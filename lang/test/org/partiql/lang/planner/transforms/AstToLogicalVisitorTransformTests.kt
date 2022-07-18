@@ -5,13 +5,18 @@ import com.amazon.ionelement.api.ionBool
 import com.amazon.ionelement.api.ionInt
 import com.amazon.ionelement.api.ionString
 import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
+import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.domains.PartiqlLogical
 import org.partiql.lang.domains.id
 import org.partiql.lang.domains.pathExpr
+import org.partiql.lang.errors.Problem
+import org.partiql.lang.planner.PlanningAbortedException
+import org.partiql.lang.planner.PlanningProblemDetails
 import org.partiql.lang.syntax.SqlParser
 import org.partiql.lang.util.ArgumentsProviderBase
 
@@ -168,13 +173,15 @@ class AstToLogicalVisitorTransformTests {
         )
     }
 
-    data class TodoTestCase(val sql: String)
+    data class UnimplementedFeatureTestCase(val sql: String, val expectedProblem: Problem)
     @ParameterizedTest
     @ArgumentsSource(ArgumentsForToToDoTests::class)
-    fun todo(tc: TodoTestCase) {
-        assertThrows<NotImplementedError>("Parsing TestCase.sql should throw NotImplementedError") {
+    fun `unimplemented feautres are blocked`(tc: UnimplementedFeatureTestCase) {
+        val ex = assertThrows<PlanningAbortedException>("Parsing TestCase.sql should throw PlanningAbortedException") {
             parseAndTransform(tc.sql)
         }
+
+        assertEquals(tc.expectedProblem, ex.problem)
     }
 
     /**
@@ -184,27 +191,34 @@ class AstToLogicalVisitorTransformTests {
      * to features supported by specific PartiQL-services.
      */
     class ArgumentsForToToDoTests : ArgumentsProviderBase() {
+        private fun unimplementedProblem(featureName: String, line: Int, col: Int) =
+            Problem(
+                SourceLocationMeta(line.toLong(), col.toLong()),
+                PlanningProblemDetails.UnimplementedFeature(featureName)
+            )
+
         override fun getParameters() = listOf(
             // SELECT queries
-            TodoTestCase("SELECT b.* FROM UNPIVOT x as y"),
-            TodoTestCase("SELECT b.* FROM bar AS b GROUP BY a"),
-            TodoTestCase("SELECT b.* FROM bar AS b HAVING x"),
-            TodoTestCase("SELECT b.* FROM bar AS b ORDER BY y"),
-            TodoTestCase("PIVOT v AT n FROM data AS d"),
+            UnimplementedFeatureTestCase("SELECT b.* FROM UNPIVOT x as y", unimplementedProblem("UNPIVOT", 1, 17)),
+            UnimplementedFeatureTestCase("SELECT b.* FROM bar AS b GROUP BY a", unimplementedProblem("GROUP BY", 1, 26)),
+            UnimplementedFeatureTestCase("SELECT b.* FROM bar AS b HAVING x", unimplementedProblem("HAVING", 1, 33)),
+            UnimplementedFeatureTestCase("SELECT b.* FROM bar AS b ORDER BY y", unimplementedProblem("ORDER BY", 1, 26)),
+            UnimplementedFeatureTestCase("PIVOT v AT n FROM data AS d", unimplementedProblem("PIVOT", 1, 1)),
 
             // DDL
-            TodoTestCase("CREATE TABLE foo"),
-            TodoTestCase("DROP TABLE foo"),
-            TodoTestCase("CREATE INDEX ON foo (x)"),
-            TodoTestCase("DROP INDEX bar ON foo"),
+            UnimplementedFeatureTestCase("CREATE TABLE foo", unimplementedProblem("CREATE TABLE", 1, 1)),
+            UnimplementedFeatureTestCase("DROP TABLE foo", unimplementedProblem("DROP TABLE", 1, 1)),
+            UnimplementedFeatureTestCase("CREATE INDEX ON foo (x)", unimplementedProblem("CREATE INDEX", 1, 1)),
+            UnimplementedFeatureTestCase("DROP INDEX bar ON foo", unimplementedProblem("DROP INDEX", 1, 1)),
 
             // DML
-            // DL TODO: include DELETE with non-scan relational operators
+            // DL TODO: include DELETE with non-scan or filterrelational operators
             // DL TODO: TodoTestCase("INSERT INTO foo VALUES(1)"),
-            TodoTestCase("FROM x AS xx INSERT INTO foo VALUES (1, 2)"),
-            TodoTestCase("FROM x AS xx WHERE a = b SET k = 5"),
-            TodoTestCase("UPDATE x SET k = 5"),
-            TodoTestCase("UPDATE x INSERT INTO k << 1 >>"),
+            UnimplementedFeatureTestCase("FROM x AS xx INSERT INTO foo VALUES (1, 2)", unimplementedProblem("UPDATE / INSERT", 1, 14)),
+            UnimplementedFeatureTestCase("FROM x AS xx SET k = 5", unimplementedProblem("SET", 1, 14)),
+            UnimplementedFeatureTestCase("UPDATE x SET k = 5", unimplementedProblem("SET", 1, 10)),
+            UnimplementedFeatureTestCase("UPDATE x REMOVE k", unimplementedProblem("REMOVE", 1, 10)),
+            UnimplementedFeatureTestCase("UPDATE x INSERT INTO k << 1 >>", unimplementedProblem("UPDATE / INSERT", 1, 10)),
         )
     }
     // DL TODO: include AT, BY aliases

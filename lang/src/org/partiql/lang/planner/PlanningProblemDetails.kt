@@ -80,13 +80,4 @@ sealed class PlanningProblemDetails(
             ProblemSeverity.ERROR,
             { "Expression is not a valid DML target.  Hint: specify a table here." }
         )
-
-    object InvalidUseOfRemove : PlanningProblemDetails(ProblemSeverity.ERROR, { "Invalid use of REMOVE." })
-    object InvalidUseOfSet : PlanningProblemDetails(ProblemSeverity.ERROR, { "Invalid use of SET." })
-
-    object DdlUnsupported :
-        PlanningProblemDetails(
-            ProblemSeverity.ERROR,
-            { "DDL statements such as CREATE and DROP are not supported by PartiQL's query planner." }
-        )
 }

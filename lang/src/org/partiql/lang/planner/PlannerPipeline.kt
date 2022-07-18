@@ -454,24 +454,24 @@ internal class PlannerPipelineImpl(
             // ast -> logical plan
             val logicalPlan = normalizedAst.toLogicalPlan()
 
-        // logical plan -> resolved logical plan
-        val problemHandler = ProblemCollector()
-        val defaultResolvedLogicalPlan = logicalPlan.toResolvedPlan(problemHandler, globalVariableResolver, allowUndefinedVariables)
-        // If there are unresolved variables after attempting to resolve variables, then we can't proceed.
-        if (problemHandler.hasErrors) {
-            return PlannerPassResult.Error(problemHandler.problems)
-        }
-
-        // Apply all of the passes over the local resolved plan.
-        val finalResolvedLogicalPlan = logicalResolvedPlanPasses
-            .fold(defaultResolvedLogicalPlan) { accumulator: PartiqlLogicalResolved.Plan, current: PartiqlLogicalResolvedPass ->
-                val passResult = current.rewrite(accumulator, problemHandler)
-                // stop planning if this pass resulted in any errors.
-                if (problemHandler.hasErrors) {
-                    return PlannerPassResult.Error(problemHandler.problems)
-                }
-                passResult
+            // logical plan -> resolved logical plan
+            val defaultResolvedLogicalPlan =
+                logicalPlan.toResolvedPlan(problemHandler, globalVariableResolver, allowUndefinedVariables)
+            // If there are unresolved variables after attempting to resolve variables, then we can't proceed.
+            if (problemHandler.hasErrors) {
+                return PlannerPassResult.Error(problemHandler.problems)
             }
+
+            // Apply all of the passes over the local resolved plan.
+            val finalResolvedLogicalPlan = logicalResolvedPlanPasses
+                .fold(defaultResolvedLogicalPlan) { accumulator: PartiqlLogicalResolved.Plan, current: PartiqlLogicalResolvedPass ->
+                    val passResult = current.rewrite(accumulator, problemHandler)
+                    // stop planning if this pass resulted in any errors.
+                    if (problemHandler.hasErrors) {
+                        return PlannerPassResult.Error(problemHandler.problems)
+                    }
+                    passResult
+                }
 
             // Possible future passes:
             // - type checking and inferencing?

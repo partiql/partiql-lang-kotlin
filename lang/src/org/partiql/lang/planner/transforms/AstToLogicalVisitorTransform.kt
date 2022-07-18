@@ -83,7 +83,7 @@ private object AstToLogicalVisitorTransform : PartiqlAstToPartiqlLogicalVisitorT
                         // [SelectStarVisitorTransform]. Therefore, there is no need to support `SELECT *` here.
                         errAstNotNormalized("Expected SELECT * to be removed")
 
-                    is PartiqlAst.Projection.ProjectPivot -> TODO("PIVOT ...")
+                    is PartiqlAst.Projection.ProjectPivot -> abortUnimplementedFeature(node, "PIVOT")
                 },
                 algebra,
                 node.project.metas
@@ -104,9 +104,9 @@ private object AstToLogicalVisitorTransform : PartiqlAstToPartiqlLogicalVisitorT
      */
     private fun checkForUnsupportedSelectClauses(node: PartiqlAst.Expr.Select) {
         when {
-            node.group != null -> abortUnimplementedFeature(node, "GROUP BY")
-            node.order != null -> abortUnimplementedFeature(node, "ORDER BY")
-            node.having != null -> abortUnimplementedFeature(node, "HAVING")
+            node.group != null -> abortUnimplementedFeature(node.group, "GROUP BY")
+            node.order != null -> abortUnimplementedFeature(node.order, "ORDER BY")
+            node.having != null -> abortUnimplementedFeature(node.having, "HAVING")
         }
     }
 
@@ -131,7 +131,7 @@ private object AstToLogicalVisitorTransform : PartiqlAstToPartiqlLogicalVisitorT
         // All
         return when (dmlOp) {
             is PartiqlAst.DmlOp.Insert -> {
-                node.from?.let { TODO("FROM / INSERT ") }
+                node.from?.let { abortUnimplementedFeature(dmlOp, "UPDATE / INSERT") }
                 // Check for and block `INSERT INTO <tbl> VALUES (...)`  This is *no* way to support this
                 // within PartiQL itself since this flavor requires schema which we do not yet have.
                 // We block this by identifying (bag (list ...) ...) nodes which  is how the parser represents the
@@ -203,20 +203,34 @@ private object AstToLogicalVisitorTransform : PartiqlAstToPartiqlLogicalVisitorT
             }
             is PartiqlAst.DmlOp.Remove -> {
                 abortQueryPlanning(
-                    Problem(node.metas.sourceLocationMetaOrUnknown, PlanningProblemDetails.InvalidUseOfRemove)
+                    Problem(dmlOp.metas.sourceLocationMetaOrUnknown, PlanningProblemDetails.UnimplementedFeature("REMOVE"))
                 )
             }
             is PartiqlAst.DmlOp.Set -> {
                 abortQueryPlanning(
-                    Problem(node.metas.sourceLocationMetaOrUnknown, PlanningProblemDetails.InvalidUseOfSet)
+                    Problem(dmlOp.metas.sourceLocationMetaOrUnknown, PlanningProblemDetails.UnimplementedFeature("SET"))
                 )
             }
         }
     }
 
-    override fun transformStatementDdl(node: PartiqlAst.Statement.Ddl): PartiqlLogical.Statement = abortQueryPlanning(
-        Problem(node.metas.sourceLocationMetaOrUnknown, PlanningProblemDetails.DdlUnsupported)
-    )
+    override fun transformStatementDdl(node: PartiqlAst.Statement.Ddl): PartiqlLogical.Statement =
+        // It is an open question whether the planner will support DDL statements directly or if they must be handled by
+        // some other construct.  For now, we just abort the query with problem details indicating these statements
+        // are not implemented.
+        abortQueryPlanning(
+            Problem(
+                node.metas.sourceLocationMetaOrUnknown,
+                PlanningProblemDetails.UnimplementedFeature(
+                    when(node.op) {
+                        is PartiqlAst.DdlOp.CreateIndex -> "CREATE INDEX"
+                        is PartiqlAst.DdlOp.CreateTable -> "CREATE TABLE"
+                        is PartiqlAst.DdlOp.DropIndex -> "DROP INDEX"
+                        is PartiqlAst.DdlOp.DropTable -> "DROP TABLE"
+                    }
+                )
+            )
+        )
 
     override fun transformExprStruct(node: PartiqlAst.Expr.Struct): PartiqlLogical.Expr =
         PartiqlLogical.build {
