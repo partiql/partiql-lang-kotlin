@@ -202,7 +202,7 @@ exprQuery
     
 booleanExpr
     : valueExpr predicate[$valueExpr.ctx]?                                  # ExprPredicate
-    | NOT rhs=booleanExpr                                                    # ExprQueryNot
+    | NOT rhs=booleanExpr                                                   # ExprQueryNot
     | lhs=booleanExpr AND rhs=booleanExpr                                   # ExprQueryAnd
     | lhs=booleanExpr OR rhs=booleanExpr                                    # ExprQueryOr
     ;
