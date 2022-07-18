@@ -10,8 +10,8 @@ import org.partiql.lang.errors.Problem
 import org.partiql.lang.errors.ProblemHandler
 import org.partiql.lang.eval.BindingName
 import org.partiql.lang.eval.builtins.DYNAMIC_LOOKUP_FUNCTION_NAME
-import org.partiql.lang.planner.MetadataResolver
-import org.partiql.lang.planner.ResolutionResult
+import org.partiql.lang.planner.GlobalResolutionResult
+import org.partiql.lang.planner.GlobalVariableResolver
 import org.partiql.pig.runtime.asPrimitive
 
 /**
@@ -71,7 +71,7 @@ import org.partiql.pig.runtime.asPrimitive
  */
 internal fun PartiqlLogical.Plan.toResolvedPlan(
     problemHandler: ProblemHandler,
-    resolver: MetadataResolver,
+    resolver: GlobalVariableResolver,
     allowUndefinedVariables: Boolean = false
 ): PartiqlLogicalResolved.Plan {
     // Allocate a unique id for each `VarDecl`
@@ -84,6 +84,39 @@ internal fun PartiqlLogical.Plan.toResolvedPlan(
 
     return resolvedSt
 }
+
+/** This class's subclasses represent the possible outcomes from an attempt to resolve a variable. */
+private sealed class ResolvedVariable {
+
+    /**
+     * A success case, indicates the [uniqueId] of the match to the [BindingName] in the global scope.
+     * Typically, this is defined by the storage layer.
+     *
+     * In the future, this will likely contain much more than just a unique id.  It might include detailed schema
+     * information about global variables.
+     */
+    data class Global(val uniqueId: String) : ResolvedVariable()
+
+    /**
+     * A success case, indicates the [index] of the only possible match to the [BindingName] in a local lexical scope.
+     * This is `internal` because [index] is an implementation detail that shouldn't be accessible outside of this
+     * library.
+     */
+    internal data class LocalVariable(val index: Int) : ResolvedVariable()
+
+    /** A failure case, indicates that resolution did not match any variable. */
+    object Undefined : ResolvedVariable()
+}
+
+/**
+ * Converts the public [GlobalResolutionResult] (which cannot represent local variables) to the private [ResolvedVariable],
+ * which can represent local variables.
+ */
+private fun GlobalResolutionResult.toResolvedVariable() =
+    when (this) {
+        is GlobalResolutionResult.GlobalVariable -> ResolvedVariable.Global(this.uniqueId)
+        GlobalResolutionResult.Undefined -> ResolvedVariable.Undefined
+    }
 
 /**
  * A local scope is a list of variable declarations that are produced by a relational operator and an optional
@@ -100,7 +133,7 @@ private data class LogicalToLogicalResolvedVisitorTransform(
     /** Where to send error reports. */
     private val problemHandler: ProblemHandler,
     /** If a variable is not found using [inputScope], we will attempt to locate the binding here instead. */
-    private val globals: MetadataResolver,
+    private val globals: GlobalVariableResolver,
 
 ) : PartiqlLogicalToPartiqlLogicalResolvedVisitorTransform() {
     /** The current [LocalScope]. */
@@ -228,16 +261,16 @@ private data class LogicalToLogicalResolvedVisitorTransform(
         }
 
     /**
-     * Returns [ResolutionResult.LocalVariable] if [bindingName] refers to a local variable.
+     * Returns [GlobalResolutionResult.LocalVariable] if [bindingName] refers to a local variable.
      *
-     * Otherwise, returns [ResolutionResult.Undefined].  (Elsewhere, [globals] will be checked next.)
+     * Otherwise, returns [GlobalResolutionResult.Undefined].  (Elsewhere, [globals] will be checked next.)
      */
-    private fun lookupLocalVariable(bindingName: BindingName): ResolutionResult {
+    private fun resolveLocalVariable(bindingName: BindingName): ResolvedVariable {
         val found = this.inputScope.varDecls.firstOrNull { bindingName.isEquivalentTo(it.name.text) }
         return if (found == null) {
-            ResolutionResult.Undefined
+            ResolvedVariable.Undefined
         } else {
-            ResolutionResult.LocalVariable(found.indexMeta)
+            ResolvedVariable.LocalVariable(found.indexMeta)
         }
     }
 
@@ -248,30 +281,30 @@ private data class LogicalToLogicalResolvedVisitorTransform(
     override fun transformExprId(node: PartiqlLogical.Expr.Id): PartiqlLogicalResolved.Expr {
         val bindingName = BindingName(node.name.text, node.case.toBindingCase())
 
-        val resolutionResult = if (
+        val globalResolutionResult = if (
             this.currentVariableLookupStrategy == VariableLookupStrategy.GLOBALS_THEN_LOCALS &&
             node.qualifier is PartiqlLogical.ScopeQualifier.Unqualified
         ) {
             // look up variable in globals first, then locals
-            when (val globalResolutionResult = globals.resolveVariable(bindingName)) {
-                ResolutionResult.Undefined -> lookupLocalVariable(bindingName)
-                else -> globalResolutionResult
+            when (val resolvedVariable = globals.resolveGlobal(bindingName)) {
+                GlobalResolutionResult.Undefined -> resolveLocalVariable(bindingName)
+                else -> resolvedVariable.toResolvedVariable()
             }
         } else {
             // look up variable in locals first, then globals.
-            when (val localResolutionResult = lookupLocalVariable(bindingName)) {
-                ResolutionResult.Undefined -> globals.resolveVariable(bindingName)
+            when (val localResolutionResult = resolveLocalVariable(bindingName)) {
+                ResolvedVariable.Undefined -> globals.resolveGlobal(bindingName).toResolvedVariable()
                 else -> localResolutionResult
             }
         }
-        return when (resolutionResult) {
-            is ResolutionResult.GlobalVariable -> {
-                node.asGlobalId(resolutionResult.uniqueId)
+        return when (globalResolutionResult) {
+            is ResolvedVariable.Global -> {
+                node.asGlobalId(globalResolutionResult.uniqueId)
             }
-            is ResolutionResult.LocalVariable -> {
-                node.asLocalId(resolutionResult.index)
+            is ResolvedVariable.LocalVariable -> {
+                node.asLocalId(globalResolutionResult.index)
             }
-            ResolutionResult.Undefined -> {
+            ResolvedVariable.Undefined -> {
                 if (this.allowUndefinedVariables) {
                     node.asDynamicLookupCallsite(
                         currentDynamicResolutionCandidates()

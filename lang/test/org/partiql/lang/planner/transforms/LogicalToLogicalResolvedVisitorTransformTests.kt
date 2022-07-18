@@ -14,7 +14,7 @@ import org.partiql.lang.errors.ProblemCollector
 import org.partiql.lang.eval.BindingCase
 import org.partiql.lang.eval.builtins.DYNAMIC_LOOKUP_FUNCTION_NAME
 import org.partiql.lang.eval.sourceLocationMeta
-import org.partiql.lang.planner.createFakeMetadataResolver
+import org.partiql.lang.planner.createFakeGlobalsResolver
 import org.partiql.lang.planner.problem
 import org.partiql.lang.syntax.SqlParser
 import org.partiql.lang.util.ArgumentsProviderBase
@@ -91,7 +91,7 @@ class LogicalToLogicalResolvedVisitorTransformTests {
     }
 
     /** Mock table resolver. That can resolve f, foo, or UPPERCASE_FOO, while respecting case-sensitivity. */
-    private val metadataResolver = createFakeMetadataResolver(
+    private val globalVariableResolver = createFakeGlobalsResolver(
         *listOf(
             "shadow",
             "foo",
@@ -117,7 +117,7 @@ class LogicalToLogicalResolvedVisitorTransformTests {
 
         when (tc.expectation) {
             is Expectation.Success -> {
-                val resolved = plan.toResolvedPlan(problemHandler, metadataResolver, tc.allowUndefinedVariables)
+                val resolved = plan.toResolvedPlan(problemHandler, globalVariableResolver, tc.allowUndefinedVariables)
 
                 // extract all of the dynamic, global and local ids from the resolved logical plan.
                 val actualResolvedIds =
@@ -186,7 +186,7 @@ class LogicalToLogicalResolvedVisitorTransformTests {
             }
             is Expectation.Problems -> {
                 assertDoesNotThrow("Should not throw when variables are undefined") {
-                    plan.toResolvedPlan(problemHandler, metadataResolver)
+                    plan.toResolvedPlan(problemHandler, globalVariableResolver)
                 }
                 assertEquals(tc.expectation.problems, problemHandler.problems)
             }
