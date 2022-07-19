@@ -480,7 +480,6 @@ internal class PlannerPipelineImpl(
             }
         // If we reach this far, we're successful.  If there were any problems at all, they were just warnings.
         return PlannerPassResult.Success(finalPlan, problemHandler.problems)
-
     }
 
     override fun compile(physicalPlan: PartiqlPhysical.Plan): PlannerPassResult<QueryPlan> {
