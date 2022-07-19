@@ -16,7 +16,7 @@ class DmlIntegrationTests {
             InMemoryTable("more_customer", listOf("id"), valueFactory)
         )
     )
-    
+
     private fun executeAndAssert(
         expectedResultAsIonText: String,
         sql: String,
@@ -76,7 +76,7 @@ class DmlIntegrationTests {
         executeAndAssert("{rows_effected:1}", "INSERT INTO customer << { 'id': 1, 'name': 'bob' } >>")
         executeAndAssert("{rows_effected:1}", "INSERT INTO customer << { 'id': 2, 'name': 'jane' } >>")
 
-        // copy that data into the more customer_table by INSERTing the result of an SFW query
+        // copy that data into the more_customer table by INSERTing the result of an SFW query
         executeAndAssert("{rows_effected:2}", "INSERT INTO more_customer SELECT c.id, c.name FROM customer AS c")
 
         val moreCustomerTbl = database.tables["more_customer"]!!
