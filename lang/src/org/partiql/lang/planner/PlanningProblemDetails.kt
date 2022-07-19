@@ -51,12 +51,6 @@ sealed class PlanningProblemDetails(
             { "The syntax at this location is valid but utilizes unimplemented PartiQL feature '$featureName'" }
         )
 
-    data class DisallowedFeature(val featureName: String) :
-        PlanningProblemDetails(
-            ProblemSeverity.ERROR,
-            { "Use of disallowed PartiQL feature: '$featureName'" }
-        )
-
     object InsertValueDisallowed :
         PlanningProblemDetails(
             ProblemSeverity.ERROR,

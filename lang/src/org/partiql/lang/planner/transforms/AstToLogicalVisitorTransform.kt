@@ -194,7 +194,7 @@ private class AstToLogicalVisitorTransform(
                                 dml(
                                     target = transformExpr(node.from.expr),
                                     operation = dmlDelete(),
-                                    // This query returns entire rows which are to be deleted, which is very but
+                                    // This query returns entire rows which are to be deleted, which is unfortunate
                                     // unavoidable without knowledge of schema. PartiQL embedders may apply a
                                     // pass over the resolved logical (or later) plan that changes this to only
                                     // include the primary keys of the rows to be deleted.
@@ -235,7 +235,7 @@ private class AstToLogicalVisitorTransform(
 
     override fun transformStatementDdl(node: PartiqlAst.Statement.Ddl): PartiqlLogical.Statement {
         // It is an open question whether the planner will support DDL statements directly or if they must be handled by
-        // some other construct.  For now, we just abort the query with problem details indicating these statements
+        // some other construct.  For now, we just submit an error with problem details indicating these statements
         // are not implemented.
         problemHandler.handleProblem(
             Problem(

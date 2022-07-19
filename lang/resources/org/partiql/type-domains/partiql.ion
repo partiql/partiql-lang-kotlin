@@ -677,31 +677,34 @@ may then be further optimized by selecting better implementations of each operat
             )
         )
 
-        // DL TOOD: document everything
         (include
             // Indicates kind of DML operation.
             (sum dml_operation
-                // INSERT INTO
                 (dml_insert)
-
-                // DELETE FROM
                 (dml_delete)
-
                 // TODO:
                 // (dml_update)
             )
         )
 
-        // Redefine statement.dml to be a simple simple subset of the full DML functionality expressed with
-        // the PartiQL's DML syntax.  This is factored minimally to support `INSERT INTO` and
-        // `DELETE FROM ... [WHERE <predicate>]` but this may need refactoring when `FROM ... UPDATE` and
-        // `UPDATE` is supported later.
+        // Redefine statement.dml to be a simpler simple subset of the full DML functionality expressed with
+        // the PartiQL's DML syntax.  Full functionality is out of scope for now.  This is factored minimally to
+        // support `INSERT INTO` and `DELETE FROM ... [WHERE <predicate>]` but this may need refactoring when
+        // `FROM ... UPDATE` and `UPDATE` is supported later.
         //need refactoring when PartiQL's `UPDATE` is supported later.
         (with statement
             (exclude dml)
             (include
                 // A DML operation, such as `INSERT`, `UPDATE` or `DELETE`
                 (dml
+                    // The target is an expression that is indicates the table whose data is to be manipulated.
+                    // In practice this can be an identifier or a simplified path expression consisting of only
+                    // literal path steps (and with no wildcard or unpivot operators).  This restriction must
+                    // be enforced by the PartiQL implementation.
+                    // TODO: consider ways to reduce the domain of acceptable values here.  Of course, we it would
+                    // be possible to create a `sum` type like expression but containing only the valid DML targets,
+                    // but would might necessitate duplicating some logic related to variable resolution which is
+                    // already implemented for standard expressions.  This is out of scope for current efforts.
                     target::expr
                     operation::dml_operation
                     rows::expr

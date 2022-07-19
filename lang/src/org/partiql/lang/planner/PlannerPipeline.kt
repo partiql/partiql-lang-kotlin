@@ -439,53 +439,48 @@ internal class PlannerPipelineImpl(
 
         // logical plan -> resolved logical plan
         val problemHandler = ProblemCollector()
-        try {
-            // Normalization--synthesizes any unspecified `AS` aliases, converts `SELECT *` to `SELECT f.*[, ...]` ...
-            val normalizedAst = ast.normalize()
+        // Normalization--synthesizes any unspecified `AS` aliases, converts `SELECT *` to `SELECT f.*[, ...]` ...
+        val normalizedAst = ast.normalize()
 
-            // ast -> logical plan
-            val logicalPlan = normalizedAst.toLogicalPlan(problemHandler)
-            if (problemHandler.hasErrors) {
-                return PlannerPassResult.Error(problemHandler.problems)
-            }
+        // ast -> logical plan
+        val logicalPlan = normalizedAst.toLogicalPlan(problemHandler)
+        if (problemHandler.hasErrors) {
+            return PlannerPassResult.Error(problemHandler.problems)
+        }
 
         // logical plan -> resolved logical plan
-        val problemHandler = ProblemCollector()
         val resolvedLogicalPlan = logicalPlan.toResolvedPlan(problemHandler, globalVariableResolver, allowUndefinedVariables)
         // If there are unresolved variables after attempting to resolve variables, then we can't proceed.
         if (problemHandler.hasErrors) {
             return PlannerPassResult.Error(problemHandler.problems)
         }
 
-            // Possible future passes:
-            // - type checking and inferencing?
-            // - constant folding
-            // - common sub-expression removal
-            // - push down predicates & projections on top of their scan nodes.
-            // - customer supplied rewrites of resolved logical plan.
+        // Possible future passes:
+        // - type checking and inferencing?
+        // - constant folding
+        // - common sub-expression removal
+        // - push down predicates & projections on top of their scan nodes.
+        // - customer supplied rewrites of resolved logical plan.
 
-            // resolved logical plan -> physical plan.
-            // this will give all relational operators `(impl default)`.
-            val defaultPhysicalPlan = resolvedLogicalPlan.toDefaultPhysicalPlan(problemHandler)
-            if (problemHandler.hasErrors) {
-                return PlannerPassResult.Error(problemHandler.problems)
-            }
-
-            val finalPlan = physicalPlanPasses
-                .fold(defaultPhysicalPlan) { accumulator: PartiqlPhysical.Plan, current: PartiqlPhysicalPass ->
-                    val passResult = current.rewrite(accumulator, problemHandler)
-                    // stop planning if this pass resulted in any errors.
-                    if (problemHandler.hasErrors) {
-                        return PlannerPassResult.Error(problemHandler.problems)
-                    }
-                    passResult
-                }
-            // If we reach this far, we're successful.  If there were any problems at all, they were just warnings.
-            return PlannerPassResult.Success(finalPlan, problemHandler.problems)
-        } catch (ex: PlanningAbortedException) {
-            problemHandler.handleProblem(ex.problem)
+        // resolved logical plan -> physical plan.
+        // this will give all relational operators `(impl default)`.
+        val defaultPhysicalPlan = resolvedLogicalPlan.toDefaultPhysicalPlan(problemHandler)
+        if (problemHandler.hasErrors) {
             return PlannerPassResult.Error(problemHandler.problems)
         }
+
+        val finalPlan = physicalPlanPasses
+            .fold(defaultPhysicalPlan) { accumulator: PartiqlPhysical.Plan, current: PartiqlPhysicalPass ->
+                val passResult = current.rewrite(accumulator, problemHandler)
+                // stop planning if this pass resulted in any errors.
+                if (problemHandler.hasErrors) {
+                    return PlannerPassResult.Error(problemHandler.problems)
+                }
+                passResult
+            }
+        // If we reach this far, we're successful.  If there were any problems at all, they were just warnings.
+        return PlannerPassResult.Success(finalPlan, problemHandler.problems)
+
     }
 
     override fun compile(physicalPlan: PartiqlPhysical.Plan): PlannerPassResult<QueryPlan> {

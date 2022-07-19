@@ -16,8 +16,7 @@ class DmlIntegrationTests {
             InMemoryTable("more_customer", listOf("id"), valueFactory)
         )
     )
-    // DL TOOD: include test for INSERT/SELECT
-
+    
     private fun executeAndAssert(
         expectedResultAsIonText: String,
         sql: String,
