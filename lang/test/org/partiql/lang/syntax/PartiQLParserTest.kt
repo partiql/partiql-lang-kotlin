@@ -17,6 +17,7 @@ package org.partiql.lang.syntax
 import com.amazon.ion.IonSystem
 import com.amazon.ion.system.IonSystemBuilder
 import org.antlr.v4.gui.TreeViewer
+import org.junit.Ignore
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
@@ -55,6 +56,7 @@ class PartiQLParserTest {
     }
 
     // TODO: Delete
+    @Ignore
     @Test
     fun testVisual() {
         val query = "SELECT * FROM a" // LEFT JOIN b ON c;"
