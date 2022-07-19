@@ -69,11 +69,16 @@ class AntlrTreeToPartiQLVisitor(val ion: IonSystem) : PartiQLBaseVisitor<Partiql
         return PartiqlAst.BUILDER().projectExpr(expr, asAlias = alias)
     }
 
-    /**
-     *
-     * SIMPLE CLAUSES
-     *
-     */
+    override fun visitExprTermTuple(ctx: PartiQLParser.ExprTermTupleContext): PartiqlAst.PartiqlAstNode {
+        val pairs = ctx.exprPair().map { pair -> visitExprPair(pair) }
+        return PartiqlAst.BUILDER().struct(pairs)
+    }
+
+    override fun visitExprPair(ctx: PartiQLParser.ExprPairContext): PartiqlAst.ExprPair {
+        val lhs = visitExprQuery(ctx.lhs)
+        val rhs = visitExprQuery(ctx.rhs)
+        return PartiqlAst.BUILDER().exprPair(lhs, rhs)
+    }
 
     override fun visitLimitClause(ctx: PartiQLParser.LimitClauseContext): PartiqlAst.Expr =
         visitExprQuery(ctx.exprQuery())
