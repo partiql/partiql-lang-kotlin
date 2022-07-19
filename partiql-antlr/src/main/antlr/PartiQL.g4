@@ -41,11 +41,11 @@ symbolPrimitive
     ;
 // TODO: Mental note. Needed to duplicate table_joined to remove left recursion
 tableReference
-    : tableNonJoin                                             # TableRefNonJoin
-    | tableReference joinType? CROSS JOIN joinRhs              # TableRefCrossJoin
+    : tableReference joinType? CROSS JOIN joinRhs              # TableRefCrossJoin
     | tableReference joinType JOIN LATERAL? joinRhs joinSpec   # TableRefJoin
     | tableReference NATURAL joinType JOIN LATERAL? joinRhs    # TableRefNaturalJoin
     | PAREN_LEFT tableJoined PAREN_RIGHT                       # TableRefWrappedJoin
+    | tableNonJoin                                             # TableRefNonJoin
     ;
 tableNonJoin
     : tableBaseReference          # TableNonJoinBaseRef
@@ -61,9 +61,9 @@ tableBaseReference
     
 // TODO: Check that all uses use a table_reference before token
 tableJoined
-    : tableCrossJoin
-    | tableQualifiedJoin
-    | PAREN_LEFT tableJoined PAREN_RIGHT
+    : tableCrossJoin                      # TableJoinedCrossJoin
+    | tableQualifiedJoin                  # TableJoinedQualified
+    | PAREN_LEFT tableJoined PAREN_RIGHT  # NestedTableJoined
     ;
     
 tableUnpivot: UNPIVOT exprQuery asIdent? atIdent? ;
@@ -73,21 +73,19 @@ tableCrossJoin: tableReference joinType? CROSS JOIN joinRhs ;
 
 // TODO: Check that all uses use a table_reference before token
 tableQualifiedJoin
-    : tableReference joinType JOIN LATERAL? joinRhs joinSpec
-    | tableReference NATURAL joinType JOIN LATERAL? joinRhs
+    : tableReference joinType JOIN LATERAL? joinRhs joinSpec # QualifiedRefJoin
+    | tableReference NATURAL joinType JOIN LATERAL? joinRhs  # QualifiedNaturalRefJoin
     ;
     
 joinRhs
-    : tableNonJoin
-    | PAREN_LEFT tableJoined PAREN_RIGHT
+    : tableNonJoin                        # JoinRhsNonJoin
+    | PAREN_LEFT tableJoined PAREN_RIGHT  # JoinRhsTableJoined
     ;
     
-// TODO: Check comma
 joinSpec
-    : ON exprQuery
-    | USING PAREN_LEFT pathExpr ( COMMA pathExpr )* PAREN_RIGHT
+    : ON exprQuery   # JoinSpecOn
     ;
-    
+
 joinType
     : INNER
     | LEFT OUTER?
@@ -95,7 +93,7 @@ joinType
     | FULL OUTER?
     | OUTER
     ;
-    
+
 // TODO: Check
 functionCall
     : name=IDENTIFIER PAREN_LEFT ( functionCallArg ( COMMA functionCallArg )* )? PAREN_RIGHT
