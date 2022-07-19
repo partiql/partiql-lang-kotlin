@@ -16,11 +16,16 @@ package org.partiql.lang.syntax
 
 import com.amazon.ion.IonSystem
 import com.amazon.ion.system.IonSystemBuilder
+import org.antlr.v4.gui.TreeViewer
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestFailureReason
 import org.partiql.lang.eval.evaluatortestframework.assertEquals
 import org.partiql.lang.util.ArgumentsProviderBase
+import java.lang.Thread.sleep
+import javax.swing.JFrame
+import javax.swing.JPanel
 
 class PartiQLParserTest {
 
@@ -47,6 +52,23 @@ class PartiQLParserTest {
         assertEquals(expected, stmt, EvaluatorTestFailureReason.FAILED_TO_EVALUATE_QUERY) {
             b.toString()
         }
+    }
+
+    @Test
+    fun testVisual() {
+        val query = "SELECT * FROM a" // LEFT JOIN b ON c;"
+        val tree = parser.parseQuery(query)
+
+        val frame = JFrame("AST")
+        val panel = JPanel()
+        val view = TreeViewer(parser.getParser(query).ruleNames.toMutableList(), tree)
+        view.scale = 1.5
+        panel.add(view)
+        frame.add(panel)
+        frame.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
+        frame.pack()
+        frame.isVisible = true
+        sleep(20_000)
     }
 
     class QueryCases : ArgumentsProviderBase() {
@@ -77,7 +99,15 @@ class PartiQLParserTest {
                 "SELECT * FROM <<>> HAVING true",
                 "SELECT * FROM <<>> LET 2 AS a",
                 "SELECT * FROM a, (SELECT * FROM <<>>)",
-                "SELECT * FROM a, b, c"
+                "SELECT * FROM a, b, c",
+                "SELECT * FROM a LEFT JOIN c ON id",
+                "SELECT * FROM a INNER JOIN c ON id",
+                "SELECT * FROM a LEFT OUTER JOIN c ON id",
+                "SELECT * FROM a RIGHT OUTER JOIN c ON id",
+                "SELECT * FROM a FULL OUTER JOIN c ON id",
+                "SELECT * FROM a FULL JOIN c ON id",
+                "SELECT * FROM a FULL JOIN (b FULL JOIN c ON d) ON e",
+                "SELECT x FROM A INNER JOIN (B INNER JOIN (C INNER JOIN D ON C = D) ON B = C) ON A = B"
             )
             return queries
         }
