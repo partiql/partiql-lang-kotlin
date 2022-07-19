@@ -17,13 +17,17 @@ package org.partiql.lang.visitors
 import com.amazon.ion.IonSystem
 import com.amazon.ionelement.api.toIonElement
 import org.partiql.lang.domains.PartiqlAst
+import org.partiql.lang.eval.EvaluationException
+import org.partiql.lang.eval.time.MAX_PRECISION_FOR_TIME
 import org.partiql.lang.generated.PartiQLBaseVisitor
 import org.partiql.lang.generated.PartiQLParser
 import org.partiql.lang.util.bigDecimalOf
 import org.partiql.lang.util.getPrecisionFromTimeString
 import java.math.BigInteger
 import java.time.LocalTime
+import java.time.OffsetTime
 import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
 
 class AntlrTreeToPartiQLVisitor(val ion: IonSystem) : PartiQLBaseVisitor<PartiqlAst.PartiqlAstNode>() {
 
@@ -191,6 +195,44 @@ class AntlrTreeToPartiQLVisitor(val ion: IonSystem) : PartiQLBaseVisitor<Partiql
     override fun visitTableBaseRefClauses(ctx: PartiQLParser.TableBaseRefClausesContext): PartiqlAst.FromSource.Scan {
         val expr = visit(ctx.exprQuery()) as PartiqlAst.Expr
         return PartiqlAst.FromSource.Scan(expr, asAlias = null, byAlias = null, atAlias = null)
+    }
+
+    override fun visitTableRefWrappedJoin(ctx: PartiQLParser.TableRefWrappedJoinContext): PartiqlAst.FromSource {
+        return visit(ctx.tableJoined()) as PartiqlAst.FromSource
+    }
+
+    override fun visitTableRefCrossJoin(ctx: PartiQLParser.TableRefCrossJoinContext): PartiqlAst.FromSource {
+        val lhs = visit(ctx.tableReference()) as PartiqlAst.FromSource
+        val joinType = if (ctx.joinType() != null) visitJoinType(ctx.joinType()) else PartiqlAst.JoinType.Inner()
+        val rhs = visit(ctx.joinRhs()) as PartiqlAst.FromSource
+        return when (ctx.joinRhs()) {
+            is PartiQLParser.JoinRhsTableJoinedContext -> PartiqlAst.BUILDER().join(joinType, rhs, lhs)
+            else -> PartiqlAst.BUILDER().join(joinType, lhs, rhs)
+        }
+    }
+
+    override fun visitTableCrossJoin(ctx: PartiQLParser.TableCrossJoinContext): PartiqlAst.FromSource {
+        val lhs = visit(ctx.tableReference()) as PartiqlAst.FromSource
+        val joinType = if (ctx.joinType() != null) visitJoinType(ctx.joinType()) else PartiqlAst.JoinType.Inner()
+        val rhs = visit(ctx.joinRhs()) as PartiqlAst.FromSource
+        return when (ctx.joinRhs()) {
+            is PartiQLParser.JoinRhsTableJoinedContext -> PartiqlAst.BUILDER().join(joinType, rhs, lhs)
+            else -> PartiqlAst.BUILDER().join(joinType, lhs, rhs)
+        }
+    }
+
+    override fun visitTableBaseRefSymbol(ctx: PartiQLParser.TableBaseRefSymbolContext): PartiqlAst.FromSource {
+        val expr = visitExprQuery(ctx.exprQuery())
+        val name = ctx.symbolPrimitive().getString()
+        return PartiqlAst.BUILDER().scan(expr, name)
+    }
+
+    override fun visitJoinRhsNonJoin(ctx: PartiQLParser.JoinRhsNonJoinContext): PartiqlAst.PartiqlAstNode {
+        return visit(ctx.tableNonJoin()) as PartiqlAst.FromSource
+    }
+
+    override fun visitTableJoinedCrossJoin(ctx: PartiQLParser.TableJoinedCrossJoinContext): PartiqlAst.FromSource {
+        return visit(ctx.tableCrossJoin()) as PartiqlAst.FromSource
     }
 
     // Note: Same as QualifiedRefJoin
@@ -421,7 +463,7 @@ class AntlrTreeToPartiQLVisitor(val ion: IonSystem) : PartiQLBaseVisitor<Partiql
     override fun visitLiteralString(ctx: PartiQLParser.LiteralStringContext): PartiqlAst.PartiqlAstNode =
         PartiqlAst.Expr.Lit(ion.newString(ctx.LITERAL_STRING().text.toPartiQLString()).toIonElement())
 
-    override fun visitLiteralInteger(ctx: PartiQLParser.LiteralIntegerContext): PartiqlAst.PartiqlAstNode =
+    override fun visitLiteralInteger(ctx: PartiQLParser.LiteralIntegerContext): PartiqlAst.Expr.Lit =
         PartiqlAst.Expr.Lit(ion.newInt(BigInteger(ctx.LITERAL_INTEGER().text, 10)).toIonElement())
 
     override fun visitLiteralDate(ctx: PartiQLParser.LiteralDateContext): PartiqlAst.PartiqlAstNode {
@@ -432,15 +474,67 @@ class AntlrTreeToPartiQLVisitor(val ion: IonSystem) : PartiQLBaseVisitor<Partiql
 
     override fun visitLiteralTime(ctx: PartiQLParser.LiteralTimeContext): PartiqlAst.PartiqlAstNode {
         val timeString = ctx.LITERAL_STRING().text.toPartiQLString()
-        // TODO: Get precision if specified
-        val precision = getPrecisionFromTimeString(timeString).toLong()
-        val time = LocalTime.parse(timeString, DateTimeFormatter.ISO_TIME)
+        val precision = when (ctx.LITERAL_INTEGER()) {
+            null -> try {
+                getPrecisionFromTimeString(timeString).toLong()
+            } catch (e: EvaluationException) {
+                throw org.partiql.lang.syntax.PartiQLParser.ParseErrorListener.ParseException("Unable to parse precision.", e)
+            }
+            else -> ctx.LITERAL_INTEGER().text.toInteger().toLong()
+        }
+        if (precision < 0 || precision > MAX_PRECISION_FOR_TIME) {
+            throw org.partiql.lang.syntax.PartiQLParser.ParseErrorListener.ParseException("Precision out of bounds")
+        }
+        var time: LocalTime
+        try {
+            time = LocalTime.parse(timeString, DateTimeFormatter.ISO_TIME)
+        } catch (e: DateTimeParseException) {
+            throw org.partiql.lang.syntax.PartiQLParser.ParseErrorListener.ParseException("Unable to parse time", e)
+        }
         return PartiqlAst.BUILDER().litTime(
             PartiqlAst.BUILDER().timeValue(
                 time.hour.toLong(), time.minute.toLong(), time.second.toLong(), time.nano.toLong(),
                 precision, false, null
             )
         )
+    }
+
+    override fun visitLiteralTimeZone(ctx: PartiQLParser.LiteralTimeZoneContext): PartiqlAst.PartiqlAstNode {
+        val timeString = ctx.LITERAL_STRING().text.toPartiQLString()
+        val precision = when (ctx.LITERAL_INTEGER()) {
+            null -> try {
+                getPrecisionFromTimeString(timeString).toLong()
+            } catch (e: EvaluationException) {
+                throw org.partiql.lang.syntax.PartiQLParser.ParseErrorListener.ParseException("Unable to parse precision.", e)
+            }
+            else -> ctx.LITERAL_INTEGER().text.toInteger().toLong()
+        }
+        if (precision < 0 || precision > MAX_PRECISION_FOR_TIME) {
+            throw org.partiql.lang.syntax.PartiQLParser.ParseErrorListener.ParseException("Precision out of bounds")
+        }
+        try {
+            var time: OffsetTime
+            time = OffsetTime.parse(timeString)
+            return PartiqlAst.BUILDER().litTime(
+                PartiqlAst.BUILDER().timeValue(
+                    time.hour.toLong(), time.minute.toLong(), time.second.toLong(), time.nano.toLong(),
+                    precision, true, (time.offset.totalSeconds / 60).toLong()
+                )
+            )
+        } catch (e: DateTimeParseException) {
+            var time: LocalTime
+            try {
+                time = LocalTime.parse(timeString)
+            } catch (e: DateTimeParseException) {
+                throw org.partiql.lang.syntax.PartiQLParser.ParseErrorListener.ParseException("Unable to parse time", e)
+            }
+            return PartiqlAst.BUILDER().litTime(
+                PartiqlAst.BUILDER().timeValue(
+                    time.hour.toLong(), time.minute.toLong(), time.second.toLong(),
+                    time.nano.toLong(), precision, true, null
+                )
+            )
+        }
     }
 
     // TODO: Catch exception for exponent too large
@@ -493,4 +587,6 @@ class AntlrTreeToPartiQLVisitor(val ion: IonSystem) : PartiQLBaseVisitor<Partiql
             else -> "UNKNOWN"
         }
     }
+
+    private fun String.toInteger() = BigInteger(this, 10)
 }
