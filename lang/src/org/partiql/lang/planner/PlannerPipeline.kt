@@ -449,13 +449,13 @@ internal class PlannerPipelineImpl(
                 return PlannerPassResult.Error(problemHandler.problems)
             }
 
-            // logical plan -> resolved logical plan
-            val resolvedLogicalPlan =
-                logicalPlan.toResolvedPlan(problemHandler, globalVariableResolver, allowUndefinedVariables)
-            // If there are unresolved variables after attempting to resolve variables, then we can't proceed.
-            if (problemHandler.hasErrors) {
-                return PlannerPassResult.Error(problemHandler.problems)
-            }
+        // logical plan -> resolved logical plan
+        val problemHandler = ProblemCollector()
+        val resolvedLogicalPlan = logicalPlan.toResolvedPlan(problemHandler, globalVariableResolver, allowUndefinedVariables)
+        // If there are unresolved variables after attempting to resolve variables, then we can't proceed.
+        if (problemHandler.hasErrors) {
+            return PlannerPassResult.Error(problemHandler.problems)
+        }
 
             // Possible future passes:
             // - type checking and inferencing?
