@@ -12,10 +12,10 @@ import org.partiql.lang.types.ListType
 import org.partiql.lang.types.StructType
 
 /**
- * The "filter scan to key lookup" pass identifies all equality expressions where the left-hand side is a primary key
- * within the filter's predicate.  This class represents the identified key field and right-hand-side of each such
- * expression. For example, given the filter predicate: `foo.id = 42`, the [keyFieldName] is `id` and the
- * [equivalentValue] is `(lit 42)`.
+ * The "filter scan to key lookup" pass identifies all equality expressions where either side is a primary key
+ * within the filter's predicate.  This class represents the identified key field and the opposing value expression of
+ * each such equality expression. For example, given the filter predicate: `foo.id = 42`, the [keyFieldName] is `id`
+ * and the [equivalentValue] is `(lit 42)`.
  */
 data class FieldEqualityPredicate(val keyFieldName: String, val equivalentValue: PartiqlPhysical.Expr)
 
@@ -37,9 +37,7 @@ data class FieldEqualityPredicate(val keyFieldName: String, val equivalentValue:
  * Note that this requires filters to be pushed down on top of their corresponding scans.  Since we don't have such a
  * pass yet, this will only work when there's a single table involved in the query.  When there's a single table,
  * the filters and scans are already arranged in this fashion.
- * DL TODO: document the expected signature of the custom get-by-key operator (static and dynamic)
- * DL TODO: accept an argument that is a function creates the list of arguments to pass to the `project` operator.
- * DL TODO: based on a List<FoundKeyEqualityPredicate>
+ * DL TODO: document the expected signature of the custom get-by-key operator (static and dynamic) and describe createKeyValueConstructor
  */
 fun createFilterScanToKeyLookupPass(
     customOperatorName: String,
@@ -148,14 +146,18 @@ private fun PartiqlPhysical.Expr.rewriteFilterPredicate(
 
     val modifiedPredicate = object : PartiqlPhysical.VisitorTransform() {
         override fun transformExprEq(node: PartiqlPhysical.Expr.Eq): PartiqlPhysical.Expr {
-            // DL TODO: is it needed to recurse here?  what might be in child that we'd skip if we don't recurse?
             val rewritten = super.transformExprEq(node) as PartiqlPhysical.Expr.Eq
 
             // TODO: support more than two operands here? (The AST's modeling allows n arguments, but IRL the parser
             // TODO: never constructs a node with more than 2)
             require(rewritten.operands.size == 2)
+
+            // handleKeyEqualityPredicate returns true and updates both remainingFilterKeys and
+            // filterKeyValueExpressions  if the first argument is a reference to a primary key field
+            // i.e. `x.keyField = <expr>`.
             var matched = handleKeyEqualityPredicate(rewritten.operands[0], rewritten.operands[1])
 
+            // If we didn't match `x.keyField = <expr>`, try the reverse, i.e. `<expr> = x.keyField`
             if(!matched) {
                 matched = handleKeyEqualityPredicate(rewritten.operands[1], rewritten.operands[0])
             }

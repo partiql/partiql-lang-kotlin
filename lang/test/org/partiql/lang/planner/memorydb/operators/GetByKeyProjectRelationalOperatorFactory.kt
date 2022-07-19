@@ -1,4 +1,4 @@
-package org.partiql.lang.planner.e2e.operators
+package org.partiql.lang.planner.memorydb.operators
 
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.eval.physical.SetVariableFunc
@@ -7,9 +7,9 @@ import org.partiql.lang.eval.physical.operators.RelationExpression
 import org.partiql.lang.eval.physical.operators.ValueExpression
 import org.partiql.lang.eval.relation.RelationType
 import org.partiql.lang.eval.relation.relation
-import org.partiql.lang.planner.e2e.DB_CONTEXT_VAR
-import org.partiql.lang.planner.e2e.GET_BY_KEY_PROJECT_IMPL_NAME
-import org.partiql.lang.planner.e2e.InMemoryDatabase
+import org.partiql.lang.planner.memorydb.DB_CONTEXT_VAR
+import org.partiql.lang.planner.memorydb.GET_BY_KEY_PROJECT_IMPL_NAME
+import org.partiql.lang.planner.memorydb.InMemoryDatabase
 import java.util.UUID
 
 class GetByKeyProjectRelationalOperatorFactory : ProjectRelationalOperatorFactory(GET_BY_KEY_PROJECT_IMPL_NAME) {
@@ -22,7 +22,8 @@ class GetByKeyProjectRelationalOperatorFactory : ProjectRelationalOperatorFactor
         setVar: SetVariableFunc,
         args: List<ValueExpression>
     ): RelationExpression {
-        // this code runs at compile-time.
+        // this code runs at compile-time.  Here is where we should do as much pre-compuation as possible
+        // so we don't have to do that stuff in a loop at evaluation-time.
 
         // Sanity check the static and dynamic arguments of this operator.
 

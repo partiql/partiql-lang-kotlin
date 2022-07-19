@@ -253,10 +253,6 @@ private class AstToLogicalVisitorTransform(
         return INVALID_STATEMENT
     }
 
-    override fun transformStatementDdl(node: PartiqlAst.Statement.Ddl): PartiqlLogical.Statement = abortQueryPlanning(
-        Problem(node.metas.sourceLocationMetaOrUnknown, PlanningProblemDetails.DdlUnsupported)
-    )
-
     override fun transformExprStruct(node: PartiqlAst.Expr.Struct): PartiqlLogical.Expr =
         PartiqlLogical.build {
             struct(

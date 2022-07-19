@@ -1,4 +1,4 @@
-package org.partiql.lang.planner.e2e
+package org.partiql.lang.planner.memorydb
 
 import org.partiql.lang.ast.DeleteOp.name
 import org.partiql.lang.eval.BindingCase

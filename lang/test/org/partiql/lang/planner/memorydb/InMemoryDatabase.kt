@@ -1,4 +1,4 @@
-package org.partiql.lang.planner.e2e
+package org.partiql.lang.planner.memorydb
 
 import org.partiql.lang.ION
 import org.partiql.lang.eval.BindingCase
@@ -14,10 +14,6 @@ class TableMetadata(val tableId: UUID, val name: String, val primaryKeyFields: L
  * in the simplest manner possible.
  *
  * This database supports basic SFW and DML operations.
- *
- * A note on the separation of concerns: in a production system you'd probably want separate interfaces providing
- * to access to database schema (metadata) and its actual data.  This is intended to just be a simple demo, so we don't do
- * that here.  DL TODO?
  */
 class InMemoryDatabase {
     val valueFactory = ExprValueFactory.standard(ION)
@@ -63,7 +59,7 @@ class InMemoryDatabase {
             // or there's a bug in the query planner and/or one of the custom passes.
             ?: error("Table with id '$tableId' does not exist!")
 
-    fun tableRowCount(tableId: UUID) =
+    fun getRowCount(tableId: UUID) =
         getTable(tableId).size
 
     fun tableContainsKey(tableId: UUID, key: ExprValue) =
@@ -82,7 +78,7 @@ class InMemoryDatabase {
     }
 
     /** Gets a [Sequence] for the specified table. */
-    fun getFullScanIteratable(tableId: UUID): Sequence<ExprValue> = getTable(tableId)
+    fun getFullScanSequence(tableId: UUID): Sequence<ExprValue> = getTable(tableId)
 
     fun getRecordByKey(tableId: UUID, key: ExprValue): ExprValue? {
         val targetTable = getTable(tableId)

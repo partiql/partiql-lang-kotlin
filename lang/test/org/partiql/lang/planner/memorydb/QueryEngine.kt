@@ -1,4 +1,4 @@
-package org.partiql.lang.planner.e2e
+package org.partiql.lang.planner.memorydb
 
 import com.amazon.ionelement.api.toIonValue
 import org.partiql.lang.ION
@@ -17,7 +17,7 @@ import org.partiql.lang.planner.PartiqlPhysicalPass
 import org.partiql.lang.planner.PlannerPassResult
 import org.partiql.lang.planner.PlannerPipeline
 import org.partiql.lang.planner.QueryResult
-import org.partiql.lang.planner.e2e.operators.GetByKeyProjectRelationalOperatorFactory
+import org.partiql.lang.planner.memorydb.operators.GetByKeyProjectRelationalOperatorFactory
 import org.partiql.lang.planner.StaticTypeResolver
 import org.partiql.lang.planner.transforms.optimizations.createFilterScanToKeyLookupPass
 import org.partiql.lang.planner.transforms.optimizations.createRemoveUselessAndsPass
@@ -83,7 +83,7 @@ class QueryEngine(val db: InMemoryDatabase) {
 
             val tableId = UUID.fromString(bindingName.name)
             return db.valueFactory.newBag(
-                db.getFullScanIteratable(tableId)
+                db.getFullScanSequence(tableId)
             )
         }
     }
@@ -104,7 +104,7 @@ class QueryEngine(val db: InMemoryDatabase) {
 
         addRelationalOperatorFactory(GetByKeyProjectRelationalOperatorFactory())
 
-        // DL TODO: push-down filters on top of scans
+        // TODO: push-down filters on top of scans before this pass.
         addPhysicalPlanPass(
             createFilterScanToKeyLookupPass(
                 customOperatorName = GET_BY_KEY_PROJECT_IMPL_NAME,
@@ -122,7 +122,7 @@ class QueryEngine(val db: InMemoryDatabase) {
                         )
                     }
                 }
-            )
+            ).debuggable("Filter/scan pair replaced with $GET_BY_KEY_PROJECT_IMPL_NAME ")
         )
 
         // Note that the order of the following plans is relevant--the "remove useless filters" pass
