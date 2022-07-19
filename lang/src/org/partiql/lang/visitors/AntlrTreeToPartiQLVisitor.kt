@@ -188,6 +188,54 @@ class AntlrTreeToPartiQLVisitor(val ion: IonSystem) : PartiQLBaseVisitor<Partiql
         return PartiqlAst.FromSource.Scan(expr, asAlias = null, byAlias = null, atAlias = null)
     }
 
+    // Note: Same as QualifiedRefJoin
+    // Note: We have a weird conditional where we changes the LHS and RHS if the RHS is a nested join
+    override fun visitTableRefJoin(ctx: PartiQLParser.TableRefJoinContext): PartiqlAst.PartiqlAstNode {
+        val lhs = visit(ctx.tableReference()) as PartiqlAst.FromSource
+        val joinType = visitJoinType(ctx.joinType())
+        val rhs = visit(ctx.joinRhs()) as PartiqlAst.FromSource
+        val predicate = if (ctx.joinSpec() != null) visit(ctx.joinSpec()) as PartiqlAst.Expr else null
+        return when (ctx.joinRhs()) {
+            is PartiQLParser.JoinRhsTableJoinedContext -> PartiqlAst.BUILDER().join(joinType, rhs, lhs, predicate)
+            else -> PartiqlAst.BUILDER().join(joinType, lhs, rhs, predicate)
+        }
+    }
+
+    // Note: Same as TableRefJoin
+    // Note: We have a weird conditional where we changes the LHS and RHS if the RHS is a nested join
+    override fun visitQualifiedRefJoin(ctx: PartiQLParser.QualifiedRefJoinContext): PartiqlAst.PartiqlAstNode {
+        val lhs = visit(ctx.tableReference()) as PartiqlAst.FromSource
+        val joinType = visitJoinType(ctx.joinType())
+        val rhs = visit(ctx.joinRhs()) as PartiqlAst.FromSource
+        val predicate = if (ctx.joinSpec() != null) visit(ctx.joinSpec()) as PartiqlAst.Expr else null
+        return when (ctx.joinRhs()) {
+            is PartiQLParser.JoinRhsTableJoinedContext -> PartiqlAst.BUILDER().join(joinType, rhs, lhs, predicate)
+            else -> PartiqlAst.BUILDER().join(joinType, lhs, rhs, predicate)
+        }
+    }
+
+    override fun visitJoinSpecOn(ctx: PartiQLParser.JoinSpecOnContext): PartiqlAst.Expr =
+        visit(ctx.exprQuery()) as PartiqlAst.Expr
+
+    override fun visitJoinType(ctx: PartiQLParser.JoinTypeContext): PartiqlAst.JoinType {
+        return when {
+            ctx.LEFT() != null -> PartiqlAst.JoinType.Left()
+            ctx.RIGHT() != null -> PartiqlAst.JoinType.Right()
+            ctx.INNER() != null -> PartiqlAst.JoinType.Inner()
+            ctx.FULL() != null -> PartiqlAst.JoinType.Full()
+            ctx.OUTER() != null -> PartiqlAst.JoinType.Full()
+            else -> PartiqlAst.JoinType.Inner()
+        }
+    }
+
+    override fun visitJoinRhsTableJoined(ctx: PartiQLParser.JoinRhsTableJoinedContext): PartiqlAst.PartiqlAstNode {
+        return visit(ctx.tableJoined())
+    }
+
+    override fun visitNestedTableJoined(ctx: PartiQLParser.NestedTableJoinedContext): PartiqlAst.PartiqlAstNode {
+        return visit(ctx.tableJoined())
+    }
+
     override fun visitExprTermBag(ctx: PartiQLParser.ExprTermBagContext): PartiqlAst.Expr.Bag {
         val exprList = ctx.exprQuery().map { exprQuery -> visit(exprQuery) as PartiqlAst.Expr }
         return PartiqlAst.Expr.Bag(exprList)
