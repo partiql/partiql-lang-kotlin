@@ -111,7 +111,10 @@ class PartiQLParserTest {
                 "SELECT * FROM a FULL JOIN c ON id",
                 "SELECT * FROM a FULL JOIN (b FULL JOIN c ON d) ON e",
                 "SELECT x FROM A INNER JOIN (B INNER JOIN (C INNER JOIN D ON C = D) ON B = C) ON A = B",
-                "SELECT x FROM A INNER JOIN (B RIGHT OUTER JOIN (C INNER JOIN D ON C = D) ON B = C) ON A = B"
+                "SELECT x FROM A INNER JOIN (B RIGHT OUTER JOIN (C INNER JOIN D ON C = D) ON B = C) ON A = B",
+                "<< { 'a': 1 }>>",
+                "<< { a: 1 }>>",
+                "<< { 2: 1 }>>"
             )
             return queries
         }
