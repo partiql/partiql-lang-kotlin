@@ -85,12 +85,12 @@ class PartiQLParser(
             line: Int,
             charPositionInLine: Int,
             msg: String,
-            e: RecognitionException
+            e: RecognitionException?
         ) {
             throw ParseException(msg, e)
         }
 
-        class ParseException(msg: String, cause: Throwable) : RuntimeException(msg, cause)
+        class ParseException(msg: String, cause: Throwable? = null) : RuntimeException(msg, cause)
         companion object {
             val INSTANCE = ParseErrorListener()
         }

@@ -41,7 +41,7 @@ import org.partiql.lang.util.softAssert
 import org.partiql.pig.runtime.toIonElement
 
 abstract class SqlParserTestBase : TestBase() {
-    protected val parser = SqlParser(ion, CUSTOM_TEST_TYPES)
+    protected val parser = PartiQLParser(ion, CUSTOM_TEST_TYPES)
 
     protected fun parse(source: String): PartiqlAst.Statement = parser.parseAstStatement(source)
 
@@ -129,7 +129,9 @@ abstract class SqlParserTestBase : TestBase() {
     ) {
         // Check for V0 Ast
         val actualStatement = parse(source)
+        println("Actual Statement: $actualStatement")
         val expectedV0AstSexp = loadIonSexp(expectedV0Ast)
+        println("Expected V0 Ast Sexp: $expectedV0AstSexp")
         serializeAssert(AstVersion.V0, actualStatement.toExprNode(ion), expectedV0AstSexp, source)
 
         // Check for PIG Ast
@@ -147,14 +149,17 @@ abstract class SqlParserTestBase : TestBase() {
         expectedPigBuilder: PartiqlAst.Builder.() -> PartiqlAst.PartiqlAstNode
     ) {
         val expectedPigAst = PartiqlAst.build { expectedPigBuilder() }.toIonElement().toString()
+        println("Expected Pig AST: $expectedPigAst")
 
         // Refer to comments inside the main body of the following function to see what checks are performed.
         assertExpression(source, expectedSexpAstV0, expectedPigAst)
     }
 
     private fun serializeAssert(astVersion: AstVersion, actualExprNode: ExprNode, expectedIonSexp: IonSexp, source: String) {
+        println("Actual Expr Node: $actualExprNode")
         // Check equals for actual value and expected value after transformation: ExprNode -> IonSexp
         val actualSexpAstWithoutMetas = AstSerializer.serialize(actualExprNode, astVersion, ion).filterMetaNodes()
+        println("Actual Sexp Ast Without Metas: $actualSexpAstWithoutMetas")
         assertSexpEquals(expectedIonSexp, actualSexpAstWithoutMetas, "$astVersion AST, $source")
 
         // Check equals for actual value and expected value after transformation: IonSexp -> ExprNode
@@ -236,6 +241,9 @@ abstract class SqlParserTestBase : TestBase() {
                 fail("Expected ParserException but there was no Exception")
             } catch (pex: ParserException) {
                 checkErrorAndErrorContext(errorCode, pex, expectErrorContextValues)
+            } catch (ignore: PartiQLParser.ParseErrorListener.ParseException) {
+                // TODO: Check the error location and more
+                // Ignore
             } catch (ex: Exception) {
                 fail("Expected ParserException but a different exception was thrown \n\t  $ex")
             }
