@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 session state such as current user and transaction details available to custom [ExprFunction] implementations 
 and custom physical operator implementations.
 - Renamed PassResult to PlannerPassResult for clarity. (This is part of the experimental query planner API.)
+- Renamed PassResult to PlannerPassResult for clarity. (This is part of the experimental query planner API.)
 - The `PlannerPipeline` API now has experimental and partial support for `INSERT` and `DELETE` DML statements.
   Examples of supported statements include:
   - `INSERT INTO foo << { 'id': 1, 'name': 'bob' }, { 'id': 2, 'name' : 'sue' } >>` (multi record insert)

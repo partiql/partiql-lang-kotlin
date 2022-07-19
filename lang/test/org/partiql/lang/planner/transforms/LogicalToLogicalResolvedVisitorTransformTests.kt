@@ -110,11 +110,10 @@ class LogicalToLogicalResolvedVisitorTransformTests {
     private val parser = SqlParser(ion)
 
     private fun runTestCase(tc: TestCase) {
-        val plan: PartiqlLogical.Plan = assertDoesNotThrow {
-            parser.parseAstStatement(tc.sql).toLogicalPlan()
-        }
-
         val problemHandler = ProblemCollector()
+        val plan: PartiqlLogical.Plan = assertDoesNotThrow {
+            parser.parseAstStatement(tc.sql).toLogicalPlan(problemHandler)
+        }
 
         when (tc.expectation) {
             is Expectation.Success -> {

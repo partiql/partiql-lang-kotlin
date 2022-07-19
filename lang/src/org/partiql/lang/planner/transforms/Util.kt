@@ -32,7 +32,7 @@ const val PLAN_VERSION_NUMBER = "0.0"
 internal fun errAstNotNormalized(message: String): Nothing =
     error("$message - have the basic visitor transforms been executed first?")
 
-/** Returns true if the given expression is `(lit true)`. */
+/** Returns true if the receiver is `(lit true)`. */
 fun PartiqlPhysical.Expr.isLitTrue() =
     when (this) {
         is PartiqlPhysical.Expr.Lit -> this.value.type == ElementType.BOOL && this.value.booleanValue

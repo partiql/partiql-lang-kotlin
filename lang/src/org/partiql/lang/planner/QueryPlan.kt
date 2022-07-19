@@ -43,7 +43,7 @@ sealed class QueryResult {
         /**
          * The rows to be inserted or deleted.
          *
-         * In the case of delete, the rows must contain at least the fields which comprise the primary key.
+         * In the case of delete, the rows must contain at least the fields which comprise the table's primary key.
          */
         val rows: Iterable<ExprValue>
     ) : QueryResult()
@@ -65,7 +65,7 @@ private fun errMissing(fieldName: String): Nothing =
 /**
  * Converts an [ExprValue] which is the result of a DML query to an instance of [DmlCommand].
  *
- * Format of a DML command:
+ * Format of a such an [ExprValue]:
  *
  * ```
  * {
@@ -76,10 +76,10 @@ private fun errMissing(fieldName: String): Nothing =
  * ```
  *
  * Where:
- *  - `<action>` is either `insert` or `delete`
+ *  - `<action>` is either `insert` or `delete` TODO: update
  *  - `<target_unique_id>` is a string or symbol containing the unique identifier of the table to be effected
  *  by the DML statement.
- *  - `<rows>` is a list of bag containing the rows (structs) effected by the DML statement.
+ *  - `<rows>` is a bag or list containing the rows (structs) effected by the DML statement.
  *      - When `<action>` is `insert` this is the rows to be inserted.
  *      - When `<action>` is `delete` this is the rows to be deleted.  Non-primary key fields may be elided, but the
  *      default behavior is to include all fields because PartiQL does not yet know about primary keys.

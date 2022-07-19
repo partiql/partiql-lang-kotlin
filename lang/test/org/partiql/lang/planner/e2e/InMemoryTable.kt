@@ -32,6 +32,10 @@ class InMemoryTable(
 
     val size: Int get() = rows.size
 
+    fun truncate() {
+        rows.clear()
+    }
+
     operator fun get(key: ExprValue): ExprValue? {
         require(key.type == ExprValueType.LIST) { "specified key must have type ExprValueType.LIST " }
         return rows[key]

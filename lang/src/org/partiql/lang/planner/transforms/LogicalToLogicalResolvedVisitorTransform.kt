@@ -103,7 +103,7 @@ private sealed class ResolvedVariable {
      * This is `internal` because [index] is an implementation detail that shouldn't be accessible outside of this
      * library.
      */
-    internal data class LocalVariable(val index: Int) : ResolvedVariable()
+    data class LocalVariable(val index: Int) : ResolvedVariable()
 
     /** A failure case, indicates that resolution did not match any variable. */
     object Undefined : ResolvedVariable()

@@ -164,7 +164,7 @@ may then be further optimized by selecting better implementations of each operat
         (sum path_step
             // `someRoot[<expr>]`, or `someRoot.someField` which is equivalent to `someRoot['someField']`.
             (path_expr index::expr case::case_sensitivity)
-            // `someRoot.[*]`]
+            // `someRoot[*]`]
             (path_wildcard)
             // `someRoot.*`
             (path_unpivot))
@@ -677,36 +677,35 @@ may then be further optimized by selecting better implementations of each operat
             )
         )
 
-        // DL TOOD: document everything
         (include
-            (product dml_target
-                target::expr // permuted in resolved domain to be table uniqueid.
-            )
-
             // Indicates kind of DML operation.
             (sum dml_operation
-                // INSERT INTO
                 (dml_insert)
-
-                // DELETE FROM
                 (dml_delete)
-
                 // TODO:
                 // (dml_update)
             )
         )
 
-        // Redefine statement.dml to be a simple simple subset of the full DML functionality expressed with
-        // the PartiQL's DML syntax.  This is factored minimally to support `INSERT INTO` and
-        // `DELETE FROM ... [WHERE <predicate>]` but this may neeed refactoring when `FROM ... UPDATE` and
-        // `UPDATE` is supported later.
+        // Redefine statement.dml to be a simpler simple subset of the full DML functionality expressed with
+        // the PartiQL's DML syntax.  Full functionality is out of scope for now.  This is factored minimally to
+        // support `INSERT INTO` and `DELETE FROM ... [WHERE <predicate>]` but this may need refactoring when
+        // `FROM ... UPDATE` and `UPDATE` is supported later.
         //need refactoring when PartiQL's `UPDATE` is supported later.
         (with statement
             (exclude dml)
             (include
                 // A DML operation, such as `INSERT`, `UPDATE` or `DELETE`
                 (dml
-                    target::dml_target
+                    // The target is an expression that is indicates the table whose data is to be manipulated.
+                    // In practice this can be an identifier or a simplified path expression consisting of only
+                    // literal path steps (and with no wildcard or unpivot operators).  This restriction must
+                    // be enforced by the PartiQL implementation.
+                    // TODO: consider ways to reduce the domain of acceptable values here.  Of course, we it would
+                    // be possible to create a `sum` type like expression but containing only the valid DML targets,
+                    // but would might necessitate duplicating some logic related to variable resolution which is
+                    // already implemented for standard expressions.  This is out of scope for current efforts.
+                    target::expr
                     operation::dml_operation
                     rows::expr
                 )
@@ -826,7 +825,7 @@ may then be further optimized by selecting better implementations of each operat
 
         // drop DML stuff added in partiql_logical (we expect these to be rewritten into pure bexprs by the time
         // we transform a query to this domain).
-        (exclude dml_target dml_operation)
+        (exclude dml_operation)
         (with statement
             (exclude dml)
             (include

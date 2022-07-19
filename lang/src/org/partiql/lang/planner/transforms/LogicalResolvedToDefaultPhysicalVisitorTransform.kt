@@ -4,17 +4,22 @@ import com.amazon.ionelement.api.ionSymbol
 import org.partiql.lang.domains.PartiqlLogicalResolved
 import org.partiql.lang.domains.PartiqlLogicalResolvedToPartiqlPhysicalVisitorTransform
 import org.partiql.lang.domains.PartiqlPhysical
+import org.partiql.lang.errors.Problem
+import org.partiql.lang.errors.ProblemHandler
+import org.partiql.lang.eval.physical.sourceLocationMetaOrUnknown
 import org.partiql.lang.planner.DML_COMMAND_FIELD_ACTION
 import org.partiql.lang.planner.DML_COMMAND_FIELD_ROWS
 import org.partiql.lang.planner.DML_COMMAND_FIELD_TARGET_UNIQUE_ID
 import org.partiql.lang.planner.DmlAction
+import org.partiql.lang.planner.PlanningProblemDetails
+import java.awt.SystemColor.text
 
 /**
  * Transforms an instance of [PartiqlLogicalResolved.Statement] to [PartiqlPhysical.Statement],
  * specifying `(impl default)` for each relational operator.
  */
-internal fun PartiqlLogicalResolved.Plan.toDefaultPhysicalPlan() =
-    LogicalResolvedToDefaultPhysicalVisitorTransform().transformPlan(this)
+internal fun PartiqlLogicalResolved.Plan.toDefaultPhysicalPlan(problemHandler: ProblemHandler) =
+    LogicalResolvedToDefaultPhysicalVisitorTransform(problemHandler).transformPlan(this)
 
 internal const val DEFAULT_IMPL_NAME = "default"
 internal val DEFAULT_IMPL = PartiqlPhysical.build { impl(DEFAULT_IMPL_NAME) }
@@ -25,7 +30,9 @@ internal fun PartiqlPhysical.Builder.structField(name: String, value: String) =
 internal fun PartiqlPhysical.Builder.structField(name: String, value: PartiqlPhysical.Expr) =
     structField(lit(ionSymbol(name)), value)
 
-internal class LogicalResolvedToDefaultPhysicalVisitorTransform : PartiqlLogicalResolvedToPartiqlPhysicalVisitorTransform() {
+internal class LogicalResolvedToDefaultPhysicalVisitorTransform(
+    val problemHandler: ProblemHandler
+) : PartiqlLogicalResolvedToPartiqlPhysicalVisitorTransform() {
 
     /** Copies [PartiqlLogicalResolved.Bexpr.Scan] to [PartiqlPhysical.Bexpr.Scan], adding the default impl. */
     override fun transformBexprScan(node: PartiqlLogicalResolved.Bexpr.Scan): PartiqlPhysical.Bexpr {
@@ -105,16 +112,6 @@ internal class LogicalResolvedToDefaultPhysicalVisitorTransform : PartiqlLogical
         }
     }
 
-    private fun PartiqlLogicalResolved.DmlTarget.asActionTarget(): PartiqlPhysical.Expr.Lit =
-        when (val target = this.target) {
-            is PartiqlLogicalResolved.Expr.GlobalId ->
-                PartiqlPhysical.build {
-                    lit(ionSymbol(target.uniqueId.text))
-                }
-            else ->
-                TODO("User-friendly error for invalid data manipulation target: $target")
-        }
-
     override fun transformStatementDml(node: PartiqlLogicalResolved.Statement.Dml): PartiqlPhysical.Statement {
         val action = when (node.operation) {
             is PartiqlLogicalResolved.DmlOperation.DmlInsert -> DmlAction.INSERT
@@ -134,11 +131,25 @@ internal class LogicalResolvedToDefaultPhysicalVisitorTransform : PartiqlLogical
         }
     }
 
-    override fun transformStatementQuery(node: PartiqlLogicalResolved.Statement.Query): PartiqlPhysical.Statement =
-        PartiqlPhysical.build {
-            query(
-                transformExpr(node.expr),
-                metas = node.metas
-            )
+    private fun PartiqlLogicalResolved.Expr.asActionTarget(): PartiqlPhysical.Expr.Lit =
+        when (this) {
+            is PartiqlLogicalResolved.Expr.GlobalId ->
+                PartiqlPhysical.build {
+                    lit(ionSymbol(this@asActionTarget.uniqueId.text))
+                }
+            else -> {
+                problemHandler.handleProblem(
+                    Problem(
+                        this@asActionTarget.metas.sourceLocationMetaOrUnknown,
+                        PlanningProblemDetails.InvalidDmlTarget
+                    )
+                )
+                PartiqlPhysical.build {
+                    lit(ionSymbol("invalid dml target - do not run"))
+                }
+            }
         }
+
+    override fun transformStatementQuery(node: PartiqlLogicalResolved.Statement.Query): PartiqlPhysical.Statement =
+        PartiqlPhysical.build { query(transformExpr(node.expr), node.metas) }
 }

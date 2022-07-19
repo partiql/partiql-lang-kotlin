@@ -12,6 +12,7 @@ import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.errors.Problem
 import org.partiql.lang.errors.ProblemDetails
+import org.partiql.lang.eval.BindingName
 import org.partiql.lang.util.SexpAstPrettyPrinter
 
 /**
@@ -44,8 +45,14 @@ fun assertSexpEquals(
     if (!expectedValue.equals(actualValue)) {
         Assert.fail(
             "Expected and actual values do not match: $message\n" +
-                    "Expected:\n${SexpAstPrettyPrinter.format(expectedValue.asAnyElement().toIonValue(ION))}\n" +
-                    "Actual:\n${SexpAstPrettyPrinter.format(actualValue.asAnyElement().toIonValue(ION))}"
+                "Expected:\n${SexpAstPrettyPrinter.format(expectedValue.asAnyElement().toIonValue(ION))}\n" +
+                "Actual:\n${SexpAstPrettyPrinter.format(actualValue.asAnyElement().toIonValue(ION))}"
         )
     }
 }
+
+fun unimplementedProblem(featureName: String, line: Int, col: Int) =
+    Problem(
+        SourceLocationMeta(line.toLong(), col.toLong()),
+        PlanningProblemDetails.UnimplementedFeature(featureName)
+    )

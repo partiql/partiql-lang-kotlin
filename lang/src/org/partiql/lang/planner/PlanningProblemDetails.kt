@@ -14,6 +14,7 @@ sealed class PlanningProblemDetails(
     val messageFormatter: () -> String
 ) : ProblemDetails {
 
+    override fun toString() = message
     override val message: String get() = messageFormatter()
 
     data class ParseError(val parseErrorMessage: String) :
@@ -50,17 +51,11 @@ sealed class PlanningProblemDetails(
             { "The syntax at this location is valid but utilizes unimplemented PartiQL feature '$featureName'" }
         )
 
-    data class DisallowedFeature(val featureName: String) :
-        PlanningProblemDetails(
-            ProblemSeverity.ERROR,
-            { "Use of disallowed PartiQL feature: '$featureName'" }
-        )
-
     object InsertValueDisallowed :
         PlanningProblemDetails(
             ProblemSeverity.ERROR,
             {
-                "Use of `INSERT INTO <table> VALUE <expr>` is not allowed." +
+                "Use of `INSERT INTO <table> VALUE <expr>` is not allowed. " +
                     "Please use the `INSERT INTO <table> << <expr> >>` form instead."
             }
         )
@@ -77,15 +72,6 @@ sealed class PlanningProblemDetails(
     object InvalidDmlTarget :
         PlanningProblemDetails(
             ProblemSeverity.ERROR,
-            { "Expression is not a valid DML target.  Hint: specify a table here." }
-        )
-
-    object InvalidUseOfRemove : PlanningProblemDetails(ProblemSeverity.ERROR, { "Invalid use of REMOVE." })
-    object InvalidUseOfSet : PlanningProblemDetails(ProblemSeverity.ERROR, { "Invalid use of SET." })
-
-    object DdlUnsupported :
-        PlanningProblemDetails(
-            ProblemSeverity.ERROR,
-            { "DDL statements such as CREATE and DROP are not supported by PartiQL's query planner." }
+            { "Expression is not a valid DML target.  Hint: only table names are allowed here." }
         )
 }
