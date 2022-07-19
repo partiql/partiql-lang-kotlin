@@ -164,7 +164,7 @@ exprTermTuple
     ;
     
 exprPair
-    : exprQuery COLON exprQuery
+    : lhs=exprQuery COLON rhs=exprQuery
     ;
     
 varRefExpr
