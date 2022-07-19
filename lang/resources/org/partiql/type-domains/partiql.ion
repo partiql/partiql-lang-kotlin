@@ -164,7 +164,7 @@ may then be further optimized by selecting better implementations of each operat
         (sum path_step
             // `someRoot[<expr>]`, or `someRoot.someField` which is equivalent to `someRoot['someField']`.
             (path_expr index::expr case::case_sensitivity)
-            // `someRoot.[*]`]
+            // `someRoot[*]`]
             (path_wildcard)
             // `someRoot.*`
             (path_unpivot))
@@ -679,10 +679,6 @@ may then be further optimized by selecting better implementations of each operat
 
         // DL TOOD: document everything
         (include
-            (product dml_target
-                target::expr // permuted in resolved domain to be table uniqueid.
-            )
-
             // Indicates kind of DML operation.
             (sum dml_operation
                 // INSERT INTO
@@ -698,7 +694,7 @@ may then be further optimized by selecting better implementations of each operat
 
         // Redefine statement.dml to be a simple simple subset of the full DML functionality expressed with
         // the PartiQL's DML syntax.  This is factored minimally to support `INSERT INTO` and
-        // `DELETE FROM ... [WHERE <predicate>]` but this may neeed refactoring when `FROM ... UPDATE` and
+        // `DELETE FROM ... [WHERE <predicate>]` but this may need refactoring when `FROM ... UPDATE` and
         // `UPDATE` is supported later.
         //need refactoring when PartiQL's `UPDATE` is supported later.
         (with statement
@@ -706,7 +702,7 @@ may then be further optimized by selecting better implementations of each operat
             (include
                 // A DML operation, such as `INSERT`, `UPDATE` or `DELETE`
                 (dml
-                    target::dml_target
+                    target::expr
                     operation::dml_operation
                     rows::expr
                 )
@@ -826,7 +822,7 @@ may then be further optimized by selecting better implementations of each operat
 
         // drop DML stuff added in partiql_logical (we expect these to be rewritten into pure bexprs by the time
         // we transform a query to this domain).
-        (exclude dml_target dml_operation)
+        (exclude dml_operation)
         (with statement
             (exclude dml)
             (include

@@ -4,10 +4,10 @@ import com.amazon.ion.system.IonSystemBuilder
 import com.amazon.ionelement.api.ionBool
 import com.amazon.ionelement.api.ionInt
 import com.amazon.ionelement.api.ionString
-import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.assertDoesNotThrow
-import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.ast.SourceLocationMeta
@@ -15,8 +15,11 @@ import org.partiql.lang.domains.PartiqlLogical
 import org.partiql.lang.domains.id
 import org.partiql.lang.domains.pathExpr
 import org.partiql.lang.errors.Problem
-import org.partiql.lang.planner.PlanningAbortedException
+import org.partiql.lang.errors.ProblemCollector
+import org.partiql.lang.errors.ProblemHandler
+import org.partiql.lang.errors.ProblemSeverity
 import org.partiql.lang.planner.PlanningProblemDetails
+import org.partiql.lang.planner.unimplementedProblem
 import org.partiql.lang.syntax.SqlParser
 import org.partiql.lang.util.ArgumentsProviderBase
 
@@ -28,20 +31,27 @@ class AstToLogicalVisitorTransformTests {
     private val ion = IonSystemBuilder.standard().build()
     private val parser = SqlParser(ion)
 
-    private fun parseAndTransform(sql: String): PartiqlLogical.Statement {
+    private fun parseAndTransform(sql: String, problemHandler: ProblemHandler): PartiqlLogical.Statement {
         val parseAstStatement = parser.parseAstStatement(sql)
         // println(SexpAstPrettyPrinter.format(parseAstStatement.toIonElement().asAnyElement().toIonValue(ion)))
-        return parseAstStatement.toLogicalPlan().stmt
+        return parseAstStatement.toLogicalPlan(problemHandler).stmt
     }
 
     data class TestCase(val sql: String, val expectedAlgebra: PartiqlLogical.Statement)
 
     private fun runTestCase(tc: TestCase) {
+        val problemHandler = ProblemCollector()
         val algebra = assertDoesNotThrow("Parsing TestCase.sql should not throw") {
-            parseAndTransform(tc.sql)
+            parseAndTransform(tc.sql, problemHandler)
         }
+        assertEquals(
+            0,
+            problemHandler.problems.filter { it.details.severity == ProblemSeverity.WARNING }.size,
+            "No problems were expected"
+        )
+
         // println(SexpAstPrettyPrinter.format(algebra.toIonElement().asAnyElement().toIonValue(ion)))
-        Assertions.assertEquals(tc.expectedAlgebra, algebra)
+        assertEquals(tc.expectedAlgebra, algebra)
     }
 
     @ParameterizedTest
@@ -117,7 +127,7 @@ class AstToLogicalVisitorTransformTests {
     class ArgumentsForToLogicalDmlTests : ArgumentsProviderBase() {
         private val insertIntoFooBagOf1 = PartiqlLogical.build {
             dml(
-                dmlTarget(id("foo", caseInsensitive(), unqualified())),
+                id("foo", caseInsensitive(), unqualified()),
                 dmlInsert(),
                 bag(lit(ionInt(1)))
             )
@@ -131,7 +141,7 @@ class AstToLogicalVisitorTransformTests {
                 "INSERT INTO foo SELECT x.* FROM 1 AS x",
                 PartiqlLogical.build {
                     dml(
-                        dmlTarget(id("foo", caseInsensitive(), unqualified())),
+                        id("foo", caseInsensitive(), unqualified()),
                         dmlInsert(),
                         bindingsToValues(
                             struct(structFields(id("x", caseInsensitive(), unqualified()))),
@@ -144,7 +154,7 @@ class AstToLogicalVisitorTransformTests {
                 "DELETE FROM y AS y",
                 PartiqlLogical.build {
                     dml(
-                        dmlTarget(id("y", caseInsensitive(), unqualified())),
+                        id("y", caseInsensitive(), unqualified()),
                         dmlDelete(),
                         bindingsToValues(
                             id("y", caseSensitive(), unqualified()),
@@ -157,7 +167,7 @@ class AstToLogicalVisitorTransformTests {
                 "DELETE FROM y AS y WHERE 1=1",
                 PartiqlLogical.build {
                     dml(
-                        dmlTarget(id("y", caseInsensitive(), unqualified())),
+                        id("y", caseInsensitive(), unqualified()),
                         dmlDelete(),
                         bindingsToValues(
                             id("y", caseSensitive(), unqualified()),
@@ -175,27 +185,26 @@ class AstToLogicalVisitorTransformTests {
 
     data class UnimplementedFeatureTestCase(val sql: String, val expectedProblem: Problem)
     @ParameterizedTest
-    @ArgumentsSource(ArgumentsForToToDoTests::class)
+    @ArgumentsSource(ArgumentsForUnimplementedFeatureTests::class)
     fun `unimplemented feautres are blocked`(tc: UnimplementedFeatureTestCase) {
-        val ex = assertThrows<PlanningAbortedException>("Parsing TestCase.sql should throw PlanningAbortedException") {
-            parseAndTransform(tc.sql)
+        val problemHandler = ProblemCollector()
+        assertDoesNotThrow("Parsing TestCase.sql should not throw") {
+            parseAndTransform(tc.sql, problemHandler)
         }
 
-        assertEquals(tc.expectedProblem, ex.problem)
+        assertFalse(problemHandler.hasWarnings, "didn't expect any warnings")
+        assertTrue(problemHandler.hasErrors, "at least one error was expected")
+
+        assertEquals(tc.expectedProblem, problemHandler.problems.first())
     }
 
     /**
-     * A list of statements that cannot be converted into the logical algebra yet by [AstToLogicalVisitorTransform].
+     * Below are all statements that cannot be converted into the logical algebra yet by [AstToLogicalVisitorTransform].
      * This is temporary--in the near future, we will accomplish this with a better language restriction feature which
      * blocks all language features except those explicitly allowed.  This will be needed to constrain possible queries
      * to features supported by specific PartiQL-services.
      */
-    class ArgumentsForToToDoTests : ArgumentsProviderBase() {
-        private fun unimplementedProblem(featureName: String, line: Int, col: Int) =
-            Problem(
-                SourceLocationMeta(line.toLong(), col.toLong()),
-                PlanningProblemDetails.UnimplementedFeature(featureName)
-            )
+    class ArgumentsForUnimplementedFeatureTests : ArgumentsProviderBase() {
 
         override fun getParameters() = listOf(
             // SELECT queries
@@ -212,15 +221,20 @@ class AstToLogicalVisitorTransformTests {
             UnimplementedFeatureTestCase("DROP INDEX bar ON foo", unimplementedProblem("DROP INDEX", 1, 1)),
 
             // DML
-            // DL TODO: include DELETE with non-scan or filterrelational operators
-            // DL TODO: TodoTestCase("INSERT INTO foo VALUES(1)"),
             UnimplementedFeatureTestCase("FROM x AS xx INSERT INTO foo VALUES (1, 2)", unimplementedProblem("UPDATE / INSERT", 1, 14)),
             UnimplementedFeatureTestCase("FROM x AS xx SET k = 5", unimplementedProblem("SET", 1, 14)),
             UnimplementedFeatureTestCase("UPDATE x SET k = 5", unimplementedProblem("SET", 1, 10)),
             UnimplementedFeatureTestCase("UPDATE x REMOVE k", unimplementedProblem("REMOVE", 1, 10)),
             UnimplementedFeatureTestCase("UPDATE x INSERT INTO k << 1 >>", unimplementedProblem("UPDATE / INSERT", 1, 10)),
+
+            UnimplementedFeatureTestCase(
+                "INSERT INTO x VALUE 1",
+                Problem(SourceLocationMeta(1, 1), PlanningProblemDetails.InsertValueDisallowed)
+            ),
+            UnimplementedFeatureTestCase(
+                "INSERT INTO x VALUES (1, 2, 3)",
+                Problem(SourceLocationMeta(1, 1), PlanningProblemDetails.InsertValuesDisallowed)
+            )
         )
     }
-    // DL TODO: include AT, BY aliases
-    // DL TODO: scan AstToLogicalVisitorTransform.kt for additional error cases and test them.
 }

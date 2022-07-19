@@ -34,6 +34,10 @@ class InMemoryTable(
 
     val size: Int get() = rows.size
 
+    fun truncate() {
+        rows.clear()
+    }
+
     fun insert(row: ExprValue) {
         require(row.type == ExprValueType.STRUCT) { "Row to be inserted must be a struct" }
 

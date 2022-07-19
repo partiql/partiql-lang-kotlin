@@ -14,8 +14,8 @@ import org.partiql.lang.errors.ProblemCollector
 import org.partiql.lang.eval.BindingCase
 import org.partiql.lang.eval.builtins.DYNAMIC_LOOKUP_FUNCTION_NAME
 import org.partiql.lang.eval.sourceLocationMeta
-import org.partiql.lang.planner.createFakeGlobalsResolver
 import org.partiql.lang.planner.PlanningProblemDetails
+import org.partiql.lang.planner.createFakeGlobalsResolver
 import org.partiql.lang.planner.problem
 import org.partiql.lang.syntax.SqlParser
 import org.partiql.lang.util.ArgumentsProviderBase
@@ -110,11 +110,10 @@ class LogicalToLogicalResolvedVisitorTransformTests {
     private val parser = SqlParser(ion)
 
     private fun runTestCase(tc: TestCase) {
-        val plan: PartiqlLogical.Plan = assertDoesNotThrow {
-            parser.parseAstStatement(tc.sql).toLogicalPlan()
-        }
-
         val problemHandler = ProblemCollector()
+        val plan: PartiqlLogical.Plan = assertDoesNotThrow {
+            parser.parseAstStatement(tc.sql).toLogicalPlan(problemHandler)
+        }
 
         when (tc.expectation) {
             is Expectation.Success -> {

@@ -78,6 +78,6 @@ sealed class PlanningProblemDetails(
     object InvalidDmlTarget :
         PlanningProblemDetails(
             ProblemSeverity.ERROR,
-            { "Expression is not a valid DML target.  Hint: specify a table here." }
+            { "Expression is not a valid DML target.  Hint: only table names are allowed here." }
         )
 }

@@ -24,6 +24,9 @@ internal class ProblemCollector : ProblemHandler {
     val hasErrors: Boolean
         get() = problemList.any { it.details.severity == ProblemSeverity.ERROR }
 
+    val hasWarnings: Boolean
+        get() = problemList.any { it.details.severity == ProblemSeverity.WARNING }
+
     override fun handleProblem(problem: Problem) {
         problemList.add(problem)
     }

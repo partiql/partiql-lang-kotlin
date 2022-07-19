@@ -2957,7 +2957,7 @@ class SqlParserTest : SqlParserTestBase() {
 
     @Test
     fun legacyUpdateReturningComplexDml() = assertExpression(
-        "UPDATE x SET k = 5, m = 6 INSERT INTO c VALUE << 1 >> REMOVE a SET l = 3 UPD b WHERE a = b RETURNING MODIFIED OLD a",
+        "UPDATE x SET k = 5, m = 6 INSERT INTO c VALUE << 1 >> REMOVE a SET l = 3 REMOVE b WHERE a = b RETURNING MODIFIED OLD a",
         """
         (dml
             (operations

@@ -4084,7 +4084,7 @@ class SqlParser(
      * If [dmlListTokenSeen] is true, it means it has been encountered at least once before while traversing the parse tree.
      */
     private fun validateTopLevelNodes(
-        node: SqlParser.ParseNode,
+        node: ParseNode,
         level: Int,
         topLevelTokenSeen: Boolean,
         dmlListTokenSeen: Boolean

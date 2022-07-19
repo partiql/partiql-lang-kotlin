@@ -18,5 +18,4 @@ enum class ProblemSeverity {
 interface ProblemDetails {
     val severity: ProblemSeverity
     val message: String
-
 }
