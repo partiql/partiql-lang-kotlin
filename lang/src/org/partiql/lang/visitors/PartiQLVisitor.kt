@@ -657,6 +657,15 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
     override fun visitLiteralDecimal(ctx: PartiQLParser.LiteralDecimalContext): PartiqlAst.PartiqlAstNode =
         PartiqlAst.Expr.Lit(ion.newDecimal(bigDecimalOf(ctx.LITERAL_DECIMAL().text)).toIonElement())
 
+    // TODO: should the function base allow f(), "f"(), @"f"(), and @f()?
+    override fun visitFunctionCall(ctx: PartiQLParser.FunctionCallContext): PartiqlAst.PartiqlAstNode {
+        val name = ctx.symbolPrimitive().getString()
+        val args = ctx.functionCallArg().map { arg -> visit(arg) as PartiqlAst.Expr }
+        return PartiqlAst.BUILDER().call(name, args)
+    }
+
+    override fun visitFunctionCallArg(ctx: PartiQLParser.FunctionCallArgContext): PartiqlAst.Expr = visitExprQuery(ctx.exprQuery())
+
     /**
      *
      * HELPER METHODS
@@ -667,7 +676,7 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         this.IDENTIFIER_AT_UNQUOTED().text.removePrefix("@")
 
     private fun PartiQLParser.VarRefExprIdentAtQuotedContext.toRawString() =
-        this.IDENTIFIER_AT_QUOTED().text.removePrefix("@").trim('"')
+        this.IDENTIFIER_AT_QUOTED().text.removePrefix("@").toPartiQLIdentifier()
 
     private fun PartiQLParser.VarRefExprIdentQuotedContext.toRawString() =
         this.IDENTIFIER_QUOTED().text.toPartiQLIdentifier()
@@ -700,6 +709,8 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         return when (this) {
             is PartiQLParser.SymbolIdentifierQuotedContext -> this.IDENTIFIER_QUOTED().text.toPartiQLIdentifier()
             is PartiQLParser.SymbolIdentifierUnquotedContext -> this.IDENTIFIER().text
+            is PartiQLParser.SymbolIdentifierAtQuotedContext -> this.IDENTIFIER_AT_QUOTED().text.removePrefix("@").toPartiQLIdentifier()
+            is PartiQLParser.SymbolIdentifierAtUnquotedContext -> this.IDENTIFIER_AT_UNQUOTED().text.removePrefix("@")
             else -> "UNKNOWN"
         }
     }
