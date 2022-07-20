@@ -164,7 +164,7 @@ may then be further optimized by selecting better implementations of each operat
         (sum path_step
             // `someRoot[<expr>]`, or `someRoot.someField` which is equivalent to `someRoot['someField']`.
             (path_expr index::expr case::case_sensitivity)
-            // `someRoot.[*]`]
+            // `someRoot[*]`]
             (path_wildcard)
             // `someRoot.*`
             (path_unpivot))
@@ -480,7 +480,7 @@ may then be further optimized by selecting better implementations of each operat
             // `DOUBLE_PRECISION`
             (double_precision_type)
 
-            // `DEICMAL[(<int> [, int])]`.  Elements are precision then scale.
+            // `DECIMAL[(<int> [, int])]`.  Elements are precision then scale.
             (decimal_type precision::(? int) scale::(? int))
 
             // `NUMERIC[(<int> [, int])]`.  Elements are precision then scale.
@@ -638,8 +638,8 @@ may then be further optimized by selecting better implementations of each operat
             // - The `AS`, `AT`, and `BY` sub-clauses in `FROM`
             // - The `AS` sub-clauses in within a `LET` clause.
             // - The `AS` and `AT` names specified with, `PIVOT`, i.e. `PIVOT x AS y AT z`
-            // Note that `AS` aliases specified in a select list (i.e. `SELECT x AS y` are *not* variables, they are
-            // fields.)
+            // Note that `AS` aliases specified in a select list (i.e. `SELECT x AS y`) are *not* variables, they are
+            // fields.
             // Modeling this with a separate node (as opposed to just a symbol) is beneficial because it is easy to
             // identify all variable declarations within a logical plan during tree traversal, and because in later
             // permuted domains we can add information to this type such as the variable's assigned index.
@@ -677,15 +677,44 @@ may then be further optimized by selecting better implementations of each operat
             )
         )
 
+        (include
+            // Indicates kind of DML operation.
+            (sum dml_operation
+                (dml_insert)
+                (dml_delete)
+                // TODO:
+                // (dml_update)
+            )
+        )
+
+        // Redefine statement.dml to be a simpler subset of the full DML functionality expressed with PartiQL's DML
+        // syntax.  Full functionality is out of scope for now.  This is factored minimally to support
+        // `INSERT INTO` and `DELETE FROM ... [WHERE <predicate>]` but this may need refactoring when
+        // `FROM ... UPDATE` and `UPDATE` is supported later.
+        (with statement
+            (exclude dml)
+            (include
+                // A DML operation, such as `INSERT`, `UPDATE` or `DELETE`
+                (dml
+                    // The target is an expression that is indicates the table whose data is to be manipulated.
+                    // In practice this can be an identifier or a simplified path expression consisting of only
+                    // literal path steps (and with no wildcard or unpivot operators).  This restriction must
+                    // be enforced by the PartiQL implementation.
+                    // TODO: consider ways to reduce the domain of acceptable values here.  Of course, we it would
+                    // be possible to create a `sum` type like `expr` but containing only the valid DML targets,
+                    // but that would might necessitate duplicating some logic related to variable resolution which is
+                    // already implemented for standard expressions.  This is out of scope for current efforts.
+                    target::expr
+                    operation::dml_operation
+                    rows::expr
+                )
+            )
+        )
+
         // Nodes excluded below this line will eventually have a representation in the logical algebra, but not
         // initially.
 
-        (with statement
-            (exclude
-                dml
-                ddl
-            )
-        )
+        (with statement (exclude ddl))
 
         (exclude
             group_by
@@ -765,9 +794,9 @@ may then be further optimized by selecting better implementations of each operat
                 // - `uniqueId`: any Ion value that uniquely identifies the global variable, typically a storage
                 // defined UUID or the name of the table in its original letter case.
                 // The value of `uniqueId` is PartiQL integration defined and can be any symbol that uniquely
-                // identifies the global variable.  Examples include database object ids or the alphabetical case
-                // respecting table name found after case-insensitive lookup.
-                (global_id uniqueId::symbol case::case_sensitivity)
+                // identifies the global variable.  Examples include database object ids or the name of the variable
+                // in its the original letter case (as it was defined).
+                (global_id uniqueId::symbol)
             )
         )
     )
@@ -791,6 +820,16 @@ may then be further optimized by selecting better implementations of each operat
             // implementation.  These values are made available to the implementation at compile-time and evaluation
             // time.
             (product impl name::symbol static_args::(* ion 0))
+        )
+
+        // drop DML stuff added in partiql_logical (we expect these to be rewritten into pure bexprs by the time
+        // we transform a query to this domain).
+        (exclude dml_operation)
+        (with statement
+            (exclude dml)
+            (include
+                // Include the dml_query variant, so that we know how to interpret the results of the query.
+                (dml_query expr::expr))
         )
 
         // Every variant of bexpr changes by adding an `impl` element in the physical algebra, so let's replace it
@@ -821,7 +860,6 @@ may then be further optimized by selecting better implementations of each operat
                     left::bexpr
                     right::bexpr
                     predicate::(? expr))
-
 
                 (offset i::impl row_count::expr source::bexpr)
                 (limit i::impl row_count::expr source::bexpr)

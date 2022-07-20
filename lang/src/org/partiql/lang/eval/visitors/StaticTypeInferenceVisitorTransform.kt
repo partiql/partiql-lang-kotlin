@@ -1590,7 +1590,7 @@ internal class StaticTypeInferenceVisitorTransform(
                         }
                     }
                     // TODO: Make the name optional in StaticType
-                    StructType(projectionFields, contentClosed)
+                    StructType(fields = projectionFields, contentClosed = contentClosed)
                 }
                 is PartiqlAst.Projection.ProjectStar -> error(
                     "Encountered a SelectListItemStar." +

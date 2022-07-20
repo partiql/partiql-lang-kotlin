@@ -12,6 +12,7 @@ import org.partiql.lang.planner.GlobalResolutionResult
 import org.partiql.lang.planner.GlobalVariableResolver
 import org.partiql.lang.planner.PlannerPassResult
 import org.partiql.lang.planner.PlannerPipeline
+import org.partiql.lang.planner.QueryResult
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNull
 
@@ -115,7 +116,10 @@ internal class PlannerPipelineFactory : PipelineFactory {
                         fail("Query compilation unexpectedly failed: ${planningResult.errors}")
                     }
                     is PlannerPassResult.Success -> {
-                        return planningResult.output.eval(session)
+                        when (val queryResult = planningResult.output.eval(session)) {
+                            is QueryResult.DmlCommand -> error("DML is not supported by test suite")
+                            is QueryResult.Value -> return queryResult.value
+                        }
                     }
                 }
             }

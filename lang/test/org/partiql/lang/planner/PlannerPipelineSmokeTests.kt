@@ -19,7 +19,6 @@ import org.partiql.lang.eval.physical.operators.ValueExpression
 import org.partiql.lang.eval.physical.sourceLocationMetaOrUnknown
 import org.partiql.lang.planner.transforms.DEFAULT_IMPL_NAME
 import org.partiql.lang.planner.transforms.PLAN_VERSION_NUMBER
-import org.partiql.lang.planner.transforms.PlanningProblemDetails
 import org.partiql.lang.util.SexpAstPrettyPrinter
 
 /**
@@ -65,7 +64,7 @@ class PlannerPipelineSmokeTests {
                                     ),
                                     source = scan(
                                         i = impl("default"),
-                                        expr = globalId("fake_uid_for_Customer", caseInsensitive()),
+                                        expr = globalId("fake_uid_for_Customer"),
                                         asDecl = varDecl(0)
                                     )
                                 )
@@ -177,7 +176,7 @@ class PlannerPipelineSmokeTests {
                 setAtVar: SetVariableFunc?,
                 setByVar: SetVariableFunc?
             ): RelationExpression {
-                TODO("doens't matter won't be invoked")
+                TODO("doesn't matter won't be invoked")
             }
         }
 

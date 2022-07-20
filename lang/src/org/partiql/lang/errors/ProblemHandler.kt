@@ -2,9 +2,7 @@ package org.partiql.lang.errors
 
 import org.partiql.lang.ast.passes.SemanticException
 
-/**
- * Handles the encountered problem.
- */
+/** Handles the encountered problem. */
 interface ProblemHandler {
     /** Handles a [problem] */
     fun handleProblem(problem: Problem)
@@ -25,6 +23,9 @@ internal class ProblemCollector : ProblemHandler {
 
     val hasErrors: Boolean
         get() = problemList.any { it.details.severity == ProblemSeverity.ERROR }
+
+    val hasWarnings: Boolean
+        get() = problemList.any { it.details.severity == ProblemSeverity.WARNING }
 
     override fun handleProblem(problem: Problem) {
         problemList.add(problem)

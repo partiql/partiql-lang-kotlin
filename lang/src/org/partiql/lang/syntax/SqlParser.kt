@@ -573,7 +573,8 @@ class SqlParser(
                         groupBy_(
                             groupingStrategy,
                             groupKeyList(keyList),
-                            groupAsName
+                            groupAsName,
+                            it.getMetas()
                         )
                     }
 
@@ -1251,7 +1252,7 @@ class SqlParser(
     private fun ParseNode.toInsertReturning(): InsertReturning =
         when (type) {
             ParseType.INSERT -> {
-                val ops = listOf(PartiqlAst.DmlOp.Insert(children[0].toAstExpr(), children[1].toAstExpr()))
+                val ops = listOf(PartiqlAst.DmlOp.Insert(children[0].toAstExpr(), children[1].toAstExpr(), this.getMetas()))
                 // We will remove items from this collection as we consume them.
                 // If any unconsumed children remain, we've missed something and should throw an exception.
                 val unconsumedChildren = children.drop(2).toMutableList()
@@ -1367,13 +1368,15 @@ class SqlParser(
                     set(
                         assignment(
                             it.children[0].toAstExpr(),
-                            it.children[1].toAstExpr()
-                        )
+                            it.children[1].toAstExpr(),
+                            it.getMetas()
+                        ),
+                        this@toDmlOperation.getMetas()
                     )
                 }
             }
-            ParseType.REMOVE -> listOf(PartiqlAst.build { remove(children[0].toAstExpr()) })
-            ParseType.DELETE -> listOf(PartiqlAst.build { delete() })
+            ParseType.REMOVE -> listOf(PartiqlAst.build { remove(children[0].toAstExpr(), this@toDmlOperation.getMetas()) })
+            ParseType.DELETE -> listOf(PartiqlAst.build { delete(this@toDmlOperation.getMetas()) })
             else -> unsupported("Unsupported syntax for $type", ErrorCode.PARSE_UNSUPPORTED_SYNTAX)
         }
 
@@ -1992,6 +1995,7 @@ class SqlParser(
     }
 
     private fun List<Token>.parseBaseDml(): ParseNode {
+        val keywordToken = this.firstOrNull()
         var rem = this
         return when (rem.head?.keywordText) {
             "insert_into" -> {
@@ -2010,17 +2014,17 @@ class SqlParser(
 
                     val returning = rem.parseOptionalReturning()?.also { rem = it.remaining }
 
-                    ParseNode(ParseType.INSERT_VALUE, null, listOfNotNull(lvalue, value, position, onConflict, returning), rem)
+                    ParseNode(ParseType.INSERT_VALUE, keywordToken, listOfNotNull(lvalue, value, position, onConflict, returning), rem)
                 } else {
                     val values = rem.parseExpression()
-                    ParseNode(ParseType.INSERT, null, listOf(lvalue, values), values.remaining)
+                    ParseNode(ParseType.INSERT, keywordToken, listOf(lvalue, values), values.remaining)
                 }
             }
-            "set" -> rem.tail.parseSetAssignments(ParseType.UPDATE)
+            "set" -> rem.tail.parseSetAssignments(ParseType.UPDATE).copy(token = keywordToken)
             "remove" -> {
                 val lvalue = rem.tail.parsePathTerm(PathMode.SIMPLE_PATH)
                 rem = lvalue.remaining
-                ParseNode(ParseType.REMOVE, null, listOf(lvalue), rem)
+                ParseNode(ParseType.REMOVE, keywordToken, listOf(lvalue), rem)
             }
             else -> err("Expected data manipulation", ErrorCode.PARSE_MISSING_OPERATION)
         }
@@ -2509,6 +2513,8 @@ class SqlParser(
         parseOptionalSingleExpressionClause(ParseType.WHERE)
 
         if (rem.head?.keywordText == "group") {
+            val groupToken = rem.head
+
             rem = rem.tail
             val type = when (rem.head?.keywordText) {
                 "partial" -> {
@@ -2554,7 +2560,7 @@ class SqlParser(
             children.add(
                 ParseNode(
                     type,
-                    null,
+                    groupToken,
                     groupChildren,
                     rem
                 )
@@ -3317,12 +3323,13 @@ class SqlParser(
                 ArgListMode.SET_CLAUSE_ARG_LIST -> {
                     val lvalue = rem.parsePathTerm(PathMode.SIMPLE_PATH)
                     rem = lvalue.remaining
+                    val equalsOperator = rem.head
                     if (rem.head?.keywordText != "=") {
                         rem.err("Expected '='", ErrorCode.PARSE_MISSING_SET_ASSIGNMENT)
                     }
                     rem = rem.tail
                     val rvalue = rem.parseExpression(precedence)
-                    ParseNode(ParseType.ASSIGNMENT, null, listOf(lvalue, rvalue), rvalue.remaining)
+                    ParseNode(ParseType.ASSIGNMENT, equalsOperator, listOf(lvalue, rvalue), rvalue.remaining)
                 }
                 ArgListMode.NORMAL_ARG_LIST -> rem.parseExpression(precedence)
             }
@@ -4077,7 +4084,7 @@ class SqlParser(
      * If [dmlListTokenSeen] is true, it means it has been encountered at least once before while traversing the parse tree.
      */
     private fun validateTopLevelNodes(
-        node: SqlParser.ParseNode,
+        node: ParseNode,
         level: Int,
         topLevelTokenSeen: Boolean,
         dmlListTokenSeen: Boolean

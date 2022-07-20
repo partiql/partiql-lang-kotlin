@@ -1,6 +1,9 @@
 
 package org.partiql.lang.planner.transforms
 
+import com.amazon.ionelement.api.ElementType
+import org.partiql.lang.domains.PartiqlPhysical
+
 /**
  * This is the semantic version number of the logical and physical plans supported by this version of PartiQL.  This
  * deals only with compatibility of trees that have been persisted as s-expressions with their PIG-generated
@@ -28,3 +31,10 @@ const val PLAN_VERSION_NUMBER = "0.0"
 
 internal fun errAstNotNormalized(message: String): Nothing =
     error("$message - have the basic visitor transforms been executed first?")
+
+/** Returns true if the receiver is `(lit true)`. */
+fun PartiqlPhysical.Expr.isLitTrue() =
+    when (this) {
+        is PartiqlPhysical.Expr.Lit -> this.value.type == ElementType.BOOL && this.value.booleanValue
+        else -> false
+    }

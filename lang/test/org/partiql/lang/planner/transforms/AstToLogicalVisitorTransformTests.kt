@@ -4,18 +4,24 @@ import com.amazon.ion.system.IonSystemBuilder
 import com.amazon.ionelement.api.ionBool
 import com.amazon.ionelement.api.ionInt
 import com.amazon.ionelement.api.ionString
-import com.amazon.ionelement.api.toIonValue
-import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.assertDoesNotThrow
-import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
+import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.domains.PartiqlLogical
 import org.partiql.lang.domains.id
 import org.partiql.lang.domains.pathExpr
+import org.partiql.lang.errors.Problem
+import org.partiql.lang.errors.ProblemCollector
+import org.partiql.lang.errors.ProblemHandler
+import org.partiql.lang.errors.ProblemSeverity
+import org.partiql.lang.planner.PlanningProblemDetails
+import org.partiql.lang.planner.unimplementedProblem
 import org.partiql.lang.syntax.SqlParser
 import org.partiql.lang.util.ArgumentsProviderBase
-import org.partiql.lang.util.SexpAstPrettyPrinter
 
 /**
  * Test cases in this class might seem a little light--that's because [AstToLogicalVisitorTransform] is getting
@@ -25,27 +31,34 @@ class AstToLogicalVisitorTransformTests {
     private val ion = IonSystemBuilder.standard().build()
     private val parser = SqlParser(ion)
 
-    private fun parseAndTransform(sql: String): PartiqlLogical.Statement {
+    private fun parseAndTransform(sql: String, problemHandler: ProblemHandler): PartiqlLogical.Statement {
         val parseAstStatement = parser.parseAstStatement(sql)
-        println(SexpAstPrettyPrinter.format(parseAstStatement.toIonElement().asAnyElement().toIonValue(ion)))
-        return parseAstStatement.toLogicalPlan().stmt
+        // println(SexpAstPrettyPrinter.format(parseAstStatement.toIonElement().asAnyElement().toIonValue(ion)))
+        return parseAstStatement.toLogicalPlan(problemHandler).stmt
     }
 
     data class TestCase(val sql: String, val expectedAlgebra: PartiqlLogical.Statement)
 
     private fun runTestCase(tc: TestCase) {
+        val problemHandler = ProblemCollector()
         val algebra = assertDoesNotThrow("Parsing TestCase.sql should not throw") {
-            parseAndTransform(tc.sql)
+            parseAndTransform(tc.sql, problemHandler)
         }
-        println(SexpAstPrettyPrinter.format(algebra.toIonElement().asAnyElement().toIonValue(ion)))
-        Assertions.assertEquals(tc.expectedAlgebra, algebra)
+        assertEquals(
+            0,
+            problemHandler.problems.filter { it.details.severity == ProblemSeverity.WARNING }.size,
+            "No problems were expected"
+        )
+
+        // println(SexpAstPrettyPrinter.format(algebra.toIonElement().asAnyElement().toIonValue(ion)))
+        assertEquals(tc.expectedAlgebra, algebra)
     }
 
     @ParameterizedTest
-    @ArgumentsSource(ArgumentsForToLogicalTests::class)
-    fun `to logical`(tc: TestCase) = runTestCase(tc)
+    @ArgumentsSource(ArgumentsForToLogicalSfwTests::class)
+    fun `to logical (SFW)`(tc: TestCase) = runTestCase(tc)
 
-    class ArgumentsForToLogicalTests : ArgumentsProviderBase() {
+    class ArgumentsForToLogicalSfwTests : ArgumentsProviderBase() {
         override fun getParameters() = listOf(
             TestCase(
                 // Note:
@@ -108,45 +121,120 @@ class AstToLogicalVisitorTransformTests {
         )
     }
 
-    data class TodoTestCase(val sql: String)
     @ParameterizedTest
-    @ArgumentsSource(ArgumentsForToToDoTests::class)
-    fun todo(tc: TodoTestCase) {
-        assertThrows<NotImplementedError>("Parsing TestCase.sql should throw NotImplementedError") {
-            parseAndTransform(tc.sql)
+    @ArgumentsSource(ArgumentsForToLogicalDmlTests::class)
+    fun `to logical (DML)`(tc: TestCase) = runTestCase(tc)
+    class ArgumentsForToLogicalDmlTests : ArgumentsProviderBase() {
+        override fun getParameters() = listOf(
+            TestCase(
+                "INSERT INTO foo << 1 >>",
+                PartiqlLogical.build {
+                    dml(
+                        id("foo", caseInsensitive(), unqualified()),
+                        dmlInsert(),
+                        bag(lit(ionInt(1)))
+                    )
+                }
+            ),
+
+            TestCase(
+                "INSERT INTO foo SELECT x.* FROM 1 AS x",
+                PartiqlLogical.build {
+                    dml(
+                        id("foo", caseInsensitive(), unqualified()),
+                        dmlInsert(),
+                        bindingsToValues(
+                            struct(structFields(id("x", caseInsensitive(), unqualified()))),
+                            scan(lit(ionInt(1)), varDecl("x"))
+                        )
+                    )
+                }
+            ),
+            TestCase(
+                "DELETE FROM y AS y",
+                PartiqlLogical.build {
+                    dml(
+                        id("y", caseInsensitive(), unqualified()),
+                        dmlDelete(),
+                        bindingsToValues(
+                            id("y", caseSensitive(), unqualified()),
+                            scan(id("y", caseInsensitive(), unqualified()), varDecl("y"))
+                        )
+                    )
+                }
+            ),
+            TestCase(
+                "DELETE FROM y AS y WHERE 1=1",
+                PartiqlLogical.build {
+                    dml(
+                        id("y", caseInsensitive(), unqualified()),
+                        dmlDelete(),
+                        bindingsToValues(
+                            id("y", caseSensitive(), unqualified()),
+                            // this logical plan is same as previous but includes this filter
+                            filter(
+                                eq(lit(ionInt(1)), lit(ionInt(1))),
+                                scan(id("y", caseInsensitive(), unqualified()), varDecl("y"))
+                            )
+                        )
+                    )
+                }
+            ),
+        )
+    }
+
+    data class UnimplementedFeatureTestCase(val sql: String, val expectedProblem: Problem)
+    @ParameterizedTest
+    @ArgumentsSource(ArgumentsForUnimplementedFeatureTests::class)
+    fun `unimplemented feautres are blocked`(tc: UnimplementedFeatureTestCase) {
+        val problemHandler = ProblemCollector()
+        assertDoesNotThrow("Parsing TestCase.sql should not throw") {
+            parseAndTransform(tc.sql, problemHandler)
         }
+
+        assertFalse(problemHandler.hasWarnings, "didn't expect any warnings")
+        assertTrue(problemHandler.hasErrors, "at least one error was expected")
+
+        assertEquals(tc.expectedProblem, problemHandler.problems.first())
     }
 
     /**
-     * A list of statements that cannot be converted into the logical algebra yet by [AstToLogicalVisitorTransform].
+     * Below are all statements that cannot be converted into the logical algebra yet by [AstToLogicalVisitorTransform].
      * This is temporary--in the near future, we will accomplish this with a better language restriction feature which
      * blocks all language features except those explicitly allowed.  This will be needed to constrain possible queries
      * to features supported by specific PartiQL-services.
      */
-    class ArgumentsForToToDoTests : ArgumentsProviderBase() {
+    class ArgumentsForUnimplementedFeatureTests : ArgumentsProviderBase() {
+
         override fun getParameters() = listOf(
             // SELECT queries
-            TodoTestCase("SELECT b.* FROM UNPIVOT x as y"),
-            TodoTestCase("SELECT b.* FROM bar AS b GROUP BY a"),
-            TodoTestCase("SELECT b.* FROM bar AS b HAVING x"),
-            TodoTestCase("SELECT b.* FROM bar AS b ORDER BY y"),
-            TodoTestCase("PIVOT v AT n FROM data AS d"),
-
-            // DML
-            TodoTestCase("CREATE TABLE foo"),
-            TodoTestCase("DROP TABLE foo"),
-            TodoTestCase("CREATE INDEX ON foo (x)"),
-            TodoTestCase("DROP INDEX bar ON foo"),
+            UnimplementedFeatureTestCase("SELECT b.* FROM UNPIVOT x as y", unimplementedProblem("UNPIVOT", 1, 17)),
+            UnimplementedFeatureTestCase("SELECT b.* FROM bar AS b GROUP BY a", unimplementedProblem("GROUP BY", 1, 26)),
+            UnimplementedFeatureTestCase("SELECT b.* FROM bar AS b HAVING x", unimplementedProblem("HAVING", 1, 33)),
+            UnimplementedFeatureTestCase("SELECT b.* FROM bar AS b ORDER BY y", unimplementedProblem("ORDER BY", 1, 26)),
+            UnimplementedFeatureTestCase("PIVOT v AT n FROM data AS d", unimplementedProblem("PIVOT", 1, 1)),
 
             // DDL
-            TodoTestCase("INSERT INTO foo VALUE 1"),
-            TodoTestCase("INSERT INTO foo VALUE 1"),
-            TodoTestCase("FROM x WHERE a = b SET k = 5"),
-            TodoTestCase("FROM x INSERT INTO foo VALUES (1, 2)"),
-            TodoTestCase("UPDATE x SET k = 5"),
-            TodoTestCase("UPDATE x INSERT INTO k << 1 >>"),
-            TodoTestCase("DELETE FROM y"),
-            TodoTestCase("REMOVE y"),
+            UnimplementedFeatureTestCase("CREATE TABLE foo", unimplementedProblem("CREATE TABLE", 1, 1)),
+            UnimplementedFeatureTestCase("DROP TABLE foo", unimplementedProblem("DROP TABLE", 1, 1)),
+            UnimplementedFeatureTestCase("CREATE INDEX ON foo (x)", unimplementedProblem("CREATE INDEX", 1, 1)),
+            UnimplementedFeatureTestCase("DROP INDEX bar ON foo", unimplementedProblem("DROP INDEX", 1, 1)),
+
+            // DML
+            UnimplementedFeatureTestCase("FROM x AS xx INSERT INTO foo VALUES (1, 2)", unimplementedProblem("UPDATE / INSERT", 1, 14)),
+            UnimplementedFeatureTestCase("FROM x AS xx SET k = 5", unimplementedProblem("SET", 1, 14)),
+            UnimplementedFeatureTestCase("UPDATE x SET k = 5", unimplementedProblem("SET", 1, 10)),
+            UnimplementedFeatureTestCase("UPDATE x REMOVE k", unimplementedProblem("REMOVE", 1, 10)),
+            UnimplementedFeatureTestCase("UPDATE x INSERT INTO k << 1 >>", unimplementedProblem("UPDATE / INSERT", 1, 10)),
+
+            UnimplementedFeatureTestCase(
+                "INSERT INTO x VALUE 1",
+                Problem(SourceLocationMeta(1, 1), PlanningProblemDetails.InsertValueDisallowed)
+            ),
+            UnimplementedFeatureTestCase(
+                "INSERT INTO x VALUES (1, 2, 3)",
+                Problem(SourceLocationMeta(1, 1), PlanningProblemDetails.InsertValuesDisallowed)
+            )
         )
     }
 }
