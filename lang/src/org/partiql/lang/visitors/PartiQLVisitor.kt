@@ -32,7 +32,12 @@ import java.time.OffsetTime
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 
-class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = listOf()) : PartiQLBaseVisitor<PartiqlAst.PartiqlAstNode>() {
+/**
+ * Extends ANTLR's generated [PartiQLBaseVisitor] to visit an ANTLR ParseTree and convert it into a PartiQL AST. This
+ * class uses the [PartiqlAst.PartiqlAstNode] to represent all nodes within the new AST.
+ */
+class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = listOf()) :
+    PartiQLBaseVisitor<PartiqlAst.PartiqlAstNode>() {
 
     private val CUSTOM_KEYWORDS = customTypes.map { it.name.toLowerCase() }
 
@@ -490,7 +495,10 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
             null -> try {
                 getPrecisionFromTimeString(timeString).toLong()
             } catch (e: EvaluationException) {
-                throw org.partiql.lang.syntax.PartiQLParser.ParseErrorListener.ParseException("Unable to parse precision.", e)
+                throw org.partiql.lang.syntax.PartiQLParser.ParseErrorListener.ParseException(
+                    "Unable to parse precision.",
+                    e
+                )
             }
             else -> ctx.LITERAL_INTEGER().text.toInteger().toLong()
         }
@@ -517,7 +525,10 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
             null -> try {
                 getPrecisionFromTimeString(timeString).toLong()
             } catch (e: EvaluationException) {
-                throw org.partiql.lang.syntax.PartiQLParser.ParseErrorListener.ParseException("Unable to parse precision.", e)
+                throw org.partiql.lang.syntax.PartiQLParser.ParseErrorListener.ParseException(
+                    "Unable to parse precision.",
+                    e
+                )
             }
             else -> ctx.LITERAL_INTEGER().text.toInteger().toLong()
         }

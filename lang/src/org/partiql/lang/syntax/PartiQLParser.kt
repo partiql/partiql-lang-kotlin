@@ -33,6 +33,11 @@ import java.nio.charset.StandardCharsets
 import org.partiql.lang.generated.PartiQLParser as GeneratedParser
 import org.partiql.lang.generated.PartiQLTokens as GeneratedLexer
 
+/**
+ * Extends [Parser] to provide a mechanism to parse an input query string. It internally uses ANTLR's generated parser,
+ * [GeneratedParser] to create an ANTLR [ParseTree] from the input query. Then, it uses the configured [PartiQLVisitor]
+ * to convert the [ParseTree] into a [PartiqlAst.Statement].
+ */
 class PartiQLParser(
     private val ion: IonSystem,
     val customTypes: List<CustomType> = listOf()
@@ -65,7 +70,7 @@ class PartiQLParser(
     }
 
     @Deprecated("Please use parseAstStatement() instead--ExprNode is deprecated.")
-    override fun parseExprNode(source: String): ExprNode {
+    override fun parseExprNode(source: String): @Suppress("DEPRECATION") ExprNode {
         return parseAstStatement(source).toExprNode(ion)
     }
 
