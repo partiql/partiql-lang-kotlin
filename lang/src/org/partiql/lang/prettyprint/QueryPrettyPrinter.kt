@@ -287,17 +287,12 @@ class QueryPrettyPrinter {
             is PartiqlAst.Expr.And -> writeNAryOperator("AND", node.operands, sb, level)
             is PartiqlAst.Expr.Or -> writeNAryOperator("OR", node.operands, sb, level)
             is PartiqlAst.Expr.InCollection -> writeNAryOperator("IN", node.operands, sb, level)
-            is PartiqlAst.Expr.Union -> when (node.setq) {
-                is PartiqlAst.SetQuantifier.Distinct -> writeNAryOperator("UNION", node.operands, sb, level)
-                is PartiqlAst.SetQuantifier.All -> writeNAryOperator("UNION ALL", node.operands, sb, level)
-            }
-            is PartiqlAst.Expr.Intersect -> when (node.setq) {
-                is PartiqlAst.SetQuantifier.Distinct -> writeNAryOperator("INTERSECT", node.operands, sb, level)
-                is PartiqlAst.SetQuantifier.All -> writeNAryOperator("INTERSECT ALL", node.operands, sb, level)
-            }
-            is PartiqlAst.Expr.Except -> when (node.setq) {
-                is PartiqlAst.SetQuantifier.Distinct -> writeNAryOperator("EXCEPT", node.operands, sb, level)
-                is PartiqlAst.SetQuantifier.All -> writeNAryOperator("EXCEPT ALL", node.operands, sb, level)
+            is PartiqlAst.Expr.BagOp -> {
+                var name = node.op.javaClass.simpleName.toUpperCase().replace("_", " ")
+                if (node.quantifier is PartiqlAst.SetQuantifier.All) {
+                    name += " ALL"
+                }
+                writeNAryOperator(name, node.operands, sb, level)
             }
         }
     }
@@ -901,13 +896,13 @@ class QueryPrettyPrinter {
         when (node) {
             is PartiqlAst.Expr.And, is PartiqlAst.Expr.Between, is PartiqlAst.Expr.CanCast,
             is PartiqlAst.Expr.CanLosslessCast, is PartiqlAst.Expr.Cast, is PartiqlAst.Expr.Concat,
-            is PartiqlAst.Expr.Divide, is PartiqlAst.Expr.Eq, is PartiqlAst.Expr.Except,
+            is PartiqlAst.Expr.Divide, is PartiqlAst.Expr.Eq, is PartiqlAst.Expr.BagOp,
             is PartiqlAst.Expr.Gt, is PartiqlAst.Expr.Gte, is PartiqlAst.Expr.InCollection,
-            is PartiqlAst.Expr.Intersect, is PartiqlAst.Expr.IsType, is PartiqlAst.Expr.Like,
+            is PartiqlAst.Expr.IsType, is PartiqlAst.Expr.Like,
             is PartiqlAst.Expr.Lt, is PartiqlAst.Expr.Lte, is PartiqlAst.Expr.Minus,
             is PartiqlAst.Expr.Modulo, is PartiqlAst.Expr.Ne, is PartiqlAst.Expr.Neg,
             is PartiqlAst.Expr.Not, is PartiqlAst.Expr.Or, is PartiqlAst.Expr.Plus,
-            is PartiqlAst.Expr.Pos, is PartiqlAst.Expr.Times, is PartiqlAst.Expr.Union -> true
+            is PartiqlAst.Expr.Pos, is PartiqlAst.Expr.Times -> true
             else -> false
         }
 
