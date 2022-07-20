@@ -109,7 +109,10 @@ class PartiQLParserTest {
                 "<< { 2: 1 }>>",
                 "SELECT x FROM a, b CROSS JOIN c LEFT JOIN d ON e RIGHT OUTER CROSS JOIN f OUTER JOIN g ON h",
                 "SELECT x FROM stuff s RIGHT CROSS JOIN foo f",
-                "SELECT x FROM a INNER CROSS JOIN b CROSS JOIN c LEFT JOIN d ON e RIGHT OUTER CROSS JOIN f OUTER JOIN g ON h"
+                "SELECT x FROM a INNER CROSS JOIN b CROSS JOIN c LEFT JOIN d ON e RIGHT OUTER CROSS JOIN f OUTER JOIN g ON h",
+                "CAST( 1 AS int)",
+                "CAST( 3 AS INTEGER)",
+                "CAST( 3 AS STRING)",
             )
             return queries
         }
