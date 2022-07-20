@@ -21,15 +21,27 @@ import org.partiql.lang.eval.EvaluationException
 import org.partiql.lang.eval.time.MAX_PRECISION_FOR_TIME
 import org.partiql.lang.generated.PartiQLBaseVisitor
 import org.partiql.lang.generated.PartiQLParser
+import org.partiql.lang.types.CustomType
 import org.partiql.lang.util.bigDecimalOf
 import org.partiql.lang.util.getPrecisionFromTimeString
+import org.partiql.pig.runtime.SymbolPrimitive
+import org.partiql.pig.runtime.asPrimitive
 import java.math.BigInteger
 import java.time.LocalTime
 import java.time.OffsetTime
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 
-class AntlrTreeToPartiQLVisitor(val ion: IonSystem) : PartiQLBaseVisitor<PartiqlAst.PartiqlAstNode>() {
+class AntlrTreeToPartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = listOf()) : PartiQLBaseVisitor<PartiqlAst.PartiqlAstNode>() {
+
+    private val CUSTOM_KEYWORDS = customTypes.map { it.name.toLowerCase() }
+
+    private val CUSTOM_TYPE_ALIASES =
+        customTypes.map { customType ->
+            customType.aliases.map { alias ->
+                Pair(alias.toLowerCase(), customType.name.toLowerCase())
+            }
+        }.flatten().toMap()
 
     override fun visitSelectFromWhere(ctx: PartiQLParser.SelectFromWhereContext): PartiqlAst.Expr.Select {
         val projection = visit(ctx.selectClause()) as PartiqlAst.Projection
@@ -535,6 +547,99 @@ class AntlrTreeToPartiQLVisitor(val ion: IonSystem) : PartiQLBaseVisitor<Partiql
                 )
             )
         }
+    }
+
+    override fun visitCast(ctx: PartiQLParser.CastContext): PartiqlAst.Expr.Cast {
+        val expr = visitExprQuery(ctx.exprQuery())
+        val type = visit(ctx.type()) as PartiqlAst.Type
+        return PartiqlAst.BUILDER().cast(expr, type)
+    }
+
+    override fun visitCanCast(ctx: PartiQLParser.CanCastContext): PartiqlAst.Expr.CanCast {
+        val expr = visitExprQuery(ctx.exprQuery())
+        val type = visit(ctx.type()) as PartiqlAst.Type
+        return PartiqlAst.BUILDER().canCast(expr, type)
+    }
+
+    override fun visitCanLosslessCast(ctx: PartiQLParser.CanLosslessCastContext): PartiqlAst.Expr.CanLosslessCast {
+        val expr = visitExprQuery(ctx.exprQuery())
+        val type = visit(ctx.type()) as PartiqlAst.Type
+        return PartiqlAst.BUILDER().canLosslessCast(expr, type)
+    }
+
+    override fun visitTypeAtomic(ctx: PartiQLParser.TypeAtomicContext): PartiqlAst.Type {
+        return when {
+            ctx.NULL() != null -> PartiqlAst.Type.NullType()
+            ctx.BOOL() != null || ctx.BOOLEAN() != null -> PartiqlAst.Type.BooleanType()
+            ctx.SMALLINT() != null -> PartiqlAst.Type.SmallintType()
+            ctx.INT2() != null || ctx.INTEGER2() != null -> PartiqlAst.Type.SmallintType()
+            ctx.INT() != null || ctx.INTEGER() != null -> PartiqlAst.Type.IntegerType()
+            ctx.INT4() != null || ctx.INTEGER4() != null -> PartiqlAst.Type.Integer4Type()
+            ctx.INT8() != null || ctx.INTEGER8() != null -> PartiqlAst.Type.Integer8Type()
+            ctx.BIGINT() != null -> PartiqlAst.Type.Integer8Type()
+            ctx.REAL() != null -> PartiqlAst.Type.RealType()
+            ctx.DOUBLE() != null -> PartiqlAst.Type.DoublePrecisionType()
+            ctx.TIMESTAMP() != null -> PartiqlAst.Type.TimestampType()
+            ctx.MISSING() != null -> PartiqlAst.Type.MissingType()
+            ctx.STRING() != null -> PartiqlAst.Type.StringType()
+            ctx.SYMBOL() != null -> PartiqlAst.Type.SymbolType()
+            ctx.BLOB() != null -> PartiqlAst.Type.BlobType()
+            ctx.CLOB() != null -> PartiqlAst.Type.ClobType()
+            ctx.DATE() != null -> PartiqlAst.Type.DateType()
+            ctx.STRUCT() != null -> PartiqlAst.Type.StructType()
+            ctx.TUPLE() != null -> PartiqlAst.Type.TupleType()
+            ctx.LIST() != null -> PartiqlAst.Type.SexpType()
+            ctx.BAG() != null -> PartiqlAst.Type.BagType()
+            ctx.ANY() != null -> PartiqlAst.Type.AnyType()
+            else -> PartiqlAst.Type.AnyType()
+        }
+    }
+
+    override fun visitTypeVarChar(ctx: PartiQLParser.TypeVarCharContext): PartiqlAst.Type.CharacterVaryingType {
+        val length = if (ctx.length != null) ctx.length.text.toInteger().toLong().asPrimitive() else null
+        return PartiqlAst.Type.CharacterVaryingType(length)
+    }
+
+    override fun visitTypeChar(ctx: PartiQLParser.TypeCharContext): PartiqlAst.Type.CharacterType {
+        val length = if (ctx.length != null) ctx.length.text.toInteger().toLong().asPrimitive() else null
+        return PartiqlAst.Type.CharacterType(length)
+    }
+
+    override fun visitTypeFloat(ctx: PartiQLParser.TypeFloatContext): PartiqlAst.Type.FloatType {
+        val precision = if (ctx.precision != null) ctx.precision.text.toInteger().toLong().asPrimitive() else null
+        return PartiqlAst.Type.FloatType(precision)
+    }
+
+    override fun visitTypeDecimal(ctx: PartiQLParser.TypeDecimalContext): PartiqlAst.Type {
+        val precision = if (ctx.precision != null) ctx.precision.text.toInteger().toLong().asPrimitive() else null
+        val scale = if (ctx.scale != null) ctx.scale.text.toInteger().toLong().asPrimitive() else null
+        return PartiqlAst.Type.DecimalType(precision, scale)
+    }
+
+    override fun visitTypeNumeric(ctx: PartiQLParser.TypeNumericContext): PartiqlAst.Type.NumericType {
+        val precision = if (ctx.precision != null) ctx.precision.text.toInteger().toLong().asPrimitive() else null
+        val scale = if (ctx.scale != null) ctx.scale.text.toInteger().toLong().asPrimitive() else null
+        return PartiqlAst.Type.NumericType(precision, scale)
+    }
+
+    override fun visitTypeTime(ctx: PartiQLParser.TypeTimeContext): PartiqlAst.Type.TimeType {
+        val precision = if (ctx.precision != null) ctx.precision.text.toInteger().toLong().asPrimitive() else null
+        return PartiqlAst.Type.TimeType(precision)
+    }
+
+    override fun visitTypeTimeZone(ctx: PartiQLParser.TypeTimeZoneContext): PartiqlAst.Type.TimeWithTimeZoneType {
+        val precision = if (ctx.precision != null) ctx.precision.text.toInteger().toLong().asPrimitive() else null
+        return PartiqlAst.Type.TimeWithTimeZoneType(precision)
+    }
+
+    // TODO: Determine if should throw error on else
+    override fun visitTypeCustom(ctx: PartiQLParser.TypeCustomContext): PartiqlAst.Type {
+        val customName: String = when (val name = ctx.symbolPrimitive().getString().toLowerCase()) {
+            in CUSTOM_KEYWORDS -> name
+            in CUSTOM_TYPE_ALIASES.keys -> CUSTOM_TYPE_ALIASES.getOrDefault(name, name)
+            else -> name
+        }
+        return PartiqlAst.Type.CustomType(SymbolPrimitive(customName, mapOf()))
     }
 
     // TODO: Catch exception for exponent too large
