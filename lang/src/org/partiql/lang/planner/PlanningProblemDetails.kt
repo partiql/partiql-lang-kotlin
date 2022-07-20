@@ -1,4 +1,4 @@
-package org.partiql.lang.planner.transforms
+package org.partiql.lang.planner
 
 import org.partiql.lang.errors.ProblemDetails
 import org.partiql.lang.errors.ProblemSeverity
@@ -14,6 +14,7 @@ sealed class PlanningProblemDetails(
     val messageFormatter: () -> String
 ) : ProblemDetails {
 
+    override fun toString() = message
     override val message: String get() = messageFormatter()
 
     data class ParseError(val parseErrorMessage: String) :
@@ -42,5 +43,35 @@ sealed class PlanningProblemDetails(
         PlanningProblemDetails(
             ProblemSeverity.ERROR,
             { "The variable '$variableName' was previously defined." }
+        )
+
+    data class UnimplementedFeature(val featureName: String) :
+        PlanningProblemDetails(
+            ProblemSeverity.ERROR,
+            { "The syntax at this location is valid but utilizes unimplemented PartiQL feature '$featureName'" }
+        )
+
+    object InsertValueDisallowed :
+        PlanningProblemDetails(
+            ProblemSeverity.ERROR,
+            {
+                "Use of `INSERT INTO <table> VALUE <expr>` is not allowed. " +
+                    "Please use the `INSERT INTO <table> << <expr> >>` form instead."
+            }
+        )
+
+    object InsertValuesDisallowed :
+        PlanningProblemDetails(
+            ProblemSeverity.ERROR,
+            {
+                "Use of `VALUES (<expr>, ...)` with INSERT is not allowed. " +
+                    "Please use the `INSERT INTO <table> << <expr>, ... >>` form instead."
+            }
+        )
+
+    object InvalidDmlTarget :
+        PlanningProblemDetails(
+            ProblemSeverity.ERROR,
+            { "Expression is not a valid DML target.  Hint: only table names are allowed here." }
         )
 }

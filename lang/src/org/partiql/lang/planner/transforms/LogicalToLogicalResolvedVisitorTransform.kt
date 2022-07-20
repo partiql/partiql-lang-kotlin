@@ -12,6 +12,7 @@ import org.partiql.lang.eval.BindingName
 import org.partiql.lang.eval.builtins.DYNAMIC_LOOKUP_FUNCTION_NAME
 import org.partiql.lang.planner.GlobalResolutionResult
 import org.partiql.lang.planner.GlobalVariableResolver
+import org.partiql.lang.planner.PlanningProblemDetails
 import org.partiql.pig.runtime.asPrimitive
 
 /**
@@ -102,7 +103,7 @@ private sealed class ResolvedVariable {
      * This is `internal` because [index] is an implementation detail that shouldn't be accessible outside of this
      * library.
      */
-    internal data class LocalVariable(val index: Int) : ResolvedVariable()
+    data class LocalVariable(val index: Int) : ResolvedVariable()
 
     /** A failure case, indicates that resolution did not match any variable. */
     object Undefined : ResolvedVariable()
@@ -171,7 +172,6 @@ private data class LogicalToLogicalResolvedVisitorTransform(
         PartiqlLogicalResolved.build {
             globalId_(
                 uniqueId = uniqueId.asPrimitive(),
-                case = this@LogicalToLogicalResolvedVisitorTransform.transformCaseSensitivity(this@asGlobalId.case),
                 metas = this@asGlobalId.metas
             )
         }

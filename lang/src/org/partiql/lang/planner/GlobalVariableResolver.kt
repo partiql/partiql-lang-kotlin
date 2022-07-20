@@ -3,7 +3,10 @@ package org.partiql.lang.planner
 import org.partiql.lang.eval.BindingCase
 import org.partiql.lang.eval.BindingName
 
-/** Indicates the result of an attempt to resolve a global variable to its customer supplied unique identifier. */
+/**
+ * Indicates the result of an attempt to resolve a global variable to its supplied unique identifier supplied by
+ * the application embedding PartiQL.
+ */
 sealed class GlobalResolutionResult {
     /**
      * A success case, indicates the [uniqueId] of the match to the [BindingName] in the global scope.
@@ -23,10 +26,10 @@ sealed class GlobalResolutionResult {
  *
  * Global variables are not limited to tables, but may be any PartiQL value assigned by the application embedding
  * PartiQL.  Most databases associate a UUID or similar unique identifier to a table.  The actual type used for the
- * unique identifier doesn't matter as long as it can be converted to and from a [String] and is unique within the
- * current database.
+ * unique identifier doesn't matter as long as it can be converted to and from a [String]. The values must be unique
+ * within the current database.
  *
- * The term "resolution" in means to look up a global variable's unique identifier, or to verify that it is not
+ * The term "resolution" in means to look up a global variable's unique identifier, or to indicate that it is not
  * defined in the current database.
  *
  * This interface is meant to be implemented by the application embedding PartiQL and added to the [PlannerPipeline]
