@@ -441,9 +441,19 @@ internal val DATE_TIME_PART_KEYWORDS: Set<String> = DateTimePart.values()
     listOf("not", "in") to ("not_in" to OPERATOR),
     listOf("is", "not") to ("is_not" to OPERATOR),
     listOf("not", "between") to ("not_between" to OPERATOR),
+
+    listOf("union", "all") to ("union_all" to OPERATOR),
     listOf("intersect", "all") to ("intersect_all" to OPERATOR),
     listOf("except", "all") to ("except_all" to OPERATOR),
-    listOf("union", "all") to ("union_all" to OPERATOR),
+    listOf("outer", "union") to ("outer_union" to OPERATOR),
+    listOf("outer", "intersect") to ("outer_intersect" to OPERATOR),
+    listOf("outer", "except") to ("outer_except" to OPERATOR),
+
+    // tomfoolery with multi lexeme token folding
+    listOf("outer_intersect", "all") to ("outer_intersect_all" to OPERATOR),
+    listOf("outer_union", "all") to ("outer_union_all" to OPERATOR),
+    listOf("outer_except", "all") to ("outer_except_all" to OPERATOR),
+
     listOf("character", "varying") to ("character_varying" to KEYWORD),
     listOf("double", "precision") to ("double_precision" to KEYWORD),
     listOf("not", "like") to ("not_like" to OPERATOR),
@@ -535,12 +545,18 @@ enum class OperatorPrecedenceGroups(val precedence: Int) {
  */
 @JvmField internal val OPERATOR_PRECEDENCE = mapOf(
     // set operator group
+    "union" to OperatorPrecedenceGroups.SET.precedence,
+    "union_all" to OperatorPrecedenceGroups.SET.precedence,
     "intersect" to OperatorPrecedenceGroups.SET.precedence,
     "intersect_all" to OperatorPrecedenceGroups.SET.precedence,
     "except" to OperatorPrecedenceGroups.SET.precedence,
     "except_all" to OperatorPrecedenceGroups.SET.precedence,
-    "union" to OperatorPrecedenceGroups.SET.precedence,
-    "union_all" to OperatorPrecedenceGroups.SET.precedence,
+    "outer_union" to OperatorPrecedenceGroups.SET.precedence,
+    "outer_union_all" to OperatorPrecedenceGroups.SET.precedence,
+    "outer_intersect" to OperatorPrecedenceGroups.SET.precedence,
+    "outer_intersect_all" to OperatorPrecedenceGroups.SET.precedence,
+    "outer_except" to OperatorPrecedenceGroups.SET.precedence,
+    "outer_except_all" to OperatorPrecedenceGroups.SET.precedence,
 
     // logical group
     "or" to OperatorPrecedenceGroups.LOGICAL_OR.precedence,

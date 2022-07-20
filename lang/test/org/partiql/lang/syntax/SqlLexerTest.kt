@@ -216,13 +216,22 @@ class SqlLexerTest : TestBase() {
     }
 
     @Test
-    fun multiLexemeOperators() = assertTokens(
-        "UNION ALL IS NOT union_all is_not",
-        token(TokenType.OPERATOR, "union_all", "UNION ALL", 1, 1, 5),
-        token(TokenType.OPERATOR, "is_not", "IS NOT", 1, 11, 2),
-        token(TokenType.IDENTIFIER, "union_all", "union_all", 1, 18, 9),
-        token(TokenType.IDENTIFIER, "is_not", "is_not", 1, 28, 6)
-    )
+    fun multiLexemeOperators() {
+        assertTokens(
+            "UNION ALL IS NOT union_all is_not",
+            token(TokenType.OPERATOR, "union_all", "UNION ALL", 1, 1, 5),
+            token(TokenType.OPERATOR, "is_not", "IS NOT", 1, 11, 2),
+            token(TokenType.IDENTIFIER, "union_all", "union_all", 1, 18, 9),
+            token(TokenType.IDENTIFIER, "is_not", "is_not", 1, 28, 6)
+        )
+        assertTokens(
+            "OUTER UNION ALL IS NOT outer_union_all is_not",
+            token(TokenType.OPERATOR, "outer_union_all", "OUTER UNION ALL", 1, 1, 5),
+            token(TokenType.OPERATOR, "is_not", "IS NOT", 1, 17, 2),
+            token(TokenType.IDENTIFIER, "outer_union_all", "outer_union_all", 1, 24, 15),
+            token(TokenType.IDENTIFIER, "is_not", "is_not", 1, 40, 6)
+        )
+    }
 
     @Test
     fun multiLexemeKeywords() = assertTokens(

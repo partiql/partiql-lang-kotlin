@@ -130,6 +130,9 @@ may then be further optimized by selecting better implementations of each operat
             (union setq::set_quantifier operands::(* expr 2))
             (except setq::set_quantifier operands::(* expr 2))
             (intersect setq::set_quantifier operands::(* expr 2))
+            (outer_union setq::set_quantifier operands::(* expr 2))
+            (outer_except setq::set_quantifier operands::(* expr 2))
+            (outer_intersect setq::set_quantifier operands::(* expr 2))
 
             // Other expression types
             (path root::expr steps::(* path_step 1))

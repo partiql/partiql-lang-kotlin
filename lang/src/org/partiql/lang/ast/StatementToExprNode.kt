@@ -84,7 +84,6 @@ private class StatementTransformer(val ion: IonSystem) {
             is PartiqlAst.Expr.Gte -> NAry(NAryOp.GTE, operands.toExprNodeList(), metas)
             is PartiqlAst.Expr.Lt -> NAry(NAryOp.LT, operands.toExprNodeList(), metas)
             is PartiqlAst.Expr.Lte -> NAry(NAryOp.LTE, operands.toExprNodeList(), metas)
-
             is PartiqlAst.Expr.Union ->
                 NAry(
                     when (setq) {
@@ -104,6 +103,33 @@ private class StatementTransformer(val ion: IonSystem) {
                     metas
                 )
             is PartiqlAst.Expr.Except ->
+                NAry(
+                    when (setq) {
+                        is PartiqlAst.SetQuantifier.Distinct -> NAryOp.EXCEPT
+                        is PartiqlAst.SetQuantifier.All -> NAryOp.EXCEPT_ALL
+                    },
+                    operands.toExprNodeList(),
+                    metas
+                )
+            is PartiqlAst.Expr.OuterUnion ->
+                NAry(
+                    when (setq) {
+                        is PartiqlAst.SetQuantifier.Distinct -> NAryOp.UNION
+                        is PartiqlAst.SetQuantifier.All -> NAryOp.UNION_ALL
+                    },
+                    operands.toExprNodeList(),
+                    metas
+                )
+            is PartiqlAst.Expr.OuterIntersect ->
+                NAry(
+                    when (setq) {
+                        is PartiqlAst.SetQuantifier.Distinct -> NAryOp.INTERSECT
+                        is PartiqlAst.SetQuantifier.All -> NAryOp.INTERSECT_ALL
+                    },
+                    operands.toExprNodeList(),
+                    metas
+                )
+            is PartiqlAst.Expr.OuterExcept ->
                 NAry(
                     when (setq) {
                         is PartiqlAst.SetQuantifier.Distinct -> NAryOp.EXCEPT

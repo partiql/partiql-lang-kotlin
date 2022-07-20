@@ -6,7 +6,7 @@ import org.partiql.lang.domains.PartiqlLogical
 
 /**
  * Transforms an instance of [PartiqlAst.Statement] to [PartiqlLogical.Statement].  This representation of the query
- * expresses the intent of the query author in terms of PartiQL's relational algebra instead of it its AST.
+ * expresses the intent of the query author in terms of PartiQL's relational algebra instead of its AST.
  *
  * Performs no semantic checks.
  *
