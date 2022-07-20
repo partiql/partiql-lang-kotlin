@@ -631,7 +631,6 @@ data class BagType(
 data class StructType(
     val fields: Map<String, StaticType> = mapOf(),
     val contentClosed: Boolean = false,
-    val primaryKeyFields: List<String> = listOf(),
     override val metas: Map<String, Any> = mapOf()
 ) : SingleType() {
     override val runtimeType: ExprValueType

@@ -34,7 +34,6 @@ and custom physical operator implementations.
 - The `PlannerPipeline` API now has experimental and partial support for `INSERT` and `DELETE` DML statements.
   Examples of supported statements include:
   - `INSERT INTO foo << { 'id': 1, 'name': 'bob' }, { 'id': 2, 'name' : 'sue' } >>` (multi record insert)
-  - `INSERT INTO foo VALUE 1` (single record insert)
   - `INSERT INTO foo SELECT c.id, c.name FROM customer AS c` (insert the results of a query into another table)
   - `DELETE FROM foo` (delete all records in a table)
   - `DELETE FROM foo AS f WHERE f.zipCode = '90210'` (delete all records matching a predicate)
