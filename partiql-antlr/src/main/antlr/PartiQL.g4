@@ -37,8 +37,10 @@ projectionItem: exprQuery ( AS? symbolPrimitive )? ;
     
 // TODO: Add other identifiers?
 symbolPrimitive
-    : IDENTIFIER         # SymbolIdentifierUnquoted
-    | IDENTIFIER_QUOTED  # SymbolIdentifierQuoted
+    : IDENTIFIER              # SymbolIdentifierUnquoted
+    | IDENTIFIER_QUOTED       # SymbolIdentifierQuoted
+    | IDENTIFIER_AT_UNQUOTED  # SymbolIdentifierAtUnquoted
+    | IDENTIFIER_AT_QUOTED    # SymbolIdentifierAtQuoted
     ;
 // TODO: Mental note. Needed to duplicate table_joined to remove left recursion
 tableReference
@@ -95,23 +97,12 @@ joinType
     | OUTER
     ;
 
-// TODO: Check
 functionCall
-    : name=IDENTIFIER PAREN_LEFT ( functionCallArg ( COMMA functionCallArg )* )? PAREN_RIGHT
+    : name=symbolPrimitive PAREN_LEFT ( functionCallArg ( COMMA functionCallArg )* )? PAREN_RIGHT
     ;
     
 functionCallArg
-    : functionArgPositional
-    | functionArgNamed
-    ;
-    
-functionArgPositional
-    : ASTERISK
-    | exprQuery
-    ;
-    
-functionArgNamed
-    : symbolPrimitive COLON exprQuery
+    : exprQuery
     ;
     
 exprPrimary
@@ -201,15 +192,16 @@ exprTermCollection
 exprTermArray
     : BRACKET_LEFT ( exprQuery ( COMMA exprQuery )* )? BRACKET_RIGHT
     ;
+
 exprTermBag
     : ANGLE_DOUBLE_LEFT ( exprQuery ( COMMA exprQuery )* )? ANGLE_DOUBLE_RIGHT
     ;
-    
+
 // TODO: Check expansion
 exprTermTuple
     : BRACE_LEFT ( exprPair ( COMMA exprPair )* )? BRACE_RIGHT
     ;
-    
+
 exprPair
     : lhs=exprQuery COLON rhs=exprQuery
     ;
