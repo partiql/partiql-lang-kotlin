@@ -16,7 +16,7 @@ class SqlParserCastTests : SqlParserTestBase() {
 
     companion object {
         val ion: IonSystem = ION
-        val parser = SqlParser(ion, CUSTOM_TEST_TYPES)
+        val parser = PartiQLParser(ion, CUSTOM_TEST_TYPES)
 
         fun parse(source: String): PartiqlAst.Statement = parser.parseAstStatement(source)
 

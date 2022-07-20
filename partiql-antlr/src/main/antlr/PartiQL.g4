@@ -35,6 +35,7 @@ setQuantifierStrategy
 projectionItems: projectionItem ( COMMA projectionItem )* ;
 projectionItem: exprQuery ( AS? symbolPrimitive )? ;
     
+// TODO: Add other identifiers?
 symbolPrimitive
     : IDENTIFIER         # SymbolIdentifierUnquoted
     | IDENTIFIER_QUOTED  # SymbolIdentifierQuoted
@@ -115,12 +116,57 @@ functionArgNamed
     
 exprPrimary
     : exprTerm                                                             # ExprPrimaryTerm
+    | CAST PAREN_LEFT exprQuery AS type PAREN_RIGHT                        # Cast
+    | CAN_CAST PAREN_LEFT exprQuery AS type PAREN_RIGHT                    # CanCast
+    | CAN_LOSSLESS_CAST PAREN_LEFT exprQuery AS type PAREN_RIGHT           # CanLosslessCast
     | functionCall                                                         # ExprQueryFunctionCall
     | exprPrimary PERIOD pathSteps                                         # ExprPrimaryPath
     | exprPrimary PERIOD ASTERISK                                          # ExprPrimaryPathAll
     | exprPrimary BRACKET_LEFT ASTERISK BRACKET_RIGHT                      # ExprPrimaryPathIndexAll
     | exprPrimary BRACKET_LEFT exprQuery BRACKET_RIGHT                     # ExprPrimaryIndex
     | caseExpr                                                             # ExprQueryCase
+    ;
+    
+// TODO: Add all types
+type
+    : NULL                         # TypeAtomic
+    | BOOL                         # TypeAtomic
+    | BOOLEAN                      # TypeAtomic
+    | SMALLINT                     # TypeAtomic
+    | INTEGER2                     # TypeAtomic
+    | INT2                         # TypeAtomic
+    | INTEGER                      # TypeAtomic
+    | INT                          # TypeAtomic
+    | INTEGER4                     # TypeAtomic
+    | INT4                         # TypeAtomic
+    | INTEGER8                     # TypeAtomic
+    | INT8                         # TypeAtomic
+    | BIGINT                       # TypeAtomic
+    | REAL                         # TypeAtomic
+    | DOUBLE                       # TypeAtomic
+    | TIMESTAMP                    # TypeAtomic
+    | CHAR                         # TypeAtomic
+    | CHARACTER                    # TypeAtomic
+    | MISSING                      # TypeAtomic
+    | STRING                       # TypeAtomic
+    | SYMBOL                       # TypeAtomic
+    | BLOB                         # TypeAtomic
+    | CLOB                         # TypeAtomic
+    | DATE                         # TypeAtomic
+    | STRUCT                       # TypeAtomic
+    | TUPLE                        # TypeAtomic
+    | LIST                         # TypeAtomic
+    | SEXP                         # TypeAtomic
+    | BAG                          # TypeAtomic
+    | ANY                          # TypeAtomic
+    | FLOAT ( PAREN_LEFT precision=LITERAL_INTEGER PAREN_RIGHT )?                                      # TypeFloat
+    | DECIMAL ( PAREN_LEFT precision=LITERAL_INTEGER ( COMMA scale=LITERAL_INTEGER )? PAREN_RIGHT )?   # TypeDecimal
+    | NUMERIC ( PAREN_LEFT precision=LITERAL_INTEGER ( COMMA scale=LITERAL_INTEGER )? PAREN_RIGHT )?   # TypeNumeric
+    | CHARACTER VARYING ( PAREN_LEFT length=LITERAL_INTEGER PAREN_RIGHT )?                             # TypeVarChar
+    | (CHARACTER | CHAR) ( PAREN_LEFT length=LITERAL_INTEGER PAREN_RIGHT )?                            # TypeChar
+    | TIME ( PAREN_LEFT precision=LITERAL_INTEGER PAREN_RIGHT )? WITH TIME ZONE                        # TypeTimeZone
+    | TIME ( PAREN_LEFT precision=LITERAL_INTEGER PAREN_RIGHT )?                                       # TypeTime
+    | symbolPrimitive              # TypeCustom
     ;
     
 literal
