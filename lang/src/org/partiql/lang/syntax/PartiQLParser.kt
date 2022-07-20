@@ -28,7 +28,7 @@ import org.partiql.lang.ast.toExprNode
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.syntax.PartiQLParser.ParseErrorListener.Companion.INSTANCE
 import org.partiql.lang.types.CustomType
-import org.partiql.lang.visitors.AntlrTreeToPartiQLVisitor
+import org.partiql.lang.visitors.PartiQLVisitor
 import java.nio.charset.StandardCharsets
 import org.partiql.lang.generated.PartiQLParser as GeneratedParser
 import org.partiql.lang.generated.PartiQLTokens as GeneratedLexer
@@ -40,7 +40,7 @@ class PartiQLParser(
 
     override fun parseAstStatement(source: String): PartiqlAst.Statement {
         val tree = parseQuery(source)
-        val visitor = AntlrTreeToPartiQLVisitor(ion, customTypes)
+        val visitor = PartiQLVisitor(ion, customTypes)
         return visitor.visit(tree) as PartiqlAst.Statement
     }
 
