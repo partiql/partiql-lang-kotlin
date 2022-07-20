@@ -2,25 +2,24 @@ package org.partiql.lang.typesystem.builtin.types
 
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
-import org.partiql.lang.typesystem.interfaces.type.BuiltInType
 import org.partiql.lang.typesystem.interfaces.type.ParametricType
-import org.partiql.lang.typesystem.interfaces.type.SqlType
+import org.partiql.lang.typesystem.interfaces.type.ScalarType
 import org.partiql.lang.typesystem.interfaces.type.TypeParameters
 import org.partiql.lang.util.asIonInt
 
 /**
  * The standard sql type TIME, e.g. '10:23:54'
  */
-object TimeType : BuiltInType(), ParametricType {
+object TimeType : ScalarType, ParametricType {
     override val typeAliases: List<String>
         get() = listOf("time")
 
     override val exprValueType: ExprValueType
         get() = ExprValueType.TIME
 
-    override val requiredParameters: List<SqlType> = emptyList()
+    override val requiredParameters: List<ScalarType> = emptyList()
 
-    override val optionalParameters: List<Pair<SqlType, ExprValue>> = listOf(
+    override val optionalParameters: List<Pair<ScalarType, ExprValue>> = listOf(
         IntType to valueFactory.newInt(Integer.MAX_VALUE)
     )
 

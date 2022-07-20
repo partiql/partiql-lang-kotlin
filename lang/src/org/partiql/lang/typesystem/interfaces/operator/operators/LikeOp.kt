@@ -4,7 +4,7 @@ import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.typesystem.interfaces.operator.OpAlias
 import org.partiql.lang.typesystem.interfaces.operator.SqlOperator
 import org.partiql.lang.typesystem.interfaces.type.CompileTimeType
-import org.partiql.lang.typesystem.interfaces.type.SqlType
+import org.partiql.lang.typesystem.interfaces.type.ScalarType
 import org.partiql.lang.typesystem.interfaces.type.TypeParameters
 
 /**
@@ -17,17 +17,17 @@ abstract class LikeOp : SqlOperator {
     /**
      * Type of the source expression
      */
-    abstract val sourceType: SqlType
+    abstract val sourceType: ScalarType
 
     /**
      * Type of the matching pattern
      */
-    abstract val patternType: SqlType
+    abstract val patternType: ScalarType
 
     /**
      * Type of the escaping characters
      */
-    abstract val escapeType: SqlType
+    abstract val escapeType: ScalarType
 
     /**
      * Function return type inference

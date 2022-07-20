@@ -4,30 +4,26 @@ import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.typesystem.interfaces.operator.OpAlias
 import org.partiql.lang.typesystem.interfaces.operator.SqlOperator
 import org.partiql.lang.typesystem.interfaces.type.CompileTimeType
-import org.partiql.lang.typesystem.interfaces.type.SqlType
+import org.partiql.lang.typesystem.interfaces.type.ScalarType
 import org.partiql.lang.typesystem.interfaces.type.TypeParameters
 
-/**
- * Used to define [OpAlias.IS] operator
- */
-abstract class IsOp : SqlOperator {
-    override val operatorAlias: OpAlias
-        get() = OpAlias.IS
+sealed class CastOp : SqlOperator {
+    override val operatorAlias = OpAlias.CAST
 
     /**
      * Type of the source expression
      */
-    abstract val sourceType: SqlType
+    abstract val sourceType: ScalarType
 
     /**
      * Target type
      */
-    abstract val expectedType: SqlType
+    abstract val targetType: ScalarType
 
     /**
-     * Function return type inference
+     * Infer return type
      *
-     * [paramRegistry] is the registry of type parameters.
+     * [paramRegistry] is the registry of type parameters of operands.
      */
     abstract fun inferReturnType(paramRegistry: ParameterRegistry): CompileTimeType
 
@@ -35,7 +31,7 @@ abstract class IsOp : SqlOperator {
      * Evaluation
      *
      * [sourceValue] is the value of the source expression passed to this operator during evaluation time.
-     * [paramRegistry] is the registry of type parameters.
+     * [paramRegistry] is the registry of type parameters of operands.
      */
     abstract fun invoke(sourceValue: ExprValue, paramRegistry: ParameterRegistry): ExprValue
 
@@ -44,6 +40,6 @@ abstract class IsOp : SqlOperator {
      */
     data class ParameterRegistry internal constructor(
         val parametersOfSourceType: TypeParameters,
-        val parametersOfExpectedType: TypeParameters
+        val parametersOfTargetType: TypeParameters
     )
 }

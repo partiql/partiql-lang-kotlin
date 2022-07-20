@@ -4,7 +4,7 @@ import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.typesystem.interfaces.operator.OpAlias
 import org.partiql.lang.typesystem.interfaces.operator.SqlOperator
 import org.partiql.lang.typesystem.interfaces.type.CompileTimeType
-import org.partiql.lang.typesystem.interfaces.type.SqlType
+import org.partiql.lang.typesystem.interfaces.type.ScalarType
 import org.partiql.lang.typesystem.interfaces.type.TypeParameters
 
 /**
@@ -17,17 +17,17 @@ abstract class BetweenOp : SqlOperator {
     /**
      * Type of the source expression
      */
-    abstract val sourceType: SqlType
+    abstract val sourceType: ScalarType
 
     /**
      * Type of the "from" expression
      */
-    abstract val fromType: SqlType
+    abstract val fromType: ScalarType
 
     /**
      * Type of the "to" expression
      */
-    abstract val toType: SqlType
+    abstract val toType: ScalarType
 
     /**
      * Function return type inference

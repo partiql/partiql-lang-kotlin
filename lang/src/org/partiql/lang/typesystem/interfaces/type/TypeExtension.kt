@@ -8,7 +8,7 @@ import org.partiql.lang.eval.ExprValue
  * [parameters] should be an empty list for non-parametric types.
  */
 data class CompileTimeType(
-    val type: SqlType,
+    val type: ScalarType,
     val parameters: TypeParameters = emptyList()
 )
 

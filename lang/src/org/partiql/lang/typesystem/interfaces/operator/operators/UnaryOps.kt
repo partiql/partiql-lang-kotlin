@@ -4,14 +4,14 @@ import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.typesystem.interfaces.operator.OpAlias
 import org.partiql.lang.typesystem.interfaces.operator.SqlOperator
 import org.partiql.lang.typesystem.interfaces.type.CompileTimeType
-import org.partiql.lang.typesystem.interfaces.type.SqlType
+import org.partiql.lang.typesystem.interfaces.type.ScalarType
 import org.partiql.lang.typesystem.interfaces.type.TypeParameters
 
 sealed class UnaryOp(override val operatorAlias: OpAlias) : SqlOperator {
     /**
      * Type of expression
      */
-    abstract val exprType: SqlType
+    abstract val exprType: ScalarType
 
     /**
      * Function return type inference
