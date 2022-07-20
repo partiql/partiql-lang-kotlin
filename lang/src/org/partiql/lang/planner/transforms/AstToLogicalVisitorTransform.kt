@@ -139,8 +139,9 @@ private class AstToLogicalVisitorTransform(
             is PartiqlAst.DmlOp.Insert -> {
                 node.from?.let { problemHandler.handleUnimplementedFeature(dmlOp, "UPDATE / INSERT") }
                 // Check for and block `INSERT INTO <tbl> VALUES (...)`  This is *no* way to support this
-                // within PartiQL itself since this flavor requires schema which we do not yet have.
-                // We block this by identifying (bag (list ...) ...) nodes which  is how the parser represents the
+                // within without the optional comma separated list of columns that precedes `VALUES` since doing so
+                // requires
+                // We block this by identifying (bag (list ...) ...) nodes which is how the parser represents the
                 // VALUES constructor.  Since parser uses the same nodes for the alternate syntactic representations
                 // `<< [ ... ] ... >>` and `BAG(LIST(...), ...)` those get blocked too.  This is probably just as well.
                 if (dmlOp.values is PartiqlAst.Expr.Bag) {
