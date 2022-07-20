@@ -35,12 +35,12 @@ import org.partiql.lang.generated.PartiQLTokens as GeneratedLexer
 
 class PartiQLParser(
     private val ion: IonSystem,
-    customTypes: List<CustomType> = listOf()
+    val customTypes: List<CustomType> = listOf()
 ) : Parser {
 
     override fun parseAstStatement(source: String): PartiqlAst.Statement {
         val tree = parseQuery(source)
-        val visitor = AntlrTreeToPartiQLVisitor(ion)
+        val visitor = AntlrTreeToPartiQLVisitor(ion, customTypes)
         return visitor.visit(tree) as PartiqlAst.Statement
     }
 
