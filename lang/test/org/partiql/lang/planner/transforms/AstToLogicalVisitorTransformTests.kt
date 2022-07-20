@@ -126,13 +126,16 @@ class AstToLogicalVisitorTransformTests {
     fun `to logical (DML)`(tc: TestCase) = runTestCase(tc)
     class ArgumentsForToLogicalDmlTests : ArgumentsProviderBase() {
         override fun getParameters() = listOf(
-            TestCase("INSERT INTO foo << 1 >>", PartiqlLogical.build {
-                dml(
-                    id("foo", caseInsensitive(), unqualified()),
-                    dmlInsert(),
-                    bag(lit(ionInt(1)))
-                )
-            }),
+            TestCase(
+                "INSERT INTO foo << 1 >>",
+                PartiqlLogical.build {
+                    dml(
+                        id("foo", caseInsensitive(), unqualified()),
+                        dmlInsert(),
+                        bag(lit(ionInt(1)))
+                    )
+                }
+            ),
 
             TestCase(
                 "INSERT INTO foo SELECT x.* FROM 1 AS x",
