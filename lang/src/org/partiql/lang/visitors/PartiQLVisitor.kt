@@ -32,7 +32,7 @@ import java.time.OffsetTime
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 
-class AntlrTreeToPartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = listOf()) : PartiQLBaseVisitor<PartiqlAst.PartiqlAstNode>() {
+class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = listOf()) : PartiQLBaseVisitor<PartiqlAst.PartiqlAstNode>() {
 
     private val CUSTOM_KEYWORDS = customTypes.map { it.name.toLowerCase() }
 
