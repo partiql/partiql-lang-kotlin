@@ -1074,7 +1074,7 @@ class SqlParserPrecedenceTest : SqlParserTestBase() {
 
         val expectedExpr = PartiqlAst.transform(ion.singleValue(expectedAst).toIonElement()) as PartiqlAst.Expr
         val expectedStatement = PartiqlAst.build { query(expectedExpr) }
-        val actualStatement = SqlParser(ion).parseAstStatement(source)
+        val actualStatement = PartiQLParser(ion).parseAstStatement(source)
 
         assertEquals(expectedStatement, actualStatement)
     }
