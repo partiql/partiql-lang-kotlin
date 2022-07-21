@@ -238,37 +238,49 @@ exprQuery
     ;
     
 booleanExpr
-    : valueExpr predicate[$valueExpr.ctx]?                                  # ExprPredicate
-    | NOT rhs=booleanExpr                                                   # ExprQueryNot
-    | lhs=booleanExpr AND rhs=booleanExpr                                   # ExprQueryAnd
-    | lhs=booleanExpr OR rhs=booleanExpr                                    # ExprQueryOr
+    : lhs=oldValueExpr arithmetic[$lhs.ctx]     # OpMath
+    | lhs=booleanExpr comparison[$lhs.ctx]      # OpComparison
+    | lhs=booleanExpr predicate[$lhs.ctx]       # OpPredicate
+    | NOT rhs=booleanExpr                       # ExprQueryNot
+    | lhs=booleanExpr AND rhs=booleanExpr       # ExprQueryAnd
+    | lhs=booleanExpr OR rhs=booleanExpr        # ExprQueryOr
+    | valueExpr                                 # BooleanExprPrimary
     ;
     
-// TODO
-valueExpr
-    : exprPrimary                                                          # ExprQueryPrimary
-    | PLUS rhs=valueExpr                                                   # ExprQueryPositive
-    | MINUS rhs=valueExpr                                                  # ExprQueryNegative
-    | lhs=valueExpr ASTERISK rhs=valueExpr                                 # ExprQueryMultiply
-    | lhs=valueExpr SLASH_FORWARD rhs=valueExpr                            # ExprQueryDivide
-    | lhs=valueExpr PERCENT rhs=valueExpr                                  # ExprQueryModulo
-    | lhs=valueExpr PLUS rhs=valueExpr                                     # ExprQueryPlus
-    | lhs=valueExpr MINUS rhs=valueExpr                                    # ExprQueryMinus
-    | lhs=valueExpr CONCAT rhs=valueExpr                                   # ExprQueryConcat
-    | lhs=valueExpr NOT? LIKE rhs=valueExpr ( ESCAPE escape=valueExpr )?     # ExprQueryLike
+oldValueExpr
+    : valueExpr                                        # OldValueExprPrimary
+    | lhs=valueExpr arithmetic[$lhs.ctx]               # OldValueExprSecondary
     ;
     
-// TODO
+arithmetic[ParserRuleContext lhs]
+    : ASTERISK rhs=valueExpr            # ExprQueryMultiply
+    | SLASH_FORWARD rhs=valueExpr       # ExprQueryDivide
+    | PERCENT rhs=valueExpr             # ExprQueryModulo
+    | PLUS rhs=valueExpr                # ExprQueryPlus
+    | MINUS rhs=valueExpr               # ExprQueryMinus
+    | CONCAT rhs=valueExpr              # ExprQueryConcat
+    ;
+    
 predicate[ParserRuleContext lhs]
-    : ANGLE_LEFT rhs=valueExpr                                 # ExprQueryLt
-    | LT_EQ rhs=valueExpr                                      # ExprQueryLtEq
-    | ANGLE_RIGHT rhs=valueExpr                                # ExprQueryGt
-    | GT_EQ rhs=valueExpr                                      # ExprQueryGtEq
-    | NEQ rhs=valueExpr                                        # ExprQueryNeq
-    | EQ rhs=valueExpr                                         # ExprQueryEq
-    | NOT? BETWEEN lower=valueExpr AND upper=valueExpr         # ExprQueryBetween
-    | NOT? IN rhs=exprQuery                                    # ExprQueryIn
-    | IS NOT? rhs=exprQuery                                    # ExprQueryIs
+    : NOT? BETWEEN lower=oldValueExpr AND upper=oldValueExpr         # ExprQueryBetween
+    | IS NOT? rhs=type                                               # ExprQueryIs
+    | NOT? LIKE rhs=oldValueExpr ( ESCAPE escape=oldValueExpr )?     # ExprQueryLike
+    | NOT? IN rhs=exprQuery                                          # ExprQueryIn
+    ;
+
+comparison[ParserRuleContext lhs]
+    : ANGLE_LEFT rhs=oldValueExpr     # ExprQueryLt
+    | LT_EQ rhs=oldValueExpr          # ExprQueryLtEq
+    | ANGLE_RIGHT rhs=oldValueExpr    # ExprQueryGt
+    | GT_EQ rhs=oldValueExpr          # ExprQueryGtEq
+    | NEQ rhs=oldValueExpr            # ExprQueryNeq
+    | EQ rhs=oldValueExpr             # ExprQueryEq
+    ;
+
+valueExpr
+    : exprPrimary               # ExprQueryPrimary
+    | PLUS rhs=valueExpr        # ExprQueryPositive
+    | MINUS rhs=valueExpr       # ExprQueryNegative
     ;
 
 caseExpr
