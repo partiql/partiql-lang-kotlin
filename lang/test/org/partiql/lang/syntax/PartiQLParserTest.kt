@@ -56,7 +56,7 @@ class PartiQLParserTest {
 
     @Test
     fun testVisual() {
-        val query = "a intersect b intersect all c"
+        val query = "a not like b + c"
         val tree = parser.parseQuery(query)
 
         val frame = JFrame("AST")
@@ -122,6 +122,8 @@ class PartiQLParserTest {
                 "d intersect e intersect f",
                 "g intersect all h intersect all i",
                 "a like b like c",
+                "a like b like c not like d",
+                "a like b not like c like d",
                 "5 <= 5 < 2"
             )
             return queries
