@@ -236,6 +236,7 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         return visit(ctx.tableJoined()) as PartiqlAst.FromSource
     }
 
+    // TODO: Ask Josh about this
     override fun visitTableRefCrossJoin(ctx: PartiQLParser.TableRefCrossJoinContext): PartiqlAst.FromSource {
         val lhs = visit(ctx.tableReference()) as PartiqlAst.FromSource
         val joinType = if (ctx.joinType() != null) visitJoinType(ctx.joinType()) else PartiqlAst.JoinType.Inner()
@@ -246,6 +247,7 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         }
     }
 
+    // TODO: Ask Josh about this
     override fun visitTableCrossJoin(ctx: PartiQLParser.TableCrossJoinContext): PartiqlAst.FromSource {
         val lhs = visit(ctx.tableReference()) as PartiqlAst.FromSource
         val joinType = if (ctx.joinType() != null) visitJoinType(ctx.joinType()) else PartiqlAst.JoinType.Inner()
@@ -471,10 +473,21 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         val lhs = visit(ctx.lhs) as PartiqlAst.Expr
         val rhs = visit(ctx.rhs) as PartiqlAst.Expr
         val escape = if (ctx.escape == null) null else visit(ctx.escape) as PartiqlAst.Expr
-        val like = PartiqlAst.BUILDER().like(lhs, rhs, escape)
-        return if (ctx.NOT() == null) like
-        else PartiqlAst.BUILDER().not(like)
+        var like: PartiqlAst.Expr = PartiqlAst.BUILDER().like(lhs, rhs, escape)
+        if (ctx.NOT() != null) like = PartiqlAst.BUILDER().not(like)
+//        var index = 0
+//        while (index < ctx.likeRhs().size) {
+//            like = getLike(like, ctx.likeRhs(index))
+//            index++
+//        }
+        return like
     }
+
+//    private fun getLike(lhs: PartiqlAst.Expr, ctx: PartiQLParser.LikeRhsContext): PartiqlAst.Expr {
+//        val rhs = visit(ctx.rhs) as PartiqlAst.Expr
+//        val escape = if (ctx.escape == null) null else visit(ctx.escape) as PartiqlAst.Expr
+//        return PartiqlAst.BUILDER().like(lhs, rhs, escape)
+//    }
 
     override fun visitExprQueryConcat(ctx: PartiQLParser.ExprQueryConcatContext): PartiqlAst.PartiqlAstNode {
         val lhs = visit(ctx.lhs) as PartiqlAst.Expr
