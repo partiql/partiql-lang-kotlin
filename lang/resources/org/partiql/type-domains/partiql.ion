@@ -697,14 +697,11 @@ may then be further optimized by selecting better implementations of each operat
                 // A DML operation, such as `INSERT`, `UPDATE` or `DELETE`
                 (dml
                     // The target is an expression that is indicates the table whose data is to be manipulated.
-                    // In practice this can be an identifier or a simplified path expression consisting of only
-                    // literal path steps (and with no wildcard or unpivot operators).  This restriction must
-                    // be enforced by the PartiQL implementation.
-                    // TODO: consider ways to reduce the domain of acceptable values here.  Of course, we it would
-                    // be possible to create a `sum` type like `expr` but containing only the valid DML targets,
-                    // but that would might necessitate duplicating some logic related to variable resolution which is
-                    // already implemented for standard expressions.  This is out of scope for current efforts.
-                    target::expr
+                    // According to the PartiQL's grammar this can be an identifier or a simplified path expression
+                    // consisting of only literal path steps (and with no wildcard or unpivot operators).
+                    // Note: partiql_ast uses the `expr` sum type for this, which is too broad.  We're not
+                    // changing that at this time because `partiql_ast` is established public API.
+                    target::identifier
                     operation::dml_operation
                     rows::expr
                 )
@@ -737,7 +734,6 @@ may then be further optimized by selecting better implementations of each operat
             column_component
             returning_mapping
             assignment
-            identifier
         )
     )
 )
@@ -799,6 +795,12 @@ may then be further optimized by selecting better implementations of each operat
                 (global_id uniqueId::symbol)
             )
         )
+
+        // Replace statement.dml.target with statement.dml.uniqueId (the "resolved" corollary).
+        (with statement
+            (exclude dml)
+            (include (dml uniqueId::symbol operation::dml_operation rows::expr))
+        )
     )
 )
 
@@ -822,8 +824,7 @@ may then be further optimized by selecting better implementations of each operat
             (product impl name::symbol static_args::(* ion 0))
         )
 
-        // drop DML stuff added in partiql_logical (we expect these to be rewritten into pure bexprs by the time
-        // we transform a query to this domain).
+        // drop DML stuff added in partiql_logical (these should be rewritten into queries).
         (exclude dml_operation)
         (with statement
             (exclude dml)

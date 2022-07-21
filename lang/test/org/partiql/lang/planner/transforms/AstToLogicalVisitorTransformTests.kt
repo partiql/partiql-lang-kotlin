@@ -130,7 +130,7 @@ class AstToLogicalVisitorTransformTests {
                 "INSERT INTO foo << 1 >>",
                 PartiqlLogical.build {
                     dml(
-                        id("foo", caseInsensitive(), unqualified()),
+                        identifier("foo", caseInsensitive()),
                         dmlInsert(),
                         bag(lit(ionInt(1)))
                     )
@@ -141,7 +141,7 @@ class AstToLogicalVisitorTransformTests {
                 "INSERT INTO foo SELECT x.* FROM 1 AS x",
                 PartiqlLogical.build {
                     dml(
-                        id("foo", caseInsensitive(), unqualified()),
+                        identifier("foo", caseInsensitive()),
                         dmlInsert(),
                         bindingsToValues(
                             struct(structFields(id("x", caseInsensitive(), unqualified()))),
@@ -154,7 +154,7 @@ class AstToLogicalVisitorTransformTests {
                 "DELETE FROM y AS y",
                 PartiqlLogical.build {
                     dml(
-                        id("y", caseInsensitive(), unqualified()),
+                        identifier("y", caseInsensitive()),
                         dmlDelete(),
                         bindingsToValues(
                             id("y", caseSensitive(), unqualified()),
@@ -167,7 +167,7 @@ class AstToLogicalVisitorTransformTests {
                 "DELETE FROM y AS y WHERE 1=1",
                 PartiqlLogical.build {
                     dml(
-                        id("y", caseInsensitive(), unqualified()),
+                        identifier("y", caseInsensitive()),
                         dmlDelete(),
                         bindingsToValues(
                             id("y", caseSensitive(), unqualified()),
@@ -183,10 +183,10 @@ class AstToLogicalVisitorTransformTests {
         )
     }
 
-    data class UnimplementedFeatureTestCase(val sql: String, val expectedProblem: Problem)
+    data class ProblemTestCase(val sql: String, val expectedProblem: Problem)
     @ParameterizedTest
-    @ArgumentsSource(ArgumentsForUnimplementedFeatureTests::class)
-    fun `unimplemented feautres are blocked`(tc: UnimplementedFeatureTestCase) {
+    @ArgumentsSource(ArgumentsForProblemTests::class)
+    fun `unimplemented feautres are blocked`(tc: ProblemTestCase) {
         val problemHandler = ProblemCollector()
         assertDoesNotThrow("Parsing TestCase.sql should not throw") {
             parseAndTransform(tc.sql, problemHandler)
@@ -204,34 +204,55 @@ class AstToLogicalVisitorTransformTests {
      * blocks all language features except those explicitly allowed.  This will be needed to constrain possible queries
      * to features supported by specific PartiQL-services.
      */
-    class ArgumentsForUnimplementedFeatureTests : ArgumentsProviderBase() {
+    class ArgumentsForProblemTests : ArgumentsProviderBase() {
 
         override fun getParameters() = listOf(
-            // SELECT queries
-            UnimplementedFeatureTestCase("SELECT b.* FROM UNPIVOT x as y", unimplementedProblem("UNPIVOT", 1, 17)),
-            UnimplementedFeatureTestCase("SELECT b.* FROM bar AS b GROUP BY a", unimplementedProblem("GROUP BY", 1, 26)),
-            UnimplementedFeatureTestCase("SELECT b.* FROM bar AS b HAVING x", unimplementedProblem("HAVING", 1, 33)),
-            UnimplementedFeatureTestCase("SELECT b.* FROM bar AS b ORDER BY y", unimplementedProblem("ORDER BY", 1, 26)),
-            UnimplementedFeatureTestCase("PIVOT v AT n FROM data AS d", unimplementedProblem("PIVOT", 1, 1)),
+            // SELECT queries are not implemented
+            ProblemTestCase("SELECT b.* FROM UNPIVOT x as y", unimplementedProblem("UNPIVOT", 1, 17)),
+            ProblemTestCase("SELECT b.* FROM bar AS b GROUP BY a", unimplementedProblem("GROUP BY", 1, 26)),
+            ProblemTestCase("SELECT b.* FROM bar AS b HAVING x", unimplementedProblem("HAVING", 1, 33)),
+            ProblemTestCase("SELECT b.* FROM bar AS b ORDER BY y", unimplementedProblem("ORDER BY", 1, 26)),
+            ProblemTestCase("PIVOT v AT n FROM data AS d", unimplementedProblem("PIVOT", 1, 1)),
 
-            // DDL
-            UnimplementedFeatureTestCase("CREATE TABLE foo", unimplementedProblem("CREATE TABLE", 1, 1)),
-            UnimplementedFeatureTestCase("DROP TABLE foo", unimplementedProblem("DROP TABLE", 1, 1)),
-            UnimplementedFeatureTestCase("CREATE INDEX ON foo (x)", unimplementedProblem("CREATE INDEX", 1, 1)),
-            UnimplementedFeatureTestCase("DROP INDEX bar ON foo", unimplementedProblem("DROP INDEX", 1, 1)),
+            // DDL is  not implemented
+            ProblemTestCase("CREATE TABLE foo", unimplementedProblem("CREATE TABLE", 1, 1)),
+            ProblemTestCase("DROP TABLE foo", unimplementedProblem("DROP TABLE", 1, 1)),
+            ProblemTestCase("CREATE INDEX ON foo (x)", unimplementedProblem("CREATE INDEX", 1, 1)),
+            ProblemTestCase("DROP INDEX bar ON foo", unimplementedProblem("DROP INDEX", 1, 1)),
 
-            // DML
-            UnimplementedFeatureTestCase("FROM x AS xx INSERT INTO foo VALUES (1, 2)", unimplementedProblem("UPDATE / INSERT", 1, 14)),
-            UnimplementedFeatureTestCase("FROM x AS xx SET k = 5", unimplementedProblem("SET", 1, 14)),
-            UnimplementedFeatureTestCase("UPDATE x SET k = 5", unimplementedProblem("SET", 1, 10)),
-            UnimplementedFeatureTestCase("UPDATE x REMOVE k", unimplementedProblem("REMOVE", 1, 10)),
-            UnimplementedFeatureTestCase("UPDATE x INSERT INTO k << 1 >>", unimplementedProblem("UPDATE / INSERT", 1, 10)),
+            // Unimplemented parts of DML
+            ProblemTestCase("FROM x AS xx INSERT INTO foo VALUES (1, 2)", unimplementedProblem("UPDATE / INSERT", 1, 14)),
+            ProblemTestCase("FROM x AS xx SET k = 5", unimplementedProblem("SET", 1, 14)),
+            ProblemTestCase("UPDATE x SET k = 5", unimplementedProblem("SET", 1, 10)),
+            ProblemTestCase("UPDATE x REMOVE k", unimplementedProblem("REMOVE", 1, 10)),
+            ProblemTestCase("UPDATE x INSERT INTO k << 1 >>", unimplementedProblem("UPDATE / INSERT", 1, 10)),
 
-            UnimplementedFeatureTestCase(
+            // Non-identifier DML targets for INSERT and DELETE cases (unsupported for now, but we will likely
+            // need at list the first case in the future.)
+            ProblemTestCase(
+                "INSERT INTO x.y << 1 >>",
+                Problem(SourceLocationMeta(1, 13), PlanningProblemDetails.InvalidDmlTarget)
+            ),
+            ProblemTestCase(
+                "DELETE FROM x.y AS y",
+                Problem(SourceLocationMeta(1, 13), PlanningProblemDetails.InvalidDmlTarget)
+            ),
+            // We may never want to support this variant, but this is valid grammar according to the parser.
+            ProblemTestCase(
+                "INSERT INTO x[1] << 1 >>",
+                Problem(SourceLocationMeta(1, 13), PlanningProblemDetails.InvalidDmlTarget)
+            ),
+            ProblemTestCase(
+                "DELETE FROM x[1] AS x1",
+                Problem(SourceLocationMeta(1, 13), PlanningProblemDetails.InvalidDmlTarget)
+            ),
+            // INSERT INTO ... VALUE ... is not supported because it is redundant with INSERT INTO ... << <expr> >>
+            ProblemTestCase(
                 "INSERT INTO x VALUE 1",
                 Problem(SourceLocationMeta(1, 1), PlanningProblemDetails.InsertValueDisallowed)
             ),
-            UnimplementedFeatureTestCase(
+            // We need schema to support using INSERT INTO without an explicit list of fields.
+            ProblemTestCase(
                 "INSERT INTO x VALUES (1, 2, 3)",
                 Problem(SourceLocationMeta(1, 1), PlanningProblemDetails.InsertValuesDisallowed)
             )

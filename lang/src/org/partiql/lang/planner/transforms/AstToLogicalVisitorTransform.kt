@@ -157,7 +157,7 @@ private class AstToLogicalVisitorTransform(
 
                 PartiqlLogical.build {
                     dml(
-                        target = transformExpr(dmlOp.target),
+                        target = dmlOp.target.toDmlTargetId(),
                         operation = dmlInsert(),
                         rows = transformExpr(dmlOp.values),
                         metas = node.metas
@@ -193,7 +193,7 @@ private class AstToLogicalVisitorTransform(
 
                             PartiqlLogical.build {
                                 dml(
-                                    target = transformExpr(node.from.expr),
+                                    target = node.from.expr.toDmlTargetId(),
                                     operation = dmlDelete(),
                                     // This query returns entire rows which are to be deleted, which is unfortunate
                                     // unavoidable without knowledge of schema. PartiQL embedders may apply a
@@ -232,6 +232,24 @@ private class AstToLogicalVisitorTransform(
                 INVALID_STATEMENT
             }
         }
+    }
+
+    private fun PartiqlAst.Expr.toDmlTargetId(): PartiqlLogical.Identifier {
+        val dmlTargetId = when (this) {
+            is PartiqlAst.Expr.Id -> PartiqlLogical.build {
+                identifier_(name, transformCaseSensitivity(case), metas)
+            }
+            else -> {
+                problemHandler.handleProblem(
+                    Problem(
+                        metas.sourceLocationMetaOrUnknown,
+                        PlanningProblemDetails.InvalidDmlTarget
+                    )
+                )
+                INVALID_DML_TARGET_ID
+            }
+        }
+        return dmlTargetId
     }
 
     override fun transformStatementDdl(node: PartiqlAst.Statement.Ddl): PartiqlLogical.Statement {
@@ -320,4 +338,8 @@ private val INVALID_BEXPR = PartiqlLogical.build {
 
 private val INVALID_EXPR = PartiqlLogical.build {
     lit(ionSymbol("this is a placeholder for an invalid expression - do not run"))
+}
+
+private val INVALID_DML_TARGET_ID = PartiqlLogical.build {
+    identifier("this is a placeholder for an invalid DML target - do not run", caseInsensitive())
 }
