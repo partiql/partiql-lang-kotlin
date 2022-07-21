@@ -16,11 +16,16 @@ package org.partiql.lang.syntax
 
 import com.amazon.ion.IonSystem
 import com.amazon.ion.system.IonSystemBuilder
+import org.antlr.v4.gui.TreeViewer
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestFailureReason
 import org.partiql.lang.eval.evaluatortestframework.assertEquals
 import org.partiql.lang.util.ArgumentsProviderBase
+import java.lang.Thread.sleep
+import javax.swing.JFrame
+import javax.swing.JPanel
 
 class PartiQLParserTest {
 
@@ -49,22 +54,22 @@ class PartiQLParserTest {
         }
     }
 
-//    @Test
-//    fun testVisual() {
-//        val query = "SELECT * FROM a" // LEFT JOIN b ON c;"
-//        val tree = parser.parseQuery(query)
-//
-//        val frame = JFrame("AST")
-//        val panel = JPanel()
-//        val view = TreeViewer(parser.getParser(query).ruleNames.toMutableList(), tree)
-//        view.scale = 1.5
-//        panel.add(view)
-//        frame.add(panel)
-//        frame.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
-//        frame.pack()
-//        frame.isVisible = true
-//        sleep(20_000)
-//    }
+    @Test
+    fun testVisual() {
+        val query = "a intersect b intersect all c"
+        val tree = parser.parseQuery(query)
+
+        val frame = JFrame("AST")
+        val panel = JPanel()
+        val view = TreeViewer(parser.getParser(query).ruleNames.toMutableList(), tree)
+        view.scale = 1.5
+        panel.add(view)
+        frame.add(panel)
+        frame.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
+        frame.pack()
+        frame.isVisible = true
+        sleep(20_000)
+    }
 
     class QueryCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> {
@@ -113,6 +118,11 @@ class PartiQLParserTest {
                 "CAST( 1 AS int)",
                 "CAST( 3 AS INTEGER)",
                 "CAST( 3 AS STRING)",
+                "a intersect b intersect all c",
+                "d intersect e intersect f",
+                "g intersect all h intersect all i",
+                "a like b like c",
+                "5 <= 5 < 2"
             )
             return queries
         }
