@@ -197,12 +197,30 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
     }
 
     override fun visitQuery(ctx: PartiQLParser.QueryContext): PartiqlAst.Expr {
-        return visitQuerySet(ctx.querySet())
+        return visit(ctx.querySet()) as PartiqlAst.Expr
     }
 
-    // TODO: Do other scenarios
-    override fun visitQuerySet(ctx: PartiQLParser.QuerySetContext): PartiqlAst.Expr {
-        return visit(ctx.singleQuery()) as PartiqlAst.Expr
+    override fun visitQuerySetSingleQuery(ctx: PartiQLParser.QuerySetSingleQueryContext): PartiqlAst.PartiqlAstNode = visit(ctx.singleQuery())
+
+    override fun visitQuerySetIntersect(ctx: PartiQLParser.QuerySetIntersectContext): PartiqlAst.Expr.Intersect {
+        val lhs = visit(ctx.lhs) as PartiqlAst.Expr
+        val rhs = visit(ctx.rhs) as PartiqlAst.Expr
+        val quantifier = if (ctx.ALL() != null) PartiqlAst.BUILDER().all() else PartiqlAst.BUILDER().distinct()
+        return PartiqlAst.BUILDER().intersect(quantifier, listOf(lhs, rhs))
+    }
+
+    override fun visitQuerySetExcept(ctx: PartiQLParser.QuerySetExceptContext): PartiqlAst.Expr.Except {
+        val lhs = visit(ctx.lhs) as PartiqlAst.Expr
+        val rhs = visit(ctx.rhs) as PartiqlAst.Expr
+        val quantifier = if (ctx.ALL() != null) PartiqlAst.BUILDER().all() else PartiqlAst.BUILDER().distinct()
+        return PartiqlAst.BUILDER().except(quantifier, listOf(lhs, rhs))
+    }
+
+    override fun visitQuerySetUnion(ctx: PartiQLParser.QuerySetUnionContext): PartiqlAst.Expr.Union {
+        val lhs = visit(ctx.lhs) as PartiqlAst.Expr
+        val rhs = visit(ctx.rhs) as PartiqlAst.Expr
+        val quantifier = if (ctx.ALL() != null) PartiqlAst.BUILDER().all() else PartiqlAst.BUILDER().distinct()
+        return PartiqlAst.BUILDER().union(quantifier, listOf(lhs, rhs))
     }
 
     override fun visitQuerySfw(ctx: PartiQLParser.QuerySfwContext): PartiqlAst.Expr.Select {
@@ -422,6 +440,14 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
 
     override fun visitExprQueryPrimary(ctx: PartiQLParser.ExprQueryPrimaryContext): PartiqlAst.PartiqlAstNode {
         return visit(ctx.exprPrimary())
+    }
+
+    override fun visitExprQueryIn(ctx: PartiQLParser.ExprQueryInContext): PartiqlAst.PartiqlAstNode {
+        val lhs = visit(ctx.lhs) as PartiqlAst.Expr
+        val rhs = visit(ctx.rhs) as PartiqlAst.Expr
+        val isType = PartiqlAst.BUILDER().inCollection(listOf(lhs, rhs))
+        return if (ctx.NOT() == null) isType
+        else PartiqlAst.BUILDER().not(isType)
     }
 
     override fun visitExprQueryIs(ctx: PartiQLParser.ExprQueryIsContext): PartiqlAst.PartiqlAstNode {
