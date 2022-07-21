@@ -8,7 +8,7 @@ options {
 
 // TODO: Search LATERAL
 
-topQuery: query;
+topQuery: query EOF;
 
 sfwQuery
     : withClause? selectClause fromClause? letClause? whereClause? groupClause? havingClause? orderByClause? limitClause? offsetByClause? # SelectFromWhere
@@ -255,20 +255,20 @@ valueExpr
     | lhs=valueExpr PLUS rhs=valueExpr                                     # ExprQueryPlus
     | lhs=valueExpr MINUS rhs=valueExpr                                    # ExprQueryMinus
     | lhs=valueExpr CONCAT rhs=valueExpr                                   # ExprQueryConcat
+    | lhs=valueExpr NOT? LIKE rhs=valueExpr ( ESCAPE escape=valueExpr )?     # ExprQueryLike
     ;
     
 // TODO
 predicate[ParserRuleContext lhs]
-    : ANGLE_LEFT rhs=valueExpr                               # ExprQueryLt
-    | LT_EQ rhs=valueExpr                                    # ExprQueryLtEq
-    | ANGLE_RIGHT rhs=valueExpr                              # ExprQueryGt
-    | GT_EQ rhs=valueExpr                                    # ExprQueryGtEq
-    | NEQ rhs=valueExpr                                      # ExprQueryNeq
-    | EQ rhs=valueExpr                                       # ExprQueryEq
-    | NOT? BETWEEN lower=valueExpr AND upper=valueExpr       # ExprQueryBetween
-    | NOT? IN rhs=exprQuery                                       # ExprQueryIn
-    | NOT? LIKE rhs=valueExpr ( ESCAPE escape=valueExpr )?   # ExprQueryLike
-    | IS NOT? rhs=valueExpr                                  # ExprQueryIs
+    : ANGLE_LEFT rhs=valueExpr                                 # ExprQueryLt
+    | LT_EQ rhs=valueExpr                                      # ExprQueryLtEq
+    | ANGLE_RIGHT rhs=valueExpr                                # ExprQueryGt
+    | GT_EQ rhs=valueExpr                                      # ExprQueryGtEq
+    | NEQ rhs=valueExpr                                        # ExprQueryNeq
+    | EQ rhs=valueExpr                                         # ExprQueryEq
+    | NOT? BETWEEN lower=valueExpr AND upper=valueExpr         # ExprQueryBetween
+    | NOT? IN rhs=exprQuery                                    # ExprQueryIn
+    | IS NOT? rhs=exprQuery                                    # ExprQueryIs
     ;
 
 caseExpr
@@ -323,30 +323,17 @@ singleQuery
     
 // NOTE: Modified rule
 querySet
-    : querySet setOpUnionExcept setQuantifier querySet
-    | querySet setOpIntersect setQuantifier singleQuery
-    | singleQuery
+    : lhs=querySet UNION ALL? rhs=querySet            # QuerySetUnion
+    | lhs=querySet EXCEPT ALL? rhs=querySet           # QuerySetExcept
+    | lhs=querySet INTERSECT ALL? rhs=querySet        # QuerySetIntersect
+    | singleQuery                                     # QuerySetSingleQuery
     ;
     
 // TODO: Determine if the following needs to be uncommented
 query
     : querySet //  orderByClause? limitClause? offsetByClause?
     ;
-    
-setOpUnionExcept
-    : UNION
-    | EXCEPT
-    ;
 
-setOpIntersect
-    : INTERSECT
-    ;
-    
-setQuantifier
-    : DISTINCT
-    | ALL?
-    ;
-    
 offsetByClause
     : OFFSET exprQuery
     ;
