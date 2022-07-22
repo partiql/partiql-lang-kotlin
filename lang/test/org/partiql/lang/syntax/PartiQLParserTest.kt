@@ -58,6 +58,8 @@ class PartiQLParserTest {
     fun testVisual() {
         val query = "a not like b + c"
         val tree = parser.parseQuery(query)
+        val b = StringBuilder()
+        b.appendLine("ANTLR TREE         : ${tree.toStringTree(parser.getParser(query))}")
 
         val frame = JFrame("AST")
         val panel = JPanel()
@@ -68,7 +70,7 @@ class PartiQLParserTest {
         frame.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
         frame.pack()
         frame.isVisible = true
-        sleep(20_000)
+        sleep(30_000)
     }
 
     class QueryCases : ArgumentsProviderBase() {
@@ -124,7 +126,9 @@ class PartiQLParserTest {
                 "a like b like c",
                 "a like b like c not like d",
                 "a like b not like c like d",
-                "5 <= 5 < 2"
+                "5 <= 5 < 2",
+                "a <= b >= c < d > e != f = g <> h",
+                "a not like b + c"
             )
             return queries
         }
