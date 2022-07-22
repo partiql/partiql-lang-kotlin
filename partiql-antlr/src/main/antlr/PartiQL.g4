@@ -236,25 +236,52 @@ pathExprVarRef
 exprQuery
     : booleanExpr
     ;
+    
+/**
+ * PRECEDENCE RULES:
+ * With the nature of PartiQL's AST, there are some oddities requiring the precedence to be set as f
+ */
 
-booleanExpr
-    : lhs=booleanExpr op=(PERCENT|ASTERISK|SLASH_FORWARD) rhs=booleanExpr     # MathOp
-    | lhs=booleanExpr op=(PLUS|MINUS|CONCAT) rhs=booleanExpr                  # MathOp
-    | lhs=booleanExpr NOT? BETWEEN lower=exprMath AND upper=booleanExpr       # ExprQueryBetween
-    | lhs=booleanExpr NOT? LIKE rhs=booleanExpr ESCAPE escape=booleanExpr     # ExprQueryLike
-    | lhs=booleanExpr NOT? LIKE rhs=booleanExpr                               # ExprQueryLike
-    
-    // TODO: IS needs to have same precedence as all the comparison and in operators
-    | lhs=booleanExpr IS NOT? rhs=type                                               # ExprQueryIs
-    | lhs=booleanExpr op=(LT_EQ|GT_EQ|ANGLE_LEFT|ANGLE_RIGHT) rhs=booleanExpr              # ComparisonOp
-    | lhs=booleanExpr op=(NEQ|EQ) rhs=booleanExpr                   # ComparisonOp
-    | lhs=booleanExpr NOT? IN rhs=booleanExpr                            # ExprQueryIn
-    
-    | NOT rhs=booleanExpr                                           # ExprQueryNot
-    | lhs=booleanExpr AND rhs=booleanExpr                           # ExprQueryAnd
-    | lhs=booleanExpr OR rhs=booleanExpr                            # ExprQueryOr
-    | valueExpr                                                     # BooleanExprPrimary
+booleanExpr: exprQueryOr ;
+exprQueryOr: lhs=exprQueryOr OR rhs=exprQueryOr | parent=exprQueryAnd ;
+exprQueryAnd: lhs=exprQueryAnd AND rhs=exprQueryAnd | parent=exprQueryNot ;   
+exprQueryNot: NOT rhs=exprQueryNot | parent=exprQueryIn ;
+exprQueryIn: lhs=exprQueryIn NOT? IN rhs=exprQueryIn | parent=comparisonOp ;
+comparisonOp:
+    lhs=comparisonOp op=(LT_EQ|GT_EQ|ANGLE_LEFT|ANGLE_RIGHT) rhs=comparisonOp
+    | lhs=comparisonOp op=(NEQ|EQ) rhs=comparisonOp
+    | parent=exprQueryPredicate;
+exprQueryPredicate
+    : lhs=exprQueryPredicate IS NOT? rhs=type # ExprQueryIs
+    | lhs=exprQueryPredicate NOT? LIKE rhs=mathOp ( ESCAPE escape=booleanExpr )? # ExprQueryLike
+    | lhs=exprQueryPredicate NOT? BETWEEN lower=mathOp AND upper=mathOp # ExprQueryBetween
+    | mathOp # PredicateParent
     ;
+mathOp
+    : lhs=mathOp op=(PERCENT|ASTERISK|SLASH_FORWARD) rhs=mathOp
+    | lhs=mathOp op=(PLUS|MINUS|CONCAT) rhs=mathOp
+    | parent=valueExpr
+    ;
+
+
+//booleanExpr
+//    : lhs=booleanExpr op=(PERCENT|ASTERISK|SLASH_FORWARD) rhs=booleanExpr     # MathOp
+//    | lhs=booleanExpr op=(PLUS|MINUS|CONCAT) rhs=booleanExpr                  # MathOp
+//    | lhs=booleanExpr NOT? BETWEEN lower=exprMath AND upper=booleanExpr       # ExprQueryBetween
+//    | lhs=booleanExpr NOT? LIKE rhs=booleanExpr ESCAPE escape=booleanExpr     # ExprQueryLike
+//    | lhs=booleanExpr NOT? LIKE rhs=booleanExpr                               # ExprQueryLike
+//
+//    // TODO: IS needs to have same precedence as all the comparison and in operators
+//    | lhs=booleanExpr IS NOT? rhs=type                                               # ExprQueryIs
+//    | lhs=booleanExpr op=(LT_EQ|GT_EQ|ANGLE_LEFT|ANGLE_RIGHT) rhs=booleanExpr              # ComparisonOp
+//    | lhs=booleanExpr op=(NEQ|EQ) rhs=booleanExpr                   # ComparisonOp
+//    | lhs=booleanExpr NOT? IN rhs=booleanExpr                            # ExprQueryIn
+//
+//    | NOT rhs=booleanExpr                                           # ExprQueryNot
+//    | lhs=booleanExpr AND rhs=booleanExpr                           # ExprQueryAnd
+//    | lhs=booleanExpr OR rhs=booleanExpr                            # ExprQueryOr
+//    | valueExpr                                                     # BooleanExprPrimary
+//    ;
     
 // This is a copy
 exprMath
