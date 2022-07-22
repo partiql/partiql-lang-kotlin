@@ -445,14 +445,19 @@ internal val DATE_TIME_PART_KEYWORDS: Set<String> = DateTimePart.values()
     listOf("union", "all") to ("union_all" to OPERATOR),
     listOf("intersect", "all") to ("intersect_all" to OPERATOR),
     listOf("except", "all") to ("except_all" to OPERATOR),
+    listOf("union", "distinct") to ("union_distinct" to OPERATOR),
+    listOf("intersect", "distinct") to ("intersect_distinct" to OPERATOR),
+    listOf("except", "distinct") to ("except_distinct" to OPERATOR),
+
     listOf("outer", "union") to ("outer_union" to OPERATOR),
     listOf("outer", "intersect") to ("outer_intersect" to OPERATOR),
     listOf("outer", "except") to ("outer_except" to OPERATOR),
-
-    // tomfoolery with multi lexeme token folding
-    listOf("outer_intersect", "all") to ("outer_intersect_all" to OPERATOR),
     listOf("outer_union", "all") to ("outer_union_all" to OPERATOR),
+    listOf("outer_intersect", "all") to ("outer_intersect_all" to OPERATOR),
     listOf("outer_except", "all") to ("outer_except_all" to OPERATOR),
+    listOf("outer_union", "distinct") to ("outer_union_distinct" to OPERATOR),
+    listOf("outer_intersect", "distinct") to ("outer_intersect_distinct" to OPERATOR),
+    listOf("outer_except", "distinct") to ("outer_except_distinct" to OPERATOR),
 
     listOf("character", "varying") to ("character_varying" to KEYWORD),
     listOf("double", "precision") to ("double_precision" to KEYWORD),

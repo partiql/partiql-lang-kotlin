@@ -1005,13 +1005,7 @@ enum class NAryOp(val arityRange: IntRange, val symbol: String, val textName: St
     EXCEPT(2..Int.MAX_VALUE, "except"),
     EXCEPT_ALL(2..Int.MAX_VALUE, "except_all"),
     UNION(2..Int.MAX_VALUE, "union"),
-    UNION_ALL(2..Int.MAX_VALUE, "union_all"),
-    OUTER_INTERSECT(2..Int.MAX_VALUE, "outer_intersect"),
-    OUTER_INTERSECT_ALL(2..Int.MAX_VALUE, "outer_intersect_all"),
-    OUTER_EXCEPT(2..Int.MAX_VALUE, "outer_except"),
-    OUTER_EXCEPT_ALL(2..Int.MAX_VALUE, "outer_except_all"),
-    OUTER_UNION(2..Int.MAX_VALUE, "outer_union"),
-    OUTER_UNION_ALL(2..Int.MAX_VALUE, "outer_union_all");
+    UNION_ALL(2..Int.MAX_VALUE, "union_all");
 
     companion object {
         /** Map of [NAryOp] keyed by the operation's text. */

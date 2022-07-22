@@ -111,33 +111,9 @@ private class StatementTransformer(val ion: IonSystem) {
                     operands.toExprNodeList(),
                     metas
                 )
-            is PartiqlAst.Expr.OuterUnion ->
-                NAry(
-                    when (setq) {
-                        is PartiqlAst.SetQuantifier.Distinct -> NAryOp.OUTER_UNION
-                        is PartiqlAst.SetQuantifier.All -> NAryOp.OUTER_UNION_ALL
-                    },
-                    operands.toExprNodeList(),
-                    metas
-                )
-            is PartiqlAst.Expr.OuterIntersect ->
-                NAry(
-                    when (setq) {
-                        is PartiqlAst.SetQuantifier.Distinct -> NAryOp.OUTER_INTERSECT
-                        is PartiqlAst.SetQuantifier.All -> NAryOp.OUTER_INTERSECT_ALL
-                    },
-                    operands.toExprNodeList(),
-                    metas
-                )
-            is PartiqlAst.Expr.OuterExcept ->
-                NAry(
-                    when (setq) {
-                        is PartiqlAst.SetQuantifier.Distinct -> NAryOp.OUTER_EXCEPT
-                        is PartiqlAst.SetQuantifier.All -> NAryOp.OUTER_EXCEPT_ALL
-                    },
-                    operands.toExprNodeList(),
-                    metas
-                )
+            is PartiqlAst.Expr.OuterUnion,
+            is PartiqlAst.Expr.OuterIntersect,
+            is PartiqlAst.Expr.OuterExcept -> error("$this node has no representation in prior ASTs.")
             is PartiqlAst.Expr.Like -> NAry(NAryOp.LIKE, listOfNotNull(value.toExprNode(), pattern.toExprNode(), escape?.toExprNode()), metas)
             is PartiqlAst.Expr.Between -> NAry(NAryOp.BETWEEN, listOf(value.toExprNode(), from.toExprNode(), to.toExprNode()), metas)
             is PartiqlAst.Expr.InCollection -> NAry(NAryOp.IN, operands.toExprNodeList(), metas)

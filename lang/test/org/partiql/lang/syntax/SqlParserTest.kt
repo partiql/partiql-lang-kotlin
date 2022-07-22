@@ -3988,6 +3988,13 @@ class SqlParserTest : SqlParserTestBase() {
     )
 
     @Test
+    fun unionDistinct() = assertExpression(
+        "a UNION DISTINCT b",
+        "(union (id a case_insensitive) (id b case_insensitive))",
+        "(union (distinct) (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))"
+    )
+
+    @Test
     fun unionAll() = assertExpression(
         "a UNION ALL b",
         "(union_all (id a case_insensitive) (id b case_insensitive))",
@@ -3997,6 +4004,13 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun except() = assertExpression(
         "a EXCEPT b",
+        "(except (id a case_insensitive) (id b case_insensitive))",
+        "(except (distinct) (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))"
+    )
+
+    @Test
+    fun exceptDistinct() = assertExpression(
+        "a EXCEPT DISTINCT b",
         "(except (id a case_insensitive) (id b case_insensitive))",
         "(except (distinct) (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))"
     )
@@ -4016,11 +4030,135 @@ class SqlParserTest : SqlParserTestBase() {
     )
 
     @Test
+    fun intersectDistinct() = assertExpression(
+        "a INTERSECT DISTINCT b",
+        "(intersect (id a case_insensitive) (id b case_insensitive))",
+        "(intersect (distinct) (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))"
+    )
+
+    @Test
     fun intersectAll() = assertExpression(
         "a INTERSECT ALL b",
         "(intersect_all (id a case_insensitive) (id b case_insensitive))",
         "(intersect (all) (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))"
     )
+
+    @Test
+    fun outerUnion() = assertExpressionNoRoundTrip(
+        "a OUTER UNION b"
+    ) {
+        this.outerUnion(
+            setq = PartiqlAst.SetQuantifier.Distinct(),
+            operands = listOf(
+                this.id("a"),
+                this.id("b")
+            )
+        )
+    }
+
+    @Test
+    fun outerUnionDistinct() = assertExpressionNoRoundTrip(
+        "a OUTER UNION DISTINCT b"
+    ) {
+        this.outerUnion(
+            setq = PartiqlAst.SetQuantifier.Distinct(),
+            operands = listOf(
+                this.id("a"),
+                this.id("b")
+            )
+        )
+    }
+
+    @Test
+    fun outerUnionAll() = assertExpressionNoRoundTrip(
+        "a OUTER UNION ALL b"
+    ) {
+        this.outerUnion(
+            setq = PartiqlAst.SetQuantifier.All(),
+            operands = listOf(
+                this.id("a"),
+                this.id("b")
+            )
+        )
+    }
+
+    @Test
+    fun outerIntersect() = assertExpressionNoRoundTrip(
+        "a OUTER INTERSECT b"
+    ) {
+        this.outerIntersect(
+            setq = PartiqlAst.SetQuantifier.Distinct(),
+            operands = listOf(
+                this.id("a"),
+                this.id("b")
+            )
+        )
+    }
+
+    @Test
+    fun outerIntersectDistinct() = assertExpressionNoRoundTrip(
+        "a OUTER INTERSECT DISTINCT b"
+    ) {
+        this.outerIntersect(
+            setq = PartiqlAst.SetQuantifier.Distinct(),
+            operands = listOf(
+                this.id("a"),
+                this.id("b")
+            )
+        )
+    }
+
+    @Test
+    fun outerIntersectAll() = assertExpressionNoRoundTrip(
+        "a OUTER INTERSECT ALL b"
+    ) {
+        this.outerIntersect(
+            setq = PartiqlAst.SetQuantifier.All(),
+            operands = listOf(
+                this.id("a"),
+                this.id("b")
+            )
+        )
+    }
+
+    @Test
+    fun outerExcept() = assertExpressionNoRoundTrip(
+        "a OUTER EXCEPT b"
+    ) {
+        this.outerExcept(
+            setq = PartiqlAst.SetQuantifier.Distinct(),
+            operands = listOf(
+                this.id("a"),
+                this.id("b")
+            )
+        )
+    }
+
+    @Test
+    fun outerExceptDistinct() = assertExpressionNoRoundTrip(
+        "a OUTER EXCEPT DISTINCT b"
+    ) {
+        this.outerExcept(
+            setq = PartiqlAst.SetQuantifier.Distinct(),
+            operands = listOf(
+                this.id("a"),
+                this.id("b")
+            )
+        )
+    }
+
+    @Test
+    fun outerExceptAll() = assertExpressionNoRoundTrip(
+        "a OUTER EXCEPT ALL b"
+    ) {
+        this.outerExcept(
+            setq = PartiqlAst.SetQuantifier.All(),
+            operands = listOf(
+                this.id("a"),
+                this.id("b")
+            )
+        )
+    }
 
     // ****************************************
     // semicolon at end of sqlUnderTest

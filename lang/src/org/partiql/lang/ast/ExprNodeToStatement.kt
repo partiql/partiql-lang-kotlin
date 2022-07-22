@@ -145,12 +145,6 @@ fun ExprNode.toAstExpr(): PartiqlAst.Expr {
                     NAryOp.INTERSECT_ALL -> intersect(all(), args, metas)
                     NAryOp.EXCEPT -> except(distinct(), args, metas)
                     NAryOp.EXCEPT_ALL -> except(all(), args, metas)
-                    NAryOp.OUTER_UNION -> outerUnion(distinct(), args, metas)
-                    NAryOp.OUTER_UNION_ALL -> outerUnion(all(), args, metas)
-                    NAryOp.OUTER_INTERSECT -> outerIntersect(distinct(), args, metas)
-                    NAryOp.OUTER_INTERSECT_ALL -> outerIntersect(all(), args, metas)
-                    NAryOp.OUTER_EXCEPT -> outerExcept(distinct(), args, metas)
-                    NAryOp.OUTER_EXCEPT_ALL -> outerExcept(all(), args, metas)
                 }
             }
             is CallAgg -> {
