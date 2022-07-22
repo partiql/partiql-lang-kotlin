@@ -40,11 +40,7 @@ class PlannerPipelineSmokeTests {
     @Test
     fun `happy path`() {
         var pecCallbacks = 0
-        val plannerEventCallback: PlannerEventCallback = { _ ->
-            pecCallbacks++
-            // println("*******************************************************************************")
-            // println(event)
-        }
+        val plannerEventCallback: PlannerEventCallback = { _ -> pecCallbacks++ }
 
         val pipeline = createPlannerPipelineForTest(allowUndefinedVariables = true, plannerEventCallback = plannerEventCallback)
 
@@ -63,8 +59,6 @@ class PlannerPipelineSmokeTests {
         // - logical resolved -> default physical
         // - compile
         assertEquals(6, pecCallbacks)
-
-        // println(SexpAstPrettyPrinter.format(result.output.toIonElement().asAnyElement().toIonValue(ION)))
 
         assertEquals(
             planResult,
