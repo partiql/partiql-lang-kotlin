@@ -310,28 +310,26 @@ interface PlannerPipeline {
             name: String,
             passBody: (PartiqlPhysical.Plan, ProblemHandler) -> PartiqlPhysical.Plan
         ) = this.apply {
-                physicalPlanPasses.add(
-                    object : PartiqlPhysicalPass {
-                        override val passName = name
+            physicalPlanPasses.add(
+                object : PartiqlPhysicalPass {
+                    override val passName = name
 
-                        override fun rewrite(
-                            inputPlan: PartiqlPhysical.Plan,
-                            problemHandler: ProblemHandler
-                        ): PartiqlPhysical.Plan =
-                            passBody(inputPlan, problemHandler)
+                    override fun rewrite(
+                        inputPlan: PartiqlPhysical.Plan,
+                        problemHandler: ProblemHandler
+                    ): PartiqlPhysical.Plan =
+                        passBody(inputPlan, problemHandler)
+                }
+            )
+        }
 
-                    }
-                )
-            }
-
-
-            /**
-             * Makes an instance of [RelationalOperatorFactory] available during plan compilation.
-             *
-             * To actually be used, operator implementations must be selected during a pass over the physical plan.
-             * See [addPhysicalPlanPass].
-             */
-            fun addRelationalOperatorFactory(factory: RelationalOperatorFactory) = this.apply {
+        /**
+         * Makes an instance of [RelationalOperatorFactory] available during plan compilation.
+         *
+         * To actually be used, operator implementations must be selected during a pass over the physical plan.
+         * See [addPhysicalPlanPass].
+         */
+        fun addRelationalOperatorFactory(factory: RelationalOperatorFactory) = this.apply {
             physicalOperatorFactories.add(factory)
         }
 

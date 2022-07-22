@@ -42,12 +42,11 @@ class PlannerPipelineSmokeTests {
         var pecCallbacks = 0
         val plannerEventCallback: PlannerEventCallback = { _ ->
             pecCallbacks++
-            //println("*******************************************************************************")
-            //println(event)
+            // println("*******************************************************************************")
+            // println(event)
         }
 
         val pipeline = createPlannerPipelineForTest(allowUndefinedVariables = true, plannerEventCallback = plannerEventCallback)
-
 
         val planResult = pipeline.plan("SELECT c.* FROM Customer AS c WHERE c.primaryKey = 42")
             as PlannerPassResult.Success<PartiqlPhysical.Plan>
@@ -65,7 +64,7 @@ class PlannerPipelineSmokeTests {
         // - compile
         assertEquals(6, pecCallbacks)
 
-        //println(SexpAstPrettyPrinter.format(result.output.toIonElement().asAnyElement().toIonValue(ION)))
+        // println(SexpAstPrettyPrinter.format(result.output.toIonElement().asAnyElement().toIonValue(ION)))
 
         assertEquals(
             planResult,

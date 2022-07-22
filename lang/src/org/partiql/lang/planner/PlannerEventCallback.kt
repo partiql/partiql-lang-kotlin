@@ -7,7 +7,7 @@ import java.time.Instant
 typealias PlannerEventCallback = (PlannerEvent) -> Unit
 
 /** Information about a planner event. */
-data class PlannerEvent (
+data class PlannerEvent(
     /** The name of the event. */
     val eventName: String,
     /** The input to the pass, e.g. the SQL query text or instance of the AST or query plan.*/
@@ -28,20 +28,14 @@ data class PlannerEvent (
             sb.append("output:\n$output")
             sb.toString()
         }
-
 }
 
 /** Convenience function for optionally invoking [PlannerEventCallback] functions. */
 internal inline fun <T> PlannerEventCallback?.doEvent(eventName: String, input: Any, crossinline block: () -> T): T {
-    if(this == null) return block()
+    if (this == null) return block()
     val startTime = Instant.now()
     return block().also { output ->
         val endTime = Instant.now()
         this(PlannerEvent(eventName, input, output, Duration.between(startTime, endTime)))
     }
 }
-
-
-
-
-
