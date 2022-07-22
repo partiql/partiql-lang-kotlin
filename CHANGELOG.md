@@ -40,6 +40,10 @@ a subset has been implemented--see examples below) and
     - `INSERT INTO foo SELECT c.id, c.name FROM customer AS c` (insert the results of a query into another table)
     - `DELETE FROM foo` (delete all records in a table)
     - `DELETE FROM foo AS f WHERE f.zipCode = '90210'` (delete all records matching a predicate)
+- Introduced planner event callbacks as a means to provide a facility that allows the query to be visualized at every 
+stage in the `PlannerPipeline` and to generate performance metrics for the individual phases of query planning.  See
+`PlannerPipe.Builder.plannerEventCallback` for details.
+
 
 
 ### Changed

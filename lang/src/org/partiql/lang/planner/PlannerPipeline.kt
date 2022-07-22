@@ -18,7 +18,6 @@ import com.amazon.ion.IonSystem
 import org.partiql.lang.SqlException
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.domains.PartiqlAst
-import org.partiql.lang.domains.PartiqlLogicalResolved
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.errors.Problem
 import org.partiql.lang.errors.ProblemCollector
@@ -75,13 +74,9 @@ import org.partiql.lang.types.CustomType
  * @see [Problem.details]
  * @see [org.partiql.lang.errors.ProblemSeverity]
  */
-fun interface PartiqlPhysicalPass {
+interface PartiqlPhysicalPass {
+    val passName: String
     fun rewrite(inputPlan: PartiqlPhysical.Plan, problemHandler: ProblemHandler): PartiqlPhysical.Plan
-}
-
-/** Similar to [PartiqlPhysicalPass] but on the resolved logical plan. */
-fun interface PartiqlLogicalResolvedPass {
-    fun rewrite(inputPlan: PartiqlLogicalResolved.Plan, problemHandler: ProblemHandler): PartiqlLogicalResolved.Plan
 }
 
 /**
@@ -215,6 +210,7 @@ interface PlannerPipeline {
         private var globalVariableResolver: GlobalVariableResolver = emptyGlobalsResolver()
         private var allowUndefinedVariables: Boolean = false
         private var enableLegacyExceptionHandling: Boolean = false
+        private var plannerEventCallback: PlannerEventCallback? = null
 
         /**
          * Specifies the [Parser] to be used to turn an PartiQL query into an instance of [PartiqlAst].
@@ -304,12 +300,38 @@ interface PlannerPipeline {
         }
 
         /**
-         * Makes an instance of [RelationalOperatorFactory] available during plan compilation.
+         * Helper function for [addPhysicalPlanPass] to reduce syntactic overhead.
          *
-         * To actually be used, operator implementations must be selected during a pass over the physical plan.
-         * See [addPhysicalPlanPass].
+         * - [name] the name of the pass--passed to [PlannerEventCallback] as [PlannerEvent.eventName].  Naming
+         * convention is `lower_snake_case`.
+         * - [passBody] a closure which actually performs the rewrite within the pass.  See [PartiqlPhysicalPass].
          */
-        fun addRelationalOperatorFactory(factory: RelationalOperatorFactory) = this.apply {
+        fun addPhysicalPlanPass(
+            name: String,
+            passBody: (PartiqlPhysical.Plan, ProblemHandler) -> PartiqlPhysical.Plan
+        ) = this.apply {
+                physicalPlanPasses.add(
+                    object : PartiqlPhysicalPass {
+                        override val passName = name
+
+                        override fun rewrite(
+                            inputPlan: PartiqlPhysical.Plan,
+                            problemHandler: ProblemHandler
+                        ): PartiqlPhysical.Plan =
+                            passBody(inputPlan, problemHandler)
+
+                    }
+                )
+            }
+
+
+            /**
+             * Makes an instance of [RelationalOperatorFactory] available during plan compilation.
+             *
+             * To actually be used, operator implementations must be selected during a pass over the physical plan.
+             * See [addPhysicalPlanPass].
+             */
+            fun addRelationalOperatorFactory(factory: RelationalOperatorFactory) = this.apply {
             physicalOperatorFactories.add(factory)
         }
 
@@ -341,6 +363,19 @@ interface PlannerPipeline {
          */
         internal fun enableLegacyExceptionHandling(): Builder = this.apply {
             enableLegacyExceptionHandling = true
+        }
+
+        /**
+         * If set, invoked after every phase of planning is completed.
+         *
+         * **CAUTION:* [PlannerEvent] instances passed to [cb] may contain sensitive information contained within user
+         * queries, particularly within filter predicates.  It may be necessary to redact these statements before
+         * logging to persistent storage.  The [org.partiql.lang.passes.redact] function is supplied to redact SQL
+         * queries but no facility is provided by PartiQL to redact ASTs or plans yet.  Such redaction must currently
+         * be provided by the embedding PartiQL application.
+         */
+        internal fun plannerEventCallback(cb: PlannerEventCallback): Builder = this.apply {
+            plannerEventCallback = cb
         }
 
         /** Builds the actual implementation of [PlannerPipeline]. */
@@ -385,7 +420,8 @@ interface PlannerPipeline {
                 bindingsOperatorFactories = allPhysicalOperatorFactories.associateBy { it.key },
                 globalVariableResolver = globalVariableResolver,
                 allowUndefinedVariables = allowUndefinedVariables,
-                enableLegacyExceptionHandling = enableLegacyExceptionHandling
+                enableLegacyExceptionHandling = enableLegacyExceptionHandling,
+                plannerEventCallback = plannerEventCallback
             )
         }
     }
@@ -403,6 +439,7 @@ internal class PlannerPipelineImpl(
     val allowUndefinedVariables: Boolean,
     val enableLegacyExceptionHandling: Boolean,
     val physicalPlanPasses: List<PartiqlPhysicalPass>,
+    val plannerEventCallback: PlannerEventCallback?,
 ) : PlannerPipeline {
 
     init {
@@ -424,7 +461,9 @@ internal class PlannerPipelineImpl(
 
     override fun plan(query: String): PlannerPassResult<PartiqlPhysical.Plan> {
         val ast = try {
-            parser.parseAstStatement(query)
+            plannerEventCallback.doEvent("parse_sql", query) {
+                parser.parseAstStatement(query)
+            }
         } catch (ex: SyntaxException) {
             val problem = Problem(
                 SourceLocationMeta(
@@ -440,16 +479,24 @@ internal class PlannerPipelineImpl(
         // logical plan -> resolved logical plan
         val problemHandler = ProblemCollector()
         // Normalization--synthesizes any unspecified `AS` aliases, converts `SELECT *` to `SELECT f.*[, ...]` ...
-        val normalizedAst = ast.normalize()
+        val normalizedAst = plannerEventCallback.doEvent("normalize_ast", ast) {
+            ast.normalize()
+        }
 
         // ast -> logical plan
-        val logicalPlan = normalizedAst.toLogicalPlan(problemHandler)
+        val logicalPlan = plannerEventCallback.doEvent("ast_to_logical", normalizedAst) {
+            normalizedAst.toLogicalPlan(problemHandler)
+        }
+
         if (problemHandler.hasErrors) {
             return PlannerPassResult.Error(problemHandler.problems)
         }
 
         // logical plan -> resolved logical plan
-        val resolvedLogicalPlan = logicalPlan.toResolvedPlan(problemHandler, globalVariableResolver, allowUndefinedVariables)
+        val resolvedLogicalPlan = plannerEventCallback.doEvent("logical_to_logical_resolved", logicalPlan) {
+            logicalPlan.toResolvedPlan(problemHandler, globalVariableResolver, allowUndefinedVariables)
+        }
+
         // If there are unresolved variables after attempting to resolve variables, then we can't proceed.
         if (problemHandler.hasErrors) {
             return PlannerPassResult.Error(problemHandler.problems)
@@ -464,14 +511,26 @@ internal class PlannerPipelineImpl(
 
         // resolved logical plan -> physical plan.
         // this will give all relational operators `(impl default)`.
-        val defaultPhysicalPlan = resolvedLogicalPlan.toDefaultPhysicalPlan(problemHandler)
+        val defaultPhysicalPlan = plannerEventCallback.doEvent(
+            "logical_resolved_to_default_physical",
+            resolvedLogicalPlan
+        ) {
+            resolvedLogicalPlan.toDefaultPhysicalPlan(problemHandler)
+        }
+
         if (problemHandler.hasErrors) {
             return PlannerPassResult.Error(problemHandler.problems)
         }
 
         val finalPlan = physicalPlanPasses
             .fold(defaultPhysicalPlan) { accumulator: PartiqlPhysical.Plan, current: PartiqlPhysicalPass ->
-                val passResult = current.rewrite(accumulator, problemHandler)
+                val passResult = plannerEventCallback.doEvent(
+                    "custom_physical_plan_pass_${current.passName}",
+                    accumulator
+                ) {
+                    current.rewrite(accumulator, problemHandler)
+                }
+
                 // stop planning if this pass resulted in any errors.
                 if (problemHandler.hasErrors) {
                     return PlannerPassResult.Error(problemHandler.problems)
@@ -482,55 +541,56 @@ internal class PlannerPipelineImpl(
         return PlannerPassResult.Success(finalPlan, problemHandler.problems)
     }
 
-    override fun compile(physicalPlan: PartiqlPhysical.Plan): PlannerPassResult<QueryPlan> {
-        // PhysicalBExprToThunkConverter and PhysicalExprToThunkConverterImpl are mutually recursive therefore
-        // we have to fall back on mutable variables to allow them to reference each other.
-        var exprConverter: PhysicalExprToThunkConverterImpl? = null
+    override fun compile(physicalPlan: PartiqlPhysical.Plan): PlannerPassResult<QueryPlan> =
+        plannerEventCallback.doEvent("compile", physicalPlan) {
+            // PhysicalBExprToThunkConverter and PhysicalExprToThunkConverterImpl are mutually recursive therefore
+            // we have to fall back on mutable variables to allow them to reference each other.
+            var exprConverter: PhysicalExprToThunkConverterImpl? = null
 
-        val bexperConverter = PhysicalBexprToThunkConverter(
-            valueFactory = this.valueFactory,
-            exprConverter = object : PhysicalExprToThunkConverter {
-                override fun convert(expr: PartiqlPhysical.Expr): PhysicalPlanThunk =
-                    exprConverter!!.convert(expr)
-            },
-            relationalOperatorFactory = bindingsOperatorFactories
-        )
+            val bexperConverter = PhysicalBexprToThunkConverter(
+                valueFactory = this.valueFactory,
+                exprConverter = object : PhysicalExprToThunkConverter {
+                    override fun convert(expr: PartiqlPhysical.Expr): PhysicalPlanThunk =
+                        exprConverter!!.convert(expr)
+                },
+                relationalOperatorFactory = bindingsOperatorFactories
+            )
 
-        exprConverter = PhysicalExprToThunkConverterImpl(
-            valueFactory = valueFactory,
-            functions = functions,
-            customTypedOpParameters = customTypedOpParameters,
-            procedures = procedures,
-            evaluatorOptions = evaluatorOptions,
-            bexperConverter = bexperConverter
-        )
+            exprConverter = PhysicalExprToThunkConverterImpl(
+                valueFactory = valueFactory,
+                functions = functions,
+                customTypedOpParameters = customTypedOpParameters,
+                procedures = procedures,
+                evaluatorOptions = evaluatorOptions,
+                bexperConverter = bexperConverter
+            )
 
-        val expression = when {
-            enableLegacyExceptionHandling -> exprConverter.compile(physicalPlan)
-            else -> {
-                // Legacy exception handling is disabled, convert any [SqlException] into a Problem and return
-                // PassResult.Error.
-                try {
-                    exprConverter.compile(physicalPlan)
-                } catch (e: SqlException) {
-                    val problem = Problem(
-                        SourceLocationMeta(
-                            e.errorContext[Property.LINE_NUMBER]?.longValue() ?: -1,
-                            e.errorContext[Property.COLUMN_NUMBER]?.longValue() ?: -1
-                        ),
-                        PlanningProblemDetails.CompileError(e.generateMessageNoLocation())
-                    )
-                    return PlannerPassResult.Error(listOf(problem))
+            val expression = when {
+                enableLegacyExceptionHandling -> exprConverter.compile(physicalPlan)
+                else -> {
+                    // Legacy exception handling is disabled, convert any [SqlException] into a Problem and return
+                    // PassResult.Error.
+                    try {
+                        exprConverter.compile(physicalPlan)
+                    } catch (e: SqlException) {
+                        val problem = Problem(
+                            SourceLocationMeta(
+                                e.errorContext[Property.LINE_NUMBER]?.longValue() ?: -1,
+                                e.errorContext[Property.COLUMN_NUMBER]?.longValue() ?: -1
+                            ),
+                            PlanningProblemDetails.CompileError(e.generateMessageNoLocation())
+                        )
+                        return@doEvent PlannerPassResult.Error(listOf(problem))
+                    }
                 }
             }
-        }
 
-        val queryPlan = when (physicalPlan.stmt) {
-            is PartiqlPhysical.Statement.DmlQuery ->
-                QueryPlan { session -> expression.eval(session).toDmlCommand() }
-            is PartiqlPhysical.Statement.Query, is PartiqlPhysical.Statement.Exec ->
-                QueryPlan { session -> QueryResult.Value(expression.eval(session)) }
+            val queryPlan = when (physicalPlan.stmt) {
+                is PartiqlPhysical.Statement.DmlQuery ->
+                    QueryPlan { session -> expression.eval(session).toDmlCommand() }
+                is PartiqlPhysical.Statement.Query, is PartiqlPhysical.Statement.Exec ->
+                    QueryPlan { session -> QueryResult.Value(expression.eval(session)) }
+            }
+            PlannerPassResult.Success(queryPlan, listOf())
         }
-        return PlannerPassResult.Success(queryPlan, listOf())
-    }
 }
