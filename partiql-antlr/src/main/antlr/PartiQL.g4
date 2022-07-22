@@ -236,47 +236,35 @@ pathExprVarRef
 exprQuery
     : booleanExpr
     ;
-    
+
 booleanExpr
-    : lhs=oldValueExpr arithmetic[$lhs.ctx]     # OpMath
-    | lhs=booleanExpr comparison[$lhs.ctx]      # OpComparison
-    | lhs=booleanExpr predicate[$lhs.ctx]       # OpPredicate
-    | NOT rhs=booleanExpr                       # ExprQueryNot
-    | lhs=booleanExpr AND rhs=booleanExpr       # ExprQueryAnd
-    | lhs=booleanExpr OR rhs=booleanExpr        # ExprQueryOr
-    | valueExpr                                 # BooleanExprPrimary
+    : lhs=booleanExpr op=(PERCENT|ASTERISK|SLASH_FORWARD) rhs=booleanExpr     # MathOp
+    | lhs=booleanExpr op=(PLUS|MINUS|CONCAT) rhs=booleanExpr                  # MathOp
+    | lhs=booleanExpr NOT? BETWEEN lower=exprMath AND upper=booleanExpr       # ExprQueryBetween
+    | lhs=booleanExpr NOT? LIKE rhs=booleanExpr ESCAPE escape=booleanExpr     # ExprQueryLike
+    | lhs=booleanExpr NOT? LIKE rhs=booleanExpr                               # ExprQueryLike
+    
+    // TODO: IS needs to have same precedence as all the comparison and in operators
+    | lhs=booleanExpr IS NOT? rhs=type                                               # ExprQueryIs
+    | lhs=booleanExpr op=(LT_EQ|GT_EQ|ANGLE_LEFT|ANGLE_RIGHT) rhs=booleanExpr              # ComparisonOp
+    | lhs=booleanExpr op=(NEQ|EQ) rhs=booleanExpr                   # ComparisonOp
+    | lhs=booleanExpr NOT? IN rhs=booleanExpr                            # ExprQueryIn
+    
+    | NOT rhs=booleanExpr                                           # ExprQueryNot
+    | lhs=booleanExpr AND rhs=booleanExpr                           # ExprQueryAnd
+    | lhs=booleanExpr OR rhs=booleanExpr                            # ExprQueryOr
+    | valueExpr                                                     # BooleanExprPrimary
     ;
     
-oldValueExpr
-    : valueExpr                                        # OldValueExprPrimary
-    | lhs=valueExpr arithmetic[$lhs.ctx]               # OldValueExprSecondary
+// This is a copy
+exprMath
+    : valueExpr                                               # MathPrimary
+    | lhs=exprMath op=(ASTERISK|SLASH_FORWARD) rhs=exprMath   # MathOpSecondary
+    | lhs=exprMath op=PERCENT rhs=exprMath                    # MathOpSecondary
+    | lhs=exprMath op=(PLUS|MINUS) rhs=exprMath               # MathOpSecondary
+    | lhs=exprMath op=CONCAT rhs=exprMath                     # MathOpSecondary
     ;
     
-arithmetic[ParserRuleContext lhs]
-    : ASTERISK rhs=valueExpr            # ExprQueryMultiply
-    | SLASH_FORWARD rhs=valueExpr       # ExprQueryDivide
-    | PERCENT rhs=valueExpr             # ExprQueryModulo
-    | PLUS rhs=valueExpr                # ExprQueryPlus
-    | MINUS rhs=valueExpr               # ExprQueryMinus
-    | CONCAT rhs=valueExpr              # ExprQueryConcat
-    ;
-    
-predicate[ParserRuleContext lhs]
-    : NOT? BETWEEN lower=oldValueExpr AND upper=oldValueExpr         # ExprQueryBetween
-    | IS NOT? rhs=type                                               # ExprQueryIs
-    | NOT? LIKE rhs=oldValueExpr ( ESCAPE escape=oldValueExpr )?     # ExprQueryLike
-    | NOT? IN rhs=exprQuery                                          # ExprQueryIn
-    ;
-
-comparison[ParserRuleContext lhs]
-    : ANGLE_LEFT rhs=oldValueExpr     # ExprQueryLt
-    | LT_EQ rhs=oldValueExpr          # ExprQueryLtEq
-    | ANGLE_RIGHT rhs=oldValueExpr    # ExprQueryGt
-    | GT_EQ rhs=oldValueExpr          # ExprQueryGtEq
-    | NEQ rhs=oldValueExpr            # ExprQueryNeq
-    | EQ rhs=oldValueExpr             # ExprQueryEq
-    ;
-
 valueExpr
     : exprPrimary               # ExprQueryPrimary
     | PLUS rhs=valueExpr        # ExprQueryPositive
@@ -335,8 +323,8 @@ singleQuery
     
 // NOTE: Modified rule
 querySet
-    : lhs=querySet UNION ALL? rhs=querySet            # QuerySetUnion
-    | lhs=querySet EXCEPT ALL? rhs=querySet           # QuerySetExcept
+    : lhs=querySet EXCEPT ALL? rhs=querySet           # QuerySetExcept
+    | lhs=querySet UNION ALL? rhs=querySet            # QuerySetUnion
     | lhs=querySet INTERSECT ALL? rhs=querySet        # QuerySetIntersect
     | singleQuery                                     # QuerySetSingleQuery
     ;
