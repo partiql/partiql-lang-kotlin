@@ -30,7 +30,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 session state such as current user and transaction details available to custom [ExprFunction] implementations 
 and custom physical operator implementations.
 - Renamed PassResult to PlannerPassResult for clarity. (This is part of the experimental query planner API.)
-- Renamed PassResult to PlannerPassResult for clarity. (This is part of the experimental query planner API.)
 - The `PlannerPipeline` API now has experimental and partial support for `INSERT` and `DELETE` DML statements— 
 tracking PartiQL specification issues are [partiql-docs/#4](https://github.com/partiql/partiql-docs/issues/4) (only
 a subset has been implemented--see examples below) and 
@@ -40,6 +39,9 @@ a subset has been implemented--see examples below) and
     - `INSERT INTO foo SELECT c.id, c.name FROM customer AS c` (insert the results of a query into another table)
     - `DELETE FROM foo` (delete all records in a table)
     - `DELETE FROM foo AS f WHERE f.zipCode = '90210'` (delete all records matching a predicate)
+- Introduced planner event callbacks as a means to provide a facility that allows the query to be visualized at every 
+stage in the `PlannerPipeline` and to generate performance metrics for the individual phases of query planning.  See
+`PlannerPipe.Builder.plannerEventCallback` for details.
 
 
 ### Changed
