@@ -355,12 +355,14 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
      */
 
     override fun visitExprQueryAnd(ctx: PartiQLParser.ExprQueryAndContext): PartiqlAst.PartiqlAstNode {
+        if (ctx.parent != null) return visit(ctx.parent) as PartiqlAst.Expr
         val lhs = visit(ctx.lhs) as PartiqlAst.Expr
         val rhs = visit(ctx.rhs) as PartiqlAst.Expr
         return PartiqlAst.BUILDER().and(listOf(lhs, rhs))
     }
 
     override fun visitMathOp(ctx: PartiQLParser.MathOpContext): PartiqlAst.PartiqlAstNode {
+        if (ctx.parent != null) return visit(ctx.parent) as PartiqlAst.Expr
         val lhs = visit(ctx.lhs) as PartiqlAst.Expr
         val rhs = visit(ctx.rhs) as PartiqlAst.Expr
         return when (ctx.op.type) {
@@ -390,6 +392,7 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
     }
 
     override fun visitExprQueryOr(ctx: PartiQLParser.ExprQueryOrContext): PartiqlAst.PartiqlAstNode {
+        if (ctx.parent != null) return visit(ctx.parent) as PartiqlAst.Expr
         val lhs = visit(ctx.lhs) as PartiqlAst.Expr
         val rhs = visit(ctx.rhs) as PartiqlAst.Expr
         return PartiqlAst.BUILDER().or(listOf(lhs, rhs))
@@ -404,6 +407,7 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
     }
 
     override fun visitComparisonOp(ctx: PartiQLParser.ComparisonOpContext): PartiqlAst.PartiqlAstNode {
+        if (ctx.parent != null) return visit(ctx.parent) as PartiqlAst.Expr
         val lhs = visit(ctx.lhs) as PartiqlAst.Expr
         val rhs = visit(ctx.rhs) as PartiqlAst.Expr
         return when {
@@ -422,11 +426,18 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
     }
 
     override fun visitExprQueryIn(ctx: PartiQLParser.ExprQueryInContext): PartiqlAst.PartiqlAstNode {
+        if (ctx.parent != null) return visit(ctx.parent) as PartiqlAst.Expr
         val lhs = visit(ctx.lhs) as PartiqlAst.Expr
         val rhs = visit(ctx.rhs) as PartiqlAst.Expr
         val isType = PartiqlAst.BUILDER().inCollection(listOf(lhs, rhs))
         return if (ctx.NOT() == null) isType
         else PartiqlAst.BUILDER().not(isType)
+    }
+
+    // TODO: Implement
+    override fun visitExprQueryNot(ctx: PartiQLParser.ExprQueryNotContext): PartiqlAst.PartiqlAstNode {
+        if (ctx.parent != null) return visit(ctx.parent) as PartiqlAst.Expr
+        return super.visitExprQueryNot(ctx)
     }
 
     override fun visitExprQueryIs(ctx: PartiQLParser.ExprQueryIsContext): PartiqlAst.PartiqlAstNode {
@@ -445,6 +456,26 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         return if (ctx.NOT() == null) between
         else PartiqlAst.BUILDER().not(between)
     }
+
+//    // TODO: Helper method
+//    override fun visitPredicateBetween(ctx: PartiQLParser.PredicateBetweenContext): PartiqlAst.PartiqlAstNode {
+//        val lhs = visit(ctx.lhs) as PartiqlAst.Expr
+//        val lower = visit(ctx.lower) as PartiqlAst.Expr
+//        val upper = visit(ctx.upper) as PartiqlAst.Expr
+//        val between = PartiqlAst.BUILDER().between(lhs, lower, upper)
+//        return if (ctx.NOT() == null) between
+//        else PartiqlAst.BUILDER().not(between)
+//    }
+//
+//    // TODO: Helper method
+//    override fun visitPredicateLike(ctx: PartiQLParser.PredicateLikeContext): PartiqlAst.PartiqlAstNode {
+//        val lhs = visit(ctx.lhs) as PartiqlAst.Expr
+//        val rhs = visit(ctx.rhs) as PartiqlAst.Expr
+//        val escape = if (ctx.escape == null) null else visit(ctx.escape) as PartiqlAst.Expr
+//        var like: PartiqlAst.Expr = PartiqlAst.BUILDER().like(lhs, rhs, escape)
+//        if (ctx.NOT() != null) like = PartiqlAst.BUILDER().not(like)
+//        return like
+//    }
 
     override fun visitExprQueryLike(ctx: PartiQLParser.ExprQueryLikeContext): PartiqlAst.PartiqlAstNode {
         val lhs = visit(ctx.lhs) as PartiqlAst.Expr
