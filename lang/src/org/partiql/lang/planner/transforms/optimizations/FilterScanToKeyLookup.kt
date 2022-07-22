@@ -4,6 +4,7 @@ import com.amazon.ionelement.api.TextElement
 import com.amazon.ionelement.api.ionBool
 import com.amazon.ionelement.api.ionSymbol
 import org.partiql.lang.domains.PartiqlPhysical
+import org.partiql.lang.errors.ProblemHandler
 import org.partiql.lang.planner.PartiqlPhysicalPass
 import org.partiql.lang.planner.StaticTypeResolver
 import org.partiql.lang.planner.transforms.DEFAULT_IMPL
@@ -44,77 +45,80 @@ fun createFilterScanToKeyLookupPass(
     staticTypeResolver: StaticTypeResolver,
     createKeyValueConstructor: (StructType, List<FieldEqualityPredicate>) -> PartiqlPhysical.Expr
 ): PartiqlPhysicalPass =
-    PartiqlPhysicalPass { inputPlan, _ ->
-        object : PartiqlPhysical.VisitorTransform() {
-            override fun transformBexprFilter(node: PartiqlPhysical.Bexpr.Filter): PartiqlPhysical.Bexpr {
-                // Rewrite children first.
-                val rewritten = super.transformBexprFilter(node) as PartiqlPhysical.Bexpr.Filter
-                when (val filterSource = rewritten.source) {
-                    // check if the source of the filter is a full scan
-                    is PartiqlPhysical.Bexpr.Scan -> {
-                        when (val scanExpr = filterSource.expr) {
-                            // check if the scan's expression is a reference to a global variable
-                            is PartiqlPhysical.Expr.GlobalId -> {
-                                // At this point, we've matched a (filter ... (scan (global_id <uuid>)))
-                                // We know the unique id of the table, and we can use the id to get the table's static
-                                // type.
+    object : PartiqlPhysicalPass {
+        override val passName: String get() = "filter_scan_to_key_lookup"
+        override fun rewrite(inputPlan: PartiqlPhysical.Plan, problemHandler: ProblemHandler): PartiqlPhysical.Plan {
+            return object : PartiqlPhysical.VisitorTransform() {
+                override fun transformBexprFilter(node: PartiqlPhysical.Bexpr.Filter): PartiqlPhysical.Bexpr {
+                    // Rewrite children first.
+                    val rewritten = super.transformBexprFilter(node) as PartiqlPhysical.Bexpr.Filter
+                    when (val filterSource = rewritten.source) {
+                        // check if the source of the filter is a full scan
+                        is PartiqlPhysical.Bexpr.Scan -> {
+                            when (val scanExpr = filterSource.expr) {
+                                // check if the scan's expression is a reference to a global variable
+                                is PartiqlPhysical.Expr.GlobalId -> {
+                                    // At this point, we've matched a (filter ... (scan (global_id <uuid>)))
+                                    // We know the unique id of the table, and we can use the id to get the table's static
+                                    // type.
 
-                                // Non-table global variables may exist and can be any type.
-                                // Tables however are always bags or lists of structs.
-                                val rowStaticType = when (
-                                    val globalStaticType =
-                                        staticTypeResolver.getVariableStaticType(scanExpr.uniqueId.text)
-                                ) {
-                                    is BagType -> globalStaticType.elementType
-                                    is ListType -> globalStaticType.elementType
-                                    else -> return rewritten // <-- bail out; this optimization does not apply
-                                }
+                                    // Non-table global variables may exist and can be any type.
+                                    // Tables however are always bags or lists of structs.
+                                    val rowStaticType = when (
+                                        val globalStaticType =
+                                            staticTypeResolver.getVariableStaticType(scanExpr.uniqueId.text)
+                                    ) {
+                                        is BagType -> globalStaticType.elementType
+                                        is ListType -> globalStaticType.elementType
+                                        else -> return rewritten // <-- bail out; this optimization does not apply
+                                    }
 
-                                // If the element type (i.e. type of its rows) of the global variable is not a struct,
-                                // this optimization also does not apply
-                                if (rowStaticType !is StructType) {
-                                    return rewritten
-                                }
+                                    // If the element type (i.e. type of its rows) of the global variable is not a struct,
+                                    // this optimization also does not apply
+                                    if (rowStaticType !is StructType) {
+                                        return rewritten
+                                    }
 
-                                // Now that we have the metadata on hand we can attempt to rewrite the filter predicate
-                                // replacing `<table>.<pkField> = <expr>` with `TRUE`, but leaving any other expression
-                                // behind.  This function also returns one instance of KeyFieldEqualityPredicate for
-                                // each replacement it made, which contains
-                                val (newPredicate, keyFieldEqualityPredicates) = rewritten.predicate.rewriteFilterPredicate(
-                                    filterSource.asDecl.index.value,
-                                    rowStaticType.primaryKeyFields
-                                )   // if we didn't succeed in rewriting the filter predicate, there are no primary
+                                    // Now that we have the metadata on hand we can attempt to rewrite the filter predicate
+                                    // replacing `<table>.<pkField> = <expr>` with `TRUE`, but leaving any other expression
+                                    // behind.  This function also returns one instance of KeyFieldEqualityPredicate for
+                                    // each replacement it made, which contains
+                                    val (newPredicate, keyFieldEqualityPredicates) = rewritten.predicate.rewriteFilterPredicate(
+                                        filterSource.asDecl.index.value,
+                                        rowStaticType.primaryKeyFields
+                                    )   // if we didn't succeed in rewriting the filter predicate, there are no primary
                                     // key field references in equality expressions in the filter predicate (or not all
                                     // key fields were included) and this optimization does not apply.
-                                    ?: return rewritten
+                                        ?: return rewritten
 
-                                // just a quick sanity check to be more confident in the result of
-                                // .rewriteFilterPredicate(), above if this fails, there is definitely a bug.
-                                require(keyFieldEqualityPredicates.size == rowStaticType.primaryKeyFields.size)
+                                    // just a quick sanity check to be more confident in the result of
+                                    // .rewriteFilterPredicate(), above if this fails, there is definitely a bug.
+                                    require(keyFieldEqualityPredicates.size == rowStaticType.primaryKeyFields.size)
 
-                                // Finally, compose a new filter/project to replace the original filter/scan.
-                                // For single-key tables, the rewritten filter predicate will just be `(lit true)`,
-                                // meaning it would be possible to eliminate the filter here.  However, this is
-                                // not the cause for tables with compound keys, so we don't
-                                return PartiqlPhysical.build {
-                                    filter(
-                                        DEFAULT_IMPL,
-                                        newPredicate,
-                                        project(
-                                            impl(customOperatorName, listOf(ionSymbol(scanExpr.uniqueId.text))),
-                                            filterSource.asDecl,
-                                            createKeyValueConstructor(rowStaticType, keyFieldEqualityPredicates)
+                                    // Finally, compose a new filter/project to replace the original filter/scan.
+                                    // For single-key tables, the rewritten filter predicate will just be `(lit true)`,
+                                    // meaning it would be possible to eliminate the filter here.  However, this is
+                                    // not the cause for tables with compound keys, so we don't
+                                    return PartiqlPhysical.build {
+                                        filter(
+                                            DEFAULT_IMPL,
+                                            newPredicate,
+                                            project(
+                                                impl(customOperatorName, listOf(ionSymbol(scanExpr.uniqueId.text))),
+                                                filterSource.asDecl,
+                                                createKeyValueConstructor(rowStaticType, keyFieldEqualityPredicates)
+                                            )
                                         )
-                                    )
+                                    }
                                 }
+                                else -> return rewritten // didn't match--return the original node unmodified.
                             }
-                            else -> return rewritten // didn't match--return the original node unmodified.
                         }
+                        else -> return rewritten // didn't match--return the original node unmodified.
                     }
-                    else -> return rewritten // didn't match--return the original node unmodified.
                 }
-            }
-        }.transformPlan(inputPlan)
+            }.transformPlan(inputPlan)
+        }
     }
 
 /**
