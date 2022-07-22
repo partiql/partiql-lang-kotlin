@@ -125,17 +125,17 @@ class AstToLogicalVisitorTransformTests {
     @ArgumentsSource(ArgumentsForToLogicalDmlTests::class)
     fun `to logical (DML)`(tc: TestCase) = runTestCase(tc)
     class ArgumentsForToLogicalDmlTests : ArgumentsProviderBase() {
-        private val insertIntoFooBagOf1 = PartiqlLogical.build {
-            dml(
-                id("foo", caseInsensitive(), unqualified()),
-                dmlInsert(),
-                bag(lit(ionInt(1)))
-            )
-        }
         override fun getParameters() = listOf(
-            // these two semantically identical cases result in the same logical plan
-            // TestCase("INSERT INTO foo VALUE 1", insertIntoFooBagOf1),
-            TestCase("INSERT INTO foo << 1 >>", insertIntoFooBagOf1),
+            TestCase(
+                "INSERT INTO foo << 1 >>",
+                PartiqlLogical.build {
+                    dml(
+                        id("foo", caseInsensitive(), unqualified()),
+                        dmlInsert(),
+                        bag(lit(ionInt(1)))
+                    )
+                }
+            ),
 
             TestCase(
                 "INSERT INTO foo SELECT x.* FROM 1 AS x",

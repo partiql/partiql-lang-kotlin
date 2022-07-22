@@ -2,7 +2,6 @@ package org.partiql.lang.planner
 
 import com.amazon.ionelement.api.ionInt
 import com.amazon.ionelement.api.ionString
-import com.amazon.ionelement.api.toIonValue
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -19,7 +18,6 @@ import org.partiql.lang.eval.physical.operators.ValueExpression
 import org.partiql.lang.eval.physical.sourceLocationMetaOrUnknown
 import org.partiql.lang.planner.transforms.DEFAULT_IMPL_NAME
 import org.partiql.lang.planner.transforms.PLAN_VERSION_NUMBER
-import org.partiql.lang.util.SexpAstPrettyPrinter
 
 /**
  * Query planning primarily consists of AST traversals and rewrites.  Each of those are thoroughly tested separately,
@@ -30,23 +28,46 @@ class PlannerPipelineSmokeTests {
     @Suppress("DEPRECATION")
     private fun createPlannerPipelineForTest(
         allowUndefinedVariables: Boolean,
+        plannerEventCallback: PlannerEventCallback?,
         block: PlannerPipeline.Builder.() -> Unit = { }
     ) = PlannerPipeline.build(ION) {
         allowUndefinedVariables(allowUndefinedVariables)
         globalVariableResolver(createFakeGlobalsResolver("Customer" to "fake_uid_for_Customer"))
+        plannerEventCallback?.let { plannerEventCallback(it) }
         block()
     }
 
     @Test
     fun `happy path`() {
-        val pipeline = createPlannerPipelineForTest(allowUndefinedVariables = true)
-        val result = pipeline.plan("SELECT c.* FROM Customer AS c WHERE c.primaryKey = 42")
+        var pecCallbacks = 0
+        val plannerEventCallback: PlannerEventCallback = { _ ->
+            pecCallbacks++
+            // println("*******************************************************************************")
+            // println(event)
+        }
 
-        result as PlannerPassResult.Success
-        println(SexpAstPrettyPrinter.format(result.output.toIonElement().asAnyElement().toIonValue(ION)))
+        val pipeline = createPlannerPipelineForTest(allowUndefinedVariables = true, plannerEventCallback = plannerEventCallback)
+
+        val planResult = pipeline.plan("SELECT c.* FROM Customer AS c WHERE c.primaryKey = 42")
+            as PlannerPassResult.Success<PartiqlPhysical.Plan>
+
+        // we call compile even tho we do nothing with the result just to ensure the PlannerEventCallback is invoked
+        // for the compile pass.
+        pipeline.compile(planResult.output)
+
+        // pec should be called once for each pass in the planner:
+        // - parse
+        // - normalize ast
+        // - ast -> logical
+        // - logical -> logical resolved
+        // - logical resolved -> default physical
+        // - compile
+        assertEquals(6, pecCallbacks)
+
+        // println(SexpAstPrettyPrinter.format(result.output.toIonElement().asAnyElement().toIonValue(ION)))
 
         assertEquals(
-            result,
+            planResult,
             PlannerPassResult.Success(
                 output = PartiqlPhysical.build {
                     plan(
@@ -81,7 +102,7 @@ class PlannerPipelineSmokeTests {
 
     @Test
     fun `undefined variable`() {
-        val qp = createPlannerPipelineForTest(allowUndefinedVariables = false)
+        val qp = createPlannerPipelineForTest(allowUndefinedVariables = false, plannerEventCallback = null)
         val result = qp.plan("SELECT undefined.* FROM Customer AS c")
         assertEquals(
             PlannerPassResult.Error<PartiqlPhysical.Statement>(
@@ -93,8 +114,8 @@ class PlannerPipelineSmokeTests {
 
     @Test
     fun `physical plan pass - happy path`() {
-        val qp = createPlannerPipelineForTest(allowUndefinedVariables = false) {
-            addPhysicalPlanPass { inputPlan, _ ->
+        val qp = createPlannerPipelineForTest(allowUndefinedVariables = false, plannerEventCallback = null) {
+            addPhysicalPlanPass("fake pass 1") { inputPlan, _ ->
                 // ensure we're getting the correct plan as input
                 assertEquals(createFakePlan(1), inputPlan)
 
@@ -102,12 +123,12 @@ class PlannerPipelineSmokeTests {
                 // plan entirely.
                 createFakePlan(2)
             }
-            addPhysicalPlanPass { inputPlan, _ ->
+            addPhysicalPlanPass("fake pass 2") { inputPlan, _ ->
                 // second pass should get the output of the first pass as input
                 assertEquals(createFakePlan(2), inputPlan)
                 createFakePlan(3)
             }
-            addPhysicalPlanPass { inputPlan, _ ->
+            addPhysicalPlanPass("fake pass 3") { inputPlan, _ ->
                 // third pass should get the output of the second pass as input
                 assertEquals(createFakePlan(3), inputPlan)
                 createFakePlan(4)
@@ -129,14 +150,15 @@ class PlannerPipelineSmokeTests {
 
     @Test
     fun `physical plan pass - first user pass sends semantic error`() {
-        val qp = createPlannerPipelineForTest(allowUndefinedVariables = false) {
-            addPhysicalPlanPass { inputPlan, problemHandler ->
+        val qp = createPlannerPipelineForTest(allowUndefinedVariables = false, plannerEventCallback = null) {
+            addPhysicalPlanPass("test_pass") { inputPlan, problemHandler ->
                 problemHandler.handleProblem(
                     createFakeErrorProblem(inputPlan.stmt.metas.sourceLocationMetaOrUnknown)
                 )
                 inputPlan
             }
-            addPhysicalPlanPass { _, _ ->
+
+            addPhysicalPlanPass("test_pass_2") { _, _ ->
                 error(
                     "This pass should not be reached due to an error being sent to to the problem handler " +
                         "in the previous pass"

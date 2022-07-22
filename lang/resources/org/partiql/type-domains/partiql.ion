@@ -687,11 +687,10 @@ may then be further optimized by selecting better implementations of each operat
             )
         )
 
-        // Redefine statement.dml to be a simpler simple subset of the full DML functionality expressed with
-        // the PartiQL's DML syntax.  Full functionality is out of scope for now.  This is factored minimally to
-        // support `INSERT INTO` and `DELETE FROM ... [WHERE <predicate>]` but this may need refactoring when
+        // Redefine statement.dml to be a simpler subset of the full DML functionality expressed with PartiQL's DML
+        // syntax.  Full functionality is out of scope for now.  This is factored minimally to support
+        // `INSERT INTO` and `DELETE FROM ... [WHERE <predicate>]` but this may need refactoring when
         // `FROM ... UPDATE` and `UPDATE` is supported later.
-        //need refactoring when PartiQL's `UPDATE` is supported later.
         (with statement
             (exclude dml)
             (include
@@ -702,8 +701,8 @@ may then be further optimized by selecting better implementations of each operat
                     // literal path steps (and with no wildcard or unpivot operators).  This restriction must
                     // be enforced by the PartiQL implementation.
                     // TODO: consider ways to reduce the domain of acceptable values here.  Of course, we it would
-                    // be possible to create a `sum` type like expression but containing only the valid DML targets,
-                    // but would might necessitate duplicating some logic related to variable resolution which is
+                    // be possible to create a `sum` type like `expr` but containing only the valid DML targets,
+                    // but that would might necessitate duplicating some logic related to variable resolution which is
                     // already implemented for standard expressions.  This is out of scope for current efforts.
                     target::expr
                     operation::dml_operation
