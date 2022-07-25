@@ -42,7 +42,15 @@ a subset has been implemented--see examples below) and
 - Introduced planner event callbacks as a means to provide a facility that allows the query to be visualized at every 
 stage in the `PlannerPipeline` and to generate performance metrics for the individual phases of query planning.  See
 `PlannerPipe.Builder.plannerEventCallback` for details.
-
+- Adds the following optimization passes, none of which are enabled by default:
+  - `FilterScanToKeyLookupPass` which performs a simple optimization common to most databases: it converts a filter 
+  predicate covering a table's complete primary key into a single get-by-key operation, thereby avoiding a full table
+  scan.  This may pass leave behind some useless `and` expressions if more `and` operands exist in the filter predicate 
+  other than primary key field equality expressions.
+  - `RemoveUselessAndsPass`, which removes any useless `and` expressions introduced by the previous pass or by the 
+  query author, e.g. `true and x.id = 42` -> `x.id = 42`), `true and true` -> `true`, etc.
+  - `RemoveUselessFiltersPass`, which removes useless filters introduced by the previous pass or by the query author 
+  (e.g. `(filter (lit true) <bexpr>))` -> `<bexpr>`.
 
 ### Changed
 
