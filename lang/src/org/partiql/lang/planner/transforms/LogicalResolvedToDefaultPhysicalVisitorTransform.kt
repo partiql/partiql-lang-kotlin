@@ -4,15 +4,11 @@ import com.amazon.ionelement.api.ionSymbol
 import org.partiql.lang.domains.PartiqlLogicalResolved
 import org.partiql.lang.domains.PartiqlLogicalResolvedToPartiqlPhysicalVisitorTransform
 import org.partiql.lang.domains.PartiqlPhysical
-import org.partiql.lang.errors.Problem
 import org.partiql.lang.errors.ProblemHandler
-import org.partiql.lang.eval.physical.sourceLocationMetaOrUnknown
 import org.partiql.lang.planner.DML_COMMAND_FIELD_ACTION
 import org.partiql.lang.planner.DML_COMMAND_FIELD_ROWS
 import org.partiql.lang.planner.DML_COMMAND_FIELD_TARGET_UNIQUE_ID
 import org.partiql.lang.planner.DmlAction
-import org.partiql.lang.planner.PlanningProblemDetails
-import java.awt.SystemColor.text
 
 /**
  * Transforms an instance of [PartiqlLogicalResolved.Statement] to [PartiqlPhysical.Statement],
@@ -122,7 +118,7 @@ internal class LogicalResolvedToDefaultPhysicalVisitorTransform(
             dmlQuery(
                 expr = struct(
                     structField(DML_COMMAND_FIELD_ACTION, action),
-                    structField(DML_COMMAND_FIELD_TARGET_UNIQUE_ID, node.target.asActionTarget()),
+                    structField(DML_COMMAND_FIELD_TARGET_UNIQUE_ID, lit(node.uniqueId.toIonElement())),
                     structField(DML_COMMAND_FIELD_ROWS, transformExpr(node.rows)),
                     metas = node.metas
                 ),
@@ -130,25 +126,6 @@ internal class LogicalResolvedToDefaultPhysicalVisitorTransform(
             )
         }
     }
-
-    private fun PartiqlLogicalResolved.Expr.asActionTarget(): PartiqlPhysical.Expr.Lit =
-        when (this) {
-            is PartiqlLogicalResolved.Expr.GlobalId ->
-                PartiqlPhysical.build {
-                    lit(ionSymbol(this@asActionTarget.uniqueId.text))
-                }
-            else -> {
-                problemHandler.handleProblem(
-                    Problem(
-                        this@asActionTarget.metas.sourceLocationMetaOrUnknown,
-                        PlanningProblemDetails.InvalidDmlTarget
-                    )
-                )
-                PartiqlPhysical.build {
-                    lit(ionSymbol("invalid dml target - do not run"))
-                }
-            }
-        }
 
     override fun transformStatementQuery(node: PartiqlLogicalResolved.Statement.Query): PartiqlPhysical.Statement =
         PartiqlPhysical.build { query(transformExpr(node.expr), node.metas) }
