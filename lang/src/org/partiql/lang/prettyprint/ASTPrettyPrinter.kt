@@ -399,13 +399,28 @@ class ASTPrettyPrinter {
                 attrOfParent = attrOfParent,
                 children = toRecursionTreeList(node.operands)
             )
+            is PartiqlAst.Expr.Intersect -> RecursionTree(
+                astType = "Intersect",
+                attrOfParent = attrOfParent,
+                children = toRecursionTreeList(node.operands)
+            )
             is PartiqlAst.Expr.Except -> RecursionTree(
                 astType = "Except",
                 attrOfParent = attrOfParent,
                 children = toRecursionTreeList(node.operands)
             )
-            is PartiqlAst.Expr.Intersect -> RecursionTree(
-                astType = "Intersect",
+            is PartiqlAst.Expr.OuterUnion -> RecursionTree(
+                astType = "OuterUnion",
+                attrOfParent = attrOfParent,
+                children = toRecursionTreeList(node.operands)
+            )
+            is PartiqlAst.Expr.OuterIntersect -> RecursionTree(
+                astType = "OuterIntersect",
+                attrOfParent = attrOfParent,
+                children = toRecursionTreeList(node.operands)
+            )
+            is PartiqlAst.Expr.OuterExcept -> RecursionTree(
+                astType = "OuterExcept",
                 attrOfParent = attrOfParent,
                 children = toRecursionTreeList(node.operands)
             )

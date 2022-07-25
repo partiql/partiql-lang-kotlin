@@ -889,12 +889,24 @@ class SqlParser(
                     // TODO:  we are losing case-sensitivity of the function name here.  Do we care?
                     call(idArg.name.text, args.drop(1), metas)
                 }
-                "intersect" -> intersect(distinct(), args, metas)
-                "intersect_all" -> intersect(all(), args, metas)
-                "except" -> except(distinct(), args, metas)
-                "except_all" -> except(all(), args, metas)
-                "union" -> union(distinct(), args, metas)
+                "union",
+                "union_distinct" -> union(distinct(), args, metas)
                 "union_all" -> union(all(), args, metas)
+                "intersect",
+                "intersect_distinct" -> intersect(distinct(), args, metas)
+                "intersect_all" -> intersect(all(), args, metas)
+                "except",
+                "except_distinct" -> except(distinct(), args, metas)
+                "except_all" -> except(all(), args, metas)
+                "outer_union",
+                "outer_union_distinct" -> outerUnion(distinct(), args, metas)
+                "outer_union_all" -> outerUnion(all(), args, metas)
+                "outer_intersect",
+                "outer_intersect_distinct" -> outerIntersect(distinct(), args, metas)
+                "outer_intersect_all" -> outerIntersect(all(), args, metas)
+                "outer_except",
+                "outer_except_distinct" -> outerExcept(distinct(), args, metas)
+                "outer_except_all" -> outerExcept(all(), args, metas)
                 else -> throw IllegalArgumentException("Unsupported operator: ${this@toOperator}")
             }
         }
