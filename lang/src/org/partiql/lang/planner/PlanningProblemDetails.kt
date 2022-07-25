@@ -28,14 +28,17 @@ sealed class PlanningProblemDetails(
             ProblemSeverity.ERROR,
             {
                 "Undefined variable '$variableName'." +
-                    if (caseSensitive) {
-                        // Individuals that are new to SQL often try to use double quotes for string literals.
-                        // Let's help them out a bit.
-                        " Hint: did you intend to use single-quotes (') here?  Remember that double-quotes (\") denote " +
-                            "quoted identifiers and single-quotes denote strings."
-                    } else {
-                        ""
-                    }
+                    quotationHint(caseSensitive)
+            }
+        )
+
+    data class UndefinedDmlTarget(val variableName: String, val caseSensitive: Boolean) :
+        PlanningProblemDetails(
+            ProblemSeverity.ERROR,
+            {
+                "Data manipulation target table '$variableName' is undefined. " +
+                    "Hint: this must be a name in the global scope. " +
+                    quotationHint(caseSensitive)
             }
         )
 
@@ -49,6 +52,12 @@ sealed class PlanningProblemDetails(
         PlanningProblemDetails(
             ProblemSeverity.ERROR,
             { "The syntax at this location is valid but utilizes unimplemented PartiQL feature '$featureName'" }
+        )
+
+    object InvalidDmlTarget :
+        PlanningProblemDetails(
+            ProblemSeverity.ERROR,
+            { "Expression is not a valid DML target.  Hint: only table names are allowed here." }
         )
 
     object InsertValueDisallowed :
@@ -68,10 +77,14 @@ sealed class PlanningProblemDetails(
                     "Please use the `INSERT INTO <table> << <expr>, ... >>` form instead."
             }
         )
-
-    object InvalidDmlTarget :
-        PlanningProblemDetails(
-            ProblemSeverity.ERROR,
-            { "Expression is not a valid DML target.  Hint: only table names are allowed here." }
-        )
 }
+
+private fun quotationHint(caseSensitive: Boolean) =
+    if (caseSensitive) {
+        // Individuals that are new to SQL often try to use double quotes for string literals.
+        // Let's help them out a bit.
+        " Hint: did you intend to use single-quotes (') here?  Remember that double-quotes (\") denote " +
+            "quoted identifiers and single-quotes denote strings."
+    } else {
+        ""
+    }
