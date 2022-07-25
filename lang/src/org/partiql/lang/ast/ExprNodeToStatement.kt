@@ -1,4 +1,3 @@
-
 // We don't need warnings about deprecated ExprNode.
 @file: Suppress("DEPRECATION")
 
@@ -95,7 +94,12 @@ fun ExprNode.toAstExpr(): PartiqlAst.Expr {
         when (node) {
             is Literal -> lit(node.ionValue.toIonElement(), metas)
             is LiteralMissing -> missing(metas)
-            is VariableReference -> id(node.id, node.case.toAstCaseSensitivity(), node.scopeQualifier.toAstScopeQualifier(), metas)
+            is VariableReference -> id(
+                node.id,
+                node.case.toAstCaseSensitivity(),
+                node.scopeQualifier.toAstScopeQualifier(),
+                metas
+            )
             is Parameter -> parameter(node.position.toLong(), metas)
             is NAry -> {
                 val args = node.args.map { it.toAstExpr() }
@@ -135,12 +139,12 @@ fun ExprNode.toAstExpr(): PartiqlAst.Expr {
                         // TODO:  we are losing case-sensitivity of the function name here.  Do we care?
                         call(idArg.name.text, args.drop(1), metas)
                     }
+                    NAryOp.UNION -> union(distinct(), args, metas)
+                    NAryOp.UNION_ALL -> union(all(), args, metas)
                     NAryOp.INTERSECT -> intersect(distinct(), args, metas)
                     NAryOp.INTERSECT_ALL -> intersect(all(), args, metas)
                     NAryOp.EXCEPT -> except(distinct(), args, metas)
                     NAryOp.EXCEPT_ALL -> except(all(), args, metas)
-                    NAryOp.UNION -> union(distinct(), args, metas)
-                    NAryOp.UNION_ALL -> union(all(), args, metas)
                 }
             }
             is CallAgg -> {
@@ -230,7 +234,13 @@ private fun OrderBy.toAstOrderBySpec(): PartiqlAst.OrderBy {
     val thiz = this
     return PartiqlAst.build {
         orderBy(
-            thiz.sortSpecItems.map { sortSpec(it.expr.toAstExpr(), it.orderingSpec?.toAstOrderSpec(), it.nullsSpec?.toAstNullsSpec()) }
+            thiz.sortSpecItems.map {
+                sortSpec(
+                    it.expr.toAstExpr(),
+                    it.orderingSpec?.toAstOrderSpec(),
+                    it.nullsSpec?.toAstNullsSpec()
+                )
+            }
         )
     }
 }
@@ -313,19 +323,31 @@ private fun SelectProjection.toAstSelectProject(): PartiqlAst.Projection {
                     if (thiz.items.size > 1) error("More than one select item when SELECT * was present.")
                     val metas = (thiz.items[0] as SelectListItemStar).metas.toIonElementMetaContainer()
                     projectStar(metas)
-                } else
+                } else {
                     projectList(
                         thiz.items.map {
                             when (it) {
-                                is SelectListItemExpr -> projectExpr_(it.expr.toAstExpr(), it.asName?.toPrimitive(), it.expr.metas.toIonElementMetaContainer())
-                                is SelectListItemProjectAll -> projectAll(it.expr.toAstExpr(), it.expr.metas.toIonElementMetaContainer())
+                                is SelectListItemExpr -> projectExpr_(
+                                    it.expr.toAstExpr(),
+                                    it.asName?.toPrimitive(),
+                                    it.expr.metas.toIonElementMetaContainer()
+                                )
+                                is SelectListItemProjectAll -> projectAll(
+                                    it.expr.toAstExpr(),
+                                    it.expr.metas.toIonElementMetaContainer()
+                                )
                                 is SelectListItemStar -> error("this should happen due to `when` branch above.")
                             }
                         },
                         metas = thiz.metas.toIonElementMetaContainer()
                     )
+                }
             }
-            is SelectProjectionPivot -> projectPivot(thiz.nameExpr.toAstExpr(), thiz.valueExpr.toAstExpr(), thiz.metas.toIonElementMetaContainer())
+            is SelectProjectionPivot -> projectPivot(
+                thiz.nameExpr.toAstExpr(),
+                thiz.valueExpr.toAstExpr(),
+                thiz.metas.toIonElementMetaContainer()
+            )
         }
     }
 }
@@ -425,6 +447,7 @@ private fun DmlOpList.toAstDmlOps(dml: DataManipulation): PartiqlAst.DmlOpList =
             metas = dml.metas.toIonElementMetaContainer()
         )
     }
+
 private fun DataManipulationOperation.toAstDmlOp(dml: DataManipulation): PartiqlAst.DmlOp =
     PartiqlAst.build {
         when (val thiz = this@toAstDmlOp) {

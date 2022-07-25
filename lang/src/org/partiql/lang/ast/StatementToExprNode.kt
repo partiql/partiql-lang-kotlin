@@ -84,7 +84,6 @@ private class StatementTransformer(val ion: IonSystem) {
             is PartiqlAst.Expr.Gte -> NAry(NAryOp.GTE, operands.toExprNodeList(), metas)
             is PartiqlAst.Expr.Lt -> NAry(NAryOp.LT, operands.toExprNodeList(), metas)
             is PartiqlAst.Expr.Lte -> NAry(NAryOp.LTE, operands.toExprNodeList(), metas)
-
             is PartiqlAst.Expr.Union ->
                 NAry(
                     when (setq) {
@@ -112,6 +111,9 @@ private class StatementTransformer(val ion: IonSystem) {
                     operands.toExprNodeList(),
                     metas
                 )
+            is PartiqlAst.Expr.OuterUnion,
+            is PartiqlAst.Expr.OuterIntersect,
+            is PartiqlAst.Expr.OuterExcept -> error("$this node has no representation in prior ASTs.")
             is PartiqlAst.Expr.Like -> NAry(NAryOp.LIKE, listOfNotNull(value.toExprNode(), pattern.toExprNode(), escape?.toExprNode()), metas)
             is PartiqlAst.Expr.Between -> NAry(NAryOp.BETWEEN, listOf(value.toExprNode(), from.toExprNode(), to.toExprNode()), metas)
             is PartiqlAst.Expr.InCollection -> NAry(NAryOp.IN, operands.toExprNodeList(), metas)
