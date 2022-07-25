@@ -697,7 +697,7 @@ may then be further optimized by selecting better implementations of each operat
                 // A DML operation, such as `INSERT`, `UPDATE` or `DELETE`
                 (dml
                     // The target is an expression that is indicates the table whose data is to be manipulated.
-                    // According to the PartiQL's grammar this can be an identifier or a simplified path expression
+                    // With current PartiQL Parser `SqlParser`, this can be an identifier or a simplified path expression
                     // consisting of only literal path steps (and with no wildcard or unpivot operators).
                     // Note: partiql_ast uses the `expr` sum type for this, which is too broad.  We're not
                     // changing that at this time because `partiql_ast` is established public API.
