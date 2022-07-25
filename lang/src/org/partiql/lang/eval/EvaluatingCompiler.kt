@@ -84,7 +84,6 @@ import java.util.LinkedList
 import java.util.Stack
 import java.util.TreeSet
 import java.util.regex.Pattern
-import kotlin.Comparator
 
 /**
  * A thunk with no parameters other than the current environment.
@@ -440,9 +439,12 @@ internal class EvaluatingCompiler(
             is PartiqlAst.Expr.Bag -> compileSeq(ExprValueType.BAG, expr.values, metas)
 
             // set operators
-            is PartiqlAst.Expr.Intersect,
             is PartiqlAst.Expr.Union,
-            is PartiqlAst.Expr.Except -> {
+            is PartiqlAst.Expr.Intersect,
+            is PartiqlAst.Expr.Except,
+            is PartiqlAst.Expr.OuterUnion,
+            is PartiqlAst.Expr.OuterIntersect,
+            is PartiqlAst.Expr.OuterExcept -> {
                 err(
                     "${expr.javaClass.canonicalName} is not yet supported",
                     ErrorCode.EVALUATOR_FEATURE_NOT_SUPPORTED_YET,
@@ -752,7 +754,8 @@ internal class EvaluatingCompiler(
         val leftThunk = compileAstExpr(args[0])
         val rightOp = args[1]
 
-        fun isOptimizedCase(values: List<PartiqlAst.Expr>): Boolean = values.all { it is PartiqlAst.Expr.Lit && !it.value.isNull }
+        fun isOptimizedCase(values: List<PartiqlAst.Expr>): Boolean =
+            values.all { it is PartiqlAst.Expr.Lit && !it.value.isNull }
 
         fun optimizedCase(values: List<PartiqlAst.Expr>): ThunkEnv {
             // Put all the literals in the sequence into a pre-computed map to be checked later by the thunk.

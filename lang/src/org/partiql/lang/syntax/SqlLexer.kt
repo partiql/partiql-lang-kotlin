@@ -624,6 +624,13 @@ class SqlLexer(private val ion: IonSystem) : Lexer {
         return tokens
     }
 
+    /**
+     * For a given token x, and lexer token list [ ..., a, b, c, d ], we attempt to look back and find the longest
+     * string "a_b_c_d_x" that appears in the multi lexeme map. If a match is found, we replace the previous matching
+     * tokens with a single "merged" token.
+     *
+     * For example, "UNION ALL" -(lex)-> [ Token(union) ].addOrMerge(Token(all)) -> [ Token(union_all) ]
+     */
     private fun MutableList<Token>.addOrMerge(token: Token) {
         var newToken = token
 
