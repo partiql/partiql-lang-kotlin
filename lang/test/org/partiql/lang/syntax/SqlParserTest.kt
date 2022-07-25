@@ -3939,13 +3939,6 @@ class SqlParserTest : SqlParserTestBase() {
     )
 
     @Test
-    fun union() = assertExpression(
-        "a UNION b",
-        "(union (id a case_insensitive) (id b case_insensitive))",
-        "(union (distinct) (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))"
-    )
-
-    @Test
     fun unionSelectPrecedence() = assertExpression(
         "SELECT * FROM foo UNION SELECT * FROM bar",
         """
@@ -3988,60 +3981,121 @@ class SqlParserTest : SqlParserTestBase() {
     )
 
     @Test
+    fun union() = assertExpression(
+        "a UNION b"
+    ) {
+        this.union(
+            setq = PartiqlAst.SetQuantifier.Distinct(),
+            operands = listOf(
+                this.id("a"),
+                this.id("b")
+            )
+        )
+    }
+
+    @Test
     fun unionDistinct() = assertExpression(
-        "a UNION DISTINCT b",
-        "(union (id a case_insensitive) (id b case_insensitive))",
-        "(union (distinct) (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))"
-    )
+        "a UNION DISTINCT b"
+    ) {
+        this.union(
+            setq = PartiqlAst.SetQuantifier.Distinct(),
+            operands = listOf(
+                this.id("a"),
+                this.id("b")
+            )
+        )
+    }
 
     @Test
     fun unionAll() = assertExpression(
-        "a UNION ALL b",
-        "(union_all (id a case_insensitive) (id b case_insensitive))",
-        "(union (all) (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))"
-    )
-
-    @Test
-    fun except() = assertExpression(
-        "a EXCEPT b",
-        "(except (id a case_insensitive) (id b case_insensitive))",
-        "(except (distinct) (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))"
-    )
-
-    @Test
-    fun exceptDistinct() = assertExpression(
-        "a EXCEPT DISTINCT b",
-        "(except (id a case_insensitive) (id b case_insensitive))",
-        "(except (distinct) (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))"
-    )
-
-    @Test
-    fun exceptAll() = assertExpression(
-        "a EXCEPT ALL b",
-        "(except_all (id a case_insensitive) (id b case_insensitive))",
-        "(except (all) (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))"
-    )
+        "a UNION ALL b"
+    ) {
+        this.union(
+            setq = PartiqlAst.SetQuantifier.All(),
+            operands = listOf(
+                this.id("a"),
+                this.id("b")
+            )
+        )
+    }
 
     @Test
     fun intersect() = assertExpression(
-        "a INTERSECT b",
-        "(intersect (id a case_insensitive) (id b case_insensitive))",
-        "(intersect (distinct) (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))"
-    )
+        "a INTERSECT b"
+    ) {
+        this.intersect(
+            setq = PartiqlAst.SetQuantifier.Distinct(),
+            operands = listOf(
+                this.id("a"),
+                this.id("b")
+            )
+        )
+    }
 
     @Test
     fun intersectDistinct() = assertExpression(
-        "a INTERSECT DISTINCT b",
-        "(intersect (id a case_insensitive) (id b case_insensitive))",
-        "(intersect (distinct) (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))"
-    )
+        "a INTERSECT DISTINCT b"
+    ) {
+        this.intersect(
+            setq = PartiqlAst.SetQuantifier.Distinct(),
+            operands = listOf(
+                this.id("a"),
+                this.id("b")
+            )
+        )
+    }
 
     @Test
     fun intersectAll() = assertExpression(
-        "a INTERSECT ALL b",
-        "(intersect_all (id a case_insensitive) (id b case_insensitive))",
-        "(intersect (all) (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))"
-    )
+        "a INTERSECT ALL b"
+    ) {
+        this.intersect(
+            setq = PartiqlAst.SetQuantifier.All(),
+            operands = listOf(
+                this.id("a"),
+                this.id("b")
+            )
+        )
+    }
+
+    @Test
+    fun except() = assertExpression(
+        "a EXCEPT b"
+    ) {
+        this.except(
+            setq = PartiqlAst.SetQuantifier.Distinct(),
+            operands = listOf(
+                this.id("a"),
+                this.id("b")
+            )
+        )
+    }
+
+    @Test
+    fun exceptDistinct() = assertExpression(
+        "a EXCEPT DISTINCT b"
+    ) {
+        this.except(
+            setq = PartiqlAst.SetQuantifier.Distinct(),
+            operands = listOf(
+                this.id("a"),
+                this.id("b")
+            )
+        )
+    }
+
+    @Test
+    fun exceptAll() = assertExpression(
+        "a EXCEPT ALL b"
+    ) {
+        this.except(
+            setq = PartiqlAst.SetQuantifier.All(),
+            operands = listOf(
+                this.id("a"),
+                this.id("b")
+            )
+        )
+    }
 
     @Test
     fun outerUnion() = assertExpressionNoRoundTrip(

@@ -551,16 +551,22 @@ enum class OperatorPrecedenceGroups(val precedence: Int) {
 @JvmField internal val OPERATOR_PRECEDENCE = mapOf(
     // set operator group
     "union" to OperatorPrecedenceGroups.SET.precedence,
+    "union_distinct" to OperatorPrecedenceGroups.SET.precedence,
     "union_all" to OperatorPrecedenceGroups.SET.precedence,
     "intersect" to OperatorPrecedenceGroups.SET.precedence,
+    "intersect_distinct" to OperatorPrecedenceGroups.SET.precedence,
     "intersect_all" to OperatorPrecedenceGroups.SET.precedence,
     "except" to OperatorPrecedenceGroups.SET.precedence,
+    "except_distinct" to OperatorPrecedenceGroups.SET.precedence,
     "except_all" to OperatorPrecedenceGroups.SET.precedence,
     "outer_union" to OperatorPrecedenceGroups.SET.precedence,
+    "outer_union_distinct" to OperatorPrecedenceGroups.SET.precedence,
     "outer_union_all" to OperatorPrecedenceGroups.SET.precedence,
     "outer_intersect" to OperatorPrecedenceGroups.SET.precedence,
+    "outer_intersect_distinct" to OperatorPrecedenceGroups.SET.precedence,
     "outer_intersect_all" to OperatorPrecedenceGroups.SET.precedence,
     "outer_except" to OperatorPrecedenceGroups.SET.precedence,
+    "outer_except_distinct" to OperatorPrecedenceGroups.SET.precedence,
     "outer_except_all" to OperatorPrecedenceGroups.SET.precedence,
 
     // logical group
