@@ -321,6 +321,7 @@ class QueryPrettyPrinter {
         }
     }
 
+    @Suppress("UNUSED_PARAMETER")
     private fun writeAstNode(node: PartiqlAst.Expr.Missing, sb: StringBuilder) {
         sb.append("MISSING")
     }
@@ -370,6 +371,7 @@ class QueryPrettyPrinter {
         }
     }
 
+    @Suppress("UNUSED_PARAMETER")
     private fun writeAstNode(node: PartiqlAst.Expr.Bag, sb: StringBuilder, level: Int) {
         sb.append("<< ")
         node.values.forEach {
@@ -383,6 +385,7 @@ class QueryPrettyPrinter {
         sb.append(" >>")
     }
 
+    @Suppress("UNUSED_PARAMETER")
     private fun writeAstNode(node: PartiqlAst.Expr.Sexp, sb: StringBuilder, level: Int) {
         sb.append("sexp(")
         node.values.forEach {
@@ -396,6 +399,7 @@ class QueryPrettyPrinter {
         sb.append(")")
     }
 
+    @Suppress("UNUSED_PARAMETER")
     private fun writeAstNode(node: PartiqlAst.Expr.List, sb: StringBuilder, level: Int) {
         sb.append("[ ")
         node.values.forEach {
@@ -409,6 +413,7 @@ class QueryPrettyPrinter {
         sb.append(" ]")
     }
 
+    @Suppress("UNUSED_PARAMETER")
     private fun writeAstNode(node: PartiqlAst.Expr.Struct, sb: StringBuilder, level: Int) {
         sb.append("{ ")
         node.fields.forEach {
@@ -424,6 +429,7 @@ class QueryPrettyPrinter {
         sb.append(" }")
     }
 
+    @Suppress("UNUSED_PARAMETER")
     private fun writeAstNode(node: PartiqlAst.Expr.Parameter, sb: StringBuilder) {
         sb.append("?")
     }
@@ -435,6 +441,7 @@ class QueryPrettyPrinter {
         }
     }
 
+    @Suppress("UNUSED_PARAMETER")
     private fun writeAstNode(node: PartiqlAst.Expr.Call, sb: StringBuilder, level: Int) {
         sb.append("${node.funcName.text}(")
         node.args.forEach { arg ->
@@ -448,6 +455,7 @@ class QueryPrettyPrinter {
         sb.append(')')
     }
 
+    @Suppress("UNUSED_PARAMETER")
     private fun writeAstNode(node: PartiqlAst.Expr.CallAgg, sb: StringBuilder, level: Int) {
         sb.append("${node.funcName.text}(")
         if (node.setq is PartiqlAst.SetQuantifier.Distinct) {
@@ -848,6 +856,7 @@ class QueryPrettyPrinter {
         sb.append(')')
     }
 
+    @Suppress("UNUSED_PARAMETER")
     private fun writeAstNode(node: PartiqlAst.Expr.Coalesce, sb: StringBuilder, level: Int) {
         sb.append("COALESCE(")
         node.args.forEach { arg ->
@@ -861,6 +870,7 @@ class QueryPrettyPrinter {
         sb.append(')')
     }
 
+    @Suppress("UNUSED_PARAMETER")
     private fun writeAstNode(node: PartiqlAst.Expr.NullIf, sb: StringBuilder, level: Int) {
         // Write anything as one line as COALESCE arguments
         sb.append("NULLIF(")
