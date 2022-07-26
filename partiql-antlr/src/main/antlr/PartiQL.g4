@@ -45,6 +45,7 @@ symbolPrimitive
 // TODO: Mental note. Needed to duplicate table_joined to remove left recursion
 tableReference
     : tableReference joinType? CROSS JOIN joinRhs              # TableRefCrossJoin
+    | tableReference COMMA joinRhs                             # TableRefCrossJoin
     | tableReference joinType JOIN LATERAL? joinRhs joinSpec   # TableRefJoin
     | tableReference NATURAL joinType JOIN LATERAL? joinRhs    # TableRefNaturalJoin
     | PAREN_LEFT tableJoined PAREN_RIGHT                       # TableRefWrappedJoin
@@ -255,7 +256,7 @@ exprQueryAnd
     ;
 
 exprQueryNot
-    : <assoc=right> NOT rhs=exprQueryNot
+    : <assoc=right> op=NOT rhs=exprQueryNot
     | parent=exprQueryPredicate
     ;
 
@@ -319,7 +320,7 @@ havingClause
     : HAVING exprQuery
     ;
 fromClause
-    : FROM ( tableReference COMMA LATERAL? )* tableReference
+    : FROM tableReference
     ;
     
 // TODO: Check expansion
