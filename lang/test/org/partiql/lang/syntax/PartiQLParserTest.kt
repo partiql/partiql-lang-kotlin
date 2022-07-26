@@ -128,7 +128,8 @@ class PartiQLParserTest {
                 "a like b not like c like d",
                 "5 <= 5 < 2",
                 "a <= b >= c < d > e != f = g <> h",
-                "a not like b + c"
+                "a not like b + c",
+                "a between foo and bar and bat"
             )
             return queries
         }
