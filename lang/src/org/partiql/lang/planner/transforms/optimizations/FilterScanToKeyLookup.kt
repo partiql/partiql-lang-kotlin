@@ -49,7 +49,13 @@ data class FieldEqualityPredicate(val keyFieldName: String, val equivalentValue:
  * is the primary key value.  The expression used to compute the key is constructed by [createKeyValueConstructor]
  * which is a function that is passed the table's [StructType] and a list of [FieldEqualityPredicate] instances.
  *
- * Limitations:
+ * ### Notes
+ *
+ * - Although not strictly needed, it is recommended to include the [RemoveUselessAndsPass] and
+ * [RemoveUselessFiltersPass] **after** this pass to remove any useless ands and filters left behind.
+ *
+ * ### Limitations
+ *
  * - Key field references must be fully qualified, (e.g. `someLocalVar.primaryKey = <expr>` and not
  * `primaryKey = <expr>`.  In the future, implicit qualification might be handled by a separate, earlier pass.
  * - Key fields must be values at the first level within the row's struct and cannot be nested. e.g. `x.primaryKey`
