@@ -311,14 +311,14 @@ class SqlParserPrecedenceTest : SqlParserTestBase() {
         /* (=, <>)                      */ "a = b <> c" to "(ne (eq (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (id c (case_insensitive) (unqualified)))",
         /* (=, in)                      */ "a = b in c" to "(in_collection (eq (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (id c (case_insensitive) (unqualified)))",
         /* (=, not_in)                  */ "a = b not in c" to "(not (in_collection (eq (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (id c (case_insensitive) (unqualified))))",
-        /* (=, <)                       */ "a = b < c" to "(eq (id a (case_insensitive) (unqualified)) (lt (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
-        /* (=, <=)                      */ "a = b <= c" to "(eq (id a (case_insensitive) (unqualified)) (lte (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
-        /* (=, >)                       */ "a = b > c" to "(eq (id a (case_insensitive) (unqualified)) (gt (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
-        /* (=, >=)                      */ "a = b >= c" to "(eq (id a (case_insensitive) (unqualified)) (gte (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
-        /* (=, between)                 */ "a = b between w and c" to "(eq (id a (case_insensitive) (unqualified)) (between (id b (case_insensitive) (unqualified)) (id w (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
-        /* (=, not_between)             */ "a = b not between y and c" to "(eq (id a (case_insensitive) (unqualified)) (not (between (id b (case_insensitive) (unqualified)) (id y (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified)))))",
-        /* (=, like)                    */ "a = b like c" to "(eq (id a (case_insensitive) (unqualified)) (like (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified)) null))",
-        /* (=, not_like)                */ "a = b not like c" to "(eq (id a (case_insensitive) (unqualified)) (not (like (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified)) null)))",
+        /* (=, <)                       */ "a = b < c" to "(lt (eq (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (id c (case_insensitive) (unqualified)))",
+        /* (=, <=)                      */ "a = b <= c" to "(lte (eq (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (id c (case_insensitive) (unqualified)))",
+        /* (=, >)                       */ "a = b > c" to "(gt (eq (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (id c (case_insensitive) (unqualified)))",
+        /* (=, >=)                      */ "a = b >= c" to "(gte (eq (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (id c (case_insensitive) (unqualified)))",
+        /* (=, between)                 */ "a = b between w and c" to "(between (eq (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (id w (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified)))",
+        /* (=, not_between)             */ "a = b not between y and c" to "(not (between (eq (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (id y (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
+        /* (=, like)                    */ "a = b like c" to "(like (eq (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (id c (case_insensitive) (unqualified)) null)",
+        /* (=, not_like)                */ "a = b not like c" to "(not (like (eq (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (id c (case_insensitive) (unqualified)) null))",
         /* (=, +)                       */ "a = b + c" to "(eq (id a (case_insensitive) (unqualified)) (plus (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
         /* (=, -)                       */ "a = b - c" to "(eq (id a (case_insensitive) (unqualified)) (minus (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
         /* (=, ||)                      */ "a = b || c" to "(eq (id a (case_insensitive) (unqualified)) (concat (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
@@ -345,14 +345,14 @@ class SqlParserPrecedenceTest : SqlParserTestBase() {
         /* (<>, =)                      */ "a <> b = c" to "(eq (ne (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (id c (case_insensitive) (unqualified)))",
         /* (<>, in)                     */ "a <> b in c" to "(in_collection (ne (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (id c (case_insensitive) (unqualified)))",
         /* (<>, not_in)                 */ "a <> b not in c" to "(not (in_collection (ne (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (id c (case_insensitive) (unqualified))))",
-        /* (<>, <)                      */ "a <> b < c" to "(ne (id a (case_insensitive) (unqualified)) (lt (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
-        /* (<>, <=)                     */ "a <> b <= c" to "(ne (id a (case_insensitive) (unqualified)) (lte (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
-        /* (<>, >)                      */ "a <> b > c" to "(ne (id a (case_insensitive) (unqualified)) (gt (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
-        /* (<>, >=)                     */ "a <> b >= c" to "(ne (id a (case_insensitive) (unqualified)) (gte (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
-        /* (<>, between)                */ "a <> b between w and c" to "(ne (id a (case_insensitive) (unqualified)) (between (id b (case_insensitive) (unqualified)) (id w (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
-        /* (<>, not_between)            */ "a <> b not between y and c" to "(ne (id a (case_insensitive) (unqualified)) (not (between (id b (case_insensitive) (unqualified)) (id y (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified)))))",
-        /* (<>, like)                   */ "a <> b like c" to "(ne (id a (case_insensitive) (unqualified)) (like (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified)) null))",
-        /* (<>, not_like)               */ "a <> b not like c" to "(ne (id a (case_insensitive) (unqualified)) (not (like (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified)) null)))",
+        /* (<>, <)                      */ "a <> b < c" to "(lt (ne (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (id c (case_insensitive) (unqualified)))",
+        /* (<>, <=)                     */ "a <> b <= c" to "(lte (ne (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (id c (case_insensitive) (unqualified)))",
+        /* (<>, >)                      */ "a <> b > c" to "(gt (ne (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (id c (case_insensitive) (unqualified)))",
+        /* (<>, >=)                     */ "a <> b >= c" to "(gte (ne (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (id c (case_insensitive) (unqualified)))",
+        /* (<>, between)                */ "a <> b between w and c" to "(between (ne (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (id w (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified)))",
+        /* (<>, not_between)            */ "a <> b not between y and c" to "(not (between (ne (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (id y (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
+        /* (<>, like)                   */ "a <> b like c" to "(like (ne (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (id c (case_insensitive) (unqualified)) null)",
+        /* (<>, not_like)               */ "a <> b not like c" to "(not (like (ne (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (id c (case_insensitive) (unqualified)) null))",
         /* (<>, +)                      */ "a <> b + c" to "(ne (id a (case_insensitive) (unqualified)) (plus (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
         /* (<>, -)                      */ "a <> b - c" to "(ne (id a (case_insensitive) (unqualified)) (minus (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
         /* (<>, ||)                     */ "a <> b || c" to "(ne (id a (case_insensitive) (unqualified)) (concat (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
@@ -387,12 +387,6 @@ class SqlParserPrecedenceTest : SqlParserTestBase() {
         /* (is, not_between)            */ "a is boolean not between y and c" to "(not (between (is_type (id a (case_insensitive) (unqualified)) (boolean_type)) (id y (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
         /* (is, like)                   */ "a is boolean like c" to "(like (is_type (id a (case_insensitive) (unqualified)) (boolean_type)) (id c (case_insensitive) (unqualified)) null)",
         /* (is, not_like)               */ "a is boolean not like c" to "(not (like (is_type (id a (case_insensitive) (unqualified)) (boolean_type)) (id c (case_insensitive) (unqualified)) null))",
-        /* (is, +)                      */ "a is boolean + c" to "(plus (is_type (id a (case_insensitive) (unqualified)) (boolean_type)) (id c (case_insensitive) (unqualified)))",
-        /* (is, -)                      */ "a is boolean - c" to "(minus (is_type (id a (case_insensitive) (unqualified)) (boolean_type)) (id c (case_insensitive) (unqualified)))",
-        /* (is, ||)                     */ "a is boolean || c" to "(concat (is_type (id a (case_insensitive) (unqualified)) (boolean_type)) (id c (case_insensitive) (unqualified)))",
-        /* (is, *)                      */ "a is boolean * c" to "(times (is_type (id a (case_insensitive) (unqualified)) (boolean_type)) (id c (case_insensitive) (unqualified)))",
-        /* (is, /)                      */ "a is boolean / c" to "(divide (is_type (id a (case_insensitive) (unqualified)) (boolean_type)) (id c (case_insensitive) (unqualified)))",
-        /* (is, %)                      */ "a is boolean % c" to "(modulo (is_type (id a (case_insensitive) (unqualified)) (boolean_type)) (id c (case_insensitive) (unqualified)))",
         /* (is, is_not)                 */ "a is boolean is not boolean" to "(not (is_type (is_type (id a (case_insensitive) (unqualified)) (boolean_type)) (boolean_type)))"
     )
 
@@ -420,12 +414,6 @@ class SqlParserPrecedenceTest : SqlParserTestBase() {
         /* (not (is, not_between)        */ "a is not boolean not between y and c" to "(not (between (not (is_type (id a (case_insensitive) (unqualified)) (boolean_type))) (id y (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
         /* (not (is, like)               */ "a is not boolean like c" to "(like (not (is_type (id a (case_insensitive) (unqualified)) (boolean_type))) (id c (case_insensitive) (unqualified)) null)",
         /* (not (is, not_like)           */ "a is not boolean not like c" to "(not (like (not (is_type (id a (case_insensitive) (unqualified)) (boolean_type))) (id c (case_insensitive) (unqualified)) null))",
-        /* (not (is, +)                  */ "a is not boolean + c" to "(plus (not (is_type (id a (case_insensitive) (unqualified)) (boolean_type))) (id c (case_insensitive) (unqualified)))",
-        /* (not (is, -)                  */ "a is not boolean - c" to "(minus (not (is_type (id a (case_insensitive) (unqualified)) (boolean_type))) (id c (case_insensitive) (unqualified)))",
-        /* (not (is, ||)                 */ "a is not boolean || c" to "(concat (not (is_type (id a (case_insensitive) (unqualified)) (boolean_type))) (id c (case_insensitive) (unqualified)))",
-        /* (not (is, *)                  */ "a is not boolean * c" to "(times (not (is_type (id a (case_insensitive) (unqualified)) (boolean_type))) (id c (case_insensitive) (unqualified)))",
-        /* (not (is, /)                  */ "a is not boolean / c" to "(divide (not (is_type (id a (case_insensitive) (unqualified)) (boolean_type))) (id c (case_insensitive) (unqualified)))",
-        /* (not (is, %)                  */ "a is not boolean % c" to "(modulo (not (is_type (id a (case_insensitive) (unqualified)) (boolean_type))) (id c (case_insensitive) (unqualified)))",
         /* (not (is, is)                 */ "a is not boolean is boolean" to "(is_type (not (is_type (id a (case_insensitive) (unqualified)) (boolean_type))) (boolean_type))"
     )
 
@@ -445,14 +433,14 @@ class SqlParserPrecedenceTest : SqlParserTestBase() {
         /* (in, =)                      */ "a in b = c" to "(eq (in_collection (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (id c (case_insensitive) (unqualified)))",
         /* (in, <>)                     */ "a in b <> c" to "(ne (in_collection (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (id c (case_insensitive) (unqualified)))",
         /* (in, not_in)                 */ "a in b not in c" to "(not (in_collection (in_collection (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (id c (case_insensitive) (unqualified))))",
-        /* (in, <)                      */ "a in b < c" to "(in_collection (id a (case_insensitive) (unqualified)) (lt (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
-        /* (in, <=)                     */ "a in b <= c" to "(in_collection (id a (case_insensitive) (unqualified)) (lte (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
-        /* (in, >)                      */ "a in b > c" to "(in_collection (id a (case_insensitive) (unqualified)) (gt (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
-        /* (in, >=)                     */ "a in b >= c" to "(in_collection (id a (case_insensitive) (unqualified)) (gte (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
-        /* (in, between)                */ "a in b between w and c" to "(in_collection (id a (case_insensitive) (unqualified)) (between (id b (case_insensitive) (unqualified)) (id w (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
-        /* (in, not_between)            */ "a in b not between y and c" to "(in_collection (id a (case_insensitive) (unqualified)) (not (between (id b (case_insensitive) (unqualified)) (id y (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified)))))",
-        /* (in, like)                   */ "a in b like c" to "(in_collection (id a (case_insensitive) (unqualified)) (like (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified)) null))",
-        /* (in, not_like)               */ "a in b not like c" to "(in_collection (id a (case_insensitive) (unqualified)) (not (like (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified)) null)))",
+        /* (in, <)                      */ "a in b < c" to "(lt (in_collection (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (id c (case_insensitive) (unqualified)))",
+        /* (in, <=)                     */ "a in b <= c" to "(lte (in_collection (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (id c (case_insensitive) (unqualified)))",
+        /* (in, >)                      */ "a in b > c" to "(gt (in_collection (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (id c (case_insensitive) (unqualified)))",
+        /* (in, >=)                     */ "a in b >= c" to "(gte (in_collection (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (id c (case_insensitive) (unqualified)))",
+        /* (in, between)                */ "a in b between w and c" to "(between (in_collection (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (id w (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified)))",
+        /* (in, not_between)            */ "a in b not between y and c" to "(not (between (in_collection (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (id y (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
+        /* (in, like)                   */ "a in b like c" to "(like (in_collection (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (id c (case_insensitive) (unqualified)) null)",
+        /* (in, not_like)               */ "a in b not like c" to "(not (like (in_collection (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (id c (case_insensitive) (unqualified)) null))",
         /* (in, +)                      */ "a in b + c" to "(in_collection (id a (case_insensitive) (unqualified)) (plus (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
         /* (in, -)                      */ "a in b - c" to "(in_collection (id a (case_insensitive) (unqualified)) (minus (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
         /* (in, ||)                     */ "a in b || c" to "(in_collection (id a (case_insensitive) (unqualified)) (concat (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
@@ -479,14 +467,14 @@ class SqlParserPrecedenceTest : SqlParserTestBase() {
         /* (not (in, =)                  */ "a not in b = c" to "(eq (not (in_collection (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))) (id c (case_insensitive) (unqualified)))",
         /* (not (in, <>)                 */ "a not in b <> c" to "(ne (not (in_collection (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))) (id c (case_insensitive) (unqualified)))",
         /* (not (in, in)                 */ "a not in b in c" to "(in_collection (not (in_collection (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))) (id c (case_insensitive) (unqualified)))",
-        /* (not (in, <)                  */ "a not in b < c" to "(not (in_collection (id a (case_insensitive) (unqualified)) (lt (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified)))))",
-        /* (not (in, <=)                 */ "a not in b <= c" to "(not (in_collection (id a (case_insensitive) (unqualified)) (lte (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified)))))",
-        /* (not (in, >)                  */ "a not in b > c" to "(not (in_collection (id a (case_insensitive) (unqualified)) (gt (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified)))))",
-        /* (not (in, >=)                 */ "a not in b >= c" to "(not (in_collection (id a (case_insensitive) (unqualified)) (gte (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified)))))",
-        /* (not (in, between)            */ "a not in b between w and c" to "(not (in_collection (id a (case_insensitive) (unqualified)) (between (id b (case_insensitive) (unqualified)) (id w (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified)))))",
-        /* (not (in, not_between)        */ "a not in b not between y and c" to "(not (in_collection (id a (case_insensitive) (unqualified)) (not (between (id b (case_insensitive) (unqualified)) (id y (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))))",
-        /* (not (in, like)               */ "a not in b like c" to "(not (in_collection (id a (case_insensitive) (unqualified)) (like (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified)) null)))",
-        /* (not (in, not_like)           */ "a not in b not like c" to "(not (in_collection (id a (case_insensitive) (unqualified)) (not (like (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified)) null))))",
+        /* (not (in, <)                  */ "a not in b < c" to "(lt (not (in_collection (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))) (id c (case_insensitive) (unqualified)))",
+        /* (not (in, <=)                 */ "a not in b <= c" to "(lte (not (in_collection (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))) (id c (case_insensitive) (unqualified)))",
+        /* (not (in, >)                  */ "a not in b > c" to "(gt (not (in_collection (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))) (id c (case_insensitive) (unqualified)))",
+        /* (not (in, >=)                 */ "a not in b >= c" to "(gte (not (in_collection (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))) (id c (case_insensitive) (unqualified)))",
+        /* (not (in, between)            */ "a not in b between w and c" to "(between (not (in_collection (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))) (id w (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified)))",
+        /* (not (in, not_between)        */ "a not in b not between y and c" to "(not (between (not (in_collection (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))) (id y (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
+        /* (not (in, like)               */ "a not in b like c" to "(like (not (in_collection (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))) (id c (case_insensitive) (unqualified)) null)",
+        /* (not (in, not_like)           */ "a not in b not like c" to "(not (like (not (in_collection (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))) (id c (case_insensitive) (unqualified)) null))",
         /* (not (in, +)                  */ "a not in b + c" to "(not (in_collection (id a (case_insensitive) (unqualified)) (plus (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified)))))",
         /* (not (in, -)                  */ "a not in b - c" to "(not (in_collection (id a (case_insensitive) (unqualified)) (minus (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified)))))",
         /* (not (in, ||)                 */ "a not in b || c" to "(not (in_collection (id a (case_insensitive) (unqualified)) (concat (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified)))))",
@@ -862,8 +850,8 @@ class SqlParserPrecedenceTest : SqlParserTestBase() {
         /* (||, not_between)            */ "a || b not between y and c" to "(not (between (concat (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (id y (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
         /* (||, like)                   */ "a || b like c" to "(like (concat (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (id c (case_insensitive) (unqualified)) null)",
         /* (||, not_like)               */ "a || b not like c" to "(not (like (concat (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (id c (case_insensitive) (unqualified)) null))",
-        /* (||, +)                      */ "a || b + c" to "(plus (concat (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (id c (case_insensitive) (unqualified)))",
-        /* (||, -)                      */ "a || b - c" to "(minus (concat (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (id c (case_insensitive) (unqualified)))",
+        /* (||, +)                      */ "a || b + c" to "(concat (id a (case_insensitive) (unqualified)) (plus (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
+        /* (||, -)                      */ "a || b - c" to "(concat (id a (case_insensitive) (unqualified)) (minus (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
         /* (||, *)                      */ "a || b * c" to "(concat (id a (case_insensitive) (unqualified)) (times (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
         /* (||, /)                      */ "a || b / c" to "(concat (id a (case_insensitive) (unqualified)) (divide (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
         /* (||, %)                      */ "a || b % c" to "(concat (id a (case_insensitive) (unqualified)) (modulo (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
@@ -1055,13 +1043,13 @@ class SqlParserPrecedenceTest : SqlParserTestBase() {
 
         "(a+-5e0) and (c-+7.0)" to """
             (and
-                (plus (id a (case_insensitive) (unqualified)) (lit -5.) )
-                (minus (id c (case_insensitive) (unqualified)) (lit 7.0) )
+                (plus (id a (case_insensitive) (unqualified)) (neg (lit 5.) ) )
+                (minus (id c (case_insensitive) (unqualified)) (pos (lit 7.0) ) )
             )""",
 
         "d*-+-9 and e>=+-+foo" to """
             (and
-                (times (id d (case_insensitive) (unqualified)) (lit 9) )
+                (times (id d (case_insensitive) (unqualified)) (neg (pos (neg (lit 9) ))) )
                 (gte
                     (id e (case_insensitive) (unqualified))
                     (pos (neg (pos (id foo (case_insensitive) (unqualified)))))
