@@ -233,69 +233,59 @@ pathExprVarRef
     | varRefExpr
     ;
     
-exprQuery
-    : booleanExpr
-    ;
+exprQuery : booleanExpr ;
     
 /**
  * PRECEDENCE RULES:
  * With the nature of PartiQL's AST, there are some oddities requiring the precedence to be set as f
  */
 
-booleanExpr: exprQueryOr ;
-exprQueryOr: lhs=exprQueryOr OR rhs=exprQueryOr | parent=exprQueryAnd ;
-exprQueryAnd: lhs=exprQueryAnd AND rhs=exprQueryAnd | parent=exprQueryNot ;   
-exprQueryNot: NOT rhs=exprQueryNot | parent=exprQueryIn ;
-exprQueryIn: lhs=exprQueryIn NOT? IN rhs=exprQueryIn | parent=comparisonOp ;
-comparisonOp:
-    lhs=comparisonOp op=(LT_EQ|GT_EQ|ANGLE_LEFT|ANGLE_RIGHT) rhs=comparisonOp
-    | lhs=comparisonOp op=(NEQ|EQ) rhs=comparisonOp
-    | parent=exprQueryPredicate;
-exprQueryPredicate
-    : lhs=exprQueryPredicate IS NOT? rhs=type # ExprQueryIs
-    | lhs=exprQueryPredicate NOT? LIKE rhs=mathOp ( ESCAPE escape=booleanExpr )? # ExprQueryLike
-    | lhs=exprQueryPredicate NOT? BETWEEN lower=mathOp AND upper=mathOp # ExprQueryBetween
-    | mathOp # PredicateParent
+booleanExpr
+    : exprQueryOr
     ;
-mathOp
-    : lhs=mathOp op=(PERCENT|ASTERISK|SLASH_FORWARD) rhs=mathOp
-    | lhs=mathOp op=(PLUS|MINUS|CONCAT) rhs=mathOp
+
+exprQueryOr
+    : lhs=exprQueryOr op=OR rhs=exprQueryOr
+    | parent=exprQueryAnd
+    ;
+
+exprQueryAnd
+    : lhs=exprQueryAnd op=AND rhs=exprQueryAnd
+    | parent=exprQueryNot
+    ;
+
+exprQueryNot
+    : <assoc=right> NOT rhs=exprQueryNot
+    | parent=exprQueryPredicate
+    ;
+
+exprQueryPredicate
+    : lhs=exprQueryPredicate op=(LT_EQ|GT_EQ|ANGLE_LEFT|ANGLE_RIGHT|NEQ|EQ) rhs=mathOp00  # PredicateComparison
+    | lhs=exprQueryPredicate IS NOT? type                                                 # PredicateIs
+    | lhs=exprQueryPredicate NOT? IN rhs=mathOp00                                         # PredicateIn
+    | lhs=exprQueryPredicate NOT? LIKE rhs=mathOp00 ( ESCAPE escape=booleanExpr )?        # PredicateLike
+    | lhs=exprQueryPredicate NOT? BETWEEN lower=mathOp00 AND upper=mathOp00               # PredicateBetween
+    | parent=mathOp00                                                                     # PredicateBase
+    ;
+
+mathOp00
+    : lhs=mathOp00 op=CONCAT rhs=mathOp01
+    | parent=mathOp01
+    ;
+
+mathOp01
+    : lhs=mathOp01 op=(PLUS|MINUS) rhs=mathOp02
+    | parent=mathOp02
+    ;
+
+mathOp02
+    : lhs=mathOp02 op=(PERCENT|ASTERISK|SLASH_FORWARD) rhs=valueExpr
     | parent=valueExpr
     ;
 
-
-//booleanExpr
-//    : lhs=booleanExpr op=(PERCENT|ASTERISK|SLASH_FORWARD) rhs=booleanExpr     # MathOp
-//    | lhs=booleanExpr op=(PLUS|MINUS|CONCAT) rhs=booleanExpr                  # MathOp
-//    | lhs=booleanExpr NOT? BETWEEN lower=exprMath AND upper=booleanExpr       # ExprQueryBetween
-//    | lhs=booleanExpr NOT? LIKE rhs=booleanExpr ESCAPE escape=booleanExpr     # ExprQueryLike
-//    | lhs=booleanExpr NOT? LIKE rhs=booleanExpr                               # ExprQueryLike
-//
-//    // TODO: IS needs to have same precedence as all the comparison and in operators
-//    | lhs=booleanExpr IS NOT? rhs=type                                               # ExprQueryIs
-//    | lhs=booleanExpr op=(LT_EQ|GT_EQ|ANGLE_LEFT|ANGLE_RIGHT) rhs=booleanExpr              # ComparisonOp
-//    | lhs=booleanExpr op=(NEQ|EQ) rhs=booleanExpr                   # ComparisonOp
-//    | lhs=booleanExpr NOT? IN rhs=booleanExpr                            # ExprQueryIn
-//
-//    | NOT rhs=booleanExpr                                           # ExprQueryNot
-//    | lhs=booleanExpr AND rhs=booleanExpr                           # ExprQueryAnd
-//    | lhs=booleanExpr OR rhs=booleanExpr                            # ExprQueryOr
-//    | valueExpr                                                     # BooleanExprPrimary
-//    ;
-    
-// This is a copy
-exprMath
-    : valueExpr                                               # MathPrimary
-    | lhs=exprMath op=(ASTERISK|SLASH_FORWARD) rhs=exprMath   # MathOpSecondary
-    | lhs=exprMath op=PERCENT rhs=exprMath                    # MathOpSecondary
-    | lhs=exprMath op=(PLUS|MINUS) rhs=exprMath               # MathOpSecondary
-    | lhs=exprMath op=CONCAT rhs=exprMath                     # MathOpSecondary
-    ;
-    
 valueExpr
-    : exprPrimary               # ExprQueryPrimary
-    | PLUS rhs=valueExpr        # ExprQueryPositive
-    | MINUS rhs=valueExpr       # ExprQueryNegative
+    : sign=(PLUS|MINUS) rhs=valueExpr
+    | parent=exprPrimary
     ;
 
 caseExpr
@@ -350,9 +340,9 @@ singleQuery
     
 // NOTE: Modified rule
 querySet
-    : lhs=querySet EXCEPT ALL? rhs=querySet           # QuerySetExcept
-    | lhs=querySet UNION ALL? rhs=querySet            # QuerySetUnion
-    | lhs=querySet INTERSECT ALL? rhs=querySet        # QuerySetIntersect
+    : lhs=querySet EXCEPT ALL? rhs=singleQuery           # QuerySetExcept
+    | lhs=querySet UNION ALL? rhs=singleQuery            # QuerySetUnion
+    | lhs=querySet INTERSECT ALL? rhs=singleQuery        # QuerySetIntersect
     | singleQuery                                     # QuerySetSingleQuery
     ;
     
