@@ -8,12 +8,12 @@ import org.partiql.lang.domains.toBindingCase
 import org.partiql.lang.errors.ProblemHandler
 import org.partiql.lang.eval.BindingName
 import org.partiql.lang.planner.PartiqlPhysicalPass
+import org.partiql.lang.planner.PlannerPipeline
 import org.partiql.lang.planner.StaticTypeResolver
 import org.partiql.lang.planner.transforms.DEFAULT_IMPL
 import org.partiql.lang.types.BagType
 import org.partiql.lang.types.ListType
 import org.partiql.lang.types.StructType
-import org.partiql.lang.planner.PlannerPipeline
 
 /**
  * The "filter scan to key lookup" pass identifies all equality expressions where either side is a primary key
@@ -190,7 +190,7 @@ private fun PartiqlPhysical.Expr.rewriteFilterPredicate(
          * Other expression types cannot be rewritten without changing the semantic intent of the query.
          */
         override fun transformExpr(node: PartiqlPhysical.Expr): PartiqlPhysical.Expr =
-            when(node) {
+            when (node) {
                 is PartiqlPhysical.Expr.And, is PartiqlPhysical.Expr.Eq -> super.transformExpr(node)
                 else -> node
             }

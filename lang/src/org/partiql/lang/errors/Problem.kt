@@ -12,4 +12,3 @@ data class Problem(val sourceLocation: SourceLocationMeta, val details: ProblemD
     override fun toString(): String =
         "$sourceLocation: ${details.message}"
 }
-
