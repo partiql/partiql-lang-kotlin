@@ -13,7 +13,7 @@ data class PlannerEvent(
     /** The input to the pass, e.g. the SQL query text or instance of the AST or query plan.*/
     val input: Any,
     /** The output of the pass, e.g., the AST or rewritten query plan. */
-    val output: Any?,
+    val output: Any,
     /** The duration of the pass. */
     val duration: Duration
 ) {
@@ -31,7 +31,7 @@ data class PlannerEvent(
 }
 
 /** Convenience function for optionally invoking [PlannerEventCallback] functions. */
-internal inline fun <T> PlannerEventCallback?.doEvent(eventName: String, input: Any, crossinline block: () -> T): T {
+internal inline fun <T : Any> PlannerEventCallback?.doEvent(eventName: String, input: Any, crossinline block: () -> T): T {
     if (this == null) return block()
     val startTime = Instant.now()
     return block().also { output ->

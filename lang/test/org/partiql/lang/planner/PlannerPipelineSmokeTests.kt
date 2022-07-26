@@ -40,7 +40,9 @@ class PlannerPipelineSmokeTests {
     @Test
     fun `happy path`() {
         var pecCallbacks = 0
-        val plannerEventCallback: PlannerEventCallback = { _ -> pecCallbacks++ }
+        val plannerEventCallback: PlannerEventCallback = { _ ->
+            pecCallbacks++
+        }
 
         val pipeline = createPlannerPipelineForTest(allowUndefinedVariables = true, plannerEventCallback = plannerEventCallback)
 
