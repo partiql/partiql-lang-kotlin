@@ -16,8 +16,8 @@ import org.partiql.lang.eval.TypedOpBehavior
 import org.partiql.lang.eval.err
 import org.partiql.lang.eval.errorContextFrom
 import org.partiql.lang.planner.EvaluatorOptions
+import org.partiql.lang.util.BuiltInScalarTypeId
 import org.partiql.lang.util.propertyValueMapOf
-import org.partiql.pig.runtime.LongPrimitive
 
 /**
  * Provides rules for basic AST sanity checks that should be performed before any attempt at further physical
@@ -60,11 +60,11 @@ class PartiqlPhysicalSanityValidator(private val evaluatorOptions: EvaluatorOpti
         }
     }
 
-    private fun validateDecimalOrNumericType(scale: LongPrimitive?, precision: LongPrimitive?, metas: MetaContainer) {
+    private fun validateDecimalOrNumericType(precision: Long?, scale: Long?, metas: MetaContainer) {
         if (scale != null && precision != null && evaluatorOptions.typedOpBehavior == TypedOpBehavior.HONOR_PARAMETERS) {
-            if (scale.value !in 0..precision.value) {
+            if (scale !in 0..precision) {
                 err(
-                    "Scale ${scale.value} should be between 0 and precision ${precision.value}",
+                    "Scale $scale should be between 0 and precision $precision",
                     errorCode = ErrorCode.SEMANTIC_INVALID_DECIMAL_ARGUMENTS,
                     errorContext = errorContextFrom(metas),
                     internal = false
@@ -73,12 +73,11 @@ class PartiqlPhysicalSanityValidator(private val evaluatorOptions: EvaluatorOpti
         }
     }
 
-    override fun visitTypeDecimalType(node: PartiqlPhysical.Type.DecimalType) {
-        validateDecimalOrNumericType(node.scale, node.precision, node.metas)
-    }
-
-    override fun visitTypeNumericType(node: PartiqlPhysical.Type.NumericType) {
-        validateDecimalOrNumericType(node.scale, node.precision, node.metas)
+    override fun visitTypeScalarType(node: PartiqlPhysical.Type.ScalarType) {
+        super.visitTypeScalarType(node)
+        if (node.id.text == BuiltInScalarTypeId.DECIMAL || node.id.text == BuiltInScalarTypeId.NUMERIC) {
+            validateDecimalOrNumericType(node.parameters[0].longValueOrNull, node.parameters[1].longValueOrNull, node.metas)
+        }
     }
 
     override fun visitExprCallAgg(node: PartiqlPhysical.Expr.CallAgg) {
