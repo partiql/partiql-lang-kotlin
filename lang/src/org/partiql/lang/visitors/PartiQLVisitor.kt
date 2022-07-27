@@ -353,6 +353,11 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         return PartiqlAst.Expr.Call(SymbolPrimitive("extract", mapOf()), args, mapOf())
     }
 
+    override fun visitSubstring(ctx: PartiQLParser.SubstringContext): PartiqlAst.Expr.Call {
+        val args = ctx.exprQuery().map { expr -> visit(expr) as PartiqlAst.Expr }
+        return PartiqlAst.Expr.Call(SymbolPrimitive(ctx.SUBSTRING().text.toLowerCase(), mapOf()), args, mapOf())
+    }
+
     override fun visitVarRefExprIdentQuoted(ctx: PartiQLParser.VarRefExprIdentQuotedContext): PartiqlAst.PartiqlAstNode =
         PartiqlAst.BUILDER()
             .id(ctx.toRawString(), PartiqlAst.CaseSensitivity.CaseSensitive(), PartiqlAst.ScopeQualifier.Unqualified())
