@@ -3957,7 +3957,8 @@ class SqlParserTest : SqlParserTestBase() {
                     (id bar case_insensitive))))            
         """,
         """
-        (union
+        (bag_op
+            (union)
             (distinct)
             (select
                 (project
@@ -3984,8 +3985,9 @@ class SqlParserTest : SqlParserTestBase() {
     fun union() = assertExpression(
         "a UNION b"
     ) {
-        this.union(
-            setq = PartiqlAst.SetQuantifier.Distinct(),
+        bagOp(
+            op = PartiqlAst.BagOpType.Union(),
+            quantifier = PartiqlAst.SetQuantifier.Distinct(),
             operands = listOf(
                 this.id("a"),
                 this.id("b")
@@ -3997,8 +3999,9 @@ class SqlParserTest : SqlParserTestBase() {
     fun unionDistinct() = assertExpression(
         "a UNION DISTINCT b"
     ) {
-        this.union(
-            setq = PartiqlAst.SetQuantifier.Distinct(),
+        bagOp(
+            op = PartiqlAst.BagOpType.Union(),
+            quantifier = PartiqlAst.SetQuantifier.Distinct(),
             operands = listOf(
                 this.id("a"),
                 this.id("b")
@@ -4010,8 +4013,9 @@ class SqlParserTest : SqlParserTestBase() {
     fun unionAll() = assertExpression(
         "a UNION ALL b"
     ) {
-        this.union(
-            setq = PartiqlAst.SetQuantifier.All(),
+        bagOp(
+            op = PartiqlAst.BagOpType.Union(),
+            quantifier = PartiqlAst.SetQuantifier.All(),
             operands = listOf(
                 this.id("a"),
                 this.id("b")
@@ -4023,8 +4027,9 @@ class SqlParserTest : SqlParserTestBase() {
     fun intersect() = assertExpression(
         "a INTERSECT b"
     ) {
-        this.intersect(
-            setq = PartiqlAst.SetQuantifier.Distinct(),
+        bagOp(
+            op = PartiqlAst.BagOpType.Intersect(),
+            quantifier = PartiqlAst.SetQuantifier.Distinct(),
             operands = listOf(
                 this.id("a"),
                 this.id("b")
@@ -4036,8 +4041,9 @@ class SqlParserTest : SqlParserTestBase() {
     fun intersectDistinct() = assertExpression(
         "a INTERSECT DISTINCT b"
     ) {
-        this.intersect(
-            setq = PartiqlAst.SetQuantifier.Distinct(),
+        bagOp(
+            op = PartiqlAst.BagOpType.Intersect(),
+            quantifier = PartiqlAst.SetQuantifier.Distinct(),
             operands = listOf(
                 this.id("a"),
                 this.id("b")
@@ -4049,8 +4055,9 @@ class SqlParserTest : SqlParserTestBase() {
     fun intersectAll() = assertExpression(
         "a INTERSECT ALL b"
     ) {
-        this.intersect(
-            setq = PartiqlAst.SetQuantifier.All(),
+        bagOp(
+            op = PartiqlAst.BagOpType.Intersect(),
+            quantifier = PartiqlAst.SetQuantifier.All(),
             operands = listOf(
                 this.id("a"),
                 this.id("b")
@@ -4062,8 +4069,9 @@ class SqlParserTest : SqlParserTestBase() {
     fun except() = assertExpression(
         "a EXCEPT b"
     ) {
-        this.except(
-            setq = PartiqlAst.SetQuantifier.Distinct(),
+        bagOp(
+            op = PartiqlAst.BagOpType.Except(),
+            quantifier = PartiqlAst.SetQuantifier.Distinct(),
             operands = listOf(
                 this.id("a"),
                 this.id("b")
@@ -4075,8 +4083,9 @@ class SqlParserTest : SqlParserTestBase() {
     fun exceptDistinct() = assertExpression(
         "a EXCEPT DISTINCT b"
     ) {
-        this.except(
-            setq = PartiqlAst.SetQuantifier.Distinct(),
+        bagOp(
+            op = PartiqlAst.BagOpType.Except(),
+            quantifier = PartiqlAst.SetQuantifier.Distinct(),
             operands = listOf(
                 this.id("a"),
                 this.id("b")
@@ -4088,8 +4097,9 @@ class SqlParserTest : SqlParserTestBase() {
     fun exceptAll() = assertExpression(
         "a EXCEPT ALL b"
     ) {
-        this.except(
-            setq = PartiqlAst.SetQuantifier.All(),
+        bagOp(
+            op = PartiqlAst.BagOpType.Except(),
+            quantifier = PartiqlAst.SetQuantifier.All(),
             operands = listOf(
                 this.id("a"),
                 this.id("b")
@@ -4101,8 +4111,9 @@ class SqlParserTest : SqlParserTestBase() {
     fun outerUnion() = assertExpressionNoRoundTrip(
         "a OUTER UNION b"
     ) {
-        this.outerUnion(
-            setq = PartiqlAst.SetQuantifier.Distinct(),
+        bagOp(
+            op = PartiqlAst.BagOpType.OuterUnion(),
+            quantifier = PartiqlAst.SetQuantifier.Distinct(),
             operands = listOf(
                 this.id("a"),
                 this.id("b")
@@ -4114,8 +4125,9 @@ class SqlParserTest : SqlParserTestBase() {
     fun outerUnionDistinct() = assertExpressionNoRoundTrip(
         "a OUTER UNION DISTINCT b"
     ) {
-        this.outerUnion(
-            setq = PartiqlAst.SetQuantifier.Distinct(),
+        bagOp(
+            op = PartiqlAst.BagOpType.OuterUnion(),
+            quantifier = PartiqlAst.SetQuantifier.Distinct(),
             operands = listOf(
                 this.id("a"),
                 this.id("b")
@@ -4127,8 +4139,9 @@ class SqlParserTest : SqlParserTestBase() {
     fun outerUnionAll() = assertExpressionNoRoundTrip(
         "a OUTER UNION ALL b"
     ) {
-        this.outerUnion(
-            setq = PartiqlAst.SetQuantifier.All(),
+        bagOp(
+            op = PartiqlAst.BagOpType.OuterUnion(),
+            quantifier = PartiqlAst.SetQuantifier.All(),
             operands = listOf(
                 this.id("a"),
                 this.id("b")
@@ -4140,8 +4153,9 @@ class SqlParserTest : SqlParserTestBase() {
     fun outerIntersect() = assertExpressionNoRoundTrip(
         "a OUTER INTERSECT b"
     ) {
-        this.outerIntersect(
-            setq = PartiqlAst.SetQuantifier.Distinct(),
+        bagOp(
+            op = PartiqlAst.BagOpType.OuterIntersect(),
+            quantifier = PartiqlAst.SetQuantifier.Distinct(),
             operands = listOf(
                 this.id("a"),
                 this.id("b")
@@ -4153,8 +4167,9 @@ class SqlParserTest : SqlParserTestBase() {
     fun outerIntersectDistinct() = assertExpressionNoRoundTrip(
         "a OUTER INTERSECT DISTINCT b"
     ) {
-        this.outerIntersect(
-            setq = PartiqlAst.SetQuantifier.Distinct(),
+        bagOp(
+            op = PartiqlAst.BagOpType.OuterIntersect(),
+            quantifier = PartiqlAst.SetQuantifier.Distinct(),
             operands = listOf(
                 this.id("a"),
                 this.id("b")
@@ -4166,8 +4181,9 @@ class SqlParserTest : SqlParserTestBase() {
     fun outerIntersectAll() = assertExpressionNoRoundTrip(
         "a OUTER INTERSECT ALL b"
     ) {
-        this.outerIntersect(
-            setq = PartiqlAst.SetQuantifier.All(),
+        bagOp(
+            op = PartiqlAst.BagOpType.OuterIntersect(),
+            quantifier = PartiqlAst.SetQuantifier.All(),
             operands = listOf(
                 this.id("a"),
                 this.id("b")
@@ -4179,8 +4195,9 @@ class SqlParserTest : SqlParserTestBase() {
     fun outerExcept() = assertExpressionNoRoundTrip(
         "a OUTER EXCEPT b"
     ) {
-        this.outerExcept(
-            setq = PartiqlAst.SetQuantifier.Distinct(),
+        bagOp(
+            op = PartiqlAst.BagOpType.OuterExcept(),
+            quantifier = PartiqlAst.SetQuantifier.Distinct(),
             operands = listOf(
                 this.id("a"),
                 this.id("b")
@@ -4192,8 +4209,9 @@ class SqlParserTest : SqlParserTestBase() {
     fun outerExceptDistinct() = assertExpressionNoRoundTrip(
         "a OUTER EXCEPT DISTINCT b"
     ) {
-        this.outerExcept(
-            setq = PartiqlAst.SetQuantifier.Distinct(),
+        bagOp(
+            op = PartiqlAst.BagOpType.OuterExcept(),
+            quantifier = PartiqlAst.SetQuantifier.Distinct(),
             operands = listOf(
                 this.id("a"),
                 this.id("b")
@@ -4205,8 +4223,9 @@ class SqlParserTest : SqlParserTestBase() {
     fun outerExceptAll() = assertExpressionNoRoundTrip(
         "a OUTER EXCEPT ALL b"
     ) {
-        this.outerExcept(
-            setq = PartiqlAst.SetQuantifier.All(),
+        bagOp(
+            op = PartiqlAst.BagOpType.OuterExcept(),
+            quantifier = PartiqlAst.SetQuantifier.All(),
             operands = listOf(
                 this.id("a"),
                 this.id("b")

@@ -139,12 +139,12 @@ fun ExprNode.toAstExpr(): PartiqlAst.Expr {
                         // TODO:  we are losing case-sensitivity of the function name here.  Do we care?
                         call(idArg.name.text, args.drop(1), metas)
                     }
-                    NAryOp.UNION -> union(distinct(), args, metas)
-                    NAryOp.UNION_ALL -> union(all(), args, metas)
-                    NAryOp.INTERSECT -> intersect(distinct(), args, metas)
-                    NAryOp.INTERSECT_ALL -> intersect(all(), args, metas)
-                    NAryOp.EXCEPT -> except(distinct(), args, metas)
-                    NAryOp.EXCEPT_ALL -> except(all(), args, metas)
+                    NAryOp.UNION -> bagOp(union(), distinct(), args, metas)
+                    NAryOp.UNION_ALL -> bagOp(union(), all(), args, metas)
+                    NAryOp.INTERSECT -> bagOp(intersect(), distinct(), args, metas)
+                    NAryOp.INTERSECT_ALL -> bagOp(intersect(), all(), args, metas)
+                    NAryOp.EXCEPT -> bagOp(except(), distinct(), args, metas)
+                    NAryOp.EXCEPT_ALL -> bagOp(except(), all(), args, metas)
                 }
             }
             is CallAgg -> {

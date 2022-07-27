@@ -438,15 +438,10 @@ internal class EvaluatingCompiler(
             is PartiqlAst.Expr.Sexp -> compileSeq(ExprValueType.SEXP, expr.values, metas)
             is PartiqlAst.Expr.Bag -> compileSeq(ExprValueType.BAG, expr.values, metas)
 
-            // set operators
-            is PartiqlAst.Expr.Union,
-            is PartiqlAst.Expr.Intersect,
-            is PartiqlAst.Expr.Except,
-            is PartiqlAst.Expr.OuterUnion,
-            is PartiqlAst.Expr.OuterIntersect,
-            is PartiqlAst.Expr.OuterExcept -> {
+            // bag operators
+            is PartiqlAst.Expr.BagOp -> {
                 err(
-                    "${expr.javaClass.canonicalName} is not yet supported",
+                    "${expr.op.javaClass.canonicalName} is not yet supported",
                     ErrorCode.EVALUATOR_FEATURE_NOT_SUPPORTED_YET,
                     errorContextFrom(metas).also {
                         it[Property.FEATURE_NAME] = expr.javaClass.canonicalName
