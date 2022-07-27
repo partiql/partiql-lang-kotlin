@@ -650,7 +650,7 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
 
     // TODO: should the function base allow f(), "f"(), @"f"(), and @f()?
     override fun visitFunctionCall(ctx: PartiQLParser.FunctionCallContext): PartiqlAst.PartiqlAstNode {
-        val name = ctx.symbolPrimitive().getString()
+        val name = ctx.symbolPrimitive().getString().toLowerCase()
         val args = ctx.functionCallArg().map { arg -> visit(arg) as PartiqlAst.Expr }
         return PartiqlAst.BUILDER().call(name, args)
     }
