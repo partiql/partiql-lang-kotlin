@@ -111,7 +111,8 @@ functionCallArg
 exprPrimary
     : exprTerm                                                             # ExprPrimaryTerm
     | CAST PAREN_LEFT exprQuery AS type PAREN_RIGHT                        # Cast
-    | LIST PAREN_LEFT (exprQuery ( COMMA exprQuery )* )? PAREN_RIGHT                               # List
+    | LIST PAREN_LEFT (exprQuery ( COMMA exprQuery )* )? PAREN_RIGHT       # List
+    | EXTRACT PAREN_LEFT IDENTIFIER FROM rhs=exprQuery PAREN_RIGHT         # Extract
     | CAN_CAST PAREN_LEFT exprQuery AS type PAREN_RIGHT                    # CanCast
     | CAN_LOSSLESS_CAST PAREN_LEFT exprQuery AS type PAREN_RIGHT           # CanLosslessCast
     | functionCall                                                         # ExprQueryFunctionCall
@@ -121,6 +122,9 @@ exprPrimary
     | exprPrimary BRACKET_LEFT exprQuery BRACKET_RIGHT                     # ExprPrimaryIndex
     | caseExpr                                                             # ExprQueryCase
     ;
+    
+// TODO: Uncomment or remove
+// fragment DATE_TIME_KEYWORDS: ('YEAR'|'MONTH'|'DAY'|'HOUR'|'MINUTE'|'SECOND'|'TIMEZONE_HOUR'|'TIMEZONE_MINUTE') ;
     
 // TODO: Add all types
 type
