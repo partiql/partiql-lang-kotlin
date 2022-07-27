@@ -129,9 +129,7 @@ abstract class SqlParserTestBase : TestBase() {
     ) {
         // Check for V0 Ast
         val actualStatement = parse(source)
-        println("Actual Statement: $actualStatement")
         val expectedV0AstSexp = loadIonSexp(expectedV0Ast)
-        println("Expected V0 Ast Sexp: $expectedV0AstSexp")
         serializeAssert(AstVersion.V0, actualStatement.toExprNode(ion), expectedV0AstSexp, source)
 
         // Check for PIG Ast
@@ -156,10 +154,8 @@ abstract class SqlParserTestBase : TestBase() {
     }
 
     private fun serializeAssert(astVersion: AstVersion, actualExprNode: ExprNode, expectedIonSexp: IonSexp, source: String) {
-        println("Actual Expr Node: $actualExprNode")
         // Check equals for actual value and expected value after transformation: ExprNode -> IonSexp
         val actualSexpAstWithoutMetas = AstSerializer.serialize(actualExprNode, astVersion, ion).filterMetaNodes()
-        println("Actual Sexp Ast Without Metas: $actualSexpAstWithoutMetas")
         assertSexpEquals(expectedIonSexp, actualSexpAstWithoutMetas, "$astVersion AST, $source")
 
         // Check equals for actual value and expected value after transformation: IonSexp -> ExprNode
