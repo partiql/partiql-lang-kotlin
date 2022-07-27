@@ -115,6 +115,9 @@ exprPrimary
     | SUBSTRING PAREN_LEFT exprQuery
         ( COMMA exprQuery ( COMMA exprQuery )? )?
         PAREN_RIGHT                                                        # Substring
+    | SUBSTRING PAREN_LEFT exprQuery
+        ( FROM exprQuery ( FOR exprQuery )? )?
+        PAREN_RIGHT                                                        # Substring
     | EXTRACT PAREN_LEFT IDENTIFIER FROM rhs=exprQuery PAREN_RIGHT         # Extract
     | CAN_CAST PAREN_LEFT exprQuery AS type PAREN_RIGHT                    # CanCast
     | CAN_LOSSLESS_CAST PAREN_LEFT exprQuery AS type PAREN_RIGHT           # CanLosslessCast
