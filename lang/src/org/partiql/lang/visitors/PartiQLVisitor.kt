@@ -241,7 +241,15 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
     override fun visitTableNonJoinBaseRef(ctx: PartiQLParser.TableNonJoinBaseRefContext?): PartiqlAst.PartiqlAstNode = super.visitTableNonJoinBaseRef(ctx)
     override fun visitTableNonJoinUnpivot(ctx: PartiQLParser.TableNonJoinUnpivotContext?): PartiqlAst.PartiqlAstNode = super.visitTableNonJoinUnpivot(ctx)
     override fun visitTableRefNonJoin(ctx: PartiQLParser.TableRefNonJoinContext?): PartiqlAst.PartiqlAstNode = super.visitTableRefNonJoin(ctx)
-    override fun visitTableUnpivot(ctx: PartiQLParser.TableUnpivotContext?): PartiqlAst.PartiqlAstNode = super.visitTableUnpivot(ctx)
+    override fun visitTableUnpivot(ctx: PartiQLParser.TableUnpivotContext): PartiqlAst.PartiqlAstNode {
+        val expr = visit(ctx.exprQuery()) as PartiqlAst.Expr
+        val asAlias = if (ctx.asIdent() != null) ctx.asIdent().symbolPrimitive().getString() else null
+        val atAlias = if (ctx.atIdent() != null) ctx.atIdent().symbolPrimitive().getString() else null
+        val byAlias = if (ctx.byIdent() != null) ctx.byIdent().symbolPrimitive().getString() else null
+        return PartiqlAst.build {
+            unpivot(expr, asAlias = asAlias, atAlias = atAlias, byAlias = byAlias)
+        }
+    }
 
     // TODO
     override fun visitTableRefNaturalJoin(ctx: PartiQLParser.TableRefNaturalJoinContext?): PartiqlAst.PartiqlAstNode = super.visitTableRefNaturalJoin(ctx)
