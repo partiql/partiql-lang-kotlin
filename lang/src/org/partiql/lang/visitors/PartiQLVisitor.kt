@@ -336,6 +336,11 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         return PartiqlAst.Expr.Bag(exprList)
     }
 
+    override fun visitList(ctx: PartiQLParser.ListContext): PartiqlAst.Expr.List {
+        val expressions = visitOrEmpty(PartiqlAst.Expr::class, ctx.exprQuery())
+        return PartiqlAst.Expr.List(expressions)
+    }
+
     override fun visitVarRefExprIdentQuoted(ctx: PartiQLParser.VarRefExprIdentQuotedContext): PartiqlAst.PartiqlAstNode =
         PartiqlAst.BUILDER()
             .id(ctx.toRawString(), PartiqlAst.CaseSensitivity.CaseSensitive(), PartiqlAst.ScopeQualifier.Unqualified())

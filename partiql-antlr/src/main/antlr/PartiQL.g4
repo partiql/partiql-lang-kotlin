@@ -111,6 +111,7 @@ functionCallArg
 exprPrimary
     : exprTerm                                                             # ExprPrimaryTerm
     | CAST PAREN_LEFT exprQuery AS type PAREN_RIGHT                        # Cast
+    | LIST PAREN_LEFT (exprQuery ( COMMA exprQuery )* )? PAREN_RIGHT                               # List
     | CAN_CAST PAREN_LEFT exprQuery AS type PAREN_RIGHT                    # CanCast
     | CAN_LOSSLESS_CAST PAREN_LEFT exprQuery AS type PAREN_RIGHT           # CanLosslessCast
     | functionCall                                                         # ExprQueryFunctionCall
