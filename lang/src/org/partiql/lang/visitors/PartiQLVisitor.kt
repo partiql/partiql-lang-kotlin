@@ -26,6 +26,7 @@ import org.partiql.lang.eval.EvaluationException
 import org.partiql.lang.eval.time.MAX_PRECISION_FOR_TIME
 import org.partiql.lang.generated.PartiQLBaseVisitor
 import org.partiql.lang.generated.PartiQLParser
+import org.partiql.lang.syntax.DATE_TIME_PART_KEYWORDS
 import org.partiql.lang.types.CustomType
 import org.partiql.lang.util.bigDecimalOf
 import org.partiql.lang.util.getPrecisionFromTimeString
@@ -339,6 +340,16 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
     override fun visitList(ctx: PartiQLParser.ListContext): PartiqlAst.Expr.List {
         val expressions = visitOrEmpty(PartiqlAst.Expr::class, ctx.exprQuery())
         return PartiqlAst.Expr.List(expressions)
+    }
+
+    override fun visitExtract(ctx: PartiQLParser.ExtractContext): PartiqlAst.Expr.Call {
+        if (!DATE_TIME_PART_KEYWORDS.contains(ctx.IDENTIFIER().text)) {
+            throw org.partiql.lang.syntax.PartiQLParser.ParseErrorListener.ParseException("Expected on of $DATE_TIME_PART_KEYWORDS")
+        }
+        val datetimePart = PartiqlAst.Expr.Lit(ion.newSymbol(ctx.IDENTIFIER().text).toIonElement())
+        val timeExpr = visit(ctx.rhs) as PartiqlAst.Expr
+        val args = listOf(datetimePart, timeExpr)
+        return PartiqlAst.Expr.Call(SymbolPrimitive("extract", mapOf()), args, mapOf())
     }
 
     override fun visitVarRefExprIdentQuoted(ctx: PartiQLParser.VarRefExprIdentQuotedContext): PartiqlAst.PartiqlAstNode =
