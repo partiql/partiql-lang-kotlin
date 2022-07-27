@@ -109,7 +109,15 @@ class EvaluatorTests {
             // we are currently not plumbed to be able to return the original letter casing of global variables.
             // (there are other tests in LogicalToLogicalResolvedVisitorTransform which cover this case for the
             // PlannerPipeline)
-            "identifierCaseMismatch"
+            "identifierCaseMismatch",
+
+            // TODO: Support bag operators in planning compiler
+            "outerUnionDistinct",
+            "outerUnionAll",
+            "outerIntersectDistinct",
+            "outerIntersectAll",
+            "outerExceptDistinct",
+            "outerExceptAll"
         )
 
         @JvmStatic

@@ -439,16 +439,7 @@ internal class EvaluatingCompiler(
             is PartiqlAst.Expr.Bag -> compileSeq(ExprValueType.BAG, expr.values, metas)
 
             // bag operators
-            is PartiqlAst.Expr.BagOp -> {
-                err(
-                    "${expr.op.javaClass.canonicalName} is not yet supported",
-                    ErrorCode.EVALUATOR_FEATURE_NOT_SUPPORTED_YET,
-                    errorContextFrom(metas).also {
-                        it[Property.FEATURE_NAME] = expr.javaClass.canonicalName
-                    },
-                    internal = false
-                )
-            }
+            is PartiqlAst.Expr.BagOp -> compileBagOp(expr, metas)
         }
     }
 
@@ -1576,6 +1567,21 @@ internal class EvaluatingCompiler(
                 seqType,
                 makeItemThunkSequence(env)
             )
+        }
+    }
+
+    private fun compileBagOp(node: PartiqlAst.Expr.BagOp, metas: MetaContainer): ThunkEnv {
+        val lhs = compileAstExpr(node.operands[0])
+        val rhs = compileAstExpr(node.operands[1])
+        val op = node.op.expr(metas)
+        return thunkFactory.thunkEnv(metas) { env ->
+            val l = lhs(env).asSequence()
+            val r = rhs(env).asSequence()
+            val result = when (node.quantifier) {
+                is PartiqlAst.SetQuantifier.All -> op.eval(l, r)
+                is PartiqlAst.SetQuantifier.Distinct -> op.eval(l, r).distinct()
+            }
+            valueFactory.newBag(result)
         }
     }
 

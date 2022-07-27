@@ -1,5 +1,3 @@
-
-
 package org.partiql.lang.util.testdsl
 
 import com.amazon.ion.IonValue
@@ -55,11 +53,12 @@ data class IonResultTestSuite(
         }
     }
 
-    /** Calls [getAllTests] and then maps the result to a [List<ExprNodeTestCase>]. */
-    fun allTestsAsExprNodeTestCases(
-        failingTestNames: Set<String> = emptySet()
-    ) =
-        getAllTests(failingTestNames).map { it.toExprNodeTestCase() }
+    /**
+     * Calls [getAllTests] and then maps the result to a [List<ExprNodeTestCase>].
+     */
+    fun allTestsAsExprNodeTestCases(failingTestNames: Set<String> = emptySet()) = getAllTests(failingTestNames)
+        .filter { !it.expectFailure }
+        .map { it.toExprNodeTestCase() }
 
     /** Invokes [factoryBlock] to create the parameters needed for the tests in the suite. */
     fun createParameters(vf: ExprValueFactory) = factoryBlock(vf)

@@ -1124,6 +1124,12 @@ internal class StaticTypeInferenceVisitorTransform(
             return transformSeq(seq, seq.values) { BagType(it) }
         }
 
+        override fun transformExprBagOp(node: PartiqlAst.Expr.BagOp): PartiqlAst.Expr {
+            val bagOp = super.transformExprBagOp(node) as PartiqlAst.Expr.BagOp
+            // TODO assert operand compatibility once SQL bag operators are implemented
+            return bagOp.withStaticType(StaticType.BAG)
+        }
+
         override fun transformExprSimpleCase(node: PartiqlAst.Expr.SimpleCase): PartiqlAst.Expr {
             val simpleCase = super.transformExprSimpleCase(node) as PartiqlAst.Expr.SimpleCase
             val caseValue = simpleCase.expr
