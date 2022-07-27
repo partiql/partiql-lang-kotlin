@@ -338,9 +338,15 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         return PartiqlAst.Expr.Bag(exprList)
     }
 
-    override fun visitList(ctx: PartiQLParser.ListContext): PartiqlAst.Expr.List {
+    override fun visitSequenceConstructor(ctx: PartiQLParser.SequenceConstructorContext): PartiqlAst.Expr {
         val expressions = visitOrEmpty(PartiqlAst.Expr::class, ctx.exprQuery())
-        return PartiqlAst.Expr.List(expressions)
+        return PartiqlAst.build {
+            when (ctx.datatype.type) {
+                PartiQLParser.LIST -> list(expressions)
+                PartiQLParser.SEXP -> sexp(expressions)
+                else -> throw org.partiql.lang.syntax.PartiQLParser.ParseErrorListener.ParseException("Unknown sequence")
+            }
+        }
     }
 
     override fun visitExtract(ctx: PartiQLParser.ExtractContext): PartiqlAst.Expr.Call {

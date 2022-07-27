@@ -12,7 +12,6 @@ topQuery: query EOF;
 
 sfwQuery
     : withClause? selectClause fromClause? letClause? whereClause? groupClause? havingClause? orderByClause? limitClause? offsetByClause? # SelectFromWhere
-    | withClause? fromClause whereClause? groupClause? havingClause? selectClause orderByClause? limitClause? offsetByClause?  # FromWhereSelect
     ;
     
 selectClause
@@ -111,7 +110,8 @@ functionCallArg
 exprPrimary
     : exprTerm                                                             # ExprPrimaryTerm
     | CAST PAREN_LEFT exprQuery AS type PAREN_RIGHT                        # Cast
-    | LIST PAREN_LEFT (exprQuery ( COMMA exprQuery )* )? PAREN_RIGHT       # List
+    | datatype=LIST PAREN_LEFT (exprQuery ( COMMA exprQuery )* )? PAREN_RIGHT  # SequenceConstructor
+    | datatype=SEXP PAREN_LEFT (exprQuery ( COMMA exprQuery )* )? PAREN_RIGHT  # SequenceConstructor
     | SUBSTRING PAREN_LEFT exprQuery
         ( COMMA exprQuery ( COMMA exprQuery )? )?
         PAREN_RIGHT                                                        # Substring
