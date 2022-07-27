@@ -221,7 +221,16 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
 
     override fun visitTableBaseRefClauses(ctx: PartiQLParser.TableBaseRefClausesContext): PartiqlAst.FromSource.Scan {
         val expr = visit(ctx.exprQuery()) as PartiqlAst.Expr
-        return PartiqlAst.FromSource.Scan(expr, asAlias = null, byAlias = null, atAlias = null)
+        val asAlias = if (ctx.asIdent() != null) convertSymbolPrimitive(ctx.asIdent().symbolPrimitive()) else null
+        val atAlias = if (ctx.atIdent() != null) convertSymbolPrimitive(ctx.atIdent().symbolPrimitive()) else null
+        val byAlias = if (ctx.byIdent() != null) convertSymbolPrimitive(ctx.byIdent().symbolPrimitive()) else null
+        return PartiqlAst.FromSource.Scan(expr, asAlias = asAlias, byAlias = byAlias, atAlias = atAlias)
+    }
+
+    // TODO: Add metas
+    private fun convertSymbolPrimitive(sym: PartiQLParser.SymbolPrimitiveContext?): SymbolPrimitive? = when (sym) {
+        null -> null
+        else -> SymbolPrimitive(sym.getString(), mapOf())
     }
 
     override fun visitTableRefWrappedJoin(ctx: PartiQLParser.TableRefWrappedJoinContext): PartiqlAst.FromSource {
@@ -635,6 +644,16 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
     private fun <T : PartiqlAst.PartiqlAstNode> visitOrEmpty(clazz: KClass<T>, vararg ctx: ParserRuleContext): List<T> = when {
         ctx.isNullOrEmpty() -> emptyList()
         else -> visitOrEmpty(clazz, ctx.asList())
+    }
+
+    private fun <T : PartiqlAst.PartiqlAstNode> visitOrNull(clazz: KClass<T>, ctx: ParserRuleContext): T? = when (ctx) {
+        null -> null
+        else -> clazz.cast(visit(ctx))
+    }
+
+    private fun visitOrNull(ctx: ParserRuleContext): PartiqlAst.PartiqlAstNode? = when (ctx) {
+        null -> null
+        else -> visit(ctx)
     }
 
     private fun PartiQLParser.VarRefExprIdentAtUnquotedContext.toRawString() =
