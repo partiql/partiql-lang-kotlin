@@ -55,8 +55,26 @@ class PartiQLParserTest {
     }
 
     @Test
+    fun testOnlyPartiQL() {
+        val query = "SELECT * FROM ( <<1>> UNION <<2>> )"
+
+        // Act
+        val stmt = parser.parseAstStatement(query)
+        val tree = parser.parseQuery(query)
+
+        // Build Message
+        val b = StringBuilder()
+        b.appendLine("QUERY              : \"$query\"")
+        b.appendLine("ANTLR TREE         : ${tree.toStringTree(parser.getParser(query))}")
+        b.appendLine("ACTUAL STATEMENT   : $stmt")
+
+        // Assert
+        println(b.toString())
+    }
+
+    @Test
     fun testVisual() {
-        val query = "a not like b + c"
+        val query = "SELECT * FROM ( <<1>> UNION <<2>> )"
         val tree = parser.parseQuery(query)
         val b = StringBuilder()
         b.appendLine("ANTLR TREE         : ${tree.toStringTree(parser.getParser(query))}")
