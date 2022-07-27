@@ -19,6 +19,7 @@ import com.amazon.ionelement.api.toIonElement
 import org.antlr.v4.runtime.ParserRuleContext
 import org.antlr.v4.runtime.Token
 import org.partiql.lang.ast.IsImplictJoinMeta
+import org.partiql.lang.ast.LegacyLogicalNotMeta
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.metaContainerOf
 import org.partiql.lang.eval.EvaluationException
@@ -403,7 +404,7 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         val lhs = visit(ctx.lhs) as PartiqlAst.Expr
         val rhs = visit(ctx.type()) as PartiqlAst.Type
         val isType = PartiqlAst.build { isType(lhs, rhs) }
-        return if (ctx.NOT() == null) isType else PartiqlAst.build { not(isType) }
+        return if (ctx.NOT() == null) isType else PartiqlAst.build { not(isType, metaContainerOf(LegacyLogicalNotMeta.instance)) }
     }
 
     override fun visitPredicateBetween(ctx: PartiQLParser.PredicateBetweenContext): PartiqlAst.PartiqlAstNode {
