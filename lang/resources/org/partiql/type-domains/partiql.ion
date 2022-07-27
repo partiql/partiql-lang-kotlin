@@ -126,13 +126,8 @@ may then be further optimized by selecting better implementations of each operat
             (date year::int month::int day::int)
             (lit_time value::time_value)
 
-            // Set operators
-            (union setq::set_quantifier operands::(* expr 2))
-            (except setq::set_quantifier operands::(* expr 2))
-            (intersect setq::set_quantifier operands::(* expr 2))
-            (outer_union setq::set_quantifier operands::(* expr 2))
-            (outer_except setq::set_quantifier operands::(* expr 2))
-            (outer_intersect setq::set_quantifier operands::(* expr 2))
+            // Bag operators
+            (bag_op op::bag_op_type quantifier::set_quantifier operands::(* expr 2))
 
             // Other expression types
             (path root::expr steps::(* path_step 1))
@@ -369,6 +364,8 @@ may then be further optimized by selecting better implementations of each operat
 
         // Indicates if a set should be reduced to its distinct elements or not.
         (sum set_quantifier (all) (distinct))
+
+        (sum bag_op_type (union) (intersect) (except) (outer_union) (outer_intersect) (outer_except))
 
         // A Data Manipulation Operation.
         // TODO:  domain of `expr` is too broad for several elements below: https://github.com/partiql/partiql-lang-kotlin/issues/243

@@ -261,15 +261,10 @@ internal class PhysicalExprToThunkConverterImpl(
             is PartiqlPhysical.Expr.Sexp -> compileSeq(ExprValueType.SEXP, expr.values, metas)
             is PartiqlPhysical.Expr.Bag -> compileSeq(ExprValueType.BAG, expr.values, metas)
 
-            // set operators
-            is PartiqlPhysical.Expr.Union,
-            is PartiqlPhysical.Expr.Intersect,
-            is PartiqlPhysical.Expr.Except,
-            is PartiqlPhysical.Expr.OuterUnion,
-            is PartiqlPhysical.Expr.OuterIntersect,
-            is PartiqlPhysical.Expr.OuterExcept -> {
+            // bag operators
+            is PartiqlPhysical.Expr.BagOp -> {
                 err(
-                    "${expr.javaClass.canonicalName} is not yet supported",
+                    "${expr.op.javaClass.simpleName} is not yet supported",
                     ErrorCode.EVALUATOR_FEATURE_NOT_SUPPORTED_YET,
                     errorContextFrom(metas).also {
                         it[Property.FEATURE_NAME] = expr.javaClass.canonicalName

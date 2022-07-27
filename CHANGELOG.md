@@ -42,6 +42,7 @@ a subset has been implemented--see examples below) and
 - Introduced planner event callbacks as a means to provide a facility that allows the query to be visualized at every 
 stage in the `PlannerPipeline` and to generate performance metrics for the individual phases of query planning.  See
 `PlannerPipe.Builder.plannerEventCallback` for details.
+- Replaces `union`, `intersect`, `except` IR nodes with common `bag_op` IR node
 
 
 ### Changed

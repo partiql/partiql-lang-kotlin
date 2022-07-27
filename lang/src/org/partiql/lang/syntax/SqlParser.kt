@@ -890,23 +890,23 @@ class SqlParser(
                     call(idArg.name.text, args.drop(1), metas)
                 }
                 "union",
-                "union_distinct" -> union(distinct(), args, metas)
-                "union_all" -> union(all(), args, metas)
+                "union_distinct" -> bagOp(union(), distinct(), args, metas)
+                "union_all" -> bagOp(union(), all(), args, metas)
                 "intersect",
-                "intersect_distinct" -> intersect(distinct(), args, metas)
-                "intersect_all" -> intersect(all(), args, metas)
+                "intersect_distinct" -> bagOp(intersect(), distinct(), args, metas)
+                "intersect_all" -> bagOp(intersect(), all(), args, metas)
                 "except",
-                "except_distinct" -> except(distinct(), args, metas)
-                "except_all" -> except(all(), args, metas)
+                "except_distinct" -> bagOp(except(), distinct(), args, metas)
+                "except_all" -> bagOp(except(), all(), args, metas)
                 "outer_union",
-                "outer_union_distinct" -> outerUnion(distinct(), args, metas)
-                "outer_union_all" -> outerUnion(all(), args, metas)
+                "outer_union_distinct" -> bagOp(outerUnion(), distinct(), args, metas)
+                "outer_union_all" -> bagOp(outerUnion(), all(), args, metas)
                 "outer_intersect",
-                "outer_intersect_distinct" -> outerIntersect(distinct(), args, metas)
-                "outer_intersect_all" -> outerIntersect(all(), args, metas)
+                "outer_intersect_distinct" -> bagOp(outerIntersect(), distinct(), args, metas)
+                "outer_intersect_all" -> bagOp(outerIntersect(), all(), args, metas)
                 "outer_except",
-                "outer_except_distinct" -> outerExcept(distinct(), args, metas)
-                "outer_except_all" -> outerExcept(all(), args, metas)
+                "outer_except_distinct" -> bagOp(outerExcept(), distinct(), args, metas)
+                "outer_except_all" -> bagOp(outerExcept(), all(), args, metas)
                 else -> throw IllegalArgumentException("Unsupported operator: ${this@toOperator}")
             }
         }
