@@ -55,6 +55,8 @@ tableNonJoin
     : tableBaseReference          # TableNonJoinBaseRef
     | tableUnpivot                # TableNonJoinUnpivot
     ;
+    
+// TODO: Check if this should be a symbol primitive. CLI says that identifiers without @ are allowed
 asIdent: AS symbolPrimitive ;
 atIdent: AT symbolPrimitive ;
 byIdent: BY symbolPrimitive ;
@@ -70,7 +72,7 @@ tableJoined
     | PAREN_LEFT tableJoined PAREN_RIGHT  # NestedTableJoined
     ;
     
-tableUnpivot: UNPIVOT exprQuery asIdent? atIdent? ;
+tableUnpivot: UNPIVOT exprQuery asIdent? atIdent? byIdent? ;
     
 // TODO: Check that all uses use a table_reference before token
 tableCrossJoin: tableReference joinType? CROSS JOIN joinRhs ;
