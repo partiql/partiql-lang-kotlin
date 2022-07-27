@@ -33,6 +33,7 @@ import org.partiql.lang.util.getPrecisionFromTimeString
 import org.partiql.pig.runtime.SymbolPrimitive
 import org.partiql.pig.runtime.asPrimitive
 import java.math.BigInteger
+import java.text.ParseException
 import java.time.LocalTime
 import java.time.OffsetTime
 import java.time.format.DateTimeFormatter
@@ -656,6 +657,29 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
     }
 
     override fun visitFunctionCallArg(ctx: PartiQLParser.FunctionCallArgContext): PartiqlAst.Expr = visitExprQuery(ctx.exprQuery())
+
+    override fun visitExprPrimaryPath(ctx: PartiQLParser.ExprPrimaryPathContext): PartiqlAst.PartiqlAstNode {
+        val base = visit(ctx.exprPrimary()) as PartiqlAst.Expr
+        val steps = ctx.pathStep().map { step -> visit(step) as PartiqlAst.PathStep }
+        return PartiqlAst.Expr.Path(base, steps)
+    }
+
+    override fun visitPathStepIndexExpr(ctx: PartiQLParser.PathStepIndexExprContext): PartiqlAst.PartiqlAstNode {
+        val expr = visit(ctx.key) as PartiqlAst.Expr
+        return PartiqlAst.build { pathExpr(expr, PartiqlAst.CaseSensitivity.CaseSensitive()) }
+    }
+
+    // TODO: VarPathExpr should NOT allow the @ symbol
+    override fun visitPathStepDotExpr(ctx: PartiQLParser.PathStepDotExprContext): PartiqlAst.PartiqlAstNode {
+        return when (val key = ctx.key) {
+            is PartiQLParser.VarRefExprIdentUnquotedContext -> PartiqlAst.build { pathExpr(lit(ion.newString(key.toRawString()).toIonElement()), caseInsensitive()) }
+            is PartiQLParser.VarRefExprIdentQuotedContext -> PartiqlAst.build { pathExpr(lit(ion.newString(key.toRawString()).toIonElement()), caseSensitive()) }
+            else -> throw org.partiql.lang.syntax.PartiQLParser.ParseErrorListener.ParseException("Unidentifiable path.")
+        }
+    }
+
+    override fun visitPathStepIndexAll(ctx: PartiQLParser.PathStepIndexAllContext) = PartiqlAst.build { pathWildcard() }
+    override fun visitPathStepDotAll(ctx: PartiQLParser.PathStepDotAllContext) = PartiqlAst.build { pathUnpivot() }
 
     /**
      *

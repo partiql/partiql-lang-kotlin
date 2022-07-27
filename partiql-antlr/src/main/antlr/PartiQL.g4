@@ -116,12 +116,18 @@ exprPrimary
     | CAN_CAST PAREN_LEFT exprQuery AS type PAREN_RIGHT                    # CanCast
     | CAN_LOSSLESS_CAST PAREN_LEFT exprQuery AS type PAREN_RIGHT           # CanLosslessCast
     | functionCall                                                         # ExprQueryFunctionCall
-    | exprPrimary PERIOD pathSteps                                         # ExprPrimaryPath
-    | exprPrimary PERIOD ASTERISK                                          # ExprPrimaryPathAll
-    | exprPrimary BRACKET_LEFT ASTERISK BRACKET_RIGHT                      # ExprPrimaryPathIndexAll
-    | exprPrimary BRACKET_LEFT exprQuery BRACKET_RIGHT                     # ExprPrimaryIndex
+    | exprPrimary pathStep+                                                # ExprPrimaryPath
+    | exprPrimary (BRACKET_LEFT exprQuery BRACKET_RIGHT)                   # ExprPrimaryIndex
     | caseExpr                                                             # ExprQueryCase
     ;
+    
+pathStep
+    : BRACKET_LEFT key=exprQuery BRACKET_RIGHT   # PathStepIndexExpr
+    | BRACKET_LEFT all=ASTERISK BRACKET_RIGHT    # PathStepIndexAll
+    | PERIOD key=varRefExpr                      # PathStepDotExpr
+    | PERIOD all=ASTERISK                        # PathStepDotAll
+    ;
+    
     
 // TODO: Uncomment or remove
 // fragment DATE_TIME_KEYWORDS: ('YEAR'|'MONTH'|'DAY'|'HOUR'|'MINUTE'|'SECOND'|'TIMEZONE_HOUR'|'TIMEZONE_MINUTE') ;
@@ -220,26 +226,6 @@ varRefExpr
     | IDENTIFIER_AT_UNQUOTED  # VarRefExprIdentAtUnquoted
     | IDENTIFIER_QUOTED       # VarRefExprIdentQuoted
     | IDENTIFIER_AT_QUOTED    # VarRefExprIdentAtQuoted
-    ;
-    
-pathExpr
-    : exprPrimary PERIOD pathSteps
-    | exprPrimary PERIOD ASTERISK
-    | exprPrimary BRACKET_LEFT ASTERISK BRACKET_RIGHT
-    | exprPrimary BRACKET_LEFT exprQuery BRACKET_RIGHT
-    ;
-    
-pathSteps
-    : pathSteps PERIOD pathExprVarRef
-    | pathSteps BRACKET_LEFT ASTERISK BRACKET_RIGHT
-    | pathSteps PERIOD ASTERISK
-    | pathSteps BRACKET_LEFT exprQuery BRACKET_RIGHT // TODO: Add path expression. See Rust impl TODO.
-    | pathExprVarRef
-    ;
-    
-pathExprVarRef
-    : LITERAL_STRING
-    | varRefExpr
     ;
     
 exprQuery : booleanExpr ;
