@@ -19,6 +19,7 @@ import com.amazon.ion.IonSystem
 import org.antlr.v4.runtime.BaseErrorListener
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
+import org.antlr.v4.runtime.Lexer
 import org.antlr.v4.runtime.RecognitionException
 import org.antlr.v4.runtime.Recognizer
 import org.antlr.v4.runtime.misc.ParseCancellationException
@@ -44,24 +45,45 @@ class PartiQLParser(
 ) : Parser {
 
     override fun parseAstStatement(source: String): PartiqlAst.Statement {
-        val tree = parseQuery(source)
-        val visitor = PartiQLVisitor(ion, customTypes)
+        val parameterIndexes = getNumberOfParameters(source)
+        val lexer = getLexer(source)
+        val tree = parseQuery(lexer)
+        val visitor = PartiQLVisitor(ion, customTypes, parameterIndexes)
         return visitor.visit(tree) as PartiqlAst.Statement
     }
 
-    fun parseQuery(source: String): ParseTree {
-        val parser = getParser(source)
+    fun parseQuery(lexer: Lexer): ParseTree {
+        val parser = getParser(lexer)
         return parser.topQuery()
     }
 
-    fun getParser(source: String): GeneratedParser {
-        // Configure Lexer
+    internal fun getLexer(source: String): Lexer {
         val inputStream = CharStreams.fromStream(source.byteInputStream(StandardCharsets.UTF_8), StandardCharsets.UTF_8)
         val lexer = GeneratedLexer(inputStream)
         lexer.removeErrorListeners()
         lexer.addErrorListener(PartiQLLexer.TokenizeErrorListener.INSTANCE)
+        return lexer
+    }
 
-        // Configure Parser
+    /**
+     * Create a map where the key is the index of a '?' token relative to all tokens, and the value is the index of a
+     * '?' token relative to all other '?' tokens (starting at index 1). This is used for visiting.
+     * NOTE: This needs to create its own lexer. Cannot share with others due to consumption of token stream.
+     */
+    private fun getNumberOfParameters(query: String): Map<Int, Int> {
+        val lexer = getLexer(query)
+        val tokenIndexToParameterIndex = mutableMapOf<Int, Int>()
+        var parametersFound = 0
+        val tokens = CommonTokenStream(lexer)
+        for (i in 0 until tokens.numberOfOnChannelTokens) {
+            if (tokens[i].type == GeneratedParser.QUESTION_MARK) {
+                tokenIndexToParameterIndex[tokens[i].tokenIndex] = ++parametersFound
+            }
+        }
+        return tokenIndexToParameterIndex
+    }
+
+    fun getParser(lexer: Lexer): GeneratedParser {
         val tokens = CommonTokenStream(lexer)
         val parser = GeneratedParser(tokens)
         parser.removeErrorListeners()

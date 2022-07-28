@@ -44,7 +44,7 @@ import kotlin.reflect.cast
  * Extends ANTLR's generated [PartiQLBaseVisitor] to visit an ANTLR ParseTree and convert it into a PartiQL AST. This
  * class uses the [PartiqlAst.PartiqlAstNode] to represent all nodes within the new AST.
  */
-class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = listOf()) :
+class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = listOf(), val parameterIndexes: Map<Int, Int> = mapOf()) :
     PartiQLBaseVisitor<PartiqlAst.PartiqlAstNode>() {
 
     private val CUSTOM_KEYWORDS = customTypes.map { it.name.toLowerCase() }
@@ -338,6 +338,12 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         return PartiqlAst.Expr.Bag(exprList)
     }
 
+    override fun visitParameter(ctx: PartiQLParser.ParameterContext): PartiqlAst.PartiqlAstNode {
+        val parameterIndex = parameterIndexes[ctx.QUESTION_MARK().symbol.tokenIndex]
+            ?: throw org.partiql.lang.syntax.PartiQLParser.ParseErrorListener.ParseException("Unable to find index of parameter.")
+        return PartiqlAst.build { parameter(parameterIndex.toLong()) }
+    }
+
     override fun visitSequenceConstructor(ctx: PartiQLParser.SequenceConstructorContext): PartiqlAst.Expr {
         val expressions = visitOrEmpty(PartiqlAst.Expr::class, ctx.exprQuery())
         return PartiqlAst.build {
@@ -395,9 +401,6 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
             PartiqlAst.CaseSensitivity.CaseInsensitive(),
             PartiqlAst.ScopeQualifier.Unqualified()
         )
-
-    override fun visitExprTermVarRefExpr(ctx: PartiQLParser.ExprTermVarRefExprContext): PartiqlAst.PartiqlAstNode =
-        visit(ctx.varRefExpr())
 
     /**
      * EXPRESSIONS

@@ -17,6 +17,7 @@ package org.partiql.lang.syntax
 import com.amazon.ion.IonSystem
 import com.amazon.ion.system.IonSystemBuilder
 import org.antlr.v4.gui.TreeViewer
+import org.antlr.v4.runtime.tree.ParseTree
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
@@ -33,18 +34,28 @@ class PartiQLParserTest {
     val parser = PartiQLParser(ion)
     val oldParser = SqlParser(ion)
 
+    private fun parseQuery(query: String): ParseTree {
+        val lexer = parser.getLexer(query)
+        return parser.parseQuery(lexer)
+    }
+
+    private fun getParser(query: String): org.antlr.v4.runtime.Parser {
+        val lexer = parser.getLexer(query)
+        return parser.getParser(lexer)
+    }
+
     @ParameterizedTest
     @ArgumentsSource(QueryCases::class)
     fun test(query: String) {
         // Act
         val expected = oldParser.parseAstStatement(query)
         val stmt = parser.parseAstStatement(query)
-        val tree = parser.parseQuery(query)
+        val tree = parseQuery(query)
 
         // Build Message
         val b = StringBuilder()
         b.appendLine("QUERY              : \"$query\"")
-        b.appendLine("ANTLR TREE         : ${tree.toStringTree(parser.getParser(query))}")
+        b.appendLine("ANTLR TREE         : ${tree.toStringTree(getParser(query))}")
         b.appendLine("ACTUAL STATEMENT   : $stmt")
         b.appendLine("EXPECTED STATEMENT : $expected")
 
@@ -60,12 +71,12 @@ class PartiQLParserTest {
 
         // Act
         val stmt = parser.parseAstStatement(query)
-        val tree = parser.parseQuery(query)
+        val tree = parseQuery(query)
 
         // Build Message
         val b = StringBuilder()
         b.appendLine("QUERY              : \"$query\"")
-        b.appendLine("ANTLR TREE         : ${tree.toStringTree(parser.getParser(query))}")
+        b.appendLine("ANTLR TREE         : ${tree.toStringTree(getParser(query))}")
         b.appendLine("ACTUAL STATEMENT   : $stmt")
 
         // Assert
@@ -75,13 +86,13 @@ class PartiQLParserTest {
     @Test
     fun testVisual() {
         val query = "SELECT * FROM ( <<1>> UNION <<2>> )"
-        val tree = parser.parseQuery(query)
+        val tree = parseQuery(query)
         val b = StringBuilder()
-        b.appendLine("ANTLR TREE         : ${tree.toStringTree(parser.getParser(query))}")
+        b.appendLine("ANTLR TREE         : ${tree.toStringTree(getParser(query))}")
 
         val frame = JFrame("AST")
         val panel = JPanel()
-        val view = TreeViewer(parser.getParser(query).ruleNames.toMutableList(), tree)
+        val view = TreeViewer(getParser(query).ruleNames.toMutableList(), tree)
         view.scale = 1.5
         panel.add(view)
         frame.add(panel)
