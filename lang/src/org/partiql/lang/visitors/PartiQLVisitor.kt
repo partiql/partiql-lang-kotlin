@@ -33,7 +33,6 @@ import org.partiql.lang.util.getPrecisionFromTimeString
 import org.partiql.pig.runtime.SymbolPrimitive
 import org.partiql.pig.runtime.asPrimitive
 import java.math.BigInteger
-import java.text.ParseException
 import java.time.LocalTime
 import java.time.OffsetTime
 import java.time.format.DateTimeFormatter
@@ -82,11 +81,12 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         )
     }
 
-    override fun visitSelectAll(ctx: PartiQLParser.SelectAllContext): PartiqlAst.Projection.ProjectStar =
-        PartiqlAst.BUILDER().projectStar()
+    override fun visitSelectAll(ctx: PartiQLParser.SelectAllContext) = PartiqlAst.build { projectStar() }
+    override fun visitSelectItems(ctx: PartiQLParser.SelectItemsContext) = visitProjectionItems(ctx.projectionItems())
 
-    override fun visitSelectItems(ctx: PartiQLParser.SelectItemsContext): PartiqlAst.Projection.ProjectList =
-        visitProjectionItems(ctx.projectionItems())
+    override fun visitSelectPivot(ctx: PartiQLParser.SelectPivotContext) = PartiqlAst.build {
+        projectPivot(visitExprQuery(ctx.at), visitExprQuery(ctx.pivot))
+    }
 
     override fun visitProjectionItems(ctx: PartiQLParser.ProjectionItemsContext): PartiqlAst.Projection.ProjectList {
         val projections = ctx.projectionItem().map { projection -> visit(projection) as PartiqlAst.ProjectItem }
