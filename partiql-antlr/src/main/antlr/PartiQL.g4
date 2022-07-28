@@ -125,7 +125,7 @@ cast: CAST PAREN_LEFT exprQuery AS type PAREN_RIGHT ;
 canLosslessCast: CAN_LOSSLESS_CAST PAREN_LEFT exprQuery AS type PAREN_RIGHT ;
 canCast: CAN_CAST PAREN_LEFT exprQuery AS type PAREN_RIGHT ;
 extract: EXTRACT PAREN_LEFT IDENTIFIER FROM rhs=exprQuery PAREN_RIGHT ;
-trimFunction: func=TRIM PAREN_LEFT ( mod=(BOTH|LEADING|TRAILING) FROM ) exprQuery PAREN_RIGHT;
+trimFunction: func=TRIM PAREN_LEFT ( mod=IDENTIFIER? sub=exprQuery? FROM )? target=exprQuery PAREN_RIGHT ;
 dateFunction: func=(DATE_ADD|DATE_DIFF) PAREN_LEFT dt=IDENTIFIER COMMA exprQuery COMMA exprQuery PAREN_RIGHT ;
 functionCall: name=symbolPrimitive PAREN_LEFT ( exprQuery ( COMMA exprQuery )* )? PAREN_RIGHT ;
 pathStep
