@@ -158,7 +158,8 @@ class PartiQLParserTest {
                 "5 <= 5 < 2",
                 "a <= b >= c < d > e != f = g <> h",
                 "a not like b + c",
-                "a between foo and bar and bat"
+                "a between foo and bar and bat",
+                "SELECT * FROM VALUES (1)"
             )
             return queries
         }
