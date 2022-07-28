@@ -576,6 +576,16 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         }
     }
 
+    override fun visitValues(ctx: PartiQLParser.ValuesContext): PartiqlAst.Expr.Bag {
+        val rows = ctx.valueRow().map { row -> visitValueRow(row) }
+        return PartiqlAst.build { bag(rows) }
+    }
+
+    override fun visitValueRow(ctx: PartiQLParser.ValueRowContext): PartiqlAst.Expr.List {
+        val expressions = ctx.exprQuery().map { expr -> visitExprQuery(expr) }
+        return PartiqlAst.build { list(expressions) }
+    }
+
     override fun visitCaseExpr(ctx: PartiQLParser.CaseExprContext): PartiqlAst.Expr {
         val exprPairList = mutableListOf<PartiqlAst.ExprPair>()
         val start = if (ctx.case_ == null) 0 else 1
