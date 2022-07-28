@@ -298,13 +298,13 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun unaryIonIntLiteral() = assertExpression(
         "-1",
-        "(lit -1)"
+        "(neg (lit 1))"
     )
 
     @Test
     fun unaryIonFloatLiteral() = assertExpression(
         "+-+-+-`-5e0`",
-        "(lit 5e0)"
+        "(pos (neg (pos (neg (pos (neg (lit -5e0)))))))"
     )
 
     @Test
