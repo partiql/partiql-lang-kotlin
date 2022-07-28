@@ -14,11 +14,12 @@ sfwQuery
     : withClause? selectClause fromClause? letClause? whereClause? groupClause? havingClause? orderByClause? limitClause? offsetByClause? # SelectFromWhere
     ;
     
+// TODO: Use setQuantifierStrategy
 selectClause
     : SELECT setQuantifierStrategy? ASTERISK          # SelectAll
     | SELECT setQuantifierStrategy? projectionItems   # SelectItems
     | SELECT setQuantifierStrategy? VALUE exprQuery   # SelectValue
-    | PIVOT exprQuery AT exprQuery                    # SelectPivot
+    | PIVOT pivot=exprQuery AT at=exprQuery           # SelectPivot
     ;
     
 letClause: LET letBindings;
