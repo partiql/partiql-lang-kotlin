@@ -89,6 +89,10 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         projectPivot(visitExprQuery(ctx.at), visitExprQuery(ctx.pivot))
     }
 
+    override fun visitSelectValue(ctx: PartiQLParser.SelectValueContext) = PartiqlAst.build {
+        projectValue(visitExprQuery(ctx.exprQuery()))
+    }
+
     override fun visitProjectionItems(ctx: PartiQLParser.ProjectionItemsContext): PartiqlAst.Projection.ProjectList {
         val projections = ctx.projectionItem().map { projection -> visit(projection) as PartiqlAst.ProjectItem }
         return PartiqlAst.BUILDER().projectList(projections)
@@ -782,7 +786,7 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         return when {
             strategy == null -> null
             strategy.text.toUpperCase() == "DISTINCT" -> PartiqlAst.SetQuantifier.Distinct()
-            else -> PartiqlAst.SetQuantifier.All()
+            else -> null
         }
     }
 
