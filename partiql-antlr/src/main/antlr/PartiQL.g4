@@ -100,29 +100,32 @@ joinType
     ;
 
 exprPrimary
-    : CAST PAREN_LEFT exprQuery AS type PAREN_RIGHT                        # Cast
-    | datatype=LIST PAREN_LEFT (exprQuery ( COMMA exprQuery )* )? PAREN_RIGHT  # SequenceConstructor
-    | datatype=SEXP PAREN_LEFT (exprQuery ( COMMA exprQuery )* )? PAREN_RIGHT  # SequenceConstructor
-    | SUBSTRING PAREN_LEFT exprQuery
-        ( COMMA exprQuery ( COMMA exprQuery )? )?
-        PAREN_RIGHT                                                        # Substring
-    | SUBSTRING PAREN_LEFT exprQuery
-        ( FROM exprQuery ( FOR exprQuery )? )?
-        PAREN_RIGHT                                                        # Substring
-    | EXTRACT PAREN_LEFT IDENTIFIER FROM rhs=exprQuery PAREN_RIGHT         # Extract
-    | CAN_CAST PAREN_LEFT exprQuery AS type PAREN_RIGHT                    # CanCast
-    | CAN_LOSSLESS_CAST PAREN_LEFT exprQuery AS type PAREN_RIGHT           # CanLosslessCast
-    | dateFunction                                                         # ExprPrimaryBase
-    | functionCall                                                         # ExprPrimaryBase
-    | exprPrimary pathStep+                                                # ExprPrimaryPath
-    | exprPrimary (BRACKET_LEFT exprQuery BRACKET_RIGHT)                   # ExprPrimaryIndex
-    | caseExpr                                                             # ExprQueryCase
-    | exprTerm                                                             # ExprPrimaryTerm
+    : cast                       # ExprPrimaryBase
+    | sequenceConstructor        # ExprPrimaryBase
+    | substring                  # ExprPrimaryBase
+    | canCast                    # ExprPrimaryBase
+    | canLosslessCast            # ExprPrimaryBase
+    | extract                    # ExprPrimaryBase
+    | dateFunction               # ExprPrimaryBase
+    | trimFunction               # ExprPrimaryBase
+    | functionCall               # ExprPrimaryBase
+    | exprPrimary pathStep+      # ExprPrimaryPath
+    | caseExpr                   # ExprPrimaryBase
+    | exprTerm                   # ExprPrimaryBase
     ;
     
+sequenceConstructor: datatype=(LIST|SEXP) PAREN_LEFT (exprQuery ( COMMA exprQuery )* )? PAREN_RIGHT;
+substring
+    : SUBSTRING PAREN_LEFT exprQuery ( COMMA exprQuery ( COMMA exprQuery )? )? PAREN_RIGHT                                                      
+    | SUBSTRING PAREN_LEFT exprQuery ( FROM exprQuery ( FOR exprQuery )? )? PAREN_RIGHT
+    ;
+cast: CAST PAREN_LEFT exprQuery AS type PAREN_RIGHT ;
+canLosslessCast: CAN_LOSSLESS_CAST PAREN_LEFT exprQuery AS type PAREN_RIGHT ;
+canCast: CAN_CAST PAREN_LEFT exprQuery AS type PAREN_RIGHT ;
+extract: EXTRACT PAREN_LEFT IDENTIFIER FROM rhs=exprQuery PAREN_RIGHT ;
+trimFunction: func=TRIM PAREN_LEFT ( mod=(BOTH|LEADING|TRAILING) FROM ) exprQuery PAREN_RIGHT;
 dateFunction: func=(DATE_ADD|DATE_DIFF) PAREN_LEFT dt=IDENTIFIER COMMA exprQuery COMMA exprQuery PAREN_RIGHT ;
 functionCall: name=symbolPrimitive PAREN_LEFT ( exprQuery ( COMMA exprQuery )* )? PAREN_RIGHT ;
-    
 pathStep
     : BRACKET_LEFT key=exprQuery BRACKET_RIGHT   # PathStepIndexExpr
     | BRACKET_LEFT all=ASTERISK BRACKET_RIGHT    # PathStepIndexAll
