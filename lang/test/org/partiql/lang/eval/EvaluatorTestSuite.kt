@@ -17,7 +17,11 @@ class EvaluatorTestCasesAsExprNodeTestCases : ArgumentsProviderBase() {
             "outerIntersectDistinct",
             "outerIntersectAll",
             "outerExceptDistinct",
-            "outerExceptAll"
+            "outerExceptAll",
+            "outerUnionCoerceScalar",
+            "outerUnionCoerceStruct",
+            "outerUnionCoerceNullMissing",
+            "outerUnionCoerceList"
         )
     }
 
@@ -1418,5 +1422,9 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
         test("outerIntersectAll", "<< 1, 2, 2, 3, 3, 3 >> OUTER INTERSECT ALL << 1, 2, 3, 3 >>", "$partiql_bag::[1, 2, 3, 3]")
         test("outerExceptDistinct", "<< 1, 1, 1, 2 >> OUTER EXCEPT << 1 >>", "$partiql_bag::[1, 2]")
         test("outerExceptAll", "<< 1, 1, 1, 2 >> OUTER EXCEPT ALL << 1 >>", "$partiql_bag::[1, 1, 2]")
+        test("outerUnionCoerceScalar", "1 OUTER UNION 2", "$partiql_bag::[1, 2]")
+        test("outerUnionCoerceStruct", "{'a': 1} OUTER UNION {'b': 2}", "$partiql_bag::[ {'a': 1}, {'b': 2} ]")
+        test("outerUnionCoerceNullMissing", "NULL OUTER UNION MISSING", "$partiql_bag::[]")
+        test("outerUnionCoerceList", "[ 1, 1, 1 ] OUTER UNION ALL [ 1, 2 ]", "$partiql_bag::[1, 1, 1, 2]")
     }
 }

@@ -35,7 +35,11 @@ class SerializationRoundTripTests {
                     "outerIntersectDistinct",
                     "outerIntersectAll",
                     "outerExceptDistinct",
-                    "outerExceptAll"
+                    "outerExceptAll",
+                    "outerUnionCoerceScalar",
+                    "outerUnionCoerceStruct",
+                    "outerUnionCoerceNullMissing",
+                    "outerUnionCoerceList"
                 )
             )
                 // we really don't need to test failure cases in this case since the (de)serializers are legacy.

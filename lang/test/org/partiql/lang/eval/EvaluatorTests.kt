@@ -117,7 +117,11 @@ class EvaluatorTests {
             "outerIntersectDistinct",
             "outerIntersectAll",
             "outerExceptDistinct",
-            "outerExceptAll"
+            "outerExceptAll",
+            "outerUnionCoerceScalar",
+            "outerUnionCoerceStruct",
+            "outerUnionCoerceNullMissing",
+            "outerUnionCoerceList"
         )
 
         @JvmStatic

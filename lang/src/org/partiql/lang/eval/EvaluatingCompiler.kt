@@ -1575,8 +1575,8 @@ internal class EvaluatingCompiler(
         val rhs = compileAstExpr(node.operands[1])
         val op = node.op.expr(metas)
         return thunkFactory.thunkEnv(metas) { env ->
-            val l = lhs(env).asSequence()
-            val r = rhs(env).asSequence()
+            val l = lhs(env)
+            val r = rhs(env)
             val result = when (node.quantifier) {
                 is PartiqlAst.SetQuantifier.All -> op.eval(l, r)
                 is PartiqlAst.SetQuantifier.Distinct -> op.eval(l, r).distinct()
