@@ -134,7 +134,6 @@ pathStep
     | PERIOD all=ASTERISK                        # PathStepDotAll
     ;
     
-    
 // TODO: Uncomment or remove
 // fragment DATE_TIME_KEYWORDS: ('YEAR'|'MONTH'|'DAY'|'HOUR'|'MINUTE'|'SECOND'|'TIMEZONE_HOUR'|'TIMEZONE_MINUTE') ;
     
@@ -197,36 +196,24 @@ literal
     
 // TODO: Check the '!' in Rust grammar
 exprTerm
-    : PAREN_LEFT query PAREN_RIGHT # ExprTermWrappedQuery
-    | literal                      # ExprTermLiteral
-    | varRefExpr                   # ExprTermVarRefExpr
-    | exprTermCollection           # ExprTermExprTermCollection
-    | exprTermTuple                # ExprTermExprTermTuple
+    : PAREN_LEFT query PAREN_RIGHT   # ExprTermWrappedQuery
+    | parameter                      # ExprTermBase
+    | literal                        # ExprTermBase
+    | varRefExpr                     # ExprTermBase
+    | exprTermCollection             # ExprTermBase
+    | exprTermTuple                  # ExprTermBase
     ;
     
-exprTermCollection
-    : exprTermArray
-    | exprTermBag
-    ;
+parameter: QUESTION_MARK ;
+
+exprTermCollection: exprTermArray | exprTermBag ;
     
 // @TODO Check expansion
-exprTermArray
-    : BRACKET_LEFT ( exprQuery ( COMMA exprQuery )* )? BRACKET_RIGHT
-    ;
+exprTermArray: BRACKET_LEFT ( exprQuery ( COMMA exprQuery )* )? BRACKET_RIGHT ;
+exprTermBag: ANGLE_DOUBLE_LEFT ( exprQuery ( COMMA exprQuery )* )? ANGLE_DOUBLE_RIGHT ;
+exprTermTuple: BRACE_LEFT ( exprPair ( COMMA exprPair )* )? BRACE_RIGHT ;
+exprPair: lhs=exprQuery COLON rhs=exprQuery ;
 
-exprTermBag
-    : ANGLE_DOUBLE_LEFT ( exprQuery ( COMMA exprQuery )* )? ANGLE_DOUBLE_RIGHT
-    ;
-
-// TODO: Check expansion
-exprTermTuple
-    : BRACE_LEFT ( exprPair ( COMMA exprPair )* )? BRACE_RIGHT
-    ;
-
-exprPair
-    : lhs=exprQuery COLON rhs=exprQuery
-    ;
-    
 varRefExpr
     : IDENTIFIER              # VarRefExprIdentUnquoted
     | IDENTIFIER_AT_UNQUOTED  # VarRefExprIdentAtUnquoted
