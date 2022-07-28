@@ -15,6 +15,7 @@
 package org.partiql.lang.visitors
 
 import com.amazon.ion.IonSystem
+import com.amazon.ionelement.api.ionSymbol
 import com.amazon.ionelement.api.toIonElement
 import org.antlr.v4.runtime.ParserRuleContext
 import org.antlr.v4.runtime.Token
@@ -362,7 +363,15 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         val datetimePart = PartiqlAst.Expr.Lit(ion.newSymbol(ctx.IDENTIFIER().text).toIonElement())
         val timeExpr = visit(ctx.rhs) as PartiqlAst.Expr
         val args = listOf(datetimePart, timeExpr)
-        return PartiqlAst.Expr.Call(SymbolPrimitive(ctx.EXTRACT().text.toLowerCase(), mapOf()), args, mapOf())
+        return PartiqlAst.Expr.Call(SymbolPrimitive(ctx.EXTRACT().text.toLowerCase(), mapOf()), args)
+    }
+
+    override fun visitTrimFunction(ctx: PartiQLParser.TrimFunctionContext): PartiqlAst.PartiqlAstNode {
+        val modifier = if (ctx.mod != null) ctx.mod.text.toLowerCase().toSymbol() else null
+        val substring = if (ctx.sub != null) visitExprQuery(ctx.sub) else null
+        val target = visitExprQuery(ctx.target)
+        var args = listOfNotNull(modifier, substring, target)
+        return PartiqlAst.Expr.Call(SymbolPrimitive(ctx.func.text.toLowerCase(), mapOf()), args)
     }
 
     override fun visitDateFunction(ctx: PartiQLParser.DateFunctionContext): PartiqlAst.Expr.Call {
@@ -798,4 +807,11 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
     }
 
     private fun String.toInteger() = BigInteger(this, 10)
+
+    private fun String.toSymbol(): PartiqlAst.Expr.Lit {
+        val str = this
+        return PartiqlAst.build {
+            lit(ionSymbol(str))
+        }
+    }
 }
