@@ -112,6 +112,7 @@ exprPrimary
     | functionCall               # ExprPrimaryBase
     | exprPrimary pathStep+      # ExprPrimaryPath
     | caseExpr                   # ExprPrimaryBase
+    | values                     # ExprPrimaryBase
     | exprTerm                   # ExprPrimaryBase
     ;
     
@@ -291,18 +292,12 @@ groupAlias: GROUP AS symbolPrimitive ;
 havingClause: HAVING exprQuery ;
 fromClause: FROM tableReference ;
     
-// TODO: Check expansion
 values: VALUES valueRow ( COMMA valueRow )* ;
-
-valueRow
-    : PAREN_LEFT exprQuery PAREN_RIGHT
-    | exprTermCollection
-    ;
+valueRow: PAREN_LEFT exprQuery ( COMMA exprQuery )* PAREN_RIGHT ;
     
 singleQuery
     : exprQuery   # QueryExpr
     | sfwQuery    # QuerySfw
-    | values      # QueryValues
     ;
     
 // NOTE: Modified rule
