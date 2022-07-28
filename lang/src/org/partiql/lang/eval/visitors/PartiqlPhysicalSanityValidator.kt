@@ -76,7 +76,7 @@ class PartiqlPhysicalSanityValidator(private val evaluatorOptions: EvaluatorOpti
     override fun visitTypeScalarType(node: PartiqlPhysical.Type.ScalarType) {
         super.visitTypeScalarType(node)
         if (node.id.text == BuiltInScalarTypeId.DECIMAL || node.id.text == BuiltInScalarTypeId.NUMERIC) {
-            validateDecimalOrNumericType(node.parameters[0].longValueOrNull, node.parameters[1].longValueOrNull, node.metas)
+            validateDecimalOrNumericType(node.parameters.getOrNull(0)?.value, node.parameters.getOrNull(1)?.value, node.metas)
         }
     }
 

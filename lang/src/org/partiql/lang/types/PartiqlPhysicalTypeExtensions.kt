@@ -19,87 +19,70 @@ fun PartiqlPhysical.Type.toTypedOpParameter(customTypedOpParameters: Map<String,
         BuiltInScalarTypeId.REAL,
         BuiltInScalarTypeId.DOUBLE_PRECISION -> TypedOpParameter(StaticType.FLOAT)
         BuiltInScalarTypeId.DECIMAL,
-        BuiltInScalarTypeId.NUMERIC -> {
-            require(parameters.size == 2) {
-                "Internal Error: DECIMAL type must have 2 parameters during compiling"
-            }
-            val precision = parameters[0].longValueOrNull // Null value means parameter not specified explicitly in the original query
-            val scale = parameters[1].longValueOrNull // Null value means parameter not specified explicitly in the original query
-            when {
-                precision == null && scale == null -> TypedOpParameter(StaticType.DECIMAL)
-                precision != null && scale == null -> TypedOpParameter(
-                    DecimalType(
-                        DecimalType.PrecisionScaleConstraint.Constrained(precision.toInt())
+        BuiltInScalarTypeId.NUMERIC -> when (parameters.size) {
+            0 -> TypedOpParameter(StaticType.DECIMAL)
+            1 -> TypedOpParameter(
+                DecimalType(
+                    DecimalType.PrecisionScaleConstraint.Constrained(parameters[0].value.toInt())
+                )
+            )
+            2 -> TypedOpParameter(
+                DecimalType(
+                    DecimalType.PrecisionScaleConstraint.Constrained(
+                        parameters[0].value.toInt(),
+                        parameters[1].value.toInt()
                     )
                 )
-                else -> TypedOpParameter(
-                    DecimalType(
-                        DecimalType.PrecisionScaleConstraint.Constrained(
-                            precision!!.toInt(),
-                            scale!!.toInt()
-                        )
-                    )
-                )
-            }
+            )
+            else -> error("Internal Error: DECIMAL type must have at most 2 parameters during compiling")
         }
         BuiltInScalarTypeId.TIMESTAMP -> TypedOpParameter(StaticType.TIMESTAMP)
-        BuiltInScalarTypeId.CHARACTER -> {
-            require(parameters.size == 1) {
-                "Internal Error: CHARACTER type must have 1 parameters during compiling"
-            }
-            when (val length = parameters[0].longValueOrNull) { // Null value means parameter not specified explicitly in the original query
-                null -> TypedOpParameter(
-                    StringType(
-                        // TODO: See if we need to use unconstrained string instead
-                        StringType.StringLengthConstraint.Constrained(
-                            NumberConstraint.Equals(1)
-                        )
+        BuiltInScalarTypeId.CHARACTER -> when (parameters.size) {
+            0 -> TypedOpParameter(
+                StringType(
+                    // TODO: See if we need to use unconstrained string instead
+                    StringType.StringLengthConstraint.Constrained(
+                        NumberConstraint.Equals(1)
                     )
                 )
-                else -> TypedOpParameter(
-                    StringType(
-                        StringType.StringLengthConstraint.Constrained(
-                            NumberConstraint.Equals(length.toInt())
-                        )
+            )
+            1 -> TypedOpParameter(
+                StringType(
+                    StringType.StringLengthConstraint.Constrained(
+                        NumberConstraint.Equals(parameters[0].value.toInt())
                     )
                 )
-            }
+            )
+            else -> error("Internal Error: CHARACTER type must have 1 parameters during compiling")
         }
-        BuiltInScalarTypeId.CHARACTER_VARYING -> {
-            require(parameters.size == 1) {
-                "Internal Error: CHARACTER_VARYING type must have 1 parameters during compiling"
-            }
-            when (val length = parameters[0].longValueOrNull) { // Null value means parameter not specified explicitly in the original query
-                null -> TypedOpParameter(StringType(StringType.StringLengthConstraint.Unconstrained))
-                else -> TypedOpParameter(StringType(StringType.StringLengthConstraint.Constrained(NumberConstraint.UpTo(length.toInt()))))
-            }
+        BuiltInScalarTypeId.CHARACTER_VARYING -> when (parameters.size) {
+            0 -> TypedOpParameter(StringType(StringType.StringLengthConstraint.Unconstrained))
+            1 -> TypedOpParameter(StringType(StringType.StringLengthConstraint.Constrained(NumberConstraint.UpTo(parameters[0].value.toInt()))))
+            else -> error("Internal Error: CHARACTER_VARYING type must have 1 parameters during compiling")
         }
         BuiltInScalarTypeId.STRING -> TypedOpParameter(StaticType.STRING)
         BuiltInScalarTypeId.SYMBOL -> TypedOpParameter(StaticType.SYMBOL)
         BuiltInScalarTypeId.CLOB -> TypedOpParameter(StaticType.CLOB)
         BuiltInScalarTypeId.BLOB -> TypedOpParameter(StaticType.BLOB)
         BuiltInScalarTypeId.DATE -> TypedOpParameter(StaticType.DATE)
-        BuiltInScalarTypeId.TIME -> {
-            require(parameters.size == 1) {
-                "Internal Error: TIME type must have 1 parameters during compiling"
-            }
-            TypedOpParameter(
-                TimeType(
-                    precision = parameters[0].longValueOrNull?.toInt(),
-                    withTimeZone = false
-                )
-            )
+        BuiltInScalarTypeId.TIME -> when (parameters.size) {
+            0 -> TypedOpParameter(TimeType())
+            1 -> TypedOpParameter(TimeType(parameters[0].value.toInt()))
+            else -> error("\"Internal Error: TIME type must have at most 1 parameters during compiling\"")
         }
-        BuiltInScalarTypeId.TIME_WITH_TIME_ZONE -> {
-            require(parameters.size == 1) {
-                "Internal Error: TIME+WITH_TIME_ZONE type must have 1 parameters during compiling"
-            }
-            TypedOpParameter(
+        BuiltInScalarTypeId.TIME_WITH_TIME_ZONE -> when (parameters.size) {
+            0 -> TypedOpParameter(
                 TimeType(
-                    precision = parameters[0].longValueOrNull?.toInt(),
                     withTimeZone = true
                 )
             )
+            1 -> TypedOpParameter(
+                TimeType(
+                    precision = parameters[0].value.toInt(),
+                    withTimeZone = true
+                )
+            )
+            else -> error("Internal Error: TIME_WITH_TIME_ZONE type must have 1 parameters during compiling")
         }
         else -> error("Unrecognized scalar type ID")
     }

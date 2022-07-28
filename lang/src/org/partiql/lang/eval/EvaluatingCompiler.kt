@@ -1222,7 +1222,7 @@ internal class EvaluatingCompiler(
             compileOptions.typedOpBehavior == TypedOpBehavior.HONOR_PARAMETERS &&
             expr.type is PartiqlAst.Type.ScalarType &&
             expr.type.id.text == BuiltInScalarTypeId.FLOAT &&
-            !expr.type.parameters[0].isNull // if precision of FLOAT is explicitly specified in the original query
+            expr.type.parameters.isNotEmpty() // if precision of FLOAT is explicitly specified in the original query
         ) {
             err(
                 "FLOAT precision parameter is unsupported",
@@ -1266,7 +1266,7 @@ internal class EvaluatingCompiler(
             compileOptions.typedOpBehavior == TypedOpBehavior.HONOR_PARAMETERS &&
             asType is PartiqlAst.Type.ScalarType &&
             asType.id.text == BuiltInScalarTypeId.FLOAT &&
-            !asType.parameters[0].isNull // if precision of FLOAT is explicitly specified in the original query != null
+            asType.parameters.isNotEmpty() // if precision of FLOAT is explicitly specified in the original query
         ) {
             err(
                 "FLOAT precision parameter is unsupported",
