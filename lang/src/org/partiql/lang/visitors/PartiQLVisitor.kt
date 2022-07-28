@@ -576,6 +576,24 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         }
     }
 
+    override fun visitCaseExpr(ctx: PartiQLParser.CaseExprContext): PartiqlAst.Expr {
+        val exprPairList = mutableListOf<PartiqlAst.ExprPair>()
+        val start = if (ctx.case_ == null) 0 else 1
+        val end = if (ctx.ELSE() == null) ctx.exprQuery().size else ctx.exprQuery().size - 1
+        for (i in start until end step 2) {
+            val whenExpr = visitExprQuery(ctx.exprQuery(i))
+            val thenExpr = visitExprQuery(ctx.exprQuery(i + 1))
+            exprPairList.add(PartiqlAst.build { exprPair(whenExpr, thenExpr) })
+        }
+        val elseExpr = if (ctx.ELSE() != null) visitExprQuery(ctx.exprQuery(end)) else null
+        return PartiqlAst.build {
+            when (ctx.case_) {
+                null -> searchedCase(exprPairList(exprPairList), elseExpr)
+                else -> simpleCase(visitExprQuery(ctx.case_), exprPairList(exprPairList), elseExpr)
+            }
+        }
+    }
+
     override fun visitCast(ctx: PartiQLParser.CastContext): PartiqlAst.Expr.Cast {
         val expr = visitExprQuery(ctx.exprQuery())
         val type = visit(ctx.type()) as PartiqlAst.Type
