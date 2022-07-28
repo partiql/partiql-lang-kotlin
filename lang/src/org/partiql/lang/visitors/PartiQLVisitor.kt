@@ -350,13 +350,23 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
     }
 
     override fun visitExtract(ctx: PartiQLParser.ExtractContext): PartiqlAst.Expr.Call {
-        if (!DATE_TIME_PART_KEYWORDS.contains(ctx.IDENTIFIER().text)) {
-            throw org.partiql.lang.syntax.PartiQLParser.ParseErrorListener.ParseException("Expected on of $DATE_TIME_PART_KEYWORDS")
+        if (!DATE_TIME_PART_KEYWORDS.contains(ctx.IDENTIFIER().text.toLowerCase())) {
+            throw org.partiql.lang.syntax.PartiQLParser.ParseErrorListener.ParseException("Expected one of: $DATE_TIME_PART_KEYWORDS")
         }
         val datetimePart = PartiqlAst.Expr.Lit(ion.newSymbol(ctx.IDENTIFIER().text).toIonElement())
         val timeExpr = visit(ctx.rhs) as PartiqlAst.Expr
         val args = listOf(datetimePart, timeExpr)
-        return PartiqlAst.Expr.Call(SymbolPrimitive("extract", mapOf()), args, mapOf())
+        return PartiqlAst.Expr.Call(SymbolPrimitive(ctx.EXTRACT().text.toLowerCase(), mapOf()), args, mapOf())
+    }
+
+    override fun visitDateFunction(ctx: PartiQLParser.DateFunctionContext): PartiqlAst.Expr.Call {
+        if (!DATE_TIME_PART_KEYWORDS.contains(ctx.dt.text.toLowerCase())) {
+            throw org.partiql.lang.syntax.PartiQLParser.ParseErrorListener.ParseException("Expected one of: $DATE_TIME_PART_KEYWORDS")
+        }
+        val datetimePart = PartiqlAst.Expr.Lit(ion.newSymbol(ctx.dt.text).toIonElement())
+        val secondaryArgs = visitOrEmpty(PartiqlAst.Expr::class, ctx.exprQuery())
+        val args = listOf(datetimePart) + secondaryArgs
+        return PartiqlAst.Expr.Call(SymbolPrimitive(ctx.func.text.toLowerCase(), mapOf()), args, mapOf())
     }
 
     override fun visitSubstring(ctx: PartiQLParser.SubstringContext): PartiqlAst.Expr.Call {
@@ -662,12 +672,10 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
 
     // TODO: should the function base allow f(), "f"(), @"f"(), and @f()?
     override fun visitFunctionCall(ctx: PartiQLParser.FunctionCallContext): PartiqlAst.PartiqlAstNode {
-        val name = ctx.symbolPrimitive().getString().toLowerCase()
-        val args = ctx.functionCallArg().map { arg -> visit(arg) as PartiqlAst.Expr }
+        val name = ctx.name.getString().toLowerCase()
+        val args = ctx.exprQuery().map { arg -> visit(arg) as PartiqlAst.Expr }
         return PartiqlAst.BUILDER().call(name, args)
     }
-
-    override fun visitFunctionCallArg(ctx: PartiQLParser.FunctionCallArgContext): PartiqlAst.Expr = visitExprQuery(ctx.exprQuery())
 
     override fun visitExprPrimaryPath(ctx: PartiQLParser.ExprPrimaryPathContext): PartiqlAst.PartiqlAstNode {
         val base = visit(ctx.exprPrimary()) as PartiqlAst.Expr

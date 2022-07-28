@@ -99,17 +99,8 @@ joinType
     | OUTER
     ;
 
-functionCall
-    : name=symbolPrimitive PAREN_LEFT ( functionCallArg ( COMMA functionCallArg )* )? PAREN_RIGHT
-    ;
-    
-functionCallArg
-    : exprQuery
-    ;
-    
 exprPrimary
-    : exprTerm                                                             # ExprPrimaryTerm
-    | CAST PAREN_LEFT exprQuery AS type PAREN_RIGHT                        # Cast
+    : CAST PAREN_LEFT exprQuery AS type PAREN_RIGHT                        # Cast
     | datatype=LIST PAREN_LEFT (exprQuery ( COMMA exprQuery )* )? PAREN_RIGHT  # SequenceConstructor
     | datatype=SEXP PAREN_LEFT (exprQuery ( COMMA exprQuery )* )? PAREN_RIGHT  # SequenceConstructor
     | SUBSTRING PAREN_LEFT exprQuery
@@ -121,11 +112,16 @@ exprPrimary
     | EXTRACT PAREN_LEFT IDENTIFIER FROM rhs=exprQuery PAREN_RIGHT         # Extract
     | CAN_CAST PAREN_LEFT exprQuery AS type PAREN_RIGHT                    # CanCast
     | CAN_LOSSLESS_CAST PAREN_LEFT exprQuery AS type PAREN_RIGHT           # CanLosslessCast
-    | functionCall                                                         # ExprQueryFunctionCall
+    | dateFunction                                                         # ExprPrimaryBase
+    | functionCall                                                         # ExprPrimaryBase
     | exprPrimary pathStep+                                                # ExprPrimaryPath
     | exprPrimary (BRACKET_LEFT exprQuery BRACKET_RIGHT)                   # ExprPrimaryIndex
     | caseExpr                                                             # ExprQueryCase
+    | exprTerm                                                             # ExprPrimaryTerm
     ;
+    
+dateFunction: func=(DATE_ADD|DATE_DIFF) PAREN_LEFT dt=IDENTIFIER COMMA exprQuery COMMA exprQuery PAREN_RIGHT ;
+functionCall: name=symbolPrimitive PAREN_LEFT ( exprQuery ( COMMA exprQuery )* )? PAREN_RIGHT ;
     
 pathStep
     : BRACKET_LEFT key=exprQuery BRACKET_RIGHT   # PathStepIndexExpr
@@ -289,20 +285,9 @@ valueExpr
     | parent=exprPrimary
     ;
 
-caseExpr
-    : CASE exprQuery? exprPairWhenThen+ elseClause? END
-    ;
+caseExpr: CASE case=exprQuery? (WHEN when=exprQuery THEN then=exprQuery)+ (ELSE exprQuery)? END ;
     
-exprPairWhenThen
-    : WHEN exprQuery THEN exprQuery
-    ;
-elseClause
-    : ELSE exprQuery
-    ;
-    
-whereClause
-    : WHERE exprQuery
-    ;
+whereClause: WHERE exprQuery ;
     
 groupKey
     : exprQuery                     # GroupKeyAliasNone
@@ -310,23 +295,13 @@ groupKey
     ;
     
 // NOTE: Made group_strategy optional
-groupClause
-    : GROUP PARTIAL? BY groupKey (COMMA groupKey )* groupAlias?
-    ;
-groupAlias
-    : GROUP AS symbolPrimitive
-    ;
-havingClause
-    : HAVING exprQuery
-    ;
-fromClause
-    : FROM tableReference
-    ;
+groupClause: GROUP PARTIAL? BY groupKey ( COMMA groupKey )* groupAlias? ;
+groupAlias: GROUP AS symbolPrimitive ;
+havingClause: HAVING exprQuery ;
+fromClause: FROM tableReference ;
     
 // TODO: Check expansion
-values
-    : VALUES valueRow ( COMMA valueRow )*
-    ;
+values: VALUES valueRow ( COMMA valueRow )* ;
 
 valueRow
     : PAREN_LEFT exprQuery PAREN_RIGHT
@@ -347,19 +322,13 @@ querySet
     | singleQuery                                     # QuerySetSingleQuery
     ;
     
-// TODO: Determine if the following needs to be uncommented
-query
-    : querySet //  orderByClause? limitClause? offsetByClause?
-    ;
+query: querySet ;
 
-offsetByClause
-    : OFFSET exprQuery
-    ;
+offsetByClause: OFFSET exprQuery ;
     
 // TODO Check expansion
 orderByClause
     : ORDER BY orderSortSpec ( COMMA orderSortSpec )*     # OrderBy
-    // ORDER BY PRESERVE
     ;
     
 orderSortSpec

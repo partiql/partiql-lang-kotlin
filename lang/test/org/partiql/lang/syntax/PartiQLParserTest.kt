@@ -56,7 +56,7 @@ class PartiQLParserTest {
 
     @Test
     fun testOnlyPartiQL() {
-        val query = "SELECT * FROM ( <<1>> UNION <<2>> )"
+        val query = "date_add(month, a, b)"
 
         // Act
         val stmt = parser.parseAstStatement(query)
