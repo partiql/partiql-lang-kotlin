@@ -2,7 +2,7 @@
 
 (Note: this folder's documents will likely be converted to a set of wikis on https://github.com/partiql/partiql-lang-kotlin/wiki
 with each major version bump on a separate wiki page.
-TBD if this document will remain as a markdown file on GitHub)
+TBD if these documents will remain as a markdown file on GitHub)
 
 The `partiql-lang-kotlin` [release notes](https://github.com/partiql/partiql-lang-kotlin/releases) list changes 
 between minor versions as well as the last minor version to the subsequent major version (e.g. v0.2.7 -> v0.3.0). This 
