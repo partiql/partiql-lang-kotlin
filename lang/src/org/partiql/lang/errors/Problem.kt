@@ -8,4 +8,7 @@ import org.partiql.lang.ast.SourceLocationMeta
  * @param sourceLocation stores the location (line and column) in the query the problem occurred
  * @param details details related to the problem's severity and a human-readable message
  */
-data class Problem(val sourceLocation: SourceLocationMeta, val details: ProblemDetails)
+data class Problem(val sourceLocation: SourceLocationMeta, val details: ProblemDetails) {
+    override fun toString(): String =
+        "$sourceLocation: ${details.message}"
+}
