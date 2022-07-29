@@ -31,7 +31,7 @@ import org.partiql.lang.eval.EvaluationException
 import org.partiql.lang.eval.TypedOpBehavior
 import org.partiql.lang.eval.err
 import org.partiql.lang.eval.errorContextFrom
-import org.partiql.pig.runtime.LongPrimitive
+import org.partiql.lang.util.BuiltInScalarTypeId
 
 /**
  * Provides rules for basic AST sanity checks that should be performed before any attempt at further AST processing.
@@ -66,11 +66,11 @@ class PartiqlAstSanityValidator : PartiqlAst.Visitor() {
         }
     }
 
-    private fun validateDecimalOrNumericType(scale: LongPrimitive?, precision: LongPrimitive?, metas: MetaContainer) {
+    private fun validateDecimalOrNumericType(precision: Long?, scale: Long?, metas: MetaContainer) {
         if (scale != null && precision != null && compileOptions.typedOpBehavior == TypedOpBehavior.HONOR_PARAMETERS) {
-            if (scale.value !in 0..precision.value) {
+            if (scale !in 0..precision) {
                 err(
-                    "Scale ${scale.value} should be between 0 and precision ${precision.value}",
+                    "Scale $scale should be between 0 and precision $precision",
                     errorCode = ErrorCode.SEMANTIC_INVALID_DECIMAL_ARGUMENTS,
                     errorContext = errorContextFrom(metas),
                     internal = false
@@ -79,12 +79,11 @@ class PartiqlAstSanityValidator : PartiqlAst.Visitor() {
         }
     }
 
-    override fun visitTypeDecimalType(node: PartiqlAst.Type.DecimalType) {
-        validateDecimalOrNumericType(node.scale, node.precision, node.metas)
-    }
-
-    override fun visitTypeNumericType(node: PartiqlAst.Type.NumericType) {
-        validateDecimalOrNumericType(node.scale, node.precision, node.metas)
+    override fun visitTypeScalarType(node: PartiqlAst.Type.ScalarType) {
+        super.visitTypeScalarType(node)
+        if (node.id.text == BuiltInScalarTypeId.DECIMAL || node.id.text == BuiltInScalarTypeId.NUMERIC) {
+            validateDecimalOrNumericType(node.parameters.getOrNull(0)?.value, node.parameters.getOrNull(1)?.value, node.metas)
+        }
     }
 
     override fun visitExprCallAgg(node: PartiqlAst.Expr.CallAgg) {

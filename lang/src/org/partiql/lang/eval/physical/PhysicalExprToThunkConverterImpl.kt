@@ -93,6 +93,7 @@ import org.partiql.lang.types.TypedOpParameter
 import org.partiql.lang.types.UnknownArguments
 import org.partiql.lang.types.UnsupportedTypeCheckException
 import org.partiql.lang.types.toTypedOpParameter
+import org.partiql.lang.util.BuiltInScalarTypeId
 import org.partiql.lang.util.checkThreadInterrupted
 import org.partiql.lang.util.codePointSequence
 import org.partiql.lang.util.div
@@ -986,7 +987,12 @@ internal class PhysicalExprToThunkConverterImpl(
         if (typedOpParameter.staticType is AnyType) {
             return thunkFactory.thunkEnv(metas) { valueFactory.newBoolean(true) }
         }
-        if (evaluatorOptions.typedOpBehavior == TypedOpBehavior.HONOR_PARAMETERS && expr.type is PartiqlPhysical.Type.FloatType && expr.type.precision != null) {
+        if (
+            evaluatorOptions.typedOpBehavior == TypedOpBehavior.HONOR_PARAMETERS &&
+            expr.type is PartiqlPhysical.Type.ScalarType &&
+            expr.type.id.text == BuiltInScalarTypeId.FLOAT &&
+            expr.type.parameters.isNotEmpty() // if precision of FLOAT is explicitly specified in the original query
+        ) {
             err(
                 "FLOAT precision parameter is unsupported",
                 ErrorCode.SEMANTIC_FLOAT_PRECISION_UNSUPPORTED,
@@ -1025,7 +1031,12 @@ internal class PhysicalExprToThunkConverterImpl(
         if (typedOpParameter.staticType is AnyType) {
             return expThunk
         }
-        if (evaluatorOptions.typedOpBehavior == TypedOpBehavior.HONOR_PARAMETERS && asType is PartiqlPhysical.Type.FloatType && asType.precision != null) {
+        if (
+            evaluatorOptions.typedOpBehavior == TypedOpBehavior.HONOR_PARAMETERS &&
+            asType is PartiqlPhysical.Type.ScalarType &&
+            asType.id.text == BuiltInScalarTypeId.FLOAT &&
+            asType.parameters.isNotEmpty() // if precision of FLOAT is explicitly specified in the original query
+        ) {
             err(
                 "FLOAT precision parameter is unsupported",
                 ErrorCode.SEMANTIC_FLOAT_PRECISION_UNSUPPORTED,
