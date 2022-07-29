@@ -1573,7 +1573,7 @@ internal class EvaluatingCompiler(
     private fun compileBagOp(node: PartiqlAst.Expr.BagOp, metas: MetaContainer): ThunkEnv {
         val lhs = compileAstExpr(node.operands[0])
         val rhs = compileAstExpr(node.operands[1])
-        val op = node.op.expr(metas)
+        val op = ExprValueBagOp.create(node.op, metas)
         return thunkFactory.thunkEnv(metas) { env ->
             val l = lhs(env)
             val r = rhs(env)

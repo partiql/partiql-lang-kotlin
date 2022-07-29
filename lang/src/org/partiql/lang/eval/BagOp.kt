@@ -4,7 +4,9 @@ import com.amazon.ion.IonContainer
 import com.amazon.ion.IonStruct
 import com.amazon.ionelement.api.MetaContainer
 import org.partiql.lang.domains.PartiqlAst
+import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.errors.ErrorCode
+import org.partiql.pig.runtime.DomainNode
 
 fun interface ExprValueBagOp {
     fun eval(lhs: ExprValue, rhs: ExprValue): Sequence<ExprValue> {
@@ -14,22 +16,39 @@ fun interface ExprValueBagOp {
     }
 
     fun eval(lhs: Sequence<ExprValue>, rhs: Sequence<ExprValue>): Sequence<ExprValue>
-}
 
-fun PartiqlAst.BagOpType.expr(metas: MetaContainer): ExprValueBagOp = when (this) {
-    is PartiqlAst.BagOpType.Union,
-    is PartiqlAst.BagOpType.Intersect,
-    is PartiqlAst.BagOpType.Except -> {
-        throw EvaluationException(
-            message = "${this.javaClass.simpleName} operator is not support yet",
-            errorCode = ErrorCode.EVALUATOR_FEATURE_NOT_SUPPORTED_YET,
-            errorContextFrom(metas),
-            internal = false
-        )
+    companion object {
+
+        fun create(node: DomainNode, metas: MetaContainer): ExprValueBagOp = when (node) {
+            is PartiqlAst.BagOpType.Union,
+            is PartiqlPhysical.BagOpType.Union,
+            is PartiqlAst.BagOpType.Intersect,
+            is PartiqlPhysical.BagOpType.Intersect,
+            is PartiqlAst.BagOpType.Except,
+            is PartiqlPhysical.BagOpType.Except -> {
+                throw EvaluationException(
+                    message = "${node.javaClass.simpleName} operator is not support yet",
+                    errorCode = ErrorCode.EVALUATOR_FEATURE_NOT_SUPPORTED_YET,
+                    errorContextFrom(metas),
+                    internal = false
+                )
+            }
+            is PartiqlAst.BagOpType.OuterUnion,
+            is PartiqlPhysical.BagOpType.OuterUnion -> outerUnion
+            is PartiqlAst.BagOpType.OuterIntersect,
+            is PartiqlPhysical.BagOpType.OuterIntersect -> outerIntersect
+            is PartiqlAst.BagOpType.OuterExcept,
+            is PartiqlPhysical.BagOpType.OuterExcept -> outerExcept
+            else -> {
+                throw EvaluationException(
+                    message = "Invalid bag operator ${node.javaClass.simpleName}",
+                    errorCode = ErrorCode.INTERNAL_ERROR,
+                    errorContextFrom(metas),
+                    internal = false
+                )
+            }
+        }
     }
-    is PartiqlAst.BagOpType.OuterUnion -> outerUnion
-    is PartiqlAst.BagOpType.OuterIntersect -> outerIntersect
-    is PartiqlAst.BagOpType.OuterExcept -> outerExcept
 }
 
 /**
