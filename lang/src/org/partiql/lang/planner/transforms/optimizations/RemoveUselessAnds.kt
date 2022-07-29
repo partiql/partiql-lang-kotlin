@@ -28,7 +28,7 @@ private class RemoveUselessAndsPass : PartiqlPhysicalPass {
     override fun rewrite(inputPlan: PartiqlPhysical.Plan, problemHandler: ProblemHandler): PartiqlPhysical.Plan =
         object : PartiqlPhysical.VisitorTransform() {
             override fun transformExprAnd(node: PartiqlPhysical.Expr.And): PartiqlPhysical.Expr {
-                // Recursing here uses transforms all child nodes, which is what we really want.
+                // Recursing here transforms all child nodes, which is what we really want.
                 val rewritten = super.transformExprAnd(node)
                 if (rewritten !is PartiqlPhysical.Expr.And) {
                     return rewritten
