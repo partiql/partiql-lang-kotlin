@@ -378,7 +378,7 @@ class SqlParserTest : SqlParserTestBase() {
     fun callIsVarchar() = assertExpression(
         "f() IS VARCHAR(200)",
         "(is (call f) (type character_varying 200))",
-        "(is_type (call f) (character_varying_type 200))"
+        "(is_type (call f) (scalar_type character_varying 200))"
     )
 
     @Test
@@ -399,7 +399,7 @@ class SqlParserTest : SqlParserTestBase() {
     fun callIsNotVarchar() = assertExpression(
         "f() IS NOT VARCHAR(200)",
         "(is_not (call f) (type character_varying 200))",
-        "(not (is_type (call f) (character_varying_type 200)))"
+        "(not (is_type (call f) (scalar_type character_varying 200)))"
     )
 
     @Test
@@ -578,7 +578,7 @@ class SqlParserTest : SqlParserTestBase() {
         """,
         """(cast
              (lit 5)
-             (character_varying_type null)
+             (scalar_type character_varying)
            )
         """
     )
@@ -587,49 +587,49 @@ class SqlParserTest : SqlParserTestBase() {
     fun castASVarCharWithLength() = assertExpression(
         "CAST(5 AS VARCHAR(5))",
         "(cast (lit 5) (type character_varying 5))",
-        "(cast (lit 5) (character_varying_type 5))"
+        "(cast (lit 5) (scalar_type character_varying 5))"
     )
 
     @Test
     fun castAsDecimal() = assertExpression(
         "CAST(a AS DECIMAL)",
         "(cast (id a case_insensitive) (type decimal) )",
-        "(cast (id a (case_insensitive) (unqualified)) (decimal_type null null))"
+        "(cast (id a (case_insensitive) (unqualified)) (scalar_type decimal))"
     )
 
     @Test
     fun castAsDecimalScaleOnly() = assertExpression(
         "CAST(a AS DECIMAL(1))",
         "(cast (id a case_insensitive) (type decimal 1))",
-        "(cast (id a (case_insensitive) (unqualified)) (decimal_type 1 null))"
+        "(cast (id a (case_insensitive) (unqualified)) (scalar_type decimal 1))"
     )
 
     @Test
     fun castAsDecimalScaleAndPrecision() = assertExpression(
         "CAST(a AS DECIMAL(1, 2))",
         "(cast (id a case_insensitive) (type decimal 1 2))",
-        "(cast (id a (case_insensitive) (unqualified)) (decimal_type 1 2))"
+        "(cast (id a (case_insensitive) (unqualified)) (scalar_type decimal 1 2))"
     )
 
     @Test
     fun castAsNumeric() = assertExpression(
         "CAST(a AS NUMERIC)",
         "(cast (id a case_insensitive) (type numeric))",
-        """(cast (id a (case_insensitive) (unqualified)) (numeric_type null null))"""
+        """(cast (id a (case_insensitive) (unqualified)) (scalar_type numeric))"""
     )
 
     @Test
     fun castAsNumericScaleOnly() = assertExpression(
         "CAST(a AS NUMERIC(1))",
         "(cast (id a case_insensitive) (type numeric 1))",
-        "(cast (id a (case_insensitive) (unqualified)) (numeric_type 1 null))"
+        "(cast (id a (case_insensitive) (unqualified)) (scalar_type numeric 1))"
     )
 
     @Test
     fun castAsNumericScaleAndPrecision() = assertExpression(
         "CAST(a AS NUMERIC(1, 2))",
         "(cast (id a case_insensitive) (type numeric 1 2))",
-        "(cast (id a (case_insensitive) (unqualified)) (numeric_type 1 2))"
+        "(cast (id a (case_insensitive) (unqualified)) (scalar_type numeric 1 2))"
     )
 
     // ****************************************
