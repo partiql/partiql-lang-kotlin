@@ -1,5 +1,6 @@
-package org.partiql.lang.planner
+package org.partiql.lang.planner.memorydb
 
+import org.partiql.lang.ast.DeleteOp.name
 import org.partiql.lang.eval.BindingCase
 import org.partiql.lang.eval.BindingName
 import org.partiql.lang.eval.DEFAULT_COMPARATOR
@@ -9,16 +10,15 @@ import org.partiql.lang.eval.ExprValueType
 import java.util.TreeMap
 
 /**
- * An extermely simple in-memory table, to be used with [InMemoryDatabase].
+ * An extremely simple in-memory table, to be used with [MemoryDatabase].
  */
-class InMemoryTable(
-    val name: String,
-    primaryKeyFields: List<String>,
+class MemoryTable(
+    val metadata: TableMetadata,
     private val valueFactory: ExprValueFactory
-) : Iterable<ExprValue> {
+) : Sequence<ExprValue> {
     private val rows = TreeMap<ExprValue, ExprValue>(DEFAULT_COMPARATOR)
 
-    private val primaryKeyBindingNames = primaryKeyFields.map { BindingName(it, BindingCase.SENSITIVE) }
+    private val primaryKeyBindingNames = metadata.primaryKeyFields.map { BindingName(it, BindingCase.SENSITIVE) }
 
     private fun ExprValue.extractPrimaryKey(): ExprValue =
         valueFactory.newList(
@@ -34,8 +34,9 @@ class InMemoryTable(
 
     val size: Int get() = rows.size
 
-    fun truncate() {
-        rows.clear()
+    operator fun get(key: ExprValue): ExprValue? {
+        require(key.type == ExprValueType.LIST) { "specified key must have type ExprValueType.LIST " }
+        return rows[key]
     }
 
     fun insert(row: ExprValue) {
