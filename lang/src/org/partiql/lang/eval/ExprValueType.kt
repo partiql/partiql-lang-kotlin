@@ -19,6 +19,7 @@ import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.syntax.CORE_TYPE_NAME_ARITY_MAP
 import org.partiql.lang.syntax.TYPE_ALIASES
+import org.partiql.lang.util.BuiltInScalarTypeId
 
 /**
  * The core types of [ExprValue] that exist within the type system of the evaluator.
@@ -187,34 +188,37 @@ enum class ExprValueType(
             )
 
         fun fromSqlDataTypeOrNull(sqlDataType: PartiqlAst.Type) = when (sqlDataType) {
-            is PartiqlAst.Type.BooleanType -> BOOL
+            is PartiqlAst.Type.ScalarType -> when (sqlDataType.id.text) {
+                BuiltInScalarTypeId.BOOLEAN -> BOOL
+                BuiltInScalarTypeId.SMALLINT,
+                BuiltInScalarTypeId.INTEGER4,
+                BuiltInScalarTypeId.INTEGER8,
+                BuiltInScalarTypeId.INTEGER -> INT
+                BuiltInScalarTypeId.FLOAT,
+                BuiltInScalarTypeId.REAL,
+                BuiltInScalarTypeId.DOUBLE_PRECISION -> FLOAT
+                BuiltInScalarTypeId.DECIMAL,
+                BuiltInScalarTypeId.NUMERIC -> DECIMAL
+                BuiltInScalarTypeId.TIMESTAMP -> TIMESTAMP
+                BuiltInScalarTypeId.CHARACTER,
+                BuiltInScalarTypeId.CHARACTER_VARYING,
+                BuiltInScalarTypeId.STRING -> STRING
+                BuiltInScalarTypeId.SYMBOL -> SYMBOL
+                BuiltInScalarTypeId.CLOB -> CLOB
+                BuiltInScalarTypeId.BLOB -> BLOB
+                BuiltInScalarTypeId.DATE -> DATE
+                BuiltInScalarTypeId.TIME,
+                BuiltInScalarTypeId.TIME_WITH_TIME_ZONE -> TIME
+                else -> error("Unrecognized scalar type ID")
+            }
             is PartiqlAst.Type.MissingType -> MISSING
             is PartiqlAst.Type.NullType -> NULL
-            is PartiqlAst.Type.SmallintType -> INT
-            is PartiqlAst.Type.Integer4Type -> INT
-            is PartiqlAst.Type.Integer8Type -> INT
-            is PartiqlAst.Type.IntegerType -> INT
-            is PartiqlAst.Type.FloatType -> FLOAT
-            is PartiqlAst.Type.RealType -> FLOAT
-            is PartiqlAst.Type.DoublePrecisionType -> FLOAT
-            is PartiqlAst.Type.DecimalType -> DECIMAL
-            is PartiqlAst.Type.NumericType -> DECIMAL
-            is PartiqlAst.Type.TimestampType -> TIMESTAMP
-            is PartiqlAst.Type.CharacterType -> STRING
-            is PartiqlAst.Type.CharacterVaryingType -> STRING
-            is PartiqlAst.Type.StringType -> STRING
-            is PartiqlAst.Type.SymbolType -> SYMBOL
-            is PartiqlAst.Type.ClobType -> CLOB
-            is PartiqlAst.Type.BlobType -> BLOB
             is PartiqlAst.Type.StructType -> STRUCT
             is PartiqlAst.Type.TupleType -> STRUCT
             is PartiqlAst.Type.ListType -> LIST
             is PartiqlAst.Type.SexpType -> SEXP
             is PartiqlAst.Type.BagType -> BAG
             is PartiqlAst.Type.AnyType -> null
-            is PartiqlAst.Type.DateType -> DATE
-            is PartiqlAst.Type.TimeType,
-            is PartiqlAst.Type.TimeWithTimeZoneType -> TIME
             is PartiqlAst.Type.CustomType -> null
             // TODO: Remove these hardcoded nodes from the PIG domain once [https://github.com/partiql/partiql-lang-kotlin/issues/510] is resolved.
             is PartiqlAst.Type.EsBoolean,

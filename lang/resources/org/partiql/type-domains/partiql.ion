@@ -455,63 +455,12 @@ may then be further optimized by selecting better implementations of each operat
         // Represents all possible PartiQL data types. (`_type` suffixes below prevent naming clashes.)
         (sum type
 
-            // SQL-92 types
-            // `NULL`
+            // Scalar type
+            (scalar_type id::symbol parameters::(* int 0))
+
+            // Non-scalar type
             (null_type)
-
-            // `BOOL`
-            (boolean_type)
-
-            // `SMALLINT`
-            (smallint_type)
-
-            // `INT4` 4-byte integer
-            (integer4_type)
-
-            // `INT8` 8-byte integer
-            (integer8_type)
-
-            // `INT`
-            (integer_type)
-
-            // `FLOAT`
-            (float_type precision::(? int))
-
-            // `REAL`
-            (real_type)
-
-            // `DOUBLE_PRECISION`
-            (double_precision_type)
-
-            // `DECIMAL[(<int> [, int])]`.  Elements are precision then scale.
-            (decimal_type precision::(? int) scale::(? int))
-
-            // `NUMERIC[(<int> [, int])]`.  Elements are precision then scale.
-            (numeric_type precision::(? int) scale::(? int))
-
-            // `TIMESTAMP`
-            (timestamp_type)
-
-            // `CHAR(<int>)`
-            (character_type length::(? int))
-
-            // `VARCHAR`
-            (character_varying_type length::(? int))
-
-            // PartiQL types.
             (missing_type)
-            (string_type)
-            (symbol_type)
-            (blob_type)
-            (clob_type)
-            (date_type)
-
-            // TIME : timezoneSpecified is 1 if time zone is specified else 0
-            //        precision is defaulted to the length of the mantissa of the second's value if the precision is not specified.
-            // Note: This logic is implemented in SqlParser.
-            (time_type precision::(? int))
-            (time_with_time_zone_type precision::(? int))
-
             (struct_type)
             (tuple_type)
             (list_type)

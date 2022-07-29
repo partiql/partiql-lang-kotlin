@@ -6,6 +6,7 @@ import com.amazon.ion.IonSystem
 import com.amazon.ionelement.api.toIonValue
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.types.StaticType
+import org.partiql.lang.util.BuiltInScalarTypeId
 import org.partiql.lang.util.checkThreadInterrupted
 import org.partiql.lang.util.toIntExact
 import org.partiql.pig.runtime.SymbolPrimitive
@@ -340,23 +341,29 @@ private class StatementTransformer(val ion: IonSystem) {
         return when (this) {
             is PartiqlAst.Type.NullType -> DataType(SqlDataType.NULL, listOf(), metas)
             is PartiqlAst.Type.MissingType -> DataType(SqlDataType.MISSING, listOf(), metas)
-            is PartiqlAst.Type.BooleanType -> DataType(SqlDataType.BOOLEAN, listOf(), metas)
-            is PartiqlAst.Type.IntegerType -> DataType(SqlDataType.INTEGER, listOf(), metas)
-            is PartiqlAst.Type.SmallintType -> DataType(SqlDataType.SMALLINT, listOf(), metas)
-            is PartiqlAst.Type.Integer4Type -> DataType(SqlDataType.INTEGER4, listOf(), metas)
-            is PartiqlAst.Type.Integer8Type -> DataType(SqlDataType.INTEGER8, listOf(), metas)
-            is PartiqlAst.Type.FloatType -> DataType(SqlDataType.FLOAT, listOfNotNull(precision?.value?.toIntExact()), metas)
-            is PartiqlAst.Type.RealType -> DataType(SqlDataType.REAL, listOf(), metas)
-            is PartiqlAst.Type.DoublePrecisionType -> DataType(SqlDataType.DOUBLE_PRECISION, listOf(), metas)
-            is PartiqlAst.Type.DecimalType -> DataType(SqlDataType.DECIMAL, listOfNotNull(precision?.value?.toIntExact(), scale?.value?.toIntExact()), metas)
-            is PartiqlAst.Type.NumericType -> DataType(SqlDataType.NUMERIC, listOfNotNull(precision?.value?.toIntExact(), scale?.value?.toIntExact()), metas)
-            is PartiqlAst.Type.TimestampType -> DataType(SqlDataType.TIMESTAMP, listOf(), metas)
-            is PartiqlAst.Type.CharacterType -> DataType(SqlDataType.CHARACTER, listOfNotNull(length?.value?.toIntExact()), metas)
-            is PartiqlAst.Type.CharacterVaryingType -> DataType(SqlDataType.CHARACTER_VARYING, listOfNotNull(length?.value?.toIntExact()), metas)
-            is PartiqlAst.Type.StringType -> DataType(SqlDataType.STRING, listOf(), metas)
-            is PartiqlAst.Type.SymbolType -> DataType(SqlDataType.SYMBOL, listOf(), metas)
-            is PartiqlAst.Type.BlobType -> DataType(SqlDataType.BLOB, listOf(), metas)
-            is PartiqlAst.Type.ClobType -> DataType(SqlDataType.CLOB, listOf(), metas)
+            is PartiqlAst.Type.ScalarType -> when (id.text) {
+                BuiltInScalarTypeId.BOOLEAN -> DataType(SqlDataType.BOOLEAN, listOf(), metas)
+                BuiltInScalarTypeId.INTEGER -> DataType(SqlDataType.INTEGER, listOf(), metas)
+                BuiltInScalarTypeId.SMALLINT -> DataType(SqlDataType.SMALLINT, listOf(), metas)
+                BuiltInScalarTypeId.INTEGER4 -> DataType(SqlDataType.INTEGER4, listOf(), metas)
+                BuiltInScalarTypeId.INTEGER8 -> DataType(SqlDataType.INTEGER8, listOf(), metas)
+                BuiltInScalarTypeId.FLOAT -> DataType(SqlDataType.FLOAT, parameters.map { it.value.toIntExact() }, metas)
+                BuiltInScalarTypeId.REAL -> DataType(SqlDataType.REAL, listOf(), metas)
+                BuiltInScalarTypeId.DOUBLE_PRECISION -> DataType(SqlDataType.DOUBLE_PRECISION, listOf(), metas)
+                BuiltInScalarTypeId.DECIMAL -> DataType(SqlDataType.DECIMAL, parameters.map { it.value.toIntExact() }, metas)
+                BuiltInScalarTypeId.NUMERIC -> DataType(SqlDataType.NUMERIC, parameters.map { it.value.toIntExact() }, metas)
+                BuiltInScalarTypeId.TIMESTAMP -> DataType(SqlDataType.TIMESTAMP, listOf(), metas)
+                BuiltInScalarTypeId.CHARACTER -> DataType(SqlDataType.CHARACTER, parameters.map { it.value.toIntExact() }, metas)
+                BuiltInScalarTypeId.CHARACTER_VARYING -> DataType(SqlDataType.CHARACTER_VARYING, parameters.map { it.value.toIntExact() }, metas)
+                BuiltInScalarTypeId.STRING -> DataType(SqlDataType.STRING, listOf(), metas)
+                BuiltInScalarTypeId.SYMBOL -> DataType(SqlDataType.SYMBOL, listOf(), metas)
+                BuiltInScalarTypeId.BLOB -> DataType(SqlDataType.BLOB, listOf(), metas)
+                BuiltInScalarTypeId.CLOB -> DataType(SqlDataType.CLOB, listOf(), metas)
+                BuiltInScalarTypeId.DATE -> DataType(SqlDataType.DATE, listOf(), metas)
+                BuiltInScalarTypeId.TIME -> DataType(SqlDataType.TIME, parameters.map { it.value.toIntExact() }, metas)
+                BuiltInScalarTypeId.TIME_WITH_TIME_ZONE -> DataType(SqlDataType.TIME_WITH_TIME_ZONE, parameters.map { it.value.toIntExact() }, metas)
+                else -> error("Unrecognized scalar type ID")
+            }
             is PartiqlAst.Type.StructType -> DataType(SqlDataType.STRUCT, listOf(), metas)
             is PartiqlAst.Type.TupleType -> DataType(SqlDataType.TUPLE, listOf(), metas)
             is PartiqlAst.Type.ListType -> DataType(SqlDataType.LIST, listOf(), metas)
@@ -364,9 +371,6 @@ private class StatementTransformer(val ion: IonSystem) {
             is PartiqlAst.Type.BagType -> DataType(SqlDataType.BAG, listOf(), metas)
             is PartiqlAst.Type.AnyType -> DataType(SqlDataType.ANY, listOf(), metas)
             is PartiqlAst.Type.CustomType -> DataType(SqlDataType.CustomDataType(this.name.text), listOf(), metas)
-            is PartiqlAst.Type.DateType -> DataType(SqlDataType.DATE, listOf(), metas)
-            is PartiqlAst.Type.TimeType -> DataType(SqlDataType.TIME, listOfNotNull(precision?.value?.toIntExact()), metas)
-            is PartiqlAst.Type.TimeWithTimeZoneType -> DataType(SqlDataType.TIME_WITH_TIME_ZONE, listOfNotNull(precision?.value?.toIntExact()), metas)
             // TODO: Remove these hardcoded nodes from the PIG domain once [https://github.com/partiql/partiql-lang-kotlin/issues/510] is resolved.
             is PartiqlAst.Type.EsBoolean,
             is PartiqlAst.Type.EsInteger,

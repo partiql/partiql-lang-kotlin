@@ -719,7 +719,7 @@ class ASTPrettyPrinterTest {
             """
                 Is
                     value: Lit 1
-                    type: (integer_type)
+                    type: (scalar_type integer)
             """.trimIndent()
         )
     }
@@ -731,7 +731,7 @@ class ASTPrettyPrinterTest {
             """
                 Cast
                     value: Lit 1
-                    asType: (string_type)
+                    asType: (scalar_type string)
             """.trimIndent()
         )
     }
@@ -743,7 +743,7 @@ class ASTPrettyPrinterTest {
             """
                 CanCast
                     value: Lit 1
-                    asType: (string_type)
+                    asType: (scalar_type string)
             """.trimIndent()
         )
     }
@@ -755,7 +755,7 @@ class ASTPrettyPrinterTest {
             """
                 CanLosslessCast
                     value: Lit 1
-                    asType: (string_type)
+                    asType: (scalar_type string)
             """.trimIndent()
         )
     }
