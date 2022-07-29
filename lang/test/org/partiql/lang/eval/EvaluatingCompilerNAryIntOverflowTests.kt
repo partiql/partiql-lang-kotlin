@@ -205,13 +205,13 @@ class EvaluatingCompilerNAryIntOverflowTests : EvaluatorTestBase() {
                     TestCase("${prefix}_1 - ${prefix}_2", "-1"),
                     TestCase("${prefix}_neg1 - ${prefix}_neg2", "1"),
 
-                    // Times 1, -1
+                    // Times 2, -2
                     TestCase("${prefix}_max * ${prefix}_2", "MISSING"),
                     TestCase("${prefix}_min * ${prefix}_neg2", "MISSING"),
                     TestCase("${prefix}_min * ${prefix}_2", "MISSING"),
                     TestCase("${prefix}_max * ${prefix}_neg2", "MISSING"),
 
-                    // Times 2, -2
+                    // Times 1, -1
                     TestCase("${prefix}_max * ${prefix}_1", "${prefix}_max"),
                     TestCase("${prefix}_min * ${prefix}_neg1", "MISSING"),
                     TestCase("${prefix}_min * ${prefix}_1", "${prefix}_min"),
@@ -219,8 +219,7 @@ class EvaluatingCompilerNAryIntOverflowTests : EvaluatorTestBase() {
 
                     // Unary negation
                     TestCase("-${prefix}_max", "${prefix}_minPlus1"),
-                    // https://github.com/partiql/partiql-lang-kotlin/issues/513
-                    // TestCase("-${prefix}_min", "MISSING"),
+                    TestCase("-${prefix}_min", "MISSING"),
                     TestCase("-${prefix}_1", "${prefix}_neg1"),
                     TestCase("-${prefix}_neg1", "${prefix}_1")
                 )

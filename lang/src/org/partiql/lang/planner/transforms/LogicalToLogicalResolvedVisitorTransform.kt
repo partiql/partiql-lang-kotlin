@@ -1,6 +1,7 @@
 package org.partiql.lang.planner.transforms
 
 import com.amazon.ionelement.api.ionSymbol
+import org.partiql.lang.ast.DeleteOp.name
 import org.partiql.lang.ast.sourceLocation
 import org.partiql.lang.domains.PartiqlLogical
 import org.partiql.lang.domains.PartiqlLogicalResolved
@@ -10,6 +11,7 @@ import org.partiql.lang.errors.Problem
 import org.partiql.lang.errors.ProblemHandler
 import org.partiql.lang.eval.BindingName
 import org.partiql.lang.eval.builtins.DYNAMIC_LOOKUP_FUNCTION_NAME
+import org.partiql.lang.eval.physical.sourceLocationMetaOrUnknown
 import org.partiql.lang.planner.GlobalResolutionResult
 import org.partiql.lang.planner.GlobalVariableResolver
 import org.partiql.lang.planner.PlanningProblemDetails
@@ -331,6 +333,34 @@ private data class LogicalToLogicalResolvedVisitorTransform(
         }
     }
 
+    override fun transformStatementDml(node: PartiqlLogical.Statement.Dml): PartiqlLogicalResolved.Statement {
+        // We only support DML targets that are global variables.
+        val bindingName = BindingName(node.target.name.text, node.target.case.toBindingCase())
+        val tableUniqueId = when (val resolvedVariable = globals.resolveGlobal(bindingName)) {
+            is GlobalResolutionResult.GlobalVariable -> resolvedVariable.uniqueId
+            GlobalResolutionResult.Undefined -> {
+                problemHandler.handleProblem(
+                    Problem(
+                        node.metas.sourceLocationMetaOrUnknown,
+                        PlanningProblemDetails.UndefinedDmlTarget(
+                            node.target.name.text,
+                            node.target.case is PartiqlLogical.CaseSensitivity.CaseSensitive
+                        )
+                    )
+                )
+                "undefined DML target: ${node.target.name.text} - do not run"
+            }
+        }
+        return PartiqlLogicalResolved.build {
+            dml(
+                uniqueId = tableUniqueId,
+                operation = transformDmlOperation(node.operation),
+                rows = transformExpr(node.rows),
+                metas = node.metas
+            )
+        }
+    }
+
     /**
      * Returns a list of variables accessible from the current scope which contain variables that may contain
      * an unqualified variable, in the order that they should be searched.
@@ -461,6 +491,6 @@ private data class LogicalToLogicalResolvedVisitorTransform(
 }
 
 /** Marks a variable for dynamic resolution--i.e. if undefined, this vardecl will be included in any dynamic_id lookup. */
-fun PartiqlLogical.VarDecl.markForDynamicResolution() = this.withMeta("\$include_in_dynamic_resolution", Unit)
+private fun PartiqlLogical.VarDecl.markForDynamicResolution() = this.withMeta("\$include_in_dynamic_resolution", Unit)
 /** Returns true of the [VarDecl] has been marked to participate in unqualified field resolution */
-val PartiqlLogical.VarDecl.includeInDynamicResolution get() = this.metas.containsKey("\$include_in_dynamic_resolution")
+private val PartiqlLogical.VarDecl.includeInDynamicResolution get() = this.metas.containsKey("\$include_in_dynamic_resolution")

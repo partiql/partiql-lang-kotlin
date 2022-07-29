@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added EvaluatonSession.context: A string-keyed map of arbitrary values which provides a way to make  
   session state such as current user and transaction details available to custom [ExprFunction] implementations
   and custom physical operator implementations.
+- Replaces `union`, `intersect`, `except` IR nodes with common `bag_op` IR node
 
 #### Experimental Planner Additions
 
@@ -62,6 +63,7 @@ stage in the `PlannerPipeline` and to generate performance metrics for the indiv
 ### Fixed
 - Codecov report uploads in GitHub Actions workflow
 - GitHub Actions capability to run on forks
+- Negation overflow caused by minimum INT8
 
 ### Removed
 - README.md badge for travisci
