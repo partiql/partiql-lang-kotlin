@@ -52,6 +52,7 @@ stage in the `PlannerPipeline` and to generate performance metrics for the indiv
 ### Fixed
 - Codecov report uploads in GitHub Actions workflow
 - GitHub Actions capability to run on forks
+- Negation overflow caused by minimum INT8
 
 ### Removed
 - README.md badge for travisci
