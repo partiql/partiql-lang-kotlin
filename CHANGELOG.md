@@ -27,9 +27,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - restrictors and selector  (section 5.1 of the GPML paper)
   - pre-filters and post-filters (section 5.2 of the GPML paper)
 - Added EvaluatonSession.context: A string-keyed map of arbitrary values which provides a way to make  
-session state such as current user and transaction details available to custom [ExprFunction] implementations 
-and custom physical operator implementations.
-- Renamed PassResult to PlannerPassResult for clarity. (This is part of the experimental query planner API.)
+  session state such as current user and transaction details available to custom [ExprFunction] implementations
+  and custom physical operator implementations.
+- Replaces `union`, `intersect`, `except` IR nodes with common `bag_op` IR node
+
+#### Experimental Planner Additions
+
+- Renamed `PassResult` to PlannerPassResult for clarity. (This is part of the experimental query planner API.)
 - The `PlannerPipeline` API now has experimental and partial support for `INSERT` and `DELETE` DML statements— 
 tracking PartiQL specification issues are [partiql-docs/#4](https://github.com/partiql/partiql-docs/issues/4) (only
 a subset has been implemented--see examples below) and 
@@ -42,8 +46,15 @@ a subset has been implemented--see examples below) and
 - Introduced planner event callbacks as a means to provide a facility that allows the query to be visualized at every 
 stage in the `PlannerPipeline` and to generate performance metrics for the individual phases of query planning.  See
 `PlannerPipe.Builder.plannerEventCallback` for details.
-- Replaces `union`, `intersect`, `except` IR nodes with common `bag_op` IR node
-
+- Adds the following optimization passes, none of which are enabled by default:
+  - `FilterScanToKeyLookupPass` which performs a simple optimization common to most databases: it converts a filter 
+  predicate covering a table's complete primary key into a single get-by-key operation, thereby avoiding a full table
+  scan.  This may pass leave behind some useless `and` expressions if more `and` operands exist in the filter predicate 
+  other than primary key field equality expressions.
+  - `RemoveUselessAndsPass`, which removes any useless `and` expressions introduced by the previous pass or by the 
+  query author, e.g. `true and x.id = 42` -> `x.id = 42`), `true and true` -> `true`, etc.
+  - `RemoveUselessFiltersPass`, which removes useless filters introduced by the previous pass or by the query author 
+  (e.g. `(filter (lit true) <bexpr>))` -> `<bexpr>`.
 
 ### Changed
 
