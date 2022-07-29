@@ -61,6 +61,7 @@ import org.partiql.lang.types.TypedOpParameter
 import org.partiql.lang.types.UnknownArguments
 import org.partiql.lang.types.UnsupportedTypeCheckException
 import org.partiql.lang.types.toTypedOpParameter
+import org.partiql.lang.util.BuiltInScalarTypeId
 import org.partiql.lang.util.bigDecimalOf
 import org.partiql.lang.util.checkThreadInterrupted
 import org.partiql.lang.util.codePointSequence
@@ -1212,7 +1213,12 @@ internal class EvaluatingCompiler(
         if (typedOpParameter.staticType is AnyType) {
             return thunkFactory.thunkEnv(metas) { valueFactory.newBoolean(true) }
         }
-        if (compileOptions.typedOpBehavior == TypedOpBehavior.HONOR_PARAMETERS && expr.type is PartiqlAst.Type.FloatType && expr.type.precision != null) {
+        if (
+            compileOptions.typedOpBehavior == TypedOpBehavior.HONOR_PARAMETERS &&
+            expr.type is PartiqlAst.Type.ScalarType &&
+            expr.type.id.text == BuiltInScalarTypeId.FLOAT &&
+            expr.type.parameters.isNotEmpty() // if precision of FLOAT is explicitly specified in the original query
+        ) {
             err(
                 "FLOAT precision parameter is unsupported",
                 ErrorCode.SEMANTIC_FLOAT_PRECISION_UNSUPPORTED,
@@ -1251,7 +1257,12 @@ internal class EvaluatingCompiler(
         if (typedOpParameter.staticType is AnyType) {
             return expThunk
         }
-        if (compileOptions.typedOpBehavior == TypedOpBehavior.HONOR_PARAMETERS && asType is PartiqlAst.Type.FloatType && asType.precision != null) {
+        if (
+            compileOptions.typedOpBehavior == TypedOpBehavior.HONOR_PARAMETERS &&
+            asType is PartiqlAst.Type.ScalarType &&
+            asType.id.text == BuiltInScalarTypeId.FLOAT &&
+            asType.parameters.isNotEmpty() // if precision of FLOAT is explicitly specified in the original query
+        ) {
             err(
                 "FLOAT precision parameter is unsupported",
                 ErrorCode.SEMANTIC_FLOAT_PRECISION_UNSUPPORTED,

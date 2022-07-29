@@ -1,6 +1,7 @@
 package org.partiql.lang.types
 
 import org.partiql.lang.domains.PartiqlPhysical
+import org.partiql.lang.util.BuiltInScalarTypeId
 
 /**
  * Helper to convert [PartiqlPhysical.Type] in AST to a [TypedOpParameter].
@@ -8,45 +9,83 @@ import org.partiql.lang.domains.PartiqlPhysical
 fun PartiqlPhysical.Type.toTypedOpParameter(customTypedOpParameters: Map<String, TypedOpParameter>): TypedOpParameter = when (this) {
     is PartiqlPhysical.Type.MissingType -> TypedOpParameter(StaticType.MISSING)
     is PartiqlPhysical.Type.NullType -> TypedOpParameter(StaticType.NULL)
-    is PartiqlPhysical.Type.BooleanType -> TypedOpParameter(StaticType.BOOL)
-    is PartiqlPhysical.Type.SmallintType -> TypedOpParameter(IntType(IntType.IntRangeConstraint.SHORT))
-    is PartiqlPhysical.Type.Integer4Type -> TypedOpParameter(IntType(IntType.IntRangeConstraint.INT4))
-    is PartiqlPhysical.Type.Integer8Type -> TypedOpParameter(IntType(IntType.IntRangeConstraint.LONG))
-    is PartiqlPhysical.Type.IntegerType -> TypedOpParameter(IntType(IntType.IntRangeConstraint.LONG))
-    is PartiqlPhysical.Type.FloatType, is PartiqlPhysical.Type.RealType, is PartiqlPhysical.Type.DoublePrecisionType -> TypedOpParameter(StaticType.FLOAT)
-    is PartiqlPhysical.Type.DecimalType -> when {
-        this.precision == null && this.scale == null -> TypedOpParameter(StaticType.DECIMAL)
-        this.precision != null && this.scale == null -> TypedOpParameter(DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(this.precision.value.toInt())))
-        else -> TypedOpParameter(
-            DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(this.precision!!.value.toInt(), this.scale!!.value.toInt()))
-        )
-    }
-    is PartiqlPhysical.Type.NumericType -> when {
-        this.precision == null && this.scale == null -> TypedOpParameter(StaticType.DECIMAL)
-        this.precision != null && this.scale == null -> TypedOpParameter(DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(this.precision.value.toInt())))
-        else -> TypedOpParameter(
-            DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(this.precision!!.value.toInt(), this.scale!!.value.toInt()))
-        )
-    }
-    is PartiqlPhysical.Type.TimestampType -> TypedOpParameter(StaticType.TIMESTAMP)
-    is PartiqlPhysical.Type.CharacterType -> when {
-        this.length == null -> TypedOpParameter(StringType(StringType.StringLengthConstraint.Constrained(NumberConstraint.Equals(1))))
-        else -> TypedOpParameter(
-            StringType(
-                StringType.StringLengthConstraint.Constrained(
-                    NumberConstraint.Equals(this.length.value.toInt())
+    is PartiqlPhysical.Type.ScalarType -> when (id.text) {
+        BuiltInScalarTypeId.BOOLEAN -> TypedOpParameter(StaticType.BOOL)
+        BuiltInScalarTypeId.SMALLINT -> TypedOpParameter(IntType(IntType.IntRangeConstraint.SHORT))
+        BuiltInScalarTypeId.INTEGER4 -> TypedOpParameter(IntType(IntType.IntRangeConstraint.INT4))
+        BuiltInScalarTypeId.INTEGER8 -> TypedOpParameter(IntType(IntType.IntRangeConstraint.LONG))
+        BuiltInScalarTypeId.INTEGER -> TypedOpParameter(IntType(IntType.IntRangeConstraint.LONG))
+        BuiltInScalarTypeId.FLOAT,
+        BuiltInScalarTypeId.REAL,
+        BuiltInScalarTypeId.DOUBLE_PRECISION -> TypedOpParameter(StaticType.FLOAT)
+        BuiltInScalarTypeId.DECIMAL,
+        BuiltInScalarTypeId.NUMERIC -> when (parameters.size) {
+            0 -> TypedOpParameter(StaticType.DECIMAL)
+            1 -> TypedOpParameter(
+                DecimalType(
+                    DecimalType.PrecisionScaleConstraint.Constrained(parameters[0].value.toInt())
                 )
             )
-        )
+            2 -> TypedOpParameter(
+                DecimalType(
+                    DecimalType.PrecisionScaleConstraint.Constrained(
+                        parameters[0].value.toInt(),
+                        parameters[1].value.toInt()
+                    )
+                )
+            )
+            else -> error("Internal Error: DECIMAL type must have at most 2 parameters during compiling")
+        }
+        BuiltInScalarTypeId.TIMESTAMP -> TypedOpParameter(StaticType.TIMESTAMP)
+        BuiltInScalarTypeId.CHARACTER -> when (parameters.size) {
+            0 -> TypedOpParameter(
+                StringType(
+                    // TODO: See if we need to use unconstrained string instead
+                    StringType.StringLengthConstraint.Constrained(
+                        NumberConstraint.Equals(1)
+                    )
+                )
+            )
+            1 -> TypedOpParameter(
+                StringType(
+                    StringType.StringLengthConstraint.Constrained(
+                        NumberConstraint.Equals(parameters[0].value.toInt())
+                    )
+                )
+            )
+            else -> error("Internal Error: CHARACTER type must have 1 parameters during compiling")
+        }
+        BuiltInScalarTypeId.CHARACTER_VARYING -> when (parameters.size) {
+            0 -> TypedOpParameter(StringType(StringType.StringLengthConstraint.Unconstrained))
+            1 -> TypedOpParameter(StringType(StringType.StringLengthConstraint.Constrained(NumberConstraint.UpTo(parameters[0].value.toInt()))))
+            else -> error("Internal Error: CHARACTER_VARYING type must have 1 parameters during compiling")
+        }
+        BuiltInScalarTypeId.STRING -> TypedOpParameter(StaticType.STRING)
+        BuiltInScalarTypeId.SYMBOL -> TypedOpParameter(StaticType.SYMBOL)
+        BuiltInScalarTypeId.CLOB -> TypedOpParameter(StaticType.CLOB)
+        BuiltInScalarTypeId.BLOB -> TypedOpParameter(StaticType.BLOB)
+        BuiltInScalarTypeId.DATE -> TypedOpParameter(StaticType.DATE)
+        BuiltInScalarTypeId.TIME -> when (parameters.size) {
+            0 -> TypedOpParameter(TimeType())
+            1 -> TypedOpParameter(TimeType(parameters[0].value.toInt()))
+            else -> error("\"Internal Error: TIME type must have at most 1 parameters during compiling\"")
+        }
+        BuiltInScalarTypeId.TIME_WITH_TIME_ZONE -> when (parameters.size) {
+            0 -> TypedOpParameter(
+                TimeType(
+                    withTimeZone = true
+                )
+            )
+            1 -> TypedOpParameter(
+                TimeType(
+                    precision = parameters[0].value.toInt(),
+                    withTimeZone = true
+                )
+            )
+            else -> error("Internal Error: TIME_WITH_TIME_ZONE type must have 1 parameters during compiling")
+        }
+        else -> error("Unrecognized scalar type ID")
     }
-    is PartiqlPhysical.Type.CharacterVaryingType -> when (this.length) {
-        null -> TypedOpParameter(StringType(StringType.StringLengthConstraint.Unconstrained))
-        else -> TypedOpParameter(StringType(StringType.StringLengthConstraint.Constrained(NumberConstraint.UpTo(this.length.value.toInt()))))
-    }
-    is PartiqlPhysical.Type.StringType -> TypedOpParameter(StaticType.STRING)
-    is PartiqlPhysical.Type.SymbolType -> TypedOpParameter(StaticType.SYMBOL)
-    is PartiqlPhysical.Type.ClobType -> TypedOpParameter(StaticType.CLOB)
-    is PartiqlPhysical.Type.BlobType -> TypedOpParameter(StaticType.BLOB)
     is PartiqlPhysical.Type.StructType -> TypedOpParameter(StaticType.STRUCT)
     is PartiqlPhysical.Type.TupleType -> TypedOpParameter(StaticType.STRUCT)
     is PartiqlPhysical.Type.ListType -> TypedOpParameter(StaticType.LIST)
@@ -58,13 +97,6 @@ fun PartiqlPhysical.Type.toTypedOpParameter(customTypedOpParameters: Map<String,
             (k, _) ->
             k.toLowerCase()
         }[this.name.text.toLowerCase()] ?: error("Could not find parameter for $this")
-    is PartiqlPhysical.Type.DateType -> TypedOpParameter(StaticType.DATE)
-    is PartiqlPhysical.Type.TimeType -> TypedOpParameter(
-        TimeType(this.precision?.value?.toInt(), withTimeZone = false)
-    )
-    is PartiqlPhysical.Type.TimeWithTimeZoneType -> TypedOpParameter(
-        TimeType(this.precision?.value?.toInt(), withTimeZone = true)
-    )
     is PartiqlPhysical.Type.EsAny,
     is PartiqlPhysical.Type.EsBoolean,
     is PartiqlPhysical.Type.EsFloat,
