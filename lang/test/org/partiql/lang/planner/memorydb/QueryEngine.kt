@@ -55,10 +55,10 @@ class QueryEngine(val db: MemoryDatabase) {
             StructType(
                 // TODO: nothing in the planner uses the fields property yet
                 fields = emptyMap(),
-                // TODO: nothing in the planner uses the contentClosed property yet
-                // But "technically" do have open content since nothing is constraining the fields in the table.
+                // TODO: nothing in the planner uses the contentClosed property yet, but "technically" do have open
+                // content since nothing is constraining the fields in the table.
                 contentClosed = false,
-                // TODO: The FilterScanTokeyLookup pass does use this.
+                // The FilterScanTokeyLookup pass does use this.
                 primaryKeyFields = tableMetadata.primaryKeyFields
             )
         )
@@ -70,9 +70,9 @@ class QueryEngine(val db: MemoryDatabase) {
          * global variable, which is almost always a database table.
          */
         override fun get(bindingName: BindingName): ExprValue {
-            // TODO: PartiQL may need some additional cleanup here because, perhaps very confusingly, the bindingName
-            // passed here contains the UUID of the table and *not* its name.  It should also always specify a
-            // case-sensitive binding name.  Really, we should reconsider if [PlannerPipeline] should use
+            // TODO: PlannerPipeline may need some additional cleanup here because, perhaps very confusingly, the
+            // bindingName passed here contains the UUID of the table and *not* its name.  It should also always
+            // specify a case-sensitive binding name.  Really, we should reconsider if [PlannerPipeline] should use
             // [Bindings<T>] at all, perhaps another interface that's more narrow should be used instead.
             // Another difference in how PlannerPipeline uses Bindings<ExprValue> (and argument for using a new
             // interface) is that the bindingName here is guaranteed to be valid because otherwise planning would have
@@ -206,6 +206,3 @@ class QueryEngine(val db: MemoryDatabase) {
         }
     }
 }
-
-private fun PartiqlPhysical.Plan.toPrettyString(): String =
-    SexpAstPrettyPrinter.format(toIonElement().asAnyElement().toIonValue(ION))

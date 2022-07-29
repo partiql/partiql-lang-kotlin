@@ -28,7 +28,7 @@ class MemoryDatabase {
         tables.firstOrNull { bindingName.isEquivalentTo(it.metadata.name) }?.metadata
 
     /**
-     * Returns a table's metadata, given it's UUID. If no table with the given UUID exists, an an exception is
+     * Returns a table's metadata, given its UUID. If no table with the given UUID exists, an exception is
      * thrown.
      */
     fun getTableMetadata(tableId: UUID): TableMetadata =
