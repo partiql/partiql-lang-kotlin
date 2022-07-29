@@ -76,7 +76,6 @@ class FilterScanToKeyLookupTests {
     }
 
     class Arguments : ArgumentsProviderBase() {
-        // todo: scour the code looking for more cases.
         override fun getParameters() = listOf(
             // single-field primary key (field-reference on LHS)
             TestCase(

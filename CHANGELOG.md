@@ -27,9 +27,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - restrictors and selector  (section 5.1 of the GPML paper)
   - pre-filters and post-filters (section 5.2 of the GPML paper)
 - Added EvaluatonSession.context: A string-keyed map of arbitrary values which provides a way to make  
-session state such as current user and transaction details available to custom [ExprFunction] implementations 
-and custom physical operator implementations.
-- Renamed PassResult to PlannerPassResult for clarity. (This is part of the experimental query planner API.)
+  session state such as current user and transaction details available to custom [ExprFunction] implementations
+  and custom physical operator implementations.
+- Replaces `union`, `intersect`, `except` IR nodes with common `bag_op` IR node
+
+#### Experimental Planner Additions
+
+- Renamed `PassResult` to PlannerPassResult for clarity. (This is part of the experimental query planner API.)
 - The `PlannerPipeline` API now has experimental and partial support for `INSERT` and `DELETE` DML statements— 
 tracking PartiQL specification issues are [partiql-docs/#4](https://github.com/partiql/partiql-docs/issues/4) (only
 a subset has been implemented--see examples below) and 
@@ -59,6 +63,7 @@ stage in the `PlannerPipeline` and to generate performance metrics for the indiv
 ### Fixed
 - Codecov report uploads in GitHub Actions workflow
 - GitHub Actions capability to run on forks
+- Negation overflow caused by minimum INT8
 
 ### Removed
 - README.md badge for travisci

@@ -24,30 +24,41 @@ import org.partiql.lang.types.StructType
 data class FieldEqualityPredicate(val keyFieldName: String, val equivalentValue: PartiqlPhysical.Expr)
 
 /**
- * Given a `filter` node with a nested `scan`, such as:
+ * If possible, changes a `filter` operator with a nested `scan` into an `project` operator that looks up a single
+ * record by its primary key.
  *
- *      (filter (impl ...)
- *          (impl ...)
- *          <predicate>
- *          (scan (impl ...) (global_id <table_id>) (var_decl n))))
+ * The implementation of the `project` operator is specified by [customProjectOperatorName],
+ * which must be supplied separately by the user (see [PlannerPipeline.Builder.addRelationalOperatorFactory]).  (More
+ * details on this operator below).
  *
- * If `<predicate>` encompasses all primary key fields of the table referenced by `<table_id>` (in the form of
- * `x.keyField1 = <expr-1> [and x.keyFieldN = <expr-n>]...`), then each `x.keyFieldN = <expr-n>` in the `<predicate>`
- * is replaced with the `true` literal. This may leave some unnecessary `and` expressions and `filter` `<predicate>`s.
- * These are removed later by the passes [RemoveUselessAndsPass] and [RemoveUselessFiltersPass].
+ * For example, given a `filter` node with a nested `scan`, such as:
  *
- * Finally, the nested `scan` is replaced with:
+ * ```
+ * (filter (impl ...)
+ *     (impl ...)
+ *     <predicate>
+ *     (scan (impl ...) (global_id <table_id>) (var_decl n))))
+ *```
  *
- *     (project
- *          (impl <custom-project-operator-name> <table_id>)
- *          (var_decl n)
- *          <key-value>)
+ * If `<predicate>` includes all primary key fields of the table referenced by `<table_id>` (in the form of
+ * `x.keyField1 = <expr-1> [and x.keyFieldN = <expr-n>]...`), then those `=` expressions are replaced with `(lit true)`
+ * (rendering them inert) and the inner `scan` is replaced with a `project` operator with the
+ * [customProjectOperatorName].  This may leave some unnecessary `and` expressions and `filter` `<predicate>`s. These
+ * are removed later by the passes [RemoveUselessAndsPass] and [RemoveUselessFiltersPass].
  *
- * An implementation of the `project` operator named [customProjectOperatorName] must be provided by the embedding
- * PartiQL application separately (see [PlannerPipeline.Builder.addRelationalOperatorFactory]).  The custom project
- * operator impl must accept a single `<table_id>` static argument and a single dynamic argument, `<key-value>`, which
- * is the primary key value.  The expression used to compute the key is constructed by [createKeyValueConstructor]
- * which is a function that is passed the table's [StructType] and a list of [FieldEqualityPredicate] instances.
+ * The replacement `project` operator takes the following form:
+ *
+ * ```
+ * (project
+ *      (impl <custom-project-operator-name> <table_id>)
+ *      (var_decl <variable_idx>)
+ *      <key-value>)
+ *```
+ *
+ * Note that The custom project operator impl must accept a single `<table_id>` static argument and a single dynamic
+ * argument, `<key-value>`, which is the primary key value.  The expression used to compute the key is constructed by
+ * [createKeyValueConstructor] which is a function that is passed the table's [StructType] and a list of
+ * [FieldEqualityPredicate] instances.
  *
  * ### Notes
  *
@@ -59,13 +70,13 @@ data class FieldEqualityPredicate(val keyFieldName: String, val equivalentValue:
  * - Key field references must be fully qualified, (e.g. `someLocalVar.primaryKey = <expr>` and not
  * `primaryKey = <expr>`.  In the future, implicit qualification might be handled by a separate, earlier pass.
  * - Key fields must be values at the first level within the row's struct and cannot be nested. e.g. `x.primaryKey`
- * is supported by `x.person.ssn` is not.
+ * is supported but `x.person.ssn` is not.
  * - Key field references must be at root node of the `<predicate>` or nested at any level within a tree of expressions
  * consisting only of `and` parents.  (This rewrite cannot apply to other expression types without changing the semantic
  * intent of the query.)
- * - `(eq <expr>...)` expressions not involving exactly 2 operands will fail.  The AST modeling supports an arbitrary
- * number of operands, but supporting > 2 here adds complexity that we may never use, because as of now there is
- * nothing in this entire codebase that composes n-ary expressions with more than 2 operands.
+ * - `(eq <expr>...)` expressions not involving exactly 2 operands will fail.  The AST modeling supports n operands,
+ * but supporting > 2 here adds complexity that we may never use, because as of now there is nothing in this entire
+ * codebase that composes n-ary expressions with more than 2 operands.
  */
 fun createFilterScanToKeyLookupPass(
     customProjectOperatorName: String,
@@ -167,7 +178,8 @@ private class FilterScanToKeyLookupPass(
  * - `<local_id>` is equal to [variableIndexId] and
  * - `<key-field-name>` contained within [primaryKeyFields] (respecting `<case-sensitivity>`).
  *
- * Returns a [Pair] containing:
+ * If `null` is returned, expressions matching the above were not found for all (or any) primary key fields. Otherwise,
+ * returns a [Pair] containing:
  *
  * - The expression predicate with all references to the key fields replaced with `(lit true)`.
  * - A list of [FieldEqualityPredicate], which is a list of the referenced key fields and value expressions.

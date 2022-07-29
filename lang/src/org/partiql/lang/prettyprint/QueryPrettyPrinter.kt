@@ -287,17 +287,12 @@ class QueryPrettyPrinter {
             is PartiqlAst.Expr.And -> writeNAryOperator("AND", node.operands, sb, level)
             is PartiqlAst.Expr.Or -> writeNAryOperator("OR", node.operands, sb, level)
             is PartiqlAst.Expr.InCollection -> writeNAryOperator("IN", node.operands, sb, level)
-            is PartiqlAst.Expr.Union -> when (node.setq) {
-                is PartiqlAst.SetQuantifier.Distinct -> writeNAryOperator("UNION", node.operands, sb, level)
-                is PartiqlAst.SetQuantifier.All -> writeNAryOperator("UNION ALL", node.operands, sb, level)
-            }
-            is PartiqlAst.Expr.Intersect -> when (node.setq) {
-                is PartiqlAst.SetQuantifier.Distinct -> writeNAryOperator("INTERSECT", node.operands, sb, level)
-                is PartiqlAst.SetQuantifier.All -> writeNAryOperator("INTERSECT ALL", node.operands, sb, level)
-            }
-            is PartiqlAst.Expr.Except -> when (node.setq) {
-                is PartiqlAst.SetQuantifier.Distinct -> writeNAryOperator("EXCEPT", node.operands, sb, level)
-                is PartiqlAst.SetQuantifier.All -> writeNAryOperator("EXCEPT ALL", node.operands, sb, level)
+            is PartiqlAst.Expr.BagOp -> {
+                var name = node.op.javaClass.simpleName.toUpperCase().replace("_", " ")
+                if (node.quantifier is PartiqlAst.SetQuantifier.All) {
+                    name += " ALL"
+                }
+                writeNAryOperator(name, node.operands, sb, level)
             }
         }
     }
@@ -321,6 +316,7 @@ class QueryPrettyPrinter {
         }
     }
 
+    @Suppress("UNUSED_PARAMETER")
     private fun writeAstNode(node: PartiqlAst.Expr.Missing, sb: StringBuilder) {
         sb.append("MISSING")
     }
@@ -370,6 +366,7 @@ class QueryPrettyPrinter {
         }
     }
 
+    @Suppress("UNUSED_PARAMETER")
     private fun writeAstNode(node: PartiqlAst.Expr.Bag, sb: StringBuilder, level: Int) {
         sb.append("<< ")
         node.values.forEach {
@@ -383,6 +380,7 @@ class QueryPrettyPrinter {
         sb.append(" >>")
     }
 
+    @Suppress("UNUSED_PARAMETER")
     private fun writeAstNode(node: PartiqlAst.Expr.Sexp, sb: StringBuilder, level: Int) {
         sb.append("sexp(")
         node.values.forEach {
@@ -396,6 +394,7 @@ class QueryPrettyPrinter {
         sb.append(")")
     }
 
+    @Suppress("UNUSED_PARAMETER")
     private fun writeAstNode(node: PartiqlAst.Expr.List, sb: StringBuilder, level: Int) {
         sb.append("[ ")
         node.values.forEach {
@@ -409,6 +408,7 @@ class QueryPrettyPrinter {
         sb.append(" ]")
     }
 
+    @Suppress("UNUSED_PARAMETER")
     private fun writeAstNode(node: PartiqlAst.Expr.Struct, sb: StringBuilder, level: Int) {
         sb.append("{ ")
         node.fields.forEach {
@@ -424,6 +424,7 @@ class QueryPrettyPrinter {
         sb.append(" }")
     }
 
+    @Suppress("UNUSED_PARAMETER")
     private fun writeAstNode(node: PartiqlAst.Expr.Parameter, sb: StringBuilder) {
         sb.append("?")
     }
@@ -435,6 +436,7 @@ class QueryPrettyPrinter {
         }
     }
 
+    @Suppress("UNUSED_PARAMETER")
     private fun writeAstNode(node: PartiqlAst.Expr.Call, sb: StringBuilder, level: Int) {
         sb.append("${node.funcName.text}(")
         node.args.forEach { arg ->
@@ -448,6 +450,7 @@ class QueryPrettyPrinter {
         sb.append(')')
     }
 
+    @Suppress("UNUSED_PARAMETER")
     private fun writeAstNode(node: PartiqlAst.Expr.CallAgg, sb: StringBuilder, level: Int) {
         sb.append("${node.funcName.text}(")
         if (node.setq is PartiqlAst.SetQuantifier.Distinct) {
@@ -848,6 +851,7 @@ class QueryPrettyPrinter {
         sb.append(')')
     }
 
+    @Suppress("UNUSED_PARAMETER")
     private fun writeAstNode(node: PartiqlAst.Expr.Coalesce, sb: StringBuilder, level: Int) {
         sb.append("COALESCE(")
         node.args.forEach { arg ->
@@ -861,6 +865,7 @@ class QueryPrettyPrinter {
         sb.append(')')
     }
 
+    @Suppress("UNUSED_PARAMETER")
     private fun writeAstNode(node: PartiqlAst.Expr.NullIf, sb: StringBuilder, level: Int) {
         // Write anything as one line as COALESCE arguments
         sb.append("NULLIF(")
@@ -891,13 +896,13 @@ class QueryPrettyPrinter {
         when (node) {
             is PartiqlAst.Expr.And, is PartiqlAst.Expr.Between, is PartiqlAst.Expr.CanCast,
             is PartiqlAst.Expr.CanLosslessCast, is PartiqlAst.Expr.Cast, is PartiqlAst.Expr.Concat,
-            is PartiqlAst.Expr.Divide, is PartiqlAst.Expr.Eq, is PartiqlAst.Expr.Except,
+            is PartiqlAst.Expr.Divide, is PartiqlAst.Expr.Eq, is PartiqlAst.Expr.BagOp,
             is PartiqlAst.Expr.Gt, is PartiqlAst.Expr.Gte, is PartiqlAst.Expr.InCollection,
-            is PartiqlAst.Expr.Intersect, is PartiqlAst.Expr.IsType, is PartiqlAst.Expr.Like,
+            is PartiqlAst.Expr.IsType, is PartiqlAst.Expr.Like,
             is PartiqlAst.Expr.Lt, is PartiqlAst.Expr.Lte, is PartiqlAst.Expr.Minus,
             is PartiqlAst.Expr.Modulo, is PartiqlAst.Expr.Ne, is PartiqlAst.Expr.Neg,
             is PartiqlAst.Expr.Not, is PartiqlAst.Expr.Or, is PartiqlAst.Expr.Plus,
-            is PartiqlAst.Expr.Pos, is PartiqlAst.Expr.Times, is PartiqlAst.Expr.Union -> true
+            is PartiqlAst.Expr.Pos, is PartiqlAst.Expr.Times -> true
             else -> false
         }
 

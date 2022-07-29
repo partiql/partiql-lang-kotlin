@@ -111,7 +111,8 @@ fun Number.ionValue(ion: IonSystem): IonValue = when (this) {
 
 operator fun Number.unaryMinus(): Number {
     return when (this) {
-        is Long -> -this
+        // - LONG.MIN_VALUE will result in LONG.MIN_VALUE in JVM because LONG is a signed two's-complement integers
+        is Long -> if (this == Long.MIN_VALUE) BigInteger.valueOf(Long.MAX_VALUE).add(BigInteger.ONE) else -this
         is BigInteger -> this.negate()
         is Double -> -this
         is BigDecimal -> if (this.isZero()) {
