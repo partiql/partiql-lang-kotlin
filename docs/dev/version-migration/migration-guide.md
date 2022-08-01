@@ -14,9 +14,8 @@ build-related changes)
 * moved CLI/REPL changes to a separate section
 * found other breaking changes from the compatibility reports between versions using the [japi-compliance-checker](https://github.com/lvc/japi-compliance-checker)
 
+The [CHANGLOG](https://github.com/partiql/partiql-lang-kotlin/blob/main/CHANGELOG.md) can also be viewed to see changes
+between releases and also includes a section on features yet to be released (see [Unreleased](https://github.com/partiql/partiql-lang-kotlin/blob/main/CHANGELOG.md#unreleased)).
+
 The repo, [test-partiql-version-migration](https://github.com/alancai98/test-partiql-version-migration), hosts all the 
 example migration code between major versions.
-
-
-
-
