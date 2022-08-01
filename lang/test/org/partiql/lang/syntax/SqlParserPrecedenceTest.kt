@@ -53,8 +53,8 @@ class SqlParserPrecedenceTest : SqlParserTestBase() {
         /* (intersect, *)               */ "a intersect b * c" to "(bag_op (intersect) (distinct) (id a (case_insensitive) (unqualified)) (times (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
         /* (intersect, /)               */ "a intersect b / c" to "(bag_op (intersect) (distinct) (id a (case_insensitive) (unqualified)) (divide (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
         /* (intersect, %)               */ "a intersect b % c" to "(bag_op (intersect) (distinct) (id a (case_insensitive) (unqualified)) (modulo (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
-        /* (intersect, is)              */ "a intersect b is boolean" to "(bag_op (intersect) (distinct) (id a (case_insensitive) (unqualified)) (is_type (id b (case_insensitive) (unqualified)) (boolean_type)))",
-        /* (intersect, is_not)          */ "a intersect b is not boolean" to "(bag_op (intersect) (distinct) (id a (case_insensitive) (unqualified)) (not (is_type (id b (case_insensitive) (unqualified)) (boolean_type))))"
+        /* (intersect, is)              */ "a intersect b is boolean" to "(bag_op (intersect) (distinct) (id a (case_insensitive) (unqualified)) (is_type (id b (case_insensitive) (unqualified)) (scalar_type boolean)))",
+        /* (intersect, is_not)          */ "a intersect b is not boolean" to "(bag_op (intersect) (distinct) (id a (case_insensitive) (unqualified)) (not (is_type (id b (case_insensitive) (unqualified)) (scalar_type boolean))))"
     )
 
     @Test
@@ -87,8 +87,8 @@ class SqlParserPrecedenceTest : SqlParserTestBase() {
         /* (intersect_all, *)           */ "a intersect all b * c" to "(bag_op (intersect) (all) (id a (case_insensitive) (unqualified)) (times (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
         /* (intersect_all, /)           */ "a intersect all b / c" to "(bag_op (intersect) (all) (id a (case_insensitive) (unqualified)) (divide (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
         /* (intersect_all, %)           */ "a intersect all b % c" to "(bag_op (intersect) (all) (id a (case_insensitive) (unqualified)) (modulo (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
-        /* (intersect_all, is)          */ "a intersect all b is boolean" to "(bag_op (intersect) (all) (id a (case_insensitive) (unqualified)) (is_type (id b (case_insensitive) (unqualified)) (boolean_type)))",
-        /* (intersect_all, is_not)      */ "a intersect all b is not boolean" to "(bag_op (intersect) (all) (id a (case_insensitive) (unqualified)) (not (is_type (id b (case_insensitive) (unqualified)) (boolean_type))))"
+        /* (intersect_all, is)          */ "a intersect all b is boolean" to "(bag_op (intersect) (all) (id a (case_insensitive) (unqualified)) (is_type (id b (case_insensitive) (unqualified)) (scalar_type boolean)))",
+        /* (intersect_all, is_not)      */ "a intersect all b is not boolean" to "(bag_op (intersect) (all) (id a (case_insensitive) (unqualified)) (not (is_type (id b (case_insensitive) (unqualified)) (scalar_type boolean))))"
     )
 
     @Test
@@ -121,8 +121,8 @@ class SqlParserPrecedenceTest : SqlParserTestBase() {
         /* (except, *)                  */ "a except b * c" to "(bag_op (except) (distinct) (id a (case_insensitive) (unqualified)) (times (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
         /* (except, /)                  */ "a except b / c" to "(bag_op (except) (distinct) (id a (case_insensitive) (unqualified)) (divide (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
         /* (except, %)                  */ "a except b % c" to "(bag_op (except) (distinct) (id a (case_insensitive) (unqualified)) (modulo (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
-        /* (except, is)                 */ "a except b is boolean" to "(bag_op (except) (distinct) (id a (case_insensitive) (unqualified)) (is_type (id b (case_insensitive) (unqualified)) (boolean_type)))",
-        /* (except, is_not)             */ "a except b is not boolean" to "(bag_op (except) (distinct) (id a (case_insensitive) (unqualified)) (not (is_type (id b (case_insensitive) (unqualified)) (boolean_type))))"
+        /* (except, is)                 */ "a except b is boolean" to "(bag_op (except) (distinct) (id a (case_insensitive) (unqualified)) (is_type (id b (case_insensitive) (unqualified)) (scalar_type boolean)))",
+        /* (except, is_not)             */ "a except b is not boolean" to "(bag_op (except) (distinct) (id a (case_insensitive) (unqualified)) (not (is_type (id b (case_insensitive) (unqualified)) (scalar_type boolean))))"
     )
 
     @Test
@@ -155,8 +155,8 @@ class SqlParserPrecedenceTest : SqlParserTestBase() {
         /* (except_all, *)              */ "a except all b * c" to "(bag_op (except) (all) (id a (case_insensitive) (unqualified)) (times (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
         /* (except_all, /)              */ "a except all b / c" to "(bag_op (except) (all) (id a (case_insensitive) (unqualified)) (divide (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
         /* (except_all, %)              */ "a except all b % c" to "(bag_op (except) (all) (id a (case_insensitive) (unqualified)) (modulo (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
-        /* (except_all, is)             */ "a except all b is boolean" to "(bag_op (except) (all) (id a (case_insensitive) (unqualified)) (is_type (id b (case_insensitive) (unqualified)) (boolean_type)))",
-        /* (except_all, is_not)         */ "a except all b is not boolean" to "(bag_op (except) (all) (id a (case_insensitive) (unqualified)) (not (is_type (id b (case_insensitive) (unqualified)) (boolean_type))))"
+        /* (except_all, is)             */ "a except all b is boolean" to "(bag_op (except) (all) (id a (case_insensitive) (unqualified)) (is_type (id b (case_insensitive) (unqualified)) (scalar_type boolean)))",
+        /* (except_all, is_not)         */ "a except all b is not boolean" to "(bag_op (except) (all) (id a (case_insensitive) (unqualified)) (not (is_type (id b (case_insensitive) (unqualified)) (scalar_type boolean))))"
     )
 
     @Test
@@ -189,8 +189,8 @@ class SqlParserPrecedenceTest : SqlParserTestBase() {
         /* (union, *)                   */ "a union b * c" to "(bag_op (union) (distinct) (id a (case_insensitive) (unqualified)) (times (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
         /* (union, /)                   */ "a union b / c" to "(bag_op (union) (distinct) (id a (case_insensitive) (unqualified)) (divide (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
         /* (union, %)                   */ "a union b % c" to "(bag_op (union) (distinct) (id a (case_insensitive) (unqualified)) (modulo (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
-        /* (union, is)                  */ "a union b is boolean" to "(bag_op (union) (distinct) (id a (case_insensitive) (unqualified)) (is_type (id b (case_insensitive) (unqualified)) (boolean_type)))",
-        /* (union, is_not)              */ "a union b is not boolean" to "(bag_op (union) (distinct) (id a (case_insensitive) (unqualified)) (not (is_type (id b (case_insensitive) (unqualified)) (boolean_type))))"
+        /* (union, is)                  */ "a union b is boolean" to "(bag_op (union) (distinct) (id a (case_insensitive) (unqualified)) (is_type (id b (case_insensitive) (unqualified)) (scalar_type boolean)))",
+        /* (union, is_not)              */ "a union b is not boolean" to "(bag_op (union) (distinct) (id a (case_insensitive) (unqualified)) (not (is_type (id b (case_insensitive) (unqualified)) (scalar_type boolean))))"
     )
 
     @Test
@@ -223,8 +223,8 @@ class SqlParserPrecedenceTest : SqlParserTestBase() {
         /* (union_all, *)               */ "a union all b * c" to "(bag_op (union) (all) (id a (case_insensitive) (unqualified)) (times (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
         /* (union_all, /)               */ "a union all b / c" to "(bag_op (union) (all) (id a (case_insensitive) (unqualified)) (divide (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
         /* (union_all, %)               */ "a union all b % c" to "(bag_op (union) (all) (id a (case_insensitive) (unqualified)) (modulo (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
-        /* (union_all, is)              */ "a union all b is boolean" to "(bag_op (union) (all) (id a (case_insensitive) (unqualified)) (is_type (id b (case_insensitive) (unqualified)) (boolean_type)))",
-        /* (union_all, is_not)          */ "a union all b is not boolean" to "(bag_op (union) (all) (id a (case_insensitive) (unqualified)) (not (is_type (id b (case_insensitive) (unqualified)) (boolean_type))))"
+        /* (union_all, is)              */ "a union all b is boolean" to "(bag_op (union) (all) (id a (case_insensitive) (unqualified)) (is_type (id b (case_insensitive) (unqualified)) (scalar_type boolean)))",
+        /* (union_all, is_not)          */ "a union all b is not boolean" to "(bag_op (union) (all) (id a (case_insensitive) (unqualified)) (not (is_type (id b (case_insensitive) (unqualified)) (scalar_type boolean))))"
     )
 
     @Test
@@ -257,8 +257,8 @@ class SqlParserPrecedenceTest : SqlParserTestBase() {
         /* (and, *)                     */ "a and b * c" to "(and (id a (case_insensitive) (unqualified)) (times (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
         /* (and, /)                     */ "a and b / c" to "(and (id a (case_insensitive) (unqualified)) (divide (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
         /* (and, %)                     */ "a and b % c" to "(and (id a (case_insensitive) (unqualified)) (modulo (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
-        /* (and, is)                    */ "a and b is boolean" to "(and (id a (case_insensitive) (unqualified)) (is_type (id b (case_insensitive) (unqualified)) (boolean_type)))",
-        /* (and, is_not)                */ "a and b is not boolean" to "(and (id a (case_insensitive) (unqualified)) (not (is_type (id b (case_insensitive) (unqualified)) (boolean_type))))"
+        /* (and, is)                    */ "a and b is boolean" to "(and (id a (case_insensitive) (unqualified)) (is_type (id b (case_insensitive) (unqualified)) (scalar_type boolean)))",
+        /* (and, is_not)                */ "a and b is not boolean" to "(and (id a (case_insensitive) (unqualified)) (not (is_type (id b (case_insensitive) (unqualified)) (scalar_type boolean))))"
     )
 
     @Test
@@ -291,8 +291,8 @@ class SqlParserPrecedenceTest : SqlParserTestBase() {
         /* (or, *)                      */ "a or b * c" to "(or (id a (case_insensitive) (unqualified)) (times (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
         /* (or, /)                      */ "a or b / c" to "(or (id a (case_insensitive) (unqualified)) (divide (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
         /* (or, %)                      */ "a or b % c" to "(or (id a (case_insensitive) (unqualified)) (modulo (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
-        /* (or, is)                     */ "a or b is boolean" to "(or (id a (case_insensitive) (unqualified)) (is_type (id b (case_insensitive) (unqualified)) (boolean_type)))",
-        /* (or, is_not)                 */ "a or b is not boolean" to "(or (id a (case_insensitive) (unqualified)) (not (is_type (id b (case_insensitive) (unqualified)) (boolean_type))))"
+        /* (or, is)                     */ "a or b is boolean" to "(or (id a (case_insensitive) (unqualified)) (is_type (id b (case_insensitive) (unqualified)) (scalar_type boolean)))",
+        /* (or, is_not)                 */ "a or b is not boolean" to "(or (id a (case_insensitive) (unqualified)) (not (is_type (id b (case_insensitive) (unqualified)) (scalar_type boolean))))"
     )
 
     @Test
@@ -325,8 +325,8 @@ class SqlParserPrecedenceTest : SqlParserTestBase() {
         /* (=, *)                       */ "a = b * c" to "(eq (id a (case_insensitive) (unqualified)) (times (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
         /* (=, /)                       */ "a = b / c" to "(eq (id a (case_insensitive) (unqualified)) (divide (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
         /* (=, %)                       */ "a = b % c" to "(eq (id a (case_insensitive) (unqualified)) (modulo (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
-        /* (=, is)                      */ "a = b is boolean" to "(is_type (eq (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (boolean_type))",
-        /* (=, is_not)                  */ "a = b is not boolean" to "(not (is_type (eq (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (boolean_type)))"
+        /* (=, is)                      */ "a = b is boolean" to "(is_type (eq (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (scalar_type boolean))",
+        /* (=, is_not)                  */ "a = b is not boolean" to "(not (is_type (eq (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (scalar_type boolean)))"
     )
 
     @Test
@@ -359,8 +359,8 @@ class SqlParserPrecedenceTest : SqlParserTestBase() {
         /* (<>, *)                      */ "a <> b * c" to "(ne (id a (case_insensitive) (unqualified)) (times (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
         /* (<>, /)                      */ "a <> b / c" to "(ne (id a (case_insensitive) (unqualified)) (divide (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
         /* (<>, %)                      */ "a <> b % c" to "(ne (id a (case_insensitive) (unqualified)) (modulo (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
-        /* (<>, is)                     */ "a <> b is boolean" to "(is_type (ne (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (boolean_type))",
-        /* (<>, is_not)                 */ "a <> b is not boolean" to "(not (is_type (ne (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (boolean_type)))"
+        /* (<>, is)                     */ "a <> b is boolean" to "(is_type (ne (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (scalar_type boolean))",
+        /* (<>, is_not)                 */ "a <> b is not boolean" to "(not (is_type (ne (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (scalar_type boolean)))"
     )
 
     @Test
@@ -368,32 +368,32 @@ class SqlParserPrecedenceTest : SqlParserTestBase() {
     @TestCaseName("{0}")
     fun isPrecedence(pair: Pair<String, String>) = runTest(pair)
     fun parametersForIsPrecedence() = listOf(
-        /* (is, intersect)              */ "a is boolean intersect c" to "(bag_op (intersect) (distinct) (is_type (id a (case_insensitive) (unqualified)) (boolean_type)) (id c (case_insensitive) (unqualified)))",
-        /* (is, intersect_all)          */ "a is boolean intersect all c" to "(bag_op (intersect) (all) (is_type (id a (case_insensitive) (unqualified)) (boolean_type)) (id c (case_insensitive) (unqualified)))",
-        /* (is, except)                 */ "a is boolean except c" to "(bag_op (except) (distinct) (is_type (id a (case_insensitive) (unqualified)) (boolean_type)) (id c (case_insensitive) (unqualified)))",
-        /* (is, except_all)             */ "a is boolean except all c" to "(bag_op (except) (all) (is_type (id a (case_insensitive) (unqualified)) (boolean_type)) (id c (case_insensitive) (unqualified)))",
-        /* (is, union)                  */ "a is boolean union c" to "(bag_op (union) (distinct) (is_type (id a (case_insensitive) (unqualified)) (boolean_type)) (id c (case_insensitive) (unqualified)))",
-        /* (is, union_all)              */ "a is boolean union all c" to "(bag_op (union) (all) (is_type (id a (case_insensitive) (unqualified)) (boolean_type)) (id c (case_insensitive) (unqualified)))",
-        /* (is, or)                     */ "a is boolean or c" to "(or (is_type (id a (case_insensitive) (unqualified)) (boolean_type)) (id c (case_insensitive) (unqualified)))",
-        /* (is, and)                    */ "a is boolean and c" to "(and (is_type (id a (case_insensitive) (unqualified)) (boolean_type)) (id c (case_insensitive) (unqualified)))",
-        /* (is, =)                      */ "a is boolean = c" to "(eq (is_type (id a (case_insensitive) (unqualified)) (boolean_type)) (id c (case_insensitive) (unqualified)))",
-        /* (is, in)                     */ "a is boolean in c" to "(in_collection (is_type (id a (case_insensitive) (unqualified)) (boolean_type)) (id c (case_insensitive) (unqualified)))",
-        /* (is, not_in)                 */ "a is boolean not in c" to "(not (in_collection (is_type (id a (case_insensitive) (unqualified)) (boolean_type)) (id c (case_insensitive) (unqualified))))",
-        /* (is, <)                      */ "a is boolean < c" to "(lt (is_type (id a (case_insensitive) (unqualified)) (boolean_type)) (id c (case_insensitive) (unqualified)))",
-        /* (is, <=)                     */ "a is boolean <= c" to "(lte (is_type (id a (case_insensitive) (unqualified)) (boolean_type)) (id c (case_insensitive) (unqualified)))",
-        /* (is, >)                      */ "a is boolean > c" to "(gt (is_type (id a (case_insensitive) (unqualified)) (boolean_type)) (id c (case_insensitive) (unqualified)))",
-        /* (is, >=)                     */ "a is boolean >= c" to "(gte (is_type (id a (case_insensitive) (unqualified)) (boolean_type)) (id c (case_insensitive) (unqualified)))",
-        /* (is, between)                */ "a is boolean between w and c" to "(between (is_type (id a (case_insensitive) (unqualified)) (boolean_type)) (id w (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified)))",
-        /* (is, not_between)            */ "a is boolean not between y and c" to "(not (between (is_type (id a (case_insensitive) (unqualified)) (boolean_type)) (id y (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
-        /* (is, like)                   */ "a is boolean like c" to "(like (is_type (id a (case_insensitive) (unqualified)) (boolean_type)) (id c (case_insensitive) (unqualified)) null)",
-        /* (is, not_like)               */ "a is boolean not like c" to "(not (like (is_type (id a (case_insensitive) (unqualified)) (boolean_type)) (id c (case_insensitive) (unqualified)) null))",
-        /* (is, +)                      */ "a is boolean + c" to "(plus (is_type (id a (case_insensitive) (unqualified)) (boolean_type)) (id c (case_insensitive) (unqualified)))",
-        /* (is, -)                      */ "a is boolean - c" to "(minus (is_type (id a (case_insensitive) (unqualified)) (boolean_type)) (id c (case_insensitive) (unqualified)))",
-        /* (is, ||)                     */ "a is boolean || c" to "(concat (is_type (id a (case_insensitive) (unqualified)) (boolean_type)) (id c (case_insensitive) (unqualified)))",
-        /* (is, *)                      */ "a is boolean * c" to "(times (is_type (id a (case_insensitive) (unqualified)) (boolean_type)) (id c (case_insensitive) (unqualified)))",
-        /* (is, /)                      */ "a is boolean / c" to "(divide (is_type (id a (case_insensitive) (unqualified)) (boolean_type)) (id c (case_insensitive) (unqualified)))",
-        /* (is, %)                      */ "a is boolean % c" to "(modulo (is_type (id a (case_insensitive) (unqualified)) (boolean_type)) (id c (case_insensitive) (unqualified)))",
-        /* (is, is_not)                 */ "a is boolean is not boolean" to "(not (is_type (is_type (id a (case_insensitive) (unqualified)) (boolean_type)) (boolean_type)))"
+        /* (is, intersect)              */ "a is boolean intersect c" to "(bag_op (intersect) (distinct) (is_type (id a (case_insensitive) (unqualified)) (scalar_type boolean)) (id c (case_insensitive) (unqualified)))",
+        /* (is, intersect_all)          */ "a is boolean intersect all c" to "(bag_op (intersect) (all) (is_type (id a (case_insensitive) (unqualified)) (scalar_type boolean)) (id c (case_insensitive) (unqualified)))",
+        /* (is, except)                 */ "a is boolean except c" to "(bag_op (except) (distinct) (is_type (id a (case_insensitive) (unqualified)) (scalar_type boolean)) (id c (case_insensitive) (unqualified)))",
+        /* (is, except_all)             */ "a is boolean except all c" to "(bag_op (except) (all) (is_type (id a (case_insensitive) (unqualified)) (scalar_type boolean)) (id c (case_insensitive) (unqualified)))",
+        /* (is, union)                  */ "a is boolean union c" to "(bag_op (union) (distinct) (is_type (id a (case_insensitive) (unqualified)) (scalar_type boolean)) (id c (case_insensitive) (unqualified)))",
+        /* (is, union_all)              */ "a is boolean union all c" to "(bag_op (union) (all) (is_type (id a (case_insensitive) (unqualified)) (scalar_type boolean)) (id c (case_insensitive) (unqualified)))",
+        /* (is, or)                     */ "a is boolean or c" to "(or (is_type (id a (case_insensitive) (unqualified)) (scalar_type boolean)) (id c (case_insensitive) (unqualified)))",
+        /* (is, and)                    */ "a is boolean and c" to "(and (is_type (id a (case_insensitive) (unqualified)) (scalar_type boolean)) (id c (case_insensitive) (unqualified)))",
+        /* (is, =)                      */ "a is boolean = c" to "(eq (is_type (id a (case_insensitive) (unqualified)) (scalar_type boolean)) (id c (case_insensitive) (unqualified)))",
+        /* (is, in)                     */ "a is boolean in c" to "(in_collection (is_type (id a (case_insensitive) (unqualified)) (scalar_type boolean)) (id c (case_insensitive) (unqualified)))",
+        /* (is, not_in)                 */ "a is boolean not in c" to "(not (in_collection (is_type (id a (case_insensitive) (unqualified)) (scalar_type boolean)) (id c (case_insensitive) (unqualified))))",
+        /* (is, <)                      */ "a is boolean < c" to "(lt (is_type (id a (case_insensitive) (unqualified)) (scalar_type boolean)) (id c (case_insensitive) (unqualified)))",
+        /* (is, <=)                     */ "a is boolean <= c" to "(lte (is_type (id a (case_insensitive) (unqualified)) (scalar_type boolean)) (id c (case_insensitive) (unqualified)))",
+        /* (is, >)                      */ "a is boolean > c" to "(gt (is_type (id a (case_insensitive) (unqualified)) (scalar_type boolean)) (id c (case_insensitive) (unqualified)))",
+        /* (is, >=)                     */ "a is boolean >= c" to "(gte (is_type (id a (case_insensitive) (unqualified)) (scalar_type boolean)) (id c (case_insensitive) (unqualified)))",
+        /* (is, between)                */ "a is boolean between w and c" to "(between (is_type (id a (case_insensitive) (unqualified)) (scalar_type boolean)) (id w (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified)))",
+        /* (is, not_between)            */ "a is boolean not between y and c" to "(not (between (is_type (id a (case_insensitive) (unqualified)) (scalar_type boolean)) (id y (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
+        /* (is, like)                   */ "a is boolean like c" to "(like (is_type (id a (case_insensitive) (unqualified)) (scalar_type boolean)) (id c (case_insensitive) (unqualified)) null)",
+        /* (is, not_like)               */ "a is boolean not like c" to "(not (like (is_type (id a (case_insensitive) (unqualified)) (scalar_type boolean)) (id c (case_insensitive) (unqualified)) null))",
+        /* (is, +)                      */ "a is boolean + c" to "(plus (is_type (id a (case_insensitive) (unqualified)) (scalar_type boolean)) (id c (case_insensitive) (unqualified)))",
+        /* (is, -)                      */ "a is boolean - c" to "(minus (is_type (id a (case_insensitive) (unqualified)) (scalar_type boolean)) (id c (case_insensitive) (unqualified)))",
+        /* (is, ||)                     */ "a is boolean || c" to "(concat (is_type (id a (case_insensitive) (unqualified)) (scalar_type boolean)) (id c (case_insensitive) (unqualified)))",
+        /* (is, *)                      */ "a is boolean * c" to "(times (is_type (id a (case_insensitive) (unqualified)) (scalar_type boolean)) (id c (case_insensitive) (unqualified)))",
+        /* (is, /)                      */ "a is boolean / c" to "(divide (is_type (id a (case_insensitive) (unqualified)) (scalar_type boolean)) (id c (case_insensitive) (unqualified)))",
+        /* (is, %)                      */ "a is boolean % c" to "(modulo (is_type (id a (case_insensitive) (unqualified)) (scalar_type boolean)) (id c (case_insensitive) (unqualified)))",
+        /* (is, is_not)                 */ "a is boolean is not boolean" to "(not (is_type (is_type (id a (case_insensitive) (unqualified)) (scalar_type boolean)) (scalar_type boolean)))"
     )
 
     @Test
@@ -401,32 +401,32 @@ class SqlParserPrecedenceTest : SqlParserTestBase() {
     @TestCaseName("{0}")
     fun isNotPrecedence(pair: Pair<String, String>) = runTest(pair)
     fun parametersForIsNotPrecedence() = listOf(
-        /* (not (is, intersect)          */ "a is not boolean intersect c" to "(bag_op (intersect) (distinct) (not (is_type (id a (case_insensitive) (unqualified)) (boolean_type))) (id c (case_insensitive) (unqualified)))",
-        /* (not (is, intersect_all)      */ "a is not boolean intersect all c" to "(bag_op (intersect) (all) (not (is_type (id a (case_insensitive) (unqualified)) (boolean_type))) (id c (case_insensitive) (unqualified)))",
-        /* (not (is, except)             */ "a is not boolean except c" to "(bag_op (except) (distinct) (not (is_type (id a (case_insensitive) (unqualified)) (boolean_type))) (id c (case_insensitive) (unqualified)))",
-        /* (not (is, union)              */ "a is not boolean union c" to "(bag_op (union) (distinct) (not (is_type (id a (case_insensitive) (unqualified)) (boolean_type))) (id c (case_insensitive) (unqualified)))",
-        /* (not (is, union_all)          */ "a is not boolean union all c" to "(bag_op (union) (all) (not (is_type (id a (case_insensitive) (unqualified)) (boolean_type))) (id c (case_insensitive) (unqualified)))",
-        /* (not (is, or)                 */ "a is not boolean or c" to "(or (not (is_type (id a (case_insensitive) (unqualified)) (boolean_type))) (id c (case_insensitive) (unqualified)))",
-        /* (not (is, and)                */ "a is not boolean and c" to "(and (not (is_type (id a (case_insensitive) (unqualified)) (boolean_type))) (id c (case_insensitive) (unqualified)))",
-        /* (not (is, =)                  */ "a is not boolean = c" to "(eq (not (is_type (id a (case_insensitive) (unqualified)) (boolean_type))) (id c (case_insensitive) (unqualified)))",
-        /* (not (is, <>)                 */ "a is not boolean <> c" to "(ne (not (is_type (id a (case_insensitive) (unqualified)) (boolean_type))) (id c (case_insensitive) (unqualified)))",
-        /* (not (is, in)                 */ "a is not boolean in c" to "(in_collection (not (is_type (id a (case_insensitive) (unqualified)) (boolean_type))) (id c (case_insensitive) (unqualified)))",
-        /* (not (is, not_in)             */ "a is not boolean not in c" to "(not (in_collection (not (is_type (id a (case_insensitive) (unqualified)) (boolean_type))) (id c (case_insensitive) (unqualified))))",
-        /* (not (is, <)                  */ "a is not boolean < c" to "(lt (not (is_type (id a (case_insensitive) (unqualified)) (boolean_type))) (id c (case_insensitive) (unqualified)))",
-        /* (not (is, <=)                 */ "a is not boolean <= c" to "(lte (not (is_type (id a (case_insensitive) (unqualified)) (boolean_type))) (id c (case_insensitive) (unqualified)))",
-        /* (not (is, >)                  */ "a is not boolean > c" to "(gt (not (is_type (id a (case_insensitive) (unqualified)) (boolean_type))) (id c (case_insensitive) (unqualified)))",
-        /* (not (is, >=)                 */ "a is not boolean >= c" to "(gte (not (is_type (id a (case_insensitive) (unqualified)) (boolean_type))) (id c (case_insensitive) (unqualified)))",
-        /* (not (is, between)            */ "a is not boolean between w and c" to "(between (not (is_type (id a (case_insensitive) (unqualified)) (boolean_type))) (id w (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified)))",
-        /* (not (is, not_between)        */ "a is not boolean not between y and c" to "(not (between (not (is_type (id a (case_insensitive) (unqualified)) (boolean_type))) (id y (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
-        /* (not (is, like)               */ "a is not boolean like c" to "(like (not (is_type (id a (case_insensitive) (unqualified)) (boolean_type))) (id c (case_insensitive) (unqualified)) null)",
-        /* (not (is, not_like)           */ "a is not boolean not like c" to "(not (like (not (is_type (id a (case_insensitive) (unqualified)) (boolean_type))) (id c (case_insensitive) (unqualified)) null))",
-        /* (not (is, +)                  */ "a is not boolean + c" to "(plus (not (is_type (id a (case_insensitive) (unqualified)) (boolean_type))) (id c (case_insensitive) (unqualified)))",
-        /* (not (is, -)                  */ "a is not boolean - c" to "(minus (not (is_type (id a (case_insensitive) (unqualified)) (boolean_type))) (id c (case_insensitive) (unqualified)))",
-        /* (not (is, ||)                 */ "a is not boolean || c" to "(concat (not (is_type (id a (case_insensitive) (unqualified)) (boolean_type))) (id c (case_insensitive) (unqualified)))",
-        /* (not (is, *)                  */ "a is not boolean * c" to "(times (not (is_type (id a (case_insensitive) (unqualified)) (boolean_type))) (id c (case_insensitive) (unqualified)))",
-        /* (not (is, /)                  */ "a is not boolean / c" to "(divide (not (is_type (id a (case_insensitive) (unqualified)) (boolean_type))) (id c (case_insensitive) (unqualified)))",
-        /* (not (is, %)                  */ "a is not boolean % c" to "(modulo (not (is_type (id a (case_insensitive) (unqualified)) (boolean_type))) (id c (case_insensitive) (unqualified)))",
-        /* (not (is, is)                 */ "a is not boolean is boolean" to "(is_type (not (is_type (id a (case_insensitive) (unqualified)) (boolean_type))) (boolean_type))"
+        /* (not (is, intersect)          */ "a is not boolean intersect c" to "(bag_op (intersect) (distinct) (not (is_type (id a (case_insensitive) (unqualified)) (scalar_type boolean))) (id c (case_insensitive) (unqualified)))",
+        /* (not (is, intersect_all)      */ "a is not boolean intersect all c" to "(bag_op (intersect) (all) (not (is_type (id a (case_insensitive) (unqualified)) (scalar_type boolean))) (id c (case_insensitive) (unqualified)))",
+        /* (not (is, except)             */ "a is not boolean except c" to "(bag_op (except) (distinct) (not (is_type (id a (case_insensitive) (unqualified)) (scalar_type boolean))) (id c (case_insensitive) (unqualified)))",
+        /* (not (is, union)              */ "a is not boolean union c" to "(bag_op (union) (distinct) (not (is_type (id a (case_insensitive) (unqualified)) (scalar_type boolean))) (id c (case_insensitive) (unqualified)))",
+        /* (not (is, union_all)          */ "a is not boolean union all c" to "(bag_op (union) (all) (not (is_type (id a (case_insensitive) (unqualified)) (scalar_type boolean))) (id c (case_insensitive) (unqualified)))",
+        /* (not (is, or)                 */ "a is not boolean or c" to "(or (not (is_type (id a (case_insensitive) (unqualified)) (scalar_type boolean))) (id c (case_insensitive) (unqualified)))",
+        /* (not (is, and)                */ "a is not boolean and c" to "(and (not (is_type (id a (case_insensitive) (unqualified)) (scalar_type boolean))) (id c (case_insensitive) (unqualified)))",
+        /* (not (is, =)                  */ "a is not boolean = c" to "(eq (not (is_type (id a (case_insensitive) (unqualified)) (scalar_type boolean))) (id c (case_insensitive) (unqualified)))",
+        /* (not (is, <>)                 */ "a is not boolean <> c" to "(ne (not (is_type (id a (case_insensitive) (unqualified)) (scalar_type boolean))) (id c (case_insensitive) (unqualified)))",
+        /* (not (is, in)                 */ "a is not boolean in c" to "(in_collection (not (is_type (id a (case_insensitive) (unqualified)) (scalar_type boolean))) (id c (case_insensitive) (unqualified)))",
+        /* (not (is, not_in)             */ "a is not boolean not in c" to "(not (in_collection (not (is_type (id a (case_insensitive) (unqualified)) (scalar_type boolean))) (id c (case_insensitive) (unqualified))))",
+        /* (not (is, <)                  */ "a is not boolean < c" to "(lt (not (is_type (id a (case_insensitive) (unqualified)) (scalar_type boolean))) (id c (case_insensitive) (unqualified)))",
+        /* (not (is, <=)                 */ "a is not boolean <= c" to "(lte (not (is_type (id a (case_insensitive) (unqualified)) (scalar_type boolean))) (id c (case_insensitive) (unqualified)))",
+        /* (not (is, >)                  */ "a is not boolean > c" to "(gt (not (is_type (id a (case_insensitive) (unqualified)) (scalar_type boolean))) (id c (case_insensitive) (unqualified)))",
+        /* (not (is, >=)                 */ "a is not boolean >= c" to "(gte (not (is_type (id a (case_insensitive) (unqualified)) (scalar_type boolean))) (id c (case_insensitive) (unqualified)))",
+        /* (not (is, between)            */ "a is not boolean between w and c" to "(between (not (is_type (id a (case_insensitive) (unqualified)) (scalar_type boolean))) (id w (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified)))",
+        /* (not (is, not_between)        */ "a is not boolean not between y and c" to "(not (between (not (is_type (id a (case_insensitive) (unqualified)) (scalar_type boolean))) (id y (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
+        /* (not (is, like)               */ "a is not boolean like c" to "(like (not (is_type (id a (case_insensitive) (unqualified)) (scalar_type boolean))) (id c (case_insensitive) (unqualified)) null)",
+        /* (not (is, not_like)           */ "a is not boolean not like c" to "(not (like (not (is_type (id a (case_insensitive) (unqualified)) (scalar_type boolean))) (id c (case_insensitive) (unqualified)) null))",
+        /* (not (is, +)                  */ "a is not boolean + c" to "(plus (not (is_type (id a (case_insensitive) (unqualified)) (scalar_type boolean))) (id c (case_insensitive) (unqualified)))",
+        /* (not (is, -)                  */ "a is not boolean - c" to "(minus (not (is_type (id a (case_insensitive) (unqualified)) (scalar_type boolean))) (id c (case_insensitive) (unqualified)))",
+        /* (not (is, ||)                 */ "a is not boolean || c" to "(concat (not (is_type (id a (case_insensitive) (unqualified)) (scalar_type boolean))) (id c (case_insensitive) (unqualified)))",
+        /* (not (is, *)                  */ "a is not boolean * c" to "(times (not (is_type (id a (case_insensitive) (unqualified)) (scalar_type boolean))) (id c (case_insensitive) (unqualified)))",
+        /* (not (is, /)                  */ "a is not boolean / c" to "(divide (not (is_type (id a (case_insensitive) (unqualified)) (scalar_type boolean))) (id c (case_insensitive) (unqualified)))",
+        /* (not (is, %)                  */ "a is not boolean % c" to "(modulo (not (is_type (id a (case_insensitive) (unqualified)) (scalar_type boolean))) (id c (case_insensitive) (unqualified)))",
+        /* (not (is, is)                 */ "a is not boolean is boolean" to "(is_type (not (is_type (id a (case_insensitive) (unqualified)) (scalar_type boolean))) (scalar_type boolean))"
     )
 
     @Test
@@ -459,8 +459,8 @@ class SqlParserPrecedenceTest : SqlParserTestBase() {
         /* (in, *)                      */ "a in b * c" to "(in_collection (id a (case_insensitive) (unqualified)) (times (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
         /* (in, /)                      */ "a in b / c" to "(in_collection (id a (case_insensitive) (unqualified)) (divide (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
         /* (in, %)                      */ "a in b % c" to "(in_collection (id a (case_insensitive) (unqualified)) (modulo (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
-        /* (in, is)                     */ "a in b is boolean" to "(is_type (in_collection (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (boolean_type))",
-        /* (in, is_not)                 */ "a in b is not boolean" to "(not (is_type (in_collection (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (boolean_type)))"
+        /* (in, is)                     */ "a in b is boolean" to "(is_type (in_collection (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (scalar_type boolean))",
+        /* (in, is_not)                 */ "a in b is not boolean" to "(not (is_type (in_collection (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (scalar_type boolean)))"
     )
 
     @Test
@@ -493,8 +493,8 @@ class SqlParserPrecedenceTest : SqlParserTestBase() {
         /* (not (in, *)                  */ "a not in b * c" to "(not (in_collection (id a (case_insensitive) (unqualified)) (times (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified)))))",
         /* (not (in, /)                  */ "a not in b / c" to "(not (in_collection (id a (case_insensitive) (unqualified)) (divide (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified)))))",
         /* (not (in, %)                  */ "a not in b % c" to "(not (in_collection (id a (case_insensitive) (unqualified)) (modulo (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified)))))",
-        /* (not (in, is)                 */ "a not in b is boolean" to "(is_type (not (in_collection (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))) (boolean_type))",
-        /* (not (in, is_not)             */ "a not in b is not boolean" to "(not (is_type (not (in_collection (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))) (boolean_type)))"
+        /* (not (in, is)                 */ "a not in b is boolean" to "(is_type (not (in_collection (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))) (scalar_type boolean))",
+        /* (not (in, is_not)             */ "a not in b is not boolean" to "(not (is_type (not (in_collection (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))) (scalar_type boolean)))"
     )
 
     @Test
@@ -527,8 +527,8 @@ class SqlParserPrecedenceTest : SqlParserTestBase() {
         /* (<, *)                       */ "a < b * c" to "(lt (id a (case_insensitive) (unqualified)) (times (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
         /* (<, /)                       */ "a < b / c" to "(lt (id a (case_insensitive) (unqualified)) (divide (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
         /* (<, %)                       */ "a < b % c" to "(lt (id a (case_insensitive) (unqualified)) (modulo (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
-        /* (<, is)                      */ "a < b is boolean" to "(is_type (lt (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (boolean_type))",
-        /* (<, is_not)                  */ "a < b is not boolean" to "(not (is_type (lt (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (boolean_type)))"
+        /* (<, is)                      */ "a < b is boolean" to "(is_type (lt (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (scalar_type boolean))",
+        /* (<, is_not)                  */ "a < b is not boolean" to "(not (is_type (lt (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (scalar_type boolean)))"
     )
 
     @Test
@@ -561,8 +561,8 @@ class SqlParserPrecedenceTest : SqlParserTestBase() {
         /* (<=, *)                      */ "a <= b * c" to "(lte (id a (case_insensitive) (unqualified)) (times (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
         /* (<=, /)                      */ "a <= b / c" to "(lte (id a (case_insensitive) (unqualified)) (divide (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
         /* (<=, %)                      */ "a <= b % c" to "(lte (id a (case_insensitive) (unqualified)) (modulo (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
-        /* (<=, is)                     */ "a <= b is boolean" to "(is_type (lte (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (boolean_type))",
-        /* (<=, is_not)                 */ "a <= b is not boolean" to "(not (is_type (lte (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (boolean_type)))"
+        /* (<=, is)                     */ "a <= b is boolean" to "(is_type (lte (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (scalar_type boolean))",
+        /* (<=, is_not)                 */ "a <= b is not boolean" to "(not (is_type (lte (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (scalar_type boolean)))"
     )
 
     @Test
@@ -595,8 +595,8 @@ class SqlParserPrecedenceTest : SqlParserTestBase() {
         /* (>, *)                       */ "a > b * c" to "(gt (id a (case_insensitive) (unqualified)) (times (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
         /* (>, /)                       */ "a > b / c" to "(gt (id a (case_insensitive) (unqualified)) (divide (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
         /* (>, %)                       */ "a > b % c" to "(gt (id a (case_insensitive) (unqualified)) (modulo (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
-        /* (>, is)                      */ "a > b is boolean" to "(is_type (gt (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (boolean_type))",
-        /* (>, is_not)                  */ "a > b is not boolean" to "(not (is_type (gt (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (boolean_type)))"
+        /* (>, is)                      */ "a > b is boolean" to "(is_type (gt (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (scalar_type boolean))",
+        /* (>, is_not)                  */ "a > b is not boolean" to "(not (is_type (gt (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (scalar_type boolean)))"
     )
 
     @Test
@@ -629,8 +629,8 @@ class SqlParserPrecedenceTest : SqlParserTestBase() {
         /* (>=, *)                      */ "a >= b * c" to "(gte (id a (case_insensitive) (unqualified)) (times (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
         /* (>=, /)                      */ "a >= b / c" to "(gte (id a (case_insensitive) (unqualified)) (divide (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
         /* (>=, %)                      */ "a >= b % c" to "(gte (id a (case_insensitive) (unqualified)) (modulo (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
-        /* (>=, is)                     */ "a >= b is boolean" to "(is_type (gte (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (boolean_type))",
-        /* (>=, is_not)                 */ "a >= b is not boolean" to "(not (is_type (gte (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (boolean_type)))"
+        /* (>=, is)                     */ "a >= b is boolean" to "(is_type (gte (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (scalar_type boolean))",
+        /* (>=, is_not)                 */ "a >= b is not boolean" to "(not (is_type (gte (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (scalar_type boolean)))"
     )
 
     @Test
@@ -663,8 +663,8 @@ class SqlParserPrecedenceTest : SqlParserTestBase() {
         /* (between, *)                 */ "a between w and b * c" to "(between (id a (case_insensitive) (unqualified)) (id w (case_insensitive) (unqualified))  (times (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
         /* (between, /)                 */ "a between w and b / c" to "(between (id a (case_insensitive) (unqualified)) (id w (case_insensitive) (unqualified))  (divide (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
         /* (between, %)                 */ "a between w and b % c" to "(between (id a (case_insensitive) (unqualified)) (id w (case_insensitive) (unqualified))  (modulo (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
-        /* (between, is)                */ "a between w and b is boolean" to "(is_type (between (id a (case_insensitive) (unqualified)) (id w (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (boolean_type))",
-        /* (between, is_not)            */ "a between w and b is not boolean" to "(not (is_type (between (id a (case_insensitive) (unqualified)) (id w (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (boolean_type)))"
+        /* (between, is)                */ "a between w and b is boolean" to "(is_type (between (id a (case_insensitive) (unqualified)) (id w (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (scalar_type boolean))",
+        /* (between, is_not)            */ "a between w and b is not boolean" to "(not (is_type (between (id a (case_insensitive) (unqualified)) (id w (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (scalar_type boolean)))"
     )
 
     @Test
@@ -697,8 +697,8 @@ class SqlParserPrecedenceTest : SqlParserTestBase() {
         /* (not (between, *)             */ "a not between y and b * c" to "(not (between (id a (case_insensitive) (unqualified)) (id y (case_insensitive) (unqualified)) (times (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified)))))",
         /* (not (between, /)             */ "a not between y and b / c" to "(not (between (id a (case_insensitive) (unqualified)) (id y (case_insensitive) (unqualified)) (divide (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified)))))",
         /* (not (between, %)             */ "a not between y and b % c" to "(not (between (id a (case_insensitive) (unqualified)) (id y (case_insensitive) (unqualified)) (modulo (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified)))))",
-        /* (not (between, is)            */ "a not between y and b is boolean" to "(is_type (not (between (id a (case_insensitive) (unqualified)) (id y (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))) (boolean_type))",
-        /* (not (between, is_not)        */ "a not between y and b is not boolean" to "(not (is_type (not (between (id a (case_insensitive) (unqualified)) (id y (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))) (boolean_type)))"
+        /* (not (between, is)            */ "a not between y and b is boolean" to "(is_type (not (between (id a (case_insensitive) (unqualified)) (id y (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))) (scalar_type boolean))",
+        /* (not (between, is_not)        */ "a not between y and b is not boolean" to "(not (is_type (not (between (id a (case_insensitive) (unqualified)) (id y (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))) (scalar_type boolean)))"
     )
 
     @Test
@@ -731,8 +731,8 @@ class SqlParserPrecedenceTest : SqlParserTestBase() {
         /* (like, *)                    */ "a like b * c" to "(like (id a (case_insensitive) (unqualified)) (times (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))) null)",
         /* (like, /)                    */ "a like b / c" to "(like (id a (case_insensitive) (unqualified)) (divide (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))) null)",
         /* (like, %)                    */ "a like b % c" to "(like (id a (case_insensitive) (unqualified)) (modulo (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))) null)",
-        /* (like, is)                   */ "a like b is boolean" to "(is_type (like (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)) null) (boolean_type))",
-        /* (like, is_not)               */ "a like b is not boolean" to "(not (is_type (like (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)) null) (boolean_type)))"
+        /* (like, is)                   */ "a like b is boolean" to "(is_type (like (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)) null) (scalar_type boolean))",
+        /* (like, is_not)               */ "a like b is not boolean" to "(not (is_type (like (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)) null) (scalar_type boolean)))"
     )
 
     @Test
@@ -765,8 +765,8 @@ class SqlParserPrecedenceTest : SqlParserTestBase() {
         /* (not (like, *)                */ "a not like b * c" to "(not (like (id a (case_insensitive) (unqualified)) (times (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))) null))",
         /* (not (like, /)                */ "a not like b / c" to "(not (like (id a (case_insensitive) (unqualified)) (divide (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))) null))",
         /* (not (like, %)                */ "a not like b % c" to "(not (like (id a (case_insensitive) (unqualified)) (modulo (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))) null))",
-        /* (not (like, is)               */ "a not like b is boolean" to "(is_type (not (like (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)) null)) (boolean_type))",
-        /* (not (like, is_not)           */ "a not like b is not boolean" to "(not (is_type (not (like (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)) null)) (boolean_type)))"
+        /* (not (like, is)               */ "a not like b is boolean" to "(is_type (not (like (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)) null)) (scalar_type boolean))",
+        /* (not (like, is_not)           */ "a not like b is not boolean" to "(not (is_type (not (like (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)) null)) (scalar_type boolean)))"
     )
 
     @Test
@@ -799,8 +799,8 @@ class SqlParserPrecedenceTest : SqlParserTestBase() {
         /* (+, *)                       */ "a + b * c" to "(plus (id a (case_insensitive) (unqualified)) (times (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
         /* (+, /)                       */ "a + b / c" to "(plus (id a (case_insensitive) (unqualified)) (divide (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
         /* (+, %)                       */ "a + b % c" to "(plus (id a (case_insensitive) (unqualified)) (modulo (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
-        /* (+, is)                      */ "a + b is boolean" to "(is_type (plus (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (boolean_type))",
-        /* (+, is_not)                  */ "a + b is not boolean" to "(not (is_type (plus (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (boolean_type)))"
+        /* (+, is)                      */ "a + b is boolean" to "(is_type (plus (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (scalar_type boolean))",
+        /* (+, is_not)                  */ "a + b is not boolean" to "(not (is_type (plus (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (scalar_type boolean)))"
     )
 
     @Test
@@ -833,8 +833,8 @@ class SqlParserPrecedenceTest : SqlParserTestBase() {
         /* (-, *)                       */ "a - b * c" to "(minus (id a (case_insensitive) (unqualified)) (times (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
         /* (-, /)                       */ "a - b / c" to "(minus (id a (case_insensitive) (unqualified)) (divide (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
         /* (-, %)                       */ "a - b % c" to "(minus (id a (case_insensitive) (unqualified)) (modulo (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
-        /* (-, is)                      */ "a - b is boolean" to "(is_type (minus (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (boolean_type))",
-        /* (-, is_not)                  */ "a - b is not boolean" to "(not (is_type (minus (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (boolean_type)))"
+        /* (-, is)                      */ "a - b is boolean" to "(is_type (minus (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (scalar_type boolean))",
+        /* (-, is_not)                  */ "a - b is not boolean" to "(not (is_type (minus (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (scalar_type boolean)))"
     )
 
     @Test
@@ -867,8 +867,8 @@ class SqlParserPrecedenceTest : SqlParserTestBase() {
         /* (||, *)                      */ "a || b * c" to "(concat (id a (case_insensitive) (unqualified)) (times (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
         /* (||, /)                      */ "a || b / c" to "(concat (id a (case_insensitive) (unqualified)) (divide (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
         /* (||, %)                      */ "a || b % c" to "(concat (id a (case_insensitive) (unqualified)) (modulo (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
-        /* (||, is)                     */ "a || b is boolean" to "(is_type (concat (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (boolean_type))",
-        /* (||, is_not)                 */ "a || b is not boolean" to "(not (is_type (concat (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (boolean_type)))"
+        /* (||, is)                     */ "a || b is boolean" to "(is_type (concat (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (scalar_type boolean))",
+        /* (||, is_not)                 */ "a || b is not boolean" to "(not (is_type (concat (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (scalar_type boolean)))"
     )
 
     @Test
@@ -901,8 +901,8 @@ class SqlParserPrecedenceTest : SqlParserTestBase() {
         /* (*, ||)                      */ "a * b || c" to "(concat (times (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (id c (case_insensitive) (unqualified)))",
         /* (*, /)                       */ "a * b / c" to "(divide (times (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (id c (case_insensitive) (unqualified)))",
         /* (*, %)                       */ "a * b % c" to "(modulo (times (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (id c (case_insensitive) (unqualified)))",
-        /* (*, is)                      */ "a * b is boolean" to "(is_type (times (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (boolean_type))",
-        /* (*, is_not)                  */ "a * b is not boolean" to "(not (is_type (times (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (boolean_type)))"
+        /* (*, is)                      */ "a * b is boolean" to "(is_type (times (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (scalar_type boolean))",
+        /* (*, is_not)                  */ "a * b is not boolean" to "(not (is_type (times (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (scalar_type boolean)))"
     )
 
     @Test
@@ -935,8 +935,8 @@ class SqlParserPrecedenceTest : SqlParserTestBase() {
         /* (/, ||)                      */ "a / b || c" to "(concat (divide (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (id c (case_insensitive) (unqualified)))",
         /* (/, *)                       */ "a / b * c" to "(times (divide (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (id c (case_insensitive) (unqualified)))",
         /* (/, %)                       */ "a / b % c" to "(modulo (divide (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (id c (case_insensitive) (unqualified)))",
-        /* (/, is)                      */ "a / b is boolean" to "(is_type (divide (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (boolean_type))",
-        /* (/, is_not)                  */ "a / b is not boolean" to "(not (is_type (divide (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (boolean_type)))"
+        /* (/, is)                      */ "a / b is boolean" to "(is_type (divide (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (scalar_type boolean))",
+        /* (/, is_not)                  */ "a / b is not boolean" to "(not (is_type (divide (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (scalar_type boolean)))"
     )
 
     @Test
@@ -969,8 +969,8 @@ class SqlParserPrecedenceTest : SqlParserTestBase() {
         /* (%, ||)                      */ "a % b || c" to "(concat (modulo (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (id c (case_insensitive) (unqualified)))",
         /* (%, *)                       */ "a % b * c" to "(times (modulo (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (id c (case_insensitive) (unqualified)))",
         /* (%, /)                       */ "a % b / c" to "(divide (modulo (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (id c (case_insensitive) (unqualified)))",
-        /* (%, is)                      */ "a % b is boolean" to "(is_type (modulo (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (boolean_type))",
-        /* (%, is_not)                  */ "a % b is not boolean" to "(not (is_type (modulo (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (boolean_type)))"
+        /* (%, is)                      */ "a % b is boolean" to "(is_type (modulo (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (scalar_type boolean))",
+        /* (%, is_not)                  */ "a % b is not boolean" to "(not (is_type (modulo (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (scalar_type boolean)))"
     )
 
     @Test
@@ -1025,8 +1025,8 @@ class SqlParserPrecedenceTest : SqlParserTestBase() {
         /* (not, *)             */ "not a * b" to "(not (times (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))))",
         /* (not, /)             */ "not a / b" to "(not (divide (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))))",
         /* (not, %)             */ "not a % b" to "(not (modulo (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))))",
-        /* (not, is)            */ "not a is boolean" to "(not (is_type (id a (case_insensitive) (unqualified)) (boolean_type)))",
-        /* (not, is_not)        */ "not a is not boolean" to "(not (not (is_type (id a (case_insensitive) (unqualified)) (boolean_type))))"
+        /* (not, is)            */ "not a is boolean" to "(not (is_type (id a (case_insensitive) (unqualified)) (scalar_type boolean)))",
+        /* (not, is_not)        */ "not a is not boolean" to "(not (not (is_type (id a (case_insensitive) (unqualified)) (scalar_type boolean))))"
     )
 
     @Test
