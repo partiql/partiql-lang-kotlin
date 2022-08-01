@@ -11,7 +11,7 @@ make it easier to understand differences between `partiql-lang-kotlin` major ver
 * unified the change format (new features, breaking changes - behavioral and API, deprecated items, misc/bug fixes)
 * cleaned up some release note items (summarized sequences of related commits, omitted commits related to tests and 
 build-related changes)
-* separated CLI/REPL changes to a separate section
+* moved CLI/REPL changes to a separate section
 * found other breaking changes from the compatibility reports between versions using the [japi-compliance-checker](https://github.com/lvc/japi-compliance-checker)
 
 The repo, [test-partiql-version-migration](https://github.com/alancai98/test-partiql-version-migration), hosts all the 
