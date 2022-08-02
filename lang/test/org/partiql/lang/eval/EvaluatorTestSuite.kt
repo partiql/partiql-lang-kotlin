@@ -1398,4 +1398,38 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
             "$partiql_bag::[[1968, 4, 3, 12, 31, 59]]"
         )
     }
+    group("arithmetic with mixed type") {
+        test(
+            "plus with mixed StaticType",
+            """
+            SELECT VALUE v + 1
+            FROM numbers as v
+            """,
+            "$partiql_bag::[2, 3.0, 4e0, 5, 6.]"
+        )
+        test(
+            "minus with mixed StaticType",
+            """
+            SELECT VALUE v - 1
+            FROM numbers as v
+            """,
+            "$partiql_bag::[0, 1.0, 2e0, 3, 4.]"
+        )
+        test(
+            "multiplication with mixed StaticType",
+            """
+            SELECT VALUE v * 2
+            FROM numbers as v
+            """,
+            "$partiql_bag::[2, 4.0, 6e0, 8, 10.]"
+        )
+        test(
+            "division with mixed StaticType",
+            """
+            SELECT VALUE v / 2
+            FROM numbers as v
+            """,
+            "$partiql_bag::[0, 1.0, 1.5e0, 2, 2.5]"
+        )
+    }
 }

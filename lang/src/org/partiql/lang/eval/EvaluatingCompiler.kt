@@ -548,26 +548,52 @@ internal class EvaluatingCompiler(
                         }
                     }
                     TypingMode.PERMISSIVE -> {
+                        // if null, then StaticTypes contains one or more Int Type.
+                        val nonIntType = staticTypes.filterNot {
+                            it is IntType
+                        }.ifEmpty { null }
                         val biggestIntegerType = staticTypes.filterIsInstance<IntType>().maxBy {
                             it.rangeConstraint.numBytes
                         }
-                        when (biggestIntegerType) {
-                            is IntType -> {
-                                val validator = integerValueValidator(biggestIntegerType.rangeConstraint.validRange)
-
+                        val validateResult = { validator: ((ExprValue) -> Boolean)?, naryResult: ExprValue ->
+                            errorSignaler.errorIf(
+                                !validator?.let { it(naryResult) }!!,
+                                ErrorCode.EVALUATOR_INTEGER_OVERFLOW,
+                                { ErrorDetails(metas, "Integer overflow", errorContextFrom(metas)) },
+                                { naryResult }
+                            )
+                        }
+                        when (nonIntType) {
+                            // only intType exists
+                            null -> {
+                                // biggestIntegerType can not be null in this case
+                                val validator = integerValueValidator(biggestIntegerType!!.rangeConstraint.validRange)
                                 thunkFactory.thunkEnv(metas) { env ->
                                     val naryResult = computeThunk(env)
-                                    errorSignaler.errorIf(
-                                        !validator(naryResult),
-                                        ErrorCode.EVALUATOR_INTEGER_OVERFLOW,
-                                        { ErrorDetails(metas, "Integer overflow", errorContextFrom(metas)) },
-                                        { naryResult }
-                                    )
+                                    validateResult(validator, naryResult)
                                 }
                             }
-                            // If there is no IntType StaticType, can't validate the integer size either.
-                            null -> computeThunk
-                            else -> computeThunk
+                            // mix types, or only non intType
+                            else ->
+                                when (biggestIntegerType) {
+                                    // if mixed type, validate if naryResult is Int
+                                    // warning: intermediate result can potentially cause overflow. i.e., (MAX_INT2 + MAX_INT2) / 2.0
+                                    is IntType -> {
+                                        val validator = integerValueValidator(biggestIntegerType.rangeConstraint.validRange)
+                                        thunkFactory.thunkEnv(metas) { env ->
+                                            val naryResult = computeThunk(env)
+                                            when (naryResult.type) {
+                                                ExprValueType.INT -> {
+                                                    validateResult(validator, naryResult)
+                                                }
+                                                else -> naryResult
+                                            }
+                                        }
+                                    }
+                                    // If only non-IntType StaticType, can't validate the integer size either.
+                                    null -> computeThunk
+                                    else -> computeThunk
+                                }
                         }
                     }
                 }
