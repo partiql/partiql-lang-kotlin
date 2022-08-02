@@ -15,10 +15,12 @@
 package org.partiql.lang.visitors
 
 import com.amazon.ion.IonSystem
+import com.amazon.ionelement.api.ionInt
 import com.amazon.ionelement.api.ionSymbol
 import com.amazon.ionelement.api.toIonElement
 import org.antlr.v4.runtime.ParserRuleContext
 import org.antlr.v4.runtime.Token
+import org.partiql.lang.ast.IsCountStarMeta
 import org.partiql.lang.ast.IsImplictJoinMeta
 import org.partiql.lang.ast.LegacyLogicalNotMeta
 import org.partiql.lang.domains.PartiqlAst
@@ -358,6 +360,16 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
                 else -> throw org.partiql.lang.syntax.PartiQLParser.ParseErrorListener.ParseException("Unknown sequence")
             }
         }
+    }
+
+    override fun visitAggregateBase(ctx: PartiQLParser.AggregateBaseContext): PartiqlAst.Expr.CallAgg {
+        val strategy = getStrategy(ctx.setQuantifierStrategy(), default = PartiqlAst.SetQuantifier.All())
+        val arg = visitExprQuery(ctx.exprQuery())
+        return PartiqlAst.build { callAgg(strategy, ctx.func.text.toLowerCase(), arg) }
+    }
+
+    override fun visitCountAll(ctx: PartiQLParser.CountAllContext) = PartiqlAst.build {
+        callAgg(all(), ctx.func.text.toLowerCase(), lit(ionInt(1)), metaContainerOf(IsCountStarMeta.instance))
     }
 
     override fun visitExtract(ctx: PartiQLParser.ExtractContext): PartiqlAst.Expr.Call {
@@ -786,10 +798,19 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
     private fun String.toPartiQLIdentifier(): String = this.trim('"').replace("\"\"", "\"")
     private fun String.toIonString(): String = this.trim('`')
 
+    private fun getStrategy(strategy: PartiQLParser.SetQuantifierStrategyContext?, default: PartiqlAst.SetQuantifier): PartiqlAst.SetQuantifier {
+        return when {
+            strategy == null -> default
+            strategy.DISTINCT() != null -> PartiqlAst.SetQuantifier.Distinct()
+            strategy.ALL() != null -> PartiqlAst.SetQuantifier.All()
+            else -> default
+        }
+    }
+
     private fun getStrategy(strategy: PartiQLParser.SetQuantifierStrategyContext?): PartiqlAst.SetQuantifier? {
         return when {
             strategy == null -> null
-            strategy.text.toUpperCase() == "DISTINCT" -> PartiqlAst.SetQuantifier.Distinct()
+            strategy.DISTINCT() != null -> PartiqlAst.SetQuantifier.Distinct()
             else -> null
         }
     }

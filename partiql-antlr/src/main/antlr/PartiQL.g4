@@ -108,6 +108,7 @@ exprPrimary
     | canLosslessCast            # ExprPrimaryBase
     | extract                    # ExprPrimaryBase
     | dateFunction               # ExprPrimaryBase
+    | aggregate                  # ExprPrimaryBase
     | trimFunction               # ExprPrimaryBase
     | functionCall               # ExprPrimaryBase
     | exprPrimary pathStep+      # ExprPrimaryPath
@@ -121,6 +122,11 @@ substring
     : SUBSTRING PAREN_LEFT exprQuery ( COMMA exprQuery ( COMMA exprQuery )? )? PAREN_RIGHT                                                      
     | SUBSTRING PAREN_LEFT exprQuery ( FROM exprQuery ( FOR exprQuery )? )? PAREN_RIGHT
     ;
+aggregate
+    : func=COUNT PAREN_LEFT ASTERISK PAREN_RIGHT                                         # CountAll
+    | func=(COUNT|MAX|MIN|SUM|AVG) PAREN_LEFT setQuantifierStrategy? exprQuery PAREN_RIGHT   # AggregateBase
+    ;
+
 cast: CAST PAREN_LEFT exprQuery AS type PAREN_RIGHT ;
 canLosslessCast: CAN_LOSSLESS_CAST PAREN_LEFT exprQuery AS type PAREN_RIGHT ;
 canCast: CAN_CAST PAREN_LEFT exprQuery AS type PAREN_RIGHT ;
