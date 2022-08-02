@@ -113,6 +113,7 @@ exprPrimary
     | functionCall               # ExprPrimaryBase
     | exprPrimary pathStep+      # ExprPrimaryPath
     | caseExpr                   # ExprPrimaryBase
+    | valueList                  # ExprPrimaryBase
     | values                     # ExprPrimaryBase
     | exprTerm                   # ExprPrimaryBase
     ;
@@ -123,7 +124,7 @@ substring
     | SUBSTRING PAREN_LEFT exprQuery ( FROM exprQuery ( FOR exprQuery )? )? PAREN_RIGHT
     ;
 aggregate
-    : func=COUNT PAREN_LEFT ASTERISK PAREN_RIGHT                                         # CountAll
+    : func=COUNT PAREN_LEFT ASTERISK PAREN_RIGHT                                             # CountAll
     | func=(COUNT|MAX|MIN|SUM|AVG) PAREN_LEFT setQuantifierStrategy? exprQuery PAREN_RIGHT   # AggregateBase
     ;
 
@@ -299,6 +300,8 @@ fromClause: FROM tableReference ;
     
 values: VALUES valueRow ( COMMA valueRow )* ;
 valueRow: PAREN_LEFT exprQuery ( COMMA exprQuery )* PAREN_RIGHT ;
+
+valueList: PAREN_LEFT exprQuery ( COMMA exprQuery )+ PAREN_RIGHT ;
     
 singleQuery
     : exprQuery   # QueryExpr
