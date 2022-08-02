@@ -18,12 +18,12 @@ sfwQuery
 selectClause
     : SELECT setQuantifierStrategy? ASTERISK          # SelectAll
     | SELECT setQuantifierStrategy? projectionItems   # SelectItems
-    | SELECT setQuantifierStrategy? VALUE exprQuery   # SelectValue
-    | PIVOT pivot=exprQuery AT at=exprQuery           # SelectPivot
+    | SELECT setQuantifierStrategy? VALUE expr        # SelectValue
+    | PIVOT pivot=expr AT at=expr                     # SelectPivot
     ;
     
 letClause: LET letBindings;
-letBinding: exprQuery AS symbolPrimitive ;
+letBinding: expr AS symbolPrimitive ;
 letBindings: letBinding ( COMMA letBinding )* ;
     
 setQuantifierStrategy
@@ -33,7 +33,7 @@ setQuantifierStrategy
     
 // TODO: Check comma
 projectionItems: projectionItem ( COMMA projectionItem )* ;
-projectionItem: exprQuery ( AS? symbolPrimitive )? ;
+projectionItem: expr ( AS? symbolPrimitive )? ;
     
 // TODO: Add other identifiers?
 symbolPrimitive
@@ -61,8 +61,8 @@ asIdent: AS symbolPrimitive ;
 atIdent: AT symbolPrimitive ;
 byIdent: BY symbolPrimitive ;
 tableBaseReference
-    : exprQuery symbolPrimitive             # TableBaseRefSymbol
-    | exprQuery asIdent? atIdent? byIdent?  # TableBaseRefClauses
+    : expr symbolPrimitive             # TableBaseRefSymbol
+    | expr asIdent? atIdent? byIdent?  # TableBaseRefClauses
     ;
     
 // TODO: Check that all uses use a table_reference before token
@@ -72,7 +72,7 @@ tableJoined
     | PAREN_LEFT tableJoined PAREN_RIGHT  # NestedTableJoined
     ;
     
-tableUnpivot: UNPIVOT exprQuery asIdent? atIdent? byIdent? ;
+tableUnpivot: UNPIVOT expr asIdent? atIdent? byIdent? ;
     
 // TODO: Check that all uses use a table_reference before token
 tableCrossJoin: tableReference joinType? CROSS JOIN joinRhs ;
@@ -89,7 +89,7 @@ joinRhs
     ;
     
 joinSpec
-    : ON exprQuery   # JoinSpecOn
+    : ON expr   # JoinSpecOn
     ;
 
 joinType
@@ -118,25 +118,25 @@ exprPrimary
     | exprTerm                   # ExprPrimaryBase
     ;
     
-sequenceConstructor: datatype=(LIST|SEXP) PAREN_LEFT (exprQuery ( COMMA exprQuery )* )? PAREN_RIGHT;
+sequenceConstructor: datatype=(LIST|SEXP) PAREN_LEFT (expr ( COMMA expr )* )? PAREN_RIGHT;
 substring
-    : SUBSTRING PAREN_LEFT exprQuery ( COMMA exprQuery ( COMMA exprQuery )? )? PAREN_RIGHT                                                      
-    | SUBSTRING PAREN_LEFT exprQuery ( FROM exprQuery ( FOR exprQuery )? )? PAREN_RIGHT
+    : SUBSTRING PAREN_LEFT expr ( COMMA expr ( COMMA expr )? )? PAREN_RIGHT                                                      
+    | SUBSTRING PAREN_LEFT expr ( FROM expr ( FOR expr )? )? PAREN_RIGHT
     ;
 aggregate
     : func=COUNT PAREN_LEFT ASTERISK PAREN_RIGHT                                             # CountAll
-    | func=(COUNT|MAX|MIN|SUM|AVG) PAREN_LEFT setQuantifierStrategy? exprQuery PAREN_RIGHT   # AggregateBase
+    | func=(COUNT|MAX|MIN|SUM|AVG) PAREN_LEFT setQuantifierStrategy? expr PAREN_RIGHT   # AggregateBase
     ;
 
-cast: CAST PAREN_LEFT exprQuery AS type PAREN_RIGHT ;
-canLosslessCast: CAN_LOSSLESS_CAST PAREN_LEFT exprQuery AS type PAREN_RIGHT ;
-canCast: CAN_CAST PAREN_LEFT exprQuery AS type PAREN_RIGHT ;
-extract: EXTRACT PAREN_LEFT IDENTIFIER FROM rhs=exprQuery PAREN_RIGHT ;
-trimFunction: func=TRIM PAREN_LEFT ( mod=IDENTIFIER? sub=exprQuery? FROM )? target=exprQuery PAREN_RIGHT ;
-dateFunction: func=(DATE_ADD|DATE_DIFF) PAREN_LEFT dt=IDENTIFIER COMMA exprQuery COMMA exprQuery PAREN_RIGHT ;
-functionCall: name=symbolPrimitive PAREN_LEFT ( exprQuery ( COMMA exprQuery )* )? PAREN_RIGHT ;
+cast: CAST PAREN_LEFT expr AS type PAREN_RIGHT ;
+canLosslessCast: CAN_LOSSLESS_CAST PAREN_LEFT expr AS type PAREN_RIGHT ;
+canCast: CAN_CAST PAREN_LEFT expr AS type PAREN_RIGHT ;
+extract: EXTRACT PAREN_LEFT IDENTIFIER FROM rhs=expr PAREN_RIGHT ;
+trimFunction: func=TRIM PAREN_LEFT ( mod=IDENTIFIER? sub=expr? FROM )? target=expr PAREN_RIGHT ;
+dateFunction: func=(DATE_ADD|DATE_DIFF) PAREN_LEFT dt=IDENTIFIER COMMA expr COMMA expr PAREN_RIGHT ;
+functionCall: name=symbolPrimitive PAREN_LEFT ( expr ( COMMA expr )* )? PAREN_RIGHT ;
 pathStep
-    : BRACKET_LEFT key=exprQuery BRACKET_RIGHT   # PathStepIndexExpr
+    : BRACKET_LEFT key=expr BRACKET_RIGHT   # PathStepIndexExpr
     | BRACKET_LEFT all=ASTERISK BRACKET_RIGHT    # PathStepIndexAll
     | PERIOD key=varRefExpr                      # PathStepDotExpr
     | PERIOD all=ASTERISK                        # PathStepDotAll
@@ -216,10 +216,10 @@ parameter: QUESTION_MARK ;
 
 exprTermCollection: array | exprTermBag ;
     
-array: BRACKET_LEFT ( exprQuery ( COMMA exprQuery )* )? BRACKET_RIGHT ;
-exprTermBag: ANGLE_DOUBLE_LEFT ( exprQuery ( COMMA exprQuery )* )? ANGLE_DOUBLE_RIGHT ;
+array: BRACKET_LEFT ( expr ( COMMA expr )* )? BRACKET_RIGHT ;
+exprTermBag: ANGLE_DOUBLE_LEFT ( expr ( COMMA expr )* )? ANGLE_DOUBLE_RIGHT ;
 exprTermTuple: BRACE_LEFT ( exprPair ( COMMA exprPair )* )? BRACE_RIGHT ;
-exprPair: lhs=exprQuery COLON rhs=exprQuery ;
+exprPair: lhs=expr COLON rhs=expr ;
 
 varRefExpr
     : IDENTIFIER              # VarRefExprIdentUnquoted
@@ -228,39 +228,37 @@ varRefExpr
     | IDENTIFIER_AT_QUOTED    # VarRefExprIdentAtQuoted
     ;
     
-exprQuery : booleanExpr ;
-    
 /**
  * PRECEDENCE RULES:
  * With the nature of PartiQL's AST, there are some oddities requiring the precedence to be set as f
  */
 
-booleanExpr
-    : exprQueryOr
+expr
+    : exprOr
     ;
 
-exprQueryOr
-    : lhs=exprQueryOr op=OR rhs=exprQueryOr
-    | parent=exprQueryAnd
+exprOr
+    : lhs=exprOr op=OR rhs=exprOr
+    | parent=exprAnd
     ;
 
-exprQueryAnd
-    : lhs=exprQueryAnd op=AND rhs=exprQueryAnd
-    | parent=exprQueryNot
+exprAnd
+    : lhs=exprAnd op=AND rhs=exprAnd
+    | parent=exprNot
     ;
 
-exprQueryNot
-    : <assoc=right> op=NOT rhs=exprQueryNot
-    | parent=exprQueryPredicate
+exprNot
+    : <assoc=right> op=NOT rhs=exprNot
+    | parent=exprPredicate
     ;
 
-exprQueryPredicate
-    : lhs=exprQueryPredicate op=(LT_EQ|GT_EQ|ANGLE_LEFT|ANGLE_RIGHT|NEQ|EQ) rhs=mathOp00  # PredicateComparison
-    | lhs=exprQueryPredicate IS NOT? type                                                 # PredicateIs
-    | lhs=exprQueryPredicate NOT? IN rhs=mathOp00                                         # PredicateIn
-    | lhs=exprQueryPredicate NOT? LIKE rhs=mathOp00 ( ESCAPE escape=booleanExpr )?        # PredicateLike
-    | lhs=exprQueryPredicate NOT? BETWEEN lower=mathOp00 AND upper=mathOp00               # PredicateBetween
-    | parent=mathOp00                                                                     # PredicateBase
+exprPredicate
+    : lhs=exprPredicate op=(LT_EQ|GT_EQ|ANGLE_LEFT|ANGLE_RIGHT|NEQ|EQ) rhs=mathOp00  # PredicateComparison
+    | lhs=exprPredicate IS NOT? type                                                 # PredicateIs
+    | lhs=exprPredicate NOT? IN rhs=mathOp00                                         # PredicateIn
+    | lhs=exprPredicate NOT? LIKE rhs=mathOp00 ( ESCAPE escape=expr )?               # PredicateLike
+    | lhs=exprPredicate NOT? BETWEEN lower=mathOp00 AND upper=mathOp00               # PredicateBetween
+    | parent=mathOp00                                                                # PredicateBase
     ;
 
 mathOp00
@@ -283,28 +281,28 @@ valueExpr
     | parent=exprPrimary
     ;
 
-caseExpr: CASE case=exprQuery? (WHEN when=exprQuery THEN then=exprQuery)+ (ELSE exprQuery)? END ;
+caseExpr: CASE case=expr? (WHEN when=expr THEN then=expr)+ (ELSE expr)? END ;
     
-whereClause: WHERE exprQuery ;
+whereClause: WHERE expr ;
     
 groupKey
-    : exprQuery                     # GroupKeyAliasNone
-    | exprQuery AS symbolPrimitive  # GroupKeyAlias
+    : expr                     # GroupKeyAliasNone
+    | expr AS symbolPrimitive  # GroupKeyAlias
     ;
     
 // NOTE: Made group_strategy optional
 groupClause: GROUP PARTIAL? BY groupKey ( COMMA groupKey )* groupAlias? ;
 groupAlias: GROUP AS symbolPrimitive ;
-havingClause: HAVING exprQuery ;
+havingClause: HAVING expr ;
 fromClause: FROM tableReference ;
     
 values: VALUES valueRow ( COMMA valueRow )* ;
-valueRow: PAREN_LEFT exprQuery ( COMMA exprQuery )* PAREN_RIGHT ;
+valueRow: PAREN_LEFT expr ( COMMA expr )* PAREN_RIGHT ;
 
-valueList: PAREN_LEFT exprQuery ( COMMA exprQuery )+ PAREN_RIGHT ;
+valueList: PAREN_LEFT expr ( COMMA expr )+ PAREN_RIGHT ;
     
 singleQuery
-    : exprQuery   # QueryExpr
+    : expr        # QueryExpr
     | sfwQuery    # QuerySfw
     ;
     
@@ -318,7 +316,7 @@ querySet
     
 query: querySet ;
 
-offsetByClause: OFFSET exprQuery ;
+offsetByClause: OFFSET expr ;
     
 // TODO Check expansion
 orderByClause
@@ -326,7 +324,7 @@ orderByClause
     ;
     
 orderSortSpec
-    : exprQuery bySpec? byNullSpec?      # OrderBySortSpec
+    : expr bySpec? byNullSpec?      # OrderBySortSpec
     ;
     
 bySpec
@@ -340,7 +338,7 @@ byNullSpec
     ;
     
 limitClause
-    : LIMIT exprQuery
+    : LIMIT expr
     ;
     
 // TODO: Need to figure out
