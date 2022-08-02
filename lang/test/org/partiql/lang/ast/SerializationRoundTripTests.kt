@@ -27,7 +27,19 @@ class SerializationRoundTripTests {
             EVALUATOR_TEST_SUITE.getAllTests(
                 failingTestNames = hashSetOf(
                     // CAN_CAST is not supported by V0 and will never be.
-                    "canCastAsFloat1"
+                    "canCastAsFloat1",
+
+                    // OUTER bag operators are not in the legacy AST and should be skipped
+                    "outerUnionDistinct",
+                    "outerUnionAll",
+                    "outerIntersectDistinct",
+                    "outerIntersectAll",
+                    "outerExceptDistinct",
+                    "outerExceptAll",
+                    "outerUnionCoerceScalar",
+                    "outerUnionCoerceStruct",
+                    "outerUnionCoerceNullMissing",
+                    "outerUnionCoerceList"
                 )
             )
                 // we really don't need to test failure cases in this case since the (de)serializers are legacy.
