@@ -58,6 +58,7 @@ import java.time.LocalTime
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
+import java.util.TreeMap
 import java.util.TreeSet
 import kotlin.math.round
 
@@ -683,4 +684,24 @@ internal fun createUniqueExprValueFilter(): (ExprValue) -> Boolean {
     val seen = TreeSet<ExprValue>(DEFAULT_COMPARATOR)
 
     return { exprValue -> seen.add(exprValue) }
+}
+
+fun Sequence<ExprValue>.distinct(): Sequence<ExprValue> {
+    val seen = TreeSet(DEFAULT_COMPARATOR)
+    return sequence {
+        this@distinct.forEach {
+            if (!seen.contains(it)) {
+                seen.add(it.unnamedValue())
+                yield(it)
+            }
+        }
+    }
+}
+
+fun Sequence<ExprValue>.multiplicities(): TreeMap<ExprValue, Int> {
+    val multiplicities: TreeMap<ExprValue, Int> = TreeMap(DEFAULT_COMPARATOR)
+    this.forEach {
+        multiplicities.compute(it) { _, v -> (v ?: 0) + 1 }
+    }
+    return multiplicities
 }
