@@ -488,7 +488,7 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         val args = visitOrEmpty(PartiqlAst.Expr::class, ctx.lhs, ctx.rhs)
         val escape = if (ctx.escape == null) null else visit(ctx.escape) as PartiqlAst.Expr
         var like: PartiqlAst.Expr = PartiqlAst.BUILDER().like(args[0], args[1], escape)
-        return if (ctx.NOT() == null) like else PartiqlAst.build { not(like) }
+        return if (ctx.NOT() == null) like else PartiqlAst.build { not(like, metas = metaContainerOf(LegacyLogicalNotMeta.instance)) }
     }
 
     override fun visitLiteralNull(ctx: PartiQLParser.LiteralNullContext): PartiqlAst.PartiqlAstNode =
