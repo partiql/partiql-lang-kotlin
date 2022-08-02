@@ -207,10 +207,9 @@ exprTerm
     
 parameter: QUESTION_MARK ;
 
-exprTermCollection: exprTermArray | exprTermBag ;
+exprTermCollection: array | exprTermBag ;
     
-// @TODO Check expansion
-exprTermArray: BRACKET_LEFT ( exprQuery ( COMMA exprQuery )* )? BRACKET_RIGHT ;
+array: BRACKET_LEFT ( exprQuery ( COMMA exprQuery )* )? BRACKET_RIGHT ;
 exprTermBag: ANGLE_DOUBLE_LEFT ( exprQuery ( COMMA exprQuery )* )? ANGLE_DOUBLE_RIGHT ;
 exprTermTuple: BRACE_LEFT ( exprPair ( COMMA exprPair )* )? BRACE_RIGHT ;
 exprPair: lhs=exprQuery COLON rhs=exprQuery ;
