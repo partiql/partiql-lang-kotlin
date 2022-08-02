@@ -9,6 +9,9 @@ import org.partiql.lang.types.ClobType
 import org.partiql.lang.types.CollectionType
 import org.partiql.lang.types.DecimalType
 import org.partiql.lang.types.FloatType
+import org.partiql.lang.types.Int2Type
+import org.partiql.lang.types.Int4Type
+import org.partiql.lang.types.Int8Type
 import org.partiql.lang.types.IntType
 import org.partiql.lang.types.MissingType
 import org.partiql.lang.types.NullType
@@ -19,8 +22,10 @@ import org.partiql.lang.types.StructType
 import org.partiql.lang.types.SymbolType
 import org.partiql.lang.types.TimestampType
 
+internal val intTypesPrecedence = listOf(Int2Type::class, Int4Type::class, Int8Type::class, IntType::class)
+
 internal fun StaticType.isNullOrMissing(): Boolean = (this is NullType || this is MissingType)
-internal fun StaticType.isNumeric(): Boolean = (this is IntType || this is FloatType || this is DecimalType)
+internal fun StaticType.isNumeric(): Boolean = (this::class in intTypesPrecedence || this is FloatType || this is DecimalType)
 internal fun StaticType.isText(): Boolean = (this is SymbolType || this is StringType)
 internal fun StaticType.isLob(): Boolean = (this is BlobType || this is ClobType)
 internal fun StaticType.isUnknown(): Boolean = (this.isNullOrMissing() || this == StaticType.NULL_OR_MISSING)
@@ -89,33 +94,42 @@ internal fun StaticType.cast(targetType: StaticType): StaticType {
                 is BoolType -> when {
                     this is BoolType || this.isNumeric() || this.isText() -> return targetType
                 }
+                is Int2Type,
+                is Int4Type,
+                is Int8Type,
                 is IntType -> when {
                     this is BoolType -> return targetType
-                    this is IntType -> {
-                        return when (targetType.rangeConstraint) {
-                            IntType.IntRangeConstraint.SHORT -> when (this.rangeConstraint) {
-                                IntType.IntRangeConstraint.SHORT -> targetType
-                                IntType.IntRangeConstraint.INT4, IntType.IntRangeConstraint.LONG, IntType.IntRangeConstraint.UNCONSTRAINED -> StaticType.unionOf(StaticType.MISSING, targetType)
+                    this is Int2Type || this is Int4Type || this is Int8Type || this is IntType -> {
+                        when (targetType) {
+                            is Int2Type -> when (this) {
+                                is Int2Type -> return targetType
+                                is Int4Type,
+                                is Int8Type,
+                                is IntType -> return StaticType.unionOf(StaticType.MISSING, targetType)
                             }
-                            IntType.IntRangeConstraint.INT4 -> when (this.rangeConstraint) {
-                                IntType.IntRangeConstraint.SHORT, IntType.IntRangeConstraint.INT4 -> targetType
-                                IntType.IntRangeConstraint.LONG, IntType.IntRangeConstraint.UNCONSTRAINED -> StaticType.unionOf(StaticType.MISSING, targetType)
+                            is Int4Type -> when (this) {
+                                is Int2Type,
+                                is Int4Type -> return targetType
+                                is Int8Type,
+                                is IntType -> return StaticType.unionOf(StaticType.MISSING, targetType)
                             }
-                            IntType.IntRangeConstraint.LONG -> when (this.rangeConstraint) {
-                                IntType.IntRangeConstraint.SHORT, IntType.IntRangeConstraint.INT4, IntType.IntRangeConstraint.LONG -> targetType
-                                IntType.IntRangeConstraint.UNCONSTRAINED -> StaticType.unionOf(StaticType.MISSING, targetType)
+                            is Int8Type -> when (this) {
+                                is Int2Type,
+                                is Int4Type,
+                                is Int8Type -> return targetType
+                                is IntType -> return StaticType.unionOf(StaticType.MISSING, targetType)
                             }
-                            IntType.IntRangeConstraint.UNCONSTRAINED -> targetType
+                            is IntType -> return targetType
                         }
                     }
-                    this is FloatType -> return when (targetType.rangeConstraint) {
-                        IntType.IntRangeConstraint.UNCONSTRAINED -> targetType
+                    this is FloatType -> return when (targetType) {
+                        is IntType -> targetType
                         else -> StaticType.unionOf(StaticType.MISSING, targetType)
                     }
 
-                    this is DecimalType -> return when (targetType.rangeConstraint) {
-                        IntType.IntRangeConstraint.UNCONSTRAINED -> targetType
-                        IntType.IntRangeConstraint.SHORT, IntType.IntRangeConstraint.INT4, IntType.IntRangeConstraint.LONG ->
+                    this is DecimalType -> return when (targetType) {
+                        is IntType -> targetType
+                        is Int2Type, is Int4Type, is Int8Type ->
                             return when (this.precisionScaleConstraint) {
                                 DecimalType.PrecisionScaleConstraint.Unconstrained -> StaticType.unionOf(StaticType.MISSING, targetType)
                                 is DecimalType.PrecisionScaleConstraint.Constrained -> {
@@ -126,20 +140,22 @@ internal fun StaticType.cast(targetType: StaticType): StaticType {
                                     //   Max value of INT4 is 2,147,483,647
                                     //   Max value of BIGINT is 9,223,372,036,854,775,807 for BIGINT
                                     // TODO: Move these magic numbers out.
-                                    val maxDigitsWithoutPrecisionLoss = when (targetType.rangeConstraint) {
-                                        IntType.IntRangeConstraint.SHORT -> 4
-                                        IntType.IntRangeConstraint.INT4 -> 9
-                                        IntType.IntRangeConstraint.LONG -> 18
-                                        IntType.IntRangeConstraint.UNCONSTRAINED -> error("Un-constrained is handled above. This code shouldn't be reached.")
+                                    val maxDigitsWithoutPrecisionLoss = when (targetType) {
+                                        is Int2Type -> 4
+                                        is Int4Type -> 9
+                                        is Int8Type -> 18
+                                        is IntType -> error("Un-constrained is handled above. This code shouldn't be reached.")
+                                        else -> ("Unreachable code")
                                     }
 
-                                    if (this.maxDigits() > maxDigitsWithoutPrecisionLoss) {
+                                    if (this.maxDigits() > maxDigitsWithoutPrecisionLoss as Int) {
                                         StaticType.unionOf(StaticType.MISSING, targetType)
                                     } else {
                                         targetType
                                     }
                                 }
                             }
+                        else -> error("Unreachable code")
                     }
                     this.isText() -> return StaticType.unionOf(targetType, StaticType.MISSING)
                 }
@@ -157,11 +173,11 @@ internal fun StaticType.cast(targetType: StaticType): StaticType {
                             StaticType.unionOf(targetType, StaticType.MISSING)
                         }
                     }
-                    this is IntType -> return when (targetType.precisionScaleConstraint) {
+                    this is Int2Type || this is Int4Type || this is Int8Type || this is IntType -> return when (targetType.precisionScaleConstraint) {
                         DecimalType.PrecisionScaleConstraint.Unconstrained -> targetType
-                        is DecimalType.PrecisionScaleConstraint.Constrained -> when (this.rangeConstraint) {
-                            IntType.IntRangeConstraint.UNCONSTRAINED -> StaticType.unionOf(StaticType.MISSING, targetType)
-                            IntType.IntRangeConstraint.SHORT ->
+                        is DecimalType.PrecisionScaleConstraint.Constrained -> when (this) {
+                            is IntType -> StaticType.unionOf(StaticType.MISSING, targetType)
+                            is Int2Type ->
                                 // TODO: Move the magic numbers out
                                 // max smallint value 32,767, so the decimal needs to be able to hold at least 5 digits
                                 if (targetType.maxDigits() >= 5) {
@@ -169,20 +185,21 @@ internal fun StaticType.cast(targetType: StaticType): StaticType {
                                 } else {
                                     StaticType.unionOf(StaticType.MISSING, targetType)
                                 }
-                            IntType.IntRangeConstraint.INT4 ->
+                            is Int4Type ->
                                 // max int4 value 2,147,483,647 so the decimal needs to be able to hold at least 10 digits
                                 if (targetType.maxDigits() >= 10) {
                                     targetType
                                 } else {
                                     StaticType.unionOf(StaticType.MISSING, targetType)
                                 }
-                            IntType.IntRangeConstraint.LONG ->
+                            is Int8Type ->
                                 // max bigint value 9,223,372,036,854,775,807 so the decimal needs to be able to hold at least 19 digits
                                 if (targetType.maxDigits() >= 19) {
                                     targetType
                                 } else {
                                     StaticType.unionOf(StaticType.MISSING, targetType)
                                 }
+                            else -> error("Unreachable code")
                         }
                     }
 

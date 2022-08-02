@@ -11,6 +11,9 @@ import org.partiql.lang.types.ClobType
 import org.partiql.lang.types.DateType
 import org.partiql.lang.types.DecimalType
 import org.partiql.lang.types.FloatType
+import org.partiql.lang.types.Int2Type
+import org.partiql.lang.types.Int4Type
+import org.partiql.lang.types.Int8Type
 import org.partiql.lang.types.IntType
 import org.partiql.lang.types.ListType
 import org.partiql.lang.types.MissingType
@@ -40,6 +43,9 @@ data class Argument(
 
 private fun SingleType.getExample() = when (this) {
     is BoolType -> "TRUE"
+    is Int2Type,
+    is Int4Type,
+    is Int8Type,
     is IntType -> "0"
     is FloatType -> "`0e0`"
     is DecimalType -> "0."

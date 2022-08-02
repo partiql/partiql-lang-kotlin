@@ -54,6 +54,9 @@ import org.partiql.lang.syntax.SqlParser
 import org.partiql.lang.types.AnyOfType
 import org.partiql.lang.types.AnyType
 import org.partiql.lang.types.FunctionSignature
+import org.partiql.lang.types.Int2Type
+import org.partiql.lang.types.Int4Type
+import org.partiql.lang.types.Int8Type
 import org.partiql.lang.types.IntType
 import org.partiql.lang.types.SingleType
 import org.partiql.lang.types.StaticType
@@ -540,7 +543,7 @@ internal class EvaluatingCompiler(
                         // throw an exception in case we encounter this untested scenario. This might work fine, but I
                         // wouldn't bet on it.
                         val hasConstrainedInteger = staticTypes.any {
-                            it is IntType && it.rangeConstraint != IntType.IntRangeConstraint.UNCONSTRAINED
+                            it is Int2Type || it is Int4Type || it is Int8Type
                         }
                         if (hasConstrainedInteger) {
                             TODO("Legacy mode doesn't support integer size constraints yet.")
@@ -549,13 +552,16 @@ internal class EvaluatingCompiler(
                         }
                     }
                     TypingMode.PERMISSIVE -> {
-                        val biggestIntegerType = staticTypes.filterIsInstance<IntType>().maxBy {
-                            it.rangeConstraint.numBytes
+                        val validRange: LongRange? = when {
+                            staticTypes.any { it is IntType } -> IntType.validRange
+                            staticTypes.any { it is Int8Type } -> Int8Type.validRange
+                            staticTypes.any { it is Int4Type } -> Int4Type.validRange
+                            staticTypes.any { it is Int2Type } -> Int2Type.validRange
+                            else -> null
                         }
-                        when (biggestIntegerType) {
-                            is IntType -> {
-                                val validator = integerValueValidator(biggestIntegerType.rangeConstraint.validRange)
-
+                        when {
+                            validRange != null -> {
+                                val validator = integerValueValidator(validRange)
                                 thunkFactory.thunkEnv(metas) { env ->
                                     val naryResult = computeThunk(env)
                                     errorSignaler.errorIf(
@@ -566,8 +572,6 @@ internal class EvaluatingCompiler(
                                     )
                                 }
                             }
-                            // If there is no IntType StaticType, can't validate the integer size either.
-                            null -> computeThunk
                             else -> computeThunk
                         }
                     }

@@ -8,10 +8,14 @@ import org.partiql.lang.types.AnyOfType
 import org.partiql.lang.types.AnyType
 import org.partiql.lang.types.BagType
 import org.partiql.lang.types.DecimalType
+import org.partiql.lang.types.Int2Type
+import org.partiql.lang.types.Int4Type
+import org.partiql.lang.types.Int8Type
 import org.partiql.lang.types.IntType
 import org.partiql.lang.types.ListType
 import org.partiql.lang.types.NumberConstraint
 import org.partiql.lang.types.SexpType
+import org.partiql.lang.types.SingleType
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.types.StringType
 import org.partiql.lang.types.StructType
@@ -100,7 +104,7 @@ class StaticTypeMapper(schema: IonSchemaModel.Schema) {
         // Create StaticType based on core ISL type
         return when (coreType) {
             is StringType -> StringType(getStringLengthConstraint(), metas)
-            is IntType -> IntType(getIntRangeConstraint(), metas)
+            is IntType -> getIntType(metas)
             is DecimalType -> DecimalType(getPrecisionScaleConstraint(), metas)
             is ListType -> ListType(getElement(currentTopLevelTypeName), metas)
             is SexpType -> SexpType(getElement(currentTopLevelTypeName), metas)
@@ -198,9 +202,9 @@ class StaticTypeMapper(schema: IonSchemaModel.Schema) {
             else -> constraint.toStringLengthConstraint()
         }
 
-    private fun IonSchemaModel.TypeDefinition.getIntRangeConstraint(): IntType.IntRangeConstraint =
+    private fun IonSchemaModel.TypeDefinition.getIntType(metas: Map<String, List<IonSchemaModel.TypeDefinition>>): SingleType =
         when (val spec = constraints.getConstraint(IonSchemaModel.Constraint.ValidValues::class)?.spec) {
-            null -> IntType.IntRangeConstraint.UNCONSTRAINED
+            null -> IntType(metas)
             is IonSchemaModel.ValidValuesSpec.OneOfValidValues -> error("One of valid values constraint is not supported for integers")
             is IonSchemaModel.ValidValuesSpec.RangeOfValidValues -> when (val range = spec.range) {
                 is IonSchemaModel.ValuesRange.NumRange -> {
@@ -218,9 +222,9 @@ class StaticTypeMapper(schema: IonSchemaModel.Schema) {
                     }
 
                     when {
-                        min == Short.MIN_VALUE.toLong() && max == Short.MAX_VALUE.toLong() -> IntType.IntRangeConstraint.SHORT
-                        min == Int.MIN_VALUE.toLong() && max == Int.MAX_VALUE.toLong() -> IntType.IntRangeConstraint.INT4
-                        min == Long.MIN_VALUE && max == Long.MAX_VALUE -> IntType.IntRangeConstraint.LONG
+                        min == Short.MIN_VALUE.toLong() && max == Short.MAX_VALUE.toLong() -> Int2Type(metas)
+                        min == Int.MIN_VALUE.toLong() && max == Int.MAX_VALUE.toLong() -> Int4Type(metas)
+                        min == Long.MIN_VALUE && max == Long.MAX_VALUE -> Int8Type(metas)
                         else -> error("Invalid range for integers $min-$max")
                     }
                 }

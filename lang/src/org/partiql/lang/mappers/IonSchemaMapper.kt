@@ -12,6 +12,9 @@ import org.partiql.lang.types.ClobType
 import org.partiql.lang.types.DateType
 import org.partiql.lang.types.DecimalType
 import org.partiql.lang.types.FloatType
+import org.partiql.lang.types.Int2Type
+import org.partiql.lang.types.Int4Type
+import org.partiql.lang.types.Int8Type
 import org.partiql.lang.types.IntType
 import org.partiql.lang.types.ListType
 import org.partiql.lang.types.MissingType
@@ -273,10 +276,19 @@ class IonSchemaMapper(private val staticType: StaticType) {
                     }
                 }
             )
+            is Int2Type,
+            is Int4Type,
+            is Int8Type,
             is IntType -> {
-                when (val constraint = this.rangeConstraint) {
-                    IntType.IntRangeConstraint.UNCONSTRAINED -> emptyList()
+                when (this) {
+                    is IntType -> emptyList()
                     else -> {
+                        val validRange = when (this) {
+                            is Int2Type -> Int2Type.validRange
+                            is Int4Type -> Int4Type.validRange
+                            is Int8Type -> Int8Type.validRange
+                            else -> error("Unreachable code")
+                        }
                         constraintsFromISL = constraintsFromISL.filterNot { it is IonSchemaModel.Constraint.ValidValues }
                         listOf(
                             IonSchemaModel.build {
@@ -284,8 +296,8 @@ class IonSchemaMapper(private val staticType: StaticType) {
                                     rangeOfValidValues(
                                         numRange(
                                             numberRange(
-                                                inclusive(ionInt(constraint.validRange.first)),
-                                                inclusive(ionInt(constraint.validRange.last))
+                                                inclusive(ionInt(validRange.first)),
+                                                inclusive(ionInt(validRange.last))
                                             )
                                         )
                                     )
@@ -521,6 +533,9 @@ private fun StaticType.visit(accumulator: TypeDefMap): TypeDefMap {
  * Note that "missing" and "bag" are not valid ISL 1.0 core types but are added here for completeness
  */
 fun StaticType.getBaseTypeName(): String = when (this) {
+    is Int2Type,
+    is Int4Type,
+    is Int8Type,
     is IntType -> "int"
     is FloatType -> "float"
     is DecimalType -> "decimal"

@@ -32,6 +32,9 @@ import org.partiql.lang.types.ClobType
 import org.partiql.lang.types.DateType
 import org.partiql.lang.types.DecimalType
 import org.partiql.lang.types.FloatType
+import org.partiql.lang.types.Int2Type
+import org.partiql.lang.types.Int4Type
+import org.partiql.lang.types.Int8Type
 import org.partiql.lang.types.IntType
 import org.partiql.lang.types.ListType
 import org.partiql.lang.types.MissingType
@@ -301,17 +304,21 @@ fun ExprValue.cast(
     val longMinDecimal = bigDecimalOf(Long.MIN_VALUE)
 
     fun Number.exprValue(type: SingleType) = when (type) {
+        is Int2Type,
+        is Int4Type,
+        is Int8Type,
         is IntType -> {
             val rangeForType = when (typedOpBehavior) {
                 // Legacy behavior doesn't honor SMALLINT, INT4 constraints
                 TypedOpBehavior.LEGACY -> LongRange(Long.MIN_VALUE, Long.MAX_VALUE)
                 TypedOpBehavior.HONOR_PARAMETERS ->
-                    when (type.rangeConstraint) {
+                    when (type) {
                         // There is not CAST syntax to that can execute this branch today.
-                        IntType.IntRangeConstraint.SHORT -> LongRange(Short.MIN_VALUE.toLong(), Short.MAX_VALUE.toLong())
-                        IntType.IntRangeConstraint.INT4 -> LongRange(Int.MIN_VALUE.toLong(), Int.MAX_VALUE.toLong())
-                        IntType.IntRangeConstraint.LONG, IntType.IntRangeConstraint.UNCONSTRAINED ->
-                            LongRange(Long.MIN_VALUE, Long.MAX_VALUE)
+                        is Int2Type -> LongRange(Short.MIN_VALUE.toLong(), Short.MAX_VALUE.toLong())
+                        is Int4Type -> LongRange(Int.MIN_VALUE.toLong(), Int.MAX_VALUE.toLong())
+                        is Int8Type,
+                        is IntType -> LongRange(Long.MIN_VALUE, Long.MAX_VALUE)
+                        else -> error("Unreachable code")
                     }
             }
 
@@ -415,7 +422,12 @@ fun ExprValue.cast(
         // We further need to check for the time zone and hence we do not short circuit here when the type is TIME.
         type == targetType.runtimeType && type != ExprValueType.TIME -> {
             return when (targetType) {
-                is IntType, is FloatType, is DecimalType -> numberValue().exprValue(targetType)
+                is Int2Type,
+                is Int4Type,
+                is Int8Type,
+                is IntType,
+                is FloatType,
+                is DecimalType -> numberValue().exprValue(targetType)
                 is StringType -> stringValue().exprValue(targetType)
                 else -> this
             }
@@ -433,6 +445,9 @@ fun ExprValue.cast(
                         else -> castFailedErr("can't convert string value to BOOL", internal = false)
                     }
                 }
+                is Int2Type,
+                is Int4Type,
+                is Int8Type,
                 is IntType -> when {
                     type == ExprValueType.BOOL -> return if (booleanValue()) 1L.exprValue(targetType) else 0L.exprValue(targetType)
                     type.isNumber -> return numberValue().exprValue(targetType)

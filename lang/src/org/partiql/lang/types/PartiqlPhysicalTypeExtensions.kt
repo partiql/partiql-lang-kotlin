@@ -11,10 +11,10 @@ fun PartiqlPhysical.Type.toTypedOpParameter(customTypedOpParameters: Map<String,
     is PartiqlPhysical.Type.NullType -> TypedOpParameter(StaticType.NULL)
     is PartiqlPhysical.Type.ScalarType -> when (id.text) {
         BuiltInScalarTypeId.BOOLEAN -> TypedOpParameter(StaticType.BOOL)
-        BuiltInScalarTypeId.SMALLINT -> TypedOpParameter(IntType(IntType.IntRangeConstraint.SHORT))
-        BuiltInScalarTypeId.INTEGER4 -> TypedOpParameter(IntType(IntType.IntRangeConstraint.INT4))
-        BuiltInScalarTypeId.INTEGER8 -> TypedOpParameter(IntType(IntType.IntRangeConstraint.LONG))
-        BuiltInScalarTypeId.INTEGER -> TypedOpParameter(IntType(IntType.IntRangeConstraint.LONG))
+        BuiltInScalarTypeId.SMALLINT -> TypedOpParameter(StaticType.INT2)
+        BuiltInScalarTypeId.INTEGER4 -> TypedOpParameter(StaticType.INT4)
+        BuiltInScalarTypeId.INTEGER8 -> TypedOpParameter(StaticType.INT8)
+        BuiltInScalarTypeId.INTEGER -> TypedOpParameter(StaticType.INT)
         BuiltInScalarTypeId.FLOAT,
         BuiltInScalarTypeId.REAL,
         BuiltInScalarTypeId.DOUBLE_PRECISION -> TypedOpParameter(StaticType.FLOAT)

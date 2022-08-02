@@ -5,7 +5,6 @@ import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.numberValue
 import org.partiql.lang.types.AnyOfType
 import org.partiql.lang.types.CustomType
-import org.partiql.lang.types.IntType
 import org.partiql.lang.types.NumberConstraint
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.types.StringType
@@ -27,7 +26,7 @@ private val booleanParameter = TypedOpParameter(StaticType.BOOL)
 private val stringParameter = TypedOpParameter(StaticType.STRING)
 
 // ES_INT
-val esIntParameter = TypedOpParameter(IntType(IntType.IntRangeConstraint.LONG))
+val esIntParameter = TypedOpParameter(StaticType.INT8)
 
 // ES_FLOAT
 val esFloatParameter = TypedOpParameter(StaticType.FLOAT) {
@@ -65,10 +64,10 @@ val esAny = TypedOpParameter(
 )
 
 // RS_INTEGER
-private val rsIntegerPrecisionParameter = TypedOpParameter(IntType(IntType.IntRangeConstraint.INT4))
+private val rsIntegerPrecisionParameter = TypedOpParameter(StaticType.INT4)
 
 // RS_BIGINT
-private val rsBigintPrecisionParameter = TypedOpParameter(IntType(IntType.IntRangeConstraint.LONG))
+private val rsBigintPrecisionParameter = TypedOpParameter(StaticType.INT8)
 
 // RS_VARCHAR_MAX
 private val rsStringParameter = TypedOpParameter(
@@ -86,13 +85,13 @@ private val rsDoublePrecisionParameter = TypedOpParameter(StaticType.FLOAT) {
 }
 
 // SPARK_SHORT
-private val sparkShortPrecisionParameter = TypedOpParameter(IntType(IntType.IntRangeConstraint.SHORT))
+private val sparkShortPrecisionParameter = TypedOpParameter(StaticType.INT2)
 
 // SPARK_INTEGER
-private val sparkIntegerPrecisionParameter = TypedOpParameter(IntType(IntType.IntRangeConstraint.INT4))
+private val sparkIntegerPrecisionParameter = TypedOpParameter(StaticType.INT4)
 
 // SPARK_LONG
-private val sparkLongPrecisionParameter = TypedOpParameter(IntType(IntType.IntRangeConstraint.LONG))
+private val sparkLongPrecisionParameter = TypedOpParameter(StaticType.INT8)
 
 // SPARK_FLOAT
 private val sparkFloatPrecisionParameter = TypedOpParameter(StaticType.FLOAT) {

@@ -48,10 +48,10 @@ sealed class StaticType {
         @JvmField val ANY: AnyType = AnyType()
         @JvmField val NULL_OR_MISSING: StaticType = unionOf(NULL, MISSING)
         @JvmField val BOOL: BoolType = BoolType()
-        @JvmField val INT2: IntType = IntType(IntType.IntRangeConstraint.SHORT)
-        @JvmField val INT4: IntType = IntType(IntType.IntRangeConstraint.INT4)
-        @JvmField val INT8: IntType = IntType(IntType.IntRangeConstraint.LONG)
-        @JvmField val INT: IntType = IntType(IntType.IntRangeConstraint.UNCONSTRAINED)
+        @JvmField val INT2: Int2Type = Int2Type()
+        @JvmField val INT4: Int4Type = Int4Type()
+        @JvmField val INT8: Int8Type = Int8Type()
+        @JvmField val INT: IntType = IntType()
         @JvmField val FLOAT: FloatType = FloatType()
         @JvmField val DECIMAL: DecimalType = DecimalType()
         @JvmField val NUMERIC: StaticType = unionOf(INT2, INT4, INT8, INT, FLOAT, DECIMAL)
@@ -195,6 +195,9 @@ sealed class StaticType {
             is MissingType -> MissingType
             is BoolType -> copy(metas = metas)
             is IntType -> copy(metas = metas)
+            is Int2Type -> copy(metas = metas)
+            is Int4Type -> copy(metas = metas)
+            is Int8Type -> copy(metas = metas)
             is FloatType -> copy(metas = metas)
             is DecimalType -> copy(metas = metas)
             is TimestampType -> copy(metas = metas)
@@ -375,26 +378,10 @@ data class BoolType(override val metas: Map<String, Any> = mapOf()) : SingleType
     override fun toString(): String = "bool"
 }
 
-data class IntType(
-    val rangeConstraint: IntRangeConstraint = IntRangeConstraint.UNCONSTRAINED,
-    override val metas: Map<String, Any> = mapOf()
-) : SingleType() {
-
-    enum class IntRangeConstraint(val numBytes: Int, val validRange: LongRange) {
-        /** SQL's SMALLINT (2 Bytes) */
-        SHORT(2, Short.MIN_VALUE.toLong()..Short.MAX_VALUE.toLong()),
-
-        /** SQL's INT4 (4 bytes) */
-        INT4(4, Int.MIN_VALUE.toLong()..Int.MAX_VALUE.toLong()),
-
-        /** SQL's BIGINT (8 bytes) */
-        LONG(8, Long.MIN_VALUE..Long.MAX_VALUE),
-
-        /**
-         * An "unconstrained" integer with an implementation-defined constraint that happens to be 8 bytes for this
-         * implementation.
-         */
-        UNCONSTRAINED(8, Long.MIN_VALUE..Long.MAX_VALUE),
+data class Int2Type(override val metas: Map<String, Any> = mapOf()) : SingleType() {
+    companion object {
+        @JvmField
+        val validRange = Short.MIN_VALUE.toLong()..Short.MAX_VALUE.toLong()
     }
 
     override val runtimeType: ExprValueType
@@ -403,11 +390,7 @@ data class IntType(
     override val allTypes: List<StaticType>
         get() = listOf(this)
 
-    override fun toString(): String =
-        when (rangeConstraint) {
-            IntRangeConstraint.UNCONSTRAINED -> "int"
-            else -> "int${rangeConstraint.numBytes}"
-        }
+    override fun toString(): String = "int2"
 
     override fun isInstance(value: ExprValue): Boolean {
         if (value.type != ExprValueType.INT) {
@@ -416,7 +399,85 @@ data class IntType(
 
         val longValue = value.numberValue().toLong()
 
-        return rangeConstraint.validRange.contains(longValue)
+        return validRange.contains(longValue)
+    }
+}
+
+data class Int4Type(override val metas: Map<String, Any> = mapOf()) : SingleType() {
+    companion object {
+        @JvmField
+        val validRange = Int.MIN_VALUE.toLong()..Int.MAX_VALUE.toLong()
+    }
+
+    override val runtimeType: ExprValueType
+        get() = ExprValueType.INT
+
+    override val allTypes: List<StaticType>
+        get() = listOf(this)
+
+    override fun toString(): String = "int4"
+
+    override fun isInstance(value: ExprValue): Boolean {
+        if (value.type != ExprValueType.INT) {
+            return false
+        }
+
+        val longValue = value.numberValue().toLong()
+
+        return validRange.contains(longValue)
+    }
+}
+
+data class Int8Type(override val metas: Map<String, Any> = mapOf()) : SingleType() {
+    companion object {
+        @JvmField
+        val validRange = Long.MIN_VALUE..Long.MAX_VALUE
+    }
+
+    override val runtimeType: ExprValueType
+        get() = ExprValueType.INT
+
+    override val allTypes: List<StaticType>
+        get() = listOf(this)
+
+    override fun toString(): String = "int8"
+
+    override fun isInstance(value: ExprValue): Boolean {
+        if (value.type != ExprValueType.INT) {
+            return false
+        }
+
+        val longValue = value.numberValue().toLong()
+
+        return validRange.contains(longValue)
+    }
+}
+
+data class IntType(override val metas: Map<String, Any> = mapOf()) : SingleType() {
+    companion object {
+        /**
+         * An "unconstrained" integer with an implementation-defined constraint that happens to be 8 bytes for this implementation.
+         */
+        @JvmField
+        val validRange = Long.MIN_VALUE..Long.MAX_VALUE
+    }
+
+    override val runtimeType: ExprValueType
+        get() = ExprValueType.INT
+
+    override val allTypes: List<StaticType>
+        get() = listOf(this)
+
+    override fun toString(): String = "int"
+
+    override fun isInstance(value: ExprValue): Boolean {
+        if (value.type != ExprValueType.INT) {
+            return false
+        }
+
+        val longValue = value.numberValue().toLong()
+
+        return validRange.contains(longValue)
     }
 }
 

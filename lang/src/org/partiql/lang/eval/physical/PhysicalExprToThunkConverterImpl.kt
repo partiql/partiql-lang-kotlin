@@ -84,6 +84,9 @@ import org.partiql.lang.planner.EvaluatorOptions
 import org.partiql.lang.types.AnyOfType
 import org.partiql.lang.types.AnyType
 import org.partiql.lang.types.FunctionSignature
+import org.partiql.lang.types.Int2Type
+import org.partiql.lang.types.Int4Type
+import org.partiql.lang.types.Int8Type
 import org.partiql.lang.types.IntType
 import org.partiql.lang.types.SingleType
 import org.partiql.lang.types.StaticType
@@ -379,7 +382,7 @@ internal class PhysicalExprToThunkConverterImpl(
                         // throw an exception in case we encounter this untested scenario. This might work fine, but I
                         // wouldn't bet on it.
                         val hasConstrainedInteger = staticTypes.any {
-                            it is IntType && it.rangeConstraint != IntType.IntRangeConstraint.UNCONSTRAINED
+                            it is Int2Type || it is Int4Type || it is Int8Type
                         }
                         if (hasConstrainedInteger) {
                             TODO("Legacy mode doesn't support integer size constraints yet.")
@@ -388,13 +391,18 @@ internal class PhysicalExprToThunkConverterImpl(
                         }
                     }
                     TypingMode.PERMISSIVE -> {
-                        val biggestIntegerType = staticTypes.filterIsInstance<IntType>().maxByOrNull {
-                            it.rangeConstraint.numBytes
+                        val validRange: LongRange? = when {
+                            // An "unconstrained" integer with an implementation-defined constraint
+                            // that happens to be 8 bytes for this implementation.
+                            staticTypes.any { it is IntType } -> Long.MIN_VALUE..Long.MAX_VALUE
+                            staticTypes.any { it is Int8Type } -> Long.MIN_VALUE..Long.MAX_VALUE
+                            staticTypes.any { it is Int4Type } -> Int.MIN_VALUE.toLong()..Int.MAX_VALUE.toLong()
+                            staticTypes.any { it is Int2Type } -> Short.MIN_VALUE.toLong()..Short.MAX_VALUE.toLong()
+                            else -> null
                         }
-                        when (biggestIntegerType) {
-                            is IntType -> {
-                                val validator = integerValueValidator(biggestIntegerType.rangeConstraint.validRange)
-
+                        when {
+                            validRange != null -> {
+                                val validator = integerValueValidator(validRange)
                                 thunkFactory.thunkEnv(metas) { env ->
                                     val naryResult = computeThunk(env)
                                     errorSignaler.errorIf(
@@ -405,8 +413,6 @@ internal class PhysicalExprToThunkConverterImpl(
                                     )
                                 }
                             }
-                            // If there is no IntType StaticType, can't validate the integer size either.
-                            null -> computeThunk
                             else -> computeThunk
                         }
                     }

@@ -14,6 +14,7 @@ import org.partiql.lang.ast.passes.SemanticException
 import org.partiql.lang.ast.passes.SemanticProblemDetails
 import org.partiql.lang.ast.passes.inference.cast
 import org.partiql.lang.ast.passes.inference.filterNullMissing
+import org.partiql.lang.ast.passes.inference.intTypesPrecedence
 import org.partiql.lang.ast.passes.inference.isLob
 import org.partiql.lang.ast.passes.inference.isNullOrMissing
 import org.partiql.lang.ast.passes.inference.isNumeric
@@ -41,6 +42,9 @@ import org.partiql.lang.types.CollectionType
 import org.partiql.lang.types.DecimalType
 import org.partiql.lang.types.FloatType
 import org.partiql.lang.types.FunctionSignature
+import org.partiql.lang.types.Int2Type
+import org.partiql.lang.types.Int4Type
+import org.partiql.lang.types.Int8Type
 import org.partiql.lang.types.IntType
 import org.partiql.lang.types.ListType
 import org.partiql.lang.types.MissingType
@@ -562,9 +566,9 @@ internal class StaticTypeInferenceVisitorTransform(
             return if (hasValidOperandTypes(operands, { it.isNumeric() }, op, expr.metas)) {
             val allTypes = argType.allTypes
             val possibleReturnTypes = allTypes.map { st ->
-                when (st) {
-                    is IntType, is FloatType, is DecimalType -> st
-                    is NullType -> StaticType.NULL
+                when {
+                    st.isNumeric() -> st
+                    st is NullType -> StaticType.NULL
                     else -> StaticType.MISSING
                 }
             }.distinct()
@@ -624,21 +628,31 @@ internal class StaticTypeInferenceVisitorTransform(
                 leftType is MissingType || rightType is MissingType -> StaticType.MISSING
                 leftType is NullType || rightType is NullType -> StaticType.NULL
                 else -> when (leftType) {
+                    is Int2Type,
+                    is Int4Type,
+                    is Int8Type,
                     is IntType ->
                         when (rightType) {
-                            is IntType ->
+                            is Int2Type,
+                            is Int4Type,
+                            is Int8Type,
+                            is IntType -> {
+                                val leftPrecedence = intTypesPrecedence.indexOf(leftType::class)
+                                val rightPrecedence = intTypesPrecedence.indexOf(rightType::class)
                                 when {
-                                    leftType.rangeConstraint == IntType.IntRangeConstraint.UNCONSTRAINED -> leftType
-                                    rightType.rangeConstraint == IntType.IntRangeConstraint.UNCONSTRAINED -> rightType
-                                    leftType.rangeConstraint.numBytes > rightType.rangeConstraint.numBytes -> leftType
-                                    else -> rightType
+                                    leftPrecedence > rightPrecedence -> leftType as SingleType
+                                    else -> rightType as SingleType
                                 }
+                            }
                             is FloatType -> StaticType.FLOAT
                             is DecimalType -> StaticType.DECIMAL // TODO:  account for decimal precision
                             else -> StaticType.MISSING
                         }
                     is FloatType ->
                         when (rightType) {
+                            is Int2Type,
+                            is Int4Type,
+                            is Int8Type,
                             is IntType -> StaticType.FLOAT
                             is FloatType -> StaticType.FLOAT
                             is DecimalType -> StaticType.DECIMAL // TODO:  account for decimal precision
@@ -646,6 +660,9 @@ internal class StaticTypeInferenceVisitorTransform(
                         }
                     is DecimalType ->
                         when (rightType) {
+                            is Int2Type,
+                            is Int4Type,
+                            is Int8Type,
                             is IntType -> StaticType.DECIMAL // TODO:  account for decimal precision
                             is FloatType -> StaticType.DECIMAL // TODO:  account for decimal precision
                             is DecimalType -> StaticType.DECIMAL // TODO:  account for decimal precision
@@ -1485,7 +1502,8 @@ internal class StaticTypeInferenceVisitorTransform(
                 is ListType,
                 is SexpType -> {
                     val previous = previousComponentType as CollectionType // help Kotlin's type inference to be more specific
-                    if (currentPathComponent.index.getStaticType() is IntType) {
+                    val staticType = currentPathComponent.index.getStaticType()
+                    if (staticType is Int2Type || staticType is Int4Type || staticType is Int8Type || staticType is IntType) {
                         previous.elementType
                     } else {
                         StaticType.MISSING

@@ -19,6 +19,8 @@ import org.partiql.lang.types.BoolType
 import org.partiql.lang.types.ClobType
 import org.partiql.lang.types.DecimalType
 import org.partiql.lang.types.FloatType
+import org.partiql.lang.types.Int4Type
+import org.partiql.lang.types.Int8Type
 import org.partiql.lang.types.IntType
 import org.partiql.lang.types.ListType
 import org.partiql.lang.types.NumberConstraint
@@ -804,8 +806,7 @@ internal fun listTests() = listOf(
     MapperE2ETestCase(
         "type::{ name: $typeName, type: list, element: {type: int, valid_values: range::[${Int.MIN_VALUE}, ${Int.MAX_VALUE}]} }",
         ListType(
-            IntType(
-                IntType.IntRangeConstraint.INT4,
+            Int4Type(
                 metas = mapOf(
                     ISL_META_KEY to listOf(
                         buildTypeDef(
@@ -833,8 +834,7 @@ internal fun listTests() = listOf(
         "type::{ name: $typeName, type: list, element: {type: nullable::{type: int, valid_values: range::[${Int.MIN_VALUE}, ${Int.MAX_VALUE}]}}}",
         ListType(
             StaticType.unionOf(
-                IntType(
-                    IntType.IntRangeConstraint.INT4,
+                Int4Type(
                     metas = mapOf(
                         ISL_META_KEY to listOf(
                             buildTypeDef(
@@ -1260,8 +1260,7 @@ internal fun sexpTests() = listOf(
     MapperE2ETestCase(
         "type::{ name: $typeName, type: sexp, element: {type: int, valid_values: range::[${Int.MIN_VALUE}, ${Int.MAX_VALUE}]} }",
         SexpType(
-            IntType(
-                IntType.IntRangeConstraint.INT4,
+            Int4Type(
                 metas = mapOf(
                     ISL_META_KEY to listOf(
                         buildTypeDef(
@@ -1289,8 +1288,7 @@ internal fun sexpTests() = listOf(
         "type::{ name: $typeName, type: sexp, element: {type: nullable::{type: int, valid_values: range::[${Int.MIN_VALUE}, ${Int.MAX_VALUE}]}}}",
         SexpType(
             StaticType.unionOf(
-                IntType(
-                    IntType.IntRangeConstraint.INT4,
+                Int4Type(
                     metas = mapOf(
                         ISL_META_KEY to listOf(
                             buildTypeDef(
@@ -1716,8 +1714,7 @@ internal fun bagTests() = listOf(
     MapperE2ETestCase(
         "type::{ name: $typeName, type: bag, element: {type: int, valid_values: range::[${Int.MIN_VALUE}, ${Int.MAX_VALUE}]} }",
         BagType(
-            IntType(
-                IntType.IntRangeConstraint.INT4,
+            Int4Type(
                 metas = mapOf(
                     ISL_META_KEY to listOf(
                         buildTypeDef(
@@ -1745,8 +1742,7 @@ internal fun bagTests() = listOf(
         "type::{ name: $typeName, type: bag, element: {type: nullable::{type: int, valid_values: range::[${Int.MIN_VALUE}, ${Int.MAX_VALUE}]}}}",
         BagType(
             StaticType.unionOf(
-                IntType(
-                    IntType.IntRangeConstraint.INT4,
+                Int4Type(
                     metas = mapOf(
                         ISL_META_KEY to listOf(
                             buildTypeDef(
@@ -2107,8 +2103,7 @@ internal fun structTests() = listOf(
         StructType(
             mapOf(
                 "a" to StaticType.unionOf(
-                    IntType(
-                        IntType.IntRangeConstraint.INT4,
+                    Int4Type(
                         metas = mapOf(
                             ISL_META_KEY to listOf(
                                 buildTypeDef(
@@ -2158,8 +2153,7 @@ internal fun structTests() = listOf(
         "type::{ name: $typeName, type: struct, fields: { a: {type: int, valid_values: range::[${Int.MIN_VALUE}, ${Int.MAX_VALUE}], occurs: required} } }",
         StructType(
             mapOf(
-                "a" to IntType(
-                    IntType.IntRangeConstraint.INT4,
+                "a" to Int4Type(
                     metas = mapOf(
                         ISL_META_KEY to listOf(
                             buildTypeDef(
@@ -2278,8 +2272,7 @@ internal fun structTests() = listOf(
         StructType(
             mapOf(
                 "a" to StaticType.unionOf(
-                    IntType(
-                        IntType.IntRangeConstraint.INT4,
+                    Int4Type(
                         metas = mapOf(
                             ISL_META_KEY to listOf(
                                 buildTypeDef(
@@ -3970,8 +3963,7 @@ internal fun intTests() = listOf(
     MapperE2ETestCase(
         "type::{ name: $typeName, type: nullable::{type: int, valid_values: range::[${Long.MIN_VALUE},${Long.MAX_VALUE}]} }",
         StaticType.unionOf(
-            IntType(
-                IntType.IntRangeConstraint.LONG,
+            Int8Type(
                 metas = mapOf(
                     ISL_META_KEY to listOf(
                         buildTypeDef(
