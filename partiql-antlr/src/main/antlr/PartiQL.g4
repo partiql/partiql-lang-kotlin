@@ -6,15 +6,23 @@ options {
     caseInsensitive = true;
 }
 
-// TODO: Search LATERAL
+/**
+ *
+ * QUERY
+ *
+ */
 
 topQuery: query COLON_SEMI? EOF;
 
 sfwQuery
-    : withClause? selectClause fromClause? letClause? whereClause? groupClause? havingClause? orderByClause? limitClause? offsetByClause? # SelectFromWhere
+    : selectClause fromClause? letClause? whereClause? groupClause? havingClause? orderByClause? limitClause? offsetByClause? # SelectFromWhere
     ;
-    
-// TODO: Use setQuantifierStrategy
+
+/**
+ *
+ * SELECT AND PROJECTION
+ *
+ */
 selectClause
     : SELECT setQuantifierStrategy? ASTERISK          # SelectAll
     | SELECT setQuantifierStrategy? projectionItems   # SelectItems
@@ -22,18 +30,25 @@ selectClause
     | PIVOT pivot=expr AT at=expr                     # SelectPivot
     ;
     
-letClause: LET letBindings;
-letBinding: expr AS symbolPrimitive ;
-letBindings: letBinding ( COMMA letBinding )* ;
-    
+projectionItems
+    : projectionItem ( COMMA projectionItem )* ;
+
+projectionItem
+    : expr ( AS? symbolPrimitive )? ;
+
 setQuantifierStrategy
     : DISTINCT
     | ALL
     ;
+
+/**
+ * LET CLAUSE
+ */
+letClause
+    : LET letBinding ( COMMA letBinding )* ;
     
-// TODO: Check comma
-projectionItems: projectionItem ( COMMA projectionItem )* ;
-projectionItem: expr ( AS? symbolPrimitive )? ;
+letBinding
+    : expr AS symbolPrimitive ;
     
 // TODO: Add other identifiers?
 symbolPrimitive
@@ -42,24 +57,27 @@ symbolPrimitive
     | IDENTIFIER_AT_UNQUOTED  # SymbolIdentifierAtUnquoted
     | IDENTIFIER_AT_QUOTED    # SymbolIdentifierAtQuoted
     ;
+
+/**
+ *
+ * TABLES & JOINS
+ *
+ */
 // TODO: Mental note. Needed to duplicate table_joined to remove left recursion
 tableReference
     : tableReference joinType? CROSS JOIN joinRhs              # TableRefCrossJoin
     | tableReference COMMA joinRhs                             # TableRefCrossJoin
-    | tableReference joinType JOIN LATERAL? joinRhs joinSpec   # TableRefJoin
-    | tableReference NATURAL joinType JOIN LATERAL? joinRhs    # TableRefNaturalJoin
+    | tableReference joinType JOIN joinRhs joinSpec            # TableRefJoin
+    | tableReference NATURAL joinType JOIN joinRhs             # TableRefNaturalJoin
     | PAREN_LEFT tableJoined PAREN_RIGHT                       # TableRefWrappedJoin
     | tableNonJoin                                             # TableRefNonJoin
     ;
+
 tableNonJoin
     : tableBaseReference          # TableNonJoinBaseRef
     | tableUnpivot                # TableNonJoinUnpivot
     ;
-    
-// TODO: Check if this should be a symbol primitive. CLI says that identifiers without @ are allowed
-asIdent: AS symbolPrimitive ;
-atIdent: AT symbolPrimitive ;
-byIdent: BY symbolPrimitive ;
+
 tableBaseReference
     : expr symbolPrimitive             # TableBaseRefSymbol
     | expr asIdent? atIdent? byIdent?  # TableBaseRefClauses
@@ -99,6 +117,11 @@ joinType
     | FULL OUTER?
     | OUTER
     ;
+
+// TODO: Check if this should be a symbol primitive. CLI says that identifiers without @ are allowed
+asIdent: AS symbolPrimitive ;
+atIdent: AT symbolPrimitive ;
+byIdent: BY symbolPrimitive ;
 
 exprPrimary
     : cast                       # ExprPrimaryBase
@@ -339,9 +362,4 @@ byNullSpec
     
 limitClause
     : LIMIT expr
-    ;
-    
-// TODO: Need to figure out
-withClause
-    : CARROT
     ;
