@@ -20,10 +20,14 @@ import com.amazon.ionelement.api.ionSymbol
 import com.amazon.ionelement.api.toIonElement
 import org.antlr.v4.runtime.ParserRuleContext
 import org.antlr.v4.runtime.Token
+import org.antlr.v4.runtime.tree.ErrorNode
+import org.antlr.v4.runtime.tree.RuleNode
+import org.antlr.v4.runtime.tree.TerminalNode
 import org.partiql.lang.ast.IsCountStarMeta
 import org.partiql.lang.ast.IsImplictJoinMeta
 import org.partiql.lang.ast.IsPathIndexMeta
 import org.partiql.lang.ast.LegacyLogicalNotMeta
+import org.partiql.lang.ast.SetQuantifier
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.metaContainerOf
 import org.partiql.lang.eval.EvaluationException
@@ -134,7 +138,7 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         visit(ctx.expr())
 
     override fun visitLetClause(ctx: PartiQLParser.LetClauseContext): PartiqlAst.Let {
-        val letBindings = ctx.letBindings().letBinding().map { binding -> visit(binding) as PartiqlAst.LetBinding }
+        val letBindings = ctx.letBinding().map { binding -> visit(binding) as PartiqlAst.LetBinding }
         return PartiqlAst.BUILDER().let(letBindings)
     }
 
@@ -764,6 +768,38 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
 
     override fun visitArray(ctx: PartiQLParser.ArrayContext) = PartiqlAst.build {
         list(visitOrEmpty(PartiqlAst.Expr::class, ctx.expr()))
+    }
+
+    override fun visitSetQuantifierStrategy(ctx: PartiQLParser.SetQuantifierStrategyContext?): PartiqlAst.SetQuantifier? = when {
+        ctx == null -> null
+        ctx.DISTINCT() != null -> PartiqlAst.SetQuantifier.Distinct()
+        ctx.ALL() != null -> PartiqlAst.SetQuantifier.All()
+        else -> null
+    }
+
+    /**
+     * NOT OVERRIDDEN
+     */
+
+    override fun visitAsIdent(ctx: PartiQLParser.AsIdentContext?): PartiqlAst.PartiqlAstNode = super.visitAsIdent(ctx)
+    override fun visitAtIdent(ctx: PartiQLParser.AtIdentContext?): PartiqlAst.PartiqlAstNode = super.visitAtIdent(ctx)
+    override fun visitByIdent(ctx: PartiQLParser.ByIdentContext?): PartiqlAst.PartiqlAstNode = super.visitByIdent(ctx)
+    override fun visitTerminal(node: TerminalNode?): PartiqlAst.PartiqlAstNode = super.visitTerminal(node)
+    override fun shouldVisitNextChild(node: RuleNode?, currentResult: PartiqlAst.PartiqlAstNode?) = super.shouldVisitNextChild(node, currentResult)
+    override fun visitErrorNode(node: ErrorNode?): PartiqlAst.PartiqlAstNode = super.visitErrorNode(node)
+    override fun visitChildren(node: RuleNode?): PartiqlAst.PartiqlAstNode = super.visitChildren(node)
+    override fun visitQueryExpr(ctx: PartiQLParser.QueryExprContext?): PartiqlAst.PartiqlAstNode = super.visitQueryExpr(ctx)
+    override fun visitExprPrimaryBase(ctx: PartiQLParser.ExprPrimaryBaseContext?): PartiqlAst.PartiqlAstNode = super.visitExprPrimaryBase(ctx)
+    override fun visitExprTermBase(ctx: PartiQLParser.ExprTermBaseContext?): PartiqlAst.PartiqlAstNode = super.visitExprTermBase(ctx)
+    override fun visitExprTermCollection(ctx: PartiQLParser.ExprTermCollectionContext?): PartiqlAst.PartiqlAstNode = super.visitExprTermCollection(ctx)
+    override fun visitPredicateBase(ctx: PartiQLParser.PredicateBaseContext?): PartiqlAst.PartiqlAstNode = super.visitPredicateBase(ctx)
+    override fun visitGroupAlias(ctx: PartiQLParser.GroupAliasContext?): PartiqlAst.PartiqlAstNode = super.visitGroupAlias(ctx)
+    override fun visitSymbolIdentifierAtQuoted(ctx: PartiQLParser.SymbolIdentifierAtQuotedContext?): PartiqlAst.PartiqlAstNode = super.visitSymbolIdentifierAtQuoted(ctx)
+    override fun visitSymbolIdentifierAtUnquoted(ctx: PartiQLParser.SymbolIdentifierAtUnquotedContext?): PartiqlAst.PartiqlAstNode = super.visitSymbolIdentifierAtUnquoted(ctx)
+    override fun visitSymbolIdentifierQuoted(ctx: PartiQLParser.SymbolIdentifierQuotedContext?): PartiqlAst.PartiqlAstNode = super.visitSymbolIdentifierQuoted(ctx)
+    override fun visitSymbolIdentifierUnquoted(ctx: PartiQLParser.SymbolIdentifierUnquotedContext?): PartiqlAst.PartiqlAstNode = super.visitSymbolIdentifierUnquoted(ctx)
+    override fun visitQualifiedNaturalRefJoin(ctx: PartiQLParser.QualifiedNaturalRefJoinContext?): PartiqlAst.PartiqlAstNode {
+        return super.visitQualifiedNaturalRefJoin(ctx)
     }
 
     /**
