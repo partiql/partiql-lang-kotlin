@@ -8,6 +8,17 @@ import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.pig.runtime.DomainNode
 
+/**
+ * Evaluable representation of PartiQL bag operators.
+ *
+ * ```
+ * - [OUTER] UNION     [ALL|DISTINCT]
+ * - [OUTER] INTERSECT [ALL|DISTINCT]
+ * - [OUTER] EXCEPT    [ALL|DISTINCT]
+ * ```
+ *
+ * @see [RFC-0007](https://github.com/partiql/partiql-docs/blob/main/RFCs/0007-rfc-bag-operators.md).
+ */
 fun interface ExprValueBagOp {
     fun eval(lhs: ExprValue, rhs: ExprValue): Sequence<ExprValue> {
         val l = lhs.coerceToBag()
