@@ -22,6 +22,7 @@ import org.antlr.v4.runtime.ParserRuleContext
 import org.antlr.v4.runtime.Token
 import org.partiql.lang.ast.IsCountStarMeta
 import org.partiql.lang.ast.IsImplictJoinMeta
+import org.partiql.lang.ast.IsPathIndexMeta
 import org.partiql.lang.ast.LegacyLogicalNotMeta
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.metaContainerOf
@@ -100,10 +101,11 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         return PartiqlAst.BUILDER().projectList(projections)
     }
 
-    override fun visitProjectionItem(ctx: PartiQLParser.ProjectionItemContext): PartiqlAst.ProjectItem.ProjectExpr {
+    override fun visitProjectionItem(ctx: PartiQLParser.ProjectionItemContext): PartiqlAst.ProjectItem {
         val expr = visit(ctx.exprQuery()) as PartiqlAst.Expr
         val alias = if (ctx.symbolPrimitive() != null) ctx.symbolPrimitive().getString() else null
-        return PartiqlAst.BUILDER().projectExpr(expr, asAlias = alias)
+        return if (expr is PartiqlAst.Expr.Path) convertPathToProjectionItem(expr, alias)
+        else PartiqlAst.build { projectExpr(expr, asAlias = alias) }
     }
 
     override fun visitExprTermTuple(ctx: PartiQLParser.ExprTermTupleContext): PartiqlAst.PartiqlAstNode {
@@ -746,7 +748,7 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
 
     override fun visitPathStepIndexExpr(ctx: PartiQLParser.PathStepIndexExprContext): PartiqlAst.PartiqlAstNode {
         val expr = visit(ctx.key) as PartiqlAst.Expr
-        return PartiqlAst.build { pathExpr(expr, PartiqlAst.CaseSensitivity.CaseSensitive()) }
+        return PartiqlAst.build { pathExpr(expr, PartiqlAst.CaseSensitivity.CaseSensitive(), metaContainerOf(IsPathIndexMeta.instance)) }
     }
 
     // TODO: VarPathExpr should NOT allow the @ symbol
@@ -770,6 +772,67 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
      * HELPER METHODS
      *
      */
+
+    /**
+     * Converts a Path expression into a Projection Item (either ALL or EXPR). Note: A Projection Item only allows a
+     * subset of a typical Path expressions. See the following examples.
+     *
+     * Examples of valid projections are:
+     *
+     * ```sql
+     *      SELECT * FROM foo
+     *      SELECT foo.* FROM foo
+     *      SELECT f.* FROM foo as f
+     *      SELECT foo.bar.* FROM foo
+     *      SELECT f.bar.* FROM foo as f
+     * ```
+     * Also validates that the expression is valid for select list context. It does this by making
+     * sure that expressions looking like the following do not appear:
+     *
+     * ```sql
+     *      SELECT foo[*] FROM foo
+     *      SELECT f.*.bar FROM foo as f
+     *      SELECT foo[1].* FROM foo
+     *      SELECT foo.*.bar FROM foo
+     * ```
+     */
+    private fun convertPathToProjectionItem(path: PartiqlAst.Expr.Path, alias: String?): PartiqlAst.ProjectItem {
+        val steps = mutableListOf<PartiqlAst.PathStep>()
+        var containsIndex = false
+        path.steps.forEachIndexed { index, step ->
+
+            // Only last step can have a '.*'
+            if (step is PartiqlAst.PathStep.PathUnpivot && index != path.steps.lastIndex) {
+                throw org.partiql.lang.syntax.PartiQLParser.ParseErrorListener.ParseException("Projection item cannot unpivot unless at end.")
+            }
+
+            // No step can have an indexed wildcard: '[*]'
+            if (step is PartiqlAst.PathStep.PathWildcard) {
+                throw org.partiql.lang.syntax.PartiQLParser.ParseErrorListener.ParseException("Projection item cannot index using wildcard.")
+            }
+
+            // If the last step is '.*', no indexing is allowed
+            if (step.metas.containsKey(IsPathIndexMeta.TAG)) {
+                containsIndex = true
+            }
+
+            if (step !is PartiqlAst.PathStep.PathUnpivot) {
+                steps.add(step)
+            }
+        }
+
+        if (path.steps.last() is PartiqlAst.PathStep.PathUnpivot && containsIndex) {
+            throw org.partiql.lang.syntax.PartiQLParser.ParseErrorListener.ParseException("Projection item use wildcard with any indexing.")
+        }
+
+        return PartiqlAst.build {
+            when {
+                path.steps.last() is PartiqlAst.PathStep.PathUnpivot && steps.isEmpty() -> projectAll(path.root)
+                path.steps.last() is PartiqlAst.PathStep.PathUnpivot -> projectAll(path(path.root, steps))
+                else -> projectExpr(path, asAlias = alias)
+            }
+        }
+    }
 
     private fun <T : PartiqlAst.PartiqlAstNode> visitOrEmpty(clazz: KClass<T>, ctx: ParserRuleContext): T = clazz.cast(visit(ctx))
     private fun <T : PartiqlAst.PartiqlAstNode> visitOrEmpty(clazz: KClass<T>, ctx: List<ParserRuleContext>): List<T> = ctx.map { clazz.cast(visit(it)) }
