@@ -480,7 +480,7 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
 
     override fun visitPredicateIn(ctx: PartiQLParser.PredicateInContext): PartiqlAst.PartiqlAstNode {
         val args = visitOrEmpty(PartiqlAst.Expr::class, ctx.lhs, ctx.rhs)
-        return PartiqlAst.build { if (ctx.NOT() != null) not(inCollection(args)) else inCollection(args) }
+        return PartiqlAst.build { if (ctx.NOT() != null) not(inCollection(args), metaContainerOf(LegacyLogicalNotMeta.instance)) else inCollection(args) }
     }
 
     override fun visitPredicateIs(ctx: PartiQLParser.PredicateIsContext): PartiqlAst.PartiqlAstNode {
@@ -493,7 +493,7 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
     override fun visitPredicateBetween(ctx: PartiQLParser.PredicateBetweenContext): PartiqlAst.PartiqlAstNode {
         val args = visitOrEmpty(PartiqlAst.Expr::class, ctx.lhs, ctx.lower, ctx.upper)
         val between = PartiqlAst.build { between(args[0], args[1], args[2]) }
-        return if (ctx.NOT() == null) between else PartiqlAst.build { not(between) }
+        return if (ctx.NOT() == null) between else PartiqlAst.build { not(between, metaContainerOf(LegacyLogicalNotMeta.instance)) }
     }
 
     override fun visitPredicateLike(ctx: PartiQLParser.PredicateLikeContext): PartiqlAst.PartiqlAstNode {
