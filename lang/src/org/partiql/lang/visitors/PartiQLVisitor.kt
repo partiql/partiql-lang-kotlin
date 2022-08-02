@@ -611,6 +611,11 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         return PartiqlAst.build { list(expressions) }
     }
 
+    override fun visitValueList(ctx: PartiQLParser.ValueListContext): PartiqlAst.Expr.List {
+        val expressions = ctx.exprQuery().map { expr -> visitExprQuery(expr) }
+        return PartiqlAst.build { list(expressions) }
+    }
+
     override fun visitCaseExpr(ctx: PartiQLParser.CaseExprContext): PartiqlAst.Expr {
         val exprPairList = mutableListOf<PartiqlAst.ExprPair>()
         val start = if (ctx.case_ == null) 0 else 1
