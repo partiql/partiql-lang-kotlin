@@ -744,6 +744,10 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
     override fun visitPathStepIndexAll(ctx: PartiQLParser.PathStepIndexAllContext) = PartiqlAst.build { pathWildcard() }
     override fun visitPathStepDotAll(ctx: PartiQLParser.PathStepDotAllContext) = PartiqlAst.build { pathUnpivot() }
 
+    override fun visitArray(ctx: PartiQLParser.ArrayContext) = PartiqlAst.build {
+        list(visitOrEmpty(PartiqlAst.Expr::class, ctx.exprQuery()))
+    }
+
     /**
      *
      * HELPER METHODS
