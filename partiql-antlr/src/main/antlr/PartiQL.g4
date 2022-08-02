@@ -8,7 +8,7 @@ options {
 
 // TODO: Search LATERAL
 
-topQuery: query EOF;
+topQuery: query COLON_SEMI? EOF;
 
 sfwQuery
     : withClause? selectClause fromClause? letClause? whereClause? groupClause? havingClause? orderByClause? limitClause? offsetByClause? # SelectFromWhere
