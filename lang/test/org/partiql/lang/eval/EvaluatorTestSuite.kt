@@ -1427,4 +1427,80 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
         test("outerUnionCoerceNullMissing", "NULL OUTER UNION MISSING", "$partiql_bag::[]")
         test("outerUnionCoerceList", "[ 1, 1, 1 ] OUTER UNION ALL [ 1, 2 ]", "$partiql_bag::[1, 1, 1, 2]")
     }
+
+    group("arithmetic with mixed type") {
+        test(
+            "plus with mixed StaticType",
+            """
+            SELECT VALUE v + 1
+            FROM numbers as v
+            """,
+            "$partiql_bag::[2, 3.0, 4e0, 5, 6.]"
+        )
+        test(
+            "minus with mixed StaticType",
+            """
+            SELECT VALUE v - 1
+            FROM numbers as v
+            """,
+            "$partiql_bag::[0, 1.0, 2e0, 3, 4.]"
+        )
+        test(
+            "multiplication with mixed StaticType",
+            """
+            SELECT VALUE v * 2
+            FROM numbers as v
+            """,
+            "$partiql_bag::[2, 4.0, 6e0, 8, 10.]"
+        )
+        test(
+            "division with mixed StaticType",
+            """
+            SELECT VALUE v / 2
+            FROM numbers as v
+            """,
+            "$partiql_bag::[0, 1.0, 1.5e0, 2, 2.5]"
+        )
+        test(
+            "modulo with mixed StaticType",
+            """
+            SELECT VALUE v % 2
+            FROM numbers as v
+            """,
+            "$partiql_bag::[1, 0.0, 1e0, 0, 1.]"
+        )
+        test(
+            "unary plus with mixed StaticType",
+            """
+            SELECT VALUE +v
+            FROM numbers as v
+            """,
+            "$partiql_bag::[1, 2.0, 3e0, 4, 5d0]"
+        )
+        test(
+            "unary minus with mixed StaticType",
+            """
+            SELECT VALUE -v
+            FROM numbers as v
+            """,
+            "$partiql_bag::[-1, -2.0, -3e0, -4, -5d0]"
+        )
+        test(
+            "function call with mixed StaticType",
+            """
+            SELECT VALUE CAST(v/2 AS INT)
+            FROM numbers as v
+            """,
+            "$partiql_bag::[0, 1, 1, 2, 2]"
+        )
+        test(
+            "arithmetic with null/missing",
+            """
+            SELECT VALUE 1 + v
+            FROM << null, missing >> AS v
+            """,
+            "$partiql_bag::[null, null]",
+            "$partiql_bag::[null, $partiql_missing::null]"
+        )
+    }
 }
