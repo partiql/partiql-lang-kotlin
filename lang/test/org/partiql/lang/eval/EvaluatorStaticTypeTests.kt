@@ -1,11 +1,9 @@
 package org.partiql.lang.eval
 
-import org.junit.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.lang.ION
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestTarget
-import org.partiql.lang.util.partiql_bag
 import org.partiql.lang.util.testdsl.IonResultTestCase
 import org.partiql.lang.util.testdsl.runTestCase
 
@@ -116,8 +114,8 @@ class EvaluatorStaticTypeTests {
 
             "parameters",
             // STIR does not support aggregates
-//            "selectDistinctWithAggregate",
-//            "selectDistinctAggregationWithGroupBy",
+            "selectDistinctWithAggregate",
+            "selectDistinctAggregationWithGroupBy",
             "selectDistinctWithGroupBy",
             "selectDistinctWithJoin",
             "selectDistinctStarScalars",
@@ -140,26 +138,26 @@ class EvaluatorStaticTypeTests {
             "projectOfUnpivotPath",
 
             // Aggregates not supported by STIR
-//            "topLevelCountDistinct",
-//            "topLevelCount",
-//            "topLevelAllCount",
-//            "topLevelAllSum",
-//            "topLevelDistinctSum",
-//            "topLevelDistinctMin",
-//            "topLevelAllMin",
-//            "topLevelSum",
-//            "topLevelMin",
-//            "topLevelMax",
-//            "topLevelDistinctMax",
-//            "topLevelAllMax",
-//            "topLevelAvg",
-//            "topLevelDistinctAvg",
-//            "topLevelAvgOnlyInt",
-//            "selectValueAggregate",
-//            "selectListCountStar",
-//            "selectListCountVariable",
-//            "selectListMultipleAggregates",
-//            "selectListMultipleAggregatesNestedQuery",
+            "topLevelCountDistinct",
+            "topLevelCount",
+            "topLevelAllCount",
+            "topLevelAllSum",
+            "topLevelDistinctSum",
+            "topLevelDistinctMin",
+            "topLevelAllMin",
+            "topLevelSum",
+            "topLevelMin",
+            "topLevelMax",
+            "topLevelDistinctMax",
+            "topLevelAllMax",
+            "topLevelAvg",
+            "topLevelDistinctAvg",
+            "topLevelAvgOnlyInt",
+            "selectValueAggregate",
+            "selectListCountStar",
+            "selectListCountVariable",
+            "selectListMultipleAggregates",
+            "selectListMultipleAggregatesNestedQuery",
 
             // PIVOT not supported by STIR
             "pivotFrom",
@@ -176,9 +174,9 @@ class EvaluatorStaticTypeTests {
             "undefinedUnqualifiedVariableIsMissingExprWithUndefinedVariableBehaviorMissing",
 
             // CallAgg not supported in STIVT - https://github.com/partiql/partiql-lang-kotlin/issues/502
-//            "aggregateInSubqueryOfSelect",
-//            "aggregateInSubqueryOfSelectValue",
-//            "aggregateWithAliasingInSubqueryOfSelectValue"
+            "aggregateInSubqueryOfSelect",
+            "aggregateInSubqueryOfSelectValue",
+            "aggregateWithAliasingInSubqueryOfSelectValue"
         )
 
         @JvmStatic
@@ -212,34 +210,4 @@ class EvaluatorStaticTypeTests {
             // Enable the static type inferencer for this
             compilerPipelineBuilderBlock = { this.globalTypeBindings(mockDb.typeBindings) },
         )
-
-    @Test
-    fun test2() {
-        val tc = IonResultTestCase(
-            "topLevelCountDistinct",
-            null,
-            null,
-            """SUM([2,3,[1,2]])""",
-            """$partiql_bag::[{c:5, result:36.0}]""",
-            """$partiql_bag::[{c:5, result:36.0}]""",
-            false,
-            {
-
-                // set permissive mode
-                typingMode(TypingMode.PERMISSIVE)
-                thunkOptions {
-                    // enable evaluation time type checking
-                    evaluationTimeTypeChecks(ThunkReturnTypeAssertions.ENABLED)
-                }
-            }
-        ) {}
-        tc.runTestCase(
-            valueFactory = valueFactory,
-            db = mockDb,
-            // the planner doesn't yet support type inferencing pass needed to make this work
-            EvaluatorTestTarget.COMPILER_PIPELINE,
-            // Enable the static type inferencer for this
-            compilerPipelineBuilderBlock = { this.globalTypeBindings(mockDb.typeBindings) },
-        )
-    }
 }

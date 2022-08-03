@@ -172,11 +172,4 @@ class MinTests : EvaluatorTestBase() {
         expectedResult = "\"1\"",
         target = EvaluatorTestTarget.COMPILER_PIPELINE
     )
-
-    @Test
-    fun minTopLevel() = runEvaluatorTestCase(
-        query = "min(1)",
-        expectedResult = "\"1\"",
-        target = EvaluatorTestTarget.COMPILER_PIPELINE
-    )
 }
