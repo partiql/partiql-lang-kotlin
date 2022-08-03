@@ -8,6 +8,30 @@ options {
 
 /**
  *
+ * COMMON STRUCTURES
+ *
+ */
+
+// TODO: Check if this should be a symbol primitive. CLI says that identifiers without @ are allowed
+asIdent
+    : AS symbolPrimitive ;
+
+atIdent
+    : AT symbolPrimitive ;
+
+byIdent
+    : BY symbolPrimitive ;
+    
+// TODO: Symbol Primitive should only be ID and quoted IDs. Need a different rule to handle @
+symbolPrimitive
+    : IDENTIFIER              # SymbolIdentifierUnquoted
+    | IDENTIFIER_QUOTED       # SymbolIdentifierQuoted
+    | IDENTIFIER_AT_UNQUOTED  # SymbolIdentifierAtUnquoted
+    | IDENTIFIER_AT_QUOTED    # SymbolIdentifierAtQuoted
+    ;
+
+/**
+ *
  * QUERY
  *
  */
@@ -23,6 +47,7 @@ sfwQuery
  * SELECT AND PROJECTION
  *
  */
+
 selectClause
     : SELECT setQuantifierStrategy? ASTERISK          # SelectAll
     | SELECT setQuantifierStrategy? projectionItems   # SelectItems
@@ -44,70 +69,59 @@ setQuantifierStrategy
 /**
  * LET CLAUSE
  */
+
 letClause
     : LET letBinding ( COMMA letBinding )* ;
     
 letBinding
     : expr AS symbolPrimitive ;
-    
-// TODO: Add other identifiers?
-symbolPrimitive
-    : IDENTIFIER              # SymbolIdentifierUnquoted
-    | IDENTIFIER_QUOTED       # SymbolIdentifierQuoted
-    | IDENTIFIER_AT_UNQUOTED  # SymbolIdentifierAtUnquoted
-    | IDENTIFIER_AT_QUOTED    # SymbolIdentifierAtQuoted
-    ;
 
 /**
  *
  * TABLES & JOINS
  *
  */
-// TODO: Mental note. Needed to duplicate table_joined to remove left recursion
+ 
 tableReference
-    : tableReference joinType? CROSS JOIN joinRhs              # TableRefCrossJoin
-    | tableReference COMMA joinRhs                             # TableRefCrossJoin
-    | tableReference joinType JOIN joinRhs joinSpec            # TableRefJoin
-    | tableReference NATURAL joinType JOIN joinRhs             # TableRefNaturalJoin
-    | PAREN_LEFT tableJoined PAREN_RIGHT                       # TableRefWrappedJoin
-    | tableNonJoin                                             # TableRefNonJoin
+    : lhs=tableReference tableJoined[$lhs.ctx] # TableRefBase
+    | PAREN_LEFT tableReference PAREN_RIGHT    # TableWrapped
+    | tableNonJoin                             # TableRefBase
     ;
 
 tableNonJoin
-    : tableBaseReference          # TableNonJoinBaseRef
-    | tableUnpivot                # TableNonJoinUnpivot
+    : tableBaseReference
+    | tableUnpivot
     ;
 
 tableBaseReference
-    : expr symbolPrimitive             # TableBaseRefSymbol
-    | expr asIdent? atIdent? byIdent?  # TableBaseRefClauses
+    : expr symbolPrimitive              # TableBaseRefSymbol
+    | expr asIdent? atIdent? byIdent?   # TableBaseRefClauses
     ;
     
-// TODO: Check that all uses use a table_reference before token
-tableJoined
-    : tableCrossJoin                      # TableJoinedCrossJoin
-    | tableQualifiedJoin                  # TableJoinedQualified
-    | PAREN_LEFT tableJoined PAREN_RIGHT  # NestedTableJoined
+tableUnpivot
+    : UNPIVOT expr asIdent? atIdent? byIdent? ;
+    
+tableJoined[ParserRuleContext lhs]
+    : tableCrossJoin[$lhs]
+    | tableQualifiedJoin[$lhs]
     ;
-    
-tableUnpivot: UNPIVOT expr asIdent? atIdent? byIdent? ;
-    
-// TODO: Check that all uses use a table_reference before token
-tableCrossJoin: tableReference joinType? CROSS JOIN joinRhs ;
 
-// TODO: Check that all uses use a table_reference before token
-tableQualifiedJoin
-    : tableReference joinType JOIN LATERAL? joinRhs joinSpec # QualifiedRefJoin
-    | tableReference NATURAL joinType JOIN LATERAL? joinRhs  # QualifiedNaturalRefJoin
+tableCrossJoin[ParserRuleContext lhs]
+    : joinType? CROSS JOIN rhs=joinRhs
+    | COMMA rhs=joinRhs
+    ;
+
+tableQualifiedJoin[ParserRuleContext lhs]
+    : joinType? JOIN rhs=joinRhs joinSpec
     ;
     
 joinRhs
-    : tableNonJoin                        # JoinRhsNonJoin
-    | PAREN_LEFT tableJoined PAREN_RIGHT  # JoinRhsTableJoined
+    : tableNonJoin                           # JoinRhsBase
+    | PAREN_LEFT tableReference PAREN_RIGHT  # JoinRhsTableJoined
     ;
     
 joinSpec
-    : ON expr   # JoinSpecOn
+    : ON expr
     ;
 
 joinType
@@ -118,10 +132,7 @@ joinType
     | OUTER
     ;
 
-// TODO: Check if this should be a symbol primitive. CLI says that identifiers without @ are allowed
-asIdent: AS symbolPrimitive ;
-atIdent: AT symbolPrimitive ;
-byIdent: BY symbolPrimitive ;
+
 
 exprPrimary
     : cast                       # ExprPrimaryBase
@@ -164,9 +175,6 @@ pathStep
     | PERIOD key=varRefExpr                      # PathStepDotExpr
     | PERIOD all=ASTERISK                        # PathStepDotAll
     ;
-    
-// TODO: Uncomment or remove
-// fragment DATE_TIME_KEYWORDS: ('YEAR'|'MONTH'|'DAY'|'HOUR'|'MINUTE'|'SECOND'|'TIMEZONE_HOUR'|'TIMEZONE_MINUTE') ;
     
 // TODO: Add all types
 type

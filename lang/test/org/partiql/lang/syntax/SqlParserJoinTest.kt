@@ -195,6 +195,10 @@ class SqlParserJoinTest : SqlParserTestBase() {
         )
     }
 
+    // "SELECT x FROM A INNER JOIN (B INNER JOIN (C INNER JOIN D ON C = D) ON B = C) ON A = B"
+    // "SELECT x FROM A INNER JOIN (B INNER JOIN C ON B = C) ON A = B"
+    // "SELECT x FROM A CROSS JOIN (B INNER JOIN C ON B = C)"
+    // "SELECT x FROM A CROSS JOIN (B CROSS JOIN C)"
     @Test
     fun selectThreeJoinsSpecifiedOrderParensTest() = assertExpression(
         "SELECT x FROM A INNER JOIN (B INNER JOIN (C INNER JOIN D ON C = D) ON B = C) ON A = B",
