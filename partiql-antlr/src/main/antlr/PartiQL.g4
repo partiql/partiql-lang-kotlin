@@ -94,11 +94,13 @@ removeCommand
     : (updateClause|fromClause)? REMOVE tableBaseReference
     ;
 
+// TODO: There is a bug in the old SqlParser that needed to be replicated to the PartiQLParser for the sake of ...
+// TODO: ... same functionality. Using 2 returning clauses always uses the second clause. This should be fixed.
 insertCommand
-    : updateClause INSERT INTO pathSimple VALUE value=expr ( AT pos=expr )? onConflict? returningClause? whereClause?   # InsertValue
-    | fromClause? INSERT INTO pathSimple VALUE value=expr ( AT pos=expr )? onConflict? returningClause?                 # InsertValue
-    | updateClause INSERT INTO pathSimple value=expr whereClause?                                                       # InsertSimple
-    | fromClause? INSERT INTO pathSimple value=expr                                                                     # InsertSimple
+    : updateClause INSERT INTO pathSimple VALUE value=querySet ( AT pos=expr )? onConflict? returningClause? whereClause? returningClause?   # InsertValue
+    | fromClause? INSERT INTO pathSimple VALUE value=querySet ( AT pos=expr )? onConflict? returningClause?                                  # InsertValue
+    | updateClause INSERT INTO pathSimple value=querySet whereClause? returningClause?                                                       # InsertSimple
+    | fromClause? INSERT INTO pathSimple value=querySet returningClause?                                                                     # InsertSimple
     ;
 
 onConflict
