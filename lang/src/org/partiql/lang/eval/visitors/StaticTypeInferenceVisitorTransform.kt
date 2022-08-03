@@ -55,6 +55,7 @@ import org.partiql.lang.types.TypedOpParameter
 import org.partiql.lang.types.UnknownArguments
 import org.partiql.lang.types.toTypedOpParameter
 import org.partiql.lang.util.cartesianProduct
+import org.partiql.pig.runtime.SymbolPrimitive
 
 /**
  * A [PartiqlAst.VisitorTransform] that annotates nodes with their static type.
@@ -522,6 +523,92 @@ internal class StaticTypeInferenceVisitorTransform(
             }
 
             return nAry.withStaticType(computeReturnTypeForFunctionCall(signature, functionArguments, nAry.metas))
+        }
+
+        // Call agg : "count", "avg", "max", "min", "sum"
+        override fun transformExprCallAgg(node: PartiqlAst.Expr.CallAgg): PartiqlAst.Expr {
+            val nAry = super.transformExprCallAgg(node) as PartiqlAst.Expr.CallAgg
+            val funcName = nAry.funcName
+
+            // for disallowing nested type in sum and avg
+            // i.e., sum([1,2,[3,4]]) is not allowed
+            val argType = when (val type = nAry.arg.getStaticType()) {
+                is CollectionType -> type.elementType
+                is SingleType -> type
+                is AnyOfType -> type
+                else -> error("We always expect there to be at least one possible result type, even if is MISSING")
+            }
+
+            checkAggInputType(funcName.text, argType)
+
+            return nAry.withStaticType(computeReturnTypeForAggFunc(funcName, argType))
+        }
+
+        private fun checkAggInputType(functionName: String, argType: StaticType) {
+
+            val hasValidParameter = when (functionName) {
+                "count", "min", "max" -> true
+                else -> argType.isSubTypeOf(StaticType.unionOf(StaticType.MISSING, StaticType.NULL, StaticType.NUMERIC))
+            }
+
+            if (!hasValidParameter) error("Aggregate function ${functionName.capitalize()} has incompatible input type")
+        }
+
+        private fun computeReturnTypeForAggFunc(aggfunc: SymbolPrimitive, argType: StaticType): StaticType {
+
+            return when (aggfunc.text) {
+                // current implementation of count will always return a long
+                "count" -> StaticType.INT8
+                // max/min result depends on comparison.
+                "max", "min" -> argType
+                // current implementation of avg always return a decimal.
+                "avg" -> StaticType.DECIMAL
+                // sum:
+                else -> {
+                    argType.allTypes.fold((StaticType.MISSING as SingleType)) { lastType, currentType ->
+                        when (currentType) {
+                            is MissingType -> lastType
+                            is NullType -> lastType
+                            is IntType -> {
+                                // based on the current implementation of arithmetic operations
+                                when (lastType) {
+                                    is IntType -> {
+                                        when {
+                                            lastType.rangeConstraint == IntType.IntRangeConstraint.UNCONSTRAINED -> lastType
+                                            currentType.rangeConstraint == IntType.IntRangeConstraint.UNCONSTRAINED -> currentType
+                                            lastType.rangeConstraint.numBytes > currentType.rangeConstraint.numBytes -> lastType
+                                            else -> currentType
+                                        }
+                                    }
+                                    is FloatType -> StaticType.FLOAT
+                                    is DecimalType -> StaticType.DECIMAL
+                                    // null, missing
+                                    else -> currentType
+                                }
+                            }
+                            is FloatType -> {
+                                when (lastType) {
+                                    is IntType -> StaticType.FLOAT
+                                    is FloatType -> StaticType.FLOAT
+                                    is DecimalType -> StaticType.DECIMAL // TODO:  account for decimal precision
+                                    else -> currentType
+                                }
+                            }
+                            is DecimalType -> {
+                                when (lastType) {
+                                    is IntType -> StaticType.DECIMAL
+                                    is FloatType -> StaticType.DECIMAL
+                                    is DecimalType -> StaticType.DECIMAL // TODO:  account for decimal precision
+                                    else -> currentType
+                                }
+                            }
+                            else ->
+                                // this should not be reached, only exists to segment the logic.
+                                error("Internal Error: SUM function only support Number Type")
+                        }
+                    }
+                }
+            }
         }
 
         /**
