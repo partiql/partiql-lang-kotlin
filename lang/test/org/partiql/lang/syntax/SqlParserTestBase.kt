@@ -147,7 +147,6 @@ abstract class SqlParserTestBase : TestBase() {
         expectedPigBuilder: PartiqlAst.Builder.() -> PartiqlAst.PartiqlAstNode
     ) {
         val expectedPigAst = PartiqlAst.build { expectedPigBuilder() }.toIonElement().toString()
-        println("Expected Pig AST: $expectedPigAst")
 
         // Refer to comments inside the main body of the following function to see what checks are performed.
         assertExpression(source, expectedSexpAstV0, expectedPigAst)
