@@ -41,7 +41,6 @@ import org.partiql.lang.util.getPrecisionFromTimeString
 import org.partiql.pig.runtime.SymbolPrimitive
 import org.partiql.pig.runtime.asPrimitive
 import java.math.BigInteger
-import java.text.ParseException
 import java.time.LocalTime
 import java.time.OffsetTime
 import java.time.format.DateTimeFormatter
@@ -65,10 +64,91 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
             }
         }.flatten().toMap()
 
+    /**
+     *
+     * DATA MANIPULATION LANGUAGE (DML)
+     *
+     */
+
+    override fun visitDml(ctx: PartiQLParser.DmlContext?): PartiqlAst.PartiqlAstNode = super.visitDml(ctx)
+
+    override fun visitInsertSimple(ctx: PartiQLParser.InsertSimpleContext): PartiqlAst.PartiqlAstNode {
+        var from = if (ctx.fromClause() != null) visitFromClause(ctx.fromClause()) else null
+        from = if (ctx.updateClause() != null) visitUpdateClause(ctx.updateClause()) else from
+        val target = visitPathSimple(ctx.pathSimple())
+        val ops = PartiqlAst.build { dmlOpList(insert(target, visitExpr(ctx.value))) }
+        val where = if (ctx.whereClause() != null) visitWhereClause(ctx.whereClause()) else null
+        return PartiqlAst.build {
+            dml(ops, from = from, where = where, returning = null)
+        }
+    }
+
+    override fun visitInsertValue(ctx: PartiQLParser.InsertValueContext): PartiqlAst.PartiqlAstNode {
+        var from = if (ctx.fromClause() != null) visitFromClause(ctx.fromClause()) else null
+        from = if (ctx.updateClause() != null) visitUpdateClause(ctx.updateClause()) else from
+        val returning = if (ctx.returningClause() != null) visitReturningClause(ctx.returningClause()) as PartiqlAst.ReturningExpr else null
+        val target = visitPathSimple(ctx.pathSimple())
+        val index = if (ctx.pos != null) visitExpr(ctx.pos) else null
+        val onConflict = if (ctx.onConflict() != null) visitOnConflict(ctx.onConflict()) else null
+        val where = if (ctx.whereClause() != null) visitWhereClause(ctx.whereClause()) else null
+        val ops = PartiqlAst.build {
+            dmlOpList(insertValue(target, visitExpr(ctx.value), index = index, onConflict = onConflict))
+        }
+        return PartiqlAst.build {
+            dml(ops, from = from, where = where, returning = returning)
+        }
+    }
+
+    override fun visitOnConflict(ctx: PartiQLParser.OnConflictContext) = PartiqlAst.build {
+        onConflict(visitExpr(ctx.expr()), doNothing())
+    }
+
+    override fun visitPathSimple(ctx: PartiQLParser.PathSimpleContext): PartiqlAst.Expr {
+        val root = visitSymbolPrimitive(ctx.symbolPrimitive())
+        if (ctx.pathSimpleSteps().isEmpty()) return root
+        val steps = ctx.pathSimpleSteps().map { step -> visit(step) as PartiqlAst.PathStep }
+        return PartiqlAst.build { path(root, steps) }
+    }
+
+    override fun visitPathSimpleLiteral(ctx: PartiQLParser.PathSimpleLiteralContext) = PartiqlAst.build {
+        pathExpr(visit(ctx.literal()) as PartiqlAst.Expr, caseSensitive())
+    }
+
+    override fun visitPathSimpleSymbol(ctx: PartiQLParser.PathSimpleSymbolContext) = PartiqlAst.build {
+        pathExpr(visitSymbolPrimitive(ctx.symbolPrimitive()), caseSensitive())
+    }
+
+    override fun visitPathSimpleDotSymbol(ctx: PartiQLParser.PathSimpleDotSymbolContext) = getSymbolPathExpr(ctx.symbolPrimitive())
+
+    override fun visitSetCommand(ctx: PartiQLParser.SetCommandContext): PartiqlAst.PartiqlAstNode {
+        var from = if (ctx.fromClause() != null) visitFromClause(ctx.fromClause()) else null
+        from = if (ctx.updateClause() != null) visitUpdateClause(ctx.updateClause()) as PartiqlAst.FromSource else from
+        val assignments = ctx.setAssignment().map { assignment -> visitSetAssignment(assignment) }
+        return PartiqlAst.build {
+            dml(dmlOpList(assignments), from = from, where = null, returning = null)
+        }
+    }
+
+    override fun visitSetAssignment(ctx: PartiQLParser.SetAssignmentContext): PartiqlAst.DmlOp.Set {
+        return PartiqlAst.build {
+            set(assignment(visitSymbolPrimitive(ctx.symbolPrimitive()), visitExpr(ctx.expr())))
+        }
+    }
+
+    override fun visitUpdateClause(ctx: PartiQLParser.UpdateClauseContext): PartiqlAst.FromSource {
+        return visit(ctx.tableBaseReference()) as PartiqlAst.FromSource
+    }
+
+    /**
+     *
+     * DATA QUERY LANGUAGE (DQL)
+     *
+     */
+
     override fun visitSfwQuery(ctx: PartiQLParser.SfwQueryContext): PartiqlAst.Expr.Select {
         val projection = visit(ctx.selectClause()) as PartiqlAst.Projection
         val strategy = getSetQuantifierStrategy(ctx.selectClause())
-        val from = visit(ctx.fromClause()) as PartiqlAst.FromSource
+        val from = visitFromClause(ctx.fromClause())
         val order = if (ctx.orderByClause() != null) visit(ctx.orderByClause()) as PartiqlAst.OrderBy else null
         val group = if (ctx.groupClause() != null) visit(ctx.groupClause()) as PartiqlAst.GroupBy else null
         val limit = if (ctx.limitClause() != null) visit(ctx.limitClause()) as PartiqlAst.Expr else null
@@ -132,11 +212,9 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
     override fun visitOffsetByClause(ctx: PartiQLParser.OffsetByClauseContext): PartiqlAst.PartiqlAstNode =
         visit(ctx.expr())
 
-    override fun visitWhereClause(ctx: PartiQLParser.WhereClauseContext): PartiqlAst.PartiqlAstNode =
-        visit(ctx.expr())
+    override fun visitWhereClause(ctx: PartiQLParser.WhereClauseContext) = visitExpr(ctx.expr())
 
-    override fun visitHavingClause(ctx: PartiQLParser.HavingClauseContext): PartiqlAst.PartiqlAstNode =
-        visit(ctx.expr())
+    override fun visitHavingClause(ctx: PartiQLParser.HavingClauseContext) = visitExpr(ctx.expr())
 
     override fun visitLetClause(ctx: PartiQLParser.LetClauseContext): PartiqlAst.Let {
         val letBindings = ctx.letBinding().map { binding -> visit(binding) as PartiqlAst.LetBinding }
@@ -201,12 +279,15 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
     override fun visitFromClause(ctx: PartiQLParser.FromClauseContext) = visit(ctx.tableReference()) as PartiqlAst.FromSource
     override fun visitExprTermWrappedQuery(ctx: PartiQLParser.ExprTermWrappedQueryContext) = visit(ctx.query()) as PartiqlAst.Expr
 
-    override fun visitTopQuery(ctx: PartiQLParser.TopQueryContext): PartiqlAst.Statement.Query {
-        val queryExpr = visitQuery(ctx.query())
-        return PartiqlAst.BUILDER().query(queryExpr)
+    override fun visitDql(ctx: PartiQLParser.DqlContext) = PartiqlAst.build {
+        query(visitQuery(ctx.query()))
     }
 
-    override fun visitQuery(ctx: PartiQLParser.QueryContext) = visit(ctx.querySet()) as PartiqlAst.Expr
+    override fun visitQueryDql(ctx: PartiQLParser.QueryDqlContext): PartiqlAst.PartiqlAstNode = visitDql(ctx.dql())
+    override fun visitQueryDml(ctx: PartiQLParser.QueryDmlContext): PartiqlAst.PartiqlAstNode = visitDml(ctx.dml())
+
+    override fun visitQuery(ctx: PartiQLParser.QueryContext): PartiqlAst.Expr = visit(ctx.querySet()) as PartiqlAst.Expr
+
     override fun visitQuerySetSingleQuery(ctx: PartiQLParser.QuerySetSingleQueryContext): PartiqlAst.PartiqlAstNode = visit(ctx.singleQuery())
 
     override fun visitQuerySetIntersect(ctx: PartiQLParser.QuerySetIntersectContext): PartiqlAst.Expr.Intersect {
@@ -392,6 +473,14 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
             ctx.IDENTIFIER_AT_QUOTED() != null -> id(ctx.IDENTIFIER_AT_QUOTED().getStringValue(), caseSensitive(), localsFirst())
             ctx.IDENTIFIER_AT_UNQUOTED() != null -> id(ctx.IDENTIFIER_AT_UNQUOTED().getStringValue(), caseInsensitive(), localsFirst())
             else -> throw org.partiql.lang.syntax.PartiQLParser.ParseErrorListener.ParseException("Invalid variable reference.")
+        }
+    }
+
+    override fun visitSymbolPrimitive(ctx: PartiQLParser.SymbolPrimitiveContext) = PartiqlAst.build {
+        when {
+            ctx.IDENTIFIER_QUOTED() != null -> id(ctx.IDENTIFIER_QUOTED().getStringValue(), caseSensitive(), unqualified())
+            ctx.IDENTIFIER() != null -> id(ctx.IDENTIFIER().getStringValue(), caseInsensitive(), unqualified())
+            else -> throw org.partiql.lang.syntax.PartiQLParser.ParseErrorListener.ParseException("Invalid symbol reference.")
         }
     }
 
@@ -754,7 +843,6 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
     override fun visitTableNonJoin(ctx: PartiQLParser.TableNonJoinContext?): PartiqlAst.PartiqlAstNode = super.visitTableNonJoin(ctx)
     override fun visitTableRefBase(ctx: PartiQLParser.TableRefBaseContext?): PartiqlAst.PartiqlAstNode = super.visitTableRefBase(ctx)
     override fun visitJoinRhsBase(ctx: PartiQLParser.JoinRhsBaseContext?): PartiqlAst.PartiqlAstNode = super.visitJoinRhsBase(ctx)
-    override fun visitSymbolPrimitive(ctx: PartiQLParser.SymbolPrimitiveContext?): PartiqlAst.PartiqlAstNode = super.visitSymbolPrimitive(ctx)
 
     /**
      *
@@ -871,6 +959,14 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         return when {
             this.IDENTIFIER_QUOTED() != null -> this.IDENTIFIER_QUOTED().getStringValue()
             this.IDENTIFIER() != null -> this.IDENTIFIER().text
+            else -> throw org.partiql.lang.syntax.PartiQLParser.ParseErrorListener.ParseException("Unable to get symbol's text.")
+        }
+    }
+
+    private fun getSymbolPathExprId(ctx: PartiQLParser.SymbolPrimitiveContext) = PartiqlAst.build {
+        when {
+            ctx.IDENTIFIER_QUOTED() != null -> pathExpr(id(ctx.IDENTIFIER_QUOTED().getStringValue(), caseSensitive(), unqualified()), caseSensitive())
+            ctx.IDENTIFIER() != null -> pathExpr(id(ctx.IDENTIFIER().getStringValue(), caseInsensitive(), unqualified()), caseSensitive())
             else -> throw org.partiql.lang.syntax.PartiQLParser.ParseErrorListener.ParseException("Unable to get symbol's text.")
         }
     }
