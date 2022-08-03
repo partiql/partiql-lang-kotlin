@@ -113,15 +113,15 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         else PartiqlAst.build { projectExpr(expr, asAlias = alias) }
     }
 
-    override fun visitExprTermTuple(ctx: PartiQLParser.ExprTermTupleContext): PartiqlAst.PartiqlAstNode {
-        val pairs = ctx.exprPair().map { pair -> visitExprPair(pair) }
-        return PartiqlAst.BUILDER().struct(pairs)
+    override fun visitTuple(ctx: PartiQLParser.TupleContext): PartiqlAst.PartiqlAstNode {
+        val pairs = ctx.pair().map { pair -> visitPair(pair) }
+        return PartiqlAst.build { struct(pairs) }
     }
 
-    override fun visitExprPair(ctx: PartiQLParser.ExprPairContext): PartiqlAst.ExprPair {
+    override fun visitPair(ctx: PartiQLParser.PairContext): PartiqlAst.ExprPair {
         val lhs = visitExpr(ctx.lhs)
         val rhs = visitExpr(ctx.rhs)
-        return PartiqlAst.BUILDER().exprPair(lhs, rhs)
+        return PartiqlAst.build { exprPair(lhs, rhs) }
     }
 
     override fun visitLimitClause(ctx: PartiQLParser.LimitClauseContext): PartiqlAst.Expr =
@@ -320,7 +320,7 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
      *
      */
 
-    override fun visitExprTermBag(ctx: PartiQLParser.ExprTermBagContext): PartiqlAst.Expr.Bag {
+    override fun visitBag(ctx: PartiQLParser.BagContext): PartiqlAst.Expr.Bag {
         val exprList = ctx.expr().map { expr -> visit(expr) as PartiqlAst.Expr }
         return PartiqlAst.Expr.Bag(exprList)
     }
@@ -734,6 +734,7 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
 
     /**
      * NOT OVERRIDDEN
+     * Explicitly defining the override helps by showing the user (via the IDE) which methods remain to be overridden.
      */
 
     override fun visitAsIdent(ctx: PartiQLParser.AsIdentContext?): PartiqlAst.PartiqlAstNode = super.visitAsIdent(ctx)
@@ -745,7 +746,7 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
     override fun visitChildren(node: RuleNode?): PartiqlAst.PartiqlAstNode = super.visitChildren(node)
     override fun visitExprPrimaryBase(ctx: PartiQLParser.ExprPrimaryBaseContext?): PartiqlAst.PartiqlAstNode = super.visitExprPrimaryBase(ctx)
     override fun visitExprTermBase(ctx: PartiQLParser.ExprTermBaseContext?): PartiqlAst.PartiqlAstNode = super.visitExprTermBase(ctx)
-    override fun visitExprTermCollection(ctx: PartiQLParser.ExprTermCollectionContext?): PartiqlAst.PartiqlAstNode = super.visitExprTermCollection(ctx)
+    override fun visitCollection(ctx: PartiQLParser.CollectionContext?): PartiqlAst.PartiqlAstNode = super.visitCollection(ctx)
     override fun visitPredicateBase(ctx: PartiQLParser.PredicateBaseContext?): PartiqlAst.PartiqlAstNode = super.visitPredicateBase(ctx)
     override fun visitGroupAlias(ctx: PartiQLParser.GroupAliasContext?): PartiqlAst.PartiqlAstNode = super.visitGroupAlias(ctx)
     override fun visitSingleQuery(ctx: PartiQLParser.SingleQueryContext?): PartiqlAst.PartiqlAstNode = super.visitSingleQuery(ctx)
