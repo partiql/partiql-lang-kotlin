@@ -16,6 +16,7 @@ package org.partiql.lang.visitors
 
 import com.amazon.ion.IonSystem
 import com.amazon.ionelement.api.ionInt
+import com.amazon.ionelement.api.ionString
 import com.amazon.ionelement.api.ionSymbol
 import com.amazon.ionelement.api.toIonElement
 import org.antlr.v4.runtime.ParserRuleContext
@@ -40,6 +41,7 @@ import org.partiql.lang.util.getPrecisionFromTimeString
 import org.partiql.pig.runtime.SymbolPrimitive
 import org.partiql.pig.runtime.asPrimitive
 import java.math.BigInteger
+import java.text.ParseException
 import java.time.LocalTime
 import java.time.OffsetTime
 import java.time.format.DateTimeFormatter
@@ -383,27 +385,15 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         return PartiqlAst.Expr.Call(SymbolPrimitive(ctx.SUBSTRING().text.toLowerCase(), mapOf()), args, mapOf())
     }
 
-    override fun visitVarRefExprIdentQuoted(ctx: PartiQLParser.VarRefExprIdentQuotedContext): PartiqlAst.PartiqlAstNode =
-        PartiqlAst.BUILDER()
-            .id(ctx.toRawString(), PartiqlAst.CaseSensitivity.CaseSensitive(), PartiqlAst.ScopeQualifier.Unqualified())
-
-    override fun visitVarRefExprIdentAtQuoted(ctx: PartiQLParser.VarRefExprIdentAtQuotedContext): PartiqlAst.PartiqlAstNode =
-        PartiqlAst.BUILDER()
-            .id(ctx.toRawString(), PartiqlAst.CaseSensitivity.CaseSensitive(), PartiqlAst.ScopeQualifier.LocalsFirst())
-
-    override fun visitVarRefExprIdentAtUnquoted(ctx: PartiQLParser.VarRefExprIdentAtUnquotedContext): PartiqlAst.PartiqlAstNode =
-        PartiqlAst.BUILDER().id(
-            ctx.toRawString(),
-            PartiqlAst.CaseSensitivity.CaseInsensitive(),
-            PartiqlAst.ScopeQualifier.LocalsFirst()
-        )
-
-    override fun visitVarRefExprIdentUnquoted(ctx: PartiQLParser.VarRefExprIdentUnquotedContext): PartiqlAst.PartiqlAstNode =
-        PartiqlAst.BUILDER().id(
-            ctx.toRawString(),
-            PartiqlAst.CaseSensitivity.CaseInsensitive(),
-            PartiqlAst.ScopeQualifier.Unqualified()
-        )
+    override fun visitVarRefExpr(ctx: PartiQLParser.VarRefExprContext): PartiqlAst.PartiqlAstNode = PartiqlAst.build {
+        when {
+            ctx.IDENTIFIER_QUOTED() != null -> id(ctx.IDENTIFIER_QUOTED().getStringValue(), caseSensitive(), unqualified())
+            ctx.IDENTIFIER() != null -> id(ctx.IDENTIFIER().getStringValue(), caseInsensitive(), unqualified())
+            ctx.IDENTIFIER_AT_QUOTED() != null -> id(ctx.IDENTIFIER_AT_QUOTED().getStringValue(), caseSensitive(), localsFirst())
+            ctx.IDENTIFIER_AT_UNQUOTED() != null -> id(ctx.IDENTIFIER_AT_UNQUOTED().getStringValue(), caseInsensitive(), localsFirst())
+            else -> throw org.partiql.lang.syntax.PartiQLParser.ParseErrorListener.ParseException("Invalid variable reference.")
+        }
+    }
 
     /**
      * EXPRESSIONS
@@ -494,22 +484,22 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         PartiqlAst.Expr.Lit(ion.newBool(false).toIonElement())
 
     override fun visitLiteralIon(ctx: PartiQLParser.LiteralIonContext): PartiqlAst.PartiqlAstNode =
-        PartiqlAst.Expr.Lit(ion.singleValue(ctx.ION_CLOSURE().text.toIonString()).toIonElement())
+        PartiqlAst.Expr.Lit(ion.singleValue(ctx.ION_CLOSURE().getStringValue()).toIonElement())
 
     override fun visitLiteralString(ctx: PartiQLParser.LiteralStringContext): PartiqlAst.PartiqlAstNode =
-        PartiqlAst.Expr.Lit(ion.newString(ctx.LITERAL_STRING().text.toPartiQLString()).toIonElement())
+        PartiqlAst.Expr.Lit(ion.newString(ctx.LITERAL_STRING().getStringValue()).toIonElement())
 
     override fun visitLiteralInteger(ctx: PartiQLParser.LiteralIntegerContext): PartiqlAst.Expr.Lit =
         PartiqlAst.Expr.Lit(ion.newInt(BigInteger(ctx.LITERAL_INTEGER().text, 10)).toIonElement())
 
     override fun visitLiteralDate(ctx: PartiQLParser.LiteralDateContext): PartiqlAst.PartiqlAstNode {
-        val dateString = ctx.LITERAL_STRING().text.toPartiQLString()
+        val dateString = ctx.LITERAL_STRING().getStringValue()
         val (year, month, day) = dateString.split("-")
         return PartiqlAst.BUILDER().date(year.toLong(), month.toLong(), day.toLong())
     }
 
     override fun visitLiteralTime(ctx: PartiQLParser.LiteralTimeContext): PartiqlAst.PartiqlAstNode {
-        val timeString = ctx.LITERAL_STRING().text.toPartiQLString()
+        val timeString = ctx.LITERAL_STRING().getStringValue()
         val precision = when (ctx.LITERAL_INTEGER()) {
             null -> try {
                 getPrecisionFromTimeString(timeString).toLong()
@@ -539,7 +529,7 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
     }
 
     override fun visitLiteralTimeZone(ctx: PartiQLParser.LiteralTimeZoneContext): PartiqlAst.PartiqlAstNode {
-        val timeString = ctx.LITERAL_STRING().text.toPartiQLString()
+        val timeString = ctx.LITERAL_STRING().getStringValue()
         val precision = when (ctx.LITERAL_INTEGER()) {
             null -> try {
                 getPrecisionFromTimeString(timeString).toLong()
@@ -709,7 +699,6 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
     override fun visitLiteralDecimal(ctx: PartiQLParser.LiteralDecimalContext): PartiqlAst.PartiqlAstNode =
         PartiqlAst.Expr.Lit(ion.newDecimal(bigDecimalOf(ctx.LITERAL_DECIMAL().text)).toIonElement())
 
-    // TODO: should the function base allow f(), "f"(), @"f"(), and @f()?
     override fun visitFunctionCall(ctx: PartiQLParser.FunctionCallContext): PartiqlAst.PartiqlAstNode {
         val name = ctx.name.getString().toLowerCase()
         val args = ctx.expr().map { arg -> visit(arg) as PartiqlAst.Expr }
@@ -727,14 +716,7 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         return PartiqlAst.build { pathExpr(expr, PartiqlAst.CaseSensitivity.CaseSensitive(), metaContainerOf(IsPathIndexMeta.instance)) }
     }
 
-    // TODO: VarPathExpr should NOT allow the @ symbol
-    override fun visitPathStepDotExpr(ctx: PartiQLParser.PathStepDotExprContext): PartiqlAst.PartiqlAstNode {
-        return when (val key = ctx.key) {
-            is PartiQLParser.VarRefExprIdentUnquotedContext -> PartiqlAst.build { pathExpr(lit(ion.newString(key.toRawString()).toIonElement()), caseInsensitive()) }
-            is PartiQLParser.VarRefExprIdentQuotedContext -> PartiqlAst.build { pathExpr(lit(ion.newString(key.toRawString()).toIonElement()), caseSensitive()) }
-            else -> throw org.partiql.lang.syntax.PartiQLParser.ParseErrorListener.ParseException("Unidentifiable path.")
-        }
-    }
+    override fun visitPathStepDotExpr(ctx: PartiQLParser.PathStepDotExprContext) = getSymbolPathExpr(ctx.key)
 
     override fun visitPathStepIndexAll(ctx: PartiQLParser.PathStepIndexAllContext) = PartiqlAst.build { pathWildcard() }
     override fun visitPathStepDotAll(ctx: PartiQLParser.PathStepDotAllContext) = PartiqlAst.build { pathUnpivot() }
@@ -766,6 +748,12 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
     override fun visitExprTermCollection(ctx: PartiQLParser.ExprTermCollectionContext?): PartiqlAst.PartiqlAstNode = super.visitExprTermCollection(ctx)
     override fun visitPredicateBase(ctx: PartiQLParser.PredicateBaseContext?): PartiqlAst.PartiqlAstNode = super.visitPredicateBase(ctx)
     override fun visitGroupAlias(ctx: PartiQLParser.GroupAliasContext?): PartiqlAst.PartiqlAstNode = super.visitGroupAlias(ctx)
+    override fun visitSingleQuery(ctx: PartiQLParser.SingleQueryContext?): PartiqlAst.PartiqlAstNode = super.visitSingleQuery(ctx)
+    override fun visitTableJoined(ctx: PartiQLParser.TableJoinedContext?): PartiqlAst.PartiqlAstNode = super.visitTableJoined(ctx)
+    override fun visitTableNonJoin(ctx: PartiQLParser.TableNonJoinContext?): PartiqlAst.PartiqlAstNode = super.visitTableNonJoin(ctx)
+    override fun visitTableRefBase(ctx: PartiQLParser.TableRefBaseContext?): PartiqlAst.PartiqlAstNode = super.visitTableRefBase(ctx)
+    override fun visitJoinRhsBase(ctx: PartiQLParser.JoinRhsBaseContext?): PartiqlAst.PartiqlAstNode = super.visitJoinRhsBase(ctx)
+    override fun visitSymbolPrimitive(ctx: PartiQLParser.SymbolPrimitiveContext?): PartiqlAst.PartiqlAstNode = super.visitSymbolPrimitive(ctx)
 
     /**
      *
@@ -841,30 +829,15 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         else -> visitOrEmpty(clazz, ctx.asList())
     }
 
-    private fun <T : PartiqlAst.PartiqlAstNode> visitOrNull(clazz: KClass<T>, ctx: ParserRuleContext): T? = when (ctx) {
-        null -> null
-        else -> clazz.cast(visit(ctx))
+    private fun TerminalNode.getStringValue(): String = when (this.symbol.type) {
+        PartiQLParser.IDENTIFIER -> this.text
+        PartiQLParser.IDENTIFIER_QUOTED -> this.text.trim('"').replace("\"\"", "\"")
+        PartiQLParser.IDENTIFIER_AT_UNQUOTED -> this.text.removePrefix("@")
+        PartiQLParser.IDENTIFIER_AT_QUOTED -> this.text.removePrefix("@").trim('"').replace("\"\"", "\"")
+        PartiQLParser.LITERAL_STRING -> this.text.trim('\'').replace("''", "'")
+        PartiQLParser.ION_CLOSURE -> this.text.trim('`')
+        else -> throw org.partiql.lang.syntax.PartiQLParser.ParseErrorListener.ParseException("Unsupported token for grabbing string value.")
     }
-
-    private fun visitOrNull(ctx: ParserRuleContext): PartiqlAst.PartiqlAstNode? = when (ctx) {
-        null -> null
-        else -> visit(ctx)
-    }
-
-    private fun PartiQLParser.VarRefExprIdentAtUnquotedContext.toRawString() =
-        this.IDENTIFIER_AT_UNQUOTED().text.removePrefix("@")
-
-    private fun PartiQLParser.VarRefExprIdentAtQuotedContext.toRawString() =
-        this.IDENTIFIER_AT_QUOTED().text.removePrefix("@").toPartiQLIdentifier()
-
-    private fun PartiQLParser.VarRefExprIdentQuotedContext.toRawString() =
-        this.IDENTIFIER_QUOTED().text.toPartiQLIdentifier()
-
-    private fun PartiQLParser.VarRefExprIdentUnquotedContext.toRawString() = this.IDENTIFIER().text
-
-    private fun String.toPartiQLString(): String = this.trim('\'').replace("''", "'")
-    private fun String.toPartiQLIdentifier(): String = this.trim('"').replace("\"\"", "\"")
-    private fun String.toIonString(): String = this.trim('`')
 
     private fun getStrategy(strategy: PartiQLParser.SetQuantifierStrategyContext?, default: PartiqlAst.SetQuantifier): PartiqlAst.SetQuantifier {
         return when {
@@ -895,8 +868,16 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
 
     private fun PartiQLParser.SymbolPrimitiveContext.getString(): String {
         return when {
-            this.IDENTIFIER_QUOTED() != null -> this.IDENTIFIER_QUOTED().text.toPartiQLIdentifier()
+            this.IDENTIFIER_QUOTED() != null -> this.IDENTIFIER_QUOTED().getStringValue()
             this.IDENTIFIER() != null -> this.IDENTIFIER().text
+            else -> throw org.partiql.lang.syntax.PartiQLParser.ParseErrorListener.ParseException("Unable to get symbol's text.")
+        }
+    }
+
+    private fun getSymbolPathExpr(ctx: PartiQLParser.SymbolPrimitiveContext) = PartiqlAst.build {
+        when {
+            ctx.IDENTIFIER_QUOTED() != null -> pathExpr(lit(ionString(ctx.IDENTIFIER_QUOTED().getStringValue())), caseSensitive())
+            ctx.IDENTIFIER() != null -> pathExpr(lit(ionString(ctx.IDENTIFIER().text)), caseInsensitive())
             else -> throw org.partiql.lang.syntax.PartiQLParser.ParseErrorListener.ParseException("Unable to get symbol's text.")
         }
     }
