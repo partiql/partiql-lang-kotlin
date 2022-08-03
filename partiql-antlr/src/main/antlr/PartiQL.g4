@@ -98,9 +98,10 @@ removeCommand
 // TODO: ... same functionality. Using 2 returning clauses always uses the second clause. This should be fixed.
 insertCommand
     : updateClause INSERT INTO pathSimple VALUE value=querySet ( AT pos=expr )? onConflict? returningClause? whereClause? returningClause?   # InsertValue
-    | fromClause? INSERT INTO pathSimple VALUE value=querySet ( AT pos=expr )? onConflict? returningClause?                                  # InsertValue
+    | fromClause whereClause? INSERT INTO pathSimple VALUE value=querySet ( AT pos=expr )? onConflict? returningClause?                      # InsertValue
     | updateClause INSERT INTO pathSimple value=querySet whereClause? returningClause?                                                       # InsertSimple
-    | fromClause? INSERT INTO pathSimple value=querySet returningClause?                                                                     # InsertSimple
+    | fromClause whereClause? INSERT INTO pathSimple value=querySet returningClause?                                                         # InsertSimple
+    | INSERT INTO pathSimple value=querySet                                                                                                  # InsertSimple
     ;
 
 onConflict
@@ -112,11 +113,13 @@ updateClause
     ;
     
 setCommand
-    : (updateClause|fromClause)? SET setAssignment ( COMMA setAssignment )*
+    : updateClause SET setAssignment ( COMMA setAssignment )* whereClause? returningClause?
+    | fromClause whereClause? SET setAssignment ( COMMA setAssignment )* returningClause?
+    | SET setAssignment ( COMMA setAssignment )*
     ;
 
 setAssignment
-    : symbolPrimitive EQ expr
+    : pathSimple EQ expr
     ;
 
 deleteCommand
