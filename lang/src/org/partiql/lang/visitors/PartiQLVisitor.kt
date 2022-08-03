@@ -75,28 +75,51 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
     override fun visitInsertSimple(ctx: PartiQLParser.InsertSimpleContext): PartiqlAst.PartiqlAstNode {
         var from = if (ctx.fromClause() != null) visitFromClause(ctx.fromClause()) else null
         from = if (ctx.updateClause() != null) visitUpdateClause(ctx.updateClause()) else from
+        val returning = if (ctx.returningClause() != null) visitReturningClause(ctx.returningClause()) else null
         val target = visitPathSimple(ctx.pathSimple())
-        val ops = PartiqlAst.build { dmlOpList(insert(target, visitExpr(ctx.value))) }
+        val ops = PartiqlAst.build { dmlOpList(insert(target, visit(ctx.value) as PartiqlAst.Expr)) }
         val where = if (ctx.whereClause() != null) visitWhereClause(ctx.whereClause()) else null
         return PartiqlAst.build {
-            dml(ops, from = from, where = where, returning = null)
+            dml(ops, from = from, where = where, returning = returning)
         }
     }
 
+    // TODO: There is a bug in SqlParser where it allows 2 returning clauses, and it only uses the last one. This ...
+    // TODO: .. should be fixed in a future iteration.
     override fun visitInsertValue(ctx: PartiQLParser.InsertValueContext): PartiqlAst.PartiqlAstNode {
         var from = if (ctx.fromClause() != null) visitFromClause(ctx.fromClause()) else null
         from = if (ctx.updateClause() != null) visitUpdateClause(ctx.updateClause()) else from
-        val returning = if (ctx.returningClause() != null) visitReturningClause(ctx.returningClause()) as PartiqlAst.ReturningExpr else null
+        val returning = if (ctx.returningClause().isNotEmpty()) visitReturningClause(ctx.returningClause().last()) else null
         val target = visitPathSimple(ctx.pathSimple())
         val index = if (ctx.pos != null) visitExpr(ctx.pos) else null
         val onConflict = if (ctx.onConflict() != null) visitOnConflict(ctx.onConflict()) else null
         val where = if (ctx.whereClause() != null) visitWhereClause(ctx.whereClause()) else null
         val ops = PartiqlAst.build {
-            dmlOpList(insertValue(target, visitExpr(ctx.value), index = index, onConflict = onConflict))
+            dmlOpList(insertValue(target, visit(ctx.value) as PartiqlAst.Expr, index = index, onConflict = onConflict))
         }
         return PartiqlAst.build {
             dml(ops, from = from, where = where, returning = returning)
         }
+    }
+
+    override fun visitReturningClause(ctx: PartiQLParser.ReturningClauseContext) = PartiqlAst.build {
+        val elements = ctx.returningColumn().map { col -> visitReturningColumn(col) }
+        returningExpr(elements)
+    }
+
+    private fun getReturningMapping(status: Token, age: Token) = PartiqlAst.build {
+        when {
+            status.type == PartiQLParser.MODIFIED && age.type == PartiQLParser.NEW -> modifiedNew()
+            status.type == PartiQLParser.MODIFIED && age.type == PartiQLParser.OLD -> modifiedOld()
+            status.type == PartiQLParser.ALL && age.type == PartiQLParser.NEW -> allNew()
+            status.type == PartiQLParser.ALL && age.type == PartiQLParser.OLD -> allOld()
+            else -> throw org.partiql.lang.syntax.PartiQLParser.ParseErrorListener.ParseException("Unable to get return mapping.")
+        }
+    }
+
+    override fun visitReturningColumn(ctx: PartiQLParser.ReturningColumnContext) = PartiqlAst.build {
+        val column = if (ctx.ASTERISK() != null) returningWildcard() else returningColumn(visitExpr(ctx.expr()))
+        returningElem(getReturningMapping(ctx.status, ctx.age), column)
     }
 
     override fun visitOnConflict(ctx: PartiQLParser.OnConflictContext) = PartiqlAst.build {
