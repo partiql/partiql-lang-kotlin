@@ -32,9 +32,16 @@ symbolPrimitive
  *
  */
 
-topQuery: query COLON_SEMI? EOF;
+topQuery
+    : dql COLON_SEMI? EOF     # QueryDql
+    | dml COLON_SEMI? EOF     # QueryDml
+    ;
 
-query: querySet ;
+dql 
+    : query;
+
+query
+    : querySet;
 
 querySet
     : lhs=querySet EXCEPT ALL? rhs=singleQuery           # QuerySetExcept
@@ -58,6 +65,69 @@ sfwQuery
         orderByClause?
         limitClause?
         offsetByClause?
+    ;
+    
+/**
+ *
+ * DATA MANIPULATION LANGUAGE (DML)
+ *
+ */
+ 
+dml
+    : insertCommand
+    | setCommand
+    | removeCommand
+    | deleteCommand
+    ;
+
+pathSimple
+    : symbolPrimitive pathSimpleSteps*
+    ;
+
+pathSimpleSteps
+    : BRACKET_LEFT key=literal BRACKET_RIGHT             # PathSimpleLiteral
+    | BRACKET_LEFT key=symbolPrimitive BRACKET_RIGHT     # PathSimpleSymbol
+    | PERIOD key=symbolPrimitive                         # PathSimpleDotSymbol
+    ;
+
+removeCommand
+    : (updateClause|fromClause)? REMOVE tableBaseReference
+    ;
+
+insertCommand
+    : updateClause INSERT INTO pathSimple VALUE value=expr ( AT pos=expr )? onConflict? returningClause? whereClause?   # InsertValue
+    | fromClause? INSERT INTO pathSimple VALUE value=expr ( AT pos=expr )? onConflict? returningClause?                 # InsertValue
+    | updateClause INSERT INTO pathSimple value=expr whereClause?                                                       # InsertSimple
+    | fromClause? INSERT INTO pathSimple value=expr                                                                     # InsertSimple
+    ;
+
+onConflict
+    : ON CONFLICT WHERE expr DO NOTHING
+    ;
+
+updateClause
+    : UPDATE tableBaseReference
+    ;
+    
+setCommand
+    : (updateClause|fromClause)? SET setAssignment ( COMMA setAssignment )*
+    ;
+
+setAssignment
+    : symbolPrimitive EQ expr
+    ;
+
+deleteCommand
+    : DELETE fromClause whereClause? returningClause?
+    ;
+
+returningClause
+    : RETURNING returningColumn ( COMMA returningColumn )*
+    ;
+    
+returningColumn
+    : status=(MODIFIED|ALL) age=(OLD|NEW) ASTERISK
+    | status=(MODIFIED|ALL) age=(OLD|NEW) col=expr
     ;
 
 /**
