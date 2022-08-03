@@ -12,22 +12,18 @@ options {
  *
  */
 
-// TODO: Check if this should be a symbol primitive. CLI says that identifiers without @ are allowed
 asIdent
-    : AS symbolPrimitive ;
+    : AS symbolPrimitive;
 
 atIdent
-    : AT symbolPrimitive ;
+    : AT symbolPrimitive;
 
 byIdent
-    : BY symbolPrimitive ;
-    
-// TODO: Symbol Primitive should only be ID and quoted IDs. Need a different rule to handle @
+    : BY symbolPrimitive;
+
 symbolPrimitive
-    : IDENTIFIER              # SymbolIdentifierUnquoted
-    | IDENTIFIER_QUOTED       # SymbolIdentifierQuoted
-    | IDENTIFIER_AT_UNQUOTED  # SymbolIdentifierAtUnquoted
-    | IDENTIFIER_AT_QUOTED    # SymbolIdentifierAtQuoted
+    : IDENTIFIER
+    | IDENTIFIER_QUOTED
     ;
 
 /**
@@ -38,8 +34,30 @@ symbolPrimitive
 
 topQuery: query COLON_SEMI? EOF;
 
+query: querySet ;
+
+querySet
+    : lhs=querySet EXCEPT ALL? rhs=singleQuery           # QuerySetExcept
+    | lhs=querySet UNION ALL? rhs=singleQuery            # QuerySetUnion
+    | lhs=querySet INTERSECT ALL? rhs=singleQuery        # QuerySetIntersect
+    | singleQuery                                        # QuerySetSingleQuery
+    ;
+
+singleQuery
+    : expr
+    | sfwQuery
+    ;
+
 sfwQuery
-    : selectClause fromClause? letClause? whereClause? groupClause? havingClause? orderByClause? limitClause? offsetByClause? # SelectFromWhere
+    : selectClause
+        fromClause
+        letClause?
+        whereClause?
+        groupClause?
+        havingClause?
+        orderByClause?
+        limitClause?
+        offsetByClause?
     ;
 
 /**
@@ -131,8 +149,6 @@ joinType
     | FULL OUTER?
     | OUTER
     ;
-
-
 
 exprPrimary
     : cast                       # ExprPrimaryBase
@@ -331,21 +347,6 @@ values: VALUES valueRow ( COMMA valueRow )* ;
 valueRow: PAREN_LEFT expr ( COMMA expr )* PAREN_RIGHT ;
 
 valueList: PAREN_LEFT expr ( COMMA expr )+ PAREN_RIGHT ;
-    
-singleQuery
-    : expr        # QueryExpr
-    | sfwQuery    # QuerySfw
-    ;
-    
-// NOTE: Modified rule
-querySet
-    : lhs=querySet EXCEPT ALL? rhs=singleQuery           # QuerySetExcept
-    | lhs=querySet UNION ALL? rhs=singleQuery            # QuerySetUnion
-    | lhs=querySet INTERSECT ALL? rhs=singleQuery        # QuerySetIntersect
-    | singleQuery                                     # QuerySetSingleQuery
-    ;
-    
-query: querySet ;
 
 offsetByClause: OFFSET expr ;
     
