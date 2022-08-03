@@ -147,14 +147,16 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         var from = if (ctx.fromClause() != null) visitFromClause(ctx.fromClause()) else null
         from = if (ctx.updateClause() != null) visitUpdateClause(ctx.updateClause()) as PartiqlAst.FromSource else from
         val assignments = ctx.setAssignment().map { assignment -> visitSetAssignment(assignment) }
+        val where = if (ctx.whereClause() != null) visitWhereClause(ctx.whereClause()) else null
+        val returning = if (ctx.returningClause() != null) visitReturningClause(ctx.returningClause()) else null
         return PartiqlAst.build {
-            dml(dmlOpList(assignments), from = from, where = null, returning = null)
+            dml(dmlOpList(assignments), from = from, where = where, returning = returning)
         }
     }
 
     override fun visitSetAssignment(ctx: PartiQLParser.SetAssignmentContext): PartiqlAst.DmlOp.Set {
         return PartiqlAst.build {
-            set(assignment(visitSymbolPrimitive(ctx.symbolPrimitive()), visitExpr(ctx.expr())))
+            set(assignment(visitPathSimple(ctx.pathSimple()), visitExpr(ctx.expr())))
         }
     }
 
