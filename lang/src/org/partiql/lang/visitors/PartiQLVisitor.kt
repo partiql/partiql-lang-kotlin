@@ -27,7 +27,6 @@ import org.partiql.lang.ast.IsCountStarMeta
 import org.partiql.lang.ast.IsImplictJoinMeta
 import org.partiql.lang.ast.IsPathIndexMeta
 import org.partiql.lang.ast.LegacyLogicalNotMeta
-import org.partiql.lang.ast.SetQuantifier
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.metaContainerOf
 import org.partiql.lang.eval.EvaluationException
@@ -64,7 +63,7 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
             }
         }.flatten().toMap()
 
-    override fun visitSelectFromWhere(ctx: PartiQLParser.SelectFromWhereContext): PartiqlAst.Expr.Select {
+    override fun visitSfwQuery(ctx: PartiQLParser.SfwQueryContext): PartiqlAst.Expr.Select {
         val projection = visit(ctx.selectClause()) as PartiqlAst.Projection
         val strategy = getSetQuantifierStrategy(ctx.selectClause())
         val from = visit(ctx.fromClause()) as PartiqlAst.FromSource
@@ -227,10 +226,6 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         val rhs = visit(ctx.rhs) as PartiqlAst.Expr
         val quantifier = if (ctx.ALL() != null) PartiqlAst.BUILDER().all() else PartiqlAst.BUILDER().distinct()
         return PartiqlAst.BUILDER().union(quantifier, listOf(lhs, rhs))
-    }
-
-    override fun visitQuerySfw(ctx: PartiQLParser.QuerySfwContext): PartiqlAst.Expr.Select {
-        return visit(ctx.sfwQuery()) as PartiqlAst.Expr.Select
     }
 
     // TODO: Add metas
@@ -766,16 +761,11 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
     override fun shouldVisitNextChild(node: RuleNode?, currentResult: PartiqlAst.PartiqlAstNode?) = super.shouldVisitNextChild(node, currentResult)
     override fun visitErrorNode(node: ErrorNode?): PartiqlAst.PartiqlAstNode = super.visitErrorNode(node)
     override fun visitChildren(node: RuleNode?): PartiqlAst.PartiqlAstNode = super.visitChildren(node)
-    override fun visitQueryExpr(ctx: PartiQLParser.QueryExprContext?): PartiqlAst.PartiqlAstNode = super.visitQueryExpr(ctx)
     override fun visitExprPrimaryBase(ctx: PartiQLParser.ExprPrimaryBaseContext?): PartiqlAst.PartiqlAstNode = super.visitExprPrimaryBase(ctx)
     override fun visitExprTermBase(ctx: PartiQLParser.ExprTermBaseContext?): PartiqlAst.PartiqlAstNode = super.visitExprTermBase(ctx)
     override fun visitExprTermCollection(ctx: PartiQLParser.ExprTermCollectionContext?): PartiqlAst.PartiqlAstNode = super.visitExprTermCollection(ctx)
     override fun visitPredicateBase(ctx: PartiQLParser.PredicateBaseContext?): PartiqlAst.PartiqlAstNode = super.visitPredicateBase(ctx)
     override fun visitGroupAlias(ctx: PartiQLParser.GroupAliasContext?): PartiqlAst.PartiqlAstNode = super.visitGroupAlias(ctx)
-    override fun visitSymbolIdentifierAtQuoted(ctx: PartiQLParser.SymbolIdentifierAtQuotedContext?): PartiqlAst.PartiqlAstNode = super.visitSymbolIdentifierAtQuoted(ctx)
-    override fun visitSymbolIdentifierAtUnquoted(ctx: PartiQLParser.SymbolIdentifierAtUnquotedContext?): PartiqlAst.PartiqlAstNode = super.visitSymbolIdentifierAtUnquoted(ctx)
-    override fun visitSymbolIdentifierQuoted(ctx: PartiQLParser.SymbolIdentifierQuotedContext?): PartiqlAst.PartiqlAstNode = super.visitSymbolIdentifierQuoted(ctx)
-    override fun visitSymbolIdentifierUnquoted(ctx: PartiQLParser.SymbolIdentifierUnquotedContext?): PartiqlAst.PartiqlAstNode = super.visitSymbolIdentifierUnquoted(ctx)
 
     /**
      *
@@ -904,12 +894,10 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
     }
 
     private fun PartiQLParser.SymbolPrimitiveContext.getString(): String {
-        return when (this) {
-            is PartiQLParser.SymbolIdentifierQuotedContext -> this.IDENTIFIER_QUOTED().text.toPartiQLIdentifier()
-            is PartiQLParser.SymbolIdentifierUnquotedContext -> this.IDENTIFIER().text
-            is PartiQLParser.SymbolIdentifierAtQuotedContext -> this.IDENTIFIER_AT_QUOTED().text.removePrefix("@").toPartiQLIdentifier()
-            is PartiQLParser.SymbolIdentifierAtUnquotedContext -> this.IDENTIFIER_AT_UNQUOTED().text.removePrefix("@")
-            else -> "UNKNOWN"
+        return when {
+            this.IDENTIFIER_QUOTED() != null -> this.IDENTIFIER_QUOTED().text.toPartiQLIdentifier()
+            this.IDENTIFIER() != null -> this.IDENTIFIER().text
+            else -> throw org.partiql.lang.syntax.PartiQLParser.ParseErrorListener.ParseException("Unable to get symbol's text.")
         }
     }
 
