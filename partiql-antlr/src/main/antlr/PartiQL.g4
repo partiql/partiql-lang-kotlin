@@ -292,10 +292,10 @@ exprPrimary
 exprTerm
     : PAREN_LEFT query PAREN_RIGHT   # ExprTermWrappedQuery
     | parameter                      # ExprTermBase
-    | literal                        # ExprTermBase
     | varRefExpr                     # ExprTermBase
-    | exprTermCollection             # ExprTermBase
-    | exprTermTuple                  # ExprTermBase
+    | literal                        # ExprTermBase
+    | collection                     # ExprTermBase
+    | tuple                          # ExprTermBase
     ;
 
 caseExpr
@@ -354,23 +354,6 @@ pathStep
 parameter
     : QUESTION_MARK;
 
-exprTermCollection
-    : array
-    | exprTermBag
-    ;
-
-array
-    : BRACKET_LEFT ( expr ( COMMA expr )* )? BRACKET_RIGHT;
-
-exprTermBag
-    : ANGLE_DOUBLE_LEFT ( expr ( COMMA expr )* )? ANGLE_DOUBLE_RIGHT;
-
-exprTermTuple
-    : BRACE_LEFT ( exprPair ( COMMA exprPair )* )? BRACE_RIGHT;
-
-exprPair
-    : lhs=expr COLON rhs=expr;
-
 varRefExpr
     : IDENTIFIER
     | IDENTIFIER_AT_UNQUOTED
@@ -383,6 +366,23 @@ varRefExpr
  * LITERALS & TYPES
  *
  */
+ 
+collection
+    : array
+    | bag
+    ;
+
+array
+    : BRACKET_LEFT ( expr ( COMMA expr )* )? BRACKET_RIGHT;
+
+bag
+    : ANGLE_DOUBLE_LEFT ( expr ( COMMA expr )* )? ANGLE_DOUBLE_RIGHT;
+
+tuple
+    : BRACE_LEFT ( pair ( COMMA pair )* )? BRACE_RIGHT;
+
+pair
+    : lhs=expr COLON rhs=expr;
 
 literal
     : NULL                           # LiteralNull
