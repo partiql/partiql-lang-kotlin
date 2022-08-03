@@ -64,7 +64,7 @@ stage in the `PlannerPipeline` and to generate performance metrics for the indiv
 - Codecov report uploads in GitHub Actions workflow
 - GitHub Actions capability to run on forks
 - Negation overflow caused by minimum INT8
-- Type Inferencer Internal error caused by arithmetic operations with mixed types. 
+- Type mismatch error caused by evaluator's integer overflow check
 
 ### Removed
 - README.md badge for travisci

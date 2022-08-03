@@ -8,7 +8,24 @@ import org.partiql.lang.util.testdsl.IonResultTestSuite
 import org.partiql.lang.util.testdsl.defineTestSuite
 
 class EvaluatorTestCasesAsExprNodeTestCases : ArgumentsProviderBase() {
-    override fun getParameters() = EVALUATOR_TEST_SUITE.allTestsAsExprNodeTestCases()
+
+    companion object {
+        private val EXPR_NODE_SKIP_LIST = setOf(
+            // OUTER bag operators are not in the legacy AST and should be skipped
+            "outerUnionDistinct",
+            "outerUnionAll",
+            "outerIntersectDistinct",
+            "outerIntersectAll",
+            "outerExceptDistinct",
+            "outerExceptAll",
+            "outerUnionCoerceScalar",
+            "outerUnionCoerceStruct",
+            "outerUnionCoerceNullMissing",
+            "outerUnionCoerceList"
+        )
+    }
+
+    override fun getParameters() = EVALUATOR_TEST_SUITE.allTestsAsExprNodeTestCases(EXPR_NODE_SKIP_LIST)
 }
 
 /**
@@ -1398,6 +1415,20 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
             "$partiql_bag::[[1968, 4, 3, 12, 31, 59]]"
         )
     }
+
+    group("bagOperators") {
+        test("outerUnionDistinct", "<< 1, 2, 2, 3, 3, 3 >> OUTER UNION << 1, 2, 3, 3 >>", "$partiql_bag::[1, 2, 3]")
+        test("outerUnionAll", "<< 1, 2, 2, 3, 3, 3 >> OUTER UNION ALL << 1, 2, 3, 3 >>", "$partiql_bag::[1, 2, 2, 3, 3, 3]")
+        test("outerIntersectDistinct", "<< 1, 2, 2, 3, 3, 3 >> OUTER INTERSECT << 1, 2, 3, 3 >>", "$partiql_bag::[1, 2, 3]")
+        test("outerIntersectAll", "<< 1, 2, 2, 3, 3, 3 >> OUTER INTERSECT ALL << 1, 2, 3, 3 >>", "$partiql_bag::[1, 2, 3, 3]")
+        test("outerExceptDistinct", "<< 1, 1, 1, 2 >> OUTER EXCEPT << 1 >>", "$partiql_bag::[1, 2]")
+        test("outerExceptAll", "<< 1, 1, 1, 2 >> OUTER EXCEPT ALL << 1 >>", "$partiql_bag::[1, 1, 2]")
+        test("outerUnionCoerceScalar", "1 OUTER UNION 2", "$partiql_bag::[1, 2]")
+        test("outerUnionCoerceStruct", "{'a': 1} OUTER UNION {'b': 2}", "$partiql_bag::[ {'a': 1}, {'b': 2} ]")
+        test("outerUnionCoerceNullMissing", "NULL OUTER UNION MISSING", "$partiql_bag::[]")
+        test("outerUnionCoerceList", "[ 1, 1, 1 ] OUTER UNION ALL [ 1, 2 ]", "$partiql_bag::[1, 1, 1, 2]")
+    }
+
     group("arithmetic with mixed type") {
         test(
             "plus with mixed StaticType",
@@ -1430,6 +1461,48 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
             FROM numbers as v
             """,
             "$partiql_bag::[0, 1.0, 1.5e0, 2, 2.5]"
+        )
+
+        test(
+            "modulo with mixed StaticType",
+            """
+            SELECT VALUE v % 2
+            FROM numbers as v
+            """,
+            "$partiql_bag::[1, 0.0, 1e0, 0, 1.]"
+        )
+        test(
+            "unary plus with mixed StaticType",
+            """
+            SELECT VALUE +v
+            FROM numbers as v
+            """,
+            "$partiql_bag::[1, 2.0, 3e0, 4, 5d0]"
+        )
+        test(
+            "unary minus with mixed StaticType",
+            """
+            SELECT VALUE -v
+            FROM numbers as v
+            """,
+            "$partiql_bag::[-1, -2.0, -3e0, -4, -5d0]"
+        )
+        test(
+            "function call with mixed StaticType",
+            """
+            SELECT VALUE CAST(v/2 AS INT)
+            FROM numbers as v
+            """,
+            "$partiql_bag::[0, 1, 1, 2, 2]"
+        )
+        test(
+            "arithmetic with null/missing",
+            """
+            SELECT VALUE 1 + v
+            FROM << null, missing >> AS v
+            """,
+            "$partiql_bag::[null, null]",
+            "$partiql_bag::[null, $partiql_missing::null]"
         )
     }
 }
