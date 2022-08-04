@@ -544,6 +544,7 @@ internal class StaticTypeInferenceVisitorTransform(
             return nAry.withStaticType(computeReturnTypeForAggFunc(funcName, argType))
         }
 
+        // Aggregate function input static type check
         private fun checkAggInputType(functionName: String, argType: StaticType) {
 
             val hasValidParameter = when (functionName) {
@@ -554,9 +555,10 @@ internal class StaticTypeInferenceVisitorTransform(
             if (!hasValidParameter) error("Aggregate function ${functionName.capitalize()} has incompatible input type")
         }
 
-        private fun computeReturnTypeForAggFunc(aggfunc: SymbolPrimitive, argType: StaticType): StaticType {
+        // Aggregate function return type computation
+        private fun computeReturnTypeForAggFunc(aggFunc: SymbolPrimitive, argType: StaticType): StaticType {
 
-            return when (aggfunc.text) {
+            return when (aggFunc.text) {
                 // current implementation of count will always return a long
                 "count" -> StaticType.INT8
                 // max/min result depends on comparison.
