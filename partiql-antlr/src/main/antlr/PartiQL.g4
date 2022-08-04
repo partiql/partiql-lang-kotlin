@@ -33,9 +33,10 @@ symbolPrimitive
  */
 
 topQuery
-    : dql COLON_SEMI? EOF     # QueryDql
-    | dml COLON_SEMI? EOF     # QueryDml
-    | ddl COLON_SEMI? EOF     # QueryDdl
+    : dql COLON_SEMI? EOF          # QueryDql
+    | dml COLON_SEMI? EOF          # QueryDml
+    | ddl COLON_SEMI? EOF          # QueryDdl
+    | execCommand COLON_SEMI? EOF  # QueryExec
     ;
 
 dql 
@@ -66,6 +67,19 @@ sfwQuery
         orderByClause?
         limitClause?
         offsetByClause?
+    ;
+
+/**
+ *
+ * EXECUTE
+ *
+ */
+
+// FIXME #002: This is a slight deviation from SqlParser, as the old parser allows ANY token after EXEC. Realistically,
+//  we probably need to determine the formal rule for this. I'm assuming we shouldn't allow any token, but I've
+//  left it as an expression (which allows strings)
+execCommand
+    : EXEC expr ( querySet ( COMMA querySet )* )?
     ;
     
 /**
