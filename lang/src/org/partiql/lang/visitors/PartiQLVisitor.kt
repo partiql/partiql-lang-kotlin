@@ -107,6 +107,13 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         remove(target)
     }
 
+    override fun visitDeleteCommand(ctx: PartiQLParser.DeleteCommandContext) = PartiqlAst.build {
+        val from = visit(ctx.fromClauseSimple()) as PartiqlAst.FromSource
+        val where = if (ctx.whereClause() != null) visitWhereClause(ctx.whereClause()) else null
+        val returning = if (ctx.returningClause() != null) visitReturningClause(ctx.returningClause()) else null
+        dml(dmlOpList(delete()), from, where, returning)
+    }
+
     override fun visitInsertSimple(ctx: PartiQLParser.InsertSimpleContext): PartiqlAst.PartiqlAstNode {
         val target = visitPathSimple(ctx.pathSimple())
         return PartiqlAst.build { insert(target, visit(ctx.value) as PartiqlAst.Expr) }
@@ -374,7 +381,15 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
      */
 
     override fun visitTableBaseRefClauses(ctx: PartiQLParser.TableBaseRefClausesContext): PartiqlAst.FromSource.Scan {
-        val expr = visit(ctx.expr()) as PartiqlAst.Expr
+        val expr = visitExpr(ctx.expr())
+        val asAlias = if (ctx.asIdent() != null) convertSymbolPrimitive(ctx.asIdent().symbolPrimitive()) else null
+        val atAlias = if (ctx.atIdent() != null) convertSymbolPrimitive(ctx.atIdent().symbolPrimitive()) else null
+        val byAlias = if (ctx.byIdent() != null) convertSymbolPrimitive(ctx.byIdent().symbolPrimitive()) else null
+        return PartiqlAst.FromSource.Scan(expr, asAlias = asAlias, byAlias = byAlias, atAlias = atAlias)
+    }
+
+    override fun visitFromClauseSimpleExplicit(ctx: PartiQLParser.FromClauseSimpleExplicitContext): PartiqlAst.FromSource.Scan {
+        val expr = visitPathSimple(ctx.pathSimple())
         val asAlias = if (ctx.asIdent() != null) convertSymbolPrimitive(ctx.asIdent().symbolPrimitive()) else null
         val atAlias = if (ctx.atIdent() != null) convertSymbolPrimitive(ctx.atIdent().symbolPrimitive()) else null
         val byAlias = if (ctx.byIdent() != null) convertSymbolPrimitive(ctx.byIdent().symbolPrimitive()) else null
@@ -425,6 +440,12 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         val expr = visitExpr(ctx.expr())
         val name = ctx.symbolPrimitive().getString()
         return PartiqlAst.BUILDER().scan(expr, name)
+    }
+
+    override fun visitFromClauseSimpleImplicit(ctx: PartiQLParser.FromClauseSimpleImplicitContext): PartiqlAst.FromSource {
+        val path = visitPathSimple(ctx.pathSimple())
+        val name = ctx.symbolPrimitive().getString()
+        return PartiqlAst.BUILDER().scan(path, name)
     }
 
     override fun visitTableWrapped(ctx: PartiQLParser.TableWrappedContext): PartiqlAst.PartiqlAstNode = visit(ctx.tableReference())
