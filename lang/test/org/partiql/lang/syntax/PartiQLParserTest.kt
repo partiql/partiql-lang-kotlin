@@ -70,7 +70,7 @@ class PartiQLParserTest {
         val query = "UPDATE a INSERT INTO B VALUE C RETURNING MODIFIED NEW E INSERT INTO F VALUE G"
 
         // Act
-        val expected = oldParser.parseAstStatement(query)
+        // val expected = oldParser.parseAstStatement(query)
         val stmt = parser.parseAstStatement(query)
         val tree = parseQuery(query)
 
