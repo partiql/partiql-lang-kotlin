@@ -15,6 +15,7 @@
 package org.partiql.lang.visitors
 
 import com.amazon.ion.IonSystem
+import com.amazon.ionelement.api.MetaContainer
 import com.amazon.ionelement.api.StringElement
 import com.amazon.ionelement.api.SymbolElement
 import com.amazon.ionelement.api.ionInt
@@ -30,6 +31,7 @@ import org.partiql.lang.ast.IsCountStarMeta
 import org.partiql.lang.ast.IsImplictJoinMeta
 import org.partiql.lang.ast.IsPathIndexMeta
 import org.partiql.lang.ast.LegacyLogicalNotMeta
+import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.metaContainerOf
 import org.partiql.lang.eval.EvaluationException
@@ -261,6 +263,7 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         val where = if (ctx.whereClause() != null) visit(ctx.whereClause()) as PartiqlAst.Expr else null
         val having = if (ctx.havingClause() != null) visit(ctx.havingClause()) as PartiqlAst.Expr else null
         val let = if (ctx.letClause() != null) visit(ctx.letClause()) as PartiqlAst.Let else null
+        val metas = ctx.selectClause().getMetas()
         return PartiqlAst.BUILDER().select(
             project = projection,
             from = from,
@@ -271,8 +274,27 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
             offset = offset,
             where = where,
             having = having,
-            fromLet = let
+            fromLet = let,
+            metas = metas
         )
+    }
+
+    private fun PartiQLParser.SelectClauseContext.getMetas(): MetaContainer = when (this) {
+        is PartiQLParser.SelectAllContext -> this.SELECT().getSourceMetaContainer()
+        is PartiQLParser.SelectItemsContext -> this.SELECT().getSourceMetaContainer()
+        is PartiQLParser.SelectValueContext -> this.SELECT().getSourceMetaContainer()
+        is PartiQLParser.SelectPivotContext -> this.PIVOT().getSourceMetaContainer()
+        else -> throw org.partiql.lang.syntax.PartiQLParser.ParseErrorListener.ParseException("Unknown meta location.")
+    }
+
+    private fun TerminalNode.getSourceMetaContainer(): MetaContainer {
+        val metas = this.getSourceMetas()
+        return com.amazon.ionelement.api.metaContainerOf(Pair(metas.tag, metas))
+    }
+
+    private fun TerminalNode.getSourceMetas(): SourceLocationMeta {
+        val length = this.symbol.stopIndex - this.symbol.startIndex + 1
+        return SourceLocationMeta(this.symbol.line.toLong(), this.symbol.charPositionInLine.toLong() + 1, length.toLong())
     }
 
     override fun visitSelectAll(ctx: PartiQLParser.SelectAllContext) = PartiqlAst.build { projectStar() }
@@ -334,7 +356,8 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
 
     override fun visitOrderBy(ctx: PartiQLParser.OrderByContext): PartiqlAst.OrderBy {
         val sortSpecs = ctx.orderSortSpec().map { spec -> visit(spec) as PartiqlAst.SortSpec }
-        return PartiqlAst.BUILDER().orderBy(sortSpecs)
+        val metas = ctx.ORDER().getSourceMetaContainer()
+        return PartiqlAst.build { orderBy(sortSpecs, metas) }
     }
 
     override fun visitOrderBySortSpec(ctx: PartiQLParser.OrderBySortSpecContext): PartiqlAst.SortSpec {
@@ -385,7 +408,8 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
     override fun visitExprTermWrappedQuery(ctx: PartiQLParser.ExprTermWrappedQueryContext) = visit(ctx.query()) as PartiqlAst.Expr
 
     override fun visitDql(ctx: PartiQLParser.DqlContext) = PartiqlAst.build {
-        query(visitQuery(ctx.query()))
+        val query = visitQuery(ctx.query())
+        query(query, query.metas)
     }
 
     override fun visitQueryDql(ctx: PartiQLParser.QueryDqlContext): PartiqlAst.PartiqlAstNode = visitDql(ctx.dql())
