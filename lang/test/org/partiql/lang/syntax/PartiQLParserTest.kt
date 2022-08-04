@@ -53,6 +53,11 @@ class PartiQLParserTest {
         println(stmt)
     }
 
+    @Test
+    fun testRandom() {
+        println("'''a'".removePrefix("'").removeSuffix("'").replace("''", "'"))
+    }
+
     // PqlParser = 100
     // SqlParser = 700
     private fun getWrapped(): String {
