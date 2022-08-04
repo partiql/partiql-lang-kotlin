@@ -132,7 +132,7 @@ setAssignment
     ;
 
 deleteCommand
-    : DELETE fromClause whereClause? returningClause?
+    : DELETE fromClauseSimple whereClause? returningClause?
     ;
 
 returningClause
@@ -142,6 +142,11 @@ returningClause
 returningColumn
     : status=(MODIFIED|ALL) age=(OLD|NEW) ASTERISK
     | status=(MODIFIED|ALL) age=(OLD|NEW) col=expr
+    ;
+
+fromClauseSimple
+    : FROM pathSimple asIdent? atIdent? byIdent?   # FromClauseSimpleExplicit
+    | FROM pathSimple symbolPrimitive              # FromClauseSimpleImplicit
     ;
 
 /**
