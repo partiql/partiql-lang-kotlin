@@ -76,11 +76,17 @@ sfwQuery
 
 ddl
     : createCommand
+    | dropCommand
     ;
 
 createCommand
     : CREATE TABLE symbolPrimitive                                                              # CreateTable
     | CREATE INDEX ON symbolPrimitive PAREN_LEFT pathSimple ( COMMA pathSimple )* PAREN_RIGHT   # CreateIndex
+    ;
+
+dropCommand
+    : DROP TABLE target=symbolPrimitive                         # DropTable
+    | DROP INDEX target=symbolPrimitive ON on=symbolPrimitive   # DropIndex
     ;
 
 /**
