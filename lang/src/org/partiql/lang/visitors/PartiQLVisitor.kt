@@ -67,6 +67,28 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
 
     /**
      *
+     * DATA DEFINITION LANGUAGE (DDL)
+     *
+     */
+
+    override fun visitQueryDdl(ctx: PartiQLParser.QueryDdlContext) = PartiqlAst.build {
+        val op = visitDdl(ctx.ddl()) as PartiqlAst.DdlOp
+        ddl(op)
+    }
+
+    override fun visitCreateTable(ctx: PartiQLParser.CreateTableContext) = PartiqlAst.build {
+        val name = ctx.symbolPrimitive().getString()
+        createTable(name)
+    }
+
+    override fun visitCreateIndex(ctx: PartiQLParser.CreateIndexContext) = PartiqlAst.build {
+        val id = visitSymbolPrimitive(ctx.symbolPrimitive())
+        val fields = ctx.pathSimple().map { path -> visitPathSimple(path) }
+        createIndex(id.toIdentifier(), fields)
+    }
+
+    /**
+     *
      * DATA MANIPULATION LANGUAGE (DML)
      *
      */
@@ -921,6 +943,14 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
      *
      */
 
+    private fun PartiqlAst.Expr.Id.toIdentifier(): PartiqlAst.Identifier {
+        val name = this.name.text
+        val case = this.case
+        return PartiqlAst.build {
+            identifier(name, case)
+        }
+    }
+
     /**
      * Converts a Path expression into a Projection Item (either ALL or EXPR). Note: A Projection Item only allows a
      * subset of a typical Path expressions. See the following examples.
@@ -1030,14 +1060,6 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         return when {
             this.IDENTIFIER_QUOTED() != null -> this.IDENTIFIER_QUOTED().getStringValue()
             this.IDENTIFIER() != null -> this.IDENTIFIER().text
-            else -> throw org.partiql.lang.syntax.PartiQLParser.ParseErrorListener.ParseException("Unable to get symbol's text.")
-        }
-    }
-
-    private fun getSymbolPathExprId(ctx: PartiQLParser.SymbolPrimitiveContext) = PartiqlAst.build {
-        when {
-            ctx.IDENTIFIER_QUOTED() != null -> pathExpr(id(ctx.IDENTIFIER_QUOTED().getStringValue(), caseSensitive(), unqualified()), caseSensitive())
-            ctx.IDENTIFIER() != null -> pathExpr(id(ctx.IDENTIFIER().getStringValue(), caseInsensitive(), unqualified()), caseSensitive())
             else -> throw org.partiql.lang.syntax.PartiQLParser.ParseErrorListener.ParseException("Unable to get symbol's text.")
         }
     }
