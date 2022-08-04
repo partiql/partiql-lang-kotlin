@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   session state such as current user and transaction details available to custom [ExprFunction] implementations
   and custom physical operator implementations.
 - Replaces `union`, `intersect`, `except` IR nodes with common `bag_op` IR node
+- Add support for CallAgg in Type Inferencer. 
 
 #### Experimental Planner Additions
 
