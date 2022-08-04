@@ -116,6 +116,16 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         }
     }
 
+    // FIXME: See `FIXME #001` in file `PartiQL.g4`.
+    override fun visitInsertCommandReturning(ctx: PartiQLParser.InsertCommandReturningContext) = PartiqlAst.build {
+        val target = visitPathSimple(ctx.pathSimple())
+        val index = if (ctx.pos != null) visitExpr(ctx.pos) else null
+        val onConflict = if (ctx.onConflict() != null) visitOnConflict(ctx.onConflict()) else null
+        val returning = if (ctx.returningClause() != null) visitReturningClause(ctx.returningClause()) else null
+        val insert = insertValue(target, visit(ctx.value) as PartiqlAst.Expr, index = index, onConflict = onConflict)
+        dml(dmlOpList(insert), returning = returning)
+    }
+
     override fun visitReturningClause(ctx: PartiQLParser.ReturningClauseContext) = PartiqlAst.build {
         val elements = ctx.returningColumn().map { col -> visitReturningColumn(col) }
         returningExpr(elements)

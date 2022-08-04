@@ -67,9 +67,10 @@ class PartiQLParserTest {
 
     @Test
     fun testOnlyPartiQL() {
-        val query = "date_add(month, a, b)"
+        val query = "UPDATE a INSERT INTO B VALUE C RETURNING MODIFIED NEW E INSERT INTO F VALUE G"
 
         // Act
+        val expected = oldParser.parseAstStatement(query)
         val stmt = parser.parseAstStatement(query)
         val tree = parseQuery(query)
 
