@@ -70,35 +70,35 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
      *
      */
 
-    override fun visitDml(ctx: PartiQLParser.DmlContext?): PartiqlAst.PartiqlAstNode = super.visitDml(ctx)
+    // @TODO: NOTE.. Need to update SET to only return the operation.
 
-    override fun visitInsertSimple(ctx: PartiQLParser.InsertSimpleContext): PartiqlAst.PartiqlAstNode {
-        var from = if (ctx.fromClause() != null) visitFromClause(ctx.fromClause()) else null
-        from = if (ctx.updateClause() != null) visitUpdateClause(ctx.updateClause()) else from
-        val returning = if (ctx.returningClause() != null) visitReturningClause(ctx.returningClause()) else null
-        val target = visitPathSimple(ctx.pathSimple())
-        val ops = PartiqlAst.build { dmlOpList(insert(target, visit(ctx.value) as PartiqlAst.Expr)) }
+    override fun visitDmlUpdateWhereReturn(ctx: PartiQLParser.DmlUpdateWhereReturnContext) = PartiqlAst.build {
+        val from = if (ctx.updateClause() != null) visitUpdateClause(ctx.updateClause()) else null
         val where = if (ctx.whereClause() != null) visitWhereClause(ctx.whereClause()) else null
-        return PartiqlAst.build {
-            dml(ops, from = from, where = where, returning = returning)
-        }
+        val returning = if (ctx.returningClause() != null) visitReturningClause(ctx.returningClause()) else null
+        val operations = ctx.dmlBaseCommand().map { command -> visit(command) as PartiqlAst.DmlOp }
+        dml(dmlOpList(operations), from, where, returning)
     }
 
-    // TODO: There is a bug in SqlParser where it allows 2 returning clauses, and it only uses the last one. This ...
-    // TODO: .. should be fixed in a future iteration.
+    override fun visitDmlFromWhereReturn(ctx: PartiQLParser.DmlFromWhereReturnContext) = PartiqlAst.build {
+        val from = if (ctx.fromClause() != null) visitFromClause(ctx.fromClause()) else null
+        val where = if (ctx.whereClause() != null) visitWhereClause(ctx.whereClause()) else null
+        val returning = if (ctx.returningClause() != null) visitReturningClause(ctx.returningClause()) else null
+        val operations = ctx.dmlBaseCommand().map { command -> visit(command) as PartiqlAst.DmlOp }
+        dml(dmlOpList(operations), from, where, returning)
+    }
+
+    override fun visitInsertSimple(ctx: PartiQLParser.InsertSimpleContext): PartiqlAst.PartiqlAstNode {
+        val target = visitPathSimple(ctx.pathSimple())
+        return PartiqlAst.build { insert(target, visit(ctx.value) as PartiqlAst.Expr) }
+    }
+
     override fun visitInsertValue(ctx: PartiQLParser.InsertValueContext): PartiqlAst.PartiqlAstNode {
-        var from = if (ctx.fromClause() != null) visitFromClause(ctx.fromClause()) else null
-        from = if (ctx.updateClause() != null) visitUpdateClause(ctx.updateClause()) else from
-        val returning = if (ctx.returningClause().isNotEmpty()) visitReturningClause(ctx.returningClause().last()) else null
         val target = visitPathSimple(ctx.pathSimple())
         val index = if (ctx.pos != null) visitExpr(ctx.pos) else null
         val onConflict = if (ctx.onConflict() != null) visitOnConflict(ctx.onConflict()) else null
-        val where = if (ctx.whereClause() != null) visitWhereClause(ctx.whereClause()) else null
-        val ops = PartiqlAst.build {
-            dmlOpList(insertValue(target, visit(ctx.value) as PartiqlAst.Expr, index = index, onConflict = onConflict))
-        }
         return PartiqlAst.build {
-            dml(ops, from = from, where = where, returning = returning)
+            insertValue(target, visit(ctx.value) as PartiqlAst.Expr, index = index, onConflict = onConflict)
         }
     }
 
@@ -309,7 +309,7 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
     }
 
     override fun visitQueryDql(ctx: PartiQLParser.QueryDqlContext): PartiqlAst.PartiqlAstNode = visitDql(ctx.dql())
-    override fun visitQueryDml(ctx: PartiQLParser.QueryDmlContext): PartiqlAst.PartiqlAstNode = visitDml(ctx.dml())
+    override fun visitQueryDml(ctx: PartiQLParser.QueryDmlContext): PartiqlAst.PartiqlAstNode = visit(ctx.dml())
 
     override fun visitQuery(ctx: PartiQLParser.QueryContext): PartiqlAst.Expr = visit(ctx.querySet()) as PartiqlAst.Expr
 
