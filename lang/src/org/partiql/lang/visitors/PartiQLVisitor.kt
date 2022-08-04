@@ -24,6 +24,7 @@ import org.antlr.v4.runtime.Token
 import org.antlr.v4.runtime.tree.ErrorNode
 import org.antlr.v4.runtime.tree.RuleNode
 import org.antlr.v4.runtime.tree.TerminalNode
+import org.partiql.lang.ast.DmlOpList
 import org.partiql.lang.ast.IsCountStarMeta
 import org.partiql.lang.ast.IsImplictJoinMeta
 import org.partiql.lang.ast.IsPathIndexMeta
@@ -76,15 +77,28 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         val from = if (ctx.updateClause() != null) visitUpdateClause(ctx.updateClause()) else null
         val where = if (ctx.whereClause() != null) visitWhereClause(ctx.whereClause()) else null
         val returning = if (ctx.returningClause() != null) visitReturningClause(ctx.returningClause()) else null
-        val operations = ctx.dmlBaseCommand().map { command -> visit(command) as PartiqlAst.DmlOp }
+        val operations = ctx.dmlBaseCommand().map { command -> getCommandList(visit(command)) }.flatten()
         dml(dmlOpList(operations), from, where, returning)
+    }
+
+    override fun visitDmlBase(ctx: PartiQLParser.DmlBaseContext) = PartiqlAst.build {
+        val commands = getCommandList(visit(ctx.dmlBaseCommand()))
+        dml(dmlOpList(commands))
+    }
+
+    private fun getCommandList(command: PartiqlAst.PartiqlAstNode): List<PartiqlAst.DmlOp> {
+        return when (command) {
+            is PartiqlAst.DmlOpList -> command.ops
+            is PartiqlAst.DmlOp -> listOf(command)
+            else -> throw org.partiql.lang.syntax.PartiQLParser.ParseErrorListener.ParseException("Unable to grab DML operation.")
+        }
     }
 
     override fun visitDmlFromWhereReturn(ctx: PartiQLParser.DmlFromWhereReturnContext) = PartiqlAst.build {
         val from = if (ctx.fromClause() != null) visitFromClause(ctx.fromClause()) else null
         val where = if (ctx.whereClause() != null) visitWhereClause(ctx.whereClause()) else null
         val returning = if (ctx.returningClause() != null) visitReturningClause(ctx.returningClause()) else null
-        val operations = ctx.dmlBaseCommand().map { command -> visit(command) as PartiqlAst.DmlOp }
+        val operations = ctx.dmlBaseCommand().map { command -> getCommandList(visit(command)) }.flatten()
         dml(dmlOpList(operations), from, where, returning)
     }
 
@@ -144,13 +158,9 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
     override fun visitPathSimpleDotSymbol(ctx: PartiQLParser.PathSimpleDotSymbolContext) = getSymbolPathExpr(ctx.symbolPrimitive())
 
     override fun visitSetCommand(ctx: PartiQLParser.SetCommandContext): PartiqlAst.PartiqlAstNode {
-        var from = if (ctx.fromClause() != null) visitFromClause(ctx.fromClause()) else null
-        from = if (ctx.updateClause() != null) visitUpdateClause(ctx.updateClause()) as PartiqlAst.FromSource else from
         val assignments = ctx.setAssignment().map { assignment -> visitSetAssignment(assignment) }
-        val where = if (ctx.whereClause() != null) visitWhereClause(ctx.whereClause()) else null
-        val returning = if (ctx.returningClause() != null) visitReturningClause(ctx.returningClause()) else null
         return PartiqlAst.build {
-            dml(dmlOpList(assignments), from = from, where = where, returning = returning)
+            dmlOpList(assignments)
         }
     }
 
