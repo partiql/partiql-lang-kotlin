@@ -102,6 +102,11 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         dml(dmlOpList(operations), from, where, returning)
     }
 
+    override fun visitRemoveCommand(ctx: PartiQLParser.RemoveCommandContext) = PartiqlAst.build {
+        val target = visitPathSimple(ctx.pathSimple())
+        remove(target)
+    }
+
     override fun visitInsertSimple(ctx: PartiQLParser.InsertSimpleContext): PartiqlAst.PartiqlAstNode {
         val target = visitPathSimple(ctx.pathSimple())
         return PartiqlAst.build { insert(target, visit(ctx.value) as PartiqlAst.Expr) }

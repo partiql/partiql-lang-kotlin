@@ -98,7 +98,7 @@ pathSimpleSteps
     ;
 
 removeCommand
-    : (updateClause|fromClause)? REMOVE tableBaseReference
+    : REMOVE pathSimple
     ;
 
 // FIXME #001
