@@ -76,6 +76,17 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         ddl(op)
     }
 
+    override fun visitDropTable(ctx: PartiQLParser.DropTableContext) = PartiqlAst.build {
+        val id = visitSymbolPrimitive(ctx.symbolPrimitive())
+        dropTable(id.toIdentifier())
+    }
+
+    override fun visitDropIndex(ctx: PartiQLParser.DropIndexContext) = PartiqlAst.build {
+        val id = visitSymbolPrimitive(ctx.target)
+        val key = visitSymbolPrimitive(ctx.on)
+        dropIndex(key.toIdentifier(), id.toIdentifier())
+    }
+
     override fun visitCreateTable(ctx: PartiQLParser.CreateTableContext) = PartiqlAst.build {
         val name = ctx.symbolPrimitive().getString()
         createTable(name)
