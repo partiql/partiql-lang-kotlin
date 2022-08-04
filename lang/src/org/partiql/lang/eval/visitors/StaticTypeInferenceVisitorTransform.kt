@@ -529,13 +529,10 @@ internal class StaticTypeInferenceVisitorTransform(
         override fun transformExprCallAgg(node: PartiqlAst.Expr.CallAgg): PartiqlAst.Expr {
             val nAry = super.transformExprCallAgg(node) as PartiqlAst.Expr.CallAgg
             val funcName = nAry.funcName
-
             // unwrap the type if this is a collectionType
             val argType = when (val type = nAry.arg.getStaticType()) {
                 is CollectionType -> type.elementType
-                is SingleType -> type
-                is AnyOfType -> type
-                else -> error("We always expect there to be at least one possible result type, even if is MISSING")
+                else -> type
             }
 
             return nAry.withStaticType(computeReturnTypeForAggFunc(funcName, argType))
@@ -609,9 +606,6 @@ internal class StaticTypeInferenceVisitorTransform(
                     } else {
                         error("Aggregate function SUM has incompatible input type")
                     }
-//                    argType.allTypes.fold((StaticType.MISSING as SingleType)) { lastType, currentType ->
-
-//                    }
                 }
                 // unsupported agg function
                 else -> error("Internal Error: Unsupported aggregate function. This probably indicates a parser bug.")
@@ -1558,7 +1552,9 @@ internal class StaticTypeInferenceVisitorTransform(
             var currentType = path.root.getStaticType()
             val newComponents = path.steps.map { pathComponent ->
                 currentType = when (pathComponent) {
-                    is PartiqlAst.PathStep.PathExpr -> inferPathComponentExprType(currentType, pathComponent)
+                    is PartiqlAst.PathStep.PathExpr -> {
+                        inferPathComponentExprType(currentType, pathComponent)
+                    }
                     is PartiqlAst.PathStep.PathUnpivot -> TODO("PathUnpivot is not implemented yet")
                     is PartiqlAst.PathStep.PathWildcard -> TODO("PathWildcard is not implemented yet")
                 }

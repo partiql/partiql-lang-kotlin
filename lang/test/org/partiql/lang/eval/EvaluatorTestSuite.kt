@@ -1499,10 +1499,10 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
             "arithmetic with null/missing",
             """
             SELECT VALUE 1 + v
-            FROM << null, missing >> AS v
+            FROM << null, missing, 1 >> AS v
             """,
-            "$partiql_bag::[null, null]",
-            "$partiql_bag::[null, $partiql_missing::null]"
+            "$partiql_bag::[null, null, 2]",
+            "$partiql_bag::[null, $partiql_missing::null, 2]"
         )
     }
 }

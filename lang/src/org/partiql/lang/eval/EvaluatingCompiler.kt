@@ -548,7 +548,7 @@ internal class EvaluatingCompiler(
                                 val validator = integerValueValidator(biggestIntegerType.rangeConstraint.validRange)
                                 thunkFactory.thunkEnv(metas) { env ->
                                     val naryResult = computeThunk(env)
-                                    // validation shall only happen when the result is INT/MISS/NULL
+                                    // validation shall only happen when the result is INT/MISSING/NULL
                                     // this is important as StaticType may contain a mixture of multiple types
                                     when (val type = naryResult.type) {
                                         ExprValueType.INT, ExprValueType.MISSING, ExprValueType.NULL -> errorSignaler.errorIf(
