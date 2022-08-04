@@ -18,6 +18,7 @@ import com.amazon.ion.IonSystem
 import com.amazon.ion.system.IonSystemBuilder
 import org.antlr.v4.gui.TreeViewer
 import org.antlr.v4.runtime.tree.ParseTree
+import org.junit.Ignore
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
@@ -42,6 +43,35 @@ class PartiQLParserTest {
     private fun getParser(query: String): org.antlr.v4.runtime.Parser {
         val lexer = parser.getLexer(query)
         return parser.getParser(lexer)
+    }
+
+    @Ignore
+    @Test
+    fun testStack() {
+        val query = getOrExpression()
+        val stmt = oldParser.parseAstStatement(query)
+        println(stmt)
+    }
+
+    // PqlParser = 100
+    // SqlParser = 700
+    private fun getWrapped(): String {
+        var sb = StringBuilder("0")
+        for (i in 1..200) {
+            sb.insert(0, "(")
+            sb.append(")")
+        }
+        return sb.toString()
+    }
+
+    // PqlParser = 900
+    // SqlParser = 1050
+    private fun getOrExpression(): String {
+        var sb = StringBuilder("0")
+        for (i in 1..1050) {
+            sb.append(" OR 0")
+        }
+        return sb.toString()
     }
 
     @ParameterizedTest
