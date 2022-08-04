@@ -35,6 +35,7 @@ symbolPrimitive
 topQuery
     : dql COLON_SEMI? EOF     # QueryDql
     | dml COLON_SEMI? EOF     # QueryDml
+    | ddl COLON_SEMI? EOF     # QueryDdl
     ;
 
 dql 
@@ -67,6 +68,21 @@ sfwQuery
         offsetByClause?
     ;
     
+/**
+ *
+ * DATA DEFINITION LANGUAGE (DDL)
+ *
+ */
+
+ddl
+    : createCommand
+    ;
+
+createCommand
+    : CREATE TABLE symbolPrimitive                                                              # CreateTable
+    | CREATE INDEX ON symbolPrimitive PAREN_LEFT pathSimple ( COMMA pathSimple )* PAREN_RIGHT   # CreateIndex
+    ;
+
 /**
  *
  * DATA MANIPULATION LANGUAGE (DML)
