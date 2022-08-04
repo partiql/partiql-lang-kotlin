@@ -77,6 +77,7 @@ dml
     : updateClause dmlBaseCommand+ whereClause? returningClause?  # DmlUpdateWhereReturn
     | fromClause whereClause? dmlBaseCommand+ returningClause?    # DmlFromWhereReturn
     | deleteCommand                                               # DmlDelete
+    | insertCommandReturning                                      # DmlInsertReturning
     | dmlBaseCommand                                              # DmlBase
     ;
 
@@ -100,11 +101,18 @@ removeCommand
     : (updateClause|fromClause)? REMOVE tableBaseReference
     ;
 
-// TODO: There is a bug in the old SqlParser that needed to be replicated to the PartiQLParser for the sake of ...
-// TODO: ... same functionality. Using 2 returning clauses always uses the second clause. This should be fixed.
+// FIXME #001
+// FIXME: There is a bug in the old SqlParser that needed to be replicated to the PartiQLParser for the sake of ...
+// FIXME: ... same functionality. Using 2 returning clauses always uses the second clause. This should be fixed.
+// FIXME: See GH Issue: https://github.com/partiql/partiql-lang-kotlin/issues/698
+// FIXME: We essentially use the returning clause, because we currently support this with the SqlParser
+insertCommandReturning
+    : INSERT INTO pathSimple VALUE value=querySet ( AT pos=expr )? onConflict? returningClause?
+    ;
+
 insertCommand
-    : INSERT INTO pathSimple VALUE value=querySet ( AT pos=expr )? onConflict?   # InsertValue
-    | INSERT INTO pathSimple value=querySet                                      # InsertSimple
+    : INSERT INTO pathSimple VALUE value=querySet ( AT pos=expr )? onConflict?  # InsertValue
+    | INSERT INTO pathSimple value=querySet                                     # InsertSimple
     ;
 
 onConflict
