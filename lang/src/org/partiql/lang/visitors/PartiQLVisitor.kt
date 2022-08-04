@@ -15,6 +15,8 @@
 package org.partiql.lang.visitors
 
 import com.amazon.ion.IonSystem
+import com.amazon.ionelement.api.StringElement
+import com.amazon.ionelement.api.SymbolElement
 import com.amazon.ionelement.api.ionInt
 import com.amazon.ionelement.api.ionString
 import com.amazon.ionelement.api.ionSymbol
@@ -24,7 +26,6 @@ import org.antlr.v4.runtime.Token
 import org.antlr.v4.runtime.tree.ErrorNode
 import org.antlr.v4.runtime.tree.RuleNode
 import org.antlr.v4.runtime.tree.TerminalNode
-import org.partiql.lang.ast.DmlOpList
 import org.partiql.lang.ast.IsCountStarMeta
 import org.partiql.lang.ast.IsImplictJoinMeta
 import org.partiql.lang.ast.IsPathIndexMeta
@@ -96,6 +97,20 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         val id = visitSymbolPrimitive(ctx.symbolPrimitive())
         val fields = ctx.pathSimple().map { path -> visitPathSimple(path) }
         createIndex(id.toIdentifier(), fields)
+    }
+
+    /**
+     *
+     * EXECUTE
+     *
+     */
+
+    override fun visitQueryExec(ctx: PartiQLParser.QueryExecContext) = visitExecCommand(ctx.execCommand())
+
+    override fun visitExecCommand(ctx: PartiQLParser.ExecCommandContext) = PartiqlAst.build {
+        val name = visitExpr(ctx.expr()).getStringValue()
+        val args = ctx.querySet().map { expr -> visit(expr) as PartiqlAst.Expr }
+        exec(name, args)
     }
 
     /**
@@ -954,6 +969,19 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
      *
      */
 
+    private fun PartiqlAst.Expr.getStringValue(): String = when (this) {
+        is PartiqlAst.Expr.Id -> this.name.text.toLowerCase()
+        is PartiqlAst.Expr.Lit -> {
+            when (this.value) {
+                is SymbolElement -> this.value.symbolValue.toLowerCase()
+                is StringElement -> this.value.stringValue.toLowerCase()
+                else ->
+                    this.value.stringValueOrNull ?: throw org.partiql.lang.syntax.PartiQLParser.ParseErrorListener.ParseException("Unable to pass the string value")
+            }
+        }
+        else -> throw org.partiql.lang.syntax.PartiQLParser.ParseErrorListener.ParseException("Unable to get value")
+    }
+
     private fun PartiqlAst.Expr.Id.toIdentifier(): PartiqlAst.Identifier {
         val name = this.name.text
         val case = this.case
@@ -1032,11 +1060,11 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
 
     private fun TerminalNode.getStringValue(): String = when (this.symbol.type) {
         PartiQLParser.IDENTIFIER -> this.text
-        PartiQLParser.IDENTIFIER_QUOTED -> this.text.trim('"').replace("\"\"", "\"")
+        PartiQLParser.IDENTIFIER_QUOTED -> this.text.removePrefix("\"").removeSuffix("\"").replace("\"\"", "\"")
         PartiQLParser.IDENTIFIER_AT_UNQUOTED -> this.text.removePrefix("@")
-        PartiQLParser.IDENTIFIER_AT_QUOTED -> this.text.removePrefix("@").trim('"').replace("\"\"", "\"")
-        PartiQLParser.LITERAL_STRING -> this.text.trim('\'').replace("''", "'")
-        PartiQLParser.ION_CLOSURE -> this.text.trim('`')
+        PartiQLParser.IDENTIFIER_AT_QUOTED -> this.text.removePrefix("@").removePrefix("\"").removeSuffix("\"").replace("\"\"", "\"")
+        PartiQLParser.LITERAL_STRING -> this.text.removePrefix("'").removeSuffix("'").replace("''", "'")
+        PartiQLParser.ION_CLOSURE -> this.text.removePrefix("`").removeSuffix("`")
         else -> throw org.partiql.lang.syntax.PartiQLParser.ParseErrorListener.ParseException("Unsupported token for grabbing string value.")
     }
 
