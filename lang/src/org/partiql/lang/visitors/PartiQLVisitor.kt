@@ -624,18 +624,18 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
 
     override fun visitVarRefExpr(ctx: PartiQLParser.VarRefExprContext): PartiqlAst.PartiqlAstNode = PartiqlAst.build {
         when {
-            ctx.IDENTIFIER_QUOTED() != null -> id(ctx.IDENTIFIER_QUOTED().getStringValue(), caseSensitive(), unqualified())
-            ctx.IDENTIFIER() != null -> id(ctx.IDENTIFIER().getStringValue(), caseInsensitive(), unqualified())
-            ctx.IDENTIFIER_AT_QUOTED() != null -> id(ctx.IDENTIFIER_AT_QUOTED().getStringValue(), caseSensitive(), localsFirst())
-            ctx.IDENTIFIER_AT_UNQUOTED() != null -> id(ctx.IDENTIFIER_AT_UNQUOTED().getStringValue(), caseInsensitive(), localsFirst())
+            ctx.IDENTIFIER_QUOTED() != null -> id(ctx.IDENTIFIER_QUOTED().getStringValue(), caseSensitive(), unqualified(), ctx.IDENTIFIER_QUOTED().getSourceMetaContainer())
+            ctx.IDENTIFIER() != null -> id(ctx.IDENTIFIER().getStringValue(), caseInsensitive(), unqualified(), ctx.IDENTIFIER().getSourceMetaContainer())
+            ctx.IDENTIFIER_AT_QUOTED() != null -> id(ctx.IDENTIFIER_AT_QUOTED().getStringValue(), caseSensitive(), localsFirst(), ctx.IDENTIFIER_AT_QUOTED().getSourceMetaContainer())
+            ctx.IDENTIFIER_AT_UNQUOTED() != null -> id(ctx.IDENTIFIER_AT_UNQUOTED().getStringValue(), caseInsensitive(), localsFirst(), ctx.IDENTIFIER_AT_UNQUOTED().getSourceMetaContainer())
             else -> throw ParseException("Invalid variable reference.")
         }
     }
 
     override fun visitSymbolPrimitive(ctx: PartiQLParser.SymbolPrimitiveContext) = PartiqlAst.build {
         when {
-            ctx.IDENTIFIER_QUOTED() != null -> id(ctx.IDENTIFIER_QUOTED().getStringValue(), caseSensitive(), unqualified())
-            ctx.IDENTIFIER() != null -> id(ctx.IDENTIFIER().getStringValue(), caseInsensitive(), unqualified())
+            ctx.IDENTIFIER_QUOTED() != null -> id(ctx.IDENTIFIER_QUOTED().getStringValue(), caseSensitive(), unqualified(), ctx.IDENTIFIER_QUOTED().getSourceMetaContainer())
+            ctx.IDENTIFIER() != null -> id(ctx.IDENTIFIER().getStringValue(), caseInsensitive(), unqualified(), ctx.IDENTIFIER().getSourceMetaContainer())
             else -> throw ParseException("Invalid symbol reference.")
         }
     }
