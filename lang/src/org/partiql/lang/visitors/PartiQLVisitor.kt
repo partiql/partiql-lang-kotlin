@@ -1006,10 +1006,10 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         call(name, args = args, metas = metas)
     }
 
-    override fun visitExprPrimaryPath(ctx: PartiQLParser.ExprPrimaryPathContext): PartiqlAst.PartiqlAstNode {
+    override fun visitExprPrimaryPath(ctx: PartiQLParser.ExprPrimaryPathContext) = PartiqlAst.build {
         val base = visit(ctx.exprPrimary()) as PartiqlAst.Expr
         val steps = ctx.pathStep().map { step -> visit(step) as PartiqlAst.PathStep }
-        return PartiqlAst.Expr.Path(base, steps)
+        path(base, steps, base.metas)
     }
 
     override fun visitPathStepIndexExpr(ctx: PartiQLParser.PathStepIndexExprContext): PartiqlAst.PartiqlAstNode {
