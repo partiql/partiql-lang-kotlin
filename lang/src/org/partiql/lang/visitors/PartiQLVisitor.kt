@@ -19,7 +19,9 @@ import com.amazon.ionelement.api.MetaContainer
 import com.amazon.ionelement.api.StringElement
 import com.amazon.ionelement.api.SymbolElement
 import com.amazon.ionelement.api.emptyMetaContainer
+import com.amazon.ionelement.api.ionBool
 import com.amazon.ionelement.api.ionInt
+import com.amazon.ionelement.api.ionNull
 import com.amazon.ionelement.api.ionString
 import com.amazon.ionelement.api.ionSymbol
 import com.amazon.ionelement.api.toIonElement
@@ -699,50 +701,49 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
     override fun visitPredicateIs(ctx: PartiQLParser.PredicateIsContext): PartiqlAst.PartiqlAstNode {
         val lhs = visit(ctx.lhs) as PartiqlAst.Expr
         val rhs = visit(ctx.type()) as PartiqlAst.Type
-        val isType = PartiqlAst.build { isType(lhs, rhs) }
-        return if (ctx.NOT() == null) isType else PartiqlAst.build { not(isType, metaContainerOf(LegacyLogicalNotMeta.instance)) }
+        val isType = PartiqlAst.build { isType(lhs, rhs, ctx.IS().getSourceMetaContainer()) }
+        return if (ctx.NOT() == null) isType else PartiqlAst.build { not(isType, ctx.NOT().getSourceMetaContainer() + metaContainerOf(LegacyLogicalNotMeta.instance)) }
     }
 
     override fun visitPredicateBetween(ctx: PartiQLParser.PredicateBetweenContext): PartiqlAst.PartiqlAstNode {
         val args = visitOrEmpty(PartiqlAst.Expr::class, ctx.lhs, ctx.lower, ctx.upper)
-        val between = PartiqlAst.build { between(args[0], args[1], args[2]) }
-        return if (ctx.NOT() == null) between else PartiqlAst.build { not(between, metaContainerOf(LegacyLogicalNotMeta.instance)) }
+        val between = PartiqlAst.build { between(args[0], args[1], args[2], ctx.BETWEEN().getSourceMetaContainer()) }
+        return if (ctx.NOT() == null) between else PartiqlAst.build { not(between, ctx.NOT().getSourceMetaContainer() + metaContainerOf(LegacyLogicalNotMeta.instance)) }
     }
 
     override fun visitPredicateLike(ctx: PartiQLParser.PredicateLikeContext): PartiqlAst.PartiqlAstNode {
         val args = visitOrEmpty(PartiqlAst.Expr::class, ctx.lhs, ctx.rhs)
         val escape = if (ctx.escape == null) null else visit(ctx.escape) as PartiqlAst.Expr
-        val like: PartiqlAst.Expr = PartiqlAst.BUILDER().like(args[0], args[1], escape)
-        return if (ctx.NOT() == null) like else PartiqlAst.build { not(like, metas = metaContainerOf(LegacyLogicalNotMeta.instance)) }
+        val like: PartiqlAst.Expr = PartiqlAst.BUILDER().like(args[0], args[1], escape, ctx.LIKE().getSourceMetaContainer())
+        return if (ctx.NOT() == null) like else PartiqlAst.build { not(like, metas = ctx.NOT().getSourceMetaContainer() + metaContainerOf(LegacyLogicalNotMeta.instance)) }
     }
 
     override fun visitLiteralNull(ctx: PartiQLParser.LiteralNullContext): PartiqlAst.PartiqlAstNode =
-        PartiqlAst.Expr.Lit(ion.newNull().toIonElement())
+        PartiqlAst.build { lit(ionNull(), ctx.NULL().getSourceMetaContainer()) }
 
     override fun visitLiteralMissing(ctx: PartiQLParser.LiteralMissingContext): PartiqlAst.PartiqlAstNode =
-        PartiqlAst.BUILDER().missing()
+        PartiqlAst.build { missing(ctx.MISSING().getSourceMetaContainer()) }
 
     override fun visitLiteralTrue(ctx: PartiQLParser.LiteralTrueContext): PartiqlAst.PartiqlAstNode =
-        PartiqlAst.Expr.Lit(ion.newBool(true).toIonElement())
+        PartiqlAst.build { lit(ionBool(true), ctx.TRUE().getSourceMetaContainer()) }
 
     override fun visitLiteralFalse(ctx: PartiQLParser.LiteralFalseContext): PartiqlAst.PartiqlAstNode =
-        PartiqlAst.Expr.Lit(ion.newBool(false).toIonElement())
+        PartiqlAst.build { lit(ionBool(false), ctx.FALSE().getSourceMetaContainer()) }
 
     override fun visitLiteralIon(ctx: PartiQLParser.LiteralIonContext): PartiqlAst.PartiqlAstNode =
-        PartiqlAst.Expr.Lit(ion.singleValue(ctx.ION_CLOSURE().getStringValue()).toIonElement())
+        PartiqlAst.build { lit(ion.singleValue(ctx.ION_CLOSURE().getStringValue()).toIonElement(), ctx.ION_CLOSURE().getSourceMetaContainer()) }
 
     override fun visitLiteralString(ctx: PartiQLParser.LiteralStringContext): PartiqlAst.PartiqlAstNode =
-        PartiqlAst.Expr.Lit(ion.newString(ctx.LITERAL_STRING().getStringValue()).toIonElement())
+        PartiqlAst.build { lit(ionString(ctx.LITERAL_STRING().getStringValue()), ctx.LITERAL_STRING().getSourceMetaContainer()) }
 
     override fun visitLiteralInteger(ctx: PartiQLParser.LiteralIntegerContext): PartiqlAst.Expr.Lit = PartiqlAst.build {
-        val metas = ctx.LITERAL_INTEGER().getSourceMetaContainer()
-        lit(ionInt(BigInteger(ctx.LITERAL_INTEGER().text, 10)), metas)
+        lit(ionInt(BigInteger(ctx.LITERAL_INTEGER().text, 10)), ctx.LITERAL_INTEGER().getSourceMetaContainer())
     }
 
     override fun visitLiteralDate(ctx: PartiQLParser.LiteralDateContext): PartiqlAst.PartiqlAstNode {
         val dateString = ctx.LITERAL_STRING().getStringValue()
         val (year, month, day) = dateString.split("-")
-        return PartiqlAst.BUILDER().date(year.toLong(), month.toLong(), day.toLong())
+        return PartiqlAst.BUILDER().date(year.toLong(), month.toLong(), day.toLong(), ctx.DATE().getSourceMetaContainer())
     }
 
     override fun visitLiteralTime(ctx: PartiQLParser.LiteralTimeContext): PartiqlAst.PartiqlAstNode {
@@ -767,12 +768,15 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         } catch (e: DateTimeParseException) {
             throw ParseException("Unable to parse time", e)
         }
-        return PartiqlAst.BUILDER().litTime(
-            PartiqlAst.BUILDER().timeValue(
-                time.hour.toLong(), time.minute.toLong(), time.second.toLong(), time.nano.toLong(),
-                precision, false, null
+        return PartiqlAst.build {
+            litTime(
+                timeValue(
+                    time.hour.toLong(), time.minute.toLong(), time.second.toLong(), time.nano.toLong(),
+                    precision, false, null, ctx.LITERAL_STRING().getSourceMetaContainer()
+                ),
+                ctx.TIME().getSourceMetaContainer()
             )
-        )
+        }
     }
 
     override fun visitLiteralTimeZone(ctx: PartiQLParser.LiteralTimeZoneContext): PartiqlAst.PartiqlAstNode {
@@ -807,12 +811,16 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
             } catch (e: DateTimeParseException) {
                 throw ParseException("Unable to parse time", e)
             }
-            return PartiqlAst.BUILDER().litTime(
-                PartiqlAst.BUILDER().timeValue(
-                    time.hour.toLong(), time.minute.toLong(), time.second.toLong(),
-                    time.nano.toLong(), precision, true, null
+            return PartiqlAst.build {
+                litTime(
+                    timeValue(
+                        time.hour.toLong(), time.minute.toLong(), time.second.toLong(),
+                        time.nano.toLong(), precision, true, null,
+                        ctx.LITERAL_STRING().getSourceMetaContainer()
+                    ),
+                    ctx.TIME(0).getSourceMetaContainer()
                 )
-            )
+            }
         }
     }
 
@@ -944,7 +952,7 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
 
     // TODO: Catch exception for exponent too large
     override fun visitLiteralDecimal(ctx: PartiQLParser.LiteralDecimalContext): PartiqlAst.PartiqlAstNode =
-        PartiqlAst.Expr.Lit(ion.newDecimal(bigDecimalOf(ctx.LITERAL_DECIMAL().text)).toIonElement())
+        PartiqlAst.Expr.Lit(ion.newDecimal(bigDecimalOf(ctx.LITERAL_DECIMAL().text)).toIonElement(), ctx.LITERAL_DECIMAL().getSourceMetaContainer())
 
     override fun visitFunctionCall(ctx: PartiQLParser.FunctionCallContext): PartiqlAst.PartiqlAstNode {
         val name = ctx.name.getString().toLowerCase()
