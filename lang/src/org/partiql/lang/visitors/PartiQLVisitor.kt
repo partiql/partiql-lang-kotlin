@@ -702,6 +702,12 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         nullIf(lhs, rhs, metas)
     }
 
+    override fun visitCoalesce(ctx: PartiQLParser.CoalesceContext) = PartiqlAst.build {
+        val expressions = ctx.expr().map { expr -> visitExpr(expr) }
+        val metas = ctx.COALESCE().getSourceMetaContainer()
+        coalesce(expressions, metas)
+    }
+
     override fun visitValueExpr(ctx: PartiQLParser.ValueExprContext) = visitUnaryOperation(ctx.rhs, ctx.sign, ctx.parent)
     override fun visitExprNot(ctx: PartiQLParser.ExprNotContext) = visitUnaryOperation(ctx.rhs, ctx.op, ctx.parent)
 
