@@ -524,36 +524,11 @@ literal
     ;
 
 type
-    : NULL                         # TypeAtomic
-    | BOOL                         # TypeAtomic
-    | BOOLEAN                      # TypeAtomic
-    | SMALLINT                     # TypeAtomic
-    | INTEGER2                     # TypeAtomic
-    | INT2                         # TypeAtomic
-    | INTEGER                      # TypeAtomic
-    | INT                          # TypeAtomic
-    | INTEGER4                     # TypeAtomic
-    | INT4                         # TypeAtomic
-    | INTEGER8                     # TypeAtomic
-    | INT8                         # TypeAtomic
-    | BIGINT                       # TypeAtomic
-    | REAL                         # TypeAtomic
-    | DOUBLE                       # TypeAtomic
-    | TIMESTAMP                    # TypeAtomic
-    | CHAR                         # TypeAtomic
-    | CHARACTER                    # TypeAtomic
-    | MISSING                      # TypeAtomic
-    | STRING                       # TypeAtomic
-    | SYMBOL                       # TypeAtomic
-    | BLOB                         # TypeAtomic
-    | CLOB                         # TypeAtomic
-    | DATE                         # TypeAtomic
-    | STRUCT                       # TypeAtomic
-    | TUPLE                        # TypeAtomic
-    | LIST                         # TypeAtomic
-    | SEXP                         # TypeAtomic
-    | BAG                          # TypeAtomic
-    | ANY                          # TypeAtomic
+    : datatype=(
+        NULL | BOOL | BOOLEAN | SMALLINT | INTEGER2 | INT2 | INTEGER | INT | INTEGER4 | INT4
+        | INTEGER8 | INT8 | BIGINT | REAL | DOUBLE | TIMESTAMP | CHAR | CHARACTER | MISSING
+        | STRING | SYMBOL | BLOB | CLOB | DATE | STRUCT | TUPLE | LIST | SEXP | BAG | ANY
+      )                                                                                                # TypeAtomic
     | FLOAT ( PAREN_LEFT precision=LITERAL_INTEGER PAREN_RIGHT )?                                      # TypeFloat
     | DECIMAL ( PAREN_LEFT precision=LITERAL_INTEGER ( COMMA scale=LITERAL_INTEGER )? PAREN_RIGHT )?   # TypeDecimal
     | NUMERIC ( PAREN_LEFT precision=LITERAL_INTEGER ( COMMA scale=LITERAL_INTEGER )? PAREN_RIGHT )?   # TypeNumeric
