@@ -986,10 +986,24 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
     override fun visitLiteralDecimal(ctx: PartiQLParser.LiteralDecimalContext): PartiqlAst.PartiqlAstNode =
         PartiqlAst.Expr.Lit(ion.newDecimal(bigDecimalOf(ctx.LITERAL_DECIMAL().text)).toIonElement(), ctx.LITERAL_DECIMAL().getSourceMetaContainer())
 
-    override fun visitFunctionCall(ctx: PartiQLParser.FunctionCallContext): PartiqlAst.PartiqlAstNode {
+    override fun visitFunctionCallIdent(ctx: PartiQLParser.FunctionCallIdentContext) = PartiqlAst.build {
         val name = ctx.name.getString().toLowerCase()
-        val args = ctx.expr().map { arg -> visit(arg) as PartiqlAst.Expr }
-        return PartiqlAst.BUILDER().call(name, args)
+        val args = ctx.expr().map { arg -> visitExpr(arg) }
+        val metas = ctx.name.getSourceMetaContainer()
+        call(name, args = args, metas = metas)
+    }
+
+    private fun PartiQLParser.SymbolPrimitiveContext.getSourceMetaContainer() = when (this.ident.type) {
+        PartiQLParser.IDENTIFIER -> this.IDENTIFIER().getSourceMetaContainer()
+        PartiQLParser.IDENTIFIER_QUOTED -> this.IDENTIFIER_QUOTED().getSourceMetaContainer()
+        else -> throw ParseException("Unable to get identifier's source meta-container.")
+    }
+
+    override fun visitFunctionCallReserved(ctx: PartiQLParser.FunctionCallReservedContext) = PartiqlAst.build {
+        val name = ctx.name.text.toLowerCase()
+        val args = ctx.expr().map { arg -> visitExpr(arg) }
+        val metas = ctx.name.getSourceMetaContainer()
+        call(name, args = args, metas = metas)
     }
 
     override fun visitExprPrimaryPath(ctx: PartiQLParser.ExprPrimaryPathContext): PartiqlAst.PartiqlAstNode {
