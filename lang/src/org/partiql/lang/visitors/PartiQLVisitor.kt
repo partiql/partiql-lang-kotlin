@@ -436,21 +436,21 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         val lhs = visit(ctx.lhs) as PartiqlAst.Expr
         val rhs = visit(ctx.rhs) as PartiqlAst.Expr
         val quantifier = if (ctx.ALL() != null) PartiqlAst.BUILDER().all() else PartiqlAst.BUILDER().distinct()
-        return PartiqlAst.BUILDER().intersect(quantifier, listOf(lhs, rhs))
+        return PartiqlAst.BUILDER().intersect(quantifier, listOf(lhs, rhs), ctx.INTERSECT().getSourceMetaContainer())
     }
 
     override fun visitQuerySetExcept(ctx: PartiQLParser.QuerySetExceptContext): PartiqlAst.Expr.Except {
         val lhs = visit(ctx.lhs) as PartiqlAst.Expr
         val rhs = visit(ctx.rhs) as PartiqlAst.Expr
         val quantifier = if (ctx.ALL() != null) PartiqlAst.BUILDER().all() else PartiqlAst.BUILDER().distinct()
-        return PartiqlAst.BUILDER().except(quantifier, listOf(lhs, rhs))
+        return PartiqlAst.BUILDER().except(quantifier, listOf(lhs, rhs), ctx.EXCEPT().getSourceMetaContainer())
     }
 
     override fun visitQuerySetUnion(ctx: PartiQLParser.QuerySetUnionContext): PartiqlAst.Expr.Union {
         val lhs = visit(ctx.lhs) as PartiqlAst.Expr
         val rhs = visit(ctx.rhs) as PartiqlAst.Expr
         val quantifier = if (ctx.ALL() != null) PartiqlAst.BUILDER().all() else PartiqlAst.BUILDER().distinct()
-        return PartiqlAst.BUILDER().union(quantifier, listOf(lhs, rhs))
+        return PartiqlAst.BUILDER().union(quantifier, listOf(lhs, rhs), ctx.UNION().getSourceMetaContainer())
     }
 
     // TODO: Add metas
@@ -559,21 +559,22 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
 
     override fun visitBag(ctx: PartiQLParser.BagContext): PartiqlAst.Expr.Bag {
         val exprList = ctx.expr().map { expr -> visit(expr) as PartiqlAst.Expr }
-        return PartiqlAst.Expr.Bag(exprList)
+        return PartiqlAst.Expr.Bag(exprList, ctx.ANGLE_DOUBLE_LEFT().getSourceMetaContainer())
     }
 
     override fun visitParameter(ctx: PartiQLParser.ParameterContext): PartiqlAst.PartiqlAstNode {
         val parameterIndex = parameterIndexes[ctx.QUESTION_MARK().symbol.tokenIndex]
             ?: throw ParseException("Unable to find index of parameter.")
-        return PartiqlAst.build { parameter(parameterIndex.toLong()) }
+        return PartiqlAst.build { parameter(parameterIndex.toLong(), ctx.QUESTION_MARK().getSourceMetaContainer()) }
     }
 
     override fun visitSequenceConstructor(ctx: PartiQLParser.SequenceConstructorContext): PartiqlAst.Expr {
         val expressions = visitOrEmpty(PartiqlAst.Expr::class, ctx.expr())
         return PartiqlAst.build {
+            val metas = ctx.datatype.getSourceMetaContainer()
             when (ctx.datatype.type) {
-                PartiQLParser.LIST -> list(expressions)
-                PartiQLParser.SEXP -> sexp(expressions)
+                PartiQLParser.LIST -> list(expressions, metas)
+                PartiQLParser.SEXP -> sexp(expressions, metas)
                 else -> throw ParseException("Unknown sequence")
             }
         }
@@ -586,7 +587,7 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
     }
 
     override fun visitCountAll(ctx: PartiQLParser.CountAllContext) = PartiqlAst.build {
-        callAgg(all(), ctx.func.text.toLowerCase(), lit(ionInt(1)), metaContainerOf(IsCountStarMeta.instance))
+        callAgg(all(), ctx.func.text.toLowerCase(), lit(ionInt(1)), ctx.COUNT().getSourceMetaContainer() + metaContainerOf(IsCountStarMeta.instance))
     }
 
     override fun visitExtract(ctx: PartiQLParser.ExtractContext): PartiqlAst.Expr.Call {
@@ -596,7 +597,8 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         val datetimePart = PartiqlAst.Expr.Lit(ion.newSymbol(ctx.IDENTIFIER().text).toIonElement())
         val timeExpr = visit(ctx.rhs) as PartiqlAst.Expr
         val args = listOf(datetimePart, timeExpr)
-        return PartiqlAst.Expr.Call(SymbolPrimitive(ctx.EXTRACT().text.toLowerCase(), mapOf()), args)
+        val metas = ctx.EXTRACT().getSourceMetaContainer()
+        return PartiqlAst.Expr.Call(SymbolPrimitive(ctx.EXTRACT().text.toLowerCase(), metas), args, metas)
     }
 
     override fun visitTrimFunction(ctx: PartiQLParser.TrimFunctionContext): PartiqlAst.PartiqlAstNode {
@@ -604,7 +606,8 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         val substring = if (ctx.sub != null) visitExpr(ctx.sub) else null
         val target = visitExpr(ctx.target)
         val args = listOfNotNull(modifier, substring, target)
-        return PartiqlAst.Expr.Call(SymbolPrimitive(ctx.func.text.toLowerCase(), mapOf()), args)
+        val metas = ctx.func.getSourceMetaContainer()
+        return PartiqlAst.Expr.Call(SymbolPrimitive(ctx.func.text.toLowerCase(), metas), args, metas)
     }
 
     override fun visitDateFunction(ctx: PartiQLParser.DateFunctionContext): PartiqlAst.Expr.Call {
@@ -614,12 +617,14 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         val datetimePart = PartiqlAst.Expr.Lit(ion.newSymbol(ctx.dt.text).toIonElement())
         val secondaryArgs = visitOrEmpty(PartiqlAst.Expr::class, ctx.expr())
         val args = listOf(datetimePart) + secondaryArgs
-        return PartiqlAst.Expr.Call(SymbolPrimitive(ctx.func.text.toLowerCase(), mapOf()), args, mapOf())
+        val metas = ctx.func.getSourceMetaContainer()
+        return PartiqlAst.Expr.Call(SymbolPrimitive(ctx.func.text.toLowerCase(), metas), args, metas)
     }
 
     override fun visitSubstring(ctx: PartiQLParser.SubstringContext): PartiqlAst.Expr.Call {
         val args = ctx.expr().map { expr -> visit(expr) as PartiqlAst.Expr }
-        return PartiqlAst.Expr.Call(SymbolPrimitive(ctx.SUBSTRING().text.toLowerCase(), mapOf()), args, mapOf())
+        val metas = ctx.SUBSTRING().getSourceMetaContainer()
+        return PartiqlAst.Expr.Call(SymbolPrimitive(ctx.SUBSTRING().text.toLowerCase(), metas), args, metas)
     }
 
     override fun visitVarRefExpr(ctx: PartiQLParser.VarRefExprContext): PartiqlAst.PartiqlAstNode = PartiqlAst.build {
@@ -881,31 +886,37 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         return PartiqlAst.BUILDER().canLosslessCast(expr, type)
     }
 
-    override fun visitTypeAtomic(ctx: PartiQLParser.TypeAtomicContext): PartiqlAst.Type {
-        return when {
-            ctx.NULL() != null -> PartiqlAst.Type.NullType()
-            ctx.BOOL() != null || ctx.BOOLEAN() != null -> PartiqlAst.Type.BooleanType()
-            ctx.SMALLINT() != null -> PartiqlAst.Type.SmallintType()
-            ctx.INT2() != null || ctx.INTEGER2() != null -> PartiqlAst.Type.SmallintType()
-            ctx.INT() != null || ctx.INTEGER() != null -> PartiqlAst.Type.IntegerType()
-            ctx.INT4() != null || ctx.INTEGER4() != null -> PartiqlAst.Type.Integer4Type()
-            ctx.INT8() != null || ctx.INTEGER8() != null -> PartiqlAst.Type.Integer8Type()
-            ctx.BIGINT() != null -> PartiqlAst.Type.Integer8Type()
-            ctx.REAL() != null -> PartiqlAst.Type.RealType()
-            ctx.DOUBLE() != null -> PartiqlAst.Type.DoublePrecisionType()
-            ctx.TIMESTAMP() != null -> PartiqlAst.Type.TimestampType()
-            ctx.MISSING() != null -> PartiqlAst.Type.MissingType()
-            ctx.STRING() != null -> PartiqlAst.Type.StringType()
-            ctx.SYMBOL() != null -> PartiqlAst.Type.SymbolType()
-            ctx.BLOB() != null -> PartiqlAst.Type.BlobType()
-            ctx.CLOB() != null -> PartiqlAst.Type.ClobType()
-            ctx.DATE() != null -> PartiqlAst.Type.DateType()
-            ctx.STRUCT() != null -> PartiqlAst.Type.StructType()
-            ctx.TUPLE() != null -> PartiqlAst.Type.TupleType()
-            ctx.LIST() != null -> PartiqlAst.Type.SexpType()
-            ctx.BAG() != null -> PartiqlAst.Type.BagType()
-            ctx.ANY() != null -> PartiqlAst.Type.AnyType()
-            else -> PartiqlAst.Type.AnyType()
+    override fun visitTypeAtomic(ctx: PartiQLParser.TypeAtomicContext) = PartiqlAst.build {
+        val metas = ctx.datatype.getSourceMetaContainer()
+        when (ctx.datatype.type) {
+            PartiQLParser.NULL -> nullType(metas)
+            PartiQLParser.BOOL -> booleanType(metas)
+            PartiQLParser.BOOLEAN -> booleanType(metas)
+            PartiQLParser.SMALLINT -> smallintType(metas)
+            PartiQLParser.INT2 -> smallintType(metas)
+            PartiQLParser.INTEGER2 -> smallintType(metas)
+            PartiQLParser.INT -> integerType(metas)
+            PartiQLParser.INTEGER -> integerType(metas)
+            PartiQLParser.INT4 -> integer4Type(metas)
+            PartiQLParser.INTEGER4 -> integer4Type(metas)
+            PartiQLParser.INT8 -> integer8Type(metas)
+            PartiQLParser.INTEGER8 -> integer8Type(metas)
+            PartiQLParser.BIGINT -> integer8Type(metas)
+            PartiQLParser.REAL -> realType(metas)
+            PartiQLParser.DOUBLE -> doublePrecisionType(metas)
+            PartiQLParser.TIMESTAMP -> timestampType(metas)
+            PartiQLParser.MISSING -> missingType(metas)
+            PartiQLParser.STRING -> stringType(metas)
+            PartiQLParser.SYMBOL -> symbolType(metas)
+            PartiQLParser.BLOB -> blobType(metas)
+            PartiQLParser.CLOB -> clobType(metas)
+            PartiQLParser.DATE -> dateType(metas)
+            PartiQLParser.STRUCT -> structType(metas)
+            PartiQLParser.TUPLE -> tupleType(metas)
+            PartiQLParser.LIST -> sexpType(metas)
+            PartiQLParser.BAG -> bagType(metas)
+            PartiQLParser.ANY -> anyType(metas)
+            else -> throw ParseException("Unsupported type.")
         }
     }
 
