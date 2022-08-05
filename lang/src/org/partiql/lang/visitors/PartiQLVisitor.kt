@@ -18,6 +18,7 @@ import com.amazon.ion.IonSystem
 import com.amazon.ionelement.api.MetaContainer
 import com.amazon.ionelement.api.StringElement
 import com.amazon.ionelement.api.SymbolElement
+import com.amazon.ionelement.api.emptyMetaContainer
 import com.amazon.ionelement.api.ionInt
 import com.amazon.ionelement.api.ionString
 import com.amazon.ionelement.api.ionSymbol
@@ -288,14 +289,23 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         else -> throw ParseException("Unknown meta location.")
     }
 
-    private fun TerminalNode.getSourceMetaContainer(): MetaContainer {
+    private fun TerminalNode?.getSourceMetaContainer(): MetaContainer {
+        if (this == null) return emptyMetaContainer()
         val metas = this.getSourceMetas()
         return com.amazon.ionelement.api.metaContainerOf(Pair(metas.tag, metas))
     }
 
-    private fun TerminalNode.getSourceMetas(): SourceLocationMeta {
-        val length = this.symbol.stopIndex - this.symbol.startIndex + 1
-        return SourceLocationMeta(this.symbol.line.toLong(), this.symbol.charPositionInLine.toLong() + 1, length.toLong())
+    private fun Token?.getSourceMetaContainer(): MetaContainer {
+        if (this == null) return emptyMetaContainer()
+        val metas = this.getSourceMetas()
+        return com.amazon.ionelement.api.metaContainerOf(Pair(metas.tag, metas))
+    }
+
+    private fun TerminalNode.getSourceMetas(): SourceLocationMeta = this.symbol.getSourceMetas()
+
+    private fun Token.getSourceMetas(): SourceLocationMeta {
+        val length = this.stopIndex - this.startIndex + 1
+        return SourceLocationMeta(this.line.toLong(), this.charPositionInLine.toLong() + 1, length.toLong())
     }
 
     override fun visitSelectAll(ctx: PartiQLParser.SelectAllContext) = PartiqlAst.build { projectStar() }
@@ -643,21 +653,22 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         if (parent != null) return visit(parent) as PartiqlAst.Expr
         val args = visitOrEmpty(PartiqlAst.Expr::class, lhs!!, rhs!!)
         return PartiqlAst.build {
+            val metas = op.getSourceMetaContainer()
             when (op!!.type) {
-                PartiQLParser.AND -> and(args)
-                PartiQLParser.OR -> or(args)
-                PartiQLParser.ASTERISK -> times(args)
-                PartiQLParser.SLASH_FORWARD -> divide(args)
-                PartiQLParser.PLUS -> plus(args)
-                PartiQLParser.MINUS -> minus(args)
-                PartiQLParser.PERCENT -> modulo(args)
-                PartiQLParser.CONCAT -> concat(args)
-                PartiQLParser.ANGLE_LEFT -> lt(args)
-                PartiQLParser.LT_EQ -> lte(args)
-                PartiQLParser.ANGLE_RIGHT -> gt(args)
-                PartiQLParser.GT_EQ -> gte(args)
-                PartiQLParser.NEQ -> ne(args)
-                PartiQLParser.EQ -> eq(args)
+                PartiQLParser.AND -> and(args, metas)
+                PartiQLParser.OR -> or(args, metas)
+                PartiQLParser.ASTERISK -> times(args, metas)
+                PartiQLParser.SLASH_FORWARD -> divide(args, metas)
+                PartiQLParser.PLUS -> plus(args, metas)
+                PartiQLParser.MINUS -> minus(args, metas)
+                PartiQLParser.PERCENT -> modulo(args, metas)
+                PartiQLParser.CONCAT -> concat(args, metas)
+                PartiQLParser.ANGLE_LEFT -> lt(args, metas)
+                PartiQLParser.LT_EQ -> lte(args, metas)
+                PartiQLParser.ANGLE_RIGHT -> gt(args, metas)
+                PartiQLParser.GT_EQ -> gte(args, metas)
+                PartiQLParser.NEQ -> ne(args, metas)
+                PartiQLParser.EQ -> eq(args, metas)
                 else -> throw ParseException("Unknown binary operator")
             }
         }
@@ -667,10 +678,11 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         if (parent != null) return visit(parent) as PartiqlAst.Expr
         val arg = visitOrEmpty(PartiqlAst.Expr::class, operand!!)
         return PartiqlAst.build {
+            val metas = op.getSourceMetaContainer()
             when (op!!.type) {
-                PartiQLParser.PLUS -> pos(arg)
-                PartiQLParser.MINUS -> neg(arg)
-                PartiQLParser.NOT -> not(arg)
+                PartiQLParser.PLUS -> pos(arg, metas)
+                PartiQLParser.MINUS -> neg(arg, metas)
+                PartiQLParser.NOT -> not(arg, metas)
                 else -> throw ParseException("Unknown unary operator")
             }
         }
@@ -722,8 +734,10 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
     override fun visitLiteralString(ctx: PartiQLParser.LiteralStringContext): PartiqlAst.PartiqlAstNode =
         PartiqlAst.Expr.Lit(ion.newString(ctx.LITERAL_STRING().getStringValue()).toIonElement())
 
-    override fun visitLiteralInteger(ctx: PartiQLParser.LiteralIntegerContext): PartiqlAst.Expr.Lit =
-        PartiqlAst.Expr.Lit(ion.newInt(BigInteger(ctx.LITERAL_INTEGER().text, 10)).toIonElement())
+    override fun visitLiteralInteger(ctx: PartiQLParser.LiteralIntegerContext): PartiqlAst.Expr.Lit = PartiqlAst.build {
+        val metas = ctx.LITERAL_INTEGER().getSourceMetaContainer()
+        lit(ionInt(BigInteger(ctx.LITERAL_INTEGER().text, 10)), metas)
+    }
 
     override fun visitLiteralDate(ctx: PartiQLParser.LiteralDateContext): PartiqlAst.PartiqlAstNode {
         val dateString = ctx.LITERAL_STRING().getStringValue()
