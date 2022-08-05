@@ -43,6 +43,7 @@ import org.partiql.lang.generated.PartiQLBaseVisitor
 import org.partiql.lang.generated.PartiQLParser
 import org.partiql.lang.syntax.DATE_TIME_PART_KEYWORDS
 import org.partiql.lang.syntax.PartiQLParser.ParseErrorListener.ParseException
+import org.partiql.lang.syntax.TRIM_SPECIFICATION_KEYWORDS
 import org.partiql.lang.types.CustomType
 import org.partiql.lang.util.bigDecimalOf
 import org.partiql.lang.util.getPrecisionFromTimeString
@@ -601,9 +602,30 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         return PartiqlAst.Expr.Call(SymbolPrimitive(ctx.EXTRACT().text.toLowerCase(), metas), args, metas)
     }
 
+    /**
+     * Note: This implementation is odd because the TRIM function contains keywords that are not keywords outside
+     * of TRIM. Therefore, TRIM(<spec> <substring> FROM <target>) needs to be parsed as below. The <spec> needs to be
+     * an identifier (according to SqlParser), but if the identifier is NOT a trim specification, and the <substring> is
+     * null, we need to make the substring equal to the <spec> (and make <spec> null).
+     */
     override fun visitTrimFunction(ctx: PartiQLParser.TrimFunctionContext): PartiqlAst.PartiqlAstNode {
-        val modifier = if (ctx.mod != null) ctx.mod.text.toLowerCase().toSymbol() else null
-        val substring = if (ctx.sub != null) visitExpr(ctx.sub) else null
+        val possibleModText = if (ctx.mod != null) ctx.mod.text.toLowerCase() else null
+        val isTrimSpec = TRIM_SPECIFICATION_KEYWORDS.contains(possibleModText)
+        val (modifier, substring) = when {
+            ctx.mod != null && ctx.sub == null -> {
+                if (isTrimSpec) ctx.mod.toSymbol() to null
+                else null to PartiqlAst.build { id(possibleModText!!, caseInsensitive(), unqualified(), ctx.mod.getSourceMetaContainer()) }
+            }
+            ctx.mod == null && ctx.sub != null -> {
+                null to visitExpr(ctx.sub)
+            }
+            ctx.mod != null && ctx.sub != null -> {
+                if (isTrimSpec) ctx.mod.toSymbol() to visitExpr(ctx.sub)
+                else throw ParseException("Expected one of: $TRIM_SPECIFICATION_KEYWORDS")
+            }
+            else -> null to null
+        }
+
         val target = visitExpr(ctx.target)
         val args = listOfNotNull(modifier, substring, target)
         val metas = ctx.func.getSourceMetaContainer()
@@ -1210,6 +1232,14 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         val str = this
         return PartiqlAst.build {
             lit(ionSymbol(str))
+        }
+    }
+
+    private fun Token.toSymbol(): PartiqlAst.Expr.Lit {
+        val str = this.text
+        val metas = this.getSourceMetaContainer()
+        return PartiqlAst.build {
+            lit(ionSymbol(str), metas)
         }
     }
 }
