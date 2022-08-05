@@ -695,7 +695,12 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
 
     override fun visitPredicateIn(ctx: PartiQLParser.PredicateInContext): PartiqlAst.PartiqlAstNode {
         val args = visitOrEmpty(PartiqlAst.Expr::class, ctx.lhs, ctx.rhs)
-        return PartiqlAst.build { if (ctx.NOT() != null) not(inCollection(args), metaContainerOf(LegacyLogicalNotMeta.instance)) else inCollection(args) }
+        val metas = ctx.IN().getSourceMetaContainer()
+        val notMetas = ctx.NOT().getSourceMetaContainer()
+        return PartiqlAst.build {
+            if (ctx.NOT() != null) not(inCollection(args, metas), notMetas + metaContainerOf(LegacyLogicalNotMeta.instance))
+            else inCollection(args, metas)
+        }
     }
 
     override fun visitPredicateIs(ctx: PartiQLParser.PredicateIsContext): PartiqlAst.PartiqlAstNode {
@@ -850,9 +855,10 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         }
         val elseExpr = if (ctx.ELSE() != null) visitExpr(ctx.expr(end)) else null
         return PartiqlAst.build {
+            val caseMeta = ctx.CASE().getSourceMetaContainer()
             when (ctx.case_) {
-                null -> searchedCase(exprPairList(exprPairList), elseExpr)
-                else -> simpleCase(visitExpr(ctx.case_), exprPairList(exprPairList), elseExpr)
+                null -> searchedCase(exprPairList(exprPairList), elseExpr, metas = caseMeta)
+                else -> simpleCase(visitExpr(ctx.case_), exprPairList(exprPairList), elseExpr, metas = caseMeta)
             }
         }
     }
