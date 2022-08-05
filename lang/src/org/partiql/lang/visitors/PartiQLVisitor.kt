@@ -695,6 +695,13 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         }
     }
 
+    override fun visitNullIf(ctx: PartiQLParser.NullIfContext) = PartiqlAst.build {
+        val lhs = visitExpr(ctx.expr(0))
+        val rhs = visitExpr(ctx.expr(1))
+        val metas = ctx.NULLIF().getSourceMetaContainer()
+        nullIf(lhs, rhs, metas)
+    }
+
     override fun visitValueExpr(ctx: PartiQLParser.ValueExprContext) = visitUnaryOperation(ctx.rhs, ctx.sign, ctx.parent)
     override fun visitExprNot(ctx: PartiQLParser.ExprNotContext) = visitUnaryOperation(ctx.rhs, ctx.op, ctx.parent)
 
