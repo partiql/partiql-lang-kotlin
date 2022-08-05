@@ -397,6 +397,7 @@ exprPrimary
     | canCast                    # ExprPrimaryBase
     | canLosslessCast            # ExprPrimaryBase
     | extract                    # ExprPrimaryBase
+    | coalesce                   # ExprPrimaryBase
     | dateFunction               # ExprPrimaryBase
     | aggregate                  # ExprPrimaryBase
     | trimFunction               # ExprPrimaryBase
@@ -426,6 +427,10 @@ exprTerm
 
 nullIf
     : NULLIF PAREN_LEFT expr COMMA expr PAREN_RIGHT
+    ;
+
+coalesce
+    : COALESCE PAREN_LEFT expr ( COMMA expr )* PAREN_RIGHT
     ;
 
 caseExpr
