@@ -401,6 +401,7 @@ exprPrimary
     | aggregate                  # ExprPrimaryBase
     | trimFunction               # ExprPrimaryBase
     | functionCall               # ExprPrimaryBase
+    | nullIf                     # ExprPrimaryBase
     | exprPrimary pathStep+      # ExprPrimaryPath
     | caseExpr                   # ExprPrimaryBase
     | valueList                  # ExprPrimaryBase
@@ -421,6 +422,10 @@ exprTerm
     | literal                        # ExprTermBase
     | collection                     # ExprTermBase
     | tuple                          # ExprTermBase
+    ;
+
+nullIf
+    : NULLIF PAREN_LEFT expr COMMA expr PAREN_RIGHT
     ;
 
 caseExpr
