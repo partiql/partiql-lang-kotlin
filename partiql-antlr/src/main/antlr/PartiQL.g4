@@ -22,8 +22,8 @@ byIdent
     : BY symbolPrimitive;
 
 symbolPrimitive
-    : IDENTIFIER
-    | IDENTIFIER_QUOTED
+    : ident=IDENTIFIER
+    | ident=IDENTIFIER_QUOTED
     ;
 
 /**
@@ -477,7 +477,11 @@ dateFunction
     : func=(DATE_ADD|DATE_DIFF) PAREN_LEFT dt=IDENTIFIER COMMA expr COMMA expr PAREN_RIGHT;
 
 functionCall
-    : name=symbolPrimitive PAREN_LEFT ( expr ( COMMA expr )* )? PAREN_RIGHT;
+    : name=( CHAR_LENGTH | CHARACTER_LENGTH | OCTET_LENGTH | 
+        BIT_LENGTH | UPPER | LOWER | SIZE | EXISTS | COUNT )
+        PAREN_LEFT ( expr ( COMMA expr )* )? PAREN_RIGHT                         # FunctionCallReserved
+    | name=symbolPrimitive PAREN_LEFT ( expr ( COMMA expr )* )? PAREN_RIGHT      # FunctionCallIdent
+    ;
 
 pathStep
     : BRACKET_LEFT key=expr BRACKET_RIGHT        # PathStepIndexExpr
