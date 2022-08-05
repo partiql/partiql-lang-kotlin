@@ -912,6 +912,8 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
             PartiQLParser.REAL -> realType(metas)
             PartiQLParser.DOUBLE -> doublePrecisionType(metas)
             PartiQLParser.TIMESTAMP -> timestampType(metas)
+            PartiQLParser.CHAR -> characterType(metas = metas)
+            PartiQLParser.CHARACTER -> characterType(metas = metas)
             PartiQLParser.MISSING -> missingType(metas)
             PartiQLParser.STRING -> stringType(metas)
             PartiQLParser.SYMBOL -> symbolType(metas)
