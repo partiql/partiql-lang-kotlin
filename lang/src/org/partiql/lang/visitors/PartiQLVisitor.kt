@@ -33,6 +33,7 @@ import org.antlr.v4.runtime.tree.TerminalNode
 import org.partiql.lang.ast.IsCountStarMeta
 import org.partiql.lang.ast.IsImplictJoinMeta
 import org.partiql.lang.ast.IsPathIndexMeta
+import org.partiql.lang.ast.IsValuesExprMeta
 import org.partiql.lang.ast.LegacyLogicalNotMeta
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.domains.PartiqlAst
@@ -733,8 +734,22 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
     override fun visitValueExpr(ctx: PartiQLParser.ValueExprContext) = visitUnaryOperation(ctx.rhs, ctx.sign, ctx.parent)
     override fun visitExprNot(ctx: PartiQLParser.ExprNotContext) = visitUnaryOperation(ctx.rhs, ctx.op, ctx.parent)
 
+    /**
+     * Note: This predicate can take a wrapped expression on the RHS, and it will wrap it in a LIST. However, if the
+     * expression is a SELECT or VALUES expression, it will NOT wrap it in a list. This is per SqlParser.
+     */
     override fun visitPredicateIn(ctx: PartiQLParser.PredicateInContext): PartiqlAst.PartiqlAstNode {
-        val args = visitOrEmpty(PartiqlAst.Expr::class, ctx.lhs, ctx.rhs)
+        // Wrap Expression with LIST unless SELECT / VALUES
+        val rhs = if (ctx.expr() != null) {
+            val possibleRhs = visitExpr(ctx.expr())
+            if (possibleRhs !is PartiqlAst.Expr.Select && !possibleRhs.metas.containsKey(IsValuesExprMeta.TAG))
+                PartiqlAst.build { list(possibleRhs) }
+            else possibleRhs
+        } else {
+            visit(ctx.rhs) as PartiqlAst.Expr
+        }
+        val lhs = visit(ctx.lhs) as PartiqlAst.Expr
+        val args = listOf(lhs, rhs)
         val metas = ctx.IN().getSourceMetaContainer()
         val notMetas = ctx.NOT().getSourceMetaContainer()
         return PartiqlAst.build {
@@ -871,7 +886,7 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
 
     override fun visitValues(ctx: PartiQLParser.ValuesContext): PartiqlAst.Expr.Bag {
         val rows = ctx.valueRow().map { row -> visitValueRow(row) }
-        return PartiqlAst.build { bag(rows) }
+        return PartiqlAst.build { bag(rows, ctx.VALUES().getSourceMetaContainer() + metaContainerOf(IsValuesExprMeta.instance)) }
     }
 
     override fun visitValueRow(ctx: PartiQLParser.ValueRowContext): PartiqlAst.Expr.List {

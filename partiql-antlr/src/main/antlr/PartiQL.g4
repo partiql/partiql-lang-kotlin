@@ -364,6 +364,7 @@ exprNot
 exprPredicate
     : lhs=exprPredicate op=(LT_EQ|GT_EQ|ANGLE_LEFT|ANGLE_RIGHT|NEQ|EQ) rhs=mathOp00  # PredicateComparison
     | lhs=exprPredicate IS NOT? type                                                 # PredicateIs
+    | lhs=exprPredicate NOT? IN PAREN_LEFT expr PAREN_RIGHT                          # PredicateIn
     | lhs=exprPredicate NOT? IN rhs=mathOp00                                         # PredicateIn
     | lhs=exprPredicate NOT? LIKE rhs=mathOp00 ( ESCAPE escape=expr )?               # PredicateLike
     | lhs=exprPredicate NOT? BETWEEN lower=mathOp00 AND upper=mathOp00               # PredicateBetween
