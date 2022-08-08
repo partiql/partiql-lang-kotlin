@@ -327,9 +327,7 @@ LITERAL_DECIMAL:
     ;
 // @TODO: Rename to IDENTIFIER_UNQUOTED
 IDENTIFIER: [A-Z$_][A-Z0-9$_]*;
-IDENTIFIER_AT_UNQUOTED: '@' [A-Z_$][A-Z0-9_$]*;
 IDENTIFIER_QUOTED: '"' ( ('""') | ~('"') )* '"';
-IDENTIFIER_AT_QUOTED: '@' '"' ( ('""') | ~('"') )* '"';
 
 /**
  * LEXER: Remove
