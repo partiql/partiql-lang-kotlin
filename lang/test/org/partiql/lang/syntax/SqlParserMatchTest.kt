@@ -101,7 +101,8 @@ class SqlParserMatchTest : SqlParserTestBase() {
                             parts = listOf(
                                 node(
                                     prefilter = null,
-                                    variable = "x"
+                                    variable = "x",
+                                    label = listOf()
                                 )
                             )
                         )
@@ -125,7 +126,8 @@ class SqlParserMatchTest : SqlParserTestBase() {
                             parts = listOf(
                                 node(
                                     prefilter = null,
-                                    variable = "x"
+                                    variable = "x",
+                                    label = listOf()
                                 )
                             )
                         )
