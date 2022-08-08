@@ -22,8 +22,7 @@ byIdent
     : BY symbolPrimitive;
 
 symbolPrimitive
-    : ident=IDENTIFIER
-    | ident=IDENTIFIER_QUOTED
+    : ident=( IDENTIFIER | IDENTIFIER_QUOTED )
     ;
 
 /**
@@ -495,10 +494,11 @@ parameter
     : QUESTION_MARK;
 
 varRefExpr
-    : IDENTIFIER
-    | IDENTIFIER_AT_UNQUOTED
-    | IDENTIFIER_QUOTED
-    | IDENTIFIER_AT_QUOTED
+    : ident=(IDENTIFIER
+        | IDENTIFIER_AT_UNQUOTED
+        | IDENTIFIER_QUOTED
+        | IDENTIFIER_AT_QUOTED
+        )
     ;
 
 /**
