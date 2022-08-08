@@ -458,7 +458,7 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
     // TODO: Add metas
     private fun convertSymbolPrimitive(sym: PartiQLParser.SymbolPrimitiveContext?): SymbolPrimitive? = when (sym) {
         null -> null
-        else -> SymbolPrimitive(sym.getString(), mapOf())
+        else -> SymbolPrimitive(sym.getString(), sym.getSourceMetaContainer())
     }
 
     /**
@@ -651,19 +651,21 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
     }
 
     override fun visitVarRefExpr(ctx: PartiQLParser.VarRefExprContext): PartiqlAst.PartiqlAstNode = PartiqlAst.build {
-        when {
-            ctx.IDENTIFIER_QUOTED() != null -> id(ctx.IDENTIFIER_QUOTED().getStringValue(), caseSensitive(), unqualified(), ctx.IDENTIFIER_QUOTED().getSourceMetaContainer())
-            ctx.IDENTIFIER() != null -> id(ctx.IDENTIFIER().getStringValue(), caseInsensitive(), unqualified(), ctx.IDENTIFIER().getSourceMetaContainer())
-            ctx.IDENTIFIER_AT_QUOTED() != null -> id(ctx.IDENTIFIER_AT_QUOTED().getStringValue(), caseSensitive(), localsFirst(), ctx.IDENTIFIER_AT_QUOTED().getSourceMetaContainer())
-            ctx.IDENTIFIER_AT_UNQUOTED() != null -> id(ctx.IDENTIFIER_AT_UNQUOTED().getStringValue(), caseInsensitive(), localsFirst(), ctx.IDENTIFIER_AT_UNQUOTED().getSourceMetaContainer())
+        val metas = ctx.ident.getSourceMetaContainer()
+        when (ctx.ident.type) {
+            PartiQLParser.IDENTIFIER_QUOTED -> id(ctx.IDENTIFIER_QUOTED().getStringValue(), caseSensitive(), unqualified(), metas)
+            PartiQLParser.IDENTIFIER -> id(ctx.IDENTIFIER().getStringValue(), caseInsensitive(), unqualified(), metas)
+            PartiQLParser.IDENTIFIER_AT_QUOTED -> id(ctx.IDENTIFIER_AT_QUOTED().getStringValue(), caseSensitive(), localsFirst(), metas)
+            PartiQLParser.IDENTIFIER_AT_UNQUOTED -> id(ctx.IDENTIFIER_AT_UNQUOTED().getStringValue(), caseInsensitive(), localsFirst(), metas)
             else -> throw ParseException("Invalid variable reference.")
         }
     }
 
     override fun visitSymbolPrimitive(ctx: PartiQLParser.SymbolPrimitiveContext) = PartiqlAst.build {
-        when {
-            ctx.IDENTIFIER_QUOTED() != null -> id(ctx.IDENTIFIER_QUOTED().getStringValue(), caseSensitive(), unqualified(), ctx.IDENTIFIER_QUOTED().getSourceMetaContainer())
-            ctx.IDENTIFIER() != null -> id(ctx.IDENTIFIER().getStringValue(), caseInsensitive(), unqualified(), ctx.IDENTIFIER().getSourceMetaContainer())
+        val metas = ctx.ident.getSourceMetaContainer()
+        when (ctx.ident.type) {
+            PartiQLParser.IDENTIFIER_QUOTED -> id(ctx.IDENTIFIER_QUOTED().getStringValue(), caseSensitive(), unqualified(), metas)
+            PartiQLParser.IDENTIFIER -> id(ctx.IDENTIFIER().getStringValue(), caseInsensitive(), unqualified(), metas)
             else -> throw ParseException("Invalid symbol reference.")
         }
     }
@@ -797,7 +799,7 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         PartiqlAst.build { lit(ionString(ctx.LITERAL_STRING().getStringValue()), ctx.LITERAL_STRING().getSourceMetaContainer()) }
 
     override fun visitLiteralInteger(ctx: PartiQLParser.LiteralIntegerContext): PartiqlAst.Expr.Lit = PartiqlAst.build {
-        lit(ionInt(BigInteger(ctx.LITERAL_INTEGER().text, 10)), ctx.LITERAL_INTEGER().getSourceMetaContainer())
+        lit(ion.newInt(BigInteger(ctx.LITERAL_INTEGER().text, 10)).toIonElement(), ctx.LITERAL_INTEGER().getSourceMetaContainer())
     }
 
     override fun visitLiteralDate(ctx: PartiQLParser.LiteralDateContext): PartiqlAst.PartiqlAstNode {
