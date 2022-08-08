@@ -534,28 +534,60 @@ internal class StaticTypeInferenceVisitorTransform(
                 is CollectionType -> type.elementType
                 else -> type
             }
-
-            return nAry.withStaticType(computeReturnTypeForAggFunc(funcName, argType))
+            val sourceLocation = nAry.getStartingSourceLocationMeta()
+            return nAry.withStaticType(computeReturnTypeForAggFunc(funcName, argType, sourceLocation))
         }
 
-        private fun computeReturnTypeForAggFunc(aggFunc: SymbolPrimitive, argType: StaticType): StaticType {
+        fun handleInvalidInputTypeForAggFun(sourceLocation: SourceLocationMeta, aggFunc: SymbolPrimitive, actualType: StaticType, expectedType: StaticType) {
+            problemHandler.handleProblem(
+                Problem(
+                    sourceLocation = sourceLocation,
+                    details = SemanticProblemDetails.InvalidArgumentTypeForFunction(
+                        functionName = aggFunc.text,
+                        expectedType = expectedType,
+                        actualType = actualType
+                    )
+                )
+            )
+        }
+
+        private fun computeReturnTypeForAggFunc(aggFunc: SymbolPrimitive, argType: StaticType, sourceLocation: SourceLocationMeta): StaticType {
             // nested type is not supported by agg functions.
             // i.e. sum(1,2,[3,4]) is not supported
-            val argTypeCheck: (StaticType) -> Boolean = {
+            val isNullOrMissingOrNumeric: (StaticType) -> Boolean = {
                 it.isSubTypeOf(StaticType.unionOf(StaticType.MISSING, StaticType.NULL, StaticType.NUMERIC))
             }
+
             return when (aggFunc.text) {
                 // current implementation of count will always return a long
                 "count" -> StaticType.INT8
                 // max/min supports all type and the result depends on comparison.
-                "max", "min" -> argType
-                // current implementation of avg always return a decimal.
+                // aggregate function will not return missing as a potential Type
+                // in case that argType contains only missing,
+                "max", "min" -> {
+                    val returnType = argType.allTypes.filter {
+                        it !is MissingType
+                    }
+                    if (returnType.isEmpty())
+                        StaticType.NULL
+                    else
+                        StaticType.unionOf(returnType.toSet())
+                }
+                // current implementation of avg always return a decimal or null.
                 "avg" -> {
-                    if (argTypeCheck(argType)) StaticType.DECIMAL else error("Aggregate function AVG has incompatible input type")
+                    when {
+                        !isNullOrMissingOrNumeric(argType) -> {
+                            handleInvalidInputTypeForAggFun(sourceLocation, aggFunc, argType, StaticType.unionOf(StaticType.MISSING, StaticType.NULL, StaticType.NUMERIC))
+                            StaticType.unionOf(StaticType.NULL, StaticType.DECIMAL)
+                        }
+                        // missing, null, or missing and null
+                        argType.isSubTypeOf(StaticType.unionOf(StaticType.MISSING, StaticType.NULL)) -> StaticType.NULL
+                        else -> StaticType.DECIMAL
+                    }
                 }
                 "sum" -> {
-                    if (argTypeCheck(argType)) {
-                        argType.allTypes.fold((StaticType.MISSING as SingleType)) { lastType, currentType ->
+                    if (isNullOrMissingOrNumeric(argType)) {
+                        argType.allTypes.fold((StaticType.NULL as SingleType)) { lastType, currentType ->
                             when (currentType) {
                                 is MissingType -> lastType
                                 is NullType -> lastType
@@ -582,8 +614,7 @@ internal class StaticTypeInferenceVisitorTransform(
                                         is IntType -> StaticType.FLOAT
                                         is FloatType -> StaticType.FLOAT
                                         is DecimalType -> StaticType.DECIMAL // TODO:  account for decimal precision
-                                        is NullType, is MissingType -> currentType
-                                        else -> error("Unsupported argument type for Aggregate Function")
+                                        else -> currentType
                                     }
                                 }
                                 is DecimalType -> {
@@ -591,8 +622,7 @@ internal class StaticTypeInferenceVisitorTransform(
                                         is IntType -> StaticType.DECIMAL // TODO:  account for decimal precision
                                         is FloatType -> StaticType.DECIMAL // TODO:  account for decimal precision
                                         is DecimalType -> StaticType.DECIMAL // TODO:  account for decimal precision
-                                        is NullType, is MissingType -> currentType
-                                        else -> error("Unsupported argument type for Aggregate Function")
+                                        else -> currentType
                                     }
                                 }
                                 else ->
@@ -603,11 +633,15 @@ internal class StaticTypeInferenceVisitorTransform(
                                     )
                             }
                         }
-                    } else {
-                        error("Aggregate function SUM has incompatible input type")
+                    }
+                    // continuation in case of type check failed
+                    else {
+                        val expectedType = StaticType.unionOf(StaticType.MISSING, StaticType.NULL, StaticType.NUMERIC)
+                        handleInvalidInputTypeForAggFun(sourceLocation, aggFunc, argType, expectedType)
+                        expectedType
                     }
                 }
-                // unsupported agg function
+                // unsupported agg function. This should be caught by the parser
                 else -> error("Internal Error: Unsupported aggregate function. This probably indicates a parser bug.")
             }
         }

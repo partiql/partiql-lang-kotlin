@@ -44,6 +44,7 @@ import org.partiql.lang.types.StaticType.Companion.LIST
 import org.partiql.lang.types.StaticType.Companion.MISSING
 import org.partiql.lang.types.StaticType.Companion.NULL
 import org.partiql.lang.types.StaticType.Companion.NULL_OR_MISSING
+import org.partiql.lang.types.StaticType.Companion.NUMERIC
 import org.partiql.lang.types.StaticType.Companion.SEXP
 import org.partiql.lang.types.StaticType.Companion.STRING
 import org.partiql.lang.types.StaticType.Companion.STRUCT
@@ -159,6 +160,10 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
     @ParameterizedTest
     @MethodSource("parametersForTypedExpressionTests")
     fun typedExpressionTests(tc: TestCase) = runTest(tc)
+
+    @ParameterizedTest
+    @MethodSource("parametersForAggFunctionTests")
+    fun aggFunctionTests(tc: TestCase) = runTest(tc)
 
     private fun runTest(tc: TestCase) {
         val globalBindings = Bindings.ofMap(tc.globals)
@@ -7402,6 +7407,99 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
 
             return incompatibleTypeForIndex + validIndexType
         }
+        private fun createAggFunctionValidTests(
+            functionName: String,
+            inputTypes: StaticType,
+            expectedType: StaticType,
+            isTopLevel: Boolean
+        ): TestCase =
+            // testing toplevel aggregated function
+            // testing sql function(t)
+            // global environment here is a bag type
+            if (isTopLevel) {
+                TestCase(
+                    name = "top level $functionName(t)",
+                    originalSql = "$functionName(t)",
+                    globals = mapOf("t" to BagType(inputTypes)),
+                    handler = expectQueryOutputType(expectedType)
+                )
+            }
+            // testing aggregate function with select
+            // testing sql: SELECT function(t.a) as result FROM t
+            // global variable here is a bag of struct
+            else {
+                TestCase(
+                    name = "SELECT $functionName(t.a) as result FROM t",
+                    originalSql = "SELECT $functionName(t.a) as result FROM t",
+                    globals = mapOf("t" to BagType(unionOf(inputTypes.allTypes.map { StructType(mapOf("a" to it)) }.toSet()))),
+                    handler = expectQueryOutputType(BagType(StructType(mapOf("result" to expectedType), contentClosed = true)))
+                )
+            }
+
+        @JvmStatic
+        @Suppress("unused")
+        fun parametersForAggFunctionTests() =
+            // valid tests
+            listOf(
+                // count
+                createAggFunctionValidTests("COUNT", ANY, INT8, false),
+                createAggFunctionValidTests("COUNT", ANY, INT8, true),
+                // min
+                createAggFunctionValidTests("MIN", unionOf(INT, DECIMAL, FLOAT, STRING), unionOf(INT, DECIMAL, FLOAT, STRING), false),
+                createAggFunctionValidTests("MIN", unionOf(INT, DECIMAL, FLOAT, STRING), unionOf(INT, DECIMAL, FLOAT, STRING), true),
+                // max
+                createAggFunctionValidTests("MAX", unionOf(INT, DECIMAL, FLOAT, STRING), unionOf(INT, DECIMAL, FLOAT, STRING), false),
+                createAggFunctionValidTests("MAX", unionOf(INT, DECIMAL, FLOAT, STRING), unionOf(INT, DECIMAL, FLOAT, STRING), true),
+                // avg
+                createAggFunctionValidTests("AVG", MISSING, NULL, false),
+                createAggFunctionValidTests("AVG", MISSING, NULL, true),
+                createAggFunctionValidTests("AVG", unionOf(MISSING, NULL), NULL, false),
+                createAggFunctionValidTests("AVG", unionOf(MISSING, NULL), NULL, true),
+                createAggFunctionValidTests("AVG", unionOf(INT, DECIMAL, FLOAT), DECIMAL, false),
+                createAggFunctionValidTests("AVG", unionOf(INT, DECIMAL, FLOAT), DECIMAL, true),
+
+                // SUM
+                createAggFunctionValidTests("SUM", MISSING, NULL, false),
+                createAggFunctionValidTests("SUM", MISSING, NULL, true),
+                createAggFunctionValidTests("SUM", unionOf(MISSING, NULL), NULL, false),
+                createAggFunctionValidTests("SUM", unionOf(MISSING, NULL), NULL, false),
+                createAggFunctionValidTests("SUM", unionOf(INT2, INT4), INT4, false),
+                createAggFunctionValidTests("SUM", unionOf(INT2, INT4, INT8), INT8, false),
+                createAggFunctionValidTests("SUM", unionOf(INT2, INT4, INT8, FLOAT), FLOAT, false),
+                createAggFunctionValidTests("SUM", unionOf(INT2, INT4, INT8, FLOAT, DECIMAL), DECIMAL, false),
+            ) +
+                // sum input type not compatible
+                TestCase(
+                    name = "SUM(t)",
+                    originalSql = "SUM(t)",
+                    globals = mapOf("t" to BagType(STRING)),
+                    handler = expectSemanticProblems(
+                        expectedProblems = listOf(
+                            createInvalidArgumentTypeForFunctionError(
+                                sourceLocation = SourceLocationMeta(1L, 1L, 3L),
+                                functionName = "sum",
+                                expectedArgType = unionOf(MISSING, NULL, NUMERIC),
+                                actualType = STRING
+                            )
+                        )
+                    )
+                ) +
+                // avg input type not compatible
+                TestCase(
+                    name = "AVG(t)",
+                    originalSql = "AVG(t)",
+                    globals = mapOf("t" to BagType(STRING)),
+                    handler = expectSemanticProblems(
+                        expectedProblems = listOf(
+                            createInvalidArgumentTypeForFunctionError(
+                                sourceLocation = SourceLocationMeta(1L, 1L, 3L),
+                                functionName = "avg",
+                                expectedArgType = unionOf(MISSING, NULL, NUMERIC),
+                                actualType = STRING
+                            )
+                        )
+                    )
+                )
 
         private fun expectQueryOutputType(expectedType: StaticType, expectedWarnings: List<Problem> = emptyList()): (ResolveTestResult) -> Unit = { result: ResolveTestResult ->
             when (result) {
