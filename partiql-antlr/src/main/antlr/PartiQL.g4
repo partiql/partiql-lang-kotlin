@@ -295,6 +295,7 @@ tableReference
 tableNonJoin
     : tableBaseReference
     | tableUnpivot
+    | tableMatch
     ;
 
 tableBaseReference
@@ -304,7 +305,95 @@ tableBaseReference
     
 tableUnpivot
     : UNPIVOT expr asIdent? atIdent? byIdent? ;
-    
+
+tableMatch
+    : lhs=expr MATCH tableMatchModifer? matchPattern
+    | PAREN_LEFT lhs=expr MATCH tableMatchModifer? matchPattern ( COMMA matchPattern )* PAREN_RIGHT
+    ;
+
+tableMatchModifer
+    : mod=(ANY|ALL) IDENTIFIER                # MatchModifierBasic // Identifier can be SHORTEST
+    | ANY k=LITERAL_INTEGER?                  # MatchModifierAny
+    | IDENTIFIER k=LITERAL_INTEGER GROUP?     # MatchModifierShortest // Identifier should be shortest
+    ;
+
+matchPattern
+    : restrictor=patternRestrictor? patternPathVariable? patternParts   # MatchPatternParts
+    | PAREN_LEFT matchPattern whereClause? PAREN_RIGHT                  # MatchPatternGrouped
+    | BRACKET_LEFT matchPattern whereClause? BRACKET_RIGHT              # MatchPatternGrouped
+    ;
+
+patternPathVariable
+    : symbolPrimitive EQ
+    ;
+
+patternRestrictor
+    : restrictor=IDENTIFIER // Should be TRAIL / ACYCLIC / SIMPLE
+    ;
+
+patternParts
+    : node=patternPartNode patternPartContinue*
+    ;
+
+patternPartNode
+    : PAREN_LEFT symbolPrimitive? patternPartLabel? whereClause? PAREN_RIGHT
+    ;
+
+patternPartContinue
+    : patternPartEdge patternPartNode
+    | patternPartParen patternPartNode
+    ;
+
+patternPartParen
+    : PAREN_LEFT matchPatternNested whereClause? PAREN_RIGHT patternQuantifier?
+    | BRACKET_LEFT matchPatternNested whereClause? BRACKET_RIGHT patternQuantifier?
+    ;
+
+matchPatternNested
+    : patternRestrictor? patternPathVariable? partsNested
+    ;
+
+partsNested
+    : patternParts
+    | patternPartContinue
+    | patternPartEdge
+    ;
+
+patternQuantifier
+    : quant=( PLUS | ASTERISK )
+    | BRACE_LEFT lower=LITERAL_INTEGER COMMA upper=LITERAL_INTEGER? BRACE_RIGHT
+    ;
+
+patternPartEdge
+    : edgeAbbrev quantifier=patternQuantifier?
+    | edgeWSpec quantifier=patternQuantifier?
+    ;
+
+edgeWSpec
+    : MINUS edgeSpec MINUS ANGLE_RIGHT
+    | TILDA edgeSpec TILDA
+    | ANGLE_LEFT MINUS edgeSpec MINUS
+    | TILDA edgeSpec TILDA ANGLE_RIGHT
+    | ANGLE_LEFT TILDA edgeSpec TILDA
+    | ANGLE_LEFT MINUS edgeSpec MINUS ANGLE_RIGHT
+    | MINUS edgeSpec MINUS
+    ;
+
+edgeSpec
+    : BRACKET_LEFT symbolPrimitive? patternPartLabel? whereClause? BRACKET_RIGHT
+    ;
+
+patternPartLabel
+    : COLON symbolPrimitive
+    ;
+
+edgeAbbrev
+    : TILDA
+    | TILDA ANGLE_RIGHT
+    | ANGLE_LEFT TILDA
+    | ANGLE_LEFT? MINUS ANGLE_RIGHT?
+    ;
+
 tableJoined[ParserRuleContext lhs]
     : tableCrossJoin[$lhs]
     | tableQualifiedJoin[$lhs]
