@@ -477,6 +477,108 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         return PartiqlAst.FromSource.Scan(expr, asAlias = asAlias, byAlias = byAlias, atAlias = atAlias, metas = expr.metas)
     }
 
+    override fun visitTableMatch(ctx: PartiQLParser.TableMatchContext) = PartiqlAst.build {
+        val source = visitExpr(ctx.lhs)
+        val selector = if (ctx.tableMatchModifer() != null) visit(ctx.tableMatchModifer()) as PartiqlAst.GraphMatchSelector else null
+        val patterns = ctx.matchPattern().map { pattern -> visit(pattern) as PartiqlAst.GraphMatchPattern }
+        val metas = ctx.MATCH().getSourceMetaContainer()
+        val graphExpr = graphMatchExpr(selector = selector, patterns = patterns)
+        graphMatch(source, graphExpr, metas)
+    }
+
+    // TODO: Check that identifier = "SHORTEST"
+    override fun visitMatchModifierBasic(ctx: PartiQLParser.MatchModifierBasicContext) = PartiqlAst.build {
+        val metas = ctx.mod.getSourceMetaContainer()
+        when (ctx.mod.type) {
+            PartiQLParser.ANY -> selectorAny(metas)
+            PartiQLParser.ALL -> selectorAllShortest(metas)
+            else -> throw ParseException("Unsupported match selector.")
+        }
+    }
+
+    override fun visitMatchModifierAny(ctx: PartiQLParser.MatchModifierAnyContext) = PartiqlAst.build {
+        if (ctx.k != null) selectorAnyK(ctx.LITERAL_INTEGER().text.toLong(), ctx.ANY().getSourceMetaContainer())
+        else selectorAny(ctx.ANY().getSourceMetaContainer())
+    }
+
+    // TODO: Check that identifier = "SHORTEST"
+    override fun visitMatchModifierShortest(ctx: PartiQLParser.MatchModifierShortestContext) = PartiqlAst.build {
+        val k = ctx.k.text.toLong()
+        if (ctx.k != null) {
+            selectorShortestKGroup(k, ctx.k.getSourceMetaContainer())
+        } else {
+            selectorShortestK(k, ctx.k.getSourceMetaContainer())
+        }
+    }
+
+    override fun visitMatchPatternParts(ctx: PartiQLParser.MatchPatternPartsContext) = PartiqlAst.build {
+        val restrictor = if (ctx.restrictor != null) visitPatternRestrictor(ctx.restrictor) else null
+        val prefilter = null
+        val variable = null
+        val quantifier = null
+        val parts = getPatternParts(ctx.patternParts())
+        graphMatchPattern(restrictor, prefilter = prefilter, variable = variable, quantifier = quantifier, parts = parts)
+    }
+
+    private fun getPatternParts(ctx: PartiQLParser.PatternPartsContext): List<PartiqlAst.GraphMatchPatternPart> {
+        val parts = mutableListOf<PartiqlAst.GraphMatchPatternPart>()
+        parts.add(visitPatternPartNode(ctx.node))
+        ctx.patternPartContinue().forEach { pattern -> parts += getPatternParts(pattern) }
+        return parts
+    }
+
+    private fun getPatternParts(ctx: PartiQLParser.PatternPartContinueContext): List<PartiqlAst.GraphMatchPatternPart> {
+        val parts = mutableListOf<PartiqlAst.GraphMatchPatternPart>()
+        parts.add(visitPatternPartEdge(ctx.patternPartEdge()))
+        parts.add(visitPatternPartNode(ctx.patternPartNode()))
+        return parts
+    }
+
+    override fun visitPatternPartEdge(ctx: PartiQLParser.PatternPartEdgeContext) = PartiqlAst.build {
+        val direction = visitEdgeAbbrev(ctx.edgeAbbrev())
+        val quantifier = if (ctx.quantifier != null) visitPatternQuantifier(ctx.quantifier) else null
+        edge(direction, quantifier)
+    }
+
+    override fun visitEdgeAbbrev(ctx: PartiQLParser.EdgeAbbrevContext) = PartiqlAst.build {
+        when {
+            ctx.TILDA() != null && ctx.ANGLE_RIGHT() != null -> edgeUndirectedOrRight()
+            ctx.TILDA() != null && ctx.ANGLE_LEFT() != null -> edgeLeftOrUndirected()
+            ctx.TILDA() != null -> edgeUndirected()
+            ctx.MINUS() && ctx.ANGLE_LEFT() != null && ctx.ANGLE_RIGHT() != null -> edgeLeftOrRight()
+            ctx.MINUS() && ctx.ANGLE_LEFT() != null -> edgeLeft()
+            ctx.MINUS() && ctx.ANGLE_RIGHT() != null -> edgeRight()
+            ctx.MINUS() -> edgeLeftOrUndirectedOrRight()
+            else -> throw ParseException("Unsupported edge type")
+        }
+    }
+
+    // TODO: Not basics
+    override fun visitPatternQuantifier(ctx: PartiQLParser.PatternQuantifierContext) = PartiqlAst.build {
+        when (ctx.quant.type) {
+            PartiQLParser.PLUS -> graphMatchQuantifier(1L)
+            PartiQLParser.ASTERISK -> graphMatchQuantifier(0L)
+            else -> throw ParseException("Unsupported quantifier.")
+        }
+    }
+
+    override fun visitPatternPartNode(ctx: PartiQLParser.PatternPartNodeContext) = PartiqlAst.build {
+        val variable = if (ctx.symbolPrimitive() != null) ctx.symbolPrimitive().getString() else null
+        val prefilter = if (ctx.whereClause() != null) visitWhereClause(ctx.whereClause()) else null
+        val label = if (ctx.patternPartLabel() != null) ctx.patternPartLabel().symbolPrimitive().getString() else null
+        node(variable = variable, prefilter = prefilter, label = listOfNotNull(label))
+    }
+
+    override fun visitPatternRestrictor(ctx: PartiQLParser.PatternRestrictorContext) = PartiqlAst.build {
+        val metas = ctx.restrictor.getSourceMetaContainer()
+        when (ctx.restrictor.text.toLowerCase()) {
+            "trail" -> restrictorTrail(metas)
+            "acyclic" -> restrictorAcyclic(metas)
+            "simple" -> restrictorSimple(metas)
+            else -> throw ParseException("Unrecognized pattern restrictor")
+        }
+    }
+
     override fun visitFromClauseSimpleExplicit(ctx: PartiQLParser.FromClauseSimpleExplicitContext): PartiqlAst.FromSource.Scan {
         val expr = visitPathSimple(ctx.pathSimple())
         val asAlias = if (ctx.asIdent() != null) convertSymbolPrimitive(ctx.asIdent().symbolPrimitive()) else null
