@@ -102,7 +102,7 @@ class PartiQLParserTest {
 
     @Test
     fun testOnlyPartiQL() {
-        val query = "UPDATE a INSERT INTO B VALUE C RETURNING MODIFIED NEW E INSERT INTO F VALUE G"
+        val query = "SELECT a, b FROM g MATCH ()"
 
         // Act
         // val expected = oldParser.parseAstStatement(query)
