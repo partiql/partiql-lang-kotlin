@@ -479,8 +479,8 @@ dateFunction
 functionCall
     : name=( CHAR_LENGTH | CHARACTER_LENGTH | OCTET_LENGTH | 
         BIT_LENGTH | UPPER | LOWER | SIZE | EXISTS | COUNT )
-        PAREN_LEFT ( expr ( COMMA expr )* )? PAREN_RIGHT                         # FunctionCallReserved
-    | name=symbolPrimitive PAREN_LEFT ( expr ( COMMA expr )* )? PAREN_RIGHT      # FunctionCallIdent
+        PAREN_LEFT ( querySet ( COMMA querySet )* )? PAREN_RIGHT                         # FunctionCallReserved
+    | name=symbolPrimitive PAREN_LEFT ( querySet ( COMMA querySet )* )? PAREN_RIGHT      # FunctionCallIdent
     ;
 
 pathStep
@@ -494,11 +494,7 @@ parameter
     : QUESTION_MARK;
 
 varRefExpr
-    : ident=(IDENTIFIER
-        | IDENTIFIER_AT_UNQUOTED
-        | IDENTIFIER_QUOTED
-        | IDENTIFIER_AT_QUOTED
-        )
+    : qualifier=AT_SIGN? ident=( IDENTIFIER | IDENTIFIER_QUOTED )
     ;
 
 /**
