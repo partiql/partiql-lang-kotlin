@@ -7,9 +7,8 @@ import org.partiql.lang.ION
 import org.partiql.lang.ast.StaticTypeMeta
 import org.partiql.lang.domains.metaContainerOf
 import org.partiql.lang.errors.ErrorCode
-import org.partiql.lang.types.NumberConstraint
 import org.partiql.lang.types.StaticType
-import org.partiql.lang.types.StringType
+import org.partiql.lang.types.VarcharType
 import kotlin.test.assertEquals
 
 /**
@@ -65,7 +64,7 @@ class ThunkFactoryTests {
 
             createTestCases(StaticType.STRING, INT_42000, true),
             createTestCases(
-                StringType(StringType.StringLengthConstraint.Constrained(NumberConstraint.UpTo(20))),
+                VarcharType(20),
                 STRING_LONG,
                 true
             )
