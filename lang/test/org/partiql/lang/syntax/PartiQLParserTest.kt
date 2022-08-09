@@ -48,7 +48,7 @@ class PartiQLParserTest {
     @Ignore
     @Test
     fun testStack() {
-        val query = getOrExpression()
+        val query = getOrExpression(1000)
         val stmt = oldParser.parseAstStatement(query)
         println(stmt)
     }
@@ -60,9 +60,9 @@ class PartiQLParserTest {
 
     // PqlParser = 100
     // SqlParser = 700
-    private fun getWrapped(): String {
+    private fun getWrapped(max: Int): String {
         var sb = StringBuilder("0")
-        for (i in 1..200) {
+        for (i in 1..max) {
             sb.insert(0, "(")
             sb.append(")")
         }
@@ -71,9 +71,9 @@ class PartiQLParserTest {
 
     // PqlParser = 900
     // SqlParser = 1050
-    private fun getOrExpression(): String {
+    private fun getOrExpression(max: Int): String {
         var sb = StringBuilder("0")
-        for (i in 1..1050) {
+        for (i in 1..max) {
             sb.append(" OR 0")
         }
         return sb.toString()
