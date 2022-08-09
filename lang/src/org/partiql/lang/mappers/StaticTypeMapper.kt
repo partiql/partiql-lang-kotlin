@@ -7,14 +7,16 @@ import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.types.AnyOfType
 import org.partiql.lang.types.AnyType
 import org.partiql.lang.types.BagType
+import org.partiql.lang.types.CharType
 import org.partiql.lang.types.DecimalType
 import org.partiql.lang.types.IntType
 import org.partiql.lang.types.ListType
-import org.partiql.lang.types.NumberConstraint
 import org.partiql.lang.types.SexpType
+import org.partiql.lang.types.SingleType
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.types.StringType
 import org.partiql.lang.types.StructType
+import org.partiql.lang.types.VarcharType
 import org.partiql.lang.util.toIntExact
 import kotlin.reflect.KClass
 
@@ -99,7 +101,7 @@ class StaticTypeMapper(schema: IonSchemaModel.Schema) {
 
         // Create StaticType based on core ISL type
         return when (coreType) {
-            is StringType -> StringType(getStringLengthConstraint(), metas)
+            is StringType -> getStringType(metas)
             is IntType -> IntType(getIntRangeConstraint(), metas)
             is DecimalType -> DecimalType(getPrecisionScaleConstraint(), metas)
             is ListType -> ListType(getElement(currentTopLevelTypeName), metas)
@@ -192,10 +194,10 @@ class StaticTypeMapper(schema: IonSchemaModel.Schema) {
     private fun IonSchemaModel.TypeDefinition.getElement(topLevelTypeName: String?): StaticType =
         constraints.getConstraint(IonSchemaModel.Constraint.Element::class)?.type?.toStaticType(topLevelTypeName) ?: StaticType.ANY
 
-    private fun IonSchemaModel.TypeDefinition.getStringLengthConstraint(): StringType.StringLengthConstraint =
+    private fun IonSchemaModel.TypeDefinition.getStringType(metas: Map<String, List<IonSchemaModel.TypeDefinition>>): SingleType =
         when (val constraint = constraints.getConstraint(IonSchemaModel.Constraint.CodepointLength::class)?.rule) {
-            null -> StringType.StringLengthConstraint.Unconstrained
-            else -> constraint.toStringLengthConstraint()
+            null -> StringType(metas)
+            else -> constraint.toStringType(metas)
         }
 
     private fun IonSchemaModel.TypeDefinition.getIntRangeConstraint(): IntType.IntRangeConstraint =
@@ -228,11 +230,9 @@ class StaticTypeMapper(schema: IonSchemaModel.Schema) {
             }
         }
 
-    private fun IonSchemaModel.NumberRule.toStringLengthConstraint(): StringType.StringLengthConstraint {
+    private fun IonSchemaModel.NumberRule.toStringType(metas: Map<String, List<IonSchemaModel.TypeDefinition>>): SingleType {
         return when (this) {
-            is IonSchemaModel.NumberRule.EqualsNumber -> StringType.StringLengthConstraint.Constrained(
-                NumberConstraint.Equals(this.value.toInt())
-            )
+            is IonSchemaModel.NumberRule.EqualsNumber -> CharType(value.toInt(), metas)
             is IonSchemaModel.NumberRule.EqualsRange -> {
                 when (val min = this.range.min) {
                     is IonSchemaModel.NumberExtent.Max -> error("Min value of a range cannot be max")
@@ -243,24 +243,20 @@ class StaticTypeMapper(schema: IonSchemaModel.Schema) {
                         //   the [TypedOpParameter] should contain the validation predicates that check
                         //   for appropriate length.
                         // TODO: Add ranged length constraints in StaticType
-                        return StringType.StringLengthConstraint.Unconstrained
+                        return StringType(metas)
                     }
                     is IonSchemaModel.NumberExtent.Exclusive -> if ((min.value.toInt() + 1) != 0) {
                         // Same as above
-                        return StringType.StringLengthConstraint.Unconstrained
+                        return StringType(metas)
                     }
                     is IonSchemaModel.NumberExtent.Min -> {}
                 }
 
                 when (val max = this.range.max) {
                     is IonSchemaModel.NumberExtent.Min -> error("Max value of a range cannot be min")
-                    is IonSchemaModel.NumberExtent.Max -> StringType.StringLengthConstraint.Unconstrained
-                    is IonSchemaModel.NumberExtent.Inclusive -> StringType.StringLengthConstraint.Constrained(
-                        NumberConstraint.UpTo(max.value.toInt())
-                    )
-                    is IonSchemaModel.NumberExtent.Exclusive -> StringType.StringLengthConstraint.Constrained(
-                        NumberConstraint.UpTo(max.value.toInt() - 1)
-                    )
+                    is IonSchemaModel.NumberExtent.Max -> StringType(metas)
+                    is IonSchemaModel.NumberExtent.Inclusive -> VarcharType(max.value.toInt(), metas)
+                    is IonSchemaModel.NumberExtent.Exclusive -> VarcharType(max.value.toInt() - 1, metas)
                 }
             }
         }

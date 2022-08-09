@@ -5,6 +5,7 @@ import org.partiql.lang.types.AnyOfType
 import org.partiql.lang.types.AnyType
 import org.partiql.lang.types.BlobType
 import org.partiql.lang.types.BoolType
+import org.partiql.lang.types.CharType
 import org.partiql.lang.types.ClobType
 import org.partiql.lang.types.CollectionType
 import org.partiql.lang.types.DecimalType
@@ -18,12 +19,19 @@ import org.partiql.lang.types.StringType
 import org.partiql.lang.types.StructType
 import org.partiql.lang.types.SymbolType
 import org.partiql.lang.types.TimestampType
+import org.partiql.lang.types.VarcharType
 
 internal fun StaticType.isNullOrMissing(): Boolean = (this is NullType || this is MissingType)
 internal fun StaticType.isNumeric(): Boolean = (this is IntType || this is FloatType || this is DecimalType)
-internal fun StaticType.isText(): Boolean = (this is SymbolType || this is StringType)
+internal fun StaticType.isText(): Boolean = (this is SymbolType || this is StringType || this is VarcharType || this is CharType)
 internal fun StaticType.isLob(): Boolean = (this is BlobType || this is ClobType)
 internal fun StaticType.isUnknown(): Boolean = (this.isNullOrMissing() || this == StaticType.NULL_OR_MISSING)
+
+internal fun SingleType.getLength() = when (this) {
+    is CharType -> length
+    is VarcharType -> length
+    else -> error("Internal error: Only CHAR & VARCHAR type has length")
+}
 
 /**
  * Returns the maximum number of digits a decimal can hold after reserving digits for scale
@@ -193,7 +201,7 @@ internal fun StaticType.cast(targetType: StaticType): StaticType {
                     this is TimestampType -> return targetType
                     this.isText() -> return StaticType.unionOf(targetType, StaticType.MISSING)
                 }
-                is StringType, is SymbolType -> when {
+                is VarcharType, is CharType, is StringType, is SymbolType -> when {
                     this.isNumeric() || this.isText() -> return targetType
                     this is BoolType || this is TimestampType -> return targetType
                 }
