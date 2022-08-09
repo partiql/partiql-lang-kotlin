@@ -18,15 +18,16 @@ import org.partiql.lang.errors.ProblemSeverity
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.numberValue
+import org.partiql.lang.ots.plugins.standard.types.DecimalType
 import org.partiql.lang.types.AnyOfType
 import org.partiql.lang.types.BagType
 import org.partiql.lang.types.BoolType
 import org.partiql.lang.types.CharType
 import org.partiql.lang.types.CollectionType
-import org.partiql.lang.types.DecimalType
 import org.partiql.lang.types.FunctionSignature
 import org.partiql.lang.types.ListType
 import org.partiql.lang.types.SexpType
+import org.partiql.lang.types.StaticScalarType
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.types.StaticType.Companion.ALL_TYPES
 import org.partiql.lang.types.StaticType.Companion.ANY
@@ -4745,7 +4746,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
                 handler = expectQueryOutputType(
                     unionOf(
                         MISSING,
-                        DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(10))
+                        StaticScalarType(DecimalType.createType(listOf(10)))
                     )
                 )
             ),
@@ -4756,7 +4757,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
                 handler = expectQueryOutputType(
                     unionOf(
                         MISSING,
-                        DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(10, 2))
+                        StaticScalarType(DecimalType.createType(listOf(10, 2)))
                     )
                 )
             ),
@@ -4767,7 +4768,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
                 handler = expectQueryOutputType(
                     unionOf(
                         MISSING,
-                        DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(10, 2))
+                        StaticScalarType(DecimalType.createType(listOf(10, 2)))
                     )
                 )
             ),

@@ -3,6 +3,8 @@ package org.partiql.lang.mappers
 import com.amazon.ionelement.api.ionBool
 import com.amazon.ionelement.api.ionInt
 import org.partiql.ionschema.model.IonSchemaModel
+import org.partiql.lang.ots.plugins.standard.types.CompileTimeDecimalType
+import org.partiql.lang.ots.plugins.standard.types.CompileTimeFloatType
 import org.partiql.lang.types.AnyOfType
 import org.partiql.lang.types.AnyType
 import org.partiql.lang.types.BagType
@@ -11,8 +13,6 @@ import org.partiql.lang.types.BoolType
 import org.partiql.lang.types.CharType
 import org.partiql.lang.types.ClobType
 import org.partiql.lang.types.DateType
-import org.partiql.lang.types.DecimalType
-import org.partiql.lang.types.FloatType
 import org.partiql.lang.types.Int2Type
 import org.partiql.lang.types.Int4Type
 import org.partiql.lang.types.Int8Type
@@ -21,6 +21,7 @@ import org.partiql.lang.types.ListType
 import org.partiql.lang.types.MissingType
 import org.partiql.lang.types.NullType
 import org.partiql.lang.types.SexpType
+import org.partiql.lang.types.StaticScalarType
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.types.StringType
 import org.partiql.lang.types.StructType
@@ -253,10 +254,8 @@ class IonSchemaMapper(private val staticType: StaticType) {
             it is IonSchemaModel.Constraint.TypeConstraint || it is IonSchemaModel.Constraint.AnyOf || it is IonSchemaModel.Constraint.Occurs
         } ?: listOf()
 
-        return when (this) {
-            is CharType,
-            is VarcharType,
-            is StringType -> listOfNotNull(
+        return when {
+            this is CharType || this is VarcharType || this is StringType -> listOfNotNull(
                 when (this) {
                     is StringType -> null
                     is CharType,
@@ -282,10 +281,7 @@ class IonSchemaMapper(private val staticType: StaticType) {
                     else -> error("Unreachable code")
                 }
             )
-            is Int2Type,
-            is Int4Type,
-            is Int8Type,
-            is IntType -> {
+            this is Int2Type || this is Int4Type || this is Int8Type || this is IntType -> {
                 when (this) {
                     is IntType -> emptyList()
                     else -> {
@@ -313,27 +309,26 @@ class IonSchemaMapper(private val staticType: StaticType) {
                     }
                 }
             }
-            is DecimalType -> when (val precisionScaleConstraint = this.precisionScaleConstraint) {
-                DecimalType.PrecisionScaleConstraint.Unconstrained -> listOf()
-                is DecimalType.PrecisionScaleConstraint.Constrained -> {
+            this is StaticScalarType && type is CompileTimeDecimalType -> when (type.precision) {
+                null -> listOf()
+                else -> {
                     constraintsFromISL = constraintsFromISL.filterNot {
                         it is IonSchemaModel.Constraint.Precision || it is IonSchemaModel.Constraint.Scale
                     }
-                    val precision = precisionScaleConstraint.precision
                     listOf(
                         // StaticType's decimal precision represents an inclusive "upto" range. Maps to an exact
                         // precision if value is 1. Otherwise (for positive values) maps to inclusive range of
                         // 1 to value.
                         when {
-                            precision < 1 -> error("Precision must be a positive integer")
-                            precision == 1 -> IonSchemaModel.build { precision(equalsNumber(ionInt(1))) }
-                            else -> IonSchemaModel.build { precision(equalsRange(numberRange(inclusive(ionInt(1)), inclusive(ionInt(precision.toLong()))))) }
+                            type.precision < 1 -> error("Precision must be a positive integer")
+                            type.precision == 1 -> IonSchemaModel.build { precision(equalsNumber(ionInt(1))) }
+                            else -> IonSchemaModel.build { precision(equalsRange(numberRange(inclusive(ionInt(1)), inclusive(ionInt(type.precision.toLong()))))) }
                         },
-                        IonSchemaModel.build { scale(equalsNumber(ionInt(precisionScaleConstraint.scale.toLong()))) }
+                        IonSchemaModel.build { scale(equalsNumber(ionInt(type.scale.toLong()))) }
                     )
                 }
             }
-            is StructType -> listOfNotNull(
+            this is StructType -> listOfNotNull(
                 if (contentClosed) {
                     constraintsFromISL = constraintsFromISL.filterNot { it is IonSchemaModel.Constraint.ClosedContent }
                     IonSchemaModel.build { closedContent() }
@@ -344,25 +339,25 @@ class IonSchemaMapper(private val staticType: StaticType) {
                     IonSchemaModel.build { fields(fields.toFieldList(topLevelTypeName)) }
                 } else null
             )
-            is ListType -> listOfNotNull(
+            this is ListType -> listOfNotNull(
                 if (elementType != StaticType.ANY) {
                     constraintsFromISL = constraintsFromISL.filterNot { it is IonSchemaModel.Constraint.Element }
                     IonSchemaModel.build { element(elementType.toTypeReference(topLevelTypeName = topLevelTypeName)) }
                 } else null
             )
-            is SexpType -> listOfNotNull(
+            this is SexpType -> listOfNotNull(
                 if (elementType != StaticType.ANY) {
                     constraintsFromISL = constraintsFromISL.filterNot { it is IonSchemaModel.Constraint.Element }
                     IonSchemaModel.build { element(elementType.toTypeReference(topLevelTypeName = topLevelTypeName)) }
                 } else null
             )
-            is BagType -> listOfNotNull(
+            this is BagType -> listOfNotNull(
                 if (elementType != StaticType.ANY) {
                     constraintsFromISL = constraintsFromISL.filterNot { it is IonSchemaModel.Constraint.Element }
                     IonSchemaModel.build { element(elementType.toTypeReference(topLevelTypeName = topLevelTypeName)) }
                 } else null
             )
-            is AnyOfType -> {
+            this is AnyOfType -> {
                 // Ignore metas from union types
                 constraintsFromISL = listOf()
                 listOf()
@@ -543,8 +538,11 @@ fun StaticType.getBaseTypeName(): String = when (this) {
     is Int4Type,
     is Int8Type,
     is IntType -> "int"
-    is FloatType -> "float"
-    is DecimalType -> "decimal"
+    is StaticScalarType -> when (type) {
+        is CompileTimeFloatType -> "float"
+        is CompileTimeDecimalType -> "decimal"
+        else -> error("Unsupported type: $type")
+    }
     is AnyType -> "any"
     is ListType -> "list"
     is SexpType -> "sexp"

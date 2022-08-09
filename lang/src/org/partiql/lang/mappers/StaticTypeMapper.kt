@@ -4,11 +4,12 @@ import com.amazon.ionelement.api.AnyElement
 import org.partiql.ionschema.model.IonSchemaModel
 import org.partiql.ionschema.model.toIsl
 import org.partiql.lang.eval.ExprValueType
+import org.partiql.lang.ots.plugins.standard.types.CompileTimeDecimalType
+import org.partiql.lang.ots.plugins.standard.types.DecimalType
 import org.partiql.lang.types.AnyOfType
 import org.partiql.lang.types.AnyType
 import org.partiql.lang.types.BagType
 import org.partiql.lang.types.CharType
-import org.partiql.lang.types.DecimalType
 import org.partiql.lang.types.Int2Type
 import org.partiql.lang.types.Int4Type
 import org.partiql.lang.types.Int8Type
@@ -16,6 +17,7 @@ import org.partiql.lang.types.IntType
 import org.partiql.lang.types.ListType
 import org.partiql.lang.types.SexpType
 import org.partiql.lang.types.SingleType
+import org.partiql.lang.types.StaticScalarType
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.types.StringType
 import org.partiql.lang.types.StructType
@@ -103,14 +105,14 @@ class StaticTypeMapper(schema: IonSchemaModel.Schema) {
         }
 
         // Create StaticType based on core ISL type
-        return when (coreType) {
-            is StringType -> getStringType(metas)
-            is IntType -> getIntType(metas)
-            is DecimalType -> DecimalType(getPrecisionScaleConstraint(), metas)
-            is ListType -> ListType(getElement(currentTopLevelTypeName), metas)
-            is SexpType -> SexpType(getElement(currentTopLevelTypeName), metas)
-            is BagType -> BagType(getElement(currentTopLevelTypeName), metas)
-            is StructType -> StructType(getFields(currentTopLevelTypeName), contentClosed = isClosedContent(), metas = metas)
+        return when {
+            coreType is StringType -> getStringType(metas)
+            coreType is IntType -> getIntType(metas)
+            coreType is StaticScalarType && coreType.type is CompileTimeDecimalType -> StaticScalarType(getCompileTimeDecimalType(), metas)
+            coreType is ListType -> ListType(getElement(currentTopLevelTypeName), metas)
+            coreType is SexpType -> SexpType(getElement(currentTopLevelTypeName), metas)
+            coreType is BagType -> BagType(getElement(currentTopLevelTypeName), metas)
+            coreType is StructType -> StructType(getFields(currentTopLevelTypeName), contentClosed = isClosedContent(), metas = metas)
             else -> coreType.withMetas(metas)
         }
     }
@@ -265,7 +267,7 @@ class StaticTypeMapper(schema: IonSchemaModel.Schema) {
         }
     }
 
-    private fun IonSchemaModel.TypeDefinition.getPrecisionScaleConstraint(): DecimalType.PrecisionScaleConstraint {
+    private fun IonSchemaModel.TypeDefinition.getCompileTimeDecimalType(): CompileTimeDecimalType {
         val precision = when (val rule = constraints.getConstraint(IonSchemaModel.Constraint.Precision::class)?.rule) {
             null -> null
             // Only certain decimal precisions can map to [DecimalType] without errors:
@@ -305,7 +307,7 @@ class StaticTypeMapper(schema: IonSchemaModel.Schema) {
                     is IonSchemaModel.NumberExtent.Inclusive -> maxPrecision.value.toInt()
                     is IonSchemaModel.NumberExtent.Exclusive -> maxPrecision.value.toInt() - 1
                     is IonSchemaModel.NumberExtent.Min -> error("Max value of a range cannot be 'min'")
-                    is IonSchemaModel.NumberExtent.Max -> return DecimalType.PrecisionScaleConstraint.Unconstrained
+                    is IonSchemaModel.NumberExtent.Max -> return DecimalType.createType(emptyList())
                 }
             }
         }
@@ -313,20 +315,20 @@ class StaticTypeMapper(schema: IonSchemaModel.Schema) {
         val scale = when (val rule = constraints.getConstraint(IonSchemaModel.Constraint.Scale::class)?.rule) {
             null -> null
             is IonSchemaModel.NumberRule.EqualsNumber -> rule.value.toInt()
-            is IonSchemaModel.NumberRule.EqualsRange -> return DecimalType.PrecisionScaleConstraint.Unconstrained
+            is IonSchemaModel.NumberRule.EqualsRange -> return DecimalType.createType(emptyList())
         }
 
         return if (precision == null) {
             if (scale == null) {
-                DecimalType.PrecisionScaleConstraint.Unconstrained
+                DecimalType.createType(emptyList())
             } else {
                 error("Precision needs be set when scale is set")
             }
         } else {
             if (scale == null) {
-                DecimalType.PrecisionScaleConstraint.Constrained(precision)
+                DecimalType.createType(listOf(precision))
             } else {
-                DecimalType.PrecisionScaleConstraint.Constrained(precision, scale)
+                DecimalType.createType(listOf(precision, scale))
             }
         }
     }

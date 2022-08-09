@@ -14,7 +14,9 @@ import org.partiql.lang.eval.name
 import org.partiql.lang.eval.numberValue
 import org.partiql.lang.eval.stringValue
 import org.partiql.lang.eval.timeValue
-import java.math.BigDecimal
+import org.partiql.lang.ots.interfaces.CompileTimeType
+import org.partiql.lang.ots.plugins.standard.types.CompileTimeFloatType
+import org.partiql.lang.ots.plugins.standard.types.DecimalType
 
 /**
  * Represents static types available in the language and ways to extends them to create new types.
@@ -52,8 +54,8 @@ sealed class StaticType {
         @JvmField val INT4: Int4Type = Int4Type()
         @JvmField val INT8: Int8Type = Int8Type()
         @JvmField val INT: IntType = IntType()
-        @JvmField val FLOAT: FloatType = FloatType()
-        @JvmField val DECIMAL: DecimalType = DecimalType()
+        @JvmField val FLOAT: StaticScalarType = StaticScalarType(CompileTimeFloatType)
+        @JvmField val DECIMAL: StaticScalarType = StaticScalarType(DecimalType.createType(emptyList()))
         @JvmField val NUMERIC: StaticType = unionOf(INT2, INT4, INT8, INT, FLOAT, DECIMAL)
         @JvmField val DATE: DateType = DateType()
         @JvmField val TIME: TimeType = TimeType()
@@ -198,8 +200,6 @@ sealed class StaticType {
             is Int2Type -> copy(metas = metas)
             is Int4Type -> copy(metas = metas)
             is Int8Type -> copy(metas = metas)
-            is FloatType -> copy(metas = metas)
-            is DecimalType -> copy(metas = metas)
             is TimestampType -> copy(metas = metas)
             is SymbolType -> copy(metas = metas)
             is StringType -> copy(metas = metas)
@@ -211,6 +211,7 @@ sealed class StaticType {
             is AnyOfType -> copy(metas = metas)
             is DateType -> copy(metas = metas)
             is TimeType -> copy(metas = metas)
+            is StaticScalarType -> copy(metas = metas)
         }
 
     /**
@@ -481,55 +482,6 @@ data class IntType(override val metas: Map<String, Any> = mapOf()) : SingleType(
 
         return validRange.contains(longValue)
     }
-}
-
-data class FloatType(override val metas: Map<String, Any> = mapOf()) : SingleType() {
-    override val runtimeType: ExprValueType
-        get() = ExprValueType.FLOAT
-
-    override val allTypes: List<StaticType>
-        get() = listOf(this)
-
-    override fun toString(): String = "float"
-}
-
-data class DecimalType(
-    val precisionScaleConstraint: PrecisionScaleConstraint = PrecisionScaleConstraint.Unconstrained,
-    override val metas: Map<String, Any> = mapOf()
-) : SingleType() {
-
-    sealed class PrecisionScaleConstraint {
-        abstract fun matches(d: BigDecimal): Boolean
-
-        // TODO: Do we need unconstrained precision and scale? What's our limit?
-        object Unconstrained : PrecisionScaleConstraint() {
-            override fun matches(d: BigDecimal): Boolean = true
-        }
-
-        data class Constrained(val precision: Int, val scale: Int = 0) : PrecisionScaleConstraint() {
-            override fun matches(d: BigDecimal): Boolean {
-                val dv = d.stripTrailingZeros()
-
-                val integerDigits = dv.precision() - dv.scale()
-                val expectedIntegerDigits = precision - scale
-                return integerDigits <= expectedIntegerDigits && dv.scale() <= scale
-            }
-        }
-    }
-
-    override val runtimeType: ExprValueType
-        get() = ExprValueType.DECIMAL
-
-    override val allTypes: List<StaticType>
-        get() = listOf(this)
-
-    override fun toString(): String = "decimal"
-
-    override fun isInstance(value: ExprValue): Boolean =
-        when (value.type) {
-            ExprValueType.DECIMAL -> precisionScaleConstraint.matches(value.scalar.numberValue() as BigDecimal)
-            else -> false
-        }
 }
 
 data class DateType(override val metas: Map<String, Any> = mapOf()) : SingleType() {
@@ -860,4 +812,20 @@ data class AnyOfType(val types: Set<StaticType>, override val metas: Map<String,
         }
         return false
     }
+}
+
+data class StaticScalarType(
+    val type: CompileTimeType,
+    override val metas: Map<String, Any> = mapOf()
+) : SingleType() {
+
+    override val runtimeType: ExprValueType
+        get() = type.type.runTimeType
+
+    override val allTypes: List<StaticType>
+        get() = listOf(this)
+
+    override fun toString(): String = type.type.id
+
+    override fun isInstance(value: ExprValue): Boolean = type.validateValue(value)
 }

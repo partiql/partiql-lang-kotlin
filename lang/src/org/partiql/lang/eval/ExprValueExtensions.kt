@@ -19,11 +19,15 @@ import com.amazon.ion.IonInt
 import com.amazon.ion.Timestamp
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.ast.passes.inference.getLength
+import org.partiql.lang.ast.passes.inference.isDecimalType
+import org.partiql.lang.ast.passes.inference.isFloatType
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.errors.PropertyValueMap
 import org.partiql.lang.eval.time.NANOS_PER_SECOND
 import org.partiql.lang.eval.time.Time
+import org.partiql.lang.ots.plugins.standard.types.CompileTimeDecimalType
+import org.partiql.lang.ots.plugins.standard.types.CompileTimeFloatType
 import org.partiql.lang.syntax.DATE_TIME_PART_KEYWORDS
 import org.partiql.lang.syntax.DateTimePart
 import org.partiql.lang.types.BagType
@@ -32,8 +36,6 @@ import org.partiql.lang.types.BoolType
 import org.partiql.lang.types.CharType
 import org.partiql.lang.types.ClobType
 import org.partiql.lang.types.DateType
-import org.partiql.lang.types.DecimalType
-import org.partiql.lang.types.FloatType
 import org.partiql.lang.types.Int2Type
 import org.partiql.lang.types.Int4Type
 import org.partiql.lang.types.Int8Type
@@ -43,6 +45,7 @@ import org.partiql.lang.types.MissingType
 import org.partiql.lang.types.NullType
 import org.partiql.lang.types.SexpType
 import org.partiql.lang.types.SingleType
+import org.partiql.lang.types.StaticScalarType
 import org.partiql.lang.types.StringType
 import org.partiql.lang.types.SymbolType
 import org.partiql.lang.types.TimeType
@@ -361,29 +364,33 @@ fun ExprValue.cast(
             }
             valueFactory.newInt(result)
         }
-        is FloatType -> valueFactory.newFloat(this.toDouble())
-        is DecimalType -> when (typedOpBehavior) {
-            TypedOpBehavior.LEGACY -> valueFactory.newFromIonValue(
-                this.coerce(BigDecimal::class.java).ionValue(valueFactory.ion)
-            )
-            TypedOpBehavior.HONOR_PARAMETERS ->
-                when (type.precisionScaleConstraint) {
-                    DecimalType.PrecisionScaleConstraint.Unconstrained -> valueFactory.newFromIonValue(
+        is StaticScalarType -> when (val compileTimeType = type.type) {
+            is CompileTimeFloatType -> valueFactory.newFloat(this.toDouble())
+            is CompileTimeDecimalType -> when (typedOpBehavior) {
+                TypedOpBehavior.LEGACY -> valueFactory.newFromIonValue(
+                    this.coerce(BigDecimal::class.java).ionValue(valueFactory.ion)
+                )
+                TypedOpBehavior.HONOR_PARAMETERS -> when (compileTimeType.precision) {
+                    null -> valueFactory.newFromIonValue(
                         this.coerce(BigDecimal::class.java).ionValue(valueFactory.ion)
                     )
-                    is DecimalType.PrecisionScaleConstraint.Constrained -> {
-                        val constraint = type.precisionScaleConstraint
+                    else -> {
                         val decimal = this.coerce(BigDecimal::class.java) as BigDecimal
-                        val result = decimal.round(MathContext(constraint.precision))
-                            .setScale(constraint.scale, RoundingMode.HALF_UP)
-                        if (result.precision() > constraint.precision) {
+                        val result = decimal.round(MathContext(compileTimeType.precision))
+                            .setScale(compileTimeType.scale, RoundingMode.HALF_UP)
+                        if (result.precision() > compileTimeType.precision) {
                             // Following PostgresSQL behavior here. Java will increase precision if needed.
-                            castFailedErr("target type DECIMAL(${constraint.precision}, ${constraint.scale}) too small for value $decimal.", internal = false)
+                            castFailedErr(
+                                "target type DECIMAL(${compileTimeType.precision}, ${compileTimeType.scale}) too small for value $decimal.",
+                                internal = false
+                            )
                         } else {
                             valueFactory.newFromIonValue(result.ionValue(valueFactory.ion))
                         }
                     }
                 }
+            }
+            else -> error("Unsupported type: $compileTimeType")
         }
         else -> castFailedErr("Invalid type for numeric conversion: $type (this code should be unreachable)", internal = true)
     }
@@ -428,14 +435,9 @@ fun ExprValue.cast(
         // Note that the ExprValueType for TIME and TIME WITH TIME ZONE is the same i.e. ExprValueType.TIME.
         // We further need to check for the time zone and hence we do not short circuit here when the type is TIME.
         type == targetType.runtimeType && type != ExprValueType.TIME -> {
-            return when (targetType) {
-                is Int2Type,
-                is Int4Type,
-                is Int8Type,
-                is IntType,
-                is FloatType,
-                is DecimalType -> numberValue().exprValue(targetType)
-                is CharType, is VarcharType, is StringType -> stringValue().exprValue(targetType)
+            return when {
+                targetType is Int2Type || targetType is Int4Type || targetType is Int8Type || targetType is IntType || targetType.isFloatType() || targetType.isDecimalType() -> numberValue().exprValue(targetType)
+                targetType is CharType || targetType is VarcharType || targetType is StringType -> stringValue().exprValue(targetType)
                 else -> this
             }
         }
@@ -473,28 +475,31 @@ fun ExprValue.cast(
                         }
                     }
                 }
-                is FloatType -> when {
-                    type == ExprValueType.BOOL -> return if (booleanValue()) 1.0.exprValue(targetType) else 0.0.exprValue(targetType)
-                    type.isNumber -> return numberValue().toDouble().exprValue(targetType)
-                    type.isText ->
-                        try {
-                            return stringValue().toDouble().exprValue(targetType)
-                        } catch (e: NumberFormatException) {
-                            castFailedErr("can't convert string value to FLOAT", internal = false, cause = e)
+                is StaticScalarType -> when (targetType.type) {
+                    is CompileTimeFloatType -> when {
+                        type == ExprValueType.BOOL -> return if (booleanValue()) 1.0.exprValue(targetType) else 0.0.exprValue(targetType)
+                        type.isNumber -> return numberValue().toDouble().exprValue(targetType)
+                        type.isText ->
+                            try {
+                                return stringValue().toDouble().exprValue(targetType)
+                            } catch (e: NumberFormatException) {
+                                castFailedErr("can't convert string value to FLOAT", internal = false, cause = e)
+                            }
+                    }
+                    is CompileTimeDecimalType -> when {
+                        type == ExprValueType.BOOL -> return if (booleanValue()) {
+                            BigDecimal.ONE.exprValue(targetType)
+                        } else {
+                            BigDecimal.ZERO.exprValue(targetType)
                         }
-                }
-                is DecimalType -> when {
-                    type == ExprValueType.BOOL -> return if (booleanValue()) {
-                        BigDecimal.ONE.exprValue(targetType)
-                    } else {
-                        BigDecimal.ZERO.exprValue(targetType)
+                        type.isNumber -> return numberValue().exprValue(targetType)
+                        type.isText -> try {
+                            return bigDecimalOf(stringValue()).exprValue(targetType)
+                        } catch (e: NumberFormatException) {
+                            castFailedErr("can't convert string value to DECIMAL", internal = false, cause = e)
+                        }
                     }
-                    type.isNumber -> return numberValue().exprValue(targetType)
-                    type.isText -> try {
-                        return bigDecimalOf(stringValue()).exprValue(targetType)
-                    } catch (e: NumberFormatException) {
-                        castFailedErr("can't convert string value to DECIMAL", internal = false, cause = e)
-                    }
+                    else -> error("Unsupported type: ${targetType.type}")
                 }
                 is TimestampType -> when {
                     type.isText -> try {

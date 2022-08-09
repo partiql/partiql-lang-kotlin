@@ -11,6 +11,8 @@ import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.ionschema.model.IonSchemaModel
 import org.partiql.ionschema.model.toIsl
 import org.partiql.ionschema.parser.parseSchema
+import org.partiql.lang.ots.plugins.standard.types.CompileTimeFloatType
+import org.partiql.lang.ots.plugins.standard.types.DecimalType
 import org.partiql.lang.types.AnyOfType
 import org.partiql.lang.types.AnyType
 import org.partiql.lang.types.BagType
@@ -18,13 +20,12 @@ import org.partiql.lang.types.BlobType
 import org.partiql.lang.types.BoolType
 import org.partiql.lang.types.CharType
 import org.partiql.lang.types.ClobType
-import org.partiql.lang.types.DecimalType
-import org.partiql.lang.types.FloatType
 import org.partiql.lang.types.Int4Type
 import org.partiql.lang.types.Int8Type
 import org.partiql.lang.types.IntType
 import org.partiql.lang.types.ListType
 import org.partiql.lang.types.SexpType
+import org.partiql.lang.types.StaticScalarType
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.types.StringType
 import org.partiql.lang.types.StructType
@@ -619,7 +620,10 @@ internal fun basicAnyOfTests() = listOf(
         StaticType.unionOf(
             StaticType.unionOf(StaticType.NULL, StaticType.INT),
             StaticType.STRING,
-            FloatType(metas = mapOf(ISL_META_KEY to listOf(buildTypeDef(null, buildTypeConstraint("float"))))),
+            StaticScalarType(
+                CompileTimeFloatType,
+                metas = mapOf(ISL_META_KEY to listOf(buildTypeDef(null, buildTypeConstraint("float"))))
+            ),
             ListType(
                 StaticType.STRING,
                 metas = mapOf(
@@ -788,8 +792,8 @@ internal fun listTests() = listOf(
     MapperE2ETestCase(
         "type::{ name: $typeName, type: list, element: {type: decimal,  precision: range::[1, 47], scale: range::[1,37]}}",
         ListType(
-            DecimalType(
-                DecimalType.PrecisionScaleConstraint.Unconstrained,
+            StaticScalarType(
+                DecimalType.createType(emptyList()),
                 metas = mapOf(
                     ISL_META_KEY to listOf(
                         buildTypeDef(
@@ -1241,8 +1245,8 @@ internal fun sexpTests() = listOf(
     MapperE2ETestCase(
         "type::{ name: $typeName, type: sexp, element: {type: decimal,  precision: range::[1, 47], scale: range::[1,37]}}",
         SexpType(
-            DecimalType(
-                DecimalType.PrecisionScaleConstraint.Unconstrained,
+            StaticScalarType(
+                DecimalType.createType(emptyList()),
                 metas = mapOf(
                     ISL_META_KEY to listOf(
                         buildTypeDef(
@@ -1694,8 +1698,8 @@ internal fun bagTests() = listOf(
     MapperE2ETestCase(
         "type::{ name: $typeName, type: bag, element: {type: decimal,  precision: range::[1, 47], scale: range::[1,37]}}",
         BagType(
-            DecimalType(
-                DecimalType.PrecisionScaleConstraint.Unconstrained,
+            StaticScalarType(
+                DecimalType.createType(emptyList()),
                 metas = mapOf(
                     ISL_META_KEY to listOf(
                         buildTypeDef(
@@ -2235,8 +2239,8 @@ internal fun structTests() = listOf(
         StructType(
             mapOf(
                 "a" to StaticType.unionOf(
-                    DecimalType(
-                        DecimalType.PrecisionScaleConstraint.Unconstrained,
+                    StaticScalarType(
+                        DecimalType.createType(emptyList()),
                         metas = mapOf(
                             ISL_META_KEY to listOf(
                                 buildTypeDef(
@@ -2706,7 +2710,8 @@ internal fun bagWithCustomElementTests() = listOf(
             type::{ name: $typeName, type: bag, element: bar }
         """,
         BagType(
-            FloatType(
+            StaticScalarType(
+                CompileTimeFloatType,
                 metas = mapOf(
                     ISL_META_KEY to listOf(
                         buildTypeDef("bar", buildTypeConstraint("float"))
@@ -2722,7 +2727,8 @@ internal fun bagWithCustomElementTests() = listOf(
             type::{ name: $typeName, type: bag, element: bar }
         """,
         BagType(
-            DecimalType(
+            StaticScalarType(
+                DecimalType.createType(emptyList()),
                 metas = mapOf(
                     ISL_META_KEY to listOf(
                         buildTypeDef("bar", buildTypeConstraint("decimal"))
@@ -3994,53 +4000,53 @@ internal fun intTests() = listOf(
 internal fun decimalTests() = listOf(
     MapperE2ETestCase(
         "type::{ name: $typeName, type: decimal }",
-        DecimalType(DecimalType.PrecisionScaleConstraint.Unconstrained)
+        StaticScalarType(DecimalType.createType(emptyList()))
     ),
     MapperE2ETestCase(
         "type::{ name: $typeName, type: decimal, precision: range::[1, 10] }",
-        DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(10)),
+        StaticScalarType(DecimalType.createType(listOf(10))),
         "type::{ name: $typeName, type: decimal, precision: range::[1, 10], scale: 0 }"
     ),
     // precision of exactly 1
     MapperE2ETestCase(
         "type::{ name: $typeName, type: decimal, precision: 1 }",
-        DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(1)),
+        StaticScalarType(DecimalType.createType(listOf(1))),
         "type::{ name: $typeName, type: decimal, precision: 1, scale: 0 }"
     ),
     // precision range min to 10
     MapperE2ETestCase(
         "type::{ name: $typeName, type: decimal, precision: range::[min, 10] }",
-        DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(10)),
+        StaticScalarType(DecimalType.createType(listOf(10))),
         "type::{ name: $typeName, type: decimal, precision: range::[1, 10], scale: 0 }"
     ),
     // precision range 1 to 10 and non-zero scale
     MapperE2ETestCase(
         "type::{ name: $typeName, type: decimal, precision: range::[1, 10], scale: 5 }",
-        DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(10, 5))
+        StaticScalarType(DecimalType.createType(listOf(10, 5)))
     ),
     // precision range 1 to max
     MapperE2ETestCase(
         "type::{ name: $typeName, type: decimal, precision: range::[1, max], scale: 5 }",
-        DecimalType(DecimalType.PrecisionScaleConstraint.Unconstrained),
+        StaticScalarType(DecimalType.createType(emptyList())),
         "type::{ name: $typeName, type: decimal }"
     ),
     // precision range 0 (exclusive) to 10 (inclusive)
     MapperE2ETestCase(
         "type::{ name: $typeName, type: decimal, precision: range::[exclusive::0, 10] }",
-        DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(10)),
+        StaticScalarType(DecimalType.createType(listOf(10))),
         "type::{ name: $typeName, type: decimal, precision: range::[1, 10], scale: 0 }"
     ),
     // precision range 0 (exclusive) to 10 (exclusive)
     MapperE2ETestCase(
         "type::{ name: $typeName, type: decimal, precision: range::[exclusive::0, exclusive::10] }",
-        DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(9)),
+        StaticScalarType(DecimalType.createType(listOf(9))),
         "type::{ name: $typeName, type: decimal, precision: range::[1, 9], scale: 0 }"
     ),
     MapperE2ETestCase(
         "type::{ name: $typeName, type: nullable::{type: decimal, precision: range::[1, 10], scale: 5} }",
         StaticType.unionOf(
-            DecimalType(
-                DecimalType.PrecisionScaleConstraint.Constrained(10, 5),
+            StaticScalarType(
+                DecimalType.createType(listOf(10, 5)),
                 metas = mapOf(
                     ISL_META_KEY to listOf(
                         buildTypeDef(
@@ -4057,8 +4063,8 @@ internal fun decimalTests() = listOf(
     ),
     MapperE2ETestCase(
         "type::{ name: $typeName, type: decimal, precision: range::[1,47], scale: range::[1,37] }",
-        DecimalType(
-            DecimalType.PrecisionScaleConstraint.Unconstrained,
+        StaticScalarType(
+            DecimalType.createType(emptyList()),
             metas = mapOf(
                 ISL_META_KEY to listOf(
                     buildTypeDef(

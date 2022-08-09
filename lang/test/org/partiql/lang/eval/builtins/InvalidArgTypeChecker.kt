@@ -4,14 +4,14 @@ import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.eval.EvaluatorTestBase
 import org.partiql.lang.eval.expectedArgTypeErrorMsg
+import org.partiql.lang.ots.plugins.standard.types.CompileTimeDecimalType
+import org.partiql.lang.ots.plugins.standard.types.CompileTimeFloatType
 import org.partiql.lang.types.BagType
 import org.partiql.lang.types.BlobType
 import org.partiql.lang.types.BoolType
 import org.partiql.lang.types.CharType
 import org.partiql.lang.types.ClobType
 import org.partiql.lang.types.DateType
-import org.partiql.lang.types.DecimalType
-import org.partiql.lang.types.FloatType
 import org.partiql.lang.types.Int2Type
 import org.partiql.lang.types.Int4Type
 import org.partiql.lang.types.Int8Type
@@ -21,6 +21,7 @@ import org.partiql.lang.types.MissingType
 import org.partiql.lang.types.NullType
 import org.partiql.lang.types.SexpType
 import org.partiql.lang.types.SingleType
+import org.partiql.lang.types.StaticScalarType
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.types.StringType
 import org.partiql.lang.types.StructType
@@ -44,13 +45,16 @@ data class Argument(
 )
 
 private fun SingleType.getExample() = when (this) {
+    is StaticScalarType -> when (type) {
+        is CompileTimeDecimalType -> "0."
+        is CompileTimeFloatType -> "`0e0`"
+        else -> error("Unrecognized type: $type")
+    }
     is BoolType -> "TRUE"
     is Int2Type,
     is Int4Type,
     is Int8Type,
     is IntType -> "0"
-    is FloatType -> "`0e0`"
-    is DecimalType -> "0."
     is DateType -> "DATE '2012-12-12'"
     is TimestampType -> "`2017T`"
     is TimeType -> "TIME '23:12:59.128'"

@@ -35,14 +35,14 @@ import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.builtins.createBuiltinFunctionSignatures
 import org.partiql.lang.eval.delegate
 import org.partiql.lang.eval.getStartingSourceLocationMeta
+import org.partiql.lang.ots.plugins.standard.types.CompileTimeDecimalType
+import org.partiql.lang.ots.plugins.standard.types.CompileTimeFloatType
 import org.partiql.lang.types.AnyOfType
 import org.partiql.lang.types.AnyType
 import org.partiql.lang.types.BagType
 import org.partiql.lang.types.BoolType
 import org.partiql.lang.types.CharType
 import org.partiql.lang.types.CollectionType
-import org.partiql.lang.types.DecimalType
-import org.partiql.lang.types.FloatType
 import org.partiql.lang.types.FunctionSignature
 import org.partiql.lang.types.Int2Type
 import org.partiql.lang.types.Int4Type
@@ -53,6 +53,7 @@ import org.partiql.lang.types.MissingType
 import org.partiql.lang.types.NullType
 import org.partiql.lang.types.SexpType
 import org.partiql.lang.types.SingleType
+import org.partiql.lang.types.StaticScalarType
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.types.StringType
 import org.partiql.lang.types.StructType
@@ -570,6 +571,11 @@ internal class StaticTypeInferenceVisitorTransform(
             val possibleReturnTypes = allTypes.map { st ->
                 when {
                     st.isNumeric() -> st
+                    st is StaticScalarType -> when (st.type) {
+                        is CompileTimeFloatType,
+                        is CompileTimeDecimalType -> st
+                        else -> error("Unsupported type: ${st.type}")
+                    }
                     st is NullType -> StaticType.NULL
                     else -> StaticType.MISSING
                 }
@@ -646,30 +652,40 @@ internal class StaticTypeInferenceVisitorTransform(
                                     else -> rightType as SingleType
                                 }
                             }
-                            is FloatType -> StaticType.FLOAT
-                            is DecimalType -> StaticType.DECIMAL // TODO:  account for decimal precision
+                            is StaticScalarType -> when (rightType.type) {
+                                is CompileTimeFloatType -> StaticType.FLOAT
+                                is CompileTimeDecimalType -> StaticType.DECIMAL // TODO:  account for decimal precision
+                                else -> error("Unsupported type ${rightType.type}")
+                            }
                             else -> StaticType.MISSING
                         }
-                    is FloatType ->
-                        when (rightType) {
+                    is StaticScalarType -> when (leftType.type) {
+                        is CompileTimeFloatType -> when (rightType) {
                             is Int2Type,
                             is Int4Type,
                             is Int8Type,
                             is IntType -> StaticType.FLOAT
-                            is FloatType -> StaticType.FLOAT
-                            is DecimalType -> StaticType.DECIMAL // TODO:  account for decimal precision
+                            is StaticScalarType -> when (rightType.type) {
+                                is CompileTimeDecimalType -> StaticType.DECIMAL // TODO:  account for decimal precision
+                                is CompileTimeFloatType -> StaticType.FLOAT
+                                else -> error("Unsupported type: ${rightType.type}")
+                            }
                             else -> StaticType.MISSING
                         }
-                    is DecimalType ->
-                        when (rightType) {
+                        is CompileTimeDecimalType -> when (rightType) {
                             is Int2Type,
                             is Int4Type,
                             is Int8Type,
                             is IntType -> StaticType.DECIMAL // TODO:  account for decimal precision
-                            is FloatType -> StaticType.DECIMAL // TODO:  account for decimal precision
-                            is DecimalType -> StaticType.DECIMAL // TODO:  account for decimal precision
+                            is StaticScalarType -> when (rightType.type) {
+                                is CompileTimeFloatType -> StaticType.DECIMAL // TODO:  account for decimal precision
+                                is CompileTimeDecimalType -> StaticType.DECIMAL // TODO:  account for decimal precision
+                                else -> error("Unsupported type: ${rightType.type}")
+                            }
                             else -> StaticType.MISSING
                         }
+                        else -> error("Unsupported type: ${leftType.type}")
+                    }
                     else -> StaticType.MISSING
                 }
             }

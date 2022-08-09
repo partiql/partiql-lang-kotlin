@@ -5,7 +5,8 @@ import junitparams.Parameters
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.partiql.lang.types.DecimalType
+import org.partiql.lang.ots.plugins.standard.types.DecimalType
+import org.partiql.lang.types.StaticScalarType
 import org.partiql.lang.types.StaticType
 
 @RunWith(JUnitParamsRunner::class)
@@ -433,9 +434,9 @@ class StaticTypeCastTests {
         val bigint = StaticType.INT8
         val unconstrainedInt = StaticType.INT
 
-        val decimal4_2 = DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(4, 2))
-        val decimal7_2 = DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(7, 2))
-        val decimal32_0 = DecimalType(DecimalType.PrecisionScaleConstraint.Constrained(32, 0))
+        val decimal4_2 = StaticScalarType(DecimalType.createType(listOf(4, 2)))
+        val decimal7_2 = StaticScalarType(DecimalType.createType(listOf(7, 2)))
+        val decimal32_0 = StaticScalarType(DecimalType.createType(listOf(32, 0)))
 
         return listOf(
             TestCase(smallint, smallint, smallint),

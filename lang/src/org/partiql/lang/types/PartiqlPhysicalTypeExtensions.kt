@@ -1,6 +1,7 @@
 package org.partiql.lang.types
 
 import org.partiql.lang.domains.PartiqlPhysical
+import org.partiql.lang.ots.plugins.standard.types.DecimalType
 import org.partiql.lang.util.BuiltInScalarTypeId
 
 /**
@@ -21,17 +22,10 @@ fun PartiqlPhysical.Type.toTypedOpParameter(customTypedOpParameters: Map<String,
         BuiltInScalarTypeId.DECIMAL,
         BuiltInScalarTypeId.NUMERIC -> when (parameters.size) {
             0 -> TypedOpParameter(StaticType.DECIMAL)
-            1 -> TypedOpParameter(
-                DecimalType(
-                    DecimalType.PrecisionScaleConstraint.Constrained(parameters[0].value.toInt())
-                )
-            )
+            1,
             2 -> TypedOpParameter(
-                DecimalType(
-                    DecimalType.PrecisionScaleConstraint.Constrained(
-                        parameters[0].value.toInt(),
-                        parameters[1].value.toInt()
-                    )
+                StaticScalarType(
+                    DecimalType.createType(parameters.map { it.value.toInt() })
                 )
             )
             else -> error("Internal Error: DECIMAL type must have at most 2 parameters during compiling")
