@@ -514,7 +514,7 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
     override fun visitMatchPatternParts(ctx: PartiQLParser.MatchPatternPartsContext) = PartiqlAst.build {
         val restrictor = if (ctx.restrictor != null) visitPatternRestrictor(ctx.restrictor) else null
         val prefilter = null
-        val variable = null
+        val variable = if (ctx.patternPathVariable() != null) ctx.patternPathVariable().symbolPrimitive().getString() else null
         val quantifier = null
         val parts = getPatternParts(ctx.patternParts())
         graphMatchPattern(restrictor, prefilter = prefilter, variable = variable, quantifier = quantifier, parts = parts)
