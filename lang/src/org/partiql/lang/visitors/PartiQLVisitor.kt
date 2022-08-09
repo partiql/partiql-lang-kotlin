@@ -529,15 +529,64 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
 
     private fun getPatternParts(ctx: PartiQLParser.PatternPartContinueContext): List<PartiqlAst.GraphMatchPatternPart> {
         val parts = mutableListOf<PartiqlAst.GraphMatchPatternPart>()
-        parts.add(visitPatternPartEdge(ctx.patternPartEdge()))
+        parts.add(visit(ctx.patternPartEdge()) as PartiqlAst.GraphMatchPatternPart)
         parts.add(visitPatternPartNode(ctx.patternPartNode()))
         return parts
     }
 
-    override fun visitPatternPartEdge(ctx: PartiQLParser.PatternPartEdgeContext) = PartiqlAst.build {
+    override fun visitEdge(ctx: PartiQLParser.EdgeContext) = PartiqlAst.build {
         val direction = visitEdgeAbbrev(ctx.edgeAbbrev())
         val quantifier = if (ctx.quantifier != null) visitPatternQuantifier(ctx.quantifier) else null
-        edge(direction, quantifier)
+        edge(direction = direction, quantifier = quantifier)
+    }
+
+    override fun visitEdgeWithSpec(ctx: PartiQLParser.EdgeWithSpecContext) = PartiqlAst.build {
+        val quantifier = if (ctx.quantifier != null) visitPatternQuantifier(ctx.quantifier) else null
+        val edge = visit(ctx.edgeWSpec()) as PartiqlAst.GraphMatchPatternPart.Edge
+        edge.copy(quantifier = quantifier)
+    }
+
+    override fun visitEdgeSpec(ctx: PartiQLParser.EdgeSpecContext) = PartiqlAst.build {
+        val placeholderDirection = edgeRight()
+        val variable = if (ctx.symbolPrimitive() != null) ctx.symbolPrimitive().getString() else null
+        val prefilter = if (ctx.whereClause() != null) visitWhereClause(ctx.whereClause()) else null
+        val label = if (ctx.patternPartLabel() != null) ctx.patternPartLabel().symbolPrimitive().getString() else null
+        edge(direction = placeholderDirection, variable = variable, prefilter = prefilter, label = listOfNotNull(label))
+    }
+
+    override fun visitEdgeSpecLeft(ctx: PartiQLParser.EdgeSpecLeftContext) = PartiqlAst.build {
+        val edge = visitEdgeSpec(ctx.edgeSpec())
+        edge.copy(direction = edgeLeft())
+    }
+
+    override fun visitEdgeSpecRight(ctx: PartiQLParser.EdgeSpecRightContext) = PartiqlAst.build {
+        val edge = visitEdgeSpec(ctx.edgeSpec())
+        edge.copy(direction = edgeRight())
+    }
+
+    override fun visitEdgeSpecBidirectional(ctx: PartiQLParser.EdgeSpecBidirectionalContext) = PartiqlAst.build {
+        val edge = visitEdgeSpec(ctx.edgeSpec())
+        edge.copy(direction = edgeLeftOrRight())
+    }
+
+    override fun visitEdgeSpecUndirectedBidirectional(ctx: PartiQLParser.EdgeSpecUndirectedBidirectionalContext) = PartiqlAst.build {
+        val edge = visitEdgeSpec(ctx.edgeSpec())
+        edge.copy(direction = edgeLeftOrUndirectedOrRight())
+    }
+
+    override fun visitEdgeSpecUndirected(ctx: PartiQLParser.EdgeSpecUndirectedContext) = PartiqlAst.build {
+        val edge = visitEdgeSpec(ctx.edgeSpec())
+        edge.copy(direction = edgeUndirected())
+    }
+
+    override fun visitEdgeSpecUndirectedLeft(ctx: PartiQLParser.EdgeSpecUndirectedLeftContext) = PartiqlAst.build {
+        val edge = visitEdgeSpec(ctx.edgeSpec())
+        edge.copy(direction = edgeLeftOrUndirected())
+    }
+
+    override fun visitEdgeSpecUndirectedRight(ctx: PartiQLParser.EdgeSpecUndirectedRightContext) = PartiqlAst.build {
+        val edge = visitEdgeSpec(ctx.edgeSpec())
+        edge.copy(direction = edgeUndirectedOrRight())
     }
 
     override fun visitEdgeAbbrev(ctx: PartiQLParser.EdgeAbbrevContext) = PartiqlAst.build {
