@@ -74,25 +74,25 @@ class EvaluatingCompilerNAryIntOverflowTests : EvaluatorTestBase() {
         listOf(
             createVariablesForInt(
                 prefix = "int2",
-                type = IntType(IntType.IntRangeConstraint.SHORT),
+                type = StaticType.INT2,
                 minValue = Short.MIN_VALUE.toLong(),
                 maxValue = Short.MAX_VALUE.toLong()
             ),
             createVariablesForInt(
                 prefix = "int4",
-                type = IntType(IntType.IntRangeConstraint.INT4),
+                type = StaticType.INT4,
                 minValue = Int.MIN_VALUE.toLong(),
                 maxValue = Int.MAX_VALUE.toLong()
             ),
             createVariablesForInt(
                 prefix = "int8",
-                type = IntType(IntType.IntRangeConstraint.LONG),
+                type = StaticType.INT8,
                 minValue = Long.MIN_VALUE,
                 maxValue = Long.MAX_VALUE
             ),
             createVariablesForInt(
                 prefix = "int",
-                type = IntType(IntType.IntRangeConstraint.UNCONSTRAINED),
+                type = StaticType.INT,
                 minValue = Long.MIN_VALUE,
                 maxValue = Long.MAX_VALUE
             ),
@@ -100,8 +100,8 @@ class EvaluatingCompilerNAryIntOverflowTests : EvaluatorTestBase() {
             createVariablesForInt(
                 prefix = "int2_4",
                 type = StaticType.unionOf(
-                    IntType(IntType.IntRangeConstraint.SHORT),
-                    IntType(IntType.IntRangeConstraint.INT4)
+                    StaticType.INT2,
+                    StaticType.INT4
                 ),
                 minValue = Int.MIN_VALUE.toLong(),
                 maxValue = Int.MAX_VALUE.toLong()
@@ -109,8 +109,8 @@ class EvaluatingCompilerNAryIntOverflowTests : EvaluatorTestBase() {
             createVariablesForInt(
                 prefix = "int2_u",
                 type = StaticType.unionOf(
-                    IntType(IntType.IntRangeConstraint.INT4),
-                    IntType(IntType.IntRangeConstraint.UNCONSTRAINED)
+                    StaticType.INT4,
+                    StaticType.INT
                 ),
                 minValue = Long.MIN_VALUE,
                 maxValue = Long.MAX_VALUE
