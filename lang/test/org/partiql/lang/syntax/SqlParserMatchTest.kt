@@ -700,7 +700,7 @@ class SqlParserMatchTest : SqlParserTestBase() {
 
     @Test
     fun prefilters() = assertExpressionNoRoundTrip(
-        "SELECT u as banCandidate FROM g MATCH (p:Post Where p.isFlagged = true) <-[:createdPost]- (u:User WHERE u.isBanned = false AND u.karma < 20) -[:createdComment]->(c:Comment WHERE c.isFlagged = true) WHERE p.title LIKE '%considered harmful%'",
+        "SELECT u as banCandidate FROM g MATCH (p:Post Where p.isFlagged = true) <-[:createdPost]- (u:Usr WHERE u.isBanned = false AND u.karma < 20) -[:createdComment]->(c:Comment WHERE c.isFlagged = true) WHERE p.title LIKE '%considered harmful%'",
     ) {
         PartiqlAst.build {
             select(
@@ -725,7 +725,7 @@ class SqlParserMatchTest : SqlParserTestBase() {
                                     ),
                                     node(
                                         variable = "u",
-                                        label = listOf("User"),
+                                        label = listOf("Usr"),
                                         prefilter = and(
                                             eq(
                                                 path(id("u"), pathExpr(lit(ionString("isBanned")), caseInsensitive())),
@@ -979,7 +979,7 @@ class SqlParserMatchTest : SqlParserTestBase() {
 
     @Test
     fun matchAndJoinCommas() {
-        assertFailsWith<ParserException> {
+        assertFailsWith<PartiQLParser.ParseErrorListener.ParseException> {
             assertExpressionNoRoundTrip(
                 "SELECT a,b,c, t1.x as x, t2.y as y FROM graph MATCH (a) -> (b), (a) -> (c), table1 as t1, table2 as t2",
             ) {
