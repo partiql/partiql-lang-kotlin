@@ -104,8 +104,8 @@ class StaticTypeMapper(schema: IonSchemaModel.Schema) {
 
         // Create StaticType based on core ISL type
         return when (coreType) {
-            is StringType -> StringType(getStringLengthConstraint(), metas)
-            is IntType -> IntType(getIntRangeConstraint(), metas)
+            is StringType -> getStringType(metas)
+            is IntType -> getIntType(metas)
             is DecimalType -> DecimalType(getPrecisionScaleConstraint(), metas)
             is ListType -> ListType(getElement(currentTopLevelTypeName), metas)
             is SexpType -> SexpType(getElement(currentTopLevelTypeName), metas)
