@@ -320,9 +320,13 @@ tableMatchModifer
     ;
 
 matchPattern
-    : restrictor=patternRestrictor? patternPathVariable? patternParts   # MatchPatternParts
-    | PAREN_LEFT matchPattern whereClause? PAREN_RIGHT                  # MatchPatternGrouped
+    : PAREN_LEFT matchPattern whereClause? PAREN_RIGHT                  # MatchPatternGrouped
     | BRACKET_LEFT matchPattern whereClause? BRACKET_RIGHT              # MatchPatternGrouped
+    | matchPatternParts                                                 # MatchPatternBase
+    ;
+
+matchPatternParts
+    : restrictor=patternRestrictor? patternPathVariable? patternParts
     ;
 
 patternPathVariable
@@ -346,6 +350,7 @@ patternPartContinue
     | patternPartParen patternPartNode
     ;
 
+// TODO: Do we use a specific nested pattern definition?
 patternPartParen
     : PAREN_LEFT matchPatternNested whereClause? PAREN_RIGHT patternQuantifier?
     | BRACKET_LEFT matchPatternNested whereClause? BRACKET_RIGHT patternQuantifier?
