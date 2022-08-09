@@ -203,6 +203,8 @@ sealed class StaticType {
             is TimestampType -> copy(metas = metas)
             is SymbolType -> copy(metas = metas)
             is StringType -> copy(metas = metas)
+            is VarcharType -> copy(metas = metas)
+            is CharType -> copy(metas = metas)
             is BlobType -> copy(metas = metas)
             is ClobType -> copy(metas = metas)
             is StructType -> copy(metas = metas)
@@ -577,28 +579,45 @@ data class SymbolType(override val metas: Map<String, Any> = mapOf()) : SingleTy
     override fun toString(): String = "symbol"
 }
 
-data class StringType(
-    val lengthConstraint: StringLengthConstraint = StringLengthConstraint.Unconstrained,
-    override val metas: Map<String, Any> = mapOf()
-) : SingleType() {
+data class VarcharType(val length: Int, override val metas: Map<String, Any> = mapOf()) : SingleType() {
+    override val runtimeType: ExprValueType
+        get() = ExprValueType.STRING
 
-    sealed class StringLengthConstraint {
-        /** Returns true if the code point count of [value] falls within the constraints.  */
-        abstract fun matches(value: ExprValue): Boolean
+    override val allTypes: List<StaticType>
+        get() = listOf(this)
 
-        object Unconstrained : StringLengthConstraint() {
-            override fun matches(value: ExprValue): Boolean = true
-        }
+    override fun toString(): String = "character_varying"
 
-        data class Constrained(val length: NumberConstraint) : StringLengthConstraint() {
-            override fun matches(value: ExprValue): Boolean {
-                val str = value.scalar.stringValue()
-                    ?: error("value.scalar.stringValue() unexpectedly returned null")
-                return length.matches(str.codePointCount(0, str.length))
+    override fun isInstance(value: ExprValue): Boolean =
+        when (value.type) {
+            ExprValueType.STRING -> {
+                val str = value.scalar.stringValue()!!
+                length >= str.codePointCount(0, str.length)
             }
+            else -> false
         }
-    }
+}
 
+data class CharType(val length: Int, override val metas: Map<String, Any> = mapOf()) : SingleType() {
+    override val runtimeType: ExprValueType
+        get() = ExprValueType.STRING
+
+    override val allTypes: List<StaticType>
+        get() = listOf(this)
+
+    override fun toString(): String = "character"
+
+    override fun isInstance(value: ExprValue): Boolean =
+        when (value.type) {
+            ExprValueType.STRING -> {
+                val str = value.scalar.stringValue()!!
+                length == str.codePointCount(0, str.length)
+            }
+            else -> false
+        }
+}
+
+data class StringType(override val metas: Map<String, Any> = mapOf()) : SingleType() {
     override val runtimeType: ExprValueType
         get() = ExprValueType.STRING
 
@@ -609,11 +628,9 @@ data class StringType(
 
     override fun isInstance(value: ExprValue): Boolean =
         when (value.type) {
-            ExprValueType.STRING -> lengthConstraint.matches(value)
+            ExprValueType.STRING -> true
             else -> false
         }
-
-    internal constructor(numberConstraint: NumberConstraint) : this(StringLengthConstraint.Constrained(numberConstraint))
 }
 
 data class BlobType(override val metas: Map<String, Any> = mapOf()) : SingleType() {
@@ -842,21 +859,5 @@ data class AnyOfType(val types: Set<StaticType>, override val metas: Map<String,
             }
         }
         return false
-    }
-}
-
-sealed class NumberConstraint {
-
-    /** Returns true of [num] matches the constraint. */
-    abstract fun matches(num: Int): Boolean
-
-    abstract val value: Int
-
-    data class Equals(override val value: Int) : NumberConstraint() {
-        override fun matches(num: Int): Boolean = value == num
-    }
-
-    data class UpTo(override val value: Int) : NumberConstraint() {
-        override fun matches(num: Int): Boolean = value >= num
     }
 }

@@ -16,6 +16,7 @@ import org.partiql.lang.types.AnyType
 import org.partiql.lang.types.BagType
 import org.partiql.lang.types.BlobType
 import org.partiql.lang.types.BoolType
+import org.partiql.lang.types.CharType
 import org.partiql.lang.types.ClobType
 import org.partiql.lang.types.DecimalType
 import org.partiql.lang.types.FloatType
@@ -23,13 +24,13 @@ import org.partiql.lang.types.Int4Type
 import org.partiql.lang.types.Int8Type
 import org.partiql.lang.types.IntType
 import org.partiql.lang.types.ListType
-import org.partiql.lang.types.NumberConstraint
 import org.partiql.lang.types.SexpType
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.types.StringType
 import org.partiql.lang.types.StructType
 import org.partiql.lang.types.SymbolType
 import org.partiql.lang.types.TimestampType
+import org.partiql.lang.types.VarcharType
 import org.partiql.pig.runtime.toIonElement
 
 internal fun buildTypeDef(name: String? = null, vararg constraints: IonSchemaModel.Constraint) =
@@ -709,8 +710,8 @@ internal fun listTests() = listOf(
     MapperE2ETestCase(
         "type::{ name: $typeName, type: list, element: {type: string, codepoint_length: 5} }",
         ListType(
-            StringType(
-                StringType.StringLengthConstraint.Constrained(NumberConstraint.Equals(5)),
+            CharType(
+                5,
                 metas = mapOf(
                     ISL_META_KEY to listOf(
                         buildTypeDef(
@@ -728,8 +729,8 @@ internal fun listTests() = listOf(
         "type::{ name: $typeName, type: list, element: {type: nullable::{type: string, codepoint_length:5}}}",
         ListType(
             StaticType.unionOf(
-                StringType(
-                    StringType.StringLengthConstraint.Constrained(NumberConstraint.Equals(5)),
+                CharType(
+                    5,
                     metas = mapOf(
                         ISL_META_KEY to listOf(
                             buildTypeDef(
@@ -771,7 +772,6 @@ internal fun listTests() = listOf(
         "type::{ name: $typeName, type: list, element: {type: string, codepoint_length: range::[1, 2048]} }",
         ListType(
             StringType(
-                StringType.StringLengthConstraint.Unconstrained,
                 metas = mapOf(
                     ISL_META_KEY to listOf(
                         buildTypeDef(
@@ -963,8 +963,8 @@ internal fun listTests() = listOf(
         ListType(
             StaticType.unionOf(
                 StaticType.NULL,
-                StringType(
-                    StringType.StringLengthConstraint.Constrained(NumberConstraint.Equals(5)),
+                CharType(
+                    5,
                     metas = mapOf(
                         ISL_META_KEY to listOf(
                             buildTypeDef(
@@ -1163,8 +1163,8 @@ internal fun sexpTests() = listOf(
     MapperE2ETestCase(
         "type::{ name: $typeName, type: sexp, element: {type: string, codepoint_length: 5} }",
         SexpType(
-            StringType(
-                StringType.StringLengthConstraint.Constrained(NumberConstraint.Equals(5)),
+            CharType(
+                5,
                 metas = mapOf(
                     ISL_META_KEY to listOf(
                         buildTypeDef(
@@ -1182,8 +1182,8 @@ internal fun sexpTests() = listOf(
         "type::{ name: $typeName, type: sexp, element: {type: nullable::{type: string, codepoint_length:5}}}",
         SexpType(
             StaticType.unionOf(
-                StringType(
-                    StringType.StringLengthConstraint.Constrained(NumberConstraint.Equals(5)),
+                CharType(
+                    5,
                     metas = mapOf(
                         ISL_META_KEY to listOf(
                             buildTypeDef(
@@ -1225,7 +1225,6 @@ internal fun sexpTests() = listOf(
         "type::{ name: $typeName, type: sexp, element: {type: string, codepoint_length: range::[1, 2048]} }",
         SexpType(
             StringType(
-                StringType.StringLengthConstraint.Unconstrained,
                 metas = mapOf(
                     ISL_META_KEY to listOf(
                         buildTypeDef(
@@ -1417,8 +1416,8 @@ internal fun sexpTests() = listOf(
         SexpType(
             StaticType.unionOf(
                 StaticType.NULL,
-                StringType(
-                    StringType.StringLengthConstraint.Constrained(NumberConstraint.Equals(5)),
+                CharType(
+                    5,
                     metas = mapOf(
                         ISL_META_KEY to listOf(
                             buildTypeDef(
@@ -1617,8 +1616,8 @@ internal fun bagTests() = listOf(
     MapperE2ETestCase(
         "type::{ name: $typeName, type: bag, element: {type: string, codepoint_length: 5} }",
         BagType(
-            StringType(
-                StringType.StringLengthConstraint.Constrained(NumberConstraint.Equals(5)),
+            CharType(
+                5,
                 metas = mapOf(
                     ISL_META_KEY to listOf(
                         buildTypeDef(
@@ -1636,8 +1635,8 @@ internal fun bagTests() = listOf(
         "type::{ name: $typeName, type: bag, element: {type: nullable::{type: string, codepoint_length:5}}}",
         BagType(
             StaticType.unionOf(
-                StringType(
-                    StringType.StringLengthConstraint.Constrained(NumberConstraint.Equals(5)),
+                CharType(
+                    5,
                     metas = mapOf(
                         ISL_META_KEY to listOf(
                             buildTypeDef(
@@ -1679,7 +1678,6 @@ internal fun bagTests() = listOf(
         "type::{ name: $typeName, type: bag, element: {type: string, codepoint_length: range::[1, 2048]} }",
         BagType(
             StringType(
-                StringType.StringLengthConstraint.Unconstrained,
                 metas = mapOf(
                     ISL_META_KEY to listOf(
                         buildTypeDef(
@@ -2072,8 +2070,8 @@ internal fun structTests() = listOf(
         StructType(
             mapOf(
                 "a" to StaticType.unionOf(
-                    StringType(
-                        StringType.StringLengthConstraint.Constrained(NumberConstraint.UpTo(5)),
+                    VarcharType(
+                        5,
                         metas = mapOf(
                             ISL_META_KEY to listOf(
                                 buildTypeDef(
@@ -2133,8 +2131,8 @@ internal fun structTests() = listOf(
         "type::{ name: $typeName, type: struct, fields: { a: {type: string, codepoint_length: range::[0, 5], occurs: required} } }",
         StructType(
             mapOf(
-                "a" to StringType(
-                    StringType.StringLengthConstraint.Constrained(NumberConstraint.UpTo(5)),
+                "a" to VarcharType(
+                    5,
                     metas = mapOf(
                         ISL_META_KEY to listOf(
                             buildTypeDef(
@@ -2174,8 +2172,8 @@ internal fun structTests() = listOf(
         StructType(
             mapOf(
                 "a" to StaticType.unionOf(
-                    StringType(
-                        StringType.StringLengthConstraint.Constrained(NumberConstraint.UpTo(5)),
+                    VarcharType(
+                        5,
                         metas = mapOf(
                             ISL_META_KEY to listOf(
                                 buildTypeDef(
@@ -2207,7 +2205,6 @@ internal fun structTests() = listOf(
             mapOf(
                 "a" to StaticType.unionOf(
                     StringType(
-                        StringType.StringLengthConstraint.Unconstrained,
                         metas = mapOf(
                             ISL_META_KEY to listOf(
                                 buildTypeDef(
@@ -2991,8 +2988,8 @@ internal fun bagWithCustomElementTests() = listOf(
         BagType(
             StaticType.unionOf(
                 StaticType.NULL,
-                StringType(
-                    StringType.StringLengthConstraint.Constrained(NumberConstraint.Equals(5)),
+                CharType(
+                    5,
                     metas = mapOf(
                         ISL_META_KEY to listOf(
                             buildTypeDef(
@@ -3609,8 +3606,8 @@ internal fun structWithCustomFieldTests() = listOf(
         StructType(
             mapOf(
                 "a" to StaticType.unionOf(
-                    StringType(
-                        StringType.StringLengthConstraint.Constrained(NumberConstraint.Equals(5)),
+                    CharType(
+                        5,
                         metas = mapOf(
                             ISL_META_KEY to listOf(
                                 buildTypeDef(
@@ -3644,7 +3641,8 @@ internal fun structWithCustomFieldTests() = listOf(
         """,
         StructType(
             mapOf(
-                "a" to StringType(
+                "a" to CharType(
+                    5,
                     metas = mapOf(
                         ISL_META_KEY to listOf(
                             buildTypeDef(
@@ -3657,7 +3655,11 @@ internal fun structWithCustomFieldTests() = listOf(
                     )
                 )
             )
-        )
+        ),
+        """
+            type::{ name: bar, type: string, codepoint_length: 5, utf8_byte_length: 5 }
+            type::{ name: $typeName, type: struct, fields: { a: { type: bar, codepoint_length: 5, occurs: required } } }
+        """
     ),
     // nullable, required field, custom type with constraints
     MapperE2ETestCase(
@@ -3668,8 +3670,8 @@ internal fun structWithCustomFieldTests() = listOf(
         StructType(
             mapOf(
                 "a" to StaticType.unionOf(
-                    StringType(
-                        StringType.StringLengthConstraint.Constrained(NumberConstraint.Equals(5)),
+                    CharType(
+                        5,
                         metas = mapOf(
                             ISL_META_KEY to listOf(
                                 buildTypeDef(
@@ -3856,17 +3858,17 @@ internal fun structWithCustomFieldTests() = listOf(
 internal fun stringTests() = listOf(
     MapperE2ETestCase(
         "type::{ name: $typeName, type: string }",
-        StringType(StringType.StringLengthConstraint.Unconstrained)
+        StaticType.STRING
     ),
     MapperE2ETestCase(
         "type::{ name: $typeName, type: string, codepoint_length: 5 }",
-        StringType(StringType.StringLengthConstraint.Constrained(NumberConstraint.Equals(5)))
+        CharType(5)
     ),
     MapperE2ETestCase(
         "type::{ name: $typeName, type: nullable::{type: string, codepoint_length: 5} }",
         StaticType.unionOf(
-            StringType(
-                StringType.StringLengthConstraint.Constrained(NumberConstraint.Equals(5)),
+            CharType(
+                5,
                 metas = mapOf(
                     ISL_META_KEY to listOf(
                         buildTypeDef(
@@ -3882,7 +3884,7 @@ internal fun stringTests() = listOf(
     ),
     MapperE2ETestCase(
         "type::{ name: $typeName, type: string, codepoint_length: range::[0, 5] }",
-        StringType(StringType.StringLengthConstraint.Constrained(NumberConstraint.UpTo(5)))
+        VarcharType(5)
     ),
     // nullable string with constraints
     MapperE2ETestCase(
@@ -3890,8 +3892,8 @@ internal fun stringTests() = listOf(
         AnyOfType(
             setOf(
                 StaticType.NULL,
-                StringType(
-                    StringType.StringLengthConstraint.Constrained(NumberConstraint.UpTo(5)),
+                VarcharType(
+                    5,
                     metas = mapOf(
                         ISL_META_KEY to listOf(
                             buildTypeDef(
@@ -3907,28 +3909,27 @@ internal fun stringTests() = listOf(
     ),
     MapperE2ETestCase(
         "type::{ name: $typeName, type: string, codepoint_length: range::[exclusive::-1, 5] }",
-        StringType(StringType.StringLengthConstraint.Constrained(NumberConstraint.UpTo(5))),
+        VarcharType(5),
         "type::{ name: $typeName, type: string, codepoint_length: range::[0, 5] }"
     ),
     MapperE2ETestCase(
         "type::{ name: $typeName, type: string, codepoint_length: range::[0, exclusive::5] }",
-        StringType(StringType.StringLengthConstraint.Constrained(NumberConstraint.UpTo(4))),
+        VarcharType(4),
         "type::{ name: $typeName, type: string, codepoint_length: range::[0, 4] }"
     ),
     MapperE2ETestCase(
         "type::{ name: $typeName, type: string, codepoint_length: range::[min, 5] }",
-        StringType(StringType.StringLengthConstraint.Constrained(NumberConstraint.UpTo(5))),
+        VarcharType(5),
         "type::{ name: $typeName, type: string, codepoint_length: range::[0, 5] }"
     ),
     MapperE2ETestCase(
         "type::{ name: $typeName, type: string, codepoint_length: range::[min, max] }",
-        StringType(StringType.StringLengthConstraint.Unconstrained),
+        StaticType.STRING,
         "type::{ name: $typeName, type: string }"
     ),
     MapperE2ETestCase(
         "type::{ name: $typeName, type: string, codepoint_length: range::[1, 2048] }",
         StringType(
-            StringType.StringLengthConstraint.Unconstrained,
             metas = mapOf(
                 ISL_META_KEY to listOf(
                     buildTypeDef(

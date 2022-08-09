@@ -18,6 +18,7 @@ import com.amazon.ion.IntegerSize
 import com.amazon.ion.IonInt
 import com.amazon.ion.Timestamp
 import org.partiql.lang.ast.SourceLocationMeta
+import org.partiql.lang.ast.passes.inference.getLength
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.errors.PropertyValueMap
@@ -28,6 +29,7 @@ import org.partiql.lang.syntax.DateTimePart
 import org.partiql.lang.types.BagType
 import org.partiql.lang.types.BlobType
 import org.partiql.lang.types.BoolType
+import org.partiql.lang.types.CharType
 import org.partiql.lang.types.ClobType
 import org.partiql.lang.types.DateType
 import org.partiql.lang.types.DecimalType
@@ -39,13 +41,13 @@ import org.partiql.lang.types.IntType
 import org.partiql.lang.types.ListType
 import org.partiql.lang.types.MissingType
 import org.partiql.lang.types.NullType
-import org.partiql.lang.types.NumberConstraint
 import org.partiql.lang.types.SexpType
 import org.partiql.lang.types.SingleType
 import org.partiql.lang.types.StringType
 import org.partiql.lang.types.SymbolType
 import org.partiql.lang.types.TimeType
 import org.partiql.lang.types.TimestampType
+import org.partiql.lang.types.VarcharType
 import org.partiql.lang.util.ConfigurableExprValueFormatter
 import org.partiql.lang.util.bigDecimalOf
 import org.partiql.lang.util.coerce
@@ -387,13 +389,16 @@ fun ExprValue.cast(
     }
 
     fun String.exprValue(type: SingleType) = when (type) {
+        is CharType,
+        is VarcharType,
         is StringType -> when (typedOpBehavior) {
             TypedOpBehavior.LEGACY -> valueFactory.newString(this)
-            TypedOpBehavior.HONOR_PARAMETERS -> when (type.lengthConstraint) {
-                StringType.StringLengthConstraint.Unconstrained -> valueFactory.newString(this)
-                is StringType.StringLengthConstraint.Constrained -> {
+            TypedOpBehavior.HONOR_PARAMETERS -> when (type) {
+                is StringType -> valueFactory.newString(this)
+                is CharType,
+                is VarcharType -> {
                     val actualCodepointCount = this.codePointCount(0, this.length)
-                    val lengthConstraint = type.lengthConstraint.length.value
+                    val lengthConstraint = type.getLength()
                     val truncatedString = if (actualCodepointCount <= lengthConstraint) {
                         this // no truncation needed
                     } else {
@@ -401,12 +406,14 @@ fun ExprValue.cast(
                     }
 
                     valueFactory.newString(
-                        when (type.lengthConstraint.length) {
-                            is NumberConstraint.Equals -> truncatedString.trimEnd { c -> c == '\u0020' }
-                            is NumberConstraint.UpTo -> truncatedString
+                        when (type) {
+                            is CharType -> truncatedString.trimEnd { c -> c == '\u0020' }
+                            is VarcharType -> truncatedString
+                            else -> error("Unreachable code")
                         }
                     )
                 }
+                else -> error("Unreachable code")
             }
         }
         is SymbolType -> valueFactory.newSymbol(this)
@@ -428,7 +435,7 @@ fun ExprValue.cast(
                 is IntType,
                 is FloatType,
                 is DecimalType -> numberValue().exprValue(targetType)
-                is StringType -> stringValue().exprValue(targetType)
+                is CharType, is VarcharType, is StringType -> stringValue().exprValue(targetType)
                 else -> this
             }
         }
@@ -593,7 +600,7 @@ fun ExprValue.cast(
                         }
                     }
                 }
-                is StringType, is SymbolType -> when {
+                is CharType, is VarcharType, is StringType, is SymbolType -> when {
                     type.isNumber -> return numberValue().toString().exprValue(targetType)
                     type.isText -> return stringValue().exprValue(targetType)
                     type == ExprValueType.DATE -> return dateValue().toString().exprValue(targetType)

@@ -38,26 +38,13 @@ fun PartiqlPhysical.Type.toTypedOpParameter(customTypedOpParameters: Map<String,
         }
         BuiltInScalarTypeId.TIMESTAMP -> TypedOpParameter(StaticType.TIMESTAMP)
         BuiltInScalarTypeId.CHARACTER -> when (parameters.size) {
-            0 -> TypedOpParameter(
-                StringType(
-                    // TODO: See if we need to use unconstrained string instead
-                    StringType.StringLengthConstraint.Constrained(
-                        NumberConstraint.Equals(1)
-                    )
-                )
-            )
-            1 -> TypedOpParameter(
-                StringType(
-                    StringType.StringLengthConstraint.Constrained(
-                        NumberConstraint.Equals(parameters[0].value.toInt())
-                    )
-                )
-            )
+            0 -> TypedOpParameter(CharType(1)) // TODO: See if we need to use unconstrained string instead
+            1 -> TypedOpParameter(CharType(parameters[0].value.toInt()))
             else -> error("Internal Error: CHARACTER type must have 1 parameters during compiling")
         }
         BuiltInScalarTypeId.CHARACTER_VARYING -> when (parameters.size) {
-            0 -> TypedOpParameter(StringType(StringType.StringLengthConstraint.Unconstrained))
-            1 -> TypedOpParameter(StringType(StringType.StringLengthConstraint.Constrained(NumberConstraint.UpTo(parameters[0].value.toInt()))))
+            0 -> TypedOpParameter(StaticType.STRING)
+            1 -> TypedOpParameter(VarcharType(parameters[0].value.toInt()))
             else -> error("Internal Error: CHARACTER_VARYING type must have 1 parameters during compiling")
         }
         BuiltInScalarTypeId.STRING -> TypedOpParameter(StaticType.STRING)

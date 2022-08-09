@@ -8,6 +8,7 @@ import org.partiql.lang.types.AnyType
 import org.partiql.lang.types.BagType
 import org.partiql.lang.types.BlobType
 import org.partiql.lang.types.BoolType
+import org.partiql.lang.types.CharType
 import org.partiql.lang.types.ClobType
 import org.partiql.lang.types.DateType
 import org.partiql.lang.types.DecimalType
@@ -19,7 +20,6 @@ import org.partiql.lang.types.IntType
 import org.partiql.lang.types.ListType
 import org.partiql.lang.types.MissingType
 import org.partiql.lang.types.NullType
-import org.partiql.lang.types.NumberConstraint
 import org.partiql.lang.types.SexpType
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.types.StringType
@@ -27,6 +27,7 @@ import org.partiql.lang.types.StructType
 import org.partiql.lang.types.SymbolType
 import org.partiql.lang.types.TimeType
 import org.partiql.lang.types.TimestampType
+import org.partiql.lang.types.VarcharType
 
 internal const val ISL_META_KEY = "ISL"
 
@@ -253,27 +254,32 @@ class IonSchemaMapper(private val staticType: StaticType) {
         } ?: listOf()
 
         return when (this) {
+            is CharType,
+            is VarcharType,
             is StringType -> listOfNotNull(
-                when (val lengthConstraint = this.lengthConstraint) {
-                    StringType.StringLengthConstraint.Unconstrained -> null
-                    is StringType.StringLengthConstraint.Constrained -> {
+                when (this) {
+                    is StringType -> null
+                    is CharType,
+                    is VarcharType -> {
                         constraintsFromISL = constraintsFromISL.filterNot { it is IonSchemaModel.Constraint.CodepointLength }
-                        when (lengthConstraint.length) {
-                            is NumberConstraint.Equals -> IonSchemaModel.build {
-                                codepointLength(equalsNumber(ionInt(lengthConstraint.length.value.toLong())))
+                        when (this) {
+                            is CharType -> IonSchemaModel.build {
+                                codepointLength(equalsNumber(ionInt(length.toLong())))
                             }
-                            is NumberConstraint.UpTo -> IonSchemaModel.build {
+                            is VarcharType -> IonSchemaModel.build {
                                 codepointLength(
                                     equalsRange(
                                         numberRange(
                                             inclusive(ionInt(0)),
-                                            inclusive(ionInt(lengthConstraint.length.value.toLong()))
+                                            inclusive(ionInt(length.toLong()))
                                         )
                                     )
                                 )
                             }
+                            else -> error("Unreachable code")
                         }
                     }
+                    else -> error("Unreachable code")
                 }
             )
             is Int2Type,
@@ -548,6 +554,8 @@ fun StaticType.getBaseTypeName(): String = when (this) {
     is BoolType -> "bool"
     is TimestampType -> "timestamp"
     is SymbolType -> "symbol"
+    is CharType,
+    is VarcharType,
     is StringType -> "string"
     is BlobType -> "blob"
     is ClobType -> "clob"

@@ -4,10 +4,9 @@ import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.numberValue
 import org.partiql.lang.types.AnyOfType
+import org.partiql.lang.types.CharType
 import org.partiql.lang.types.CustomType
-import org.partiql.lang.types.NumberConstraint
 import org.partiql.lang.types.StaticType
-import org.partiql.lang.types.StringType
 import org.partiql.lang.types.TypedOpParameter
 import org.partiql.lang.util.compareTo
 
@@ -70,9 +69,7 @@ private val rsIntegerPrecisionParameter = TypedOpParameter(StaticType.INT4)
 private val rsBigintPrecisionParameter = TypedOpParameter(StaticType.INT8)
 
 // RS_VARCHAR_MAX
-private val rsStringParameter = TypedOpParameter(
-    StringType(StringType.StringLengthConstraint.Constrained(NumberConstraint.UpTo(10)))
-)
+private val rsStringParameter = TypedOpParameter(CharType(10))
 
 // RS_REAL
 private val rsRealParameter = TypedOpParameter(StaticType.FLOAT) {
