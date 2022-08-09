@@ -7410,31 +7410,17 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
         private fun createAggFunctionValidTests(
             functionName: String,
             inputTypes: StaticType,
-            expectedType: StaticType,
-            isTopLevel: Boolean
+            expectedType: StaticType
         ): TestCase =
             // testing toplevel aggregated function
             // testing sql function(t)
             // global environment here is a bag type
-            if (isTopLevel) {
-                TestCase(
-                    name = "top level $functionName(t)",
-                    originalSql = "$functionName(t)",
-                    globals = mapOf("t" to BagType(inputTypes)),
-                    handler = expectQueryOutputType(expectedType)
-                )
-            }
-            // testing aggregate function with select
-            // testing sql: SELECT function(t.a) as result FROM t
-            // global variable here is a bag of struct
-            else {
-                TestCase(
-                    name = "SELECT $functionName(t.a) as result FROM t",
-                    originalSql = "SELECT $functionName(t.a) as result FROM t",
-                    globals = mapOf("t" to BagType(unionOf(inputTypes.allTypes.map { StructType(mapOf("a" to it)) }.toSet()))),
-                    handler = expectQueryOutputType(BagType(StructType(mapOf("result" to expectedType), contentClosed = true)))
-                )
-            }
+            TestCase(
+                name = "top level $functionName(t)",
+                originalSql = "$functionName(t)",
+                globals = mapOf("t" to BagType(inputTypes)),
+                handler = expectQueryOutputType(expectedType)
+            )
 
         @JvmStatic
         @Suppress("unused")
@@ -7442,31 +7428,38 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
             // valid tests
             listOf(
                 // count
-                createAggFunctionValidTests("COUNT", ANY, INT8, false),
-                createAggFunctionValidTests("COUNT", ANY, INT8, true),
+                createAggFunctionValidTests("COUNT", NULL, INT8),
+                createAggFunctionValidTests("COUNT", MISSING, INT8),
+                createAggFunctionValidTests("COUNT", ANY, INT8),
+                createAggFunctionValidTests("COUNT", unionOf(NULL, MISSING, INT), INT8),
+                createAggFunctionValidTests("COUNT", unionOf(NULL, MISSING, INT), INT8),
+
                 // min
-                createAggFunctionValidTests("MIN", unionOf(INT, DECIMAL, FLOAT, STRING), unionOf(INT, DECIMAL, FLOAT, STRING), false),
-                createAggFunctionValidTests("MIN", unionOf(INT, DECIMAL, FLOAT, STRING), unionOf(INT, DECIMAL, FLOAT, STRING), true),
+                createAggFunctionValidTests("MIN", MISSING, NULL),
+                createAggFunctionValidTests("MIN", NULL, NULL),
+                createAggFunctionValidTests("MIN", unionOf(INT, DECIMAL, FLOAT, LIST), unionOf(INT, DECIMAL, FLOAT, LIST)),
+                createAggFunctionValidTests("MIN", unionOf(INT, DECIMAL, FLOAT, LIST, NULL, MISSING), unionOf(INT, DECIMAL, FLOAT, LIST, NULL)),
+
                 // max
-                createAggFunctionValidTests("MAX", unionOf(INT, DECIMAL, FLOAT, STRING), unionOf(INT, DECIMAL, FLOAT, STRING), false),
-                createAggFunctionValidTests("MAX", unionOf(INT, DECIMAL, FLOAT, STRING), unionOf(INT, DECIMAL, FLOAT, STRING), true),
+                createAggFunctionValidTests("MAX", MISSING, NULL),
+                createAggFunctionValidTests("MAX", NULL, NULL),
+                createAggFunctionValidTests("MAX", unionOf(INT, DECIMAL, FLOAT, STRING), unionOf(INT, DECIMAL, FLOAT, STRING)),
+                createAggFunctionValidTests("MAX", unionOf(INT, DECIMAL, FLOAT, STRING, NULL, MISSING), unionOf(INT, DECIMAL, FLOAT, STRING, NULL)),
+
                 // avg
-                createAggFunctionValidTests("AVG", MISSING, NULL, false),
-                createAggFunctionValidTests("AVG", MISSING, NULL, true),
-                createAggFunctionValidTests("AVG", unionOf(MISSING, NULL), NULL, false),
-                createAggFunctionValidTests("AVG", unionOf(MISSING, NULL), NULL, true),
-                createAggFunctionValidTests("AVG", unionOf(INT, DECIMAL, FLOAT), DECIMAL, false),
-                createAggFunctionValidTests("AVG", unionOf(INT, DECIMAL, FLOAT), DECIMAL, true),
+                createAggFunctionValidTests("AVG", MISSING, NULL),
+                createAggFunctionValidTests("AVG", unionOf(MISSING, NULL), NULL),
+                createAggFunctionValidTests("AVG", unionOf(MISSING, NULL, INT), DECIMAL),
+                createAggFunctionValidTests("AVG", unionOf(INT, DECIMAL, FLOAT), DECIMAL),
 
                 // SUM
-                createAggFunctionValidTests("SUM", MISSING, NULL, false),
-                createAggFunctionValidTests("SUM", MISSING, NULL, true),
-                createAggFunctionValidTests("SUM", unionOf(MISSING, NULL), NULL, false),
-                createAggFunctionValidTests("SUM", unionOf(MISSING, NULL), NULL, false),
-                createAggFunctionValidTests("SUM", unionOf(INT2, INT4), INT4, false),
-                createAggFunctionValidTests("SUM", unionOf(INT2, INT4, INT8), INT8, false),
-                createAggFunctionValidTests("SUM", unionOf(INT2, INT4, INT8, FLOAT), FLOAT, false),
-                createAggFunctionValidTests("SUM", unionOf(INT2, INT4, INT8, FLOAT, DECIMAL), DECIMAL, false),
+                createAggFunctionValidTests("SUM", MISSING, NULL),
+                createAggFunctionValidTests("SUM", unionOf(MISSING, NULL), NULL),
+                createAggFunctionValidTests("SUM", unionOf(MISSING, NULL, INT2), INT2),
+                createAggFunctionValidTests("SUM", unionOf(INT2, INT4), INT4),
+                createAggFunctionValidTests("SUM", unionOf(INT2, INT4, INT8), INT8),
+                createAggFunctionValidTests("SUM", unionOf(INT2, INT4, INT8, FLOAT), FLOAT),
+                createAggFunctionValidTests("SUM", unionOf(INT2, INT4, INT8, FLOAT, DECIMAL), DECIMAL),
             ) +
                 // sum input type not compatible
                 TestCase(

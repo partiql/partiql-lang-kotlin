@@ -565,13 +565,13 @@ internal class StaticTypeInferenceVisitorTransform(
                 // aggregate function will not return missing as a potential Type
                 // in case that argType contains only missing,
                 "max", "min" -> {
-                    val returnType = argType.allTypes.filter {
+                    val possibleReturnTypes = argType.allTypes.filter {
                         it !is MissingType
                     }
-                    if (returnType.isEmpty())
+                    if (possibleReturnTypes.isEmpty())
                         StaticType.NULL
                     else
-                        StaticType.unionOf(returnType.toSet())
+                        StaticType.unionOf(possibleReturnTypes.toSet()).flatten()
                 }
                 // current implementation of avg always return a decimal or null.
                 "avg" -> {
@@ -634,7 +634,7 @@ internal class StaticTypeInferenceVisitorTransform(
                             }
                         }
                     }
-                    // continuation in case of type check failed
+                    // continuation in case of data type mismatch
                     else {
                         val expectedType = StaticType.unionOf(StaticType.MISSING, StaticType.NULL, StaticType.NUMERIC)
                         handleInvalidInputTypeForAggFun(sourceLocation, aggFunc, argType, expectedType)
@@ -1586,9 +1586,7 @@ internal class StaticTypeInferenceVisitorTransform(
             var currentType = path.root.getStaticType()
             val newComponents = path.steps.map { pathComponent ->
                 currentType = when (pathComponent) {
-                    is PartiqlAst.PathStep.PathExpr -> {
-                        inferPathComponentExprType(currentType, pathComponent)
-                    }
+                    is PartiqlAst.PathStep.PathExpr -> inferPathComponentExprType(currentType, pathComponent)
                     is PartiqlAst.PathStep.PathUnpivot -> TODO("PathUnpivot is not implemented yet")
                     is PartiqlAst.PathStep.PathWildcard -> TODO("PathWildcard is not implemented yet")
                 }
