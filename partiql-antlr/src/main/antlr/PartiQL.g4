@@ -308,11 +308,13 @@ tableUnpivot
 
 tableMatch
     : lhs=expr MATCH tableMatchModifer? matchPattern
+    | lhs=expr MATCH PAREN_LEFT tableMatchModifer? matchPattern PAREN_RIGHT
     | PAREN_LEFT lhs=expr MATCH tableMatchModifer? matchPattern ( COMMA matchPattern )* PAREN_RIGHT
     ;
 
 tableMatchModifer
-    : mod=(ANY|ALL) IDENTIFIER                # MatchModifierBasic // Identifier can be SHORTEST
+    : mod=ANY ident=IDENTIFIER?               # MatchModifierBasic    // Identifier can be SHORTEST
+    | mod=ALL ident=IDENTIFIER                # MatchModifierBasic    // Identifier can be SHORTEST
     | ANY k=LITERAL_INTEGER?                  # MatchModifierAny
     | IDENTIFIER k=LITERAL_INTEGER GROUP?     # MatchModifierShortest // Identifier should be shortest
     ;
