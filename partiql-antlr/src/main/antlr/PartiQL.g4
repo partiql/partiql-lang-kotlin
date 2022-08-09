@@ -302,13 +302,13 @@ tableBaseReference
     : expr symbolPrimitive              # TableBaseRefSymbol
     | expr asIdent? atIdent? byIdent?   # TableBaseRefClauses
     ;
-    
+
 tableUnpivot
     : UNPIVOT expr asIdent? atIdent? byIdent? ;
 
 tableMatch
     : lhs=expr MATCH tableMatchModifer? matchPattern
-    | lhs=expr MATCH PAREN_LEFT tableMatchModifer? matchPattern PAREN_RIGHT
+    | lhs=expr MATCH PAREN_LEFT tableMatchModifer? matchPattern ( COMMA matchPattern )* PAREN_RIGHT
     | PAREN_LEFT lhs=expr MATCH tableMatchModifer? matchPattern ( COMMA matchPattern )* PAREN_RIGHT
     ;
 
