@@ -21,12 +21,12 @@ import org.partiql.lang.eval.numberValue
 import org.partiql.lang.types.AnyOfType
 import org.partiql.lang.types.BagType
 import org.partiql.lang.types.BoolType
+import org.partiql.lang.types.CharType
 import org.partiql.lang.types.CollectionType
 import org.partiql.lang.types.DecimalType
 import org.partiql.lang.types.FunctionSignature
 import org.partiql.lang.types.IntType
 import org.partiql.lang.types.ListType
-import org.partiql.lang.types.NumberConstraint
 import org.partiql.lang.types.SexpType
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.types.StaticType.Companion.ALL_TYPES
@@ -50,10 +50,10 @@ import org.partiql.lang.types.StaticType.Companion.STRUCT
 import org.partiql.lang.types.StaticType.Companion.SYMBOL
 import org.partiql.lang.types.StaticType.Companion.TIMESTAMP
 import org.partiql.lang.types.StaticType.Companion.unionOf
-import org.partiql.lang.types.StringType
 import org.partiql.lang.types.StructType
 import org.partiql.lang.types.TypedOpParameter
 import org.partiql.lang.types.VarargFormalParameter
+import org.partiql.lang.types.VarcharType
 import org.partiql.lang.util.cartesianProduct
 import org.partiql.lang.util.compareTo
 import org.partiql.lang.util.countMatchingSubstrings
@@ -1826,39 +1826,39 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
             ),
             createNAryConcatTest(
                 name = "constrained string equals, unconstrained string",
-                leftType = StringType(NumberConstraint.Equals(4)),
+                leftType = CharType(4),
                 rightType = STRING,
                 expectedType = STRING
             ),
             createNAryConcatTest(
                 name = "constrained string up to, unconstrained string",
-                leftType = StringType(NumberConstraint.UpTo(4)),
+                leftType = CharType(4),
                 rightType = STRING,
                 expectedType = STRING
             ),
             createNAryConcatTest(
                 name = "constrained string equals 4, constrained string equals 6",
-                leftType = StringType(NumberConstraint.Equals(4)),
-                rightType = StringType(NumberConstraint.Equals(6)),
-                expectedType = StringType(NumberConstraint.Equals(10))
+                leftType = CharType(4),
+                rightType = CharType(6),
+                expectedType = CharType(10)
             ),
             createNAryConcatTest(
                 name = "constrained string equals 4, constrained string up to 6",
-                leftType = StringType(NumberConstraint.Equals(4)),
-                rightType = StringType(NumberConstraint.UpTo(6)),
-                expectedType = StringType(NumberConstraint.UpTo(10))
+                leftType = CharType(4),
+                rightType = VarcharType(6),
+                expectedType = VarcharType(10)
             ),
             createNAryConcatTest(
                 name = "constrained string up to 4, constrained string equals 6",
-                leftType = StringType(NumberConstraint.UpTo(4)),
-                rightType = StringType(NumberConstraint.Equals(6)),
-                expectedType = StringType(NumberConstraint.UpTo(10))
+                leftType = VarcharType(4),
+                rightType = CharType(6),
+                expectedType = VarcharType(10)
             ),
             createNAryConcatTest(
                 name = "constrained string up to 4, constrained string up to 6",
-                leftType = StringType(NumberConstraint.UpTo(4)),
-                rightType = StringType(NumberConstraint.UpTo(6)),
-                expectedType = StringType(NumberConstraint.UpTo(10))
+                leftType = VarcharType(4),
+                rightType = VarcharType(6),
+                expectedType = VarcharType(10)
             ),
             createNAryConcatTest(
                 name = "ANY, ANY",
@@ -1926,13 +1926,13 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
             } + listOf(
             createNAryConcatDataTypeMismatchTest(
                 name = "null or missing error - constrained string, null",
-                leftType = StringType(NumberConstraint.Equals(2)),
+                leftType = CharType(2),
                 rightType = NULL,
                 expectedProblems = listOf(createReturnsNullOrMissingError(col = 3, nAryOp = "||"))
             ),
             createNAryConcatDataTypeMismatchTest(
                 name = "null or missing error - constrained string, missing",
-                leftType = StringType(NumberConstraint.Equals(2)),
+                leftType = CharType(2),
                 rightType = MISSING,
                 expectedProblems = listOf(createReturnsNullOrMissingError(col = 3, nAryOp = "||"))
             ),
@@ -1946,7 +1946,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
             singleNAryOpMismatchWithSwappedCases(
                 name = "data type mismatch - constrained string, int",
                 op = "||",
-                leftType = StringType(NumberConstraint.Equals(2)),
+                leftType = CharType(2),
                 rightType = INT
             ) +
             singleNAryOpMismatchWithSwappedCases(
@@ -4707,61 +4707,31 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
                 name = "CAST to VARCHAR",
                 originalSql = "CAST(a_string AS VARCHAR)",
                 globals = mapOf("a_string" to STRING),
-                handler = expectQueryOutputType(StringType(StringType.StringLengthConstraint.Unconstrained))
+                handler = expectQueryOutputType(STRING)
             ),
             TestCase(
                 name = "CAST to VARCHAR(x)",
                 originalSql = "CAST(a_string AS VARCHAR(10))",
                 globals = mapOf(
-                    "a_string" to StringType(
-                        StringType.StringLengthConstraint.Constrained(
-                            NumberConstraint.UpTo(10)
-                        )
-                    )
+                    "a_string" to VarcharType(10)
                 ),
-                handler = expectQueryOutputType(
-                    StringType(
-                        StringType.StringLengthConstraint.Constrained(
-                            NumberConstraint.UpTo(10)
-                        )
-                    )
-                )
+                handler = expectQueryOutputType(VarcharType(10))
             ),
             TestCase(
                 name = "CAST to CHAR",
                 originalSql = "CAST(a_string AS CHAR)",
                 globals = mapOf(
-                    "a_string" to StringType(
-                        StringType.StringLengthConstraint.Constrained(
-                            NumberConstraint.Equals(1)
-                        )
-                    )
+                    "a_string" to CharType(1)
                 ),
-                handler = expectQueryOutputType(
-                    StringType(
-                        StringType.StringLengthConstraint.Constrained(
-                            NumberConstraint.Equals(1)
-                        )
-                    )
-                )
+                handler = expectQueryOutputType(CharType(1))
             ),
             TestCase(
                 name = "CAST to CHAR(x)",
                 originalSql = "CAST(a_string AS CHAR(10))",
                 globals = mapOf(
-                    "a_string" to StringType(
-                        StringType.StringLengthConstraint.Constrained(
-                            NumberConstraint.Equals(10)
-                        )
-                    )
+                    "a_string" to CharType(10)
                 ),
-                handler = expectQueryOutputType(
-                    StringType(
-                        StringType.StringLengthConstraint.Constrained(
-                            NumberConstraint.Equals(10)
-                        )
-                    )
-                )
+                handler = expectQueryOutputType(CharType(10))
             ),
             TestCase(
                 name = "CAST to DECIMAL",

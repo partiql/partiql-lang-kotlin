@@ -7,6 +7,7 @@ import org.partiql.lang.eval.expectedArgTypeErrorMsg
 import org.partiql.lang.types.BagType
 import org.partiql.lang.types.BlobType
 import org.partiql.lang.types.BoolType
+import org.partiql.lang.types.CharType
 import org.partiql.lang.types.ClobType
 import org.partiql.lang.types.DateType
 import org.partiql.lang.types.DecimalType
@@ -23,6 +24,7 @@ import org.partiql.lang.types.StructType
 import org.partiql.lang.types.SymbolType
 import org.partiql.lang.types.TimeType
 import org.partiql.lang.types.TimestampType
+import org.partiql.lang.types.VarcharType
 import org.partiql.lang.util.propertyValueMapOf
 import java.lang.StringBuilder
 
@@ -47,6 +49,8 @@ private fun SingleType.getExample() = when (this) {
     is TimestampType -> "`2017T`"
     is TimeType -> "TIME '23:12:59.128'"
     is SymbolType -> "`a`"
+    is CharType,
+    is VarcharType,
     is StringType -> "'a'"
     is ClobType -> "`{{ \"HelloWorld\" }}`"
     is BlobType -> "`{{ aGVsbG8= }}`"

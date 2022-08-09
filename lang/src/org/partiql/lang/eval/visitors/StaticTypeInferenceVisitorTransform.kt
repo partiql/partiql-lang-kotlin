@@ -14,6 +14,7 @@ import org.partiql.lang.ast.passes.SemanticException
 import org.partiql.lang.ast.passes.SemanticProblemDetails
 import org.partiql.lang.ast.passes.inference.cast
 import org.partiql.lang.ast.passes.inference.filterNullMissing
+import org.partiql.lang.ast.passes.inference.getLength
 import org.partiql.lang.ast.passes.inference.isLob
 import org.partiql.lang.ast.passes.inference.isNullOrMissing
 import org.partiql.lang.ast.passes.inference.isNumeric
@@ -37,6 +38,7 @@ import org.partiql.lang.types.AnyOfType
 import org.partiql.lang.types.AnyType
 import org.partiql.lang.types.BagType
 import org.partiql.lang.types.BoolType
+import org.partiql.lang.types.CharType
 import org.partiql.lang.types.CollectionType
 import org.partiql.lang.types.DecimalType
 import org.partiql.lang.types.FloatType
@@ -45,7 +47,6 @@ import org.partiql.lang.types.IntType
 import org.partiql.lang.types.ListType
 import org.partiql.lang.types.MissingType
 import org.partiql.lang.types.NullType
-import org.partiql.lang.types.NumberConstraint
 import org.partiql.lang.types.SexpType
 import org.partiql.lang.types.SingleType
 import org.partiql.lang.types.StaticType
@@ -53,6 +54,7 @@ import org.partiql.lang.types.StringType
 import org.partiql.lang.types.StructType
 import org.partiql.lang.types.TypedOpParameter
 import org.partiql.lang.types.UnknownArguments
+import org.partiql.lang.types.VarcharType
 import org.partiql.lang.types.toTypedOpParameter
 import org.partiql.lang.util.cartesianProduct
 
@@ -815,27 +817,20 @@ internal class StaticTypeInferenceVisitorTransform(
         }
 
         /**
-         * Computes the constraints for the string concatenation if all the arguments are [StringType].
-         *
+         * Computes the constraints for the string concatenation if all the arguments are [StringType], [CharType] or [VarcharType].
          */
-        fun computeConstraintsForConcatStringType(args: List<StringType>): SingleType {
-            if (args.size < 2) {
-                error("Expected 2 or more operands for CONCAT")
+        fun computeConstraintsForConcatStringType(args: List<SingleType>): SingleType {
+            require(args.all { it is StringType || it is CharType || it is VarcharType }) { "Internal error: CONCAT only works on arguments of CHAR, VARCHAR or STRING type" }
+            if (args.size < 2) { error("Expected 2 or more operands for CONCAT") }
+            if (args.any { it is StringType }) { return StaticType.STRING }
+
+            val lengths: List<Int> = args.map { it.getLength() }
+            val lengthSum = lengths.sumBy { it }
+
+            return when {
+                args.all { it is CharType } -> CharType(lengthSum)
+                else -> VarcharType(lengthSum)
             }
-            val constraints = args.map { it.lengthConstraint }
-            val lengths: List<StringType.StringLengthConstraint.Constrained> = constraints.map {
-                when (it) {
-                    // Return Unconstrained string when one of the StringTypes is Unconstrained
-                    is StringType.StringLengthConstraint.Unconstrained -> return StaticType.STRING
-                    is StringType.StringLengthConstraint.Constrained -> it
-                }
-            }
-            val maximumLength = lengths.sumBy { it.length.value }
-            val newNumberConstraint = when {
-                lengths.all { it.length is NumberConstraint.Equals } -> NumberConstraint.Equals(maximumLength)
-                else -> NumberConstraint.UpTo(maximumLength)
-            }
-            return StringType(StringType.StringLengthConstraint.Constrained(newNumberConstraint))
         }
 
         /**
@@ -846,7 +841,7 @@ internal class StaticTypeInferenceVisitorTransform(
                 error("Expected 2 or more operands for $nAryOp")
             }
 
-            val stringArgTypes = args.filterIsInstance<StringType>()
+            val stringArgTypes = args.filter { it is CharType || it is VarcharType || it is StringType }
             return when {
                 // If any one of the operands is missing, return MISSING. MISSING has precedence over NULL
                 args.any { it is MissingType } -> StaticType.MISSING
