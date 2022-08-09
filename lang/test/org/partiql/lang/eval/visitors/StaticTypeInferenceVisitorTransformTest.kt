@@ -7416,7 +7416,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
             // testing sql function(t)
             // global environment here is a bag type
             TestCase(
-                name = "top level $functionName(t)",
+                name = "top level $functionName($inputTypes) -> $expectedType",
                 originalSql = "$functionName(t)",
                 globals = mapOf("t" to BagType(inputTypes)),
                 handler = expectQueryOutputType(expectedType)
@@ -7463,7 +7463,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
             ) +
                 // sum input type not compatible
                 TestCase(
-                    name = "SUM(t)",
+                    name = "data type mismatch SUM(STRING)",
                     originalSql = "SUM(t)",
                     globals = mapOf("t" to BagType(STRING)),
                     handler = expectSemanticProblems(
@@ -7479,7 +7479,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
                 ) +
                 // avg input type not compatible
                 TestCase(
-                    name = "AVG(t)",
+                    name = "data type mismatch AVG(STRING)",
                     originalSql = "AVG(t)",
                     globals = mapOf("t" to BagType(STRING)),
                     handler = expectSemanticProblems(
