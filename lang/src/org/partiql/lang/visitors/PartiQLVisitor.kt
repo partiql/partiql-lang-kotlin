@@ -490,7 +490,13 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
     override fun visitMatchModifierBasic(ctx: PartiQLParser.MatchModifierBasicContext) = PartiqlAst.build {
         val metas = ctx.mod.getSourceMetaContainer()
         when (ctx.mod.type) {
-            PartiQLParser.ANY -> selectorAny(metas)
+            PartiQLParser.ANY -> {
+                when {
+                    ctx.ident == null -> selectorAny(metas)
+                    ctx.ident.text.toLowerCase() == "shortest" -> selectorAnyShortest(metas)
+                    else -> throw ParseException("Unsupported modifier after ANY")
+                }
+            }
             PartiQLParser.ALL -> selectorAllShortest(metas)
             else -> throw ParseException("Unsupported match selector.")
         }
@@ -594,10 +600,10 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
             ctx.TILDA() != null && ctx.ANGLE_RIGHT() != null -> edgeUndirectedOrRight()
             ctx.TILDA() != null && ctx.ANGLE_LEFT() != null -> edgeLeftOrUndirected()
             ctx.TILDA() != null -> edgeUndirected()
-            ctx.MINUS() && ctx.ANGLE_LEFT() != null && ctx.ANGLE_RIGHT() != null -> edgeLeftOrRight()
-            ctx.MINUS() && ctx.ANGLE_LEFT() != null -> edgeLeft()
-            ctx.MINUS() && ctx.ANGLE_RIGHT() != null -> edgeRight()
-            ctx.MINUS() -> edgeLeftOrUndirectedOrRight()
+            ctx.MINUS() != null && ctx.ANGLE_LEFT() != null && ctx.ANGLE_RIGHT() != null -> edgeLeftOrRight()
+            ctx.MINUS() != null && ctx.ANGLE_LEFT() != null -> edgeLeft()
+            ctx.MINUS() != null && ctx.ANGLE_RIGHT() != null -> edgeRight()
+            ctx.MINUS() != null -> edgeLeftOrUndirectedOrRight()
             else -> throw ParseException("Unsupported edge type")
         }
     }
