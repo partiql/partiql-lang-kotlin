@@ -365,18 +365,18 @@ patternQuantifier
     ;
 
 patternPartEdge
-    : edgeAbbrev quantifier=patternQuantifier?
-    | edgeWSpec quantifier=patternQuantifier?
+    : edgeAbbrev quantifier=patternQuantifier? # Edge
+    | edgeWSpec quantifier=patternQuantifier?  # EdgeWithSpec
     ;
 
 edgeWSpec
-    : MINUS edgeSpec MINUS ANGLE_RIGHT
-    | TILDA edgeSpec TILDA
-    | ANGLE_LEFT MINUS edgeSpec MINUS
-    | TILDA edgeSpec TILDA ANGLE_RIGHT
-    | ANGLE_LEFT TILDA edgeSpec TILDA
-    | ANGLE_LEFT MINUS edgeSpec MINUS ANGLE_RIGHT
-    | MINUS edgeSpec MINUS
+    : MINUS edgeSpec MINUS ANGLE_RIGHT             # EdgeSpecRight
+    | TILDA edgeSpec TILDA                         # EdgeSpecUndirected
+    | ANGLE_LEFT MINUS edgeSpec MINUS              # EdgeSpecLeft
+    | TILDA edgeSpec TILDA ANGLE_RIGHT             # EdgeSpecUndirectedRight
+    | ANGLE_LEFT TILDA edgeSpec TILDA              # EdgeSpecUndirectedLeft
+    | ANGLE_LEFT MINUS edgeSpec MINUS ANGLE_RIGHT  # EdgeSpecBidirectional
+    | MINUS edgeSpec MINUS                         # EdgeSpecUndirectedBidirectional
     ;
 
 edgeSpec
