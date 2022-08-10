@@ -510,7 +510,7 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
     // TODO: Check that identifier = "SHORTEST"
     override fun visitMatchModifierShortest(ctx: PartiQLParser.MatchModifierShortestContext) = PartiqlAst.build {
         val k = ctx.k.text.toLong()
-        if (ctx.k != null) {
+        if (ctx.GROUP() != null) {
             selectorShortestKGroup(k, ctx.k.getSourceMetaContainer())
         } else {
             selectorShortestK(k, ctx.k.getSourceMetaContainer())
