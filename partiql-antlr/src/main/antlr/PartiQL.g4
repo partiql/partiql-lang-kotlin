@@ -346,18 +346,14 @@ patternPartNode
     ;
 
 patternPartContinue
-    : patternPartEdge patternPartNode
-    | patternPartParen patternPartNode
+    : patternPartEdge patternPartNode   # EdgeToNode
+    | patternPartParen patternPartNode  # PatternToNode
     ;
 
 // TODO: Do we use a specific nested pattern definition?
 patternPartParen
-    : PAREN_LEFT matchPatternNested whereClause? PAREN_RIGHT patternQuantifier?
-    | BRACKET_LEFT matchPatternNested whereClause? BRACKET_RIGHT patternQuantifier?
-    ;
-
-matchPatternNested
-    : patternRestrictor? patternPathVariable? partsNested
+    : PAREN_LEFT restrictor=patternRestrictor? variable=patternPathVariable? partsNested where=whereClause? PAREN_RIGHT quantifier=patternQuantifier?
+    | BRACKET_LEFT restrictor=patternRestrictor? variable=patternPathVariable? partsNested where=whereClause? BRACKET_RIGHT quantifier=patternQuantifier?
     ;
 
 partsNested
