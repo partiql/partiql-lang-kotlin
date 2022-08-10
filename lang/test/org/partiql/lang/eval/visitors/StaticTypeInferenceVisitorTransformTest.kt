@@ -44,6 +44,7 @@ import org.partiql.lang.types.StaticType.Companion.LIST
 import org.partiql.lang.types.StaticType.Companion.MISSING
 import org.partiql.lang.types.StaticType.Companion.NULL
 import org.partiql.lang.types.StaticType.Companion.NULL_OR_MISSING
+import org.partiql.lang.types.StaticType.Companion.NUMERIC
 import org.partiql.lang.types.StaticType.Companion.SEXP
 import org.partiql.lang.types.StaticType.Companion.STRING
 import org.partiql.lang.types.StaticType.Companion.STRUCT
@@ -159,6 +160,10 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
     @ParameterizedTest
     @MethodSource("parametersForTypedExpressionTests")
     fun typedExpressionTests(tc: TestCase) = runTest(tc)
+
+    @ParameterizedTest
+    @MethodSource("parametersForAggFunctionTests")
+    fun aggFunctionTests(tc: TestCase) = runTest(tc)
 
     private fun runTest(tc: TestCase) {
         val globalBindings = Bindings.ofMap(tc.globals)
@@ -7402,6 +7407,92 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
 
             return incompatibleTypeForIndex + validIndexType
         }
+        private fun createAggFunctionValidTests(
+            functionName: String,
+            inputTypes: StaticType,
+            expectedType: StaticType
+        ): TestCase =
+            // testing toplevel aggregated function
+            // testing sql function(t)
+            // global environment here is a bag type
+            TestCase(
+                name = "top level $functionName($inputTypes) -> $expectedType",
+                originalSql = "$functionName(t)",
+                globals = mapOf("t" to BagType(inputTypes)),
+                handler = expectQueryOutputType(expectedType)
+            )
+
+        @JvmStatic
+        @Suppress("unused")
+        fun parametersForAggFunctionTests() =
+            // valid tests
+            listOf(
+                // count
+                createAggFunctionValidTests("COUNT", NULL, INT8),
+                createAggFunctionValidTests("COUNT", MISSING, INT8),
+                createAggFunctionValidTests("COUNT", ANY, INT8),
+                createAggFunctionValidTests("COUNT", unionOf(NULL, MISSING, INT), INT8),
+                createAggFunctionValidTests("COUNT", unionOf(NULL, MISSING, INT), INT8),
+
+                // min
+                createAggFunctionValidTests("MIN", MISSING, NULL),
+                createAggFunctionValidTests("MIN", NULL, NULL),
+                createAggFunctionValidTests("MIN", unionOf(INT, DECIMAL, FLOAT, LIST), unionOf(INT, DECIMAL, FLOAT, LIST)),
+                createAggFunctionValidTests("MIN", unionOf(INT, DECIMAL, FLOAT, LIST, NULL, MISSING), unionOf(INT, DECIMAL, FLOAT, LIST, NULL)),
+
+                // max
+                createAggFunctionValidTests("MAX", MISSING, NULL),
+                createAggFunctionValidTests("MAX", NULL, NULL),
+                createAggFunctionValidTests("MAX", unionOf(INT, DECIMAL, FLOAT, STRING), unionOf(INT, DECIMAL, FLOAT, STRING)),
+                createAggFunctionValidTests("MAX", unionOf(INT, DECIMAL, FLOAT, STRING, NULL, MISSING), unionOf(INT, DECIMAL, FLOAT, STRING, NULL)),
+
+                // avg
+                createAggFunctionValidTests("AVG", MISSING, NULL),
+                createAggFunctionValidTests("AVG", unionOf(MISSING, NULL), NULL),
+                createAggFunctionValidTests("AVG", unionOf(MISSING, NULL, INT), DECIMAL),
+                createAggFunctionValidTests("AVG", unionOf(INT, DECIMAL, FLOAT), DECIMAL),
+
+                // SUM
+                createAggFunctionValidTests("SUM", MISSING, NULL),
+                createAggFunctionValidTests("SUM", unionOf(MISSING, NULL), NULL),
+                createAggFunctionValidTests("SUM", unionOf(MISSING, NULL, INT2), INT2),
+                createAggFunctionValidTests("SUM", unionOf(INT2, INT4), INT4),
+                createAggFunctionValidTests("SUM", unionOf(INT2, INT4, INT8), INT8),
+                createAggFunctionValidTests("SUM", unionOf(INT2, INT4, INT8, FLOAT), FLOAT),
+                createAggFunctionValidTests("SUM", unionOf(INT2, INT4, INT8, FLOAT, DECIMAL), DECIMAL),
+            ) +
+                // sum input type not compatible
+                TestCase(
+                    name = "data type mismatch SUM(STRING)",
+                    originalSql = "SUM(t)",
+                    globals = mapOf("t" to BagType(STRING)),
+                    handler = expectSemanticProblems(
+                        expectedProblems = listOf(
+                            createInvalidArgumentTypeForFunctionError(
+                                sourceLocation = SourceLocationMeta(1L, 1L, 3L),
+                                functionName = "sum",
+                                expectedArgType = unionOf(MISSING, NULL, NUMERIC),
+                                actualType = STRING
+                            )
+                        )
+                    )
+                ) +
+                // avg input type not compatible
+                TestCase(
+                    name = "data type mismatch AVG(STRING)",
+                    originalSql = "AVG(t)",
+                    globals = mapOf("t" to BagType(STRING)),
+                    handler = expectSemanticProblems(
+                        expectedProblems = listOf(
+                            createInvalidArgumentTypeForFunctionError(
+                                sourceLocation = SourceLocationMeta(1L, 1L, 3L),
+                                functionName = "avg",
+                                expectedArgType = unionOf(MISSING, NULL, NUMERIC),
+                                actualType = STRING
+                            )
+                        )
+                    )
+                )
 
         private fun expectQueryOutputType(expectedType: StaticType, expectedWarnings: List<Problem> = emptyList()): (ResolveTestResult) -> Unit = { result: ResolveTestResult ->
             when (result) {
