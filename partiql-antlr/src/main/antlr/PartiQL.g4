@@ -442,18 +442,18 @@ expr
     : exprOr;
 
 exprOr
-    : lhs=exprOr op=OR rhs=exprOr
-    | parent=exprAnd
+    : lhs=exprOr OR rhs=exprAnd     # Or
+    | parent=exprAnd                # ExprOrBase
     ;
 
 exprAnd
-    : lhs=exprAnd op=AND rhs=exprAnd
-    | parent=exprNot
+    : lhs=exprAnd op=AND rhs=exprNot  # And
+    | parent=exprNot                  # ExprAndBase
     ;
 
 exprNot
-    : <assoc=right> op=NOT rhs=exprNot
-    | parent=exprPredicate
+    : <assoc=right> op=NOT rhs=exprNot  # Not
+    | parent=exprPredicate              # ExprNotBase
     ;
 
 exprPredicate
