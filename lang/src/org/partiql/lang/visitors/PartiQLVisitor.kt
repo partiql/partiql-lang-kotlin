@@ -629,12 +629,12 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         }
     }
 
-    // TODO: Not basics
     override fun visitPatternQuantifier(ctx: PartiQLParser.PatternQuantifierContext) = PartiqlAst.build {
-        when (ctx.quant.type) {
-            PartiQLParser.PLUS -> graphMatchQuantifier(1L)
-            PartiQLParser.ASTERISK -> graphMatchQuantifier(0L)
-            else -> throw ParseException("Unsupported quantifier.")
+        when {
+            ctx.quant == null -> graphMatchQuantifier(ctx.lower.text.toLong(), ctx.upper?.text?.toLong())
+            ctx.quant.type == PartiQLParser.PLUS -> graphMatchQuantifier(1L)
+            ctx.quant.type == PartiQLParser.ASTERISK -> graphMatchQuantifier(0L)
+            else -> throw ParseException("Unsupported quantifier")
         }
     }
 
