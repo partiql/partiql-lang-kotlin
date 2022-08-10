@@ -5,14 +5,15 @@ import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.anyOfType
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.esAny
+import org.partiql.lang.ots.plugins.standard.types.CompileTimeCharType
 import org.partiql.lang.types.BagType
 import org.partiql.lang.types.CustomType
 import org.partiql.lang.types.ListType
 import org.partiql.lang.types.SexpType
+import org.partiql.lang.types.StaticScalarType
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.types.StructType
 import org.partiql.lang.types.TypedOpParameter
-import org.partiql.lang.types.VarcharType
 import org.partiql.lang.util.ArgumentsProviderBase
 import org.partiql.lang.util.honorTypedOpParameters
 import org.partiql.lang.util.legacyTypingMode
@@ -262,7 +263,7 @@ class EvaluatingCompilerCustomAnyOfTypeOperationTests : CastTestBase() {
                     // duplicate types
                     anyOfType(
                         StaticType.STRING,
-                        VarcharType(500)
+                        StaticScalarType(CompileTimeCharType(500))
                     ),
                     anyOfType(
                         StaticType.INT,

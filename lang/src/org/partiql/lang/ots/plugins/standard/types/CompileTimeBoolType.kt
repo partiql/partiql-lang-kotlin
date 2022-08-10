@@ -4,8 +4,8 @@ import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.ots.interfaces.CompileTimeType
 import org.partiql.lang.ots.interfaces.ScalarType
 
-object CompileTimeFloatType : CompileTimeType {
-    override val type: ScalarType = FloatType
+object CompileTimeBoolType : CompileTimeType {
+    override val type: ScalarType = BoolType
 
     override fun validateValue(value: ExprValue): Boolean =
         value.type == type.runTimeType

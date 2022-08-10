@@ -4,24 +4,24 @@ import com.amazon.ionelement.api.AnyElement
 import org.partiql.ionschema.model.IonSchemaModel
 import org.partiql.ionschema.model.toIsl
 import org.partiql.lang.eval.ExprValueType
+import org.partiql.lang.ots.plugins.standard.types.CompileTimeCharType
 import org.partiql.lang.ots.plugins.standard.types.CompileTimeDecimalType
+import org.partiql.lang.ots.plugins.standard.types.CompileTimeInt2Type
+import org.partiql.lang.ots.plugins.standard.types.CompileTimeInt4Type
+import org.partiql.lang.ots.plugins.standard.types.CompileTimeInt8Type
+import org.partiql.lang.ots.plugins.standard.types.CompileTimeIntType
+import org.partiql.lang.ots.plugins.standard.types.CompileTimeStringType
+import org.partiql.lang.ots.plugins.standard.types.CompileTimeVarcharType
 import org.partiql.lang.ots.plugins.standard.types.DecimalType
 import org.partiql.lang.types.AnyOfType
 import org.partiql.lang.types.AnyType
 import org.partiql.lang.types.BagType
-import org.partiql.lang.types.CharType
-import org.partiql.lang.types.Int2Type
-import org.partiql.lang.types.Int4Type
-import org.partiql.lang.types.Int8Type
-import org.partiql.lang.types.IntType
 import org.partiql.lang.types.ListType
 import org.partiql.lang.types.SexpType
 import org.partiql.lang.types.SingleType
 import org.partiql.lang.types.StaticScalarType
 import org.partiql.lang.types.StaticType
-import org.partiql.lang.types.StringType
 import org.partiql.lang.types.StructType
-import org.partiql.lang.types.VarcharType
 import org.partiql.lang.util.toIntExact
 import kotlin.reflect.KClass
 
@@ -106,8 +106,8 @@ class StaticTypeMapper(schema: IonSchemaModel.Schema) {
 
         // Create StaticType based on core ISL type
         return when {
-            coreType is StringType -> getStringType(metas)
-            coreType is IntType -> getIntType(metas)
+            coreType is StaticScalarType && coreType.type is CompileTimeStringType -> getStringType(metas)
+            coreType is StaticScalarType && coreType.type is CompileTimeIntType -> getIntType(metas)
             coreType is StaticScalarType && coreType.type is CompileTimeDecimalType -> StaticScalarType(getCompileTimeDecimalType(), metas)
             coreType is ListType -> ListType(getElement(currentTopLevelTypeName), metas)
             coreType is SexpType -> SexpType(getElement(currentTopLevelTypeName), metas)
@@ -201,13 +201,13 @@ class StaticTypeMapper(schema: IonSchemaModel.Schema) {
 
     private fun IonSchemaModel.TypeDefinition.getStringType(metas: Map<String, List<IonSchemaModel.TypeDefinition>>): SingleType =
         when (val constraint = constraints.getConstraint(IonSchemaModel.Constraint.CodepointLength::class)?.rule) {
-            null -> StringType(metas)
+            null -> StaticScalarType(CompileTimeStringType, metas)
             else -> constraint.toStringType(metas)
         }
 
     private fun IonSchemaModel.TypeDefinition.getIntType(metas: Map<String, List<IonSchemaModel.TypeDefinition>>): SingleType =
         when (val spec = constraints.getConstraint(IonSchemaModel.Constraint.ValidValues::class)?.spec) {
-            null -> IntType(metas)
+            null -> StaticScalarType(CompileTimeIntType, metas)
             is IonSchemaModel.ValidValuesSpec.OneOfValidValues -> error("One of valid values constraint is not supported for integers")
             is IonSchemaModel.ValidValuesSpec.RangeOfValidValues -> when (val range = spec.range) {
                 is IonSchemaModel.ValuesRange.NumRange -> {
@@ -225,9 +225,9 @@ class StaticTypeMapper(schema: IonSchemaModel.Schema) {
                     }
 
                     when {
-                        min == Short.MIN_VALUE.toLong() && max == Short.MAX_VALUE.toLong() -> Int2Type(metas)
-                        min == Int.MIN_VALUE.toLong() && max == Int.MAX_VALUE.toLong() -> Int4Type(metas)
-                        min == Long.MIN_VALUE && max == Long.MAX_VALUE -> Int8Type(metas)
+                        min == Short.MIN_VALUE.toLong() && max == Short.MAX_VALUE.toLong() -> StaticScalarType(CompileTimeInt2Type, metas)
+                        min == Int.MIN_VALUE.toLong() && max == Int.MAX_VALUE.toLong() -> StaticScalarType(CompileTimeInt4Type, metas)
+                        min == Long.MIN_VALUE && max == Long.MAX_VALUE -> StaticScalarType(CompileTimeInt8Type, metas)
                         else -> error("Invalid range for integers $min-$max")
                     }
                 }
@@ -237,7 +237,7 @@ class StaticTypeMapper(schema: IonSchemaModel.Schema) {
 
     private fun IonSchemaModel.NumberRule.toStringType(metas: Map<String, List<IonSchemaModel.TypeDefinition>>): SingleType {
         return when (this) {
-            is IonSchemaModel.NumberRule.EqualsNumber -> CharType(value.toInt(), metas)
+            is IonSchemaModel.NumberRule.EqualsNumber -> StaticScalarType(CompileTimeCharType(value.toInt()), metas)
             is IonSchemaModel.NumberRule.EqualsRange -> {
                 when (val min = this.range.min) {
                     is IonSchemaModel.NumberExtent.Max -> error("Min value of a range cannot be max")
@@ -248,20 +248,20 @@ class StaticTypeMapper(schema: IonSchemaModel.Schema) {
                         //   the [TypedOpParameter] should contain the validation predicates that check
                         //   for appropriate length.
                         // TODO: Add ranged length constraints in StaticType
-                        return StringType(metas)
+                        return StaticScalarType(CompileTimeStringType, metas)
                     }
                     is IonSchemaModel.NumberExtent.Exclusive -> if ((min.value.toInt() + 1) != 0) {
                         // Same as above
-                        return StringType(metas)
+                        return StaticScalarType(CompileTimeStringType, metas)
                     }
                     is IonSchemaModel.NumberExtent.Min -> {}
                 }
 
                 when (val max = this.range.max) {
                     is IonSchemaModel.NumberExtent.Min -> error("Max value of a range cannot be min")
-                    is IonSchemaModel.NumberExtent.Max -> StringType(metas)
-                    is IonSchemaModel.NumberExtent.Inclusive -> VarcharType(max.value.toInt(), metas)
-                    is IonSchemaModel.NumberExtent.Exclusive -> VarcharType(max.value.toInt() - 1, metas)
+                    is IonSchemaModel.NumberExtent.Max -> StaticScalarType(CompileTimeStringType, metas)
+                    is IonSchemaModel.NumberExtent.Inclusive -> StaticScalarType(CompileTimeVarcharType(max.value.toInt()), metas)
+                    is IonSchemaModel.NumberExtent.Exclusive -> StaticScalarType(CompileTimeVarcharType(max.value.toInt() - 1), metas)
                 }
             }
         }

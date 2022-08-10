@@ -1,43 +1,53 @@
 package org.partiql.lang.ast.passes.inference
 
 import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.ots.plugins.standard.types.BoolType
+import org.partiql.lang.ots.plugins.standard.types.CharType
+import org.partiql.lang.ots.plugins.standard.types.CompileTimeBlobType
+import org.partiql.lang.ots.plugins.standard.types.CompileTimeBoolType
+import org.partiql.lang.ots.plugins.standard.types.CompileTimeCharType
+import org.partiql.lang.ots.plugins.standard.types.CompileTimeClobType
 import org.partiql.lang.ots.plugins.standard.types.CompileTimeDecimalType
 import org.partiql.lang.ots.plugins.standard.types.CompileTimeFloatType
+import org.partiql.lang.ots.plugins.standard.types.CompileTimeInt2Type
+import org.partiql.lang.ots.plugins.standard.types.CompileTimeInt4Type
+import org.partiql.lang.ots.plugins.standard.types.CompileTimeInt8Type
+import org.partiql.lang.ots.plugins.standard.types.CompileTimeIntType
+import org.partiql.lang.ots.plugins.standard.types.CompileTimeStringType
+import org.partiql.lang.ots.plugins.standard.types.CompileTimeSymbolType
+import org.partiql.lang.ots.plugins.standard.types.CompileTimeTimestampType
+import org.partiql.lang.ots.plugins.standard.types.CompileTimeVarcharType
+import org.partiql.lang.ots.plugins.standard.types.DecimalType
+import org.partiql.lang.ots.plugins.standard.types.FloatType
+import org.partiql.lang.ots.plugins.standard.types.Int2Type
+import org.partiql.lang.ots.plugins.standard.types.Int4Type
+import org.partiql.lang.ots.plugins.standard.types.Int8Type
+import org.partiql.lang.ots.plugins.standard.types.IntType
+import org.partiql.lang.ots.plugins.standard.types.StringType
+import org.partiql.lang.ots.plugins.standard.types.SymbolType
+import org.partiql.lang.ots.plugins.standard.types.TimeStampType
+import org.partiql.lang.ots.plugins.standard.types.VarcharType
 import org.partiql.lang.types.AnyOfType
 import org.partiql.lang.types.AnyType
-import org.partiql.lang.types.BlobType
-import org.partiql.lang.types.BoolType
-import org.partiql.lang.types.CharType
-import org.partiql.lang.types.ClobType
 import org.partiql.lang.types.CollectionType
-import org.partiql.lang.types.Int2Type
-import org.partiql.lang.types.Int4Type
-import org.partiql.lang.types.Int8Type
-import org.partiql.lang.types.IntType
 import org.partiql.lang.types.MissingType
 import org.partiql.lang.types.NullType
 import org.partiql.lang.types.SingleType
 import org.partiql.lang.types.StaticScalarType
 import org.partiql.lang.types.StaticType
-import org.partiql.lang.types.StringType
 import org.partiql.lang.types.StructType
-import org.partiql.lang.types.SymbolType
-import org.partiql.lang.types.TimestampType
-import org.partiql.lang.types.VarcharType
 
-internal val intTypesPrecedence = listOf(Int2Type::class, Int4Type::class, Int8Type::class, IntType::class)
+internal val intTypesPrecedence = listOf(Int2Type, Int4Type, Int8Type, IntType)
 
-internal fun StaticType.isDecimalType() = this is StaticScalarType && type is CompileTimeDecimalType
-internal fun StaticType.isFloatType() = this is StaticScalarType && type is CompileTimeFloatType
 internal fun StaticType.isNullOrMissing(): Boolean = (this is NullType || this is MissingType)
-internal fun StaticType.isText(): Boolean = (this is SymbolType || this is StringType || this is VarcharType || this is CharType)
-internal fun StaticType.isNumeric(): Boolean = (this is Int2Type || this is Int4Type || this is Int8Type || this is IntType || isFloatType() || isDecimalType())
-internal fun StaticType.isLob(): Boolean = (this is BlobType || this is ClobType)
+internal fun StaticType.isText(): Boolean = this is StaticScalarType && (type.type in listOf(SymbolType, StringType, VarcharType, CharType))
+internal fun StaticType.isNumeric(): Boolean = this is StaticScalarType && (type.type in listOf(Int2Type, Int4Type, Int8Type, IntType, FloatType, DecimalType))
+internal fun StaticType.isLob(): Boolean = this is StaticScalarType && (type === CompileTimeBlobType || type === CompileTimeClobType)
 internal fun StaticType.isUnknown(): Boolean = (this.isNullOrMissing() || this == StaticType.NULL_OR_MISSING)
 
-internal fun SingleType.getLength() = when (this) {
-    is CharType -> length
-    is VarcharType -> length
+internal fun SingleType.getLength() = when {
+    this is StaticScalarType && type is CompileTimeCharType -> type.length
+    this is StaticScalarType && type is CompileTimeVarcharType -> type.length
     else -> error("Internal error: Only CHAR & VARCHAR type has length")
 }
 
@@ -90,141 +100,151 @@ internal fun StaticType.cast(targetType: StaticType): StaticType {
         this.isNullOrMissing() -> return this
         else -> {
             when (targetType) {
-                is BoolType -> when {
-                    this is BoolType || this.isNumeric() || this.isText() -> return targetType
-                }
-                is Int2Type,
-                is Int4Type,
-                is Int8Type,
-                is IntType -> when {
-                    this is BoolType -> return targetType
-                    this is Int2Type || this is Int4Type || this is Int8Type || this is IntType -> {
-                        when (targetType) {
-                            is Int2Type -> when (this) {
-                                is Int2Type -> return targetType
-                                is Int4Type,
-                                is Int8Type,
-                                is IntType -> return StaticType.unionOf(StaticType.MISSING, targetType)
-                            }
-                            is Int4Type -> when (this) {
-                                is Int2Type,
-                                is Int4Type -> return targetType
-                                is Int8Type,
-                                is IntType -> return StaticType.unionOf(StaticType.MISSING, targetType)
-                            }
-                            is Int8Type -> when (this) {
-                                is Int2Type,
-                                is Int4Type,
-                                is Int8Type -> return targetType
-                                is IntType -> return StaticType.unionOf(StaticType.MISSING, targetType)
-                            }
-                            is IntType -> return targetType
-                        }
+                is StaticScalarType -> when (targetType.type) {
+                    is CompileTimeVarcharType,
+                    is CompileTimeCharType,
+                    is CompileTimeStringType,
+                    is CompileTimeSymbolType -> when {
+                        this.isNumeric() || this.isText() -> return targetType
+                        this is StaticScalarType && (type.type in listOf(BoolType, TimeStampType)) -> return targetType
                     }
-                    this is StaticScalarType -> when (type) {
-                        is CompileTimeFloatType -> return when (targetType) {
-                            is IntType -> targetType
-                            else -> StaticType.unionOf(StaticType.MISSING, targetType)
-                        }
-                        is CompileTimeDecimalType -> return when (targetType) {
-                            is IntType -> targetType
-                            is Int2Type,
-                            is Int4Type,
-                            is Int8Type -> return when (type.precision) {
-                                null -> StaticType.unionOf(StaticType.MISSING, targetType)
-                                else -> {
-
-                                    // Max value of SMALLINT is 32767.
-                                    // Conversion to SMALLINT will work as long as the decimal holds up 4 to digits. There is a chance of overflow beyond that.
-                                    // Similarly -
-                                    //   Max value of INT4 is 2,147,483,647
-                                    //   Max value of BIGINT is 9,223,372,036,854,775,807 for BIGINT
-                                    // TODO: Move these magic numbers out.
-                                    val maxDigitsWithoutPrecisionLoss = when (targetType) {
-                                        is Int2Type -> 4
-                                        is Int4Type -> 9
-                                        is Int8Type -> 18
-                                        is IntType -> error("Un-constrained is handled above. This code shouldn't be reached.")
-                                        else -> error("Unreachable code")
+                    is CompileTimeInt2Type,
+                    is CompileTimeInt4Type,
+                    is CompileTimeInt8Type,
+                    is CompileTimeIntType -> when {
+                        this is StaticScalarType -> when (type) {
+                            is CompileTimeInt2Type,
+                            is CompileTimeInt4Type,
+                            is CompileTimeInt8Type,
+                            is CompileTimeIntType -> {
+                                when (targetType.type.type) {
+                                    is Int2Type -> when (type.type) {
+                                        is Int2Type -> return targetType
+                                        is Int4Type,
+                                        is Int8Type,
+                                        is IntType -> return StaticType.unionOf(StaticType.MISSING, targetType)
                                     }
-
-                                    if (type.maxDigits() > maxDigitsWithoutPrecisionLoss) {
-                                        StaticType.unionOf(StaticType.MISSING, targetType)
-                                    } else {
-                                        targetType
+                                    is Int4Type -> when (type.type) {
+                                        is Int2Type,
+                                        is Int4Type -> return targetType
+                                        is Int8Type,
+                                        is IntType -> return StaticType.unionOf(StaticType.MISSING, targetType)
                                     }
+                                    is Int8Type -> when (type.type) {
+                                        is Int2Type,
+                                        is Int4Type,
+                                        is Int8Type -> return targetType
+                                        is IntType -> return StaticType.unionOf(StaticType.MISSING, targetType)
+                                    }
+                                    is IntType -> return targetType
                                 }
                             }
-                            else -> error("Unreachable code")
+                            is CompileTimeBoolType -> return targetType
+                            is CompileTimeFloatType -> return when (targetType.type.type) {
+                                IntType -> targetType
+                                else -> StaticType.unionOf(StaticType.MISSING, targetType)
+                            }
+                            is CompileTimeDecimalType -> return when (targetType.type.type) {
+                                IntType -> targetType
+                                Int2Type,
+                                Int4Type,
+                                Int8Type -> return when (type.precision) {
+                                    null -> StaticType.unionOf(StaticType.MISSING, targetType)
+                                    else -> {
+                                        // Max value of SMALLINT is 32767.
+                                        // Conversion to SMALLINT will work as long as the decimal holds up 4 to digits. There is a chance of overflow beyond that.
+                                        // Similarly -
+                                        //   Max value of INT4 is 2,147,483,647
+                                        //   Max value of BIGINT is 9,223,372,036,854,775,807 for BIGINT
+                                        // TODO: Move these magic numbers out.
+                                        val maxDigitsWithoutPrecisionLoss = when (targetType.type.type) {
+                                            Int2Type -> 4
+                                            Int4Type -> 9
+                                            Int8Type -> 18
+                                            IntType -> error("Un-constrained is handled above. This code shouldn't be reached.")
+                                            else -> error("Unreachable code")
+                                        }
+
+                                        if (type.maxDigits() > maxDigitsWithoutPrecisionLoss) {
+                                            StaticType.unionOf(StaticType.MISSING, targetType)
+                                        } else {
+                                            targetType
+                                        }
+                                    }
+                                }
+                                else -> error("Unreachable code")
+                            }
+                            is CompileTimeSymbolType,
+                            is CompileTimeStringType,
+                            is CompileTimeCharType,
+                            is CompileTimeVarcharType -> return StaticType.unionOf(targetType, StaticType.MISSING)
                         }
                     }
-                    this.isText() -> return StaticType.unionOf(targetType, StaticType.MISSING)
-                }
-                is StaticScalarType -> when (targetType.type) {
+                    is CompileTimeBoolType -> when {
+                        this is StaticScalarType && type === CompileTimeBoolType || this.isNumeric() || this.isText() -> return targetType
+                    }
                     is CompileTimeFloatType -> when {
-                        this is BoolType -> return targetType
+                        this is StaticScalarType && type === CompileTimeBoolType -> return targetType
                         // Conversion to float will always succeed for numeric types
                         this.isNumeric() -> return targetType
                         this.isText() -> return StaticType.unionOf(targetType, StaticType.MISSING)
                     }
                     is CompileTimeDecimalType -> when {
-                        this is StaticScalarType && type is CompileTimeDecimalType -> {
-                            return if (targetType.type.maxDigits() >= type.maxDigits()) {
-                                targetType
-                            } else {
-                                StaticType.unionOf(targetType, StaticType.MISSING)
+                        this is StaticScalarType -> when (type) {
+                            is CompileTimeDecimalType ->
+                                return if (targetType.type.maxDigits() >= type.maxDigits()) {
+                                    targetType
+                                } else {
+                                    StaticType.unionOf(targetType, StaticType.MISSING)
+                                }
+                            is CompileTimeInt2Type,
+                            is CompileTimeInt4Type,
+                            is CompileTimeInt8Type,
+                            is CompileTimeIntType -> return when (targetType.type.precision) {
+                                null -> targetType
+                                else -> when (type) {
+                                    is CompileTimeIntType -> StaticType.unionOf(StaticType.MISSING, targetType)
+                                    is CompileTimeInt2Type ->
+                                        // TODO: Move the magic numbers out
+                                        // max smallint value 32,767, so the decimal needs to be able to hold at least 5 digits
+                                        if (targetType.type.maxDigits() >= 5) {
+                                            targetType
+                                        } else {
+                                            StaticType.unionOf(StaticType.MISSING, targetType)
+                                        }
+                                    is CompileTimeInt4Type ->
+                                        // max int4 value 2,147,483,647 so the decimal needs to be able to hold at least 10 digits
+                                        if (targetType.type.maxDigits() >= 10) {
+                                            targetType
+                                        } else {
+                                            StaticType.unionOf(StaticType.MISSING, targetType)
+                                        }
+                                    is CompileTimeInt8Type ->
+                                        // max bigint value 9,223,372,036,854,775,807 so the decimal needs to be able to hold at least 19 digits
+                                        if (targetType.type.maxDigits() >= 19) {
+                                            targetType
+                                        } else {
+                                            StaticType.unionOf(StaticType.MISSING, targetType)
+                                        }
+                                    else -> error("Unreachable code")
+                                }
                             }
+                            is CompileTimeBoolType,
+                            is CompileTimeFloatType -> return targetType
+                            is CompileTimeSymbolType,
+                            is CompileTimeStringType,
+                            is CompileTimeCharType,
+                            is CompileTimeVarcharType -> return StaticType.unionOf(targetType, StaticType.MISSING)
                         }
-                        this is Int2Type || this is Int4Type || this is Int8Type || this is IntType -> return when (targetType.type.precision) {
-                            null -> targetType
-                            else -> when (this) {
-                                is IntType -> StaticType.unionOf(StaticType.MISSING, targetType)
-                                is Int2Type ->
-                                    // TODO: Move the magic numbers out
-                                    // max smallint value 32,767, so the decimal needs to be able to hold at least 5 digits
-                                    if (targetType.type.maxDigits() >= 5) {
-                                        targetType
-                                    } else {
-                                        StaticType.unionOf(StaticType.MISSING, targetType)
-                                    }
-                                is Int4Type ->
-                                    // max int4 value 2,147,483,647 so the decimal needs to be able to hold at least 10 digits
-                                    if (targetType.type.maxDigits() >= 10) {
-                                        targetType
-                                    } else {
-                                        StaticType.unionOf(StaticType.MISSING, targetType)
-                                    }
-                                is Int8Type ->
-                                    // max bigint value 9,223,372,036,854,775,807 so the decimal needs to be able to hold at least 19 digits
-                                    if (targetType.type.maxDigits() >= 19) {
-                                        targetType
-                                    } else {
-                                        StaticType.unionOf(StaticType.MISSING, targetType)
-                                    }
-                                else -> error("Unreachable code")
-                            }
-                        }
-
-                        this is BoolType || this.isNumeric() -> return targetType
+                    }
+                    is CompileTimeClobType,
+                    is CompileTimeBlobType -> when {
+                        isLob() -> return targetType
+                    }
+                    is CompileTimeTimestampType -> when {
+                        this is StaticScalarType && type === CompileTimeTimestampType -> return targetType
                         this.isText() -> return StaticType.unionOf(targetType, StaticType.MISSING)
                     }
-                }
-                is TimestampType -> when {
-                    this is TimestampType -> return targetType
-                    this.isText() -> return StaticType.unionOf(targetType, StaticType.MISSING)
-                }
-                is VarcharType,
-                is CharType,
-                is StringType,
-                is SymbolType -> when {
-                    this.isNumeric() || this.isText() -> return targetType
-                    this is BoolType || this is TimestampType -> return targetType
-                }
-                is ClobType -> when (this) {
-                    is ClobType, is BlobType -> return targetType
-                }
-                is BlobType -> when (this) {
-                    is ClobType, is BlobType -> return targetType
                 }
                 is CollectionType -> when (this) {
                     is CollectionType -> return targetType
