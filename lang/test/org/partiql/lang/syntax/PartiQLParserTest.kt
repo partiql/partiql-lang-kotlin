@@ -18,13 +18,13 @@ import com.amazon.ion.IonSystem
 import com.amazon.ion.system.IonSystemBuilder
 import org.antlr.v4.gui.TreeViewer
 import org.antlr.v4.runtime.tree.ParseTree
-import org.junit.Ignore
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestFailureReason
 import org.partiql.lang.eval.evaluatortestframework.assertEquals
 import org.partiql.lang.util.ArgumentsProviderBase
+import java.lang.RuntimeException
 import java.lang.Thread.sleep
 import javax.swing.JFrame
 import javax.swing.JPanel
@@ -34,6 +34,7 @@ class PartiQLParserTest {
     val ion: IonSystem = IonSystemBuilder.standard().build()
     val parser = PartiQLParser(ion)
     val oldParser = SqlParser(ion)
+    val STACK_SIZE = 4_000_000L
 
     private fun parseQuery(query: String): ParseTree {
         val lexer = parser.getLexer(query)
@@ -45,12 +46,32 @@ class PartiQLParserTest {
         return parser.getParser(lexer)
     }
 
-    @Ignore
     @Test
     fun testStack() {
-        val query = getOrExpression(1000)
-        val stmt = oldParser.parseAstStatement(query)
-        println(stmt)
+        val max = testMaxWrapped(oldParser, 2000)
+        println("MAXIMUM = $max")
+    }
+
+    private fun testMax(parser: Parser, current: Int, op: String) {
+        println("Current: $current")
+        var failed = false
+        val query = getBinaryExpression(current, op)
+        val thread = Thread(ThreadGroup("GROUP"), TestParser(parser, query), "$current", STACK_SIZE)
+        thread.uncaughtExceptionHandler = Thread.UncaughtExceptionHandler { _, _ -> failed = true }
+        thread.start()
+        thread.join()
+        if (failed) throw RuntimeException()
+    }
+
+    private fun testMaxWrapped(parser: Parser, current: Int) {
+        println("Current: $current")
+        var failed = false
+        val query = getWrapped(current)
+        val thread = Thread(ThreadGroup("GROUP"), TestParser(parser, query), "$current", STACK_SIZE)
+        thread.uncaughtExceptionHandler = Thread.UncaughtExceptionHandler { _, _ -> failed = true }
+        thread.start()
+        thread.join()
+        if (failed) throw RuntimeException()
     }
 
     @Test
@@ -58,8 +79,13 @@ class PartiQLParserTest {
         println("'''a'".removePrefix("'").removeSuffix("'").replace("''", "'"))
     }
 
-    // PqlParser = 100
-    // SqlParser = 700
+    class TestParser(val parser: Parser, val query: String) : Runnable {
+        override fun run() {
+            val stmt = parser.parseAstStatement(query)
+            println(stmt.equals(1))
+        }
+    }
+
     private fun getWrapped(max: Int): String {
         var sb = StringBuilder("0")
         for (i in 1..max) {
@@ -69,12 +95,10 @@ class PartiQLParserTest {
         return sb.toString()
     }
 
-    // PqlParser = 900
-    // SqlParser = 1050
-    private fun getOrExpression(max: Int): String {
+    private fun getBinaryExpression(max: Int, op: String): String {
         var sb = StringBuilder("0")
         for (i in 1..max) {
-            sb.append(" OR 0")
+            sb.append(" $op 0")
         }
         return sb.toString()
     }
