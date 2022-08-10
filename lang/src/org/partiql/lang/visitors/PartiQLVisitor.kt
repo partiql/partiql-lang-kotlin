@@ -522,22 +522,43 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         val prefilter = null
         val variable = if (ctx.patternPathVariable() != null) ctx.patternPathVariable().symbolPrimitive().getString() else null
         val quantifier = null
-        val parts = getPatternParts(ctx.patternParts())
+        val parts = visitPatternParts(ctx.patternParts()).parts
         graphMatchPattern(restrictor, prefilter = prefilter, variable = variable, quantifier = quantifier, parts = parts)
     }
 
-    private fun getPatternParts(ctx: PartiQLParser.PatternPartsContext): List<PartiqlAst.GraphMatchPatternPart> {
+    override fun visitPatternParts(ctx: PartiQLParser.PatternPartsContext) = PartiqlAst.build {
         val parts = mutableListOf<PartiqlAst.GraphMatchPatternPart>()
         parts.add(visitPatternPartNode(ctx.node))
-        ctx.patternPartContinue().forEach { pattern -> parts += getPatternParts(pattern) }
-        return parts
+        ctx.patternPartContinue().forEach { pattern -> parts += (visit(pattern) as PartiqlAst.GraphMatchPattern).parts }
+        graphMatchPattern(parts = parts)
     }
 
-    private fun getPatternParts(ctx: PartiQLParser.PatternPartContinueContext): List<PartiqlAst.GraphMatchPatternPart> {
+    override fun visitEdgeToNode(ctx: PartiQLParser.EdgeToNodeContext) = PartiqlAst.build {
         val parts = mutableListOf<PartiqlAst.GraphMatchPatternPart>()
         parts.add(visit(ctx.patternPartEdge()) as PartiqlAst.GraphMatchPatternPart)
         parts.add(visitPatternPartNode(ctx.patternPartNode()))
-        return parts
+        graphMatchPattern(parts = parts)
+    }
+
+    override fun visitPatternToNode(ctx: PartiQLParser.PatternToNodeContext) = PartiqlAst.build {
+        val parts = mutableListOf<PartiqlAst.GraphMatchPatternPart>()
+        parts += (visit(ctx.patternPartParen()) as PartiqlAst.GraphMatchPatternPart.Pattern)
+        parts.add(visitPatternPartNode(ctx.patternPartNode()))
+        graphMatchPattern(parts = parts)
+    }
+
+    override fun visitPatternPartParen(ctx: PartiQLParser.PatternPartParenContext) = PartiqlAst.build {
+        val parts = mutableListOf<PartiqlAst.GraphMatchPatternPart>()
+        val restrictor = if (ctx.restrictor != null) visitPatternRestrictor(ctx.restrictor) else null
+        val variable = if (ctx.variable != null) ctx.variable.symbolPrimitive().getString() else null
+        val prefilter = if (ctx.where != null) visitWhereClause(ctx.where) else null
+        val quantifier = if (ctx.quantifier != null) visitPatternQuantifier(ctx.quantifier) else null
+        when (val pattern = visitPartsNested(ctx.partsNested())) {
+            is PartiqlAst.GraphMatchPattern -> parts += pattern.parts
+            is PartiqlAst.GraphMatchPatternPart -> parts.add(pattern)
+            else -> throw ParseException("Unrecognized nested structure.")
+        }
+        pattern(graphMatchPattern(parts = parts, variable = variable, restrictor = restrictor, quantifier = quantifier, prefilter = prefilter))
     }
 
     override fun visitEdge(ctx: PartiQLParser.EdgeContext) = PartiqlAst.build {
