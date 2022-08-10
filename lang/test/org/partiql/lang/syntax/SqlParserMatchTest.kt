@@ -477,7 +477,7 @@ class SqlParserMatchTest : SqlParserTestBase() {
 
     @Test
     fun twoHopTriples() = assertExpressionNoRoundTrip(
-        "SELECT a,b FROM g MATCH (a) -[:has]-> (x), (x)-[:contains]->(b)",
+        "SELECT a,b FROM g MATCH ((a) -[:has]-> (x), (x)-[:contains]->(b))",
     ) {
         select(
             project = projectList(
