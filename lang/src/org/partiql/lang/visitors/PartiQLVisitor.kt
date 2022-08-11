@@ -14,6 +14,8 @@
 
 package org.partiql.lang.visitors
 
+import com.amazon.ion.IntegerSize
+import com.amazon.ion.IonInt
 import com.amazon.ion.IonSystem
 import com.amazon.ion.IonValue
 import com.amazon.ionelement.api.MetaContainer
@@ -61,7 +63,6 @@ import org.partiql.lang.types.CustomType
 import org.partiql.lang.util.bigDecimalOf
 import org.partiql.lang.util.getPrecisionFromTimeString
 import org.partiql.pig.runtime.SymbolPrimitive
-import org.partiql.pig.runtime.asPrimitive
 import java.lang.IndexOutOfBoundsException
 import java.math.BigInteger
 import java.time.LocalDate
@@ -1177,41 +1178,42 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         }
     }
 
-    override fun visitTypeVarChar(ctx: PartiQLParser.TypeVarCharContext): PartiqlAst.Type.CharacterVaryingType {
-        val length = if (ctx.length != null) ctx.length.text.toInteger().toLong().asPrimitive() else null
-        return PartiqlAst.Type.CharacterVaryingType(length)
+    override fun visitTypeVarChar(ctx: PartiQLParser.TypeVarCharContext) = PartiqlAst.build {
+        val arg0 = if (ctx.arg0 != null) ion.newInt(BigInteger(ctx.arg0.text, 10)) else null
+        assertIntegerValue(ctx.arg0, arg0)
+        characterVaryingType(arg0?.longValue())
     }
 
-    override fun visitTypeChar(ctx: PartiQLParser.TypeCharContext): PartiqlAst.Type.CharacterType {
-        val length = if (ctx.length != null) ctx.length.text.toInteger().toLong().asPrimitive() else null
-        return PartiqlAst.Type.CharacterType(length)
+    override fun visitTypeArgSingle(ctx: PartiQLParser.TypeArgSingleContext) = PartiqlAst.build {
+        val arg0 = if (ctx.arg0 != null) ion.newInt(BigInteger(ctx.arg0.text, 10)) else null
+        assertIntegerValue(ctx.arg0, arg0)
+        when (ctx.datatype.type) {
+            PartiQLParser.FLOAT -> floatType(arg0?.longValue())
+            PartiQLParser.CHAR, PartiQLParser.CHARACTER -> characterType(arg0?.longValue())
+            PartiQLParser.VARCHAR -> characterVaryingType(arg0?.longValue())
+            else -> throw ParserException("Unknown datatype", ErrorCode.PARSE_UNEXPECTED_TOKEN, PropertyValueMap())
+        }
     }
 
-    override fun visitTypeFloat(ctx: PartiQLParser.TypeFloatContext): PartiqlAst.Type.FloatType {
-        val precision = if (ctx.precision != null) ctx.precision.text.toInteger().toLong().asPrimitive() else null
-        return PartiqlAst.Type.FloatType(precision)
+    override fun visitTypeArgDouble(ctx: PartiQLParser.TypeArgDoubleContext) = PartiqlAst.build {
+        val arg0 = if (ctx.arg0 != null) ion.newInt(BigInteger(ctx.arg0.text, 10)) else null
+        val arg1 = if (ctx.arg0 != null) ion.newInt(BigInteger(ctx.arg1.text, 10)) else null
+        assertIntegerValue(ctx.arg0, arg0)
+        assertIntegerValue(ctx.arg1, arg1)
+        when (ctx.datatype.type) {
+            PartiQLParser.DECIMAL -> decimalType(arg0?.longValue(), arg1?.longValue())
+            PartiQLParser.NUMERIC -> numericType(arg0?.longValue(), arg1?.longValue())
+            else -> throw ParserException("Unknown datatype", ErrorCode.PARSE_UNEXPECTED_TOKEN, PropertyValueMap())
+        }
     }
 
-    override fun visitTypeDecimal(ctx: PartiQLParser.TypeDecimalContext): PartiqlAst.Type {
-        val precision = if (ctx.precision != null) ctx.precision.text.toInteger().toLong().asPrimitive() else null
-        val scale = if (ctx.scale != null) ctx.scale.text.toInteger().toLong().asPrimitive() else null
-        return PartiqlAst.Type.DecimalType(precision, scale)
-    }
-
-    override fun visitTypeNumeric(ctx: PartiQLParser.TypeNumericContext): PartiqlAst.Type.NumericType {
-        val precision = if (ctx.precision != null) ctx.precision.text.toInteger().toLong().asPrimitive() else null
-        val scale = if (ctx.scale != null) ctx.scale.text.toInteger().toLong().asPrimitive() else null
-        return PartiqlAst.Type.NumericType(precision, scale)
-    }
-
-    override fun visitTypeTime(ctx: PartiQLParser.TypeTimeContext): PartiqlAst.Type.TimeType {
-        val precision = if (ctx.precision != null) ctx.precision.text.toInteger().toLong().asPrimitive() else null
-        return PartiqlAst.Type.TimeType(precision)
-    }
-
-    override fun visitTypeTimeZone(ctx: PartiQLParser.TypeTimeZoneContext): PartiqlAst.Type.TimeWithTimeZoneType {
-        val precision = if (ctx.precision != null) ctx.precision.text.toInteger().toLong().asPrimitive() else null
-        return PartiqlAst.Type.TimeWithTimeZoneType(precision)
+    override fun visitTypeTimeZone(ctx: PartiQLParser.TypeTimeZoneContext) = PartiqlAst.build {
+        val precision = if (ctx.precision != null) ctx.precision.text.toInteger().toLong() else null
+        if (precision != null && (precision < 0 || precision > MAX_PRECISION_FOR_TIME)) {
+            throw ctx.precision.err("Unsupported precision", ErrorCode.PARSE_INVALID_PRECISION_FOR_TIME)
+        }
+        if (ctx.WITH() != null) timeWithTimeZoneType(precision)
+        else timeType(precision)
     }
 
     // TODO: Determine if should throw error on else
@@ -1549,5 +1551,14 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
             KEYWORDS.contains(text.toLowerCase()) -> ion.newSymbol(TYPE_ALIASES[text.toLowerCase()] ?: text.toLowerCase())
             else -> ion.newSymbol(text)
         }
+    }
+
+    private fun assertIntegerValue(token: Token, ionValue: IonValue?) {
+        if (ionValue == null)
+            return
+        if (ionValue !is IonInt)
+            throw token.err("Expected an integer value.", ErrorCode.PARSE_MALFORMED_PARSE_TREE)
+        if (ionValue.integerSize == IntegerSize.LONG || ionValue.integerSize == IntegerSize.BIG_INTEGER)
+            throw token.err("Type parameter exceeded maximum value", ErrorCode.PARSE_TYPE_PARAMETER_EXCEEDED_MAXIMUM_VALUE)
     }
 }
