@@ -255,9 +255,7 @@ groupAlias
     : GROUP AS symbolPrimitive;
     
 groupKey
-    : expr                     # GroupKeyAliasNone
-    | expr AS symbolPrimitive  # GroupKeyAlias
-    ;
+    : expr (AS symbolPrimitive)?;
 
 /**
  *
