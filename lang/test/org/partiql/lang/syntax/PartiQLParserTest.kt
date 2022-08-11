@@ -44,7 +44,9 @@ class PartiQLParserTest {
 
     @Test
     fun testStack() {
-        val max = testMaxWrapped(oldParser, 2000)
+        val initTime = System.currentTimeMillis()
+        val max = testMax(oldParser, 2_000, "OR")
+        println("TIME TAKEN (ms): ${System.currentTimeMillis() - initTime}")
         println("MAXIMUM = $max")
     }
 
