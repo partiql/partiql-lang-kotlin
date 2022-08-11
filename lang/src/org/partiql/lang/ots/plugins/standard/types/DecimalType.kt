@@ -19,7 +19,7 @@ object DecimalType : ScalarType {
         }
 
         val precision = parameters[0]
-        val scale = parameters[1]!!
+        val scale = parameters[1] ?: 0 // Scale of DECIMAL by default is 0
 
         if (precision == null) { // Unlimited DECIMAL
             return true

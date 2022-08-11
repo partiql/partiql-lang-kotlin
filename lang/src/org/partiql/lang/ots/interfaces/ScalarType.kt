@@ -19,6 +19,9 @@ interface ScalarType {
 
     /**
      * used to validate a value of this type
+     *
+     * [value] is the value we want to validate
+     * [parameters] is type parameters of this type
      */
     fun validateValue(value: ExprValue, parameters: TypeParameters): Boolean =
         value.type == runTimeType
