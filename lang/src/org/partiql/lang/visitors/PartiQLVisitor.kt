@@ -424,13 +424,19 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         return PartiqlAst.BUILDER().groupBy(strategy, keyList = keyList, groupAsAlias = alias)
     }
 
-    override fun visitGroupKeyAliasNone(ctx: PartiQLParser.GroupKeyAliasNoneContext): PartiqlAst.GroupKey {
+    /**
+     * Returns a GROUP BY key
+     * TODO: Support ordinal case. Also, the conditional defining the exception is odd. 1 + 1 is allowed, but 2 is not.
+     *  This is to match the functionality of SqlParser, but this should likely be adjusted.
+     */
+    override fun visitGroupKey(ctx: PartiQLParser.GroupKeyContext): PartiqlAst.GroupKey {
         val expr = visit(ctx.expr()) as PartiqlAst.Expr
-        return PartiqlAst.BUILDER().groupKey(expr)
-    }
-
-    override fun visitGroupKeyAlias(ctx: PartiQLParser.GroupKeyAliasContext): PartiqlAst.GroupKey {
-        val expr = visit(ctx.expr()) as PartiqlAst.Expr
+        if (expr is PartiqlAst.Expr.Lit || expr is PartiqlAst.Expr.LitTime || expr is PartiqlAst.Expr.Date) {
+            throw ctx.expr().getStart().err(
+                "Literals (including ordinals) not supported in GROUP BY",
+                ErrorCode.PARSE_UNSUPPORTED_LITERALS_GROUPBY
+            )
+        }
         val alias = if (ctx.symbolPrimitive() != null) ctx.symbolPrimitive().getString() else null
         return PartiqlAst.BUILDER().groupKey(expr, asAlias = alias)
     }
