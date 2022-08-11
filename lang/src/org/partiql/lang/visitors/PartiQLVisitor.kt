@@ -1202,7 +1202,7 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
 
     override fun visitTypeArgDouble(ctx: PartiQLParser.TypeArgDoubleContext) = PartiqlAst.build {
         val arg0 = if (ctx.arg0 != null) ion.newInt(BigInteger(ctx.arg0.text, 10)) else null
-        val arg1 = if (ctx.arg0 != null) ion.newInt(BigInteger(ctx.arg1.text, 10)) else null
+        val arg1 = if (ctx.arg1 != null) ion.newInt(BigInteger(ctx.arg1.text, 10)) else null
         assertIntegerValue(ctx.arg0, arg0)
         assertIntegerValue(ctx.arg1, arg1)
         when (ctx.datatype.type) {
@@ -1558,7 +1558,7 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         }
     }
 
-    private fun assertIntegerValue(token: Token, ionValue: IonValue?) {
+    private fun assertIntegerValue(token: Token?, ionValue: IonValue?) {
         if (ionValue == null)
             return
         if (ionValue !is IonInt)
