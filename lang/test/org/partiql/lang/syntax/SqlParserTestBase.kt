@@ -22,6 +22,7 @@ import com.amazon.ionelement.api.SexpElement
 import com.amazon.ionelement.api.toIonElement
 import com.amazon.ionelement.api.toIonValue
 import org.partiql.lang.CUSTOM_TEST_TYPES
+import org.partiql.lang.ION
 import org.partiql.lang.TestBase
 import org.partiql.lang.ast.AstDeserializerBuilder
 import org.partiql.lang.ast.AstSerializer
@@ -42,6 +43,13 @@ import org.partiql.pig.runtime.toIonElement
 
 abstract class SqlParserTestBase : TestBase() {
     val parser = PartiQLParser(ion, CUSTOM_TEST_TYPES)
+
+    enum class ParserTypes(val parser: Parser) {
+        SQL_PARSER(SqlParser(ION, CUSTOM_TEST_TYPES)),
+        PARTIQL_PARSER(PartiQLParser(ION, CUSTOM_TEST_TYPES))
+    }
+
+    private val defaultParserTypes = setOf(ParserTypes.SQL_PARSER, ParserTypes.PARTIQL_PARSER)
 
     protected fun parse(source: String): PartiqlAst.Statement = parser.parseAstStatement(source)
 
@@ -227,20 +235,23 @@ abstract class SqlParserTestBase : TestBase() {
     protected fun checkInputThrowingParserException(
         input: String,
         errorCode: ErrorCode,
-        expectErrorContextValues: Map<Property, Any>
+        expectErrorContextValues: Map<Property, Any>,
+        targetParsers: Set<ParserTypes> = defaultParserTypes
     ) {
 
         softAssert {
-            try {
-                parser.parseAstStatement(input)
-                fail("Expected ParserException but there was no Exception")
-            } catch (pex: ParserException) {
-                checkErrorAndErrorContext(errorCode, pex, expectErrorContextValues)
-            } catch (ignore: PartiQLParser.ParseErrorListener.ParseException) {
-                // TODO: Check the error location and more
-                // Ignore
-            } catch (ex: Exception) {
-                fail("Expected ParserException but a different exception was thrown \n\t  $ex")
+            targetParsers.forEach {
+                try {
+                    it.parser.parseAstStatement(input)
+                    fail("Expected ParserException but there was no Exception")
+                } catch (pex: ParserException) {
+                    checkErrorAndErrorContext(errorCode, pex, expectErrorContextValues)
+                } catch (ignore: PartiQLParser.ParseErrorListener.ParseException) {
+                    // TODO: Check the error location and more
+                    // Ignore
+                } catch (ex: Exception) {
+                    fail("Expected ParserException but a different exception was thrown \n\t  $ex")
+                }
             }
         }
     }
