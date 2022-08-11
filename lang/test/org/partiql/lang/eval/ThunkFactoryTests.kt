@@ -7,7 +7,7 @@ import org.partiql.lang.ION
 import org.partiql.lang.ast.StaticTypeMeta
 import org.partiql.lang.domains.metaContainerOf
 import org.partiql.lang.errors.ErrorCode
-import org.partiql.lang.ots.plugins.standard.types.CompileTimeCharType
+import org.partiql.lang.ots.plugins.standard.types.CharType
 import org.partiql.lang.types.StaticScalarType
 import org.partiql.lang.types.StaticType
 import kotlin.test.assertEquals
@@ -65,7 +65,7 @@ class ThunkFactoryTests {
 
             createTestCases(StaticType.STRING, INT_42000, true),
             createTestCases(
-                StaticScalarType(CompileTimeCharType(20)),
+                StaticScalarType(CharType, listOf(20)),
                 STRING_LONG,
                 true
             )

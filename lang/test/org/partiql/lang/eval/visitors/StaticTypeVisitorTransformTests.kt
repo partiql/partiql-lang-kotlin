@@ -23,7 +23,7 @@ import org.partiql.lang.errors.Property.FEATURE_NAME
 import org.partiql.lang.errors.Property.LINE_NUMBER
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.mappers.ISL_META_KEY
-import org.partiql.lang.ots.plugins.standard.types.CompileTimeIntType
+import org.partiql.lang.ots.plugins.standard.types.IntType
 import org.partiql.lang.types.ListType
 import org.partiql.lang.types.StaticScalarType
 import org.partiql.lang.types.StaticType
@@ -1093,7 +1093,7 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
                 StaticTypeMeta(
                     ListType(
                         StaticScalarType(
-                            CompileTimeIntType,
+                            IntType,
                             metas = mapOf(
                                 ISL_META_KEY to listOf(
                                     IonSchemaModel.build {

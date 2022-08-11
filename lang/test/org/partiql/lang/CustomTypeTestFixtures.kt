@@ -3,7 +3,7 @@ package org.partiql.lang
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.numberValue
-import org.partiql.lang.ots.plugins.standard.types.CompileTimeCharType
+import org.partiql.lang.ots.plugins.standard.types.CharType
 import org.partiql.lang.types.AnyOfType
 import org.partiql.lang.types.CustomType
 import org.partiql.lang.types.StaticScalarType
@@ -70,7 +70,7 @@ private val rsIntegerPrecisionParameter = TypedOpParameter(StaticType.INT4)
 private val rsBigintPrecisionParameter = TypedOpParameter(StaticType.INT8)
 
 // RS_VARCHAR_MAX
-private val rsStringParameter = TypedOpParameter(StaticScalarType(CompileTimeCharType(10)))
+private val rsStringParameter = TypedOpParameter(StaticScalarType(CharType, listOf(10)))
 
 // RS_REAL
 private val rsRealParameter = TypedOpParameter(StaticType.FLOAT) {

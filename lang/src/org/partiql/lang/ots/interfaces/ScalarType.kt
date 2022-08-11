@@ -1,5 +1,6 @@
 package org.partiql.lang.ots.interfaces
 
+import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
 
 /**
@@ -17,7 +18,8 @@ interface ScalarType {
     val runTimeType: ExprValueType
 
     /**
-     * Create an instance of this type
+     * used to validate a value of this type
      */
-    fun createType(parameters: TypeParameters): CompileTimeType
+    fun validateValue(value: ExprValue, parameters: TypeParameters): Boolean =
+        value.type == runTimeType
 }

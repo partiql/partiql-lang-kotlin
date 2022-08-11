@@ -434,9 +434,9 @@ class StaticTypeCastTests {
         val bigint = StaticType.INT8
         val unconstrainedInt = StaticType.INT
 
-        val decimal4_2 = StaticScalarType(DecimalType.createType(listOf(4, 2)))
-        val decimal7_2 = StaticScalarType(DecimalType.createType(listOf(7, 2)))
-        val decimal32_0 = StaticScalarType(DecimalType.createType(listOf(32, 0)))
+        val decimal4_2 = StaticScalarType(DecimalType, listOf(4, 2))
+        val decimal7_2 = StaticScalarType(DecimalType, listOf(7, 2))
+        val decimal32_0 = StaticScalarType(DecimalType, listOf(32, 0))
 
         return listOf(
             TestCase(smallint, smallint, smallint),

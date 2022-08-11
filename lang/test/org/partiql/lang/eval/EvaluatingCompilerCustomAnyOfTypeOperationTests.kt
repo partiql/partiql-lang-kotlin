@@ -5,7 +5,7 @@ import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.anyOfType
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.esAny
-import org.partiql.lang.ots.plugins.standard.types.CompileTimeCharType
+import org.partiql.lang.ots.plugins.standard.types.CharType
 import org.partiql.lang.types.BagType
 import org.partiql.lang.types.CustomType
 import org.partiql.lang.types.ListType
@@ -263,7 +263,7 @@ class EvaluatingCompilerCustomAnyOfTypeOperationTests : CastTestBase() {
                     // duplicate types
                     anyOfType(
                         StaticType.STRING,
-                        StaticScalarType(CompileTimeCharType(500))
+                        StaticScalarType(CharType, listOf(500))
                     ),
                     anyOfType(
                         StaticType.INT,

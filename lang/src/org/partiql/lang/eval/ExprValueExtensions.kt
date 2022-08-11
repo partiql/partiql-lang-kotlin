@@ -18,31 +18,27 @@ import com.amazon.ion.IntegerSize
 import com.amazon.ion.IonInt
 import com.amazon.ion.Timestamp
 import org.partiql.lang.ast.SourceLocationMeta
-import org.partiql.lang.ast.passes.inference.getLength
 import org.partiql.lang.ast.passes.inference.isNumeric
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.errors.PropertyValueMap
 import org.partiql.lang.eval.time.NANOS_PER_SECOND
 import org.partiql.lang.eval.time.Time
+import org.partiql.lang.ots.plugins.standard.types.BlobType
+import org.partiql.lang.ots.plugins.standard.types.BoolType
 import org.partiql.lang.ots.plugins.standard.types.CharType
-import org.partiql.lang.ots.plugins.standard.types.CompileTimeBlobType
-import org.partiql.lang.ots.plugins.standard.types.CompileTimeBoolType
-import org.partiql.lang.ots.plugins.standard.types.CompileTimeCharType
-import org.partiql.lang.ots.plugins.standard.types.CompileTimeClobType
-import org.partiql.lang.ots.plugins.standard.types.CompileTimeDateType
-import org.partiql.lang.ots.plugins.standard.types.CompileTimeDecimalType
-import org.partiql.lang.ots.plugins.standard.types.CompileTimeFloatType
-import org.partiql.lang.ots.plugins.standard.types.CompileTimeInt2Type
-import org.partiql.lang.ots.plugins.standard.types.CompileTimeInt4Type
-import org.partiql.lang.ots.plugins.standard.types.CompileTimeInt8Type
-import org.partiql.lang.ots.plugins.standard.types.CompileTimeIntType
-import org.partiql.lang.ots.plugins.standard.types.CompileTimeStringType
-import org.partiql.lang.ots.plugins.standard.types.CompileTimeSymbolType
-import org.partiql.lang.ots.plugins.standard.types.CompileTimeTimeType
-import org.partiql.lang.ots.plugins.standard.types.CompileTimeTimestampType
-import org.partiql.lang.ots.plugins.standard.types.CompileTimeVarcharType
+import org.partiql.lang.ots.plugins.standard.types.ClobType
+import org.partiql.lang.ots.plugins.standard.types.DateType
+import org.partiql.lang.ots.plugins.standard.types.DecimalType
+import org.partiql.lang.ots.plugins.standard.types.FloatType
+import org.partiql.lang.ots.plugins.standard.types.Int2Type
+import org.partiql.lang.ots.plugins.standard.types.Int4Type
+import org.partiql.lang.ots.plugins.standard.types.Int8Type
+import org.partiql.lang.ots.plugins.standard.types.IntType
 import org.partiql.lang.ots.plugins.standard.types.StringType
+import org.partiql.lang.ots.plugins.standard.types.SymbolType
+import org.partiql.lang.ots.plugins.standard.types.TimeStampType
+import org.partiql.lang.ots.plugins.standard.types.TimeType
 import org.partiql.lang.ots.plugins.standard.types.VarcharType
 import org.partiql.lang.syntax.DATE_TIME_PART_KEYWORDS
 import org.partiql.lang.syntax.DateTimePart
@@ -311,21 +307,21 @@ fun ExprValue.cast(
     val longMinDecimal = bigDecimalOf(Long.MIN_VALUE)
 
     fun Number.exprValue(type: SingleType) = when (type) {
-        is StaticScalarType -> when (val compileTimeType = type.type) {
-            is CompileTimeInt2Type,
-            is CompileTimeInt4Type,
-            is CompileTimeInt8Type,
-            is CompileTimeIntType -> {
+        is StaticScalarType -> when (type.scalarType) {
+            is Int2Type,
+            is Int4Type,
+            is Int8Type,
+            is IntType -> {
                 val rangeForType = when (typedOpBehavior) {
                     // Legacy behavior doesn't honor SMALLINT, INT4 constraints
                     TypedOpBehavior.LEGACY -> LongRange(Long.MIN_VALUE, Long.MAX_VALUE)
                     TypedOpBehavior.HONOR_PARAMETERS ->
-                        when (type.type) {
+                        when (type.scalarType) {
                             // There is not CAST syntax to that can execute this branch today.
-                            is CompileTimeInt2Type -> LongRange(Short.MIN_VALUE.toLong(), Short.MAX_VALUE.toLong())
-                            is CompileTimeInt4Type -> LongRange(Int.MIN_VALUE.toLong(), Int.MAX_VALUE.toLong())
-                            is CompileTimeInt8Type,
-                            is CompileTimeIntType -> LongRange(Long.MIN_VALUE, Long.MAX_VALUE)
+                            is Int2Type -> LongRange(Short.MIN_VALUE.toLong(), Short.MAX_VALUE.toLong())
+                            is Int4Type -> LongRange(Int.MIN_VALUE.toLong(), Int.MAX_VALUE.toLong())
+                            is Int8Type,
+                            is IntType -> LongRange(Long.MIN_VALUE, Long.MAX_VALUE)
                             else -> error("Unreachable code")
                         }
                 }
@@ -367,23 +363,24 @@ fun ExprValue.cast(
                 }
                 valueFactory.newInt(result)
             }
-            is CompileTimeFloatType -> valueFactory.newFloat(this.toDouble())
-            is CompileTimeDecimalType -> when (typedOpBehavior) {
+            is FloatType -> valueFactory.newFloat(this.toDouble())
+            is DecimalType -> when (typedOpBehavior) {
                 TypedOpBehavior.LEGACY -> valueFactory.newFromIonValue(
                     this.coerce(BigDecimal::class.java).ionValue(valueFactory.ion)
                 )
-                TypedOpBehavior.HONOR_PARAMETERS -> when (compileTimeType.precision) {
+                TypedOpBehavior.HONOR_PARAMETERS -> when (val precision = type.parameters[0]) {
                     null -> valueFactory.newFromIonValue(
                         this.coerce(BigDecimal::class.java).ionValue(valueFactory.ion)
                     )
                     else -> {
                         val decimal = this.coerce(BigDecimal::class.java) as BigDecimal
-                        val result = decimal.round(MathContext(compileTimeType.precision))
-                            .setScale(compileTimeType.scale, RoundingMode.HALF_UP)
-                        if (result.precision() > compileTimeType.precision) {
+                        val scale = type.parameters[1]!!
+                        val result = decimal.round(MathContext(precision))
+                            .setScale(scale, RoundingMode.HALF_UP)
+                        if (result.precision() > precision) {
                             // Following PostgresSQL behavior here. Java will increase precision if needed.
                             castFailedErr(
-                                "target type DECIMAL(${compileTimeType.precision}, ${compileTimeType.scale}) too small for value $decimal.",
+                                "target type DECIMAL($precision, $scale) too small for value $decimal.",
                                 internal = false
                             )
                         } else {
@@ -392,23 +389,23 @@ fun ExprValue.cast(
                     }
                 }
             }
-            else -> error("Unsupported type: $compileTimeType")
+            else -> error("Unsupported type: ${type.scalarType}")
         }
         else -> castFailedErr("Invalid type for numeric conversion: $type (this code should be unreachable)", internal = true)
     }
 
     fun String.exprValue(type: SingleType) = when (type) {
-        is StaticScalarType -> when (type.type) {
-            is CompileTimeCharType,
-            is CompileTimeVarcharType,
-            is CompileTimeStringType -> when (typedOpBehavior) {
+        is StaticScalarType -> when (type.scalarType) {
+            is CharType,
+            is VarcharType,
+            is StringType -> when (typedOpBehavior) {
                 TypedOpBehavior.LEGACY -> valueFactory.newString(this)
-                TypedOpBehavior.HONOR_PARAMETERS -> when (type.type) {
-                    is CompileTimeStringType -> valueFactory.newString(this)
-                    is CompileTimeCharType,
-                    is CompileTimeVarcharType -> {
+                TypedOpBehavior.HONOR_PARAMETERS -> when (type.scalarType) {
+                    is StringType -> valueFactory.newString(this)
+                    is CharType,
+                    is VarcharType -> {
                         val actualCodepointCount = this.codePointCount(0, this.length)
-                        val lengthConstraint = type.getLength()
+                        val lengthConstraint = type.parameters[0]!!
                         val truncatedString = if (actualCodepointCount <= lengthConstraint) {
                             this // no truncation needed
                         } else {
@@ -416,9 +413,9 @@ fun ExprValue.cast(
                         }
 
                         valueFactory.newString(
-                            when (type.type) {
-                                is CompileTimeCharType -> truncatedString.trimEnd { c -> c == '\u0020' }
-                                is CompileTimeVarcharType -> truncatedString
+                            when (type.scalarType) {
+                                is CharType -> truncatedString.trimEnd { c -> c == '\u0020' }
+                                is VarcharType -> truncatedString
                                 else -> error("Unreachable code")
                             }
                         )
@@ -426,7 +423,7 @@ fun ExprValue.cast(
                     else -> error("Unreachable code")
                 }
             }
-            is CompileTimeSymbolType -> valueFactory.newSymbol(this)
+            is SymbolType -> valueFactory.newSymbol(this)
             else -> castFailedErr("Invalid type for textual conversion: $type (this code should be unreachable)", internal = true)
         }
         else -> castFailedErr("Invalid type for textual conversion: $type (this code should be unreachable)", internal = true)
@@ -441,27 +438,27 @@ fun ExprValue.cast(
         type == targetType.runtimeType && type != ExprValueType.TIME -> {
             return when {
                 targetType.isNumeric() -> numberValue().exprValue(targetType)
-                targetType is StaticScalarType && (targetType.type.type in listOf(CharType, VarcharType, StringType)) -> stringValue().exprValue(targetType)
+                targetType is StaticScalarType && (targetType.scalarType in listOf(CharType, VarcharType, StringType)) -> stringValue().exprValue(targetType)
                 else -> this
             }
         }
         else -> {
             when (targetType) {
-                is StaticScalarType -> when (targetType.type) {
-                    is CompileTimeCharType,
-                    is CompileTimeVarcharType,
-                    is CompileTimeStringType,
-                    is CompileTimeSymbolType -> when {
+                is StaticScalarType -> when (targetType.scalarType) {
+                    is CharType,
+                    is VarcharType,
+                    is StringType,
+                    is SymbolType -> when {
                         type.isNumber -> return numberValue().toString().exprValue(targetType)
                         type.isText -> return stringValue().exprValue(targetType)
                         type == ExprValueType.DATE -> return dateValue().toString().exprValue(targetType)
                         type == ExprValueType.TIME -> return timeValue().toString().exprValue(targetType)
                         type in ION_TEXT_STRING_CAST_TYPES -> return ionValue.toString().exprValue(targetType)
                     }
-                    is CompileTimeInt2Type,
-                    is CompileTimeInt4Type,
-                    is CompileTimeInt8Type,
-                    is CompileTimeIntType -> when {
+                    is Int2Type,
+                    is Int4Type,
+                    is Int8Type,
+                    is IntType -> when {
                         type == ExprValueType.BOOL -> return if (booleanValue()) 1L.exprValue(targetType) else 0L.exprValue(targetType)
                         type.isNumber -> return numberValue().exprValue(targetType)
                         type.isText -> {
@@ -479,7 +476,7 @@ fun ExprValue.cast(
                             }
                         }
                     }
-                    is CompileTimeFloatType -> when {
+                    is FloatType -> when {
                         type == ExprValueType.BOOL -> return if (booleanValue()) 1.0.exprValue(targetType) else 0.0.exprValue(targetType)
                         type.isNumber -> return numberValue().toDouble().exprValue(targetType)
                         type.isText ->
@@ -489,7 +486,7 @@ fun ExprValue.cast(
                                 castFailedErr("can't convert string value to FLOAT", internal = false, cause = e)
                             }
                     }
-                    is CompileTimeDecimalType -> when {
+                    is DecimalType -> when {
                         type == ExprValueType.BOOL -> return if (booleanValue()) {
                             BigDecimal.ONE.exprValue(targetType)
                         } else {
@@ -502,13 +499,13 @@ fun ExprValue.cast(
                             castFailedErr("can't convert string value to DECIMAL", internal = false, cause = e)
                         }
                     }
-                    is CompileTimeBlobType -> when {
+                    is BlobType -> when {
                         type.isLob -> return valueFactory.newBlob(bytesValue())
                     }
-                    is CompileTimeClobType -> when {
+                    is ClobType -> when {
                         type.isLob -> return valueFactory.newClob(bytesValue())
                     }
-                    is CompileTimeBoolType -> when {
+                    is BoolType -> when {
                         type.isNumber -> return when {
                             numberValue().compareTo(0L) == 0 -> valueFactory.newBoolean(false)
                             else -> valueFactory.newBoolean(true)
@@ -519,14 +516,14 @@ fun ExprValue.cast(
                             else -> castFailedErr("can't convert string value to BOOL", internal = false)
                         }
                     }
-                    is CompileTimeTimestampType -> when {
+                    is TimeStampType -> when {
                         type.isText -> try {
                             return valueFactory.newTimestamp(Timestamp.valueOf(stringValue()))
                         } catch (e: IllegalArgumentException) {
                             castFailedErr("can't convert string value to TIMESTAMP", internal = false, cause = e)
                         }
                     }
-                    is CompileTimeDateType -> when {
+                    is DateType -> when {
                         type == ExprValueType.TIMESTAMP -> {
                             val ts = timestampValue()
                             return valueFactory.newDate(LocalDate.of(ts.year, ts.month, ts.day))
@@ -550,12 +547,12 @@ fun ExprValue.cast(
                             )
                         }
                     }
-                    is CompileTimeTimeType -> {
-                        val precision = targetType.type.precision
+                    is TimeType -> {
+                        val precision = targetType.parameters[0]
                         when {
                             type == ExprValueType.TIME -> {
                                 val time = timeValue()
-                                val timeZoneOffset = when (targetType.type.withTimeZone) {
+                                val timeZoneOffset = when (targetType.scalarType.withTimeZone) {
                                     true -> time.zoneOffset ?: defaultTimezoneOffset
                                     else -> null
                                 }
@@ -569,7 +566,7 @@ fun ExprValue.cast(
                             }
                             type == ExprValueType.TIMESTAMP -> {
                                 val ts = timestampValue()
-                                val timeZoneOffset = when (targetType.type.withTimeZone) {
+                                val timeZoneOffset = when (targetType.scalarType.withTimeZone) {
                                     true -> ts.localOffset ?: castFailedErr(
                                         "Can't convert timestamp value with unknown local offset (i.e. -00:00) to TIME WITH TIME ZONE.",
                                         internal = false
@@ -608,7 +605,7 @@ fun ExprValue.cast(
                                     Time.of(
                                         localTime,
                                         precision ?: getPrecisionFromTimeString(stringValue()),
-                                        when (targetType.type.withTimeZone) {
+                                        when (targetType.scalarType.withTimeZone) {
                                             true -> zoneOffset
                                             else -> null
                                         }
@@ -623,7 +620,7 @@ fun ExprValue.cast(
                             }
                         }
                     }
-                    else -> error("Unsupported type: ${targetType.type}")
+                    else -> error("Unsupported type: ${targetType.scalarType}")
                 }
                 is ListType -> if (type.isSequence) return valueFactory.newList(asSequence())
                 is SexpType -> if (type.isSequence) return valueFactory.newSexp(asSequence())

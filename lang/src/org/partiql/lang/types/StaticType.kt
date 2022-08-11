@@ -13,23 +13,21 @@ import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.name
 import org.partiql.lang.eval.stringValue
 import org.partiql.lang.eval.timeValue
-import org.partiql.lang.ots.interfaces.CompileTimeType
-import org.partiql.lang.ots.plugins.standard.types.CompileTimeBlobType
-import org.partiql.lang.ots.plugins.standard.types.CompileTimeBoolType
-import org.partiql.lang.ots.plugins.standard.types.CompileTimeClobType
-import org.partiql.lang.ots.plugins.standard.types.CompileTimeDateType
-import org.partiql.lang.ots.plugins.standard.types.CompileTimeFloatType
-import org.partiql.lang.ots.plugins.standard.types.CompileTimeInt2Type
-import org.partiql.lang.ots.plugins.standard.types.CompileTimeInt4Type
-import org.partiql.lang.ots.plugins.standard.types.CompileTimeInt8Type
-import org.partiql.lang.ots.plugins.standard.types.CompileTimeIntType
-import org.partiql.lang.ots.plugins.standard.types.CompileTimeStringType
-import org.partiql.lang.ots.plugins.standard.types.CompileTimeSymbolType
-import org.partiql.lang.ots.plugins.standard.types.CompileTimeTimeType
-import org.partiql.lang.ots.plugins.standard.types.CompileTimeTimestampType
+import org.partiql.lang.ots.interfaces.ScalarType
+import org.partiql.lang.ots.interfaces.TypeParameters
+import org.partiql.lang.ots.plugins.standard.types.BlobType
+import org.partiql.lang.ots.plugins.standard.types.BoolType
+import org.partiql.lang.ots.plugins.standard.types.ClobType
+import org.partiql.lang.ots.plugins.standard.types.DateType
 import org.partiql.lang.ots.plugins.standard.types.DecimalType
+import org.partiql.lang.ots.plugins.standard.types.FloatType
+import org.partiql.lang.ots.plugins.standard.types.Int2Type
+import org.partiql.lang.ots.plugins.standard.types.Int4Type
+import org.partiql.lang.ots.plugins.standard.types.Int8Type
 import org.partiql.lang.ots.plugins.standard.types.IntType
 import org.partiql.lang.ots.plugins.standard.types.StringType
+import org.partiql.lang.ots.plugins.standard.types.SymbolType
+import org.partiql.lang.ots.plugins.standard.types.TimeStampType
 import org.partiql.lang.ots.plugins.standard.types.TimeType
 
 /**
@@ -63,22 +61,22 @@ sealed class StaticType {
         @JvmField val NULL: NullType = NullType()
         @JvmField val ANY: AnyType = AnyType()
         @JvmField val NULL_OR_MISSING: StaticType = unionOf(NULL, MISSING)
-        @JvmField val INT2: StaticScalarType = StaticScalarType(CompileTimeInt2Type)
-        @JvmField val INT4: StaticScalarType = StaticScalarType(CompileTimeInt4Type)
-        @JvmField val INT8: StaticScalarType = StaticScalarType(CompileTimeInt8Type)
-        @JvmField val INT: StaticScalarType = StaticScalarType(CompileTimeIntType)
-        @JvmField val BOOL: StaticScalarType = StaticScalarType(CompileTimeBoolType)
-        @JvmField val FLOAT: StaticScalarType = StaticScalarType(CompileTimeFloatType)
-        @JvmField val DECIMAL: StaticScalarType = StaticScalarType(DecimalType.createType(emptyList()))
+        @JvmField val INT2: StaticScalarType = StaticScalarType(Int2Type)
+        @JvmField val INT4: StaticScalarType = StaticScalarType(Int4Type)
+        @JvmField val INT8: StaticScalarType = StaticScalarType(Int8Type)
+        @JvmField val INT: StaticScalarType = StaticScalarType(IntType)
+        @JvmField val BOOL: StaticScalarType = StaticScalarType(BoolType)
+        @JvmField val FLOAT: StaticScalarType = StaticScalarType(FloatType)
+        @JvmField val DECIMAL: StaticScalarType = StaticScalarType(DecimalType, listOf(null, 0))
         @JvmField val NUMERIC: StaticType = unionOf(INT2, INT4, INT8, INT, FLOAT, DECIMAL)
-        @JvmField val DATE: StaticScalarType = StaticScalarType(CompileTimeDateType)
-        @JvmField val TIME: StaticScalarType = StaticScalarType(TimeType.createType(emptyList()))
-        @JvmField val TIMESTAMP: StaticScalarType = StaticScalarType(CompileTimeTimestampType)
-        @JvmField val SYMBOL: StaticScalarType = StaticScalarType(CompileTimeSymbolType)
-        @JvmField val STRING: StaticScalarType = StaticScalarType(CompileTimeStringType)
+        @JvmField val DATE: StaticScalarType = StaticScalarType(DateType)
+        @JvmField val TIME: StaticScalarType = StaticScalarType(TimeType(), listOf(null))
+        @JvmField val TIMESTAMP: StaticScalarType = StaticScalarType(TimeStampType)
+        @JvmField val SYMBOL: StaticScalarType = StaticScalarType(SymbolType)
+        @JvmField val STRING: StaticScalarType = StaticScalarType(StringType)
         @JvmField val TEXT: StaticType = unionOf(SYMBOL, STRING)
-        @JvmField val CLOB: StaticScalarType = StaticScalarType(CompileTimeClobType)
-        @JvmField val BLOB: StaticScalarType = StaticScalarType(CompileTimeBlobType)
+        @JvmField val CLOB: StaticScalarType = StaticScalarType(ClobType)
+        @JvmField val BLOB: StaticScalarType = StaticScalarType(BlobType)
         @JvmField val LIST: ListType = ListType()
         @JvmField val SEXP: SexpType = SexpType()
         @JvmField val STRUCT: StructType = StructType()
@@ -112,10 +110,8 @@ sealed class StaticType {
                 ExprValueType.TIME -> {
                     val timeValue = exprValue.timeValue()
                     StaticScalarType(
-                        CompileTimeTimeType(
-                            precision = timeValue.precision,
-                            withTimeZone = timeValue.zoneOffset != null
-                        )
+                        TimeType(timeValue.zoneOffset != null),
+                        listOf(timeValue.precision)
                     )
                 }
                 else -> fromExprValueType(exprValue.type)
@@ -586,17 +582,18 @@ data class AnyOfType(val types: Set<StaticType>, override val metas: Map<String,
 }
 
 data class StaticScalarType(
-    val type: CompileTimeType,
+    val scalarType: ScalarType,
+    val parameters: TypeParameters = emptyList(),
     override val metas: Map<String, Any> = mapOf()
 ) : SingleType() {
 
     override val runtimeType: ExprValueType
-        get() = type.type.runTimeType
+        get() = scalarType.runTimeType
 
     override val allTypes: List<StaticType>
         get() = listOf(this)
 
-    override fun toString(): String = type.type.id
+    override fun toString(): String = scalarType.id
 
-    override fun isInstance(value: ExprValue): Boolean = type.validateValue(value)
+    override fun isInstance(value: ExprValue): Boolean = scalarType.validateValue(value, parameters)
 }

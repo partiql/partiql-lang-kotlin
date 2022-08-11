@@ -1,3 +1,6 @@
 package org.partiql.lang.ots.interfaces
 
-typealias TypeParameters = List<Int>
+/**
+ * Null value means the parameter is not explicitly specified by users
+ */
+typealias TypeParameters = List<Int?>

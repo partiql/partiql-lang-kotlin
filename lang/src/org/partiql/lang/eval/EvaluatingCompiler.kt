@@ -50,10 +50,6 @@ import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedure
 import org.partiql.lang.eval.like.parsePattern
 import org.partiql.lang.eval.time.Time
 import org.partiql.lang.eval.visitors.PartiqlAstSanityValidator
-import org.partiql.lang.ots.plugins.standard.types.CompileTimeInt2Type
-import org.partiql.lang.ots.plugins.standard.types.CompileTimeInt4Type
-import org.partiql.lang.ots.plugins.standard.types.CompileTimeInt8Type
-import org.partiql.lang.ots.plugins.standard.types.CompileTimeIntType
 import org.partiql.lang.ots.plugins.standard.types.Int2Type
 import org.partiql.lang.ots.plugins.standard.types.Int4Type
 import org.partiql.lang.ots.plugins.standard.types.Int8Type
@@ -548,7 +544,7 @@ internal class EvaluatingCompiler(
                         // throw an exception in case we encounter this untested scenario. This might work fine, but I
                         // wouldn't bet on it.
                         val hasConstrainedInteger = staticTypes.any {
-                            it is StaticScalarType && (it.type.type in listOf(Int2Type, Int4Type, Int8Type))
+                            it is StaticScalarType && (it.scalarType in listOf(Int2Type, Int4Type, Int8Type))
                         }
                         if (hasConstrainedInteger) {
                             TODO("Legacy mode doesn't support integer size constraints yet.")
@@ -558,10 +554,10 @@ internal class EvaluatingCompiler(
                     }
                     TypingMode.PERMISSIVE -> {
                         val validRange: LongRange? = when {
-                            staticTypes.any { it is StaticScalarType && it.type.type is IntType } -> CompileTimeIntType.validRange
-                            staticTypes.any { it is StaticScalarType && it.type.type is Int8Type } -> CompileTimeInt8Type.validRange
-                            staticTypes.any { it is StaticScalarType && it.type.type is Int4Type } -> CompileTimeInt4Type.validRange
-                            staticTypes.any { it is StaticScalarType && it.type.type is Int2Type } -> CompileTimeInt2Type.validRange
+                            staticTypes.any { it is StaticScalarType && it.scalarType is IntType } -> IntType.validRange
+                            staticTypes.any { it is StaticScalarType && it.scalarType is Int8Type } -> Int8Type.validRange
+                            staticTypes.any { it is StaticScalarType && it.scalarType is Int4Type } -> Int4Type.validRange
+                            staticTypes.any { it is StaticScalarType && it.scalarType is Int2Type } -> Int2Type.validRange
                             else -> null
                         }
                         when {

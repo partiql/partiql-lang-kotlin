@@ -14,7 +14,6 @@ import org.partiql.lang.ast.passes.SemanticException
 import org.partiql.lang.ast.passes.SemanticProblemDetails
 import org.partiql.lang.ast.passes.inference.cast
 import org.partiql.lang.ast.passes.inference.filterNullMissing
-import org.partiql.lang.ast.passes.inference.getLength
 import org.partiql.lang.ast.passes.inference.intTypesPrecedence
 import org.partiql.lang.ast.passes.inference.isLob
 import org.partiql.lang.ast.passes.inference.isNullOrMissing
@@ -35,12 +34,8 @@ import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.builtins.createBuiltinFunctionSignatures
 import org.partiql.lang.eval.delegate
 import org.partiql.lang.eval.getStartingSourceLocationMeta
+import org.partiql.lang.ots.plugins.standard.types.BoolType
 import org.partiql.lang.ots.plugins.standard.types.CharType
-import org.partiql.lang.ots.plugins.standard.types.CompileTimeBoolType
-import org.partiql.lang.ots.plugins.standard.types.CompileTimeCharType
-import org.partiql.lang.ots.plugins.standard.types.CompileTimeDecimalType
-import org.partiql.lang.ots.plugins.standard.types.CompileTimeFloatType
-import org.partiql.lang.ots.plugins.standard.types.CompileTimeVarcharType
 import org.partiql.lang.ots.plugins.standard.types.DecimalType
 import org.partiql.lang.ots.plugins.standard.types.FloatType
 import org.partiql.lang.ots.plugins.standard.types.Int2Type
@@ -439,7 +434,7 @@ internal class StaticTypeInferenceVisitorTransform(
         override fun transformExprNot(node: PartiqlAst.Expr.Not): PartiqlAst.Expr {
             val nAry = super.transformExprNot(node) as PartiqlAst.Expr.Not
             val args = listOf(nAry.expr)
-            return if (hasValidOperandTypes(args, { it is StaticScalarType && it.type === CompileTimeBoolType }, "NOT", nAry.metas)) {
+            return if (hasValidOperandTypes(args, { it is StaticScalarType && it.scalarType === BoolType }, "NOT", nAry.metas)) {
             transformNAry(nAry, args) { recurseForNAryOperations(nAry, it, ::getTypeForNAryLogicalOperations) }
         } else {
                 nAry.withStaticType(StaticType.BOOL)
@@ -448,7 +443,7 @@ internal class StaticTypeInferenceVisitorTransform(
 
         override fun transformExprAnd(node: PartiqlAst.Expr.And): PartiqlAst.Expr {
             val nAry = super.transformExprAnd(node) as PartiqlAst.Expr.And
-            return if (hasValidOperandTypes(nAry.operands, { it is StaticScalarType && it.type === CompileTimeBoolType }, "AND", nAry.metas)) {
+            return if (hasValidOperandTypes(nAry.operands, { it is StaticScalarType && it.scalarType === BoolType }, "AND", nAry.metas)) {
             transformNAry(nAry, nAry.operands) { recurseForNAryOperations(nAry, it, ::getTypeForNAryLogicalOperations) }
         } else {
                 nAry.withStaticType(StaticType.BOOL)
@@ -457,7 +452,7 @@ internal class StaticTypeInferenceVisitorTransform(
 
         override fun transformExprOr(node: PartiqlAst.Expr.Or): PartiqlAst.Expr {
             val nAry = super.transformExprOr(node) as PartiqlAst.Expr.Or
-            return if (hasValidOperandTypes(nAry.operands, { it is StaticScalarType && it.type === CompileTimeBoolType }, "OR", nAry.metas)) {
+            return if (hasValidOperandTypes(nAry.operands, { it is StaticScalarType && it.scalarType === BoolType }, "OR", nAry.metas)) {
             transformNAry(nAry, nAry.operands) { recurseForNAryOperations(nAry, it, ::getTypeForNAryLogicalOperations) }
         } else {
                 nAry.withStaticType(StaticType.BOOL)
@@ -575,9 +570,9 @@ internal class StaticTypeInferenceVisitorTransform(
             val possibleReturnTypes = allTypes.map { st ->
                 when {
                     st.isNumeric() -> st
-                    st is StaticScalarType -> when (st.type) {
-                        is CompileTimeFloatType,
-                        is CompileTimeDecimalType -> st
+                    st is StaticScalarType -> when (st.scalarType) {
+                        FloatType,
+                        DecimalType -> st
                         else -> StaticType.MISSING
                     }
                     st is NullType -> StaticType.NULL
@@ -640,19 +635,19 @@ internal class StaticTypeInferenceVisitorTransform(
                 leftType is MissingType || rightType is MissingType -> StaticType.MISSING
                 leftType is NullType || rightType is NullType -> StaticType.NULL
                 else -> when (leftType) {
-                    is StaticScalarType -> when (leftType.type.type) {
+                    is StaticScalarType -> when (leftType.scalarType) {
                         Int2Type,
                         Int4Type,
                         Int8Type,
                         IntType ->
                             when (rightType) {
-                                is StaticScalarType -> when (rightType.type.type) {
+                                is StaticScalarType -> when (rightType.scalarType) {
                                     Int2Type,
                                     Int4Type,
                                     Int8Type,
                                     IntType -> {
-                                        val leftPrecedence = intTypesPrecedence.indexOf(leftType.type.type)
-                                        val rightPrecedence = intTypesPrecedence.indexOf(rightType.type.type)
+                                        val leftPrecedence = intTypesPrecedence.indexOf(leftType.scalarType)
+                                        val rightPrecedence = intTypesPrecedence.indexOf(rightType.scalarType)
                                         when {
                                             leftPrecedence > rightPrecedence -> leftType
                                             else -> rightType
@@ -665,7 +660,7 @@ internal class StaticTypeInferenceVisitorTransform(
                                 else -> StaticType.MISSING
                             }
                         FloatType -> when (rightType) {
-                            is StaticScalarType -> when (rightType.type.type) {
+                            is StaticScalarType -> when (rightType.scalarType) {
                                 Int2Type,
                                 Int4Type,
                                 Int8Type,
@@ -677,7 +672,7 @@ internal class StaticTypeInferenceVisitorTransform(
                             else -> StaticType.MISSING
                         }
                         DecimalType -> when (rightType) {
-                            is StaticScalarType -> when (rightType.type.type) {
+                            is StaticScalarType -> when (rightType.scalarType) {
                                 Int2Type,
                                 Int4Type,
                                 Int8Type,
@@ -857,16 +852,16 @@ internal class StaticTypeInferenceVisitorTransform(
          * Computes the constraints for the string concatenation if all the arguments are [StringType], [CharType] or [VarcharType].
          */
         fun computeConstraintsForConcatStringType(args: List<SingleType>): SingleType {
-            require(args.all { it is StaticScalarType && (it.type.type in listOf(StringType, CharType, VarcharType)) }) { "Internal error: CONCAT only works on arguments of CHAR, VARCHAR or STRING type" }
+            require(args.all { it is StaticScalarType && (it.scalarType in listOf(StringType, CharType, VarcharType)) }) { "Internal error: CONCAT only works on arguments of CHAR, VARCHAR or STRING type" }
             if (args.size < 2) { error("Expected 2 or more operands for CONCAT") }
-            if (args.any { it is StaticScalarType && it.type.type === StringType }) { return StaticType.STRING }
+            if (args.any { it is StaticScalarType && it.scalarType === StringType }) { return StaticType.STRING }
 
-            val lengths: List<Int> = args.map { it.getLength() }
+            val lengths: List<Int> = args.map { (it as StaticScalarType).parameters[0]!! }
             val lengthSum = lengths.sumBy { it }
 
             return when {
-                args.all { it is StaticScalarType && it.type.type === CharType } -> StaticScalarType(CompileTimeCharType(lengthSum))
-                else -> StaticScalarType(CompileTimeVarcharType(lengthSum))
+                args.all { it is StaticScalarType && it.scalarType === CharType } -> StaticScalarType(CharType, listOf(lengthSum))
+                else -> StaticScalarType(VarcharType, listOf(lengthSum))
             }
         }
 
@@ -878,7 +873,7 @@ internal class StaticTypeInferenceVisitorTransform(
                 error("Expected 2 or more operands for $nAryOp")
             }
 
-            val stringArgTypes = args.filter { it is StaticScalarType && it.type.type in listOf(CharType, VarcharType, StringType) }
+            val stringArgTypes = args.filter { it is StaticScalarType && it.scalarType in listOf(CharType, VarcharType, StringType) }
             return when {
                 // If any one of the operands is missing, return MISSING. MISSING has precedence over NULL
                 args.any { it is MissingType } -> StaticType.MISSING
@@ -1204,7 +1199,7 @@ internal class StaticTypeInferenceVisitorTransform(
                 }
 
                 // if whenExpr can never be bool -> data type mismatch
-                else if (whenExprType.allTypes.none { it is StaticScalarType && it.type === CompileTimeBoolType }) {
+                else if (whenExprType.allTypes.none { it is StaticScalarType && it.scalarType === BoolType }) {
                     handleIncompatibleDataTypeForExprError(
                         expectedType = StaticType.BOOL,
                         actualType = whenExprType,
@@ -1518,7 +1513,7 @@ internal class StaticTypeInferenceVisitorTransform(
                 is SexpType -> {
                     val previous = previousComponentType as CollectionType // help Kotlin's type inference to be more specific
                     val staticType = currentPathComponent.index.getStaticType()
-                    if (staticType is StaticScalarType && (staticType.type.type in listOf(Int2Type, Int4Type, Int8Type, IntType))) {
+                    if (staticType is StaticScalarType && (staticType.scalarType in listOf(Int2Type, Int4Type, Int8Type, IntType))) {
                         previous.elementType
                     } else {
                         StaticType.MISSING

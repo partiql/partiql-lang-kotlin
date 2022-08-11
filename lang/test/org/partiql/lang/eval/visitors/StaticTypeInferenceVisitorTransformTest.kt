@@ -18,10 +18,10 @@ import org.partiql.lang.errors.ProblemSeverity
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.numberValue
-import org.partiql.lang.ots.plugins.standard.types.CompileTimeBoolType
-import org.partiql.lang.ots.plugins.standard.types.CompileTimeCharType
-import org.partiql.lang.ots.plugins.standard.types.CompileTimeVarcharType
+import org.partiql.lang.ots.plugins.standard.types.BoolType
+import org.partiql.lang.ots.plugins.standard.types.CharType
 import org.partiql.lang.ots.plugins.standard.types.DecimalType
+import org.partiql.lang.ots.plugins.standard.types.VarcharType
 import org.partiql.lang.types.AnyOfType
 import org.partiql.lang.types.BagType
 import org.partiql.lang.types.CollectionType
@@ -201,7 +201,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
         private val ALL_NON_NUMERIC_NON_UNKNOWN_TYPES = ALL_NON_UNKNOWN_TYPES.filter { !it.isNumeric() }
         private val ALL_TEXT_TYPES = ALL_NON_UNKNOWN_TYPES.filter { it.isText() }
         private val ALL_NON_TEXT_NON_UNKNOWN_TYPES = ALL_NON_UNKNOWN_TYPES.filter { !it.isText() }
-        private val ALL_NON_BOOL_NON_UNKNOWN_TYPES = ALL_NON_UNKNOWN_TYPES.filter { !(it is StaticScalarType && it.type === CompileTimeBoolType) }
+        private val ALL_NON_BOOL_NON_UNKNOWN_TYPES = ALL_NON_UNKNOWN_TYPES.filter { !(it is StaticScalarType && it.scalarType === BoolType) }
         private val ALL_LOB_TYPES = ALL_NON_UNKNOWN_TYPES.filter { it.isLob() }
         private val ALL_NON_LOB_NON_UNKNOWN_TYPES = ALL_NON_UNKNOWN_TYPES.filter { !it.isLob() }
         private val ALL_NON_COLLECTION_NON_UNKNOWN_TYPES = ALL_NON_UNKNOWN_TYPES.filter { it !is CollectionType }
@@ -1826,39 +1826,39 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
             ),
             createNAryConcatTest(
                 name = "constrained string equals, unconstrained string",
-                leftType = StaticScalarType(CompileTimeCharType(4)),
+                leftType = StaticScalarType(CharType, listOf(4)),
                 rightType = STRING,
                 expectedType = STRING
             ),
             createNAryConcatTest(
                 name = "constrained string up to, unconstrained string",
-                leftType = StaticScalarType(CompileTimeCharType(4)),
+                leftType = StaticScalarType(CharType, listOf(4)),
                 rightType = STRING,
                 expectedType = STRING
             ),
             createNAryConcatTest(
                 name = "constrained string equals 4, constrained string equals 6",
-                leftType = StaticScalarType(CompileTimeCharType(4)),
-                rightType = StaticScalarType(CompileTimeCharType(6)),
-                expectedType = StaticScalarType(CompileTimeCharType(10))
+                leftType = StaticScalarType(CharType, listOf(4)),
+                rightType = StaticScalarType(CharType, listOf(6)),
+                expectedType = StaticScalarType(CharType, listOf(10))
             ),
             createNAryConcatTest(
                 name = "constrained string equals 4, constrained string up to 6",
-                leftType = StaticScalarType(CompileTimeCharType(4)),
-                rightType = StaticScalarType(CompileTimeVarcharType(6)),
-                expectedType = StaticScalarType(CompileTimeVarcharType(10))
+                leftType = StaticScalarType(CharType, listOf(4)),
+                rightType = StaticScalarType(VarcharType, listOf(6)),
+                expectedType = StaticScalarType(VarcharType, listOf(10))
             ),
             createNAryConcatTest(
                 name = "constrained string up to 4, constrained string equals 6",
-                leftType = StaticScalarType(CompileTimeVarcharType(4)),
-                rightType = StaticScalarType(CompileTimeCharType(6)),
-                expectedType = StaticScalarType(CompileTimeVarcharType(10))
+                leftType = StaticScalarType(VarcharType, listOf(4)),
+                rightType = StaticScalarType(CharType, listOf(6)),
+                expectedType = StaticScalarType(VarcharType, listOf(10))
             ),
             createNAryConcatTest(
                 name = "constrained string up to 4, constrained string up to 6",
-                leftType = StaticScalarType(CompileTimeVarcharType(4)),
-                rightType = StaticScalarType(CompileTimeVarcharType(6)),
-                expectedType = StaticScalarType(CompileTimeVarcharType(10))
+                leftType = StaticScalarType(VarcharType, listOf(4)),
+                rightType = StaticScalarType(VarcharType, listOf(6)),
+                expectedType = StaticScalarType(VarcharType, listOf(10))
             ),
             createNAryConcatTest(
                 name = "ANY, ANY",
@@ -1926,13 +1926,13 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
             } + listOf(
             createNAryConcatDataTypeMismatchTest(
                 name = "null or missing error - constrained string, null",
-                leftType = StaticScalarType(CompileTimeCharType(2)),
+                leftType = StaticScalarType(CharType, listOf(2)),
                 rightType = NULL,
                 expectedProblems = listOf(createReturnsNullOrMissingError(col = 3, nAryOp = "||"))
             ),
             createNAryConcatDataTypeMismatchTest(
                 name = "null or missing error - constrained string, missing",
-                leftType = StaticScalarType(CompileTimeCharType(2)),
+                leftType = StaticScalarType(CharType, listOf(2)),
                 rightType = MISSING,
                 expectedProblems = listOf(createReturnsNullOrMissingError(col = 3, nAryOp = "||"))
             ),
@@ -1946,7 +1946,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
             singleNAryOpMismatchWithSwappedCases(
                 name = "data type mismatch - constrained string, int",
                 op = "||",
-                leftType = StaticScalarType(CompileTimeCharType(2)),
+                leftType = StaticScalarType(CharType, listOf(2)),
                 rightType = INT
             ) +
             singleNAryOpMismatchWithSwappedCases(
@@ -4713,25 +4713,25 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
                 name = "CAST to VARCHAR(x)",
                 originalSql = "CAST(a_string AS VARCHAR(10))",
                 globals = mapOf(
-                    "a_string" to StaticScalarType(CompileTimeCharType(10))
+                    "a_string" to StaticScalarType(CharType, listOf(10))
                 ),
-                handler = expectQueryOutputType(StaticScalarType(CompileTimeVarcharType(10)))
+                handler = expectQueryOutputType(StaticScalarType(VarcharType, listOf(10)))
             ),
             TestCase(
                 name = "CAST to CHAR",
                 originalSql = "CAST(a_string AS CHAR)",
                 globals = mapOf(
-                    "a_string" to StaticScalarType(CompileTimeCharType(1))
+                    "a_string" to StaticScalarType(CharType, listOf(1))
                 ),
-                handler = expectQueryOutputType(StaticScalarType(CompileTimeCharType(1)))
+                handler = expectQueryOutputType(StaticScalarType(CharType, listOf(1)))
             ),
             TestCase(
                 name = "CAST to CHAR(x)",
                 originalSql = "CAST(a_string AS CHAR(10))",
                 globals = mapOf(
-                    "a_string" to StaticScalarType(CompileTimeCharType(10))
+                    "a_string" to StaticScalarType(CharType, listOf(10))
                 ),
-                handler = expectQueryOutputType(StaticScalarType(CompileTimeCharType(10)))
+                handler = expectQueryOutputType(StaticScalarType(CharType, listOf(10)))
             ),
             TestCase(
                 name = "CAST to DECIMAL",
@@ -4746,7 +4746,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
                 handler = expectQueryOutputType(
                     unionOf(
                         MISSING,
-                        StaticScalarType(DecimalType.createType(listOf(10)))
+                        StaticScalarType(DecimalType, listOf(10, 0))
                     )
                 )
             ),
@@ -4757,7 +4757,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
                 handler = expectQueryOutputType(
                     unionOf(
                         MISSING,
-                        StaticScalarType(DecimalType.createType(listOf(10, 2)))
+                        StaticScalarType(DecimalType, listOf(10, 2))
                     )
                 )
             ),
@@ -4768,7 +4768,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
                 handler = expectQueryOutputType(
                     unionOf(
                         MISSING,
-                        StaticScalarType(DecimalType.createType(listOf(10, 2)))
+                        StaticScalarType(DecimalType, listOf(10, 2))
                     )
                 )
             ),

@@ -7,14 +7,6 @@ import org.partiql.lang.ots.plugins.standard.types.BlobType
 import org.partiql.lang.ots.plugins.standard.types.BoolType
 import org.partiql.lang.ots.plugins.standard.types.CharType
 import org.partiql.lang.ots.plugins.standard.types.ClobType
-import org.partiql.lang.ots.plugins.standard.types.CompileTimeCharType
-import org.partiql.lang.ots.plugins.standard.types.CompileTimeDecimalType
-import org.partiql.lang.ots.plugins.standard.types.CompileTimeInt2Type
-import org.partiql.lang.ots.plugins.standard.types.CompileTimeInt4Type
-import org.partiql.lang.ots.plugins.standard.types.CompileTimeInt8Type
-import org.partiql.lang.ots.plugins.standard.types.CompileTimeIntType
-import org.partiql.lang.ots.plugins.standard.types.CompileTimeStringType
-import org.partiql.lang.ots.plugins.standard.types.CompileTimeVarcharType
 import org.partiql.lang.ots.plugins.standard.types.DateType
 import org.partiql.lang.ots.plugins.standard.types.DecimalType
 import org.partiql.lang.ots.plugins.standard.types.FloatType
@@ -263,17 +255,17 @@ class IonSchemaMapper(private val staticType: StaticType) {
         } ?: listOf()
 
         return when (this) {
-            is StaticScalarType -> when (type) {
-                is CompileTimeStringType -> emptyList()
-                is CompileTimeCharType -> {
+            is StaticScalarType -> when (scalarType) {
+                is StringType -> emptyList()
+                is CharType -> {
                     constraintsFromISL = constraintsFromISL.filterNot { it is IonSchemaModel.Constraint.CodepointLength }
                     listOf(
                         IonSchemaModel.build {
-                            codepointLength(equalsNumber(ionInt(type.length.toLong())))
+                            codepointLength(equalsNumber(ionInt(parameters[0]!!.toLong())))
                         }
                     )
                 }
-                is CompileTimeVarcharType -> {
+                is VarcharType -> {
                     constraintsFromISL = constraintsFromISL.filterNot { it is IonSchemaModel.Constraint.CodepointLength }
                     listOf(
                         IonSchemaModel.build {
@@ -281,21 +273,21 @@ class IonSchemaMapper(private val staticType: StaticType) {
                                 equalsRange(
                                     numberRange(
                                         inclusive(ionInt(0)),
-                                        inclusive(ionInt(type.length.toLong()))
+                                        inclusive(ionInt(parameters[0]!!.toLong()))
                                     )
                                 )
                             )
                         }
                     )
                 }
-                is CompileTimeIntType -> emptyList()
-                is CompileTimeInt2Type,
-                is CompileTimeInt4Type,
-                is CompileTimeInt8Type -> {
-                    val validRange = when (type) {
-                        is CompileTimeInt2Type -> CompileTimeInt2Type.validRange
-                        is CompileTimeInt4Type -> CompileTimeInt4Type.validRange
-                        is CompileTimeInt8Type -> CompileTimeInt8Type.validRange
+                is IntType -> emptyList()
+                is Int2Type,
+                is Int4Type,
+                is Int8Type -> {
+                    val validRange = when (scalarType) {
+                        is Int2Type -> Int2Type.validRange
+                        is Int4Type -> Int4Type.validRange
+                        is Int8Type -> Int8Type.validRange
                         else -> error("Unreachable code")
                     }
                     constraintsFromISL = constraintsFromISL.filterNot { it is IonSchemaModel.Constraint.ValidValues }
@@ -314,7 +306,7 @@ class IonSchemaMapper(private val staticType: StaticType) {
                         }
                     )
                 }
-                is CompileTimeDecimalType -> when (type.precision) {
+                is DecimalType -> when (val precision = parameters[0]) {
                     null -> listOf()
                     else -> {
                         constraintsFromISL = constraintsFromISL.filterNot {
@@ -325,11 +317,11 @@ class IonSchemaMapper(private val staticType: StaticType) {
                             // precision if value is 1. Otherwise (for positive values) maps to inclusive range of
                             // 1 to value.
                             when {
-                                type.precision < 1 -> error("Precision must be a positive integer")
-                                type.precision == 1 -> IonSchemaModel.build { precision(equalsNumber(ionInt(1))) }
-                                else -> IonSchemaModel.build { precision(equalsRange(numberRange(inclusive(ionInt(1)), inclusive(ionInt(type.precision.toLong()))))) }
+                                precision < 1 -> error("Precision must be a positive integer")
+                                precision == 1 -> IonSchemaModel.build { precision(equalsNumber(ionInt(1))) }
+                                else -> IonSchemaModel.build { precision(equalsRange(numberRange(inclusive(ionInt(1)), inclusive(ionInt(precision.toLong()))))) }
                             },
-                            IonSchemaModel.build { scale(equalsNumber(ionInt(type.scale.toLong()))) }
+                            IonSchemaModel.build { scale(equalsNumber(ionInt(parameters[1]!!.toLong()))) }
                         )
                     }
                 }
@@ -541,7 +533,7 @@ private fun StaticType.visit(accumulator: TypeDefMap): TypeDefMap {
  * Note that "missing" and "bag" are not valid ISL 1.0 core types but are added here for completeness
  */
 fun StaticType.getBaseTypeName(): String = when (this) {
-    is StaticScalarType -> when (type.type) {
+    is StaticScalarType -> when (scalarType) {
         CharType,
         VarcharType,
         StringType -> "string"
@@ -557,8 +549,8 @@ fun StaticType.getBaseTypeName(): String = when (this) {
         BoolType -> "bool"
         TimeStampType -> "timestamp"
         DateType -> "date"
-        TimeType -> type.toString()
-        else -> error("Unsupported type: $type")
+        is TimeType -> scalarType.toString()
+        else -> error("Unsupported type: $scalarType")
     }
     is AnyType -> "any"
     is ListType -> "list"
