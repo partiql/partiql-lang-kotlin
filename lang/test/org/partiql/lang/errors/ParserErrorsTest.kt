@@ -988,7 +988,19 @@ class ParserErrorsTest : SqlParserTestBase() {
                 Property.COLUMN_NUMBER to 30L,
                 Property.TOKEN_TYPE to TokenType.LITERAL,
                 Property.TOKEN_VALUE to ion.newInt(-1)
-            )
+            ),
+            targetParsers = setOf(ParserTypes.SQL_PARSER)
+        )
+        checkInputThrowingParserException(
+            "SELECT a FROM data GROUP BY -1", // looks duplicate
+            ErrorCode.PARSE_UNSUPPORTED_LITERALS_GROUPBY,
+            mapOf(
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 29L,
+                Property.TOKEN_TYPE to TokenType.OPERATOR,
+                Property.TOKEN_VALUE to ion.newSymbol("-")
+            ),
+            targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
         )
     }
 
