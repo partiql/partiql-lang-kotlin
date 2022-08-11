@@ -15,6 +15,7 @@
 package org.partiql.lang.visitors
 
 import com.amazon.ion.IonSystem
+import com.amazon.ion.IonValue
 import com.amazon.ionelement.api.MetaContainer
 import com.amazon.ionelement.api.StringElement
 import com.amazon.ionelement.api.SymbolElement
@@ -38,19 +39,32 @@ import org.partiql.lang.ast.LegacyLogicalNotMeta
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.metaContainerOf
+import org.partiql.lang.errors.ErrorCode
+import org.partiql.lang.errors.Property
+import org.partiql.lang.errors.PropertyValueMap
 import org.partiql.lang.eval.EvaluationException
 import org.partiql.lang.eval.time.MAX_PRECISION_FOR_TIME
 import org.partiql.lang.generated.PartiQLBaseVisitor
 import org.partiql.lang.generated.PartiQLParser
+import org.partiql.lang.generated.PartiQLTokens
+import org.partiql.lang.syntax.ALL_OPERATORS
+import org.partiql.lang.syntax.ALL_SINGLE_LEXEME_OPERATORS
 import org.partiql.lang.syntax.DATE_TIME_PART_KEYWORDS
+import org.partiql.lang.syntax.KEYWORDS
+import org.partiql.lang.syntax.MULTI_LEXEME_TOKEN_MAP
+import org.partiql.lang.syntax.ParserException
 import org.partiql.lang.syntax.PartiQLParser.ParseErrorListener.ParseException
 import org.partiql.lang.syntax.TRIM_SPECIFICATION_KEYWORDS
+import org.partiql.lang.syntax.TYPE_ALIASES
+import org.partiql.lang.syntax.TokenType
 import org.partiql.lang.types.CustomType
 import org.partiql.lang.util.bigDecimalOf
 import org.partiql.lang.util.getPrecisionFromTimeString
 import org.partiql.pig.runtime.SymbolPrimitive
 import org.partiql.pig.runtime.asPrimitive
+import java.lang.IndexOutOfBoundsException
 import java.math.BigInteger
+import java.time.LocalDate
 import java.time.LocalTime
 import java.time.OffsetTime
 import java.time.format.DateTimeFormatter
@@ -980,8 +994,15 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
 
     override fun visitLiteralDate(ctx: PartiQLParser.LiteralDateContext): PartiqlAst.PartiqlAstNode {
         val dateString = ctx.LITERAL_STRING().getStringValue()
-        val (year, month, day) = dateString.split("-")
-        return PartiqlAst.BUILDER().date(year.toLong(), month.toLong(), day.toLong(), ctx.DATE().getSourceMetaContainer())
+        try {
+            LocalDate.parse(dateString, DateTimeFormatter.ISO_LOCAL_DATE)
+            val (year, month, day) = dateString.split("-")
+            return PartiqlAst.BUILDER().date(year.toLong(), month.toLong(), day.toLong(), ctx.DATE().getSourceMetaContainer())
+        } catch (e: DateTimeParseException) {
+            throw ctx.LITERAL_STRING().err(e.localizedMessage, ErrorCode.PARSE_INVALID_DATE_STRING, cause = e)
+        } catch (e: IndexOutOfBoundsException) {
+            throw ctx.LITERAL_STRING().err(e.localizedMessage, ErrorCode.PARSE_INVALID_DATE_STRING, cause = e)
+        }
     }
 
     override fun visitLiteralTime(ctx: PartiQLParser.LiteralTimeContext): PartiqlAst.PartiqlAstNode {
@@ -1421,10 +1442,19 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
 
     private fun String.toInteger() = BigInteger(this, 10)
 
-    private fun String.toSymbol(): PartiqlAst.Expr.Lit {
-        val str = this
-        return PartiqlAst.build {
-            lit(ionSymbol(str))
+    internal fun TerminalNode?.err(message: String, errorCode: ErrorCode, errorContext: PropertyValueMap = PropertyValueMap(), cause: Throwable? = null) = when (this) {
+        null -> ParserException(errorCode = errorCode, errorContext = errorContext, cause = cause)
+        else -> this.symbol.err(message, errorCode, errorContext, cause)
+    }
+
+    internal fun Token?.err(message: String, errorCode: ErrorCode, errorContext: PropertyValueMap = PropertyValueMap(), cause: Throwable? = null) = when (this) {
+        null -> ParserException(errorCode = errorCode, errorContext = errorContext, cause = cause)
+        else -> {
+            errorContext[Property.LINE_NUMBER] = this.line.toLong()
+            errorContext[Property.COLUMN_NUMBER] = this.charPositionInLine.toLong() + 1
+            errorContext[Property.TOKEN_TYPE] = this.getPartiQLTokenType()
+            errorContext[Property.TOKEN_VALUE] = this.getIonValue()
+            ParserException(message, errorCode, errorContext, cause)
         }
     }
 
@@ -1433,6 +1463,85 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         val metas = this.getSourceMetaContainer()
         return PartiqlAst.build {
             lit(ionSymbol(str), metas)
+        }
+    }
+
+    /**
+     * Returns the corresponding PartiQL Token Type for the ANTLR Token
+     */
+    private fun Token.getPartiQLTokenType(): TokenType {
+        return when {
+            type == PartiQLTokens.PAREN_LEFT -> TokenType.LEFT_PAREN
+            type == PartiQLTokens.PAREN_RIGHT -> TokenType.RIGHT_PAREN
+            type == PartiQLTokens.ASTERISK -> TokenType.STAR
+            type == PartiQLTokens.BRACKET_LEFT -> TokenType.LEFT_BRACKET
+            type == PartiQLTokens.BRACKET_RIGHT -> TokenType.RIGHT_BRACKET
+            type == PartiQLTokens.ANGLE_DOUBLE_LEFT -> TokenType.LEFT_DOUBLE_ANGLE_BRACKET
+            type == PartiQLTokens.ANGLE_DOUBLE_RIGHT -> TokenType.RIGHT_DOUBLE_ANGLE_BRACKET
+            type == PartiQLTokens.BRACE_LEFT -> TokenType.LEFT_CURLY
+            type == PartiQLTokens.BRACE_RIGHT -> TokenType.RIGHT_CURLY
+            type == PartiQLTokens.COLON -> TokenType.COLON
+            type == PartiQLTokens.COLON_SEMI -> TokenType.SEMICOLON
+            type == PartiQLTokens.LAST -> TokenType.LAST
+            type == PartiQLTokens.FIRST -> TokenType.FIRST
+            type == PartiQLTokens.AS -> TokenType.AS
+            type == PartiQLTokens.AT -> TokenType.AT
+            type == PartiQLTokens.ASC -> TokenType.ASC
+            type == PartiQLTokens.DESC -> TokenType.DESC
+            type == PartiQLTokens.NULL -> TokenType.NULL
+            type == PartiQLTokens.NULLS -> TokenType.NULLS
+            type == PartiQLTokens.MISSING -> TokenType.MISSING
+            type == PartiQLTokens.COMMA -> TokenType.COMMA
+            type == PartiQLTokens.PERIOD -> TokenType.DOT
+            type == PartiQLTokens.QUESTION_MARK -> TokenType.QUESTION_MARK
+            type == PartiQLTokens.EOF -> TokenType.EOF
+            type == PartiQLTokens.FOR -> TokenType.FOR
+            type == PartiQLTokens.BY -> TokenType.BY
+            type == PartiQLTokens.ION_CLOSURE -> TokenType.ION_LITERAL
+            type == PartiQLTokens.LITERAL_STRING -> TokenType.LITERAL
+            type == PartiQLTokens.LITERAL_INTEGER -> TokenType.LITERAL
+            type == PartiQLTokens.LITERAL_DECIMAL -> TokenType.LITERAL
+            type == PartiQLTokens.IDENTIFIER_QUOTED -> TokenType.QUOTED_IDENTIFIER
+            type == PartiQLTokens.TRUE -> TokenType.LITERAL
+            type == PartiQLTokens.FALSE -> TokenType.LITERAL
+            ALL_SINGLE_LEXEME_OPERATORS.contains(text.toLowerCase()) -> TokenType.OPERATOR
+            type == PartiQLTokens.IDENTIFIER -> TokenType.IDENTIFIER
+            type == PartiQLTokens.IDENTIFIER_QUOTED -> TokenType.QUOTED_IDENTIFIER
+            ALL_OPERATORS.contains(text.toLowerCase()) -> TokenType.OPERATOR
+            MULTI_LEXEME_TOKEN_MAP.containsKey(text.toLowerCase().split("\\s+".toRegex())) -> {
+                val pair = MULTI_LEXEME_TOKEN_MAP[text.toLowerCase().split("\\s+".toRegex())]!!
+                pair.second
+            }
+            KEYWORDS.contains(text.toLowerCase()) -> TokenType.KEYWORD
+            else -> TokenType.IDENTIFIER
+        }
+    }
+
+    /**
+     * Returns the corresponding [IonValue] for a particular ANTLR Token
+     */
+    private fun Token.getIonValue(): IonValue {
+        return when {
+            ALL_OPERATORS.contains(text.toLowerCase()) -> ion.newSymbol(text.toLowerCase())
+            type == PartiQLTokens.ION_CLOSURE -> ion.singleValue(text.trimStart('`').trimEnd('`'))
+            type == PartiQLTokens.TRUE -> ion.newBool(true)
+            type == PartiQLTokens.FALSE -> ion.newBool(false)
+            type == PartiQLTokens.NULL -> ion.newNull()
+            type == PartiQLTokens.MISSING -> ion.newNull()
+            type == PartiQLTokens.LITERAL_STRING -> ion.newString(text.trim('\'').replace("''", "'"))
+            type == PartiQLTokens.LITERAL_INTEGER -> ion.newInt(BigInteger(text, 10))
+            type == PartiQLTokens.LITERAL_DECIMAL -> try {
+                ion.newDecimal(bigDecimalOf(text))
+            } catch (e: NumberFormatException) {
+                throw this.err(e.localizedMessage, ErrorCode.PARSE_EXPECTED_NUMBER, cause = e)
+            }
+            type == PartiQLTokens.IDENTIFIER_QUOTED -> ion.newSymbol(text.trim('\"').replace("\"\"", "\""))
+            MULTI_LEXEME_TOKEN_MAP.containsKey(text.toLowerCase().split("\\s+".toRegex())) -> {
+                val pair = MULTI_LEXEME_TOKEN_MAP[text.toLowerCase().split("\\s+".toRegex())]!!
+                ion.newSymbol(pair.first)
+            }
+            KEYWORDS.contains(text.toLowerCase()) -> ion.newSymbol(TYPE_ALIASES[text.toLowerCase()] ?: text.toLowerCase())
+            else -> ion.newSymbol(text)
         }
     }
 }
