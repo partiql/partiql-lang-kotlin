@@ -432,7 +432,12 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
      */
     override fun visitGroupKey(ctx: PartiQLParser.GroupKeyContext): PartiqlAst.GroupKey {
         val expr = visit(ctx.expr()) as PartiqlAst.Expr
-        if (expr is PartiqlAst.Expr.Lit || expr is PartiqlAst.Expr.LitTime || expr is PartiqlAst.Expr.Date) {
+        val possibleLiteral = when (expr) {
+            is PartiqlAst.Expr.Pos -> expr.expr
+            is PartiqlAst.Expr.Neg -> expr.expr
+            else -> expr
+        }
+        if (possibleLiteral is PartiqlAst.Expr.Lit || possibleLiteral is PartiqlAst.Expr.LitTime || possibleLiteral is PartiqlAst.Expr.Date) {
             throw ctx.expr().getStart().err(
                 "Literals (including ordinals) not supported in GROUP BY",
                 ErrorCode.PARSE_UNSUPPORTED_LITERALS_GROUPBY
