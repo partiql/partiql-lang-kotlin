@@ -834,7 +834,7 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
 
     override fun visitDateFunction(ctx: PartiQLParser.DateFunctionContext): PartiqlAst.Expr.Call {
         if (!DATE_TIME_PART_KEYWORDS.contains(ctx.dt.text.toLowerCase())) {
-            throw ParserException("Expected one of: $DATE_TIME_PART_KEYWORDS", ErrorCode.PARSE_INVALID_QUERY)
+            throw ctx.dt.err("Expected one of: $DATE_TIME_PART_KEYWORDS", ErrorCode.PARSE_EXPECTED_DATE_TIME_PART)
         }
         val datetimePart = PartiqlAst.Expr.Lit(ion.newSymbol(ctx.dt.text).toIonElement())
         val secondaryArgs = visitOrEmpty(PartiqlAst.Expr::class, ctx.expr())

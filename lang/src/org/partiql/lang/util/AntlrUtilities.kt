@@ -120,6 +120,7 @@ internal fun getIonValue(ion: IonSystem, token: Token): IonValue {
     val type = token.type
     val text = token.text
     return when {
+        type == PartiQLTokens.EOF -> ion.newSymbol("EOF")
         ALL_OPERATORS.contains(text.toLowerCase()) -> ion.newSymbol(text.toLowerCase())
         type == PartiQLTokens.ION_CLOSURE -> ion.singleValue(text.trimStart('`').trimEnd('`'))
         type == PartiQLTokens.TRUE -> ion.newBool(true)
