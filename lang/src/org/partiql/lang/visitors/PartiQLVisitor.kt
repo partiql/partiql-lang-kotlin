@@ -55,14 +55,12 @@ import org.partiql.lang.syntax.DATE_TIME_PART_KEYWORDS
 import org.partiql.lang.syntax.KEYWORDS
 import org.partiql.lang.syntax.MULTI_LEXEME_TOKEN_MAP
 import org.partiql.lang.syntax.ParserException
-import org.partiql.lang.syntax.PartiQLParser.ParseErrorListener.ParseException
 import org.partiql.lang.syntax.TRIM_SPECIFICATION_KEYWORDS
 import org.partiql.lang.syntax.TYPE_ALIASES
 import org.partiql.lang.syntax.TokenType
 import org.partiql.lang.types.CustomType
 import org.partiql.lang.util.DATE_PATTERN_REGEX
 import org.partiql.lang.util.bigDecimalOf
-import org.partiql.lang.util.err
 import org.partiql.lang.util.getPrecisionFromTimeString
 import org.partiql.pig.runtime.SymbolPrimitive
 import java.lang.IndexOutOfBoundsException
@@ -163,7 +161,7 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         return when (command) {
             is PartiqlAst.DmlOpList -> command.ops
             is PartiqlAst.DmlOp -> listOf(command)
-            else -> throw ParseException("Unable to grab DML operation.")
+            else -> throw ParserException("Unable to grab DML operation.", ErrorCode.PARSE_INVALID_QUERY)
         }
     }
 
@@ -222,7 +220,7 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
             status.type == PartiQLParser.MODIFIED && age.type == PartiQLParser.OLD -> modifiedOld()
             status.type == PartiQLParser.ALL && age.type == PartiQLParser.NEW -> allNew()
             status.type == PartiQLParser.ALL && age.type == PartiQLParser.OLD -> allOld()
-            else -> throw ParseException("Unable to get return mapping.")
+            else -> throw ParserException("Unable to get return mapping.", ErrorCode.PARSE_INVALID_QUERY)
         }
     }
 
@@ -307,7 +305,7 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         is PartiQLParser.SelectItemsContext -> this.SELECT().getSourceMetaContainer()
         is PartiQLParser.SelectValueContext -> this.SELECT().getSourceMetaContainer()
         is PartiQLParser.SelectPivotContext -> this.PIVOT().getSourceMetaContainer()
-        else -> throw ParseException("Unknown meta location.")
+        else -> throw ParserException("Unknown meta location.", ErrorCode.PARSE_INVALID_QUERY)
     }
 
     private fun TerminalNode?.getSourceMetaContainer(): MetaContainer {
@@ -522,11 +520,11 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
                 when {
                     ctx.ident == null -> selectorAny(metas)
                     ctx.ident.text.toLowerCase() == "shortest" -> selectorAnyShortest(metas)
-                    else -> throw ParseException("Unsupported modifier after ANY")
+                    else -> throw ParserException("Unsupported modifier after ANY", ErrorCode.PARSE_INVALID_QUERY)
                 }
             }
             PartiQLParser.ALL -> selectorAllShortest(metas)
-            else -> throw ParseException("Unsupported match selector.")
+            else -> throw ParserException("Unsupported match selector.", ErrorCode.PARSE_INVALID_QUERY)
         }
     }
 
@@ -584,7 +582,7 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         when (val pattern = visitPartsNested(ctx.partsNested())) {
             is PartiqlAst.GraphMatchPattern -> parts += pattern.parts
             is PartiqlAst.GraphMatchPatternPart -> parts.add(pattern)
-            else -> throw ParseException("Unrecognized nested structure.")
+            else -> throw ParserException("Unrecognized nested structure.", ErrorCode.PARSE_INVALID_QUERY)
         }
         pattern(graphMatchPattern(parts = parts, variable = variable, restrictor = restrictor, quantifier = quantifier, prefilter = prefilter))
     }
@@ -653,7 +651,7 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
             ctx.MINUS() != null && ctx.ANGLE_LEFT() != null -> edgeLeft()
             ctx.MINUS() != null && ctx.ANGLE_RIGHT() != null -> edgeRight()
             ctx.MINUS() != null -> edgeLeftOrUndirectedOrRight()
-            else -> throw ParseException("Unsupported edge type")
+            else -> throw ParserException("Unsupported edge type", ErrorCode.PARSE_INVALID_QUERY)
         }
     }
 
@@ -662,7 +660,7 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
             ctx.quant == null -> graphMatchQuantifier(ctx.lower.text.toLong(), ctx.upper?.text?.toLong())
             ctx.quant.type == PartiQLParser.PLUS -> graphMatchQuantifier(1L)
             ctx.quant.type == PartiQLParser.ASTERISK -> graphMatchQuantifier(0L)
-            else -> throw ParseException("Unsupported quantifier")
+            else -> throw ParserException("Unsupported quantifier", ErrorCode.PARSE_INVALID_QUERY)
         }
     }
 
@@ -679,7 +677,7 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
             "trail" -> restrictorTrail(metas)
             "acyclic" -> restrictorAcyclic(metas)
             "simple" -> restrictorSimple(metas)
-            else -> throw ParseException("Unrecognized pattern restrictor")
+            else -> throw ParserException("Unrecognized pattern restrictor", ErrorCode.PARSE_INVALID_QUERY)
         }
     }
 
@@ -774,7 +772,7 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
 
     override fun visitParameter(ctx: PartiQLParser.ParameterContext): PartiqlAst.PartiqlAstNode {
         val parameterIndex = parameterIndexes[ctx.QUESTION_MARK().symbol.tokenIndex]
-            ?: throw ParseException("Unable to find index of parameter.")
+            ?: throw ParserException("Unable to find index of parameter.", ErrorCode.PARSE_INVALID_QUERY)
         return PartiqlAst.build { parameter(parameterIndex.toLong(), ctx.QUESTION_MARK().getSourceMetaContainer()) }
     }
 
@@ -785,7 +783,7 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
             when (ctx.datatype.type) {
                 PartiQLParser.LIST -> list(expressions, metas)
                 PartiQLParser.SEXP -> sexp(expressions, metas)
-                else -> throw ParseException("Unknown sequence")
+                else -> throw ParserException("Unknown sequence", ErrorCode.PARSE_INVALID_QUERY)
             }
         }
     }
@@ -802,7 +800,7 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
 
     override fun visitExtract(ctx: PartiQLParser.ExtractContext): PartiqlAst.Expr.Call {
         if (!DATE_TIME_PART_KEYWORDS.contains(ctx.IDENTIFIER().text.toLowerCase())) {
-            throw ParseException("Expected one of: $DATE_TIME_PART_KEYWORDS")
+            throw ParserException("Expected one of: $DATE_TIME_PART_KEYWORDS", ErrorCode.PARSE_INVALID_QUERY)
         }
         val datetimePart = PartiqlAst.Expr.Lit(ion.newSymbol(ctx.IDENTIFIER().text).toIonElement())
         val timeExpr = visit(ctx.rhs) as PartiqlAst.Expr
@@ -830,7 +828,7 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
             }
             ctx.mod != null && ctx.sub != null -> {
                 if (isTrimSpec) ctx.mod.toSymbol() to visitExpr(ctx.sub)
-                else throw ParseException("Expected one of: $TRIM_SPECIFICATION_KEYWORDS")
+                else throw ParserException("Expected one of: $TRIM_SPECIFICATION_KEYWORDS", ErrorCode.PARSE_INVALID_QUERY)
             }
             else -> null to null
         }
@@ -843,7 +841,7 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
 
     override fun visitDateFunction(ctx: PartiQLParser.DateFunctionContext): PartiqlAst.Expr.Call {
         if (!DATE_TIME_PART_KEYWORDS.contains(ctx.dt.text.toLowerCase())) {
-            throw ParseException("Expected one of: $DATE_TIME_PART_KEYWORDS")
+            throw ParserException("Expected one of: $DATE_TIME_PART_KEYWORDS", ErrorCode.PARSE_INVALID_QUERY)
         }
         val datetimePart = PartiqlAst.Expr.Lit(ion.newSymbol(ctx.dt.text).toIonElement())
         val secondaryArgs = visitOrEmpty(PartiqlAst.Expr::class, ctx.expr())
@@ -870,7 +868,7 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         when (ctx.ident.type) {
             PartiQLParser.IDENTIFIER_QUOTED -> id(ctx.IDENTIFIER_QUOTED().getStringValue(), caseSensitive(), unqualified(), metas)
             PartiQLParser.IDENTIFIER -> id(ctx.IDENTIFIER().getStringValue(), caseInsensitive(), unqualified(), metas)
-            else -> throw ParseException("Invalid symbol reference.")
+            else -> throw ParserException("Invalid symbol reference.", ErrorCode.PARSE_INVALID_QUERY)
         }
     }
 
@@ -905,7 +903,7 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
                 PartiQLParser.GT_EQ -> gte(args, metas)
                 PartiQLParser.NEQ -> ne(args, metas)
                 PartiQLParser.EQ -> eq(args, metas)
-                else -> throw ParseException("Unknown binary operator")
+                else -> throw ParserException("Unknown binary operator", ErrorCode.PARSE_INVALID_QUERY)
             }
         }
     }
@@ -919,7 +917,7 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
                 PartiQLParser.PLUS -> pos(arg, metas)
                 PartiQLParser.MINUS -> neg(arg, metas)
                 PartiQLParser.NOT -> not(arg, metas)
-                else -> throw ParseException("Unknown unary operator")
+                else -> throw ParserException("Unknown unary operator", ErrorCode.PARSE_INVALID_QUERY)
             }
         }
     }
@@ -1028,21 +1026,21 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
             null -> try {
                 getPrecisionFromTimeString(timeString).toLong()
             } catch (e: EvaluationException) {
-                throw ParseException(
+                throw ParserException(
                     "Unable to parse precision.",
-                    e
+                    ErrorCode.PARSE_INVALID_QUERY, cause = e
                 )
             }
             else -> ctx.LITERAL_INTEGER().text.toInteger().toLong()
         }
         if (precision < 0 || precision > MAX_PRECISION_FOR_TIME) {
-            throw ParseException("Precision out of bounds")
+            throw ParserException("Precision out of bounds", ErrorCode.PARSE_INVALID_QUERY)
         }
         val time: LocalTime
         try {
             time = LocalTime.parse(timeString, DateTimeFormatter.ISO_TIME)
         } catch (e: DateTimeParseException) {
-            throw ParseException("Unable to parse time", e)
+            throw ParserException("Unable to parse time", ErrorCode.PARSE_INVALID_QUERY, cause = e)
         }
         return PartiqlAst.build {
             litTime(
@@ -1061,15 +1059,15 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
             null -> try {
                 getPrecisionFromTimeString(timeString).toLong()
             } catch (e: EvaluationException) {
-                throw ParseException(
-                    "Unable to parse precision.",
-                    e
+                throw ParserException(
+                    "Unable to parse precision.", ErrorCode.PARSE_INVALID_QUERY,
+                    cause = e
                 )
             }
             else -> ctx.LITERAL_INTEGER().text.toInteger().toLong()
         }
         if (precision < 0 || precision > MAX_PRECISION_FOR_TIME) {
-            throw ParseException("Precision out of bounds")
+            throw ParserException("Precision out of bounds", ErrorCode.PARSE_INVALID_QUERY)
         }
         try {
             val time: OffsetTime
@@ -1085,7 +1083,7 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
             try {
                 time = LocalTime.parse(timeString)
             } catch (e: DateTimeParseException) {
-                throw ParseException("Unable to parse time", e)
+                throw ParserException("Unable to parse time", ErrorCode.PARSE_INVALID_QUERY, cause = e)
             }
             return PartiqlAst.build {
                 litTime(
@@ -1184,7 +1182,7 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
             PartiQLParser.LIST -> sexpType(metas)
             PartiQLParser.BAG -> bagType(metas)
             PartiQLParser.ANY -> anyType(metas)
-            else -> throw ParseException("Unsupported type.")
+            else -> throw ParserException("Unsupported type.", ErrorCode.PARSE_INVALID_QUERY)
         }
     }
 
@@ -1250,7 +1248,7 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
     private fun PartiQLParser.SymbolPrimitiveContext.getSourceMetaContainer() = when (this.ident.type) {
         PartiQLParser.IDENTIFIER -> this.IDENTIFIER().getSourceMetaContainer()
         PartiQLParser.IDENTIFIER_QUOTED -> this.IDENTIFIER_QUOTED().getSourceMetaContainer()
-        else -> throw ParseException("Unable to get identifier's source meta-container.")
+        else -> throw ParserException("Unable to get identifier's source meta-container.", ErrorCode.PARSE_INVALID_QUERY)
     }
 
     override fun visitFunctionCallReserved(ctx: PartiQLParser.FunctionCallReservedContext) = PartiqlAst.build {
@@ -1323,10 +1321,10 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
                 is SymbolElement -> this.value.symbolValue.toLowerCase()
                 is StringElement -> this.value.stringValue.toLowerCase()
                 else ->
-                    this.value.stringValueOrNull ?: throw ParseException("Unable to pass the string value")
+                    this.value.stringValueOrNull ?: throw ParserException("Unable to pass the string value", ErrorCode.PARSE_INVALID_QUERY)
             }
         }
-        else -> throw ParseException("Unable to get value")
+        else -> throw ParserException("Unable to get value", ErrorCode.PARSE_INVALID_QUERY)
     }
 
     private fun PartiqlAst.Expr.Id.toIdentifier(): PartiqlAst.Identifier {
@@ -1367,12 +1365,12 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
 
             // Only last step can have a '.*'
             if (step is PartiqlAst.PathStep.PathUnpivot && index != path.steps.lastIndex) {
-                throw ParseException("Projection item cannot unpivot unless at end.")
+                throw ParserException("Projection item cannot unpivot unless at end.", ErrorCode.PARSE_INVALID_QUERY)
             }
 
             // No step can have an indexed wildcard: '[*]'
             if (step is PartiqlAst.PathStep.PathWildcard) {
-                throw ParseException("Projection item cannot index using wildcard.")
+                throw ParserException("Projection item cannot index using wildcard.", ErrorCode.PARSE_INVALID_QUERY)
             }
 
             // If the last step is '.*', no indexing is allowed
@@ -1386,7 +1384,7 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         }
 
         if (path.steps.last() is PartiqlAst.PathStep.PathUnpivot && containsIndex) {
-            throw ParseException("Projection item use wildcard with any indexing.")
+            throw ParserException("Projection item use wildcard with any indexing.", ErrorCode.PARSE_INVALID_QUERY)
         }
 
         return PartiqlAst.build {
@@ -1412,7 +1410,7 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         PartiQLParser.IDENTIFIER_QUOTED -> this.text.removePrefix("\"").removeSuffix("\"").replace("\"\"", "\"")
         PartiQLParser.LITERAL_STRING -> this.text.removePrefix("'").removeSuffix("'").replace("''", "'")
         PartiQLParser.ION_CLOSURE -> this.text.removePrefix("`").removeSuffix("`")
-        else -> throw ParseException("Unsupported token for grabbing string value.")
+        else -> throw ParserException("Unsupported token for grabbing string value.", ErrorCode.PARSE_INVALID_QUERY)
     }
 
     private fun getStrategy(strategy: PartiQLParser.SetQuantifierStrategyContext?, default: PartiqlAst.SetQuantifier): PartiqlAst.SetQuantifier {
@@ -1446,7 +1444,7 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         return when {
             this.IDENTIFIER_QUOTED() != null -> this.IDENTIFIER_QUOTED().getStringValue()
             this.IDENTIFIER() != null -> this.IDENTIFIER().text
-            else -> throw ParseException("Unable to get symbol's text.")
+            else -> throw ParserException("Unable to get symbol's text.", ErrorCode.PARSE_INVALID_QUERY)
         }
     }
 
@@ -1454,7 +1452,7 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         when {
             ctx.IDENTIFIER_QUOTED() != null -> pathExpr(lit(ionString(ctx.IDENTIFIER_QUOTED().getStringValue())), caseSensitive())
             ctx.IDENTIFIER() != null -> pathExpr(lit(ionString(ctx.IDENTIFIER().text)), caseInsensitive())
-            else -> throw ParseException("Unable to get symbol's text.")
+            else -> throw ParserException("Unable to get symbol's text.", ErrorCode.PARSE_INVALID_QUERY)
         }
     }
 
@@ -1487,7 +1485,7 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
     /**
      * Returns the corresponding PartiQL Token Type for the ANTLR Token
      */
-    private fun Token.getPartiQLTokenType(): TokenType {
+    fun Token.getPartiQLTokenType(): TokenType {
         return when {
             type == PartiQLTokens.PAREN_LEFT -> TokenType.LEFT_PAREN
             type == PartiQLTokens.PAREN_RIGHT -> TokenType.RIGHT_PAREN
@@ -1538,7 +1536,7 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
     /**
      * Returns the corresponding [IonValue] for a particular ANTLR Token
      */
-    private fun Token.getIonValue(): IonValue {
+    internal fun Token.getIonValue(): IonValue {
         return when {
             ALL_OPERATORS.contains(text.toLowerCase()) -> ion.newSymbol(text.toLowerCase())
             type == PartiQLTokens.ION_CLOSURE -> ion.singleValue(text.trimStart('`').trimEnd('`'))

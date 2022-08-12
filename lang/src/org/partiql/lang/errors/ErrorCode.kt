@@ -107,6 +107,12 @@ enum class ErrorCode(
             getTokenString(errorContext)
     },
 
+    PARSE_INVALID_QUERY(
+        ErrorCategory.PARSER,
+        LOCATION,
+        "Invalid query syntax"
+    ),
+
     PARSE_MALFORMED_PARSE_TREE(
         ErrorCategory.PARSER,
         LOC_TOKEN,
