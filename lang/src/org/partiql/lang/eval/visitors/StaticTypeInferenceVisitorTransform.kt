@@ -14,7 +14,6 @@ import org.partiql.lang.ast.passes.SemanticException
 import org.partiql.lang.ast.passes.SemanticProblemDetails
 import org.partiql.lang.ast.passes.inference.cast
 import org.partiql.lang.ast.passes.inference.filterNullMissing
-import org.partiql.lang.ast.passes.inference.getLength
 import org.partiql.lang.ast.passes.inference.intTypesPrecedence
 import org.partiql.lang.ast.passes.inference.isLob
 import org.partiql.lang.ast.passes.inference.isNullOrMissing
@@ -35,30 +34,31 @@ import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.builtins.createBuiltinFunctionSignatures
 import org.partiql.lang.eval.delegate
 import org.partiql.lang.eval.getStartingSourceLocationMeta
+import org.partiql.lang.ots.plugins.standard.types.BoolType
+import org.partiql.lang.ots.plugins.standard.types.CharType
+import org.partiql.lang.ots.plugins.standard.types.DecimalType
+import org.partiql.lang.ots.plugins.standard.types.FloatType
+import org.partiql.lang.ots.plugins.standard.types.Int2Type
+import org.partiql.lang.ots.plugins.standard.types.Int4Type
+import org.partiql.lang.ots.plugins.standard.types.Int8Type
+import org.partiql.lang.ots.plugins.standard.types.IntType
+import org.partiql.lang.ots.plugins.standard.types.StringType
+import org.partiql.lang.ots.plugins.standard.types.VarcharType
 import org.partiql.lang.types.AnyOfType
 import org.partiql.lang.types.AnyType
 import org.partiql.lang.types.BagType
-import org.partiql.lang.types.BoolType
-import org.partiql.lang.types.CharType
 import org.partiql.lang.types.CollectionType
-import org.partiql.lang.types.DecimalType
-import org.partiql.lang.types.FloatType
 import org.partiql.lang.types.FunctionSignature
-import org.partiql.lang.types.Int2Type
-import org.partiql.lang.types.Int4Type
-import org.partiql.lang.types.Int8Type
-import org.partiql.lang.types.IntType
 import org.partiql.lang.types.ListType
 import org.partiql.lang.types.MissingType
 import org.partiql.lang.types.NullType
 import org.partiql.lang.types.SexpType
 import org.partiql.lang.types.SingleType
+import org.partiql.lang.types.StaticScalarType
 import org.partiql.lang.types.StaticType
-import org.partiql.lang.types.StringType
 import org.partiql.lang.types.StructType
 import org.partiql.lang.types.TypedOpParameter
 import org.partiql.lang.types.UnknownArguments
-import org.partiql.lang.types.VarcharType
 import org.partiql.lang.types.toTypedOpParameter
 import org.partiql.lang.util.cartesianProduct
 import org.partiql.pig.runtime.SymbolPrimitive
@@ -435,7 +435,7 @@ internal class StaticTypeInferenceVisitorTransform(
         override fun transformExprNot(node: PartiqlAst.Expr.Not): PartiqlAst.Expr {
             val nAry = super.transformExprNot(node) as PartiqlAst.Expr.Not
             val args = listOf(nAry.expr)
-            return if (hasValidOperandTypes(args, { it is BoolType }, "NOT", nAry.metas)) {
+            return if (hasValidOperandTypes(args, { it is StaticScalarType && it.scalarType === BoolType }, "NOT", nAry.metas)) {
             transformNAry(nAry, args) { recurseForNAryOperations(nAry, it, ::getTypeForNAryLogicalOperations) }
         } else {
                 nAry.withStaticType(StaticType.BOOL)
@@ -444,7 +444,7 @@ internal class StaticTypeInferenceVisitorTransform(
 
         override fun transformExprAnd(node: PartiqlAst.Expr.And): PartiqlAst.Expr {
             val nAry = super.transformExprAnd(node) as PartiqlAst.Expr.And
-            return if (hasValidOperandTypes(nAry.operands, { it is BoolType }, "AND", nAry.metas)) {
+            return if (hasValidOperandTypes(nAry.operands, { it is StaticScalarType && it.scalarType === BoolType }, "AND", nAry.metas)) {
             transformNAry(nAry, nAry.operands) { recurseForNAryOperations(nAry, it, ::getTypeForNAryLogicalOperations) }
         } else {
                 nAry.withStaticType(StaticType.BOOL)
@@ -453,7 +453,7 @@ internal class StaticTypeInferenceVisitorTransform(
 
         override fun transformExprOr(node: PartiqlAst.Expr.Or): PartiqlAst.Expr {
             val nAry = super.transformExprOr(node) as PartiqlAst.Expr.Or
-            return if (hasValidOperandTypes(nAry.operands, { it is BoolType }, "OR", nAry.metas)) {
+            return if (hasValidOperandTypes(nAry.operands, { it is StaticScalarType && it.scalarType === BoolType }, "OR", nAry.metas)) {
             transformNAry(nAry, nAry.operands) { recurseForNAryOperations(nAry, it, ::getTypeForNAryLogicalOperations) }
         } else {
                 nAry.withStaticType(StaticType.BOOL)
@@ -692,6 +692,11 @@ internal class StaticTypeInferenceVisitorTransform(
             val possibleReturnTypes = allTypes.map { st ->
                 when {
                     st.isNumeric() -> st
+                    st is StaticScalarType -> when (st.scalarType) {
+                        FloatType,
+                        DecimalType -> st
+                        else -> StaticType.MISSING
+                    }
                     st is NullType -> StaticType.NULL
                     else -> StaticType.MISSING
                 }
@@ -752,46 +757,56 @@ internal class StaticTypeInferenceVisitorTransform(
                 leftType is MissingType || rightType is MissingType -> StaticType.MISSING
                 leftType is NullType || rightType is NullType -> StaticType.NULL
                 else -> when (leftType) {
-                    is Int2Type,
-                    is Int4Type,
-                    is Int8Type,
-                    is IntType ->
-                        when (rightType) {
-                            is Int2Type,
-                            is Int4Type,
-                            is Int8Type,
-                            is IntType -> {
-                                val leftPrecedence = intTypesPrecedence.indexOf(leftType::class)
-                                val rightPrecedence = intTypesPrecedence.indexOf(rightType::class)
-                                when {
-                                    leftPrecedence > rightPrecedence -> leftType as SingleType
-                                    else -> rightType as SingleType
+                    is StaticScalarType -> when (leftType.scalarType) {
+                        Int2Type,
+                        Int4Type,
+                        Int8Type,
+                        IntType ->
+                            when (rightType) {
+                                is StaticScalarType -> when (rightType.scalarType) {
+                                    Int2Type,
+                                    Int4Type,
+                                    Int8Type,
+                                    IntType -> {
+                                        val leftPrecedence = intTypesPrecedence.indexOf(leftType.scalarType)
+                                        val rightPrecedence = intTypesPrecedence.indexOf(rightType.scalarType)
+                                        when {
+                                            leftPrecedence > rightPrecedence -> leftType
+                                            else -> rightType
+                                        }
+                                    }
+                                    FloatType -> StaticType.FLOAT
+                                    DecimalType -> StaticType.DECIMAL // TODO:  account for decimal precision
+                                    else -> StaticType.MISSING
                                 }
+                                else -> StaticType.MISSING
                             }
-                            is FloatType -> StaticType.FLOAT
-                            is DecimalType -> StaticType.DECIMAL // TODO:  account for decimal precision
+                        FloatType -> when (rightType) {
+                            is StaticScalarType -> when (rightType.scalarType) {
+                                Int2Type,
+                                Int4Type,
+                                Int8Type,
+                                IntType -> StaticType.FLOAT
+                                DecimalType -> StaticType.DECIMAL // TODO:  account for decimal precision
+                                FloatType -> StaticType.FLOAT
+                                else -> StaticType.MISSING
+                            }
                             else -> StaticType.MISSING
                         }
-                    is FloatType ->
-                        when (rightType) {
-                            is Int2Type,
-                            is Int4Type,
-                            is Int8Type,
-                            is IntType -> StaticType.FLOAT
-                            is FloatType -> StaticType.FLOAT
-                            is DecimalType -> StaticType.DECIMAL // TODO:  account for decimal precision
+                        DecimalType -> when (rightType) {
+                            is StaticScalarType -> when (rightType.scalarType) {
+                                Int2Type,
+                                Int4Type,
+                                Int8Type,
+                                IntType -> StaticType.DECIMAL // TODO:  account for decimal precision
+                                FloatType -> StaticType.DECIMAL // TODO:  account for decimal precision
+                                DecimalType -> StaticType.DECIMAL // TODO:  account for decimal precision
+                                else -> StaticType.MISSING
+                            }
                             else -> StaticType.MISSING
                         }
-                    is DecimalType ->
-                        when (rightType) {
-                            is Int2Type,
-                            is Int4Type,
-                            is Int8Type,
-                            is IntType -> StaticType.DECIMAL // TODO:  account for decimal precision
-                            is FloatType -> StaticType.DECIMAL // TODO:  account for decimal precision
-                            is DecimalType -> StaticType.DECIMAL // TODO:  account for decimal precision
-                            else -> StaticType.MISSING
-                        }
+                        else -> StaticType.MISSING
+                    }
                     else -> StaticType.MISSING
                 }
             }
@@ -959,16 +974,16 @@ internal class StaticTypeInferenceVisitorTransform(
          * Computes the constraints for the string concatenation if all the arguments are [StringType], [CharType] or [VarcharType].
          */
         fun computeConstraintsForConcatStringType(args: List<SingleType>): SingleType {
-            require(args.all { it is StringType || it is CharType || it is VarcharType }) { "Internal error: CONCAT only works on arguments of CHAR, VARCHAR or STRING type" }
+            require(args.all { it is StaticScalarType && (it.scalarType in listOf(StringType, CharType, VarcharType)) }) { "Internal error: CONCAT only works on arguments of CHAR, VARCHAR or STRING type" }
             if (args.size < 2) { error("Expected 2 or more operands for CONCAT") }
-            if (args.any { it is StringType }) { return StaticType.STRING }
+            if (args.any { it is StaticScalarType && it.scalarType === StringType }) { return StaticType.STRING }
 
-            val lengths: List<Int> = args.map { it.getLength() }
+            val lengths: List<Int> = args.map { (it as StaticScalarType).parameters[0]!! }
             val lengthSum = lengths.sumBy { it }
 
             return when {
-                args.all { it is CharType } -> CharType(lengthSum)
-                else -> VarcharType(lengthSum)
+                args.all { it is StaticScalarType && it.scalarType === CharType } -> StaticScalarType(CharType, listOf(lengthSum))
+                else -> StaticScalarType(VarcharType, listOf(lengthSum))
             }
         }
 
@@ -980,7 +995,7 @@ internal class StaticTypeInferenceVisitorTransform(
                 error("Expected 2 or more operands for $nAryOp")
             }
 
-            val stringArgTypes = args.filter { it is CharType || it is VarcharType || it is StringType }
+            val stringArgTypes = args.filter { it is StaticScalarType && it.scalarType in listOf(CharType, VarcharType, StringType) }
             return when {
                 // If any one of the operands is missing, return MISSING. MISSING has precedence over NULL
                 args.any { it is MissingType } -> StaticType.MISSING
@@ -1312,7 +1327,7 @@ internal class StaticTypeInferenceVisitorTransform(
                 }
 
                 // if whenExpr can never be bool -> data type mismatch
-                else if (whenExprType.allTypes.none { it is BoolType }) {
+                else if (whenExprType.allTypes.none { it is StaticScalarType && it.scalarType === BoolType }) {
                     handleIncompatibleDataTypeForExprError(
                         expectedType = StaticType.BOOL,
                         actualType = whenExprType,
@@ -1626,7 +1641,7 @@ internal class StaticTypeInferenceVisitorTransform(
                 is SexpType -> {
                     val previous = previousComponentType as CollectionType // help Kotlin's type inference to be more specific
                     val staticType = currentPathComponent.index.getStaticType()
-                    if (staticType is Int2Type || staticType is Int4Type || staticType is Int8Type || staticType is IntType) {
+                    if (staticType is StaticScalarType && (staticType.scalarType in listOf(Int2Type, Int4Type, Int8Type, IntType))) {
                         previous.elementType
                     } else {
                         StaticType.MISSING
