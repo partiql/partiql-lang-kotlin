@@ -22,6 +22,7 @@ import org.antlr.v4.runtime.CommonTokenStream
 import org.antlr.v4.runtime.Lexer
 import org.antlr.v4.runtime.RecognitionException
 import org.antlr.v4.runtime.Recognizer
+import org.antlr.v4.runtime.Token
 import org.antlr.v4.runtime.misc.ParseCancellationException
 import org.antlr.v4.runtime.tree.ParseTree
 import org.partiql.lang.ast.ExprNode
@@ -30,8 +31,9 @@ import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.errors.PropertyValueMap
-import org.partiql.lang.syntax.PartiQLParser.ParseErrorListener.Companion.INSTANCE
 import org.partiql.lang.types.CustomType
+import org.partiql.lang.util.getIonValue
+import org.partiql.lang.util.getPartiQLTokenType
 import org.partiql.lang.visitors.PartiQLVisitor
 import java.nio.charset.StandardCharsets
 import org.partiql.lang.generated.PartiQLParser as GeneratedParser
@@ -90,7 +92,7 @@ class PartiQLParser(
         val tokens = CommonTokenStream(lexer)
         val parser = GeneratedParser(tokens)
         parser.removeErrorListeners()
-        parser.addErrorListener(INSTANCE)
+        parser.addErrorListener(ParseErrorListener(ion))
         return parser
     }
 
@@ -107,7 +109,7 @@ class PartiQLParser(
             org.partiql.lang.ast.AstVersion.V0, ion
         )
 
-    class ParseErrorListener : BaseErrorListener() {
+    class ParseErrorListener(val ion: IonSystem) : BaseErrorListener() {
         @Throws(ParseCancellationException::class)
         override fun syntaxError(
             recognizer: Recognizer<*, *>?,
@@ -120,11 +122,9 @@ class PartiQLParser(
             val propertyValues = PropertyValueMap()
             propertyValues[Property.LINE_NUMBER] = line.toLong()
             propertyValues[Property.COLUMN_NUMBER] = charPositionInLine.toLong() + 1
-            throw ParserException(message = msg, errorCode = ErrorCode.PARSE_INVALID_QUERY, errorContext = propertyValues, cause = e)
-        }
-
-        companion object {
-            val INSTANCE = ParseErrorListener()
+            propertyValues[Property.TOKEN_TYPE] = getPartiQLTokenType(offendingSymbol as Token)
+            propertyValues[Property.TOKEN_VALUE] = getIonValue(ion, offendingSymbol)
+            throw ParserException(message = msg, errorCode = ErrorCode.PARSE_UNEXPECTED_TOKEN, errorContext = propertyValues, cause = e)
         }
     }
 }
