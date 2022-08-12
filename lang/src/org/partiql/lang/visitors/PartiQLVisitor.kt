@@ -60,7 +60,9 @@ import org.partiql.lang.syntax.TRIM_SPECIFICATION_KEYWORDS
 import org.partiql.lang.syntax.TYPE_ALIASES
 import org.partiql.lang.syntax.TokenType
 import org.partiql.lang.types.CustomType
+import org.partiql.lang.util.DATE_PATTERN_REGEX
 import org.partiql.lang.util.bigDecimalOf
+import org.partiql.lang.util.err
 import org.partiql.lang.util.getPrecisionFromTimeString
 import org.partiql.pig.runtime.SymbolPrimitive
 import java.lang.IndexOutOfBoundsException
@@ -1006,6 +1008,9 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
 
     override fun visitLiteralDate(ctx: PartiQLParser.LiteralDateContext): PartiqlAst.PartiqlAstNode {
         val dateString = ctx.LITERAL_STRING().getStringValue()
+        if (DATE_PATTERN_REGEX.matches(dateString).not()) {
+            throw ctx.LITERAL_STRING().err("Expected DATE string to be of the format yyyy-MM-dd", ErrorCode.PARSE_INVALID_DATE_STRING)
+        }
         try {
             LocalDate.parse(dateString, DateTimeFormatter.ISO_LOCAL_DATE)
             val (year, month, day) = dateString.split("-")
