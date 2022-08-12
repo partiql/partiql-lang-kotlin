@@ -979,7 +979,7 @@ class SqlParserMatchTest : SqlParserTestBase() {
 
     @Test
     fun matchAndJoinCommas() {
-        assertFailsWith<PartiQLParser.ParseErrorListener.ParseException> {
+        assertFailsWith<ParserException> {
             assertExpressionNoRoundTrip(
                 "SELECT a,b,c, t1.x as x, t2.y as y FROM graph MATCH (a) -> (b), (a) -> (c), table1 as t1, table2 as t2",
             ) {

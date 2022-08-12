@@ -27,6 +27,9 @@ import org.antlr.v4.runtime.tree.ParseTree
 import org.partiql.lang.ast.ExprNode
 import org.partiql.lang.ast.toExprNode
 import org.partiql.lang.domains.PartiqlAst
+import org.partiql.lang.errors.ErrorCode
+import org.partiql.lang.errors.Property
+import org.partiql.lang.errors.PropertyValueMap
 import org.partiql.lang.syntax.PartiQLParser.ParseErrorListener.Companion.INSTANCE
 import org.partiql.lang.types.CustomType
 import org.partiql.lang.visitors.PartiQLVisitor
@@ -114,10 +117,12 @@ class PartiQLParser(
             msg: String,
             e: RecognitionException?
         ) {
-            throw ParseException(msg, e)
+            val propertyValues = PropertyValueMap()
+            propertyValues[Property.LINE_NUMBER] = line.toLong()
+            propertyValues[Property.COLUMN_NUMBER] = charPositionInLine.toLong() + 1
+            throw ParserException(message = msg, errorCode = ErrorCode.PARSE_INVALID_QUERY, errorContext = propertyValues, cause = e)
         }
 
-        class ParseException(msg: String, cause: Throwable? = null) : RuntimeException(msg, cause)
         companion object {
             val INSTANCE = ParseErrorListener()
         }
