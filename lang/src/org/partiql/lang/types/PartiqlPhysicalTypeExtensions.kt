@@ -1,6 +1,10 @@
 package org.partiql.lang.types
 
 import org.partiql.lang.domains.PartiqlPhysical
+import org.partiql.lang.ots.plugins.standard.types.CharType
+import org.partiql.lang.ots.plugins.standard.types.DecimalType
+import org.partiql.lang.ots.plugins.standard.types.TimeType
+import org.partiql.lang.ots.plugins.standard.types.VarcharType
 import org.partiql.lang.util.BuiltInScalarTypeId
 
 /**
@@ -21,30 +25,24 @@ fun PartiqlPhysical.Type.toTypedOpParameter(customTypedOpParameters: Map<String,
         BuiltInScalarTypeId.DECIMAL,
         BuiltInScalarTypeId.NUMERIC -> when (parameters.size) {
             0 -> TypedOpParameter(StaticType.DECIMAL)
-            1 -> TypedOpParameter(
-                DecimalType(
-                    DecimalType.PrecisionScaleConstraint.Constrained(parameters[0].value.toInt())
-                )
-            )
+            1 -> TypedOpParameter(StaticScalarType(DecimalType, listOf(parameters.first().value.toInt(), 0)))
             2 -> TypedOpParameter(
-                DecimalType(
-                    DecimalType.PrecisionScaleConstraint.Constrained(
-                        parameters[0].value.toInt(),
-                        parameters[1].value.toInt()
-                    )
+                StaticScalarType(
+                    DecimalType,
+                    parameters.map { it.value.toInt() }
                 )
             )
             else -> error("Internal Error: DECIMAL type must have at most 2 parameters during compiling")
         }
         BuiltInScalarTypeId.TIMESTAMP -> TypedOpParameter(StaticType.TIMESTAMP)
         BuiltInScalarTypeId.CHARACTER -> when (parameters.size) {
-            0 -> TypedOpParameter(CharType(1)) // TODO: See if we need to use unconstrained string instead
-            1 -> TypedOpParameter(CharType(parameters[0].value.toInt()))
+            0 -> TypedOpParameter(StaticScalarType(CharType, listOf(1))) // TODO: See if we need to use unconstrained string instead
+            1 -> TypedOpParameter(StaticScalarType(CharType, listOf(parameters[0].value.toInt())))
             else -> error("Internal Error: CHARACTER type must have 1 parameters during compiling")
         }
         BuiltInScalarTypeId.CHARACTER_VARYING -> when (parameters.size) {
             0 -> TypedOpParameter(StaticType.STRING)
-            1 -> TypedOpParameter(VarcharType(parameters[0].value.toInt()))
+            1 -> TypedOpParameter(StaticScalarType(VarcharType, listOf(parameters[0].value.toInt())))
             else -> error("Internal Error: CHARACTER_VARYING type must have 1 parameters during compiling")
         }
         BuiltInScalarTypeId.STRING -> TypedOpParameter(StaticType.STRING)
@@ -53,20 +51,21 @@ fun PartiqlPhysical.Type.toTypedOpParameter(customTypedOpParameters: Map<String,
         BuiltInScalarTypeId.BLOB -> TypedOpParameter(StaticType.BLOB)
         BuiltInScalarTypeId.DATE -> TypedOpParameter(StaticType.DATE)
         BuiltInScalarTypeId.TIME -> when (parameters.size) {
-            0 -> TypedOpParameter(TimeType())
-            1 -> TypedOpParameter(TimeType(parameters[0].value.toInt()))
+            0 -> TypedOpParameter(StaticScalarType(TimeType(), listOf(null)))
+            1 -> TypedOpParameter(StaticScalarType(TimeType(), parameters.map { it.value.toInt() }))
             else -> error("\"Internal Error: TIME type must have at most 1 parameters during compiling\"")
         }
         BuiltInScalarTypeId.TIME_WITH_TIME_ZONE -> when (parameters.size) {
             0 -> TypedOpParameter(
-                TimeType(
-                    withTimeZone = true
+                StaticScalarType(
+                    TimeType(true),
+                    listOf(null)
                 )
             )
             1 -> TypedOpParameter(
-                TimeType(
-                    precision = parameters[0].value.toInt(),
-                    withTimeZone = true
+                StaticScalarType(
+                    TimeType(true),
+                    listOf(parameters[0].value.toInt())
                 )
             )
             else -> error("Internal Error: TIME_WITH_TIME_ZONE type must have 1 parameters during compiling")

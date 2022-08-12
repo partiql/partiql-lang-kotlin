@@ -11,10 +11,24 @@ import org.partiql.lang.ast.passes.inference.isUnknown
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.name
-import org.partiql.lang.eval.numberValue
 import org.partiql.lang.eval.stringValue
 import org.partiql.lang.eval.timeValue
-import java.math.BigDecimal
+import org.partiql.lang.ots.interfaces.ScalarType
+import org.partiql.lang.ots.interfaces.TypeParameters
+import org.partiql.lang.ots.plugins.standard.types.BlobType
+import org.partiql.lang.ots.plugins.standard.types.BoolType
+import org.partiql.lang.ots.plugins.standard.types.ClobType
+import org.partiql.lang.ots.plugins.standard.types.DateType
+import org.partiql.lang.ots.plugins.standard.types.DecimalType
+import org.partiql.lang.ots.plugins.standard.types.FloatType
+import org.partiql.lang.ots.plugins.standard.types.Int2Type
+import org.partiql.lang.ots.plugins.standard.types.Int4Type
+import org.partiql.lang.ots.plugins.standard.types.Int8Type
+import org.partiql.lang.ots.plugins.standard.types.IntType
+import org.partiql.lang.ots.plugins.standard.types.StringType
+import org.partiql.lang.ots.plugins.standard.types.SymbolType
+import org.partiql.lang.ots.plugins.standard.types.TimeStampType
+import org.partiql.lang.ots.plugins.standard.types.TimeType
 
 /**
  * Represents static types available in the language and ways to extends them to create new types.
@@ -47,22 +61,22 @@ sealed class StaticType {
         @JvmField val NULL: NullType = NullType()
         @JvmField val ANY: AnyType = AnyType()
         @JvmField val NULL_OR_MISSING: StaticType = unionOf(NULL, MISSING)
-        @JvmField val BOOL: BoolType = BoolType()
-        @JvmField val INT2: Int2Type = Int2Type()
-        @JvmField val INT4: Int4Type = Int4Type()
-        @JvmField val INT8: Int8Type = Int8Type()
-        @JvmField val INT: IntType = IntType()
-        @JvmField val FLOAT: FloatType = FloatType()
-        @JvmField val DECIMAL: DecimalType = DecimalType()
+        @JvmField val INT2: StaticScalarType = StaticScalarType(Int2Type)
+        @JvmField val INT4: StaticScalarType = StaticScalarType(Int4Type)
+        @JvmField val INT8: StaticScalarType = StaticScalarType(Int8Type)
+        @JvmField val INT: StaticScalarType = StaticScalarType(IntType)
+        @JvmField val BOOL: StaticScalarType = StaticScalarType(BoolType)
+        @JvmField val FLOAT: StaticScalarType = StaticScalarType(FloatType)
+        @JvmField val DECIMAL: StaticScalarType = StaticScalarType(DecimalType, listOf(null, 0))
         @JvmField val NUMERIC: StaticType = unionOf(INT2, INT4, INT8, INT, FLOAT, DECIMAL)
-        @JvmField val DATE: DateType = DateType()
-        @JvmField val TIME: TimeType = TimeType()
-        @JvmField val TIMESTAMP: TimestampType = TimestampType()
-        @JvmField val SYMBOL: SymbolType = SymbolType()
-        @JvmField val STRING: StringType = StringType()
+        @JvmField val DATE: StaticScalarType = StaticScalarType(DateType)
+        @JvmField val TIME: StaticScalarType = StaticScalarType(TimeType(), listOf(null))
+        @JvmField val TIMESTAMP: StaticScalarType = StaticScalarType(TimeStampType)
+        @JvmField val SYMBOL: StaticScalarType = StaticScalarType(SymbolType)
+        @JvmField val STRING: StaticScalarType = StaticScalarType(StringType)
         @JvmField val TEXT: StaticType = unionOf(SYMBOL, STRING)
-        @JvmField val CLOB: ClobType = ClobType()
-        @JvmField val BLOB: BlobType = BlobType()
+        @JvmField val CLOB: StaticScalarType = StaticScalarType(ClobType)
+        @JvmField val BLOB: StaticScalarType = StaticScalarType(BlobType)
         @JvmField val LIST: ListType = ListType()
         @JvmField val SEXP: SexpType = SexpType()
         @JvmField val STRUCT: StructType = StructType()
@@ -95,7 +109,10 @@ sealed class StaticType {
             when (exprValue.type) {
                 ExprValueType.TIME -> {
                     val timeValue = exprValue.timeValue()
-                    TimeType(precision = timeValue.precision, withTimeZone = timeValue.zoneOffset != null)
+                    StaticScalarType(
+                        TimeType(timeValue.zoneOffset != null),
+                        listOf(timeValue.precision)
+                    )
                 }
                 else -> fromExprValueType(exprValue.type)
             }
@@ -193,24 +210,9 @@ sealed class StaticType {
             is BagType -> copy(metas = metas)
             is NullType -> copy(metas = metas)
             is MissingType -> MissingType
-            is BoolType -> copy(metas = metas)
-            is IntType -> copy(metas = metas)
-            is Int2Type -> copy(metas = metas)
-            is Int4Type -> copy(metas = metas)
-            is Int8Type -> copy(metas = metas)
-            is FloatType -> copy(metas = metas)
-            is DecimalType -> copy(metas = metas)
-            is TimestampType -> copy(metas = metas)
-            is SymbolType -> copy(metas = metas)
-            is StringType -> copy(metas = metas)
-            is VarcharType -> copy(metas = metas)
-            is CharType -> copy(metas = metas)
-            is BlobType -> copy(metas = metas)
-            is ClobType -> copy(metas = metas)
             is StructType -> copy(metas = metas)
             is AnyOfType -> copy(metas = metas)
-            is DateType -> copy(metas = metas)
-            is TimeType -> copy(metas = metas)
+            is StaticScalarType -> copy(metas = metas)
         }
 
     /**
@@ -368,289 +370,6 @@ object MissingType : SingleType() {
         get() = listOf(this)
 
     override fun toString(): String = "missing"
-}
-
-data class BoolType(override val metas: Map<String, Any> = mapOf()) : SingleType() {
-    override val runtimeType: ExprValueType
-        get() = ExprValueType.BOOL
-
-    override val allTypes: List<StaticType>
-        get() = listOf(this)
-
-    override fun toString(): String = "bool"
-}
-
-data class Int2Type(override val metas: Map<String, Any> = mapOf()) : SingleType() {
-    companion object {
-        @JvmField
-        val validRange = Short.MIN_VALUE.toLong()..Short.MAX_VALUE.toLong()
-    }
-
-    override val runtimeType: ExprValueType
-        get() = ExprValueType.INT
-
-    override val allTypes: List<StaticType>
-        get() = listOf(this)
-
-    override fun toString(): String = "int2"
-
-    override fun isInstance(value: ExprValue): Boolean {
-        if (value.type != ExprValueType.INT) {
-            return false
-        }
-
-        val longValue = value.numberValue().toLong()
-
-        return validRange.contains(longValue)
-    }
-}
-
-data class Int4Type(override val metas: Map<String, Any> = mapOf()) : SingleType() {
-    companion object {
-        @JvmField
-        val validRange = Int.MIN_VALUE.toLong()..Int.MAX_VALUE.toLong()
-    }
-
-    override val runtimeType: ExprValueType
-        get() = ExprValueType.INT
-
-    override val allTypes: List<StaticType>
-        get() = listOf(this)
-
-    override fun toString(): String = "int4"
-
-    override fun isInstance(value: ExprValue): Boolean {
-        if (value.type != ExprValueType.INT) {
-            return false
-        }
-
-        val longValue = value.numberValue().toLong()
-
-        return validRange.contains(longValue)
-    }
-}
-
-data class Int8Type(override val metas: Map<String, Any> = mapOf()) : SingleType() {
-    companion object {
-        @JvmField
-        val validRange = Long.MIN_VALUE..Long.MAX_VALUE
-    }
-
-    override val runtimeType: ExprValueType
-        get() = ExprValueType.INT
-
-    override val allTypes: List<StaticType>
-        get() = listOf(this)
-
-    override fun toString(): String = "int8"
-
-    override fun isInstance(value: ExprValue): Boolean {
-        if (value.type != ExprValueType.INT) {
-            return false
-        }
-
-        val longValue = value.numberValue().toLong()
-
-        return validRange.contains(longValue)
-    }
-}
-
-data class IntType(override val metas: Map<String, Any> = mapOf()) : SingleType() {
-    companion object {
-        /**
-         * An "unconstrained" integer with an implementation-defined constraint that happens to be 8 bytes for this implementation.
-         */
-        @JvmField
-        val validRange = Long.MIN_VALUE..Long.MAX_VALUE
-    }
-
-    override val runtimeType: ExprValueType
-        get() = ExprValueType.INT
-
-    override val allTypes: List<StaticType>
-        get() = listOf(this)
-
-    override fun toString(): String = "int"
-
-    override fun isInstance(value: ExprValue): Boolean {
-        if (value.type != ExprValueType.INT) {
-            return false
-        }
-
-        val longValue = value.numberValue().toLong()
-
-        return validRange.contains(longValue)
-    }
-}
-
-data class FloatType(override val metas: Map<String, Any> = mapOf()) : SingleType() {
-    override val runtimeType: ExprValueType
-        get() = ExprValueType.FLOAT
-
-    override val allTypes: List<StaticType>
-        get() = listOf(this)
-
-    override fun toString(): String = "float"
-}
-
-data class DecimalType(
-    val precisionScaleConstraint: PrecisionScaleConstraint = PrecisionScaleConstraint.Unconstrained,
-    override val metas: Map<String, Any> = mapOf()
-) : SingleType() {
-
-    sealed class PrecisionScaleConstraint {
-        abstract fun matches(d: BigDecimal): Boolean
-
-        // TODO: Do we need unconstrained precision and scale? What's our limit?
-        object Unconstrained : PrecisionScaleConstraint() {
-            override fun matches(d: BigDecimal): Boolean = true
-        }
-
-        data class Constrained(val precision: Int, val scale: Int = 0) : PrecisionScaleConstraint() {
-            override fun matches(d: BigDecimal): Boolean {
-                val dv = d.stripTrailingZeros()
-
-                val integerDigits = dv.precision() - dv.scale()
-                val expectedIntegerDigits = precision - scale
-                return integerDigits <= expectedIntegerDigits && dv.scale() <= scale
-            }
-        }
-    }
-
-    override val runtimeType: ExprValueType
-        get() = ExprValueType.DECIMAL
-
-    override val allTypes: List<StaticType>
-        get() = listOf(this)
-
-    override fun toString(): String = "decimal"
-
-    override fun isInstance(value: ExprValue): Boolean =
-        when (value.type) {
-            ExprValueType.DECIMAL -> precisionScaleConstraint.matches(value.scalar.numberValue() as BigDecimal)
-            else -> false
-        }
-}
-
-data class DateType(override val metas: Map<String, Any> = mapOf()) : SingleType() {
-    override val runtimeType: ExprValueType
-        get() = ExprValueType.DATE
-
-    override val allTypes: List<StaticType>
-        get() = listOf(this)
-
-    override fun toString(): String = "date"
-}
-
-data class TimeType(
-    val precision: Int? = null,
-    val withTimeZone: Boolean = false,
-    override val metas: Map<String, Any> = mapOf()
-) : SingleType() {
-    override val runtimeType: ExprValueType
-        get() = ExprValueType.TIME
-
-    override val allTypes: List<StaticType>
-        get() = listOf(this)
-
-    override fun toString(): String = when (withTimeZone) {
-        true -> "time with time zone"
-        false -> "time"
-    }
-}
-
-data class TimestampType(override val metas: Map<String, Any> = mapOf()) : SingleType() {
-    override val runtimeType: ExprValueType
-        get() = ExprValueType.TIMESTAMP
-
-    override val allTypes: List<StaticType>
-        get() = listOf(this)
-
-    override fun toString(): String = "timestamp"
-}
-
-data class SymbolType(override val metas: Map<String, Any> = mapOf()) : SingleType() {
-    override val runtimeType: ExprValueType
-        get() = ExprValueType.SYMBOL
-
-    override val allTypes: List<StaticType>
-        get() = listOf(this)
-
-    override fun toString(): String = "symbol"
-}
-
-data class VarcharType(val length: Int, override val metas: Map<String, Any> = mapOf()) : SingleType() {
-    override val runtimeType: ExprValueType
-        get() = ExprValueType.STRING
-
-    override val allTypes: List<StaticType>
-        get() = listOf(this)
-
-    override fun toString(): String = "character_varying"
-
-    override fun isInstance(value: ExprValue): Boolean =
-        when (value.type) {
-            ExprValueType.STRING -> {
-                val str = value.scalar.stringValue()!!
-                length >= str.codePointCount(0, str.length)
-            }
-            else -> false
-        }
-}
-
-data class CharType(val length: Int, override val metas: Map<String, Any> = mapOf()) : SingleType() {
-    override val runtimeType: ExprValueType
-        get() = ExprValueType.STRING
-
-    override val allTypes: List<StaticType>
-        get() = listOf(this)
-
-    override fun toString(): String = "character"
-
-    override fun isInstance(value: ExprValue): Boolean =
-        when (value.type) {
-            ExprValueType.STRING -> {
-                val str = value.scalar.stringValue()!!
-                length == str.codePointCount(0, str.length)
-            }
-            else -> false
-        }
-}
-
-data class StringType(override val metas: Map<String, Any> = mapOf()) : SingleType() {
-    override val runtimeType: ExprValueType
-        get() = ExprValueType.STRING
-
-    override val allTypes: List<StaticType>
-        get() = listOf(this)
-
-    override fun toString(): String = "string"
-
-    override fun isInstance(value: ExprValue): Boolean =
-        when (value.type) {
-            ExprValueType.STRING -> true
-            else -> false
-        }
-}
-
-data class BlobType(override val metas: Map<String, Any> = mapOf()) : SingleType() {
-    override val runtimeType: ExprValueType
-        get() = ExprValueType.BLOB
-
-    override val allTypes: List<StaticType>
-        get() = listOf(this)
-
-    override fun toString(): String = "blob"
-}
-
-data class ClobType(override val metas: Map<String, Any> = mapOf()) : SingleType() {
-    override val runtimeType: ExprValueType
-        get() = ExprValueType.CLOB
-
-    override val allTypes: List<StaticType>
-        get() = listOf(this)
-
-    override fun toString(): String = "clob"
 }
 
 /**
@@ -860,4 +579,21 @@ data class AnyOfType(val types: Set<StaticType>, override val metas: Map<String,
         }
         return false
     }
+}
+
+data class StaticScalarType(
+    val scalarType: ScalarType,
+    val parameters: TypeParameters = emptyList(),
+    override val metas: Map<String, Any> = mapOf()
+) : SingleType() {
+
+    override val runtimeType: ExprValueType
+        get() = scalarType.runTimeType
+
+    override val allTypes: List<StaticType>
+        get() = listOf(this)
+
+    override fun toString(): String = scalarType.id
+
+    override fun isInstance(value: ExprValue): Boolean = scalarType.validateValue(value, parameters)
 }

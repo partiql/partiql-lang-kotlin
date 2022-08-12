@@ -80,15 +80,16 @@ import org.partiql.lang.eval.syntheticColumnName
 import org.partiql.lang.eval.time.Time
 import org.partiql.lang.eval.unnamedValue
 import org.partiql.lang.eval.visitors.PartiqlPhysicalSanityValidator
+import org.partiql.lang.ots.plugins.standard.types.Int2Type
+import org.partiql.lang.ots.plugins.standard.types.Int4Type
+import org.partiql.lang.ots.plugins.standard.types.Int8Type
+import org.partiql.lang.ots.plugins.standard.types.IntType
 import org.partiql.lang.planner.EvaluatorOptions
 import org.partiql.lang.types.AnyOfType
 import org.partiql.lang.types.AnyType
 import org.partiql.lang.types.FunctionSignature
-import org.partiql.lang.types.Int2Type
-import org.partiql.lang.types.Int4Type
-import org.partiql.lang.types.Int8Type
-import org.partiql.lang.types.IntType
 import org.partiql.lang.types.SingleType
+import org.partiql.lang.types.StaticScalarType
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.types.TypedOpParameter
 import org.partiql.lang.types.UnknownArguments
@@ -382,7 +383,7 @@ internal class PhysicalExprToThunkConverterImpl(
                         // throw an exception in case we encounter this untested scenario. This might work fine, but I
                         // wouldn't bet on it.
                         val hasConstrainedInteger = staticTypes.any {
-                            it is Int2Type || it is Int4Type || it is Int8Type
+                            it is StaticScalarType && (it.scalarType in listOf(Int2Type, Int4Type, Int8Type))
                         }
                         if (hasConstrainedInteger) {
                             TODO("Legacy mode doesn't support integer size constraints yet.")
@@ -394,10 +395,10 @@ internal class PhysicalExprToThunkConverterImpl(
                         val validRange: LongRange? = when {
                             // An "unconstrained" integer with an implementation-defined constraint
                             // that happens to be 8 bytes for this implementation.
-                            staticTypes.any { it is IntType } -> Long.MIN_VALUE..Long.MAX_VALUE
-                            staticTypes.any { it is Int8Type } -> Long.MIN_VALUE..Long.MAX_VALUE
-                            staticTypes.any { it is Int4Type } -> Int.MIN_VALUE.toLong()..Int.MAX_VALUE.toLong()
-                            staticTypes.any { it is Int2Type } -> Short.MIN_VALUE.toLong()..Short.MAX_VALUE.toLong()
+                            staticTypes.any { it is StaticScalarType && it.scalarType is IntType } -> Long.MIN_VALUE..Long.MAX_VALUE
+                            staticTypes.any { it is StaticScalarType && it.scalarType is Int8Type } -> Long.MIN_VALUE..Long.MAX_VALUE
+                            staticTypes.any { it is StaticScalarType && it.scalarType is Int4Type } -> Int.MIN_VALUE.toLong()..Int.MAX_VALUE.toLong()
+                            staticTypes.any { it is StaticScalarType && it.scalarType is Int2Type } -> Short.MIN_VALUE.toLong()..Short.MAX_VALUE.toLong()
                             else -> null
                         }
                         when {

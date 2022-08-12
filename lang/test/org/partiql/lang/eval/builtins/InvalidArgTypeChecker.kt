@@ -4,30 +4,31 @@ import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.eval.EvaluatorTestBase
 import org.partiql.lang.eval.expectedArgTypeErrorMsg
+import org.partiql.lang.ots.plugins.standard.types.BlobType
+import org.partiql.lang.ots.plugins.standard.types.BoolType
+import org.partiql.lang.ots.plugins.standard.types.CharType
+import org.partiql.lang.ots.plugins.standard.types.ClobType
+import org.partiql.lang.ots.plugins.standard.types.DateType
+import org.partiql.lang.ots.plugins.standard.types.DecimalType
+import org.partiql.lang.ots.plugins.standard.types.FloatType
+import org.partiql.lang.ots.plugins.standard.types.Int2Type
+import org.partiql.lang.ots.plugins.standard.types.Int4Type
+import org.partiql.lang.ots.plugins.standard.types.Int8Type
+import org.partiql.lang.ots.plugins.standard.types.IntType
+import org.partiql.lang.ots.plugins.standard.types.StringType
+import org.partiql.lang.ots.plugins.standard.types.SymbolType
+import org.partiql.lang.ots.plugins.standard.types.TimeStampType
+import org.partiql.lang.ots.plugins.standard.types.TimeType
+import org.partiql.lang.ots.plugins.standard.types.VarcharType
 import org.partiql.lang.types.BagType
-import org.partiql.lang.types.BlobType
-import org.partiql.lang.types.BoolType
-import org.partiql.lang.types.CharType
-import org.partiql.lang.types.ClobType
-import org.partiql.lang.types.DateType
-import org.partiql.lang.types.DecimalType
-import org.partiql.lang.types.FloatType
-import org.partiql.lang.types.Int2Type
-import org.partiql.lang.types.Int4Type
-import org.partiql.lang.types.Int8Type
-import org.partiql.lang.types.IntType
 import org.partiql.lang.types.ListType
 import org.partiql.lang.types.MissingType
 import org.partiql.lang.types.NullType
 import org.partiql.lang.types.SexpType
 import org.partiql.lang.types.SingleType
+import org.partiql.lang.types.StaticScalarType
 import org.partiql.lang.types.StaticType
-import org.partiql.lang.types.StringType
 import org.partiql.lang.types.StructType
-import org.partiql.lang.types.SymbolType
-import org.partiql.lang.types.TimeType
-import org.partiql.lang.types.TimestampType
-import org.partiql.lang.types.VarcharType
 import org.partiql.lang.util.propertyValueMapOf
 import java.lang.StringBuilder
 
@@ -44,22 +45,25 @@ data class Argument(
 )
 
 private fun SingleType.getExample() = when (this) {
-    is BoolType -> "TRUE"
-    is Int2Type,
-    is Int4Type,
-    is Int8Type,
-    is IntType -> "0"
-    is FloatType -> "`0e0`"
-    is DecimalType -> "0."
-    is DateType -> "DATE '2012-12-12'"
-    is TimestampType -> "`2017T`"
-    is TimeType -> "TIME '23:12:59.128'"
-    is SymbolType -> "`a`"
-    is CharType,
-    is VarcharType,
-    is StringType -> "'a'"
-    is ClobType -> "`{{ \"HelloWorld\" }}`"
-    is BlobType -> "`{{ aGVsbG8= }}`"
+    is StaticScalarType -> when (scalarType) {
+        is CharType,
+        is VarcharType,
+        is StringType -> "'a'"
+        is SymbolType -> "`a`"
+        is Int2Type,
+        is Int4Type,
+        is Int8Type,
+        is IntType -> "0"
+        is DecimalType -> "0."
+        is FloatType -> "`0e0`"
+        is BlobType -> "`{{ aGVsbG8= }}`"
+        is ClobType -> "`{{ \"HelloWorld\" }}`"
+        is BoolType -> "TRUE"
+        is TimeStampType -> "`2017T`"
+        is DateType -> "DATE '2012-12-12'"
+        is TimeType -> "TIME '23:12:59.128'"
+        else -> error("Unrecognized type: $scalarType")
+    }
     is ListType -> "[]"
     is SexpType -> "sexp()"
     is StructType -> "{}"

@@ -5,7 +5,6 @@ import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestCase
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestTarget
 import org.partiql.lang.eval.visitors.StaticTypeInferenceVisitorTransform
-import org.partiql.lang.types.IntType
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.util.ArgumentsProviderBase
 
