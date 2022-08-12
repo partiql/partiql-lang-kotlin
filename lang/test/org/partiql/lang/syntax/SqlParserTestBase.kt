@@ -246,9 +246,6 @@ abstract class SqlParserTestBase : TestBase() {
                     fail("Expected ParserException but there was no Exception")
                 } catch (pex: ParserException) {
                     checkErrorAndErrorContext(errorCode, pex, expectErrorContextValues)
-                } catch (ignore: PartiQLParser.ParseErrorListener.ParseException) {
-                    // TODO: Check the error location and more
-                    // Ignore
                 } catch (ex: Exception) {
                     fail("Expected ParserException but a different exception was thrown \n\t  $ex")
                 }
