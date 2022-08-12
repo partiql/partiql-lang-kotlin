@@ -1712,7 +1712,19 @@ class ParserErrorsTest : SqlParserTestBase() {
                 Property.KEYWORD to "FROM",
                 Property.TOKEN_TYPE to TokenType.IDENTIFIER,
                 Property.TOKEN_VALUE to ion.newSymbol("b")
-            )
+            ),
+            targetParsers = setOf(ParserTypes.SQL_PARSER)
+        )
+        checkInputThrowingParserException(
+            "extract(year b)",
+            ErrorCode.PARSE_UNEXPECTED_TOKEN,
+            mapOf(
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 14L,
+                Property.TOKEN_TYPE to TokenType.IDENTIFIER,
+                Property.TOKEN_VALUE to ion.newSymbol("b")
+            ),
+            targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
         )
     }
 
@@ -1727,7 +1739,19 @@ class ParserErrorsTest : SqlParserTestBase() {
                 Property.KEYWORD to "FROM",
                 Property.TOKEN_TYPE to TokenType.COMMA,
                 Property.TOKEN_VALUE to ion.newSymbol(",")
-            )
+            ),
+            targetParsers = setOf(ParserTypes.SQL_PARSER)
+        )
+        checkInputThrowingParserException(
+            "extract(year, b)",
+            ErrorCode.PARSE_UNEXPECTED_TOKEN,
+            mapOf(
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 13L,
+                Property.TOKEN_TYPE to TokenType.COMMA,
+                Property.TOKEN_VALUE to ion.newSymbol(",")
+            ),
+            targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
         )
     }
 
@@ -1741,7 +1765,19 @@ class ParserErrorsTest : SqlParserTestBase() {
                 Property.COLUMN_NUMBER to 18L,
                 Property.TOKEN_TYPE to TokenType.RIGHT_PAREN,
                 Property.TOKEN_VALUE to ion.newSymbol(")")
-            )
+            ),
+            targetParsers = setOf(ParserTypes.SQL_PARSER)
+        )
+        checkInputThrowingParserException(
+            "extract(year from)",
+            ErrorCode.PARSE_UNEXPECTED_TOKEN,
+            mapOf(
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 18L,
+                Property.TOKEN_TYPE to TokenType.RIGHT_PAREN,
+                Property.TOKEN_VALUE to ion.newSymbol(")")
+            ),
+            targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
         )
     }
 
@@ -1755,7 +1791,19 @@ class ParserErrorsTest : SqlParserTestBase() {
                 Property.COLUMN_NUMBER to 9L,
                 Property.TOKEN_TYPE to TokenType.KEYWORD,
                 Property.TOKEN_VALUE to ion.newSymbol("from")
-            )
+            ),
+            targetParsers = setOf(ParserTypes.SQL_PARSER)
+        )
+        checkInputThrowingParserException(
+            "extract(from b)",
+            ErrorCode.PARSE_UNEXPECTED_TOKEN,
+            mapOf(
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 9L,
+                Property.TOKEN_TYPE to TokenType.KEYWORD,
+                Property.TOKEN_VALUE to ion.newSymbol("from")
+            ),
+            targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
         )
     }
 
@@ -1763,6 +1811,32 @@ class ParserErrorsTest : SqlParserTestBase() {
     fun callExtractOnlySecondArgument() {
         checkInputThrowingParserException(
             "extract(b)",
+            ErrorCode.PARSE_EXPECTED_DATE_TIME_PART,
+            mapOf(
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 9L,
+                Property.TOKEN_TYPE to TokenType.IDENTIFIER,
+                Property.TOKEN_VALUE to ion.newSymbol("b")
+            ),
+            targetParsers = setOf(ParserTypes.SQL_PARSER)
+        )
+        checkInputThrowingParserException(
+            "extract(b)",
+            ErrorCode.PARSE_UNEXPECTED_TOKEN,
+            mapOf(
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 10L,
+                Property.TOKEN_TYPE to TokenType.RIGHT_PAREN,
+                Property.TOKEN_VALUE to ion.newSymbol(")")
+            ),
+            targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
+        )
+    }
+
+    @Test
+    fun callExtractWrongDateTime() {
+        checkInputThrowingParserException(
+            "extract(b from c)",
             ErrorCode.PARSE_EXPECTED_DATE_TIME_PART,
             mapOf(
                 Property.LINE_NUMBER to 1L,
@@ -1784,7 +1858,19 @@ class ParserErrorsTest : SqlParserTestBase() {
                 Property.KEYWORD to "FROM",
                 Property.TOKEN_TYPE to TokenType.RIGHT_PAREN,
                 Property.TOKEN_VALUE to ion.newSymbol(")")
-            )
+            ),
+            targetParsers = setOf(ParserTypes.SQL_PARSER)
+        )
+        checkInputThrowingParserException(
+            "extract(year)",
+            ErrorCode.PARSE_UNEXPECTED_TOKEN,
+            mapOf(
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 13L,
+                Property.TOKEN_TYPE to TokenType.RIGHT_PAREN,
+                Property.TOKEN_VALUE to ion.newSymbol(")")
+            ),
+            targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
         )
     }
 
