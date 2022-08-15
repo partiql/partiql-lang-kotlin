@@ -49,7 +49,7 @@ abstract class SqlParserTestBase : TestBase() {
         PARTIQL_PARSER(PartiQLParser(ION, CUSTOM_TEST_TYPES))
     }
 
-    private val defaultParserTypes = setOf(ParserTypes.SQL_PARSER, ParserTypes.PARTIQL_PARSER)
+    internal val defaultParserTypes = setOf(ParserTypes.SQL_PARSER, ParserTypes.PARTIQL_PARSER)
 
     protected fun parse(source: String): PartiqlAst.Statement = parser.parseAstStatement(source)
 
