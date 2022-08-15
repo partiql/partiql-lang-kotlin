@@ -126,6 +126,7 @@ internal fun getIonValue(ion: IonSystem, token: Token): IonValue {
         type == PartiQLTokens.TRUE -> ion.newBool(true)
         type == PartiQLTokens.FALSE -> ion.newBool(false)
         type == PartiQLTokens.NULL -> ion.newNull()
+        type == PartiQLTokens.NULLS -> ion.newSymbol("nulls")
         type == PartiQLTokens.MISSING -> ion.newNull()
         type == PartiQLTokens.LITERAL_STRING -> ion.newString(text.trim('\'').replace("''", "'"))
         type == PartiQLTokens.LITERAL_INTEGER -> ion.newInt(BigInteger(text, 10))
