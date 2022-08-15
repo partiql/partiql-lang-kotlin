@@ -1019,21 +1019,21 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
             null -> try {
                 getPrecisionFromTimeString(timeString).toLong()
             } catch (e: EvaluationException) {
-                throw ParserException(
+                throw ctx.LITERAL_STRING().err(
                     "Unable to parse precision.",
-                    ErrorCode.PARSE_INVALID_QUERY, cause = e
+                    ErrorCode.PARSE_INVALID_TIME_STRING, cause = e
                 )
             }
             else -> ctx.LITERAL_INTEGER().text.toInteger().toLong()
         }
         if (precision < 0 || precision > MAX_PRECISION_FOR_TIME) {
-            throw ParserException("Precision out of bounds", ErrorCode.PARSE_INVALID_QUERY)
+            throw ctx.LITERAL_INTEGER().err("Precision out of bounds", ErrorCode.PARSE_INVALID_PRECISION_FOR_TIME)
         }
         val time: LocalTime
         try {
             time = LocalTime.parse(timeString, DateTimeFormatter.ISO_TIME)
         } catch (e: DateTimeParseException) {
-            throw ParserException("Unable to parse time", ErrorCode.PARSE_INVALID_QUERY, cause = e)
+            throw ctx.LITERAL_STRING().err("Unable to parse time", ErrorCode.PARSE_INVALID_TIME_STRING, cause = e)
         }
         return PartiqlAst.build {
             litTime(
@@ -1052,15 +1052,15 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
             null -> try {
                 getPrecisionFromTimeString(timeString).toLong()
             } catch (e: EvaluationException) {
-                throw ParserException(
-                    "Unable to parse precision.", ErrorCode.PARSE_INVALID_QUERY,
+                throw ctx.LITERAL_STRING().err(
+                    "Unable to parse precision.", ErrorCode.PARSE_INVALID_TIME_STRING,
                     cause = e
                 )
             }
             else -> ctx.LITERAL_INTEGER().text.toInteger().toLong()
         }
         if (precision < 0 || precision > MAX_PRECISION_FOR_TIME) {
-            throw ParserException("Precision out of bounds", ErrorCode.PARSE_INVALID_QUERY)
+            throw ctx.LITERAL_INTEGER().err("Precision out of bounds", ErrorCode.PARSE_INVALID_PRECISION_FOR_TIME)
         }
         try {
             val time: OffsetTime
@@ -1076,7 +1076,7 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
             try {
                 time = LocalTime.parse(timeString)
             } catch (e: DateTimeParseException) {
-                throw ParserException("Unable to parse time", ErrorCode.PARSE_INVALID_QUERY, cause = e)
+                throw ctx.LITERAL_STRING().err("Unable to parse time", ErrorCode.PARSE_INVALID_TIME_STRING, cause = e)
             }
             return PartiqlAst.build {
                 litTime(
@@ -1403,7 +1403,7 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         PartiQLParser.IDENTIFIER_QUOTED -> this.text.removePrefix("\"").removeSuffix("\"").replace("\"\"", "\"")
         PartiQLParser.LITERAL_STRING -> this.text.removePrefix("'").removeSuffix("'").replace("''", "'")
         PartiQLParser.ION_CLOSURE -> this.text.removePrefix("`").removeSuffix("`")
-        else -> throw ParserException("Unsupported token for grabbing string value.", ErrorCode.PARSE_INVALID_QUERY)
+        else -> throw this.err("Unsupported token for grabbing string value.", ErrorCode.PARSE_INVALID_QUERY)
     }
 
     private fun getStrategy(strategy: PartiQLParser.SetQuantifierStrategyContext?, default: PartiqlAst.SetQuantifier): PartiqlAst.SetQuantifier {
