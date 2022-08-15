@@ -91,8 +91,9 @@ class PartiQLParser(
     fun getParser(lexer: Lexer): GeneratedParser {
         val tokens = CommonTokenStream(lexer)
         val parser = GeneratedParser(tokens)
+        val handler = ParseErrorListener(ion)
         parser.removeErrorListeners()
-        parser.addErrorListener(ParseErrorListener(ion))
+        parser.addErrorListener(handler)
         return parser
     }
 
