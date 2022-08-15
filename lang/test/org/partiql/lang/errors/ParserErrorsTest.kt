@@ -21,16 +21,31 @@ import org.partiql.lang.util.sourceLocationProperties
 
 class ParserErrorsTest : SqlParserTestBase() {
 
-    fun emptyQuery() = checkInputThrowingParserException(
-        "",
-        ErrorCode.PARSE_UNEXPECTED_TERM,
-        mapOf(
-            Property.LINE_NUMBER to 1L,
-            Property.COLUMN_NUMBER to 1L,
-            Property.TOKEN_TYPE to TokenType.EOF,
-            Property.TOKEN_VALUE to ion.newSymbol("EOF")
+    @Test
+    fun emptyQuery() {
+        checkInputThrowingParserException(
+            "",
+            ErrorCode.PARSE_UNEXPECTED_TERM,
+            mapOf(
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 1L,
+                Property.TOKEN_TYPE to TokenType.EOF,
+                Property.TOKEN_VALUE to ion.newSymbol("EOF")
+            ),
+            targetParsers = setOf(ParserTypes.SQL_PARSER)
         )
-    )
+        checkInputThrowingParserException(
+            "",
+            ErrorCode.PARSE_UNEXPECTED_TOKEN,
+            mapOf(
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 1L,
+                Property.TOKEN_TYPE to TokenType.EOF,
+                Property.TOKEN_VALUE to ion.newSymbol("EOF")
+            ),
+            targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
+        )
+    }
 
     @Test
     fun expectedKeyword() {
@@ -43,7 +58,19 @@ class ParserErrorsTest : SqlParserTestBase() {
                 Property.KEYWORD to "AND",
                 Property.TOKEN_TYPE to TokenType.LITERAL,
                 Property.TOKEN_VALUE to ion.newInt(10)
-            )
+            ),
+            targetParsers = setOf(ParserTypes.SQL_PARSER)
+        )
+        checkInputThrowingParserException(
+            "5 BETWEEN 1  10",
+            ErrorCode.PARSE_UNEXPECTED_TOKEN,
+            mapOf(
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 14L,
+                Property.TOKEN_TYPE to TokenType.LITERAL,
+                Property.TOKEN_VALUE to ion.newInt(10)
+            ),
+            targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
         )
     }
 
@@ -57,7 +84,19 @@ class ParserErrorsTest : SqlParserTestBase() {
                 Property.COLUMN_NUMBER to 9L,
                 Property.TOKEN_TYPE to TokenType.ION_LITERAL,
                 Property.TOKEN_VALUE to ion.newNull()
-            )
+            ),
+            targetParsers = setOf(ParserTypes.SQL_PARSER)
+        )
+        checkInputThrowingParserException(
+            "NULL is `null`",
+            ErrorCode.PARSE_UNEXPECTED_TOKEN,
+            mapOf(
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 9L,
+                Property.TOKEN_TYPE to TokenType.ION_LITERAL,
+                Property.TOKEN_VALUE to ion.newNull()
+            ),
+            targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
         )
     }
 
@@ -71,7 +110,19 @@ class ParserErrorsTest : SqlParserTestBase() {
                 Property.COLUMN_NUMBER to 1L,
                 Property.TOKEN_TYPE to TokenType.OPERATOR,
                 Property.TOKEN_VALUE to ion.newSymbol("@")
-            )
+            ),
+            targetParsers = setOf(ParserTypes.SQL_PARSER)
+        )
+        checkInputThrowingParserException(
+            "@",
+            ErrorCode.PARSE_UNEXPECTED_TOKEN,
+            mapOf(
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 2L,
+                Property.TOKEN_TYPE to TokenType.EOF,
+                Property.TOKEN_VALUE to ion.newSymbol("EOF")
+            ),
+            targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
         )
     }
 
@@ -85,7 +136,19 @@ class ParserErrorsTest : SqlParserTestBase() {
                 Property.COLUMN_NUMBER to 6L,
                 Property.TOKEN_TYPE to TokenType.LITERAL,
                 Property.TOKEN_VALUE to ion.newString("missing")
-            )
+            ),
+            targetParsers = setOf(ParserTypes.SQL_PARSER)
+        )
+        checkInputThrowingParserException(
+            "a is 'missing'",
+            ErrorCode.PARSE_UNEXPECTED_TOKEN,
+            mapOf(
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 6L,
+                Property.TOKEN_TYPE to TokenType.LITERAL,
+                Property.TOKEN_VALUE to ion.newString("missing")
+            ),
+            targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
         )
     }
 
@@ -130,28 +193,56 @@ class ParserErrorsTest : SqlParserTestBase() {
     }
 
     @Test
-    fun unexpectedKeywordFromInSelectList() = checkInputThrowingParserException(
-        "SELECT a, DATE '2012-12-12', FROM {'a' : 1}",
-        ErrorCode.PARSE_UNEXPECTED_KEYWORD,
-        mapOf(
-            Property.LINE_NUMBER to 1L,
-            Property.COLUMN_NUMBER to 30L,
-            Property.TOKEN_TYPE to TokenType.KEYWORD,
-            Property.TOKEN_VALUE to ion.newSymbol("from")
+    fun unexpectedKeywordFromInSelectList() {
+        checkInputThrowingParserException(
+            "SELECT a, DATE '2012-12-12', FROM {'a' : 1}",
+            ErrorCode.PARSE_UNEXPECTED_KEYWORD,
+            mapOf(
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 30L,
+                Property.TOKEN_TYPE to TokenType.KEYWORD,
+                Property.TOKEN_VALUE to ion.newSymbol("from")
+            ),
+            targetParsers = setOf(ParserTypes.SQL_PARSER)
         )
-    )
+        checkInputThrowingParserException(
+            "SELECT a, DATE '2012-12-12', FROM {'a' : 1}",
+            ErrorCode.PARSE_UNEXPECTED_TOKEN,
+            mapOf(
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 30L,
+                Property.TOKEN_TYPE to TokenType.KEYWORD,
+                Property.TOKEN_VALUE to ion.newSymbol("from")
+            ),
+            targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
+        )
+    }
 
     @Test
-    fun unexpectedKeywordUpdateInSelectList() = checkInputThrowingParserException(
-        "SELECT a, UPDATE FROM {'a' : 1}",
-        ErrorCode.PARSE_UNEXPECTED_KEYWORD,
-        mapOf(
-            Property.LINE_NUMBER to 1L,
-            Property.COLUMN_NUMBER to 11L,
-            Property.TOKEN_TYPE to TokenType.KEYWORD,
-            Property.TOKEN_VALUE to ion.newSymbol("update")
+    fun unexpectedKeywordUpdateInSelectList() {
+        checkInputThrowingParserException(
+            "SELECT a, UPDATE FROM {'a' : 1}",
+            ErrorCode.PARSE_UNEXPECTED_KEYWORD,
+            mapOf(
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 11L,
+                Property.TOKEN_TYPE to TokenType.KEYWORD,
+                Property.TOKEN_VALUE to ion.newSymbol("update")
+            ),
+            targetParsers = setOf(ParserTypes.SQL_PARSER)
         )
-    )
+        checkInputThrowingParserException(
+            "SELECT a, UPDATE FROM {'a' : 1}",
+            ErrorCode.PARSE_UNEXPECTED_TOKEN,
+            mapOf(
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 11L,
+                Property.TOKEN_TYPE to TokenType.KEYWORD,
+                Property.TOKEN_VALUE to ion.newSymbol("update")
+            ),
+            targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
+        )
+    }
 
     @Test
     fun expectedInvalidPathComponent() {
@@ -163,7 +254,19 @@ class ParserErrorsTest : SqlParserTestBase() {
                 Property.COLUMN_NUMBER to 3L,
                 Property.TOKEN_TYPE to TokenType.DOT,
                 Property.TOKEN_VALUE to ion.newSymbol(".")
-            )
+            ),
+            targetParsers = setOf(ParserTypes.SQL_PARSER)
+        )
+        checkInputThrowingParserException(
+            "x...a",
+            ErrorCode.PARSE_UNEXPECTED_TOKEN,
+            mapOf(
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 3L,
+                Property.TOKEN_TYPE to TokenType.DOT,
+                Property.TOKEN_VALUE to ion.newSymbol(".")
+            ),
+            targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
         )
     }
 
@@ -177,7 +280,19 @@ class ParserErrorsTest : SqlParserTestBase() {
                 Property.COLUMN_NUMBER to 20L,
                 Property.TOKEN_TYPE to TokenType.KEYWORD,
                 Property.TOKEN_VALUE to ion.newSymbol("table")
-            )
+            ),
+            targetParsers = setOf(ParserTypes.SQL_PARSER)
+        )
+        checkInputThrowingParserException(
+            """SELECT foo.id, foo.table FROM `[{id: 1, table: "foos"}]` AS foo""",
+            ErrorCode.PARSE_UNEXPECTED_TOKEN,
+            mapOf(
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 20L,
+                Property.TOKEN_TYPE to TokenType.KEYWORD,
+                Property.TOKEN_VALUE to ion.newSymbol("table")
+            ),
+            targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
         )
     }
 
@@ -194,7 +309,19 @@ class ParserErrorsTest : SqlParserTestBase() {
                 Property.EXPECTED_ARITY_MAX to 0,
                 Property.CAST_TO to "integer",
                 Property.TOKEN_VALUE to ion.newSymbol("(")
-            )
+            ),
+            targetParsers = setOf(ParserTypes.SQL_PARSER)
+        )
+        checkInputThrowingParserException(
+            "CAST(5 AS INTEGER(10))",
+            ErrorCode.PARSE_UNEXPECTED_TOKEN,
+            mapOf(
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 18L,
+                Property.TOKEN_TYPE to TokenType.LEFT_PAREN,
+                Property.TOKEN_VALUE to ion.newSymbol("(")
+            ),
+            targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
         )
     }
 
@@ -211,7 +338,19 @@ class ParserErrorsTest : SqlParserTestBase() {
                 Property.EXPECTED_ARITY_MAX to 0,
                 Property.CAST_TO to "real",
                 Property.TOKEN_VALUE to ion.newSymbol("(")
-            )
+            ),
+            targetParsers = setOf(ParserTypes.SQL_PARSER)
+        )
+        checkInputThrowingParserException(
+            "CAST(5 AS REAL(10))",
+            ErrorCode.PARSE_UNEXPECTED_TOKEN,
+            mapOf(
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 15L,
+                Property.TOKEN_TYPE to TokenType.LEFT_PAREN,
+                Property.TOKEN_VALUE to ion.newSymbol("(")
+            ),
+            targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
         )
     }
 
@@ -225,7 +364,19 @@ class ParserErrorsTest : SqlParserTestBase() {
                 Property.COLUMN_NUMBER to 11L,
                 Property.TOKEN_TYPE to TokenType.KEYWORD,
                 Property.TOKEN_VALUE to ion.newSymbol("character_varying")
-            )
+            ),
+            targetParsers = setOf(ParserTypes.SQL_PARSER)
+        )
+        checkInputThrowingParserException(
+            "CAST(5 AS VARCHAR(a))",
+            ErrorCode.PARSE_UNEXPECTED_TOKEN,
+            mapOf(
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 18L,
+                Property.TOKEN_TYPE to TokenType.LEFT_PAREN,
+                Property.TOKEN_VALUE to ion.newSymbol("(")
+            ),
+            targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
         )
     }
 
@@ -309,7 +460,19 @@ class ParserErrorsTest : SqlParserTestBase() {
                 Property.COLUMN_NUMBER to 11L,
                 Property.TOKEN_TYPE to TokenType.KEYWORD,
                 Property.TOKEN_VALUE to ion.newSymbol("else")
-            )
+            ),
+            targetParsers = setOf(ParserTypes.SQL_PARSER)
+        )
+        checkInputThrowingParserException(
+            "CASE name ELSE 1 END",
+            ErrorCode.PARSE_UNEXPECTED_TOKEN,
+            mapOf(
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 11L,
+                Property.TOKEN_TYPE to TokenType.KEYWORD,
+                Property.TOKEN_VALUE to ion.newSymbol("else")
+            ),
+            targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
         )
     }
 
@@ -323,7 +486,19 @@ class ParserErrorsTest : SqlParserTestBase() {
                 Property.COLUMN_NUMBER to 29L,
                 Property.TOKEN_TYPE to TokenType.OPERATOR,
                 Property.TOKEN_VALUE to ion.newSymbol("like")
-            )
+            ),
+            targetParsers = setOf(ParserTypes.SQL_PARSER)
+        )
+        checkInputThrowingParserException(
+            "SELECT a, b FROM data WHERE LIKE a b",
+            ErrorCode.PARSE_UNEXPECTED_TOKEN,
+            mapOf(
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 23L,
+                Property.TOKEN_TYPE to TokenType.KEYWORD,
+                Property.TOKEN_VALUE to ion.newSymbol("where")
+            ),
+            targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
         )
     }
 
@@ -337,7 +512,19 @@ class ParserErrorsTest : SqlParserTestBase() {
                 Property.COLUMN_NUMBER to 38L,
                 Property.TOKEN_TYPE to TokenType.KEYWORD,
                 Property.TOKEN_VALUE to ion.newSymbol("escape")
-            )
+            ),
+            targetParsers = setOf(ParserTypes.SQL_PARSER)
+        )
+        checkInputThrowingParserException(
+            "SELECT a, b FROM data WHERE a LIKE b ESCAPE",
+            ErrorCode.PARSE_UNEXPECTED_TOKEN,
+            mapOf(
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 23L,
+                Property.TOKEN_TYPE to TokenType.KEYWORD,
+                Property.TOKEN_VALUE to ion.newSymbol("where")
+            ),
+            targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
         )
     }
 
@@ -351,7 +538,19 @@ class ParserErrorsTest : SqlParserTestBase() {
                 Property.COLUMN_NUMBER to 31L,
                 Property.TOKEN_TYPE to TokenType.OPERATOR,
                 Property.TOKEN_VALUE to ion.newSymbol("like")
-            )
+            ),
+            targetParsers = setOf(ParserTypes.SQL_PARSER)
+        )
+        checkInputThrowingParserException(
+            "SELECT a, b FROM data WHERE a LIKE",
+            ErrorCode.PARSE_UNEXPECTED_TOKEN,
+            mapOf(
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 23L,
+                Property.TOKEN_TYPE to TokenType.KEYWORD,
+                Property.TOKEN_VALUE to ion.newSymbol("where")
+            ),
+            targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
         )
     }
 
@@ -366,7 +565,19 @@ class ParserErrorsTest : SqlParserTestBase() {
                 Property.COLUMN_NUMBER to 7L,
                 Property.TOKEN_TYPE to TokenType.EOF,
                 Property.TOKEN_VALUE to ion.newSymbol("EOF")
-            )
+            ),
+            targetParsers = setOf(ParserTypes.SQL_PARSER)
+        )
+        checkInputThrowingParserException(
+            "(1 + 2",
+            ErrorCode.PARSE_UNEXPECTED_TOKEN,
+            mapOf(
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 7L,
+                Property.TOKEN_TYPE to TokenType.EOF,
+                Property.TOKEN_VALUE to ion.newSymbol("EOF")
+            ),
+            targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
         )
     }
 
