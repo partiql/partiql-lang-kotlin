@@ -124,7 +124,7 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
     override fun visitQueryExec(ctx: PartiQLParser.QueryExecContext) = visitExecCommand(ctx.execCommand())
 
     override fun visitExecCommand(ctx: PartiQLParser.ExecCommandContext) = PartiqlAst.build {
-        val name = visitExpr(ctx.expr()).getStringValue()
+        val name = visitExpr(ctx.expr()).getStringValue(ctx.expr().getStart())
         val args = ctx.querySet().map { expr -> visit(expr) as PartiqlAst.Expr }
         exec(name, args)
     }
@@ -213,7 +213,7 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
             status.type == PartiQLParser.MODIFIED && age.type == PartiQLParser.OLD -> modifiedOld()
             status.type == PartiQLParser.ALL && age.type == PartiQLParser.NEW -> allNew()
             status.type == PartiQLParser.ALL && age.type == PartiQLParser.OLD -> allOld()
-            else -> throw ParserException("Unable to get return mapping.", ErrorCode.PARSE_INVALID_QUERY)
+            else -> throw status.err("Unable to get return mapping.", ErrorCode.PARSE_UNEXPECTED_TOKEN)
         }
     }
 
@@ -1307,17 +1307,17 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
      *
      */
 
-    private fun PartiqlAst.Expr.getStringValue(): String = when (this) {
+    private fun PartiqlAst.Expr.getStringValue(token: Token? = null): String = when (this) {
         is PartiqlAst.Expr.Id -> this.name.text.toLowerCase()
         is PartiqlAst.Expr.Lit -> {
             when (this.value) {
                 is SymbolElement -> this.value.symbolValue.toLowerCase()
                 is StringElement -> this.value.stringValue.toLowerCase()
                 else ->
-                    this.value.stringValueOrNull ?: throw ParserException("Unable to pass the string value", ErrorCode.PARSE_INVALID_QUERY)
+                    this.value.stringValueOrNull ?: throw token.err("Unable to pass the string value", ErrorCode.PARSE_UNEXPECTED_TOKEN)
             }
         }
-        else -> throw ParserException("Unable to get value", ErrorCode.PARSE_INVALID_QUERY)
+        else -> throw token.err("Unable to get value", ErrorCode.PARSE_UNEXPECTED_TOKEN)
     }
 
     private fun PartiqlAst.Expr.Id.toIdentifier(): PartiqlAst.Identifier {
