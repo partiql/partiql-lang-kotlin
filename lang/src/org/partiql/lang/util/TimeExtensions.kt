@@ -1,10 +1,15 @@
 package org.partiql.lang.util
 
 import org.partiql.lang.errors.ErrorCode
-import org.partiql.lang.eval.time.SECONDS_PER_HOUR
-import org.partiql.lang.eval.time.SECONDS_PER_MINUTE
 import java.time.ZoneOffset
 import kotlin.math.absoluteValue
+
+internal const val HOURS_PER_DAY = 24
+internal const val MINUTES_PER_HOUR = 60
+internal const val SECONDS_PER_MINUTE = 60
+internal const val SECONDS_PER_HOUR = SECONDS_PER_MINUTE * MINUTES_PER_HOUR
+internal const val NANOS_PER_SECOND = 1000000000
+internal const val MAX_PRECISION_FOR_TIME = 9
 
 // These are used to validate the generic format of the time string.
 // The more involved logic such as validating the time is done by LocalTime.parse or OffsetTime.parse

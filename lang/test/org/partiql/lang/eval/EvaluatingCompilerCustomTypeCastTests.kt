@@ -4,8 +4,10 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.CUSTOM_TEST_TYPES
 import org.partiql.lang.errors.ErrorCode
+import org.partiql.lang.ots_work.plugins.standard.plugin.StandardPlugin
+import org.partiql.lang.ots_work.plugins.standard.plugin.TypedOpBehavior
+import org.partiql.lang.ots_work.stscore.ScalarTypeSystem
 import org.partiql.lang.util.ArgumentsProviderBase
-import org.partiql.lang.util.honorTypedOpParameters
 import org.partiql.lang.util.legacyTypingMode
 import org.partiql.lang.util.permissiveTypingMode
 
@@ -171,13 +173,11 @@ class EvaluatingCompilerCustomTypeCastTests : CastTestBase() {
 
         private val customTypeCastConfiguredTestCases = (
             customTypeCases.map { case ->
-                ConfiguredCastCase(case, "HONOR_PARAM_CAST, LEGACY_TYPING_MODE") {
-                    honorTypedOpParameters()
+                ConfiguredCastCase(case, "HONOR_PARAM_CAST, LEGACY_TYPING_MODE", ScalarTypeSystem(StandardPlugin(TypedOpBehavior.HONOR_PARAMETERS))) {
                     legacyTypingMode()
                 }
             } + customTypeCases.toPermissive().map { case ->
-                ConfiguredCastCase(case, "HONOR_PARAM_CAST, PERMISSIVE_TYPING_MODE") {
-                    honorTypedOpParameters()
+                ConfiguredCastCase(case, "HONOR_PARAM_CAST, PERMISSIVE_TYPING_MODE", ScalarTypeSystem(StandardPlugin(TypedOpBehavior.HONOR_PARAMETERS))) {
                     permissiveTypingMode()
                 }
             }

@@ -23,9 +23,11 @@ import org.junit.Test
 import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.eval.EvaluationException
 import org.partiql.lang.eval.ProjectionIterationBehavior
-import org.partiql.lang.eval.TypedOpBehavior
 import org.partiql.lang.eval.TypingMode
 import org.partiql.lang.eval.UndefinedVariableBehavior
+import org.partiql.lang.ots_work.plugins.standard.plugin.StandardPlugin
+import org.partiql.lang.ots_work.plugins.standard.plugin.TypedOpBehavior
+import org.partiql.lang.ots_work.stscore.ScalarTypeSystem
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
@@ -229,9 +231,13 @@ class CliTest {
     @Test
     fun runWithTypedOpBehaviorLegacy() {
         val pipeline = CompilerPipeline.build(ion) {
-            compileOptions {
-                typedOpBehavior(TypedOpBehavior.LEGACY)
-            }
+            scalarTypeSystem(
+                ScalarTypeSystem(
+                    StandardPlugin(
+                        typedOpBehavior = TypedOpBehavior.LEGACY
+                    )
+                )
+            )
         }
         val query = "CAST('abcde' as VARCHAR(3));"
         val actual = makeCliAndGetResult(query, compilerPipeline = pipeline)
@@ -242,9 +248,13 @@ class CliTest {
     @Test
     fun runWithTypedOpBehaviorHonorParameters() {
         val pipeline = CompilerPipeline.build(ion) {
-            compileOptions {
-                typedOpBehavior(TypedOpBehavior.HONOR_PARAMETERS)
-            }
+            scalarTypeSystem(
+                ScalarTypeSystem(
+                    StandardPlugin(
+                        typedOpBehavior = TypedOpBehavior.LEGACY
+                    )
+                )
+            )
         }
         val query = "CAST('abcde' as VARCHAR(3));"
         val actual = makeCliAndGetResult(query, compilerPipeline = pipeline)

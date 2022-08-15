@@ -63,7 +63,6 @@ internal class PlannerPipelineFactory : PipelineFactory {
             typingMode(co.typingMode)
             thunkOptions(co.thunkOptions)
             defaultTimezoneOffset(co.defaultTimezoneOffset)
-            typedOpBehavior(co.typedOpBehavior)
             projectionIteration(co.projectionIteration)
         }
 
@@ -98,6 +97,8 @@ internal class PlannerPipelineFactory : PipelineFactory {
                     GlobalResolutionResult.Undefined
                 }
             }
+
+            scalarTypeSystem(compilerPipeline.scalarTypeSystem)
         }
 
         return object : AbstractPipeline {

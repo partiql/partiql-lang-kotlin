@@ -37,10 +37,10 @@ import org.partiql.lang.domains.metaContainerOf
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.errors.PropertyValueMap
-import org.partiql.lang.eval.time.MAX_PRECISION_FOR_TIME
 import org.partiql.lang.types.CustomType
 import org.partiql.lang.util.BuiltInScalarTypeId
 import org.partiql.lang.util.DATE_PATTERN_REGEX
+import org.partiql.lang.util.MAX_PRECISION_FOR_TIME
 import org.partiql.lang.util.asIonInt
 import org.partiql.lang.util.atomFromHead
 import org.partiql.lang.util.checkThreadInterrupted

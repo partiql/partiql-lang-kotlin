@@ -5,7 +5,10 @@ import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.anyOfType
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.esAny
-import org.partiql.lang.ots.plugins.standard.types.CharType
+import org.partiql.lang.ots_work.plugins.standard.plugin.StandardPlugin
+import org.partiql.lang.ots_work.plugins.standard.plugin.TypedOpBehavior
+import org.partiql.lang.ots_work.plugins.standard.types.CharType
+import org.partiql.lang.ots_work.stscore.ScalarTypeSystem
 import org.partiql.lang.types.BagType
 import org.partiql.lang.types.CustomType
 import org.partiql.lang.types.ListType
@@ -15,7 +18,6 @@ import org.partiql.lang.types.StaticType
 import org.partiql.lang.types.StructType
 import org.partiql.lang.types.TypedOpParameter
 import org.partiql.lang.util.ArgumentsProviderBase
-import org.partiql.lang.util.honorTypedOpParameters
 import org.partiql.lang.util.legacyTypingMode
 import org.partiql.lang.util.permissiveTypingMode
 
@@ -112,16 +114,14 @@ class EvaluatingCompilerCustomAnyOfTypeOperationTests : CastTestBase() {
         // TODO consider refactoring into CastTestBase (with parameter)
         fun List<CastCase>.toConfiguredCases(): List<ConfiguredCastCase> = (
             flatMap { case ->
-                castBehaviors.map { (castBehaviorName, castBehaviorConfig) ->
-                    ConfiguredCastCase(case, "$castBehaviorName, LEGACY_TYPING_MODE") {
-                        castBehaviorConfig(this)
+                castBehaviors.map { (castBehaviorName, scalarTypeSystem) ->
+                    ConfiguredCastCase(case, "$castBehaviorName, LEGACY_TYPING_MODE", scalarTypeSystem) {
                         legacyTypingMode()
                     }
                 }
             } + toPermissive().flatMap { case ->
-                castBehaviors.map { (castBehaviorName, castBehaviorConfig) ->
-                    ConfiguredCastCase(case, "$castBehaviorName, PERMISSIVE_TYPING_MODE") {
-                        castBehaviorConfig(this)
+                castBehaviors.map { (castBehaviorName, scalarTypeSystem) ->
+                    ConfiguredCastCase(case, "$castBehaviorName, PERMISSIVE_TYPING_MODE", scalarTypeSystem) {
                         permissiveTypingMode()
                     }
                 }
@@ -136,13 +136,11 @@ class EvaluatingCompilerCustomAnyOfTypeOperationTests : CastTestBase() {
 
         fun List<CastCase>.toConfiguredHonorParamMode(): List<ConfiguredCastCase> = (
             map { case ->
-                ConfiguredCastCase(case, "HONOR_PARAMS, LEGACY_TYPING_MODE") {
-                    honorTypedOpParameters()
+                ConfiguredCastCase(case, "HONOR_PARAMS, LEGACY_TYPING_MODE", ScalarTypeSystem(StandardPlugin(TypedOpBehavior.HONOR_PARAMETERS))) {
                     legacyTypingMode()
                 }
             } + toPermissive().map { case ->
-                ConfiguredCastCase(case, "HONOR_PARAMS, PERMISSIVE_TYPING_MODE") {
-                    honorTypedOpParameters()
+                ConfiguredCastCase(case, "HONOR_PARAMS, PERMISSIVE_TYPING_MODE", ScalarTypeSystem(StandardPlugin(TypedOpBehavior.HONOR_PARAMETERS))) {
                     permissiveTypingMode()
                 }
             }

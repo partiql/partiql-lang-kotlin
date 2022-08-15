@@ -143,7 +143,7 @@ class EvaluatingCompilerExecTest : EvaluatorTestBase() {
             EvaluatorTestCase(
                 "EXEC zero_arg_procedure",
                 "0",
-                compilerPipelineBuilderBlock = compilerPipelineBuilderBlock
+                compilerPipelineBuilderBlock = compilerPipelineBuilderBlock,
             ),
             EvaluatorTestCase(
                 "EXEC one_arg_procedure 1",

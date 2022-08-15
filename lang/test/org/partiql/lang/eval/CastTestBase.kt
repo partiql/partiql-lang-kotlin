@@ -18,9 +18,10 @@ import org.partiql.lang.eval.ExprValueType.SEXP
 import org.partiql.lang.eval.ExprValueType.STRUCT
 import org.partiql.lang.eval.ExprValueType.TIMESTAMP
 import org.partiql.lang.eval.evaluatortestframework.ExpectedResultFormat
+import org.partiql.lang.ots_work.plugins.standard.plugin.StandardPlugin
+import org.partiql.lang.ots_work.plugins.standard.plugin.TypedOpBehavior
+import org.partiql.lang.ots_work.stscore.ScalarTypeSystem
 import org.partiql.lang.util.getOffsetHHmm
-import org.partiql.lang.util.honorTypedOpParameters
-import org.partiql.lang.util.legacyCastBehavior
 import org.partiql.lang.util.legacyTypingMode
 import org.partiql.lang.util.permissiveTypingMode
 import java.time.ZoneOffset
@@ -80,7 +81,8 @@ abstract class CastTestBase : EvaluatorTestBase() {
                         implicitPermissiveModeTest = false,
                         addtionalExceptionAssertBlock = { it ->
                             assertEquals(expectedErrorCode, it.errorCode)
-                        }
+                        },
+                        scalarTypeSystem = scalarTypeSystem
                     )
                 }
             }
@@ -92,7 +94,8 @@ abstract class CastTestBase : EvaluatorTestBase() {
                 includePermissiveModeTest = false,
                 compileOptionsBuilderBlock = compileOptionBlock,
                 compilerPipelineBuilderBlock = compilerPipelineBuilderBlock,
-                extraResultAssertions = castCase.additionalAssertBlock
+                extraResultAssertions = castCase.additionalAssertBlock,
+                scalarTypeSystem = scalarTypeSystem
             )
         }
     }
@@ -196,11 +199,13 @@ abstract class CastTestBase : EvaluatorTestBase() {
      * @param compileOptionBlock The optional lambda with a receiver to a [CompileOptions.Builder] to
      *  configure it.
      */
+    // TODO: seperate scalar casts to test/ots_work package
     data class ConfiguredCastCase(
         val castCase: CastCase,
         val description: String = "",
+        val scalarTypeSystem: ScalarTypeSystem?,
         val compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit = {},
-        val compileOptionBlock: CompileOptions.Builder.() -> Unit = {}
+        val compileOptionBlock: CompileOptions.Builder.() -> Unit = {},
     ) {
         private val additionalDescription = when (description) {
             "" -> ""
@@ -1371,9 +1376,9 @@ abstract class CastTestBase : EvaluatorTestBase() {
             "PERMISSIVE_TYPING_MODE" to { cob -> cob.permissiveTypingMode() }
         )
 
-        val castBehaviors: Map<String, (CompileOptions.Builder) -> Unit> = mapOf(
-            "LEGACY_CAST" to { cob -> cob.legacyCastBehavior() },
-            "HONOR_PARAM_CAST" to { cob -> cob.honorTypedOpParameters() }
+        val castBehaviors: Map<String, ScalarTypeSystem> = mapOf(
+            "LEGACY_CAST" to ScalarTypeSystem(StandardPlugin(TypedOpBehavior.LEGACY)),
+            "HONOR_PARAM_CAST" to ScalarTypeSystem(StandardPlugin(TypedOpBehavior.HONOR_PARAMETERS))
         )
 
         private val legacyCastTestCases = (commonTestCases + deviatingLegacyTestCases)
@@ -1394,13 +1399,11 @@ abstract class CastTestBase : EvaluatorTestBase() {
 
         private val castPermissiveConfiguredTestCases = (
             legacyCastTestCases.toPermissive().map { case ->
-                ConfiguredCastCase(case, "LEGACY_CAST, PERMISSIVE_TYPING_MODE") {
-                    legacyCastBehavior()
+                ConfiguredCastCase(case, "LEGACY_CAST, PERMISSIVE_TYPING_MODE", ScalarTypeSystem(StandardPlugin(TypedOpBehavior.LEGACY))) {
                     permissiveTypingMode()
                 }
             } + honorParamCastTestCases.toPermissive().map { case ->
-                ConfiguredCastCase(case, "HONOR_PARAM_CAST, PERMISSIVE_TYPING_MODE") {
-                    honorTypedOpParameters()
+                ConfiguredCastCase(case, "HONOR_PARAM_CAST, PERMISSIVE_TYPING_MODE", ScalarTypeSystem(StandardPlugin(TypedOpBehavior.HONOR_PARAMETERS))) {
                     permissiveTypingMode()
                 }
             }
@@ -1408,13 +1411,11 @@ abstract class CastTestBase : EvaluatorTestBase() {
 
         private val castLegacyConfiguredTestCases = (
             legacyCastTestCases.map { case ->
-                ConfiguredCastCase(case, "LEGACY_CAST, LEGACY_ERROR_MODE") {
-                    legacyCastBehavior()
+                ConfiguredCastCase(case, "LEGACY_CAST, LEGACY_ERROR_MODE", ScalarTypeSystem(StandardPlugin(TypedOpBehavior.LEGACY))) {
                     legacyTypingMode()
                 }
             } + honorParamCastTestCases.map { case ->
-                ConfiguredCastCase(case, "HONOR_PARAM_CAST, LEGACY_ERROR_MODE") {
-                    honorTypedOpParameters()
+                ConfiguredCastCase(case, "HONOR_PARAM_CAST, LEGACY_ERROR_MODE", ScalarTypeSystem(StandardPlugin(TypedOpBehavior.HONOR_PARAMETERS))) {
                     legacyTypingMode()
                 }
             }
@@ -1496,15 +1497,13 @@ abstract class CastTestBase : EvaluatorTestBase() {
         private val canCastConfiguredTestCases = (
             legacyCastTestCases.flatMap { case ->
                 typingModes.map { (typingModeName, typingModeConfig) ->
-                    ConfiguredCastCase(case.toCanCast(), "LEGACY_CAST, $typingModeName") {
-                        legacyCastBehavior()
+                    ConfiguredCastCase(case.toCanCast(), "LEGACY_CAST, $typingModeName", ScalarTypeSystem(StandardPlugin(TypedOpBehavior.LEGACY))) {
                         typingModeConfig(this)
                     }
                 }
             } + honorParamCastTestCases.flatMap { case ->
                 typingModes.map { (typingModeName, typingModeConfig) ->
-                    ConfiguredCastCase(case.toCanCast(), "HONOR_PARAM_CAST, $typingModeName") {
-                        honorTypedOpParameters()
+                    ConfiguredCastCase(case.toCanCast(), "HONOR_PARAM_CAST, $typingModeName", ScalarTypeSystem(StandardPlugin(TypedOpBehavior.HONOR_PARAMETERS))) {
                         typingModeConfig(this)
                     }
                 }
@@ -1514,15 +1513,13 @@ abstract class CastTestBase : EvaluatorTestBase() {
         private val canLosslessCastConfiguredTestCases = (
             legacyCastTestCases.flatMap { case ->
                 typingModes.map { (typingModeName, typingModeConfig) ->
-                    ConfiguredCastCase(case.toCanLosslessCast(), "LEGACY_CAST, $typingModeName") {
-                        legacyCastBehavior()
+                    ConfiguredCastCase(case.toCanLosslessCast(), "LEGACY_CAST, $typingModeName", ScalarTypeSystem(StandardPlugin(TypedOpBehavior.LEGACY))) {
                         typingModeConfig(this)
                     }
                 }
             } + honorParamCastTestCases.flatMap { case ->
                 typingModes.map { (typingModeName, typingModeConfig) ->
-                    ConfiguredCastCase(case.toCanLosslessCast(), "HONOR_PARAM_CAST, $typingModeName") {
-                        honorTypedOpParameters()
+                    ConfiguredCastCase(case.toCanLosslessCast(), "HONOR_PARAM_CAST, $typingModeName", ScalarTypeSystem(StandardPlugin(TypedOpBehavior.HONOR_PARAMETERS))) {
                         typingModeConfig(this)
                     }
                 }
@@ -1537,45 +1534,39 @@ abstract class CastTestBase : EvaluatorTestBase() {
                 canLosslessCastConfiguredTestCases
 
         private val configuredDateTimeTestCases = commonDateTimeTests.map { case ->
-            ConfiguredCastCase(case, "LEGACY_ERROR_MODE") {
+            ConfiguredCastCase(case, "LEGACY_ERROR_MODE", null) {
                 legacyTypingMode()
             }
         } + commonDateTimeTests.map { case ->
-            ConfiguredCastCase(case, "PERMISSIVE_TYPING_MODE") {
+            ConfiguredCastCase(case, "PERMISSIVE_TYPING_MODE", null) {
                 permissiveTypingMode()
             }
         } + castDefaultTimezoneOffsetConfiguration.map { (case, configuredTimezoneOffset) ->
-            ConfiguredCastCase(case, "Configuring default timezone offset") {
-                defaultTimezoneOffset(configuredTimezoneOffset)
-            }
+            ConfiguredCastCase(case, "Configuring default timezone offset", ScalarTypeSystem(StandardPlugin(defaultTimezoneOffset = configuredTimezoneOffset)))
         }
 
         private val canCastConfiguredDateTimeTestCases = commonDateTimeTests.map { case ->
-            ConfiguredCastCase(case.toCanCast(), "LEGACY_ERROR_MODE") {
+            ConfiguredCastCase(case.toCanCast(), "LEGACY_ERROR_MODE", null) {
                 legacyTypingMode()
             }
         } + commonDateTimeTests.map { case ->
-            ConfiguredCastCase(case.toCanCast(), "PERMISSIVE_TYPING_MODE") {
+            ConfiguredCastCase(case.toCanCast(), "PERMISSIVE_TYPING_MODE", null) {
                 permissiveTypingMode()
             }
         } + castDefaultTimezoneOffsetConfiguration.map { (case, configuredTimezoneOffset) ->
-            ConfiguredCastCase(case.toCanCast(), "Configuring default timezone offset") {
-                defaultTimezoneOffset(configuredTimezoneOffset)
-            }
+            ConfiguredCastCase(case.toCanCast(), "Configuring default timezone offset", ScalarTypeSystem(StandardPlugin(defaultTimezoneOffset = configuredTimezoneOffset)))
         }
 
         private val canLosslessCastConfiguredDateTimeTestCases = commonDateTimeTests.map { case ->
-            ConfiguredCastCase(case.toCanLosslessCast(), "LEGACY_ERROR_MODE") {
+            ConfiguredCastCase(case.toCanLosslessCast(), "LEGACY_ERROR_MODE", null) {
                 legacyTypingMode()
             }
         } + commonDateTimeTests.map { case ->
-            ConfiguredCastCase(case.toCanLosslessCast(), "PERMISSIVE_TYPING_MODE") {
+            ConfiguredCastCase(case.toCanLosslessCast(), "PERMISSIVE_TYPING_MODE", null) {
                 permissiveTypingMode()
             }
         } + castDefaultTimezoneOffsetConfiguration.map { (case, configuredTimezoneOffset) ->
-            ConfiguredCastCase(case.toCanLosslessCast(), "Configuring default timezone offset") {
-                defaultTimezoneOffset(configuredTimezoneOffset)
-            }
+            ConfiguredCastCase(case.toCanLosslessCast(), "Configuring default timezone offset", ScalarTypeSystem(StandardPlugin(defaultTimezoneOffset = configuredTimezoneOffset)))
         }
 
         internal val allConfiguredDateTimeTestCases =

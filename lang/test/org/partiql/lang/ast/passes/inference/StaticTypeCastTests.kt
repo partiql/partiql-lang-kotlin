@@ -5,10 +5,14 @@ import junitparams.Parameters
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.partiql.lang.ots.plugins.standard.types.DecimalType
+import org.partiql.lang.ots_work.plugins.standard.plugin.StandardPlugin
+import org.partiql.lang.ots_work.plugins.standard.plugin.TypedOpBehavior
+import org.partiql.lang.ots_work.plugins.standard.types.DecimalType
+import org.partiql.lang.ots_work.stscore.ScalarTypeSystem
 import org.partiql.lang.types.StaticScalarType
 import org.partiql.lang.types.StaticType
 
+// TODO: consider moving this test somewhere other than test/org.partiql.lang or separate tests for scalar types to test/ots_work
 @RunWith(JUnitParamsRunner::class)
 class StaticTypeCastTests {
 
@@ -19,7 +23,8 @@ class StaticTypeCastTests {
     )
 
     private fun runTest(tc: TestCase) {
-        val outType = tc.sourceType.cast(tc.targetType)
+        val scalarTypeSystem = ScalarTypeSystem(StandardPlugin(TypedOpBehavior.LEGACY))
+        val outType = tc.sourceType.cast(tc.targetType, scalarTypeSystem)
         assertEquals("Expected ${tc.expectedType} when ${tc.sourceType} is casted to ${tc.targetType}", tc.expectedType, outType)
     }
 

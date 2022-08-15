@@ -2,7 +2,6 @@ package org.partiql.lang.planner
 
 import org.partiql.lang.eval.ProjectionIterationBehavior
 import org.partiql.lang.eval.ThunkOptions
-import org.partiql.lang.eval.TypedOpBehavior
 import org.partiql.lang.eval.TypingMode
 import java.time.ZoneOffset
 
@@ -30,7 +29,7 @@ data class EvaluatorOptions private constructor (
     val projectionIteration: ProjectionIterationBehavior = ProjectionIterationBehavior.FILTER_MISSING,
     val thunkOptions: ThunkOptions = ThunkOptions.standard(),
     val typingMode: TypingMode = TypingMode.LEGACY,
-    val typedOpBehavior: TypedOpBehavior = TypedOpBehavior.LEGACY,
+    // TODO: move the following field into ots_work package as a configuration option of `StandardPlugin`
     val defaultTimezoneOffset: ZoneOffset = ZoneOffset.UTC
 ) {
     companion object {
@@ -71,7 +70,6 @@ data class EvaluatorOptions private constructor (
 
         fun projectionIteration(value: ProjectionIterationBehavior) = set { copy(projectionIteration = value) }
         fun typingMode(value: TypingMode) = set { copy(typingMode = value) }
-        fun typedOpBehavior(value: TypedOpBehavior) = set { copy(typedOpBehavior = value) }
         fun thunkOptions(value: ThunkOptions) = set { copy(thunkOptions = value) }
         fun defaultTimezoneOffset(value: ZoneOffset) = set { copy(defaultTimezoneOffset = value) }
 

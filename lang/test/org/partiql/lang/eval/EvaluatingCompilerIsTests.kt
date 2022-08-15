@@ -3,6 +3,9 @@ package org.partiql.lang.eval
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestCase
+import org.partiql.lang.ots_work.plugins.standard.plugin.StandardPlugin
+import org.partiql.lang.ots_work.plugins.standard.plugin.TypedOpBehavior
+import org.partiql.lang.ots_work.stscore.ScalarTypeSystem
 import org.partiql.lang.util.ArgumentsProviderBase
 
 /**
@@ -49,22 +52,22 @@ private fun isStringTypeTestCase(
         EvaluatorTestCase(
             sql.replace("{TYPE}", "CHAR"),
             expectedIsCharHonorParamsSql,
-            compileOptionsBuilderBlock = CompOptions.TYPED_OP_BEHAVIOR_HONOR_PARAMS.optionsBlock
+            scalarTypeSystem = ScalarTypeSystem(StandardPlugin(TypedOpBehavior.HONOR_PARAMETERS))
         ),
         EvaluatorTestCase(
             sql.replace("{TYPE}", "CHARACTER"),
             expectedIsCharHonorParamsSql,
-            compileOptionsBuilderBlock = CompOptions.TYPED_OP_BEHAVIOR_HONOR_PARAMS.optionsBlock
+            scalarTypeSystem = ScalarTypeSystem(StandardPlugin(TypedOpBehavior.HONOR_PARAMETERS))
         ),
         EvaluatorTestCase(
             sql.replace("{TYPE}", "VARCHAR"),
             expectedIsVarcharHonorParamsSql,
-            compileOptionsBuilderBlock = CompOptions.TYPED_OP_BEHAVIOR_HONOR_PARAMS.optionsBlock
+            scalarTypeSystem = ScalarTypeSystem(StandardPlugin(TypedOpBehavior.HONOR_PARAMETERS))
         ),
         EvaluatorTestCase(
             sql.replace("{TYPE}", "CHARACTER VARYING"),
             expectedIsVarcharHonorParamsSql,
-            compileOptionsBuilderBlock = CompOptions.TYPED_OP_BEHAVIOR_HONOR_PARAMS.optionsBlock
+            scalarTypeSystem = ScalarTypeSystem(StandardPlugin(TypedOpBehavior.HONOR_PARAMETERS))
         )
     )
 
@@ -112,12 +115,12 @@ private fun isDecimalTypeTestCase(
         EvaluatorTestCase(
             sql.replace("{TYPE}", "DECIMAL"),
             expectedIsDecimalHonorParamsResult,
-            compileOptionsBuilderBlock = CompOptions.TYPED_OP_BEHAVIOR_HONOR_PARAMS.optionsBlock
+            scalarTypeSystem = ScalarTypeSystem(StandardPlugin(TypedOpBehavior.HONOR_PARAMETERS))
         ),
         EvaluatorTestCase(
             sql.replace("{TYPE}", "NUMERIC"),
             expectedIsDecimalHonorParamsResult,
-            compileOptionsBuilderBlock = CompOptions.TYPED_OP_BEHAVIOR_HONOR_PARAMS.optionsBlock
+            scalarTypeSystem = ScalarTypeSystem(StandardPlugin(TypedOpBehavior.HONOR_PARAMETERS))
         )
     )
 
@@ -133,7 +136,7 @@ private fun isIntDecimalTypeTestCase(
     EvaluatorTestCase(
         sql,
         expectedHonorParamsResult,
-        compileOptionsBuilderBlock = CompOptions.TYPED_OP_BEHAVIOR_HONOR_PARAMS.optionsBlock
+        scalarTypeSystem = ScalarTypeSystem(StandardPlugin(TypedOpBehavior.HONOR_PARAMETERS))
     )
 )
 

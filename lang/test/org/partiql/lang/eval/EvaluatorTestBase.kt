@@ -38,6 +38,7 @@ import org.partiql.lang.eval.evaluatortestframework.MultipleTestAdapter
 import org.partiql.lang.eval.evaluatortestframework.PartiqlAstExprNodeRoundTripAdapter
 import org.partiql.lang.eval.evaluatortestframework.PipelineEvaluatorTestAdapter
 import org.partiql.lang.eval.evaluatortestframework.PlannerPipelineFactory
+import org.partiql.lang.ots_work.stscore.ScalarTypeSystem
 import org.partiql.lang.util.asSequence
 import org.partiql.lang.util.newFromIonText
 
@@ -76,6 +77,7 @@ abstract class EvaluatorTestBase : TestBase() {
         expectedResultFormat: ExpectedResultFormat = ExpectedResultFormat.ION_WITHOUT_BAG_AND_MISSING_ANNOTATIONS,
         includePermissiveModeTest: Boolean = true,
         target: EvaluatorTestTarget = EvaluatorTestTarget.ALL_PIPELINES,
+        scalarTypeSystem: ScalarTypeSystem? = null,
         compileOptionsBuilderBlock: CompileOptions.Builder.() -> Unit = { },
         compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit = { },
         extraResultAssertions: (ExprValue) -> Unit = { }
@@ -90,7 +92,8 @@ abstract class EvaluatorTestBase : TestBase() {
             target = target,
             compileOptionsBuilderBlock = compileOptionsBuilderBlock,
             compilerPipelineBuilderBlock = compilerPipelineBuilderBlock,
-            extraResultAssertions = extraResultAssertions
+            extraResultAssertions = extraResultAssertions,
+            scalarTypeSystem = scalarTypeSystem
         )
         testHarness.runEvaluatorTestCase(tc, session)
     }
@@ -119,7 +122,8 @@ abstract class EvaluatorTestBase : TestBase() {
         addtionalExceptionAssertBlock: (SqlException) -> Unit = { },
         implicitPermissiveModeTest: Boolean = true,
         target: EvaluatorTestTarget = EvaluatorTestTarget.ALL_PIPELINES,
-        session: EvaluationSession = EvaluationSession.standard()
+        session: EvaluationSession = EvaluationSession.standard(),
+        scalarTypeSystem: ScalarTypeSystem? = null
     ) {
         val tc = EvaluatorErrorTestCase(
             query = query,
@@ -133,6 +137,7 @@ abstract class EvaluatorTestBase : TestBase() {
             compileOptionsBuilderBlock = compileOptionsBuilderBlock,
             compilerPipelineBuilderBlock = compilerPipelineBuilderBlock,
             additionalExceptionAssertBlock = addtionalExceptionAssertBlock,
+            scalarTypeSystem = scalarTypeSystem,
         )
 
         testHarness.runEvaluatorErrorTestCase(tc, session)

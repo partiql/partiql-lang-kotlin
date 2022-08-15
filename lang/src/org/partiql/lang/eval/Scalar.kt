@@ -15,7 +15,7 @@
 package org.partiql.lang.eval
 
 import com.amazon.ion.Timestamp
-import org.partiql.lang.eval.time.Time
+import org.partiql.lang.util.Time
 import java.time.LocalDate
 
 /**

@@ -1,4 +1,4 @@
-package org.partiql.lang.ots.interfaces
+package org.partiql.lang.ots_work.interfaces
 
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType

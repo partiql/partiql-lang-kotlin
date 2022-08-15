@@ -37,6 +37,9 @@ import org.partiql.lang.eval.physical.PhysicalPlanThunk
 import org.partiql.lang.eval.physical.operators.DEFAULT_RELATIONAL_OPERATOR_FACTORIES
 import org.partiql.lang.eval.physical.operators.RelationalOperatorFactory
 import org.partiql.lang.eval.physical.operators.RelationalOperatorFactoryKey
+import org.partiql.lang.ots_work.plugins.standard.plugin.StandardPlugin
+import org.partiql.lang.ots_work.plugins.standard.plugin.TypedOpBehavior
+import org.partiql.lang.ots_work.stscore.ScalarTypeSystem
 import org.partiql.lang.planner.transforms.normalize
 import org.partiql.lang.planner.transforms.toDefaultPhysicalPlan
 import org.partiql.lang.planner.transforms.toLogicalPlan
@@ -211,6 +214,8 @@ interface PlannerPipeline {
         private var allowUndefinedVariables: Boolean = false
         private var enableLegacyExceptionHandling: Boolean = false
         private var plannerEventCallback: PlannerEventCallback? = null
+        // TODO: make the scalar type system configurable
+        private var scalarTypeSystem: ScalarTypeSystem = ScalarTypeSystem(StandardPlugin(TypedOpBehavior.LEGACY))
 
         /**
          * Specifies the [Parser] to be used to turn an PartiQL query into an instance of [PartiqlAst].
@@ -376,6 +381,8 @@ interface PlannerPipeline {
             plannerEventCallback = cb
         }
 
+        fun scalarTypeSystem(scalarTypeSystem: ScalarTypeSystem): Builder = this.apply { this.scalarTypeSystem = scalarTypeSystem }
+
         /** Builds the actual implementation of [PlannerPipeline]. */
         fun build(): PlannerPipeline {
             val compileOptionsToUse = evaluatorOptions ?: EvaluatorOptions.standard()
@@ -419,7 +426,8 @@ interface PlannerPipeline {
                 globalVariableResolver = globalVariableResolver,
                 allowUndefinedVariables = allowUndefinedVariables,
                 enableLegacyExceptionHandling = enableLegacyExceptionHandling,
-                plannerEventCallback = plannerEventCallback
+                plannerEventCallback = plannerEventCallback,
+                scalarTypeSystem = scalarTypeSystem
             )
         }
     }
@@ -438,6 +446,7 @@ internal class PlannerPipelineImpl(
     val enableLegacyExceptionHandling: Boolean,
     val physicalPlanPasses: List<PartiqlPhysicalPass>,
     val plannerEventCallback: PlannerEventCallback?,
+    private val scalarTypeSystem: ScalarTypeSystem
 ) : PlannerPipeline {
 
     init {
@@ -560,7 +569,8 @@ internal class PlannerPipelineImpl(
                 customTypedOpParameters = customTypedOpParameters,
                 procedures = procedures,
                 evaluatorOptions = evaluatorOptions,
-                bexperConverter = bexperConverter
+                bexperConverter = bexperConverter,
+                scalarTypeSystem = scalarTypeSystem
             )
 
             val expression = when {

@@ -2,6 +2,7 @@ package org.partiql.lang.eval.evaluatortestframework
 
 import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.eval.CompileOptions
+import org.partiql.lang.ots_work.stscore.ScalarTypeSystem
 
 /**
  * Defines fields common to both [EvaluatorTestCase] and [EvaluatorErrorTestCase]
@@ -51,4 +52,6 @@ interface EvaluatorTestDefinition {
      * Allows each test to configure its pipeline.
      */
     val compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit
+
+    val scalarTypeSystem: ScalarTypeSystem?
 }

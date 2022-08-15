@@ -22,6 +22,9 @@ import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorErrorTestCase
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestTarget
+import org.partiql.lang.ots_work.plugins.standard.plugin.StandardPlugin
+import org.partiql.lang.ots_work.plugins.standard.plugin.TypedOpBehavior
+import org.partiql.lang.ots_work.stscore.ScalarTypeSystem
 import org.partiql.lang.util.ArgumentsProviderBase
 import org.partiql.lang.util.propertyValueMapOf
 import org.partiql.lang.util.rootCause
@@ -45,19 +48,19 @@ class EvaluatingCompilerExceptionsTest : EvaluatorTestBase() {
                 query = """CAST(12 AS FLOAT(1))""",
                 expectedErrorCode = ErrorCode.SEMANTIC_FLOAT_PRECISION_UNSUPPORTED,
                 expectedErrorContext = propertyValueMapOf(1, 13),
-                compileOptionsBuilderBlock = CompOptions.TYPED_OP_BEHAVIOR_HONOR_PARAMS.optionsBlock
+                scalarTypeSystem = ScalarTypeSystem(StandardPlugin(TypedOpBehavior.HONOR_PARAMETERS))
             ),
             EvaluatorErrorTestCase(
                 query = """CAN_CAST(12 AS FLOAT(1))""",
                 expectedErrorCode = ErrorCode.SEMANTIC_FLOAT_PRECISION_UNSUPPORTED,
                 expectedErrorContext = propertyValueMapOf(1, 17),
-                compileOptionsBuilderBlock = CompOptions.TYPED_OP_BEHAVIOR_HONOR_PARAMS.optionsBlock
+                scalarTypeSystem = ScalarTypeSystem(StandardPlugin(TypedOpBehavior.HONOR_PARAMETERS))
             ),
             EvaluatorErrorTestCase(
                 query = """12 IS FLOAT(1)""",
                 expectedErrorCode = ErrorCode.SEMANTIC_FLOAT_PRECISION_UNSUPPORTED,
                 expectedErrorContext = propertyValueMapOf(1, 8),
-                compileOptionsBuilderBlock = CompOptions.TYPED_OP_BEHAVIOR_HONOR_PARAMS.optionsBlock
+                scalarTypeSystem = ScalarTypeSystem(StandardPlugin(TypedOpBehavior.HONOR_PARAMETERS))
             )
         )
     }

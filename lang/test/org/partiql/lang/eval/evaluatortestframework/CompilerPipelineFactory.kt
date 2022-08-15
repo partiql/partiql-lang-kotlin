@@ -46,6 +46,7 @@ internal fun EvaluatorTestDefinition.createCompilerPipeline(forcePermissiveMode:
     val concretePipeline = CompilerPipeline.build(ION) {
         compileOptions(compileOptions)
         this@createCompilerPipeline.compilerPipelineBuilderBlock(this)
+        scalarTypeSystem?.let { scalarTypeSystem(it) }
     }
     return concretePipeline
 }

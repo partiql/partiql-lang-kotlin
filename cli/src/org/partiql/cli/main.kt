@@ -31,9 +31,11 @@ import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.ProjectionIterationBehavior
-import org.partiql.lang.eval.TypedOpBehavior
 import org.partiql.lang.eval.TypingMode
 import org.partiql.lang.eval.UndefinedVariableBehavior
+import org.partiql.lang.ots_work.plugins.standard.plugin.StandardPlugin
+import org.partiql.lang.ots_work.plugins.standard.plugin.TypedOpBehavior
+import org.partiql.lang.ots_work.stscore.ScalarTypeSystem
 import org.partiql.lang.syntax.SqlParser
 import org.partiql.shell.Shell
 import org.partiql.shell.Shell.ShellConfiguration
@@ -183,7 +185,6 @@ fun main(args: Array<String>) = try {
 
     // Compile Options
     val compileOptions = CompileOptions.build {
-        typedOpBehavior(optionSet.valueOf(typedOpBehaviorOpt))
         projectionIteration(optionSet.valueOf(projectionIterationBehaviorOpt))
         undefinedVariable(optionSet.valueOf(undefinedVariableBehaviorOpt))
         when (optionSet.has(permissiveModeOpt)) {
@@ -197,6 +198,13 @@ fun main(args: Array<String>) = try {
         addFunction(WriteFile(valueFactory))
         addFunction(QueryDDB(valueFactory))
         compileOptions(compileOptions)
+        scalarTypeSystem(
+            ScalarTypeSystem(
+                StandardPlugin(
+                    optionSet.valueOf(typedOpBehaviorOpt)
+                )
+            )
+        )
     }
 
     // common options

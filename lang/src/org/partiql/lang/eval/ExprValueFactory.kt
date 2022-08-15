@@ -25,9 +25,9 @@ import com.amazon.ion.IonType
 import com.amazon.ion.IonValue
 import com.amazon.ion.Timestamp
 import org.partiql.lang.errors.ErrorCode
-import org.partiql.lang.eval.time.MINUTES_PER_HOUR
-import org.partiql.lang.eval.time.NANOS_PER_SECOND
-import org.partiql.lang.eval.time.Time
+import org.partiql.lang.util.MINUTES_PER_HOUR
+import org.partiql.lang.util.NANOS_PER_SECOND
+import org.partiql.lang.util.Time
 import org.partiql.lang.util.booleanValueOrNull
 import org.partiql.lang.util.bytesValueOrNull
 import org.partiql.lang.util.isBag

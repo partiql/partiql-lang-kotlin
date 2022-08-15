@@ -18,10 +18,13 @@ import org.partiql.lang.errors.ProblemSeverity
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.numberValue
-import org.partiql.lang.ots.plugins.standard.types.BoolType
-import org.partiql.lang.ots.plugins.standard.types.CharType
-import org.partiql.lang.ots.plugins.standard.types.DecimalType
-import org.partiql.lang.ots.plugins.standard.types.VarcharType
+import org.partiql.lang.ots_work.plugins.standard.plugin.StandardPlugin
+import org.partiql.lang.ots_work.plugins.standard.plugin.TypedOpBehavior
+import org.partiql.lang.ots_work.plugins.standard.types.BoolType
+import org.partiql.lang.ots_work.plugins.standard.types.CharType
+import org.partiql.lang.ots_work.plugins.standard.types.DecimalType
+import org.partiql.lang.ots_work.plugins.standard.types.VarcharType
+import org.partiql.lang.ots_work.stscore.ScalarTypeSystem
 import org.partiql.lang.types.AnyOfType
 import org.partiql.lang.types.BagType
 import org.partiql.lang.types.CollectionType
@@ -58,7 +61,9 @@ import org.partiql.lang.util.cartesianProduct
 import org.partiql.lang.util.compareTo
 import org.partiql.lang.util.countMatchingSubstrings
 
+// TODO: consider moving this test suite somewhere else since part of it is related to testing standard scalar types
 class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
+    private val scalarTypeSystem = ScalarTypeSystem(StandardPlugin(TypedOpBehavior.LEGACY))
 
     @ParameterizedTest
     @MethodSource("parametersForTests")
@@ -166,7 +171,8 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
         val inferencer = StaticTypeInferencer(
             globalBindings = globalBindings,
             customFunctionSignatures = tc.customFunctionSignatures,
-            customTypedOpParameters = customTypedOpParameters
+            customTypedOpParameters = customTypedOpParameters,
+            scalarTypeSystem = scalarTypeSystem
         )
 
         val defaultVisitorTransforms = basicVisitorTransforms()

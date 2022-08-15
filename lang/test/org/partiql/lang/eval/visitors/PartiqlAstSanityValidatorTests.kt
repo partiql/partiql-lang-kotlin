@@ -21,12 +21,17 @@ import org.partiql.lang.SqlException
 import org.partiql.lang.TestBase
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.errors.ErrorCode
+import org.partiql.lang.ots_work.plugins.standard.plugin.StandardPlugin
+import org.partiql.lang.ots_work.plugins.standard.plugin.TypedOpBehavior
+import org.partiql.lang.ots_work.stscore.ScalarTypeSystem
 
+// TODO: consider moving this test suite somewhere else since part of it is related to testing standard scalar types
 class PartiqlAstSanityValidatorTests : TestBase() {
     private fun litInt(value: Int) = PartiqlAst.build { lit(ion.newInt(value).toIonElement()) }
     private val litNull = PartiqlAst.build { lit(ion.newNull().toIonElement()) }
     private val missingExpr = PartiqlAst.build { missing() }
-    private val partiqlAstSanityValidator: PartiqlAstSanityValidator = PartiqlAstSanityValidator()
+    private val scalarTypeSystem = ScalarTypeSystem(StandardPlugin(TypedOpBehavior.LEGACY))
+    private val partiqlAstSanityValidator: PartiqlAstSanityValidator = PartiqlAstSanityValidator(scalarTypeSystem)
 
     /**
      * Asserts that the specified [block] throws an [SqlException] and its [expectedErrorCode] matches the expected value.

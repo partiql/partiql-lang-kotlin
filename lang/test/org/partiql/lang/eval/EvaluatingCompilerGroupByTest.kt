@@ -208,7 +208,8 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
             EvaluatorTestCase(
                 query = query,
                 expectedResult = expected,
-                compileOptionsBuilderBlock = co.optionsBlock
+                compileOptionsBuilderBlock = co.optionsBlock,
+                scalarTypeSystem = null
             )
         }
 
@@ -218,7 +219,8 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
                     EvaluatorTestCase(
                         query = q,
                         expectedResult = expected,
-                        compileOptionsBuilderBlock = co.optionsBlock
+                        compileOptionsBuilderBlock = co.optionsBlock,
+                        scalarTypeSystem = null
                     )
                 }
             }

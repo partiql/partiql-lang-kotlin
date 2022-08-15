@@ -28,9 +28,11 @@ import org.partiql.lang.errors.Property
 import org.partiql.lang.errors.PropertyValueMap
 import org.partiql.lang.eval.CompileOptions
 import org.partiql.lang.eval.EvaluationException
-import org.partiql.lang.eval.TypedOpBehavior
 import org.partiql.lang.eval.err
 import org.partiql.lang.eval.errorContextFrom
+import org.partiql.lang.ots_work.plugins.standard.plugin.StandardPlugin
+import org.partiql.lang.ots_work.plugins.standard.plugin.TypedOpBehavior
+import org.partiql.lang.ots_work.stscore.ScalarTypeSystem
 import org.partiql.lang.util.BuiltInScalarTypeId
 
 /**
@@ -44,7 +46,11 @@ import org.partiql.lang.util.BuiltInScalarTypeId
  * - A visitor transform pass (internal or external)
  *
  */
-class PartiqlAstSanityValidator : PartiqlAst.Visitor() {
+class PartiqlAstSanityValidator(
+    private val scalarTypeSystem: ScalarTypeSystem
+) : PartiqlAst.Visitor() {
+    // TODO: remove the following hard-coded variable later
+    private val typedOpBehavior = (scalarTypeSystem.plugin as StandardPlugin).typedOpBehavior
 
     private var compileOptions = CompileOptions.standard()
 
@@ -67,7 +73,7 @@ class PartiqlAstSanityValidator : PartiqlAst.Visitor() {
     }
 
     private fun validateDecimalOrNumericType(precision: Long?, scale: Long?, metas: MetaContainer) {
-        if (scale != null && precision != null && compileOptions.typedOpBehavior == TypedOpBehavior.HONOR_PARAMETERS) {
+        if (scale != null && precision != null && typedOpBehavior == TypedOpBehavior.HONOR_PARAMETERS) {
             if (scale !in 0..precision) {
                 err(
                     "Scale $scale should be between 0 and precision $precision",

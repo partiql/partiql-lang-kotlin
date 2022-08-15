@@ -39,12 +39,6 @@ enum class CompOptions(
         }
     ),
 
-    TYPED_OP_BEHAVIOR_HONOR_PARAMS(
-        {
-            typedOpBehavior(TypedOpBehavior.HONOR_PARAMETERS)
-        }
-    ),
-
     PERMISSIVE(
         {
             this.typingMode(TypingMode.PERMISSIVE)

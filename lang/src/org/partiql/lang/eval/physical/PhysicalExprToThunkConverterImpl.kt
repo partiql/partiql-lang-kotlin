@@ -52,7 +52,6 @@ import org.partiql.lang.eval.RequiredWithVariadic
 import org.partiql.lang.eval.SequenceExprValue
 import org.partiql.lang.eval.StructOrdering
 import org.partiql.lang.eval.ThunkValue
-import org.partiql.lang.eval.TypedOpBehavior
 import org.partiql.lang.eval.TypingMode
 import org.partiql.lang.eval.booleanValue
 import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedure
@@ -77,13 +76,15 @@ import org.partiql.lang.eval.rangeOver
 import org.partiql.lang.eval.sourceLocationMeta
 import org.partiql.lang.eval.stringValue
 import org.partiql.lang.eval.syntheticColumnName
-import org.partiql.lang.eval.time.Time
 import org.partiql.lang.eval.unnamedValue
 import org.partiql.lang.eval.visitors.PartiqlPhysicalSanityValidator
-import org.partiql.lang.ots.plugins.standard.types.Int2Type
-import org.partiql.lang.ots.plugins.standard.types.Int4Type
-import org.partiql.lang.ots.plugins.standard.types.Int8Type
-import org.partiql.lang.ots.plugins.standard.types.IntType
+import org.partiql.lang.ots_work.plugins.standard.plugin.StandardPlugin
+import org.partiql.lang.ots_work.plugins.standard.plugin.TypedOpBehavior
+import org.partiql.lang.ots_work.plugins.standard.types.Int2Type
+import org.partiql.lang.ots_work.plugins.standard.types.Int4Type
+import org.partiql.lang.ots_work.plugins.standard.types.Int8Type
+import org.partiql.lang.ots_work.plugins.standard.types.IntType
+import org.partiql.lang.ots_work.stscore.ScalarTypeSystem
 import org.partiql.lang.planner.EvaluatorOptions
 import org.partiql.lang.types.AnyOfType
 import org.partiql.lang.types.AnyType
@@ -96,6 +97,7 @@ import org.partiql.lang.types.UnknownArguments
 import org.partiql.lang.types.UnsupportedTypeCheckException
 import org.partiql.lang.types.toTypedOpParameter
 import org.partiql.lang.util.BuiltInScalarTypeId
+import org.partiql.lang.util.Time
 import org.partiql.lang.util.checkThreadInterrupted
 import org.partiql.lang.util.codePointSequence
 import org.partiql.lang.util.div
@@ -142,7 +144,11 @@ internal class PhysicalExprToThunkConverterImpl(
     private val procedures: Map<String, StoredProcedure>,
     private val evaluatorOptions: EvaluatorOptions = EvaluatorOptions.standard(),
     private val bexperConverter: PhysicalBexprToThunkConverter,
+    private val scalarTypeSystem: ScalarTypeSystem
 ) : PhysicalExprToThunkConverter {
+    // TODO: remove the following hard-coded variable later
+    private val typedOpBehavior = (scalarTypeSystem.plugin as StandardPlugin).typedOpBehavior
+
     private val errorSignaler = evaluatorOptions.typingMode.createErrorSignaler(valueFactory)
     private val thunkFactory = evaluatorOptions.typingMode.createThunkFactory<EvaluatorState>(
         evaluatorOptions.thunkOptions,
@@ -172,7 +178,7 @@ internal class PhysicalExprToThunkConverterImpl(
      * hope that long-running compilations may be aborted by the caller.
      */
     fun compile(plan: PartiqlPhysical.Plan): Expression {
-        PartiqlPhysicalSanityValidator(evaluatorOptions).walkPlan(plan)
+        PartiqlPhysicalSanityValidator(evaluatorOptions, scalarTypeSystem).walkPlan(plan)
 
         val thunk = compileAstStatement(plan.stmt)
 
@@ -968,7 +974,7 @@ internal class PhysicalExprToThunkConverterImpl(
             (isTypeMatch && typedOpParameter.validationThunk?.let { it(expValue) } != false)
         }
 
-        return when (evaluatorOptions.typedOpBehavior) {
+        return when (typedOpBehavior) {
             TypedOpBehavior.LEGACY -> simpleTypeMatchFunc
             TypedOpBehavior.HONOR_PARAMETERS -> { expValue: ExprValue ->
                 staticType.allTypes.any {
@@ -1002,7 +1008,7 @@ internal class PhysicalExprToThunkConverterImpl(
             return thunkFactory.thunkEnv(metas) { valueFactory.newBoolean(true) }
         }
         if (
-            evaluatorOptions.typedOpBehavior == TypedOpBehavior.HONOR_PARAMETERS &&
+            typedOpBehavior == TypedOpBehavior.HONOR_PARAMETERS &&
             expr.type is PartiqlPhysical.Type.ScalarType &&
             expr.type.id.text == BuiltInScalarTypeId.FLOAT &&
             expr.type.parameters.isNotEmpty() // if precision of FLOAT is explicitly specified in the original query
@@ -1046,7 +1052,7 @@ internal class PhysicalExprToThunkConverterImpl(
             return expThunk
         }
         if (
-            evaluatorOptions.typedOpBehavior == TypedOpBehavior.HONOR_PARAMETERS &&
+            typedOpBehavior == TypedOpBehavior.HONOR_PARAMETERS &&
             asType is PartiqlPhysical.Type.ScalarType &&
             asType.id.text == BuiltInScalarTypeId.FLOAT &&
             asType.parameters.isNotEmpty() // if precision of FLOAT is explicitly specified in the original query
@@ -1088,9 +1094,8 @@ internal class PhysicalExprToThunkConverterImpl(
                 val castOutput = value.cast(
                     singleType,
                     valueFactory,
-                    evaluatorOptions.typedOpBehavior,
                     locationMeta,
-                    evaluatorOptions.defaultTimezoneOffset
+                    scalarTypeSystem
                 )
                 typeOpValidate(value, castOutput, singleType.runtimeType.toString(), locationMeta)
                 castOutput
@@ -1194,9 +1199,8 @@ internal class PhysicalExprToThunkConverterImpl(
                         value.cast(
                             singleType,
                             valueFactory,
-                            evaluatorOptions.typedOpBehavior,
                             locationMeta,
-                            evaluatorOptions.defaultTimezoneOffset
+                            scalarTypeSystem
                         )
                     }
 

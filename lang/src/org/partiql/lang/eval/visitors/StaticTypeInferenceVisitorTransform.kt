@@ -34,16 +34,17 @@ import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.builtins.createBuiltinFunctionSignatures
 import org.partiql.lang.eval.delegate
 import org.partiql.lang.eval.getStartingSourceLocationMeta
-import org.partiql.lang.ots.plugins.standard.types.BoolType
-import org.partiql.lang.ots.plugins.standard.types.CharType
-import org.partiql.lang.ots.plugins.standard.types.DecimalType
-import org.partiql.lang.ots.plugins.standard.types.FloatType
-import org.partiql.lang.ots.plugins.standard.types.Int2Type
-import org.partiql.lang.ots.plugins.standard.types.Int4Type
-import org.partiql.lang.ots.plugins.standard.types.Int8Type
-import org.partiql.lang.ots.plugins.standard.types.IntType
-import org.partiql.lang.ots.plugins.standard.types.StringType
-import org.partiql.lang.ots.plugins.standard.types.VarcharType
+import org.partiql.lang.ots_work.plugins.standard.types.BoolType
+import org.partiql.lang.ots_work.plugins.standard.types.CharType
+import org.partiql.lang.ots_work.plugins.standard.types.DecimalType
+import org.partiql.lang.ots_work.plugins.standard.types.FloatType
+import org.partiql.lang.ots_work.plugins.standard.types.Int2Type
+import org.partiql.lang.ots_work.plugins.standard.types.Int4Type
+import org.partiql.lang.ots_work.plugins.standard.types.Int8Type
+import org.partiql.lang.ots_work.plugins.standard.types.IntType
+import org.partiql.lang.ots_work.plugins.standard.types.StringType
+import org.partiql.lang.ots_work.plugins.standard.types.VarcharType
+import org.partiql.lang.ots_work.stscore.ScalarTypeSystem
 import org.partiql.lang.types.AnyOfType
 import org.partiql.lang.types.AnyType
 import org.partiql.lang.types.BagType
@@ -79,7 +80,8 @@ internal class StaticTypeInferenceVisitorTransform(
     globalBindings: Bindings<StaticType>,
     customFunctionSignatures: List<FunctionSignature>,
     private val customTypedOpParameters: Map<String, TypedOpParameter>,
-    private val problemHandler: ProblemHandler = ProblemThrower()
+    private val problemHandler: ProblemHandler = ProblemThrower(),
+    private val scalarTypeSystem: ScalarTypeSystem
 ) : PartiqlAst.VisitorTransform() {
 
     /** Used to allow certain binding lookups to occur directly in the global scope. */
@@ -1253,7 +1255,7 @@ internal class StaticTypeInferenceVisitorTransform(
             val typed = super.transformExprCast(node) as PartiqlAst.Expr.Cast
             val sourceType = typed.value.getStaticType()
             val targetType = typed.asType.toTypedOpParameter(customTypedOpParameters)
-            val castOutputType = sourceType.cast(targetType.staticType).let {
+            val castOutputType = sourceType.cast(targetType.staticType, scalarTypeSystem).let {
                 if (targetType.validationThunk == null) {
                     // There is no additional validation for this parameter, return this type as-is
                     it

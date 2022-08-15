@@ -48,12 +48,14 @@ import org.partiql.lang.eval.binding.Alias
 import org.partiql.lang.eval.binding.localsBinder
 import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedure
 import org.partiql.lang.eval.like.parsePattern
-import org.partiql.lang.eval.time.Time
 import org.partiql.lang.eval.visitors.PartiqlAstSanityValidator
-import org.partiql.lang.ots.plugins.standard.types.Int2Type
-import org.partiql.lang.ots.plugins.standard.types.Int4Type
-import org.partiql.lang.ots.plugins.standard.types.Int8Type
-import org.partiql.lang.ots.plugins.standard.types.IntType
+import org.partiql.lang.ots_work.plugins.standard.plugin.StandardPlugin
+import org.partiql.lang.ots_work.plugins.standard.plugin.TypedOpBehavior
+import org.partiql.lang.ots_work.plugins.standard.types.Int2Type
+import org.partiql.lang.ots_work.plugins.standard.types.Int4Type
+import org.partiql.lang.ots_work.plugins.standard.types.Int8Type
+import org.partiql.lang.ots_work.plugins.standard.types.IntType
+import org.partiql.lang.ots_work.stscore.ScalarTypeSystem
 import org.partiql.lang.syntax.SqlParser
 import org.partiql.lang.types.AnyOfType
 import org.partiql.lang.types.AnyType
@@ -66,6 +68,7 @@ import org.partiql.lang.types.UnknownArguments
 import org.partiql.lang.types.UnsupportedTypeCheckException
 import org.partiql.lang.types.toTypedOpParameter
 import org.partiql.lang.util.BuiltInScalarTypeId
+import org.partiql.lang.util.Time
 import org.partiql.lang.util.bigDecimalOf
 import org.partiql.lang.util.checkThreadInterrupted
 import org.partiql.lang.util.codePointSequence
@@ -135,8 +138,12 @@ internal class EvaluatingCompiler(
     private val functions: Map<String, ExprFunction>,
     private val customTypedOpParameters: Map<String, TypedOpParameter>,
     private val procedures: Map<String, StoredProcedure>,
-    private val compileOptions: CompileOptions = CompileOptions.standard()
+    private val compileOptions: CompileOptions = CompileOptions.standard(),
+    private val scalarTypeSystem: ScalarTypeSystem
 ) {
+    // TODO: remove the following hard-coded variable later
+    private val typedOpBehavior = (scalarTypeSystem.plugin as StandardPlugin).typedOpBehavior
+
     private val errorSignaler = compileOptions.typingMode.createErrorSignaler(valueFactory)
     private val thunkFactory = compileOptions.typingMode.createThunkFactory<Environment>(compileOptions.thunkOptions, valueFactory)
 
@@ -321,7 +328,7 @@ internal class EvaluatingCompiler(
     fun compile(originalAst: PartiqlAst.Statement): Expression {
         val visitorTransform = compileOptions.visitorTransformMode.createVisitorTransform()
         val transformedAst = visitorTransform.transformStatement(originalAst)
-        val partiqlAstSanityValidator = PartiqlAstSanityValidator()
+        val partiqlAstSanityValidator = PartiqlAstSanityValidator(scalarTypeSystem)
 
         partiqlAstSanityValidator.validate(transformedAst, compileOptions)
 
@@ -1168,11 +1175,11 @@ internal class EvaluatingCompiler(
      * [TypedOpBehavior].
      */
     private fun makeIsCheck(
-        staticType: SingleType,
+        singleType: SingleType,
         typedOpParameter: TypedOpParameter,
         metas: MetaContainer
     ): (ExprValue) -> Boolean {
-        val exprValueType = staticType.runtimeType
+        val exprValueType = singleType.runtimeType
 
         // The "simple" type match function only looks at the [ExprValueType] of the [ExprValue]
         // and invokes the custom [validationThunk] if one exists.
@@ -1185,10 +1192,11 @@ internal class EvaluatingCompiler(
             (isTypeMatch && typedOpParameter.validationThunk?.let { it(expValue) } != false)
         }
 
-        return when (compileOptions.typedOpBehavior) {
+        // TODO: move the following code into ots_work standard plugin package. Probably we need to refactor IS compiling using `ScalarType.validateValue()` method for scalar types.
+        return when (typedOpBehavior) {
             TypedOpBehavior.LEGACY -> simpleTypeMatchFunc
             TypedOpBehavior.HONOR_PARAMETERS -> { expValue: ExprValue ->
-                staticType.allTypes.any {
+                singleType.let {
                     val matchesStaticType = try {
                         it.isInstance(expValue)
                     } catch (e: UnsupportedTypeCheckException) {
@@ -1218,8 +1226,9 @@ internal class EvaluatingCompiler(
         if (typedOpParameter.staticType is AnyType) {
             return thunkFactory.thunkEnv(metas) { valueFactory.newBoolean(true) }
         }
+        // TODO: move the following code into ots_work standard plugin package
         if (
-            compileOptions.typedOpBehavior == TypedOpBehavior.HONOR_PARAMETERS &&
+            typedOpBehavior == TypedOpBehavior.HONOR_PARAMETERS &&
             expr.type is PartiqlAst.Type.ScalarType &&
             expr.type.id.text == BuiltInScalarTypeId.FLOAT &&
             expr.type.parameters.isNotEmpty() // if precision of FLOAT is explicitly specified in the original query
@@ -1263,7 +1272,7 @@ internal class EvaluatingCompiler(
             return expThunk
         }
         if (
-            compileOptions.typedOpBehavior == TypedOpBehavior.HONOR_PARAMETERS &&
+            typedOpBehavior == TypedOpBehavior.HONOR_PARAMETERS &&
             asType is PartiqlAst.Type.ScalarType &&
             asType.id.text == BuiltInScalarTypeId.FLOAT &&
             asType.parameters.isNotEmpty() // if precision of FLOAT is explicitly specified in the original query
@@ -1305,9 +1314,8 @@ internal class EvaluatingCompiler(
                 val castOutput = value.cast(
                     singleType,
                     valueFactory,
-                    compileOptions.typedOpBehavior,
                     locationMeta,
-                    compileOptions.defaultTimezoneOffset
+                    scalarTypeSystem
                 )
                 typeOpValidate(value, castOutput, singleType.runtimeType.toString(), locationMeta)
                 castOutput
@@ -1411,9 +1419,8 @@ internal class EvaluatingCompiler(
                         value.cast(
                             singleType,
                             valueFactory,
-                            compileOptions.typedOpBehavior,
                             locationMeta,
-                            compileOptions.defaultTimezoneOffset
+                            scalarTypeSystem
                         )
                     }
 

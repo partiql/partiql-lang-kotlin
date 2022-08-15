@@ -1,12 +1,10 @@
-package org.partiql.lang.eval.time
+package org.partiql.lang.util
 
 import com.amazon.ion.IonStruct
 import com.amazon.ion.IonSystem
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.EvaluationException
 import org.partiql.lang.eval.err
-import org.partiql.lang.util.getOffsetHHmm
-import org.partiql.lang.util.propertyValueMapOf
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.DateTimeException
@@ -20,12 +18,6 @@ import kotlin.math.min
 // Constants related to the TIME
 
 internal const val PARTIQL_TIME_ANNOTATION = "\$partiql_time"
-internal const val HOURS_PER_DAY = 24
-internal const val MINUTES_PER_HOUR = 60
-internal const val SECONDS_PER_MINUTE = 60
-internal const val SECONDS_PER_HOUR = SECONDS_PER_MINUTE * MINUTES_PER_HOUR
-internal const val NANOS_PER_SECOND = 1000000000
-internal const val MAX_PRECISION_FOR_TIME = 9
 
 /**
  * Wrapper class representing the run time instance of TIME in PartiQL.
@@ -158,7 +150,7 @@ data class Time private constructor(val localTime: LocalTime, val precision: Int
      * Returns the seconds along with the fractional part of the second's value.
      */
     val secondsWithFractionalPart: BigDecimal
-        get() = (localTime.second.toBigDecimal() + localTime.nano.toBigDecimal().divide(NANOS_PER_SECOND.toBigDecimal()))
+        get() = ((localTime.second.toBigDecimal() + localTime.nano.toBigDecimal().divide(NANOS_PER_SECOND.toBigDecimal())) as BigDecimal)
             .setScale(precision, RoundingMode.HALF_EVEN)
 
     fun toIonValue(ion: IonSystem): IonStruct =

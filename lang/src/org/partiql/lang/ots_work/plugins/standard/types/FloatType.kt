@@ -1,7 +1,7 @@
-package org.partiql.lang.ots.plugins.standard.types
+package org.partiql.lang.ots_work.plugins.standard.types
 
 import org.partiql.lang.eval.ExprValueType
-import org.partiql.lang.ots.interfaces.ScalarType
+import org.partiql.lang.ots_work.interfaces.ScalarType
 
 object FloatType : ScalarType {
     override val id: String

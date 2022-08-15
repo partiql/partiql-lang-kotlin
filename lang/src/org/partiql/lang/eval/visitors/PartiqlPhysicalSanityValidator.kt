@@ -12,9 +12,11 @@ import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.errors.PropertyValueMap
 import org.partiql.lang.eval.EvaluationException
-import org.partiql.lang.eval.TypedOpBehavior
 import org.partiql.lang.eval.err
 import org.partiql.lang.eval.errorContextFrom
+import org.partiql.lang.ots_work.plugins.standard.plugin.StandardPlugin
+import org.partiql.lang.ots_work.plugins.standard.plugin.TypedOpBehavior
+import org.partiql.lang.ots_work.stscore.ScalarTypeSystem
 import org.partiql.lang.planner.EvaluatorOptions
 import org.partiql.lang.util.BuiltInScalarTypeId
 import org.partiql.lang.util.propertyValueMapOf
@@ -26,7 +28,12 @@ import org.partiql.lang.util.propertyValueMapOf
  *
  * Any exception thrown by this class should always be considered an indication of a bug.
  */
-class PartiqlPhysicalSanityValidator(private val evaluatorOptions: EvaluatorOptions) : PartiqlPhysical.Visitor() {
+class PartiqlPhysicalSanityValidator(
+    private val evaluatorOptions: EvaluatorOptions,
+    private val scalarTypeSystem: ScalarTypeSystem
+) : PartiqlPhysical.Visitor() {
+    // TODO: remove the following hard-coded variable later
+    private val typedOpBehavior = (scalarTypeSystem.plugin as StandardPlugin).typedOpBehavior
 
     /**
      * Quick validation step to make sure the indexes of any variables make sense.
@@ -61,7 +68,7 @@ class PartiqlPhysicalSanityValidator(private val evaluatorOptions: EvaluatorOpti
     }
 
     private fun validateDecimalOrNumericType(precision: Long?, scale: Long?, metas: MetaContainer) {
-        if (scale != null && precision != null && evaluatorOptions.typedOpBehavior == TypedOpBehavior.HONOR_PARAMETERS) {
+        if (scale != null && precision != null && typedOpBehavior == TypedOpBehavior.HONOR_PARAMETERS) {
             if (scale !in 0..precision) {
                 err(
                     "Scale $scale should be between 0 and precision $precision",

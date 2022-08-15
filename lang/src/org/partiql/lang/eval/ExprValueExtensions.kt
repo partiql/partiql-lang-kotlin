@@ -14,58 +14,31 @@
 
 package org.partiql.lang.eval
 
-import com.amazon.ion.IntegerSize
-import com.amazon.ion.IonInt
 import com.amazon.ion.Timestamp
 import org.partiql.lang.ast.SourceLocationMeta
-import org.partiql.lang.ast.passes.inference.isNumeric
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.errors.PropertyValueMap
-import org.partiql.lang.eval.time.NANOS_PER_SECOND
-import org.partiql.lang.eval.time.Time
-import org.partiql.lang.ots.plugins.standard.types.BlobType
-import org.partiql.lang.ots.plugins.standard.types.BoolType
-import org.partiql.lang.ots.plugins.standard.types.CharType
-import org.partiql.lang.ots.plugins.standard.types.ClobType
-import org.partiql.lang.ots.plugins.standard.types.DateType
-import org.partiql.lang.ots.plugins.standard.types.DecimalType
-import org.partiql.lang.ots.plugins.standard.types.FloatType
-import org.partiql.lang.ots.plugins.standard.types.Int2Type
-import org.partiql.lang.ots.plugins.standard.types.Int4Type
-import org.partiql.lang.ots.plugins.standard.types.Int8Type
-import org.partiql.lang.ots.plugins.standard.types.IntType
-import org.partiql.lang.ots.plugins.standard.types.StringType
-import org.partiql.lang.ots.plugins.standard.types.SymbolType
-import org.partiql.lang.ots.plugins.standard.types.TimeStampType
-import org.partiql.lang.ots.plugins.standard.types.TimeType
-import org.partiql.lang.ots.plugins.standard.types.VarcharType
+import org.partiql.lang.ots_work.stscore.ScalarTypeSystem
 import org.partiql.lang.syntax.DATE_TIME_PART_KEYWORDS
 import org.partiql.lang.syntax.DateTimePart
 import org.partiql.lang.types.BagType
+import org.partiql.lang.types.CollectionType
 import org.partiql.lang.types.ListType
 import org.partiql.lang.types.MissingType
 import org.partiql.lang.types.NullType
 import org.partiql.lang.types.SexpType
 import org.partiql.lang.types.SingleType
 import org.partiql.lang.types.StaticScalarType
+import org.partiql.lang.types.StructType
 import org.partiql.lang.util.ConfigurableExprValueFormatter
-import org.partiql.lang.util.bigDecimalOf
-import org.partiql.lang.util.coerce
+import org.partiql.lang.util.Time
 import org.partiql.lang.util.compareTo
 import org.partiql.lang.util.downcast
-import org.partiql.lang.util.getPrecisionFromTimeString
 import org.partiql.lang.util.ionValue
 import java.math.BigDecimal
-import java.math.MathContext
-import java.math.RoundingMode
 import java.time.LocalDate
-import java.time.LocalTime
-import java.time.ZoneOffset
-import java.time.format.DateTimeFormatter
-import java.time.format.DateTimeParseException
 import java.util.TreeSet
-import kotlin.math.round
 
 /**
  * Wraps the given [ExprValue] with a delegate that provides the [OrderedBindNames] facet.
@@ -203,13 +176,7 @@ internal fun ExprValue.isDirectlyComparableTo(other: ExprValue): Boolean =
         else -> type.isDirectlyComparableTo(other.type)
     }
 
-/** Types that are cast to the [ExprValueType.isText] types by calling `IonValue.toString()`. */
-private val ION_TEXT_STRING_CAST_TYPES = setOf(ExprValueType.BOOL, ExprValueType.TIMESTAMP)
-
 /** Regex to match DATE strings of the format yyyy-MM-dd */
-private val datePatternRegex = Regex("\\d\\d\\d\\d-\\d\\d-\\d\\d")
-
-private val genericTimeRegex = Regex("\\d\\d:\\d\\d:\\d\\d(\\.\\d*)?([+|-]\\d\\d:\\d\\d)?")
 
 /**
  * Casts this [ExprValue] to the target type.
@@ -264,15 +231,13 @@ private val genericTimeRegex = Regex("\\d\\d:\\d\\d:\\d\\d(\\.\\d*)?([+|-]\\d\\d
  * @param valueFactory The ExprValueFactory used to create ExprValues.
  * @param typedOpBehavior TypedOpBehavior indicating how CAST should behave.
  * @param locationMeta The source location for the CAST. Used for error reporting.
- * @param defaultTimezoneOffset Default timezone offset to be used when TIME WITH TIME ZONE does not explicitly
  * specify the time zone.
  */
 fun ExprValue.cast(
     targetType: SingleType,
     valueFactory: ExprValueFactory,
-    typedOpBehavior: TypedOpBehavior,
     locationMeta: SourceLocationMeta?,
-    defaultTimezoneOffset: ZoneOffset
+    scalarTypeSystem: ScalarTypeSystem
 ): ExprValue {
     fun castExceptionContext(): PropertyValueMap {
         val errorContext = PropertyValueMap().also {
@@ -285,350 +250,25 @@ fun ExprValue.cast(
         return errorContext
     }
 
-    fun castFailedErr(message: String, internal: Boolean, cause: Throwable? = null): Nothing {
-        val errorContext = castExceptionContext()
-
-        val errorCode = if (locationMeta == null) {
-            ErrorCode.EVALUATOR_CAST_FAILED_NO_LOCATION
-        } else {
-            ErrorCode.EVALUATOR_CAST_FAILED
+    if (type.isUnknown) {
+        return when (targetType) {
+            is MissingType -> valueFactory.missingValue
+            is NullType -> valueFactory.nullValue
+            else -> this
         }
-
-        throw EvaluationException(
-            message = message,
-            errorCode = errorCode,
-            errorContext = errorContext,
-            internal = internal,
-            cause = cause
-        )
     }
-
-    val longMaxDecimal = bigDecimalOf(Long.MAX_VALUE)
-    val longMinDecimal = bigDecimalOf(Long.MIN_VALUE)
-
-    fun Number.exprValue(type: SingleType) = when (type) {
-        is StaticScalarType -> when (type.scalarType) {
-            is Int2Type,
-            is Int4Type,
-            is Int8Type,
-            is IntType -> {
-                val rangeForType = when (typedOpBehavior) {
-                    // Legacy behavior doesn't honor SMALLINT, INT4 constraints
-                    TypedOpBehavior.LEGACY -> LongRange(Long.MIN_VALUE, Long.MAX_VALUE)
-                    TypedOpBehavior.HONOR_PARAMETERS ->
-                        when (type.scalarType) {
-                            // There is not CAST syntax to that can execute this branch today.
-                            is Int2Type -> LongRange(Short.MIN_VALUE.toLong(), Short.MAX_VALUE.toLong())
-                            is Int4Type -> LongRange(Int.MIN_VALUE.toLong(), Int.MAX_VALUE.toLong())
-                            is Int8Type,
-                            is IntType -> LongRange(Long.MIN_VALUE, Long.MAX_VALUE)
-                            else -> error("Unreachable code")
-                        }
-                }
-
-                // Here, we check if there is a possibility of being able to fit this number into
-                // any of the integer types. We allow the buffer of 1 because we allow rounding into min/max values.
-                if (this <= (longMinDecimal - BigDecimal.ONE) || this >= (longMaxDecimal + BigDecimal.ONE)) {
-                    errIntOverflow(8)
-                }
-
-                // We round the value to the nearest integral value
-                // In legacy behavior, this always picks the floor integer value
-                // Else, rounding is done through https://en.wikipedia.org/wiki/Rounding#Round_half_to_even
-                // We don't convert the result to Long within the when block here
-                //  because the rounded values can still be out of range for Kotlin's Long.
-                val result = when (typedOpBehavior) {
-                    TypedOpBehavior.LEGACY -> when (this) {
-                        // BigDecimal.toLong inflates the internal BigInteger to the scale before converting it to a long.
-                        // For example to convert 1e-6000 it needs to create a BigInteger with value equal to
-                        // `unscaledNumber^(10^abs(scale))` to them drop it and return 0L. The BigInteger creation is very
-                        // expensive and completely wasted. The division to integral skips all that.
-                        is BigDecimal -> this.divideToIntegralValue(BigDecimal.ONE)
-                        else -> this
-                    }
-                    TypedOpBehavior.HONOR_PARAMETERS -> when (this) {
-                        is BigDecimal -> this.setScale(0, RoundingMode.HALF_EVEN)
-                        // [kotlin.math.round] rounds towards the closes even number on tie
-                        //   https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.math/round.html
-                        is Float -> round(this)
-                        is Double -> round(this)
-                        else -> this
-                    }
-                }.let {
-                    // after rounding, check that the value can fit into range of the type being casted into
-                    if (it < rangeForType.first || it > rangeForType.last) {
-                        errIntOverflow(8)
-                    }
-                    it.toLong()
-                }
-                valueFactory.newInt(result)
-            }
-            is FloatType -> valueFactory.newFloat(this.toDouble())
-            is DecimalType -> when (typedOpBehavior) {
-                TypedOpBehavior.LEGACY -> valueFactory.newFromIonValue(
-                    this.coerce(BigDecimal::class.java).ionValue(valueFactory.ion)
-                )
-                TypedOpBehavior.HONOR_PARAMETERS -> when (val precision = type.parameters[0]) {
-                    null -> valueFactory.newFromIonValue(
-                        this.coerce(BigDecimal::class.java).ionValue(valueFactory.ion)
-                    )
-                    else -> {
-                        val decimal = this.coerce(BigDecimal::class.java) as BigDecimal
-                        val scale = type.parameters[1]!!
-                        val result = decimal.round(MathContext(precision))
-                            .setScale(scale, RoundingMode.HALF_UP)
-                        if (result.precision() > precision) {
-                            // Following PostgresSQL behavior here. Java will increase precision if needed.
-                            castFailedErr(
-                                "target type DECIMAL($precision, $scale) too small for value $decimal.",
-                                internal = false
-                            )
-                        } else {
-                            valueFactory.newFromIonValue(result.ionValue(valueFactory.ion))
-                        }
-                    }
-                }
-            }
-            else -> error("Unsupported type: ${type.scalarType}")
-        }
-        else -> castFailedErr("Invalid type for numeric conversion: $type (this code should be unreachable)", internal = true)
+    if ((targetType is CollectionType || targetType is StructType) && type == targetType.runtimeType) {
+        return this
     }
-
-    fun String.exprValue(type: SingleType) = when (type) {
-        is StaticScalarType -> when (type.scalarType) {
-            is CharType,
-            is VarcharType,
-            is StringType -> when (typedOpBehavior) {
-                TypedOpBehavior.LEGACY -> valueFactory.newString(this)
-                TypedOpBehavior.HONOR_PARAMETERS -> when (type.scalarType) {
-                    is StringType -> valueFactory.newString(this)
-                    is CharType,
-                    is VarcharType -> {
-                        val actualCodepointCount = this.codePointCount(0, this.length)
-                        val lengthConstraint = type.parameters[0]!!
-                        val truncatedString = if (actualCodepointCount <= lengthConstraint) {
-                            this // no truncation needed
-                        } else {
-                            this.substring(0, this.offsetByCodePoints(0, lengthConstraint))
-                        }
-
-                        valueFactory.newString(
-                            when (type.scalarType) {
-                                is CharType -> truncatedString.trimEnd { c -> c == '\u0020' }
-                                is VarcharType -> truncatedString
-                                else -> error("Unreachable code")
-                            }
-                        )
-                    }
-                    else -> error("Unreachable code")
-                }
-            }
-            is SymbolType -> valueFactory.newSymbol(this)
-            else -> castFailedErr("Invalid type for textual conversion: $type (this code should be unreachable)", internal = true)
+    when (targetType) {
+        is StaticScalarType -> scalarTypeSystem.invokeCastOp(this, targetType.toCompileTimeType(), locationMeta).let {
+            if (it != null) { return it }
         }
-        else -> castFailedErr("Invalid type for textual conversion: $type (this code should be unreachable)", internal = true)
-    }
-
-    when {
-        type.isUnknown && targetType is MissingType -> return valueFactory.missingValue
-        type.isUnknown && targetType is NullType -> return valueFactory.nullValue
-        type.isUnknown -> return this
-        // Note that the ExprValueType for TIME and TIME WITH TIME ZONE is the same i.e. ExprValueType.TIME.
-        // We further need to check for the time zone and hence we do not short circuit here when the type is TIME.
-        type == targetType.runtimeType && type != ExprValueType.TIME -> {
-            return when {
-                targetType.isNumeric() -> numberValue().exprValue(targetType)
-                targetType is StaticScalarType && (targetType.scalarType in listOf(CharType, VarcharType, StringType)) -> stringValue().exprValue(targetType)
-                else -> this
-            }
-        }
-        else -> {
-            when (targetType) {
-                is StaticScalarType -> when (targetType.scalarType) {
-                    is CharType,
-                    is VarcharType,
-                    is StringType,
-                    is SymbolType -> when {
-                        type.isNumber -> return numberValue().toString().exprValue(targetType)
-                        type.isText -> return stringValue().exprValue(targetType)
-                        type == ExprValueType.DATE -> return dateValue().toString().exprValue(targetType)
-                        type == ExprValueType.TIME -> return timeValue().toString().exprValue(targetType)
-                        type in ION_TEXT_STRING_CAST_TYPES -> return ionValue.toString().exprValue(targetType)
-                    }
-                    is Int2Type,
-                    is Int4Type,
-                    is Int8Type,
-                    is IntType -> when {
-                        type == ExprValueType.BOOL -> return if (booleanValue()) 1L.exprValue(targetType) else 0L.exprValue(targetType)
-                        type.isNumber -> return numberValue().exprValue(targetType)
-                        type.isText -> {
-                            val value = try {
-                                val normalized = stringValue().normalizeForCastToInt()
-                                valueFactory.ion.singleValue(normalized) as IonInt
-                            } catch (e: Exception) {
-                                castFailedErr("can't convert string value to INT", internal = false, cause = e)
-                            }
-
-                            return when (value.integerSize) {
-                                // Our numbers comparison machinery does not handle big integers yet, fail fast
-                                IntegerSize.BIG_INTEGER -> errIntOverflow(8, errorContextFrom(locationMeta))
-                                else -> value.longValue().exprValue(targetType)
-                            }
-                        }
-                    }
-                    is FloatType -> when {
-                        type == ExprValueType.BOOL -> return if (booleanValue()) 1.0.exprValue(targetType) else 0.0.exprValue(targetType)
-                        type.isNumber -> return numberValue().toDouble().exprValue(targetType)
-                        type.isText ->
-                            try {
-                                return stringValue().toDouble().exprValue(targetType)
-                            } catch (e: NumberFormatException) {
-                                castFailedErr("can't convert string value to FLOAT", internal = false, cause = e)
-                            }
-                    }
-                    is DecimalType -> when {
-                        type == ExprValueType.BOOL -> return if (booleanValue()) {
-                            BigDecimal.ONE.exprValue(targetType)
-                        } else {
-                            BigDecimal.ZERO.exprValue(targetType)
-                        }
-                        type.isNumber -> return numberValue().exprValue(targetType)
-                        type.isText -> try {
-                            return bigDecimalOf(stringValue()).exprValue(targetType)
-                        } catch (e: NumberFormatException) {
-                            castFailedErr("can't convert string value to DECIMAL", internal = false, cause = e)
-                        }
-                    }
-                    is BlobType -> when {
-                        type.isLob -> return valueFactory.newBlob(bytesValue())
-                    }
-                    is ClobType -> when {
-                        type.isLob -> return valueFactory.newClob(bytesValue())
-                    }
-                    is BoolType -> when {
-                        type.isNumber -> return when {
-                            numberValue().compareTo(0L) == 0 -> valueFactory.newBoolean(false)
-                            else -> valueFactory.newBoolean(true)
-                        }
-                        type.isText -> return when (stringValue().toLowerCase()) {
-                            "true" -> valueFactory.newBoolean(true)
-                            "false" -> valueFactory.newBoolean(false)
-                            else -> castFailedErr("can't convert string value to BOOL", internal = false)
-                        }
-                    }
-                    is TimeStampType -> when {
-                        type.isText -> try {
-                            return valueFactory.newTimestamp(Timestamp.valueOf(stringValue()))
-                        } catch (e: IllegalArgumentException) {
-                            castFailedErr("can't convert string value to TIMESTAMP", internal = false, cause = e)
-                        }
-                    }
-                    is DateType -> when {
-                        type == ExprValueType.TIMESTAMP -> {
-                            val ts = timestampValue()
-                            return valueFactory.newDate(LocalDate.of(ts.year, ts.month, ts.day))
-                        }
-                        type.isText -> try {
-                            // validate that the date string follows the format YYYY-MM-DD
-                            if (!datePatternRegex.matches(stringValue())) {
-                                castFailedErr(
-                                    "Can't convert string value to DATE. Expected valid date string " +
-                                        "and the date format to be YYYY-MM-DD",
-                                    internal = false
-                                )
-                            }
-                            val date = LocalDate.parse(stringValue())
-                            return valueFactory.newDate(date)
-                        } catch (e: DateTimeParseException) {
-                            castFailedErr(
-                                "Can't convert string value to DATE. Expected valid date string " +
-                                    "and the date format to be YYYY-MM-DD",
-                                internal = false, cause = e
-                            )
-                        }
-                    }
-                    is TimeType -> {
-                        val precision = targetType.parameters[0]
-                        when {
-                            type == ExprValueType.TIME -> {
-                                val time = timeValue()
-                                val timeZoneOffset = when (targetType.scalarType.withTimeZone) {
-                                    true -> time.zoneOffset ?: defaultTimezoneOffset
-                                    else -> null
-                                }
-                                return valueFactory.newTime(
-                                    Time.of(
-                                        time.localTime,
-                                        precision ?: time.precision,
-                                        timeZoneOffset
-                                    )
-                                )
-                            }
-                            type == ExprValueType.TIMESTAMP -> {
-                                val ts = timestampValue()
-                                val timeZoneOffset = when (targetType.scalarType.withTimeZone) {
-                                    true -> ts.localOffset ?: castFailedErr(
-                                        "Can't convert timestamp value with unknown local offset (i.e. -00:00) to TIME WITH TIME ZONE.",
-                                        internal = false
-                                    )
-                                    else -> null
-                                }
-                                return valueFactory.newTime(
-                                    Time.of(
-                                        ts.hour,
-                                        ts.minute,
-                                        ts.second,
-                                        (ts.decimalSecond.remainder(BigDecimal.ONE).multiply(NANOS_PER_SECOND.toBigDecimal())).toInt(),
-                                        precision ?: ts.decimalSecond.scale(),
-                                        timeZoneOffset
-                                    )
-                                )
-                            }
-                            type.isText -> try {
-                                // validate that the time string follows the format HH:MM:SS[.ddddd...][+|-HH:MM]
-                                val matcher = genericTimeRegex.toPattern().matcher(stringValue())
-                                if (!matcher.find()) {
-                                    castFailedErr(
-                                        "Can't convert string value to TIME. Expected valid time string " +
-                                            "and the time to be of the format HH:MM:SS[.ddddd...][+|-HH:MM]",
-                                        internal = false
-                                    )
-                                }
-
-                                val localTime = LocalTime.parse(stringValue(), DateTimeFormatter.ISO_TIME)
-
-                                // Note that the [genericTimeRegex] has a group to extract the zone offset.
-                                val zoneOffsetString = matcher.group(2)
-                                val zoneOffset = zoneOffsetString?.let { ZoneOffset.of(it) } ?: defaultTimezoneOffset
-
-                                return valueFactory.newTime(
-                                    Time.of(
-                                        localTime,
-                                        precision ?: getPrecisionFromTimeString(stringValue()),
-                                        when (targetType.scalarType.withTimeZone) {
-                                            true -> zoneOffset
-                                            else -> null
-                                        }
-                                    )
-                                )
-                            } catch (e: DateTimeParseException) {
-                                castFailedErr(
-                                    "Can't convert string value to TIME. Expected valid time string " +
-                                        "and the time format to be HH:MM:SS[.ddddd...][+|-HH:MM]",
-                                    internal = false, cause = e
-                                )
-                            }
-                        }
-                    }
-                    else -> error("Unsupported type: ${targetType.scalarType}")
-                }
-                is ListType -> if (type.isSequence) return valueFactory.newList(asSequence())
-                is SexpType -> if (type.isSequence) return valueFactory.newSexp(asSequence())
-                is BagType -> if (type.isSequence) return valueFactory.newBag(asSequence())
-                // no support for anything else
-                else -> {}
-            }
-        }
+        is ListType -> if (type.isSequence) return valueFactory.newList(asSequence())
+        is SexpType -> if (type.isSequence) return valueFactory.newSexp(asSequence())
+        is BagType -> if (type.isSequence) return valueFactory.newBag(asSequence())
+        // no support for anything else
+        else -> {}
     }
 
     val errorCode = if (locationMeta == null) {
@@ -639,58 +279,6 @@ fun ExprValue.cast(
 
     // incompatible types
     err("Cannot convert $type to $targetType", errorCode, castExceptionContext(), internal = false)
-}
-/**
- * Remove leading spaces in decimal notation and the plus sign
- *
- * Examples:
- * - `"00001".normalizeForIntCast() == "1"`
- * - `"-00001".normalizeForIntCast() == "-1"`
- * - `"0x00001".normalizeForIntCast() == "0x00001"`
- * - `"+0x00001".normalizeForIntCast() == "0x00001"`
- * - `"000a".normalizeForIntCast() == "a"`
- */
-private fun String.normalizeForCastToInt(): String {
-    fun Char.isSign() = this == '-' || this == '+'
-    fun Char.isHexOrBase2Marker(): Boolean {
-        val c = this.toLowerCase()
-
-        return c == 'x' || c == 'b'
-    }
-
-    fun String.possiblyHexOrBase2() = (length >= 2 && this[1].isHexOrBase2Marker()) ||
-        (length >= 3 && this[0].isSign() && this[2].isHexOrBase2Marker())
-
-    return when {
-        length == 0 -> this
-        possiblyHexOrBase2() -> {
-            if (this[0] == '+') {
-                this.drop(1)
-            } else {
-                this
-            }
-        }
-        else -> {
-            val (isNegative, startIndex) = when (this[0]) {
-                '-' -> Pair(true, 1)
-                '+' -> Pair(false, 1)
-                else -> Pair(false, 0)
-            }
-
-            var toDrop = startIndex
-            while (toDrop < length && this[toDrop] == '0') {
-                toDrop += 1
-            }
-
-            when {
-                toDrop == length -> "0" // string is all zeros
-                toDrop == 0 -> this
-                toDrop == 1 && isNegative -> this
-                toDrop > 1 && isNegative -> '-' + this.drop(toDrop)
-                else -> this.drop(toDrop)
-            }
-        }
-    }
 }
 
 /**

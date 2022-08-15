@@ -5,6 +5,7 @@ import org.partiql.lang.SqlException
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.PropertyValueMap
 import org.partiql.lang.eval.CompileOptions
+import org.partiql.lang.ots_work.stscore.ScalarTypeSystem
 
 /**
  * Defines a error test case for query evaluation.
@@ -75,6 +76,8 @@ data class EvaluatorErrorTestCase(
      * Allows each test to configure its pipeline.
      */
     override val compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit = { },
+
+    override val scalarTypeSystem: ScalarTypeSystem? = null,
 
 ) : EvaluatorTestDefinition {
 

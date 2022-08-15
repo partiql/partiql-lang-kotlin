@@ -3,6 +3,7 @@ package org.partiql.lang.eval.evaluatortestframework
 import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.eval.CompileOptions
 import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.ots_work.stscore.ScalarTypeSystem
 
 /**
  * Defines a test case for query evaluation.
@@ -76,7 +77,9 @@ data class EvaluatorTestCase(
      */
     override val compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit = { },
 
-    val extraResultAssertions: (ExprValue) -> Unit = { }
+    val extraResultAssertions: (ExprValue) -> Unit = { },
+
+    override val scalarTypeSystem: ScalarTypeSystem? = null
 ) : EvaluatorTestDefinition {
     constructor(
         query: String,
@@ -89,6 +92,7 @@ data class EvaluatorTestCase(
         compileOptionsBuilderBlock: CompileOptions.Builder.() -> Unit = { },
         compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit = { },
         extraResultAssertions: (ExprValue) -> Unit = { },
+        scalarTypeSystem: ScalarTypeSystem? = null
     ) : this(
         groupName = null,
         query = query,
@@ -100,7 +104,8 @@ data class EvaluatorTestCase(
         targetPipeline = target,
         compileOptionsBuilderBlock = compileOptionsBuilderBlock,
         compilerPipelineBuilderBlock = compilerPipelineBuilderBlock,
-        extraResultAssertions = extraResultAssertions
+        extraResultAssertions = extraResultAssertions,
+        scalarTypeSystem = scalarTypeSystem
     )
 
     /** This will show up in the IDE's test runner. */
