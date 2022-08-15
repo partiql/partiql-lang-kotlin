@@ -251,7 +251,7 @@ class CliTest {
             scalarTypeSystem(
                 ScalarTypeSystem(
                     StandardPlugin(
-                        typedOpBehavior = TypedOpBehavior.LEGACY
+                        typedOpBehavior = TypedOpBehavior.HONOR_PARAMETERS
                     )
                 )
             )
