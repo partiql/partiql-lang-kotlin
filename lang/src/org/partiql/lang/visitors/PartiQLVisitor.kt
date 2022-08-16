@@ -560,7 +560,7 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         }
     }
 
-    override fun visitPatternPartParen(ctx: PartiQLParser.PatternPartParenContext) = PartiqlAst.build {
+    override fun visitPattern(ctx: PartiQLParser.PatternContext) = PartiqlAst.build {
         val restrictor = if (ctx.restrictor != null) visitPatternRestrictor(ctx.restrictor) else null
         val variable = if (ctx.variable != null) ctx.variable.symbolPrimitive().getString() else null
         val prefilter = if (ctx.where != null) visitWhereClause(ctx.where) else null
@@ -569,7 +569,7 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         pattern(graphMatchPattern(parts = parts, variable = variable, restrictor = restrictor, quantifier = quantifier, prefilter = prefilter))
     }
 
-    override fun visitEdge(ctx: PartiQLParser.EdgeContext) = PartiqlAst.build {
+    override fun visitEdgeAbbreviated(ctx: PartiQLParser.EdgeAbbreviatedContext) = PartiqlAst.build {
         val direction = visitEdgeAbbrev(ctx.edgeAbbrev())
         val quantifier = if (ctx.quantifier != null) visitPatternQuantifier(ctx.quantifier) else null
         edge(direction = direction, quantifier = quantifier)
@@ -646,7 +646,7 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         }
     }
 
-    override fun visitPatternPartNode(ctx: PartiQLParser.PatternPartNodeContext) = PartiqlAst.build {
+    override fun visitNode(ctx: PartiQLParser.NodeContext) = PartiqlAst.build {
         val variable = if (ctx.symbolPrimitive() != null) ctx.symbolPrimitive().getString() else null
         val prefilter = if (ctx.whereClause() != null) visitWhereClause(ctx.whereClause()) else null
         val label = if (ctx.patternPartLabel() != null) ctx.patternPartLabel().symbolPrimitive().getString() else null
