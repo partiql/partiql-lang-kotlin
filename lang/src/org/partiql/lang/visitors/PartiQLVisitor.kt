@@ -28,17 +28,13 @@ import com.amazon.ionelement.api.ionNull
 import com.amazon.ionelement.api.ionString
 import com.amazon.ionelement.api.ionSymbol
 import com.amazon.ionelement.api.toIonElement
+import com.ibm.icu.text.MessagePattern.Part
 import org.antlr.v4.runtime.ParserRuleContext
 import org.antlr.v4.runtime.Token
 import org.antlr.v4.runtime.tree.ErrorNode
 import org.antlr.v4.runtime.tree.RuleNode
 import org.antlr.v4.runtime.tree.TerminalNode
-import org.partiql.lang.ast.IsCountStarMeta
-import org.partiql.lang.ast.IsImplictJoinMeta
-import org.partiql.lang.ast.IsPathIndexMeta
-import org.partiql.lang.ast.IsValuesExprMeta
-import org.partiql.lang.ast.LegacyLogicalNotMeta
-import org.partiql.lang.ast.SourceLocationMeta
+import org.partiql.lang.ast.*
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.metaContainerOf
 import org.partiql.lang.errors.ErrorCode
@@ -455,25 +451,31 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
 
     override fun visitQuerySetSingleQuery(ctx: PartiQLParser.QuerySetSingleQueryContext): PartiqlAst.PartiqlAstNode = visit(ctx.singleQuery())
 
-    override fun visitQuerySetIntersect(ctx: PartiQLParser.QuerySetIntersectContext): PartiqlAst.Expr.Intersect {
+    override fun visitQuerySetIntersect(ctx: PartiQLParser.QuerySetIntersectContext): PartiqlAst.Expr.BagOp {
         val lhs = visit(ctx.lhs) as PartiqlAst.Expr
         val rhs = visit(ctx.rhs) as PartiqlAst.Expr
         val quantifier = if (ctx.ALL() != null) PartiqlAst.BUILDER().all() else PartiqlAst.BUILDER().distinct()
-        return PartiqlAst.BUILDER().intersect(quantifier, listOf(lhs, rhs), ctx.INTERSECT().getSourceMetaContainer())
+        return PartiqlAst.build {
+            bagOp(PartiqlAst.BagOpType.Intersect(), quantifier, listOf(lhs, rhs), ctx.INTERSECT().getSourceMetaContainer())
+        }
     }
 
-    override fun visitQuerySetExcept(ctx: PartiQLParser.QuerySetExceptContext): PartiqlAst.Expr.Except {
+    override fun visitQuerySetExcept(ctx: PartiQLParser.QuerySetExceptContext): PartiqlAst.Expr.BagOp {
         val lhs = visit(ctx.lhs) as PartiqlAst.Expr
         val rhs = visit(ctx.rhs) as PartiqlAst.Expr
         val quantifier = if (ctx.ALL() != null) PartiqlAst.BUILDER().all() else PartiqlAst.BUILDER().distinct()
-        return PartiqlAst.BUILDER().except(quantifier, listOf(lhs, rhs), ctx.EXCEPT().getSourceMetaContainer())
+        return PartiqlAst.build {
+            bagOp(PartiqlAst.BagOpType.Except(), quantifier, listOf(lhs, rhs), ctx.EXCEPT().getSourceMetaContainer())
+        }
     }
 
-    override fun visitQuerySetUnion(ctx: PartiQLParser.QuerySetUnionContext): PartiqlAst.Expr.Union {
+    override fun visitQuerySetUnion(ctx: PartiQLParser.QuerySetUnionContext): PartiqlAst.Expr.BagOp {
         val lhs = visit(ctx.lhs) as PartiqlAst.Expr
         val rhs = visit(ctx.rhs) as PartiqlAst.Expr
         val quantifier = if (ctx.ALL() != null) PartiqlAst.BUILDER().all() else PartiqlAst.BUILDER().distinct()
-        return PartiqlAst.BUILDER().union(quantifier, listOf(lhs, rhs), ctx.UNION().getSourceMetaContainer())
+        return PartiqlAst.build {
+            bagOp(PartiqlAst.BagOpType.Union(), quantifier, listOf(lhs, rhs), ctx.UNION().getSourceMetaContainer())
+        }
     }
 
     // TODO: Add metas
@@ -494,6 +496,26 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         val atAlias = if (ctx.atIdent() != null) convertSymbolPrimitive(ctx.atIdent().symbolPrimitive()) else null
         val byAlias = if (ctx.byIdent() != null) convertSymbolPrimitive(ctx.byIdent().symbolPrimitive()) else null
         return PartiqlAst.FromSource.Scan(expr, asAlias = asAlias, byAlias = byAlias, atAlias = atAlias, metas = expr.metas)
+    }
+
+    // COW HACK
+    override fun visitTableBaseRefSource(ctx: PartiQLParser.TableBaseRefSourceContext): PartiqlAst.FromSource.Scan {
+        val expr = visitTableSource(ctx.tableSource()) as PartiqlAst.Expr
+        val asAlias = if (ctx.asIdent() != null) convertSymbolPrimitive(ctx.asIdent().symbolPrimitive()) else null
+        val atAlias = if (ctx.atIdent() != null) convertSymbolPrimitive(ctx.atIdent().symbolPrimitive()) else null
+        val byAlias = if (ctx.byIdent() != null) convertSymbolPrimitive(ctx.byIdent().symbolPrimitive()) else null
+        return PartiqlAst.FromSource.Scan(expr, asAlias = asAlias, byAlias = byAlias, atAlias = atAlias, metas = expr.metas)
+    }
+
+    // COW HACK
+    override fun visitTableSource(ctx: PartiQLParser.TableSourceContext): PartiqlAst.PartiqlAstNode {
+        val plugin = ctx.plugin.getString().toUpperCase()
+        val function = ctx.function.getString().toUpperCase()
+        val id = "SOURCE::$plugin::$function" // hack since I'm overloading "CALL" responsibility
+        val args = ctx.literal().map { visit(it) as PartiqlAst.Expr }
+        return PartiqlAst.build {
+            call(id, args)
+        }
     }
 
     override fun visitTableMatch(ctx: PartiQLParser.TableMatchContext) = PartiqlAst.build {

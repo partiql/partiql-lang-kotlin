@@ -297,8 +297,14 @@ tableNonJoin
     ;
 
 tableBaseReference
-    : expr symbolPrimitive              # TableBaseRefSymbol
-    | expr asIdent? atIdent? byIdent?   # TableBaseRefClauses
+    : expr symbolPrimitive                       # TableBaseRefSymbol
+    | tableSource asIdent? atIdent? byIdent?     # TableBaseRefSource
+    | expr asIdent? atIdent? byIdent?            # TableBaseRefClauses
+    ;
+
+// COW HACK
+tableSource
+    : plugin=symbolPrimitive PERIOD function=symbolPrimitive PAREN_LEFT literal ( COMMA literal )* PAREN_RIGHT
     ;
 
 tableUnpivot

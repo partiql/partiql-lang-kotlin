@@ -28,6 +28,8 @@ task install(type: GradleBuild) {
 dependencies {
     implementation project(":lang")
     implementation project(":extensions")
+    implementation project(":partiql-spi")
+
     implementation 'net.sf.jopt-simple:jopt-simple:[5.0,6.0)'
     implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
 

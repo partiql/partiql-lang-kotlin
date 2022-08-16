@@ -20,13 +20,8 @@ import com.amazon.ion.IonSystem
 import org.partiql.lang.ast.ExprNode
 import org.partiql.lang.ast.toAstStatement
 import org.partiql.lang.domains.PartiqlAst
-import org.partiql.lang.eval.Bindings
-import org.partiql.lang.eval.CompileOptions
+import org.partiql.lang.eval.*
 import org.partiql.lang.eval.EvaluatingCompiler
-import org.partiql.lang.eval.ExprFunction
-import org.partiql.lang.eval.ExprValueFactory
-import org.partiql.lang.eval.Expression
-import org.partiql.lang.eval.ThunkReturnTypeAssertions
 import org.partiql.lang.eval.builtins.createBuiltinFunctions
 import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedure
 import org.partiql.lang.eval.visitors.PipelinedVisitorTransform
@@ -37,6 +32,7 @@ import org.partiql.lang.syntax.SqlParser
 import org.partiql.lang.types.CustomType
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.util.interruptibleFold
+import org.partiql.spi.Plugin
 
 /**
  * Contains all information needed for processing steps.
@@ -154,6 +150,7 @@ interface CompilerPipeline {
         private val customProcedures: MutableMap<String, StoredProcedure> = HashMap()
         private val preProcessingSteps: MutableList<ProcessingStep> = ArrayList()
         private var globalTypeBindings: Bindings<StaticType>? = null
+        private var pluginManager: PluginManager = PluginManager()
 
         /**
          * Specifies the [Parser] to be used to turn an PartiQL query into an instance of [PartiqlAst].
@@ -206,6 +203,8 @@ interface CompilerPipeline {
         /** Adds the [Bindings<StaticType>] for global variables. */
         fun globalTypeBindings(bindings: Bindings<StaticType>): Builder = this.apply { this.globalTypeBindings = bindings }
 
+        fun register(plugin: Plugin.Factory) = this.apply { pluginManager.register(valueFactory.ion, plugin) }
+
         /** Builds the actual implementation of [CompilerPipeline]. */
         fun build(): CompilerPipeline {
             val compileOptionsToUse = compileOptions ?: CompileOptions.standard()
@@ -235,7 +234,8 @@ interface CompilerPipeline {
                 customDataTypes = customDataTypes,
                 procedures = customProcedures,
                 preProcessingSteps = preProcessingSteps,
-                globalTypeBindings = globalTypeBindings
+                globalTypeBindings = globalTypeBindings,
+                pluginManager = pluginManager,
             )
         }
     }
@@ -249,7 +249,8 @@ internal class CompilerPipelineImpl(
     override val customDataTypes: List<CustomType>,
     override val procedures: Map<String, StoredProcedure>,
     private val preProcessingSteps: List<ProcessingStep>,
-    override val globalTypeBindings: Bindings<StaticType>?
+    override val globalTypeBindings: Bindings<StaticType>?,
+    private val pluginManager: PluginManager
 ) : CompilerPipeline {
 
     private val compiler = EvaluatingCompiler(
@@ -261,7 +262,8 @@ internal class CompilerPipelineImpl(
             }
         }.flatten().toMap(),
         procedures,
-        compileOptions
+        compileOptions,
+        pluginManager
     )
 
     override fun compile(query: String): Expression = compile(parser.parseAstStatement(query))

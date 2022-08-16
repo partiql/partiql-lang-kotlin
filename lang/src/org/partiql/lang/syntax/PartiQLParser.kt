@@ -16,15 +16,14 @@ package org.partiql.lang.syntax
 
 import com.amazon.ion.IonSexp
 import com.amazon.ion.IonSystem
-import org.antlr.v4.runtime.BaseErrorListener
-import org.antlr.v4.runtime.CharStreams
-import org.antlr.v4.runtime.CommonTokenStream
+import org.antlr.v4.runtime.*
 import org.antlr.v4.runtime.Lexer
-import org.antlr.v4.runtime.RecognitionException
-import org.antlr.v4.runtime.Recognizer
 import org.antlr.v4.runtime.Token
 import org.antlr.v4.runtime.misc.ParseCancellationException
+import org.antlr.v4.runtime.misc.Utils
 import org.antlr.v4.runtime.tree.ParseTree
+import org.antlr.v4.runtime.tree.Tree
+import org.antlr.v4.runtime.tree.Trees
 import org.partiql.lang.ast.ExprNode
 import org.partiql.lang.ast.toExprNode
 import org.partiql.lang.domains.PartiqlAst
@@ -35,6 +34,7 @@ import org.partiql.lang.types.CustomType
 import org.partiql.lang.util.getIonValue
 import org.partiql.lang.util.getPartiQLTokenType
 import org.partiql.lang.visitors.PartiQLVisitor
+import java.io.PrintStream
 import java.nio.charset.StandardCharsets
 import org.partiql.lang.generated.PartiQLParser as GeneratedParser
 import org.partiql.lang.generated.PartiQLTokens as GeneratedLexer
@@ -45,8 +45,8 @@ import org.partiql.lang.generated.PartiQLTokens as GeneratedLexer
  * to convert the [ParseTree] into a [PartiqlAst.Statement].
  */
 class PartiQLParser(
-    private val ion: IonSystem,
-    val customTypes: List<CustomType> = listOf()
+        private val ion: IonSystem,
+        val customTypes: List<CustomType> = listOf()
 ) : Parser {
 
     override fun parseAstStatement(source: String): PartiqlAst.Statement {
@@ -60,6 +60,30 @@ class PartiQLParser(
     fun parseQuery(lexer: Lexer): ParseTree {
         val parser = getParser(lexer)
         return parser.topQuery()
+    }
+
+    fun describe(source: String, out: PrintStream) {
+        val parameterIndexes = getNumberOfParameters(source)
+
+        val lexer = getLexer(source)
+        val tokens = CommonTokenStream(lexer)
+        val parser = GeneratedParser(tokens)
+        parser.addErrorListener(ParseErrorListener(ion))
+        val tree = parser.topQuery()
+
+        out.println("==Tokens")
+        tokens.tokens.forEach {
+            val type = org.partiql.lang.generated.PartiQLLexer.VOCABULARY.getSymbolicName(it.type)
+            out.println("$type: ${it.text}")
+        }
+
+        out.println("\n==Tree")
+        out.println(toPrettyTree(tree, parser))
+
+        // TODO
+//        val visitor = PartiQLVisitor(ion, customTypes, parameterIndexes)
+//        val ast = visitor.visit(tree) as PartiqlAst.Statement
+//        out.println("==AST")
     }
 
     internal fun getLexer(source: String): Lexer {
@@ -104,21 +128,21 @@ class PartiQLParser(
 
     @Deprecated("Please use parseAstStatement() instead--the return value can be deserialized to backward-compatible IonSexp.")
     override fun parse(source: String): IonSexp =
-        @Suppress("DEPRECATION")
-        org.partiql.lang.ast.AstSerializer.serialize(
-            parseExprNode(source),
-            org.partiql.lang.ast.AstVersion.V0, ion
-        )
+            @Suppress("DEPRECATION")
+            org.partiql.lang.ast.AstSerializer.serialize(
+                    parseExprNode(source),
+                    org.partiql.lang.ast.AstVersion.V0, ion
+            )
 
     class ParseErrorListener(val ion: IonSystem) : BaseErrorListener() {
         @Throws(ParseCancellationException::class)
         override fun syntaxError(
-            recognizer: Recognizer<*, *>?,
-            offendingSymbol: Any,
-            line: Int,
-            charPositionInLine: Int,
-            msg: String,
-            e: RecognitionException?
+                recognizer: Recognizer<*, *>?,
+                offendingSymbol: Any,
+                line: Int,
+                charPositionInLine: Int,
+                msg: String,
+                e: RecognitionException?
         ) {
             val propertyValues = PropertyValueMap()
             propertyValues[Property.LINE_NUMBER] = line.toLong()
@@ -127,5 +151,54 @@ class PartiQLParser(
             propertyValues[Property.TOKEN_VALUE] = getIonValue(ion, offendingSymbol)
             throw ParserException(message = msg, errorCode = ErrorCode.PARSE_UNEXPECTED_TOKEN, errorContext = propertyValues, cause = e)
         }
+    }
+
+    // COW HACK
+    companion object {
+
+        private val EOL = System.lineSeparator()
+        private const val INDENTS = "   "
+        private const val INDENT_ROOT = "⚬"
+        private const val INDENT_PIPE = "──"
+        private const val INDENT_T = "├" + INDENT_PIPE
+        private const val INDENT_I = "│  "
+        private const val INDENT_ELBOW = "└" + INDENT_PIPE
+        fun toPrettyTree(tree: Tree, parser: org.antlr.v4.runtime.Parser): String {
+            return processLined(tree, parser, 0, HashSet(), true)
+        }
+
+        private fun processLined(tree: Tree, parser: org.antlr.v4.runtime.Parser, level: Int, levels: Set<Int>, isLast: Boolean): String {
+            val nodeText: String = Utils.escapeWhitespace(Trees.getNodeText(tree, parser), false)
+            val childCount: Int = tree.childCount
+            val sb = StringBuilder()
+            sb.append(getLead(level, levels, isLast)).append(' ').append(nodeText).append(EOL)
+            if (childCount > 0) {
+                val levelsForChildren: MutableSet<Int> = HashSet(levels)
+                if (!isLast) levelsForChildren.add(level - 1)
+                for (c in 0 until childCount) {
+                    sb.append(processLined(tree.getChild(c), parser, level + 1, levelsForChildren, c == childCount - 1))
+                }
+            }
+            return sb.toString()
+        }
+
+        /**
+         * Constructs the leading text in a pretty tree print
+         *
+         * - Use "  " for empty space
+         * - Use "| " when we are "carrying" a level for easy reading
+         * - Use a sideways "T" for mid-level elements with no children
+         * - Use an elbow "L" for end elements or those with children
+         */
+        private fun getLead(level: Int, levels: Set<Int>, useElbow: Boolean): String {
+            if (level == 0) return INDENT_ROOT
+            val sb = StringBuilder()
+            for (l in 0 until level - 1) {
+                sb.append(if (levels.contains(l)) INDENT_I else INDENTS)
+            }
+            sb.append(if (useElbow) INDENT_ELBOW else INDENT_T)
+            return sb.toString()
+        }
+
     }
 }

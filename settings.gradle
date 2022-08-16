@@ -20,6 +20,7 @@ include('lang',
         'examples', 
         'testscript',
         'pts',
-        'extensions')
-include 'partiql-antlr'
-
+        'extensions',
+        'partiql-antlr',
+        'partiql-spi'
+)

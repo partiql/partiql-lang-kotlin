@@ -37,6 +37,7 @@ import org.partiql.lang.eval.UndefinedVariableBehavior
 import org.partiql.lang.syntax.Parser
 import org.partiql.lang.syntax.PartiQLParser
 import org.partiql.lang.syntax.SqlParser
+import org.partiql.plugins.EchoPlugin
 import org.partiql.shell.Shell
 import org.partiql.shell.Shell.ShellConfiguration
 import java.io.File
@@ -130,7 +131,7 @@ private val inputFormatOpt = optParser.acceptsAll(listOf("input-format", "if"), 
 private val wrapIonOpt = optParser.acceptsAll(listOf("wrap-ion", "w"), "wraps Ion input file values in a bag, requires the input format to be ION, requires the query option")
     .availableIf(queryOpt)
 
-private val parserOpt = optParser.acceptsAll(listOf("partiql-parser", "pql"), "wraps Ion input file values in a bag, requires the input format to be ION, requires the query option")
+private val parserOpt = optParser.acceptsAll(listOf("partiql-parser", "pql"), "if specified, the ANTLR parser will be used")
 
 private val monochromeOpt = optParser.acceptsAll(listOf("monochrome", "m"), "removes syntax highlighting for the REPL")
 
@@ -206,6 +207,8 @@ fun main(args: Array<String>) = try {
         addFunction(QueryDDB(valueFactory))
         compileOptions(compileOptions)
         sqlParser(parser)
+        // register a plugin
+        register(EchoPlugin.Factory)
     }
 
     // common options

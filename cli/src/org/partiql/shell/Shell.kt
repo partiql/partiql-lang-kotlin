@@ -37,6 +37,7 @@ import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.delegate
 import org.partiql.lang.syntax.Parser
+import org.partiql.lang.syntax.PartiQLParser
 import org.partiql.lang.util.ConfigurableExprValueFormatter
 import org.partiql.lang.util.ExprValueFormatter
 import java.io.Closeable
@@ -156,7 +157,15 @@ class Shell(
 
             // Pretty print AST
             if (line.endsWith("\n!!")) {
-                printAST(line.removeSuffix("!!"))
+                val query = line.removeSuffix("!!")
+                if (parser is PartiQLParser) {
+                    try {
+                        parser.describe(query, out)
+                    } catch (ex: Exception) {
+                        out.error(ex.stackTraceToString())
+                    }
+                }
+                printAST(query)
                 continue
             }
 
