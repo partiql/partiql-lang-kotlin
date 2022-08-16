@@ -305,31 +305,27 @@ tableUnpivot
     : UNPIVOT expr asIdent? atIdent? byIdent? ;
 
 tableMatch
-    : lhs=expr MATCH tableMatchModifer? matchPattern
-    | lhs=expr MATCH PAREN_LEFT tableMatchModifer? matchPattern ( COMMA matchPattern )* PAREN_RIGHT
-    | PAREN_LEFT lhs=expr MATCH tableMatchModifer? matchPattern ( COMMA matchPattern )* PAREN_RIGHT
+    : lhs=expr MATCH matchSelector? matchPattern
+    | lhs=expr MATCH PAREN_LEFT matchSelector? matchPattern ( COMMA matchPattern )* PAREN_RIGHT
+    | PAREN_LEFT lhs=expr MATCH matchSelector? matchPattern ( COMMA matchPattern )* PAREN_RIGHT
     ;
 
-tableMatchModifer
-    : mod=ANY ident=IDENTIFIER?               # MatchModifierBasic    // Identifier can be SHORTEST
-    | mod=ALL ident=IDENTIFIER                # MatchModifierBasic    // Identifier can be SHORTEST
-    | ANY k=LITERAL_INTEGER?                  # MatchModifierAny
-    | IDENTIFIER k=LITERAL_INTEGER GROUP?     # MatchModifierShortest // Identifier should be shortest
+// NOTE: Variable 'ident' can only be 'SHORTEST'
+matchSelector
+    : mod=ANY ident=IDENTIFIER?               # SelectorBasic
+    | mod=ALL ident=IDENTIFIER                # SelectorBasic
+    | ANY k=LITERAL_INTEGER?                  # SelectorAny
+    | IDENTIFIER k=LITERAL_INTEGER GROUP?     # SelectorShortest
     ;
 
 matchPattern
-    : PAREN_LEFT matchPattern whereClause? PAREN_RIGHT                  # MatchPatternGrouped
-    | BRACKET_LEFT matchPattern whereClause? BRACKET_RIGHT              # MatchPatternGrouped
-    | matchPatternParts                                                 # MatchPatternBase
-    ;
-
-matchPatternParts
-    : restrictor=patternRestrictor? patternPathVariable? patternParts
+    : PAREN_LEFT matchPattern whereClause? PAREN_RIGHT quantifier=patternQuantifier?         # MatchPatternGrouped
+    | BRACKET_LEFT matchPattern whereClause? BRACKET_RIGHT quantifier=patternQuantifier?     # MatchPatternGrouped
+    | restrictor=patternRestrictor? patternPathVariable? patternParts                        # MatchPatternBase
     ;
 
 patternPathVariable
-    : symbolPrimitive EQ
-    ;
+    : symbolPrimitive EQ ;
 
 patternRestrictor
     : restrictor=IDENTIFIER // Should be TRAIL / ACYCLIC / SIMPLE
