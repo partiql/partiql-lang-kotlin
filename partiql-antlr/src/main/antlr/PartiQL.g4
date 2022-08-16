@@ -279,44 +279,20 @@ limitClause
     : LIMIT expr;
 
 /**
+ *
  * GRAPH PATTERN MATCHING LANGUAGE (GPML)
- */
-
-
-/**
- *
- * TABLES & JOINS
  *
  */
- 
-tableReference
-    : lhs=tableReference tableJoined[$lhs.ctx] # TableRefBase
-    | PAREN_LEFT tableReference PAREN_RIGHT    # TableWrapped
-    | tableNonJoin                             # TableRefBase
+
+matchExpr
+    : selector=matchSelector? matchPattern
     ;
 
-tableNonJoin
-    : tableBaseReference
-    | tableUnpivot
-    | tableMatch
+matchExprList
+    : selector=matchSelector? matchPattern ( COMMA matchPattern )*
     ;
 
-tableBaseReference
-    : expr symbolPrimitive              # TableBaseRefSymbol
-    | expr asIdent? atIdent? byIdent?   # TableBaseRefClauses
-    ;
-
-tableUnpivot
-    : UNPIVOT expr asIdent? atIdent? byIdent? ;
-
-tableMatch
-    : lhs=expr MATCH selector=matchSelector? graphPattern
-    | lhs=expr MATCH PAREN_LEFT selector=matchSelector? graphPattern ( COMMA graphPattern )* PAREN_RIGHT
-    | PAREN_LEFT lhs=expr MATCH selector=matchSelector? graphPattern ( COMMA graphPattern )* PAREN_RIGHT
-    ;
-
-
-graphPattern
+matchPattern
     : restrictor=patternRestrictor? variable=patternPathVariable? graphPart*
     ;
 
@@ -344,6 +320,7 @@ patternRestrictor
 patternPartNode
     : PAREN_LEFT symbolPrimitive? patternPartLabel? whereClause? PAREN_RIGHT
     ;
+
 
 // TODO: Do we use a specific nested pattern definition?
 patternPartParen
@@ -384,6 +361,37 @@ edgeAbbrev
     | TILDA ANGLE_RIGHT
     | ANGLE_LEFT TILDA
     | ANGLE_LEFT? MINUS ANGLE_RIGHT?
+    ;
+
+/**
+ *
+ * TABLES & JOINS
+ *
+ */
+ 
+tableReference
+    : lhs=tableReference tableJoined[$lhs.ctx] # TableRefBase
+    | PAREN_LEFT tableReference PAREN_RIGHT    # TableWrapped
+    | tableNonJoin                             # TableRefBase
+    ;
+
+tableNonJoin
+    : tableBaseReference
+    | tableUnpivot
+    | tableMatch
+    ;
+
+tableBaseReference
+    : expr symbolPrimitive              # TableBaseRefSymbol
+    | expr asIdent? atIdent? byIdent?   # TableBaseRefClauses
+    ;
+
+tableUnpivot
+    : UNPIVOT expr asIdent? atIdent? byIdent? ;
+
+tableMatch
+    : lhs=expr MATCH matchExpr                              # MatchSingle
+    | lhs=expr MATCH PAREN_LEFT matchExprList PAREN_RIGHT   # MatchMultiple
     ;
 
 tableJoined[ParserRuleContext lhs]
