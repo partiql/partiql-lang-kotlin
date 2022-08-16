@@ -279,6 +279,11 @@ limitClause
     : LIMIT expr;
 
 /**
+ * GRAPH PATTERN MATCHING LANGUAGE (GPML)
+ */
+
+
+/**
  *
  * TABLES & JOINS
  *
@@ -305,9 +310,20 @@ tableUnpivot
     : UNPIVOT expr asIdent? atIdent? byIdent? ;
 
 tableMatch
-    : lhs=expr MATCH matchSelector? matchPattern
-    | lhs=expr MATCH PAREN_LEFT matchSelector? matchPattern ( COMMA matchPattern )* PAREN_RIGHT
-    | PAREN_LEFT lhs=expr MATCH matchSelector? matchPattern ( COMMA matchPattern )* PAREN_RIGHT
+    : lhs=expr MATCH selector=matchSelector? graphPattern
+    | lhs=expr MATCH PAREN_LEFT selector=matchSelector? graphPattern ( COMMA graphPattern )* PAREN_RIGHT
+    | PAREN_LEFT lhs=expr MATCH selector=matchSelector? graphPattern ( COMMA graphPattern )* PAREN_RIGHT
+    ;
+
+
+graphPattern
+    : restrictor=patternRestrictor? variable=patternPathVariable? graphPart*
+    ;
+
+graphPart
+    : patternPartNode
+    | patternPartEdge
+    | patternPartParen
     ;
 
 // NOTE: Variable 'ident' can only be 'SHORTEST'
@@ -318,12 +334,6 @@ matchSelector
     | IDENTIFIER k=LITERAL_INTEGER GROUP?     # SelectorShortest
     ;
 
-matchPattern
-    : PAREN_LEFT matchPattern whereClause? PAREN_RIGHT quantifier=patternQuantifier?         # MatchPatternGrouped
-    | BRACKET_LEFT matchPattern whereClause? BRACKET_RIGHT quantifier=patternQuantifier?     # MatchPatternGrouped
-    | restrictor=patternRestrictor? patternPathVariable? patternParts                        # MatchPatternBase
-    ;
-
 patternPathVariable
     : symbolPrimitive EQ ;
 
@@ -331,29 +341,14 @@ patternRestrictor
     : restrictor=IDENTIFIER // Should be TRAIL / ACYCLIC / SIMPLE
     ;
 
-patternParts
-    : node=patternPartNode patternPartContinue*
-    ;
-
 patternPartNode
     : PAREN_LEFT symbolPrimitive? patternPartLabel? whereClause? PAREN_RIGHT
     ;
 
-patternPartContinue
-    : patternPartEdge patternPartNode   # EdgeToNode
-    | patternPartParen patternPartNode  # PatternToNode
-    ;
-
 // TODO: Do we use a specific nested pattern definition?
 patternPartParen
-    : PAREN_LEFT restrictor=patternRestrictor? variable=patternPathVariable? partsNested where=whereClause? PAREN_RIGHT quantifier=patternQuantifier?
-    | BRACKET_LEFT restrictor=patternRestrictor? variable=patternPathVariable? partsNested where=whereClause? BRACKET_RIGHT quantifier=patternQuantifier?
-    ;
-
-partsNested
-    : patternParts
-    | patternPartContinue
-    | patternPartEdge
+    : PAREN_LEFT restrictor=patternRestrictor? variable=patternPathVariable? graphPart+ where=whereClause? PAREN_RIGHT quantifier=patternQuantifier?
+    | BRACKET_LEFT restrictor=patternRestrictor? variable=patternPathVariable? graphPart+ where=whereClause? BRACKET_RIGHT quantifier=patternQuantifier?
     ;
 
 patternQuantifier
@@ -362,8 +357,8 @@ patternQuantifier
     ;
 
 patternPartEdge
-    : edgeAbbrev quantifier=patternQuantifier? # Edge
-    | edgeWSpec quantifier=patternQuantifier?  # EdgeWithSpec
+    : edgeWSpec quantifier=patternQuantifier?  # EdgeWithSpec
+    | edgeAbbrev quantifier=patternQuantifier? # Edge
     ;
 
 edgeWSpec
