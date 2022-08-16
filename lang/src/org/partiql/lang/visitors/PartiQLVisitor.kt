@@ -498,7 +498,7 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
 
     override fun visitTableMatch(ctx: PartiQLParser.TableMatchContext) = PartiqlAst.build {
         val source = visitExpr(ctx.lhs)
-        val selector = if (ctx.tableMatchModifer() != null) visit(ctx.tableMatchModifer()) as PartiqlAst.GraphMatchSelector else null
+        val selector = if (ctx.matchSelector() != null) visit(ctx.matchSelector()) as PartiqlAst.GraphMatchSelector else null
         val patterns = ctx.matchPattern().map { pattern -> visit(pattern) as PartiqlAst.GraphMatchPattern }
         val metas = ctx.MATCH().getSourceMetaContainer()
         val graphExpr = graphMatchExpr(selector = selector, patterns = patterns)
@@ -506,7 +506,7 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
     }
 
     // TODO: Check that identifier = "SHORTEST"
-    override fun visitMatchModifierBasic(ctx: PartiQLParser.MatchModifierBasicContext) = PartiqlAst.build {
+    override fun visitSelectorBasic(ctx: PartiQLParser.SelectorBasicContext) = PartiqlAst.build {
         val metas = ctx.mod.getSourceMetaContainer()
         when (ctx.mod.type) {
             PartiQLParser.ANY -> {
@@ -521,13 +521,13 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         }
     }
 
-    override fun visitMatchModifierAny(ctx: PartiQLParser.MatchModifierAnyContext) = PartiqlAst.build {
+    override fun visitSelectorAny(ctx: PartiQLParser.SelectorAnyContext) = PartiqlAst.build {
         if (ctx.k != null) selectorAnyK(ctx.LITERAL_INTEGER().text.toLong(), ctx.ANY().getSourceMetaContainer())
         else selectorAny(ctx.ANY().getSourceMetaContainer())
     }
 
     // TODO: Check that identifier = "SHORTEST"
-    override fun visitMatchModifierShortest(ctx: PartiQLParser.MatchModifierShortestContext) = PartiqlAst.build {
+    override fun visitSelectorShortest(ctx: PartiQLParser.SelectorShortestContext) = PartiqlAst.build {
         val k = ctx.k.text.toLong()
         if (ctx.GROUP() != null) {
             selectorShortestKGroup(k, ctx.k.getSourceMetaContainer())
@@ -536,15 +536,27 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         }
     }
 
-    override fun visitMatchPatternParts(ctx: PartiQLParser.MatchPatternPartsContext) = PartiqlAst.build {
+    override fun visitMatchPatternGrouped(ctx: PartiQLParser.MatchPatternGroupedContext) = PartiqlAst.build {
+        val prefilter = if (ctx.whereClause() != null) visitWhereClause(ctx.whereClause()) else null
+        val quantifier = if (ctx.quantifier != null) visitPatternQuantifier(ctx.quantifier) else null
+        val subPattern = visit(ctx.matchPattern()) as PartiqlAst.GraphMatchPattern
+        val newSubPattern = subPattern.copy(prefilter = prefilter, quantifier = quantifier)
+        val pattern = pattern(newSubPattern)
+        graphMatchPattern(restrictor = null, prefilter = null, variable = null, quantifier = null, parts = listOf(pattern))
+    }
+
+    override fun visitMatchPatternBase(ctx: PartiQLParser.MatchPatternBaseContext) = PartiqlAst.build {
         val restrictor = if (ctx.restrictor != null) visitPatternRestrictor(ctx.restrictor) else null
         val prefilter = null
         val variable = if (ctx.patternPathVariable() != null) ctx.patternPathVariable().symbolPrimitive().getString() else null
         val quantifier = null
-        val parts = visitPatternParts(ctx.patternParts()).parts
-        graphMatchPattern(restrictor, prefilter = prefilter, variable = variable, quantifier = quantifier, parts = parts)
+        val subPattern = visitPatternParts(ctx.patternParts())
+        graphMatchPattern(restrictor, prefilter = prefilter, variable = variable, quantifier = quantifier, parts = subPattern.parts)
     }
 
+    /**
+     * @return a [PartiqlAst.GraphMatchPattern] that holds all parts.
+     */
     override fun visitPatternParts(ctx: PartiQLParser.PatternPartsContext) = PartiqlAst.build {
         val parts = mutableListOf<PartiqlAst.GraphMatchPatternPart>()
         parts.add(visitPatternPartNode(ctx.node))
