@@ -297,13 +297,13 @@ matchPattern
     ;
 
 graphPart
-    : patternPartNode
-    | patternPartEdge
-    | patternPartParen
+    : node
+    | edge
+    | pattern
     ;
 
-// NOTE: Variable 'ident' can only be 'SHORTEST'
-matchSelector
+
+matchSelector    // NOTE: Variable 'ident' can only be 'SHORTEST'
     : mod=ANY ident=IDENTIFIER?               # SelectorBasic
     | mod=ALL ident=IDENTIFIER                # SelectorBasic
     | ANY k=LITERAL_INTEGER?                  # SelectorAny
@@ -313,17 +313,20 @@ matchSelector
 patternPathVariable
     : symbolPrimitive EQ ;
 
-patternRestrictor
-    : restrictor=IDENTIFIER // Should be TRAIL / ACYCLIC / SIMPLE
+patternRestrictor    // Should be TRAIL / ACYCLIC / SIMPLE
+    : restrictor=IDENTIFIER
     ;
 
-patternPartNode
+node
     : PAREN_LEFT symbolPrimitive? patternPartLabel? whereClause? PAREN_RIGHT
     ;
 
+edge
+    : edgeWSpec quantifier=patternQuantifier?    # EdgeWithSpec
+    | edgeAbbrev quantifier=patternQuantifier?   # EdgeAbbreviated
+    ;
 
-// TODO: Do we use a specific nested pattern definition?
-patternPartParen
+pattern
     : PAREN_LEFT restrictor=patternRestrictor? variable=patternPathVariable? graphPart+ where=whereClause? PAREN_RIGHT quantifier=patternQuantifier?
     | BRACKET_LEFT restrictor=patternRestrictor? variable=patternPathVariable? graphPart+ where=whereClause? BRACKET_RIGHT quantifier=patternQuantifier?
     ;
@@ -331,11 +334,6 @@ patternPartParen
 patternQuantifier
     : quant=( PLUS | ASTERISK )
     | BRACE_LEFT lower=LITERAL_INTEGER COMMA upper=LITERAL_INTEGER? BRACE_RIGHT
-    ;
-
-patternPartEdge
-    : edgeWSpec quantifier=patternQuantifier?  # EdgeWithSpec
-    | edgeAbbrev quantifier=patternQuantifier? # Edge
     ;
 
 edgeWSpec
