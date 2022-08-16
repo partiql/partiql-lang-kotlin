@@ -484,47 +484,25 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
 
     /**
      *
-     * TABLE REFERENCES & JOINS
+     * GRAPH PATTERN MANIPULATION LANGUAGE (GPML)
      *
      */
 
-    override fun visitTableBaseRefClauses(ctx: PartiQLParser.TableBaseRefClausesContext): PartiqlAst.FromSource.Scan {
-        val expr = visitExpr(ctx.expr())
-        val asAlias = if (ctx.asIdent() != null) convertSymbolPrimitive(ctx.asIdent().symbolPrimitive()) else null
-        val atAlias = if (ctx.atIdent() != null) convertSymbolPrimitive(ctx.atIdent().symbolPrimitive()) else null
-        val byAlias = if (ctx.byIdent() != null) convertSymbolPrimitive(ctx.byIdent().symbolPrimitive()) else null
-        return PartiqlAst.FromSource.Scan(expr, asAlias = asAlias, byAlias = byAlias, atAlias = atAlias, metas = expr.metas)
-    }
-
-    override fun visitMatchSingle(ctx: PartiQLParser.MatchSingleContext) = PartiqlAst.build {
-        val source = visitExpr(ctx.lhs)
-        val metas = ctx.MATCH().getSourceMetaContainer()
-        val graphExpr = visitMatchExpr(ctx.matchExpr())
-        graphMatch(source, graphExpr, metas)
-    }
-
-    override fun visitMatchMultiple(ctx: PartiQLParser.MatchMultipleContext) = PartiqlAst.build {
-        val source = visitExpr(ctx.lhs)
-        val metas = ctx.MATCH().getSourceMetaContainer()
-        val graphExpr = visitMatchExprList(ctx.matchExprList())
-        graphMatch(source, graphExpr, metas)
-    }
-
     override fun visitMatchExpr(ctx: PartiQLParser.MatchExprContext) = PartiqlAst.build {
-        val selector = if (ctx.matchSelector() != null) visit(ctx.matchSelector()) as PartiqlAst.GraphMatchSelector else null
+        val selector = visitOrNull(ctx.matchSelector(), PartiqlAst.GraphMatchSelector::class)
         val pattern = visitMatchPattern(ctx.matchPattern())
         graphMatchExpr(selector, listOf(pattern))
     }
 
     override fun visitMatchExprList(ctx: PartiQLParser.MatchExprListContext) = PartiqlAst.build {
-        val selector = if (ctx.matchSelector() != null) visit(ctx.matchSelector()) as PartiqlAst.GraphMatchSelector else null
+        val selector = visitOrNull(ctx.matchSelector(), PartiqlAst.GraphMatchSelector::class)
         val patterns = ctx.matchPattern().map { pattern -> visitMatchPattern(pattern) }
         graphMatchExpr(selector, patterns)
     }
 
     override fun visitMatchPattern(ctx: PartiQLParser.MatchPatternContext) = PartiqlAst.build {
-        val parts = ctx.graphPart().map { part -> visit(part) as PartiqlAst.GraphMatchPatternPart }
-        val restrictor = if (ctx.restrictor != null) visitPatternRestrictor(ctx.restrictor) else null
+        val parts = visitOrEmpty(ctx.graphPart(), PartiqlAst.GraphMatchPatternPart::class)
+        val restrictor = visitOrNull(ctx.restrictor, PartiqlAst.GraphMatchRestrictor::class)
         val variable = if (ctx.variable != null) ctx.variable.symbolPrimitive().getString() else null
         graphMatchPattern(parts = parts, restrictor = restrictor, variable = variable)
     }
@@ -561,30 +539,32 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
     }
 
     override fun visitPattern(ctx: PartiQLParser.PatternContext) = PartiqlAst.build {
-        val restrictor = if (ctx.restrictor != null) visitPatternRestrictor(ctx.restrictor) else null
+        val restrictor = visitOrNull(ctx.restrictor, PartiqlAst.GraphMatchRestrictor::class)
         val variable = if (ctx.variable != null) ctx.variable.symbolPrimitive().getString() else null
-        val prefilter = if (ctx.where != null) visitWhereClause(ctx.where) else null
-        val quantifier = if (ctx.quantifier != null) visitPatternQuantifier(ctx.quantifier) else null
-        val parts = ctx.graphPart().map { part -> visitGraphPart(part) as PartiqlAst.GraphMatchPatternPart }
-        pattern(graphMatchPattern(parts = parts, variable = variable, restrictor = restrictor, quantifier = quantifier, prefilter = prefilter))
+        val prefilter = visitOrNull(ctx.where, PartiqlAst.Expr::class)
+        val quantifier = visitOrNull(ctx.quantifier, PartiqlAst.GraphMatchQuantifier::class)
+        val parts = visitOrEmpty(ctx.graphPart(), PartiqlAst.GraphMatchPatternPart::class)
+        pattern(
+            graphMatchPattern(parts = parts, variable = variable, restrictor = restrictor, quantifier = quantifier, prefilter = prefilter)
+        )
     }
 
     override fun visitEdgeAbbreviated(ctx: PartiQLParser.EdgeAbbreviatedContext) = PartiqlAst.build {
         val direction = visitEdgeAbbrev(ctx.edgeAbbrev())
-        val quantifier = if (ctx.quantifier != null) visitPatternQuantifier(ctx.quantifier) else null
+        val quantifier = visitOrNull(ctx.quantifier, PartiqlAst.GraphMatchQuantifier::class)
         edge(direction = direction, quantifier = quantifier)
     }
 
     override fun visitEdgeWithSpec(ctx: PartiQLParser.EdgeWithSpecContext) = PartiqlAst.build {
-        val quantifier = if (ctx.quantifier != null) visitPatternQuantifier(ctx.quantifier) else null
-        val edge = visit(ctx.edgeWSpec()) as PartiqlAst.GraphMatchPatternPart.Edge
-        edge.copy(quantifier = quantifier)
+        val quantifier = visitOrNull(ctx.quantifier, PartiqlAst.GraphMatchQuantifier::class)
+        val edge = visitOrNull(ctx.edgeWSpec(), PartiqlAst.GraphMatchPatternPart.Edge::class)
+        edge!!.copy(quantifier = quantifier)
     }
 
     override fun visitEdgeSpec(ctx: PartiQLParser.EdgeSpecContext) = PartiqlAst.build {
         val placeholderDirection = edgeRight()
         val variable = if (ctx.symbolPrimitive() != null) ctx.symbolPrimitive().getString() else null
-        val prefilter = if (ctx.whereClause() != null) visitWhereClause(ctx.whereClause()) else null
+        val prefilter = visitOrNull(ctx.whereClause(), PartiqlAst.Expr::class)
         val label = if (ctx.patternPartLabel() != null) ctx.patternPartLabel().symbolPrimitive().getString() else null
         edge(direction = placeholderDirection, variable = variable, prefilter = prefilter, label = listOfNotNull(label))
     }
@@ -648,7 +628,7 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
 
     override fun visitNode(ctx: PartiQLParser.NodeContext) = PartiqlAst.build {
         val variable = if (ctx.symbolPrimitive() != null) ctx.symbolPrimitive().getString() else null
-        val prefilter = if (ctx.whereClause() != null) visitWhereClause(ctx.whereClause()) else null
+        val prefilter = visitOrNull(ctx.whereClause(), PartiqlAst.Expr::class)
         val label = if (ctx.patternPartLabel() != null) ctx.patternPartLabel().symbolPrimitive().getString() else null
         node(variable = variable, prefilter = prefilter, label = listOfNotNull(label))
     }
@@ -661,6 +641,34 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
             "simple" -> restrictorSimple(metas)
             else -> throw ParserException("Unrecognized pattern restrictor", ErrorCode.PARSE_INVALID_QUERY)
         }
+    }
+
+    /**
+     *
+     * TABLE REFERENCES & JOINS
+     *
+     */
+
+    override fun visitTableBaseRefClauses(ctx: PartiQLParser.TableBaseRefClausesContext): PartiqlAst.FromSource.Scan {
+        val expr = visitExpr(ctx.expr())
+        val asAlias = if (ctx.asIdent() != null) convertSymbolPrimitive(ctx.asIdent().symbolPrimitive()) else null
+        val atAlias = if (ctx.atIdent() != null) convertSymbolPrimitive(ctx.atIdent().symbolPrimitive()) else null
+        val byAlias = if (ctx.byIdent() != null) convertSymbolPrimitive(ctx.byIdent().symbolPrimitive()) else null
+        return PartiqlAst.FromSource.Scan(expr, asAlias = asAlias, byAlias = byAlias, atAlias = atAlias, metas = expr.metas)
+    }
+
+    override fun visitMatchSingle(ctx: PartiQLParser.MatchSingleContext) = PartiqlAst.build {
+        val source = visitExpr(ctx.lhs)
+        val metas = ctx.MATCH().getSourceMetaContainer()
+        val graphExpr = visitMatchExpr(ctx.matchExpr())
+        graphMatch(source, graphExpr, metas)
+    }
+
+    override fun visitMatchMultiple(ctx: PartiQLParser.MatchMultipleContext) = PartiqlAst.build {
+        val source = visitExpr(ctx.lhs)
+        val metas = ctx.MATCH().getSourceMetaContainer()
+        val graphExpr = visitMatchExprList(ctx.matchExprList())
+        graphMatch(source, graphExpr, metas)
     }
 
     override fun visitFromClauseSimpleExplicit(ctx: PartiQLParser.FromClauseSimpleExplicitContext): PartiqlAst.FromSource.Scan {
@@ -759,7 +767,7 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
     }
 
     override fun visitSequenceConstructor(ctx: PartiQLParser.SequenceConstructorContext): PartiqlAst.Expr {
-        val expressions = visitOrEmpty(PartiqlAst.Expr::class, ctx.expr())
+        val expressions = visitOrEmpty(ctx.expr(), PartiqlAst.Expr::class)
         return PartiqlAst.build {
             val metas = ctx.datatype.getSourceMetaContainer()
             when (ctx.datatype.type) {
@@ -826,7 +834,7 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
             throw ctx.dt.err("Expected one of: $DATE_TIME_PART_KEYWORDS", ErrorCode.PARSE_EXPECTED_DATE_TIME_PART)
         }
         val datetimePart = PartiqlAst.Expr.Lit(ion.newSymbol(ctx.dt.text).toIonElement())
-        val secondaryArgs = visitOrEmpty(PartiqlAst.Expr::class, ctx.expr())
+        val secondaryArgs = visitOrEmpty(ctx.expr(), PartiqlAst.Expr::class)
         val args = listOf(datetimePart) + secondaryArgs
         val metas = ctx.func.getSourceMetaContainer()
         return PartiqlAst.Expr.Call(SymbolPrimitive(ctx.func.text.toLowerCase(), metas), args, metas)
@@ -867,7 +875,7 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
 
     private fun visitBinaryOperation(lhs: ParserRuleContext?, rhs: ParserRuleContext?, op: Token?, parent: ParserRuleContext? = null): PartiqlAst.Expr {
         if (parent != null) return visit(parent) as PartiqlAst.Expr
-        val args = visitOrEmpty(PartiqlAst.Expr::class, lhs!!, rhs!!)
+        val args = visitOrEmpty(listOf(lhs!!, rhs!!), PartiqlAst.Expr::class)
         return PartiqlAst.build {
             val metas = op.getSourceMetaContainer()
             when (op!!.type) {
@@ -892,7 +900,7 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
 
     private fun visitUnaryOperation(operand: ParserRuleContext?, op: Token?, parent: ParserRuleContext? = null): PartiqlAst.PartiqlAstNode {
         if (parent != null) return visit(parent) as PartiqlAst.Expr
-        val arg = visitOrEmpty(PartiqlAst.Expr::class, operand!!)
+        val arg = visit(operand!!) as PartiqlAst.Expr
         return PartiqlAst.build {
             val metas = op.getSourceMetaContainer()
             when (op!!.type) {
@@ -952,13 +960,13 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
     }
 
     override fun visitPredicateBetween(ctx: PartiQLParser.PredicateBetweenContext): PartiqlAst.PartiqlAstNode {
-        val args = visitOrEmpty(PartiqlAst.Expr::class, ctx.lhs, ctx.lower, ctx.upper)
+        val args = visitOrEmpty(listOf(ctx.lhs, ctx.lower, ctx.upper), PartiqlAst.Expr::class)
         val between = PartiqlAst.build { between(args[0], args[1], args[2], ctx.BETWEEN().getSourceMetaContainer()) }
         return if (ctx.NOT() == null) between else PartiqlAst.build { not(between, ctx.NOT().getSourceMetaContainer() + metaContainerOf(LegacyLogicalNotMeta.instance)) }
     }
 
     override fun visitPredicateLike(ctx: PartiQLParser.PredicateLikeContext): PartiqlAst.PartiqlAstNode {
-        val args = visitOrEmpty(PartiqlAst.Expr::class, ctx.lhs, ctx.rhs)
+        val args = visitOrEmpty(listOf(ctx.lhs, ctx.rhs), PartiqlAst.Expr::class)
         val escape = if (ctx.escape == null) null else visit(ctx.escape) as PartiqlAst.Expr
         val like: PartiqlAst.Expr = PartiqlAst.BUILDER().like(args[0], args[1], escape, ctx.LIKE().getSourceMetaContainer())
         return if (ctx.NOT() == null) like else PartiqlAst.build { not(like, metas = ctx.NOT().getSourceMetaContainer() + metaContainerOf(LegacyLogicalNotMeta.instance)) }
@@ -1257,7 +1265,7 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
     override fun visitPathStepDotAll(ctx: PartiQLParser.PathStepDotAllContext) = PartiqlAst.build { pathUnpivot() }
 
     override fun visitArray(ctx: PartiQLParser.ArrayContext) = PartiqlAst.build {
-        list(visitOrEmpty(PartiqlAst.Expr::class, ctx.expr()))
+        list(visitOrEmpty(ctx.expr(), PartiqlAst.Expr::class))
     }
 
     override fun visitSetQuantifierStrategy(ctx: PartiQLParser.SetQuantifierStrategyContext?): PartiqlAst.SetQuantifier? = when {
@@ -1295,6 +1303,16 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
      * HELPER METHODS
      *
      */
+
+    private fun <T : PartiqlAst.PartiqlAstNode> visitOrEmpty(ctx: List<ParserRuleContext>?, clazz: KClass<T>): List<T> = when {
+        ctx.isNullOrEmpty() -> emptyList()
+        else -> ctx.map { clazz.cast(visit(it)) }
+    }
+
+    private fun <T : PartiqlAst.PartiqlAstNode> visitOrNull(ctx: ParserRuleContext?, clazz: KClass<T>): T? = when (ctx) {
+        null -> null
+        else -> clazz.cast(visit(ctx))
+    }
 
     private fun PartiqlAst.Expr.getStringValue(token: Token? = null): String = when (this) {
         is PartiqlAst.Expr.Id -> this.name.text.toLowerCase()
@@ -1376,13 +1394,6 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
                 else -> projectExpr(path, asAlias = alias, path.metas)
             }
         }
-    }
-
-    private fun <T : PartiqlAst.PartiqlAstNode> visitOrEmpty(clazz: KClass<T>, ctx: ParserRuleContext): T = clazz.cast(visit(ctx))
-    private fun <T : PartiqlAst.PartiqlAstNode> visitOrEmpty(clazz: KClass<T>, ctx: List<ParserRuleContext>): List<T> = ctx.map { clazz.cast(visit(it)) }
-    private fun <T : PartiqlAst.PartiqlAstNode> visitOrEmpty(clazz: KClass<T>, vararg ctx: ParserRuleContext): List<T> = when {
-        ctx.isNullOrEmpty() -> emptyList()
-        else -> visitOrEmpty(clazz, ctx.asList())
     }
 
     private fun TerminalNode.getStringValue(): String = this.symbol.getStringValue()
