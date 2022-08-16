@@ -496,16 +496,33 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         return PartiqlAst.FromSource.Scan(expr, asAlias = asAlias, byAlias = byAlias, atAlias = atAlias, metas = expr.metas)
     }
 
-    override fun visitTableMatch(ctx: PartiQLParser.TableMatchContext) = PartiqlAst.build {
+    override fun visitMatchSingle(ctx: PartiQLParser.MatchSingleContext) = PartiqlAst.build {
         val source = visitExpr(ctx.lhs)
-        val selector = if (ctx.matchSelector() != null) visit(ctx.matchSelector()) as PartiqlAst.GraphMatchSelector else null
-        val patterns = ctx.graphPattern().map { pattern -> visit(pattern) as PartiqlAst.GraphMatchPattern }
         val metas = ctx.MATCH().getSourceMetaContainer()
-        val graphExpr = graphMatchExpr(selector = selector, patterns = patterns)
+        val graphExpr = visitMatchExpr(ctx.matchExpr())
         graphMatch(source, graphExpr, metas)
     }
 
-    override fun visitGraphPattern(ctx: PartiQLParser.GraphPatternContext) = PartiqlAst.build {
+    override fun visitMatchMultiple(ctx: PartiQLParser.MatchMultipleContext) = PartiqlAst.build {
+        val source = visitExpr(ctx.lhs)
+        val metas = ctx.MATCH().getSourceMetaContainer()
+        val graphExpr = visitMatchExprList(ctx.matchExprList())
+        graphMatch(source, graphExpr, metas)
+    }
+
+    override fun visitMatchExpr(ctx: PartiQLParser.MatchExprContext) = PartiqlAst.build {
+        val selector = if (ctx.matchSelector() != null) visit(ctx.matchSelector()) as PartiqlAst.GraphMatchSelector else null
+        val pattern = visitMatchPattern(ctx.matchPattern())
+        graphMatchExpr(selector, listOf(pattern))
+    }
+
+    override fun visitMatchExprList(ctx: PartiQLParser.MatchExprListContext) = PartiqlAst.build {
+        val selector = if (ctx.matchSelector() != null) visit(ctx.matchSelector()) as PartiqlAst.GraphMatchSelector else null
+        val patterns = ctx.matchPattern().map { pattern -> visitMatchPattern(pattern) }
+        graphMatchExpr(selector, patterns)
+    }
+
+    override fun visitMatchPattern(ctx: PartiQLParser.MatchPatternContext) = PartiqlAst.build {
         val parts = ctx.graphPart().map { part -> visit(part) as PartiqlAst.GraphMatchPatternPart }
         val restrictor = if (ctx.restrictor != null) visitPatternRestrictor(ctx.restrictor) else null
         val variable = if (ctx.variable != null) ctx.variable.symbolPrimitive().getString() else null
