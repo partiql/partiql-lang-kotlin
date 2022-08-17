@@ -12,7 +12,7 @@ options {
  *
  */
 
-topQuery
+statement
     : dql COLON_SEMI? EOF          # QueryDql
     | dml COLON_SEMI? EOF          # QueryDml
     | ddl COLON_SEMI? EOF          # QueryDdl
@@ -48,16 +48,13 @@ dql
     : query;
 
 query
-    : querySet;
-
-querySet
-    : lhs=querySet EXCEPT ALL? rhs=singleQuery           # QuerySetExcept
-    | lhs=querySet UNION ALL? rhs=singleQuery            # QuerySetUnion
-    | lhs=querySet INTERSECT ALL? rhs=singleQuery        # QuerySetIntersect
-    | singleQuery                                        # QuerySetSingleQuery
+    : lhs=query EXCEPT ALL? rhs=queryPrimary           # Except
+    | lhs=query UNION ALL? rhs=queryPrimary            # Union
+    | lhs=query INTERSECT ALL? rhs=queryPrimary        # Intersect
+    | queryPrimary                                     # QueryBase
     ;
 
-singleQuery
+queryPrimary
     : expr
     | sfwQuery
     ;
@@ -84,9 +81,9 @@ sfwQuery
 //  we probably need to determine the formal rule for this. I'm assuming we shouldn't allow any token, but I've
 //  left it as an expression (which allows strings)
 execCommand
-    : EXEC expr ( querySet ( COMMA querySet )* )?
+    : EXEC expr ( query ( COMMA query )* )?
     ;
-    
+
 /**
  *
  * DATA DEFINITION LANGUAGE (DDL)
@@ -148,12 +145,12 @@ removeCommand
 //  See GH Issue: https://github.com/partiql/partiql-lang-kotlin/issues/698
 //  We essentially use the returning clause, because we currently support this with the SqlParser
 insertCommandReturning
-    : INSERT INTO pathSimple VALUE value=querySet ( AT pos=expr )? onConflict? returningClause?
+    : INSERT INTO pathSimple VALUE value=query ( AT pos=expr )? onConflict? returningClause?
     ;
 
 insertCommand
-    : INSERT INTO pathSimple VALUE value=querySet ( AT pos=expr )? onConflict?  # InsertValue
-    | INSERT INTO pathSimple value=querySet                                     # InsertSimple
+    : INSERT INTO pathSimple VALUE value=query ( AT pos=expr )? onConflict?  # InsertValue
+    | INSERT INTO pathSimple value=query                                     # InsertSimple
     ;
 
 onConflict
@@ -163,7 +160,7 @@ onConflict
 updateClause
     : UPDATE tableBaseReference
     ;
-    
+
 setCommand
     : SET setAssignment ( COMMA setAssignment )*
     ;
@@ -179,7 +176,7 @@ deleteCommand
 returningClause
     : RETURNING returningColumn ( COMMA returningColumn )*
     ;
-    
+
 returningColumn
     : status=(MODIFIED|ALL) age=(OLD|NEW) ASTERISK
     | status=(MODIFIED|ALL) age=(OLD|NEW) col=expr
@@ -202,7 +199,7 @@ selectClause
     | SELECT setQuantifierStrategy? VALUE expr        # SelectValue
     | PIVOT pivot=expr AT at=expr                     # SelectPivot
     ;
-    
+
 projectionItems
     : projectionItem ( COMMA projectionItem )* ;
 
@@ -220,10 +217,10 @@ setQuantifierStrategy
 
 letClause
     : LET letBinding ( COMMA letBinding )*;
-    
+
 letBinding
     : expr AS symbolPrimitive;
-    
+
 /**
  *
  * ORDER BY CLAUSE
@@ -233,21 +230,21 @@ letBinding
 orderByClause
     : ORDER BY orderSortSpec ( COMMA orderSortSpec )*     # OrderBy
     ;
-    
+
 orderSortSpec
     : expr bySpec? byNullSpec?      # OrderBySortSpec
     ;
-    
+
 bySpec
     : ASC   # OrderByAsc
     | DESC  # OrderByDesc
     ;
-    
+
 byNullSpec
     : NULLS FIRST  # NullSpecFirst
     | NULLS LAST   # NullSpecLast
     ;
-    
+
 /**
  *
  * GROUP CLAUSE
@@ -259,7 +256,7 @@ groupClause
 
 groupAlias
     : GROUP AS symbolPrimitive;
-    
+
 groupKey
     : expr (AS symbolPrimitive)?;
 
@@ -274,13 +271,13 @@ havingClause
 
 fromClause
     : FROM tableReference;
-    
+
 whereClause
     : WHERE expr;
 
 offsetByClause
     : OFFSET expr;
-    
+
 limitClause
     : LIMIT expr;
 
@@ -409,12 +406,12 @@ tableCrossJoin[ParserRuleContext lhs]
 tableQualifiedJoin[ParserRuleContext lhs]
     : joinType? JOIN rhs=joinRhs joinSpec
     ;
-    
+
 joinRhs
     : tableNonJoin                           # JoinRhsBase
     | PAREN_LEFT tableReference PAREN_RIGHT  # JoinRhsTableJoined
     ;
-    
+
 joinSpec
     : ON expr
     ;
@@ -480,7 +477,7 @@ valueExpr
     : sign=(PLUS|MINUS) rhs=valueExpr
     | parent=exprPrimary
     ;
-    
+
 exprPrimary
     : cast                       # ExprPrimaryBase
     | sequenceConstructor        # ExprPrimaryBase
@@ -500,7 +497,7 @@ exprPrimary
     | values                     # ExprPrimaryBase
     | exprTerm                   # ExprPrimaryBase
     ;
-    
+
 /**
  *
  * PRIMARY EXPRESSIONS
@@ -570,8 +567,8 @@ dateFunction
 functionCall
     : name=( CHAR_LENGTH | CHARACTER_LENGTH | OCTET_LENGTH | 
         BIT_LENGTH | UPPER | LOWER | SIZE | EXISTS | COUNT )
-        PAREN_LEFT ( querySet ( COMMA querySet )* )? PAREN_RIGHT                         # FunctionCallReserved
-    | name=symbolPrimitive PAREN_LEFT ( querySet ( COMMA querySet )* )? PAREN_RIGHT      # FunctionCallIdent
+        PAREN_LEFT ( query ( COMMA query )* )? PAREN_RIGHT                         # FunctionCallReserved
+    | name=symbolPrimitive PAREN_LEFT ( query ( COMMA query )* )? PAREN_RIGHT      # FunctionCallIdent
     ;
 
 pathStep
@@ -580,7 +577,7 @@ pathStep
     | PERIOD key=symbolPrimitive                 # PathStepDotExpr
     | PERIOD all=ASTERISK                        # PathStepDotAll
     ;
-    
+
 parameter
     : QUESTION_MARK;
 
