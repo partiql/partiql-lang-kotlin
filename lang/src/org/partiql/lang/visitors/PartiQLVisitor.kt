@@ -398,29 +398,29 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
      *
      */
 
-    override fun visitOrderBy(ctx: PartiQLParser.OrderByContext) = PartiqlAst.build {
+    override fun visitOrderByClause(ctx: PartiQLParser.OrderByClauseContext) = PartiqlAst.build {
         val sortSpecs = visitOrEmpty(ctx.orderSortSpec(), PartiqlAst.SortSpec::class)
         val metas = ctx.ORDER().getSourceMetaContainer()
         orderBy(sortSpecs, metas)
     }
 
-    override fun visitOrderBySortSpec(ctx: PartiQLParser.OrderBySortSpecContext) = PartiqlAst.build {
-        val expr = visit(ctx.expr()) as PartiqlAst.Expr
-        val order =
-            if (ctx.bySpec() != null) visit(ctx.bySpec(), PartiqlAst.OrderingSpec::class)
-            else asc()
+    override fun visitOrderSortSpec(ctx: PartiQLParser.OrderSortSpecContext) = PartiqlAst.build {
+        val expr = visit(ctx.expr(), PartiqlAst.Expr::class)
+        val orderSpec = when {
+            ctx.dir == null -> asc()
+            ctx.dir.type == PartiQLParser.ASC -> asc()
+            ctx.dir.type == PartiQLParser.DESC -> desc()
+            else -> throw ctx.dir.err("Invalid query syntax", ErrorCode.PARSE_INVALID_QUERY)
+        }
         val nullSpec = when {
-            ctx.byNullSpec() != null -> visit(ctx.byNullSpec(), PartiqlAst.NullsSpec::class)
-            order == desc() -> nullsFirst()
+            ctx.nulls == null && orderSpec is PartiqlAst.OrderingSpec.Desc -> nullsFirst()
+            ctx.nulls == null -> nullsLast()
+            ctx.nulls.type == PartiQLParser.FIRST -> nullsFirst()
+            ctx.nulls.type == PartiQLParser.LAST -> nullsLast()
             else -> nullsLast()
         }
-        sortSpec(expr, orderingSpec = order, nullsSpec = nullSpec)
+        sortSpec(expr, orderingSpec = orderSpec, nullsSpec = nullSpec)
     }
-
-    override fun visitNullSpecFirst(ctx: PartiQLParser.NullSpecFirstContext) = PartiqlAst.build { nullsFirst() }
-    override fun visitNullSpecLast(ctx: PartiQLParser.NullSpecLastContext) = PartiqlAst.build { nullsLast() }
-    override fun visitOrderByAsc(ctx: PartiQLParser.OrderByAscContext) = PartiqlAst.build { asc() }
-    override fun visitOrderByDesc(ctx: PartiQLParser.OrderByDescContext) = PartiqlAst.build { desc() }
 
     /**
      *
