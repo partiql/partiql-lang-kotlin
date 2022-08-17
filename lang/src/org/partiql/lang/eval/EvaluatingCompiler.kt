@@ -80,9 +80,6 @@ import org.partiql.lang.util.timestampValue
 import org.partiql.lang.util.totalMinutes
 import org.partiql.lang.util.unaryMinus
 import org.partiql.pig.runtime.SymbolPrimitive
-import org.partiql.spi.Plugin
-import org.partiql.spi.SourceHandle
-import java.lang.IllegalArgumentException
 import java.math.BigDecimal
 import java.util.LinkedList
 import java.util.Stack
@@ -1077,6 +1074,7 @@ internal class EvaluatingCompiler(
         return resolveArithmeticOverflow(computeThunk, metas)
     }
 
+    // COW HACK
     private fun compileSourceFunction(pluginId: String, functionId: String, args: List<AnyElement>, metas: MetaContainer): ThunkEnv {
         return thunkFactory.thunkEnv(metas) { env ->
             val sourceHandle = plugins.source(pluginId, functionId, args)

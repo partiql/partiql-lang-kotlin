@@ -37,12 +37,13 @@ import org.partiql.lang.eval.UndefinedVariableBehavior
 import org.partiql.lang.syntax.Parser
 import org.partiql.lang.syntax.PartiQLParser
 import org.partiql.lang.syntax.SqlParser
-import org.partiql.plugins.EchoPlugin
 import org.partiql.shell.Shell
 import org.partiql.shell.Shell.ShellConfiguration
+import org.partiql.spi.Plugin
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
+import java.util.ServiceLoader
 import kotlin.system.exitProcess
 
 // TODO how can a user pass the catalog here?
@@ -201,14 +202,19 @@ fun main(args: Array<String>) = try {
         }
     }
 
+    val pluginLoader = PluginLoader()
+
     val compilerPipeline = CompilerPipeline.build(ion) {
         addFunction(ReadFile(valueFactory))
         addFunction(WriteFile(valueFactory))
         addFunction(QueryDDB(valueFactory))
         compileOptions(compileOptions)
         sqlParser(parser)
-        // register a plugin
-        register(EchoPlugin.Factory)
+        // register all plugins
+        pluginLoader.load().forEach {
+            println("Registering plugin `${it.identifier}`")
+            register(it)
+        }
     }
 
     // common options
@@ -264,5 +270,22 @@ private fun runCli(environment: Bindings<ExprValue>, optionSet: OptionSet, compi
         output.use {
             Cli(valueFactory, input, inputFormat, output, outputFormat, compilerPipeline, environment, query, wrapIon).run()
         }
+    }
+}
+
+// COW HACK
+// Not sure where this would actually live
+class PluginLoader {
+
+    private val factories: ServiceLoader<Plugin.Factory> = ServiceLoader.load(Plugin.Factory::class.java)
+
+    fun load(): List<Plugin.Factory> {
+        val plugins = mutableListOf<Plugin.Factory>()
+        factories.forEach {
+            println("Found plugin `${it.identifier}`")
+            plugins.add(it)
+        }
+        println("Found ${plugins.size} plugins")
+        return plugins
     }
 }

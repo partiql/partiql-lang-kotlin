@@ -5,8 +5,8 @@ import com.amazon.ionelement.api.AnyElement
 import org.partiql.spi.Plugin
 import org.partiql.spi.SourceHandle
 import org.partiql.spi.SourceResolver
-import java.lang.IllegalArgumentException
 
+// COW HACK
 class PluginManager {
 
   private val plugins = mutableMapOf<String, Plugin>()

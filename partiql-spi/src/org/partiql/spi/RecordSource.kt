@@ -4,7 +4,6 @@ import com.amazon.ion.IonValue
 
 interface RecordSource {
 
-  // eh
-  fun get(): Sequence<IonValue>
-
+    // eh
+    fun get(): Sequence<IonValue>
 }

@@ -20,8 +20,14 @@ import com.amazon.ion.IonSystem
 import org.partiql.lang.ast.ExprNode
 import org.partiql.lang.ast.toAstStatement
 import org.partiql.lang.domains.PartiqlAst
-import org.partiql.lang.eval.*
+import org.partiql.lang.eval.Bindings
+import org.partiql.lang.eval.CompileOptions
 import org.partiql.lang.eval.EvaluatingCompiler
+import org.partiql.lang.eval.ExprFunction
+import org.partiql.lang.eval.ExprValueFactory
+import org.partiql.lang.eval.Expression
+import org.partiql.lang.eval.PluginManager
+import org.partiql.lang.eval.ThunkReturnTypeAssertions
 import org.partiql.lang.eval.builtins.createBuiltinFunctions
 import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedure
 import org.partiql.lang.eval.visitors.PipelinedVisitorTransform
@@ -203,6 +209,7 @@ interface CompilerPipeline {
         /** Adds the [Bindings<StaticType>] for global variables. */
         fun globalTypeBindings(bindings: Bindings<StaticType>): Builder = this.apply { this.globalTypeBindings = bindings }
 
+        // COW HACK
         fun register(plugin: Plugin.Factory) = this.apply { pluginManager.register(valueFactory.ion, plugin) }
 
         /** Builds the actual implementation of [CompilerPipeline]. */

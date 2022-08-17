@@ -5,17 +5,17 @@ import kotlin.reflect.KClass
 
 interface Plugin {
 
-  val ionSystem: IonSystem
+    val ion: IonSystem
 
-  fun getSplitSource(source: SourceHandle): SplitSource
+    fun getSplitSource(source: SourceHandle): SplitSource
 
-  fun getRecordSource(split: Split): RecordSource
+    fun getRecordSource(split: Split): RecordSource
 
-  interface Factory {
-    val identifier: String
-    val sourceResolver: SourceResolver
-    val config: KClass<*>
+    interface Factory {
+        val identifier: String
+        val sourceResolver: SourceResolver
+        val config: KClass<*>
 
-    fun create(ionSystem: IonSystem, config: Any?): Plugin
-  }
+        fun create(ion: IonSystem, config: Any?): Plugin
+    }
 }

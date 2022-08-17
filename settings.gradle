@@ -22,5 +22,6 @@ include('lang',
         'pts',
         'extensions',
         'partiql-antlr',
+        // COW HACK
         'partiql-spi'
 )

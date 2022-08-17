@@ -1,11 +1,17 @@
-package org.partiql.plugins
+package com.amazon.howero.echo
 
 import com.amazon.ion.IonSystem
 import com.amazon.ion.IonValue
-import org.partiql.spi.*
+import org.partiql.spi.Plugin
+import org.partiql.spi.RecordSource
+import org.partiql.spi.Source
+import org.partiql.spi.SourceHandle
+import org.partiql.spi.SourceResolver
+import org.partiql.spi.Split
+import org.partiql.spi.SplitSource
 import kotlin.reflect.KClass
 
-class EchoPlugin(override val ionSystem: IonSystem) : Plugin {
+class EchoPlugin(override val ion: IonSystem) : Plugin {
 
   override fun getSplitSource(source: SourceHandle): SplitSource {
     val s = source as EchoSourceHandle
@@ -13,26 +19,26 @@ class EchoPlugin(override val ionSystem: IonSystem) : Plugin {
   }
 
   override fun getRecordSource(split: Split): RecordSource = EchoRecordSource(
-      ionSystem = ionSystem,
+      ion = ion,
       split = split as EchoSplit,
   )
 
   object Sources : SourceResolver() {
 
     @Source
-    fun echo(message: String, times: Long): SourceHandle = EchoSourceHandle(message, times)
+    fun times(message: String, times: Long): SourceHandle = EchoSourceHandle(message, times)
 
   }
 
-  object Factory : Plugin.Factory {
+  class Factory : Plugin.Factory {
 
-    override val identifier: String = "example"
+    override val identifier: String = "echo"
 
     override val sourceResolver: SourceResolver = Sources
 
     override val config: KClass<*> = Any::class
 
-    override fun create(ionSystem: IonSystem, config: Any?): Plugin = EchoPlugin(ionSystem)
+    override fun create(ion: IonSystem, config: Any?): Plugin = EchoPlugin(ion)
 
   }
 
@@ -55,16 +61,16 @@ class EchoSplitSource(private val splits: List<Split>) : SplitSource {
 }
 
 class EchoRecordSource(
-    private val ionSystem: IonSystem,
+    private val ion: IonSystem,
     private val split: EchoSplit,
 ) : RecordSource {
 
   override fun get(): Sequence<IonValue> = sequence {
     (1..split.times).forEach { v ->
-      val s = ionSystem.newEmptyStruct()
-      s.add("timestamp", ionSystem.newCurrentUtcTimestamp())
-      s.add("message", ionSystem.newString(split.message))
-      s.add("time", ionSystem.newInt(v))
+      val s = ion.newEmptyStruct()
+      s.add("timestamp", ion.newCurrentUtcTimestamp())
+      s.add("message", ion.newString(split.message))
+      s.add("time", ion.newInt(v))
       yield(s)
     }
   }
