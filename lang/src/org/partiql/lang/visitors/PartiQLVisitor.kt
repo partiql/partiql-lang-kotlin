@@ -508,32 +508,30 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
 
     override fun visitPatternPathVariable(ctx: PartiQLParser.PatternPathVariableContext) = visitSymbolPrimitive(ctx.symbolPrimitive())
 
-    // TODO: Check that identifier = "SHORTEST"
     override fun visitSelectorBasic(ctx: PartiQLParser.SelectorBasicContext) = PartiqlAst.build {
         val metas = ctx.mod.getSourceMetaContainer()
         when (ctx.mod.type) {
-            PartiQLParser.ANY -> {
-                when {
-                    ctx.ident == null -> selectorAny(metas)
-                    ctx.ident.text.toLowerCase() == "shortest" -> selectorAnyShortest(metas)
-                    else -> throw ParserException("Unsupported modifier after ANY", ErrorCode.PARSE_INVALID_QUERY)
-                }
-            }
+            PartiQLParser.ANY -> selectorAnyShortest(metas)
             PartiQLParser.ALL -> selectorAllShortest(metas)
             else -> throw ParserException("Unsupported match selector.", ErrorCode.PARSE_INVALID_QUERY)
         }
     }
 
     override fun visitSelectorAny(ctx: PartiQLParser.SelectorAnyContext) = PartiqlAst.build {
-        if (ctx.k != null) selectorAnyK(ctx.LITERAL_INTEGER().text.toLong(), ctx.ANY().getSourceMetaContainer())
-        else selectorAny(ctx.ANY().getSourceMetaContainer())
+        val metas = ctx.ANY().getSourceMetaContainer()
+        when (ctx.k) {
+            null -> selectorAny(metas)
+            else -> selectorAnyK(ctx.k.text.toLong(), metas)
+        }
     }
 
-    // TODO: Check that identifier = "SHORTEST"
     override fun visitSelectorShortest(ctx: PartiQLParser.SelectorShortestContext) = PartiqlAst.build {
         val k = ctx.k.text.toLong()
-        if (ctx.GROUP() != null) selectorShortestKGroup(k, ctx.k.getSourceMetaContainer())
-        else selectorShortestK(k, ctx.k.getSourceMetaContainer())
+        val metas = ctx.k.getSourceMetaContainer()
+        when (ctx.GROUP()) {
+            null -> selectorShortestK(k, metas)
+            else -> selectorShortestKGroup(k, metas)
+        }
     }
 
     override fun visitPatternPartLabel(ctx: PartiQLParser.PatternPartLabelContext) = visitSymbolPrimitive(ctx.symbolPrimitive())
