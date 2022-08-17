@@ -81,8 +81,7 @@ sfwQuery
 //  we probably need to determine the formal rule for this. I'm assuming we shouldn't allow any token, but I've
 //  left it as an expression (which allows strings)
 execCommand
-    : EXEC expr ( query ( COMMA query )* )?
-    ;
+    : EXEC expr ( query ( COMMA query )* )?;
 
 /**
  *
@@ -126,8 +125,7 @@ dmlBaseCommand
     ;
 
 pathSimple
-    : symbolPrimitive pathSimpleSteps*
-    ;
+    : symbolPrimitive pathSimpleSteps*;
 
 pathSimpleSteps
     : BRACKET_LEFT key=literal BRACKET_RIGHT             # PathSimpleLiteral
@@ -136,8 +134,7 @@ pathSimpleSteps
     ;
 
 removeCommand
-    : REMOVE pathSimple
-    ;
+    : REMOVE pathSimple;
 
 // FIXME #001
 //  There is a bug in the old SqlParser that needed to be replicated to the PartiQLParser for the sake of ...
@@ -145,8 +142,7 @@ removeCommand
 //  See GH Issue: https://github.com/partiql/partiql-lang-kotlin/issues/698
 //  We essentially use the returning clause, because we currently support this with the SqlParser
 insertCommandReturning
-    : INSERT INTO pathSimple VALUE value=query ( AT pos=expr )? onConflict? returningClause?
-    ;
+    : INSERT INTO pathSimple VALUE value=query ( AT pos=expr )? onConflict? returningClause?;
 
 insertCommand
     : INSERT INTO pathSimple VALUE value=query ( AT pos=expr )? onConflict?  # InsertValue
@@ -154,28 +150,22 @@ insertCommand
     ;
 
 onConflict
-    : ON CONFLICT WHERE expr DO NOTHING
-    ;
+    : ON CONFLICT WHERE expr DO NOTHING;
 
 updateClause
-    : UPDATE tableBaseReference
-    ;
+    : UPDATE tableBaseReference;
 
 setCommand
-    : SET setAssignment ( COMMA setAssignment )*
-    ;
+    : SET setAssignment ( COMMA setAssignment )*;
 
 setAssignment
-    : pathSimple EQ expr
-    ;
+    : pathSimple EQ expr;
 
 deleteCommand
-    : DELETE fromClauseSimple whereClause? returningClause?
-    ;
+    : DELETE fromClauseSimple whereClause? returningClause?;
 
 returningClause
-    : RETURNING returningColumn ( COMMA returningColumn )*
-    ;
+    : RETURNING returningColumn ( COMMA returningColumn )*;
 
 returningColumn
     : status=(MODIFIED|ALL) age=(OLD|NEW) ASTERISK
@@ -228,22 +218,10 @@ letBinding
  */
 
 orderByClause
-    : ORDER BY orderSortSpec ( COMMA orderSortSpec )*     # OrderBy
-    ;
+    : ORDER BY orderSortSpec ( COMMA orderSortSpec )*;
 
 orderSortSpec
-    : expr bySpec? byNullSpec?      # OrderBySortSpec
-    ;
-
-bySpec
-    : ASC   # OrderByAsc
-    | DESC  # OrderByDesc
-    ;
-
-byNullSpec
-    : NULLS FIRST  # NullSpecFirst
-    | NULLS LAST   # NullSpecLast
-    ;
+    : expr dir=(ASC|DESC)? (NULLS nulls=(FIRST|LAST))?;
 
 /**
  *
@@ -288,16 +266,13 @@ limitClause
  */
 
 matchExpr
-    : selector=matchSelector? matchPattern
-    ;
+    : selector=matchSelector? matchPattern;
 
 matchExprList
-    : selector=matchSelector? matchPattern ( COMMA matchPattern )*
-    ;
+    : selector=matchSelector? matchPattern ( COMMA matchPattern )*;
 
 matchPattern
-    : restrictor=patternRestrictor? variable=patternPathVariable? graphPart*
-    ;
+    : restrictor=patternRestrictor? variable=patternPathVariable? graphPart*;
 
 graphPart
     : node
@@ -312,15 +287,13 @@ matchSelector
     ;
 
 patternPathVariable
-    : symbolPrimitive EQ ;
+    : symbolPrimitive EQ;
 
 patternRestrictor    // Should be TRAIL / ACYCLIC / SIMPLE
-    : restrictor=IDENTIFIER
-    ;
+    : restrictor=IDENTIFIER;
 
 node
-    : PAREN_LEFT symbolPrimitive? patternPartLabel? whereClause? PAREN_RIGHT
-    ;
+    : PAREN_LEFT symbolPrimitive? patternPartLabel? whereClause? PAREN_RIGHT;
 
 edge
     : edgeWSpec quantifier=patternQuantifier?    # EdgeWithSpec
@@ -348,12 +321,10 @@ edgeWSpec
     ;
 
 edgeSpec
-    : BRACKET_LEFT symbolPrimitive? patternPartLabel? whereClause? BRACKET_RIGHT
-    ;
+    : BRACKET_LEFT symbolPrimitive? patternPartLabel? whereClause? BRACKET_RIGHT;
 
 patternPartLabel
-    : COLON symbolPrimitive
-    ;
+    : COLON symbolPrimitive;
 
 edgeAbbrev
     : TILDA
@@ -386,7 +357,7 @@ tableBaseReference
     ;
 
 tableUnpivot
-    : UNPIVOT expr asIdent? atIdent? byIdent? ;
+    : UNPIVOT expr asIdent? atIdent? byIdent?;
 
 tableMatch
     : lhs=expr MATCH matchExpr                              # MatchSingle
@@ -404,8 +375,7 @@ tableCrossJoin[ParserRuleContext lhs]
     ;
 
 tableQualifiedJoin[ParserRuleContext lhs]
-    : joinType? JOIN rhs=joinRhs joinSpec
-    ;
+    : joinType? JOIN rhs=joinRhs joinSpec;
 
 joinRhs
     : tableNonJoin                           # JoinRhsBase
@@ -413,8 +383,7 @@ joinRhs
     ;
 
 joinSpec
-    : ON expr
-    ;
+    : ON expr;
 
 joinType
     : INNER
@@ -514,12 +483,10 @@ exprTerm
     ;
 
 nullIf
-    : NULLIF PAREN_LEFT expr COMMA expr PAREN_RIGHT
-    ;
+    : NULLIF PAREN_LEFT expr COMMA expr PAREN_RIGHT;
 
 coalesce
-    : COALESCE PAREN_LEFT expr ( COMMA expr )* PAREN_RIGHT
-    ;
+    : COALESCE PAREN_LEFT expr ( COMMA expr )* PAREN_RIGHT;
 
 caseExpr
     : CASE case=expr? (WHEN when=expr THEN then=expr)+ (ELSE expr)? END;
@@ -542,7 +509,7 @@ substring
     ;
 
 aggregate
-    : func=COUNT PAREN_LEFT ASTERISK PAREN_RIGHT                                             # CountAll
+    : func=COUNT PAREN_LEFT ASTERISK PAREN_RIGHT                                        # CountAll
     | func=(COUNT|MAX|MIN|SUM|AVG) PAREN_LEFT setQuantifierStrategy? expr PAREN_RIGHT   # AggregateBase
     ;
 
@@ -582,8 +549,7 @@ parameter
     : QUESTION_MARK;
 
 varRefExpr
-    : qualifier=AT_SIGN? ident=( IDENTIFIER | IDENTIFIER_QUOTED )
-    ;
+    : qualifier=AT_SIGN? ident=(IDENTIFIER|IDENTIFIER_QUOTED);
 
 /**
  *
@@ -609,16 +575,16 @@ pair
     : lhs=expr COLON rhs=expr;
 
 literal
-    : NULL                           # LiteralNull
-    | MISSING                        # LiteralMissing
-    | TRUE                           # LiteralTrue
-    | FALSE                          # LiteralFalse
-    | LITERAL_STRING                 # LiteralString
-    | LITERAL_INTEGER                # LiteralInteger
-    | LITERAL_DECIMAL                                                                    # LiteralDecimal
-    | ION_CLOSURE                                                                        # LiteralIon
-    | DATE LITERAL_STRING                                                                # LiteralDate
-    | TIME ( PAREN_LEFT LITERAL_INTEGER PAREN_RIGHT )? (WITH TIME ZONE)? LITERAL_STRING  # LiteralTime
+    : NULL                                                                                # LiteralNull
+    | MISSING                                                                             # LiteralMissing
+    | TRUE                                                                                # LiteralTrue
+    | FALSE                                                                               # LiteralFalse
+    | LITERAL_STRING                                                                      # LiteralString
+    | LITERAL_INTEGER                                                                     # LiteralInteger
+    | LITERAL_DECIMAL                                                                     # LiteralDecimal
+    | ION_CLOSURE                                                                         # LiteralIon
+    | DATE LITERAL_STRING                                                                 # LiteralDate
+    | TIME ( PAREN_LEFT LITERAL_INTEGER PAREN_RIGHT )? (WITH TIME ZONE)? LITERAL_STRING   # LiteralTime
     ;
 
 type
