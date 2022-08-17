@@ -37,7 +37,7 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
 }
 
 dependencies {
-    implementation project(":partiql-antlr")
+    implementation project(":partiql-syntax")
     // run-time dependencies
     // TODO:  don't expose Kotlin stdlib as part of the API.  This is currently needed because parts of the
     // interpreter's API use kotlin.sequences.Sequence<ExprValue>.  Once that has been removed, we can change
