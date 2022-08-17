@@ -52,7 +52,11 @@ class PartiQLParser(
     override fun parseAstStatement(source: String): PartiqlAst.Statement {
         val parameterIndexes = getNumberOfParameters(source)
         val lexer = getLexer(source)
-        val tree = parseQuery(lexer)
+        val tree = try {
+            parseQuery(lexer)
+        } catch (e: StackOverflowError) {
+            throw ParserException("Statement too large", ErrorCode.PARSE_STATEMENT_TOO_LARGE, cause = e)
+        }
         val visitor = PartiQLVisitor(ion, customTypes, parameterIndexes)
         return visitor.visit(tree) as PartiqlAst.Statement
     }
