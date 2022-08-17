@@ -79,7 +79,7 @@ sfwQuery
 
 // FIXME #002: This is a slight deviation from SqlParser, as the old parser allows ANY token after EXEC. Realistically,
 //  we probably need to determine the formal rule for this. I'm assuming we shouldn't allow any token, but I've
-//  left it as an expression (which allows strings)
+//  left it as an expression (which allows strings). See https://github.com/partiql/partiql-lang-kotlin/issues/707
 execCommand
     : EXEC expr ( query ( COMMA query )* )?;
 
@@ -140,7 +140,8 @@ removeCommand
 //  There is a bug in the old SqlParser that needed to be replicated to the PartiQLParser for the sake of ...
 //  ... same functionality. Using 2 returning clauses always uses the second clause. This should be fixed.
 //  See GH Issue: https://github.com/partiql/partiql-lang-kotlin/issues/698
-//  We essentially use the returning clause, because we currently support this with the SqlParser
+//  We essentially use the returning clause, because we currently support this with the SqlParser.
+//  See https://github.com/partiql/partiql-lang-kotlin/issues/708
 insertCommandReturning
     : INSERT INTO pathSimple VALUE value=query ( AT pos=expr )? onConflict? returningClause?;
 
