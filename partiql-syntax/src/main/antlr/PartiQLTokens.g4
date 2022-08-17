@@ -188,7 +188,7 @@ REAL: 'REAL';
 REFERENCES: 'REFERENCES';
 RELATIVE: 'RELATIVE';
 RESTRICT: 'RESTRICT';
-REVOKE: 'REVOKE';
+REVOKE: 'REVOKE'build/generated-src/antlr/main/org/partiql/lang/generate;
 RIGHT: 'RIGHT';
 ROLLBACK: 'ROLLBACK';
 ROWS: 'ROWS';
@@ -326,7 +326,6 @@ LITERAL_DECIMAL:
     | '.' DIGIT DIGIT* ([e] [+-]? DIGIT+)?
     | DIGIT DIGIT* ([e] [+-]? DIGIT+)?
     ;
-// @TODO: Rename to IDENTIFIER_UNQUOTED
 IDENTIFIER: [A-Z$_][A-Z0-9$_]*;
 IDENTIFIER_QUOTED: '"' ( ('""') | ~('"') )* '"';
 
@@ -342,7 +341,6 @@ fragment LETTER: [A-Z];
 fragment LETTER_NOT: ~[A-Z];
 fragment WHITESPACE: [ \r\n\t];
 
-// TODO: Comments, Strings, Symbols
 mode ION;
 ION_INLINE_COMMENT: '//' .*? (ION_NEWLINE | EOF) -> more;
 ION_BLOCK_COMMENT: '/*' .*? '*/' -> more;
