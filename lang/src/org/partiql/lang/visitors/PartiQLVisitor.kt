@@ -42,6 +42,7 @@ import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.metaContainerOf
 import org.partiql.lang.errors.ErrorCode
+import org.partiql.lang.errors.Property
 import org.partiql.lang.errors.PropertyValueMap
 import org.partiql.lang.eval.EvaluationException
 import org.partiql.lang.eval.time.MAX_PRECISION_FOR_TIME
@@ -73,9 +74,9 @@ import kotlin.reflect.cast
 class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = listOf(), private val parameterIndexes: Map<Int, Int> = mapOf()) :
     PartiQLBaseVisitor<PartiqlAst.PartiqlAstNode>() {
 
-    private val CUSTOM_KEYWORDS = customTypes.map { it.name.toLowerCase() }
+    private val customKeywords = customTypes.map { it.name.toLowerCase() }
 
-    private val CUSTOM_TYPE_ALIASES =
+    private val customTypeAliases =
         customTypes.map { customType ->
             customType.aliases.map { alias ->
                 Pair(alias.toLowerCase(), customType.name.toLowerCase())
@@ -652,10 +653,8 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
 
     override fun visitTableBaseRefClauses(ctx: PartiQLParser.TableBaseRefClausesContext) = PartiqlAst.build {
         val expr = visitExpr(ctx.expr())
-        val asAlias = visitOrNull(ctx.asIdent(), PartiqlAst.Expr.Id::class).toPigSymbolPrimitive()
-        val atAlias = visitOrNull(ctx.atIdent(), PartiqlAst.Expr.Id::class).toPigSymbolPrimitive()
-        val byAlias = visitOrNull(ctx.byIdent(), PartiqlAst.Expr.Id::class).toPigSymbolPrimitive()
-        scan_(expr, asAlias = asAlias, byAlias = byAlias, atAlias = atAlias, metas = expr.metas)
+        val (asAlias, atAlias, byAlias) = visitNullableItems(listOf(ctx.asIdent(), ctx.atIdent(), ctx.byIdent()), PartiqlAst.Expr.Id::class)
+        scan_(expr, asAlias = asAlias.toPigSymbolPrimitive(), byAlias = byAlias.toPigSymbolPrimitive(), atAlias = atAlias.toPigSymbolPrimitive(), metas = expr.metas)
     }
 
     override fun visitMatchSingle(ctx: PartiQLParser.MatchSingleContext) = PartiqlAst.build {
@@ -674,18 +673,15 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
 
     override fun visitFromClauseSimpleExplicit(ctx: PartiQLParser.FromClauseSimpleExplicitContext) = PartiqlAst.build {
         val expr = visitPathSimple(ctx.pathSimple())
-        val asAlias = visitOrNull(ctx.asIdent(), PartiqlAst.Expr.Id::class).toPigSymbolPrimitive()
-        val atAlias = visitOrNull(ctx.atIdent(), PartiqlAst.Expr.Id::class).toPigSymbolPrimitive()
-        val byAlias = visitOrNull(ctx.byIdent(), PartiqlAst.Expr.Id::class).toPigSymbolPrimitive()
-        scan_(expr, asAlias = asAlias, byAlias = byAlias, atAlias = atAlias, metas = expr.metas)
+        val (asAlias, atAlias, byAlias) = visitNullableItems(listOf(ctx.asIdent(), ctx.atIdent(), ctx.byIdent()), PartiqlAst.Expr.Id::class)
+        scan_(expr, asAlias = asAlias.toPigSymbolPrimitive(), byAlias = byAlias.toPigSymbolPrimitive(), atAlias = atAlias.toPigSymbolPrimitive(), metas = expr.metas)
     }
 
     override fun visitTableUnpivot(ctx: PartiQLParser.TableUnpivotContext) = PartiqlAst.build {
         val expr = visitExpr(ctx.expr())
-        val asAlias = visitOrNull(ctx.asIdent(), PartiqlAst.Expr.Id::class).toPigSymbolPrimitive()
-        val atAlias = visitOrNull(ctx.atIdent(), PartiqlAst.Expr.Id::class).toPigSymbolPrimitive()
-        val byAlias = visitOrNull(ctx.byIdent(), PartiqlAst.Expr.Id::class).toPigSymbolPrimitive()
-        unpivot_(expr, asAlias = asAlias, atAlias = atAlias, byAlias = byAlias, ctx.UNPIVOT().getSourceMetaContainer())
+        val metas = ctx.UNPIVOT().getSourceMetaContainer()
+        val (asAlias, atAlias, byAlias) = visitNullableItems(listOf(ctx.asIdent(), ctx.atIdent(), ctx.byIdent()), PartiqlAst.Expr.Id::class)
+        unpivot_(expr, asAlias = asAlias.toPigSymbolPrimitive(), atAlias = atAlias.toPigSymbolPrimitive(), byAlias = byAlias.toPigSymbolPrimitive(), metas)
     }
 
     /**
@@ -1147,17 +1143,23 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
 
     override fun visitTypeCustom(ctx: PartiQLParser.TypeCustomContext) = PartiqlAst.build {
         val customName: String = when (val name = ctx.symbolPrimitive().getString().toLowerCase()) {
-            in CUSTOM_KEYWORDS -> name
-            in CUSTOM_TYPE_ALIASES.keys -> CUSTOM_TYPE_ALIASES.getOrDefault(name, name)
+            in customKeywords -> name
+            in customTypeAliases.keys -> customTypeAliases.getOrDefault(name, name)
             else -> throw ParserException("Invalid custom type name: $name", ErrorCode.PARSE_INVALID_QUERY)
         }
         customType_(SymbolPrimitive(customName, mapOf()))
     }
 
-    // TODO: Catch exception for exponent too large
     override fun visitLiteralDecimal(ctx: PartiQLParser.LiteralDecimalContext) = PartiqlAst.build {
+        val decimal = try {
+            ion.newDecimal(bigDecimalOf(ctx.LITERAL_DECIMAL().text)).toIonElement()
+        } catch (e: NumberFormatException) {
+            val errorContext = PropertyValueMap()
+            errorContext[Property.TOKEN_STRING] = ctx.LITERAL_DECIMAL().text
+            throw ctx.LITERAL_DECIMAL().err("Invalid decimal literal", ErrorCode.LEXER_INVALID_LITERAL, errorContext)
+        }
         lit(
-            ion.newDecimal(bigDecimalOf(ctx.LITERAL_DECIMAL().text)).toIonElement(),
+            decimal,
             ctx.LITERAL_DECIMAL().getSourceMetaContainer()
         )
     }
@@ -1242,6 +1244,11 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
     private fun <T : PartiqlAst.PartiqlAstNode> visitOrEmpty(ctx: List<ParserRuleContext>?, clazz: KClass<T>): List<T> = when {
         ctx.isNullOrEmpty() -> emptyList()
         else -> ctx.map { clazz.cast(visit(it)) }
+    }
+
+    private fun <T : PartiqlAst.PartiqlAstNode> visitNullableItems(ctx: List<ParserRuleContext>?, clazz: KClass<T>): List<T?> = when {
+        ctx.isNullOrEmpty() -> emptyList()
+        else -> ctx.map { visitOrNull(it, clazz) }
     }
 
     private fun <T : PartiqlAst.PartiqlAstNode> visitOrNull(ctx: ParserRuleContext?, clazz: KClass<T>): T? = when (ctx) {
