@@ -8,6 +8,19 @@ options {
 
 /**
  *
+ * TOP LEVEL
+ *
+ */
+
+topQuery
+    : dql COLON_SEMI? EOF          # QueryDql
+    | dml COLON_SEMI? EOF          # QueryDml
+    | ddl COLON_SEMI? EOF          # QueryDdl
+    | execCommand COLON_SEMI? EOF  # QueryExec
+    ;
+
+/**
+ *
  * COMMON STRUCTURES
  *
  */
@@ -27,16 +40,9 @@ symbolPrimitive
 
 /**
  *
- * QUERY
+ * DATA QUERY LANGUAGE (DQL)
  *
  */
-
-topQuery
-    : dql COLON_SEMI? EOF          # QueryDql
-    | dml COLON_SEMI? EOF          # QueryDml
-    | ddl COLON_SEMI? EOF          # QueryDdl
-    | execCommand COLON_SEMI? EOF  # QueryExec
-    ;
 
 dql 
     : query;
@@ -109,8 +115,8 @@ dropCommand
  */
  
 dml
-    : updateClause dmlBaseCommand+ whereClause? returningClause?  # DmlUpdateWhereReturn
-    | fromClause whereClause? dmlBaseCommand+ returningClause?    # DmlFromWhereReturn
+    : updateClause dmlBaseCommand+ whereClause? returningClause?  # DmlBaseWrapper
+    | fromClause whereClause? dmlBaseCommand+ returningClause?    # DmlBaseWrapper
     | deleteCommand                                               # DmlDelete
     | insertCommandReturning                                      # DmlInsertReturning
     | dmlBaseCommand                                              # DmlBase
