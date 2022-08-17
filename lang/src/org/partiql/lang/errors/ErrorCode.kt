@@ -240,7 +240,15 @@ enum class ErrorCode(
         LOC_TOKEN,
         "unsupported syntax for alias, `at` and `as` are supported"
     ),
-
+    PARSE_STATEMENT_TOO_LARGE(
+        ErrorCategory.PARSER,
+        setOf(),
+        "Statement too large"
+    ) {
+        override fun getErrorMessage(errorContext: PropertyValueMap?): String {
+            return "Statement too large."
+        }
+    },
     PARSE_UNSUPPORTED_SYNTAX(
         ErrorCategory.PARSER,
         LOC_TOKEN,
