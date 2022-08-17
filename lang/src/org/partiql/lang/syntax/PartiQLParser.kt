@@ -59,7 +59,7 @@ class PartiQLParser(
 
     fun parseQuery(lexer: Lexer): ParseTree {
         val parser = getParser(lexer)
-        return parser.topQuery()
+        return parser.statement()
     }
 
     internal fun getLexer(source: String): Lexer {
