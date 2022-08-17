@@ -60,11 +60,11 @@ configure(subprojects.findAll { it.name != 'example' }) {
 
 subprojects { proj ->
 
-    if (proj.name == "partiql-antlr") {
+    if (proj.name == "partiql-syntax") {
         return
     }
 
-    if (proj.name != "partiql-antlr") {
+    if (proj.name != "partiql-syntax") {
         apply plugin: "org.jetbrains.kotlin.jvm"
     }
     
@@ -96,7 +96,7 @@ subprojects { proj ->
     }
 
     plugins.withId('java', { _ ->
-        if (proj.name != "partiql-antlr") {
+        if (proj.name != "partiql-syntax") {
             sourceSets {
                 main.java.srcDirs = ["src"]
                 main.resources.srcDirs = ["resources"]
@@ -108,7 +108,7 @@ subprojects { proj ->
     plugins.withId('org.jetbrains.kotlin.jvm', { _ ->
         def generatedVersionDir = "${buildDir}/generated-version"
 
-        if (proj.name != "partiql-antlr") {
+        if (proj.name != "partiql-syntax") {
             
             sourceSets {
                 main.kotlin.srcDirs = ["src"]
