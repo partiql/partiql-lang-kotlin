@@ -143,10 +143,10 @@ removeCommand
     ;
 
 // FIXME #001
-// FIXME: There is a bug in the old SqlParser that needed to be replicated to the PartiQLParser for the sake of ...
-// FIXME: ... same functionality. Using 2 returning clauses always uses the second clause. This should be fixed.
-// FIXME: See GH Issue: https://github.com/partiql/partiql-lang-kotlin/issues/698
-// FIXME: We essentially use the returning clause, because we currently support this with the SqlParser
+//  There is a bug in the old SqlParser that needed to be replicated to the PartiQLParser for the sake of ...
+//  ... same functionality. Using 2 returning clauses always uses the second clause. This should be fixed.
+//  See GH Issue: https://github.com/partiql/partiql-lang-kotlin/issues/698
+//  We essentially use the returning clause, because we currently support this with the SqlParser
 insertCommandReturning
     : INSERT INTO pathSimple VALUE value=querySet ( AT pos=expr )? onConflict? returningClause?
     ;
