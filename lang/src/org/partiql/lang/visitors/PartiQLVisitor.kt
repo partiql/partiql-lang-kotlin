@@ -1014,75 +1014,10 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
     }
 
     override fun visitLiteralTime(ctx: PartiQLParser.LiteralTimeContext) = PartiqlAst.build {
-        val timeString = ctx.LITERAL_STRING().getStringValue()
-        val precision = when (ctx.LITERAL_INTEGER()) {
-            null -> try {
-                getPrecisionFromTimeString(timeString).toLong()
-            } catch (e: EvaluationException) {
-                throw ctx.LITERAL_STRING().err(
-                    "Unable to parse precision.",
-                    ErrorCode.PARSE_INVALID_TIME_STRING, cause = e
-                )
-            }
-            else -> ctx.LITERAL_INTEGER().text.toInteger().toLong()
-        }
-        if (precision < 0 || precision > MAX_PRECISION_FOR_TIME) {
-            throw ctx.LITERAL_INTEGER().err("Precision out of bounds", ErrorCode.PARSE_INVALID_PRECISION_FOR_TIME)
-        }
-        val time: LocalTime
-        try {
-            time = LocalTime.parse(timeString, DateTimeFormatter.ISO_TIME)
-        } catch (e: DateTimeParseException) {
-            throw ctx.LITERAL_STRING().err("Unable to parse time", ErrorCode.PARSE_INVALID_TIME_STRING, cause = e)
-        }
-        litTime(
-            timeValue(
-                time.hour.toLong(), time.minute.toLong(), time.second.toLong(), time.nano.toLong(),
-                precision, false, null, ctx.LITERAL_STRING().getSourceMetaContainer()
-            ),
-            ctx.TIME().getSourceMetaContainer()
-        )
-    }
-
-    override fun visitLiteralTimeZone(ctx: PartiQLParser.LiteralTimeZoneContext) = PartiqlAst.build {
-        val timeString = ctx.LITERAL_STRING().getStringValue()
-        val precision = when (ctx.LITERAL_INTEGER()) {
-            null -> try {
-                getPrecisionFromTimeString(timeString).toLong()
-            } catch (e: EvaluationException) {
-                throw ctx.LITERAL_STRING().err(
-                    "Unable to parse precision.", ErrorCode.PARSE_INVALID_TIME_STRING,
-                    cause = e
-                )
-            }
-            else -> ctx.LITERAL_INTEGER().text.toInteger().toLong()
-        }
-        if (precision < 0 || precision > MAX_PRECISION_FOR_TIME) {
-            throw ctx.LITERAL_INTEGER().err("Precision out of bounds", ErrorCode.PARSE_INVALID_PRECISION_FOR_TIME)
-        }
-        try {
-            val time: OffsetTime = OffsetTime.parse(timeString)
-            return@build litTime(
-                timeValue(
-                    time.hour.toLong(), time.minute.toLong(), time.second.toLong(), time.nano.toLong(),
-                    precision, true, (time.offset.totalSeconds / 60).toLong()
-                )
-            )
-        } catch (e: DateTimeParseException) {
-            val time: LocalTime
-            try {
-                time = LocalTime.parse(timeString)
-            } catch (e: DateTimeParseException) {
-                throw ctx.LITERAL_STRING().err("Unable to parse time", ErrorCode.PARSE_INVALID_TIME_STRING, cause = e)
-            }
-            litTime(
-                timeValue(
-                    time.hour.toLong(), time.minute.toLong(), time.second.toLong(),
-                    time.nano.toLong(), precision, true, null,
-                    ctx.LITERAL_STRING().getSourceMetaContainer()
-                ),
-                ctx.TIME(0).getSourceMetaContainer()
-            )
+        val (timeString, precision) = getTimeStringAndPrecision(ctx.LITERAL_STRING(), ctx.LITERAL_INTEGER())
+        when (ctx.WITH()) {
+            null -> getLocalTime(timeString, false, precision, ctx.LITERAL_STRING(), ctx.TIME(0))
+            else -> getOffsetTime(timeString, precision, ctx.LITERAL_STRING(), ctx.TIME(0))
         }
     }
 
@@ -1210,7 +1145,6 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         timeWithTimeZoneType(precision)
     }
 
-    // TODO: Determine if should throw error on else
     override fun visitTypeCustom(ctx: PartiQLParser.TypeCustomContext) = PartiqlAst.build {
         val customName: String = when (val name = ctx.symbolPrimitive().getString().toLowerCase()) {
             in CUSTOM_KEYWORDS -> name
@@ -1341,6 +1275,71 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         return PartiqlAst.build {
             identifier(name, case)
         }
+    }
+
+    /**
+     * With the <string> and <int> nodes of a literal time expression, returns the parsed string and precision.
+     * TIME (<int>)? (WITH TIME ZONE)? <string>
+     */
+    private fun getTimeStringAndPrecision(stringNode: TerminalNode, integerNode: TerminalNode?): Pair<String, Long> {
+        val timeString = stringNode.getStringValue()
+        val precision = when (integerNode) {
+            null -> try {
+                getPrecisionFromTimeString(timeString).toLong()
+            } catch (e: EvaluationException) {
+                throw stringNode.err(
+                    "Unable to parse precision.", ErrorCode.PARSE_INVALID_TIME_STRING,
+                    cause = e
+                )
+            }
+            else -> integerNode.text.toInteger().toLong()
+        }
+        if (precision < 0 || precision > MAX_PRECISION_FOR_TIME) {
+            throw integerNode.err("Precision out of bounds", ErrorCode.PARSE_INVALID_PRECISION_FOR_TIME)
+        }
+        return timeString to precision
+    }
+
+    /**
+     * Parses a [timeString] using [OffsetTime] and converts to a [PartiqlAst.Expr.LitTime]. If unable to parse, parses
+     * using [getLocalTime].
+     */
+    private fun getOffsetTime(timeString: String, precision: Long, stringNode: TerminalNode, timeNode: TerminalNode) = PartiqlAst.build {
+        try {
+            val time: OffsetTime = OffsetTime.parse(timeString)
+            litTime(
+                timeValue(
+                    time.hour.toLong(), time.minute.toLong(), time.second.toLong(), time.nano.toLong(),
+                    precision, true, (time.offset.totalSeconds / 60).toLong()
+                )
+            )
+        } catch (e: DateTimeParseException) {
+            getLocalTime(timeString, true, precision, stringNode, timeNode)
+        }
+    }
+
+    /**
+     * Parses a [timeString] using [LocalTime] and converts to a [PartiqlAst.Expr.LitTime]
+     */
+    private fun getLocalTime(timeString: String, withTimeZone: Boolean, precision: Long, stringNode: TerminalNode, timeNode: TerminalNode) = PartiqlAst.build {
+        val time: LocalTime
+        val formatter = when (withTimeZone) {
+            false -> DateTimeFormatter.ISO_TIME
+            else -> DateTimeFormatter.ISO_LOCAL_TIME
+        }
+        try {
+            time = LocalTime.parse(timeString, formatter)
+        } catch (e: DateTimeParseException) {
+            throw stringNode.err("Unable to parse time", ErrorCode.PARSE_INVALID_TIME_STRING, cause = e)
+        }
+        litTime(
+            timeValue(
+                time.hour.toLong(), time.minute.toLong(), time.second.toLong(),
+                time.nano.toLong(), precision, withTimeZone, null,
+                stringNode.getSourceMetaContainer()
+            ),
+            timeNode.getSourceMetaContainer()
+        )
     }
 
     /**

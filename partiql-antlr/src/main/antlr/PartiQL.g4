@@ -618,11 +618,10 @@ literal
     | FALSE                          # LiteralFalse
     | LITERAL_STRING                 # LiteralString
     | LITERAL_INTEGER                # LiteralInteger
-    | LITERAL_DECIMAL                                                                   # LiteralDecimal
-    | ION_CLOSURE                                                                       # LiteralIon
-    | DATE LITERAL_STRING                                                               # LiteralDate
-    | TIME ( PAREN_LEFT LITERAL_INTEGER PAREN_RIGHT )? WITH TIME ZONE LITERAL_STRING    # LiteralTimeZone
-    | TIME ( PAREN_LEFT LITERAL_INTEGER PAREN_RIGHT )? LITERAL_STRING                   # LiteralTime
+    | LITERAL_DECIMAL                                                                    # LiteralDecimal
+    | ION_CLOSURE                                                                        # LiteralIon
+    | DATE LITERAL_STRING                                                                # LiteralDate
+    | TIME ( PAREN_LEFT LITERAL_INTEGER PAREN_RIGHT )? (WITH TIME ZONE)? LITERAL_STRING  # LiteralTime
     ;
 
 type
