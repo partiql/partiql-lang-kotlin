@@ -302,12 +302,10 @@ graphPart
     | pattern
     ;
 
-
-matchSelector    // NOTE: Variable 'ident' can only be 'SHORTEST'
-    : mod=ANY ident=IDENTIFIER?               # SelectorBasic
-    | mod=ALL ident=IDENTIFIER                # SelectorBasic
+matchSelector
+    : mod=(ANY|ALL) SHORTEST                  # SelectorBasic
     | ANY k=LITERAL_INTEGER?                  # SelectorAny
-    | IDENTIFIER k=LITERAL_INTEGER GROUP?     # SelectorShortest
+    | SHORTEST k=LITERAL_INTEGER GROUP?       # SelectorShortest
     ;
 
 patternPathVariable
