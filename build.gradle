@@ -64,10 +64,7 @@ subprojects { proj ->
         return
     }
 
-    if (proj.name != "partiql-syntax") {
-        apply plugin: "org.jetbrains.kotlin.jvm"
-    }
-    
+    apply plugin: "org.jetbrains.kotlin.jvm"
     tasks.withType(Test) {
         jvmArgs += ['-Duser.language=en', '-Duser.country=US']
         maxHeapSize = "4g"
@@ -96,27 +93,23 @@ subprojects { proj ->
     }
 
     plugins.withId('java', { _ ->
-        if (proj.name != "partiql-syntax") {
-            sourceSets {
-                main.java.srcDirs = ["src"]
-                main.resources.srcDirs = ["resources"]
-                test.java.srcDirs = ["test"]
-                test.resources.srcDirs = ["test-resources"]
-            }
+
+        sourceSets {
+            main.java.srcDirs = ["src"]
+            main.resources.srcDirs = ["resources"]
+            test.java.srcDirs = ["test"]
+            test.resources.srcDirs = ["test-resources"]
         }
     })
     plugins.withId('org.jetbrains.kotlin.jvm', { _ ->
         def generatedVersionDir = "${buildDir}/generated-version"
 
-        if (proj.name != "partiql-syntax") {
-            
-            sourceSets {
-                main.kotlin.srcDirs = ["src"]
-                test.kotlin.srcDirs = ["test"]
+        sourceSets {
+            main.kotlin.srcDirs = ["src"]
+            test.kotlin.srcDirs = ["test"]
 
-                main {
-                    output.dir(generatedVersionDir, builtBy: 'generateVersionAndHashProperties')
-                }
+            main {
+                output.dir(generatedVersionDir, builtBy: 'generateVersionAndHashProperties')
             }
         }
 
