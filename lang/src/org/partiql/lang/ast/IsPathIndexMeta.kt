@@ -13,6 +13,10 @@
  */
 package org.partiql.lang.ast
 
+/**
+ * This is used by the PartiQLVisitor to determine whether the path step is of type index. This is because it is
+ * used to evaluate path expressions in FROM clauses in convertPathToProjectionItem().
+ */
 class IsPathIndexMeta private constructor() : Meta {
     override val tag = TAG
 

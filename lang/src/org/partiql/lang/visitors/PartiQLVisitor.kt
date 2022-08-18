@@ -1435,7 +1435,7 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
      *      SELECT foo.*.bar FROM foo
      * ```
      */
-    private fun convertPathToProjectionItem(path: PartiqlAst.Expr.Path, alias: SymbolPrimitive?) = PartiqlAst.build {
+    protected fun convertPathToProjectionItem(path: PartiqlAst.Expr.Path, alias: SymbolPrimitive?) = PartiqlAst.build {
         val steps = mutableListOf<PartiqlAst.PathStep>()
         var containsIndex = false
         path.steps.forEachIndexed { index, step ->
