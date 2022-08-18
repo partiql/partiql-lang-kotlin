@@ -58,7 +58,7 @@ Be sure to replace `${version}` with the desired version.
 
 ## Building
 
-**Pre-requisite**: Building this project requires Java 11.
+**Pre-requisite**: Building this project requires Java 11+.
 
 To build this project, clone this repository and from its root directory execute:
 
