@@ -22,6 +22,7 @@ import org.antlr.v4.runtime.tree.TerminalNode
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.errors.PropertyValueMap
+import org.partiql.lang.generated.PartiQLParser
 import org.partiql.lang.generated.PartiQLTokens
 import org.partiql.lang.syntax.ALL_OPERATORS
 import org.partiql.lang.syntax.ALL_SINGLE_LEXEME_OPERATORS
@@ -66,6 +67,8 @@ internal fun Token?.error(
 internal fun getPartiQLTokenType(token: Token): TokenType {
     val type = token.type
     val text = token.text
+    println("TYPE: $type")
+    println("TEXT: $text")
     return when {
         type == PartiQLTokens.PAREN_LEFT -> TokenType.LEFT_PAREN
         type == PartiQLTokens.PAREN_RIGHT -> TokenType.RIGHT_PAREN
