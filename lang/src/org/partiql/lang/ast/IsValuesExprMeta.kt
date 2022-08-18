@@ -13,6 +13,11 @@
  */
 package org.partiql.lang.ast
 
+/**
+ * This is used because the IN Predicate requires that the RHS cannot be a SELECT expression or a VALUES expression.
+ * Therefore, attaching this to a VALUES expression (which is just a BAG in the AST) allows the PartiQLVisitor to
+ * differentiate between bags (specifically for the IN Predicate).
+ */
 class IsValuesExprMeta private constructor() : Meta {
     override val tag = TAG
 
