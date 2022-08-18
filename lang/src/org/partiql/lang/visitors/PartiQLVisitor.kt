@@ -28,13 +28,17 @@ import com.amazon.ionelement.api.ionNull
 import com.amazon.ionelement.api.ionString
 import com.amazon.ionelement.api.ionSymbol
 import com.amazon.ionelement.api.toIonElement
-import com.ibm.icu.text.MessagePattern.Part
 import org.antlr.v4.runtime.ParserRuleContext
 import org.antlr.v4.runtime.Token
 import org.antlr.v4.runtime.tree.ErrorNode
 import org.antlr.v4.runtime.tree.RuleNode
 import org.antlr.v4.runtime.tree.TerminalNode
-import org.partiql.lang.ast.*
+import org.partiql.lang.ast.IsCountStarMeta
+import org.partiql.lang.ast.IsImplictJoinMeta
+import org.partiql.lang.ast.IsPathIndexMeta
+import org.partiql.lang.ast.IsValuesExprMeta
+import org.partiql.lang.ast.LegacyLogicalNotMeta
+import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.metaContainerOf
 import org.partiql.lang.errors.ErrorCode
@@ -52,7 +56,6 @@ import org.partiql.lang.util.bigDecimalOf
 import org.partiql.lang.util.error
 import org.partiql.lang.util.getPrecisionFromTimeString
 import org.partiql.pig.runtime.SymbolPrimitive
-import java.lang.IndexOutOfBoundsException
 import java.math.BigInteger
 import java.time.LocalDate
 import java.time.LocalTime
@@ -1254,10 +1257,17 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         PartiqlAst.Expr.Lit(ion.newDecimal(bigDecimalOf(ctx.LITERAL_DECIMAL().text)).toIonElement(), ctx.LITERAL_DECIMAL().getSourceMetaContainer())
 
     override fun visitFunctionCallIdent(ctx: PartiQLParser.FunctionCallIdentContext) = PartiqlAst.build {
-        val name = ctx.name.getString().toLowerCase()
+        // COW HACK
+        val id = if (ctx.plugin != null) {
+            val plugin = ctx.plugin.getString().toUpperCase()
+            val function = ctx.name.getString().toUpperCase()
+            "SCALAR::$plugin::$function"
+        } else {
+            ctx.name.getString().toLowerCase()
+        }
         val args = ctx.querySet().map { arg -> visit(arg) as PartiqlAst.Expr }
         val metas = ctx.name.getSourceMetaContainer()
-        call(name, args = args, metas = metas)
+        call(id, args = args, metas = metas)
     }
 
     private fun PartiQLParser.SymbolPrimitiveContext.getSourceMetaContainer() = when (this.ident.type) {

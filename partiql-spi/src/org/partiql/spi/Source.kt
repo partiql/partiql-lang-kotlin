@@ -8,40 +8,6 @@ annotation class Source
 
 interface SourceHandle
 
-enum class SourceFormat {
-    JSON,
-    TEXT,
-}
-
-enum class SourceCompression {
-    NONE,
-    ZSTD,
-    GZIP,
-    ION,
-    B10N,
-}
-
-class SourceEncoding(
-    val format: SourceFormat,
-    val compression: SourceCompression,
-) {
-
-    companion object {
-
-        fun parse(arg: String): SourceEncoding {
-            if (arg == "") {
-                throw IllegalArgumentException("source encoding argument is null or empty")
-            }
-            val parts = arg.toUpperCase().split('/')
-            return when (parts.size) {
-                1 -> SourceEncoding(SourceFormat.valueOf(parts[0]), SourceCompression.NONE)
-                2 -> SourceEncoding(SourceFormat.valueOf(parts[0]), SourceCompression.valueOf(parts[1]))
-                else -> throw IllegalArgumentException("Invalid source encoding $arg")
-            }
-        }
-    }
-}
-
 abstract class SourceResolver {
 
     fun get(identifier: String, args: List<AnyElement>): SourceHandle {

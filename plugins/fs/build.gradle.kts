@@ -13,7 +13,7 @@ repositories {
 dependencies {
     implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
-
+    implementation("com.github.luben:zstd-jni:1.5.2-3")
     // COW HACK because `partiql-spi` is not in Maven
     implementation(files("../../partiql-spi/build/libs/partiql-spi-0.7.1-SNAPSHOT.jar"))
     implementation("com.amazon.ion:ion-java:1.9.0")

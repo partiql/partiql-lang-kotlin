@@ -279,13 +279,5 @@ class PluginLoader {
 
     private val factories: ServiceLoader<Plugin.Factory> = ServiceLoader.load(Plugin.Factory::class.java)
 
-    fun load(): List<Plugin.Factory> {
-        val plugins = mutableListOf<Plugin.Factory>()
-        factories.forEach {
-            println("Found plugin `${it.identifier}`")
-            plugins.add(it)
-        }
-        println("Found ${plugins.size} plugins")
-        return plugins
-    }
+    fun load(): List<Plugin.Factory> = factories.toList()
 }

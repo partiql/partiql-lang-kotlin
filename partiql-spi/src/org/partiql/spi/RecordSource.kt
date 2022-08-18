@@ -2,7 +2,7 @@ package org.partiql.spi
 
 import com.amazon.ion.IonValue
 
-interface RecordSource {
+interface RecordSource : AutoCloseable {
 
     // eh
     fun get(): Sequence<IonValue>

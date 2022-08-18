@@ -233,11 +233,16 @@ interface CompilerPipeline {
             // built-in functions with the same name.
             val allFunctions = builtinFunctions + customFunctions
 
+            // holy COW I dislike the raw function Map
+            val evenMoreFunctions = pluginManager.scalarExprLibs(valueFactory).fold(allFunctions) { m, lib ->
+                m + lib.functions.associateBy { it.signature.name }
+            }
+
             return CompilerPipelineImpl(
                 valueFactory = valueFactory,
                 parser = parser ?: SqlParser(valueFactory.ion, customDataTypes),
                 compileOptions = compileOptionsToUse,
-                functions = allFunctions,
+                functions = evenMoreFunctions,
                 customDataTypes = customDataTypes,
                 procedures = customProcedures,
                 preProcessingSteps = preProcessingSteps,

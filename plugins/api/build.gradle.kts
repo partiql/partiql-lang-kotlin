@@ -13,7 +13,7 @@ repositories {
 dependencies {
     implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
-
+    implementation("com.google.guava:guava:23.0")
     // COW HACK because `partiql-spi` is not in Maven
     implementation(files("../../partiql-spi/build/libs/partiql-spi-0.7.1-SNAPSHOT.jar"))
     implementation("com.amazon.ion:ion-java:1.9.0")
@@ -22,7 +22,7 @@ dependencies {
 
 tasks {
     named<ShadowJar>("shadowJar") {
-        archiveBaseName.set("echo-plugin")
+        archiveBaseName.set("api-plugin")
         archiveClassifier.set("")
         archiveVersion.set("")
     }

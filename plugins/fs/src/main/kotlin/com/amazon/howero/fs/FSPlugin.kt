@@ -1,15 +1,18 @@
 package com.amazon.howero.fs
 
+import com.amazon.howero.fs.source.IonRecordSource
+import com.amazon.howero.fs.source.TextRecordSource
 import com.amazon.ion.IonSystem
-import com.amazon.ion.IonValue
+import com.github.luben.zstd.ZstdInputStream
 import org.partiql.spi.Plugin
 import org.partiql.spi.RecordSource
 import org.partiql.spi.Source
-import org.partiql.spi.SourceEncoding
 import org.partiql.spi.SourceHandle
 import org.partiql.spi.SourceResolver
 import org.partiql.spi.Split
 import org.partiql.spi.SplitSource
+import java.io.FileInputStream
+import java.io.InputStream
 import java.nio.file.FileSystems
 import java.nio.file.Files
 import java.nio.file.Path
@@ -17,27 +20,19 @@ import java.nio.file.PathMatcher
 import java.nio.file.Paths
 import java.nio.file.attribute.BasicFileAttributes
 import java.util.function.BiPredicate
+import java.util.zip.GZIPInputStream
 import kotlin.reflect.KClass
 
 class FSPlugin(override val ion: IonSystem) : Plugin {
 
+    private val sources = FSSourceProvider(ion)
+
     override fun getSplitSource(source: SourceHandle): SplitSource = FSSplitSource(source as FSSourceHandle)
 
-    override fun getRecordSource(split: Split): RecordSource = object : RecordSource {
-
-        override fun get(): Sequence<IonValue> {
-            val s = split as FSSplit
-            return sequence {
-                val record = ion.newEmptyStruct()
-                record.add("path", ion.newString(s.path.toString()))
-                val encoding = ion.newEmptyStruct()
-                encoding.add("format", ion.newString(s.encoding.format.name))
-                encoding.add("compression", ion.newString(s.encoding.compression.name))
-                record.add("encoding", encoding)
-                yield(record)
-            }
-        }
-
+    override fun getRecordSource(split: Split): RecordSource {
+        val s = split as FSSplit
+        val input = FileInputStream(s.path.toFile())
+        return sources.get(input, s.encoding)
     }
 
     object Sources : SourceResolver() {
@@ -46,13 +41,13 @@ class FSPlugin(override val ion: IonSystem) : Plugin {
          * Usage: SELECT * FROM fs.glob('glob', 'format/compression');
          */
         @Source
-        fun glob(glob: String, encoding: String): SourceHandle = FSSourceHandle("glob:$glob", SourceEncoding.parse(encoding))
+        fun glob(glob: String, encoding: String): SourceHandle = FSSourceHandle("glob:$glob", FsEncoding.parse(encoding))
 
         /**
          * Usage: SELECT * FROM fs.regex('regex', 'format/compression');
          */
         @Source
-        fun regex(regex: String, encoding: String): SourceHandle = FSSourceHandle("regex:$regex", SourceEncoding.parse(encoding))
+        fun regex(regex: String, encoding: String): SourceHandle = FSSourceHandle("regex:$regex", FsEncoding.parse(encoding))
     }
 
     class Factory : Plugin.Factory {
@@ -63,13 +58,15 @@ class FSPlugin(override val ion: IonSystem) : Plugin {
 
         override val sourceResolver: SourceResolver = Sources
 
+        override val scalarLib: Plugin.ScalarLib = FSScalarLib
+
         override fun create(ion: IonSystem, config: Any?): Plugin = FSPlugin(ion)
     }
 }
 
-data class FSSourceHandle(val glob: String, val encoding: SourceEncoding) : SourceHandle
+data class FSSourceHandle(val glob: String, val encoding: FsEncoding) : SourceHandle
 
-data class FSSplit(val path: Path, val encoding: SourceEncoding) : Split
+data class FSSplit(val path: Path, val encoding: FsEncoding) : Split
 
 class FSSplitSource(private val source: FSSourceHandle) : SplitSource {
 
@@ -108,4 +105,23 @@ class FSSplitSource(private val source: FSSourceHandle) : SplitSource {
             return Paths.get(path.substring(0, lastSlashIndex))
         }
     }
+}
+
+class FSSourceProvider(private val ion: IonSystem) {
+
+    fun get(input: InputStream, encoding: FsEncoding): RecordSource {
+        val stream = when (encoding.compression) {
+            FsCompression.NONE -> input
+            FsCompression.ZSTD -> ZstdInputStream(input)
+            FsCompression.GZIP -> GZIPInputStream(input)
+        }
+        return when (encoding.format) {
+            FsFormat.TEXT -> TextRecordSource(ion, stream)
+            FsFormat.JSON,
+            FsFormat.B10N,
+            FsFormat.ION -> IonRecordSource(ion, stream)
+        }
+
+    }
+
 }

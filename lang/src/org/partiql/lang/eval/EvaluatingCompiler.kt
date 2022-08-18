@@ -1086,10 +1086,15 @@ internal class EvaluatingCompiler(
                     records.get().forEach { value ->
                         yield(valueFactory.newFromIonValue(value))
                     }
+                    records.close()
                 }
             }
             valueFactory.newBag(sequence)
         }
+    }
+
+    private fun compilePluginFunction() {
+        TODO()
     }
 
     private fun compileLit(expr: PartiqlAst.Expr.Lit, metas: MetaContainer): ThunkEnv {

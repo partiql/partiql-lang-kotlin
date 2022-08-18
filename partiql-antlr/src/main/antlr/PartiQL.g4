@@ -576,7 +576,7 @@ functionCall
     : name=( CHAR_LENGTH | CHARACTER_LENGTH | OCTET_LENGTH | 
         BIT_LENGTH | UPPER | LOWER | SIZE | EXISTS | COUNT )
         PAREN_LEFT ( querySet ( COMMA querySet )* )? PAREN_RIGHT                         # FunctionCallReserved
-    | name=symbolPrimitive PAREN_LEFT ( querySet ( COMMA querySet )* )? PAREN_RIGHT      # FunctionCallIdent
+    | (plugin=symbolPrimitive PERIOD)? name=symbolPrimitive PAREN_LEFT ( querySet ( COMMA querySet )* )? PAREN_RIGHT      # FunctionCallIdent
     ;
 
 pathStep
