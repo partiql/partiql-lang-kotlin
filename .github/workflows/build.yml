@@ -9,30 +9,11 @@ jobs:
         java: [11]
     steps:
       - uses: actions/checkout@v2
-
-      # Java 11 is required for building the ANTLR Source Files (*.g4).
-      #- name: Use Java 11 for ANTLR Task
-      #  uses: actions/setup-java@v1
-      #  with:
-      #    java-version: 11
-
-      # Generate Grammar Source (requires Java 11 -- see above)
-      #- name: Generate ANTLR Grammar Source
-      #  run: ./gradlew :partiql-antlr:generateGrammarSource
-
-      # Java Matrix is set up after 11, so that JAVA_HOME used by Gradle during build will point to the matrix.
       - name: Use Java ${{ matrix.java }}
         uses: actions/setup-java@v1
         with:
           java-version: ${{ matrix.java }}
-
-      - name: Inspect Java Environments
-        run: set | grep JAVA
-
-      - name: Examine Java Toolchain
-        run: ./gradlew -q javaToolchains
-        
-      - name: Build and Test
+      - name: Build and test
         run: ./gradlew build
 
   report-generation:
