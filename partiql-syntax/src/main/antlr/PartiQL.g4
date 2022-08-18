@@ -48,9 +48,9 @@ dql
     : query;
 
 query
-    : lhs=query EXCEPT ALL? rhs=queryPrimary           # Except
-    | lhs=query UNION ALL? rhs=queryPrimary            # Union
-    | lhs=query INTERSECT ALL? rhs=queryPrimary        # Intersect
+    : lhs=query OUTER? EXCEPT (DISTINCT|ALL)? rhs=queryPrimary           # Except
+    | lhs=query OUTER? UNION (DISTINCT|ALL)? rhs=queryPrimary            # Union
+    | lhs=query OUTER? INTERSECT (DISTINCT|ALL)? rhs=queryPrimary        # Intersect
     | queryPrimary                                     # QueryBase
     ;
 
