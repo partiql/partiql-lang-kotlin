@@ -78,6 +78,10 @@ enum class InputFormat {
     PARTIQL, ION
 }
 
+enum class ParserImplementation {
+    PARTIQL, SQL
+}
+
 enum class OutputFormat {
     ION_TEXT, ION_BINARY, PARTIQL, PARTIQL_PRETTY
 }
@@ -130,7 +134,11 @@ private val inputFormatOpt = optParser.acceptsAll(listOf("input-format", "if"), 
 private val wrapIonOpt = optParser.acceptsAll(listOf("wrap-ion", "w"), "wraps Ion input file values in a bag, requires the input format to be ION, requires the query option")
     .availableIf(queryOpt)
 
-private val parserOpt = optParser.acceptsAll(listOf("partiql-parser", "pql"), "wraps Ion input file values in a bag, requires the input format to be ION, requires the query option")
+private val parserOpt = optParser.acceptsAll(listOf("parser", "l"), "wraps Ion input file values in a bag, requires the input format to be ION, requires the query option")
+    .withRequiredArg()
+    .ofType(ParserImplementation::class.java)
+    .describedAs("(${ParserImplementation.values().joinToString("|")})")
+    .defaultsTo(ParserImplementation.PARTIQL)
 
 private val monochromeOpt = optParser.acceptsAll(listOf("monochrome", "m"), "removes syntax highlighting for the REPL")
 
@@ -160,6 +168,7 @@ private val outputFormatOpt = optParser.acceptsAll(listOf("output-format", "of")
  * * -r --projection-iter-behavior: Controls the behavior of ExprValue.iterator in the projection result: (default: FILTER_MISSING) [FILTER_MISSING, UNFILTERED]
  * * -v --undefined-variable-behavior: Defines the behavior when a non-existent variable is referenced: (default: ERROR) [ERROR, MISSING]
  * mismatches)
+ * * -l --parser: Uses the PartiQL Parser for parsing (default: PARTIQL) [PARTIQL, SQL]
  * * Interactive only:
  *      * -m --monochrome: removes syntax highlighting for the REPL
  * * Non interactive only:
@@ -184,9 +193,10 @@ fun main(args: Array<String>) = try {
     }
 
     // Parser Options
-    val parser = when (optionSet.has(parserOpt)) {
-        false -> SqlParser(ion)
-        true -> PartiQLParser(ion)
+    val parser = when (optionSet.valueOf(parserOpt)) {
+        ParserImplementation.SQL -> SqlParser(ion)
+        ParserImplementation.PARTIQL -> PartiQLParser(ion)
+        else -> PartiQLParser(ion)
     }
 
     // Compile Options
