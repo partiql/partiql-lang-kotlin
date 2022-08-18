@@ -109,9 +109,13 @@ enum class ErrorCode(
 
     PARSE_INVALID_QUERY(
         ErrorCategory.PARSER,
-        LOCATION,
+        setOf(),
         "Invalid query syntax"
-    ),
+    ) {
+        override fun getErrorMessage(errorContext: PropertyValueMap?): String {
+            return "Invalid query syntax."
+        }
+    },
 
     PARSE_MALFORMED_PARSE_TREE(
         ErrorCategory.PARSER,
@@ -240,6 +244,7 @@ enum class ErrorCode(
         LOC_TOKEN,
         "unsupported syntax for alias, `at` and `as` are supported"
     ),
+
     PARSE_STATEMENT_TOO_LARGE(
         ErrorCategory.PARSER,
         setOf(),
@@ -249,6 +254,7 @@ enum class ErrorCode(
             return "Statement too large."
         }
     },
+
     PARSE_UNSUPPORTED_SYNTAX(
         ErrorCategory.PARSER,
         LOC_TOKEN,
