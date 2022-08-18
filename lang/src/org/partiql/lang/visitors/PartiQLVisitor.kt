@@ -470,24 +470,33 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         val lhs = visit(ctx.lhs, PartiqlAst.Expr::class)
         val rhs = visit(ctx.rhs, PartiqlAst.Expr::class)
         val quantifier = if (ctx.ALL() != null) all() else distinct()
-        val metas = ctx.INTERSECT().getSourceMetaContainer()
-        bagOp(intersect(metas), quantifier, listOf(lhs, rhs), metas)
+        val (intersect, metas) = when (ctx.OUTER()) {
+            null -> intersect() to ctx.INTERSECT().getSourceMetaContainer()
+            else -> outerIntersect() to ctx.OUTER().getSourceMetaContainer()
+        }
+        bagOp(intersect, quantifier, listOf(lhs, rhs), metas)
     }
 
     override fun visitExcept(ctx: PartiQLParser.ExceptContext) = PartiqlAst.build {
         val lhs = visit(ctx.lhs, PartiqlAst.Expr::class)
         val rhs = visit(ctx.rhs, PartiqlAst.Expr::class)
         val quantifier = if (ctx.ALL() != null) all() else distinct()
-        val metas = ctx.EXCEPT().getSourceMetaContainer()
-        bagOp(except(metas), quantifier, listOf(lhs, rhs), metas)
+        val (except, metas) = when (ctx.OUTER()) {
+            null -> except() to ctx.EXCEPT().getSourceMetaContainer()
+            else -> outerExcept() to ctx.OUTER().getSourceMetaContainer()
+        }
+        bagOp(except, quantifier, listOf(lhs, rhs), metas)
     }
 
     override fun visitUnion(ctx: PartiQLParser.UnionContext) = PartiqlAst.build {
         val lhs = visit(ctx.lhs, PartiqlAst.Expr::class)
         val rhs = visit(ctx.rhs, PartiqlAst.Expr::class)
         val quantifier = if (ctx.ALL() != null) all() else distinct()
-        val metas = ctx.UNION().getSourceMetaContainer()
-        bagOp(union(metas), quantifier, listOf(lhs, rhs), metas)
+        val (union, metas) = when (ctx.OUTER()) {
+            null -> union() to ctx.UNION().getSourceMetaContainer()
+            else -> outerUnion() to ctx.OUTER().getSourceMetaContainer()
+        }
+        bagOp(union, quantifier, listOf(lhs, rhs), metas)
     }
 
     /**
