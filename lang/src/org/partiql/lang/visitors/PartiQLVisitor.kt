@@ -470,21 +470,24 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         val lhs = visit(ctx.lhs, PartiqlAst.Expr::class)
         val rhs = visit(ctx.rhs, PartiqlAst.Expr::class)
         val quantifier = if (ctx.ALL() != null) all() else distinct()
-        intersect(quantifier, listOf(lhs, rhs), ctx.INTERSECT().getSourceMetaContainer())
+        val metas = ctx.INTERSECT().getSourceMetaContainer()
+        bagOp(intersect(metas), quantifier, listOf(lhs, rhs), metas)
     }
 
     override fun visitExcept(ctx: PartiQLParser.ExceptContext) = PartiqlAst.build {
         val lhs = visit(ctx.lhs, PartiqlAst.Expr::class)
         val rhs = visit(ctx.rhs, PartiqlAst.Expr::class)
         val quantifier = if (ctx.ALL() != null) all() else distinct()
-        except(quantifier, listOf(lhs, rhs), ctx.EXCEPT().getSourceMetaContainer())
+        val metas = ctx.EXCEPT().getSourceMetaContainer()
+        bagOp(except(metas), quantifier, listOf(lhs, rhs), metas)
     }
 
     override fun visitUnion(ctx: PartiQLParser.UnionContext) = PartiqlAst.build {
         val lhs = visit(ctx.lhs, PartiqlAst.Expr::class)
         val rhs = visit(ctx.rhs, PartiqlAst.Expr::class)
         val quantifier = if (ctx.ALL() != null) all() else distinct()
-        union(quantifier, listOf(lhs, rhs), ctx.UNION().getSourceMetaContainer())
+        val metas = ctx.UNION().getSourceMetaContainer()
+        bagOp(union(metas), quantifier, listOf(lhs, rhs), metas)
     }
 
     /**
@@ -1017,7 +1020,8 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
     override fun visitAggregateBase(ctx: PartiQLParser.AggregateBaseContext) = PartiqlAst.build {
         val strategy = getStrategy(ctx.setQuantifierStrategy(), default = all())
         val arg = visitExpr(ctx.expr())
-        callAgg(strategy, ctx.func.text.toLowerCase(), arg)
+        val metas = ctx.func.getSourceMetaContainer()
+        callAgg(strategy, ctx.func.text.toLowerCase(), arg, metas)
     }
 
     /**
