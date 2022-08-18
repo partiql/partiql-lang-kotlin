@@ -386,7 +386,7 @@ fragment WHITESPACE
  * ION MODE
  * Note: This is largely copied from Ion's public ANTLR grammar, but this is used in a very specific manner in PartiQL's
  *  grammar. We use a Lexer Grammar because it allows multiple modes (languages), and whenever we find a straggling
- *  backtick, we use popMode() to enter Ion's grammar/mode. From there, since we don't necessarily care about the semantics of
+ *  backtick, we use pushMode() to enter Ion's grammar/mode. From there, since we don't necessarily care about the semantics of
  *  Ion, we need to capture *everything* until we see a standalone backtick. So, the only tokens we need to watch out for
  *  are tokens that *may* include a backtick in its contents (such as comments, strings, and quoted symbols). We use the
  *  `-> more` annotation to accumulate all of the received Ion tokens into a single PartiQL token (ION_CLOSURE). That
