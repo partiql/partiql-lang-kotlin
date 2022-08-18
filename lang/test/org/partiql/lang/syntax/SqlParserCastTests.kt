@@ -7,7 +7,6 @@ import com.amazon.ionelement.api.ionInt
 import com.amazon.ionelement.api.ionString
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
-import org.partiql.lang.CUSTOM_TEST_TYPES
 import org.partiql.lang.ION
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.util.ArgumentsProviderBase
@@ -16,9 +15,6 @@ class SqlParserCastTests : SqlParserTestBase() {
 
     companion object {
         val ion: IonSystem = ION
-        val parser = PartiQLParser(ion, CUSTOM_TEST_TYPES)
-
-        fun parse(source: String): PartiqlAst.Statement = parser.parseAstStatement(source)
 
         data class CastParseTest(val source: String, val ast: PartiqlAst.Expr.Cast) {
             fun toCastTest() =
@@ -37,11 +33,13 @@ class SqlParserCastTests : SqlParserTestBase() {
                     PartiqlAst.build { query(canLosslessCast(ast.value, ast.asType, ast.metas)) }
                 )
         }
-        data class ConfiguredCastParseTest(val source: String, val expectedAst: PartiqlAst.PartiqlAstNode) {
+        data class ConfiguredCastParseTest(val source: String, val expectedAst: PartiqlAst.PartiqlAstNode, val targetParsers: Set<ParserTypes> = defaultParserTypes) {
             fun assertCase() {
                 // Convert the query to ast
-                val parsedPartiqlAst = parse(source) as PartiqlAst.Statement.Query
-                assertEquals("Expected PartiqlAst and actual PartiqlAst must match", expectedAst, parsedPartiqlAst)
+                targetParsers.forEach { parser ->
+                    val parsedPartiqlAst = parser.parser.parseAstStatement(source) as PartiqlAst.Statement.Query
+                    assertEquals("Expected PartiqlAst and actual PartiqlAst must match", expectedAst, parsedPartiqlAst)
+                }
             }
         }
 
