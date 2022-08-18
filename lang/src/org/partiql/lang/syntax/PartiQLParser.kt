@@ -23,7 +23,6 @@ import org.antlr.v4.runtime.Lexer
 import org.antlr.v4.runtime.RecognitionException
 import org.antlr.v4.runtime.Recognizer
 import org.antlr.v4.runtime.Token
-import org.antlr.v4.runtime.misc.ParseCancellationException
 import org.antlr.v4.runtime.tree.ParseTree
 import org.partiql.lang.ast.ExprNode
 import org.partiql.lang.ast.toExprNode
@@ -61,17 +60,27 @@ class PartiQLParser(
         return visitor.visit(tree) as PartiqlAst.Statement
     }
 
-    fun parseQuery(lexer: Lexer): ParseTree {
+    private fun parseQuery(lexer: Lexer): ParseTree {
         val parser = getParser(lexer)
         return parser.statement()
     }
 
-    internal fun getLexer(source: String): Lexer {
+    private fun getLexer(source: String): Lexer {
         val inputStream = CharStreams.fromStream(source.byteInputStream(StandardCharsets.UTF_8), StandardCharsets.UTF_8)
         val lexer = GeneratedLexer(inputStream)
+        val handler = TokenizeErrorListener(ion)
         lexer.removeErrorListeners()
-        lexer.addErrorListener(PartiQLLexer.TokenizeErrorListener.INSTANCE)
+        lexer.addErrorListener(handler)
         return lexer
+    }
+
+    private fun getParser(lexer: Lexer): GeneratedParser {
+        val tokens = CommonTokenStream(lexer)
+        val parser = GeneratedParser(tokens)
+        val handler = ParseErrorListener(ion)
+        parser.removeErrorListeners()
+        parser.addErrorListener(handler)
+        return parser
     }
 
     /**
@@ -92,15 +101,6 @@ class PartiQLParser(
         return tokenIndexToParameterIndex
     }
 
-    fun getParser(lexer: Lexer): GeneratedParser {
-        val tokens = CommonTokenStream(lexer)
-        val parser = GeneratedParser(tokens)
-        val handler = ParseErrorListener(ion)
-        parser.removeErrorListeners()
-        parser.addErrorListener(handler)
-        return parser
-    }
-
     @Deprecated("Please use parseAstStatement() instead--ExprNode is deprecated.")
     override fun parseExprNode(source: String): @Suppress("DEPRECATION") ExprNode {
         return parseAstStatement(source).toExprNode(ion)
@@ -114,8 +114,32 @@ class PartiQLParser(
             org.partiql.lang.ast.AstVersion.V0, ion
         )
 
+    /**
+     * Catches Lexical errors (unidentified tokens) and throws a [LexerException]
+     */
+    class TokenizeErrorListener(val ion: IonSystem) : BaseErrorListener() {
+        @Throws(LexerException::class)
+        override fun syntaxError(
+            recognizer: Recognizer<*, *>?,
+            offendingSymbol: Any,
+            line: Int,
+            charPositionInLine: Int,
+            msg: String,
+            e: RecognitionException?
+        ) {
+            val propertyValues = PropertyValueMap()
+            propertyValues[Property.LINE_NUMBER] = line.toLong()
+            propertyValues[Property.COLUMN_NUMBER] = charPositionInLine.toLong() + 1
+            propertyValues[Property.TOKEN_STRING] = msg
+            throw LexerException(message = msg, errorCode = ErrorCode.LEXER_INVALID_TOKEN, errorContext = propertyValues, cause = e)
+        }
+    }
+
+    /**
+     * Catches Parser errors (malformed syntax) and throws a [ParserException]
+     */
     class ParseErrorListener(val ion: IonSystem) : BaseErrorListener() {
-        @Throws(ParseCancellationException::class)
+        @Throws(ParserException::class)
         override fun syntaxError(
             recognizer: Recognizer<*, *>?,
             offendingSymbol: Any,
