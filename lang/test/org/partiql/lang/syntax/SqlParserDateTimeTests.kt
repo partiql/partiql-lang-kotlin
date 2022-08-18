@@ -23,7 +23,7 @@ class SqlParserDateTimeTests : SqlParserTestBase() {
     @Parameters
     fun dateLiteralTests(tc: DateTimeTestCase) =
         if (!tc.skipTest) {
-            assertExpression(tc.source, tc.block)
+            assertExpression(tc.source, expectedPigBuilder = tc.block)
         } else {
             // Skip test, do nothing
         }
