@@ -377,7 +377,7 @@ interface PlannerPipeline {
          * queries but no facility is provided by PartiQL to redact ASTs or plans yet.  Such redaction must currently
          * be provided by the embedding PartiQL application.
          */
-        internal fun plannerEventCallback(cb: PlannerEventCallback): Builder = this.apply {
+        fun plannerEventCallback(cb: PlannerEventCallback): Builder = this.apply {
             plannerEventCallback = cb
         }
 

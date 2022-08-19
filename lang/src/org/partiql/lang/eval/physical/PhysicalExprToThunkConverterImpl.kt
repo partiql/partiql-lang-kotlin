@@ -41,6 +41,7 @@ import org.partiql.lang.eval.EvaluationException
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.eval.ExprValueBagOp
 import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.Expression
@@ -60,6 +61,7 @@ import org.partiql.lang.eval.cast
 import org.partiql.lang.eval.compareTo
 import org.partiql.lang.eval.createErrorSignaler
 import org.partiql.lang.eval.createThunkFactory
+import org.partiql.lang.eval.distinct
 import org.partiql.lang.eval.err
 import org.partiql.lang.eval.errInvalidArgumentType
 import org.partiql.lang.eval.errNoContext
@@ -273,16 +275,7 @@ internal class PhysicalExprToThunkConverterImpl(
             is PartiqlPhysical.Expr.Bag -> compileSeq(ExprValueType.BAG, expr.values, metas)
 
             // bag operators
-            is PartiqlPhysical.Expr.BagOp -> {
-                err(
-                    "${expr.op.javaClass.simpleName} is not yet supported",
-                    ErrorCode.EVALUATOR_FEATURE_NOT_SUPPORTED_YET,
-                    errorContextFrom(metas).also {
-                        it[Property.FEATURE_NAME] = expr.javaClass.canonicalName
-                    },
-                    internal = false
-                )
-            }
+            is PartiqlPhysical.Expr.BagOp -> compileBagOp(expr, metas)
             is PartiqlPhysical.Expr.BindingsToValues -> compileBindingsToValues(expr)
         }
     }
@@ -1861,6 +1854,21 @@ internal class PhysicalExprToThunkConverterImpl(
                 )
             )
         }
+
+    private fun compileBagOp(node: PartiqlPhysical.Expr.BagOp, metas: MetaContainer): PhysicalPlanThunk {
+        val lhs = compileAstExpr(node.operands[0])
+        val rhs = compileAstExpr(node.operands[1])
+        val op = ExprValueBagOp.create(node.op, metas)
+        return thunkFactory.thunkEnv(metas) { env ->
+            val l = lhs(env)
+            val r = rhs(env)
+            val result = when (node.quantifier) {
+                is PartiqlPhysical.SetQuantifier.All -> op.eval(l, r)
+                is PartiqlPhysical.SetQuantifier.Distinct -> op.eval(l, r).distinct()
+            }
+            valueFactory.newBag(result)
+        }
+    }
 
     /** A special wrapper for `UNPIVOT` values as a BAG. */
     private class UnpivotedExprValue(private val values: Iterable<ExprValue>) : BaseExprValue() {
