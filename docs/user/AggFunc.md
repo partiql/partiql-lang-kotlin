@@ -1,5 +1,5 @@
 # Aggregate Function
-Aggregate function takes in a single result value from a collection of input values.
+Aggregate function outputs a single result value from a collection of input values.
 
 Unlike SQL, `GROUP BY` is not required to use the aggregate function. 
 
@@ -17,7 +17,6 @@ Header
 
 Purpose
 : Given a collection of numeric type values, evaluates the arithmetic mean of the input expression values. 
-
 
 Example
 : 
@@ -88,7 +87,6 @@ Example
     MAX(<<'1',2,3, MISSING>>) -- '1'
 ```
 
-
 ## SUM
 
 Returns the sum of the input expression values.
@@ -101,7 +99,6 @@ Header
 
 Purpose
 : Given a collection of numeric type values, evaluates the sum of the input expression values.
-
 
 Example
 : 
