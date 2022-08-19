@@ -1,10 +1,11 @@
 package com.amazon.howero.fs
 
+import com.amazon.ion.IonSystem
 import org.partiql.spi.Plugin
 import org.partiql.spi.ScalarFunction
 import org.partiql.spi.Type
 
-object FSScalarLib : Plugin.ScalarLib {
+class FSScalarLib(override val ion: IonSystem) : Plugin.ScalarLib {
 
     @ScalarFunction(
         names = ["howero"],

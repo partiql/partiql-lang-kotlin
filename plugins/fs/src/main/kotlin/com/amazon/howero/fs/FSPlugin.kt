@@ -58,9 +58,9 @@ class FSPlugin(override val ion: IonSystem) : Plugin {
 
         override val sourceResolver: SourceResolver = Sources
 
-        override val scalarLib: Plugin.ScalarLib = FSScalarLib
-
         override fun create(ion: IonSystem, config: Any?): Plugin = FSPlugin(ion)
+
+        override fun scalarLib(ion: IonSystem): Plugin.ScalarLib = FSScalarLib(ion)
     }
 }
 

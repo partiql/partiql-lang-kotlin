@@ -1,5 +1,6 @@
 package org.partiql.lang.eval.function
 
+import com.amazon.ion.IonValue
 import com.amazon.ion.Timestamp
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprFunction
@@ -16,6 +17,7 @@ import org.partiql.lang.eval.timeValue
 import org.partiql.lang.eval.timestampValue
 import org.partiql.lang.types.FunctionSignature
 import org.partiql.lang.types.StaticType
+import org.partiql.lang.util.asSequence
 import org.partiql.spi.Plugin
 import org.partiql.spi.ScalarFunction
 import org.partiql.spi.Type
@@ -135,6 +137,9 @@ class ScalarExprLib(
         StaticType.TEXT -> { e -> e.stringValue() }
         StaticType.BLOB,
         StaticType.CLOB -> { e -> e.bytesValue() }
+        StaticType.LIST,
+        StaticType.BAG -> { e -> e.ionValue.asSequence() }
+        StaticType.STRUCT -> { e -> e.ionValue }
         else -> throw IllegalArgumentException("Unhandled static type mapping ${this.javaClass.simpleName}")
     }
 
@@ -156,6 +161,9 @@ class ScalarExprLib(
         StaticType.STRING -> { v -> valueFactory.newString(v as String) }
         StaticType.CLOB -> { v -> valueFactory.newClob(v as ByteArray) }
         StaticType.BLOB -> { v -> valueFactory.newBlob(v as ByteArray) }
+        StaticType.LIST,
+        StaticType.STRUCT,
+        StaticType.BAG -> { v -> valueFactory.newFromIonValue(v as IonValue) }
         else -> throw IllegalArgumentException("Unhandled static type mapping ${this.javaClass.simpleName}")
     }
 }

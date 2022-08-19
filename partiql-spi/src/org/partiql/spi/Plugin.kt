@@ -14,14 +14,15 @@ interface Plugin {
     interface Factory {
         val identifier: String
         val sourceResolver: SourceResolver
-        val scalarLib: ScalarLib?
-            get() = null
 
         val config: KClass<*>
 
         fun create(ion: IonSystem, config: Any?): Plugin
+
+        fun scalarLib(ion: IonSystem): ScalarLib? = null
     }
 
-    // likely pointless because inversion
-    interface ScalarLib
+    interface ScalarLib {
+        val ion: IonSystem
+    }
 }

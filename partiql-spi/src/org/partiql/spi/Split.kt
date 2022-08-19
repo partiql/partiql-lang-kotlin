@@ -8,4 +8,9 @@ interface Split {
     )
 }
 
-interface SplitSource : Iterator<Split>, AutoCloseable
+interface SplitSource : Iterator<Split>, AutoCloseable {
+
+    override fun close() {
+        // no-op
+    }
+}

@@ -14,13 +14,14 @@ class PluginManager {
     private val scalarLibs = mutableMapOf<String, Plugin.ScalarLib>()
     private val sources = mutableMapOf<String, SourceResolver>()
 
-    fun register(ionSystem: IonSystem, plugin: Plugin.Factory) {
+    fun register(ion: IonSystem, plugin: Plugin.Factory) {
         // TODO configuration
         val id = plugin.identifier.toUpperCase()
-        plugins[id] = plugin.create(ionSystem, null)
+        plugins[id] = plugin.create(ion, null)
         sources[id] = plugin.sourceResolver
-        if (plugin.scalarLib != null) {
-            scalarLibs[id] = plugin.scalarLib!!
+        val scalarLib = plugin.scalarLib(ion)
+        if (scalarLib != null) {
+            scalarLibs[id] = scalarLib
         }
     }
 

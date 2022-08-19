@@ -16,5 +16,5 @@
 cli_path=$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )
 
 cd "$cli_path"
-#../gradlew :cli:install
+../gradlew :cli:install
 JAVA_OPTS="" ../cli/build/install/partiql-cli/bin/partiql -pql

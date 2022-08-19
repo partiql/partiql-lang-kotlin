@@ -7,7 +7,6 @@ application {
     mainClass.set("org.partiql.cli.Main")
 }
 
-// distribution configuration, brought in by `application` plugin
 distributions {
     main {
         distributionBaseName.set('partiql-cli') // archive name
@@ -20,10 +19,6 @@ distributions {
 (tasks.findByName("distTar") as Tar).compression = Compression.GZIP
 
 tasks['run'].standardInput = System.in
-
-task install(type: GradleBuild) {
-    tasks = ['assembleDist', 'distZip', 'installDist']
-}
 
 dependencies {
     implementation project(":lang")
@@ -42,4 +37,25 @@ dependencies {
     implementation 'org.apache.commons:commons-csv:1.8'
 
     testImplementation 'org.junit.vintage:junit-vintage-engine:5.7.0'
+}
+
+// COW HACK. We should considering a custom distributions Gradle plugin
+task install(type: GradleBuild) {
+    tasks = ['assembleDist', 'distZip', 'installDist']
+    doLast {
+        var generated = new File("$buildDir/install/partiql-cli/bin/partiql")
+        var buffer = ""
+        generated.readLines().forEach({
+            buffer += it + '\n'
+            if (it.startsWith("CLASSPATH=")) {
+                buffer += """
+                    # Add all plugins to classpath
+                    for plugin in \$HOME/.partiql/plugins/*.jar; do
+                        CLASSPATH=\$CLASSPATH:\$plugin
+                    done
+                """.stripIndent()
+            }
+        })
+        generated.text = buffer
+    }
 }

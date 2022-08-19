@@ -13,13 +13,11 @@ class TextRecordSource(
 ) : RecordSource {
 
     override fun get(): Sequence<IonValue> {
-        var n = 0
         val lines = BufferedReader(InputStreamReader(input))
         return sequence {
             while (lines.ready()) {
                 val s = ion.newEmptyStruct()
                 s.add("line", ion.newString(lines.readLine()))
-                s.add("n", ion.newInt(n++))
                 yield(s)
             }
         }
