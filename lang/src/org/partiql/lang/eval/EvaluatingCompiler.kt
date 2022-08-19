@@ -552,6 +552,7 @@ internal class EvaluatingCompiler(
                             else -> null
                         }
                         when {
+                            // static type contains one or more IntType
                             validRange != null -> {
                                 val validator = integerValueValidator(validRange)
                                 thunkFactory.thunkEnv(metas) { env ->
@@ -567,7 +568,7 @@ internal class EvaluatingCompiler(
                                         )
 
                                         else -> {
-                                            if (staticTypes.all { it is IntType }) {
+                                            if (staticTypes.all { it is StaticScalarType && it.scalarType === IntType }) {
                                                 error(
                                                     "The expression's static type was supposed to be INT but instead it was $type" +
                                                         "This may indicate the presence of a bug in the type inferencer."

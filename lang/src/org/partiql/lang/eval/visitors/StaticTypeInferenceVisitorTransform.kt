@@ -597,39 +597,56 @@ internal class StaticTypeInferenceVisitorTransform(
                             when (currentType) {
                                 is MissingType -> lastType
                                 is NullType -> lastType
-                                is IntType -> {
+                                is StaticScalarType -> when (currentType.scalarType) {
                                     // based on the current implementation of arithmetic operations
                                     // decimal type precision to be determined
-                                    when (lastType) {
-                                        is IntType -> {
-                                            when {
-                                                lastType.rangeConstraint == IntType.IntRangeConstraint.UNCONSTRAINED -> lastType
-                                                currentType.rangeConstraint == IntType.IntRangeConstraint.UNCONSTRAINED -> currentType
-                                                lastType.rangeConstraint.numBytes > currentType.rangeConstraint.numBytes -> lastType
-                                                else -> currentType
+                                    Int2Type,
+                                    Int4Type,
+                                    Int8Type,
+                                    IntType -> when (lastType) {
+                                        is StaticScalarType -> when (lastType.scalarType) {
+                                            Int2Type,
+                                            Int4Type,
+                                            Int8Type,
+                                            IntType -> {
+                                                val currentPrecedence = intTypesPrecedence.indexOf(currentType.scalarType)
+                                                val lastPrecedence = intTypesPrecedence.indexOf(lastType.scalarType)
+                                                when {
+                                                    currentPrecedence > lastPrecedence -> currentType
+                                                    else -> lastType
+                                                }
                                             }
+                                            FloatType -> StaticType.FLOAT
+                                            DecimalType -> StaticType.DECIMAL // TODO:  account for decimal precision
+                                            // only missing and null are possible because of argTypeCheck()
+                                            else -> currentType
                                         }
-                                        is FloatType -> StaticType.FLOAT
-                                        is DecimalType -> StaticType.DECIMAL // TODO:  account for decimal precision
-                                        // only missing and null are possible because of argTypeCheck()
                                         else -> currentType
                                     }
-                                }
-                                is FloatType -> {
-                                    when (lastType) {
-                                        is IntType -> StaticType.FLOAT
-                                        is FloatType -> StaticType.FLOAT
-                                        is DecimalType -> StaticType.DECIMAL // TODO:  account for decimal precision
+                                    FloatType -> when (lastType) {
+                                        is StaticScalarType -> when (lastType.scalarType) {
+                                            IntType -> StaticType.FLOAT
+                                            FloatType -> StaticType.FLOAT
+                                            DecimalType -> StaticType.DECIMAL // TODO:  account for decimal precision
+                                            else -> currentType
+                                        }
                                         else -> currentType
                                     }
-                                }
-                                is DecimalType -> {
-                                    when (lastType) {
-                                        is IntType -> StaticType.DECIMAL // TODO:  account for decimal precision
-                                        is FloatType -> StaticType.DECIMAL // TODO:  account for decimal precision
-                                        is DecimalType -> StaticType.DECIMAL // TODO:  account for decimal precision
+                                    DecimalType -> when (lastType) {
+                                        is StaticScalarType -> when (lastType.scalarType) {
+                                            IntType -> StaticType.DECIMAL // TODO:  account for decimal precision
+                                            FloatType -> StaticType.DECIMAL // TODO:  account for decimal precision
+                                            DecimalType -> StaticType.DECIMAL // TODO:  account for decimal precision
+                                            else -> currentType
+                                        }
                                         else -> currentType
                                     }
+                                    else ->
+                                        // this should not be reached, only exists to segment the logic.
+                                        error(
+                                            "Internal Error: SUM function only support Number Type. " +
+                                                "This probably indicates an bug in type inferencer."
+                                        )
                                 }
                                 else ->
                                     // this should not be reached, only exists to segment the logic.
