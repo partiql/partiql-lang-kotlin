@@ -6,7 +6,7 @@ interface ScalarCast {
     fun inferType(sourceType: CompileTimeType, targetType: CompileTimeType): TypeInferenceResult
 
     /**
-     * Null return value means there is such cast is not allowed.
+     * Null return value means such cast is not allowed.
      */
     fun invoke(value: ExprValue, targetType: CompileTimeType): ExprValue?
 }
