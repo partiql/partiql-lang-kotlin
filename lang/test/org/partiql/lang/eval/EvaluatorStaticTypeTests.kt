@@ -137,28 +137,6 @@ class EvaluatorStaticTypeTests {
             "pathUnpivotEmptyStruct3",
             "projectOfUnpivotPath",
 
-            // Aggregates not supported by STIR
-            "topLevelCountDistinct",
-            "topLevelCount",
-            "topLevelAllCount",
-            "topLevelAllSum",
-            "topLevelDistinctSum",
-            "topLevelDistinctMin",
-            "topLevelAllMin",
-            "topLevelSum",
-            "topLevelMin",
-            "topLevelMax",
-            "topLevelDistinctMax",
-            "topLevelAllMax",
-            "topLevelAvg",
-            "topLevelDistinctAvg",
-            "topLevelAvgOnlyInt",
-            "selectValueAggregate",
-            "selectListCountStar",
-            "selectListCountVariable",
-            "selectListMultipleAggregates",
-            "selectListMultipleAggregatesNestedQuery",
-
             // PIVOT not supported by STIR
             "pivotFrom",
             "pivotBadFieldType",
@@ -173,10 +151,6 @@ class EvaluatorStaticTypeTests {
             "undefinedUnqualifiedVariableIsNullExprWithUndefinedVariableBehaviorMissing",
             "undefinedUnqualifiedVariableIsMissingExprWithUndefinedVariableBehaviorMissing",
 
-            // CallAgg not supported in STIVT - https://github.com/partiql/partiql-lang-kotlin/issues/502
-            "aggregateInSubqueryOfSelect",
-            "aggregateInSubqueryOfSelectValue",
-            "aggregateWithAliasingInSubqueryOfSelectValue"
         )
 
         @JvmStatic

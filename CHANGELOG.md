@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   session state such as current user and transaction details available to custom [ExprFunction] implementations
   and custom physical operator implementations.
 - Replaces `union`, `intersect`, `except` IR nodes with common `bag_op` IR node
+- Add support for CallAgg in Type Inferencer. 
 
 #### Experimental Planner Additions
 
@@ -64,6 +65,7 @@ stage in the `PlannerPipeline` and to generate performance metrics for the indiv
 - Codecov report uploads in GitHub Actions workflow
 - GitHub Actions capability to run on forks
 - Negation overflow caused by minimum INT8
+- Type mismatch error caused by evaluator's integer overflow check
 
 ### Removed
 - README.md badge for travisci

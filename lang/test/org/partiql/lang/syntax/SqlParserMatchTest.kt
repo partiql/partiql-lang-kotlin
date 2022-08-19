@@ -37,6 +37,31 @@ class SqlParserMatchTest : SqlParserTestBase() {
     }
 
     @Test
+    fun starAllNodesNoLabel() = assertExpressionNoRoundTrip(
+        "SELECT * FROM my_graph MATCH ()"
+    ) {
+        select(
+            project = projectStar(),
+            from = graphMatch(
+                expr = id("my_graph"),
+                graphExpr = graphMatchExpr(
+                    patterns = listOf(
+                        graphMatchPattern(
+                            parts = listOf(
+                                node(
+                                    prefilter = null,
+                                    variable = null,
+                                    label = listOf()
+                                )
+                            )
+                        )
+                    )
+                )
+            )
+        )
+    }
+
+    @Test
     fun allNodesNoLabelFilter() = assertExpressionNoRoundTrip(
         "SELECT 1 FROM my_graph MATCH () WHERE contains_value('1')",
     ) {
@@ -59,6 +84,56 @@ class SqlParserMatchTest : SqlParserTestBase() {
                 )
             ),
             where = call(funcName = "contains_value", args = listOf(lit(ionString("1"))))
+        )
+    }
+
+    @Test
+    fun bindAllNodesProjectBound() = assertExpressionNoRoundTrip(
+        "SELECT x FROM my_graph MATCH (x)"
+    ) {
+        select(
+            project = projectList(projectExpr(expr = id("x"))),
+            from = graphMatch(
+                expr = id("my_graph"),
+                graphExpr = graphMatchExpr(
+                    patterns = listOf(
+                        graphMatchPattern(
+                            parts = listOf(
+                                node(
+                                    prefilter = null,
+                                    variable = "x",
+                                    label = listOf()
+                                )
+                            )
+                        )
+                    )
+                )
+            )
+        )
+    }
+
+    @Test
+    fun bindAllNodesProjectStar() = assertExpressionNoRoundTrip(
+        "SELECT * FROM my_graph MATCH (x)"
+    ) {
+        select(
+            project = projectStar(),
+            from = graphMatch(
+                expr = id("my_graph"),
+                graphExpr = graphMatchExpr(
+                    patterns = listOf(
+                        graphMatchPattern(
+                            parts = listOf(
+                                node(
+                                    prefilter = null,
+                                    variable = "x",
+                                    label = listOf()
+                                )
+                            )
+                        )
+                    )
+                )
+            )
         )
     }
 

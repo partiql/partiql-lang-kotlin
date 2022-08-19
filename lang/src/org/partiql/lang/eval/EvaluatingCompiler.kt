@@ -444,16 +444,7 @@ internal class EvaluatingCompiler(
             is PartiqlAst.Expr.Bag -> compileSeq(ExprValueType.BAG, expr.values, metas)
 
             // bag operators
-            is PartiqlAst.Expr.BagOp -> {
-                err(
-                    "${expr.op.javaClass.canonicalName} is not yet supported",
-                    ErrorCode.EVALUATOR_FEATURE_NOT_SUPPORTED_YET,
-                    errorContextFrom(metas).also {
-                        it[Property.FEATURE_NAME] = expr.javaClass.canonicalName
-                    },
-                    internal = false
-                )
-            }
+            is PartiqlAst.Expr.BagOp -> compileBagOp(expr, metas)
         }
     }
 
@@ -523,8 +514,7 @@ internal class EvaluatingCompiler(
                 range.contains(longValue)
             }
             else -> error(
-                "The expression's static type was supposed to be INT but instead it was ${value.type}" +
-                    "This may indicate the presence of a bug in the type inferencer."
+                "IntegerValueValidator can only accept ExprValue with type INT, NULL, and MISSING."
             )
         }
     }
@@ -532,7 +522,7 @@ internal class EvaluatingCompiler(
     /**
      *  For operators which could return integer type, check integer overflow in case of [TypingMode.PERMISSIVE].
      */
-    private fun resolveIntConstraint(computeThunk: ThunkEnv, metas: MetaContainer): ThunkEnv =
+    private fun resolveArithmeticOverflow(computeThunk: ThunkEnv, metas: MetaContainer): ThunkEnv =
         when (val staticTypes = metas.staticType?.type?.getTypes()) {
             // No staticType, can't validate integer size.
             null -> computeThunk
@@ -552,6 +542,7 @@ internal class EvaluatingCompiler(
                             computeThunk
                         }
                     }
+
                     TypingMode.PERMISSIVE -> {
                         val validRange: LongRange? = when {
                             staticTypes.any { it is StaticScalarType && it.scalarType is IntType } -> IntType.validRange
@@ -561,16 +552,32 @@ internal class EvaluatingCompiler(
                             else -> null
                         }
                         when {
+                            // static type contains one or more IntType
                             validRange != null -> {
                                 val validator = integerValueValidator(validRange)
                                 thunkFactory.thunkEnv(metas) { env ->
                                     val naryResult = computeThunk(env)
-                                    errorSignaler.errorIf(
-                                        !validator(naryResult),
-                                        ErrorCode.EVALUATOR_INTEGER_OVERFLOW,
-                                        { ErrorDetails(metas, "Integer overflow", errorContextFrom(metas)) },
-                                        { naryResult }
-                                    )
+                                    // validation shall only happen when the result is INT/MISSING/NULL
+                                    // this is important as StaticType may contain a mixture of multiple types
+                                    when (val type = naryResult.type) {
+                                        ExprValueType.INT, ExprValueType.MISSING, ExprValueType.NULL -> errorSignaler.errorIf(
+                                            !validator(naryResult),
+                                            ErrorCode.EVALUATOR_INTEGER_OVERFLOW,
+                                            { ErrorDetails(metas, "Integer overflow", errorContextFrom(metas)) },
+                                            { naryResult }
+                                        )
+
+                                        else -> {
+                                            if (staticTypes.all { it is StaticScalarType && it.scalarType === IntType }) {
+                                                error(
+                                                    "The expression's static type was supposed to be INT but instead it was $type" +
+                                                        "This may indicate the presence of a bug in the type inferencer."
+                                                )
+                                            } else {
+                                                naryResult
+                                            }
+                                        }
+                                    }
                                 }
                             }
                             else -> computeThunk
@@ -591,7 +598,7 @@ internal class EvaluatingCompiler(
             (lValue.numberValue() + rValue.numberValue()).exprValue()
         }
 
-        return resolveIntConstraint(computeThunk, metas)
+        return resolveArithmeticOverflow(computeThunk, metas)
     }
 
     private fun compileMinus(expr: PartiqlAst.Expr.Minus, metas: MetaContainer): ThunkEnv {
@@ -605,7 +612,7 @@ internal class EvaluatingCompiler(
             (lValue.numberValue() - rValue.numberValue()).exprValue()
         }
 
-        return resolveIntConstraint(computeThunk, metas)
+        return resolveArithmeticOverflow(computeThunk, metas)
     }
 
     private fun compilePos(expr: PartiqlAst.Expr.Pos, metas: MetaContainer): ThunkEnv {
@@ -618,7 +625,7 @@ internal class EvaluatingCompiler(
             value
         }
 
-        return resolveIntConstraint(computeThunk, metas)
+        return resolveArithmeticOverflow(computeThunk, metas)
     }
 
     private fun compileNeg(expr: PartiqlAst.Expr.Neg, metas: MetaContainer): ThunkEnv {
@@ -628,7 +635,7 @@ internal class EvaluatingCompiler(
             (-value.numberValue()).exprValue()
         }
 
-        return resolveIntConstraint(computeThunk, metas)
+        return resolveArithmeticOverflow(computeThunk, metas)
     }
 
     private fun compileTimes(expr: PartiqlAst.Expr.Times, metas: MetaContainer): ThunkEnv {
@@ -638,7 +645,7 @@ internal class EvaluatingCompiler(
             (lValue.numberValue() * rValue.numberValue()).exprValue()
         }
 
-        return resolveIntConstraint(computeThunk, metas)
+        return resolveArithmeticOverflow(computeThunk, metas)
     }
 
     private fun compileDivide(expr: PartiqlAst.Expr.Divide, metas: MetaContainer): ThunkEnv {
@@ -666,7 +673,7 @@ internal class EvaluatingCompiler(
             }
         }
 
-        return resolveIntConstraint(computeThunk, metas)
+        return resolveArithmeticOverflow(computeThunk, metas)
     }
 
     private fun compileModulo(expr: PartiqlAst.Expr.Modulo, metas: MetaContainer): ThunkEnv {
@@ -681,7 +688,7 @@ internal class EvaluatingCompiler(
             (lValue.numberValue() % denominator).exprValue()
         }
 
-        return resolveIntConstraint(computeThunk, metas)
+        return resolveArithmeticOverflow(computeThunk, metas)
     }
 
     private fun compileEq(expr: PartiqlAst.Expr.Eq, metas: MetaContainer): ThunkEnv {
@@ -1055,7 +1062,7 @@ internal class EvaluatingCompiler(
             }
         }
 
-        return resolveIntConstraint(computeThunk, metas)
+        return resolveArithmeticOverflow(computeThunk, metas)
     }
 
     private fun compileLit(expr: PartiqlAst.Expr.Lit, metas: MetaContainer): ThunkEnv {
@@ -1592,6 +1599,21 @@ internal class EvaluatingCompiler(
                 seqType,
                 makeItemThunkSequence(env)
             )
+        }
+    }
+
+    private fun compileBagOp(node: PartiqlAst.Expr.BagOp, metas: MetaContainer): ThunkEnv {
+        val lhs = compileAstExpr(node.operands[0])
+        val rhs = compileAstExpr(node.operands[1])
+        val op = ExprValueBagOp.create(node.op, metas)
+        return thunkFactory.thunkEnv(metas) { env ->
+            val l = lhs(env)
+            val r = rhs(env)
+            val result = when (node.quantifier) {
+                is PartiqlAst.SetQuantifier.All -> op.eval(l, r)
+                is PartiqlAst.SetQuantifier.Distinct -> op.eval(l, r).distinct()
+            }
+            valueFactory.newBag(result)
         }
     }
 
