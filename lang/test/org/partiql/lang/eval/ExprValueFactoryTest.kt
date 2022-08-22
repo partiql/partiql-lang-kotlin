@@ -24,7 +24,7 @@ import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.partiql.lang.errors.ErrorCode
-import org.partiql.lang.util.Time
+import org.partiql.lang.eval.time.Time
 import org.partiql.lang.util.isBag
 import org.partiql.lang.util.isMissing
 import org.partiql.lang.util.seal

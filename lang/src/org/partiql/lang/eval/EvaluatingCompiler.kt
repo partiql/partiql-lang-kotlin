@@ -48,6 +48,8 @@ import org.partiql.lang.eval.binding.Alias
 import org.partiql.lang.eval.binding.localsBinder
 import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedure
 import org.partiql.lang.eval.like.parsePattern
+import org.partiql.lang.eval.time.Time
+import org.partiql.lang.eval.time.totalMinutes
 import org.partiql.lang.eval.visitors.PartiqlAstSanityValidator
 import org.partiql.lang.ots_work.plugins.standard.plugin.StandardPlugin
 import org.partiql.lang.ots_work.plugins.standard.plugin.TypedOpBehavior
@@ -68,7 +70,6 @@ import org.partiql.lang.types.UnknownArguments
 import org.partiql.lang.types.UnsupportedTypeCheckException
 import org.partiql.lang.types.toTypedOpParameter
 import org.partiql.lang.util.BuiltInScalarTypeId
-import org.partiql.lang.util.Time
 import org.partiql.lang.util.bigDecimalOf
 import org.partiql.lang.util.checkThreadInterrupted
 import org.partiql.lang.util.codePointSequence
@@ -84,7 +85,6 @@ import org.partiql.lang.util.stringValue
 import org.partiql.lang.util.take
 import org.partiql.lang.util.times
 import org.partiql.lang.util.timestampValue
-import org.partiql.lang.util.totalMinutes
 import org.partiql.lang.util.unaryMinus
 import org.partiql.pig.runtime.SymbolPrimitive
 import java.math.BigDecimal

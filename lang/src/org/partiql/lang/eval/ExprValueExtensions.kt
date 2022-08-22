@@ -19,6 +19,7 @@ import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.errors.PropertyValueMap
+import org.partiql.lang.eval.time.Time
 import org.partiql.lang.ots_work.stscore.ScalarTypeSystem
 import org.partiql.lang.syntax.DATE_TIME_PART_KEYWORDS
 import org.partiql.lang.syntax.DateTimePart
@@ -32,7 +33,6 @@ import org.partiql.lang.types.SingleType
 import org.partiql.lang.types.StaticScalarType
 import org.partiql.lang.types.StructType
 import org.partiql.lang.util.ConfigurableExprValueFormatter
-import org.partiql.lang.util.Time
 import org.partiql.lang.util.downcast
 import java.math.BigDecimal
 import java.time.LocalDate

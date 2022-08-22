@@ -1,10 +1,11 @@
-package org.partiql.lang.util
+package org.partiql.lang.eval.time
 
 import com.amazon.ion.IonStruct
 import com.amazon.ion.IonSystem
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.EvaluationException
 import org.partiql.lang.eval.err
+import org.partiql.lang.util.propertyValueMapOf
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.DateTimeException

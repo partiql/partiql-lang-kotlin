@@ -8,10 +8,6 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.runner.RunWith
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.EvaluationException
-import org.partiql.lang.util.MINUTES_PER_HOUR
-import org.partiql.lang.util.SECONDS_PER_HOUR
-import org.partiql.lang.util.SECONDS_PER_MINUTE
-import org.partiql.lang.util.Time
 import java.time.LocalTime
 import java.time.ZoneOffset
 

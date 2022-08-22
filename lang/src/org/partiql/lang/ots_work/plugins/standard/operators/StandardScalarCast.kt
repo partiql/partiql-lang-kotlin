@@ -14,6 +14,10 @@ import org.partiql.lang.eval.errIntOverflow
 import org.partiql.lang.eval.errorContextFrom
 import org.partiql.lang.eval.numberValue
 import org.partiql.lang.eval.stringValue
+import org.partiql.lang.eval.time.NANOS_PER_SECOND
+import org.partiql.lang.eval.time.Time
+import org.partiql.lang.eval.time.genericTimeRegex
+import org.partiql.lang.eval.time.getPrecisionFromTimeString
 import org.partiql.lang.eval.timeValue
 import org.partiql.lang.eval.timestampValue
 import org.partiql.lang.ots_work.interfaces.CompileTimeType
@@ -39,13 +43,9 @@ import org.partiql.lang.ots_work.plugins.standard.types.VarcharType
 import org.partiql.lang.ots_work.plugins.standard.types.isLob
 import org.partiql.lang.ots_work.plugins.standard.types.isNumeric
 import org.partiql.lang.ots_work.plugins.standard.types.isText
-import org.partiql.lang.util.NANOS_PER_SECOND
-import org.partiql.lang.util.Time
 import org.partiql.lang.util.bigDecimalOf
 import org.partiql.lang.util.coerce
 import org.partiql.lang.util.compareTo
-import org.partiql.lang.util.genericTimeRegex
-import org.partiql.lang.util.getPrecisionFromTimeString
 import org.partiql.lang.util.ionValue
 import java.math.BigDecimal
 import java.math.MathContext

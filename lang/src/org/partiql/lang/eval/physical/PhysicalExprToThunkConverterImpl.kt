@@ -78,6 +78,8 @@ import org.partiql.lang.eval.rangeOver
 import org.partiql.lang.eval.sourceLocationMeta
 import org.partiql.lang.eval.stringValue
 import org.partiql.lang.eval.syntheticColumnName
+import org.partiql.lang.eval.time.Time
+import org.partiql.lang.eval.time.totalMinutes
 import org.partiql.lang.eval.unnamedValue
 import org.partiql.lang.eval.visitors.PartiqlPhysicalSanityValidator
 import org.partiql.lang.ots_work.plugins.standard.plugin.StandardPlugin
@@ -99,7 +101,6 @@ import org.partiql.lang.types.UnknownArguments
 import org.partiql.lang.types.UnsupportedTypeCheckException
 import org.partiql.lang.types.toTypedOpParameter
 import org.partiql.lang.util.BuiltInScalarTypeId
-import org.partiql.lang.util.Time
 import org.partiql.lang.util.checkThreadInterrupted
 import org.partiql.lang.util.codePointSequence
 import org.partiql.lang.util.div
@@ -111,7 +112,6 @@ import org.partiql.lang.util.stringValue
 import org.partiql.lang.util.times
 import org.partiql.lang.util.timestampValue
 import org.partiql.lang.util.toIntExact
-import org.partiql.lang.util.totalMinutes
 import org.partiql.lang.util.unaryMinus
 import java.math.BigDecimal
 import java.util.LinkedList

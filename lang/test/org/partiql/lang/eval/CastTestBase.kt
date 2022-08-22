@@ -18,10 +18,10 @@ import org.partiql.lang.eval.ExprValueType.SEXP
 import org.partiql.lang.eval.ExprValueType.STRUCT
 import org.partiql.lang.eval.ExprValueType.TIMESTAMP
 import org.partiql.lang.eval.evaluatortestframework.ExpectedResultFormat
+import org.partiql.lang.eval.time.getOffsetHHmm
 import org.partiql.lang.ots_work.plugins.standard.plugin.StandardPlugin
 import org.partiql.lang.ots_work.plugins.standard.plugin.TypedOpBehavior
 import org.partiql.lang.ots_work.stscore.ScalarTypeSystem
-import org.partiql.lang.util.getOffsetHHmm
 import org.partiql.lang.util.legacyTypingMode
 import org.partiql.lang.util.permissiveTypingMode
 import java.time.ZoneOffset
