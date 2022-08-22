@@ -134,7 +134,7 @@ private val inputFormatOpt = optParser.acceptsAll(listOf("input-format", "if"), 
 private val wrapIonOpt = optParser.acceptsAll(listOf("wrap-ion", "w"), "wraps Ion input file values in a bag, requires the input format to be ION, requires the query option")
     .availableIf(queryOpt)
 
-private val parserOpt = optParser.acceptsAll(listOf("parser", "l"), "wraps Ion input file values in a bag, requires the input format to be ION, requires the query option")
+private val parserOpt = optParser.acceptsAll(listOf("parser", "l"), "parser implementation")
     .withRequiredArg()
     .ofType(ParserImplementation::class.java)
     .describedAs("(${ParserImplementation.values().joinToString("|")})")
@@ -168,7 +168,7 @@ private val outputFormatOpt = optParser.acceptsAll(listOf("output-format", "of")
  * * -r --projection-iter-behavior: Controls the behavior of ExprValue.iterator in the projection result: (default: FILTER_MISSING) [FILTER_MISSING, UNFILTERED]
  * * -v --undefined-variable-behavior: Defines the behavior when a non-existent variable is referenced: (default: ERROR) [ERROR, MISSING]
  * mismatches)
- * * -l --parser: Uses the PartiQL Parser for parsing (default: PARTIQL) [PARTIQL, SQL]
+ * * -l --parser: parser implementation (default: PARTIQL) [PARTIQL, SQL]
  * * Interactive only:
  *      * -m --monochrome: removes syntax highlighting for the REPL
  * * Non interactive only:
