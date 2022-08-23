@@ -1160,7 +1160,7 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
             PartiQLParser.DATE -> dateType(metas)
             PartiQLParser.STRUCT -> structType(metas)
             PartiQLParser.TUPLE -> tupleType(metas)
-            PartiQLParser.LIST -> sexpType(metas)
+            PartiQLParser.LIST -> listType(metas)
             PartiQLParser.BAG -> bagType(metas)
             PartiQLParser.ANY -> anyType(metas)
             else -> throw ParserException("Unsupported type.", ErrorCode.PARSE_INVALID_QUERY)
