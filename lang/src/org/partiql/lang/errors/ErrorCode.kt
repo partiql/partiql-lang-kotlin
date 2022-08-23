@@ -65,15 +65,6 @@ enum class ErrorCode(
             getTokenString(errorContext)
     },
 
-    LEXER_INVALID_TOKEN(
-        ErrorCategory.LEXER,
-        LOC_TOKEN_STR,
-        "invalid token"
-    ) {
-        override fun detailMessageSuffix(errorContext: PropertyValueMap?): String =
-            getTokenString(errorContext)
-    },
-
     LEXER_INVALID_NAME(
         ErrorCategory.LEXER,
         LOC_TOKEN_STR,
@@ -105,16 +96,6 @@ enum class ErrorCode(
     ) {
         override fun detailMessageSuffix(errorContext: PropertyValueMap?): String =
             getTokenString(errorContext)
-    },
-
-    PARSE_INVALID_QUERY(
-        ErrorCategory.PARSER,
-        setOf(),
-        "Invalid query syntax"
-    ) {
-        override fun getErrorMessage(errorContext: PropertyValueMap?): String {
-            return "Invalid query syntax."
-        }
     },
 
     PARSE_MALFORMED_PARSE_TREE(
@@ -244,16 +225,6 @@ enum class ErrorCode(
         LOC_TOKEN,
         "unsupported syntax for alias, `at` and `as` are supported"
     ),
-
-    PARSE_STATEMENT_TOO_LARGE(
-        ErrorCategory.PARSER,
-        setOf(),
-        "Statement too large"
-    ) {
-        override fun getErrorMessage(errorContext: PropertyValueMap?): String {
-            return "Statement too large."
-        }
-    },
 
     PARSE_UNSUPPORTED_SYNTAX(
         ErrorCategory.PARSER,

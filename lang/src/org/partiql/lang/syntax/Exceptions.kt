@@ -40,7 +40,7 @@ open class LexerException(
 open class ParserException(
     message: String = "",
     errorCode: ErrorCode,
-    errorContext: PropertyValueMap = PropertyValueMap(),
+    errorContext: PropertyValueMap,
     cause: Throwable? = null
 ) :
     SyntaxException(message, errorCode, errorContext, cause)

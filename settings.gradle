@@ -20,5 +20,5 @@ include('lang',
         'examples', 
         'testscript',
         'pts',
-        'extensions',
-        'partiql-syntax')
+        'extensions')
+
