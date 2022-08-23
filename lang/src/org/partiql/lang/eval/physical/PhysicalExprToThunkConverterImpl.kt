@@ -82,8 +82,6 @@ import org.partiql.lang.eval.time.Time
 import org.partiql.lang.eval.time.totalMinutes
 import org.partiql.lang.eval.unnamedValue
 import org.partiql.lang.eval.visitors.PartiqlPhysicalSanityValidator
-import org.partiql.lang.ots_work.plugins.standard.plugin.StandardPlugin
-import org.partiql.lang.ots_work.plugins.standard.plugin.TypedOpBehavior
 import org.partiql.lang.ots_work.plugins.standard.types.Int2Type
 import org.partiql.lang.ots_work.plugins.standard.types.Int4Type
 import org.partiql.lang.ots_work.plugins.standard.types.Int8Type
@@ -92,15 +90,19 @@ import org.partiql.lang.ots_work.stscore.ScalarTypeSystem
 import org.partiql.lang.planner.EvaluatorOptions
 import org.partiql.lang.types.AnyOfType
 import org.partiql.lang.types.AnyType
+import org.partiql.lang.types.BagType
 import org.partiql.lang.types.FunctionSignature
+import org.partiql.lang.types.ListType
+import org.partiql.lang.types.MissingType
+import org.partiql.lang.types.NullType
+import org.partiql.lang.types.SexpType
 import org.partiql.lang.types.SingleType
 import org.partiql.lang.types.StaticScalarType
 import org.partiql.lang.types.StaticType
+import org.partiql.lang.types.StructType
 import org.partiql.lang.types.TypedOpParameter
 import org.partiql.lang.types.UnknownArguments
-import org.partiql.lang.types.UnsupportedTypeCheckException
 import org.partiql.lang.types.toTypedOpParameter
-import org.partiql.lang.util.BuiltInScalarTypeId
 import org.partiql.lang.util.checkThreadInterrupted
 import org.partiql.lang.util.codePointSequence
 import org.partiql.lang.util.div
@@ -148,9 +150,6 @@ internal class PhysicalExprToThunkConverterImpl(
     private val bexperConverter: PhysicalBexprToThunkConverter,
     private val scalarTypeSystem: ScalarTypeSystem
 ) : PhysicalExprToThunkConverter {
-    // TODO: remove the following hard-coded variable later
-    private val typedOpBehavior = (scalarTypeSystem.plugin as StandardPlugin).typedOpBehavior
-
     private val errorSignaler = evaluatorOptions.typingMode.createErrorSignaler(valueFactory)
     private val thunkFactory = evaluatorOptions.typingMode.createThunkFactory<EvaluatorState>(
         evaluatorOptions.thunkOptions,
@@ -945,96 +944,50 @@ internal class PhysicalExprToThunkConverterImpl(
         }
     }
 
-    /**
-     * Returns a lambda that implements the `IS` operator type check according to the current
-     * [TypedOpBehavior].
-     */
-    private fun makeIsCheck(
-        staticType: SingleType,
-        typedOpParameter: TypedOpParameter,
-        metas: MetaContainer
-    ): (ExprValue) -> Boolean {
-        val exprValueType = staticType.runtimeType
-
-        // The "simple" type match function only looks at the [ExprValueType] of the [ExprValue]
-        // and invokes the custom [validationThunk] if one exists.
-        val simpleTypeMatchFunc = { expValue: ExprValue ->
-            val isTypeMatch = when (exprValueType) {
-                // MISSING IS NULL and NULL IS MISSING
-                ExprValueType.NULL -> expValue.type.isUnknown
-                else -> expValue.type == exprValueType
-            }
-            (isTypeMatch && typedOpParameter.validationThunk?.let { it(expValue) } != false)
+    private fun makeIsCheck(sourceValue: ExprValue, targetType: SingleType): Boolean =
+        when (targetType) {
+            MissingType,
+            is NullType,
+            is BagType,
+            is ListType,
+            is SexpType,
+            is StructType -> targetType.isInstance(sourceValue)
+            is StaticScalarType -> scalarTypeSystem.invokeIsOp(sourceValue, targetType.toCompileTimeType())
         }
 
-        return when (typedOpBehavior) {
-            TypedOpBehavior.LEGACY -> simpleTypeMatchFunc
-            TypedOpBehavior.HONOR_PARAMETERS -> { expValue: ExprValue ->
-                staticType.allTypes.any {
-                    val matchesStaticType = try {
-                        it.isInstance(expValue)
-                    } catch (e: UnsupportedTypeCheckException) {
-                        err(
-                            e.message!!,
-                            ErrorCode.UNIMPLEMENTED_FEATURE,
+    private fun compileIs(expr: PartiqlPhysical.Expr.IsType, metas: MetaContainer): PhysicalPlanThunk {
+        val typeNode = expr.type
+        val typedOpParameter = typeNode.toTypedOpParameter(customTypedOpParameters)
+        if (typedOpParameter.staticType is AnyType) {
+            return thunkFactory.thunkEnv(metas) { valueFactory.newBoolean(true) }
+        }
+
+        val expThunk = compileAstExpr(expr.value)
+        return thunkFactory.thunkEnv(metas) { env ->
+            val sourceValue = expThunk(env)
+
+            when (val staticType = typedOpParameter.staticType) {
+                is SingleType -> makeIsCheck(sourceValue, staticType)
+                is AnyOfType -> staticType.types.any { singleType ->
+                    when (singleType) {
+                        is SingleType -> makeIsCheck(sourceValue, singleType)
+                        else -> err(
+                            "Union type cannot have ANY or nested AnyOf type for IS",
+                            ErrorCode.SEMANTIC_UNION_TYPE_INVALID,
                             errorContextFrom(metas),
                             internal = true
                         )
                     }
-
-                    when {
-                        !matchesStaticType -> false
-                        else -> when (val validator = typedOpParameter.validationThunk) {
-                            null -> true
-                            else -> validator(expValue)
-                        }
-                    }
                 }
-            }
-        }
-    }
-
-    private fun compileIs(expr: PartiqlPhysical.Expr.IsType, metas: MetaContainer): PhysicalPlanThunk {
-        val expThunk = compileAstExpr(expr.value)
-        val typedOpParameter = expr.type.toTypedOpParameter(customTypedOpParameters)
-        if (typedOpParameter.staticType is AnyType) {
-            return thunkFactory.thunkEnv(metas) { valueFactory.newBoolean(true) }
-        }
-        if (
-            typedOpBehavior == TypedOpBehavior.HONOR_PARAMETERS &&
-            expr.type is PartiqlPhysical.Type.ScalarType &&
-            expr.type.id.text == BuiltInScalarTypeId.FLOAT &&
-            expr.type.parameters.isNotEmpty() // if precision of FLOAT is explicitly specified in the original query
-        ) {
-            err(
-                "FLOAT precision parameter is unsupported",
-                ErrorCode.SEMANTIC_FLOAT_PRECISION_UNSUPPORTED,
-                errorContextFrom(expr.type.metas),
-                internal = false
-            )
-        }
-
-        val typeMatchFunc = when (val staticType = typedOpParameter.staticType) {
-            is SingleType -> makeIsCheck(staticType, typedOpParameter, metas)
-            is AnyOfType -> staticType.types.map { childType ->
-                when (childType) {
-                    is SingleType -> makeIsCheck(childType, typedOpParameter, metas)
-                    else -> err(
-                        "Union type cannot have ANY or nested AnyOf type for IS",
-                        ErrorCode.SEMANTIC_UNION_TYPE_INVALID,
-                        errorContextFrom(metas),
-                        internal = true
-                    )
+                is AnyType -> throw IllegalStateException("Unreachable code")
+            }.let {
+                val test = when (it) {
+                    false -> false
+                    true -> typedOpParameter.validationThunk?.let { validator -> validator(sourceValue) } ?: true
                 }
-            }.let { typeMatchFuncs ->
-                { expValue: ExprValue -> typeMatchFuncs.any { func -> func(expValue) } }
-            }
-            is AnyType -> throw IllegalStateException("Unexpected ANY type in IS compilation")
-        }
 
-        return thunkFactory.thunkEnv(metas) { env ->
-            val expValue = expThunk(env)
-            typeMatchFunc(expValue).exprValue()
+                test
+            }.exprValue()
         }
     }
 
@@ -1044,19 +997,6 @@ internal class PhysicalExprToThunkConverterImpl(
         if (typedOpParameter.staticType is AnyType) {
             return expThunk
         }
-        if (
-            typedOpBehavior == TypedOpBehavior.HONOR_PARAMETERS &&
-            asType is PartiqlPhysical.Type.ScalarType &&
-            asType.id.text == BuiltInScalarTypeId.FLOAT &&
-            asType.parameters.isNotEmpty() // if precision of FLOAT is explicitly specified in the original query
-        ) {
-            err(
-                "FLOAT precision parameter is unsupported",
-                ErrorCode.SEMANTIC_FLOAT_PRECISION_UNSUPPORTED,
-                errorContextFrom(asType.metas),
-                internal = false
-            )
-        }
 
         fun typeOpValidate(
             value: ExprValue,
@@ -1064,7 +1004,7 @@ internal class PhysicalExprToThunkConverterImpl(
             typeName: String,
             locationMeta: SourceLocationMeta?
         ) {
-            if (typedOpParameter.validationThunk?.let { it(castOutput) } == false) {
+            if (asType is PartiqlPhysical.Type.CustomType && asType.toTypedOpParameter(customTypedOpParameters).validationThunk?.let { it(castOutput) } == false) {
                 val errorContext = PropertyValueMap().also {
                     it[Property.CAST_FROM] = value.type.toString()
                     it[Property.CAST_TO] = typeName
@@ -1135,8 +1075,7 @@ internal class PhysicalExprToThunkConverterImpl(
         thunkFactory.thunkEnv(metas, compileCastHelper(expr.value, expr.asType, metas))
 
     private fun compileCanCast(expr: PartiqlPhysical.Expr.CanCast, metas: MetaContainer): PhysicalPlanThunk {
-        val typedOpParameter = expr.asType.toTypedOpParameter(customTypedOpParameters)
-        if (typedOpParameter.staticType is AnyType) {
+        if (expr.asType is PartiqlPhysical.Type.AnyType) {
             return thunkFactory.thunkEnv(metas) { valueFactory.newBoolean(true) }
         }
 

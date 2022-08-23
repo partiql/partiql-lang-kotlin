@@ -22,4 +22,8 @@ class ScalarTypeSystem(
 
         return plugin.scalarCast.invoke(value, targetType)
     }
+
+    internal fun invokeIsOp(value: ExprValue, targetType: CompileTimeType): Boolean {
+        return plugin.scalarIs.invoke(value, targetType)
+    }
 }

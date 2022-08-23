@@ -5,4 +5,6 @@ package org.partiql.lang.ots_work.interfaces
  */
 interface Plugin {
     val scalarCast: ScalarCast
+
+    val scalarIs: ScalarIs
 }

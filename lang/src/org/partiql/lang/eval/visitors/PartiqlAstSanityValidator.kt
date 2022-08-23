@@ -85,10 +85,24 @@ class PartiqlAstSanityValidator(
         }
     }
 
+    private fun validateFloatType(node: PartiqlAst.Type.ScalarType) {
+        if (typedOpBehavior == TypedOpBehavior.HONOR_PARAMETERS && node.parameters.isNotEmpty()) {
+            err(
+                "FLOAT precision parameter is unsupported",
+                errorCode = ErrorCode.SEMANTIC_FLOAT_PRECISION_UNSUPPORTED,
+                errorContext = errorContextFrom(node.metas),
+                internal = false
+            )
+        }
+    }
+
     override fun visitTypeScalarType(node: PartiqlAst.Type.ScalarType) {
         super.visitTypeScalarType(node)
-        if (node.id.text == BuiltInScalarTypeId.DECIMAL || node.id.text == BuiltInScalarTypeId.NUMERIC) {
-            validateDecimalOrNumericType(node.parameters.getOrNull(0)?.value, node.parameters.getOrNull(1)?.value, node.metas)
+
+        when (node.id.text) {
+            BuiltInScalarTypeId.DECIMAL,
+            BuiltInScalarTypeId.NUMERIC -> validateDecimalOrNumericType(node.parameters.getOrNull(0)?.value, node.parameters.getOrNull(1)?.value, node.metas)
+            BuiltInScalarTypeId.FLOAT -> validateFloatType(node)
         }
     }
 

@@ -51,8 +51,6 @@ import org.partiql.lang.eval.like.parsePattern
 import org.partiql.lang.eval.time.Time
 import org.partiql.lang.eval.time.totalMinutes
 import org.partiql.lang.eval.visitors.PartiqlAstSanityValidator
-import org.partiql.lang.ots_work.plugins.standard.plugin.StandardPlugin
-import org.partiql.lang.ots_work.plugins.standard.plugin.TypedOpBehavior
 import org.partiql.lang.ots_work.plugins.standard.types.Int2Type
 import org.partiql.lang.ots_work.plugins.standard.types.Int4Type
 import org.partiql.lang.ots_work.plugins.standard.types.Int8Type
@@ -61,15 +59,19 @@ import org.partiql.lang.ots_work.stscore.ScalarTypeSystem
 import org.partiql.lang.syntax.SqlParser
 import org.partiql.lang.types.AnyOfType
 import org.partiql.lang.types.AnyType
+import org.partiql.lang.types.BagType
 import org.partiql.lang.types.FunctionSignature
+import org.partiql.lang.types.ListType
+import org.partiql.lang.types.MissingType
+import org.partiql.lang.types.NullType
+import org.partiql.lang.types.SexpType
 import org.partiql.lang.types.SingleType
 import org.partiql.lang.types.StaticScalarType
 import org.partiql.lang.types.StaticType
+import org.partiql.lang.types.StructType
 import org.partiql.lang.types.TypedOpParameter
 import org.partiql.lang.types.UnknownArguments
-import org.partiql.lang.types.UnsupportedTypeCheckException
 import org.partiql.lang.types.toTypedOpParameter
-import org.partiql.lang.util.BuiltInScalarTypeId
 import org.partiql.lang.util.bigDecimalOf
 import org.partiql.lang.util.checkThreadInterrupted
 import org.partiql.lang.util.codePointSequence
@@ -141,9 +143,6 @@ internal class EvaluatingCompiler(
     private val compileOptions: CompileOptions = CompileOptions.standard(),
     private val scalarTypeSystem: ScalarTypeSystem
 ) {
-    // TODO: remove the following hard-coded variable later
-    private val typedOpBehavior = (scalarTypeSystem.plugin as StandardPlugin).typedOpBehavior
-
     private val errorSignaler = compileOptions.typingMode.createErrorSignaler(valueFactory)
     private val thunkFactory = compileOptions.typingMode.createThunkFactory<Environment>(compileOptions.thunkOptions, valueFactory)
 
@@ -1177,98 +1176,50 @@ internal class EvaluatingCompiler(
         }
     }
 
-    /**
-     * Returns a lambda that implements the `IS` operator type check according to the current
-     * [TypedOpBehavior].
-     */
-    private fun makeIsCheck(
-        singleType: SingleType,
-        typedOpParameter: TypedOpParameter,
-        metas: MetaContainer
-    ): (ExprValue) -> Boolean {
-        val exprValueType = singleType.runtimeType
-
-        // The "simple" type match function only looks at the [ExprValueType] of the [ExprValue]
-        // and invokes the custom [validationThunk] if one exists.
-        val simpleTypeMatchFunc = { expValue: ExprValue ->
-            val isTypeMatch = when (exprValueType) {
-                // MISSING IS NULL and NULL IS MISSING
-                ExprValueType.NULL -> expValue.type.isUnknown
-                else -> expValue.type == exprValueType
-            }
-            (isTypeMatch && typedOpParameter.validationThunk?.let { it(expValue) } != false)
+    private fun makeIsCheck(sourceValue: ExprValue, targetType: SingleType): Boolean =
+        when (targetType) {
+            MissingType,
+            is NullType,
+            is BagType,
+            is ListType,
+            is SexpType,
+            is StructType -> targetType.isInstance(sourceValue)
+            is StaticScalarType -> scalarTypeSystem.invokeIsOp(sourceValue, targetType.toCompileTimeType())
         }
 
-        // TODO: move the following code into ots_work standard plugin package. Probably we need to refactor IS compiling using `ScalarType.validateValue()` method for scalar types.
-        return when (typedOpBehavior) {
-            TypedOpBehavior.LEGACY -> simpleTypeMatchFunc
-            TypedOpBehavior.HONOR_PARAMETERS -> { expValue: ExprValue ->
-                singleType.let {
-                    val matchesStaticType = try {
-                        it.isInstance(expValue)
-                    } catch (e: UnsupportedTypeCheckException) {
-                        err(
-                            e.message!!,
-                            ErrorCode.UNIMPLEMENTED_FEATURE,
+    private fun compileIs(expr: PartiqlAst.Expr.IsType, metas: MetaContainer): ThunkEnv {
+        val typeNode = expr.type
+        val typedOpParameter = typeNode.toTypedOpParameter(customTypedOpParameters)
+        if (typedOpParameter.staticType is AnyType) {
+            return thunkFactory.thunkEnv(metas) { valueFactory.newBoolean(true) }
+        }
+
+        val expThunk = compileAstExpr(expr.value)
+        return thunkFactory.thunkEnv(metas) { env ->
+            val sourceValue = expThunk(env)
+
+            when (val staticType = typedOpParameter.staticType) {
+                is SingleType -> makeIsCheck(sourceValue, staticType)
+                is AnyOfType -> staticType.types.any { singleType ->
+                    when (singleType) {
+                        is SingleType -> makeIsCheck(sourceValue, singleType)
+                        else -> err(
+                            "Union type cannot have ANY or nested AnyOf type for IS",
+                            ErrorCode.SEMANTIC_UNION_TYPE_INVALID,
                             errorContextFrom(metas),
                             internal = true
                         )
                     }
-
-                    when {
-                        !matchesStaticType -> false
-                        else -> when (val validator = typedOpParameter.validationThunk) {
-                            null -> true
-                            else -> validator(expValue)
-                        }
-                    }
                 }
-            }
-        }
-    }
-
-    private fun compileIs(expr: PartiqlAst.Expr.IsType, metas: MetaContainer): ThunkEnv {
-        val expThunk = compileAstExpr(expr.value)
-        val typedOpParameter = expr.type.toTypedOpParameter(customTypedOpParameters)
-        if (typedOpParameter.staticType is AnyType) {
-            return thunkFactory.thunkEnv(metas) { valueFactory.newBoolean(true) }
-        }
-        // TODO: move the following code into ots_work standard plugin package
-        if (
-            typedOpBehavior == TypedOpBehavior.HONOR_PARAMETERS &&
-            expr.type is PartiqlAst.Type.ScalarType &&
-            expr.type.id.text == BuiltInScalarTypeId.FLOAT &&
-            expr.type.parameters.isNotEmpty() // if precision of FLOAT is explicitly specified in the original query
-        ) {
-            err(
-                "FLOAT precision parameter is unsupported",
-                ErrorCode.SEMANTIC_FLOAT_PRECISION_UNSUPPORTED,
-                errorContextFrom(expr.type.metas),
-                internal = false
-            )
-        }
-
-        val typeMatchFunc = when (val staticType = typedOpParameter.staticType) {
-            is SingleType -> makeIsCheck(staticType, typedOpParameter, metas)
-            is AnyOfType -> staticType.types.map { childType ->
-                when (childType) {
-                    is SingleType -> makeIsCheck(childType, typedOpParameter, metas)
-                    else -> err(
-                        "Union type cannot have ANY or nested AnyOf type for IS",
-                        ErrorCode.SEMANTIC_UNION_TYPE_INVALID,
-                        errorContextFrom(metas),
-                        internal = true
-                    )
+                is AnyType -> throw IllegalStateException("Unreachable code")
+            }.let {
+                val test = when (it) {
+                    false -> false
+                    true -> typedOpParameter.validationThunk?.let { validator -> validator(sourceValue) } ?: true
                 }
-            }.let { typeMatchFuncs ->
-                { expValue: ExprValue -> typeMatchFuncs.any { func -> func(expValue) } }
-            }
-            is AnyType -> throw IllegalStateException("Unexpected ANY type in IS compilation")
-        }
 
-        return thunkFactory.thunkEnv(metas) { env ->
-            val expValue = expThunk(env)
-            typeMatchFunc(expValue).exprValue()
+                test
+            }.exprValue()
         }
     }
 
@@ -1277,19 +1228,6 @@ internal class EvaluatingCompiler(
         val typedOpParameter = asType.toTypedOpParameter(customTypedOpParameters)
         if (typedOpParameter.staticType is AnyType) {
             return expThunk
-        }
-        if (
-            typedOpBehavior == TypedOpBehavior.HONOR_PARAMETERS &&
-            asType is PartiqlAst.Type.ScalarType &&
-            asType.id.text == BuiltInScalarTypeId.FLOAT &&
-            asType.parameters.isNotEmpty() // if precision of FLOAT is explicitly specified in the original query
-        ) {
-            err(
-                "FLOAT precision parameter is unsupported",
-                ErrorCode.SEMANTIC_FLOAT_PRECISION_UNSUPPORTED,
-                errorContextFrom(asType.metas),
-                internal = false
-            )
         }
 
         fun typeOpValidate(
