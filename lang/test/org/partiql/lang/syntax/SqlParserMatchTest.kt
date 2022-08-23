@@ -477,7 +477,7 @@ class SqlParserMatchTest : SqlParserTestBase() {
 
     @Test
     fun twoHopTriples() = assertExpressionNoRoundTrip(
-        "SELECT a,b FROM g MATCH ((a) -[:has]-> (x), (x)-[:contains]->(b))",
+        "SELECT a,b FROM g MATCH (a) -[:has]-> (x), (x)-[:contains]->(b)",
     ) {
         select(
             project = projectList(
@@ -775,7 +775,7 @@ class SqlParserMatchTest : SqlParserTestBase() {
 
     @Test
     fun prefilters() = assertExpressionNoRoundTrip(
-        "SELECT u as banCandidate FROM g MATCH (p:Post Where p.isFlagged = true) <-[:createdPost]- (u:Usr WHERE u.isBanned = false AND u.karma < 20) -[:createdComment]->(c:Comment WHERE c.isFlagged = true) WHERE p.title LIKE '%considered harmful%'",
+        "SELECT u as banCandidate FROM g MATCH (p:Post Where p.isFlagged = true) <-[:createdPost]- (u:User WHERE u.isBanned = false AND u.karma < 20) -[:createdComment]->(c:Comment WHERE c.isFlagged = true) WHERE p.title LIKE '%considered harmful%'",
     ) {
         PartiqlAst.build {
             select(
@@ -800,7 +800,7 @@ class SqlParserMatchTest : SqlParserTestBase() {
                                     ),
                                     node(
                                         variable = "u",
-                                        label = listOf("Usr"),
+                                        label = listOf("User"),
                                         prefilter = and(
                                             eq(
                                                 path(id("u"), pathExpr(lit(ionString("isBanned")), caseInsensitive())),
