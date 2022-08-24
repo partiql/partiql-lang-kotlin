@@ -15,7 +15,15 @@ package org.partiql.lang.ast
 
 /**
  * This is used by the PartiQLVisitor to determine whether the path step is of type index. This is because it is
- * used to evaluate path expressions in FROM clauses in convertPathToProjectionItem().
+ * used to evaluate path expressions in FROM clauses in convertPathToProjectionItem(). This class exists because ANTLR
+ * first parses the path (and adds [IsPathIndexMeta] to any path step that uses indexing: AKA a[0]), and, upon visiting
+ * the path, we check that the path doesn't end with a `.*` and contains an index. The AST does
+ * not differentiate between different path steps, and therefore, this meta exists to aid in determining whether the
+ * projection item path is correct.
+ * Example:
+ *   - ```SELECT a.b.* FROM data``` --> Allowed
+ *   - ```SELECT a[b] FROM data``` --> Allowed
+ *   - ```SELECT a[b].* FROM data``` --> NOT Allowed
  */
 class IsPathIndexMeta private constructor() : Meta {
     override val tag = TAG

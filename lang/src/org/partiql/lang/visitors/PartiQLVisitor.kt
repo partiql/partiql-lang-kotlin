@@ -788,9 +788,9 @@ class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = lis
         // Wrap Expression with LIST unless SELECT / VALUES
         val rhs = if (ctx.expr() != null) {
             val possibleRhs = visitExpr(ctx.expr())
-            if (possibleRhs !is PartiqlAst.Expr.Select && !possibleRhs.metas.containsKey(IsValuesExprMeta.TAG))
-                list(possibleRhs)
-            else possibleRhs
+            if (possibleRhs is PartiqlAst.Expr.Select || possibleRhs.metas.containsKey(IsValuesExprMeta.TAG))
+                possibleRhs
+            else list(possibleRhs)
         } else {
             visit(ctx.rhs, PartiqlAst.Expr::class)
         }

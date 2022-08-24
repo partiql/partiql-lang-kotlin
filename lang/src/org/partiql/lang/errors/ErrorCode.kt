@@ -245,13 +245,13 @@ enum class ErrorCode(
         "unsupported syntax for alias, `at` and `as` are supported"
     ),
 
-    PARSE_STATEMENT_TOO_LARGE(
+    PARSE_FAILED_STACK_OVERFLOW(
         ErrorCategory.PARSER,
         setOf(),
-        "Statement too large"
+        ""
     ) {
         override fun getErrorMessage(errorContext: PropertyValueMap?): String {
-            return "Statement too large."
+            return "Statement too large. Parse failed due to stack overflow."
         }
     },
 
