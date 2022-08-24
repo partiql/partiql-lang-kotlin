@@ -25,7 +25,7 @@ import org.partiql.lang.ots_work.interfaces.ScalarCast
 import org.partiql.lang.ots_work.interfaces.TypeInferenceResult
 import org.partiql.lang.ots_work.plugins.standard.plugin.TypedOpBehavior
 import org.partiql.lang.ots_work.plugins.standard.types.BlobType
-import org.partiql.lang.ots_work.plugins.standard.types.BoolType
+import org.partiql.lang.ots_work.interfaces.BoolType
 import org.partiql.lang.ots_work.plugins.standard.types.CharType
 import org.partiql.lang.ots_work.plugins.standard.types.ClobType
 import org.partiql.lang.ots_work.plugins.standard.types.DateType

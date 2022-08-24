@@ -12,7 +12,7 @@ import org.partiql.ionschema.model.IonSchemaModel
 import org.partiql.ionschema.model.toIsl
 import org.partiql.ionschema.parser.parseSchema
 import org.partiql.lang.ots_work.plugins.standard.types.BlobType
-import org.partiql.lang.ots_work.plugins.standard.types.BoolType
+import org.partiql.lang.ots_work.interfaces.BoolType
 import org.partiql.lang.ots_work.plugins.standard.types.CharType
 import org.partiql.lang.ots_work.plugins.standard.types.ClobType
 import org.partiql.lang.ots_work.plugins.standard.types.DecimalType

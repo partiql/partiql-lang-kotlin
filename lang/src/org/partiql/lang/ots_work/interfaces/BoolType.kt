@@ -1,4 +1,4 @@
-package org.partiql.lang.ots_work.plugins.standard.types
+package org.partiql.lang.ots_work.interfaces
 
 import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.ots_work.interfaces.ScalarType

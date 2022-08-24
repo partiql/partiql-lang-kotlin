@@ -34,7 +34,7 @@ import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.builtins.createBuiltinFunctionSignatures
 import org.partiql.lang.eval.delegate
 import org.partiql.lang.eval.getStartingSourceLocationMeta
-import org.partiql.lang.ots_work.plugins.standard.types.BoolType
+import org.partiql.lang.ots_work.interfaces.BoolType
 import org.partiql.lang.ots_work.plugins.standard.types.CharType
 import org.partiql.lang.ots_work.plugins.standard.types.DecimalType
 import org.partiql.lang.ots_work.plugins.standard.types.FloatType
