@@ -49,12 +49,15 @@ class PartiQLParser(
 ) : Parser {
 
     override fun parseAstStatement(source: String): PartiqlAst.Statement {
+        // TODO: Research use-case of parameters and implementation -- see https://github.com/partiql/partiql-docs/issues/23
         val parameterIndexes = getNumberOfParameters(source)
         val lexer = getLexer(source)
         val tree = try {
             parseQuery(lexer)
         } catch (e: StackOverflowError) {
-            throw ParserException("Statement too large", ErrorCode.PARSE_STATEMENT_TOO_LARGE, cause = e)
+            val msg = "Input query too large. This error typically occurs when there are several nested " +
+                "expressions/predicates and can usually be fixed by simplifying expressions."
+            throw ParserException(msg, ErrorCode.PARSE_FAILED_STACK_OVERFLOW, cause = e)
         }
         val visitor = PartiQLVisitor(ion, customTypes, parameterIndexes)
         return visitor.visit(tree) as PartiqlAst.Statement

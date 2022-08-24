@@ -66,8 +66,6 @@ internal fun Token?.error(
 internal fun getPartiQLTokenType(token: Token): TokenType {
     val type = token.type
     val text = token.text
-    println("TYPE: $type")
-    println("TEXT: $text")
     return when {
         type == PartiQLParser.PAREN_LEFT -> TokenType.LEFT_PAREN
         type == PartiQLParser.PAREN_RIGHT -> TokenType.RIGHT_PAREN
