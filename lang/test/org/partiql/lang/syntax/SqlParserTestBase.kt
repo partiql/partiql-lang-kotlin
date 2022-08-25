@@ -41,8 +41,7 @@ import org.partiql.lang.util.softAssert
 import org.partiql.pig.runtime.toIonElement
 
 abstract class SqlParserTestBase : TestBase() {
-    // Default Parser
-    val parser = PartiQLParserBuilder().withIonSystem(ion).withCustomTypes(CUSTOM_TEST_TYPES).build()
+    protected val parser = SqlParser(ion, CUSTOM_TEST_TYPES)
 
     protected fun parse(source: String): PartiqlAst.Statement = parser.parseAstStatement(source)
 
