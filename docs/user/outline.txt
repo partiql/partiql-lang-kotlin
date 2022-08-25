@@ -1,9 +1,0 @@
-metadata.yaml
-Preface.md
-FAQ.md
-GettingStarted.md
-CLI.md
-Tutorial.md
-Guide.md
-BuiltInFunctions.md
-References.md
