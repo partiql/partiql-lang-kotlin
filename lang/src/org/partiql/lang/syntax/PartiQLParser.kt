@@ -48,10 +48,6 @@ internal class PartiQLParser(
     val customTypes: List<CustomType> = listOf()
 ) : Parser {
 
-    // TODO: This class is marked as internal (and will continue to be so in the future), but for customers to use this
-    //  class, a builder of some sort is required. This needs to occur prior to deprecating SqlParser.
-    //  For reference, see: https://github.com/partiql/partiql-lang-kotlin/issues/720
-
     override fun parseAstStatement(source: String): PartiqlAst.Statement {
         // TODO: Research use-case of parameters and implementation -- see https://github.com/partiql/partiql-docs/issues/23
         val parameterIndexes = getNumberOfParameters(source)
