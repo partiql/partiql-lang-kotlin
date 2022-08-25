@@ -49,8 +49,21 @@ sealed class QueryResult {
     ) : QueryResult()
 }
 
-/** Identifies the action to take. */
-enum class DmlAction { INSERT, DELETE }
+/**
+ * Identifies the action to take. This should be represented by PIG.
+ */
+enum class DmlAction {
+    INSERT,
+    DELETE;
+
+    companion object {
+        fun safeValueOf(v: String): DmlAction? = try {
+            valueOf(v.toUpperCase())
+        } catch (ex: IllegalArgumentException) {
+            null
+        }
+    }
+}
 
 internal const val DML_COMMAND_FIELD_ACTION = "action"
 internal const val DML_COMMAND_FIELD_TARGET_UNIQUE_ID = "target_unique_id"
@@ -90,7 +103,7 @@ internal fun ExprValue.toDmlCommand(): QueryResult.DmlCommand {
     val actionString = this.bindings[DML_COMMAND_FIELD_ACTION]?.scalar?.stringValue()?.toUpperCase()
         ?: errMissing(DML_COMMAND_FIELD_ACTION)
 
-    val dmlAction = DmlAction.values().firstOrNull { it.name == actionString }
+    val dmlAction = DmlAction.safeValueOf(actionString)
         ?: error("Unknown DmlAction in DML command struct: '$actionString'")
 
     val targetUniqueId = this.bindings[DML_COMMAND_FIELD_TARGET_UNIQUE_ID]?.scalar?.stringValue()

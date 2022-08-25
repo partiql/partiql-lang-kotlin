@@ -10,6 +10,14 @@ import org.partiql.lang.eval.physical.sourceLocationMetaOrUnknown
 import org.partiql.lang.planner.PlanningProblemDetails
 import org.partiql.lang.planner.handleUnimplementedFeature
 
+internal fun PartiqlAst.Statement.toLogicalPlan(problemHandler: ProblemHandler): PartiqlLogical.Plan =
+    PartiqlLogical.build {
+        plan(
+            AstToLogicalVisitorTransform(problemHandler).transformStatement(this@toLogicalPlan),
+            version = PLAN_VERSION_NUMBER
+        )
+    }
+
 /**
  * Transforms an instance of [PartiqlAst.Statement] to [PartiqlLogical.Statement].  This representation of the query
  * expresses the intent of the query author in terms of PartiQL's relational algebra instead of its AST.
@@ -19,15 +27,7 @@ import org.partiql.lang.planner.handleUnimplementedFeature
  * This conversion (and the logical algebra) are early in their lifecycle and so only a limited subset of SFW queries
  * are transformable.  See `AstToLogicalVisitorTransformTests` to see which queries are transformable.
  */
-internal fun PartiqlAst.Statement.toLogicalPlan(problemHandler: ProblemHandler): PartiqlLogical.Plan =
-    PartiqlLogical.build {
-        plan(
-            AstToLogicalVisitorTransform(problemHandler).transformStatement(this@toLogicalPlan),
-            version = PLAN_VERSION_NUMBER
-        )
-    }
-
-private class AstToLogicalVisitorTransform(
+internal class AstToLogicalVisitorTransform(
     val problemHandler: ProblemHandler
 ) : PartiqlAstToPartiqlLogicalVisitorTransform() {
 
