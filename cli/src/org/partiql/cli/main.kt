@@ -35,7 +35,7 @@ import org.partiql.lang.eval.TypedOpBehavior
 import org.partiql.lang.eval.TypingMode
 import org.partiql.lang.eval.UndefinedVariableBehavior
 import org.partiql.lang.syntax.Parser
-import org.partiql.lang.syntax.PartiQLParser
+import org.partiql.lang.syntax.PartiQLParserBuilder
 import org.partiql.lang.syntax.SqlParser
 import org.partiql.shell.Shell
 import org.partiql.shell.Shell.ShellConfiguration
@@ -195,8 +195,8 @@ fun main(args: Array<String>) = try {
     // Parser Options
     val parser = when (optionSet.valueOf(parserOpt)) {
         ParserImplementation.LEGACY -> SqlParser(ion)
-        ParserImplementation.ANTLR -> PartiQLParser(ion)
-        else -> PartiQLParser(ion)
+        ParserImplementation.ANTLR -> PartiQLParserBuilder().withIonSystem(ion).build()
+        else -> PartiQLParserBuilder().withIonSystem(ion).build()
     }
 
     // Compile Options
