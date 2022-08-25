@@ -71,7 +71,7 @@ import kotlin.reflect.cast
  * Extends ANTLR's generated [PartiQLBaseVisitor] to visit an ANTLR ParseTree and convert it into a PartiQL AST. This
  * class uses the [PartiqlAst.PartiqlAstNode] to represent all nodes within the new AST.
  */
-class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = listOf(), private val parameterIndexes: Map<Int, Int> = mapOf()) :
+internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = listOf(), private val parameterIndexes: Map<Int, Int> = mapOf()) :
     PartiQLBaseVisitor<PartiqlAst.PartiqlAstNode>() {
 
     private val customKeywords = customTypes.map { it.name.toLowerCase() }

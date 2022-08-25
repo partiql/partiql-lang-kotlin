@@ -398,6 +398,18 @@ joinType
  *
  * EXPRESSIONS & PRECEDENCE
  *
+ * Precedence Table:
+ * 1. Primary Expressions: Functions, Literals, Paths, Identifiers, etc (ex: a, f(a), 1, a.b, "a")
+ * 2. Unary plus, minus (ex: -a, +a)
+ * 3. Multiplication, Division, Modulo (ex: a * b)
+ * 4. Addition, Subtraction (ex: a + b)
+ * 5. Other operators (ex: a || b)
+ * 6. Predicates (ex: a LIKE b, a < b, a IN b, a = b)
+ * 7. IS true/false. Not yet implemented in PartiQL, but defined in SQL-92. (ex: a IS TRUE)
+ * 8. NOT (ex: NOT a)
+ * 8. AND (ex: a AND b)
+ * 9. OR (ex: a OR b)
+ *
  */
 
 expr
