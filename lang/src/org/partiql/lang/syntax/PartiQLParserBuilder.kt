@@ -18,6 +18,17 @@ import com.amazon.ion.IonSystem
 import com.amazon.ion.system.IonSystemBuilder
 import org.partiql.lang.types.CustomType
 
+/**
+ * A builder class to instantiate a [Parser].
+ *
+ * Example usages:
+ *
+ * ```
+ * val parser = PartiQLParserBuilder.standard().build()
+ * val parser = PartiQLParserBuilder.standard().withCustomTypes(types).build()
+ * val parser = PartiQLParserBuilder().withIonSystem(ion).withCustomTypes().build()
+ * ```
+ */
 class PartiQLParserBuilder {
 
     companion object {
