@@ -1,7 +1,11 @@
 package org.partiql.lang.ast.passes.inference
 
 import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.ots_work.interfaces.CompileTimeType
+import org.partiql.lang.ots_work.interfaces.Failed
+import org.partiql.lang.ots_work.interfaces.Successful
 import org.partiql.lang.ots_work.interfaces.TypeInferenceResult
+import org.partiql.lang.ots_work.interfaces.Uncertain
 import org.partiql.lang.ots_work.plugins.standard.types.BlobType
 import org.partiql.lang.ots_work.plugins.standard.types.CharType
 import org.partiql.lang.ots_work.plugins.standard.types.ClobType
@@ -73,7 +77,7 @@ internal fun StaticType.cast(targetType: StaticType, scalarTypeSystem: ScalarTyp
         this.isNullOrMissing() -> this
         else -> {
             when {
-                targetType is StaticScalarType && this is StaticScalarType -> scalarTypeSystem.inferReturnTypeOfScalarCastOp(toCompileTimeType(), targetType.toCompileTimeType()).toStaticType()
+                targetType is StaticScalarType && this is StaticScalarType -> scalarTypeSystem.inferReturnTypeOfScalarCastOp(toCompileTimeType(), targetType.toCompileTimeType()).toSingleType()
                 targetType is CollectionType && this is CollectionType -> targetType
                 targetType is StructType && this is StructType -> targetType
                 else -> StaticType.MISSING // TODO:  support non-permissive mode(s) here by throwing an exception to indicate cast is not possible
@@ -98,13 +102,11 @@ internal fun StaticType.filterNullMissing(): StaticType =
 internal fun stringWithoutNullMissing(argTypes: List<StaticType>): String =
     argTypes.joinToString { it.filterNullMissing().toString() }
 
-internal fun TypeInferenceResult.toStaticType() =
-    when (compileTimeType) {
-        null -> StaticType.MISSING
-        else -> StaticScalarType(compileTimeType.scalarType, compileTimeType.parameters).let {
-            when (canBeMissing) {
-                true -> StaticType.unionOf(StaticType.MISSING, it)
-                false -> it
-            }
-        }
+internal fun CompileTimeType.toSingleType() = StaticScalarType(scalarType, parameters)
+
+internal fun TypeInferenceResult.toSingleType() =
+    when (this) {
+        is Successful -> compileTimeType.toSingleType()
+        is Failed -> compileTimeType?.toSingleType() ?: StaticType.MISSING
+        is Uncertain -> StaticType.unionOf(StaticType.MISSING, compileTimeType.toSingleType())
     }

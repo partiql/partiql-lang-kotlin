@@ -18,9 +18,9 @@ import org.partiql.lang.errors.ProblemSeverity
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.numberValue
+import org.partiql.lang.ots_work.interfaces.BoolType
 import org.partiql.lang.ots_work.plugins.standard.plugin.StandardPlugin
 import org.partiql.lang.ots_work.plugins.standard.plugin.TypedOpBehavior
-import org.partiql.lang.ots_work.interfaces.BoolType
 import org.partiql.lang.ots_work.plugins.standard.types.CharType
 import org.partiql.lang.ots_work.plugins.standard.types.DecimalType
 import org.partiql.lang.ots_work.plugins.standard.types.VarcharType

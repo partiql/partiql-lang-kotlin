@@ -1,7 +1,6 @@
 package org.partiql.lang.ots_work.interfaces
 
 import org.partiql.lang.eval.ExprValueType
-import org.partiql.lang.ots_work.interfaces.ScalarType
 
 object BoolType : ScalarType {
     override val id: String

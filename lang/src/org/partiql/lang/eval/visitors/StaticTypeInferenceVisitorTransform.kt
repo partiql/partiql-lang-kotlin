@@ -290,12 +290,12 @@ internal class StaticTypeInferenceVisitorTransform(
 
         // Arithmetic NAry ops: ADD, SUB, MUL, DIV, MOD
         override fun transformExprPlus(node: PartiqlAst.Expr.Plus): PartiqlAst.Expr {
-            val nAry = super.transformExprPlus(node) as PartiqlAst.Expr.Plus
+            val processedNode = super.transformExprPlus(node) as PartiqlAst.Expr.Plus
             val type = when {
-                nAry.operands.size < 2 -> throw IllegalArgumentException("PartiqlAst.Expr.Plus must have at least 2 arguments")
-                else -> computeReturnTypeForArithmeticNAry(nAry, nAry.operands, "+")
+                processedNode.operands.size < 2 -> throw IllegalArgumentException("PartiqlAst.Expr.Plus must have at least 2 arguments")
+                else -> computeReturnTypeForArithmeticNAry(processedNode, processedNode.operands, "+")
             }
-            return nAry.withStaticType(type)
+            return processedNode.withStaticType(type)
         }
 
         override fun transformExprPos(node: PartiqlAst.Expr.Pos): PartiqlAst.Expr {
@@ -733,35 +733,52 @@ internal class StaticTypeInferenceVisitorTransform(
 
         private fun computeReturnTypeForArithmeticNAry(expr: PartiqlAst.Expr, operands: List<PartiqlAst.Expr>, op: String): StaticType {
             // check if all operands could be a numeric type
-            return if (hasValidOperandTypes(operands, { it.isNumeric() }, op, expr.metas)) {
-            operands.map { it.getStaticType() }.reduce { lastType, currentType ->
-                when {
-                    lastType is MissingType || currentType is MissingType -> StaticType.MISSING
-                    lastType is NullType || currentType is NullType -> StaticType.NULL
-                    else -> {
-                        val leftTypes = lastType.allTypes
-                        val rightTypes = currentType.allTypes
+            val operandsTypes = operands.map { it.getStaticType() }
+            val metas = expr.metas
 
-                        val possibleResultTypes: List<SingleType> =
-                            leftTypes.flatMap { type1 ->
-                                rightTypes.map { type2 ->
-                                    computeBinaryArithmeticResultType(type1, type2)
+            var hasValidOperands = true
+
+            // check for an incompatible operand type
+            if (operandsTypes.any { operand -> !operand.isUnknown() && operand.allTypes.none { it.isNumeric() } }) {
+                handleIncompatibleDataTypesForOpError(operandsTypes, op, metas.getSourceLocation())
+                hasValidOperands = false
+            }
+
+            // check for an unknown operand type
+            if (operandsTypes.any { operand -> operand.isUnknown() }) {
+                handleExpressionAlwaysReturnsNullOrMissingError(metas.getSourceLocation())
+                hasValidOperands = false
+            }
+
+            return if (hasValidOperands) {
+                operands.map { it.getStaticType() }.reduce { lastType, currentType ->
+                    when {
+                        lastType is MissingType || currentType is MissingType -> StaticType.MISSING
+                        lastType is NullType || currentType is NullType -> StaticType.NULL
+                        else -> {
+                            val leftTypes = lastType.allTypes
+                            val rightTypes = currentType.allTypes
+
+                            val possibleResultTypes: List<SingleType> =
+                                leftTypes.flatMap { type1 ->
+                                    rightTypes.map { type2 ->
+                                        computeBinaryArithmeticResultType(type1, type2)
+                                    }
+                                }.distinct()
+
+                            when (possibleResultTypes.size) {
+                                0 -> error("We always expect there to be at least one possible result type, even if is MISSING")
+                                1 -> {
+                                    // returning StaticType.MISSING from this branch is an error condition because the
+                                    // arithmetic operation can *never* succeed.
+                                    possibleResultTypes.first()
                                 }
-                            }.distinct()
-
-                        when (possibleResultTypes.size) {
-                            0 -> error("We always expect there to be at least one possible result type, even if is MISSING")
-                            1 -> {
-                                // returning StaticType.MISSING from this branch is an error condition because the
-                                // arithmetic operation can *never* succeed.
-                                possibleResultTypes.first()
+                                else -> AnyOfType(possibleResultTypes.toSet())
                             }
-                            else -> AnyOfType(possibleResultTypes.toSet())
                         }
                     }
                 }
-            }
-        } else {
+            } else {
                 // continuation type of all numeric types to prevent incompatible types and unknown errors from propagating
                 StaticType.unionOf(StaticType.ALL_TYPES.filter { it.isNumeric() }.toSet())
             }

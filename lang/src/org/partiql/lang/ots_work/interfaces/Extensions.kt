@@ -13,10 +13,16 @@ data class CompileTimeType(
     val parameters: TypeParameters
 )
 
-/**
- * Null value of [compileTimeType] means that the type cannot be inferred properly
- */
-data class TypeInferenceResult(
-    val compileTimeType: CompileTimeType?,
-    val canBeMissing: Boolean = false
-)
+sealed class TypeInferenceResult
+
+class Successful(
+    val compileTimeType: CompileTimeType
+) : TypeInferenceResult()
+
+class Failed(
+    val compileTimeType: CompileTimeType? = null
+) : TypeInferenceResult()
+
+class Uncertain(
+    val compileTimeType: CompileTimeType
+) : TypeInferenceResult()

@@ -20,12 +20,15 @@ import org.partiql.lang.eval.time.genericTimeRegex
 import org.partiql.lang.eval.time.getPrecisionFromTimeString
 import org.partiql.lang.eval.timeValue
 import org.partiql.lang.eval.timestampValue
+import org.partiql.lang.ots_work.interfaces.BoolType
 import org.partiql.lang.ots_work.interfaces.CompileTimeType
+import org.partiql.lang.ots_work.interfaces.Failed
 import org.partiql.lang.ots_work.interfaces.ScalarCast
+import org.partiql.lang.ots_work.interfaces.Successful
 import org.partiql.lang.ots_work.interfaces.TypeInferenceResult
+import org.partiql.lang.ots_work.interfaces.Uncertain
 import org.partiql.lang.ots_work.plugins.standard.plugin.TypedOpBehavior
 import org.partiql.lang.ots_work.plugins.standard.types.BlobType
-import org.partiql.lang.ots_work.interfaces.BoolType
 import org.partiql.lang.ots_work.plugins.standard.types.CharType
 import org.partiql.lang.ots_work.plugins.standard.types.ClobType
 import org.partiql.lang.ots_work.plugins.standard.types.DateType
@@ -76,9 +79,9 @@ class StandardScalarCast(
             is CharType,
             is StringType,
             is SymbolType -> when {
-                sourceScalarType.isNumeric() || sourceScalarType.isText() -> TypeInferenceResult(targetType)
-                sourceScalarType in listOf(BoolType, TimeStampType) -> TypeInferenceResult(targetType)
-                else -> TypeInferenceResult(null)
+                sourceScalarType.isNumeric() || sourceScalarType.isText() -> Successful(targetType)
+                sourceScalarType in listOf(BoolType, TimeStampType) -> Successful(targetType)
+                else -> Failed()
             }
             is Int2Type,
             is Int4Type,
@@ -90,41 +93,41 @@ class StandardScalarCast(
                 is IntType -> {
                     when (targetScalarType) {
                         is Int2Type -> when (sourceScalarType) {
-                            is Int2Type -> TypeInferenceResult(targetType)
+                            is Int2Type -> Successful(targetType)
                             is Int4Type,
                             is Int8Type,
-                            is IntType -> TypeInferenceResult(targetType, true)
+                            is IntType -> Uncertain(targetType)
                             else -> error("Unreachable code")
                         }
                         is Int4Type -> when (sourceScalarType) {
                             is Int2Type,
-                            is Int4Type -> TypeInferenceResult(targetType)
+                            is Int4Type -> Successful(targetType)
                             is Int8Type,
-                            is IntType -> TypeInferenceResult(targetType, true)
+                            is IntType -> Uncertain(targetType)
                             else -> error("Unreachable code")
                         }
                         is Int8Type -> when (sourceScalarType) {
                             is Int2Type,
                             is Int4Type,
-                            is Int8Type -> TypeInferenceResult(targetType)
-                            is IntType -> TypeInferenceResult(targetType, true)
+                            is Int8Type -> Successful(targetType)
+                            is IntType -> Uncertain(targetType)
                             else -> error("Unreachable code")
                         }
-                        is IntType -> TypeInferenceResult(targetType)
+                        is IntType -> Successful(targetType)
                         else -> error("Unreachable code")
                     }
                 }
-                is BoolType -> TypeInferenceResult(targetType)
+                is BoolType -> Successful(targetType)
                 is FloatType -> when (targetScalarType) {
-                    IntType -> TypeInferenceResult(targetType)
-                    else -> TypeInferenceResult(targetType, true)
+                    IntType -> Successful(targetType)
+                    else -> Uncertain(targetType)
                 }
                 is DecimalType -> when (targetScalarType) {
-                    IntType -> TypeInferenceResult(targetType)
+                    IntType -> Successful(targetType)
                     Int2Type,
                     Int4Type,
                     Int8Type -> when (sourceType.parameters[0]) {
-                        null -> TypeInferenceResult(targetType, true)
+                        null -> Uncertain(targetType)
                         else -> {
                             // Max value of SMALLINT is 32767.
                             // Conversion to SMALLINT will work as long as the decimal holds up 4 to digits. There is a chance of overflow beyond that.
@@ -141,9 +144,9 @@ class StandardScalarCast(
                             }
 
                             if (sourceScalarType.maxDigits(sourceType.parameters) > maxDigitsWithoutPrecisionLoss) {
-                                TypeInferenceResult(targetType, true)
+                                Uncertain(targetType)
                             } else {
-                                TypeInferenceResult(targetType)
+                                Successful(targetType)
                             }
                         }
                     }
@@ -152,78 +155,78 @@ class StandardScalarCast(
                 is SymbolType,
                 is StringType,
                 is CharType,
-                is VarcharType -> TypeInferenceResult(targetType, true)
-                else -> TypeInferenceResult(null)
+                is VarcharType -> Uncertain(targetType)
+                else -> Failed()
             }
             is BoolType -> when {
-                sourceScalarType === BoolType || sourceScalarType.isNumeric() || sourceScalarType.isText() -> TypeInferenceResult(targetType)
-                else -> TypeInferenceResult(null)
+                sourceScalarType === BoolType || sourceScalarType.isNumeric() || sourceScalarType.isText() -> Successful(targetType)
+                else -> Failed()
             }
             is FloatType -> when {
-                sourceScalarType === BoolType -> TypeInferenceResult(targetType)
+                sourceScalarType === BoolType -> Successful(targetType)
                 // Conversion to float will always succeed for numeric types
-                sourceScalarType.isNumeric() -> TypeInferenceResult(targetType)
-                sourceScalarType.isText() -> TypeInferenceResult(targetType, true)
-                else -> TypeInferenceResult(null)
+                sourceScalarType.isNumeric() -> Successful(targetType)
+                sourceScalarType.isText() -> Uncertain(targetType)
+                else -> Failed()
             }
             is DecimalType -> when (sourceScalarType) {
                 is DecimalType ->
                     if (targetScalarType.maxDigits(targetType.parameters) >= sourceScalarType.maxDigits(sourceType.parameters)) {
-                        TypeInferenceResult(targetType)
+                        Successful(targetType)
                     } else {
-                        TypeInferenceResult(targetType, true)
+                        Uncertain(targetType)
                     }
                 is Int2Type,
                 is Int4Type,
                 is Int8Type,
                 is IntType -> when (targetType.parameters[0]) {
-                    null -> TypeInferenceResult(targetType)
+                    null -> Successful(targetType)
                     else -> when (sourceScalarType) {
-                        is IntType -> TypeInferenceResult(targetType, true)
+                        is IntType -> Uncertain(targetType)
                         is Int2Type ->
                             // TODO: Move the magic numbers out
                             // max smallint value 32,767, so the decimal needs to be able to hold at least 5 digits
                             if (targetScalarType.maxDigits(targetType.parameters) >= 5) {
-                                TypeInferenceResult(targetType)
+                                Successful(targetType)
                             } else {
-                                TypeInferenceResult(targetType, true)
+                                Uncertain(targetType)
                             }
                         is Int4Type ->
                             // max int4 value 2,147,483,647 so the decimal needs to be able to hold at least 10 digits
                             if (targetScalarType.maxDigits(targetType.parameters) >= 10) {
-                                TypeInferenceResult(targetType)
+                                Successful(targetType)
                             } else {
-                                TypeInferenceResult(targetType, true)
+                                Uncertain(targetType)
                             }
                         is Int8Type ->
                             // max bigint value 9,223,372,036,854,775,807 so the decimal needs to be able to hold at least 19 digits
                             if (targetScalarType.maxDigits(targetType.parameters) >= 19) {
-                                TypeInferenceResult(targetType)
+                                Successful(targetType)
                             } else {
-                                TypeInferenceResult(targetType, true)
+                                Uncertain(targetType)
                             }
                         else -> error("Unreachable code")
                     }
                 }
                 is BoolType,
-                is FloatType -> TypeInferenceResult(targetType)
+                is FloatType -> Successful(targetType)
                 is SymbolType,
                 is StringType,
                 is CharType,
-                is VarcharType -> TypeInferenceResult(targetType, true)
-                else -> TypeInferenceResult(null)
+                is VarcharType -> Uncertain(targetType)
+                else -> Failed()
             }
             is ClobType,
             is BlobType -> when {
-                sourceScalarType.isLob() -> TypeInferenceResult(targetType)
-                else -> TypeInferenceResult(null)
+                sourceScalarType.isLob() -> Successful(targetType)
+                else -> Failed()
             }
             is TimeStampType -> when {
-                sourceScalarType === TimeStampType -> TypeInferenceResult(targetType)
-                sourceScalarType.isText() -> TypeInferenceResult(targetType, true)
-                else -> TypeInferenceResult(null)
+                sourceScalarType === TimeStampType -> Successful(targetType)
+                sourceScalarType.isText() -> Uncertain(targetType)
+                else -> Failed()
             }
-            else -> TypeInferenceResult(null)
+            else -> Failed()
         }
     }
 
