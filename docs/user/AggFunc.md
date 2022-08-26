@@ -1,9 +1,9 @@
 # Aggregate Function
-Aggregate function outputs a single result value from a collection of input values.
+Aggregate functions output a single result value from a collection of input values.
 
 Unlike SQL, `GROUP BY` is not required to use the aggregate function. 
 
-Unless otherwise specified, aggregate function will skip `NULL` and `MISSING`
+Unless otherwise specified, aggregate functions will skip `NULL` and `MISSING`
 
 ## AVG
 
@@ -71,7 +71,7 @@ Header
 : `MIN(expression)/MAX(expression)`
 
 Purpose
-: Given a collection of variable in any date type, find the minimum/maximum value in the collection.
+: Given a collection of variables in any date type, find the minimum/maximum value in the collection.
 : In general: Boolean < Number < Text < Blob/Clob < List < Struct < Bag
 
 Example
