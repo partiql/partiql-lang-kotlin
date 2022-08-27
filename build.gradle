@@ -60,7 +60,7 @@ configure(subprojects.findAll { it.name != 'example' }) {
 
 subprojects { proj ->
 
-    /* Note: Module `partiql-syntax` is an exception to the configurations below since the configurations do not apply.
+    /* Note: Module `partiql-grammar` is an exception to the configurations below since the configurations do not apply.
      *   - Specifically:
      *     - the module does not have a Test directory
      *     - the module does not contain Java code
@@ -68,7 +68,7 @@ subprojects { proj ->
      *       - AKA -- `src/main` should be the sources root, not `src`
      *   - Without the exception, the build fails as Gradle requires Kotlin classes, and the ANTLR sources cannot be found.
      */
-    if (proj.name == "partiql-syntax") {
+    if (proj.name == "partiql-grammar") {
         return
     }
 

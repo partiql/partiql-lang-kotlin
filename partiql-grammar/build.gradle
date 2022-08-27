@@ -23,12 +23,12 @@ java {
 
 // ANTLR Configuration
 def ANTLR_INPUT_SOURCE_ROOT = new File(projectDir, "src/main/antlr")
-def ANTLR_OUTPUT_DIR = new File(projectDir, "build/generated-src/antlr/main/org/partiql/lang/generated")
+def ANTLR_OUTPUT_DIR = new File(projectDir, "build/generated-src/antlr/main/org/partiql/grammar/parser/generated")
 
 // ANTLR Task
 generateGrammarSource {
     maxHeapSize = "64m"
-    arguments += ["-visitor", "-long-messages", "-package", "org.partiql.lang.generated", "-Xexact-output-dir" ]
+    arguments += ["-visitor", "-long-messages", "-package", "org.partiql.grammar.parser.generated", "-Xexact-output-dir" ]
     outputDirectory = ANTLR_OUTPUT_DIR
 }
 
@@ -37,4 +37,10 @@ sourceSets {
     main {
         antlr.srcDirs = [ANTLR_INPUT_SOURCE_ROOT]
     }
+}
+
+// Adds G4 Files to Resources
+processResources {
+    from ANTLR_INPUT_SOURCE_ROOT
+    include "**/*.g4"
 }

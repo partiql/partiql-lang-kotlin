@@ -35,8 +35,8 @@ import org.partiql.lang.util.getIonValue
 import org.partiql.lang.util.getPartiQLTokenType
 import org.partiql.lang.visitors.PartiQLVisitor
 import java.nio.charset.StandardCharsets
-import org.partiql.lang.generated.PartiQLParser as GeneratedParser
-import org.partiql.lang.generated.PartiQLTokens as GeneratedLexer
+import org.partiql.grammar.parser.generated.PartiQLParser as GeneratedParser
+import org.partiql.grammar.parser.generated.PartiQLTokens as GeneratedLexer
 
 /**
  * Extends [Parser] to provide a mechanism to parse an input query string. It internally uses ANTLR's generated parser,
