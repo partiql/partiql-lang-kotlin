@@ -33,6 +33,8 @@ import org.antlr.v4.runtime.Token
 import org.antlr.v4.runtime.tree.ErrorNode
 import org.antlr.v4.runtime.tree.RuleNode
 import org.antlr.v4.runtime.tree.TerminalNode
+import org.partiql.grammar.parser.generated.PartiQLBaseVisitor
+import org.partiql.grammar.parser.generated.PartiQLParser
 import org.partiql.lang.ast.IsCountStarMeta
 import org.partiql.lang.ast.IsImplictJoinMeta
 import org.partiql.lang.ast.IsPathIndexMeta
@@ -46,8 +48,6 @@ import org.partiql.lang.errors.Property
 import org.partiql.lang.errors.PropertyValueMap
 import org.partiql.lang.eval.EvaluationException
 import org.partiql.lang.eval.time.MAX_PRECISION_FOR_TIME
-import org.partiql.lang.generated.PartiQLBaseVisitor
-import org.partiql.lang.generated.PartiQLParser
 import org.partiql.lang.syntax.DATE_TIME_PART_KEYWORDS
 import org.partiql.lang.syntax.ParserException
 import org.partiql.lang.syntax.TRIM_SPECIFICATION_KEYWORDS

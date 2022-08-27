@@ -19,10 +19,10 @@ import com.amazon.ion.IonValue
 import com.amazon.ion.system.IonSystemBuilder
 import org.antlr.v4.runtime.Token
 import org.antlr.v4.runtime.tree.TerminalNode
+import org.partiql.grammar.parser.generated.PartiQLParser
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.errors.PropertyValueMap
-import org.partiql.lang.generated.PartiQLParser
 import org.partiql.lang.syntax.ALL_OPERATORS
 import org.partiql.lang.syntax.ALL_SINGLE_LEXEME_OPERATORS
 import org.partiql.lang.syntax.KEYWORDS

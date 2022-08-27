@@ -21,4 +21,4 @@ include('lang',
         'testscript',
         'pts',
         'extensions',
-        'partiql-syntax')
+        'partiql-grammar')
