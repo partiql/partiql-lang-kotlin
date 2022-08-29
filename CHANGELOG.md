@@ -67,6 +67,8 @@ stage in the `PlannerPipeline` and to generate performance metrics for the indiv
   (e.g. `(filter (lit true) <bexpr>))` -> `<bexpr>`.
 
 ### Changed
+- Updates dependencies to use a stable release of `ion-element` and the latest releases of `partiql-ir-generator` and
+  `partiql-isl-kotlin`.
 
 ### Deprecated
 - Deprecates `SqlLexer` and `SqlParser` to be replaced with the `PartiQLParserBuilder`.

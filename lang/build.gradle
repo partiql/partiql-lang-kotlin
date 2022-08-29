@@ -49,9 +49,9 @@ dependencies {
     implementation 'org.antlr:antlr4-runtime:4.10.1'
 
     api 'com.amazon.ion:ion-java:1.9.0'
-    api 'com.amazon.ion:ion-element:0.2.0'
-    api 'org.partiql:partiql-ir-generator-runtime:0.5.0'
-    api 'org.partiql:partiql-isl-kotlin:0.1.0'
+    api 'com.amazon.ion:ion-element:1.0.0'
+    api 'org.partiql:partiql-ir-generator-runtime:0.6.0'
+    api 'org.partiql:partiql-isl-kotlin:0.2.0'
 
     implementation 'org.apache.commons:commons-csv:1.8'
 
@@ -76,9 +76,8 @@ task generatePigDomains {
 
 
     def typeUniverse = new File(projectDir, "resources/org/partiql/type-domains/partiql.ion")
-    def targetLanguage = new TargetLanguage.Kotlin("org.partiql.lang.domains", PIG_OUTPUT_DIR)
-    def cmd = new Command.Generate(typeUniverse , targetLanguage)
-
+    def targetLanguage = new TargetLanguage.Kotlin("org.partiql.lang.domains", PIG_OUTPUT_DIR, null)
+    def cmd = new Command.Generate(typeUniverse, targetLanguage)
 
     // Tell gradle about the input and output of this task so that it only invokes pig when
     // the input file has changed or the output files are missing.
@@ -119,9 +118,8 @@ runKtlintCheckOverMainSourceSet.dependsOn generatePigDomains
 
 ktlint {
     filter {
-        // excluding multiple files from ktlint was somewhat of a challenge using other approaches..
-        // We use the "workaround" described here: https://github.com/JLLeitschuh/ktlint-gradle/issues/222
-        exclude({it.file.absolutePath.contains("/generated-src/")})
+        // Excludes any code in the build directory, which is assumed to be generated.
+        exclude { projectDir.toURI().relativize(it.file.toURI()).path.startsWith("build") }
     }
 }
 
