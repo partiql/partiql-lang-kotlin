@@ -16,6 +16,7 @@ import org.partiql.lang.eval.timeValue
 import org.partiql.lang.ots_work.interfaces.CompileTimeType
 import org.partiql.lang.ots_work.interfaces.ScalarType
 import org.partiql.lang.ots_work.interfaces.TypeParameters
+//TODO: (OTS) remove the following imports
 import org.partiql.lang.ots_work.plugins.standard.types.BlobType
 import org.partiql.lang.ots_work.plugins.standard.types.BoolType
 import org.partiql.lang.ots_work.plugins.standard.types.ClobType
@@ -58,6 +59,7 @@ sealed class StaticType {
         // TODO consider making these into an enumeration...
 
         // Convenient enums to create a bare bones instance of StaticType
+        // TODO: (OTS) remove all the scalar types specified here
         @JvmField val MISSING: MissingType = MissingType
         @JvmField val NULL: NullType = NullType()
         @JvmField val ANY: AnyType = AnyType()
