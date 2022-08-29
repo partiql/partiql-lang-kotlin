@@ -16,7 +16,7 @@ import org.partiql.lang.eval.timeValue
 import org.partiql.lang.ots_work.interfaces.CompileTimeType
 import org.partiql.lang.ots_work.interfaces.ScalarType
 import org.partiql.lang.ots_work.interfaces.TypeParameters
-//TODO: (OTS) remove the following imports
+// TODO: (OTS) remove the following imports
 import org.partiql.lang.ots_work.plugins.standard.types.BlobType
 import org.partiql.lang.ots_work.plugins.standard.types.BoolType
 import org.partiql.lang.ots_work.plugins.standard.types.ClobType
