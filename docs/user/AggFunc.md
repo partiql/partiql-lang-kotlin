@@ -16,7 +16,7 @@ Example
 : 
 
 ```SQL
-AVG(<< 1, 2, 3 >>)          -- 2 (`decimal(1, 0)`
+AVG(<< 1, 2, 3 >>)          -- 2 `decimal(1, 0)`
 AVG(<< MISSING >>)          -- NULL
 AVG(<< 1, 2, 3, MISSING >>) -- 2
 ```
