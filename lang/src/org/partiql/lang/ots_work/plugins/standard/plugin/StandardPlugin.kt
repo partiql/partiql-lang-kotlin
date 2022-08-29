@@ -2,8 +2,30 @@ package org.partiql.lang.ots_work.plugins.standard.plugin
 
 import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.ots_work.interfaces.Plugin
-import org.partiql.lang.ots_work.interfaces.operators.*
-import org.partiql.lang.ots_work.plugins.standard.operators.*
+import org.partiql.lang.ots_work.interfaces.operators.BinaryConcatOp
+import org.partiql.lang.ots_work.interfaces.operators.BinaryDivideOp
+import org.partiql.lang.ots_work.interfaces.operators.BinaryMinusOp
+import org.partiql.lang.ots_work.interfaces.operators.BinaryModuloOp
+import org.partiql.lang.ots_work.interfaces.operators.BinaryPlusOp
+import org.partiql.lang.ots_work.interfaces.operators.BinaryTimesOp
+import org.partiql.lang.ots_work.interfaces.operators.LikeOp
+import org.partiql.lang.ots_work.interfaces.operators.NegOp
+import org.partiql.lang.ots_work.interfaces.operators.NotOp
+import org.partiql.lang.ots_work.interfaces.operators.PosOp
+import org.partiql.lang.ots_work.interfaces.operators.ScalarIsOp
+import org.partiql.lang.ots_work.plugins.standard.operators.StandardBinaryConcatOp
+import org.partiql.lang.ots_work.plugins.standard.operators.StandardBinaryDivideOp
+import org.partiql.lang.ots_work.plugins.standard.operators.StandardBinaryMinusOp
+import org.partiql.lang.ots_work.plugins.standard.operators.StandardBinaryModuloOp
+import org.partiql.lang.ots_work.plugins.standard.operators.StandardBinaryPlusOp
+import org.partiql.lang.ots_work.plugins.standard.operators.StandardBinaryTimesOp
+import org.partiql.lang.ots_work.plugins.standard.operators.StandardLikeOp
+import org.partiql.lang.ots_work.plugins.standard.operators.StandardNegOp
+import org.partiql.lang.ots_work.plugins.standard.operators.StandardNotOp
+import org.partiql.lang.ots_work.plugins.standard.operators.StandardPosOp
+import org.partiql.lang.ots_work.plugins.standard.operators.StandardScalarCastOp
+import org.partiql.lang.ots_work.plugins.standard.operators.StandardScalarIsOp
+import org.partiql.lang.ots_work.plugins.standard.operators.ion
 import java.time.ZoneOffset
 
 data class StandardPlugin(

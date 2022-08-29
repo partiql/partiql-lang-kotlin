@@ -1,31 +1,19 @@
 package org.partiql.lang.ots_work.plugins.standard.operators
 
-import com.amazon.ion.IonValue
-import com.amazon.ionelement.api.toIonValue
-import org.partiql.lang.ast.SourceLocationMeta
-import org.partiql.lang.ast.sourceLocation
-import org.partiql.lang.ast.toPartiQlMetaContainer
-import org.partiql.lang.domains.PartiqlAst
-import org.partiql.lang.errors.ErrorCode
-import org.partiql.lang.errors.Property
-import org.partiql.lang.eval.*
-import org.partiql.lang.eval.err
-import org.partiql.lang.eval.like.parsePattern
-import org.partiql.lang.ots_work.interfaces.*
+import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.eval.ExprValueFactory
+import org.partiql.lang.ots_work.interfaces.BoolType
+import org.partiql.lang.ots_work.interfaces.CompileTimeType
+import org.partiql.lang.ots_work.interfaces.Failed
+import org.partiql.lang.ots_work.interfaces.ScalarType
+import org.partiql.lang.ots_work.interfaces.Successful
+import org.partiql.lang.ots_work.interfaces.TypeInferenceResult
+import org.partiql.lang.ots_work.interfaces.Uncertain
 import org.partiql.lang.ots_work.interfaces.operators.LikeOp
-import org.partiql.lang.ots_work.interfaces.operators.PosOp
-import org.partiql.lang.ots_work.interfaces.operators.UnaryOp
-import org.partiql.lang.ots_work.plugins.standard.types.CharType
-import org.partiql.lang.ots_work.plugins.standard.types.StringType
-import org.partiql.lang.ots_work.plugins.standard.types.SymbolType
-import org.partiql.lang.ots_work.plugins.standard.types.VarcharType
-import org.partiql.lang.util.codePointSequence
-import org.partiql.lang.util.stringValue
-import java.util.regex.Pattern
 
 class StandardLikeOp(
     val valueFactory: ExprValueFactory
-): LikeOp() {
+) : LikeOp() {
     override val validOperandTypes: List<ScalarType> = ALL_TEXT_TYPES
 
     override fun inferType(value: CompileTimeType, pattern: CompileTimeType, escape: CompileTimeType?): TypeInferenceResult =

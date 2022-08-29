@@ -2,7 +2,7 @@ package org.partiql.lang.ots_work.interfaces
 
 import org.partiql.lang.eval.ExprValueType
 
-object BoolType: ScalarType {
+object BoolType : ScalarType {
     val compileTimeType = CompileTimeType(this, emptyList())
 
     override val id: String

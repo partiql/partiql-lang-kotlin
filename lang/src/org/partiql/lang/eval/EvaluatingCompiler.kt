@@ -495,7 +495,7 @@ internal class EvaluatingCompiler(
 
     // TODO: Is it weird if we only check integer overflow after arithmetic calculation? Can we generally validate the result by transitively calling `ScalarType.validateValue()`? (`StaticScalarType.isInstance()`)
     private fun resolveIntegerOverflow(computeThunk: ThunkEnv, metas: MetaContainer): ThunkEnv =
-        when (metas.staticType?.type){
+        when (metas.staticType?.type) {
             null -> computeThunk
             else -> thunkFactory.thunkEnv(metas) { env ->
                 val naryResult = computeThunk(env)

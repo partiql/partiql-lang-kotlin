@@ -6,7 +6,7 @@ import org.partiql.lang.ots_work.interfaces.ScalarOp
 import org.partiql.lang.ots_work.interfaces.ScalarOpId
 import org.partiql.lang.ots_work.interfaces.TypeInferenceResult
 
-abstract class ScalarCastOp: ScalarOp {
+abstract class ScalarCastOp : ScalarOp {
     override val scalarOpId: ScalarOpId
         get() = ScalarOpId.ScalarCast
 

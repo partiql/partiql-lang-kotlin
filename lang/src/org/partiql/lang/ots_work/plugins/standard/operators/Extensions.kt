@@ -5,10 +5,29 @@ import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.errors.PropertyValueMap
-import org.partiql.lang.eval.*
+import org.partiql.lang.eval.ErrorDetails
+import org.partiql.lang.eval.EvaluationException
+import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.eval.ExprValueFactory
+import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.errNoContext
-import org.partiql.lang.ots_work.interfaces.*
-import org.partiql.lang.ots_work.plugins.standard.types.*
+import org.partiql.lang.eval.fillErrorContext
+import org.partiql.lang.ots_work.interfaces.CompileTimeType
+import org.partiql.lang.ots_work.interfaces.Failed
+import org.partiql.lang.ots_work.interfaces.ScalarType
+import org.partiql.lang.ots_work.interfaces.Successful
+import org.partiql.lang.ots_work.interfaces.TypeInferenceResult
+import org.partiql.lang.ots_work.plugins.standard.types.CharType
+import org.partiql.lang.ots_work.plugins.standard.types.DecimalType
+import org.partiql.lang.ots_work.plugins.standard.types.FloatType
+import org.partiql.lang.ots_work.plugins.standard.types.Int2Type
+import org.partiql.lang.ots_work.plugins.standard.types.Int4Type
+import org.partiql.lang.ots_work.plugins.standard.types.Int8Type
+import org.partiql.lang.ots_work.plugins.standard.types.IntType
+import org.partiql.lang.ots_work.plugins.standard.types.StringType
+import org.partiql.lang.ots_work.plugins.standard.types.SymbolType
+import org.partiql.lang.ots_work.plugins.standard.types.VarcharType
+import org.partiql.lang.ots_work.plugins.standard.types.numberTypesPrecedence
 import org.partiql.lang.util.bigDecimalOf
 import org.partiql.lang.util.propertyValueMapOf
 import java.math.BigDecimal
@@ -40,10 +59,10 @@ internal fun throwEE(errorCode: ErrorCode, createErrorDetails: () -> ErrorDetail
 internal fun inferTypeOfArithmeticOp(lhs: CompileTimeType, rhs: CompileTimeType): TypeInferenceResult {
     val leftType = lhs.scalarType
     val rightType = rhs.scalarType
-    if (leftType !in ALL_NUMBER_TYPES || rightType !in ALL_NUMBER_TYPES){
+    if (leftType !in ALL_NUMBER_TYPES || rightType !in ALL_NUMBER_TYPES) {
         return Failed
     }
-    if (leftType === DecimalType || rightType === DecimalType){
+    if (leftType === DecimalType || rightType === DecimalType) {
         return Successful(DecimalType.compileTimeType) // TODO:  account for decimal precision
     }
 

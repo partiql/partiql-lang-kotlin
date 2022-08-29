@@ -2,11 +2,26 @@ package org.partiql.lang.ots_work.stscore
 
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.ots_work.interfaces.*
-import org.partiql.lang.ots_work.interfaces.operators.*
+import org.partiql.lang.ots_work.interfaces.ArgTypeValidatable
+import org.partiql.lang.ots_work.interfaces.CompileTimeType
+import org.partiql.lang.ots_work.interfaces.Plugin
+import org.partiql.lang.ots_work.interfaces.ScalarOp
+import org.partiql.lang.ots_work.interfaces.ScalarOpId
+import org.partiql.lang.ots_work.interfaces.ScalarType
+import org.partiql.lang.ots_work.interfaces.operators.BinaryConcatOp
+import org.partiql.lang.ots_work.interfaces.operators.BinaryDivideOp
+import org.partiql.lang.ots_work.interfaces.operators.BinaryMinusOp
+import org.partiql.lang.ots_work.interfaces.operators.BinaryModuloOp
+import org.partiql.lang.ots_work.interfaces.operators.BinaryPlusOp
+import org.partiql.lang.ots_work.interfaces.operators.BinaryTimesOp
+import org.partiql.lang.ots_work.interfaces.operators.LikeOp
+import org.partiql.lang.ots_work.interfaces.operators.NegOp
+import org.partiql.lang.ots_work.interfaces.operators.NotOp
+import org.partiql.lang.ots_work.interfaces.operators.PosOp
+import org.partiql.lang.ots_work.interfaces.operators.ScalarCastOp
+import org.partiql.lang.ots_work.interfaces.operators.ScalarIsOp
 import org.partiql.lang.ots_work.plugins.standard.operators.StandardBinaryConcatOp
 import org.partiql.lang.ots_work.plugins.standard.operators.StandardBinaryDivideOp
-import org.partiql.lang.ots_work.plugins.standard.operators.StandardLikeOp
 import org.partiql.lang.ots_work.plugins.standard.operators.StandardScalarCastOp
 
 /**
@@ -31,11 +46,11 @@ class ScalarTypeSystem(
         ScalarOpId.Like -> plugin.likeOp
     }
 
-    internal fun inferReturnType (scalarOpId: ScalarOpId, vararg argsType: CompileTimeType) =
+    internal fun inferReturnType(scalarOpId: ScalarOpId, vararg argsType: CompileTimeType) =
         inferReturnType(scalarOpId, argsType.toList())
 
-    internal fun inferReturnType (scalarOpId: ScalarOpId, argsType: List<CompileTimeType>) =
-        when (val scalarOp = getScalarOp(scalarOpId)){
+    internal fun inferReturnType(scalarOpId: ScalarOpId, argsType: List<CompileTimeType>) =
+        when (val scalarOp = getScalarOp(scalarOpId)) {
             is ScalarCastOp -> {
                 require(argsType.size == 2) { "Scalar CAST operator expects receiving 2 args" }
                 scalarOp.inferType(argsType[0], argsType[1])
@@ -92,7 +107,7 @@ class ScalarTypeSystem(
      */
     // TODO: Will be removed after we support function overloading
     internal fun validateOperandType(scalarOpId: ScalarOpId, opScalarType: ScalarType): Boolean =
-        when (val scalarOp = getScalarOp(scalarOpId)){
+        when (val scalarOp = getScalarOp(scalarOpId)) {
             is ArgTypeValidatable -> opScalarType in scalarOp.validOperandTypes
             else -> true
         }
@@ -113,7 +128,7 @@ class ScalarTypeSystem(
         invokeScalarOp(opId, args.toList(), locationMeta)
 
     internal fun invokeScalarOp(opId: ScalarOpId, args: List<ExprValue>, locationMeta: SourceLocationMeta? = null): ExprValue =
-        when (val scalarOp = getScalarOp(opId)){
+        when (val scalarOp = getScalarOp(opId)) {
             is ScalarCastOp -> error("Please call `invokeCastOp()` for now")
             is ScalarIsOp -> error("Please call `invokeIsOp()` for now")
             is BinaryPlusOp -> {

@@ -5,7 +5,9 @@ import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.err
 import org.partiql.lang.eval.numberValue
-import org.partiql.lang.ots_work.interfaces.*
+import org.partiql.lang.ots_work.interfaces.CompileTimeType
+import org.partiql.lang.ots_work.interfaces.ScalarType
+import org.partiql.lang.ots_work.interfaces.TypeInferenceResult
 import org.partiql.lang.ots_work.interfaces.operators.BinaryModuloOp
 import org.partiql.lang.util.isZero
 import org.partiql.lang.util.rem

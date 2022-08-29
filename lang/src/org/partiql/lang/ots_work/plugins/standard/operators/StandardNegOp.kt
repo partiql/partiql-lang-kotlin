@@ -11,7 +11,7 @@ import org.partiql.lang.util.unaryMinus
 
 class StandardNegOp(
     private val valueFactory: ExprValueFactory
-): NegOp() {
+) : NegOp() {
     override val defaultReturnTypes: List<CompileTimeType> =
         defaultReturnTypesOfArithmeticOp
 

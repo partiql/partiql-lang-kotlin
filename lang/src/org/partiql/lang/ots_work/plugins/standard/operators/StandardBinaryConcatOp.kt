@@ -3,11 +3,21 @@ package org.partiql.lang.ots_work.plugins.standard.operators
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
-import org.partiql.lang.eval.*
+import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.err
-import org.partiql.lang.ots_work.interfaces.*
+import org.partiql.lang.eval.errorContextFrom
+import org.partiql.lang.eval.stringValue
+import org.partiql.lang.ots_work.interfaces.CompileTimeType
+import org.partiql.lang.ots_work.interfaces.Failed
+import org.partiql.lang.ots_work.interfaces.ScalarType
+import org.partiql.lang.ots_work.interfaces.Successful
+import org.partiql.lang.ots_work.interfaces.TypeInferenceResult
 import org.partiql.lang.ots_work.interfaces.operators.BinaryConcatOp
-import org.partiql.lang.ots_work.plugins.standard.types.*
+import org.partiql.lang.ots_work.plugins.standard.types.CharType
+import org.partiql.lang.ots_work.plugins.standard.types.StringType
+import org.partiql.lang.ots_work.plugins.standard.types.SymbolType
+import org.partiql.lang.ots_work.plugins.standard.types.VarcharType
 
 class StandardBinaryConcatOp(
     val valueFactory: ExprValueFactory,
@@ -21,10 +31,10 @@ class StandardBinaryConcatOp(
     override fun inferType(lType: CompileTimeType, rType: CompileTimeType): TypeInferenceResult {
         val leftType = lType.scalarType
         val rightType = rType.scalarType
-        if (leftType !in validOperandTypes || rightType !in validOperandTypes){
+        if (leftType !in validOperandTypes || rightType !in validOperandTypes) {
             return Failed
         }
-        if (leftType === SymbolType || leftType === StringType || rightType === SymbolType || rightType === StringType){
+        if (leftType === SymbolType || leftType === StringType || rightType === SymbolType || rightType === StringType) {
             return Successful(StringType.compileTimeType)
         }
 

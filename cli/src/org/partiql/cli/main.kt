@@ -194,7 +194,7 @@ fun main(args: Array<String>) = try {
         }
     }
 
-    val behaviorWhenDivisorIsZero = when (compileOptions.typingMode){
+    val behaviorWhenDivisorIsZero = when (compileOptions.typingMode) {
         TypingMode.LEGACY -> BehaviorWhenDivisorIsZero.ERROR
         TypingMode.PERMISSIVE -> BehaviorWhenDivisorIsZero.MISSING
     }

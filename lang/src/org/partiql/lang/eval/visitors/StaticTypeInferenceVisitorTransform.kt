@@ -12,7 +12,6 @@ import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.ast.StaticTypeMeta
 import org.partiql.lang.ast.passes.SemanticException
 import org.partiql.lang.ast.passes.SemanticProblemDetails
-import org.partiql.lang.ast.passes.inference.*
 import org.partiql.lang.ast.passes.inference.cast
 import org.partiql.lang.ast.passes.inference.filterNullMissing
 import org.partiql.lang.ast.passes.inference.intTypesPrecedence
@@ -21,6 +20,9 @@ import org.partiql.lang.ast.passes.inference.isNullOrMissing
 import org.partiql.lang.ast.passes.inference.isNumeric
 import org.partiql.lang.ast.passes.inference.isText
 import org.partiql.lang.ast.passes.inference.isUnknown
+import org.partiql.lang.ast.passes.inference.toSingleType
+import org.partiql.lang.ast.passes.inference.toSingleTypes
+import org.partiql.lang.ast.passes.inference.toStaticType
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.staticType
 import org.partiql.lang.domains.toBindingCase
@@ -457,8 +459,8 @@ internal class StaticTypeInferenceVisitorTransform(
         override fun transformExprAnd(node: PartiqlAst.Expr.And): PartiqlAst.Expr {
             val processedNode = super.transformExprAnd(node) as PartiqlAst.Expr.And
             return if (hasValidOperandTypes(processedNode.operands, { it is StaticScalarType && it.scalarType === BoolType }, "AND", processedNode.metas)) {
-                transformNAry(processedNode, processedNode.operands) { recurseForNAryOperations(processedNode, it, ::getTypeForNAryLogicalOperations) }
-            } else {
+            transformNAry(processedNode, processedNode.operands) { recurseForNAryOperations(processedNode, it, ::getTypeForNAryLogicalOperations) }
+        } else {
                 processedNode.withStaticType(StaticType.BOOL)
             }
         }
@@ -466,8 +468,8 @@ internal class StaticTypeInferenceVisitorTransform(
         override fun transformExprOr(node: PartiqlAst.Expr.Or): PartiqlAst.Expr {
             val processedNode = super.transformExprOr(node) as PartiqlAst.Expr.Or
             return if (hasValidOperandTypes(processedNode.operands, { it is StaticScalarType && it.scalarType === BoolType }, "OR", processedNode.metas)) {
-                transformNAry(processedNode, processedNode.operands) { recurseForNAryOperations(processedNode, it, ::getTypeForNAryLogicalOperations) }
-            } else {
+            transformNAry(processedNode, processedNode.operands) { recurseForNAryOperations(processedNode, it, ::getTypeForNAryLogicalOperations) }
+        } else {
                 processedNode.withStaticType(StaticType.BOOL)
             }
         }
@@ -516,7 +518,7 @@ internal class StaticTypeInferenceVisitorTransform(
             val opId = ScalarOpId.Like
 
             val validator = { it: StaticType -> it is StaticScalarType && scalarTypeSystem.validateOperandType(opId, it.scalarType) }
-            if (!hasValidOperandTypes(args, validator, opId.alias, processedNode.metas)){
+            if (!hasValidOperandTypes(args, validator, opId.alias, processedNode.metas)) {
                 return processedNode.withStaticType(StaticType.BOOL)
             }
 

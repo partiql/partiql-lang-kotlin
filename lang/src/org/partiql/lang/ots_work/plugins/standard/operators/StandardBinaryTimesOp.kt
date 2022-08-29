@@ -3,13 +3,15 @@ package org.partiql.lang.ots_work.plugins.standard.operators
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.numberValue
-import org.partiql.lang.ots_work.interfaces.*
+import org.partiql.lang.ots_work.interfaces.CompileTimeType
+import org.partiql.lang.ots_work.interfaces.ScalarType
+import org.partiql.lang.ots_work.interfaces.TypeInferenceResult
 import org.partiql.lang.ots_work.interfaces.operators.BinaryTimesOp
 import org.partiql.lang.util.times
 
 class StandardBinaryTimesOp(
     val valueFactory: ExprValueFactory
-): BinaryTimesOp() {
+) : BinaryTimesOp() {
     override val validOperandTypes: List<ScalarType> =
         ALL_NUMBER_TYPES
 

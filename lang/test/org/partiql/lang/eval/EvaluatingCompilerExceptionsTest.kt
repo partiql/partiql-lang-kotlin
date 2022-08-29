@@ -22,7 +22,6 @@ import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorErrorTestCase
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestTarget
-import org.partiql.lang.ots_work.plugins.standard.plugin.BehaviorWhenDivisorIsZero
 import org.partiql.lang.ots_work.plugins.standard.plugin.StandardPlugin
 import org.partiql.lang.ots_work.plugins.standard.plugin.TypedOpBehavior
 import org.partiql.lang.ots_work.stscore.ScalarTypeSystem

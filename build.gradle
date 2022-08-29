@@ -84,7 +84,7 @@ subprojects {
 
         // Make the ktlinCheck task run *before* unit tests--faster failure here means we won't need to re-run the
         // tests (which can take several minutes) after applying formatting fixes.
-        //dependsOn.add(ktlintCheck)
+        dependsOn.add(ktlintCheck)
     }
 
     plugins.withId('java', { _ ->

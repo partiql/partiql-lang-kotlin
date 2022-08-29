@@ -23,7 +23,10 @@ import org.partiql.lang.errors.Problem
 import org.partiql.lang.errors.ProblemCollector
 import org.partiql.lang.errors.ProblemHandler
 import org.partiql.lang.errors.Property
-import org.partiql.lang.eval.*
+import org.partiql.lang.eval.ExprFunction
+import org.partiql.lang.eval.ExprValueFactory
+import org.partiql.lang.eval.ThunkReturnTypeAssertions
+import org.partiql.lang.eval.TypingMode
 import org.partiql.lang.eval.builtins.DynamicLookupExprFunction
 import org.partiql.lang.eval.builtins.createBuiltinFunctions
 import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedure
@@ -385,7 +388,7 @@ interface PlannerPipeline {
         fun build(): PlannerPipeline {
             val compileOptionsToUse = evaluatorOptions ?: EvaluatorOptions.standard()
 
-            val behaviorWhenDivisorIsZero = when (compileOptionsToUse.typingMode){
+            val behaviorWhenDivisorIsZero = when (compileOptionsToUse.typingMode) {
                 TypingMode.LEGACY -> BehaviorWhenDivisorIsZero.ERROR
                 TypingMode.PERMISSIVE -> BehaviorWhenDivisorIsZero.MISSING
             }

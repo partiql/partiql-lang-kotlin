@@ -12,7 +12,7 @@ import org.partiql.lang.ots_work.plugins.standard.plugin.TypedOpBehavior
  * This interface only works as a workaround for different IS evaluation behaviors with different [TypedOpBehavior].
  * Once we decide to remove [TypedOpBehavior], we can remove this interface as well.
  */
-abstract class ScalarIsOp: ScalarOp {
+abstract class ScalarIsOp : ScalarOp {
     override val scalarOpId: ScalarOpId
         get() = ScalarOpId.ScalarIs
 

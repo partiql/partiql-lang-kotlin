@@ -20,8 +20,14 @@ import com.amazon.ion.IonSystem
 import org.partiql.lang.ast.ExprNode
 import org.partiql.lang.ast.toAstStatement
 import org.partiql.lang.domains.PartiqlAst
-import org.partiql.lang.eval.*
+import org.partiql.lang.eval.Bindings
+import org.partiql.lang.eval.CompileOptions
 import org.partiql.lang.eval.EvaluatingCompiler
+import org.partiql.lang.eval.ExprFunction
+import org.partiql.lang.eval.ExprValueFactory
+import org.partiql.lang.eval.Expression
+import org.partiql.lang.eval.ThunkReturnTypeAssertions
+import org.partiql.lang.eval.TypingMode
 import org.partiql.lang.eval.builtins.createBuiltinFunctions
 import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedure
 import org.partiql.lang.eval.visitors.PipelinedVisitorTransform
@@ -213,7 +219,7 @@ interface CompilerPipeline {
         /** Builds the actual implementation of [CompilerPipeline]. */
         fun build(): CompilerPipeline {
             val compileOptionsToUse = compileOptions ?: CompileOptions.standard()
-            val behaviorWhenDivisorIsZero = when (compileOptionsToUse.typingMode){
+            val behaviorWhenDivisorIsZero = when (compileOptionsToUse.typingMode) {
                 TypingMode.LEGACY -> BehaviorWhenDivisorIsZero.ERROR
                 TypingMode.PERMISSIVE -> BehaviorWhenDivisorIsZero.MISSING
             }

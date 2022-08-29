@@ -19,7 +19,7 @@ class Successful(
     val compileTimeType: CompileTimeType
 ) : TypeInferenceResult()
 
-object Failed: TypeInferenceResult()
+object Failed : TypeInferenceResult()
 
 class Uncertain(
     val compileTimeType: CompileTimeType
