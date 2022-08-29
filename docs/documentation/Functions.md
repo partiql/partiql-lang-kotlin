@@ -965,8 +965,6 @@ FLOOR(`nan`) = `nan` -- Float
 
 This is the template for writing documentations for an PartiQL built-in function. 
 
-The template uses Pandoc's definition lists feature https://pandoc.org/MANUAL.html#definition-lists
-
 There are 5 parts to a function's documentation 
 
 1. One sentence statement -- much like the first sentence of a Java method's Javadoc
