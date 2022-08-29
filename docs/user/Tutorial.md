@@ -1,3 +1,0 @@
-# PartiQL Tutorial 
-
-TBD
