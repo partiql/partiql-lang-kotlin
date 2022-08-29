@@ -30,7 +30,7 @@ class PartiqlAstSanityValidatorTests : TestBase() {
     private fun litInt(value: Int) = PartiqlAst.build { lit(ion.newInt(value).toIonElement()) }
     private val litNull = PartiqlAst.build { lit(ion.newNull().toIonElement()) }
     private val missingExpr = PartiqlAst.build { missing() }
-    private val scalarTypeSystem = ScalarTypeSystem(StandardPlugin(TypedOpBehavior.LEGACY))
+    private val scalarTypeSystem = ScalarTypeSystem(StandardPlugin(TypedOpBehavior.LEGACY, null))
     private val partiqlAstSanityValidator: PartiqlAstSanityValidator = PartiqlAstSanityValidator(scalarTypeSystem)
 
     /**

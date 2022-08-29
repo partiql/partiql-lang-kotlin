@@ -1377,8 +1377,18 @@ abstract class CastTestBase : EvaluatorTestBase() {
         )
 
         val castBehaviors: Map<String, ScalarTypeSystem> = mapOf(
-            "LEGACY_CAST" to ScalarTypeSystem(StandardPlugin(TypedOpBehavior.LEGACY)),
-            "HONOR_PARAM_CAST" to ScalarTypeSystem(StandardPlugin(TypedOpBehavior.HONOR_PARAMETERS))
+            "LEGACY_CAST" to ScalarTypeSystem(
+                StandardPlugin(
+                    typedOpBehavior = TypedOpBehavior.LEGACY,
+                    behaviorWhenDivisorIsZero = null
+                )
+            ),
+            "HONOR_PARAM_CAST" to ScalarTypeSystem(
+                StandardPlugin(
+                    typedOpBehavior = TypedOpBehavior.HONOR_PARAMETERS,
+                    behaviorWhenDivisorIsZero = null
+                )
+            )
         )
 
         private val legacyCastTestCases = (commonTestCases + deviatingLegacyTestCases)
@@ -1399,11 +1409,11 @@ abstract class CastTestBase : EvaluatorTestBase() {
 
         private val castPermissiveConfiguredTestCases = (
             legacyCastTestCases.toPermissive().map { case ->
-                ConfiguredCastCase(case, "LEGACY_CAST, PERMISSIVE_TYPING_MODE", ScalarTypeSystem(StandardPlugin(TypedOpBehavior.LEGACY))) {
+                ConfiguredCastCase(case, "LEGACY_CAST, PERMISSIVE_TYPING_MODE", ScalarTypeSystem(StandardPlugin(TypedOpBehavior.LEGACY, null))) {
                     permissiveTypingMode()
                 }
             } + honorParamCastTestCases.toPermissive().map { case ->
-                ConfiguredCastCase(case, "HONOR_PARAM_CAST, PERMISSIVE_TYPING_MODE", ScalarTypeSystem(StandardPlugin(TypedOpBehavior.HONOR_PARAMETERS))) {
+                ConfiguredCastCase(case, "HONOR_PARAM_CAST, PERMISSIVE_TYPING_MODE", ScalarTypeSystem(StandardPlugin(TypedOpBehavior.HONOR_PARAMETERS, null))) {
                     permissiveTypingMode()
                 }
             }
@@ -1411,11 +1421,11 @@ abstract class CastTestBase : EvaluatorTestBase() {
 
         private val castLegacyConfiguredTestCases = (
             legacyCastTestCases.map { case ->
-                ConfiguredCastCase(case, "LEGACY_CAST, LEGACY_ERROR_MODE", ScalarTypeSystem(StandardPlugin(TypedOpBehavior.LEGACY))) {
+                ConfiguredCastCase(case, "LEGACY_CAST, LEGACY_ERROR_MODE", ScalarTypeSystem(StandardPlugin(TypedOpBehavior.LEGACY, null))) {
                     legacyTypingMode()
                 }
             } + honorParamCastTestCases.map { case ->
-                ConfiguredCastCase(case, "HONOR_PARAM_CAST, LEGACY_ERROR_MODE", ScalarTypeSystem(StandardPlugin(TypedOpBehavior.HONOR_PARAMETERS))) {
+                ConfiguredCastCase(case, "HONOR_PARAM_CAST, LEGACY_ERROR_MODE", ScalarTypeSystem(StandardPlugin(TypedOpBehavior.HONOR_PARAMETERS, null))) {
                     legacyTypingMode()
                 }
             }
@@ -1497,13 +1507,13 @@ abstract class CastTestBase : EvaluatorTestBase() {
         private val canCastConfiguredTestCases = (
             legacyCastTestCases.flatMap { case ->
                 typingModes.map { (typingModeName, typingModeConfig) ->
-                    ConfiguredCastCase(case.toCanCast(), "LEGACY_CAST, $typingModeName", ScalarTypeSystem(StandardPlugin(TypedOpBehavior.LEGACY))) {
+                    ConfiguredCastCase(case.toCanCast(), "LEGACY_CAST, $typingModeName", ScalarTypeSystem(StandardPlugin(TypedOpBehavior.LEGACY, null))) {
                         typingModeConfig(this)
                     }
                 }
             } + honorParamCastTestCases.flatMap { case ->
                 typingModes.map { (typingModeName, typingModeConfig) ->
-                    ConfiguredCastCase(case.toCanCast(), "HONOR_PARAM_CAST, $typingModeName", ScalarTypeSystem(StandardPlugin(TypedOpBehavior.HONOR_PARAMETERS))) {
+                    ConfiguredCastCase(case.toCanCast(), "HONOR_PARAM_CAST, $typingModeName", ScalarTypeSystem(StandardPlugin(TypedOpBehavior.HONOR_PARAMETERS, null))) {
                         typingModeConfig(this)
                     }
                 }
@@ -1513,13 +1523,13 @@ abstract class CastTestBase : EvaluatorTestBase() {
         private val canLosslessCastConfiguredTestCases = (
             legacyCastTestCases.flatMap { case ->
                 typingModes.map { (typingModeName, typingModeConfig) ->
-                    ConfiguredCastCase(case.toCanLosslessCast(), "LEGACY_CAST, $typingModeName", ScalarTypeSystem(StandardPlugin(TypedOpBehavior.LEGACY))) {
+                    ConfiguredCastCase(case.toCanLosslessCast(), "LEGACY_CAST, $typingModeName", ScalarTypeSystem(StandardPlugin(TypedOpBehavior.LEGACY, null))) {
                         typingModeConfig(this)
                     }
                 }
             } + honorParamCastTestCases.flatMap { case ->
                 typingModes.map { (typingModeName, typingModeConfig) ->
-                    ConfiguredCastCase(case.toCanLosslessCast(), "HONOR_PARAM_CAST, $typingModeName", ScalarTypeSystem(StandardPlugin(TypedOpBehavior.HONOR_PARAMETERS))) {
+                    ConfiguredCastCase(case.toCanLosslessCast(), "HONOR_PARAM_CAST, $typingModeName", ScalarTypeSystem(StandardPlugin(TypedOpBehavior.HONOR_PARAMETERS, null))) {
                         typingModeConfig(this)
                     }
                 }
@@ -1542,7 +1552,7 @@ abstract class CastTestBase : EvaluatorTestBase() {
                 permissiveTypingMode()
             }
         } + castDefaultTimezoneOffsetConfiguration.map { (case, configuredTimezoneOffset) ->
-            ConfiguredCastCase(case, "Configuring default timezone offset", ScalarTypeSystem(StandardPlugin(defaultTimezoneOffset = configuredTimezoneOffset)))
+            ConfiguredCastCase(case, "Configuring default timezone offset", ScalarTypeSystem(StandardPlugin(defaultTimezoneOffset = configuredTimezoneOffset, behaviorWhenDivisorIsZero = null)))
         }
 
         private val canCastConfiguredDateTimeTestCases = commonDateTimeTests.map { case ->
@@ -1554,7 +1564,7 @@ abstract class CastTestBase : EvaluatorTestBase() {
                 permissiveTypingMode()
             }
         } + castDefaultTimezoneOffsetConfiguration.map { (case, configuredTimezoneOffset) ->
-            ConfiguredCastCase(case.toCanCast(), "Configuring default timezone offset", ScalarTypeSystem(StandardPlugin(defaultTimezoneOffset = configuredTimezoneOffset)))
+            ConfiguredCastCase(case.toCanCast(), "Configuring default timezone offset", ScalarTypeSystem(StandardPlugin(defaultTimezoneOffset = configuredTimezoneOffset, behaviorWhenDivisorIsZero = null)))
         }
 
         private val canLosslessCastConfiguredDateTimeTestCases = commonDateTimeTests.map { case ->
@@ -1566,7 +1576,7 @@ abstract class CastTestBase : EvaluatorTestBase() {
                 permissiveTypingMode()
             }
         } + castDefaultTimezoneOffsetConfiguration.map { (case, configuredTimezoneOffset) ->
-            ConfiguredCastCase(case.toCanLosslessCast(), "Configuring default timezone offset", ScalarTypeSystem(StandardPlugin(defaultTimezoneOffset = configuredTimezoneOffset)))
+            ConfiguredCastCase(case.toCanLosslessCast(), "Configuring default timezone offset", ScalarTypeSystem(StandardPlugin(defaultTimezoneOffset = configuredTimezoneOffset, behaviorWhenDivisorIsZero = null)))
         }
 
         internal val allConfiguredDateTimeTestCases =

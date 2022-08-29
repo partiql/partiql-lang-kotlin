@@ -23,10 +23,7 @@ import org.partiql.lang.errors.Problem
 import org.partiql.lang.errors.ProblemCollector
 import org.partiql.lang.errors.ProblemHandler
 import org.partiql.lang.errors.Property
-import org.partiql.lang.eval.ExprFunction
-import org.partiql.lang.eval.ExprValueFactory
-import org.partiql.lang.eval.Expression
-import org.partiql.lang.eval.ThunkReturnTypeAssertions
+import org.partiql.lang.eval.*
 import org.partiql.lang.eval.builtins.DynamicLookupExprFunction
 import org.partiql.lang.eval.builtins.createBuiltinFunctions
 import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedure
@@ -37,6 +34,7 @@ import org.partiql.lang.eval.physical.PhysicalPlanThunk
 import org.partiql.lang.eval.physical.operators.DEFAULT_RELATIONAL_OPERATOR_FACTORIES
 import org.partiql.lang.eval.physical.operators.RelationalOperatorFactory
 import org.partiql.lang.eval.physical.operators.RelationalOperatorFactoryKey
+import org.partiql.lang.ots_work.plugins.standard.plugin.BehaviorWhenDivisorIsZero
 import org.partiql.lang.ots_work.plugins.standard.plugin.StandardPlugin
 import org.partiql.lang.ots_work.plugins.standard.plugin.TypedOpBehavior
 import org.partiql.lang.ots_work.stscore.ScalarTypeSystem
@@ -215,7 +213,7 @@ interface PlannerPipeline {
         private var enableLegacyExceptionHandling: Boolean = false
         private var plannerEventCallback: PlannerEventCallback? = null
         // TODO: make the scalar type system configurable
-        private var scalarTypeSystem: ScalarTypeSystem = ScalarTypeSystem(StandardPlugin(TypedOpBehavior.LEGACY))
+        private var scalarTypeSystem: ScalarTypeSystem? = null
 
         /**
          * Specifies the [Parser] to be used to turn an PartiQL query into an instance of [PartiqlAst].
@@ -387,6 +385,18 @@ interface PlannerPipeline {
         fun build(): PlannerPipeline {
             val compileOptionsToUse = evaluatorOptions ?: EvaluatorOptions.standard()
 
+            val behaviorWhenDivisorIsZero = when (compileOptionsToUse.typingMode){
+                TypingMode.LEGACY -> BehaviorWhenDivisorIsZero.ERROR
+                TypingMode.PERMISSIVE -> BehaviorWhenDivisorIsZero.MISSING
+            }
+
+            val scalarTypeSystemToUse = scalarTypeSystem ?: ScalarTypeSystem(
+                StandardPlugin(
+                    typedOpBehavior = TypedOpBehavior.LEGACY,
+                    behaviorWhenDivisorIsZero = behaviorWhenDivisorIsZero
+                )
+            )
+
             when (compileOptionsToUse.thunkOptions.thunkReturnTypeAssertions) {
                 ThunkReturnTypeAssertions.DISABLED -> { /* take no action */ }
                 ThunkReturnTypeAssertions.ENABLED -> error(
@@ -427,7 +437,7 @@ interface PlannerPipeline {
                 allowUndefinedVariables = allowUndefinedVariables,
                 enableLegacyExceptionHandling = enableLegacyExceptionHandling,
                 plannerEventCallback = plannerEventCallback,
-                scalarTypeSystem = scalarTypeSystem
+                scalarTypeSystem = scalarTypeSystemToUse
             )
         }
     }

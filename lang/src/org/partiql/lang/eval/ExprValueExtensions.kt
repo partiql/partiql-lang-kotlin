@@ -260,7 +260,8 @@ fun ExprValue.cast(
         return this
     }
     when (targetType) {
-        is StaticScalarType -> scalarTypeSystem.invokeCastOp(this, targetType.toCompileTimeType(), locationMeta).let {
+        is StaticScalarType -> scalarTypeSystem.invokeScalarCastOp(this, targetType.toCompileTimeType(), locationMeta).let {
+            // TODO: Remove the hard-coded null check once we handle error in OTS properly
             if (it != null) { return it }
         }
         is ListType -> if (type.isSequence) return valueFactory.newList(asSequence())

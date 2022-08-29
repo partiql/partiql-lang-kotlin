@@ -1,11 +1,7 @@
 package org.partiql.lang.ast.passes.inference
 
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.ots_work.interfaces.CompileTimeType
-import org.partiql.lang.ots_work.interfaces.Failed
-import org.partiql.lang.ots_work.interfaces.Successful
-import org.partiql.lang.ots_work.interfaces.TypeInferenceResult
-import org.partiql.lang.ots_work.interfaces.Uncertain
+import org.partiql.lang.ots_work.interfaces.*
 import org.partiql.lang.ots_work.plugins.standard.types.BlobType
 import org.partiql.lang.ots_work.plugins.standard.types.CharType
 import org.partiql.lang.ots_work.plugins.standard.types.ClobType
@@ -36,6 +32,7 @@ internal fun StaticType.isText(): Boolean = this is StaticScalarType && (scalarT
 internal fun StaticType.isNumeric(): Boolean = this is StaticScalarType && (scalarType in listOf(Int2Type, Int4Type, Int8Type, IntType, FloatType, DecimalType))
 internal fun StaticType.isLob(): Boolean = this is StaticScalarType && (scalarType === BlobType || scalarType === ClobType)
 internal fun StaticType.isUnknown(): Boolean = (this.isNullOrMissing() || this == StaticType.NULL_OR_MISSING)
+internal fun StaticType.isKnown(): Boolean = !isUnknown()
 
 /**
  * Casts [this] static to the given target type.
@@ -75,13 +72,14 @@ internal fun StaticType.cast(targetType: StaticType, scalarTypeSystem: ScalarTyp
         this.isNullOrMissing() && targetType == StaticType.NULL -> StaticType.NULL
         // `MISSING` and `NULL` always convert to themselves no matter the target type
         this.isNullOrMissing() -> this
-        else -> {
-            when {
-                targetType is StaticScalarType && this is StaticScalarType -> scalarTypeSystem.inferReturnTypeOfScalarCastOp(toCompileTimeType(), targetType.toCompileTimeType()).toSingleType()
-                targetType is CollectionType && this is CollectionType -> targetType
-                targetType is StructType && this is StructType -> targetType
-                else -> StaticType.MISSING // TODO:  support non-permissive mode(s) here by throwing an exception to indicate cast is not possible
+        else -> when {
+            targetType is StaticScalarType && this is StaticScalarType -> {
+                val inferResult = scalarTypeSystem.inferReturnType(ScalarOpId.ScalarCast, toCompileTimeType(), targetType.toCompileTimeType())
+                inferResult.toSingleTypes().toStaticType()
             }
+            targetType is CollectionType && this is CollectionType -> targetType
+            targetType is StructType && this is StructType -> targetType
+            else -> StaticType.MISSING // TODO:  support non-permissive mode(s) here by throwing an exception to indicate cast is not possible
         }
     }
 }
@@ -104,9 +102,15 @@ internal fun stringWithoutNullMissing(argTypes: List<StaticType>): String =
 
 internal fun CompileTimeType.toSingleType() = StaticScalarType(scalarType, parameters)
 
-internal fun TypeInferenceResult.toSingleType() =
+internal fun TypeInferenceResult.toSingleTypes() =
     when (this) {
-        is Successful -> compileTimeType.toSingleType()
-        is Failed -> compileTimeType?.toSingleType() ?: StaticType.MISSING
-        is Uncertain -> StaticType.unionOf(StaticType.MISSING, compileTimeType.toSingleType())
+        Failed -> setOf(StaticType.MISSING)
+        is Successful -> setOf(compileTimeType.toSingleType())
+        is Uncertain -> setOf(StaticType.MISSING, compileTimeType.toSingleType())
     }
+
+internal fun Set<SingleType>.toStaticType() = when (size){
+    0 -> StaticType.MISSING
+    1 -> first()
+    else -> StaticType.unionOf(this)
+}

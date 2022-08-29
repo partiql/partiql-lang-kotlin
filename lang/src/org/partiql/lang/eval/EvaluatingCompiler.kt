@@ -51,10 +51,7 @@ import org.partiql.lang.eval.like.parsePattern
 import org.partiql.lang.eval.time.Time
 import org.partiql.lang.eval.time.totalMinutes
 import org.partiql.lang.eval.visitors.PartiqlAstSanityValidator
-import org.partiql.lang.ots_work.plugins.standard.types.Int2Type
-import org.partiql.lang.ots_work.plugins.standard.types.Int4Type
-import org.partiql.lang.ots_work.plugins.standard.types.Int8Type
-import org.partiql.lang.ots_work.plugins.standard.types.IntType
+import org.partiql.lang.ots_work.interfaces.ScalarOpId
 import org.partiql.lang.ots_work.stscore.ScalarTypeSystem
 import org.partiql.lang.syntax.SqlParser
 import org.partiql.lang.types.AnyOfType
@@ -85,9 +82,7 @@ import org.partiql.lang.util.plus
 import org.partiql.lang.util.rem
 import org.partiql.lang.util.stringValue
 import org.partiql.lang.util.take
-import org.partiql.lang.util.times
 import org.partiql.lang.util.timestampValue
-import org.partiql.lang.util.unaryMinus
 import org.partiql.pig.runtime.SymbolPrimitive
 import java.math.BigDecimal
 import java.util.LinkedList
@@ -498,97 +493,20 @@ internal class EvaluatingCompiler(
         }
     }
 
-    /**
-     * Returns a function that accepts an [ExprValue] as an argument and returns true it is `NULL`, `MISSING`, or
-     * within the range specified by [range].
-     */
-    private fun integerValueValidator(
-        range: LongRange
-    ): (ExprValue) -> Boolean = { value ->
-        when (value.type) {
-            ExprValueType.NULL, ExprValueType.MISSING -> true
-            ExprValueType.INT -> {
-                val longValue: Long = value.scalar.numberValue()?.toLong()
-                    ?: error(
-                        "ExprValue.numberValue() must not be `NULL` when its type is INT." +
-                            "This indicates that the ExprValue instance has a bug."
-                    )
-
-                // PRO-TIP:  make sure to use the `Long` primitive type here with `.contains` otherwise
-                // Kotlin will use the version of `.contains` that treats [range] as a collection, and it will
-                // be very slow!
-                range.contains(longValue)
-            }
-            else -> error(
-                "IntegerValueValidator can only accept ExprValue with type INT, NULL, and MISSING."
-            )
-        }
-    }
-
-    /**
-     *  For operators which could return integer type, check integer overflow in case of [TypingMode.PERMISSIVE].
-     */
-    private fun resolveArithmeticOverflow(computeThunk: ThunkEnv, metas: MetaContainer): ThunkEnv =
-        when (val staticTypes = metas.staticType?.type?.getTypes()) {
-            // No staticType, can't validate integer size.
+    // TODO: Is it weird if we only check integer overflow after arithmetic calculation? Can we generally validate the result by transitively calling `ScalarType.validateValue()`? (`StaticScalarType.isInstance()`)
+    private fun resolveIntegerOverflow(computeThunk: ThunkEnv, metas: MetaContainer): ThunkEnv =
+        when (metas.staticType?.type){
             null -> computeThunk
-            else -> {
-                when (compileOptions.typingMode) {
-                    TypingMode.LEGACY -> {
-                        // integer size constraints have not been tested under [TypingMode.LEGACY] because the
-                        // [StaticTypeInferenceVisitorTransform] doesn't support being used with legacy mode yet.
-                        // throw an exception in case we encounter this untested scenario. This might work fine, but I
-                        // wouldn't bet on it.
-                        val hasConstrainedInteger = staticTypes.any {
-                            it is StaticScalarType && (it.scalarType in listOf(Int2Type, Int4Type, Int8Type))
-                        }
-                        if (hasConstrainedInteger) {
-                            TODO("Legacy mode doesn't support integer size constraints yet.")
-                        } else {
-                            computeThunk
-                        }
-                    }
-
-                    TypingMode.PERMISSIVE -> {
-                        val validRange: LongRange? = when {
-                            staticTypes.any { it is StaticScalarType && it.scalarType is IntType } -> IntType.validRange
-                            staticTypes.any { it is StaticScalarType && it.scalarType is Int8Type } -> Int8Type.validRange
-                            staticTypes.any { it is StaticScalarType && it.scalarType is Int4Type } -> Int4Type.validRange
-                            staticTypes.any { it is StaticScalarType && it.scalarType is Int2Type } -> Int2Type.validRange
-                            else -> null
-                        }
-                        when {
-                            // static type contains one or more IntType
-                            validRange != null -> {
-                                val validator = integerValueValidator(validRange)
-                                thunkFactory.thunkEnv(metas) { env ->
-                                    val naryResult = computeThunk(env)
-                                    // validation shall only happen when the result is INT/MISSING/NULL
-                                    // this is important as StaticType may contain a mixture of multiple types
-                                    when (val type = naryResult.type) {
-                                        ExprValueType.INT, ExprValueType.MISSING, ExprValueType.NULL -> errorSignaler.errorIf(
-                                            !validator(naryResult),
-                                            ErrorCode.EVALUATOR_INTEGER_OVERFLOW,
-                                            { ErrorDetails(metas, "Integer overflow", errorContextFrom(metas)) },
-                                            { naryResult }
-                                        )
-
-                                        else -> {
-                                            if (staticTypes.all { it is StaticScalarType && it.scalarType === IntType }) {
-                                                error(
-                                                    "The expression's static type was supposed to be INT but instead it was $type" +
-                                                        "This may indicate the presence of a bug in the type inferencer."
-                                                )
-                                            } else {
-                                                naryResult
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                            else -> computeThunk
-                        }
-                    }
+            else -> thunkFactory.thunkEnv(metas) { env ->
+                val naryResult = computeThunk(env)
+                when (naryResult.type) {
+                    ExprValueType.INT -> errorSignaler.errorIf(
+                        !metas.staticType?.type!!.isInstance(naryResult),
+                        ErrorCode.EVALUATOR_INTEGER_OVERFLOW,
+                        { ErrorDetails(metas, "Integer overflow", errorContextFrom(metas)) },
+                        { naryResult }
+                    )
+                    else -> naryResult
                 }
             }
         }
@@ -601,10 +519,10 @@ internal class EvaluatingCompiler(
         val argThunks = compileAstExprs(expr.operands)
 
         val computeThunk = thunkFactory.thunkFold(metas, argThunks) { lValue, rValue ->
-            (lValue.numberValue() + rValue.numberValue()).exprValue()
+            scalarTypeSystem.invokeScalarOp(ScalarOpId.BinaryPlus, lValue, rValue)
         }
 
-        return resolveArithmeticOverflow(computeThunk, metas)
+        return resolveIntegerOverflow(computeThunk, metas)
     }
 
     private fun compileMinus(expr: PartiqlAst.Expr.Minus, metas: MetaContainer): ThunkEnv {
@@ -618,68 +536,47 @@ internal class EvaluatingCompiler(
             (lValue.numberValue() - rValue.numberValue()).exprValue()
         }
 
-        return resolveArithmeticOverflow(computeThunk, metas)
+        return resolveIntegerOverflow(computeThunk, metas)
     }
 
     private fun compilePos(expr: PartiqlAst.Expr.Pos, metas: MetaContainer): ThunkEnv {
         val exprThunk = compileAstExpr(expr.expr)
 
         val computeThunk = thunkFactory.thunkEnvOperands(metas, exprThunk) { _, value ->
-            // Invoking .numberValue() here makes this essentially just a type check
-            value.numberValue()
-            // Original value is returned unmodified.
-            value
+            scalarTypeSystem.invokeScalarOp(ScalarOpId.Pos, value)
         }
 
-        return resolveArithmeticOverflow(computeThunk, metas)
+        return resolveIntegerOverflow(computeThunk, metas)
     }
 
     private fun compileNeg(expr: PartiqlAst.Expr.Neg, metas: MetaContainer): ThunkEnv {
         val exprThunk = compileAstExpr(expr.expr)
 
         val computeThunk = thunkFactory.thunkEnvOperands(metas, exprThunk) { _, value ->
-            (-value.numberValue()).exprValue()
+            scalarTypeSystem.invokeScalarOp(ScalarOpId.Neg, value)
         }
 
-        return resolveArithmeticOverflow(computeThunk, metas)
+        return resolveIntegerOverflow(computeThunk, metas)
     }
 
     private fun compileTimes(expr: PartiqlAst.Expr.Times, metas: MetaContainer): ThunkEnv {
         val argThunks = compileAstExprs(expr.operands)
 
         val computeThunk = thunkFactory.thunkFold(metas, argThunks) { lValue, rValue ->
-            (lValue.numberValue() * rValue.numberValue()).exprValue()
+            scalarTypeSystem.invokeScalarOp(ScalarOpId.BinaryTimes, lValue, rValue)
         }
 
-        return resolveArithmeticOverflow(computeThunk, metas)
+        return resolveIntegerOverflow(computeThunk, metas)
     }
 
     private fun compileDivide(expr: PartiqlAst.Expr.Divide, metas: MetaContainer): ThunkEnv {
         val argThunks = compileAstExprs(expr.operands)
 
         val computeThunk = thunkFactory.thunkFold(metas, argThunks) { lValue, rValue ->
-            val denominator = rValue.numberValue()
-
-            errorSignaler.errorIf(
-                denominator.isZero(),
-                ErrorCode.EVALUATOR_DIVIDE_BY_ZERO,
-                { ErrorDetails(metas, "/ by zero") }
-            ) {
-                try {
-                    (lValue.numberValue() / denominator).exprValue()
-                } catch (e: ArithmeticException) {
-                    // Setting the internal flag as true as it is not clear what
-                    // ArithmeticException may be thrown by the above
-                    throw EvaluationException(
-                        cause = e,
-                        errorCode = ErrorCode.EVALUATOR_ARITHMETIC_EXCEPTION,
-                        internal = true
-                    )
-                }
-            }
+            scalarTypeSystem.invokeScalarOp(ScalarOpId.BinaryDivide, lValue, rValue, locationMeta = metas[SourceLocationMeta.TAG] as? SourceLocationMeta)
         }
 
-        return resolveArithmeticOverflow(computeThunk, metas)
+        return resolveIntegerOverflow(computeThunk, metas)
     }
 
     private fun compileModulo(expr: PartiqlAst.Expr.Modulo, metas: MetaContainer): ThunkEnv {
@@ -694,7 +591,7 @@ internal class EvaluatingCompiler(
             (lValue.numberValue() % denominator).exprValue()
         }
 
-        return resolveArithmeticOverflow(computeThunk, metas)
+        return resolveIntegerOverflow(computeThunk, metas)
     }
 
     private fun compileEq(expr: PartiqlAst.Expr.Eq, metas: MetaContainer): ThunkEnv {
@@ -858,7 +755,7 @@ internal class EvaluatingCompiler(
         val argThunk = compileAstExpr(expr.expr)
 
         return thunkFactory.thunkEnvOperands(metas, argThunk) { _, value ->
-            (!value.booleanValue()).exprValue()
+            scalarTypeSystem.invokeScalarOp(ScalarOpId.Not, value)
         }
     }
 
@@ -961,22 +858,7 @@ internal class EvaluatingCompiler(
         val argThunks = compileAstExprs(expr.operands)
 
         return thunkFactory.thunkFold(metas, argThunks) { lValue, rValue ->
-            val lType = lValue.type
-            val rType = rValue.type
-
-            if (lType.isText && rType.isText) {
-                // null/missing propagation is handled before getting here
-                (lValue.stringValue() + rValue.stringValue()).exprValue()
-            } else {
-                err(
-                    "Wrong argument type for ||",
-                    ErrorCode.EVALUATOR_CONCAT_FAILED_DUE_TO_INCOMPATIBLE_TYPE,
-                    errorContextFrom(metas).also {
-                        it[Property.ACTUAL_ARGUMENT_TYPES] = listOf(lType, rType).toString()
-                    },
-                    internal = false
-                )
-            }
+            scalarTypeSystem.invokeScalarOp(ScalarOpId.BinaryConcat, lValue, rValue, locationMeta = metas[SourceLocationMeta.TAG] as? SourceLocationMeta)
         }
     }
 
@@ -1068,7 +950,7 @@ internal class EvaluatingCompiler(
             }
         }
 
-        return resolveArithmeticOverflow(computeThunk, metas)
+        return resolveIntegerOverflow(computeThunk, metas)
     }
 
     private fun compileLit(expr: PartiqlAst.Expr.Lit, metas: MetaContainer): ThunkEnv {
@@ -3051,6 +2933,6 @@ private class MultipleProjectionElement(val thunks: List<ThunkEnv>) : Projection
 internal val MetaContainer.sourceLocationMeta get() = this[SourceLocationMeta.TAG] as? SourceLocationMeta
 
 private fun StaticType.getTypes() = when (val flattened = this.flatten()) {
-    is AnyOfType -> flattened.types
-    else -> listOf(this)
+    is AnyOfType -> flattened.types as Set<SingleType>
+    else -> setOf(this)
 }

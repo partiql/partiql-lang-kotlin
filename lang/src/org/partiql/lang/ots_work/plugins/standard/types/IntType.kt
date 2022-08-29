@@ -3,11 +3,14 @@ package org.partiql.lang.ots_work.plugins.standard.types
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.numberValue
+import org.partiql.lang.ots_work.interfaces.CompileTimeType
 import org.partiql.lang.ots_work.interfaces.ScalarType
 import org.partiql.lang.ots_work.interfaces.TypeParameters
 
 object IntType : ScalarType {
     val validRange = Long.MIN_VALUE..Long.MAX_VALUE
+
+    val compileTimeType: CompileTimeType = CompileTimeType(this, emptyList())
 
     override val id: String
         get() = "int"

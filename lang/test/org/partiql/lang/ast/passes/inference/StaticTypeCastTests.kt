@@ -23,7 +23,12 @@ class StaticTypeCastTests {
     )
 
     private fun runTest(tc: TestCase) {
-        val scalarTypeSystem = ScalarTypeSystem(StandardPlugin(TypedOpBehavior.LEGACY))
+        val scalarTypeSystem = ScalarTypeSystem(
+            StandardPlugin(
+                typedOpBehavior = TypedOpBehavior.LEGACY,
+                behaviorWhenDivisorIsZero = null
+            )
+        )
         val outType = tc.sourceType.cast(tc.targetType, scalarTypeSystem)
         assertEquals("Expected ${tc.expectedType} when ${tc.sourceType} is casted to ${tc.targetType}", tc.expectedType, outType)
     }

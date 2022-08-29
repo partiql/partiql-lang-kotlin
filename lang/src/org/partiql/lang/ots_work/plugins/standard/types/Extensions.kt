@@ -10,3 +10,5 @@ internal fun ScalarType.isText() =
 
 internal fun ScalarType.isLob(): Boolean =
     this === BlobType || this === ClobType
+
+internal val numberTypesPrecedence = listOf(Int2Type, Int4Type, Int8Type, IntType, FloatType, DecimalType)

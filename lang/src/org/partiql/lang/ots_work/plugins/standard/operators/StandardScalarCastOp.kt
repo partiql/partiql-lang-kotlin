@@ -20,13 +20,8 @@ import org.partiql.lang.eval.time.genericTimeRegex
 import org.partiql.lang.eval.time.getPrecisionFromTimeString
 import org.partiql.lang.eval.timeValue
 import org.partiql.lang.eval.timestampValue
-import org.partiql.lang.ots_work.interfaces.BoolType
-import org.partiql.lang.ots_work.interfaces.CompileTimeType
-import org.partiql.lang.ots_work.interfaces.Failed
-import org.partiql.lang.ots_work.interfaces.ScalarCast
-import org.partiql.lang.ots_work.interfaces.Successful
-import org.partiql.lang.ots_work.interfaces.TypeInferenceResult
-import org.partiql.lang.ots_work.interfaces.Uncertain
+import org.partiql.lang.ots_work.interfaces.*
+import org.partiql.lang.ots_work.interfaces.operators.ScalarCastOp
 import org.partiql.lang.ots_work.plugins.standard.plugin.TypedOpBehavior
 import org.partiql.lang.ots_work.plugins.standard.types.BlobType
 import org.partiql.lang.ots_work.plugins.standard.types.CharType
@@ -63,13 +58,13 @@ import kotlin.math.round
 /**
  * @param defaultTimezoneOffset Default timezone offset to be used when TIME WITH TIME ZONE does not explicitly
  */
-class StandardScalarCast(
-    val typedOpBehavior: TypedOpBehavior = TypedOpBehavior.LEGACY,
-    val valueFactory: ExprValueFactory = ExprValueFactory.standard(ion),
-    val defaultTimezoneOffset: ZoneOffset = ZoneOffset.UTC,
+class StandardScalarCastOp(
+    val typedOpBehavior: TypedOpBehavior,
+    val valueFactory: ExprValueFactory,
+    val defaultTimezoneOffset: ZoneOffset,
     // TODO: remove the following field and move location-meta-related error handling to scalar type system core
     var currentLocationMeta: SourceLocationMeta? = null
-) : ScalarCast {
+) : ScalarCastOp() {
     override fun inferType(sourceType: CompileTimeType, targetType: CompileTimeType): TypeInferenceResult {
         val targetScalarType = targetType.scalarType
         val sourceScalarType = sourceType.scalarType
@@ -81,7 +76,7 @@ class StandardScalarCast(
             is SymbolType -> when {
                 sourceScalarType.isNumeric() || sourceScalarType.isText() -> Successful(targetType)
                 sourceScalarType in listOf(BoolType, TimeStampType) -> Successful(targetType)
-                else -> Failed()
+                else -> Failed
             }
             is Int2Type,
             is Int4Type,
@@ -156,18 +151,18 @@ class StandardScalarCast(
                 is StringType,
                 is CharType,
                 is VarcharType -> Uncertain(targetType)
-                else -> Failed()
+                else -> Failed
             }
             is BoolType -> when {
                 sourceScalarType === BoolType || sourceScalarType.isNumeric() || sourceScalarType.isText() -> Successful(targetType)
-                else -> Failed()
+                else -> Failed
             }
             is FloatType -> when {
                 sourceScalarType === BoolType -> Successful(targetType)
                 // Conversion to float will always succeed for numeric types
                 sourceScalarType.isNumeric() -> Successful(targetType)
                 sourceScalarType.isText() -> Uncertain(targetType)
-                else -> Failed()
+                else -> Failed
             }
             is DecimalType -> when (sourceScalarType) {
                 is DecimalType ->
@@ -214,19 +209,19 @@ class StandardScalarCast(
                 is StringType,
                 is CharType,
                 is VarcharType -> Uncertain(targetType)
-                else -> Failed()
+                else -> Failed
             }
             is ClobType,
             is BlobType -> when {
                 sourceScalarType.isLob() -> Successful(targetType)
-                else -> Failed()
+                else -> Failed
             }
             is TimeStampType -> when {
                 sourceScalarType === TimeStampType -> Successful(targetType)
                 sourceScalarType.isText() -> Uncertain(targetType)
-                else -> Failed()
+                else -> Failed
             }
-            else -> Failed()
+            else -> Failed
         }
     }
 

@@ -2,11 +2,14 @@ package org.partiql.lang.ots_work.plugins.standard.types
 
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
+import org.partiql.lang.ots_work.interfaces.CompileTimeType
 import org.partiql.lang.ots_work.interfaces.ScalarType
 import org.partiql.lang.ots_work.interfaces.TypeParameters
 import java.math.BigDecimal
 
 object DecimalType : ScalarType {
+    val compileTimeType: CompileTimeType = CompileTimeType(this, listOf(null, 0))
+
     override val id: String
         get() = "decimal"
 

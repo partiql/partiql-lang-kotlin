@@ -234,7 +234,8 @@ class CliTest {
             scalarTypeSystem(
                 ScalarTypeSystem(
                     StandardPlugin(
-                        typedOpBehavior = TypedOpBehavior.LEGACY
+                        typedOpBehavior = TypedOpBehavior.LEGACY,
+                        behaviorWhenDivisorIsZero = null
                     )
                 )
             )
@@ -251,7 +252,8 @@ class CliTest {
             scalarTypeSystem(
                 ScalarTypeSystem(
                     StandardPlugin(
-                        typedOpBehavior = TypedOpBehavior.HONOR_PARAMETERS
+                        typedOpBehavior = TypedOpBehavior.HONOR_PARAMETERS,
+                        behaviorWhenDivisorIsZero = null
                     )
                 )
             )

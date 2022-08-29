@@ -10,6 +10,9 @@ import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.TypingMode
 import org.partiql.lang.eval.cloneAndRemoveBagAndMissingAnnotations
 import org.partiql.lang.eval.exprEquals
+import org.partiql.lang.ots_work.plugins.standard.plugin.BehaviorWhenDivisorIsZero
+import org.partiql.lang.ots_work.plugins.standard.plugin.StandardPlugin
+import org.partiql.lang.ots_work.stscore.ScalarTypeSystem
 
 internal class PipelineEvaluatorTestAdapter(
     private val pipelineFactory: PipelineFactory
@@ -173,7 +176,10 @@ internal class PipelineEvaluatorTestAdapter(
                 compileOptionsBuilderBlock = {
                     tc.compileOptionsBuilderBlock(this)
                     typingMode(TypingMode.LEGACY)
-                }
+                },
+                scalarTypeSystem = (tc.scalarTypeSystem?.plugin as? StandardPlugin)?.copy(
+                    behaviorWhenDivisorIsZero = BehaviorWhenDivisorIsZero.ERROR
+                )?.let { ScalarTypeSystem(it) }
             ),
             session = session,
             note = "${pipelineFactory.pipelineName} (Typing mode forced to LEGACY)"
@@ -194,7 +200,10 @@ internal class PipelineEvaluatorTestAdapter(
                         compileOptionsBuilderBlock = {
                             tc.compileOptionsBuilderBlock(this)
                             typingMode(TypingMode.PERMISSIVE)
-                        }
+                        },
+                        scalarTypeSystem = (tc.scalarTypeSystem?.plugin as? StandardPlugin)?.copy(
+                            behaviorWhenDivisorIsZero = BehaviorWhenDivisorIsZero.MISSING
+                        )?.let { ScalarTypeSystem(it) }
                     ),
                     session,
                     note = "${pipelineFactory.pipelineName} (typing mode forced to PERMISSIVE)"

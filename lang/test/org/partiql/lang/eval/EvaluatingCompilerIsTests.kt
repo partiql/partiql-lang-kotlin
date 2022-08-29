@@ -52,22 +52,22 @@ private fun isStringTypeTestCase(
         EvaluatorTestCase(
             sql.replace("{TYPE}", "CHAR"),
             expectedIsCharHonorParamsSql,
-            scalarTypeSystem = ScalarTypeSystem(StandardPlugin(TypedOpBehavior.HONOR_PARAMETERS))
+            scalarTypeSystem = ScalarTypeSystem(StandardPlugin(TypedOpBehavior.HONOR_PARAMETERS, null))
         ),
         EvaluatorTestCase(
             sql.replace("{TYPE}", "CHARACTER"),
             expectedIsCharHonorParamsSql,
-            scalarTypeSystem = ScalarTypeSystem(StandardPlugin(TypedOpBehavior.HONOR_PARAMETERS))
+            scalarTypeSystem = ScalarTypeSystem(StandardPlugin(TypedOpBehavior.HONOR_PARAMETERS, null))
         ),
         EvaluatorTestCase(
             sql.replace("{TYPE}", "VARCHAR"),
             expectedIsVarcharHonorParamsSql,
-            scalarTypeSystem = ScalarTypeSystem(StandardPlugin(TypedOpBehavior.HONOR_PARAMETERS))
+            scalarTypeSystem = ScalarTypeSystem(StandardPlugin(TypedOpBehavior.HONOR_PARAMETERS, null))
         ),
         EvaluatorTestCase(
             sql.replace("{TYPE}", "CHARACTER VARYING"),
             expectedIsVarcharHonorParamsSql,
-            scalarTypeSystem = ScalarTypeSystem(StandardPlugin(TypedOpBehavior.HONOR_PARAMETERS))
+            scalarTypeSystem = ScalarTypeSystem(StandardPlugin(TypedOpBehavior.HONOR_PARAMETERS, null))
         )
     )
 
@@ -115,12 +115,12 @@ private fun isDecimalTypeTestCase(
         EvaluatorTestCase(
             sql.replace("{TYPE}", "DECIMAL"),
             expectedIsDecimalHonorParamsResult,
-            scalarTypeSystem = ScalarTypeSystem(StandardPlugin(TypedOpBehavior.HONOR_PARAMETERS))
+            scalarTypeSystem = ScalarTypeSystem(StandardPlugin(TypedOpBehavior.HONOR_PARAMETERS, null))
         ),
         EvaluatorTestCase(
             sql.replace("{TYPE}", "NUMERIC"),
             expectedIsDecimalHonorParamsResult,
-            scalarTypeSystem = ScalarTypeSystem(StandardPlugin(TypedOpBehavior.HONOR_PARAMETERS))
+            scalarTypeSystem = ScalarTypeSystem(StandardPlugin(TypedOpBehavior.HONOR_PARAMETERS, null))
         )
     )
 
@@ -136,7 +136,7 @@ private fun isIntDecimalTypeTestCase(
     EvaluatorTestCase(
         sql,
         expectedHonorParamsResult,
-        scalarTypeSystem = ScalarTypeSystem(StandardPlugin(TypedOpBehavior.HONOR_PARAMETERS))
+        scalarTypeSystem = ScalarTypeSystem(StandardPlugin(TypedOpBehavior.HONOR_PARAMETERS, null))
     )
 )
 

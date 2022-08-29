@@ -136,11 +136,11 @@ class EvaluatingCompilerCustomAnyOfTypeOperationTests : CastTestBase() {
 
         fun List<CastCase>.toConfiguredHonorParamMode(): List<ConfiguredCastCase> = (
             map { case ->
-                ConfiguredCastCase(case, "HONOR_PARAMS, LEGACY_TYPING_MODE", ScalarTypeSystem(StandardPlugin(TypedOpBehavior.HONOR_PARAMETERS))) {
+                ConfiguredCastCase(case, "HONOR_PARAMS, LEGACY_TYPING_MODE", ScalarTypeSystem(StandardPlugin(TypedOpBehavior.HONOR_PARAMETERS, null))) {
                     legacyTypingMode()
                 }
             } + toPermissive().map { case ->
-                ConfiguredCastCase(case, "HONOR_PARAMS, PERMISSIVE_TYPING_MODE", ScalarTypeSystem(StandardPlugin(TypedOpBehavior.HONOR_PARAMETERS))) {
+                ConfiguredCastCase(case, "HONOR_PARAMS, PERMISSIVE_TYPING_MODE", ScalarTypeSystem(StandardPlugin(TypedOpBehavior.HONOR_PARAMETERS, null))) {
                     permissiveTypingMode()
                 }
             }

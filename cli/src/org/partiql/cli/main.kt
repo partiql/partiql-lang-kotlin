@@ -33,6 +33,7 @@ import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.ProjectionIterationBehavior
 import org.partiql.lang.eval.TypingMode
 import org.partiql.lang.eval.UndefinedVariableBehavior
+import org.partiql.lang.ots_work.plugins.standard.plugin.BehaviorWhenDivisorIsZero
 import org.partiql.lang.ots_work.plugins.standard.plugin.StandardPlugin
 import org.partiql.lang.ots_work.plugins.standard.plugin.TypedOpBehavior
 import org.partiql.lang.ots_work.stscore.ScalarTypeSystem
@@ -193,6 +194,11 @@ fun main(args: Array<String>) = try {
         }
     }
 
+    val behaviorWhenDivisorIsZero = when (compileOptions.typingMode){
+        TypingMode.LEGACY -> BehaviorWhenDivisorIsZero.ERROR
+        TypingMode.PERMISSIVE -> BehaviorWhenDivisorIsZero.MISSING
+    }
+
     val compilerPipeline = CompilerPipeline.build(ion) {
         addFunction(ReadFile(valueFactory))
         addFunction(WriteFile(valueFactory))
@@ -201,7 +207,8 @@ fun main(args: Array<String>) = try {
         scalarTypeSystem(
             ScalarTypeSystem(
                 StandardPlugin(
-                    optionSet.valueOf(typedOpBehaviorOpt)
+                    typedOpBehavior = optionSet.valueOf(typedOpBehaviorOpt),
+                    behaviorWhenDivisorIsZero = behaviorWhenDivisorIsZero
                 )
             )
         )

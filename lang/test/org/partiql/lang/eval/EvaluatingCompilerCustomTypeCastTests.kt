@@ -173,11 +173,11 @@ class EvaluatingCompilerCustomTypeCastTests : CastTestBase() {
 
         private val customTypeCastConfiguredTestCases = (
             customTypeCases.map { case ->
-                ConfiguredCastCase(case, "HONOR_PARAM_CAST, LEGACY_TYPING_MODE", ScalarTypeSystem(StandardPlugin(TypedOpBehavior.HONOR_PARAMETERS))) {
+                ConfiguredCastCase(case, "HONOR_PARAM_CAST, LEGACY_TYPING_MODE", ScalarTypeSystem(StandardPlugin(TypedOpBehavior.HONOR_PARAMETERS, null))) {
                     legacyTypingMode()
                 }
             } + customTypeCases.toPermissive().map { case ->
-                ConfiguredCastCase(case, "HONOR_PARAM_CAST, PERMISSIVE_TYPING_MODE", ScalarTypeSystem(StandardPlugin(TypedOpBehavior.HONOR_PARAMETERS))) {
+                ConfiguredCastCase(case, "HONOR_PARAM_CAST, PERMISSIVE_TYPING_MODE", ScalarTypeSystem(StandardPlugin(TypedOpBehavior.HONOR_PARAMETERS, null))) {
                     permissiveTypingMode()
                 }
             }

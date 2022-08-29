@@ -5,12 +5,84 @@ import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.errors.PropertyValueMap
-import org.partiql.lang.eval.EvaluationException
-import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.eval.ExprValueType
-import org.partiql.lang.eval.fillErrorContext
-import org.partiql.lang.ots_work.interfaces.ScalarType
+import org.partiql.lang.eval.*
+import org.partiql.lang.eval.errNoContext
+import org.partiql.lang.ots_work.interfaces.*
+import org.partiql.lang.ots_work.plugins.standard.types.*
 import org.partiql.lang.util.bigDecimalOf
+import org.partiql.lang.util.propertyValueMapOf
+import java.math.BigDecimal
+
+internal fun throwEE(errorCode: ErrorCode, createErrorDetails: () -> ErrorDetails): Nothing {
+    with(createErrorDetails()) {
+        // Add source location if we need to and if we can
+        val srcLoc = metas[SourceLocationMeta.TAG] as? SourceLocationMeta
+        val errCtx = this.errorContext ?: propertyValueMapOf()
+        if (srcLoc != null) {
+            if (!errCtx.hasProperty(Property.LINE_NUMBER)) {
+                errCtx[Property.LINE_NUMBER] = srcLoc.lineNum
+            }
+            if (!errCtx.hasProperty(Property.COLUMN_NUMBER)) {
+                errCtx[Property.COLUMN_NUMBER] = srcLoc.charOffset
+            }
+        }
+
+        throw EvaluationException(
+            message = message,
+            errorCode = errorCode,
+            errorContext = errCtx,
+            cause = null,
+            internal = false
+        )
+    }
+}
+
+internal fun inferTypeOfArithmeticOp(lhs: CompileTimeType, rhs: CompileTimeType): TypeInferenceResult {
+    val leftType = lhs.scalarType
+    val rightType = rhs.scalarType
+    if (leftType !in ALL_NUMBER_TYPES || rightType !in ALL_NUMBER_TYPES){
+        return Failed
+    }
+    if (leftType === DecimalType || rightType === DecimalType){
+        return Successful(DecimalType.compileTimeType) // TODO:  account for decimal precision
+    }
+
+    val leftPrecedence = numberTypesPrecedence.indexOf(leftType)
+    val rightPrecedence = numberTypesPrecedence.indexOf(rightType)
+
+    return when {
+        leftPrecedence > rightPrecedence -> Successful(lhs)
+        else -> Successful(rhs)
+    }
+}
+
+internal fun Number.exprValue(valueFactory: ExprValueFactory): ExprValue = when (this) {
+    is Int -> valueFactory.newInt(this)
+    is Long -> valueFactory.newInt(this)
+    is Double -> valueFactory.newFloat(this)
+    is BigDecimal -> valueFactory.newDecimal(this)
+    else -> errNoContext(
+        "Cannot convert number to expression value: $this",
+        errorCode = ErrorCode.EVALUATOR_INVALID_CONVERSION,
+        internal = true
+    )
+}
+
+internal fun Boolean.exprValue(valueFactory: ExprValueFactory): ExprValue = valueFactory.newBoolean(this)
+internal fun String.exprValue(valueFactory: ExprValueFactory): ExprValue = valueFactory.newString(this)
+
+internal val ALL_TEXT_TYPES = listOf(SymbolType, StringType, CharType, VarcharType)
+
+internal val ALL_NUMBER_TYPES = listOf(Int2Type, Int4Type, Int8Type, IntType, FloatType, DecimalType)
+
+internal val defaultReturnTypesOfArithmeticOp = listOf(
+    Int2Type.compileTimeType,
+    Int4Type.compileTimeType,
+    Int8Type.compileTimeType,
+    IntType.compileTimeType,
+    FloatType.compileTimeType,
+    DecimalType.compileTimeType
+)
 
 /** Regex to match DATE strings of the format yyyy-MM-dd */
 internal val datePatternRegex = Regex("\\d\\d\\d\\d-\\d\\d-\\d\\d")

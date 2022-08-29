@@ -19,6 +19,7 @@ import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.numberValue
 import org.partiql.lang.ots_work.interfaces.BoolType
+import org.partiql.lang.ots_work.interfaces.ScalarOpId
 import org.partiql.lang.ots_work.plugins.standard.plugin.StandardPlugin
 import org.partiql.lang.ots_work.plugins.standard.plugin.TypedOpBehavior
 import org.partiql.lang.ots_work.plugins.standard.types.CharType
@@ -64,7 +65,18 @@ import org.partiql.lang.util.countMatchingSubstrings
 
 // TODO: consider moving this test suite somewhere else since part of it is related to testing standard scalar types
 class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
-    private val scalarTypeSystem = ScalarTypeSystem(StandardPlugin(TypedOpBehavior.LEGACY))
+//    @Test
+//    fun `test subquery`() {
+//        val tc = TestCase(
+//            name = "TEST",
+//            originalSql = "x + y",
+//            globals = mapOf("x" to INT, "y" to unionOf(INT, STRING)),
+//            handler = expectQueryOutputType(BAG)
+//        )
+//        runTest(tc)
+//    }
+
+    private val scalarTypeSystem = ScalarTypeSystem(StandardPlugin(TypedOpBehavior.LEGACY, null))
 
     @ParameterizedTest
     @MethodSource("parametersForTests")
@@ -223,11 +235,11 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
         private val ALL_TYPES_ONLY_COMPARABLE_TO_SELF = ALL_NON_UNKNOWN_TYPES.filter { !it.isNumeric() && !it.isText() && !it.isLob() }
 
         enum class OpType(vararg ops: String) {
-            ARITHMETIC("+", "-", "*", "/", "%"),
+            ARITHMETIC(ScalarOpId.BinaryPlus.alias, ScalarOpId.BinaryMinus.alias, ScalarOpId.BinaryTimes.alias, ScalarOpId.BinaryDivide.alias, ScalarOpId.BinaryModulo.alias),
             COMPARISON("<", "<=", ">", ">="),
             EQUALITY("!=", "="),
             LOGICAL("AND", "OR"),
-            CONCAT("||");
+            CONCAT(ScalarOpId.BinaryConcat.alias);
 
             val operators = ops.toList()
         }
@@ -1552,28 +1564,28 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
                 name = "NAry op NOT data type mismatch - nullable non-bool",
                 argType = INT.asNullable(),
                 expectedProblems = listOf(
-                    createDataTypeMismatchError(col = 1, argTypes = listOf(INT.asNullable()), nAryOp = "NOT")
+                    createDataTypeMismatchError(col = 1, argTypes = listOf(INT.asNullable()), nAryOp = ScalarOpId.Not.alias)
                 )
             ),
             createNotDataTypeMismatchTestCase(
                 name = "NAry op NOT data type mismatch - optional non-bool",
                 argType = INT.asOptional(),
                 expectedProblems = listOf(
-                    createDataTypeMismatchError(col = 1, argTypes = listOf(INT.asOptional()), nAryOp = "NOT")
+                    createDataTypeMismatchError(col = 1, argTypes = listOf(INT.asOptional()), nAryOp = ScalarOpId.Not.alias)
                 )
             ),
             createNotDataTypeMismatchTestCase(
                 name = "NAry op NOT data type mismatch - nullable, optional non-bool",
                 argType = INT.asNullable().asOptional(),
                 expectedProblems = listOf(
-                    createDataTypeMismatchError(col = 1, argTypes = listOf(INT.asNullable().asOptional()), nAryOp = "NOT")
+                    createDataTypeMismatchError(col = 1, argTypes = listOf(INT.asNullable().asOptional()), nAryOp = ScalarOpId.Not.alias)
                 )
             ),
             createNotDataTypeMismatchTestCase(
                 name = "NAry op NOT data type mismatch - union of non-bool types",
                 argType = unionOf(INT, STRING),
                 expectedProblems = listOf(
-                    createDataTypeMismatchError(col = 1, argTypes = listOf(unionOf(INT, STRING)), nAryOp = "NOT")
+                    createDataTypeMismatchError(col = 1, argTypes = listOf(unionOf(INT, STRING)), nAryOp = ScalarOpId.Not.alias)
                 )
             )
         ) +
@@ -1583,7 +1595,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
                     name = "NAry op NOT data type mismatch - $nonBoolType",
                     argType = nonBoolType,
                     expectedProblems = listOf(
-                        createDataTypeMismatchError(col = 1, argTypes = listOf(nonBoolType), nAryOp = "NOT")
+                        createDataTypeMismatchError(col = 1, argTypes = listOf(nonBoolType), nAryOp = ScalarOpId.Not.alias)
                     )
                 )
             } +
@@ -1592,7 +1604,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
                 createNotDataTypeMismatchTestCase(
                     name = "NAry op NOT null or missing error - $unknownType",
                     argType = unknownType,
-                    expectedProblems = listOf(createReturnsNullOrMissingError(col = 1, nAryOp = "NOT"))
+                    expectedProblems = listOf(createReturnsNullOrMissingError(col = 1, nAryOp = ScalarOpId.Not.alias))
                 )
             } + listOf(
             //
@@ -2166,7 +2178,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
                     valueType = it.first,
                     patternType = it.second,
                     expectedProblems = listOf(
-                        createDataTypeMismatchError(col = 3, argTypes = listOf(it.first, it.second), nAryOp = "LIKE")
+                        createDataTypeMismatchError(col = 3, argTypes = listOf(it.first, it.second), nAryOp = ScalarOpId.Like.alias)
                     )
                 )
             } +
@@ -2177,8 +2189,8 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
                     valueType = it.first,
                     patternType = it.second,
                     expectedProblems = listOf(
-                        createDataTypeMismatchError(col = 3, argTypes = listOf(it.first, it.second), nAryOp = "LIKE"),
-                        createReturnsNullOrMissingError(col = 3, nAryOp = "LIKE")
+                        createDataTypeMismatchError(col = 3, argTypes = listOf(it.first, it.second), nAryOp = ScalarOpId.Like.alias),
+                        createReturnsNullOrMissingError(col = 3, nAryOp = ScalarOpId.Like.alias)
                     )
                 )
             } +
@@ -2188,7 +2200,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
                     name = "null or missing error - ${it.first}, ${it.second}",
                     valueType = it.first,
                     patternType = it.second,
-                    expectedProblems = listOf(createReturnsNullOrMissingError(col = 3, nAryOp = "LIKE"))
+                    expectedProblems = listOf(createReturnsNullOrMissingError(col = 3, nAryOp = ScalarOpId.Like.alias))
                 )
             } +
             // unknown with an unknown -> null or missing error
@@ -2197,7 +2209,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
                     name = "null or missing error - ${it.first}, ${it.second}",
                     valueType = it.first,
                     patternType = it.second,
-                    expectedProblems = listOf(createReturnsNullOrMissingError(col = 3, nAryOp = "LIKE"))
+                    expectedProblems = listOf(createReturnsNullOrMissingError(col = 3, nAryOp = ScalarOpId.Like.alias))
                 )
             } +
             // 3 args - 1 invalid argument (non-text, non-unknown) -> data type mismatch
@@ -2211,7 +2223,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
                             patternType = textType1,
                             escapeType = textType2,
                             expectedProblems = listOf(
-                                createDataTypeMismatchError(col = 3, argTypes = listOf(nonTextType, textType1, textType2), nAryOp = "LIKE")
+                                createDataTypeMismatchError(col = 3, argTypes = listOf(nonTextType, textType1, textType2), nAryOp = ScalarOpId.Like.alias)
                             )
                         ),
                         createNAryLikeDataTypeMismatchTest(
@@ -2220,7 +2232,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
                             patternType = nonTextType,
                             escapeType = textType2,
                             expectedProblems = listOf(
-                                createDataTypeMismatchError(col = 3, argTypes = listOf(textType1, nonTextType, textType2), nAryOp = "LIKE")
+                                createDataTypeMismatchError(col = 3, argTypes = listOf(textType1, nonTextType, textType2), nAryOp = ScalarOpId.Like.alias)
                             )
                         ),
                         createNAryLikeDataTypeMismatchTest(
@@ -2229,7 +2241,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
                             patternType = textType2,
                             escapeType = nonTextType,
                             expectedProblems = listOf(
-                                createDataTypeMismatchError(col = 3, argTypes = listOf(textType1, textType2, nonTextType), nAryOp = "LIKE")
+                                createDataTypeMismatchError(col = 3, argTypes = listOf(textType1, textType2, nonTextType), nAryOp = ScalarOpId.Like.alias)
                             )
                         )
                     )
@@ -2241,7 +2253,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
                     valueType = unionOf(STRING, INT, NULL),
                     patternType = BOOL,
                     expectedProblems = listOf(
-                        createDataTypeMismatchError(col = 3, argTypes = listOf(unionOf(STRING, INT, NULL), BOOL), nAryOp = "LIKE")
+                        createDataTypeMismatchError(col = 3, argTypes = listOf(unionOf(STRING, INT, NULL), BOOL), nAryOp = ScalarOpId.Like.alias)
                     )
                 ),
                 createNAryLikeDataTypeMismatchTest(
@@ -2250,7 +2262,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
                     patternType = STRING,
                     escapeType = unionOf(INT, DECIMAL, BOOL),
                     expectedProblems = listOf(
-                        createDataTypeMismatchError(col = 3, argTypes = listOf(STRING, STRING, unionOf(INT, DECIMAL, BOOL)), nAryOp = "LIKE")
+                        createDataTypeMismatchError(col = 3, argTypes = listOf(STRING, STRING, unionOf(INT, DECIMAL, BOOL)), nAryOp = ScalarOpId.Like.alias)
                     )
                 ),
                 createNAryLikeDataTypeMismatchTest(
@@ -2259,7 +2271,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
                     patternType = unionOf(INT, DECIMAL, BOOL),
                     escapeType = SYMBOL,
                     expectedProblems = listOf(
-                        createDataTypeMismatchError(col = 3, argTypes = listOf(STRING, unionOf(INT, DECIMAL, BOOL), SYMBOL), nAryOp = "LIKE")
+                        createDataTypeMismatchError(col = 3, argTypes = listOf(STRING, unionOf(INT, DECIMAL, BOOL), SYMBOL), nAryOp = ScalarOpId.Like.alias)
                     )
                 ),
                 createNAryLikeDataTypeMismatchTest(
@@ -2268,7 +2280,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
                     patternType = STRING,
                     escapeType = STRING,
                     expectedProblems = listOf(
-                        createDataTypeMismatchError(col = 3, argTypes = listOf(unionOf(INT, DECIMAL, BOOL), STRING, STRING), nAryOp = "LIKE")
+                        createDataTypeMismatchError(col = 3, argTypes = listOf(unionOf(INT, DECIMAL, BOOL), STRING, STRING), nAryOp = ScalarOpId.Like.alias)
                     )
                 ),
                 createNAryLikeDataTypeMismatchTest(
@@ -2276,70 +2288,70 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
                     valueType = STRING,
                     patternType = STRING,
                     escapeType = NULL,
-                    expectedProblems = listOf(createReturnsNullOrMissingError(col = 3, nAryOp = "LIKE"))
+                    expectedProblems = listOf(createReturnsNullOrMissingError(col = 3, nAryOp = ScalarOpId.Like.alias))
                 ),
                 createNAryLikeDataTypeMismatchTest(
                     name = "NAry op LIKE with null or missing error - string LIKE null ESCAPE string",
                     valueType = STRING,
                     patternType = NULL,
                     escapeType = STRING,
-                    expectedProblems = listOf(createReturnsNullOrMissingError(col = 3, nAryOp = "LIKE"))
+                    expectedProblems = listOf(createReturnsNullOrMissingError(col = 3, nAryOp = ScalarOpId.Like.alias))
                 ),
                 createNAryLikeDataTypeMismatchTest(
                     name = "NAry op LIKE with null or missing error - null LIKE string ESCAPE string",
                     valueType = NULL,
                     patternType = STRING,
                     escapeType = STRING,
-                    expectedProblems = listOf(createReturnsNullOrMissingError(col = 3, nAryOp = "LIKE"))
+                    expectedProblems = listOf(createReturnsNullOrMissingError(col = 3, nAryOp = ScalarOpId.Like.alias))
                 ),
                 createNAryLikeDataTypeMismatchTest(
                     name = "NAry op LIKE with null or missing error - null LIKE null ESCAPE null",
                     valueType = NULL,
                     patternType = NULL,
                     escapeType = NULL,
-                    expectedProblems = listOf(createReturnsNullOrMissingError(col = 3, nAryOp = "LIKE"))
+                    expectedProblems = listOf(createReturnsNullOrMissingError(col = 3, nAryOp = ScalarOpId.Like.alias))
                 ),
                 createNAryLikeDataTypeMismatchTest(
                     name = "NAry op LIKE with null or missing error - string LIKE missing ESCAPE string",
                     valueType = STRING,
                     patternType = MISSING,
                     escapeType = STRING,
-                    expectedProblems = listOf(createReturnsNullOrMissingError(col = 3, nAryOp = "LIKE"))
+                    expectedProblems = listOf(createReturnsNullOrMissingError(col = 3, nAryOp = ScalarOpId.Like.alias))
                 ),
                 createNAryLikeDataTypeMismatchTest(
                     name = "NAry op LIKE with null or missing error - missing LIKE string ESCAPE string",
                     valueType = MISSING,
                     patternType = STRING,
                     escapeType = STRING,
-                    expectedProblems = listOf(createReturnsNullOrMissingError(col = 3, nAryOp = "LIKE"))
+                    expectedProblems = listOf(createReturnsNullOrMissingError(col = 3, nAryOp = ScalarOpId.Like.alias))
                 ),
                 createNAryLikeDataTypeMismatchTest(
                     name = "NAry op LIKE with null or missing error - missing LIKE missing ESCAPE missing",
                     valueType = MISSING,
                     patternType = MISSING,
                     escapeType = MISSING,
-                    expectedProblems = listOf(createReturnsNullOrMissingError(col = 3, nAryOp = "LIKE"))
+                    expectedProblems = listOf(createReturnsNullOrMissingError(col = 3, nAryOp = ScalarOpId.Like.alias))
                 ),
                 createNAryLikeDataTypeMismatchTest(
                     name = "NAry op LIKE with null or missing error - missing LIKE null ESCAPE null",
                     valueType = MISSING,
                     patternType = NULL,
                     escapeType = NULL,
-                    expectedProblems = listOf(createReturnsNullOrMissingError(col = 3, nAryOp = "LIKE"))
+                    expectedProblems = listOf(createReturnsNullOrMissingError(col = 3, nAryOp = ScalarOpId.Like.alias))
                 ),
                 createNAryLikeDataTypeMismatchTest(
                     name = "NAry op LIKE with null or missing error - null LIKE missing ESCAPE null",
                     valueType = NULL,
                     patternType = MISSING,
                     escapeType = NULL,
-                    expectedProblems = listOf(createReturnsNullOrMissingError(col = 3, nAryOp = "LIKE"))
+                    expectedProblems = listOf(createReturnsNullOrMissingError(col = 3, nAryOp = ScalarOpId.Like.alias))
                 ),
                 createNAryLikeDataTypeMismatchTest(
                     name = "NAry op LIKE with null or missing error - null LIKE null ESCAPE missing",
                     valueType = NULL,
                     patternType = NULL,
                     escapeType = MISSING,
-                    expectedProblems = listOf(createReturnsNullOrMissingError(col = 3, nAryOp = "LIKE"))
+                    expectedProblems = listOf(createReturnsNullOrMissingError(col = 3, nAryOp = ScalarOpId.Like.alias))
                 ),
                 createNAryLikeDataTypeMismatchTest(
                     name = "NAry op LIKE data type mismatch, null or missing error - 3 args, incompatible escape type with unknown types",
@@ -2347,8 +2359,8 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
                     patternType = MISSING,
                     escapeType = INT,
                     expectedProblems = listOf(
-                        createDataTypeMismatchError(col = 3, argTypes = listOf(NULL, MISSING, INT), nAryOp = "LIKE"),
-                        createReturnsNullOrMissingError(col = 3, nAryOp = "LIKE")
+                        createDataTypeMismatchError(col = 3, argTypes = listOf(NULL, MISSING, INT), nAryOp = ScalarOpId.Like.alias),
+                        createReturnsNullOrMissingError(col = 3, nAryOp = ScalarOpId.Like.alias)
                     )
                 ),
                 createNAryLikeDataTypeMismatchTest(
@@ -2357,8 +2369,8 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
                     patternType = INT,
                     escapeType = MISSING,
                     expectedProblems = listOf(
-                        createDataTypeMismatchError(col = 3, argTypes = listOf(NULL, INT, MISSING), nAryOp = "LIKE"),
-                        createReturnsNullOrMissingError(col = 3, nAryOp = "LIKE")
+                        createDataTypeMismatchError(col = 3, argTypes = listOf(NULL, INT, MISSING), nAryOp = ScalarOpId.Like.alias),
+                        createReturnsNullOrMissingError(col = 3, nAryOp = ScalarOpId.Like.alias)
                     )
                 ),
                 createNAryLikeDataTypeMismatchTest(
@@ -2367,8 +2379,8 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
                     patternType = NULL,
                     escapeType = MISSING,
                     expectedProblems = listOf(
-                        createDataTypeMismatchError(col = 3, argTypes = listOf(STRUCT, NULL, MISSING), nAryOp = "LIKE"),
-                        createReturnsNullOrMissingError(col = 3, nAryOp = "LIKE")
+                        createDataTypeMismatchError(col = 3, argTypes = listOf(STRUCT, NULL, MISSING), nAryOp = ScalarOpId.Like.alias),
+                        createReturnsNullOrMissingError(col = 3, nAryOp = ScalarOpId.Like.alias)
                     )
                 ),
             )
@@ -5083,7 +5095,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
                     goodType = STRING,
                     badType = INT,
                     expectedContinuationType = BOOL,
-                    op = "LIKE"
+                    op = ScalarOpId.Like.alias
                 ) +
                 // logical ops will return bool in the event of an error
                 OpType.LOGICAL.operators.flatMap { logicalOp ->
@@ -5146,7 +5158,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
                         ),
                         handler = expectQueryOutputTypeAndProblems(
                             expectedType = BOOL,
-                            expectedProblems = listOf(createDataTypeMismatchError(col = 7, argTypes = listOf(STRING, STRING, INT), nAryOp = "LIKE"))
+                            expectedProblems = listOf(createDataTypeMismatchError(col = 7, argTypes = listOf(STRING, STRING, INT), nAryOp = ScalarOpId.Like.alias))
                         )
                     ),
                     TestCase(
@@ -5158,7 +5170,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
                         ),
                         handler = expectQueryOutputTypeAndProblems(
                             expectedType = BOOL,
-                            expectedProblems = listOf(createReturnsNullOrMissingError(col = 7, nAryOp = "LIKE"))
+                            expectedProblems = listOf(createReturnsNullOrMissingError(col = 7, nAryOp = ScalarOpId.Like.alias))
                         )
                     ),
                 ) +
@@ -5170,7 +5182,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
                         globals = mapOf("badT" to STRING),
                         handler = expectQueryOutputTypeAndProblems(
                             expectedType = BOOL,
-                            expectedProblems = listOf(createDataTypeMismatchError(col = 1, argTypes = listOf(STRING), nAryOp = "NOT"))
+                            expectedProblems = listOf(createDataTypeMismatchError(col = 1, argTypes = listOf(STRING), nAryOp = ScalarOpId.Not.alias))
                         )
                     ),
                     TestCase(
@@ -5179,7 +5191,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
                         globals = mapOf("nullT" to NULL),
                         handler = expectQueryOutputTypeAndProblems(
                             expectedType = BOOL,
-                            expectedProblems = listOf(createReturnsNullOrMissingError(col = 1, nAryOp = "NOT"))
+                            expectedProblems = listOf(createReturnsNullOrMissingError(col = 1, nAryOp = ScalarOpId.Not.alias))
                         )
                     )
                 ) +
