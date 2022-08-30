@@ -151,7 +151,7 @@ abstract class SqlParserTestBase : TestBase() {
             serializeAssert(AstVersion.V0, actualStatement.toExprNode(ion), expectedV0AstSexp, source)
 
             // Check for PIG Ast
-            assertExpression(source, expectedPigAst)
+            assertExpression(source, expectedPigAst, targetParsers = targetParsers)
         }
     }
 
