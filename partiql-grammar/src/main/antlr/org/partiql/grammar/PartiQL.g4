@@ -502,7 +502,7 @@ coalesce
     : COALESCE PAREN_LEFT expr ( COMMA expr )* PAREN_RIGHT;
 
 caseExpr
-    : CASE case=expr? (WHEN when=expr THEN then=expr)+ (ELSE expr)? END;
+    : CASE case=expr? (WHEN whens+=expr THEN thens+=expr)+ (ELSE else=expr)? END;
 
 values
     : VALUES valueRow ( COMMA valueRow )*;

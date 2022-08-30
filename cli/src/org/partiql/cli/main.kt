@@ -79,7 +79,7 @@ enum class InputFormat {
 }
 
 enum class ParserImplementation {
-    ANTLR, LEGACY
+    STANDARD, LEGACY
 }
 
 enum class OutputFormat {
@@ -138,7 +138,7 @@ private val parserOpt = optParser.acceptsAll(listOf("parser", "l"), "parser impl
     .withRequiredArg()
     .ofType(ParserImplementation::class.java)
     .describedAs("(${ParserImplementation.values().joinToString("|")})")
-    .defaultsTo(ParserImplementation.ANTLR)
+    .defaultsTo(ParserImplementation.STANDARD)
 
 private val monochromeOpt = optParser.acceptsAll(listOf("monochrome", "m"), "removes syntax highlighting for the REPL")
 
@@ -168,7 +168,7 @@ private val outputFormatOpt = optParser.acceptsAll(listOf("output-format", "of")
  * * -r --projection-iter-behavior: Controls the behavior of ExprValue.iterator in the projection result: (default: FILTER_MISSING) [FILTER_MISSING, UNFILTERED]
  * * -v --undefined-variable-behavior: Defines the behavior when a non-existent variable is referenced: (default: ERROR) [ERROR, MISSING]
  * mismatches)
- * * -l --parser: parser implementation (default: ANTLR) [ANTLR, LEGACY]
+ * * -l --parser: parser implementation (default: STANDARD) [STANDARD, LEGACY]
  * * Interactive only:
  *      * -m --monochrome: removes syntax highlighting for the REPL
  * * Non interactive only:
@@ -195,7 +195,7 @@ fun main(args: Array<String>) = try {
     // Parser Options
     val parser = when (optionSet.valueOf(parserOpt)) {
         ParserImplementation.LEGACY -> SqlParser(ion)
-        ParserImplementation.ANTLR -> PartiQLParserBuilder().withIonSystem(ion).build()
+        ParserImplementation.STANDARD -> PartiQLParserBuilder().withIonSystem(ion).build()
         else -> PartiQLParserBuilder().withIonSystem(ion).build()
     }
 

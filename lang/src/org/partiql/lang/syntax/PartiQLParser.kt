@@ -120,7 +120,7 @@ internal class PartiQLParser(
     /**
      * Catches Lexical errors (unidentified tokens) and throws a [LexerException]
      */
-    class TokenizeErrorListener(val ion: IonSystem) : BaseErrorListener() {
+    private class TokenizeErrorListener(val ion: IonSystem) : BaseErrorListener() {
         @Throws(LexerException::class)
         override fun syntaxError(
             recognizer: Recognizer<*, *>?,
@@ -141,7 +141,7 @@ internal class PartiQLParser(
     /**
      * Catches Parser errors (malformed syntax) and throws a [ParserException]
      */
-    class ParseErrorListener(val ion: IonSystem) : BaseErrorListener() {
+    private class ParseErrorListener(val ion: IonSystem) : BaseErrorListener() {
         @Throws(ParserException::class)
         override fun syntaxError(
             recognizer: Recognizer<*, *>?,
