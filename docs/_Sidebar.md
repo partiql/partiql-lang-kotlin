@@ -10,6 +10,8 @@
 * Documentation
   * [Exceptions](https://github.com/partiql/partiql-lang-kotlin/wiki/Exceptions)
   * [Functions](https://github.com/partiql/partiql-lang-kotlin/wiki/Functions)
+  * [Numeric Data Type & Arithmetic Operations](https://github.com/partiql/partiql-lang-kotlin/wiki/Numeric-Data-Tyoe-&-Arithmetic-Operations)
+  * [Aggregate Functions](https://github.com/partiql/partiql-lang-kotlin/wiki/Aggregate-Functions)
   * [Command Line Reference](https://github.com/partiql/partiql-lang-kotlin/wiki/Command-Line-Tutorial)
   * [Implementation & Specification Comparison](https://github.com/partiql/partiql-lang-kotlin/wiki/Implementation-&-Specification-Comparison)
   * [Test Script Specification](https://github.com/partiql/partiql-lang-kotlin/wiki/Test-Script-Specification)
