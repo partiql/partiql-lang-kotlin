@@ -8,12 +8,6 @@ repositories {
 
 dependencies {
     antlr 'org.antlr:antlr4:4.10.1'
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
-}
-
-test {
-    useJUnitPlatform()
 }
 
 java {
@@ -30,13 +24,6 @@ generateGrammarSource {
     maxHeapSize = "64m"
     arguments += ["-visitor", "-long-messages", "-package", "org.partiql.grammar.parser.generated", "-Xexact-output-dir" ]
     outputDirectory = ANTLR_OUTPUT_DIR
-}
-
-// ANTLR Source
-sourceSets {
-    main {
-        antlr.srcDirs = [ANTLR_INPUT_SOURCE_ROOT]
-    }
 }
 
 // Adds G4 Files to Resources

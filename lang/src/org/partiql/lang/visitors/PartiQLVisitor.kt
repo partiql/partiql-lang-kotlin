@@ -90,6 +90,7 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
      */
 
     override fun visitQueryDql(ctx: PartiQLParser.QueryDqlContext) = visitDql(ctx.dql())
+
     override fun visitQueryDml(ctx: PartiQLParser.QueryDmlContext): PartiqlAst.PartiqlAstNode = visit(ctx.dml())
 
     /**
@@ -700,34 +701,20 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
         unpivot_(expr, asAlias = asAlias.toPigSymbolPrimitive(), atAlias = atAlias.toPigSymbolPrimitive(), byAlias = byAlias.toPigSymbolPrimitive(), metas)
     }
 
-    /**
-     * Note: Similar to the old SqlParser, we have an odd condition (if the RHS is a nested join), where we flip
-     * the LHS and RHS operands.
-     */
     override fun visitTableCrossJoin(ctx: PartiQLParser.TableCrossJoinContext) = PartiqlAst.build {
         val lhs = visit(ctx.lhs, PartiqlAst.FromSource::class)
         val joinType = visitJoinType(ctx.joinType())
         val rhs = visit(ctx.rhs, PartiqlAst.FromSource::class)
         val metas = metaContainerOf(IsImplictJoinMeta.instance)
-        when (ctx.rhs) {
-            is PartiQLParser.JoinRhsTableJoinedContext -> join(joinType, rhs, lhs, metas = metas)
-            else -> join(joinType, lhs, rhs, metas = metas)
-        }
+        join(joinType, lhs, rhs, metas = metas)
     }
 
-    /**
-     * Note: Similar to the old SqlParser, we have an odd condition (if the RHS is a nested join), where we flip
-     * the LHS and RHS operands.
-     */
     override fun visitTableQualifiedJoin(ctx: PartiQLParser.TableQualifiedJoinContext) = PartiqlAst.build {
         val lhs = visit(ctx.lhs, PartiqlAst.FromSource::class)
         val joinType = visitJoinType(ctx.joinType())
         val rhs = visit(ctx.rhs, PartiqlAst.FromSource::class)
         val predicate = visitOrNull(ctx.joinSpec(), PartiqlAst.Expr::class)
-        when (ctx.rhs) {
-            is PartiQLParser.JoinRhsTableJoinedContext -> join(joinType, rhs, lhs, predicate)
-            else -> join(joinType, lhs, rhs, predicate)
-        }
+        join(joinType, lhs, rhs, predicate)
     }
 
     override fun visitTableBaseRefSymbol(ctx: PartiQLParser.TableBaseRefSymbolContext) = PartiqlAst.build {
@@ -765,11 +752,17 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
      */
 
     override fun visitOr(ctx: PartiQLParser.OrContext) = visitBinaryOperation(ctx.lhs, ctx.rhs, ctx.OR().symbol, null)
+
     override fun visitAnd(ctx: PartiQLParser.AndContext) = visitBinaryOperation(ctx.lhs, ctx.rhs, ctx.op, null)
+
     override fun visitNot(ctx: PartiQLParser.NotContext) = visitUnaryOperation(ctx.rhs, ctx.op, null)
+
     override fun visitMathOp00(ctx: PartiQLParser.MathOp00Context): PartiqlAst.PartiqlAstNode = visitBinaryOperation(ctx.lhs, ctx.rhs, ctx.op, ctx.parent)
+
     override fun visitMathOp01(ctx: PartiQLParser.MathOp01Context): PartiqlAst.PartiqlAstNode = visitBinaryOperation(ctx.lhs, ctx.rhs, ctx.op, ctx.parent)
+
     override fun visitMathOp02(ctx: PartiQLParser.MathOp02Context): PartiqlAst.PartiqlAstNode = visitBinaryOperation(ctx.lhs, ctx.rhs, ctx.op, ctx.parent)
+
     override fun visitValueExpr(ctx: PartiQLParser.ValueExprContext) = visitUnaryOperation(ctx.rhs, ctx.sign, ctx.parent)
 
     /**
@@ -911,19 +904,14 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
     }
 
     override fun visitCaseExpr(ctx: PartiQLParser.CaseExprContext) = PartiqlAst.build {
-        val exprPairList = mutableListOf<PartiqlAst.ExprPair>()
-        val start = if (ctx.case_ == null) 0 else 1
-        val end = if (ctx.ELSE() == null) ctx.expr().size else ctx.expr().size - 1
-        for (i in start until end step 2) {
-            val whenExpr = visitExpr(ctx.expr(i))
-            val thenExpr = visitExpr(ctx.expr(i + 1))
-            exprPairList.add(exprPair(whenExpr, thenExpr))
+        val pairs = ctx.whens.indices.map { i ->
+            exprPair(visitExpr(ctx.whens[i]), visitExpr(ctx.thens[i]))
         }
-        val elseExpr = if (ctx.ELSE() != null) visitExpr(ctx.expr(end)) else null
+        val elseExpr = visitOrNull(ctx.else_, PartiqlAst.Expr::class)
         val caseMeta = ctx.CASE().getSourceMetaContainer()
         when (ctx.case_) {
-            null -> searchedCase(exprPairList(exprPairList), elseExpr, metas = caseMeta)
-            else -> simpleCase(visitExpr(ctx.case_), exprPairList(exprPairList), elseExpr, metas = caseMeta)
+            null -> searchedCase(exprPairList(pairs), elseExpr, metas = caseMeta)
+            else -> simpleCase(visitExpr(ctx.case_), exprPairList(pairs), elseExpr, metas = caseMeta)
         }
     }
 
