@@ -166,29 +166,30 @@ class SqlParserJoinTest : SqlParserTestBase() {
                     (id x case_insensitive)))
             (from
                 (inner_join
+                    (id A case_insensitive)
                     (inner_join
                         (id B case_insensitive)
                         (id C case_insensitive)
                         (=
                             (id B case_insensitive)
                             (id C case_insensitive)))
-                    (id A case_insensitive)
                     (=
                         (id A case_insensitive)
                         (id B case_insensitive)))))
-        """
+        """,
+        targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
     ) {
         select(
             project = projectX,
             from = join(
                 inner(),
+                scan(id("A")),
                 join(
                     inner(),
                     scan(id("B")),
                     scan(id("C")),
                     eq(id("B"), id("C"))
                 ),
-                scan(id("A")),
                 eq(id("A"), id("B"))
             ),
             where = null
@@ -204,39 +205,40 @@ class SqlParserJoinTest : SqlParserTestBase() {
                     (id x case_insensitive)))
             (from
                 (inner_join
+                    (id A case_insensitive)
                     (inner_join
+                        (id B case_insensitive)
                         (inner_join
                             (id C case_insensitive)
                             (id D case_insensitive)
                             (=
                                 (id C case_insensitive)
                                 (id D case_insensitive)))
-                        (id B case_insensitive)
                         (=
                             (id B case_insensitive)
                             (id C case_insensitive)))
-                    (id A case_insensitive)
                     (=
                         (id A case_insensitive)
                         (id B case_insensitive)))))
-        """
+        """,
+        targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
     ) {
         select(
             project = projectX,
             from = join(
                 inner(),
+                scan(id("A")),
                 join(
                     inner(),
+                    scan(id("B")),
                     join(
                         inner(),
                         scan(id("C")),
                         scan(id("D")),
                         eq(id("C"), id("D"))
                     ),
-                    scan(id("B")),
                     eq(id("B"), id("C"))
                 ),
-                scan(id("A")),
                 eq(id("A"), id("B"))
             ),
             where = null
