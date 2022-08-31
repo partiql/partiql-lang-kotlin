@@ -4,9 +4,9 @@ import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.numberValue
 import org.partiql.lang.ots_work.interfaces.CompileTimeType
-import org.partiql.lang.ots_work.interfaces.ScalarType
 import org.partiql.lang.ots_work.interfaces.TypeInferenceResult
-import org.partiql.lang.ots_work.interfaces.operators.NegOp
+import org.partiql.lang.ots_work.interfaces.operator.NegOp
+import org.partiql.lang.ots_work.interfaces.type.ScalarType
 import org.partiql.lang.util.unaryMinus
 
 class StandardNegOp(

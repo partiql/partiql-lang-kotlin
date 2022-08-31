@@ -2,14 +2,14 @@ package org.partiql.lang.ots_work.plugins.standard.operators
 
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
-import org.partiql.lang.ots_work.interfaces.BoolType
 import org.partiql.lang.ots_work.interfaces.CompileTimeType
 import org.partiql.lang.ots_work.interfaces.Failed
-import org.partiql.lang.ots_work.interfaces.ScalarType
 import org.partiql.lang.ots_work.interfaces.Successful
 import org.partiql.lang.ots_work.interfaces.TypeInferenceResult
 import org.partiql.lang.ots_work.interfaces.Uncertain
-import org.partiql.lang.ots_work.interfaces.operators.LikeOp
+import org.partiql.lang.ots_work.interfaces.operator.LikeOp
+import org.partiql.lang.ots_work.interfaces.type.BoolType
+import org.partiql.lang.ots_work.interfaces.type.ScalarType
 
 class StandardLikeOp(
     val valueFactory: ExprValueFactory

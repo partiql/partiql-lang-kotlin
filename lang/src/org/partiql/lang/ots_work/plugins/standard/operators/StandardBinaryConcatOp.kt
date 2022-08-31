@@ -10,10 +10,10 @@ import org.partiql.lang.eval.errorContextFrom
 import org.partiql.lang.eval.stringValue
 import org.partiql.lang.ots_work.interfaces.CompileTimeType
 import org.partiql.lang.ots_work.interfaces.Failed
-import org.partiql.lang.ots_work.interfaces.ScalarType
 import org.partiql.lang.ots_work.interfaces.Successful
 import org.partiql.lang.ots_work.interfaces.TypeInferenceResult
-import org.partiql.lang.ots_work.interfaces.operators.BinaryConcatOp
+import org.partiql.lang.ots_work.interfaces.operator.BinaryConcatOp
+import org.partiql.lang.ots_work.interfaces.type.ScalarType
 import org.partiql.lang.ots_work.plugins.standard.types.CharType
 import org.partiql.lang.ots_work.plugins.standard.types.StringType
 import org.partiql.lang.ots_work.plugins.standard.types.SymbolType

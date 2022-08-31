@@ -8,9 +8,9 @@ import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.numberValue
 import org.partiql.lang.ots_work.interfaces.CompileTimeType
-import org.partiql.lang.ots_work.interfaces.ScalarType
 import org.partiql.lang.ots_work.interfaces.TypeInferenceResult
-import org.partiql.lang.ots_work.interfaces.operators.BinaryDivideOp
+import org.partiql.lang.ots_work.interfaces.operator.BinaryDivideOp
+import org.partiql.lang.ots_work.interfaces.type.ScalarType
 import org.partiql.lang.ots_work.plugins.standard.plugin.BehaviorWhenDivisorIsZero
 import org.partiql.lang.util.div
 import org.partiql.lang.util.isZero

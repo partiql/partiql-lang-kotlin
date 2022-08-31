@@ -18,8 +18,8 @@ import org.partiql.lang.errors.ProblemSeverity
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.numberValue
-import org.partiql.lang.ots_work.interfaces.BoolType
-import org.partiql.lang.ots_work.interfaces.ScalarOpId
+import org.partiql.lang.ots_work.interfaces.operator.ScalarOpId
+import org.partiql.lang.ots_work.interfaces.type.BoolType
 import org.partiql.lang.ots_work.plugins.standard.plugin.StandardPlugin
 import org.partiql.lang.ots_work.plugins.standard.plugin.TypedOpBehavior
 import org.partiql.lang.ots_work.plugins.standard.types.CharType
@@ -65,17 +65,6 @@ import org.partiql.lang.util.countMatchingSubstrings
 
 // TODO: consider moving this test suite somewhere else since part of it is related to testing standard scalar types
 class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
-//    @Test
-//    fun `test subquery`() {
-//        val tc = TestCase(
-//            name = "TEST",
-//            originalSql = "x + y",
-//            globals = mapOf("x" to INT, "y" to unionOf(INT, STRING)),
-//            handler = expectQueryOutputType(BAG)
-//        )
-//        runTest(tc)
-//    }
-
     private val scalarTypeSystem = ScalarTypeSystem(StandardPlugin(TypedOpBehavior.LEGACY, null))
 
     @ParameterizedTest

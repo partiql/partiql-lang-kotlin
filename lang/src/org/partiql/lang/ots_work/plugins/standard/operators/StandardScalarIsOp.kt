@@ -2,7 +2,7 @@ package org.partiql.lang.ots_work.plugins.standard.operators
 
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.ots_work.interfaces.CompileTimeType
-import org.partiql.lang.ots_work.interfaces.operators.ScalarIsOp
+import org.partiql.lang.ots_work.interfaces.operator.ScalarIsOp
 import org.partiql.lang.ots_work.plugins.standard.plugin.TypedOpBehavior
 
 // TODO: remove the whole class once [TypedOpBehavior.LEGACY] is removed

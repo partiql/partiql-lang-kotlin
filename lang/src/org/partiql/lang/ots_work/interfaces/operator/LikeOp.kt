@@ -1,12 +1,9 @@
-package org.partiql.lang.ots_work.interfaces.operators
+package org.partiql.lang.ots_work.interfaces.operator
 
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.ots_work.interfaces.ArgTypeValidatable
-import org.partiql.lang.ots_work.interfaces.BoolType
 import org.partiql.lang.ots_work.interfaces.CompileTimeType
-import org.partiql.lang.ots_work.interfaces.ScalarOp
-import org.partiql.lang.ots_work.interfaces.ScalarOpId
 import org.partiql.lang.ots_work.interfaces.TypeInferenceResult
+import org.partiql.lang.ots_work.interfaces.type.BoolType
 
 abstract class LikeOp : ScalarOp, ArgTypeValidatable {
     override val scalarOpId: ScalarOpId

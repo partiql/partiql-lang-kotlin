@@ -1,4 +1,6 @@
-package org.partiql.lang.ots_work.interfaces
+package org.partiql.lang.ots_work.interfaces.operator
+
+import org.partiql.lang.ots_work.interfaces.type.ScalarType
 
 interface ArgTypeValidatable {
     /**

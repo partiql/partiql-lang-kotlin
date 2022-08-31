@@ -1,4 +1,4 @@
-package org.partiql.lang.ots_work.interfaces
+package org.partiql.lang.ots_work.interfaces.operator
 
 enum class ScalarOpId(val alias: String) {
     ScalarCast("cast"),

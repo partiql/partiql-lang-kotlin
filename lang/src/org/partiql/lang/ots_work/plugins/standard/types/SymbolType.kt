@@ -1,7 +1,7 @@
 package org.partiql.lang.ots_work.plugins.standard.types
 
 import org.partiql.lang.eval.ExprValueType
-import org.partiql.lang.ots_work.interfaces.ScalarType
+import org.partiql.lang.ots_work.interfaces.type.ScalarType
 
 object SymbolType : ScalarType {
     override val id: String

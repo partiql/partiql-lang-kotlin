@@ -4,10 +4,10 @@ import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.numberValue
 import org.partiql.lang.ots_work.interfaces.CompileTimeType
 import org.partiql.lang.ots_work.interfaces.Failed
-import org.partiql.lang.ots_work.interfaces.ScalarType
 import org.partiql.lang.ots_work.interfaces.Successful
 import org.partiql.lang.ots_work.interfaces.TypeInferenceResult
-import org.partiql.lang.ots_work.interfaces.operators.PosOp
+import org.partiql.lang.ots_work.interfaces.operator.PosOp
+import org.partiql.lang.ots_work.interfaces.type.ScalarType
 
 object StandardPosOp : PosOp() {
     override val defaultReturnTypes: List<CompileTimeType> =

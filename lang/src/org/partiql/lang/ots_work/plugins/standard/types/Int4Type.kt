@@ -4,8 +4,8 @@ import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.numberValue
 import org.partiql.lang.ots_work.interfaces.CompileTimeType
-import org.partiql.lang.ots_work.interfaces.ScalarType
 import org.partiql.lang.ots_work.interfaces.TypeParameters
+import org.partiql.lang.ots_work.interfaces.type.ScalarType
 
 object Int4Type : ScalarType {
     val validRange = Int.MIN_VALUE.toLong()..Int.MAX_VALUE.toLong()

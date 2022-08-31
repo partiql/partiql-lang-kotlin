@@ -51,7 +51,7 @@ import org.partiql.lang.eval.like.parsePattern
 import org.partiql.lang.eval.time.Time
 import org.partiql.lang.eval.time.totalMinutes
 import org.partiql.lang.eval.visitors.PartiqlAstSanityValidator
-import org.partiql.lang.ots_work.interfaces.ScalarOpId
+import org.partiql.lang.ots_work.interfaces.operator.ScalarOpId
 import org.partiql.lang.ots_work.stscore.ScalarTypeSystem
 import org.partiql.lang.syntax.SqlParser
 import org.partiql.lang.types.AnyOfType

@@ -1,6 +1,6 @@
 package org.partiql.lang.ots_work.plugins.standard.types
 
-import org.partiql.lang.ots_work.interfaces.ScalarType
+import org.partiql.lang.ots_work.interfaces.type.ScalarType
 
 internal fun ScalarType.isNumeric() =
     this === Int2Type || this === Int4Type || this === Int8Type || this === IntType || this === FloatType || this === DecimalType

@@ -1,5 +1,7 @@
 package org.partiql.lang.ots_work.interfaces
 
+import org.partiql.lang.ots_work.interfaces.type.ScalarType
+
 /**
  * For now, we assume all the type parameters are optional and all the type parameters
  * are integers. The length of this list represents the number of optional type parameters

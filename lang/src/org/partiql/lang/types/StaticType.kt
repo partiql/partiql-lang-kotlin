@@ -13,10 +13,10 @@ import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.name
 import org.partiql.lang.eval.stringValue
 import org.partiql.lang.eval.timeValue
-import org.partiql.lang.ots_work.interfaces.BoolType
 import org.partiql.lang.ots_work.interfaces.CompileTimeType
-import org.partiql.lang.ots_work.interfaces.ScalarType
 import org.partiql.lang.ots_work.interfaces.TypeParameters
+import org.partiql.lang.ots_work.interfaces.type.BoolType
+import org.partiql.lang.ots_work.interfaces.type.ScalarType
 import org.partiql.lang.ots_work.plugins.standard.types.BlobType
 import org.partiql.lang.ots_work.plugins.standard.types.ClobType
 import org.partiql.lang.ots_work.plugins.standard.types.DateType

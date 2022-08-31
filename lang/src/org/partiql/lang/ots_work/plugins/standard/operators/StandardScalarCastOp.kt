@@ -20,13 +20,13 @@ import org.partiql.lang.eval.time.genericTimeRegex
 import org.partiql.lang.eval.time.getPrecisionFromTimeString
 import org.partiql.lang.eval.timeValue
 import org.partiql.lang.eval.timestampValue
-import org.partiql.lang.ots_work.interfaces.BoolType
 import org.partiql.lang.ots_work.interfaces.CompileTimeType
 import org.partiql.lang.ots_work.interfaces.Failed
 import org.partiql.lang.ots_work.interfaces.Successful
 import org.partiql.lang.ots_work.interfaces.TypeInferenceResult
 import org.partiql.lang.ots_work.interfaces.Uncertain
-import org.partiql.lang.ots_work.interfaces.operators.ScalarCastOp
+import org.partiql.lang.ots_work.interfaces.operator.ScalarCastOp
+import org.partiql.lang.ots_work.interfaces.type.BoolType
 import org.partiql.lang.ots_work.plugins.standard.plugin.TypedOpBehavior
 import org.partiql.lang.ots_work.plugins.standard.types.BlobType
 import org.partiql.lang.ots_work.plugins.standard.types.CharType
