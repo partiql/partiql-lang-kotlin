@@ -37,6 +37,7 @@ import org.partiql.grammar.parser.generated.PartiQLBaseVisitor
 import org.partiql.grammar.parser.generated.PartiQLParser
 import org.partiql.lang.ast.IsCountStarMeta
 import org.partiql.lang.ast.IsImplictJoinMeta
+import org.partiql.lang.ast.IsIonLiteralMeta
 import org.partiql.lang.ast.IsPathIndexMeta
 import org.partiql.lang.ast.IsValuesExprMeta
 import org.partiql.lang.ast.LegacyLogicalNotMeta
@@ -122,29 +123,29 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
 
     override fun visitQueryDdl(ctx: PartiQLParser.QueryDdlContext) = PartiqlAst.build {
         val op = visitDdl(ctx.ddl()) as PartiqlAst.DdlOp
-        ddl(op)
+        ddl(op, op.metas)
     }
 
     override fun visitDropTable(ctx: PartiQLParser.DropTableContext) = PartiqlAst.build {
         val id = visitSymbolPrimitive(ctx.symbolPrimitive())
-        dropTable(id.toIdentifier())
+        dropTable(id.toIdentifier(), ctx.DROP().getSourceMetaContainer())
     }
 
     override fun visitDropIndex(ctx: PartiQLParser.DropIndexContext) = PartiqlAst.build {
         val id = visitSymbolPrimitive(ctx.target)
         val key = visitSymbolPrimitive(ctx.on)
-        dropIndex(key.toIdentifier(), id.toIdentifier())
+        dropIndex(key.toIdentifier(), id.toIdentifier(), ctx.DROP().getSourceMetaContainer())
     }
 
     override fun visitCreateTable(ctx: PartiQLParser.CreateTableContext) = PartiqlAst.build {
         val name = visitSymbolPrimitive(ctx.symbolPrimitive()).name
-        createTable_(name)
+        createTable_(name, ctx.CREATE().getSourceMetaContainer())
     }
 
     override fun visitCreateIndex(ctx: PartiQLParser.CreateIndexContext) = PartiqlAst.build {
         val id = visitSymbolPrimitive(ctx.symbolPrimitive())
         val fields = ctx.pathSimple().map { path -> visitPathSimple(path) }
-        createIndex(id.toIdentifier(), fields)
+        createIndex(id.toIdentifier(), fields, ctx.CREATE().getSourceMetaContainer())
     }
 
     /**
@@ -156,9 +157,9 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
     override fun visitQueryExec(ctx: PartiQLParser.QueryExecContext) = visitExecCommand(ctx.execCommand())
 
     override fun visitExecCommand(ctx: PartiQLParser.ExecCommandContext) = PartiqlAst.build {
-        val name = visitExpr(ctx.expr()).getStringValue(ctx.expr().getStart())
-        val args = visitOrEmpty(ctx.query(), PartiqlAst.Expr::class)
-        exec(name, args)
+        val name = visitExpr(ctx.expr(0)).getStringValue(ctx.expr(0).getStart())
+        val args = visitOrEmpty(ctx.args, PartiqlAst.Expr::class)
+        exec(name, args, ctx.EXEC().getSourceMetaContainer())
     }
 
     /**
@@ -177,12 +178,12 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
         val where = visitOrNull(ctx.whereClause(), PartiqlAst.Expr::class)
         val returning = visitOrNull(ctx.returningClause(), PartiqlAst.ReturningExpr::class)
         val operations = ctx.dmlBaseCommand().map { command -> getCommandList(visit(command)) }.flatten()
-        dml(dmlOpList(operations), from, where, returning)
+        dml(dmlOpList(operations, operations[0].metas), from, where, returning, metas = operations[0].metas)
     }
 
     override fun visitDmlBase(ctx: PartiQLParser.DmlBaseContext) = PartiqlAst.build {
         val commands = getCommandList(visit(ctx.dmlBaseCommand()))
-        dml(dmlOpList(commands))
+        dml(dmlOpList(commands, commands[0].metas), metas = commands[0].metas)
     }
 
     private fun getCommandList(command: PartiqlAst.PartiqlAstNode): List<PartiqlAst.DmlOp> {
@@ -195,26 +196,26 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
 
     override fun visitRemoveCommand(ctx: PartiQLParser.RemoveCommandContext) = PartiqlAst.build {
         val target = visitPathSimple(ctx.pathSimple())
-        remove(target)
+        remove(target, ctx.REMOVE().getSourceMetaContainer())
     }
 
     override fun visitDeleteCommand(ctx: PartiQLParser.DeleteCommandContext) = PartiqlAst.build {
         val from = visit(ctx.fromClauseSimple(), PartiqlAst.FromSource::class)
         val where = visitOrNull(ctx.whereClause(), PartiqlAst.Expr::class)
         val returning = visitOrNull(ctx.returningClause(), PartiqlAst.ReturningExpr::class)
-        dml(dmlOpList(delete()), from, where, returning)
+        dml(dmlOpList(delete(ctx.DELETE().getSourceMetaContainer()), metas = ctx.DELETE().getSourceMetaContainer()), from, where, returning, ctx.DELETE().getSourceMetaContainer())
     }
 
     override fun visitInsertSimple(ctx: PartiQLParser.InsertSimpleContext) = PartiqlAst.build {
         val target = visitPathSimple(ctx.pathSimple())
-        insert(target, visit(ctx.value, PartiqlAst.Expr::class))
+        insert(target, visit(ctx.value, PartiqlAst.Expr::class), ctx.INSERT().getSourceMetaContainer())
     }
 
     override fun visitInsertValue(ctx: PartiQLParser.InsertValueContext) = PartiqlAst.build {
         val target = visitPathSimple(ctx.pathSimple())
         val index = visitOrNull(ctx.pos, PartiqlAst.Expr::class)
         val onConflict = visitOrNull(ctx.onConflict(), PartiqlAst.OnConflict::class)
-        insertValue(target, visit(ctx.value, PartiqlAst.Expr::class), index = index, onConflict = onConflict)
+        insertValue(target, visit(ctx.value, PartiqlAst.Expr::class), index = index, onConflict = onConflict, ctx.INSERT().getSourceMetaContainer())
     }
 
     // FIXME: See `FIXME #001` in file `PartiQL.g4`.
@@ -225,15 +226,17 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
         val returning = visitOrNull(ctx.returningClause(), PartiqlAst.ReturningExpr::class)
         dml(
             dmlOpList(
-                insertValue(target, visit(ctx.value, PartiqlAst.Expr::class), index = index, onConflict = onConflict)
+                insertValue(target, visit(ctx.value, PartiqlAst.Expr::class), index = index, onConflict = onConflict, ctx.INSERT().getSourceMetaContainer()),
+                metas = ctx.INSERT().getSourceMetaContainer()
             ),
-            returning = returning
+            returning = returning,
+            metas = ctx.INSERT().getSourceMetaContainer()
         )
     }
 
     override fun visitReturningClause(ctx: PartiQLParser.ReturningClauseContext) = PartiqlAst.build {
         val elements = visitOrEmpty(ctx.returningColumn(), PartiqlAst.ReturningElem::class)
-        returningExpr(elements)
+        returningExpr(elements, ctx.RETURNING().getSourceMetaContainer())
     }
 
     private fun getReturningMapping(status: Token, age: Token) = PartiqlAst.build {
@@ -255,14 +258,14 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
     }
 
     override fun visitOnConflict(ctx: PartiQLParser.OnConflictContext) = PartiqlAst.build {
-        onConflict(visitExpr(ctx.expr()), doNothing())
+        onConflict(visitExpr(ctx.expr()), doNothing(), ctx.ON().getSourceMetaContainer())
     }
 
     override fun visitPathSimple(ctx: PartiQLParser.PathSimpleContext) = PartiqlAst.build {
         val root = visitSymbolPrimitive(ctx.symbolPrimitive())
         if (ctx.pathSimpleSteps().isEmpty()) return@build root
         val steps = visitOrEmpty(ctx.pathSimpleSteps(), PartiqlAst.PathStep::class)
-        path(root, steps)
+        path(root, steps, root.metas)
     }
 
     override fun visitPathSimpleLiteral(ctx: PartiQLParser.PathSimpleLiteralContext) = PartiqlAst.build {
@@ -277,7 +280,8 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
 
     override fun visitSetCommand(ctx: PartiQLParser.SetCommandContext) = PartiqlAst.build {
         val assignments = visitOrEmpty(ctx.setAssignment(), PartiqlAst.DmlOp.Set::class)
-        dmlOpList(assignments)
+        val newSets = assignments.map { assignment -> assignment.copy(metas = ctx.SET().getSourceMetaContainer()) }
+        dmlOpList(newSets, ctx.SET().getSourceMetaContainer())
     }
 
     override fun visitSetAssignment(ctx: PartiQLParser.SetAssignmentContext) = PartiqlAst.build {
@@ -293,11 +297,11 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
      */
 
     override fun visitDql(ctx: PartiQLParser.DqlContext) = PartiqlAst.build {
-        val query = visit(ctx.query(), PartiqlAst.Expr::class)
+        val query = visit(ctx.expr(), PartiqlAst.Expr::class)
         query(query, query.metas)
     }
 
-    override fun visitQueryBase(ctx: PartiQLParser.QueryBaseContext) = visit(ctx.queryPrimary(), PartiqlAst.Expr::class)
+    override fun visitQueryBase(ctx: PartiQLParser.QueryBaseContext) = visit(ctx.exprSelect(), PartiqlAst.Expr::class)
 
     override fun visitSfwQuery(ctx: PartiQLParser.SfwQueryContext) = PartiqlAst.build {
         val projection = visit(ctx.selectClause()) as PartiqlAst.Projection
@@ -368,7 +372,7 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
 
     override fun visitLimitClause(ctx: PartiQLParser.LimitClauseContext): PartiqlAst.Expr = visitExpr(ctx.expr())
 
-    override fun visitExpr(ctx: PartiQLParser.ExprContext) = visit(ctx.exprOr(), PartiqlAst.Expr::class)
+    override fun visitExpr(ctx: PartiQLParser.ExprContext) = visit(ctx.exprBagOp(), PartiqlAst.Expr::class)
 
     override fun visitOffsetByClause(ctx: PartiQLParser.OffsetByClauseContext) = visitExpr(ctx.expr())
 
@@ -434,7 +438,7 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
         val keys = visitOrEmpty(ctx.groupKey(), PartiqlAst.GroupKey::class)
         val keyList = groupKeyList(keys)
         val alias = visitOrNull(ctx.groupAlias(), PartiqlAst.Expr.Id::class).toPigSymbolPrimitive()
-        groupBy_(strategy, keyList = keyList, groupAsAlias = alias)
+        groupBy_(strategy, keyList = keyList, groupAsAlias = alias, ctx.GROUP().getSourceMetaContainer())
     }
 
     override fun visitGroupAlias(ctx: PartiQLParser.GroupAliasContext) = visitSymbolPrimitive(ctx.symbolPrimitive())
@@ -451,14 +455,17 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
             is PartiqlAst.Expr.Neg -> expr.expr
             else -> expr
         }
-        if (possibleLiteral is PartiqlAst.Expr.Lit || possibleLiteral is PartiqlAst.Expr.LitTime || possibleLiteral is PartiqlAst.Expr.Date) {
+        if (
+            (possibleLiteral is PartiqlAst.Expr.Lit && possibleLiteral.value != ionNull()) ||
+            possibleLiteral is PartiqlAst.Expr.LitTime || possibleLiteral is PartiqlAst.Expr.Date
+        ) {
             throw ctx.expr().getStart().err(
                 "Literals (including ordinals) not supported in GROUP BY",
                 ErrorCode.PARSE_UNSUPPORTED_LITERALS_GROUPBY
             )
         }
         val alias = visitOrNull(ctx.symbolPrimitive(), PartiqlAst.Expr.Id::class).toPigSymbolPrimitive()
-        groupKey_(expr, asAlias = alias)
+        groupKey_(expr, asAlias = alias, expr.metas)
     }
 
     /**
@@ -713,8 +720,8 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
         val lhs = visit(ctx.lhs, PartiqlAst.FromSource::class)
         val joinType = visitJoinType(ctx.joinType())
         val rhs = visit(ctx.rhs, PartiqlAst.FromSource::class)
-        val predicate = visitOrNull(ctx.joinSpec(), PartiqlAst.Expr::class)
-        join(joinType, lhs, rhs, predicate)
+        val condition = visitOrNull(ctx.joinSpec(), PartiqlAst.Expr::class)
+        join(joinType, lhs, rhs, condition)
     }
 
     override fun visitTableBaseRefSymbol(ctx: PartiQLParser.TableBaseRefSymbolContext) = PartiqlAst.build {
@@ -823,7 +830,7 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
      *
      */
 
-    override fun visitExprTermWrappedQuery(ctx: PartiQLParser.ExprTermWrappedQueryContext) = visit(ctx.query(), PartiqlAst.Expr::class)
+    override fun visitExprTermWrappedQuery(ctx: PartiQLParser.ExprTermWrappedQueryContext) = visit(ctx.expr(), PartiqlAst.Expr::class)
 
     override fun visitVarRefExpr(ctx: PartiQLParser.VarRefExprContext): PartiqlAst.PartiqlAstNode = PartiqlAst.build {
         val metas = ctx.ident.getSourceMetaContainer()
@@ -935,14 +942,14 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
 
     override fun visitFunctionCallIdent(ctx: PartiQLParser.FunctionCallIdentContext) = PartiqlAst.build {
         val name = ctx.name.getString().toLowerCase()
-        val args = visitOrEmpty(ctx.query(), PartiqlAst.Expr::class)
+        val args = visitOrEmpty(ctx.expr(), PartiqlAst.Expr::class)
         val metas = ctx.name.getSourceMetaContainer()
         call(name, args = args, metas = metas)
     }
 
     override fun visitFunctionCallReserved(ctx: PartiQLParser.FunctionCallReservedContext) = PartiqlAst.build {
         val name = ctx.name.text.toLowerCase()
-        val args = visitOrEmpty(ctx.query(), PartiqlAst.Expr::class)
+        val args = visitOrEmpty(ctx.expr(), PartiqlAst.Expr::class)
         val metas = ctx.name.getSourceMetaContainer()
         call(name, args = args, metas = metas)
     }
@@ -1067,7 +1074,10 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
     }
 
     override fun visitLiteralIon(ctx: PartiQLParser.LiteralIonContext) = PartiqlAst.build {
-        lit(ion.singleValue(ctx.ION_CLOSURE().getStringValue()).toIonElement(), ctx.ION_CLOSURE().getSourceMetaContainer())
+        lit(
+            ion.singleValue(ctx.ION_CLOSURE().getStringValue()).toIonElement(),
+            ctx.ION_CLOSURE().getSourceMetaContainer() + metaContainerOf(IsIonLiteralMeta.instance)
+        )
     }
 
     override fun visitLiteralString(ctx: PartiQLParser.LiteralStringContext) = PartiqlAst.build {
@@ -1150,6 +1160,7 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
             PartiQLParser.TUPLE -> tupleType(metas)
             PartiQLParser.LIST -> listType(metas)
             PartiQLParser.BAG -> bagType(metas)
+            PartiQLParser.SEXP -> sexpType(metas)
             PartiQLParser.ANY -> anyType(metas)
             else -> throw ParserException("Unsupported type.", ErrorCode.PARSE_INVALID_QUERY)
         }
@@ -1178,7 +1189,7 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
         assertIntegerValue(ctx.arg0, arg0)
         assertIntegerValue(ctx.arg1, arg1)
         when (ctx.datatype.type) {
-            PartiQLParser.DECIMAL -> decimalType(arg0?.longValue(), arg1?.longValue())
+            PartiQLParser.DECIMAL, PartiQLParser.DEC -> decimalType(arg0?.longValue(), arg1?.longValue())
             PartiQLParser.NUMERIC -> numericType(arg0?.longValue(), arg1?.longValue())
             else -> throw ParserException("Unknown datatype", ErrorCode.PARSE_UNEXPECTED_TOKEN, PropertyValueMap())
         }
@@ -1215,7 +1226,6 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
     override fun visitExprTermBase(ctx: PartiQLParser.ExprTermBaseContext?): PartiqlAst.PartiqlAstNode = super.visitExprTermBase(ctx)
     override fun visitCollection(ctx: PartiQLParser.CollectionContext?): PartiqlAst.PartiqlAstNode = super.visitCollection(ctx)
     override fun visitPredicateBase(ctx: PartiQLParser.PredicateBaseContext?): PartiqlAst.PartiqlAstNode = super.visitPredicateBase(ctx)
-    override fun visitQueryPrimary(ctx: PartiQLParser.QueryPrimaryContext?): PartiqlAst.PartiqlAstNode = super.visitQueryPrimary(ctx)
     override fun visitTableJoined(ctx: PartiQLParser.TableJoinedContext?): PartiqlAst.PartiqlAstNode = super.visitTableJoined(ctx)
     override fun visitTableNonJoin(ctx: PartiQLParser.TableNonJoinContext?): PartiqlAst.PartiqlAstNode = super.visitTableNonJoin(ctx)
     override fun visitTableRefBase(ctx: PartiQLParser.TableRefBaseContext?): PartiqlAst.PartiqlAstNode = super.visitTableRefBase(ctx)

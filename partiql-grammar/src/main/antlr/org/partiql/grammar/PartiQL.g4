@@ -44,32 +44,8 @@ symbolPrimitive
  *
  */
 
-dql 
-    : query;
-
-query
-    : lhs=query OUTER? EXCEPT (DISTINCT|ALL)? rhs=queryPrimary           # Except
-    | lhs=query OUTER? UNION (DISTINCT|ALL)? rhs=queryPrimary            # Union
-    | lhs=query OUTER? INTERSECT (DISTINCT|ALL)? rhs=queryPrimary        # Intersect
-    | queryPrimary                                     # QueryBase
-    ;
-
-queryPrimary
-    : expr
-    | sfwQuery
-    ;
-
-sfwQuery
-    : selectClause
-        fromClause
-        letClause?
-        whereClause?
-        groupClause?
-        havingClause?
-        orderByClause?
-        limitClause?
-        offsetByClause?
-    ;
+dql
+    : expr;
 
 /**
  *
@@ -81,7 +57,7 @@ sfwQuery
 //  we probably need to determine the formal rule for this. I'm assuming we shouldn't allow any token, but I've
 //  left it as an expression (which allows strings). See https://github.com/partiql/partiql-lang-kotlin/issues/707
 execCommand
-    : EXEC expr ( query ( COMMA query )* )?;
+    : EXEC expr ( args+=expr ( COMMA args+=expr )* )?;
 
 /**
  *
@@ -143,11 +119,11 @@ removeCommand
 //  We essentially use the returning clause, because we currently support this with the SqlParser.
 //  See https://github.com/partiql/partiql-lang-kotlin/issues/708
 insertCommandReturning
-    : INSERT INTO pathSimple VALUE value=query ( AT pos=expr )? onConflict? returningClause?;
+    : INSERT INTO pathSimple VALUE value=expr ( AT pos=expr )? onConflict? returningClause?;
 
 insertCommand
-    : INSERT INTO pathSimple VALUE value=query ( AT pos=expr )? onConflict?  # InsertValue
-    | INSERT INTO pathSimple value=query                                     # InsertSimple
+    : INSERT INTO pathSimple VALUE value=expr ( AT pos=expr )? onConflict?  # InsertValue
+    | INSERT INTO pathSimple value=expr                                     # InsertSimple
     ;
 
 onConflict
@@ -413,7 +389,28 @@ joinType
  */
 
 expr
-    : exprOr;
+    : exprBagOp
+    ;
+
+exprBagOp
+    : lhs=exprBagOp OUTER? EXCEPT (DISTINCT|ALL)? rhs=exprSelect           # Except
+    | lhs=exprBagOp OUTER? UNION (DISTINCT|ALL)? rhs=exprSelect            # Union
+    | lhs=exprBagOp OUTER? INTERSECT (DISTINCT|ALL)? rhs=exprSelect        # Intersect
+    | exprSelect                                                           # QueryBase
+    ;
+
+exprSelect
+    : selectClause
+        fromClause
+        letClause?
+        whereClause?
+        groupClause?
+        havingClause?
+        orderByClause?
+        limitClause?
+        offsetByClause? # SfwQuery
+    | exprOr            # SfwBase
+    ;
 
 exprOr
     : lhs=exprOr OR rhs=exprAnd     # Or
@@ -461,7 +458,8 @@ valueExpr
     ;
 
 exprPrimary
-    : cast                       # ExprPrimaryBase
+    : exprTerm                   # ExprPrimaryBase
+    | cast                       # ExprPrimaryBase
     | sequenceConstructor        # ExprPrimaryBase
     | substring                  # ExprPrimaryBase
     | canCast                    # ExprPrimaryBase
@@ -477,7 +475,6 @@ exprPrimary
     | caseExpr                   # ExprPrimaryBase
     | valueList                  # ExprPrimaryBase
     | values                     # ExprPrimaryBase
-    | exprTerm                   # ExprPrimaryBase
     ;
 
 /**
@@ -487,7 +484,7 @@ exprPrimary
  */
 
 exprTerm
-    : PAREN_LEFT query PAREN_RIGHT   # ExprTermWrappedQuery
+    : PAREN_LEFT expr PAREN_RIGHT    # ExprTermWrappedQuery
     | parameter                      # ExprTermBase
     | varRefExpr                     # ExprTermBase
     | literal                        # ExprTermBase
@@ -547,8 +544,8 @@ dateFunction
 functionCall
     : name=( CHAR_LENGTH | CHARACTER_LENGTH | OCTET_LENGTH | 
         BIT_LENGTH | UPPER | LOWER | SIZE | EXISTS | COUNT )
-        PAREN_LEFT ( query ( COMMA query )* )? PAREN_RIGHT                         # FunctionCallReserved
-    | name=symbolPrimitive PAREN_LEFT ( query ( COMMA query )* )? PAREN_RIGHT      # FunctionCallIdent
+        PAREN_LEFT ( expr ( COMMA expr )* )? PAREN_RIGHT                         # FunctionCallReserved
+    | name=symbolPrimitive PAREN_LEFT ( expr ( COMMA expr )* )? PAREN_RIGHT      # FunctionCallIdent
     ;
 
 pathStep
@@ -603,12 +600,13 @@ literal
 type
     : datatype=(
         NULL | BOOL | BOOLEAN | SMALLINT | INTEGER2 | INT2 | INTEGER | INT | INTEGER4 | INT4
-        | INTEGER8 | INT8 | BIGINT | REAL | DOUBLE | TIMESTAMP | CHAR | CHARACTER | MISSING
+        | INTEGER8 | INT8 | BIGINT | REAL | TIMESTAMP | CHAR | CHARACTER | MISSING
         | STRING | SYMBOL | BLOB | CLOB | DATE | STRUCT | TUPLE | LIST | SEXP | BAG | ANY
-      )                                                                                                             # TypeAtomic
-    | datatype=(CHARACTER|CHAR|FLOAT|VARCHAR) ( PAREN_LEFT arg0=LITERAL_INTEGER PAREN_RIGHT )?                      # TypeArgSingle
-    | CHARACTER VARYING ( PAREN_LEFT arg0=LITERAL_INTEGER PAREN_RIGHT )?                                            # TypeVarChar
-    | datatype=(DECIMAL|NUMERIC) ( PAREN_LEFT arg0=LITERAL_INTEGER ( COMMA arg1=LITERAL_INTEGER )? PAREN_RIGHT )?   # TypeArgDouble
-    | TIME ( PAREN_LEFT precision=LITERAL_INTEGER PAREN_RIGHT )? (WITH TIME ZONE)?                                  # TypeTimeZone
-    | symbolPrimitive                                                                                               # TypeCustom
+      )                                                                                                                # TypeAtomic
+    | datatype=DOUBLE PRECISION                                                                                        # TypeAtomic
+    | datatype=(CHARACTER|CHAR|FLOAT|VARCHAR) ( PAREN_LEFT arg0=LITERAL_INTEGER PAREN_RIGHT )?                         # TypeArgSingle
+    | CHARACTER VARYING ( PAREN_LEFT arg0=LITERAL_INTEGER PAREN_RIGHT )?                                               # TypeVarChar
+    | datatype=(DECIMAL|DEC|NUMERIC) ( PAREN_LEFT arg0=LITERAL_INTEGER ( COMMA arg1=LITERAL_INTEGER )? PAREN_RIGHT )?  # TypeArgDouble
+    | TIME ( PAREN_LEFT precision=LITERAL_INTEGER PAREN_RIGHT )? (WITH TIME ZONE)?                                     # TypeTimeZone
+    | symbolPrimitive                                                                                                  # TypeCustom
     ;
