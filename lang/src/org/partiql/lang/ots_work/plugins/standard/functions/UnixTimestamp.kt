@@ -1,14 +1,14 @@
-package org.partiql.lang.eval.builtins
+package org.partiql.lang.ots_work.plugins.standard.functions
 
 import com.amazon.ion.Timestamp
-import org.partiql.lang.eval.EvaluationSession
-import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.timestampValue
-import org.partiql.lang.types.FunctionSignature
-import org.partiql.lang.types.StaticType
-import org.partiql.lang.types.StaticType.Companion.unionOf
+import org.partiql.lang.ots_work.interfaces.function.FunctionSignature
+import org.partiql.lang.ots_work.interfaces.function.ScalarFunction
+import org.partiql.lang.ots_work.plugins.standard.types.DecimalType
+import org.partiql.lang.ots_work.plugins.standard.types.IntType
+import org.partiql.lang.ots_work.plugins.standard.types.TimeStampType
+import org.partiql.lang.ots_work.plugins.standard.valueFactory
 import java.math.BigDecimal
 
 /**
@@ -27,23 +27,25 @@ import java.math.BigDecimal
  *
  * The valid range of argument values is the range of PartiQL's `TIMESTAMP` value.
  */
-internal class UnixTimestampFunction(val valueFactory: ExprValueFactory) : ExprFunction {
+data class UnixTimestamp(
+    val now: Timestamp
+) : ScalarFunction {
     override val signature = FunctionSignature(
         name = "unix_timestamp",
-        requiredParameters = listOf(),
-        optionalParameter = StaticType.TIMESTAMP,
-        returnType = unionOf(StaticType.INT, StaticType.DECIMAL)
+        requiredParameters = emptyList(),
+        optionalParameter = listOf(TimeStampType),
+        returnType = listOf(IntType, DecimalType)
     )
 
     private val millisPerSecond = BigDecimal(1000)
     private fun epoch(timestamp: Timestamp): BigDecimal = timestamp.decimalMillis.divide(millisPerSecond)
 
-    override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
-        return valueFactory.newInt(epoch(session.now).toLong())
+    override fun callWithRequired(required: List<ExprValue>): ExprValue {
+        return valueFactory.newInt(epoch(now).toLong())
     }
 
-    override fun callWithOptional(session: EvaluationSession, required: List<ExprValue>, opt: ExprValue): ExprValue {
-        val timestamp = opt.timestampValue()
+    override fun callWithOptional(required: List<ExprValue>, optional: ExprValue): ExprValue {
+        val timestamp = optional.timestampValue()
         val epochTime = epoch(timestamp)
         return if (timestamp.decimalSecond.scale() == 0) {
             valueFactory.newInt(epochTime.toLong())

@@ -5,7 +5,6 @@ import com.amazon.ion.IonInt
 import com.amazon.ion.Timestamp
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.booleanValue
 import org.partiql.lang.eval.bytesValue
@@ -46,6 +45,7 @@ import org.partiql.lang.ots_work.plugins.standard.types.VarcharType
 import org.partiql.lang.ots_work.plugins.standard.types.isLob
 import org.partiql.lang.ots_work.plugins.standard.types.isNumeric
 import org.partiql.lang.ots_work.plugins.standard.types.isText
+import org.partiql.lang.ots_work.plugins.standard.valueFactory
 import org.partiql.lang.util.bigDecimalOf
 import org.partiql.lang.util.coerce
 import org.partiql.lang.util.compareTo
@@ -65,7 +65,6 @@ import kotlin.math.round
  */
 class StandardScalarCastOp(
     val typedOpBehavior: TypedOpBehavior,
-    val valueFactory: ExprValueFactory,
     val defaultTimezoneOffset: ZoneOffset,
     // TODO: remove the following field and move location-meta-related error handling to scalar type system core
     var currentLocationMeta: SourceLocationMeta? = null

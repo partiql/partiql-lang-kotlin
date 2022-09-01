@@ -22,7 +22,9 @@ import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.stringValue
+import org.partiql.lang.ots_work.plugins.standard.types.StringType
 import org.partiql.lang.types.FunctionSignature
+import org.partiql.lang.types.StaticScalarType
 import org.partiql.lang.types.StaticType
 
 /**
@@ -44,7 +46,7 @@ class QueryDDB(valueFactory: ExprValueFactory) : BaseFunction(valueFactory) {
 
     override val signature = FunctionSignature(
         name = "query_ddb",
-        requiredParameters = listOf(StaticType.STRING),
+        requiredParameters = listOf(StaticScalarType(StringType)),
         optionalParameter = StaticType.NULL_OR_MISSING,
         returnType = StaticType.LIST
     )

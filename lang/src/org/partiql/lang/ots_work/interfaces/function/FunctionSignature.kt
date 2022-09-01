@@ -1,22 +1,13 @@
-/*
- * Copyright 2017 Amazon.com, Inc. or its affiliates.  All rights reserved.
- */
+package org.partiql.lang.ots_work.interfaces.function
 
-package org.partiql.lang.types
+import org.partiql.lang.ots_work.interfaces.UnionOfScalarTypes
 
-/**
- * A typed version of function signature.
- *
- * Parameters of function consists of single parameters (i.e non-variadic and mandatory) and
- * either an optional parameter or a variadic parameter.
- * A function cannot contain both optional and variadic parameters.
- */
-class FunctionSignature(
+class FunctionSignature private constructor (
     val name: String,
-    val requiredParameters: List<StaticType>,
-    val optionalParameter: StaticType? = null,
+    val requiredParameters: List<UnionOfScalarTypes>,
+    val optionalParameter: UnionOfScalarTypes? = null,
     val variadicParameter: VarargFormalParameter? = null,
-    val returnType: StaticType,
+    val returnType: UnionOfScalarTypes,
     val unknownArguments: UnknownArguments = UnknownArguments.PROPAGATE
 ) {
 
@@ -27,24 +18,24 @@ class FunctionSignature(
     }
     constructor(
         name: String,
-        requiredParameters: List<StaticType>,
-        optionalParameter: StaticType,
-        returnType: StaticType,
+        requiredParameters: List<UnionOfScalarTypes>,
+        optionalParameter: UnionOfScalarTypes,
+        returnType: UnionOfScalarTypes,
         unknownArguments: UnknownArguments = UnknownArguments.PROPAGATE
     ) : this(name, requiredParameters, optionalParameter, null, returnType, unknownArguments)
 
     constructor(
         name: String,
-        requiredParameters: List<StaticType>,
+        requiredParameters: List<UnionOfScalarTypes>,
         variadicParameter: VarargFormalParameter,
-        returnType: StaticType,
+        returnType: UnionOfScalarTypes,
         unknownArguments: UnknownArguments = UnknownArguments.PROPAGATE
     ) : this(name, requiredParameters, null, variadicParameter, returnType, unknownArguments)
 
     constructor(
         name: String,
-        requiredParameters: List<StaticType>,
-        returnType: StaticType,
+        requiredParameters: List<UnionOfScalarTypes>,
+        returnType: UnionOfScalarTypes,
         unknownArguments: UnknownArguments = UnknownArguments.PROPAGATE
     ) : this(name, requiredParameters, null, null, returnType, unknownArguments)
 
@@ -60,9 +51,7 @@ class FunctionSignature(
     }
 }
 
-/**
- * Indicates if a given function should allow unknown values to be propagated at evaluation time.
- */
+// TODO: remove this class and use [TypingMode] to replace it
 enum class UnknownArguments {
     /**
      * Indicates that if an unknown argument (`NULL` or `MISSING`) is encountered, an unknown value depending
@@ -78,4 +67,16 @@ enum class UnknownArguments {
      * for known-ness.
      */
     PASS_THRU
+}
+
+/**
+ * Represents a variable number of arguments function parameter. Varargs are monomorpic, i.e. all elements are of
+ * the **same** type
+ */
+data class VarargFormalParameter(
+    val type: UnionOfScalarTypes,
+    val arityRange: IntRange
+) {
+    constructor(type: UnionOfScalarTypes, minCount: Int) : this(type, minCount..Int.MAX_VALUE)
+    override fun toString(): String = "$type..."
 }

@@ -1,31 +1,18 @@
-/*
- * Copyright 2019 Amazon.com, Inc. or its affiliates.  All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License").
- *  You may not use this file except in compliance with the License.
- * A copy of the License is located at:
- *
- *      http://aws.amazon.com/apache2.0/
- *
- *  or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
- *  language governing permissions and limitations under the License.
- */
-
-package org.partiql.lang.eval.builtins
+package org.partiql.lang.ots_work.plugins.standard.functions
 
 import com.amazon.ion.Timestamp
 import org.partiql.lang.errors.ErrorCode
-import org.partiql.lang.eval.EvaluationSession
-import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.dateTimePartValue
 import org.partiql.lang.eval.errNoContext
 import org.partiql.lang.eval.timestampValue
+import org.partiql.lang.ots_work.interfaces.function.FunctionSignature
+import org.partiql.lang.ots_work.interfaces.function.ScalarFunction
+import org.partiql.lang.ots_work.plugins.standard.types.IntType
+import org.partiql.lang.ots_work.plugins.standard.types.SymbolType
+import org.partiql.lang.ots_work.plugins.standard.types.TimeStampType
+import org.partiql.lang.ots_work.plugins.standard.valueFactory
 import org.partiql.lang.syntax.DateTimePart
-import org.partiql.lang.types.FunctionSignature
-import org.partiql.lang.types.StaticType
 import java.time.Duration
 import java.time.OffsetDateTime
 import java.time.Period
@@ -46,11 +33,11 @@ import java.time.ZoneOffset
  * - date_diff(day, `2010-01-01T`, `2010-01-02T`) results in 1
  * - date_diff(day, `2010-01-01T23:00Z`, `2010-01-02T01:00Z`) results in 0 as they are only 2h apart
  */
-internal class DateDiffExprFunction(val valueFactory: ExprValueFactory) : ExprFunction {
+object DateDiff : ScalarFunction {
     override val signature = FunctionSignature(
         name = "date_diff",
-        requiredParameters = listOf(StaticType.SYMBOL, StaticType.TIMESTAMP, StaticType.TIMESTAMP),
-        returnType = StaticType.INT
+        requiredParameters = listOf(listOf(SymbolType), listOf(TimeStampType), listOf(TimeStampType)),
+        returnType = listOf(IntType)
     )
 
     // Since we don't have a datetime part for `milliseconds` we can safely set the OffsetDateTime to 0 as it won't
@@ -87,7 +74,7 @@ internal class DateDiffExprFunction(val valueFactory: ExprValueFactory) : ExprFu
     private fun secondsSince(left: OffsetDateTime, right: OffsetDateTime): Number =
         Duration.between(left, right).toMillis() / 1_000
 
-    override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
+    override fun callWithRequired(required: List<ExprValue>): ExprValue {
         val dateTimePart = required[0].dateTimePartValue()
         val left = required[1].timestampValue()
         val right = required[2].timestampValue()

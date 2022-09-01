@@ -1,7 +1,6 @@
 package org.partiql.lang.ots_work.plugins.standard.operators
 
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.booleanValue
 import org.partiql.lang.ots_work.interfaces.CompileTimeType
 import org.partiql.lang.ots_work.interfaces.Failed
@@ -10,10 +9,9 @@ import org.partiql.lang.ots_work.interfaces.TypeInferenceResult
 import org.partiql.lang.ots_work.interfaces.operator.NotOp
 import org.partiql.lang.ots_work.interfaces.type.BoolType
 import org.partiql.lang.ots_work.interfaces.type.ScalarType
+import org.partiql.lang.ots_work.plugins.standard.valueFactory
 
-class StandardNotOp(
-    private val valueFactory: ExprValueFactory
-) : NotOp() {
+object StandardNotOp : NotOp() {
     override val defaultReturnTypes: List<CompileTimeType> =
         listOf(BoolType.compileTimeType)
 

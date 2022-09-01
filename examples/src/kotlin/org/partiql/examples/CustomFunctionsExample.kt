@@ -12,7 +12,9 @@ import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.StructOrdering
 import org.partiql.lang.eval.namedValue
+import org.partiql.lang.ots_work.plugins.standard.types.IntType
 import org.partiql.lang.types.FunctionSignature
+import org.partiql.lang.types.StaticScalarType
 import org.partiql.lang.types.StaticType
 import java.io.PrintStream
 
@@ -22,6 +24,8 @@ private fun calcFib(n: Long): Long = when (n) {
     1L -> 1L
     else -> calcFib(n - 1L) + calcFib(n - 2L)
 }
+
+private val staticIntType = StaticScalarType(IntType)
 
 /**
  * A simple custom function that calculates the value of the nth position in the
@@ -34,11 +38,12 @@ private fun calcFib(n: Long): Long = when (n) {
  * If the arguments of the function should *not* trigger null-propagation (e.g.
  * `COALESCE`), the [ExprFunction] interface should be implemented directly.
  */
+// TODO: Rewrite this file so it shows how to define a customized [ScalarFunction] instead of an [ExprFunction]
 class FibScalarExprFunc(private val valueFactory: ExprValueFactory) : ExprFunction {
     override val signature = FunctionSignature(
         name = "fib_scalar",
-        requiredParameters = listOf(StaticType.INT),
-        returnType = StaticType.INT
+        requiredParameters = listOf(staticIntType),
+        returnType = staticIntType
     )
 
     override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {

@@ -7,6 +7,8 @@ import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestTarget
+import org.partiql.lang.ots_work.plugins.standard.plugin.StandardPlugin
+import org.partiql.lang.ots_work.stscore.ScalarTypeSystem
 import org.partiql.lang.util.newFromIonText
 
 /**
@@ -39,11 +41,12 @@ private fun Map<String, String>.toBindings(): Bindings<ExprValue> = Bindings.ofM
  */
 internal fun Map<String, String>.toSession() = EvaluationSession.build { globals(this@toSession.toBindings()) }
 
-/**
- * Internal function used by ExprFunctionTest to build EvaluationSession with now.
- */
-internal fun buildSessionWithNow(numMillis: Long, localOffset: Int) =
-    EvaluationSession.build { now(Timestamp.forMillis(numMillis, localOffset)) }
+internal fun buildStandardPluginWithNow(numMillis: Long, localOffset: Int) =
+    StandardPlugin(
+        now = Timestamp.forMillis(numMillis, localOffset)
+    )
+
+private val defaultStandardPlugin = StandardPlugin()
 
 /**
  * Used by ExprFunctionTest to represent a test case.
@@ -52,5 +55,6 @@ data class ExprFunctionTestCase(
     val source: String,
     val expectedLegacyModeResult: String,
     val expectedPermissiveModeResult: String = expectedLegacyModeResult,
-    val session: EvaluationSession = EvaluationSession.standard()
+    val session: EvaluationSession = EvaluationSession.standard(),
+    val scalarTypeSystem: ScalarTypeSystem = ScalarTypeSystem(defaultStandardPlugin)
 )

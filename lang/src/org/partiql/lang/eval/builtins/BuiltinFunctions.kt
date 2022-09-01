@@ -20,9 +20,7 @@ import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
-import org.partiql.lang.eval.stringValue
 import org.partiql.lang.eval.unnamedValue
-import org.partiql.lang.types.AnyOfType
 import org.partiql.lang.types.FunctionSignature
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.types.UnknownArguments
@@ -39,26 +37,10 @@ internal fun createBuiltinFunctionSignatures(): Map<String, FunctionSignature> =
 
 internal fun createBuiltinFunctions(valueFactory: ExprValueFactory) =
     listOf(
-        createUpper(valueFactory),
-        createLower(valueFactory),
         createExists(valueFactory),
-        createCharacterLength("character_length", valueFactory),
-        createCharacterLength("char_length", valueFactory),
-        createUtcNow(valueFactory),
         createFilterDistinct(valueFactory),
-        DateAddExprFunction(valueFactory),
-        DateDiffExprFunction(valueFactory),
-        ExtractExprFunction(valueFactory),
-        MakeDateExprFunction(valueFactory),
-        MakeTimeExprFunction(valueFactory),
-        SubstringExprFunction(valueFactory),
-        TrimExprFunction(valueFactory),
-        ToStringExprFunction(valueFactory),
-        ToTimestampExprFunction(valueFactory),
-        SizeExprFunction(valueFactory),
-        FromUnixTimeFunction(valueFactory),
-        UnixTimestampFunction(valueFactory)
-    ) + MathFunctions.create(valueFactory)
+        SizeExprFunction(valueFactory)
+    )
 
 internal fun createExists(valueFactory: ExprValueFactory): ExprFunction = object : ExprFunction {
     override val signature = FunctionSignature(
@@ -70,17 +52,6 @@ internal fun createExists(valueFactory: ExprValueFactory): ExprFunction = object
 
     override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue =
         valueFactory.newBoolean(required[0].any())
-}
-
-internal fun createUtcNow(valueFactory: ExprValueFactory): ExprFunction = object : ExprFunction {
-    override val signature = FunctionSignature(
-        "utcnow",
-        listOf(),
-        returnType = StaticType.TIMESTAMP
-    )
-
-    override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue =
-        valueFactory.newTimestamp(session.now)
 }
 
 internal fun createFilterDistinct(valueFactory: ExprValueFactory): ExprFunction = object : ExprFunction {
@@ -105,45 +76,4 @@ internal fun createFilterDistinct(valueFactory: ExprValueFactory): ExprFunction 
             }
         )
     }
-}
-internal fun createCharacterLength(name: String, valueFactory: ExprValueFactory): ExprFunction =
-    object : ExprFunction {
-        override val signature: FunctionSignature
-            get() {
-                val element = AnyOfType(setOf(StaticType.STRING, StaticType.SYMBOL))
-                return FunctionSignature(
-                    name,
-                    listOf(element),
-                    returnType = StaticType.INT
-                )
-            }
-
-        override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
-            val s = required.first().stringValue()
-            return valueFactory.newInt(s.codePointCount(0, s.length))
-        }
-    }
-
-internal fun createUpper(valueFactory: ExprValueFactory): ExprFunction = object : ExprFunction {
-    override val signature: FunctionSignature
-        get() = FunctionSignature(
-            "upper",
-            listOf(AnyOfType(setOf(StaticType.STRING, StaticType.SYMBOL))),
-            returnType = StaticType.STRING
-        )
-
-    override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue =
-        valueFactory.newString(required.first().stringValue().toUpperCase())
-}
-
-internal fun createLower(valueFactory: ExprValueFactory): ExprFunction = object : ExprFunction {
-    override val signature: FunctionSignature
-        get() = FunctionSignature(
-            "lower",
-            listOf(AnyOfType(setOf(StaticType.STRING, StaticType.SYMBOL))),
-            returnType = StaticType.STRING
-        )
-
-    override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue =
-        valueFactory.newString(required.first().stringValue().toLowerCase())
 }

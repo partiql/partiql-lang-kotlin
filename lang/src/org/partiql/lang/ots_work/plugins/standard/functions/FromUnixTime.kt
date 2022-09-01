@@ -1,14 +1,14 @@
-package org.partiql.lang.eval.builtins
+package org.partiql.lang.ots_work.plugins.standard.functions
 
 import com.amazon.ion.Timestamp
-import org.partiql.lang.eval.EvaluationSession
-import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.bigDecimalValue
-import org.partiql.lang.types.FunctionSignature
-import org.partiql.lang.types.StaticType
-import org.partiql.lang.types.StaticType.Companion.unionOf
+import org.partiql.lang.ots_work.interfaces.function.FunctionSignature
+import org.partiql.lang.ots_work.interfaces.function.ScalarFunction
+import org.partiql.lang.ots_work.plugins.standard.types.DecimalType
+import org.partiql.lang.ots_work.plugins.standard.types.IntType
+import org.partiql.lang.ots_work.plugins.standard.types.TimeStampType
+import org.partiql.lang.ots_work.plugins.standard.valueFactory
 import java.math.BigDecimal
 
 /**
@@ -24,16 +24,16 @@ import java.math.BigDecimal
  * When given a non-negative numeric value, this function returns a PartiQL `TIMESTAMP` [ExprValue] after the last
  * epoch.
  */
-internal class FromUnixTimeFunction(val valueFactory: ExprValueFactory) : ExprFunction {
+object FromUnixTime : ScalarFunction {
     override val signature = FunctionSignature(
         name = "from_unixtime",
-        requiredParameters = listOf(unionOf(StaticType.DECIMAL, StaticType.INT)),
-        returnType = StaticType.TIMESTAMP
+        requiredParameters = listOf(listOf(DecimalType, IntType)),
+        returnType = listOf(TimeStampType)
     )
 
     private val millisPerSecond = BigDecimal(1000)
 
-    override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
+    override fun callWithRequired(required: List<ExprValue>): ExprValue {
         val unixTimestamp = required[0].bigDecimalValue()
 
         val numMillis = unixTimestamp.times(millisPerSecond).stripTrailingZeros()

@@ -14,9 +14,7 @@
 
 package org.partiql.lang.eval
 
-import com.amazon.ion.Timestamp
 import org.junit.Test
-import org.partiql.lang.util.softAssert
 import kotlin.test.assertEquals
 
 class EvaluationSessionTest {
@@ -24,20 +22,6 @@ class EvaluationSessionTest {
         val session = block.invoke()
 
         assertEquals(Bindings.empty(), session.globals)
-        assertNow(block)
-    }
-
-    private fun assertNow(block: () -> EvaluationSession) {
-        val beforeNow = Timestamp.nowZ()
-        val session = block.invoke()
-        val afterNow = Timestamp.nowZ()
-
-        softAssert {
-            // can't assert the defaulting `now`
-            assertThat(session.now).isNotNull()
-            assertThat(session.now.dateValue()).isBeforeOrEqualsTo(afterNow.dateValue())
-            assertThat(session.now.dateValue()).isAfterOrEqualsTo(beforeNow.dateValue())
-        }
     }
 
     @Test
@@ -56,7 +40,6 @@ class EvaluationSessionTest {
         val session = block.invoke()
 
         assertEquals(globals, session.globals)
-        assertNow(block)
     }
 
     @Test
@@ -68,25 +51,5 @@ class EvaluationSessionTest {
         assertEquals(2, session.context.size)
         assertEquals(42, session.context["meaning"])
         assertEquals("Picard", session.context["captain"])
-    }
-
-    @Test
-    fun settingNow() {
-        val now = Timestamp.forMillis(10, 0)
-        val session = EvaluationSession.build { now(now) }
-
-        assertEquals(Bindings.empty(), session.globals)
-        assertEquals(now, session.now)
-    }
-
-    @Test
-    fun settingNowNonZeroOffset() {
-        val now = Timestamp.forMillis(10, 10)
-        val utcNow = now.withLocalOffset(0)
-
-        val session = EvaluationSession.build { now(now) }
-
-        assertEquals(Bindings.empty(), session.globals)
-        assertEquals(utcNow, session.now)
     }
 }

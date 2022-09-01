@@ -1,59 +1,44 @@
-/*
- * Copyright 2019 Amazon.com, Inc. or its affiliates.  All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License").
- *  You may not use this file except in compliance with the License.
- * A copy of the License is located at:
- *
- *      http://aws.amazon.com/apache2.0/
- *
- *  or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
- *  language governing permissions and limitations under the License.
- */
-
-package org.partiql.lang.eval.builtins
+package org.partiql.lang.ots_work.plugins.standard.functions
 
 import com.amazon.ion.Timestamp
-import com.amazon.ion.Timestamp.Precision
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.EvaluationException
-import org.partiql.lang.eval.EvaluationSession
-import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.dateTimePartValue
 import org.partiql.lang.eval.errNoContext
 import org.partiql.lang.eval.intValue
 import org.partiql.lang.eval.timestampValue
+import org.partiql.lang.ots_work.interfaces.function.FunctionSignature
+import org.partiql.lang.ots_work.interfaces.function.ScalarFunction
+import org.partiql.lang.ots_work.plugins.standard.types.IntType
+import org.partiql.lang.ots_work.plugins.standard.types.SymbolType
+import org.partiql.lang.ots_work.plugins.standard.types.TimeStampType
+import org.partiql.lang.ots_work.plugins.standard.valueFactory
 import org.partiql.lang.syntax.DateTimePart
-import org.partiql.lang.types.FunctionSignature
-import org.partiql.lang.types.StaticType
 
-internal class DateAddExprFunction(val valueFactory: ExprValueFactory) : ExprFunction {
+object DateAdd : ScalarFunction {
     override val signature = FunctionSignature(
         name = "date_add",
-        requiredParameters = listOf(StaticType.SYMBOL, StaticType.INT, StaticType.TIMESTAMP),
-        returnType = StaticType.TIMESTAMP
+        requiredParameters = listOf(listOf(SymbolType), listOf(IntType), listOf(TimeStampType)),
+        returnType = listOf(TimeStampType)
     )
 
-    companion object {
-        @JvmStatic private val precisionOrder = listOf(
-            Timestamp.Precision.YEAR,
-            Timestamp.Precision.MONTH,
-            Timestamp.Precision.DAY,
-            Timestamp.Precision.MINUTE,
-            Timestamp.Precision.SECOND
-        )
-        @JvmStatic private val dateTimePartToPrecision = mapOf(
-            DateTimePart.YEAR to Precision.YEAR,
-            DateTimePart.MONTH to Precision.MONTH,
-            DateTimePart.DAY to Precision.DAY,
-            DateTimePart.HOUR to Precision.MINUTE,
-            DateTimePart.MINUTE to Precision.MINUTE,
-            DateTimePart.SECOND to Precision.SECOND
-        )
-    }
+    private val precisionOrder = listOf(
+        Timestamp.Precision.YEAR,
+        Timestamp.Precision.MONTH,
+        Timestamp.Precision.DAY,
+        Timestamp.Precision.MINUTE,
+        Timestamp.Precision.SECOND
+    )
+
+    private val dateTimePartToPrecision = mapOf(
+        DateTimePart.YEAR to Timestamp.Precision.YEAR,
+        DateTimePart.MONTH to Timestamp.Precision.MONTH,
+        DateTimePart.DAY to Timestamp.Precision.DAY,
+        DateTimePart.HOUR to Timestamp.Precision.MINUTE,
+        DateTimePart.MINUTE to Timestamp.Precision.MINUTE,
+        DateTimePart.SECOND to Timestamp.Precision.SECOND
+    )
 
     private fun Timestamp.hasSufficientPrecisionFor(requiredPrecision: Timestamp.Precision): Boolean {
         val requiredPrecisionPos = precisionOrder.indexOf(requiredPrecision)
@@ -98,7 +83,7 @@ internal class DateAddExprFunction(val valueFactory: ExprValueFactory) : ExprFun
         }
     }
 
-    override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
+    override fun callWithRequired(required: List<ExprValue>): ExprValue {
         val dateTimePart = required[0].dateTimePartValue()
         val interval = required[1].intValue()
         val timestamp = required[2].timestampValue()

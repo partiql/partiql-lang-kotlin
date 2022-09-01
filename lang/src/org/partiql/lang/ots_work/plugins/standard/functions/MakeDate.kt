@@ -1,16 +1,16 @@
-package org.partiql.lang.eval.builtins
+package org.partiql.lang.ots_work.plugins.standard.functions
 
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
-import org.partiql.lang.eval.EvaluationSession
-import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.err
 import org.partiql.lang.eval.intValue
-import org.partiql.lang.types.FunctionSignature
-import org.partiql.lang.types.StaticType
+import org.partiql.lang.ots_work.interfaces.function.FunctionSignature
+import org.partiql.lang.ots_work.interfaces.function.ScalarFunction
+import org.partiql.lang.ots_work.plugins.standard.types.DateType
+import org.partiql.lang.ots_work.plugins.standard.types.IntType
+import org.partiql.lang.ots_work.plugins.standard.valueFactory
 import org.partiql.lang.util.propertyValueMapOf
 import java.time.DateTimeException
 
@@ -20,15 +20,14 @@ import java.time.DateTimeException
  *
  * make_date(<year_value>, <month_value>, <day_value>)
  */
-internal class MakeDateExprFunction(val valueFactory: ExprValueFactory) : ExprFunction {
-
+object MakeDate : ScalarFunction {
     override val signature = FunctionSignature(
         name = "make_date",
-        requiredParameters = listOf(StaticType.INT, StaticType.INT, StaticType.INT),
-        returnType = StaticType.DATE
+        requiredParameters = listOf(listOf(IntType), listOf(IntType), listOf(IntType)),
+        returnType = listOf(DateType)
     )
 
-    override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
+    override fun callWithRequired(required: List<ExprValue>): ExprValue {
         required.map {
             if (it.type != ExprValueType.INT) {
                 err(

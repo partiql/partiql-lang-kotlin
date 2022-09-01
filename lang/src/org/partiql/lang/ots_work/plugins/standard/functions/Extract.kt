@@ -1,25 +1,8 @@
-/*
- * Copyright 2019 Amazon.com, Inc. or its affiliates.  All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License").
- *  You may not use this file except in compliance with the License.
- * A copy of the License is located at:
- *
- *      http://aws.amazon.com/apache2.0/
- *
- *  or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
- *  language governing permissions and limitations under the License.
- */
-
-package org.partiql.lang.eval.builtins
+package org.partiql.lang.ots_work.plugins.standard.functions
 
 import com.amazon.ion.Timestamp
 import org.partiql.lang.errors.ErrorCode
-import org.partiql.lang.eval.EvaluationSession
-import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.dateTimePartValue
 import org.partiql.lang.eval.dateValue
@@ -28,10 +11,15 @@ import org.partiql.lang.eval.isUnknown
 import org.partiql.lang.eval.time.Time
 import org.partiql.lang.eval.timeValue
 import org.partiql.lang.eval.timestampValue
+import org.partiql.lang.ots_work.interfaces.function.FunctionSignature
+import org.partiql.lang.ots_work.interfaces.function.ScalarFunction
+import org.partiql.lang.ots_work.plugins.standard.types.DateType
+import org.partiql.lang.ots_work.plugins.standard.types.DecimalType
+import org.partiql.lang.ots_work.plugins.standard.types.SymbolType
+import org.partiql.lang.ots_work.plugins.standard.types.TimeStampType
+import org.partiql.lang.ots_work.plugins.standard.types.TimeType
+import org.partiql.lang.ots_work.plugins.standard.valueFactory
 import org.partiql.lang.syntax.DateTimePart
-import org.partiql.lang.types.AnyOfType
-import org.partiql.lang.types.FunctionSignature
-import org.partiql.lang.types.StaticType
 import java.math.BigDecimal
 import java.time.LocalDate
 
@@ -48,20 +36,14 @@ private const val SECONDS_PER_MINUTE = 60
  *
  * `EXTRACT(<date part> FROM <datetime_type>)`
  */
-internal class ExtractExprFunction(val valueFactory: ExprValueFactory) : ExprFunction {
+object Extract : ScalarFunction {
     override val signature = FunctionSignature(
         name = "extract",
         requiredParameters = listOf(
-            StaticType.SYMBOL,
-            AnyOfType(
-                setOf(
-                    StaticType.TIMESTAMP,
-                    StaticType.TIME,
-                    StaticType.DATE
-                )
-            )
+            listOf(SymbolType),
+            listOf(TimeStampType, TimeType(), DateType)
         ),
-        returnType = StaticType.DECIMAL
+        returnType = listOf(DecimalType)
     )
 
     // IonJava Timestamp.localOffset is the offset in minutes, e.g.: `+01:00 = 60` and `-1:20 = -80`
@@ -69,7 +51,7 @@ internal class ExtractExprFunction(val valueFactory: ExprValueFactory) : ExprFun
 
     private fun Timestamp.minuteOffset() = (localOffset ?: 0) % SECONDS_PER_MINUTE
 
-    override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
+    override fun callWithRequired(required: List<ExprValue>): ExprValue {
         return when {
             required[1].isUnknown() -> valueFactory.nullValue
             else -> eval(required)

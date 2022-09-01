@@ -80,6 +80,7 @@ import org.partiql.lang.eval.stringValue
 import org.partiql.lang.eval.syntheticColumnName
 import org.partiql.lang.eval.time.Time
 import org.partiql.lang.eval.time.totalMinutes
+import org.partiql.lang.eval.toExprFunction
 import org.partiql.lang.eval.unnamedValue
 import org.partiql.lang.eval.visitors.PartiqlPhysicalSanityValidator
 import org.partiql.lang.ots_work.plugins.standard.types.Int2Type
@@ -143,13 +144,17 @@ import kotlin.collections.ArrayList
  */
 internal class PhysicalExprToThunkConverterImpl(
     private val valueFactory: ExprValueFactory,
-    private val functions: Map<String, ExprFunction>,
+    private val functions: List<ExprFunction>,
     private val customTypedOpParameters: Map<String, TypedOpParameter>,
     private val procedures: Map<String, StoredProcedure>,
     private val evaluatorOptions: EvaluatorOptions = EvaluatorOptions.standard(),
     private val bexperConverter: PhysicalBexprToThunkConverter,
     private val scalarTypeSystem: ScalarTypeSystem
 ) : PhysicalExprToThunkConverter {
+    private val allFunctions = functions.plus(
+        scalarTypeSystem.scalarFunctions.map { it.toExprFunction() }
+    ).associateBy { it.signature.name }
+
     private val errorSignaler = evaluatorOptions.typingMode.createErrorSignaler(valueFactory)
     private val thunkFactory = evaluatorOptions.typingMode.createThunkFactory<EvaluatorState>(
         evaluatorOptions.thunkOptions,
@@ -807,7 +812,7 @@ internal class PhysicalExprToThunkConverterImpl(
 
     private fun compileCall(expr: PartiqlPhysical.Expr.Call, metas: MetaContainer): PhysicalPlanThunk {
         val funcArgThunks = compileAstExprs(expr.args)
-        val func = functions[expr.funcName.text] ?: err(
+        val func = allFunctions[expr.funcName.text] ?: err(
             "No such function: ${expr.funcName.text}",
             ErrorCode.EVALUATOR_NO_SUCH_FUNCTION,
             errorContextFrom(metas).also {

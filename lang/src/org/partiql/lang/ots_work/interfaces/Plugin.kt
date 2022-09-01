@@ -1,5 +1,6 @@
 package org.partiql.lang.ots_work.interfaces
 
+import org.partiql.lang.ots_work.interfaces.function.ScalarFunction
 import org.partiql.lang.ots_work.interfaces.operator.BinaryConcatOp
 import org.partiql.lang.ots_work.interfaces.operator.BinaryDivideOp
 import org.partiql.lang.ots_work.interfaces.operator.BinaryMinusOp
@@ -29,4 +30,5 @@ interface Plugin {
     val binaryConcatOp: BinaryConcatOp
     val notOp: NotOp
     val likeOp: LikeOp
+    val scalarFunctions: List<ScalarFunction>
 }

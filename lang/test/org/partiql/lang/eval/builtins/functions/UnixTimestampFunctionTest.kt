@@ -6,9 +6,10 @@ import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.eval.EvaluatorTestBase
 import org.partiql.lang.eval.builtins.Argument
 import org.partiql.lang.eval.builtins.ExprFunctionTestCase
-import org.partiql.lang.eval.builtins.buildSessionWithNow
+import org.partiql.lang.eval.builtins.buildStandardPluginWithNow
 import org.partiql.lang.eval.builtins.checkInvalidArgType
 import org.partiql.lang.eval.builtins.checkInvalidArity
+import org.partiql.lang.ots_work.stscore.ScalarTypeSystem
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.util.ArgumentsProviderBase
 
@@ -19,9 +20,9 @@ class UnixTimestampFunctionTest : EvaluatorTestBase() {
     fun runPassTests(tc: ExprFunctionTestCase) =
         runEvaluatorTestCase(
             query = tc.source,
-            session = tc.session,
+            scalarTypeSystem = tc.scalarTypeSystem,
             expectedResult = tc.expectedLegacyModeResult,
-            expectedPermissiveModeResult = tc.expectedPermissiveModeResult
+            expectedPermissiveModeResult = tc.expectedPermissiveModeResult,
         )
 
     class UnixTimestampPassCases : ArgumentsProviderBase() {
@@ -30,11 +31,11 @@ class UnixTimestampFunctionTest : EvaluatorTestBase() {
 
         override fun getParameters(): List<Any> = listOf(
             // No args
-            ExprFunctionTestCase("unix_timestamp()", "0", session = buildSessionWithNow(0, 0)), // now = 0
-            ExprFunctionTestCase("unix_timestamp()", "0", session = buildSessionWithNow(1, 0)), // now = 1ms
-            ExprFunctionTestCase("unix_timestamp()", "0", session = buildSessionWithNow(999, 0)), // now = 999ms
-            ExprFunctionTestCase("unix_timestamp()", "1", session = buildSessionWithNow(1000, 0)), // now = 1s
-            ExprFunctionTestCase("unix_timestamp()", "1", session = buildSessionWithNow(1001, 0)), // now = 1001ms
+            ExprFunctionTestCase("unix_timestamp()", "0", scalarTypeSystem = ScalarTypeSystem(buildStandardPluginWithNow(0, 0))), // now = 0
+            ExprFunctionTestCase("unix_timestamp()", "0", scalarTypeSystem = ScalarTypeSystem(buildStandardPluginWithNow(1, 0))), // now = 1ms
+            ExprFunctionTestCase("unix_timestamp()", "0", scalarTypeSystem = ScalarTypeSystem(buildStandardPluginWithNow(999, 0))), // now = 999ms
+            ExprFunctionTestCase("unix_timestamp()", "1", scalarTypeSystem = ScalarTypeSystem(buildStandardPluginWithNow(1000, 0))), // now = 1s
+            ExprFunctionTestCase("unix_timestamp()", "1", scalarTypeSystem = ScalarTypeSystem(buildStandardPluginWithNow(1001, 0))), // now = 1001ms
             // time before the last epoch
             ExprFunctionTestCase("unix_timestamp(`1969T`)", "-31536000"),
             ExprFunctionTestCase("unix_timestamp(`1969-12-31T23:59:59.999Z`)", "-0.001"),

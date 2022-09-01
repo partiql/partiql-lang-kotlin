@@ -3,6 +3,9 @@ package org.partiql.lang.eval.builtins.timestamp
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.partiql.lang.eval.EvaluationException
+import org.partiql.lang.ots_work.plugins.standard.functions.timestamp.TimestampFormatPatternLexer
+import org.partiql.lang.ots_work.plugins.standard.functions.timestamp.Token
+import org.partiql.lang.ots_work.plugins.standard.functions.timestamp.TokenType
 
 class TimestampFormatPatternLexerTest {
 

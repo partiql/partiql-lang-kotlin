@@ -178,4 +178,6 @@ class ScalarTypeSystem(
             is LikeOp -> TODO("Unsupported for now")
             else -> error("Unrecognized scalar operator: $scalarOp")
         }
+
+    internal val scalarFunctions = plugin.scalarFunctions
 }

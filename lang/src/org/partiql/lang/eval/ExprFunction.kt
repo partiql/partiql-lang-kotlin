@@ -15,7 +15,13 @@
 package org.partiql.lang.eval
 
 import org.partiql.lang.errors.ErrorCode
+import org.partiql.lang.ots_work.interfaces.UnionOfScalarTypes
+import org.partiql.lang.ots_work.interfaces.function.ScalarFunction
+import org.partiql.lang.ots_work.interfaces.function.UnknownArguments
 import org.partiql.lang.types.FunctionSignature
+import org.partiql.lang.types.StaticScalarType
+import org.partiql.lang.types.StaticType
+import org.partiql.lang.types.VarargFormalParameter
 
 sealed class Arguments
 data class RequiredArgs(val required: List<ExprValue>) : Arguments()
@@ -103,4 +109,38 @@ fun ExprFunction.call(session: EvaluationSession, args: Arguments): ExprValue =
         is RequiredArgs -> callWithRequired(session, args.required)
         is RequiredWithOptional -> callWithOptional(session, args.required, args.opt)
         is RequiredWithVariadic -> callWithVariadic(session, args.required, args.variadic)
+    }
+
+internal fun UnionOfScalarTypes.toStaticType() =
+    when (size) {
+        1 -> StaticScalarType(first())
+        else -> StaticType.unionOf(
+            map { StaticScalarType(it) }.toSet()
+        )
+    }
+
+internal fun ScalarFunction.toExprFunction(): ExprFunction =
+    object : ExprFunction {
+        override val signature: FunctionSignature =
+            FunctionSignature(
+                name = this@toExprFunction.signature.name,
+                requiredParameters = this@toExprFunction.signature.requiredParameters.map { it.toStaticType() },
+                optionalParameter = this@toExprFunction.signature.optionalParameter?.toStaticType(),
+                variadicParameter = this@toExprFunction.signature.variadicParameter?.let { VarargFormalParameter(it.type.toStaticType(), it.arityRange) },
+                returnType = this@toExprFunction.signature.returnType.toStaticType(),
+                unknownArguments = when (this@toExprFunction.signature.unknownArguments) {
+                    UnknownArguments.PROPAGATE -> org.partiql.lang.types.UnknownArguments.PROPAGATE
+                    UnknownArguments.PASS_THRU -> org.partiql.lang.types.UnknownArguments.PROPAGATE
+                },
+            )
+
+        override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
+            return callWithRequired(required)
+        }
+
+        override fun callWithOptional(session: EvaluationSession, required: List<ExprValue>, opt: ExprValue): ExprValue =
+            callWithOptional(required, opt)
+
+        override fun callWithVariadic(session: EvaluationSession, required: List<ExprValue>, variadic: List<ExprValue>): ExprValue =
+            callWithVariadic(required, variadic)
     }

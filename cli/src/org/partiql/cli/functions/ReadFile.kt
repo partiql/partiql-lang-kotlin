@@ -24,7 +24,9 @@ import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.io.DelimitedValues
 import org.partiql.lang.eval.io.DelimitedValues.ConversionMode
 import org.partiql.lang.eval.stringValue
+import org.partiql.lang.ots_work.plugins.standard.types.StringType
 import org.partiql.lang.types.FunctionSignature
+import org.partiql.lang.types.StaticScalarType
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.util.asIonStruct
 import org.partiql.lang.util.booleanValue
@@ -36,7 +38,7 @@ import java.io.InputStreamReader
 internal class ReadFile(valueFactory: ExprValueFactory) : BaseFunction(valueFactory) {
     override val signature = FunctionSignature(
         name = "read_file",
-        requiredParameters = listOf(StaticType.STRING),
+        requiredParameters = listOf(StaticScalarType(StringType)),
         optionalParameter = StaticType.STRUCT,
         returnType = StaticType.BAG
     )

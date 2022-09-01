@@ -22,7 +22,9 @@ import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.io.DelimitedValues
 import org.partiql.lang.eval.stringValue
+import org.partiql.lang.ots_work.plugins.standard.types.StringType
 import org.partiql.lang.types.FunctionSignature
+import org.partiql.lang.types.StaticScalarType
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.util.asIonStruct
 import org.partiql.lang.util.booleanValue
@@ -34,7 +36,7 @@ import java.io.OutputStreamWriter
 internal class WriteFile(valueFactory: ExprValueFactory) : BaseFunction(valueFactory) {
     override val signature = FunctionSignature(
         name = "write_file",
-        requiredParameters = listOf(StaticType.STRING, StaticType.ANY),
+        requiredParameters = listOf(StaticScalarType(StringType), StaticType.ANY),
         optionalParameter = StaticType.STRUCT,
         returnType = StaticType.BOOL
     )

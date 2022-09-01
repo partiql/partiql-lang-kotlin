@@ -206,7 +206,7 @@ interface PlannerPipeline {
     class Builder(val valueFactory: ExprValueFactory) {
         private var parser: Parser? = null
         private var evaluatorOptions: EvaluatorOptions? = null
-        private val customFunctions: MutableMap<String, ExprFunction> = HashMap()
+        private val customFunctions: MutableList<ExprFunction> = mutableListOf()
         private var customDataTypes: List<CustomType> = listOf()
         private val customProcedures: MutableMap<String, StoredProcedure> = HashMap()
         private val physicalPlanPasses = ArrayList<PartiqlPhysicalPass>()
@@ -254,7 +254,7 @@ interface PlannerPipeline {
          * https://github.com/partiql/partiql-lang-kotlin/milestone/4
          */
         internal fun addFunction(function: ExprFunction): Builder = this.apply {
-            customFunctions[function.signature.name] = function
+            customFunctions.add(function)
         }
 
         /**
@@ -420,18 +420,15 @@ interface PlannerPipeline {
             }
 
             val builtinFunctions = createBuiltinFunctions(valueFactory) + DynamicLookupExprFunction()
-            val builtinFunctionsMap = builtinFunctions.associateBy {
-                it.signature.name
-            }
 
             // customFunctions must be on the right side of + here to ensure that they overwrite any
             // built-in functions with the same name.
-            val allFunctionsMap = builtinFunctionsMap + customFunctions
+            val allFunctions = builtinFunctions + customFunctions
             return PlannerPipelineImpl(
                 valueFactory = valueFactory,
                 parser = parser ?: SqlParser(valueFactory.ion, this.customDataTypes),
                 evaluatorOptions = compileOptionsToUse,
-                functions = allFunctionsMap,
+                functions = allFunctions,
                 customDataTypes = customDataTypes,
                 procedures = customProcedures,
                 physicalPlanPasses = physicalPlanPasses,
@@ -450,7 +447,7 @@ internal class PlannerPipelineImpl(
     override val valueFactory: ExprValueFactory,
     private val parser: Parser,
     val evaluatorOptions: EvaluatorOptions,
-    val functions: Map<String, ExprFunction>,
+    val functions: List<ExprFunction>,
     val customDataTypes: List<CustomType>,
     val procedures: Map<String, StoredProcedure>,
     val bindingsOperatorFactories: Map<RelationalOperatorFactoryKey, RelationalOperatorFactory>,

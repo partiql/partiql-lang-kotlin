@@ -132,12 +132,16 @@ private typealias ThunkEnvValue<T> = ThunkValue<Environment, T>
  */
 internal class EvaluatingCompiler(
     private val valueFactory: ExprValueFactory,
-    private val functions: Map<String, ExprFunction>,
+    private val functions: List<ExprFunction>,
     private val customTypedOpParameters: Map<String, TypedOpParameter>,
     private val procedures: Map<String, StoredProcedure>,
     private val compileOptions: CompileOptions = CompileOptions.standard(),
     private val scalarTypeSystem: ScalarTypeSystem
 ) {
+    private val allFunctions = functions.plus(
+        scalarTypeSystem.scalarFunctions.map { it.toExprFunction() }
+    ).associateBy { it.signature.name }
+
     private val errorSignaler = compileOptions.typingMode.createErrorSignaler(valueFactory)
     private val thunkFactory = compileOptions.typingMode.createThunkFactory<Environment>(compileOptions.thunkOptions, valueFactory)
 
@@ -864,7 +868,7 @@ internal class EvaluatingCompiler(
 
     private fun compileCall(expr: PartiqlAst.Expr.Call, metas: MetaContainer): ThunkEnv {
         val funcArgThunks = compileAstExprs(expr.args)
-        val func = functions[expr.funcName.text] ?: err(
+        val func = allFunctions[expr.funcName.text] ?: err(
             "No such function: ${expr.funcName.text}",
             ErrorCode.EVALUATOR_NO_SUCH_FUNCTION,
             errorContextFrom(metas).also {
@@ -2049,6 +2053,7 @@ internal class EvaluatingCompiler(
             }
         }
 
+    // TODO: refactor "SUM" & "AVG" functions so they implicitly call PLUS and DIVIDE operators
     private fun compileCallAgg(expr: PartiqlAst.Expr.CallAgg, metas: MetaContainer): ThunkEnv {
         if (metas.containsKey(IsCountStarMeta.TAG) && currentCompilationContext.expressionContext != ExpressionContext.SELECT_LIST) {
             err(
@@ -2931,8 +2936,3 @@ private class SingleProjectionElement(val name: ExprValue, val thunk: ThunkEnv) 
 private class MultipleProjectionElement(val thunks: List<ThunkEnv>) : ProjectionElement()
 
 internal val MetaContainer.sourceLocationMeta get() = this[SourceLocationMeta.TAG] as? SourceLocationMeta
-
-private fun StaticType.getTypes() = when (val flattened = this.flatten()) {
-    is AnyOfType -> flattened.types as Set<SingleType>
-    else -> setOf(this)
-}

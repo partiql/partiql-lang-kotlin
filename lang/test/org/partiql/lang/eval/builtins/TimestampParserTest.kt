@@ -8,6 +8,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.EvaluationException
+import org.partiql.lang.ots_work.plugins.standard.functions.timestamp.TimestampParser
 import java.lang.reflect.Type
 import java.time.format.DateTimeParseException
 import kotlin.test.assertEquals

@@ -12,7 +12,7 @@
  *  language governing permissions and limitations under the License.
  */
 
-package org.partiql.lang.eval.builtins
+package org.partiql.lang.ots_work.plugins.standard.functions.timestamp
 
 internal val TIMESTAMP_FORMAT_SYMBOLS: Set<Char> =
     setOf(

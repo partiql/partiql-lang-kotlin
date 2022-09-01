@@ -4,6 +4,7 @@
 
 package org.partiql.lang.eval.visitors
 
+import com.amazon.ion.system.IonSystemBuilder
 import com.amazon.ionelement.api.MetaContainer
 import com.amazon.ionelement.api.StringElement
 import com.amazon.ionelement.api.TextElement
@@ -33,10 +34,12 @@ import org.partiql.lang.errors.ProblemThrower
 import org.partiql.lang.eval.BindingCase
 import org.partiql.lang.eval.BindingName
 import org.partiql.lang.eval.Bindings
+import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.ExprValueType
-import org.partiql.lang.eval.builtins.createBuiltinFunctionSignatures
+import org.partiql.lang.eval.builtins.createBuiltinFunctions
 import org.partiql.lang.eval.delegate
 import org.partiql.lang.eval.getStartingSourceLocationMeta
+import org.partiql.lang.eval.toExprFunction
 import org.partiql.lang.ots_work.interfaces.operator.ScalarOpId
 import org.partiql.lang.ots_work.interfaces.type.BoolType
 import org.partiql.lang.ots_work.plugins.standard.types.CharType
@@ -89,6 +92,8 @@ internal class StaticTypeInferenceVisitorTransform(
     private val scalarTypeSystem: ScalarTypeSystem
 ) : PartiqlAst.VisitorTransform() {
 
+    private val valueFactory = ExprValueFactory.standard(IonSystemBuilder.standard().build())
+
     /** Used to allow certain binding lookups to occur directly in the global scope. */
     private val globalTypeEnv = wrapBindings(globalBindings, 0)
 
@@ -103,7 +108,7 @@ internal class StaticTypeInferenceVisitorTransform(
 
     /** The built-in functions + the custom functions. */
     private val allFunctions: Map<String, FunctionSignature> =
-        createBuiltinFunctionSignatures() + customFunctionSignatures.associateBy { it.name }
+        ((createBuiltinFunctions(valueFactory) + scalarTypeSystem.scalarFunctions.map { it.toExprFunction() }).map { it.signature } + customFunctionSignatures).associateBy { it.name }
 
     /**
      * @param parentEnv the enclosing bindings
@@ -609,6 +614,7 @@ internal class StaticTypeInferenceVisitorTransform(
                     else
                         StaticType.unionOf(possibleReturnTypes.toSet()).flatten()
                 }
+                // TODO: refactor the logic so it becomes nAry plus divided by integer
                 // current implementation of avg always return a decimal or null.
                 "avg" -> {
                     when {
@@ -621,6 +627,7 @@ internal class StaticTypeInferenceVisitorTransform(
                         else -> StaticType.DECIMAL
                     }
                 }
+                // TODO: refactor the logic so it becomes nAry plus actually
                 "sum" -> {
                     if (isNullOrMissingOrNumeric(argType)) {
                         argType.allTypes.fold((StaticType.NULL as SingleType)) { lastType, currentType ->

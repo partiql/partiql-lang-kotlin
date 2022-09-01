@@ -4,7 +4,6 @@ import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.err
 import org.partiql.lang.eval.errorContextFrom
 import org.partiql.lang.eval.stringValue
@@ -18,11 +17,11 @@ import org.partiql.lang.ots_work.plugins.standard.types.CharType
 import org.partiql.lang.ots_work.plugins.standard.types.StringType
 import org.partiql.lang.ots_work.plugins.standard.types.SymbolType
 import org.partiql.lang.ots_work.plugins.standard.types.VarcharType
+import org.partiql.lang.ots_work.plugins.standard.valueFactory
 
-class StandardBinaryConcatOp(
-    val valueFactory: ExprValueFactory,
+object StandardBinaryConcatOp : BinaryConcatOp() {
     var currentLocationMeta: SourceLocationMeta? = null
-) : BinaryConcatOp() {
+
     override val validOperandTypes: List<ScalarType> = ALL_TEXT_TYPES
 
     override val defaultReturnTypes: List<CompileTimeType> =

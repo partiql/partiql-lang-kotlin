@@ -12,7 +12,7 @@
  *  language governing permissions and limitations under the License.
  */
 
-package org.partiql.lang.eval.builtins
+package org.partiql.lang.ots_work.plugins.standard.functions.timestamp
 
 import com.amazon.ion.Timestamp
 import java.math.BigDecimal

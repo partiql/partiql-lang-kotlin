@@ -1,29 +1,15 @@
-/*
- * Copyright 2019 Amazon.com, Inc. or its affiliates.  All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License").
- *  You may not use this file except in compliance with the License.
- * A copy of the License is located at:
- *
- *      http://aws.amazon.com/apache2.0/
- *
- *  or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
- *  language governing permissions and limitations under the License.
- */
-
-package org.partiql.lang.eval.builtins
+package org.partiql.lang.ots_work.plugins.standard.functions
 
 import org.partiql.lang.errors.ErrorCode
-import org.partiql.lang.eval.EvaluationSession
-import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.errNoContext
 import org.partiql.lang.eval.intValue
 import org.partiql.lang.eval.stringValue
-import org.partiql.lang.types.FunctionSignature
-import org.partiql.lang.types.StaticType
+import org.partiql.lang.ots_work.interfaces.function.FunctionSignature
+import org.partiql.lang.ots_work.interfaces.function.ScalarFunction
+import org.partiql.lang.ots_work.plugins.standard.types.IntType
+import org.partiql.lang.ots_work.plugins.standard.types.StringType
+import org.partiql.lang.ots_work.plugins.standard.valueFactory
 
 /**
  * Built in function to return the substring of an existing string. This function
@@ -94,23 +80,23 @@ import org.partiql.lang.types.StaticType
  *              L1 = E1 - S1
  *              return java's substring(C, S1, E1)
  */
-internal class SubstringExprFunction(private val valueFactory: ExprValueFactory) : ExprFunction {
+object Substring : ScalarFunction {
     override val signature = FunctionSignature(
         name = "substring",
-        requiredParameters = listOf(StaticType.STRING, StaticType.INT),
-        optionalParameter = StaticType.INT,
-        returnType = StaticType.STRING
+        requiredParameters = listOf(listOf(StringType), listOf(IntType)),
+        optionalParameter = listOf(IntType),
+        returnType = listOf(StringType)
     )
 
-    override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue =
+    override fun callWithRequired(required: List<ExprValue>): ExprValue =
         substring(required[0].stringValue(), required[1].intValue(), null)
 
-    override fun callWithOptional(session: EvaluationSession, required: List<ExprValue>, opt: ExprValue): ExprValue {
-        val quantity = opt.intValue()
+    override fun callWithOptional(required: List<ExprValue>, optional: ExprValue): ExprValue {
+        val quantity = optional.intValue()
         if (quantity < 0) {
             errNoContext("Argument 3 of substring has to be greater than 0.", errorCode = ErrorCode.EVALUATOR_INVALID_ARGUMENTS_FOR_FUNC_CALL, internal = false)
         }
-        return substring(required[0].stringValue(), required[1].intValue(), opt.intValue())
+        return substring(required[0].stringValue(), required[1].intValue(), optional.intValue())
     }
 
     private fun substring(

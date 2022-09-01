@@ -12,7 +12,7 @@
  *  language governing permissions and limitations under the License.
  */
 
-package org.partiql.lang.eval.builtins.timestamp
+package org.partiql.lang.ots_work.plugins.standard.functions.timestamp
 
 /**
  * A item that is parsed from the format pattern. i.e. text or one of many symbols corresponding to a

@@ -1,6 +1,7 @@
 package org.partiql.lang.eval.builtins
 
 import com.amazon.ion.Timestamp
+import org.partiql.lang.ots_work.plugins.standard.functions.timestamp.TimestampTemporalAccessor
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.OffsetDateTime

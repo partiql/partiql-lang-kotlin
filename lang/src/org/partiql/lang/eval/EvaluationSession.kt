@@ -30,8 +30,7 @@ import com.amazon.ion.Timestamp
 class EvaluationSession private constructor(
     val globals: Bindings<ExprValue>,
     val parameters: List<ExprValue>,
-    val context: Map<String, Any>,
-    val now: Timestamp
+    val context: Map<String, Any>
 ) {
 
     companion object {
@@ -54,15 +53,6 @@ class EvaluationSession private constructor(
     }
 
     class Builder {
-        private fun Timestamp.toUtc() = this.withLocalOffset(0)!!
-
-        // using null to postpone defaulting to when the session is created
-        private var now: Timestamp? = null
-        fun now(value: Timestamp): Builder {
-            now = value.toUtc()
-            return this
-        }
-
         private var globals: Bindings<ExprValue> = Bindings.empty()
         fun globals(value: Bindings<ExprValue>): Builder {
             globals = value
@@ -82,7 +72,6 @@ class EvaluationSession private constructor(
         }
 
         fun build(): EvaluationSession = EvaluationSession(
-            now = now ?: Timestamp.nowZ(),
             parameters = parameters,
             context = contextVariables,
             globals = globals

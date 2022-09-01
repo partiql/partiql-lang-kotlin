@@ -1,18 +1,19 @@
-package org.partiql.lang.eval.builtins
+package org.partiql.lang.ots_work.plugins.standard.functions
 
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.EvaluationException
-import org.partiql.lang.eval.EvaluationSession
-import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.bigDecimalValue
 import org.partiql.lang.eval.err
 import org.partiql.lang.eval.intValue
 import org.partiql.lang.eval.time.NANOS_PER_SECOND
 import org.partiql.lang.eval.time.Time
-import org.partiql.lang.types.FunctionSignature
-import org.partiql.lang.types.StaticType
+import org.partiql.lang.ots_work.interfaces.function.FunctionSignature
+import org.partiql.lang.ots_work.interfaces.function.ScalarFunction
+import org.partiql.lang.ots_work.plugins.standard.types.DecimalType
+import org.partiql.lang.ots_work.plugins.standard.types.IntType
+import org.partiql.lang.ots_work.plugins.standard.types.TimeType
+import org.partiql.lang.ots_work.plugins.standard.valueFactory
 import java.math.BigDecimal
 
 /**
@@ -21,20 +22,20 @@ import java.math.BigDecimal
  *
  * make_time(<hour_value>, <minute_value>, <second_value>, <optional_timezone_minutes>?)
  */
-internal class MakeTimeExprFunction(val valueFactory: ExprValueFactory) : ExprFunction {
+object MakeTime : ScalarFunction {
     override val signature = FunctionSignature(
         name = "make_time",
-        requiredParameters = listOf(StaticType.INT, StaticType.INT, StaticType.DECIMAL),
-        optionalParameter = StaticType.INT,
-        returnType = StaticType.TIME
+        requiredParameters = listOf(listOf(IntType), listOf(IntType), listOf(DecimalType)),
+        optionalParameter = listOf(IntType),
+        returnType = listOf(TimeType())
     )
 
-    override fun callWithOptional(session: EvaluationSession, required: List<ExprValue>, opt: ExprValue): ExprValue {
+    override fun callWithOptional(required: List<ExprValue>, optional: ExprValue): ExprValue {
         val (hour, min, sec) = required
-        return makeTime(hour.intValue(), min.intValue(), sec.bigDecimalValue(), opt.intValue())
+        return makeTime(hour.intValue(), min.intValue(), sec.bigDecimalValue(), optional.intValue())
     }
 
-    override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
+    override fun callWithRequired(required: List<ExprValue>): ExprValue {
         val (hour, min, sec) = required
         return makeTime(hour.intValue(), min.intValue(), sec.bigDecimalValue(), null)
     }

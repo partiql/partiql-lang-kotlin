@@ -12,7 +12,7 @@
  *  language governing permissions and limitations under the License.
  */
 
-package org.partiql.lang.eval.builtins.timestamp
+package org.partiql.lang.ots_work.plugins.standard.functions.timestamp
 
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
@@ -185,7 +185,10 @@ internal class FormatPattern(val formatPatternString: String, val formatItems: L
                 // it does not require any other fields to make a complete timestamp
             }
             TimestampField.MONTH_OF_YEAR -> errIfMissingTimestampFields(TimestampField.YEAR)
-            TimestampField.DAY_OF_MONTH -> errIfMissingTimestampFields(TimestampField.YEAR, TimestampField.MONTH_OF_YEAR)
+            TimestampField.DAY_OF_MONTH -> errIfMissingTimestampFields(
+                TimestampField.YEAR,
+                TimestampField.MONTH_OF_YEAR
+            )
             TimestampField.HOUR_OF_DAY -> errIfMissingTimestampFields(
                 TimestampField.YEAR,
                 TimestampField.MONTH_OF_YEAR, TimestampField.DAY_OF_MONTH

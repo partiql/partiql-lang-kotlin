@@ -1,34 +1,15 @@
-/*
- * Copyright 2019 Amazon.com, Inc. or its affiliates.  All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License").
- *  You may not use this file except in compliance with the License.
- * A copy of the License is located at:
- *
- *      http://aws.amazon.com/apache2.0/
- *
- *  or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
- *  language governing permissions and limitations under the License.
- */
-
-package org.partiql.lang.eval.builtins
+package org.partiql.lang.ots_work.plugins.standard.functions
 
 import org.partiql.lang.errors.ErrorCode
-import org.partiql.lang.eval.EvaluationSession
-import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.eval.ExprValueFactory
-import org.partiql.lang.eval.builtins.TrimSpecification.BOTH
-import org.partiql.lang.eval.builtins.TrimSpecification.LEADING
-import org.partiql.lang.eval.builtins.TrimSpecification.NONE
-import org.partiql.lang.eval.builtins.TrimSpecification.TRAILING
 import org.partiql.lang.eval.errNoContext
 import org.partiql.lang.eval.stringValue
-import org.partiql.lang.types.FunctionSignature
-import org.partiql.lang.types.StaticType
-import org.partiql.lang.types.StaticType.Companion.unionOf
-import org.partiql.lang.types.VarargFormalParameter
+import org.partiql.lang.ots_work.interfaces.function.FunctionSignature
+import org.partiql.lang.ots_work.interfaces.function.ScalarFunction
+import org.partiql.lang.ots_work.interfaces.function.VarargFormalParameter
+import org.partiql.lang.ots_work.plugins.standard.types.StringType
+import org.partiql.lang.ots_work.plugins.standard.types.SymbolType
+import org.partiql.lang.ots_work.plugins.standard.valueFactory
 
 /**
  * From section 6.7 of SQL 92 spec:
@@ -59,13 +40,13 @@ import org.partiql.lang.types.VarargFormalParameter
  *  * `<trim character> ::= <character value expression>`
  *  * `<trim source> ::= <character value expression>`
  */
-internal class TrimExprFunction(private val valueFactory: ExprValueFactory) : ExprFunction {
+object Trim : ScalarFunction {
     override val signature =
         FunctionSignature(
             name = "trim",
-            requiredParameters = listOf(unionOf(StaticType.STRING, StaticType.SYMBOL)),
-            variadicParameter = VarargFormalParameter(StaticType.STRING, 0..2),
-            returnType = StaticType.STRING
+            requiredParameters = listOf(listOf(StringType, SymbolType)),
+            variadicParameter = VarargFormalParameter(listOf(StringType), 0..2),
+            returnType = listOf(StringType)
         )
 
     private val DEFAULT_TO_REMOVE = " ".codePoints().toArray()
@@ -107,9 +88,9 @@ internal class TrimExprFunction(private val valueFactory: ExprValueFactory) : Ex
 
     private fun trim(type: TrimSpecification, toRemove: IntArray, sourceString: IntArray): ExprValue {
         return when (type) {
-            BOTH, NONE -> valueFactory.newString(sourceString.trim(toRemove))
-            LEADING -> valueFactory.newString(sourceString.leadingTrim(toRemove))
-            TRAILING -> valueFactory.newString(sourceString.trailingTrim(toRemove))
+            TrimSpecification.BOTH, TrimSpecification.NONE -> valueFactory.newString(sourceString.trim(toRemove))
+            TrimSpecification.LEADING -> valueFactory.newString(sourceString.leadingTrim(toRemove))
+            TrimSpecification.TRAILING -> valueFactory.newString(sourceString.trailingTrim(toRemove))
         }
     }
 
@@ -127,7 +108,7 @@ internal class TrimExprFunction(private val valueFactory: ExprValueFactory) : Ex
 
         val trimSpec = TrimSpecification.from(specificationOrToRemove)
         val toRemove = when (trimSpec) {
-            NONE -> specificationOrToRemove.codePoints()
+            TrimSpecification.NONE -> specificationOrToRemove.codePoints()
             else -> DEFAULT_TO_REMOVE
         }
 
@@ -135,7 +116,7 @@ internal class TrimExprFunction(private val valueFactory: ExprValueFactory) : Ex
     }
     private fun trim3Arg(specification: ExprValue, toRemove: ExprValue, sourceString: ExprValue): ExprValue {
         val trimSpec = TrimSpecification.from(specification)
-        if (trimSpec == NONE) {
+        if (trimSpec == TrimSpecification.NONE) {
             errNoContext(
                 "'${specification.stringValue()}' is an unknown trim specification, " +
                     "valid vales: ${TrimSpecification.validValues}",
@@ -147,8 +128,8 @@ internal class TrimExprFunction(private val valueFactory: ExprValueFactory) : Ex
         return trim(trimSpec, toRemove.codePoints(), sourceString.codePoints())
     }
 
-    override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>) = trim1Arg(required[0])
-    override fun callWithVariadic(session: EvaluationSession, required: List<ExprValue>, variadic: List<ExprValue>): ExprValue {
+    override fun callWithRequired(required: List<ExprValue>) = trim1Arg(required[0])
+    override fun callWithVariadic(required: List<ExprValue>, variadic: List<ExprValue>): ExprValue {
         return when (variadic.size) {
             0 -> trim1Arg(required[0])
             1 -> trim2Arg(required[0], variadic[0])
