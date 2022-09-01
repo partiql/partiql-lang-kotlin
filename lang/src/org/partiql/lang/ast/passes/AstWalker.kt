@@ -310,6 +310,8 @@ open class AstWalker(private val visitor: AstVisitor) {
             when (conflictAction) {
                 ConflictAction.DO_NOTHING -> {
                 }
+                ConflictAction.DO_REPLACE -> {
+                }
             }
         }
     }

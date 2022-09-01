@@ -379,6 +379,7 @@ data class InsertOp(
 }
 
 /** Represents `INSERT INTO <lvalueExpr> VALUE <valueExpr> [AT <position>] [ON CONFLICT WHERE <Expr> <CONFLICT ACTION>]` */
+@Deprecated("This statement is non-standard—See https://github.com/partiql/partiql-docs/blob/main/RFCs/0011-partiql-insert.md")
 data class InsertValueOp(
     val lvalue: ExprNode,
     val value: ExprNode,
@@ -398,7 +399,9 @@ data class OnConflict(
 /** ConflictAction */
 enum class ConflictAction {
     /** Represents DO NOTHING action in ON CONFLICT operation */
-    DO_NOTHING
+    DO_NOTHING,
+    /** Represents DO REPLACE action in ON CONFLICT operation */
+    DO_REPLACE
 }
 
 data class Assignment(val lvalue: ExprNode, val rvalue: ExprNode) : AstNode() {

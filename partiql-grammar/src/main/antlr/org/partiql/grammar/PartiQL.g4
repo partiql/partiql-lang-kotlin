@@ -85,7 +85,7 @@ dropCommand
  * DATA MANIPULATION LANGUAGE (DML)
  *
  */
- 
+
 dml
     : updateClause dmlBaseCommand+ whereClause? returningClause?  # DmlBaseWrapper
     | fromClause whereClause? dmlBaseCommand+ returningClause?    # DmlBaseWrapper
@@ -119,15 +119,58 @@ removeCommand
 //  We essentially use the returning clause, because we currently support this with the SqlParser.
 //  See https://github.com/partiql/partiql-lang-kotlin/issues/708
 insertCommandReturning
-    : INSERT INTO pathSimple VALUE value=expr ( AT pos=expr )? onConflict? returningClause?;
+    : INSERT INTO pathSimple VALUE value=expr ( AT pos=expr )? onConflictClause? returningClause?;
 
 insertCommand
-    : INSERT INTO pathSimple VALUE value=expr ( AT pos=expr )? onConflict?  # InsertValue
-    | INSERT INTO pathSimple value=expr                                     # InsertSimple
+    : INSERT INTO pathSimple VALUE value=expr ( AT pos=expr )? onConflictClause?  # InsertLegacy
+    // See the Grammar at https://github.com/partiql/partiql-docs/blob/main/RFCs/0011-partiql-insert.md#2-proposed-grammar-and-semantics
+    | INSERT INTO symbolPrimitive asIdent? value=expr onConflictClause?           # Insert
     ;
 
-onConflict
-    : ON CONFLICT WHERE expr DO NOTHING;
+onConflictClause
+    : ON CONFLICT WHERE expr DO NOTHING                                           # OnConflictLegacy
+    | ON CONFLICT conflictTarget? conflictAction                                  # OnConflict
+    ;
+
+/**
+    <conflict target> ::=
+        ( <index target> [, <index target>]... )
+        | ( { <primary key> | <composite primary key> } )
+        | ON CONSTRAINT <constraint name>
+*/
+conflictTarget
+    : PAREN_LEFT indexTarget (COMMA indexTarget)* PAREN_RIGHT
+    | PAREN_LEFT ( primaryKey | compositePrimaryKey ) PAREN_RIGHT
+    | ON CONSTRAINT constraintName;
+
+indexTarget
+    : IDENTIFIER;
+
+primaryKey
+    : IDENTIFIER;
+
+/**
+    <composite primary key> ::= <attr name>, <attr name> [, <attr name> ]...
+*/
+compositePrimaryKey
+    : IDENTIFIER COMMA IDENTIFIER (COMMA IDENTIFIER)*;
+
+constraintName
+    : IDENTIFIER;
+
+conflictAction
+    : DO NOTHING
+    | DO REPLACE doReplace;
+
+/*
+<do replace> ::= EXCLUDED
+    | SET <attr values> [, <attr values>]...
+    | VALUE <tuple value>
+   [ WHERE <condition> ]
+*/
+doReplace
+    : EXCLUDED
+    | VALUE tuple;
 
 updateClause
     : UPDATE tableBaseReference;
@@ -318,7 +361,7 @@ edgeAbbrev
  * TABLES & JOINS
  *
  */
- 
+
 tableReference
     : lhs=tableReference tableJoined[$lhs.ctx] # TableRefBase
     | PAREN_LEFT tableReference PAREN_RIGHT    # TableWrapped
@@ -517,7 +560,7 @@ sequenceConstructor
     : datatype=(LIST|SEXP) PAREN_LEFT (expr ( COMMA expr )* )? PAREN_RIGHT;
 
 substring
-    : SUBSTRING PAREN_LEFT expr ( COMMA expr ( COMMA expr )? )? PAREN_RIGHT                                                      
+    : SUBSTRING PAREN_LEFT expr ( COMMA expr ( COMMA expr )? )? PAREN_RIGHT
     | SUBSTRING PAREN_LEFT expr ( FROM expr ( FOR expr )? )? PAREN_RIGHT
     ;
 
@@ -545,7 +588,7 @@ dateFunction
     : func=(DATE_ADD|DATE_DIFF) PAREN_LEFT dt=IDENTIFIER COMMA expr COMMA expr PAREN_RIGHT;
 
 functionCall
-    : name=( CHAR_LENGTH | CHARACTER_LENGTH | OCTET_LENGTH | 
+    : name=( CHAR_LENGTH | CHARACTER_LENGTH | OCTET_LENGTH |
         BIT_LENGTH | UPPER | LOWER | SIZE | EXISTS | COUNT )
         PAREN_LEFT ( expr ( COMMA expr )* )? PAREN_RIGHT                         # FunctionCallReserved
     | name=symbolPrimitive PAREN_LEFT ( expr ( COMMA expr )* )? PAREN_RIGHT      # FunctionCallIdent
@@ -569,7 +612,7 @@ varRefExpr
  * LITERALS & TYPES
  *
  */
- 
+
 collection
     : array
     | bag
