@@ -3954,13 +3954,6 @@ class SqlParserTest : SqlParserTestBase() {
         "(ddl (drop_index (table (identifier foo (case_sensitive))) (keys (identifier bar (case_sensitive)))))"
     )
 
-    // TODO: There is an ambiguity in our grammar since UNION is an expression. Essentially, on the RHS of a FROM clause,
-    //  we allow expressions such as literals, other SELECT statements, and, in this case, bag operations. In SQL-92,
-    //  the standard only allows FROM sources to include table names and sub-queries, therefore, the grammar knows that
-    //  the RHS of the first FROM below would end at the identifier foo. PartiQL, however, allows the FROM source to be
-    //  `foo UNION SELECT * ...`. Therefore, there is an ambiguity due to PartiQL allowing all expressions in the FROM.
-    //  See: https://github.com/partiql/partiql-lang-kotlin/issues/732
-    @Ignore
     @Test
     fun unionSelectPrecedence() = assertExpression(
         "SELECT * FROM foo UNION SELECT * FROM bar",
