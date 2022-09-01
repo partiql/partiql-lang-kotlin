@@ -17,7 +17,7 @@ package org.partiql.lang.ast
 import com.amazon.ion.system.IonSystemBuilder
 import org.junit.Assert
 import org.junit.Test
-import org.partiql.lang.syntax.SqlParser
+import org.partiql.lang.syntax.PartiQLParser
 
 class IsIonLiteralMetaTest {
 
@@ -25,7 +25,7 @@ class IsIonLiteralMetaTest {
     fun testIonLiteralMetaPreserved() {
         val ion = IonSystemBuilder.standard().build()
         @Suppress("DEPRECATION")
-        val ionLiteral = SqlParser(ion).parseExprNode("`1.0`")
+        val ionLiteral = PartiQLParser(ion).parseExprNode("`1.0`")
         Assert.assertTrue(ionLiteral.metas.hasMeta(IsIonLiteralMeta.TAG))
         val roundTrippedIonLiteral = ionLiteral.toAstStatement().toExprNode(ion)
         Assert.assertTrue(roundTrippedIonLiteral.metas.hasMeta(IsIonLiteralMeta.TAG))

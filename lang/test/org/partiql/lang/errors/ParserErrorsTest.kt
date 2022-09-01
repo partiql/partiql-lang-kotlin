@@ -520,9 +520,9 @@ class ParserErrorsTest : SqlParserTestBase() {
             ErrorCode.PARSE_UNEXPECTED_TOKEN,
             mapOf(
                 Property.LINE_NUMBER to 1L,
-                Property.COLUMN_NUMBER to 23L,
-                Property.TOKEN_TYPE to TokenType.KEYWORD,
-                Property.TOKEN_VALUE to ion.newSymbol("where")
+                Property.COLUMN_NUMBER to 44L,
+                Property.TOKEN_TYPE to TokenType.EOF,
+                Property.TOKEN_VALUE to ion.newSymbol("EOF")
             ),
             targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
         )
@@ -546,9 +546,9 @@ class ParserErrorsTest : SqlParserTestBase() {
             ErrorCode.PARSE_UNEXPECTED_TOKEN,
             mapOf(
                 Property.LINE_NUMBER to 1L,
-                Property.COLUMN_NUMBER to 23L,
-                Property.TOKEN_TYPE to TokenType.KEYWORD,
-                Property.TOKEN_VALUE to ion.newSymbol("where")
+                Property.COLUMN_NUMBER to 35L,
+                Property.TOKEN_TYPE to TokenType.EOF,
+                Property.TOKEN_VALUE to ion.newSymbol("EOF")
             ),
             targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
         )
@@ -751,7 +751,6 @@ class ParserErrorsTest : SqlParserTestBase() {
         )
     }
 
-    // FIXME: PartiQL Parser marks the entire AT Clause as wrong, but error location should be at `true`
     @Test
     fun expectedIdentForAt() {
         checkInputThrowingParserException(
@@ -1443,7 +1442,6 @@ class ParserErrorsTest : SqlParserTestBase() {
         )
     }
 
-    // FIXME: PartiQL Parser says the error location is at the parenthesis, when the real error token is `*`
     @Test
     fun aggregateWithWildcardOnNonCountNonAggregate() {
         checkInputThrowingParserException(
@@ -1499,7 +1497,6 @@ class ParserErrorsTest : SqlParserTestBase() {
         )
     }
 
-    // FIXME: PartiQL Parser says the error location is at the parenthesis, when the real error token is `a`
     @Test
     fun castNonLiteralArg() {
         checkInputThrowingParserException(
@@ -1526,7 +1523,6 @@ class ParserErrorsTest : SqlParserTestBase() {
         )
     }
 
-    // FIXME: PartiQL Parser says the error location is at the parenthesis, when the real error token is `-1`
     @Test
     fun castNegativeArg() {
         checkInputThrowingParserException(
@@ -1929,9 +1925,9 @@ class ParserErrorsTest : SqlParserTestBase() {
             ErrorCode.PARSE_UNEXPECTED_TOKEN,
             mapOf(
                 Property.LINE_NUMBER to 1L,
-                Property.COLUMN_NUMBER to 27L,
-                Property.TOKEN_TYPE to TokenType.KEYWORD,
-                Property.TOKEN_VALUE to ion.newSymbol("select")
+                Property.COLUMN_NUMBER to 33L,
+                Property.TOKEN_TYPE to TokenType.EOF,
+                Property.TOKEN_VALUE to ion.newSymbol("EOF")
             ),
             targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
         )
@@ -2107,9 +2103,9 @@ class ParserErrorsTest : SqlParserTestBase() {
             ErrorCode.PARSE_UNEXPECTED_TOKEN,
             mapOf(
                 Property.LINE_NUMBER to 1L,
-                Property.COLUMN_NUMBER to 25L,
-                Property.TOKEN_TYPE to TokenType.KEYWORD,
-                Property.TOKEN_VALUE to ion.newSymbol("select")
+                Property.COLUMN_NUMBER to 31L,
+                Property.TOKEN_TYPE to TokenType.EOF,
+                Property.TOKEN_VALUE to ion.newSymbol("EOF")
             ),
             targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
         )
@@ -2407,7 +2403,8 @@ class ParserErrorsTest : SqlParserTestBase() {
         )
     }
 
-    // FIXME: PartiQL Parser says the error location is `where` when it should be `like`
+    // TODO: PartiQL Parser says the error location is `where` when it should be `like`
+    //  See: https://github.com/partiql/partiql-lang-kotlin/issues/731
     @Test
     fun likeWrongOrderOfArgs() {
         checkInputThrowingParserException(
@@ -2452,9 +2449,9 @@ class ParserErrorsTest : SqlParserTestBase() {
             ErrorCode.PARSE_UNEXPECTED_TOKEN,
             mapOf(
                 Property.LINE_NUMBER to 1L,
-                Property.COLUMN_NUMBER to 23L,
-                Property.TOKEN_TYPE to TokenType.KEYWORD,
-                Property.TOKEN_VALUE to ion.newSymbol("where")
+                Property.COLUMN_NUMBER to 44L,
+                Property.TOKEN_TYPE to TokenType.EOF,
+                Property.TOKEN_VALUE to ion.newSymbol("EOF")
             ),
             targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
         )
@@ -2478,9 +2475,9 @@ class ParserErrorsTest : SqlParserTestBase() {
             ErrorCode.PARSE_UNEXPECTED_TOKEN,
             mapOf(
                 Property.LINE_NUMBER to 1L,
-                Property.COLUMN_NUMBER to 23L,
-                Property.TOKEN_TYPE to TokenType.KEYWORD,
-                Property.TOKEN_VALUE to ion.newSymbol("where")
+                Property.COLUMN_NUMBER to 35L,
+                Property.TOKEN_TYPE to TokenType.EOF,
+                Property.TOKEN_VALUE to ion.newSymbol("EOF")
             ),
             targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
         )
@@ -2530,9 +2527,9 @@ class ParserErrorsTest : SqlParserTestBase() {
             ErrorCode.PARSE_UNEXPECTED_TOKEN,
             mapOf(
                 Property.LINE_NUMBER to 1L,
-                Property.COLUMN_NUMBER to 23L,
+                Property.COLUMN_NUMBER to 36L,
                 Property.TOKEN_TYPE to TokenType.KEYWORD,
-                Property.TOKEN_VALUE to ion.newSymbol("where")
+                Property.TOKEN_VALUE to ion.newSymbol("escape")
             ),
             targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
         )
@@ -4727,6 +4724,13 @@ class ParserErrorsTest : SqlParserTestBase() {
         )
     }
 
+    // TODO: This test is ambiguous. In SqlParser, we allow the use of implicit list constructors, and we parse the list
+    //  of EXEC arguments as expressions. Therefore, to deny the use of (arg0, arg1) as an argument does not make sense.
+    //  Take for example a similar query: `EXEC foo arg0, (arg1, arg2)` or `EXEC foo [arg0, arg1]`. Both of these are valid
+    //  queries according to SqlParser. PartiQLParser, on the other hand, allows the `EXEC foo (arg0, arg1)`, as it does
+    //  not have a workaround check for the presence of a left parenthesis (as seen in SqlParser). Therefore, this test
+    //  should be discarded for PartiQLParser.
+    //  See: https://github.com/partiql/partiql-lang-kotlin/issues/733
     @Test
     fun execUnexpectedParenWithArgs() {
         checkInputThrowingParserException(
@@ -4739,17 +4743,6 @@ class ParserErrorsTest : SqlParserTestBase() {
                 Property.TOKEN_VALUE to ion.newSymbol("(")
             ),
             targetParsers = setOf(ParserTypes.SQL_PARSER)
-        )
-        checkInputThrowingParserException(
-            "EXEC foo(arg0, arg1)",
-            ErrorCode.PARSE_UNEXPECTED_TOKEN,
-            mapOf(
-                Property.LINE_NUMBER to 1L,
-                Property.COLUMN_NUMBER to 6L,
-                Property.TOKEN_TYPE to TokenType.IDENTIFIER,
-                Property.TOKEN_VALUE to ion.newSymbol("foo")
-            ),
-            targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
         )
     }
 

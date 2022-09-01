@@ -11,7 +11,7 @@ import org.partiql.lang.ast.AstVersion
 import org.partiql.lang.ast.ExprNode
 import org.partiql.lang.ast.toExprNode
 import org.partiql.lang.eval.EvaluationSession
-import org.partiql.lang.syntax.SqlParser
+import org.partiql.lang.syntax.PartiQLParser
 import org.partiql.lang.util.stripMetas
 import kotlin.test.assertEquals
 
@@ -30,7 +30,7 @@ class LegacySerializerTestAdapter : EvaluatorTestAdapter {
 
     private fun runSerializerAssertions(tc: EvaluatorTestDefinition) {
         if (!tc.excludeLegacySerializerAssertions) {
-            val parser = SqlParser(ION, CUSTOM_TEST_TYPES)
+            val parser = PartiQLParser(ION, CUSTOM_TEST_TYPES)
             val exprNode: ExprNode = parser.parseAstStatement(tc.query).toExprNode(ION)
             val deserializer: AstDeserializer = AstDeserializerBuilder(ION).build()
             AstVersion.values().forEach { astVersion ->
