@@ -154,6 +154,9 @@ fromClauseSimple
     | FROM pathSimple symbolPrimitive              # FromClauseSimpleImplicit
     ;
 
+whereClause
+    : WHERE arg=expr;
+
 /**
  *
  * SELECT AND PROJECTION
@@ -213,7 +216,7 @@ groupAlias
     : GROUP AS symbolPrimitive;
 
 groupKey
-    : expr (AS symbolPrimitive)?;
+    : key=exprSelect (AS symbolPrimitive)?;
 
 /**
  *
@@ -222,19 +225,19 @@ groupKey
  */
 
 havingClause
-    : HAVING expr;
+    : HAVING arg=exprSelect;
 
 fromClause
     : FROM tableReference;
 
-whereClause
-    : WHERE expr;
+whereClauseSelect
+    : WHERE arg=exprSelect;
 
 offsetByClause
-    : OFFSET expr;
+    : OFFSET arg=exprSelect;
 
 limitClause
-    : LIMIT expr;
+    : LIMIT arg=exprSelect;
 
 /**
  *
@@ -329,8 +332,8 @@ tableNonJoin
     ;
 
 tableBaseReference
-    : expr symbolPrimitive              # TableBaseRefSymbol
-    | expr asIdent? atIdent? byIdent?   # TableBaseRefClauses
+    : source=exprSelect symbolPrimitive              # TableBaseRefSymbol
+    | source=exprSelect asIdent? atIdent? byIdent?   # TableBaseRefClauses
     ;
 
 tableUnpivot
@@ -400,15 +403,15 @@ exprBagOp
     ;
 
 exprSelect
-    : selectClause
-        fromClause
-        letClause?
-        whereClause?
-        groupClause?
-        havingClause?
-        orderByClause?
-        limitClause?
-        offsetByClause? # SfwQuery
+    : select=selectClause
+        from=fromClause
+        let=letClause?
+        where=whereClauseSelect?
+        group=groupClause?
+        having=havingClause?
+        order=orderByClause?
+        limit=limitClause?
+        offset=offsetByClause? # SfwQuery
     | exprOr            # SfwBase
     ;
 
