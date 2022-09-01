@@ -304,16 +304,16 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
     override fun visitQueryBase(ctx: PartiQLParser.QueryBaseContext) = visit(ctx.exprSelect(), PartiqlAst.Expr::class)
 
     override fun visitSfwQuery(ctx: PartiQLParser.SfwQueryContext) = PartiqlAst.build {
-        val projection = visit(ctx.selectClause()) as PartiqlAst.Projection
-        val strategy = getSetQuantifierStrategy(ctx.selectClause())
-        val from = visitFromClause(ctx.fromClause())
-        val order = visitOrNull(ctx.orderByClause(), PartiqlAst.OrderBy::class)
-        val group = visitOrNull(ctx.groupClause(), PartiqlAst.GroupBy::class)
-        val limit = visitOrNull(ctx.limitClause(), PartiqlAst.Expr::class)
-        val offset = visitOrNull(ctx.offsetByClause(), PartiqlAst.Expr::class)
-        val where = visitOrNull(ctx.whereClause(), PartiqlAst.Expr::class)
-        val having = visitOrNull(ctx.havingClause(), PartiqlAst.Expr::class)
-        val let = visitOrNull(ctx.letClause(), PartiqlAst.Let::class)
+        val projection = visit(ctx.select, PartiqlAst.Projection::class)
+        val strategy = getSetQuantifierStrategy(ctx.select)
+        val from = visitFromClause(ctx.from)
+        val order = visitOrNull(ctx.order, PartiqlAst.OrderBy::class)
+        val group = visitOrNull(ctx.group, PartiqlAst.GroupBy::class)
+        val limit = visitOrNull(ctx.limit, PartiqlAst.Expr::class)
+        val offset = visitOrNull(ctx.offset, PartiqlAst.Expr::class)
+        val where = visitOrNull(ctx.where, PartiqlAst.Expr::class)
+        val having = visitOrNull(ctx.having, PartiqlAst.Expr::class)
+        val let = visitOrNull(ctx.let, PartiqlAst.Let::class)
         val metas = ctx.selectClause().getMetas()
         select(
             project = projection,
@@ -370,15 +370,17 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
      *
      */
 
-    override fun visitLimitClause(ctx: PartiQLParser.LimitClauseContext): PartiqlAst.Expr = visitExpr(ctx.expr())
+    override fun visitLimitClause(ctx: PartiQLParser.LimitClauseContext): PartiqlAst.Expr = visit(ctx.arg, PartiqlAst.Expr::class)
 
     override fun visitExpr(ctx: PartiQLParser.ExprContext) = visit(ctx.exprBagOp(), PartiqlAst.Expr::class)
 
-    override fun visitOffsetByClause(ctx: PartiQLParser.OffsetByClauseContext) = visitExpr(ctx.expr())
+    override fun visitOffsetByClause(ctx: PartiQLParser.OffsetByClauseContext) = visit(ctx.arg, PartiqlAst.Expr::class)
 
-    override fun visitWhereClause(ctx: PartiQLParser.WhereClauseContext) = visitExpr(ctx.expr())
+    override fun visitWhereClause(ctx: PartiQLParser.WhereClauseContext) = visitExpr(ctx.arg)
 
-    override fun visitHavingClause(ctx: PartiQLParser.HavingClauseContext) = visitExpr(ctx.expr())
+    override fun visitWhereClauseSelect(ctx: PartiQLParser.WhereClauseSelectContext) = visit(ctx.arg, PartiqlAst.Expr::class)
+
+    override fun visitHavingClause(ctx: PartiQLParser.HavingClauseContext) = visit(ctx.arg, PartiqlAst.Expr::class)
 
     /**
      *
@@ -449,7 +451,7 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
      *  This is to match the functionality of SqlParser, but this should likely be adjusted.
      */
     override fun visitGroupKey(ctx: PartiQLParser.GroupKeyContext) = PartiqlAst.build {
-        val expr = visit(ctx.expr(), PartiqlAst.Expr::class)
+        val expr = visit(ctx.key, PartiqlAst.Expr::class)
         val possibleLiteral = when (expr) {
             is PartiqlAst.Expr.Pos -> expr.expr
             is PartiqlAst.Expr.Neg -> expr.expr
@@ -459,7 +461,7 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
             (possibleLiteral is PartiqlAst.Expr.Lit && possibleLiteral.value != ionNull()) ||
             possibleLiteral is PartiqlAst.Expr.LitTime || possibleLiteral is PartiqlAst.Expr.Date
         ) {
-            throw ctx.expr().getStart().err(
+            throw ctx.key.getStart().err(
                 "Literals (including ordinals) not supported in GROUP BY",
                 ErrorCode.PARSE_UNSUPPORTED_LITERALS_GROUPBY
             )
@@ -676,7 +678,7 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
     override fun visitFromClause(ctx: PartiQLParser.FromClauseContext) = visit(ctx.tableReference(), PartiqlAst.FromSource::class)
 
     override fun visitTableBaseRefClauses(ctx: PartiQLParser.TableBaseRefClausesContext) = PartiqlAst.build {
-        val expr = visitExpr(ctx.expr())
+        val expr = visit(ctx.source, PartiqlAst.Expr::class)
         val (asAlias, atAlias, byAlias) = visitNullableItems(listOf(ctx.asIdent(), ctx.atIdent(), ctx.byIdent()), PartiqlAst.Expr.Id::class)
         scan_(expr, asAlias = asAlias.toPigSymbolPrimitive(), byAlias = byAlias.toPigSymbolPrimitive(), atAlias = atAlias.toPigSymbolPrimitive(), metas = expr.metas)
     }
@@ -725,7 +727,7 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
     }
 
     override fun visitTableBaseRefSymbol(ctx: PartiQLParser.TableBaseRefSymbolContext) = PartiqlAst.build {
-        val expr = visitExpr(ctx.expr())
+        val expr = visit(ctx.source, PartiqlAst.Expr::class)
         val name = visitOrNull(ctx.symbolPrimitive(), PartiqlAst.Expr.Id::class)?.name
         scan_(expr, name, metas = expr.metas)
     }
