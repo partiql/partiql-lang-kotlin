@@ -17,7 +17,7 @@ import org.partiql.lang.eval.sourceLocationMeta
 import org.partiql.lang.planner.PlanningProblemDetails
 import org.partiql.lang.planner.createFakeGlobalsResolver
 import org.partiql.lang.planner.problem
-import org.partiql.lang.syntax.SqlParser
+import org.partiql.lang.syntax.PartiQLParser
 import org.partiql.lang.util.ArgumentsProviderBase
 import org.partiql.lang.util.toIntExact
 
@@ -107,7 +107,7 @@ class LogicalToLogicalResolvedVisitorTransformTests {
     )
 
     private val ion = IonSystemBuilder.standard().build()
-    private val parser = SqlParser(ion)
+    private val parser = PartiQLParser(ion)
 
     private fun runTestCase(tc: TestCase) {
         val problemHandler = ProblemCollector()
