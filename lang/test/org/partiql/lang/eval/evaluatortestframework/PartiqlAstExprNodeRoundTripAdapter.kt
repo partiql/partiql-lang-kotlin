@@ -5,7 +5,7 @@ import org.partiql.lang.ION
 import org.partiql.lang.ast.toAstStatement
 import org.partiql.lang.ast.toExprNode
 import org.partiql.lang.eval.EvaluationSession
-import org.partiql.lang.syntax.SqlParser
+import org.partiql.lang.syntax.PartiQLParser
 import kotlin.test.assertEquals
 
 /** Tests [toExprNode] and [toAstStatement]. */
@@ -20,7 +20,7 @@ class PartiqlAstExprNodeRoundTripAdapter : EvaluatorTestAdapter {
     }
 
     private fun runRoundTripTest(tc: EvaluatorTestDefinition) {
-        val parser = SqlParser(ION, CUSTOM_TEST_TYPES)
+        val parser = PartiQLParser(ION, CUSTOM_TEST_TYPES)
         val ast = parser.parseAstStatement(tc.query)
 
         val roundTrippedAst = ast.toExprNode(ION).toAstStatement()

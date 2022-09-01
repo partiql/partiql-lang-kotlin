@@ -16,7 +16,7 @@ import org.partiql.lang.eval.evaluatortestframework.ExpectedResultFormat
 import org.partiql.lang.eval.evaluatortestframework.PipelineEvaluatorTestAdapter
 import org.partiql.lang.eval.evaluatortestframework.PlannerPipelineFactory
 import org.partiql.lang.mockdb.MockDb
-import org.partiql.lang.syntax.SqlParser
+import org.partiql.lang.syntax.PartiQLParser
 
 /** Defines a test case for query evaluation. */
 data class IonResultTestCase(
@@ -66,7 +66,7 @@ data class IonResultTestCase(
     fun toExprNodeTestCase(): ExprNodeTestCase =
         assertDoesNotThrow("IonResultTestCase ${toString()} should not throw when parsing") {
             @Suppress("DEPRECATION")
-            ExprNodeTestCase(name, SqlParser(ION).parseExprNode(sqlUnderTest))
+            ExprNodeTestCase(name, PartiQLParser(ION).parseExprNode(sqlUnderTest))
         }
 }
 

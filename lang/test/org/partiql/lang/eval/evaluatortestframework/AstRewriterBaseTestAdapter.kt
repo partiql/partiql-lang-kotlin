@@ -6,7 +6,7 @@ import org.partiql.lang.ION
 import org.partiql.lang.ast.passes.AstRewriterBase
 import org.partiql.lang.ast.toExprNode
 import org.partiql.lang.eval.EvaluationSession
-import org.partiql.lang.syntax.SqlParser
+import org.partiql.lang.syntax.PartiQLParser
 import kotlin.test.assertEquals
 
 /** Tests [org.partiql.lang.ast.passes.AstRewriterBase]. */
@@ -22,7 +22,7 @@ class AstRewriterBaseTestAdapter : EvaluatorTestAdapter {
     }
 
     private fun testAstRewriterBase(tc: EvaluatorTestDefinition) {
-        val parser = SqlParser(ION, CUSTOM_TEST_TYPES)
+        val parser = PartiQLParser(ION, CUSTOM_TEST_TYPES)
         val ast = parser.parseAstStatement(tc.query)
 
         val exprNode = ast.toExprNode(ION)
