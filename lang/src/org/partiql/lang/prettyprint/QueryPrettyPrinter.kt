@@ -188,6 +188,9 @@ class QueryPrettyPrinter {
                         is PartiqlAst.ConflictAction.DoNothing -> {
                             sb.append(" DO NOTHING")
                         }
+                        is PartiqlAst.ConflictAction.DoReplace -> {
+                            sb.append(" DO REPLACE")
+                        }
                     }
                 }
             }

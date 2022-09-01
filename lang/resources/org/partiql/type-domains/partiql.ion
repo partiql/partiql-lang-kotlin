@@ -373,7 +373,7 @@ may then be further optimized by selecting better implementations of each operat
 
         (sum dml_op
             // `INSERT INTO <expr> <expr>`
-            (insert target::expr values::expr)
+            (insert target::expr values::expr conflict_action::(? conflict_action))
 
             // `INSERT INTO <expr> VALUE <expr> [AT <expr>]` [ON CONFLICT WHERE <expr> DO NOTHING]`
             (insert_value target::expr value::expr index::(? expr) on_conflict::(? on_conflict))
@@ -393,7 +393,11 @@ may then be further optimized by selecting better implementations of each operat
 
         // `CONFLICT_ACTION <action>`
         (sum conflict_action
+            (do_replace value::do_replace_value)
             (do_nothing))
+
+        (sum do_replace_value
+            (excluded))
 
         // A data definition operation.
         (sum ddl_op
@@ -869,4 +873,3 @@ may then be further optimized by selecting better implementations of each operat
         )
     )
 )
-

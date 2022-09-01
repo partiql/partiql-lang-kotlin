@@ -213,6 +213,10 @@ class ASTPrettyPrinter {
                 astType = "DoNothing",
                 attrOfParent = attrOfParent
             )
+            is PartiqlAst.ConflictAction.DoReplace -> RecursionTree(
+                astType = "DoReplace",
+                attrOfParent = attrOfParent
+            )
         }
 
     private fun toRecursionTree(node: PartiqlAst.ReturningExpr, attrOfParent: String? = null): RecursionTree =

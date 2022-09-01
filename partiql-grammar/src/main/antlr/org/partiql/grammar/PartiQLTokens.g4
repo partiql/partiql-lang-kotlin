@@ -100,6 +100,7 @@ END_EXEC: 'END-EXEC';
 ESCAPE: 'ESCAPE';
 EXCEPT: 'EXCEPT';
 EXCEPTION: 'EXCEPTION';
+EXCLUDED: 'EXCLUDED';
 EXEC: 'EXEC';
 EXECUTE: 'EXECUTE';
 EXISTS: 'EXISTS';
@@ -190,6 +191,7 @@ READ: 'READ';
 REAL: 'REAL';
 REFERENCES: 'REFERENCES';
 RELATIVE: 'RELATIVE';
+REPLACE: 'REPLACE';
 RESTRICT: 'RESTRICT';
 REVOKE: 'REVOKE';
 RIGHT: 'RIGHT';
@@ -345,7 +347,7 @@ LITERAL_DECIMAL:
     | '.' DIGIT DIGIT* ([e] [+-]? DIGIT+)?
     | DIGIT DIGIT* ([e] [+-]? DIGIT+)?
     ;
-    
+
 IDENTIFIER
     : [A-Z$_][A-Z0-9$_]*;
 
@@ -426,7 +428,7 @@ ION_ANY: . -> more;
 
 fragment ION_NEWLINE
     : '\u000D\u000A'
-    | '\u000D'       
+    | '\u000D'
     | '\u000A'
     ;
 
@@ -518,7 +520,7 @@ fragment HEX_ESCAPE
 
 fragment UNICODE_ESCAPE
     : '\\u'     HEX_DIGIT_QUARTET
-    | '\\U000'  HEX_DIGIT_QUARTET HEX_DIGIT 
+    | '\\U000'  HEX_DIGIT_QUARTET HEX_DIGIT
     | '\\U0010' HEX_DIGIT_QUARTET
     ;
 

@@ -393,6 +393,7 @@ private class StatementTransformer(val ion: IonSystem) {
     private fun PartiqlAst.OnConflict.toOnConflictNode(): OnConflict {
         return when (this.conflictAction) {
             is PartiqlAst.ConflictAction.DoNothing -> OnConflict(this.expr.toExprNode(), ConflictAction.DO_NOTHING)
+            is PartiqlAst.ConflictAction.DoReplace -> OnConflict(this.expr.toExprNode(), ConflictAction.DO_REPLACE)
         }
     }
 
