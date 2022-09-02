@@ -1,5 +1,6 @@
 package org.partiql.lang.ots_work.stscore
 
+import com.amazon.ionelement.api.MetaContainer
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.ots_work.interfaces.CompileTimeType
@@ -22,6 +23,7 @@ import org.partiql.lang.ots_work.interfaces.operator.ScalarOpId
 import org.partiql.lang.ots_work.interfaces.type.ScalarType
 import org.partiql.lang.ots_work.plugins.standard.operators.StandardBinaryConcatOp
 import org.partiql.lang.ots_work.plugins.standard.operators.StandardBinaryDivideOp
+import org.partiql.lang.ots_work.plugins.standard.operators.StandardLikeOp
 import org.partiql.lang.ots_work.plugins.standard.operators.StandardScalarCastOp
 
 /**
@@ -123,6 +125,24 @@ class ScalarTypeSystem(
     // TODO: remove this method once [TypedOpBehavior.Legacy] is removed
     internal fun invokeIsOp(value: ExprValue, targetType: CompileTimeType): Boolean =
         plugin.scalarIsOp.invoke(value, targetType)
+
+    // TODO: Merge this method into `invokeScalarOp` once we deal with metas in error handling correctly
+    internal fun invokeLikeOp(
+        value: ExprValue,
+        pattern: ExprValue,
+        escape: ExprValue?,
+        metas: MetaContainer?,
+        patternLocationMeta: SourceLocationMeta?,
+        escapeLocationMeta: SourceLocationMeta?,
+    ): ExprValue {
+        val likeOp = (plugin.likeOp as StandardLikeOp)
+
+        likeOp.metas = metas
+        likeOp.patternLocationMeta = patternLocationMeta
+        likeOp.escapeLocationMeta = escapeLocationMeta
+
+        return plugin.likeOp.invoke(value, pattern, escape)
+    }
 
     internal fun invokeScalarOp(opId: ScalarOpId, vararg args: ExprValue, locationMeta: SourceLocationMeta? = null): ExprValue =
         invokeScalarOp(opId, args.toList(), locationMeta)

@@ -71,7 +71,7 @@ data class StandardPlugin(
     override val negOp: NegOp = StandardNegOp
     override val binaryConcatOp: BinaryConcatOp = StandardBinaryConcatOp
     override val notOp: NotOp = StandardNotOp
-    override val likeOp: LikeOp = StandardLikeOp
+    override val likeOp: LikeOp = StandardLikeOp()
     override val scalarFunctions: List<ScalarFunction> =
         listOf(
             CharacterLength,
