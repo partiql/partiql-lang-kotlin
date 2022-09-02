@@ -10,7 +10,9 @@ import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.physical.throwUndefinedVariableException
 import org.partiql.lang.eval.stringValue
+import org.partiql.lang.ots_work.plugins.standard.types.SymbolType
 import org.partiql.lang.types.FunctionSignature
+import org.partiql.lang.types.StaticScalarType
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.types.VarargFormalParameter
 
@@ -38,10 +40,11 @@ import org.partiql.lang.types.VarargFormalParameter
 class DynamicLookupExprFunction : ExprFunction {
     override val signature: FunctionSignature
         get() {
+            val staticSymbolType = StaticScalarType(SymbolType)
             return FunctionSignature(
                 name = DYNAMIC_LOOKUP_FUNCTION_NAME,
                 // Required parameters are: variable name, case sensitivity and lookup strategy
-                requiredParameters = listOf(StaticType.SYMBOL, StaticType.SYMBOL, StaticType.SYMBOL),
+                requiredParameters = listOf(staticSymbolType, staticSymbolType, staticSymbolType),
                 variadicParameter = VarargFormalParameter(StaticType.ANY, 0..Int.MAX_VALUE),
                 returnType = StaticType.ANY
             )

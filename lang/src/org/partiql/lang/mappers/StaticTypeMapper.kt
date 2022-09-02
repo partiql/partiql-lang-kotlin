@@ -4,13 +4,18 @@ import com.amazon.ionelement.api.AnyElement
 import org.partiql.ionschema.model.IonSchemaModel
 import org.partiql.ionschema.model.toIsl
 import org.partiql.lang.eval.ExprValueType
+import org.partiql.lang.ots_work.plugins.standard.types.BlobType
 import org.partiql.lang.ots_work.plugins.standard.types.CharType
+import org.partiql.lang.ots_work.plugins.standard.types.ClobType
 import org.partiql.lang.ots_work.plugins.standard.types.DecimalType
+import org.partiql.lang.ots_work.plugins.standard.types.FloatType
 import org.partiql.lang.ots_work.plugins.standard.types.Int2Type
 import org.partiql.lang.ots_work.plugins.standard.types.Int4Type
 import org.partiql.lang.ots_work.plugins.standard.types.Int8Type
 import org.partiql.lang.ots_work.plugins.standard.types.IntType
 import org.partiql.lang.ots_work.plugins.standard.types.StringType
+import org.partiql.lang.ots_work.plugins.standard.types.SymbolType
+import org.partiql.lang.ots_work.plugins.standard.types.TimeStampType
 import org.partiql.lang.ots_work.plugins.standard.types.VarcharType
 import org.partiql.lang.types.AnyOfType
 import org.partiql.lang.types.AnyType
@@ -25,6 +30,15 @@ import org.partiql.lang.util.toIntExact
 import kotlin.reflect.KClass
 
 internal typealias TypeDefMap = Map<String, IonSchemaModel.TypeDefinition>
+
+internal val staticIntType = StaticScalarType(IntType)
+internal val staticFloatType = StaticScalarType(FloatType)
+internal val staticDecimalType = StaticScalarType(DecimalType, listOf(null, 0))
+internal val staticTimestampType = StaticScalarType(TimeStampType)
+internal val staticSymbolType = StaticScalarType(SymbolType)
+internal val staticStringType = StaticScalarType(StringType)
+internal val staticClobType = StaticScalarType(ClobType)
+internal val staticBlobType = StaticScalarType(BlobType)
 
 // FIXME: Duplicated from StaticType because of - https://github.com/partiql/partiql-lang-kotlin/issues/515
 internal fun isOptional(type: StaticType) = type.typeDomain.contains(ExprValueType.MISSING)
@@ -122,14 +136,14 @@ class StaticTypeMapper(schema: IonSchemaModel.Schema) {
                 when (name.text) {
                     // TODO: Consider replacing raw strings with a kotlin type
                     "bool" -> StaticType.BOOL
-                    "int" -> StaticType.INT
-                    "float" -> StaticType.FLOAT
-                    "decimal" -> StaticType.DECIMAL
-                    "timestamp" -> StaticType.TIMESTAMP
-                    "symbol" -> StaticType.SYMBOL
-                    "string" -> StaticType.STRING
-                    "clob" -> StaticType.CLOB
-                    "blob" -> StaticType.BLOB
+                    "int" -> staticIntType
+                    "float" -> staticFloatType
+                    "decimal" -> staticDecimalType
+                    "timestamp" -> staticTimestampType
+                    "symbol" -> staticSymbolType
+                    "string" -> staticStringType
+                    "clob" -> staticClobType
+                    "blob" -> staticBlobType
                     "bag" -> StaticType.BAG
                     "missing" -> StaticType.MISSING
                     "list" -> StaticType.LIST
