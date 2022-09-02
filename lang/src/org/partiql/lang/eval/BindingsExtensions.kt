@@ -35,19 +35,32 @@ fun <T> Bindings<T>.delegate(fallback: Bindings<T>): Bindings<T> =
  * Wraps a binding with a set of names that should not be resolved to anything.
  *
  * @receiver The [Bindings] to delegate over.
- * @param names, the blacklisted names
+ * @param names, the deny listed names
  */
-fun <T> Bindings<T>.blacklist(vararg names: String) = object : Bindings<T> {
-    val blacklisted = names.toSet()
-    val loweredBlacklisted = names.map { it.toLowerCase() }.toSet()
+@Deprecated(
+    message = "To be replaced with functionally equivalent denyList method.",
+    replaceWith = ReplaceWith("denyList", "org.partiql.lang.eval.denyList"),
+    level = DeprecationLevel.WARNING
+)
+fun <T> Bindings<T>.blacklist(vararg names: String) = this.denyList(*names)
+
+/**
+ * Wraps a binding with a set of names that should not be resolved to anything.
+ *
+ * @receiver The [Bindings] to delegate over.
+ * @param names, the deny listed names
+ */
+fun <T> Bindings<T>.denyList(vararg names: String) = object : Bindings<T> {
+    val denyListed = names.toSet()
+    val loweredDenyListed = names.map { it.toLowerCase() }.toSet()
 
     override fun get(bindingName: BindingName): T? {
-        val isBlacklisted = when (bindingName.bindingCase) {
-            BindingCase.SENSITIVE -> blacklisted.contains(bindingName.name)
-            BindingCase.INSENSITIVE -> loweredBlacklisted.contains(bindingName.loweredName)
+        val isDenyListed = when (bindingName.bindingCase) {
+            BindingCase.SENSITIVE -> denyListed.contains(bindingName.name)
+            BindingCase.INSENSITIVE -> loweredDenyListed.contains(bindingName.loweredName)
         }
         return when {
-            isBlacklisted -> null
+            isDenyListed -> null
             else -> this[bindingName]
         }
     }
