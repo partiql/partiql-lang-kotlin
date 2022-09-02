@@ -7473,7 +7473,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
                             createInvalidArgumentTypeForFunctionError(
                                 sourceLocation = SourceLocationMeta(1L, 1L, 3L),
                                 functionName = "sum",
-                                expectedArgType = unionOf(NULL, NUMERIC),
+                                expectedArgType = unionOf(MISSING, NULL, NUMERIC).flatten(),
                                 actualType = STRING
                             )
                         )
@@ -7489,7 +7489,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
                             createInvalidArgumentTypeForFunctionError(
                                 sourceLocation = SourceLocationMeta(1L, 1L, 3L),
                                 functionName = "avg",
-                                expectedArgType = unionOf(NULL, NUMERIC),
+                                expectedArgType = unionOf(MISSING, NULL, NUMERIC).flatten(),
                                 actualType = STRING
                             )
                         )

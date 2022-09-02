@@ -568,8 +568,9 @@ internal class StaticTypeInferenceVisitorTransform(
                 // In case that any element is MISSING or there is no element, we should return NULL
                 "max", "min" -> StaticType.unionOf(elementTypes.convertMissingToNull())
                 "sum" -> when {
-                    elementTypes.all { !it.isUnknownOrNumeric() } -> StaticType.unionOf(StaticType.NULL, StaticType.NUMERIC).apply {
-                        handleInvalidInputTypeForAggFun(sourceLocation, funcName, elementType, this)
+                    elementTypes.all { !it.isUnknownOrNumeric() } -> {
+                        handleInvalidInputTypeForAggFun(sourceLocation, funcName, elementType, StaticType.unionOf(StaticType.NULL_OR_MISSING, StaticType.NUMERIC).flatten())
+                        StaticType.unionOf(StaticType.NULL, StaticType.NUMERIC)
                     }
                     elementTypes.any { !it.isUnknownOrNumeric() } -> StaticType.unionOf(
                         elementTypes.filter { it.isUnknownOrNumeric() }.toMutableSet().apply { add(StaticType.MISSING) }
@@ -580,7 +581,7 @@ internal class StaticTypeInferenceVisitorTransform(
                 // "avg" returns DECIMAL or NULL
                 "avg" -> when {
                     elementTypes.all { !it.isUnknownOrNumeric() } -> {
-                        handleInvalidInputTypeForAggFun(sourceLocation, funcName, elementType, StaticType.unionOf(StaticType.NULL, StaticType.NUMERIC))
+                        handleInvalidInputTypeForAggFun(sourceLocation, funcName, elementType, StaticType.unionOf(StaticType.NULL_OR_MISSING, StaticType.NUMERIC).flatten())
                         StaticType.unionOf(StaticType.NULL, StaticType.DECIMAL)
                     }
                     else -> StaticType.unionOf(
