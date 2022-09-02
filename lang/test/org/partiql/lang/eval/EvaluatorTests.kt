@@ -91,7 +91,6 @@ class EvaluatorTests {
             "aggregateInSubqueryOfSelect", // TODO: Support aggregates in physical plans
             "aggregateInSubqueryOfSelectValue", // TODO: Support aggregates in physical plans
             "aggregateWithAliasingInSubqueryOfSelectValue", // TODO: Support aggregates in physical plans
-            "selectDistinctWithAggregate", // TODO: Support aggregates in physical plans
             "selectDistinctAggregationWithGroupBy", // TODO: Support GROUP BY in physical plans
             "selectDistinctWithGroupBy", // TODO: Support GROUP BY in physical plans
             "unpivotStructWithMissingField", // TODO: Support UNPIVOT in physical plans

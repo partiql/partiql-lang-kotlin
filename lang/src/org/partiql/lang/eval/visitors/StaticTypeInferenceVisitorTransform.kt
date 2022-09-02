@@ -530,9 +530,12 @@ internal class StaticTypeInferenceVisitorTransform(
             val funcName = nAry.funcName
             // unwrap the type if this is a collectionType
             // only collection types work for agg functions, e.g. SUM(1) & SUM(NULL) return NULL
-            val type = nAry.arg.getStaticType() as? CollectionType ?: return nAry.withStaticType(StaticType.NULL)
+            val argType = when (val type = nAry.arg.getStaticType()) {
+                is CollectionType -> type.elementType
+                else -> type
+            }
             val sourceLocation = nAry.getStartingSourceLocationMeta()
-            return nAry.withStaticType(computeReturnTypeForAggFunc(funcName.text, type.elementType, sourceLocation))
+            return nAry.withStaticType(computeReturnTypeForAggFunc(funcName.text, argType, sourceLocation))
         }
 
         private fun handleInvalidInputTypeForAggFun(sourceLocation: SourceLocationMeta, funcName: String, actualType: StaticType, expectedType: StaticType) {

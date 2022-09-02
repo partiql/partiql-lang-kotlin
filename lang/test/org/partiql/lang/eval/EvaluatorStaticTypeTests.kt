@@ -114,7 +114,6 @@ class EvaluatorStaticTypeTests {
 
             "parameters",
             // STIR does not support aggregates
-            "selectDistinctWithAggregate",
             "selectDistinctAggregationWithGroupBy",
             "selectDistinctWithGroupBy",
             "selectDistinctWithJoin",

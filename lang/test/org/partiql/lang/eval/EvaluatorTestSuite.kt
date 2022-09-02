@@ -1111,12 +1111,6 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
         )
 
         test(
-            "selectDistinctWithAggregate",
-            """SELECT SUM(DISTINCT t.a) AS a FROM `[{a:10}, {a:1}, {a:10}, {a:3}]` t""",
-            "$partiql_bag::[{a:14}]"
-        )
-
-        test(
             "selectDistinctSubQuery",
             """SELECT * FROM (SELECT DISTINCT t.a FROM `[{a: 1}, {a: 2}, {a: 1}]` t)""",
             """$partiql_bag::[{a:1},{a:2}]"""
