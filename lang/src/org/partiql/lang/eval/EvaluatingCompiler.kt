@@ -1721,7 +1721,7 @@ internal class EvaluatingCompiler(
             val letSourceThunks = selectExpr.fromLet?.let { compileLetSources(it) }
             val sourceThunks = compileQueryWithoutProjection(selectExpr, fromSourceThunks, letSourceThunks)
 
-            val orderByThunk = selectExpr.order?.let { compileOrderByExpression(selectExpr.order.sortSpecs) }
+            val orderByThunk = selectExpr.order?.let { compileOrderByExpression(selectExpr, selectExpr.order, allFromSourceAliases) }
             val orderByLocationMeta = selectExpr.order?.metas?.sourceLocation
 
             val offsetThunk = selectExpr.offset?.let { compileAstExpr(it) }
@@ -1972,72 +1972,84 @@ internal class EvaluatingCompiler(
                     }
                 }
                 is PartiqlAst.Projection.ProjectList -> {
-                    val items = project.projectItems
                     nestCompilationContext(ExpressionContext.SELECT_LIST, allFromSourceAliases) {
-                        val projectionThunk: ThunkEnvValue<List<ExprValue>> =
-                            when {
-                                items.filterIsInstance<PartiqlAst.Projection.ProjectStar>().any() -> {
-                                    errNoContext(
-                                        "Encountered a PartiqlAst.Projection.ProjectStar--did SelectStarVisitorTransform execute?",
-                                        errorCode = ErrorCode.INTERNAL_ERROR,
-                                        internal = true
-                                    )
-                                }
-                                else -> {
-                                    val projectionElements =
-                                        compileSelectListToProjectionElements(project)
-
-                                    val ordering = if (items.none { it is PartiqlAst.ProjectItem.ProjectAll })
-                                        StructOrdering.ORDERED
-                                    else
-                                        StructOrdering.UNORDERED
-
-                                    thunkFactory.thunkEnvValueList(project.metas) { env, _ ->
-                                        val columns = mutableListOf<ExprValue>()
-                                        for (element in projectionElements) {
-                                            when (element) {
-                                                is SingleProjectionElement -> {
-                                                    val eval = element.thunk(env)
-                                                    columns.add(eval.namedValue(element.name))
-                                                }
-                                                is MultipleProjectionElement -> {
-                                                    for (projThunk in element.thunks) {
-                                                        val value = projThunk(env)
-                                                        if (value.type == ExprValueType.MISSING) continue
-
-                                                        val children = value.asSequence()
-                                                        if (!children.any() || value.type.isSequence) {
-                                                            val name = syntheticColumnName(columns.size).exprValue()
-                                                            columns.add(value.namedValue(name))
-                                                        } else {
-                                                            val valuesToProject =
-                                                                when (compileOptions.projectionIteration) {
-                                                                    ProjectionIterationBehavior.FILTER_MISSING -> {
-                                                                        value.filter { it.type != ExprValueType.MISSING }
-                                                                    }
-                                                                    ProjectionIterationBehavior.UNFILTERED -> value
-                                                                }
-                                                            for (childValue in valuesToProject) {
-                                                                val namedFacet = childValue.asFacet(Named::class.java)
-                                                                val name = namedFacet?.name
-                                                                    ?: syntheticColumnName(columns.size).exprValue()
-                                                                columns.add(childValue.namedValue(name))
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                        createStructExprValue(columns.asSequence(), ordering)
-                                    }
-                                }
-                            }
+                        val projectionThunk: ThunkEnvValue<List<ExprValue>> = getProjectionListThunk(project)
                         getQueryThunk(projectionThunk)
-                    } // nestCompilationContext(ExpressionContext.SELECT_LIST)
-                } // is SelectProjectionList
+                    }
+                }
                 is PartiqlAst.Projection.ProjectStar -> error("Internal Error: PartiqlAst.Projection.ProjectStar can only be wrapped in PartiqlAst.Projection.ProjectList")
             }
         }
+    }
+
+    /**
+     * Returns a thunk to create structs based on the requested projection
+     */
+    private fun getProjectionListThunk(project: PartiqlAst.Projection.ProjectList): ThunkEnvValue<List<ExprValue>> {
+        val items = project.projectItems
+        return when {
+            items.filterIsInstance<PartiqlAst.Projection.ProjectStar>().any() -> {
+                errNoContext(
+                    "Encountered a PartiqlAst.Projection.ProjectStar--did SelectStarVisitorTransform execute?",
+                    errorCode = ErrorCode.INTERNAL_ERROR,
+                    internal = true
+                )
+            }
+            else -> {
+                val projectionElements = compileSelectListToProjectionElements(project)
+                val ordering = when (items.none { it is PartiqlAst.ProjectItem.ProjectAll }) {
+                    true -> StructOrdering.ORDERED
+                    false -> StructOrdering.UNORDERED
+                }
+
+                thunkFactory.thunkEnvValueList(project.metas) { env, _ ->
+                    val columns = getProjectionColumns(env, projectionElements)
+                    createStructExprValue(columns.asSequence(), ordering)
+                }
+            }
+        }
+    }
+
+    /**
+     * Returns the columns (with names/values) of a projection
+     */
+    private fun getProjectionColumns(env: Environment, projectionElements: List<ProjectionElement>): List<ExprValue> {
+        val columns = mutableListOf<ExprValue>()
+        for (element in projectionElements) {
+            when (element) {
+                is SingleProjectionElement -> {
+                    val eval = element.thunk(env)
+                    columns.add(eval.namedValue(element.name))
+                }
+                is MultipleProjectionElement -> {
+                    for (projThunk in element.thunks) {
+                        val value = projThunk(env)
+                        if (value.type == ExprValueType.MISSING) continue
+
+                        val children = value.asSequence()
+                        if (!children.any() || value.type.isSequence) {
+                            val name = syntheticColumnName(columns.size).exprValue()
+                            columns.add(value.namedValue(name))
+                        } else {
+                            val valuesToProject =
+                                when (compileOptions.projectionIteration) {
+                                    ProjectionIterationBehavior.FILTER_MISSING -> {
+                                        value.filter { it.type != ExprValueType.MISSING }
+                                    }
+                                    ProjectionIterationBehavior.UNFILTERED -> value
+                                }
+                            for (childValue in valuesToProject) {
+                                val namedFacet = childValue.asFacet(Named::class.java)
+                                val name = namedFacet?.name
+                                    ?: syntheticColumnName(columns.size).exprValue()
+                                columns.add(childValue.namedValue(name))
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return columns
     }
 
     private fun compileGroupByExpressions(groupByItems: List<PartiqlAst.GroupKey>): List<CompiledGroupByItem> =
@@ -2070,8 +2082,35 @@ internal class EvaluatingCompiler(
             GroupKeyExprValue(valueFactory.ion, keyValues.asSequence(), uniqueNames)
         }
 
-    private fun compileOrderByExpression(sortSpecs: List<PartiqlAst.SortSpec>): List<CompiledOrderByItem> =
-        sortSpecs.map {
+    /**
+     * Returns a modified environment where the local bindings contain the Projection Aliases
+     */
+    private fun getOrderByEnv(projections: List<ProjectionElement>) = { env: Environment ->
+        val bindings = Bindings.buildLazyBindings<ExprValue> {
+            projections.forEach { projection ->
+                if (projection is SingleProjectionElement && projection.name.type == ExprValueType.STRING) {
+                    addBinding(projection.name.stringValue()) {
+                        projection.thunk.invoke(env)
+                    }
+                }
+            }
+        }
+        env.nest(bindings)
+    }
+
+    /**
+     * Modifies the current environment to include the projection bindings and returns a compiled ORDER BY clause.
+     */
+    private fun compileOrderByExpression(select: PartiqlAst.Expr.Select, order: PartiqlAst.OrderBy, fromAliases: Set<String>): List<CompiledOrderByItem> {
+        val projections = when (select.project) {
+            is PartiqlAst.Projection.ProjectList -> {
+                nestCompilationContext(ExpressionContext.SELECT_LIST, fromAliases) {
+                    compileSelectListToProjectionElements(select.project)
+                }
+            }
+            else -> emptyList()
+        }
+        return order.sortSpecs.map {
             it.orderingSpec
                 ?: errNoContext(
                     "SortSpec.orderingSpec was not specified",
@@ -2099,8 +2138,17 @@ internal class EvaluatingCompiler(
                     }
             }
 
-            CompiledOrderByItem(comparator, compileAstExpr(it.expr))
+            CompiledOrderByItem(
+                comparator,
+                thunkFactory.thunkEnv(order.metas) { env ->
+                    val orderByEnv = getOrderByEnv(projections)(env)
+                    nestCompilationContext(ExpressionContext.NORMAL, emptySet()) {
+                        compileAstExpr(it.expr)(orderByEnv)
+                    }
+                }
+            )
         }
+    }
 
     private fun <T> evalOrderBy(
         rows: Sequence<T>,
