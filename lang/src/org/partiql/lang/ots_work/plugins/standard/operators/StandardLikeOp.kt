@@ -57,7 +57,7 @@ class StandardLikeOp(
                 )
             }
             else -> {
-                val (patternString: kotlin.String, escapeChar: kotlin.Int?) =
+                val (patternString: String, escapeChar: Int?) =
                     checkPattern(pattern.ionValue, patternLocationMeta, escape?.ionValue, escapeLocationMeta)
                 val likeRegexPattern = when {
                     patternString.isEmpty() -> Pattern.compile("")

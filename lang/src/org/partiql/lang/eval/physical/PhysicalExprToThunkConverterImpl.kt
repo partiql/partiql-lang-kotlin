@@ -15,7 +15,6 @@
 package org.partiql.lang.eval.physical
 
 import com.amazon.ion.IonString
-import com.amazon.ion.IonValue
 import com.amazon.ion.Timestamp
 import com.amazon.ionelement.api.MetaContainer
 import com.amazon.ionelement.api.toIonValue
@@ -71,7 +70,6 @@ import org.partiql.lang.eval.exprEquals
 import org.partiql.lang.eval.fillErrorContext
 import org.partiql.lang.eval.isNotUnknown
 import org.partiql.lang.eval.isUnknown
-import org.partiql.lang.eval.like.parsePattern
 import org.partiql.lang.eval.namedValue
 import org.partiql.lang.eval.numberValue
 import org.partiql.lang.eval.rangeOver
@@ -105,7 +103,6 @@ import org.partiql.lang.types.TypedOpParameter
 import org.partiql.lang.types.UnknownArguments
 import org.partiql.lang.types.toTypedOpParameter
 import org.partiql.lang.util.checkThreadInterrupted
-import org.partiql.lang.util.codePointSequence
 import org.partiql.lang.util.div
 import org.partiql.lang.util.isZero
 import org.partiql.lang.util.minus
@@ -119,7 +116,6 @@ import org.partiql.lang.util.unaryMinus
 import java.math.BigDecimal
 import java.util.LinkedList
 import java.util.TreeSet
-import java.util.regex.Pattern
 import kotlin.collections.ArrayList
 
 /**
@@ -1525,207 +1521,40 @@ internal class PhysicalExprToThunkConverterImpl(
         val patternLocationMeta = patternExpr.metas.toPartiQlMetaContainer().sourceLocation
         val escapeLocationMeta = escapeExpr?.metas?.toPartiQlMetaContainer()?.sourceLocation
 
-        // This is so that null short-circuits can be supported.
-        fun getRegexPattern(pattern: ExprValue, escape: ExprValue?): (() -> Pattern)? {
-            val patternArgs = listOfNotNull(pattern, escape)
-            when {
-                patternArgs.any { it.type.isUnknown } -> return null
-                patternArgs.any { !it.type.isText } -> return {
-                    err(
-                        "LIKE expression must be given non-null strings as input",
-                        ErrorCode.EVALUATOR_LIKE_INVALID_INPUTS,
-                        errorContextFrom(metas).also {
-                            it[Property.LIKE_PATTERN] = pattern.ionValue.toString()
-                            if (escape != null) it[Property.LIKE_ESCAPE] = escape.ionValue.toString()
-                        },
-                        internal = false
-                    )
-                }
-                else -> {
-                    val (patternString: String, escapeChar: Int?) =
-                        checkPattern(pattern.ionValue, patternLocationMeta, escape?.ionValue, escapeLocationMeta)
-                    val likeRegexPattern = when {
-                        patternString.isEmpty() -> Pattern.compile("")
-                        else -> parsePattern(patternString, escapeChar)
-                    }
-                    return { likeRegexPattern }
-                }
-            }
-        }
-
-        fun matchRegexPattern(value: ExprValue, likePattern: (() -> Pattern)?): ExprValue {
-            return when {
-                likePattern == null || value.type.isUnknown -> valueFactory.nullValue
-                !value.type.isText -> err(
-                    "LIKE expression must be given non-null strings as input",
-                    ErrorCode.EVALUATOR_LIKE_INVALID_INPUTS,
-                    errorContextFrom(metas).also {
-                        it[Property.LIKE_VALUE] = value.ionValue.toString()
-                    },
-                    internal = false
-                )
-                else -> valueFactory.newBoolean(likePattern().matcher(value.stringValue()).matches())
-            }
-        }
-
-        val valueThunk = compileAstExpr(valueExpr)
-
         // If the pattern and escape expressions are literals then we can compile the pattern now and
         // re-use it with every execution. Otherwise, we must re-compile the pattern every time.
         return when {
-            patternExpr is PartiqlPhysical.Expr.Lit && (escapeExpr == null || escapeExpr is PartiqlPhysical.Expr.Lit) -> {
-                val patternParts = getRegexPattern(
-                    valueFactory.newFromIonValue(patternExpr.value.toIonValue(valueFactory.ion)),
-                    (escapeExpr as? PartiqlPhysical.Expr.Lit)?.value?.toIonValue(valueFactory.ion)
-                        ?.let { valueFactory.newFromIonValue(it) }
-                )
+            valueExpr is PartiqlPhysical.Expr.Lit && patternExpr is PartiqlPhysical.Expr.Lit && (escapeExpr == null || escapeExpr is PartiqlPhysical.Expr.Lit) -> {
+                val value = valueFactory.newFromIonValue(valueExpr.value.toIonValue(valueFactory.ion))
+                val pattern = valueFactory.newFromIonValue(patternExpr.value.toIonValue(valueFactory.ion))
+                val escape = (escapeExpr as? PartiqlPhysical.Expr.Lit)?.value?.toIonValue(valueFactory.ion)
+                    ?.let { valueFactory.newFromIonValue(it) }
 
-                // If valueExpr is also a literal then we can evaluate this at compile time and return a constant.
-                if (valueExpr is PartiqlPhysical.Expr.Lit) {
-                    val resultValue = matchRegexPattern(
-                        valueFactory.newFromIonValue(valueExpr.value.toIonValue(valueFactory.ion)),
-                        patternParts
-                    )
-                    return thunkFactory.thunkEnv(metas) { resultValue }
-                } else {
-                    thunkFactory.thunkEnvOperands(metas, valueThunk) { _, value ->
-                        matchRegexPattern(value, patternParts)
-                    }
-                }
+                val resultValue = scalarTypeSystem.invokeLikeOp(value, pattern, escape, metas, patternLocationMeta, escapeLocationMeta)
+
+                return thunkFactory.thunkEnv(metas) { resultValue }
             }
             else -> {
                 val patternThunk = compileAstExpr(patternExpr)
+                val valueThunk = compileAstExpr(valueExpr)
+
                 when (escapeExpr) {
                     null -> {
                         // thunk that re-compiles the DFA every evaluation without a custom escape sequence
                         thunkFactory.thunkEnvOperands(metas, valueThunk, patternThunk) { _, value, pattern ->
-                            val pps = getRegexPattern(pattern, null)
-                            matchRegexPattern(value, pps)
+                            scalarTypeSystem.invokeLikeOp(value, pattern, null, metas, patternLocationMeta, escapeLocationMeta)
                         }
                     }
                     else -> {
                         // thunk that re-compiles the pattern every evaluation but *with* a custom escape sequence
                         val escapeThunk = compileAstExpr(escapeExpr)
-                        thunkFactory.thunkEnvOperands(
-                            metas,
-                            valueThunk,
-                            patternThunk,
-                            escapeThunk
-                        ) { _, value, pattern, escape ->
-                            val pps = getRegexPattern(pattern, escape)
-                            matchRegexPattern(value, pps)
+                        thunkFactory.thunkEnvOperands(metas, valueThunk, patternThunk, escapeThunk) { _, value, pattern, escape ->
+                            scalarTypeSystem.invokeLikeOp(value, pattern, escape, metas, patternLocationMeta, escapeLocationMeta)
                         }
                     }
                 }
             }
         }
-    }
-
-    /**
-     * Given the pattern and optional escape character in a `LIKE` predicate as [IonValue]s
-     * check their validity based on the SQL92 spec and return a triple that contains in order
-     *
-     * - the search pattern as a string
-     * - the escape character, possibly `null`
-     * - the length of the search pattern. The length of the search pattern is either
-     *   - the length of the string representing the search pattern when no escape character is used
-     *   - the length of the string representing the search pattern without counting uses of the escape character
-     *     when an escape character is used
-     *
-     * A search pattern is valid when
-     * 1. pattern is not null
-     * 1. pattern contains characters where `_` means any 1 character and `%` means any string of length 0 or more
-     * 1. if the escape character is specified then pattern can be deterministically partitioned into character groups where
-     *     1. A length 1 character group consists of any character other than the ESCAPE character
-     *     1. A length 2 character group consists of the ESCAPE character followed by either `_` or `%` or the ESCAPE character itself
-     *
-     * @param pattern search pattern
-     * @param escape optional escape character provided in the `LIKE` predicate
-     *
-     * @return a triple that contains in order the search pattern as a [String], optionally the code point for the escape character if one was provided
-     * and the size of the search pattern excluding uses of the escape character
-     */
-    private fun checkPattern(
-        pattern: IonValue,
-        patternLocationMeta: SourceLocationMeta?,
-        escape: IonValue?,
-        escapeLocationMeta: SourceLocationMeta?
-    ): Pair<String, Int?> {
-
-        val patternString = pattern.stringValue()
-            ?: err(
-                "Must provide a non-null value for PATTERN in a LIKE predicate: $pattern",
-                ErrorCode.EVALUATOR_LIKE_PATTERN_INVALID_ESCAPE_SEQUENCE,
-                errorContextFrom(patternLocationMeta),
-                internal = false
-            )
-
-        escape?.let {
-            val escapeCharString = checkEscapeChar(escape, escapeLocationMeta)
-            val escapeCharCodePoint = escapeCharString.codePointAt(0) // escape is a string of length 1
-            val validEscapedChars = setOf('_'.toInt(), '%'.toInt(), escapeCharCodePoint)
-            val iter = patternString.codePointSequence().iterator()
-
-            while (iter.hasNext()) {
-                val current = iter.next()
-                if (current == escapeCharCodePoint && (!iter.hasNext() || !validEscapedChars.contains(iter.next()))) {
-                    err(
-                        "Invalid escape sequence : $patternString",
-                        ErrorCode.EVALUATOR_LIKE_PATTERN_INVALID_ESCAPE_SEQUENCE,
-                        errorContextFrom(patternLocationMeta).apply {
-                            set(Property.LIKE_PATTERN, patternString)
-                            set(Property.LIKE_ESCAPE, escapeCharString)
-                        },
-                        internal = false
-                    )
-                }
-            }
-            return Pair(patternString, escapeCharCodePoint)
-        }
-        return Pair(patternString, null)
-    }
-
-    /**
-     * Given an [IonValue] to be used as the escape character in a `LIKE` predicate check that it is
-     * a valid character based on the SQL Spec.
-     *
-     *
-     * A value is a valid escape when
-     * 1. it is 1 character long, and,
-     * 1. Cannot be null (SQL92 spec marks this cases as *unknown*)
-     *
-     * @param escape value provided as an escape character for a `LIKE` predicate
-     *
-     * @return the escape character as a [String] or throws an exception when the input is invalid
-     */
-    private fun checkEscapeChar(escape: IonValue, locationMeta: SourceLocationMeta?): String {
-        val escapeChar = escape.stringValue() ?: err(
-            "Must provide a value when using ESCAPE in a LIKE predicate: $escape",
-            ErrorCode.EVALUATOR_LIKE_PATTERN_INVALID_ESCAPE_SEQUENCE,
-            errorContextFrom(locationMeta),
-            internal = false
-        )
-        when (escapeChar) {
-            "" -> {
-                err(
-                    "Cannot use empty character as ESCAPE character in a LIKE predicate: $escape",
-                    ErrorCode.EVALUATOR_LIKE_PATTERN_INVALID_ESCAPE_SEQUENCE,
-                    errorContextFrom(locationMeta),
-                    internal = false
-                )
-            }
-            else -> {
-                if (escapeChar.trim().length != 1) {
-                    err(
-                        "Escape character must have size 1 : $escapeChar",
-                        ErrorCode.EVALUATOR_LIKE_PATTERN_INVALID_ESCAPE_SEQUENCE,
-                        errorContextFrom(locationMeta),
-                        internal = false
-                    )
-                }
-            }
-        }
-        return escapeChar
     }
 
     private fun compileExec(node: PartiqlPhysical.Statement.Exec): PhysicalPlanThunk {

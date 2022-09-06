@@ -2519,20 +2519,27 @@ internal class EvaluatingCompiler(
                 val escape = (escapeExpr as? PartiqlAst.Expr.Lit)?.value?.toIonValue(valueFactory.ion)
                     ?.let { valueFactory.newFromIonValue(it) }
 
-                thunkFactory.thunkEnv(metas) { scalarTypeSystem.invokeLikeOp(value, pattern, escape, metas, patternLocationMeta, escapeLocationMeta) }
+                val resultValue = scalarTypeSystem.invokeLikeOp(value, pattern, escape, metas, patternLocationMeta, escapeLocationMeta)
+
+                return thunkFactory.thunkEnv(metas) { resultValue }
             }
             else -> {
-                val valueThunk = compileAstExpr(valueExpr)
                 val patternThunk = compileAstExpr(patternExpr)
+                val valueThunk = compileAstExpr(valueExpr)
 
                 when (escapeExpr) {
-                    // thunk that re-compiles the DFA every evaluation without a custom escape sequence
-                    null -> thunkFactory.thunkEnvOperands(metas, valueThunk, patternThunk) { _, value, pattern ->
-                        scalarTypeSystem.invokeLikeOp(value, pattern, null, metas, patternLocationMeta, escapeLocationMeta)
+                    null -> {
+                        // thunk that re-compiles the DFA every evaluation without a custom escape sequence
+                        thunkFactory.thunkEnvOperands(metas, valueThunk, patternThunk) { _, value, pattern ->
+                            scalarTypeSystem.invokeLikeOp(value, pattern, null, metas, patternLocationMeta, escapeLocationMeta)
+                        }
                     }
-                    // thunk that re-compiles the pattern every evaluation but *with* a custom escape sequence
-                    else -> thunkFactory.thunkEnvOperands(metas, valueThunk, patternThunk, compileAstExpr(escapeExpr)) { _, value, pattern, escape ->
-                        scalarTypeSystem.invokeLikeOp(value, pattern, escape, metas, patternLocationMeta, escapeLocationMeta)
+                    else -> {
+                        // thunk that re-compiles the pattern every evaluation but *with* a custom escape sequence
+                        val escapeThunk = compileAstExpr(escapeExpr)
+                        thunkFactory.thunkEnvOperands(metas, valueThunk, patternThunk, escapeThunk) { _, value, pattern, escape ->
+                            scalarTypeSystem.invokeLikeOp(value, pattern, escape, metas, patternLocationMeta, escapeLocationMeta)
+                        }
                     }
                 }
             }
