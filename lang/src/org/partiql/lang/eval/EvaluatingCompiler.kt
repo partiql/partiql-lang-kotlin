@@ -128,16 +128,12 @@ private typealias ThunkEnvValue<T> = ThunkValue<Environment, T>
  */
 internal class EvaluatingCompiler(
     private val valueFactory: ExprValueFactory,
-    private val functions: List<ExprFunction>,
+    private val functions: Map<String, ExprFunction>,
     private val customTypedOpParameters: Map<String, TypedOpParameter>,
     private val procedures: Map<String, StoredProcedure>,
     private val compileOptions: CompileOptions = CompileOptions.standard(),
     private val scalarTypeSystem: ScalarTypeSystem
 ) {
-    private val allFunctions = functions.plus(
-        scalarTypeSystem.scalarFunctions.map { it.toExprFunction() }
-    ).associateBy { it.signature.name }
-
     private val errorSignaler = compileOptions.typingMode.createErrorSignaler(valueFactory)
     private val thunkFactory = compileOptions.typingMode.createThunkFactory<Environment>(compileOptions.thunkOptions, valueFactory)
 
@@ -864,7 +860,7 @@ internal class EvaluatingCompiler(
 
     private fun compileCall(expr: PartiqlAst.Expr.Call, metas: MetaContainer): ThunkEnv {
         val funcArgThunks = compileAstExprs(expr.args)
-        val func = allFunctions[expr.funcName.text] ?: err(
+        val func = functions[expr.funcName.text] ?: err(
             "No such function: ${expr.funcName.text}",
             ErrorCode.EVALUATOR_NO_SUCH_FUNCTION,
             errorContextFrom(metas).also {

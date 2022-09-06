@@ -205,7 +205,7 @@ class ThreadInterruptedTests {
         } as CompilerPipelineImpl
 
         val expr = PartiqlAst.build { query(lit((ionInt(42)))) }
-        val context = StepContext(pipeline.valueFactory, CompileOptions.standard(), emptyList(), emptyMap())
+        val context = StepContext(pipeline.valueFactory, CompileOptions.standard(), emptyMap(), emptyMap())
 
         testThreadInterrupt {
             pipeline.executePreProcessingSteps(expr, context)

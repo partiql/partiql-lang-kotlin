@@ -73,7 +73,7 @@ internal class PlannerPipelineFactory : PipelineFactory {
 
             customDataTypes(compilerPipeline.customDataTypes)
 
-            compilerPipeline.functions.forEach { this.addFunction(it) }
+            compilerPipeline.functions.values.forEach { this.addFunction(it) }
             compilerPipeline.procedures.values.forEach { this.addProcedure(it) }
 
             evaluatorOptions(evaluatorOptions)

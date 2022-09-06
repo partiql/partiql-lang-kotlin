@@ -37,6 +37,7 @@ import org.partiql.lang.eval.physical.PhysicalPlanThunk
 import org.partiql.lang.eval.physical.operators.DEFAULT_RELATIONAL_OPERATOR_FACTORIES
 import org.partiql.lang.eval.physical.operators.RelationalOperatorFactory
 import org.partiql.lang.eval.physical.operators.RelationalOperatorFactoryKey
+import org.partiql.lang.eval.toExprFunction
 import org.partiql.lang.ots_work.plugins.standard.plugin.BehaviorWhenDivisorIsZero
 import org.partiql.lang.ots_work.plugins.standard.plugin.StandardPlugin
 import org.partiql.lang.ots_work.plugins.standard.plugin.TypedOpBehavior
@@ -206,7 +207,7 @@ interface PlannerPipeline {
     class Builder(val valueFactory: ExprValueFactory) {
         private var parser: Parser? = null
         private var evaluatorOptions: EvaluatorOptions? = null
-        private val customFunctions: MutableList<ExprFunction> = mutableListOf()
+        private val customFunctions: MutableMap<String, ExprFunction> = HashMap()
         private var customDataTypes: List<CustomType> = listOf()
         private val customProcedures: MutableMap<String, StoredProcedure> = HashMap()
         private val physicalPlanPasses = ArrayList<PartiqlPhysicalPass>()
@@ -254,7 +255,7 @@ interface PlannerPipeline {
          * https://github.com/partiql/partiql-lang-kotlin/milestone/4
          */
         internal fun addFunction(function: ExprFunction): Builder = this.apply {
-            customFunctions.add(function)
+            customFunctions[function.signature.name] = function
         }
 
         /**
@@ -419,11 +420,17 @@ interface PlannerPipeline {
                 }
             }
 
-            val builtinFunctions = createBuiltinFunctions(valueFactory) + DynamicLookupExprFunction()
+            val builtinFunctions = (createBuiltinFunctions(valueFactory) + DynamicLookupExprFunction()).associateBy {
+                it.signature.name
+            }
+
+            val scalarFunctions = scalarTypeSystemToUse.scalarFunctions.map { it.toExprFunction() }.associateBy {
+                it.signature.name
+            }
 
             // customFunctions must be on the right side of + here to ensure that they overwrite any
             // built-in functions with the same name.
-            val allFunctions = builtinFunctions + customFunctions
+            val allFunctions = builtinFunctions + scalarFunctions + customFunctions
             return PlannerPipelineImpl(
                 valueFactory = valueFactory,
                 parser = parser ?: SqlParser(valueFactory.ion, this.customDataTypes),
@@ -447,7 +454,7 @@ internal class PlannerPipelineImpl(
     override val valueFactory: ExprValueFactory,
     private val parser: Parser,
     val evaluatorOptions: EvaluatorOptions,
-    val functions: List<ExprFunction>,
+    val functions: Map<String, ExprFunction>,
     val customDataTypes: List<CustomType>,
     val procedures: Map<String, StoredProcedure>,
     val bindingsOperatorFactories: Map<RelationalOperatorFactoryKey, RelationalOperatorFactory>,
