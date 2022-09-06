@@ -583,7 +583,7 @@ internal class StaticTypeInferenceVisitorTransform(
                 }
                 // "avg" returns DECIMAL or NULL
                 "avg" -> when {
-                    elementTypes.all { !it.isUnknownOrNumeric() } -> {
+                    elementTypes.none { it.isUnknownOrNumeric() } -> {
                         handleInvalidInputTypeForAggFun(sourceLocation, funcName, elementType, StaticType.unionOf(StaticType.NULL_OR_MISSING, StaticType.NUMERIC).flatten())
                         StaticType.unionOf(StaticType.NULL, StaticType.DECIMAL)
                     }
