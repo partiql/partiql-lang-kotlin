@@ -529,7 +529,6 @@ internal class StaticTypeInferenceVisitorTransform(
             val nAry = super.transformExprCallAgg(node) as PartiqlAst.Expr.CallAgg
             val funcName = nAry.funcName
             // unwrap the type if this is a collectionType
-            // only collection types work for agg functions, e.g. SUM(1) & SUM(NULL) return NULL
             val argType = when (val type = nAry.arg.getStaticType()) {
                 is CollectionType -> type.elementType
                 else -> type

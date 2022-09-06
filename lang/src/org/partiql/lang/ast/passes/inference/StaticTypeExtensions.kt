@@ -24,7 +24,6 @@ internal fun StaticType.isNumeric(): Boolean = (this is IntType || this is Float
 internal fun StaticType.isText(): Boolean = (this is SymbolType || this is StringType)
 internal fun StaticType.isLob(): Boolean = (this is BlobType || this is ClobType)
 internal fun StaticType.isUnknown(): Boolean = (this.isNullOrMissing() || this == StaticType.NULL_OR_MISSING)
-internal fun StaticType.isKnown(): Boolean = !isUnknown()
 
 /**
  * Returns the maximum number of digits a decimal can hold after reserving digits for scale
