@@ -1,40 +1,35 @@
 package org.partiql.lang.planner
 
-import com.amazon.ion.IonSystem
-
-class PartiQLPlannerBuilder private constructor(private val ion: IonSystem) {
+class PartiQLPlannerBuilder private constructor() {
 
     private var globalVariableResolver = GlobalVariableResolver.EMPTY
-    private val physicalPlanPasses = mutableListOf<PartiQLPlannerPass.Physical>()
+    private var physicalPlanPasses: List<PartiQLPlannerPass.Physical> = emptyList()
     private var callback: PlannerEventCallback? = null
     private var options = PartiQLPlanner.Options()
 
     companion object {
 
         @JvmStatic
-        fun standard(ion: IonSystem) = PartiQLPlannerBuilder(ion)
+        fun standard() = PartiQLPlannerBuilder()
     }
 
-    fun globalVariableResolver(g: GlobalVariableResolver) = this.apply {
-        globalVariableResolver = g
+    fun withGlobalVariableResolver(globalVariableResolver: GlobalVariableResolver) = this.apply {
+        this.globalVariableResolver = globalVariableResolver
     }
 
-    fun addPass(pass: PartiQLPlannerPass<*>) = this.apply {
-        when (pass) {
-            is PartiQLPlannerPass.Physical -> physicalPlanPasses.add(pass)
-            else -> error("PartiQLPlanner currently supports only `PartiQLPlannerPass.Physical` planner passes")
-        }
+    fun withPhysicalPlannerPasses(physicalPlanPasses: List<PartiQLPlannerPass.Physical>) = this.apply {
+        this.physicalPlanPasses = physicalPlanPasses
     }
 
-    fun options(o: PartiQLPlanner.Options) = this.apply {
-        options = o
+    fun withOptions(options: PartiQLPlanner.Options) = this.apply {
+        this.options = options
     }
 
-    fun callback(cb: PlannerEventCallback) = this.apply {
-        callback = cb
+    fun withCallback(callback: PlannerEventCallback) = this.apply {
+        this.callback = callback
     }
 
-    fun build(): PartiQLPlanner = PartiQLPlannerImpl(
+    fun build(): PartiQLPlanner = PartiQLPlannerDefault(
         globalVariableResolver = globalVariableResolver,
         physicalPlanPasses = physicalPlanPasses,
         callback = callback,

@@ -4,8 +4,21 @@ import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.errors.Problem
 
+/**
+ * [PartiQLPlanner] is responsible for transforming a [PartiqlAst.Statement] representation of a query into an
+ * equivalent [PartiqlPhysical.Plan] representation of the query.
+ */
 interface PartiQLPlanner {
 
+    /**
+     * Transforms the given statement to an equivalent expression tree with each SELECT-FROM-WHERE block
+     * expanded into its relational algebra form.
+     *
+     * If planning succeeds, this returns a PartiQLPlanner.Result.Success,
+     * Else this returns a PartiQLPlanner.Result.Error.
+     *
+     * TODO this error handling pattern is subject to review and change
+     */
     fun plan(statement: PartiqlAst.Statement): Result
 
     companion object {
@@ -13,7 +26,7 @@ interface PartiQLPlanner {
     }
 
     /**
-     * This method of error handling will be reviewed by the team and is subject to change.
+     * TODO review error handling pattern with the team
      */
     sealed class Result {
 

@@ -24,7 +24,7 @@ import org.partiql.lang.planner.DmlAction
 import org.partiql.lang.planner.EvaluatorOptions
 import org.partiql.lang.types.TypedOpParameter
 
-internal class PartiQLCompilerImpl(
+internal class PartiQLCompilerDefault(
     private val valueFactory: ExprValueFactory,
     private val evaluatorOptions: EvaluatorOptions,
     private val customTypedOpParameters: Map<String, TypedOpParameter>,

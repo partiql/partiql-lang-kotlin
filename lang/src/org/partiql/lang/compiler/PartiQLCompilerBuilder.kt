@@ -1,6 +1,7 @@
 package org.partiql.lang.compiler
 
 import com.amazon.ion.IonSystem
+import com.amazon.ion.system.IonSystemBuilder
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.ThunkReturnTypeAssertions
@@ -11,82 +12,103 @@ import org.partiql.lang.eval.physical.operators.DEFAULT_RELATIONAL_OPERATOR_FACT
 import org.partiql.lang.eval.physical.operators.RelationalOperatorFactory
 import org.partiql.lang.planner.EvaluatorOptions
 import org.partiql.lang.types.CustomType
-import org.partiql.lang.types.TypedOpParameter
 
-class PartiQLCompilerBuilder(val ion: IonSystem) {
+/**
+ * Builder class to instantiate a [PartiQLCompiler].
+ *
+ * Example usages:
+ *
+ * ```
+ * // Default
+ * val compiler = PartiQLCompilerBuilder.standard().build()
+ *
+ * // Fluent builder
+ * val compiler = PartiQLCompilerBuilder.standard()
+ *                                      .withIonSystem(myIonSystem)
+ *                                      .withCustomFunctions(myCustomFunctionList)
+ *                                      .build()
+ * ```
+ */
+class PartiQLCompilerBuilder private constructor() {
 
-    private var valueFactory: ExprValueFactory = ExprValueFactory.standard(ion)
+    private var valueFactory: ExprValueFactory = ExprValueFactory.standard(DEFAULT_ION)
     private var options: EvaluatorOptions = EvaluatorOptions.standard()
-    private var customTypes: List<CustomType> = mutableListOf()
-    private val customFunctions: MutableList<ExprFunction> = mutableListOf()
-    private val customProcedures: MutableMap<String, StoredProcedure> = mutableMapOf()
-    private val customOperatorFactories: MutableList<RelationalOperatorFactory> = mutableListOf()
+    private var customTypes: List<CustomType> = emptyList()
+    private var customFunctions: List<ExprFunction> = emptyList()
+    private var customProcedures: List<StoredProcedure> = emptyList()
+    private var customOperatorFactories: List<RelationalOperatorFactory> = emptyList()
 
     companion object {
 
+        private val DEFAULT_ION = IonSystemBuilder.standard().build()
+
         @JvmStatic
-        fun standard(ion: IonSystem) = PartiQLCompilerBuilder(ion)
+        fun standard() = PartiQLCompilerBuilder()
     }
 
     fun build(): PartiQLCompiler {
         if (options.thunkOptions.thunkReturnTypeAssertions == ThunkReturnTypeAssertions.ENABLED) {
             TODO("ThunkReturnTypeAssertions.ENABLED requires a static type pass")
         }
-        return PartiQLCompilerImpl(
+        return PartiQLCompilerDefault(
             valueFactory = valueFactory,
             evaluatorOptions = options,
-            customTypedOpParameters = customTypes.toMap(),
+            customTypedOpParameters = customTypes.associateBy(
+                keySelector = { it.name },
+                valueTransform = { it.typedOpParameter }
+            ),
             functions = allFunctions(),
-            procedures = customProcedures,
+            procedures = customProcedures.associateBy(
+                keySelector = { it.signature.name },
+                valueTransform = { it }
+            ),
             operatorFactories = allOperatorFactories()
         )
     }
 
-    fun options(evaluatorOptions: EvaluatorOptions) = this.apply {
-        options = evaluatorOptions
+    fun withIonSystem(ion: IonSystem): PartiQLCompilerBuilder = this.apply {
+        this.valueFactory = ExprValueFactory.standard(ion)
+    }
+
+    fun withOptions(options: EvaluatorOptions) = this.apply {
+        this.options = options
     }
 
     /**
-     * This will be replaced by the open type system.
-     * https://github.com/partiql/partiql-lang-kotlin/milestone/4
+     * TODO This will be replaced by the open type system.
+     *  - https://github.com/partiql/partiql-lang-kotlin/milestone/4
      */
-    internal fun addFunction(function: ExprFunction) = this.apply {
-        customFunctions.add(function)
+    internal fun withCustomFunctions(customFunctions: List<ExprFunction>) = this.apply {
+        this.customFunctions = customFunctions
     }
 
     /**
-     * This will be replaced by the open type system.
-     * https://github.com/partiql/partiql-lang-kotlin/milestone/4
+     * TODO This will be replaced by the open type system.
+     *  - https://github.com/partiql/partiql-lang-kotlin/milestone/4
      */
-    internal fun customDataTypes(types: List<CustomType>) = this.apply {
-        customTypes = types
+    internal fun withCustomTypes(customTypes: List<CustomType>) = this.apply {
+        this.customTypes = customTypes
     }
 
     /**
-     * This will be replaced by the open type system.
-     * https://github.com/partiql/partiql-lang-kotlin/milestone/4
+     * TODO This will be replaced by the open type system.
+     *  - https://github.com/partiql/partiql-lang-kotlin/milestone/4
      */
-    internal fun addProcedure(procedure: StoredProcedure) = this.apply {
-        customProcedures[procedure.signature.name] = procedure
+    internal fun withCustomProcedures(customProcedures: List<StoredProcedure>) = this.apply {
+        this.customProcedures = customProcedures
     }
 
-    internal fun addOperatorFactory(operator: RelationalOperatorFactory) = this.apply {
-        customOperatorFactories.add(operator)
+    internal fun withCustomOperatorFactories(customOperatorFactories: List<RelationalOperatorFactory>) = this.apply {
+        this.customOperatorFactories = customOperatorFactories
     }
 
     // --- Internal ----------------------------------
 
-    // To be replaced by OTS — https://media.giphy.com/media/3o6Zt3l22wlJ0HLpUk/giphy.gif
     private fun allFunctions(): Map<String, ExprFunction> {
         val builtins = createBuiltinFunctions(valueFactory)
         val allFunctions = builtins + customFunctions + DynamicLookupExprFunction()
         return allFunctions.associateBy { it.signature.name }
     }
-
-    private fun List<CustomType>.toMap(): Map<String, TypedOpParameter> = this.associateBy(
-        keySelector = { it.name },
-        valueTransform = { it.typedOpParameter }
-    )
 
     private fun allOperatorFactories() = (DEFAULT_RELATIONAL_OPERATOR_FACTORIES + customOperatorFactories).apply {
         groupBy { it.key }.entries.firstOrNull { it.value.size > 1 }?.let {

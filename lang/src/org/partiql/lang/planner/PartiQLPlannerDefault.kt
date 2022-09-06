@@ -15,7 +15,7 @@ import org.partiql.lang.planner.transforms.LogicalToLogicalResolvedVisitorTransf
 import org.partiql.lang.planner.transforms.allocateVariableIds
 import org.partiql.pig.runtime.asPrimitive
 
-internal class PartiQLPlannerImpl(
+internal class PartiQLPlannerDefault(
     private val globalVariableResolver: GlobalVariableResolver,
     private val physicalPlanPasses: List<PartiQLPlannerPass.Physical>,
     private val callback: PlannerEventCallback?,

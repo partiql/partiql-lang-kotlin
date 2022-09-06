@@ -50,7 +50,8 @@ sealed class QueryResult {
 }
 
 /**
- * Identifies the action to take. This should be represented by PIG.
+ * Identifies the action to take.
+ * TODO This should be represented in the IR grammar.
  */
 enum class DmlAction {
     INSERT,

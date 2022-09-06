@@ -1,7 +1,6 @@
 package org.partiql.lang.eval.evaluatortestframework
 
 import org.partiql.lang.ION
-import org.partiql.lang.compiler.PartiQLCompilerBuilder
 import org.partiql.lang.compiler.PartiQLCompilerPipeline
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
@@ -12,13 +11,12 @@ import org.partiql.lang.planner.EvaluatorOptions
 import org.partiql.lang.planner.GlobalResolutionResult
 import org.partiql.lang.planner.GlobalVariableResolver
 import org.partiql.lang.planner.PartiQLPlanner
-import org.partiql.lang.planner.PartiQLPlannerBuilder
 import org.partiql.lang.syntax.SqlParser
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNull
 
 /**
- * Proof-of-refactor. Delete this once `partiql-tests` is ready
+ * TODO delete this once evaluator tests are replaced by `partiql-tests`
  */
 internal class PartiQLCompilerPipelineFactory : PipelineFactory {
 
@@ -45,7 +43,7 @@ internal class PartiQLCompilerPipelineFactory : PipelineFactory {
 
         assertNull(
             legacyPipeline.globalTypeBindings,
-            "The planner and physical plan evaluator do not support globalTypeBindings (yet)" +
+            "The planner and evaluator do not currently support globalTypeBindings" +
                 "Please set target = EvaluatorTestTarget.COMPILER_PIPELINE for this test."
         )
 
@@ -57,35 +55,31 @@ internal class PartiQLCompilerPipelineFactory : PipelineFactory {
             projectionIteration(co.projectionIteration)
         }
 
-        val globalVariableResolver = GlobalVariableResolver { bindingName ->
-            val boundValue = session.globals[bindingName]
-            if (boundValue != null) {
-                GlobalResolutionResult.GlobalVariable(bindingName.name)
+        val globalVariableResolver = GlobalVariableResolver {
+            val value = session.globals[it]
+            if (value != null) {
+                GlobalResolutionResult.GlobalVariable(it.name)
             } else {
                 GlobalResolutionResult.Undefined
             }
         }
 
-        val planner = PartiQLPlannerBuilder.standard(ION)
-            .options(
-                PartiQLPlanner.Options(
-                    allowedUndefinedVariables = true
-                )
-            )
-            .globalVariableResolver(globalVariableResolver)
-
-        val compiler = PartiQLCompilerBuilder.standard(ION)
-            .customDataTypes(legacyPipeline.customDataTypes)
-            .options(evaluatorOptions)
-
-        legacyPipeline.functions.values.forEach { compiler.addFunction(it) }
-        legacyPipeline.procedures.values.forEach { compiler.addProcedure(it) }
-
-        val pipeline = PartiQLCompilerPipeline(
-            parser = SqlParser(ION, customTypes = legacyPipeline.customDataTypes),
-            planner = planner.build(),
-            compiler = compiler.build()
+        val plannerOptions = PartiQLPlanner.Options(
+            allowedUndefinedVariables = true
         )
+
+        val pipeline = PartiQLCompilerPipeline.build {
+            parser = SqlParser(ION, customTypes = legacyPipeline.customDataTypes)
+            planner
+                .withOptions(plannerOptions)
+                .withGlobalVariableResolver(globalVariableResolver)
+            compiler
+                .withIonSystem(ION)
+                .withOptions(evaluatorOptions)
+                .withCustomTypes(legacyPipeline.customDataTypes)
+                .withCustomFunctions(legacyPipeline.functions.values.toList())
+                .withCustomProcedures(legacyPipeline.procedures.values.toList())
+        }
 
         return object : AbstractPipeline {
 
