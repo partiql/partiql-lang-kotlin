@@ -571,7 +571,7 @@ internal class StaticTypeInferenceVisitorTransform(
                 // In case that any element is MISSING or there is no element, we should return NULL
                 "max", "min" -> StaticType.unionOf(elementTypes.convertMissingToNull())
                 "sum" -> when {
-                    elementTypes.all { !it.isUnknownOrNumeric() } -> {
+                    elementTypes.none { it.isUnknownOrNumeric() } -> {
                         handleInvalidInputTypeForAggFun(sourceLocation, funcName, elementType, StaticType.unionOf(StaticType.NULL_OR_MISSING, StaticType.NUMERIC).flatten())
                         StaticType.unionOf(StaticType.NULL, StaticType.NUMERIC)
                     }
