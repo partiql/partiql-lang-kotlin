@@ -27,6 +27,10 @@ import java.math.BigInteger
 /**
  * Simple tokenizer for PartiQL.
  */
+@Deprecated(
+    message = "Bug fixes, enhancements, and features will no longer be implemented. SqlLexer will be removed after v0.8.",
+    level = DeprecationLevel.WARNING
+)
 class SqlLexer(private val ion: IonSystem) : Lexer {
     /** Transition types. */
     internal enum class StateType(
