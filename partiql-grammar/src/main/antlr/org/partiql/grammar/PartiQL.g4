@@ -292,10 +292,10 @@ patternQuantifier
 
 edgeWSpec
     : MINUS edgeSpec MINUS ANGLE_RIGHT             # EdgeSpecRight
-    | TILDA edgeSpec TILDA                         # EdgeSpecUndirected
+    | TILDE edgeSpec TILDE                         # EdgeSpecUndirected
     | ANGLE_LEFT MINUS edgeSpec MINUS              # EdgeSpecLeft
-    | TILDA edgeSpec TILDA ANGLE_RIGHT             # EdgeSpecUndirectedRight
-    | ANGLE_LEFT TILDA edgeSpec TILDA              # EdgeSpecUndirectedLeft
+    | TILDE edgeSpec TILDE ANGLE_RIGHT             # EdgeSpecUndirectedRight
+    | ANGLE_LEFT TILDE edgeSpec TILDE              # EdgeSpecUndirectedLeft
     | ANGLE_LEFT MINUS edgeSpec MINUS ANGLE_RIGHT  # EdgeSpecBidirectional
     | MINUS edgeSpec MINUS                         # EdgeSpecUndirectedBidirectional
     ;
@@ -307,9 +307,9 @@ patternPartLabel
     : COLON symbolPrimitive;
 
 edgeAbbrev
-    : TILDA
-    | TILDA ANGLE_RIGHT
-    | ANGLE_LEFT TILDA
+    : TILDE
+    | TILDE ANGLE_RIGHT
+    | ANGLE_LEFT TILDE
     | ANGLE_LEFT? MINUS ANGLE_RIGHT?
     ;
 

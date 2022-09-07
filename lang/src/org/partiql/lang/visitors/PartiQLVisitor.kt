@@ -632,9 +632,9 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
 
     override fun visitEdgeAbbrev(ctx: PartiQLParser.EdgeAbbrevContext) = PartiqlAst.build {
         when {
-            ctx.TILDA() != null && ctx.ANGLE_RIGHT() != null -> edgeUndirectedOrRight()
-            ctx.TILDA() != null && ctx.ANGLE_LEFT() != null -> edgeLeftOrUndirected()
-            ctx.TILDA() != null -> edgeUndirected()
+            ctx.TILDE() != null && ctx.ANGLE_RIGHT() != null -> edgeUndirectedOrRight()
+            ctx.TILDE() != null && ctx.ANGLE_LEFT() != null -> edgeLeftOrUndirected()
+            ctx.TILDE() != null -> edgeUndirected()
             ctx.MINUS() != null && ctx.ANGLE_LEFT() != null && ctx.ANGLE_RIGHT() != null -> edgeLeftOrRight()
             ctx.MINUS() != null && ctx.ANGLE_LEFT() != null -> edgeLeft()
             ctx.MINUS() != null && ctx.ANGLE_RIGHT() != null -> edgeRight()
