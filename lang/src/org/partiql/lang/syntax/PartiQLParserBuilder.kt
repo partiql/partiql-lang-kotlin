@@ -43,14 +43,12 @@ class PartiQLParserBuilder {
     private var ion: IonSystem = DEFAULT_ION
     private var customTypes: List<CustomType> = emptyList()
 
-    fun withIonSystem(ion: IonSystem): PartiQLParserBuilder {
+    fun withIonSystem(ion: IonSystem): PartiQLParserBuilder = this.apply {
         this.ion = ion
-        return this
     }
 
-    fun withCustomTypes(types: List<CustomType>): PartiQLParserBuilder {
+    fun withCustomTypes(types: List<CustomType>): PartiQLParserBuilder = this.apply {
         this.customTypes = types
-        return this
     }
 
     fun build(): Parser {

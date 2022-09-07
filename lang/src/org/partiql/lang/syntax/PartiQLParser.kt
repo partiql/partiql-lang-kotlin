@@ -50,7 +50,7 @@ internal class PartiQLParser(
 
     override fun parseAstStatement(source: String): PartiqlAst.Statement {
         // TODO: Research use-case of parameters and implementation -- see https://github.com/partiql/partiql-docs/issues/23
-        val parameterIndexes = getNumberOfParameters(source)
+        val parameterIndexes = calculateTokenToParameterOrdinals(source)
         val lexer = getLexer(source)
         val tree = try {
             parseQuery(lexer)
@@ -91,7 +91,7 @@ internal class PartiQLParser(
      * '?' token relative to all other '?' tokens (starting at index 1). This is used for visiting.
      * NOTE: This needs to create its own lexer. Cannot share with others due to consumption of token stream.
      */
-    private fun getNumberOfParameters(query: String): Map<Int, Int> {
+    private fun calculateTokenToParameterOrdinals(query: String): Map<Int, Int> {
         val lexer = getLexer(query)
         val tokenIndexToParameterIndex = mutableMapOf<Int, Int>()
         var parametersFound = 0
