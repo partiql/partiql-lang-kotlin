@@ -34,6 +34,8 @@ import org.partiql.lang.eval.ProjectionIterationBehavior
 import org.partiql.lang.eval.TypedOpBehavior
 import org.partiql.lang.eval.TypingMode
 import org.partiql.lang.eval.UndefinedVariableBehavior
+import org.partiql.lang.syntax.Parser
+import org.partiql.lang.syntax.PartiQLParserBuilder
 import org.partiql.lang.syntax.SqlParser
 import org.partiql.shell.Shell
 import org.partiql.shell.Shell.ShellConfiguration
@@ -45,8 +47,6 @@ import kotlin.system.exitProcess
 // TODO how can a user pass the catalog here?
 private val ion = IonSystemBuilder.standard().build()
 private val valueFactory = ExprValueFactory.standard(ion)
-
-private val parser = SqlParser(ion)
 
 private val optParser = OptionParser()
 
@@ -76,6 +76,10 @@ private val formatter = object : BuiltinHelpFormatter(120, 2) {
 
 enum class InputFormat {
     PARTIQL, ION
+}
+
+enum class ParserImplementation {
+    STANDARD, LEGACY
 }
 
 enum class OutputFormat {
@@ -130,6 +134,12 @@ private val inputFormatOpt = optParser.acceptsAll(listOf("input-format", "if"), 
 private val wrapIonOpt = optParser.acceptsAll(listOf("wrap-ion", "w"), "wraps Ion input file values in a bag, requires the input format to be ION, requires the query option")
     .availableIf(queryOpt)
 
+private val parserOpt = optParser.acceptsAll(listOf("parser", "l"), "parser implementation")
+    .withRequiredArg()
+    .ofType(ParserImplementation::class.java)
+    .describedAs("(${ParserImplementation.values().joinToString("|")})")
+    .defaultsTo(ParserImplementation.STANDARD)
+
 private val monochromeOpt = optParser.acceptsAll(listOf("monochrome", "m"), "removes syntax highlighting for the REPL")
 
 private val outputFileOpt = optParser.acceptsAll(listOf("output", "o"), "output file, requires the query option (default: stdout)")
@@ -158,6 +168,7 @@ private val outputFormatOpt = optParser.acceptsAll(listOf("output-format", "of")
  * * -r --projection-iter-behavior: Controls the behavior of ExprValue.iterator in the projection result: (default: FILTER_MISSING) [FILTER_MISSING, UNFILTERED]
  * * -v --undefined-variable-behavior: Defines the behavior when a non-existent variable is referenced: (default: ERROR) [ERROR, MISSING]
  * mismatches)
+ * * -l --parser: parser implementation (default: STANDARD) [STANDARD, LEGACY]
  * * Interactive only:
  *      * -m --monochrome: removes syntax highlighting for the REPL
  * * Non interactive only:
@@ -181,6 +192,13 @@ fun main(args: Array<String>) = try {
         throw IllegalArgumentException("Non option arguments are not allowed!")
     }
 
+    // Parser Options
+    val parser = when (optionSet.valueOf(parserOpt)) {
+        ParserImplementation.LEGACY -> SqlParser(ion)
+        ParserImplementation.STANDARD -> PartiQLParserBuilder().withIonSystem(ion).build()
+        else -> PartiQLParserBuilder().withIonSystem(ion).build()
+    }
+
     // Compile Options
     val compileOptions = CompileOptions.build {
         typedOpBehavior(optionSet.valueOf(typedOpBehaviorOpt))
@@ -197,6 +215,7 @@ fun main(args: Array<String>) = try {
         addFunction(WriteFile(valueFactory))
         addFunction(QueryDDB(valueFactory))
         compileOptions(compileOptions)
+        sqlParser(parser)
     }
 
     // common options
@@ -212,7 +231,7 @@ fun main(args: Array<String>) = try {
     if (optionSet.has(queryOpt)) {
         runCli(environment, optionSet, compilerPipeline)
     } else {
-        runShell(environment, optionSet, compilerPipeline)
+        runShell(environment, optionSet, compilerPipeline, parser)
     }
 } catch (e: OptionException) {
     System.err.println("${e.message}\n")
@@ -223,7 +242,7 @@ fun main(args: Array<String>) = try {
     exitProcess(1)
 }
 
-private fun runShell(environment: Bindings<ExprValue>, optionSet: OptionSet, compilerPipeline: CompilerPipeline) {
+private fun runShell(environment: Bindings<ExprValue>, optionSet: OptionSet, compilerPipeline: CompilerPipeline, parser: Parser) {
     val config = ShellConfiguration(isMonochrome = optionSet.has(monochromeOpt))
     Shell(valueFactory, System.out, parser, compilerPipeline, environment, config).start()
 }

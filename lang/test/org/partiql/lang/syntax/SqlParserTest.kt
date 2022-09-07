@@ -296,16 +296,32 @@ class SqlParserTest : SqlParserTestBase() {
     )
 
     @Test
-    fun unaryIonIntLiteral() = assertExpression(
-        "-1",
-        "(lit -1)"
-    )
+    fun unaryIonIntLiteral() {
+        assertExpression(
+            "-1",
+            "(lit -1)",
+            targetParsers = setOf(ParserTypes.SQL_PARSER)
+        )
+        assertExpression(
+            "-1",
+            "(neg (lit 1))",
+            targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
+        )
+    }
 
     @Test
-    fun unaryIonFloatLiteral() = assertExpression(
-        "+-+-+-`-5e0`",
-        "(lit 5e0)"
-    )
+    fun unaryIonFloatLiteral() {
+        assertExpression(
+            "+-+-+-`-5e0`",
+            "(lit 5e0)",
+            targetParsers = setOf(ParserTypes.SQL_PARSER)
+        )
+        assertExpression(
+            "+-+-+-`-5e0`",
+            "(pos (neg (pos (neg (pos (neg (lit -5e0)))))))",
+            targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
+        )
+    }
 
     @Test
     fun unaryIonTimestampLiteral() = assertExpression(

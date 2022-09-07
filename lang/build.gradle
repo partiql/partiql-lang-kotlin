@@ -43,6 +43,10 @@ dependencies {
     // 'api' below to 'implementation' to effect this.
     implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
     implementation 'org.jetbrains.kotlin:kotlin-reflect'
+    
+    // Parser and ANTLR Runtime
+    implementation project(":partiql-grammar")
+    implementation 'org.antlr:antlr4-runtime:4.10.1'
 
     api 'com.amazon.ion:ion-java:1.9.0'
     api 'com.amazon.ion:ion-element:0.2.0'
@@ -193,4 +197,10 @@ signing {
     required { !gradle.taskGraph.hasTask(":lang:publishToMavenLocal") }
 
     sign publishing.publications.maven
+}
+
+// Adds Resources from PartiQL Grammar Module to Resources
+processResources {
+    from "${project(":partiql-grammar").buildDir}/resources/main"
+    dependsOn(":partiql-grammar:processResources")
 }

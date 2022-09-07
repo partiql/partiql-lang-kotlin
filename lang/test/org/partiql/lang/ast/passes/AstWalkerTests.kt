@@ -28,7 +28,7 @@ import org.partiql.lang.ast.FromSource
 import org.partiql.lang.ast.PathComponent
 import org.partiql.lang.ast.SelectListItem
 import org.partiql.lang.ast.SelectProjection
-import org.partiql.lang.syntax.SqlParser
+import org.partiql.lang.syntax.PartiQLParser
 import kotlin.test.assertEquals
 
 /**
@@ -86,7 +86,7 @@ class AstWalkerTests {
     }
 
     private val ion = IonSystemBuilder.standard().build()
-    private val parser = SqlParser(ion)
+    private val parser = PartiQLParser(ion)
 
     class WalkerTestCase(val sql: String, val expectedTrace: String)
 

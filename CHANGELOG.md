@@ -32,6 +32,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Replaces `union`, `intersect`, `except` IR nodes with common `bag_op` IR node
 - Add support for CallAgg in Type Inferencer.
 - A GitHub Workflow to automatically sync the `docs` directory with the GitHub Wiki
+- Introduces the `PartiQLParser`, an implementation of `Parser` using `ANTLR`
+  - Matches the functionality of the existing `SqlParser`
+  - Now catches a StackOverflowError and throws a ParserException
+  - Support for DQL, DDL, DML, GPML, and EXEC
+  - Handles consistency and precedence issues seen in SqlParser
+    - See GitHub Issues [#709](https://github.com/partiql/partiql-lang-kotlin/issues/709), [#708](https://github.com/partiql/partiql-lang-kotlin/issues/708),
+      [#707](https://github.com/partiql/partiql-lang-kotlin/issues/707), [#683](https://github.com/partiql/partiql-lang-kotlin/issues/683),
+      and [#730](https://github.com/partiql/partiql-lang-kotlin/issues/730)
 
 #### Experimental Planner Additions
 
