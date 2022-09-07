@@ -14,16 +14,15 @@
 package org.partiql.shell
 
 import com.amazon.ion.IonString
-import com.amazon.ion.system.IonSystemBuilder
 import org.jline.reader.Highlighter
 import org.jline.reader.LineReader
 import org.jline.utils.AttributedString
 import org.jline.utils.AttributedStringBuilder
 import org.jline.utils.AttributedStyle
 import org.partiql.lang.errors.Property
+import org.partiql.lang.syntax.Lexer
+import org.partiql.lang.syntax.Parser
 import org.partiql.lang.syntax.ParserException
-import org.partiql.lang.syntax.SqlLexer
-import org.partiql.lang.syntax.SqlParser
 import org.partiql.lang.syntax.Token
 import org.partiql.lang.syntax.TokenType
 import java.io.PrintStream
@@ -39,11 +38,7 @@ private val ADD_TO_GLOBAL_ENV_COMMAND =
     AttributedString(ADD_TO_GLOBAL_ENV, AttributedStyle.DEFAULT.foreground(AttributedStyle.CYAN))
 private val ALLOWED_SUFFIXES = setOf("!!")
 
-internal class ShellHighlighter() : Highlighter {
-
-    private val ion = IonSystemBuilder.standard().build()
-    private val lexer = SqlLexer(ion)
-    private val parser = SqlParser(ion)
+internal class ShellHighlighter(private val lexer: Lexer, private val parser: Parser) : Highlighter {
 
     /**
      * Returns a highlighted string by passing the [input] string through the [lexer] and [parser] to identify and
@@ -83,9 +78,8 @@ internal class ShellHighlighter() : Highlighter {
         }
 
         // Get Tokens
-        val tokens: List<Token>
-        try {
-            tokens = lexer.tokenize(input.substring(0, lastValidQueryIndex))
+        val tokens = try {
+            lexer.tokenize(input.substring(0, lastValidQueryIndex))
         } catch (e: Exception) {
             val error = AttributedString(input, AttributedStyle().foreground(AttributedStyle.RED))
             return if (hasAddToGlobalEnv) {
@@ -214,6 +208,7 @@ internal class ShellHighlighter() : Highlighter {
             TokenType.IDENTIFIER -> AttributedStyle.BRIGHT
             TokenType.MISSING -> AttributedStyle.BLUE
             TokenType.NULL -> AttributedStyle.BLUE
+            TokenType.NULLS -> AttributedStyle.CYAN
             else -> AttributedStyle.WHITE
         }
         style = style.foreground(attrCode)

@@ -28,6 +28,7 @@ import org.partiql.lang.syntax.ALL_SINGLE_LEXEME_OPERATORS
 import org.partiql.lang.syntax.KEYWORDS
 import org.partiql.lang.syntax.MULTI_LEXEME_TOKEN_MAP
 import org.partiql.lang.syntax.ParserException
+import org.partiql.lang.syntax.SourceSpan
 import org.partiql.lang.syntax.TYPE_ALIASES
 import org.partiql.lang.syntax.TokenType
 import java.math.BigInteger
@@ -58,6 +59,24 @@ internal fun Token?.error(
         errorContext[Property.TOKEN_VALUE] = getIonValue(ion, this)
         ParserException(message, errorCode, errorContext, cause)
     }
+}
+
+internal fun Token.toPartiQLToken(ion: IonSystem): org.partiql.lang.syntax.Token {
+    val text = when (this.type) {
+        PartiQLParser.EOF -> ""
+        else -> this.text
+    }
+    val span = SourceSpan(
+        line = this.line.toLong(),
+        column = this.charPositionInLine.toLong() + 1L,
+        length = text.length.toLong()
+    )
+    return org.partiql.lang.syntax.Token(
+        type = getPartiQLTokenType(this),
+        value = getIonValue(ion, this),
+        sourceText = text,
+        span = span
+    )
 }
 
 /**

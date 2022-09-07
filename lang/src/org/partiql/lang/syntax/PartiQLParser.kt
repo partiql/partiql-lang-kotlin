@@ -33,6 +33,7 @@ import org.partiql.lang.errors.PropertyValueMap
 import org.partiql.lang.types.CustomType
 import org.partiql.lang.util.getIonValue
 import org.partiql.lang.util.getPartiQLTokenType
+import org.partiql.lang.util.toPartiQLToken
 import org.partiql.lang.visitors.PartiQLVisitor
 import java.nio.charset.StandardCharsets
 import org.partiql.grammar.parser.generated.PartiQLParser as GeneratedParser
@@ -46,7 +47,7 @@ import org.partiql.grammar.parser.generated.PartiQLTokens as GeneratedLexer
 internal class PartiQLParser(
     private val ion: IonSystem,
     val customTypes: List<CustomType> = listOf()
-) : Parser {
+) : Parser, org.partiql.lang.syntax.Lexer {
 
     override fun parseAstStatement(source: String): PartiqlAst.Statement {
         // TODO: Research use-case of parameters and implementation -- see https://github.com/partiql/partiql-docs/issues/23
@@ -61,6 +62,16 @@ internal class PartiQLParser(
         }
         val visitor = PartiQLVisitor(ion, customTypes, parameterIndexes)
         return visitor.visit(tree) as PartiqlAst.Statement
+    }
+
+    override fun tokenize(source: String): List<org.partiql.lang.syntax.Token> {
+        val lexer = getLexer(source)
+        val antlrTokens = CommonTokenStream(lexer)
+        val tokens = mutableListOf<org.partiql.lang.syntax.Token>()
+        for (i in 0 until antlrTokens.numberOfOnChannelTokens) {
+            tokens.add(antlrTokens[i].toPartiQLToken(ion = ion))
+        }
+        return tokens
     }
 
     private fun parseQuery(lexer: Lexer): ParseTree {
