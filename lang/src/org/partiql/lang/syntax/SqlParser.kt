@@ -76,6 +76,11 @@ import java.time.temporal.Temporal
  * Parses a list of tokens as infix query expression into a prefix s-expression
  * as the abstract syntax tree.
  */
+@Deprecated(
+    message = "Bug fixes, enhancements, and features will no longer be implemented. SqlParser will be deleted after v0.8.",
+    replaceWith = ReplaceWith("PartiQLParserBuilder.standard().build()", "org.partiql.lang.syntax.PartiQLParserBuilder"),
+    level = DeprecationLevel.WARNING
+)
 class SqlParser(
     private val ion: IonSystem,
     customTypes: List<CustomType> = listOf()

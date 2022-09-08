@@ -69,6 +69,7 @@ stage in the `PlannerPipeline` and to generate performance metrics for the indiv
 ### Changed
 
 ### Deprecated
+- Deprecates `SqlLexer` and `SqlParser` to be replaced with the `PartiQLParserBuilder`.
 
 ### Fixed
 - Codecov report uploads in GitHub Actions workflow
