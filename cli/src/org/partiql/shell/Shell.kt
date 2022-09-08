@@ -39,7 +39,6 @@ import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.delegate
 import org.partiql.lang.syntax.Lexer
 import org.partiql.lang.syntax.Parser
-import org.partiql.lang.syntax.PartiQLParserBuilder
 import org.partiql.lang.syntax.SqlLexer
 import org.partiql.lang.syntax.SqlParser
 import org.partiql.lang.util.ConfigurableExprValueFormatter
