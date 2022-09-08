@@ -1228,7 +1228,7 @@ internal class EvaluatingCompiler(
         if (
             compileOptions.typedOpBehavior == TypedOpBehavior.HONOR_PARAMETERS &&
             expr.type is PartiqlAst.Type.ScalarType &&
-            expr.type.alias.text == BuiltInScalarTypeId.FLOAT &&
+            expr.type.id.text == BuiltInScalarTypeId.FLOAT &&
             expr.type.parameters.isNotEmpty() // if precision of FLOAT is explicitly specified in the original query
         ) {
             err(
@@ -1272,7 +1272,7 @@ internal class EvaluatingCompiler(
         if (
             compileOptions.typedOpBehavior == TypedOpBehavior.HONOR_PARAMETERS &&
             asType is PartiqlAst.Type.ScalarType &&
-            asType.alias.text == BuiltInScalarTypeId.FLOAT &&
+            asType.id.text == BuiltInScalarTypeId.FLOAT &&
             asType.parameters.isNotEmpty() // if precision of FLOAT is explicitly specified in the original query
         ) {
             err(
