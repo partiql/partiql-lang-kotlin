@@ -418,7 +418,6 @@ private fun OnConflict.toAstOnConflict(): PartiqlAst.OnConflict {
     return PartiqlAst.build {
         when (thiz.conflictAction) {
             ConflictAction.DO_NOTHING -> onConflict(thiz.condition.toAstExpr(), doNothing())
-            ConflictAction.DO_REPLACE -> onConflict(thiz.condition.toAstExpr(), doReplace(value = excluded()))
         }
     }
 }

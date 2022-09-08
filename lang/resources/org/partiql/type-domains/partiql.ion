@@ -372,7 +372,8 @@ may then be further optimized by selecting better implementations of each operat
         (product dml_op_list ops::(* dml_op 1))
 
         (sum dml_op
-            // `INSERT INTO <expr> <expr>`
+            // See the following RFC for more details:
+            // https://github.com/partiql/partiql-docs/blob/main/RFCs/0011-partiql-insert.md
             (insert target::expr values::expr conflict_action::(? conflict_action))
 
             // `INSERT INTO <expr> VALUE <expr> [AT <expr>]` [ON CONFLICT WHERE <expr> DO NOTHING]`
@@ -393,10 +394,10 @@ may then be further optimized by selecting better implementations of each operat
 
         // `CONFLICT_ACTION <action>`
         (sum conflict_action
-            (do_replace value::do_replace_value)
+            (do_replace value::on_conflict_value)
             (do_nothing))
 
-        (sum do_replace_value
+        (sum on_conflict_value
             (excluded))
 
         // A data definition operation.

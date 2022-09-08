@@ -1269,7 +1269,7 @@ class SqlParser(
     private fun ParseNode.toInsertReturning(): InsertReturning =
         when (type) {
             ParseType.INSERT -> {
-                // As `SQLParser` is on path for removal, only support extended syntax of `INSERT` with `ON CONFLICT`
+                // As `SQLParser` is deprecated, only support extended syntax of `INSERT` with `ON CONFLICT`
                 // in the new ANTLR parser.
                 // TODO: Add the `SQLParser` support for the PartiQL `INSERT` based on the grammar, if we're going to
                 // switch back to the `SQLParser`; see the following RFC for the complete Grammar:

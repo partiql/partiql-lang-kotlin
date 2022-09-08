@@ -189,7 +189,7 @@ class QueryPrettyPrinter {
                             sb.append(" DO NOTHING")
                         }
                         is PartiqlAst.ConflictAction.DoReplace -> {
-                            sb.append(" DO REPLACE")
+                            TODO("PrettyPrinter doesn't support DO REPLACE yet.")
                         }
                     }
                 }

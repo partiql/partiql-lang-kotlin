@@ -94,7 +94,7 @@ abstract class SqlParserTestBase : TestBase() {
             pigDomainAssert(actualStatement, expectedElement)
 
             // Check equals for actual value after round trip transformation: astStatement -> ExprNode -> astStatement
-            if (roundTrip && ParserTypes.SQL_PARSER in targetParsers) {
+            if (roundTrip) {
                 assertRoundTripPigAstToExprNode(actualStatement)
             }
         }
