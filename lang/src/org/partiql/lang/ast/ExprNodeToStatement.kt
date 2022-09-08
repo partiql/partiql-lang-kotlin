@@ -543,8 +543,7 @@ fun DataType.toAstType(): PartiqlAst.Type {
             SqlDataType.SEXP -> sexpType(metas)
             SqlDataType.BAG -> bagType(metas)
             SqlDataType.ANY -> anyType(metas)
-            SqlDataType.ES_ANY -> esAnyType(metas)
-            is SqlDataType.CustomDataType -> scalarType(thiz.sqlDataType.name.toLowerCase(), metas = metas)
+            is SqlDataType.CustomDataType -> customType(thiz.sqlDataType.name.toLowerCase(), metas)
         }
     }
 }

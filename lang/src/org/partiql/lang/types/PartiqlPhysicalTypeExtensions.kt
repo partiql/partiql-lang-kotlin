@@ -69,7 +69,7 @@ fun PartiqlPhysical.Type.toTypedOpParameter(customTypedOpParameters: Map<String,
             )
             else -> error("Internal Error: TIME_WITH_TIME_ZONE type must have 1 parameters during compiling")
         }
-        else -> customTypedOpParameters.mapKeys { (k, _) -> k.toLowerCase() }[alias.text.toLowerCase()] ?: error("No such scalar type: ${alias.text.toLowerCase()}")
+        else -> error("Unrecognized scalar type ID: ${alias.text}")
     }
     is PartiqlPhysical.Type.StructType -> TypedOpParameter(StaticType.STRUCT)
     is PartiqlPhysical.Type.TupleType -> TypedOpParameter(StaticType.STRUCT)
@@ -77,6 +77,26 @@ fun PartiqlPhysical.Type.toTypedOpParameter(customTypedOpParameters: Map<String,
     is PartiqlPhysical.Type.SexpType -> TypedOpParameter(StaticType.SEXP)
     is PartiqlPhysical.Type.BagType -> TypedOpParameter(StaticType.BAG)
     is PartiqlPhysical.Type.AnyType -> TypedOpParameter(StaticType.ANY)
-    // TODO: consider using a more proper way to model non-scalar custom type
-    is PartiqlPhysical.Type.EsAnyType -> customTypedOpParameters.mapKeys { (k, _) -> k.toLowerCase() }["es_any"] ?: error("`es_amy` is not injected as a custom type")
+    is PartiqlPhysical.Type.CustomType ->
+        customTypedOpParameters.mapKeys {
+            (k, _) ->
+            k.toLowerCase()
+        }[this.name.text.toLowerCase()] ?: error("Could not find parameter for $this")
+    is PartiqlPhysical.Type.EsAny,
+    is PartiqlPhysical.Type.EsBoolean,
+    is PartiqlPhysical.Type.EsFloat,
+    is PartiqlPhysical.Type.EsInteger,
+    is PartiqlPhysical.Type.EsText,
+    is PartiqlPhysical.Type.RsBigint,
+    is PartiqlPhysical.Type.RsBoolean,
+    is PartiqlPhysical.Type.RsDoublePrecision,
+    is PartiqlPhysical.Type.RsInteger,
+    is PartiqlPhysical.Type.RsReal,
+    is PartiqlPhysical.Type.RsVarcharMax,
+    is PartiqlPhysical.Type.SparkBoolean,
+    is PartiqlPhysical.Type.SparkDouble,
+    is PartiqlPhysical.Type.SparkFloat,
+    is PartiqlPhysical.Type.SparkInteger,
+    is PartiqlPhysical.Type.SparkLong,
+    is PartiqlPhysical.Type.SparkShort -> error("$this node should not be present in PartiqlPhysical. Consider transforming the AST using CustomTypeVisitorTransform.")
 }

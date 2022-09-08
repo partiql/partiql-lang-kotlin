@@ -1178,7 +1178,6 @@ sealed class SqlDataType(val typeName: String, open val arityRange: IntRange) {
     object SEXP : SqlDataType("sexp", 0..0)
     object BAG : SqlDataType("bag", 0..0)
     object ANY : SqlDataType("any", 0..0)
-    object ES_ANY : SqlDataType("es_any", 0..0)
     object DATE : SqlDataType("date", 0..0)
     object TIME : SqlDataType("time", 0..1)
     object TIME_WITH_TIME_ZONE : SqlDataType("time_with_time_zone", 0..1)

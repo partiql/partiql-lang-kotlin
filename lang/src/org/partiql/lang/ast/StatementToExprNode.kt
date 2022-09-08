@@ -332,7 +332,6 @@ private class StatementTransformer(val ion: IonSystem) {
             is PartiqlAst.Type.SexpType -> DataType(SqlDataType.SEXP, listOf(), metas)
             is PartiqlAst.Type.BagType -> DataType(SqlDataType.BAG, listOf(), metas)
             is PartiqlAst.Type.AnyType -> DataType(SqlDataType.ANY, listOf(), metas)
-            is PartiqlAst.Type.EsAnyType -> DataType(SqlDataType.ES_ANY, listOf(), metas)
             is PartiqlAst.Type.ScalarType -> when (TYPE_ALIAS_TO_SCALAR_TYPE[alias.text]) {
                 BuiltInScalarType.BOOLEAN -> DataType(SqlDataType.BOOLEAN, listOf(), metas, alias.text)
                 BuiltInScalarType.INTEGER -> DataType(SqlDataType.INTEGER, listOf(), metas, alias.text)
@@ -356,6 +355,25 @@ private class StatementTransformer(val ion: IonSystem) {
                 BuiltInScalarType.TIME_WITH_TIME_ZONE -> DataType(SqlDataType.TIME_WITH_TIME_ZONE, parameters.map { it.value.toIntExact() }, metas, alias.text)
                 else -> DataType(SqlDataType.CustomDataType(alias.text), listOf(), metas, alias.text)
             }
+            is PartiqlAst.Type.CustomType -> DataType(SqlDataType.CustomDataType(this.name.text), listOf(), metas)
+            // TODO: Remove these hardcoded nodes from the PIG domain once [https://github.com/partiql/partiql-lang-kotlin/issues/510] is resolved.
+            is PartiqlAst.Type.EsBoolean,
+            is PartiqlAst.Type.EsInteger,
+            is PartiqlAst.Type.EsText,
+            is PartiqlAst.Type.EsAny,
+            is PartiqlAst.Type.EsFloat,
+            is PartiqlAst.Type.RsBigint,
+            is PartiqlAst.Type.RsBoolean,
+            is PartiqlAst.Type.RsDoublePrecision,
+            is PartiqlAst.Type.RsInteger,
+            is PartiqlAst.Type.RsReal,
+            is PartiqlAst.Type.RsVarcharMax,
+            is PartiqlAst.Type.SparkBoolean,
+            is PartiqlAst.Type.SparkDouble,
+            is PartiqlAst.Type.SparkFloat,
+            is PartiqlAst.Type.SparkInteger,
+            is PartiqlAst.Type.SparkLong,
+            is PartiqlAst.Type.SparkShort -> error("$this node should not be present in PartiQLAST. Consider transforming the AST using CustomTypeVisitorTransform.")
         }
     }
 

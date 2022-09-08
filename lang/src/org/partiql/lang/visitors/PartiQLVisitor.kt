@@ -1214,7 +1214,7 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
             in customTypeAliases.keys -> customTypeAliases.getOrDefault(name, name)
             else -> throw ParserException("Invalid custom type name: $name", ErrorCode.PARSE_INVALID_QUERY)
         }
-        scalarType(customName, emptyList())
+        customType_(SymbolPrimitive(customName, mapOf()))
     }
 
     /**

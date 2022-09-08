@@ -805,12 +805,13 @@ class QueryPrettyPrinter {
                 BuiltInScalarType.TIME_WITH_TIME_ZONE -> sb.append("TIME WITH TIME ZONE")
                 else -> error("Unrecognized scalar type ID")
             }
-            is PartiqlAst.Type.EsAnyType -> sb.append("ES_ANY")
             is PartiqlAst.Type.ListType -> sb.append("LIST")
             is PartiqlAst.Type.MissingType -> sb.append("MISSING")
             is PartiqlAst.Type.SexpType -> sb.append("SEXP")
             is PartiqlAst.Type.StructType -> sb.append("STRUCT")
             is PartiqlAst.Type.TupleType -> sb.append("TUPLE")
+            // TODO: Support formatting CustomType
+            is PartiqlAst.Type.CustomType -> error("CustomType is not supported yet. ")
         }
     }
 

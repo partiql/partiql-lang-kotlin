@@ -849,8 +849,7 @@ class SqlParser(
                 SqlDataType.SEXP -> sexpType(metas)
                 SqlDataType.BAG -> bagType(metas)
                 SqlDataType.ANY -> anyType(metas)
-                SqlDataType.ES_ANY -> esAnyType(metas)
-                is SqlDataType.CustomDataType -> scalarType(typeAlias, metas = metas)
+                is SqlDataType.CustomDataType -> customType(typeAlias, metas)
             }
         }
     }
