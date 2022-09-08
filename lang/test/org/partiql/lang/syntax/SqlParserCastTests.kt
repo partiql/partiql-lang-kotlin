@@ -10,7 +10,6 @@ import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.ION
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.util.ArgumentsProviderBase
-import org.partiql.lang.util.BuiltInScalarTypeId
 
 class SqlParserCastTests : SqlParserTestBase() {
 
@@ -49,111 +48,111 @@ class SqlParserCastTests : SqlParserTestBase() {
         private val cases = listOf(
             case(
                 source = "CAST(true as es_boolean)",
-                ast = PartiqlAst.build { cast(lit(ionBool(true)), customType("es_boolean")) }
+                ast = PartiqlAst.build { cast(lit(ionBool(true)), scalarType("es_boolean")) }
             ),
             case(
                 source = "CAST(1 as es_integer)",
-                ast = PartiqlAst.build { cast(lit(ionInt(1)), customType("es_integer")) }
+                ast = PartiqlAst.build { cast(lit(ionInt(1)), scalarType("es_integer")) }
             ),
             case(
                 source = "CAST(`1.2e0` as ES_FLOAT)",
-                ast = PartiqlAst.build { cast(lit(ionFloat(1.2)), customType("es_float")) }
+                ast = PartiqlAst.build { cast(lit(ionFloat(1.2)), scalarType("es_float")) }
             ),
             case(
                 source = "CAST('xyz' as ES_TEXT)",
-                ast = PartiqlAst.build { cast(lit(ionString("xyz")), customType("es_text")) }
+                ast = PartiqlAst.build { cast(lit(ionString("xyz")), scalarType("es_text")) }
             ),
             case(
                 source = "CAST('xyz' as RS_VARCHAR_MAX)",
-                ast = PartiqlAst.build { cast(lit(ionString("xyz")), customType("rs_varchar_max")) }
+                ast = PartiqlAst.build { cast(lit(ionString("xyz")), scalarType("rs_varchar_max")) }
             ),
             case(
                 source = "CAST('xyz' as RS_REAL)",
-                ast = PartiqlAst.build { cast(lit(ionString("xyz")), customType("rs_real")) }
+                ast = PartiqlAst.build { cast(lit(ionString("xyz")), scalarType("rs_real")) }
             ),
             case(
                 source = "CAST('xyz' as RS_FLOAT4)",
-                ast = PartiqlAst.build { cast(lit(ionString("xyz")), customType("rs_real")) }
+                ast = PartiqlAst.build { cast(lit(ionString("xyz")), scalarType("rs_real")) }
             ),
             case(
                 source = "CAST('xyz' as RS_DOUBLE_PRECISION)",
-                ast = PartiqlAst.build { cast(lit(ionString("xyz")), customType("rs_double_precision")) }
+                ast = PartiqlAst.build { cast(lit(ionString("xyz")), scalarType("rs_double_precision")) }
             ),
             case(
                 source = "CAST('xyz' as RS_FLOAT)",
-                ast = PartiqlAst.build { cast(lit(ionString("xyz")), customType("rs_double_precision")) }
+                ast = PartiqlAst.build { cast(lit(ionString("xyz")), scalarType("rs_double_precision")) }
             ),
             case(
                 source = "CAST('xyz' as rs_float8)",
-                ast = PartiqlAst.build { cast(lit(ionString("xyz")), customType("rs_double_precision")) }
+                ast = PartiqlAst.build { cast(lit(ionString("xyz")), scalarType("rs_double_precision")) }
             ),
             case(
                 source = "CAST('xyz' as SPARK_FLOAT)",
-                ast = PartiqlAst.build { cast(lit(ionString("xyz")), customType("spark_float")) }
+                ast = PartiqlAst.build { cast(lit(ionString("xyz")), scalarType("spark_float")) }
             ),
             case(
                 source = "CAST('xyz' as int4)",
-                ast = PartiqlAst.build { cast(lit(ionString("xyz")), scalarType(BuiltInScalarTypeId.INTEGER4)) }
+                ast = PartiqlAst.build { cast(lit(ionString("xyz")), scalarType("int4")) }
             ),
             case(
                 source = "CAST('xyz' as smallint)",
-                ast = PartiqlAst.build { cast(lit(ionString("xyz")), scalarType(BuiltInScalarTypeId.SMALLINT)) }
+                ast = PartiqlAst.build { cast(lit(ionString("xyz")), scalarType("smallint")) }
             ),
             case(
                 source = "CAST('xyz' as integer2)",
-                ast = PartiqlAst.build { cast(lit(ionString("xyz")), scalarType(BuiltInScalarTypeId.SMALLINT)) }
+                ast = PartiqlAst.build { cast(lit(ionString("xyz")), scalarType("integer2")) }
             ),
             case(
                 source = "CAST('xyz' as int2)",
-                ast = PartiqlAst.build { cast(lit(ionString("xyz")), scalarType(BuiltInScalarTypeId.SMALLINT)) }
+                ast = PartiqlAst.build { cast(lit(ionString("xyz")), scalarType("int2")) }
             ),
             case(
                 source = "CAST('xyz' as integer4)",
-                ast = PartiqlAst.build { cast(lit(ionString("xyz")), scalarType(BuiltInScalarTypeId.INTEGER4)) }
+                ast = PartiqlAst.build { cast(lit(ionString("xyz")), scalarType("integer4")) }
             ),
             case(
                 source = "CAST('xyz' as int8)",
-                ast = PartiqlAst.build { cast(lit(ionString("xyz")), scalarType(BuiltInScalarTypeId.INTEGER8)) }
+                ast = PartiqlAst.build { cast(lit(ionString("xyz")), scalarType("int8")) }
             ),
             case(
                 source = "CAST('xyz' as integer8)",
-                ast = PartiqlAst.build { cast(lit(ionString("xyz")), scalarType(BuiltInScalarTypeId.INTEGER8)) }
+                ast = PartiqlAst.build { cast(lit(ionString("xyz")), scalarType("integer8")) }
             ),
             case(
                 source = "CAST('xyz' as bigint)",
-                ast = PartiqlAst.build { cast(lit(ionString("xyz")), scalarType(BuiltInScalarTypeId.INTEGER8)) }
+                ast = PartiqlAst.build { cast(lit(ionString("xyz")), scalarType("bigint")) }
             ),
             case(
                 source = "CAST('xyz' as SPARK_SHORT)",
-                ast = PartiqlAst.build { cast(lit(ionString("xyz")), customType("spark_short")) }
+                ast = PartiqlAst.build { cast(lit(ionString("xyz")), scalarType("spark_short")) }
             ),
             case(
                 source = "CAST('xyz' as SPARK_INTEGER)",
-                ast = PartiqlAst.build { cast(lit(ionString("xyz")), customType("spark_integer")) }
+                ast = PartiqlAst.build { cast(lit(ionString("xyz")), scalarType("spark_integer")) }
             ),
             case(
                 source = "CAST('xyz' as SPARK_LONG)",
-                ast = PartiqlAst.build { cast(lit(ionString("xyz")), customType("spark_long")) }
+                ast = PartiqlAst.build { cast(lit(ionString("xyz")), scalarType("spark_long")) }
             ),
             case(
                 source = "CAST('xyz' as SPARK_DOUBLE)",
-                ast = PartiqlAst.build { cast(lit(ionString("xyz")), customType("spark_double")) }
+                ast = PartiqlAst.build { cast(lit(ionString("xyz")), scalarType("spark_double")) }
             ),
             case(
                 source = "CAST('xyz' as SPARK_BOOLEAN)",
-                ast = PartiqlAst.build { cast(lit(ionString("xyz")), customType("spark_boolean")) }
+                ast = PartiqlAst.build { cast(lit(ionString("xyz")), scalarType("spark_boolean")) }
             ),
             case(
                 source = "CAST('xyz' as RS_integer)",
-                ast = PartiqlAst.build { cast(lit(ionString("xyz")), customType("rs_integer")) }
+                ast = PartiqlAst.build { cast(lit(ionString("xyz")), scalarType("rs_integer")) }
             ),
             case(
                 source = "CAST('xyz' as RS_BIGINT)",
-                ast = PartiqlAst.build { cast(lit(ionString("xyz")), customType("rs_bigint")) }
+                ast = PartiqlAst.build { cast(lit(ionString("xyz")), scalarType("rs_bigint")) }
             ),
             case(
                 source = "CAST('xyz' as RS_BOOLEAN)",
-                ast = PartiqlAst.build { cast(lit(ionString("xyz")), customType("rs_boolean")) }
+                ast = PartiqlAst.build { cast(lit(ionString("xyz")), scalarType("rs_boolean")) }
             )
         )
 

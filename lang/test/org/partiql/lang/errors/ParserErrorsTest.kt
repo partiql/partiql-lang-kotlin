@@ -363,7 +363,7 @@ class ParserErrorsTest : SqlParserTestBase() {
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 11L,
                 Property.TOKEN_TYPE to TokenType.KEYWORD,
-                Property.TOKEN_VALUE to ion.newSymbol("character_varying")
+                Property.TOKEN_VALUE to ion.newSymbol("varchar")
             ),
             targetParsers = setOf(ParserTypes.SQL_PARSER)
         )
@@ -1506,7 +1506,7 @@ class ParserErrorsTest : SqlParserTestBase() {
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 11L,
                 Property.TOKEN_TYPE to TokenType.KEYWORD,
-                Property.TOKEN_VALUE to ion.newSymbol("character_varying")
+                Property.TOKEN_VALUE to ion.newSymbol("varchar")
             ),
             targetParsers = setOf(ParserTypes.SQL_PARSER)
         )
@@ -1532,7 +1532,7 @@ class ParserErrorsTest : SqlParserTestBase() {
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 11L,
                 Property.TOKEN_TYPE to TokenType.KEYWORD,
-                Property.TOKEN_VALUE to ion.newSymbol("character_varying")
+                Property.TOKEN_VALUE to ion.newSymbol("varchar")
             ),
             targetParsers = setOf(ParserTypes.SQL_PARSER)
         )

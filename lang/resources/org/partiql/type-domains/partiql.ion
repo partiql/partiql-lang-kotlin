@@ -453,7 +453,7 @@ may then be further optimized by selecting better implementations of each operat
         (sum type
 
             // Scalar type
-            (scalar_type id::symbol parameters::(* int 0))
+            (scalar_type alias::symbol parameters::(* int 0))
 
             // Non-scalar type
             (null_type)
@@ -467,31 +467,8 @@ may then be further optimized by selecting better implementations of each operat
             // Special types
             (any_type)
 
-            // TODO: Remove these hardcoded nodes from the PIG domain once [https://github.com/partiql/partiql-lang-kotlin/issues/510]
-            // Elastic Search types
-            (es_boolean)
-            (es_integer)
-            (es_float)
-            (es_text)
-            (es_any)
-
-            // SPARK Types
-            (spark_short)
-            (spark_integer)
-            (spark_long)
-            (spark_double)
-            (spark_boolean)
-            (spark_float)
-
-            // RedShift Types
-            (rs_varchar_max)
-            (rs_integer)
-            (rs_bigint)
-            (rs_boolean)
-            (rs_real)               // float-32, RS aliases: FLOAT4
-            (rs_double_precision)   // float-64, RS aliases: FLOAT8, FLOAT
-
-            (custom_type name::symbol)
+             // TODO: design custom non-scalar type API, and remove the following hard-coded type
+            (es_any_type)
         )
 
 

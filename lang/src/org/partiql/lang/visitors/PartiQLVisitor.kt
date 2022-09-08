@@ -1135,29 +1135,29 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
         val metas = ctx.datatype.getSourceMetaContainer()
         when (ctx.datatype.type) {
             PartiQLParser.NULL -> nullType(metas)
-            PartiQLParser.BOOL -> booleanType(metas)
-            PartiQLParser.BOOLEAN -> booleanType(metas)
-            PartiQLParser.SMALLINT -> smallintType(metas)
-            PartiQLParser.INT2 -> smallintType(metas)
-            PartiQLParser.INTEGER2 -> smallintType(metas)
-            PartiQLParser.INT -> integerType(metas)
-            PartiQLParser.INTEGER -> integerType(metas)
-            PartiQLParser.INT4 -> integer4Type(metas)
-            PartiQLParser.INTEGER4 -> integer4Type(metas)
-            PartiQLParser.INT8 -> integer8Type(metas)
-            PartiQLParser.INTEGER8 -> integer8Type(metas)
-            PartiQLParser.BIGINT -> integer8Type(metas)
-            PartiQLParser.REAL -> realType(metas)
-            PartiQLParser.DOUBLE -> doublePrecisionType(metas)
-            PartiQLParser.TIMESTAMP -> timestampType(metas)
-            PartiQLParser.CHAR -> characterType(metas = metas)
-            PartiQLParser.CHARACTER -> characterType(metas = metas)
+            PartiQLParser.BOOL -> scalarType("bool", emptyList(), metas)
+            PartiQLParser.BOOLEAN -> scalarType("boolean", emptyList(), metas)
+            PartiQLParser.SMALLINT -> scalarType("smallint", emptyList(), metas)
+            PartiQLParser.INT2 -> scalarType("int2", emptyList(), metas)
+            PartiQLParser.INTEGER2 -> scalarType("integer2", emptyList(), metas)
+            PartiQLParser.INT -> scalarType("int", emptyList(), metas)
+            PartiQLParser.INTEGER -> scalarType("integer", emptyList(), metas)
+            PartiQLParser.INT4 -> scalarType("int4", emptyList(), metas)
+            PartiQLParser.INTEGER4 -> scalarType("integer4", emptyList(), metas)
+            PartiQLParser.INT8 -> scalarType("int8", emptyList(), metas)
+            PartiQLParser.INTEGER8 -> scalarType("integer8", emptyList(), metas)
+            PartiQLParser.BIGINT -> scalarType("bigint", emptyList(), metas)
+            PartiQLParser.REAL -> scalarType("real", emptyList(), metas)
+            PartiQLParser.DOUBLE -> scalarType("double_precision", emptyList(), metas)
+            PartiQLParser.TIMESTAMP -> scalarType("timestamp", emptyList(), metas)
+            PartiQLParser.CHAR -> scalarType("char", emptyList(), metas)
+            PartiQLParser.CHARACTER -> scalarType("character", emptyList(), metas)
             PartiQLParser.MISSING -> missingType(metas)
-            PartiQLParser.STRING -> stringType(metas)
-            PartiQLParser.SYMBOL -> symbolType(metas)
-            PartiQLParser.BLOB -> blobType(metas)
-            PartiQLParser.CLOB -> clobType(metas)
-            PartiQLParser.DATE -> dateType(metas)
+            PartiQLParser.STRING -> scalarType("string", emptyList(), metas)
+            PartiQLParser.SYMBOL -> scalarType("symbol", emptyList(), metas)
+            PartiQLParser.BLOB -> scalarType("blob", emptyList(), metas)
+            PartiQLParser.CLOB -> scalarType("clob", emptyList(), metas)
+            PartiQLParser.DATE -> scalarType("date", emptyList(), metas)
             PartiQLParser.STRUCT -> structType(metas)
             PartiQLParser.TUPLE -> tupleType(metas)
             PartiQLParser.LIST -> listType(metas)
@@ -1171,16 +1171,17 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
     override fun visitTypeVarChar(ctx: PartiQLParser.TypeVarCharContext) = PartiqlAst.build {
         val arg0 = if (ctx.arg0 != null) ion.newInt(BigInteger(ctx.arg0.text, 10)) else null
         assertIntegerValue(ctx.arg0, arg0)
-        characterVaryingType(arg0?.longValue())
+        scalarType("varchar", listOfNotNull(arg0?.longValue()))
     }
 
     override fun visitTypeArgSingle(ctx: PartiQLParser.TypeArgSingleContext) = PartiqlAst.build {
         val arg0 = if (ctx.arg0 != null) ion.newInt(BigInteger(ctx.arg0.text, 10)) else null
         assertIntegerValue(ctx.arg0, arg0)
         when (ctx.datatype.type) {
-            PartiQLParser.FLOAT -> floatType(arg0?.longValue())
-            PartiQLParser.CHAR, PartiQLParser.CHARACTER -> characterType(arg0?.longValue())
-            PartiQLParser.VARCHAR -> characterVaryingType(arg0?.longValue())
+            PartiQLParser.FLOAT -> scalarType("float", listOfNotNull(arg0?.longValue()))
+            PartiQLParser.CHAR -> scalarType("char", listOfNotNull(arg0?.longValue()))
+            PartiQLParser.CHARACTER -> scalarType("character", listOfNotNull(arg0?.longValue()))
+            PartiQLParser.VARCHAR -> scalarType("varchar", listOfNotNull(arg0?.longValue()))
             else -> throw ParserException("Unknown datatype", ErrorCode.PARSE_UNEXPECTED_TOKEN, PropertyValueMap())
         }
     }
@@ -1191,8 +1192,9 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
         assertIntegerValue(ctx.arg0, arg0)
         assertIntegerValue(ctx.arg1, arg1)
         when (ctx.datatype.type) {
-            PartiQLParser.DECIMAL, PartiQLParser.DEC -> decimalType(arg0?.longValue(), arg1?.longValue())
-            PartiQLParser.NUMERIC -> numericType(arg0?.longValue(), arg1?.longValue())
+            PartiQLParser.DECIMAL -> scalarType("decimal", listOfNotNull(arg0?.longValue(), arg1?.longValue()))
+            PartiQLParser.DEC -> scalarType("dec", listOfNotNull(arg0?.longValue(), arg1?.longValue()))
+            PartiQLParser.NUMERIC -> scalarType("numeric", listOfNotNull(arg0?.longValue(), arg1?.longValue()))
             else -> throw ParserException("Unknown datatype", ErrorCode.PARSE_UNEXPECTED_TOKEN, PropertyValueMap())
         }
     }
@@ -1202,8 +1204,8 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
         if (precision != null && (precision < 0 || precision > MAX_PRECISION_FOR_TIME)) {
             throw ctx.precision.err("Unsupported precision", ErrorCode.PARSE_INVALID_PRECISION_FOR_TIME)
         }
-        if (ctx.WITH() == null) return@build timeType(precision)
-        timeWithTimeZoneType(precision)
+        if (ctx.WITH() == null) return@build scalarType("time", listOfNotNull(precision))
+        scalarType("time_with_time_zone", listOfNotNull(precision))
     }
 
     override fun visitTypeCustom(ctx: PartiQLParser.TypeCustomContext) = PartiqlAst.build {
@@ -1212,7 +1214,7 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
             in customTypeAliases.keys -> customTypeAliases.getOrDefault(name, name)
             else -> throw ParserException("Invalid custom type name: $name", ErrorCode.PARSE_INVALID_QUERY)
         }
-        customType_(SymbolPrimitive(customName, mapOf()))
+        scalarType(customName, emptyList())
     }
 
     /**
