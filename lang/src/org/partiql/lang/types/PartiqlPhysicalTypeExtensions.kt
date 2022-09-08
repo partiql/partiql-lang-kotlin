@@ -69,7 +69,7 @@ fun PartiqlPhysical.Type.toTypedOpParameter(customTypedOpParameters: Map<String,
             )
             else -> error("Internal Error: TIME_WITH_TIME_ZONE type must have 1 parameters during compiling")
         }
-        else -> error("Unrecognized scalar type ID")
+        else -> customTypedOpParameters.mapKeys { (k, _) -> k.toLowerCase() }[alias.text.toLowerCase()] ?: error("No such scalar type: ${alias.text.toLowerCase()}")
     }
     is PartiqlPhysical.Type.StructType -> TypedOpParameter(StaticType.STRUCT)
     is PartiqlPhysical.Type.TupleType -> TypedOpParameter(StaticType.STRUCT)
