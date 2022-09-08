@@ -1287,6 +1287,36 @@ class ParserErrorsTest : SqlParserTestBase() {
     }
 
     @Test
+    fun callTrimSpecificationMismatch() {
+        // for SQL parser, the logic seems to be if the first token is not one of { NONE | BOTH | LEADING | TRAILING}
+        // treating the token as identifier and expect the trim expression to end
+        checkInputThrowingParserException(
+            "trim(something ' ' from ' string ')",
+            ErrorCode.PARSE_EXPECTED_RIGHT_PAREN_BUILTIN_FUNCTION_CALL,
+            mapOf(
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 16L,
+                Property.TOKEN_TYPE to TokenType.LITERAL,
+                Property.TOKEN_VALUE to ion.newString(" ")
+            ),
+            targetParsers = setOf(ParserTypes.SQL_PARSER)
+        )
+        // for sql parser, the logic is, if the first token is not one of { NONE | BOTH | LEADING | TRAILING}
+        // throw out a parser error
+        checkInputThrowingParserException(
+            "trim(something ' ' from ' string ')",
+            ErrorCode.PARSE_INVALID_ARGUMENTS_FOR_TRIM,
+            mapOf(
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 6L,
+                Property.TOKEN_TYPE to TokenType.IDENTIFIER,
+                Property.TOKEN_VALUE to ion.newSymbol("something")
+            ),
+            targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
+        )
+    }
+
+    @Test
     fun nullIsNotNullIonLiteral() {
         checkInputThrowingParserException(
             "NULL is not `null`",
