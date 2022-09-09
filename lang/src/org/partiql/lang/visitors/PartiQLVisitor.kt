@@ -272,12 +272,11 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
         onConflict(expr = visitExpr(ctx.expr()), conflictAction = doNothing(), metas = ctx.ON().getSourceMetaContainer())
     }
 
-    override fun visitConflictAction(ctx: PartiQLParser.ConflictActionContext): PartiqlAst.PartiqlAstNode = PartiqlAst.build {
-        when (ctx.action.type) {
-            PartiQLParser.REPLACE -> visit(ctx.doReplace())
-            PartiQLParser.NOTHING -> PartiqlAst.ConflictAction.DoNothing()
-            else -> TODO("INSERT INTO doesn't support ON CONFLICT actions other than `REPLACE` and `NOTHING` yet.")
-        }
+    override fun visitConflictAction(ctx: PartiQLParser.ConflictActionContext) = when {
+        ctx == null -> null
+        ctx.REPLACE() != null -> visit(ctx.doReplace())
+        ctx.NOTHING() != null -> PartiqlAst.ConflictAction.DoNothing()
+        else -> TODO("ON CONFLICT only supports `DO REPLACE` and `DO NOTHING` actions at the moment.")
     }
 
     override fun visitDoReplace(ctx: PartiQLParser.DoReplaceContext) = PartiqlAst.build {

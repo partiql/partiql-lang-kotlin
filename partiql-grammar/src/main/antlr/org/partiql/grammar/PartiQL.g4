@@ -159,8 +159,8 @@ constraintName
     : symbolPrimitive;
 
 conflictAction
-    : DO action=NOTHING
-    | DO action=REPLACE doReplace;
+    : DO NOTHING
+    | DO REPLACE doReplace;
 
 /*
 <do replace> ::= EXCLUDED
