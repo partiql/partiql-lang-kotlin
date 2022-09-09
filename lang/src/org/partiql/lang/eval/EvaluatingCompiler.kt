@@ -1767,18 +1767,17 @@ internal class EvaluatingCompiler(
                                 else -> evalOrderBy(quantifiedRows, orderByThunk, orderByLocationMeta, env.session)
                             }
 
-                            val offsetRows = rowsWithOffsetAndLimit(orderedRows, env)
+                            val offsetLimitRows = rowsWithOffsetAndLimit(orderedRows, env)
 
-                            // If order by is specified, return list otherwise bag
                             when (orderByThunk) {
                                 null -> valueFactory.newBag(
-                                    offsetRows.map {
+                                    offsetLimitRows.map {
                                         // TODO make this expose the ordinal for ordered sequences
                                         // make sure we don't expose the underlying value's name out of a SELECT
                                         it.unnamedValue()
                                     }
                                 )
-                                else -> valueFactory.newList(offsetRows.map { it.unnamedValue() })
+                                else -> valueFactory.newList(offsetLimitRows.map { it.unnamedValue() })
                             }
                         }
                     else -> {
@@ -1819,7 +1818,7 @@ internal class EvaluatingCompiler(
                             groupByItems.isEmpty() -> { // There are aggregates but no group by items
                                 // Create a closure that groups all the rows in the FROM source into a single group.
                                 thunkFactory.thunkEnv(metas) { env ->
-                                    val fromProductions: Sequence<FromProduction> = rowsWithOffsetAndLimit(sourceThunks(env), env)
+                                    val fromProductions = sourceThunks(env)
 
                                     // note: the group key can be anything here because we only ever have a single
                                     // group when aggregates are used without GROUP BY expression
@@ -1845,9 +1844,11 @@ internal class EvaluatingCompiler(
                                         else -> evalOrderBy(sequenceOf(groupResult), orderByThunk, orderByLocationMeta, env.session)
                                     }
 
+                                    val offsetLimitRows = rowsWithOffsetAndLimit(orderedRows, env)
+
                                     when (orderByThunk) {
-                                        null -> valueFactory.newBag(orderedRows)
-                                        else -> valueFactory.newList(orderedRows)
+                                        null -> valueFactory.newBag(offsetLimitRows)
+                                        else -> valueFactory.newList(offsetLimitRows)
                                     }
                                 }
                             }
@@ -1919,16 +1920,16 @@ internal class EvaluatingCompiler(
                                         filterHavingAndProject(groupByEnv, groupValue)
                                     }.asSequence()
 
-                                    val offsetLimitRows = rowsWithOffsetAndLimit(projectedRows, env)
-
                                     val orderedRows = when (orderByThunk) {
-                                        null -> offsetLimitRows
-                                        else -> evalOrderBy(offsetLimitRows, orderByThunk, orderByLocationMeta, env.session)
+                                        null -> projectedRows
+                                        else -> evalOrderBy(projectedRows, orderByThunk, orderByLocationMeta, env.session)
                                     }
 
+                                    val offsetLimitRows = rowsWithOffsetAndLimit(orderedRows, env)
+
                                     when (orderByThunk) {
-                                        null -> valueFactory.newBag(orderedRows)
-                                        else -> valueFactory.newList(orderedRows)
+                                        null -> valueFactory.newBag(offsetLimitRows)
+                                        else -> valueFactory.newList(offsetLimitRows)
                                     }
                                 }
                             }
