@@ -353,7 +353,7 @@ private class StatementTransformer(val ion: IonSystem) {
                 BuiltInScalarType.DATE -> DataType(SqlDataType.DATE, listOf(), metas, alias.text)
                 BuiltInScalarType.TIME -> DataType(SqlDataType.TIME, parameters.map { it.value.toIntExact() }, metas, alias.text)
                 BuiltInScalarType.TIME_WITH_TIME_ZONE -> DataType(SqlDataType.TIME_WITH_TIME_ZONE, parameters.map { it.value.toIntExact() }, metas, alias.text)
-                else -> DataType(SqlDataType.CustomDataType(alias.text), listOf(), metas, alias.text)
+                else -> error("Unrecognized scalar type ID: ${alias.text}")
             }
             is PartiqlAst.Type.CustomType -> DataType(SqlDataType.CustomDataType(this.name.text), listOf(), metas)
             // TODO: Remove these hardcoded nodes from the PIG domain once [https://github.com/partiql/partiql-lang-kotlin/issues/510] is resolved.
