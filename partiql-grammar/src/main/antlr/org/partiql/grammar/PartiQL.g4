@@ -159,8 +159,8 @@ constraintName
     : IDENTIFIER;
 
 conflictAction
-    : DO NOTHING
-    | DO REPLACE doReplace;
+    : DO action=NOTHING
+    | DO action=REPLACE doReplace;
 
 /*
 <do replace> ::= EXCLUDED
