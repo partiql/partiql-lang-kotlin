@@ -279,7 +279,7 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
         else -> null
     }
 
-    override fun visitDoReplace(ctx: PartiQLParser.DoReplaceContext?): PartiqlAst.PartiqlAstNode {
+    override fun visitDoReplace(ctx: PartiQLParser.DoReplaceContext) = PartiqlAst.build {
         val value = when {
             ctx?.EXCLUDED() != null -> PartiqlAst.OnConflictValue.Excluded()
             else -> {
