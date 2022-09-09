@@ -70,10 +70,6 @@ To build this project, clone this repository and from its root directory execute
 
 This will build the reference interpreter and test framework, then run all unit and integration tests.
 
-### Building the Documentation
-
-[Instructions on how to build PartiQL's documentation](docs/Docker/README.md)
-
 ## Directory Structure
 
 - `docs` source code for the GitHub Wiki
