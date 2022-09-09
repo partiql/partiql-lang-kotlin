@@ -1,3 +1,17 @@
+/*
+ * Copyright 2022 Amazon.com, Inc. or its affiliates.  All rights reserved.
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License").
+ *  You may not use this file except in compliance with the License.
+ *  A copy of the License is located at:
+ *
+ *       http://aws.amazon.com/apache2.0/
+ *
+ *  or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
+ *  language governing permissions and limitations under the License.
+ */
+
 package org.partiql.lang.compiler
 
 import com.amazon.ion.IonSystem
@@ -24,8 +38,8 @@ import org.partiql.lang.types.CustomType
  *
  * // Fluent builder
  * val compiler = PartiQLCompilerBuilder.standard()
- *                                      .withIonSystem(myIonSystem)
- *                                      .withCustomFunctions(myCustomFunctionList)
+ *                                      .ionSystem(myIonSystem)
+ *                                      .customFunctions(myCustomFunctionList)
  *                                      .build()
  * ```
  */
@@ -66,11 +80,11 @@ class PartiQLCompilerBuilder private constructor() {
         )
     }
 
-    fun withIonSystem(ion: IonSystem): PartiQLCompilerBuilder = this.apply {
+    fun ionSystem(ion: IonSystem): PartiQLCompilerBuilder = this.apply {
         this.valueFactory = ExprValueFactory.standard(ion)
     }
 
-    fun withOptions(options: EvaluatorOptions) = this.apply {
+    fun options(options: EvaluatorOptions) = this.apply {
         this.options = options
     }
 
@@ -78,7 +92,7 @@ class PartiQLCompilerBuilder private constructor() {
      * TODO This will be replaced by the open type system.
      *  - https://github.com/partiql/partiql-lang-kotlin/milestone/4
      */
-    internal fun withCustomFunctions(customFunctions: List<ExprFunction>) = this.apply {
+    internal fun customFunctions(customFunctions: List<ExprFunction>) = this.apply {
         this.customFunctions = customFunctions
     }
 
@@ -86,7 +100,7 @@ class PartiQLCompilerBuilder private constructor() {
      * TODO This will be replaced by the open type system.
      *  - https://github.com/partiql/partiql-lang-kotlin/milestone/4
      */
-    internal fun withCustomTypes(customTypes: List<CustomType>) = this.apply {
+    internal fun customTypes(customTypes: List<CustomType>) = this.apply {
         this.customTypes = customTypes
     }
 
@@ -94,11 +108,11 @@ class PartiQLCompilerBuilder private constructor() {
      * TODO This will be replaced by the open type system.
      *  - https://github.com/partiql/partiql-lang-kotlin/milestone/4
      */
-    internal fun withCustomProcedures(customProcedures: List<StoredProcedure>) = this.apply {
+    internal fun customProcedures(customProcedures: List<StoredProcedure>) = this.apply {
         this.customProcedures = customProcedures
     }
 
-    internal fun withCustomOperatorFactories(customOperatorFactories: List<RelationalOperatorFactory>) = this.apply {
+    internal fun customOperatorFactories(customOperatorFactories: List<RelationalOperatorFactory>) = this.apply {
         this.customOperatorFactories = customOperatorFactories
     }
 

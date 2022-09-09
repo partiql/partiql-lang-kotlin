@@ -1,6 +1,7 @@
 package org.partiql.lang.eval.evaluatortestframework
 
 import org.partiql.lang.ION
+import org.partiql.lang.compiler.PartiQLCompilerBuilder
 import org.partiql.lang.compiler.PartiQLCompilerPipeline
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
@@ -11,6 +12,7 @@ import org.partiql.lang.planner.EvaluatorOptions
 import org.partiql.lang.planner.GlobalResolutionResult
 import org.partiql.lang.planner.GlobalVariableResolver
 import org.partiql.lang.planner.PartiQLPlanner
+import org.partiql.lang.planner.PartiQLPlannerBuilder
 import org.partiql.lang.syntax.SqlParser
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNull
@@ -68,18 +70,20 @@ internal class PartiQLCompilerPipelineFactory : PipelineFactory {
             allowedUndefinedVariables = true
         )
 
-        val pipeline = PartiQLCompilerPipeline.build {
-            parser = SqlParser(ION, customTypes = legacyPipeline.customDataTypes)
-            planner
-                .withOptions(plannerOptions)
-                .withGlobalVariableResolver(globalVariableResolver)
-            compiler
-                .withIonSystem(ION)
-                .withOptions(evaluatorOptions)
-                .withCustomTypes(legacyPipeline.customDataTypes)
-                .withCustomFunctions(legacyPipeline.functions.values.toList())
-                .withCustomProcedures(legacyPipeline.procedures.values.toList())
-        }
+        val pipeline = PartiQLCompilerPipeline(
+            parser = SqlParser(ION, legacyPipeline.customDataTypes),
+            planner = PartiQLPlannerBuilder.standard()
+                .options(plannerOptions)
+                .globalVariableResolver(globalVariableResolver)
+                .build(),
+            compiler = PartiQLCompilerBuilder.standard()
+                .ionSystem(ION)
+                .options(evaluatorOptions)
+                .customTypes(legacyPipeline.customDataTypes)
+                .customFunctions(legacyPipeline.functions.values.toList())
+                .customProcedures(legacyPipeline.procedures.values.toList())
+                .build(),
+        )
 
         return object : AbstractPipeline {
 
