@@ -207,7 +207,7 @@ interface PlannerPipeline {
         private val customProcedures: MutableMap<String, StoredProcedure> = HashMap()
         private val physicalPlanPasses = ArrayList<PartiqlPhysicalPass>()
         private val physicalOperatorFactories = ArrayList<RelationalOperatorFactory>()
-        private var globalVariableResolver: GlobalVariableResolver = emptyGlobalsResolver()
+        private var globalVariableResolver: GlobalVariableResolver = GlobalVariableResolver.EMPTY
         private var allowUndefinedVariables: Boolean = false
         private var enableLegacyExceptionHandling: Boolean = false
         private var plannerEventCallback: PlannerEventCallback? = null

@@ -1,7 +1,6 @@
 package org.partiql.lang.planner.transforms
 
 import com.amazon.ionelement.api.ionSymbol
-import org.partiql.lang.ast.DeleteOp.name
 import org.partiql.lang.ast.sourceLocation
 import org.partiql.lang.domains.PartiqlLogical
 import org.partiql.lang.domains.PartiqlLogicalResolved
@@ -130,7 +129,7 @@ private fun GlobalResolutionResult.toResolvedVariable() =
  */
 private data class LocalScope(val varDecls: List<PartiqlLogical.VarDecl>)
 
-private data class LogicalToLogicalResolvedVisitorTransform(
+internal data class LogicalToLogicalResolvedVisitorTransform(
     /** If set to `true`, do not log errors about undefined variables. Rewrite such variables to a `dynamic_id` node. */
     val allowUndefinedVariables: Boolean,
     /** Where to send error reports. */

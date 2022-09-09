@@ -35,6 +35,7 @@ import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestTarget
 import org.partiql.lang.eval.evaluatortestframework.ExpectedResultFormat
 import org.partiql.lang.eval.evaluatortestframework.LegacySerializerTestAdapter
 import org.partiql.lang.eval.evaluatortestframework.MultipleTestAdapter
+import org.partiql.lang.eval.evaluatortestframework.PartiQLCompilerPipelineFactory
 import org.partiql.lang.eval.evaluatortestframework.PartiqlAstExprNodeRoundTripAdapter
 import org.partiql.lang.eval.evaluatortestframework.PipelineEvaluatorTestAdapter
 import org.partiql.lang.eval.evaluatortestframework.PlannerPipelineFactory
@@ -49,6 +50,7 @@ abstract class EvaluatorTestBase : TestBase() {
         listOf(
             PipelineEvaluatorTestAdapter(CompilerPipelineFactory()),
             PipelineEvaluatorTestAdapter(PlannerPipelineFactory()),
+            PipelineEvaluatorTestAdapter(PartiQLCompilerPipelineFactory()),
             PartiqlAstExprNodeRoundTripAdapter(),
             LegacySerializerTestAdapter(),
             AstRewriterBaseTestAdapter()
