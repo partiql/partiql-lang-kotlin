@@ -144,19 +144,19 @@ conflictTarget
     | ON CONSTRAINT constraintName;
 
 indexTarget
-    : IDENTIFIER;
+    : symbolPrimitive;
 
 primaryKey
-    : IDENTIFIER;
+    : symbolPrimitive;
 
 /**
     <composite primary key> ::= <attr name>, <attr name> [, <attr name> ]...
 */
 compositePrimaryKey
-    : IDENTIFIER COMMA IDENTIFIER (COMMA IDENTIFIER)*;
+    : symbolPrimitive COMMA symbolPrimitive (COMMA symbolPrimitive)*;
 
 constraintName
-    : IDENTIFIER;
+    : symbolPrimitive;
 
 conflictAction
     : DO action=NOTHING
