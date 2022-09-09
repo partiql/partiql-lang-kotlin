@@ -79,7 +79,7 @@ stage in the `PlannerPipeline` and to generate performance metrics for the indiv
 
 ### Removed
 - README.md badge for travisci
-
+- The following custom type AST nodes are removed from `partiql.ion` file: `es_boolean`, `es_integer`, `es_float`, `es_text`, `es_any`, `spark_short`, `spark_integer`, `spark_long`, `spark_double`, `spark_boolean`, `spark_float`, `rs_varchar_max`, `rs_integer`, `rs_bigint`, `rs_boolean`, `rs_real`, `rs_double_precision`. The related visitor transform `CustomTypeVisitorTransform` is also removed
 ### Security
 
 ## [0.7.0-alpha] - 2022-06-23

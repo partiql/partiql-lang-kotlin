@@ -180,8 +180,6 @@ private enum class NodeTag(val definition: TagDefinition) {
 
     CUSTOM_TYPE(TagDefinition("custom_type", 1)),
 
-    // TODO: This should be removed along with all it's usages once hardcoded types are removed from the PIG domain
-    //  https://github.com/partiql/partiql-lang-kotlin/issues/510
     CUSTOM_TYPE_FOR_OLDER_PIG_ASTS(TagDefinition("custom_type_for_older_pig_asts", 0)),
 
     // These are not expressions by themselves but are still valid tags
@@ -258,8 +256,6 @@ private enum class NodeTag(val definition: TagDefinition) {
     }
 }
 
-// TODO: CustomTypes in this signature should be removed along with all it's usages
-//  once hardcoded types are removed from the PIG domain https://github.com/partiql/partiql-lang-kotlin/issues/510
 @Suppress("DEPRECATION") // We don't need warnings about deprecated ExprNode.
 class AstDeserializerBuilder(val ion: IonSystem, val customTypes: List<CustomType> = listOf()) {
     private val metaDeserializers = mutableMapOf(
@@ -288,8 +284,6 @@ class AstDeserializerBuilder(val ion: IonSystem, val customTypes: List<CustomTyp
         }
 }
 
-// TODO: CustomTypes in this signature should be removed along with all it's usages
-//  once hardcoded types are removed from the PIG domain https://github.com/partiql/partiql-lang-kotlin/issues/510
 @Suppress("DEPRECATION") // We don't need warnings about deprecated ExprNode
 internal class AstDeserializerInternal(
     val astVersion: AstVersion,
