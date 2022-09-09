@@ -281,7 +281,7 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
 
     override fun visitDoReplace(ctx: PartiQLParser.DoReplaceContext) = PartiqlAst.build {
         val value = when {
-            ctx?.EXCLUDED() != null -> PartiqlAst.OnConflictValue.Excluded()
+            ctx.EXCLUDED() != null -> PartiqlAst.OnConflictValue.Excluded()
             else -> TODO("DO REPLACE doesn't support values other than `EXCLUDED` yet.")
         }
         PartiqlAst.ConflictAction.DoReplace(value)
