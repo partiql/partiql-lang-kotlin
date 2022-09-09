@@ -77,6 +77,7 @@ This will build the reference interpreter and test framework, then run all unit 
 ## Directory Structure
 
 - `docs` source code for the GitHub Wiki
+- `partiql-grammar` contains the ANTLR files to generate the PartiQL Parser.
 - `lang` contains the source code of the library containing the interpreter.
 - `lang/jmh` contains the JMH benchmarks for PartiQL.
 - `cli` contains the source code of the command-line interface and interactive prompt. (CLI/REPL)
