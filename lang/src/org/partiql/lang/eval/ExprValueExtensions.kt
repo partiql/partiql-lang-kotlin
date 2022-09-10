@@ -364,7 +364,7 @@ fun ExprValue.cast(
         is FloatType -> valueFactory.newFloat(this.toDouble())
         is DecimalType -> {
             if (this.isNaN || this.isNegInf || this.isPosInf) {
-                castFailedErr("Can't convert Infinity or NaN to INT.", internal = false)
+                castFailedErr("Can't convert Infinity or NaN to DECIMAL.", internal = false)
             }
 
             when (typedOpBehavior) {
