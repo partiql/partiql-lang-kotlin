@@ -50,6 +50,9 @@ import org.partiql.lang.util.compareTo
 import org.partiql.lang.util.downcast
 import org.partiql.lang.util.getPrecisionFromTimeString
 import org.partiql.lang.util.ionValue
+import org.partiql.lang.util.isNaN
+import org.partiql.lang.util.isNegInf
+import org.partiql.lang.util.isPosInf
 import java.math.BigDecimal
 import java.math.MathContext
 import java.math.RoundingMode
@@ -316,6 +319,11 @@ fun ExprValue.cast(
                     }
             }
 
+            // If the source is Positive/Negative Infinity or Nan, We do not allow cast operator to continue
+            if (this.isNaN || this.isNegInf || this.isPosInf) {
+                castFailedErr("Can't convert Infinity or NaN to INT.", internal = false)
+            }
+
             // Here, we check if there is a possibility of being able to fit this number into
             // any of the integer types. We allow the buffer of 1 because we allow rounding into min/max values.
             if (this <= (longMinDecimal - BigDecimal.ONE) || this >= (longMaxDecimal + BigDecimal.ONE)) {
@@ -354,28 +362,34 @@ fun ExprValue.cast(
             valueFactory.newInt(result)
         }
         is FloatType -> valueFactory.newFloat(this.toDouble())
-        is DecimalType -> when (typedOpBehavior) {
-            TypedOpBehavior.LEGACY -> valueFactory.newFromIonValue(
-                this.coerce(BigDecimal::class.java).ionValue(valueFactory.ion)
-            )
-            TypedOpBehavior.HONOR_PARAMETERS ->
-                when (type.precisionScaleConstraint) {
-                    DecimalType.PrecisionScaleConstraint.Unconstrained -> valueFactory.newFromIonValue(
-                        this.coerce(BigDecimal::class.java).ionValue(valueFactory.ion)
-                    )
-                    is DecimalType.PrecisionScaleConstraint.Constrained -> {
-                        val constraint = type.precisionScaleConstraint
-                        val decimal = this.coerce(BigDecimal::class.java) as BigDecimal
-                        val result = decimal.round(MathContext(constraint.precision))
-                            .setScale(constraint.scale, RoundingMode.HALF_UP)
-                        if (result.precision() > constraint.precision) {
-                            // Following PostgresSQL behavior here. Java will increase precision if needed.
-                            castFailedErr("target type DECIMAL(${constraint.precision}, ${constraint.scale}) too small for value $decimal.", internal = false)
-                        } else {
-                            valueFactory.newFromIonValue(result.ionValue(valueFactory.ion))
+        is DecimalType -> {
+            if (this.isNaN || this.isNegInf || this.isPosInf) {
+                castFailedErr("Can't convert Infinity or NaN to INT.", internal = false)
+            }
+
+            when (typedOpBehavior) {
+                TypedOpBehavior.LEGACY -> valueFactory.newFromIonValue(
+                    this.coerce(BigDecimal::class.java).ionValue(valueFactory.ion)
+                )
+                TypedOpBehavior.HONOR_PARAMETERS ->
+                    when (type.precisionScaleConstraint) {
+                        DecimalType.PrecisionScaleConstraint.Unconstrained -> valueFactory.newFromIonValue(
+                            this.coerce(BigDecimal::class.java).ionValue(valueFactory.ion)
+                        )
+                        is DecimalType.PrecisionScaleConstraint.Constrained -> {
+                            val constraint = type.precisionScaleConstraint
+                            val decimal = this.coerce(BigDecimal::class.java) as BigDecimal
+                            val result = decimal.round(MathContext(constraint.precision))
+                                .setScale(constraint.scale, RoundingMode.HALF_UP)
+                            if (result.precision() > constraint.precision) {
+                                // Following PostgresSQL behavior here. Java will increase precision if needed.
+                                castFailedErr("target type DECIMAL(${constraint.precision}, ${constraint.scale}) too small for value $decimal.", internal = false)
+                            } else {
+                                valueFactory.newFromIonValue(result.ionValue(valueFactory.ion))
+                            }
                         }
                     }
-                }
+            }
         }
         else -> castFailedErr("Invalid type for numeric conversion: $type (this code should be unreachable)", internal = true)
     }

@@ -950,6 +950,10 @@ abstract class CastTestBase : EvaluatorTestBase() {
                 case("`0e0`", "\"0.0\"", CastQuality.LOSSLESS),
                 case("1.1", "\"1.1\"", CastQuality.LOSSLESS),
                 case("-20.1", "\"-20.1\"", CastQuality.LOSSLESS),
+                // inf, -inf, nan
+                case("`+inf`", "\"Infinity\"", CastQuality.LOSSLESS),
+                case("`-inf`", "\"-Infinity\"", CastQuality.LOSSLESS),
+                case("`nan`", "\"NaN\"", CastQuality.LOSSLESS),
                 // timestamp
                 case("`2007-10-10T`", "\"2007-10-10\"", CastQuality.LOSSLESS),
                 // text
@@ -1110,6 +1114,10 @@ abstract class CastTestBase : EvaluatorTestBase() {
                 case("`0e0`", "\"0\"", CastQuality.LOSSLESS),
                 case("1.1", "\"1\"", CastQuality.LOSSY),
                 case("-20.1", "\"-\"", CastQuality.LOSSY),
+                // inf, -inf, nan
+                case("`+inf`", "\"I\"", CastQuality.LOSSY),
+                case("`-inf`", "\"-\"", CastQuality.LOSSY),
+                case("`nan`", "\"N\"", CastQuality.LOSSY),
                 // timestamp
                 case("`2007-10-10T`", "\"2\"", CastQuality.LOSSY),
                 // text
@@ -1259,6 +1267,51 @@ abstract class CastTestBase : EvaluatorTestBase() {
             ).types(listOf("CHAR(4)", "CHARACTER(4)"))
         ).flatten()
 
+        // collection of test demostrating how cast([`+inf` | `-inf` | `nan`] as <type>) behave
+        val infinityOrNanTestCases = listOf(
+            // cast([`+inf` | `-inf` | `nan`] as [INT | DECIMAL]) returns Evaluator_CAST_FAILED error
+            listOf(
+                case("`+inf`", ErrorCode.EVALUATOR_CAST_FAILED),
+                case("`-inf`", ErrorCode.EVALUATOR_CAST_FAILED),
+                case("`nan`", ErrorCode.EVALUATOR_CAST_FAILED),
+            ).types(INT.sqlTextNames + DECIMAL.sqlTextNames),
+            // cast([`+inf` | `-inf` | `nan`] as FLOAT) returns the original value
+            listOf(
+                case("`+inf`", "+inf", CastQuality.LOSSLESS),
+                case("`-inf`", "-inf", CastQuality.LOSSLESS),
+                case("`nan`", "nan", CastQuality.LOSSLESS)
+            ).types(FLOAT.sqlTextNames),
+            // cast([`+inf` | `-inf` | `nan`] as STRING) returns "Infinity", "-Infinity", and "NaN" respectively.
+            // for casting behavor with parametered char, character, see [deviatingParamsTestCases] and [deviatingLegacyTestCases]
+            listOf(
+                case("`+inf`", "\"Infinity\"", CastQuality.LOSSLESS),
+                case("`-inf`", "\"-Infinity\"", CastQuality.LOSSLESS),
+                case("`nan`", "\"NaN\"", CastQuality.LOSSLESS)
+            ).types(listOf("STRING", "VARCHAR", "CHARACTER VARYING")),
+            // cast([`+inf` | `-inf` | `nan`] as STRING) returns 'Infinity', '-Infinity', and 'NaN' respectively.
+            listOf(
+                case("`+inf`", "'Infinity'", CastQuality.LOSSLESS),
+                case("`-inf`", "'-Infinity'", CastQuality.LOSSLESS),
+                case("`nan`", "'NaN'", CastQuality.LOSSLESS)
+            ).types(ExprValueType.SYMBOL.sqlTextNames),
+            // cast([`+inf` | `-inf` | `nan`] as BOOLEAN) returns true, since none of which has value of 0.
+            listOf(
+                case("`+inf`", "true", CastQuality.LOSSY),
+                case("`-inf`", "true", CastQuality.LOSSY),
+                case("`nan`", "true", CastQuality.LOSSY)
+            ).types(BOOL.sqlTextNames),
+            listOf(
+                case("`+inf`", ErrorCode.EVALUATOR_INVALID_CAST),
+                case("`-inf`", ErrorCode.EVALUATOR_INVALID_CAST),
+                case("`nan`", ErrorCode.EVALUATOR_INVALID_CAST)
+            ).types(
+                listOf(INT, DECIMAL, FLOAT, ExprValueType.STRING, ExprValueType.SYMBOL, BOOL).fold(allTypeNames) {
+                    allTypes, type ->
+                    allTypes - type.sqlTextNames
+                }
+            )
+        ).flatten()
+
         private val defaultTimezoneOffset = ZoneOffset.UTC
 
         private fun createZoneOffset(hours: Int = 0, minutes: Int = 0) = ZoneOffset.ofHoursMinutes(hours, minutes)
@@ -1376,8 +1429,8 @@ abstract class CastTestBase : EvaluatorTestBase() {
             "HONOR_PARAM_CAST" to { cob -> cob.honorTypedOpParameters() }
         )
 
-        private val legacyCastTestCases = (commonTestCases + deviatingLegacyTestCases)
-        private val honorParamCastTestCases = (commonTestCases + deviatingParamsTestCases)
+        private val legacyCastTestCases = (commonTestCases + deviatingLegacyTestCases + infinityOrNanTestCases)
+        private val honorParamCastTestCases = (commonTestCases + deviatingParamsTestCases + infinityOrNanTestCases)
 
         fun List<CastCase>.toPermissive(): List<CastCase> = map { case ->
             when {
