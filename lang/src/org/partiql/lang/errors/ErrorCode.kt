@@ -531,7 +531,7 @@ enum class ErrorCode(
         "Other expressions may not be present in the select list when '*' is used without dot notation."
     ),
 
-    PARSE_INVALID_ARGUMENTS_FOR_TRIM(
+    PARSE_INVALID_TRIM_SPEC(
         ErrorCategory.PARSER,
         LOC_TOKEN,
         "Invalid arguments for trim"

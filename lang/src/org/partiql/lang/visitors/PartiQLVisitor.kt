@@ -48,7 +48,6 @@ import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.errors.PropertyValueMap
 import org.partiql.lang.eval.EvaluationException
-import org.partiql.lang.eval.stringValue
 import org.partiql.lang.eval.time.MAX_PRECISION_FOR_TIME
 import org.partiql.lang.syntax.DATE_TIME_PART_KEYWORDS
 import org.partiql.lang.syntax.ParserException
@@ -1022,7 +1021,7 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
                     errorContext[Property.TOKEN_STRING] = ctx.mod.text
                     throw ctx.mod.err(
                         "'${ctx.mod.text}' is an unknown trim specification, valid values: $TRIM_SPECIFICATION_KEYWORDS",
-                        ErrorCode.PARSE_INVALID_ARGUMENTS_FOR_TRIM,
+                        ErrorCode.PARSE_INVALID_TRIM_SPEC,
                         errorContext
                     )
                 }

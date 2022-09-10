@@ -21,6 +21,7 @@ import org.partiql.lang.util.sourceLocationProperties
 
 class ParserErrorsTest : SqlParserTestBase() {
 
+    // TODO: now we are testing on both parsers(SQL_PARSER AND PARTIQL_PARSER). We need to remove test cases targeting SQL_PARSER once we removed it.
     @Test
     fun emptyQuery() {
         checkInputThrowingParserException(
@@ -1305,7 +1306,7 @@ class ParserErrorsTest : SqlParserTestBase() {
         // throw out a parser error
         checkInputThrowingParserException(
             "trim(something ' ' from ' string ')",
-            ErrorCode.PARSE_INVALID_ARGUMENTS_FOR_TRIM,
+            ErrorCode.PARSE_INVALID_TRIM_SPEC,
             mapOf(
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 6L,
