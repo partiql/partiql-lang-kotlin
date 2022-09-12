@@ -551,10 +551,6 @@ internal class StaticTypeInferenceVisitorTransform(
         }
 
         private fun computeReturnTypeForAggFunc(funcName: String, elementType: StaticType, sourceLocation: SourceLocationMeta): StaticType {
-            if (funcName == "count") {
-                return StaticType.INT
-            }
-
             val elementTypes = elementType.allTypes
 
             fun List<StaticType>.convertMissingToNull() = toMutableSet().apply {
@@ -567,6 +563,7 @@ internal class StaticTypeInferenceVisitorTransform(
             fun StaticType.isUnknownOrNumeric() = isUnknown() || isNumeric()
 
             return when (funcName) {
+                "count" -> StaticType.INT
                 // In case that any element is MISSING or there is no element, we should return NULL
                 "max", "min" -> StaticType.unionOf(elementTypes.convertMissingToNull())
                 "sum" -> when {
@@ -574,6 +571,7 @@ internal class StaticTypeInferenceVisitorTransform(
                         handleInvalidInputTypeForAggFun(sourceLocation, funcName, elementType, StaticType.unionOf(StaticType.NULL_OR_MISSING, StaticType.NUMERIC).flatten())
                         StaticType.unionOf(StaticType.NULL, StaticType.NUMERIC)
                     }
+                    // If any single type is mismatched, We should add MISSING to the result types set to indicate there is a chance of data mismatch error
                     elementTypes.any { !it.isUnknownOrNumeric() } -> StaticType.unionOf(
                         elementTypes.filter { it.isUnknownOrNumeric() }.toMutableSet().apply { add(StaticType.MISSING) }
                     )
@@ -590,6 +588,7 @@ internal class StaticTypeInferenceVisitorTransform(
                         mutableSetOf<SingleType>().apply {
                             if (elementTypes.any { it.isUnknown() }) { add(StaticType.NULL) }
                             if (elementTypes.any { it.isNumeric() }) { add(StaticType.DECIMAL) }
+                            // If any single type is mismatched, We should add MISSING to the result types set to indicate there is a chance of data mismatch error
                             if (elementTypes.any { !it.isUnknownOrNumeric() }) { add(StaticType.MISSING) }
                         }
                     )
