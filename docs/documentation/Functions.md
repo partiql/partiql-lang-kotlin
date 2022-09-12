@@ -44,7 +44,7 @@ Where `DataType` is one of
 * `struct`
 * `bag`
 
-Note for handling `CAST` Operation on `+inf`, `-inf`, and `nan`, see [Special Float Value Handling](#Special Float Value Handling)
+Note for handling `CAST` Operation on `+inf`, `-inf`, and `nan`, see Special Float Value Handling below.
 
 Header
 : `CAST(exp AS dt)` 
