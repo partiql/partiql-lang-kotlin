@@ -1,5 +1,6 @@
 package org.partiql.jmh
 
+import com.amazon.ion.IonSystem
 import com.amazon.ion.system.IonSystemBuilder
 import org.openjdk.jmh.annotations.Benchmark
 import org.openjdk.jmh.annotations.BenchmarkMode
@@ -11,7 +12,7 @@ import org.openjdk.jmh.annotations.State
 import org.openjdk.jmh.infra.Blackhole
 import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.eval.EvaluationSession
-import org.partiql.lang.syntax.SqlParser
+import org.partiql.lang.syntax.PartiQLParserBuilder
 import java.util.concurrent.TimeUnit
 
 /**
@@ -22,8 +23,8 @@ import java.util.concurrent.TimeUnit
 open class PartiQLBenchmark {
     @State(Scope.Thread)
     open class MyState {
-        val ion = IonSystemBuilder.standard().build()
-        val parser = SqlParser(ion)
+        val ion: IonSystem = IonSystemBuilder.standard().build()
+        val parser = PartiQLParserBuilder.standard().build()
         val pipeline = CompilerPipeline.standard(ion)
 
         val data = """

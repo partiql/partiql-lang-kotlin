@@ -1,8 +1,7 @@
 package org.partiql.lang.prettyprint
 
-import com.amazon.ion.system.IonSystemBuilder
 import org.partiql.lang.domains.PartiqlAst
-import org.partiql.lang.syntax.SqlParser
+import org.partiql.lang.syntax.PartiQLParserBuilder
 import org.partiql.pig.runtime.toIonElement
 import java.lang.StringBuilder
 import java.time.LocalDate
@@ -18,7 +17,7 @@ import kotlin.math.abs
  * of the parsed tree
  */
 class QueryPrettyPrinter {
-    private val sqlParser = SqlParser(IonSystemBuilder.standard().build())
+    private val sqlParser = PartiQLParserBuilder.standard().build()
 
     /**
      * For the given SQL query outputs the corresponding string formatted PartiQL AST representation, e.g:

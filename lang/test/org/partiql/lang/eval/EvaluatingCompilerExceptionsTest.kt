@@ -90,7 +90,7 @@ class EvaluatingCompilerExceptionsTest : EvaluatorTestBase() {
           WHERE x NOT BETWEEN 1 AND 'Y'
         """,
         ErrorCode.EVALUATOR_INVALID_COMPARISION,
-        expectedErrorContext = propertyValueMapOf(4, 19),
+        expectedErrorContext = propertyValueMapOf(4, 23),
         expectedPermissiveModeResult = "<<>>"
     )
 

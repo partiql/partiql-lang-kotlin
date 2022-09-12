@@ -50,7 +50,7 @@ import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedure
 import org.partiql.lang.eval.like.parsePattern
 import org.partiql.lang.eval.time.Time
 import org.partiql.lang.eval.visitors.PartiqlAstSanityValidator
-import org.partiql.lang.syntax.SqlParser
+import org.partiql.lang.syntax.PartiQLParserBuilder
 import org.partiql.lang.types.AnyOfType
 import org.partiql.lang.types.AnyType
 import org.partiql.lang.types.FunctionSignature
@@ -343,7 +343,7 @@ internal class EvaluatingCompiler(
      */
     @Deprecated("Please use CompilerPipeline instead")
     fun compile(source: String): Expression {
-        val parser = SqlParser(valueFactory.ion)
+        val parser = PartiQLParserBuilder().ionSystem(valueFactory.ion).build()
         val ast = parser.parseAstStatement(source)
         return compile(ast)
     }

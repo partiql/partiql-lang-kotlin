@@ -42,7 +42,7 @@ import org.partiql.lang.planner.transforms.toDefaultPhysicalPlan
 import org.partiql.lang.planner.transforms.toLogicalPlan
 import org.partiql.lang.planner.transforms.toResolvedPlan
 import org.partiql.lang.syntax.Parser
-import org.partiql.lang.syntax.SqlParser
+import org.partiql.lang.syntax.PartiQLParserBuilder
 import org.partiql.lang.syntax.SyntaxException
 import org.partiql.lang.types.CustomType
 
@@ -214,7 +214,6 @@ interface PlannerPipeline {
 
         /**
          * Specifies the [Parser] to be used to turn an PartiQL query into an instance of [PartiqlAst].
-         * The default is [SqlParser].
          */
         fun sqlParser(p: Parser): Builder = this.apply {
             parser = p
@@ -409,7 +408,7 @@ interface PlannerPipeline {
             val allFunctionsMap = builtinFunctionsMap + customFunctions
             return PlannerPipelineImpl(
                 valueFactory = valueFactory,
-                parser = parser ?: SqlParser(valueFactory.ion, this.customDataTypes),
+                parser = parser ?: PartiQLParserBuilder().ionSystem(valueFactory.ion).customTypes(this.customDataTypes).build(),
                 evaluatorOptions = compileOptionsToUse,
                 functions = allFunctionsMap,
                 customDataTypes = customDataTypes,
