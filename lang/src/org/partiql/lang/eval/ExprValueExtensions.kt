@@ -306,6 +306,11 @@ fun ExprValue.cast(
 
     fun Number.exprValue(type: SingleType) = when (type) {
         is IntType -> {
+            // If the source is Positive/Negative Infinity or Nan, We throw an error
+            if (this.isNaN || this.isNegInf || this.isPosInf) {
+                castFailedErr("Can't convert Infinity or NaN to INT.", internal = false)
+            }
+
             val rangeForType = when (typedOpBehavior) {
                 // Legacy behavior doesn't honor SMALLINT, INT4 constraints
                 TypedOpBehavior.LEGACY -> LongRange(Long.MIN_VALUE, Long.MAX_VALUE)
@@ -317,11 +322,6 @@ fun ExprValue.cast(
                         IntType.IntRangeConstraint.LONG, IntType.IntRangeConstraint.UNCONSTRAINED ->
                             LongRange(Long.MIN_VALUE, Long.MAX_VALUE)
                     }
-            }
-
-            // If the source is Positive/Negative Infinity or Nan, We do not allow cast operator to continue
-            if (this.isNaN || this.isNegInf || this.isPosInf) {
-                castFailedErr("Can't convert Infinity or NaN to INT.", internal = false)
             }
 
             // Here, we check if there is a possibility of being able to fit this number into
