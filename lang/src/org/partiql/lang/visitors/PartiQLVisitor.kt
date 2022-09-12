@@ -1003,6 +1003,9 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
         val possibleModText = if (ctx.mod != null) ctx.mod.text.toLowerCase() else null
         val isTrimSpec = TRIM_SPECIFICATION_KEYWORDS.contains(possibleModText)
         val (modifier, substring) = when {
+            // if <spec> is not null and <substring> is null
+            // then there are two possible cases trim(( BOTH | LEADING | TRAILING ) FROM <target> )
+            // or trim(<substring> FROM target), i.e., we treat what is recognized by parser as the modifier as <substring>
             ctx.mod != null && ctx.sub == null -> {
                 if (isTrimSpec) ctx.mod.toSymbol() to null
                 else null to id(possibleModText!!, caseInsensitive(), unqualified(), ctx.mod.getSourceMetaContainer())
@@ -1012,7 +1015,16 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
             }
             ctx.mod != null && ctx.sub != null -> {
                 if (isTrimSpec) ctx.mod.toSymbol() to visitExpr(ctx.sub)
-                else throw ParserException("Expected one of: $TRIM_SPECIFICATION_KEYWORDS", ErrorCode.PARSE_INVALID_QUERY)
+                // todo we need to decide if it should be an evaluator error or a parser error
+                else {
+                    val errorContext = PropertyValueMap()
+                    errorContext[Property.TOKEN_STRING] = ctx.mod.text
+                    throw ctx.mod.err(
+                        "'${ctx.mod.text}' is an unknown trim specification, valid values: $TRIM_SPECIFICATION_KEYWORDS",
+                        ErrorCode.PARSE_INVALID_TRIM_SPEC,
+                        errorContext
+                    )
+                }
             }
             else -> null to null
         }

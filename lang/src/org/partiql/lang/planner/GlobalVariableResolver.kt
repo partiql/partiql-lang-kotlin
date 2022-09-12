@@ -55,9 +55,9 @@ fun interface GlobalVariableResolver {
      * be used outside this project.
      */
     fun resolveGlobal(bindingName: BindingName): GlobalResolutionResult
+
+    companion object {
+
+        val EMPTY = GlobalVariableResolver { GlobalResolutionResult.Undefined }
+    }
 }
-
-private val EMPTY: GlobalVariableResolver = GlobalVariableResolver { GlobalResolutionResult.Undefined }
-
-/** Convenience function for obtaining an instance of [GlobalVariableResolver] with no defined global variables. */
-fun emptyGlobalsResolver(): GlobalVariableResolver = EMPTY

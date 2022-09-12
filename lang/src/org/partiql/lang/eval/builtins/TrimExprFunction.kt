@@ -136,9 +136,11 @@ internal class TrimExprFunction(private val valueFactory: ExprValueFactory) : Ex
     private fun trim3Arg(specification: ExprValue, toRemove: ExprValue, sourceString: ExprValue): ExprValue {
         val trimSpec = TrimSpecification.from(specification)
         if (trimSpec == NONE) {
+            // todo with ANTLR, the invalid_argument should be caught in visitTrimFunction in PartiQLVisitor
+            // we should decide where this error shall be caught and whether it is a parsing error or an evaluator error.
             errNoContext(
                 "'${specification.stringValue()}' is an unknown trim specification, " +
-                    "valid vales: ${TrimSpecification.validValues}",
+                    "valid values: ${TrimSpecification.validValues}",
                 errorCode = ErrorCode.EVALUATOR_INVALID_ARGUMENTS_FOR_TRIM,
                 internal = false
             )
@@ -162,7 +164,7 @@ private enum class TrimSpecification {
     BOTH, LEADING, TRAILING, NONE;
 
     companion object {
-        fun from(arg: ExprValue) = when (arg.stringValue()) {
+        fun from(arg: ExprValue) = when (arg.stringValue().toLowerCase()) {
             "both" -> BOTH
             "leading" -> LEADING
             "trailing" -> TRAILING
@@ -170,7 +172,7 @@ private enum class TrimSpecification {
         }
 
         val validValues = TrimSpecification.values()
-            .filter { it == NONE }
+            .filterNot { it == NONE }
             .joinToString()
     }
 

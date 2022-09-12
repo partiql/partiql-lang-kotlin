@@ -531,6 +531,12 @@ enum class ErrorCode(
         "Other expressions may not be present in the select list when '*' is used without dot notation."
     ),
 
+    PARSE_INVALID_TRIM_SPEC(
+        ErrorCategory.PARSER,
+        LOC_TOKEN,
+        "Invalid arguments for trim"
+    ),
+
     // Evaluator errors
     // TODO:  replace uses of this with UNIMPLEMENTED_FEATURE
     EVALUATOR_FEATURE_NOT_SUPPORTED_YET(

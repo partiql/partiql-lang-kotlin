@@ -1,4 +1,4 @@
-*Issue #, if available:*
+*Issue #, if available:* [Closes/Related To] Issue #XXX
 
 *Description of changes:*
 

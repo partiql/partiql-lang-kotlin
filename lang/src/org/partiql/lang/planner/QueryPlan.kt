@@ -49,8 +49,22 @@ sealed class QueryResult {
     ) : QueryResult()
 }
 
-/** Identifies the action to take. */
-enum class DmlAction { INSERT, DELETE }
+/**
+ * Identifies the action to take.
+ * TODO This should be represented in the IR grammar - https://github.com/partiql/partiql-lang-kotlin/issues/756
+ */
+enum class DmlAction {
+    INSERT,
+    DELETE;
+
+    companion object {
+        fun safeValueOf(v: String): DmlAction? = try {
+            valueOf(v.toUpperCase())
+        } catch (ex: IllegalArgumentException) {
+            null
+        }
+    }
+}
 
 internal const val DML_COMMAND_FIELD_ACTION = "action"
 internal const val DML_COMMAND_FIELD_TARGET_UNIQUE_ID = "target_unique_id"
@@ -76,7 +90,7 @@ private fun errMissing(fieldName: String): Nothing =
  * ```
  *
  * Where:
- *  - `<action>` is either `insert` or `delete` TODO: update
+ *  - `<action>` is either `insert` or `delete`
  *  - `<target_unique_id>` is a string or symbol containing the unique identifier of the table to be effected
  *  by the DML statement.
  *  - `<rows>` is a bag or list containing the rows (structs) effected by the DML statement.
@@ -90,7 +104,7 @@ internal fun ExprValue.toDmlCommand(): QueryResult.DmlCommand {
     val actionString = this.bindings[DML_COMMAND_FIELD_ACTION]?.scalar?.stringValue()?.toUpperCase()
         ?: errMissing(DML_COMMAND_FIELD_ACTION)
 
-    val dmlAction = DmlAction.values().firstOrNull { it.name == actionString }
+    val dmlAction = DmlAction.safeValueOf(actionString)
         ?: error("Unknown DmlAction in DML command struct: '$actionString'")
 
     val targetUniqueId = this.bindings[DML_COMMAND_FIELD_TARGET_UNIQUE_ID]?.scalar?.stringValue()
