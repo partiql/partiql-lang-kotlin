@@ -10,9 +10,9 @@ class ParserErrorExampleTest : BaseExampleTest() {
         |Invalid PartiQL query:
         |    SELECT 1 + 
         |Error message:
-        |    Parser Error: at line 1, column 10: expected expression, OPERATOR : '+'
+        |    Parser Error: at line 1, column 10: unexpected token found, OPERATOR : '+'
         |Error information:
-        |    errorCode: PARSE_EXPECTED_EXPRESSION
+        |    errorCode: PARSE_UNEXPECTED_TOKEN
         |    LINE_NUMBER: 1
         |    COLUMN_NUMBER: 10
         |    TOKEN_TYPE: OPERATOR

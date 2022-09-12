@@ -11,7 +11,7 @@ import org.openjdk.jmh.annotations.State
 import org.openjdk.jmh.infra.Blackhole
 import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.eval.EvaluationSession
-import org.partiql.lang.syntax.SqlParser
+import org.partiql.lang.syntax.PartiQLParserBuilder
 import java.util.concurrent.TimeUnit
 
 /**
@@ -21,7 +21,7 @@ open class MultipleLikeBenchmark {
     @State(Scope.Thread)
     open class MyState {
         val ion = IonSystemBuilder.standard().build()
-        val parser = SqlParser(ion)
+        val parser = PartiQLParserBuilder().ionSystem(ion).build()
         val pipeline = CompilerPipeline.standard(ion)
 
         val name1 = listOf(

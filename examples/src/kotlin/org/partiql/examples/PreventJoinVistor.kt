@@ -3,7 +3,7 @@ package org.partiql.examples
 import com.amazon.ion.system.IonSystemBuilder
 import org.partiql.examples.util.Example
 import org.partiql.lang.domains.PartiqlAst
-import org.partiql.lang.syntax.SqlParser
+import org.partiql.lang.syntax.PartiQLParserBuilder
 import java.io.PrintStream
 
 /** The exception thrown by when a JOIN clause was detected. */
@@ -17,7 +17,7 @@ private class InvalidAstException(message: String) : RuntimeException(message)
 
 class PreventJoinVisitorExample(out: PrintStream) : Example(out) {
     private val ion = IonSystemBuilder.standard().build()
-    private val parser = SqlParser(ion)
+    private val parser = PartiQLParserBuilder().ionSystem(ion).build()
 
     private fun hasJoins(sql: String): Boolean = try {
         val ast = parser.parseAstStatement(sql)

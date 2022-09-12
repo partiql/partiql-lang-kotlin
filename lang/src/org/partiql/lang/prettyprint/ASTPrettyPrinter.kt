@@ -2,7 +2,7 @@ package org.partiql.lang.prettyprint
 
 import com.amazon.ion.system.IonSystemBuilder
 import org.partiql.lang.domains.PartiqlAst
-import org.partiql.lang.syntax.SqlParser
+import org.partiql.lang.syntax.PartiQLParserBuilder
 import org.partiql.pig.runtime.SymbolPrimitive
 
 /**
@@ -38,7 +38,7 @@ class ASTPrettyPrinter {
      */
     fun prettyPrintAST(query: String): String {
         val ion = IonSystemBuilder.standard().build()
-        val ast = SqlParser(ion).parseAstStatement(query)
+        val ast = PartiQLParserBuilder().ionSystem(ion).build().parseAstStatement(query)
 
         return prettyPrintAST(ast)
     }

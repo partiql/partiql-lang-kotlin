@@ -5,11 +5,11 @@ import com.amazon.ion.system.IonTextWriterBuilder
 import org.partiql.examples.util.Example
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.syntax.Parser
-import org.partiql.lang.syntax.SqlParser
+import org.partiql.lang.syntax.PartiQLParserBuilder
 import java.io.PrintStream
 
 /**
- * Demonstrates the use of [SqlParser] and [PartiqlAst].
+ * Demonstrates the use of [Parser] and [PartiqlAst].
  */
 class ParserExample(out: PrintStream) : Example(out) {
 
@@ -18,8 +18,8 @@ class ParserExample(out: PrintStream) : Example(out) {
         // / A standard instance of [IonSystem], which is required by [SqlParser].
         val ion = IonSystemBuilder.standard().build()
 
-        // An instance of [SqlParser].
-        val parser: Parser = SqlParser(ion)
+        // An instance of [Parser].
+        val parser: Parser = PartiQLParserBuilder().ionSystem(ion).build()
 
         // A query in string format
         val query = "SELECT exampleField FROM exampleTable WHERE anotherField > 10"

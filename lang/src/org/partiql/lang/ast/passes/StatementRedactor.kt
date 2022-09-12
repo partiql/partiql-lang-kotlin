@@ -5,7 +5,7 @@ import com.amazon.ionelement.api.StringElement
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.ast.sourceLocation
 import org.partiql.lang.domains.PartiqlAst
-import org.partiql.lang.syntax.SqlParser
+import org.partiql.lang.syntax.PartiQLParserBuilder
 
 /**
  * This is a function alias for determining which UDF input arguments need to be redacted.
@@ -20,7 +20,7 @@ import org.partiql.lang.syntax.SqlParser
 typealias UserDefinedFunctionRedactionLambda = (List<PartiqlAst.Expr>) -> List<PartiqlAst.Expr>
 
 private val ion = IonSystemBuilder.standard().build()
-private val parser = SqlParser(ion)
+private val parser = PartiQLParserBuilder().ionSystem(ion).build()
 private const val maskPattern = "***(Redacted)"
 
 const val INVALID_NUM_ARGS = "Invalid number of args in node"

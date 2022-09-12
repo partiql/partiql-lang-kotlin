@@ -22,11 +22,10 @@ import com.amazon.ionelement.api.SexpElement;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.examples.util.Example;
 import org.partiql.lang.domains.PartiqlAst;
-import org.partiql.lang.syntax.SqlParser;
+import org.partiql.lang.syntax.Parser;
+import org.partiql.lang.syntax.PartiQLParserBuilder;
 
 import java.io.PrintStream;
-
-import static java.util.Collections.emptyList;
 
 /**
  * This example demonstrates producing a PartiQL AST from a PartiQL query.
@@ -43,7 +42,7 @@ public class ParserJavaExample extends Example {
         final IonSystem ion = IonSystemBuilder.standard().build();
 
         // An instance of [SqlParser].
-        final SqlParser parser = new SqlParser(ion, emptyList());
+        final Parser parser = new PartiQLParserBuilder().ionSystem(ion).build();
 
         // A query in string format
         final String query = "SELECT exampleField FROM exampleTable WHERE anotherField > 10";

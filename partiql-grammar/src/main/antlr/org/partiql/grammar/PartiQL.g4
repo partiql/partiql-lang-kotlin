@@ -57,7 +57,7 @@ dql
 //  we probably need to determine the formal rule for this. I'm assuming we shouldn't allow any token, but I've
 //  left it as an expression (which allows strings). See https://github.com/partiql/partiql-lang-kotlin/issues/707
 execCommand
-    : EXEC expr ( args+=expr ( COMMA args+=expr )* )?;
+    : EXEC name=expr ( args+=expr ( COMMA args+=expr )* )?;
 
 /**
  *
@@ -321,8 +321,8 @@ edgeAbbrev
  
 tableReference
     : lhs=tableReference tableJoined[$lhs.ctx] # TableRefBase
-    | PAREN_LEFT tableReference PAREN_RIGHT    # TableWrapped
     | tableNonJoin                             # TableRefBase
+    | PAREN_LEFT tableReference PAREN_RIGHT    # TableWrapped
     ;
 
 tableNonJoin
@@ -366,11 +366,11 @@ joinSpec
     : ON expr;
 
 joinType
-    : INNER
-    | LEFT OUTER?
-    | RIGHT OUTER?
-    | FULL OUTER?
-    | OUTER
+    : mod=INNER
+    | mod=LEFT OUTER?
+    | mod=RIGHT OUTER?
+    | mod=FULL OUTER?
+    | mod=OUTER
     ;
 
 /**

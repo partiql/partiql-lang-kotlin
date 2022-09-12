@@ -13,7 +13,7 @@ import org.partiql.lang.planner.GlobalResolutionResult
 import org.partiql.lang.planner.GlobalVariableResolver
 import org.partiql.lang.planner.PartiQLPlanner
 import org.partiql.lang.planner.PartiQLPlannerBuilder
-import org.partiql.lang.syntax.SqlParser
+import org.partiql.lang.syntax.PartiQLParserBuilder
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNull
 
@@ -71,7 +71,7 @@ internal class PartiQLCompilerPipelineFactory : PipelineFactory {
         )
 
         val pipeline = PartiQLCompilerPipeline(
-            parser = SqlParser(ION, legacyPipeline.customDataTypes),
+            parser = PartiQLParserBuilder().ionSystem(ION).customTypes(legacyPipeline.customDataTypes).build(),
             planner = PartiQLPlannerBuilder.standard()
                 .options(plannerOptions)
                 .globalVariableResolver(globalVariableResolver)
