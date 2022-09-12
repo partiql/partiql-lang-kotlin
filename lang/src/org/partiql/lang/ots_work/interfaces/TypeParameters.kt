@@ -1,4 +1,4 @@
-package org.partiql.lang.ots.interfaces
+package org.partiql.lang.ots_work.interfaces
 
 /**
  * For now, we assume all the type parameters are optional and all the typa parameters

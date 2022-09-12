@@ -1,16 +1,16 @@
-package org.partiql.lang.ots.plugins.standard.types
+package org.partiql.lang.ots_work.plugins.standard.types
 
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.numberValue
-import org.partiql.lang.ots.interfaces.ScalarType
-import org.partiql.lang.ots.interfaces.TypeParameters
+import org.partiql.lang.ots_work.interfaces.ScalarType
+import org.partiql.lang.ots_work.interfaces.TypeParameters
 
-object IntType : ScalarType {
-    val validRange = Long.MIN_VALUE..Long.MAX_VALUE
+object Int2Type : ScalarType {
+    val validRange = Short.MIN_VALUE.toLong()..Short.MAX_VALUE.toLong()
 
     override val id: String
-        get() = "int"
+        get() = "int2"
 
     override val runTimeType: ExprValueType
         get() = ExprValueType.INT
