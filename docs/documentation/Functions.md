@@ -118,7 +118,7 @@ The runtime support for casts is
 #### Special Float Value Handling
 The following table list explicitly on behavior of CAST Function when expression supplied is one of `+inf`, `-inf`, or `nan`.
 
-| target type | can cast | cast quality |     expected result/Error      | 
+| target type | can cast | cast quality |     expected result/error      | 
 |:-----------:|:--------:|:------------:|:------------------------------:|
 |   missing   |  false   |     N/A      |     EVALUATOR_INVALID_CAST     | 
 |    null     |  false   |     N/A      |     EVALUATOR_INVALID_CAST     |
@@ -129,7 +129,7 @@ The following table list explicitly on behavior of CAST Function when expression
 |  timestamp  |  false   |     N/A      |     EVALUATOR_INVALID_CAST     |
 |   symbol    |   true   |   LOSSLESS   | 'Infinity', '-Infinity', 'NaN' | 
 |   string    |   true   |   LOSSLESS   | "Infinity", "-Infinity", "NaN" |
- |    list     |  false   |     N/A      |     EVALUATOR_INVALID_CAST     | 
+|    list     |  false   |     N/A      |     EVALUATOR_INVALID_CAST     | 
 |   struct    |  false   |     N/A      |     EVALUATOR_INVALID_CAST     | 
 |     bag     |  false   |     N/A      |     EVALUATOR_INVALID_CAST     |
 
