@@ -76,6 +76,7 @@ stage in the `PlannerPipeline` and to generate performance metrics for the indiv
 - GitHub Actions capability to run on forks
 - Negation overflow caused by minimum INT8
 - Type mismatch error caused by evaluator's integer overflow check
+- Cast function's behavior on positive_infinity, negative_infinity, NaN explicitly defined and handled. 
 
 ### Removed
 - README.md badge for travisci
