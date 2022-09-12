@@ -18,3 +18,6 @@ assignees: ''
 
 ## Additional Context
 Add any other context about the feature request here.
+
+## DoD (Definition of Done)
+List set of criteria that characterize this issue as _DONE_ or _COMPLETED_.
