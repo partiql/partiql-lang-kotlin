@@ -67,6 +67,7 @@ stage in the `PlannerPipeline` and to generate performance metrics for the indiv
   (e.g. `(filter (lit true) <bexpr>))` -> `<bexpr>`.
 
 ### Changed
+- The default parser for all components of PartiQL is now the PartiQLParser -- see the deprecation of `SqlParser`
 
 ### Deprecated
 - Deprecates `SqlLexer` and `SqlParser` to be replaced with the `PartiQLParserBuilder`.
