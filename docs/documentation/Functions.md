@@ -44,6 +44,7 @@ Where `DataType` is one of
 * `struct`
 * `bag`
 
+Note for handling `CAST` Operation on `+inf`, `-inf`, and `nan`, see [Special Float Value Handling](#Special Float Value Handling)
 
 Header
 : `CAST(exp AS dt)` 
@@ -113,6 +114,24 @@ The runtime support for casts is
 * Casting to `bag` from
     * Bag is a no-op
     * List: return a list with the same elements. The order of the elements in the resulting bag is unspecified. 
+
+#### Special Float Value Handling
+The following table list explicitly on behavior of CAST Function when expression supplied is one of `+inf`, `-inf`, or `nan`.
+
+| target type | can cast | cast quality |     expected result/error      | 
+|:-----------:|:--------:|:------------:|:------------------------------:|
+|   missing   |  false   |     N/A      |     EVALUATOR_INVALID_CAST     | 
+|    null     |  false   |     N/A      |     EVALUATOR_INVALID_CAST     |
+|   integer   |  false   |     N/A      |     EVALUATOR_CAST_FAILED      | 
+|   boolean   |   true   |    LOSSY     |              true              |
+|    float    |   true   |   LOSSLESS   |        +inf, -inf, nan         |
+|   decimal   |  false   |     N/A      |     EVALUATOR_CAST_FAILED      | 
+|  timestamp  |  false   |     N/A      |     EVALUATOR_INVALID_CAST     |
+|   symbol    |   true   |   LOSSLESS   | 'Infinity', '-Infinity', 'NaN' | 
+|   string    |   true   |   LOSSLESS   | "Infinity", "-Infinity", "NaN" |
+|    list     |  false   |     N/A      |     EVALUATOR_INVALID_CAST     | 
+|   struct    |  false   |     N/A      |     EVALUATOR_INVALID_CAST     | 
+|     bag     |  false   |     N/A      |     EVALUATOR_INVALID_CAST     |
 
 
 Examples

@@ -78,6 +78,7 @@ stage in the `PlannerPipeline` and to generate performance metrics for the indiv
 - GitHub Actions capability to run on forks
 - Negation overflow caused by minimum INT8
 - Type mismatch error caused by evaluator's integer overflow check
+- Cast function's behavior on positive_infinity, negative_infinity, and NaN explicitly defined and handled. 
 - Changed Trim Function Specification handling(fixed error message, and now can take case-insensitive trim spec)
 
 ### Removed
