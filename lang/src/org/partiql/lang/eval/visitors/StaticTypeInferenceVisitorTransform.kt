@@ -42,15 +42,12 @@ import org.partiql.lang.eval.getStartingSourceLocationMeta
 import org.partiql.lang.eval.toExprFunction
 import org.partiql.lang.ots_work.interfaces.operator.ScalarOpId
 import org.partiql.lang.ots_work.interfaces.type.BoolType
-import org.partiql.lang.ots_work.plugins.standard.types.CharType
 import org.partiql.lang.ots_work.plugins.standard.types.DecimalType
 import org.partiql.lang.ots_work.plugins.standard.types.FloatType
 import org.partiql.lang.ots_work.plugins.standard.types.Int2Type
 import org.partiql.lang.ots_work.plugins.standard.types.Int4Type
 import org.partiql.lang.ots_work.plugins.standard.types.Int8Type
 import org.partiql.lang.ots_work.plugins.standard.types.IntType
-import org.partiql.lang.ots_work.plugins.standard.types.StringType
-import org.partiql.lang.ots_work.plugins.standard.types.VarcharType
 import org.partiql.lang.ots_work.stscore.ScalarTypeSystem
 import org.partiql.lang.types.AnyOfType
 import org.partiql.lang.types.AnyType
@@ -933,73 +930,6 @@ internal class StaticTypeInferenceVisitorTransform(
                 args.any { it is MissingType } -> StaticType.MISSING
                 // If any of the operands is NULL, return NULL
                 args.any { it is NullType } -> StaticType.NULL
-                else -> StaticType.MISSING
-            }
-        }
-
-        /**
-         * Computes the constraints for the string concatenation if all the arguments are [StringType], [CharType] or [VarcharType].
-         */
-        fun computeConstraintsForConcatStringType(args: List<SingleType>): SingleType {
-            require(args.all { it is StaticScalarType && (it.scalarType in listOf(StringType, CharType, VarcharType)) }) { "Internal error: CONCAT only works on arguments of CHAR, VARCHAR or STRING type" }
-            if (args.size < 2) { error("Expected 2 or more operands for CONCAT") }
-            if (args.any { it is StaticScalarType && it.scalarType === StringType }) { return StaticType.STRING }
-
-            val lengths: List<Int> = args.map { (it as StaticScalarType).parameters[0]!! }
-            val lengthSum = lengths.sumBy { it }
-
-            return when {
-                args.all { it is StaticScalarType && it.scalarType === CharType } -> StaticScalarType(CharType, listOf(lengthSum))
-                else -> StaticScalarType(VarcharType, listOf(lengthSum))
-            }
-        }
-
-        /**
-         * Infers type for the concat operation when all the arguments are of type [SingleType]
-         */
-        fun getTypeForNAryStringConcat(nAryOp: PartiqlAst.Expr, args: List<SingleType>): SingleType {
-            if (args.size < 2) {
-                error("Expected 2 or more operands for $nAryOp")
-            }
-
-            val stringArgTypes = args.filter { it is StaticScalarType && it.scalarType in listOf(CharType, VarcharType, StringType) }
-            return when {
-                // If any one of the operands is missing, return MISSING. MISSING has precedence over NULL
-                args.any { it is MissingType } -> StaticType.MISSING
-                // If any one of the operands is null, return NULL
-                args.any { it is NullType } -> StaticType.NULL
-                // If all the types are StringTypes, then add the string constraints accordingly
-                stringArgTypes.size == args.size -> computeConstraintsForConcatStringType(stringArgTypes)
-                // Arguments for string_concat need to be text type
-                args.all { it.isText() } -> StaticType.STRING
-                else -> StaticType.MISSING
-            }
-        }
-
-        /**
-         * Infers type for the LIKE operation when all the arguments are of type [SingleType]
-         *
-         * If the optional escape character is provided, it can result in failure even if the type is text (string, in this case)
-         * This is because the escape character needs to be a single character (string with length 1),
-         * Even if the escape character is of length 1, escape sequence can be incorrect.
-         * Check [EvaluatingCompiler.checkPattern] method for more details.
-         */
-        fun getTypeForNAryLike(
-            @Suppress("UNUSED_PARAMETER")
-            nAryOp: PartiqlAst.Expr,
-            args: List<SingleType>
-        ): StaticType {
-            return when {
-                // If any one of the operands is missing, return MISSING. MISSING has precedence over NULL
-                args.any { it is MissingType } -> StaticType.MISSING
-                // If any one of the operands is null, return NULL
-                args.any { it is NullType } -> StaticType.NULL
-                // Arguments for LIKE need to be text type
-                args.all { it.isText() } -> when (args.size) {
-                    2 -> StaticType.BOOL
-                    // if optional escape character is provided, it may result in error or boolean.
-                    else -> AnyOfType(setOf(StaticType.MISSING, StaticType.BOOL))
-                }
                 else -> StaticType.MISSING
             }
         }
