@@ -6,7 +6,6 @@ package org.partiql.lang.ast
 import com.amazon.ionelement.api.emptyMetaContainer
 import com.amazon.ionelement.api.toIonElement
 import org.partiql.lang.domains.PartiqlAst
-import org.partiql.lang.util.BuiltInScalarTypeId
 import org.partiql.lang.util.checkThreadInterrupted
 import org.partiql.pig.runtime.SymbolPrimitive
 import org.partiql.pig.runtime.asPrimitive
@@ -519,31 +518,31 @@ fun DataType.toAstType(): PartiqlAst.Type {
         when (thiz.sqlDataType) {
             SqlDataType.MISSING -> missingType(metas)
             SqlDataType.NULL -> nullType(metas)
-            SqlDataType.BOOLEAN -> scalarType(BuiltInScalarTypeId.BOOLEAN, metas = metas)
-            SqlDataType.SMALLINT -> scalarType(BuiltInScalarTypeId.SMALLINT, metas = metas)
-            SqlDataType.INTEGER4 -> scalarType(BuiltInScalarTypeId.INTEGER4, metas = metas)
-            SqlDataType.INTEGER8 -> scalarType(BuiltInScalarTypeId.INTEGER8, metas = metas)
-            SqlDataType.INTEGER -> scalarType(BuiltInScalarTypeId.INTEGER, metas = metas)
-            SqlDataType.FLOAT -> scalarType(BuiltInScalarTypeId.FLOAT, listOfNotNull(arg1), metas = metas)
-            SqlDataType.REAL -> scalarType(BuiltInScalarTypeId.REAL, metas = metas)
-            SqlDataType.DOUBLE_PRECISION -> scalarType(BuiltInScalarTypeId.DOUBLE_PRECISION, metas = metas)
-            SqlDataType.DECIMAL -> scalarType(BuiltInScalarTypeId.DECIMAL, listOfNotNull(arg1, arg2), metas)
-            SqlDataType.NUMERIC -> scalarType(BuiltInScalarTypeId.NUMERIC, listOfNotNull(arg1, arg2), metas)
-            SqlDataType.TIMESTAMP -> scalarType(BuiltInScalarTypeId.TIMESTAMP, metas = metas)
-            SqlDataType.CHARACTER -> scalarType(BuiltInScalarTypeId.CHARACTER, listOfNotNull(arg1), metas)
-            SqlDataType.CHARACTER_VARYING -> scalarType(BuiltInScalarTypeId.CHARACTER_VARYING, listOfNotNull(arg1), metas)
-            SqlDataType.STRING -> scalarType(BuiltInScalarTypeId.STRING, metas = metas)
-            SqlDataType.SYMBOL -> scalarType(BuiltInScalarTypeId.SYMBOL, metas = metas)
-            SqlDataType.CLOB -> scalarType(BuiltInScalarTypeId.CLOB, metas = metas)
-            SqlDataType.BLOB -> scalarType(BuiltInScalarTypeId.BLOB, metas = metas)
+            SqlDataType.BOOLEAN,
+            SqlDataType.SMALLINT,
+            SqlDataType.INTEGER4,
+            SqlDataType.INTEGER8,
+            SqlDataType.INTEGER,
+            SqlDataType.STRING,
+            SqlDataType.SYMBOL,
+            SqlDataType.CLOB,
+            SqlDataType.BLOB,
+            SqlDataType.REAL,
+            SqlDataType.TIMESTAMP,
+            SqlDataType.DATE,
+            SqlDataType.DOUBLE_PRECISION -> scalarType(thiz.alias, metas = metas)
+            SqlDataType.TIME,
+            SqlDataType.TIME_WITH_TIME_ZONE,
+            SqlDataType.FLOAT,
+            SqlDataType.CHARACTER,
+            SqlDataType.CHARACTER_VARYING -> scalarType(thiz.alias, listOfNotNull(arg1), metas)
+            SqlDataType.DECIMAL,
+            SqlDataType.NUMERIC -> scalarType(thiz.alias, listOfNotNull(arg1, arg2), metas)
             SqlDataType.STRUCT -> structType(metas)
             SqlDataType.TUPLE -> tupleType(metas)
             SqlDataType.LIST -> listType(metas)
             SqlDataType.SEXP -> sexpType(metas)
             SqlDataType.BAG -> bagType(metas)
-            SqlDataType.DATE -> scalarType(BuiltInScalarTypeId.DATE, metas = metas)
-            SqlDataType.TIME -> scalarType(BuiltInScalarTypeId.TIME, listOfNotNull(arg1), metas)
-            SqlDataType.TIME_WITH_TIME_ZONE -> scalarType(BuiltInScalarTypeId.TIME_WITH_TIME_ZONE, listOfNotNull(arg1), metas)
             SqlDataType.ANY -> anyType(metas)
             is SqlDataType.CustomDataType -> customType(thiz.sqlDataType.name.toLowerCase(), metas)
         }

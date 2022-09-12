@@ -189,7 +189,7 @@ class EvaluatingCompilerExecTest : EvaluatorTestBase() {
             ),
             // call function that is not a stored procedure, w/ args
             EvaluatorErrorTestCase(
-                query = "EXEC substring 0, 1, 'foo'",
+                query = "EXEC \"substring\" 0, 1, 'foo'",
                 expectedErrorCode = ErrorCode.EVALUATOR_NO_SUCH_PROCEDURE,
                 expectedErrorContext = propertyValueMapOf(
                     Property.LINE_NUMBER to 1L,

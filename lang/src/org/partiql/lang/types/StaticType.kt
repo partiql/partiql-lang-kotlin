@@ -587,7 +587,6 @@ data class StaticScalarType(
     val parameters: TypeParameters = emptyList(),
     override val metas: Map<String, Any> = mapOf()
 ) : SingleType() {
-
     override val runtimeType: ExprValueType
         get() = scalarType.runTimeType
 

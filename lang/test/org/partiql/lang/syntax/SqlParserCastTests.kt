@@ -7,19 +7,14 @@ import com.amazon.ionelement.api.ionInt
 import com.amazon.ionelement.api.ionString
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
-import org.partiql.lang.CUSTOM_TEST_TYPES
 import org.partiql.lang.ION
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.util.ArgumentsProviderBase
-import org.partiql.lang.util.BuiltInScalarTypeId
 
 class SqlParserCastTests : SqlParserTestBase() {
 
     companion object {
         val ion: IonSystem = ION
-        val parser = SqlParser(ion, CUSTOM_TEST_TYPES)
-
-        fun parse(source: String): PartiqlAst.Statement = parser.parseAstStatement(source)
 
         data class CastParseTest(val source: String, val ast: PartiqlAst.Expr.Cast) {
             fun toCastTest() =
@@ -38,11 +33,13 @@ class SqlParserCastTests : SqlParserTestBase() {
                     PartiqlAst.build { query(canLosslessCast(ast.value, ast.asType, ast.metas)) }
                 )
         }
-        data class ConfiguredCastParseTest(val source: String, val expectedAst: PartiqlAst.PartiqlAstNode) {
+        data class ConfiguredCastParseTest(val source: String, val expectedAst: PartiqlAst.PartiqlAstNode, val targetParsers: Set<ParserTypes> = defaultParserTypes) {
             fun assertCase() {
                 // Convert the query to ast
-                val parsedPartiqlAst = parse(source) as PartiqlAst.Statement.Query
-                assertEquals("Expected PartiqlAst and actual PartiqlAst must match", expectedAst, parsedPartiqlAst)
+                targetParsers.forEach { parser ->
+                    val parsedPartiqlAst = parser.parser.parseAstStatement(source) as PartiqlAst.Statement.Query
+                    assertEquals("Expected PartiqlAst and actual PartiqlAst must match", expectedAst, parsedPartiqlAst)
+                }
             }
         }
 
@@ -95,35 +92,35 @@ class SqlParserCastTests : SqlParserTestBase() {
             ),
             case(
                 source = "CAST('xyz' as int4)",
-                ast = PartiqlAst.build { cast(lit(ionString("xyz")), scalarType(BuiltInScalarTypeId.INTEGER4)) }
+                ast = PartiqlAst.build { cast(lit(ionString("xyz")), scalarType("int4")) }
             ),
             case(
                 source = "CAST('xyz' as smallint)",
-                ast = PartiqlAst.build { cast(lit(ionString("xyz")), scalarType(BuiltInScalarTypeId.SMALLINT)) }
+                ast = PartiqlAst.build { cast(lit(ionString("xyz")), scalarType("smallint")) }
             ),
             case(
                 source = "CAST('xyz' as integer2)",
-                ast = PartiqlAst.build { cast(lit(ionString("xyz")), scalarType(BuiltInScalarTypeId.SMALLINT)) }
+                ast = PartiqlAst.build { cast(lit(ionString("xyz")), scalarType("integer2")) }
             ),
             case(
                 source = "CAST('xyz' as int2)",
-                ast = PartiqlAst.build { cast(lit(ionString("xyz")), scalarType(BuiltInScalarTypeId.SMALLINT)) }
+                ast = PartiqlAst.build { cast(lit(ionString("xyz")), scalarType("int2")) }
             ),
             case(
                 source = "CAST('xyz' as integer4)",
-                ast = PartiqlAst.build { cast(lit(ionString("xyz")), scalarType(BuiltInScalarTypeId.INTEGER4)) }
+                ast = PartiqlAst.build { cast(lit(ionString("xyz")), scalarType("integer4")) }
             ),
             case(
                 source = "CAST('xyz' as int8)",
-                ast = PartiqlAst.build { cast(lit(ionString("xyz")), scalarType(BuiltInScalarTypeId.INTEGER8)) }
+                ast = PartiqlAst.build { cast(lit(ionString("xyz")), scalarType("int8")) }
             ),
             case(
                 source = "CAST('xyz' as integer8)",
-                ast = PartiqlAst.build { cast(lit(ionString("xyz")), scalarType(BuiltInScalarTypeId.INTEGER8)) }
+                ast = PartiqlAst.build { cast(lit(ionString("xyz")), scalarType("integer8")) }
             ),
             case(
                 source = "CAST('xyz' as bigint)",
-                ast = PartiqlAst.build { cast(lit(ionString("xyz")), scalarType(BuiltInScalarTypeId.INTEGER8)) }
+                ast = PartiqlAst.build { cast(lit(ionString("xyz")), scalarType("bigint")) }
             ),
             case(
                 source = "CAST('xyz' as SPARK_SHORT)",

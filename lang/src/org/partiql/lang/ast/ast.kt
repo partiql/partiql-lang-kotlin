@@ -898,7 +898,8 @@ data class Seq(
 data class DataType(
     val sqlDataType: SqlDataType,
     val args: List<Int>,
-    override val metas: MetaContainer
+    override val metas: MetaContainer,
+    val alias: String = sqlDataType.typeName
 ) : AstNode(), HasMetas {
     override val children: List<AstNode> = listOf()
 }
@@ -1146,7 +1147,7 @@ sealed class SqlDataType(val typeName: String, open val arityRange: IntRange) {
         * https://stackoverflow.com/questions/54940944/initializing-companion-object-after-inner-objects/55010004
         * */
         private val DATA_TYPE_NAME_TO_TYPE_LOOKUP by lazy {
-            values().map { Pair(it.typeName, it) }.toMap()
+            values().associateBy { it.typeName }
         }
 
         fun forTypeName(typeName: String): SqlDataType? = DATA_TYPE_NAME_TO_TYPE_LOOKUP[typeName]

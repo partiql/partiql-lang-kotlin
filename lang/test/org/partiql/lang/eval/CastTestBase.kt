@@ -1221,7 +1221,7 @@ abstract class CastTestBase : EvaluatorTestBase() {
                 case("'1234'", ErrorCode.EVALUATOR_CAST_FAILED),
                 case("'123.45'", "123.45", CastQuality.LOSSLESS),
                 case("'123.459'", "123.46", CastQuality.LOSSY)
-            ).types(ExprValueType.DECIMAL.sqlTextNames.map { "$it(5, 2)" }),
+            ).types(ExprValueType.DECIMAL.sqlTextNames.map { "$it(5,2)" }),
             // DECIMAL(4,4) precision = scale is valid in honor_params
             listOf(
                 case("0.1", "1.000d-1", CastQuality.LOSSLESS),

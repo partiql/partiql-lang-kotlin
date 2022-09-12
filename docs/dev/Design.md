@@ -1,1 +1,0 @@
-# PartiQL Design Overview

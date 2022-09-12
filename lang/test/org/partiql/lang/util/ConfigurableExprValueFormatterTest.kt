@@ -8,8 +8,7 @@ import org.junit.runner.RunWith
 import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.syntax.SqlLexer
-import org.partiql.lang.syntax.SqlParser
+import org.partiql.lang.syntax.PartiQLParser
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
@@ -17,8 +16,7 @@ import kotlin.test.assertTrue
 class ConfigurableExprValueFormatterTest {
 
     private val ion = IonSystemBuilder.standard().build()
-    private val lexer = SqlLexer(ion)
-    private val parser = SqlParser(ion)
+    private val parser = PartiQLParser(ion)
     private val compiler = CompilerPipeline.builder(ion).sqlParser(parser).build()
 
     private val pretty = ConfigurableExprValueFormatter.pretty

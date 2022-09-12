@@ -453,7 +453,7 @@ may then be further optimized by selecting better implementations of each operat
         (sum type
 
             // Scalar type
-            (scalar_type id::symbol parameters::(* int 0))
+            (scalar_type alias::symbol parameters::(* int 0))
 
             // Non-scalar type
             (null_type)

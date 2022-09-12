@@ -37,7 +37,6 @@ internal fun StaticType.isText(): Boolean = this is StaticScalarType && (scalarT
 internal fun StaticType.isNumeric(): Boolean = this is StaticScalarType && (scalarType in listOf(Int2Type, Int4Type, Int8Type, IntType, FloatType, DecimalType))
 internal fun StaticType.isLob(): Boolean = this is StaticScalarType && (scalarType === BlobType || scalarType === ClobType)
 internal fun StaticType.isUnknown(): Boolean = (this.isNullOrMissing() || this == StaticType.NULL_OR_MISSING)
-internal fun StaticType.isKnown(): Boolean = !isUnknown()
 
 /**
  * Casts [this] static to the given target type.

@@ -33,7 +33,8 @@ import org.partiql.lang.eval.errorContextFrom
 import org.partiql.lang.ots_work.plugins.standard.plugin.StandardPlugin
 import org.partiql.lang.ots_work.plugins.standard.plugin.TypedOpBehavior
 import org.partiql.lang.ots_work.stscore.ScalarTypeSystem
-import org.partiql.lang.util.BuiltInScalarTypeId
+import org.partiql.lang.types.BuiltInScalarType
+import org.partiql.lang.types.TYPE_ALIAS_TO_SCALAR_TYPE
 
 /**
  * Provides rules for basic AST sanity checks that should be performed before any attempt at further AST processing.
@@ -99,10 +100,11 @@ class PartiqlAstSanityValidator(
     override fun visitTypeScalarType(node: PartiqlAst.Type.ScalarType) {
         super.visitTypeScalarType(node)
 
-        when (node.id.text) {
-            BuiltInScalarTypeId.DECIMAL,
-            BuiltInScalarTypeId.NUMERIC -> validateDecimalOrNumericType(node.parameters.getOrNull(0)?.value, node.parameters.getOrNull(1)?.value, node.metas)
-            BuiltInScalarTypeId.FLOAT -> validateFloatType(node)
+        val scalarType = TYPE_ALIAS_TO_SCALAR_TYPE[node.alias.text]
+        when (scalarType) {
+            BuiltInScalarType.DECIMAL,
+            BuiltInScalarType.NUMERIC -> validateDecimalOrNumericType(node.parameters.getOrNull(0)?.value, node.parameters.getOrNull(1)?.value, node.metas)
+            BuiltInScalarType.FLOAT -> validateFloatType(node)
         }
     }
 

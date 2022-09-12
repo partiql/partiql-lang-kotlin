@@ -3,7 +3,8 @@ package org.partiql.lang.prettyprint
 import com.amazon.ion.system.IonSystemBuilder
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.syntax.SqlParser
-import org.partiql.lang.util.BuiltInScalarTypeId
+import org.partiql.lang.types.BuiltInScalarType
+import org.partiql.lang.types.TYPE_ALIAS_TO_SCALAR_TYPE
 import org.partiql.pig.runtime.toIonElement
 import java.lang.StringBuilder
 import java.time.LocalDate
@@ -781,27 +782,27 @@ class QueryPrettyPrinter {
             is PartiqlAst.Type.NullType -> sb.append("NULL")
             is PartiqlAst.Type.AnyType -> sb.append("ANY")
             is PartiqlAst.Type.BagType -> sb.append("BAG")
-            is PartiqlAst.Type.ScalarType -> when (node.id.text) {
-                BuiltInScalarTypeId.BOOLEAN -> sb.append("BOOLEAN")
-                BuiltInScalarTypeId.INTEGER -> sb.append("INT")
-                BuiltInScalarTypeId.SMALLINT -> sb.append("SMALLINT")
-                BuiltInScalarTypeId.INTEGER4 -> sb.append("INT4")
-                BuiltInScalarTypeId.INTEGER8 -> sb.append("INT8")
-                BuiltInScalarTypeId.FLOAT -> sb.append("FLOAT")
-                BuiltInScalarTypeId.REAL -> sb.append("REAL")
-                BuiltInScalarTypeId.DOUBLE_PRECISION -> sb.append("DOUBLE_PRECISION")
-                BuiltInScalarTypeId.DECIMAL -> sb.append("DECIMAL")
-                BuiltInScalarTypeId.NUMERIC -> sb.append("NUMERIC")
-                BuiltInScalarTypeId.TIMESTAMP -> sb.append("TIMESTAMP")
-                BuiltInScalarTypeId.CHARACTER -> sb.append("CHAR")
-                BuiltInScalarTypeId.CHARACTER_VARYING -> sb.append("VARCHAR")
-                BuiltInScalarTypeId.STRING -> sb.append("STRING")
-                BuiltInScalarTypeId.SYMBOL -> sb.append("SYMBOL")
-                BuiltInScalarTypeId.BLOB -> sb.append("BLOB")
-                BuiltInScalarTypeId.CLOB -> sb.append("CLOB")
-                BuiltInScalarTypeId.DATE -> sb.append("DATE")
-                BuiltInScalarTypeId.TIME -> sb.append("TIME")
-                BuiltInScalarTypeId.TIME_WITH_TIME_ZONE -> sb.append("TIME WITH TIME ZONE")
+            is PartiqlAst.Type.ScalarType -> when (TYPE_ALIAS_TO_SCALAR_TYPE[node.alias.text]) {
+                BuiltInScalarType.BOOLEAN -> sb.append("BOOLEAN")
+                BuiltInScalarType.INTEGER -> sb.append("INT")
+                BuiltInScalarType.SMALLINT -> sb.append("SMALLINT")
+                BuiltInScalarType.INTEGER4 -> sb.append("INT4")
+                BuiltInScalarType.INTEGER8 -> sb.append("INT8")
+                BuiltInScalarType.FLOAT -> sb.append("FLOAT")
+                BuiltInScalarType.REAL -> sb.append("REAL")
+                BuiltInScalarType.DOUBLE_PRECISION -> sb.append("DOUBLE_PRECISION")
+                BuiltInScalarType.DECIMAL -> sb.append("DECIMAL")
+                BuiltInScalarType.NUMERIC -> sb.append("NUMERIC")
+                BuiltInScalarType.TIMESTAMP -> sb.append("TIMESTAMP")
+                BuiltInScalarType.CHARACTER -> sb.append("CHAR")
+                BuiltInScalarType.CHARACTER_VARYING -> sb.append("VARCHAR")
+                BuiltInScalarType.STRING -> sb.append("STRING")
+                BuiltInScalarType.SYMBOL -> sb.append("SYMBOL")
+                BuiltInScalarType.BLOB -> sb.append("BLOB")
+                BuiltInScalarType.CLOB -> sb.append("CLOB")
+                BuiltInScalarType.DATE -> sb.append("DATE")
+                BuiltInScalarType.TIME -> sb.append("TIME")
+                BuiltInScalarType.TIME_WITH_TIME_ZONE -> sb.append("TIME WITH TIME ZONE")
                 else -> error("Unrecognized scalar type ID")
             }
             is PartiqlAst.Type.EsAny -> sb.append("ES_ANY")

@@ -13,8 +13,10 @@ compose seamlessly with each other and SQL.
 
 This repository contains an embeddable reference interpreter, test framework, and tests for PartiQL in Kotlin.
 
-The easiest way to get started with PartiQL is to clone this repository locally, build, then
-[run the REPL](./docs/user/CLI.md).
+## About
+
+Check out the [PartiQL Lang Kotlin Wiki](https://github.com/partiql/partiql-lang-kotlin/wiki) for documentation,
+tutorials, migration guides, and more!
 
 ## Status
 
@@ -58,6 +60,8 @@ Be sure to replace `${version}` with the desired version.
 
 ## Building
 
+**Pre-requisite**: Building this project requires Java 11+.
+
 To build this project, clone this repository and from its root directory execute:
 
 ```shell
@@ -72,8 +76,7 @@ This will build the reference interpreter and test framework, then run all unit 
 
 ## Directory Structure
 
-- `docs/user` documentation for developers embedding the interpreter in an application.
-- `docs/dev` documentation for developers of the interpreter library.
+- `docs` source code for the GitHub Wiki
 - `lang` contains the source code of the library containing the interpreter.
 - `lang/jmh` contains the JMH benchmarks for PartiQL.
 - `cli` contains the source code of the command-line interface and interactive prompt. (CLI/REPL)

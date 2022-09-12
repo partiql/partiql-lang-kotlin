@@ -13,7 +13,7 @@
  */
 
 plugins {
-    id 'org.jetbrains.kotlin.jvm' version '1.4.32' apply false
+    id 'org.jetbrains.kotlin.jvm' version '1.5.31' apply false
     // https://arturbosch.github.io/detekt/groovydsl.html
     id "io.gitlab.arturbosch.detekt" version "1.20.0-RC1" apply false
     id 'org.jlleitschuh.gradle.ktlint' version '10.2.1'
@@ -24,7 +24,7 @@ allprojects {
     apply plugin: 'org.jlleitschuh.gradle.ktlint'
 
     jacoco {
-        toolVersion = '0.8.5'
+        toolVersion = '0.8.8'
         reportsDirectory = file("$buildDir/reports/jacoco/")
     }
 
@@ -58,7 +58,21 @@ configure(subprojects.findAll { it.name != 'example' }) {
     }
 }
 
-subprojects {
+
+subprojects { proj ->
+
+    /* Note: Module `partiql-grammar` is an exception to the configurations below since the configurations do not apply.
+     *   - Specifically:
+     *     - the module does not have a Test directory
+     *     - the module does not contain Java code
+     *     - the module follows a conventional multi-project and multi-language source structure
+     *       - AKA -- `src/main` should be the sources root, not `src`
+     *   - Without the exception, the build fails as Gradle requires Kotlin classes, and the ANTLR sources cannot be found.
+     */
+    if (proj.name == "partiql-grammar") {
+        return
+    }
+
     apply plugin: "org.jetbrains.kotlin.jvm"
     tasks.withType(Test) {
         jvmArgs += ['-Duser.language=en', '-Duser.country=US']
@@ -88,12 +102,16 @@ subprojects {
     }
 
     plugins.withId('java', { _ ->
-
         sourceSets {
             main.java.srcDirs = ["src"]
             main.resources.srcDirs = ["resources"]
             test.java.srcDirs = ["test"]
             test.resources.srcDirs = ["test-resources"]
+        }
+
+        java {
+            sourceCompatibility = JavaVersion.VERSION_1_8
+            targetCompatibility = JavaVersion.VERSION_1_8
         }
     })
     plugins.withId('org.jetbrains.kotlin.jvm', { _ ->

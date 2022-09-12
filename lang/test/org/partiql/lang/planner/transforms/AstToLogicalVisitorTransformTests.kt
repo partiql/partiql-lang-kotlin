@@ -20,7 +20,7 @@ import org.partiql.lang.errors.ProblemHandler
 import org.partiql.lang.errors.ProblemSeverity
 import org.partiql.lang.planner.PlanningProblemDetails
 import org.partiql.lang.planner.unimplementedProblem
-import org.partiql.lang.syntax.SqlParser
+import org.partiql.lang.syntax.PartiQLParser
 import org.partiql.lang.util.ArgumentsProviderBase
 
 /**
@@ -29,7 +29,7 @@ import org.partiql.lang.util.ArgumentsProviderBase
  */
 class AstToLogicalVisitorTransformTests {
     private val ion = IonSystemBuilder.standard().build()
-    private val parser = SqlParser(ion)
+    private val parser = PartiQLParser(ion)
 
     private fun parseAndTransform(sql: String, problemHandler: ProblemHandler): PartiqlLogical.Statement {
         val parseAstStatement = parser.parseAstStatement(sql)

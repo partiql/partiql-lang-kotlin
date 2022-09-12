@@ -1,0 +1,71 @@
+<code_scheme name="PartiQL" version="173">
+  <JavaCodeStyleSettings>
+    <option name="USE_SINGLE_CLASS_IMPORTS" value="false" />
+  </JavaCodeStyleSettings>
+  <JetCodeStyleSettings>
+    <option name="PACKAGES_TO_USE_STAR_IMPORTS">
+      <value />
+    </option>
+    <option name="NAME_COUNT_TO_USE_STAR_IMPORT" value="2147483647" />
+    <option name="NAME_COUNT_TO_USE_STAR_IMPORT_FOR_MEMBERS" value="2147483647" />
+    <option name="CONTINUATION_INDENT_IN_PARAMETER_LISTS" value="false" />
+    <option name="CONTINUATION_INDENT_IN_ARGUMENT_LISTS" value="false" />
+    <option name="CONTINUATION_INDENT_FOR_EXPRESSION_BODIES" value="false" />
+    <option name="CONTINUATION_INDENT_FOR_CHAINED_CALLS" value="false" />
+    <option name="CONTINUATION_INDENT_IN_SUPERTYPE_LISTS" value="false" />
+    <option name="CONTINUATION_INDENT_IN_IF_CONDITIONS" value="false" />
+    <option name="CONTINUATION_INDENT_IN_ELVIS" value="false" />
+    <option name="IF_RPAREN_ON_NEW_LINE" value="true" />
+  </JetCodeStyleSettings>
+  <codeStyleSettings language="CFML">
+    <indentOptions>
+      <option name="CONTINUATION_INDENT_SIZE" value="4" />
+    </indentOptions>
+  </codeStyleSettings>
+  <codeStyleSettings language="DependencyConfig">
+    <indentOptions>
+      <option name="CONTINUATION_INDENT_SIZE" value="4" />
+    </indentOptions>
+  </codeStyleSettings>
+  <codeStyleSettings language="GSP">
+    <indentOptions>
+      <option name="CONTINUATION_INDENT_SIZE" value="4" />
+    </indentOptions>
+  </codeStyleSettings>
+  <codeStyleSettings language="HTML">
+    <indentOptions>
+      <option name="CONTINUATION_INDENT_SIZE" value="4" />
+    </indentOptions>
+  </codeStyleSettings>
+  <codeStyleSettings language="Haml">
+    <indentOptions>
+      <option name="CONTINUATION_INDENT_SIZE" value="4" />
+    </indentOptions>
+  </codeStyleSettings>
+  <codeStyleSettings language="Ion">
+    <indentOptions>
+      <option name="INDENT_SIZE" value="2" />
+      <option name="TAB_SIZE" value="2" />
+    </indentOptions>
+  </codeStyleSettings>
+  <codeStyleSettings language="VTL">
+    <indentOptions>
+      <option name="CONTINUATION_INDENT_SIZE" value="4" />
+    </indentOptions>
+  </codeStyleSettings>
+  <codeStyleSettings language="XML">
+    <indentOptions>
+      <option name="CONTINUATION_INDENT_SIZE" value="4" />
+    </indentOptions>
+  </codeStyleSettings>
+  <codeStyleSettings language="kotlin">
+    <option name="KEEP_FIRST_COLUMN_COMMENT" value="false" />
+    <option name="ALIGN_MULTILINE_PARAMETERS" value="false" />
+    <option name="CALL_PARAMETERS_LPAREN_ON_NEXT_LINE" value="true" />
+    <option name="METHOD_PARAMETERS_LPAREN_ON_NEXT_LINE" value="true" />
+    <option name="WRAP_FIRST_METHOD_IN_CALL_CHAIN" value="true" />
+    <indentOptions>
+      <option name="CONTINUATION_INDENT_SIZE" value="4" />
+    </indentOptions>
+  </codeStyleSettings>
+</code_scheme>

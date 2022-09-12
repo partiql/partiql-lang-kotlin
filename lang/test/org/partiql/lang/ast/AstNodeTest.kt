@@ -11,7 +11,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.partiql.lang.syntax.SqlParser
+import org.partiql.lang.syntax.PartiQLParser
 
 // TODO:  add tests for DDL & DML ExprNodes.
 
@@ -68,7 +68,7 @@ class AstNodeTest {
     @Test
     @Parameters
     fun iteratorTests(testCase: IteratorTestCase) {
-        val ast = SqlParser(ion).parseExprNode(testCase.sql)
+        val ast = PartiQLParser(ion).parseExprNode(testCase.sql)
 
         val actual = ast.joinToString("|") { it.javaClass.simpleName }
 

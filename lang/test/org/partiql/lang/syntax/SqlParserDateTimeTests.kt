@@ -23,7 +23,7 @@ class SqlParserDateTimeTests : SqlParserTestBase() {
     @Parameters
     fun dateLiteralTests(tc: DateTimeTestCase) =
         if (!tc.skipTest) {
-            assertExpression(tc.source, tc.block)
+            assertExpression(tc.source, expectedPigBuilder = tc.block)
         } else {
             // Skip test, do nothing
         }
@@ -225,7 +225,7 @@ class SqlParserDateTimeTests : SqlParserTestBase() {
         }
     }
 
-    private fun createErrorCaseForTime(source: String, errorCode: ErrorCode, line: Long, col: Long, tokenType: TokenType, tokenValue: IonValue, skipTest: Boolean = false): () -> Unit = {
+    private fun createErrorCaseForTime(source: String, errorCode: ErrorCode, line: Long, col: Long, tokenType: TokenType, tokenValue: IonValue, skipTest: Boolean = false, targetParsers: Set<ParserTypes> = defaultParserTypes): () -> Unit = {
         if (!skipTest) {
             checkInputThrowingParserException(
                 source,
@@ -235,16 +235,18 @@ class SqlParserDateTimeTests : SqlParserTestBase() {
                     Property.COLUMN_NUMBER to col,
                     Property.TOKEN_TYPE to tokenType,
                     Property.TOKEN_VALUE to tokenValue
-                )
+                ),
+                targetParsers
             )
         }
     }
 
-    private fun createErrorCaseForTime(source: String, errorCode: ErrorCode, errorContext: Map<Property, Any>): () -> Unit = {
+    private fun createErrorCaseForTime(source: String, errorCode: ErrorCode, errorContext: Map<Property, Any>, targetParsers: Set<ParserTypes> = defaultParserTypes): () -> Unit = {
         checkInputThrowingParserException(
             source,
             errorCode,
-            errorContext
+            errorContext,
+            targetParsers
         )
     }
 
@@ -441,7 +443,17 @@ class SqlParserDateTimeTests : SqlParserTestBase() {
             col = 8L,
             errorCode = ErrorCode.PARSE_INVALID_PRECISION_FOR_TIME,
             tokenType = TokenType.LITERAL,
-            tokenValue = ion.newString("23:59:59.99999")
+            tokenValue = ion.newString("23:59:59.99999"),
+            targetParsers = setOf(ParserTypes.SQL_PARSER)
+        ),
+        createErrorCaseForTime(
+            source = "TIME ( '23:59:59.99999'",
+            line = 1L,
+            col = 8L,
+            errorCode = ErrorCode.PARSE_UNEXPECTED_TOKEN,
+            tokenType = TokenType.LITERAL,
+            tokenValue = ion.newString("23:59:59.99999"),
+            targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
         ),
         createErrorCaseForTime(
             source = "TIME () '23:59:59.99999'",
@@ -449,7 +461,17 @@ class SqlParserDateTimeTests : SqlParserTestBase() {
             col = 7L,
             errorCode = ErrorCode.PARSE_INVALID_PRECISION_FOR_TIME,
             tokenType = TokenType.RIGHT_PAREN,
-            tokenValue = ion.newSymbol(")")
+            tokenValue = ion.newSymbol(")"),
+            targetParsers = setOf(ParserTypes.SQL_PARSER)
+        ),
+        createErrorCaseForTime(
+            source = "TIME () '23:59:59.99999'",
+            line = 1L,
+            col = 7L,
+            errorCode = ErrorCode.PARSE_UNEXPECTED_TOKEN,
+            tokenType = TokenType.RIGHT_PAREN,
+            tokenValue = ion.newSymbol(")"),
+            targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
         ),
         createErrorCaseForTime(
             source = "TIME [4] '23:59:59.99999'",
@@ -481,7 +503,17 @@ class SqlParserDateTimeTests : SqlParserTestBase() {
             col = 7L,
             errorCode = ErrorCode.PARSE_INVALID_PRECISION_FOR_TIME,
             tokenType = TokenType.LITERAL,
-            tokenValue = ion.newString("4")
+            tokenValue = ion.newString("4"),
+            targetParsers = setOf(ParserTypes.SQL_PARSER)
+        ),
+        createErrorCaseForTime(
+            source = "TIME ('4') '23:59:59.99999'",
+            line = 1L,
+            col = 7L,
+            errorCode = ErrorCode.PARSE_UNEXPECTED_TOKEN,
+            tokenType = TokenType.LITERAL,
+            tokenValue = ion.newString("4"),
+            targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
         ),
         createErrorCaseForTime(
             source = "TIME (-1) '23:59:59.99999'",
@@ -489,7 +521,17 @@ class SqlParserDateTimeTests : SqlParserTestBase() {
             col = 7L,
             errorCode = ErrorCode.PARSE_INVALID_PRECISION_FOR_TIME,
             tokenType = TokenType.OPERATOR,
-            tokenValue = ion.newSymbol("-")
+            tokenValue = ion.newSymbol("-"),
+            targetParsers = setOf(ParserTypes.SQL_PARSER)
+        ),
+        createErrorCaseForTime(
+            source = "TIME (-1) '23:59:59.99999'",
+            line = 1L,
+            col = 7L,
+            errorCode = ErrorCode.PARSE_UNEXPECTED_TOKEN,
+            tokenType = TokenType.OPERATOR,
+            tokenValue = ion.newSymbol("-"),
+            targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
         ),
         createErrorCaseForTime(
             source = "TIME (10) '23:59:59.99999'",
@@ -505,7 +547,17 @@ class SqlParserDateTimeTests : SqlParserTestBase() {
             col = 7L,
             errorCode = ErrorCode.PARSE_INVALID_PRECISION_FOR_TIME,
             tokenType = TokenType.LITERAL,
-            tokenValue = ion.newString("four")
+            tokenValue = ion.newString("four"),
+            targetParsers = setOf(ParserTypes.SQL_PARSER)
+        ),
+        createErrorCaseForTime(
+            source = "TIME ('four') '23:59:59.99999'",
+            line = 1L,
+            col = 7L,
+            errorCode = ErrorCode.PARSE_UNEXPECTED_TOKEN,
+            tokenType = TokenType.LITERAL,
+            tokenValue = ion.newString("four"),
+            targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
         ),
         createErrorCaseForTime(
             source = "TIME WITH TIME ZONE",
@@ -556,7 +608,19 @@ class SqlParserDateTimeTests : SqlParserTestBase() {
                 Property.KEYWORD to "TIME",
                 Property.TOKEN_TYPE to TokenType.IDENTIFIER,
                 Property.TOKEN_VALUE to ion.newSymbol("TIMEZONE")
-            )
+            ),
+            targetParsers = setOf(ParserTypes.SQL_PARSER)
+        ),
+        createErrorCaseForTime(
+            source = "TIME WITH TIMEZONE '23:59:59.99999'",
+            errorCode = ErrorCode.PARSE_UNEXPECTED_TOKEN,
+            errorContext = mapOf(
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 11L,
+                Property.TOKEN_TYPE to TokenType.IDENTIFIER,
+                Property.TOKEN_VALUE to ion.newSymbol("TIMEZONE")
+            ),
+            targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
         ),
         createErrorCaseForTime(
             source = "TIME WITH_TIME_ZONE '23:59:59.99999'",
@@ -592,7 +656,19 @@ class SqlParserDateTimeTests : SqlParserTestBase() {
                 Property.KEYWORD to "ZONE",
                 Property.TOKEN_TYPE to TokenType.IDENTIFIER,
                 Property.TOKEN_VALUE to ion.newSymbol("PHONE")
-            )
+            ),
+            targetParsers = setOf(ParserTypes.SQL_PARSER)
+        ),
+        createErrorCaseForTime(
+            source = "TIME WITH TIME PHONE '23:59:59.99999'",
+            errorCode = ErrorCode.PARSE_UNEXPECTED_TOKEN,
+            errorContext = mapOf(
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 16L,
+                Property.TOKEN_TYPE to TokenType.IDENTIFIER,
+                Property.TOKEN_VALUE to ion.newSymbol("PHONE")
+            ),
+            targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
         ),
         createErrorCaseForTime(
             source = "TIME WITH (4) TIME ZONE '23:59:59.99999'",
@@ -603,7 +679,19 @@ class SqlParserDateTimeTests : SqlParserTestBase() {
                 Property.KEYWORD to "TIME",
                 Property.TOKEN_TYPE to TokenType.LEFT_PAREN,
                 Property.TOKEN_VALUE to ion.newSymbol("(")
-            )
+            ),
+            targetParsers = setOf(ParserTypes.SQL_PARSER)
+        ),
+        createErrorCaseForTime(
+            source = "TIME WITH (4) TIME ZONE '23:59:59.99999'",
+            errorCode = ErrorCode.PARSE_UNEXPECTED_TOKEN,
+            errorContext = mapOf(
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 11L,
+                Property.TOKEN_TYPE to TokenType.LEFT_PAREN,
+                Property.TOKEN_VALUE to ion.newSymbol("(")
+            ),
+            targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
         ),
         createErrorCaseForTime(
             source = "TIME WITH TIME (4) ZONE '23:59:59.99999'",
@@ -614,7 +702,19 @@ class SqlParserDateTimeTests : SqlParserTestBase() {
                 Property.KEYWORD to "ZONE",
                 Property.TOKEN_TYPE to TokenType.LEFT_PAREN,
                 Property.TOKEN_VALUE to ion.newSymbol("(")
-            )
+            ),
+            targetParsers = setOf(ParserTypes.SQL_PARSER)
+        ),
+        createErrorCaseForTime(
+            source = "TIME WITH TIME (4) ZONE '23:59:59.99999'",
+            errorCode = ErrorCode.PARSE_UNEXPECTED_TOKEN,
+            errorContext = mapOf(
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 16L,
+                Property.TOKEN_TYPE to TokenType.LEFT_PAREN,
+                Property.TOKEN_VALUE to ion.newSymbol("(")
+            ),
+            targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
         ),
         createErrorCaseForTime(
             source = "TIME WITH TIME ZONE (4) '23:59:59.99999'",
@@ -672,7 +772,17 @@ class SqlParserDateTimeTests : SqlParserTestBase() {
             col = 7L,
             errorCode = ErrorCode.PARSE_INVALID_PRECISION_FOR_TIME,
             tokenType = TokenType.LITERAL,
-            tokenValue = ion.newString("4")
+            tokenValue = ion.newString("4"),
+            targetParsers = setOf(ParserTypes.SQL_PARSER)
+        ),
+        createErrorCaseForTime(
+            source = "TIME ('4') WITH TIME ZONE '23:59:59-18:01'",
+            line = 1L,
+            col = 7L,
+            errorCode = ErrorCode.PARSE_UNEXPECTED_TOKEN,
+            tokenType = TokenType.LITERAL,
+            tokenValue = ion.newString("4"),
+            targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
         ),
         createErrorCaseForTime(
             source = "TIME WITH TIME ZONE '23:59:59-18-01'",

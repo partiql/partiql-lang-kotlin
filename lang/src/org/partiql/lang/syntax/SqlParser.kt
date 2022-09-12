@@ -43,7 +43,6 @@ import org.partiql.lang.eval.time.genericTimeRegex
 import org.partiql.lang.eval.time.getPrecisionFromTimeString
 import org.partiql.lang.eval.time.timeWithoutTimeZoneRegex
 import org.partiql.lang.types.CustomType
-import org.partiql.lang.util.BuiltInScalarTypeId
 import org.partiql.lang.util.asIonInt
 import org.partiql.lang.util.atomFromHead
 import org.partiql.lang.util.checkThreadInterrupted
@@ -64,7 +63,6 @@ import org.partiql.lang.util.tailExpectedToken
 import org.partiql.lang.util.unaryMinus
 import org.partiql.pig.runtime.LongPrimitive
 import org.partiql.pig.runtime.SymbolPrimitive
-import org.partiql.pig.runtime.toIonElement
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.OffsetTime
@@ -78,6 +76,11 @@ import java.time.temporal.Temporal
  * Parses a list of tokens as infix query expression into a prefix s-expression
  * as the abstract syntax tree.
  */
+@Deprecated(
+    message = "Bug fixes, enhancements, and features will no longer be implemented. SqlParser will be deleted after v0.8.",
+    replaceWith = ReplaceWith("PartiQLParserBuilder.standard().build()", "org.partiql.lang.syntax.PartiQLParserBuilder"),
+    level = DeprecationLevel.WARNING
+)
 class SqlParser(
     private val ion: IonSystem,
     customTypes: List<CustomType> = listOf()
@@ -793,8 +796,9 @@ class SqlParser(
             errMalformedParseTree("Expected ParseType.TYPE instead of $type")
         }
 
-        val typeName = token?.keywordText ?: token?.customKeywordText
-        val sqlDataType = SqlDataType.forTypeName(typeName!!)
+        val typeAlias = token?.keywordText ?: token?.customKeywordText!!
+        val typeName = TYPE_ALIASES[typeAlias] ?: typeAlias
+        val sqlDataType = SqlDataType.forTypeName(typeName)
             ?: (token?.customType ?: errMalformedParseTree("Invalid DataType: $typeName"))
         val metas = getMetas()
         val args = children.map {
@@ -819,33 +823,33 @@ class SqlParser(
             when (sqlDataType) {
                 SqlDataType.MISSING -> missingType(metas)
                 SqlDataType.NULL -> nullType(metas)
-                SqlDataType.BOOLEAN -> scalarType(BuiltInScalarTypeId.BOOLEAN, metas = metas)
-                SqlDataType.SMALLINT -> scalarType(BuiltInScalarTypeId.SMALLINT, metas = metas)
-                SqlDataType.INTEGER4 -> scalarType(BuiltInScalarTypeId.INTEGER4, metas = metas)
-                SqlDataType.INTEGER8 -> scalarType(BuiltInScalarTypeId.INTEGER8, metas = metas)
-                SqlDataType.INTEGER -> scalarType(BuiltInScalarTypeId.INTEGER, metas = metas)
-                SqlDataType.FLOAT -> scalarType(BuiltInScalarTypeId.FLOAT, args, metas = metas)
-                SqlDataType.REAL -> scalarType(BuiltInScalarTypeId.REAL, metas = metas)
-                SqlDataType.DOUBLE_PRECISION -> scalarType(BuiltInScalarTypeId.DOUBLE_PRECISION, metas = metas)
-                SqlDataType.DECIMAL -> scalarType(BuiltInScalarTypeId.DECIMAL, args, metas)
-                SqlDataType.NUMERIC -> scalarType(BuiltInScalarTypeId.NUMERIC, args, metas)
-                SqlDataType.TIMESTAMP -> scalarType(BuiltInScalarTypeId.TIMESTAMP, metas = metas)
-                SqlDataType.CHARACTER -> scalarType(BuiltInScalarTypeId.CHARACTER, args, metas)
-                SqlDataType.CHARACTER_VARYING -> scalarType(BuiltInScalarTypeId.CHARACTER_VARYING, args, metas)
-                SqlDataType.STRING -> scalarType(BuiltInScalarTypeId.STRING, metas = metas)
-                SqlDataType.SYMBOL -> scalarType(BuiltInScalarTypeId.SYMBOL, metas = metas)
-                SqlDataType.CLOB -> scalarType(BuiltInScalarTypeId.CLOB, metas = metas)
-                SqlDataType.BLOB -> scalarType(BuiltInScalarTypeId.BLOB, metas = metas)
+                SqlDataType.BOOLEAN,
+                SqlDataType.SMALLINT,
+                SqlDataType.INTEGER4,
+                SqlDataType.INTEGER8,
+                SqlDataType.INTEGER,
+                SqlDataType.REAL,
+                SqlDataType.DOUBLE_PRECISION,
+                SqlDataType.TIMESTAMP,
+                SqlDataType.STRING,
+                SqlDataType.SYMBOL,
+                SqlDataType.CLOB,
+                SqlDataType.BLOB,
+                SqlDataType.DATE -> scalarType(typeAlias, metas = metas)
+                SqlDataType.FLOAT,
+                SqlDataType.DECIMAL,
+                SqlDataType.NUMERIC,
+                SqlDataType.CHARACTER,
+                SqlDataType.CHARACTER_VARYING,
+                SqlDataType.TIME,
+                SqlDataType.TIME_WITH_TIME_ZONE -> scalarType(typeAlias, args, metas)
                 SqlDataType.STRUCT -> structType(metas)
                 SqlDataType.TUPLE -> tupleType(metas)
                 SqlDataType.LIST -> listType(metas)
                 SqlDataType.SEXP -> sexpType(metas)
                 SqlDataType.BAG -> bagType(metas)
-                SqlDataType.DATE -> scalarType(BuiltInScalarTypeId.DATE, metas = metas)
-                SqlDataType.TIME -> scalarType(BuiltInScalarTypeId.TIME, args, metas)
-                SqlDataType.TIME_WITH_TIME_ZONE -> scalarType(BuiltInScalarTypeId.TIME_WITH_TIME_ZONE, args, metas)
                 SqlDataType.ANY -> anyType(metas)
-                is SqlDataType.CustomDataType -> customType(typeName, metas)
+                is SqlDataType.CustomDataType -> customType(typeAlias, metas)
             }
         }
     }
@@ -1895,11 +1899,9 @@ class SqlParser(
 
     private fun List<Token>.parseType(opName: String): ParseNode {
         val typeName = head?.keywordText
-        val typeArity = ALL_TYPE_NAME_ARITY_MAP[typeName]
-            ?: (
-                head?.customType?.arityRange
-                    ?: err("Expected type name", ErrorCode.PARSE_EXPECTED_TYPE_NAME)
-                )
+        val typeArity = ALL_TYPE_NAME_ARITY_MAP[TYPE_ALIASES[typeName] ?: typeName]
+            ?: head?.customType?.arityRange
+            ?: err("Expected type name", ErrorCode.PARSE_EXPECTED_TYPE_NAME)
 
         val typeNode = when (tail.head?.type) {
             TokenType.LEFT_PAREN -> tail.tail.parseArgList(
