@@ -1,5 +1,15 @@
 name: "Build and Report Generation"
-on: [push, pull_request]
+on: 
+  push:
+    paths:
+      - '**'
+      - '!docs/**'
+      - '!**/*.md'
+  pull_request:
+    paths:
+      - '**'
+      - '!docs/**'
+      - '!**.*.md'
 
 jobs:
   test:

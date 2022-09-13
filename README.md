@@ -70,13 +70,10 @@ To build this project, clone this repository and from its root directory execute
 
 This will build the reference interpreter and test framework, then run all unit and integration tests.
 
-### Building the Documentation
-
-[Instructions on how to build PartiQL's documentation](docs/Docker/README.md)
-
 ## Directory Structure
 
 - `docs` source code for the GitHub Wiki
+- `partiql-grammar` contains the ANTLR files to generate the PartiQL Parser.
 - `lang` contains the source code of the library containing the interpreter.
 - `lang/jmh` contains the JMH benchmarks for PartiQL.
 - `cli` contains the source code of the command-line interface and interactive prompt. (CLI/REPL)
