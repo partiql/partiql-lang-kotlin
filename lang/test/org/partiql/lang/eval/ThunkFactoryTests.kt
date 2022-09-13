@@ -7,7 +7,7 @@ import org.partiql.lang.ION
 import org.partiql.lang.ast.StaticTypeMeta
 import org.partiql.lang.domains.metaContainerOf
 import org.partiql.lang.errors.ErrorCode
-import org.partiql.lang.ots.plugins.standard.types.CharType
+import org.partiql.lang.ots_work.plugins.standard.types.CharType
 import org.partiql.lang.types.StaticScalarType
 import org.partiql.lang.types.StaticType
 import kotlin.test.assertEquals

@@ -5,7 +5,7 @@ import junitparams.Parameters
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.partiql.lang.ots.plugins.standard.types.DecimalType
+import org.partiql.lang.ots_work.plugins.standard.types.DecimalType
 import org.partiql.lang.types.StaticScalarType
 import org.partiql.lang.types.StaticType
 

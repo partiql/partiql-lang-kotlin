@@ -3,7 +3,7 @@ package org.partiql.lang
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.numberValue
-import org.partiql.lang.ots.plugins.standard.types.CharType
+import org.partiql.lang.ots_work.plugins.standard.types.CharType
 import org.partiql.lang.types.AnyOfType
 import org.partiql.lang.types.CustomType
 import org.partiql.lang.types.StaticScalarType
