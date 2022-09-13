@@ -55,7 +55,6 @@ import org.partiql.lang.eval.EvaluationException
 import org.partiql.lang.eval.time.MAX_PRECISION_FOR_TIME
 import org.partiql.lang.syntax.DATE_TIME_PART_KEYWORDS
 import org.partiql.lang.syntax.ParserException
-import org.partiql.lang.syntax.TRIM_SPECIFICATION_KEYWORDS
 import org.partiql.lang.types.CustomType
 import org.partiql.lang.util.DATE_PATTERN_REGEX
 import org.partiql.lang.util.bigDecimalOf
@@ -115,11 +114,17 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
 
     override fun visitSymbolPrimitive(ctx: PartiQLParser.SymbolPrimitiveContext) = PartiqlAst.build {
         val metas = ctx.ident.getSourceMetaContainer()
+        if (ctx.key != null) return@build visit(ctx.key, PartiqlAst.Expr.Id::class)
         when (ctx.ident.type) {
             PartiQLParser.IDENTIFIER_QUOTED -> id(ctx.IDENTIFIER_QUOTED().getStringValue(), caseSensitive(), unqualified(), metas)
             PartiQLParser.IDENTIFIER -> id(ctx.IDENTIFIER().getStringValue(), caseInsensitive(), unqualified(), metas)
             else -> throw ParserException("Invalid symbol reference.", ErrorCode.PARSE_INVALID_QUERY)
         }
+    }
+
+    override fun visitNonreservedKeyword(ctx: PartiQLParser.NonreservedKeywordContext) = PartiqlAst.build {
+        val metas = ctx.key.getSourceMetaContainer()
+        id(ctx.key.text, caseInsensitive(), unqualified(), metas)
     }
 
     /**
@@ -672,10 +677,10 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
 
     override fun visitPatternRestrictor(ctx: PartiQLParser.PatternRestrictorContext) = PartiqlAst.build {
         val metas = ctx.restrictor.getSourceMetaContainer()
-        when (ctx.restrictor.text.toLowerCase()) {
-            "trail" -> restrictorTrail(metas)
-            "acyclic" -> restrictorAcyclic(metas)
-            "simple" -> restrictorSimple(metas)
+        when (ctx.restrictor.type) {
+            PartiQLParser.TRAIL -> restrictorTrail(metas)
+            PartiQLParser.ACYCLIC -> restrictorAcyclic(metas)
+            PartiQLParser.SIMPLE -> restrictorSimple(metas)
             else -> throw ParserException("Unrecognized pattern restrictor", ErrorCode.PARSE_INVALID_QUERY)
         }
     }
@@ -847,10 +852,9 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
     override fun visitExprTermWrappedQuery(ctx: PartiQLParser.ExprTermWrappedQueryContext) = visit(ctx.expr(), PartiqlAst.Expr::class)
 
     override fun visitVarRefExpr(ctx: PartiQLParser.VarRefExprContext): PartiqlAst.PartiqlAstNode = PartiqlAst.build {
-        val metas = ctx.ident.getSourceMetaContainer()
         val qualifier = if (ctx.qualifier == null) unqualified() else localsFirst()
-        val sensitivity = if (ctx.ident.type == PartiQLParser.IDENTIFIER) caseInsensitive() else caseSensitive()
-        id(ctx.ident.getStringValue(), sensitivity, qualifier, metas)
+        val ident = visit(ctx.ident, PartiqlAst.Expr.Id::class)
+        ident.copy(qualifier = qualifier)
     }
 
     override fun visitParameter(ctx: PartiQLParser.ParameterContext) = PartiqlAst.build {
@@ -1009,42 +1013,9 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
         call(ctx.EXTRACT().text.toLowerCase(), args, metas)
     }
 
-    /**
-     * Note: This implementation is odd because the TRIM function contains keywords that are not keywords outside
-     * of TRIM. Therefore, TRIM(<spec> <substring> FROM <target>) needs to be parsed as below. The <spec> needs to be
-     * an identifier (according to SqlParser), but if the identifier is NOT a trim specification, and the <substring> is
-     * null, we need to make the substring equal to the <spec> (and make <spec> null).
-     */
     override fun visitTrimFunction(ctx: PartiQLParser.TrimFunctionContext) = PartiqlAst.build {
-        val possibleModText = if (ctx.mod != null) ctx.mod.text.toLowerCase() else null
-        val isTrimSpec = TRIM_SPECIFICATION_KEYWORDS.contains(possibleModText)
-        val (modifier, substring) = when {
-            // if <spec> is not null and <substring> is null
-            // then there are two possible cases trim(( BOTH | LEADING | TRAILING ) FROM <target> )
-            // or trim(<substring> FROM target), i.e., we treat what is recognized by parser as the modifier as <substring>
-            ctx.mod != null && ctx.sub == null -> {
-                if (isTrimSpec) ctx.mod.toSymbol() to null
-                else null to id(possibleModText!!, caseInsensitive(), unqualified(), ctx.mod.getSourceMetaContainer())
-            }
-            ctx.mod == null && ctx.sub != null -> {
-                null to visitExpr(ctx.sub)
-            }
-            ctx.mod != null && ctx.sub != null -> {
-                if (isTrimSpec) ctx.mod.toSymbol() to visitExpr(ctx.sub)
-                // todo we need to decide if it should be an evaluator error or a parser error
-                else {
-                    val errorContext = PropertyValueMap()
-                    errorContext[Property.TOKEN_STRING] = ctx.mod.text
-                    throw ctx.mod.err(
-                        "'${ctx.mod.text}' is an unknown trim specification, valid values: $TRIM_SPECIFICATION_KEYWORDS",
-                        ErrorCode.PARSE_INVALID_TRIM_SPEC,
-                        errorContext
-                    )
-                }
-            }
-            else -> null to null
-        }
-
+        val modifier = if (ctx.mod != null) lit(ionSymbol(ctx.mod.text.toLowerCase())) else null
+        val substring = visitOrNull(ctx.sub, PartiqlAst.Expr::class)
         val target = visitExpr(ctx.target)
         val args = listOfNotNull(modifier, substring, target)
         val metas = ctx.func.getSourceMetaContainer()

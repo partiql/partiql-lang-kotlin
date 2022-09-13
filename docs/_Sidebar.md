@@ -8,6 +8,7 @@
   * [Architecture Design](https://github.com/partiql/partiql-lang-kotlin/wiki/Architecture-Design)
   * [Code Style Guidelines](https://github.com/partiql/partiql-lang-kotlin/wiki/CODE-STYLE)
 * Documentation
+  * [PartiQL Keywords](https://github.com/partiql/partiql-lang-kotlin/wiki/Keywords)
   * [Exceptions](https://github.com/partiql/partiql-lang-kotlin/wiki/Exceptions)
   * [Functions](https://github.com/partiql/partiql-lang-kotlin/wiki/Functions)
   * [Numeric Data Type & Arithmetic Operations](https://github.com/partiql/partiql-lang-kotlin/wiki/Numeric-Data-Type-&-Arithmetic-Operations)

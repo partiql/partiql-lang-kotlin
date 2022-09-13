@@ -35,7 +35,21 @@ byIdent
     : BY symbolPrimitive;
 
 symbolPrimitive
-    : ident=( IDENTIFIER | IDENTIFIER_QUOTED )
+    : ident=(IDENTIFIER | IDENTIFIER_QUOTED)
+    | key=nonreservedKeyword
+    ;
+
+nonreservedKeyword
+    : key=( ACYCLIC
+          | BOTH
+          | DOMAIN
+          | LEADING
+          | PUBLIC
+          | SIMPLE
+          | TRAIL
+          | TRAILING
+          | USER
+          )
     ;
 
 /**
@@ -269,8 +283,8 @@ matchSelector
 patternPathVariable
     : symbolPrimitive EQ;
 
-patternRestrictor    // Should be TRAIL / ACYCLIC / SIMPLE
-    : restrictor=IDENTIFIER;
+patternRestrictor
+    : restrictor=( TRAIL | ACYCLIC | SIMPLE );
 
 node
     : PAREN_LEFT symbolPrimitive? patternPartLabel? whereClause? PAREN_RIGHT;
@@ -539,7 +553,7 @@ extract
     : EXTRACT PAREN_LEFT IDENTIFIER FROM rhs=expr PAREN_RIGHT;
 
 trimFunction
-    : func=TRIM PAREN_LEFT ( mod=IDENTIFIER? sub=expr? FROM )? target=expr PAREN_RIGHT;
+    : func=TRIM PAREN_LEFT ( mod=(BOTH|LEADING|TRAILING)? sub=expr? FROM )? target=expr PAREN_RIGHT;
 
 dateFunction
     : func=(DATE_ADD|DATE_DIFF) PAREN_LEFT dt=IDENTIFIER COMMA expr COMMA expr PAREN_RIGHT;
@@ -562,7 +576,7 @@ parameter
     : QUESTION_MARK;
 
 varRefExpr
-    : qualifier=AT_SIGN? ident=(IDENTIFIER|IDENTIFIER_QUOTED);
+    : qualifier=AT_SIGN? ident=symbolPrimitive;
 
 /**
  *

@@ -1302,16 +1302,14 @@ class ParserErrorsTest : SqlParserTestBase() {
             ),
             targetParsers = setOf(ParserTypes.SQL_PARSER)
         )
-        // for sql parser, the logic is, if the first token is not one of { NONE | BOTH | LEADING | TRAILING}
-        // throw out a parser error
         checkInputThrowingParserException(
             "trim(something ' ' from ' string ')",
-            ErrorCode.PARSE_INVALID_TRIM_SPEC,
+            ErrorCode.PARSE_UNEXPECTED_TOKEN,
             mapOf(
                 Property.LINE_NUMBER to 1L,
-                Property.COLUMN_NUMBER to 6L,
-                Property.TOKEN_TYPE to TokenType.IDENTIFIER,
-                Property.TOKEN_VALUE to ion.newSymbol("something")
+                Property.COLUMN_NUMBER to 16L,
+                Property.TOKEN_TYPE to TokenType.LITERAL,
+                Property.TOKEN_VALUE to ion.newString(" ")
             ),
             targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
         )
