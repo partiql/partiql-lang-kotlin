@@ -719,7 +719,7 @@ class ASTPrettyPrinterTest {
             """
                 Is
                     value: Lit 1
-                    type: (scalar_type int)
+                    type: (scalar_type integer)
             """.trimIndent()
         )
     }

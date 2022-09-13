@@ -272,7 +272,7 @@ class SqlLexerTest : TestBase() {
     @Test
     fun boolType() = assertTokens(
         "BOOL",
-        token(TokenType.KEYWORD, "bool", "BOOL", 1, 1, 4)
+        token(TokenType.KEYWORD, "boolean", "BOOL", 1, 1, 4)
     )
 
     @Test
@@ -290,13 +290,13 @@ class SqlLexerTest : TestBase() {
     @Test
     fun int4Type() = assertTokens(
         "INT4",
-        token(TokenType.KEYWORD, "int4", "INT4", 1, 1, 4)
+        token(TokenType.KEYWORD, "integer4", "INT4", 1, 1, 4)
     )
 
     @Test
     fun intType() = assertTokens(
         "INT",
-        token(TokenType.KEYWORD, "int", "INT", 1, 1, 3)
+        token(TokenType.KEYWORD, "integer", "INT", 1, 1, 3)
     )
 
     @Test
@@ -350,13 +350,13 @@ class SqlLexerTest : TestBase() {
     @Test
     fun charType() = assertTokens(
         "CHAR",
-        token(TokenType.KEYWORD, "char", "CHAR", 1, 1, 4)
+        token(TokenType.KEYWORD, "character", "CHAR", 1, 1, 4)
     )
 
     @Test
     fun varcharType() = assertTokens(
         "VARCHAR",
-        token(TokenType.KEYWORD, "varchar", "VARCHAR", 1, 1, 7)
+        token(TokenType.KEYWORD, "character_varying", "VARCHAR", 1, 1, 7)
     )
 
     @Test

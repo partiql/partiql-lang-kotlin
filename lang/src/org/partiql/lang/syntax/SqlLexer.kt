@@ -555,7 +555,7 @@ class SqlLexer(private val ion: IonSystem) : Lexer {
                                     lower in KEYWORDS -> {
                                         // unquoted identifier that is a keyword
                                         tokenType = TokenType.KEYWORD
-                                        ion.newSymbol(lower)
+                                        ion.newSymbol(TYPE_ALIASES[lower] ?: lower)
                                     }
                                     else -> ion.newSymbol(text)
                                 }

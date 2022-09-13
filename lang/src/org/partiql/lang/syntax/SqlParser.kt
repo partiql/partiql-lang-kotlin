@@ -796,9 +796,8 @@ class SqlParser(
             errMalformedParseTree("Expected ParseType.TYPE instead of $type")
         }
 
-        val typeAlias = token?.keywordText ?: token?.customKeywordText!!
-        val typeName = TYPE_ALIASES[typeAlias] ?: typeAlias
-        val sqlDataType = SqlDataType.forTypeName(typeName)
+        val typeName = token?.keywordText ?: token?.customKeywordText
+        val sqlDataType = SqlDataType.forTypeName(typeName!!)
             ?: (token?.customType ?: errMalformedParseTree("Invalid DataType: $typeName"))
         val metas = getMetas()
         val args = children.map {
@@ -823,33 +822,33 @@ class SqlParser(
             when (sqlDataType) {
                 SqlDataType.MISSING -> missingType(metas)
                 SqlDataType.NULL -> nullType(metas)
-                SqlDataType.BOOLEAN,
-                SqlDataType.SMALLINT,
-                SqlDataType.INTEGER4,
-                SqlDataType.INTEGER8,
-                SqlDataType.INTEGER,
-                SqlDataType.REAL,
-                SqlDataType.DOUBLE_PRECISION,
-                SqlDataType.TIMESTAMP,
-                SqlDataType.STRING,
-                SqlDataType.SYMBOL,
-                SqlDataType.CLOB,
-                SqlDataType.BLOB,
-                SqlDataType.DATE -> scalarType(typeAlias, metas = metas)
-                SqlDataType.FLOAT,
-                SqlDataType.DECIMAL,
-                SqlDataType.NUMERIC,
-                SqlDataType.CHARACTER,
-                SqlDataType.CHARACTER_VARYING,
-                SqlDataType.TIME,
-                SqlDataType.TIME_WITH_TIME_ZONE -> scalarType(typeAlias, args, metas)
+                SqlDataType.BOOLEAN -> scalarType("boolean", metas = metas)
+                SqlDataType.SMALLINT -> scalarType("smallint", metas = metas)
+                SqlDataType.INTEGER4 -> scalarType("integer4", metas = metas)
+                SqlDataType.INTEGER8 -> scalarType("integer8", metas = metas)
+                SqlDataType.INTEGER -> scalarType("integer", metas = metas)
+                SqlDataType.FLOAT -> scalarType("float", args, metas = metas)
+                SqlDataType.REAL -> scalarType("real", metas = metas)
+                SqlDataType.DOUBLE_PRECISION -> scalarType("double_precision", metas = metas)
+                SqlDataType.DECIMAL -> scalarType("decimal", args, metas)
+                SqlDataType.NUMERIC -> scalarType("numeric", args, metas)
+                SqlDataType.TIMESTAMP -> scalarType("timestamp", metas = metas)
+                SqlDataType.CHARACTER -> scalarType("character", args, metas)
+                SqlDataType.CHARACTER_VARYING -> scalarType("character_varying", args, metas)
+                SqlDataType.STRING -> scalarType("string", metas = metas)
+                SqlDataType.SYMBOL -> scalarType("symbol", metas = metas)
+                SqlDataType.CLOB -> scalarType("clob", metas = metas)
+                SqlDataType.BLOB -> scalarType("blob", metas = metas)
                 SqlDataType.STRUCT -> structType(metas)
                 SqlDataType.TUPLE -> tupleType(metas)
                 SqlDataType.LIST -> listType(metas)
                 SqlDataType.SEXP -> sexpType(metas)
                 SqlDataType.BAG -> bagType(metas)
+                SqlDataType.DATE -> scalarType("date", metas = metas)
+                SqlDataType.TIME -> scalarType("time", args, metas)
+                SqlDataType.TIME_WITH_TIME_ZONE -> scalarType("time_with_time_zone", args, metas)
                 SqlDataType.ANY -> anyType(metas)
-                is SqlDataType.CustomDataType -> customType(typeAlias, metas)
+                is SqlDataType.CustomDataType -> customType(typeName, metas)
             }
         }
     }

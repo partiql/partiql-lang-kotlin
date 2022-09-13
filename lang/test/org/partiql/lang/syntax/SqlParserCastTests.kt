@@ -16,24 +16,27 @@ class SqlParserCastTests : SqlParserTestBase() {
     companion object {
         val ion: IonSystem = ION
 
-        data class CastParseTest(val source: String, val ast: PartiqlAst.Expr.Cast) {
+        data class CastParseTest(val source: String, val ast: PartiqlAst.Expr.Cast, val targetParsers: Set<ParserTypes>) {
             fun toCastTest() =
                 ConfiguredCastParseTest(
                     source,
-                    PartiqlAst.build { query(cast(ast.value, ast.asType, ast.metas)) }
+                    PartiqlAst.build { query(cast(ast.value, ast.asType, ast.metas)) },
+                    targetParsers
                 )
             fun toCanCastTest() =
                 ConfiguredCastParseTest(
                     source.replaceFirst("CAST", "CAN_CAST"),
-                    PartiqlAst.build { query(canCast(ast.value, ast.asType, ast.metas)) }
+                    PartiqlAst.build { query(canCast(ast.value, ast.asType, ast.metas)) },
+                    targetParsers
                 )
             fun toCanLosslessCastTest() =
                 ConfiguredCastParseTest(
                     source.replaceFirst("CAST", "CAN_LOSSLESS_CAST"),
-                    PartiqlAst.build { query(canLosslessCast(ast.value, ast.asType, ast.metas)) }
+                    PartiqlAst.build { query(canLosslessCast(ast.value, ast.asType, ast.metas)) },
+                    targetParsers
                 )
         }
-        data class ConfiguredCastParseTest(val source: String, val expectedAst: PartiqlAst.PartiqlAstNode, val targetParsers: Set<ParserTypes> = defaultParserTypes) {
+        data class ConfiguredCastParseTest(val source: String, val expectedAst: PartiqlAst.PartiqlAstNode, val targetParsers: Set<ParserTypes>) {
             fun assertCase() {
                 // Convert the query to ast
                 targetParsers.forEach { parser ->
@@ -43,7 +46,7 @@ class SqlParserCastTests : SqlParserTestBase() {
             }
         }
 
-        fun case(source: String, ast: PartiqlAst.Expr.Cast) = SqlParserCastTests.Companion.CastParseTest(source, ast)
+        fun case(source: String, ast: PartiqlAst.Expr.Cast, targetParsers: Set<ParserTypes> = defaultParserTypes) = CastParseTest(source, ast, targetParsers)
 
         private val cases = listOf(
             case(
@@ -92,7 +95,13 @@ class SqlParserCastTests : SqlParserTestBase() {
             ),
             case(
                 source = "CAST('xyz' as int4)",
-                ast = PartiqlAst.build { cast(lit(ionString("xyz")), scalarType("int4")) }
+                ast = PartiqlAst.build { cast(lit(ionString("xyz")), scalarType("int4")) },
+                targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
+            ),
+            case(
+                source = "CAST('xyz' as int4)",
+                ast = PartiqlAst.build { cast(lit(ionString("xyz")), scalarType("integer4")) },
+                targetParsers = setOf(ParserTypes.SQL_PARSER)
             ),
             case(
                 source = "CAST('xyz' as smallint)",
@@ -100,11 +109,23 @@ class SqlParserCastTests : SqlParserTestBase() {
             ),
             case(
                 source = "CAST('xyz' as integer2)",
-                ast = PartiqlAst.build { cast(lit(ionString("xyz")), scalarType("integer2")) }
+                ast = PartiqlAst.build { cast(lit(ionString("xyz")), scalarType("integer2")) },
+                targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
+            ),
+            case(
+                source = "CAST('xyz' as integer2)",
+                ast = PartiqlAst.build { cast(lit(ionString("xyz")), scalarType("smallint")) },
+                targetParsers = setOf(ParserTypes.SQL_PARSER)
             ),
             case(
                 source = "CAST('xyz' as int2)",
-                ast = PartiqlAst.build { cast(lit(ionString("xyz")), scalarType("int2")) }
+                ast = PartiqlAst.build { cast(lit(ionString("xyz")), scalarType("int2")) },
+                targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
+            ),
+            case(
+                source = "CAST('xyz' as int2)",
+                ast = PartiqlAst.build { cast(lit(ionString("xyz")), scalarType("smallint")) },
+                targetParsers = setOf(ParserTypes.SQL_PARSER)
             ),
             case(
                 source = "CAST('xyz' as integer4)",
@@ -112,7 +133,13 @@ class SqlParserCastTests : SqlParserTestBase() {
             ),
             case(
                 source = "CAST('xyz' as int8)",
-                ast = PartiqlAst.build { cast(lit(ionString("xyz")), scalarType("int8")) }
+                ast = PartiqlAst.build { cast(lit(ionString("xyz")), scalarType("int8")) },
+                targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
+            ),
+            case(
+                source = "CAST('xyz' as int8)",
+                ast = PartiqlAst.build { cast(lit(ionString("xyz")), scalarType("integer8")) },
+                targetParsers = setOf(ParserTypes.SQL_PARSER)
             ),
             case(
                 source = "CAST('xyz' as integer8)",
@@ -120,7 +147,13 @@ class SqlParserCastTests : SqlParserTestBase() {
             ),
             case(
                 source = "CAST('xyz' as bigint)",
-                ast = PartiqlAst.build { cast(lit(ionString("xyz")), scalarType("bigint")) }
+                ast = PartiqlAst.build { cast(lit(ionString("xyz")), scalarType("bigint")) },
+                targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
+            ),
+            case(
+                source = "CAST('xyz' as bigint)",
+                ast = PartiqlAst.build { cast(lit(ionString("xyz")), scalarType("integer8")) },
+                targetParsers = setOf(ParserTypes.SQL_PARSER)
             ),
             case(
                 source = "CAST('xyz' as SPARK_SHORT)",
