@@ -7,6 +7,4 @@ import org.partiql.lang.ots_work.interfaces.Plugin
  */
 class ScalarTypeSystem(
     val plugin: Plugin
-) {
-
-}
+)

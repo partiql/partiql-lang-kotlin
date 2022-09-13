@@ -2,8 +2,8 @@ package org.partiql.lang.ast.passes.inference
 
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.ots_work.interfaces.TypeParameters
-import org.partiql.lang.ots_work.plugins.standard.types.BlobType
 import org.partiql.lang.ots_work.interfaces.type.BoolType
+import org.partiql.lang.ots_work.plugins.standard.types.BlobType
 import org.partiql.lang.ots_work.plugins.standard.types.CharType
 import org.partiql.lang.ots_work.plugins.standard.types.ClobType
 import org.partiql.lang.ots_work.plugins.standard.types.DecimalType
