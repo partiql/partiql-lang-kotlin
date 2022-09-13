@@ -17,21 +17,29 @@ package org.partiql.lang.util
 import com.amazon.ion.IonSystem
 import com.amazon.ion.IonValue
 import com.amazon.ion.system.IonSystemBuilder
+import org.antlr.v4.runtime.BaseErrorListener
+import org.antlr.v4.runtime.CharStreams
+import org.antlr.v4.runtime.Lexer
+import org.antlr.v4.runtime.RecognitionException
+import org.antlr.v4.runtime.Recognizer
 import org.antlr.v4.runtime.Token
 import org.antlr.v4.runtime.tree.TerminalNode
 import org.partiql.grammar.parser.generated.PartiQLParser
+import org.partiql.grammar.parser.generated.PartiQLTokens
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.errors.PropertyValueMap
 import org.partiql.lang.syntax.ALL_OPERATORS
 import org.partiql.lang.syntax.ALL_SINGLE_LEXEME_OPERATORS
 import org.partiql.lang.syntax.KEYWORDS
+import org.partiql.lang.syntax.LexerException
 import org.partiql.lang.syntax.MULTI_LEXEME_TOKEN_MAP
 import org.partiql.lang.syntax.ParserException
 import org.partiql.lang.syntax.SourceSpan
 import org.partiql.lang.syntax.TYPE_ALIASES
 import org.partiql.lang.syntax.TokenType
 import java.math.BigInteger
+import java.nio.charset.StandardCharsets
 
 internal fun TerminalNode?.error(
     message: String,
@@ -58,6 +66,36 @@ internal fun Token?.error(
         errorContext[Property.TOKEN_TYPE] = getPartiQLTokenType(this)
         errorContext[Property.TOKEN_VALUE] = getIonValue(ion, this)
         ParserException(message, errorCode, errorContext, cause)
+    }
+}
+
+internal fun getLexer(source: String, ion: IonSystem): Lexer {
+    val inputStream = CharStreams.fromStream(source.byteInputStream(StandardCharsets.UTF_8), StandardCharsets.UTF_8)
+    val lexer = PartiQLTokens(inputStream)
+    val handler = TokenizeErrorListener()
+    lexer.removeErrorListeners()
+    lexer.addErrorListener(handler)
+    return lexer
+}
+
+/**
+ * Catches Lexical errors (unidentified tokens) and throws a [LexerException]
+ */
+private class TokenizeErrorListener : BaseErrorListener() {
+    @Throws(LexerException::class)
+    override fun syntaxError(
+        recognizer: Recognizer<*, *>?,
+        offendingSymbol: Any?,
+        line: Int,
+        charPositionInLine: Int,
+        msg: String,
+        e: RecognitionException?
+    ) {
+        val propertyValues = PropertyValueMap()
+        propertyValues[Property.LINE_NUMBER] = line.toLong()
+        propertyValues[Property.COLUMN_NUMBER] = charPositionInLine.toLong() + 1
+        propertyValues[Property.TOKEN_STRING] = msg
+        throw LexerException(message = msg, errorCode = ErrorCode.LEXER_INVALID_TOKEN, errorContext = propertyValues, cause = e)
     }
 }
 

@@ -34,8 +34,11 @@ import org.partiql.lang.eval.ProjectionIterationBehavior
 import org.partiql.lang.eval.TypedOpBehavior
 import org.partiql.lang.eval.TypingMode
 import org.partiql.lang.eval.UndefinedVariableBehavior
+import org.partiql.lang.syntax.Lexer
 import org.partiql.lang.syntax.Parser
+import org.partiql.lang.syntax.PartiQLLexerBuilder
 import org.partiql.lang.syntax.PartiQLParserBuilder
+import org.partiql.lang.syntax.SqlLexer
 import org.partiql.lang.syntax.SqlParser
 import org.partiql.shell.Shell
 import org.partiql.shell.Shell.ShellConfiguration
@@ -192,11 +195,11 @@ fun main(args: Array<String>) = try {
         throw IllegalArgumentException("Non option arguments are not allowed!")
     }
 
-    // Parser Options
-    val parser = when (optionSet.valueOf(parserOpt)) {
-        ParserImplementation.LEGACY -> SqlParser(ion)
-        ParserImplementation.STANDARD -> PartiQLParserBuilder().ionSystem(ion).build()
-        else -> PartiQLParserBuilder().ionSystem(ion).build()
+    // Parser & Lexer Options
+    val (parser, lexer) = when (optionSet.valueOf(parserOpt)) {
+        ParserImplementation.LEGACY -> SqlParser(ion) to SqlLexer(ion)
+        ParserImplementation.STANDARD -> PartiQLParserBuilder().ionSystem(ion).build() to PartiQLLexerBuilder().ionSystem(ion).build()
+        else -> throw IllegalArgumentException("Unknown parser option!")
     }
 
     // Compile Options
@@ -231,7 +234,7 @@ fun main(args: Array<String>) = try {
     if (optionSet.has(queryOpt)) {
         runCli(environment, optionSet, compilerPipeline)
     } else {
-        runShell(environment, optionSet, compilerPipeline, parser)
+        runShell(environment, optionSet, compilerPipeline, parser, lexer)
     }
 } catch (e: OptionException) {
     System.err.println("${e.message}\n")
@@ -242,9 +245,9 @@ fun main(args: Array<String>) = try {
     exitProcess(1)
 }
 
-private fun runShell(environment: Bindings<ExprValue>, optionSet: OptionSet, compilerPipeline: CompilerPipeline, parser: Parser) {
+private fun runShell(environment: Bindings<ExprValue>, optionSet: OptionSet, compilerPipeline: CompilerPipeline, parser: Parser, lexer: Lexer) {
     val config = ShellConfiguration(isMonochrome = optionSet.has(monochromeOpt))
-    Shell(valueFactory, System.out, parser, compilerPipeline, environment, config).start()
+    Shell(valueFactory, System.out, parser, lexer, compilerPipeline, environment, config).start()
 }
 
 private fun runCli(environment: Bindings<ExprValue>, optionSet: OptionSet, compilerPipeline: CompilerPipeline) {

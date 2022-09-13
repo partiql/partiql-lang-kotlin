@@ -14,7 +14,6 @@
 
 package org.partiql.shell
 
-import com.amazon.ion.system.IonSystemBuilder
 import com.amazon.ion.system.IonTextWriterBuilder
 import com.amazon.ionelement.api.toIonValue
 import com.google.common.base.CharMatcher
@@ -39,8 +38,6 @@ import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.delegate
 import org.partiql.lang.syntax.Lexer
 import org.partiql.lang.syntax.Parser
-import org.partiql.lang.syntax.SqlLexer
-import org.partiql.lang.syntax.SqlParser
 import org.partiql.lang.util.ConfigurableExprValueFormatter
 import org.partiql.lang.util.ExprValueFormatter
 import java.io.Closeable
@@ -81,6 +78,7 @@ class Shell(
     private val valueFactory: ExprValueFactory,
     private val output: OutputStream,
     private val parser: Parser,
+    private val lexer: Lexer,
     private val compiler: CompilerPipeline,
     private val initialGlobal: Bindings<ExprValue>,
     private val config: ShellConfiguration = ShellConfiguration()
@@ -129,8 +127,7 @@ class Shell(
     private fun run(exiting: AtomicBoolean) = TerminalBuilder.builder().build().use { terminal ->
         val highlighter = when {
             this.config.isMonochrome -> null
-            this.parser is SqlParser -> ShellHighlighter(SqlLexer(IonSystemBuilder.standard().build()), this.parser)
-            else -> ShellHighlighter(this.parser as Lexer, this.parser)
+            else -> ShellHighlighter(this.lexer, this.parser)
         }
         val reader = LineReaderBuilder.builder()
             .terminal(terminal)

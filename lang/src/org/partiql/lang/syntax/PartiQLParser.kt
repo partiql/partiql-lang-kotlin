@@ -17,7 +17,6 @@ package org.partiql.lang.syntax
 import com.amazon.ion.IonSexp
 import com.amazon.ion.IonSystem
 import org.antlr.v4.runtime.BaseErrorListener
-import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
 import org.antlr.v4.runtime.Lexer
 import org.antlr.v4.runtime.RecognitionException
@@ -32,12 +31,10 @@ import org.partiql.lang.errors.Property
 import org.partiql.lang.errors.PropertyValueMap
 import org.partiql.lang.types.CustomType
 import org.partiql.lang.util.getIonValue
+import org.partiql.lang.util.getLexer
 import org.partiql.lang.util.getPartiQLTokenType
-import org.partiql.lang.util.toPartiQLToken
 import org.partiql.lang.visitors.PartiQLVisitor
-import java.nio.charset.StandardCharsets
 import org.partiql.grammar.parser.generated.PartiQLParser as GeneratedParser
-import org.partiql.grammar.parser.generated.PartiQLTokens as GeneratedLexer
 
 /**
  * Extends [Parser] to provide a mechanism to parse an input query string. It internally uses ANTLR's generated parser,
@@ -47,12 +44,12 @@ import org.partiql.grammar.parser.generated.PartiQLTokens as GeneratedLexer
 internal class PartiQLParser(
     private val ion: IonSystem,
     val customTypes: List<CustomType> = listOf()
-) : Parser, org.partiql.lang.syntax.Lexer {
+) : Parser {
 
     override fun parseAstStatement(source: String): PartiqlAst.Statement {
         // TODO: Research use-case of parameters and implementation -- see https://github.com/partiql/partiql-docs/issues/23
         val parameterIndexes = calculateTokenToParameterOrdinals(source)
-        val lexer = getLexer(source)
+        val lexer = getLexer(source, ion)
         val tree = try {
             parseQuery(lexer)
         } catch (e: StackOverflowError) {
@@ -64,28 +61,9 @@ internal class PartiQLParser(
         return visitor.visit(tree) as PartiqlAst.Statement
     }
 
-    override fun tokenize(source: String): List<org.partiql.lang.syntax.Token> {
-        val lexer = getLexer(source)
-        val antlrTokens = CommonTokenStream(lexer)
-        val tokens = mutableListOf<org.partiql.lang.syntax.Token>()
-        for (i in 0 until antlrTokens.numberOfOnChannelTokens) {
-            tokens.add(antlrTokens[i].toPartiQLToken(ion = ion))
-        }
-        return tokens
-    }
-
     private fun parseQuery(lexer: Lexer): ParseTree {
         val parser = getParser(lexer)
         return parser.statement()
-    }
-
-    private fun getLexer(source: String): Lexer {
-        val inputStream = CharStreams.fromStream(source.byteInputStream(StandardCharsets.UTF_8), StandardCharsets.UTF_8)
-        val lexer = GeneratedLexer(inputStream)
-        val handler = TokenizeErrorListener(ion)
-        lexer.removeErrorListeners()
-        lexer.addErrorListener(handler)
-        return lexer
     }
 
     private fun getParser(lexer: Lexer): GeneratedParser {
@@ -103,7 +81,7 @@ internal class PartiQLParser(
      * NOTE: This needs to create its own lexer. Cannot share with others due to consumption of token stream.
      */
     private fun calculateTokenToParameterOrdinals(query: String): Map<Int, Int> {
-        val lexer = getLexer(query)
+        val lexer = getLexer(query, ion)
         val tokenIndexToParameterIndex = mutableMapOf<Int, Int>()
         var parametersFound = 0
         val tokens = CommonTokenStream(lexer)
@@ -127,27 +105,6 @@ internal class PartiQLParser(
             parseExprNode(source),
             org.partiql.lang.ast.AstVersion.V0, ion
         )
-
-    /**
-     * Catches Lexical errors (unidentified tokens) and throws a [LexerException]
-     */
-    private class TokenizeErrorListener(val ion: IonSystem) : BaseErrorListener() {
-        @Throws(LexerException::class)
-        override fun syntaxError(
-            recognizer: Recognizer<*, *>?,
-            offendingSymbol: Any?,
-            line: Int,
-            charPositionInLine: Int,
-            msg: String,
-            e: RecognitionException?
-        ) {
-            val propertyValues = PropertyValueMap()
-            propertyValues[Property.LINE_NUMBER] = line.toLong()
-            propertyValues[Property.COLUMN_NUMBER] = charPositionInLine.toLong() + 1
-            propertyValues[Property.TOKEN_STRING] = msg
-            throw LexerException(message = msg, errorCode = ErrorCode.LEXER_INVALID_TOKEN, errorContext = propertyValues, cause = e)
-        }
-    }
 
     /**
      * Catches Parser errors (malformed syntax) and throws a [ParserException]
