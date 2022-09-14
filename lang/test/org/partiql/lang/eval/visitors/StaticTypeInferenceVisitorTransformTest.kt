@@ -64,17 +64,6 @@ import org.partiql.lang.util.countMatchingSubstrings
 
 class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
 
-    @Test
-    fun `test subquery`() {
-        val tc = TestCase(
-            name = "TEST",
-            originalSql = "[1, 2, 3][1+1]",
-            globals = mapOf(),
-            handler = expectQueryOutputType(BAG)
-        )
-        runTest(tc)
-    }
-
     @ParameterizedTest
     @MethodSource("parametersForTests")
     fun tests(tc: TestCase) = runTest(tc)

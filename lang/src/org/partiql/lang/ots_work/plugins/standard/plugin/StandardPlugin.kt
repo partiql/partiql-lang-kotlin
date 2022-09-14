@@ -26,7 +26,6 @@ import org.partiql.lang.ots_work.plugins.standard.operators.StandardScalarCastOp
 import java.time.ZoneOffset
 
 data class StandardPlugin(
-    val behaviorWhenDivisorIsZero: BehaviorWhenDivisorIsZero? = null,
     val defaultTimezoneOffset: ZoneOffset = ZoneOffset.UTC,
     val now: Timestamp = Timestamp.nowZ()
 ) : Plugin {
@@ -36,9 +35,7 @@ data class StandardPlugin(
     override val binaryPlusOp: BinaryPlusOp = StandardBinaryPlusOp
     override val binaryMinusOp: BinaryMinusOp = StandardBinaryMinusOp
     override val binaryTimesOp: BinaryTimesOp = StandardBinaryTimesOp
-    override val binaryDivideOp: BinaryDivideOp = StandardBinaryDivideOp(
-        behaviorWhenDivisorIsZero = behaviorWhenDivisorIsZero,
-    )
+    override val binaryDivideOp: BinaryDivideOp = StandardBinaryDivideOp
     override val binaryModuloOp: BinaryModuloOp = StandardBinaryModuloOp
     override val posOp: PosOp = StandardPosOp
     override val negOp: NegOp = StandardNegOp
