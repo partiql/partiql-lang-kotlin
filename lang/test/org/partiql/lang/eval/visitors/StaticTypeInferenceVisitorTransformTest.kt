@@ -1,7 +1,6 @@
 package org.partiql.lang.eval.visitors
 
 import com.amazon.ion.system.IonSystemBuilder
-import org.junit.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.lang.ast.SourceLocationMeta
