@@ -1721,7 +1721,7 @@ internal class EvaluatingCompiler(
             val letSourceThunks = selectExpr.fromLet?.let { compileLetSources(it) }
             val sourceThunks = compileQueryWithoutProjection(selectExpr, fromSourceThunks, letSourceThunks)
 
-            val orderByThunk = selectExpr.order?.let { compileOrderByExpression(selectExpr.order) }
+            val orderByThunk = selectExpr.order?.let { compileOrderByExpression(selectExpr.order.sortSpecs) }
             val orderByLocationMeta = selectExpr.order?.metas?.sourceLocation
 
             val offsetThunk = selectExpr.offset?.let { compileAstExpr(it) }
@@ -1753,31 +1753,32 @@ internal class EvaluatingCompiler(
                     groupByItems.isEmpty() && !hasAggregateCallSites ->
                         // Grouping is not needed -- simply project the results from the FROM clause directly.
                         thunkFactory.thunkEnv(metas) { env ->
-                            val projectedRows = sourceThunks(env).map { (joinedValues, projectEnv) ->
+
+                            val orderedRows = when (orderByThunk) {
+                                null -> sourceThunks(env)
+                                else -> evalOrderBy(sourceThunks(env), orderByThunk, orderByLocationMeta)
+                            }
+
+                            val projectedRows = orderedRows.map { (joinedValues, projectEnv) ->
                                 selectProjectionThunk(projectEnv, joinedValues)
                             }
 
                             val quantifiedRows = when (selectExpr.setq ?: PartiqlAst.SetQuantifier.All()) {
+                                // wrap the ExprValue to use ExprValue.equals as the equality
                                 is PartiqlAst.SetQuantifier.Distinct -> projectedRows.filter(createUniqueExprValueFilter())
                                 is PartiqlAst.SetQuantifier.All -> projectedRows
-                            }
+                            }.let { rowsWithOffsetAndLimit(it, env) }
 
-                            val orderedRows = when (orderByThunk) {
-                                null -> quantifiedRows
-                                else -> evalOrderBy(quantifiedRows, orderByThunk, orderByLocationMeta, env.session)
-                            }
-
-                            val offsetLimitRows = rowsWithOffsetAndLimit(orderedRows, env)
-
+                            // if order by is specified, return list otherwise bag
                             when (orderByThunk) {
                                 null -> valueFactory.newBag(
-                                    offsetLimitRows.map {
+                                    quantifiedRows.map {
                                         // TODO make this expose the ordinal for ordered sequences
                                         // make sure we don't expose the underlying value's name out of a SELECT
                                         it.unnamedValue()
                                     }
                                 )
-                                else -> valueFactory.newList(offsetLimitRows.map { it.unnamedValue() })
+                                else -> valueFactory.newList(quantifiedRows.map { it.unnamedValue() })
                             }
                         }
                     else -> {
@@ -1818,11 +1819,18 @@ internal class EvaluatingCompiler(
                             groupByItems.isEmpty() -> { // There are aggregates but no group by items
                                 // Create a closure that groups all the rows in the FROM source into a single group.
                                 thunkFactory.thunkEnv(metas) { env ->
-                                    val fromProductions = sourceThunks(env)
+                                    // Evaluate the FROM clause
+                                    val orderedRows = when (orderByThunk) {
+                                        null -> sourceThunks(env)
+                                        else -> evalOrderBy(sourceThunks(env), orderByThunk, orderByLocationMeta)
+                                    }
+
+                                    val fromProductions: Sequence<FromProduction> =
+                                        rowsWithOffsetAndLimit(orderedRows, env)
+                                    val registers = createRegisterBank()
 
                                     // note: the group key can be anything here because we only ever have a single
                                     // group when aggregates are used without GROUP BY expression
-                                    val registers = createRegisterBank()
                                     val syntheticGroup = Group(valueFactory.nullValue, registers)
 
                                     // iterate over the values from the FROM clause and populate our
@@ -1839,16 +1847,10 @@ internal class EvaluatingCompiler(
                                         listOf(syntheticGroup.key)
                                     )
 
-                                    val orderedRows = when (orderByThunk) {
-                                        null -> sequenceOf(groupResult)
-                                        else -> evalOrderBy(sequenceOf(groupResult), orderByThunk, orderByLocationMeta, env.session)
-                                    }
-
-                                    val offsetLimitRows = rowsWithOffsetAndLimit(orderedRows, env)
-
+                                    // if order by is specified, return list otherwise bag
                                     when (orderByThunk) {
-                                        null -> valueFactory.newBag(offsetLimitRows)
-                                        else -> valueFactory.newList(offsetLimitRows)
+                                        null -> valueFactory.newBag(listOf(groupResult).asSequence())
+                                        else -> valueFactory.newList(listOf(groupResult).asSequence())
                                     }
                                 }
                             }
@@ -1914,22 +1916,20 @@ internal class EvaluatingCompiler(
                                     }
 
                                     val groupByEnvValuePairs = env.groups.mapNotNull { g -> getGroupEnv(env, g.value) to g.value }.asSequence()
-
-                                    // generate the final group by projection
-                                    val projectedRows = groupByEnvValuePairs.mapNotNull { (groupByEnv, groupValue) ->
-                                        filterHavingAndProject(groupByEnv, groupValue)
-                                    }.asSequence()
-
-                                    val orderedRows = when (orderByThunk) {
-                                        null -> projectedRows
-                                        else -> evalOrderBy(projectedRows, orderByThunk, orderByLocationMeta, env.session)
+                                    val orderedGroupEnvPairs = when (orderByThunk) {
+                                        null -> groupByEnvValuePairs
+                                        else -> evalOrderBy(groupByEnvValuePairs, orderByThunk, orderByLocationMeta)
                                     }
 
-                                    val offsetLimitRows = rowsWithOffsetAndLimit(orderedRows, env)
+                                    // generate the final group by projection
+                                    val projectedRows = orderedGroupEnvPairs.mapNotNull { (groupByEnv, groupValue) ->
+                                        filterHavingAndProject(groupByEnv, groupValue)
+                                    }.asSequence().let { rowsWithOffsetAndLimit(it, env) }
 
+                                    // if order by is specified, return list otherwise bag
                                     when (orderByThunk) {
-                                        null -> valueFactory.newBag(offsetLimitRows)
-                                        else -> valueFactory.newList(offsetLimitRows)
+                                        null -> valueFactory.newBag(projectedRows)
+                                        else -> valueFactory.newList(projectedRows)
                                     }
                                 }
                             }
@@ -1972,84 +1972,72 @@ internal class EvaluatingCompiler(
                     }
                 }
                 is PartiqlAst.Projection.ProjectList -> {
+                    val items = project.projectItems
                     nestCompilationContext(ExpressionContext.SELECT_LIST, allFromSourceAliases) {
-                        val projectionThunk: ThunkEnvValue<List<ExprValue>> = getProjectionListThunk(project)
+                        val projectionThunk: ThunkEnvValue<List<ExprValue>> =
+                            when {
+                                items.filterIsInstance<PartiqlAst.Projection.ProjectStar>().any() -> {
+                                    errNoContext(
+                                        "Encountered a PartiqlAst.Projection.ProjectStar--did SelectStarVisitorTransform execute?",
+                                        errorCode = ErrorCode.INTERNAL_ERROR,
+                                        internal = true
+                                    )
+                                }
+                                else -> {
+                                    val projectionElements =
+                                        compileSelectListToProjectionElements(project)
+
+                                    val ordering = if (items.none { it is PartiqlAst.ProjectItem.ProjectAll })
+                                        StructOrdering.ORDERED
+                                    else
+                                        StructOrdering.UNORDERED
+
+                                    thunkFactory.thunkEnvValueList(project.metas) { env, _ ->
+                                        val columns = mutableListOf<ExprValue>()
+                                        for (element in projectionElements) {
+                                            when (element) {
+                                                is SingleProjectionElement -> {
+                                                    val eval = element.thunk(env)
+                                                    columns.add(eval.namedValue(element.name))
+                                                }
+                                                is MultipleProjectionElement -> {
+                                                    for (projThunk in element.thunks) {
+                                                        val value = projThunk(env)
+                                                        if (value.type == ExprValueType.MISSING) continue
+
+                                                        val children = value.asSequence()
+                                                        if (!children.any() || value.type.isSequence) {
+                                                            val name = syntheticColumnName(columns.size).exprValue()
+                                                            columns.add(value.namedValue(name))
+                                                        } else {
+                                                            val valuesToProject =
+                                                                when (compileOptions.projectionIteration) {
+                                                                    ProjectionIterationBehavior.FILTER_MISSING -> {
+                                                                        value.filter { it.type != ExprValueType.MISSING }
+                                                                    }
+                                                                    ProjectionIterationBehavior.UNFILTERED -> value
+                                                                }
+                                                            for (childValue in valuesToProject) {
+                                                                val namedFacet = childValue.asFacet(Named::class.java)
+                                                                val name = namedFacet?.name
+                                                                    ?: syntheticColumnName(columns.size).exprValue()
+                                                                columns.add(childValue.namedValue(name))
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        createStructExprValue(columns.asSequence(), ordering)
+                                    }
+                                }
+                            }
                         getQueryThunk(projectionThunk)
-                    }
-                }
+                    } // nestCompilationContext(ExpressionContext.SELECT_LIST)
+                } // is SelectProjectionList
                 is PartiqlAst.Projection.ProjectStar -> error("Internal Error: PartiqlAst.Projection.ProjectStar can only be wrapped in PartiqlAst.Projection.ProjectList")
             }
         }
-    }
-
-    /**
-     * Returns a thunk to create structs based on the requested projection
-     */
-    private fun getProjectionListThunk(project: PartiqlAst.Projection.ProjectList): ThunkEnvValue<List<ExprValue>> {
-        val items = project.projectItems
-        return when {
-            items.filterIsInstance<PartiqlAst.Projection.ProjectStar>().any() -> {
-                errNoContext(
-                    "Encountered a PartiqlAst.Projection.ProjectStar--did SelectStarVisitorTransform execute?",
-                    errorCode = ErrorCode.INTERNAL_ERROR,
-                    internal = true
-                )
-            }
-            else -> {
-                val projectionElements = compileSelectListToProjectionElements(project)
-                val ordering = when (items.none { it is PartiqlAst.ProjectItem.ProjectAll }) {
-                    true -> StructOrdering.ORDERED
-                    false -> StructOrdering.UNORDERED
-                }
-
-                thunkFactory.thunkEnvValueList(project.metas) { env, _ ->
-                    val columns = getProjectionColumns(env, projectionElements)
-                    createStructExprValue(columns.asSequence(), ordering)
-                }
-            }
-        }
-    }
-
-    /**
-     * Returns the columns (with names/values) of a projection
-     */
-    private fun getProjectionColumns(env: Environment, projectionElements: List<ProjectionElement>): List<ExprValue> {
-        val columns = mutableListOf<ExprValue>()
-        for (element in projectionElements) {
-            when (element) {
-                is SingleProjectionElement -> {
-                    val eval = element.thunk(env)
-                    columns.add(eval.namedValue(element.name))
-                }
-                is MultipleProjectionElement -> {
-                    for (projThunk in element.thunks) {
-                        val value = projThunk(env)
-                        if (value.type == ExprValueType.MISSING) continue
-
-                        val children = value.asSequence()
-                        if (!children.any() || value.type.isSequence) {
-                            val name = syntheticColumnName(columns.size).exprValue()
-                            columns.add(value.namedValue(name))
-                        } else {
-                            val valuesToProject =
-                                when (compileOptions.projectionIteration) {
-                                    ProjectionIterationBehavior.FILTER_MISSING -> {
-                                        value.filter { it.type != ExprValueType.MISSING }
-                                    }
-                                    ProjectionIterationBehavior.UNFILTERED -> value
-                                }
-                            for (childValue in valuesToProject) {
-                                val namedFacet = childValue.asFacet(Named::class.java)
-                                val name = namedFacet?.name
-                                    ?: syntheticColumnName(columns.size).exprValue()
-                                columns.add(childValue.namedValue(name))
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return columns
     }
 
     private fun compileGroupByExpressions(groupByItems: List<PartiqlAst.GroupKey>): List<CompiledGroupByItem> =
@@ -2082,13 +2070,21 @@ internal class EvaluatingCompiler(
             GroupKeyExprValue(valueFactory.ion, keyValues.asSequence(), uniqueNames)
         }
 
-    /**
-     * Modifies the current environment to include the projection bindings and returns a compiled ORDER BY clause.
-     */
-    private fun compileOrderByExpression(order: PartiqlAst.OrderBy): List<CompiledOrderByItem> {
-        return order.sortSpecs.map {
-            it.orderingSpec ?: errNoContext("SortSpec.orderingSpec was not specified", ErrorCode.INTERNAL_ERROR, true)
-            it.nullsSpec ?: errNoContext("SortSpec.nullsSpec was not specified", ErrorCode.INTERNAL_ERROR, true)
+    private fun compileOrderByExpression(sortSpecs: List<PartiqlAst.SortSpec>): List<CompiledOrderByItem> =
+        sortSpecs.map {
+            it.orderingSpec
+                ?: errNoContext(
+                    "SortSpec.orderingSpec was not specified",
+                    errorCode = ErrorCode.INTERNAL_ERROR,
+                    internal = true
+                )
+
+            it.nullsSpec
+                ?: errNoContext(
+                    "SortSpec.nullsSpec was not specified",
+                    errorCode = ErrorCode.INTERNAL_ERROR,
+                    internal = true
+                )
 
             val comparator = when (it.orderingSpec) {
                 is PartiqlAst.OrderingSpec.Asc ->
@@ -2105,25 +2101,24 @@ internal class EvaluatingCompiler(
 
             CompiledOrderByItem(comparator, compileAstExpr(it.expr))
         }
-    }
 
     private fun <T> evalOrderBy(
         rows: Sequence<T>,
         orderByItems: List<CompiledOrderByItem>,
-        offsetLocationMeta: SourceLocationMeta?,
-        session: EvaluationSession = EvaluationSession.standard()
+        offsetLocationMeta: SourceLocationMeta?
     ): Sequence<T> {
         val initialComparator: Comparator<T>? = null
         val resultComparator = orderByItems.interruptibleFold(initialComparator) { intermediateComparator, orderByItem ->
-            when (intermediateComparator) {
-                null -> return@interruptibleFold compareBy<T, ExprValue>(orderByItem.comparator) { row ->
-                    val env = resolveEnvironment(row, offsetLocationMeta, session)
+            if (intermediateComparator == null) {
+                return@interruptibleFold compareBy<T, ExprValue>(orderByItem.comparator) { row ->
+                    val env = resolveEnvironment(row, offsetLocationMeta)
                     orderByItem.thunk(env)
                 }
-                else -> return@interruptibleFold intermediateComparator.thenBy(orderByItem.comparator) { row ->
-                    val env = resolveEnvironment(row, offsetLocationMeta, session)
-                    orderByItem.thunk(env)
-                }
+            }
+
+            return@interruptibleFold intermediateComparator.thenBy(orderByItem.comparator) { row ->
+                val env = resolveEnvironment(row, offsetLocationMeta)
+                orderByItem.thunk(env)
             }
         } ?: err(
             "Order BY comparator cannot be null",
@@ -2135,9 +2130,9 @@ internal class EvaluatingCompiler(
         return rows.sortedWith(resultComparator)
     }
 
-    private fun <T> resolveEnvironment(envWrapper: T, offsetLocationMeta: SourceLocationMeta?, session: EvaluationSession = EvaluationSession.standard()): Environment {
+    private fun <T> resolveEnvironment(envWrapper: T, offsetLocationMeta: SourceLocationMeta?): Environment {
         return when (envWrapper) {
-            is ExprValue -> Environment(envWrapper.bindings.delegate(session.globals), session = session)
+            is FromProduction -> envWrapper.env
             is Pair<*, *> -> {
                 if (envWrapper.first is Environment) {
                     envWrapper.first as Environment
