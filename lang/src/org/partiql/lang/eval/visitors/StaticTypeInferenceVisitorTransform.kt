@@ -14,12 +14,14 @@ import org.partiql.lang.ast.passes.SemanticException
 import org.partiql.lang.ast.passes.SemanticProblemDetails
 import org.partiql.lang.ast.passes.inference.cast
 import org.partiql.lang.ast.passes.inference.filterNullMissing
-import org.partiql.lang.ast.passes.inference.intTypesPrecedence
 import org.partiql.lang.ast.passes.inference.isLob
 import org.partiql.lang.ast.passes.inference.isNullOrMissing
 import org.partiql.lang.ast.passes.inference.isNumeric
 import org.partiql.lang.ast.passes.inference.isText
 import org.partiql.lang.ast.passes.inference.isUnknown
+import org.partiql.lang.ast.passes.inference.toSingleType
+import org.partiql.lang.ast.passes.inference.toSingleTypes
+import org.partiql.lang.ast.passes.inference.toStaticType
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.staticType
 import org.partiql.lang.domains.toBindingCase
@@ -34,16 +36,13 @@ import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.builtins.createBuiltinFunctionSignatures
 import org.partiql.lang.eval.delegate
 import org.partiql.lang.eval.getStartingSourceLocationMeta
-import org.partiql.lang.ots.plugins.standard.types.BoolType
-import org.partiql.lang.ots.plugins.standard.types.CharType
-import org.partiql.lang.ots.plugins.standard.types.DecimalType
-import org.partiql.lang.ots.plugins.standard.types.FloatType
-import org.partiql.lang.ots.plugins.standard.types.Int2Type
-import org.partiql.lang.ots.plugins.standard.types.Int4Type
-import org.partiql.lang.ots.plugins.standard.types.Int8Type
-import org.partiql.lang.ots.plugins.standard.types.IntType
-import org.partiql.lang.ots.plugins.standard.types.StringType
-import org.partiql.lang.ots.plugins.standard.types.VarcharType
+import org.partiql.lang.ots_work.interfaces.operator.ScalarOpId
+import org.partiql.lang.ots_work.interfaces.type.BoolType
+import org.partiql.lang.ots_work.plugins.standard.types.Int2Type
+import org.partiql.lang.ots_work.plugins.standard.types.Int4Type
+import org.partiql.lang.ots_work.plugins.standard.types.Int8Type
+import org.partiql.lang.ots_work.plugins.standard.types.IntType
+import org.partiql.lang.ots_work.stscore.ScalarTypeSystem
 import org.partiql.lang.types.AnyOfType
 import org.partiql.lang.types.AnyType
 import org.partiql.lang.types.BagType
@@ -79,7 +78,8 @@ internal class StaticTypeInferenceVisitorTransform(
     globalBindings: Bindings<StaticType>,
     customFunctionSignatures: List<FunctionSignature>,
     private val customTypedOpParameters: Map<String, TypedOpParameter>,
-    private val problemHandler: ProblemHandler = ProblemThrower()
+    private val problemHandler: ProblemHandler = ProblemThrower(),
+    private val scalarTypeSystem: ScalarTypeSystem
 ) : PartiqlAst.VisitorTransform() {
 
     /** Used to allow certain binding lookups to occur directly in the global scope. */
@@ -287,48 +287,60 @@ internal class StaticTypeInferenceVisitorTransform(
 
         // Arithmetic NAry ops: ADD, SUB, MUL, DIV, MOD
         override fun transformExprPlus(node: PartiqlAst.Expr.Plus): PartiqlAst.Expr {
-            val nAry = super.transformExprPlus(node) as PartiqlAst.Expr.Plus
+            val processedNode = super.transformExprPlus(node) as PartiqlAst.Expr.Plus
             val type = when {
-                nAry.operands.size < 2 -> throw IllegalArgumentException("PartiqlAst.Expr.Plus must have at least 2 arguments")
-                else -> computeReturnTypeForArithmeticNAry(nAry, nAry.operands, "+")
+                processedNode.operands.size < 2 -> throw IllegalArgumentException("PartiqlAst.Expr.Plus must have at least 2 arguments")
+                else -> computeReturnTypeForNAry(processedNode, processedNode.operands, ScalarOpId.BinaryPlus)
             }
-            return nAry.withStaticType(type)
+            return processedNode.withStaticType(type)
         }
 
         override fun transformExprPos(node: PartiqlAst.Expr.Pos): PartiqlAst.Expr {
-            val nAry = super.transformExprPos(node) as PartiqlAst.Expr.Pos
-            val type = computeReturnTypeForArithmeticUnary(nAry, listOf(nAry.expr), "+")
-            return nAry.withStaticType(type)
+            val processedNode = super.transformExprPos(node) as PartiqlAst.Expr.Pos
+            val type = computeReturnTypeForUnary(processedNode, listOf(processedNode.expr), ScalarOpId.Pos)
+            return processedNode.withStaticType(type)
         }
 
         override fun transformExprMinus(node: PartiqlAst.Expr.Minus): PartiqlAst.Expr {
-            val nAry = (super.transformExprMinus(node) as PartiqlAst.Expr.Minus)
+            val processedNode = (super.transformExprMinus(node) as PartiqlAst.Expr.Minus)
             val type = when {
-                nAry.operands.size < 2 -> throw IllegalArgumentException("PartiqlAst.Expr.Minus must have at least 2 arguments")
-                else -> computeReturnTypeForArithmeticNAry(nAry, nAry.operands, "-")
+                processedNode.operands.size < 2 -> throw IllegalArgumentException("PartiqlAst.Expr.Minus must have at least 2 arguments")
+                else -> computeReturnTypeForNAry(processedNode, processedNode.operands, ScalarOpId.BinaryMinus)
             }
-            return nAry.withStaticType(type)
+            return processedNode.withStaticType(type)
         }
 
         override fun transformExprNeg(node: PartiqlAst.Expr.Neg): PartiqlAst.Expr {
-            val nAry = super.transformExprNeg(node) as PartiqlAst.Expr.Neg
-            val type = computeReturnTypeForArithmeticUnary(nAry, listOf(nAry.expr), "-")
-            return nAry.withStaticType(type)
+            val processedNode = super.transformExprNeg(node) as PartiqlAst.Expr.Neg
+            val type = computeReturnTypeForUnary(processedNode, listOf(processedNode.expr), ScalarOpId.Neg)
+            return processedNode.withStaticType(type)
         }
 
         override fun transformExprTimes(node: PartiqlAst.Expr.Times): PartiqlAst.Expr {
-            val nAry = (super.transformExprTimes(node) as PartiqlAst.Expr.Times)
-            return nAry.withStaticType(computeReturnTypeForArithmeticNAry(nAry, nAry.operands, "*"))
+            val processedNode = super.transformExprTimes(node) as PartiqlAst.Expr.Times
+            val type = when {
+                processedNode.operands.size < 2 -> throw IllegalArgumentException("PartiqlAst.Expr.Times must have at least 2 arguments")
+                else -> computeReturnTypeForNAry(processedNode, processedNode.operands, ScalarOpId.BinaryTimes)
+            }
+            return processedNode.withStaticType(type)
         }
 
         override fun transformExprDivide(node: PartiqlAst.Expr.Divide): PartiqlAst.Expr {
-            val nAry = (super.transformExprDivide(node) as PartiqlAst.Expr.Divide)
-            return nAry.withStaticType(computeReturnTypeForArithmeticNAry(nAry, nAry.operands, "/"))
+            val processedNode = super.transformExprDivide(node) as PartiqlAst.Expr.Divide
+            val type = when {
+                processedNode.operands.size < 2 -> throw IllegalArgumentException("PartiqlAst.Expr.Divide must have at least 2 arguments")
+                else -> computeReturnTypeForNAry(processedNode, processedNode.operands, ScalarOpId.BinaryDivide)
+            }
+            return processedNode.withStaticType(type)
         }
 
         override fun transformExprModulo(node: PartiqlAst.Expr.Modulo): PartiqlAst.Expr {
-            val nAry = (super.transformExprModulo(node) as PartiqlAst.Expr.Modulo)
-            return nAry.withStaticType(computeReturnTypeForArithmeticNAry(nAry, nAry.operands, "%"))
+            val processedNode = super.transformExprModulo(node) as PartiqlAst.Expr.Modulo
+            val type = when {
+                processedNode.operands.size < 2 -> throw IllegalArgumentException("PartiqlAst.Expr.Modulo must have at least 2 arguments")
+                else -> computeReturnTypeForNAry(processedNode, processedNode.operands, ScalarOpId.BinaryModulo)
+            }
+            return processedNode.withStaticType(type)
         }
 
         /**
@@ -367,167 +379,179 @@ internal class StaticTypeInferenceVisitorTransform(
 
         // Compare NAry ops: EQ, NE, GT, GTE, LT, LTE, BETWEEN
         override fun transformExprEq(node: PartiqlAst.Expr.Eq): PartiqlAst.Expr {
-            val nAry = super.transformExprEq(node) as PartiqlAst.Expr.Eq
-            return if (operandsAreComparable(nAry.operands, "=", nAry.metas)) {
-                transformNAry(nAry, nAry.operands) { recurseForNAryOperations(nAry, it, ::getTypeForNAryCompareOperations) }
-            } else {
-                return nAry.withStaticType(StaticType.BOOL)
+            val processedNode = super.transformExprEq(node) as PartiqlAst.Expr.Eq
+
+            return when (operandsAreComparable(processedNode.operands, "=", processedNode.metas)) {
+                true -> transformNAry(processedNode, processedNode.operands) { recurseForNAryOperations(processedNode, it, ::getTypeForNAryCompareOperations) }
+                false -> processedNode.withStaticType(StaticType.BOOL)
             }
         }
 
         override fun transformExprNe(node: PartiqlAst.Expr.Ne): PartiqlAst.Expr {
-            val nAry = super.transformExprNe(node) as PartiqlAst.Expr.Ne
-            return if (operandsAreComparable(nAry.operands, "!=", nAry.metas)) {
-                transformNAry(nAry, nAry.operands) { recurseForNAryOperations(nAry, it, ::getTypeForNAryCompareOperations) }
-            } else {
-                return nAry.withStaticType(StaticType.BOOL)
+            val processedNode = super.transformExprNe(node) as PartiqlAst.Expr.Ne
+
+            return when (operandsAreComparable(processedNode.operands, "!=", processedNode.metas)) {
+                true -> transformNAry(processedNode, processedNode.operands) { recurseForNAryOperations(processedNode, it, ::getTypeForNAryCompareOperations) }
+                false -> processedNode.withStaticType(StaticType.BOOL)
             }
         }
 
         override fun transformExprGt(node: PartiqlAst.Expr.Gt): PartiqlAst.Expr {
-            val nAry = super.transformExprGt(node) as PartiqlAst.Expr.Gt
-            return if (operandsAreComparable(nAry.operands, ">", nAry.metas)) {
-                transformNAry(nAry, nAry.operands) { recurseForNAryOperations(nAry, it, ::getTypeForNAryCompareOperations) }
-            } else {
-                return nAry.withStaticType(StaticType.BOOL)
+            val processedNode = super.transformExprGt(node) as PartiqlAst.Expr.Gt
+
+            return when (operandsAreComparable(processedNode.operands, ">", processedNode.metas)) {
+                true -> transformNAry(processedNode, processedNode.operands) { recurseForNAryOperations(processedNode, it, ::getTypeForNAryCompareOperations) }
+                false -> processedNode.withStaticType(StaticType.BOOL)
             }
         }
 
         override fun transformExprGte(node: PartiqlAst.Expr.Gte): PartiqlAst.Expr {
-            val nAry = super.transformExprGte(node) as PartiqlAst.Expr.Gte
-            return if (operandsAreComparable(nAry.operands, ">=", nAry.metas)) {
-                transformNAry(nAry, nAry.operands) { recurseForNAryOperations(nAry, it, ::getTypeForNAryCompareOperations) }
-            } else {
-                return nAry.withStaticType(StaticType.BOOL)
+            val processedNode = super.transformExprGte(node) as PartiqlAst.Expr.Gte
+
+            return when (operandsAreComparable(processedNode.operands, ">=", processedNode.metas)) {
+                true -> transformNAry(processedNode, processedNode.operands) { recurseForNAryOperations(processedNode, it, ::getTypeForNAryCompareOperations) }
+                false -> processedNode.withStaticType(StaticType.BOOL)
             }
         }
 
         override fun transformExprLt(node: PartiqlAst.Expr.Lt): PartiqlAst.Expr {
-            val nAry = super.transformExprLt(node) as PartiqlAst.Expr.Lt
-            return if (operandsAreComparable(nAry.operands, "<", nAry.metas)) {
-                transformNAry(nAry, nAry.operands) { recurseForNAryOperations(nAry, it, ::getTypeForNAryCompareOperations) }
-            } else {
-                return nAry.withStaticType(StaticType.BOOL)
+            val processedNode = super.transformExprLt(node) as PartiqlAst.Expr.Lt
+
+            return when (operandsAreComparable(processedNode.operands, "<", processedNode.metas)) {
+                true -> transformNAry(processedNode, processedNode.operands) { recurseForNAryOperations(processedNode, it, ::getTypeForNAryCompareOperations) }
+                false -> processedNode.withStaticType(StaticType.BOOL)
             }
         }
 
         override fun transformExprLte(node: PartiqlAst.Expr.Lte): PartiqlAst.Expr {
-            val nAry = super.transformExprLte(node) as PartiqlAst.Expr.Lte
-            return if (operandsAreComparable(nAry.operands, "<=", nAry.metas)) {
-                transformNAry(nAry, nAry.operands) { recurseForNAryOperations(nAry, it, ::getTypeForNAryCompareOperations) }
-            } else {
-                return nAry.withStaticType(StaticType.BOOL)
+            val processedNode = super.transformExprLte(node) as PartiqlAst.Expr.Lte
+
+            return when (operandsAreComparable(processedNode.operands, "<=", processedNode.metas)) {
+                true -> transformNAry(processedNode, processedNode.operands) { recurseForNAryOperations(processedNode, it, ::getTypeForNAryCompareOperations) }
+                false -> processedNode.withStaticType(StaticType.BOOL)
             }
         }
 
         override fun transformExprBetween(node: PartiqlAst.Expr.Between): PartiqlAst.Expr {
-            val nAry = super.transformExprBetween(node) as PartiqlAst.Expr.Between
-            val args = listOf(nAry.value, nAry.from, nAry.to)
-            return if (operandsAreComparable(args, "BETWEEN", nAry.metas)) {
-                transformNAry(nAry, args) { recurseForNAryOperations(nAry, it, ::getTypeForNAryCompareOperations) }
-            } else {
-                return nAry.withStaticType(StaticType.BOOL)
+            val processedNode = super.transformExprBetween(node) as PartiqlAst.Expr.Between
+            val args = listOf(processedNode.value, processedNode.from, processedNode.to)
+
+            return when (operandsAreComparable(args, "BETWEEN", processedNode.metas)) {
+                true -> transformNAry(processedNode, args) { recurseForNAryOperations(processedNode, it, ::getTypeForNAryCompareOperations) }
+                false -> processedNode.withStaticType(StaticType.BOOL)
             }
         }
 
         // Logical NAry ops: NOT, AND, OR
         override fun transformExprNot(node: PartiqlAst.Expr.Not): PartiqlAst.Expr {
-            val nAry = super.transformExprNot(node) as PartiqlAst.Expr.Not
-            val args = listOf(nAry.expr)
-            return if (hasValidOperandTypes(args, { it is StaticScalarType && it.scalarType === BoolType }, "NOT", nAry.metas)) {
-            transformNAry(nAry, args) { recurseForNAryOperations(nAry, it, ::getTypeForNAryLogicalOperations) }
-        } else {
-                nAry.withStaticType(StaticType.BOOL)
-            }
+            val processedNode = super.transformExprNot(node) as PartiqlAst.Expr.Not
+            val type = computeReturnTypeForUnary(processedNode, listOf(processedNode.expr), ScalarOpId.Not)
+            return processedNode.withStaticType(type)
         }
 
         override fun transformExprAnd(node: PartiqlAst.Expr.And): PartiqlAst.Expr {
-            val nAry = super.transformExprAnd(node) as PartiqlAst.Expr.And
-            return if (hasValidOperandTypes(nAry.operands, { it is StaticScalarType && it.scalarType === BoolType }, "AND", nAry.metas)) {
-            transformNAry(nAry, nAry.operands) { recurseForNAryOperations(nAry, it, ::getTypeForNAryLogicalOperations) }
-        } else {
-                nAry.withStaticType(StaticType.BOOL)
-            }
+            val processedNode = super.transformExprAnd(node) as PartiqlAst.Expr.And
+
+            return when (hasValidOperandTypes(processedNode.operands, { it is StaticScalarType && it.scalarType === BoolType }, "AND", processedNode.metas)) {
+            true -> transformNAry(processedNode, processedNode.operands) { recurseForNAryOperations(processedNode, it, ::getTypeForNAryLogicalOperations) }
+            false -> processedNode.withStaticType(StaticType.BOOL)
+        }
         }
 
         override fun transformExprOr(node: PartiqlAst.Expr.Or): PartiqlAst.Expr {
-            val nAry = super.transformExprOr(node) as PartiqlAst.Expr.Or
-            return if (hasValidOperandTypes(nAry.operands, { it is StaticScalarType && it.scalarType === BoolType }, "OR", nAry.metas)) {
-            transformNAry(nAry, nAry.operands) { recurseForNAryOperations(nAry, it, ::getTypeForNAryLogicalOperations) }
-        } else {
-                nAry.withStaticType(StaticType.BOOL)
-            }
+            val processedNode = super.transformExprOr(node) as PartiqlAst.Expr.Or
+
+            return when (hasValidOperandTypes(processedNode.operands, { it is StaticScalarType && it.scalarType === BoolType }, "OR", processedNode.metas)) {
+            true -> transformNAry(processedNode, processedNode.operands) { recurseForNAryOperations(processedNode, it, ::getTypeForNAryLogicalOperations) }
+            false -> processedNode.withStaticType(StaticType.BOOL)
+        }
         }
 
         // IN NAry op
         override fun transformExprInCollection(node: PartiqlAst.Expr.InCollection): PartiqlAst.Expr {
-            val nAry = super.transformExprInCollection(node) as PartiqlAst.Expr.InCollection
-            val operands = nAry.operands.map { it.getStaticType() }
+            val processedNode = super.transformExprInCollection(node) as PartiqlAst.Expr.InCollection
+            val operands = processedNode.operands.map { it.getStaticType() }
             val lhs = operands[0]
             val rhs = operands[1]
             var errorAdded = false
 
             // check if any operands are unknown, then null or missing error
             if (operands.any { operand -> operand.isUnknown() }) {
-                handleExpressionAlwaysReturnsNullOrMissingError(nAry.metas.getSourceLocation())
+                handleExpressionAlwaysReturnsNullOrMissingError(processedNode.metas.getSourceLocation())
                 errorAdded = true
             }
 
             // if none of the [rhs] types are [CollectionType]s with comparable element types to [lhs], then data type
             // mismatch error
             if (!rhs.isUnknown() && rhs.allTypes.none { it is CollectionType && it.elementType.isComparableTo(lhs) }) {
-                handleIncompatibleDataTypesForOpError(operands, "IN", nAry.metas.getSourceLocation())
+                handleIncompatibleDataTypesForOpError(operands, "IN", processedNode.metas.getSourceLocation())
                 errorAdded = true
             }
             return if (errorAdded) {
-                nAry.withStaticType(StaticType.BOOL)
+                processedNode.withStaticType(StaticType.BOOL)
             } else {
-                transformNAry(nAry, nAry.operands) { computeReturnTypeForNAryIn(it) }
+                transformNAry(processedNode, processedNode.operands) { computeReturnTypeForNAryIn(it) }
             }
         }
 
         // CONCAT NAry op
         override fun transformExprConcat(node: PartiqlAst.Expr.Concat): PartiqlAst.Expr {
-            val nAry = super.transformExprConcat(node) as PartiqlAst.Expr.Concat
-            val operandsTypes = nAry.operands.map { it.getStaticType() }
-
-            // check if any non-unknown operand has no text type. if so, then data type mismatch
-            return if (hasValidOperandTypes(nAry.operands, { it.isText() }, "||", nAry.metas)) {
-            transformNAry(nAry, nAry.operands) { recurseForNAryOperations(nAry, operandsTypes, ::getTypeForNAryStringConcat) }
-        } else {
-                nAry.withStaticType(StaticType.STRING)
+            val processedNode = super.transformExprConcat(node) as PartiqlAst.Expr.Concat
+            val type = when {
+                processedNode.operands.size < 2 -> throw IllegalArgumentException("PartiqlAst.Expr.Concat must have at least 2 arguments")
+                else -> computeReturnTypeForNAry(processedNode, processedNode.operands, ScalarOpId.BinaryConcat)
             }
+            return processedNode.withStaticType(type)
         }
 
         // LIKE NAry op
         override fun transformExprLike(node: PartiqlAst.Expr.Like): PartiqlAst.Expr {
-            val nAry = super.transformExprLike(node) as PartiqlAst.Expr.Like
-            val args = listOfNotNull(nAry.value, nAry.pattern, nAry.escape)
+            val processedNode = super.transformExprLike(node) as PartiqlAst.Expr.Like
+            val args = listOfNotNull(processedNode.value, processedNode.pattern, processedNode.escape)
+            val opId = ScalarOpId.Like
 
-            // check if any non-unknown operand has no text type. if so, then data type mismatch
-            return if (hasValidOperandTypes(args, { it.isText() }, "LIKE", nAry.metas)) {
-            transformNAry(nAry, args) { recurseForNAryOperations(nAry, it, ::getTypeForNAryLike) }
-        } else {
-                nAry.withStaticType(StaticType.BOOL)
+            val validator = { it: StaticType -> it is StaticScalarType && scalarTypeSystem.validateOperandType(opId, it.scalarType) }
+            if (!hasValidOperandTypes(args, validator, opId.alias, processedNode.metas)) {
+                return processedNode.withStaticType(StaticType.BOOL)
             }
+
+            val argTypes = args.map { it.getStaticType() }
+            val argsAllTypes = argTypes.map { it.allTypes }
+            val possibleReturnTypes: MutableSet<SingleType> = mutableSetOf()
+
+            argsAllTypes.cartesianProduct().forEach { argsChildType ->
+                val argsSingleType = argsChildType.map { it as SingleType }
+                when {
+                    // If any one of the operands is null, return NULL
+                    argsSingleType.any { it is NullType } -> possibleReturnTypes.add(StaticType.NULL)
+                    // Arguments for LIKE need to be text type
+                    argsSingleType.all { it is StaticScalarType } -> {
+                        val inferResult = scalarTypeSystem.inferReturnType(opId, argsSingleType.map { (it as StaticScalarType).toCompileTimeType() })
+                        possibleReturnTypes.addAll(inferResult.toSingleTypes())
+                    }
+                    else -> StaticType.MISSING
+                }
+            }
+
+            return processedNode.withStaticType(possibleReturnTypes.toStaticType())
         }
 
         // CALL
         override fun transformExprCall(node: PartiqlAst.Expr.Call): PartiqlAst.Expr {
-            val nAry = super.transformExprCall(node) as PartiqlAst.Expr.Call
+            val processedNode = super.transformExprCall(node) as PartiqlAst.Expr.Call
 
-            val funcExpr = nAry.funcName
-            val functionArguments = nAry.args
+            val funcExpr = processedNode.funcName
+            val functionArguments = processedNode.args
 
             val functionName = funcExpr.text
 
             val signature = allFunctions[functionName]
             if (signature == null) {
-                handleNoSuchFunctionError(functionName, nAry.metas.getSourceLocation())
-                return nAry.withStaticType(StaticType.ANY)
+                handleNoSuchFunctionError(functionName, processedNode.metas.getSourceLocation())
+                return processedNode.withStaticType(StaticType.ANY)
             }
 
-            return nAry.withStaticType(computeReturnTypeForFunctionCall(signature, functionArguments, nAry.metas))
+            return processedNode.withStaticType(computeReturnTypeForFunctionCall(signature, functionArguments, processedNode.metas))
         }
 
         // Call agg : "count", "avg", "max", "min", "sum"
@@ -556,6 +580,7 @@ internal class StaticTypeInferenceVisitorTransform(
             )
         }
 
+        // TODO: consider how to move specific scalar types used in aggregate function out of the core package
         private fun computeReturnTypeForAggFunc(funcName: String, elementType: StaticType, sourceLocation: SourceLocationMeta): StaticType {
             val elementTypes = elementType.allTypes
 
@@ -572,6 +597,7 @@ internal class StaticTypeInferenceVisitorTransform(
                 "count" -> StaticType.INT
                 // In case that any element is MISSING or there is no element, we should return NULL
                 "max", "min" -> StaticType.unionOf(elementTypes.convertMissingToNull())
+                // TODO: can we refactor `sum` to be recursively binary plus operator, so the following code will depend on `plus` operator and specific number types can be removed?
                 "sum" -> when {
                     elementTypes.none { it.isUnknownOrNumeric() } -> {
                         handleInvalidInputTypeForAggFun(sourceLocation, funcName, elementType, StaticType.unionOf(StaticType.NULL_OR_MISSING, StaticType.NUMERIC).flatten())
@@ -585,6 +611,7 @@ internal class StaticTypeInferenceVisitorTransform(
                     else -> StaticType.unionOf(elementTypes.convertMissingToNull())
                 }
                 // "avg" returns DECIMAL or NULL
+                // TODO: can we consider `avg` always returns a decimal literal & infer its return type the same as default type for a decimal literal?
                 "avg" -> when {
                     elementTypes.none { it.isUnknownOrNumeric() } -> {
                         handleInvalidInputTypeForAggFun(sourceLocation, funcName, elementType, StaticType.unionOf(StaticType.NULL_OR_MISSING, StaticType.NUMERIC).flatten())
@@ -599,6 +626,7 @@ internal class StaticTypeInferenceVisitorTransform(
                         }
                     )
                 }
+                // TODO: another idea is that for `sum` & `avg` we can expose interfaces to define its type inference & compilation logic
                 else -> error("Internal Error: Unsupported aggregate function. This probably indicates a parser bug.")
             }.flatten()
         }
@@ -632,135 +660,67 @@ internal class StaticTypeInferenceVisitorTransform(
             return hasValidOperands
         }
 
-        private fun computeReturnTypeForArithmeticUnary(expr: PartiqlAst.Expr, operands: List<PartiqlAst.Expr>, op: String): StaticType {
+        private fun computeReturnTypeForUnary(expr: PartiqlAst.Expr, operands: List<PartiqlAst.Expr>, opId: ScalarOpId): StaticType {
             require(operands.size == 1) { "Unary operations must have one argument" }
 
-            val argType = operands.single().getStaticType()
-
             // check if [argType] could be a numeric type
-            return if (hasValidOperandTypes(operands, { it.isNumeric() }, op, expr.metas)) {
-            val allTypes = argType.allTypes
-            val possibleReturnTypes = allTypes.map { st ->
-                when {
-                    st.isNumeric() -> st
-                    st is StaticScalarType -> when (st.scalarType) {
-                        FloatType,
-                        DecimalType -> st
-                        else -> StaticType.MISSING
-                    }
-                    st is NullType -> StaticType.NULL
-                    else -> StaticType.MISSING
-                }
-            }.distinct()
+            val validator = { it: StaticType -> it is StaticScalarType && scalarTypeSystem.validateOperandType(opId, it.scalarType) }
+            if (!hasValidOperandTypes(operands, validator, opId.alias, expr.metas)) {
+                val defaultReturnTypes = scalarTypeSystem.defaultReturnTypeOfScalarOp(opId)
+                val defaultReturnSingleTypes = defaultReturnTypes.map { it.toSingleType() }.toSet()
 
-            when (possibleReturnTypes.size) {
-                1 -> possibleReturnTypes.single()
-                else -> StaticType.unionOf(*possibleReturnTypes.toTypedArray())
+                return defaultReturnSingleTypes.toStaticType()
             }
-        } else {
-                // continuation type of all numeric types to prevent incompatible types and unknown errors from propagating
-                StaticType.unionOf(StaticType.ALL_TYPES.filter { it.isNumeric() }.toSet())
+
+            val argType = operands.single().getStaticType()
+            val possibleReturnTypes: MutableSet<SingleType> = mutableSetOf()
+            argType.allTypes.forEach { childType ->
+                childType as SingleType
+                when (childType) {
+                    is StaticScalarType -> {
+                        val inferResult = scalarTypeSystem.inferReturnType(opId, childType.toCompileTimeType())
+                        possibleReturnTypes.addAll(inferResult.toSingleTypes())
+                    }
+                    is NullType -> possibleReturnTypes.add(StaticType.NULL)
+                    else -> possibleReturnTypes.add(StaticType.MISSING)
+                }
             }
+
+            return possibleReturnTypes.toStaticType()
         }
 
-        private fun computeReturnTypeForArithmeticNAry(expr: PartiqlAst.Expr, operands: List<PartiqlAst.Expr>, op: String): StaticType {
+        private fun computeReturnTypeForNAry(expr: PartiqlAst.Expr, operands: List<PartiqlAst.Expr>, opId: ScalarOpId): StaticType {
             // check if all operands could be a numeric type
-            return if (hasValidOperandTypes(operands, { it.isNumeric() }, op, expr.metas)) {
-            operands.map { it.getStaticType() }.reduce { lastType, currentType ->
-                when {
-                    lastType is MissingType || currentType is MissingType -> StaticType.MISSING
-                    lastType is NullType || currentType is NullType -> StaticType.NULL
-                    else -> {
-                        val leftTypes = lastType.allTypes
-                        val rightTypes = currentType.allTypes
+            val validator = { it: StaticType -> it is StaticScalarType && scalarTypeSystem.validateOperandType(opId, it.scalarType) }
+            if (!hasValidOperandTypes(operands, validator, opId.alias, expr.metas)) {
+                val defaultReturnTypes = scalarTypeSystem.defaultReturnTypeOfScalarOp(opId)
+                val defaultReturnSingleTypes = defaultReturnTypes.map { it.toSingleType() }.toSet()
 
-                        val possibleResultTypes: List<SingleType> =
-                            leftTypes.flatMap { type1 ->
-                                rightTypes.map { type2 ->
-                                    computeBinaryArithmeticResultType(type1, type2)
-                                }
-                            }.distinct()
+                return defaultReturnSingleTypes.toStaticType()
+            }
 
-                        when (possibleResultTypes.size) {
-                            0 -> error("We always expect there to be at least one possible result type, even if is MISSING")
-                            1 -> {
-                                // returning StaticType.MISSING from this branch is an error condition because the
-                                // arithmetic operation can *never* succeed.
-                                possibleResultTypes.first()
+            return operands.map { it.getStaticType() }.reduce { leftStaticType, rightStaticType ->
+                val possibleReturnTypes: MutableSet<SingleType> = mutableSetOf()
+
+                leftStaticType.allTypes.forEach { leftType ->
+                    leftType as SingleType
+                    rightStaticType.allTypes.forEach { rightType ->
+                        rightType as SingleType
+                        when {
+                            // Propagate missing as missing. Missing has precedence over null
+                            leftType is MissingType || rightType is MissingType -> possibleReturnTypes.add(StaticType.MISSING)
+                            leftType is NullType || rightType is NullType -> possibleReturnTypes.add(StaticType.NULL)
+                            leftType is StaticScalarType && rightType is StaticScalarType -> {
+                                val inferResult = scalarTypeSystem.inferReturnType(opId, leftType.toCompileTimeType(), rightType.toCompileTimeType())
+                                possibleReturnTypes.addAll(inferResult.toSingleTypes())
                             }
-                            else -> AnyOfType(possibleResultTypes.toSet())
                         }
                     }
                 }
-            }
-        } else {
-                // continuation type of all numeric types to prevent incompatible types and unknown errors from propagating
-                StaticType.unionOf(StaticType.ALL_TYPES.filter { it.isNumeric() }.toSet())
+
+                possibleReturnTypes.toStaticType()
             }
         }
-
-        private fun computeBinaryArithmeticResultType(leftType: StaticType, rightType: StaticType): SingleType =
-            // This could also have been a lookup table of types, however... doing this as a nested `when` allows
-            // us to not to rely on `.equals` and `.hashcode` implementations of [StaticType], which include metas
-            // and might introduce unwanted behavior.
-            when {
-                // Propagate missing as missing. Missing has precedence over null
-                leftType is MissingType || rightType is MissingType -> StaticType.MISSING
-                leftType is NullType || rightType is NullType -> StaticType.NULL
-                else -> when (leftType) {
-                    is StaticScalarType -> when (leftType.scalarType) {
-                        Int2Type,
-                        Int4Type,
-                        Int8Type,
-                        IntType ->
-                            when (rightType) {
-                                is StaticScalarType -> when (rightType.scalarType) {
-                                    Int2Type,
-                                    Int4Type,
-                                    Int8Type,
-                                    IntType -> {
-                                        val leftPrecedence = intTypesPrecedence.indexOf(leftType.scalarType)
-                                        val rightPrecedence = intTypesPrecedence.indexOf(rightType.scalarType)
-                                        when {
-                                            leftPrecedence > rightPrecedence -> leftType
-                                            else -> rightType
-                                        }
-                                    }
-                                    FloatType -> StaticType.FLOAT
-                                    DecimalType -> StaticType.DECIMAL // TODO:  account for decimal precision
-                                    else -> StaticType.MISSING
-                                }
-                                else -> StaticType.MISSING
-                            }
-                        FloatType -> when (rightType) {
-                            is StaticScalarType -> when (rightType.scalarType) {
-                                Int2Type,
-                                Int4Type,
-                                Int8Type,
-                                IntType -> StaticType.FLOAT
-                                DecimalType -> StaticType.DECIMAL // TODO:  account for decimal precision
-                                FloatType -> StaticType.FLOAT
-                                else -> StaticType.MISSING
-                            }
-                            else -> StaticType.MISSING
-                        }
-                        DecimalType -> when (rightType) {
-                            is StaticScalarType -> when (rightType.scalarType) {
-                                Int2Type,
-                                Int4Type,
-                                Int8Type,
-                                IntType -> StaticType.DECIMAL // TODO:  account for decimal precision
-                                FloatType -> StaticType.DECIMAL // TODO:  account for decimal precision
-                                DecimalType -> StaticType.DECIMAL // TODO:  account for decimal precision
-                                else -> StaticType.MISSING
-                            }
-                            else -> StaticType.MISSING
-                        }
-                        else -> StaticType.MISSING
-                    }
-                    else -> StaticType.MISSING
-                }
-            }
 
         private fun computeReturnTypeForNAryIn(argTypes: List<StaticType>): StaticType {
             require(argTypes.size >= 2) { "IN must have at least two args" }
@@ -898,92 +858,6 @@ internal class StaticTypeInferenceVisitorTransform(
                 args.any { it is MissingType } -> StaticType.MISSING
                 // If any of the operands is NULL, return NULL
                 args.any { it is NullType } -> StaticType.NULL
-                else -> StaticType.MISSING
-            }
-        }
-
-        /**
-         * Infers type for the IN operation when all the arguments are of type [SingleType]
-         */
-        fun getTypeForNAryIn(nAryOp: PartiqlAst.Expr, args: List<SingleType>): SingleType {
-            if (args.size < 2) {
-                error("Expected 2 or more operands for $nAryOp")
-            }
-
-            return when {
-                // If any of the operands is MISSING, return MISSING. MISSING has a precedence over NULL
-                args.any { it is MissingType } -> StaticType.MISSING
-                // If any of the operands is NULL, return NULL
-                args.any { it is NullType } -> StaticType.NULL
-                // Right arg should be collection type for IN operator.
-                args[1] is CollectionType -> StaticType.BOOL
-                else -> StaticType.MISSING
-            }
-        }
-
-        /**
-         * Computes the constraints for the string concatenation if all the arguments are [StringType], [CharType] or [VarcharType].
-         */
-        fun computeConstraintsForConcatStringType(args: List<SingleType>): SingleType {
-            require(args.all { it is StaticScalarType && (it.scalarType in listOf(StringType, CharType, VarcharType)) }) { "Internal error: CONCAT only works on arguments of CHAR, VARCHAR or STRING type" }
-            if (args.size < 2) { error("Expected 2 or more operands for CONCAT") }
-            if (args.any { it is StaticScalarType && it.scalarType === StringType }) { return StaticType.STRING }
-
-            val lengths: List<Int> = args.map { (it as StaticScalarType).parameters[0]!! }
-            val lengthSum = lengths.sumBy { it }
-
-            return when {
-                args.all { it is StaticScalarType && it.scalarType === CharType } -> StaticScalarType(CharType, listOf(lengthSum))
-                else -> StaticScalarType(VarcharType, listOf(lengthSum))
-            }
-        }
-
-        /**
-         * Infers type for the concat operation when all the arguments are of type [SingleType]
-         */
-        fun getTypeForNAryStringConcat(nAryOp: PartiqlAst.Expr, args: List<SingleType>): SingleType {
-            if (args.size < 2) {
-                error("Expected 2 or more operands for $nAryOp")
-            }
-
-            val stringArgTypes = args.filter { it is StaticScalarType && it.scalarType in listOf(CharType, VarcharType, StringType) }
-            return when {
-                // If any one of the operands is missing, return MISSING. MISSING has precedence over NULL
-                args.any { it is MissingType } -> StaticType.MISSING
-                // If any one of the operands is null, return NULL
-                args.any { it is NullType } -> StaticType.NULL
-                // If all the types are StringTypes, then add the string constraints accordingly
-                stringArgTypes.size == args.size -> computeConstraintsForConcatStringType(stringArgTypes)
-                // Arguments for string_concat need to be text type
-                args.all { it.isText() } -> StaticType.STRING
-                else -> StaticType.MISSING
-            }
-        }
-
-        /**
-         * Infers type for the LIKE operation when all the arguments are of type [SingleType]
-         *
-         * If the optional escape character is provided, it can result in failure even if the type is text (string, in this case)
-         * This is because the escape character needs to be a single character (string with length 1),
-         * Even if the escape character is of length 1, escape sequence can be incorrect.
-         * Check [EvaluatingCompiler.checkPattern] method for more details.
-         */
-        fun getTypeForNAryLike(
-            @Suppress("UNUSED_PARAMETER")
-            nAryOp: PartiqlAst.Expr,
-            args: List<SingleType>
-        ): StaticType {
-            return when {
-                // If any one of the operands is missing, return MISSING. MISSING has precedence over NULL
-                args.any { it is MissingType } -> StaticType.MISSING
-                // If any one of the operands is null, return NULL
-                args.any { it is NullType } -> StaticType.NULL
-                // Arguments for LIKE need to be text type
-                args.all { it.isText() } -> when (args.size) {
-                    2 -> StaticType.BOOL
-                    // if optional escape character is provided, it may result in error or boolean.
-                    else -> AnyOfType(setOf(StaticType.MISSING, StaticType.BOOL))
-                }
                 else -> StaticType.MISSING
             }
         }
@@ -1332,12 +1206,10 @@ internal class StaticTypeInferenceVisitorTransform(
             val typed = super.transformExprCast(node) as PartiqlAst.Expr.Cast
             val sourceType = typed.value.getStaticType()
             val targetType = typed.asType.toTypedOpParameter(customTypedOpParameters)
-            val castOutputType = sourceType.cast(targetType.staticType).let {
-                if (targetType.validationThunk == null) {
-                    // There is no additional validation for this parameter, return this type as-is
-                    it
-                } else {
-                    StaticType.unionOf(StaticType.MISSING, it)
+            val castOutputType = sourceType.cast(targetType.staticType, scalarTypeSystem).let {
+                when (targetType.validationThunk) {
+                    null -> it
+                    else -> StaticType.unionOf(StaticType.MISSING, it)
                 }
             }
             return typed.withStaticType(castOutputType)
@@ -1581,6 +1453,7 @@ internal class StaticTypeInferenceVisitorTransform(
             }
         }
 
+        // TODO: pull `Int2Type`, `Int4Type`, Int8Type` & `IntType` out.
         private fun inferPathComponentExprType(
             previousComponentType: StaticType,
             currentPathComponent: PartiqlAst.PathStep.PathExpr
@@ -1592,6 +1465,7 @@ internal class StaticTypeInferenceVisitorTransform(
                 is SexpType -> {
                     val previous = previousComponentType as CollectionType // help Kotlin's type inference to be more specific
                     val staticType = currentPathComponent.index.getStaticType()
+                    // Can we require type of `currentPathComponent` to be the run-time integer type instead & pull the specific static integer types out?
                     if (staticType is StaticScalarType && (staticType.scalarType in listOf(Int2Type, Int4Type, Int8Type, IntType))) {
                         previous.elementType
                     } else {

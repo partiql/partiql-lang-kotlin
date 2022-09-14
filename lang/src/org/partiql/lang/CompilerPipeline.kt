@@ -32,6 +32,7 @@ import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedure
 import org.partiql.lang.eval.visitors.PipelinedVisitorTransform
 import org.partiql.lang.eval.visitors.StaticTypeInferenceVisitorTransform
 import org.partiql.lang.eval.visitors.StaticTypeVisitorTransform
+import org.partiql.lang.ots_work.stscore.ScalarTypeSystem
 import org.partiql.lang.syntax.Parser
 import org.partiql.lang.syntax.PartiQLParserBuilder
 import org.partiql.lang.types.CustomType
@@ -107,6 +108,11 @@ interface CompilerPipeline {
      */
     val globalTypeBindings: Bindings<StaticType>?
 
+    /**
+     * The scalar type system the compiler depends on
+     */
+    val scalarTypeSystem: ScalarTypeSystem
+
     /** Compiles the specified PartiQL query using the configured parser. */
     fun compile(query: String): Expression
 
@@ -154,6 +160,7 @@ interface CompilerPipeline {
         private val customProcedures: MutableMap<String, StoredProcedure> = HashMap()
         private val preProcessingSteps: MutableList<ProcessingStep> = ArrayList()
         private var globalTypeBindings: Bindings<StaticType>? = null
+        private var scalarTypeSystem: ScalarTypeSystem? = null
 
         /**
          * Specifies the [Parser] to be used to turn an PartiQL query into an instance of [PartiqlAst].
@@ -205,6 +212,9 @@ interface CompilerPipeline {
         /** Adds the [Bindings<StaticType>] for global variables. */
         fun globalTypeBindings(bindings: Bindings<StaticType>): Builder = this.apply { this.globalTypeBindings = bindings }
 
+        /** Provide the scalar type system. */
+        fun scalarTypeSystem(scalarTypeSystem: ScalarTypeSystem): Builder = this.apply { this.scalarTypeSystem = scalarTypeSystem }
+
         /** Builds the actual implementation of [CompilerPipeline]. */
         fun build(): CompilerPipeline {
             val compileOptionsToUse = compileOptions ?: CompileOptions.standard()
@@ -234,7 +244,8 @@ interface CompilerPipeline {
                 customDataTypes = customDataTypes,
                 procedures = customProcedures,
                 preProcessingSteps = preProcessingSteps,
-                globalTypeBindings = globalTypeBindings
+                globalTypeBindings = globalTypeBindings,
+                scalarTypeSystem = scalarTypeSystem ?: ScalarTypeSystem.defaultScalarTypeSystem
             )
         }
     }
@@ -248,7 +259,8 @@ internal class CompilerPipelineImpl(
     override val customDataTypes: List<CustomType>,
     override val procedures: Map<String, StoredProcedure>,
     private val preProcessingSteps: List<ProcessingStep>,
-    override val globalTypeBindings: Bindings<StaticType>?
+    override val globalTypeBindings: Bindings<StaticType>?,
+    override val scalarTypeSystem: ScalarTypeSystem
 ) : CompilerPipeline {
 
     private val compiler = EvaluatingCompiler(
@@ -288,7 +300,8 @@ internal class CompilerPipelineImpl(
                                     (customType.aliases + customType.name).map { alias ->
                                         Pair(alias.toLowerCase(), customType.typedOpParameter)
                                     }
-                                }.flatten().toMap()
+                                }.flatten().toMap(),
+                                scalarTypeSystem = scalarTypeSystem
                             )
                         )
                     }
