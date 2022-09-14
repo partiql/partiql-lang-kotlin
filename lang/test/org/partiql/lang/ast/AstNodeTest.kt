@@ -237,7 +237,7 @@ class AstNodeTest {
     @Test
     fun typedChildren() {
         val child1 = literal("1")
-        val child2 = DataType(SqlDataType.BAG, listOf(), emptyMeta)
+        val child2 = DataType(SqlDataType.BAG, listOf(), metas = emptyMeta)
 
         assertEquals(listOf(child1, child2), Typed(TypedOp.CAST, child1, child2, emptyMeta).children)
     }
@@ -465,5 +465,5 @@ class AstNodeTest {
     }
 
     @Test
-    fun dataTypeChildren() = assertTrue(DataType(SqlDataType.BAG, listOf(), emptyMeta).children.isEmpty())
+    fun dataTypeChildren() = assertTrue(DataType(SqlDataType.BAG, listOf(), metas = emptyMeta).children.isEmpty())
 }

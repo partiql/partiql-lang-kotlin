@@ -28,7 +28,6 @@ import org.partiql.lang.syntax.ALL_SINGLE_LEXEME_OPERATORS
 import org.partiql.lang.syntax.KEYWORDS
 import org.partiql.lang.syntax.MULTI_LEXEME_TOKEN_MAP
 import org.partiql.lang.syntax.ParserException
-import org.partiql.lang.syntax.TYPE_ALIASES
 import org.partiql.lang.syntax.TokenType
 import java.math.BigInteger
 
@@ -140,7 +139,7 @@ internal fun getIonValue(ion: IonSystem, token: Token): IonValue {
             val pair = MULTI_LEXEME_TOKEN_MAP[text.toLowerCase().split("\\s+".toRegex())]!!
             ion.newSymbol(pair.first)
         }
-        KEYWORDS.contains(text.toLowerCase()) -> ion.newSymbol(TYPE_ALIASES[text.toLowerCase()] ?: text.toLowerCase())
+        KEYWORDS.contains(text.toLowerCase()) -> ion.newSymbol(text.toLowerCase())
         else -> ion.newSymbol(text)
     }
 }

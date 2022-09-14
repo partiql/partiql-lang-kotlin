@@ -1266,7 +1266,7 @@ internal class AstDeserializerInternal(
                     if (!sqlDataType.arityRange.contains(args.size)) {
                         err("Type $typeName arity range ${sqlDataType.arityRange} was but ${args.size} were specified")
                     }
-                    DataType(sqlDataType, args, metas)
+                    DataType(sqlDataType, args, metas = metas)
                 }
                 else -> {
                     err("Expected `${NodeTag.TYPE.definition.tagText}` tag instead found ${nodeTag.definition.tagText}")

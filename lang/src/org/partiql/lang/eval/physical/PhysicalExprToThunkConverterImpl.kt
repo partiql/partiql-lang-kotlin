@@ -89,15 +89,16 @@ import org.partiql.lang.ots.plugins.standard.types.IntType
 import org.partiql.lang.planner.EvaluatorOptions
 import org.partiql.lang.types.AnyOfType
 import org.partiql.lang.types.AnyType
+import org.partiql.lang.types.BuiltInScalarType
 import org.partiql.lang.types.FunctionSignature
 import org.partiql.lang.types.SingleType
 import org.partiql.lang.types.StaticScalarType
 import org.partiql.lang.types.StaticType
+import org.partiql.lang.types.TYPE_ALIAS_TO_SCALAR_TYPE
 import org.partiql.lang.types.TypedOpParameter
 import org.partiql.lang.types.UnknownArguments
 import org.partiql.lang.types.UnsupportedTypeCheckException
 import org.partiql.lang.types.toTypedOpParameter
-import org.partiql.lang.util.BuiltInScalarTypeId
 import org.partiql.lang.util.checkThreadInterrupted
 import org.partiql.lang.util.codePointSequence
 import org.partiql.lang.util.div
@@ -997,7 +998,7 @@ internal class PhysicalExprToThunkConverterImpl(
         if (
             evaluatorOptions.typedOpBehavior == TypedOpBehavior.HONOR_PARAMETERS &&
             expr.type is PartiqlPhysical.Type.ScalarType &&
-            expr.type.id.text == BuiltInScalarTypeId.FLOAT &&
+            TYPE_ALIAS_TO_SCALAR_TYPE[expr.type.alias.text] === BuiltInScalarType.FLOAT &&
             expr.type.parameters.isNotEmpty() // if precision of FLOAT is explicitly specified in the original query
         ) {
             err(
@@ -1041,7 +1042,7 @@ internal class PhysicalExprToThunkConverterImpl(
         if (
             evaluatorOptions.typedOpBehavior == TypedOpBehavior.HONOR_PARAMETERS &&
             asType is PartiqlPhysical.Type.ScalarType &&
-            asType.id.text == BuiltInScalarTypeId.FLOAT &&
+            TYPE_ALIAS_TO_SCALAR_TYPE[asType.alias.text] === BuiltInScalarType.FLOAT &&
             asType.parameters.isNotEmpty() // if precision of FLOAT is explicitly specified in the original query
         ) {
             err(

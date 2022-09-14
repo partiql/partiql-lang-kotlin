@@ -34,5 +34,5 @@ class MetaStrippingRewriter : AstRewriterBase() {
 
     override fun rewriteMetas(itemWithMetas: HasMetas): MetaContainer = emptyMetas
     override fun rewriteDataType(dataType: DataType): DataType =
-        DataType(dataType.sqlDataType, dataType.args, emptyMetas)
+        DataType(dataType.sqlDataType, dataType.args, metas = emptyMetas)
 }

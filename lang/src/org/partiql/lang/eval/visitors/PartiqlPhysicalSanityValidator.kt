@@ -16,7 +16,8 @@ import org.partiql.lang.eval.TypedOpBehavior
 import org.partiql.lang.eval.err
 import org.partiql.lang.eval.errorContextFrom
 import org.partiql.lang.planner.EvaluatorOptions
-import org.partiql.lang.util.BuiltInScalarTypeId
+import org.partiql.lang.types.BuiltInScalarType
+import org.partiql.lang.types.TYPE_ALIAS_TO_SCALAR_TYPE
 import org.partiql.lang.util.propertyValueMapOf
 
 /**
@@ -75,7 +76,9 @@ class PartiqlPhysicalSanityValidator(private val evaluatorOptions: EvaluatorOpti
 
     override fun visitTypeScalarType(node: PartiqlPhysical.Type.ScalarType) {
         super.visitTypeScalarType(node)
-        if (node.id.text == BuiltInScalarTypeId.DECIMAL || node.id.text == BuiltInScalarTypeId.NUMERIC) {
+
+        val scalarType = TYPE_ALIAS_TO_SCALAR_TYPE[node.alias.text]
+        if (scalarType == BuiltInScalarType.DECIMAL || scalarType == BuiltInScalarType.NUMERIC) {
             validateDecimalOrNumericType(node.parameters.getOrNull(0)?.value, node.parameters.getOrNull(1)?.value, node.metas)
         }
     }

@@ -378,7 +378,8 @@ class SqlParserTest : SqlParserTestBase() {
     fun callIsVarchar() = assertExpression(
         "f() IS VARCHAR(200)",
         "(is (call f) (type character_varying 200))",
-        "(is_type (call f) (scalar_type character_varying 200))"
+        "(is_type (call f) (scalar_type varchar 200))",
+        setOf(ParserTypes.PARTIQL_PARSER)
     )
 
     @Test
@@ -399,7 +400,8 @@ class SqlParserTest : SqlParserTestBase() {
     fun callIsNotVarchar() = assertExpression(
         "f() IS NOT VARCHAR(200)",
         "(is_not (call f) (type character_varying 200))",
-        "(not (is_type (call f) (scalar_type character_varying 200)))"
+        "(not (is_type (call f) (scalar_type varchar 200)))",
+        setOf(ParserTypes.PARTIQL_PARSER)
     )
 
     @Test
@@ -578,16 +580,18 @@ class SqlParserTest : SqlParserTestBase() {
         """,
         """(cast
              (lit 5)
-             (scalar_type character_varying)
+             (scalar_type varchar)
            )
-        """
+        """,
+        setOf(ParserTypes.PARTIQL_PARSER)
     )
 
     @Test
     fun castASVarCharWithLength() = assertExpression(
         "CAST(5 AS VARCHAR(5))",
         "(cast (lit 5) (type character_varying 5))",
-        "(cast (lit 5) (scalar_type character_varying 5))"
+        "(cast (lit 5) (scalar_type varchar 5))",
+        setOf(ParserTypes.PARTIQL_PARSER)
     )
 
     @Test
