@@ -139,21 +139,8 @@ onConflictClause
         | ON CONSTRAINT <constraint name>
 */
 conflictTarget
-    : PAREN_LEFT indexTarget (COMMA indexTarget)* PAREN_RIGHT
-    | PAREN_LEFT ( primaryKey | compositePrimaryKey ) PAREN_RIGHT
+    : PAREN_LEFT symbolPrimitive (COMMA symbolPrimitive)* PAREN_RIGHT
     | ON CONSTRAINT constraintName;
-
-indexTarget
-    : symbolPrimitive;
-
-primaryKey
-    : symbolPrimitive;
-
-/**
-    <composite primary key> ::= <attr name>, <attr name> [, <attr name> ]...
-*/
-compositePrimaryKey
-    : symbolPrimitive COMMA symbolPrimitive (COMMA symbolPrimitive)*;
 
 constraintName
     : symbolPrimitive;
@@ -169,8 +156,8 @@ conflictAction
    [ WHERE <condition> ]
 */
 doReplace
-    : EXCLUDED
-    | VALUE tuple;
+    : EXCLUDED;
+    // :TODO add the rest of the grammar
 
 updateClause
     : UPDATE tableBaseReference;
