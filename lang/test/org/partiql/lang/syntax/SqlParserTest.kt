@@ -2150,20 +2150,25 @@ class SqlParserTest : SqlParserTestBase() {
           )
         """,
         """
-          (dml
+        (dml
             (operations
-              (dml_op_list
-                (insert
-                  (id foo (case_insensitive) (unqualified))
-                  (bag
-                    (list (lit 1) (lit 2))
-                    (list (lit 3) (lit 4))
-                  )
-                )
-              )
-            )
-            (from (scan (id x (case_insensitive) (unqualified)) null null null))
-          )
+                (dml_op_list
+                    (insert
+                        (id foo (case_insensitive) (unqualified))
+                        (bag
+                            (list
+                                (lit 1)
+                                (lit 2))
+                            (list
+                                (lit 3)
+                                (lit 4)))
+                        null)))
+            (from
+                (scan
+                    (id x (case_insensitive) (unqualified))
+                    null
+                    null
+                    null)))
         """
     )
 
@@ -2273,20 +2278,30 @@ class SqlParserTest : SqlParserTestBase() {
           )
         """,
         """
-          (dml
+        (dml
             (operations
-              (dml_op_list
-                (insert
-                  (id foo (case_insensitive) (unqualified))
-                  (select
-                    (project (project_list (project_expr (id y (case_insensitive) (unqualified)) null)))
-                    (from (scan (id bar (case_insensitive) (unqualified)) null null null))
-                  )
-                )
-              )
-            )
-            (from (scan (id x (case_insensitive) (unqualified)) null null null))
-          )
+                (dml_op_list
+                    (insert
+                        (id foo (case_insensitive) (unqualified))
+                        (select
+                            (project
+                                (project_list
+                                    (project_expr
+                                        (id y (case_insensitive) (unqualified))
+                                        null)))
+                            (from
+                                (scan
+                                    (id bar (case_insensitive) (unqualified))
+                                    null
+                                    null
+                                    null)))
+                        null)))
+            (from
+                (scan
+                    (id x (case_insensitive) (unqualified))
+                    null
+                    null
+                    null)))
         """
     )
 
@@ -2361,19 +2376,19 @@ class SqlParserTest : SqlParserTestBase() {
           )
         """,
         """
-          (dml
+        (dml
             (operations
-              (dml_op_list
-                (insert
-                  (id foo (case_insensitive) (unqualified))
-                  (bag
-                    (list (lit 1) (lit 2))
-                    (list (lit 3) (lit 4))
-                  )
-                )
-              )
-            )
-          )
+                (dml_op_list
+                    (insert
+                        (id foo (case_insensitive) (unqualified))
+                        (bag
+                            (list
+                                (lit 1)
+                                (lit 2))
+                            (list
+                                (lit 3)
+                                (lit 4)))
+                        null))))
         """
     )
 
@@ -2467,7 +2482,8 @@ class SqlParserTest : SqlParserTestBase() {
               )
             ))
           )
-        """
+        """,
+        targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
     )
 
     @Test
@@ -2646,20 +2662,195 @@ class SqlParserTest : SqlParserTestBase() {
           )
         """,
         """
-          (dml
+        (dml
             (operations
-              (dml_op_list
-                (insert
-                  (id foo (case_insensitive) (unqualified))
-                  (select
-                    (project (project_list (project_expr (id y (case_insensitive) (unqualified)) null)))
-                    (from (scan (id bar (case_insensitive) (unqualified)) null null null))
-                  )
-                )
-              )
-            )
-          )
+                (dml_op_list
+                    (insert
+                        (id foo (case_insensitive) (unqualified))
+                        (select
+                            (project
+                                (project_list
+                                    (project_expr
+                                        (id y (case_insensitive) (unqualified))
+                                        null)))
+                            (from
+                                (scan
+                                    (id bar (case_insensitive) (unqualified))
+                                    null
+                                    null
+                                    null)))
+                        null))))
         """
+    )
+
+    @Test
+    fun insertWithOnConflictReplaceExcludedWithLiteralValue() = assertExpression(
+        source = "INSERT into foo VALUES (1, 2), (3, 4) ON CONFLICT DO REPLACE EXCLUDED",
+        expectedPigAst = """
+        (dml
+            (operations
+                (dml_op_list
+                    (insert
+                        (id foo (case_insensitive) (unqualified))
+                        (bag
+                            (list
+                                (lit 1)
+                                (lit 2))
+                            (list
+                                (lit 3)
+                                (lit 4)))
+                        (do_replace
+                            (excluded))))))
+        """,
+        targetParsers = setOf(ParserTypes.PARTIQL_PARSER),
+        roundTrip = false
+    )
+
+    @Test
+    fun insertWithOnConflictReplaceExcludedWithLiteralValueWithAlias() = assertExpression(
+        source = "INSERT into foo AS f <<{'id': 1, 'name':'bob'}>> ON CONFLICT DO REPLACE EXCLUDED",
+        expectedPigAst = """
+            (dml
+                (operations
+                    (dml_op_list
+                        (insert
+                            (id f (case_insensitive) (unqualified))
+                            (bag
+                                (struct
+                                    (expr_pair
+                                        (lit "id")
+                                        (lit 1))
+                                    (expr_pair
+                                        (lit "name")
+                                        (lit "bob"))))
+                            (do_replace
+                                (excluded))))))
+        """,
+        targetParsers = setOf(ParserTypes.PARTIQL_PARSER),
+        roundTrip = false
+    )
+
+    @Test
+    fun insertWithOnConflictReplaceExcludedWithSelect() = assertExpression(
+        source = "INSERT into foo SELECT bar.id, bar.name FROM bar ON CONFLICT DO REPLACE EXCLUDED",
+        expectedPigAst = """
+            (dml
+                (operations
+                    (dml_op_list
+                        (insert
+                            (id foo (case_insensitive) (unqualified))
+                            (select
+                                (project
+                                    (project_list
+                                        (project_expr
+                                            (path
+                                                (id bar (case_insensitive) (unqualified))
+                                                (path_expr
+                                                    (lit "id")
+                                                    (case_insensitive)))
+                                            null)
+                                        (project_expr
+                                            (path
+                                                (id bar (case_insensitive) (unqualified))
+                                                (path_expr
+                                                    (lit "name")
+                                                    (case_insensitive)))
+                                            null)))
+                                (from
+                                    (scan
+                                        (id bar (case_insensitive) (unqualified))
+                                        null
+                                        null
+                                        null)))
+                            (do_replace
+                                (excluded))))))
+        """,
+        targetParsers = setOf(ParserTypes.PARTIQL_PARSER),
+        roundTrip = false
+    )
+
+    @Test
+    fun insertWithOnConflictDoNothing() = assertExpression(
+        source = "INSERT into foo <<{'id': 1, 'name':'bob'}>> ON CONFLICT DO NOTHING",
+        expectedPigAst = """
+            (dml
+                (operations
+                    (dml_op_list
+                        (insert
+                            (id foo (case_insensitive) (unqualified))
+                            (bag
+                                (struct
+                                    (expr_pair
+                                        (lit "id")
+                                        (lit 1))
+                                    (expr_pair
+                                        (lit "name")
+                                        (lit "bob"))))
+                            (do_nothing)))))
+        """,
+        targetParsers = setOf(ParserTypes.PARTIQL_PARSER),
+        roundTrip = false
+    )
+
+    @Test
+    fun insertWithOnConflictDoNothingWithLiteralValueWithAlias() = assertExpression(
+        source = "INSERT into foo AS f <<{'id': 1, 'name':'bob'}>> ON CONFLICT DO NOTHING",
+        expectedPigAst = """
+            (dml
+                (operations
+                    (dml_op_list
+                        (insert
+                            (id f (case_insensitive) (unqualified))
+                            (bag
+                                (struct
+                                    (expr_pair
+                                        (lit "id")
+                                        (lit 1))
+                                    (expr_pair
+                                        (lit "name")
+                                        (lit "bob"))))
+                            (do_nothing)))))
+        """,
+        targetParsers = setOf(ParserTypes.PARTIQL_PARSER),
+        roundTrip = false
+    )
+
+    @Test
+    fun insertWithOnConflictDoNothingWithSelect() = assertExpression(
+        source = "INSERT into foo SELECT bar.id, bar.name FROM bar ON CONFLICT DO NOTHING",
+        expectedPigAst = """
+            (dml
+                (operations
+                    (dml_op_list
+                        (insert
+                            (id foo (case_insensitive) (unqualified))
+                            (select
+                                (project
+                                    (project_list
+                                        (project_expr
+                                            (path
+                                                (id bar (case_insensitive) (unqualified))
+                                                (path_expr
+                                                    (lit "id")
+                                                    (case_insensitive)))
+                                            null)
+                                        (project_expr
+                                            (path
+                                                (id bar (case_insensitive) (unqualified))
+                                                (path_expr
+                                                    (lit "name")
+                                                    (case_insensitive)))
+                                            null)))
+                                (from
+                                    (scan
+                                        (id bar (case_insensitive) (unqualified))
+                                        null
+                                        null
+                                        null)))
+                            (do_nothing)))))
+        """,
+        targetParsers = setOf(ParserTypes.PARTIQL_PARSER),
+        roundTrip = false
     )
 
     @Test
@@ -3310,23 +3501,24 @@ class SqlParserTest : SqlParserTestBase() {
                 (id b case_insensitive))))
         """,
         """
-          (dml
+        (dml
             (operations
-              (dml_op_list
-                (insert
-                  (id k (case_insensitive) (unqualified))
-                  (bag
-                    (lit 1)))))
+                (dml_op_list
+                    (insert
+                        (id k (case_insensitive) (unqualified))
+                        (bag
+                            (lit 1))
+                        null)))
             (from
-              (scan
-                (id x (case_insensitive) (unqualified))
-                y 
-                null
-                null))
+                (scan
+                    (id x (case_insensitive) (unqualified))
+                    y
+                    null
+                    null))
             (where
-              (eq
-                (id a (case_insensitive) (unqualified))
-                (id b (case_insensitive) (unqualified)))))
+                (eq
+                    (id a (case_insensitive) (unqualified))
+                    (id b (case_insensitive) (unqualified)))))
         """
     )
 
@@ -3334,28 +3526,30 @@ class SqlParserTest : SqlParserTestBase() {
     fun updateWithInsertReturningDml() = assertExpression(
         "UPDATE x AS y INSERT INTO k << 1 >> WHERE a = b RETURNING MODIFIED OLD a",
         """
-      (dml
-        (operations
-          (dml_op_list
-            (insert
-              (id k (case_insensitive) (unqualified))
-              (bag
-                (lit 1)))))
-        (from
-          (scan
-            (id x (case_insensitive) (unqualified))
-            y 
-            null
-            null))
-        (where
-          (eq
-            (id a (case_insensitive) (unqualified))
-            (id b (case_insensitive) (unqualified))))
-        (returning 
-            (returning_expr 
-                (returning_elem 
-                    (modified_old) 
-                    (returning_column (id a (case_insensitive) (unqualified)))))))   
+        (dml
+            (operations
+                (dml_op_list
+                    (insert
+                        (id k (case_insensitive) (unqualified))
+                        (bag
+                            (lit 1))
+                        null)))
+            (from
+                (scan
+                    (id x (case_insensitive) (unqualified))
+                    y
+                    null
+                    null))
+            (where
+                (eq
+                    (id a (case_insensitive) (unqualified))
+                    (id b (case_insensitive) (unqualified))))
+            (returning
+                (returning_expr
+                    (returning_elem
+                        (modified_old)
+                        (returning_column
+                            (id a (case_insensitive) (unqualified)))))))
         """
     )
 
