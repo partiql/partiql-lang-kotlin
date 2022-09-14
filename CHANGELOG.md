@@ -40,6 +40,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - See GitHub Issues [#709](https://github.com/partiql/partiql-lang-kotlin/issues/709), [#708](https://github.com/partiql/partiql-lang-kotlin/issues/708),
       [#707](https://github.com/partiql/partiql-lang-kotlin/issues/707), [#683](https://github.com/partiql/partiql-lang-kotlin/issues/683),
       and [#730](https://github.com/partiql/partiql-lang-kotlin/issues/730)
+- Specifies and adds support for a limited set of PartiQL non-reserved keywords (ACYCLIC, BOTH, DOMAIN, LEADING, PUBLIC,
+  SIMPLE, TRAIL, TRAILING, and USER)
 
 #### Experimental Planner Additions
 
