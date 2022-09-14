@@ -30,5 +30,4 @@ internal class PartiQLLexer(private val ion: IonSystem) : Lexer {
         }
         return tokens
     }
-
 }
