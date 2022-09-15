@@ -203,10 +203,22 @@ class OrderByAliasVisitorTransformTests : VisitorTransformTestBase() {
                 ORDER BY a + b, a, a + b
             """
             ),
+            TransformTestCase(
+                """
+                SELECT (a * -1) AS a
+                FROM << { 'a': 1 }, { 'a': 2 } >>
+                ORDER BY a
+            """,
+                """
+                SELECT (a * -1) AS a
+                FROM << { 'a': 1 }, { 'a': 2 } >>
+                ORDER BY (a * -1)
+            """
+            ),
         )
     }
 
     @ParameterizedTest
     @ArgumentsSource(ArgsProvider::class)
-    fun test(tc: TransformTestCase) = runTest(tc, listOf(OrderByAliasVisitorTransform()))
+    fun test(tc: TransformTestCase) = runTestForIdempotentTransform(tc, OrderByAliasVisitorTransform())
 }

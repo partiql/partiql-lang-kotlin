@@ -14,12 +14,15 @@
 
 package org.partiql.lang.eval.visitors
 
+import org.partiql.lang.ast.IsTransformedOrderByAliasMeta
 import org.partiql.lang.domains.PartiqlAst
+import org.partiql.lang.domains.metaContainerOf
 import org.partiql.pig.runtime.SymbolPrimitive
 
 /**
  * A [PartiqlAst.VisitorTransform] to replace the [PartiqlAst.SortSpec] of a [PartiqlAst.OrderBy] with a reference to
- * a [PartiqlAst.ProjectItem]'s [PartiqlAst.Expr] if an alias is provided.
+ * a [PartiqlAst.ProjectItem]'s [PartiqlAst.Expr] if an alias is provided. Also utilizes [IsTransformedOrderByAliasMeta]
+ * to enforce idempotency (delivering the same result through multiple passes).
  *
  * Turns:
  *
@@ -58,15 +61,19 @@ class OrderByAliasVisitorTransform : VisitorTransformBase() {
     }
 
     /**
-     * A [PartiqlAst.VisitorTransform] that converts any found Expr.Id's into what it is mapped to in [aliases]
+     * A [PartiqlAst.VisitorTransform] that converts any found Expr.Id's into what it is mapped to in [aliases]. Also
+     * utilizes [IsTransformedOrderByAliasMeta] to ensure idempotency of this visitor (AKA visiting twice will NOT result
+     * in a different AST)
      */
     class OrderByAliasSupport(val aliases: Map<String, PartiqlAst.Expr>) : VisitorTransformBase() {
         override fun transformExprId(node: PartiqlAst.Expr.Id): PartiqlAst.Expr {
             val transformedExpr = super.transformExprId(node)
-            return when (node.case) {
+            if (transformedExpr.metas.containsKey(IsTransformedOrderByAliasMeta.TAG)) return transformedExpr
+            val newExpr = when (node.case) {
                 is PartiqlAst.CaseSensitivity.CaseSensitive -> aliases[node.name.text] ?: transformedExpr
                 else -> aliases[node.name.text.toLowerCase()] ?: aliases[node.name.text.toUpperCase()] ?: transformedExpr
             }
+            return newExpr.copy(metas = newExpr.metas + metaContainerOf(IsTransformedOrderByAliasMeta.instance))
         }
     }
 }
