@@ -57,7 +57,11 @@ class OrderByAliasVisitorTransform : VisitorTransformBase() {
      * expression using the [projectionAliases]
      */
     override fun transformSortSpec_expr(node: PartiqlAst.SortSpec): PartiqlAst.Expr {
-        return OrderByAliasSupport(projectionAliases).transformSortSpec_expr(node)
+        val newExpr = when (node.expr.metas.containsKey(IsTransformedOrderByAliasMeta.TAG)) {
+            true -> super.transformSortSpec_expr(node)
+            false -> OrderByAliasSupport(projectionAliases).transformSortSpec_expr(node)
+        }
+        return newExpr.copy(metas = newExpr.metas + metaContainerOf(IsTransformedOrderByAliasMeta.instance))
     }
 
     /**
@@ -68,12 +72,10 @@ class OrderByAliasVisitorTransform : VisitorTransformBase() {
     class OrderByAliasSupport(val aliases: Map<String, PartiqlAst.Expr>) : VisitorTransformBase() {
         override fun transformExprId(node: PartiqlAst.Expr.Id): PartiqlAst.Expr {
             val transformedExpr = super.transformExprId(node)
-            if (transformedExpr.metas.containsKey(IsTransformedOrderByAliasMeta.TAG)) return transformedExpr
-            val newExpr = when (node.case) {
+            return when (node.case) {
                 is PartiqlAst.CaseSensitivity.CaseSensitive -> aliases[node.name.text] ?: transformedExpr
                 else -> aliases[node.name.text.toLowerCase()] ?: aliases[node.name.text.toUpperCase()] ?: transformedExpr
             }
-            return newExpr.copy(metas = newExpr.metas + metaContainerOf(IsTransformedOrderByAliasMeta.instance))
         }
     }
 }
