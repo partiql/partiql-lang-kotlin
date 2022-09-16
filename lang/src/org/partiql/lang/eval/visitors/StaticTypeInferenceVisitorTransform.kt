@@ -225,7 +225,7 @@ internal class StaticTypeInferenceVisitorTransform(
             if (existing != null) {
                 TODO(
                     "A variable named '$name' was already defined in this scope. " +
-                            "This wouldn't be the case if StaticTypeVisitorTransform was executed first."
+                        "This wouldn't be the case if StaticTypeVisitorTransform was executed first."
                 )
             }
             localsMap[name] = type
@@ -263,7 +263,7 @@ internal class StaticTypeInferenceVisitorTransform(
 
             val foundType = findBind(bindingName, node.qualifier) ?: error(
                 "No such variable named ${node.name.text}. " +
-                        "This wouldn't be the case if StaticTypeVisitorTransform was executed first."
+                    "This wouldn't be the case if StaticTypeVisitorTransform was executed first."
             )
 
             return node.withStaticType(foundType)
@@ -362,7 +362,7 @@ internal class StaticTypeInferenceVisitorTransform(
         // Compare NAry ops: EQ, NE, GT, GTE, LT, LTE, BETWEEN
         override fun transformExprEq(node: PartiqlAst.Expr.Eq): PartiqlAst.Expr {
             val processedNode = super.transformExprEq(node) as PartiqlAst.Expr.Eq
-            return when (operandsAreComparable(processedNode.operands, "=", processedNode.metas)){
+            return when (operandsAreComparable(processedNode.operands, "=", processedNode.metas)) {
                 true -> transformNAry(processedNode, processedNode.operands) { recurseForNAryOperations(processedNode, it, ::getTypeForNAryCompareOperations) }
                 false -> processedNode.withStaticType(StaticType.BOOL)
             }
@@ -370,7 +370,7 @@ internal class StaticTypeInferenceVisitorTransform(
 
         override fun transformExprNe(node: PartiqlAst.Expr.Ne): PartiqlAst.Expr {
             val processedNode = super.transformExprNe(node) as PartiqlAst.Expr.Ne
-            return when (operandsAreComparable(processedNode.operands, "!=", processedNode.metas)){
+            return when (operandsAreComparable(processedNode.operands, "!=", processedNode.metas)) {
                 true -> transformNAry(processedNode, processedNode.operands) { recurseForNAryOperations(processedNode, it, ::getTypeForNAryCompareOperations) }
                 false -> processedNode.withStaticType(StaticType.BOOL)
             }
@@ -378,7 +378,7 @@ internal class StaticTypeInferenceVisitorTransform(
 
         override fun transformExprGt(node: PartiqlAst.Expr.Gt): PartiqlAst.Expr {
             val processedNode = super.transformExprGt(node) as PartiqlAst.Expr.Gt
-            return when (operandsAreComparable(processedNode.operands, ">", processedNode.metas)){
+            return when (operandsAreComparable(processedNode.operands, ">", processedNode.metas)) {
                 true -> transformNAry(processedNode, processedNode.operands) { recurseForNAryOperations(processedNode, it, ::getTypeForNAryCompareOperations) }
                 false -> processedNode.withStaticType(StaticType.BOOL)
             }
@@ -422,25 +422,25 @@ internal class StaticTypeInferenceVisitorTransform(
             val processedNode = super.transformExprNot(node) as PartiqlAst.Expr.Not
             val args = listOf(processedNode.expr)
             return when (hasValidOperandTypes(args, { it is BoolType }, "NOT", processedNode.metas)) {
-                true -> transformNAry(processedNode, args) { recurseForNAryOperations(processedNode, it, ::getTypeForNAryLogicalOperations) }
-                false -> processedNode.withStaticType(StaticType.BOOL)
-            }
+            true -> transformNAry(processedNode, args) { recurseForNAryOperations(processedNode, it, ::getTypeForNAryLogicalOperations) }
+            false -> processedNode.withStaticType(StaticType.BOOL)
+        }
         }
 
         override fun transformExprAnd(node: PartiqlAst.Expr.And): PartiqlAst.Expr {
             val processedNode = super.transformExprAnd(node) as PartiqlAst.Expr.And
             return when (hasValidOperandTypes(processedNode.operands, { it is BoolType }, "AND", processedNode.metas)) {
-                true -> transformNAry(processedNode, processedNode.operands) { recurseForNAryOperations(processedNode, it, ::getTypeForNAryLogicalOperations) }
-                false -> processedNode.withStaticType(StaticType.BOOL)
-            }
+            true -> transformNAry(processedNode, processedNode.operands) { recurseForNAryOperations(processedNode, it, ::getTypeForNAryLogicalOperations) }
+            false -> processedNode.withStaticType(StaticType.BOOL)
+        }
         }
 
         override fun transformExprOr(node: PartiqlAst.Expr.Or): PartiqlAst.Expr {
             val processedNode = super.transformExprOr(node) as PartiqlAst.Expr.Or
             return when (hasValidOperandTypes(processedNode.operands, { it is BoolType }, "OR", processedNode.metas)) {
-                true -> transformNAry(processedNode, processedNode.operands) { recurseForNAryOperations(processedNode, it, ::getTypeForNAryLogicalOperations) }
-                false -> processedNode.withStaticType(StaticType.BOOL)
-            }
+            true -> transformNAry(processedNode, processedNode.operands) { recurseForNAryOperations(processedNode, it, ::getTypeForNAryLogicalOperations) }
+            false -> processedNode.withStaticType(StaticType.BOOL)
+        }
         }
 
         // IN NAry op
@@ -464,7 +464,7 @@ internal class StaticTypeInferenceVisitorTransform(
                 errorAdded = true
             }
 
-            return when(errorAdded) {
+            return when (errorAdded) {
                 true -> processedNode.withStaticType(StaticType.BOOL)
                 false -> transformNAry(processedNode, processedNode.operands) { computeReturnTypeForNAryIn(it) }
             }
@@ -477,9 +477,9 @@ internal class StaticTypeInferenceVisitorTransform(
 
             // check if any non-unknown operand has no text type. if so, then data type mismatch
             return when (hasValidOperandTypes(processedNode.operands, { it.isText() }, "||", processedNode.metas)) {
-                true -> transformNAry(processedNode, processedNode.operands) { recurseForNAryOperations(processedNode, operandsTypes, ::getTypeForNAryStringConcat) }
-                false -> processedNode.withStaticType(StaticType.STRING)
-            }
+            true -> transformNAry(processedNode, processedNode.operands) { recurseForNAryOperations(processedNode, operandsTypes, ::getTypeForNAryStringConcat) }
+            false -> processedNode.withStaticType(StaticType.STRING)
+        }
         }
 
         // LIKE NAry op
@@ -489,9 +489,9 @@ internal class StaticTypeInferenceVisitorTransform(
 
             // check if any non-unknown operand has no text type. if so, then data type mismatch
             return when (hasValidOperandTypes(args, { it.isText() }, "LIKE", processedNode.metas)) {
-                true -> transformNAry(processedNode, args) { recurseForNAryOperations(processedNode, it, ::getTypeForNAryLike) }
-                false -> processedNode.withStaticType(StaticType.BOOL)
-            }
+            true -> transformNAry(processedNode, args) { recurseForNAryOperations(processedNode, it, ::getTypeForNAryLike) }
+            false -> processedNode.withStaticType(StaticType.BOOL)
+        }
         }
 
         // CALL
@@ -621,20 +621,20 @@ internal class StaticTypeInferenceVisitorTransform(
 
             // check if [argType] could be a numeric type
             return if (hasValidOperandTypes(operands, { it.isNumeric() }, op, expr.metas)) {
-                val allTypes = argType.allTypes
-                val possibleReturnTypes = allTypes.map { st ->
-                    when (st) {
-                        is IntType, is FloatType, is DecimalType -> st
-                        is NullType -> StaticType.NULL
-                        else -> StaticType.MISSING
-                    }
-                }.distinct()
-
-                when (possibleReturnTypes.size) {
-                    1 -> possibleReturnTypes.single()
-                    else -> StaticType.unionOf(*possibleReturnTypes.toTypedArray())
+            val allTypes = argType.allTypes
+            val possibleReturnTypes = allTypes.map { st ->
+                when (st) {
+                    is IntType, is FloatType, is DecimalType -> st
+                    is NullType -> StaticType.NULL
+                    else -> StaticType.MISSING
                 }
-            } else {
+            }.distinct()
+
+            when (possibleReturnTypes.size) {
+                1 -> possibleReturnTypes.single()
+                else -> StaticType.unionOf(*possibleReturnTypes.toTypedArray())
+            }
+        } else {
                 // continuation type of all numeric types to prevent incompatible types and unknown errors from propagating
                 StaticType.unionOf(StaticType.ALL_TYPES.filter { it.isNumeric() }.toSet())
             }
@@ -643,42 +643,42 @@ internal class StaticTypeInferenceVisitorTransform(
         private fun computeReturnTypeForArithmeticNAry(expr: PartiqlAst.Expr, operands: List<PartiqlAst.Expr>, op: String): StaticType {
             // check if all operands could be a numeric type
             return if (hasValidOperandTypes(operands, { it.isNumeric() }, op, expr.metas)) {
-                operands.map { it.getStaticType() }.reduce { lastType, currentType ->
-                    when {
-                        lastType is MissingType || currentType is MissingType -> StaticType.MISSING
-                        lastType is NullType || currentType is NullType -> StaticType.NULL
-                        else -> {
-                            val leftTypes = lastType.allTypes
-                            val rightTypes = currentType.allTypes
+            operands.map { it.getStaticType() }.reduce { lastType, currentType ->
+                when {
+                    lastType is MissingType || currentType is MissingType -> StaticType.MISSING
+                    lastType is NullType || currentType is NullType -> StaticType.NULL
+                    else -> {
+                        val leftTypes = lastType.allTypes
+                        val rightTypes = currentType.allTypes
 
-                            val possibleResultTypes: List<SingleType> =
-                                leftTypes.flatMap { type1 ->
-                                    rightTypes.map { type2 ->
-                                        computeBinaryArithmeticResultType(type1, type2)
-                                    }
-                                }.distinct()
-
-                            when (possibleResultTypes.size) {
-                                0 -> error("We always expect there to be at least one possible result type, even if is MISSING")
-                                1 -> {
-                                    // returning StaticType.MISSING from this branch is an error condition because the
-                                    // arithmetic operation can *never* succeed.
-                                    possibleResultTypes.first()
+                        val possibleResultTypes: List<SingleType> =
+                            leftTypes.flatMap { type1 ->
+                                rightTypes.map { type2 ->
+                                    computeBinaryArithmeticResultType(type1, type2)
                                 }
-                                else -> AnyOfType(possibleResultTypes.toSet())
+                            }.distinct()
+
+                        when (possibleResultTypes.size) {
+                            0 -> error("We always expect there to be at least one possible result type, even if is MISSING")
+                            1 -> {
+                                // returning StaticType.MISSING from this branch is an error condition because the
+                                // arithmetic operation can *never* succeed.
+                                possibleResultTypes.first()
                             }
+                            else -> AnyOfType(possibleResultTypes.toSet())
                         }
                     }
                 }
-            } else {
+            }
+        } else {
                 // continuation type of all numeric types to prevent incompatible types and unknown errors from propagating
                 StaticType.unionOf(StaticType.ALL_TYPES.filter { it.isNumeric() }.toSet())
             }
         }
 
         private fun computeBinaryArithmeticResultType(leftType: StaticType, rightType: StaticType): SingleType =
-        // This could also have been a lookup table of types, however... doing this as a nested `when` allows
-        // us to not to rely on `.equals` and `.hashcode` implementations of [StaticType], which include metas
+            // This could also have been a lookup table of types, however... doing this as a nested `when` allows
+            // us to not to rely on `.equals` and `.hashcode` implementations of [StaticType], which include metas
             // and might introduce unwanted behavior.
             when {
                 // Propagate missing as missing. Missing has precedence over null
@@ -1661,7 +1661,7 @@ internal class StaticTypeInferenceVisitorTransform(
                 }
                 is PartiqlAst.Projection.ProjectStar -> error(
                     "Encountered a SelectListItemStar." +
-                            " This wouldn't be the case if SelectStarVisitorTransform ran before this."
+                        " This wouldn't be the case if SelectStarVisitorTransform ran before this."
                 )
                 is PartiqlAst.Projection.ProjectValue -> newProjection.value.getStaticType()
                 is PartiqlAst.Projection.ProjectPivot -> TODO("PartiqlAst.Projection.ProjectPivot is not implemented yet")
@@ -1678,7 +1678,7 @@ internal class StaticTypeInferenceVisitorTransform(
             // calling transformExprSelectEvaluationOrder avoids the infinite recursion that would happen
             // if we called transformExprSelect on the nested visitor transform.
             val newNode = createVisitorTransformForNestedScope().transformExprSelectEvaluationOrder(node)
-                    as PartiqlAst.Expr.Select
+                as PartiqlAst.Expr.Select
 
             val projectionType = newNode.project.metas.staticType?.type
                 ?: error("Select project wasn't assigned a StaticTypeMeta for some reason")
