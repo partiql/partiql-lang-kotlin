@@ -517,13 +517,13 @@ internal class EvaluatingCompiler(
     /**
      *  For operators which could return integer type, check integer overflow in case of [TypingMode.PERMISSIVE].
      */
-    private fun resolveArithmeticOverflow(computeThunk: ThunkEnv, metas: MetaContainer): ThunkEnv =
+    private fun checkIntegerOverflow(computeThunk: ThunkEnv, metas: MetaContainer): ThunkEnv =
         when (val staticTypes = metas.staticType?.type?.getTypes()) {
             // No staticType, can't validate integer size.
             null -> computeThunk
             else -> {
-                when (compileOptions.typingMode) {
-                    TypingMode.LEGACY -> {
+                when (compileOptions.typedOpBehavior) {
+                    TypedOpBehavior.LEGACY -> {
                         // integer size constraints have not been tested under [TypingMode.LEGACY] because the
                         // [StaticTypeInferenceVisitorTransform] doesn't support being used with legacy mode yet.
                         // throw an exception in case we encounter this untested scenario. This might work fine, but I
@@ -538,7 +538,7 @@ internal class EvaluatingCompiler(
                         }
                     }
 
-                    TypingMode.PERMISSIVE -> {
+                    TypedOpBehavior.HONOR_PARAMETERS -> {
                         val biggestIntegerType = staticTypes.filterIsInstance<IntType>().maxBy {
                             it.rangeConstraint.numBytes
                         }
@@ -591,7 +591,7 @@ internal class EvaluatingCompiler(
             (lValue.numberValue() + rValue.numberValue()).exprValue()
         }
 
-        return resolveArithmeticOverflow(computeThunk, metas)
+        return checkIntegerOverflow(computeThunk, metas)
     }
 
     private fun compileMinus(expr: PartiqlAst.Expr.Minus, metas: MetaContainer): ThunkEnv {
@@ -605,7 +605,7 @@ internal class EvaluatingCompiler(
             (lValue.numberValue() - rValue.numberValue()).exprValue()
         }
 
-        return resolveArithmeticOverflow(computeThunk, metas)
+        return checkIntegerOverflow(computeThunk, metas)
     }
 
     private fun compilePos(expr: PartiqlAst.Expr.Pos, metas: MetaContainer): ThunkEnv {
@@ -618,7 +618,7 @@ internal class EvaluatingCompiler(
             value
         }
 
-        return resolveArithmeticOverflow(computeThunk, metas)
+        return checkIntegerOverflow(computeThunk, metas)
     }
 
     private fun compileNeg(expr: PartiqlAst.Expr.Neg, metas: MetaContainer): ThunkEnv {
@@ -628,7 +628,7 @@ internal class EvaluatingCompiler(
             (-value.numberValue()).exprValue()
         }
 
-        return resolveArithmeticOverflow(computeThunk, metas)
+        return checkIntegerOverflow(computeThunk, metas)
     }
 
     private fun compileTimes(expr: PartiqlAst.Expr.Times, metas: MetaContainer): ThunkEnv {
@@ -638,7 +638,7 @@ internal class EvaluatingCompiler(
             (lValue.numberValue() * rValue.numberValue()).exprValue()
         }
 
-        return resolveArithmeticOverflow(computeThunk, metas)
+        return checkIntegerOverflow(computeThunk, metas)
     }
 
     private fun compileDivide(expr: PartiqlAst.Expr.Divide, metas: MetaContainer): ThunkEnv {
@@ -666,7 +666,7 @@ internal class EvaluatingCompiler(
             }
         }
 
-        return resolveArithmeticOverflow(computeThunk, metas)
+        return checkIntegerOverflow(computeThunk, metas)
     }
 
     private fun compileModulo(expr: PartiqlAst.Expr.Modulo, metas: MetaContainer): ThunkEnv {
@@ -681,7 +681,7 @@ internal class EvaluatingCompiler(
             (lValue.numberValue() % denominator).exprValue()
         }
 
-        return resolveArithmeticOverflow(computeThunk, metas)
+        return checkIntegerOverflow(computeThunk, metas)
     }
 
     private fun compileEq(expr: PartiqlAst.Expr.Eq, metas: MetaContainer): ThunkEnv {
@@ -1055,7 +1055,7 @@ internal class EvaluatingCompiler(
             }
         }
 
-        return resolveArithmeticOverflow(computeThunk, metas)
+        return checkIntegerOverflow(computeThunk, metas)
     }
 
     private fun compileLit(expr: PartiqlAst.Expr.Lit, metas: MetaContainer): ThunkEnv {

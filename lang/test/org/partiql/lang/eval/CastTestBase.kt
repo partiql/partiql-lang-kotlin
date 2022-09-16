@@ -1325,7 +1325,7 @@ abstract class CastTestBase : EvaluatorTestBase() {
             ).types(ExprValueType.SYMBOL.sqlTextNames),
             listOf(
                 case("DATE '2007-10-10'", "\"2007-10-10\"", CastQuality.LOSSLESS)
-            ).types(ExprValueType.STRING.sqlTextNames),
+            ).types(listOf("string", "varchar")),
             listOf(
                 // CAST(<TIME> AS <variants of TIME type>)
                 case("TIME '23:12:12.1267'", "TIME", "$TIME_ANNOTATION::{hour:23, minute:12, second:12.1267, timezone_hour:null.int, timezone_minute:null.int}", CastQuality.LOSSLESS),
@@ -1412,7 +1412,7 @@ abstract class CastTestBase : EvaluatorTestBase() {
                 case("TIME (3) WITH TIME ZONE '23:12:12.1267'", "\"23:12:12.127${defaultTimezoneOffset.getOffsetHHmm()}\"", CastQuality.LOSSLESS),
                 case("TIME (3) WITH TIME ZONE '23:12:12.1267-05:30'", "\"23:12:12.127-05:30\"", CastQuality.LOSSLESS),
                 case("TIME (3) WITH TIME ZONE '23:12:12.1267+05:30'", "\"23:12:12.127+05:30\"", CastQuality.LOSSLESS)
-            ).types(ExprValueType.STRING.sqlTextNames)
+            ).types(listOf("string", "varchar"))
         ).flatten() +
             listOf(MISSING, NULL, BOOL, INT, FLOAT, DECIMAL, TIMESTAMP, CLOB, BLOB, LIST, SEXP, STRUCT, BAG)
                 .map {

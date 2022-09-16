@@ -79,6 +79,7 @@ enum class TypingMode {
  * Indicates how CAST should behave.
  */
 enum class TypedOpBehavior {
+    @Deprecated("Please use HONOR_PARAMETERS")
     /** The old behavior that ignores type arguments in CAST and IS. */
     LEGACY,
 
@@ -148,7 +149,7 @@ data class CompileOptions private constructor (
     val visitorTransformMode: VisitorTransformMode = VisitorTransformMode.DEFAULT,
     val thunkOptions: ThunkOptions = ThunkOptions.standard(),
     val typingMode: TypingMode = TypingMode.LEGACY,
-    val typedOpBehavior: TypedOpBehavior = TypedOpBehavior.LEGACY,
+    val typedOpBehavior: TypedOpBehavior = TypedOpBehavior.HONOR_PARAMETERS,
     val defaultTimezoneOffset: ZoneOffset = ZoneOffset.UTC
 ) {
 
