@@ -281,48 +281,48 @@ internal class StaticTypeInferenceVisitorTransform(
 
         // Arithmetic NAry ops: ADD, SUB, MUL, DIV, MOD
         override fun transformExprPlus(node: PartiqlAst.Expr.Plus): PartiqlAst.Expr {
-            val nAry = super.transformExprPlus(node) as PartiqlAst.Expr.Plus
+            val processedNode = super.transformExprPlus(node) as PartiqlAst.Expr.Plus
             val type = when {
-                nAry.operands.size < 2 -> throw IllegalArgumentException("PartiqlAst.Expr.Plus must have at least 2 arguments")
-                else -> computeReturnTypeForArithmeticNAry(nAry, nAry.operands, "+")
+                processedNode.operands.size < 2 -> throw IllegalArgumentException("PartiqlAst.Expr.Plus must have at least 2 arguments")
+                else -> computeReturnTypeForArithmeticNAry(processedNode, processedNode.operands, "+")
             }
-            return nAry.withStaticType(type)
+            return processedNode.withStaticType(type)
         }
 
         override fun transformExprPos(node: PartiqlAst.Expr.Pos): PartiqlAst.Expr {
-            val nAry = super.transformExprPos(node) as PartiqlAst.Expr.Pos
-            val type = computeReturnTypeForArithmeticUnary(nAry, listOf(nAry.expr), "+")
-            return nAry.withStaticType(type)
+            val processedName = super.transformExprPos(node) as PartiqlAst.Expr.Pos
+            val type = computeReturnTypeForArithmeticUnary(processedName, listOf(processedName.expr), "+")
+            return processedName.withStaticType(type)
         }
 
         override fun transformExprMinus(node: PartiqlAst.Expr.Minus): PartiqlAst.Expr {
-            val nAry = (super.transformExprMinus(node) as PartiqlAst.Expr.Minus)
+            val processedNode = (super.transformExprMinus(node) as PartiqlAst.Expr.Minus)
             val type = when {
-                nAry.operands.size < 2 -> throw IllegalArgumentException("PartiqlAst.Expr.Minus must have at least 2 arguments")
-                else -> computeReturnTypeForArithmeticNAry(nAry, nAry.operands, "-")
+                processedNode.operands.size < 2 -> throw IllegalArgumentException("PartiqlAst.Expr.Minus must have at least 2 arguments")
+                else -> computeReturnTypeForArithmeticNAry(processedNode, processedNode.operands, "-")
             }
-            return nAry.withStaticType(type)
+            return processedNode.withStaticType(type)
         }
 
         override fun transformExprNeg(node: PartiqlAst.Expr.Neg): PartiqlAst.Expr {
-            val nAry = super.transformExprNeg(node) as PartiqlAst.Expr.Neg
-            val type = computeReturnTypeForArithmeticUnary(nAry, listOf(nAry.expr), "-")
-            return nAry.withStaticType(type)
+            val processedNode = super.transformExprNeg(node) as PartiqlAst.Expr.Neg
+            val type = computeReturnTypeForArithmeticUnary(processedNode, listOf(processedNode.expr), "-")
+            return processedNode.withStaticType(type)
         }
 
         override fun transformExprTimes(node: PartiqlAst.Expr.Times): PartiqlAst.Expr {
-            val nAry = (super.transformExprTimes(node) as PartiqlAst.Expr.Times)
-            return nAry.withStaticType(computeReturnTypeForArithmeticNAry(nAry, nAry.operands, "*"))
+            val processedNode = (super.transformExprTimes(node) as PartiqlAst.Expr.Times)
+            return processedNode.withStaticType(computeReturnTypeForArithmeticNAry(processedNode, processedNode.operands, "*"))
         }
 
         override fun transformExprDivide(node: PartiqlAst.Expr.Divide): PartiqlAst.Expr {
-            val nAry = (super.transformExprDivide(node) as PartiqlAst.Expr.Divide)
-            return nAry.withStaticType(computeReturnTypeForArithmeticNAry(nAry, nAry.operands, "/"))
+            val processedNode = (super.transformExprDivide(node) as PartiqlAst.Expr.Divide)
+            return processedNode.withStaticType(computeReturnTypeForArithmeticNAry(processedNode, processedNode.operands, "/"))
         }
 
         override fun transformExprModulo(node: PartiqlAst.Expr.Modulo): PartiqlAst.Expr {
-            val nAry = (super.transformExprModulo(node) as PartiqlAst.Expr.Modulo)
-            return nAry.withStaticType(computeReturnTypeForArithmeticNAry(nAry, nAry.operands, "%"))
+            val processedNode = (super.transformExprModulo(node) as PartiqlAst.Expr.Modulo)
+            return processedNode.withStaticType(computeReturnTypeForArithmeticNAry(processedNode, processedNode.operands, "%"))
         }
 
         /**
@@ -361,180 +361,168 @@ internal class StaticTypeInferenceVisitorTransform(
 
         // Compare NAry ops: EQ, NE, GT, GTE, LT, LTE, BETWEEN
         override fun transformExprEq(node: PartiqlAst.Expr.Eq): PartiqlAst.Expr {
-            val nAry = super.transformExprEq(node) as PartiqlAst.Expr.Eq
-            return if (operandsAreComparable(nAry.operands, "=", nAry.metas)) {
-                transformNAry(nAry, nAry.operands) { recurseForNAryOperations(nAry, it, ::getTypeForNAryCompareOperations) }
-            } else {
-                return nAry.withStaticType(StaticType.BOOL)
+            val processedNode = super.transformExprEq(node) as PartiqlAst.Expr.Eq
+            return when (operandsAreComparable(processedNode.operands, "=", processedNode.metas)) {
+                true -> transformNAry(processedNode, processedNode.operands) { recurseForNAryOperations(processedNode, it, ::getTypeForNAryCompareOperations) }
+                false -> processedNode.withStaticType(StaticType.BOOL)
             }
         }
 
         override fun transformExprNe(node: PartiqlAst.Expr.Ne): PartiqlAst.Expr {
-            val nAry = super.transformExprNe(node) as PartiqlAst.Expr.Ne
-            return if (operandsAreComparable(nAry.operands, "!=", nAry.metas)) {
-                transformNAry(nAry, nAry.operands) { recurseForNAryOperations(nAry, it, ::getTypeForNAryCompareOperations) }
-            } else {
-                return nAry.withStaticType(StaticType.BOOL)
+            val processedNode = super.transformExprNe(node) as PartiqlAst.Expr.Ne
+            return when (operandsAreComparable(processedNode.operands, "!=", processedNode.metas)) {
+                true -> transformNAry(processedNode, processedNode.operands) { recurseForNAryOperations(processedNode, it, ::getTypeForNAryCompareOperations) }
+                false -> processedNode.withStaticType(StaticType.BOOL)
             }
         }
 
         override fun transformExprGt(node: PartiqlAst.Expr.Gt): PartiqlAst.Expr {
-            val nAry = super.transformExprGt(node) as PartiqlAst.Expr.Gt
-            return if (operandsAreComparable(nAry.operands, ">", nAry.metas)) {
-                transformNAry(nAry, nAry.operands) { recurseForNAryOperations(nAry, it, ::getTypeForNAryCompareOperations) }
-            } else {
-                return nAry.withStaticType(StaticType.BOOL)
+            val processedNode = super.transformExprGt(node) as PartiqlAst.Expr.Gt
+            return when (operandsAreComparable(processedNode.operands, ">", processedNode.metas)) {
+                true -> transformNAry(processedNode, processedNode.operands) { recurseForNAryOperations(processedNode, it, ::getTypeForNAryCompareOperations) }
+                false -> processedNode.withStaticType(StaticType.BOOL)
             }
         }
 
         override fun transformExprGte(node: PartiqlAst.Expr.Gte): PartiqlAst.Expr {
-            val nAry = super.transformExprGte(node) as PartiqlAst.Expr.Gte
-            return if (operandsAreComparable(nAry.operands, ">=", nAry.metas)) {
-                transformNAry(nAry, nAry.operands) { recurseForNAryOperations(nAry, it, ::getTypeForNAryCompareOperations) }
-            } else {
-                return nAry.withStaticType(StaticType.BOOL)
+            val processedNode = super.transformExprGte(node) as PartiqlAst.Expr.Gte
+            return when (operandsAreComparable(processedNode.operands, ">=", processedNode.metas)) {
+                true -> transformNAry(processedNode, processedNode.operands) { recurseForNAryOperations(processedNode, it, ::getTypeForNAryCompareOperations) }
+                false -> processedNode.withStaticType(StaticType.BOOL)
             }
         }
 
         override fun transformExprLt(node: PartiqlAst.Expr.Lt): PartiqlAst.Expr {
-            val nAry = super.transformExprLt(node) as PartiqlAst.Expr.Lt
-            return if (operandsAreComparable(nAry.operands, "<", nAry.metas)) {
-                transformNAry(nAry, nAry.operands) { recurseForNAryOperations(nAry, it, ::getTypeForNAryCompareOperations) }
-            } else {
-                return nAry.withStaticType(StaticType.BOOL)
+            val processedNode = super.transformExprLt(node) as PartiqlAst.Expr.Lt
+            return when (operandsAreComparable(processedNode.operands, "<", processedNode.metas)) {
+                true -> transformNAry(processedNode, processedNode.operands) { recurseForNAryOperations(processedNode, it, ::getTypeForNAryCompareOperations) }
+                false -> processedNode.withStaticType(StaticType.BOOL)
             }
         }
 
         override fun transformExprLte(node: PartiqlAst.Expr.Lte): PartiqlAst.Expr {
-            val nAry = super.transformExprLte(node) as PartiqlAst.Expr.Lte
-            return if (operandsAreComparable(nAry.operands, "<=", nAry.metas)) {
-                transformNAry(nAry, nAry.operands) { recurseForNAryOperations(nAry, it, ::getTypeForNAryCompareOperations) }
-            } else {
-                return nAry.withStaticType(StaticType.BOOL)
+            val processedNode = super.transformExprLte(node) as PartiqlAst.Expr.Lte
+            return when (operandsAreComparable(processedNode.operands, "<=", processedNode.metas)) {
+                true -> transformNAry(processedNode, processedNode.operands) { recurseForNAryOperations(processedNode, it, ::getTypeForNAryCompareOperations) }
+                false -> processedNode.withStaticType(StaticType.BOOL)
             }
         }
 
         override fun transformExprBetween(node: PartiqlAst.Expr.Between): PartiqlAst.Expr {
-            val nAry = super.transformExprBetween(node) as PartiqlAst.Expr.Between
-            val args = listOf(nAry.value, nAry.from, nAry.to)
-            return if (operandsAreComparable(args, "BETWEEN", nAry.metas)) {
-                transformNAry(nAry, args) { recurseForNAryOperations(nAry, it, ::getTypeForNAryCompareOperations) }
-            } else {
-                return nAry.withStaticType(StaticType.BOOL)
+            val processedNode = super.transformExprBetween(node) as PartiqlAst.Expr.Between
+            val args = listOf(processedNode.value, processedNode.from, processedNode.to)
+            return when (operandsAreComparable(args, "BETWEEN", processedNode.metas)) {
+                true -> transformNAry(processedNode, args) { recurseForNAryOperations(processedNode, it, ::getTypeForNAryCompareOperations) }
+                false -> processedNode.withStaticType(StaticType.BOOL)
             }
         }
 
         // Logical NAry ops: NOT, AND, OR
         override fun transformExprNot(node: PartiqlAst.Expr.Not): PartiqlAst.Expr {
-            val nAry = super.transformExprNot(node) as PartiqlAst.Expr.Not
-            val args = listOf(nAry.expr)
-            return if (hasValidOperandTypes(args, { it is BoolType }, "NOT", nAry.metas)) {
-            transformNAry(nAry, args) { recurseForNAryOperations(nAry, it, ::getTypeForNAryLogicalOperations) }
-        } else {
-                nAry.withStaticType(StaticType.BOOL)
-            }
+            val processedNode = super.transformExprNot(node) as PartiqlAst.Expr.Not
+            val args = listOf(processedNode.expr)
+            return when (hasValidOperandTypes(args, { it is BoolType }, "NOT", processedNode.metas)) {
+            true -> transformNAry(processedNode, args) { recurseForNAryOperations(processedNode, it, ::getTypeForNAryLogicalOperations) }
+            false -> processedNode.withStaticType(StaticType.BOOL)
+        }
         }
 
         override fun transformExprAnd(node: PartiqlAst.Expr.And): PartiqlAst.Expr {
-            val nAry = super.transformExprAnd(node) as PartiqlAst.Expr.And
-            return if (hasValidOperandTypes(nAry.operands, { it is BoolType }, "AND", nAry.metas)) {
-            transformNAry(nAry, nAry.operands) { recurseForNAryOperations(nAry, it, ::getTypeForNAryLogicalOperations) }
-        } else {
-                nAry.withStaticType(StaticType.BOOL)
-            }
+            val processedNode = super.transformExprAnd(node) as PartiqlAst.Expr.And
+            return when (hasValidOperandTypes(processedNode.operands, { it is BoolType }, "AND", processedNode.metas)) {
+            true -> transformNAry(processedNode, processedNode.operands) { recurseForNAryOperations(processedNode, it, ::getTypeForNAryLogicalOperations) }
+            false -> processedNode.withStaticType(StaticType.BOOL)
+        }
         }
 
         override fun transformExprOr(node: PartiqlAst.Expr.Or): PartiqlAst.Expr {
-            val nAry = super.transformExprOr(node) as PartiqlAst.Expr.Or
-            return if (hasValidOperandTypes(nAry.operands, { it is BoolType }, "OR", nAry.metas)) {
-            transformNAry(nAry, nAry.operands) { recurseForNAryOperations(nAry, it, ::getTypeForNAryLogicalOperations) }
-        } else {
-                nAry.withStaticType(StaticType.BOOL)
-            }
+            val processedNode = super.transformExprOr(node) as PartiqlAst.Expr.Or
+            return when (hasValidOperandTypes(processedNode.operands, { it is BoolType }, "OR", processedNode.metas)) {
+            true -> transformNAry(processedNode, processedNode.operands) { recurseForNAryOperations(processedNode, it, ::getTypeForNAryLogicalOperations) }
+            false -> processedNode.withStaticType(StaticType.BOOL)
+        }
         }
 
         // IN NAry op
         override fun transformExprInCollection(node: PartiqlAst.Expr.InCollection): PartiqlAst.Expr {
-            val nAry = super.transformExprInCollection(node) as PartiqlAst.Expr.InCollection
-            val operands = nAry.operands.map { it.getStaticType() }
+            val processedNode = super.transformExprInCollection(node) as PartiqlAst.Expr.InCollection
+            val operands = processedNode.operands.map { it.getStaticType() }
             val lhs = operands[0]
             val rhs = operands[1]
             var errorAdded = false
 
             // check if any operands are unknown, then null or missing error
             if (operands.any { operand -> operand.isUnknown() }) {
-                handleExpressionAlwaysReturnsNullOrMissingError(nAry.metas.getSourceLocation())
+                handleExpressionAlwaysReturnsNullOrMissingError(processedNode.metas.getSourceLocation())
                 errorAdded = true
             }
 
             // if none of the [rhs] types are [CollectionType]s with comparable element types to [lhs], then data type
             // mismatch error
             if (!rhs.isUnknown() && rhs.allTypes.none { it is CollectionType && it.elementType.isComparableTo(lhs) }) {
-                handleIncompatibleDataTypesForOpError(operands, "IN", nAry.metas.getSourceLocation())
+                handleIncompatibleDataTypesForOpError(operands, "IN", processedNode.metas.getSourceLocation())
                 errorAdded = true
             }
-            return if (errorAdded) {
-                nAry.withStaticType(StaticType.BOOL)
-            } else {
-                transformNAry(nAry, nAry.operands) { computeReturnTypeForNAryIn(it) }
+
+            return when (errorAdded) {
+                true -> processedNode.withStaticType(StaticType.BOOL)
+                false -> transformNAry(processedNode, processedNode.operands) { computeReturnTypeForNAryIn(it) }
             }
         }
 
         // CONCAT NAry op
         override fun transformExprConcat(node: PartiqlAst.Expr.Concat): PartiqlAst.Expr {
-            val nAry = super.transformExprConcat(node) as PartiqlAst.Expr.Concat
-            val operandsTypes = nAry.operands.map { it.getStaticType() }
+            val processedNode = super.transformExprConcat(node) as PartiqlAst.Expr.Concat
+            val operandsTypes = processedNode.operands.map { it.getStaticType() }
 
             // check if any non-unknown operand has no text type. if so, then data type mismatch
-            return if (hasValidOperandTypes(nAry.operands, { it.isText() }, "||", nAry.metas)) {
-            transformNAry(nAry, nAry.operands) { recurseForNAryOperations(nAry, operandsTypes, ::getTypeForNAryStringConcat) }
-        } else {
-                nAry.withStaticType(StaticType.STRING)
-            }
+            return when (hasValidOperandTypes(processedNode.operands, { it.isText() }, "||", processedNode.metas)) {
+            true -> transformNAry(processedNode, processedNode.operands) { recurseForNAryOperations(processedNode, operandsTypes, ::getTypeForNAryStringConcat) }
+            false -> processedNode.withStaticType(StaticType.STRING)
+        }
         }
 
         // LIKE NAry op
         override fun transformExprLike(node: PartiqlAst.Expr.Like): PartiqlAst.Expr {
-            val nAry = super.transformExprLike(node) as PartiqlAst.Expr.Like
-            val args = listOfNotNull(nAry.value, nAry.pattern, nAry.escape)
+            val processedNode = super.transformExprLike(node) as PartiqlAst.Expr.Like
+            val args = listOfNotNull(processedNode.value, processedNode.pattern, processedNode.escape)
 
             // check if any non-unknown operand has no text type. if so, then data type mismatch
-            return if (hasValidOperandTypes(args, { it.isText() }, "LIKE", nAry.metas)) {
-            transformNAry(nAry, args) { recurseForNAryOperations(nAry, it, ::getTypeForNAryLike) }
-        } else {
-                nAry.withStaticType(StaticType.BOOL)
-            }
+            return when (hasValidOperandTypes(args, { it.isText() }, "LIKE", processedNode.metas)) {
+            true -> transformNAry(processedNode, args) { recurseForNAryOperations(processedNode, it, ::getTypeForNAryLike) }
+            false -> processedNode.withStaticType(StaticType.BOOL)
+        }
         }
 
         // CALL
         override fun transformExprCall(node: PartiqlAst.Expr.Call): PartiqlAst.Expr {
-            val nAry = super.transformExprCall(node) as PartiqlAst.Expr.Call
+            val processedNode = super.transformExprCall(node) as PartiqlAst.Expr.Call
 
-            val funcExpr = nAry.funcName
-            val functionArguments = nAry.args
+            val funcExpr = processedNode.funcName
+            val functionArguments = processedNode.args
 
             val functionName = funcExpr.text
 
             val signature = allFunctions[functionName]
             if (signature == null) {
-                handleNoSuchFunctionError(functionName, nAry.metas.getSourceLocation())
-                return nAry.withStaticType(StaticType.ANY)
+                handleNoSuchFunctionError(functionName, processedNode.metas.getSourceLocation())
+                return processedNode.withStaticType(StaticType.ANY)
             }
 
-            return nAry.withStaticType(computeReturnTypeForFunctionCall(signature, functionArguments, nAry.metas))
+            return processedNode.withStaticType(computeReturnTypeForFunctionCall(signature, functionArguments, processedNode.metas))
         }
 
         // Call agg : "count", "avg", "max", "min", "sum"
         override fun transformExprCallAgg(node: PartiqlAst.Expr.CallAgg): PartiqlAst.Expr {
-            val nAry = super.transformExprCallAgg(node) as PartiqlAst.Expr.CallAgg
-            val funcName = nAry.funcName
+            val processedNode = super.transformExprCallAgg(node) as PartiqlAst.Expr.CallAgg
+            val funcName = processedNode.funcName
             // unwrap the type if this is a collectionType
-            val argType = when (val type = nAry.arg.getStaticType()) {
+            val argType = when (val type = processedNode.arg.getStaticType()) {
                 is CollectionType -> type.elementType
                 else -> type
             }
-            val sourceLocation = nAry.getStartingSourceLocationMeta()
-            return nAry.withStaticType(computeReturnTypeForAggFunc(funcName.text, argType, sourceLocation))
+            val sourceLocation = processedNode.getStartingSourceLocationMeta()
+            return processedNode.withStaticType(computeReturnTypeForAggFunc(funcName.text, argType, sourceLocation))
         }
 
         private fun handleInvalidInputTypeForAggFun(sourceLocation: SourceLocationMeta, funcName: String, actualType: StaticType, expectedType: StaticType) {
