@@ -12,6 +12,8 @@
  *  language governing permissions and limitations under the License.
  */
 
+@file:Suppress("DEPRECATION")
+
 package org.partiql.lang.util
 
 import org.partiql.lang.errors.ErrorCode
@@ -44,7 +46,7 @@ internal fun Token?.err(message: String, errorCode: ErrorCode, errorContext: Pro
         null -> throw ParserException(errorCode = errorCode, errorContext = errorContext)
         else -> {
             val pvmap = populateLineAndColumn(errorContext, this.span)
-            pvmap[Property.TOKEN_TYPE] = type
+            pvmap[Property.TOKEN_DESCRIPTION] = type.toString()
             value?.let { pvmap[Property.TOKEN_VALUE] = it }
             throw ParserException(message, errorCode, pvmap)
         }

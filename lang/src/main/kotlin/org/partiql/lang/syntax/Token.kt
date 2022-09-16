@@ -12,6 +12,8 @@
  *  language governing permissions and limitations under the License.
  */
 
+@file:Suppress("DEPRECATION")
+
 package org.partiql.lang.syntax
 
 import com.amazon.ion.IonValue
@@ -25,6 +27,10 @@ import org.partiql.lang.util.stringValue
  * @property sourceText the literal source [String] of the token, if available
  * @property span the [SourceSpan] in the source where this token appears
  */
+@Deprecated(
+    message = "This class is subject to removal.",
+    level = DeprecationLevel.WARNING
+) // To be removed before 1.0
 data class Token(
     val type: TokenType,
     val value: IonValue? = null,

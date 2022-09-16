@@ -15,6 +15,10 @@
 package org.partiql.lang.syntax
 
 /** Simple source line/column value. */
+@Deprecated(
+    message = "This class is subject to removal.",
+    level = DeprecationLevel.WARNING
+) // To be removed before 1.0
 data class SourcePosition(val line: Long, val column: Long) {
     override fun toString(): String = "line $line, column $column"
 }

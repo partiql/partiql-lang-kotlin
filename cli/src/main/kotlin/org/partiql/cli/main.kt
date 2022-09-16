@@ -13,6 +13,8 @@
  */
 @file:JvmName("Main")
 
+@file:Suppress("DEPRECATION")
+
 package org.partiql.cli
 
 import com.amazon.ion.system.IonSystemBuilder
