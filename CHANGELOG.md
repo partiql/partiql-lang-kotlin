@@ -69,11 +69,13 @@ stage in the `PlannerPipeline` and to generate performance metrics for the indiv
 
 ### Changed
 - The default parser for all components of PartiQL is now the PartiQLParser -- see the deprecation of `SqlParser`
+- Now `CompileOption` uses `TypedOpParameter.HONOR_PARAMETERS` as default. 
 
 ### Deprecated
 - Deprecates `SqlLexer` and `SqlParser` to be replaced with the `PartiQLParserBuilder`.
 - Deprecates helper method, `blacklist`, within `org.partiql.lang.eval` and introduced a functionally equivalent
   `org.partiql.lang.eval.denyList` method.
+- Deprecates `TypedOpParameter.LEGACY` to be replaces with `TypedOpParameter.HONOR_PARAMETERS`
 
 ### Fixed
 - Codecov report uploads in GitHub Actions workflow
