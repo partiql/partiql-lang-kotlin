@@ -251,7 +251,7 @@ class EvaluatingCompilerIntTest : EvaluatorTestBase() {
         expectedPermissiveModeResult = "MISSING"
     )
 
-    // TODO: Are we going to support extremely small decimal operations? If so, uncomment the next test and fix the bug
+    // TODO: see https://github.com/partiql/partiql-lang-kotlin/issues/784
 //    @Test
 //    fun castAlmostZeroDecimal() = runEvaluatorTestCase("cast(1e-2147483609 as int)", expectedResult = "0")
 
