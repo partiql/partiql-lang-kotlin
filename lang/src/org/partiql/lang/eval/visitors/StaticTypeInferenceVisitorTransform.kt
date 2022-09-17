@@ -487,6 +487,7 @@ internal class StaticTypeInferenceVisitorTransform(
                 handleIncompatibleDataTypesForOpError(operands, "IN", processedNode.metas.getSourceLocation())
                 errorAdded = true
             }
+
             return if (errorAdded) {
                 processedNode.withStaticType(StaticType.BOOL)
             } else {
@@ -556,15 +557,15 @@ internal class StaticTypeInferenceVisitorTransform(
 
         // Call agg : "count", "avg", "max", "min", "sum"
         override fun transformExprCallAgg(node: PartiqlAst.Expr.CallAgg): PartiqlAst.Expr {
-            val nAry = super.transformExprCallAgg(node) as PartiqlAst.Expr.CallAgg
-            val funcName = nAry.funcName
+            val processedNode = super.transformExprCallAgg(node) as PartiqlAst.Expr.CallAgg
+            val funcName = processedNode.funcName
             // unwrap the type if this is a collectionType
-            val argType = when (val type = nAry.arg.getStaticType()) {
+            val argType = when (val type = processedNode.arg.getStaticType()) {
                 is CollectionType -> type.elementType
                 else -> type
             }
-            val sourceLocation = nAry.getStartingSourceLocationMeta()
-            return nAry.withStaticType(computeReturnTypeForAggFunc(funcName.text, argType, sourceLocation))
+            val sourceLocation = processedNode.getStartingSourceLocationMeta()
+            return processedNode.withStaticType(computeReturnTypeForAggFunc(funcName.text, argType, sourceLocation))
         }
 
         private fun handleInvalidInputTypeForAggFun(sourceLocation: SourceLocationMeta, funcName: String, actualType: StaticType, expectedType: StaticType) {

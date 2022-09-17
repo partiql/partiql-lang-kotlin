@@ -1267,7 +1267,13 @@ class SqlParser(
     private fun ParseNode.toInsertReturning(): InsertReturning =
         when (type) {
             ParseType.INSERT -> {
-                val ops = listOf(PartiqlAst.DmlOp.Insert(children[0].toAstExpr(), children[1].toAstExpr(), this.getMetas()))
+                // As `SQLParser` is deprecated, only support extended syntax of `INSERT` with `ON CONFLICT`
+                // in the new ANTLR parser.
+                // TODO: Add the `SQLParser` support for the PartiQL `INSERT` based on the grammar, if we're going to
+                // switch back to the `SQLParser`; see the following RFC for the complete Grammar:
+                // https://github.com/partiql/partiql-docs/blob/main/RFCs/0011-partiql-insert.md#2-proposed-grammar-and-semantics
+                val conflictAction = null
+                val ops = listOf(PartiqlAst.DmlOp.Insert(children[0].toAstExpr(), children[1].toAstExpr(), conflictAction, this.getMetas()))
                 // We will remove items from this collection as we consume them.
                 // If any unconsumed children remain, we've missed something and should throw an exception.
                 val unconsumedChildren = children.drop(2).toMutableList()

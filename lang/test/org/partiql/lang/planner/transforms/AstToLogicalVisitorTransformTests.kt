@@ -227,25 +227,6 @@ class AstToLogicalVisitorTransformTests {
             ProblemTestCase("UPDATE x REMOVE k", unimplementedProblem("REMOVE", 1, 10)),
             ProblemTestCase("UPDATE x INSERT INTO k << 1 >>", unimplementedProblem("UPDATE / INSERT", 1, 10)),
 
-            // Non-identifier DML targets for INSERT and DELETE cases (unsupported for now, but we will likely
-            // need at list the first case in the future.)
-            ProblemTestCase(
-                "INSERT INTO x.y << 1 >>",
-                Problem(SourceLocationMeta(1, 13), PlanningProblemDetails.InvalidDmlTarget)
-            ),
-            ProblemTestCase(
-                "DELETE FROM x.y AS y",
-                Problem(SourceLocationMeta(1, 13), PlanningProblemDetails.InvalidDmlTarget)
-            ),
-            // We may never want to support this variant, but this is valid grammar according to the parser.
-            ProblemTestCase(
-                "INSERT INTO x[1] << 1 >>",
-                Problem(SourceLocationMeta(1, 13), PlanningProblemDetails.InvalidDmlTarget)
-            ),
-            ProblemTestCase(
-                "DELETE FROM x[1] AS x1",
-                Problem(SourceLocationMeta(1, 13), PlanningProblemDetails.InvalidDmlTarget)
-            ),
             // INSERT INTO ... VALUE ... is not supported because it is redundant with INSERT INTO ... << <expr> >>
             ProblemTestCase(
                 "INSERT INTO x VALUE 1",

@@ -3445,9 +3445,9 @@ class ParserErrorsTest : SqlParserTestBase() {
             ErrorCode.PARSE_UNEXPECTED_TOKEN,
             mapOf(
                 Property.LINE_NUMBER to 1L,
-                Property.COLUMN_NUMBER to 13L,
-                Property.TOKEN_TYPE to TokenType.LEFT_BRACKET,
-                Property.TOKEN_VALUE to ion.newSymbol("[")
+                Property.COLUMN_NUMBER to 15L,
+                Property.TOKEN_TYPE to TokenType.OPERATOR,
+                Property.TOKEN_VALUE to ion.newSymbol("+")
             ),
             targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
         )
@@ -4377,9 +4377,9 @@ class ParserErrorsTest : SqlParserTestBase() {
             ErrorCode.PARSE_UNEXPECTED_TOKEN,
             mapOf(
                 Property.LINE_NUMBER to 1L,
-                Property.COLUMN_NUMBER to 23L,
-                Property.TOKEN_TYPE to TokenType.LEFT_BRACKET,
-                Property.TOKEN_VALUE to ion.newSymbol("[")
+                Property.COLUMN_NUMBER to 25L,
+                Property.TOKEN_TYPE to TokenType.OPERATOR,
+                Property.TOKEN_VALUE to ion.newSymbol("+")
             ),
             targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
         )

@@ -217,31 +217,38 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
         dml(dmlOpList(delete(ctx.DELETE().getSourceMetaContainer()), metas = ctx.DELETE().getSourceMetaContainer()), from, where, returning, ctx.DELETE().getSourceMetaContainer())
     }
 
-    override fun visitInsertSimple(ctx: PartiQLParser.InsertSimpleContext) = PartiqlAst.build {
-        val target = visitPathSimple(ctx.pathSimple())
-        insert(target, visit(ctx.value, PartiqlAst.Expr::class), ctx.INSERT().getSourceMetaContainer())
-    }
-
-    override fun visitInsertValue(ctx: PartiQLParser.InsertValueContext) = PartiqlAst.build {
+    override fun visitInsertLegacy(ctx: PartiQLParser.InsertLegacyContext) = PartiqlAst.build {
+        val metas = ctx.INSERT().getSourceMetaContainer()
         val target = visitPathSimple(ctx.pathSimple())
         val index = visitOrNull(ctx.pos, PartiqlAst.Expr::class)
-        val onConflict = visitOrNull(ctx.onConflict(), PartiqlAst.OnConflict::class)
-        insertValue(target, visit(ctx.value, PartiqlAst.Expr::class), index = index, onConflict = onConflict, ctx.INSERT().getSourceMetaContainer())
+        val onConflict = visitOrNull(ctx.onConflictClause(), PartiqlAst.OnConflict::class)
+        insertValue(target, visit(ctx.value, PartiqlAst.Expr::class), index, onConflict, metas)
+    }
+
+    override fun visitInsert(ctx: PartiQLParser.InsertContext) = PartiqlAst.build {
+        val metas = ctx.INSERT().getSourceMetaContainer()
+        val asIdent = ctx.asIdent()
+        // Based on the RFC, if alias exists the table must be hidden behind the alias, see:
+        // https://github.com/partiql/partiql-docs/blob/main/RFCs/0011-partiql-insert.md#41-insert-parameters
+        val target = if (asIdent != null) visitAsIdent(asIdent) else visitSymbolPrimitive(ctx.symbolPrimitive())
+        val conflictAction = visitOrNull(ctx.onConflictClause(), PartiqlAst.ConflictAction::class)
+        insert(target, visit(ctx.value, PartiqlAst.Expr::class), conflictAction, metas)
     }
 
     // FIXME: See `FIXME #001` in file `PartiQL.g4`.
     override fun visitInsertCommandReturning(ctx: PartiQLParser.InsertCommandReturningContext) = PartiqlAst.build {
+        val metas = ctx.INSERT().getSourceMetaContainer()
         val target = visitPathSimple(ctx.pathSimple())
         val index = visitOrNull(ctx.pos, PartiqlAst.Expr::class)
-        val onConflict = visitOrNull(ctx.onConflict(), PartiqlAst.OnConflict::class)
+        val onConflictLegacy = visitOrNull(ctx.onConflictClause(), PartiqlAst.OnConflict::class)
         val returning = visitOrNull(ctx.returningClause(), PartiqlAst.ReturningExpr::class)
         dml(
             dmlOpList(
-                insertValue(target, visit(ctx.value, PartiqlAst.Expr::class), index = index, onConflict = onConflict, ctx.INSERT().getSourceMetaContainer()),
-                metas = ctx.INSERT().getSourceMetaContainer()
+                insertValue(target, visit(ctx.value, PartiqlAst.Expr::class), index = index, onConflict = onConflictLegacy, ctx.INSERT().getSourceMetaContainer()),
+                metas = metas
             ),
             returning = returning,
-            metas = ctx.INSERT().getSourceMetaContainer()
+            metas = metas
         )
     }
 
@@ -269,7 +276,27 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
     }
 
     override fun visitOnConflict(ctx: PartiQLParser.OnConflictContext) = PartiqlAst.build {
-        onConflict(visitExpr(ctx.expr()), doNothing(), ctx.ON().getSourceMetaContainer())
+        visit(ctx.conflictAction(), PartiqlAst.ConflictAction::class)
+    }
+
+    override fun visitOnConflictLegacy(ctx: PartiQLParser.OnConflictLegacyContext) = PartiqlAst.build {
+        onConflict(expr = visitExpr(ctx.expr()), conflictAction = doNothing(), metas = ctx.ON().getSourceMetaContainer())
+    }
+
+    override fun visitConflictAction(ctx: PartiQLParser.ConflictActionContext) = PartiqlAst.build {
+        when {
+            ctx.NOTHING() != null -> doNothing()
+            ctx.REPLACE() != null -> visitDoReplace(ctx.doReplace())
+            else -> TODO("ON CONFLICT only supports `DO REPLACE` and `DO NOTHING` actions at the moment.")
+        }
+    }
+
+    override fun visitDoReplace(ctx: PartiQLParser.DoReplaceContext) = PartiqlAst.build {
+        val value = when {
+            ctx.EXCLUDED() != null -> excluded()
+            else -> TODO("DO REPLACE doesn't support values other than `EXCLUDED` yet.")
+        }
+        doReplace(value)
     }
 
     override fun visitPathSimple(ctx: PartiQLParser.PathSimpleContext) = PartiqlAst.build {
@@ -1267,6 +1294,7 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
     override fun visitTableNonJoin(ctx: PartiQLParser.TableNonJoinContext?): PartiqlAst.PartiqlAstNode = super.visitTableNonJoin(ctx)
     override fun visitTableRefBase(ctx: PartiQLParser.TableRefBaseContext?): PartiqlAst.PartiqlAstNode = super.visitTableRefBase(ctx)
     override fun visitJoinRhsBase(ctx: PartiQLParser.JoinRhsBaseContext?): PartiqlAst.PartiqlAstNode = super.visitJoinRhsBase(ctx)
+    override fun visitConflictTarget(ctx: PartiQLParser.ConflictTargetContext?): PartiqlAst.PartiqlAstNode = super.visitConflictTarget(ctx)
 
     /**
      *
