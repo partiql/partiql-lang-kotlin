@@ -18,7 +18,7 @@ class SqlParserMatchTest : SqlParserTestBase() {
             project = projectList(projectExpr(lit(ionInt(1)))),
             from = graphMatch(
                 expr = id("my_graph"),
-                graphExpr = graphMatchExpr(
+                gpmlPattern = gpmlPattern(
                     patterns = listOf(
                         graphMatchPattern(
                             parts = listOf(
@@ -44,7 +44,7 @@ class SqlParserMatchTest : SqlParserTestBase() {
             project = projectStar(),
             from = graphMatch(
                 expr = id("my_graph"),
-                graphExpr = graphMatchExpr(
+                gpmlPattern = gpmlPattern(
                     patterns = listOf(
                         graphMatchPattern(
                             parts = listOf(
@@ -69,7 +69,7 @@ class SqlParserMatchTest : SqlParserTestBase() {
             project = projectList(projectExpr(lit(ionInt(1)))),
             from = graphMatch(
                 expr = id("my_graph"),
-                graphExpr = graphMatchExpr(
+                gpmlPattern = gpmlPattern(
                     patterns = listOf(
                         graphMatchPattern(
                             parts = listOf(
@@ -95,7 +95,7 @@ class SqlParserMatchTest : SqlParserTestBase() {
             project = projectList(projectExpr(expr = id("x"))),
             from = graphMatch(
                 expr = id("my_graph"),
-                graphExpr = graphMatchExpr(
+                gpmlPattern = gpmlPattern(
                     patterns = listOf(
                         graphMatchPattern(
                             parts = listOf(
@@ -120,7 +120,7 @@ class SqlParserMatchTest : SqlParserTestBase() {
             project = projectStar(),
             from = graphMatch(
                 expr = id("my_graph"),
-                graphExpr = graphMatchExpr(
+                gpmlPattern = gpmlPattern(
                     patterns = listOf(
                         graphMatchPattern(
                             parts = listOf(
@@ -150,7 +150,7 @@ class SqlParserMatchTest : SqlParserTestBase() {
             ),
             from = graphMatch(
                 expr = id("my_graph"),
-                graphExpr = graphMatchExpr(
+                gpmlPattern = gpmlPattern(
                     patterns = listOf(
                         graphMatchPattern(
                             parts = listOf(
@@ -179,7 +179,7 @@ class SqlParserMatchTest : SqlParserTestBase() {
             project = projectList(projectExpr(expr = id("x"), asAlias = "target")),
             from = graphMatch(
                 expr = id("my_graph"),
-                graphExpr = graphMatchExpr(
+                gpmlPattern = gpmlPattern(
                     patterns = listOf(
                         graphMatchPattern(
                             parts = listOf(
@@ -210,7 +210,7 @@ class SqlParserMatchTest : SqlParserTestBase() {
             project = projectList(projectExpr(lit(ionInt(1)))),
             from = graphMatch(
                 expr = id("g"),
-                graphExpr = graphMatchExpr(
+                gpmlPattern = gpmlPattern(
                     patterns = listOf(
                         graphMatchPattern(
                             parts = listOf(
@@ -237,7 +237,7 @@ class SqlParserMatchTest : SqlParserTestBase() {
                     project = projectList(projectExpr(id("a")), projectExpr(id("b"))),
                     from = graphMatch(
                         expr = id("g"),
-                        graphExpr = graphMatchExpr(
+                        gpmlPattern = gpmlPattern(
                             patterns = listOf(
                                 graphMatchPattern(
                                     quantifier = null,
@@ -440,7 +440,7 @@ class SqlParserMatchTest : SqlParserTestBase() {
             ),
             from = graphMatch(
                 expr = id("my_graph"),
-                graphExpr = graphMatchExpr(
+                gpmlPattern = gpmlPattern(
                     patterns = listOf(
                         graphMatchPattern(
                             parts = listOf(
@@ -486,7 +486,7 @@ class SqlParserMatchTest : SqlParserTestBase() {
             ),
             from = graphMatch(
                 expr = id("g"),
-                graphExpr = graphMatchExpr(
+                gpmlPattern = gpmlPattern(
                     patterns = listOf(
                         graphMatchPattern(
                             parts = listOf(
@@ -547,7 +547,7 @@ class SqlParserMatchTest : SqlParserTestBase() {
             ),
             from = graphMatch(
                 expr = id("g"),
-                graphExpr = graphMatchExpr(
+                gpmlPattern = gpmlPattern(
                     patterns = listOf(
                         graphMatchPattern(
                             parts = listOf(
@@ -597,7 +597,7 @@ class SqlParserMatchTest : SqlParserTestBase() {
                 project = projectList(projectExpr(id("a")), projectExpr(id("b"))),
                 from = graphMatch(
                     expr = id("g"),
-                    graphExpr = graphMatchExpr(
+                    gpmlPattern = gpmlPattern(
                         patterns = listOf(
                             graphMatchPattern(
                                 variable = "p",
@@ -634,7 +634,7 @@ class SqlParserMatchTest : SqlParserTestBase() {
                 project = projectList(projectExpr(id("a")), projectExpr(id("b"))),
                 from = graphMatch(
                     expr = id("g"),
-                    graphExpr = graphMatchExpr(
+                    gpmlPattern = gpmlPattern(
                         patterns = listOf(
                             graphMatchPattern(
                                 parts = listOf(
@@ -681,7 +681,7 @@ class SqlParserMatchTest : SqlParserTestBase() {
                 project = projectList(projectExpr(id("a")), projectExpr(id("b"))),
                 from = graphMatch(
                     expr = id("g"),
-                    graphExpr = graphMatchExpr(
+                    gpmlPattern = gpmlPattern(
                         patterns = listOf(
                             graphMatchPattern(
                                 variable = "pathVar",
@@ -724,7 +724,7 @@ class SqlParserMatchTest : SqlParserTestBase() {
                 project = projectList(projectExpr(id("a")), projectExpr(id("b"))),
                 from = graphMatch(
                     expr = id("g"),
-                    graphExpr = graphMatchExpr(
+                    gpmlPattern = gpmlPattern(
                         patterns = listOf(
                             graphMatchPattern(
                                 variable = "pathVar",
@@ -782,7 +782,7 @@ class SqlParserMatchTest : SqlParserTestBase() {
                 project = projectList(projectExpr(id("u"), asAlias = "banCandidate")),
                 from = graphMatch(
                     expr = id("g"),
-                    graphExpr = graphMatchExpr(
+                    gpmlPattern = gpmlPattern(
                         patterns = listOf(
                             graphMatchPattern(
                                 parts = listOf(
@@ -844,7 +844,7 @@ class SqlParserMatchTest : SqlParserTestBase() {
                 project = projectList(projectExpr(id("p"))),
                 from = graphMatch(
                     expr = id("g"),
-                    graphExpr = graphMatchExpr(
+                    gpmlPattern = gpmlPattern(
                         patterns = listOf(
                             graphMatchPattern(
                                 restrictor = restrictor,
@@ -909,7 +909,7 @@ class SqlParserMatchTest : SqlParserTestBase() {
                 project = projectList(projectExpr(id("p"))),
                 from = graphMatch(
                     expr = id("g"),
-                    graphExpr = graphMatchExpr(
+                    gpmlPattern = gpmlPattern(
                         selector = selector,
                         patterns = listOf(
                             graphMatchPattern(
@@ -993,7 +993,7 @@ class SqlParserMatchTest : SqlParserTestBase() {
         val match = PartiqlAst.build {
             graphMatch(
                 expr = id("graph"),
-                graphExpr = graphMatchExpr(
+                gpmlPattern = gpmlPattern(
                     patterns = listOf(
                         graphMatchPattern(
                             parts = listOf(

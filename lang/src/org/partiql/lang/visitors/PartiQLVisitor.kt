@@ -573,16 +573,16 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
      *
      */
 
-    override fun visitMatchExpr(ctx: PartiQLParser.MatchExprContext) = PartiqlAst.build {
+    override fun visitGpmlPattern(ctx: PartiQLParser.GpmlPatternContext) = PartiqlAst.build {
         val selector = visitOrNull(ctx.matchSelector(), PartiqlAst.GraphMatchSelector::class)
         val pattern = visitMatchPattern(ctx.matchPattern())
-        graphMatchExpr(selector, listOf(pattern))
+        gpmlPattern(selector, listOf(pattern))
     }
 
-    override fun visitMatchExprList(ctx: PartiQLParser.MatchExprListContext) = PartiqlAst.build {
+    override fun visitGpmlPatternList(ctx: PartiQLParser.GpmlPatternListContext) = PartiqlAst.build {
         val selector = visitOrNull(ctx.matchSelector(), PartiqlAst.GraphMatchSelector::class)
         val patterns = ctx.matchPattern().map { pattern -> visitMatchPattern(pattern) }
-        graphMatchExpr(selector, patterns)
+        gpmlPattern(selector, patterns)
     }
 
     override fun visitMatchPattern(ctx: PartiQLParser.MatchPatternContext) = PartiqlAst.build {
@@ -744,15 +744,15 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
     override fun visitMatchSingle(ctx: PartiQLParser.MatchSingleContext) = PartiqlAst.build {
         val source = visitExpr(ctx.lhs)
         val metas = ctx.MATCH().getSourceMetaContainer()
-        val graphExpr = visitMatchExpr(ctx.matchExpr())
-        graphMatch(source, graphExpr, metas)
+        val gpmlPattern = visitGpmlPattern(ctx.gpmlPattern())
+        graphMatch(source, gpmlPattern, metas)
     }
 
     override fun visitMatchMultiple(ctx: PartiQLParser.MatchMultipleContext) = PartiqlAst.build {
         val source = visitExpr(ctx.lhs)
         val metas = ctx.MATCH().getSourceMetaContainer()
-        val graphExpr = visitMatchExprList(ctx.matchExprList())
-        graphMatch(source, graphExpr, metas)
+        val gpmlPattern = visitGpmlPatternList(ctx.gpmlPatternList())
+        graphMatch(source, gpmlPattern, metas)
     }
 
     override fun visitFromClauseSimpleExplicit(ctx: PartiQLParser.FromClauseSimpleExplicitContext) = PartiqlAst.build {

@@ -985,7 +985,7 @@ class SqlParser(
                 it.toGraphMatchPattern()
             }
 
-            val matchExpr = PartiqlAst.GraphMatchExpr(selector = selector, patterns = patterns, metas = metas)
+            val matchExpr = PartiqlAst.GpmlPattern(selector = selector, patterns = patterns, metas = metas)
             PartiqlAst.FromSource.GraphMatch(expr, matchExpr, metas)
         }
     }

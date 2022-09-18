@@ -296,10 +296,10 @@ limitClause
  *
  */
 
-matchExpr
+gpmlPattern
     : selector=matchSelector? matchPattern;
 
-matchExprList
+gpmlPatternList
     : selector=matchSelector? matchPattern ( COMMA matchPattern )*;
 
 matchPattern
@@ -391,8 +391,8 @@ tableUnpivot
     : UNPIVOT expr asIdent? atIdent? byIdent?;
 
 tableMatch
-    : lhs=expr MATCH matchExpr                              # MatchSingle
-    | lhs=expr MATCH PAREN_LEFT matchExprList PAREN_RIGHT   # MatchMultiple
+    : lhs=expr MATCH gpmlPattern                              # MatchSingle
+    | lhs=expr MATCH PAREN_LEFT gpmlPatternList PAREN_RIGHT   # MatchMultiple
     ;
 
 tableJoined[ParserRuleContext lhs]
