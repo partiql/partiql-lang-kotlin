@@ -488,10 +488,9 @@ internal class StaticTypeInferenceVisitorTransform(
                 errorAdded = true
             }
 
-            return if (errorAdded) {
-                processedNode.withStaticType(StaticType.BOOL)
-            } else {
-                transformNAry(processedNode, processedNode.operands) { computeReturnTypeForNAryIn(it) }
+            return when (errorAdded) {
+                true -> processedNode.withStaticType(StaticType.BOOL)
+                false -> transformNAry(processedNode, processedNode.operands) { computeReturnTypeForNAryIn(it) }
             }
         }
 

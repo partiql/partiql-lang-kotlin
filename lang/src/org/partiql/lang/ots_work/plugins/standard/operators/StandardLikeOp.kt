@@ -11,11 +11,7 @@ import org.partiql.lang.ots_work.interfaces.operator.LikeOp
 import org.partiql.lang.ots_work.interfaces.type.BoolType
 import org.partiql.lang.ots_work.interfaces.type.ScalarType
 
-class StandardLikeOp(
-    var metas: MetaContainer? = null,
-    var patternLocationMeta: SourceLocationMeta? = null,
-    var escapeLocationMeta: SourceLocationMeta? = null,
-) : LikeOp() {
+object StandardLikeOp: LikeOp() {
     override val validOperandTypes: List<ScalarType> = ALL_TEXT_TYPES
 
     override fun inferType(value: CompileTimeType, pattern: CompileTimeType, escape: CompileTimeType?): TypeInferenceResult =
