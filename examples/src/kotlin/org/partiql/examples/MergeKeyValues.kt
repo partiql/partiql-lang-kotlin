@@ -20,7 +20,7 @@ abstract class MergeKeysBaseExprFunction(
 ) : ExprFunction
 
 /**
- * For the Given [ExprValue] representing list of structs, merges key/values based on the given inputs in flatten list
+ * For the given [ExprValue] representing list of structs, merges key/values based on the given inputs in flatten list
  * for values.
  *
  * E.g.
