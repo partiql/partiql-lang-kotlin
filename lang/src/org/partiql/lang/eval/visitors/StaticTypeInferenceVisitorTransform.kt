@@ -339,7 +339,7 @@ internal class StaticTypeInferenceVisitorTransform(
 
             return when (hasValidOperandTypes(listOf(argStaticType), { it is BoolType }, "NOT", processedNode.metas)) {
             true -> computeReturnTypeForUnary(argStaticType, ::inferNotOp)
-            false -> StaticType.BOOL // continuation type of all numeric types to prevent incompatible types and unknown errors from propagating
+            false -> StaticType.BOOL // continuation type to prevent incompatible types and unknown errors from propagating
         }.let { processedNode.withStaticType(it) }
         }
 
@@ -349,7 +349,7 @@ internal class StaticTypeInferenceVisitorTransform(
 
             return when (hasValidOperandTypes(listOf(argStaticType), { it.isNumeric() }, "+", processedNode.metas)) {
             true -> computeReturnTypeForUnary(argStaticType, ::inferUnaryArithmeticOp)
-            false -> StaticType.NUMERIC // continuation type of all numeric types to prevent incompatible types and unknown errors from propagating
+            false -> StaticType.NUMERIC // continuation type to prevent incompatible types and unknown errors from propagating
         }.let { processedNode.withStaticType(it) }
         }
 
@@ -359,7 +359,7 @@ internal class StaticTypeInferenceVisitorTransform(
 
             return when (hasValidOperandTypes(listOf(argStaticType), { it.isNumeric() }, "-", processedNode.metas)) {
             true -> computeReturnTypeForUnary(argStaticType, ::inferUnaryArithmeticOp)
-            false -> StaticType.NUMERIC // continuation type of all numeric types to prevent incompatible types and unknown errors from propagating
+            false -> StaticType.NUMERIC // continuation type to prevent incompatible types and unknown errors from propagating
         }.let { processedNode.withStaticType(it) }
         }
 
@@ -414,7 +414,7 @@ internal class StaticTypeInferenceVisitorTransform(
 
             StaticType.unionOf(possibleResultTypes).flatten()
         }
-        false -> StaticType.BOOL // continuation type of all numeric types to prevent incompatible types and unknown errors from propagating
+        false -> StaticType.BOOL // continuation type to prevent incompatible types and unknown errors from propagating
     }.let { node.withStaticType(it) }
 
         private fun getTypeForNAryLogicalOperations(args: List<SingleType>): StaticType = when {
