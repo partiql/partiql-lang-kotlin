@@ -365,27 +365,28 @@ internal class StaticTypeInferenceVisitorTransform(
 
         private fun computeReturnTypeForUnary(
             argStaticType: StaticType,
-            unaryOpInferencer: (SingleType) -> SingleType?
+            unaryOpInferencer: (SingleType) -> SingleType
         ): StaticType {
-            val argSingleTypes = argStaticType.allTypes
-            val possibleReturnTypes = argSingleTypes.map { st ->
-                when (st as SingleType) {
-                    is NullType -> StaticType.NULL
-                    else -> unaryOpInferencer(st) ?: StaticType.MISSING
-                }
-            }.distinct()
+            val argSingleTypes = argStaticType.allTypes.map { it as SingleType }
+            val possibleReturnTypes = argSingleTypes.map { st -> unaryOpInferencer(st) }
 
             return StaticType.unionOf(possibleReturnTypes.toSet()).flatten()
         }
 
-        private fun inferNotOp(type: SingleType): SingleType? = when (type) {
+        private fun inferNotOp(type: SingleType): SingleType = when (type) {
+            // Propagate NULL or MISSING
+            is NullType -> StaticType.NULL
+            is MissingType -> StaticType.MISSING
             is BoolType -> type
-            else -> null
+            else -> StaticType.MISSING
         }
 
-        private fun inferUnaryArithmeticOp(type: SingleType): SingleType? = when (type) {
+        private fun inferUnaryArithmeticOp(type: SingleType): SingleType = when (type) {
+            // Propagate NULL or MISSING
+            is NullType -> StaticType.NULL
+            is MissingType -> StaticType.MISSING
             is DecimalType, is IntType, is FloatType -> type
-            else -> null
+            else -> StaticType.MISSING
         }
 
         // Logical NAry ops: AND, OR
@@ -444,7 +445,7 @@ internal class StaticTypeInferenceVisitorTransform(
 
             return when (hasValidOperandTypes(argsStaticType, { it.isNumeric() }, "+", processedNode.metas)) {
             true -> computeReturnTypeForNAry(argsStaticType, ::inferBinaryArithmeticOp)
-            false -> StaticType.NUMERIC // continuation type of all numeric types to prevent incompatible types and unknown errors from propagating
+            false -> StaticType.NUMERIC // continuation type to prevent incompatible types and unknown errors from propagating
         }.let { processedNode.withStaticType(it) }
         }
 
@@ -454,7 +455,7 @@ internal class StaticTypeInferenceVisitorTransform(
 
             return when (hasValidOperandTypes(argsStaticType, { it.isNumeric() }, "-", processedNode.metas)) {
             true -> computeReturnTypeForNAry(argsStaticType, ::inferBinaryArithmeticOp)
-            false -> StaticType.NUMERIC // continuation type of all numeric types to prevent incompatible types and unknown errors from propagating
+            false -> StaticType.NUMERIC // continuation type to prevent incompatible types and unknown errors from propagating
         }.let { processedNode.withStaticType(it) }
         }
 
@@ -464,7 +465,7 @@ internal class StaticTypeInferenceVisitorTransform(
 
             return when (hasValidOperandTypes(argsStaticType, { it.isNumeric() }, "*", processedNode.metas)) {
             true -> computeReturnTypeForNAry(argsStaticType, ::inferBinaryArithmeticOp)
-            false -> StaticType.NUMERIC // continuation type of all numeric types to prevent incompatible types and unknown errors from propagating
+            false -> StaticType.NUMERIC // continuation type to prevent incompatible types and unknown errors from propagating
         }.let { processedNode.withStaticType(it) }
         }
 
@@ -474,7 +475,7 @@ internal class StaticTypeInferenceVisitorTransform(
 
             return when (hasValidOperandTypes(argsStaticType, { it.isNumeric() }, "/", processedNode.metas)) {
             true -> computeReturnTypeForNAry(argsStaticType, ::inferBinaryArithmeticOp)
-            false -> StaticType.NUMERIC // continuation type of all numeric types to prevent incompatible types and unknown errors from propagating
+            false -> StaticType.NUMERIC // continuation type to prevent incompatible types and unknown errors from propagating
         }.let { processedNode.withStaticType(it) }
         }
 
@@ -484,7 +485,7 @@ internal class StaticTypeInferenceVisitorTransform(
 
             return when (hasValidOperandTypes(argsStaticType, { it.isNumeric() }, "%", processedNode.metas)) {
             true -> computeReturnTypeForNAry(argsStaticType, ::inferBinaryArithmeticOp)
-            false -> StaticType.NUMERIC // continuation type of all numeric types to prevent incompatible types and unknown errors from propagating
+            false -> StaticType.NUMERIC // continuation type to prevent incompatible types and unknown errors from propagating
         }.let { processedNode.withStaticType(it) }
         }
 
@@ -494,7 +495,7 @@ internal class StaticTypeInferenceVisitorTransform(
 
             return when (hasValidOperandTypes(argsStaticType, { it.isText() }, "||", processedNode.metas)) {
             true -> computeReturnTypeForNAry(argsStaticType, ::inferConcatOp)
-            false -> StaticType.STRING // continuation type of all numeric types to prevent incompatible types and unknown errors from propagating
+            false -> StaticType.STRING // continuation type to prevent incompatible types and unknown errors from propagating
         }.let { processedNode.withStaticType(it) }
         }
 
@@ -503,8 +504,8 @@ internal class StaticTypeInferenceVisitorTransform(
             val argsStaticType = processedNode.operands.getStaticType()
 
             return when (operandsAreComparable(argsStaticType, "=", processedNode.metas)) {
-                true -> computeReturnTypeForNAry(argsStaticType) { _, _ -> StaticType.BOOL }
-                false -> StaticType.BOOL // continuation type of all numeric types to prevent incompatible types and unknown errors from propagating
+                true -> computeReturnTypeForNAry(argsStaticType, ::inferEqNeOp)
+                false -> StaticType.BOOL // continuation type to prevent incompatible types and unknown errors from propagating
             }.let { processedNode.withStaticType(it) }
         }
 
@@ -513,8 +514,8 @@ internal class StaticTypeInferenceVisitorTransform(
             val argsStaticType = processedNode.operands.getStaticType()
 
             return when (operandsAreComparable(argsStaticType, "!=", processedNode.metas)) {
-                true -> computeReturnTypeForNAry(argsStaticType) { _, _ -> StaticType.BOOL }
-                false -> StaticType.BOOL // continuation type of all numeric types to prevent incompatible types and unknown errors from propagating
+                true -> computeReturnTypeForNAry(argsStaticType, ::inferEqNeOp)
+                false -> StaticType.BOOL // continuation type to prevent incompatible types and unknown errors from propagating
             }.let { processedNode.withStaticType(it) }
         }
 
@@ -524,7 +525,7 @@ internal class StaticTypeInferenceVisitorTransform(
 
             return when (operandsAreComparable(argsStaticType, ">", processedNode.metas)) {
                 true -> computeReturnTypeForNAry(argsStaticType, ::inferComparatorOp)
-                false -> StaticType.BOOL // continuation type of all numeric types to prevent incompatible types and unknown errors from propagating
+                false -> StaticType.BOOL // continuation type prevent incompatible types and unknown errors from propagating
             }.let { processedNode.withStaticType(it) }
         }
 
@@ -534,7 +535,7 @@ internal class StaticTypeInferenceVisitorTransform(
 
             return when (operandsAreComparable(argsStaticType, ">=", processedNode.metas)) {
                 true -> computeReturnTypeForNAry(argsStaticType, ::inferComparatorOp)
-                false -> StaticType.BOOL // continuation type of all numeric types to prevent incompatible types and unknown errors from propagating
+                false -> StaticType.BOOL // continuation type to prevent incompatible types and unknown errors from propagating
             }.let { processedNode.withStaticType(it) }
         }
 
@@ -544,7 +545,7 @@ internal class StaticTypeInferenceVisitorTransform(
 
             return when (operandsAreComparable(argsStaticType, "<", processedNode.metas)) {
                 true -> computeReturnTypeForNAry(argsStaticType, ::inferComparatorOp)
-                false -> StaticType.BOOL // continuation type of all numeric types to prevent incompatible types and unknown errors from propagating
+                false -> StaticType.BOOL // continuation type to prevent incompatible types and unknown errors from propagating
             }.let { processedNode.withStaticType(it) }
         }
 
@@ -554,41 +555,31 @@ internal class StaticTypeInferenceVisitorTransform(
 
             return when (operandsAreComparable(argsStaticType, "<=", processedNode.metas)) {
                 true -> computeReturnTypeForNAry(argsStaticType, ::inferComparatorOp)
-                false -> StaticType.BOOL // continuation type of all numeric types to prevent incompatible types and unknown errors from propagating
+                false -> StaticType.BOOL // continuation type to prevent incompatible types and unknown errors from propagating
             }.let { processedNode.withStaticType(it) }
         }
 
         private fun computeReturnTypeForNAry(
             argsStaticType: List<StaticType>,
-            binaryOpInferencer: (SingleType, SingleType) -> SingleType?,
+            binaryOpInferencer: (SingleType, SingleType) -> SingleType,
         ): StaticType =
             argsStaticType.reduce { leftStaticType, rightStaticType ->
-                when {
-                    leftStaticType is MissingType || rightStaticType is MissingType -> StaticType.MISSING
-                    leftStaticType is NullType || rightStaticType is NullType -> StaticType.NULL
-                    else -> {
-                        val leftSingleTypes = leftStaticType.allTypes
-                        val rightSingleTypes = rightStaticType.allTypes
-                        val possibleResultTypes: List<SingleType> =
-                            leftSingleTypes.flatMap { leftSingleType ->
-                                rightSingleTypes.map { rightSingleType ->
-                                    when {
-                                        leftSingleType is NullType || rightSingleType is NullType -> StaticType.NULL
-                                        leftSingleType is MissingType || rightSingleType is MissingType -> StaticType.MISSING
-                                        else -> binaryOpInferencer(leftSingleType as SingleType, rightSingleType as SingleType) ?: StaticType.MISSING
-                                    }
-                                }
-                            }.distinct()
-
-                        return StaticType.unionOf(possibleResultTypes.toSet()).flatten()
+                val leftSingleTypes = leftStaticType.allTypes.map { it as SingleType }
+                val rightSingleTypes = rightStaticType.allTypes.map { it as SingleType }
+                val possibleResultTypes: List<SingleType> =
+                    leftSingleTypes.flatMap { leftSingleType ->
+                        rightSingleTypes.map { rightSingleType ->
+                            binaryOpInferencer(leftSingleType, rightSingleType)
+                        }
                     }
-                }
+
+                StaticType.unionOf(possibleResultTypes.toSet()).flatten()
             }
 
         // This could also have been a lookup table of types, however... doing this as a nested `when` allows
         // us to not to rely on `.equals` and `.hashcode` implementations of [StaticType], which include metas
         // and might introduce unwanted behavior.
-        private fun inferBinaryArithmeticOp(leftType: StaticType, rightType: StaticType): SingleType = when {
+        private fun inferBinaryArithmeticOp(leftType: SingleType, rightType: SingleType): SingleType = when {
             // Propagate missing as missing. Missing has precedence over null
             leftType is MissingType || rightType is MissingType -> StaticType.MISSING
             leftType is NullType || rightType is NullType -> StaticType.NULL
@@ -624,11 +615,14 @@ internal class StaticTypeInferenceVisitorTransform(
             }
         }
 
-        private fun inferConcatOp(leftType: SingleType, rightType: SingleType): SingleType? {
+        private fun inferConcatOp(leftType: SingleType, rightType: SingleType): SingleType {
             fun checkUnconstrainedText(type: SingleType) = type is SymbolType || type is StringType && type.lengthConstraint is StringType.StringLengthConstraint.Unconstrained
 
             return when {
-                !leftType.isText() || !rightType.isText() -> null
+                // Propagate missing as missing. Missing has precedence over null
+                leftType is MissingType || rightType is MissingType -> StaticType.MISSING
+                leftType is NullType || rightType is NullType -> StaticType.NULL
+                !leftType.isText() || !rightType.isText() -> StaticType.MISSING
                 checkUnconstrainedText(leftType) || checkUnconstrainedText(rightType) -> StaticType.STRING
                 else -> { // Constrained string types (char & varchar)
                     val leftLength = ((leftType as StringType).lengthConstraint as StringType.StringLengthConstraint.Constrained).length
@@ -643,9 +637,21 @@ internal class StaticTypeInferenceVisitorTransform(
             }
         }
 
-        private fun inferComparatorOp(lhs: SingleType, rhs: SingleType): SingleType? = when {
+        // LT, LTE, GT, GTE
+        private fun inferComparatorOp(lhs: SingleType, rhs: SingleType): SingleType = when {
+            // Propagate missing as missing. Missing has precedence over null
+            lhs is MissingType || rhs is MissingType -> StaticType.MISSING
+            lhs is NullType || rhs is NullType -> StaticType.NULL
             lhs.isComparableTo(rhs) -> StaticType.BOOL
-            else -> null
+            else -> StaticType.MISSING
+        }
+
+        // EQ, NE
+        private fun inferEqNeOp(lhs: SingleType, rhs: SingleType): SingleType = when {
+            // Propagate missing as missing. Missing has precedence over null
+            lhs is MissingType || rhs is MissingType -> StaticType.MISSING
+            lhs.isNullable() || rhs.isNullable() -> StaticType.NULL
+            else -> StaticType.BOOL
         }
 
         // Other Special NAry ops
