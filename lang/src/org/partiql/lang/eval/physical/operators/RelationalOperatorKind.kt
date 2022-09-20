@@ -15,5 +15,6 @@ enum class RelationalOperatorKind {
     JOIN,
     OFFSET,
     LIMIT,
-    LET
+    LET,
+    SORT
 }

@@ -5,8 +5,10 @@ import com.amazon.ionelement.api.MetaContainer
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.eval.ExprValueFactory
+import org.partiql.lang.eval.NaturalExprValueComparators
 import org.partiql.lang.eval.Thunk
 import org.partiql.lang.eval.ThunkValue
+import org.partiql.lang.eval.physical.operators.CompiledSortKey
 import org.partiql.lang.eval.physical.operators.FilterRelationalOperatorFactory
 import org.partiql.lang.eval.physical.operators.JoinRelationalOperatorFactory
 import org.partiql.lang.eval.physical.operators.LetRelationalOperatorFactory
@@ -18,6 +20,7 @@ import org.partiql.lang.eval.physical.operators.RelationalOperatorFactory
 import org.partiql.lang.eval.physical.operators.RelationalOperatorFactoryKey
 import org.partiql.lang.eval.physical.operators.RelationalOperatorKind
 import org.partiql.lang.eval.physical.operators.ScanRelationalOperatorFactory
+import org.partiql.lang.eval.physical.operators.SortOperatorFactory
 import org.partiql.lang.eval.physical.operators.VariableBinding
 import org.partiql.lang.eval.physical.operators.valueExpression
 import org.partiql.lang.util.toIntExact
@@ -192,6 +195,17 @@ internal class PhysicalBexprToThunkConverter(
         return bindingsExpr.toRelationThunk(node.metas)
     }
 
+    override fun convertSort(node: PartiqlPhysical.Bexpr.Sort): RelationThunkEnv {
+        // Compile Arguments
+        val source = this.convert(node.source)
+        val sortKeys = compileSortSpecs(node.sortSpecs)
+
+        // Get Implementation
+        val factory = findOperatorFactory<SortOperatorFactory>(RelationalOperatorKind.SORT, node.i.name.text)
+        val bindingsExpr = factory.create(node.i, sortKeys, source)
+        return bindingsExpr.toRelationThunk(node.metas)
+    }
+
     override fun convertLet(node: PartiqlPhysical.Bexpr.Let): RelationThunkEnv {
         // recurse into children
         val sourceBexpr = this.convert(node.source)
@@ -209,6 +223,30 @@ internal class PhysicalBexprToThunkConverter(
 
         // wrap in thunk
         return bindingsExpr.toRelationThunk(node.metas)
+    }
+
+    /**
+     * Returns a list of [CompiledSortKey] with the aim of pre-computing the [NaturalExprValueComparators] prior to
+     * evaluation and leaving the [PartiqlPhysical.SortSpec]'s [PartiqlPhysical.Expr] to be evaluated later.
+     */
+    private fun compileSortSpecs(specs: List<PartiqlPhysical.SortSpec>): List<CompiledSortKey> = specs.map { spec ->
+        val comp = when (spec.orderingSpec) {
+            is PartiqlPhysical.OrderingSpec.Asc ->
+                when (spec.nullsSpec) {
+                    is PartiqlPhysical.NullsSpec.NullsFirst -> NaturalExprValueComparators.NULLS_FIRST_ASC
+                    is PartiqlPhysical.NullsSpec.NullsLast -> NaturalExprValueComparators.NULLS_LAST_ASC
+                    null -> NaturalExprValueComparators.NULLS_LAST_ASC
+                }
+            is PartiqlPhysical.OrderingSpec.Desc ->
+                when (spec.nullsSpec) {
+                    is PartiqlPhysical.NullsSpec.NullsFirst -> NaturalExprValueComparators.NULLS_FIRST_DESC
+                    is PartiqlPhysical.NullsSpec.NullsLast -> NaturalExprValueComparators.NULLS_LAST_DESC
+                    null -> NaturalExprValueComparators.NULLS_LAST_DESC
+                }
+            null -> NaturalExprValueComparators.NULLS_LAST_ASC
+        }
+        val value = exprConverter.convert(spec.expr).toValueExpr(spec.expr.metas.sourceLocationMeta)
+        CompiledSortKey(comp, value)
     }
 }
 

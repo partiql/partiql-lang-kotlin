@@ -1,6 +1,8 @@
 package org.partiql.lang.eval.physical
 
 import org.partiql.lang.domains.PartiqlPhysical
+import org.partiql.lang.errors.ErrorCode
+import org.partiql.lang.eval.EvaluationException
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.util.toIntExact
 
@@ -32,4 +34,14 @@ typealias SetVariableFunc = (EvaluatorState, ExprValue) -> Unit
 internal fun PartiqlPhysical.VarDecl.toSetVariableFunc(): SetVariableFunc {
     val index = this.index.value.toIntExact()
     return { state, value -> state.registers[index] = value }
+}
+
+/**
+ * Transfers all [ExprValue]s in [source] to the [target] [EvaluatorState]'s registers
+ */
+internal fun transferState(target: EvaluatorState, source: Array<ExprValue>) {
+    if (target.registers.size != source.size) {
+        throw EvaluationException("No", ErrorCode.EVALUATOR_GENERIC_EXCEPTION, null, null, true)
+    }
+    target.registers.forEachIndexed { index, _ -> target.registers[index] = source[index] }
 }

@@ -670,7 +670,11 @@ may then be further optimized by selecting better implementations of each operat
                     join_type::join_type
                     left::bexpr
                     right::bexpr
-                    predicate::(? expr))
+                    predicate::(? expr)
+                )
+
+                // Converts a bindings collection into a sorted bindings collection.
+                (sort source::bexpr sort_specs::(* sort_spec 1))
 
                 // Skips `row_count` rows, then emits all remaining rows.
                 (offset row_count::expr source::bexpr)
@@ -725,12 +729,8 @@ may then be further optimized by selecting better implementations of each operat
             grouping_strategy
             group_key
             group_key_list
-            order_by
-            sort_spec
-            ordering_spec
-
+            order_by             // Replaced with SORT node
             let
-
             dml_op
             dml_op_list
             ddl_op
@@ -858,8 +858,7 @@ may then be further optimized by selecting better implementations of each operat
                 (project i::impl binding::var_decl args::(* arguments::expr 0))
 
                 // Operators below this point are the same as in the logical algebra, but also include an i::impl
-                // element.
-
+                // element. 
                 (scan i::impl expr::expr as_decl::var_decl at_decl::(? var_decl) by_decl::(? var_decl))
                 (filter i::impl predicate::expr source::bexpr)
                 (join
@@ -869,6 +868,7 @@ may then be further optimized by selecting better implementations of each operat
                     right::bexpr
                     predicate::(? expr))
 
+                (sort i::impl source::bexpr sort_specs::(* sort_spec 1))
                 (offset i::impl row_count::expr source::bexpr)
                 (limit i::impl row_count::expr source::bexpr)
                 (let i::impl source::bexpr bindings::(* let_binding 1))
