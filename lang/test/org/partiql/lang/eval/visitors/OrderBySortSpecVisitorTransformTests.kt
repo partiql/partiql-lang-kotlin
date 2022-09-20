@@ -18,7 +18,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.util.ArgumentsProviderBase
 
-class OrderByAliasVisitorTransformTests : VisitorTransformTestBase() {
+class OrderBySortSpecVisitorTransformTests : VisitorTransformTestBase() {
 
     class ArgsProvider : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(
@@ -220,5 +220,5 @@ class OrderByAliasVisitorTransformTests : VisitorTransformTestBase() {
 
     @ParameterizedTest
     @ArgumentsSource(ArgsProvider::class)
-    fun test(tc: TransformTestCase) = runTestForIdempotentTransform(tc, OrderByAliasVisitorTransform())
+    fun test(tc: TransformTestCase) = runTestForIdempotentTransform(tc, OrderBySortSpecVisitorTransform())
 }

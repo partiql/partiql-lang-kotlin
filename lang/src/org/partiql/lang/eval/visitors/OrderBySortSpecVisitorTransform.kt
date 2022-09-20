@@ -32,7 +32,7 @@ import org.partiql.pig.runtime.SymbolPrimitive
  *
  * ```SELECT a + 1 AS b FROM c ORDER BY a + 1```
  */
-class OrderByAliasVisitorTransform : VisitorTransformBase() {
+class OrderBySortSpecVisitorTransform : VisitorTransformBase() {
 
     private val projectionAliases: MutableMap<String, PartiqlAst.Expr> = mutableMapOf<String, PartiqlAst.Expr>()
 
@@ -40,7 +40,7 @@ class OrderByAliasVisitorTransform : VisitorTransformBase() {
      * Nests itself to ensure ORDER BYs don't have access to the same [projectionAliases]
      */
     override fun transformExprSelect(node: PartiqlAst.Expr.Select): PartiqlAst.Expr {
-        return OrderByAliasVisitorTransform().transformExprSelectEvaluationOrder(node)
+        return OrderBySortSpecVisitorTransform().transformExprSelectEvaluationOrder(node)
     }
 
     /**
@@ -54,7 +54,7 @@ class OrderByAliasVisitorTransform : VisitorTransformBase() {
 
     /**
      * Uses the [OrderByAliasSupport] class to transform any encountered IDs in ORDER BY <sortSpec> into the appropriate
-     * expression using the [projectionAliases]
+     * expression using the [projectionAliases] while ensuring idempotency via [IsTransformedOrderByAliasMeta]
      */
     override fun transformSortSpec_expr(node: PartiqlAst.SortSpec): PartiqlAst.Expr {
         val newExpr = when (node.expr.metas.containsKey(IsTransformedOrderByAliasMeta.TAG)) {
@@ -65,9 +65,7 @@ class OrderByAliasVisitorTransform : VisitorTransformBase() {
     }
 
     /**
-     * A [PartiqlAst.VisitorTransform] that converts any found Expr.Id's into what it is mapped to in [aliases]. Also
-     * utilizes [IsTransformedOrderByAliasMeta] to ensure idempotency of this visitor (AKA visiting twice will NOT result
-     * in a different AST)
+     * A [PartiqlAst.VisitorTransform] that converts any found Expr.Id's into what it is mapped to in [aliases].
      */
     class OrderByAliasSupport(val aliases: Map<String, PartiqlAst.Expr>) : VisitorTransformBase() {
         override fun transformExprId(node: PartiqlAst.Expr.Id): PartiqlAst.Expr {

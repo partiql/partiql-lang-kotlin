@@ -14,10 +14,10 @@
 
 package org.partiql.lang.ast
 
-import org.partiql.lang.eval.visitors.OrderByAliasVisitorTransform
+import org.partiql.lang.eval.visitors.OrderBySortSpecVisitorTransform
 
 /**
- * A [Meta] to help the [OrderByAliasVisitorTransform] to know when the OrderBy SortSpec has already been transformed. It
+ * A [Meta] to help the [OrderBySortSpecVisitorTransform] to know when the OrderBy SortSpec has already been transformed. It
  * essentially helps to turn
  *
  * ```SELECT a + 1 AS b FROM c ORDER BY b```
