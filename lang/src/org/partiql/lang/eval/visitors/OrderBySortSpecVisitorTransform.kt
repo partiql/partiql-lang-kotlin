@@ -32,9 +32,9 @@ import org.partiql.pig.runtime.SymbolPrimitive
  *
  * ```SELECT a + 1 AS b FROM c ORDER BY a + 1```
  */
-class OrderBySortSpecVisitorTransform : VisitorTransformBase() {
+internal class OrderBySortSpecVisitorTransform : VisitorTransformBase() {
 
-    private val projectionAliases: MutableMap<String, PartiqlAst.Expr> = mutableMapOf<String, PartiqlAst.Expr>()
+    private val projectionAliases: MutableMap<String, PartiqlAst.Expr> = mutableMapOf()
 
     /**
      * Nests itself to ensure ORDER BYs don't have access to the same [projectionAliases]
@@ -67,7 +67,7 @@ class OrderBySortSpecVisitorTransform : VisitorTransformBase() {
     /**
      * A [PartiqlAst.VisitorTransform] that converts any found Expr.Id's into what it is mapped to in [aliases].
      */
-    class OrderByAliasSupport(val aliases: Map<String, PartiqlAst.Expr>) : VisitorTransformBase() {
+    private class OrderByAliasSupport(val aliases: Map<String, PartiqlAst.Expr>) : VisitorTransformBase() {
         override fun transformExprId(node: PartiqlAst.Expr.Id): PartiqlAst.Expr {
             val transformedExpr = super.transformExprId(node)
             return when (node.case) {
