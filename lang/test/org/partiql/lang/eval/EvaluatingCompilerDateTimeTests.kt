@@ -19,7 +19,67 @@ import kotlin.random.Random
 
 class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
 
-    private val randomTestsSize = 50000
+    abstract class RandomTestsProvider() : ArgumentsProviderBase() {
+        private val randomTestsSize = 50000
+        private val randomGenerator = generateRandomSeed()
+
+        private fun generateRandomSeed(): Random {
+            val seed = Random.nextInt()
+            println("Randomly generated seed is $seed. Use this to reproduce failures in dev environment.")
+            return Random(seed)
+        }
+
+        private fun Random.nextTime(withPrecision: Boolean = false, withTimezone: Boolean = false): TimeForValidation {
+            val hour = nextInt(24)
+            val minute = nextInt(60)
+            val second = nextInt(60)
+            val nano = nextInt(999999999)
+            val precision = if (withPrecision) {
+                nextInt(10)
+            } else {
+                val timeStr = Time.of(hour, minute, second, nano, 9).toString()
+                timeStr.split(".")[1].length
+            }
+            val timezoneMinutes = if (withTimezone) {
+                nextInt(-1080, 1081)
+            } else {
+                null
+            }
+            return TimeForValidation(hour, minute, second, nano, precision, timezoneMinutes)
+        }
+        protected val RANDOM_TIMES = List(randomTestsSize) {
+            randomGenerator.nextTime(
+                withPrecision = false,
+                withTimezone = false
+            )
+        }
+        protected val RANDOM_TIMES_WITH_PRECISION = List(randomTestsSize) {
+            randomGenerator.nextTime(
+                withPrecision = true,
+                withTimezone = false
+            )
+        }
+        protected val RANDOM_TIMES_WITH_TIMEZONE = List(randomTestsSize) {
+            randomGenerator.nextTime(
+                withPrecision = false,
+                withTimezone = true
+            )
+        }
+        protected val RANDOM_TIMES_WITH_PRECISION_AND_TIMEZONE = List(randomTestsSize) {
+            randomGenerator.nextTime(
+                withPrecision = true,
+                withTimezone = true
+            )
+        }
+
+        class RandomTimesAndRandomTimesWithTimezone() : RandomTestsProvider() {
+            override fun getParameters(): List<Any> = super.RANDOM_TIMES + super.RANDOM_TIMES_WITH_TIMEZONE
+        }
+
+        class RandomTimesWithPrecisionAndRandomTimesWithPrecisionAndTimezone() : RandomTestsProvider() {
+            override fun getParameters(): List<Any> = super.RANDOM_TIMES_WITH_PRECISION + super.RANDOM_TIMES_WITH_PRECISION_AND_TIMEZONE
+        }
+    }
 
     @Test
     fun testDateLiteral() {
@@ -121,14 +181,6 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
         )
     }
 
-    private val randomGenerator = generateRandomSeed()
-
-    private fun generateRandomSeed(): Random {
-        val seed = Random.nextInt()
-        println("Randomly generated seed is $seed. Use this to reproduce failures in dev environment.")
-        return Random(seed)
-    }
-
     data class TimeForValidation(
         val hour: Int,
         val minute: Int,
@@ -161,105 +213,58 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
         }
     }
 
-    private fun Random.nextTime(withPrecision: Boolean = false, withTimezone: Boolean = false): TimeForValidation {
-        val hour = nextInt(24)
-        val minute = nextInt(60)
-        val second = nextInt(60)
-        val nano = nextInt(999999999)
-        val precision = if (withPrecision) {
-            nextInt(10)
-        } else {
-            val timeStr = Time.of(hour, minute, second, nano, 9).toString()
-            timeStr.split(".")[1].length
-        }
-        val timezoneMinutes = if (withTimezone) {
-            nextInt(-1080, 1081)
-        } else {
-            null
-        }
-        return TimeForValidation(hour, minute, second, nano, precision, timezoneMinutes)
-    }
-
-    private val RANDOM_TIMES = List(randomTestsSize) {
-        randomGenerator.nextTime(
-            withPrecision = false,
-            withTimezone = false
-        )
-    }
-    private val RANDOM_TIMES_WITH_PRECISION = List(randomTestsSize) {
-        randomGenerator.nextTime(
-            withPrecision = true,
-            withTimezone = false
-        )
-    }
-    private val RANDOM_TIMES_WITH_TIMEZONE = List(randomTestsSize) {
-        randomGenerator.nextTime(
-            withPrecision = false,
-            withTimezone = true
-        )
-    }
-    private val RANDOM_TIMES_WITH_PRECISION_AND_TIMEZONE = List(randomTestsSize) {
-        randomGenerator.nextTime(
-            withPrecision = true,
-            withTimezone = true
+    @ParameterizedTest
+    @ArgumentsSource(RandomTestsProvider.RandomTimesAndRandomTimesWithTimezone::class)
+    fun testRandomTimes(time: TimeForValidation) {
+        val query = "TIME '$time'"
+        val expected = "TIME '${time.expectedTimeString(withTimeZone = false)}'"
+        runEvaluatorTestCase(
+            query = query,
+            expectedResult = expected,
+            excludeLegacySerializerAssertions = true,
+            expectedResultFormat = ExpectedResultFormat.STRING
         )
     }
 
-    @Test
-    fun testRandomTimes() {
-        (RANDOM_TIMES + RANDOM_TIMES_WITH_TIMEZONE).map {
-            val query = "TIME '$it'"
-            val expected = "TIME '${it.expectedTimeString(withTimeZone = false)}'"
-            runEvaluatorTestCase(
-                query = query,
-                expectedResult = expected,
-                excludeLegacySerializerAssertions = true,
-                expectedResultFormat = ExpectedResultFormat.STRING
-            )
-        }
+    @ParameterizedTest
+    @ArgumentsSource(RandomTestsProvider.RandomTimesWithPrecisionAndRandomTimesWithPrecisionAndTimezone::class)
+    fun testRandomTimesWithPrecision(time: TimeForValidation) {
+        val query = "TIME (${time.precision}) '$time'"
+        val expected = "TIME '${time.expectedTimeString(withTimeZone = false)}'"
+        runEvaluatorTestCase(
+            query = query,
+            expectedResult = expected,
+            excludeLegacySerializerAssertions = true,
+            expectedResultFormat = ExpectedResultFormat.STRING
+        )
     }
 
-    @Test
-    fun testRandomTimesWithPrecision() {
-        (RANDOM_TIMES_WITH_PRECISION + RANDOM_TIMES_WITH_PRECISION_AND_TIMEZONE).map {
-            val query = "TIME (${it.precision}) '$it'"
-            val expected = "TIME '${it.expectedTimeString(withTimeZone = false)}'"
-            runEvaluatorTestCase(
-                query = query,
-                expectedResult = expected,
-                excludeLegacySerializerAssertions = true,
-                expectedResultFormat = ExpectedResultFormat.STRING
-            )
-        }
+    @ParameterizedTest
+    @ArgumentsSource(RandomTestsProvider.RandomTimesAndRandomTimesWithTimezone::class)
+    fun testRandomTimesWithTimezone(time: TimeForValidation) {
+        val query = "TIME WITH TIME ZONE '$time'"
+        val expected = "TIME WITH TIME ZONE '${time.expectedTimeString(withTimeZone = true)}'"
+        runEvaluatorTestCase(
+            query = query,
+            expectedResult = expected,
+            excludeLegacySerializerAssertions = true,
+            expectedResultFormat = ExpectedResultFormat.STRING
+        )
     }
 
-    @Test
-    fun testRandomTimesWithTimezone() {
-        (RANDOM_TIMES + RANDOM_TIMES_WITH_TIMEZONE).map {
-            val query = "TIME WITH TIME ZONE '$it'"
-            val expected = "TIME WITH TIME ZONE '${it.expectedTimeString(withTimeZone = true)}'"
-            runEvaluatorTestCase(
-                query = query,
-                expectedResult = expected,
-                excludeLegacySerializerAssertions = true,
-                expectedResultFormat = ExpectedResultFormat.STRING
-            )
-        }
+    @ParameterizedTest
+    @ArgumentsSource(RandomTestsProvider.RandomTimesWithPrecisionAndRandomTimesWithPrecisionAndTimezone::class)
+    fun testRandomTimesWithPrecisionAndTimezone(time: TimeForValidation) {
+        val query = "TIME (${time.precision}) WITH TIME ZONE '$time'"
+        val expected = "TIME WITH TIME ZONE '${time.expectedTimeString(withTimeZone = true)}'"
+        runEvaluatorTestCase(
+            query = query,
+            expectedResult = expected,
+            excludeLegacySerializerAssertions = true,
+            expectedResultFormat = ExpectedResultFormat.STRING
+        )
     }
 
-    @Test
-    fun testRandomTimesWithPrecisionAndTimezone() {
-        (RANDOM_TIMES_WITH_PRECISION + RANDOM_TIMES_WITH_PRECISION_AND_TIMEZONE).map {
-            val query = "TIME (${it.precision}) WITH TIME ZONE '$it'"
-            val expected = "TIME WITH TIME ZONE '${it.expectedTimeString(withTimeZone = true)}'"
-            runEvaluatorTestCase(
-                query = query,
-                expectedResult = expected,
-                excludeLegacySerializerAssertions = true,
-                expectedResultFormat = ExpectedResultFormat.STRING
-            )
-        }
-    }
     @ParameterizedTest
     @ArgumentsSource(ArgumentsForComparison::class)
     fun testComparison(tc: ComparisonTestCase) {
