@@ -687,6 +687,7 @@ may then be further optimized by selecting better implementations of each operat
             (sum dml_operation
                 (dml_insert)
                 (dml_delete)
+                (dml_replace)
                 // TODO:
                 // (dml_update)
             )
