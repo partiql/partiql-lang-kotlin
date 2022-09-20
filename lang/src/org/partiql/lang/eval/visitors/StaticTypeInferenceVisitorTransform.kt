@@ -271,16 +271,6 @@ internal class StaticTypeInferenceVisitorTransform(
             return node.withStaticType(foundType)
         }
 
-        private fun transformNAry(
-            expr: PartiqlAst.Expr,
-            operands: List<PartiqlAst.Expr>,
-            compute: (List<StaticType>) -> StaticType
-        ): PartiqlAst.Expr {
-            val argTypes = operands.getStaticType()
-            val inferredType = compute(argTypes)
-            return expr.withStaticType(inferredType)
-        }
-
         /**
          * Gives [SemanticProblemDetails.IncompatibleDatatypesForOp] error when none of the non-unknown [operandsStaticType]'
          * types satisfy [operandTypeValidator]. Also gives [SemanticProblemDetails.ExpressionAlwaysReturnsNullOrMissing]
@@ -411,44 +401,40 @@ internal class StaticTypeInferenceVisitorTransform(
             return inferNaryLogicalOp(processedNode, processedNode.operands.getStaticType(), "OR")
         }
 
-        private fun inferNaryLogicalOp(node: PartiqlAst.Expr, argsStaticType: List<StaticType>, opAlias: String): PartiqlAst.Expr {
-            return when (hasValidOperandTypes(argsStaticType, { it is BoolType }, opAlias, node.metas)) {
-            true -> {
-                val argsSingleTypes = argsStaticType.map { argStaticType ->
-                    argStaticType.allTypes.map { singleType -> singleType as SingleType }
-                }
-                val argsSingleTypeCombination = argsSingleTypes.cartesianProduct()
-                val possibleResultTypes = argsSingleTypeCombination.map { argsSingleType ->
-                    getTypeForNAryLogicalOperations(argsSingleType)
-                }.toSet()
-
-                StaticType.unionOf(possibleResultTypes).flatten()
+        private fun inferNaryLogicalOp(node: PartiqlAst.Expr, argsStaticType: List<StaticType>, opAlias: String): PartiqlAst.Expr = when (hasValidOperandTypes(argsStaticType, { it is BoolType }, opAlias, node.metas)) {
+        true -> {
+            val argsSingleTypes = argsStaticType.map { argStaticType ->
+                argStaticType.allTypes.map { singleType -> singleType as SingleType }
             }
-            false -> StaticType.BOOL // continuation type of all numeric types to prevent incompatible types and unknown errors from propagating
-        }.let { node.withStaticType(it) }
-        }
+            val argsSingleTypeCombination = argsSingleTypes.cartesianProduct()
+            val possibleResultTypes = argsSingleTypeCombination.map { argsSingleType ->
+                getTypeForNAryLogicalOperations(argsSingleType)
+            }.toSet()
 
-        private fun getTypeForNAryLogicalOperations(args: List<SingleType>): StaticType {
-            return when {
-                // Logical operands need to be of Boolean Type
-                args.all { it == StaticType.BOOL } -> StaticType.BOOL
-                // If any of the arguments is boolean, then the return type can be boolean because of short-circuiting
-                // in logical ops. For e.g. "TRUE OR ANY" returns TRUE. "FALSE AND ANY" returns FALSE. But in the case
-                // where the other arg is an incompatible type (not an unknown or bool), the result type is MISSING.
-                args.any { it == StaticType.BOOL } -> when {
-                    // If other argument is missing, then return union(bool, missing)
-                    args.any { it is MissingType } -> AnyOfType(setOf(StaticType.MISSING, StaticType.BOOL))
-                    // If other argument is null, then return union(bool, null)
-                    args.any { it is NullType } -> AnyOfType(setOf(StaticType.NULL, StaticType.BOOL))
-                    // If other type is anything other than null or missing, then it is an error case
-                    else -> StaticType.MISSING
-                }
-                // If any of the operands is MISSING, return MISSING. MISSING has a precedence over NULL
-                args.any { it is MissingType } -> StaticType.MISSING
-                // If any of the operands is NULL, return NULL
-                args.any { it is NullType } -> StaticType.NULL
+            StaticType.unionOf(possibleResultTypes).flatten()
+        }
+        false -> StaticType.BOOL // continuation type of all numeric types to prevent incompatible types and unknown errors from propagating
+    }.let { node.withStaticType(it) }
+
+        private fun getTypeForNAryLogicalOperations(args: List<SingleType>): StaticType = when {
+            // Logical operands need to be of Boolean Type
+            args.all { it == StaticType.BOOL } -> StaticType.BOOL
+            // If any of the arguments is boolean, then the return type can be boolean because of short-circuiting
+            // in logical ops. For e.g. "TRUE OR ANY" returns TRUE. "FALSE AND ANY" returns FALSE. But in the case
+            // where the other arg is an incompatible type (not an unknown or bool), the result type is MISSING.
+            args.any { it == StaticType.BOOL } -> when {
+                // If other argument is missing, then return union(bool, missing)
+                args.any { it is MissingType } -> AnyOfType(setOf(StaticType.MISSING, StaticType.BOOL))
+                // If other argument is null, then return union(bool, null)
+                args.any { it is NullType } -> AnyOfType(setOf(StaticType.NULL, StaticType.BOOL))
+                // If other type is anything other than null or missing, then it is an error case
                 else -> StaticType.MISSING
             }
+            // If any of the operands is MISSING, return MISSING. MISSING has a precedence over NULL
+            args.any { it is MissingType } -> StaticType.MISSING
+            // If any of the operands is NULL, return NULL
+            args.any { it is NullType } -> StaticType.NULL
+            else -> StaticType.MISSING
         }
 
         // NAry ops: ADD, SUB, MUL, DIV, MOD, CONCAT, EQ, NE, LT, LTE, GT, GTE
@@ -599,6 +585,69 @@ internal class StaticTypeInferenceVisitorTransform(
                 }
             }
 
+        // This could also have been a lookup table of types, however... doing this as a nested `when` allows
+        // us to not to rely on `.equals` and `.hashcode` implementations of [StaticType], which include metas
+        // and might introduce unwanted behavior.
+        private fun inferBinaryArithmeticOp(leftType: StaticType, rightType: StaticType): SingleType = when {
+            // Propagate missing as missing. Missing has precedence over null
+            leftType is MissingType || rightType is MissingType -> StaticType.MISSING
+            leftType is NullType || rightType is NullType -> StaticType.NULL
+            else -> when (leftType) {
+                is IntType ->
+                    when (rightType) {
+                        is IntType ->
+                            when {
+                                leftType.rangeConstraint == IntType.IntRangeConstraint.UNCONSTRAINED -> leftType
+                                rightType.rangeConstraint == IntType.IntRangeConstraint.UNCONSTRAINED -> rightType
+                                leftType.rangeConstraint.numBytes > rightType.rangeConstraint.numBytes -> leftType
+                                else -> rightType
+                            }
+                        is FloatType -> StaticType.FLOAT
+                        is DecimalType -> StaticType.DECIMAL // TODO:  account for decimal precision
+                        else -> StaticType.MISSING
+                    }
+                is FloatType ->
+                    when (rightType) {
+                        is IntType -> StaticType.FLOAT
+                        is FloatType -> StaticType.FLOAT
+                        is DecimalType -> StaticType.DECIMAL // TODO:  account for decimal precision
+                        else -> StaticType.MISSING
+                    }
+                is DecimalType ->
+                    when (rightType) {
+                        is IntType -> StaticType.DECIMAL // TODO:  account for decimal precision
+                        is FloatType -> StaticType.DECIMAL // TODO:  account for decimal precision
+                        is DecimalType -> StaticType.DECIMAL // TODO:  account for decimal precision
+                        else -> StaticType.MISSING
+                    }
+                else -> StaticType.MISSING
+            }
+        }
+
+        private fun inferConcatOp(leftType: SingleType, rightType: SingleType): SingleType? {
+            fun checkUnconstrainedText(type: SingleType) = type is SymbolType || type is StringType && type.lengthConstraint is StringType.StringLengthConstraint.Unconstrained
+
+            return when {
+                !leftType.isText() || !rightType.isText() -> null
+                checkUnconstrainedText(leftType) || checkUnconstrainedText(rightType) -> StaticType.STRING
+                else -> { // Constrained string types (char & varchar)
+                    val leftLength = ((leftType as StringType).lengthConstraint as StringType.StringLengthConstraint.Constrained).length
+                    val rightLength = ((rightType as StringType).lengthConstraint as StringType.StringLengthConstraint.Constrained).length
+                    val sum = leftLength.value + rightLength.value
+                    val newConstraint = when {
+                        leftLength is NumberConstraint.UpTo || rightLength is NumberConstraint.UpTo -> NumberConstraint.UpTo(sum)
+                        else -> NumberConstraint.Equals(sum)
+                    }
+                    StringType(StringType.StringLengthConstraint.Constrained(newConstraint))
+                }
+            }
+        }
+
+        private fun inferComparatorOp(lhs: SingleType, rhs: SingleType): SingleType? = when {
+            lhs.isComparableTo(rhs) -> StaticType.BOOL
+            else -> null
+        }
+
         // Other Special NAry ops
         // BETWEEN Op
         override fun transformExprBetween(node: PartiqlAst.Expr.Between): PartiqlAst.Expr {
@@ -646,10 +695,59 @@ internal class StaticTypeInferenceVisitorTransform(
             }
 
             return when (errorAdded) {
-                true -> processedNode.withStaticType(StaticType.BOOL)
-                false -> transformNAry(processedNode, processedNode.operands) { computeReturnTypeForNAryIn(it) }
+                true -> StaticType.BOOL
+                false -> computeReturnTypeForNAryIn(operands)
+            }.let { processedNode.withStaticType(it) }
+        }
+
+        private fun computeReturnTypeForNAryIn(argTypes: List<StaticType>): StaticType {
+            require(argTypes.size >= 2) { "IN must have at least two args" }
+            val leftTypes = argTypes.first().allTypes
+            val rightTypes = argTypes.drop(1).flatMap { it.allTypes }
+
+            val finalTypes = leftTypes
+                .flatMap { left ->
+                    rightTypes.flatMap { right ->
+                        computeReturnTypeForBinaryIn(left, right).allTypes
+                    }
+                }.distinct()
+
+            return when (finalTypes.size) {
+                1 -> finalTypes.first()
+                else -> StaticType.unionOf(*finalTypes.toTypedArray())
             }
         }
+
+        private fun computeReturnTypeForBinaryIn(left: StaticType, right: StaticType): StaticType =
+            when (right) {
+                is NullType -> when (left) {
+                    is MissingType -> StaticType.MISSING
+                    else -> StaticType.NULL
+                }
+                is MissingType -> StaticType.MISSING
+                is CollectionType -> when (left) {
+                    is NullType -> StaticType.NULL
+                    is MissingType -> StaticType.MISSING
+                    else -> {
+                        val rightElemTypes = right.elementType.allTypes
+                        val possibleTypes = mutableSetOf<StaticType>()
+                        if (rightElemTypes.any { it is MissingType }) {
+                            possibleTypes.add(StaticType.MISSING)
+                        }
+                        if (rightElemTypes.any { it is NullType }) {
+                            possibleTypes.add(StaticType.NULL)
+                        }
+                        if (rightElemTypes.any { !it.isNullOrMissing() }) {
+                            possibleTypes.add(StaticType.BOOL)
+                        }
+                        StaticType.unionOf(possibleTypes).flatten()
+                    }
+                }
+                else -> when (left) {
+                    is NullType -> StaticType.unionOf(StaticType.NULL, StaticType.MISSING)
+                    else -> StaticType.MISSING
+                }
+            }
 
         // LIKE NAry op
         override fun transformExprLike(node: PartiqlAst.Expr.Like): PartiqlAst.Expr {
@@ -776,121 +874,6 @@ internal class StaticTypeInferenceVisitorTransform(
                 else -> error("Internal Error: Unsupported aggregate function. This probably indicates a parser bug.")
             }.flatten()
         }
-
-        private fun inferConcatOp(leftType: SingleType, rightType: SingleType): SingleType? {
-            fun checkUnconstrainedText(type: SingleType) = type is SymbolType || type is StringType && type.lengthConstraint is StringType.StringLengthConstraint.Unconstrained
-
-            return when {
-                !leftType.isText() || !rightType.isText() -> null
-                checkUnconstrainedText(leftType) || checkUnconstrainedText(rightType) -> StaticType.STRING
-                else -> { // Constrained string types (char & varchar)
-                    val leftLength = ((leftType as StringType).lengthConstraint as StringType.StringLengthConstraint.Constrained).length
-                    val rightLength = ((rightType as StringType).lengthConstraint as StringType.StringLengthConstraint.Constrained).length
-                    val sum = leftLength.value + rightLength.value
-                    val newConstraint = when {
-                        leftLength is NumberConstraint.UpTo || rightLength is NumberConstraint.UpTo -> NumberConstraint.UpTo(sum)
-                        else -> NumberConstraint.Equals(sum)
-                    }
-                    StringType(StringType.StringLengthConstraint.Constrained(newConstraint))
-                }
-            }
-        }
-
-        private fun inferBinaryArithmeticOp(leftType: StaticType, rightType: StaticType): SingleType =
-            // This could also have been a lookup table of types, however... doing this as a nested `when` allows
-            // us to not to rely on `.equals` and `.hashcode` implementations of [StaticType], which include metas
-            // and might introduce unwanted behavior.
-            when {
-                // Propagate missing as missing. Missing has precedence over null
-                leftType is MissingType || rightType is MissingType -> StaticType.MISSING
-                leftType is NullType || rightType is NullType -> StaticType.NULL
-                else -> when (leftType) {
-                    is IntType ->
-                        when (rightType) {
-                            is IntType ->
-                                when {
-                                    leftType.rangeConstraint == IntType.IntRangeConstraint.UNCONSTRAINED -> leftType
-                                    rightType.rangeConstraint == IntType.IntRangeConstraint.UNCONSTRAINED -> rightType
-                                    leftType.rangeConstraint.numBytes > rightType.rangeConstraint.numBytes -> leftType
-                                    else -> rightType
-                                }
-                            is FloatType -> StaticType.FLOAT
-                            is DecimalType -> StaticType.DECIMAL // TODO:  account for decimal precision
-                            else -> StaticType.MISSING
-                        }
-                    is FloatType ->
-                        when (rightType) {
-                            is IntType -> StaticType.FLOAT
-                            is FloatType -> StaticType.FLOAT
-                            is DecimalType -> StaticType.DECIMAL // TODO:  account for decimal precision
-                            else -> StaticType.MISSING
-                        }
-                    is DecimalType ->
-                        when (rightType) {
-                            is IntType -> StaticType.DECIMAL // TODO:  account for decimal precision
-                            is FloatType -> StaticType.DECIMAL // TODO:  account for decimal precision
-                            is DecimalType -> StaticType.DECIMAL // TODO:  account for decimal precision
-                            else -> StaticType.MISSING
-                        }
-                    else -> StaticType.MISSING
-                }
-            }
-
-        // Lt, Lte, Gt, Gte
-        private fun inferComparatorOp(lhs: SingleType, rhs: SingleType): SingleType? =
-            when {
-                lhs.isComparableTo(rhs) -> StaticType.BOOL
-                else -> null
-            }
-
-        private fun computeReturnTypeForNAryIn(argTypes: List<StaticType>): StaticType {
-            require(argTypes.size >= 2) { "IN must have at least two args" }
-            val leftTypes = argTypes.first().allTypes
-            val rightTypes = argTypes.drop(1).flatMap { it.allTypes }
-
-            val finalTypes = leftTypes
-                .flatMap { left ->
-                    rightTypes.flatMap { right ->
-                        computeReturnTypeForBinaryIn(left, right).allTypes
-                    }
-                }.distinct()
-
-            return when (finalTypes.size) {
-                1 -> finalTypes.first()
-                else -> StaticType.unionOf(*finalTypes.toTypedArray())
-            }
-        }
-
-        private fun computeReturnTypeForBinaryIn(left: StaticType, right: StaticType): StaticType =
-            when (right) {
-                is NullType -> when (left) {
-                    is MissingType -> StaticType.MISSING
-                    else -> StaticType.NULL
-                }
-                is MissingType -> StaticType.MISSING
-                is CollectionType -> when (left) {
-                    is NullType -> StaticType.NULL
-                    is MissingType -> StaticType.MISSING
-                    else -> {
-                        val rightElemTypes = right.elementType.allTypes
-                        val possibleTypes = mutableSetOf<StaticType>()
-                        if (rightElemTypes.any { it is MissingType }) {
-                            possibleTypes.add(StaticType.MISSING)
-                        }
-                        if (rightElemTypes.any { it is NullType }) {
-                            possibleTypes.add(StaticType.NULL)
-                        }
-                        if (rightElemTypes.any { !it.isNullOrMissing() }) {
-                            possibleTypes.add(StaticType.BOOL)
-                        }
-                        StaticType.unionOf(possibleTypes).flatten()
-                    }
-                }
-                else -> when (left) {
-                    is NullType -> StaticType.unionOf(StaticType.NULL, StaticType.MISSING)
-                    else -> StaticType.MISSING
-                }
-            }
 
         /**
          * Computes the return type of the function call based on the [FunctionSignature.unknownArguments]
