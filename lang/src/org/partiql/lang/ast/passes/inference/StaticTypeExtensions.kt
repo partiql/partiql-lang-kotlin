@@ -81,7 +81,7 @@ internal fun StaticType.cast(targetType: StaticType, scalarTypeSystem: ScalarTyp
                     toCompileTimeType(),
                     targetType.toCompileTimeType()
                 )
-                inferResult.toSingleTypes().toStaticType()
+                inferResult.toStaticType()
             }
             targetType is CollectionType && this is CollectionType -> targetType
             targetType is StructType && this is StructType -> targetType
@@ -108,11 +108,11 @@ internal fun stringWithoutNullMissing(argTypes: List<StaticType>): String =
 
 internal fun CompileTimeType.toSingleType() = StaticScalarType(scalarType, parameters)
 
-internal fun TypeInferenceResult.toSingleTypes() =
+internal fun TypeInferenceResult.toStaticType() =
     when (this) {
-        Failed -> setOf(StaticType.MISSING)
-        is Successful -> setOf(compileTimeType.toSingleType())
-        is Uncertain -> setOf(StaticType.MISSING, compileTimeType.toSingleType())
+        Failed -> StaticType.MISSING
+        is Successful -> compileTimeType.toSingleType()
+        is Uncertain -> StaticType.unionOf(StaticType.MISSING, compileTimeType.toSingleType())
     }
 
 internal fun Set<SingleType>.toStaticType() = when (size) {
@@ -120,3 +120,5 @@ internal fun Set<SingleType>.toStaticType() = when (size) {
     1 -> first()
     else -> StaticType.unionOf(this)
 }
+
+internal fun List<CompileTimeType>.toStaticType() = map { it.toSingleType() }.toSet().toStaticType()
