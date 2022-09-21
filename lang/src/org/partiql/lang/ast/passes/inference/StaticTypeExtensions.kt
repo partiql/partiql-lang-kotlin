@@ -6,7 +6,6 @@ import org.partiql.lang.ots_work.interfaces.Failed
 import org.partiql.lang.ots_work.interfaces.Successful
 import org.partiql.lang.ots_work.interfaces.TypeInferenceResult
 import org.partiql.lang.ots_work.interfaces.Uncertain
-import org.partiql.lang.ots_work.interfaces.operator.ScalarOpId
 import org.partiql.lang.ots_work.plugins.standard.types.BlobType
 import org.partiql.lang.ots_work.plugins.standard.types.CharType
 import org.partiql.lang.ots_work.plugins.standard.types.ClobType
@@ -19,6 +18,7 @@ import org.partiql.lang.ots_work.plugins.standard.types.IntType
 import org.partiql.lang.ots_work.plugins.standard.types.StringType
 import org.partiql.lang.ots_work.plugins.standard.types.SymbolType
 import org.partiql.lang.ots_work.plugins.standard.types.VarcharType
+import org.partiql.lang.ots_work.stscore.ScalarOpId
 import org.partiql.lang.ots_work.stscore.ScalarTypeSystem
 import org.partiql.lang.types.AnyOfType
 import org.partiql.lang.types.AnyType

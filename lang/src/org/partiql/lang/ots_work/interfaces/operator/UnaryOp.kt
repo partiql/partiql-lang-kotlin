@@ -7,14 +7,6 @@ abstract class UnaryOp : ScalarOp, ArgTypeValidatable {
     abstract fun inferType(argType: CompileTimeType): TypeInferenceResult
 }
 
-abstract class PosOp : UnaryOp() {
-    override val scalarOpId: ScalarOpId = ScalarOpId.Pos
-}
-
-abstract class NegOp : UnaryOp() {
-    override val scalarOpId: ScalarOpId = ScalarOpId.Neg
-}
-
-abstract class NotOp : UnaryOp() {
-    override val scalarOpId: ScalarOpId = ScalarOpId.Not
-}
+abstract class PosOp : UnaryOp()
+abstract class NegOp : UnaryOp()
+abstract class NotOp : UnaryOp()

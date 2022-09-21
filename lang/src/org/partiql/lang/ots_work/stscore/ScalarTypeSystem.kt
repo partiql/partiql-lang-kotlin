@@ -15,7 +15,6 @@ import org.partiql.lang.ots_work.interfaces.operator.NotOp
 import org.partiql.lang.ots_work.interfaces.operator.PosOp
 import org.partiql.lang.ots_work.interfaces.operator.ScalarCastOp
 import org.partiql.lang.ots_work.interfaces.operator.ScalarOp
-import org.partiql.lang.ots_work.interfaces.operator.ScalarOpId
 import org.partiql.lang.ots_work.interfaces.type.ScalarType
 import org.partiql.lang.ots_work.plugins.standard.plugin.StandardPlugin
 

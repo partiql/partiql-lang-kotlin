@@ -7,26 +7,9 @@ abstract class BinaryOp : ScalarOp, ArgTypeValidatable {
     abstract fun inferType(lType: CompileTimeType, rType: CompileTimeType): TypeInferenceResult
 }
 
-abstract class BinaryPlusOp : BinaryOp() {
-    override val scalarOpId: ScalarOpId = ScalarOpId.BinaryPlus
-}
-
-abstract class BinaryMinusOp : BinaryOp() {
-    override val scalarOpId: ScalarOpId = ScalarOpId.BinaryMinus
-}
-
-abstract class BinaryTimesOp : BinaryOp() {
-    override val scalarOpId: ScalarOpId = ScalarOpId.BinaryTimes
-}
-
-abstract class BinaryDivideOp : BinaryOp() {
-    override val scalarOpId: ScalarOpId = ScalarOpId.BinaryDivide
-}
-
-abstract class BinaryModuloOp : BinaryOp() {
-    override val scalarOpId: ScalarOpId = ScalarOpId.BinaryModulo
-}
-
-abstract class BinaryConcatOp : BinaryOp() {
-    override val scalarOpId: ScalarOpId = ScalarOpId.BinaryConcat
-}
+abstract class BinaryPlusOp : BinaryOp()
+abstract class BinaryMinusOp : BinaryOp()
+abstract class BinaryTimesOp : BinaryOp()
+abstract class BinaryDivideOp : BinaryOp()
+abstract class BinaryModuloOp : BinaryOp()
+abstract class BinaryConcatOp : BinaryOp()

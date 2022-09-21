@@ -33,7 +33,6 @@ import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.builtins.createBuiltinFunctionSignatures
 import org.partiql.lang.eval.delegate
 import org.partiql.lang.eval.getStartingSourceLocationMeta
-import org.partiql.lang.ots_work.interfaces.operator.ScalarOpId
 import org.partiql.lang.ots_work.interfaces.type.BoolType
 import org.partiql.lang.ots_work.plugins.standard.types.CharType
 import org.partiql.lang.ots_work.plugins.standard.types.DecimalType
@@ -45,6 +44,7 @@ import org.partiql.lang.ots_work.plugins.standard.types.IntType
 import org.partiql.lang.ots_work.plugins.standard.types.StringType
 import org.partiql.lang.ots_work.plugins.standard.types.SymbolType
 import org.partiql.lang.ots_work.plugins.standard.types.VarcharType
+import org.partiql.lang.ots_work.stscore.ScalarOpId
 import org.partiql.lang.ots_work.stscore.ScalarTypeSystem
 import org.partiql.lang.types.AnyOfType
 import org.partiql.lang.types.AnyType
@@ -346,30 +346,48 @@ internal class StaticTypeInferenceVisitorTransform(
             val processedNode = super.transformExprNot(node) as PartiqlAst.Expr.Not
             val argStaticType = processedNode.expr.getStaticType()
 
-            return when (hasValidOperandTypes(listOf(argStaticType), { it is StaticScalarType && scalarTypeSystem.validateOperandType(ScalarOpId.Not, it.scalarType) }, "NOT", processedNode.metas)) {
-            true -> computeReturnTypeForUnary(argStaticType, ::inferNotOp)
-            false -> scalarTypeSystem.defaultReturnTypeOfScalarOp(ScalarOpId.Not).toStaticType() // continuation type to prevent incompatible types and unknown errors from propagating
-        }.let { processedNode.withStaticType(it) }
+            return when (
+                hasValidOperandTypes(listOf(argStaticType), {
+                    it is StaticScalarType && scalarTypeSystem.validateOperandType(
+                        ScalarOpId.Not, it.scalarType
+                    )
+                }, "NOT", processedNode.metas)
+            ) {
+                true -> computeReturnTypeForUnary(argStaticType, ::inferNotOp)
+                false -> scalarTypeSystem.defaultReturnTypeOfScalarOp(ScalarOpId.Not).toStaticType() // continuation type to prevent incompatible types and unknown errors from propagating
+            }.let { processedNode.withStaticType(it) }
         }
 
         override fun transformExprPos(node: PartiqlAst.Expr.Pos): PartiqlAst.Expr {
             val processedNode = super.transformExprPos(node) as PartiqlAst.Expr.Pos
             val argStaticType = processedNode.expr.getStaticType()
 
-            return when (hasValidOperandTypes(listOf(argStaticType), { it is StaticScalarType && scalarTypeSystem.validateOperandType(ScalarOpId.Pos, it.scalarType) }, "+", processedNode.metas)) {
-            true -> computeReturnTypeForUnary(argStaticType, ::inferUnaryArithmeticOp)
-            false -> scalarTypeSystem.defaultReturnTypeOfScalarOp(ScalarOpId.Pos).toStaticType() // continuation type to prevent incompatible types and unknown errors from propagating
-        }.let { processedNode.withStaticType(it) }
+            return when (
+                hasValidOperandTypes(listOf(argStaticType), {
+                    it is StaticScalarType && scalarTypeSystem.validateOperandType(
+                        ScalarOpId.Pos, it.scalarType
+                    )
+                }, "+", processedNode.metas)
+            ) {
+                true -> computeReturnTypeForUnary(argStaticType, ::inferUnaryArithmeticOp)
+                false -> scalarTypeSystem.defaultReturnTypeOfScalarOp(ScalarOpId.Pos).toStaticType() // continuation type to prevent incompatible types and unknown errors from propagating
+            }.let { processedNode.withStaticType(it) }
         }
 
         override fun transformExprNeg(node: PartiqlAst.Expr.Neg): PartiqlAst.Expr {
             val processedNode = super.transformExprNeg(node) as PartiqlAst.Expr.Neg
             val argStaticType = processedNode.expr.getStaticType()
 
-            return when (hasValidOperandTypes(listOf(argStaticType), { it is StaticScalarType && scalarTypeSystem.validateOperandType(ScalarOpId.Neg, it.scalarType) }, "-", processedNode.metas)) {
-            true -> computeReturnTypeForUnary(argStaticType, ::inferUnaryArithmeticOp)
-            false -> scalarTypeSystem.defaultReturnTypeOfScalarOp(ScalarOpId.Neg).toStaticType() // continuation type to prevent incompatible types and unknown errors from propagating
-        }.let { processedNode.withStaticType(it) }
+            return when (
+                hasValidOperandTypes(listOf(argStaticType), {
+                    it is StaticScalarType && scalarTypeSystem.validateOperandType(
+                        ScalarOpId.Neg, it.scalarType
+                    )
+                }, "-", processedNode.metas)
+            ) {
+                true -> computeReturnTypeForUnary(argStaticType, ::inferUnaryArithmeticOp)
+                false -> scalarTypeSystem.defaultReturnTypeOfScalarOp(ScalarOpId.Neg).toStaticType() // continuation type to prevent incompatible types and unknown errors from propagating
+            }.let { processedNode.withStaticType(it) }
         }
 
         private fun computeReturnTypeForUnary(
@@ -518,10 +536,16 @@ internal class StaticTypeInferenceVisitorTransform(
             val processedNode = super.transformExprConcat(node) as PartiqlAst.Expr.Concat
             val argsStaticType = processedNode.operands.getStaticType()
 
-            return when (hasValidOperandTypes(argsStaticType, { it is StaticScalarType && scalarTypeSystem.validateOperandType(ScalarOpId.BinaryConcat, it.scalarType) }, "||", processedNode.metas)) {
-            true -> computeReturnTypeForNAry(argsStaticType, ::inferConcatOp)
-            false -> scalarTypeSystem.defaultReturnTypeOfScalarOp(ScalarOpId.BinaryConcat).toStaticType() // continuation type to prevent incompatible types and unknown errors from propagating
-        }.let { processedNode.withStaticType(it) }
+            return when (
+                hasValidOperandTypes(argsStaticType, {
+                    it is StaticScalarType && scalarTypeSystem.validateOperandType(
+                        ScalarOpId.BinaryConcat, it.scalarType
+                    )
+                }, "||", processedNode.metas)
+            ) {
+                true -> computeReturnTypeForNAry(argsStaticType, ::inferConcatOp)
+                false -> scalarTypeSystem.defaultReturnTypeOfScalarOp(ScalarOpId.BinaryConcat).toStaticType() // continuation type to prevent incompatible types and unknown errors from propagating
+            }.let { processedNode.withStaticType(it) }
         }
 
         override fun transformExprEq(node: PartiqlAst.Expr.Eq): PartiqlAst.Expr {

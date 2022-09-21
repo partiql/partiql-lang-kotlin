@@ -5,9 +5,6 @@ import org.partiql.lang.ots_work.interfaces.TypeInferenceResult
 import org.partiql.lang.ots_work.interfaces.type.BoolType
 
 abstract class LikeOp : ScalarOp, ArgTypeValidatable {
-    override val scalarOpId: ScalarOpId
-        get() = ScalarOpId.Like
-
     final override val defaultReturnTypes: List<CompileTimeType>
         get() = listOf(BoolType.compileTimeType)
 
