@@ -20,7 +20,7 @@ abstract class MergeKeysBaseExprFunction(
 ) : ExprFunction
 
 /**
- * For the given [ExprValue] representing list of structs, merges key/values based on the given inputs in flatten list
+ * For the Given [ExprValue] representing collection of structs, merges key/values based on the given inputs in flatten list
  * for values.
  *
  * E.g.
@@ -43,16 +43,20 @@ class MergeKeyValues(valueFactory: ExprValueFactory) :
     MergeKeysBaseExprFunction(valueFactory) {
     override val signature = FunctionSignature(
         name = "merge_key_values",
-        requiredParameters = listOf(StaticType.BAG, StaticType.STRING, StaticType.STRING),
+        requiredParameters = listOf(
+            StaticType.unionOf(StaticType.BAG, StaticType.LIST, StaticType.SEXP),
+            StaticType.STRING,
+            StaticType.STRING
+        ),
         returnType = StaticType.LIST
     )
 
-    override fun callWithRequired(session: EvaluationSession, value: List<ExprValue>): ExprValue {
-        val mergeKey = value[1].stringValue()
-        val valueKey = value [2].stringValue()
+    override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
+        val mergeKey = required[1].stringValue()
+        val valueKey = required[2].stringValue()
         val result = HashMap<String, MutableList<ExprValue>>()
 
-        value[0].forEach {
+        required[0].forEach {
             if (it.type != ExprValueType.STRUCT) {
                 throw Exception("All elements on input collection must be of type struct. Erroneous value: $it")
             }

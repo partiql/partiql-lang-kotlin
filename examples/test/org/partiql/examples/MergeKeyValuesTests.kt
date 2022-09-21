@@ -16,6 +16,7 @@ package org.partiql.examples
 import com.amazon.ion.system.IonSystemBuilder
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertNotNull
+import org.junit.Assert.assertThrows
 import org.junit.Test
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValueFactory
@@ -47,7 +48,7 @@ class MergeKeyValuesTests {
             factory.newString("test").namedValue(factory.newSymbol("Name")),
             factory.newFromIonValue(ionValue3).namedValue(factory.newSymbol("Values")),
         )
-        val res = fn.callWithRequired(
+        val res1 = fn.callWithRequired(
             session,
             listOf(
                 factory.newBag(
@@ -62,10 +63,63 @@ class MergeKeyValuesTests {
             )
         )
 
-        assertNotNull(res)
+        val res2 = fn.callWithRequired(
+            session,
+            listOf(
+                factory.newSexp(
+                    listOf(
+                        factory.newStruct(list1.asSequence(), StructOrdering.UNORDERED),
+                        factory.newStruct(list2.asSequence(), StructOrdering.UNORDERED),
+                        factory.newStruct(list3.asSequence(), StructOrdering.UNORDERED)
+                    )
+                ),
+                factory.newString("Name"),
+                factory.newString("Values")
+            )
+        )
+
+        val res3 = fn.callWithRequired(
+            session,
+            listOf(
+                factory.newList(
+                    listOf(
+                        factory.newStruct(list1.asSequence(), StructOrdering.UNORDERED),
+                        factory.newStruct(list2.asSequence(), StructOrdering.UNORDERED),
+                        factory.newStruct(list3.asSequence(), StructOrdering.UNORDERED)
+                    )
+                ),
+                factory.newString("Name"),
+                factory.newString("Values")
+            )
+        )
+
+        setOf(res1, res2, res3).forEach {
+            assertNotNull(it)
+            assertEquals(
+                "[{'test': ['ghj', 'klu']}, {'certificate': ['abc', 'cde', 'ghj', 'klu']}]",
+                it.toString()
+            )
+        }
+
+        val ex = assertThrows(Exception::class.java) {
+            fn.callWithRequired(
+                session,
+                listOf(
+                    factory.newList(
+                        listOf(
+                            factory.newInt(10),
+                            factory.newStruct(list2.asSequence(), StructOrdering.UNORDERED),
+                        )
+                    ),
+                    factory.newString("Name"),
+                    factory.newString("Values")
+                )
+            )
+        }
+
         assertEquals(
-            "[{'test': ['ghj', 'klu']}, {'certificate': ['abc', 'cde', 'ghj', 'klu']}]",
-            res.toString()
+            "All elements on input collection must be of type struct. Erroneous value: 10",
+            ex.message
         )
     }
 }
