@@ -271,6 +271,17 @@ class EvaluatingCompilerOrderByTests : EvaluatorTestBase() {
                 "SELECT * FROM [{'a': <<5>>}, {'a': <<1>>}, {'a': <<10>>}] ORDER BY a DESC",
                 "[{'a': <<10>>}, {'a': <<5>>}, {'a': <<1>>}]"
             ),
+            // testing alias support
+            EvaluatorTestCase(
+                "SELECT a AS b FROM [{'a': <<5>>}, {'a': <<1>>}, {'a': <<10>>}] ORDER BY b DESC",
+                "[{'b': <<10>>}, {'b': <<5>>}, {'b': <<1>>}]"
+            ),
+
+            // testing nested alias support
+            EvaluatorTestCase(
+                "SELECT b AS \"C\" FROM (SELECT a AS b FROM [{'a': <<5>>}, {'a': <<1>>}, {'a': <<10>>}] ORDER BY b DESC) ORDER BY \"C\"",
+                "[{'C': <<1>>}, {'C': <<5>>}, {'C': <<10>>}]"
+            ),
         )
     }
 
