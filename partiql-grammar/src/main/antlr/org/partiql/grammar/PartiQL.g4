@@ -97,7 +97,9 @@ dml
 dmlBaseCommand
     : insertCommand
     | setCommand
+    | replaceCommand
     | removeCommand
+    | upsertCommand
     ;
 
 pathSimple
@@ -108,6 +110,14 @@ pathSimpleSteps
     | BRACKET_LEFT key=symbolPrimitive BRACKET_RIGHT     # PathSimpleSymbol
     | PERIOD key=symbolPrimitive                         # PathSimpleDotSymbol
     ;
+
+// TODO move from experimental; pending: https://github.com/partiql/partiql-docs/issues/27
+replaceCommand
+    : REPLACE INTO symbolPrimitive value=expr;
+
+// TODO move from experimental; pending: https://github.com/partiql/partiql-docs/issues/27
+upsertCommand
+    : UPSERT INTO symbolPrimitive value=expr;
 
 removeCommand
     : REMOVE pathSimple;
@@ -147,7 +157,8 @@ constraintName
 
 conflictAction
     : DO NOTHING
-    | DO REPLACE doReplace;
+    | DO REPLACE doReplace
+    | DO UPDATE doUpdate;
 
 /*
 <do replace> ::= EXCLUDED
@@ -156,6 +167,16 @@ conflictAction
    [ WHERE <condition> ]
 */
 doReplace
+    : EXCLUDED;
+    // :TODO add the rest of the grammar
+
+/*
+<do update> ::= EXCLUDED
+    | SET <attr values> [, <attr values>]...
+    | VALUE <tuple value>
+   [ WHERE <condition> ]
+*/
+doUpdate
     : EXCLUDED;
     // :TODO add the rest of the grammar
 
