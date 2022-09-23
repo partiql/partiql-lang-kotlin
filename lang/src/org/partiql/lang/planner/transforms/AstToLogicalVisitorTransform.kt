@@ -345,7 +345,6 @@ private class FromSourceToBexpr(
                 node.metas
             )
         }
-
 }
 
 private val INVALID_STATEMENT = PartiqlLogical.build {

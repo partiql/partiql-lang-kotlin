@@ -76,7 +76,6 @@ class GroupByPathExpressionVisitorTransform(
 
                 is PartiqlAst.FromSource.Unpivot ->
                     listOfNotNull(fromSource.asAlias?.text, fromSource.atAlias?.text)
-
             }
     }
 
