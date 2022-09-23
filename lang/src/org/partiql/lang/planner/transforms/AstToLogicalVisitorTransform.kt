@@ -346,8 +346,6 @@ private class FromSourceToBexpr(
             )
         }
 
-    override fun convertGraphMatch(node: PartiqlAst.FromSource.GraphMatch): PartiqlLogical.Bexpr =
-        INVALID_BEXPR.also { problemHandler.handleUnimplementedFeature(node, "MATCH") }
 }
 
 private val INVALID_STATEMENT = PartiqlLogical.build {

@@ -129,6 +129,9 @@ may then be further optimized by selecting better implementations of each operat
             // Bag operators
             (bag_op op::bag_op_type quantifier::set_quantifier operands::(* expr 2))
 
+            // GPML graph pattern match:  <expr> MATCH <gpml_pattern>
+            (graph_match expr::expr gpml_pattern::gpml_pattern)
+
             // Other expression types
             (path root::expr steps::(* path_step 1))
             (call func_name::symbol args::(* expr 1))
@@ -210,9 +213,7 @@ may then be further optimized by selecting better implementations of each operat
 
             // <from_source> JOIN [INNER | LEFT | RIGHT | FULL] <from_source> ON <expr>
             (join type::join_type left::from_source right::from_source predicate::(? expr))
-
-            // <expr> MATCH <gpml_pattern>
-            (graph_match expr::expr gpml_pattern::gpml_pattern))
+        )
 
         // Indicates the logical type of join.
         (sum join_type (inner) (left) (right) (full))

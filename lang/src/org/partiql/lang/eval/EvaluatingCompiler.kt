@@ -440,6 +440,8 @@ internal class EvaluatingCompiler(
 
             // bag operators
             is PartiqlAst.Expr.BagOp -> compileBagOp(expr, metas)
+
+            is PartiqlAst.Expr.GraphMatch -> TODO("Compilation of GraphMatch expression")
         }
     }
 

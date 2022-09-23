@@ -379,7 +379,6 @@ tableReference
 tableNonJoin
     : tableBaseReference
     | tableUnpivot
-    | tableMatch
     ;
 
 tableBaseReference
@@ -389,11 +388,6 @@ tableBaseReference
 
 tableUnpivot
     : UNPIVOT expr asIdent? atIdent? byIdent?;
-
-tableMatch
-    : lhs=expr MATCH gpmlPattern                              # MatchSingle
-    | lhs=expr MATCH PAREN_LEFT gpmlPatternList PAREN_RIGHT   # MatchMultiple
-    ;
 
 tableJoined[ParserRuleContext lhs]
     : tableCrossJoin[$lhs]
@@ -526,6 +520,7 @@ exprPrimary
     | functionCall               # ExprPrimaryBase
     | nullIf                     # ExprPrimaryBase
     | exprPrimary pathStep+      # ExprPrimaryPath
+    | exprPrimary matchPostfix   # ExprPrimaryMatch
     | caseExpr                   # ExprPrimaryBase
     | valueList                  # ExprPrimaryBase
     | values                     # ExprPrimaryBase
@@ -607,6 +602,11 @@ pathStep
     | BRACKET_LEFT all=ASTERISK BRACKET_RIGHT    # PathStepIndexAll
     | PERIOD key=symbolPrimitive                 # PathStepDotExpr
     | PERIOD all=ASTERISK                        # PathStepDotAll
+    ;
+
+matchPostfix
+    : MATCH gpmlPattern                              # MatchSingle
+    | MATCH PAREN_LEFT gpmlPatternList PAREN_RIGHT   # MatchMultiple
     ;
 
 parameter

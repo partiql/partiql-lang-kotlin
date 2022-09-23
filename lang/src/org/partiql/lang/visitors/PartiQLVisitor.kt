@@ -742,17 +742,11 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
     }
 
     override fun visitMatchSingle(ctx: PartiQLParser.MatchSingleContext) = PartiqlAst.build {
-        val source = visitExpr(ctx.lhs)
-        val metas = ctx.MATCH().getSourceMetaContainer()
-        val gpmlPattern = visitGpmlPattern(ctx.gpmlPattern())
-        graphMatch(source, gpmlPattern, metas)
+        visitGpmlPattern(ctx.gpmlPattern())
     }
 
     override fun visitMatchMultiple(ctx: PartiQLParser.MatchMultipleContext) = PartiqlAst.build {
-        val source = visitExpr(ctx.lhs)
-        val metas = ctx.MATCH().getSourceMetaContainer()
-        val gpmlPattern = visitGpmlPatternList(ctx.gpmlPatternList())
-        graphMatch(source, gpmlPattern, metas)
+        visitGpmlPatternList(ctx.gpmlPatternList())
     }
 
     override fun visitFromClauseSimpleExplicit(ctx: PartiQLParser.FromClauseSimpleExplicitContext) = PartiqlAst.build {
@@ -920,6 +914,12 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
         val base = visit(ctx.exprPrimary()) as PartiqlAst.Expr
         val steps = ctx.pathStep().map { step -> visit(step) as PartiqlAst.PathStep }
         path(base, steps, base.metas)
+    }
+
+    override fun visitExprPrimaryMatch(ctx: PartiQLParser.ExprPrimaryMatchContext) = PartiqlAst.build {
+        val graph = visit(ctx.exprPrimary()) as PartiqlAst.Expr
+        val gpmlPattern = visit(ctx.matchPostfix()) as PartiqlAst.GpmlPattern
+        graphMatch(graph, gpmlPattern, graph.metas)
     }
 
     override fun visitPathStepIndexExpr(ctx: PartiQLParser.PathStepIndexExprContext) = PartiqlAst.build {
