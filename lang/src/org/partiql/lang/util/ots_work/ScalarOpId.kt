@@ -1,4 +1,4 @@
-package org.partiql.lang.ots_work.stscore
+package org.partiql.lang.util.ots_work
 
 enum class ScalarOpId {
     ScalarCast,

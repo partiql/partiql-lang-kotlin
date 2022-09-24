@@ -5,8 +5,8 @@ import junitparams.Parameters
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.partiql.lang.ots_work.plugins.standard.plugin.StandardPlugin
 import org.partiql.lang.ots_work.plugins.standard.types.DecimalType
-import org.partiql.lang.ots_work.stscore.ScalarTypeSystem
 import org.partiql.lang.types.StaticScalarType
 import org.partiql.lang.types.StaticType
 
@@ -20,7 +20,7 @@ class StaticTypeCastTests {
     )
 
     private fun runTest(tc: TestCase) {
-        val outType = tc.sourceType.cast(tc.targetType, ScalarTypeSystem.defaultScalarTypeSystem)
+        val outType = tc.sourceType.cast(tc.targetType, StandardPlugin())
         assertEquals("Expected ${tc.expectedType} when ${tc.sourceType} is casted to ${tc.targetType}", tc.expectedType, outType)
     }
 

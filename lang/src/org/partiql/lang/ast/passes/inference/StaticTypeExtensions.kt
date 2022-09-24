@@ -3,6 +3,7 @@ package org.partiql.lang.ast.passes.inference
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.ots_work.interfaces.CompileTimeType
 import org.partiql.lang.ots_work.interfaces.Failed
+import org.partiql.lang.ots_work.interfaces.Plugin
 import org.partiql.lang.ots_work.interfaces.Successful
 import org.partiql.lang.ots_work.interfaces.TypeInferenceResult
 import org.partiql.lang.ots_work.interfaces.Uncertain
@@ -18,8 +19,6 @@ import org.partiql.lang.ots_work.plugins.standard.types.IntType
 import org.partiql.lang.ots_work.plugins.standard.types.StringType
 import org.partiql.lang.ots_work.plugins.standard.types.SymbolType
 import org.partiql.lang.ots_work.plugins.standard.types.VarcharType
-import org.partiql.lang.ots_work.stscore.ScalarOpId
-import org.partiql.lang.ots_work.stscore.ScalarTypeSystem
 import org.partiql.lang.types.AnyOfType
 import org.partiql.lang.types.AnyType
 import org.partiql.lang.types.CollectionType
@@ -29,6 +28,8 @@ import org.partiql.lang.types.SingleType
 import org.partiql.lang.types.StaticScalarType
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.types.StructType
+import org.partiql.lang.util.ots_work.ScalarOpId
+import org.partiql.lang.util.ots_work.inferReturnType
 
 internal fun StaticType.isNullOrMissing(): Boolean = (this is NullType || this is MissingType)
 internal fun StaticType.isText(): Boolean = this is StaticScalarType && (scalarType in listOf(SymbolType, StringType, VarcharType, CharType))
@@ -42,7 +43,7 @@ internal fun StaticType.isUnknown(): Boolean = (this.isNullOrMissing() || this =
  * This replicates the behavior of its runtime equivalent [ExprValue.cast].
  * @see [ExprValue.cast] for documentation.
  */
-internal fun StaticType.cast(targetType: StaticType, scalarTypeSystem: ScalarTypeSystem): StaticType {
+internal fun StaticType.cast(targetType: StaticType, plugin: Plugin): StaticType {
     when (targetType) {
         is AnyOfType -> {
             // TODO we should do more sophisticated inference based on the source like we do for single types
@@ -61,10 +62,10 @@ internal fun StaticType.cast(targetType: StaticType, scalarTypeSystem: ScalarTyp
 
     // union source types, recursively process them
     when (this) {
-        is AnyType -> return AnyOfType(this.toAnyOfType().types.map { it.cast(targetType, scalarTypeSystem) }.toSet()).flatten()
+        is AnyType -> return AnyOfType(this.toAnyOfType().types.map { it.cast(targetType, plugin) }.toSet()).flatten()
         is AnyOfType -> return when (val flattened = this.flatten()) {
-            is SingleType, is AnyType -> flattened.cast(targetType, scalarTypeSystem)
-            is AnyOfType -> AnyOfType(flattened.types.map { it.cast(targetType, scalarTypeSystem) }.toSet()).flatten()
+            is SingleType, is AnyType -> flattened.cast(targetType, plugin)
+            is AnyOfType -> AnyOfType(flattened.types.map { it.cast(targetType, plugin) }.toSet()).flatten()
         }
     }
 
@@ -76,7 +77,7 @@ internal fun StaticType.cast(targetType: StaticType, scalarTypeSystem: ScalarTyp
         this.isNullOrMissing() -> this
         else -> when {
             targetType is StaticScalarType && this is StaticScalarType -> {
-                val inferResult = scalarTypeSystem.inferReturnType(
+                val inferResult = plugin.inferReturnType(
                     ScalarOpId.ScalarCast,
                     toCompileTimeType(),
                     targetType.toCompileTimeType()
