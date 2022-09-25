@@ -90,6 +90,7 @@ stage in the `PlannerPipeline` and to generate performance metrics for the indiv
 
 ### Removed
 - README.md badge for travisci
+- [ExprValueType.typeNames] as needed by the future work of legacy parser removal and OTS 
 
 ### Security
 
