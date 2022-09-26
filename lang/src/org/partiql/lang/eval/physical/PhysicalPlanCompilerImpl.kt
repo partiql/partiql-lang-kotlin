@@ -110,7 +110,6 @@ import java.math.BigDecimal
 import java.util.LinkedList
 import java.util.TreeSet
 import java.util.regex.Pattern
-import kotlin.collections.ArrayList
 
 /**
  * A basic "compiler" that converts an instance of [PartiqlPhysical.Expr] to an [Expression].
@@ -132,14 +131,14 @@ import kotlin.collections.ArrayList
  *
  * [1]: https://www.complang.tuwien.ac.at/anton/lvas/sem06w/fest.pdf
  */
-internal class PhysicalExprToThunkConverterImpl(
+internal class PhysicalPlanCompilerImpl(
     private val valueFactory: ExprValueFactory,
     private val functions: Map<String, ExprFunction>,
     private val customTypedOpParameters: Map<String, TypedOpParameter>,
     private val procedures: Map<String, StoredProcedure>,
     private val evaluatorOptions: EvaluatorOptions = EvaluatorOptions.standard(),
     private val bexperConverter: PhysicalBexprToThunkConverter,
-) : PhysicalExprToThunkConverter {
+) : PhysicalPlanCompiler {
     private val errorSignaler = evaluatorOptions.typingMode.createErrorSignaler(valueFactory)
     private val thunkFactory = evaluatorOptions.typingMode.createThunkFactory<EvaluatorState>(
         evaluatorOptions.thunkOptions,
