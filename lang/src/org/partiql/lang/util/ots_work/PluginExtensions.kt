@@ -1,21 +1,21 @@
 package org.partiql.lang.util.ots_work
 
-import org.partiql.lang.ots_work.interfaces.CompileTimeType
-import org.partiql.lang.ots_work.interfaces.Plugin
-import org.partiql.lang.ots_work.interfaces.operator.ArgTypeValidatable
-import org.partiql.lang.ots_work.interfaces.operator.BinaryConcatOp
-import org.partiql.lang.ots_work.interfaces.operator.BinaryDivideOp
-import org.partiql.lang.ots_work.interfaces.operator.BinaryMinusOp
-import org.partiql.lang.ots_work.interfaces.operator.BinaryModuloOp
-import org.partiql.lang.ots_work.interfaces.operator.BinaryPlusOp
-import org.partiql.lang.ots_work.interfaces.operator.BinaryTimesOp
-import org.partiql.lang.ots_work.interfaces.operator.LikeOp
-import org.partiql.lang.ots_work.interfaces.operator.NegOp
-import org.partiql.lang.ots_work.interfaces.operator.NotOp
-import org.partiql.lang.ots_work.interfaces.operator.PosOp
-import org.partiql.lang.ots_work.interfaces.operator.ScalarCastOp
-import org.partiql.lang.ots_work.interfaces.operator.ScalarOp
-import org.partiql.lang.ots_work.interfaces.type.ScalarType
+import org.partiql.lang.ots.interfaces.CompileTimeType
+import org.partiql.lang.ots.interfaces.Plugin
+import org.partiql.lang.ots.interfaces.operator.ArgTypeValidatable
+import org.partiql.lang.ots.interfaces.operator.BinaryConcatOp
+import org.partiql.lang.ots.interfaces.operator.BinaryDivideOp
+import org.partiql.lang.ots.interfaces.operator.BinaryMinusOp
+import org.partiql.lang.ots.interfaces.operator.BinaryModuloOp
+import org.partiql.lang.ots.interfaces.operator.BinaryPlusOp
+import org.partiql.lang.ots.interfaces.operator.BinaryTimesOp
+import org.partiql.lang.ots.interfaces.operator.LikeOp
+import org.partiql.lang.ots.interfaces.operator.NegOp
+import org.partiql.lang.ots.interfaces.operator.NotOp
+import org.partiql.lang.ots.interfaces.operator.PosOp
+import org.partiql.lang.ots.interfaces.operator.ScalarCastOp
+import org.partiql.lang.ots.interfaces.operator.ScalarOp
+import org.partiql.lang.ots.interfaces.type.ScalarType
 
 internal fun Plugin.getScalarOp(scalarOpId: ScalarOpId): ScalarOp = when (scalarOpId) {
     ScalarOpId.ScalarCast -> scalarCastOp

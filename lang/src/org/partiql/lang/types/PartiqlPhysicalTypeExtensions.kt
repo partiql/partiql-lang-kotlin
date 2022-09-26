@@ -1,10 +1,10 @@
 package org.partiql.lang.types
 
 import org.partiql.lang.domains.PartiqlPhysical
-import org.partiql.lang.ots_work.plugins.standard.types.CharType
-import org.partiql.lang.ots_work.plugins.standard.types.DecimalType
-import org.partiql.lang.ots_work.plugins.standard.types.TimeType
-import org.partiql.lang.ots_work.plugins.standard.types.VarcharType
+import org.partiql.lang.ots.plugins.standard.types.CharType
+import org.partiql.lang.ots.plugins.standard.types.DecimalType
+import org.partiql.lang.ots.plugins.standard.types.TimeType
+import org.partiql.lang.ots.plugins.standard.types.VarcharType
 
 /**
  * Helper to convert [PartiqlPhysical.Type] in AST to a [TypedOpParameter].

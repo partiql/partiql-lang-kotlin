@@ -13,23 +13,23 @@ import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.name
 import org.partiql.lang.eval.stringValue
 import org.partiql.lang.eval.timeValue
-import org.partiql.lang.ots_work.interfaces.CompileTimeType
-import org.partiql.lang.ots_work.interfaces.TypeParameters
-import org.partiql.lang.ots_work.interfaces.type.BoolType
-import org.partiql.lang.ots_work.interfaces.type.ScalarType
-import org.partiql.lang.ots_work.plugins.standard.types.BlobType
-import org.partiql.lang.ots_work.plugins.standard.types.ClobType
-import org.partiql.lang.ots_work.plugins.standard.types.DateType
-import org.partiql.lang.ots_work.plugins.standard.types.DecimalType
-import org.partiql.lang.ots_work.plugins.standard.types.FloatType
-import org.partiql.lang.ots_work.plugins.standard.types.Int2Type
-import org.partiql.lang.ots_work.plugins.standard.types.Int4Type
-import org.partiql.lang.ots_work.plugins.standard.types.Int8Type
-import org.partiql.lang.ots_work.plugins.standard.types.IntType
-import org.partiql.lang.ots_work.plugins.standard.types.StringType
-import org.partiql.lang.ots_work.plugins.standard.types.SymbolType
-import org.partiql.lang.ots_work.plugins.standard.types.TimeStampType
-import org.partiql.lang.ots_work.plugins.standard.types.TimeType
+import org.partiql.lang.ots.interfaces.CompileTimeType
+import org.partiql.lang.ots.interfaces.TypeParameters
+import org.partiql.lang.ots.interfaces.type.BoolType
+import org.partiql.lang.ots.interfaces.type.ScalarType
+import org.partiql.lang.ots.plugins.standard.types.BlobType
+import org.partiql.lang.ots.plugins.standard.types.ClobType
+import org.partiql.lang.ots.plugins.standard.types.DateType
+import org.partiql.lang.ots.plugins.standard.types.DecimalType
+import org.partiql.lang.ots.plugins.standard.types.FloatType
+import org.partiql.lang.ots.plugins.standard.types.Int2Type
+import org.partiql.lang.ots.plugins.standard.types.Int4Type
+import org.partiql.lang.ots.plugins.standard.types.Int8Type
+import org.partiql.lang.ots.plugins.standard.types.IntType
+import org.partiql.lang.ots.plugins.standard.types.StringType
+import org.partiql.lang.ots.plugins.standard.types.SymbolType
+import org.partiql.lang.ots.plugins.standard.types.TimeStampType
+import org.partiql.lang.ots.plugins.standard.types.TimeType
 
 /**
  * Represents static types available in the language and ways to extends them to create new types.

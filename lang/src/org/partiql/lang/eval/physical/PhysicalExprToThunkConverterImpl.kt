@@ -82,10 +82,10 @@ import org.partiql.lang.eval.syntheticColumnName
 import org.partiql.lang.eval.time.Time
 import org.partiql.lang.eval.unnamedValue
 import org.partiql.lang.eval.visitors.PartiqlPhysicalSanityValidator
-import org.partiql.lang.ots_work.plugins.standard.types.Int2Type
-import org.partiql.lang.ots_work.plugins.standard.types.Int4Type
-import org.partiql.lang.ots_work.plugins.standard.types.Int8Type
-import org.partiql.lang.ots_work.plugins.standard.types.IntType
+import org.partiql.lang.ots.plugins.standard.types.Int2Type
+import org.partiql.lang.ots.plugins.standard.types.Int4Type
+import org.partiql.lang.ots.plugins.standard.types.Int8Type
+import org.partiql.lang.ots.plugins.standard.types.IntType
 import org.partiql.lang.planner.EvaluatorOptions
 import org.partiql.lang.types.AnyOfType
 import org.partiql.lang.types.AnyType
