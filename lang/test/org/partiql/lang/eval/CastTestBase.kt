@@ -42,25 +42,25 @@ data class NotImplemented(val expectedQuality: CastQuality) : CastQualityStatus(
  */
 data class FixSemantics(val expectedQuality: CastQuality) : CastQualityStatus()
 
-private val typeToTypeAliases = mapOf(
-    ExprValueType.MISSING to listOf("missing"),
-    ExprValueType.NULL to listOf("null"),
-    ExprValueType.BOOL to listOf("bool", "boolean"),
-    ExprValueType.INT to listOf("int", "smallint", "integer2", "int2", "integer", "integer4", "int4", "integer8", "int8", "bigint"),
-    ExprValueType.FLOAT to listOf("float", "real", "double precision"),
-    ExprValueType.DECIMAL to listOf("dec", "decimal", "numeric"),
-    ExprValueType.DATE to listOf("date"),
-    ExprValueType.TIMESTAMP to listOf("timestamp"),
-    ExprValueType.TIME to listOf("time"),
-    ExprValueType.SYMBOL to listOf("symbol"),
-    ExprValueType.STRING to listOf("string", "char", "varchar", "character", "character varying"),
-    ExprValueType.CLOB to listOf("clob"),
-    ExprValueType.BLOB to listOf("blob"),
-    ExprValueType.LIST to listOf("list"),
-    ExprValueType.SEXP to listOf("sexp"),
-    ExprValueType.STRUCT to listOf("struct", "tuple"),
-    ExprValueType.BAG to listOf("bag")
-)
+private fun ExprValueType.typeAliases(): List<String> = when (this) {
+    ExprValueType.MISSING -> listOf("missing")
+    ExprValueType.NULL -> listOf("null")
+    ExprValueType.BOOL -> listOf("bool", "boolean")
+    ExprValueType.INT -> listOf("int", "smallint", "integer2", "int2", "integer", "integer4", "int4", "integer8", "int8", "bigint")
+    ExprValueType.FLOAT -> listOf("float", "real", "double precision")
+    ExprValueType.DECIMAL -> listOf("dec", "decimal", "numeric")
+    ExprValueType.DATE -> listOf("date")
+    ExprValueType.TIMESTAMP -> listOf("timestamp")
+    ExprValueType.TIME -> listOf("time")
+    ExprValueType.SYMBOL -> listOf("symbol")
+    ExprValueType.STRING -> listOf("string", "char", "varchar", "character", "character varying")
+    ExprValueType.CLOB -> listOf("clob")
+    ExprValueType.BLOB -> listOf("blob")
+    ExprValueType.LIST -> listOf("list")
+    ExprValueType.SEXP -> listOf("sexp")
+    ExprValueType.STRUCT -> listOf("struct", "tuple")
+    ExprValueType.BAG -> listOf("bag")
+}
 
 abstract class CastTestBase : EvaluatorTestBase() {
 
@@ -259,7 +259,7 @@ abstract class CastTestBase : EvaluatorTestBase() {
         fun List<(String) -> CastCase>.types(types: List<String>): List<CastCase> =
             this.flatMap { partial -> types.map { type -> partial(type) } }
 
-        val allTypeNames = ExprValueType.values().flatMap { typeToTypeAliases[it]!! }
+        val allTypeNames = ExprValueType.values().flatMap { it.typeAliases() }
 
         val commonTestCases =
             listOf(
@@ -267,7 +267,7 @@ abstract class CastTestBase : EvaluatorTestBase() {
                     case("NULL", "null", CastQuality.LOSSLESS) {
                         assertEquals(ExprValueType.NULL, it.type)
                     }
-                ).types(allTypeNames - typeToTypeAliases[ExprValueType.MISSING]!!),
+                ).types(allTypeNames - ExprValueType.MISSING.typeAliases()),
                 listOf(
                     case("NULL", "null", CastQuality.LOSSLESS) {
                         assertEquals(ExprValueType.MISSING, it.type)
@@ -277,7 +277,7 @@ abstract class CastTestBase : EvaluatorTestBase() {
                     case("MISSING", "null", CastQuality.LOSSLESS) {
                         assertEquals(ExprValueType.MISSING, it.type)
                     }
-                ).types(allTypeNames - typeToTypeAliases[ExprValueType.NULL]!!),
+                ).types(allTypeNames - ExprValueType.NULL.typeAliases()),
                 listOf(
                     case("MISSING", "null", CastQuality.LOSSLESS) {
                         assertEquals(ExprValueType.NULL, it.type)
@@ -398,7 +398,7 @@ abstract class CastTestBase : EvaluatorTestBase() {
                     case("<<>>", ErrorCode.EVALUATOR_INVALID_CAST),
                     case("<<14>>", ErrorCode.EVALUATOR_INVALID_CAST),
                     case("<<20>>", ErrorCode.EVALUATOR_INVALID_CAST)
-                ).types(typeToTypeAliases[ExprValueType.INT]!!),
+                ).types(ExprValueType.INT.typeAliases()),
                 listOf(
                     // booleans
                     case("TRUE AND FALSE", "0e0", CastQuality.LOSSLESS),
@@ -443,7 +443,7 @@ abstract class CastTestBase : EvaluatorTestBase() {
                     case("<<>>", ErrorCode.EVALUATOR_INVALID_CAST),
                     case("<<`14e0`>>", ErrorCode.EVALUATOR_INVALID_CAST),
                     case("<<`20e0`>>", ErrorCode.EVALUATOR_INVALID_CAST)
-                ).types(typeToTypeAliases[ExprValueType.FLOAT]!!),
+                ).types(ExprValueType.FLOAT.typeAliases()),
                 listOf(
                     // booleans
                     case("TRUE AND FALSE", "0d0", CastQuality.LOSSLESS),
@@ -489,7 +489,7 @@ abstract class CastTestBase : EvaluatorTestBase() {
                     case("<<>>", ErrorCode.EVALUATOR_INVALID_CAST),
                     case("<<`14d0`>>", ErrorCode.EVALUATOR_INVALID_CAST),
                     case("<<`20d0`>>", ErrorCode.EVALUATOR_INVALID_CAST)
-                ).types(typeToTypeAliases[ExprValueType.DECIMAL]!!),
+                ).types(ExprValueType.DECIMAL.typeAliases()),
                 listOf(
                     // booleans
                     case("TRUE AND FALSE", ErrorCode.EVALUATOR_INVALID_CAST),
@@ -525,7 +525,7 @@ abstract class CastTestBase : EvaluatorTestBase() {
                     case("`{}`", ErrorCode.EVALUATOR_INVALID_CAST),
                     // bag
                     case("<<>>", ErrorCode.EVALUATOR_INVALID_CAST)
-                ).types(typeToTypeAliases[ExprValueType.DATE]!!),
+                ).types(ExprValueType.DATE.typeAliases()),
                 // Find more coverage for the "Cast as Time" tests in `castDateAndTime`.
                 listOf(
                     // booleans
@@ -562,7 +562,7 @@ abstract class CastTestBase : EvaluatorTestBase() {
                     case("`{}`", ErrorCode.EVALUATOR_INVALID_CAST),
                     // bag
                     case("<<>>", ErrorCode.EVALUATOR_INVALID_CAST)
-                ).types(typeToTypeAliases[ExprValueType.TIME]!!),
+                ).types(ExprValueType.TIME.typeAliases()),
                 listOf(
                     // booleans
                     case("TRUE AND FALSE", ErrorCode.EVALUATOR_INVALID_CAST),
@@ -591,7 +591,7 @@ abstract class CastTestBase : EvaluatorTestBase() {
                     case("`{}`", ErrorCode.EVALUATOR_INVALID_CAST),
                     // bag
                     case("<<>>", ErrorCode.EVALUATOR_INVALID_CAST)
-                ).types(typeToTypeAliases[ExprValueType.TIMESTAMP]!!),
+                ).types(ExprValueType.TIMESTAMP.typeAliases()),
                 listOf(
                     // booleans
                     case("TRUE AND FALSE", "'false'", CastQuality.LOSSLESS),
@@ -635,7 +635,7 @@ abstract class CastTestBase : EvaluatorTestBase() {
                     case("<<>>", ErrorCode.EVALUATOR_INVALID_CAST),
                     case("<<`14d0`>>", ErrorCode.EVALUATOR_INVALID_CAST),
                     case("<<`20d0`>>", ErrorCode.EVALUATOR_INVALID_CAST)
-                ).types(typeToTypeAliases[ExprValueType.SYMBOL]!!),
+                ).types(ExprValueType.SYMBOL.typeAliases()),
                 listOf(
                     // booleans
                     case("TRUE AND FALSE", "\"false\"", CastQuality.LOSSLESS),
@@ -724,7 +724,7 @@ abstract class CastTestBase : EvaluatorTestBase() {
                     case("<<>>", ErrorCode.EVALUATOR_INVALID_CAST),
                     case("<<`14d0`>>", ErrorCode.EVALUATOR_INVALID_CAST),
                     case("<<`20d0`>>", ErrorCode.EVALUATOR_INVALID_CAST)
-                ).types(typeToTypeAliases[ExprValueType.CLOB]!!),
+                ).types(ExprValueType.CLOB.typeAliases()),
                 listOf(
                     // booleans
                     case("TRUE AND FALSE", ErrorCode.EVALUATOR_INVALID_CAST),
@@ -768,7 +768,7 @@ abstract class CastTestBase : EvaluatorTestBase() {
                     case("<<>>", ErrorCode.EVALUATOR_INVALID_CAST),
                     case("<<`14d0`>>", ErrorCode.EVALUATOR_INVALID_CAST),
                     case("<<`20d0`>>", ErrorCode.EVALUATOR_INVALID_CAST)
-                ).types(typeToTypeAliases[ExprValueType.BLOB]!!),
+                ).types(ExprValueType.BLOB.typeAliases()),
                 listOf(
                     // booleans
                     case("TRUE AND FALSE", ErrorCode.EVALUATOR_INVALID_CAST),
@@ -812,7 +812,7 @@ abstract class CastTestBase : EvaluatorTestBase() {
                     case("<<>>", "[]", CastQuality.LOSSLESS), // TODO bag verification
                     case("<<`14d0`>>", "[14d0]", CastQuality.LOSSLESS), // TODO bag verification
                     case("<<`20d0`>>", "[20d0]", CastQuality.LOSSLESS) // TODO bag verification
-                ).types(typeToTypeAliases[ExprValueType.LIST]!!),
+                ).types(ExprValueType.LIST.typeAliases()),
                 listOf(
                     // booleans
                     case("TRUE AND FALSE", ErrorCode.EVALUATOR_INVALID_CAST),
@@ -856,7 +856,7 @@ abstract class CastTestBase : EvaluatorTestBase() {
                     case("<<>>", "()", CastQuality.LOSSLESS),
                     case("<<`14d0`>>", "(14d0)", CastQuality.LOSSLESS),
                     case("<<`20d0`>>", "(20d0)", CastQuality.LOSSLESS)
-                ).types(typeToTypeAliases[ExprValueType.SEXP]!!),
+                ).types(ExprValueType.SEXP.typeAliases()),
                 listOf(
                     // booleans
                     case("TRUE AND FALSE", ErrorCode.EVALUATOR_INVALID_CAST),
@@ -900,7 +900,7 @@ abstract class CastTestBase : EvaluatorTestBase() {
                     case("<<>>", ErrorCode.EVALUATOR_INVALID_CAST),
                     case("<<`14d0`>>", ErrorCode.EVALUATOR_INVALID_CAST),
                     case("<<`20d0`>>", ErrorCode.EVALUATOR_INVALID_CAST)
-                ).types(typeToTypeAliases[ExprValueType.STRUCT]!!),
+                ).types(ExprValueType.STRUCT.typeAliases()),
                 listOf(
                     // booleans
                     case("TRUE AND FALSE", ErrorCode.EVALUATOR_INVALID_CAST),
@@ -944,7 +944,7 @@ abstract class CastTestBase : EvaluatorTestBase() {
                     case("<<>>", "[]", CastQuality.LOSSLESS), // TODO bag verification
                     case("<<`14d0`>>", "[14d0]", CastQuality.LOSSLESS), // TODO bag verification
                     case("<<`20d0`>>", "[20d0]", CastQuality.LOSSLESS) // TODO bag verification
-                ).types(typeToTypeAliases[ExprValueType.BAG]!!)
+                ).types(ExprValueType.BAG.typeAliases())
             ).flatten()
 
         val deviatingLegacyTestCases = listOf(
@@ -1003,7 +1003,7 @@ abstract class CastTestBase : EvaluatorTestBase() {
                 case("-20.9", "-20", CastQuality.LOSSY),
                 case("1.5", "1", CastQuality.LOSSY),
                 case("2.5", "2", CastQuality.LOSSY)
-            ).types(typeToTypeAliases[ExprValueType.INT]!!),
+            ).types(ExprValueType.INT.typeAliases()),
             // SMALLINT tests
             listOf(
                 // over range
@@ -1054,7 +1054,7 @@ abstract class CastTestBase : EvaluatorTestBase() {
                 case("'123'", "123.", CastQuality.LOSSLESS),
                 case("'1234'", "1234.", CastQuality.LOSSLESS),
                 case("'123.45'", "123.45", CastQuality.LOSSLESS)
-            ).types(typeToTypeAliases[ExprValueType.DECIMAL]!!.map { "$it(3)" }),
+            ).types(ExprValueType.DECIMAL.typeAliases().map { "$it(3)" }),
             // DECIMAL(5,2) ; LEGACY mode does not respect DECIMAL's precison or scale
             listOf(
                 case("12", "12.", CastQuality.LOSSLESS),
@@ -1067,17 +1067,17 @@ abstract class CastTestBase : EvaluatorTestBase() {
                 case("'1234'", "1234.", CastQuality.LOSSLESS),
                 case("'123.45'", "123.45", CastQuality.LOSSLESS),
                 case("'123.459'", "123.459", CastQuality.LOSSLESS)
-            ).types(typeToTypeAliases[ExprValueType.DECIMAL]!!.map { "$it(5, 2)" }),
+            ).types(ExprValueType.DECIMAL.typeAliases().map { "$it(5, 2)" }),
             // DECIMAL(4,4) ; LEGACY mode does not respect DECIMAL's precison or scale; precision = scale is valid here
             listOf(
                 case("0.1", "1d-1", CastQuality.LOSSLESS),
                 case("0.1234", "0.1234", CastQuality.LOSSLESS),
                 case("0.12345", "0.12345", CastQuality.LOSSLESS)
-            ).types(typeToTypeAliases[ExprValueType.DECIMAL]!!.map { "$it(4,4)" }),
+            ).types(ExprValueType.DECIMAL.typeAliases().map { "$it(4,4)" }),
             // DECIMAL(2, 4) ; LEGACY mode does not respect DECIMAL's precison or scale; precision < scale is valid in legacy mode
             listOf(
                 case("1", "1d0", CastQuality.LOSSLESS)
-            ).types(typeToTypeAliases[ExprValueType.DECIMAL]!!.map { "$it(2,4)" }),
+            ).types(ExprValueType.DECIMAL.typeAliases().map { "$it(2,4)" }),
             // VARCHAR(4) legacy mode doesn't care about params
             listOf(
                 // from string types
@@ -1167,7 +1167,7 @@ abstract class CastTestBase : EvaluatorTestBase() {
                 case("-20.9", "-21", CastQuality.LOSSY),
                 case("1.5", "2", CastQuality.LOSSY),
                 case("2.5", "2", CastQuality.LOSSY)
-            ).types(typeToTypeAliases[ExprValueType.INT]!!),
+            ).types(ExprValueType.INT.typeAliases()),
             // SMALLINT tests
             listOf(
                 // over range
@@ -1218,7 +1218,7 @@ abstract class CastTestBase : EvaluatorTestBase() {
                 case("'123'", "123.", CastQuality.LOSSLESS),
                 case("'1234'", ErrorCode.EVALUATOR_CAST_FAILED),
                 case("'123.45'", "123.", CastQuality.LOSSY)
-            ).types(typeToTypeAliases[ExprValueType.DECIMAL]!!.map { "$it(3)" }),
+            ).types(ExprValueType.DECIMAL.typeAliases().map { "$it(3)" }),
             // DECIMAL(5,2)
             listOf(
                 case("12", "12.00", CastQuality.LOSSLESS),
@@ -1231,17 +1231,17 @@ abstract class CastTestBase : EvaluatorTestBase() {
                 case("'1234'", ErrorCode.EVALUATOR_CAST_FAILED),
                 case("'123.45'", "123.45", CastQuality.LOSSLESS),
                 case("'123.459'", "123.46", CastQuality.LOSSY)
-            ).types(typeToTypeAliases[ExprValueType.DECIMAL]!!.map { "$it(5, 2)" }),
+            ).types(ExprValueType.DECIMAL.typeAliases().map { "$it(5, 2)" }),
             // DECIMAL(4,4) precision = scale is valid in honor_params
             listOf(
                 case("0.1", "1.000d-1", CastQuality.LOSSLESS),
                 case("0.1234", "0.1234", CastQuality.LOSSLESS),
                 case("0.12345", "0.1235", CastQuality.LOSSY)
-            ).types(typeToTypeAliases[ExprValueType.DECIMAL]!!.map { "$it(4,4)" }),
+            ).types(ExprValueType.DECIMAL.typeAliases().map { "$it(4,4)" }),
             // DECIMAL(2, 4) is a compilation failure in this mode
             listOf(
                 case("1", ErrorCode.SEMANTIC_INVALID_DECIMAL_ARGUMENTS)
-            ).types(typeToTypeAliases[ExprValueType.DECIMAL]!!.map { "$it(2,4)" }),
+            ).types(ExprValueType.DECIMAL.typeAliases().map { "$it(2,4)" }),
             // VARCHAR(4) should truncate to size <= 4
             listOf(
                 // from string types
@@ -1281,13 +1281,13 @@ abstract class CastTestBase : EvaluatorTestBase() {
                 case("`+inf`", ErrorCode.EVALUATOR_CAST_FAILED),
                 case("`-inf`", ErrorCode.EVALUATOR_CAST_FAILED),
                 case("`nan`", ErrorCode.EVALUATOR_CAST_FAILED),
-            ).types(typeToTypeAliases[ExprValueType.INT]!! + typeToTypeAliases[ExprValueType.DECIMAL]!!),
+            ).types(ExprValueType.INT.typeAliases() + ExprValueType.DECIMAL.typeAliases()),
             // cast([`+inf` | `-inf` | `nan`] as FLOAT) returns the original value
             listOf(
                 case("`+inf`", "+inf", CastQuality.LOSSLESS),
                 case("`-inf`", "-inf", CastQuality.LOSSLESS),
                 case("`nan`", "nan", CastQuality.LOSSLESS)
-            ).types(typeToTypeAliases[ExprValueType.FLOAT]!!),
+            ).types(ExprValueType.FLOAT.typeAliases()),
             // cast([`+inf` | `-inf` | `nan`] as STRING) returns "Infinity", "-Infinity", and "NaN" respectively.
             // for casting behavor with parametered char, character, see [deviatingParamsTestCases] and [deviatingLegacyTestCases]
             listOf(
@@ -1300,20 +1300,20 @@ abstract class CastTestBase : EvaluatorTestBase() {
                 case("`+inf`", "'Infinity'", CastQuality.LOSSLESS),
                 case("`-inf`", "'-Infinity'", CastQuality.LOSSLESS),
                 case("`nan`", "'NaN'", CastQuality.LOSSLESS)
-            ).types(typeToTypeAliases[ExprValueType.SYMBOL]!!),
+            ).types(ExprValueType.SYMBOL.typeAliases()),
             // cast([`+inf` | `-inf` | `nan`] as BOOLEAN) returns true, since none of which has value of 0.
             listOf(
                 case("`+inf`", "true", CastQuality.LOSSY),
                 case("`-inf`", "true", CastQuality.LOSSY),
                 case("`nan`", "true", CastQuality.LOSSY)
-            ).types(typeToTypeAliases[ExprValueType.BOOL]!!),
+            ).types(ExprValueType.BOOL.typeAliases()),
             listOf(
                 case("`+inf`", ErrorCode.EVALUATOR_INVALID_CAST),
                 case("`-inf`", ErrorCode.EVALUATOR_INVALID_CAST),
                 case("`nan`", ErrorCode.EVALUATOR_INVALID_CAST)
             ).types(
                 listOf(ExprValueType.INT, ExprValueType.DECIMAL, ExprValueType.FLOAT, ExprValueType.STRING, ExprValueType.SYMBOL, ExprValueType.BOOL)
-                    .map { typeToTypeAliases[it]!! }
+                    .map { it.typeAliases() }
                     .fold(allTypeNames) { allTypes, type -> allTypes - type }
             )
         ).flatten()
@@ -1325,13 +1325,13 @@ abstract class CastTestBase : EvaluatorTestBase() {
         private val commonDateTimeTests = listOf(
             listOf(
                 case("DATE '2007-10-10'", "$DATE_ANNOTATION::2007-10-10", CastQuality.LOSSLESS)
-            ).types(typeToTypeAliases[ExprValueType.DATE]!!),
+            ).types(ExprValueType.DATE.typeAliases()),
             listOf(
                 case("DATE '2007-10-10'", "'2007-10-10'", CastQuality.LOSSLESS)
-            ).types(typeToTypeAliases[ExprValueType.SYMBOL]!!),
+            ).types(ExprValueType.SYMBOL.typeAliases()),
             listOf(
                 case("DATE '2007-10-10'", "\"2007-10-10\"", CastQuality.LOSSLESS)
-            ).types(typeToTypeAliases[ExprValueType.STRING]!!),
+            ).types(ExprValueType.STRING.typeAliases()),
             listOf(
                 // CAST(<TIME> AS <variants of TIME type>)
                 case("TIME '23:12:12.1267'", "TIME", "$TIME_ANNOTATION::{hour:23, minute:12, second:12.1267, timezone_hour:null.int, timezone_minute:null.int}", CastQuality.LOSSLESS),
@@ -1403,7 +1403,7 @@ abstract class CastTestBase : EvaluatorTestBase() {
                 case("TIME (3) WITH TIME ZONE '23:12:12.1267'", "'23:12:12.127${defaultTimezoneOffset.getOffsetHHmm()}'", CastQuality.LOSSLESS),
                 case("TIME (3) WITH TIME ZONE '23:12:12.1267-05:30'", "'23:12:12.127-05:30'", CastQuality.LOSSLESS),
                 case("TIME (3) WITH TIME ZONE '23:12:12.1267+05:30'", "'23:12:12.127+05:30'", CastQuality.LOSSLESS)
-            ).types(typeToTypeAliases[ExprValueType.SYMBOL]!!),
+            ).types(ExprValueType.SYMBOL.typeAliases()),
             // CAST <TIME> AS STRING
             listOf(
                 case("TIME '23:12:12.1267'", "\"23:12:12.1267\"", CastQuality.LOSSLESS),
@@ -1418,11 +1418,11 @@ abstract class CastTestBase : EvaluatorTestBase() {
                 case("TIME (3) WITH TIME ZONE '23:12:12.1267'", "\"23:12:12.127${defaultTimezoneOffset.getOffsetHHmm()}\"", CastQuality.LOSSLESS),
                 case("TIME (3) WITH TIME ZONE '23:12:12.1267-05:30'", "\"23:12:12.127-05:30\"", CastQuality.LOSSLESS),
                 case("TIME (3) WITH TIME ZONE '23:12:12.1267+05:30'", "\"23:12:12.127+05:30\"", CastQuality.LOSSLESS)
-            ).types(typeToTypeAliases[ExprValueType.STRING]!!)
+            ).types(ExprValueType.STRING.typeAliases())
         ).flatten() +
             listOf(ExprValueType.MISSING, ExprValueType.NULL, ExprValueType.BOOL, ExprValueType.INT, ExprValueType.FLOAT, ExprValueType.DECIMAL, ExprValueType.TIMESTAMP, ExprValueType.CLOB, ExprValueType.BLOB, ExprValueType.LIST, ExprValueType.SEXP, ExprValueType.STRUCT, ExprValueType.BAG)
                 .map {
-                    listOf(case("DATE '2007-10-10'", ErrorCode.EVALUATOR_INVALID_CAST)).types(typeToTypeAliases[it]!!)
+                    listOf(case("DATE '2007-10-10'", ErrorCode.EVALUATOR_INVALID_CAST)).types(it.typeAliases())
                 }.flatten()
 
         private val typingModes: Map<String, (CompileOptions.Builder) -> Unit> = mapOf(
