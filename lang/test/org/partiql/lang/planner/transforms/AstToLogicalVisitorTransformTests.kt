@@ -33,7 +33,6 @@ class AstToLogicalVisitorTransformTests {
 
     private fun parseAndTransform(sql: String, problemHandler: ProblemHandler): PartiqlLogical.Statement {
         val parseAstStatement = parser.parseAstStatement(sql)
-        // println(SexpAstPrettyPrinter.format(parseAstStatement.toIonElement().asAnyElement().toIonValue(ion)))
         return parseAstStatement.toLogicalPlan(problemHandler).stmt
     }
 
@@ -148,6 +147,36 @@ class AstToLogicalVisitorTransformTests {
                             scan(lit(ionInt(1)), varDecl("x"))
                         )
                     )
+                }
+            ),
+            TestCase(
+                "INSERT INTO foo SELECT x.* FROM 1 AS x ON CONFLICT DO REPLACE EXCLUDED",
+                PartiqlLogical.build {
+                    dml(
+                        identifier("foo", caseInsensitive()),
+                        dmlReplace(),
+                        bindingsToValues(
+                            struct(structFields(id("x", caseInsensitive(), unqualified()))),
+                            scan(lit(ionInt(1)), varDecl("x"))
+                        )
+                    )
+                }
+            ),
+            TestCase(
+                "INSERT INTO foo AS f <<{'id': 1, 'name':'bob'}>> ON CONFLICT DO REPLACE EXCLUDED",
+                PartiqlLogical.build {
+                    PartiqlLogical.build {
+                        dml(
+                            identifier("f", caseInsensitive()),
+                            dmlReplace(),
+                            bag(
+                                struct(
+                                    structField(lit(ionString("id")), lit(ionInt(1))),
+                                    structField(lit(ionString("name")), lit(ionString("bob")))
+                                )
+                            )
+                        )
+                    }
                 }
             ),
             TestCase(

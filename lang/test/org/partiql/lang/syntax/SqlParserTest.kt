@@ -2858,6 +2858,132 @@ class SqlParserTest : SqlParserTestBase() {
     )
 
     @Test
+    fun replaceCommand() = assertExpression(
+        source = "REPLACE INTO foo <<{'id': 1, 'name':'bob'}>>",
+        expectedPigAst = """
+            (dml
+                (operations
+                    (dml_op_list
+                        (insert
+                            (id foo (case_insensitive) (unqualified))
+                            (bag
+                                (struct
+                                    (expr_pair
+                                        (lit "id")
+                                        (lit 1))
+                                    (expr_pair
+                                        (lit "name")
+                                        (lit "bob"))))
+                            (do_replace
+                                (excluded))))))
+        """,
+        targetParsers = setOf(ParserTypes.PARTIQL_PARSER),
+        roundTrip = false
+    )
+
+    @Test
+    fun upsertCommand() = assertExpression(
+        source = "UPSERT INTO foo <<{'id': 1, 'name':'bob'}>>",
+        expectedPigAst = """
+            (dml
+                (operations
+                    (dml_op_list
+                        (insert
+                            (id foo (case_insensitive) (unqualified))
+                            (bag
+                                (struct
+                                    (expr_pair
+                                        (lit "id")
+                                        (lit 1))
+                                    (expr_pair
+                                        (lit "name")
+                                        (lit "bob"))))
+                            (do_update
+                                (excluded))))))
+        """,
+        targetParsers = setOf(ParserTypes.PARTIQL_PARSER),
+        roundTrip = false
+    )
+
+    @Test
+    fun replaceCommandWithSelect() = assertExpression(
+        source = "REPLACE INTO foo SELECT bar.id, bar.name FROM bar",
+        expectedPigAst = """
+            (dml
+                (operations
+                    (dml_op_list
+                        (insert
+                            (id foo (case_insensitive) (unqualified))
+                            (select
+                                (project
+                                    (project_list
+                                        (project_expr
+                                            (path
+                                                (id bar (case_insensitive) (unqualified))
+                                                (path_expr
+                                                    (lit "id")
+                                                    (case_insensitive)))
+                                            null)
+                                        (project_expr
+                                            (path
+                                                (id bar (case_insensitive) (unqualified))
+                                                (path_expr
+                                                    (lit "name")
+                                                    (case_insensitive)))
+                                            null)))
+                                (from
+                                    (scan
+                                        (id bar (case_insensitive) (unqualified))
+                                        null
+                                        null
+                                        null)))
+                            (do_replace
+                                (excluded))))))
+        """,
+        targetParsers = setOf(ParserTypes.PARTIQL_PARSER),
+        roundTrip = false
+    )
+
+    @Test
+    fun upsertCommandWithSelect() = assertExpression(
+        source = "UPSERT INTO foo SELECT bar.id, bar.name FROM bar",
+        expectedPigAst = """
+        (dml
+            (operations
+                (dml_op_list
+                    (insert
+                        (id foo (case_insensitive) (unqualified))
+                        (select
+                            (project
+                                (project_list
+                                    (project_expr
+                                        (path
+                                            (id bar (case_insensitive) (unqualified))
+                                            (path_expr
+                                                (lit "id")
+                                                (case_insensitive)))
+                                        null)
+                                    (project_expr
+                                        (path
+                                            (id bar (case_insensitive) (unqualified))
+                                            (path_expr
+                                                (lit "name")
+                                                (case_insensitive)))
+                                        null)))
+                            (from
+                                (scan
+                                    (id bar (case_insensitive) (unqualified))
+                                    null
+                                    null
+                                    null)))
+                        (do_update
+                            (excluded))))))
+        """,
+        targetParsers = setOf(ParserTypes.PARTIQL_PARSER),
+        roundTrip = false
+    )
+
+    @Test
     @Ignore
     fun insertQueryReturningDml() = assertExpression(
         "INSERT INTO foo SELECT y FROM bar RETURNING ALL NEW foo",

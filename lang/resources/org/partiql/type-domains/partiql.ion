@@ -395,6 +395,7 @@ may then be further optimized by selecting better implementations of each operat
         // `CONFLICT_ACTION <action>`
         (sum conflict_action
             (do_replace value::on_conflict_value)
+            (do_update value::on_conflict_value)
             (do_nothing))
 
         (sum on_conflict_value
@@ -636,6 +637,7 @@ may then be further optimized by selecting better implementations of each operat
             (sum dml_operation
                 (dml_insert)
                 (dml_delete)
+                (dml_replace)
                 // TODO:
                 // (dml_update)
             )

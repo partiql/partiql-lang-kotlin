@@ -235,6 +235,26 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
         insert(target, visit(ctx.value, PartiqlAst.Expr::class), conflictAction, metas)
     }
 
+    // TODO move from experimental; pending: https://github.com/partiql/partiql-docs/issues/27
+    override fun visitReplaceCommand(ctx: PartiQLParser.ReplaceCommandContext) = PartiqlAst.build {
+        insert(
+            target = visitSymbolPrimitive(ctx.symbolPrimitive()),
+            values = visit(ctx.value, PartiqlAst.Expr::class),
+            conflictAction = doReplace(excluded()),
+            metas = ctx.REPLACE().getSourceMetaContainer()
+        )
+    }
+
+    // TODO move from experimental; pending: https://github.com/partiql/partiql-docs/issues/27
+    override fun visitUpsertCommand(ctx: PartiQLParser.UpsertCommandContext) = PartiqlAst.build {
+        insert(
+            target = visitSymbolPrimitive(ctx.symbolPrimitive()),
+            values = visit(ctx.value, PartiqlAst.Expr::class),
+            conflictAction = doUpdate(excluded()),
+            metas = ctx.UPSERT().getSourceMetaContainer()
+        )
+    }
+
     // FIXME: See `FIXME #001` in file `PartiQL.g4`.
     override fun visitInsertCommandReturning(ctx: PartiQLParser.InsertCommandReturningContext) = PartiqlAst.build {
         val metas = ctx.INSERT().getSourceMetaContainer()

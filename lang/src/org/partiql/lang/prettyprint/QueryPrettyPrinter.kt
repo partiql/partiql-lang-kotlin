@@ -189,9 +189,10 @@ class QueryPrettyPrinter {
                         is PartiqlAst.ConflictAction.DoNothing -> {
                             sb.append(" DO NOTHING")
                         }
-                        is PartiqlAst.ConflictAction.DoReplace -> {
+                        is PartiqlAst.ConflictAction.DoReplace ->
                             TODO("PrettyPrinter doesn't support DO REPLACE yet.")
-                        }
+                        is PartiqlAst.ConflictAction.DoUpdate ->
+                            TODO("PrettyPrinter doesn't support DO UPDATE yet.")
                     }
                 }
             }

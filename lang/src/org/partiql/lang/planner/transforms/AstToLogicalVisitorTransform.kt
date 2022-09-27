@@ -155,12 +155,34 @@ internal class AstToLogicalVisitorTransform(
                     }
                 }
 
-                PartiqlLogical.build {
-                    dml(
-                        target = dmlOp.target.toDmlTargetId(),
-                        operation = dmlInsert(),
-                        rows = transformExpr(dmlOp.values),
-                        metas = node.metas
+                when (val conflictAction = dmlOp.conflictAction) {
+                    null -> {
+                        PartiqlLogical.build {
+                            dml(
+                                target = dmlOp.target.toDmlTargetId(),
+                                operation = dmlInsert(),
+                                rows = transformExpr(dmlOp.values),
+                                metas = node.metas
+                            )
+                        }
+                    }
+                    is PartiqlAst.ConflictAction.DoReplace -> {
+                        when (conflictAction.value) {
+                            PartiqlAst.OnConflictValue.Excluded() -> PartiqlLogical.build {
+                                dml(
+                                    target = dmlOp.target.toDmlTargetId(),
+                                    operation = dmlReplace(),
+                                    rows = transformExpr(dmlOp.values),
+                                    metas = node.metas
+                                )
+                            } else -> TODO("Only `DO REPLACE EXCLUDED` is supported in logical plan at the moment.")
+                        }
+                    }
+                    is PartiqlAst.ConflictAction.DoUpdate -> TODO(
+                        "`ON CONFLICT DO UPDATE` is not supported in logical plan yet."
+                    )
+                    is PartiqlAst.ConflictAction.DoNothing -> TODO(
+                        "`ON CONFLICT DO NOTHING` is not supported in logical plan yet."
                     )
                 }
             }

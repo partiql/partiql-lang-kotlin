@@ -1771,9 +1771,11 @@ internal class EvaluatingCompiler(
                         // Grouping is not needed -- simply project the results from the FROM clause directly.
                         thunkFactory.thunkEnv(metas) { env ->
 
+                            val sourcedRows = sourceThunks(env)
+
                             val orderedRows = when (orderByThunk) {
-                                null -> sourceThunks(env)
-                                else -> evalOrderBy(sourceThunks(env), orderByThunk, orderByLocationMeta)
+                                null -> sourcedRows
+                                else -> evalOrderBy(sourcedRows, orderByThunk, orderByLocationMeta)
                             }
 
                             val projectedRows = orderedRows.map { (joinedValues, projectEnv) ->
