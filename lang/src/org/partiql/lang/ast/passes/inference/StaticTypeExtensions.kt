@@ -1,5 +1,23 @@
 package org.partiql.lang.ast.passes.inference
 
+import OTS.IMP.org.partiql.ots.legacy.types.BlobType
+import OTS.IMP.org.partiql.ots.legacy.types.CharType
+import OTS.IMP.org.partiql.ots.legacy.types.ClobType
+import OTS.IMP.org.partiql.ots.legacy.types.DecimalType
+import OTS.IMP.org.partiql.ots.legacy.types.FloatType
+import OTS.IMP.org.partiql.ots.legacy.types.Int2Type
+import OTS.IMP.org.partiql.ots.legacy.types.Int4Type
+import OTS.IMP.org.partiql.ots.legacy.types.Int8Type
+import OTS.IMP.org.partiql.ots.legacy.types.IntType
+import OTS.IMP.org.partiql.ots.legacy.types.StringType
+import OTS.IMP.org.partiql.ots.legacy.types.SymbolType
+import OTS.IMP.org.partiql.ots.legacy.types.VarcharType
+import OTS.ITF.org.partiql.ots.CompileTimeType
+import OTS.ITF.org.partiql.ots.Failed
+import OTS.ITF.org.partiql.ots.Plugin
+import OTS.ITF.org.partiql.ots.Successful
+import OTS.ITF.org.partiql.ots.TypeInferenceResult
+import OTS.ITF.org.partiql.ots.Uncertain
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.types.AnyOfType
 import org.partiql.lang.types.AnyType
@@ -12,24 +30,6 @@ import org.partiql.lang.types.StaticType
 import org.partiql.lang.types.StructType
 import org.partiql.lang.util.ots_work.ScalarOpId
 import org.partiql.lang.util.ots_work.inferReturnType
-import ots.CompileTimeType
-import ots.Failed
-import ots.Plugin
-import ots.Successful
-import ots.TypeInferenceResult
-import ots.Uncertain
-import ots.legacy.types.BlobType
-import ots.legacy.types.CharType
-import ots.legacy.types.ClobType
-import ots.legacy.types.DecimalType
-import ots.legacy.types.FloatType
-import ots.legacy.types.Int2Type
-import ots.legacy.types.Int4Type
-import ots.legacy.types.Int8Type
-import ots.legacy.types.IntType
-import ots.legacy.types.StringType
-import ots.legacy.types.SymbolType
-import ots.legacy.types.VarcharType
 
 internal fun StaticType.isNullOrMissing(): Boolean = (this is NullType || this is MissingType)
 internal fun StaticType.isText(): Boolean = this is StaticScalarType && (scalarType in listOf(SymbolType, StringType, VarcharType, CharType))

@@ -14,6 +14,10 @@
 
 package org.partiql.lang.eval.physical
 
+import OTS.IMP.org.partiql.ots.legacy.types.Int2Type
+import OTS.IMP.org.partiql.ots.legacy.types.Int4Type
+import OTS.IMP.org.partiql.ots.legacy.types.Int8Type
+import OTS.IMP.org.partiql.ots.legacy.types.IntType
 import com.amazon.ion.IonString
 import com.amazon.ion.IonValue
 import com.amazon.ion.Timestamp
@@ -108,10 +112,6 @@ import org.partiql.lang.util.timestampValue
 import org.partiql.lang.util.toIntExact
 import org.partiql.lang.util.totalMinutes
 import org.partiql.lang.util.unaryMinus
-import ots.legacy.types.Int2Type
-import ots.legacy.types.Int4Type
-import ots.legacy.types.Int8Type
-import ots.legacy.types.IntType
 import java.math.BigDecimal
 import java.util.LinkedList
 import java.util.TreeSet

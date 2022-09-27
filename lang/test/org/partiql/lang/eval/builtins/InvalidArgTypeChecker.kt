@@ -1,5 +1,21 @@
 package org.partiql.lang.eval.builtins
 
+import OTS.IMP.org.partiql.ots.legacy.types.BlobType
+import OTS.IMP.org.partiql.ots.legacy.types.CharType
+import OTS.IMP.org.partiql.ots.legacy.types.ClobType
+import OTS.IMP.org.partiql.ots.legacy.types.DateType
+import OTS.IMP.org.partiql.ots.legacy.types.DecimalType
+import OTS.IMP.org.partiql.ots.legacy.types.FloatType
+import OTS.IMP.org.partiql.ots.legacy.types.Int2Type
+import OTS.IMP.org.partiql.ots.legacy.types.Int4Type
+import OTS.IMP.org.partiql.ots.legacy.types.Int8Type
+import OTS.IMP.org.partiql.ots.legacy.types.IntType
+import OTS.IMP.org.partiql.ots.legacy.types.StringType
+import OTS.IMP.org.partiql.ots.legacy.types.SymbolType
+import OTS.IMP.org.partiql.ots.legacy.types.TimeStampType
+import OTS.IMP.org.partiql.ots.legacy.types.TimeType
+import OTS.IMP.org.partiql.ots.legacy.types.VarcharType
+import OTS.ITF.org.partiql.ots.type.BoolType
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.eval.EvaluatorTestBase
@@ -14,22 +30,6 @@ import org.partiql.lang.types.StaticScalarType
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.types.StructType
 import org.partiql.lang.util.propertyValueMapOf
-import ots.legacy.types.BlobType
-import ots.legacy.types.CharType
-import ots.legacy.types.ClobType
-import ots.legacy.types.DateType
-import ots.legacy.types.DecimalType
-import ots.legacy.types.FloatType
-import ots.legacy.types.Int2Type
-import ots.legacy.types.Int4Type
-import ots.legacy.types.Int8Type
-import ots.legacy.types.IntType
-import ots.legacy.types.StringType
-import ots.legacy.types.SymbolType
-import ots.legacy.types.TimeStampType
-import ots.legacy.types.TimeType
-import ots.legacy.types.VarcharType
-import ots.type.BoolType
 import java.lang.StringBuilder
 
 /**

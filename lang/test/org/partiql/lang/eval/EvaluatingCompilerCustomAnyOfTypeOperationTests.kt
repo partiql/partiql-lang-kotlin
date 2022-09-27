@@ -1,5 +1,6 @@
 package org.partiql.lang.eval
 
+import OTS.IMP.org.partiql.ots.legacy.types.CharType
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.anyOfType
@@ -17,7 +18,6 @@ import org.partiql.lang.util.ArgumentsProviderBase
 import org.partiql.lang.util.honorTypedOpParameters
 import org.partiql.lang.util.legacyTypingMode
 import org.partiql.lang.util.permissiveTypingMode
-import ots.legacy.types.CharType
 
 /**
  * This test class covers use of [TypedOpParameter] with custom [AnyOfType] types such as `ES_ANY`.

@@ -1,5 +1,6 @@
 package org.partiql.lang
 
+import OTS.IMP.org.partiql.ots.legacy.types.CharType
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.numberValue
@@ -9,7 +10,6 @@ import org.partiql.lang.types.StaticScalarType
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.types.TypedOpParameter
 import org.partiql.lang.util.compareTo
-import ots.legacy.types.CharType
 
 /**
  * The types in this file are a set of bare-bones fixtures to assure proper behavior with the *interface* to custom types.

@@ -16,6 +16,8 @@
 
 package org.partiql.lang
 
+import OTS.IMP.org.partiql.ots.legacy.plugin.StandardPlugin
+import OTS.ITF.org.partiql.ots.Plugin
 import com.amazon.ion.IonSystem
 import org.partiql.lang.ast.ExprNode
 import org.partiql.lang.ast.toAstStatement
@@ -37,8 +39,6 @@ import org.partiql.lang.syntax.PartiQLParserBuilder
 import org.partiql.lang.types.CustomType
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.util.interruptibleFold
-import ots.Plugin
-import ots.legacy.plugin.StandardPlugin
 
 /**
  * Contains all information needed for processing steps.

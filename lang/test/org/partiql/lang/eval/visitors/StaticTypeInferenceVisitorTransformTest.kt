@@ -1,5 +1,10 @@
 package org.partiql.lang.eval.visitors
 
+import OTS.IMP.org.partiql.ots.legacy.plugin.StandardPlugin
+import OTS.IMP.org.partiql.ots.legacy.types.CharType
+import OTS.IMP.org.partiql.ots.legacy.types.DecimalType
+import OTS.IMP.org.partiql.ots.legacy.types.VarcharType
+import OTS.ITF.org.partiql.ots.type.BoolType
 import com.amazon.ion.system.IonSystemBuilder
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
@@ -54,11 +59,6 @@ import org.partiql.lang.types.VarargFormalParameter
 import org.partiql.lang.util.cartesianProduct
 import org.partiql.lang.util.compareTo
 import org.partiql.lang.util.countMatchingSubstrings
-import ots.legacy.plugin.StandardPlugin
-import ots.legacy.types.CharType
-import ots.legacy.types.DecimalType
-import ots.legacy.types.VarcharType
-import ots.type.BoolType
 
 class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
 

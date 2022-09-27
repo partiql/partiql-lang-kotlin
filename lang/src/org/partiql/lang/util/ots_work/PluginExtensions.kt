@@ -1,21 +1,21 @@
 package org.partiql.lang.util.ots_work
 
-import ots.CompileTimeType
-import ots.Plugin
-import ots.operator.ArgTypeValidatable
-import ots.operator.BinaryConcatOp
-import ots.operator.BinaryDivideOp
-import ots.operator.BinaryMinusOp
-import ots.operator.BinaryModuloOp
-import ots.operator.BinaryPlusOp
-import ots.operator.BinaryTimesOp
-import ots.operator.LikeOp
-import ots.operator.NegOp
-import ots.operator.NotOp
-import ots.operator.PosOp
-import ots.operator.ScalarCastOp
-import ots.operator.ScalarOp
-import ots.type.ScalarType
+import OTS.ITF.org.partiql.ots.CompileTimeType
+import OTS.ITF.org.partiql.ots.Plugin
+import OTS.ITF.org.partiql.ots.operator.ArgTypeValidatable
+import OTS.ITF.org.partiql.ots.operator.BinaryConcatOp
+import OTS.ITF.org.partiql.ots.operator.BinaryDivideOp
+import OTS.ITF.org.partiql.ots.operator.BinaryMinusOp
+import OTS.ITF.org.partiql.ots.operator.BinaryModuloOp
+import OTS.ITF.org.partiql.ots.operator.BinaryPlusOp
+import OTS.ITF.org.partiql.ots.operator.BinaryTimesOp
+import OTS.ITF.org.partiql.ots.operator.LikeOp
+import OTS.ITF.org.partiql.ots.operator.NegOp
+import OTS.ITF.org.partiql.ots.operator.NotOp
+import OTS.ITF.org.partiql.ots.operator.PosOp
+import OTS.ITF.org.partiql.ots.operator.ScalarCastOp
+import OTS.ITF.org.partiql.ots.operator.ScalarOp
+import OTS.ITF.org.partiql.ots.type.ScalarType
 
 internal fun Plugin.getScalarOp(scalarOpId: ScalarOpId): ScalarOp = when (scalarOpId) {
     ScalarOpId.ScalarCast -> scalarCastOp

@@ -4,6 +4,18 @@
 
 package org.partiql.lang.eval.visitors
 
+import OTS.IMP.org.partiql.ots.legacy.types.CharType
+import OTS.IMP.org.partiql.ots.legacy.types.DecimalType
+import OTS.IMP.org.partiql.ots.legacy.types.FloatType
+import OTS.IMP.org.partiql.ots.legacy.types.Int2Type
+import OTS.IMP.org.partiql.ots.legacy.types.Int4Type
+import OTS.IMP.org.partiql.ots.legacy.types.Int8Type
+import OTS.IMP.org.partiql.ots.legacy.types.IntType
+import OTS.IMP.org.partiql.ots.legacy.types.StringType
+import OTS.IMP.org.partiql.ots.legacy.types.SymbolType
+import OTS.IMP.org.partiql.ots.legacy.types.VarcharType
+import OTS.ITF.org.partiql.ots.Plugin
+import OTS.ITF.org.partiql.ots.type.BoolType
 import com.amazon.ionelement.api.MetaContainer
 import com.amazon.ionelement.api.StringElement
 import com.amazon.ionelement.api.TextElement
@@ -54,18 +66,6 @@ import org.partiql.lang.util.ots_work.ScalarOpId
 import org.partiql.lang.util.ots_work.defaultReturnTypeOfScalarOp
 import org.partiql.lang.util.ots_work.inferReturnType
 import org.partiql.lang.util.ots_work.validateOperandType
-import ots.Plugin
-import ots.legacy.types.CharType
-import ots.legacy.types.DecimalType
-import ots.legacy.types.FloatType
-import ots.legacy.types.Int2Type
-import ots.legacy.types.Int4Type
-import ots.legacy.types.Int8Type
-import ots.legacy.types.IntType
-import ots.legacy.types.StringType
-import ots.legacy.types.SymbolType
-import ots.legacy.types.VarcharType
-import ots.type.BoolType
 
 /**
  * A [PartiqlAst.VisitorTransform] that annotates nodes with their static type.
