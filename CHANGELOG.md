@@ -41,6 +41,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
       [#707](https://github.com/partiql/partiql-lang-kotlin/issues/707), [#683](https://github.com/partiql/partiql-lang-kotlin/issues/683),
       and [#730](https://github.com/partiql/partiql-lang-kotlin/issues/730)
 - Parsing of `INSERT` DML with `ON CONFLICT DO REPLACE EXCLUDED` based on [RFC-0011](https://github.com/partiql/partiql-docs/blob/main/RFCs/0011-partiql-insert.md)
+- Adds experimental parsing of `REPLACE INTO` and `UPSERT INTO` DML commands pending approval of the following RFC for moving out of experimental:
+  - https://github.com/partiql/partiql-docs/issues/27
+- Logical plan representation of `INSERT` DML with `ON CONFLICT DO REPLACE EXCLUDED` based on [RFC-0011](https://github.com/partiql/partiql-docs/blob/main/RFCs/0011-partiql-insert.md)
+- Enabled projection alias support for ORDER BY clause
 
 #### Experimental Planner Additions
 
@@ -74,6 +78,7 @@ stage in the `PlannerPipeline` and to generate performance metrics for the indiv
 - Deprecates `SqlLexer` and `SqlParser` to be replaced with the `PartiQLParserBuilder`.
 - Deprecates helper method, `blacklist`, within `org.partiql.lang.eval` and introduced a functionally equivalent
   `org.partiql.lang.eval.denyList` method.
+- Deprecates `TypedOpParameter.LEGACY` to be replaced with `TypedOpParameter.HONOR_PARAMETERS`
 
 ### Fixed
 - Codecov report uploads in GitHub Actions workflow

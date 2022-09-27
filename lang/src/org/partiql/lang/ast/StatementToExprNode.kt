@@ -401,6 +401,9 @@ private class StatementTransformer(val ion: IonSystem) {
             is PartiqlAst.ConflictAction.DoReplace -> {
                 TODO("ExprNode doesn't support DO REPLACE.")
             }
+            is PartiqlAst.ConflictAction.DoUpdate -> {
+                TODO("ExprNode doesn't support DO UPDATE.")
+            }
         }
     }
 
