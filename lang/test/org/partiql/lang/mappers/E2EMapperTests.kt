@@ -11,19 +11,6 @@ import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.ionschema.model.IonSchemaModel
 import org.partiql.ionschema.model.toIsl
 import org.partiql.ionschema.parser.parseSchema
-import org.partiql.lang.ots.interfaces.type.BoolType
-import org.partiql.lang.ots.plugins.standard.types.BlobType
-import org.partiql.lang.ots.plugins.standard.types.CharType
-import org.partiql.lang.ots.plugins.standard.types.ClobType
-import org.partiql.lang.ots.plugins.standard.types.DecimalType
-import org.partiql.lang.ots.plugins.standard.types.FloatType
-import org.partiql.lang.ots.plugins.standard.types.Int4Type
-import org.partiql.lang.ots.plugins.standard.types.Int8Type
-import org.partiql.lang.ots.plugins.standard.types.IntType
-import org.partiql.lang.ots.plugins.standard.types.StringType
-import org.partiql.lang.ots.plugins.standard.types.SymbolType
-import org.partiql.lang.ots.plugins.standard.types.TimeStampType
-import org.partiql.lang.ots.plugins.standard.types.VarcharType
 import org.partiql.lang.types.AnyOfType
 import org.partiql.lang.types.AnyType
 import org.partiql.lang.types.BagType
@@ -33,6 +20,19 @@ import org.partiql.lang.types.StaticScalarType
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.types.StructType
 import org.partiql.pig.runtime.toIonElement
+import ots.legacy.types.BlobType
+import ots.legacy.types.CharType
+import ots.legacy.types.ClobType
+import ots.legacy.types.DecimalType
+import ots.legacy.types.FloatType
+import ots.legacy.types.Int4Type
+import ots.legacy.types.Int8Type
+import ots.legacy.types.IntType
+import ots.legacy.types.StringType
+import ots.legacy.types.SymbolType
+import ots.legacy.types.TimeStampType
+import ots.legacy.types.VarcharType
+import ots.type.BoolType
 
 internal fun buildTypeDef(name: String? = null, vararg constraints: IonSchemaModel.Constraint) =
     IonSchemaModel.build { typeDefinition(name, constraintList(constraints.toList())) }

@@ -4,14 +4,6 @@ import com.amazon.ionelement.api.AnyElement
 import org.partiql.ionschema.model.IonSchemaModel
 import org.partiql.ionschema.model.toIsl
 import org.partiql.lang.eval.ExprValueType
-import org.partiql.lang.ots.plugins.standard.types.CharType
-import org.partiql.lang.ots.plugins.standard.types.DecimalType
-import org.partiql.lang.ots.plugins.standard.types.Int2Type
-import org.partiql.lang.ots.plugins.standard.types.Int4Type
-import org.partiql.lang.ots.plugins.standard.types.Int8Type
-import org.partiql.lang.ots.plugins.standard.types.IntType
-import org.partiql.lang.ots.plugins.standard.types.StringType
-import org.partiql.lang.ots.plugins.standard.types.VarcharType
 import org.partiql.lang.types.AnyOfType
 import org.partiql.lang.types.AnyType
 import org.partiql.lang.types.BagType
@@ -22,6 +14,14 @@ import org.partiql.lang.types.StaticScalarType
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.types.StructType
 import org.partiql.lang.util.toIntExact
+import ots.legacy.types.CharType
+import ots.legacy.types.DecimalType
+import ots.legacy.types.Int2Type
+import ots.legacy.types.Int4Type
+import ots.legacy.types.Int8Type
+import ots.legacy.types.IntType
+import ots.legacy.types.StringType
+import ots.legacy.types.VarcharType
 import kotlin.reflect.KClass
 
 internal typealias TypeDefMap = Map<String, IonSchemaModel.TypeDefinition>

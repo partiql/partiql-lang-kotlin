@@ -33,18 +33,6 @@ import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.builtins.createBuiltinFunctionSignatures
 import org.partiql.lang.eval.delegate
 import org.partiql.lang.eval.getStartingSourceLocationMeta
-import org.partiql.lang.ots.interfaces.Plugin
-import org.partiql.lang.ots.interfaces.type.BoolType
-import org.partiql.lang.ots.plugins.standard.types.CharType
-import org.partiql.lang.ots.plugins.standard.types.DecimalType
-import org.partiql.lang.ots.plugins.standard.types.FloatType
-import org.partiql.lang.ots.plugins.standard.types.Int2Type
-import org.partiql.lang.ots.plugins.standard.types.Int4Type
-import org.partiql.lang.ots.plugins.standard.types.Int8Type
-import org.partiql.lang.ots.plugins.standard.types.IntType
-import org.partiql.lang.ots.plugins.standard.types.StringType
-import org.partiql.lang.ots.plugins.standard.types.SymbolType
-import org.partiql.lang.ots.plugins.standard.types.VarcharType
 import org.partiql.lang.types.AnyOfType
 import org.partiql.lang.types.AnyType
 import org.partiql.lang.types.BagType
@@ -66,6 +54,18 @@ import org.partiql.lang.util.ots_work.ScalarOpId
 import org.partiql.lang.util.ots_work.defaultReturnTypeOfScalarOp
 import org.partiql.lang.util.ots_work.inferReturnType
 import org.partiql.lang.util.ots_work.validateOperandType
+import ots.Plugin
+import ots.legacy.types.CharType
+import ots.legacy.types.DecimalType
+import ots.legacy.types.FloatType
+import ots.legacy.types.Int2Type
+import ots.legacy.types.Int4Type
+import ots.legacy.types.Int8Type
+import ots.legacy.types.IntType
+import ots.legacy.types.StringType
+import ots.legacy.types.SymbolType
+import ots.legacy.types.VarcharType
+import ots.type.BoolType
 
 /**
  * A [PartiqlAst.VisitorTransform] that annotates nodes with their static type.

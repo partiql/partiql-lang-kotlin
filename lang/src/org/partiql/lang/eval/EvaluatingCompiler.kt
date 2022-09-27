@@ -50,10 +50,6 @@ import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedure
 import org.partiql.lang.eval.like.parsePattern
 import org.partiql.lang.eval.time.Time
 import org.partiql.lang.eval.visitors.PartiqlAstSanityValidator
-import org.partiql.lang.ots.plugins.standard.types.Int2Type
-import org.partiql.lang.ots.plugins.standard.types.Int4Type
-import org.partiql.lang.ots.plugins.standard.types.Int8Type
-import org.partiql.lang.ots.plugins.standard.types.IntType
 import org.partiql.lang.syntax.PartiQLParserBuilder
 import org.partiql.lang.types.AnyOfType
 import org.partiql.lang.types.AnyType
@@ -85,6 +81,10 @@ import org.partiql.lang.util.timestampValue
 import org.partiql.lang.util.totalMinutes
 import org.partiql.lang.util.unaryMinus
 import org.partiql.pig.runtime.SymbolPrimitive
+import ots.legacy.types.Int2Type
+import ots.legacy.types.Int4Type
+import ots.legacy.types.Int8Type
+import ots.legacy.types.IntType
 import java.math.BigDecimal
 import java.util.LinkedList
 import java.util.Stack
