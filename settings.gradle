@@ -22,5 +22,6 @@ include('lang',
         'pts',
         'extensions',
         'partiql-grammar',
-        'lib:partiql-isl'
+        'lib:partiql-isl',
+        'partiql-tests-runner'
 )
