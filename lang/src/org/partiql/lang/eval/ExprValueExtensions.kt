@@ -24,8 +24,8 @@ import org.partiql.lang.errors.Property
 import org.partiql.lang.errors.PropertyValueMap
 import org.partiql.lang.eval.time.NANOS_PER_SECOND
 import org.partiql.lang.eval.time.Time
+import org.partiql.lang.ots.interfaces.type.BoolType
 import org.partiql.lang.ots.plugins.standard.types.BlobType
-import org.partiql.lang.ots.plugins.standard.types.BoolType
 import org.partiql.lang.ots.plugins.standard.types.CharType
 import org.partiql.lang.ots.plugins.standard.types.ClobType
 import org.partiql.lang.ots.plugins.standard.types.DateType

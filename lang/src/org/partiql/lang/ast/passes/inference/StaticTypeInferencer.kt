@@ -9,6 +9,7 @@ import org.partiql.lang.errors.ProblemSeverity
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.visitors.StaticTypeInferenceVisitorTransform
 import org.partiql.lang.eval.visitors.StaticTypeVisitorTransform
+import org.partiql.lang.ots.interfaces.Plugin
 import org.partiql.lang.types.FunctionSignature
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.types.TypedOpParameter
@@ -27,6 +28,7 @@ class StaticTypeInferencer(
     private val globalBindings: Bindings<StaticType>,
     private val customFunctionSignatures: List<FunctionSignature>,
     private val customTypedOpParameters: Map<String, TypedOpParameter>,
+    private val plugin: Plugin
 ) {
     /**
      * Infers the [StaticType] of [node] and returns an [InferenceResult]. Currently does not support inference for
@@ -42,7 +44,7 @@ class StaticTypeInferencer(
      */
     fun inferStaticType(node: PartiqlAst.Statement): InferenceResult {
         val problemCollector = ProblemCollector()
-        val inferencer = StaticTypeInferenceVisitorTransform(globalBindings, customFunctionSignatures, customTypedOpParameters, problemCollector)
+        val inferencer = StaticTypeInferenceVisitorTransform(globalBindings, customFunctionSignatures, customTypedOpParameters, problemCollector, plugin)
         val transformedPartiqlAst = inferencer.transformStatement(node)
         val inferredStaticType = when (transformedPartiqlAst) {
             is PartiqlAst.Statement.Query ->

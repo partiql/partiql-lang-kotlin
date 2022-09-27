@@ -1,7 +1,8 @@
-package org.partiql.lang.ots.interfaces
+package org.partiql.lang.ots.interfaces.type
 
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
+import org.partiql.lang.ots.interfaces.TypeParameters
 
 /**
  * This interface is used to define a scalar type

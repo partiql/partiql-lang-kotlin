@@ -1,9 +1,11 @@
-package org.partiql.lang.ots.plugins.standard.types
+package org.partiql.lang.ots.interfaces.type
 
 import org.partiql.lang.eval.ExprValueType
-import org.partiql.lang.ots.interfaces.ScalarType
+import org.partiql.lang.ots.interfaces.CompileTimeType
 
 object BoolType : ScalarType {
+    val compileTimeType = CompileTimeType(this, emptyList())
+
     override val id: String
         get() = "bool"
 

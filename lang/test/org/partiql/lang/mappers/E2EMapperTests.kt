@@ -11,8 +11,8 @@ import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.ionschema.model.IonSchemaModel
 import org.partiql.ionschema.model.toIsl
 import org.partiql.ionschema.parser.parseSchema
+import org.partiql.lang.ots.interfaces.type.BoolType
 import org.partiql.lang.ots.plugins.standard.types.BlobType
-import org.partiql.lang.ots.plugins.standard.types.BoolType
 import org.partiql.lang.ots.plugins.standard.types.CharType
 import org.partiql.lang.ots.plugins.standard.types.ClobType
 import org.partiql.lang.ots.plugins.standard.types.DecimalType

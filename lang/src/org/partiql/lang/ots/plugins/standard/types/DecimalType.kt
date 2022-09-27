@@ -2,11 +2,14 @@ package org.partiql.lang.ots.plugins.standard.types
 
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
-import org.partiql.lang.ots.interfaces.ScalarType
+import org.partiql.lang.ots.interfaces.CompileTimeType
 import org.partiql.lang.ots.interfaces.TypeParameters
+import org.partiql.lang.ots.interfaces.type.ScalarType
 import java.math.BigDecimal
 
 object DecimalType : ScalarType {
+    val compileTimeType: CompileTimeType = CompileTimeType(this, listOf(null, 0))
+
     override val id: String
         get() = "decimal"
 
@@ -32,4 +35,14 @@ object DecimalType : ScalarType {
 
         return integerDigits <= expectedIntegerDigits && dv.scale() <= scale
     }
+
+    /**
+     * Returns the maximum number of digits a decimal can hold after reserving digits for scale
+     *
+     * For example: The maximum value a DECIMAL(5,2) can represent is 999.99, therefore the maximum
+     *  number of digits it can hold is 3 (i.e up to 999).
+     */
+    // TODO: What's PartiQL's max allowed precision?
+    internal fun maxDigits(parameters: TypeParameters): Int =
+        (parameters[0] ?: Int.MAX_VALUE) - parameters[1]!!
 }

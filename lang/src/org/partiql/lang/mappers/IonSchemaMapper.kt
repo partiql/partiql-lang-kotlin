@@ -3,8 +3,8 @@ package org.partiql.lang.mappers
 import com.amazon.ionelement.api.ionBool
 import com.amazon.ionelement.api.ionInt
 import org.partiql.ionschema.model.IonSchemaModel
+import org.partiql.lang.ots.interfaces.type.BoolType
 import org.partiql.lang.ots.plugins.standard.types.BlobType
-import org.partiql.lang.ots.plugins.standard.types.BoolType
 import org.partiql.lang.ots.plugins.standard.types.CharType
 import org.partiql.lang.ots.plugins.standard.types.ClobType
 import org.partiql.lang.ots.plugins.standard.types.DateType

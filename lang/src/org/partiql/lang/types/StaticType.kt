@@ -13,10 +13,11 @@ import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.name
 import org.partiql.lang.eval.stringValue
 import org.partiql.lang.eval.timeValue
-import org.partiql.lang.ots.interfaces.ScalarType
+import org.partiql.lang.ots.interfaces.CompileTimeType
 import org.partiql.lang.ots.interfaces.TypeParameters
+import org.partiql.lang.ots.interfaces.type.BoolType
+import org.partiql.lang.ots.interfaces.type.ScalarType
 import org.partiql.lang.ots.plugins.standard.types.BlobType
-import org.partiql.lang.ots.plugins.standard.types.BoolType
 import org.partiql.lang.ots.plugins.standard.types.ClobType
 import org.partiql.lang.ots.plugins.standard.types.DateType
 import org.partiql.lang.ots.plugins.standard.types.DecimalType
@@ -596,4 +597,6 @@ data class StaticScalarType(
     override fun toString(): String = scalarType.id
 
     override fun isInstance(value: ExprValue): Boolean = scalarType.validateValue(value, parameters)
+
+    fun toCompileTimeType() = CompileTimeType(scalarType, parameters)
 }

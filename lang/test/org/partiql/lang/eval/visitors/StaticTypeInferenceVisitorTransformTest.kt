@@ -18,7 +18,8 @@ import org.partiql.lang.errors.ProblemSeverity
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.numberValue
-import org.partiql.lang.ots.plugins.standard.types.BoolType
+import org.partiql.lang.ots.interfaces.type.BoolType
+import org.partiql.lang.ots.plugins.standard.plugin.StandardPlugin
 import org.partiql.lang.ots.plugins.standard.types.CharType
 import org.partiql.lang.ots.plugins.standard.types.DecimalType
 import org.partiql.lang.ots.plugins.standard.types.VarcharType
@@ -171,7 +172,8 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
         val inferencer = StaticTypeInferencer(
             globalBindings = globalBindings,
             customFunctionSignatures = tc.customFunctionSignatures,
-            customTypedOpParameters = customTypedOpParameters
+            customTypedOpParameters = customTypedOpParameters,
+            plugin = StandardPlugin()
         )
 
         val defaultVisitorTransforms = basicVisitorTransforms()
