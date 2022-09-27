@@ -18,11 +18,6 @@ import org.partiql.lang.errors.ProblemSeverity
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.numberValue
-import org.partiql.lang.ots.interfaces.type.BoolType
-import org.partiql.lang.ots.plugins.standard.plugin.StandardPlugin
-import org.partiql.lang.ots.plugins.standard.types.CharType
-import org.partiql.lang.ots.plugins.standard.types.DecimalType
-import org.partiql.lang.ots.plugins.standard.types.VarcharType
 import org.partiql.lang.types.AnyOfType
 import org.partiql.lang.types.BagType
 import org.partiql.lang.types.CollectionType
@@ -59,6 +54,11 @@ import org.partiql.lang.types.VarargFormalParameter
 import org.partiql.lang.util.cartesianProduct
 import org.partiql.lang.util.compareTo
 import org.partiql.lang.util.countMatchingSubstrings
+import ots.legacy.plugin.StandardPlugin
+import ots.legacy.types.CharType
+import ots.legacy.types.DecimalType
+import ots.legacy.types.VarcharType
+import ots.type.BoolType
 
 class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
 

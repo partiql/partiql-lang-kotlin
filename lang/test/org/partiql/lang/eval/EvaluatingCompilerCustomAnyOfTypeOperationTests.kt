@@ -5,7 +5,6 @@ import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.anyOfType
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.esAny
-import org.partiql.lang.ots.plugins.standard.types.CharType
 import org.partiql.lang.types.BagType
 import org.partiql.lang.types.CustomType
 import org.partiql.lang.types.ListType
@@ -18,6 +17,7 @@ import org.partiql.lang.util.ArgumentsProviderBase
 import org.partiql.lang.util.honorTypedOpParameters
 import org.partiql.lang.util.legacyTypingMode
 import org.partiql.lang.util.permissiveTypingMode
+import ots.legacy.types.CharType
 
 /**
  * This test class covers use of [TypedOpParameter] with custom [AnyOfType] types such as `ES_ANY`.

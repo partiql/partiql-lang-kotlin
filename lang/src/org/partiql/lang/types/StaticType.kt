@@ -13,23 +13,23 @@ import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.name
 import org.partiql.lang.eval.stringValue
 import org.partiql.lang.eval.timeValue
-import org.partiql.lang.ots.interfaces.CompileTimeType
-import org.partiql.lang.ots.interfaces.TypeParameters
-import org.partiql.lang.ots.interfaces.type.BoolType
-import org.partiql.lang.ots.interfaces.type.ScalarType
-import org.partiql.lang.ots.plugins.standard.types.BlobType
-import org.partiql.lang.ots.plugins.standard.types.ClobType
-import org.partiql.lang.ots.plugins.standard.types.DateType
-import org.partiql.lang.ots.plugins.standard.types.DecimalType
-import org.partiql.lang.ots.plugins.standard.types.FloatType
-import org.partiql.lang.ots.plugins.standard.types.Int2Type
-import org.partiql.lang.ots.plugins.standard.types.Int4Type
-import org.partiql.lang.ots.plugins.standard.types.Int8Type
-import org.partiql.lang.ots.plugins.standard.types.IntType
-import org.partiql.lang.ots.plugins.standard.types.StringType
-import org.partiql.lang.ots.plugins.standard.types.SymbolType
-import org.partiql.lang.ots.plugins.standard.types.TimeStampType
-import org.partiql.lang.ots.plugins.standard.types.TimeType
+import ots.CompileTimeType
+import ots.TypeParameters
+import ots.legacy.types.BlobType
+import ots.legacy.types.ClobType
+import ots.legacy.types.DateType
+import ots.legacy.types.DecimalType
+import ots.legacy.types.FloatType
+import ots.legacy.types.Int2Type
+import ots.legacy.types.Int4Type
+import ots.legacy.types.Int8Type
+import ots.legacy.types.IntType
+import ots.legacy.types.StringType
+import ots.legacy.types.SymbolType
+import ots.legacy.types.TimeStampType
+import ots.legacy.types.TimeType
+import ots.type.BoolType
+import ots.type.ScalarType
 
 /**
  * Represents static types available in the language and ways to extends them to create new types.
