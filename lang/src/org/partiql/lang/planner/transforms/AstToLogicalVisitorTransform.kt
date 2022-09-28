@@ -332,8 +332,18 @@ private class FromSourceToBexpr(
         }
     }
 
-    override fun convertUnpivot(node: PartiqlAst.FromSource.Unpivot): PartiqlLogical.Bexpr =
-        INVALID_BEXPR.also { problemHandler.handleUnimplementedFeature(node, "UNPIVOT") }
+    override fun convertUnpivot(node: PartiqlAst.FromSource.Unpivot): PartiqlLogical.Bexpr {
+        val asAlias = node.asAlias ?: errAstNotNormalized("Expected as alias to be non-null")
+        return PartiqlLogical.build {
+            unpivot(
+                toLogicalTransform.transformExpr(node.expr),
+                varDecl_(asAlias, asAlias.metas),
+                node.atAlias?.let { varDecl_(it, it.metas) },
+                node.byAlias?.let { varDecl_(it, it.metas) },
+                node.metas
+            )
+        }
+    }
 
     override fun convertJoin(node: PartiqlAst.FromSource.Join): PartiqlLogical.Bexpr =
         PartiqlLogical.build {

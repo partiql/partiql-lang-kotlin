@@ -117,6 +117,20 @@ class AstToLogicalVisitorTransformTests {
                     )
                 }
             ),
+            TestCase(
+                "SELECT v.*, n.* FROM UNPIVOT bar AS v AT n",
+                PartiqlLogical.build {
+                    query(
+                        bindingsToValues(
+                            struct(
+                                structFields(id("v")),
+                                structFields(id("n"))
+                            ),
+                            unpivot(id("bar"), varDecl("v"), varDecl("n"))
+                        )
+                    )
+                }
+            )
         )
     }
 
@@ -237,7 +251,6 @@ class AstToLogicalVisitorTransformTests {
 
         override fun getParameters() = listOf(
             // SELECT queries are not implemented
-            ProblemTestCase("SELECT b.* FROM UNPIVOT x as y", unimplementedProblem("UNPIVOT", 1, 17)),
             ProblemTestCase("SELECT b.* FROM bar AS b GROUP BY a", unimplementedProblem("GROUP BY", 1, 26)),
             ProblemTestCase("SELECT b.* FROM bar AS b HAVING x", unimplementedProblem("HAVING", 1, 33)),
             ProblemTestCase("SELECT b.* FROM bar AS b ORDER BY y", unimplementedProblem("ORDER BY", 1, 26)),

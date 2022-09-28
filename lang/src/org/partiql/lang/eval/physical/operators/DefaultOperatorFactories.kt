@@ -5,12 +5,14 @@ import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.address
 import org.partiql.lang.eval.name
+import org.partiql.lang.eval.namedValue
 import org.partiql.lang.eval.physical.EvaluatorState
 import org.partiql.lang.eval.physical.SetVariableFunc
 import org.partiql.lang.eval.physical.evalLimitRowCount
 import org.partiql.lang.eval.physical.evalOffsetRowCount
 import org.partiql.lang.eval.relation.RelationType
 import org.partiql.lang.eval.relation.relation
+import org.partiql.lang.eval.syntheticColumnName
 import org.partiql.lang.eval.unnamedValue
 import org.partiql.lang.planner.transforms.DEFAULT_IMPL_NAME
 
@@ -24,6 +26,51 @@ import org.partiql.lang.planner.transforms.DEFAULT_IMPL_NAME
  * @see [org.partiql.lang.planner.PlannerPipeline.Builder.addRelationalOperatorFactory]
  */
 internal val DEFAULT_RELATIONAL_OPERATOR_FACTORIES = listOf(
+
+    object : UnpivotRelationalOperatorFactory(DEFAULT_IMPL_NAME) {
+        override fun create(
+            impl: PartiqlPhysical.Impl,
+            expr: ValueExpression,
+            setAsVar: SetVariableFunc,
+            setAtVar: SetVariableFunc?,
+            setByVar: SetVariableFunc?
+        ): RelationExpression =
+            RelationExpression { state ->
+
+                fun ExprValue.unpivot(state: EvaluatorState): ExprValue = when (type) {
+                    ExprValueType.STRUCT, ExprValueType.MISSING -> this
+
+                    else -> state.valueFactory.newBag(
+                        listOf(
+                            this.namedValue(state.valueFactory.newString(syntheticColumnName(0)))
+                        )
+                    )
+                }
+
+                val originalValue = expr(state)
+
+                val unpivot = originalValue.unpivot(state)
+
+                relation(RelationType.BAG) {
+                    val iter = unpivot.iterator()
+                    while (iter.hasNext()) {
+                        val item = iter.next()
+
+                        setAsVar(state, item.unnamedValue())
+
+                        if (setAtVar != null) {
+                            setAtVar(state, item.name ?: state.valueFactory.missingValue)
+                        }
+
+                        if (setByVar != null) {
+                            setByVar(state, item.address ?: state.valueFactory.missingValue)
+                        }
+                        yield()
+                    }
+                }
+            }
+    },
+
     object : ScanRelationalOperatorFactory(DEFAULT_IMPL_NAME) {
         override fun create(
             impl: PartiqlPhysical.Impl,

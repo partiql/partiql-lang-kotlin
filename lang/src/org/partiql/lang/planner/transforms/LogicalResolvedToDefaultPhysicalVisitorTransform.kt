@@ -45,6 +45,21 @@ internal class LogicalResolvedToDefaultPhysicalVisitorTransform(
         }
     }
 
+    /** Copies [PartiqlLogicalResolved.Bexpr.Unpivot] to [PartiqlPhysical.Bexpr.Unpivot], adding the default impl. */
+    override fun transformBexprUnpivot(node: PartiqlLogicalResolved.Bexpr.Unpivot): PartiqlPhysical.Bexpr {
+        val thiz = this
+        return PartiqlPhysical.build {
+            unpivot(
+                i = DEFAULT_IMPL,
+                expr = thiz.transformExpr(node.expr),
+                asDecl = thiz.transformVarDecl(node.asDecl),
+                atDecl = node.atDecl?.let { thiz.transformVarDecl(it) },
+                byDecl = node.byDecl?.let { thiz.transformVarDecl(it) },
+                metas = node.metas
+            )
+        }
+    }
+
     /** Copies [PartiqlLogicalResolved.Bexpr.Filter] to [PartiqlPhysical.Bexpr.Filter], adding the default impl. */
     override fun transformBexprFilter(node: PartiqlLogicalResolved.Bexpr.Filter): PartiqlPhysical.Bexpr {
         val thiz = this

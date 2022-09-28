@@ -11,6 +11,7 @@ package org.partiql.lang.eval.physical.operators
 enum class RelationalOperatorKind {
     PROJECT,
     SCAN,
+    UNPIVOT,
     FILTER,
     JOIN,
     OFFSET,

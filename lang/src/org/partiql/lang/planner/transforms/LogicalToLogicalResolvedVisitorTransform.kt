@@ -430,6 +430,13 @@ internal data class LogicalToLogicalResolvedVisitorTransform(
                     }
                 )
             }
+            is PartiqlLogical.Bexpr.Unpivot -> {
+                LocalScope(
+                    listOfNotNull(bexpr.asDecl.markForDynamicResolution(), bexpr.atDecl, bexpr.byDecl).also {
+                        checkForDuplicateVariables(it)
+                    }
+                )
+            }
             is PartiqlLogical.Bexpr.Join -> {
                 val (leftBexpr, rightBexpr) = when (bexpr.joinType) {
                     is PartiqlLogical.JoinType.Full,
