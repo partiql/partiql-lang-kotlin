@@ -5,8 +5,6 @@
 package org.partiql.lang.eval.visitors
 
 import OTS.IMP.org.partiql.ots.legacy.types.CharType
-import OTS.IMP.org.partiql.ots.legacy.types.DecimalType
-import OTS.IMP.org.partiql.ots.legacy.types.FloatType
 import OTS.IMP.org.partiql.ots.legacy.types.Int2Type
 import OTS.IMP.org.partiql.ots.legacy.types.Int4Type
 import OTS.IMP.org.partiql.ots.legacy.types.Int8Type
@@ -365,7 +363,7 @@ internal class StaticTypeInferenceVisitorTransform(
                     it is StaticScalarType && it.scalarType in plugin.posOp.validOperandTypes
                 }, "+", processedNode.metas)
             ) {
-                true -> computeReturnTypeForUnary(argStaticType, ::inferUnaryArithmeticOp)
+                true -> computeReturnTypeForUnary(argStaticType, getUnaryArithmeticOpInferencer(plugin.posOp))
                 false -> plugin.posOp.defaultReturnTypes.toStaticType() // continuation type to prevent incompatible types and unknown errors from propagating
             }.let { processedNode.withStaticType(it) }
         }
@@ -379,14 +377,14 @@ internal class StaticTypeInferenceVisitorTransform(
                     it is StaticScalarType && it.scalarType in plugin.negOp.validOperandTypes
                 }, "-", processedNode.metas)
             ) {
-                true -> computeReturnTypeForUnary(argStaticType, ::inferUnaryArithmeticOp)
+                true -> computeReturnTypeForUnary(argStaticType, getUnaryArithmeticOpInferencer(plugin.negOp))
                 false -> plugin.negOp.defaultReturnTypes.toStaticType() // continuation type to prevent incompatible types and unknown errors from propagating
             }.let { processedNode.withStaticType(it) }
         }
 
         private fun computeReturnTypeForUnary(
             argStaticType: StaticType,
-            unaryOpInferencer: (SingleType) -> SingleType
+            unaryOpInferencer: (SingleType) -> StaticType
         ): StaticType {
             val argSingleTypes = argStaticType.allTypes.map { it as SingleType }
             val possibleReturnTypes = argSingleTypes.map { st -> unaryOpInferencer(st) }
@@ -405,20 +403,14 @@ internal class StaticTypeInferenceVisitorTransform(
             else -> StaticType.MISSING
         }
 
-        private fun inferUnaryArithmeticOp(type: SingleType): SingleType = when (type) {
-            // Propagate NULL or MISSING
-            is NullType -> StaticType.NULL
-            is MissingType -> StaticType.MISSING
-            is StaticScalarType -> when (type.scalarType) {
-                DecimalType,
-                Int2Type,
-                Int4Type,
-                Int8Type,
-                IntType,
-                FloatType -> type
+        private fun getUnaryArithmeticOpInferencer(scalarOp: ScalarOp) = { type: SingleType ->
+            when {
+                // Propagate NULL or MISSING
+                type is MissingType -> StaticType.MISSING
+                type is NullType -> StaticType.NULL
+                type is StaticScalarType -> scalarOp.inferReturnType(listOf(type.toCompileTimeType())).toStaticType()
                 else -> StaticType.MISSING
             }
-            else -> StaticType.MISSING
         }
 
         // Logical NAry ops: AND, OR
