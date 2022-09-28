@@ -137,9 +137,6 @@ class EvaluatorStaticTypeTests {
             "projectOfUnpivotPath",
 
             // PIVOT not supported by STIR
-            "pivotFrom",
-            "pivotBadFieldType",
-            "pivotLiteralFieldNameFrom",
             "pivotUnpivotWithWhereLimit",
             "unpivotStructWithMissingField",
 

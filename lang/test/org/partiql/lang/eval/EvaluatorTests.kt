@@ -61,10 +61,6 @@ class EvaluatorTests {
             // below this line use features not supported by the current physical algebra compiler.
             // most fail due to not supporting foundational nodes like id, global_id and scan yet.
             // PartiQL's test cases are not all that cleanly separated.
-            "pivotFrom", // TODO: Support PIVOT in physical plans
-            "pivotLiteralFieldNameFrom", // TODO: Support PIVOT in physical plans
-            "pivotBadFieldType", // TODO: Support PIVOT in physical plans
-            "pivotUnpivotWithWhereLimit", // TODO: Support PIVOT in physical plans
             "topLevelCountDistinct", // TODO: Support aggregates in physical plans
             "topLevelCount", // TODO: Support aggregates in physical plans
             "topLevelAllCount", // TODO: Support aggregates in physical plans

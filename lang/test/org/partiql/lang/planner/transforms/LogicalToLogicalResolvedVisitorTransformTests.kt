@@ -448,6 +448,13 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                 Expectation.Problems(
                     problem(1, 35, PlanningProblemDetails.UndefinedVariable("barbat", caseSensitive = false))
                 )
+            ),
+            TestCase(
+                "PIVOT x.v AT x.a FROM << {'a': 'first', 'v': 'john'}, {'a': 'last', 'v': 'doe'} >> as x",
+                Expectation.Success(
+                    ResolvedId(1, 7) { localId(0) },
+                    ResolvedId(1, 14) { localId(0) }
+                ).withLocals(localVariable("x", 0))
             )
         )
     }
