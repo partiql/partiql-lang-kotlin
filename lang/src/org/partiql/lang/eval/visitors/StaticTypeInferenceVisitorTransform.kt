@@ -5,10 +5,6 @@
 package org.partiql.lang.eval.visitors
 
 import OTS.IMP.org.partiql.ots.legacy.types.CharType
-import OTS.IMP.org.partiql.ots.legacy.types.Int2Type
-import OTS.IMP.org.partiql.ots.legacy.types.Int4Type
-import OTS.IMP.org.partiql.ots.legacy.types.Int8Type
-import OTS.IMP.org.partiql.ots.legacy.types.IntType
 import OTS.IMP.org.partiql.ots.legacy.types.StringType
 import OTS.IMP.org.partiql.ots.legacy.types.SymbolType
 import OTS.IMP.org.partiql.ots.legacy.types.VarcharType
@@ -1486,8 +1482,9 @@ internal class StaticTypeInferenceVisitorTransform(
                 is ListType,
                 is SexpType -> {
                     val previous = previousComponentType as CollectionType // help Kotlin's type inference to be more specific
-                    val staticType = currentPathComponent.index.getStaticType()
-                    if (staticType is StaticScalarType && (staticType.scalarType in listOf(Int2Type, Int4Type, Int8Type, IntType))) {
+                    val staticType = currentPathComponent.index.getStaticType() as SingleType
+                    // As long as the expression surrounded by brackets can be evaluated as an integer scalar, we don't care which type it is at compile time
+                    if (staticType.runtimeType === ExprValueType.INT) {
                         previous.elementType
                     } else {
                         StaticType.MISSING
