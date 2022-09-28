@@ -10,13 +10,11 @@ import OTS.ITF.org.partiql.ots.operator.LikeOp
 import OTS.ITF.org.partiql.ots.operator.NegOp
 import OTS.ITF.org.partiql.ots.operator.NotOp
 import OTS.ITF.org.partiql.ots.operator.PosOp
-import OTS.ITF.org.partiql.ots.operator.ScalarCastOp
 
 /**
  * Used to define a plugin
  */
 interface Plugin {
-    val scalarCastOp: ScalarCastOp
     val posOp: PosOp
     val negOp: NegOp
     val binaryPlusOp: BinaryPlusOp
@@ -27,4 +25,6 @@ interface Plugin {
     val binaryConcatOp: BinaryConcatOp
     val notOp: NotOp
     val likeOp: LikeOp
+
+    fun scalarTypeCastInference(sourceType: CompileTimeType, targetType: CompileTimeType): TypeInferenceResult
 }

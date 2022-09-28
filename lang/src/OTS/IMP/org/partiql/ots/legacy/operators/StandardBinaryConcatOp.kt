@@ -17,7 +17,12 @@ object StandardBinaryConcatOp : BinaryConcatOp() {
     override val defaultReturnTypes: List<CompileTimeType> =
         listOf(StringType.compileTimeType)
 
-    override fun inferType(lType: CompileTimeType, rType: CompileTimeType): TypeInferenceResult {
+    override fun inferReturnType(argsType: List<CompileTimeType>): TypeInferenceResult {
+        require(argsType.size == 2) { "Binary Concat operator expects 2 arguments" }
+
+        val lType = argsType[0]
+        val rType = argsType[1]
+
         val leftType = lType.scalarType
         val rightType = rType.scalarType
         if (leftType !in validOperandTypes || rightType !in validOperandTypes) {

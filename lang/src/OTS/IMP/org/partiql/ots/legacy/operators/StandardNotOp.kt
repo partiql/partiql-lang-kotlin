@@ -15,9 +15,14 @@ object StandardNotOp : NotOp() {
     override val validOperandTypes: List<ScalarType> =
         listOf(BoolType)
 
-    override fun inferType(argType: CompileTimeType): TypeInferenceResult =
-        when (argType.scalarType) {
+    override fun inferReturnType(argsType: List<CompileTimeType>): TypeInferenceResult {
+        require(argsType.size == 1) { "NOT Operator expects 1 argument" }
+
+        val argType = argsType[0]
+
+        return when (argType.scalarType) {
             BoolType -> Successful(argType)
             else -> Failed
         }
+    }
 }

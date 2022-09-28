@@ -12,6 +12,6 @@ object StandardBinaryDivideOp : BinaryDivideOp() {
     override val defaultReturnTypes: List<CompileTimeType> =
         defaultReturnTypesOfArithmeticOp
 
-    override fun inferType(lType: CompileTimeType, rType: CompileTimeType): TypeInferenceResult =
-        inferTypeOfArithmeticOp(lType, rType)
+    override fun inferReturnType(argsType: List<CompileTimeType>): TypeInferenceResult =
+        inferTypeOfArithmeticOp(argsType)
 }

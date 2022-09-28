@@ -28,8 +28,6 @@ import org.partiql.lang.types.SingleType
 import org.partiql.lang.types.StaticScalarType
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.types.StructType
-import org.partiql.lang.util.ots_work.ScalarOpId
-import org.partiql.lang.util.ots_work.inferReturnType
 
 internal fun StaticType.isNullOrMissing(): Boolean = (this is NullType || this is MissingType)
 internal fun StaticType.isText(): Boolean = this is StaticScalarType && (scalarType in listOf(SymbolType, StringType, VarcharType, CharType))
@@ -77,8 +75,7 @@ internal fun StaticType.cast(targetType: StaticType, plugin: Plugin): StaticType
         this.isNullOrMissing() -> this
         else -> when {
             targetType is StaticScalarType && this is StaticScalarType -> {
-                val inferResult = plugin.inferReturnType(
-                    ScalarOpId.ScalarCast,
+                val inferResult = plugin.scalarTypeCastInference(
                     toCompileTimeType(),
                     targetType.toCompileTimeType()
                 )

@@ -28,18 +28,23 @@ internal val defaultReturnTypesOfArithmeticOp = listOf(
     DecimalType.compileTimeType
 )
 
-internal fun inferTypeOfArithmeticOp(lhs: CompileTimeType, rhs: CompileTimeType): TypeInferenceResult {
-    val leftType = lhs.scalarType
-    val rightType = rhs.scalarType
-    if (leftType !in ALL_NUMBER_TYPES || rightType !in ALL_NUMBER_TYPES) {
+internal fun inferTypeOfArithmeticOp(argsType: List<CompileTimeType>): TypeInferenceResult {
+    require(argsType.size == 2) { "Binary arithmetic operator expects 2 arguments" }
+
+    val lhs = argsType[0]
+    val rhs = argsType[1]
+
+    val leftScalarType = lhs.scalarType
+    val rightScalarType = rhs.scalarType
+    if (leftScalarType !in ALL_NUMBER_TYPES || rightScalarType !in ALL_NUMBER_TYPES) {
         return Failed
     }
-    if (leftType === DecimalType || rightType === DecimalType) {
+    if (leftScalarType === DecimalType || rightScalarType === DecimalType) {
         return Successful(DecimalType.compileTimeType) // TODO:  account for decimal precision
     }
 
-    val leftPrecedence = numberTypesPrecedence.indexOf(leftType)
-    val rightPrecedence = numberTypesPrecedence.indexOf(rightType)
+    val leftPrecedence = numberTypesPrecedence.indexOf(leftScalarType)
+    val rightPrecedence = numberTypesPrecedence.indexOf(rightScalarType)
 
     return when {
         leftPrecedence > rightPrecedence -> Successful(lhs)

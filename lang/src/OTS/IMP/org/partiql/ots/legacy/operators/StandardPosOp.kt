@@ -14,9 +14,14 @@ object StandardPosOp : PosOp() {
     override val validOperandTypes: List<ScalarType> =
         ALL_NUMBER_TYPES
 
-    override fun inferType(argType: CompileTimeType): TypeInferenceResult =
-        when (argType.scalarType) {
+    override fun inferReturnType(argsType: List<CompileTimeType>): TypeInferenceResult {
+        require(argsType.size == 1) { "POS Operator expects 1 argument" }
+
+        val argType = argsType[0]
+
+        return when (argType.scalarType) {
             in validOperandTypes -> Successful(argType)
             else -> Failed
         }
+    }
 }
