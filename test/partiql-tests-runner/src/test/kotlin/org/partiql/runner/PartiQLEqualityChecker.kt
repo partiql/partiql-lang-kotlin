@@ -1,4 +1,4 @@
-package org.partiql.tests.runner
+package org.partiql.runner
 
 import com.amazon.ion.IonDecimal
 import com.amazon.ion.IonList

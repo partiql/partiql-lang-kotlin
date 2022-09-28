@@ -156,7 +156,7 @@ subprojects { proj ->
         processResources.dependsOn generateVersionAndHashProperties
     })
 
-    if (project.name == "partiql-isl") {
+    if (project.name == "partiql-isl" || project.name == "partiql-tests-runner") {
         // skip since partiql-isl uses the conventional Gradle layout
         return
     }

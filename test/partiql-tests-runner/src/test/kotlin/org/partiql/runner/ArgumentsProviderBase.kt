@@ -12,7 +12,7 @@
  *  language governing permissions and limitations under the License.
  */
 
-package org.partiql.tests.runner
+package org.partiql.runner
 
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.junit.jupiter.params.provider.Arguments

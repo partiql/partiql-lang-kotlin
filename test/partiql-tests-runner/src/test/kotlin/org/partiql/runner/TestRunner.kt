@@ -12,7 +12,7 @@
  *  language governing permissions and limitations under the License.
  */
 
-package org.partiql.tests.runner
+package org.partiql.runner
 
 import com.amazon.ion.system.IonSystemBuilder
 import org.junit.jupiter.params.ParameterizedTest
@@ -83,29 +83,6 @@ private val LANG_KOTLIN_EVAL_SKIP_LIST = listOf(
     // WITH keyword not supported resulting in parse error. windowing will be supported in plk in https://github.com/partiql/partiql-lang-kotlin/issues/603
     Pair("windowing simplified with grouping", COERCE_EVAL_MODE_COMPILE_OPTIONS),
     Pair("windowing simplified with grouping", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-
-    // outer set ops not yet supported released to Maven (will be part of next release). implemented as part of
-    // https://github.com/partiql/partiql-lang-kotlin/pull/690
-    Pair("outerUnionDistinct", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-    Pair("outerUnionDistinct", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-    Pair("outerUnionAll", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-    Pair("outerUnionAll", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-    Pair("outerIntersectDistinct", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-    Pair("outerIntersectDistinct", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-    Pair("outerIntersectAll", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-    Pair("outerIntersectAll", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-    Pair("outerExceptDistinct", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-    Pair("outerExceptDistinct", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-    Pair("outerExceptAll", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-    Pair("outerExceptAll", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-    Pair("outerUnionCoerceScalar", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-    Pair("outerUnionCoerceScalar", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-    Pair("outerUnionCoerceStruct", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-    Pair("outerUnionCoerceStruct", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-    Pair("outerUnionCoerceNullMissing", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-    Pair("outerUnionCoerceNullMissing", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-    Pair("outerUnionCoerceList", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-    Pair("outerUnionCoerceList", ERROR_EVAL_MODE_COMPILE_OPTIONS),
 
     // plk doesn't have STRICT/ERROR mode. LEGACY mode used which doesn't error when RHS of `IN` expression is not a
     // bag, list, or sexp

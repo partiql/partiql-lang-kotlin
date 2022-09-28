@@ -16,30 +16,18 @@ plugins {
     id 'java-library'
 }
 
-task wrapper(type: Wrapper){
-   gradleVersion = '7.5.1'
-}
-
-repositories {
-    mavenCentral()
-}
-
 dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 
     testImplementation("org.jetbrains.kotlin:kotlin-test")
     testImplementation("org.junit.jupiter:junit-jupiter-params:5.8.2")
 
-    testImplementation("org.partiql:partiql-lang-kotlin:0.7.0")
+    implementation(project(':lang'))
+
 }
 
 test {
     useJUnitPlatform()
-    environment("PARTIQL_EVAL_TESTS_DATA", file("partiql-tests/partiql-tests-data/eval/").absolutePath)
-    environment("PARTIQL_EVAL_EQUIV_TESTS_DATA", file("partiql-tests/partiql-tests-data/eval-equiv/").absolutePath)
-}
-
-java {
-    sourceCompatibility = JavaVersion.VERSION_11
-    targetCompatibility = JavaVersion.VERSION_11
+    environment("PARTIQL_EVAL_TESTS_DATA", file("../partiql-tests/partiql-tests-data/eval/").absolutePath)
+    environment("PARTIQL_EVAL_EQUIV_TESTS_DATA", file("../partiql-tests/partiql-tests-data/eval-equiv/").absolutePath)
 }

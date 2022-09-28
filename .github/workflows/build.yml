@@ -54,17 +54,17 @@ jobs:
           file: lang/build/reports/jacoco/test/jacocoTestReport.xml
           flags: LANG
 
-      - name: Upload PTS coverage
+      - name: Upload PARTIQL_PTS coverage
         uses: codecov/codecov-action@v3
         with:
-          file: pts/build/reports/jacoco/test/jacocoTestReport.xml
-          flags: PTS
+          file: partiql-pts/build/reports/jacoco/test/jacocoTestReport.xml
+          flags: PARTIQL_PTS
 
-      - name: Upload TEST_SCRIPT coverage
+      - name: Upload PARTIQL_TEST_SCRIPT coverage
         uses: codecov/codecov-action@v3
         with:
-          file: testscript/build/reports/jacoco/test/jacocoTestReport.xml
-          flags: TEST_SCRIPT
+          file: partiql-testscript/build/reports/jacoco/test/jacocoTestReport.xml
+          flags: PARTIQL_TEST_SCRIPT
 
       - name: Upload EXAMPLES coverage
         uses: codecov/codecov-action@v3
