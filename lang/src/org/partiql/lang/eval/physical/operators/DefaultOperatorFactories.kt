@@ -27,49 +27,7 @@ import org.partiql.lang.planner.transforms.DEFAULT_IMPL_NAME
  */
 internal val DEFAULT_RELATIONAL_OPERATOR_FACTORIES = listOf(
 
-    object : UnpivotRelationalOperatorFactory(DEFAULT_IMPL_NAME) {
-        override fun create(
-            impl: PartiqlPhysical.Impl,
-            expr: ValueExpression,
-            setAsVar: SetVariableFunc,
-            setAtVar: SetVariableFunc?,
-            setByVar: SetVariableFunc?
-        ): RelationExpression =
-            RelationExpression { state ->
-
-                fun ExprValue.unpivot(state: EvaluatorState): ExprValue = when (type) {
-                    ExprValueType.STRUCT, ExprValueType.MISSING -> this
-
-                    else -> state.valueFactory.newBag(
-                        listOf(
-                            this.namedValue(state.valueFactory.newString(syntheticColumnName(0)))
-                        )
-                    )
-                }
-
-                val originalValue = expr(state)
-
-                val unpivot = originalValue.unpivot(state)
-
-                relation(RelationType.BAG) {
-                    val iter = unpivot.iterator()
-                    while (iter.hasNext()) {
-                        val item = iter.next()
-
-                        setAsVar(state, item.unnamedValue())
-
-                        if (setAtVar != null) {
-                            setAtVar(state, item.name ?: state.valueFactory.missingValue)
-                        }
-
-                        if (setByVar != null) {
-                            setByVar(state, item.address ?: state.valueFactory.missingValue)
-                        }
-                        yield()
-                    }
-                }
-            }
-    },
+    UnpivotOperator(DEFAULT_IMPL_NAME),
 
     object : ScanRelationalOperatorFactory(DEFAULT_IMPL_NAME) {
         override fun create(
