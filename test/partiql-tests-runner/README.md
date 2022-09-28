@@ -3,9 +3,9 @@
 This package checks whether the conformance tests (in [partiql-tests](https://github.com/partiql/partiql-tests)) run 
 using the `partiql-lang-kotlin` implementation return the correct result.
 
-This package will allow us to:
-1. verify conformance tests are defined correctly (e.g. verify evaluation environment is not missing a table)
-2. identify areas in the Kotlin implementation that diverge from the PartiQL specification
+This package enables:
+1. Verifying conformance tests are defined correctly (e.g. verify evaluation environment is not missing a table)
+2. Identifying areas in the Kotlin implementation that diverge from the [PartiQL Specification](https://partiql.org/assets/PartiQL-Specification.pdf)
 
 Eventually, the Kotlin test runner should replace the `pts` and `testscript` Gradle subprojects along with some other 
 tests in `lang` that were ported to `partiql-tests` 
