@@ -19,6 +19,7 @@ import OTS.IMP.org.partiql.ots.legacy.types.CharType
 import OTS.IMP.org.partiql.ots.legacy.types.ClobType
 import OTS.IMP.org.partiql.ots.legacy.types.DateType
 import OTS.IMP.org.partiql.ots.legacy.types.DecimalType
+import OTS.IMP.org.partiql.ots.legacy.types.DecimalTypeParameters
 import OTS.IMP.org.partiql.ots.legacy.types.FloatType
 import OTS.IMP.org.partiql.ots.legacy.types.Int2Type
 import OTS.IMP.org.partiql.ots.legacy.types.Int4Type
@@ -28,6 +29,7 @@ import OTS.IMP.org.partiql.ots.legacy.types.StringType
 import OTS.IMP.org.partiql.ots.legacy.types.SymbolType
 import OTS.IMP.org.partiql.ots.legacy.types.TimeStampType
 import OTS.IMP.org.partiql.ots.legacy.types.TimeType
+import OTS.IMP.org.partiql.ots.legacy.types.TimeTypeParameter
 import OTS.IMP.org.partiql.ots.legacy.types.VarcharType
 import OTS.ITF.org.partiql.ots.type.BoolType
 import com.amazon.ion.IntegerSize
@@ -382,23 +384,26 @@ fun ExprValue.cast(
                     TypedOpBehavior.LEGACY -> valueFactory.newFromIonValue(
                         this.coerce(BigDecimal::class.java).ionValue(valueFactory.ion)
                     )
-                    TypedOpBehavior.HONOR_PARAMETERS -> when (val precision = type.parameters[0]) {
-                        null -> valueFactory.newFromIonValue(
-                            this.coerce(BigDecimal::class.java).ionValue(valueFactory.ion)
-                        )
-                        else -> {
-                            val decimal = this.coerce(BigDecimal::class.java) as BigDecimal
-                            val scale = type.parameters[1]!!
-                            val result = decimal.round(MathContext(precision))
-                                .setScale(scale, RoundingMode.HALF_UP)
-                            if (result.precision() > precision) {
-                                // Following PostgresSQL behavior here. Java will increase precision if needed.
-                                castFailedErr(
-                                    "target type DECIMAL($precision, $scale) too small for value $decimal.",
-                                    internal = false
-                                )
-                            } else {
-                                valueFactory.newFromIonValue(result.ionValue(valueFactory.ion))
+                    TypedOpBehavior.HONOR_PARAMETERS -> {
+                        val decimalTypeParameter = DecimalTypeParameters(type.parameters)
+                        when (val precision = decimalTypeParameter.precision) {
+                            null -> valueFactory.newFromIonValue(
+                                this.coerce(BigDecimal::class.java).ionValue(valueFactory.ion)
+                            )
+                            else -> {
+                                val decimal = this.coerce(BigDecimal::class.java) as BigDecimal
+                                val scale = decimalTypeParameter.scale
+                                val result = decimal.round(MathContext(precision))
+                                    .setScale(scale, RoundingMode.HALF_UP)
+                                if (result.precision() > precision) {
+                                    // Following PostgresSQL behavior here. Java will increase precision if needed.
+                                    castFailedErr(
+                                        "target type DECIMAL($precision, $scale) too small for value $decimal.",
+                                        internal = false
+                                    )
+                                } else {
+                                    valueFactory.newFromIonValue(result.ionValue(valueFactory.ion))
+                                }
                             }
                         }
                     }
@@ -563,7 +568,7 @@ fun ExprValue.cast(
                         }
                     }
                     is TimeType -> {
-                        val precision = targetType.parameters[0]
+                        val precision = TimeTypeParameter(targetType.parameters).precision
                         when {
                             type == ExprValueType.TIME -> {
                                 val time = timeValue()

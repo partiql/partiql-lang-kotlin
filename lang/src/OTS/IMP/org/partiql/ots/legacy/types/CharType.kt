@@ -16,9 +16,15 @@ object CharType : ScalarType {
         when (value.type) {
             ExprValueType.STRING -> {
                 val str = value.scalar.stringValue()!!
-                val length = parameters[0]
+                val length = CharTypeParameter(parameters).length
                 length == str.codePointCount(0, str.length)
             }
             else -> false
         }
+}
+
+data class CharTypeParameter(val length: Int) {
+    constructor(typeParameters: TypeParameters) : this(
+        typeParameters.getOrElse(0) { 1 } // Sql standard requires CHAR type to have length of 1 by default
+    )
 }

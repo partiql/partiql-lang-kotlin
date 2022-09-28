@@ -8,7 +8,7 @@ import org.partiql.lang.eval.ExprValueType
 import java.math.BigDecimal
 
 object DecimalType : ScalarType {
-    val compileTimeType: CompileTimeType = CompileTimeType(this, listOf(null, 0))
+    val compileTimeType: CompileTimeType = CompileTimeType(this, listOf())
 
     override val id: String
         get() = "decimal"
@@ -21,12 +21,10 @@ object DecimalType : ScalarType {
             return false
         }
 
-        val precision = parameters[0]
-        val scale = parameters[1] ?: 0 // Scale of DECIMAL by default is 0
-
-        if (precision == null) { // Unlimited DECIMAL
-            return true
-        }
+        val decimalTypeParameters = DecimalTypeParameters(parameters)
+        val precision = decimalTypeParameters.precision
+            ?: return true // Unlimited DECIMAL
+        val scale = decimalTypeParameters.scale
 
         val decimalValue = value.scalar.numberValue() as BigDecimal
         val dv = decimalValue.stripTrailingZeros()
@@ -35,14 +33,19 @@ object DecimalType : ScalarType {
 
         return integerDigits <= expectedIntegerDigits && dv.scale() <= scale
     }
+}
 
+data class DecimalTypeParameters(val precision: Int?, val scale: Int) {
     /**
-     * Returns the maximum number of digits a decimal can hold after reserving digits for scale
+     * The maximum number of digits a decimal can hold after reserving digits for scale
      *
      * For example: The maximum value a DECIMAL(5,2) can represent is 999.99, therefore the maximum
      *  number of digits it can hold is 3 (i.e up to 999).
      */
-    // TODO: What's PartiQL's max allowed precision?
-    internal fun maxDigits(parameters: TypeParameters): Int =
-        (parameters[0] ?: Int.MAX_VALUE) - parameters[1]!!
+    val maxDigits = (precision ?: Int.MAX_VALUE) - scale
+
+    constructor(typeParameters: TypeParameters) : this(
+        typeParameters.getOrElse(0) { null }, // Null indicates unlimited precision
+        typeParameters.getOrElse(1) { 0 } // Sql standard requires DECIMAL type to have scale of 1 by default
+    )
 }

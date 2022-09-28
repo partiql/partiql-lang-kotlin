@@ -310,7 +310,7 @@ class StaticTypeMapper(schema: IonSchemaModel.Schema) {
                     is IonSchemaModel.NumberExtent.Inclusive -> maxPrecision.value.toInt()
                     is IonSchemaModel.NumberExtent.Exclusive -> maxPrecision.value.toInt() - 1
                     is IonSchemaModel.NumberExtent.Min -> error("Max value of a range cannot be 'min'")
-                    is IonSchemaModel.NumberExtent.Max -> return StaticScalarType(DecimalType, listOf(null, 0), metas)
+                    is IonSchemaModel.NumberExtent.Max -> return StaticScalarType(DecimalType, metas = metas)
                 }
             }
         }
@@ -318,12 +318,12 @@ class StaticTypeMapper(schema: IonSchemaModel.Schema) {
         val scale = when (val rule = constraints.getConstraint(IonSchemaModel.Constraint.Scale::class)?.rule) {
             null -> null
             is IonSchemaModel.NumberRule.EqualsNumber -> rule.value.toInt()
-            is IonSchemaModel.NumberRule.EqualsRange -> return StaticScalarType(DecimalType, listOf(null, 0), metas)
+            is IonSchemaModel.NumberRule.EqualsRange -> return StaticScalarType(DecimalType, metas = metas)
         }
 
         return if (precision == null) {
             if (scale == null) {
-                StaticScalarType(DecimalType, listOf(null, 0), metas)
+                StaticScalarType(DecimalType, metas = metas)
             } else {
                 error("Precision needs be set when scale is set")
             }

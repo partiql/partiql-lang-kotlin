@@ -14,6 +14,7 @@ import OTS.IMP.org.partiql.ots.legacy.types.BlobType
 import OTS.IMP.org.partiql.ots.legacy.types.CharType
 import OTS.IMP.org.partiql.ots.legacy.types.ClobType
 import OTS.IMP.org.partiql.ots.legacy.types.DecimalType
+import OTS.IMP.org.partiql.ots.legacy.types.DecimalTypeParameters
 import OTS.IMP.org.partiql.ots.legacy.types.FloatType
 import OTS.IMP.org.partiql.ots.legacy.types.Int2Type
 import OTS.IMP.org.partiql.ots.legacy.types.Int4Type
@@ -117,27 +118,32 @@ data class StandardPlugin(
                     IntType -> Successful(targetType)
                     Int2Type,
                     Int4Type,
-                    Int8Type -> when (sourceType.parameters[0]) {
-                        null -> Uncertain(targetType)
-                        else -> {
-                            // Max value of SMALLINT is 32767.
-                            // Conversion to SMALLINT will work as long as the decimal holds up 4 to digits. There is a chance of overflow beyond that.
-                            // Similarly -
-                            //   Max value of INT4 is 2,147,483,647
-                            //   Max value of BIGINT is 9,223,372,036,854,775,807 for BIGINT
-                            // TODO: Move these magic numbers out.
-                            val maxDigitsWithoutPrecisionLoss = when (targetScalarType) {
-                                Int2Type -> 4
-                                Int4Type -> 9
-                                Int8Type -> 18
-                                IntType -> error("Un-constrained is handled above. This code shouldn't be reached.")
-                                else -> error("Unreachable code")
-                            }
+                    Int8Type -> {
+                        val decimalTypeParameters = DecimalTypeParameters(sourceType.parameters)
+                        val precision = decimalTypeParameters.precision
+                        val maxDigits = decimalTypeParameters.maxDigits
+                        when (precision) {
+                            null -> Uncertain(targetType)
+                            else -> {
+                                // Max value of SMALLINT is 32767.
+                                // Conversion to SMALLINT will work as long as the decimal holds up 4 to digits. There is a chance of overflow beyond that.
+                                // Similarly -
+                                //   Max value of INT4 is 2,147,483,647
+                                //   Max value of BIGINT is 9,223,372,036,854,775,807 for BIGINT
+                                // TODO: Move these magic numbers out.
+                                val maxDigitsWithoutPrecisionLoss = when (targetScalarType) {
+                                    Int2Type -> 4
+                                    Int4Type -> 9
+                                    Int8Type -> 18
+                                    IntType -> error("Un-constrained is handled above. This code shouldn't be reached.")
+                                    else -> error("Unreachable code")
+                                }
 
-                            if (sourceScalarType.maxDigits(sourceType.parameters) > maxDigitsWithoutPrecisionLoss) {
-                                Uncertain(targetType)
-                            } else {
-                                Successful(targetType)
+                                if (maxDigits > maxDigitsWithoutPrecisionLoss) {
+                                    Uncertain(targetType)
+                                } else {
+                                    Successful(targetType)
+                                }
                             }
                         }
                     }
@@ -160,52 +166,57 @@ data class StandardPlugin(
                 sourceScalarType.isText() -> Uncertain(targetType)
                 else -> Failed
             }
-            is DecimalType -> when (sourceScalarType) {
-                is DecimalType ->
-                    if (targetScalarType.maxDigits(targetType.parameters) >= sourceScalarType.maxDigits(sourceType.parameters)) {
-                        Successful(targetType)
-                    } else {
-                        Uncertain(targetType)
+            is DecimalType -> {
+                val targetTypeParameters = DecimalTypeParameters(targetType.parameters)
+                when (sourceScalarType) {
+                    is DecimalType -> {
+                        val sourceTypeParameters = DecimalTypeParameters(sourceType.parameters)
+                        if (targetTypeParameters.maxDigits >= sourceTypeParameters.maxDigits) {
+                            Successful(targetType)
+                        } else {
+                            Uncertain(targetType)
+                        }
                     }
-                is Int2Type,
-                is Int4Type,
-                is Int8Type,
-                is IntType -> when (targetType.parameters[0]) {
-                    null -> Successful(targetType)
-                    else -> when (sourceScalarType) {
-                        is IntType -> Uncertain(targetType)
-                        is Int2Type ->
-                            // TODO: Move the magic numbers out
-                            // max smallint value 32,767, so the decimal needs to be able to hold at least 5 digits
-                            if (targetScalarType.maxDigits(targetType.parameters) >= 5) {
-                                Successful(targetType)
-                            } else {
-                                Uncertain(targetType)
-                            }
-                        is Int4Type ->
-                            // max int4 value 2,147,483,647 so the decimal needs to be able to hold at least 10 digits
-                            if (targetScalarType.maxDigits(targetType.parameters) >= 10) {
-                                Successful(targetType)
-                            } else {
-                                Uncertain(targetType)
-                            }
-                        is Int8Type ->
-                            // max bigint value 9,223,372,036,854,775,807 so the decimal needs to be able to hold at least 19 digits
-                            if (targetScalarType.maxDigits(targetType.parameters) >= 19) {
-                                Successful(targetType)
-                            } else {
-                                Uncertain(targetType)
-                            }
-                        else -> error("Unreachable code")
+                    is Int2Type,
+                    is Int4Type,
+                    is Int8Type,
+                    is IntType -> when (targetTypeParameters.precision) {
+                        null -> Successful(targetType)
+                        else -> when (sourceScalarType) {
+                            is IntType -> Uncertain(targetType)
+                            is Int2Type ->
+                                // TODO: Move the magic numbers out
+                                // max smallint value 32,767, so the decimal needs to be able to hold at least 5 digits
+                                if (targetTypeParameters.maxDigits >= 5) {
+                                    Successful(targetType)
+                                } else {
+                                    Uncertain(targetType)
+                                }
+                            is Int4Type ->
+                                // max int4 value 2,147,483,647 so the decimal needs to be able to hold at least 10 digits
+                                if (targetTypeParameters.maxDigits >= 10) {
+                                    Successful(targetType)
+                                } else {
+                                    Uncertain(targetType)
+                                }
+                            is Int8Type ->
+                                // max bigint value 9,223,372,036,854,775,807 so the decimal needs to be able to hold at least 19 digits
+                                if (targetTypeParameters.maxDigits >= 19) {
+                                    Successful(targetType)
+                                } else {
+                                    Uncertain(targetType)
+                                }
+                            else -> error("Unreachable code")
+                        }
                     }
+                    is BoolType,
+                    is FloatType -> Successful(targetType)
+                    is SymbolType,
+                    is StringType,
+                    is CharType,
+                    is VarcharType -> Uncertain(targetType)
+                    else -> Failed
                 }
-                is BoolType,
-                is FloatType -> Successful(targetType)
-                is SymbolType,
-                is StringType,
-                is CharType,
-                is VarcharType -> Uncertain(targetType)
-                else -> Failed
             }
             is ClobType,
             is BlobType -> when {

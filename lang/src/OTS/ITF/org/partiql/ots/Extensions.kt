@@ -4,11 +4,9 @@ import OTS.ITF.org.partiql.ots.type.ScalarType
 
 /**
  * For now, we assume all the type parameters are optional and all the type parameters
- * are integers. The length of this list represents the number of optional type parameters
- * a type has. Null value means the parameter is not explicitly specified in the original
- * query
+ * are integers.
  */
-typealias TypeParameters = List<Int?>
+typealias TypeParameters = List<Int>
 
 data class CompileTimeType(
     val scalarType: ScalarType,

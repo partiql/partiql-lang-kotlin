@@ -811,7 +811,6 @@ internal fun listTests() = listOf(
         ListType(
             StaticScalarType(
                 DecimalType,
-                listOf(null, 0),
                 metas = mapOf(
                     ISL_META_KEY to listOf(
                         buildTypeDef(
@@ -1278,7 +1277,6 @@ internal fun sexpTests() = listOf(
         SexpType(
             StaticScalarType(
                 DecimalType,
-                listOf(null, 0),
                 metas = mapOf(
                     ISL_META_KEY to listOf(
                         buildTypeDef(
@@ -1747,7 +1745,6 @@ internal fun bagTests() = listOf(
         BagType(
             StaticScalarType(
                 DecimalType,
-                listOf(null, 0),
                 metas = mapOf(
                     ISL_META_KEY to listOf(
                         buildTypeDef(
@@ -2298,7 +2295,6 @@ internal fun structTests() = listOf(
                 "a" to StaticType.unionOf(
                     StaticScalarType(
                         DecimalType,
-                        listOf(null, 0),
                         metas = mapOf(
                             ISL_META_KEY to listOf(
                                 buildTypeDef(
@@ -2791,7 +2787,6 @@ internal fun bagWithCustomElementTests() = listOf(
         BagType(
             StaticScalarType(
                 DecimalType,
-                listOf(null, 0),
                 metas = mapOf(
                     ISL_META_KEY to listOf(
                         buildTypeDef("bar", buildTypeConstraint("decimal"))
@@ -4096,7 +4091,7 @@ internal fun intTests() = listOf(
 internal fun decimalTests() = listOf(
     MapperE2ETestCase(
         "type::{ name: $typeName, type: decimal }",
-        StaticScalarType(DecimalType, listOf(null, 0))
+        StaticScalarType(DecimalType)
     ),
     MapperE2ETestCase(
         "type::{ name: $typeName, type: decimal, precision: range::[1, 10] }",
@@ -4123,7 +4118,7 @@ internal fun decimalTests() = listOf(
     // precision range 1 to max
     MapperE2ETestCase(
         "type::{ name: $typeName, type: decimal, precision: range::[1, max], scale: 5 }",
-        StaticScalarType(DecimalType, listOf(null, 0)),
+        StaticScalarType(DecimalType),
         "type::{ name: $typeName, type: decimal }"
     ),
     // precision range 0 (exclusive) to 10 (inclusive)
@@ -4162,7 +4157,6 @@ internal fun decimalTests() = listOf(
         "type::{ name: $typeName, type: decimal, precision: range::[1,47], scale: range::[1,37] }",
         StaticScalarType(
             DecimalType,
-            listOf(null, 0),
             metas = mapOf(
                 ISL_META_KEY to listOf(
                     buildTypeDef(
