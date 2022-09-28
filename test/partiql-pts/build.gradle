@@ -33,6 +33,6 @@ dependencies {
 
     // test-time dependencies
     testImplementation project(':lang')
-    testImplementation project(':testscript')
+    testImplementation project(':test:partiql-testscript')
     testImplementation 'org.junit.vintage:junit-vintage-engine:5.7.0'
 }
