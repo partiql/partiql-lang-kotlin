@@ -12,7 +12,6 @@ import org.partiql.lang.eval.relation.RelationType
 import org.partiql.lang.eval.relation.relation
 import org.partiql.lang.eval.syntheticColumnName
 import org.partiql.lang.eval.unnamedValue
-import org.partiql.lang.planner.transforms.DEFAULT_IMPL_NAME
 
 /** Provides an implementation of the [PartiqlPhysical.Bexpr.Scan] operator.*/
 abstract class UnpivotRelationalOperatorFactory(name: String) : RelationalOperatorFactory {
@@ -79,4 +78,3 @@ internal class UnpivotOperator(name: String) : UnpivotRelationalOperatorFactory(
             }
         }
 }
-

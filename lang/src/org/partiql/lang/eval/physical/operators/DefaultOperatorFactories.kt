@@ -5,14 +5,12 @@ import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.address
 import org.partiql.lang.eval.name
-import org.partiql.lang.eval.namedValue
 import org.partiql.lang.eval.physical.EvaluatorState
 import org.partiql.lang.eval.physical.SetVariableFunc
 import org.partiql.lang.eval.physical.evalLimitRowCount
 import org.partiql.lang.eval.physical.evalOffsetRowCount
 import org.partiql.lang.eval.relation.RelationType
 import org.partiql.lang.eval.relation.relation
-import org.partiql.lang.eval.syntheticColumnName
 import org.partiql.lang.eval.unnamedValue
 import org.partiql.lang.planner.transforms.DEFAULT_IMPL_NAME
 
