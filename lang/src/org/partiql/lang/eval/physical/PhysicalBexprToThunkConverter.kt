@@ -98,10 +98,8 @@ internal class PhysicalBexprToThunkConverter(
         val atSetter = node.atDecl?.toSetVariableFunc()
         val bySetter = node.byDecl?.toSetVariableFunc()
 
-        // locate operator factory
         val factory = findOperatorFactory<UnpivotRelationalOperatorFactory>(RelationalOperatorKind.UNPIVOT, node.i.name.text)
 
-        // create operator implementation
         val bindingsExpr = factory.create(
             impl = node.i,
             expr = valueExpr,
@@ -110,7 +108,6 @@ internal class PhysicalBexprToThunkConverter(
             setByVar = bySetter
         )
 
-        // wrap in thunk
         return bindingsExpr.toRelationThunk(node.metas)
     }
 

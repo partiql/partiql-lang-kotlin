@@ -660,9 +660,8 @@ may then be further optimized by selecting better implementations of each operat
                 // value, it is converted into a singleton bag.
                 (scan expr::expr as_decl::var_decl at_decl::(? var_decl) by_decl::(? var_decl))
 
-                // Simialar to scan, the unpivot opertor converts a value collection to a binding collection.
-                // In case that the from_source is a unpivot node, the logical plan will use unpivot operator
-                // to perform the convertion.
+                 // Similar to scan, the unpivot operator converts a value collection to a binding collection.
+                 // The logical plan uses unpivot operator in place of the AST's unpivot from_source node.
                 (unpivot expr::expr as_decl::var_decl at_decl::(? var_decl) by_decl::(? var_decl))
 
                 // Evaluates `predicate` within the scope of every row of `bexpr`, and only returns those
