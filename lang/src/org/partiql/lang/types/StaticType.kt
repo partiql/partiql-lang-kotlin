@@ -4,6 +4,23 @@
 
 package org.partiql.lang.types
 
+import OTS.IMP.org.partiql.ots.legacy.types.BlobType
+import OTS.IMP.org.partiql.ots.legacy.types.ClobType
+import OTS.IMP.org.partiql.ots.legacy.types.DateType
+import OTS.IMP.org.partiql.ots.legacy.types.DecimalType
+import OTS.IMP.org.partiql.ots.legacy.types.FloatType
+import OTS.IMP.org.partiql.ots.legacy.types.Int2Type
+import OTS.IMP.org.partiql.ots.legacy.types.Int4Type
+import OTS.IMP.org.partiql.ots.legacy.types.Int8Type
+import OTS.IMP.org.partiql.ots.legacy.types.IntType
+import OTS.IMP.org.partiql.ots.legacy.types.StringType
+import OTS.IMP.org.partiql.ots.legacy.types.SymbolType
+import OTS.IMP.org.partiql.ots.legacy.types.TimeStampType
+import OTS.IMP.org.partiql.ots.legacy.types.TimeType
+import OTS.ITF.org.partiql.ots.CompileTimeType
+import OTS.ITF.org.partiql.ots.TypeParameters
+import OTS.ITF.org.partiql.ots.type.BoolType
+import OTS.ITF.org.partiql.ots.type.ScalarType
 import org.partiql.lang.ast.passes.inference.isLob
 import org.partiql.lang.ast.passes.inference.isNumeric
 import org.partiql.lang.ast.passes.inference.isText
@@ -13,23 +30,6 @@ import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.name
 import org.partiql.lang.eval.stringValue
 import org.partiql.lang.eval.timeValue
-import org.partiql.lang.ots.interfaces.CompileTimeType
-import org.partiql.lang.ots.interfaces.TypeParameters
-import org.partiql.lang.ots.interfaces.type.BoolType
-import org.partiql.lang.ots.interfaces.type.ScalarType
-import org.partiql.lang.ots.plugins.standard.types.BlobType
-import org.partiql.lang.ots.plugins.standard.types.ClobType
-import org.partiql.lang.ots.plugins.standard.types.DateType
-import org.partiql.lang.ots.plugins.standard.types.DecimalType
-import org.partiql.lang.ots.plugins.standard.types.FloatType
-import org.partiql.lang.ots.plugins.standard.types.Int2Type
-import org.partiql.lang.ots.plugins.standard.types.Int4Type
-import org.partiql.lang.ots.plugins.standard.types.Int8Type
-import org.partiql.lang.ots.plugins.standard.types.IntType
-import org.partiql.lang.ots.plugins.standard.types.StringType
-import org.partiql.lang.ots.plugins.standard.types.SymbolType
-import org.partiql.lang.ots.plugins.standard.types.TimeStampType
-import org.partiql.lang.ots.plugins.standard.types.TimeType
 
 /**
  * Represents static types available in the language and ways to extends them to create new types.

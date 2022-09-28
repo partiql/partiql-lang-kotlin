@@ -16,6 +16,10 @@
 
 package org.partiql.lang.eval
 
+import OTS.IMP.org.partiql.ots.legacy.types.Int2Type
+import OTS.IMP.org.partiql.ots.legacy.types.Int4Type
+import OTS.IMP.org.partiql.ots.legacy.types.Int8Type
+import OTS.IMP.org.partiql.ots.legacy.types.IntType
 import com.amazon.ion.IntegerSize
 import com.amazon.ion.IonInt
 import com.amazon.ion.IonSexp
@@ -50,10 +54,6 @@ import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedure
 import org.partiql.lang.eval.like.parsePattern
 import org.partiql.lang.eval.time.Time
 import org.partiql.lang.eval.visitors.PartiqlAstSanityValidator
-import org.partiql.lang.ots.plugins.standard.types.Int2Type
-import org.partiql.lang.ots.plugins.standard.types.Int4Type
-import org.partiql.lang.ots.plugins.standard.types.Int8Type
-import org.partiql.lang.ots.plugins.standard.types.IntType
 import org.partiql.lang.syntax.PartiQLParserBuilder
 import org.partiql.lang.types.AnyOfType
 import org.partiql.lang.types.AnyType

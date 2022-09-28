@@ -4,6 +4,7 @@
 
 package org.partiql.lang.eval.visitors
 
+import OTS.IMP.org.partiql.ots.legacy.types.IntType
 import com.amazon.ionelement.api.emptyMetaContainer
 import com.amazon.ionelement.api.ionBool
 import com.amazon.ionelement.api.toIonElement
@@ -23,7 +24,6 @@ import org.partiql.lang.errors.Property.FEATURE_NAME
 import org.partiql.lang.errors.Property.LINE_NUMBER
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.mappers.ISL_META_KEY
-import org.partiql.lang.ots.plugins.standard.types.IntType
 import org.partiql.lang.types.ListType
 import org.partiql.lang.types.StaticScalarType
 import org.partiql.lang.types.StaticType

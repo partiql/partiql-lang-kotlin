@@ -1,12 +1,12 @@
 package org.partiql.lang.ast.passes.inference
 
+import OTS.IMP.org.partiql.ots.legacy.plugin.StandardPlugin
+import OTS.IMP.org.partiql.ots.legacy.types.DecimalType
 import junitparams.JUnitParamsRunner
 import junitparams.Parameters
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.partiql.lang.ots.plugins.standard.plugin.StandardPlugin
-import org.partiql.lang.ots.plugins.standard.types.DecimalType
 import org.partiql.lang.types.StaticScalarType
 import org.partiql.lang.types.StaticType
 

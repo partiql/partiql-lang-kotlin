@@ -1,5 +1,6 @@
 package org.partiql.lang.eval
 
+import OTS.IMP.org.partiql.ots.legacy.types.CharType
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
@@ -7,7 +8,6 @@ import org.partiql.lang.ION
 import org.partiql.lang.ast.StaticTypeMeta
 import org.partiql.lang.domains.metaContainerOf
 import org.partiql.lang.errors.ErrorCode
-import org.partiql.lang.ots.plugins.standard.types.CharType
 import org.partiql.lang.types.StaticScalarType
 import org.partiql.lang.types.StaticType
 import kotlin.test.assertEquals
