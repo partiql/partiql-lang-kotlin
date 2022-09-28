@@ -92,7 +92,6 @@ internal class PhysicalBexprToThunkConverter(
     }
 
     override fun convertUnpivot(node: PartiqlPhysical.Bexpr.Unpivot): RelationThunkEnv {
-        // recurse into children
         val valueExpr = exprConverter.convert(node.expr).toValueExpr(node.expr.metas.sourceLocationMeta)
         val asSetter = node.asDecl.toSetVariableFunc()
         val atSetter = node.atDecl?.toSetVariableFunc()
