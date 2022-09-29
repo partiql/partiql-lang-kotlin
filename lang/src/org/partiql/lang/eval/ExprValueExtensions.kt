@@ -16,6 +16,7 @@ package org.partiql.lang.eval
 
 import OTS.IMP.org.partiql.ots.legacy.types.BlobType
 import OTS.IMP.org.partiql.ots.legacy.types.CharType
+import OTS.IMP.org.partiql.ots.legacy.types.CharTypeParameter
 import OTS.IMP.org.partiql.ots.legacy.types.ClobType
 import OTS.IMP.org.partiql.ots.legacy.types.DateType
 import OTS.IMP.org.partiql.ots.legacy.types.DecimalType
@@ -31,6 +32,7 @@ import OTS.IMP.org.partiql.ots.legacy.types.TimeStampType
 import OTS.IMP.org.partiql.ots.legacy.types.TimeType
 import OTS.IMP.org.partiql.ots.legacy.types.TimeTypeParameter
 import OTS.IMP.org.partiql.ots.legacy.types.VarcharType
+import OTS.IMP.org.partiql.ots.legacy.types.VarcharTypeParameter
 import OTS.ITF.org.partiql.ots.type.BoolType
 import com.amazon.ion.IntegerSize
 import com.amazon.ion.IonInt
@@ -422,23 +424,29 @@ fun ExprValue.cast(
                 TypedOpBehavior.LEGACY -> valueFactory.newString(this)
                 TypedOpBehavior.HONOR_PARAMETERS -> when (type.scalarType) {
                     is StringType -> valueFactory.newString(this)
-                    is CharType,
-                    is VarcharType -> {
+                    is CharType -> {
                         val actualCodepointCount = this.codePointCount(0, this.length)
-                        val lengthConstraint = type.parameters[0]!!
+                        val charTypeParameter = CharTypeParameter(type.parameters)
+                        val lengthConstraint = charTypeParameter.length
                         val truncatedString = if (actualCodepointCount <= lengthConstraint) {
                             this // no truncation needed
                         } else {
                             this.substring(0, this.offsetByCodePoints(0, lengthConstraint))
                         }
 
-                        valueFactory.newString(
-                            when (type.scalarType) {
-                                is CharType -> truncatedString.trimEnd { c -> c == '\u0020' }
-                                is VarcharType -> truncatedString
-                                else -> error("Unreachable code")
-                            }
-                        )
+                        valueFactory.newString(truncatedString.trimEnd { c -> c == '\u0020' })
+                    }
+                    is VarcharType -> {
+                        val actualCodepointCount = this.codePointCount(0, this.length)
+                        val varcharTypeParameter = VarcharTypeParameter(type.parameters)
+                        val lengthConstraint = varcharTypeParameter.length
+                        val truncatedString = if (lengthConstraint === null || actualCodepointCount <= lengthConstraint) {
+                            this // no truncation needed
+                        } else {
+                            this.substring(0, this.offsetByCodePoints(0, lengthConstraint))
+                        }
+
+                        valueFactory.newString(truncatedString)
                     }
                     else -> error("Unreachable code")
                 }
