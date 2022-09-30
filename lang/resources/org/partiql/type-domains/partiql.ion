@@ -136,17 +136,8 @@ may then be further optimized by selecting better implementations of each operat
             (path root::expr steps::(* path_step 1))
             (call func_name::symbol args::(* expr 1))
             (call_agg setq::set_quantifier func_name::symbol arg::expr)
-            // window function, for now using symbol as function name
-<<<<<<< HEAD
-<<<<<<< HEAD
 
             // TODO: In the feature, when we allow use of aggregation function as window function, we need to consider incorporate in setq
-=======
-            // TODO: In the feature, when we allows use of aggregation function as window function, we need to consider incorporate in setq
->>>>>>> e7b260e0 (partiql.ion and g4 file)
-=======
-            // TODO: In the feature, when we allow use of aggregation function as window function, we need to consider incorporate in setq
->>>>>>> 185c4a06 (wip)
             (call_window func_name::symbol over::over args::(* expr 1))
             (cast value::expr as_type::type)
             (can_cast value::expr as_type::type)
@@ -612,16 +603,22 @@ may then be further optimized by selecting better implementations of each operat
         (with expr
             // Remove the select and struct node from the `expr` sum type, which will be replaced below.
 <<<<<<< HEAD
+<<<<<<< HEAD
 
+=======
+>>>>>>> a262341a (wip)
             // Remove the call_window node from the `expr` sum type
             // During logical plan construction, we will convert each call_window node to a window operator.
             // the expression call_window will be replaced as an id that is the as alias
             (exclude select struct call_window)
+<<<<<<< HEAD
 =======
             // Remove the call_window node from the `expr` sum type, because the call_window contains two parts:
             // Window specification and window function, we want to define a stand alone operator for this
             (exclude select struct)
 >>>>>>> 046efd24 (wip)
+=======
+>>>>>>> a262341a (wip)
 
             (include
                 // Invokes `exp` once in the context of every binding tuple returned by `query`, returning a
@@ -674,6 +671,7 @@ may then be further optimized by selecting better implementations of each operat
         (exclude let_binding)
         (include (product let_binding value::expr decl::var_decl))
 
+<<<<<<< HEAD
         // Inputs to Aggregations
         (include
             (product group_key
@@ -694,6 +692,8 @@ may then be further optimized by selecting better implementations of each operat
             )
         )
 
+=======
+>>>>>>> a262341a (wip)
         (include (product window_expression decl::var_decl func_name::symbol args::(* expr 1)))
 
         // Now we include new stuff, including PartiQL's relational algebra.
@@ -749,6 +749,13 @@ may then be further optimized by selecting better implementations of each operat
 
                 // Converts a bindings collection into a sorted bindings collection.
                 (sort source::bexpr sort_specs::(* sort_spec 1))
+
+                (window
+                    source:: bexpr
+                    // shall we consider break it into three parts here?
+                    window_specification:: over
+                    window_expression:: window_expression
+                )
 
                 (window
                     source:: bexpr
