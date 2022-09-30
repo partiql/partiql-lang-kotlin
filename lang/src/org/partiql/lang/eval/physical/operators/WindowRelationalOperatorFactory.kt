@@ -10,6 +10,7 @@ import org.partiql.lang.eval.physical.toSetVariableFunc
 import org.partiql.lang.eval.relation.RelationIterator
 import org.partiql.lang.eval.relation.RelationType
 import org.partiql.lang.eval.relation.relation
+import org.partiql.lang.util.compareTo
 
 class CompiledSortKey(val comparator: NaturalExprValueComparators, val value: ValueExpression)
 
@@ -113,7 +114,8 @@ class sortBasedWindowOperator(name: String) : WindowRelationalOperatorFactory(na
         // ideally, window function are processed per row, i.e., we have processing one window function call per row
         // We could benefit from have a window function interface which serves as a top-level abstraction
         // "partition based window function" and "frame based window function" will inherit from "window function"
-        // and concrete window function implementations are inherited from the above two
+        // and concrete window function implementations are inherited from the above two.
+        // This is why, simplification such as abstract Lag/Lead into a LagLeadCommon has not been done yet.
         if (windowExpression.funcName.text.toLowerCase() == "lag") {
             LagFunction(windowExpression, partition, windowFunctionParameter, state).eval()
         } else {
@@ -141,9 +143,18 @@ internal class LeadFunction(val windowExpression: PartiqlPhysical.WindowExpressi
                 rowsInPartition.forEachIndexed { index, row ->
                     // reset index for parameter evaluation
                     transferState(state, row)
-                    val offsetValue = offset?.invoke(state)?.numberValue()?.toLong() ?: 1
+                    val offsetValue = offset?.let {
+                        val numberValue = it.invoke(state).numberValue().toLong()
+                        // taking one step back here, do we even want to support non-constant value?
+                        if (numberValue >= 0) {
+                            numberValue
+                        } else {
+                            error("offset need to be non-negative integer")
+                        }
+                    } ?: 1L // default offset is one
+                    // We leave the checking mechanism for type mismatch out for now.
                     val defaultValue = default?.invoke(state) ?: state.valueFactory.nullValue
-                    val targetIndex = index + offsetValue
+                    val targetIndex = index + offsetValue.toLong()
                     // if targetRow is within partition
                     if (targetIndex >= 0 && targetIndex <= rowsInPartition.size - 1) {
                         // TODO need to check if index is larger than MAX INT, but this may causes overflow already
@@ -182,7 +193,15 @@ internal class LagFunction(val windowExpression: PartiqlPhysical.WindowExpressio
                 rowsInPartition.forEachIndexed { index, row ->
                     // reset index for parameter evaluation
                     transferState(state, row)
-                    val offsetValue = offset?.invoke(state)?.numberValue()?.toLong() ?: 1
+                    val offsetValue = offset?.let {
+                        val numberValue = it.invoke(state).numberValue().toLong()
+                        // taking one step back here, do we even want to support non-constant value?
+                        if (numberValue >= 0) {
+                            numberValue
+                        } else {
+                            error("offset need to be non-negative integer")
+                        }
+                    } ?: 1L // default offset is one
                     val defaultValue = default?.invoke(state) ?: state.valueFactory.nullValue
                     val targetIndex = index - offsetValue
                     // if targetRow is within partition
