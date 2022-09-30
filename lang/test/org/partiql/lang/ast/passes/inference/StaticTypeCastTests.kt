@@ -1,6 +1,6 @@
 package org.partiql.lang.ast.passes.inference
 
-import OTS.IMP.org.partiql.ots.legacy.plugin.StandardPlugin
+import OTS.IMP.org.partiql.ots.legacy.plugin.LegacyPlugin
 import OTS.IMP.org.partiql.ots.legacy.types.DecimalType
 import junitparams.JUnitParamsRunner
 import junitparams.Parameters
@@ -20,7 +20,7 @@ class StaticTypeCastTests {
     )
 
     private fun runTest(tc: TestCase) {
-        val outType = tc.sourceType.cast(tc.targetType, StandardPlugin())
+        val outType = tc.sourceType.cast(tc.targetType, LegacyPlugin())
         assertEquals("Expected ${tc.expectedType} when ${tc.sourceType} is casted to ${tc.targetType}", tc.expectedType, outType)
     }
 

@@ -1,5 +1,15 @@
-package OTS.IMP.org.partiql.ots.legacy.operators
+package OTS.IMP.org.partiql.ots.legacy.plugin
 
+import OTS.IMP.org.partiql.ots.legacy.operators.LegacyBinaryConcatOp
+import OTS.IMP.org.partiql.ots.legacy.operators.LegacyBinaryDivideOp
+import OTS.IMP.org.partiql.ots.legacy.operators.LegacyBinaryMinusOp
+import OTS.IMP.org.partiql.ots.legacy.operators.LegacyBinaryModuloOp
+import OTS.IMP.org.partiql.ots.legacy.operators.LegacyBinaryPlusOp
+import OTS.IMP.org.partiql.ots.legacy.operators.LegacyBinaryTimesOp
+import OTS.IMP.org.partiql.ots.legacy.operators.LegacyLikeOp
+import OTS.IMP.org.partiql.ots.legacy.operators.LegacyNegOp
+import OTS.IMP.org.partiql.ots.legacy.operators.LegacyNotOp
+import OTS.IMP.org.partiql.ots.legacy.operators.LegacyPosOp
 import OTS.IMP.org.partiql.ots.legacy.types.BlobType
 import OTS.IMP.org.partiql.ots.legacy.types.CharType
 import OTS.IMP.org.partiql.ots.legacy.types.ClobType
@@ -18,20 +28,31 @@ import OTS.IMP.org.partiql.ots.legacy.types.isNumeric
 import OTS.IMP.org.partiql.ots.legacy.types.isText
 import OTS.ITF.org.partiql.ots.CompileTimeType
 import OTS.ITF.org.partiql.ots.Failed
+import OTS.ITF.org.partiql.ots.Plugin
 import OTS.ITF.org.partiql.ots.Successful
 import OTS.ITF.org.partiql.ots.TypeInferenceResult
 import OTS.ITF.org.partiql.ots.Uncertain
-import OTS.ITF.org.partiql.ots.operator.ScalarCastOp
+import OTS.ITF.org.partiql.ots.operator.ScalarOp
 import OTS.ITF.org.partiql.ots.type.BoolType
+import com.amazon.ion.Timestamp
 import java.time.ZoneOffset
 
-/**
- * @param defaultTimezoneOffset Default timezone offset to be used when TIME WITH TIME ZONE does not explicitly
- */
-class StandardScalarCastOp(
-    val defaultTimezoneOffset: ZoneOffset,
-) : ScalarCastOp() {
-    override fun inferType(sourceType: CompileTimeType, targetType: CompileTimeType): TypeInferenceResult {
+class LegacyPlugin(
+    val defaultTimezoneOffset: ZoneOffset = ZoneOffset.UTC,
+    val now: Timestamp = Timestamp.nowZ()
+) : Plugin {
+    override val binaryPlusOp: ScalarOp = LegacyBinaryPlusOp
+    override val binaryMinusOp: ScalarOp = LegacyBinaryMinusOp
+    override val binaryTimesOp: ScalarOp = LegacyBinaryTimesOp
+    override val binaryDivideOp: ScalarOp = LegacyBinaryDivideOp
+    override val binaryModuloOp: ScalarOp = LegacyBinaryModuloOp
+    override val posOp: ScalarOp = LegacyPosOp
+    override val negOp: ScalarOp = LegacyNegOp
+    override val binaryConcatOp: ScalarOp = LegacyBinaryConcatOp
+    override val notOp: ScalarOp = LegacyNotOp
+    override val likeOp: ScalarOp = LegacyLikeOp
+
+    override fun scalarTypeCastInference(sourceType: CompileTimeType, targetType: CompileTimeType): TypeInferenceResult {
         val targetScalarType = targetType.scalarType
         val sourceScalarType = sourceType.scalarType
 
