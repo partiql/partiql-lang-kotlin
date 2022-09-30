@@ -136,6 +136,9 @@ may then be further optimized by selecting better implementations of each operat
             (path root::expr steps::(* path_step 1))
             (call func_name::symbol args::(* expr 1))
             (call_agg setq::set_quantifier func_name::symbol arg::expr)
+            // window function, for now using symbol as function name
+            // TODO: In the feature, when we allows use of aggregation function as window function, we need to consider incorporate in setq
+            (call_window func_name::symbol over::over args::(* expr 1))
             (cast value::expr as_type::type)
             (can_cast value::expr as_type::type)
             (can_lossless_cast value::expr as_type::type)
@@ -352,6 +355,17 @@ may then be further optimized by selecting better implementations of each operat
              (nulls_first)
              (nulls_last)
         )
+
+        // Over clause of a window function.
+        // OVER ([PARTITION BY <expr> [, <expr>]... ] [ORDER BY <sort_spec> [, <sort_spec>]... ])
+        // TODO: In the future, we need to add support for custom declared frame clause
+        (product over partition_by::(? window_partition_list ) order_by::(? window_sort_spec_list ) )
+
+        // <expr>[, <expr>]...
+        (product window_partition_list exprs::(* expr 1 ))
+
+        // <sort_spec>[, <sort_spec>]...
+        (product window_sort_spec_list sort_specs::(* sort_spec 1 ))
 
         // Indicates if variable lookup should be case-sensitive or not.
         (sum case_sensitivity (case_sensitive) (case_insensitive))
@@ -588,7 +602,9 @@ may then be further optimized by selecting better implementations of each operat
 
         (with expr
             // Remove the select and struct node from the `expr` sum type, which will be replaced below.
-            (exclude select struct)
+            // Remove the call_window node from the `expr` sum type, because the call_window contains two parts:
+            // Window specification and window function, we want to define a stand alone operator for this
+            (exclude select struct call_window)
 
             (include
                 // Invokes `exp` once in the context of every binding tuple returned by `query`, returning a
@@ -767,6 +783,12 @@ may then be further optimized by selecting better implementations of each operat
             group_key
             group_key_list
             order_by             // Replaced with SORT node
+            sort_spec
+            ordering_spec
+            over
+            window_partition_list
+            window_sort_spec_list
+
             let
             dml_op
             dml_op_list

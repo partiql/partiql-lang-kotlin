@@ -272,6 +272,24 @@ groupKey
 
 /**
  *
+ * Window Function
+ *
+ */
+
+over
+   : OVER PAREN_LEFT windowPartitionList? windowSortSpecList? PAREN_RIGHT
+   ;
+
+windowPartitionList
+   : PARTITION BY expr (COMMA expr)*
+   ;
+
+windowSortSpecList
+   : ORDER BY orderSortSpec (COMMA orderSortSpec)*
+   ;
+
+/**
+ *
  * SIMPLE CLAUSES
  *
  */
@@ -526,6 +544,7 @@ exprPrimary
     | caseExpr                   # ExprPrimaryBase
     | valueList                  # ExprPrimaryBase
     | values                     # ExprPrimaryBase
+    | windowFunction             # ExprPrimaryBase
     ;
 
 /**
@@ -572,6 +591,10 @@ substring
 aggregate
     : func=COUNT PAREN_LEFT ASTERISK PAREN_RIGHT                                        # CountAll
     | func=(COUNT|MAX|MIN|SUM|AVG) PAREN_LEFT setQuantifierStrategy? expr PAREN_RIGHT   # AggregateBase
+    ;
+
+windowFunction
+    : func=(LAG|LEAD) PAREN_LEFT expr ( COMMA expr)* PAREN_RIGHT over #LagLeadFunction
     ;
 
 cast
