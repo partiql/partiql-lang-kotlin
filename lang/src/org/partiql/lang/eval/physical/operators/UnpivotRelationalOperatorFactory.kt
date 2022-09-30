@@ -35,7 +35,7 @@ abstract class UnpivotRelationalOperatorFactory(name: String) : RelationalOperat
     ): RelationExpression
 }
 
-internal class DefaultUnpivotOperatorFactory(name: String) : UnpivotRelationalOperatorFactory(name) {
+internal class UnpivotOperator(name: String) : UnpivotRelationalOperatorFactory(name) {
     override fun create(
         impl: PartiqlPhysical.Impl,
         expr: ValueExpression,
