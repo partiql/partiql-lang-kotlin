@@ -97,6 +97,29 @@ class AstToLogicalVisitorTransformTests {
     }
 
     @ParameterizedTest
+    @ArgumentsSource(ArgumentsForToLogicalWindowTests::class)
+    fun `to logical (Window)`(tc: TestCase) = runTestCase(tc)
+
+    class ArgumentsForToLogicalWindowTests : ArgumentsProviderBase() {
+        override fun getParameters() = listOf(
+            TestCase(
+                // Note:
+                // `SELECT * FROM bar AS b` is rewritten to `SELECT b.* FROM bar as b` by [SelectStarVisitorTransform].
+                // Therefore, there is no need to support `SELECT *` in `AstToLogicalVisitorTransform`.
+                "SELECT lag(a) OVER (PARTITION BY b ORDER BY c) as d FROM bar AS e",
+                PartiqlLogical.build {
+                    query(
+                        bindingsToValues(
+                            struct(structFields(id("b"))),
+                            scan(id("bar"), varDecl("b"))
+                        )
+                    )
+                }
+            ),
+        )
+    }
+
+    @ParameterizedTest
     @ArgumentsSource(ArgumentsForToLogicalSfwTests::class)
     fun `to logical (SFW)`(tc: TestCase) = runTestCase(tc)
 

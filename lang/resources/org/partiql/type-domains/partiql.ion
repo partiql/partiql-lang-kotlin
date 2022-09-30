@@ -611,11 +611,17 @@ may then be further optimized by selecting better implementations of each operat
 
         (with expr
             // Remove the select and struct node from the `expr` sum type, which will be replaced below.
+<<<<<<< HEAD
 
             // Remove the call_window node from the `expr` sum type
             // During logical plan construction, we will convert each call_window node to a window operator.
             // the expression call_window will be replaced as an id that is the as alias
             (exclude select struct call_window)
+=======
+            // Remove the call_window node from the `expr` sum type, because the call_window contains two parts:
+            // Window specification and window function, we want to define a stand alone operator for this
+            (exclude select struct)
+>>>>>>> 046efd24 (wip)
 
             (include
                 // Invokes `exp` once in the context of every binding tuple returned by `query`, returning a
@@ -801,7 +807,6 @@ may then be further optimized by selecting better implementations of each operat
         (exclude
             group_by
             group_key
-            group_key_list
             order_by             // Replaced with SORT node
 
             let
