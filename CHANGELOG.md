@@ -70,6 +70,7 @@ stage in the `PlannerPipeline` and to generate performance metrics for the indiv
   query author, e.g. `true and x.id = 42` -> `x.id = 42`), `true and true` -> `true`, etc.
   - `RemoveUselessFiltersPass`, which removes useless filters introduced by the previous pass or by the query author 
   (e.g. `(filter (lit true) <bexpr>))` -> `<bexpr>`.
+- Adds support for ORDER BY in Planner
 
 ### Changed
 - The default parser for all components of PartiQL is now the PartiQLParser -- see the deprecation of `SqlParser`

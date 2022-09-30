@@ -374,6 +374,15 @@ internal data class LogicalToLogicalResolvedVisitorTransform(
         }
     }
 
+    override fun transformBexprSort_sortSpecs(node: PartiqlLogical.Bexpr.Sort): List<PartiqlLogicalResolved.SortSpec> {
+        val bindings = getOutputScope(node.source).concatenate(this.inputScope)
+        return withInputScope(bindings) {
+            node.sortSpecs.map {
+                this.transformSortSpec(it)
+            }
+        }
+    }
+
     override fun transformBexprFilter_predicate(node: PartiqlLogical.Bexpr.Filter): PartiqlLogicalResolved.Expr {
         val bindings = getOutputScope(node.source)
         return withInputScope(bindings) {
@@ -423,6 +432,7 @@ internal data class LogicalToLogicalResolvedVisitorTransform(
             is PartiqlLogical.Bexpr.Filter -> getOutputScope(bexpr.source)
             is PartiqlLogical.Bexpr.Limit -> getOutputScope(bexpr.source)
             is PartiqlLogical.Bexpr.Offset -> getOutputScope(bexpr.source)
+            is PartiqlLogical.Bexpr.Sort -> getOutputScope(bexpr.source)
             is PartiqlLogical.Bexpr.Scan -> {
                 LocalScope(
                     listOfNotNull(bexpr.asDecl.markForDynamicResolution(), bexpr.atDecl, bexpr.byDecl).also {

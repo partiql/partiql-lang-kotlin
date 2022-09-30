@@ -76,6 +76,7 @@ import org.partiql.lang.eval.like.parsePattern
 import org.partiql.lang.eval.namedValue
 import org.partiql.lang.eval.numberValue
 import org.partiql.lang.eval.rangeOver
+import org.partiql.lang.eval.relation.RelationType
 import org.partiql.lang.eval.sourceLocationMeta
 import org.partiql.lang.eval.stringValue
 import org.partiql.lang.eval.syntheticColumnName
@@ -273,13 +274,19 @@ internal class PhysicalPlanCompilerImpl(
         val bexprThunk: RelationThunkEnv = bexperConverter.convert(expr.query)
 
         return thunkFactory.thunkEnv(expr.metas) { env ->
+            val relationTypeThunk = bexprThunk(env)
+            val relationType: RelationType = relationTypeThunk.relType
+
             val elements = sequence {
                 val relItr = bexprThunk(env)
                 while (relItr.nextRow()) {
                     yield(mapThunk(env))
                 }
             }
-            valueFactory.newBag(elements)
+            when (relationType) {
+                RelationType.LIST -> valueFactory.newList(elements)
+                RelationType.BAG -> valueFactory.newBag(elements)
+            }
         }
     }
 

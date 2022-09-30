@@ -46,6 +46,11 @@ internal class AstToLogicalVisitorTransform(
             PartiqlLogical.build { filter(transformExpr(it), algebra, it.metas) }
         } ?: algebra
 
+        algebra = node.order?.let { orderBy ->
+            val sortSpecs = orderBy.sortSpecs.map { sortSpec -> transformSortSpec(sortSpec) }
+            PartiqlLogical.build { sort(algebra, sortSpecs, orderBy.metas) }
+        } ?: algebra
+
         algebra = node.offset?.let {
             PartiqlLogical.build { offset(transformExpr(it), algebra, node.offset.metas) }
         } ?: algebra
@@ -111,7 +116,6 @@ internal class AstToLogicalVisitorTransform(
     private fun checkForUnsupportedSelectClauses(node: PartiqlAst.Expr.Select) {
         when {
             node.group != null -> problemHandler.handleUnimplementedFeature(node.group, "GROUP BY")
-            node.order != null -> problemHandler.handleUnimplementedFeature(node.order, "ORDER BY")
             node.having != null -> problemHandler.handleUnimplementedFeature(node.having, "HAVING")
         }
     }

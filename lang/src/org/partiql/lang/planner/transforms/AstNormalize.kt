@@ -2,6 +2,7 @@ package org.partiql.lang.planner.transforms
 
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.eval.visitors.FromSourceAliasVisitorTransform
+import org.partiql.lang.eval.visitors.OrderBySortSpecVisitorTransform
 import org.partiql.lang.eval.visitors.PipelinedVisitorTransform
 import org.partiql.lang.eval.visitors.SelectListItemAliasVisitorTransform
 import org.partiql.lang.eval.visitors.SelectStarVisitorTransform
@@ -18,6 +19,7 @@ fun PartiqlAst.Statement.normalize(): PartiqlAst.Statement {
         SelectListItemAliasVisitorTransform(),
         // Synthesizes unspecified `FROM <expr> AS ...` aliases
         FromSourceAliasVisitorTransform(),
+        OrderBySortSpecVisitorTransform(),
         // Changes `SELECT * FROM a, b` to SELECT a.*, b.* FROM a, b`
         SelectStarVisitorTransform()
     )
