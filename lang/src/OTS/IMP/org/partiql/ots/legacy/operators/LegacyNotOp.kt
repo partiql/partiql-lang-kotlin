@@ -4,23 +4,24 @@ import OTS.ITF.org.partiql.ots.CompileTimeType
 import OTS.ITF.org.partiql.ots.Failed
 import OTS.ITF.org.partiql.ots.Successful
 import OTS.ITF.org.partiql.ots.TypeInferenceResult
-import OTS.ITF.org.partiql.ots.operator.NegOp
+import OTS.ITF.org.partiql.ots.operator.ScalarOp
+import OTS.ITF.org.partiql.ots.type.BoolType
 import OTS.ITF.org.partiql.ots.type.ScalarType
 
-object StandardNegOp : NegOp() {
+object LegacyNotOp : ScalarOp {
     override val defaultReturnTypes: List<CompileTimeType> =
-        defaultReturnTypesOfArithmeticOp
+        listOf(BoolType.compileTimeType)
 
     override val validOperandTypes: List<ScalarType> =
-        ALL_NUMBER_TYPES
+        listOf(BoolType)
 
     override fun inferReturnType(argsType: List<CompileTimeType>): TypeInferenceResult {
-        require(argsType.size == 1) { "NEG Operator expects 1 argument" }
+        require(argsType.size == 1) { "NOT Operator expects 1 argument" }
 
         val argType = argsType[0]
 
         return when (argType.scalarType) {
-            in StandardPosOp.validOperandTypes -> Successful(argType)
+            BoolType -> Successful(argType)
             else -> Failed
         }
     }

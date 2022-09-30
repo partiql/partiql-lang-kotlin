@@ -1,6 +1,6 @@
 package org.partiql.lang.eval.visitors
 
-import OTS.IMP.org.partiql.ots.legacy.plugin.StandardPlugin
+import OTS.IMP.org.partiql.ots.legacy.plugin.LegacyPlugin
 import OTS.IMP.org.partiql.ots.legacy.types.CharType
 import OTS.IMP.org.partiql.ots.legacy.types.DecimalType
 import OTS.IMP.org.partiql.ots.legacy.types.VarcharType
@@ -173,7 +173,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
             globalBindings = globalBindings,
             customFunctionSignatures = tc.customFunctionSignatures,
             customTypedOpParameters = customTypedOpParameters,
-            plugin = StandardPlugin()
+            plugin = LegacyPlugin()
         )
 
         val defaultVisitorTransforms = basicVisitorTransforms()

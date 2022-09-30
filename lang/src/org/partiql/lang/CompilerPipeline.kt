@@ -16,7 +16,7 @@
 
 package org.partiql.lang
 
-import OTS.IMP.org.partiql.ots.legacy.plugin.StandardPlugin
+import OTS.IMP.org.partiql.ots.legacy.plugin.LegacyPlugin
 import OTS.ITF.org.partiql.ots.Plugin
 import com.amazon.ion.IonSystem
 import org.partiql.lang.ast.ExprNode
@@ -246,7 +246,7 @@ interface CompilerPipeline {
                 procedures = customProcedures,
                 preProcessingSteps = preProcessingSteps,
                 globalTypeBindings = globalTypeBindings,
-                plugin = plugin ?: StandardPlugin()
+                plugin = plugin ?: LegacyPlugin()
             )
         }
     }
