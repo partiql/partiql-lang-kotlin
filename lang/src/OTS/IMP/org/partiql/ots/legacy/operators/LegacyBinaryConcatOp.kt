@@ -8,10 +8,10 @@ import OTS.ITF.org.partiql.ots.CompileTimeType
 import OTS.ITF.org.partiql.ots.Failed
 import OTS.ITF.org.partiql.ots.Successful
 import OTS.ITF.org.partiql.ots.TypeInferenceResult
-import OTS.ITF.org.partiql.ots.operator.BinaryConcatOp
+import OTS.ITF.org.partiql.ots.operator.ScalarOp
 import OTS.ITF.org.partiql.ots.type.ScalarType
 
-object StandardBinaryConcatOp : BinaryConcatOp() {
+object LegacyBinaryConcatOp : ScalarOp {
     override val validOperandTypes: List<ScalarType> = ALL_TEXT_TYPES
 
     override val defaultReturnTypes: List<CompileTimeType> =
