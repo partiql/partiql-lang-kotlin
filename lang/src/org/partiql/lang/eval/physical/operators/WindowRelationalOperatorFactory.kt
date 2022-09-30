@@ -108,81 +108,17 @@ class sortBasedWindowOperator(name: String) : WindowRelationalOperatorFactory(na
             rowInPartition.clear()
         }
 
+        // We would need to model this better
+        // ideally, we would have a factory that binds window function name and parameter to an implementation
+        // ideally, window function are processed per row, i.e., we have processing one window function call per row
+        // We could benefit from have a window function interface which serves as a top-level abstraction
+        // "partition based window function" and "frame based window function" will inherit from "window function"
+        // and concrete window function implementations are inherited from the above two
         if (windowExpression.funcName.text.toLowerCase() == "lag") {
-            LeadFunction(windowExpression, partition, windowFunctionParameter, state).eval()
-        } else {
             LagFunction(windowExpression, partition, windowFunctionParameter, state).eval()
+        } else {
+            LeadFunction(windowExpression, partition, windowFunctionParameter, state).eval()
         }
-
-//        relation(RelationType.LIST) {
-//            partition.forEach { rowsInPartition ->
-//                // calculate window function result
-//                if (windowExpression.funcName.text.toLowerCase() == "lag") {
-//                    // TODO need additional check logic to valiadate window function parameters
-//                    val (target, offset, default) = when (windowFunctionParameter.size) {
-//                        1 -> listOf(windowFunctionParameter[0], null, null)
-//
-//                        2 -> listOf(windowFunctionParameter[0], windowFunctionParameter[1], null)
-//
-//                        3 -> listOf(windowFunctionParameter[0], windowFunctionParameter[1], null)
-//
-//                        else -> error("Wrong number of Parameter for LAG Function")
-//                    }
-//                    rowsInPartition.forEachIndexed { index, row ->
-//                        // reset index for parameter evaluation
-//                        transferState(state, row)
-//                        val offsetValue = offset?.invoke(state)?.numberValue()?.toLong() ?: 1
-//                        val defaultValue = default?.invoke(state) ?: state.valueFactory.nullValue
-//                        val targetIndex = index - offsetValue
-//                        // if targetRow is within partition
-//                        if (targetIndex >= 0 && targetIndex <= rowsInPartition.size - 1) {
-//                            // TODO need to check if index is larger than MAX INT, but this may causes overflow already
-//                            val targetRow = rowsInPartition[targetIndex.toInt()]
-//                            transferState(state, targetRow)
-//                            val res = target!!.invoke(state)
-//                            transferState(state, row)
-//                            windowExpression.decl.toSetVariableFunc()(state, res)
-//                        } else {
-//                            transferState(state, row)
-//                            windowExpression.decl.toSetVariableFunc()(state, defaultValue)
-//                        }
-//                        yield()
-//                    }
-//                } else {
-//                    rowsInPartition.forEachIndexed { index, row ->
-//
-//                        val (target, offset, default) = when (windowFunctionParameter.size) {
-//                            1 -> listOf(windowFunctionParameter[0], null, null)
-//
-//                            2 -> listOf(windowFunctionParameter[0], windowFunctionParameter[1], null)
-//
-//                            3 -> listOf(windowFunctionParameter[0], windowFunctionParameter[1], null)
-//
-//                            else -> error("Wrong number of Parameter for Lead Function")
-//                        }
-//
-//                        // reset index for parameter evaluation
-//                        transferState(state, row)
-//                        val offsetValue = offset?.invoke(state)?.numberValue()?.toLong() ?: 1
-//                        val defaultValue = default?.invoke(state) ?: state.valueFactory.nullValue
-//                        val targetIndex = index + offsetValue
-//                        // if targetRow is within partition
-//                        if (targetIndex >= 0 && targetIndex <= rowsInPartition.size - 1) {
-//                            // TODO need to check if index is larger than MAX INT, but this may causes overflow already
-//                            val targetRow = rowsInPartition[targetIndex.toInt()]
-//                            transferState(state, targetRow)
-//                            val res = target!!.invoke(state)
-//                            transferState(state, row)
-//                            windowExpression.decl.toSetVariableFunc()(state, res)
-//                        } else {
-//                            transferState(state, row)
-//                            windowExpression.decl.toSetVariableFunc()(state, defaultValue)
-//                        }
-//                        yield()
-//                    }
-//                }
-//            }
-//        }
     }
 }
 
@@ -195,11 +131,11 @@ internal class LeadFunction(val windowExpression: PartiqlPhysical.WindowExpressi
 
             2 -> listOf(arguments[0], arguments[1], null)
 
-            3 -> listOf(arguments[0], arguments[1], null)
+            3 -> listOf(arguments[0], arguments[1], arguments[2])
 
             else -> error("Wrong number of Parameter for Lead Function")
         }
-        return relation(RelationType.LIST) {
+        return relation(RelationType.BAG) {
 
             partition.forEach { rowsInPartition ->
                 rowsInPartition.forEachIndexed { index, row ->
@@ -236,11 +172,11 @@ internal class LagFunction(val windowExpression: PartiqlPhysical.WindowExpressio
 
             2 -> listOf(arguments[0], arguments[1], null)
 
-            3 -> listOf(arguments[0], arguments[1], null)
+            3 -> listOf(arguments[0], arguments[1], arguments[2])
 
             else -> error("Wrong number of Parameter for Lag Function")
         }
-        return relation(RelationType.LIST) {
+        return relation(RelationType.BAG) {
 
             partition.forEach { rowsInPartition ->
                 rowsInPartition.forEachIndexed { index, row ->
