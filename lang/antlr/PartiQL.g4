@@ -596,7 +596,7 @@ aggregate
 // For now, we only support a set of builtin Window Function and there is (yet) no plan to support custom window function
 // Therefore we explicitly list out the maximum number of argument allowed here.
 windowFunction
-    : func=(LAG|LEAD) PAREN_LEFT expr ( COMMA expr (COMMA expr))? PAREN_RIGHT over #LagLeadFunction
+    : func=(LAG|LEAD) PAREN_LEFT expr ( COMMA expr (COMMA expr)?)? PAREN_RIGHT over #LagLeadFunction
     ;
 
 cast
