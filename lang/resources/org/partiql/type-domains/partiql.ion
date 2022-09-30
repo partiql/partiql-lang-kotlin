@@ -138,11 +138,15 @@ may then be further optimized by selecting better implementations of each operat
             (call_agg setq::set_quantifier func_name::symbol arg::expr)
             // window function, for now using symbol as function name
 <<<<<<< HEAD
+<<<<<<< HEAD
 
             // TODO: In the feature, when we allow use of aggregation function as window function, we need to consider incorporate in setq
 =======
             // TODO: In the feature, when we allows use of aggregation function as window function, we need to consider incorporate in setq
 >>>>>>> e7b260e0 (partiql.ion and g4 file)
+=======
+            // TODO: In the feature, when we allow use of aggregation function as window function, we need to consider incorporate in setq
+>>>>>>> 185c4a06 (wip)
             (call_window func_name::symbol over::over args::(* expr 1))
             (cast value::expr as_type::type)
             (can_cast value::expr as_type::type)
@@ -798,16 +802,7 @@ may then be further optimized by selecting better implementations of each operat
             group_by
             group_key
             group_key_list
-<<<<<<< HEAD
             order_by             // Replaced with SORT node
-=======
-            order_by
-            sort_spec
-            ordering_spec
-            over
-            window_partition_list
-            window_sort_spec_list
->>>>>>> e7b260e0 (partiql.ion and g4 file)
 
             let
             dml_op
