@@ -6,22 +6,21 @@ import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.NaturalExprValueComparators
 import org.partiql.lang.eval.err
 import org.partiql.lang.eval.physical.EvaluatorState
-import org.partiql.lang.eval.physical.transferState
 import org.partiql.lang.eval.relation.RelationType
 import org.partiql.lang.eval.relation.relation
 import org.partiql.lang.util.interruptibleFold
 
 /** Provides an implementation of the [PartiqlPhysical.Bexpr.Order] operator.*/
-internal abstract class SortOperatorFactory(name: String) : RelationalOperatorFactory {
-    final override val key: RelationalOperatorFactoryKey = RelationalOperatorFactoryKey(RelationalOperatorKind.SORT, name)
-    internal abstract fun create(
+public abstract class SortOperatorFactory(name: String) : RelationalOperatorFactory {
+    public final override val key: RelationalOperatorFactoryKey = RelationalOperatorFactoryKey(RelationalOperatorKind.SORT, name)
+    public abstract fun create(
         impl: PartiqlPhysical.Impl,
         sortKeys: List<CompiledSortKey>,
         sourceRelation: RelationExpression
     ): RelationExpression
 }
 
-internal class CompiledSortKey(val comparator: NaturalExprValueComparators, val value: ValueExpression)
+public class CompiledSortKey(val comparator: NaturalExprValueComparators, val value: ValueExpression)
 
 /**
  * A simple [SortOperatorFactory] that sorts relations completely in memory.
@@ -34,15 +33,21 @@ internal class InMemorySortFactory(name: String) : SortOperatorFactory(name) {
     ): RelationExpression = RelationExpression { state ->
         val source = sourceRelation.evaluate(state)
         relation(RelationType.LIST) {
-            val registers = mutableListOf<Array<ExprValue>>()
-            while (source.nextRow()) { registers.add(state.registers.clone()) }
-
+            val rows = mutableListOf<Array<ExprValue>>()
             val comparator = getSortingComparator(sortKeys, state)
-            val sortedRegisters = registers.sortedWith(comparator)
 
-            val iterator = sortedRegisters.iterator()
+            // Consume Input
+            while (source.nextRow()) {
+                rows.add(state.registers.clone())
+            }
+
+            // Perform Sort
+            val sortedRows = rows.sortedWith(comparator)
+
+            // Yield Sorted Rows
+            val iterator = sortedRows.iterator()
             while (iterator.hasNext()) {
-                transferState(state, iterator.next())
+                state.load(iterator.next())
                 yield()
             }
         }
@@ -58,12 +63,12 @@ private fun getSortingComparator(sortKeys: List<CompiledSortKey>, state: Evaluat
     return sortKeys.interruptibleFold(initial) { intermediate, sortKey ->
         if (intermediate == null) {
             return@interruptibleFold compareBy<Array<ExprValue>, ExprValue>(sortKey.comparator) { row ->
-                transferState(state, row)
+                state.load(row)
                 sortKey.value(state)
             }
         }
         return@interruptibleFold intermediate.thenBy(sortKey.comparator) { row ->
-            transferState(state, row)
+            state.load(row)
             sortKey.value(state)
         }
     } ?: err(

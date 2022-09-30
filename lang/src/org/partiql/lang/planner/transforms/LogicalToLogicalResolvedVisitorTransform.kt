@@ -374,10 +374,6 @@ internal data class LogicalToLogicalResolvedVisitorTransform(
         }
     }
 
-    override fun transformSortSpec(node: PartiqlLogical.SortSpec): PartiqlLogicalResolved.SortSpec {
-        return super.transformSortSpec(node)
-    }
-
     override fun transformBexprSort_sortSpecs(node: PartiqlLogical.Bexpr.Sort): List<PartiqlLogicalResolved.SortSpec> {
         val bindings = getOutputScope(node.source).concatenate(this.inputScope)
         return withInputScope(bindings) {
