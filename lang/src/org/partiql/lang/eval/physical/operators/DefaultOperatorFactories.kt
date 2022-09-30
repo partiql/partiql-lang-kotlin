@@ -26,6 +26,7 @@ import org.partiql.lang.planner.transforms.DEFAULT_IMPL_NAME
 internal val DEFAULT_RELATIONAL_OPERATOR_FACTORIES = listOf(
 
     DefaultUnpivotOperatorFactory(DEFAULT_IMPL_NAME),
+    InMemorySortFactory(DEFAULT_IMPL_NAME),
 
     object : ScanRelationalOperatorFactory(DEFAULT_IMPL_NAME) {
         override fun create(
@@ -128,8 +129,8 @@ internal val DEFAULT_RELATIONAL_OPERATOR_FACTORIES = listOf(
         ): RelationExpression =
             RelationExpression { state ->
                 val skipCount: Long = evalOffsetRowCount(rowCountExpr, state)
-                relation(RelationType.BAG) {
-                    val sourceRel = sourceBexpr.evaluate(state)
+                val sourceRel = sourceBexpr.evaluate(state)
+                relation(sourceRel.relType) {
                     var rowCount = 0L
                     while (rowCount++ < skipCount) {
                         // stop iterating if we run out of rows before we hit the offset.
@@ -150,7 +151,7 @@ internal val DEFAULT_RELATIONAL_OPERATOR_FACTORIES = listOf(
             RelationExpression { state ->
                 val limitCount = evalLimitRowCount(rowCountExpr, state)
                 val rowIter = sourceBexpr.evaluate(state)
-                relation(RelationType.BAG) {
+                relation(rowIter.relType) {
                     var rowCount = 0L
                     while (rowCount++ < limitCount && rowIter.nextRow()) {
                         yield()

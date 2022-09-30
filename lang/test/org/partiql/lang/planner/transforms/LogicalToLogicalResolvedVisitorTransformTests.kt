@@ -412,6 +412,30 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                 ).withLocals(localVariable("foo", 0))
             ),
             TestCase(
+                // all uppercase
+                "SELECT FOO.* FROM 1 AS foo ORDER BY FOO",
+                Expectation.Success(
+                    ResolvedId(1, 8) { localId(0) },
+                    ResolvedId(1, 37) { localId(0) }
+                ).withLocals(localVariable("foo", 0))
+            ),
+            TestCase(
+                // all lowercase
+                "SELECT foo.* FROM 1 AS foo ORDER BY foo",
+                Expectation.Success(
+                    ResolvedId(1, 8) { localId(0) },
+                    ResolvedId(1, 37) { localId(0) }
+                ).withLocals(localVariable("foo", 0))
+            ),
+            TestCase(
+                // mixed case
+                "SELECT FoO.* FROM 1 AS foo ORDER BY fOo",
+                Expectation.Success(
+                    ResolvedId(1, 8) { localId(0) },
+                    ResolvedId(1, 37) { localId(0) }
+                ).withLocals(localVariable("foo", 0))
+            ),
+            TestCase(
                 // foobar is undefined (select list)
                 "SELECT foobar.* FROM [] AS foo",
                 Expectation.Problems(
@@ -459,6 +483,30 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                 )
             ),
             TestCase(
+                // all uppercase
+                "SELECT \"FOO\".* FROM 1 AS foo ORDER BY \"FOO\"",
+                Expectation.Problems(
+                    problem(1, 8, PlanningProblemDetails.UndefinedVariable("FOO", caseSensitive = true)),
+                    problem(1, 39, PlanningProblemDetails.UndefinedVariable("FOO", caseSensitive = true))
+                )
+            ),
+            TestCase(
+                // all lowercase
+                "SELECT \"foo\".* FROM 1 AS foo ORDER BY \"foo\"",
+                Expectation.Success(
+                    ResolvedId(1, 8) { localId(0) },
+                    ResolvedId(1, 39) { localId(0) },
+                ).withLocals(localVariable("foo", 0))
+            ),
+            TestCase(
+                // mixed case
+                "SELECT \"FoO\".* FROM 1 AS foo ORDER BY \"fOo\"",
+                Expectation.Problems(
+                    problem(1, 8, PlanningProblemDetails.UndefinedVariable("FoO", caseSensitive = true)),
+                    problem(1, 39, PlanningProblemDetails.UndefinedVariable("fOo", caseSensitive = true))
+                )
+            ),
+            TestCase(
                 // "foobar" is undefined (select list)
                 "SELECT \"foobar\".* FROM [] AS foo ",
                 Expectation.Problems(
@@ -470,6 +518,13 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                 "SELECT \"foo\".* FROM [] AS foo WHERE \"barbat\"",
                 Expectation.Problems(
                     problem(1, 37, PlanningProblemDetails.UndefinedVariable("barbat", caseSensitive = true))
+                )
+            ),
+            TestCase(
+                // "barbat" is undefined (ORDER BY clause)
+                "SELECT \"foo\".* FROM [] AS foo ORDER BY \"barbat\"",
+                Expectation.Problems(
+                    problem(1, 40, PlanningProblemDetails.UndefinedVariable("barbat", caseSensitive = true))
                 )
             )
         )
@@ -555,6 +610,16 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                 ).withLocals(localVariable("b", 0))
             ),
 
+            // Covers local variables in select list, global variables in FROM source, local variables in ORDER BY clause
+            TestCase(
+                "SELECT b.* FROM bar AS b ORDER BY b.primaryKey = 42",
+                Expectation.Success(
+                    ResolvedId(1, 8) { localId(0) },
+                    ResolvedId(1, 17) { globalId("fake_uid_for_bar") },
+                    ResolvedId(1, 35) { localId(0) },
+                ).withLocals(localVariable("b", 0))
+            ),
+
             // Demonstrate that globals-first variable lookup only happens in the FROM clause.
             TestCase(
                 "SELECT shadow.* FROM shadow AS shadow", // `shadow` defined here shadows the global `shadow`
@@ -623,6 +688,37 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                 ).withLocals(localVariable("f", 0), localVariable("b", 1), localVariable("t", 2)),
                 allowUndefinedVariables = true
             ),
+
+            // In select list and ORDER BY clause
+            TestCase(
+                "SELECT undefined1 AS u FROM 1 AS f ORDER BY undefined2", // 1 from source
+                Expectation.Success(
+                    ResolvedId(1, 8) { dynamicLookup("undefined1", BindingCase.INSENSITIVE, globalsFirst = false, localId(0)) },
+                    ResolvedId(1, 45) { dynamicLookup("undefined2", BindingCase.INSENSITIVE, globalsFirst = false, localId(0)) }
+                ).withLocals(localVariable("f", 0)),
+                allowUndefinedVariables = true
+            ),
+            TestCase(
+                sql = "SELECT undefined1 AS u FROM 1 AS a, 2 AS b ORDER BY undefined2", // 2 from sources
+                Expectation.Success(
+                    ResolvedId(1, 8) { dynamicLookup("undefined1", BindingCase.INSENSITIVE, globalsFirst = false, localId(1), localId(0)) },
+                    ResolvedId(1, 53) { dynamicLookup("undefined2", BindingCase.INSENSITIVE, globalsFirst = false, localId(1), localId(0)) }
+                ).withLocals(localVariable("a", 0), localVariable("b", 1)),
+                allowUndefinedVariables = true
+            ),
+            TestCase(
+                sql = "SELECT undefined1 AS u FROM 1 AS f, 1 AS b, 1 AS t ORDER BY undefined2", // 3 from sources
+                Expectation.Success(
+                    ResolvedId(1, 8) {
+                        dynamicLookup("undefined1", BindingCase.INSENSITIVE, globalsFirst = false, localId(2), localId(1), localId(0))
+                    },
+                    ResolvedId(1, 61) {
+                        dynamicLookup("undefined2", BindingCase.INSENSITIVE, globalsFirst = false, localId(2), localId(1), localId(0))
+                    }
+                ).withLocals(localVariable("f", 0), localVariable("b", 1), localVariable("t", 2)),
+                allowUndefinedVariables = true
+            ),
+
             // In from clause
             TestCase(
                 // Wihtout scope override

@@ -130,7 +130,21 @@ class AstToLogicalVisitorTransformTests {
                         )
                     )
                 }
-            )
+            ),
+            TestCase(
+                "SELECT b.* FROM bar AS b ORDER BY y",
+                PartiqlLogical.build {
+                    query(
+                        bindingsToValues(
+                            struct(structFields(id("b"))),
+                            sort(
+                                scan(id("bar"), varDecl("b")),
+                                sortSpec(id("y"), asc(), nullsLast())
+                            )
+                        )
+                    )
+                }
+            ),
         )
     }
 
@@ -253,7 +267,6 @@ class AstToLogicalVisitorTransformTests {
             // SELECT queries are not implemented
             ProblemTestCase("SELECT b.* FROM bar AS b GROUP BY a", unimplementedProblem("GROUP BY", 1, 26)),
             ProblemTestCase("SELECT b.* FROM bar AS b HAVING x", unimplementedProblem("HAVING", 1, 33)),
-            ProblemTestCase("SELECT b.* FROM bar AS b ORDER BY y", unimplementedProblem("ORDER BY", 1, 26)),
             ProblemTestCase("PIVOT v AT n FROM data AS d", unimplementedProblem("PIVOT", 1, 1)),
 
             // DDL is  not implemented

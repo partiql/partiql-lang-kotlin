@@ -43,4 +43,8 @@ class EvaluatorState(
      * of [SetVariableFunc] that were provided by this library, thus it is marked as `internal`.
      */
     internal val registers: Array<ExprValue>
-)
+) {
+    internal fun load(registers: Array<ExprValue>) = registers.forEachIndexed { index, exprValue ->
+        this.registers[index] = exprValue
+    }
+}

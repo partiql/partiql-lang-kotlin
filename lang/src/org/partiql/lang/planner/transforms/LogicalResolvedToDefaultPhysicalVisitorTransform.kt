@@ -99,6 +99,18 @@ internal class LogicalResolvedToDefaultPhysicalVisitorTransform(
         }
     }
 
+    override fun transformBexprSort(node: PartiqlLogicalResolved.Bexpr.Sort): PartiqlPhysical.Bexpr {
+        val thiz = this
+        return PartiqlPhysical.build {
+            sort(
+                i = DEFAULT_IMPL,
+                sortSpecs = node.sortSpecs.map { thiz.transformSortSpec(it) },
+                source = thiz.transformBexpr(node.source),
+                metas = node.metas
+            )
+        }
+    }
+
     override fun transformBexprLimit(node: PartiqlLogicalResolved.Bexpr.Limit): PartiqlPhysical.Bexpr {
         val thiz = this
         return PartiqlPhysical.build {
