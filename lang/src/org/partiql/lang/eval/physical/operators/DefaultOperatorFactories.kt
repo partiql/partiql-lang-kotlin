@@ -25,7 +25,7 @@ import org.partiql.lang.planner.transforms.DEFAULT_IMPL_NAME
  */
 internal val DEFAULT_RELATIONAL_OPERATOR_FACTORIES = listOf(
 
-    UnpivotOperator(DEFAULT_IMPL_NAME),
+    DefaultUnpivotOperatorFactory(DEFAULT_IMPL_NAME),
 
     object : ScanRelationalOperatorFactory(DEFAULT_IMPL_NAME) {
         override fun create(
