@@ -2,10 +2,10 @@ package OTS.IMP.org.partiql.ots.legacy.operators
 
 import OTS.ITF.org.partiql.ots.CompileTimeType
 import OTS.ITF.org.partiql.ots.TypeInferenceResult
-import OTS.ITF.org.partiql.ots.operator.BinaryTimesOp
+import OTS.ITF.org.partiql.ots.operator.ScalarOp
 import OTS.ITF.org.partiql.ots.type.ScalarType
 
-object StandardBinaryTimesOp : BinaryTimesOp() {
+object LegacyBinaryModuloOp : ScalarOp {
     override val validOperandTypes: List<ScalarType> =
         ALL_NUMBER_TYPES
 

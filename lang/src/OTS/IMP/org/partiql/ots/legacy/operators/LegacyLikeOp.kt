@@ -5,12 +5,14 @@ import OTS.ITF.org.partiql.ots.Failed
 import OTS.ITF.org.partiql.ots.Successful
 import OTS.ITF.org.partiql.ots.TypeInferenceResult
 import OTS.ITF.org.partiql.ots.Uncertain
-import OTS.ITF.org.partiql.ots.operator.LikeOp
+import OTS.ITF.org.partiql.ots.operator.ScalarOp
 import OTS.ITF.org.partiql.ots.type.BoolType
 import OTS.ITF.org.partiql.ots.type.ScalarType
 
-object StandardLikeOp : LikeOp() {
+object LegacyLikeOp : ScalarOp {
     override val validOperandTypes: List<ScalarType> = ALL_TEXT_TYPES
+
+    override val defaultReturnTypes: List<CompileTimeType> = listOf(BoolType.compileTimeType)
 
     override fun inferReturnType(argsType: List<CompileTimeType>): TypeInferenceResult {
         require(argsType.size == 2 || argsType.size == 3) { "LIKE operator expects 2-3 arguments" }

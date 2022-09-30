@@ -1,15 +1,15 @@
 package OTS.IMP.org.partiql.ots.legacy.plugin
 
-import OTS.IMP.org.partiql.ots.legacy.operators.StandardBinaryConcatOp
-import OTS.IMP.org.partiql.ots.legacy.operators.StandardBinaryDivideOp
-import OTS.IMP.org.partiql.ots.legacy.operators.StandardBinaryMinusOp
-import OTS.IMP.org.partiql.ots.legacy.operators.StandardBinaryModuloOp
-import OTS.IMP.org.partiql.ots.legacy.operators.StandardBinaryPlusOp
-import OTS.IMP.org.partiql.ots.legacy.operators.StandardBinaryTimesOp
-import OTS.IMP.org.partiql.ots.legacy.operators.StandardLikeOp
-import OTS.IMP.org.partiql.ots.legacy.operators.StandardNegOp
-import OTS.IMP.org.partiql.ots.legacy.operators.StandardNotOp
-import OTS.IMP.org.partiql.ots.legacy.operators.StandardPosOp
+import OTS.IMP.org.partiql.ots.legacy.operators.LegacyBinaryConcatOp
+import OTS.IMP.org.partiql.ots.legacy.operators.LegacyBinaryDivideOp
+import OTS.IMP.org.partiql.ots.legacy.operators.LegacyBinaryMinusOp
+import OTS.IMP.org.partiql.ots.legacy.operators.LegacyBinaryModuloOp
+import OTS.IMP.org.partiql.ots.legacy.operators.LegacyBinaryPlusOp
+import OTS.IMP.org.partiql.ots.legacy.operators.LegacyBinaryTimesOp
+import OTS.IMP.org.partiql.ots.legacy.operators.LegacyLikeOp
+import OTS.IMP.org.partiql.ots.legacy.operators.LegacyNegOp
+import OTS.IMP.org.partiql.ots.legacy.operators.LegacyNotOp
+import OTS.IMP.org.partiql.ots.legacy.operators.LegacyPosOp
 import OTS.IMP.org.partiql.ots.legacy.types.BlobType
 import OTS.IMP.org.partiql.ots.legacy.types.CharType
 import OTS.IMP.org.partiql.ots.legacy.types.ClobType
@@ -33,34 +33,25 @@ import OTS.ITF.org.partiql.ots.Plugin
 import OTS.ITF.org.partiql.ots.Successful
 import OTS.ITF.org.partiql.ots.TypeInferenceResult
 import OTS.ITF.org.partiql.ots.Uncertain
-import OTS.ITF.org.partiql.ots.operator.BinaryConcatOp
-import OTS.ITF.org.partiql.ots.operator.BinaryDivideOp
-import OTS.ITF.org.partiql.ots.operator.BinaryMinusOp
-import OTS.ITF.org.partiql.ots.operator.BinaryModuloOp
-import OTS.ITF.org.partiql.ots.operator.BinaryPlusOp
-import OTS.ITF.org.partiql.ots.operator.BinaryTimesOp
-import OTS.ITF.org.partiql.ots.operator.LikeOp
-import OTS.ITF.org.partiql.ots.operator.NegOp
-import OTS.ITF.org.partiql.ots.operator.NotOp
-import OTS.ITF.org.partiql.ots.operator.PosOp
+import OTS.ITF.org.partiql.ots.operator.ScalarOp
 import OTS.ITF.org.partiql.ots.type.BoolType
 import com.amazon.ion.Timestamp
 import java.time.ZoneOffset
 
-data class StandardPlugin(
+class LegacyPlugin(
     val defaultTimezoneOffset: ZoneOffset = ZoneOffset.UTC,
     val now: Timestamp = Timestamp.nowZ()
 ) : Plugin {
-    override val binaryPlusOp: BinaryPlusOp = StandardBinaryPlusOp
-    override val binaryMinusOp: BinaryMinusOp = StandardBinaryMinusOp
-    override val binaryTimesOp: BinaryTimesOp = StandardBinaryTimesOp
-    override val binaryDivideOp: BinaryDivideOp = StandardBinaryDivideOp
-    override val binaryModuloOp: BinaryModuloOp = StandardBinaryModuloOp
-    override val posOp: PosOp = StandardPosOp
-    override val negOp: NegOp = StandardNegOp
-    override val binaryConcatOp: BinaryConcatOp = StandardBinaryConcatOp
-    override val notOp: NotOp = StandardNotOp
-    override val likeOp: LikeOp = StandardLikeOp
+    override val binaryPlusOp: ScalarOp = LegacyBinaryPlusOp
+    override val binaryMinusOp: ScalarOp = LegacyBinaryMinusOp
+    override val binaryTimesOp: ScalarOp = LegacyBinaryTimesOp
+    override val binaryDivideOp: ScalarOp = LegacyBinaryDivideOp
+    override val binaryModuloOp: ScalarOp = LegacyBinaryModuloOp
+    override val posOp: ScalarOp = LegacyPosOp
+    override val negOp: ScalarOp = LegacyNegOp
+    override val binaryConcatOp: ScalarOp = LegacyBinaryConcatOp
+    override val notOp: ScalarOp = LegacyNotOp
+    override val likeOp: ScalarOp = LegacyLikeOp
 
     override fun scalarTypeCastInference(sourceType: CompileTimeType, targetType: CompileTimeType): TypeInferenceResult {
         val targetScalarType = targetType.scalarType

@@ -4,16 +4,10 @@
 
 package org.partiql.lang.eval.visitors
 
-import OTS.IMP.org.partiql.ots.legacy.types.CharType
-import OTS.IMP.org.partiql.ots.legacy.types.DecimalType
-import OTS.IMP.org.partiql.ots.legacy.types.FloatType
 import OTS.IMP.org.partiql.ots.legacy.types.Int2Type
 import OTS.IMP.org.partiql.ots.legacy.types.Int4Type
 import OTS.IMP.org.partiql.ots.legacy.types.Int8Type
 import OTS.IMP.org.partiql.ots.legacy.types.IntType
-import OTS.IMP.org.partiql.ots.legacy.types.StringType
-import OTS.IMP.org.partiql.ots.legacy.types.SymbolType
-import OTS.IMP.org.partiql.ots.legacy.types.VarcharType
 import OTS.ITF.org.partiql.ots.Plugin
 import OTS.ITF.org.partiql.ots.operator.ScalarOp
 import OTS.ITF.org.partiql.ots.type.BoolType
@@ -365,7 +359,7 @@ internal class StaticTypeInferenceVisitorTransform(
                     it is StaticScalarType && it.scalarType in plugin.posOp.validOperandTypes
                 }, "+", processedNode.metas)
             ) {
-                true -> computeReturnTypeForUnary(argStaticType, ::inferUnaryArithmeticOp)
+                true -> computeReturnTypeForUnary(argStaticType, getUnaryArithmeticOpInferencer(plugin.posOp))
                 false -> plugin.posOp.defaultReturnTypes.toStaticType() // continuation type to prevent incompatible types and unknown errors from propagating
             }.let { processedNode.withStaticType(it) }
         }
@@ -379,14 +373,14 @@ internal class StaticTypeInferenceVisitorTransform(
                     it is StaticScalarType && it.scalarType in plugin.negOp.validOperandTypes
                 }, "-", processedNode.metas)
             ) {
-                true -> computeReturnTypeForUnary(argStaticType, ::inferUnaryArithmeticOp)
+                true -> computeReturnTypeForUnary(argStaticType, getUnaryArithmeticOpInferencer(plugin.negOp))
                 false -> plugin.negOp.defaultReturnTypes.toStaticType() // continuation type to prevent incompatible types and unknown errors from propagating
             }.let { processedNode.withStaticType(it) }
         }
 
         private fun computeReturnTypeForUnary(
             argStaticType: StaticType,
-            unaryOpInferencer: (SingleType) -> SingleType
+            unaryOpInferencer: (SingleType) -> StaticType
         ): StaticType {
             val argSingleTypes = argStaticType.allTypes.map { it as SingleType }
             val possibleReturnTypes = argSingleTypes.map { st -> unaryOpInferencer(st) }
@@ -405,20 +399,14 @@ internal class StaticTypeInferenceVisitorTransform(
             else -> StaticType.MISSING
         }
 
-        private fun inferUnaryArithmeticOp(type: SingleType): SingleType = when (type) {
-            // Propagate NULL or MISSING
-            is NullType -> StaticType.NULL
-            is MissingType -> StaticType.MISSING
-            is StaticScalarType -> when (type.scalarType) {
-                DecimalType,
-                Int2Type,
-                Int4Type,
-                Int8Type,
-                IntType,
-                FloatType -> type
+        private fun getUnaryArithmeticOpInferencer(scalarOp: ScalarOp) = { type: SingleType ->
+            when {
+                // Propagate NULL or MISSING
+                type is MissingType -> StaticType.MISSING
+                type is NullType -> StaticType.NULL
+                type is StaticScalarType -> scalarOp.inferReturnType(listOf(type.toCompileTimeType())).toStaticType()
                 else -> StaticType.MISSING
             }
-            else -> StaticType.MISSING
         }
 
         // Logical NAry ops: AND, OR
@@ -530,7 +518,7 @@ internal class StaticTypeInferenceVisitorTransform(
                     it is StaticScalarType && it.scalarType in plugin.binaryConcatOp.validOperandTypes
                 }, "||", processedNode.metas)
             ) {
-                true -> computeReturnTypeForNAry(argsStaticType, ::inferConcatOp)
+                true -> computeReturnTypeForNAry(argsStaticType, getConcatOpInferencer(plugin.binaryConcatOp))
                 false -> plugin.binaryConcatOp.defaultReturnTypes.toStaticType() // continuation type to prevent incompatible types and unknown errors from propagating
             }.let { processedNode.withStaticType(it) }
         }
@@ -623,31 +611,12 @@ internal class StaticTypeInferenceVisitorTransform(
             }
         }
 
-        private fun inferConcatOp(leftType: SingleType, rightType: SingleType): StaticType {
-            return when {
+        private fun getConcatOpInferencer(scalarOp: ScalarOp) = { leftType: SingleType, rightType: SingleType ->
+            when {
                 // Propagate missing as missing. Missing has precedence over null
                 leftType is MissingType || rightType is MissingType -> StaticType.MISSING
                 leftType is NullType || rightType is NullType -> StaticType.NULL
-                leftType is StaticScalarType && rightType is StaticScalarType -> when {
-                    leftType.isText() && rightType.isText() -> {
-                        val leftScalarType = leftType.scalarType
-                        val rightScalarType = rightType.scalarType
-                        when {
-                            leftScalarType === StringType || leftScalarType === SymbolType || rightScalarType === StringType || rightScalarType === SymbolType -> StaticType.STRING
-                            else -> { // Constrained string types (char & varchar)
-                                val leftLength = leftType.parameters[0]!!
-                                val rightLength = rightType.parameters[0]!!
-                                val sum = leftLength + rightLength
-                                val returnType = when {
-                                    leftScalarType === CharType && rightScalarType === CharType -> CharType
-                                    else -> VarcharType
-                                }
-                                StaticScalarType(returnType, listOf(sum))
-                            }
-                        }
-                    }
-                    else -> StaticType.MISSING
-                }
+                leftType is StaticScalarType && rightType is StaticScalarType -> scalarOp.inferReturnType(listOf(leftType.toCompileTimeType(), rightType.toCompileTimeType())).toStaticType()
                 else -> StaticType.MISSING
             }
         }
