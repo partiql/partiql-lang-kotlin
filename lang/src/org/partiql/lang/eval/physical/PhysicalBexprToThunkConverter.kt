@@ -29,7 +29,7 @@ internal typealias PhysicalPlanThunk = Thunk<EvaluatorState>
 internal typealias PhysicalPlanThunkValue<T> = ThunkValue<EvaluatorState, T>
 
 internal class PhysicalBexprToThunkConverter(
-    private val exprConverter: PhysicalExprToThunkConverter,
+    private val exprConverter: PhysicalPlanCompiler,
     private val valueFactory: ExprValueFactory,
     private val relationalOperatorFactory: Map<RelationalOperatorFactoryKey, RelationalOperatorFactory>
 ) : PartiqlPhysical.Bexpr.Converter<RelationThunkEnv> {

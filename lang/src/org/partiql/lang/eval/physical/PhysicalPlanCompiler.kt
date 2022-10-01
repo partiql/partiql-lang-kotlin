@@ -8,6 +8,6 @@ import org.partiql.lang.domains.PartiqlPhysical
  * Intended to prevent [PhysicalBexprToThunkConverter] from having to take a direct dependency on
  * [org.partiql.lang.eval.EvaluatingCompiler].
  */
-internal interface PhysicalExprToThunkConverter {
+internal interface PhysicalPlanCompiler {
     fun convert(expr: PartiqlPhysical.Expr): PhysicalPlanThunk
 }
