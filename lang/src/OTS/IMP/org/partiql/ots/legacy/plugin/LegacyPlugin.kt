@@ -13,16 +13,20 @@ import OTS.IMP.org.partiql.ots.legacy.operators.LegacyPosOp
 import OTS.IMP.org.partiql.ots.legacy.types.BlobType
 import OTS.IMP.org.partiql.ots.legacy.types.CharType
 import OTS.IMP.org.partiql.ots.legacy.types.ClobType
+import OTS.IMP.org.partiql.ots.legacy.types.DateType
 import OTS.IMP.org.partiql.ots.legacy.types.DecimalType
 import OTS.IMP.org.partiql.ots.legacy.types.DecimalTypeParameters
+import OTS.IMP.org.partiql.ots.legacy.types.DoubleType
 import OTS.IMP.org.partiql.ots.legacy.types.FloatType
 import OTS.IMP.org.partiql.ots.legacy.types.Int2Type
 import OTS.IMP.org.partiql.ots.legacy.types.Int4Type
 import OTS.IMP.org.partiql.ots.legacy.types.Int8Type
 import OTS.IMP.org.partiql.ots.legacy.types.IntType
+import OTS.IMP.org.partiql.ots.legacy.types.RealType
 import OTS.IMP.org.partiql.ots.legacy.types.StringType
 import OTS.IMP.org.partiql.ots.legacy.types.SymbolType
 import OTS.IMP.org.partiql.ots.legacy.types.TimeStampType
+import OTS.IMP.org.partiql.ots.legacy.types.TimeType
 import OTS.IMP.org.partiql.ots.legacy.types.VarcharType
 import OTS.IMP.org.partiql.ots.legacy.types.isLob
 import OTS.IMP.org.partiql.ots.legacy.types.isNumeric
@@ -35,8 +39,37 @@ import OTS.ITF.org.partiql.ots.TypeInferenceResult
 import OTS.ITF.org.partiql.ots.Uncertain
 import OTS.ITF.org.partiql.ots.operator.ScalarOp
 import OTS.ITF.org.partiql.ots.type.BoolType
+import OTS.ITF.org.partiql.ots.type.ScalarType
 
 class LegacyPlugin : Plugin {
+    override val scalarTypes: List<ScalarType> = listOf(
+        BoolType,
+        BlobType,
+        CharType,
+        ClobType,
+        DateType,
+        DecimalType,
+        DoubleType,
+        FloatType,
+        Int2Type,
+        Int4Type,
+        Int8Type,
+        IntType,
+        RealType,
+        StringType,
+        SymbolType,
+        TimeStampType,
+        TimeType(false),
+        TimeType(true),
+        VarcharType
+    )
+
+    private val aliasToScalarType = scalarTypes.flatMap { scalarType ->
+        scalarType.aliases.map { typeAlias -> typeAlias to scalarType }
+    }.associate { it.first to it.second }
+
+    override fun findScalarType(typeAlias: String) = aliasToScalarType[typeAlias]
+
     override val binaryPlusOp: ScalarOp = LegacyBinaryPlusOp
     override val binaryMinusOp: ScalarOp = LegacyBinaryMinusOp
     override val binaryTimesOp: ScalarOp = LegacyBinaryTimesOp

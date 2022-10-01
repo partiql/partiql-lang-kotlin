@@ -1,11 +1,12 @@
 package OTS.IMP.org.partiql.ots.legacy.types
 
-import OTS.ITF.org.partiql.ots.type.ScalarType
+import OTS.ITF.org.partiql.ots.type.NonParametricType
 import org.partiql.lang.eval.ExprValueType
 
-object ClobType : ScalarType {
-    override val id: String
-        get() = "clob"
+object ClobType : NonParametricType() {
+    override val typeName = "clob"
+
+    override val aliases = listOf("clob")
 
     override val runTimeType: ExprValueType
         get() = ExprValueType.CLOB

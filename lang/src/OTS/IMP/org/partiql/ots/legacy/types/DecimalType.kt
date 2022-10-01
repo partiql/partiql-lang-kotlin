@@ -3,6 +3,8 @@ package OTS.IMP.org.partiql.ots.legacy.types
 import OTS.ITF.org.partiql.ots.CompileTimeType
 import OTS.ITF.org.partiql.ots.TypeParameters
 import OTS.ITF.org.partiql.ots.type.ScalarType
+import org.partiql.lang.ast.passes.SemanticException
+import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
 import java.math.BigDecimal
@@ -10,8 +12,24 @@ import java.math.BigDecimal
 object DecimalType : ScalarType {
     val compileTimeType: CompileTimeType = CompileTimeType(this, listOf())
 
-    override val id: String
-        get() = "decimal"
+    override val typeName = "decimal"
+
+    override val aliases = listOf("decimal", "dec", "numeric")
+
+    override fun validateParameters(typeParameters: TypeParameters) {
+        require(typeParameters.size < 3) { error("$typeName type requires at most 2 parameter") }
+
+        val decimalTypeParameters = DecimalTypeParameters(typeParameters)
+        val precision = decimalTypeParameters.precision
+        val scale = decimalTypeParameters.scale
+
+        if (precision != null && scale !in 0..precision) {
+            throw SemanticException(
+                "Scale $scale should be between 0 and precision $precision",
+                ErrorCode.SEMANTIC_INVALID_DECIMAL_PARAMETERS,
+            )
+        }
+    }
 
     override val runTimeType: ExprValueType
         get() = ExprValueType.DECIMAL

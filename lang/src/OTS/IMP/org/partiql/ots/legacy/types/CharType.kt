@@ -6,8 +6,17 @@ import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
 
 object CharType : ScalarType {
-    override val id: String
-        get() = "character"
+    override val typeName = "character"
+
+    override val aliases = listOf("character", "char")
+
+    override fun validateParameters(typeParameters: TypeParameters) {
+        when (typeParameters.size) {
+            0 -> {}
+            1 -> require(typeParameters[0] > 0)
+            2 -> error("$typeName type requires at most 1 parameter")
+        }
+    }
 
     override val runTimeType: ExprValueType
         get() = ExprValueType.STRING

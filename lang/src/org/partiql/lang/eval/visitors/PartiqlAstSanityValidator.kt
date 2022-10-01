@@ -15,9 +15,10 @@
 
 package org.partiql.lang.eval.visitors
 
+import OTS.IMP.org.partiql.ots.legacy.plugin.LegacyPlugin
+import OTS.ITF.org.partiql.ots.Plugin
 import com.amazon.ionelement.api.IntElement
 import com.amazon.ionelement.api.IntElementSize
-import com.amazon.ionelement.api.MetaContainer
 import com.amazon.ionelement.api.TextElement
 import org.partiql.lang.ast.IsCountStarMeta
 import org.partiql.lang.ast.passes.SemanticException
@@ -31,8 +32,6 @@ import org.partiql.lang.eval.EvaluationException
 import org.partiql.lang.eval.TypedOpBehavior
 import org.partiql.lang.eval.err
 import org.partiql.lang.eval.errorContextFrom
-import org.partiql.lang.types.BuiltInScalarType
-import org.partiql.lang.types.TYPE_ALIAS_TO_SCALAR_TYPE
 
 /**
  * Provides rules for basic AST sanity checks that should be performed before any attempt at further AST processing.
@@ -47,10 +46,17 @@ import org.partiql.lang.types.TYPE_ALIAS_TO_SCALAR_TYPE
  */
 class PartiqlAstSanityValidator : PartiqlAst.Visitor() {
 
+    private var plugin: Plugin = LegacyPlugin()
+
     private var compileOptions = CompileOptions.standard()
 
-    fun validate(statement: PartiqlAst.Statement, compileOptions: CompileOptions = CompileOptions.standard()) {
+    fun validate(
+        statement: PartiqlAst.Statement,
+        compileOptions: CompileOptions = CompileOptions.standard(),
+        plugin: Plugin = LegacyPlugin()
+    ) {
         this.compileOptions = compileOptions
+        this.plugin = plugin
         this.walkStatement(statement)
     }
 
@@ -67,25 +73,12 @@ class PartiqlAstSanityValidator : PartiqlAst.Visitor() {
         }
     }
 
-    private fun validateDecimalOrNumericType(precision: Long?, scale: Long?, metas: MetaContainer) {
-        if (scale != null && precision != null && compileOptions.typedOpBehavior == TypedOpBehavior.HONOR_PARAMETERS) {
-            if (scale !in 0..precision) {
-                err(
-                    "Scale $scale should be between 0 and precision $precision",
-                    errorCode = ErrorCode.SEMANTIC_INVALID_DECIMAL_ARGUMENTS,
-                    errorContext = errorContextFrom(metas),
-                    internal = false
-                )
-            }
-        }
-    }
-
     override fun visitTypeScalarType(node: PartiqlAst.Type.ScalarType) {
         super.visitTypeScalarType(node)
 
-        val scalarType = TYPE_ALIAS_TO_SCALAR_TYPE[node.alias.text]
-        if (scalarType == BuiltInScalarType.DECIMAL || scalarType == BuiltInScalarType.NUMERIC) {
-            validateDecimalOrNumericType(node.parameters.getOrNull(0)?.value, node.parameters.getOrNull(1)?.value, node.metas)
+        val scalarType = plugin.findScalarType(node.alias.text) ?: error("No such type alias: ${node.alias.text}")
+        if (compileOptions.typedOpBehavior == TypedOpBehavior.HONOR_PARAMETERS) {
+            scalarType.validateParameters(node.parameters.map { it.value.toInt() })
         }
     }
 

@@ -1,11 +1,12 @@
 package OTS.IMP.org.partiql.ots.legacy.types
 
-import OTS.ITF.org.partiql.ots.type.ScalarType
+import OTS.ITF.org.partiql.ots.type.NonParametricType
 import org.partiql.lang.eval.ExprValueType
 
-object DateType : ScalarType {
-    override val id: String
-        get() = "date"
+object DateType : NonParametricType() {
+    override val typeName = "date"
+
+    override val aliases = listOf("date")
 
     override val runTimeType: ExprValueType
         get() = ExprValueType.DATE

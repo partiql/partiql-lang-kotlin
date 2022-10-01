@@ -1156,7 +1156,7 @@ enum class ErrorCode(
                 "Actual = ${errorContext.getProperty(Property.ACTUAL_ARITY)}"
     },
 
-    SEMANTIC_INVALID_DECIMAL_ARGUMENTS(
+    SEMANTIC_INVALID_DECIMAL_PARAMETERS(
         ErrorCategory.SEMANTIC,
         LOCATION,
         "Invalid precision or scale for decimal"

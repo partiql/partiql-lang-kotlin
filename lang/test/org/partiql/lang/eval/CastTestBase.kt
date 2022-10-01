@@ -1240,7 +1240,7 @@ abstract class CastTestBase : EvaluatorTestBase() {
             ).types(ExprValueType.DECIMAL.typeAliases().map { "$it(4,4)" }),
             // DECIMAL(2, 4) is a compilation failure in this mode
             listOf(
-                case("1", ErrorCode.SEMANTIC_INVALID_DECIMAL_ARGUMENTS)
+                case("1", ErrorCode.SEMANTIC_INVALID_DECIMAL_PARAMETERS)
             ).types(ExprValueType.DECIMAL.typeAliases().map { "$it(2,4)" }),
             // VARCHAR(4) should truncate to size <= 4
             listOf(

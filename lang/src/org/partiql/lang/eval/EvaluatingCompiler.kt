@@ -20,6 +20,7 @@ import OTS.IMP.org.partiql.ots.legacy.types.Int2Type
 import OTS.IMP.org.partiql.ots.legacy.types.Int4Type
 import OTS.IMP.org.partiql.ots.legacy.types.Int8Type
 import OTS.IMP.org.partiql.ots.legacy.types.IntType
+import OTS.ITF.org.partiql.ots.Plugin
 import com.amazon.ion.IntegerSize
 import com.amazon.ion.IonInt
 import com.amazon.ion.IonSexp
@@ -57,12 +58,10 @@ import org.partiql.lang.eval.visitors.PartiqlAstSanityValidator
 import org.partiql.lang.syntax.PartiQLParserBuilder
 import org.partiql.lang.types.AnyOfType
 import org.partiql.lang.types.AnyType
-import org.partiql.lang.types.BuiltInScalarType
 import org.partiql.lang.types.FunctionSignature
 import org.partiql.lang.types.SingleType
 import org.partiql.lang.types.StaticScalarType
 import org.partiql.lang.types.StaticType
-import org.partiql.lang.types.TYPE_ALIAS_TO_SCALAR_TYPE
 import org.partiql.lang.types.TypedOpParameter
 import org.partiql.lang.types.UnknownArguments
 import org.partiql.lang.types.UnsupportedTypeCheckException
@@ -136,7 +135,8 @@ internal class EvaluatingCompiler(
     private val functions: Map<String, ExprFunction>,
     private val customTypedOpParameters: Map<String, TypedOpParameter>,
     private val procedures: Map<String, StoredProcedure>,
-    private val compileOptions: CompileOptions = CompileOptions.standard()
+    private val compileOptions: CompileOptions = CompileOptions.standard(),
+    private val plugin: Plugin
 ) {
     private val errorSignaler = compileOptions.typingMode.createErrorSignaler(valueFactory)
     private val thunkFactory = compileOptions.typingMode.createThunkFactory<Environment>(compileOptions.thunkOptions, valueFactory)
@@ -1221,22 +1221,9 @@ internal class EvaluatingCompiler(
 
     private fun compileIs(expr: PartiqlAst.Expr.IsType, metas: MetaContainer): ThunkEnv {
         val expThunk = compileAstExpr(expr.value)
-        val typedOpParameter = expr.type.toTypedOpParameter(customTypedOpParameters)
+        val typedOpParameter = expr.type.toTypedOpParameter(customTypedOpParameters, plugin)
         if (typedOpParameter.staticType is AnyType) {
             return thunkFactory.thunkEnv(metas) { valueFactory.newBoolean(true) }
-        }
-        if (
-            compileOptions.typedOpBehavior == TypedOpBehavior.HONOR_PARAMETERS &&
-            expr.type is PartiqlAst.Type.ScalarType &&
-            TYPE_ALIAS_TO_SCALAR_TYPE[expr.type.alias.text] === BuiltInScalarType.FLOAT &&
-            expr.type.parameters.isNotEmpty() // if precision of FLOAT is explicitly specified in the original query
-        ) {
-            err(
-                "FLOAT precision parameter is unsupported",
-                ErrorCode.SEMANTIC_FLOAT_PRECISION_UNSUPPORTED,
-                errorContextFrom(expr.type.metas),
-                internal = false
-            )
         }
 
         val typeMatchFunc = when (val staticType = typedOpParameter.staticType) {
@@ -1265,22 +1252,9 @@ internal class EvaluatingCompiler(
 
     private fun compileCastHelper(value: PartiqlAst.Expr, asType: PartiqlAst.Type, metas: MetaContainer): ThunkEnv {
         val expThunk = compileAstExpr(value)
-        val typedOpParameter = asType.toTypedOpParameter(customTypedOpParameters)
+        val typedOpParameter = asType.toTypedOpParameter(customTypedOpParameters, plugin)
         if (typedOpParameter.staticType is AnyType) {
             return expThunk
-        }
-        if (
-            compileOptions.typedOpBehavior == TypedOpBehavior.HONOR_PARAMETERS &&
-            asType is PartiqlAst.Type.ScalarType &&
-            TYPE_ALIAS_TO_SCALAR_TYPE[asType.alias.text] === BuiltInScalarType.FLOAT &&
-            asType.parameters.isNotEmpty() // if precision of FLOAT is explicitly specified in the original query
-        ) {
-            err(
-                "FLOAT precision parameter is unsupported",
-                ErrorCode.SEMANTIC_FLOAT_PRECISION_UNSUPPORTED,
-                errorContextFrom(asType.metas),
-                internal = false
-            )
         }
 
         fun typeOpValidate(
@@ -1361,7 +1335,7 @@ internal class EvaluatingCompiler(
         thunkFactory.thunkEnv(metas, compileCastHelper(expr.value, expr.asType, metas))
 
     private fun compileCanCast(expr: PartiqlAst.Expr.CanCast, metas: MetaContainer): ThunkEnv {
-        val typedOpParameter = expr.asType.toTypedOpParameter(customTypedOpParameters)
+        val typedOpParameter = expr.asType.toTypedOpParameter(customTypedOpParameters, plugin)
         if (typedOpParameter.staticType is AnyType) {
             return thunkFactory.thunkEnv(metas) { valueFactory.newBoolean(true) }
         }
@@ -1396,7 +1370,7 @@ internal class EvaluatingCompiler(
     }
 
     private fun compileCanLosslessCast(expr: PartiqlAst.Expr.CanLosslessCast, metas: MetaContainer): ThunkEnv {
-        val typedOpParameter = expr.asType.toTypedOpParameter(customTypedOpParameters)
+        val typedOpParameter = expr.asType.toTypedOpParameter(customTypedOpParameters, plugin)
         if (typedOpParameter.staticType is AnyType) {
             return thunkFactory.thunkEnv(metas) { valueFactory.newBoolean(true) }
         }

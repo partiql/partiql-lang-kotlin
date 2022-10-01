@@ -18,6 +18,7 @@ import OTS.IMP.org.partiql.ots.legacy.types.Int2Type
 import OTS.IMP.org.partiql.ots.legacy.types.Int4Type
 import OTS.IMP.org.partiql.ots.legacy.types.Int8Type
 import OTS.IMP.org.partiql.ots.legacy.types.IntType
+import OTS.ITF.org.partiql.ots.Plugin
 import com.amazon.ion.IonString
 import com.amazon.ion.IonValue
 import com.amazon.ion.Timestamp
@@ -89,12 +90,10 @@ import org.partiql.lang.eval.visitors.PartiqlPhysicalSanityValidator
 import org.partiql.lang.planner.EvaluatorOptions
 import org.partiql.lang.types.AnyOfType
 import org.partiql.lang.types.AnyType
-import org.partiql.lang.types.BuiltInScalarType
 import org.partiql.lang.types.FunctionSignature
 import org.partiql.lang.types.SingleType
 import org.partiql.lang.types.StaticScalarType
 import org.partiql.lang.types.StaticType
-import org.partiql.lang.types.TYPE_ALIAS_TO_SCALAR_TYPE
 import org.partiql.lang.types.TypedOpParameter
 import org.partiql.lang.types.UnknownArguments
 import org.partiql.lang.types.UnsupportedTypeCheckException
@@ -144,6 +143,7 @@ internal class PhysicalPlanCompilerImpl(
     private val procedures: Map<String, StoredProcedure>,
     private val evaluatorOptions: EvaluatorOptions = EvaluatorOptions.standard(),
     private val bexperConverter: PhysicalBexprToThunkConverter,
+    private val plugin: Plugin
 ) : PhysicalPlanCompiler {
     private val errorSignaler = evaluatorOptions.typingMode.createErrorSignaler(valueFactory)
     private val thunkFactory = evaluatorOptions.typingMode.createThunkFactory<EvaluatorState>(
@@ -174,7 +174,7 @@ internal class PhysicalPlanCompilerImpl(
      * hope that long-running compilations may be aborted by the caller.
      */
     fun compile(plan: PartiqlPhysical.Plan): Expression {
-        PartiqlPhysicalSanityValidator(evaluatorOptions).walkPlan(plan)
+        PartiqlPhysicalSanityValidator(evaluatorOptions, plugin).walkPlan(plan)
 
         val thunk = compileAstStatement(plan.stmt)
 
@@ -990,22 +990,9 @@ internal class PhysicalPlanCompilerImpl(
 
     private fun compileIs(expr: PartiqlPhysical.Expr.IsType, metas: MetaContainer): PhysicalPlanThunk {
         val expThunk = compileAstExpr(expr.value)
-        val typedOpParameter = expr.type.toTypedOpParameter(customTypedOpParameters)
+        val typedOpParameter = expr.type.toTypedOpParameter(customTypedOpParameters, plugin)
         if (typedOpParameter.staticType is AnyType) {
             return thunkFactory.thunkEnv(metas) { valueFactory.newBoolean(true) }
-        }
-        if (
-            evaluatorOptions.typedOpBehavior == TypedOpBehavior.HONOR_PARAMETERS &&
-            expr.type is PartiqlPhysical.Type.ScalarType &&
-            TYPE_ALIAS_TO_SCALAR_TYPE[expr.type.alias.text] === BuiltInScalarType.FLOAT &&
-            expr.type.parameters.isNotEmpty() // if precision of FLOAT is explicitly specified in the original query
-        ) {
-            err(
-                "FLOAT precision parameter is unsupported",
-                ErrorCode.SEMANTIC_FLOAT_PRECISION_UNSUPPORTED,
-                errorContextFrom(expr.type.metas),
-                internal = false
-            )
         }
 
         val typeMatchFunc = when (val staticType = typedOpParameter.staticType) {
@@ -1034,22 +1021,9 @@ internal class PhysicalPlanCompilerImpl(
 
     private fun compileCastHelper(value: PartiqlPhysical.Expr, asType: PartiqlPhysical.Type, metas: MetaContainer): PhysicalPlanThunk {
         val expThunk = compileAstExpr(value)
-        val typedOpParameter = asType.toTypedOpParameter(customTypedOpParameters)
+        val typedOpParameter = asType.toTypedOpParameter(customTypedOpParameters, plugin)
         if (typedOpParameter.staticType is AnyType) {
             return expThunk
-        }
-        if (
-            evaluatorOptions.typedOpBehavior == TypedOpBehavior.HONOR_PARAMETERS &&
-            asType is PartiqlPhysical.Type.ScalarType &&
-            TYPE_ALIAS_TO_SCALAR_TYPE[asType.alias.text] === BuiltInScalarType.FLOAT &&
-            asType.parameters.isNotEmpty() // if precision of FLOAT is explicitly specified in the original query
-        ) {
-            err(
-                "FLOAT precision parameter is unsupported",
-                ErrorCode.SEMANTIC_FLOAT_PRECISION_UNSUPPORTED,
-                errorContextFrom(asType.metas),
-                internal = false
-            )
         }
 
         fun typeOpValidate(
@@ -1130,7 +1104,7 @@ internal class PhysicalPlanCompilerImpl(
         thunkFactory.thunkEnv(metas, compileCastHelper(expr.value, expr.asType, metas))
 
     private fun compileCanCast(expr: PartiqlPhysical.Expr.CanCast, metas: MetaContainer): PhysicalPlanThunk {
-        val typedOpParameter = expr.asType.toTypedOpParameter(customTypedOpParameters)
+        val typedOpParameter = expr.asType.toTypedOpParameter(customTypedOpParameters, plugin)
         if (typedOpParameter.staticType is AnyType) {
             return thunkFactory.thunkEnv(metas) { valueFactory.newBoolean(true) }
         }
@@ -1165,7 +1139,7 @@ internal class PhysicalPlanCompilerImpl(
     }
 
     private fun compileCanLosslessCast(expr: PartiqlPhysical.Expr.CanLosslessCast, metas: MetaContainer): PhysicalPlanThunk {
-        val typedOpParameter = expr.asType.toTypedOpParameter(customTypedOpParameters)
+        val typedOpParameter = expr.asType.toTypedOpParameter(customTypedOpParameters, plugin)
         if (typedOpParameter.staticType is AnyType) {
             return thunkFactory.thunkEnv(metas) { valueFactory.newBoolean(true) }
         }

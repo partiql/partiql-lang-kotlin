@@ -4714,7 +4714,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
                 name = "CAST to VARCHAR",
                 originalSql = "CAST(a_string AS VARCHAR)",
                 globals = mapOf("a_string" to STRING),
-                handler = expectQueryOutputType(STRING)
+                handler = expectQueryOutputType(StaticScalarType(VarcharType))
             ),
             TestCase(
                 name = "CAST to VARCHAR(x)",
@@ -4730,7 +4730,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
                 globals = mapOf(
                     "a_string" to StaticScalarType(CharType, listOf(1))
                 ),
-                handler = expectQueryOutputType(StaticScalarType(CharType, listOf(1)))
+                handler = expectQueryOutputType(StaticScalarType(CharType))
             ),
             TestCase(
                 name = "CAST to CHAR(x)",
@@ -4753,7 +4753,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
                 handler = expectQueryOutputType(
                     unionOf(
                         MISSING,
-                        StaticScalarType(DecimalType, listOf(10, 0))
+                        StaticScalarType(DecimalType, listOf(10))
                     )
                 )
             ),

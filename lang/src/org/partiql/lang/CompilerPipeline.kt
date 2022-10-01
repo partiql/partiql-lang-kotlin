@@ -39,6 +39,7 @@ import org.partiql.lang.syntax.PartiQLParserBuilder
 import org.partiql.lang.types.CustomType
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.util.interruptibleFold
+import org.partiql.lang.util.validate
 
 /**
  * Contains all information needed for processing steps.
@@ -264,6 +265,10 @@ internal class CompilerPipelineImpl(
     override val plugin: Plugin
 ) : CompilerPipeline {
 
+    init {
+        plugin.validate()
+    }
+
     private val compiler = EvaluatingCompiler(
         valueFactory,
         functions,
@@ -273,7 +278,8 @@ internal class CompilerPipelineImpl(
             }
         }.flatten().toMap(),
         procedures,
-        compileOptions
+        compileOptions,
+        plugin
     )
 
     override fun compile(query: String): Expression = compile(parser.parseAstStatement(query))

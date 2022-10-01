@@ -594,7 +594,10 @@ data class StaticScalarType(
     override val allTypes: List<StaticType>
         get() = listOf(this)
 
-    override fun toString(): String = scalarType.id
+    override fun toString(): String = scalarType.typeName + when {
+        parameters.isEmpty() -> ""
+        else -> parameters.toString()
+    }
 
     override fun isInstance(value: ExprValue): Boolean = scalarType.validateValue(value, parameters)
 

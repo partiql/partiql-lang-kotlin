@@ -1,8 +1,8 @@
 package org.partiql.lang.eval.visitors
 
+import OTS.ITF.org.partiql.ots.Plugin
 import com.amazon.ionelement.api.IntElement
 import com.amazon.ionelement.api.IntElementSize
-import com.amazon.ionelement.api.MetaContainer
 import com.amazon.ionelement.api.TextElement
 import org.partiql.lang.ast.IsCountStarMeta
 import org.partiql.lang.ast.passes.SemanticException
@@ -16,8 +16,6 @@ import org.partiql.lang.eval.TypedOpBehavior
 import org.partiql.lang.eval.err
 import org.partiql.lang.eval.errorContextFrom
 import org.partiql.lang.planner.EvaluatorOptions
-import org.partiql.lang.types.BuiltInScalarType
-import org.partiql.lang.types.TYPE_ALIAS_TO_SCALAR_TYPE
 import org.partiql.lang.util.propertyValueMapOf
 
 /**
@@ -27,7 +25,10 @@ import org.partiql.lang.util.propertyValueMapOf
  *
  * Any exception thrown by this class should always be considered an indication of a bug.
  */
-class PartiqlPhysicalSanityValidator(private val evaluatorOptions: EvaluatorOptions) : PartiqlPhysical.Visitor() {
+class PartiqlPhysicalSanityValidator(
+    private val evaluatorOptions: EvaluatorOptions,
+    private val plugin: Plugin
+) : PartiqlPhysical.Visitor() {
 
     /**
      * Quick validation step to make sure the indexes of any variables make sense.
@@ -61,25 +62,12 @@ class PartiqlPhysicalSanityValidator(private val evaluatorOptions: EvaluatorOpti
         }
     }
 
-    private fun validateDecimalOrNumericType(precision: Long?, scale: Long?, metas: MetaContainer) {
-        if (scale != null && precision != null && evaluatorOptions.typedOpBehavior == TypedOpBehavior.HONOR_PARAMETERS) {
-            if (scale !in 0..precision) {
-                err(
-                    "Scale $scale should be between 0 and precision $precision",
-                    errorCode = ErrorCode.SEMANTIC_INVALID_DECIMAL_ARGUMENTS,
-                    errorContext = errorContextFrom(metas),
-                    internal = false
-                )
-            }
-        }
-    }
-
     override fun visitTypeScalarType(node: PartiqlPhysical.Type.ScalarType) {
         super.visitTypeScalarType(node)
 
-        val scalarType = TYPE_ALIAS_TO_SCALAR_TYPE[node.alias.text]
-        if (scalarType == BuiltInScalarType.DECIMAL || scalarType == BuiltInScalarType.NUMERIC) {
-            validateDecimalOrNumericType(node.parameters.getOrNull(0)?.value, node.parameters.getOrNull(1)?.value, node.metas)
+        val scalarType = plugin.findScalarType(node.alias.text) ?: error("No such type alias: ${node.alias.text}")
+        if (evaluatorOptions.typedOpBehavior == TypedOpBehavior.HONOR_PARAMETERS) {
+            scalarType.validateParameters(node.parameters.map { it.value.toInt() })
         }
     }
 

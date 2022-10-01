@@ -14,6 +14,8 @@
 
 package org.partiql.lang.planner
 
+import OTS.IMP.org.partiql.ots.legacy.plugin.LegacyPlugin
+import OTS.ITF.org.partiql.ots.Plugin
 import com.amazon.ion.IonSystem
 import org.partiql.lang.SqlException
 import org.partiql.lang.ast.SourceLocationMeta
@@ -45,6 +47,7 @@ import org.partiql.lang.syntax.Parser
 import org.partiql.lang.syntax.PartiQLParserBuilder
 import org.partiql.lang.syntax.SyntaxException
 import org.partiql.lang.types.CustomType
+import org.partiql.lang.util.validate
 
 /**
  * Represents a pass over the physical plan that accepts a physical plan and returns a modified
@@ -212,6 +215,7 @@ interface PlannerPipeline {
         private var allowUndefinedVariables: Boolean = false
         private var enableLegacyExceptionHandling: Boolean = false
         private var plannerEventCallback: PlannerEventCallback? = null
+        private var plugin: Plugin? = null
 
         /**
          * Specifies the [Parser] to be used to turn an PartiQL query into an instance of [PartiqlAst].
@@ -376,6 +380,10 @@ interface PlannerPipeline {
             plannerEventCallback = cb
         }
 
+        fun plugin(plugin: Plugin): Builder = this.apply {
+            this.plugin = plugin
+        }
+
         /** Builds the actual implementation of [PlannerPipeline]. */
         fun build(): PlannerPipeline {
             val compileOptionsToUse = evaluatorOptions ?: EvaluatorOptions.standard()
@@ -422,7 +430,8 @@ interface PlannerPipeline {
                 globalVariableResolver = globalVariableResolver,
                 allowUndefinedVariables = allowUndefinedVariables,
                 enableLegacyExceptionHandling = enableLegacyExceptionHandling,
-                plannerEventCallback = plannerEventCallback
+                plannerEventCallback = plannerEventCallback,
+                plugin = plugin ?: LegacyPlugin()
             )
         }
     }
@@ -441,6 +450,7 @@ internal class PlannerPipelineImpl(
     val enableLegacyExceptionHandling: Boolean,
     val physicalPlanPasses: List<PartiqlPhysicalPass>,
     val plannerEventCallback: PlannerEventCallback?,
+    val plugin: Plugin
 ) : PlannerPipeline {
 
     init {
@@ -452,6 +462,8 @@ internal class PlannerPipelineImpl(
                 // Need a type inferencer pass on resolved logical algebra to support this.
                 TODO("Support for EvaluatorOptions.thunkReturnTypeAsserts == ThunkReturnTypeAssertions.ENABLED")
         }
+
+        plugin.validate()
     }
 
     val customTypedOpParameters = customDataTypes.map { customType ->
@@ -563,7 +575,8 @@ internal class PlannerPipelineImpl(
                 customTypedOpParameters = customTypedOpParameters,
                 procedures = procedures,
                 evaluatorOptions = evaluatorOptions,
-                bexperConverter = bexperConverter
+                bexperConverter = bexperConverter,
+                plugin = plugin
             )
 
             val expression = when {

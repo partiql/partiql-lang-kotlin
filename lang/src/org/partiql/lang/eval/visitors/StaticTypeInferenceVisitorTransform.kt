@@ -1199,7 +1199,7 @@ internal class StaticTypeInferenceVisitorTransform(
         override fun transformExprCast(node: PartiqlAst.Expr.Cast): PartiqlAst.Expr {
             val typed = super.transformExprCast(node) as PartiqlAst.Expr.Cast
             val sourceType = typed.value.getStaticType()
-            val targetType = typed.asType.toTypedOpParameter(customTypedOpParameters)
+            val targetType = typed.asType.toTypedOpParameter(customTypedOpParameters, plugin)
             val castOutputType = sourceType.cast(targetType.staticType, plugin).let {
                 if (targetType.validationThunk == null) {
                     // There is no additional validation for this parameter, return this type as-is

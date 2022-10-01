@@ -1287,14 +1287,18 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
         scalarType("time_with_time_zone", listOfNotNull(precision))
     }
 
-    override fun visitTypeCustom(ctx: PartiQLParser.TypeCustomContext) = PartiqlAst.build {
+    override fun visitGenericType(ctx: PartiQLParser.GenericTypeContext) = PartiqlAst.build {
         val metas = ctx.symbolPrimitive().getSourceMetaContainer()
-        val customName: String = when (val name = ctx.symbolPrimitive().getString().toLowerCase()) {
-            in customKeywords -> name
-            in customTypeAliases.keys -> customTypeAliases.getOrDefault(name, name)
-            else -> throw ParserException("Invalid custom type name: $name", ErrorCode.PARSE_INVALID_QUERY)
+        when (val name = ctx.symbolPrimitive().getString().toLowerCase()) {
+            in customKeywords, in customTypeAliases.keys -> {
+                val customTypeAlias = customTypeAliases.getOrDefault(name, name)
+                customType_(SymbolPrimitive(customTypeAlias, metas), metas)
+            }
+            else -> {
+                val typeParameters = ctx.LITERAL_INTEGER().map { it.text.toLong() }
+                scalarType(name, typeParameters, metas)
+            }
         }
-        customType_(SymbolPrimitive(customName, metas), metas)
     }
 
     /**

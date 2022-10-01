@@ -2,18 +2,19 @@ package OTS.IMP.org.partiql.ots.legacy.types
 
 import OTS.ITF.org.partiql.ots.CompileTimeType
 import OTS.ITF.org.partiql.ots.TypeParameters
-import OTS.ITF.org.partiql.ots.type.ScalarType
+import OTS.ITF.org.partiql.ots.type.NonParametricType
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.numberValue
 
-object IntType : ScalarType {
+object IntType : NonParametricType() {
     val validRange = Long.MIN_VALUE..Long.MAX_VALUE
 
     val compileTimeType: CompileTimeType = CompileTimeType(this, emptyList())
 
-    override val id: String
-        get() = "int"
+    override val typeName = "integer"
+
+    override val aliases = listOf("int", "integer")
 
     override val runTimeType: ExprValueType
         get() = ExprValueType.INT

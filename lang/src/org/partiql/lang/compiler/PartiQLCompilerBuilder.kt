@@ -14,6 +14,8 @@
 
 package org.partiql.lang.compiler
 
+import OTS.IMP.org.partiql.ots.legacy.plugin.LegacyPlugin
+import OTS.ITF.org.partiql.ots.Plugin
 import com.amazon.ion.IonSystem
 import com.amazon.ion.system.IonSystemBuilder
 import org.partiql.lang.eval.ExprFunction
@@ -51,6 +53,7 @@ class PartiQLCompilerBuilder private constructor() {
     private var customFunctions: List<ExprFunction> = emptyList()
     private var customProcedures: List<StoredProcedure> = emptyList()
     private var customOperatorFactories: List<RelationalOperatorFactory> = emptyList()
+    private var plugin: Plugin = LegacyPlugin()
 
     companion object {
 
@@ -76,7 +79,8 @@ class PartiQLCompilerBuilder private constructor() {
                 keySelector = { it.signature.name },
                 valueTransform = { it }
             ),
-            operatorFactories = allOperatorFactories()
+            operatorFactories = allOperatorFactories(),
+            plugin = plugin
         )
     }
 
@@ -114,6 +118,10 @@ class PartiQLCompilerBuilder private constructor() {
 
     internal fun customOperatorFactories(customOperatorFactories: List<RelationalOperatorFactory>) = this.apply {
         this.customOperatorFactories = customOperatorFactories
+    }
+
+    internal fun plugin(plugin: Plugin) = this.apply {
+        this.plugin = plugin
     }
 
     // --- Internal ----------------------------------
