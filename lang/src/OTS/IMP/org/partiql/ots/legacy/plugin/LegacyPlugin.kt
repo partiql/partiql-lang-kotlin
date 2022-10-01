@@ -34,13 +34,8 @@ import OTS.ITF.org.partiql.ots.TypeInferenceResult
 import OTS.ITF.org.partiql.ots.Uncertain
 import OTS.ITF.org.partiql.ots.operator.ScalarOp
 import OTS.ITF.org.partiql.ots.type.BoolType
-import com.amazon.ion.Timestamp
-import java.time.ZoneOffset
 
-class LegacyPlugin(
-    val defaultTimezoneOffset: ZoneOffset = ZoneOffset.UTC,
-    val now: Timestamp = Timestamp.nowZ()
-) : Plugin {
+class LegacyPlugin : Plugin {
     override val binaryPlusOp: ScalarOp = LegacyBinaryPlusOp
     override val binaryMinusOp: ScalarOp = LegacyBinaryMinusOp
     override val binaryTimesOp: ScalarOp = LegacyBinaryTimesOp
