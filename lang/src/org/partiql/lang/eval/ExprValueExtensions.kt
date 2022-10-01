@@ -16,9 +16,11 @@ package org.partiql.lang.eval
 
 import OTS.IMP.org.partiql.ots.legacy.types.BlobType
 import OTS.IMP.org.partiql.ots.legacy.types.CharType
+import OTS.IMP.org.partiql.ots.legacy.types.CharTypeParameter
 import OTS.IMP.org.partiql.ots.legacy.types.ClobType
 import OTS.IMP.org.partiql.ots.legacy.types.DateType
 import OTS.IMP.org.partiql.ots.legacy.types.DecimalType
+import OTS.IMP.org.partiql.ots.legacy.types.DecimalTypeParameters
 import OTS.IMP.org.partiql.ots.legacy.types.FloatType
 import OTS.IMP.org.partiql.ots.legacy.types.Int2Type
 import OTS.IMP.org.partiql.ots.legacy.types.Int4Type
@@ -28,7 +30,9 @@ import OTS.IMP.org.partiql.ots.legacy.types.StringType
 import OTS.IMP.org.partiql.ots.legacy.types.SymbolType
 import OTS.IMP.org.partiql.ots.legacy.types.TimeStampType
 import OTS.IMP.org.partiql.ots.legacy.types.TimeType
+import OTS.IMP.org.partiql.ots.legacy.types.TimeTypeParameter
 import OTS.IMP.org.partiql.ots.legacy.types.VarcharType
+import OTS.IMP.org.partiql.ots.legacy.types.VarcharTypeParameter
 import OTS.ITF.org.partiql.ots.type.BoolType
 import com.amazon.ion.IntegerSize
 import com.amazon.ion.IonInt
@@ -382,23 +386,26 @@ fun ExprValue.cast(
                     TypedOpBehavior.LEGACY -> valueFactory.newFromIonValue(
                         this.coerce(BigDecimal::class.java).ionValue(valueFactory.ion)
                     )
-                    TypedOpBehavior.HONOR_PARAMETERS -> when (val precision = type.parameters[0]) {
-                        null -> valueFactory.newFromIonValue(
-                            this.coerce(BigDecimal::class.java).ionValue(valueFactory.ion)
-                        )
-                        else -> {
-                            val decimal = this.coerce(BigDecimal::class.java) as BigDecimal
-                            val scale = type.parameters[1]!!
-                            val result = decimal.round(MathContext(precision))
-                                .setScale(scale, RoundingMode.HALF_UP)
-                            if (result.precision() > precision) {
-                                // Following PostgresSQL behavior here. Java will increase precision if needed.
-                                castFailedErr(
-                                    "target type DECIMAL($precision, $scale) too small for value $decimal.",
-                                    internal = false
-                                )
-                            } else {
-                                valueFactory.newFromIonValue(result.ionValue(valueFactory.ion))
+                    TypedOpBehavior.HONOR_PARAMETERS -> {
+                        val decimalTypeParameter = DecimalTypeParameters(type.parameters)
+                        when (val precision = decimalTypeParameter.precision) {
+                            null -> valueFactory.newFromIonValue(
+                                this.coerce(BigDecimal::class.java).ionValue(valueFactory.ion)
+                            )
+                            else -> {
+                                val decimal = this.coerce(BigDecimal::class.java) as BigDecimal
+                                val scale = decimalTypeParameter.scale
+                                val result = decimal.round(MathContext(precision))
+                                    .setScale(scale, RoundingMode.HALF_UP)
+                                if (result.precision() > precision) {
+                                    // Following PostgresSQL behavior here. Java will increase precision if needed.
+                                    castFailedErr(
+                                        "target type DECIMAL($precision, $scale) too small for value $decimal.",
+                                        internal = false
+                                    )
+                                } else {
+                                    valueFactory.newFromIonValue(result.ionValue(valueFactory.ion))
+                                }
                             }
                         }
                     }
@@ -417,23 +424,29 @@ fun ExprValue.cast(
                 TypedOpBehavior.LEGACY -> valueFactory.newString(this)
                 TypedOpBehavior.HONOR_PARAMETERS -> when (type.scalarType) {
                     is StringType -> valueFactory.newString(this)
-                    is CharType,
-                    is VarcharType -> {
+                    is CharType -> {
                         val actualCodepointCount = this.codePointCount(0, this.length)
-                        val lengthConstraint = type.parameters[0]!!
+                        val charTypeParameter = CharTypeParameter(type.parameters)
+                        val lengthConstraint = charTypeParameter.length
                         val truncatedString = if (actualCodepointCount <= lengthConstraint) {
                             this // no truncation needed
                         } else {
                             this.substring(0, this.offsetByCodePoints(0, lengthConstraint))
                         }
 
-                        valueFactory.newString(
-                            when (type.scalarType) {
-                                is CharType -> truncatedString.trimEnd { c -> c == '\u0020' }
-                                is VarcharType -> truncatedString
-                                else -> error("Unreachable code")
-                            }
-                        )
+                        valueFactory.newString(truncatedString.trimEnd { c -> c == '\u0020' })
+                    }
+                    is VarcharType -> {
+                        val actualCodepointCount = this.codePointCount(0, this.length)
+                        val varcharTypeParameter = VarcharTypeParameter(type.parameters)
+                        val lengthConstraint = varcharTypeParameter.length
+                        val truncatedString = if (lengthConstraint === null || actualCodepointCount <= lengthConstraint) {
+                            this // no truncation needed
+                        } else {
+                            this.substring(0, this.offsetByCodePoints(0, lengthConstraint))
+                        }
+
+                        valueFactory.newString(truncatedString)
                     }
                     else -> error("Unreachable code")
                 }
@@ -563,7 +576,7 @@ fun ExprValue.cast(
                         }
                     }
                     is TimeType -> {
-                        val precision = targetType.parameters[0]
+                        val precision = TimeTypeParameter(targetType.parameters).precision
                         when {
                             type == ExprValueType.TIME -> {
                                 val time = timeValue()

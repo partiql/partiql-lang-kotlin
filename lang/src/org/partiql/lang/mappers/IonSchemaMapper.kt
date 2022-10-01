@@ -5,6 +5,7 @@ import OTS.IMP.org.partiql.ots.legacy.types.CharType
 import OTS.IMP.org.partiql.ots.legacy.types.ClobType
 import OTS.IMP.org.partiql.ots.legacy.types.DateType
 import OTS.IMP.org.partiql.ots.legacy.types.DecimalType
+import OTS.IMP.org.partiql.ots.legacy.types.DecimalTypeParameters
 import OTS.IMP.org.partiql.ots.legacy.types.FloatType
 import OTS.IMP.org.partiql.ots.legacy.types.Int2Type
 import OTS.IMP.org.partiql.ots.legacy.types.Int4Type
@@ -306,23 +307,26 @@ class IonSchemaMapper(private val staticType: StaticType) {
                         }
                     )
                 }
-                is DecimalType -> when (val precision = parameters[0]) {
-                    null -> listOf()
-                    else -> {
-                        constraintsFromISL = constraintsFromISL.filterNot {
-                            it is IonSchemaModel.Constraint.Precision || it is IonSchemaModel.Constraint.Scale
+                is DecimalType -> {
+                    val decimalTypeParameter = DecimalTypeParameters(parameters)
+                    when (val precision = decimalTypeParameter.precision) {
+                        null -> listOf()
+                        else -> {
+                            constraintsFromISL = constraintsFromISL.filterNot {
+                                it is IonSchemaModel.Constraint.Precision || it is IonSchemaModel.Constraint.Scale
+                            }
+                            listOf(
+                                // StaticType's decimal precision represents an inclusive "upto" range. Maps to an exact
+                                // precision if value is 1. Otherwise (for positive values) maps to inclusive range of
+                                // 1 to value.
+                                when {
+                                    precision < 1 -> error("Precision must be a positive integer")
+                                    precision == 1 -> IonSchemaModel.build { precision(equalsNumber(ionInt(1))) }
+                                    else -> IonSchemaModel.build { precision(equalsRange(numberRange(inclusive(ionInt(1)), inclusive(ionInt(precision.toLong()))))) }
+                                },
+                                IonSchemaModel.build { scale(equalsNumber(ionInt(parameters[1]!!.toLong()))) }
+                            )
                         }
-                        listOf(
-                            // StaticType's decimal precision represents an inclusive "upto" range. Maps to an exact
-                            // precision if value is 1. Otherwise (for positive values) maps to inclusive range of
-                            // 1 to value.
-                            when {
-                                precision < 1 -> error("Precision must be a positive integer")
-                                precision == 1 -> IonSchemaModel.build { precision(equalsNumber(ionInt(1))) }
-                                else -> IonSchemaModel.build { precision(equalsRange(numberRange(inclusive(ionInt(1)), inclusive(ionInt(precision.toLong()))))) }
-                            },
-                            IonSchemaModel.build { scale(equalsNumber(ionInt(parameters[1]!!.toLong()))) }
-                        )
                     }
                 }
                 else -> constraintsFromISL

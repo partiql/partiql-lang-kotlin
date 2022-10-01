@@ -16,9 +16,15 @@ object VarcharType : ScalarType {
         when (value.type) {
             ExprValueType.STRING -> {
                 val str = value.scalar.stringValue()!!
-                val length = parameters[0]!! // Currently, if the parameter of CHAR or VARCHAR is not explicitly specified, it is considered as StringType
-                length >= str.codePointCount(0, str.length)
+                val length = VarcharTypeParameter(parameters).length
+                length === null || length >= str.codePointCount(0, str.length)
             }
             else -> false
         }
+}
+
+data class VarcharTypeParameter(val length: Int?) {
+    constructor(typeParameters: TypeParameters) : this(
+        typeParameters.getOrElse(0) { null } // Null indicates unlimited length
+    )
 }

@@ -33,8 +33,15 @@ object LegacyBinaryConcatOp : ScalarOp {
         }
 
         // Here only VARCHAR or CHAR exists
-        val leftLength = lType.parameters[0]!!
-        val rightLength = rType.parameters[0]!!
+        fun checkUnlimitedVarchar(type: CompileTimeType) =
+            type.scalarType === VarcharType && type.parameters.isEmpty()
+
+        if (checkUnlimitedVarchar(lType) || checkUnlimitedVarchar(rType)) {
+            return Successful(StringType.compileTimeType)
+        }
+
+        val leftLength = lType.parameters.getOrElse(0) { 1 }
+        val rightLength = rType.parameters.getOrElse(0) { 1 }
         val sumLength = leftLength + rightLength
         val returnType = when {
             leftType === CharType && rightType === CharType -> CharType

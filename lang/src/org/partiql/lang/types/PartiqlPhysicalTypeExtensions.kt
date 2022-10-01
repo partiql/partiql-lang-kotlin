@@ -50,15 +50,14 @@ fun PartiqlPhysical.Type.toTypedOpParameter(customTypedOpParameters: Map<String,
         BuiltInScalarType.BLOB -> TypedOpParameter(StaticType.BLOB)
         BuiltInScalarType.DATE -> TypedOpParameter(StaticType.DATE)
         BuiltInScalarType.TIME -> when (parameters.size) {
-            0 -> TypedOpParameter(StaticScalarType(TimeType(), listOf(null)))
+            0 -> TypedOpParameter(StaticScalarType(TimeType()))
             1 -> TypedOpParameter(StaticScalarType(TimeType(), parameters.map { it.value.toInt() }))
             else -> error("\"Internal Error: TIME type must have at most 1 parameters during compiling\"")
         }
         BuiltInScalarType.TIME_WITH_TIME_ZONE -> when (parameters.size) {
             0 -> TypedOpParameter(
                 StaticScalarType(
-                    TimeType(true),
-                    listOf(null)
+                    TimeType(true)
                 )
             )
             1 -> TypedOpParameter(
