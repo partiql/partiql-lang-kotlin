@@ -24,7 +24,10 @@ import org.partiql.lang.planner.transforms.DEFAULT_IMPL_NAME
  * @see [org.partiql.lang.planner.PlannerPipeline.Builder.addRelationalOperatorFactory]
  */
 internal val DEFAULT_RELATIONAL_OPERATOR_FACTORIES = listOf(
+
+    DefaultUnpivotOperatorFactory(DEFAULT_IMPL_NAME),
     InMemorySortFactory(DEFAULT_IMPL_NAME),
+
     object : ScanRelationalOperatorFactory(DEFAULT_IMPL_NAME) {
         override fun create(
             impl: PartiqlPhysical.Impl,

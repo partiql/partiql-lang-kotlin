@@ -70,6 +70,7 @@ stage in the `PlannerPipeline` and to generate performance metrics for the indiv
   query author, e.g. `true and x.id = 42` -> `x.id = 42`), `true and true` -> `true`, etc.
   - `RemoveUselessFiltersPass`, which removes useless filters introduced by the previous pass or by the query author 
   (e.g. `(filter (lit true) <bexpr>))` -> `<bexpr>`.
+- Add support for `UNPIVOT`, the behavior is expected to be compatible with the `evaluating compiler`.
 - Adds support for ORDER BY in Planner
 
 ### Changed

@@ -75,6 +75,25 @@ class LogicalResolvedToDefaultPhysicalVisitorTransformTests {
             ),
             BexprTestCase(
                 PartiqlLogicalResolved.build {
+                    unpivot(
+                        expr = globalId("foo"),
+                        asDecl = varDecl(0),
+                        atDecl = varDecl(1),
+                        byDecl = varDecl(2)
+                    )
+                },
+                PartiqlPhysical.build {
+                    unpivot(
+                        i = DEFAULT_IMPL,
+                        expr = globalId("foo"),
+                        asDecl = varDecl(0),
+                        atDecl = varDecl(1),
+                        byDecl = varDecl(2)
+                    )
+                }
+            ),
+            BexprTestCase(
+                PartiqlLogicalResolved.build {
                     sort(
                         source = scan(
                             expr = globalId("foo"),

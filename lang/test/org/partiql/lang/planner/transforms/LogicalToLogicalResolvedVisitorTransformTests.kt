@@ -795,4 +795,27 @@ class LogicalToLogicalResolvedVisitorTransformTests {
             ),
         )
     }
+
+    @ParameterizedTest
+    @ArgumentsSource(UnpivotQueryClass::class)
+    fun `unpivot queries`(tc: TestCase) = runTestCase(tc)
+    class UnpivotQueryClass : ArgumentsProviderBase() {
+        override fun getParameters() = listOf(
+            TestCase(
+                "SELECT v as v, n as n FROM UNPIVOT {'a': 1, 'b': 2} AS v AT n",
+                Expectation.Success(
+                    ResolvedId(1, 8) { localId(0) },
+                    ResolvedId(1, 16) { localId(1) },
+                ).withLocals(localVariable("v", 0), localVariable("n", 1))
+            ),
+            // No Access to the binding name in the original data source
+            TestCase(
+                "SELECT a as a, b as b FROM UNPIVOT {'a': 1, 'b': 2} AS v AT n",
+                Expectation.Problems(
+                    problem(1, 8, PlanningProblemDetails.UndefinedVariable("a", false)),
+                    problem(1, 16, PlanningProblemDetails.UndefinedVariable("b", false))
+                ),
+            ),
+        )
+    }
 }

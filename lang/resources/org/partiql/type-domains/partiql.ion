@@ -660,6 +660,10 @@ may then be further optimized by selecting better implementations of each operat
                 // value, it is converted into a singleton bag.
                 (scan expr::expr as_decl::var_decl at_decl::(? var_decl) by_decl::(? var_decl))
 
+                 // Similar to scan, the unpivot operator converts a value collection to a binding collection.
+                 // The logical plan uses unpivot operator in place of the AST's unpivot from_source node.
+                (unpivot expr::expr as_decl::var_decl at_decl::(? var_decl) by_decl::(? var_decl))
+
                 // Evaluates `predicate` within the scope of every row of `bexpr`, and only returns those
                 // rows for which `predicate` returns true.
                 (filter predicate::expr source::bexpr)
@@ -858,8 +862,9 @@ may then be further optimized by selecting better implementations of each operat
                 (project i::impl binding::var_decl args::(* arguments::expr 0))
 
                 // Operators below this point are the same as in the logical algebra, but also include an i::impl
-                // element. 
+                // element.
                 (scan i::impl expr::expr as_decl::var_decl at_decl::(? var_decl) by_decl::(? var_decl))
+                (unpivot i::impl expr::expr as_decl::var_decl at_decl::(? var_decl) by_decl::(? var_decl))
                 (filter i::impl predicate::expr source::bexpr)
                 (join
                     i::impl

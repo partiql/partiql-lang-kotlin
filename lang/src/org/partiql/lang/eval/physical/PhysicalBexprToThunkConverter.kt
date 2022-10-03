@@ -21,6 +21,7 @@ import org.partiql.lang.eval.physical.operators.RelationalOperatorFactoryKey
 import org.partiql.lang.eval.physical.operators.RelationalOperatorKind
 import org.partiql.lang.eval.physical.operators.ScanRelationalOperatorFactory
 import org.partiql.lang.eval.physical.operators.SortOperatorFactory
+import org.partiql.lang.eval.physical.operators.UnpivotRelationalOperatorFactory
 import org.partiql.lang.eval.physical.operators.VariableBinding
 import org.partiql.lang.eval.physical.operators.valueExpression
 import org.partiql.lang.util.toIntExact
@@ -90,6 +91,25 @@ internal class PhysicalBexprToThunkConverter(
         )
 
         // wrap in thunk
+        return bindingsExpr.toRelationThunk(node.metas)
+    }
+
+    override fun convertUnpivot(node: PartiqlPhysical.Bexpr.Unpivot): RelationThunkEnv {
+        val valueExpr = exprConverter.convert(node.expr).toValueExpr(node.expr.metas.sourceLocationMeta)
+        val asSetter = node.asDecl.toSetVariableFunc()
+        val atSetter = node.atDecl?.toSetVariableFunc()
+        val bySetter = node.byDecl?.toSetVariableFunc()
+
+        val factory = findOperatorFactory<UnpivotRelationalOperatorFactory>(RelationalOperatorKind.UNPIVOT, node.i.name.text)
+
+        val bindingsExpr = factory.create(
+            impl = node.i,
+            expr = valueExpr,
+            setAsVar = asSetter,
+            setAtVar = atSetter,
+            setByVar = bySetter
+        )
+
         return bindingsExpr.toRelationThunk(node.metas)
     }
 
