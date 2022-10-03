@@ -1795,7 +1795,6 @@ class ParserErrorsTest : SqlParserTestBase() {
             ),
             targetParsers = setOf(ParserTypes.SQL_PARSER)
         )
-        // This is changed because the window function adds an additional rule that uses ORDER BY.
         checkInputThrowingParserException(
             "SELECT a FROM tb ORDER foo",
             ErrorCode.PARSE_UNEXPECTED_TOKEN,
