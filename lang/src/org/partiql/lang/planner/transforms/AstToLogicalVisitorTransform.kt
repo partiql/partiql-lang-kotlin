@@ -59,51 +59,46 @@ internal class AstToLogicalVisitorTransform(
             PartiqlLogical.build { limit(transformExpr(it), algebra, node.limit.metas) }
         } ?: algebra
 
-        return convertProjectionToBindingsToValues(node, algebra)
+        val expr = transformProjection(node, algebra)
+
+        // SELECT DISTINCT ...
+        if (node.setq != null && node.setq is PartiqlAst.SetQuantifier.Distinct) {
+            return PartiqlLogical.build { call("filter_distinct", expr) }
+        }
+
+        return expr
     }
 
-    private fun convertProjectionToBindingsToValues(node: PartiqlAst.Expr.Select, algebra: PartiqlLogical.Bexpr) =
+    private fun transformProjection(node: PartiqlAst.Expr.Select, algebra: PartiqlLogical.Bexpr) =
         PartiqlLogical.build {
-            bindingsToValues(
-                when (val project = node.project) {
-                    is PartiqlAst.Projection.ProjectValue -> transformExpr(project.value)
-                    is PartiqlAst.Projection.ProjectList -> {
-                        struct(
-                            List(project.projectItems.size) { idx ->
-                                when (val projectItem = project.projectItems[idx]) {
-                                    is PartiqlAst.ProjectItem.ProjectExpr ->
-                                        structField(
-                                            lit(
-                                                projectItem.asAlias?.toIonElement()
-                                                    ?: errAstNotNormalized("SELECT-list item alias not specified")
-                                            ),
-                                            transformExpr(projectItem.expr),
-                                        )
-                                    is PartiqlAst.ProjectItem.ProjectAll -> {
-                                        structFields(transformExpr(projectItem.expr), projectItem.metas)
-                                    }
-                                }
-                            }
-                        )
-                    }
-                    is PartiqlAst.Projection.ProjectStar ->
-                        // `SELECT * FROM bar AS b` is rewritten to `SELECT b.* FROM bar as b` by
-                        // [SelectStarVisitorTransform]. Therefore, there is no need to support `SELECT *` here.
-                        errAstNotNormalized("Expected SELECT * to be removed")
-
-                    is PartiqlAst.Projection.ProjectPivot -> {
-                        problemHandler.handleUnimplementedFeature(node, "PIVOT")
-                        INVALID_EXPR
-                    }
-                },
-                algebra,
-                node.project.metas
-            )
-        }.let { q ->
-            // in case of SELECT DISTINCT, wrap bindingsToValues in call to filter_distinct
-            when (node.setq) {
-                null, is PartiqlAst.SetQuantifier.All -> q
-                is PartiqlAst.SetQuantifier.Distinct -> PartiqlLogical.build { call("filter_distinct", q) }
+            when (val project = node.project) {
+                is PartiqlAst.Projection.ProjectValue -> {
+                    bindingsToValues(
+                        exp = transformExpr(project.value),
+                        query = algebra,
+                        metas = project.metas
+                    )
+                }
+                is PartiqlAst.Projection.ProjectList -> {
+                    bindingsToValues(
+                        exp = transformProjectList(project),
+                        query = algebra,
+                        metas = project.metas
+                    )
+                }
+                is PartiqlAst.Projection.ProjectStar -> {
+                    // `SELECT * FROM bar AS b` is rewritten to `SELECT b.* FROM bar as b` by
+                    // [SelectStarVisitorTransform]. Therefore, there is no need to support `SELECT *` here.
+                    errAstNotNormalized("Expected SELECT * to be removed")
+                }
+                is PartiqlAst.Projection.ProjectPivot -> {
+                    pivot(
+                        input = algebra,
+                        key = transformExpr(project.key),
+                        value = transformExpr(project.value),
+                        metas = project.metas
+                    )
+                }
             }
         }
 
@@ -308,6 +303,27 @@ internal class AstToLogicalVisitorTransform(
                     )
                 },
                 metas = node.metas
+            )
+        }
+
+    private fun transformProjectList(node: PartiqlAst.Projection.ProjectList): PartiqlLogical.Expr =
+        PartiqlLogical.build {
+            struct(
+                List(node.projectItems.size) { idx ->
+                    when (val projectItem = node.projectItems[idx]) {
+                        is PartiqlAst.ProjectItem.ProjectExpr ->
+                            structField(
+                                lit(
+                                    projectItem.asAlias?.toIonElement()
+                                        ?: errAstNotNormalized("SELECT-list item alias not specified")
+                                ),
+                                transformExpr(projectItem.expr),
+                            )
+                        is PartiqlAst.ProjectItem.ProjectAll -> {
+                            structFields(transformExpr(projectItem.expr), projectItem.metas)
+                        }
+                    }
+                }
             )
         }
 }

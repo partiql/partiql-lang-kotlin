@@ -398,6 +398,21 @@ internal data class LogicalToLogicalResolvedVisitorTransform(
     }
 
     /**
+     * Rewrites PIVOT with resolved variables of the relevant scope
+     */
+    override fun transformExprPivot(node: PartiqlLogical.Expr.Pivot): PartiqlLogicalResolved.Expr {
+        val scope = getOutputScope(node.input).concatenate(this.inputScope)
+        return PartiqlLogicalResolved.build {
+            pivot(
+                input = transformBexpr(node.input),
+                key = withInputScope(scope) { transformExpr(node.key) },
+                value = withInputScope(scope) { transformExpr(node.value) },
+                metas = transformMetas(node.metas)
+            )
+        }
+    }
+
+    /**
      * This should be called any time we create a [LocalScope] with more than one variable to prevent duplicate
      * variable names.  When checking for duplication, the letter case of the variable names is not considered.
      *
@@ -508,5 +523,6 @@ internal data class LogicalToLogicalResolvedVisitorTransform(
 
 /** Marks a variable for dynamic resolution--i.e. if undefined, this vardecl will be included in any dynamic_id lookup. */
 private fun PartiqlLogical.VarDecl.markForDynamicResolution() = this.withMeta("\$include_in_dynamic_resolution", Unit)
+
 /** Returns true of the [VarDecl] has been marked to participate in unqualified field resolution */
 private val PartiqlLogical.VarDecl.includeInDynamicResolution get() = this.metas.containsKey("\$include_in_dynamic_resolution")

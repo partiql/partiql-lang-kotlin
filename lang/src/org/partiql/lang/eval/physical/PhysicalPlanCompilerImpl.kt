@@ -266,6 +266,7 @@ internal class PhysicalPlanCompilerImpl(
             // bag operators
             is PartiqlPhysical.Expr.BagOp -> compileBagOp(expr, metas)
             is PartiqlPhysical.Expr.BindingsToValues -> compileBindingsToValues(expr)
+            is PartiqlPhysical.Expr.Pivot -> compilePivot(expr, metas)
         }
     }
 
@@ -1851,6 +1852,26 @@ internal class PhysicalPlanCompilerImpl(
                 is PartiqlPhysical.SetQuantifier.Distinct -> op.eval(l, r).distinct()
             }
             valueFactory.newBag(result)
+        }
+    }
+
+    private fun compilePivot(expr: PartiqlPhysical.Expr.Pivot, metas: MetaContainer): PhysicalPlanThunk {
+        val inputBExpr: RelationThunkEnv = bexperConverter.convert(expr.input)
+        // The names are intentionally flipped for clarity; consider fixing this in the AST
+        val valueExpr = compileAstExpr(expr.key)
+        val keyExpr = compileAstExpr(expr.value)
+        return thunkFactory.thunkEnv(metas) { env ->
+            val attributes: Sequence<ExprValue> = sequence {
+                val relation = inputBExpr(env)
+                while (relation.nextRow()) {
+                    val key = keyExpr.invoke(env)
+                    if (key.type.isText) {
+                        val value = valueExpr.invoke(env)
+                        yield(value.namedValue(key))
+                    }
+                }
+            }
+            valueFactory.newStruct(attributes, StructOrdering.UNORDERED)
         }
     }
 

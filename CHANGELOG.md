@@ -45,6 +45,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - https://github.com/partiql/partiql-docs/issues/27
 - Logical plan representation of `INSERT` DML with `ON CONFLICT DO REPLACE EXCLUDED` based on [RFC-0011](https://github.com/partiql/partiql-docs/blob/main/RFCs/0011-partiql-insert.md)
 - Enabled projection alias support for ORDER BY clause
+- Adds support for PIVOT in the planner consistent with `EvaluatingCompiler`
 
 #### Experimental Planner Additions
 
