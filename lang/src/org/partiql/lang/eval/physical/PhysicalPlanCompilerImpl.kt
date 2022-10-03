@@ -18,7 +18,7 @@ import OTS.IMP.org.partiql.ots.legacy.types.Int2Type
 import OTS.IMP.org.partiql.ots.legacy.types.Int4Type
 import OTS.IMP.org.partiql.ots.legacy.types.Int8Type
 import OTS.IMP.org.partiql.ots.legacy.types.IntType
-import OTS.ITF.org.partiql.ots.Plugin
+import OTS.ITF.org.partiql.ots.type.ScalarType
 import com.amazon.ion.IonString
 import com.amazon.ion.IonValue
 import com.amazon.ion.Timestamp
@@ -143,7 +143,7 @@ internal class PhysicalPlanCompilerImpl(
     private val procedures: Map<String, StoredProcedure>,
     private val evaluatorOptions: EvaluatorOptions = EvaluatorOptions.standard(),
     private val bexperConverter: PhysicalBexprToThunkConverter,
-    private val plugin: Plugin
+    private val aliasToScalarType: Map<String, ScalarType>
 ) : PhysicalPlanCompiler {
     private val errorSignaler = evaluatorOptions.typingMode.createErrorSignaler(valueFactory)
     private val thunkFactory = evaluatorOptions.typingMode.createThunkFactory<EvaluatorState>(
@@ -174,7 +174,7 @@ internal class PhysicalPlanCompilerImpl(
      * hope that long-running compilations may be aborted by the caller.
      */
     fun compile(plan: PartiqlPhysical.Plan): Expression {
-        PartiqlPhysicalSanityValidator(evaluatorOptions, plugin).walkPlan(plan)
+        PartiqlPhysicalSanityValidator(evaluatorOptions, aliasToScalarType).walkPlan(plan)
 
         val thunk = compileAstStatement(plan.stmt)
 
@@ -990,7 +990,7 @@ internal class PhysicalPlanCompilerImpl(
 
     private fun compileIs(expr: PartiqlPhysical.Expr.IsType, metas: MetaContainer): PhysicalPlanThunk {
         val expThunk = compileAstExpr(expr.value)
-        val typedOpParameter = expr.type.toTypedOpParameter(customTypedOpParameters, plugin)
+        val typedOpParameter = expr.type.toTypedOpParameter(customTypedOpParameters, aliasToScalarType)
         if (typedOpParameter.staticType is AnyType) {
             return thunkFactory.thunkEnv(metas) { valueFactory.newBoolean(true) }
         }
@@ -1021,7 +1021,7 @@ internal class PhysicalPlanCompilerImpl(
 
     private fun compileCastHelper(value: PartiqlPhysical.Expr, asType: PartiqlPhysical.Type, metas: MetaContainer): PhysicalPlanThunk {
         val expThunk = compileAstExpr(value)
-        val typedOpParameter = asType.toTypedOpParameter(customTypedOpParameters, plugin)
+        val typedOpParameter = asType.toTypedOpParameter(customTypedOpParameters, aliasToScalarType)
         if (typedOpParameter.staticType is AnyType) {
             return expThunk
         }
@@ -1104,7 +1104,7 @@ internal class PhysicalPlanCompilerImpl(
         thunkFactory.thunkEnv(metas, compileCastHelper(expr.value, expr.asType, metas))
 
     private fun compileCanCast(expr: PartiqlPhysical.Expr.CanCast, metas: MetaContainer): PhysicalPlanThunk {
-        val typedOpParameter = expr.asType.toTypedOpParameter(customTypedOpParameters, plugin)
+        val typedOpParameter = expr.asType.toTypedOpParameter(customTypedOpParameters, aliasToScalarType)
         if (typedOpParameter.staticType is AnyType) {
             return thunkFactory.thunkEnv(metas) { valueFactory.newBoolean(true) }
         }
@@ -1139,7 +1139,7 @@ internal class PhysicalPlanCompilerImpl(
     }
 
     private fun compileCanLosslessCast(expr: PartiqlPhysical.Expr.CanLosslessCast, metas: MetaContainer): PhysicalPlanThunk {
-        val typedOpParameter = expr.asType.toTypedOpParameter(customTypedOpParameters, plugin)
+        val typedOpParameter = expr.asType.toTypedOpParameter(customTypedOpParameters, aliasToScalarType)
         if (typedOpParameter.staticType is AnyType) {
             return thunkFactory.thunkEnv(metas) { valueFactory.newBoolean(true) }
         }

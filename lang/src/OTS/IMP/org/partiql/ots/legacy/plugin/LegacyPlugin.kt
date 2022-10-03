@@ -64,12 +64,6 @@ class LegacyPlugin : Plugin {
         VarcharType
     )
 
-    private val aliasToScalarType = scalarTypes.flatMap { scalarType ->
-        scalarType.aliases.map { typeAlias -> typeAlias to scalarType }
-    }.associate { it.first to it.second }
-
-    override fun findScalarType(typeAlias: String) = aliasToScalarType[typeAlias]
-
     override val binaryPlusOp: ScalarOp = LegacyBinaryPlusOp
     override val binaryMinusOp: ScalarOp = LegacyBinaryMinusOp
     override val binaryTimesOp: ScalarOp = LegacyBinaryTimesOp

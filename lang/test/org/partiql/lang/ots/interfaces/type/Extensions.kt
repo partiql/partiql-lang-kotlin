@@ -16,9 +16,6 @@ internal val valueFactory = ExprValueFactory.standard(ion)
 internal open class DummyPlugin : Plugin {
     override val scalarTypes: List<ScalarType>
         get() = error("Not yet implemented")
-    override fun findScalarType(typeAlias: String): ScalarType? {
-        error("Not yet implemented")
-    }
     override val posOp: ScalarOp
         get() = error("Not yet implemented")
     override val negOp: ScalarOp

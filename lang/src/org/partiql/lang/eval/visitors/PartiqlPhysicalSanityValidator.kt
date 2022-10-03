@@ -1,6 +1,6 @@
 package org.partiql.lang.eval.visitors
 
-import OTS.ITF.org.partiql.ots.Plugin
+import OTS.ITF.org.partiql.ots.type.ScalarType
 import com.amazon.ionelement.api.IntElement
 import com.amazon.ionelement.api.IntElementSize
 import com.amazon.ionelement.api.TextElement
@@ -27,7 +27,7 @@ import org.partiql.lang.util.propertyValueMapOf
  */
 class PartiqlPhysicalSanityValidator(
     private val evaluatorOptions: EvaluatorOptions,
-    private val plugin: Plugin
+    private val aliasToScalarType: Map<String, ScalarType>
 ) : PartiqlPhysical.Visitor() {
 
     /**
@@ -65,7 +65,7 @@ class PartiqlPhysicalSanityValidator(
     override fun visitTypeScalarType(node: PartiqlPhysical.Type.ScalarType) {
         super.visitTypeScalarType(node)
 
-        val scalarType = plugin.findScalarType(node.alias.text) ?: error("No such type alias: ${node.alias.text}")
+        val scalarType = aliasToScalarType[node.alias.text] ?: error("No such type alias: ${node.alias.text}")
         if (evaluatorOptions.typedOpBehavior == TypedOpBehavior.HONOR_PARAMETERS) {
             scalarType.validateParameters(node.parameters.map { it.value.toInt() })
         }

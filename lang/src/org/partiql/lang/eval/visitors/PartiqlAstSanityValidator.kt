@@ -16,7 +16,7 @@
 package org.partiql.lang.eval.visitors
 
 import OTS.IMP.org.partiql.ots.legacy.plugin.LegacyPlugin
-import OTS.ITF.org.partiql.ots.Plugin
+import OTS.ITF.org.partiql.ots.type.ScalarType
 import com.amazon.ionelement.api.IntElement
 import com.amazon.ionelement.api.IntElementSize
 import com.amazon.ionelement.api.TextElement
@@ -32,6 +32,7 @@ import org.partiql.lang.eval.EvaluationException
 import org.partiql.lang.eval.TypedOpBehavior
 import org.partiql.lang.eval.err
 import org.partiql.lang.eval.errorContextFrom
+import org.partiql.lang.util.mapAliasToScalarType
 
 /**
  * Provides rules for basic AST sanity checks that should be performed before any attempt at further AST processing.
@@ -46,17 +47,17 @@ import org.partiql.lang.eval.errorContextFrom
  */
 class PartiqlAstSanityValidator : PartiqlAst.Visitor() {
 
-    private var plugin: Plugin = LegacyPlugin()
+    private var aliasToScalarType: Map<String, ScalarType> = LegacyPlugin().mapAliasToScalarType()
 
     private var compileOptions = CompileOptions.standard()
 
     fun validate(
         statement: PartiqlAst.Statement,
         compileOptions: CompileOptions = CompileOptions.standard(),
-        plugin: Plugin = LegacyPlugin()
+        aliasToScalarType: Map<String, ScalarType> = LegacyPlugin().mapAliasToScalarType()
     ) {
         this.compileOptions = compileOptions
-        this.plugin = plugin
+        this.aliasToScalarType = aliasToScalarType
         this.walkStatement(statement)
     }
 
@@ -76,7 +77,7 @@ class PartiqlAstSanityValidator : PartiqlAst.Visitor() {
     override fun visitTypeScalarType(node: PartiqlAst.Type.ScalarType) {
         super.visitTypeScalarType(node)
 
-        val scalarType = plugin.findScalarType(node.alias.text) ?: error("No such type alias: ${node.alias.text}")
+        val scalarType = aliasToScalarType[node.alias.text] ?: error("No such type alias: ${node.alias.text}")
         if (compileOptions.typedOpBehavior == TypedOpBehavior.HONOR_PARAMETERS) {
             scalarType.validateParameters(node.parameters.map { it.value.toInt() })
         }

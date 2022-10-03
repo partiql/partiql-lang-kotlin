@@ -1,6 +1,7 @@
 package org.partiql.lang.ast.passes.inference
 
 import OTS.ITF.org.partiql.ots.Plugin
+import OTS.ITF.org.partiql.ots.type.ScalarType
 import org.partiql.lang.ast.passes.SemanticException
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.staticType
@@ -13,6 +14,8 @@ import org.partiql.lang.eval.visitors.StaticTypeVisitorTransform
 import org.partiql.lang.types.FunctionSignature
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.types.TypedOpParameter
+import org.partiql.lang.util.mapAliasToScalarType
+import org.partiql.lang.util.validate
 
 /**
  * Infers the [StaticType] of a [PartiqlAst.Statement]. Assumes [StaticTypeVisitorTransform] was run before on this
@@ -30,6 +33,15 @@ class StaticTypeInferencer(
     private val customTypedOpParameters: Map<String, TypedOpParameter>,
     private val plugin: Plugin
 ) {
+    // Initialize a map from a type alias to a scalar type, as part of work for PartiQL inferencer to install the plugin
+    private val aliasToScalarType: Map<String, ScalarType>
+
+    init {
+        plugin.validate()
+
+        aliasToScalarType = plugin.mapAliasToScalarType()
+    }
+
     /**
      * Infers the [StaticType] of [node] and returns an [InferenceResult]. Currently does not support inference for
      * [PartiqlAst.Statement.Dml] and [PartiqlAst.Statement.Ddl] statements.
@@ -44,7 +56,7 @@ class StaticTypeInferencer(
      */
     fun inferStaticType(node: PartiqlAst.Statement): InferenceResult {
         val problemCollector = ProblemCollector()
-        val inferencer = StaticTypeInferenceVisitorTransform(globalBindings, customFunctionSignatures, customTypedOpParameters, problemCollector, plugin)
+        val inferencer = StaticTypeInferenceVisitorTransform(globalBindings, customFunctionSignatures, customTypedOpParameters, problemCollector, plugin, aliasToScalarType)
         val transformedPartiqlAst = inferencer.transformStatement(node)
         val inferredStaticType = when (transformedPartiqlAst) {
             is PartiqlAst.Statement.Query ->

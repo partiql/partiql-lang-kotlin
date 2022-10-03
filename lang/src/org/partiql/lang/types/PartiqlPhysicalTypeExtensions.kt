@@ -1,18 +1,17 @@
 package org.partiql.lang.types
 
-import OTS.ITF.org.partiql.ots.Plugin
 import OTS.ITF.org.partiql.ots.type.ScalarType
 import org.partiql.lang.domains.PartiqlPhysical
 
 /**
  * Helper to convert [PartiqlPhysical.Type] in AST to a [TypedOpParameter].
  */
-fun PartiqlPhysical.Type.toTypedOpParameter(customTypedOpParameters: Map<String, TypedOpParameter>, plugin: Plugin): TypedOpParameter = when (this) {
+fun PartiqlPhysical.Type.toTypedOpParameter(customTypedOpParameters: Map<String, TypedOpParameter>, aliasToScalarType: Map<String, ScalarType>): TypedOpParameter = when (this) {
     is PartiqlPhysical.Type.MissingType -> TypedOpParameter(StaticType.MISSING)
     is PartiqlPhysical.Type.NullType -> TypedOpParameter(StaticType.NULL)
     is PartiqlPhysical.Type.ScalarType -> TypedOpParameter(
         StaticScalarType(
-            plugin.findScalarType(alias.text) ?: error("No such type alias: ${alias.text}"),
+            aliasToScalarType[alias.text] ?: error("No such type alias: ${alias.text}"),
             parameters.map { it.value.toInt() }
         )
     )

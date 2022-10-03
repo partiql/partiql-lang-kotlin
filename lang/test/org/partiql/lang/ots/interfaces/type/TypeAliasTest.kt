@@ -9,6 +9,7 @@ import org.partiql.lang.compiler.PartiQLCompilerBuilder
 import org.partiql.lang.eval.visitors.PartiqlAstSanityValidator
 import org.partiql.lang.planner.PlannerPipeline
 import org.partiql.lang.syntax.PartiQLParser
+import org.partiql.lang.util.mapAliasToScalarType
 
 class TypeAliasTest {
     private val parser = PartiQLParser(ion)
@@ -24,16 +25,6 @@ class TypeAliasTest {
         val myPlugin = object : DummyPlugin() {
             override val scalarTypes: List<ScalarType>
                 get() = listOf(myType)
-
-            override fun findScalarType(typeAlias: String): ScalarType? {
-                scalarTypes.forEach {
-                    if (typeAlias in it.aliases) {
-                        return it
-                    }
-                }
-
-                return null
-            }
         }
 
         // Parsing should always succeed
@@ -41,8 +32,8 @@ class TypeAliasTest {
         val ast1 = parser.parseAstStatement("CAST(1 AS another_alias)")
 
         // The following should not throw error since they are valid type aliases
-        sanityValidator.validate(ast0, plugin = myPlugin)
-        sanityValidator.validate(ast1, plugin = myPlugin)
+        sanityValidator.validate(ast0, aliasToScalarType = myPlugin.mapAliasToScalarType())
+        sanityValidator.validate(ast1, aliasToScalarType = myPlugin.mapAliasToScalarType())
     }
 
     // Error cases
@@ -55,16 +46,6 @@ class TypeAliasTest {
         val myPlugin = object : DummyPlugin() {
             override val scalarTypes: List<ScalarType>
                 get() = listOf(myType)
-
-            override fun findScalarType(typeAlias: String): ScalarType? {
-                scalarTypes.forEach {
-                    if (typeAlias in it.aliases) {
-                        return it
-                    }
-                }
-
-                return null
-            }
         }
 
         // Parsing should always succeed
@@ -72,7 +53,7 @@ class TypeAliasTest {
 
         // The following should throw error due to no such scalar type
         assertThrows<RuntimeException> {
-            sanityValidator.validate(ast, plugin = myPlugin)
+            sanityValidator.validate(ast, aliasToScalarType = myPlugin.mapAliasToScalarType())
         }
     }
 
@@ -87,16 +68,6 @@ class TypeAliasTest {
         val myPlugin = object : DummyPlugin() {
             override val scalarTypes: List<ScalarType>
                 get() = listOf(myType0, myType1)
-
-            override fun findScalarType(typeAlias: String): ScalarType? {
-                scalarTypes.forEach {
-                    if (typeAlias in it.aliases) {
-                        return it
-                    }
-                }
-
-                return null
-            }
         }
 
         assertThrows<RuntimeException> {
@@ -118,16 +89,6 @@ class TypeAliasTest {
         val myPlugin = object : DummyPlugin() {
             override val scalarTypes: List<ScalarType>
                 get() = listOf(myType)
-
-            override fun findScalarType(typeAlias: String): ScalarType? {
-                scalarTypes.forEach {
-                    if (typeAlias in it.aliases) {
-                        return it
-                    }
-                }
-
-                return null
-            }
         }
 
         assertThrows<RuntimeException> {
@@ -152,16 +113,6 @@ class TypeAliasTest {
         val myPlugin = object : DummyPlugin() {
             override val scalarTypes: List<ScalarType>
                 get() = listOf(myType0, myType1)
-
-            override fun findScalarType(typeAlias: String): ScalarType? {
-                scalarTypes.forEach {
-                    if (typeAlias in it.aliases) {
-                        return it
-                    }
-                }
-
-                return null
-            }
         }
 
         assertThrows<RuntimeException> {

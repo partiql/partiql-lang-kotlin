@@ -2,6 +2,13 @@ package org.partiql.lang.util
 
 import OTS.ITF.org.partiql.ots.Plugin
 
+internal fun Plugin.mapAliasToScalarType() = scalarTypes.flatMap { scalarType ->
+    scalarType.aliases.map { typeAlias -> typeAlias to scalarType }
+}.associate { it.first to it.second }
+
+/**
+ * Used by PartiQL compile pipeline to validate a plugin when taking it at build time
+ */
 internal fun Plugin.validate() {
     // Validate scalar types
     val typeNames = mutableSetOf<String>()

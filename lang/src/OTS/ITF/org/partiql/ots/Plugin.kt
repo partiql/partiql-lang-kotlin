@@ -12,11 +12,6 @@ interface Plugin {
      */
     val scalarTypes: List<ScalarType>
 
-    /**
-     * Find a scalar type from its type alias
-     */
-    fun findScalarType(typeAlias: String): ScalarType?
-
     val posOp: ScalarOp
     val negOp: ScalarOp
     val binaryPlusOp: ScalarOp
