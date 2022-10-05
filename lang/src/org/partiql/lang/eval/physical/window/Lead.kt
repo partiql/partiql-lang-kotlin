@@ -11,7 +11,7 @@ class Lead : NavigationWindowFunction {
     override lateinit var currentPartition: List<Array<ExprValue>>
     override var currentPos: Int = 0
     override val signature: WindowFunctionSignature = WindowFunctionSignature(
-        name = "lag",
+        name = "lead",
     )
 
     override fun processRow(state: EvaluatorState, arguments: List<ValueExpression>, currentPos: Int): ExprValue {
