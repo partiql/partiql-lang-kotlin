@@ -20,6 +20,7 @@ import org.partiql.lang.domains.PartiqlLogicalResolved
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.errors.ProblemCollector
 import org.partiql.lang.eval.visitors.FromSourceAliasVisitorTransform
+import org.partiql.lang.eval.visitors.OrderBySortSpecVisitorTransform
 import org.partiql.lang.eval.visitors.PipelinedVisitorTransform
 import org.partiql.lang.eval.visitors.SelectListItemAliasVisitorTransform
 import org.partiql.lang.eval.visitors.SelectStarVisitorTransform
@@ -36,13 +37,13 @@ internal class PartiQLPlannerDefault(
     private val options: PartiQLPlanner.Options
 ) : PartiQLPlanner {
 
-    private val problemHandler = ProblemCollector()
-
     override fun plan(statement: PartiqlAst.Statement): PartiQLPlanner.Result {
+
+        val problemHandler = ProblemCollector()
 
         // Step 1. Normalize the AST
         val normalized = callback.doEvent("normalize_ast", statement) {
-            statement.normalize()
+            statement.normalize(problemHandler)
         }
         if (problemHandler.hasErrors) {
             return PartiQLPlanner.Result.Error(problemHandler.problems)
@@ -50,7 +51,7 @@ internal class PartiQLPlannerDefault(
 
         // Step 2. AST -> LogicalPlan
         val logicalPlan = callback.doEvent("ast_to_logical", normalized) {
-            normalized.toLogicalPlan()
+            normalized.toLogicalPlan(problemHandler)
         }
         if (problemHandler.hasErrors) {
             return PartiQLPlanner.Result.Error(problemHandler.problems)
@@ -58,7 +59,7 @@ internal class PartiQLPlannerDefault(
 
         // Step 3. Replace variable references
         val resolvedLogicalPlan = callback.doEvent("logical_to_logical_resolved", logicalPlan) {
-            logicalPlan.toResolvedPlan()
+            logicalPlan.toResolvedPlan(problemHandler)
         }
         if (problemHandler.hasErrors) {
             return PartiQLPlanner.Result.Error(problemHandler.problems)
@@ -66,7 +67,7 @@ internal class PartiQLPlannerDefault(
 
         // Step 4. LogicalPlan -> PhysicalPlan
         val physicalPlan = callback.doEvent("logical_resolved_to_physical", resolvedLogicalPlan) {
-            resolvedLogicalPlan.toPhysicalPlan()
+            resolvedLogicalPlan.toPhysicalPlan(problemHandler)
         }
         if (problemHandler.hasErrors) {
             return PartiQLPlanner.Result.Error(problemHandler.problems)
@@ -97,10 +98,11 @@ internal class PartiQLPlannerDefault(
      *  2. Synthesizes unspecified `FROM <expr> AS ...` aliases
      *  3. Changes `SELECT * FROM a, b` to SELECT a.*, b.* FROM a, b`
      */
-    private fun PartiqlAst.Statement.normalize(): PartiqlAst.Statement {
+    private fun PartiqlAst.Statement.normalize(problems: ProblemCollector): PartiqlAst.Statement {
         val transform = PipelinedVisitorTransform(
             SelectListItemAliasVisitorTransform(),
             FromSourceAliasVisitorTransform(),
+            OrderBySortSpecVisitorTransform(),
             SelectStarVisitorTransform()
         )
         return transform.transformStatement(this)
@@ -109,10 +111,8 @@ internal class PartiQLPlannerDefault(
     /**
      * See [AstToLogicalVisitorTransform]
      */
-    private fun PartiqlAst.Statement.toLogicalPlan(): PartiqlLogical.Plan {
-        val transform = AstToLogicalVisitorTransform(
-            problemHandler = problemHandler
-        )
+    private fun PartiqlAst.Statement.toLogicalPlan(problems: ProblemCollector): PartiqlLogical.Plan {
+        val transform = AstToLogicalVisitorTransform(problems)
         return PartiqlLogical.Plan(
             stmt = transform.transformStatement(this),
             version = PartiQLPlanner.PLAN_VERSION.asPrimitive()
@@ -122,11 +122,11 @@ internal class PartiQLPlannerDefault(
     /**
      * See [LogicalToLogicalResolvedVisitorTransform]
      */
-    private fun PartiqlLogical.Plan.toResolvedPlan(): PartiqlLogicalResolved.Plan {
+    private fun PartiqlLogical.Plan.toResolvedPlan(problems: ProblemCollector): PartiqlLogicalResolved.Plan {
         val (planWithAllocatedVariables, allLocals) = this.allocateVariableIds()
         val transform = LogicalToLogicalResolvedVisitorTransform(
             allowUndefinedVariables = options.allowedUndefinedVariables,
-            problemHandler = problemHandler,
+            problemHandler = problems,
             globals = globalVariableResolver,
         )
         return transform.transformPlan(planWithAllocatedVariables).copy(locals = allLocals)
@@ -135,8 +135,8 @@ internal class PartiQLPlannerDefault(
     /**
      * See [LogicalResolvedToDefaultPhysicalVisitorTransform]
      */
-    private fun PartiqlLogicalResolved.Plan.toPhysicalPlan(): PartiqlPhysical.Plan {
-        val transform = LogicalResolvedToDefaultPhysicalVisitorTransform(problemHandler)
+    private fun PartiqlLogicalResolved.Plan.toPhysicalPlan(problems: ProblemCollector): PartiqlPhysical.Plan {
+        val transform = LogicalResolvedToDefaultPhysicalVisitorTransform(problems)
         return transform.transformPlan(this)
     }
 }

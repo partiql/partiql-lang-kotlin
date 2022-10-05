@@ -18,8 +18,10 @@ rootProject.name = 'PartiQL'
 include('lang',
         'cli', 
         'examples', 
-        'testscript',
-        'pts',
         'extensions',
-        'partiql-grammar'
+        'partiql-grammar',
+        'lib:partiql-isl',
+        'test:partiql-pts',
+        'test:partiql-tests-runner',
+        'test:partiql-testscript'
 )

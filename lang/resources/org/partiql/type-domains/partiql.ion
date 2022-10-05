@@ -622,6 +622,10 @@ may then be further optimized by selecting better implementations of each operat
                 // TODO:  in the future, when the legacy AST compiler has been removed and the AST is no longer
                 // part of the public API, we should consider moving this definition to the partiql_ast domain.
                 (struct parts::(* struct_part 1))
+
+                // The PIVOT clause produces a single tuple whose attributes are the key and value expression evaluated
+                //   for all input tuples. The tuple is a value, not a bindings expr, hence why this isn't an operator.
+                (pivot input::bexpr key::expr value::expr)
             )
         )
 
@@ -661,6 +665,10 @@ may then be further optimized by selecting better implementations of each operat
                 // value, it is converted into a singleton bag.
                 (scan expr::expr as_decl::var_decl at_decl::(? var_decl) by_decl::(? var_decl))
 
+                 // Similar to scan, the unpivot operator converts a value collection to a binding collection.
+                 // The logical plan uses unpivot operator in place of the AST's unpivot from_source node.
+                (unpivot expr::expr as_decl::var_decl at_decl::(? var_decl) by_decl::(? var_decl))
+
                 // Evaluates `predicate` within the scope of every row of `bexpr`, and only returns those
                 // rows for which `predicate` returns true.
                 (filter predicate::expr source::bexpr)
@@ -671,7 +679,11 @@ may then be further optimized by selecting better implementations of each operat
                     join_type::join_type
                     left::bexpr
                     right::bexpr
-                    predicate::(? expr))
+                    predicate::(? expr)
+                )
+
+                // Converts a bindings collection into a sorted bindings collection.
+                (sort source::bexpr sort_specs::(* sort_spec 1))
 
                 // Skips `row_count` rows, then emits all remaining rows.
                 (offset row_count::expr source::bexpr)
@@ -726,12 +738,8 @@ may then be further optimized by selecting better implementations of each operat
             grouping_strategy
             group_key
             group_key_list
-            order_by
-            sort_spec
-            ordering_spec
-
+            order_by             // Replaced with SORT node
             let
-
             dml_op
             dml_op_list
             ddl_op
@@ -860,8 +868,8 @@ may then be further optimized by selecting better implementations of each operat
 
                 // Operators below this point are the same as in the logical algebra, but also include an i::impl
                 // element.
-
                 (scan i::impl expr::expr as_decl::var_decl at_decl::(? var_decl) by_decl::(? var_decl))
+                (unpivot i::impl expr::expr as_decl::var_decl at_decl::(? var_decl) by_decl::(? var_decl))
                 (filter i::impl predicate::expr source::bexpr)
                 (join
                     i::impl
@@ -870,6 +878,7 @@ may then be further optimized by selecting better implementations of each operat
                     right::bexpr
                     predicate::(? expr))
 
+                (sort i::impl source::bexpr sort_specs::(* sort_spec 1))
                 (offset i::impl row_count::expr source::bexpr)
                 (limit i::impl row_count::expr source::bexpr)
                 (let i::impl source::bexpr bindings::(* let_binding 1))

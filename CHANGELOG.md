@@ -46,6 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - https://github.com/partiql/partiql-docs/issues/27
 - Logical plan representation of `INSERT` DML with `ON CONFLICT DO REPLACE EXCLUDED` based on [RFC-0011](https://github.com/partiql/partiql-docs/blob/main/RFCs/0011-partiql-insert.md)
 - Enabled projection alias support for ORDER BY clause
+- Adds support for PIVOT in the planner consistent with `EvaluatingCompiler`
 
 #### Experimental Planner Additions
 
@@ -71,6 +72,8 @@ stage in the `PlannerPipeline` and to generate performance metrics for the indiv
   query author, e.g. `true and x.id = 42` -> `x.id = 42`), `true and true` -> `true`, etc.
   - `RemoveUselessFiltersPass`, which removes useless filters introduced by the previous pass or by the query author 
   (e.g. `(filter (lit true) <bexpr>))` -> `<bexpr>`.
+- Add support for `UNPIVOT`, the behavior is expected to be compatible with the `evaluating compiler`.
+- Adds support for ORDER BY in Planner
 
 ### Changed
 - The default parser for all components of PartiQL is now the PartiQLParser -- see the deprecation of `SqlParser`
@@ -79,6 +82,7 @@ stage in the `PlannerPipeline` and to generate performance metrics for the indiv
 - Deprecates `SqlLexer` and `SqlParser` to be replaced with the `PartiQLParserBuilder`.
 - Deprecates helper method, `blacklist`, within `org.partiql.lang.eval` and introduced a functionally equivalent
   `org.partiql.lang.eval.denyList` method.
+- Deprecates `TypedOpParameter.LEGACY` to be replaced with `TypedOpParameter.HONOR_PARAMETERS`
 
 ### Fixed
 - Codecov report uploads in GitHub Actions workflow
@@ -90,6 +94,7 @@ stage in the `PlannerPipeline` and to generate performance metrics for the indiv
 
 ### Removed
 - README.md badge for travisci
+- **Breaking Change**: removed [ExprValueType.typeNames] as needed by the future work of legacy parser removal and OTS 
 
 ### Security
 

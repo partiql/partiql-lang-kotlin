@@ -6,5 +6,5 @@ repositories {
 dependencies {
     // Adding this dependency here in buildSrc exposes it to all build.gradle files in this project
     // which allows PIG to be invoked by the :lang project at build time.
-    implementation 'org.partiql:partiql-ir-generator:0.5.0'
+    implementation 'org.partiql:partiql-ir-generator:0.6.0'
 }

@@ -76,6 +76,7 @@ import org.partiql.lang.eval.like.parsePattern
 import org.partiql.lang.eval.namedValue
 import org.partiql.lang.eval.numberValue
 import org.partiql.lang.eval.rangeOver
+import org.partiql.lang.eval.relation.RelationType
 import org.partiql.lang.eval.sourceLocationMeta
 import org.partiql.lang.eval.stringValue
 import org.partiql.lang.eval.syntheticColumnName
@@ -110,7 +111,6 @@ import java.math.BigDecimal
 import java.util.LinkedList
 import java.util.TreeSet
 import java.util.regex.Pattern
-import kotlin.collections.ArrayList
 
 /**
  * A basic "compiler" that converts an instance of [PartiqlPhysical.Expr] to an [Expression].
@@ -132,14 +132,14 @@ import kotlin.collections.ArrayList
  *
  * [1]: https://www.complang.tuwien.ac.at/anton/lvas/sem06w/fest.pdf
  */
-internal class PhysicalExprToThunkConverterImpl(
+internal class PhysicalPlanCompilerImpl(
     private val valueFactory: ExprValueFactory,
     private val functions: Map<String, ExprFunction>,
     private val customTypedOpParameters: Map<String, TypedOpParameter>,
     private val procedures: Map<String, StoredProcedure>,
     private val evaluatorOptions: EvaluatorOptions = EvaluatorOptions.standard(),
     private val bexperConverter: PhysicalBexprToThunkConverter,
-) : PhysicalExprToThunkConverter {
+) : PhysicalPlanCompiler {
     private val errorSignaler = evaluatorOptions.typingMode.createErrorSignaler(valueFactory)
     private val thunkFactory = evaluatorOptions.typingMode.createThunkFactory<EvaluatorState>(
         evaluatorOptions.thunkOptions,
@@ -266,6 +266,7 @@ internal class PhysicalExprToThunkConverterImpl(
             // bag operators
             is PartiqlPhysical.Expr.BagOp -> compileBagOp(expr, metas)
             is PartiqlPhysical.Expr.BindingsToValues -> compileBindingsToValues(expr)
+            is PartiqlPhysical.Expr.Pivot -> compilePivot(expr, metas)
 
             is PartiqlPhysical.Expr.GraphMatch -> TODO("Physical compilation of GraphMatch expression")
         }
@@ -276,13 +277,19 @@ internal class PhysicalExprToThunkConverterImpl(
         val bexprThunk: RelationThunkEnv = bexperConverter.convert(expr.query)
 
         return thunkFactory.thunkEnv(expr.metas) { env ->
+            val relationTypeThunk = bexprThunk(env)
+            val relationType: RelationType = relationTypeThunk.relType
+
             val elements = sequence {
                 val relItr = bexprThunk(env)
                 while (relItr.nextRow()) {
                     yield(mapThunk(env))
                 }
             }
-            valueFactory.newBag(elements)
+            when (relationType) {
+                RelationType.LIST -> valueFactory.newList(elements)
+                RelationType.BAG -> valueFactory.newBag(elements)
+            }
         }
     }
 
@@ -1847,6 +1854,26 @@ internal class PhysicalExprToThunkConverterImpl(
                 is PartiqlPhysical.SetQuantifier.Distinct -> op.eval(l, r).distinct()
             }
             valueFactory.newBag(result)
+        }
+    }
+
+    private fun compilePivot(expr: PartiqlPhysical.Expr.Pivot, metas: MetaContainer): PhysicalPlanThunk {
+        val inputBExpr: RelationThunkEnv = bexperConverter.convert(expr.input)
+        // The names are intentionally flipped for clarity; consider fixing this in the AST
+        val valueExpr = compileAstExpr(expr.key)
+        val keyExpr = compileAstExpr(expr.value)
+        return thunkFactory.thunkEnv(metas) { env ->
+            val attributes: Sequence<ExprValue> = sequence {
+                val relation = inputBExpr(env)
+                while (relation.nextRow()) {
+                    val key = keyExpr.invoke(env)
+                    if (key.type.isText) {
+                        val value = valueExpr.invoke(env)
+                        yield(value.namedValue(key))
+                    }
+                }
+            }
+            valueFactory.newStruct(attributes, StructOrdering.UNORDERED)
         }
     }
 

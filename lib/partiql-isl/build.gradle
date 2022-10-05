@@ -1,0 +1,159 @@
+import org.partiql.pig.cmdline.Command
+import org.partiql.pig.cmdline.TargetLanguage
+import org.partiql.pig.errors.PigException
+
+/*
+ * Copyright 2022 Amazon.com, Inc. or its affiliates.  All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the 'License').
+ *  You may not use this file except in compliance with the License.
+ * A copy of the License is located at:
+ *
+ *      http://aws.amazon.com/apache2.0/
+ *
+ *  or in the 'license' file accompanying this file. This file is distributed on an 'AS IS' BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
+ *  language governing permissions and limitations under the License.
+ */
+
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+    id 'signing'
+    id 'org.jetbrains.dokka' version '1.6.10'
+}
+
+// lib subprojects are _currently_ versioned independently of partiql-lang-kotlin
+version = "0.2.1"
+ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
+
+dependencies {
+
+    // TODO https://github.com/partiql/partiql-lang-kotlin/issues/803
+    api 'com.amazon.ion:ion-element:1.0.0'
+    api 'org.partiql:partiql-ir-generator-runtime:0.6.0'
+
+    api 'com.amazon.ion:ion-java:1.8.0'
+    api 'com.amazon.ion:ion-schema-kotlin:1.2.1'
+
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
+    testImplementation 'org.jetbrains.kotlin:kotlin-test-junit5'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
+    testImplementation 'org.junit.vintage:junit-vintage-engine:5.7.0'
+    testImplementation 'org.junit.jupiter:junit-jupiter-params:5.7.0'
+}
+
+def PIG_SOURCE_ROOT = new File(projectDir, "build/generated-src/pig")
+def PIG_OUTPUT_DIR = new File(PIG_SOURCE_ROOT, "org/partiql/ionschema/model")
+
+// TODO replace with PIG Gradle plugin once this is completed https://github.com/partiql/partiql-ir-generator/pull/129
+task generatePigDomains {
+    group = "code generation"
+
+    // TODO: in the future, utilize the API created as part of this ticket:
+    // https://github.com/partiql/partiql-ir-generator/issues/5
+
+    project.file("${projectDir}/build/generated/pig/main/kotlin/org/partiql/ionschema/model/").mkdirs()
+
+    def typeUniverse = new File(projectDir, "src/main/pig/isl.ion")
+    def targetLanguage = new TargetLanguage.Kotlin("org.partiql.ionschema.model", PIG_OUTPUT_DIR, null)
+    def cmd = new Command.Generate(typeUniverse, targetLanguage)
+
+    // Tell gradle about the input and output of this task so that it only invokes pig when
+    // the input file has changed or the output files are missing.
+    inputs.file(typeUniverse)
+    outputs.dir(PIG_SOURCE_ROOT)
+
+    doLast {
+        try {
+            org.partiql.pig.MainKt.generateCode(cmd)
+        } catch(PigException e) {
+            System.err.println("Failed to generate PIG domains: ${e.error}")
+            throw new TaskExecutionException(generatePigDomains, e)
+        }
+    }
+}
+
+compileKotlin.dependsOn generatePigDomains
+
+sourceSets {
+    main {
+        kotlin.srcDirs += [PIG_SOURCE_ROOT]
+    }
+}
+
+tasks.dokkaHtml.configure {
+    dependsOn(generatePigDomains)
+    outputDirectory.set(file("$buildDir/javadoc"))
+    //todo: includes = ["path/to/module.md"]
+}
+
+task sourcesJar(type: Jar) {
+    from "src"
+    archiveClassifier.set("sources")
+}
+
+task javadocJar(type: Jar) {
+    from dokkaHtml
+    archiveClassifier.set("javadoc")
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            artifactId = "partiql-isl-kotlin"
+
+            from components.java
+            artifact sourcesJar
+            artifact javadocJar
+
+            pom {
+                name = "PartiQL ISL Kotlin"
+                packaging = "jar"
+                url = "https://github.com/partiql/partiql-isl-kotlin"
+                description = "An object model that allows for programmatic manipulation of Ion Schema Language schemas."
+                scm {
+                    connection = "scm:git@github.com:partiql/partiql-isl-kotlin.git"
+                    developerConnection = "scm:git@github.com:partiql/partiql-isl-kotlin.git"
+                    url = "git@github.com:partiql/partiql-isl-kotlin.git"
+                }
+                licenses {
+                    license {
+                        name = "The Apache License, Version 2.0"
+                        url = "http://www.apache.org/licenses/LICENSE-2.0.txt"
+                    }
+                }
+                developers {
+                    developer {
+                        name = "PartiQL Team"
+                        email = "partiql-team@amazon.com"
+                        organization = "PartiQL"
+                        organizationUrl = "https://github.com/partiql"
+                    }
+                }
+            }
+        }
+    }
+    repositories {
+        maven {
+            url "https://aws.oss.sonatype.org/service/local/staging/deploy/maven2"
+            credentials {
+                username ossrhUsername
+                password ossrhPassword
+            }
+        }
+    }
+}
+
+signing {
+    // Allow publishing to maven local even if we don't have the signing keys
+    // This works because when not required, the signing task will be skipped
+    // if signing.keyId, signing.password, signing.secretKeyRingFile, etc are
+    // not present in gradle.properties.
+    required { isReleaseVersion && gradle.taskGraph.hasTask("publish") }
+    sign publishing.publications.maven
+}
+
+tasks.withType(Sign) {
+    onlyIf { isReleaseVersion }
+}

@@ -117,6 +117,34 @@ class AstToLogicalVisitorTransformTests {
                     )
                 }
             ),
+            TestCase(
+                "SELECT v.*, n.* FROM UNPIVOT bar AS v AT n",
+                PartiqlLogical.build {
+                    query(
+                        bindingsToValues(
+                            struct(
+                                structFields(id("v")),
+                                structFields(id("n"))
+                            ),
+                            unpivot(id("bar"), varDecl("v"), varDecl("n"))
+                        )
+                    )
+                }
+            ),
+            TestCase(
+                "SELECT b.* FROM bar AS b ORDER BY y",
+                PartiqlLogical.build {
+                    query(
+                        bindingsToValues(
+                            struct(structFields(id("b"))),
+                            sort(
+                                scan(id("bar"), varDecl("b")),
+                                sortSpec(id("y"), asc(), nullsLast())
+                            )
+                        )
+                    )
+                }
+            ),
         )
     }
 
@@ -209,10 +237,39 @@ class AstToLogicalVisitorTransformTests {
                     )
                 }
             ),
+            TestCase(
+                "PIVOT x.v AT x.a FROM << {'a': 'first', 'v': 'john'}, {'a': 'last', 'v': 'doe'} >> as x",
+                PartiqlLogical.build {
+                    query(
+                        pivot(
+                            input = scan(
+                                bag(
+                                    struct(
+                                        listOf(
+                                            structField(lit(ionString("a")), lit(ionString("first"))),
+                                            structField(lit(ionString("v")), lit(ionString("john"))),
+                                        )
+                                    ),
+                                    struct(
+                                        listOf(
+                                            structField(lit(ionString("a")), lit(ionString("last"))),
+                                            structField(lit(ionString("v")), lit(ionString("doe"))),
+                                        )
+                                    )
+                                ),
+                                asDecl = varDecl("x"),
+                            ),
+                            key = path(id("x"), listOf(pathExpr(lit(ionString("v"))))),
+                            value = path(id("x"), listOf(pathExpr(lit(ionString("a"))))),
+                        )
+                    )
+                }
+            )
         )
     }
 
     data class ProblemTestCase(val sql: String, val expectedProblem: Problem)
+
     @ParameterizedTest
     @ArgumentsSource(ArgumentsForProblemTests::class)
     fun `unimplemented feautres are blocked`(tc: ProblemTestCase) {
@@ -237,11 +294,8 @@ class AstToLogicalVisitorTransformTests {
 
         override fun getParameters() = listOf(
             // SELECT queries are not implemented
-            ProblemTestCase("SELECT b.* FROM UNPIVOT x as y", unimplementedProblem("UNPIVOT", 1, 17)),
             ProblemTestCase("SELECT b.* FROM bar AS b GROUP BY a", unimplementedProblem("GROUP BY", 1, 26)),
             ProblemTestCase("SELECT b.* FROM bar AS b HAVING x", unimplementedProblem("HAVING", 1, 33)),
-            ProblemTestCase("SELECT b.* FROM bar AS b ORDER BY y", unimplementedProblem("ORDER BY", 1, 26)),
-            ProblemTestCase("PIVOT v AT n FROM data AS d", unimplementedProblem("PIVOT", 1, 1)),
 
             // DDL is  not implemented
             ProblemTestCase("CREATE TABLE foo", unimplementedProblem("CREATE TABLE", 1, 1)),
