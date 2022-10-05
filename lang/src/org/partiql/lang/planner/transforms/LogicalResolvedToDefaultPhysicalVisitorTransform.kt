@@ -139,8 +139,7 @@ internal class LogicalResolvedToDefaultPhysicalVisitorTransform(
         val action = when (node.operation) {
             is PartiqlLogicalResolved.DmlOperation.DmlInsert -> DmlAction.INSERT
             is PartiqlLogicalResolved.DmlOperation.DmlDelete -> DmlAction.DELETE
-            is PartiqlLogicalResolved.DmlOperation.DmlReplace ->
-                TODO("DmlReplace physical transform hasn't been implemented yet")
+            is PartiqlLogicalResolved.DmlOperation.DmlReplace -> DmlAction.REPLACE
         }.name.toLowerCase()
 
         return PartiqlPhysical.build {

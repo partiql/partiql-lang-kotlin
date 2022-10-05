@@ -2878,6 +2878,30 @@ class SqlParserTest : SqlParserTestBase() {
     )
 
     @Test
+    fun replaceCommandWithAsAlias() = assertExpression(
+        source = "REPLACE INTO foo As f <<{'id': 1, 'name':'bob'}>>",
+        expectedPigAst = """
+            (dml
+                (operations
+                    (dml_op_list
+                        (insert
+                            (id f (case_insensitive) (unqualified))
+                            (bag
+                                (struct
+                                    (expr_pair
+                                        (lit "id")
+                                        (lit 1))
+                                    (expr_pair
+                                        (lit "name")
+                                        (lit "bob"))))
+                            (do_replace
+                                (excluded))))))
+        """,
+        targetParsers = setOf(ParserTypes.PARTIQL_PARSER),
+        roundTrip = false
+    )
+
+    @Test
     fun upsertCommand() = assertExpression(
         source = "UPSERT INTO foo <<{'id': 1, 'name':'bob'}>>",
         expectedPigAst = """

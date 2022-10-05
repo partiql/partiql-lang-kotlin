@@ -113,7 +113,7 @@ pathSimpleSteps
 
 // TODO move from experimental; pending: https://github.com/partiql/partiql-docs/issues/27
 replaceCommand
-    : REPLACE INTO symbolPrimitive value=expr;
+    : REPLACE INTO symbolPrimitive asIdent? value=expr;
 
 // TODO move from experimental; pending: https://github.com/partiql/partiql-docs/issues/27
 upsertCommand
