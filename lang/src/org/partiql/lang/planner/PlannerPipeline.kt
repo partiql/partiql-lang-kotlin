@@ -484,6 +484,8 @@ internal class PlannerPipelineImpl(
             ast.normalize()
         }
 
+        println("nomalized AST is $normalizedAst")
+
         // ast -> logical plan
         val logicalPlan = plannerEventCallback.doEvent("ast_to_logical", normalizedAst) {
             normalizedAst.toLogicalPlan(problemHandler)
@@ -492,6 +494,8 @@ internal class PlannerPipelineImpl(
         if (problemHandler.hasErrors) {
             return PlannerPassResult.Error(problemHandler.problems)
         }
+
+        println("logicalPlan is $logicalPlan")
 
         // logical plan -> resolved logical plan
         val resolvedLogicalPlan = plannerEventCallback.doEvent("logical_to_logical_resolved", logicalPlan) {
@@ -502,6 +506,8 @@ internal class PlannerPipelineImpl(
         if (problemHandler.hasErrors) {
             return PlannerPassResult.Error(problemHandler.problems)
         }
+
+        println("resolvedLogicalPlan is $resolvedLogicalPlan")
 
         // Possible future passes:
         // - type checking and inferencing?
@@ -522,6 +528,8 @@ internal class PlannerPipelineImpl(
         if (problemHandler.hasErrors) {
             return PlannerPassResult.Error(problemHandler.problems)
         }
+
+        println("defaultPhysicalPlan is $defaultPhysicalPlan")
 
         val finalPlan = physicalPlanPasses
             .fold(defaultPhysicalPlan) { accumulator: PartiqlPhysical.Plan, current: PartiqlPhysicalPass ->

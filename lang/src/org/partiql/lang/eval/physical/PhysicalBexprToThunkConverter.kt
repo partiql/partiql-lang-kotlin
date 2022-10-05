@@ -28,6 +28,7 @@ import org.partiql.lang.eval.physical.operators.UnpivotOperatorFactory
 import org.partiql.lang.eval.physical.operators.VariableBinding
 import org.partiql.lang.eval.physical.operators.WindowRelationalOperatorFactory
 import org.partiql.lang.eval.physical.operators.valueExpression
+import org.partiql.lang.eval.physical.window.createBuiltinWindowFunctions
 import org.partiql.lang.util.toIntExact
 
 /** A specialization of [Thunk] that we use for evaluation of physical plans. */
@@ -310,11 +311,18 @@ internal class PhysicalBexprToThunkConverter(
             exprConverter.convert(it).toValueExpr(it.metas.sourceLocationMeta)
         }
 
+        // window function map
+        val builtinWindowFunctions = createBuiltinWindowFunctions(valueFactory)
+        val builtinWindowFunctionsMap = builtinWindowFunctions.associateBy {
+            it.signature.name
+        }
+        val allWindowFunctionsMap = builtinWindowFunctionsMap
+
         // locate operator factory
         val factory = findOperatorFactory<WindowRelationalOperatorFactory>(RelationalOperatorKind.WINDOW, node.i.name.text)
 
         // create operator implementation
-        val bindingsExpr = factory.create(node.i, source, compiledPartitionBy, compiledOrderBy, node.windowExpression, compiledWindowFunctionParameter)
+        val bindingsExpr = factory.create(node.i, source, compiledPartitionBy, compiledOrderBy, node.windowExpression, compiledWindowFunctionParameter, allWindowFunctionsMap)
 
         // wrap in thunk
         return bindingsExpr.toRelationThunk(node.metas)
