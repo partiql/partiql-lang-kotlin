@@ -12,7 +12,7 @@ import kotlin.test.assertFailsWith
 class SqlParserMatchTest : SqlParserTestBase() {
 
     // The tests in this suite are for MATCH, so run them only with PARTIQL_PARSER (ANTLR).
-    // (After switching from MATCH-as-FROM-source to MATCH-as-expression, SQL-PARSER
+    // (After switching from MATCH-as-FROM-source to MATCH-as-expression, SqlParser
     // no longer parses MATCH-containing source.)
     private fun assertExpressionNoRoundTrip(
         source: String,
@@ -358,6 +358,84 @@ class SqlParserMatchTest : SqlParserTestBase() {
                     expr = id("g"),
                     gpmlPattern = gpmlPattern(
                         patterns = listOf(
+                            graphMatchPattern(
+                                parts = listOf(
+                                    edge(
+                                        direction = edgeRight(),
+                                        quantifier = null,
+                                        prefilter = null,
+                                        variable = null,
+                                        label = listOf()
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+            ),
+            where = null
+        )
+    }
+
+    @Test
+    fun allEdgesAllNodes() = assertExpressionNoRoundTrip(
+        "SELECT 1 FROM g MATCH (-[]->, ())",
+    ) {
+        select(
+            project = projectList(projectExpr(lit(ionInt(1)))),
+            from = scan(
+                graphMatch(
+                    expr = id("g"),
+                    gpmlPattern = gpmlPattern(
+                        patterns = listOf(
+                            graphMatchPattern(
+                                parts = listOf(
+                                    edge(
+                                        direction = edgeRight(),
+                                        quantifier = null,
+                                        prefilter = null,
+                                        variable = null,
+                                        label = listOf()
+                                    ),
+                                )
+                            ),
+                            graphMatchPattern(
+                                parts = listOf(
+                                    node(
+                                        prefilter = null,
+                                        variable = null,
+                                        label = listOf()
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+            ),
+            where = null
+        )
+    }
+
+    @Test
+    fun allNodesAllEdges() = assertExpressionNoRoundTrip(
+        "SELECT 1 FROM g MATCH ( (), -[]-> )",
+    ) {
+        select(
+            project = projectList(projectExpr(lit(ionInt(1)))),
+            from = scan(
+                graphMatch(
+                    expr = id("g"),
+                    gpmlPattern = gpmlPattern(
+                        patterns = listOf(
+                            graphMatchPattern(
+                                parts = listOf(
+                                    node(
+                                        prefilter = null,
+                                        variable = null,
+                                        label = listOf()
+                                    )
+                                )
+                            ),
                             graphMatchPattern(
                                 parts = listOf(
                                     edge(
