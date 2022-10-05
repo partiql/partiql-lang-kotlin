@@ -312,7 +312,7 @@ internal class PhysicalBexprToThunkConverter(
         }
 
         // window function map
-        val builtinWindowFunctions = createBuiltinWindowFunctions(valueFactory)
+        val builtinWindowFunctions = createBuiltinWindowFunctions()
         val builtinWindowFunctionsMap = builtinWindowFunctions.associateBy {
             it.signature.name
         }
