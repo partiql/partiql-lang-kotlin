@@ -117,7 +117,7 @@ replaceCommand
 
 // TODO move from experimental; pending: https://github.com/partiql/partiql-docs/issues/27
 upsertCommand
-    : UPSERT INTO symbolPrimitive value=expr;
+    : UPSERT INTO symbolPrimitive asIdent? value=expr;
 
 removeCommand
     : REMOVE pathSimple;

@@ -140,6 +140,8 @@ internal class LogicalResolvedToDefaultPhysicalVisitorTransform(
             is PartiqlLogicalResolved.DmlOperation.DmlInsert -> DmlAction.INSERT
             is PartiqlLogicalResolved.DmlOperation.DmlDelete -> DmlAction.DELETE
             is PartiqlLogicalResolved.DmlOperation.DmlReplace -> DmlAction.REPLACE
+            is PartiqlLogicalResolved.DmlOperation.DmlUpdate ->
+                TODO("DmlUpdate physical transform is not supported yet")
         }.name.toLowerCase()
 
         return PartiqlPhysical.build {
