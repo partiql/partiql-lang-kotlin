@@ -1,6 +1,5 @@
 package org.partiql.lang.eval.physical.window
 
-import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.numberValue
 import org.partiql.lang.eval.physical.EvaluatorState
@@ -11,7 +10,7 @@ class Lag() : NavigationWindowFunction {
     override lateinit var currentPartition: List<Array<ExprValue>>
     override var currentPos: Int = 0
     override val signature: WindowFunctionSignature = WindowFunctionSignature(
-            name = "lag"
+        name = "lag"
     )
 
     override fun processRow(state: EvaluatorState, arguments: List<ValueExpression>, currentPos: Int): ExprValue {

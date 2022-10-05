@@ -6,7 +6,6 @@ import org.partiql.lang.eval.physical.EvaluatorState
 import org.partiql.lang.eval.physical.operators.ValueExpression
 import org.partiql.lang.eval.physical.toSetVariableFunc
 
-
 /**
  * This interface hold some common logic for navigation window function, i.e., LAG, LEAD
  *

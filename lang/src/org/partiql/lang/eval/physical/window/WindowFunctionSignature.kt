@@ -1,7 +1,5 @@
 package org.partiql.lang.eval.physical.window
 
-import org.partiql.lang.types.StaticType
-
 /**
  * Window function signature
  *
@@ -9,6 +7,6 @@ import org.partiql.lang.types.StaticType
  *
  * In the future we can add additional parameter such as frame information here.
  */
-class WindowFunctionSignature (
+class WindowFunctionSignature(
     val name: String
 )
