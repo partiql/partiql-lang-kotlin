@@ -87,6 +87,101 @@ private val LANG_KOTLIN_EVAL_SKIP_LIST = listOf(
     // plk doesn't have STRICT/ERROR mode. LEGACY mode used which doesn't error when RHS of `IN` expression is not a
     // bag, list, or sexp
     Pair("notInPredicateSingleExpr", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+
+    // PTS tests:
+    // plk no STRICT/ERROR mode
+    Pair("""char_length null and missing propagation{in:"missing",result:(success missing::null)}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""character_length null and missing propagation{in:"missing",result:(success missing::null)}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""date_add null and missing propagation{time_part:year,quantity:"missing",timestamp:"`2017T`",result:(success missing::null)}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""date_add null and missing propagation{time_part:year,quantity:1,timestamp:"missing",result:(success missing::null)}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""date_add null and missing propagation{time_part:year,quantity:"null",timestamp:"missing",result:(success missing::null)}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""date_add null and missing propagation{time_part:year,quantity:"missing",timestamp:"null",result:(success missing::null)}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""trim null and missing propagation{sql:"trim(missing)"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""trim null and missing propagation{sql:"trim(leading from missing)"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""trim null and missing propagation{sql:"trim(trailing from missing)"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""trim null and missing propagation{sql:"trim(both from missing)"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""trim null and missing propagation{sql:"trim(leading '' from missing)"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""trim null and missing propagation{sql:"trim(trailing '' from missing)"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""trim null and missing propagation{sql:"trim(both '' from missing)"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""trim null and missing propagation{sql:"trim(leading missing from '')"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""trim null and missing propagation{sql:"trim(trailing missing from '')"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""trim null and missing propagation{sql:"trim(both missing from '')"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""trim null and missing propagation{sql:"trim(leading null from missing)"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""trim null and missing propagation{sql:"trim(trailing null from missing)"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""trim null and missing propagation{sql:"trim(both null from missing)"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""trim null and missing propagation{sql:"trim(leading missing from null)"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""trim null and missing propagation{sql:"trim(trailing missing from null)"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""trim null and missing propagation{sql:"trim(both missing from null)"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""trim null and missing propagation{sql:"trim(leading missing from missing)"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""trim null and missing propagation{sql:"trim(trailing missing from missing)"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""trim null and missing propagation{sql:"trim(both missing from missing)"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""substring null and missing propagation 2 arguments{target:"missing",start_pos:"1"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""substring null and missing propagation 2 arguments{target:"''",start_pos:"missing"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""substring null and missing propagation 2 arguments{target:"missing",start_pos:"missing"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""substring null and missing propagation 2 arguments{target:"null",start_pos:"missing"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""substring null and missing propagation 2 arguments{target:"missing",start_pos:"null"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""substring null and missing propagation 3 arguments{target:"null",start_pos:"1",quantity:"missing"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""substring null and missing propagation 3 arguments{target:"null",start_pos:"null",quantity:"missing"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""substring null and missing propagation 3 arguments{target:"null",start_pos:"missing",quantity:"1"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""substring null and missing propagation 3 arguments{target:"null",start_pos:"missing",quantity:"null"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""substring null and missing propagation 3 arguments{target:"null",start_pos:"missing",quantity:"missing"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""substring null and missing propagation 3 arguments{target:"missing",start_pos:"1",quantity:"1"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""substring null and missing propagation 3 arguments{target:"missing",start_pos:"1",quantity:"null"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""substring null and missing propagation 3 arguments{target:"missing",start_pos:"1",quantity:"missing"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""substring null and missing propagation 3 arguments{target:"missing",start_pos:"null",quantity:"1"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""substring null and missing propagation 3 arguments{target:"missing",start_pos:"null",quantity:"null"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""substring null and missing propagation 3 arguments{target:"missing",start_pos:"null",quantity:"missing"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""substring null and missing propagation 3 arguments{target:"missing",start_pos:"missing",quantity:"1"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""substring null and missing propagation 3 arguments{target:"missing",start_pos:"missing",quantity:"null"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""substring null and missing propagation 3 arguments{target:"missing",start_pos:"missing",quantity:"missing"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""substring null and missing propagation 3 arguments{target:"''",start_pos:"1",quantity:"missing"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""substring null and missing propagation 3 arguments{target:"''",start_pos:"null",quantity:"missing"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""substring null and missing propagation 3 arguments{target:"''",start_pos:"missing",quantity:"1"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""substring null and missing propagation 3 arguments{target:"''",start_pos:"missing",quantity:"null"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""substring null and missing propagation 3 arguments{target:"''",start_pos:"missing",quantity:"missing"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""upper null and missing propagation{param:"missing"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""lower null and missing propagation{param:"missing"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""to_timestamp single argument missing propagation""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""to_timestamp null and missing propagation{string:"missing",pattern:"'y'"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""to_timestamp null and missing propagation{string:"''",pattern:"missing"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""to_timestamp null and missing propagation{string:"missing",pattern:"missing"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""to_timestamp null and missing propagation{string:"null",pattern:"missing"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""to_timestamp null and missing propagation{string:"missing",pattern:"null"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""size null and missing propagation{param:"missing"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""date_diff null and missing propagation{result:(success null),time_part:"year",left:"missing",right:"`2017T`"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""date_diff null and missing propagation{result:(success null),time_part:"year",left:"`2017T`",right:"missing"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""date_diff null and missing propagation{result:(success null),time_part:"year",left:"null",right:"missing"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""date_diff null and missing propagation{result:(success null),time_part:"year",left:"missing",right:"null"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""extract null and missing propagation{time_part:"year",timestamp:"missing"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""to_string null and missing propagation{timestamp:"missing",pattern:"null",result:null}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""to_string null and missing propagation{timestamp:"null",pattern:"missing",result:null}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""to_string null and missing propagation{timestamp:"missing",pattern:"'y'",result:null}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""to_string null and missing propagation{timestamp:"`2000T`",pattern:"missing",result:null}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""to_string null and missing propagation{timestamp:"missing",pattern:"missing",result:null}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""|| valid cases{lparam:"null",rparam:"missing",result:missing::null}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""|| valid cases{lparam:"missing",rparam:"null",result:missing::null}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""|| valid cases{lparam:"missing",rparam:"'b'",result:missing::null}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""|| valid cases{lparam:"'a'",rparam:"missing",result:missing::null}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""|| valid cases{lparam:"missing",rparam:"missing",result:missing::null}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""concatenation with null values{left:"MISSING",right:"MISSING"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""concatenation with null values{left:"''",right:"MISSING"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""concatenation with null values{left:"MISSING",right:"''"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""concatenation with null values{left:"'a'",right:"MISSING"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""concatenation with null values{left:"MISSING",right:"'b'"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    // similar to above plk doesn't have an ERROR/STRICT mode; its LEGACY mode propagates NULL rather than MISSING
+    Pair("""null comparison{sql:"MISSING = NULL",result:missing::null}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""null comparison{sql:"NULL = MISSING",result:missing::null}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""null comparison{sql:"`null.null` = MISSING",result:missing::null}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""null comparison{sql:"`null.bool` = MISSING",result:missing::null}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""null comparison{sql:"`null.int` = MISSING",result:missing::null}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""null comparison{sql:"`null.decimal` = MISSING",result:missing::null}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""null comparison{sql:"`null.string` = MISSING",result:missing::null}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""null comparison{sql:"`null.symbol` = MISSING",result:missing::null}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""null comparison{sql:"`null.clob` = MISSING",result:missing::null}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""null comparison{sql:"`null.blob` = MISSING",result:missing::null}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""null comparison{sql:"`null.list` = MISSING",result:missing::null}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""null comparison{sql:"`null.struct` = MISSING",result:missing::null}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""null comparison{sql:"`null.sexp` = MISSING",result:missing::null}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
 )
 
 private val LANG_KOTLIN_EVAL_EQUIV_SKIP_LIST = listOf(
@@ -185,7 +280,12 @@ class TestRunner {
                 is Assertion.EvaluationSuccess -> {
                     val actualResultAsIon = actualResult.toIonValue(ION)
                     if (!PartiQLEqualityChecker().areEqual(evalTC.assertion.expectedResult, actualResultAsIon)) {
-                        error("Expected and actual results differ:\nExpected: ${evalTC.assertion.expectedResult}\nActual:   $actualResultAsIon\nMode: ${evalTC.compileOptions.typingMode}")
+                        val testName = evalTC.name
+                        val evalMode = when (evalTC.compileOptions.typingMode) {
+                            TypingMode.PERMISSIVE -> "COERCE_EVAL_MODE_COMPILE_OPTIONS"
+                            TypingMode.LEGACY -> "ERROR_EVAL_MODE_COMPILE_OPTIONS"
+                        }
+                        error("Pair(\"\"\"$testName\"\"\", $evalMode),\nExpected and actual results differ:\nExpected: ${evalTC.assertion.expectedResult}\nActual:   $actualResultAsIon\nMode: ${evalTC.compileOptions.typingMode}")
                     }
                 }
                 is Assertion.EvaluationFailure -> {
@@ -195,7 +295,7 @@ class TestRunner {
         } catch (e: SqlException) {
             when (evalTC.assertion) {
                 is Assertion.EvaluationSuccess -> {
-                    error("Expected success but exception thrown")
+                    error("Expected success but exception thrown: $e")
                 }
                 is Assertion.EvaluationFailure -> {
                     // Expected failure and test threw when evaluated
