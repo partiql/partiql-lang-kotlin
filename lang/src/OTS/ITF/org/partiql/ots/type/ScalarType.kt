@@ -1,6 +1,5 @@
 package OTS.ITF.org.partiql.ots.type
 
-import OTS.ITF.org.partiql.ots.TypeParameters
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
 
@@ -9,18 +8,18 @@ import org.partiql.lang.eval.ExprValueType
  */
 interface ScalarType {
     /**
-     * A type name, recognized by users or developers to know which type it is. One example use case
+     * The type id, recognized by users or developers to know which type it is. One example use case
      * is that, if we want to throw an error mentioning a scalar type in the error message, we can
-     * use its [typeName] to refer to the type.
+     * refer to its [id].
      *
-     * Types cannot share the same type name
+     * Types cannot share the same type id
      */
-    val typeName: String
+    val id: String
 
     /**
-     * Type aliases, recognized by program (PartiQL compiler). One example use case is that, in the expression
-     * `CAST(1 AS <type_alias>)`, the target type of the CAST operator corresponds to the scalar type whose
-     * [aliases] has `<type_alias>`
+     * Type names, recognized by program (PartiQL compiler). One use case is that, e.g., in the expression
+     * `CAST(1 AS <type_names>)`, the target type of the CAST operator corresponds to the scalar type whose
+     * [names] has `<type_name>`
      *
      * Note that spaces are not allowed in type aliases. For special type aliases with space in standard sql, e.g.
      * `TIME WITH TIME ZONE` in the query `CAST(a AS TIME WITH TIME ZONE)`, the spaces there are replaced with
@@ -30,13 +29,13 @@ interface ScalarType {
      *      2. DOUBLE PRECISION -> DOUBLE_PRECISION
      *      3. TIME WITH TIME ZONE -> TIME_WITH_TIME_ZONE
      *
-     * One type can have multiple type aliases
+     * One type can have multiple type names
      *
-     * Types cannot share the same type alias
+     * Types cannot share the same type name
      *
-     * Type alias cannot be a PartiQL keywords e.g. 'select'
+     * Type name cannot be a PartiQL keywords e.g. 'select'
      */
-    val aliases: List<String>
+    val names: List<String>
 
     /**
      * Validate type parameters, which is called during compiler time by PartiQL compiler
@@ -60,6 +59,6 @@ interface ScalarType {
 
 abstract class NonParametricType : ScalarType {
     override fun validateParameters(typeParameters: TypeParameters) {
-        require(typeParameters.isEmpty()) { "${typeName.toUpperCase()} type requires no type parameter" }
+        require(typeParameters.isEmpty()) { "${id.toUpperCase()} type requires no type parameter" }
     }
 }

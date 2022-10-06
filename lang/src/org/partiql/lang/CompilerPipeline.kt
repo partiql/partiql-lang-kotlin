@@ -18,7 +18,6 @@ package org.partiql.lang
 
 import OTS.IMP.org.partiql.ots.legacy.plugin.LegacyPlugin
 import OTS.ITF.org.partiql.ots.Plugin
-import OTS.ITF.org.partiql.ots.type.ScalarType
 import com.amazon.ion.IonSystem
 import org.partiql.lang.ast.ExprNode
 import org.partiql.lang.ast.toAstStatement
@@ -39,8 +38,8 @@ import org.partiql.lang.syntax.Parser
 import org.partiql.lang.syntax.PartiQLParserBuilder
 import org.partiql.lang.types.CustomType
 import org.partiql.lang.types.StaticType
+import org.partiql.lang.util.TypeRegistry
 import org.partiql.lang.util.interruptibleFold
-import org.partiql.lang.util.mapAliasToScalarType
 import org.partiql.lang.util.validate
 
 /**
@@ -267,13 +266,13 @@ internal class CompilerPipelineImpl(
     override val plugin: Plugin
 ) : CompilerPipeline {
 
-    // Initialize a map from a type alias to a scalar type, as part of work for PartiQL compile pipeline to install the plugin
-    private val aliasesToScalarType: Map<String, ScalarType>
+    private val typeRegistry: TypeRegistry
 
     init {
+        // Install plugin
         plugin.validate()
 
-        aliasesToScalarType = plugin.mapAliasToScalarType()
+        typeRegistry = TypeRegistry(plugin.scalarTypes)
     }
 
     private val compiler = EvaluatingCompiler(
@@ -286,7 +285,7 @@ internal class CompilerPipelineImpl(
         }.flatten().toMap(),
         procedures,
         compileOptions,
-        aliasesToScalarType
+        typeRegistry
     )
 
     override fun compile(query: String): Expression = compile(parser.parseAstStatement(query))
@@ -316,7 +315,7 @@ internal class CompilerPipelineImpl(
                                     }
                                 }.flatten().toMap(),
                                 plugin = plugin,
-                                aliasToScalarType = aliasesToScalarType
+                                typeRegistry = typeRegistry
                             )
                         )
                     }

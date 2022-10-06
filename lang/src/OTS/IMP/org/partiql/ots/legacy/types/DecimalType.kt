@@ -1,8 +1,8 @@
 package OTS.IMP.org.partiql.ots.legacy.types
 
 import OTS.ITF.org.partiql.ots.CompileTimeType
-import OTS.ITF.org.partiql.ots.TypeParameters
 import OTS.ITF.org.partiql.ots.type.ScalarType
+import OTS.ITF.org.partiql.ots.type.TypeParameters
 import org.partiql.lang.ast.passes.SemanticException
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.ExprValue
@@ -12,12 +12,12 @@ import java.math.BigDecimal
 object DecimalType : ScalarType {
     val compileTimeType: CompileTimeType = CompileTimeType(this, listOf())
 
-    override val typeName = "decimal"
+    override val id = "decimal"
 
-    override val aliases = listOf("decimal", "dec", "numeric")
+    override val names = listOf("decimal", "dec", "numeric")
 
     override fun validateParameters(typeParameters: TypeParameters) {
-        require(typeParameters.size < 3) { error("$typeName type requires at most 2 parameter") }
+        require(typeParameters.size < 3) { error("$id type requires at most 2 parameter") }
 
         val decimalTypeParameters = DecimalTypeParameters(typeParameters)
         val precision = decimalTypeParameters.precision

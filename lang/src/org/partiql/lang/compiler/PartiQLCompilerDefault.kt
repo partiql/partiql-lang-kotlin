@@ -15,7 +15,6 @@
 package org.partiql.lang.compiler
 
 import OTS.ITF.org.partiql.ots.Plugin
-import OTS.ITF.org.partiql.ots.type.ScalarType
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.eval.BindingCase
 import org.partiql.lang.eval.BindingName
@@ -39,7 +38,7 @@ import org.partiql.lang.planner.DML_COMMAND_FIELD_TARGET_UNIQUE_ID
 import org.partiql.lang.planner.DmlAction
 import org.partiql.lang.planner.EvaluatorOptions
 import org.partiql.lang.types.TypedOpParameter
-import org.partiql.lang.util.mapAliasToScalarType
+import org.partiql.lang.util.TypeRegistry
 import org.partiql.lang.util.validate
 
 internal class PartiQLCompilerDefault(
@@ -61,13 +60,13 @@ internal class PartiQLCompilerDefault(
         relationalOperatorFactory = operatorFactories
     )
 
-    // Initialize a map from a type alias to a scalar type, as part of work for PartiQL compiler to install the plugin
-    private val aliasToScalarType: Map<String, ScalarType>
+    private val typeRegistry: TypeRegistry
 
     init {
+        // Install plugin
         plugin.validate()
 
-        aliasToScalarType = plugin.mapAliasToScalarType()
+        typeRegistry = TypeRegistry(plugin.scalarTypes)
 
         exprConverter = PhysicalPlanCompilerImpl(
             valueFactory = valueFactory,
@@ -76,7 +75,7 @@ internal class PartiQLCompilerDefault(
             procedures = procedures,
             evaluatorOptions = evaluatorOptions,
             bexperConverter = bexprConverter,
-            aliasToScalarType = aliasToScalarType
+            typeRegistry = typeRegistry
         )
     }
 

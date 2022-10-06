@@ -1,7 +1,6 @@
 package org.partiql.lang.ast.passes.inference
 
 import OTS.ITF.org.partiql.ots.Plugin
-import OTS.ITF.org.partiql.ots.type.ScalarType
 import org.partiql.lang.ast.passes.SemanticException
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.staticType
@@ -14,7 +13,7 @@ import org.partiql.lang.eval.visitors.StaticTypeVisitorTransform
 import org.partiql.lang.types.FunctionSignature
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.types.TypedOpParameter
-import org.partiql.lang.util.mapAliasToScalarType
+import org.partiql.lang.util.TypeRegistry
 import org.partiql.lang.util.validate
 
 /**
@@ -33,13 +32,13 @@ class StaticTypeInferencer(
     private val customTypedOpParameters: Map<String, TypedOpParameter>,
     private val plugin: Plugin
 ) {
-    // Initialize a map from a type alias to a scalar type, as part of work for PartiQL inferencer to install the plugin
-    private val aliasToScalarType: Map<String, ScalarType>
+    private val typeRegistry: TypeRegistry
 
     init {
+        // Install plugin
         plugin.validate()
 
-        aliasToScalarType = plugin.mapAliasToScalarType()
+        typeRegistry = TypeRegistry(plugin.scalarTypes)
     }
 
     /**
@@ -56,7 +55,7 @@ class StaticTypeInferencer(
      */
     fun inferStaticType(node: PartiqlAst.Statement): InferenceResult {
         val problemCollector = ProblemCollector()
-        val inferencer = StaticTypeInferenceVisitorTransform(globalBindings, customFunctionSignatures, customTypedOpParameters, problemCollector, plugin, aliasToScalarType)
+        val inferencer = StaticTypeInferenceVisitorTransform(globalBindings, customFunctionSignatures, customTypedOpParameters, problemCollector, plugin, typeRegistry)
         val transformedPartiqlAst = inferencer.transformStatement(node)
         val inferredStaticType = when (transformedPartiqlAst) {
             is PartiqlAst.Statement.Query ->

@@ -16,7 +16,6 @@ package org.partiql.lang.planner
 
 import OTS.IMP.org.partiql.ots.legacy.plugin.LegacyPlugin
 import OTS.ITF.org.partiql.ots.Plugin
-import OTS.ITF.org.partiql.ots.type.ScalarType
 import com.amazon.ion.IonSystem
 import org.partiql.lang.SqlException
 import org.partiql.lang.ast.SourceLocationMeta
@@ -48,7 +47,7 @@ import org.partiql.lang.syntax.Parser
 import org.partiql.lang.syntax.PartiQLParserBuilder
 import org.partiql.lang.syntax.SyntaxException
 import org.partiql.lang.types.CustomType
-import org.partiql.lang.util.mapAliasToScalarType
+import org.partiql.lang.util.TypeRegistry
 import org.partiql.lang.util.validate
 
 /**
@@ -456,7 +455,7 @@ internal class PlannerPipelineImpl(
 ) : PlannerPipeline {
 
     // Initialize a map from a type alias to a scalar type, as part of work for PartiQL planner pipeline to install the plugin
-    private val aliasToScalarType: Map<String, ScalarType>
+    private val typeRegistry: TypeRegistry
 
     init {
         when (evaluatorOptions.thunkOptions.thunkReturnTypeAssertions) {
@@ -468,9 +467,10 @@ internal class PlannerPipelineImpl(
                 TODO("Support for EvaluatorOptions.thunkReturnTypeAsserts == ThunkReturnTypeAssertions.ENABLED")
         }
 
+        // Install plugin
         plugin.validate()
 
-        aliasToScalarType = plugin.mapAliasToScalarType()
+        typeRegistry = TypeRegistry(plugin.scalarTypes)
     }
 
     val customTypedOpParameters = customDataTypes.map { customType ->
@@ -583,7 +583,7 @@ internal class PlannerPipelineImpl(
                 procedures = procedures,
                 evaluatorOptions = evaluatorOptions,
                 bexperConverter = bexperConverter,
-                aliasToScalarType = aliasToScalarType
+                typeRegistry = typeRegistry
             )
 
             val expression = when {

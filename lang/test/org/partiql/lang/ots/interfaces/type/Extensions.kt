@@ -3,9 +3,9 @@ package org.partiql.lang.ots.interfaces.type
 import OTS.ITF.org.partiql.ots.CompileTimeType
 import OTS.ITF.org.partiql.ots.Plugin
 import OTS.ITF.org.partiql.ots.TypeInferenceResult
-import OTS.ITF.org.partiql.ots.TypeParameters
 import OTS.ITF.org.partiql.ots.operator.ScalarOp
 import OTS.ITF.org.partiql.ots.type.ScalarType
+import OTS.ITF.org.partiql.ots.type.TypeParameters
 import com.amazon.ion.system.IonSystemBuilder
 import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.ExprValueType
@@ -45,9 +45,9 @@ internal open class DummyPlugin : Plugin {
 }
 
 internal open class DummyScalarType : ScalarType {
-    override val typeName: String
+    override val id: String
         get() = error("Not yet implemented")
-    override val aliases: List<String>
+    override val names: List<String>
         get() = error("Not yet implemented")
     override fun validateParameters(typeParameters: TypeParameters) {
         error("Not yet implemented")

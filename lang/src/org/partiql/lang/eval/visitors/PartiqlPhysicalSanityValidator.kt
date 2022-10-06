@@ -16,6 +16,7 @@ import org.partiql.lang.eval.TypedOpBehavior
 import org.partiql.lang.eval.err
 import org.partiql.lang.eval.errorContextFrom
 import org.partiql.lang.planner.EvaluatorOptions
+import org.partiql.lang.util.TypeRegistry
 import org.partiql.lang.util.propertyValueMapOf
 
 /**
@@ -27,7 +28,7 @@ import org.partiql.lang.util.propertyValueMapOf
  */
 class PartiqlPhysicalSanityValidator(
     private val evaluatorOptions: EvaluatorOptions,
-    private val aliasToScalarType: Map<String, ScalarType>
+    private val typeRegistry: TypeRegistry
 ) : PartiqlPhysical.Visitor() {
 
     /**
@@ -65,7 +66,7 @@ class PartiqlPhysicalSanityValidator(
     override fun visitTypeScalarType(node: PartiqlPhysical.Type.ScalarType) {
         super.visitTypeScalarType(node)
 
-        val scalarType = aliasToScalarType[node.alias.text] ?: error("No such type alias: ${node.alias.text}")
+        val scalarType = typeRegistry.getTypeByName(node.alias.text) ?: error("No such type alias: ${node.alias.text}")
         if (evaluatorOptions.typedOpBehavior == TypedOpBehavior.HONOR_PARAMETERS) {
             scalarType.validateParameters(node.parameters.map { it.value.toInt() })
         }

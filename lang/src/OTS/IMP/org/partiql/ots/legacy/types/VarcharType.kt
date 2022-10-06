@@ -1,20 +1,20 @@
 package OTS.IMP.org.partiql.ots.legacy.types
 
-import OTS.ITF.org.partiql.ots.TypeParameters
 import OTS.ITF.org.partiql.ots.type.ScalarType
+import OTS.ITF.org.partiql.ots.type.TypeParameters
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
 
 object VarcharType : ScalarType {
-    override val typeName = "character_varying"
+    override val id = "character_varying"
 
-    override val aliases = listOf("varchar", "character_varying")
+    override val names = listOf("varchar", "character_varying")
 
     override fun validateParameters(typeParameters: TypeParameters) {
         when (typeParameters.size) {
             0 -> {}
             1 -> require(typeParameters[0] > 0)
-            2 -> error("$typeName type requires at most 1 parameter")
+            2 -> error("$id type requires at most 1 parameter")
         }
     }
 

@@ -1,10 +1,15 @@
 package org.partiql.lang.util
 
 import OTS.ITF.org.partiql.ots.Plugin
+import OTS.ITF.org.partiql.ots.type.ScalarType
 
-internal fun Plugin.mapAliasToScalarType() = scalarTypes.flatMap { scalarType ->
-    scalarType.aliases.map { typeAlias -> typeAlias to scalarType }
-}.associate { it.first to it.second }
+class TypeRegistry(types: List<ScalarType>) {
+    private var namesToType: Map<String, ScalarType> = types.flatMap { scalarType ->
+        scalarType.names.map { typeAlias -> typeAlias to scalarType }
+    }.associate { it.first to it.second }
+
+    fun getTypeByName(name: String): ScalarType? = namesToType[name]
+}
 
 /**
  * Used by PartiQL compile pipeline to validate a plugin when taking it at build time
@@ -15,13 +20,13 @@ internal fun Plugin.validate() {
     val typeAliases = mutableSetOf<String>()
     scalarTypes.forEach { type ->
         // Type name checking
-        if (typeNames.contains(type.typeName)) {
+        if (typeNames.contains(type.id)) {
             error("Type name '$typeNames' are registered twice")
         }
-        typeNames.add(type.typeName)
+        typeNames.add(type.id)
 
         // Type alias checking
-        type.aliases.forEach { alias ->
+        type.names.forEach { alias ->
             if (alias.contains(' ')) {
                 error("Type alias '$alias' has a space")
             }

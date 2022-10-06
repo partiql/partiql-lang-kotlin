@@ -1,11 +1,11 @@
 package org.partiql.lang.types
 
-import OTS.ITF.org.partiql.ots.type.ScalarType
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.PartiqlPhysical
+import org.partiql.lang.util.TypeRegistry
 
 /** Helper to convert [PartiqlAst.Type] in AST to a [TypedOpParameter]. */
-fun PartiqlAst.Type.toTypedOpParameter(customTypedOpParameters: Map<String, TypedOpParameter>, aliasToScalarType: Map<String, ScalarType>): TypedOpParameter {
+fun PartiqlAst.Type.toTypedOpParameter(customTypedOpParameters: Map<String, TypedOpParameter>, typeRegistry: TypeRegistry): TypedOpParameter {
     // hack: to avoid duplicating the function `PartiqlAst.Type.toTypedOpParameter`, we have to convert this
     // PartiqlAst.Type to PartiqlPhysical.Type. The easiest way to do that without using a visitor transform
     // (which is overkill and comes with some downsides for something this simple), is to transform to and from
@@ -17,5 +17,5 @@ fun PartiqlAst.Type.toTypedOpParameter(customTypedOpParameters: Map<String, Type
     // to keep this function around.
     val sexp = this.toIonElement()
     val physicalType = PartiqlPhysical.transform(sexp) as PartiqlPhysical.Type
-    return physicalType.toTypedOpParameter(customTypedOpParameters, aliasToScalarType)
+    return physicalType.toTypedOpParameter(customTypedOpParameters, typeRegistry)
 }

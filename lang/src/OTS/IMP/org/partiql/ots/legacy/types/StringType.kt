@@ -7,9 +7,9 @@ import org.partiql.lang.eval.ExprValueType
 object StringType : NonParametricType() {
     val compileTimeType: CompileTimeType = CompileTimeType(this, emptyList())
 
-    override val typeName = "string"
+    override val id = "string"
 
-    override val aliases = listOf("string")
+    override val names = listOf("string")
 
     override val runTimeType: ExprValueType
         get() = ExprValueType.STRING

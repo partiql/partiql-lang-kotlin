@@ -20,7 +20,6 @@ import OTS.IMP.org.partiql.ots.legacy.types.Int2Type
 import OTS.IMP.org.partiql.ots.legacy.types.Int4Type
 import OTS.IMP.org.partiql.ots.legacy.types.Int8Type
 import OTS.IMP.org.partiql.ots.legacy.types.IntType
-import OTS.ITF.org.partiql.ots.type.ScalarType
 import com.amazon.ion.IntegerSize
 import com.amazon.ion.IonInt
 import com.amazon.ion.IonSexp
@@ -66,6 +65,7 @@ import org.partiql.lang.types.TypedOpParameter
 import org.partiql.lang.types.UnknownArguments
 import org.partiql.lang.types.UnsupportedTypeCheckException
 import org.partiql.lang.types.toTypedOpParameter
+import org.partiql.lang.util.TypeRegistry
 import org.partiql.lang.util.bigDecimalOf
 import org.partiql.lang.util.checkThreadInterrupted
 import org.partiql.lang.util.codePointSequence
@@ -136,7 +136,7 @@ internal class EvaluatingCompiler(
     private val customTypedOpParameters: Map<String, TypedOpParameter>,
     private val procedures: Map<String, StoredProcedure>,
     private val compileOptions: CompileOptions = CompileOptions.standard(),
-    private val aliasToScalarType: Map<String, ScalarType>
+    private val typeReistery: TypeRegistry
 ) {
     private val errorSignaler = compileOptions.typingMode.createErrorSignaler(valueFactory)
     private val thunkFactory = compileOptions.typingMode.createThunkFactory<Environment>(compileOptions.thunkOptions, valueFactory)
@@ -324,7 +324,7 @@ internal class EvaluatingCompiler(
         val transformedAst = visitorTransform.transformStatement(originalAst)
         val partiqlAstSanityValidator = PartiqlAstSanityValidator()
 
-        partiqlAstSanityValidator.validate(transformedAst, compileOptions, aliasToScalarType)
+        partiqlAstSanityValidator.validate(transformedAst, compileOptions, typeReistery)
 
         val thunk = nestCompilationContext(ExpressionContext.NORMAL, emptySet()) {
             compileAstStatement(transformedAst)
@@ -1221,7 +1221,7 @@ internal class EvaluatingCompiler(
 
     private fun compileIs(expr: PartiqlAst.Expr.IsType, metas: MetaContainer): ThunkEnv {
         val expThunk = compileAstExpr(expr.value)
-        val typedOpParameter = expr.type.toTypedOpParameter(customTypedOpParameters, aliasToScalarType)
+        val typedOpParameter = expr.type.toTypedOpParameter(customTypedOpParameters, typeReistery)
         if (typedOpParameter.staticType is AnyType) {
             return thunkFactory.thunkEnv(metas) { valueFactory.newBoolean(true) }
         }
@@ -1252,7 +1252,7 @@ internal class EvaluatingCompiler(
 
     private fun compileCastHelper(value: PartiqlAst.Expr, asType: PartiqlAst.Type, metas: MetaContainer): ThunkEnv {
         val expThunk = compileAstExpr(value)
-        val typedOpParameter = asType.toTypedOpParameter(customTypedOpParameters, aliasToScalarType)
+        val typedOpParameter = asType.toTypedOpParameter(customTypedOpParameters, typeReistery)
         if (typedOpParameter.staticType is AnyType) {
             return expThunk
         }
@@ -1335,7 +1335,7 @@ internal class EvaluatingCompiler(
         thunkFactory.thunkEnv(metas, compileCastHelper(expr.value, expr.asType, metas))
 
     private fun compileCanCast(expr: PartiqlAst.Expr.CanCast, metas: MetaContainer): ThunkEnv {
-        val typedOpParameter = expr.asType.toTypedOpParameter(customTypedOpParameters, aliasToScalarType)
+        val typedOpParameter = expr.asType.toTypedOpParameter(customTypedOpParameters, typeReistery)
         if (typedOpParameter.staticType is AnyType) {
             return thunkFactory.thunkEnv(metas) { valueFactory.newBoolean(true) }
         }
@@ -1370,7 +1370,7 @@ internal class EvaluatingCompiler(
     }
 
     private fun compileCanLosslessCast(expr: PartiqlAst.Expr.CanLosslessCast, metas: MetaContainer): ThunkEnv {
-        val typedOpParameter = expr.asType.toTypedOpParameter(customTypedOpParameters, aliasToScalarType)
+        val typedOpParameter = expr.asType.toTypedOpParameter(customTypedOpParameters, typeReistery)
         if (typedOpParameter.staticType is AnyType) {
             return thunkFactory.thunkEnv(metas) { valueFactory.newBoolean(true) }
         }

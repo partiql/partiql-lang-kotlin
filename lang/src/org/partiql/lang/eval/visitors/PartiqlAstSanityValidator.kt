@@ -32,7 +32,7 @@ import org.partiql.lang.eval.EvaluationException
 import org.partiql.lang.eval.TypedOpBehavior
 import org.partiql.lang.eval.err
 import org.partiql.lang.eval.errorContextFrom
-import org.partiql.lang.util.mapAliasToScalarType
+import org.partiql.lang.util.TypeRegistry
 
 /**
  * Provides rules for basic AST sanity checks that should be performed before any attempt at further AST processing.
@@ -47,17 +47,17 @@ import org.partiql.lang.util.mapAliasToScalarType
  */
 class PartiqlAstSanityValidator : PartiqlAst.Visitor() {
 
-    private var aliasToScalarType: Map<String, ScalarType> = LegacyPlugin().mapAliasToScalarType()
+    private var typeRegistry: TypeRegistry = TypeRegistry(LegacyPlugin().scalarTypes)
 
     private var compileOptions = CompileOptions.standard()
 
     fun validate(
         statement: PartiqlAst.Statement,
         compileOptions: CompileOptions = CompileOptions.standard(),
-        aliasToScalarType: Map<String, ScalarType> = LegacyPlugin().mapAliasToScalarType()
+        typeRegistry: TypeRegistry = TypeRegistry(LegacyPlugin().scalarTypes)
     ) {
         this.compileOptions = compileOptions
-        this.aliasToScalarType = aliasToScalarType
+        this.typeRegistry = typeRegistry
         this.walkStatement(statement)
     }
 
@@ -77,7 +77,7 @@ class PartiqlAstSanityValidator : PartiqlAst.Visitor() {
     override fun visitTypeScalarType(node: PartiqlAst.Type.ScalarType) {
         super.visitTypeScalarType(node)
 
-        val scalarType = aliasToScalarType[node.alias.text] ?: error("No such type alias: ${node.alias.text}")
+        val scalarType = typeRegistry.getTypeByName(node.alias.text) ?: error("No such type alias: ${node.alias.text}")
         if (compileOptions.typedOpBehavior == TypedOpBehavior.HONOR_PARAMETERS) {
             scalarType.validateParameters(node.parameters.map { it.value.toInt() })
         }

@@ -7,7 +7,6 @@ package org.partiql.lang.eval.visitors
 import OTS.ITF.org.partiql.ots.Plugin
 import OTS.ITF.org.partiql.ots.operator.ScalarOp
 import OTS.ITF.org.partiql.ots.type.BoolType
-import OTS.ITF.org.partiql.ots.type.ScalarType
 import com.amazon.ionelement.api.MetaContainer
 import com.amazon.ionelement.api.StringElement
 import com.amazon.ionelement.api.TextElement
@@ -53,6 +52,7 @@ import org.partiql.lang.types.StructType
 import org.partiql.lang.types.TypedOpParameter
 import org.partiql.lang.types.UnknownArguments
 import org.partiql.lang.types.toTypedOpParameter
+import org.partiql.lang.util.TypeRegistry
 import org.partiql.lang.util.cartesianProduct
 
 /**
@@ -74,7 +74,7 @@ internal class StaticTypeInferenceVisitorTransform(
     private val customTypedOpParameters: Map<String, TypedOpParameter>,
     private val problemHandler: ProblemHandler = ProblemThrower(),
     private val plugin: Plugin,
-    private val aliasToScalarType: Map<String, ScalarType>
+    private val typeRegistry: TypeRegistry
 ) : PartiqlAst.VisitorTransform() {
 
     /** Used to allow certain binding lookups to occur directly in the global scope. */
@@ -1201,7 +1201,7 @@ internal class StaticTypeInferenceVisitorTransform(
         override fun transformExprCast(node: PartiqlAst.Expr.Cast): PartiqlAst.Expr {
             val typed = super.transformExprCast(node) as PartiqlAst.Expr.Cast
             val sourceType = typed.value.getStaticType()
-            val targetType = typed.asType.toTypedOpParameter(customTypedOpParameters, aliasToScalarType)
+            val targetType = typed.asType.toTypedOpParameter(customTypedOpParameters, typeRegistry)
             val castOutputType = sourceType.cast(targetType.staticType, plugin).let {
                 if (targetType.validationThunk == null) {
                     // There is no additional validation for this parameter, return this type as-is

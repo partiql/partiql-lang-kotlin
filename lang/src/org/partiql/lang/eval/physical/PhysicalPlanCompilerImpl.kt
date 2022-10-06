@@ -18,7 +18,6 @@ import OTS.IMP.org.partiql.ots.legacy.types.Int2Type
 import OTS.IMP.org.partiql.ots.legacy.types.Int4Type
 import OTS.IMP.org.partiql.ots.legacy.types.Int8Type
 import OTS.IMP.org.partiql.ots.legacy.types.IntType
-import OTS.ITF.org.partiql.ots.type.ScalarType
 import com.amazon.ion.IonString
 import com.amazon.ion.IonValue
 import com.amazon.ion.Timestamp
@@ -98,6 +97,7 @@ import org.partiql.lang.types.TypedOpParameter
 import org.partiql.lang.types.UnknownArguments
 import org.partiql.lang.types.UnsupportedTypeCheckException
 import org.partiql.lang.types.toTypedOpParameter
+import org.partiql.lang.util.TypeRegistry
 import org.partiql.lang.util.checkThreadInterrupted
 import org.partiql.lang.util.codePointSequence
 import org.partiql.lang.util.div
@@ -143,7 +143,7 @@ internal class PhysicalPlanCompilerImpl(
     private val procedures: Map<String, StoredProcedure>,
     private val evaluatorOptions: EvaluatorOptions = EvaluatorOptions.standard(),
     private val bexperConverter: PhysicalBexprToThunkConverter,
-    private val aliasToScalarType: Map<String, ScalarType>
+    private val typeRegistry: TypeRegistry
 ) : PhysicalPlanCompiler {
     private val errorSignaler = evaluatorOptions.typingMode.createErrorSignaler(valueFactory)
     private val thunkFactory = evaluatorOptions.typingMode.createThunkFactory<EvaluatorState>(
@@ -174,7 +174,7 @@ internal class PhysicalPlanCompilerImpl(
      * hope that long-running compilations may be aborted by the caller.
      */
     fun compile(plan: PartiqlPhysical.Plan): Expression {
-        PartiqlPhysicalSanityValidator(evaluatorOptions, aliasToScalarType).walkPlan(plan)
+        PartiqlPhysicalSanityValidator(evaluatorOptions, typeRegistry).walkPlan(plan)
 
         val thunk = compileAstStatement(plan.stmt)
 
@@ -990,7 +990,7 @@ internal class PhysicalPlanCompilerImpl(
 
     private fun compileIs(expr: PartiqlPhysical.Expr.IsType, metas: MetaContainer): PhysicalPlanThunk {
         val expThunk = compileAstExpr(expr.value)
-        val typedOpParameter = expr.type.toTypedOpParameter(customTypedOpParameters, aliasToScalarType)
+        val typedOpParameter = expr.type.toTypedOpParameter(customTypedOpParameters, typeRegistry)
         if (typedOpParameter.staticType is AnyType) {
             return thunkFactory.thunkEnv(metas) { valueFactory.newBoolean(true) }
         }
@@ -1021,7 +1021,7 @@ internal class PhysicalPlanCompilerImpl(
 
     private fun compileCastHelper(value: PartiqlPhysical.Expr, asType: PartiqlPhysical.Type, metas: MetaContainer): PhysicalPlanThunk {
         val expThunk = compileAstExpr(value)
-        val typedOpParameter = asType.toTypedOpParameter(customTypedOpParameters, aliasToScalarType)
+        val typedOpParameter = asType.toTypedOpParameter(customTypedOpParameters, typeRegistry)
         if (typedOpParameter.staticType is AnyType) {
             return expThunk
         }
@@ -1104,7 +1104,7 @@ internal class PhysicalPlanCompilerImpl(
         thunkFactory.thunkEnv(metas, compileCastHelper(expr.value, expr.asType, metas))
 
     private fun compileCanCast(expr: PartiqlPhysical.Expr.CanCast, metas: MetaContainer): PhysicalPlanThunk {
-        val typedOpParameter = expr.asType.toTypedOpParameter(customTypedOpParameters, aliasToScalarType)
+        val typedOpParameter = expr.asType.toTypedOpParameter(customTypedOpParameters, typeRegistry)
         if (typedOpParameter.staticType is AnyType) {
             return thunkFactory.thunkEnv(metas) { valueFactory.newBoolean(true) }
         }
@@ -1139,7 +1139,7 @@ internal class PhysicalPlanCompilerImpl(
     }
 
     private fun compileCanLosslessCast(expr: PartiqlPhysical.Expr.CanLosslessCast, metas: MetaContainer): PhysicalPlanThunk {
-        val typedOpParameter = expr.asType.toTypedOpParameter(customTypedOpParameters, aliasToScalarType)
+        val typedOpParameter = expr.asType.toTypedOpParameter(customTypedOpParameters, typeRegistry)
         if (typedOpParameter.staticType is AnyType) {
             return thunkFactory.thunkEnv(metas) { valueFactory.newBoolean(true) }
         }

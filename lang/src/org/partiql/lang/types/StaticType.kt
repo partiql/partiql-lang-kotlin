@@ -18,9 +18,9 @@ import OTS.IMP.org.partiql.ots.legacy.types.SymbolType
 import OTS.IMP.org.partiql.ots.legacy.types.TimeStampType
 import OTS.IMP.org.partiql.ots.legacy.types.TimeType
 import OTS.ITF.org.partiql.ots.CompileTimeType
-import OTS.ITF.org.partiql.ots.TypeParameters
 import OTS.ITF.org.partiql.ots.type.BoolType
 import OTS.ITF.org.partiql.ots.type.ScalarType
+import OTS.ITF.org.partiql.ots.type.TypeParameters
 import org.partiql.lang.ast.passes.inference.isLob
 import org.partiql.lang.ast.passes.inference.isNumeric
 import org.partiql.lang.ast.passes.inference.isText
@@ -594,7 +594,7 @@ data class StaticScalarType(
     override val allTypes: List<StaticType>
         get() = listOf(this)
 
-    override fun toString(): String = scalarType.typeName + when {
+    override fun toString(): String = scalarType.id + when {
         parameters.isEmpty() -> ""
         else -> parameters.toString()
     }
