@@ -11,7 +11,7 @@ import kotlin.test.assertFailsWith
 
 class SqlParserMatchTest : SqlParserTestBase() {
 
-    // The tests in this suite are for MATCH, so run them only with PARTIQL_PARSER (ANTLR).
+    // The tests in this suite are for MATCH, so run them only with PartiqlParser (ANTLR).
     // (After switching from MATCH-as-FROM-source to MATCH-as-expression, SqlParser
     // no longer parses MATCH-containing source.)
     private fun assertExpressionNoRoundTrip(
@@ -23,7 +23,8 @@ class SqlParserMatchTest : SqlParserTestBase() {
 
     @Test
     fun loneMatchExpr1path() = assertExpressionNoRoundTrip(
-        "MyGraph MATCH (x)"
+        // PR-COMMENT It is sad that outer parens are needed in a stand-alone expression like this
+        "(MyGraph MATCH (x))"
     ) {
         graphMatch(
             expr = id("MyGraph"),
@@ -45,7 +46,7 @@ class SqlParserMatchTest : SqlParserTestBase() {
 
     @Test
     fun loneMatchExpr2path() = assertExpressionNoRoundTrip(
-        "MyGraph MATCH ( (x), -[u]-> )"
+        "( MyGraph MATCH (x), -[u]-> )"
     ) {
         graphMatch(
             expr = id("MyGraph"),
@@ -101,7 +102,7 @@ class SqlParserMatchTest : SqlParserTestBase() {
 
     @Test
     fun leftMatchExprInUnion() = assertExpressionNoRoundTrip(
-        "MyGraph MATCH (x) UNION SELECT * FROM tbl1"
+        "(MyGraph MATCH (x)) UNION SELECT * FROM tbl1"
     ) {
         bagOp(
             op = union(),
@@ -115,7 +116,7 @@ class SqlParserMatchTest : SqlParserTestBase() {
 
     @Test
     fun rightMatchExprInUnion() = assertExpressionNoRoundTrip(
-        "SELECT * FROM tbl1 UNION MyGraph MATCH (x)"
+        "SELECT * FROM tbl1 UNION (MyGraph MATCH (x))"
     ) {
         bagOp(
             op = union(),
@@ -379,7 +380,7 @@ class SqlParserMatchTest : SqlParserTestBase() {
 
     @Test
     fun allEdgesAllNodes() = assertExpressionNoRoundTrip(
-        "SELECT 1 FROM g MATCH (-[]->, ())",
+        "SELECT 1 FROM (g MATCH -[]->, ())",
     ) {
         select(
             project = projectList(projectExpr(lit(ionInt(1)))),
@@ -418,7 +419,7 @@ class SqlParserMatchTest : SqlParserTestBase() {
 
     @Test
     fun allNodesAllEdges() = assertExpressionNoRoundTrip(
-        "SELECT 1 FROM g MATCH ( (), -[]-> )",
+        "SELECT 1 FROM (g MATCH (), -[]-> )",
     ) {
         select(
             project = projectList(projectExpr(lit(ionInt(1)))),
@@ -706,7 +707,7 @@ class SqlParserMatchTest : SqlParserTestBase() {
 
     @Test
     fun twoHopTriples() = assertExpressionNoRoundTrip(
-        "SELECT a,b FROM g MATCH ((a) -[:has]-> (x), (x)-[:contains]->(b))",
+        "SELECT a,b FROM (g MATCH (a) -[:has]-> (x), (x)-[:contains]->(b))",
     ) {
         select(
             project = projectList(
@@ -1298,14 +1299,20 @@ class SqlParserMatchTest : SqlParserTestBase() {
     }
 
     @Test
-    fun matchAndJoinCommasParenthesized() = assertExpressionNoRoundTrip(
-        "SELECT a,b,c, t1.x as x, t2.y as y FROM graph MATCH ((a) -> (b), (a) -> (c)), table1 as t1, table2 as t2",
-    ) {
-        joinedMatch()
+    fun matchAndJoinCommasParenthesized() {
+        // fails because of the outer parentheses in ((a) -> (b), (a) -> (c)))
+        assertFailsWith<ParserException> {
+            assertExpressionNoRoundTrip(
+                "SELECT a,b,c, t1.x as x, t2.y as y FROM graph MATCH ((a) -> (b), (a) -> (c)), table1 as t1, table2 as t2",
+            ) {
+                joinedMatch()
+            }
+        }
     }
 
     @Test
     fun matchAndJoinCommas() {
+        // fails because of the comma in the pattern and no parentheses like `(graph MATCH ...)`
         assertFailsWith<ParserException> {
             assertExpressionNoRoundTrip(
                 "SELECT a,b,c, t1.x as x, t2.y as y FROM graph MATCH (a) -> (b), (a) -> (c), table1 as t1, table2 as t2",
@@ -1316,24 +1323,23 @@ class SqlParserMatchTest : SqlParserTestBase() {
     }
 
     @Test
-    fun matchAndJoinCommasParenthesized_outerParens() = assertExpressionNoRoundTrip(
-        "SELECT a,b,c, t1.x as x, t2.y as y FROM (graph MATCH ((a) -> (b), (a) -> (c))), table1 as t1, table2 as t2",
-    ) {
-        joinedMatch()
-    }
-
-    // PR-COMMENT (Compare with the 3 preceding tests.)
-    // Conceivably, this could be parsed unambiguously, thanks to the outer parentheses,
-    // but I couldn't come up with an elegant enough grammar tweak where commas in a MATCH would
-    // only be allowed in the presence of outer parentheses.
-    @Test
-    fun matchAndJoinCommas_outerParens() {
+    fun matchAndJoinCommasParenthesized_outerParens() {
+        // fails because of the outer parentheses in ((a) -> (b), (a) -> (c)))
         assertFailsWith<ParserException> {
             assertExpressionNoRoundTrip(
-                "SELECT a,b,c, t1.x as x, t2.y as y FROM (graph MATCH (a) -> (b), (a) -> (c)), table1 as t1, table2 as t2",
+                "SELECT a,b,c, t1.x as x, t2.y as y FROM (graph MATCH ((a) -> (b), (a) -> (c))), table1 as t1, table2 as t2",
             ) {
                 joinedMatch()
             }
+        }
+    }
+
+    @Test
+    fun matchAndJoinCommas_outerParens() {
+        assertExpressionNoRoundTrip(
+            "SELECT a,b,c, t1.x as x, t2.y as y FROM (graph MATCH (a) -> (b), (a) -> (c)), table1 as t1, table2 as t2",
+        ) {
+            joinedMatch()
         }
     }
 

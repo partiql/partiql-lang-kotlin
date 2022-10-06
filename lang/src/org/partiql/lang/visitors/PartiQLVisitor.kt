@@ -741,12 +741,10 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
         scan_(expr, asAlias = asAlias.toPigSymbolPrimitive(), byAlias = byAlias.toPigSymbolPrimitive(), atAlias = atAlias.toPigSymbolPrimitive(), metas = expr.metas)
     }
 
-    override fun visitMatchSingle(ctx: PartiQLParser.MatchSingleContext) = PartiqlAst.build {
-        visitGpmlPattern(ctx.gpmlPattern())
-    }
-
-    override fun visitMatchMultiple(ctx: PartiQLParser.MatchMultipleContext) = PartiqlAst.build {
-        visitGpmlPatternList(ctx.gpmlPatternList())
+    override fun visitTableBaseRefMatch(ctx: PartiQLParser.TableBaseRefMatchContext) = PartiqlAst.build {
+        val expr = visit(ctx.source, PartiqlAst.Expr::class)
+        val (asAlias, atAlias, byAlias) = visitNullableItems(listOf(ctx.asIdent(), ctx.atIdent(), ctx.byIdent()), PartiqlAst.Expr.Id::class)
+        scan_(expr, asAlias = asAlias.toPigSymbolPrimitive(), byAlias = byAlias.toPigSymbolPrimitive(), atAlias = atAlias.toPigSymbolPrimitive(), metas = expr.metas)
     }
 
     override fun visitFromClauseSimpleExplicit(ctx: PartiQLParser.FromClauseSimpleExplicitContext) = PartiqlAst.build {
@@ -916,12 +914,6 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
         path(base, steps, base.metas)
     }
 
-    override fun visitExprPrimaryMatch(ctx: PartiQLParser.ExprPrimaryMatchContext) = PartiqlAst.build {
-        val graph = visit(ctx.exprPrimary()) as PartiqlAst.Expr
-        val gpmlPattern = visit(ctx.matchPostfix()) as PartiqlAst.GpmlPattern
-        graphMatch(graph, gpmlPattern, graph.metas)
-    }
-
     override fun visitPathStepIndexExpr(ctx: PartiQLParser.PathStepIndexExprContext) = PartiqlAst.build {
         val expr = visit(ctx.key, PartiqlAst.Expr::class)
         val metas = expr.metas + metaContainerOf(IsPathIndexMeta.instance)
@@ -936,6 +928,18 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
 
     override fun visitPathStepDotAll(ctx: PartiQLParser.PathStepDotAllContext) = PartiqlAst.build {
         pathUnpivot()
+    }
+
+    override fun visitExprGraphMatchMany(ctx: PartiQLParser.ExprGraphMatchManyContext) = PartiqlAst.build {
+        val graph = visit(ctx.exprPrimary()) as PartiqlAst.Expr
+        val gpmlPattern = visitGpmlPatternList(ctx.gpmlPatternList())
+        graphMatch(graph, gpmlPattern, graph.metas)
+    }
+
+    override fun visitExprGraphMatchOne(ctx: PartiQLParser.ExprGraphMatchOneContext) = PartiqlAst.build {
+        val graph = visit(ctx.exprPrimary()) as PartiqlAst.Expr
+        val gpmlPattern = visitGpmlPattern(ctx.gpmlPattern())
+        graphMatch(graph, gpmlPattern, graph.metas)
     }
 
     override fun visitValues(ctx: PartiQLParser.ValuesContext) = PartiqlAst.build {

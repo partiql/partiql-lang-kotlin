@@ -384,6 +384,7 @@ tableNonJoin
 tableBaseReference
     : source=exprSelect symbolPrimitive              # TableBaseRefSymbol
     | source=exprSelect asIdent? atIdent? byIdent?   # TableBaseRefClauses
+    | source=exprGraphMatchOne asIdent? atIdent? byIdent?   # TableBaseRefMatch
     ;
 
 tableUnpivot
@@ -520,7 +521,7 @@ exprPrimary
     | functionCall               # ExprPrimaryBase
     | nullIf                     # ExprPrimaryBase
     | exprPrimary pathStep+      # ExprPrimaryPath
-    | exprPrimary matchPostfix   # ExprPrimaryMatch
+    | exprGraphMatchMany         # ExprPrimaryBase
     | caseExpr                   # ExprPrimaryBase
     | valueList                  # ExprPrimaryBase
     | values                     # ExprPrimaryBase
@@ -604,10 +605,12 @@ pathStep
     | PERIOD all=ASTERISK                        # PathStepDotAll
     ;
 
-matchPostfix
-    : MATCH gpmlPattern                              # MatchSingle
-    | MATCH PAREN_LEFT gpmlPatternList PAREN_RIGHT   # MatchMultiple
-    ;
+exprGraphMatchMany
+    :  PAREN_LEFT exprPrimary MATCH gpmlPatternList PAREN_RIGHT ;
+
+exprGraphMatchOne
+    :   exprPrimary MATCH gpmlPattern ;
+
 
 parameter
     : QUESTION_MARK;
