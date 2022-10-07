@@ -472,17 +472,16 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
     override fun visitOrderSortSpec(ctx: PartiQLParser.OrderSortSpecContext) = PartiqlAst.build {
         val expr = visit(ctx.expr(), PartiqlAst.Expr::class)
         val orderSpec = when {
-            ctx.dir == null -> asc()
+            ctx.dir == null -> null
             ctx.dir.type == PartiQLParser.ASC -> asc()
             ctx.dir.type == PartiQLParser.DESC -> desc()
             else -> throw ctx.dir.err("Invalid query syntax", ErrorCode.PARSE_INVALID_QUERY)
         }
         val nullSpec = when {
-            ctx.nulls == null && orderSpec is PartiqlAst.OrderingSpec.Desc -> nullsFirst()
-            ctx.nulls == null -> nullsLast()
+            ctx.nulls == null -> null
             ctx.nulls.type == PartiQLParser.FIRST -> nullsFirst()
             ctx.nulls.type == PartiQLParser.LAST -> nullsLast()
-            else -> nullsLast()
+            else -> throw ctx.dir.err("Invalid query syntax", ErrorCode.PARSE_INVALID_QUERY)
         }
         sortSpec(expr, orderingSpec = orderSpec, nullsSpec = nullSpec)
     }
