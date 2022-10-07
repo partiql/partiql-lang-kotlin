@@ -2074,30 +2074,19 @@ internal class EvaluatingCompiler(
 
     private fun compileOrderByExpression(sortSpecs: List<PartiqlAst.SortSpec>): List<CompiledOrderByItem> =
         sortSpecs.map {
-            it.orderingSpec
-                ?: errNoContext(
-                    "SortSpec.orderingSpec was not specified",
-                    errorCode = ErrorCode.INTERNAL_ERROR,
-                    internal = true
-                )
-
-            it.nullsSpec
-                ?: errNoContext(
-                    "SortSpec.nullsSpec was not specified",
-                    errorCode = ErrorCode.INTERNAL_ERROR,
-                    internal = true
-                )
-
-            val comparator = when (it.orderingSpec) {
+            val comparator = when (it.orderingSpec ?: PartiqlAst.OrderingSpec.Asc()) {
                 is PartiqlAst.OrderingSpec.Asc ->
                     when (it.nullsSpec) {
                         is PartiqlAst.NullsSpec.NullsFirst -> NaturalExprValueComparators.NULLS_FIRST_ASC
                         is PartiqlAst.NullsSpec.NullsLast -> NaturalExprValueComparators.NULLS_LAST_ASC
+                        else -> NaturalExprValueComparators.NULLS_LAST_ASC
                     }
+
                 is PartiqlAst.OrderingSpec.Desc ->
                     when (it.nullsSpec) {
                         is PartiqlAst.NullsSpec.NullsFirst -> NaturalExprValueComparators.NULLS_FIRST_DESC
                         is PartiqlAst.NullsSpec.NullsLast -> NaturalExprValueComparators.NULLS_LAST_DESC
+                        else -> NaturalExprValueComparators.NULLS_FIRST_DESC
                     }
             }
 

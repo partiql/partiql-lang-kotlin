@@ -593,17 +593,19 @@ class SqlParser(
                         orderBy(
                             it.children[0].children.map {
                                 when (it.children.size) {
-                                    1 -> sortSpec(it.children[0].toAstExpr(), asc(), nullsLast())
+                                    1 -> sortSpec(it.children[0].toAstExpr(), null, null)
                                     2 -> when (it.children[1].type) {
                                         ParseType.ORDERING_SPEC -> {
                                             val orderingSpec = it.children[1].toOrderingSpec()
-                                            val defaultNullsSpec = when (orderingSpec) {
-                                                is PartiqlAst.OrderingSpec.Asc -> nullsLast()
-                                                is PartiqlAst.OrderingSpec.Desc -> nullsFirst()
-                                            }
-                                            sortSpec(it.children[0].toAstExpr(), orderingSpec, defaultNullsSpec)
+                                            sortSpec(it.children[0].toAstExpr(), orderingSpec, null)
                                         }
-                                        ParseType.NULLS_SPEC -> sortSpec(it.children[0].toAstExpr(), asc(), it.children[1].toNullsSpec())
+
+                                        ParseType.NULLS_SPEC -> sortSpec(
+                                            it.children[0].toAstExpr(),
+                                            null,
+                                            it.children[1].toNullsSpec()
+                                        )
+
                                         else -> errMalformedParseTree("Invalid ordering expressions syntax")
                                     }
                                     3 -> sortSpec(it.children[0].toAstExpr(), it.children[1].toOrderingSpec(), it.children[2].toNullsSpec())

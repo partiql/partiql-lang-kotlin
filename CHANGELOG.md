@@ -76,6 +76,9 @@ stage in the `PlannerPipeline` and to generate performance metrics for the indiv
 
 ### Changed
 - The default parser for all components of PartiQL is now the PartiQLParser -- see the deprecation of `SqlParser`
+- Parsing of `ORDER BY` clauses will no longer populate the AST with defaults for the 'sort specification'
+  (i.e., `ASC` or `DESC`) or 'nulls specification' (i.e., `NULLS FIRST` or `NULLS LAST`) when the are not provided in
+  the query text. Defaulting of sort order is moved to the evaluator.
 
 ### Deprecated
 - Deprecates `SqlLexer` and `SqlParser` to be replaced with the `PartiQLParserBuilder`.

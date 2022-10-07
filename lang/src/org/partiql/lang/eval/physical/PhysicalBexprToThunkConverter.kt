@@ -250,20 +250,20 @@ internal class PhysicalBexprToThunkConverter(
      * evaluation and leaving the [PartiqlPhysical.SortSpec]'s [PartiqlPhysical.Expr] to be evaluated later.
      */
     private fun compileSortSpecs(specs: List<PartiqlPhysical.SortSpec>): List<CompiledSortKey> = specs.map { spec ->
-        val comp = when (spec.orderingSpec) {
+        val comp = when (spec.orderingSpec ?: PartiqlPhysical.OrderingSpec.Asc()) {
             is PartiqlPhysical.OrderingSpec.Asc ->
                 when (spec.nullsSpec) {
                     is PartiqlPhysical.NullsSpec.NullsFirst -> NaturalExprValueComparators.NULLS_FIRST_ASC
                     is PartiqlPhysical.NullsSpec.NullsLast -> NaturalExprValueComparators.NULLS_LAST_ASC
                     null -> NaturalExprValueComparators.NULLS_LAST_ASC
                 }
+
             is PartiqlPhysical.OrderingSpec.Desc ->
                 when (spec.nullsSpec) {
                     is PartiqlPhysical.NullsSpec.NullsFirst -> NaturalExprValueComparators.NULLS_FIRST_DESC
                     is PartiqlPhysical.NullsSpec.NullsLast -> NaturalExprValueComparators.NULLS_LAST_DESC
-                    null -> NaturalExprValueComparators.NULLS_LAST_DESC
+                    null -> NaturalExprValueComparators.NULLS_FIRST_DESC
                 }
-            null -> NaturalExprValueComparators.NULLS_LAST_ASC
         }
         val value = exprConverter.convert(spec.expr).toValueExpr(spec.expr.metas.sourceLocationMeta)
         CompiledSortKey(comp, value)

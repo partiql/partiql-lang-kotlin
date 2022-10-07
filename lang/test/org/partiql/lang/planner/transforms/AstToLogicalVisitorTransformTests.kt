@@ -139,7 +139,7 @@ class AstToLogicalVisitorTransformTests {
                             struct(structFields(id("b"))),
                             sort(
                                 scan(id("bar"), varDecl("b")),
-                                sortSpec(id("y"), asc(), nullsLast())
+                                sortSpec(id("y"))
                             )
                         )
                     )
