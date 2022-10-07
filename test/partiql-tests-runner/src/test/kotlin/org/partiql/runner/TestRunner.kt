@@ -272,9 +272,8 @@ class TestRunner {
         val compilerPipeline = CompilerPipeline.builder(ION).compileOptions(evalTC.compileOptions).build()
         val globals = evalTC.env.toExprValue(compilerPipeline.valueFactory).bindings
         val session = EvaluationSession.build { globals(globals) }
-        val expression = compilerPipeline.compile(evalTC.statement)
-
         try {
+            val expression = compilerPipeline.compile(evalTC.statement)
             val actualResult = expression.eval(session)
             when (evalTC.assertion) {
                 is Assertion.EvaluationSuccess -> {
