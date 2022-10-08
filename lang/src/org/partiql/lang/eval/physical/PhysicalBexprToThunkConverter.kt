@@ -8,6 +8,9 @@ import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.NaturalExprValueComparators
 import org.partiql.lang.eval.Thunk
 import org.partiql.lang.eval.ThunkValue
+import org.partiql.lang.eval.physical.operators.AggregateOperatorFactory
+import org.partiql.lang.eval.physical.operators.CompiledAggregateFunction
+import org.partiql.lang.eval.physical.operators.CompiledGroupKey
 import org.partiql.lang.eval.physical.operators.CompiledSortKey
 import org.partiql.lang.eval.physical.operators.FilterRelationalOperatorFactory
 import org.partiql.lang.eval.physical.operators.JoinRelationalOperatorFactory
@@ -69,6 +72,28 @@ internal class PhysicalBexprToThunkConverter(
 
         // wrap in thunk.
         return bindingsExpr.toRelationThunk(node.metas)
+    }
+
+    override fun convertAggregate(node: PartiqlPhysical.Bexpr.Aggregate): RelationThunkEnv {
+        val source = this.convert(node.source)
+
+        // Compile Arguments
+        val compiledFunctions = node.functionList.functions.map { func ->
+            val setAggregateVal = func.asVar.toSetVariableFunc()
+            val value = exprConverter.convert(func.arg).toValueExpr(func.arg.metas.sourceLocationMeta)
+            CompiledAggregateFunction(func.name.text, setAggregateVal, value, func.quantifier)
+        }
+        val compiledKeys = node.groupList.keys.map { key ->
+            val value = exprConverter.convert(key.expr).toValueExpr(key.expr.metas.sourceLocationMeta)
+            val function = key.asVar.toSetVariableFunc()
+            CompiledGroupKey(function, value, key.asVar)
+        }
+
+        // Get Implementation
+        val factory = findOperatorFactory<AggregateOperatorFactory>(RelationalOperatorKind.AGGREGATE, node.i.name.text)
+        val aggregateOperator = factory.create(node.i)
+        val relationExpression = aggregateOperator.create(source, compiledKeys, compiledFunctions)
+        return relationExpression.toRelationThunk(node.metas)
     }
 
     override fun convertScan(node: PartiqlPhysical.Bexpr.Scan): RelationThunkEnv {

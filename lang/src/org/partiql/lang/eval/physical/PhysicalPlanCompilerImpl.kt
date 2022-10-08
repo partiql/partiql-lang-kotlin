@@ -19,6 +19,7 @@ import com.amazon.ion.IonValue
 import com.amazon.ion.Timestamp
 import com.amazon.ionelement.api.MetaContainer
 import com.amazon.ionelement.api.toIonValue
+import org.partiql.lang.ast.IsOrderedMeta
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.ast.UNKNOWN_SOURCE_LOCATION
 import org.partiql.lang.ast.sourceLocation
@@ -276,10 +277,12 @@ internal class PhysicalPlanCompilerImpl(
         val mapThunk = compileAstExpr(expr.exp)
         val bexprThunk: RelationThunkEnv = bexperConverter.convert(expr.query)
 
-        return thunkFactory.thunkEnv(expr.metas) { env ->
-            val relationTypeThunk = bexprThunk(env)
-            val relationType: RelationType = relationTypeThunk.relType
+        val relationType = when (expr.metas.containsKey(IsOrderedMeta.TAG)) {
+            true -> RelationType.LIST
+            false -> RelationType.BAG
+        }
 
+        return thunkFactory.thunkEnv(expr.metas) { env ->
             val elements = sequence {
                 val relItr = bexprThunk(env)
                 while (relItr.nextRow()) {

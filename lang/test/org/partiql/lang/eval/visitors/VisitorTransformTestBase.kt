@@ -14,30 +14,50 @@
 
 package org.partiql.lang.eval.visitors
 
+import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.fail
 import org.partiql.lang.domains.PartiqlAst
+import org.partiql.lang.syntax.PartiQLParserBuilder
 import org.partiql.lang.syntax.SqlParserTestBase
 
 /** Provides some basic functionality for parameterized testing implementation of [PartiqlAst.VisitorTransform]. */
 abstract class VisitorTransformTestBase : SqlParserTestBase() {
 
-    data class TransformTestCase(val originalSql: String, val expectedSql: String)
+    class TransformTestCase() {
+        val parser = PartiQLParserBuilder.standard().build()
+        lateinit var original: PartiqlAst.Statement
+        lateinit var expected: PartiqlAst.Statement
+        constructor(original: String, expected: String) : this() {
+            this.original = assertDoesNotThrow("Parsing Original SQL") {
+                this.parser.parseAstStatement(original)
+            }
+            this.expected = assertDoesNotThrow("Parsing Expected SQL") {
+                this.parser.parseAstStatement(expected)
+            }
+        }
+
+        constructor(original: PartiqlAst.Statement, expected: PartiqlAst.Statement) : this() {
+            this.original = original
+            this.expected = expected
+        }
+
+        constructor(original: PartiqlAst.Statement, expected: String) : this() {
+            this.original = original
+            this.expected = assertDoesNotThrow("Parsing Expected SQL") {
+                this.parser.parseAstStatement(expected)
+            }
+        }
+    }
 
     /**
      * Similar to [runTest], but executes the transform again a second time on the result of the first transform
      * and ensures that the second result is the same as the first.  This ensures that the transform is idempotent.
      */
     protected fun runTestForIdempotentTransform(tc: TransformTestCase, transform: PartiqlAst.VisitorTransform) {
-        val originalAst = assertDoesNotThrow("Parsing TransformTestCase.originalSql") {
-            super.parser.parseAstStatement(tc.originalSql)
-        }
-        val expectedAst = assertDoesNotThrow("Parsing TransformTestCase.expectedSql") {
-            super.parser.parseAstStatement(tc.expectedSql)
-        }
 
-        val actualAst = transform.transformStatement(originalAst)
+        val actualAst = transform.transformStatement(tc.original)
 
-        assertEquals("The expected AST must match the transformed AST", expectedAst, actualAst)
+        assertEquals("The expected AST must match the transformed AST", tc.expected, actualAst)
 
         // Idempotent transforms should have the same result if the result of the first pass is passed into a
         // second pass.
@@ -54,18 +74,11 @@ abstract class VisitorTransformTestBase : SqlParserTestBase() {
      * Parses [TransformTestCase.expectedSql], and asserts the transformed AST is equivalent to the expected AST.
      */
     protected fun runTest(tc: TransformTestCase, transformers: List<PartiqlAst.VisitorTransform>) {
-        val originalAst = assertDoesNotThrow("Parsing TransformTestCase.originalSql") {
-            super.parser.parseAstStatement(tc.originalSql)
-        }
-        val expectedAst = assertDoesNotThrow("Parsing TransformTestCase.expectedSql") {
-            super.parser.parseAstStatement(tc.expectedSql)
-        }
-
-        val actualStatement = transformers.fold(originalAst) { node, transform ->
+        val actualStatement = transformers.fold(tc.original) { node, transform ->
             transform.transformStatement(node)
         }
 
-        assertEquals("The expected AST must match the transformed AST", expectedAst, actualStatement)
+        assertEquals("The expected AST must match the transformed AST", tc.expected, actualStatement)
     }
 
     private fun <T> assertDoesNotThrow(message: String, block: () -> T): T {

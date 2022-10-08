@@ -30,6 +30,20 @@ internal class LogicalResolvedToDefaultPhysicalVisitorTransform(
     val problemHandler: ProblemHandler
 ) : PartiqlLogicalResolvedToPartiqlPhysicalVisitorTransform() {
 
+    override fun transformAggregateFunction(node: PartiqlLogicalResolved.AggregateFunction): PartiqlPhysical.AggregateFunction {
+        val thiz = this
+        return PartiqlPhysical.build {
+            aggregateFunction(
+                i = DEFAULT_IMPL,
+                quantifier = thiz.transformSetQuantifier(node.quantifier),
+                name = thiz.transformSymbolPrimitiveText(node.name),
+                arg = thiz.transformExpr(node.arg),
+                asVar = thiz.transformVarDecl(node.asVar),
+                metas = thiz.transformMetas(node.metas)
+            )
+        }
+    }
+
     /** Copies [PartiqlLogicalResolved.Bexpr.Scan] to [PartiqlPhysical.Bexpr.Scan], adding the default impl. */
     override fun transformBexprScan(node: PartiqlLogicalResolved.Bexpr.Scan): PartiqlPhysical.Bexpr {
         val thiz = this
@@ -82,6 +96,20 @@ internal class LogicalResolvedToDefaultPhysicalVisitorTransform(
                 left = thiz.transformBexpr(node.left),
                 right = thiz.transformBexpr(node.right),
                 predicate = node.predicate?.let { thiz.transformExpr(it) },
+                metas = node.metas
+            )
+        }
+    }
+
+    override fun transformBexprAggregate(node: PartiqlLogicalResolved.Bexpr.Aggregate): PartiqlPhysical.Bexpr {
+        val thiz = this
+        return PartiqlPhysical.build {
+            aggregate(
+                i = DEFAULT_IMPL,
+                source = thiz.transformBexpr(node.source),
+                strategy = thiz.transformGroupingStrategy(node.strategy),
+                groupList = thiz.transformGroupKeyList(node.groupList),
+                functionList = thiz.transformAggregateFunctionList(node.functionList),
                 metas = node.metas
             )
         }

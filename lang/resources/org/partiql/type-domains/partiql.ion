@@ -641,6 +641,26 @@ may then be further optimized by selecting better implementations of each operat
         (exclude let_binding)
         (include (product let_binding value::expr decl::var_decl))
 
+        // Inputs to Aggregations
+        (include
+            (product group_key
+                     expr::expr
+                     as_var::var_decl
+            )
+            (product group_key_list
+                     keys::(* group_key 1)
+            )
+            (product aggregate_function
+                quantifier::set_quantifier
+                name::symbol
+                arg::expr
+                as_var::var_decl
+            )
+            (product aggregate_function_list
+                functions::(* aggregate_function 1)
+            )
+        )
+
         // Now we include new stuff, including PartiQL's relational algebra.
         (include
             // Every instance of `var_decl` introduces a new binding in the current scope.
@@ -672,6 +692,16 @@ may then be further optimized by selecting better implementations of each operat
                 // Evaluates `predicate` within the scope of every row of `bexpr`, and only returns those
                 // rows for which `predicate` returns true.
                 (filter predicate::expr source::bexpr)
+
+                // The relational algebra operator for aggregations. Using the output scope of the `source` and any
+                //  passed input scope, we group on the `group_key_list` calculate aggregations using the
+                //  `aggregate_function_list`. To note: GROUP AS is represented as an aggregation function
+                (aggregate
+                     source::bexpr
+                     strategy::grouping_strategy
+                     group_list::group_key_list
+                     function_list::aggregate_function_list
+                )
 
                 // Basic join operator.  Covers cross, inner, left, right and full joins.
                 // To represent a cross join, set `predicate` to `null`.
@@ -735,7 +765,6 @@ may then be further optimized by selecting better implementations of each operat
 
         (exclude
             group_by
-            grouping_strategy
             group_key
             group_key_list
             order_by             // Replaced with SORT node
@@ -849,6 +878,18 @@ may then be further optimized by selecting better implementations of each operat
                 (dml_query expr::expr))
         )
 
+        // Aggregate Functions are used by the `aggregate` relational algebra operator and carry implementations.
+        (exclude aggregate_function)
+        (include
+            (product aggregate_function
+                i::impl
+                quantifier::set_quantifier
+                name::symbol
+                arg::expr
+                as_var::var_decl
+            )
+        )
+
         // Every variant of bexpr changes by adding an `impl` element in the physical algebra, so let's replace it
         // entirely.
         (exclude bexpr)
@@ -879,6 +920,15 @@ may then be further optimized by selecting better implementations of each operat
                     predicate::(? expr))
 
                 (sort i::impl source::bexpr sort_specs::(* sort_spec 1))
+
+                (aggregate
+                    i::impl
+                    source::bexpr
+                    strategy::grouping_strategy
+                    group_list::group_key_list
+                    function_list::aggregate_function_list
+                )
+
                 (offset i::impl row_count::expr source::bexpr)
                 (limit i::impl row_count::expr source::bexpr)
                 (let i::impl source::bexpr bindings::(* let_binding 1))
