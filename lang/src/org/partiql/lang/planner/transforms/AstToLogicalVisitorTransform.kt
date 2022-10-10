@@ -114,7 +114,7 @@ internal class AstToLogicalVisitorTransform(
         node: PartiqlAst.Expr.Select,
         source: PartiqlLogical.Bexpr
     ): Pair<PartiqlAst.Expr.Select, PartiqlLogical.Bexpr.Aggregate>? {
-        val aggregationReplacer = ReplaceAllCallAggregationsVisitorTransform()
+        val aggregationReplacer = CallAggregationsProjectionReplacer()
         val transformedNode = aggregationReplacer.transformExprSelect(node) as PartiqlAst.Expr.Select
 
         // Check if aggregation is necessary
@@ -503,31 +503,20 @@ private class FromSourceToBexpr(
 }
 
 /**
- * Transforms [PartiqlAst.Expr.CallAgg]'s to [PartiqlAst.Expr.Id]'s that reference the new [PartiqlLogical.VarDecl].
- * Does not recurse into more than 1 [PartiqlAst.Expr.Select].
+ * Given a [PartiqlAst.Expr.Select], transforms all [PartiqlAst.Expr.CallAgg]'s within the projection list to
+ * [PartiqlAst.Expr.Id]'s that reference the new [PartiqlLogical.VarDecl].
+ * Does not recurse into more than 1 [PartiqlAst.Expr.Select]. Designed to be invoked directly on a
+ * [PartiqlAst.Expr.Select] using [transformExprSelect].
  */
-private class ReplaceAllCallAggregationsVisitorTransform(var level: Int = 0) : VisitorTransformBase() {
-    val callAggregationVisitorTransform = CallAggToIdVisitorTransform()
-    val findAggregationsVisitor = FindAggregationsVisitor()
+private class CallAggregationsProjectionReplacer(var level: Int = 0) : VisitorTransformBase() {
+    val callAggregationVisitorTransform = CallAggregationReplacer()
 
     override fun transformProjectItemProjectExpr_expr(node: PartiqlAst.ProjectItem.ProjectExpr): PartiqlAst.Expr {
-        findAggregationsVisitor.walkProjectItem(node)
-        val transformed = when (findAggregationsVisitor.containsCallAggregations) {
-            true -> callAggregationVisitorTransform.transformExpr(node.expr)
-            false -> super.transformProjectItemProjectExpr_expr(node)
-        }
-        findAggregationsVisitor.containsCallAggregations = false
-        return transformed
+        return callAggregationVisitorTransform.transformExpr(node.expr)
     }
 
     override fun transformProjectionProjectValue_value(node: PartiqlAst.Projection.ProjectValue): PartiqlAst.Expr {
-        findAggregationsVisitor.walkProjectionProjectValue(node)
-        val transformed = when (findAggregationsVisitor.containsCallAggregations) {
-            true -> callAggregationVisitorTransform.transformExpr(node.value)
-            false -> super.transformProjectionProjectValue_value(node)
-        }
-        findAggregationsVisitor.containsCallAggregations = false
-        return transformed
+        return callAggregationVisitorTransform.transformExpr(node.value)
     }
 
     override fun transformExprSelect(node: PartiqlAst.Expr.Select): PartiqlAst.Expr {
@@ -538,18 +527,58 @@ private class ReplaceAllCallAggregationsVisitorTransform(var level: Int = 0) : V
 }
 
 /**
- * Determines whether the AST contains [PartiqlAst.Expr.CallAgg]s
+ * Created to be invoked by the [CallAggregationsProjectionReplacer] to transform all encountered [PartiqlAst.Expr.CallAgg]'s to
+ * [PartiqlAst.Expr.Id]'s. This class is designed to be called directly on [PartiqlAst.Projection]'s and does NOT recurse
+ * into [PartiqlAst.Expr.Select]'s. This class is designed to be instantiated once per aggregation scope. The class collects
+ * all unique-per-scope aggregation variable declaration names and exposes it to the calling class.
+ *
+ * As an example, this transforms:
+ * ```
+ * SELECT g, SUM(t.b) AS sumB
+ * FROM t
+ * GROUP BY t.a AS g GROUP AS h
+ * ```
+ *
+ * into:
+ *
+ * ```
+ * SELECT g, t.b, h, $__partiql_aggregation_0 AS sumB
+ * FROM t
+ * GROUP BY t.a AS g, t.b GROUP AS h
+ * ```
+ *
  */
-private class FindAggregationsVisitor() : PartiqlAst.Visitor() {
-    var containsCallAggregations = false
-    override fun visitExprCallAgg(node: PartiqlAst.Expr.CallAgg) {
-        containsCallAggregations = true
+private class CallAggregationReplacer() : VisitorTransformBase() {
+    private var varDeclIncrement = 0
+    val aggregations = mutableSetOf<Pair<String, PartiqlAst.Expr.CallAgg>>()
+
+    override fun transformExprCallAgg(node: PartiqlAst.Expr.CallAgg): PartiqlAst.Expr {
+        val name = getAggregationIdName()
+        aggregations.add(name to node)
+        return PartiqlAst.build {
+            id(
+                name = name,
+                case = caseInsensitive(),
+                qualifier = unqualified(),
+                metas = node.metas
+            )
+        }
     }
+
+    override fun transformExprSelect(node: PartiqlAst.Expr.Select): PartiqlAst.Expr {
+        return node
+    }
+
+    /**
+     * Returns unique (per [PartiqlAst.Expr.Select]) strings for each aggregation.
+     */
+    private fun getAggregationIdName(): String = "\$__partiql_aggregation_${varDeclIncrement++}"
 }
 
 /**
  * Asserts whether each found [PartiqlAst.Expr.Id] is a Group Key or Group As reference by checking for the
- * existence of a [IsGroupAttributeReferenceMeta]. Does not recurse into more than 1 [PartiqlAst.Expr.Select].
+ * existence of a [IsGroupAttributeReferenceMeta]. Does not recurse into more than 1 [PartiqlAst.Expr.Select]. Designed
+ * to be called directly on a single [PartiqlAst.Expr.Select].
  */
 private class CheckProjectionsForGroups(var level: Int = 0) : PartiqlAst.Visitor() {
 
@@ -576,55 +605,6 @@ private class CheckProjectionsForGroups(var level: Int = 0) : PartiqlAst.Visitor
     override fun walkExprCallAgg(node: PartiqlAst.Expr.CallAgg) {
         return
     }
-}
-
-/**
- * Created to be invoked by the [ReplaceAllCallAggregationsVisitorTransform] to transform projection items and assert
- * that any remaining variable references are either GROUP BY KEYS, GROUP BY KEY ALIASES, or GROUP AS ALIASES.
- *
- * Also transforms CallAgg with a reference to the result identifier.
- *
- * As an example, this transforms:
- * ```
- * SELECT g, SUM(t.b) AS sumB
- * FROM t
- * GROUP BY t.a AS g GROUP AS h
- * ```
- *
- * into:
- *
- * ```
- * SELECT g, t.b, h, $__partiql_aggregation_0 AS sumB
- * FROM t
- * GROUP BY t.a AS g, t.b GROUP AS h
- * ```
- *
- */
-private class CallAggToIdVisitorTransform() : VisitorTransformBase() {
-    private var varDeclIncrement = 0
-    val aggregations = mutableSetOf<Pair<String, PartiqlAst.Expr.CallAgg>>()
-
-    override fun transformExprCallAgg(node: PartiqlAst.Expr.CallAgg): PartiqlAst.Expr {
-        val name = getAggregationIdName()
-        aggregations.add(name to node)
-        return PartiqlAst.build {
-            id(
-                name = name,
-                case = caseInsensitive(),
-                qualifier = unqualified(),
-                metas = node.metas
-            )
-        }
-    }
-
-    override fun transformExprSelect(node: PartiqlAst.Expr.Select): PartiqlAst.Expr {
-        return node
-    }
-
-    /**
-     * Returns unique (per [PartiqlAst.Expr.Select]) strings for each aggregation.
-     */
-    private fun getAggregationIdName(): String = "\$__partiql_aggregation_${varDeclIncrement++}"
 }
 
 private val INVALID_STATEMENT = PartiqlLogical.build {

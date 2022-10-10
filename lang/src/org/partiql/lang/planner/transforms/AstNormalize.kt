@@ -4,9 +4,9 @@ import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.eval.visitors.FromSourceAliasVisitorTransform
 import org.partiql.lang.eval.visitors.GroupByItemAliasVisitorTransform
 import org.partiql.lang.eval.visitors.GroupByPathExpressionVisitorTransform
+import org.partiql.lang.eval.visitors.GroupKeyReferencesVisitorTransform
 import org.partiql.lang.eval.visitors.OrderBySortSpecVisitorTransform
 import org.partiql.lang.eval.visitors.PipelinedVisitorTransform
-import org.partiql.lang.eval.visitors.SelectListGroupKeysVisitorTransform
 import org.partiql.lang.eval.visitors.SelectListItemAliasVisitorTransform
 import org.partiql.lang.eval.visitors.SelectStarVisitorTransform
 
@@ -24,7 +24,7 @@ fun PartiqlAst.Statement.normalize(): PartiqlAst.Statement {
         OrderBySortSpecVisitorTransform(),
         GroupByItemAliasVisitorTransform(),
         GroupByPathExpressionVisitorTransform(),
-        SelectListGroupKeysVisitorTransform(),
+        GroupKeyReferencesVisitorTransform(),
         // Changes `SELECT * FROM a, b` to SELECT a.*, b.* FROM a, b`
         SelectStarVisitorTransform()
     )

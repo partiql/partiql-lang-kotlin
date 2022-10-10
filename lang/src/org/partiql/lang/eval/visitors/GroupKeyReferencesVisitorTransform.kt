@@ -47,17 +47,15 @@ import org.partiql.lang.planner.transforms.errAstNotNormalized
  *
  * ```
  */
-class SelectListGroupKeysVisitorTransform(
-    val keys: Map<String, PartiqlAst.GroupKey> = emptyMap(),
+public class GroupKeyReferencesVisitorTransform(
+    private val keys: Map<String, PartiqlAst.GroupKey> = emptyMap(),
     private val groupAliases: Set<String> = emptySet()
 ) : VisitorTransformBase() {
 
     override fun transformExprSelect(node: PartiqlAst.Expr.Select): PartiqlAst.Expr {
-        val keyVisitor = GroupKeyGathererVisitor()
-        keyVisitor.walkExprSelect(node)
-        val keys = keyVisitor.groupByKeys + this.keys
-        val aliases = keyVisitor.groupAliases + this.groupAliases
-        return SelectListGroupKeysVisitorTransform(keys, aliases).transformExprSelectSupport(node)
+        val keys = getGroupByKeys(node) + this.keys
+        val aliases = setOfNotNull(getGroupAsAlias(node)) + this.groupAliases
+        return GroupKeyReferencesVisitorTransform(keys, aliases).transformExprSelectSupport(node)
     }
 
     private fun transformExprSelectSupport(node: PartiqlAst.Expr.Select): PartiqlAst.Expr {
@@ -107,11 +105,25 @@ class SelectListGroupKeysVisitorTransform(
             )
         }
     }
+
+    private fun getGroupByKeys(node: PartiqlAst.Expr.Select): Map<String, PartiqlAst.GroupKey> {
+        val groupByKeys = mutableMapOf<String, PartiqlAst.GroupKey>()
+        node.group?.keyList?.keys?.reversed()?.forEach { key ->
+            val keyAlias = key.asAlias?.text ?: errAstNotNormalized("Group By Keys should all have aliases.")
+            groupByKeys[keyAlias] = key
+        }
+        return groupByKeys
+    }
+
+    private fun getGroupAsAlias(node: PartiqlAst.Expr.Select): String? = node.group?.groupAsAlias?.text
 }
 
+/**
+ * Transforms identifiers that reference group keys into the Group Key's alias or unique name.
+ */
 private class GroupKeyReferencesToUniqueNameIdsVisitorTransform(val keys: Map<String, PartiqlAst.GroupKey>, val aliases: Set<String>) : VisitorTransformBase() {
-    val groupKeybindings = MapBindings(keys)
-    val groupAsBindings = MapBindings(aliases.associateWith { 1 })
+    private val groupKeybindings = MapBindings(keys)
+    private val groupAsBindings = MapBindings(aliases.associateWith { 1 })
 
     override fun transformExprId(node: PartiqlAst.Expr.Id): PartiqlAst.Expr {
         val bindingName = BindingName(node.name.text, node.case.toBindingCase())
@@ -133,19 +145,6 @@ private class GroupKeyReferencesToUniqueNameIdsVisitorTransform(val keys: Map<St
     }
 
     override fun transformExprSelect(node: PartiqlAst.Expr.Select): PartiqlAst.Expr {
-        return SelectListGroupKeysVisitorTransform(keys, aliases).transformExprSelect(node)
-    }
-}
-
-private class GroupKeyGathererVisitor : PartiqlAst.Visitor() {
-    val groupByKeys = mutableMapOf<String, PartiqlAst.GroupKey>()
-    val groupAliases = mutableSetOf<String>()
-    override fun walkExprSelect(node: PartiqlAst.Expr.Select) {
-        // Note: We use reversed() here so that we access the keys in LIFO order
-        node.group?.keyList?.keys?.reversed()?.forEach { key ->
-            val keyAlias = key.asAlias?.text ?: errAstNotNormalized("Group By Keys should all have aliases.")
-            groupByKeys[keyAlias] = key
-        }
-        node.group?.groupAsAlias?.text?.let { text -> groupAliases.add(text) }
+        return GroupKeyReferencesVisitorTransform(keys, aliases).transformExprSelect(node)
     }
 }

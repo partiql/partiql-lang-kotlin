@@ -878,18 +878,6 @@ may then be further optimized by selecting better implementations of each operat
                 (dml_query expr::expr))
         )
 
-        // Aggregate Functions are used by the `aggregate` relational algebra operator and carry implementations.
-        (exclude aggregate_function)
-        (include
-            (product aggregate_function
-                i::impl
-                quantifier::set_quantifier
-                name::symbol
-                arg::expr
-                as_var::var_decl
-            )
-        )
-
         // Every variant of bexpr changes by adding an `impl` element in the physical algebra, so let's replace it
         // entirely.
         (exclude bexpr)

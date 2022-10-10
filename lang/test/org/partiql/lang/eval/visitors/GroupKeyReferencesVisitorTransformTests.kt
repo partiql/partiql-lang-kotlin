@@ -22,11 +22,11 @@ import org.partiql.lang.domains.metaContainerOf
 import org.partiql.lang.util.ArgumentsProviderBase
 import org.partiql.pig.runtime.SymbolPrimitive
 
-class SelectListGroupKeysVisitorTransformTests : VisitorTransformTestBase() {
+class GroupKeyReferencesVisitorTransformTests : VisitorTransformTestBase() {
 
     @ParameterizedTest
     @ArgumentsSource(ArgsProvider::class)
-    fun transform(tc: TransformTestCase) = runTestForIdempotentTransform(tc, SelectListGroupKeysVisitorTransform())
+    fun transform(tc: TransformTestCase) = runTestForIdempotentTransform(tc, GroupKeyReferencesVisitorTransform())
 
     class ArgsProvider : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> {

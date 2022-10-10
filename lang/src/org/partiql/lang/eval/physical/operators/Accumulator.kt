@@ -63,17 +63,17 @@ internal class AccumulatorSum(
     internal override val filter: (ExprValue) -> Boolean
 ) : Accumulator(filter = filter) {
 
-    lateinit var sum: Number
+    var sum: Number? = null
 
     override fun nextValue(value: ExprValue) {
         checkIsNumberType(funcName = "SUM", value = value)
-        if (this::sum.isInitialized.not()) sum = 0.0
-        this.sum += value.numberValue()
+        if (sum == null) sum = 0.0
+        this.sum = value.numberValue() + this.sum!!
     }
 
-    override fun compute(): ExprValue = when (this::sum.isInitialized) {
-        true -> sum.exprValue(valueFactory)
-        false -> valueFactory.nullValue
+    override fun compute(): ExprValue {
+        val totalSum = sum?.let { bigDecimalOf(it) }
+        return totalSum?.exprValue(valueFactory) ?: valueFactory.nullValue
     }
 }
 
