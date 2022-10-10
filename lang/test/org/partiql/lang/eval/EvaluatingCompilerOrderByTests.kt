@@ -3,7 +3,6 @@ package org.partiql.lang.eval
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestCase
-import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestTarget
 import org.partiql.lang.util.ArgumentsProviderBase
 
 class EvaluatingCompilerOrderByTests : EvaluatorTestBase() {
@@ -109,47 +108,39 @@ class EvaluatingCompilerOrderByTests : EvaluatorTestBase() {
                 "[{'productId': 4, 'supplierId_nulls': NULL}, {'productId': 5, 'supplierId_nulls': NULL}, {'productId': 8, 'supplierId_nulls': NULL}, {'productId': 9, 'supplierId_nulls': NULL}, {'productId': 10, 'supplierId_nulls': NULL}, {'productId': 6, 'supplierId_nulls': 11}, {'productId': 7, 'supplierId_nulls': 11}, {'productId': 1, 'supplierId_nulls': 10}, {'productId': 2, 'supplierId_nulls': 10}, {'productId': 3, 'supplierId_nulls': 10}]"
             ),
             // should group and order by asc sellerId
-            // @TODO: Planner does NOT support GROUP BY yet. Need to add support for the following 7 tests
             EvaluatorTestCase(
                 "SELECT sellerId FROM orders GROUP BY sellerId ORDER BY sellerId ASC",
-                "[{'sellerId': 1}, {'sellerId': 2}]",
-                target = EvaluatorTestTarget.COMPILER_PIPELINE
+                "[{'sellerId': 1}, {'sellerId': 2}]"
             ),
             // should group and order by desc sellerId
             EvaluatorTestCase(
                 "SELECT sellerId FROM orders GROUP BY sellerId ORDER BY sellerId DESC",
-                "[{'sellerId': 2}, {'sellerId': 1}]",
-                target = EvaluatorTestTarget.COMPILER_PIPELINE
+                "[{'sellerId': 2}, {'sellerId': 1}]"
             ),
             // should group and order by DESC (NULLS FIRST as default)
             EvaluatorTestCase(
                 "SELECT supplierId_nulls FROM products_sparse GROUP BY supplierId_nulls ORDER BY supplierId_nulls DESC",
-                " [{'supplierId_nulls': NULL}, {'supplierId_nulls': 11}, {'supplierId_nulls': 10}]",
-                target = EvaluatorTestTarget.COMPILER_PIPELINE
+                " [{'supplierId_nulls': NULL}, {'supplierId_nulls': 11}, {'supplierId_nulls': 10}]"
             ),
             // should group and order by ASC (NULLS LAST as default)
             EvaluatorTestCase(
                 "SELECT supplierId_nulls FROM products_sparse GROUP BY supplierId_nulls ORDER BY supplierId_nulls ASC",
-                "[{'supplierId_nulls': 10}, {'supplierId_nulls': 11}, {'supplierId_nulls': NULL}]",
-                target = EvaluatorTestTarget.COMPILER_PIPELINE
+                "[{'supplierId_nulls': 10}, {'supplierId_nulls': 11}, {'supplierId_nulls': NULL}]"
             ),
             // should group and place nulls first (asc as default)
             EvaluatorTestCase(
                 "SELECT supplierId_nulls FROM products_sparse GROUP BY supplierId_nulls ORDER BY supplierId_nulls NULLS FIRST",
-                "[{'supplierId_nulls': NULL}, {'supplierId_nulls': 10}, {'supplierId_nulls': 11}]",
-                target = EvaluatorTestTarget.COMPILER_PIPELINE
+                "[{'supplierId_nulls': NULL}, {'supplierId_nulls': 10}, {'supplierId_nulls': 11}]"
             ),
             // should group and place nulls last (asc as default)
             EvaluatorTestCase(
                 "SELECT supplierId_nulls FROM products_sparse GROUP BY supplierId_nulls ORDER BY supplierId_nulls NULLS LAST",
-                "[{'supplierId_nulls': 10}, {'supplierId_nulls': 11}, {'supplierId_nulls': NULL}]",
-                target = EvaluatorTestTarget.COMPILER_PIPELINE
+                "[{'supplierId_nulls': 10}, {'supplierId_nulls': 11}, {'supplierId_nulls': NULL}]"
             ),
             // should group and order by asc and place nulls first
             EvaluatorTestCase(
                 "SELECT supplierId_nulls FROM products_sparse GROUP BY supplierId_nulls ORDER BY supplierId_nulls ASC NULLS FIRST",
-                "[{'supplierId_nulls': NULL}, {'supplierId_nulls': 10}, {'supplierId_nulls': 11}]",
-                target = EvaluatorTestTarget.COMPILER_PIPELINE
+                "[{'supplierId_nulls': NULL}, {'supplierId_nulls': 10}, {'supplierId_nulls': 11}]"
             ),
 
             // DIFFERENT DATA TYPES
@@ -296,9 +287,60 @@ class EvaluatingCompilerOrderByTests : EvaluatorTestBase() {
     @ParameterizedTest
     @ArgumentsSource(ArgsProviderValid::class)
     fun validTests(tc: EvaluatorTestCase) = runEvaluatorTestCase(
-        tc = tc.copy(
-            excludeLegacySerializerAssertions = true
-        ),
+        tc = tc.copy(excludeLegacySerializerAssertions = true),
         session = session
     )
+
+    // TODO: These tests are FAILING. These need to be addressed. Uncomment @ParameterizedTest to test
+    // @ParameterizedTest
+    @ArgumentsSource(FailingTestsProvider::class)
+    fun failingTests(tc: EvaluatorTestCase) = runEvaluatorTestCase(
+        tc = tc.copy(excludeLegacySerializerAssertions = true),
+        session = session
+    )
+    class FailingTestsProvider : ArgumentsProviderBase() {
+        override fun getParameters() = listOf(
+            // TODO: Please reference https://github.com/partiql/partiql-lang-kotlin/issues/833 for context.
+            //  For this, we need to clone the ExprValue during the SORT operator factory. This has to do with the shared
+            //  global state registers.
+            EvaluatorTestCase(
+                query = """
+                    SELECT supplierId_nulls
+                    FROM products_sparse
+                    GROUP BY supplierId_nulls
+                    ORDER BY
+                        (SELECT supplierId_nulls FROM << 0, 1 >>)
+                    DESC NULLS FIRST
+                """,
+                "[{'supplierId_nulls': NULL}, {'supplierId_nulls': 11}, {'supplierId_nulls': 10}]"
+            ),
+            // Nested SELECT in ORDER BY ASC
+            EvaluatorTestCase(
+                query = """
+                    SELECT supplierId_nulls
+                    FROM products_sparse
+                    GROUP BY supplierId_nulls
+                    ORDER BY
+                        (SELECT supplierId_nulls FROM << 0, 1 >>)
+                    ASC NULLS FIRST
+                """,
+                "[{'supplierId_nulls': NULL}, {'supplierId_nulls': 10}, {'supplierId_nulls': 11}]"
+            ),
+            // Nested SELECT in ORDER BY with shadowing
+            // With the following test, we are showing that the nested SELECT `supplierId_nulls` gives preference to
+            // its from source. Therefore, even though the outer ORDER is DESC, the outer ORDER SORT SPEC will always
+            // be the same value -- therefore, it can be treated as a constant -- and ordering won't occur.
+            EvaluatorTestCase(
+                query = """
+                    SELECT supplierId_nulls
+                    FROM products_sparse
+                    GROUP BY supplierId_nulls
+                    ORDER BY
+                        (SELECT t FROM products_sparse GROUP BY supplierId_nulls ORDER BY supplierIds_nulls ASC NULLS FIRST)
+                    DESC NULLS FIRST
+                """,
+                "[{'supplierId_nulls': NULL}, {'supplierId_nulls': 10}, {'supplierId_nulls': 11}]"
+            ),
+        )
+    }
 }

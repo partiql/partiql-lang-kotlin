@@ -31,6 +31,7 @@ import org.partiql.lang.planner.transforms.errAstNotNormalized
  * SELECT groupKey AS projectionAlias
  * FROM source AS sourceTable
  * GROUP BY sourceTable.a AS groupKey(meta = UniqueNameMeta:someUniqueName)
+ * ORDER BY groupKey
  * ```
  *
  * Into:
@@ -39,6 +40,7 @@ import org.partiql.lang.planner.transforms.errAstNotNormalized
  * SELECT someUniqueName AS projectionAlias
  * FROM source AS sourceTable
  * GROUP BY sourceTable.a AS groupKey(meta = UniqueNameMeta:someUniqueName)
+ * ORDER BY someUniqueName
  * ```
  *
  * If provided with a query with all of the select list aliases are already specified, an exact clone is returned.
@@ -64,7 +66,8 @@ class SelectListGroupKeysVisitorTransform(
             return transformedNode
         }
         val projection = this.transformProjection(node.project)
-        return transformedNode.copy(project = projection)
+        val order = node.order?.let { this.transformOrderBy(it) }
+        return transformedNode.copy(project = projection, order = order)
     }
 
     override fun transformProjectionProjectValue(node: PartiqlAst.Projection.ProjectValue): PartiqlAst.Projection {
@@ -75,6 +78,11 @@ class SelectListGroupKeysVisitorTransform(
                 metas = node.metas
             )
         }
+    }
+
+    override fun transformSortSpec_expr(node: PartiqlAst.SortSpec): PartiqlAst.Expr {
+        val itemTransform = GroupKeyReferencesToUniqueNameIdsVisitorTransform(this.keys, this.groupAliases)
+        return itemTransform.transformSortSpec_expr(node)
     }
 
     override fun transformProjectionProjectList(node: PartiqlAst.Projection.ProjectList): PartiqlAst.Projection {
