@@ -48,7 +48,7 @@ internal class PartiqlAstSanityValidator : PartiqlAst.Visitor() {
 
     private var compileOptions = CompileOptions.standard()
 
-    fun validate(statement: PartiqlAst.Statement, compileOptions: CompileOptions = CompileOptions.standard()) {
+    internal fun validate(statement: PartiqlAst.Statement, compileOptions: CompileOptions = CompileOptions.standard()) {
         this.compileOptions = compileOptions
         this.walkStatement(statement)
     }
