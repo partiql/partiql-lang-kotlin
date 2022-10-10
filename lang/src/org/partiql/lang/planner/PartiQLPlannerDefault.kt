@@ -112,7 +112,7 @@ internal class PartiQLPlannerDefault(
      * See [AstToLogicalVisitorTransform]
      */
     private fun PartiqlAst.Statement.toLogicalPlan(problems: ProblemCollector): PartiqlLogical.Plan {
-        val transform = AstToLogicalVisitorTransform(problems)
+        val transform = AstToLogicalVisitorTransform(problems, options.typedOpBehavior)
         return PartiqlLogical.Plan(
             stmt = transform.transformStatement(this),
             version = PartiQLPlanner.PLAN_VERSION.asPrimitive()

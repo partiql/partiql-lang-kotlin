@@ -1,19 +1,34 @@
 package org.partiql.lang.planner.transforms
 
+import com.amazon.ionelement.api.IntElement
+import com.amazon.ionelement.api.IntElementSize
+import com.amazon.ionelement.api.MetaContainer
+import com.amazon.ionelement.api.TextElement
 import com.amazon.ionelement.api.ionSymbol
+import org.partiql.lang.ast.IsCountStarMeta
+import org.partiql.lang.ast.passes.SemanticException
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.PartiqlAstToPartiqlLogicalVisitorTransform
 import org.partiql.lang.domains.PartiqlLogical
+import org.partiql.lang.domains.addSourceLocation
+import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Problem
 import org.partiql.lang.errors.ProblemHandler
+import org.partiql.lang.errors.Property
+import org.partiql.lang.errors.PropertyValueMap
+import org.partiql.lang.eval.EvaluationException
+import org.partiql.lang.eval.TypedOpBehavior
+import org.partiql.lang.eval.err
+import org.partiql.lang.eval.errorContextFrom
 import org.partiql.lang.eval.physical.sourceLocationMetaOrUnknown
 import org.partiql.lang.planner.PlanningProblemDetails
 import org.partiql.lang.planner.handleUnimplementedFeature
+import org.partiql.pig.runtime.LongPrimitive
 
-internal fun PartiqlAst.Statement.toLogicalPlan(problemHandler: ProblemHandler): PartiqlLogical.Plan =
+internal fun PartiqlAst.Statement.toLogicalPlan(problemHandler: ProblemHandler, typedOpBehavior: TypedOpBehavior = TypedOpBehavior.LEGACY): PartiqlLogical.Plan =
     PartiqlLogical.build {
         plan(
-            AstToLogicalVisitorTransform(problemHandler).transformStatement(this@toLogicalPlan),
+            AstToLogicalVisitorTransform(problemHandler, typedOpBehavior).transformStatement(this@toLogicalPlan),
             version = PLAN_VERSION_NUMBER
         )
     }
@@ -28,7 +43,8 @@ internal fun PartiqlAst.Statement.toLogicalPlan(problemHandler: ProblemHandler):
  * are transformable.  See `AstToLogicalVisitorTransformTests` to see which queries are transformable.
  */
 internal class AstToLogicalVisitorTransform(
-    val problemHandler: ProblemHandler
+    val problemHandler: ProblemHandler,
+    private val typedOpBehavior: TypedOpBehavior
 ) : PartiqlAstToPartiqlLogicalVisitorTransform() {
 
     override fun transformExprSelect(node: PartiqlAst.Expr.Select): PartiqlLogical.Expr {
@@ -304,6 +320,29 @@ internal class AstToLogicalVisitorTransform(
                 },
                 metas = node.metas
             )
+        }.apply { // Validation
+            parts.forEach { part ->
+                when (part) {
+                    is PartiqlLogical.StructPart.StructField -> {
+                        if (part.fieldName is PartiqlLogical.Expr.Missing ||
+                            (part.fieldName is PartiqlLogical.Expr.Lit && part.fieldName.value !is TextElement)
+                        ) {
+                            val type = when (part.fieldName) {
+                                is PartiqlLogical.Expr.Lit -> part.fieldName.value.type.toString()
+                                else -> "MISSING"
+                            }
+                            throw SemanticException(
+                                "Found struct part to be of type $type",
+                                ErrorCode.SEMANTIC_NON_TEXT_STRUCT_FIELD_KEY,
+                                PropertyValueMap().addSourceLocation(part.fieldName.metas).also { pvm ->
+                                    pvm[Property.ACTUAL_TYPE] = type
+                                }
+                            )
+                        }
+                    }
+                    is PartiqlLogical.StructPart.StructFields -> { /* intentionally empty */ }
+                }
+            }
         }
 
     private fun transformProjectList(node: PartiqlAst.Projection.ProjectList): PartiqlLogical.Expr =
@@ -325,6 +364,55 @@ internal class AstToLogicalVisitorTransform(
                     }
                 }
             )
+        }
+
+    override fun transformExprLit(node: PartiqlAst.Expr.Lit): PartiqlLogical.Expr =
+        (super.transformExprLit(node) as PartiqlLogical.Expr.Lit).apply { // Validation
+            if (value is IntElement && value.integerSize == IntElementSize.BIG_INTEGER) {
+                throw EvaluationException(
+                    message = "Int overflow or underflow at compile time",
+                    errorCode = ErrorCode.SEMANTIC_LITERAL_INT_OVERFLOW,
+                    errorContext = errorContextFrom(metas),
+                    internal = false
+                )
+            }
+        }
+
+    override fun transformTypeDecimalType(node: PartiqlAst.Type.DecimalType): PartiqlLogical.Type.DecimalType =
+        (super.transformTypeDecimalType(node) as PartiqlLogical.Type.DecimalType).apply { // Validation
+            validateDecimalOrNumericType(scale, precision, metas)
+        }
+
+    override fun transformTypeNumericType(node: PartiqlAst.Type.NumericType): PartiqlLogical.Type.NumericType =
+        (super.transformTypeNumericType(node) as PartiqlLogical.Type.NumericType).apply { // Validation
+            validateDecimalOrNumericType(scale, precision, metas)
+        }
+
+    private fun validateDecimalOrNumericType(scale: LongPrimitive?, precision: LongPrimitive?, metas: MetaContainer) {
+        if (scale != null && precision != null && typedOpBehavior == TypedOpBehavior.HONOR_PARAMETERS) {
+            if (scale.value !in 0..precision.value) {
+                err(
+                    "Scale ${scale.value} should be between 0 and precision ${precision.value}",
+                    errorCode = ErrorCode.SEMANTIC_INVALID_DECIMAL_ARGUMENTS,
+                    errorContext = errorContextFrom(metas),
+                    internal = false
+                )
+            }
+        }
+    }
+
+    override fun transformExprCallAgg(node: PartiqlAst.Expr.CallAgg): PartiqlLogical.Expr =
+        super.transformExprCallAgg(node).apply { // Validation
+            val setQuantifier = node.setq
+            val metas = node.metas
+            if (setQuantifier is PartiqlAst.SetQuantifier.Distinct && metas.containsKey(IsCountStarMeta.TAG)) {
+                err(
+                    "COUNT(DISTINCT *) is not supported",
+                    ErrorCode.EVALUATOR_COUNT_DISTINCT_STAR,
+                    errorContextFrom(metas),
+                    internal = false
+                )
+            }
         }
 }
 

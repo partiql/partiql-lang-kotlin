@@ -44,7 +44,7 @@ import org.partiql.pig.runtime.LongPrimitive
  * - A visitor transform pass (internal or external)
  *
  */
-class PartiqlAstSanityValidator : PartiqlAst.Visitor() {
+internal class PartiqlAstSanityValidator : PartiqlAst.Visitor() {
 
     private var compileOptions = CompileOptions.standard()
 

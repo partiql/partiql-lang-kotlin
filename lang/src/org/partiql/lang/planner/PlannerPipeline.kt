@@ -486,7 +486,7 @@ internal class PlannerPipelineImpl(
 
         // ast -> logical plan
         val logicalPlan = plannerEventCallback.doEvent("ast_to_logical", normalizedAst) {
-            normalizedAst.toLogicalPlan(problemHandler)
+            normalizedAst.toLogicalPlan(problemHandler, evaluatorOptions.typedOpBehavior)
         }
 
         if (problemHandler.hasErrors) {
