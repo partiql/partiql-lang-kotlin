@@ -136,7 +136,7 @@ internal class EvaluatingCompiler(
     private val customTypedOpParameters: Map<String, TypedOpParameter>,
     private val procedures: Map<String, StoredProcedure>,
     private val compileOptions: CompileOptions = CompileOptions.standard(),
-    private val typeReistery: TypeRegistry
+    private val typeRegistery: TypeRegistry
 ) {
     private val errorSignaler = compileOptions.typingMode.createErrorSignaler(valueFactory)
     private val thunkFactory = compileOptions.typingMode.createThunkFactory<Environment>(compileOptions.thunkOptions, valueFactory)
