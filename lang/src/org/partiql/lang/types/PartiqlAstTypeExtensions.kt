@@ -5,7 +5,7 @@ import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.util.TypeRegistry
 
 /** Helper to convert [PartiqlAst.Type] in AST to a [TypedOpParameter]. */
-fun PartiqlAst.Type.toTypedOpParameter(customTypedOpParameters: Map<String, TypedOpParameter>, typeRegistry: TypeRegistry): TypedOpParameter {
+internal fun PartiqlAst.Type.toTypedOpParameter(customTypedOpParameters: Map<String, TypedOpParameter>, typeRegistry: TypeRegistry): TypedOpParameter {
     // hack: to avoid duplicating the function `PartiqlAst.Type.toTypedOpParameter`, we have to convert this
     // PartiqlAst.Type to PartiqlPhysical.Type. The easiest way to do that without using a visitor transform
     // (which is overkill and comes with some downsides for something this simple), is to transform to and from

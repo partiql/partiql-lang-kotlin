@@ -6,7 +6,7 @@ import org.partiql.lang.util.TypeRegistry
 /**
  * Helper to convert [PartiqlPhysical.Type] in AST to a [TypedOpParameter].
  */
-fun PartiqlPhysical.Type.toTypedOpParameter(customTypedOpParameters: Map<String, TypedOpParameter>, typeRegistry: TypeRegistry): TypedOpParameter = when (this) {
+internal fun PartiqlPhysical.Type.toTypedOpParameter(customTypedOpParameters: Map<String, TypedOpParameter>, typeRegistry: TypeRegistry): TypedOpParameter = when (this) {
     is PartiqlPhysical.Type.MissingType -> TypedOpParameter(StaticType.MISSING)
     is PartiqlPhysical.Type.NullType -> TypedOpParameter(StaticType.NULL)
     is PartiqlPhysical.Type.ScalarType -> TypedOpParameter(

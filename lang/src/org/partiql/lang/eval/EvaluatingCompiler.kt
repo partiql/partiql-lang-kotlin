@@ -136,7 +136,7 @@ internal class EvaluatingCompiler(
     private val customTypedOpParameters: Map<String, TypedOpParameter>,
     private val procedures: Map<String, StoredProcedure>,
     private val compileOptions: CompileOptions = CompileOptions.standard(),
-    private val typeReistery: TypeRegistry
+    private val typeRegistery: TypeRegistry
 ) {
     private val errorSignaler = compileOptions.typingMode.createErrorSignaler(valueFactory)
     private val thunkFactory = compileOptions.typingMode.createThunkFactory<Environment>(compileOptions.thunkOptions, valueFactory)
@@ -324,7 +324,7 @@ internal class EvaluatingCompiler(
         val transformedAst = visitorTransform.transformStatement(originalAst)
         val partiqlAstSanityValidator = PartiqlAstSanityValidator()
 
-        partiqlAstSanityValidator.validate(transformedAst, compileOptions, typeReistery)
+        partiqlAstSanityValidator.validate(transformedAst, compileOptions, typeRegistery)
 
         val thunk = nestCompilationContext(ExpressionContext.NORMAL, emptySet()) {
             compileAstStatement(transformedAst)
@@ -1221,7 +1221,7 @@ internal class EvaluatingCompiler(
 
     private fun compileIs(expr: PartiqlAst.Expr.IsType, metas: MetaContainer): ThunkEnv {
         val expThunk = compileAstExpr(expr.value)
-        val typedOpParameter = expr.type.toTypedOpParameter(customTypedOpParameters, typeReistery)
+        val typedOpParameter = expr.type.toTypedOpParameter(customTypedOpParameters, typeRegistery)
         if (typedOpParameter.staticType is AnyType) {
             return thunkFactory.thunkEnv(metas) { valueFactory.newBoolean(true) }
         }
@@ -1252,7 +1252,7 @@ internal class EvaluatingCompiler(
 
     private fun compileCastHelper(value: PartiqlAst.Expr, asType: PartiqlAst.Type, metas: MetaContainer): ThunkEnv {
         val expThunk = compileAstExpr(value)
-        val typedOpParameter = asType.toTypedOpParameter(customTypedOpParameters, typeReistery)
+        val typedOpParameter = asType.toTypedOpParameter(customTypedOpParameters, typeRegistery)
         if (typedOpParameter.staticType is AnyType) {
             return expThunk
         }
@@ -1335,7 +1335,7 @@ internal class EvaluatingCompiler(
         thunkFactory.thunkEnv(metas, compileCastHelper(expr.value, expr.asType, metas))
 
     private fun compileCanCast(expr: PartiqlAst.Expr.CanCast, metas: MetaContainer): ThunkEnv {
-        val typedOpParameter = expr.asType.toTypedOpParameter(customTypedOpParameters, typeReistery)
+        val typedOpParameter = expr.asType.toTypedOpParameter(customTypedOpParameters, typeRegistery)
         if (typedOpParameter.staticType is AnyType) {
             return thunkFactory.thunkEnv(metas) { valueFactory.newBoolean(true) }
         }
@@ -1370,7 +1370,7 @@ internal class EvaluatingCompiler(
     }
 
     private fun compileCanLosslessCast(expr: PartiqlAst.Expr.CanLosslessCast, metas: MetaContainer): ThunkEnv {
-        val typedOpParameter = expr.asType.toTypedOpParameter(customTypedOpParameters, typeReistery)
+        val typedOpParameter = expr.asType.toTypedOpParameter(customTypedOpParameters, typeRegistery)
         if (typedOpParameter.staticType is AnyType) {
             return thunkFactory.thunkEnv(metas) { valueFactory.newBoolean(true) }
         }
