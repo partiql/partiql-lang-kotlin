@@ -20,9 +20,6 @@ import org.partiql.lang.eval.relation.RelationType
 import org.partiql.lang.eval.relation.relation
 import java.util.TreeMap
 
-/**
- * The [AggregateOperatorFactoryDefault] performs a simple form of aggregation by computing the group keys and t
- */
 internal class AggregateOperatorDefault : AggregateOperator {
     override fun create(
         source: RelationExpression,
