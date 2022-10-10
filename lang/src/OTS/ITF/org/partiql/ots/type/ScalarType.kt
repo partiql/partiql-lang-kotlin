@@ -21,14 +21,6 @@ interface ScalarType {
      * `CAST(1 AS <type_names>)`, the target type of the CAST operator corresponds to the scalar type whose
      * [names] has `<type_name>`
      *
-     * Note that spaces are not allowed in type aliases. For special type aliases with space in standard sql, e.g.
-     * `TIME WITH TIME ZONE` in the query `CAST(a AS TIME WITH TIME ZONE)`, the spaces there are replaced with
-     * underscore '_' during parsing, so the query is actually transformed as `CAST(a AS TIME_WITH_TIME_ZONE)`.
-     * All the special type aliases are:
-     *      1. CHARACTER VARYING -> CHARACTER_VARYING
-     *      2. DOUBLE PRECISION -> DOUBLE_PRECISION
-     *      3. TIME WITH TIME ZONE -> TIME_WITH_TIME_ZONE
-     *
      * One type can have multiple type names
      *
      * Types cannot share the same type name

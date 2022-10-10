@@ -6,7 +6,7 @@ import org.partiql.lang.eval.ExprValueType
 object DoubleType : NonParametricType() {
     override val id = "double_precision"
 
-    override val names = listOf("double_precision")
+    override val names = listOf("double precision")
 
     override val runTimeType: ExprValueType
         get() = ExprValueType.FLOAT

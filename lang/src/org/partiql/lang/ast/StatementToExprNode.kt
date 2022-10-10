@@ -368,7 +368,7 @@ private class StatementTransformer(val ion: IonSystem) {
                 in ClobType.names -> DataType(SqlDataType.CLOB, listOf(), alias.text, metas)
                 in DateType.names -> DataType(SqlDataType.DATE, listOf(), alias.text, metas)
                 "time" -> DataType(SqlDataType.TIME, parameters.map { it.value.toIntExact() }, alias.text, metas)
-                "time_with_time_zone" -> DataType(SqlDataType.TIME_WITH_TIME_ZONE, parameters.map { it.value.toIntExact() }, alias.text, metas)
+                "time with time zone" -> DataType(SqlDataType.TIME_WITH_TIME_ZONE, parameters.map { it.value.toIntExact() }, alias.text, metas)
                 else -> error("Unrecognized scalar type ID: ${alias.text}")
             }
             is PartiqlAst.Type.CustomType -> DataType(SqlDataType.CustomDataType(this.name.text), listOf(), metas = metas)
