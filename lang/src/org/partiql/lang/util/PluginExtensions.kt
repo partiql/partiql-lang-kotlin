@@ -27,9 +27,6 @@ internal fun Plugin.validate() {
 
         // Type alias checking
         type.names.forEach { alias ->
-            if (alias.contains(' ')) {
-                error("Type alias '$alias' has a space")
-            }
             // TODO: Check type alias not to collide with PartiQL keywords except type-related keywords
             if (typeAliases.contains(alias)) {
                 error("Type alias '$alias' are registered twice")

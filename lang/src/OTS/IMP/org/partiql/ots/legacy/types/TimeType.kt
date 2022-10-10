@@ -21,7 +21,7 @@ data class TimeType(
 
     override val names: List<String>
         get() = when (withTimeZone) {
-            true -> listOf("time_with_time_zone")
+            true -> listOf("time with time zone")
             false -> listOf("time")
         }
 

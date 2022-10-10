@@ -8,7 +8,7 @@ import org.partiql.lang.eval.ExprValueType
 object VarcharType : ScalarType {
     override val id = "character_varying"
 
-    override val names = listOf("varchar", "character_varying")
+    override val names = listOf("varchar", "character varying")
 
     override fun validateParameters(typeParameters: TypeParameters) {
         when (typeParameters.size) {
