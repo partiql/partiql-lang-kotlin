@@ -67,13 +67,12 @@ internal class AccumulatorSum(
 
     override fun nextValue(value: ExprValue) {
         checkIsNumberType(funcName = "SUM", value = value)
-        if (sum == null) sum = 0.0
+        if (sum == null) sum = 0L
         this.sum = value.numberValue() + this.sum!!
     }
 
     override fun compute(): ExprValue {
-        val totalSum = sum?.let { bigDecimalOf(it) }
-        return totalSum?.exprValue(valueFactory) ?: valueFactory.nullValue
+        return sum?.exprValue(valueFactory) ?: valueFactory.nullValue
     }
 }
 
