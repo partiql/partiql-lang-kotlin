@@ -930,12 +930,6 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
         pathUnpivot()
     }
 
-    override fun visitExprPrimaryMatchOne(ctx: PartiQLParser.ExprPrimaryMatchOneContext) = PartiqlAst.build {
-        val graph = visit(ctx.exprPrimary()) as PartiqlAst.Expr
-        val gpmlPattern = visitGpmlPattern(ctx.gpmlPattern())
-        graphMatch(graph, gpmlPattern, graph.metas)
-    }
-
     override fun visitExprGraphMatchMany(ctx: PartiQLParser.ExprGraphMatchManyContext) = PartiqlAst.build {
         val graph = visit(ctx.exprPrimary()) as PartiqlAst.Expr
         val gpmlPattern = visitGpmlPatternList(ctx.gpmlPatternList())

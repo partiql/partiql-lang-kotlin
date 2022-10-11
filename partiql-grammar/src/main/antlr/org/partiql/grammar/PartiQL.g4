@@ -521,8 +521,6 @@ exprPrimary
     | functionCall               # ExprPrimaryBase
     | nullIf                     # ExprPrimaryBase
     | exprPrimary pathStep+      # ExprPrimaryPath
-    // Same as exprGraphMatchOne, but working around ANTLR restriction on mutual left-recursion:
-    | exprPrimary MATCH gpmlPattern # ExprPrimaryMatchOne
     | exprGraphMatchMany         # ExprPrimaryBase
     | caseExpr                   # ExprPrimaryBase
     | valueList                  # ExprPrimaryBase
