@@ -14,8 +14,26 @@
 package org.partiql.lang.eval.physical.operators
 
 import org.partiql.lang.domains.PartiqlPhysical
+import org.partiql.lang.eval.physical.SetVariableFunc
 
 public abstract class AggregateOperatorFactory(name: String) : RelationalOperatorFactory {
     public final override val key: RelationalOperatorFactoryKey = RelationalOperatorFactoryKey(RelationalOperatorKind.AGGREGATE, name)
-    public abstract fun create(impl: PartiqlPhysical.Impl): AggregateOperator
+    public abstract fun create(
+        source: RelationExpression,
+        keys: List<CompiledGroupKey>,
+        functions: List<CompiledAggregateFunction>
+    ): RelationExpression
 }
+
+public class CompiledGroupKey(
+    val setGroupKeyVal: SetVariableFunc,
+    val value: ValueExpression,
+    val variable: PartiqlPhysical.VarDecl
+)
+
+public class CompiledAggregateFunction(
+    val name: String,
+    val setAggregateVal: SetVariableFunc,
+    val value: ValueExpression,
+    val quantifier: PartiqlPhysical.SetQuantifier,
+)
