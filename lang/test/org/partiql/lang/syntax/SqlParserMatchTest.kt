@@ -23,31 +23,44 @@ class SqlParserMatchTest : SqlParserTestBase() {
 
     @Test
     fun loneMatchExpr1path() = assertExpressionNoRoundTrip(
-        // PR-COMMENT It is sad that outer parens are needed in a stand-alone expression like this
         "(MyGraph MATCH (x))"
     ) {
-        graphMatch(
-            expr = id("MyGraph"),
-            gpmlPattern = gpmlPattern(
-                patterns = listOf(
-                    graphMatchPattern(
-                        parts = listOf(
-                            node(
-                                prefilter = null,
-                                variable = "x",
-                                label = listOf()
-                            )
-                        )
-                    )
-                )
-            )
-        )
+        astMygraphMatchAllNodes
+    }
+
+    @Test
+    fun loneMatchExpr1path_noParens() {
+        // fails because it should be in parentheses
+        assertFailsWith<ParserException> {
+            assertExpressionNoRoundTrip(
+                "MyGraph MATCH (x)"
+            ) {
+                astMygraphMatchAllNodes
+            }
+        }
     }
 
     @Test
     fun loneMatchExpr2path() = assertExpressionNoRoundTrip(
         "( MyGraph MATCH (x), -[u]-> )"
     ) {
+        astMyGraphMatchAllNodesEdges
+    }
+
+    @Test
+    fun loneMatchExpr2path_noParens() {
+        // fails because it should be in parentheses
+        assertFailsWith<ParserException> {
+            assertExpressionNoRoundTrip(
+                "MyGraph MATCH (x), -[u]-> "
+            ) {
+                astMyGraphMatchAllNodesEdges
+            }
+        }
+    }
+
+    // `MyGraph MATCH (x), -[u]->`
+    val astMyGraphMatchAllNodesEdges = PartiqlAst.build {
         graphMatch(
             expr = id("MyGraph"),
             gpmlPattern = gpmlPattern(
@@ -74,7 +87,8 @@ class SqlParserMatchTest : SqlParserTestBase() {
         )
     }
 
-    val unionsMatch = PartiqlAst.build {
+    // `MyGraph MATCH (x)`
+    val astMygraphMatchAllNodes = PartiqlAst.build {
         graphMatch(
             expr = id("MyGraph"),
             gpmlPattern = gpmlPattern(
@@ -93,7 +107,8 @@ class SqlParserMatchTest : SqlParserTestBase() {
         )
     }
 
-    val unionsSelect = PartiqlAst.build {
+    // `SELECT * FROM tbl1`
+    val astSelectStarFromTbl1 = PartiqlAst.build {
         select(
             project = projectStar(),
             from = scan(id("tbl1"))
@@ -108,10 +123,29 @@ class SqlParserMatchTest : SqlParserTestBase() {
             op = union(),
             quantifier = distinct(),
             operands = listOf(
-                unionsMatch,
-                unionsSelect
+                astMygraphMatchAllNodes,
+                astSelectStarFromTbl1
             )
         )
+    }
+
+    @Test
+    fun leftMatchExprInUnion_noParens() {
+        // fails because it should be in parentheses
+        assertFailsWith<ParserException> {
+            assertExpressionNoRoundTrip(
+                "MyGraph MATCH (x) UNION SELECT * FROM tbl1"
+            ) {
+                bagOp(
+                    op = union(),
+                    quantifier = distinct(),
+                    operands = listOf(
+                        astMygraphMatchAllNodes,
+                        astSelectStarFromTbl1
+                    )
+                )
+            }
+        }
     }
 
     @Test
@@ -122,10 +156,54 @@ class SqlParserMatchTest : SqlParserTestBase() {
             op = union(),
             quantifier = distinct(),
             operands = listOf(
-                unionsSelect,
-                unionsMatch
+                astSelectStarFromTbl1,
+                astMygraphMatchAllNodes
             )
         )
+    }
+
+    @Test
+    fun rightMatchExprInUnion_noParens() {
+        // fails because it should be in parentheses
+        assertFailsWith<ParserException> {
+            assertExpressionNoRoundTrip(
+                "SELECT * FROM tbl1 UNION MyGraph MATCH (x)"
+            ) {
+                bagOp(
+                    op = union(),
+                    quantifier = distinct(),
+                    operands = listOf(
+                        astSelectStarFromTbl1,
+                        astMygraphMatchAllNodes
+                    )
+                )
+            }
+        }
+    }
+
+    @Test
+    fun matchLeftTight() = assertExpressionNoRoundTrip(
+        "3 + (MyGraph MATCH (x))"
+    ) {
+        plus(
+            lit(ionInt(3)),
+            astMygraphMatchAllNodes
+        )
+    }
+
+    @Test
+    fun matchLeftTight_noParens() {
+        // fails because it should be in parentheses
+        assertFailsWith<ParserException> {
+            assertExpressionNoRoundTrip(
+                "3 + MyGraph MATCH (x)"
+            ) {
+                plus(
+                    lit(ionInt(3)),
+                    astMygraphMatchAllNodes
+                )
+            }
+        }
     }
 
     @Test
