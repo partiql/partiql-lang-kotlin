@@ -23,7 +23,7 @@ import org.partiql.lang.eval.relation.relation
 import org.partiql.lang.planner.transforms.DEFAULT_IMPL_NAME
 import java.util.TreeMap
 
-internal class AggregateOperatorFactoryDefault : AggregateOperatorFactory(DEFAULT_IMPL_NAME) {
+internal object AggregateOperatorFactoryDefault : AggregateOperatorFactory(DEFAULT_IMPL_NAME) {
     override fun create(
         source: RelationExpression,
         keys: List<CompiledGroupKey>,
