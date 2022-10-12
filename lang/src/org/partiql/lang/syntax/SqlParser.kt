@@ -947,9 +947,6 @@ class SqlParser(
         }
     }
 
-    // PR-COMMENT As changed, this compiles,
-    // transforming into the changed PartiqlAst,
-    // but this is not called from anywhere currently.
     private fun ParseNode.toGraphMatch(): PartiqlAst.Expr {
         val metas = getMetas()
         var selector: PartiqlAst.GraphMatchSelector? = null

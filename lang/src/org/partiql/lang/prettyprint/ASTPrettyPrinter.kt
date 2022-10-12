@@ -557,7 +557,6 @@ class ASTPrettyPrinter {
                     if (node.offset == null) it else (it.plusElement(toRecursionTree(node.offset, "offset")))
                 }
             )
-            // PR-COMMENT This is on par with the TODO that was in toRecursionTree(PartiqlAst.FromSource) overload.
             is PartiqlAst.Expr.GraphMatch -> TODO("Unsupported GraphMatch AST node")
         }
 
