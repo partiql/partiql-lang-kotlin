@@ -19,7 +19,6 @@ import com.amazon.ion.IonValue
 import com.amazon.ion.Timestamp
 import com.amazon.ionelement.api.MetaContainer
 import com.amazon.ionelement.api.toIonValue
-import org.partiql.lang.ast.IsOrderedMeta
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.ast.UNKNOWN_SOURCE_LOCATION
 import org.partiql.lang.ast.sourceLocation
@@ -277,21 +276,30 @@ internal class PhysicalPlanCompilerImpl(
         val mapThunk = compileAstExpr(expr.exp)
         val bexprThunk: RelationThunkEnv = bexperConverter.convert(expr.query)
 
-        val relationType = when (expr.metas.containsKey(IsOrderedMeta.TAG)) {
-            true -> RelationType.LIST
-            false -> RelationType.BAG
+        fun createOutputSequence(relationType: RelationType?, elements: Sequence<ExprValue>) = when (relationType) {
+            RelationType.LIST -> valueFactory.newList(elements)
+            RelationType.BAG -> valueFactory.newBag(elements)
+            null -> throw EvaluationException(
+                message = "Unable to recover the output Relation Type",
+                errorCode = ErrorCode.EVALUATOR_GENERIC_EXCEPTION,
+                internal = false
+            )
         }
 
         return thunkFactory.thunkEnv(expr.metas) { env ->
+            var relationType: RelationType? = null
             val elements = sequence {
                 val relItr = bexprThunk(env)
+                relationType = relItr.relType
                 while (relItr.nextRow()) {
                     yield(mapThunk(env))
                 }
             }
-            when (relationType) {
-                RelationType.LIST -> valueFactory.newList(elements)
-                RelationType.BAG -> valueFactory.newBag(elements)
+
+            // Trick the compiler here to always initialize `relationType`
+            when (elements.firstOrNull()) {
+                null -> createOutputSequence(relationType, emptySequence())
+                else -> createOutputSequence(relationType, elements)
             }
         }
     }

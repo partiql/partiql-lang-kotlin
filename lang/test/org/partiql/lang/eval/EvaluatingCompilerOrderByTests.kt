@@ -281,6 +281,32 @@ class EvaluatingCompilerOrderByTests : EvaluatorTestBase() {
                 "SELECT b AS \"C\" FROM (SELECT a AS b FROM [{'a': <<5>>}, {'a': <<1>>}, {'a': <<10>>}] ORDER BY b DESC) ORDER BY \"C\"",
                 "[{'C': <<1>>}, {'C': <<5>>}, {'C': <<10>>}]"
             ),
+
+            // Empty Output (ordered)
+            EvaluatorTestCase(
+                "SELECT * FROM <<>> ORDER BY true",
+                "[]"
+            ),
+            // Empty Projection item (ordered) -- Output (unordered)
+            EvaluatorTestCase(
+                "SELECT (SELECT * FROM <<>> ORDER BY true) AS ordered FROM <<0>>",
+                "<< { 'ordered': [] } >>"
+            ),
+            // Empty Projection item (unordered) -- Output (ordered)
+            EvaluatorTestCase(
+                "SELECT (SELECT * FROM <<>>) AS ordered FROM <<0>> ORDER BY true",
+                "[ { 'ordered': <<>> } ]"
+            ),
+            // Empty Projection item (ordered) -- Output (ordered)
+            EvaluatorTestCase(
+                "SELECT (SELECT * FROM <<>> ORDER BY true) AS ordered FROM <<0>> ORDER BY true",
+                "[ { 'ordered': [] } ]"
+            ),
+            // Empty Projection item (unordered) -- Output (unordered)
+            EvaluatorTestCase(
+                "SELECT (SELECT * FROM <<>>) AS ordered FROM <<0>>",
+                "<< { 'ordered': <<>> } >>"
+            ),
         )
     }
 
