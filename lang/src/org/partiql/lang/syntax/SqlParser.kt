@@ -944,13 +944,12 @@ class SqlParser(
                         if (isCrossJoin) metas + metaContainerOf(IsImplictJoinMeta.instance) else metas
                     )
                 }
-                ParseType.MATCH -> toGraphMatch()
                 else -> unwrapAliasesAndUnpivot()
             }
         }
     }
 
-    private fun ParseNode.toGraphMatch(): PartiqlAst.FromSource {
+    private fun ParseNode.toGraphMatch(): PartiqlAst.Expr {
         val metas = getMetas()
         var selector: PartiqlAst.GraphMatchSelector? = null
 
@@ -987,8 +986,8 @@ class SqlParser(
                 it.toGraphMatchPattern()
             }
 
-            val matchExpr = PartiqlAst.GraphMatchExpr(selector = selector, patterns = patterns, metas = metas)
-            PartiqlAst.FromSource.GraphMatch(expr, matchExpr, metas)
+            val matchExpr = PartiqlAst.GpmlPattern(selector = selector, patterns = patterns, metas = metas)
+            PartiqlAst.Expr.GraphMatch(expr, matchExpr, metas)
         }
     }
 

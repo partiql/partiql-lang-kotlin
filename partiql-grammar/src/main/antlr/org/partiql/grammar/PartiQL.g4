@@ -296,10 +296,10 @@ limitClause
  *
  */
 
-matchExpr
+gpmlPattern
     : selector=matchSelector? matchPattern;
 
-matchExprList
+gpmlPatternList
     : selector=matchSelector? matchPattern ( COMMA matchPattern )*;
 
 matchPattern
@@ -379,21 +379,16 @@ tableReference
 tableNonJoin
     : tableBaseReference
     | tableUnpivot
-    | tableMatch
     ;
 
 tableBaseReference
     : source=exprSelect symbolPrimitive              # TableBaseRefSymbol
     | source=exprSelect asIdent? atIdent? byIdent?   # TableBaseRefClauses
+    | source=exprGraphMatchOne asIdent? atIdent? byIdent?   # TableBaseRefMatch
     ;
 
 tableUnpivot
     : UNPIVOT expr asIdent? atIdent? byIdent?;
-
-tableMatch
-    : lhs=expr MATCH matchExpr                              # MatchSingle
-    | lhs=expr MATCH PAREN_LEFT matchExprList PAREN_RIGHT   # MatchMultiple
-    ;
 
 tableJoined[ParserRuleContext lhs]
     : tableCrossJoin[$lhs]
@@ -526,6 +521,7 @@ exprPrimary
     | functionCall               # ExprPrimaryBase
     | nullIf                     # ExprPrimaryBase
     | exprPrimary pathStep+      # ExprPrimaryPath
+    | exprGraphMatchMany         # ExprPrimaryBase
     | caseExpr                   # ExprPrimaryBase
     | valueList                  # ExprPrimaryBase
     | values                     # ExprPrimaryBase
@@ -608,6 +604,13 @@ pathStep
     | PERIOD key=symbolPrimitive                 # PathStepDotExpr
     | PERIOD all=ASTERISK                        # PathStepDotAll
     ;
+
+exprGraphMatchMany
+    :  PAREN_LEFT exprPrimary MATCH gpmlPatternList PAREN_RIGHT ;
+
+exprGraphMatchOne
+    :   exprPrimary MATCH gpmlPattern ;
+
 
 parameter
     : QUESTION_MARK;

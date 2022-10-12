@@ -14,8 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   on the changes that include these and the alternatives that have been considered.
 - README.md badges for GitHub Actions status, codecov, and license
 - An experimental (pending [#15](https://github.com/partiql/partiql-docs/issues/15)) embedding of a subset of
-  the [GPML (Graph Pattern Matching Language)](https://arxiv.org/abs/2112.06217) graph query into the `FROM` clause,
-  supporting. The use within the grammar is based on the assumption of a new graph data type being added to the
+  the [GPML (Graph Pattern Matching Language)](https://arxiv.org/abs/2112.06217) graph query, as a new expression
+  form `<expr> MATCH <gpml_pattern>`, which can be used as a bag-of-structs data source in the `FROM` clause.   
+  The use within the grammar is based on the assumption of a new graph data type being added to the
   specification of data types within PartiQL, and should be considered experimental until the semantics of the graph
   data type are specified.
   - basic and abbreviated node and edge patterns (section 4.1 of the GPML paper)

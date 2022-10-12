@@ -129,6 +129,9 @@ may then be further optimized by selecting better implementations of each operat
             // Bag operators
             (bag_op op::bag_op_type quantifier::set_quantifier operands::(* expr 2))
 
+            // GPML graph pattern match:  <expr> MATCH <gpml_pattern>
+            (graph_match expr::expr gpml_pattern::gpml_pattern)
+
             // Other expression types
             (path root::expr steps::(* path_step 1))
             (call func_name::symbol args::(* expr 1))
@@ -208,11 +211,9 @@ may then be further optimized by selecting better implementations of each operat
             // UNPIVOT <expr> [AS <id>] [AT <id>] [BY <id>]
             (unpivot expr::expr as_alias::(? symbol) at_alias::(? symbol) by_alias::(? symbol))
 
-             // <from_source> JOIN [INNER | LEFT | RIGHT | FULL] <from_source> ON <expr>
-             (join type::join_type left::from_source right::from_source predicate::(? expr))
-
-             // <expr> MATCH <graph_pattern>
-             (graph_match expr::expr graph_expr::graph_match_expr))
+            // <from_source> JOIN [INNER | LEFT | RIGHT | FULL] <from_source> ON <expr>
+            (join type::join_type left::from_source right::from_source predicate::(? expr))
+        )
 
         // Indicates the logical type of join.
         (sum join_type (inner) (left) (right) (full))
@@ -302,9 +303,9 @@ may then be further optimized by selecting better implementations of each operat
              (selector_shortest_k k::int)
              (selector_shortest_k_group k::int))
 
-        // A graph match clause as defined in GPML
+        // A graph pattern as defined in GPML
         // See https://arxiv.org/abs/2112.06217
-        (product graph_match_expr
+        (product gpml_pattern
                  selector::(? graph_match_selector)
                  patterns::(* graph_match_pattern 1))
 
