@@ -59,7 +59,7 @@ internal class PartiQLPlannerDefault(
             return PartiQLPlanner.Result.Error(problemHandler.problems)
         }
         // Validate logical plan
-        // TODO: do if it is an invalid logical plan, do we want to add it to [problemHandler]?
+        // TODO: if it is an invalid logical plan, do we want to add it to [problemHandler]?
         PartiqlLogicalValidator(options.typedOpBehavior).walkPlan(logicalPlan)
 
         // Step 3. Replace variable references
