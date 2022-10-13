@@ -52,6 +52,8 @@ public class GroupKeyReferencesVisitorTransform(
     private val groupAliases: Set<String> = emptySet()
 ) : VisitorTransformBase() {
 
+    private val itemTransform = GroupKeyReferencesToUniqueNameIdsVisitorTransform(this.keys, this.groupAliases)
+
     override fun transformExprSelect(node: PartiqlAst.Expr.Select): PartiqlAst.Expr {
         val keys = getGroupByKeys(node) + this.keys
         val aliases = setOfNotNull(getGroupAsAlias(node)) + this.groupAliases
@@ -69,7 +71,6 @@ public class GroupKeyReferencesVisitorTransform(
     }
 
     override fun transformProjectionProjectValue(node: PartiqlAst.Projection.ProjectValue): PartiqlAst.Projection {
-        val itemTransform = GroupKeyReferencesToUniqueNameIdsVisitorTransform(this.keys, this.groupAliases)
         return PartiqlAst.build {
             projectValue(
                 value = itemTransform.transformExpr(node.value),
@@ -78,13 +79,9 @@ public class GroupKeyReferencesVisitorTransform(
         }
     }
 
-    override fun transformSortSpec_expr(node: PartiqlAst.SortSpec): PartiqlAst.Expr {
-        val itemTransform = GroupKeyReferencesToUniqueNameIdsVisitorTransform(this.keys, this.groupAliases)
-        return itemTransform.transformSortSpec_expr(node)
-    }
+    override fun transformSortSpec_expr(node: PartiqlAst.SortSpec) = itemTransform.transformSortSpec_expr(node)
 
     override fun transformProjectionProjectList(node: PartiqlAst.Projection.ProjectList): PartiqlAst.Projection {
-        val itemTransform = GroupKeyReferencesToUniqueNameIdsVisitorTransform(this.keys, this.groupAliases)
         return PartiqlAst.build {
             projectList(
                 projectItems = node.projectItems.mapIndexed { _, item ->
