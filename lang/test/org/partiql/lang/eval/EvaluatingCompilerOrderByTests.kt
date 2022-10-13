@@ -317,18 +317,14 @@ class EvaluatingCompilerOrderByTests : EvaluatorTestBase() {
         session = session
     )
 
-    // TODO: These tests are FAILING. These need to be addressed. Uncomment @ParameterizedTest to test
-    // @ParameterizedTest
-    @ArgumentsSource(FailingTestsProvider::class)
-    fun failingTests(tc: EvaluatorTestCase) = runEvaluatorTestCase(
+    @ParameterizedTest
+    @ArgumentsSource(OrderBySubqueryTestsProvider::class)
+    fun orderBySubqueryTests(tc: EvaluatorTestCase) = runEvaluatorTestCase(
         tc = tc.copy(excludeLegacySerializerAssertions = true),
         session = session
     )
-    class FailingTestsProvider : ArgumentsProviderBase() {
+    class OrderBySubqueryTestsProvider : ArgumentsProviderBase() {
         override fun getParameters() = listOf(
-            // TODO: Please reference https://github.com/partiql/partiql-lang-kotlin/issues/833 for context.
-            //  For this, we need to clone the ExprValue during the SORT operator factory. This has to do with the shared
-            //  global state registers.
             EvaluatorTestCase(
                 query = """
                     SELECT supplierId_nulls
@@ -362,7 +358,7 @@ class EvaluatingCompilerOrderByTests : EvaluatorTestBase() {
                     FROM products_sparse
                     GROUP BY supplierId_nulls
                     ORDER BY
-                        (SELECT t FROM products_sparse GROUP BY supplierId_nulls ORDER BY supplierIds_nulls ASC NULLS FIRST)
+                        (SELECT 1 FROM products_sparse GROUP BY supplierId_nulls ORDER BY supplierId_nulls ASC NULLS FIRST)
                     DESC NULLS FIRST
                 """,
                 "[{'supplierId_nulls': NULL}, {'supplierId_nulls': 10}, {'supplierId_nulls': 11}]"
