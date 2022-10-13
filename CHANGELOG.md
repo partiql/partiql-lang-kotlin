@@ -73,6 +73,7 @@ stage in the `PlannerPipeline` and to generate performance metrics for the indiv
   - `RemoveUselessFiltersPass`, which removes useless filters introduced by the previous pass or by the query author 
   (e.g. `(filter (lit true) <bexpr>))` -> `<bexpr>`.
 - Add support for `UNPIVOT`, the behavior is expected to be compatible with the `evaluating compiler`.
+- Adds support for GROUP BY (aggregations, group keys, etc)
 - Adds support for ORDER BY in Planner
 
 ### Changed
