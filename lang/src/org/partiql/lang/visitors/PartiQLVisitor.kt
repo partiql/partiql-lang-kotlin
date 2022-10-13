@@ -249,7 +249,7 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
         )
     }
 
-    // TODO move from experimental; pending: https://github.com/partiql/partiql-docs/issues/27
+    // Based on https://github.com/partiql/partiql-docs/blob/main/RFCs/0011-partiql-insert.md
     override fun visitUpsertCommand(ctx: PartiQLParser.UpsertCommandContext) = PartiqlAst.build {
         val asIdent = ctx.asIdent()
         // Based on the RFC, if alias exists the table must be hidden behind the alias, see:
@@ -263,7 +263,7 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
         )
     }
 
-    // FIXME: See `FIXME #001` in file `PartiQL.g4`.
+    // Based on https://github.com/partiql/partiql-docs/blob/main/RFCs/0011-partiql-insert.md
     override fun visitInsertCommandReturning(ctx: PartiQLParser.InsertCommandReturningContext) = PartiqlAst.build {
         val metas = ctx.INSERT().getSourceMetaContainer()
         val target = visitPathSimple(ctx.pathSimple())

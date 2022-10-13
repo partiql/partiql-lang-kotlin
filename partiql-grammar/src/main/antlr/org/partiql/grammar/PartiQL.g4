@@ -111,11 +111,13 @@ pathSimpleSteps
     | PERIOD key=symbolPrimitive                         # PathSimpleDotSymbol
     ;
 
-// TODO move from experimental; pending: https://github.com/partiql/partiql-docs/issues/27
+// Based on https://github.com/partiql/partiql-docs/blob/main/RFCs/0011-partiql-insert.md
+// TODO add parsing of target attributes: https://github.com/partiql/partiql-lang-kotlin/issues/841
 replaceCommand
     : REPLACE INTO symbolPrimitive asIdent? value=expr;
 
-// TODO move from experimental; pending: https://github.com/partiql/partiql-docs/issues/27
+// Based on https://github.com/partiql/partiql-docs/blob/main/RFCs/0011-partiql-insert.md
+// TODO add parsing of target attributes: https://github.com/partiql/partiql-lang-kotlin/issues/841
 upsertCommand
     : UPSERT INTO symbolPrimitive asIdent? value=expr;
 
