@@ -24,7 +24,7 @@ import org.partiql.lang.eval.physical.operators.RelationalOperatorFactoryKey
 import org.partiql.lang.eval.physical.operators.RelationalOperatorKind
 import org.partiql.lang.eval.physical.operators.ScanRelationalOperatorFactory
 import org.partiql.lang.eval.physical.operators.SortOperatorFactory
-import org.partiql.lang.eval.physical.operators.UnpivotRelationalOperatorFactory
+import org.partiql.lang.eval.physical.operators.UnpivotOperatorFactory
 import org.partiql.lang.eval.physical.operators.VariableBinding
 import org.partiql.lang.eval.physical.operators.valueExpression
 import org.partiql.lang.util.toIntExact
@@ -124,10 +124,9 @@ internal class PhysicalBexprToThunkConverter(
         val atSetter = node.atDecl?.toSetVariableFunc()
         val bySetter = node.byDecl?.toSetVariableFunc()
 
-        val factory = findOperatorFactory<UnpivotRelationalOperatorFactory>(RelationalOperatorKind.UNPIVOT, node.i.name.text)
+        val factory = findOperatorFactory<UnpivotOperatorFactory>(RelationalOperatorKind.UNPIVOT, node.i.name.text)
 
         val bindingsExpr = factory.create(
-            impl = node.i,
             expr = valueExpr,
             setAsVar = asSetter,
             setAtVar = atSetter,
@@ -246,7 +245,7 @@ internal class PhysicalBexprToThunkConverter(
 
         // Get Implementation
         val factory = findOperatorFactory<SortOperatorFactory>(RelationalOperatorKind.SORT, node.i.name.text)
-        val bindingsExpr = factory.create(node.i, sortKeys, source)
+        val bindingsExpr = factory.create(sortKeys, source)
         return bindingsExpr.toRelationThunk(node.metas)
     }
 
