@@ -28,6 +28,8 @@ import org.partiql.lang.planner.transforms.AstToLogicalVisitorTransform
 import org.partiql.lang.planner.transforms.LogicalResolvedToDefaultPhysicalVisitorTransform
 import org.partiql.lang.planner.transforms.LogicalToLogicalResolvedVisitorTransform
 import org.partiql.lang.planner.transforms.allocateVariableIds
+import org.partiql.lang.planner.validators.PartiqlLogicalResolvedValidator
+import org.partiql.lang.planner.validators.PartiqlLogicalValidator
 import org.partiql.pig.runtime.asPrimitive
 
 internal class PartiQLPlannerDefault(
@@ -56,6 +58,9 @@ internal class PartiQLPlannerDefault(
         if (problemHandler.hasErrors) {
             return PartiQLPlanner.Result.Error(problemHandler.problems)
         }
+        // Validate logical plan
+        // TODO: do if it is an invalid logical plan, do we want to add it to [problemHandler]?
+        PartiqlLogicalValidator(options.typedOpBehavior).walkPlan(logicalPlan)
 
         // Step 3. Replace variable references
         val resolvedLogicalPlan = callback.doEvent("logical_to_logical_resolved", logicalPlan) {
@@ -64,6 +69,7 @@ internal class PartiQLPlannerDefault(
         if (problemHandler.hasErrors) {
             return PartiQLPlanner.Result.Error(problemHandler.problems)
         }
+        PartiqlLogicalResolvedValidator().walkPlan(resolvedLogicalPlan)
 
         // Step 4. LogicalPlan -> PhysicalPlan
         val physicalPlan = callback.doEvent("logical_resolved_to_physical", resolvedLogicalPlan) {
@@ -112,7 +118,7 @@ internal class PartiQLPlannerDefault(
      * See [AstToLogicalVisitorTransform]
      */
     private fun PartiqlAst.Statement.toLogicalPlan(problems: ProblemCollector): PartiqlLogical.Plan {
-        val transform = AstToLogicalVisitorTransform(problems, options.typedOpBehavior)
+        val transform = AstToLogicalVisitorTransform(problems)
         return PartiqlLogical.Plan(
             stmt = transform.transformStatement(this),
             version = PartiQLPlanner.PLAN_VERSION.asPrimitive()
