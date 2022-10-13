@@ -7,7 +7,6 @@ import com.amazon.ionelement.api.TextElement
 import org.partiql.lang.ast.IsCountStarMeta
 import org.partiql.lang.ast.passes.SemanticException
 import org.partiql.lang.domains.PartiqlLogical
-import org.partiql.lang.domains.PartiqlLogicalResolved
 import org.partiql.lang.domains.addSourceLocation
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property

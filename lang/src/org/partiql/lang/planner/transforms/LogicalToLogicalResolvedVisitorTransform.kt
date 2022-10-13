@@ -6,17 +6,14 @@ import org.partiql.lang.domains.PartiqlLogical
 import org.partiql.lang.domains.PartiqlLogicalResolved
 import org.partiql.lang.domains.PartiqlLogicalToPartiqlLogicalResolvedVisitorTransform
 import org.partiql.lang.domains.toBindingCase
-import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Problem
 import org.partiql.lang.errors.ProblemHandler
 import org.partiql.lang.eval.BindingName
-import org.partiql.lang.eval.EvaluationException
 import org.partiql.lang.eval.builtins.DYNAMIC_LOOKUP_FUNCTION_NAME
 import org.partiql.lang.eval.physical.sourceLocationMetaOrUnknown
 import org.partiql.lang.planner.GlobalResolutionResult
 import org.partiql.lang.planner.GlobalVariableResolver
 import org.partiql.lang.planner.PlanningProblemDetails
-import org.partiql.lang.util.propertyValueMapOf
 import org.partiql.pig.runtime.asPrimitive
 
 /**
@@ -198,22 +195,6 @@ internal data class LogicalToLogicalResolvedVisitorTransform(
                 locals = emptyList(), // NOTE: locals will be populated by caller
                 metas = node.metas
             )
-        }.apply {
-            /**
-             * Quick validation step to make sure the indexes of any variables make sense.
-             * It is unlikely that this check will ever fail, but if it does, it likely means there's a bug in
-             * [org.partiql.lang.planner.transforms.VariableIdAllocator] or that the plan was malformed by other means.
-             */
-            locals.forEachIndexed { idx, it ->
-                if (it.registerIndex.value != idx.toLong()) {
-                    throw EvaluationException(
-                        message = "Variable index must match ordinal position of variable",
-                        errorCode = ErrorCode.INTERNAL_ERROR,
-                        errorContext = propertyValueMapOf(),
-                        internal = true
-                    )
-                }
-            }
         }
 
     override fun transformBexprScan_expr(node: PartiqlLogical.Bexpr.Scan): PartiqlLogicalResolved.Expr =
