@@ -16,12 +16,10 @@ package org.partiql.lang.eval
 
 import junitparams.Parameters
 import org.junit.Test
-import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestCase
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestTarget
-import org.partiql.lang.util.ArgumentsProviderBase
 import org.partiql.lang.util.propertyValueMapOf
 
 class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
@@ -971,16 +969,13 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
         ),
     )
 
-    // TODO: These tests are FAILING. These need to be addressed. Uncomment @ParameterizedTest to test
-    // @ParameterizedTest
-    @ArgumentsSource(FailingTestsArgsProvider::class)
-    fun failingTests(tc: EvaluatorTestCase) = runTest(tc, session)
-    class FailingTestsArgsProvider : ArgumentsProviderBase() {
-        override fun getParameters(): List<Any> = listOf(
-            // TODO: Please reference https://github.com/partiql/partiql-lang-kotlin/issues/833 for context.
-            EvaluatorTestCase(
-                groupName = "SELECT with nested aggregates (complex)",
-                query = """
+    @Test
+    @Parameters
+    fun groupByNestedAggregationTest(tc: EvaluatorTestCase) = runTest(tc, session)
+    fun parametersForGroupByNestedAggregationTest() = listOf(
+        EvaluatorTestCase(
+            groupName = "SELECT with nested aggregates (complex)",
+            query = """
                 SELECT
                     i2 AS outerKey,
                     g2 AS outerGroupAs,
@@ -999,7 +994,7 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
                 ) AS innerQuery
                 GROUP BY innerQuery.i AS i2, innerQuery.g AS g2
             """,
-                expectedResult = """
+            expectedResult = """
                 <<
                     {
                         'outerKey': 1,
@@ -1015,10 +1010,9 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
                     }
                 >>
             """,
-                targetPipeline = EvaluatorTestTarget.PLANNER_PIPELINE
-            ),
-        )
-    }
+            targetPipeline = EvaluatorTestTarget.PLANNER_PIPELINE
+        ),
+    )
 
     @Test
     @Parameters
