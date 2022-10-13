@@ -42,9 +42,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
       [#707](https://github.com/partiql/partiql-lang-kotlin/issues/707), [#683](https://github.com/partiql/partiql-lang-kotlin/issues/683),
       and [#730](https://github.com/partiql/partiql-lang-kotlin/issues/730)
 - Parsing of `INSERT` DML with `ON CONFLICT DO REPLACE EXCLUDED` based on [RFC-0011](https://github.com/partiql/partiql-docs/blob/main/RFCs/0011-partiql-insert.md)
-- Adds experimental parsing of `REPLACE INTO` and `UPSERT INTO` DML commands pending approval of the following RFC for moving out of experimental:
-  - https://github.com/partiql/partiql-docs/issues/27
-- Logical plan representation of `INSERT` DML with `ON CONFLICT DO REPLACE EXCLUDED` based on [RFC-0011](https://github.com/partiql/partiql-docs/blob/main/RFCs/0011-partiql-insert.md)
+- Adds a subset of `REPLACE INTO` and `UPSERT INTO` parsing based on [RFC-0030](https://github.com/partiql/partiql-docs/blob/main/RFCs/0030-partiql-upsert-replace.md)
+  - Parsing of target attributes is not supported yet and is pending [#841](https://github.com/partiql/partiql-lang-kotlin/issues/841)
+- Logical plan representation and evaluation support for `INSERT` DML with `ON CONFLICT DO REPLACE EXCLUDED` and `REPLACE INTO` based on [RFC-0011](https://github.com/partiql/partiql-docs/blob/main/RFCs/0011-partiql-insert.md)
+- Logical plan representation of `INSERT` DML with `ON CONFLICT DO UPDATE EXCLUDED` and `UPSERT INTO` based on [RFC-0011](https://github.com/partiql/partiql-docs/blob/main/RFCs/0011-partiql-insert.md)
 - Enabled projection alias support for ORDER BY clause
 - Adds support for PIVOT in the planner consistent with `EvaluatingCompiler`
 

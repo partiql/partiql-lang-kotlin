@@ -201,6 +201,38 @@ class LogicalResolvedToDefaultPhysicalVisitorTransformTests {
                 }
             ),
             DmlTestCase(
+                // INSERT INTO foo SELECT x.* FROM 1 AS x ON CONFLICT DO REPLACE EXCLUDED
+                PartiqlLogicalResolved.build {
+                    dml(
+                        uniqueId = "foo",
+                        operation = dmlReplace(),
+                        rows = bindingsToValues(
+                            struct(structFields(localId(0))),
+                            scan(lit(ionInt(1)), varDecl(0))
+                        )
+                    )
+                },
+                PartiqlPhysical.build {
+                    dmlQuery(
+                        struct(
+                            structField(DML_COMMAND_FIELD_ACTION, "replace"),
+                            structField(DML_COMMAND_FIELD_TARGET_UNIQUE_ID, lit(ionSymbol("foo"))),
+                            structField(
+                                DML_COMMAND_FIELD_ROWS,
+                                bindingsToValues(
+                                    struct(structFields(localId(0))),
+                                    scan(
+                                        i = DEFAULT_IMPL,
+                                        expr = lit(ionInt(1)),
+                                        asDecl = varDecl(0)
+                                    )
+                                )
+                            )
+                        )
+                    )
+                }
+            ),
+            DmlTestCase(
                 // DELETE FROM y AS y
                 PartiqlLogicalResolved.build {
                     dml(

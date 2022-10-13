@@ -237,25 +237,33 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
 
     // TODO move from experimental; pending: https://github.com/partiql/partiql-docs/issues/27
     override fun visitReplaceCommand(ctx: PartiQLParser.ReplaceCommandContext) = PartiqlAst.build {
+        val asIdent = ctx.asIdent()
+        // Based on the RFC, if alias exists the table must be hidden behind the alias, see:
+        // https://github.com/partiql/partiql-docs/blob/main/RFCs/0011-partiql-insert.md#41-insert-parameters
+        val target = if (asIdent != null) visitAsIdent(asIdent) else visitSymbolPrimitive(ctx.symbolPrimitive())
         insert(
-            target = visitSymbolPrimitive(ctx.symbolPrimitive()),
+            target = target,
             values = visit(ctx.value, PartiqlAst.Expr::class),
             conflictAction = doReplace(excluded()),
             metas = ctx.REPLACE().getSourceMetaContainer()
         )
     }
 
-    // TODO move from experimental; pending: https://github.com/partiql/partiql-docs/issues/27
+    // Based on https://github.com/partiql/partiql-docs/blob/main/RFCs/0011-partiql-insert.md
     override fun visitUpsertCommand(ctx: PartiQLParser.UpsertCommandContext) = PartiqlAst.build {
+        val asIdent = ctx.asIdent()
+        // Based on the RFC, if alias exists the table must be hidden behind the alias, see:
+        // https://github.com/partiql/partiql-docs/blob/main/RFCs/0011-partiql-insert.md#41-insert-parameters
+        val target = if (asIdent != null) visitAsIdent(asIdent) else visitSymbolPrimitive(ctx.symbolPrimitive())
         insert(
-            target = visitSymbolPrimitive(ctx.symbolPrimitive()),
+            target = target,
             values = visit(ctx.value, PartiqlAst.Expr::class),
             conflictAction = doUpdate(excluded()),
             metas = ctx.UPSERT().getSourceMetaContainer()
         )
     }
 
-    // FIXME: See `FIXME #001` in file `PartiQL.g4`.
+    // Based on https://github.com/partiql/partiql-docs/blob/main/RFCs/0011-partiql-insert.md
     override fun visitInsertCommandReturning(ctx: PartiQLParser.InsertCommandReturningContext) = PartiqlAst.build {
         val metas = ctx.INSERT().getSourceMetaContainer()
         val target = visitPathSimple(ctx.pathSimple())
@@ -307,6 +315,7 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
         when {
             ctx.NOTHING() != null -> doNothing()
             ctx.REPLACE() != null -> visitDoReplace(ctx.doReplace())
+            ctx.UPDATE() != null -> visitDoUpdate(ctx.doUpdate())
             else -> TODO("ON CONFLICT only supports `DO REPLACE` and `DO NOTHING` actions at the moment.")
         }
     }
@@ -317,6 +326,14 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
             else -> TODO("DO REPLACE doesn't support values other than `EXCLUDED` yet.")
         }
         doReplace(value)
+    }
+
+    override fun visitDoUpdate(ctx: PartiQLParser.DoUpdateContext) = PartiqlAst.build {
+        val value = when {
+            ctx.EXCLUDED() != null -> excluded()
+            else -> TODO("DO UPDATE doesn't support values other than `EXCLUDED` yet.")
+        }
+        doUpdate(value)
     }
 
     override fun visitPathSimple(ctx: PartiQLParser.PathSimpleContext) = PartiqlAst.build {

@@ -30,4 +30,9 @@ sealed class PartiQLResult {
         val target: String,
         val rows: Iterable<ExprValue>
     ) : PartiQLResult()
+
+    class Replace(
+        val target: String,
+        val rows: Iterable<ExprValue>
+    ) : PartiQLResult()
 }

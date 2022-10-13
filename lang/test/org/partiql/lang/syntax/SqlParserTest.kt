@@ -2771,6 +2771,92 @@ class SqlParserTest : SqlParserTestBase() {
     )
 
     @Test
+    fun insertWithOnConflictUpdateExcludedWithLiteralValue() = assertExpression(
+        source = "INSERT into foo VALUES (1, 2), (3, 4) ON CONFLICT DO UPDATE EXCLUDED",
+        expectedPigAst = """
+        (dml
+            (operations
+                (dml_op_list
+                    (insert
+                        (id foo (case_insensitive) (unqualified))
+                        (bag
+                            (list
+                                (lit 1)
+                                (lit 2))
+                            (list
+                                (lit 3)
+                                (lit 4)))
+                        (do_update
+                            (excluded))))))
+        """,
+        targetParsers = setOf(ParserTypes.PARTIQL_PARSER),
+        roundTrip = false
+    )
+
+    @Test
+    fun insertWithOnConflictUpdateExcludedWithLiteralValueWithAlias() = assertExpression(
+        source = "INSERT into foo AS f <<{'id': 1, 'name':'bob'}>> ON CONFLICT DO UPDATE EXCLUDED",
+        expectedPigAst = """
+            (dml
+                (operations
+                    (dml_op_list
+                        (insert
+                            (id f (case_insensitive) (unqualified))
+                            (bag
+                                (struct
+                                    (expr_pair
+                                        (lit "id")
+                                        (lit 1))
+                                    (expr_pair
+                                        (lit "name")
+                                        (lit "bob"))))
+                            (do_update
+                                (excluded))))))
+        """,
+        targetParsers = setOf(ParserTypes.PARTIQL_PARSER),
+        roundTrip = false
+    )
+
+    @Test
+    fun insertWithOnConflictUpdateExcludedWithSelect() = assertExpression(
+        source = "INSERT into foo SELECT bar.id, bar.name FROM bar ON CONFLICT DO UPDATE EXCLUDED",
+        expectedPigAst = """
+            (dml
+                (operations
+                    (dml_op_list
+                        (insert
+                            (id foo (case_insensitive) (unqualified))
+                            (select
+                                (project
+                                    (project_list
+                                        (project_expr
+                                            (path
+                                                (id bar (case_insensitive) (unqualified))
+                                                (path_expr
+                                                    (lit "id")
+                                                    (case_insensitive)))
+                                            null)
+                                        (project_expr
+                                            (path
+                                                (id bar (case_insensitive) (unqualified))
+                                                (path_expr
+                                                    (lit "name")
+                                                    (case_insensitive)))
+                                            null)))
+                                (from
+                                    (scan
+                                        (id bar (case_insensitive) (unqualified))
+                                        null
+                                        null
+                                        null)))
+                            (do_update
+                                (excluded))))))
+        """,
+        targetParsers = setOf(ParserTypes.PARTIQL_PARSER),
+        roundTrip = false
+    )
+
+    @Test
     fun insertWithOnConflictDoNothing() = assertExpression(
         source = "INSERT into foo <<{'id': 1, 'name':'bob'}>> ON CONFLICT DO NOTHING",
         expectedPigAst = """
@@ -2879,6 +2965,30 @@ class SqlParserTest : SqlParserTestBase() {
     )
 
     @Test
+    fun replaceCommandWithAsAlias() = assertExpression(
+        source = "REPLACE INTO foo As f <<{'id': 1, 'name':'bob'}>>",
+        expectedPigAst = """
+            (dml
+                (operations
+                    (dml_op_list
+                        (insert
+                            (id f (case_insensitive) (unqualified))
+                            (bag
+                                (struct
+                                    (expr_pair
+                                        (lit "id")
+                                        (lit 1))
+                                    (expr_pair
+                                        (lit "name")
+                                        (lit "bob"))))
+                            (do_replace
+                                (excluded))))))
+        """,
+        targetParsers = setOf(ParserTypes.PARTIQL_PARSER),
+        roundTrip = false
+    )
+
+    @Test
     fun upsertCommand() = assertExpression(
         source = "UPSERT INTO foo <<{'id': 1, 'name':'bob'}>>",
         expectedPigAst = """
@@ -2887,6 +2997,30 @@ class SqlParserTest : SqlParserTestBase() {
                     (dml_op_list
                         (insert
                             (id foo (case_insensitive) (unqualified))
+                            (bag
+                                (struct
+                                    (expr_pair
+                                        (lit "id")
+                                        (lit 1))
+                                    (expr_pair
+                                        (lit "name")
+                                        (lit "bob"))))
+                            (do_update
+                                (excluded))))))
+        """,
+        targetParsers = setOf(ParserTypes.PARTIQL_PARSER),
+        roundTrip = false
+    )
+
+    @Test
+    fun upsertCommandWithAsAlias() = assertExpression(
+        source = "UPSERT INTO foo As f <<{'id': 1, 'name':'bob'}>>",
+        expectedPigAst = """
+            (dml
+                (operations
+                    (dml_op_list
+                        (insert
+                            (id f (case_insensitive) (unqualified))
                             (bag
                                 (struct
                                     (expr_pair

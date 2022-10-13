@@ -593,6 +593,68 @@ class AstToLogicalVisitorTransformTests {
                 }
             ),
             TestCase(
+                "INSERT INTO foo SELECT x.* FROM 1 AS x ON CONFLICT DO UPDATE EXCLUDED",
+                PartiqlLogical.build {
+                    dml(
+                        identifier("foo", caseInsensitive()),
+                        dmlUpdate(),
+                        bindingsToValues(
+                            struct(structFields(id("x", caseInsensitive(), unqualified()))),
+                            scan(lit(ionInt(1)), varDecl("x"))
+                        )
+                    )
+                }
+            ),
+            TestCase(
+                "INSERT INTO foo AS f <<{'id': 1, 'name':'bob'}>> ON CONFLICT DO UPDATE EXCLUDED",
+                PartiqlLogical.build {
+                    PartiqlLogical.build {
+                        dml(
+                            identifier("f", caseInsensitive()),
+                            dmlUpdate(),
+                            bag(
+                                struct(
+                                    structField(lit(ionString("id")), lit(ionInt(1))),
+                                    structField(lit(ionString("name")), lit(ionString("bob")))
+                                )
+                            )
+                        )
+                    }
+                }
+            ),
+            TestCase(
+                "REPLACE INTO foo AS f <<{'id': 1, 'name':'bob'}>>",
+                PartiqlLogical.build {
+                    PartiqlLogical.build {
+                        dml(
+                            identifier("f", caseInsensitive()),
+                            dmlReplace(),
+                            bag(
+                                struct(
+                                    structField(lit(ionString("id")), lit(ionInt(1))),
+                                    structField(lit(ionString("name")), lit(ionString("bob")))
+                                )
+                            )
+                        )
+                    }
+                }
+            ),
+            TestCase(
+                "UPSERT INTO foo AS f SELECT x.* FROM 1 AS x",
+                PartiqlLogical.build {
+                    PartiqlLogical.build {
+                        dml(
+                            identifier("f", caseInsensitive()),
+                            dmlUpdate(),
+                            bindingsToValues(
+                                struct(structFields(id("x", caseInsensitive(), unqualified()))),
+                                scan(lit(ionInt(1)), varDecl("x"))
+                            )
+                        )
+                    }
+                }
+            ),
+            TestCase(
                 "DELETE FROM y AS y",
                 PartiqlLogical.build {
                     dml(
