@@ -276,19 +276,30 @@ internal class PhysicalPlanCompilerImpl(
         val mapThunk = compileAstExpr(expr.exp)
         val bexprThunk: RelationThunkEnv = bexperConverter.convert(expr.query)
 
-        return thunkFactory.thunkEnv(expr.metas) { env ->
-            val relationTypeThunk = bexprThunk(env)
-            val relationType: RelationType = relationTypeThunk.relType
+        fun createOutputSequence(relationType: RelationType?, elements: Sequence<ExprValue>) = when (relationType) {
+            RelationType.LIST -> valueFactory.newList(elements)
+            RelationType.BAG -> valueFactory.newBag(elements)
+            null -> throw EvaluationException(
+                message = "Unable to recover the output Relation Type",
+                errorCode = ErrorCode.EVALUATOR_GENERIC_EXCEPTION,
+                internal = false
+            )
+        }
 
+        return thunkFactory.thunkEnv(expr.metas) { env ->
+            var relationType: RelationType? = null
             val elements = sequence {
                 val relItr = bexprThunk(env)
+                relationType = relItr.relType
                 while (relItr.nextRow()) {
                     yield(mapThunk(env))
                 }
             }
-            when (relationType) {
-                RelationType.LIST -> valueFactory.newList(elements)
-                RelationType.BAG -> valueFactory.newBag(elements)
+
+            // Trick the compiler here to always initialize `relationType`
+            when (elements.firstOrNull()) {
+                null -> createOutputSequence(relationType, emptySequence())
+                else -> createOutputSequence(relationType, elements)
             }
         }
     }

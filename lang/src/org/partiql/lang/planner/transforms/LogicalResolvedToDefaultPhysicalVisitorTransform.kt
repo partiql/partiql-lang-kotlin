@@ -87,6 +87,20 @@ internal class LogicalResolvedToDefaultPhysicalVisitorTransform(
         }
     }
 
+    override fun transformBexprAggregate(node: PartiqlLogicalResolved.Bexpr.Aggregate): PartiqlPhysical.Bexpr {
+        val thiz = this
+        return PartiqlPhysical.build {
+            aggregate(
+                i = DEFAULT_IMPL,
+                source = thiz.transformBexpr(node.source),
+                strategy = thiz.transformGroupingStrategy(node.strategy),
+                groupList = thiz.transformGroupKeyList(node.groupList),
+                functionList = thiz.transformAggregateFunctionList(node.functionList),
+                metas = node.metas
+            )
+        }
+    }
+
     override fun transformBexprOffset(node: PartiqlLogicalResolved.Bexpr.Offset): PartiqlPhysical.Bexpr {
         val thiz = this
         return PartiqlPhysical.build {

@@ -27,7 +27,7 @@ internal val DEFAULT_RELATIONAL_OPERATOR_FACTORIES = listOf(
 
     DefaultUnpivotOperatorFactory(DEFAULT_IMPL_NAME),
     InMemorySortFactory(DEFAULT_IMPL_NAME),
-
+    AggregateOperatorFactoryDefault,
     object : ScanRelationalOperatorFactory(DEFAULT_IMPL_NAME) {
         override fun create(
             impl: PartiqlPhysical.Impl,

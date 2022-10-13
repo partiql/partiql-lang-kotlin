@@ -20,6 +20,9 @@ import org.partiql.lang.domains.PartiqlLogicalResolved
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.errors.ProblemCollector
 import org.partiql.lang.eval.visitors.FromSourceAliasVisitorTransform
+import org.partiql.lang.eval.visitors.GroupByItemAliasVisitorTransform
+import org.partiql.lang.eval.visitors.GroupByPathExpressionVisitorTransform
+import org.partiql.lang.eval.visitors.GroupKeyReferencesVisitorTransform
 import org.partiql.lang.eval.visitors.OrderBySortSpecVisitorTransform
 import org.partiql.lang.eval.visitors.PipelinedVisitorTransform
 import org.partiql.lang.eval.visitors.SelectListItemAliasVisitorTransform
@@ -103,6 +106,9 @@ internal class PartiQLPlannerDefault(
             SelectListItemAliasVisitorTransform(),
             FromSourceAliasVisitorTransform(),
             OrderBySortSpecVisitorTransform(),
+            GroupByItemAliasVisitorTransform(),
+            GroupByPathExpressionVisitorTransform(),
+            GroupKeyReferencesVisitorTransform(),
             SelectStarVisitorTransform()
         )
         return transform.transformStatement(this)

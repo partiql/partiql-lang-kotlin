@@ -390,6 +390,19 @@ internal data class LogicalToLogicalResolvedVisitorTransform(
         }
     }
 
+    override fun transformBexprAggregate(node: PartiqlLogical.Bexpr.Aggregate): PartiqlLogicalResolved.Bexpr {
+        val scope = getOutputScope(node.source).concatenate(this.inputScope)
+        return PartiqlLogicalResolved.build {
+            aggregate(
+                source = transformBexpr(node.source),
+                strategy = super.transformBexprAggregate_strategy(node),
+                groupList = withInputScope(scope) { super.transformBexprAggregate_groupList(node) },
+                functionList = withInputScope(scope) { super.transformBexprAggregate_functionList(node) },
+                metas = super.transformBexprAggregate_metas(node)
+            )
+        }
+    }
+
     override fun transformBexprJoin_predicate(node: PartiqlLogical.Bexpr.Join): PartiqlLogicalResolved.Expr? {
         val bindings = getOutputScope(node)
         return withInputScope(bindings) {
@@ -448,6 +461,11 @@ internal data class LogicalToLogicalResolvedVisitorTransform(
             is PartiqlLogical.Bexpr.Limit -> getOutputScope(bexpr.source)
             is PartiqlLogical.Bexpr.Offset -> getOutputScope(bexpr.source)
             is PartiqlLogical.Bexpr.Sort -> getOutputScope(bexpr.source)
+            is PartiqlLogical.Bexpr.Aggregate -> {
+                val keyVariables = bexpr.groupList.keys.map { it.asVar }
+                val functionVariables = bexpr.functionList.functions.map { it.asVar }
+                LocalScope(keyVariables + functionVariables)
+            }
             is PartiqlLogical.Bexpr.Scan -> {
                 LocalScope(
                     listOfNotNull(bexpr.asDecl.markForDynamicResolution(), bexpr.atDecl, bexpr.byDecl).also {

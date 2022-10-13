@@ -16,16 +16,19 @@ package org.partiql.lang.eval
 
 import junitparams.Parameters
 import org.junit.Test
+import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestCase
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestTarget
+import org.partiql.lang.util.ArgumentsProviderBase
 import org.partiql.lang.util.propertyValueMapOf
 
 class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
 
     private val session = mapOf(
         "simple_1_col_1_group" to "[{col1: 1}, {col1: 1}]",
+        "simple_1_col_1_group_2" to "[{col1: 1}, {col1: 5}]",
         "simple_1_col_2_groups" to "[{col1: 1}, {col1: 2}, {col1: 1}, {col1: 2}]",
         "simple_2_col_1_group" to "[{col1: 1, col2: 10}, {col1: 1, col2: 10}]",
         "simple_2_col_2_groups" to "[{col1: 1, col2: 10}, {col1: 11, col2: 110}, {col1: 1, col2: 10}, {col1: 11, col2: 110}]",
@@ -90,8 +93,7 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
     private fun runTest(tc: EvaluatorTestCase, session: EvaluationSession) =
         super.runEvaluatorTestCase(
             tc.copy(
-                implicitPermissiveModeTest = false, // we are manually setting typing mode
-                targetPipeline = EvaluatorTestTarget.COMPILER_PIPELINE // no support in physical plans yet for GROUP BY
+                implicitPermissiveModeTest = false // we are manually setting typing mode
             ),
             session
         )
@@ -104,6 +106,16 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
         )
 
         /**
+         * The [EvaluatorTestTarget.PLANNER_PIPELINE] does NOT support [UndefinedVariableBehavior.MISSING], so if the
+         * [compOptions] includes the [UndefinedVariableBehavior], we should use the [EvaluatorTestTarget.COMPILER_PIPELINE]
+         */
+        private fun getTestTarget(compOptions: CompOptions, default: EvaluatorTestTarget): EvaluatorTestTarget = when (compOptions) {
+            CompOptions.UNDEF_VAR_MISSING -> EvaluatorTestTarget.COMPILER_PIPELINE
+            CompOptions.PROJECT_UNFILTERED_UNDEF_VAR_MISSING -> EvaluatorTestTarget.COMPILER_PIPELINE
+            else -> default
+        }
+
+        /**
          * Creates one [EvaluatorTestCase] for each of the specified `expectedResultFor*` arguments and
          * [SqlTemplate.compilationOptions].
          */
@@ -114,7 +126,8 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
             expectedResultForSum: String? = null,
             expectedResultForMin: String? = null,
             expectedResultForMax: String? = null,
-            expectedResultForAvg: String? = null
+            expectedResultForAvg: String? = null,
+            targetPipeline: EvaluatorTestTarget = EvaluatorTestTarget.ALL_PIPELINES
         ): List<EvaluatorTestCase> {
             val cases = ArrayList<EvaluatorTestCase>()
 
@@ -122,6 +135,7 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
                 sqlTemplate.compilationOptions.forEach { compOptions ->
                     fun applySqlTemplate(aggFuncName: String) = sqlTemplate.sql.replace("{{agg}}", aggFuncName)
                     val coGroupName = "$compOptions|$groupName"
+                    val pipeline = getTestTarget(compOptions, targetPipeline)
                     expectedResultForCount?.let {
                         cases.add(
                             EvaluatorTestCase(
@@ -129,6 +143,7 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
                                 query = applySqlTemplate("COUNT"),
                                 expectedResult = it,
                                 compileOptionsBuilderBlock = compOptions.optionsBlock,
+                                targetPipeline = pipeline
                             )
                         )
                     }
@@ -139,6 +154,7 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
                                 query = applySqlTemplate("SUM"),
                                 expectedResult = it,
                                 compileOptionsBuilderBlock = compOptions.optionsBlock,
+                                targetPipeline = pipeline
                             )
                         )
                     }
@@ -149,6 +165,7 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
                                 query = applySqlTemplate("MIN"),
                                 expectedResult = it,
                                 compileOptionsBuilderBlock = compOptions.optionsBlock,
+                                targetPipeline = pipeline
                             )
                         )
                     }
@@ -159,6 +176,7 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
                                 query = applySqlTemplate("MAX"),
                                 expectedResult = it,
                                 compileOptionsBuilderBlock = compOptions.optionsBlock,
+                                targetPipeline = pipeline
                             )
                         )
                     }
@@ -169,6 +187,7 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
                                 applySqlTemplate("AVG"),
                                 expectedResult = it,
                                 compileOptionsBuilderBlock = compOptions.optionsBlock,
+                                targetPipeline = pipeline
                             )
                         )
                     }
@@ -203,22 +222,27 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
         private fun createGroupByTestCases(
             query: String,
             expected: String,
-            compilationOptions: List<CompOptions> = CompOptions.values().toList()
+            compilationOptions: List<CompOptions> = CompOptions.values().toList(),
+            targetPipeline: EvaluatorTestTarget = EvaluatorTestTarget.ALL_PIPELINES
         ) = compilationOptions.map { co ->
+            val pipeline = getTestTarget(co, targetPipeline)
             EvaluatorTestCase(
                 query = query,
                 expectedResult = expected,
-                compileOptionsBuilderBlock = co.optionsBlock
+                compileOptionsBuilderBlock = co.optionsBlock,
+                targetPipeline = pipeline
             )
         }
 
-        private fun createGroupByTestCases(queries: List<String>, expected: String) =
+        private fun createGroupByTestCases(queries: List<String>, expected: String, targetPipeline: EvaluatorTestTarget = EvaluatorTestTarget.ALL_PIPELINES) =
             queries.flatMap { q ->
                 CompOptions.values().map { co ->
+                    val pipeline = getTestTarget(co, targetPipeline)
                     EvaluatorTestCase(
                         query = q,
                         expectedResult = expected,
-                        compileOptionsBuilderBlock = co.optionsBlock
+                        compileOptionsBuilderBlock = co.optionsBlock,
+                        targetPipeline = pipeline
                     )
                 }
             }
@@ -905,8 +929,96 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
             groupName = "SELECT with GROUP BY path expression having more than 1 component.",
             query = "SELECT avg(age) as avg_employee_age, manager.address.city FROM employees GROUP BY manager.address.city",
             expectedResult = "<<{'avg_employee_age': 22, 'city': 'Chicago'}, {'avg_employee_age': 26, 'city': 'Seattle'}>>"
-        )
+        ),
+        EvaluatorTestCase(
+            groupName = "SELECT with nested aggregates (complex)",
+            query = """
+                SELECT
+                    i2 AS outerKey,
+                    g2 AS outerGroupAs,
+                    COUNT(*) AS outerCount,
+                    SUM(innerQuery.innerSum) AS outerSum,
+                    MIN(innerQuery.innerSum) AS outerMin
+                FROM (
+                    SELECT
+                        i,
+                        g,
+                        SUM(col1) AS innerSum
+                    FROM simple_1_col_1_group_2 AS innerFromSource
+                    GROUP BY col1 AS i GROUP AS g
+                ) AS innerQuery
+                GROUP BY innerQuery.i AS i2, innerQuery.g AS g2
+            """,
+            expectedResult = """
+                <<
+                    {
+                        'outerKey': 1,
+                        'outerGroupAs': << { 'innerFromSource': { 'col1': 1 } } >>,
+                        'outerCount': 1,
+                        'outerSum': 1,
+                        'outerMin': 1
+                    },
+                    {
+                        'outerKey': 5,
+                        'outerGroupAs': << { 'innerFromSource': { 'col1': 5 } } >>,
+                        'outerCount': 1,
+                        'outerSum': 5,
+                        'outerMin': 5
+                    }
+                >>
+            """,
+            targetPipeline = EvaluatorTestTarget.PLANNER_PIPELINE
+        ),
     )
+
+    // TODO: These tests are FAILING. These need to be addressed. Uncomment @ParameterizedTest to test
+    // @ParameterizedTest
+    @ArgumentsSource(FailingTestsArgsProvider::class)
+    fun failingTests(tc: EvaluatorTestCase) = runTest(tc, session)
+    class FailingTestsArgsProvider : ArgumentsProviderBase() {
+        override fun getParameters(): List<Any> = listOf(
+            // TODO: Please reference https://github.com/partiql/partiql-lang-kotlin/issues/833 for context.
+            EvaluatorTestCase(
+                groupName = "SELECT with nested aggregates (complex)",
+                query = """
+                SELECT
+                    i2 AS outerKey,
+                    g2 AS outerGroupAs,
+                    MIN(innerQuery.innerSum) AS outerMin,
+                    (
+                        SELECT VALUE SUM(i2)
+                        FROM << 0, 1 >>
+                    ) AS projListSubQuery
+                FROM (
+                    SELECT
+                        i,
+                        g,
+                        SUM(col1) AS innerSum
+                    FROM simple_1_col_1_group_2 AS innerFromSource
+                    GROUP BY col1 AS i GROUP AS g
+                ) AS innerQuery
+                GROUP BY innerQuery.i AS i2, innerQuery.g AS g2
+            """,
+                expectedResult = """
+                <<
+                    {
+                        'outerKey': 1,
+                        'outerGroupAs': << { 'innerFromSource': { 'col1': 1 } } >>,
+                        'outerMin': 1,
+                        'projListSubQuery': << 2 >>
+                    },
+                    {
+                        'outerKey': 5,
+                        'outerGroupAs': << { 'innerFromSource': { 'col1': 5 } } >>,
+                        'outerMin': 5,
+                        'projListSubQuery': << 10 >>
+                    }
+                >>
+            """,
+                targetPipeline = EvaluatorTestTarget.PLANNER_PIPELINE
+            ),
+        )
+    }
 
     @Test
     @Parameters
@@ -1152,6 +1264,12 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
             expectedPermissiveModeResult = "<<{}>>",
             target = EvaluatorTestTarget.COMPILER_PIPELINE
         )
+        runEvaluatorErrorTestCase(
+            "SELECT foo AS someSelectListAlias FROM <<{ 'a': 1 }>> GROUP BY someSelectListAlias",
+            ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
+            propertyValueMapOf(1, 8, Property.BINDING_NAME to "foo"),
+            target = EvaluatorTestTarget.PLANNER_PIPELINE
+        )
     }
 
     @Test
@@ -1159,11 +1277,11 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
         runEvaluatorErrorTestCase(
             "SELECT MAX(@v2), @v2 FROM `[1, 2.0, 3e0, 4, 5d0]` AS v2",
             ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
-            propertyValueMapOf(1, 19, Property.BINDING_NAME to "v2"),
-            target = EvaluatorTestTarget.COMPILER_PIPELINE
+            propertyValueMapOf(1, 19, Property.BINDING_NAME to "v2")
         )
     }
 
+    // TODO: Remove target override once HAVING is supported in Planner
     @Test
     fun missingGroupByCausedByHavingTest() {
         runEvaluatorErrorTestCase(
@@ -1179,8 +1297,7 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
         runEvaluatorErrorTestCase(
             "SELECT VALUE f.id FROM << {'a': 'b' } >> AS f GROUP BY f.a",
             ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
-            propertyValueMapOf(1, 14, Property.BINDING_NAME to "f"),
-            target = EvaluatorTestTarget.COMPILER_PIPELINE
+            propertyValueMapOf(1, 14, Property.BINDING_NAME to "f")
         )
     }
 
@@ -1193,8 +1310,7 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
                 """,
             ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
             propertyValueMapOf(2, 28, Property.BINDING_NAME to "O"),
-            session = session,
-            target = EvaluatorTestTarget.COMPILER_PIPELINE
+            session = session
         )
     }
 
@@ -1211,6 +1327,16 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
             session = session,
             target = EvaluatorTestTarget.COMPILER_PIPELINE
         )
+        runEvaluatorErrorTestCase(
+            """
+                    SELECT "O".customerId, MAX(o.cost)
+                    FROM orders as o
+                """,
+            ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
+            propertyValueMapOf(2, 28, Property.BINDING_NAME to "O"),
+            session = session,
+            target = EvaluatorTestTarget.PLANNER_PIPELINE
+        )
     }
 
     @Test
@@ -1223,8 +1349,7 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
                 """,
             expectedErrorCode = ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
             expectedErrorContext = propertyValueMapOf(2, 41, Property.BINDING_NAME to "c"),
-            session = session,
-            target = EvaluatorTestTarget.COMPILER_PIPELINE
+            session = session
         )
     }
 
@@ -1239,8 +1364,7 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
                 """,
             expectedErrorCode = ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
             expectedErrorContext = propertyValueMapOf(2, 41, Property.BINDING_NAME to "o"),
-            session = session,
-            target = EvaluatorTestTarget.COMPILER_PIPELINE
+            session = session
         )
     }
 
@@ -1259,8 +1383,7 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
                 """,
             expectedErrorCode = ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
             expectedErrorContext = propertyValueMapOf(2, 37, Property.BINDING_NAME to "o"),
-            session = session,
-            target = EvaluatorTestTarget.COMPILER_PIPELINE
+            session = session
         )
     }
 
@@ -1277,8 +1400,7 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
                 """,
             expectedErrorCode = ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
             expectedErrorContext = propertyValueMapOf(4, 28, Property.BINDING_NAME to "o"),
-            session = session,
-            target = EvaluatorTestTarget.COMPILER_PIPELINE
+            session = session
         )
     }
 }
