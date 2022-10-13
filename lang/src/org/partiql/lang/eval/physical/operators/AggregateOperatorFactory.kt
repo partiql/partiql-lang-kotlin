@@ -20,6 +20,7 @@ public abstract class AggregateOperatorFactory(name: String) : RelationalOperato
     public final override val key: RelationalOperatorFactoryKey = RelationalOperatorFactoryKey(RelationalOperatorKind.AGGREGATE, name)
     public abstract fun create(
         source: RelationExpression,
+        strategy: PartiqlPhysical.GroupingStrategy,
         keys: List<CompiledGroupKey>,
         functions: List<CompiledAggregateFunction>
     ): RelationExpression

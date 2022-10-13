@@ -14,6 +14,7 @@
 
 package org.partiql.lang.eval.physical.operators
 
+import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.eval.DEFAULT_COMPARATOR
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.physical.EvaluatorState
@@ -26,6 +27,7 @@ import java.util.TreeMap
 internal object AggregateOperatorFactoryDefault : AggregateOperatorFactory(DEFAULT_IMPL_NAME) {
     override fun create(
         source: RelationExpression,
+        strategy: PartiqlPhysical.GroupingStrategy,
         keys: List<CompiledGroupKey>,
         functions: List<CompiledAggregateFunction>
     ): RelationExpression = AggregateOperatorDefault(source, keys, functions)

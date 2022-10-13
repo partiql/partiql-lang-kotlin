@@ -91,7 +91,7 @@ internal class PhysicalBexprToThunkConverter(
 
         // Get Implementation
         val factory = findOperatorFactory<AggregateOperatorFactory>(RelationalOperatorKind.AGGREGATE, node.i.name.text)
-        val relationExpression = factory.create(source, compiledKeys, compiledFunctions)
+        val relationExpression = factory.create(source, node.strategy, compiledKeys, compiledFunctions)
         return relationExpression.toRelationThunk(node.metas)
     }
 
