@@ -34,8 +34,10 @@ private val ERROR_EVAL_MODE_COMPILE_OPTIONS = CompileOptions.build { typingMode(
 
 /*
 The skip lists defined in this file show how the current Kotlin implementation diverges from the PartiQL spec. Most of
-the divergent behavior is due to `partiql-lang-kotlin` not having a STRICT/ERROR typing mode.  The [LEGACY typing mode](https://github.com/partiql/partiql-lang-kotlin/blob/main/lang/src/org/partiql/lang/eval/CompileOptions.kt#L53-L62)
-(which is closer to STRICT/ERROR but not a complete match) was used for testing the STRICT/ERROR typing mode behavior.
+the divergent behavior is due to `partiql-lang-kotlin` not having a STRICT typing mode/ERROR eval mode.  The
+[LEGACY typing mode](https://github.com/partiql/partiql-lang-kotlin/blob/main/lang/src/org/partiql/lang/eval/CompileOptions.kt#L53-L62)
+(which is closer to STRICT typing mode/ERROR eval mode but not a complete match) was used for testing the STRICT typing
+mode/ERROR eval mode.
 
 A lot of the other behavior differences is due to not supporting some syntax mentioned in the spec (like `COLL_*`
 aggregation functions) and due to not supporting coercions.
@@ -50,8 +52,9 @@ private val LANG_KOTLIN_EVAL_SKIP_LIST = listOf(
     // same as above, but since in error mode, should give an error
     Pair("tuple navigation with array notation without explicit CAST to string", ERROR_EVAL_MODE_COMPILE_OPTIONS),
 
-    // for the following, partiql-lang-kotlin doesn't have a STRICT/ERROR typing mode. tested using
-    // partiql-lang-kotlin's LEGACY typing mode, which has some semantic differences from STRICT/ERROR typing mode.
+    // for the following, partiql-lang-kotlin doesn't have a STRICT typing mode/ERROR eval mode. tested using
+    // partiql-lang-kotlin's LEGACY typing mode, which has some semantic differences from STRICT typing mode/ERROR eval
+    // mode.
     Pair("path on string", ERROR_EVAL_MODE_COMPILE_OPTIONS),
     Pair("tuple navigation missing attribute dot notation", ERROR_EVAL_MODE_COMPILE_OPTIONS),
     Pair("tuple navigation missing attribute array notation", ERROR_EVAL_MODE_COMPILE_OPTIONS),
@@ -84,12 +87,13 @@ private val LANG_KOTLIN_EVAL_SKIP_LIST = listOf(
     Pair("windowing simplified with grouping", COERCE_EVAL_MODE_COMPILE_OPTIONS),
     Pair("windowing simplified with grouping", ERROR_EVAL_MODE_COMPILE_OPTIONS),
 
-    // partiql-lang-kotlin doesn't have STRICT/ERROR mode. LEGACY mode used which doesn't error when RHS of `IN`
-    // expression is not a bag, list, or sexp
+    // partiql-lang-kotlin doesn't have STRICT typing mode/ERROR eval mode. LEGACY mode used which doesn't error when
+    // RHS of `IN` expression is not a bag, list, or sexp
     Pair("notInPredicateSingleExpr", ERROR_EVAL_MODE_COMPILE_OPTIONS),
 
     // PartiQL Test Suite (PTS, https://github.com/partiql/partiql-lang-kotlin/tree/main/test/partiql-pts) tests:
-    // partiql-lang-kotlin doesn't have STRICT/ERROR mode. LEGACY mode used which propagates NULL rather than missing
+    // partiql-lang-kotlin doesn't have STRICT typing mode/ERROR eval mode. LEGACY mode used which propagates NULL
+    // rather than missing
     Pair("""char_length null and missing propagation{in:"missing",result:(success missing::null)}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
     Pair("""character_length null and missing propagation{in:"missing",result:(success missing::null)}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
     Pair("""trim null and missing propagation{sql:"trim(missing)"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
@@ -148,8 +152,8 @@ private val LANG_KOTLIN_EVAL_SKIP_LIST = listOf(
     Pair("""concatenation with null values{left:"MISSING",right:"''"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
     Pair("""concatenation with null values{left:"'a'",right:"MISSING"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
     Pair("""concatenation with null values{left:"MISSING",right:"'b'"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-    // similar to above partiql-lang-kotlin doesn't have an ERROR/STRICT mode; its LEGACY mode propagates NULL rather
-    // than MISSING
+    // similar to above partiql-lang-kotlin doesn't have an STRICT typing mode/ERROR eval mode; its LEGACY mode
+    // propagates NULL rather than MISSING
     Pair("""null comparison{sql:"MISSING = NULL",result:missing::null}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
     Pair("""null comparison{sql:"NULL = MISSING",result:missing::null}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
     Pair("""null comparison{sql:"`null.null` = MISSING",result:missing::null}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
@@ -172,7 +176,7 @@ private val LANG_KOTLIN_EVAL_EQUIV_SKIP_LIST = listOf(
     Pair("equiv tuple path navigation with array notation", COERCE_EVAL_MODE_COMPILE_OPTIONS),
     Pair("equiv tuple path navigation with array notation", ERROR_EVAL_MODE_COMPILE_OPTIONS),
 
-    // partiql-lang-kotlin doesn't support a STRICT/ERROR mode.
+    // partiql-lang-kotlin doesn't support a STRICT typing mode/ERROR eval mode.
     Pair("equiv attribute value pair unpivot non-missing", ERROR_EVAL_MODE_COMPILE_OPTIONS),
     Pair("equiv attribute value pair unpivot missing", ERROR_EVAL_MODE_COMPILE_OPTIONS),
 
