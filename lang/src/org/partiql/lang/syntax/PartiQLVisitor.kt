@@ -12,7 +12,7 @@
  * language governing permissions and limitations under the License.
  */
 
-package org.partiql.lang.visitors
+package org.partiql.lang.syntax
 
 import com.amazon.ion.IntegerSize
 import com.amazon.ion.IonInt
@@ -37,8 +37,6 @@ import org.antlr.v4.runtime.Token
 import org.antlr.v4.runtime.tree.ErrorNode
 import org.antlr.v4.runtime.tree.RuleNode
 import org.antlr.v4.runtime.tree.TerminalNode
-import org.partiql.grammar.parser.generated.PartiQLBaseVisitor
-import org.partiql.grammar.parser.generated.PartiQLParser
 import org.partiql.lang.ast.IsCountStarMeta
 import org.partiql.lang.ast.IsImplictJoinMeta
 import org.partiql.lang.ast.IsIonLiteralMeta
@@ -53,9 +51,8 @@ import org.partiql.lang.errors.Property
 import org.partiql.lang.errors.PropertyValueMap
 import org.partiql.lang.eval.EvaluationException
 import org.partiql.lang.eval.time.MAX_PRECISION_FOR_TIME
-import org.partiql.lang.syntax.DATE_TIME_PART_KEYWORDS
-import org.partiql.lang.syntax.ParserException
-import org.partiql.lang.syntax.TRIM_SPECIFICATION_KEYWORDS
+import org.partiql.lang.syntax.antlr.PartiQLBaseVisitor
+import org.partiql.lang.syntax.antlr.PartiQLParser
 import org.partiql.lang.types.CustomType
 import org.partiql.lang.util.DATE_PATTERN_REGEX
 import org.partiql.lang.util.bigDecimalOf
@@ -65,7 +62,6 @@ import org.partiql.lang.util.ionValue
 import org.partiql.lang.util.numberValue
 import org.partiql.lang.util.unaryMinus
 import org.partiql.pig.runtime.SymbolPrimitive
-import java.lang.IndexOutOfBoundsException
 import java.math.BigInteger
 import java.time.LocalDate
 import java.time.LocalTime
