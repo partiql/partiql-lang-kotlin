@@ -68,28 +68,28 @@ private val LANG_KOTLIN_EVAL_SKIP_LIST = listOf(
     // TODO: clarify behavior. spec (section 8) says it should return NULL based on 3-value logic
     Pair("missing and true", COERCE_EVAL_MODE_COMPILE_OPTIONS),
 
-    // plk doesn't currently implement subquery coercion. The inner SFW query returns a bag of two elements that when
-    // coerced to a scalar should return MISSING in COERCE mode. As a result, `customerName` should be missing from the
-    // first tuple.
+    // partiql-lang-kotlin doesn't currently implement subquery coercion. The inner SFW query returns a bag of two
+    // elements that when coerced to a scalar should return MISSING in COERCE mode. As a result, `customerName` should
+    // be missing from the first tuple.
     Pair("inner select evaluating to collection with more than one element", COERCE_EVAL_MODE_COMPILE_OPTIONS),
 
-    // coll_* aggregate functions not supported in plk -- results in parser error. coll_* functions will be supported in
-    // https://github.com/partiql/partiql-lang-kotlin/issues/222
+    // coll_* aggregate functions not supported in partiql-lang-kotlin -- results in parser error. coll_* functions
+    // will be supported in https://github.com/partiql/partiql-lang-kotlin/issues/222
     Pair("coll_count without group by", COERCE_EVAL_MODE_COMPILE_OPTIONS),
     Pair("coll_count without group by", ERROR_EVAL_MODE_COMPILE_OPTIONS),
     Pair("coll_count with result of subquery", COERCE_EVAL_MODE_COMPILE_OPTIONS),
     Pair("coll_count with result of subquery", ERROR_EVAL_MODE_COMPILE_OPTIONS),
 
-    // WITH keyword not supported resulting in parse error. windowing will be supported in plk in https://github.com/partiql/partiql-lang-kotlin/issues/603
+    // WITH keyword not supported resulting in parse error
     Pair("windowing simplified with grouping", COERCE_EVAL_MODE_COMPILE_OPTIONS),
     Pair("windowing simplified with grouping", ERROR_EVAL_MODE_COMPILE_OPTIONS),
 
-    // plk doesn't have STRICT/ERROR mode. LEGACY mode used which doesn't error when RHS of `IN` expression is not a
-    // bag, list, or sexp
+    // partiql-lang-kotlin doesn't have STRICT/ERROR mode. LEGACY mode used which doesn't error when RHS of `IN`
+    // expression is not a bag, list, or sexp
     Pair("notInPredicateSingleExpr", ERROR_EVAL_MODE_COMPILE_OPTIONS),
 
-    // PTS tests:
-    // plk no STRICT/ERROR mode
+    // PartiQL Test Suite (PTS, https://github.com/partiql/partiql-lang-kotlin/tree/main/test/partiql-pts) tests:
+    // partiql-lang-kotlin doesn't have STRICT/ERROR mode. LEGACY mode used which propagates NULL rather than missing
     Pair("""char_length null and missing propagation{in:"missing",result:(success missing::null)}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
     Pair("""character_length null and missing propagation{in:"missing",result:(success missing::null)}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
     Pair("""trim null and missing propagation{sql:"trim(missing)"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
@@ -148,7 +148,8 @@ private val LANG_KOTLIN_EVAL_SKIP_LIST = listOf(
     Pair("""concatenation with null values{left:"MISSING",right:"''"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
     Pair("""concatenation with null values{left:"'a'",right:"MISSING"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
     Pair("""concatenation with null values{left:"MISSING",right:"'b'"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
-    // similar to above plk doesn't have an ERROR/STRICT mode; its LEGACY mode propagates NULL rather than MISSING
+    // similar to above partiql-lang-kotlin doesn't have an ERROR/STRICT mode; its LEGACY mode propagates NULL rather
+    // than MISSING
     Pair("""null comparison{sql:"MISSING = NULL",result:missing::null}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
     Pair("""null comparison{sql:"NULL = MISSING",result:missing::null}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
     Pair("""null comparison{sql:"`null.null` = MISSING",result:missing::null}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
@@ -165,24 +166,25 @@ private val LANG_KOTLIN_EVAL_SKIP_LIST = listOf(
 )
 
 private val LANG_KOTLIN_EVAL_EQUIV_SKIP_LIST = listOf(
-    // plk gives a parser error for tuple path navigation in which the path expression is a string literal
+    // partiql-lang-kotlin gives a parser error for tuple path navigation in which the path expression is a string
+    // literal
     // e.g. { 'a': 1, 'b': 2}.'a' -> 1 (see section 4 of spec)
     Pair("equiv tuple path navigation with array notation", COERCE_EVAL_MODE_COMPILE_OPTIONS),
     Pair("equiv tuple path navigation with array notation", ERROR_EVAL_MODE_COMPILE_OPTIONS),
 
-    // plk doesn't support a STRICT/ERROR mode.
+    // partiql-lang-kotlin doesn't support a STRICT/ERROR mode.
     Pair("equiv attribute value pair unpivot non-missing", ERROR_EVAL_MODE_COMPILE_OPTIONS),
     Pair("equiv attribute value pair unpivot missing", ERROR_EVAL_MODE_COMPILE_OPTIONS),
 
-    // plk doesn't support `LATERAL` keyword which results in a parser error
+    // partiql-lang-kotlin doesn't support `LATERAL` keyword which results in a parser error
     Pair("equiv of comma, cross join, and join", COERCE_EVAL_MODE_COMPILE_OPTIONS),
     Pair("equiv of comma, cross join, and join", ERROR_EVAL_MODE_COMPILE_OPTIONS),
 
-    // plk doesn't support `TUPLEUNION` function which results in an evaluation error
+    // partiql-lang-kotlin doesn't support `TUPLEUNION` function which results in an evaluation error
     Pair("equiv tupleunion with select list", COERCE_EVAL_MODE_COMPILE_OPTIONS),
     Pair("equiv tupleunion with select list", ERROR_EVAL_MODE_COMPILE_OPTIONS),
 
-    // plk doesn't support coercion of subqueries which results in different outputs
+    // partiql-lang-kotlin doesn't support coercion of subqueries which results in different outputs
     Pair("equiv coercion of a SELECT subquery into a scalar", COERCE_EVAL_MODE_COMPILE_OPTIONS),
     Pair("equiv coercion of a SELECT subquery into a scalar", ERROR_EVAL_MODE_COMPILE_OPTIONS),
     Pair("equiv coercion of a SELECT subquery into an array", COERCE_EVAL_MODE_COMPILE_OPTIONS),
@@ -190,15 +192,17 @@ private val LANG_KOTLIN_EVAL_EQUIV_SKIP_LIST = listOf(
     Pair("equiv coercions with explicit literals", COERCE_EVAL_MODE_COMPILE_OPTIONS),
     Pair("equiv coercions with explicit literals", ERROR_EVAL_MODE_COMPILE_OPTIONS),
 
-    // plk doesn't support `GROUP ALL` and `COLL_*` aggregate functions. Currently, results in a parser error
+    // partiql-lang-kotlin doesn't support `GROUP ALL` and `COLL_*` aggregate functions. Currently, results in a parser
+    // error
     Pair("equiv group_all", COERCE_EVAL_MODE_COMPILE_OPTIONS),
     Pair("equiv group_all", ERROR_EVAL_MODE_COMPILE_OPTIONS),
 
-    // plk doesn't support `COLL_*` aggregate functions. Currently, results in an evaluation error
+    // partiql-lang-kotlin doesn't support `COLL_*` aggregate functions. Currently, results in an evaluation error
     Pair("equiv group by with aggregates", COERCE_EVAL_MODE_COMPILE_OPTIONS),
     Pair("equiv group by with aggregates", ERROR_EVAL_MODE_COMPILE_OPTIONS),
 
-    // plk doesn't support using aliases created in select list in `GROUP BY` (and `ORDER BY`). GH issue to track:
+    // partiql-lang-kotlin doesn't support using aliases created in select list in `GROUP BY` (and `ORDER BY`). GH
+    // issue to track:
     // https://github.com/partiql/partiql-lang-kotlin/issues/571
     Pair("equiv aliases from select clause", COERCE_EVAL_MODE_COMPILE_OPTIONS),
     Pair("equiv aliases from select clause", ERROR_EVAL_MODE_COMPILE_OPTIONS),
