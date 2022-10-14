@@ -26,15 +26,17 @@ plugins {
     id 'org.jetbrains.dokka' version '1.6.10'
     id 'signing'
     id 'me.champeau.gradle.jmh' version '0.5.3'
+    id 'antlr'
 }
 
 dependencies {
-    // run-time dependencies
+
+    // Runtime dependencies
     implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
     implementation 'org.jetbrains.kotlin:kotlin-reflect'
 
-    // Parser and ANTLR Runtime
-    implementation project(":partiql-grammar")
+    // ANTLR
+    antlr 'org.antlr:antlr4:4.10.1'
     implementation 'org.antlr:antlr4-runtime:4.10.1'
 
     api 'com.amazon.ion:ion-java:1.9.0'
@@ -45,7 +47,7 @@ dependencies {
 
     implementation 'org.apache.commons:commons-csv:1.8'
 
-    // test-time dependencies
+    // Test dependencies
     testImplementation 'org.jetbrains.kotlin:kotlin-test-junit5'
     testImplementation 'pl.pragmatists:JUnitParams:[1.0.0,1.1.0)'
     testImplementation 'org.assertj:assertj-core:[3.11.0,3.12.0)'
@@ -55,8 +57,13 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter-params:5.7.0'
 }
 
+// TODO update to conventional source layout
 def PIG_SOURCE_ROOT = new File(projectDir, "build/generated-src/pig")
 def PIG_OUTPUT_DIR = new File(PIG_SOURCE_ROOT, "org/partiql/lang/domains")
+
+// TODO remove once project is updated to conventional source layout
+def ANTLR_SOURCE_ROOT = new File(projectDir, "build/generated-src/antlr")
+def ANTLR_OUTPUT_DIR = new File(ANTLR_SOURCE_ROOT, "org/partiql/lang/syntax/antlr")
 
 task generatePigDomains {
     group = "code generation"
@@ -95,7 +102,9 @@ compileKotlin.dependsOn generatePigDomains
 
 sourceSets {
     main {
-        kotlin.srcDirs += [PIG_SOURCE_ROOT]
+        kotlin.srcDirs += [PIG_SOURCE_ROOT, ANTLR_SOURCE_ROOT]
+        java.srcDirs += [ANTLR_SOURCE_ROOT]
+        antlr.srcDirs = ['antlr']
     }
     jmh {
         java.srcDirs = ['src/jmh/java']
@@ -106,7 +115,6 @@ sourceSets {
 }
 
 runKtlintCheckOverMainSourceSet.dependsOn generatePigDomains
-
 
 tasks.dokkaHtml.configure {
     dependsOn(generatePigDomains)
@@ -181,8 +189,17 @@ signing {
     sign publishing.publications.maven
 }
 
-// Adds Resources from PartiQL Grammar Module to Resources
+// ANTLR Task
+generateGrammarSource {
+    maxHeapSize = "64m"
+    arguments += ["-visitor", "-long-messages", "-package", "org.partiql.lang.syntax.antlr" ]
+    outputDirectory = ANTLR_OUTPUT_DIR
+}
+
+compileKotlin.dependsOn generateGrammarSource
+
 processResources {
-    from "${project(":partiql-grammar").buildDir}/resources/main"
-    dependsOn(":partiql-grammar:processResources")
+    from (sourceSets.main.antlr) {
+        include "**/*.g4"
+    }
 }

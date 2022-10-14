@@ -61,18 +61,6 @@ configure(subprojects.findAll { it.name != 'example' }) {
 
 subprojects { proj ->
 
-    /* Note: Module `partiql-grammar` is an exception to the configurations below since the configurations do not apply.
-     *   - Specifically:
-     *     - the module does not have a Test directory
-     *     - the module does not contain Java code
-     *     - the module follows a conventional multi-project and multi-language source structure
-     *       - AKA -- `src/main` should be the sources root, not `src`
-     *   - Without the exception, the build fails as Gradle requires Kotlin classes, and the ANTLR sources cannot be found.
-     */
-    if (proj.name == "partiql-grammar") {
-        return
-    }
-
     apply plugin: "org.jetbrains.kotlin.jvm"
     tasks.withType(Test) {
         jvmArgs += ['-Duser.language=en', '-Duser.country=US']
@@ -157,7 +145,7 @@ subprojects { proj ->
     })
 
     if (project.name == "partiql-isl" || project.name == "partiql-tests-runner") {
-        // skip since partiql-isl uses the conventional Gradle layout
+        // skip subprojects using the conventional Gradle layout
         return
     }
 
