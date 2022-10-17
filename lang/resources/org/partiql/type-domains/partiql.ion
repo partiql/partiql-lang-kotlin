@@ -605,7 +605,7 @@ may then be further optimized by selecting better implementations of each operat
             // Remove the select and struct node from the `expr` sum type, which will be replaced below.
             // Remove the call_window node from the `expr` sum type, because the call_window contains two parts:
             // Window specification and window function, we want to define a stand alone operator for this
-            (exclude select struct call_window)
+            (exclude select struct)
 
             (include
                 // Invokes `exp` once in the context of every binding tuple returned by `query`, returning a
@@ -784,9 +784,6 @@ may then be further optimized by selecting better implementations of each operat
             group_key
             group_key_list
             order_by             // Replaced with SORT node
-            over
-            window_partition_list
-            window_sort_spec_list
 
             let
             dml_op
