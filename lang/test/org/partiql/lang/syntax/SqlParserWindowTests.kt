@@ -21,8 +21,8 @@ class SqlParserWindowTests : SqlParserTestBase() {
                                 (window_sort_spec_list
                                     (sort_spec
                                         (id c (case_insensitive) (unqualified))
-                                        (asc)
-                                        (nulls_last)
+                                        null
+                                        null
                                     )
                                 )
                             )
@@ -60,8 +60,8 @@ class SqlParserWindowTests : SqlParserTestBase() {
                                 (window_sort_spec_list
                                     (sort_spec
                                         (id c (case_insensitive) (unqualified))
-                                        (asc)
-                                        (nulls_last)
+                                        null
+                                        null
                                     )
                                 )
                             )
@@ -99,8 +99,8 @@ class SqlParserWindowTests : SqlParserTestBase() {
                                 (window_sort_spec_list
                                     (sort_spec
                                         (id c (case_insensitive) (unqualified))
-                                        (asc)
-                                        (nulls_last)
+                                        null
+                                        null
                                     )
                                 )
                             )
@@ -140,8 +140,8 @@ class SqlParserWindowTests : SqlParserTestBase() {
                                 (window_sort_spec_list
                                     (sort_spec
                                         (id c (case_insensitive) (unqualified))
-                                        (asc)
-                                        (nulls_last)
+                                        null
+                                        null
                                     )
                                 )
                             )
@@ -180,8 +180,8 @@ class SqlParserWindowTests : SqlParserTestBase() {
                                 (window_sort_spec_list
                                     (sort_spec
                                         (id c (case_insensitive) (unqualified))
-                                        (asc)
-                                        (nulls_last)
+                                        null
+                                        null
                                     )
                                 )
                             )
@@ -220,8 +220,8 @@ class SqlParserWindowTests : SqlParserTestBase() {
                                 (window_sort_spec_list
                                     (sort_spec
                                         (id c (case_insensitive) (unqualified))
-                                        (asc)
-                                        (nulls_last)
+                                        null
+                                        null
                                     )
                                 )
                             )

@@ -783,8 +783,6 @@ may then be further optimized by selecting better implementations of each operat
             group_key
             group_key_list
             order_by             // Replaced with SORT node
-            sort_spec
-            ordering_spec
             over
             window_partition_list
             window_sort_spec_list
