@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+
+### Changed
+
+### Deprecated
+
+### Fixed
+
+### Removed
+
+### Security
+
+## [0.8.0] - 2022-10-14
+
+### Added
 - `CHANGELOG.md` with back-filling of the previous releases to the change log to provide more visibility on unreleased
   changes and make the release process easier by using the `unreleased` section of change log. The `CONTRIBUTING.md`
   has also been updated to ensure this is part of the process.
