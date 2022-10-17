@@ -433,6 +433,7 @@ internal class AstToLogicalVisitorTransform(
             )
         }
 
+<<<<<<< HEAD
     private fun transformProjectList(node: PartiqlAst.Projection.ProjectList): PartiqlLogical.Expr =
         PartiqlLogical.build {
             struct(
@@ -453,10 +454,17 @@ internal class AstToLogicalVisitorTransform(
                 }
             )
         }
-
-    override fun transformExprCallWindow(node: PartiqlAst.Expr.CallWindow): PartiqlLogical.Expr {
-        TODO("Not yet implemented")
-    }
+    override fun transformExprCallWindow(node: PartiqlAst.Expr.CallWindow): PartiqlLogical.Expr =
+        PartiqlLogical.build {
+            callWindow(
+                node.funcName.text,
+                transformOver(node.over),
+                node.args.map {
+                    transformExpr(it)
+                },
+                node.metas
+            )
+        }
 }
 
 private fun PartiqlAst.FromSource.toBexpr(
