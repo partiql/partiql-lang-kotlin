@@ -268,6 +268,7 @@ internal class PhysicalBexprToThunkConverter(
         return bindingsExpr.toRelationThunk(node.metas)
     }
 
+<<<<<<< HEAD
     /**
      * Returns a list of [CompiledSortKey] with the aim of pre-computing the [NaturalExprValueComparators] prior to
      * evaluation and leaving the [PartiqlPhysical.SortSpec]'s [PartiqlPhysical.Expr] to be evaluated later.
@@ -290,6 +291,10 @@ internal class PhysicalBexprToThunkConverter(
         }
         val value = exprConverter.convert(spec.expr).toValueExpr(spec.expr.metas.sourceLocationMeta)
         CompiledSortKey(comp, value)
+=======
+    override fun convertWindow(node: PartiqlPhysical.Bexpr.Window): RelationThunkEnv {
+        TODO("Not yet implemented")
+>>>>>>> 6e9b3de (wip)
     }
 }
 
