@@ -87,7 +87,6 @@ internal class LogicalResolvedToDefaultPhysicalVisitorTransform(
         }
     }
 
-<<<<<<< HEAD
     override fun transformBexprAggregate(node: PartiqlLogicalResolved.Bexpr.Aggregate): PartiqlPhysical.Bexpr {
         val thiz = this
         return PartiqlPhysical.build {
@@ -100,10 +99,17 @@ internal class LogicalResolvedToDefaultPhysicalVisitorTransform(
                 metas = node.metas
             )
         }
-=======
+    }
     override fun transformBexprWindow(node: PartiqlLogicalResolved.Bexpr.Window): PartiqlPhysical.Bexpr {
-        TODO("Not yet implemented")
->>>>>>> ddec6d5 (logical done)
+        val thiz = this
+        return PartiqlPhysical.build {
+            window(
+                i = DEFAULT_IMPL,
+                source = thiz.transformBexpr(node.source),
+                windowSpecification = thiz.transformOver(node.windowSpecification),
+                windowExpression = thiz.transformWindowExpression(node.windowExpression)
+            )
+        }
     }
 
     override fun transformBexprOffset(node: PartiqlLogicalResolved.Bexpr.Offset): PartiqlPhysical.Bexpr {

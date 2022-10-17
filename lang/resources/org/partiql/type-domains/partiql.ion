@@ -949,6 +949,12 @@ may then be further optimized by selecting better implementations of each operat
                 (offset i::impl row_count::expr source::bexpr)
                 (limit i::impl row_count::expr source::bexpr)
                 (let i::impl source::bexpr bindings::(* let_binding 1))
+                (window
+                     i::impl
+                     source:: bexpr
+                     window_specification:: over
+                     window_expression:: window_expression
+                )
             )
         )
     )
