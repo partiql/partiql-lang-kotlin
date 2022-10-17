@@ -8,9 +8,12 @@ import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.NaturalExprValueComparators
 import org.partiql.lang.eval.Thunk
 import org.partiql.lang.eval.ThunkValue
+<<<<<<< HEAD
 import org.partiql.lang.eval.physical.operators.AggregateOperatorFactory
 import org.partiql.lang.eval.physical.operators.CompiledAggregateFunction
 import org.partiql.lang.eval.physical.operators.CompiledGroupKey
+=======
+>>>>>>> a8e77064 (wip)
 import org.partiql.lang.eval.physical.operators.CompiledSortKey
 import org.partiql.lang.eval.physical.operators.FilterRelationalOperatorFactory
 import org.partiql.lang.eval.physical.operators.JoinRelationalOperatorFactory
@@ -26,6 +29,7 @@ import org.partiql.lang.eval.physical.operators.ScanRelationalOperatorFactory
 import org.partiql.lang.eval.physical.operators.SortOperatorFactory
 import org.partiql.lang.eval.physical.operators.UnpivotOperatorFactory
 import org.partiql.lang.eval.physical.operators.VariableBinding
+import org.partiql.lang.eval.physical.operators.WindowRelationalOperatorFactory
 import org.partiql.lang.eval.physical.operators.valueExpression
 import org.partiql.lang.util.toIntExact
 
@@ -268,7 +272,6 @@ internal class PhysicalBexprToThunkConverter(
         return bindingsExpr.toRelationThunk(node.metas)
     }
 
-<<<<<<< HEAD
     /**
      * Returns a list of [CompiledSortKey] with the aim of pre-computing the [NaturalExprValueComparators] prior to
      * evaluation and leaving the [PartiqlPhysical.SortSpec]'s [PartiqlPhysical.Expr] to be evaluated later.
@@ -291,10 +294,54 @@ internal class PhysicalBexprToThunkConverter(
         }
         val value = exprConverter.convert(spec.expr).toValueExpr(spec.expr.metas.sourceLocationMeta)
         CompiledSortKey(comp, value)
-=======
+    }
+
     override fun convertWindow(node: PartiqlPhysical.Bexpr.Window): RelationThunkEnv {
-        TODO("Not yet implemented")
->>>>>>> 6e9b3de (wip)
+        val source = this.convert(node.source)
+
+        val windowPartitionList = node.windowSpecification.partitionBy
+
+        val windowSortSpecList = node.windowSpecification.orderBy
+
+        val compiledPartitionBy = if (windowPartitionList != null) windowPartitionList.exprs.map {
+            exprConverter.convert(it).toValueExpr(it.metas.sourceLocationMeta)
+        } else null
+
+        val compiledOrderBy = if (windowSortSpecList != null) compileSortSpecs(windowSortSpecList.sortSpecs) else null
+
+        val compiledWindowFunctionParameter = node.windowExpression.args.map {
+            exprConverter.convert(it).toValueExpr(it.metas.sourceLocationMeta)
+        }
+
+        // locate operator factory
+        val factory = findOperatorFactory<WindowRelationalOperatorFactory>(RelationalOperatorKind.WINDOW, node.i.name.text)
+
+        // create operator implementation
+        val bindingsExpr = factory.create(node.i, source, compiledPartitionBy, compiledOrderBy, node.windowExpression, compiledWindowFunctionParameter)
+
+        // wrap in thunk
+        return bindingsExpr.toRelationThunk(node.metas)
+    }
+
+    private fun compileSortSpecs(specs: List<PartiqlPhysical.SortSpec>): List<CompiledSortKey> = specs.map { spec ->
+        val comp = when (spec.orderingSpec) {
+            is PartiqlPhysical.OrderingSpec.Asc ->
+                when (spec.nullsSpec) {
+                    is PartiqlPhysical.NullsSpec.NullsFirst -> NaturalExprValueComparators.NULLS_FIRST_ASC
+                    is PartiqlPhysical.NullsSpec.NullsLast -> NaturalExprValueComparators.NULLS_LAST_ASC
+                    null -> NaturalExprValueComparators.NULLS_LAST_ASC
+                }
+            is PartiqlPhysical.OrderingSpec.Desc ->
+                when (spec.nullsSpec) {
+                    is PartiqlPhysical.NullsSpec.NullsFirst -> NaturalExprValueComparators.NULLS_FIRST_DESC
+                    is PartiqlPhysical.NullsSpec.NullsLast -> NaturalExprValueComparators.NULLS_LAST_DESC
+                    null -> NaturalExprValueComparators.NULLS_LAST_DESC
+                }
+            null -> NaturalExprValueComparators.NULLS_LAST_ASC
+        }
+        val value = exprConverter.convert(spec.expr).toValueExpr(spec.expr.metas.sourceLocationMeta)
+        CompiledSortKey(comp, value)
+>>>>>>> a8e77064 (wip)
     }
 }
 
