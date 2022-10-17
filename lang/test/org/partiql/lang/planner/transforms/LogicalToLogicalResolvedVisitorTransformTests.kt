@@ -827,23 +827,20 @@ class LogicalToLogicalResolvedVisitorTransformTests {
     }
 
     @ParameterizedTest
-    @ArgumentsSource(withWindowFunction::class)
+    @ArgumentsSource(WithWindowFunction::class)
     fun `queries-with-window-function`(tc: TestCase) = runTestCase(tc)
-    class withWindowFunction : ArgumentsProviderBase() {
+    class WithWindowFunction : ArgumentsProviderBase() {
         override fun getParameters() = listOf(
             TestCase(
-                // inner query does not reference variables outer query
                 "SELECT lag(l.co) OVER(PARTITION BY l.sensor ORDER BY l.record_time) as previous_co FROM << {'sensor' : 2, 'co': 0.2, 'recordtime': 1000}, {'sensor' : 1, 'co': 0.4, 'recordtime': 2000}, {'sensor' : 2, 'co': 0.8, 'recordtime': 3000}, {'sensor' : 1, 'co': 1.0, 'recordtime': 4000} >> as l",
                 Expectation.Success(
+                    ResolvedId(1, 12) { localId(0) },
+                    ResolvedId(1, 36) { localId(0) },
+                    ResolvedId(1, 54) { localId(0) },
                     ResolvedId(1, 8) { localId(1) },
-                    ResolvedId(1, 25) { localId(0) },
-                    ResolvedId(1, 8) { localId(2) },
-                    ResolvedId(1, 25) { localId(3) },
                 ).withLocals(
-                    localVariable("a", 0),
-                    localVariable("b", 1),
-                    localVariable("e", 2),
-                    localVariable("windowFunction0", 3)
+                    localVariable("l", 0),
+                    localVariable("windowFunction0", 1)
                 )
             ),
         )
