@@ -499,6 +499,13 @@ internal data class LogicalToLogicalResolvedVisitorTransform(
                 val letVariables = bexpr.bindings.reversed().map { it.decl }
                 sourceScope.concatenate(letVariables)
             }
+
+            is PartiqlLogical.Bexpr.Window -> {
+                val sourceScope = getOutputScope(bexpr.source)
+                // Note that .reversed() is important here to ensure that variable shadowing works correctly.
+                val windowVariable = bexpr.windowExpression.decl
+                sourceScope.concatenate(windowVariable)
+            }
         }
 
     private fun LocalScope.concatenate(other: LocalScope): LocalScope =
@@ -506,6 +513,11 @@ internal data class LogicalToLogicalResolvedVisitorTransform(
 
     private fun LocalScope.concatenate(other: List<PartiqlLogical.VarDecl>): LocalScope {
         val concatenatedScopeVariables = this.varDecls + other
+        return LocalScope(concatenatedScopeVariables)
+    }
+
+    private fun LocalScope.concatenate(other: PartiqlLogical.VarDecl): LocalScope {
+        val concatenatedScopeVariables = this.varDecls + listOf(other)
         return LocalScope(concatenatedScopeVariables)
     }
 

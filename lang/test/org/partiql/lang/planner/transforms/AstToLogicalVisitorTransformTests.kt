@@ -76,15 +76,19 @@ class AstToLogicalVisitorTransformTests {
     class ArgumentsForToLogicalWindowTests : ArgumentsProviderBase() {
         override fun getParameters() = listOf(
             TestCase(
-                // Note:
-                // `SELECT * FROM bar AS b` is rewritten to `SELECT b.* FROM bar as b` by [SelectStarVisitorTransform].
-                // Therefore, there is no need to support `SELECT *` in `AstToLogicalVisitorTransform`.
-                "SELECT lag(a) OVER (PARTITION BY b ORDER BY c) as d FROM bar AS e",
+                "SELECT lag(a) OVER (ORDER BY b) as c FROM d AS e",
                 PartiqlLogical.build {
                     query(
                         bindingsToValues(
-                            struct(structFields(id("b"))),
-                            scan(id("bar"), varDecl("b"))
+                            struct(structField(lit(ionSymbol("c")), id("windowFunction0"))),
+                            window(
+                                scan(id("d"), varDecl("e")),
+                                over(
+                                    null,
+                                    windowSortSpecList(sortSpec(id("b"), asc(), nullsLast())),
+                                ),
+                                windowExpression(varDecl("windowFunction0"), "lag", listOf(id("a")))
+                            )
                         )
                     )
                 }

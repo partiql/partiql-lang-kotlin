@@ -139,6 +139,7 @@ internal class AstToLogicalVisitorTransform(
         return modifiedAlgebra
     }
 
+
     /**
      * Transforms the input [node] into a pair of two items:
      *  1. An AST (where all [PartiqlAst.Expr.CallAgg]'s in the input projection list are replaced with references
