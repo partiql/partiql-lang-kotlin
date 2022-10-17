@@ -59,7 +59,7 @@ class WindowRelatedParserErrorsTest : SqlParserTestBase() {
             ErrorCode.PARSE_UNEXPECTED_TOKEN,
             mapOf(
                 Property.LINE_NUMBER to 1L,
-                Property.COLUMN_NUMBER to 17L,
+                Property.COLUMN_NUMBER to 18L,
                 Property.TOKEN_TYPE to TokenType.COMMA,
                 Property.TOKEN_VALUE to ion.newSymbol(",")
             ),

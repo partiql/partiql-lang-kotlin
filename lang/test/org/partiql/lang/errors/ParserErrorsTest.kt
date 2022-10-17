@@ -1793,14 +1793,15 @@ class ParserErrorsTest : SqlParserTestBase() {
             ),
             targetParsers = setOf(ParserTypes.SQL_PARSER)
         )
+        // This is changed because the window function adds an additional rule that uses ORDER BY.
         checkInputThrowingParserException(
             "SELECT a FROM tb ORDER foo",
             ErrorCode.PARSE_UNEXPECTED_TOKEN,
             mapOf(
                 Property.LINE_NUMBER to 1L,
-                Property.COLUMN_NUMBER to 24L,
-                Property.TOKEN_TYPE to TokenType.IDENTIFIER,
-                Property.TOKEN_VALUE to ion.newSymbol("foo")
+                Property.COLUMN_NUMBER to 18L,
+                Property.TOKEN_TYPE to TokenType.KEYWORD,
+                Property.TOKEN_VALUE to ion.newSymbol("order")
             ),
             targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
         )
