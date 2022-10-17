@@ -28,7 +28,7 @@ internal val DEFAULT_RELATIONAL_OPERATOR_FACTORIES = listOf(
     AggregateOperatorFactoryDefault,
     SortOperatorFactoryDefault,
     UnpivotOperatorFactoryDefault,
-    sortBasedWindowOperator(DEFAULT_IMPL_NAME),
+    SortBasedWindowOperator(DEFAULT_IMPL_NAME),
 
     object : ScanRelationalOperatorFactory(DEFAULT_IMPL_NAME) {
         override fun create(

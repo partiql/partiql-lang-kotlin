@@ -10,7 +10,6 @@ import org.partiql.lang.eval.physical.toSetVariableFunc
 import org.partiql.lang.eval.relation.RelationIterator
 import org.partiql.lang.eval.relation.RelationType
 import org.partiql.lang.eval.relation.relation
-import org.partiql.lang.util.compareTo
 
 class CompiledSortKey(val comparator: NaturalExprValueComparators, val value: ValueExpression)
 
@@ -44,7 +43,7 @@ abstract class WindowRelationalOperatorFactory(name: String) : RelationalOperato
  * After partition is materialized, `LAG` and `LEAD` function can use index to access the target row, if the target row is with in the partition.
  *
  */
-class sortBasedWindowOperator(name: String) : WindowRelationalOperatorFactory(name) {
+class SortBasedWindowOperator(name: String) : WindowRelationalOperatorFactory(name) {
     override fun create(
         impl: PartiqlPhysical.Impl,
         source: RelationExpression,
@@ -127,7 +126,6 @@ class sortBasedWindowOperator(name: String) : WindowRelationalOperatorFactory(na
 internal class LeadFunction(val windowExpression: PartiqlPhysical.WindowExpression, val partition: MutableList<List<Array<ExprValue>>>, val arguments: List<ValueExpression>, val state: EvaluatorState) {
 
     fun eval(): RelationIterator {
-        // TODO need additional check logic to valiadate window function parameters. i.e. offset must be non-negative integer
         val (target, offset, default) = when (arguments.size) {
             1 -> listOf(arguments[0], null, null)
 
@@ -177,7 +175,6 @@ internal class LeadFunction(val windowExpression: PartiqlPhysical.WindowExpressi
 internal class LagFunction(val windowExpression: PartiqlPhysical.WindowExpression, val partition: MutableList<List<Array<ExprValue>>>, val arguments: List<ValueExpression>, val state: EvaluatorState) {
 
     fun eval(): RelationIterator {
-        // TODO need additional check logic to valiadate window function parameters. i.e. offset must be non-negative integer
         val (target, offset, default) = when (arguments.size) {
             1 -> listOf(arguments[0], null, null)
 

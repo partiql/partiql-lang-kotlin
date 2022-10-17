@@ -248,7 +248,6 @@ internal data class LogicalToLogicalResolvedVisitorTransform(
         val bindings = getOutputScope(node)
         return withInputScope(bindings) {
             node.windowSpecification.let {
-                // this.transformExpr(it)
                 this.transformOver(it)
             }
         }
@@ -258,7 +257,6 @@ internal data class LogicalToLogicalResolvedVisitorTransform(
         val bindings = getOutputScope(node)
         return withInputScope(bindings) {
             node.windowExpression.let {
-                // this.transformExpr(it)
                 this.transformWindowExpression(it)
             }
         }
