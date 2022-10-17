@@ -41,6 +41,8 @@ internal class AstToLogicalVisitorTransform(
     val problemHandler: ProblemHandler
 ) : PartiqlAstToPartiqlLogicalVisitorTransform() {
 
+    val windowFunctionUniqueIdMap = mutableMapOf<PartiqlAst.Expr.CallWindow, String>()
+
     override fun transformExprSelect(node: PartiqlAst.Expr.Select): PartiqlLogical.Expr {
         checkForUnsupportedSelectClauses(node)
 
@@ -51,6 +53,8 @@ internal class AstToLogicalVisitorTransform(
                 let(algebra, fromLet.letBindings.map { transformLetBinding(it) }, node.fromLet.metas)
             }
         } ?: algebra
+
+        algebra = extractWindowFunction(node, algebra)
 
         algebra = node.where?.let {
             PartiqlLogical.build { filter(transformExpr(it), algebra, it.metas) }
@@ -79,6 +83,60 @@ internal class AstToLogicalVisitorTransform(
         }
 
         return expr
+    }
+
+    // This is to produce a unique var_decl value for window
+    private fun generateUniqueWindowName(node: PartiqlAst.Expr.CallWindow, index: Int): String {
+        val uniqueId = "windowFunction$index"
+        windowFunctionUniqueIdMap[node] = uniqueId
+        return "windowFunction$index"
+    }
+
+    private fun getUniqueWindowName(node: PartiqlAst.Expr.CallWindow): String {
+        return windowFunctionUniqueIdMap[node] ?: error("no such window function registered")
+    }
+
+    private fun extractWindowFunction(node: PartiqlAst.Expr.Select, algebra: PartiqlLogical.Bexpr): PartiqlLogical.Bexpr {
+        // check to see if there is any window call in the select list
+        val windowExpressions = when (val project = node.project) {
+            is PartiqlAst.Projection.ProjectValue -> return algebra
+            is PartiqlAst.Projection.ProjectList -> {
+                project.projectItems.asSequence().filterNot {
+                    it is PartiqlAst.ProjectItem.ProjectAll
+                }.filter {
+                    (it as PartiqlAst.ProjectItem.ProjectExpr).expr is PartiqlAst.Expr.CallWindow
+                }.map {
+                    (((it as PartiqlAst.ProjectItem.ProjectExpr).expr) as PartiqlAst.Expr.CallWindow)
+                }
+            }
+
+            is PartiqlAst.Projection.ProjectPivot -> return algebra
+            is PartiqlAst.Projection.ProjectStar -> return algebra
+        }
+
+        // todo: if multiple window functions are operating on the same window, we need to be able to add them in a single window operator
+        var modifiedAlgebra = algebra
+        windowExpressions.forEachIndexed { index, callWindow ->
+            modifiedAlgebra = callWindow.let { callWindowNode ->
+                PartiqlLogical.build {
+                    window(
+                        algebra,
+                        transformOver(callWindowNode.over),
+                        PartiqlLogical.build {
+                            windowExpression(
+                                varDecl(generateUniqueWindowName(callWindowNode, index)),
+                                callWindowNode.funcName.text,
+                                callWindowNode.args.map { arg ->
+                                    transformExpr(arg)
+                                },
+                                metas = node.project.metas
+                            )
+                        }
+                    )
+                }
+            }
+        }
+        return modifiedAlgebra
     }
 
     /**
@@ -433,7 +491,16 @@ internal class AstToLogicalVisitorTransform(
             )
         }
 
-<<<<<<< HEAD
+    override fun transformExprCallWindow(node: PartiqlAst.Expr.CallWindow): PartiqlLogical.Expr =
+        PartiqlLogical.build {
+            id(
+                getUniqueWindowName(node,),
+                caseInsensitive(),
+                unqualified(),
+                metas = node.metas
+            )
+        }
+
     private fun transformProjectList(node: PartiqlAst.Projection.ProjectList): PartiqlLogical.Expr =
         PartiqlLogical.build {
             struct(
@@ -452,17 +519,6 @@ internal class AstToLogicalVisitorTransform(
                         }
                     }
                 }
-            )
-        }
-    override fun transformExprCallWindow(node: PartiqlAst.Expr.CallWindow): PartiqlLogical.Expr =
-        PartiqlLogical.build {
-            callWindow(
-                node.funcName.text,
-                transformOver(node.over),
-                node.args.map {
-                    transformExpr(it)
-                },
-                node.metas
             )
         }
 }
