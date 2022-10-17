@@ -498,8 +498,6 @@ internal class PlannerPipelineImpl(
             logicalPlan.toResolvedPlan(problemHandler, globalVariableResolver, allowUndefinedVariables)
         }
 
-        println(resolvedLogicalPlan)
-
         // If there are unresolved variables after attempting to resolve variables, then we can't proceed.
         if (problemHandler.hasErrors) {
             return PlannerPassResult.Error(problemHandler.problems)

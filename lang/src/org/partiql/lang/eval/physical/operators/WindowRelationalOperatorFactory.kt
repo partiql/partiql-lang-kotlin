@@ -5,7 +5,9 @@ import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.NaturalExprValueComparators
 import org.partiql.lang.eval.exprEquals
 import org.partiql.lang.eval.numberValue
+import org.partiql.lang.eval.physical.EvaluatorState
 import org.partiql.lang.eval.physical.toSetVariableFunc
+import org.partiql.lang.eval.relation.RelationIterator
 import org.partiql.lang.eval.relation.RelationType
 import org.partiql.lang.eval.relation.relation
 
@@ -106,73 +108,160 @@ class sortBasedWindowOperator(name: String) : WindowRelationalOperatorFactory(na
             rowInPartition.clear()
         }
 
-        relation(RelationType.LIST) {
+        if (windowExpression.funcName.text.toLowerCase() == "lag") {
+            LeadFunction(windowExpression, partition, windowFunctionParameter, state).eval()
+        } else {
+            LagFunction(windowExpression, partition, windowFunctionParameter, state).eval()
+        }
+
+//        relation(RelationType.LIST) {
+//            partition.forEach { rowsInPartition ->
+//                // calculate window function result
+//                if (windowExpression.funcName.text.toLowerCase() == "lag") {
+//                    // TODO need additional check logic to valiadate window function parameters
+//                    val (target, offset, default) = when (windowFunctionParameter.size) {
+//                        1 -> listOf(windowFunctionParameter[0], null, null)
+//
+//                        2 -> listOf(windowFunctionParameter[0], windowFunctionParameter[1], null)
+//
+//                        3 -> listOf(windowFunctionParameter[0], windowFunctionParameter[1], null)
+//
+//                        else -> error("Wrong number of Parameter for LAG Function")
+//                    }
+//                    rowsInPartition.forEachIndexed { index, row ->
+//                        // reset index for parameter evaluation
+//                        transferState(state, row)
+//                        val offsetValue = offset?.invoke(state)?.numberValue()?.toLong() ?: 1
+//                        val defaultValue = default?.invoke(state) ?: state.valueFactory.nullValue
+//                        val targetIndex = index - offsetValue
+//                        // if targetRow is within partition
+//                        if (targetIndex >= 0 && targetIndex <= rowsInPartition.size - 1) {
+//                            // TODO need to check if index is larger than MAX INT, but this may causes overflow already
+//                            val targetRow = rowsInPartition[targetIndex.toInt()]
+//                            transferState(state, targetRow)
+//                            val res = target!!.invoke(state)
+//                            transferState(state, row)
+//                            windowExpression.decl.toSetVariableFunc()(state, res)
+//                        } else {
+//                            transferState(state, row)
+//                            windowExpression.decl.toSetVariableFunc()(state, defaultValue)
+//                        }
+//                        yield()
+//                    }
+//                } else {
+//                    rowsInPartition.forEachIndexed { index, row ->
+//
+//                        val (target, offset, default) = when (windowFunctionParameter.size) {
+//                            1 -> listOf(windowFunctionParameter[0], null, null)
+//
+//                            2 -> listOf(windowFunctionParameter[0], windowFunctionParameter[1], null)
+//
+//                            3 -> listOf(windowFunctionParameter[0], windowFunctionParameter[1], null)
+//
+//                            else -> error("Wrong number of Parameter for Lead Function")
+//                        }
+//
+//                        // reset index for parameter evaluation
+//                        transferState(state, row)
+//                        val offsetValue = offset?.invoke(state)?.numberValue()?.toLong() ?: 1
+//                        val defaultValue = default?.invoke(state) ?: state.valueFactory.nullValue
+//                        val targetIndex = index + offsetValue
+//                        // if targetRow is within partition
+//                        if (targetIndex >= 0 && targetIndex <= rowsInPartition.size - 1) {
+//                            // TODO need to check if index is larger than MAX INT, but this may causes overflow already
+//                            val targetRow = rowsInPartition[targetIndex.toInt()]
+//                            transferState(state, targetRow)
+//                            val res = target!!.invoke(state)
+//                            transferState(state, row)
+//                            windowExpression.decl.toSetVariableFunc()(state, res)
+//                        } else {
+//                            transferState(state, row)
+//                            windowExpression.decl.toSetVariableFunc()(state, defaultValue)
+//                        }
+//                        yield()
+//                    }
+//                }
+//            }
+//        }
+    }
+}
+
+internal class LeadFunction(val windowExpression: PartiqlPhysical.WindowExpression, val partition: MutableList<List<Array<ExprValue>>>, val arguments: List<ValueExpression>, val state: EvaluatorState) {
+
+    fun eval(): RelationIterator {
+        // TODO need additional check logic to valiadate window function parameters. i.e. offset must be non-negative integer
+        val (target, offset, default) = when (arguments.size) {
+            1 -> listOf(arguments[0], null, null)
+
+            2 -> listOf(arguments[0], arguments[1], null)
+
+            3 -> listOf(arguments[0], arguments[1], null)
+
+            else -> error("Wrong number of Parameter for Lead Function")
+        }
+        return relation(RelationType.LIST) {
+
             partition.forEach { rowsInPartition ->
-                // calculate window function result
-                if (windowExpression.funcName.text.toLowerCase() == "lag") {
-                    rowsInPartition.forEachIndexed { index, row ->
-                        // TODO need additional check logic to valiadate window function parameters
-                        val (target, offset, default) = when (windowFunctionParameter.size) {
-                            1 -> listOf(windowFunctionParameter[0], null, null)
-
-                            2 -> listOf(windowFunctionParameter[0], windowFunctionParameter[1], null)
-
-                            3 -> listOf(windowFunctionParameter[0], windowFunctionParameter[1], null)
-
-                            else -> error("Wrong number of Parameter for LAG Function")
-                        }
-
-                        // reset index for parameter evaluation
+                rowsInPartition.forEachIndexed { index, row ->
+                    // reset index for parameter evaluation
+                    transferState(state, row)
+                    val offsetValue = offset?.invoke(state)?.numberValue()?.toLong() ?: 1
+                    val defaultValue = default?.invoke(state) ?: state.valueFactory.nullValue
+                    val targetIndex = index + offsetValue
+                    // if targetRow is within partition
+                    if (targetIndex >= 0 && targetIndex <= rowsInPartition.size - 1) {
+                        // TODO need to check if index is larger than MAX INT, but this may causes overflow already
+                        val targetRow = rowsInPartition[targetIndex.toInt()]
+                        transferState(state, targetRow)
+                        val res = target!!.invoke(state)
                         transferState(state, row)
-                        val offsetValue = offset?.invoke(state)?.numberValue()?.toLong() ?: 1
-                        val defaultValue = default?.invoke(state) ?: state.valueFactory.nullValue
-                        val targetIndex = index - offsetValue
-                        // if targetRow is within partition
-                        if (targetIndex >= 0 && targetIndex <= rowsInPartition.size - 1) {
-                            // TODO need to check if index is larger than MAX INT, but this may causes overflow already
-                            val targetRow = rowsInPartition[targetIndex.toInt()]
-                            transferState(state, targetRow)
-                            val res = target!!.invoke(state)
-                            transferState(state, row)
-                            windowExpression.decl.toSetVariableFunc()(state, res)
-                        } else {
-                            transferState(state, row)
-                            windowExpression.decl.toSetVariableFunc()(state, defaultValue)
-                        }
-                        yield()
-                    }
-                } else {
-                    rowsInPartition.forEachIndexed { index, row ->
-                        // TODO need additional check logic to valiadate window function parameters
-                        val (target, offset, default) = when (windowFunctionParameter.size) {
-                            1 -> listOf(windowFunctionParameter[0], null, null)
-
-                            2 -> listOf(windowFunctionParameter[0], windowFunctionParameter[1], null)
-
-                            3 -> listOf(windowFunctionParameter[0], windowFunctionParameter[1], null)
-
-                            else -> error("Wrong number of Parameter for Lead Function")
-                        }
-
-                        // reset index for parameter evaluation
+                        windowExpression.decl.toSetVariableFunc()(state, res)
+                    } else {
                         transferState(state, row)
-                        val offsetValue = offset?.invoke(state)?.numberValue()?.toLong() ?: 1
-                        val defaultValue = default?.invoke(state) ?: state.valueFactory.nullValue
-                        val targetIndex = index + offsetValue
-                        // if targetRow is within partition
-                        if (targetIndex >= 0 && targetIndex <= rowsInPartition.size - 1) {
-                            // TODO need to check if index is larger than MAX INT, but this may causes overflow already
-                            val targetRow = rowsInPartition[targetIndex.toInt()]
-                            transferState(state, targetRow)
-                            val res = target!!.invoke(state)
-                            transferState(state, row)
-                            windowExpression.decl.toSetVariableFunc()(state, res)
-                        } else {
-                            transferState(state, row)
-                            windowExpression.decl.toSetVariableFunc()(state, defaultValue)
-                        }
-                        yield()
+                        windowExpression.decl.toSetVariableFunc()(state, defaultValue)
                     }
+                    yield()
+                }
+            }
+        }
+    }
+}
+
+internal class LagFunction(val windowExpression: PartiqlPhysical.WindowExpression, val partition: MutableList<List<Array<ExprValue>>>, val arguments: List<ValueExpression>, val state: EvaluatorState) {
+
+    fun eval(): RelationIterator {
+        // TODO need additional check logic to valiadate window function parameters. i.e. offset must be non-negative integer
+        val (target, offset, default) = when (arguments.size) {
+            1 -> listOf(arguments[0], null, null)
+
+            2 -> listOf(arguments[0], arguments[1], null)
+
+            3 -> listOf(arguments[0], arguments[1], null)
+
+            else -> error("Wrong number of Parameter for Lag Function")
+        }
+        return relation(RelationType.LIST) {
+
+            partition.forEach { rowsInPartition ->
+                rowsInPartition.forEachIndexed { index, row ->
+                    // reset index for parameter evaluation
+                    transferState(state, row)
+                    val offsetValue = offset?.invoke(state)?.numberValue()?.toLong() ?: 1
+                    val defaultValue = default?.invoke(state) ?: state.valueFactory.nullValue
+                    val targetIndex = index - offsetValue
+                    // if targetRow is within partition
+                    if (targetIndex >= 0 && targetIndex <= rowsInPartition.size - 1) {
+                        // TODO need to check if index is larger than MAX INT, but this may causes overflow already
+                        val targetRow = rowsInPartition[targetIndex.toInt()]
+                        transferState(state, targetRow)
+                        val res = target!!.invoke(state)
+                        transferState(state, row)
+                        windowExpression.decl.toSetVariableFunc()(state, res)
+                    } else {
+                        transferState(state, row)
+                        windowExpression.decl.toSetVariableFunc()(state, defaultValue)
+                    }
+                    yield()
                 }
             }
         }
