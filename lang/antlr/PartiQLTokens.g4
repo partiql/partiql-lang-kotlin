@@ -249,6 +249,17 @@ WORK: 'WORK';
 WRITE: 'WRITE';
 ZONE: 'ZONE';
 
+
+/**
+ * window related
+ */
+// todo: move those keywords
+LAG: 'LAG';
+LEAD: 'LEAD';
+OVER: 'OVER';
+PARTITION: 'PARTITION';
+
+
 /**
  * OTHER
  */

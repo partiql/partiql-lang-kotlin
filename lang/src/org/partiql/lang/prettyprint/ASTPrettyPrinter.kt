@@ -557,7 +557,12 @@ class ASTPrettyPrinter {
                     if (node.offset == null) it else (it.plusElement(toRecursionTree(node.offset, "offset")))
                 }
             )
+<<<<<<< HEAD
             is PartiqlAst.Expr.GraphMatch -> TODO("Unsupported GraphMatch AST node")
+=======
+
+            is PartiqlAst.Expr.CallWindow -> TODO("PrettyPrinter doesn't support Window Function yet.")
+>>>>>>> 185c4a0 (wip)
         }
 
     private fun toRecursionTreeList(nodes: List<PartiqlAst.Expr>, attrOfParent: String? = null): List<RecursionTree> =
