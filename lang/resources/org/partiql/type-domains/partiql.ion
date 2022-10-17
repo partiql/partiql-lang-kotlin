@@ -137,7 +137,11 @@ may then be further optimized by selecting better implementations of each operat
             (call func_name::symbol args::(* expr 1))
             (call_agg setq::set_quantifier func_name::symbol arg::expr)
             // window function, for now using symbol as function name
+<<<<<<< HEAD
             // TODO: In the feature, when we allow use of aggregation function as window function, we need to consider incorporate in setq
+=======
+            // TODO: In the feature, when we allows use of aggregation function as window function, we need to consider incorporate in setq
+>>>>>>> e7b260e (partiql.ion and g4 file)
             (call_window func_name::symbol over::over args::(* expr 1))
             (cast value::expr as_type::type)
             (can_cast value::expr as_type::type)
