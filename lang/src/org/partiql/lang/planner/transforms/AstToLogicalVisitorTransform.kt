@@ -453,6 +453,7 @@ internal class AstToLogicalVisitorTransform(
                 }
             )
         }
+
     override fun transformExprCallWindow(node: PartiqlAst.Expr.CallWindow): PartiqlLogical.Expr {
         TODO("Not yet implemented")
     }
