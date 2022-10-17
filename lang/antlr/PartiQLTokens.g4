@@ -253,8 +253,12 @@ ZONE: 'ZONE';
 /**
  * window related
  */
+<<<<<<< HEAD
  // TODO: Move the keywords to the corresponding section once https://github.com/partiql/partiql-docs/issues/31 is resolved and a RFC is approved
  // i.e. Move OVER/PARTITION to KEYWORDS.
+=======
+// todo: move those keywords
+>>>>>>> ab146cd4 (rebase)
 LAG: 'LAG';
 LEAD: 'LEAD';
 OVER: 'OVER';
