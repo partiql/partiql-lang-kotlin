@@ -244,6 +244,26 @@ internal data class LogicalToLogicalResolvedVisitorTransform(
         }
     }
 
+    override fun transformBexprWindow_windowSpecification(node: PartiqlLogical.Bexpr.Window): PartiqlLogicalResolved.Over {
+        val bindings = getOutputScope(node)
+        return withInputScope(bindings) {
+            node.windowSpecification.let {
+                // this.transformExpr(it)
+                this.transformOver(it)
+            }
+        }
+    }
+
+    override fun transformBexprWindow_windowExpression(node: PartiqlLogical.Bexpr.Window): PartiqlLogicalResolved.WindowExpression {
+        val bindings = getOutputScope(node)
+        return withInputScope(bindings) {
+            node.windowExpression.let {
+                // this.transformExpr(it)
+                this.transformWindowExpression(it)
+            }
+        }
+    }
+
     // We are currently using bindings_to_values to denote a sub-query, which works for all the use cases we are
     // presented with today, as every SELECT statement is replaced with `bindings_to_values at the top level.
     override fun transformExprBindingsToValues(node: PartiqlLogical.Expr.BindingsToValues): PartiqlLogicalResolved.Expr =
