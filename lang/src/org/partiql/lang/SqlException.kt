@@ -18,7 +18,6 @@ import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.errors.PropertyValueMap
 import org.partiql.lang.errors.UNKNOWN
-import org.partiql.lang.util.propertyValueMapOf
 
 /**
  * General exception class for the interpreter.
@@ -34,18 +33,15 @@ import org.partiql.lang.util.propertyValueMapOf
  *
  * @param message the message for this exception
  * @param errorCode the error code for this exception
- * @param errorContextArg context for this error, includes details like line & character offsets, among others.
- * TODO: https://github.com/partiql/partiql-lang-kotlin/issues/616
+ * @param errorContext context for this error, includes details like line & character offsets, among others.
  * @param cause for this exception
  */
 open class SqlException(
     override var message: String,
     val errorCode: ErrorCode,
-    errorContextArg: PropertyValueMap? = null,
+    val errorContext: PropertyValueMap,
     cause: Throwable? = null
 ) : RuntimeException(message, cause) {
-
-    val errorContext: PropertyValueMap = errorContextArg ?: propertyValueMapOf()
 
     /**
      * Indicates if this exception is due to an internal error or not.
