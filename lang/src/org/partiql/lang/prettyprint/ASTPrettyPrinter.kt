@@ -14,25 +14,25 @@ class ASTPrettyPrinter {
      * Given:
      *  "SELECT * FROM 1 WHERE a = b GROUP BY c HAVING d = '123' LIMIT 3 OFFSET 4"
      * Outputs:
-    """
-    Select
-    project: *
-    from: Scan
-    Lit 1
-    where: =
-    Id a (case_insensitive) (unqualified)
-    Id b (case_insensitive) (unqualified)
-    group: Group
-    strategy: GroupFull
-    keyList: GroupKeyList
-    key1: GroupKey
-    expr: Id c (case_insensitive) (unqualified)
-    having: =
-    Id d (case_insensitive) (unqualified)
-    Lit "123"
-    limit: Lit 3
-    offset: Lit 4
-    """
+     """
+     Select
+     project: *
+     from: Scan
+     Lit 1
+     where: =
+     Id a (case_insensitive) (unqualified)
+     Id b (case_insensitive) (unqualified)
+     group: Group
+     strategy: GroupFull
+     keyList: GroupKeyList
+     key1: GroupKey
+     expr: Id c (case_insensitive) (unqualified)
+     having: =
+     Id d (case_insensitive) (unqualified)
+     Lit "123"
+     limit: Lit 3
+     offset: Lit 4
+     """
      * @param query An SQL query as string.
      * @return formatted string corresponding to the input AST.
      */
@@ -298,12 +298,12 @@ class ASTPrettyPrinter {
             is PartiqlAst.Expr.LitTime -> RecursionTree(
                 astType = "LitTime",
                 value = node.value.hour.value.toString() +
-                        ":" + node.value.minute.value.toString() +
-                        ":" + node.value.second.toString() +
-                        "." + node.value.nano.toString() +
-                        ", 'precision': " + node.value.precision.value.toString() +
-                        ", 'timeZone': " + node.value.withTimeZone.toString() +
-                        ", 'tzminute': " + node.value.tzMinutes.toString(),
+                    ":" + node.value.minute.value.toString() +
+                    ":" + node.value.second.toString() +
+                    "." + node.value.nano.toString() +
+                    ", 'precision': " + node.value.precision.value.toString() +
+                    ", 'timeZone': " + node.value.withTimeZone.toString() +
+                    ", 'tzminute': " + node.value.tzMinutes.toString(),
                 attrOfParent = attrOfParent,
             )
             is PartiqlAst.Expr.Not -> RecursionTree(

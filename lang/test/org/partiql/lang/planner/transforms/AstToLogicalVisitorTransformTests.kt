@@ -97,33 +97,6 @@ class AstToLogicalVisitorTransformTests {
     }
 
     @ParameterizedTest
-    @ArgumentsSource(ArgumentsForToLogicalWindowTests::class)
-    fun `to logical (Window)`(tc: TestCase) = runTestCase(tc)
-
-    class ArgumentsForToLogicalWindowTests : ArgumentsProviderBase() {
-        override fun getParameters() = listOf(
-            TestCase(
-                "SELECT lag(a) OVER (ORDER BY b) as c FROM d AS e",
-                PartiqlLogical.build {
-                    query(
-                        bindingsToValues(
-                            struct(structField(lit(ionSymbol("c")), id("windowFunction0"))),
-                            window(
-                                scan(id("d"), varDecl("e")),
-                                over(
-                                    null,
-                                    windowSortSpecList(sortSpec(id("b"), asc(), nullsLast())),
-                                ),
-                                windowExpression(varDecl("windowFunction0"), "lag", listOf(id("a")))
-                            )
-                        )
-                    )
-                }
-            ),
-        )
-    }
-
-    @ParameterizedTest
     @ArgumentsSource(ArgumentsForToLogicalSfwTests::class)
     fun `to logical (SFW)`(tc: TestCase) = runTestCase(tc)
 

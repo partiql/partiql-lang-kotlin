@@ -736,14 +736,6 @@ may then be further optimized by selecting better implementations of each operat
 
                 (window
                     source:: bexpr
-                    // shall we consider break it into three parts here?
-                    window_specification:: over
-                    window_expression:: window_expression
-                )
-
-                (window
-                    source:: bexpr
-                    // shall we consider break it into three parts here?
                     window_specification:: over
                     window_expression:: window_expression
                 )
@@ -796,21 +788,21 @@ may then be further optimized by selecting better implementations of each operat
         (with statement (exclude ddl))
 
         (exclude
-            group_by
-            group_key
-            order_by             // Replaced with SORT node
-
-            let
-            dml_op
-            dml_op_list
-            ddl_op
-            conflict_action
-            on_conflict
-            returning_expr
-            returning_elem
-            column_component
-            returning_mapping
-            assignment
+           group_by
+           group_key
+           group_key_list
+           order_by             // Replaced with SORT node
+           let
+           dml_op
+           dml_op_list
+           ddl_op
+           conflict_action
+           on_conflict
+           returning_expr
+           returning_elem
+           column_component
+           returning_mapping
+           assignment
         )
     )
 )

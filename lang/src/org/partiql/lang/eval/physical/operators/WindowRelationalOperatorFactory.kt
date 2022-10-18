@@ -8,8 +8,6 @@ import org.partiql.lang.eval.physical.window.WindowFunction
 import org.partiql.lang.eval.relation.RelationType
 import org.partiql.lang.eval.relation.relation
 
-class CompiledSortKey(val comparator: NaturalExprValueComparators, val value: ValueExpression)
-
 abstract class WindowRelationalOperatorFactory(name: String) : RelationalOperatorFactory {
 
     final override val key: RelationalOperatorFactoryKey = RelationalOperatorFactoryKey(RelationalOperatorKind.WINDOW, name)
