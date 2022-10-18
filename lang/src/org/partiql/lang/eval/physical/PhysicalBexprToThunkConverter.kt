@@ -8,12 +8,9 @@ import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.NaturalExprValueComparators
 import org.partiql.lang.eval.Thunk
 import org.partiql.lang.eval.ThunkValue
-<<<<<<< HEAD
 import org.partiql.lang.eval.physical.operators.AggregateOperatorFactory
 import org.partiql.lang.eval.physical.operators.CompiledAggregateFunction
 import org.partiql.lang.eval.physical.operators.CompiledGroupKey
-=======
->>>>>>> a8e77064 (wip)
 import org.partiql.lang.eval.physical.operators.CompiledSortKey
 import org.partiql.lang.eval.physical.operators.FilterRelationalOperatorFactory
 import org.partiql.lang.eval.physical.operators.JoinRelationalOperatorFactory
@@ -321,27 +318,6 @@ internal class PhysicalBexprToThunkConverter(
 
         // wrap in thunk
         return bindingsExpr.toRelationThunk(node.metas)
-    }
-
-    private fun compileSortSpecs(specs: List<PartiqlPhysical.SortSpec>): List<CompiledSortKey> = specs.map { spec ->
-        val comp = when (spec.orderingSpec) {
-            is PartiqlPhysical.OrderingSpec.Asc ->
-                when (spec.nullsSpec) {
-                    is PartiqlPhysical.NullsSpec.NullsFirst -> NaturalExprValueComparators.NULLS_FIRST_ASC
-                    is PartiqlPhysical.NullsSpec.NullsLast -> NaturalExprValueComparators.NULLS_LAST_ASC
-                    null -> NaturalExprValueComparators.NULLS_LAST_ASC
-                }
-            is PartiqlPhysical.OrderingSpec.Desc ->
-                when (spec.nullsSpec) {
-                    is PartiqlPhysical.NullsSpec.NullsFirst -> NaturalExprValueComparators.NULLS_FIRST_DESC
-                    is PartiqlPhysical.NullsSpec.NullsLast -> NaturalExprValueComparators.NULLS_LAST_DESC
-                    null -> NaturalExprValueComparators.NULLS_LAST_DESC
-                }
-            null -> NaturalExprValueComparators.NULLS_LAST_ASC
-        }
-        val value = exprConverter.convert(spec.expr).toValueExpr(spec.expr.metas.sourceLocationMeta)
-        CompiledSortKey(comp, value)
->>>>>>> a8e77064 (wip)
     }
 }
 

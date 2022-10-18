@@ -85,7 +85,7 @@ class AstToLogicalVisitorTransformTests {
                                 scan(id("d"), varDecl("e")),
                                 over(
                                     null,
-                                    windowSortSpecList(sortSpec(id("b"), asc(), nullsLast())),
+                                    windowSortSpecList(sortSpec(id("b"), null, null)),
                                 ),
                                 windowExpression(varDecl("windowFunction0"), "lag", listOf(id("a")))
                             )

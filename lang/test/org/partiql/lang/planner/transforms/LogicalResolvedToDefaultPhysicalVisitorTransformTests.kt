@@ -1,3 +1,4 @@
+
 package org.partiql.lang.planner.transforms
 
 import com.amazon.ionelement.api.ionBool
@@ -75,7 +76,6 @@ class LogicalResolvedToDefaultPhysicalVisitorTransformTests {
             ),
             BexprTestCase(
                 PartiqlLogicalResolved.build {
-<<<<<<< HEAD
                     unpivot(
                         expr = globalId("foo"),
                         asDecl = varDecl(0),
@@ -113,7 +113,26 @@ class LogicalResolvedToDefaultPhysicalVisitorTransformTests {
                 },
                 PartiqlPhysical.build {
                     sort(
-=======
+                        i = DEFAULT_IMPL,
+                        source = scan(
+                            i = DEFAULT_IMPL,
+                            expr = globalId("foo"),
+                            asDecl = varDecl(0),
+                            atDecl = varDecl(1),
+                            byDecl = varDecl(2)
+                        ),
+                        sortSpecs = listOf(
+                            sortSpec(
+                                globalId("foo"),
+                                asc(),
+                                nullsLast()
+                            )
+                        )
+                    )
+                }
+            ),
+            BexprTestCase(
+                PartiqlLogicalResolved.build {
                     window(
                         source = scan(
                             expr = globalId("foo"),
@@ -150,22 +169,10 @@ class LogicalResolvedToDefaultPhysicalVisitorTransformTests {
                 },
                 PartiqlPhysical.build {
                     window(
->>>>>>> a8e77064 (wip)
                         i = DEFAULT_IMPL,
                         source = scan(
                             i = DEFAULT_IMPL,
                             expr = globalId("foo"),
-<<<<<<< HEAD
-                            asDecl = varDecl(0),
-                            atDecl = varDecl(1),
-                            byDecl = varDecl(2)
-                        ),
-                        sortSpecs = listOf(
-                            sortSpec(
-                                globalId("foo"),
-                                asc(),
-                                nullsLast()
-=======
                             asDecl = varDecl(0)
                         ),
                         windowSpecification = over(
@@ -192,16 +199,11 @@ class LogicalResolvedToDefaultPhysicalVisitorTransformTests {
                                 listOf(
                                     pathExpr(lit(ionSymbol("b")), PartiqlPhysical.CaseSensitivity.CaseInsensitive())
                                 )
->>>>>>> a8e77064 (wip)
                             )
                         )
                     )
                 }
-<<<<<<< HEAD
-            )
-=======
             ),
->>>>>>> a8e77064 (wip)
         )
     }
 

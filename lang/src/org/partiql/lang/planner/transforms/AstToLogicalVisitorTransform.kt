@@ -114,7 +114,7 @@ internal class AstToLogicalVisitorTransform(
             is PartiqlAst.Projection.ProjectStar -> return algebra
         }
 
-        // todo: if multiple window functions are operating on the same window, we need to be able to add them in a single window operator
+        // todo: if multiple window functions are operating on the same window, we can potentially add them in a single window operator to increase performance
         var modifiedAlgebra = algebra
         windowExpressions.forEachIndexed { index, callWindow ->
             modifiedAlgebra = callWindow.let { callWindowNode ->
@@ -138,7 +138,6 @@ internal class AstToLogicalVisitorTransform(
         }
         return modifiedAlgebra
     }
-
 
     /**
      * Transforms the input [node] into a pair of two items:
