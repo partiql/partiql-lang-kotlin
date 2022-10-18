@@ -80,14 +80,14 @@ class AstToLogicalVisitorTransformTests {
                 PartiqlLogical.build {
                     query(
                         bindingsToValues(
-                            struct(structField(lit(ionSymbol("c")), id("windowFunction0"))),
+                            struct(structField(lit(ionSymbol("c")), id("\$__partiql_window_function_0"))),
                             window(
                                 scan(id("d"), varDecl("e")),
                                 over(
                                     null,
                                     windowSortSpecList(sortSpec(id("b"), null, null)),
                                 ),
-                                windowExpression(varDecl("windowFunction0"), "lag", listOf(id("a")))
+                                windowExpression(varDecl("\$__partiql_window_function_0"), "lag", listOf(id("a")))
                             )
                         )
                     )

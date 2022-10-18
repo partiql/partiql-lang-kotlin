@@ -840,7 +840,7 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                     ResolvedId(1, 8) { localId(1) },
                 ).withLocals(
                     localVariable("l", 0),
-                    localVariable("windowFunction0", 1)
+                    localVariable("\$__partiql_window_function_0", 1)
                 )
             ),
         )
