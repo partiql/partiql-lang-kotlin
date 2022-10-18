@@ -658,7 +658,6 @@ may then be further optimized by selecting better implementations of each operat
         (exclude let_binding)
         (include (product let_binding value::expr decl::var_decl))
 
-<<<<<<< HEAD
         // Inputs to Aggregations
         (include
             (product group_key
@@ -678,9 +677,8 @@ may then be further optimized by selecting better implementations of each operat
                 functions::(* aggregate_function 1)
             )
         )
-=======
+
         (include (product window_expression decl::var_decl func_name::symbol args::(* expr 1)))
->>>>>>> a262341 (wip)
 
         // Now we include new stuff, including PartiQL's relational algebra.
         (include

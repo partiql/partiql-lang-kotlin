@@ -3,6 +3,7 @@ package org.partiql.lang.eval.physical.operators
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.EvaluationException
 import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.eval.NaturalExprValueComparators
 import org.partiql.lang.eval.booleanValue
 import org.partiql.lang.eval.err
 import org.partiql.lang.eval.isUnknown
@@ -110,17 +111,23 @@ private fun coercePredicateResult(value: ExprValue): Boolean =
         else -> value.booleanValue() // <-- throws if [value] is not a boolean.
     }
 
+class CompiledSortKey(val comparator: NaturalExprValueComparators, val value: ValueExpression)
+
+/**
+ * Returns a [Comparator] that compares arrays of registers by using un-evaluated sort keys. It does this by modifying
+ * the [state] to allow evaluation of the [sortKeys]
+ */
 internal fun getSortingComparator(sortKeys: List<CompiledSortKey>, state: EvaluatorState): Comparator<Array<ExprValue>> {
     val initial: Comparator<Array<ExprValue>>? = null
     return sortKeys.interruptibleFold(initial) { intermediate, sortKey ->
         if (intermediate == null) {
             return@interruptibleFold compareBy<Array<ExprValue>, ExprValue>(sortKey.comparator) { row ->
-                transferState(state, row)
+                state.load(row)
                 sortKey.value(state)
             }
         }
         return@interruptibleFold intermediate.thenBy(sortKey.comparator) { row ->
-            transferState(state, row)
+            state.load(row)
             sortKey.value(state)
         }
     } ?: err(
