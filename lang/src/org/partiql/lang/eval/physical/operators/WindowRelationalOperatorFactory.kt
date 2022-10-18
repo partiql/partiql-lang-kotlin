@@ -53,27 +53,26 @@ class SortBasedWindowOperator(name: String) : WindowRelationalOperatorFactory(na
 
         // the following corresponding to materialization process
         val source = source.evaluate(state)
-        val registers = mutableListOf<Array<ExprValue>>()
-        while (source.nextRow()) {
-            registers.add(state.registers.clone())
+        val registers = sequence {
+            while (source.nextRow()) {
+                yield(state.registers.clone())
+            }
         }
-        // if partition and order by are both null, we do not sort
-        // this logic will not be called as this point since lag/lead forcefully require ORDER BY
 
         val partitionSortSpec = windowPartitionList?.map {
             CompiledSortKey(NaturalExprValueComparators.NULLS_FIRST_ASC, it)
-        } ?: emptyList<CompiledSortKey>()
+        } ?: emptyList()
 
-        val sortKeys = partitionSortSpec + (windowSortSpecList ?: emptyList<CompiledSortKey>())
+        val sortKeys = partitionSortSpec + (windowSortSpecList ?: emptyList())
 
         val sortedRegisters = registers.sortedWith(getSortingComparator(sortKeys, state))
 
-        // create the partition here TODO refactor the partition creation logic
+        // create the partition here
         var partition = mutableListOf<List<Array<ExprValue>>>()
 
         // entire partition
         if (windowPartitionList == null) {
-            partition.add(sortedRegisters)
+            partition.add(sortedRegisters.toList())
         }
         // need to be partitioned
         else {
@@ -110,7 +109,7 @@ class SortBasedWindowOperator(name: String) : WindowRelationalOperatorFactory(na
             ?: error("window function not yet implemented")
 
         relation(RelationType.BAG) {
-            partition.forEachIndexed { index, rowsInPartition ->
+            partition.forEach { rowsInPartition ->
 
                 // set the window function partition to the current partition
                 windowFunction.reset(rowsInPartition)

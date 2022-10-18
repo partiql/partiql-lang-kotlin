@@ -60,7 +60,6 @@ class WindowRelatedParserErrorsTest : SqlParserTestBase() {
             mapOf(
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 18L,
-                Property.COLUMN_NUMBER to 17L,
                 Property.TOKEN_TYPE to TokenType.COMMA,
                 Property.TOKEN_VALUE to ion.newSymbol(",")
             ),

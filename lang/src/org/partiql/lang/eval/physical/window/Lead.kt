@@ -29,7 +29,6 @@ class Lead : NavigationWindowFunction {
 
         val offsetValue = offset?.let {
             val numberValue = it.invoke(state).numberValue().toLong()
-            // taking one step back here, do we even want to support non-constant value?
             if (numberValue >= 0) {
                 numberValue
             } else {

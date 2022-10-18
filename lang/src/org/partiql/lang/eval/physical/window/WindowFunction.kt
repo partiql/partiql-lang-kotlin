@@ -6,7 +6,6 @@ import org.partiql.lang.eval.physical.EvaluatorState
 import org.partiql.lang.eval.physical.operators.ValueExpression
 
 sealed class Arguments
-data class RequiredArgs(val required: List<ValueExpression>) : Arguments()
 
 interface WindowFunction {
     val signature: WindowFunctionSignature
