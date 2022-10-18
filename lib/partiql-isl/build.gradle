@@ -24,7 +24,7 @@ plugins {
 }
 
 // lib subprojects are _currently_ versioned independently of partiql-lang-kotlin
-version = "0.2.1"
+version = "0.2.2"
 ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
 
 dependencies {
