@@ -41,6 +41,7 @@ internal class AstToLogicalVisitorTransform(
     val problemHandler: ProblemHandler
 ) : PartiqlAstToPartiqlLogicalVisitorTransform() {
 
+    // we need this map since potentially there can be multiple window operators
     val windowFunctionUniqueIdMap = mutableMapOf<PartiqlAst.Expr.CallWindow, String>()
 
     override fun transformExprSelect(node: PartiqlAst.Expr.Select): PartiqlLogical.Expr {
@@ -85,17 +86,19 @@ internal class AstToLogicalVisitorTransform(
         return expr
     }
 
-    // This is to produce a unique var_decl value for window
     private fun generateUniqueWindowName(node: PartiqlAst.Expr.CallWindow, index: Int): String {
-        val uniqueId = "windowFunction$index"
+        val uniqueId = "\$__partiql_window_function_$index"
         windowFunctionUniqueIdMap[node] = uniqueId
-        return "windowFunction$index"
+        return uniqueId
     }
 
     private fun getUniqueWindowName(node: PartiqlAst.Expr.CallWindow): String {
         return windowFunctionUniqueIdMap[node] ?: error("no such window function registered")
     }
 
+    /**
+     * If the Select Clause contains window function, create a corresponding Window operator.
+     */
     private fun extractWindowFunction(node: PartiqlAst.Expr.Select, algebra: PartiqlLogical.Bexpr): PartiqlLogical.Bexpr {
         // check to see if there is any window call in the select list
         val windowExpressions = when (val project = node.project) {
