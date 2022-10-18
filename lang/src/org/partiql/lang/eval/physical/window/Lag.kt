@@ -4,11 +4,8 @@ import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.numberValue
 import org.partiql.lang.eval.physical.EvaluatorState
 import org.partiql.lang.eval.physical.operators.ValueExpression
-import org.partiql.lang.eval.physical.operators.transferState
 
-class Lag() : NavigationWindowFunction {
-    override lateinit var currentPartition: List<Array<ExprValue>>
-    override var currentPos: Int = 0
+class Lag() : NavigationWindowFunction() {
     override val signature: WindowFunctionSignature = WindowFunctionSignature(
         name = "lag"
     )
@@ -25,7 +22,7 @@ class Lag() : NavigationWindowFunction {
             else -> error("Wrong number of Parameter for Lag Function")
         }
 
-        transferState(state, currentPartition[currentPos])
+        state.load(currentPartition[currentPos])
 
         val offsetValue = offset?.let {
             val numberValue = it.invoke(state).numberValue().toLong()
@@ -41,7 +38,7 @@ class Lag() : NavigationWindowFunction {
         if (targetIndex >= 0 && targetIndex <= currentPartition.size - 1) {
             // TODO need to check if index is larger than MAX INT, but this may causes overflow already
             val targetRow = currentPartition[targetIndex.toInt()]
-            transferState(state, targetRow)
+            state.load(targetRow)
             val res = target!!.invoke(state)
             return res
         } else {

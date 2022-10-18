@@ -7,14 +7,14 @@ import org.partiql.lang.eval.physical.operators.ValueExpression
 import org.partiql.lang.eval.physical.toSetVariableFunc
 
 /**
- * This interface hold some common logic for navigation window function, i.e., LAG, LEAD
+ * This abstract class holds some common logic for navigation window function, i.e., LAG, LEAD
  *
- * TODO: When we support FIRST_VALUE, etc, we need to modify this pretty extensively, since those function requires frame
+ * TODO: When we support FIRST_VALUE, etc, we need to modify the process row function, since those function requires frame
  */
-interface NavigationWindowFunction : WindowFunction {
+abstract class NavigationWindowFunction() : WindowFunction {
 
-    var currentPartition: List<Array<ExprValue>>
-    var currentPos: Int
+    lateinit var currentPartition: List<Array<ExprValue>>
+    var currentPos: Int = 0
 
     override fun reset(partition: List<Array<ExprValue>>) {
         currentPartition = partition
@@ -31,5 +31,5 @@ interface NavigationWindowFunction : WindowFunction {
         currentPos += 1
     }
 
-    fun processRow(state: EvaluatorState, arguments: List<ValueExpression>, currentPos: Int): ExprValue
+    abstract fun processRow(state: EvaluatorState, arguments: List<ValueExpression>, currentPos: Int): ExprValue
 }

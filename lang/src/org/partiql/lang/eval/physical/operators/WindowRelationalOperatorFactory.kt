@@ -81,7 +81,7 @@ class SortBasedWindowOperator(name: String) : WindowRelationalOperatorFactory(na
             var previousPartition: ExprValue? = null
             while (iter.hasNext()) {
                 val currentRow = iter.next()
-                transferState(state, currentRow)
+                state.load(currentRow)
                 val currentPartition = state.valueFactory.newSexp(
                     windowPartitionList.map {
                         it.invoke(state)
@@ -116,7 +116,7 @@ class SortBasedWindowOperator(name: String) : WindowRelationalOperatorFactory(na
 
                 rowsInPartition.forEach { row ->
                     // reset state
-                    transferState(state, row)
+                    state.load(row)
 
                     // process current row
                     windowFunction.processRow(state, windowFunctionParameter, windowExpression.decl)
