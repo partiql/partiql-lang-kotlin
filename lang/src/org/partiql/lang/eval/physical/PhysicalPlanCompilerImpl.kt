@@ -85,7 +85,6 @@ import org.partiql.lang.eval.stringValue
 import org.partiql.lang.eval.syntheticColumnName
 import org.partiql.lang.eval.time.Time
 import org.partiql.lang.eval.unnamedValue
-import org.partiql.lang.eval.visitors.PartiqlPhysicalSanityValidator
 import org.partiql.lang.planner.EvaluatorOptions
 import org.partiql.lang.types.AnyOfType
 import org.partiql.lang.types.AnyType
@@ -174,8 +173,6 @@ internal class PhysicalPlanCompilerImpl(
      * hope that long-running compilations may be aborted by the caller.
      */
     fun compile(plan: PartiqlPhysical.Plan): Expression {
-        PartiqlPhysicalSanityValidator(evaluatorOptions, typeRegistry).walkPlan(plan)
-
         val thunk = compileAstStatement(plan.stmt)
 
         return object : Expression {
@@ -346,7 +343,7 @@ internal class PhysicalPlanCompilerImpl(
                 val longValue: Long = value.scalar.numberValue()?.toLong()
                     ?: error(
                         "ExprValue.numberValue() must not be `NULL` when its type is INT." +
-                            "This indicates that the ExprValue instance has a bug."
+                                "This indicates that the ExprValue instance has a bug."
                     )
 
                 // PRO-TIP:  make sure to use the `Long` primitive type here with `.contains` otherwise
@@ -356,7 +353,7 @@ internal class PhysicalPlanCompilerImpl(
             }
             else -> error(
                 "The expression's static type was supposed to be INT but instead it was ${value.type}" +
-                    "This may indicate the presence of a bug in the type inferencer."
+                        "This may indicate the presence of a bug in the type inferencer."
             )
         }
     }
@@ -827,7 +824,7 @@ internal class PhysicalPlanCompilerImpl(
                     "${func.signature.name} takes exactly ${func.signature.arity.first} arguments, received: ${funcArgThunks.size}"
                 else ->
                     "${func.signature.name} takes between ${func.signature.arity.first} and " +
-                        "${func.signature.arity.last} arguments, received: ${funcArgThunks.size}"
+                            "${func.signature.arity.last} arguments, received: ${funcArgThunks.size}"
             }
 
             throw EvaluationException(
@@ -1781,7 +1778,7 @@ internal class PhysicalPlanCompilerImpl(
                     "${procedure.signature.name} takes exactly ${procedure.signature.arity.first} arguments, received: ${args.size}"
                 else ->
                     "${procedure.signature.name} takes between ${procedure.signature.arity.first} and " +
-                        "${procedure.signature.arity.last} arguments, received: ${args.size}"
+                            "${procedure.signature.arity.last} arguments, received: ${args.size}"
             }
 
             throw EvaluationException(

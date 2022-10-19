@@ -16,7 +16,6 @@
 package org.partiql.lang.eval.visitors
 
 import OTS.IMP.org.partiql.ots.legacy.plugin.LegacyPlugin
-import OTS.ITF.org.partiql.ots.type.ScalarType
 import com.amazon.ionelement.api.IntElement
 import com.amazon.ionelement.api.IntElementSize
 import com.amazon.ionelement.api.TextElement
@@ -45,13 +44,13 @@ import org.partiql.lang.util.TypeRegistry
  * - A visitor transform pass (internal or external)
  *
  */
-class PartiqlAstSanityValidator : PartiqlAst.Visitor() {
+internal class PartiqlAstSanityValidator : PartiqlAst.Visitor() {
 
     private var typeRegistry: TypeRegistry = TypeRegistry(LegacyPlugin().scalarTypes)
 
     private var compileOptions = CompileOptions.standard()
 
-    fun validate(
+    internal fun validate(
         statement: PartiqlAst.Statement,
         compileOptions: CompileOptions = CompileOptions.standard(),
         typeRegistry: TypeRegistry = TypeRegistry(LegacyPlugin().scalarTypes)

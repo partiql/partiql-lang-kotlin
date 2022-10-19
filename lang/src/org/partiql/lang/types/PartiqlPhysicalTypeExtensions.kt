@@ -23,7 +23,7 @@ internal fun PartiqlPhysical.Type.toTypedOpParameter(customTypedOpParameters: Ma
     is PartiqlPhysical.Type.AnyType -> TypedOpParameter(StaticType.ANY)
     is PartiqlPhysical.Type.CustomType ->
         customTypedOpParameters.mapKeys {
-            (k, _) ->
+                (k, _) ->
             k.toLowerCase()
         }[this.name.text.toLowerCase()] ?: error("Could not find parameter for $this")
     is PartiqlPhysical.Type.EsAny,

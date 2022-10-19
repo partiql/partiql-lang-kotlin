@@ -42,6 +42,7 @@ import org.partiql.lang.ast.sourceLocation
 import org.partiql.lang.ast.toAstStatement
 import org.partiql.lang.ast.toPartiQlMetaContainer
 import org.partiql.lang.domains.PartiqlAst
+import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.domains.staticType
 import org.partiql.lang.domains.toBindingCase
 import org.partiql.lang.errors.ErrorCode
@@ -506,7 +507,7 @@ internal class EvaluatingCompiler(
                 val longValue: Long = value.scalar.numberValue()?.toLong()
                     ?: error(
                         "ExprValue.numberValue() must not be `NULL` when its type is INT." +
-                            "This indicates that the ExprValue instance has a bug."
+                                "This indicates that the ExprValue instance has a bug."
                     )
 
                 // PRO-TIP:  make sure to use the `Long` primitive type here with `.contains` otherwise
@@ -571,7 +572,7 @@ internal class EvaluatingCompiler(
                                             if (staticTypes.all { it is StaticScalarType && it.scalarType === IntType }) {
                                                 error(
                                                     "The expression's static type was supposed to be INT but instead it was $type" +
-                                                        "This may indicate the presence of a bug in the type inferencer."
+                                                            "This may indicate the presence of a bug in the type inferencer."
                                                 )
                                             } else {
                                                 naryResult
@@ -1001,7 +1002,7 @@ internal class EvaluatingCompiler(
                     "${func.signature.name} takes exactly ${func.signature.arity.first} arguments, received: ${funcArgThunks.size}"
                 else ->
                     "${func.signature.name} takes between ${func.signature.arity.first} and " +
-                        "${func.signature.arity.last} arguments, received: ${funcArgThunks.size}"
+                            "${func.signature.arity.last} arguments, received: ${funcArgThunks.size}"
             }
 
             throw EvaluationException(
@@ -1221,7 +1222,7 @@ internal class EvaluatingCompiler(
 
     private fun compileIs(expr: PartiqlAst.Expr.IsType, metas: MetaContainer): ThunkEnv {
         val expThunk = compileAstExpr(expr.value)
-        val typedOpParameter = expr.type.toTypedOpParameter(customTypedOpParameters, typeRegistery)
+        val typedOpParameter = expr.type.toTypedOpParameter()
         if (typedOpParameter.staticType is AnyType) {
             return thunkFactory.thunkEnv(metas) { valueFactory.newBoolean(true) }
         }
@@ -1252,7 +1253,7 @@ internal class EvaluatingCompiler(
 
     private fun compileCastHelper(value: PartiqlAst.Expr, asType: PartiqlAst.Type, metas: MetaContainer): ThunkEnv {
         val expThunk = compileAstExpr(value)
-        val typedOpParameter = asType.toTypedOpParameter(customTypedOpParameters, typeRegistery)
+        val typedOpParameter = asType.toTypedOpParameter()
         if (typedOpParameter.staticType is AnyType) {
             return expThunk
         }
@@ -1335,7 +1336,7 @@ internal class EvaluatingCompiler(
         thunkFactory.thunkEnv(metas, compileCastHelper(expr.value, expr.asType, metas))
 
     private fun compileCanCast(expr: PartiqlAst.Expr.CanCast, metas: MetaContainer): ThunkEnv {
-        val typedOpParameter = expr.asType.toTypedOpParameter(customTypedOpParameters, typeRegistery)
+        val typedOpParameter = expr.asType.toTypedOpParameter()
         if (typedOpParameter.staticType is AnyType) {
             return thunkFactory.thunkEnv(metas) { valueFactory.newBoolean(true) }
         }
@@ -1370,7 +1371,7 @@ internal class EvaluatingCompiler(
     }
 
     private fun compileCanLosslessCast(expr: PartiqlAst.Expr.CanLosslessCast, metas: MetaContainer): ThunkEnv {
-        val typedOpParameter = expr.asType.toTypedOpParameter(customTypedOpParameters, typeRegistery)
+        val typedOpParameter = expr.asType.toTypedOpParameter()
         if (typedOpParameter.staticType is AnyType) {
             return thunkFactory.thunkEnv(metas) { valueFactory.newBoolean(true) }
         }
@@ -1896,12 +1897,12 @@ internal class EvaluatingCompiler(
                                         groupAsName.run {
                                             val seq = fromSourceBindingNames.asSequence().map { pair ->
                                                 (
-                                                    fromProduction.env.current[pair.bindingName] ?: errNoContext(
-                                                        "Could not resolve from source binding name during group as variable mapping",
-                                                        errorCode = ErrorCode.INTERNAL_ERROR,
-                                                        internal = true
-                                                    )
-                                                    ).namedValue(pair.nameExprValue)
+                                                        fromProduction.env.current[pair.bindingName] ?: errNoContext(
+                                                            "Could not resolve from source binding name during group as variable mapping",
+                                                            errorCode = ErrorCode.INTERNAL_ERROR,
+                                                            internal = true
+                                                        )
+                                                        ).namedValue(pair.nameExprValue)
                                             }.asSequence()
 
                                             group.groupValues.add(createStructExprValue(seq, StructOrdering.UNORDERED))
@@ -2912,7 +2913,7 @@ internal class EvaluatingCompiler(
                     "${procedure.signature.name} takes exactly ${procedure.signature.arity.first} arguments, received: ${args.size}"
                 else ->
                     "${procedure.signature.name} takes between ${procedure.signature.arity.first} and " +
-                        "${procedure.signature.arity.last} arguments, received: ${args.size}"
+                            "${procedure.signature.arity.last} arguments, received: ${args.size}"
             }
 
             throw EvaluationException(
@@ -2988,6 +2989,22 @@ internal class EvaluatingCompiler(
             },
             ordering
         )
+
+    /** Helper to convert [PartiqlAst.Type] in AST to a [TypedOpParameter]. */
+    private fun PartiqlAst.Type.toTypedOpParameter(): TypedOpParameter {
+        // hack: to avoid duplicating the function `PartiqlAst.Type.toTypedOpParameter`, we have to convert this
+        // PartiqlAst.Type to PartiqlPhysical.Type. The easiest way to do that without using a visitor transform
+        // (which is overkill and comes with some downsides for something this simple), is to transform to and from
+        // s-expressions again.  This will work without difficulty as long as PartiqlAst.Type remains unchanged in all
+        // permuted domains between PartiqlAst and PartiqlPhysical.
+
+        // This is really just a temporary measure, however, which must exist for as long as the type inferencer works only
+        // on PartiqlAst.  When it has been migrated to use PartiqlPhysical instead, there should no longer be a reason
+        // to keep this function around.
+        val sexp = this.toIonElement()
+        val physicalType = PartiqlPhysical.transform(sexp) as PartiqlPhysical.Type
+        return physicalType.toTypedOpParameter(customTypedOpParameters, typeRegistery)
+    }
 }
 
 /**
