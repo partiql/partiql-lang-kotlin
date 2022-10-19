@@ -3,7 +3,7 @@ package org.partiql.lang.util
 import OTS.ITF.org.partiql.ots.Plugin
 import OTS.ITF.org.partiql.ots.type.ScalarType
 
-class TypeRegistry(types: List<ScalarType>) {
+internal class TypeRegistry(types: List<ScalarType>) {
     private var namesToType: Map<String, ScalarType> = types.flatMap { scalarType ->
         scalarType.names.map { typeAlias -> typeAlias to scalarType }
     }.associate { it.first to it.second }

@@ -24,7 +24,7 @@ import org.partiql.lang.util.TypeRegistry
  * Any exception thrown by this class should always be considered an indication of a bug in one of the following places:
  * - [org.partiql.lang.planner.transforms.AstToLogicalVisitorTransform]
  */
-class PartiqlLogicalValidator(
+internal class PartiqlLogicalValidator(
     private val typedOpBehavior: TypedOpBehavior,
     private val typeRegistry: TypeRegistry
 ) : PartiqlLogical.Visitor() {
