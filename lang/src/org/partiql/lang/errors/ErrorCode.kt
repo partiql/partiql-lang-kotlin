@@ -1198,7 +1198,6 @@ enum class ErrorCode(
         "Union type not permitted"
     ),
 
-    // Window Related Error
     PARSE_EXPECTED_WINDOW_ORDER_BY(
         ErrorCategory.PARSER,
         LOC_TOKEN,

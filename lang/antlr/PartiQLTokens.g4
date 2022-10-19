@@ -253,7 +253,7 @@ ZONE: 'ZONE';
 /**
  * window related
  */
-// todo: move those keywords
+ // TODO: Remove from experimental once https://github.com/partiql/partiql-docs/issues/31 is resolved and a RFC is approved
 LAG: 'LAG';
 LEAD: 'LEAD';
 OVER: 'OVER';

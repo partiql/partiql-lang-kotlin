@@ -4,9 +4,8 @@ import org.junit.Test
 import org.partiql.lang.syntax.SqlParserTestBase
 import org.partiql.lang.syntax.TokenType
 
-// since window function is experimental and are in the development stage
-// we treat this as a standalone class for easiness to change
-// once the feature for window function is finalized, we will move this to [ParserErrorsTest]
+
+// TODO: move this to [ParserErrorsTest] once https://github.com/partiql/partiql-docs/issues/31 is resolved and a RFC is approved
 class WindowRelatedParserErrorsTest : SqlParserTestBase() {
     @Test
     fun lagWithoutOrderBy() {
