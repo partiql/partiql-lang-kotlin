@@ -514,7 +514,7 @@ internal class PlannerPipelineImpl(
             return PlannerPassResult.Error(problemHandler.problems)
         }
 
-        PartiqlLogicalValidator(evaluatorOptions.typedOpBehavior).walkPlan(logicalPlan)
+        PartiqlLogicalValidator(evaluatorOptions.typedOpBehavior, typeRegistry).walkPlan(logicalPlan)
 
         // logical plan -> resolved logical plan
         val resolvedLogicalPlan = plannerEventCallback.doEvent("logical_to_logical_resolved", logicalPlan) {

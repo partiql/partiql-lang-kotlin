@@ -14,9 +14,7 @@ import org.partiql.lang.eval.EvaluationException
 import org.partiql.lang.eval.TypedOpBehavior
 import org.partiql.lang.eval.err
 import org.partiql.lang.eval.errorContextFrom
-import org.partiql.lang.planner.EvaluatorOptions
 import org.partiql.lang.util.TypeRegistry
-import org.partiql.lang.util.propertyValueMapOf
 
 /**
  * Provides rules for basic AST sanity checks that should be performed before any attempt at further AST processing.
