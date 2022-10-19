@@ -91,6 +91,10 @@ stage in the `PlannerPipeline` and to generate performance metrics for the indiv
 ### Removed
 - README.md badge for travisci
 - **Breaking Change**: removed [ExprValueType.typeNames] as needed by the future work of legacy parser removal and OTS 
+- **Breaking Change**: [PartiqlPhysical.Type.toTypedOpParameter()] now becomes an internal function 
+- **Breaking Change**: [PartiqlAst.Type.toTypedOpParameter()] is removed
+- **Breaking Change**: [PartiqlAstSanityValidator] now becomes an internal class
+- **Breaking Change**: [PartiqlPhysicalSanityValidator] is removed
 
 ### Security
 

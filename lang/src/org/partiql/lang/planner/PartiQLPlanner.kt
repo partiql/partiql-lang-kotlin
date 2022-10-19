@@ -17,6 +17,7 @@ package org.partiql.lang.planner
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.errors.Problem
+import org.partiql.lang.eval.TypedOpBehavior
 
 /**
  * [PartiQLPlanner] is responsible for transforming a [PartiqlAst.Statement] representation of a query into an
@@ -57,5 +58,8 @@ interface PartiQLPlanner {
     /**
      * Options which control [PartiQLPlanner] behavior.
      */
-    class Options(val allowedUndefinedVariables: Boolean = false)
+    class Options(
+        val allowedUndefinedVariables: Boolean = false,
+        val typedOpBehavior: TypedOpBehavior = TypedOpBehavior.LEGACY
+    )
 }

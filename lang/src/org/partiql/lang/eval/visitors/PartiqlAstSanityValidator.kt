@@ -45,11 +45,11 @@ import org.partiql.lang.types.TYPE_ALIAS_TO_SCALAR_TYPE
  * - A visitor transform pass (internal or external)
  *
  */
-class PartiqlAstSanityValidator : PartiqlAst.Visitor() {
+internal class PartiqlAstSanityValidator : PartiqlAst.Visitor() {
 
     private var compileOptions = CompileOptions.standard()
 
-    fun validate(statement: PartiqlAst.Statement, compileOptions: CompileOptions = CompileOptions.standard()) {
+    internal fun validate(statement: PartiqlAst.Statement, compileOptions: CompileOptions = CompileOptions.standard()) {
         this.compileOptions = compileOptions
         this.walkStatement(statement)
     }

@@ -9,7 +9,7 @@ import org.partiql.lang.domains.PartiqlPhysical
 /**
  * Helper to convert [PartiqlPhysical.Type] in AST to a [TypedOpParameter].
  */
-fun PartiqlPhysical.Type.toTypedOpParameter(customTypedOpParameters: Map<String, TypedOpParameter>): TypedOpParameter = when (this) {
+internal fun PartiqlPhysical.Type.toTypedOpParameter(customTypedOpParameters: Map<String, TypedOpParameter>): TypedOpParameter = when (this) {
     is PartiqlPhysical.Type.MissingType -> TypedOpParameter(StaticType.MISSING)
     is PartiqlPhysical.Type.NullType -> TypedOpParameter(StaticType.NULL)
     is PartiqlPhysical.Type.ScalarType -> when (TYPE_ALIAS_TO_SCALAR_TYPE[alias.text]) {
