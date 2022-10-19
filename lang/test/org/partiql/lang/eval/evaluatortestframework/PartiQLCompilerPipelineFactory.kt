@@ -67,7 +67,8 @@ internal class PartiQLCompilerPipelineFactory : PipelineFactory {
         }
 
         val plannerOptions = PartiQLPlanner.Options(
-            allowedUndefinedVariables = true
+            allowedUndefinedVariables = true,
+            typedOpBehavior = evaluatorOptions.typedOpBehavior
         )
 
         val pipeline = PartiQLCompilerPipeline(

@@ -41,6 +41,8 @@ import org.partiql.lang.planner.transforms.normalize
 import org.partiql.lang.planner.transforms.toDefaultPhysicalPlan
 import org.partiql.lang.planner.transforms.toLogicalPlan
 import org.partiql.lang.planner.transforms.toResolvedPlan
+import org.partiql.lang.planner.validators.PartiqlLogicalResolvedValidator
+import org.partiql.lang.planner.validators.PartiqlLogicalValidator
 import org.partiql.lang.syntax.Parser
 import org.partiql.lang.syntax.PartiQLParserBuilder
 import org.partiql.lang.syntax.SyntaxException
@@ -493,6 +495,8 @@ internal class PlannerPipelineImpl(
             return PlannerPassResult.Error(problemHandler.problems)
         }
 
+        PartiqlLogicalValidator(evaluatorOptions.typedOpBehavior).walkPlan(logicalPlan)
+
         // logical plan -> resolved logical plan
         val resolvedLogicalPlan = plannerEventCallback.doEvent("logical_to_logical_resolved", logicalPlan) {
             logicalPlan.toResolvedPlan(problemHandler, globalVariableResolver, allowUndefinedVariables)
@@ -502,6 +506,8 @@ internal class PlannerPipelineImpl(
         if (problemHandler.hasErrors) {
             return PlannerPassResult.Error(problemHandler.problems)
         }
+
+        PartiqlLogicalResolvedValidator().walkPlan(resolvedLogicalPlan)
 
         // Possible future passes:
         // - type checking and inferencing?

@@ -82,7 +82,6 @@ import org.partiql.lang.eval.stringValue
 import org.partiql.lang.eval.syntheticColumnName
 import org.partiql.lang.eval.time.Time
 import org.partiql.lang.eval.unnamedValue
-import org.partiql.lang.eval.visitors.PartiqlPhysicalSanityValidator
 import org.partiql.lang.planner.EvaluatorOptions
 import org.partiql.lang.types.AnyOfType
 import org.partiql.lang.types.AnyType
@@ -169,8 +168,6 @@ internal class PhysicalPlanCompilerImpl(
      * hope that long-running compilations may be aborted by the caller.
      */
     fun compile(plan: PartiqlPhysical.Plan): Expression {
-        PartiqlPhysicalSanityValidator(evaluatorOptions).walkPlan(plan)
-
         val thunk = compileAstStatement(plan.stmt)
 
         return object : Expression {

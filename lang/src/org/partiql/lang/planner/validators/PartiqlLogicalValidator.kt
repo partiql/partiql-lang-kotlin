@@ -1,4 +1,4 @@
-package org.partiql.lang.eval.visitors
+package org.partiql.lang.planner.validators
 
 import com.amazon.ionelement.api.IntElement
 import com.amazon.ionelement.api.IntElementSize
@@ -6,7 +6,7 @@ import com.amazon.ionelement.api.MetaContainer
 import com.amazon.ionelement.api.TextElement
 import org.partiql.lang.ast.IsCountStarMeta
 import org.partiql.lang.ast.passes.SemanticException
-import org.partiql.lang.domains.PartiqlPhysical
+import org.partiql.lang.domains.PartiqlLogical
 import org.partiql.lang.domains.addSourceLocation
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
@@ -15,39 +15,18 @@ import org.partiql.lang.eval.EvaluationException
 import org.partiql.lang.eval.TypedOpBehavior
 import org.partiql.lang.eval.err
 import org.partiql.lang.eval.errorContextFrom
-import org.partiql.lang.planner.EvaluatorOptions
-import org.partiql.lang.util.propertyValueMapOf
 import org.partiql.pig.runtime.LongPrimitive
 
 /**
- * Provides rules for basic AST sanity checks that should be performed before any attempt at further physical
- * plan processing. This is provided as a distinct [PartiqlPhysical.Visitor] so that the planner and evaluator may
- * assume that the physical plan has passed the checks performed here.
+ * Provides rules for basic AST sanity checks that should be performed before any attempt at further AST processing.
+ * This is provided as a distinct [PartiqlLogical.Visitor] so that all other visitors may assume that the AST at least
+ * passed the checking performed here.
  *
- * Any exception thrown by this class should always be considered an indication of a bug.
+ * Any exception thrown by this class should always be considered an indication of a bug in one of the following places:
+ * - [org.partiql.lang.planner.transforms.AstToLogicalVisitorTransform]
  */
-class PartiqlPhysicalSanityValidator(private val evaluatorOptions: EvaluatorOptions) : PartiqlPhysical.Visitor() {
-
-    /**
-     * Quick validation step to make sure the indexes of any variables make sense.
-     * It is unlikely that this check will ever fail, but if it does, it likely means there's a bug in
-     * [org.partiql.lang.planner.transforms.VariableIdAllocator] or that the plan was malformed by other means.
-     */
-    override fun visitPlan(node: PartiqlPhysical.Plan) {
-        node.locals.forEachIndexed { idx, it ->
-            if (it.registerIndex.value != idx.toLong()) {
-                throw EvaluationException(
-                    message = "Variable index must match ordinal position of variable",
-                    errorCode = ErrorCode.INTERNAL_ERROR,
-                    errorContext = propertyValueMapOf(),
-                    internal = true
-                )
-            }
-        }
-        super.visitPlan(node)
-    }
-
-    override fun visitExprLit(node: PartiqlPhysical.Expr.Lit) {
+class PartiqlLogicalValidator(private val typedOpBehavior: TypedOpBehavior) : PartiqlLogical.Visitor() {
+    override fun visitExprLit(node: PartiqlLogical.Expr.Lit) {
         val ionValue = node.value
         val metas = node.metas
         if (node.value is IntElement && ionValue.integerSize == IntElementSize.BIG_INTEGER) {
@@ -61,7 +40,7 @@ class PartiqlPhysicalSanityValidator(private val evaluatorOptions: EvaluatorOpti
     }
 
     private fun validateDecimalOrNumericType(scale: LongPrimitive?, precision: LongPrimitive?, metas: MetaContainer) {
-        if (scale != null && precision != null && evaluatorOptions.typedOpBehavior == TypedOpBehavior.HONOR_PARAMETERS) {
+        if (scale != null && precision != null && typedOpBehavior == TypedOpBehavior.HONOR_PARAMETERS) {
             if (scale.value !in 0..precision.value) {
                 err(
                     "Scale ${scale.value} should be between 0 and precision ${precision.value}",
@@ -73,18 +52,18 @@ class PartiqlPhysicalSanityValidator(private val evaluatorOptions: EvaluatorOpti
         }
     }
 
-    override fun visitTypeDecimalType(node: PartiqlPhysical.Type.DecimalType) {
+    override fun visitTypeDecimalType(node: PartiqlLogical.Type.DecimalType) {
         validateDecimalOrNumericType(node.scale, node.precision, node.metas)
     }
 
-    override fun visitTypeNumericType(node: PartiqlPhysical.Type.NumericType) {
+    override fun visitTypeNumericType(node: PartiqlLogical.Type.NumericType) {
         validateDecimalOrNumericType(node.scale, node.precision, node.metas)
     }
 
-    override fun visitExprCallAgg(node: PartiqlPhysical.Expr.CallAgg) {
+    override fun visitExprCallAgg(node: PartiqlLogical.Expr.CallAgg) {
         val setQuantifier = node.setq
         val metas = node.metas
-        if (setQuantifier is PartiqlPhysical.SetQuantifier.Distinct && metas.containsKey(IsCountStarMeta.TAG)) {
+        if (setQuantifier is PartiqlLogical.SetQuantifier.Distinct && metas.containsKey(IsCountStarMeta.TAG)) {
             err(
                 "COUNT(DISTINCT *) is not supported",
                 ErrorCode.EVALUATOR_COUNT_DISTINCT_STAR,
@@ -94,15 +73,15 @@ class PartiqlPhysicalSanityValidator(private val evaluatorOptions: EvaluatorOpti
         }
     }
 
-    override fun visitExprStruct(node: PartiqlPhysical.Expr.Struct) {
+    override fun visitExprStruct(node: PartiqlLogical.Expr.Struct) {
         node.parts.forEach { part ->
             when (part) {
-                is PartiqlPhysical.StructPart.StructField -> {
-                    if (part.fieldName is PartiqlPhysical.Expr.Missing ||
-                        (part.fieldName is PartiqlPhysical.Expr.Lit && part.fieldName.value !is TextElement)
+                is PartiqlLogical.StructPart.StructField -> {
+                    if (part.fieldName is PartiqlLogical.Expr.Missing ||
+                        (part.fieldName is PartiqlLogical.Expr.Lit && part.fieldName.value !is TextElement)
                     ) {
                         val type = when (part.fieldName) {
-                            is PartiqlPhysical.Expr.Lit -> part.fieldName.value.type.toString()
+                            is PartiqlLogical.Expr.Lit -> part.fieldName.value.type.toString()
                             else -> "MISSING"
                         }
                         throw SemanticException(
@@ -114,7 +93,7 @@ class PartiqlPhysicalSanityValidator(private val evaluatorOptions: EvaluatorOpti
                         )
                     }
                 }
-                is PartiqlPhysical.StructPart.StructFields -> { /* intentionally empty */ }
+                is PartiqlLogical.StructPart.StructFields -> { /* intentionally empty */ }
             }
         }
     }
