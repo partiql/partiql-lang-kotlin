@@ -597,8 +597,8 @@ aggregate
 /**
 *
 * Supported Window Functions:
-* 1. LAG(expr, [offset, [default]]) OVER(...)
-* 2. LEAD(expr, [offset, [default]]) OVER(...)
+* 1. LAG(expr, [offset, [default]]) OVER([window_partition] window_ordering)
+* 2. LEAD(expr, [offset, [default]]) OVER([window_partition] window_ordering)
 *
 */
 windowFunction
