@@ -16,7 +16,7 @@ package org.partiql.lang.eval.physical.operators
 
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.eval.err
+import org.partiql.lang.eval.errNoContext
 import org.partiql.lang.eval.physical.EvaluatorState
 import org.partiql.lang.eval.relation.RelationIterator
 import org.partiql.lang.eval.relation.RelationType
@@ -73,10 +73,9 @@ private fun getSortingComparator(sortKeys: List<CompiledSortKey>, state: Evaluat
             state.load(row)
             sortKey.value(state)
         }
-    } ?: err(
+    } ?: errNoContext(
         "Order BY comparator cannot be null",
         ErrorCode.EVALUATOR_ORDER_BY_NULL_COMPARATOR,
-        null,
         internal = true
     )
 }

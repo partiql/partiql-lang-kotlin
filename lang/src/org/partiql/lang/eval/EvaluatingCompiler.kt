@@ -139,7 +139,7 @@ internal class EvaluatingCompiler(
     private val compilationContextStack = Stack<CompilationContext>()
 
     private val currentCompilationContext: CompilationContext
-        get() = compilationContextStack.peek() ?: throw EvaluationException(
+        get() = compilationContextStack.peek() ?: errNoContext(
             "compilationContextStack was empty.", ErrorCode.EVALUATOR_UNEXPECTED_VALUE, internal = true
         )
 
@@ -663,6 +663,7 @@ internal class EvaluatingCompiler(
                     throw EvaluationException(
                         cause = e,
                         errorCode = ErrorCode.EVALUATOR_ARITHMETIC_EXCEPTION,
+                        errorContext = errorContextFrom(metas),
                         internal = true
                     )
                 }
@@ -678,7 +679,7 @@ internal class EvaluatingCompiler(
         val computeThunk = thunkFactory.thunkFold(metas, argThunks) { lValue, rValue ->
             val denominator = rValue.numberValue()
             if (denominator.isZero()) {
-                err("% by zero", ErrorCode.EVALUATOR_MODULO_BY_ZERO, null, false)
+                err("% by zero", ErrorCode.EVALUATOR_MODULO_BY_ZERO, errorContextFrom(metas), false)
             }
 
             (lValue.numberValue() % denominator).exprValue()
@@ -1000,7 +1001,7 @@ internal class EvaluatingCompiler(
                         "${func.signature.arity.last} arguments, received: ${funcArgThunks.size}"
             }
 
-            throw EvaluationException(
+            err(
                 message,
                 ErrorCode.EVALUATOR_INCORRECT_NUMBER_OF_ARGUMENTS_TO_FUNC_CALL,
                 errorContext,
@@ -1083,7 +1084,7 @@ internal class EvaluatingCompiler(
                             when (val value = env.current[bindingName]) {
                                 null -> {
                                     if (fromSourceNames.any { bindingName.isEquivalentTo(it) }) {
-                                        throw EvaluationException(
+                                        err(
                                             "Variable not in GROUP BY or aggregation function: ${bindingName.name}",
                                             ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
                                             errorContextFrom(metas).also {
@@ -1101,7 +1102,7 @@ internal class EvaluatingCompiler(
                                             is PartiqlAst.CaseSensitivity.CaseInsensitive ->
                                                 Pair(ErrorCode.EVALUATOR_BINDING_DOES_NOT_EXIST, "")
                                         }
-                                        throw EvaluationException(
+                                        err(
                                             "No such binding: ${bindingName.name}.$hint",
                                             errorCode,
                                             errorContextFrom(metas).also {
@@ -1151,7 +1152,7 @@ internal class EvaluatingCompiler(
         return { env ->
             val params = env.session.parameters
             if (params.size <= index) {
-                throw EvaluationException(
+                err(
                     "Unbound parameter for ordinal: $ordinal",
                     ErrorCode.EVALUATOR_UNBOUND_PARAMETER,
                     errorContextFrom(metas).also {
@@ -1283,7 +1284,7 @@ internal class EvaluatingCompiler(
 
                 locationMeta?.let { fillErrorContext(errorContext, it) }
 
-                throw EvaluationException(
+                err(
                     "Validation failure for $asType",
                     ErrorCode.EVALUATOR_CAST_FAILED,
                     errorContext,
@@ -2114,10 +2115,9 @@ internal class EvaluatingCompiler(
                 val env = resolveEnvironment(row, offsetLocationMeta)
                 orderByItem.thunk(env)
             }
-        } ?: err(
+        } ?: errNoContext(
             "Order BY comparator cannot be null",
             ErrorCode.EVALUATOR_ORDER_BY_NULL_COMPARATOR,
-            null,
             internal = true
         )
 
@@ -2916,7 +2916,7 @@ internal class EvaluatingCompiler(
                         "${procedure.signature.arity.last} arguments, received: ${args.size}"
             }
 
-            throw EvaluationException(
+            err(
                 message,
                 ErrorCode.EVALUATOR_INCORRECT_NUMBER_OF_ARGUMENTS_TO_PROCEDURE_CALL,
                 errorContext,

@@ -522,7 +522,7 @@ internal class PhysicalPlanCompilerImpl(
         val computeThunk = thunkFactory.thunkFold(metas, argThunks) { lValue, rValue ->
             val denominator = rValue.numberValue()
             if (denominator.isZero()) {
-                err("% by zero", ErrorCode.EVALUATOR_MODULO_BY_ZERO, errorContext = null, internal = false)
+                err("% by zero", ErrorCode.EVALUATOR_MODULO_BY_ZERO, errorContextFrom(metas), internal = false)
             }
 
             (lValue.numberValue() % denominator).exprValue()
