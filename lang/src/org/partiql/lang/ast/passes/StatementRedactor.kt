@@ -161,6 +161,13 @@ private class StatementRedactionVisitor(
         }
     }
 
+    override fun visitDmlOpInsert(node: PartiqlAst.DmlOp.Insert) {
+        when (node.values) {
+            is PartiqlAst.Expr.Bag -> redactBagInInserOpValues(node.values)
+            else -> redactExpr(node.values)
+        }
+    }
+
     private fun redactExpr(node: PartiqlAst.Expr) {
         if (node.isNAry()) {
             redactNAry(node)
@@ -278,6 +285,27 @@ private class StatementRedactionVisitor(
         if (typed.value is PartiqlAst.Expr.Id && !skipRedaction(typed.value, safeFieldNames)) {
             val sourceLocation = typed.type.metas.sourceLocation ?: error("Cannot redact due to missing source location")
             sourceLocationMetaForRedaction.add(sourceLocation)
+        }
+    }
+
+    /**
+     * For [PartiqlAst.DmlOp.Insert], redacts every element of the BAG; for struct elements it
+     * follows the redaction rules that [redactStructInInsertValueOp] already applies.
+     * For example, given:
+     * INSERT INTO tb <<{ 'hk': 'a', 'rk': 1, 'attr': { 'hk': 'a' }}>>"
+     * REPLACE INTO tb << { 'dummy1' : 'hashKey', 'dummy2' : 'rangeKey', 'dummyTestAttribute' : '123' } >>
+     *
+     * Expected:
+     * INSERT INTO tb <<{ 'hk': 'a', 'rk': 1, 'attr': { ***(Redacted): ***(Redacted) }}>>
+     * REPLACE INTO tb <<{ 'dummy1' : ***(Redacted), 'dummy2' : ***(Redacted), 'dummyTestAttribute' : ***(Redacted) }>>
+     */
+    private fun redactBagInInserOpValues(bag: PartiqlAst.Expr.Bag) {
+        bag.values.map {
+            if (it is PartiqlAst.Expr.Struct) {
+                redactStructInInsertValueOp(it)
+            } else {
+                redactExpr(it)
+            }
         }
     }
 
