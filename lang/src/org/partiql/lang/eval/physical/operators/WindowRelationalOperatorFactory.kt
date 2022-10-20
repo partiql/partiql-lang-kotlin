@@ -11,6 +11,7 @@ import org.partiql.lang.eval.relation.RelationIterator
 import org.partiql.lang.eval.relation.RelationType
 import org.partiql.lang.eval.relation.relation
 
+// TODO: Remove from experimental once https://github.com/partiql/partiql-docs/issues/31 is resolved and a RFC is approved
 abstract class WindowRelationalOperatorFactory(name: String) : RelationalOperatorFactory {
 
     final override val key: RelationalOperatorFactoryKey = RelationalOperatorFactoryKey(RelationalOperatorKind.WINDOW, name)
@@ -68,7 +69,7 @@ class SortBasedWindowOperator(name: String) : WindowRelationalOperatorFactory(na
 
         val sortedRegisters = registers.sortedWith(getSortingComparator(sortKeys, state))
 
-        // create the partition here TODO refactor the partition creation logic
+        // create the partition here
         var partition = mutableListOf<List<Array<ExprValue>>>()
 
         // entire partition
@@ -106,13 +107,8 @@ class SortBasedWindowOperator(name: String) : WindowRelationalOperatorFactory(na
             rowInPartition.clear()
         }
 
-        // We would need to model this better
-        // ideally, we would have a factory that binds window function name and parameter to an implementation
-        // ideally, window function are processed per row, i.e., we have processing one window function call per row
-        // We could benefit from have a window function interface which serves as a top-level abstraction
-        // "partition based window function" and "frame based window function" will inherit from "window function"
-        // and concrete window function implementations are inherited from the above two.
-        // This is why, simplification such as abstract Lag/Lead into a LagLeadCommon has not been done yet.
+        // We would need to model this better. This PR was for demonstrate the window operator.
+        // See the next PR for window function modeling.
         if (windowExpression.funcName.text.toLowerCase() == "lag") {
             LagFunction(windowExpression, partition, windowFunctionParameter, state).eval()
         } else {
@@ -153,7 +149,6 @@ internal class LeadFunction(val windowExpression: PartiqlPhysical.WindowExpressi
                     val targetIndex = index + offsetValue.toLong()
                     // if targetRow is within partition
                     if (targetIndex >= 0 && targetIndex <= rowsInPartition.size - 1) {
-                        // TODO need to check if index is larger than MAX INT, but this may causes overflow already
                         val targetRow = rowsInPartition[targetIndex.toInt()]
                         transferState(state, targetRow)
                         val res = target!!.invoke(state)
@@ -201,7 +196,6 @@ internal class LagFunction(val windowExpression: PartiqlPhysical.WindowExpressio
                     val targetIndex = index - offsetValue
                     // if targetRow is within partition
                     if (targetIndex >= 0 && targetIndex <= rowsInPartition.size - 1) {
-                        // TODO need to check if index is larger than MAX INT, but this may causes overflow already
                         val targetRow = rowsInPartition[targetIndex.toInt()]
                         transferState(state, targetRow)
                         val res = target!!.invoke(state)
