@@ -374,10 +374,6 @@ class StatementRedactorTest : SqlParserTestBase() {
             "REPLACE INTO testTable2 << { 'dummy1' : ***(Redacted), 'dummy2' : ***(Redacted), 'dummyTestAttribute' : ***(Redacted) } >>"
         ),
         RedactionTestCase(
-            "REPLACE INTO testTable2 << { 'dummy1' : 'hashKey', 'dummy2' : 'rangeKey', 'dummyTestAttribute' : '123' } >>",
-            "REPLACE INTO testTable2 << { 'dummy1' : ***(Redacted), 'dummy2' : ***(Redacted), 'dummyTestAttribute' : ***(Redacted) } >>"
-        ),
-        RedactionTestCase(
             "INSERT INTO testTable2 <<[2, 'some-name']>>",
             "INSERT INTO testTable2 <<[***(Redacted), ***(Redacted)]>>"
         ),

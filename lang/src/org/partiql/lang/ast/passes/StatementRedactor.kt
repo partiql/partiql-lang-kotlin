@@ -289,8 +289,8 @@ private class StatementRedactionVisitor(
     }
 
     /**
-     * For [PartiqlAst.DmlOp.Insert], redacts every element of the BAG; for struct elements it
-     * follows the redaction rules that [redactStructInInsertValueOp] already applies.
+     * For [PartiqlAst.DmlOp.Insert], redacts every element of VALUES clause BAG value; for struct elements in the bag, it
+     * follows the redaction rules that [redactStructInInsertValueOp] applies.
      * For example, given:
      * INSERT INTO tb <<{ 'hk': 'a', 'rk': 1, 'attr': { 'hk': 'a' }}>>"
      * REPLACE INTO tb << { 'dummy1' : 'hashKey', 'dummy2' : 'rangeKey', 'dummyTestAttribute' : '123' } >>
