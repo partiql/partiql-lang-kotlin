@@ -1123,6 +1123,46 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
 
     /**
      *
+     * Window Functions
+     *
+     */
+
+    override fun visitLagLeadFunction(ctx: PartiQLParser.LagLeadFunctionContext) = PartiqlAst.build {
+        val args = visitOrEmpty(ctx.expr(), PartiqlAst.Expr::class)
+        val over = visitOver(ctx.over())
+        // LAG and LEAD will require a Window ORDER BY
+        if (over.orderBy == null) {
+            val errorContext = PropertyValueMap()
+            errorContext[Property.TOKEN_STRING] = ctx.func.text.toLowerCase()
+            throw ctx.func.err(
+                "${ctx.func.text} requires Window ORDER BY",
+                ErrorCode.PARSE_EXPECTED_WINDOW_ORDER_BY,
+                errorContext
+            )
+        }
+        val metas = ctx.func.getSourceMetaContainer()
+        callWindow(ctx.func.text.toLowerCase(), over, args, metas)
+    }
+    override fun visitOver(ctx: PartiQLParser.OverContext) = PartiqlAst.build {
+        val windowPartitionList = if (ctx.windowPartitionList() != null) visitWindowPartitionList(ctx.windowPartitionList()) else null
+        val windowSortSpecList = if (ctx.windowSortSpecList() != null) visitWindowSortSpecList(ctx.windowSortSpecList()) else null
+        val metas = ctx.OVER().getSourceMetaContainer()
+        over(windowPartitionList, windowSortSpecList, metas)
+    }
+    override fun visitWindowPartitionList(ctx: PartiQLParser.WindowPartitionListContext) = PartiqlAst.build {
+        val args = visitOrEmpty(ctx.expr(), PartiqlAst.Expr::class)
+        val metas = ctx.PARTITION().getSourceMetaContainer()
+        windowPartitionList(args, metas)
+    }
+
+    override fun visitWindowSortSpecList(ctx: PartiQLParser.WindowSortSpecListContext) = PartiqlAst.build {
+        val sortSpecList = visitOrEmpty(ctx.orderSortSpec(), PartiqlAst.SortSpec::class)
+        val metas = ctx.ORDER().getSourceMetaContainer()
+        windowSortSpecList(sortSpecList, metas)
+    }
+
+    /**
+     *
      * LITERALS
      *
      */

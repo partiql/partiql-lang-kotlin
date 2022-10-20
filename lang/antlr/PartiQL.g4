@@ -272,6 +272,24 @@ groupKey
 
 /**
  *
+ * Window Function
+ *
+ */
+
+over
+   : OVER PAREN_LEFT windowPartitionList? windowSortSpecList? PAREN_RIGHT
+   ;
+
+windowPartitionList
+   : PARTITION BY expr (COMMA expr)*
+   ;
+
+windowSortSpecList
+   : ORDER BY orderSortSpec (COMMA orderSortSpec)*
+   ;
+
+/**
+ *
  * SIMPLE CLAUSES
  *
  */
@@ -526,6 +544,7 @@ exprPrimary
     | caseExpr                   # ExprPrimaryBase
     | valueList                  # ExprPrimaryBase
     | values                     # ExprPrimaryBase
+    | windowFunction             # ExprPrimaryBase
     ;
 
 /**
@@ -572,6 +591,18 @@ substring
 aggregate
     : func=COUNT PAREN_LEFT ASTERISK PAREN_RIGHT                                        # CountAll
     | func=(COUNT|MAX|MIN|SUM|AVG) PAREN_LEFT setQuantifierStrategy? expr PAREN_RIGHT   # AggregateBase
+    ;
+
+// TODO: Remove from experimental once https://github.com/partiql/partiql-docs/issues/31 is resolved and a RFC is approved
+/**
+*
+* Supported Window Functions:
+* 1. LAG(expr, [offset [, default]]) OVER([window_partition] window_ordering)
+* 2. LEAD(expr, [offset [, default]]) OVER([window_partition] window_ordering)
+*
+*/
+windowFunction
+    : func=(LAG|LEAD) PAREN_LEFT expr ( COMMA expr (COMMA expr)?)? PAREN_RIGHT over #LagLeadFunction
     ;
 
 cast
