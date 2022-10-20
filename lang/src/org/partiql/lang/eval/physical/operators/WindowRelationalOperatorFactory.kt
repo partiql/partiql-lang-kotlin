@@ -33,15 +33,6 @@ abstract class WindowRelationalOperatorFactory(name: String) : RelationalOperato
     ): RelationExpression
 }
 
-/**
- * This is an experimental implementation of the window operator
- * Many concepts are missing from this implementation as the first step is to implementation partition based function `LAG` and `LEAD`.
- *
- * The general concept here is to sort the input relation, first by partition keys (if not null) then by sort keys ( if not null).
- * After sorting, we can do a sequence scan to create partition and materialize all the element in the same partition
- * After partition is materialized, `LAG` and `LEAD` function can use index to access the target row, if the target row is with in the partition.
- *
- */
 class SortBasedWindowOperator(name: String) : WindowRelationalOperatorFactory(name) {
     override fun create(
         impl: PartiqlPhysical.Impl,
@@ -54,18 +45,17 @@ class SortBasedWindowOperator(name: String) : WindowRelationalOperatorFactory(na
 
         // the following corresponding to materialization process
         val source = source.evaluate(state)
-        val registers = mutableListOf<Array<ExprValue>>()
-        while (source.nextRow()) {
-            registers.add(state.registers.clone())
+        val registers = sequence {
+            while (source.nextRow()) {
+                yield(state.registers.clone())
+            }
         }
-        // if partition and order by are both null, we do not sort
-        // this logic will not be called as this point since lag/lead forcefully require ORDER BY
 
         val partitionSortSpec = windowPartitionList?.map {
             CompiledSortKey(NaturalExprValueComparators.NULLS_FIRST_ASC, it)
-        } ?: emptyList<CompiledSortKey>()
+        } ?: emptyList()
 
-        val sortKeys = partitionSortSpec + (windowSortSpecList ?: emptyList<CompiledSortKey>())
+        val sortKeys = partitionSortSpec + (windowSortSpecList ?: emptyList())
 
         val sortedRegisters = registers.sortedWith(getSortingComparator(sortKeys, state))
 
@@ -74,7 +64,7 @@ class SortBasedWindowOperator(name: String) : WindowRelationalOperatorFactory(na
 
         // entire partition
         if (windowPartitionList == null) {
-            partition.add(sortedRegisters)
+            partition.add(sortedRegisters.toList())
         }
         // need to be partitioned
         else {
@@ -83,13 +73,13 @@ class SortBasedWindowOperator(name: String) : WindowRelationalOperatorFactory(na
             var previousPartition: ExprValue? = null
             while (iter.hasNext()) {
                 val currentRow = iter.next()
-                transferState(state, currentRow)
+                state.load(currentRow)
                 val currentPartition = state.valueFactory.newSexp(
                     windowPartitionList.map {
                         it.invoke(state)
                     }
                 )
-                // for the first time,
+
                 if (previousPartition == null) {
                     rowInPartition.add(currentRow)
                     previousPartition = currentPartition
@@ -134,7 +124,7 @@ internal class LeadFunction(val windowExpression: PartiqlPhysical.WindowExpressi
             partition.forEach { rowsInPartition ->
                 rowsInPartition.forEachIndexed { index, row ->
                     // reset index for parameter evaluation
-                    transferState(state, row)
+                    state.load(row)
                     val offsetValue = offset?.let {
                         val numberValue = it.invoke(state).numberValue().toLong()
                         // taking one step back here, do we even want to support non-constant value?
@@ -150,12 +140,12 @@ internal class LeadFunction(val windowExpression: PartiqlPhysical.WindowExpressi
                     // if targetRow is within partition
                     if (targetIndex >= 0 && targetIndex <= rowsInPartition.size - 1) {
                         val targetRow = rowsInPartition[targetIndex.toInt()]
-                        transferState(state, targetRow)
+                        state.load(targetRow)
                         val res = target!!.invoke(state)
-                        transferState(state, row)
+                        state.load(row)
                         windowExpression.decl.toSetVariableFunc()(state, res)
                     } else {
-                        transferState(state, row)
+                        state.load(row)
                         windowExpression.decl.toSetVariableFunc()(state, defaultValue)
                     }
                     yield()
@@ -182,7 +172,7 @@ internal class LagFunction(val windowExpression: PartiqlPhysical.WindowExpressio
             partition.forEach { rowsInPartition ->
                 rowsInPartition.forEachIndexed { index, row ->
                     // reset index for parameter evaluation
-                    transferState(state, row)
+                    state.load(row)
                     val offsetValue = offset?.let {
                         val numberValue = it.invoke(state).numberValue().toLong()
                         // taking one step back here, do we even want to support non-constant value?
@@ -197,12 +187,12 @@ internal class LagFunction(val windowExpression: PartiqlPhysical.WindowExpressio
                     // if targetRow is within partition
                     if (targetIndex >= 0 && targetIndex <= rowsInPartition.size - 1) {
                         val targetRow = rowsInPartition[targetIndex.toInt()]
-                        transferState(state, targetRow)
+                        state.load(targetRow)
                         val res = target!!.invoke(state)
-                        transferState(state, row)
+                        state.load(row)
                         windowExpression.decl.toSetVariableFunc()(state, res)
                     } else {
-                        transferState(state, row)
+                        state.load(row)
                         windowExpression.decl.toSetVariableFunc()(state, defaultValue)
                     }
                     yield()

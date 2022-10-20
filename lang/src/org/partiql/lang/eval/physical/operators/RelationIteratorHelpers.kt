@@ -1,7 +1,6 @@
 package org.partiql.lang.eval.physical.operators
 
 import org.partiql.lang.errors.ErrorCode
-import org.partiql.lang.eval.EvaluationException
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.NaturalExprValueComparators
 import org.partiql.lang.eval.booleanValue
@@ -136,11 +135,4 @@ internal fun getSortingComparator(sortKeys: List<CompiledSortKey>, state: Evalua
         null,
         internal = true
     )
-}
-
-internal fun transferState(target: EvaluatorState, source: Array<ExprValue>) {
-    if (target.registers.size != source.size) {
-        throw EvaluationException("Something Wrong", ErrorCode.EVALUATOR_GENERIC_EXCEPTION, null, null, true)
-    }
-    target.registers.forEachIndexed { index, _ -> target.registers[index] = source[index] }
 }
