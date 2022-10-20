@@ -137,7 +137,7 @@ may then be further optimized by selecting better implementations of each operat
             (call func_name::symbol args::(* expr 1))
             (call_agg setq::set_quantifier func_name::symbol arg::expr)
             // window function, for now using symbol as function name
-            // TODO: In the feature, when we allows use of aggregation function as window function, we need to consider incorporate in setq
+            // TODO: In the feature, when we allow use of aggregation function as window function, we need to consider incorporate in setq
             (call_window func_name::symbol over::over args::(* expr 1))
             (cast value::expr as_type::type)
             (can_cast value::expr as_type::type)
@@ -358,6 +358,7 @@ may then be further optimized by selecting better implementations of each operat
 
         // Over clause of a window function.
         // OVER ([PARTITION BY <expr> [, <expr>]... ] [ORDER BY <sort_spec> [, <sort_spec>]... ])
+        // TODO: In the future, we need to add support for custom declared frame clause
         // TODO: Remove from experimental once https://github.com/partiql/partiql-docs/issues/31 is resolved and a RFC is approved
         (product over partition_by::(? window_partition_list ) order_by::(? window_sort_spec_list ) )
 
@@ -602,9 +603,8 @@ may then be further optimized by selecting better implementations of each operat
 
         (with expr
             // Remove the select and struct node from the `expr` sum type, which will be replaced below.
-            // Remove the call_window node from the `expr` sum type
-            // During logical plan construction, we will convert each call_window node to a window operator.
-            // the expression call_window will be replaced as an id that is the as alias
+            // Remove the call_window node from the `expr` sum type, because the call_window contains two parts:
+            // Window specification and window function, we want to define a stand alone operator for this
             (exclude select struct call_window)
 
             (include
@@ -678,8 +678,6 @@ may then be further optimized by selecting better implementations of each operat
             )
         )
 
-        (include (product window_expression decl::var_decl func_name::symbol args::(* expr 1)))
-
         // Now we include new stuff, including PartiQL's relational algebra.
         (include
             // Every instance of `var_decl` introduces a new binding in the current scope.
@@ -734,13 +732,6 @@ may then be further optimized by selecting better implementations of each operat
                 // Converts a bindings collection into a sorted bindings collection.
                 (sort source::bexpr sort_specs::(* sort_spec 1))
 
-                (window
-                    source:: bexpr
-                    // shall we consider break it into three parts here?
-                    window_specification:: over
-                    window_expression:: window_expression
-                )
-
                 // Skips `row_count` rows, then emits all remaining rows.
                 (offset row_count::expr source::bexpr)
 
@@ -793,6 +784,9 @@ may then be further optimized by selecting better implementations of each operat
             group_key
             group_key_list
             order_by             // Replaced with SORT node
+            over
+            window_partition_list
+            window_sort_spec_list
 
             let
             dml_op
@@ -946,12 +940,6 @@ may then be further optimized by selecting better implementations of each operat
                 (offset i::impl row_count::expr source::bexpr)
                 (limit i::impl row_count::expr source::bexpr)
                 (let i::impl source::bexpr bindings::(* let_binding 1))
-                (window
-                     i::impl
-                     source:: bexpr
-                     window_specification:: over
-                     window_expression:: window_expression
-                )
             )
         )
     )

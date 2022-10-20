@@ -4,7 +4,6 @@ import org.junit.Test
 import org.partiql.lang.syntax.SqlParserTestBase
 import org.partiql.lang.syntax.TokenType
 
-
 // TODO: move this to [ParserErrorsTest] once https://github.com/partiql/partiql-docs/issues/31 is resolved and a RFC is approved
 class WindowRelatedParserErrorsTest : SqlParserTestBase() {
     @Test

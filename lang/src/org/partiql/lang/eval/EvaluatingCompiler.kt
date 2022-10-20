@@ -440,6 +440,7 @@ internal class EvaluatingCompiler(
 
             // bag operators
             is PartiqlAst.Expr.BagOp -> compileBagOp(expr, metas)
+
             is PartiqlAst.Expr.GraphMatch -> TODO("Compilation of GraphMatch expression")
             is PartiqlAst.Expr.CallWindow -> TODO("Evaluating Compiler doesn't support window function")
         }
