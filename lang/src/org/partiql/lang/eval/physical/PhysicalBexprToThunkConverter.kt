@@ -293,6 +293,7 @@ internal class PhysicalBexprToThunkConverter(
         CompiledSortKey(comp, value)
     }
 
+    // TODO: Remove from experimental once https://github.com/partiql/partiql-docs/issues/31 is resolved and a RFC is approved
     override fun convertWindow(node: PartiqlPhysical.Bexpr.Window): RelationThunkEnv {
         val source = this.convert(node.source)
 
@@ -300,9 +301,9 @@ internal class PhysicalBexprToThunkConverter(
 
         val windowSortSpecList = node.windowSpecification.orderBy
 
-        val compiledPartitionBy = if (windowPartitionList != null) windowPartitionList.exprs.map {
+        val compiledPartitionBy = windowPartitionList?.exprs?.map {
             exprConverter.convert(it).toValueExpr(it.metas.sourceLocationMeta)
-        } else null
+        }
 
         val compiledOrderBy = if (windowSortSpecList != null) compileSortSpecs(windowSortSpecList.sortSpecs) else null
 

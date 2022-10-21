@@ -131,6 +131,8 @@ class LogicalResolvedToDefaultPhysicalVisitorTransformTests {
                     )
                 }
             ),
+
+            // TODO: Test for window function, remove from experimental once https://github.com/partiql/partiql-docs/issues/31 is resolved and a RFC is approved
             BexprTestCase(
                 PartiqlLogicalResolved.build {
                     window(

@@ -826,6 +826,7 @@ class LogicalToLogicalResolvedVisitorTransformTests {
         )
     }
 
+    // TODO: Test for window function, remove from experimental once https://github.com/partiql/partiql-docs/issues/31 is resolved and a RFC is approved
     @ParameterizedTest
     @ArgumentsSource(WithWindowFunction::class)
     fun `queries-with-window-function`(tc: TestCase) = runTestCase(tc)

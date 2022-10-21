@@ -1,11 +1,12 @@
 package org.partiql.lang.eval.builtins.windowFunctions
 
-import org.junit.Test
+import org.junit.jupiter.api.Test
 import org.partiql.lang.planner.TestContext
 
+// TODO: Remove from experimental once https://github.com/partiql/partiql-docs/issues/31 is resolved and a RFC is approved
 class LeadLagTest {
 
-    @org.junit.jupiter.api.Test
+    @Test
     fun `lead_lag`() {
         val ctx = TestContext()
 

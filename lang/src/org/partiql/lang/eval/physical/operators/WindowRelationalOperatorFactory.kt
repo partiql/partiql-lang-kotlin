@@ -107,6 +107,7 @@ class SortBasedWindowOperator(name: String) : WindowRelationalOperatorFactory(na
     }
 }
 
+// TODO : The next PR will focus on modeling the window function.
 internal class LeadFunction(val windowExpression: PartiqlPhysical.WindowExpression, val partition: MutableList<List<Array<ExprValue>>>, val arguments: List<ValueExpression>, val state: EvaluatorState) {
 
     fun eval(): RelationIterator {
