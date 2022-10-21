@@ -79,7 +79,7 @@ enum class TypingMode {
  * Indicates how CAST should behave.
  */
 enum class TypedOpBehavior {
-    @Deprecated("Please use HONOR_PARAMETERS")
+    @Deprecated(message = "TypedOpBehavior.LEGACY is an old compile option that will be removed in an upcoming release", replaceWith = ReplaceWith("TypedOpBehavior.HONOR_PARAMETERS"))
     /** The old behavior that ignores type arguments in CAST and IS. */
     LEGACY,
 
