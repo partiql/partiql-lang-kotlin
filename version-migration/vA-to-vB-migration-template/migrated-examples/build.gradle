@@ -22,10 +22,6 @@ dependencies {
     testImplementation("org.jetbrains.kotlin:kotlin-test")
     testImplementation("org.junit.jupiter:junit-jupiter-params:5.8.2")
 
-    testImplementation("org.partiql:partiql-lang-kotlin:0.7.0")
-}
-
-java {
-    sourceCompatibility = JavaVersion.VERSION_11
-    targetCompatibility = JavaVersion.VERSION_11
+    // TODO specify partiql-lang-kotlin version B
+    //testImplementation("org.partiql:partiql-lang-kotlin:B")
 }
