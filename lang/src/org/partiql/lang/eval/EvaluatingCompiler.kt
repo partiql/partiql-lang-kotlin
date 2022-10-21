@@ -38,6 +38,7 @@ import org.partiql.lang.ast.sourceLocation
 import org.partiql.lang.ast.toAstStatement
 import org.partiql.lang.ast.toPartiQlMetaContainer
 import org.partiql.lang.domains.PartiqlAst
+import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.domains.staticType
 import org.partiql.lang.domains.toBindingCase
 import org.partiql.lang.errors.ErrorCode
@@ -138,7 +139,7 @@ internal class EvaluatingCompiler(
     private val compilationContextStack = Stack<CompilationContext>()
 
     private val currentCompilationContext: CompilationContext
-        get() = compilationContextStack.peek() ?: throw EvaluationException(
+        get() = compilationContextStack.peek() ?: errNoContext(
             "compilationContextStack was empty.", ErrorCode.EVALUATOR_UNEXPECTED_VALUE, internal = true
         )
 
@@ -440,6 +441,8 @@ internal class EvaluatingCompiler(
 
             // bag operators
             is PartiqlAst.Expr.BagOp -> compileBagOp(expr, metas)
+
+            is PartiqlAst.Expr.GraphMatch -> TODO("Compilation of GraphMatch expression")
         }
     }
 
@@ -660,6 +663,7 @@ internal class EvaluatingCompiler(
                     throw EvaluationException(
                         cause = e,
                         errorCode = ErrorCode.EVALUATOR_ARITHMETIC_EXCEPTION,
+                        errorContext = errorContextFrom(metas),
                         internal = true
                     )
                 }
@@ -675,7 +679,7 @@ internal class EvaluatingCompiler(
         val computeThunk = thunkFactory.thunkFold(metas, argThunks) { lValue, rValue ->
             val denominator = rValue.numberValue()
             if (denominator.isZero()) {
-                err("% by zero", ErrorCode.EVALUATOR_MODULO_BY_ZERO, null, false)
+                err("% by zero", ErrorCode.EVALUATOR_MODULO_BY_ZERO, errorContextFrom(metas), false)
             }
 
             (lValue.numberValue() % denominator).exprValue()
@@ -997,7 +1001,7 @@ internal class EvaluatingCompiler(
                         "${func.signature.arity.last} arguments, received: ${funcArgThunks.size}"
             }
 
-            throw EvaluationException(
+            err(
                 message,
                 ErrorCode.EVALUATOR_INCORRECT_NUMBER_OF_ARGUMENTS_TO_FUNC_CALL,
                 errorContext,
@@ -1080,7 +1084,7 @@ internal class EvaluatingCompiler(
                             when (val value = env.current[bindingName]) {
                                 null -> {
                                     if (fromSourceNames.any { bindingName.isEquivalentTo(it) }) {
-                                        throw EvaluationException(
+                                        err(
                                             "Variable not in GROUP BY or aggregation function: ${bindingName.name}",
                                             ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
                                             errorContextFrom(metas).also {
@@ -1098,7 +1102,7 @@ internal class EvaluatingCompiler(
                                             is PartiqlAst.CaseSensitivity.CaseInsensitive ->
                                                 Pair(ErrorCode.EVALUATOR_BINDING_DOES_NOT_EXIST, "")
                                         }
-                                        throw EvaluationException(
+                                        err(
                                             "No such binding: ${bindingName.name}.$hint",
                                             errorCode,
                                             errorContextFrom(metas).also {
@@ -1148,7 +1152,7 @@ internal class EvaluatingCompiler(
         return { env ->
             val params = env.session.parameters
             if (params.size <= index) {
-                throw EvaluationException(
+                err(
                     "Unbound parameter for ordinal: $ordinal",
                     ErrorCode.EVALUATOR_UNBOUND_PARAMETER,
                     errorContextFrom(metas).also {
@@ -1214,7 +1218,7 @@ internal class EvaluatingCompiler(
 
     private fun compileIs(expr: PartiqlAst.Expr.IsType, metas: MetaContainer): ThunkEnv {
         val expThunk = compileAstExpr(expr.value)
-        val typedOpParameter = expr.type.toTypedOpParameter(customTypedOpParameters)
+        val typedOpParameter = expr.type.toTypedOpParameter()
         if (typedOpParameter.staticType is AnyType) {
             return thunkFactory.thunkEnv(metas) { valueFactory.newBoolean(true) }
         }
@@ -1253,7 +1257,7 @@ internal class EvaluatingCompiler(
 
     private fun compileCastHelper(value: PartiqlAst.Expr, asType: PartiqlAst.Type, metas: MetaContainer): ThunkEnv {
         val expThunk = compileAstExpr(value)
-        val typedOpParameter = asType.toTypedOpParameter(customTypedOpParameters)
+        val typedOpParameter = asType.toTypedOpParameter()
         if (typedOpParameter.staticType is AnyType) {
             return expThunk
         }
@@ -1280,7 +1284,7 @@ internal class EvaluatingCompiler(
 
                 locationMeta?.let { fillErrorContext(errorContext, it) }
 
-                throw EvaluationException(
+                err(
                     "Validation failure for $asType",
                     ErrorCode.EVALUATOR_CAST_FAILED,
                     errorContext,
@@ -1344,7 +1348,7 @@ internal class EvaluatingCompiler(
         thunkFactory.thunkEnv(metas, compileCastHelper(expr.value, expr.asType, metas))
 
     private fun compileCanCast(expr: PartiqlAst.Expr.CanCast, metas: MetaContainer): ThunkEnv {
-        val typedOpParameter = expr.asType.toTypedOpParameter(customTypedOpParameters)
+        val typedOpParameter = expr.asType.toTypedOpParameter()
         if (typedOpParameter.staticType is AnyType) {
             return thunkFactory.thunkEnv(metas) { valueFactory.newBoolean(true) }
         }
@@ -1379,7 +1383,7 @@ internal class EvaluatingCompiler(
     }
 
     private fun compileCanLosslessCast(expr: PartiqlAst.Expr.CanLosslessCast, metas: MetaContainer): ThunkEnv {
-        val typedOpParameter = expr.asType.toTypedOpParameter(customTypedOpParameters)
+        val typedOpParameter = expr.asType.toTypedOpParameter()
         if (typedOpParameter.staticType is AnyType) {
             return thunkFactory.thunkEnv(metas) { valueFactory.newBoolean(true) }
         }
@@ -1754,9 +1758,11 @@ internal class EvaluatingCompiler(
                         // Grouping is not needed -- simply project the results from the FROM clause directly.
                         thunkFactory.thunkEnv(metas) { env ->
 
+                            val sourcedRows = sourceThunks(env)
+
                             val orderedRows = when (orderByThunk) {
-                                null -> sourceThunks(env)
-                                else -> evalOrderBy(sourceThunks(env), orderByThunk, orderByLocationMeta)
+                                null -> sourcedRows
+                                else -> evalOrderBy(sourcedRows, orderByThunk, orderByLocationMeta)
                             }
 
                             val projectedRows = orderedRows.map { (joinedValues, projectEnv) ->
@@ -2072,30 +2078,19 @@ internal class EvaluatingCompiler(
 
     private fun compileOrderByExpression(sortSpecs: List<PartiqlAst.SortSpec>): List<CompiledOrderByItem> =
         sortSpecs.map {
-            it.orderingSpec
-                ?: errNoContext(
-                    "SortSpec.orderingSpec was not specified",
-                    errorCode = ErrorCode.INTERNAL_ERROR,
-                    internal = true
-                )
-
-            it.nullsSpec
-                ?: errNoContext(
-                    "SortSpec.nullsSpec was not specified",
-                    errorCode = ErrorCode.INTERNAL_ERROR,
-                    internal = true
-                )
-
-            val comparator = when (it.orderingSpec) {
+            val comparator = when (it.orderingSpec ?: PartiqlAst.OrderingSpec.Asc()) {
                 is PartiqlAst.OrderingSpec.Asc ->
                     when (it.nullsSpec) {
                         is PartiqlAst.NullsSpec.NullsFirst -> NaturalExprValueComparators.NULLS_FIRST_ASC
                         is PartiqlAst.NullsSpec.NullsLast -> NaturalExprValueComparators.NULLS_LAST_ASC
+                        else -> NaturalExprValueComparators.NULLS_LAST_ASC
                     }
+
                 is PartiqlAst.OrderingSpec.Desc ->
                     when (it.nullsSpec) {
                         is PartiqlAst.NullsSpec.NullsFirst -> NaturalExprValueComparators.NULLS_FIRST_DESC
                         is PartiqlAst.NullsSpec.NullsLast -> NaturalExprValueComparators.NULLS_LAST_DESC
+                        else -> NaturalExprValueComparators.NULLS_FIRST_DESC
                     }
             }
 
@@ -2120,10 +2115,9 @@ internal class EvaluatingCompiler(
                 val env = resolveEnvironment(row, offsetLocationMeta)
                 orderByItem.thunk(env)
             }
-        } ?: err(
+        } ?: errNoContext(
             "Order BY comparator cannot be null",
             ErrorCode.EVALUATOR_ORDER_BY_NULL_COMPARATOR,
-            null,
             internal = true
         )
 
@@ -2922,7 +2916,7 @@ internal class EvaluatingCompiler(
                         "${procedure.signature.arity.last} arguments, received: ${args.size}"
             }
 
-            throw EvaluationException(
+            err(
                 message,
                 ErrorCode.EVALUATOR_INCORRECT_NUMBER_OF_ARGUMENTS_TO_PROCEDURE_CALL,
                 errorContext,
@@ -2995,6 +2989,22 @@ internal class EvaluatingCompiler(
             },
             ordering
         )
+
+    /** Helper to convert [PartiqlAst.Type] in AST to a [TypedOpParameter]. */
+    private fun PartiqlAst.Type.toTypedOpParameter(): TypedOpParameter {
+        // hack: to avoid duplicating the function `PartiqlAst.Type.toTypedOpParameter`, we have to convert this
+        // PartiqlAst.Type to PartiqlPhysical.Type. The easiest way to do that without using a visitor transform
+        // (which is overkill and comes with some downsides for something this simple), is to transform to and from
+        // s-expressions again.  This will work without difficulty as long as PartiqlAst.Type remains unchanged in all
+        // permuted domains between PartiqlAst and PartiqlPhysical.
+
+        // This is really just a temporary measure, however, which must exist for as long as the type inferencer works only
+        // on PartiqlAst.  When it has been migrated to use PartiqlPhysical instead, there should no longer be a reason
+        // to keep this function around.
+        val sexp = this.toIonElement()
+        val physicalType = PartiqlPhysical.transform(sexp) as PartiqlPhysical.Type
+        return physicalType.toTypedOpParameter(customTypedOpParameters)
+    }
 }
 
 /**

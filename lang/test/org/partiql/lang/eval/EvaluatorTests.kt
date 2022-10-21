@@ -61,13 +61,6 @@ class EvaluatorTests {
             // below this line use features not supported by the current physical algebra compiler.
             // most fail due to not supporting foundational nodes like id, global_id and scan yet.
             // PartiQL's test cases are not all that cleanly separated.
-            "selectCorrelatedUnpivot", // TODO: Support UNPIVOT in physical plans
-            "nestedSelectJoinWithUnpivot", // TODO: Support UNPIVOT in physical plans
-            "nestedSelectJoinLimit", // TODO: Support UNPIVOT in physical plans
-            "pivotFrom", // TODO: Support PIVOT in physical plans
-            "pivotLiteralFieldNameFrom", // TODO: Support PIVOT in physical plans
-            "pivotBadFieldType", // TODO: Support PIVOT in physical plans
-            "pivotUnpivotWithWhereLimit", // TODO: Support PIVOT in physical plans
             "topLevelCountDistinct", // TODO: Support aggregates in physical plans
             "topLevelCount", // TODO: Support aggregates in physical plans
             "topLevelAllCount", // TODO: Support aggregates in physical plans
@@ -94,11 +87,6 @@ class EvaluatorTests {
             "selectDistinctWithAggregate", // TODO: Support aggregates in physical plans
             "selectDistinctAggregationWithGroupBy", // TODO: Support GROUP BY in physical plans
             "selectDistinctWithGroupBy", // TODO: Support GROUP BY in physical plans
-            "unpivotStructWithMissingField", // TODO: Support UNPIVOT in physical plans
-            "unpivotMissing", // TODO: Support UNPIVOT in physical plans
-            "unpivotEmptyStruct", // TODO: Support UNPIVOT in physical plans
-            "unpivotMissingWithAsAndAt", // TODO: Support UNPIVOT in physical plans
-            "unpivotMissingCrossJoinWithAsAndAt", // TODO: Support UNPIVOT in physical plans
 
             // UndefinedVariableBehavior.MISSING not supported by plan evaluator
             "undefinedUnqualifiedVariableWithUndefinedVariableBehaviorMissing",

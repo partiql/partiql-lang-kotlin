@@ -583,6 +583,19 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
         )
 
         test(
+            "pivotMissingKeys",
+            "PIVOT x.v AT x.i FROM [ { 'a' : 'first', 'v' : 'John' }, {'i' : 'last', 'v' : 'doe' } ] AS x",
+            """
+              {
+                last: "doe"
+              }
+            """.trimIndent(),
+            compileOptionsBuilderBlock = {
+                typingMode(TypingMode.PERMISSIVE)
+            }
+        )
+
+        test(
             "pivotLiteralFieldNameFrom",
             """
               PIVOT a.name AT 'name' FROM animals AS a

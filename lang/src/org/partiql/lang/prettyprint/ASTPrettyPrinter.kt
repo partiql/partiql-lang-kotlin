@@ -213,9 +213,8 @@ class ASTPrettyPrinter {
                 astType = "DoNothing",
                 attrOfParent = attrOfParent
             )
-            is PartiqlAst.ConflictAction.DoReplace -> {
-                TODO("PrettyPrinter doesn't support DO REPLACE yet.")
-            }
+            is PartiqlAst.ConflictAction.DoReplace -> TODO("PrettyPrinter doesn't support DO REPLACE yet.")
+            is PartiqlAst.ConflictAction.DoUpdate -> TODO("PrettyPrinter doesn't support DO UPDATE yet.")
         }
 
     private fun toRecursionTree(node: PartiqlAst.ReturningExpr, attrOfParent: String? = null): RecursionTree =
@@ -558,6 +557,7 @@ class ASTPrettyPrinter {
                     if (node.offset == null) it else (it.plusElement(toRecursionTree(node.offset, "offset")))
                 }
             )
+            is PartiqlAst.Expr.GraphMatch -> TODO("Unsupported GraphMatch AST node")
         }
 
     private fun toRecursionTreeList(nodes: List<PartiqlAst.Expr>, attrOfParent: String? = null): List<RecursionTree> =
@@ -669,7 +669,6 @@ class ASTPrettyPrinter {
                     if (node.byAlias == null) it else { it.plusElement(toRecursionTree(node.byAlias, attrOfParent = "by")) }
                 }
             )
-            else -> TODO("Unsupported FROM AST node")
         }
 
     private fun toRecursionTree(node: PartiqlAst.Let, attrOfParent: String? = null): RecursionTree =

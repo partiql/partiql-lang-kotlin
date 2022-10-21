@@ -67,7 +67,8 @@ internal class PartiQLCompilerPipelineFactory : PipelineFactory {
         }
 
         val plannerOptions = PartiQLPlanner.Options(
-            allowedUndefinedVariables = true
+            allowedUndefinedVariables = true,
+            typedOpBehavior = evaluatorOptions.typedOpBehavior
         )
 
         val pipeline = PartiQLCompilerPipeline(
@@ -93,7 +94,8 @@ internal class PartiQLCompilerPipelineFactory : PipelineFactory {
                 val statement = pipeline.compile(query)
                 return when (val result = statement.eval(session)) {
                     is PartiQLResult.Delete,
-                    is PartiQLResult.Insert -> error("DML is not supported by test suite")
+                    is PartiQLResult.Insert,
+                    is PartiQLResult.Replace -> error("DML is not supported by test suite")
                     is PartiQLResult.Value -> result.value
                 }
             }

@@ -26,8 +26,8 @@ import org.partiql.lang.eval.PartiQLResult
 import org.partiql.lang.eval.PartiQLStatement
 import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedure
 import org.partiql.lang.eval.physical.PhysicalBexprToThunkConverter
-import org.partiql.lang.eval.physical.PhysicalExprToThunkConverter
-import org.partiql.lang.eval.physical.PhysicalExprToThunkConverterImpl
+import org.partiql.lang.eval.physical.PhysicalPlanCompiler
+import org.partiql.lang.eval.physical.PhysicalPlanCompilerImpl
 import org.partiql.lang.eval.physical.PhysicalPlanThunk
 import org.partiql.lang.eval.physical.operators.RelationalOperatorFactory
 import org.partiql.lang.eval.physical.operators.RelationalOperatorFactoryKey
@@ -47,17 +47,17 @@ internal class PartiQLCompilerDefault(
     private val operatorFactories: Map<RelationalOperatorFactoryKey, RelationalOperatorFactory>
 ) : PartiQLCompiler {
 
-    private lateinit var exprConverter: PhysicalExprToThunkConverterImpl
+    private lateinit var exprConverter: PhysicalPlanCompilerImpl
     private val bexprConverter = PhysicalBexprToThunkConverter(
         valueFactory = this.valueFactory,
-        exprConverter = object : PhysicalExprToThunkConverter {
+        exprConverter = object : PhysicalPlanCompiler {
             override fun convert(expr: PartiqlPhysical.Expr): PhysicalPlanThunk = exprConverter.convert(expr)
         },
         relationalOperatorFactory = operatorFactories
     )
 
     init {
-        exprConverter = PhysicalExprToThunkConverterImpl(
+        exprConverter = PhysicalPlanCompilerImpl(
             valueFactory = valueFactory,
             functions = functions,
             customTypedOpParameters = customTypedOpParameters,
@@ -97,6 +97,7 @@ internal class PartiQLCompilerDefault(
         return when (DmlAction.safeValueOf(action)) {
             DmlAction.INSERT -> PartiQLResult.Insert(target, rows)
             DmlAction.DELETE -> PartiQLResult.Delete(target, rows)
+            DmlAction.REPLACE -> PartiQLResult.Replace(target, rows)
             null -> error("Unknown DML Action `$action`")
         }
     }

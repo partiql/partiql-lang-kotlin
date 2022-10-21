@@ -194,6 +194,7 @@ private class StatementTransformer(val ion: IonSystem) {
                 )
             is PartiqlAst.Expr.NullIf -> NullIf(expr1.toExprNode(), expr2.toExprNode(), metas)
             is PartiqlAst.Expr.Coalesce -> Coalesce(args.map { it.toExprNode() }, metas)
+            is PartiqlAst.Expr.GraphMatch -> error("$this node has no representation in prior ASTs.")
         }
     }
 
@@ -252,7 +253,6 @@ private class StatementTransformer(val ion: IonSystem) {
                     condition = predicate?.toExprNode() ?: Literal(ion.newBool(true), metaContainerOf(StaticTypeMeta(StaticType.BOOL))),
                     metas = metas
                 )
-            is PartiqlAst.FromSource.GraphMatch -> error("$this node has no representation in prior ASTs.")
         }
     }
 
@@ -395,6 +395,9 @@ private class StatementTransformer(val ion: IonSystem) {
             is PartiqlAst.ConflictAction.DoNothing -> OnConflict(this.expr.toExprNode(), ConflictAction.DO_NOTHING)
             is PartiqlAst.ConflictAction.DoReplace -> {
                 TODO("ExprNode doesn't support DO REPLACE.")
+            }
+            is PartiqlAst.ConflictAction.DoUpdate -> {
+                TODO("ExprNode doesn't support DO UPDATE.")
             }
         }
     }

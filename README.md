@@ -31,7 +31,7 @@ This project is published to [Maven Central](https://search.maven.org/artifact/o
 
 | Group ID | Artifact ID | Recommended Version |
 |----------|-------------|---------------------|
-| `org.partiql` | `partiql-lang-kotlin` | `0.7.0`| 
+| `org.partiql` | `partiql-lang-kotlin` | `0.8.0`| 
 
 
 For Maven builds, add the following to your `pom.xml`:
@@ -62,7 +62,21 @@ Be sure to replace `${version}` with the desired version.
 
 **Pre-requisite**: Building this project requires Java 11+.
 
-To build this project, clone this repository and from its root directory execute:
+This project uses a [git submodule](https://git-scm.com/book/en/v2/Git-Tools-Submodules) to pull in 
+[partiql-tests](https://github.com/partiql/partiql-tests). The easiest way to pull everything in is to clone the 
+repository recursively:
+
+```bash
+$ git clone --recursive https://github.com/partiql/partiql-lang-kotlin.git
+```
+
+You can also initialize the submodules as follows:
+
+```bash
+$ git submodule update --init --recursive
+```
+
+To build this project, from the root directory execute:
 
 ```shell
 ./gradlew build

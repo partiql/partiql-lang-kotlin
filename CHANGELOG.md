@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Extends statement redaction to support `INSERT/REPLACE/UPSERT INTO`.
+
+### Changed
+- Now `CompileOption` uses `TypedOpParameter.HONOR_PARAMETERS` as default.
+
+### Deprecated
+
+### Fixed
+
+### Removed
+
+### Security
+
+## [0.8.0] - 2022-10-14
+
+### Added
 - `CHANGELOG.md` with back-filling of the previous releases to the change log to provide more visibility on unreleased
   changes and make the release process easier by using the `unreleased` section of change log. The `CONTRIBUTING.md`
   has also been updated to ensure this is part of the process.
@@ -14,8 +30,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   on the changes that include these and the alternatives that have been considered.
 - README.md badges for GitHub Actions status, codecov, and license
 - An experimental (pending [#15](https://github.com/partiql/partiql-docs/issues/15)) embedding of a subset of
-  the [GPML (Graph Pattern Matching Language)](https://arxiv.org/abs/2112.06217) graph query into the `FROM` clause,
-  supporting. The use within the grammar is based on the assumption of a new graph data type being added to the
+  the [GPML (Graph Pattern Matching Language)](https://arxiv.org/abs/2112.06217) graph query, as a new expression
+  form `<expr> MATCH <gpml_pattern>`, which can be used as a bag-of-structs data source in the `FROM` clause.   
+  The use within the grammar is based on the assumption of a new graph data type being added to the
   specification of data types within PartiQL, and should be considered experimental until the semantics of the graph
   data type are specified.
   - basic and abbreviated node and edge patterns (section 4.1 of the GPML paper)
@@ -41,6 +58,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
       [#707](https://github.com/partiql/partiql-lang-kotlin/issues/707), [#683](https://github.com/partiql/partiql-lang-kotlin/issues/683),
       and [#730](https://github.com/partiql/partiql-lang-kotlin/issues/730)
 - Parsing of `INSERT` DML with `ON CONFLICT DO REPLACE EXCLUDED` based on [RFC-0011](https://github.com/partiql/partiql-docs/blob/main/RFCs/0011-partiql-insert.md)
+- Adds a subset of `REPLACE INTO` and `UPSERT INTO` parsing based on [RFC-0030](https://github.com/partiql/partiql-docs/blob/main/RFCs/0030-partiql-upsert-replace.md)
+  - Parsing of target attributes is not supported yet and is pending [#841](https://github.com/partiql/partiql-lang-kotlin/issues/841)
+- Logical plan representation and evaluation support for `INSERT` DML with `ON CONFLICT DO REPLACE EXCLUDED` and `REPLACE INTO` based on [RFC-0011](https://github.com/partiql/partiql-docs/blob/main/RFCs/0011-partiql-insert.md)
+- Logical plan representation of `INSERT` DML with `ON CONFLICT DO UPDATE EXCLUDED` and `UPSERT INTO` based on [RFC-0011](https://github.com/partiql/partiql-docs/blob/main/RFCs/0011-partiql-insert.md)
+- Enabled projection alias support for ORDER BY clause
+- Adds support for PIVOT in the planner consistent with `EvaluatingCompiler`
 
 #### Experimental Planner Additions
 
@@ -66,16 +89,21 @@ stage in the `PlannerPipeline` and to generate performance metrics for the indiv
   query author, e.g. `true and x.id = 42` -> `x.id = 42`), `true and true` -> `true`, etc.
   - `RemoveUselessFiltersPass`, which removes useless filters introduced by the previous pass or by the query author 
   (e.g. `(filter (lit true) <bexpr>))` -> `<bexpr>`.
+- Add support for `UNPIVOT`, the behavior is expected to be compatible with the `evaluating compiler`.
+- Adds support for GROUP BY (aggregations, group keys, etc)
+- Adds support for ORDER BY in Planner
 
 ### Changed
 - The default parser for all components of PartiQL is now the PartiQLParser -- see the deprecation of `SqlParser`
-- Now `CompileOption` uses `TypedOpParameter.HONOR_PARAMETERS` as default. 
+- Parsing of `ORDER BY` clauses will no longer populate the AST with defaults for the 'sort specification'
+  (i.e., `ASC` or `DESC`) or 'nulls specification' (i.e., `NULLS FIRST` or `NULLS LAST`) when the are not provided in
+  the query text. Defaulting of sort order is moved to the evaluator.
 
 ### Deprecated
 - Deprecates `SqlLexer` and `SqlParser` to be replaced with the `PartiQLParserBuilder`.
 - Deprecates helper method, `blacklist`, within `org.partiql.lang.eval` and introduced a functionally equivalent
   `org.partiql.lang.eval.denyList` method.
-- Deprecates `TypedOpParameter.LEGACY` to be replaces with `TypedOpParameter.HONOR_PARAMETERS`
+- Deprecates `TypedOpParameter.LEGACY` to be replaced with `TypedOpParameter.HONOR_PARAMETERS`
 
 ### Fixed
 - Codecov report uploads in GitHub Actions workflow
@@ -87,6 +115,11 @@ stage in the `PlannerPipeline` and to generate performance metrics for the indiv
 
 ### Removed
 - README.md badge for travisci
+- **Breaking Change**: removed [ExprValueType.typeNames] as needed by the future work of legacy parser removal and OTS 
+- **Breaking Change**: [PartiqlPhysical.Type.toTypedOpParameter()] now becomes an internal function 
+- **Breaking Change**: [PartiqlAst.Type.toTypedOpParameter()] is removed
+- **Breaking Change**: [PartiqlAstSanityValidator] now becomes an internal class
+- **Breaking Change**: [PartiqlPhysicalSanityValidator] is removed
 
 ### Security
 
