@@ -22,9 +22,9 @@ abstract class WindowRelationalOperatorFactory(name: String) : RelationalOperato
 
         source: RelationExpression,
 
-        windowPartitionList: List<ValueExpression>?,
+        windowPartitionList: List<ValueExpression>,
 
-        windowSortSpecList: List<CompiledSortKey>?,
+        windowSortSpecList: List<CompiledSortKey>,
 
         windowExpression: PartiqlPhysical.WindowExpression,
 
@@ -37,8 +37,8 @@ class SortBasedWindowOperator(name: String) : WindowRelationalOperatorFactory(na
     override fun create(
         impl: PartiqlPhysical.Impl,
         source: RelationExpression,
-        windowPartitionList: List<ValueExpression>?,
-        windowSortSpecList: List<CompiledSortKey>?,
+        windowPartitionList: List<ValueExpression>,
+        windowSortSpecList: List<CompiledSortKey>,
         windowExpression: PartiqlPhysical.WindowExpression,
         windowFunctionParameter: List<ValueExpression>
     ) = RelationExpression { state ->
@@ -51,11 +51,11 @@ class SortBasedWindowOperator(name: String) : WindowRelationalOperatorFactory(na
             }
         }
 
-        val partitionSortSpec = windowPartitionList?.map {
+        val partitionSortSpec = windowPartitionList.map {
             CompiledSortKey(NaturalExprValueComparators.NULLS_FIRST_ASC, it)
-        } ?: emptyList()
+        }
 
-        val sortKeys = partitionSortSpec + (windowSortSpecList ?: emptyList())
+        val sortKeys = partitionSortSpec + windowSortSpecList
 
         val sortedRegisters = registers.sortedWith(getSortingComparator(sortKeys, state))
 
@@ -63,7 +63,7 @@ class SortBasedWindowOperator(name: String) : WindowRelationalOperatorFactory(na
         var partition = mutableListOf<List<Array<ExprValue>>>()
 
         // entire partition
-        if (windowPartitionList == null) {
+        if (windowPartitionList.isEmpty()) {
             partition.add(sortedRegisters.toList())
         }
         // need to be partitioned
@@ -113,11 +113,8 @@ internal class LeadFunction(val windowExpression: PartiqlPhysical.WindowExpressi
     fun eval(): RelationIterator {
         val (target, offset, default) = when (arguments.size) {
             1 -> listOf(arguments[0], null, null)
-
             2 -> listOf(arguments[0], arguments[1], null)
-
             3 -> listOf(arguments[0], arguments[1], arguments[2])
-
             else -> error("Wrong number of Parameter for Lead Function")
         }
         return relation(RelationType.BAG) {
@@ -137,9 +134,9 @@ internal class LeadFunction(val windowExpression: PartiqlPhysical.WindowExpressi
                     } ?: 1L // default offset is one
                     // We leave the checking mechanism for type mismatch out for now.
                     val defaultValue = default?.invoke(state) ?: state.valueFactory.nullValue
-                    val targetIndex = index + offsetValue.toLong()
+                    val targetIndex = index + offsetValue
                     // if targetRow is within partition
-                    if (targetIndex >= 0 && targetIndex <= rowsInPartition.size - 1) {
+                    if (targetIndex <= rowsInPartition.lastIndex) {
                         val targetRow = rowsInPartition[targetIndex.toInt()]
                         state.load(targetRow)
                         val res = target!!.invoke(state)
@@ -161,11 +158,8 @@ internal class LagFunction(val windowExpression: PartiqlPhysical.WindowExpressio
     fun eval(): RelationIterator {
         val (target, offset, default) = when (arguments.size) {
             1 -> listOf(arguments[0], null, null)
-
             2 -> listOf(arguments[0], arguments[1], null)
-
             3 -> listOf(arguments[0], arguments[1], arguments[2])
-
             else -> error("Wrong number of Parameter for Lag Function")
         }
         return relation(RelationType.BAG) {

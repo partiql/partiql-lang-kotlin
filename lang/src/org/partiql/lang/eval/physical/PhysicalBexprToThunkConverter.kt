@@ -303,9 +303,9 @@ internal class PhysicalBexprToThunkConverter(
 
         val compiledPartitionBy = windowPartitionList?.exprs?.map {
             exprConverter.convert(it).toValueExpr(it.metas.sourceLocationMeta)
-        }
+        } ?: emptyList()
 
-        val compiledOrderBy = if (windowSortSpecList != null) compileSortSpecs(windowSortSpecList.sortSpecs) else null
+        val compiledOrderBy = windowSortSpecList?.sortSpecs?.let { compileSortSpecs(it) } ?: emptyList()
 
         val compiledWindowFunctionParameter = node.windowExpression.args.map {
             exprConverter.convert(it).toValueExpr(it.metas.sourceLocationMeta)

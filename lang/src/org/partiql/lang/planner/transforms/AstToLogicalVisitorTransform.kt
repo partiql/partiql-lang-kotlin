@@ -41,9 +41,6 @@ internal class AstToLogicalVisitorTransform(
     val problemHandler: ProblemHandler
 ) : PartiqlAstToPartiqlLogicalVisitorTransform() {
 
-    // we need this map since potentially there can be multiple window operators
-    val windowFunctionUniqueIdMap = mutableMapOf<PartiqlAst.Expr.CallWindow, String>()
-
     override fun transformExprSelect(node: PartiqlAst.Expr.Select): PartiqlLogical.Expr {
         checkForUnsupportedSelectClauses(node)
 
@@ -55,13 +52,15 @@ internal class AstToLogicalVisitorTransform(
             }
         } ?: algebra
 
-        algebra = extractWindowFunction(node, algebra)
+        var (selectWindow, modifiedAlgebra) = transformWindowFunctions(node, algebra) ?: (node to algebra)
 
-        algebra = node.where?.let {
+        algebra = modifiedAlgebra
+
+        algebra = selectWindow.where?.let {
             PartiqlLogical.build { filter(transformExpr(it), algebra, it.metas) }
         } ?: algebra
 
-        var (select, algebraAfterAggregation) = transformAggregations(node, algebra) ?: node to algebra
+        var (select, algebraAfterAggregation) = transformAggregations(selectWindow, algebra) ?: (selectWindow to algebra)
 
         algebraAfterAggregation = select.order?.let { orderBy ->
             val sortSpecs = orderBy.sortSpecs.map { sortSpec -> transformSortSpec(sortSpec) }
@@ -78,6 +77,8 @@ internal class AstToLogicalVisitorTransform(
 
         val expr = transformProjection(select, algebraAfterAggregation)
 
+        println(expr)
+
         // SELECT DISTINCT ...
         if (node.setq != null && node.setq is PartiqlAst.SetQuantifier.Distinct) {
             return PartiqlLogical.build { call("filter_distinct", expr) }
@@ -86,48 +87,33 @@ internal class AstToLogicalVisitorTransform(
         return expr
     }
 
-    private fun generateUniqueWindowName(node: PartiqlAst.Expr.CallWindow, index: Int): String {
-        val uniqueId = "\$__partiql_window_function_$index"
-        windowFunctionUniqueIdMap[node] = uniqueId
-        return uniqueId
-    }
-
-    private fun getUniqueWindowName(node: PartiqlAst.Expr.CallWindow): String {
-        return windowFunctionUniqueIdMap[node] ?: error("no such window function registered")
-    }
-
     /**
      * If the Select Clause contains window function, create a corresponding Window operator.
      */
-    private fun extractWindowFunction(node: PartiqlAst.Expr.Select, algebra: PartiqlLogical.Bexpr): PartiqlLogical.Bexpr {
-        // check to see if there is any window call in the select list
-        val windowExpressions = when (val project = node.project) {
-            is PartiqlAst.Projection.ProjectValue -> return algebra
-            is PartiqlAst.Projection.ProjectList -> {
-                project.projectItems.asSequence().filterNot {
-                    it is PartiqlAst.ProjectItem.ProjectAll
-                }.filter {
-                    (it as PartiqlAst.ProjectItem.ProjectExpr).expr is PartiqlAst.Expr.CallWindow
-                }.map {
-                    (((it as PartiqlAst.ProjectItem.ProjectExpr).expr) as PartiqlAst.Expr.CallWindow)
-                }
-            }
+    private fun transformWindowFunctions(node: PartiqlAst.Expr.Select, algebra: PartiqlLogical.Bexpr): Pair<PartiqlAst.Expr.Select, PartiqlLogical.Bexpr>? {
+        val windowReplacer = CallWindowFunctionProjectionReplacer()
 
-            is PartiqlAst.Projection.ProjectPivot -> return algebra
-            is PartiqlAst.Projection.ProjectStar -> return algebra
+        val transformedNode = windowReplacer.transformExprSelect(node) as PartiqlAst.Expr.Select
+
+        println(transformedNode.project)
+
+        val windowExpressions = windowReplacer.getWindowFuncs()
+
+        if (windowExpressions.isEmpty()) {
+            return null
         }
 
         // todo: if multiple window functions are operating on the same window, we can potentially add them in a single window operator to increase performance
         var modifiedAlgebra = algebra
         windowExpressions.forEachIndexed { index, callWindow ->
-            modifiedAlgebra = callWindow.let { callWindowNode ->
+            modifiedAlgebra = callWindow.second.let { callWindowNode ->
                 PartiqlLogical.build {
                     window(
                         algebra,
                         transformOver(callWindowNode.over),
                         PartiqlLogical.build {
                             windowExpression(
-                                varDecl(generateUniqueWindowName(callWindowNode, index)),
+                                varDecl(callWindow.first),
                                 callWindowNode.funcName.text,
                                 callWindowNode.args.map { arg ->
                                     transformExpr(arg)
@@ -139,7 +125,7 @@ internal class AstToLogicalVisitorTransform(
                 }
             }
         }
-        return modifiedAlgebra
+        return transformedNode to modifiedAlgebra
     }
 
     /**
@@ -494,15 +480,15 @@ internal class AstToLogicalVisitorTransform(
             )
         }
 
-    override fun transformExprCallWindow(node: PartiqlAst.Expr.CallWindow): PartiqlLogical.Expr =
-        PartiqlLogical.build {
-            id(
-                getUniqueWindowName(node,),
-                caseInsensitive(),
-                unqualified(),
-                metas = node.metas
-            )
-        }
+    override fun transformExprCallWindow(node: PartiqlAst.Expr.CallWindow): PartiqlLogical.Expr = error("call transformer")
+//        PartiqlLogical.build {
+//            id(
+//                getUniqueWindowName(node),
+//                caseInsensitive(),
+//                unqualified(),
+//                metas = node.metas
+//            )
+//        }
 
     private fun transformProjectList(node: PartiqlAst.Projection.ProjectList): PartiqlLogical.Expr =
         PartiqlLogical.build {
@@ -573,6 +559,65 @@ private class FromSourceToBexpr(
                 node.metas
             )
         }
+}
+
+/**
+ * Given a [PartiqlAst.Expr.Select], transforms all [PartiqlAst.Expr.CallWindow]'s within the projection list to
+ * [PartiqlAst.Expr.Id]'s that reference the new [PartiqlLogical.VarDecl].
+ */
+private class CallWindowFunctionProjectionReplacer() : VisitorTransformBase() {
+    val callWindowFunctionVisitorTransform = CallWindowFunctionReplacer()
+
+    override fun transformProjectItemProjectExpr_expr(node: PartiqlAst.ProjectItem.ProjectExpr): PartiqlAst.Expr {
+        println("transformProjectItemProjectExpr_expr called")
+        return callWindowFunctionVisitorTransform.transformExpr(node.expr)
+    }
+
+    override fun transformProjectionProjectValue_value(node: PartiqlAst.Projection.ProjectValue): PartiqlAst.Expr {
+        return callWindowFunctionVisitorTransform.transformExpr(node.value)
+    }
+
+    // We don't want to nest in to select.
+    override fun transformExprSelect(node: PartiqlAst.Expr.Select): PartiqlAst.Expr {
+        println("called")
+        return super.transformExprSelect(node)
+        // return node
+    }
+
+    fun getWindowFuncs() = callWindowFunctionVisitorTransform.windowFunctions
+}
+
+/**
+ * Created to be invoked by the [CallWindowFunctionProjectionReplacer] to transform all encountered [PartiqlAst.Expr.CallWindow]'s to
+ * [PartiqlAst.Expr.Id]'s. This class is designed to be called directly on [PartiqlAst.Projection]'s and does NOT recurse
+ * into [PartiqlAst.Expr.Select]'s. This class is designed to be instantiated once per aggregation scope. The class collects
+ * all unique-per-scope aggregation variable declaration names and exposes it to the calling class.
+ */
+private class CallWindowFunctionReplacer() : VisitorTransformBase() {
+    private var varDeclIncrement = 0
+    val windowFunctions = mutableSetOf<Pair<String, PartiqlAst.Expr.CallWindow>>()
+    override fun transformExprCallWindow(node: PartiqlAst.Expr.CallWindow): PartiqlAst.Expr {
+        println("called")
+        val name = getAggregationIdName()
+        windowFunctions.add(name to node)
+        return PartiqlAst.build {
+            id(
+                name = name,
+                case = caseInsensitive(),
+                qualifier = unqualified(),
+                metas = node.metas
+            )
+        }
+    }
+
+    override fun transformExprSelect(node: PartiqlAst.Expr.Select): PartiqlAst.Expr {
+        return node
+    }
+
+    /**
+     * Returns unique (per [PartiqlAst.Expr.Select]) strings for each window function.
+     */
+    private fun getAggregationIdName(): String = "\$__partiql_window_function_${varDeclIncrement++}"
 }
 
 /**

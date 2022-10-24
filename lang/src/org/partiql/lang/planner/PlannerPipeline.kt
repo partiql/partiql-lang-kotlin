@@ -484,10 +484,14 @@ internal class PlannerPipelineImpl(
             ast.normalize()
         }
 
+        println(normalizedAst)
+
         // ast -> logical plan
         val logicalPlan = plannerEventCallback.doEvent("ast_to_logical", normalizedAst) {
             normalizedAst.toLogicalPlan(problemHandler)
         }
+
+        println(logicalPlan)
 
         if (problemHandler.hasErrors) {
             return PlannerPassResult.Error(problemHandler.problems)
