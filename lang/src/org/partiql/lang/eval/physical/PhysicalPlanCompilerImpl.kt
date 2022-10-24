@@ -385,8 +385,8 @@ internal class PhysicalPlanCompilerImpl(
             // No staticType, can't validate integer size.
             null -> computeThunk
             else -> {
-                when (evaluatorOptions.typedOpBehavior) {
-                    TypedOpBehavior.LEGACY -> {
+                when (evaluatorOptions.typingMode) {
+                    TypingMode.LEGACY -> {
                         // integer size constraints have not been tested under [TypingMode.LEGACY] because the
                         // [StaticTypeInferenceVisitorTransform] doesn't support being used with legacy mode yet.
                         // throw an exception in case we encounter this untested scenario. This might work fine, but I
@@ -400,7 +400,7 @@ internal class PhysicalPlanCompilerImpl(
                             computeThunk
                         }
                     }
-                    TypedOpBehavior.HONOR_PARAMETERS -> {
+                    TypingMode.PERMISSIVE -> {
                         val biggestIntegerType = staticTypes.filterIsInstance<IntType>().maxByOrNull {
                             it.rangeConstraint.numBytes
                         }
