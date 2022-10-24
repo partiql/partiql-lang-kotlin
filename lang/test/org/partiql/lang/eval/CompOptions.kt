@@ -39,9 +39,9 @@ enum class CompOptions(
         }
     ),
 
-    TYPED_OP_BEHAVIOR_HONOR_PARAMS(
+    TYPED_OP_BEHAVIOR_LEGACY(
         {
-            typedOpBehavior(TypedOpBehavior.HONOR_PARAMETERS)
+            typedOpBehavior(TypedOpBehavior.LEGACY)
         }
     ),
 

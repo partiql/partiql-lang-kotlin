@@ -30,7 +30,7 @@ data class EvaluatorOptions private constructor (
     val projectionIteration: ProjectionIterationBehavior = ProjectionIterationBehavior.FILTER_MISSING,
     val thunkOptions: ThunkOptions = ThunkOptions.standard(),
     val typingMode: TypingMode = TypingMode.LEGACY,
-    val typedOpBehavior: TypedOpBehavior = TypedOpBehavior.LEGACY,
+    val typedOpBehavior: TypedOpBehavior = TypedOpBehavior.HONOR_PARAMETERS,
     val defaultTimezoneOffset: ZoneOffset = ZoneOffset.UTC
 ) {
     companion object {
