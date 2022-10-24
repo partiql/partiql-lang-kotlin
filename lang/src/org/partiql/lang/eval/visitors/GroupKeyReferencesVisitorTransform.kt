@@ -67,7 +67,8 @@ public class GroupKeyReferencesVisitorTransform(
         }
         val projection = this.transformProjection(node.project)
         val order = node.order?.let { this.transformOrderBy(it) }
-        return transformedNode.copy(project = projection, order = order)
+        val having = node.having?.let { this.transformHaving(it) }
+        return transformedNode.copy(project = projection, order = order, having = having)
     }
 
     override fun transformProjectionProjectValue(node: PartiqlAst.Projection.ProjectValue): PartiqlAst.Projection {
@@ -78,6 +79,8 @@ public class GroupKeyReferencesVisitorTransform(
             )
         }
     }
+
+    private fun transformHaving(node: PartiqlAst.Expr): PartiqlAst.Expr = itemTransform.transformExpr(node)
 
     override fun transformSortSpec_expr(node: PartiqlAst.SortSpec) = itemTransform.transformSortSpec_expr(node)
 

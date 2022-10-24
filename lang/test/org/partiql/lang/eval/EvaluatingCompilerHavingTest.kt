@@ -18,7 +18,6 @@ import junitparams.Parameters
 import org.junit.Test
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestCase
-import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestTarget
 import org.partiql.lang.util.propertyValueMapOf
 
 class EvaluatingCompilerHavingTest : EvaluatorTestBase() {
@@ -55,11 +54,7 @@ class EvaluatingCompilerHavingTest : EvaluatorTestBase() {
 
     @Test
     @Parameters
-    fun groupByHavingTest(tc: EvaluatorTestCase) =
-        runEvaluatorTestCase(
-            tc.copy(targetPipeline = EvaluatorTestTarget.COMPILER_PIPELINE), // Phys. Algebra doesn't yet support HAVING
-            session
-        )
+    fun groupByHavingTest(tc: EvaluatorTestCase) = runEvaluatorTestCase(tc, session)
 
     fun parametersForGroupByHavingTest() =
         listOf(
@@ -148,7 +143,7 @@ class EvaluatingCompilerHavingTest : EvaluatorTestBase() {
                 >>"""
             ),
             EvaluatorTestCase(
-                groupName = "GROUP BY with HAVING that calls SUM(*)",
+                groupName = "GROUP BY with HAVING that calls SUM()",
                 """
                     SELECT attributeId, SUM(attributeId) as the_count
                     FROM repeating_things
@@ -184,8 +179,7 @@ class EvaluatingCompilerHavingTest : EvaluatorTestBase() {
         runEvaluatorErrorTestCase(
             query = "SELECT foo.bar FROM bat HAVING 1 = 1",
             expectedErrorCode = ErrorCode.SEMANTIC_HAVING_USED_WITHOUT_GROUP_BY,
-            expectedErrorContext = propertyValueMapOf(1, 1),
-            target = EvaluatorTestTarget.COMPILER_PIPELINE
+            expectedErrorContext = propertyValueMapOf(1, 1)
         )
     }
 }

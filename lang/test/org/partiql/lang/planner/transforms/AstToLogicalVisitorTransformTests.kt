@@ -140,6 +140,79 @@ class AstToLogicalVisitorTransformTests {
             )
         }
 
+        private fun PartiqlAst.Builder.simpleHaving(
+            projections: List<PartiqlAst.ProjectItem>,
+            keys: List<PartiqlAst.GroupKey>,
+            groupAsAlias: String? = null,
+            fromSource: PartiqlAst.FromSource? = null,
+            having: PartiqlAst.Expr
+        ): PartiqlAst.Statement = query(simpleHavingExpr(projections, keys, groupAsAlias, fromSource, having))
+
+        private fun PartiqlAst.Builder.simpleHavingExpr(
+            projections: List<PartiqlAst.ProjectItem>,
+            keys: List<PartiqlAst.GroupKey>,
+            groupAsAlias: String? = null,
+            fromSource: PartiqlAst.FromSource? = null,
+            having: PartiqlAst.Expr
+        ): PartiqlAst.Expr {
+            val from = when (fromSource) {
+                null -> {
+                    scan(
+                        id("bar", caseInsensitive(), unqualified()),
+                        asAlias = "b"
+                    )
+                }
+                else -> fromSource
+            }
+            return select(
+                project = projectList(projections),
+                from = from,
+                group = groupBy(
+                    groupFull(),
+                    groupKeyList(
+                        keys = keys
+                    ),
+                    groupAsAlias = groupAsAlias
+                ),
+                having = having
+            )
+        }
+
+        private fun PartiqlLogical.Builder.simpleHavingLogicalQuery(
+            fields: List<PartiqlLogical.StructPart> = emptyList(),
+            keys: List<PartiqlLogical.GroupKey> = emptyList(),
+            functions: List<PartiqlLogical.AggregateFunction> = emptyList(),
+            source: PartiqlLogical.Bexpr? = null,
+            predicate: PartiqlLogical.Expr
+        ): PartiqlLogical.Statement = query(simpleHavingLogical(fields, keys, functions, source, predicate))
+
+        private fun PartiqlLogical.Builder.simpleHavingLogical(
+            fields: List<PartiqlLogical.StructPart> = emptyList(),
+            keys: List<PartiqlLogical.GroupKey> = emptyList(),
+            functions: List<PartiqlLogical.AggregateFunction> = emptyList(),
+            source: PartiqlLogical.Bexpr? = null,
+            predicate: PartiqlLogical.Expr
+        ): PartiqlLogical.Expr {
+            val sourceBexpr = when (source) {
+                null -> scan(id("bar"), varDecl("b"))
+                else -> source
+            }
+            return bindingsToValues(
+                struct(fields),
+                filter(
+                    predicate = predicate,
+                    source = aggregate(
+                        source = sourceBexpr,
+                        strategy = groupFull(),
+                        groupList = groupKeyList(keys),
+                        functionList = aggregateFunctionList(
+                            functions = functions
+                        )
+                    )
+                )
+            )
+        }
+
         override fun getParameters() = listOf(
             TestCase(
                 // Note:
@@ -530,6 +603,49 @@ class AstToLogicalVisitorTransformTests {
                     )
                 }
             ),
+
+            // SELECT k AS keyAlias FROM bar AS b GROUP BY y AS k HAVING k > 2
+            TestCase(
+                PartiqlAst.build {
+                    simpleHaving(
+                        projections = listOf(
+                            projectExpr(
+                                id(
+                                    "k",
+                                    caseInsensitive(),
+                                    unqualified(),
+                                    metas = metaContainerOf(IsGroupAttributeReferenceMeta.instance)
+                                ),
+                                asAlias = "keyAlias"
+                            )
+                        ),
+                        keys = listOf(
+                            groupKey_(
+                                id("y", caseInsensitive(), unqualified()),
+                                asAlias = SymbolPrimitive(
+                                    text = "k",
+                                    metas = metaContainerOf(UniqueNameMeta("someUniqueName"))
+                                )
+                            )
+                        ),
+                        having = gt(id("k"), lit(ionInt(2)))
+                    )
+                },
+                PartiqlLogical.build {
+                    simpleHavingLogicalQuery(
+                        fields = listOf(
+                            structField(lit(ionSymbol("keyAlias")), id("k"))
+                        ),
+                        keys = listOf(
+                            groupKey(
+                                id("y", caseInsensitive(), unqualified()),
+                                asVar = varDecl("someUniqueName")
+                            )
+                        ),
+                        predicate = gt(id("k"), lit(ionInt(2)))
+                    )
+                }
+            ),
         )
     }
 
@@ -740,9 +856,6 @@ class AstToLogicalVisitorTransformTests {
     class ArgumentsForProblemTests : ArgumentsProviderBase() {
 
         override fun getParameters() = listOf(
-            // SELECT queries are not implemented
-            ProblemTestCase("SELECT b.* FROM bar AS b HAVING x", unimplementedProblem("HAVING", 1, 33)),
-
             // DDL is  not implemented
             ProblemTestCase("CREATE TABLE foo", unimplementedProblem("CREATE TABLE", 1, 1)),
             ProblemTestCase("DROP TABLE foo", unimplementedProblem("DROP TABLE", 1, 1)),

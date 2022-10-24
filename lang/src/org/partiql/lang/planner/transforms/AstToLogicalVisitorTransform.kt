@@ -41,44 +41,36 @@ internal class AstToLogicalVisitorTransform(
     val problemHandler: ProblemHandler
 ) : PartiqlAstToPartiqlLogicalVisitorTransform() {
 
-    override fun transformExprSelect(node: PartiqlAst.Expr.Select): PartiqlLogical.Expr {
-        checkForUnsupportedSelectClauses(node)
-
-        var algebra: PartiqlLogical.Bexpr = node.from.toBexpr(this, problemHandler)
+    override fun transformExprSelect(node: PartiqlAst.Expr.Select): PartiqlLogical.Expr = PartiqlLogical.build {
+        var algebra: PartiqlLogical.Bexpr = node.from.toBexpr(this@AstToLogicalVisitorTransform, problemHandler)
 
         algebra = node.fromLet?.let { fromLet ->
-            PartiqlLogical.build {
-                let(algebra, fromLet.letBindings.map { transformLetBinding(it) }, node.fromLet.metas)
-            }
+            let(algebra, fromLet.letBindings.map { transformLetBinding(it) }, fromLet.metas)
         } ?: algebra
 
-        algebra = node.where?.let {
-            PartiqlLogical.build { filter(transformExpr(it), algebra, it.metas) }
-        } ?: algebra
+        algebra = node.where?.let { filter(transformExpr(it), algebra, it.metas) } ?: algebra
 
         var (select, algebraAfterAggregation) = transformAggregations(node, algebra) ?: node to algebra
 
+        algebraAfterAggregation = select.having?.let { filter(transformExpr(it), algebraAfterAggregation, it.metas) }
+            ?: algebraAfterAggregation
+
         algebraAfterAggregation = select.order?.let { orderBy ->
             val sortSpecs = orderBy.sortSpecs.map { sortSpec -> transformSortSpec(sortSpec) }
-            PartiqlLogical.build { sort(algebraAfterAggregation, sortSpecs, orderBy.metas) }
+            sort(algebraAfterAggregation, sortSpecs, orderBy.metas)
         } ?: algebraAfterAggregation
 
-        algebraAfterAggregation = select.offset?.let {
-            PartiqlLogical.build { offset(transformExpr(it), algebraAfterAggregation, select.offset!!.metas) }
-        } ?: algebraAfterAggregation
+        algebraAfterAggregation = select.offset?.let { offset(transformExpr(it), algebraAfterAggregation, it.metas) }
+            ?: algebraAfterAggregation
 
-        algebraAfterAggregation = select.limit?.let {
-            PartiqlLogical.build { limit(transformExpr(it), algebraAfterAggregation, select.limit!!.metas) }
-        } ?: algebraAfterAggregation
+        algebraAfterAggregation = select.limit?.let { limit(transformExpr(it), algebraAfterAggregation, it.metas) }
+            ?: algebraAfterAggregation
 
         val expr = transformProjection(select, algebraAfterAggregation)
-
-        // SELECT DISTINCT ...
-        if (node.setq != null && node.setq is PartiqlAst.SetQuantifier.Distinct) {
-            return PartiqlLogical.build { call("filter_distinct", expr) }
+        when (node.setq) {
+            is PartiqlAst.SetQuantifier.Distinct -> call("filter_distinct", expr)
+            else -> expr
         }
-
-        return expr
     }
 
     /**
@@ -217,18 +209,6 @@ internal class AstToLogicalVisitorTransform(
                     )
                 }
             }
-        }
-    }
-
-    /**
-     * Throws [NotImplementedError] if any `SELECT` clauses were used that are not mappable to [PartiqlLogical].
-     *
-     * This function is temporary and will be removed when all the clauses of the `SELECT` expression are mappable
-     * to [PartiqlLogical].
-     */
-    private fun checkForUnsupportedSelectClauses(node: PartiqlAst.Expr.Select) {
-        when {
-            node.having != null -> problemHandler.handleUnimplementedFeature(node.having, "HAVING")
         }
     }
 
@@ -519,6 +499,10 @@ private class CallAggregationsProjectionReplacer(var level: Int = 0) : VisitorTr
 
     override fun transformProjectionProjectValue_value(node: PartiqlAst.Projection.ProjectValue): PartiqlAst.Expr {
         return callAggregationVisitorTransform.transformExpr(node.value)
+    }
+
+    override fun transformExprSelect_having(node: PartiqlAst.Expr.Select): PartiqlAst.Expr? = node.having?.let { having ->
+        callAggregationVisitorTransform.transformExpr(having)
     }
 
     override fun transformExprSelect(node: PartiqlAst.Expr.Select): PartiqlAst.Expr {

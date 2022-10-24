@@ -14,6 +14,7 @@
 
 package org.partiql.lang.eval.visitors
 
+import com.amazon.ionelement.api.ionInt
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.ast.UniqueNameMeta
@@ -102,6 +103,135 @@ class GroupKeyReferencesVisitorTransformTests : VisitorTransformTestBase() {
                         )
                     },
                     expected = "SELECT \"someUniqueName\" AS someProjection FROM t GROUP BY a AS someKey"
+                ),
+
+                // SELECT someKey AS someProjection FROM t GROUP BY a AS someKey HAVING someKey > 2
+                TransformTestCase(
+                    original = PartiqlAst.build {
+                        query(
+                            select(
+                                project = projectList(
+                                    projectExpr(
+                                        id("someKey", caseInsensitive(), unqualified()),
+                                        asAlias = "someProjection"
+                                    )
+                                ),
+                                from = scan(
+                                    id("t", caseInsensitive(), unqualified())
+                                ),
+                                group = groupBy(
+                                    groupFull(),
+                                    keyList = groupKeyList(
+                                        groupKey_(
+                                            id(
+                                                "a",
+                                                caseInsensitive(),
+                                                unqualified()
+                                            ),
+                                            asAlias = SymbolPrimitive(
+                                                text = "someKey",
+                                                metas = metaContainerOf(UniqueNameMeta("someUniqueName"))
+                                            )
+                                        )
+                                    )
+                                ),
+                                having = gt(id("someUniqueName", caseSensitive(), unqualified()), lit(ionInt(2)))
+                            )
+                        )
+                    },
+                    expected = "SELECT \"someUniqueName\" AS someProjection FROM t GROUP BY a AS someKey HAVING \"someUniqueName\" > 2"
+                ),
+
+                // SELECT someKey AS someProjection FROM t GROUP BY a AS someKey HAVING COUNT(someKey) > 2
+                TransformTestCase(
+                    original = PartiqlAst.build {
+                        query(
+                            select(
+                                project = projectList(
+                                    projectExpr(
+                                        id("someKey", caseInsensitive(), unqualified()),
+                                        asAlias = "someProjection"
+                                    )
+                                ),
+                                from = scan(
+                                    id("t", caseInsensitive(), unqualified())
+                                ),
+                                group = groupBy(
+                                    groupFull(),
+                                    keyList = groupKeyList(
+                                        groupKey_(
+                                            id(
+                                                "a",
+                                                caseInsensitive(),
+                                                unqualified()
+                                            ),
+                                            asAlias = SymbolPrimitive(
+                                                text = "someKey",
+                                                metas = metaContainerOf(UniqueNameMeta("someUniqueName"))
+                                            )
+                                        )
+                                    )
+                                ),
+                                having = gt(
+                                    callAgg(
+                                        all(),
+                                        "count",
+                                        id("someUniqueName", caseSensitive(), unqualified())
+                                    ),
+                                    lit(ionInt(2))
+                                )
+                            )
+                        )
+                    },
+                    expected = "SELECT \"someUniqueName\" AS someProjection FROM t GROUP BY a AS someKey HAVING COUNT(\"someUniqueName\") > 2"
+                ),
+
+                // SELECT COUNT(someKey) AS someProjection FROM t GROUP BY a AS someKey HAVING COUNT(someKey) > 2
+                TransformTestCase(
+                    original = PartiqlAst.build {
+                        query(
+                            select(
+                                project = projectList(
+                                    projectExpr(
+                                        callAgg(
+                                            all(),
+                                            "count",
+                                            id("someKey", caseSensitive(), unqualified())
+                                        ),
+                                        asAlias = "someProjection"
+                                    )
+                                ),
+                                from = scan(
+                                    id("t", caseInsensitive(), unqualified())
+                                ),
+                                group = groupBy(
+                                    groupFull(),
+                                    keyList = groupKeyList(
+                                        groupKey_(
+                                            id(
+                                                "a",
+                                                caseInsensitive(),
+                                                unqualified()
+                                            ),
+                                            asAlias = SymbolPrimitive(
+                                                text = "someKey",
+                                                metas = metaContainerOf(UniqueNameMeta("someUniqueName"))
+                                            )
+                                        )
+                                    )
+                                ),
+                                having = gt(
+                                    callAgg(
+                                        all(),
+                                        "count",
+                                        id("someKey", caseSensitive(), unqualified())
+                                    ),
+                                    lit(ionInt(2))
+                                )
+                            )
+                        )
+                    },
+                    expected = "SELECT COUNT(\"someUniqueName\") AS someProjection FROM t GROUP BY a AS someKey HAVING COUNT(\"someUniqueName\") > 2"
                 ),
             )
         }
