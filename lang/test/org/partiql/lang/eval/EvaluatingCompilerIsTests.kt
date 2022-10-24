@@ -12,7 +12,7 @@ import org.partiql.lang.util.ArgumentsProviderBase
  * In [TypedOpBehavior.LEGACY] mode, any `IS CHAR(n)` or `IS VARCHAR(n)` returns true for any left-hand value
  * that is an `ExprValueType.STRING`, so only one expected result is needed for both ([expectedLegacyResult]).
  *
- * In [CompOptions.TYPED_OP_BEHAVIOR_HONOR_PARAMS] mode, `IS CHAR(n)` or `IS VARCHAR(n)` inspect the length of the
+ * In [TypedOpBehavior.HONOR_PARAMETERS] mode, `IS CHAR(n)` or `IS VARCHAR(n)` inspect the length of the
  * left-hand value according to different rules.  The expected results are stored in [expectedIsCharHonorParamsSql]
  * and [expectedIsVarcharHonorParamsSql].
  *
