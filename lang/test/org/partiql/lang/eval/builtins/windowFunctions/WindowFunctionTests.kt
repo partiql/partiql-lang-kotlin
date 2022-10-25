@@ -1,0 +1,167 @@
+package org.partiql.lang.eval.builtins.windowFunctions
+
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ArgumentsSource
+import org.partiql.lang.eval.EvaluatorTestBase
+import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestAdapter
+import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestCase
+import org.partiql.lang.eval.evaluatortestframework.MultipleTestAdapter
+import org.partiql.lang.eval.evaluatortestframework.PipelineEvaluatorTestAdapter
+import org.partiql.lang.eval.evaluatortestframework.PlannerPipelineFactory
+import org.partiql.lang.util.ArgumentsProviderBase
+
+// TODO: Remove from experimental once https://github.com/partiql/partiql-docs/issues/31 is resolved and a RFC is approved
+class WindowFunctionTests : EvaluatorTestBase() {
+    // The new AST node is not supported by ExprNode
+    override val testHarness: EvaluatorTestAdapter = MultipleTestAdapter(
+        listOf(
+            PipelineEvaluatorTestAdapter(PlannerPipelineFactory()),
+        )
+    )
+    private val session = mapOf(
+        "stock_price" to """[
+            { date: 2022-09-30, ticker: AMZN, price: 113.00},
+            { date: 2022-10-03, ticker: AMZN, price: 115.88},
+            { date: 2022-10-04, ticker: AMZN, price: 121.09},
+            { date: 2022-09-30, ticker: GOOG, price: 96.15},
+            { date: 2022-10-03, ticker: GOOG, price: 99.30},
+            { date: 2022-10-04, ticker: GOOG, price: 101.04}
+        ]""",
+    ).toSession()
+
+    @ParameterizedTest
+    @ArgumentsSource(LagFunctionTestsProvider::class)
+    fun lagFunctionTests(tc: EvaluatorTestCase) = runEvaluatorTestCase(
+        tc = tc,
+        session = session
+    )
+    class LagFunctionTestsProvider : ArgumentsProviderBase() {
+        override fun getParameters() = listOf(
+//            EvaluatorTestCase(
+//                query = """
+//                    SELECT sp."date" as "date",
+//                        sp.ticker as ticker,
+//                        sp.price as current_price,
+//                        lag(sp.price) OVER (PARTITION BY sp.ticker ORDER BY sp."date") as previous_price
+//                    FROM stock_price as sp
+//                """,
+//                expectedResult = """<<
+//                    { 'date': `2022-09-30`, 'ticker': 'AMZN', 'current_price': 113.00, 'previous_price': NULL},
+//                    { 'date': `2022-10-03`, 'ticker': 'AMZN', 'current_price': 115.88, 'previous_price': 113.00},
+//                    { 'date': `2022-10-04`, 'ticker': 'AMZN', 'current_price': 121.09, 'previous_price': 115.88},
+//                    { 'date': `2022-09-30`, 'ticker': 'GOOG', 'current_price': 96.15, 'previous_price': NULL},
+//                    { 'date': `2022-10-03`, 'ticker': 'GOOG', 'current_price': 99.30, 'previous_price': 96.15},
+//                    { 'date': `2022-10-04`, 'ticker': 'GOOG', 'current_price': 101.04, 'previous_price': 99.30}
+//                >>""",
+//                excludeLegacySerializerAssertions = true
+//            ),
+//
+//            // Window Function + 100
+//            EvaluatorTestCase(
+//                query = """
+//                    SELECT sp."date" as "date",
+//                        sp.ticker as ticker,
+//                        sp.price as current_price,
+//                        lag(sp.price) OVER (PARTITION BY sp.ticker ORDER BY sp."date") + 100 as previous_price
+//                    FROM stock_price as sp
+//                """,
+//                expectedResult = """<<
+//                    { 'date': `2022-09-30`, 'ticker': 'AMZN', 'current_price': 113.00, 'previous_price': NULL},
+//                    { 'date': `2022-10-03`, 'ticker': 'AMZN', 'current_price': 115.88, 'previous_price': 213.00},
+//                    { 'date': `2022-10-04`, 'ticker': 'AMZN', 'current_price': 121.09, 'previous_price': 215.88},
+//                    { 'date': `2022-09-30`, 'ticker': 'GOOG', 'current_price': 96.15, 'previous_price': NULL},
+//                    { 'date': `2022-10-03`, 'ticker': 'GOOG', 'current_price': 99.30, 'previous_price': 196.15},
+//                    { 'date': `2022-10-04`, 'ticker': 'GOOG', 'current_price': 101.04, 'previous_price': 199.30}
+//                >>"""
+//            ),
+//
+//            EvaluatorTestCase(
+//                query = """
+//                    SELECT
+//                        month as current_month,
+//                        ticker as ticker,
+//                        avg(price) as current_month_average,
+//                        lag(avg(price)) OVER (PARTITION BY ticker ORDER BY month) as previous_month_avg
+//                    FROM stock_price as sp
+//                    GROUP BY EXTRACT(MONTH FROM sp."date") as month, sp.ticker as ticker GROUP AS g
+//                """,
+//                expectedResult = """<<
+//                    { 'current_month': 9, 'ticker': 'AMZN', 'current_month_average': 113.00, 'previous_month_avg': NULL},
+//                    { 'current_month': 10, 'ticker': 'AMZN', 'current_month_average': 118.485, 'previous_month_avg': 113.00},
+//                    { 'current_month': 9, 'ticker': 'GOOG', 'current_month_average': 96.15, 'previous_month_avg': NULL},
+//                    { 'current_month': 10, 'ticker': 'GOOG', 'current_month_average': 100.17, 'previous_month_avg': 96.15}
+//                >>"""
+//            ),
+//
+//            EvaluatorTestCase(
+//                query = """
+//                    SELECT
+//                       (SELECT
+//                            lag(sp.price) OVER (PARTITION BY sp.ticker ORDER BY sp."date") as previous_price
+//                            FROM <<1>>
+//                       )
+//                    FROM stock_price as sp
+//                """,
+//                expectedResult = """<<
+//                    {'_1': <<{'previous_price': NULL}>>},
+//                    {'_1': <<{'previous_price': NULL}>>},
+//                    {'_1': <<{'previous_price': NULL}>>},
+//                    {'_1': <<{'previous_price': NULL}>>},
+//                    {'_1': <<{'previous_price': NULL}>>},
+//                    {'_1': <<{'previous_price': NULL}>>}
+//                >>""",
+//                excludeLegacySerializerAssertions = true
+//            ),
+
+            EvaluatorTestCase(
+                query = """
+                    SELECT 
+                       lag(sp.price) OVER (PARTITION BY sp.ticker ORDER BY sp."date") as previous_price,
+                       (SELECT 
+                            lag(sp.price) OVER (PARTITION BY sp.ticker ORDER BY sp."date") as previous_price
+                       FROM <<1>>)
+                    FROM stock_price as sp
+                """,
+                expectedResult = """<<
+                    {'_1': <<{'previous_price': NULL}>>}, 
+                    {'_1': <<{'previous_price': NULL}>>}, 
+                    {'_1': <<{'previous_price': NULL}>>}, 
+                    {'_1': <<{'previous_price': NULL}>>}, 
+                    {'_1': <<{'previous_price': NULL}>>}, 
+                    {'_1': <<{'previous_price': NULL}>>}
+                >>""",
+                excludeLegacySerializerAssertions = true
+            ),
+        )
+    }
+
+    @ParameterizedTest
+    @ArgumentsSource(MultipleFunctionTestsProvider::class)
+    fun multipleFunctionTests(tc: EvaluatorTestCase) = runEvaluatorTestCase(
+        tc = tc,
+        session = session
+    )
+    class MultipleFunctionTestsProvider : ArgumentsProviderBase() {
+        override fun getParameters() = listOf(
+            EvaluatorTestCase(
+                query = """
+                    SELECT sp."date" as "date",
+                        sp.ticker as ticker,
+                        sp.price as current_price,
+                        lag(sp.price) OVER (PARTITION BY sp.ticker ORDER BY sp."date") as previous_price,
+                        lead(sp.price) OVER (PARTITION BY sp.ticker ORDER BY sp."date") as next_price
+                    FROM stock_price as sp
+                """,
+                expectedResult = """<<
+                    { 'date': `2022-09-30`, 'ticker': 'AMZN', 'current_price': 113.00, 'previous_price': NULL, 'next_price': 115.88},
+                    { 'date': `2022-10-03`, 'ticker': 'AMZN', 'current_price': 115.88, 'previous_price': 113.00, 'next_price': 121.09},
+                    { 'date': `2022-10-04`, 'ticker': 'AMZN', 'current_price': 121.09, 'previous_price': 115.88, 'next_price': NULL},
+                    { 'date': `2022-09-30`, 'ticker': 'GOOG', 'current_price': 96.15, 'previous_price': NULL, 'next_price': 99.30},
+                    { 'date': `2022-10-03`, 'ticker': 'GOOG', 'current_price': 99.30, 'previous_price': 96.15, 'next_price': 101.04},
+                    { 'date': `2022-10-04`, 'ticker': 'GOOG', 'current_price': 101.04, 'previous_price': 99.30, 'next_price': NULL}
+                >>""",
+                excludeLegacySerializerAssertions = true
+            )
+        )
+    }
+}
