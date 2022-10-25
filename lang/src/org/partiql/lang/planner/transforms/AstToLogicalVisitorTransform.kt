@@ -114,7 +114,7 @@ internal class AstToLogicalVisitorTransform(
      *      over
      *      window_expression
      *          $__partiql_window_function_1
-     *          LAG
+     *          LEAD
      *          t.a
      * ```
      */
@@ -130,15 +130,17 @@ internal class AstToLogicalVisitorTransform(
         }
 
         var modifiedAlgebra = algebra
-        windowExpressions.forEachIndexed { index, callWindow ->
-            modifiedAlgebra = callWindow.second.let { callWindowNode ->
+        windowExpressions.forEach { callWindow ->
+            val callWindowNode = callWindow.second
+            val windowFuncGeneratedName = callWindow.first
+            modifiedAlgebra =
                 PartiqlLogical.build {
                     window(
                         modifiedAlgebra,
                         transformOver(callWindowNode.over),
                         PartiqlLogical.build {
                             windowExpression(
-                                varDecl(callWindow.first),
+                                varDecl(windowFuncGeneratedName),
                                 callWindowNode.funcName.text,
                                 callWindowNode.args.map { arg ->
                                     transformExpr(arg)
@@ -148,7 +150,6 @@ internal class AstToLogicalVisitorTransform(
                         }
                     )
                 }
-            }
         }
         return transformedNode to modifiedAlgebra
     }
