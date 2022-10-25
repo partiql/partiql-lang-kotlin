@@ -489,6 +489,8 @@ internal class PlannerPipelineImpl(
             normalizedAst.toLogicalPlan(problemHandler)
         }
 
+        println(logicalPlan)
+
         if (problemHandler.hasErrors) {
             return PlannerPassResult.Error(problemHandler.problems)
         }
