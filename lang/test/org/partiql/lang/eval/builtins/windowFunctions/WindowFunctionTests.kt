@@ -6,6 +6,7 @@ import org.partiql.lang.eval.EvaluatorTestBase
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestAdapter
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestCase
 import org.partiql.lang.eval.evaluatortestframework.MultipleTestAdapter
+import org.partiql.lang.eval.evaluatortestframework.PartiQLCompilerPipelineFactory
 import org.partiql.lang.eval.evaluatortestframework.PipelineEvaluatorTestAdapter
 import org.partiql.lang.eval.evaluatortestframework.PlannerPipelineFactory
 import org.partiql.lang.util.ArgumentsProviderBase
@@ -16,6 +17,7 @@ class WindowFunctionTests : EvaluatorTestBase() {
     override val testHarness: EvaluatorTestAdapter = MultipleTestAdapter(
         listOf(
             PipelineEvaluatorTestAdapter(PlannerPipelineFactory()),
+            PipelineEvaluatorTestAdapter(PartiQLCompilerPipelineFactory())
         )
     )
     private val session = mapOf(

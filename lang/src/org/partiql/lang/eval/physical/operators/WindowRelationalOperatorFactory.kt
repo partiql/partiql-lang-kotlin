@@ -44,9 +44,9 @@ class SortBasedWindowOperator(name: String) : WindowRelationalOperatorFactory(na
     ) = RelationExpression { state ->
 
         // the following corresponding to materialization process
-        val source = source.evaluate(state)
+        val sourceIter = source.evaluate(state)
         val registers = sequence {
-            while (source.nextRow()) {
+            while (sourceIter.nextRow()) {
                 yield(state.registers.clone())
             }
         }
