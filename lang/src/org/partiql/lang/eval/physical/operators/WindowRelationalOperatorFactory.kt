@@ -60,7 +60,7 @@ class SortBasedWindowOperator(name: String) : WindowRelationalOperatorFactory(na
         val sortedRegisters = registers.sortedWith(getSortingComparator(sortKeys, state))
 
         // create the partition here
-        var partition = mutableListOf<List<Array<ExprValue>>>()
+        val partition = mutableListOf<List<Array<ExprValue>>>()
 
         // entire partition
         if (windowPartitionList.isEmpty()) {
@@ -69,7 +69,7 @@ class SortBasedWindowOperator(name: String) : WindowRelationalOperatorFactory(na
         // need to be partitioned
         else {
             val iter = sortedRegisters.iterator()
-            var rowInPartition = mutableListOf<Array<ExprValue>>()
+            val rowInPartition = mutableListOf<Array<ExprValue>>()
             var previousPartition: ExprValue? = null
             while (iter.hasNext()) {
                 val currentRow = iter.next()
