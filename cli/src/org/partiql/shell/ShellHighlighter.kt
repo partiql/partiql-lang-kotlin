@@ -13,130 +13,114 @@
  */
 package org.partiql.shell
 
-import com.amazon.ion.IonString
-import com.amazon.ion.system.IonSystemBuilder
+import org.antlr.v4.runtime.BaseErrorListener
+import org.antlr.v4.runtime.CharStreams
+import org.antlr.v4.runtime.CommonTokenStream
+import org.antlr.v4.runtime.RecognitionException
+import org.antlr.v4.runtime.Recognizer
 import org.jline.reader.Highlighter
 import org.jline.reader.LineReader
 import org.jline.utils.AttributedString
 import org.jline.utils.AttributedStringBuilder
 import org.jline.utils.AttributedStyle
-import org.partiql.lang.errors.Property
-import org.partiql.lang.syntax.ParserException
-import org.partiql.lang.syntax.SqlLexer
-import org.partiql.lang.syntax.SqlParser
-import org.partiql.lang.syntax.Token
-import org.partiql.lang.syntax.TokenType
-import java.io.PrintStream
+import org.partiql.lang.syntax.antlr.PartiQLParser
+import org.partiql.lang.syntax.antlr.PartiQLTokens
+import java.nio.charset.StandardCharsets
 import java.util.regex.Pattern
 
-private val SUCCESS: AttributedStyle = AttributedStyle.DEFAULT.foreground(AttributedStyle.GREEN)
-private val ERROR: AttributedStyle = AttributedStyle.DEFAULT.foreground(AttributedStyle.RED)
-private val INFO: AttributedStyle = AttributedStyle.DEFAULT
-private val WARN: AttributedStyle = AttributedStyle.DEFAULT.foreground(AttributedStyle.YELLOW)
-
-private const val ADD_TO_GLOBAL_ENV = "!add_to_global_env"
-private val ADD_TO_GLOBAL_ENV_COMMAND =
-    AttributedString(ADD_TO_GLOBAL_ENV, AttributedStyle.DEFAULT.foreground(AttributedStyle.CYAN))
+private const val ADD_TO_GLOBAL_ENV_STR = "!add_to_global_env"
 private val ALLOWED_SUFFIXES = setOf("!!")
 
-internal class ShellHighlighter() : Highlighter {
+private val STYLE_COMMAND = AttributedStyle.DEFAULT.foreground(AttributedStyle.CYAN)
+private val STYLE_KEYWORD = AttributedStyle.BOLD.foreground(AttributedStyle.CYAN).bold()
+private val STYLE_DATATYPE = AttributedStyle.DEFAULT.foreground(AttributedStyle.GREEN)
+private val STYLE_IDENTIFIER = AttributedStyle.DEFAULT.foreground(AttributedStyle.BRIGHT)
+private val STYLE_STRING = AttributedStyle.DEFAULT.foreground(AttributedStyle.YELLOW)
+private val STYLE_NUMBER = AttributedStyle.DEFAULT.foreground(AttributedStyle.BLUE)
+private val STYLE_COMMENT = AttributedStyle.DEFAULT.foreground(AttributedStyle.BRIGHT).italic()
+private val STYLE_ERROR = AttributedStyle.DEFAULT.foreground(AttributedStyle.RED)
 
-    private val ion = IonSystemBuilder.standard().build()
-    private val lexer = SqlLexer(ion)
-    private val parser = SqlParser(ion)
+internal class ShellHighlighter : Highlighter {
 
-    /**
-     * Returns a highlighted string by passing the [input] string through the [lexer] and [parser] to identify and
-     * highlight tokens
-     */
     override fun highlight(reader: LineReader, line: String): AttributedString {
 
-        val hasAddToGlobalEnv = line.toLowerCase().startsWith(ADD_TO_GLOBAL_ENV)
-        val input = if (hasAddToGlobalEnv) {
-            line.substring(ADD_TO_GLOBAL_ENV.length, line.length)
-        } else {
-            line
+        val hasAddToGlobalEnv = line.toLowerCase().startsWith(ADD_TO_GLOBAL_ENV_STR)
+        val input = when (hasAddToGlobalEnv) {
+            true -> line.substring(ADD_TO_GLOBAL_ENV_STR.length, line.length)
+            false -> line
         }
 
         if (input.isBlank()) {
-            return if (hasAddToGlobalEnv) {
-                AttributedString(line, AttributedStyle.DEFAULT.foreground(AttributedStyle.CYAN))
-            } else {
-                AttributedString(line)
+            return when (hasAddToGlobalEnv) {
+                true -> AttributedString(line, AttributedStyle.DEFAULT.foreground(AttributedStyle.CYAN))
+                false -> AttributedString(line)
             }
         }
 
-        // Map Between Line Number and Index
-        val lineIndexesMap = mutableMapOf<Int, Int>()
-        var currentLine = 0
-        lineIndexesMap[currentLine] = -1
-        input.forEachIndexed { index, char ->
-            if (char == '\n') lineIndexesMap[++currentLine] = index
-        }
-
-        // Check for Non-PartiQL Suffixes (REPL Only)
-        val lastNewlineIndex = lineIndexesMap[currentLine]!!
-        val suffixString = input.substring(lastNewlineIndex + 1, input.lastIndex + 1)
-        val lastValidQueryIndex = when (currentLine > 0 && ALLOWED_SUFFIXES.contains(suffixString)) {
-            true -> lastNewlineIndex
+        // Temporarily Remove Allowed Suffix from Input
+        val lastNewlineIndex = input.indexOfLast { c -> c == '\n' }
+        val suffixString = input.substring(lastNewlineIndex + 1)
+        val lastValidQueryIndex = when (lastNewlineIndex > 0 && ALLOWED_SUFFIXES.contains(suffixString)) {
+            true -> lastNewlineIndex + 1
             false -> input.length
         }
-
-        // Get Tokens
-        val tokens: List<Token>
-        try {
-            tokens = lexer.tokenize(input.substring(0, lastValidQueryIndex))
-        } catch (e: Exception) {
-            val error = AttributedString(input, AttributedStyle().foreground(AttributedStyle.RED))
-            return if (hasAddToGlobalEnv) {
-                with(AttributedStringBuilder()) {
-                    append(ADD_TO_GLOBAL_ENV_COMMAND)
-                    append(error)
-                    toAttributedString()
-                }
-            } else {
-                error
-            }
-        }
+        val usableInput = input.substring(0, lastValidQueryIndex)
 
         // Build Token Colors (Last Token is EOF)
+        val stream = getTokenStream(usableInput)
+        stream.fill()
+        val tokenIter = stream.tokens.iterator()
         var builder = AttributedStringBuilder()
-        for (tokenIndex in 0..(tokens.size - 2)) {
-            if (tokenIndex == tokens.lastIndex) break
-            val currentToken = tokens[tokenIndex]
-            val preIndex = when (tokenIndex) {
-                0 -> 0
-                else -> {
-                    val prevToken = tokens[tokenIndex - 1]
-                    (getTokenIndex(prevToken, lineIndexesMap) ?: 0) + prevToken.span.length.toInt()
+        var hasError = false
+        while (tokenIter.hasNext()) {
+            val token = tokenIter.next()
+            val type = token.type
+            val text = token.text
+            when {
+                isError(hasError, type) -> {
+                    hasError = true
+                    builder.styled(STYLE_ERROR, text.removeSuffix("<EOF>"))
                 }
+                isDatatype(type) -> builder.styled(STYLE_DATATYPE, text)
+                isIdentifier(type) -> builder.styled(STYLE_IDENTIFIER, text)
+                isString(type) -> builder.styled(STYLE_STRING, text)
+                isLiteral(type) -> builder.styled(STYLE_NUMBER, text)
+                isComment(type) -> builder.styled(STYLE_COMMENT, text)
+                isIonMode(type, text) -> builder.append(text)
+                isKeyword(type, text) -> builder.styled(STYLE_KEYWORD, text)
+                isEOF(type) -> { /* Do nothing */ }
+                else -> builder.append(text)
             }
-            val postIndex = when (tokenIndex) {
-                tokens.lastIndex - 1 -> input.lastIndex + 1
-                else -> (
-                    getTokenIndex(currentToken, lineIndexesMap)
-                        ?: input.lastIndex
-                    ) + currentToken.span.length.toInt()
-            }
-            addToAttributeStringBuilder(currentToken, lineIndexesMap, builder, input, preIndex, postIndex)
         }
+
+        // Re-add Suffix
+        if (usableInput.length < input.length) {
+            builder.append(input.substring(lastValidQueryIndex))
+        }
+
+        // Create Parser
+        val parser = PartiQLParser(getTokenStream(usableInput))
+        parser.removeErrorListeners()
+        parser.addErrorListener(RethrowErrorListener())
 
         // Parse and Replace Token Style if Failures
         try {
-            parser.parseAstStatement(input.substring(0, lastValidQueryIndex))
-        } catch (e: ParserException) {
-            val column =
-                e.errorContext[Property.COLUMN_NUMBER]?.longValue()?.toInt() ?: return builder.toAttributedString()
-            val lineNumber =
-                e.errorContext[Property.LINE_NUMBER]?.longValue()?.toInt() ?: return builder.toAttributedString()
-            val token = tokens.find {
-                it.span.column.toInt() == column && it.span.line.toInt() == lineNumber
-            } ?: return builder.toAttributedString()
-            builder = createAttributeStringBuilder(token, lineIndexesMap, builder)
+            parser.statement()
+        } catch (e: RethrowErrorListener.OffendingSymbolException) {
+            val offending = e.offendingSymbol
+            val prefix = builder.substring(0, offending.startIndex)
+            val insertedStyle = AttributedString(offending.text, STYLE_ERROR)
+            val suffix = builder.substring(offending.stopIndex + 1, builder.length)
+            val replacementBuilder = AttributedStringBuilder()
+            replacementBuilder.append(prefix)
+            replacementBuilder.append(insertedStyle)
+            replacementBuilder.append(suffix)
+            builder = replacementBuilder
         }
+
         return if (hasAddToGlobalEnv) {
             with(AttributedStringBuilder()) {
-                append(ADD_TO_GLOBAL_ENV_COMMAND)
+                append(AttributedString(ADD_TO_GLOBAL_ENV_STR, STYLE_COMMAND))
                 append(builder.toAttributedString())
                 toAttributedString()
             }
@@ -148,97 +132,101 @@ internal class ShellHighlighter() : Highlighter {
     override fun setErrorPattern(errorPattern: Pattern?) {}
 
     override fun setErrorIndex(errorIndex: Int) {}
+}
 
-    /**
-     * Based on the [token] type and location, this function will return a replica of the [stringBuilder] with the
-     * token's location having an updated color-scheme (of color RED). This is used if the [parser] throws a
-     * [ParserException].
-     */
-    private fun createAttributeStringBuilder(
-        token: Token,
-        lineIndexes: Map<Int, Int>,
-        stringBuilder: AttributedStringBuilder
-    ): AttributedStringBuilder {
-        val a = AttributedStringBuilder()
-        val style = AttributedStyle().foreground(AttributedStyle.RED)
-        val length = token.span.length.toInt()
-        val index = getTokenIndex(token, lineIndexes) ?: return a
-        a.append(stringBuilder.subSequence(0, index))
-        a.append(stringBuilder.subSequence(index, index + length), style)
-        a.append(stringBuilder.subSequence(index + length, stringBuilder.length))
-        return a
-    }
-
-    /**
-     * Based on the [token] type and location, this function will modify the [stringBuilder] in place by adding a
-     * [token] and its associated [AttributedStyle]. This is used by the [lexer] to create the highlighted string.
-     */
-    private fun addToAttributeStringBuilder(
-        token: Token,
-        lineIndexes: Map<Int, Int>,
-        stringBuilder: AttributedStringBuilder,
-        input: String,
-        preIndex: Int,
-        postIndex: Int
+/**
+ * A means by which we can return the offending token during parse
+ */
+private class RethrowErrorListener : BaseErrorListener() {
+    @Throws(OffendingSymbolException::class)
+    override fun syntaxError(
+        recognizer: Recognizer<*, *>?,
+        offendingSymbol: Any?,
+        line: Int,
+        charPositionInLine: Int,
+        msg: String?,
+        e: RecognitionException?
     ) {
-        val style = getStyle(token)
-        val length = token.span.length.toInt()
-        val index = getTokenIndex(token, lineIndexes) ?: return
-        stringBuilder.append(input.subSequence(preIndex, index))
-        stringBuilder.append(input.subSequence(index, index + length), style)
-        stringBuilder.append(input.subSequence(index + length, postIndex))
-    }
-
-    /**
-     * Gets the index of a specific token
-     */
-    private fun getTokenIndex(token: Token, lineIndexes: Map<Int, Int>): Int? {
-        val column = token.span.column.toInt()
-        val lineNumber = token.span.line.toInt() - 1
-        return lineIndexes[lineNumber]?.plus(column)
-    }
-
-    /**
-     * Sets the color and thickness of the string based on the [token] type
-     */
-    private fun getStyle(token: Token): AttributedStyle {
-        var style = AttributedStyle()
-        val attrCode = when (token.type) {
-            TokenType.KEYWORD -> if (token.isDataType) AttributedStyle.GREEN else AttributedStyle.CYAN
-            TokenType.AS, TokenType.FOR, TokenType.ASC, TokenType.LAST, TokenType.DESC,
-            TokenType.BY, TokenType.FIRST -> AttributedStyle.CYAN
-            TokenType.LITERAL -> if (token.value is IonString) AttributedStyle.YELLOW else AttributedStyle.BLUE
-            TokenType.ION_LITERAL -> AttributedStyle.YELLOW
-            TokenType.OPERATOR -> AttributedStyle.WHITE
-            TokenType.QUOTED_IDENTIFIER -> AttributedStyle.BRIGHT
-            TokenType.IDENTIFIER -> AttributedStyle.BRIGHT
-            TokenType.MISSING -> AttributedStyle.BLUE
-            TokenType.NULL -> AttributedStyle.BLUE
-            else -> AttributedStyle.WHITE
-        }
-        style = style.foreground(attrCode)
-
-        return when (token.type) {
-            TokenType.IDENTIFIER, TokenType.OPERATOR -> style.bold()
-            else -> style
+        if (offendingSymbol != null && offendingSymbol is org.antlr.v4.runtime.Token && offendingSymbol.type != PartiQLParser.EOF) {
+            throw OffendingSymbolException(offendingSymbol)
         }
     }
+
+    class OffendingSymbolException(val offendingSymbol: org.antlr.v4.runtime.Token) : Exception()
 }
 
-private fun ansi(string: String, style: AttributedStyle) = AttributedString(string, style).toAnsi()
-
-fun PrintStream.success(string: String) {
-    this.println(ansi(string, SUCCESS))
+private fun getTokenStream(input: String): CommonTokenStream {
+    val inputStream = CharStreams.fromStream(input.byteInputStream(StandardCharsets.UTF_8), StandardCharsets.UTF_8)
+    val tokenizer = PartiQLTokens(inputStream)
+    tokenizer.removeErrorListeners()
+    return CommonTokenStream(tokenizer)
 }
 
-fun PrintStream.error(string: String) {
-    this.println(ansi(string, ERROR))
+private fun isKeyword(type: Int, text: String): Boolean = PartiQLTokens.VOCABULARY.getSymbolicName(type).equals(text, ignoreCase = true)
+
+private fun isDatatype(type: Int) = when (type) {
+    PartiQLTokens.SMALLINT,
+    PartiQLTokens.INT,
+    PartiQLTokens.INT2,
+    PartiQLTokens.INTEGER,
+    PartiQLTokens.INTEGER2,
+    PartiQLTokens.INT4,
+    PartiQLTokens.INTEGER4,
+    PartiQLTokens.INT8,
+    PartiQLTokens.INTEGER8,
+    PartiQLTokens.BIGINT,
+    PartiQLTokens.REAL,
+    PartiQLTokens.TIMESTAMP,
+    PartiQLTokens.DATE,
+    PartiQLTokens.SYMBOL,
+    PartiQLTokens.STRING,
+    PartiQLTokens.BLOB,
+    PartiQLTokens.CLOB,
+    PartiQLTokens.STRUCT,
+    PartiQLTokens.TUPLE,
+    PartiQLTokens.BAG,
+    PartiQLTokens.LIST,
+    PartiQLTokens.SEXP,
+    PartiQLTokens.DECIMAL,
+    PartiQLTokens.FLOAT,
+    PartiQLTokens.CHAR,
+    PartiQLTokens.CHARACTER,
+    PartiQLTokens.VARYING,
+    PartiQLTokens.VARCHAR,
+    PartiQLTokens.NULL,
+    PartiQLTokens.MISSING,
+    PartiQLTokens.BOOL,
+    PartiQLTokens.BOOLEAN,
+    PartiQLTokens.ANY -> true
+    else -> false
 }
 
-fun PrintStream.info(string: String) {
-    this.println(ansi(string, INFO))
+private fun isIonMode(type: Int, text: String) = type == PartiQLTokens.EOF && text.contains("<EOF>").not()
+
+private fun isEOF(type: Int) = type == PartiQLTokens.EOF
+
+private fun isIdentifier(type: Int) = when (type) {
+    PartiQLTokens.IDENTIFIER,
+    PartiQLTokens.IDENTIFIER_QUOTED -> true
+    else -> false
 }
 
-fun PrintStream.warn(string: String) {
-    this.println(ansi(string, WARN))
+private fun isString(type: Int) = when (type) {
+    PartiQLTokens.LITERAL_STRING -> true
+    else -> false
 }
+
+private fun isLiteral(type: Int) = when (type) {
+    PartiQLTokens.ION_CLOSURE,
+    PartiQLTokens.LITERAL_DECIMAL,
+    PartiQLTokens.LITERAL_INTEGER -> true
+    else -> false
+}
+
+private fun isComment(type: Int) = when (type) {
+    PartiQLTokens.COMMENT_SINGLE,
+    PartiQLTokens.COMMENT_BLOCK -> true
+    else -> false
+}
+
+private fun isError(hasError: Boolean, type: Int) = (hasError || type == PartiQLTokens.UNRECOGNIZED)
