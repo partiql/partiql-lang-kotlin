@@ -28,19 +28,21 @@ import org.partiql.lang.syntax.antlr.PartiQLTokens
 import java.nio.charset.StandardCharsets
 import java.util.regex.Pattern
 
-private const val ADD_TO_GLOBAL_ENV_STR = "!add_to_global_env"
-private val ALLOWED_SUFFIXES = setOf("!!")
-
-private val STYLE_COMMAND = AttributedStyle.DEFAULT.foreground(AttributedStyle.CYAN)
-private val STYLE_KEYWORD = AttributedStyle.BOLD.foreground(AttributedStyle.CYAN).bold()
-private val STYLE_DATATYPE = AttributedStyle.DEFAULT.foreground(AttributedStyle.GREEN)
-private val STYLE_IDENTIFIER = AttributedStyle.DEFAULT.foreground(AttributedStyle.BRIGHT)
-private val STYLE_STRING = AttributedStyle.DEFAULT.foreground(AttributedStyle.YELLOW)
-private val STYLE_NUMBER = AttributedStyle.DEFAULT.foreground(AttributedStyle.BLUE)
-private val STYLE_COMMENT = AttributedStyle.DEFAULT.foreground(AttributedStyle.BRIGHT).italic()
-private val STYLE_ERROR = AttributedStyle.DEFAULT.foreground(AttributedStyle.RED)
-
 internal class ShellHighlighter : Highlighter {
+
+    companion object {
+        private const val ADD_TO_GLOBAL_ENV_STR = "!add_to_global_env"
+        private val ALLOWED_SUFFIXES = setOf("!!")
+
+        private val STYLE_COMMAND = AttributedStyle.DEFAULT.foreground(AttributedStyle.CYAN)
+        private val STYLE_KEYWORD = AttributedStyle.BOLD.foreground(AttributedStyle.CYAN).bold()
+        private val STYLE_DATATYPE = AttributedStyle.DEFAULT.foreground(AttributedStyle.GREEN)
+        private val STYLE_IDENTIFIER = AttributedStyle.DEFAULT.foreground(AttributedStyle.BRIGHT)
+        private val STYLE_STRING = AttributedStyle.DEFAULT.foreground(AttributedStyle.YELLOW)
+        private val STYLE_NUMBER = AttributedStyle.DEFAULT.foreground(AttributedStyle.BLUE)
+        private val STYLE_COMMENT = AttributedStyle.DEFAULT.foreground(AttributedStyle.BRIGHT).italic()
+        private val STYLE_ERROR = AttributedStyle.DEFAULT.foreground(AttributedStyle.RED)
+    }
 
     override fun highlight(reader: LineReader, line: String): AttributedString {
 
@@ -67,20 +69,13 @@ internal class ShellHighlighter : Highlighter {
         val usableInput = input.substring(0, lastValidQueryIndex)
 
         // Build Token Colors (Last Token is EOF)
-        val stream = getTokenStream(usableInput)
-        stream.fill()
-        val tokenIter = stream.tokens.iterator()
+        val tokenIter = getTokenStream(usableInput).also { it.fill() }.tokens.iterator()
         var builder = AttributedStringBuilder()
-        var hasError = false
         while (tokenIter.hasNext()) {
             val token = tokenIter.next()
-            val type = token.type
-            val text = token.text
+            val (type, text) = token.type to token.text
             when {
-                isError(hasError, type) -> {
-                    hasError = true
-                    builder.styled(STYLE_ERROR, text.removeSuffix("<EOF>"))
-                }
+                isUnrecognized(type) -> builder.styled(STYLE_ERROR, text)
                 isDatatype(type) -> builder.styled(STYLE_DATATYPE, text)
                 isIdentifier(type) -> builder.styled(STYLE_IDENTIFIER, text)
                 isString(type) -> builder.styled(STYLE_STRING, text)
@@ -88,7 +83,7 @@ internal class ShellHighlighter : Highlighter {
                 isComment(type) -> builder.styled(STYLE_COMMENT, text)
                 isIonMode(type, text) -> builder.append(text)
                 isKeyword(type, text) -> builder.styled(STYLE_KEYWORD, text)
-                isEOF(type) -> { /* Do nothing */ }
+                isEOF(type) -> builder.styled(STYLE_ERROR, text.removeSuffix("<EOF>"))
                 else -> builder.append(text)
             }
         }
@@ -132,101 +127,79 @@ internal class ShellHighlighter : Highlighter {
     override fun setErrorPattern(errorPattern: Pattern?) {}
 
     override fun setErrorIndex(errorIndex: Int) {}
-}
 
-/**
- * A means by which we can return the offending token during parse
- */
-private class RethrowErrorListener : BaseErrorListener() {
-    @Throws(OffendingSymbolException::class)
-    override fun syntaxError(
-        recognizer: Recognizer<*, *>?,
-        offendingSymbol: Any?,
-        line: Int,
-        charPositionInLine: Int,
-        msg: String?,
-        e: RecognitionException?
-    ) {
-        if (offendingSymbol != null && offendingSymbol is org.antlr.v4.runtime.Token && offendingSymbol.type != PartiQLParser.EOF) {
-            throw OffendingSymbolException(offendingSymbol)
+    /**
+     * A means by which we can return the offending token during parse
+     */
+    private class RethrowErrorListener : BaseErrorListener() {
+        @Throws(OffendingSymbolException::class)
+        override fun syntaxError(
+            recognizer: Recognizer<*, *>?,
+            offendingSymbol: Any?,
+            line: Int,
+            charPositionInLine: Int,
+            msg: String?,
+            e: RecognitionException?
+        ) {
+            if (offendingSymbol != null && offendingSymbol is org.antlr.v4.runtime.Token && offendingSymbol.type != PartiQLParser.EOF) {
+                throw OffendingSymbolException(offendingSymbol)
+            }
         }
+
+        class OffendingSymbolException(val offendingSymbol: org.antlr.v4.runtime.Token) : Exception()
     }
 
-    class OffendingSymbolException(val offendingSymbol: org.antlr.v4.runtime.Token) : Exception()
+    private fun getTokenStream(input: String): CommonTokenStream {
+        val inputStream = CharStreams.fromStream(input.byteInputStream(StandardCharsets.UTF_8), StandardCharsets.UTF_8)
+        val tokenizer = PartiQLTokens(inputStream)
+        tokenizer.removeErrorListeners()
+        return CommonTokenStream(tokenizer)
+    }
+
+    private fun isKeyword(type: Int, text: String): Boolean = PartiQLTokens.VOCABULARY.getSymbolicName(type).equals(text, ignoreCase = true)
+
+    private fun isDatatype(type: Int) = when (type) {
+        PartiQLTokens.SMALLINT, PartiQLTokens.INT, PartiQLTokens.INT2, PartiQLTokens.INTEGER, PartiQLTokens.INTEGER2,
+        PartiQLTokens.INT4, PartiQLTokens.INTEGER4, PartiQLTokens.INT8, PartiQLTokens.INTEGER8, PartiQLTokens.BIGINT,
+        PartiQLTokens.REAL, PartiQLTokens.TIMESTAMP, PartiQLTokens.DATE, PartiQLTokens.SYMBOL, PartiQLTokens.STRING,
+        PartiQLTokens.BLOB, PartiQLTokens.CLOB, PartiQLTokens.STRUCT, PartiQLTokens.TUPLE, PartiQLTokens.BAG,
+        PartiQLTokens.LIST, PartiQLTokens.SEXP, PartiQLTokens.DECIMAL, PartiQLTokens.FLOAT, PartiQLTokens.CHAR,
+        PartiQLTokens.CHARACTER, PartiQLTokens.VARYING, PartiQLTokens.VARCHAR, PartiQLTokens.NULL, PartiQLTokens.MISSING,
+        PartiQLTokens.BOOL, PartiQLTokens.BOOLEAN, PartiQLTokens.ANY -> true
+        else -> false
+    }
+
+    /**
+     * ANTLR treats the Ion island mode a bit oddly -- essentially, the accumulation of tokens in Ion mode, for some reason,
+     * is associated with the EOF token.
+     */
+    private fun isIonMode(type: Int, text: String) = type == PartiQLTokens.EOF && text.contains("<EOF>").not()
+
+    private fun isEOF(type: Int) = type == PartiQLTokens.EOF
+
+    private fun isIdentifier(type: Int) = when (type) {
+        PartiQLTokens.IDENTIFIER,
+        PartiQLTokens.IDENTIFIER_QUOTED -> true
+        else -> false
+    }
+
+    private fun isString(type: Int) = when (type) {
+        PartiQLTokens.LITERAL_STRING -> true
+        else -> false
+    }
+
+    private fun isLiteral(type: Int) = when (type) {
+        PartiQLTokens.ION_CLOSURE,
+        PartiQLTokens.LITERAL_DECIMAL,
+        PartiQLTokens.LITERAL_INTEGER -> true
+        else -> false
+    }
+
+    private fun isComment(type: Int) = when (type) {
+        PartiQLTokens.COMMENT_SINGLE,
+        PartiQLTokens.COMMENT_BLOCK -> true
+        else -> false
+    }
+
+    private fun isUnrecognized(type: Int) = type == PartiQLTokens.UNRECOGNIZED
 }
-
-private fun getTokenStream(input: String): CommonTokenStream {
-    val inputStream = CharStreams.fromStream(input.byteInputStream(StandardCharsets.UTF_8), StandardCharsets.UTF_8)
-    val tokenizer = PartiQLTokens(inputStream)
-    tokenizer.removeErrorListeners()
-    return CommonTokenStream(tokenizer)
-}
-
-private fun isKeyword(type: Int, text: String): Boolean = PartiQLTokens.VOCABULARY.getSymbolicName(type).equals(text, ignoreCase = true)
-
-private fun isDatatype(type: Int) = when (type) {
-    PartiQLTokens.SMALLINT,
-    PartiQLTokens.INT,
-    PartiQLTokens.INT2,
-    PartiQLTokens.INTEGER,
-    PartiQLTokens.INTEGER2,
-    PartiQLTokens.INT4,
-    PartiQLTokens.INTEGER4,
-    PartiQLTokens.INT8,
-    PartiQLTokens.INTEGER8,
-    PartiQLTokens.BIGINT,
-    PartiQLTokens.REAL,
-    PartiQLTokens.TIMESTAMP,
-    PartiQLTokens.DATE,
-    PartiQLTokens.SYMBOL,
-    PartiQLTokens.STRING,
-    PartiQLTokens.BLOB,
-    PartiQLTokens.CLOB,
-    PartiQLTokens.STRUCT,
-    PartiQLTokens.TUPLE,
-    PartiQLTokens.BAG,
-    PartiQLTokens.LIST,
-    PartiQLTokens.SEXP,
-    PartiQLTokens.DECIMAL,
-    PartiQLTokens.FLOAT,
-    PartiQLTokens.CHAR,
-    PartiQLTokens.CHARACTER,
-    PartiQLTokens.VARYING,
-    PartiQLTokens.VARCHAR,
-    PartiQLTokens.NULL,
-    PartiQLTokens.MISSING,
-    PartiQLTokens.BOOL,
-    PartiQLTokens.BOOLEAN,
-    PartiQLTokens.ANY -> true
-    else -> false
-}
-
-private fun isIonMode(type: Int, text: String) = type == PartiQLTokens.EOF && text.contains("<EOF>").not()
-
-private fun isEOF(type: Int) = type == PartiQLTokens.EOF
-
-private fun isIdentifier(type: Int) = when (type) {
-    PartiQLTokens.IDENTIFIER,
-    PartiQLTokens.IDENTIFIER_QUOTED -> true
-    else -> false
-}
-
-private fun isString(type: Int) = when (type) {
-    PartiQLTokens.LITERAL_STRING -> true
-    else -> false
-}
-
-private fun isLiteral(type: Int) = when (type) {
-    PartiQLTokens.ION_CLOSURE,
-    PartiQLTokens.LITERAL_DECIMAL,
-    PartiQLTokens.LITERAL_INTEGER -> true
-    else -> false
-}
-
-private fun isComment(type: Int) = when (type) {
-    PartiQLTokens.COMMENT_SINGLE,
-    PartiQLTokens.COMMENT_BLOCK -> true
-    else -> false
-}
-
-private fun isError(hasError: Boolean, type: Int) = (hasError || type == PartiQLTokens.UNRECOGNIZED)
