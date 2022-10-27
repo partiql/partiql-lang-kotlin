@@ -54,8 +54,7 @@ private class CsvRowExprValue(private val valueFactory: ExprValueFactory, privat
     override fun iterator() = rowValues.values.iterator()
 
     /** The Ion representation of the current value. */
-    override val ionValue: IonValue
-        get() = lazyIonValue
+    fun toIonValue(): IonValue = lazyIonValue
 
     private val bindingsInstance by lazy {
         Bindings.ofMap(rowValues)

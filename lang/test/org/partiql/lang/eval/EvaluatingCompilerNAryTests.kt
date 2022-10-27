@@ -21,6 +21,7 @@ import junitparams.Parameters
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.partiql.lang.CompilerPipeline
+import org.partiql.lang.ION
 import org.partiql.lang.domains.PartiqlAst
 
 /**
@@ -146,7 +147,7 @@ class EvaluatingCompilerNAryTests : EvaluatorTestBase() {
         val pipeline = CompilerPipeline.standard(ion)
         val expr = pipeline.compile(astExpr)
         val result = expr.eval(session)
-        assertEquals(expectedExprValue.ionValue, result.ionValue)
+        assertEquals(expectedExprValue.toIonValue(ION), result.toIonValue(ION))
     }
 
     /**

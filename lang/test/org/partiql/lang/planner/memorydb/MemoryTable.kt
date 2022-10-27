@@ -1,5 +1,6 @@
 package org.partiql.lang.planner.memorydb
 
+import org.partiql.lang.ION
 import org.partiql.lang.ast.DeleteOp.name
 import org.partiql.lang.eval.BindingCase
 import org.partiql.lang.eval.BindingName
@@ -7,6 +8,7 @@ import org.partiql.lang.eval.DEFAULT_COMPARATOR
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.ExprValueType
+import org.partiql.lang.eval.toIonValue
 import java.util.TreeMap
 
 /**
@@ -50,7 +52,7 @@ class MemoryTable(
             // We have to detatch the ExprValue from any lazily evaluated query that may get invoked
             // whenever the value is accessed.  To do this we convert to Ion, which forces full materialization,
             // and then create a new ExprValue based off the Ion.
-            val rowStruct = row.ionValue
+            val rowStruct = row.toIonValue(ION)
             rows[primaryKeyExprValue] = valueFactory.newFromIonValue(rowStruct)
         }
     }

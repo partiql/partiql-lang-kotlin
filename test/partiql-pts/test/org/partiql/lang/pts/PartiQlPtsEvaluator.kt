@@ -11,6 +11,7 @@ import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.name
 import org.partiql.lang.eval.stringValue
+import org.partiql.lang.eval.toIonValue
 import org.partiql.testscript.compiler.AppendedTestExpression
 import org.partiql.testscript.compiler.ExpectedError
 import org.partiql.testscript.compiler.ExpectedSuccess
@@ -93,7 +94,7 @@ class PartiQlPtsEvaluator(equality: PtsEquality) : Evaluator(equality) {
             ExprValueType.SYMBOL,
             ExprValueType.STRING,
             ExprValueType.CLOB,
-            ExprValueType.BLOB -> this.ionValue.clone()
+            ExprValueType.BLOB -> this.toIonValue(ion).clone()
             ExprValueType.LIST -> this.foldToIonSequence(ion.newEmptyList())
             ExprValueType.SEXP -> this.foldToIonSequence(ion.newEmptySexp())
             ExprValueType.STRUCT -> this.fold(ion.newEmptyStruct()) { struct, el ->

@@ -16,6 +16,7 @@ package org.partiql.cli.functions
 
 import com.amazon.ion.IonStruct
 import com.amazon.ion.system.IonReaderBuilder
+import com.amazon.ion.system.IonSystemBuilder
 import org.apache.commons.csv.CSVFormat
 import org.partiql.extensions.cli.functions.BaseFunction
 import org.partiql.lang.eval.EvaluationSession
@@ -24,6 +25,7 @@ import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.io.DelimitedValues
 import org.partiql.lang.eval.io.DelimitedValues.ConversionMode
 import org.partiql.lang.eval.stringValue
+import org.partiql.lang.eval.toIonValue
 import org.partiql.lang.types.FunctionSignature
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.util.asIonStruct
@@ -34,6 +36,8 @@ import java.io.InputStream
 import java.io.InputStreamReader
 
 internal class ReadFile(valueFactory: ExprValueFactory) : BaseFunction(valueFactory) {
+    private val ion = IonSystemBuilder.standard().build()
+
     override val signature = FunctionSignature(
         name = "read_file",
         requiredParameters = listOf(StaticType.STRING),
@@ -110,7 +114,7 @@ internal class ReadFile(valueFactory: ExprValueFactory) : BaseFunction(valueFact
     }
 
     override fun callWithOptional(session: EvaluationSession, required: List<ExprValue>, opt: ExprValue): ExprValue {
-        val options = opt.ionValue.asIonStruct()
+        val options = opt.toIonValue(ion).asIonStruct()
         val fileName = required[0].stringValue()
         val fileType = options["type"]?.stringValue() ?: "ion"
         val handler = readHandlers[fileType] ?: throw IllegalArgumentException("Unknown file type: $fileType")

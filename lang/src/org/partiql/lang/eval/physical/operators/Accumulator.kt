@@ -163,7 +163,7 @@ private fun comparisonAccumulator(comparator: NaturalExprValueComparators): (Exp
 internal fun checkIsNumberType(funcName: String, value: ExprValue) {
     if (!value.type.isNumber) {
         errNoContext(
-            message = "Aggregate function $funcName expects arguments of NUMBER type but the following value was provided: ${value.ionValue}, with type of ${value.type}",
+            message = "Aggregate function $funcName expects arguments of NUMBER type but the following value was provided: $value, with type of ${value.type}",
             errorCode = ErrorCode.EVALUATOR_INVALID_ARGUMENTS_FOR_AGG_FUNCTION,
             internal = false
         )

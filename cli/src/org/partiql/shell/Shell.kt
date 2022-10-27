@@ -14,6 +14,7 @@
 
 package org.partiql.shell
 
+import com.amazon.ion.system.IonSystemBuilder
 import com.amazon.ion.system.IonTextWriterBuilder
 import com.amazon.ionelement.api.toIonValue
 import com.google.common.base.CharMatcher
@@ -36,6 +37,7 @@ import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.delegate
+import org.partiql.lang.eval.toIonValue
 import org.partiql.lang.syntax.Parser
 import org.partiql.lang.util.ConfigurableExprValueFormatter
 import org.partiql.lang.util.ExprValueFormatter
@@ -81,6 +83,7 @@ class Shell(
     private val initialGlobal: Bindings<ExprValue>,
     private val config: ShellConfiguration = ShellConfiguration()
 ) {
+    private val ion = IonSystemBuilder.standard().build()
 
     private val homeDir: Path = Paths.get(System.getProperty("user.home"))
     private val globals = ShellGlobalBinding(valueFactory).add(initialGlobal)
@@ -90,7 +93,7 @@ class Shell(
         val writer = IonTextWriterBuilder.pretty().build(output)
 
         override fun formatTo(value: ExprValue, out: Appendable) {
-            value.ionValue.writeTo(writer)
+            value.toIonValue(ion).writeTo(writer)
             writer.flush()
         }
     }

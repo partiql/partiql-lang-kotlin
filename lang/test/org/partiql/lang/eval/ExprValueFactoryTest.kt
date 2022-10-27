@@ -23,6 +23,7 @@ import junitparams.Parameters
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.partiql.lang.ION
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.time.Time
 import org.partiql.lang.util.isBag
@@ -90,7 +91,7 @@ class ExprValueFactoryTest {
         assertTrue(tc.value.none())
 
         // The IonValue should match the expected value
-        assertEquals(tc.expectedIonValue, tc.value.ionValue)
+        assertEquals(tc.expectedIonValue, tc.value.toIonValue(ION))
 
         // An ExprValue created from tc.expectedIonValue must be equivalent to tc.value
         val exprValueFromExpectedIonValue = factory.newFromIonValue(tc.expectedIonValue)
@@ -192,7 +193,7 @@ class ExprValueFactoryTest {
     }
 
     private fun assertEquivalentAfterConversionToIon(value: ExprValue) {
-        val reconstitutedValue = factory.newFromIonValue(value.ionValue)
+        val reconstitutedValue = factory.newFromIonValue(value.toIonValue(ION))
         assertEquals(0, DEFAULT_COMPARATOR.compare(value, reconstitutedValue))
     }
 
@@ -208,14 +209,14 @@ class ExprValueFactoryTest {
     fun emptyBag() {
         assertEquals(ExprValueType.BAG, factory.emptyBag.type)
         assertTrue(factory.emptyBag.none())
-        assertEquals(ion.singleValue("$BAG_ANNOTATION::[]"), factory.emptyBag.ionValue)
+        assertEquals(ion.singleValue("$BAG_ANNOTATION::[]"), factory.emptyBag.toIonValue(ION))
     }
 
     @Test
     fun emptyList() {
         assertEquals(ExprValueType.LIST, factory.emptyList.type)
         assertTrue(factory.emptyList.none())
-        assertEquals(ion.singleValue("[]"), factory.emptyList.ionValue)
+        assertEquals(ion.singleValue("[]"), factory.emptyList.toIonValue(ION))
         assertEquivalentAfterConversionToIon(factory.emptyList)
     }
 
@@ -240,20 +241,14 @@ class ExprValueFactoryTest {
     private val testBag = "$BAG_ANNOTATION::[1,2,3]"
     private val bagFromSequence = factory.newBag(testListExprValues.asSequence())
     private val bagFromList = factory.newBag(testListExprValues)
-    private val ddbList = "\$ddb_NS::[1,2,3]"
-    private val ddbListWithMultipleAnnotations = "\$ddb_NS::$BAG_ANNOTATION::[1,2,3]"
-    private val ddbListWithMultipleAnnotationsUnordered = "$BAG_ANNOTATION::\$ddb_NS::[1,2,3]"
 
     fun parametersForNonEmptyContainers() = listOf(
         TestCase(ExprValueType.LIST, null, ionList, factory.newList(testListExprValues.asSequence())),
         TestCase(ExprValueType.LIST, null, ionList, factory.newList(testListExprValues)),
-        TestCase(ExprValueType.LIST, null, ion.singleValue(ddbList), factory.newFromIonValue(ion.singleValue(ddbList))),
         TestCase(ExprValueType.SEXP, null, ionSexp, factory.newSexp(testListExprValues.asSequence())),
         TestCase(ExprValueType.SEXP, null, ionSexp, factory.newSexp(testListExprValues)),
         TestCase(ExprValueType.BAG, null, ion.singleValue(testBag), bagFromSequence),
-        TestCase(ExprValueType.BAG, null, ion.singleValue(testBag), bagFromList),
-        TestCase(ExprValueType.BAG, null, ion.singleValue(ddbListWithMultipleAnnotations), factory.newFromIonValue(ion.singleValue(ddbListWithMultipleAnnotations))),
-        TestCase(ExprValueType.BAG, null, ion.singleValue(ddbListWithMultipleAnnotationsUnordered), factory.newFromIonValue(ion.singleValue(ddbListWithMultipleAnnotationsUnordered)))
+        TestCase(ExprValueType.BAG, null, ion.singleValue(testBag), bagFromList)
     )
 
     @Test
@@ -263,29 +258,29 @@ class ExprValueFactoryTest {
             ExprValueType.BAG -> {
                 assertEquals(ExprValueType.BAG, tc.value.type)
                 assertBagValues(tc.value)
-                assertTrue(tc.value.ionValue.isBag)
-                assertEquals(tc.expectedIonValue, tc.value.ionValue)
+                assertTrue(tc.value.toIonValue(ION).isBag)
+                assertEquals(tc.expectedIonValue, tc.value.toIonValue(ION))
 
-                val fromIonValue = factory.newFromIonValue(tc.value.ionValue)
+                val fromIonValue = factory.newFromIonValue(tc.value.toIonValue(ION))
                 assertEquals(ExprValueType.BAG, fromIonValue.type) // Ion has no bag type--[bag.ionVaule] converts to a list with annotation $partiql_bag
                 assertBagValues(fromIonValue)
-                assertEquals(fromIonValue.ionValue, tc.value.ionValue)
+                assertEquals(fromIonValue.toIonValue(ION), tc.value.toIonValue(ION))
 
-                assertTrue(fromIonValue.ionValue.isBag, "The ion value should be ionList with annotation $BAG_ANNOTATION")
-                assertEquals(1, fromIonValue.ionValue.typeAnnotations.count { it == BAG_ANNOTATION })
+                assertTrue(fromIonValue.toIonValue(ION).isBag, "The ion value should be ionList with annotation $BAG_ANNOTATION")
+                assertEquals(1, fromIonValue.toIonValue(ION).typeAnnotations.count { it == BAG_ANNOTATION })
             }
             ExprValueType.LIST -> {
                 assertEquals(ExprValueType.LIST, tc.value.type)
                 assertOrderedContainer(tc.value)
 
-                assertEquals(tc.expectedIonValue, tc.value.ionValue)
+                assertEquals(tc.expectedIonValue, tc.value.toIonValue(ION))
                 assertEquivalentAfterConversionToIon(tc.value)
             }
             ExprValueType.SEXP -> {
                 assertEquals(ExprValueType.SEXP, tc.value.type)
                 assertOrderedContainer(tc.value)
 
-                assertEquals(tc.expectedIonValue, tc.value.ionValue)
+                assertEquals(tc.expectedIonValue, tc.value.toIonValue(ION))
                 assertEquivalentAfterConversionToIon(tc.value)
             }
             else -> fail("Unexpected ExprValueType: ${tc.expectedType}")
@@ -329,7 +324,7 @@ class ExprValueFactoryTest {
     @Parameters(method = "nonEmptyUnorderedStructs")
     fun nonEmptyUnorderedStruct(struct: ExprValue) {
         assertUnorderderedStructValues(struct)
-        assertUnorderderedStructValues(factory.newFromIonValue(struct.ionValue))
+        assertUnorderderedStructValues(factory.newFromIonValue(struct.toIonValue(ION)))
         assertEquivalentAfterConversionToIon(struct)
     }
 
@@ -360,7 +355,7 @@ class ExprValueFactoryTest {
     @Parameters(method = "nonEmptyOrderedStructs")
     fun nonEmptyOrderedStruct(struct: ExprValue) {
         assertOrderedStructValues(struct)
-        assertOrderedStructValues(factory.newFromIonValue(struct.ionValue))
+        assertOrderedStructValues(factory.newFromIonValue(struct.toIonValue(ION)))
         assertEquivalentAfterConversionToIon(struct)
     }
 
@@ -378,37 +373,26 @@ class ExprValueFactoryTest {
     }
 
     @Test
-    fun newFromIonValueThrowsIfNotSameIonSystem() {
-        val otherIonSystem = IonSystemBuilder.standard().build()
-        try {
-            factory.newFromIonValue(otherIonSystem.newInt(1))
-            fail("no exception thrown")
-        } catch (e: IllegalArgumentException) {
-            /* intentionally left blank */
-        }
-    }
-
-    @Test
     fun serializeDeserializeMissing() {
         // Deserialize - IonValue to ExprValue using newFromIonValue
         val ionValue = ion.newNull().also { it.addTypeAnnotation(MISSING_ANNOTATION) }
         val exprValue = factory.newFromIonValue(ionValue)
         assertEquals(ExprValueType.MISSING, exprValue.type)
-        assertEquals(exprValue.ionValue, ionValue)
+        assertEquals(exprValue.toIonValue(ION), ionValue)
 
         // Deserialize - IonValue to ExprValue using factory's missing value
         val exprValueFromFactory = factory.missingValue
         assertEquals(ExprValueType.MISSING, exprValueFromFactory.type)
 
         // Serialize - ExprValue to IonValue using ionValue by lazy
-        val missingIonValue = factory.missingValue.ionValue
+        val missingIonValue = factory.missingValue.toIonValue(ION)
         assertTrue(missingIonValue.isMissing, "The ion value should be ionNull with annotation $MISSING_ANNOTATION")
 
         // Ensure round trip doesn't add the annotation if it already has $partiql_missing annotation
-        val roundTrippedMissingExprValue = factory.newFromIonValue(exprValueFromFactory.ionValue)
-        assertTrue(roundTrippedMissingExprValue.ionValue.isMissing, "The ion value should be ionNull with annotation $MISSING_ANNOTATION")
-        assertEquals(1, roundTrippedMissingExprValue.ionValue.typeAnnotations.size)
-        assertEquals(MISSING_ANNOTATION, roundTrippedMissingExprValue.ionValue.typeAnnotations[0])
+        val roundTrippedMissingExprValue = factory.newFromIonValue(exprValueFromFactory.toIonValue(ION))
+        assertTrue(roundTrippedMissingExprValue.toIonValue(ION).isMissing, "The ion value should be ionNull with annotation $MISSING_ANNOTATION")
+        assertEquals(1, roundTrippedMissingExprValue.toIonValue(ION).typeAnnotations.size)
+        assertEquals(MISSING_ANNOTATION, roundTrippedMissingExprValue.toIonValue(ION).typeAnnotations[0])
     }
 
     @Test
@@ -417,20 +401,20 @@ class ExprValueFactoryTest {
         val ionValue = ion.newList(ion.newInt(1), ion.newInt(2), ion.newInt(3)).also { it.addTypeAnnotation(BAG_ANNOTATION) }
         val exprValue = factory.newFromIonValue(ionValue)
         assertEquals(ExprValueType.BAG, exprValue.type)
-        assertEquals(exprValue.ionValue, ionValue)
+        assertEquals(exprValue.toIonValue(ION), ionValue)
 
         // Deserialize - IonValue to ExprValue using newBag, newBag adds $partiql_bag annotation to the list
         val exprValueFromFactory = factory.newBag(listOf(factory.newInt(1), factory.newInt(2), factory.newInt(3)).asSequence())
         assertEquals(ExprValueType.BAG, exprValueFromFactory.type)
 
         // Serialize - ExprValue to IonValue using ionValue by lazy
-        assertTrue(exprValueFromFactory.ionValue.isBag)
+        assertTrue(exprValueFromFactory.toIonValue(ION).isBag)
 
         // Ensure round trip doesn't add the annotation if it already has $partiql_bag annotation
-        val roundTrippedBagExprValue = factory.newFromIonValue(exprValueFromFactory.ionValue)
-        assertTrue(roundTrippedBagExprValue.ionValue.isBag, "The ion value should be ionList with annotation $BAG_ANNOTATION")
-        assertEquals(1, roundTrippedBagExprValue.ionValue.typeAnnotations.size)
-        assertEquals(BAG_ANNOTATION, roundTrippedBagExprValue.ionValue.typeAnnotations[0])
+        val roundTrippedBagExprValue = factory.newFromIonValue(exprValueFromFactory.toIonValue(ION))
+        assertTrue(roundTrippedBagExprValue.toIonValue(ION).isBag, "The ion value should be ionList with annotation $BAG_ANNOTATION")
+        assertEquals(1, roundTrippedBagExprValue.toIonValue(ION).typeAnnotations.size)
+        assertEquals(BAG_ANNOTATION, roundTrippedBagExprValue.toIonValue(ION).typeAnnotations[0])
     }
 
     @Test
@@ -443,7 +427,7 @@ class ExprValueFactoryTest {
             }.seal()
 
         val dateExprValue = factory.newDate(date)
-        val dateIonValue = dateExprValue.ionValue
+        val dateIonValue = dateExprValue.toIonValue(ION)
         assertEquals(ionDate, dateIonValue, "Expected ionValues to be equal.")
         dateIonValue as IonTimestamp
         val timestamp = dateIonValue.timestampValue()

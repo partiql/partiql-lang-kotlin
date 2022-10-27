@@ -16,7 +16,6 @@ package org.partiql.lang.eval
 
 import com.amazon.ion.IonBool
 import com.amazon.ion.IonContainer
-import com.amazon.ion.IonNull
 import com.amazon.ion.IonReader
 import com.amazon.ion.IonSequence
 import com.amazon.ion.IonStruct
@@ -184,11 +183,11 @@ private class ExprValueFactoryImpl(override val ion: IonSystem) : ExprValueFacto
         private val MIN_LONG_VALUE = BigInteger.valueOf(Long.MIN_VALUE)
     }
 
-    override val missingValue = MissingExprValue(ion.newNull())
-    override val nullValue = NullExprValue(ion.newNull())
+    override val missingValue = MissingExprValue()
+    override val nullValue = NullExprValue()
 
-    private val trueValue = TrueBoolExprValue(ion.newBool(true))
-    private val falseValue = FalseBoolExprValue(ion.newBool(false))
+    private val trueValue = TrueBoolExprValue()
+    private val falseValue = FalseBoolExprValue()
 
     private val emptyString = StringExprValue(ion, "")
 
@@ -257,7 +256,7 @@ private class ExprValueFactoryImpl(override val ion: IonSystem) : ExprValueFacto
         newFromIonValue(ion.newValue(reader))
 
     override fun newStruct(value: Sequence<ExprValue>, ordering: StructOrdering): ExprValue =
-        StructExprValue(ion, ordering, value)
+        StructExprValue(ordering, value)
 
     override fun newStruct(value: Iterable<ExprValue>, ordering: StructOrdering): ExprValue =
         newStruct(value.asSequence(), ordering)
@@ -279,31 +278,23 @@ private class ExprValueFactoryImpl(override val ion: IonSystem) : ExprValueFacto
 }
 
 /** A base class for the `NULL` value, intended to be memoized. */
-private class NullExprValue(value: IonNull) : BaseExprValue() {
-    override val ionValue = value
+private class NullExprValue() : BaseExprValue() {
     override val type: ExprValueType get() = ExprValueType.NULL
 }
 
 /** A base class for the `MISSING` value, intended to be memoized. */
-private class MissingExprValue(value: IonNull) : BaseExprValue() {
-    override val ionValue = value.also {
-        if (!it.hasTypeAnnotation(MISSING_ANNOTATION)) {
-            it.addTypeAnnotation(MISSING_ANNOTATION)
-        }
-    }
+private class MissingExprValue() : BaseExprValue() {
     override val type: ExprValueType get() = ExprValueType.MISSING
 }
 
 /** An ExprValue class just for boolean values. [value] holds a memoized instance of [IonBool].
  */
-private abstract class BooleanExprValue(value: IonBool) : BaseExprValue(), Scalar {
+private abstract class BooleanExprValue() : BaseExprValue(), Scalar {
     override val scalar: Scalar
         get() = this
 
     override val type: ExprValueType
         get() = ExprValueType.BOOL
-
-    override val ionValue = value
 }
 
 /** Basic implementation for scalar [ExprValue] types. */
@@ -312,20 +303,16 @@ private abstract class ScalarExprValue : BaseExprValue(), Scalar {
         get() = this
 
     abstract fun ionValueFun(): IonValue
-
-    // LazyThreadSafetyMode.PUBLICATION is ok here because the worst that can happen is that [ionValueFun] is invoked
-    // from multiple threads.  This should be ok because [IonSystem] is thread-safe.
-    override val ionValue by lazy(LazyThreadSafetyMode.PUBLICATION) { ionValueFun().seal() }
 }
 
 /** A base class for the `true` boolean value, intended to be memoized. */
-private class TrueBoolExprValue(val value: IonBool) : BooleanExprValue(value) {
-    override fun booleanValue(): Boolean? = true
+private class TrueBoolExprValue : BooleanExprValue() {
+    override fun booleanValue(): Boolean = true
 }
 
 /** A base class for the `false` boolean value, intended to be memoized. */
-private class FalseBoolExprValue(val value: IonBool) : BooleanExprValue(value) {
-    override fun booleanValue(): Boolean? = false
+private class FalseBoolExprValue : BooleanExprValue() {
+    override fun booleanValue(): Boolean = false
 }
 
 private class StringExprValue(val ion: IonSystem, val value: String) : ScalarExprValue() {
@@ -413,14 +400,7 @@ private class BlobExprValue(val ion: IonSystem, val value: ByteArray) : ScalarEx
 /**
  * Core [ExprValue] over an [IonValue].
  */
-internal class IonExprValue(private val valueFactory: ExprValueFactory, override val ionValue: IonValue) : BaseExprValue() {
-
-    init {
-        if (valueFactory.ion !== ionValue.system) {
-            throw IllegalArgumentException("valueFactory must have the same instance of IonSystem as ionValue")
-        }
-    }
-
+internal class IonExprValue(private val valueFactory: ExprValueFactory, val ionValue: IonValue) : BaseExprValue() {
     private val namedFacet: Named? = when {
         ionValue.fieldName != null -> valueFactory.newString(ionValue.fieldName).asNamed()
         ionValue.type != IonType.DATAGRAM &&
@@ -529,29 +509,6 @@ internal class SequenceExprValue( // dl todo: make private again
         if (!type.isSequence) {
             errNoContext("Cannot bind non-sequence type to sequence: $type", errorCode = ErrorCode.EVALUATOR_INVALID_BINDING, internal = true)
         }
-    }
-
-    override val ionValue: IonValue by lazy {
-        sequence
-            .mapTo(
-                when (type) {
-                    // dont add annotation if already present.
-                    ExprValueType.BAG -> ion.newEmptyList().also {
-                        if (!it.hasTypeAnnotation(BAG_ANNOTATION)) {
-                            it.addTypeAnnotation(BAG_ANNOTATION)
-                        }
-                    }
-                    ExprValueType.LIST -> ion.newEmptyList()
-                    ExprValueType.SEXP -> ion.newEmptySexp()
-                    else -> throw IllegalStateException("Invalid type: $type")
-                }
-            ) {
-                if (it is StructExprValue)
-                    it.createMutableValue()
-                else
-                    it.ionValue.clone()
-            }
-            .seal()
     }
 
     override val ordinalBindings: OrdinalBindings by lazy {

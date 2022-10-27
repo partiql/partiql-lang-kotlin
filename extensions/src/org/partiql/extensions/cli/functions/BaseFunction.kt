@@ -14,11 +14,15 @@
 package org.partiql.extensions.cli.functions
 
 import com.amazon.ion.IonStruct
+import com.amazon.ion.system.IonSystemBuilder
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
+import org.partiql.lang.eval.toIonValue
 
 abstract class BaseFunction(val valueFactory: ExprValueFactory) : ExprFunction {
+    private val ion = IonSystemBuilder.standard().build()
+
     protected fun optionsStruct(
         requiredArity: Int,
         args: List<ExprValue>,
@@ -30,8 +34,7 @@ abstract class BaseFunction(val valueFactory: ExprValueFactory) : ExprFunction {
     }
 
     private fun extractOptVal(args: List<ExprValue>, optionsIndex: Int): IonStruct {
-        val optVal = args[optionsIndex].ionValue
-        return when (optVal) {
+        return when (val optVal = args[optionsIndex].toIonValue(ion)) {
             is IonStruct -> optVal
             else -> throw IllegalArgumentException("Invalid option: $optVal")
         }

@@ -22,6 +22,7 @@ import org.partiql.lang.SqlException
 import org.partiql.lang.eval.CompileOptions
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.TypingMode
+import org.partiql.lang.eval.toIonValue
 import java.io.File
 
 private val PARTIQL_EVAL_TEST_DATA_DIR = System.getenv("PARTIQL_EVAL_TESTS_DATA")

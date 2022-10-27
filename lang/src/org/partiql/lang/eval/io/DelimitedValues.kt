@@ -33,6 +33,7 @@ import org.partiql.lang.eval.StructOrdering
 import org.partiql.lang.eval.namedValue
 import org.partiql.lang.eval.orderedNames
 import org.partiql.lang.eval.syntheticColumnName
+import org.partiql.lang.eval.toIonValue
 import org.partiql.lang.util.stringValue
 import java.io.BufferedReader
 import java.io.Reader
@@ -157,7 +158,7 @@ object DelimitedValues {
 
                 csvPrinter.printRecord(
                     names.map {
-                        val col = row.bindings[BindingName(it, BindingCase.SENSITIVE)]?.ionValue ?: ion.newNull()
+                        val col = row.bindings[BindingName(it, BindingCase.SENSITIVE)]?.toIonValue(ion) ?: ion.newNull()
                         col.csvStringValue()
                     }
                 )

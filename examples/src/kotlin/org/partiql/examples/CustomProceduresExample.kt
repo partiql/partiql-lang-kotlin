@@ -19,6 +19,7 @@ import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedure
 import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedureSignature
 import org.partiql.lang.eval.stringValue
+import org.partiql.lang.eval.toIonValue
 import java.io.PrintStream
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -73,7 +74,7 @@ class CalculateCrewMoonWeight(private val valueFactory: ExprValueFactory) : Stor
         // In addition, we keep a running a tally of how many crewmates we do this for.
         var numCalculated = 0
         for (crewmateBinding in crewBindings) {
-            val crewmate = crewmateBinding.ionValue as IonStruct
+            val crewmate = crewmateBinding.toIonValue(ion) as IonStruct
             val mass = crewmate["mass"] as IonDecimal
             val moonWeight = (mass.decimalValue() * MOON_GRAVITATIONAL_CONSTANT).setScale(1, RoundingMode.HALF_UP)
             crewmate.add("moonWeight", ion.newDecimal(moonWeight))

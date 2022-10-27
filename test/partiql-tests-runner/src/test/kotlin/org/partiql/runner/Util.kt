@@ -2,18 +2,13 @@ package org.partiql.runner
 
 import com.amazon.ion.IonList
 import com.amazon.ion.IonNull
-import com.amazon.ion.IonSequence
 import com.amazon.ion.IonSexp
 import com.amazon.ion.IonStruct
-import com.amazon.ion.IonSystem
 import com.amazon.ion.IonValue
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
-import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.StructOrdering
-import org.partiql.lang.eval.name
 import org.partiql.lang.eval.namedValue
-import org.partiql.lang.eval.stringValue
 
 const val BAG_ANNOTATION = "\$bag"
 const val MISSING_ANNOTATION = "\$missing"
@@ -44,38 +39,5 @@ internal fun IonValue.toExprValue(exprValueFactory: ExprValueFactory): ExprValue
             exprValueFactory.newStruct(elem.map { it.toExprValue(exprValueFactory).namedValue(exprValueFactory.newString(it.fieldName)) }, StructOrdering.UNORDERED)
         }
         else -> exprValueFactory.newFromIonValue(elem)
-    }
-}
-
-/**
- * Converts an [ExprValue] to the conformance test suite's modeling of PartiQL values in Ion.
- */
-internal fun ExprValue.toIonValue(ion: IonSystem): IonValue {
-    fun <S : IonSequence> ExprValue.foldToIonSequence(initial: S): S =
-        this.fold(initial) { seq, el -> seq.apply { add(el.toIonValue(ion)) } }
-
-    return when (this.type) {
-        ExprValueType.MISSING -> ion.singleValue("$MISSING_ANNOTATION::null").clone()
-        ExprValueType.NULL,
-        ExprValueType.BOOL,
-        ExprValueType.INT,
-        ExprValueType.FLOAT,
-        ExprValueType.DECIMAL,
-        ExprValueType.DATE,
-        ExprValueType.TIME,
-        ExprValueType.TIMESTAMP,
-        ExprValueType.SYMBOL,
-        ExprValueType.STRING,
-        ExprValueType.CLOB,
-        ExprValueType.BLOB -> this.ionValue.clone()
-        ExprValueType.LIST -> this.foldToIonSequence(ion.newEmptyList())
-        ExprValueType.SEXP -> this.foldToIonSequence(ion.newEmptySexp())
-        ExprValueType.STRUCT -> this.fold(ion.newEmptyStruct()) { struct, el ->
-            struct.apply { add(el.name!!.stringValue(), el.toIonValue(ion)) }
-        }
-        ExprValueType.BAG -> {
-            val bag = ion.newEmptyList().apply { addTypeAnnotation(BAG_ANNOTATION) }
-            this.foldToIonSequence(bag)
-        }
     }
 }
