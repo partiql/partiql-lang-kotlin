@@ -58,6 +58,25 @@ class WindowFunctionTests : EvaluatorTestBase() {
                 >>"""
             ),
 
+            // Binding to Missing
+            EvaluatorTestCase(
+                query = """
+                    SELECT sp."date" as "date",
+                        sp.ticker as ticker,
+                        sp.price as current_price,
+                        lag(sp.a, 1, 'OUT OF PARTITION') OVER (PARTITION BY sp.ticker ORDER BY sp."date") as previous_a
+                    FROM stock_price as sp
+                """,
+                expectedResult = """<<
+                    { 'date': `2022-09-30`, 'ticker': 'AMZN', 'current_price': 113.00, 'previous_a': 'OUT OF PARTITION'},
+                    { 'date': `2022-10-03`, 'ticker': 'AMZN', 'current_price': 115.88},
+                    { 'date': `2022-10-04`, 'ticker': 'AMZN', 'current_price': 121.09},
+                    { 'date': `2022-09-30`, 'ticker': 'GOOG', 'current_price': 96.15, 'previous_a': 'OUT OF PARTITION'},
+                    { 'date': `2022-10-03`, 'ticker': 'GOOG', 'current_price': 99.30},
+                    { 'date': `2022-10-04`, 'ticker': 'GOOG', 'current_price': 101.04}
+                >>"""
+            ),
+
             // Use Lag Function result as an exprValue
             EvaluatorTestCase(
                 query = """
@@ -138,20 +157,54 @@ class WindowFunctionTests : EvaluatorTestBase() {
 
             EvaluatorTestCase(
                 query = """
-                    SELECT 
+                    SELECT
                        lag(sp.price) OVER (PARTITION BY sp.ticker ORDER BY sp."date") as previous_price,
-                       (SELECT 
+                       (SELECT
                             lag(sp.price) OVER (PARTITION BY sp.ticker ORDER BY sp."date") as Inner_lag
                        FROM <<1>>)
                     FROM stock_price as sp
                 """,
                 expectedResult = """<<
-                    {'previous_price': NULL, '_2': <<{'Inner_lag': NULL}>>}, 
-                    {'previous_price': 113.00, '_2': <<{'Inner_lag': NULL}>>}, 
-                    {'previous_price': 115.88, '_2': <<{'Inner_lag': NULL}>>}, 
-                    {'previous_price': NULL, '_2': <<{'Inner_lag': NULL}>>}, 
-                    {'previous_price': 96.15, '_2': <<{'Inner_lag': NULL}>>}, 
+                    {'previous_price': NULL, '_2': <<{'Inner_lag': NULL}>>},
+                    {'previous_price': 113.00, '_2': <<{'Inner_lag': NULL}>>},
+                    {'previous_price': 115.88, '_2': <<{'Inner_lag': NULL}>>},
+                    {'previous_price': NULL, '_2': <<{'Inner_lag': NULL}>>},
+                    {'previous_price': 96.15, '_2': <<{'Inner_lag': NULL}>>},
                     {'previous_price': 99.30, '_2': <<{'Inner_lag': NULL}>>}
+                >>"""
+            ),
+
+            EvaluatorTestCase(
+                query = """
+                    SELECT a.res FROM (
+                        SELECT LAG(sp.price) OVER(PARTITION BY sp.ticker ORDER BY sp."date") AS res
+                        FROM stock_price AS sp
+                    ) as a
+                """,
+                expectedResult = """<<
+                    {'res': NULL},
+                    {'res': 113.00},
+                    {'res': 115.88},
+                    {'res': NULL},
+                    {'res': 96.15},
+                    {'res': 99.30}
+                >>"""
+            ),
+
+            EvaluatorTestCase(
+                query = """
+                    SELECT Lag(a.res, 1, 0) OVER (ORDER BY a.res NULLS FIRST) as prev_res_or_zero FROM (
+                        SELECT LAG(sp.price) OVER(PARTITION BY sp.ticker ORDER BY sp."date") AS res
+                        FROM stock_price AS sp
+                    ) as a
+                """,
+                expectedResult = """<<
+                    {'prev_res_or_zero': 0},
+                    {'prev_res_or_zero': NULL},
+                    {'prev_res_or_zero': NULL},
+                    {'prev_res_or_zero': 96.15},
+                    {'prev_res_or_zero': 99.30},
+                    {'prev_res_or_zero': 113.00}
                 >>"""
             ),
         )
@@ -181,6 +234,24 @@ class WindowFunctionTests : EvaluatorTestBase() {
                     { 'date': `2022-09-30`, 'ticker': 'GOOG', 'current_price': 96.15, 'next_price': 99.30},
                     { 'date': `2022-10-03`, 'ticker': 'GOOG', 'current_price': 99.30, 'next_price': 101.04},
                     { 'date': `2022-10-04`, 'ticker': 'GOOG', 'current_price': 101.04, 'next_price': NULL}
+                >>"""
+            ),
+
+            EvaluatorTestCase(
+                query = """
+                    SELECT sp."date" as "date",
+                        sp.ticker as ticker,
+                        sp.price as current_price,
+                        lead(sp.a,1,'OUT OF PARTITION') OVER (PARTITION BY sp.ticker ORDER BY sp."date") as next_price
+                    FROM stock_price as sp
+                """,
+                expectedResult = """<<
+                    { 'date': `2022-09-30`, 'ticker': 'AMZN', 'current_price': 113.00},
+                    { 'date': `2022-10-03`, 'ticker': 'AMZN', 'current_price': 115.88},
+                    { 'date': `2022-10-04`, 'ticker': 'AMZN', 'current_price': 121.09, 'next_price': 'OUT OF PARTITION'},
+                    { 'date': `2022-09-30`, 'ticker': 'GOOG', 'current_price': 96.15},
+                    { 'date': `2022-10-03`, 'ticker': 'GOOG', 'current_price': 99.30},
+                    { 'date': `2022-10-04`, 'ticker': 'GOOG', 'current_price': 101.04, 'next_price': 'OUT OF PARTITION'}
                 >>"""
             ),
 
@@ -274,6 +345,40 @@ class WindowFunctionTests : EvaluatorTestBase() {
                     {'next_price': 99.30, '_2': <<{'Inner_lead': NULL}>>}, 
                     {'next_price': 101.04, '_2': <<{'Inner_lead': NULL}>>}, 
                     {'next_price': NULL, '_2': <<{'Inner_lead': NULL}>>}
+                >>"""
+            ),
+
+            EvaluatorTestCase(
+                query = """
+                    SELECT a.res FROM (
+                        SELECT LEAD(sp.price) OVER(PARTITION BY sp.ticker ORDER BY sp."date") AS res
+                        FROM stock_price AS sp
+                    ) as a
+                """,
+                expectedResult = """<<
+                    {'res': 99.30},
+                    {'res': 101.04},
+                    {'res': NULL},
+                    {'res': 115.88},
+                    {'res': 121.09},
+                    {'res': NULL}
+                >>"""
+            ),
+
+            EvaluatorTestCase(
+                query = """
+                    SELECT LEAD(a.res, 1, 0) OVER (ORDER BY a.res NULLS FIRST) as next_res_or_zero FROM (
+                        SELECT LEAD(sp.price) OVER(PARTITION BY sp.ticker ORDER BY sp."date") AS res
+                        FROM stock_price AS sp
+                    ) as a
+                """,
+                expectedResult = """<<
+                    {'next_res_or_zero': NULL},
+                    {'next_res_or_zero': 99.30},
+                    {'next_res_or_zero': 101.04},
+                    {'next_res_or_zero': 115.88},
+                    {'next_res_or_zero': 121.09},
+                    {'next_res_or_zero': 0}
                 >>"""
             ),
         )

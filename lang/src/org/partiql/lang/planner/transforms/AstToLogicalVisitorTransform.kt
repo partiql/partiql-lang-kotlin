@@ -119,7 +119,7 @@ internal class AstToLogicalVisitorTransform(
      * ```
      */
     private fun transformWindowFunctions(node: PartiqlAst.Expr.Select, algebra: PartiqlLogical.Bexpr): Pair<PartiqlAst.Expr.Select, PartiqlLogical.Bexpr>? {
-        val windowReplacer = CallWindowFunctionProjectionReplacer()
+        val windowReplacer = CurrentProjectionListWindowFunctionTransform()
 
         val transformedNode = windowReplacer.transformExprSelect(node) as PartiqlAst.Expr.Select
 
@@ -506,15 +506,8 @@ internal class AstToLogicalVisitorTransform(
             )
         }
 
-    override fun transformExprCallWindow(node: PartiqlAst.Expr.CallWindow): PartiqlLogical.Expr = error("call transformer")
-//        PartiqlLogical.build {
-//            id(
-//                getUniqueWindowName(node),
-//                caseInsensitive(),
-//                unqualified(),
-//                metas = node.metas
-//            )
-//        }
+    override fun transformExprCallWindow(node: PartiqlAst.Expr.CallWindow): PartiqlLogical.Expr =
+        error("Call window node is not transformed (This shall never happend)")
 
     private fun transformProjectList(node: PartiqlAst.Projection.ProjectList): PartiqlLogical.Expr =
         PartiqlLogical.build {
@@ -590,9 +583,33 @@ private class FromSourceToBexpr(
 /**
  * Given a [PartiqlAst.Expr.Select], transforms all [PartiqlAst.Expr.CallWindow]'s within the projection list to
  * [PartiqlAst.Expr.Id]'s that reference the new [PartiqlLogical.VarDecl].
+ * We only want this to convert the window function in the current projection list without recuse into any sub-query.
+ *
+ * For example:
+ * Consider:
+ * SELECT
+ *  aWinFunc
+ * FROM (
+ *  SELECT
+ *      anotherWinFunc
+ *  FROM
+ *  ...
+ * )
+ *
+ * The transformation Order is as follows:
+ * FROM <-- This is the outer FROM
+ *      FROM <- This is the inner FROM
+ *          CurrentProjectionListWindowFunctionTransform (1)
+ *      SELECT <- This is the inner SELECT
+ *          anotherWinFunc <- transformed By CurrentProjectionListWindowFunctionTransform (1)
+ *          Transform Projection
+ * CurrentProjectionListWindowFunctionTransform (2)
+ * SELECT <- This is the outer SELECT
+ *      aWindFunc <- transformed By CurrentProjectionListWindowFunctionTransform (2)
+ * TransformProjection
  */
-private class CallWindowFunctionProjectionReplacer() : VisitorTransformBase() {
-    val callWindowFunctionVisitorTransform = CallWindowFunctionReplacer()
+private class CurrentProjectionListWindowFunctionTransform(var level: Int = 0) : VisitorTransformBase() {
+    val callWindowFunctionVisitorTransform = CallWindowReplacer()
 
     override fun transformProjectItemProjectExpr_expr(node: PartiqlAst.ProjectItem.ProjectExpr): PartiqlAst.Expr {
         return callWindowFunctionVisitorTransform.transformExpr(node.expr)
@@ -601,16 +618,25 @@ private class CallWindowFunctionProjectionReplacer() : VisitorTransformBase() {
     override fun transformProjectionProjectValue_value(node: PartiqlAst.Projection.ProjectValue): PartiqlAst.Expr {
         return callWindowFunctionVisitorTransform.transformExpr(node.value)
     }
+
+    // we don't want to nested in sub-queries, otherwise the inner window function get transformed multiple times.
+    override fun transformExprSelect(node: PartiqlAst.Expr.Select): PartiqlAst.Expr =
+        if (level == 0) {
+            level += 1
+            super.transformExprSelect(node)
+        } else {
+            node
+        }
+
     fun getWindowFuncs() = callWindowFunctionVisitorTransform.windowFunctions
 }
 
 /**
- * Created to be invoked by the [CallWindowFunctionProjectionReplacer] to transform all encountered [PartiqlAst.Expr.CallWindow]'s to
+ * Created to be invoked by the [CurrentProjectionListWindowFunctionTransform] to transform all encountered [PartiqlAst.Expr.CallWindow]'s to
  * [PartiqlAst.Expr.Id]'s. This class is designed to be called directly on [PartiqlAst.Projection]'s and does NOT recurse
- * into [PartiqlAst.Expr.Select]'s. This class is designed to be instantiated once per aggregation scope. The class collects
- * all unique-per-scope aggregation variable declaration names and exposes it to the calling class.
+ * into [PartiqlAst.Expr.Select]'s if the projection list contains a Select Node.
  */
-private class CallWindowFunctionReplacer() : VisitorTransformBase() {
+private class CallWindowReplacer : VisitorTransformBase() {
     private var varDeclIncrement = 0
     val windowFunctions = mutableSetOf<Pair<String, PartiqlAst.Expr.CallWindow>>()
     override fun transformExprCallWindow(node: PartiqlAst.Expr.CallWindow): PartiqlAst.Expr {
@@ -626,7 +652,9 @@ private class CallWindowFunctionReplacer() : VisitorTransformBase() {
         }
     }
 
-    // No need to nested in to sub-query
+    // If this function is called, then the projection list contains a Select Node.
+    // Regardless whether that select node's projection list contains window function
+    // we do not want to transform it at the moment
     override fun transformExprSelect(node: PartiqlAst.Expr.Select): PartiqlAst.Expr {
         return node
     }
