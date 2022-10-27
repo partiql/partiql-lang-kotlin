@@ -593,8 +593,14 @@ aggregate
     | func=(COUNT|MAX|MIN|SUM|AVG) PAREN_LEFT setQuantifierStrategy? expr PAREN_RIGHT   # AggregateBase
     ;
 
-// For now, we only support a set of builtin Window Function and there is (yet) no plan to support custom window function
-// Therefore we explicitly list out the maximum number of argument allowed here.
+// TODO: Remove from experimental once https://github.com/partiql/partiql-docs/issues/31 is resolved and a RFC is approved
+/**
+*
+* Supported Window Functions:
+* 1. LAG(expr, [offset [, default]]) OVER([window_partition] window_ordering)
+* 2. LEAD(expr, [offset [, default]]) OVER([window_partition] window_ordering)
+*
+*/
 windowFunction
     : func=(LAG|LEAD) PAREN_LEFT expr ( COMMA expr (COMMA expr)?)? PAREN_RIGHT over #LagLeadFunction
     ;

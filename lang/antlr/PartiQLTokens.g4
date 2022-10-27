@@ -253,7 +253,8 @@ ZONE: 'ZONE';
 /**
  * window related
  */
-// todo: move those keywords
+ // TODO: Move the keywords to the corresponding section once https://github.com/partiql/partiql-docs/issues/31 is resolved and a RFC is approved
+ // i.e. Move OVER/PARTITION to KEYWORDS.
 LAG: 'LAG';
 LEAD: 'LEAD';
 OVER: 'OVER';
