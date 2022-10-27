@@ -152,13 +152,6 @@ stage in the `PlannerPipeline` and to generate performance metrics for the indiv
   A client program may be interrupted by `NoSuchFieldError` exception.
 - [breaking change] Removal of `NodeMetadata` from `org.partiql.lang.eval`:
   A client program may be interrupted by `NoClassDefFoundError` exception.
-- [breaking change] Removal of the following classes from `org.partiql.lang.eval.like`:
-  - `CodepointCheckpointIterator`
-  - `PatternPart`
-  - `PatternPart.AnyOneChar`
-  - `PatternPart.ExactChars`
-  - `PatternPartKt`
-    A client program may be interrupted by NoClassDefFoundError exception.
 
 ### Fixed
 - Fix `write_file` CLI function; the old function required the input to be a `string`, but it must be a generic type.
