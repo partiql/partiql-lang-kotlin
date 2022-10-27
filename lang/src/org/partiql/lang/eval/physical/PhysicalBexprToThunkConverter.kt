@@ -26,6 +26,7 @@ import org.partiql.lang.eval.physical.operators.ScanRelationalOperatorFactory
 import org.partiql.lang.eval.physical.operators.SortOperatorFactory
 import org.partiql.lang.eval.physical.operators.UnpivotOperatorFactory
 import org.partiql.lang.eval.physical.operators.VariableBinding
+import org.partiql.lang.eval.physical.operators.WindowRelationalOperatorFactory
 import org.partiql.lang.eval.physical.operators.valueExpression
 import org.partiql.lang.util.toIntExact
 
@@ -290,6 +291,34 @@ internal class PhysicalBexprToThunkConverter(
         }
         val value = exprConverter.convert(spec.expr).toValueExpr(spec.expr.metas.sourceLocationMeta)
         CompiledSortKey(comp, value)
+    }
+
+    // TODO: Remove from experimental once https://github.com/partiql/partiql-docs/issues/31 is resolved and a RFC is approved
+    override fun convertWindow(node: PartiqlPhysical.Bexpr.Window): RelationThunkEnv {
+        val source = this.convert(node.source)
+
+        val windowPartitionList = node.windowSpecification.partitionBy
+
+        val windowSortSpecList = node.windowSpecification.orderBy
+
+        val compiledPartitionBy = windowPartitionList?.exprs?.map {
+            exprConverter.convert(it).toValueExpr(it.metas.sourceLocationMeta)
+        } ?: emptyList()
+
+        val compiledOrderBy = windowSortSpecList?.sortSpecs?.let { compileSortSpecs(it) } ?: emptyList()
+
+        val compiledWindowFunctionParameter = node.windowExpression.args.map {
+            exprConverter.convert(it).toValueExpr(it.metas.sourceLocationMeta)
+        }
+
+        // locate operator factory
+        val factory = findOperatorFactory<WindowRelationalOperatorFactory>(RelationalOperatorKind.WINDOW, node.i.name.text)
+
+        // create operator implementation
+        val bindingsExpr = factory.create(node.i, source, compiledPartitionBy, compiledOrderBy, node.windowExpression, compiledWindowFunctionParameter)
+
+        // wrap in thunk
+        return bindingsExpr.toRelationThunk(node.metas)
     }
 }
 

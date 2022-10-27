@@ -1,12 +1,16 @@
 package org.partiql.lang.eval.physical.operators
 
+import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.eval.NaturalExprValueComparators
 import org.partiql.lang.eval.booleanValue
+import org.partiql.lang.eval.err
 import org.partiql.lang.eval.isUnknown
 import org.partiql.lang.eval.physical.EvaluatorState
 import org.partiql.lang.eval.relation.RelationIterator
 import org.partiql.lang.eval.relation.RelationType
 import org.partiql.lang.eval.relation.relation
+import org.partiql.lang.util.interruptibleFold
 
 /** Creates a new [RelationIterator] that returns a cross join of [leftRel] and [rightRel]. */
 internal fun createCrossJoinRelItr(
@@ -105,3 +109,30 @@ private fun coercePredicateResult(value: ExprValue): Boolean =
         value.isUnknown() -> false
         else -> value.booleanValue() // <-- throws if [value] is not a boolean.
     }
+
+class CompiledSortKey(val comparator: NaturalExprValueComparators, val value: ValueExpression)
+
+/**
+ * Returns a [Comparator] that compares arrays of registers by using un-evaluated sort keys. It does this by modifying
+ * the [state] to allow evaluation of the [sortKeys]
+ */
+internal fun getSortingComparator(sortKeys: List<CompiledSortKey>, state: EvaluatorState): Comparator<Array<ExprValue>> {
+    val initial: Comparator<Array<ExprValue>>? = null
+    return sortKeys.interruptibleFold(initial) { intermediate, sortKey ->
+        if (intermediate == null) {
+            return@interruptibleFold compareBy<Array<ExprValue>, ExprValue>(sortKey.comparator) { row ->
+                state.load(row)
+                sortKey.value(state)
+            }
+        }
+        return@interruptibleFold intermediate.thenBy(sortKey.comparator) { row ->
+            state.load(row)
+            sortKey.value(state)
+        }
+    } ?: err(
+        "Order BY comparator cannot be null",
+        ErrorCode.EVALUATOR_ORDER_BY_NULL_COMPARATOR,
+        null,
+        internal = true
+    )
+}

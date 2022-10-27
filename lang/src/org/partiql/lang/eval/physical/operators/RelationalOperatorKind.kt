@@ -14,6 +14,7 @@ enum class RelationalOperatorKind {
     UNPIVOT,
     FILTER,
     JOIN,
+    WINDOW,
     OFFSET,
     LIMIT,
     LET,

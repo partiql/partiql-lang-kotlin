@@ -558,7 +558,6 @@ class ASTPrettyPrinter {
                 }
             )
             is PartiqlAst.Expr.GraphMatch -> TODO("Unsupported GraphMatch AST node")
-
             is PartiqlAst.Expr.CallWindow -> TODO("PrettyPrinter doesn't support Window Function yet.")
         }
 

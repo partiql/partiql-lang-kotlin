@@ -678,6 +678,8 @@ may then be further optimized by selecting better implementations of each operat
             )
         )
 
+        (include (product window_expression decl::var_decl func_name::symbol args::(* expr 1)))
+
         // Now we include new stuff, including PartiQL's relational algebra.
         (include
             // Every instance of `var_decl` introduces a new binding in the current scope.
@@ -729,7 +731,13 @@ may then be further optimized by selecting better implementations of each operat
                     predicate::(? expr)
                 )
 
-                // Converts a bindings collection into a sorted bindings collection.
+                (window
+                    source:: bexpr
+                    window_specification:: over
+                    window_expression:: window_expression
+                )
+
+                 // Converts a bindings collection into a sorted bindings collection.
                 (sort source::bexpr sort_specs::(* sort_spec 1))
 
                 // Skips `row_count` rows, then emits all remaining rows.
@@ -784,10 +792,6 @@ may then be further optimized by selecting better implementations of each operat
             group_key
             group_key_list
             order_by             // Replaced with SORT node
-            over
-            window_partition_list
-            window_sort_spec_list
-
             let
             dml_op
             dml_op_list
@@ -940,6 +944,13 @@ may then be further optimized by selecting better implementations of each operat
                 (offset i::impl row_count::expr source::bexpr)
                 (limit i::impl row_count::expr source::bexpr)
                 (let i::impl source::bexpr bindings::(* let_binding 1))
+
+                (window
+                    i::impl
+                    source:: bexpr
+                    window_specification:: over
+                    window_expression:: window_expression
+                )
             )
         )
     )
