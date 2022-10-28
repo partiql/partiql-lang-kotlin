@@ -29,8 +29,8 @@ GitHub issues list for details.)
 
 This project is published to [Maven Central](https://search.maven.org/artifact/org.partiql/partiql-lang-kotlin).
 
-| Group ID | Artifact ID | Recommended Version |
-|----------|-------------|---------------------|
+| Group ID      | Artifact ID           | Recommended Version |
+|---------------|-----------------------|---------------------|
 | `org.partiql` | `partiql-lang-kotlin` | `0.8.1`             | 
 
 
