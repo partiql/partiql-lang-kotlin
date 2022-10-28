@@ -25,4 +25,5 @@
   * [v0.4 -> v0.5](https://github.com/partiql/partiql-lang-kotlin/wiki/v0.4-to-v0.5-migration)
   * [v0.5 -> v0.6](https://github.com/partiql/partiql-lang-kotlin/wiki/v0.5-to-v0.6-migration)
   * [v0.6 -> v0.7](https://github.com/partiql/partiql-lang-kotlin/wiki/v0.6-to-v0.7-migration)
+  * [v0.7 -> v0.8](https://github.com/partiql/partiql-lang-kotlin/wiki/v0.7-to-v0.8-migration)
   * [Rewriter to Visitor Transform Guide](https://github.com/partiql/partiql-lang-kotlin/wiki/Rewriter-to-Visitor-Transform-Guide)
