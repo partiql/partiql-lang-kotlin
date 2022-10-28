@@ -65,7 +65,7 @@ fun ExprValue.toIonValue(ion: IonSystem): IonValue =
             val value = dateValue()
             ion.newTimestamp(Timestamp.forDay(value.year, value.monthValue, value.dayOfMonth)).apply {
                 addTypeAnnotation(DATE_ANNOTATION)
-            }.seal()
+            }
         }
         ExprValueType.TIMESTAMP -> ion.newTimestamp(timestampValue())
         ExprValueType.TIME -> timeValue().toIonValue(ion)
@@ -74,12 +74,17 @@ fun ExprValue.toIonValue(ion: IonSystem): IonValue =
         ExprValueType.CLOB -> ion.newClob(bytesValue())
         ExprValueType.BLOB -> ion.newBlob(bytesValue())
         ExprValueType.LIST -> mapTo(ion.newEmptyList()) {
-            it.toIonValue(ion).clone()
+            if (it is StructExprValue)
+                it.toIonStruct(ion)
+            else
+                it.toIonValue(ion).clone()
         }
         ExprValueType.SEXP -> mapTo(ion.newEmptySexp()) {
-            it.toIonValue(ion).clone()
+            if (it is StructExprValue)
+                it.toIonStruct(ion)
+            else
+                it.toIonValue(ion).clone()
         }
-        ExprValueType.STRUCT -> toIonStruct(ion)
         ExprValueType.BAG -> mapTo(
             ion.newEmptyList().apply { addTypeAnnotation(BAG_ANNOTATION) }
         ) {
@@ -88,6 +93,7 @@ fun ExprValue.toIonValue(ion: IonSystem): IonValue =
             else
                 it.toIonValue(ion).clone()
         }
+        ExprValueType.STRUCT -> toIonStruct(ion)
     }.seal()
 
 /**

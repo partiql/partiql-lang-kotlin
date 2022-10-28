@@ -5,7 +5,6 @@ package org.partiql.examples.util
 import org.partiql.examples.CSVJavaExample
 import org.partiql.examples.CsvExprValueExample
 import org.partiql.examples.CustomFunctionsExample
-import org.partiql.examples.CustomProceduresExample
 import org.partiql.examples.EvaluationJavaExample
 import org.partiql.examples.EvaluationWithBindings
 import org.partiql.examples.EvaluationWithLazyBindings
@@ -29,7 +28,6 @@ private val examples = mapOf(
     // Kotlin Examples
     CsvExprValueExample::class.java.simpleName to CsvExprValueExample(System.out),
     CustomFunctionsExample::class.java.simpleName to CustomFunctionsExample(System.out),
-    CustomProceduresExample::class.java.simpleName to CustomProceduresExample(System.out),
     EvaluationWithBindings::class.java.simpleName to EvaluationWithBindings(System.out),
     EvaluationWithLazyBindings::class.java.simpleName to EvaluationWithLazyBindings(System.out),
     ParserErrorExample::class.java.simpleName to ParserErrorExample(System.out),
