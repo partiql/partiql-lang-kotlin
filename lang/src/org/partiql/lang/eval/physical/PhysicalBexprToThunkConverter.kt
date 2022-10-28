@@ -12,6 +12,7 @@ import org.partiql.lang.eval.physical.operators.AggregateOperatorFactory
 import org.partiql.lang.eval.physical.operators.CompiledAggregateFunction
 import org.partiql.lang.eval.physical.operators.CompiledGroupKey
 import org.partiql.lang.eval.physical.operators.CompiledSortKey
+import org.partiql.lang.eval.physical.operators.CompiledWindowFunction
 import org.partiql.lang.eval.physical.operators.FilterRelationalOperatorFactory
 import org.partiql.lang.eval.physical.operators.JoinRelationalOperatorFactory
 import org.partiql.lang.eval.physical.operators.LetRelationalOperatorFactory
@@ -294,6 +295,7 @@ internal class PhysicalBexprToThunkConverter(
         CompiledSortKey(comp, value)
     }
 
+    // TODO: Remove from experimental once https://github.com/partiql/partiql-docs/issues/31 is resolved and a RFC is approved
     override fun convertWindow(node: PartiqlPhysical.Bexpr.Window): RelationThunkEnv {
         val source = this.convert(node.source)
 
@@ -301,11 +303,11 @@ internal class PhysicalBexprToThunkConverter(
 
         val windowSortSpecList = node.windowSpecification.orderBy
 
-        val compiledPartitionBy = if (windowPartitionList != null) windowPartitionList.exprs.map {
+        val compiledPartitionBy = windowPartitionList?.exprs?.map {
             exprConverter.convert(it).toValueExpr(it.metas.sourceLocationMeta)
-        } else null
+        } ?: emptyList()
 
-        val compiledOrderBy = if (windowSortSpecList != null) compileSortSpecs(windowSortSpecList.sortSpecs) else null
+        val compiledOrderBy = windowSortSpecList?.sortSpecs?.let { compileSortSpecs(it) } ?: emptyList()
 
         val compiledWindowFunctionParameter = node.windowExpression.args.map {
             exprConverter.convert(it).toValueExpr(it.metas.sourceLocationMeta)
@@ -316,14 +318,21 @@ internal class PhysicalBexprToThunkConverter(
         val builtinWindowFunctionsMap = builtinWindowFunctions.associateBy {
             it.signature.name
         }
-        val allWindowFunctionsMap = builtinWindowFunctionsMap
+
+        // We need compiled window function here.
+        val compiledWindowFunction = CompiledWindowFunction(
+            builtinWindowFunctionsMap[node.windowExpression.funcName.text] ?: error("window function not supported yet"),
+            compiledWindowFunctionParameter,
+            node.windowExpression.decl.toSetVariableFunc()
+        )
+
+        // val allWindowFunctionsMap = builtinWindowFunctionsMap
 
         // locate operator factory
         val factory = findOperatorFactory<WindowRelationalOperatorFactory>(RelationalOperatorKind.WINDOW, node.i.name.text)
 
         // create operator implementation
-        val bindingsExpr = factory.create(node.i, source, compiledPartitionBy, compiledOrderBy, node.windowExpression, compiledWindowFunctionParameter, allWindowFunctionsMap)
-
+        val bindingsExpr = factory.create(source, compiledPartitionBy, compiledOrderBy, compiledWindowFunction)
         // wrap in thunk
         return bindingsExpr.toRelationThunk(node.metas)
     }

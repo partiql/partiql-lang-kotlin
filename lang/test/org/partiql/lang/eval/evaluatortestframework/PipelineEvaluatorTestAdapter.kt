@@ -57,6 +57,7 @@ internal class PipelineEvaluatorTestAdapter(
         ) {
             pipeline.evaluate(tc.query)
         }
+        println("actualExprValueResult Done")
 
         val (expectedResult, unexpectedResultErrorCode) =
             when (pipeline.typingMode) {

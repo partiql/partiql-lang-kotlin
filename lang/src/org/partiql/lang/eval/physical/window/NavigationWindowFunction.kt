@@ -1,15 +1,14 @@
 package org.partiql.lang.eval.physical.window
 
-import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.physical.EvaluatorState
+import org.partiql.lang.eval.physical.SetVariableFunc
 import org.partiql.lang.eval.physical.operators.ValueExpression
-import org.partiql.lang.eval.physical.toSetVariableFunc
 
 /**
  * This abstract class holds some common logic for navigation window function, i.e., LAG, LEAD
  *
- * TODO: When we support FIRST_VALUE, etc, we need to modify the process row function, since those function requires frame
+ * TODO: When we support FIRST_VALUE, etc, we probably need to modify the process row function, since those function requires frame
  */
 abstract class NavigationWindowFunction() : WindowFunction {
 
@@ -24,10 +23,13 @@ abstract class NavigationWindowFunction() : WindowFunction {
     override fun processRow(
         state: EvaluatorState,
         arguments: List<ValueExpression>,
-        windowVarDecl: PartiqlPhysical.VarDecl
+        windowVarDecl: SetVariableFunc
     ) {
+        state.load(currentPartition[currentPos])
         val value = processRow(state, arguments, currentPos)
-        windowVarDecl.toSetVariableFunc()(state, value)
+        // before we declare the window function result, we need to go back to the current row
+        state.load(currentPartition[currentPos])
+        windowVarDecl(state, value)
         currentPos += 1
     }
 

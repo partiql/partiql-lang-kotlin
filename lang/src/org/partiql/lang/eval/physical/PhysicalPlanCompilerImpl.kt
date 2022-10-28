@@ -266,6 +266,7 @@ internal class PhysicalPlanCompilerImpl(
             // bag operators
             is PartiqlPhysical.Expr.BagOp -> compileBagOp(expr, metas)
             is PartiqlPhysical.Expr.BindingsToValues -> compileBindingsToValues(expr)
+
             is PartiqlPhysical.Expr.Pivot -> compilePivot(expr, metas)
             is PartiqlPhysical.Expr.GraphMatch -> TODO("Physical compilation of GraphMatch expression")
         }

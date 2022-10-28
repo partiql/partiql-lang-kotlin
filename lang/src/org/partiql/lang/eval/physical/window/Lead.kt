@@ -22,8 +22,6 @@ class Lead : NavigationWindowFunction() {
             else -> error("Wrong number of Parameter for Lag Function")
         }
 
-        state.load(currentPartition[currentPos])
-
         val offsetValue = offset?.let {
             val numberValue = it.invoke(state).numberValue().toLong()
             if (numberValue >= 0) {
@@ -35,12 +33,10 @@ class Lead : NavigationWindowFunction() {
         val defaultValue = default?.invoke(state) ?: state.valueFactory.nullValue
         val targetIndex = currentPos + offsetValue
 
-        if (targetIndex >= 0 && targetIndex <= currentPartition.size - 1) {
-            // TODO need to check if index is larger than MAX INT, but this may causes overflow already
+        if (targetIndex <= currentPartition.lastIndex) {
             val targetRow = currentPartition[targetIndex.toInt()]
             state.load(targetRow)
-            val res = target!!.invoke(state)
-            return res
+            return target!!.invoke(state)
         } else {
             return defaultValue
         }

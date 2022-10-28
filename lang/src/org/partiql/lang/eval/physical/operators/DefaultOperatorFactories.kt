@@ -28,7 +28,7 @@ internal val DEFAULT_RELATIONAL_OPERATOR_FACTORIES = listOf(
     AggregateOperatorFactoryDefault,
     SortOperatorFactoryDefault,
     UnpivotOperatorFactoryDefault,
-    SortBasedWindowOperator(DEFAULT_IMPL_NAME),
+    WindowOperatorFactoryDefault,
 
     object : ScanRelationalOperatorFactory(DEFAULT_IMPL_NAME) {
         override fun create(
@@ -37,8 +37,8 @@ internal val DEFAULT_RELATIONAL_OPERATOR_FACTORIES = listOf(
             setAsVar: SetVariableFunc,
             setAtVar: SetVariableFunc?,
             setByVar: SetVariableFunc?
-        ): RelationExpression =
-            RelationExpression { state ->
+        ): RelationExpression {
+            return RelationExpression { state ->
                 val valueToScan = expr(state)
 
                 // coerces non-collection types to a singleton Sequence<>.
@@ -66,13 +66,16 @@ internal val DEFAULT_RELATIONAL_OPERATOR_FACTORIES = listOf(
                     }
                 }
             }
+        }
     },
     object : FilterRelationalOperatorFactory(DEFAULT_IMPL_NAME) {
-        override fun create(impl: PartiqlPhysical.Impl, predicate: ValueExpression, sourceBexpr: RelationExpression) =
-            RelationExpression { state ->
+        override fun create(impl: PartiqlPhysical.Impl, predicate: ValueExpression, sourceBexpr: RelationExpression):
+            RelationExpression {
+            return RelationExpression { state ->
                 val sourceToFilter = sourceBexpr.evaluate(state)
                 createFilterRelItr(sourceToFilter, predicate, state)
             }
+        }
     },
     object : JoinRelationalOperatorFactory(DEFAULT_IMPL_NAME) {
         override fun create(

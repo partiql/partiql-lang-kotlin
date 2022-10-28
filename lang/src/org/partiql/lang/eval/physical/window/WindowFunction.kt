@@ -1,8 +1,8 @@
 package org.partiql.lang.eval.physical.window
 
-import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.physical.EvaluatorState
+import org.partiql.lang.eval.physical.SetVariableFunc
 import org.partiql.lang.eval.physical.operators.ValueExpression
 
 sealed class Arguments
@@ -21,5 +21,5 @@ interface WindowFunction {
     /**
      * Process a row by outputting the result of the window function.
      */
-    fun processRow(state: EvaluatorState, arguments: List<ValueExpression>, windowVarDecl: PartiqlPhysical.VarDecl)
+    fun processRow(state: EvaluatorState, arguments: List<ValueExpression>, windowVarDecl: SetVariableFunc)
 }

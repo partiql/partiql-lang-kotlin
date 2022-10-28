@@ -136,11 +136,6 @@ may then be further optimized by selecting better implementations of each operat
             (path root::expr steps::(* path_step 1))
             (call func_name::symbol args::(* expr 1))
             (call_agg setq::set_quantifier func_name::symbol arg::expr)
-<<<<<<< HEAD
-
-=======
-            // window function, for now using symbol as function name
->>>>>>> upstream/window-function
             // TODO: In the feature, when we allow use of aggregation function as window function, we need to consider incorporate in setq
             (call_window func_name::symbol over::over args::(* expr 1))
             (cast value::expr as_type::type)
@@ -362,11 +357,7 @@ may then be further optimized by selecting better implementations of each operat
 
         // Over clause of a window function.
         // OVER ([PARTITION BY <expr> [, <expr>]... ] [ORDER BY <sort_spec> [, <sort_spec>]... ])
-        // TODO: In the future, we need to add support for custom declared frame clause
-<<<<<<< HEAD
-=======
         // TODO: Remove from experimental once https://github.com/partiql/partiql-docs/issues/31 is resolved and a RFC is approved
->>>>>>> upstream/window-function
         (product over partition_by::(? window_partition_list ) order_by::(? window_sort_spec_list ) )
 
         // <expr>[, <expr>]...
@@ -610,14 +601,9 @@ may then be further optimized by selecting better implementations of each operat
 
         (with expr
             // Remove the select and struct node from the `expr` sum type, which will be replaced below.
-<<<<<<< HEAD
             // Remove the call_window node from the `expr` sum type
             // During logical plan construction, we will convert each call_window node to a window operator.
             // the expression call_window will be replaced as an id that is the as alias
-=======
-            // Remove the call_window node from the `expr` sum type, because the call_window contains two parts:
-            // Window specification and window function, we want to define a stand alone operator for this
->>>>>>> upstream/window-function
             (exclude select struct call_window)
 
             (include
@@ -744,14 +730,14 @@ may then be further optimized by selecting better implementations of each operat
                     predicate::(? expr)
                 )
 
-                // Converts a bindings collection into a sorted bindings collection.
-                (sort source::bexpr sort_specs::(* sort_spec 1))
-
                 (window
                     source:: bexpr
                     window_specification:: over
                     window_expression:: window_expression
                 )
+
+                 // Converts a bindings collection into a sorted bindings collection.
+                (sort source::bexpr sort_specs::(* sort_spec 1))
 
                 // Skips `row_count` rows, then emits all remaining rows.
                 (offset row_count::expr source::bexpr)
