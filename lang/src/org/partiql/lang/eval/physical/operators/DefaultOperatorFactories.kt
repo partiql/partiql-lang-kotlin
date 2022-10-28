@@ -38,33 +38,33 @@ internal val DEFAULT_RELATIONAL_OPERATOR_FACTORIES = listOf(
             setAtVar: SetVariableFunc?,
             setByVar: SetVariableFunc?
         ) = RelationExpression { state ->
-                val valueToScan = expr(state)
+            val valueToScan = expr(state)
 
-                // coerces non-collection types to a singleton Sequence<>.
-                val rows: Sequence<ExprValue> = when (valueToScan.type) {
-                    ExprValueType.LIST, ExprValueType.BAG -> valueToScan.asSequence()
-                    else -> sequenceOf(valueToScan)
-                }
+            // coerces non-collection types to a singleton Sequence<>.
+            val rows: Sequence<ExprValue> = when (valueToScan.type) {
+                ExprValueType.LIST, ExprValueType.BAG -> valueToScan.asSequence()
+                else -> sequenceOf(valueToScan)
+            }
 
-                relation(RelationType.BAG) {
-                    val rowsIter: Iterator<ExprValue> = rows.iterator()
-                    while (rowsIter.hasNext()) {
-                        val item = rowsIter.next()
+            relation(RelationType.BAG) {
+                val rowsIter: Iterator<ExprValue> = rows.iterator()
+                while (rowsIter.hasNext()) {
+                    val item = rowsIter.next()
 
-                        // .unnamedValue() removes any ordinal that might exist on item
-                        setAsVar(state, item.unnamedValue())
+                    // .unnamedValue() removes any ordinal that might exist on item
+                    setAsVar(state, item.unnamedValue())
 
-                        if (setAtVar != null) {
-                            setAtVar(state, item.name ?: state.valueFactory.missingValue)
-                        }
-
-                        if (setByVar != null) {
-                            setByVar(state, item.address ?: state.valueFactory.missingValue)
-                        }
-                        yield()
+                    if (setAtVar != null) {
+                        setAtVar(state, item.name ?: state.valueFactory.missingValue)
                     }
+
+                    if (setByVar != null) {
+                        setByVar(state, item.address ?: state.valueFactory.missingValue)
+                    }
+                    yield()
                 }
             }
+        }
     },
     object : FilterRelationalOperatorFactory(DEFAULT_IMPL_NAME) {
         override fun create(impl: PartiqlPhysical.Impl, predicate: ValueExpression, sourceBexpr: RelationExpression) =
