@@ -22,7 +22,6 @@ import org.partiql.lang.SqlException
 import org.partiql.lang.eval.CompileOptions
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.TypingMode
-import org.partiql.lang.eval.toIonValue
 import java.io.File
 
 private val PARTIQL_EVAL_TEST_DATA_DIR = System.getenv("PARTIQL_EVAL_TESTS_DATA")
@@ -259,14 +258,14 @@ class TestRunner {
 
     private fun runEvalTestCase(evalTC: EvalTestCase) {
         val compilerPipeline = CompilerPipeline.builder(ION).compileOptions(evalTC.compileOptions).build()
-        val globals = evalTC.env.toExprValue(compilerPipeline.valueFactory).bindings
+        val globals = evalTC.env.toExprValueChangingAnnotation().bindings
         val session = EvaluationSession.build { globals(globals) }
         try {
             val expression = compilerPipeline.compile(evalTC.statement)
             val actualResult = expression.eval(session)
             when (evalTC.assertion) {
                 is Assertion.EvaluationSuccess -> {
-                    val actualResultAsIon = actualResult.toIonValue(ION)
+                    val actualResultAsIon = actualResult.toIonValueChangingAnnotation(ION)
                     if (!PartiQLEqualityChecker().areEqual(evalTC.assertion.expectedResult, actualResultAsIon)) {
                         val testName = evalTC.name
                         val evalMode = when (evalTC.compileOptions.typingMode) {
@@ -277,7 +276,7 @@ class TestRunner {
                     }
                 }
                 is Assertion.EvaluationFailure -> {
-                    error("Expected error to be thrown but none was thrown.\n${evalTC.name}\nActual result: ${actualResult.toIonValue(ION)}")
+                    error("Expected error to be thrown but none was thrown.\n${evalTC.name}\nActual result: ${actualResult.toIonValueChangingAnnotation(ION)}")
                 }
             }
         } catch (e: SqlException) {
@@ -294,7 +293,7 @@ class TestRunner {
 
     private fun runEvalEquivTestCase(evalEquivTestCase: EvalEquivTestCase) {
         val compilerPipeline = CompilerPipeline.builder(ION).compileOptions(evalEquivTestCase.compileOptions).build()
-        val globals = evalEquivTestCase.env.toExprValue(compilerPipeline.valueFactory).bindings
+        val globals = evalEquivTestCase.env.toExprValueChangingAnnotation().bindings
         val session = EvaluationSession.build { globals(globals) }
         val statements = evalEquivTestCase.statements
 
@@ -304,13 +303,13 @@ class TestRunner {
                 val actualResult = expression.eval(session)
                 when (evalEquivTestCase.assertion) {
                     is Assertion.EvaluationSuccess -> {
-                        val actualResultAsIon = actualResult.toIonValue(ION)
+                        val actualResultAsIon = actualResult.toIonValueChangingAnnotation(ION)
                         if (!PartiQLEqualityChecker().areEqual(evalEquivTestCase.assertion.expectedResult, actualResultAsIon)) {
                             error("Expected and actual results differ:\nExpected: ${evalEquivTestCase.assertion.expectedResult}\nActual:   $actualResultAsIon\nMode: ${evalEquivTestCase.compileOptions.typingMode}")
                         }
                     }
                     is Assertion.EvaluationFailure -> {
-                        error("Expected error to be thrown but none was thrown.\n${evalEquivTestCase.name}\nActual result: ${actualResult.toIonValue(ION)}")
+                        error("Expected error to be thrown but none was thrown.\n${evalEquivTestCase.name}\nActual result: ${actualResult.toIonValueChangingAnnotation(ION)}")
                     }
                 }
             } catch (e: SqlException) {

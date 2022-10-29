@@ -14,12 +14,27 @@
 
 package org.partiql.lang.eval
 
+import com.amazon.ion.IonBlob
+import com.amazon.ion.IonBool
+import com.amazon.ion.IonClob
+import com.amazon.ion.IonDecimal
+import com.amazon.ion.IonFloat
+import com.amazon.ion.IonInt
+import com.amazon.ion.IonList
+import com.amazon.ion.IonSexp
+import com.amazon.ion.IonString
 import com.amazon.ion.IonStruct
+import com.amazon.ion.IonSymbol
 import com.amazon.ion.IonSystem
+import com.amazon.ion.IonTimestamp
+import com.amazon.ion.IonType
 import com.amazon.ion.IonValue
 import com.amazon.ion.Timestamp
 import com.amazon.ion.facet.Faceted
-import org.partiql.lang.util.seal
+import org.partiql.lang.eval.time.NANOS_PER_SECOND
+import org.partiql.lang.eval.time.Time
+import org.partiql.lang.util.bytesValue
+import java.math.BigDecimal
 
 /**
  * Representation of a value within the context of an [Expression].
@@ -51,11 +66,21 @@ interface ExprValue : Iterable<ExprValue>, Faceted {
      * If this value has no children, then it should return the empty iterator.
      */
     override operator fun iterator(): Iterator<ExprValue>
+
+    /**
+     * Only used for conversion between [ExprValue] and other data formats
+     *
+     * We can use metas to provide additional information when representing data w/r other data formats
+     */
+    val metas: Map<String, Any?>
 }
 
 fun ExprValue.toIonValue(ion: IonSystem): IonValue =
     when (type) {
-        ExprValueType.NULL -> ion.newNull()
+        ExprValueType.NULL -> {
+            val ionType = metas["ion_null_type"] as? IonType ?: IonType.NULL
+            ion.newNull(ionType)
+        }
         ExprValueType.MISSING -> ion.newNull().apply { addTypeAnnotation(MISSING_ANNOTATION) }
         ExprValueType.BOOL -> ion.newBool(booleanValue())
         ExprValueType.INT -> ion.newInt(longValue())
@@ -94,7 +119,7 @@ fun ExprValue.toIonValue(ion: IonSystem): IonValue =
                 it.toIonValue(ion).clone()
         }
         ExprValueType.STRUCT -> toIonStruct(ion)
-    }.seal()
+    }
 
 /**
  * [SequenceExprValue] may call this function to get a mutable instance of the IonValue that it can add
@@ -113,4 +138,59 @@ private fun ExprValue.toIonStruct(ion: IonSystem): IonStruct {
             }
         }
     }
+}
+
+fun IonValue.toExprValue(): ExprValue {
+    val valueFactory = ExprValueFactory.standard(system)
+    return when {
+        isNullValue && hasTypeAnnotation(MISSING_ANNOTATION) -> valueFactory.missingValue // MISSING
+        isNullValue -> object : BaseExprValue() {
+            override val type = ExprValueType.NULL
+            override val metas: Map<String, Any?>
+                get() = mapOf(
+                    Pair("ion_null_type", this@toExprValue.type)
+                )
+        } // NULL
+        this is IonBool -> valueFactory.newBoolean(booleanValue()) // BOOL
+        this is IonInt -> valueFactory.newInt(longValue()) // INT
+        this is IonFloat -> valueFactory.newFloat(doubleValue()) // FLOAT
+        this is IonDecimal -> valueFactory.newDecimal(decimalValue()) // DECIMAL
+        this is IonTimestamp && hasTypeAnnotation(DATE_ANNOTATION) -> {
+            val timestampValue = timestampValue()
+            valueFactory.newDate(timestampValue.year, timestampValue.month, timestampValue.day)
+        } // DATE
+        this is IonTimestamp -> valueFactory.newTimestamp(timestampValue()) // TIMESTAMP
+        this is IonStruct && hasTypeAnnotation(TIME_ANNOTATION) -> {
+            val hourValue = (get("hour") as IonInt).intValue()
+            val minuteValue = (get("minute") as IonInt).intValue()
+            val secondInDecimal = (get("second") as IonDecimal).decimalValue()
+            val secondValue = secondInDecimal.toInt()
+            val nanoValue = secondInDecimal.remainder(BigDecimal.ONE).multiply(NANOS_PER_SECOND.toBigDecimal()).toInt()
+            val timeZoneHourValue = (get("timezone_hour") as IonInt).intValue()
+            val timeZoneMinuteValue = (get("timezone_minute") as IonInt).intValue()
+            valueFactory.newTime(Time.of(hourValue, minuteValue, secondValue, nanoValue, secondInDecimal.scale(), timeZoneHourValue * 60 + timeZoneMinuteValue))
+        } // TIME
+        this is IonSymbol -> valueFactory.newSymbol(stringValue()) // SYMBOL
+        this is IonString -> valueFactory.newString(stringValue()) // STRING
+        this is IonClob -> valueFactory.newClob(bytesValue()) // CLOB
+        this is IonBlob -> valueFactory.newBlob(bytesValue()) // BLOB
+        this is IonList && hasTypeAnnotation(BAG_ANNOTATION) -> valueFactory.newBag(map { it.toExprValue() }) // BAG
+        this is IonList -> valueFactory.newList(map { it.toExprValue() }) // LIST
+        this is IonSexp -> valueFactory.newSexp(map { it.toExprValue() }) // SEXP
+        this is IonStruct -> IonStructExprValue(valueFactory, this) // STRUCT
+        else -> error("Invalid IonValue")
+    }
+}
+
+private class IonStructExprValue(
+    valueFactory: ExprValueFactory,
+    ionStruct: IonStruct
+) : StructExprValue(
+    StructOrdering.UNORDERED,
+    ionStruct.asSequence().map {
+        it.toExprValue().namedValue(valueFactory.newString(it.fieldName))
+    }
+) {
+    override val bindings: Bindings<ExprValue> =
+        IonStructBindings(valueFactory, ionStruct)
 }

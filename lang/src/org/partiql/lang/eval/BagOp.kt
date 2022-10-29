@@ -1,7 +1,5 @@
 package org.partiql.lang.eval
 
-import com.amazon.ion.IonContainer
-import com.amazon.ion.IonStruct
 import com.amazon.ionelement.api.MetaContainer
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.PartiqlPhysical
@@ -73,11 +71,6 @@ fun interface ExprValueBagOp {
 internal fun ExprValue.coerceToBag(): Sequence<ExprValue> = when {
     isUnknown() -> emptySequence()
     this is StructExprValue || this is Scalar -> sequenceOf(this)
-    this is IonExprValue -> when (ionValue) {
-        is IonStruct -> sequenceOf(this)
-        is IonContainer -> this.asSequence()
-        else -> sequenceOf(this)
-    }
     else -> this.asSequence()
 }
 

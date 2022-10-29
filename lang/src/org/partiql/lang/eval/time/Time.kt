@@ -4,6 +4,7 @@ import com.amazon.ion.IonStruct
 import com.amazon.ion.IonSystem
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.EvaluationException
+import org.partiql.lang.eval.TIME_ANNOTATION
 import org.partiql.lang.eval.err
 import org.partiql.lang.util.getOffsetHHmm
 import org.partiql.lang.util.propertyValueMapOf
@@ -168,7 +169,7 @@ data class Time private constructor(val localTime: LocalTime, val precision: Int
             add("second", ion.newDecimal(secondsWithFractionalPart))
             add("timezone_hour", ion.newInt(timezoneHour))
             add("timezone_minute", ion.newInt(timezoneMinute))
-            addTypeAnnotation(PARTIQL_TIME_ANNOTATION)
+            addTypeAnnotation(TIME_ANNOTATION)
         }
 
     /**

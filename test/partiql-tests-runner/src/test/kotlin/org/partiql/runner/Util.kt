@@ -1,14 +1,17 @@
 package org.partiql.runner
 
-import com.amazon.ion.IonList
-import com.amazon.ion.IonNull
-import com.amazon.ion.IonSexp
+import com.amazon.ion.IonContainer
 import com.amazon.ion.IonStruct
+import com.amazon.ion.IonSystem
 import com.amazon.ion.IonValue
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.StructOrdering
 import org.partiql.lang.eval.namedValue
+import org.partiql.lang.eval.toExprValue
+import org.partiql.lang.eval.toIonValue
+
+// TODO: remove this file once we remove the prefix 'paritql_' as annotation of Ion values in core package
 
 const val BAG_ANNOTATION = "\$bag"
 const val MISSING_ANNOTATION = "\$missing"
@@ -18,26 +21,56 @@ const val MISSING_ANNOTATION = "\$missing"
  * slightly different encoding than the default conversion function provided by [ExprValueFactory]. E.g. Ion value
  * annotation for bag.
  */
-internal fun IonValue.toExprValue(exprValueFactory: ExprValueFactory): ExprValue {
+internal fun IonValue.toExprValueChangingAnnotation(): ExprValue {
     // Need to create a different IonValue to ExprValue conversion function because the default provided by
     // `ExprValueFactory`'s [newFromIonValue] relies on a different encoding of PartiQL-specific types than the
     // conformance tests (e.g. `ExprValueFactory` uses $partiql_bag rather than $bag)
-    val elem = this
-    val annotations = elem.typeAnnotations
-    return when {
-        (elem is IonList) && annotations.contains(BAG_ANNOTATION) -> {
-            val elemsAsExprValues = elem.map {
-                it.toExprValue(exprValueFactory)
-            }
-            exprValueFactory.newBag(elemsAsExprValues)
+    changeAnnotation()
+    val valueFactory = ExprValueFactory.standard(system)
+    return when (this) {
+        is IonStruct -> {
+            valueFactory.newStruct(map { it.toExprValueChangingAnnotation().namedValue(valueFactory.newString(it.fieldName)) }, StructOrdering.UNORDERED)
         }
-        elem is IonNull && elem.hasTypeAnnotation(MISSING_ANNOTATION) -> exprValueFactory.missingValue
-        // TODO: other PartiQL types not in Ion
-        elem is IonList -> exprValueFactory.newList(elem.map { it.toExprValue(exprValueFactory) })
-        elem is IonSexp -> exprValueFactory.newSexp(elem.map { it.toExprValue(exprValueFactory) })
-        elem is IonStruct -> {
-            exprValueFactory.newStruct(elem.map { it.toExprValue(exprValueFactory).namedValue(exprValueFactory.newString(it.fieldName)) }, StructOrdering.UNORDERED)
+        else -> toExprValue()
+    }
+}
+
+private fun IonValue.changeAnnotation() {
+    when {
+        hasTypeAnnotation(BAG_ANNOTATION) -> {
+            removeTypeAnnotation(BAG_ANNOTATION)
+            addTypeAnnotation("\$partiql_bag")
         }
-        else -> exprValueFactory.newFromIonValue(elem)
+        hasTypeAnnotation(MISSING_ANNOTATION) -> {
+            removeTypeAnnotation(MISSING_ANNOTATION)
+            addTypeAnnotation("\$partiql_missing")
+        }
+    }
+
+    if (this is IonContainer) {
+        forEach { it.changeAnnotationToPartiql() }
+    }
+}
+
+/**
+ * Converts an [ExprValue] to the conformance test suite's modeling of PartiQL values in Ion.
+ */
+internal fun ExprValue.toIonValueChangingAnnotation(ion: IonSystem): IonValue =
+    toIonValue(ion).apply { changeAnnotationToPartiql() }
+
+private fun IonValue.changeAnnotationToPartiql() {
+    when {
+        hasTypeAnnotation("\$partiql_bag") -> {
+            removeTypeAnnotation("\$partiql_bag")
+            addTypeAnnotation(BAG_ANNOTATION)
+        }
+        hasTypeAnnotation("\$partiql_missing") -> {
+            removeTypeAnnotation("\$partiql_missing")
+            addTypeAnnotation(MISSING_ANNOTATION)
+        }
+    }
+
+    if (this is IonContainer) {
+        forEach { it.changeAnnotationToPartiql() }
     }
 }
