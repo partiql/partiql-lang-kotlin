@@ -16,7 +16,6 @@ package org.partiql.lang.syntax
 
 import com.amazon.ion.IntegerSize
 import com.amazon.ion.IonInt
-import com.amazon.ion.IonSexp
 import com.amazon.ion.IonSystem
 import com.amazon.ionelement.api.emptyMetaContainer
 import com.amazon.ionelement.api.ionInt
@@ -4173,11 +4172,4 @@ class SqlParser(
 
         return node.toAstStatement()
     }
-
-    override fun parse(source: String): IonSexp =
-        @Suppress("DEPRECATION")
-        org.partiql.lang.ast.AstSerializer.serialize(
-            parseExprNode(source),
-            org.partiql.lang.ast.AstVersion.V0, ion
-        )
 }

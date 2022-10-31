@@ -14,7 +14,6 @@
 
 package org.partiql.lang.syntax
 
-import com.amazon.ion.IonSexp
 import com.amazon.ion.IonSystem
 import org.antlr.v4.runtime.BaseErrorListener
 import org.antlr.v4.runtime.CharStreams
@@ -109,14 +108,6 @@ internal class PartiQLParser(
     override fun parseExprNode(source: String): @Suppress("DEPRECATION") ExprNode {
         return parseAstStatement(source).toExprNode(ion)
     }
-
-    @Deprecated("Please use parseAstStatement() instead--the return value can be deserialized to backward-compatible IonSexp.")
-    override fun parse(source: String): IonSexp =
-        @Suppress("DEPRECATION")
-        org.partiql.lang.ast.AstSerializer.serialize(
-            parseExprNode(source),
-            org.partiql.lang.ast.AstVersion.V0, ion
-        )
 
     /**
      * Catches Lexical errors (unidentified tokens) and throws a [LexerException]
