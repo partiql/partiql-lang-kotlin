@@ -61,53 +61,42 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun listLiteral() = assertExpression(
         "[a, 5]",
-        "(list (id a case_insensitive) (lit 5))",
         "(list (id a (case_insensitive) (unqualified)) (lit 5))"
     )
 
     @Test
     fun listLiteralWithBinary() = assertExpression(
         "[a, 5, (b + 6)]",
-        "(list (id a case_insensitive) (lit 5) (+ (id b case_insensitive) (lit 6)))",
         "(list (id a (case_insensitive) (unqualified)) (lit 5) (plus (id b (case_insensitive) (unqualified)) (lit 6)))"
     )
 
     @Test
     fun listFunction() = assertExpression(
         "list(a, 5)",
-        "(list (id a case_insensitive) (lit 5))",
         "(list (id a (case_insensitive) (unqualified)) (lit 5))"
     )
 
     @Test
     fun listFunctionlWithBinary() = assertExpression(
         "LIST(a, 5, (b + 6))",
-        "(list (id a case_insensitive) (lit 5) (+ (id b case_insensitive) (lit 6)))",
         "(list (id a (case_insensitive) (unqualified)) (lit 5) (plus (id b (case_insensitive) (unqualified)) (lit 6)))"
     )
 
     @Test
     fun sexpFunction() = assertExpression(
         "sexp(a, 5)",
-        "(sexp (id a case_insensitive) (lit 5))",
         "(sexp (id a (case_insensitive) (unqualified)) (lit 5))"
     )
 
     @Test
     fun sexpFunctionWithBinary() = assertExpression(
         "SEXP(a, 5, (b + 6))",
-        "(sexp (id a case_insensitive) (lit 5) (+ (id b case_insensitive) (lit 6)))",
         "(sexp (id a (case_insensitive) (unqualified)) (lit 5) (plus (id b (case_insensitive) (unqualified)) (lit 6)))"
     )
 
     @Test
     fun structLiteral() = assertExpression(
         "{'x':a, 'y':5 }",
-        """(struct
-             (lit "x") (id a case_insensitive)
-             (lit "y") (lit 5)
-           )
-        """,
         """(struct
              (expr_pair (lit "x") (id a (case_insensitive) (unqualified)))
              (expr_pair (lit "y") (lit 5))
@@ -118,12 +107,6 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun structLiteralWithBinary() = assertExpression(
         "{'x':a, 'y':5, 'z':(b + 6)}",
-        """(struct
-             (lit "x") (id a case_insensitive)
-             (lit "y") (lit 5)
-             (lit "z") (+ (id b case_insensitive) (lit 6))
-           )
-        """,
         """(struct
              (expr_pair (lit "x") (id a (case_insensitive) (unqualified)))
              (expr_pair (lit "y") (lit 5))
@@ -147,7 +130,6 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun nestedEmptyStructLiteral() = assertExpression(
         "{'a':{}}",
-        """(struct (lit "a") (struct))""",
         """(struct (expr_pair (lit "a") (struct)))"""
     )
 
@@ -184,14 +166,12 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun id_case_insensitive() = assertExpression(
         "kumo",
-        "(id kumo case_insensitive)",
         "(id kumo (case_insensitive) (unqualified))"
     )
 
     @Test
     fun id_case_sensitive() = assertExpression(
         "\"kumo\"",
-        "(id kumo case_sensitive)",
         "(id kumo (case_sensitive) (unqualified))"
     )
 
@@ -277,21 +257,18 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun negCall() = assertExpression(
         "-baz()",
-        "(- (call baz))",
         "(neg (call baz))"
     )
 
     @Test
     fun posNegIdent() = assertExpression(
         "+(-baz())",
-        "(+ (- (call baz)))",
         "(pos (neg (call baz)))"
     )
 
     @Test
     fun posNegIdentNoSpaces() = assertExpression(
         "+-baz()",
-        "(+ (- (call baz)))",
         "(pos (neg (call baz)))"
     )
 
@@ -314,7 +291,6 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun unaryIonTimestampLiteral() = assertExpression(
         "+-`2017-01-01`",
-        "(+ (- (lit 2017-01-01T)))",
         "(pos (neg (lit 2017-01-01T)))"
     )
 
@@ -336,7 +312,6 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun notBetweenOperator() = assertExpression(
         "5 NOT BETWEEN 1 AND 10",
-        "(not_between (lit 5) (lit 1) (lit 10))",
         "(not (between (lit 5) (lit 1) (lit 10)))"
     )
     // ****************************************
@@ -346,14 +321,12 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun atOperatorOnIdentifier() = assertExpression(
         "@a",
-        "(@ (id a case_insensitive))",
         "(id a (case_insensitive) (locals_first))"
     )
 
     @Test
     fun atOperatorOnPath() = assertExpression(
         "@a.b",
-        """(path (@ (id a case_insensitive)) (case_insensitive (lit "b")))""",
         """(path (id a (case_insensitive) (locals_first)) (path_expr (lit "b") (case_insensitive)))"""
     )
 
@@ -363,84 +336,72 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun nullIsNull() = assertExpression(
         "null IS NULL",
-        "(is (lit null) (type 'null'))",
         "(is_type (lit null) (null_type))"
     )
 
     @Test
     fun missingIsMissing() = assertExpression(
         "mIsSiNg IS MISSING",
-        "(is (missing) (type missing))",
         "(is_type (missing) (missing_type))"
     )
 
     @Test
     fun callIsVarchar() = assertExpression(
         "f() IS VARCHAR(200)",
-        "(is (call f) (type character_varying 200))",
         "(is_type (call f) (character_varying_type 200))"
     )
 
     @Test
     fun nullIsNotNull() = assertExpression(
         "null IS NOT NULL",
-        "(is_not (lit null) (type 'null'))",
         "(not (is_type (lit null) (null_type)))"
     )
 
     @Test
     fun missingIsNotMissing() = assertExpression(
         "mIsSiNg IS NOT MISSING",
-        "(is_not (missing) (type missing))",
         "(not (is_type (missing) (missing_type)))"
     )
 
     @Test
     fun callIsNotVarchar() = assertExpression(
         "f() IS NOT VARCHAR(200)",
-        "(is_not (call f) (type character_varying 200))",
         "(not (is_type (call f) (character_varying_type 200)))"
     )
 
     @Test
     fun callWithMultiple() = assertExpression(
         "foobar(5, 6, a)",
-        "(call foobar (lit 5) (lit 6) (id a case_insensitive))",
         "(call foobar (lit 5) (lit 6) (id a (case_insensitive) (unqualified)))"
     )
 
     @Test
     fun aggregateFunctionCall() = assertExpression(
         "COUNT(a)",
-        """(call_agg count all (id a case_insensitive))""",
         """(call_agg (all) count (id a (case_insensitive) (unqualified)))"""
     )
 
     @Test
     fun aggregateDistinctFunctionCall() = assertExpression(
         "SUM(DISTINCT a)",
-        "(call_agg sum distinct (id a case_insensitive))",
         "(call_agg (distinct) sum (id a (case_insensitive) (unqualified)))"
     )
 
     @Test
     fun countStarFunctionCall() = assertExpression(
         "COUNT(*)",
-        "(call_agg_wildcard count)",
         "(call_agg (all) count (lit 1))"
     )
 
     @Test
     fun countFunctionCall() = assertExpression(
         "COUNT(a)",
-        "(call_agg count all (id a case_insensitive))",
         "(call_agg (all) count (id a (case_insensitive) (unqualified)))"
     )
 
     @Test
     fun countDistinctFunctionCall() = assertExpression(
         "COUNT(DISTINCT a)",
-        "(call_agg count distinct (id a case_insensitive))",
         "(call_agg (distinct) count (id a (case_insensitive) (unqualified)))"
     )
 
@@ -450,14 +411,12 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun dot_case_1_insensitive_component() = assertExpression(
         "a.b",
-        """(path (id a case_insensitive) (case_insensitive (lit "b")))""",
         """(path (id a (case_insensitive) (unqualified)) (path_expr (lit "b") (case_insensitive)))"""
     )
 
     @Test
     fun dot_case_2_insensitive_component() = assertExpression(
         "a.b.c",
-        """(path (id a case_insensitive) (case_insensitive (lit "b")) (case_insensitive (lit "c")))""",
         """(path (id a (case_insensitive) (unqualified))
            (path_expr (lit "b") (case_insensitive))
            (path_expr (lit "c") (case_insensitive)))""".trimMargin()
@@ -465,7 +424,6 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun dot_case_3_insensitive_components() = assertExpression(
         "a.b.c.d",
-        """(path (id a case_insensitive) (case_insensitive (lit "b")) (case_insensitive (lit "c")) (case_insensitive (lit "d")))""",
         """(path (id a (case_insensitive) (unqualified))
            (path_expr (lit "b") (case_insensitive))
            (path_expr (lit "c") (case_insensitive))
@@ -475,7 +433,6 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun dot_case_sensitive() = assertExpression(
         """ "a"."b" """,
-        """(path (id a case_sensitive) (case_sensitive (lit "b")))""",
         """(path (id a (case_sensitive) (unqualified))
            (path_expr (lit "b") (case_sensitive)))""".trimMargin()
     )
@@ -483,7 +440,6 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun dot_case_sensitive_component() = assertExpression(
         "a.\"b\"",
-        """(path (id a case_insensitive) (case_sensitive (lit "b")))""",
         """(path (id a (case_insensitive) (unqualified))
            (path_expr (lit "b") (case_sensitive)))""".trimMargin()
     )
@@ -491,7 +447,6 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun groupDot() = assertExpression(
         "(a).b",
-        """(path (id a case_insensitive) (case_insensitive (lit "b")))""",
         """(path (id a (case_insensitive) (unqualified))
            (path_expr (lit "b") (case_insensitive)))""".trimMargin()
     )
@@ -499,14 +454,12 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun pathWith1SquareBracket() = assertExpression(
         """a[5]""",
-        """(path (id a case_insensitive) (lit 5))""",
         """(path (id a (case_insensitive) (unqualified))
            (path_expr (lit 5) (case_sensitive)))""".trimMargin()
     )
     @Test
     fun pathWith3SquareBrackets() = assertExpression(
         """a[5]['b'][(a + 3)]""",
-        """(path (id a case_insensitive) (lit 5) (case_sensitive (lit "b")) (+ (id a case_insensitive) (lit 3)))""",
         """(path (id a (case_insensitive) (unqualified))
            (path_expr (lit 5) (case_sensitive))
            (path_expr (lit "b") (case_sensitive))
@@ -516,14 +469,12 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun dotStar() = assertExpression(
         "a.*",
-        """(path (id a case_insensitive) (* unpivot))""",
         """(path (id a (case_insensitive) (unqualified)) (path_unpivot))""".trimMargin()
     )
 
     @Test
     fun dot2Star() = assertExpression(
         "a.b.*",
-        """(path (id a case_insensitive) (case_insensitive (lit "b")) (* unpivot))""",
         """(path (id a (case_insensitive) (unqualified))
            (path_expr (lit "b") (case_insensitive))
            (path_unpivot))""".trimMargin()
@@ -532,14 +483,12 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun dotWildcard() = assertExpression(
         "a[*]",
-        """(path (id a case_insensitive) (*))""",
         """(path (id a (case_insensitive) (unqualified)) (path_wildcard))"""
     )
 
     @Test
     fun dot2Wildcard() = assertExpression(
         "a.b[*]",
-        """(path (id a case_insensitive) (case_insensitive (lit "b")) (*))""",
         """(path (id a (case_insensitive) (unqualified))
            (path_expr (lit "b") (case_insensitive))
            (path_wildcard))""".trimMargin()
@@ -548,7 +497,6 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun pathWithCallAndDotStar() = assertExpression(
         "foo(x, y).a.*.b",
-        """(path (call foo (id x case_insensitive) (id y case_insensitive)) (case_insensitive (lit "a")) (* unpivot) (case_insensitive (lit "b")))""",
         """(path (call foo (id x (case_insensitive) (unqualified)) (id y (case_insensitive) (unqualified)))
            (path_expr (lit "a") (case_insensitive))
            (path_unpivot)
@@ -558,7 +506,6 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun dotAndBracketStar() = assertExpression(
         "x.a[*].b",
-        """(path (id x case_insensitive) (case_insensitive (lit "a")) (*) (case_insensitive (lit "b")))""",
         """(path (id x (case_insensitive) (unqualified))
            (path_expr (lit "a") (case_insensitive))
            (path_wildcard)
@@ -573,11 +520,6 @@ class SqlParserTest : SqlParserTestBase() {
         "CAST(5 AS VARCHAR)",
         """(cast
              (lit 5)
-             (type character_varying)
-           )
-        """,
-        """(cast
-             (lit 5)
              (character_varying_type null)
            )
         """
@@ -586,49 +528,42 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun castASVarCharWithLength() = assertExpression(
         "CAST(5 AS VARCHAR(5))",
-        "(cast (lit 5) (type character_varying 5))",
         "(cast (lit 5) (character_varying_type 5))"
     )
 
     @Test
     fun castAsDecimal() = assertExpression(
         "CAST(a AS DECIMAL)",
-        "(cast (id a case_insensitive) (type decimal) )",
         "(cast (id a (case_insensitive) (unqualified)) (decimal_type null null))"
     )
 
     @Test
     fun castAsDecimalScaleOnly() = assertExpression(
         "CAST(a AS DECIMAL(1))",
-        "(cast (id a case_insensitive) (type decimal 1))",
         "(cast (id a (case_insensitive) (unqualified)) (decimal_type 1 null))"
     )
 
     @Test
     fun castAsDecimalScaleAndPrecision() = assertExpression(
         "CAST(a AS DECIMAL(1, 2))",
-        "(cast (id a case_insensitive) (type decimal 1 2))",
         "(cast (id a (case_insensitive) (unqualified)) (decimal_type 1 2))"
     )
 
     @Test
     fun castAsNumeric() = assertExpression(
         "CAST(a AS NUMERIC)",
-        "(cast (id a case_insensitive) (type numeric))",
         """(cast (id a (case_insensitive) (unqualified)) (numeric_type null null))"""
     )
 
     @Test
     fun castAsNumericScaleOnly() = assertExpression(
         "CAST(a AS NUMERIC(1))",
-        "(cast (id a case_insensitive) (type numeric 1))",
         "(cast (id a (case_insensitive) (unqualified)) (numeric_type 1 null))"
     )
 
     @Test
     fun castAsNumericScaleAndPrecision() = assertExpression(
         "CAST(a AS NUMERIC(1, 2))",
-        "(cast (id a case_insensitive) (type numeric 1 2))",
         "(cast (id a (case_insensitive) (unqualified)) (numeric_type 1 2))"
     )
 
@@ -654,13 +589,6 @@ class SqlParserTest : SqlParserTestBase() {
     fun searchedCaseSingleNoElse() = assertExpression(
         "CASE WHEN name = 'zoe' THEN 1 END",
         """(searched_case
-             (when
-               (= (id name case_insensitive) (lit "zoe"))
-               (lit 1)
-             )
-           )
-        """,
-        """(searched_case
           (expr_pair_list
             (expr_pair (eq (id name (case_insensitive) (unqualified)) (lit "zoe")) (lit 1)))
           null
@@ -672,14 +600,6 @@ class SqlParserTest : SqlParserTestBase() {
     fun searchedCaseSingleWithElse() = assertExpression(
         "CASE WHEN name = 'zoe' THEN 1 ELSE 0 END",
         """(searched_case
-             (when
-               (= (id name case_insensitive) (lit "zoe"))
-               (lit 1)
-             )
-             (else (lit 0))
-           )
-        """,
-        """(searched_case
           (expr_pair_list
             (expr_pair (eq (id name (case_insensitive) (unqualified)) (lit "zoe")) (lit 1)))
           (lit 0)
@@ -690,18 +610,6 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun searchedCaseMultiWithElse() = assertExpression(
         "CASE WHEN name = 'zoe' THEN 1 WHEN name > 'kumo' THEN 2 ELSE 0 END",
-        """(searched_case
-             (when
-               (= (id name case_insensitive) (lit "zoe"))
-               (lit 1)
-             )
-             (when
-               (> (id name case_insensitive) (lit "kumo"))
-               (lit 2)
-             )
-             (else (lit 0))
-           )
-        """,
         """(searched_case
           (expr_pair_list
             (expr_pair (eq (id name (case_insensitive) (unqualified)) (lit "zoe")) (lit 1))
@@ -718,14 +626,6 @@ class SqlParserTest : SqlParserTestBase() {
     fun simpleCaseSingleNoElse() = assertExpression(
         "CASE name WHEN 'zoe' THEN 1 END",
         """(simple_case
-             (id name case_insensitive)
-             (when
-               (lit "zoe")
-               (lit 1)
-             )
-           )
-        """,
-        """(simple_case
           (id name (case_insensitive) (unqualified))
           (expr_pair_list
             (expr_pair (lit "zoe") (lit 1)))
@@ -737,15 +637,6 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun simpleCaseSingleWithElse() = assertExpression(
         "CASE name WHEN 'zoe' THEN 1 ELSE 0 END",
-        """(simple_case
-             (id name case_insensitive)
-             (when
-               (lit "zoe")
-               (lit 1)
-             )
-             (else (lit 0))
-           )
-        """,
         """(simple_case
              (id name (case_insensitive) (unqualified))
              (expr_pair_list
@@ -759,23 +650,6 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun simpleCaseMultiWithElse() = assertExpression(
         "CASE name WHEN 'zoe' THEN 1 WHEN 'kumo' THEN 2 WHEN 'mary' THEN 3 ELSE 0 END",
-        """(simple_case
-            (id name case_insensitive)
-            (when
-              (lit "zoe")
-              (lit 1)
-            )
-            (when
-              (lit "kumo")
-              (lit 2)
-            )
-            (when
-              (lit "mary")
-              (lit 3)
-            )
-            (else (lit 0))
-           )
-        """,
         """(simple_case
           (id name (case_insensitive) (unqualified))
           (expr_pair_list
@@ -793,11 +667,6 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun inOperatorWithImplicitValues() = assertExpression(
         "a IN (1, 2, 3, 4)",
-        """(in
-             (id a case_insensitive)
-             (list (lit 1) (lit 2) (lit 3) (lit 4))
-           )
-        """,
         """(in_collection
              (id a (case_insensitive) (unqualified))
              (list (lit 1) (lit 2) (lit 3) (lit 4))
@@ -808,11 +677,6 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun notInOperatorWithImplicitValues() = assertExpression(
         "a NOT IN (1, 2, 3, 4)",
-        """(not_in
-             (id a case_insensitive)
-             (list (lit 1) (lit 2) (lit 3) (lit 4))
-           )
-        """,
         """(not
           (in_collection
              (id a (case_insensitive) (unqualified))
@@ -823,11 +687,6 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun inOperatorWithImplicitValuesRowConstructor() = assertExpression(
         "(a, b) IN ((1, 2), (3, 4))",
-        """(in
-             (list (id a case_insensitive) (id b case_insensitive))
-             (list (list (lit 1) (lit 2)) (list (lit 3) (lit 4)))
-           )
-        """,
         """(in_collection
              (list (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))
              (list (list (lit 1) (lit 2)) (list (lit 3) (lit 4)))
@@ -850,25 +709,18 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun likeColNameLikeString() = assertExpression(
         "a LIKE '_AAA%'",
-        """(like (id a case_insensitive) (lit "_AAA%"))""",
         """(like (id a (case_insensitive) (unqualified)) (lit "_AAA%") null)"""
     )
 
     @Test
     fun likeColNameLikeColName() = assertExpression(
         "a LIKE b",
-        "(like (id a case_insensitive) (id b case_insensitive))",
         "(like (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)) null)"
     )
 
     @Test
     fun pathLikePath() = assertExpression(
         "a.name LIKE b.pattern",
-        """
-        (like
-            (path (id a case_insensitive) (case_insensitive (lit "name")))
-            (path (id b case_insensitive) (case_insensitive (lit "pattern"))))
-        """,
         """
         (like
             (path (id a (case_insensitive) (unqualified)) (path_expr (lit "name") (case_insensitive)))
@@ -882,11 +734,6 @@ class SqlParserTest : SqlParserTestBase() {
         "a.name LIKE b.pattern",
         """
         (like
-            (path (id a case_insensitive) (case_insensitive (lit "name")))
-            (path (id b case_insensitive) (case_insensitive (lit "pattern"))))
-        """,
-        """
-        (like
             (path (id a (case_insensitive) (unqualified)) (path_expr (lit "name") (case_insensitive)))
             (path (id b (case_insensitive) (unqualified)) (path_expr (lit "pattern") (case_insensitive)))
             null)
@@ -896,12 +743,6 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun likeColNameLikeStringEscape() = assertExpression(
         "a LIKE '_AAA%' ESCAPE '['",
-        """
-        (like
-            (id a case_insensitive)
-            (lit "_AAA%")
-            (lit "["))
-        """,
         """
         (like
             (id a (case_insensitive) (unqualified))
@@ -914,11 +755,6 @@ class SqlParserTest : SqlParserTestBase() {
     fun notLikeColNameLikeString() = assertExpression(
         "a NOT LIKE '_AAA%'",
         """
-        (not_like
-            (id a case_insensitive)
-            (lit "_AAA%"))
-        """,
-        """
         (not
           (like
             (id a (case_insensitive) (unqualified))
@@ -930,12 +766,7 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun likeColNameLikeColNameEscape() = assertExpression(
         "a LIKE b ESCAPE '\\'", //  escape \ inside a Kotlin/Java String
-        """
-        (like
-            (id a case_insensitive)
-            (id b case_insensitive)
-            (lit "\\"))
-        """, // escape \ inside a Kotlin/Java String
+        // escape \ inside a Kotlin/Java String
         """
         (like
             (id a (case_insensitive) (unqualified))
@@ -947,14 +778,12 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun likeColNameLikeColNameEscapeNonLit() = assertExpression(
         "a LIKE b ESCAPE c",
-        "(like (id a case_insensitive) (id b case_insensitive) (id c case_insensitive))",
         "(like (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified)))"
     )
 
     @Test
     fun likeColNameLikeColNameEscapePath() = assertExpression(
         "a LIKE b ESCAPE x.c",
-        """(like (id a case_insensitive) (id b case_insensitive) (path (id x case_insensitive) (case_insensitive (lit "c"))))""",
         """(like (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)) (path (id x (case_insensitive) (unqualified)) (path_expr (lit "c") (case_insensitive))))"""
     )
 
@@ -978,7 +807,6 @@ class SqlParserTest : SqlParserTestBase() {
     ) {
         assertExpression(
             templateSql.replace("<op>", operation),
-            templateExpectedV0.replace("<op>", operation),
             templateExpectedPartiqlAst.replace("<op>", operation)
         )
     }
@@ -1045,63 +873,54 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun callExtractYear() = assertExpression(
         "extract(year from a)",
-        "(call extract (lit year) (id a case_insensitive))",
         "(call extract (lit year) (id a (case_insensitive) (unqualified)))"
     )
 
     @Test
     fun callExtractMonth() = assertExpression(
         "extract(month from a)",
-        "(call extract (lit month) (id a case_insensitive))",
         "(call extract (lit month) (id a (case_insensitive) (unqualified)))"
     )
 
     @Test
     fun callExtractDay() = assertExpression(
         "extract(day from a)",
-        "(call extract (lit day) (id a case_insensitive))",
         "(call extract (lit day) (id a (case_insensitive) (unqualified)))"
     )
 
     @Test
     fun callExtractHour() = assertExpression(
         "extract(hour from a)",
-        "(call extract (lit hour) (id a case_insensitive))",
         "(call extract (lit hour) (id a (case_insensitive) (unqualified)))"
     )
 
     @Test
     fun callExtractMinute() = assertExpression(
         "extract(minute from a)",
-        "(call extract (lit minute) (id a case_insensitive))",
         "(call extract (lit minute) (id a (case_insensitive) (unqualified)))"
     )
 
     @Test
     fun callExtractSecond() = assertExpression(
         "extract(second from a)",
-        "(call extract (lit second) (id a case_insensitive))",
         "(call extract (lit second) (id a (case_insensitive) (unqualified)))"
     )
 
     @Test
     fun callExtractTimezoneHour() = assertExpression(
         "extract(timezone_hour from a)",
-        "(call extract (lit timezone_hour) (id a case_insensitive))",
         "(call extract (lit timezone_hour) (id a (case_insensitive) (unqualified)))"
     )
 
     @Test
     fun callExtractTimezoneMinute() = assertExpression(
         "extract(timezone_minute from a)",
-        "(call extract (lit timezone_minute) (id a case_insensitive))",
         "(call extract (lit timezone_minute) (id a (case_insensitive) (unqualified)))"
     )
 
     @Test
     fun caseInsensitiveFunctionName() = assertExpression(
         "mY_fUnCtIoN(a)",
-        "(call my_function (id a case_insensitive))",
         "(call my_function (id a (case_insensitive) (unqualified)))"
     )
 
@@ -1117,96 +936,78 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun selectWithSingleFrom() = assertExpression(
         "SELECT a FROM table1",
-        "(select (project (list (id a case_insensitive))) (from (id table1 case_insensitive)))",
         "(select (project (project_list (project_expr (id a (case_insensitive) (unqualified)) null))) (from (scan (id table1 (case_insensitive) (unqualified)) null null null)))"
     )
 
     @Test
     fun selectAllWithSingleFrom() = assertExpression(
         "SELECT ALL a FROM table1",
-        "(select (project (list (id a case_insensitive))) (from (id table1 case_insensitive)))",
         "(select (project (project_list (project_expr (id a (case_insensitive) (unqualified)) null))) (from (scan (id table1 (case_insensitive) (unqualified)) null null null)))"
     )
 
     @Test
     fun selectDistinctWithSingleFrom() = assertExpression(
         "SELECT DISTINCT a FROM table1",
-        "(select (project_distinct (list (id a case_insensitive))) (from (id table1 case_insensitive)))",
         "(select (setq (distinct)) (project (project_list (project_expr (id a (case_insensitive) (unqualified)) null))) (from (scan (id table1 (case_insensitive) (unqualified)) null null null)))"
     )
 
     @Test
     fun selectStar() = assertExpression(
         "SELECT * FROM table1",
-        "(select (project (list (project_all))) (from (id table1 case_insensitive)))",
         "(select (project (project_star)) (from (scan (id table1 (case_insensitive) (unqualified)) null null null)))"
     )
 
     @Test
     fun selectAliasDotStar() = assertExpression(
         "SELECT t.* FROM table1 AS t",
-        "(select (project (list (project_all (id t case_insensitive)))) (from (as t (id table1 case_insensitive))))",
         "(select (project (project_list (project_all (id t (case_insensitive) (unqualified))))) (from (scan (id table1 (case_insensitive) (unqualified)) t null null)))"
     )
 
     @Test
     fun selectPathAliasDotStar() = assertExpression(
         "SELECT a.b.* FROM table1 AS t",
-        "(select (project (list (project_all (path (id a case_insensitive) (case_insensitive (lit \"b\")))))) (from (as t (id table1 case_insensitive))))",
         "(select (project (project_list (project_all (path (id a (case_insensitive) (unqualified)) (path_expr (lit \"b\") (case_insensitive)))))) (from (scan (id table1 (case_insensitive) (unqualified)) t null null)))"
     )
 
     @Test
     fun selectWithFromAt() = assertExpression(
         "SELECT ord FROM table1 AT ord",
-        "(select (project (list (id ord case_insensitive))) (from (at ord (id table1 case_insensitive))))",
         "(select (project (project_list (project_expr (id ord (case_insensitive) (unqualified)) null))) (from (scan (id table1 (case_insensitive) (unqualified)) null ord null)))"
     )
 
     @Test
     fun selectWithFromAsAndAt() = assertExpression(
         "SELECT ord, val FROM table1 AS val AT ord",
-        "(select (project (list (id ord case_insensitive) (id val case_insensitive))) (from (at ord (as val (id table1 case_insensitive)))))",
         "(select (project (project_list (project_expr (id ord (case_insensitive) (unqualified)) null) (project_expr (id val (case_insensitive) (unqualified)) null))) (from (scan (id table1 (case_insensitive) (unqualified)) val ord null)))"
     )
 
     @Test
     fun selectWithFromIdBy() = assertExpression(
         "SELECT * FROM table1 BY uid",
-        "(select (project (list (project_all))) (from (by uid (id table1 case_insensitive))))",
         "(select (project (project_star)) (from (scan (id table1 (case_insensitive) (unqualified)) null null uid)))"
     )
 
     @Test
     fun selectWithFromAtIdBy() = assertExpression(
         "SELECT * FROM table1 AT ord BY uid",
-        "(select (project (list (project_all))) (from (by uid (at ord (id table1 case_insensitive)))))",
         "(select (project (project_star)) (from (scan (id table1 (case_insensitive) (unqualified)) null ord uid)))"
     )
 
     @Test
     fun selectWithFromAsIdBy() = assertExpression(
         "SELECT * FROM table1 AS t BY uid",
-        "(select (project (list (project_all))) (from (by uid (as t (id table1 case_insensitive)))))",
         "(select (project (project_star)) (from (scan (id table1 (case_insensitive) (unqualified)) t null uid)))"
     )
 
     @Test
     fun selectWithFromAsAndAtIdBy() = assertExpression(
         "SELECT * FROM table1 AS val AT ord BY uid",
-        "(select (project (list (project_all))) (from (by uid (at ord (as val (id table1 case_insensitive))))))",
         "(select (project (project_star)) (from (scan (id table1 (case_insensitive) (unqualified)) val ord uid)))"
     )
 
     @Test
     fun selectWithFromUnpivot() = assertExpression(
         "SELECT * FROM UNPIVOT item",
-        """
-        (select
-          (project (list (project_all)))
-          (from (unpivot (id item case_insensitive)))
-        )
-        """,
         """
         (select
           (project (project_star))
@@ -1220,12 +1021,6 @@ class SqlParserTest : SqlParserTestBase() {
         "SELECT ord FROM UNPIVOT item AT name",
         """
         (select
-          (project (list (id ord case_insensitive)))
-          (from (at name (unpivot (id item case_insensitive))))
-        )
-        """,
-        """
-        (select
           (project (project_list (project_expr (id ord (case_insensitive) (unqualified)) null)))
           (from (unpivot (id item (case_insensitive) (unqualified)) null name null))
         )
@@ -1235,12 +1030,6 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun selectWithFromUnpivotWithAs() = assertExpression(
         "SELECT ord FROM UNPIVOT item AS val",
-        """
-        (select
-          (project (list (id ord case_insensitive)))
-          (from (as val (unpivot (id item case_insensitive))))
-        )
-        """,
         """
         (select
           (project (project_list (project_expr (id ord (case_insensitive) (unqualified)) null)))
@@ -1254,12 +1043,6 @@ class SqlParserTest : SqlParserTestBase() {
         "SELECT ord FROM UNPIVOT item AS val AT name",
         """
         (select
-          (project (list (id ord case_insensitive)))
-          (from (at name (as val (unpivot (id item case_insensitive)))))
-        )
-        """,
-        """
-        (select
           (project (project_list (project_expr (id ord (case_insensitive) (unqualified)) null)))
           (from (unpivot (id item (case_insensitive) (unqualified)) val name null))
         )
@@ -1269,7 +1052,6 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun selectAllStar() = assertExpression(
         "SELECT ALL * FROM table1",
-        "(select (project (list (project_all))) (from (id table1 case_insensitive)))",
         """
             (select 
                 (project (project_star)) 
@@ -1280,7 +1062,6 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun selectDistinctStar() = assertExpression(
         "SELECT DISTINCT * FROM table1",
-        "(select (project_distinct (list (project_all))) (from (id table1 case_insensitive)))",
         """
             (select 
                 (setq (distinct)) 
@@ -1292,7 +1073,6 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun selectWhereMissing() = assertExpression(
         "SELECT a FROM stuff WHERE b IS MISSING",
-        "(select (project (list (id a case_insensitive))) (from (id stuff case_insensitive)) (where (is (id b case_insensitive) (type missing))))",
         """
             (select 
                 (project (project_list (project_expr (id a (case_insensitive) (unqualified)) null))) 
@@ -1304,7 +1084,6 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun selectCommaCrossJoin1() = assertExpression(
         "SELECT a FROM table1, table2",
-        "(select (project (list (id a case_insensitive))) (from (inner_join (id table1 case_insensitive) (id table2 case_insensitive))))",
         """
             (select 
                 (project (project_list (project_expr (id a (case_insensitive) (unqualified)) null))) 
@@ -1320,7 +1099,6 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun selectCommaCrossJoin2() = assertExpression(
         "SELECT a FROM table1, table2, table3",
-        "(select (project (list (id a case_insensitive))) (from (inner_join (inner_join (id table1 case_insensitive) (id table2 case_insensitive)) (id table3 case_insensitive))))",
         """
             (select 
                 (project (project_list (project_expr (id a (case_insensitive) (unqualified)) null))) 
@@ -1341,12 +1119,6 @@ class SqlParserTest : SqlParserTestBase() {
     fun selectMultipleWithMultipleFromSimpleWhere() = assertExpression(
         "SELECT a, b FROM table1 as t1, table2 WHERE f(t1)",
         """(select
-             (project (list (id a case_insensitive) (id b case_insensitive)))
-             (from (inner_join (as t1 (id table1 case_insensitive)) (id table2 case_insensitive)))
-             (where (call f (id t1 case_insensitive)))
-           )
-        """,
-        """(select
              (project (project_list (project_expr (id a (case_insensitive) (unqualified)) null) (project_expr (id b (case_insensitive) (unqualified)) null)))
              (from 
                 (join
@@ -1362,12 +1134,6 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun selectMultipleWithMultipleFromSimpleWhereNoAsAlias() = assertExpression(
         "SELECT a a1, b b1 FROM table1 t1, table2 WHERE f(t1)",
-        """(select
-             (project (list (as a1 (id a case_insensitive)) (as b1 (id b case_insensitive))))
-             (from (inner_join (as t1 (id table1 case_insensitive)) (id table2 case_insensitive)))
-             (where (call f (id t1 case_insensitive)))
-           )
-        """,
         """
         (select
             (project (project_list (project_expr (id a (case_insensitive) (unqualified)) a1) (project_expr (id b (case_insensitive) (unqualified)) b1)))
@@ -1385,19 +1151,6 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun selectListWithAggregateWildcardCall() = assertExpression(
         "SELECT sum(a) + count(*), AVG(b), MIN(c), MAX(d + e) FROM foo",
-        """
-        (select
-          (project
-            (list
-              (+ (call_agg sum all (id a case_insensitive)) (call_agg_wildcard count))
-              (call_agg avg all (id b case_insensitive))
-              (call_agg min all (id c case_insensitive))
-              (call_agg max all (+ (id d case_insensitive) (id e case_insensitive)))
-            )
-          )
-          (from (id foo case_insensitive))
-        )
-        """,
         """
         (select
           (project
@@ -1419,27 +1172,6 @@ class SqlParserTest : SqlParserTestBase() {
                    FROM t1.a AS t, t2.x.*.b
                    WHERE test(t2.name, t1.name) AND t1.id = t2.id
                 """,
-        """(select
-             (project
-               (list
-                 (as a (path (call process (id t case_insensitive)) (case_insensitive (lit "a")) (lit 0)))
-                 (as b (path (id t2 case_insensitive) (case_insensitive (lit "b"))))
-               )
-             )
-             (from
-               (inner_join
-                 (as t (path (id t1 case_insensitive) (case_insensitive (lit "a"))))
-                 (path (id t2 case_insensitive) (case_insensitive (lit "x")) (* unpivot) (case_insensitive (lit "b")))
-               )
-             )
-             (where
-               (and
-                 (call test (path (id t2 case_insensitive) (case_insensitive (lit "name"))) (path (id t1 case_insensitive) (case_insensitive (lit "name"))))
-                 (= (path (id t1 case_insensitive) (case_insensitive (lit "id"))) (path (id t2 case_insensitive) (case_insensitive (lit "id"))))
-               )
-             )
-           )
-        """,
         """(select
              (project
                (project_list
@@ -1468,47 +1200,30 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun selectValueWithSingleFrom() = assertExpression(
         "SELECT VALUE a FROM table1",
-        "(select (project (value (id a case_insensitive))) (from (id table1 case_insensitive)))",
         "(select (project (project_value (id a (case_insensitive) (unqualified)))) (from (scan (id table1 (case_insensitive) (unqualified)) null null null)))"
     )
 
     @Test
     fun selectValueWithSingleAliasedFrom() = assertExpression(
         "SELECT VALUE v FROM table1 AS v",
-        "(select (project (value (id v case_insensitive))) (from (as v (id table1 case_insensitive))))",
         "(select (project (project_value (id v (case_insensitive) (unqualified)))) (from (scan (id table1 (case_insensitive) (unqualified)) v null null)))"
     )
 
     @Test
     fun selectAllValues() = assertExpression(
         "SELECT ALL VALUE v FROM table1 AS v",
-        "(select (project (value (id v case_insensitive))) (from (as v (id table1 case_insensitive))))",
         "(select (project (project_value (id v (case_insensitive) (unqualified)))) (from (scan (id table1 (case_insensitive) (unqualified)) v null null)))"
     )
 
     @Test
     fun selectDistinctValues() = assertExpression(
         "SELECT DISTINCT VALUE v FROM table1 AS v",
-        "(select (project_distinct (value (id v case_insensitive))) (from (as v (id table1 case_insensitive))))",
         "(select (setq (distinct)) (project (project_value (id v (case_insensitive) (unqualified)))) (from (scan (id table1 (case_insensitive) (unqualified)) v null null)))"
     )
 
     @Test
     fun nestedSelectNoWhere() = assertExpression(
         "SELECT * FROM (SELECT * FROM x).a",
-        """(select
-             (project (list (project_all)))
-             (from
-               (path
-                 (select
-                   (project (list (project_all)))
-                   (from (id x case_insensitive))
-                 )
-                 (case_insensitive (lit "a"))
-               )
-             )
-           )
-        """,
         """
             (select
                 (project (project_star))
@@ -1528,20 +1243,6 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun nestedSelect() = assertExpression(
         "SELECT * FROM (SELECT * FROM x WHERE b).a",
-        """(select
-             (project (list (project_all)))
-             (from
-               (path
-                 (select
-                   (project (list (project_all)))
-                   (from (id x case_insensitive))
-                   (where (id b case_insensitive))
-                 )
-                 (case_insensitive (lit "a"))
-               )
-             )
-           )
-        """,
         """(select
              (project (project_star))
              (from
@@ -1567,12 +1268,6 @@ class SqlParserTest : SqlParserTestBase() {
     fun selectLimit() = assertExpression(
         "SELECT * FROM a LIMIT 10",
         """(select
-             (project (list (project_all)))
-             (from (id a case_insensitive))
-             (limit (lit 10))
-           )
-        """,
-        """(select
              (project (project_star))
              (from (scan (id a (case_insensitive) (unqualified)) null null null))
              (limit (lit 10))
@@ -1583,13 +1278,6 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun selectWhereLimit() = assertExpression(
         "SELECT * FROM a WHERE a = 5 LIMIT 10",
-        """(select
-             (project (list (project_all)))             
-             (from (id a case_insensitive))
-             (where (= (id a case_insensitive) (lit 5)))
-             (limit (lit 10))
-           )
-        """,
         """(select
              (project (project_star))
              (from (scan (id a (case_insensitive) (unqualified)) null null null))
@@ -1602,44 +1290,6 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun selectWithParametersAndLiterals() = assertExpression(
         "SELECT ?, f.a from foo f where f.bar = ? and f.spam = 'eggs' and f.baz = ?",
-        """
-        (select
-            (project
-                (list
-                    (parameter
-                        1)
-                    (path
-                        (id f case_insensitive)
-                        (case_insensitive
-                            (lit "a")))))
-            (from
-                (as
-                    f
-                    (id foo case_insensitive)))
-            (where
-                (and
-                    (and
-                        (=
-                            (path
-                                (id f case_insensitive)
-                                (case_insensitive
-                                    (lit "bar")))
-                            (parameter
-                                2))
-                        (=
-                            (path
-                                (id f case_insensitive)
-                                (case_insensitive
-                                    (lit "spam")))
-                            (lit "eggs")))
-                    (=
-                        (path
-                            (id f case_insensitive)
-                            (case_insensitive
-                                (lit "baz")))
-                        (parameter
-                            3)))))
-        """,
         """
         (select
             (project
@@ -1942,12 +1592,6 @@ class SqlParserTest : SqlParserTestBase() {
     fun groupBySingleId() = assertExpression(
         "SELECT a FROM data GROUP BY a",
         """(select
-             (project (list (id a case_insensitive)))
-             (from (id data case_insensitive))
-             (group (by (id a case_insensitive)))
-           )
-        """,
-        """(select
              (project (project_list (project_expr (id a (case_insensitive) (unqualified)) null)))
              (from (scan (id data (case_insensitive) (unqualified)) null null null))
              (group (group_by (group_full) (group_key_list (group_key (id a (case_insensitive) (unqualified)) null)) null))
@@ -1959,12 +1603,6 @@ class SqlParserTest : SqlParserTestBase() {
     fun groupBySingleExpr() = assertExpression(
         "SELECT a + b FROM data GROUP BY a + b",
         """(select
-             (project (list (+ (id a case_insensitive) (id b case_insensitive))))
-             (from (id data case_insensitive))
-             (group (by (+ (id a case_insensitive) (id b case_insensitive))))
-           )
-        """,
-        """(select
              (project (project_list (project_expr (plus (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) null)))
              (from (scan (id data (case_insensitive) (unqualified)) null null null))
              (group (group_by (group_full) (group_key_list (group_key (plus (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) null)) null))
@@ -1975,19 +1613,6 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun groupPartialByMultiAliasedAndGroupAliased() = assertExpression(
         "SELECT g FROM data GROUP PARTIAL BY a AS x, b + c AS y, foo(d) AS z GROUP AS g",
-        """(select
-             (project (list (id g case_insensitive)))
-             (from (id data case_insensitive))
-             (group_partial
-               (by
-                 (as x (id a case_insensitive))
-                 (as y (+ (id b case_insensitive) (id c case_insensitive)))
-                 (as z (call foo (id d case_insensitive)))
-               )
-               (name g)
-             )
-           )
-        """,
         """(select
              (project (project_list (project_expr (id g (case_insensitive) (unqualified)) null)))
              (from (scan (id data (case_insensitive) (unqualified)) null null null))
@@ -2024,13 +1649,6 @@ class SqlParserTest : SqlParserTestBase() {
         "SELECT a FROM data HAVING a = b",
         """
           (select
-            (project (list (id a case_insensitive)))
-            (from (id data case_insensitive))
-            (having (= (id a case_insensitive) (id b case_insensitive)))
-          )
-        """,
-        """
-          (select
             (project (project_list (project_expr (id a (case_insensitive) (unqualified)) null)))
             (from (scan (id data (case_insensitive) (unqualified)) null null null))
             (having (eq (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))))
@@ -2041,14 +1659,6 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun havingWithWhere() = assertExpression(
         "SELECT a FROM data WHERE a = b HAVING c = d",
-        """
-          (select
-            (project (list (id a case_insensitive)))
-            (from (id data case_insensitive))
-            (where (= (id a case_insensitive) (id b case_insensitive)))
-            (having (= (id c case_insensitive) (id d case_insensitive)))
-          )
-        """,
         """
           (select
             (project (project_list (project_expr (id a (case_insensitive) (unqualified)) null)))
@@ -2062,15 +1672,6 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun havingWithWhereAndGroupBy() = assertExpression(
         "SELECT g FROM data WHERE a = b GROUP BY c, d GROUP AS g HAVING d > 6",
-        """
-          (select
-            (project (list (id g case_insensitive)))
-            (from (id data case_insensitive))
-            (where (= (id a case_insensitive) (id b case_insensitive)))
-            (group (by (id c case_insensitive) (id d case_insensitive)) (name g))
-            (having (> (id d case_insensitive) (lit 6)))
-          )
-        """,
         """
           (select
             (project (project_list (project_expr (id g (case_insensitive) (unqualified)) null)))
@@ -2089,12 +1690,6 @@ class SqlParserTest : SqlParserTestBase() {
     fun pivotWithOnlyFrom() = assertExpression(
         "PIVOT v AT n FROM data",
         """
-          (pivot
-            (member (id n case_insensitive) (id v case_insensitive))
-            (from (id data case_insensitive))
-          )
-        """,
-        """
           (select
             (project
                 (project_pivot 
@@ -2108,15 +1703,6 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun pivotHavingWithWhereAndGroupBy() = assertExpression(
         "PIVOT g AT ('prefix:' || c) FROM data WHERE a = b GROUP BY c, d GROUP AS g HAVING d > 6",
-        """
-          (pivot
-            (member (|| (lit "prefix:") (id c case_insensitive)) (id g case_insensitive))
-            (from (id data case_insensitive))
-            (where (= (id a case_insensitive) (id b case_insensitive)))
-            (group (by (id c case_insensitive) (id d case_insensitive)) (name g))
-            (having (> (id d case_insensitive) (lit 6)))
-          )
-        """,
         """
           (select
             (project 
@@ -2138,18 +1724,6 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun fromInsertValuesDml() = assertExpression(
         "FROM x INSERT INTO foo VALUES (1, 2), (3, 4)",
-        """
-          (dml
-            (insert
-              (id foo case_insensitive)
-              (bag
-                (list (lit 1) (lit 2))
-                (list (lit 3) (lit 4))
-              )
-            )
-            (from (id x case_insensitive))
-          )
-        """,
         """
         (dml
             (operations
@@ -2176,16 +1750,6 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun fromInsertValueAtDml() = assertExpression(
         "FROM x INSERT INTO foo VALUE 1 AT bar",
-        """
-          (dml
-              (insert_value
-                (id foo case_insensitive)
-                (lit 1)
-                (id bar case_insensitive)
-              )
-              (from (id x case_insensitive))
-          )
-        """,
         """
           (dml
             (operations
@@ -2228,14 +1792,6 @@ class SqlParserTest : SqlParserTestBase() {
         "FROM x INSERT INTO foo VALUE 1",
         """
           (dml
-              (insert_value
-                (id foo case_insensitive)
-                (lit 1))
-              (from (id x case_insensitive))
-          )
-        """,
-        """
-          (dml
             (operations
               (dml_op_list
                 (insert_value
@@ -2267,18 +1823,6 @@ class SqlParserTest : SqlParserTestBase() {
     fun fromInsertQueryDml() = assertExpression(
         "FROM x INSERT INTO foo SELECT y FROM bar",
         """
-          (dml
-            (insert
-              (id foo case_insensitive)
-              (select
-                (project (list (id y case_insensitive)))
-                (from (id bar case_insensitive))
-              )
-            )
-            (from (id x case_insensitive))
-          )
-        """,
-        """
         (dml
             (operations
                 (dml_op_list
@@ -2309,14 +1853,6 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun insertValueDml() = assertExpression(
         "INSERT INTO foo VALUE 1",
-        """
-          (dml
-              (insert_value
-                (id foo case_insensitive)
-                (lit 1)
-              )
-          )
-        """,
         """
           (dml
             (operations
@@ -2365,17 +1901,6 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun insertValuesDml() = assertExpression(
         "INSERT INTO foo VALUES (1, 2), (3, 4)",
-        """
-          (dml
-              (insert
-                (id foo case_insensitive)
-                (bag
-                  (list (lit 1) (lit 2))
-                  (list (lit 3) (lit 4))
-                )
-              )
-          )
-        """,
         """
         (dml
             (operations
@@ -2651,17 +2176,6 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun insertQueryDml() = assertExpression(
         "INSERT INTO foo SELECT y FROM bar",
-        """
-          (dml
-              (insert
-                (id foo case_insensitive)
-                (select
-                  (project (list (id y case_insensitive)))
-                  (from (id bar case_insensitive))
-                )
-              )
-          )
-        """,
         """
         (dml
             (operations
@@ -3140,18 +2654,6 @@ class SqlParserTest : SqlParserTestBase() {
         "FROM x WHERE a = b SET k = 5",
         """
           (dml
-            (set
-              (assignment
-                (id k case_insensitive)
-                (lit 5)
-              )
-            )
-            (from (id x case_insensitive))
-            (where (= (id a case_insensitive) (id b case_insensitive)))
-          )
-        """,
-        """
-          (dml
             (operations
               (dml_op_list
                 (set
@@ -3188,18 +2690,6 @@ class SqlParserTest : SqlParserTestBase() {
         "FROM x WHERE a = b SET k.m = 5",
         """
           (dml
-            (set
-              (assignment
-                (path (id k case_insensitive) (case_insensitive (lit "m")))
-                (lit 5)
-              )
-            )
-            (from (id x case_insensitive))
-            (where (= (id a case_insensitive) (id b case_insensitive)))
-          )
-        """,
-        """
-          (dml
             (operations
               (dml_op_list
                 (set
@@ -3221,18 +2711,6 @@ class SqlParserTest : SqlParserTestBase() {
         "FROM x WHERE a = b SET k['m'] = 5",
         """
           (dml
-            (set
-              (assignment
-                (path (id k case_insensitive) (case_sensitive (lit "m")))
-                (lit 5)
-              )
-            )
-            (from (id x case_insensitive))
-            (where (= (id a case_insensitive) (id b case_insensitive)))
-          )
-        """,
-        """
-          (dml
             (operations
               (dml_op_list
                 (set
@@ -3252,18 +2730,6 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun fromSetSinglePathOrdinalDml() = assertExpression(
         "FROM x WHERE a = b SET k[3] = 5",
-        """
-          (dml
-            (set
-              (assignment
-                (path (id k case_insensitive) (lit 3))
-                (lit 5)
-              )
-            )
-            (from (id x case_insensitive))
-            (where (= (id a case_insensitive) (id b case_insensitive)))
-          )
-        """,
         """
           (dml
             (operations
@@ -3462,16 +2928,6 @@ class SqlParserTest : SqlParserTestBase() {
         "SET k = 5",
         """
           (dml
-              (set
-                (assignment
-                  (id k case_insensitive)
-                  (lit 5)
-                )
-              )
-          )
-        """,
-        """
-          (dml
             (operations
               (dml_op_list
                 (set
@@ -3489,16 +2945,6 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun setSingleDmlWithQuotedIdentifierAtHead() = assertExpression(
         "SET \"k\" = 5",
-        """
-          (dml
-              (set
-                (assignment
-                  (id k case_sensitive)
-                  (lit 5)
-                )
-              )
-          )
-        """,
         """
           (dml
             (operations
@@ -3543,15 +2989,6 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun fromRemoveDml() = assertExpression(
         "FROM x WHERE a = b REMOVE y",
-        """
-          (dml
-            (remove
-              (id y case_insensitive)
-            )
-            (from (id x case_insensitive))
-            (where (= (id a case_insensitive) (id b case_insensitive)))
-          )
-        """,
         """
           (dml
             (operations
@@ -3634,13 +3071,6 @@ class SqlParserTest : SqlParserTestBase() {
         "REMOVE y",
         """
           (dml
-              (remove
-                (id y case_insensitive)
-              )
-          )
-        """,
-        """
-          (dml
             (operations
               (dml_op_list
                 (remove
@@ -3655,18 +3085,6 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun removeDmlPath() = assertExpression(
         "REMOVE a.b['c'][2]",
-        """
-          (dml
-              (remove
-                (path
-                  (id a case_insensitive)
-                  (case_insensitive (lit "b"))
-                  (case_sensitive (lit "c"))
-                  (lit 2)
-                )
-              )
-          )
-        """,
         """
           (dml
             (operations
@@ -3747,21 +3165,6 @@ class SqlParserTest : SqlParserTestBase() {
     fun updateWithInsert() = assertExpression(
         "UPDATE x AS y INSERT INTO k << 1 >> WHERE a = b",
         """
-          (dml
-            (insert
-              (id k case_insensitive)
-              (bag
-                (lit 1)))
-            (from
-              (as
-                y
-                (id x case_insensitive)))
-            (where
-              (=
-                (id a case_insensitive)
-                (id b case_insensitive))))
-        """,
-        """
         (dml
             (operations
                 (dml_op_list
@@ -3819,21 +3222,6 @@ class SqlParserTest : SqlParserTestBase() {
         "UPDATE x AS y INSERT INTO k VALUE 1 AT 'j' WHERE a = b",
         """
           (dml
-            (insert_value
-              (id k case_insensitive)
-              (lit 1)
-              (lit "j"))
-            (from
-              (as
-                y
-                (id x case_insensitive)))
-            (where
-              (=
-                (id a case_insensitive)
-                (id b case_insensitive))))
-        """,
-        """
-          (dml
             (operations
               (dml_op_list
                 (insert_value
@@ -3857,16 +3245,6 @@ class SqlParserTest : SqlParserTestBase() {
     fun updateWithRemove() = assertExpression(
         "UPDATE x AS y REMOVE y.a WHERE a = b",
         """
-          (dml
-            (remove
-              (path
-                (id y case_insensitive)
-                (case_insensitive (lit "a"))))
-            (from (as y (id x case_insensitive)))
-            (where (= (id a case_insensitive) (id b case_insensitive)))
-          )
-        """,
-        """
           (dml  
             (operations
               (dml_op_list
@@ -3885,15 +3263,6 @@ class SqlParserTest : SqlParserTestBase() {
         "UPDATE zoo z SET z.kingdom = 'Fungi'",
         """
           (dml
-            (set
-              (assignment
-                (path (id z case_insensitive) (case_insensitive (lit "kingdom")))
-                (lit "Fungi")))
-            (from
-              (as z (id zoo case_insensitive))))
-        """,
-        """
-          (dml
             (operations
               (dml_op_list
                 (set
@@ -3908,15 +3277,6 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun updateDmlWithAt() = assertExpression(
         "UPDATE zoo AT z_ord SET z.kingdom = 'Fungi'",
-        """
-          (dml
-            (set
-              (assignment
-                (path (id z case_insensitive) (case_insensitive (lit "kingdom")))
-                (lit "Fungi")))
-            (from
-              (at z_ord (id zoo case_insensitive))))
-        """,
         """
           (dml
             (operations
@@ -3935,15 +3295,6 @@ class SqlParserTest : SqlParserTestBase() {
         "UPDATE zoo BY z_id SET z.kingdom = 'Fungi'",
         """
           (dml
-            (set
-              (assignment
-                (path (id z case_insensitive) (case_insensitive (lit "kingdom")))
-                (lit "Fungi")))
-            (from
-              (by z_id (id zoo case_insensitive))))
-        """,
-        """
-          (dml
             (operations
               (dml_op_list
                 (set
@@ -3958,15 +3309,6 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun updateDmlWithAtAndBy() = assertExpression(
         "UPDATE zoo AT z_ord BY z_id SET z.kingdom = 'Fungi'",
-        """
-          (dml
-            (set
-              (assignment
-                (path (id z case_insensitive) (case_insensitive (lit "kingdom")))
-                (lit "Fungi")))
-            (from
-              (by z_id (at z_ord (id zoo case_insensitive)))))
-        """,
         """
           (dml
             (operations
@@ -4117,12 +3459,6 @@ class SqlParserTest : SqlParserTestBase() {
         "DELETE FROM y",
         """
           (dml
-              (delete)
-              (from (id y case_insensitive))
-          )
-        """,
-        """
-          (dml
             (operations (dml_op_list (delete)))
             (from (scan (id y (case_insensitive) (unqualified)) null null null))
           )
@@ -4149,12 +3485,6 @@ class SqlParserTest : SqlParserTestBase() {
         "DELETE FROM x AS y",
         """
           (dml
-              (delete)
-              (from (as y (id x case_insensitive)))
-          )
-        """,
-        """
-          (dml
             (operations (dml_op_list (delete)))
             (from (scan (id x (case_insensitive) (unqualified)) y null null))
           )
@@ -4164,14 +3494,6 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun canParseADeleteQueryWithAPositionClause() = assertExpression(
         "DELETE FROM x AT y",
-        """
-            (dml
-                (delete)
-                (from
-                    (at
-                        y
-                        (id x case_insensitive))))
-        """,
         """
             (dml
               (operations ( dml_op_list (delete)))
@@ -4184,16 +3506,6 @@ class SqlParserTest : SqlParserTestBase() {
         "DELETE FROM x AS y AT z",
         """
             (dml
-                (delete)
-                (from
-                    (at
-                        z
-                        (as
-                            y
-                            (id x case_insensitive)))))
-        """,
-        """
-            (dml
                (operations (dml_op_list (delete)))
                (from (scan (id x (case_insensitive) (unqualified)) y z null)))
         """
@@ -4202,14 +3514,6 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun canParseADeleteQueryWithPath() = assertExpression(
         "DELETE FROM x.n",
-        """
-            (dml
-                (delete)
-                (from
-                    (path
-                        (id x case_insensitive)
-                        (case_insensitive (lit "n")))))
-        """,
         """
             (dml
                 (operations (dml_op_list (delete)))
@@ -4225,15 +3529,6 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun canParseADeleteQueryWithNestedPath() = assertExpression(
         "DELETE FROM x.n.m",
-        """
-            (dml
-                (delete)
-                (from
-                    (path
-                        (id x case_insensitive)
-                        (case_insensitive (lit "n"))
-                        (case_insensitive (lit "m")))))
-        """,
         """
             (dml
                 (operations (dml_op_list(delete)))
@@ -4254,19 +3549,6 @@ class SqlParserTest : SqlParserTestBase() {
         "DELETE FROM x.n.m AS y",
         """
             (dml
-                (delete)
-                (from
-                    (as
-                        y
-                        (path
-                            (id x case_insensitive)
-                            (case_insensitive
-                                (lit "n"))
-                            (case_insensitive
-                                (lit "m"))))))
-        """,
-        """
-            (dml
                 (operations (dml_op_list (delete)))
                 (from
                     (scan
@@ -4283,21 +3565,6 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun canParseADeleteQueryWithNestedPathAndAliasAndPosition() = assertExpression(
         "DELETE FROM x.n.m AS y AT z",
-        """
-            (dml
-                (delete)
-                (from
-                    (at
-                        z
-                        (as
-                            y
-                            (path
-                                (id x case_insensitive)
-                                (case_insensitive
-                                    (lit "n"))
-                                (case_insensitive
-                                    (lit "m")))))))
-        """,
         """
             (dml
                 (operations (dml_op_list (delete)))
@@ -4318,43 +3585,30 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun createTable() = assertExpression(
         "CREATE TABLE foo",
-        "(create foo (table))",
         "(ddl (create_table foo))"
     )
 
     @Test
     fun createTableWithQuotedIdentifier() = assertExpression(
         "CREATE TABLE \"user\"",
-        "(create user (table))",
         "(ddl (create_table user))"
     )
 
     @Test
     fun dropTable() = assertExpression(
         "DROP TABLE foo",
-        "(drop_table (identifier foo (case_insensitive)))",
         "(ddl (drop_table (identifier foo (case_insensitive))))"
     )
 
     @Test
     fun dropTableWithQuotedIdentifier() = assertExpression(
         "DROP TABLE \"user\"",
-        "(drop_table (identifier user (case_sensitive)))",
         "(ddl (drop_table (identifier user (case_sensitive))))"
     )
 
     @Test
     fun createIndex() = assertExpression(
         "CREATE INDEX ON foo (x, y.z)",
-        """
-        (create
-          null.symbol
-          (index
-            (identifier foo (case_insensitive))
-            (keys
-              (id x case_insensitive)
-              (path (id y case_insensitive) (case_insensitive (lit "z"))))))
-        """,
         """
         (ddl
           (create_index
@@ -4368,14 +3622,6 @@ class SqlParserTest : SqlParserTestBase() {
     fun createIndexWithQuotedIdentifiers() = assertExpression(
         "CREATE INDEX ON \"user\" (\"group\")",
         """
-        (create
-          null.symbol
-          (index
-            (identifier user (case_sensitive))
-            (keys
-              (id group case_sensitive))))
-        """,
-        """
         (ddl
           (create_index
             (identifier user (case_sensitive))
@@ -4386,35 +3632,18 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun dropIndex() = assertExpression(
         "DROP INDEX bar ON foo",
-        "(drop_index (identifier foo (case_insensitive)) (identifier bar (case_insensitive)))",
         "(ddl (drop_index (table (identifier foo (case_insensitive))) (keys (identifier bar (case_insensitive)))))"
     )
 
     @Test
     fun dropIndexWithQuotedIdentifiers() = assertExpression(
         "DROP INDEX \"bar\" ON \"foo\"",
-        "(drop_index (identifier foo (case_sensitive)) (identifier bar (case_sensitive)))",
         "(ddl (drop_index (table (identifier foo (case_sensitive))) (keys (identifier bar (case_sensitive)))))"
     )
 
     @Test
     fun unionSelectPrecedence() = assertExpression(
         "SELECT * FROM foo UNION SELECT * FROM bar",
-        """
-        (union
-            (select
-                (project
-                    (list
-                        (project_all)))
-                (from
-                    (id foo case_insensitive)))
-            (select
-                (project
-                    (list
-                        (project_all)))
-                (from
-                    (id bar case_insensitive))))            
-        """,
         """
         (bag_op
             (union)
@@ -4698,7 +3927,6 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun semicolonAtEndOfQuery() = assertExpression(
         "SELECT * FROM <<1>>;",
-        "(select (project (list (project_all))) (from (bag (lit 1))))",
         "(select (project (project_star)) (from (scan (bag (lit 1)) null null null)))"
     )
 

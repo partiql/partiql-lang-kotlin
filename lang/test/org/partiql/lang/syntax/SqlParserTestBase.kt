@@ -24,9 +24,6 @@ import com.amazon.ionelement.api.toIonValue
 import org.partiql.lang.CUSTOM_TEST_TYPES
 import org.partiql.lang.ION
 import org.partiql.lang.TestBase
-import org.partiql.lang.ast.AstDeserializerBuilder
-import org.partiql.lang.ast.AstSerializer
-import org.partiql.lang.ast.AstVersion
 import org.partiql.lang.ast.ExprNode
 import org.partiql.lang.ast.passes.MetaStrippingRewriter
 import org.partiql.lang.ast.toAstStatement
@@ -37,7 +34,6 @@ import org.partiql.lang.errors.Property
 import org.partiql.lang.util.SexpAstPrettyPrinter
 import org.partiql.lang.util.asIonSexp
 import org.partiql.lang.util.checkErrorAndErrorContext
-import org.partiql.lang.util.filterMetaNodes
 import org.partiql.lang.util.softAssert
 import org.partiql.pig.runtime.toIonElement
 
@@ -135,56 +131,17 @@ abstract class SqlParserTestBase : TestBase() {
 
     /**
      * This method is used by test cases for parsing a string.
-     * The test are performed with both PIG AST and V0 AST.
+     * The test are performed with PIG AST.
      * The expected PIG AST is a string.
      */
     protected fun assertExpression(
         source: String,
-        expectedV0Ast: String,
         expectedPigAst: String,
         targetParsers: Set<ParserTypes> = defaultParserTypes
     ) {
         targetParsers.forEach { parser ->
-            // Check for V0 Ast
-            val actualStatement = parser.parser.parseAstStatement(source)
-            val expectedV0AstSexp = loadIonSexp(expectedV0Ast)
-            serializeAssert(AstVersion.V0, actualStatement.toExprNode(ion), expectedV0AstSexp, source)
-
-            // Check for PIG Ast
-            assertExpression(source, expectedPigAst, targetParsers = targetParsers)
+            assertExpression(source, expectedPigAst, roundTrip = true, targetParsers = targetParsers)
         }
-    }
-
-    /**
-     * This method is used by test cases for parsing a string.
-     * The test are performed with both PIG AST and V0 AST.
-     * The expected PIG AST is a PIG builder.
-     */
-    protected fun assertExpression(
-        source: String,
-        expectedSexpAstV0: String,
-        targetParsers: Set<ParserTypes> = defaultParserTypes,
-        expectedPigBuilder: PartiqlAst.Builder.() -> PartiqlAst.PartiqlAstNode
-    ) {
-        val expectedPigAst = PartiqlAst.build { expectedPigBuilder() }.toIonElement().toString()
-
-        // Refer to comments inside the main body of the following function to see what checks are performed.
-        assertExpression(source, expectedSexpAstV0, expectedPigAst, targetParsers)
-    }
-
-    private fun serializeAssert(astVersion: AstVersion, actualExprNode: ExprNode, expectedIonSexp: IonSexp, source: String) {
-        // Check equals for actual value and expected value after transformation: ExprNode -> IonSexp
-        val actualSexpAstWithoutMetas = AstSerializer.serialize(actualExprNode, astVersion, ion).filterMetaNodes()
-        assertSexpEquals(expectedIonSexp, actualSexpAstWithoutMetas, "$astVersion AST, $source")
-
-        // Check equals for actual value and expected value after transformation: IonSexp -> ExprNode
-        val deserializer = AstDeserializerBuilder(ion).build()
-        val deserializedExprNodeFromSexp = deserializer.deserialize(expectedIonSexp, astVersion)
-        assertEquals(
-            "actual ExprNodes must match deserialized s-exp $astVersion AST",
-            actualExprNode.stripMetas(),
-            deserializedExprNodeFromSexp.stripMetas()
-        )
     }
 
     /**
@@ -201,8 +158,7 @@ abstract class SqlParserTestBase : TestBase() {
     }
 
     /**
-     * Performs checks similar to that of [serializeAssert]. First checks that parsing the [source] query string to
-     * a [PartiqlAst] and to an IonValue Sexp equals the [expectedIonSexp].
+     * First checks that parsing the [source] query string to a [PartiqlAst] and to an IonValue Sexp equals the [expectedIonSexp].
      */
     private fun checkEqualInIonSexp(actualStatement: PartiqlAst.Statement, expectedIonSexp: IonSexp, source: String) {
         val actualElement = unwrapQuery(actualStatement)
