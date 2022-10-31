@@ -139,7 +139,7 @@ abstract class SqlParserTestBase : TestBase() {
         expectedPigAst: String,
         targetParsers: Set<ParserTypes> = defaultParserTypes
     ) {
-        targetParsers.forEach { parser ->
+        targetParsers.forEach { _ ->
             assertExpression(source, expectedPigAst, roundTrip = true, targetParsers = targetParsers)
         }
     }

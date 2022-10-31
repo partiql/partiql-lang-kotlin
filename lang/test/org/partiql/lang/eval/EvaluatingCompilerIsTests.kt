@@ -129,7 +129,11 @@ private fun isIntDecimalTypeTestCase(
     expectedLegacyResult: String,
     expectedHonorParamsResult: String = expectedLegacyResult
 ) = listOf(
-    EvaluatorTestCase(sql, expectedLegacyResult, compileOptionsBuilderBlock = CompOptions.TYPED_OP_BEHAVIOR_LEGACY.optionsBlock),
+    EvaluatorTestCase(
+        sql,
+        expectedLegacyResult,
+        compileOptionsBuilderBlock = CompOptions.TYPED_OP_BEHAVIOR_LEGACY.optionsBlock
+    ),
     EvaluatorTestCase(
         sql,
         expectedHonorParamsResult,

@@ -111,7 +111,7 @@ class EvaluatingCompilerFromLetTests : EvaluatorTestBase() {
     @ParameterizedTest
     @ArgumentsSource(ArgsProviderValid::class)
     fun validTests(tc: EvaluatorTestCase) = runEvaluatorTestCase(
-        tc.copy(excludeLegacySerializerAssertions = true),
+        tc,
         session
     )
 
@@ -190,7 +190,7 @@ class EvaluatingCompilerFromLetTests : EvaluatorTestBase() {
     @ParameterizedTest
     @ArgumentsSource(ArgsProviderError::class)
     fun errorTests(tc: EvaluatorErrorTestCase) = runEvaluatorErrorTestCase(
-        tc.copy(excludeLegacySerializerAssertions = true),
+        tc,
         session
     )
 }

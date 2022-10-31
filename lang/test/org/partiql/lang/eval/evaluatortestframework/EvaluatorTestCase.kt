@@ -46,12 +46,6 @@ data class EvaluatorTestCase(
     val expectedResultFormat: ExpectedResultFormat = ExpectedResultFormat.PARTIQL,
 
     /**
-     * Set to true to skip testing the legacy serializers with an AST from the parsed [query].  This is needed
-     * because the legacy (de)serializers do not support newer AST nodes.
-     */
-    override val excludeLegacySerializerAssertions: Boolean = false,
-
-    /**
      * When true, after running the test once with compile options unmodified, run the test again in permissive mode.
      *
      * The default is `true` to ensure that permissive mode is tested as thoroughly as legacy mode.  However, some
@@ -83,7 +77,6 @@ data class EvaluatorTestCase(
         expectedResult: String,
         expectedPermissiveModeResult: String = expectedResult,
         expectedResultFormat: ExpectedResultFormat = ExpectedResultFormat.PARTIQL,
-        excludeLegacySerializerAssertions: Boolean = false,
         implicitPermissiveModeTest: Boolean = true,
         target: EvaluatorTestTarget = EvaluatorTestTarget.ALL_PIPELINES,
         compileOptionsBuilderBlock: CompileOptions.Builder.() -> Unit = { },
@@ -95,7 +88,6 @@ data class EvaluatorTestCase(
         expectedResult = expectedResult,
         expectedPermissiveModeResult = expectedPermissiveModeResult,
         expectedResultFormat = expectedResultFormat,
-        excludeLegacySerializerAssertions = excludeLegacySerializerAssertions,
         implicitPermissiveModeTest = implicitPermissiveModeTest,
         targetPipeline = target,
         compileOptionsBuilderBlock = compileOptionsBuilderBlock,

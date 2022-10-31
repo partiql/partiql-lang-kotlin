@@ -331,9 +331,8 @@ class PipelineEvaluatorTestAdapterTests {
             astPipelineTestAdapter.runEvaluatorTestCase(
                 EvaluatorTestCase(
                     query = "1",
-                    expectedResult = "1",
-                    extraResultAssertions = { throw FooException() }
-                ),
+                    expectedResult = "1"
+                ) { throw FooException() },
                 EvaluationSession.standard()
             )
         }

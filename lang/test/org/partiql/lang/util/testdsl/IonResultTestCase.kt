@@ -97,7 +97,6 @@ internal fun IonResultTestCase.runTestCase(
         expectedResult = this.expectedLegacyModeIonResult,
         expectedPermissiveModeResult = this.expectedPermissiveModeIonResult,
         expectedResultFormat = ExpectedResultFormat.ION,
-        excludeLegacySerializerAssertions = true,
         implicitPermissiveModeTest = false,
         compileOptionsBuilderBlock = this.compileOptionsBuilderBlock,
         compilerPipelineBuilderBlock = compilerPipelineBuilderBlock,

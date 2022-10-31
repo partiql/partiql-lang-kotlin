@@ -72,7 +72,6 @@ abstract class EvaluatorTestBase : TestBase() {
         session: EvaluationSession = EvaluationSession.standard(),
         expectedResult: String,
         expectedPermissiveModeResult: String = expectedResult,
-        excludeLegacySerializerAssertions: Boolean = false,
         expectedResultFormat: ExpectedResultFormat = ExpectedResultFormat.ION_WITHOUT_BAG_AND_MISSING_ANNOTATIONS,
         includePermissiveModeTest: Boolean = true,
         target: EvaluatorTestTarget = EvaluatorTestTarget.ALL_PIPELINES,
@@ -85,7 +84,6 @@ abstract class EvaluatorTestBase : TestBase() {
             expectedResult = expectedResult,
             expectedPermissiveModeResult = expectedPermissiveModeResult,
             expectedResultFormat = expectedResultFormat,
-            excludeLegacySerializerAssertions = excludeLegacySerializerAssertions,
             implicitPermissiveModeTest = includePermissiveModeTest,
             target = target,
             compileOptionsBuilderBlock = compileOptionsBuilderBlock,
@@ -113,7 +111,6 @@ abstract class EvaluatorTestBase : TestBase() {
         expectedErrorContext: PropertyValueMap? = null,
         expectedPermissiveModeResult: String? = null,
         expectedInternalFlag: Boolean? = null,
-        excludeLegacySerializerAssertions: Boolean = false,
         compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit = { },
         compileOptionsBuilderBlock: CompileOptions.Builder.() -> Unit = { },
         addtionalExceptionAssertBlock: (SqlException) -> Unit = { },
@@ -127,12 +124,11 @@ abstract class EvaluatorTestBase : TestBase() {
             expectedErrorContext = expectedErrorContext,
             expectedInternalFlag = expectedInternalFlag,
             expectedPermissiveModeResult = expectedPermissiveModeResult,
-            excludeLegacySerializerAssertions = excludeLegacySerializerAssertions,
             implicitPermissiveModeTest = implicitPermissiveModeTest,
+            additionalExceptionAssertBlock = addtionalExceptionAssertBlock,
             targetPipeline = target,
             compileOptionsBuilderBlock = compileOptionsBuilderBlock,
             compilerPipelineBuilderBlock = compilerPipelineBuilderBlock,
-            additionalExceptionAssertBlock = addtionalExceptionAssertBlock,
         )
 
         testHarness.runEvaluatorErrorTestCase(tc, session)

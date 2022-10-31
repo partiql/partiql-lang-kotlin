@@ -81,7 +81,6 @@ abstract class CastTestBase : EvaluatorTestBase() {
                             ErrorBehaviorInPermissiveMode.RETURN_MISSING -> "MISSING"
                         },
                         expectedInternalFlag = null, // <-- disables internal flag assertion
-                        excludeLegacySerializerAssertions = true,
                         compilerPipelineBuilderBlock = compilerPipelineBuilderBlock,
                         compileOptionsBuilderBlock = compileOptionBlock,
                         implicitPermissiveModeTest = false,
@@ -94,7 +93,6 @@ abstract class CastTestBase : EvaluatorTestBase() {
             else -> runEvaluatorTestCase(
                 castCase.expression,
                 expectedResult = castCase.expected,
-                excludeLegacySerializerAssertions = true,
                 expectedResultFormat = expectedResultFormat,
                 includePermissiveModeTest = false,
                 compileOptionsBuilderBlock = compileOptionBlock,

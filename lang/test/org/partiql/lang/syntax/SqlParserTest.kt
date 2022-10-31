@@ -793,16 +793,14 @@ class SqlParserTest : SqlParserTestBase() {
 
     private fun assertDateArithmetic(
         templateSql: String,
-        templateExpectedV0: String,
         templateExpectedPartiqlAst: String
     ) {
-        applyAndAssertDateArithmeticFunctions("add", templateSql, templateExpectedV0, templateExpectedPartiqlAst)
+        applyAndAssertDateArithmeticFunctions("add", templateSql, templateExpectedPartiqlAst)
     }
 
     private fun applyAndAssertDateArithmeticFunctions(
         operation: String,
         templateSql: String,
-        templateExpectedV0: String,
         templateExpectedPartiqlAst: String
     ) {
         assertExpression(
@@ -814,56 +812,48 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun callDateArithYear() = assertDateArithmetic(
         "date_<op>(year, a, b)",
-        "(call date_<op> (lit year) (id a case_insensitive) (id b case_insensitive))",
         "(call date_<op> (lit year) (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))"
     )
 
     @Test
     fun callDateArithMonth() = assertDateArithmetic(
         "date_<op>(month, a, b)",
-        "(call date_<op> (lit month) (id a case_insensitive) (id b case_insensitive))",
         "(call date_<op> (lit month) (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))"
     )
 
     @Test
     fun callDateArithDay() = assertDateArithmetic(
         "date_<op>(day, a, b)",
-        "(call date_<op> (lit day) (id a case_insensitive) (id b case_insensitive))",
         "(call date_<op> (lit day) (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))"
     )
 
     @Test
     fun callDateArithHour() = assertDateArithmetic(
         "date_<op>(hour, a, b)",
-        "(call date_<op> (lit hour) (id a case_insensitive) (id b case_insensitive))",
         "(call date_<op> (lit hour) (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))"
     )
 
     @Test
     fun callDateArithMinute() = assertDateArithmetic(
         "date_<op>(minute, a, b)",
-        "(call date_<op> (lit minute) (id a case_insensitive) (id b case_insensitive))",
         "(call date_<op> (lit minute) (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))"
     )
 
     @Test
     fun callDateArithSecond() = assertDateArithmetic(
         "date_<op>(second, a, b)",
-        "(call date_<op> (lit second) (id a case_insensitive) (id b case_insensitive))",
         "(call date_<op> (lit second) (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))"
     )
 
     @Test // invalid evaluation, but valid parsing
     fun callDateArithTimezoneHour() = assertDateArithmetic(
         "date_<op>(timezone_hour, a, b)",
-        "(call date_<op> (lit timezone_hour) (id a case_insensitive) (id b case_insensitive))",
         "(call date_<op> (lit timezone_hour) (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))"
     )
 
     @Test // invalid evaluation, but valid parsing
     fun callDateArithTimezoneMinute() = assertDateArithmetic(
         "date_<op>(timezone_minute, a, b)",
-        "(call date_<op> (lit timezone_minute) (id a case_insensitive) (id b case_insensitive))",
         "(call date_<op> (lit timezone_minute) (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))"
     )
 
