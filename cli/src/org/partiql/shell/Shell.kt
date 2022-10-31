@@ -24,7 +24,7 @@ import org.jline.reader.History
 import org.jline.reader.LineReader
 import org.jline.reader.LineReaderBuilder
 import org.jline.reader.UserInterruptException
-import org.jline.reader.impl.completer.NullCompleter
+import org.jline.reader.impl.completer.AggregateCompleter
 import org.jline.terminal.TerminalBuilder
 import org.jline.utils.AttributedStringBuilder
 import org.jline.utils.AttributedStyle
@@ -127,10 +127,15 @@ class Shell(
             this.config.isMonochrome -> null
             else -> ShellHighlighter()
         }
+        val completer = AggregateCompleter(CompleterDefault())
         val reader = LineReaderBuilder.builder()
             .terminal(terminal)
             .parser(ShellParser)
-            .completer(NullCompleter())
+            .completer(completer)
+            .option(LineReader.Option.GROUP_PERSIST, true)
+            .option(LineReader.Option.AUTO_LIST, true)
+            .option(LineReader.Option.CASE_INSENSITIVE, true)
+            .variable(LineReader.LIST_MAX, 10)
             .highlighter(highlighter)
             .expander(ShellExpander)
             .variable(LineReader.HISTORY_FILE, homeDir.resolve(".partiql/.history"))
