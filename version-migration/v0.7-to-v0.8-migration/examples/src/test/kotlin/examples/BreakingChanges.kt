@@ -43,7 +43,8 @@ class BreakingChanges {
     }
 
     /**
-     * Added: [PassResult]
+     * Renamed: [PassResult]
+     * - [PassResult] gets renamed to PlannerPassResult. This is part of the experimental planner API.
      */
     @Test
     fun `PassResult (Renamed)`() {
@@ -94,9 +95,14 @@ class BreakingChanges {
 
     /**
      * Deprecated: [SqlLexer]
-     *  - Not to be replaced. Unsupported generated files using ANTLR may be used (not as a 1-for-1 replacement) to
-     *    mimic the same functionality -- but PartiQL will not be supporting this use-case. See the `migrated-examples`
-     *    for more information.
+     *  - The new PartiQLParserBuilder provides the ability to parse a query string, but it will not provide the functionality
+     *  of exposing the tokenized tokens. Therefore, while the [SqlLexer] and [SqlParser] previously worked together to provide
+     *  a parsed query, the new PartiQLParserBuilder will now provide all functionality via the [Parser] interface.
+     *  - As mentioned above, the new PartiQLParserBuilder will not expose a [Lexer] -- although it will be used to replicate
+     *  the same functionality internally via the compilation pipeline. Unsupported generated lexer files using
+     *  ANTLR may be used (not as a 1-for-1 replacement) to mimic the same functionality -- but PartiQL will not be
+     *  supporting this use-case. See the `migrated-examples` for more information.
+     *  - v0.9 will remove [SqlLexer]
      */
     @Test
     fun `SqlLexer (Deprecated)`() {
@@ -108,10 +114,11 @@ class BreakingChanges {
     }
 
     /**
-     * Deprecated: [TypedOpBehavior.LEGACY]
+     * Deprecated: [TypedOpBehavior.LEGACY]. This is deprecated in v0.8. The default will be [TypedOpBehavior.HONOR_PARAMETERS]
+     * from v0.9 onward.
      */
     @Test
-    fun `TypedOpParameter LEGACY (Deprecated)`() {
+    fun `TypedOpBehavior LEGACY (Deprecated)`() {
         fun `Example Usage`() {
             val deprecated: TypedOpBehavior = TypedOpBehavior.LEGACY
             val supported: TypedOpBehavior = TypedOpBehavior.HONOR_PARAMETERS

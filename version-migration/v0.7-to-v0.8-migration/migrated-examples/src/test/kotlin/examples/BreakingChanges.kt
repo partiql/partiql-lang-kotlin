@@ -51,6 +51,7 @@ class BreakingChanges {
 
     /**
      * Added: [PlannerPassResult]
+     * - PassResult gets renamed to [PlannerPassResult]. This is part of the experimental planner API.
      */
     @Test
     fun `PassResult (Renamed)`() {
