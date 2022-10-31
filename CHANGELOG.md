@@ -4,10 +4,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+<!-- Template: after a release, copy and paste out below
 ## [Unreleased]
 
 ### Added
-- Extends statement redaction to support `INSERT/REPLACE/UPSERT INTO`.
+
+### Changed
+
+### Deprecated
+
+### Fixed
+
+### Removed
+
+### Security
+-->
+
+
+## [Unreleased]
+
+### Added
 - Adds simple auto-completion to the CLI.
 
 ### Changed
@@ -21,6 +37,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 ### Security
+
+
+## [0.8.1] - 2022-10-28
+
+### Added
+- Extends statement redaction to support `INSERT/REPLACE/UPSERT INTO`.
+
 
 ## [0.8.0] - 2022-10-14
 
