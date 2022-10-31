@@ -1,11 +1,11 @@
 package OTS.IMP.org.partiql.ots.legacy.types
 
-import OTS.ITF.org.partiql.ots.type.ScalarType
+import OTS.ITF.org.partiql.ots.type.ParametricType
 import OTS.ITF.org.partiql.ots.type.TypeParameters
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
 
-object CharType : ScalarType {
+object CharType : ParametricType {
     override val id = "character"
 
     override val names = listOf("character", "char")

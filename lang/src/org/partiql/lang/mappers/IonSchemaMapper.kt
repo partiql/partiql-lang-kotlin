@@ -13,8 +13,8 @@ import OTS.IMP.org.partiql.ots.legacy.types.Int8Type
 import OTS.IMP.org.partiql.ots.legacy.types.IntType
 import OTS.IMP.org.partiql.ots.legacy.types.StringType
 import OTS.IMP.org.partiql.ots.legacy.types.SymbolType
-import OTS.IMP.org.partiql.ots.legacy.types.TimeStampType
 import OTS.IMP.org.partiql.ots.legacy.types.TimeType
+import OTS.IMP.org.partiql.ots.legacy.types.TimestampType
 import OTS.IMP.org.partiql.ots.legacy.types.VarcharType
 import OTS.ITF.org.partiql.ots.type.BoolType
 import com.amazon.ionelement.api.ionBool
@@ -551,7 +551,7 @@ fun StaticType.getBaseTypeName(): String = when (this) {
         BlobType -> "blob"
         ClobType -> "clob"
         BoolType -> "bool"
-        TimeStampType -> "timestamp"
+        TimestampType -> "timestamp"
         DateType -> "date"
         is TimeType -> scalarType.toString()
         else -> error("Unsupported type: $scalarType")

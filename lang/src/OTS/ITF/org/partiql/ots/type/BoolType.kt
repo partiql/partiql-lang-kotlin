@@ -3,7 +3,7 @@ package OTS.ITF.org.partiql.ots.type
 import OTS.ITF.org.partiql.ots.CompileTimeType
 import org.partiql.lang.eval.ExprValueType
 
-object BoolType : NonParametricType() {
+object BoolType : ScalarType {
     val compileTimeType = CompileTimeType(this, emptyList())
 
     override val id = "boolean"

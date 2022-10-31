@@ -1,9 +1,9 @@
 package OTS.IMP.org.partiql.ots.legacy.types
 
-import OTS.ITF.org.partiql.ots.type.NonParametricType
+import OTS.ITF.org.partiql.ots.type.ScalarType
 import org.partiql.lang.eval.ExprValueType
 
-object ClobType : NonParametricType() {
+object ClobType : ScalarType {
     override val id = "clob"
 
     override val names = listOf("clob")

@@ -30,9 +30,9 @@ import OTS.IMP.org.partiql.ots.legacy.types.IntType
 import OTS.IMP.org.partiql.ots.legacy.types.RealType
 import OTS.IMP.org.partiql.ots.legacy.types.StringType
 import OTS.IMP.org.partiql.ots.legacy.types.SymbolType
-import OTS.IMP.org.partiql.ots.legacy.types.TimeStampType
 import OTS.IMP.org.partiql.ots.legacy.types.TimeType
 import OTS.IMP.org.partiql.ots.legacy.types.TimeTypeParameter
+import OTS.IMP.org.partiql.ots.legacy.types.TimestampType
 import OTS.IMP.org.partiql.ots.legacy.types.VarcharType
 import OTS.IMP.org.partiql.ots.legacy.types.VarcharTypeParameter
 import OTS.ITF.org.partiql.ots.type.BoolType
@@ -550,7 +550,7 @@ fun ExprValue.cast(
                             else -> castFailedErr("can't convert string value to BOOL", internal = false)
                         }
                     }
-                    is TimeStampType -> when {
+                    is TimestampType -> when {
                         type.isText -> try {
                             return valueFactory.newTimestamp(Timestamp.valueOf(stringValue()))
                         } catch (e: IllegalArgumentException) {

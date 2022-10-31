@@ -16,7 +16,7 @@ import OTS.IMP.org.partiql.ots.legacy.types.IntType
 import OTS.IMP.org.partiql.ots.legacy.types.RealType
 import OTS.IMP.org.partiql.ots.legacy.types.StringType
 import OTS.IMP.org.partiql.ots.legacy.types.SymbolType
-import OTS.IMP.org.partiql.ots.legacy.types.TimeStampType
+import OTS.IMP.org.partiql.ots.legacy.types.TimestampType
 import OTS.IMP.org.partiql.ots.legacy.types.VarcharType
 import OTS.ITF.org.partiql.ots.type.BoolType
 import com.amazon.ion.IonSystem
@@ -359,7 +359,7 @@ private class StatementTransformer(val ion: IonSystem) {
                 in RealType.names -> DataType(SqlDataType.REAL, listOf(), alias.text, metas)
                 in DoubleType.names -> DataType(SqlDataType.DOUBLE_PRECISION, listOf(), alias.text, metas)
                 in DecimalType.names -> DataType(SqlDataType.DECIMAL, parameters.map { it.value.toIntExact() }, alias.text, metas)
-                in TimeStampType.names -> DataType(SqlDataType.TIMESTAMP, listOf(), alias.text, metas)
+                in TimestampType.names -> DataType(SqlDataType.TIMESTAMP, listOf(), alias.text, metas)
                 in CharType.names -> DataType(SqlDataType.CHARACTER, parameters.map { it.value.toIntExact() }, alias.text, metas)
                 in VarcharType.names -> DataType(SqlDataType.CHARACTER_VARYING, parameters.map { it.value.toIntExact() }, alias.text, metas)
                 in StringType.names -> DataType(SqlDataType.STRING, listOf(), alias.text, metas)

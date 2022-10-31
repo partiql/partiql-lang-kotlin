@@ -1,6 +1,6 @@
 package OTS.IMP.org.partiql.ots.legacy.types
 
-import OTS.ITF.org.partiql.ots.type.ScalarType
+import OTS.ITF.org.partiql.ots.type.ParametricType
 import OTS.ITF.org.partiql.ots.type.TypeParameters
 import org.partiql.lang.eval.ExprValueType
 
@@ -12,7 +12,7 @@ import org.partiql.lang.eval.ExprValueType
  */
 data class TimeType(
     val withTimeZone: Boolean = false
-) : ScalarType {
+) : ParametricType {
     override val id: String
         get() = when (withTimeZone) {
             true -> "time_with_time_zone"

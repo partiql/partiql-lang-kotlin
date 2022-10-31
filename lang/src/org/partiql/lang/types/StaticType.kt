@@ -15,8 +15,8 @@ import OTS.IMP.org.partiql.ots.legacy.types.Int8Type
 import OTS.IMP.org.partiql.ots.legacy.types.IntType
 import OTS.IMP.org.partiql.ots.legacy.types.StringType
 import OTS.IMP.org.partiql.ots.legacy.types.SymbolType
-import OTS.IMP.org.partiql.ots.legacy.types.TimeStampType
 import OTS.IMP.org.partiql.ots.legacy.types.TimeType
+import OTS.IMP.org.partiql.ots.legacy.types.TimestampType
 import OTS.ITF.org.partiql.ots.CompileTimeType
 import OTS.ITF.org.partiql.ots.type.BoolType
 import OTS.ITF.org.partiql.ots.type.ScalarType
@@ -72,7 +72,7 @@ sealed class StaticType {
         @JvmField val NUMERIC: StaticType = unionOf(INT2, INT4, INT8, INT, FLOAT, DECIMAL)
         @JvmField val DATE: StaticScalarType = StaticScalarType(DateType)
         @JvmField val TIME: StaticScalarType = StaticScalarType(TimeType())
-        @JvmField val TIMESTAMP: StaticScalarType = StaticScalarType(TimeStampType)
+        @JvmField val TIMESTAMP: StaticScalarType = StaticScalarType(TimestampType)
         @JvmField val SYMBOL: StaticScalarType = StaticScalarType(SymbolType)
         @JvmField val STRING: StaticScalarType = StaticScalarType(StringType)
         @JvmField val TEXT: StaticType = unionOf(SYMBOL, STRING)

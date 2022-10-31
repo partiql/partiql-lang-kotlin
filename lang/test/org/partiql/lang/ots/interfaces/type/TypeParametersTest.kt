@@ -1,6 +1,5 @@
 package org.partiql.lang.ots.interfaces.type
 
-import OTS.ITF.org.partiql.ots.type.NonParametricType
 import OTS.ITF.org.partiql.ots.type.ScalarType
 import OTS.ITF.org.partiql.ots.type.TypeParameters
 import org.junit.jupiter.api.Test
@@ -22,7 +21,7 @@ class TypeParametersTest {
 
     @Test
     fun nonParametricType() {
-        val myType = object : NonParametricType() {
+        val myType = object : ScalarType {
             override val id: String = "my_type"
             override val names: List<String> = listOf("my_type")
             override val runTimeType: ExprValueType

@@ -1,7 +1,7 @@
 package OTS.IMP.org.partiql.ots.legacy.types
 
 import OTS.ITF.org.partiql.ots.CompileTimeType
-import OTS.ITF.org.partiql.ots.type.ScalarType
+import OTS.ITF.org.partiql.ots.type.ParametricType
 import OTS.ITF.org.partiql.ots.type.TypeParameters
 import org.partiql.lang.ast.passes.SemanticException
 import org.partiql.lang.errors.ErrorCode
@@ -9,7 +9,7 @@ import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
 import java.math.BigDecimal
 
-object DecimalType : ScalarType {
+object DecimalType : ParametricType {
     val compileTimeType: CompileTimeType = CompileTimeType(this, listOf())
 
     override val id = "decimal"

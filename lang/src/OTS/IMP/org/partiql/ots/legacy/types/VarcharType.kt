@@ -1,11 +1,11 @@
 package OTS.IMP.org.partiql.ots.legacy.types
 
-import OTS.ITF.org.partiql.ots.type.ScalarType
+import OTS.ITF.org.partiql.ots.type.ParametricType
 import OTS.ITF.org.partiql.ots.type.TypeParameters
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
 
-object VarcharType : ScalarType {
+object VarcharType : ParametricType {
     override val id = "character_varying"
 
     override val names = listOf("varchar", "character varying")

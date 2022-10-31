@@ -1,13 +1,13 @@
 package OTS.IMP.org.partiql.ots.legacy.types
 
 import OTS.ITF.org.partiql.ots.CompileTimeType
-import OTS.ITF.org.partiql.ots.type.ScalarType
+import OTS.ITF.org.partiql.ots.type.ParametricType
 import OTS.ITF.org.partiql.ots.type.TypeParameters
 import org.partiql.lang.ast.passes.SemanticException
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.ExprValueType
 
-object FloatType : ScalarType {
+object FloatType : ParametricType {
     val compileTimeType: CompileTimeType = CompileTimeType(this, emptyList())
 
     override val id = "float"

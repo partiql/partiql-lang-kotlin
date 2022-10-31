@@ -31,8 +31,12 @@ interface ScalarType {
 
     /**
      * Validate type parameters, which is called during compiler time by PartiQL compiler
+     *
+     * The default implementation is for non-parametric types
      */
-    fun validateParameters(typeParameters: TypeParameters)
+    fun validateParameters(typeParameters: TypeParameters) {
+        require(typeParameters.isEmpty()) { "${id.toUpperCase()} type requires no type parameter" }
+    }
 
     /**
      * Run-time type
@@ -49,8 +53,9 @@ interface ScalarType {
         value.type == runTimeType
 }
 
-abstract class NonParametricType : ScalarType {
-    override fun validateParameters(typeParameters: TypeParameters) {
-        require(typeParameters.isEmpty()) { "${id.toUpperCase()} type requires no type parameter" }
-    }
+interface ParametricType : ScalarType {
+    /**
+     * Forcing implementation with declaring override without a body;
+     */
+    override fun validateParameters(typeParameters: TypeParameters)
 }

@@ -25,8 +25,8 @@ import OTS.IMP.org.partiql.ots.legacy.types.IntType
 import OTS.IMP.org.partiql.ots.legacy.types.RealType
 import OTS.IMP.org.partiql.ots.legacy.types.StringType
 import OTS.IMP.org.partiql.ots.legacy.types.SymbolType
-import OTS.IMP.org.partiql.ots.legacy.types.TimeStampType
 import OTS.IMP.org.partiql.ots.legacy.types.TimeType
+import OTS.IMP.org.partiql.ots.legacy.types.TimestampType
 import OTS.IMP.org.partiql.ots.legacy.types.VarcharType
 import OTS.IMP.org.partiql.ots.legacy.types.isLob
 import OTS.IMP.org.partiql.ots.legacy.types.isNumeric
@@ -58,7 +58,7 @@ class LegacyPlugin : Plugin {
         RealType,
         StringType,
         SymbolType,
-        TimeStampType,
+        TimestampType,
         TimeType(false),
         TimeType(true),
         VarcharType
@@ -85,7 +85,7 @@ class LegacyPlugin : Plugin {
             is StringType,
             is SymbolType -> when {
                 sourceScalarType.isNumeric() || sourceScalarType.isText() -> Successful(targetType)
-                sourceScalarType in listOf(BoolType, TimeStampType) -> Successful(targetType)
+                sourceScalarType in listOf(BoolType, TimestampType) -> Successful(targetType)
                 else -> Failed
             }
             is Int2Type,
@@ -236,8 +236,8 @@ class LegacyPlugin : Plugin {
                 sourceScalarType.isLob() -> Successful(targetType)
                 else -> Failed
             }
-            is TimeStampType -> when {
-                sourceScalarType === TimeStampType -> Successful(targetType)
+            is TimestampType -> when {
+                sourceScalarType === TimestampType -> Successful(targetType)
                 sourceScalarType.isText() -> Uncertain(targetType)
                 else -> Failed
             }

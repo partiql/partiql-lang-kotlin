@@ -1,9 +1,9 @@
 package OTS.IMP.org.partiql.ots.legacy.types
 
-import OTS.ITF.org.partiql.ots.type.NonParametricType
+import OTS.ITF.org.partiql.ots.type.ScalarType
 import org.partiql.lang.eval.ExprValueType
 
-object DateType : NonParametricType() {
+object DateType : ScalarType {
     override val id = "date"
 
     override val names = listOf("date")

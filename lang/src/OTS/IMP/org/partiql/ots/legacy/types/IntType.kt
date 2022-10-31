@@ -1,13 +1,13 @@
 package OTS.IMP.org.partiql.ots.legacy.types
 
 import OTS.ITF.org.partiql.ots.CompileTimeType
-import OTS.ITF.org.partiql.ots.type.NonParametricType
+import OTS.ITF.org.partiql.ots.type.ScalarType
 import OTS.ITF.org.partiql.ots.type.TypeParameters
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.numberValue
 
-object IntType : NonParametricType() {
+object IntType : ScalarType {
     val validRange = Long.MIN_VALUE..Long.MAX_VALUE
 
     val compileTimeType: CompileTimeType = CompileTimeType(this, emptyList())
