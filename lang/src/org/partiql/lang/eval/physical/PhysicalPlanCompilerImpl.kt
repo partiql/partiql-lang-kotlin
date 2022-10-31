@@ -380,7 +380,7 @@ internal class PhysicalPlanCompilerImpl(
     /**
      *  For operators which could return integer type, check integer overflow in case of [TypingMode.PERMISSIVE].
      */
-    private fun resolveIntConstraint(computeThunk: PhysicalPlanThunk, metas: MetaContainer): PhysicalPlanThunk =
+    private fun checkIntegerOverflow(computeThunk: PhysicalPlanThunk, metas: MetaContainer): PhysicalPlanThunk =
         when (val staticTypes = metas.staticType?.type?.getTypes()) {
             // No staticType, can't validate integer size.
             null -> computeThunk
@@ -438,7 +438,7 @@ internal class PhysicalPlanCompilerImpl(
             (lValue.numberValue() + rValue.numberValue()).exprValue()
         }
 
-        return resolveIntConstraint(computeThunk, metas)
+        return checkIntegerOverflow(computeThunk, metas)
     }
 
     private fun compileMinus(expr: PartiqlPhysical.Expr.Minus, metas: MetaContainer): PhysicalPlanThunk {
@@ -452,7 +452,7 @@ internal class PhysicalPlanCompilerImpl(
             (lValue.numberValue() - rValue.numberValue()).exprValue()
         }
 
-        return resolveIntConstraint(computeThunk, metas)
+        return checkIntegerOverflow(computeThunk, metas)
     }
 
     private fun compilePos(expr: PartiqlPhysical.Expr.Pos, metas: MetaContainer): PhysicalPlanThunk {
@@ -465,7 +465,7 @@ internal class PhysicalPlanCompilerImpl(
             value
         }
 
-        return resolveIntConstraint(computeThunk, metas)
+        return checkIntegerOverflow(computeThunk, metas)
     }
 
     private fun compileNeg(expr: PartiqlPhysical.Expr.Neg, metas: MetaContainer): PhysicalPlanThunk {
@@ -475,7 +475,7 @@ internal class PhysicalPlanCompilerImpl(
             (-value.numberValue()).exprValue()
         }
 
-        return resolveIntConstraint(computeThunk, metas)
+        return checkIntegerOverflow(computeThunk, metas)
     }
 
     private fun compileTimes(expr: PartiqlPhysical.Expr.Times, metas: MetaContainer): PhysicalPlanThunk {
@@ -485,7 +485,7 @@ internal class PhysicalPlanCompilerImpl(
             (lValue.numberValue() * rValue.numberValue()).exprValue()
         }
 
-        return resolveIntConstraint(computeThunk, metas)
+        return checkIntegerOverflow(computeThunk, metas)
     }
 
     private fun compileDivide(expr: PartiqlPhysical.Expr.Divide, metas: MetaContainer): PhysicalPlanThunk {
@@ -513,7 +513,7 @@ internal class PhysicalPlanCompilerImpl(
             }
         }
 
-        return resolveIntConstraint(computeThunk, metas)
+        return checkIntegerOverflow(computeThunk, metas)
     }
 
     private fun compileModulo(expr: PartiqlPhysical.Expr.Modulo, metas: MetaContainer): PhysicalPlanThunk {
@@ -528,7 +528,7 @@ internal class PhysicalPlanCompilerImpl(
             (lValue.numberValue() % denominator).exprValue()
         }
 
-        return resolveIntConstraint(computeThunk, metas)
+        return checkIntegerOverflow(computeThunk, metas)
     }
 
     private fun compileEq(expr: PartiqlPhysical.Expr.Eq, metas: MetaContainer): PhysicalPlanThunk {
@@ -901,7 +901,7 @@ internal class PhysicalPlanCompilerImpl(
             }
         }
 
-        return resolveIntConstraint(computeThunk, metas)
+        return checkIntegerOverflow(computeThunk, metas)
     }
 
     private fun compileLit(expr: PartiqlPhysical.Expr.Lit, metas: MetaContainer): PhysicalPlanThunk {

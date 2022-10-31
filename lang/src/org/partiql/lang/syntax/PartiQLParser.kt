@@ -94,10 +94,11 @@ internal class PartiQLParser(
         val lexer = getLexer(query)
         val tokenIndexToParameterIndex = mutableMapOf<Int, Int>()
         var parametersFound = 0
-        val tokens = CommonTokenStream(lexer)
-        for (i in 0 until tokens.numberOfOnChannelTokens) {
-            if (tokens[i].type == GeneratedParser.QUESTION_MARK) {
-                tokenIndexToParameterIndex[tokens[i].tokenIndex] = ++parametersFound
+        val tokenIter = CommonTokenStream(lexer).also { it.fill() }.tokens.iterator()
+        while (tokenIter.hasNext()) {
+            val token = tokenIter.next()
+            if (token.type == GeneratedParser.QUESTION_MARK) {
+                tokenIndexToParameterIndex[token.tokenIndex] = ++parametersFound
             }
         }
         return tokenIndexToParameterIndex

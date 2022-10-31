@@ -362,13 +362,16 @@ IDENTIFIER_QUOTED
  */
 
 WS
-    : WHITESPACE+ -> skip;
+    : WHITESPACE+ -> channel(HIDDEN);
 
 COMMENT_SINGLE
-    : '--' ~[\r\n]* '\r'? '\n'? -> skip;
+    : '--' ~[\r\n]* '\r'? '\n'? -> channel(HIDDEN);
 
 COMMENT_BLOCK
-    : '/*' .*? '*/' -> skip;
+    : '/*' .*? '*/' -> channel(HIDDEN);
+
+UNRECOGNIZED
+    : . ;
 
 /**
  *

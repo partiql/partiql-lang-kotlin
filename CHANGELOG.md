@@ -21,6 +21,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -->
 
 
+## [Unreleased]
+
+### Added
+- Adds simple auto-completion to the CLI.
+
+### Changed
+- Now `CompileOption` uses `TypedOpParameter.HONOR_PARAMETERS` as default.
+- Updates the CLI Shell Highlighter to use the ANTLR generated lexer/parser for highlighting user queries
+
+### Deprecated
+
+### Fixed
+
+### Removed
+
+### Security
+
+
 ## [0.8.1] - 2022-10-28
 
 ### Added
@@ -160,13 +178,6 @@ stage in the `PlannerPipeline` and to generate performance metrics for the indiv
   A client program may be interrupted by `NoSuchFieldError` exception.
 - [breaking change] Removal of `NodeMetadata` from `org.partiql.lang.eval`:
   A client program may be interrupted by `NoClassDefFoundError` exception.
-- [breaking change] Removal of the following classes from `org.partiql.lang.eval.like`:
-  - `CodepointCheckpointIterator`
-  - `PatternPart`
-  - `PatternPart.AnyOneChar`
-  - `PatternPart.ExactChars`
-  - `PatternPartKt`
-    A client program may be interrupted by NoClassDefFoundError exception.
 
 ### Fixed
 - Fix `write_file` CLI function; the old function required the input to be a `string`, but it must be a generic type.
