@@ -10,7 +10,7 @@ interface Expression {
 Compiler ..> Expression
 
 interface Parser {
-  +parse(source: String): IonSexp
+  +parseAstStatement(source: String): Statement
 }
 
 interface Lexer {
