@@ -18,6 +18,7 @@
   * [Further Reading](https://github.com/partiql/partiql-lang-kotlin/wiki/Further-Reading)
 * Upgrade Guides
   * [Upgrade Guide General](https://github.com/partiql/partiql-lang-kotlin/wiki/upgrade-guide)
+  * [CLI Versions](https://github.com/partiql/partiql-lang-kotlin/wiki/cli-versions)
   * [v0.1 -> v0.2](https://github.com/partiql/partiql-lang-kotlin/wiki/v0.1-to-v0.2-upgrade)
   * [v0.2 -> v0.3](https://github.com/partiql/partiql-lang-kotlin/wiki/v0.2-to-v0.3-upgrade)
   * [v0.3 -> v0.4](https://github.com/partiql/partiql-lang-kotlin/wiki/v0.3-to-v0.4-upgrade)
