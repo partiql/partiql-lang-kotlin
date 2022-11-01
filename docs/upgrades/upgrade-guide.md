@@ -17,8 +17,8 @@ build-related changes)
 The [CHANGELOG](https://github.com/partiql/partiql-lang-kotlin/blob/main/CHANGELOG.md) can also be viewed to see changes
 between releases and also includes a section on features yet to be released (see [Unreleased](https://github.com/partiql/partiql-lang-kotlin/blob/main/CHANGELOG.md#unreleased)).
 
-The repo, [test-partiql-version-migration](https://github.com/alancai98/test-partiql-version-migration), hosts all the 
-example migration code between major versions.
+The repo, [test-partiql-version-upgrade](https://github.com/alancai98/test-partiql-version-migration), hosts all the 
+example upgrade code between major versions.
 TODO: as part of [partiql-lang-kotlin#692](https://github.com/partiql/partiql-lang-kotlin/issues/692), move the repo
 under the `partiql` GitHub organization (either as submodule or as a separate repo).
 
