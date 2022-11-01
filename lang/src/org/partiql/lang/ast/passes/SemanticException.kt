@@ -35,14 +35,14 @@ class SemanticException(
      * Alternate constructor using a [Problem]. Error message is generated using [ProblemDetails.message].
      */
     constructor(err: Problem, cause: Throwable? = null) :
-            this(
-                message = "",
-                errorCode = ErrorCode.SEMANTIC_PROBLEM,
-                errorContext = propertyValueMapOf(
-                    Property.LINE_NUMBER to err.sourceLocation.lineNum,
-                    Property.COLUMN_NUMBER to err.sourceLocation.charOffset,
-                    Property.MESSAGE to err.details.message
-                ),
-                cause = cause
-            )
+        this(
+            message = "",
+            errorCode = ErrorCode.SEMANTIC_PROBLEM,
+            errorContext = propertyValueMapOf(
+                Property.LINE_NUMBER to err.sourceLocation.lineNum,
+                Property.COLUMN_NUMBER to err.sourceLocation.charOffset,
+                Property.MESSAGE to err.details.message
+            ),
+            cause = cause
+        )
 }
