@@ -557,6 +557,7 @@ class ASTPrettyPrinter {
                     if (node.offset == null) it else (it.plusElement(toRecursionTree(node.offset, "offset")))
                 }
             )
+            is PartiqlAst.Expr.GraphMatch -> TODO("Unsupported GraphMatch AST node")
         }
 
     private fun toRecursionTreeList(nodes: List<PartiqlAst.Expr>, attrOfParent: String? = null): List<RecursionTree> =
@@ -668,7 +669,6 @@ class ASTPrettyPrinter {
                     if (node.byAlias == null) it else { it.plusElement(toRecursionTree(node.byAlias, attrOfParent = "by")) }
                 }
             )
-            else -> TODO("Unsupported FROM AST node")
         }
 
     private fun toRecursionTree(node: PartiqlAst.Let, attrOfParent: String? = null): RecursionTree =

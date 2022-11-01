@@ -1536,15 +1536,13 @@ internal class StaticTypeInferenceVisitorTransform(
 
         override fun transformProjection(node: PartiqlAst.Projection): PartiqlAst.Projection {
             val newProjection = super.transformProjection(node)
-
-            val projectionType: StaticType = when (newProjection) {
+            val type = when (newProjection) {
                 is PartiqlAst.Projection.ProjectList -> {
                     val contentClosed = newProjection.projectItems.filterIsInstance<PartiqlAst.ProjectItem.ProjectAll>().all {
                         val exprType = it.expr.getStaticType() as? StructType
                             ?: TODO("Expected Struct type for PartiqlAst.ProjectItem.ProjectAll expr")
                         exprType.contentClosed
                     }
-
                     val projectionFields = mutableMapOf<String, StaticType>()
                     for (item in newProjection.projectItems) {
                         when (item) {
@@ -1574,10 +1572,9 @@ internal class StaticTypeInferenceVisitorTransform(
                         " This wouldn't be the case if SelectStarVisitorTransform ran before this."
                 )
                 is PartiqlAst.Projection.ProjectValue -> newProjection.value.getStaticType()
-                is PartiqlAst.Projection.ProjectPivot -> TODO("PartiqlAst.Projection.ProjectPivot is not implemented yet")
+                is PartiqlAst.Projection.ProjectPivot -> StaticType.STRUCT
             }
-
-            return newProjection.withStaticType(projectionType)
+            return newProjection.withStaticType(type)
         }
 
         private fun createVisitorTransformForNestedScope(): VisitorTransform {
@@ -1593,7 +1590,15 @@ internal class StaticTypeInferenceVisitorTransform(
             val projectionType = newNode.project.metas.staticType?.type
                 ?: error("Select project wasn't assigned a StaticTypeMeta for some reason")
 
-            return newNode.withStaticType(BagType(projectionType))
+            val selectType = when (newNode.project) {
+                is PartiqlAst.Projection.ProjectList,
+                is PartiqlAst.Projection.ProjectValue -> BagType(projectionType)
+                is PartiqlAst.Projection.ProjectStar ->
+                    error("expected SelectListItemStar transform to be ran before this")
+                is PartiqlAst.Projection.ProjectPivot -> projectionType
+            }
+
+            return newNode.withStaticType(selectType)
         }
 
         override fun transformExprSelect_where(node: PartiqlAst.Expr.Select): PartiqlAst.Expr? {

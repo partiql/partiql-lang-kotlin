@@ -76,9 +76,6 @@ class GroupByPathExpressionVisitorTransform(
 
                 is PartiqlAst.FromSource.Unpivot ->
                     listOfNotNull(fromSource.asAlias?.text, fromSource.atAlias?.text)
-
-                is PartiqlAst.FromSource.GraphMatch ->
-                    TODO("Handle MATCH for GROUP BY")
             }
     }
 

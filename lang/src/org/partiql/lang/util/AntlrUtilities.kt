@@ -19,7 +19,6 @@ import com.amazon.ion.IonValue
 import com.amazon.ion.system.IonSystemBuilder
 import org.antlr.v4.runtime.Token
 import org.antlr.v4.runtime.tree.TerminalNode
-import org.partiql.grammar.parser.generated.PartiQLParser
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.errors.PropertyValueMap
@@ -29,6 +28,7 @@ import org.partiql.lang.syntax.KEYWORDS
 import org.partiql.lang.syntax.MULTI_LEXEME_TOKEN_MAP
 import org.partiql.lang.syntax.ParserException
 import org.partiql.lang.syntax.TokenType
+import org.partiql.lang.syntax.antlr.PartiQLParser
 import java.math.BigInteger
 
 internal fun TerminalNode?.error(

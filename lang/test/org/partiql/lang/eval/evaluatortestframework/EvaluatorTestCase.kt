@@ -117,9 +117,7 @@ data class EvaluatorTestCase(
         b.appendLine("Query           : $query")
         b.appendLine("Target pipeline : $targetPipeline")
         b.appendLine("Expected result : $expectedResult")
-        if (actualResult != null) {
-            b.appendLine("Actual result   : $actualResult")
-        }
+        b.appendLine("Actual result   : $actualResult")
         b.appendLine("Result format   : $expectedResultFormat")
 
         return b.toString()

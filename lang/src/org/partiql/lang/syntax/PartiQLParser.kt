@@ -33,10 +33,9 @@ import org.partiql.lang.errors.PropertyValueMap
 import org.partiql.lang.types.CustomType
 import org.partiql.lang.util.getIonValue
 import org.partiql.lang.util.getPartiQLTokenType
-import org.partiql.lang.visitors.PartiQLVisitor
 import java.nio.charset.StandardCharsets
-import org.partiql.grammar.parser.generated.PartiQLParser as GeneratedParser
-import org.partiql.grammar.parser.generated.PartiQLTokens as GeneratedLexer
+import org.partiql.lang.syntax.antlr.PartiQLParser as GeneratedParser
+import org.partiql.lang.syntax.antlr.PartiQLTokens as GeneratedLexer
 
 /**
  * Extends [Parser] to provide a mechanism to parse an input query string. It internally uses ANTLR's generated parser,
@@ -95,10 +94,11 @@ internal class PartiQLParser(
         val lexer = getLexer(query)
         val tokenIndexToParameterIndex = mutableMapOf<Int, Int>()
         var parametersFound = 0
-        val tokens = CommonTokenStream(lexer)
-        for (i in 0 until tokens.numberOfOnChannelTokens) {
-            if (tokens[i].type == GeneratedParser.QUESTION_MARK) {
-                tokenIndexToParameterIndex[tokens[i].tokenIndex] = ++parametersFound
+        val tokenIter = CommonTokenStream(lexer).also { it.fill() }.tokens.iterator()
+        while (tokenIter.hasNext()) {
+            val token = tokenIter.next()
+            if (token.type == GeneratedParser.QUESTION_MARK) {
+                tokenIndexToParameterIndex[token.tokenIndex] = ++parametersFound
             }
         }
         return tokenIndexToParameterIndex

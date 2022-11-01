@@ -357,6 +357,26 @@ class StatementRedactorTest : SqlParserTestBase() {
             "INSERT INTO tb VALUE << 'value1', 'value2' >>",
             "INSERT INTO tb VALUE << ***(Redacted), ***(Redacted) >>"
         ),
+        RedactionTestCase(
+            "INSERT INTO tb <<{ 'hk': 'a', 'rk': 1, 'attr': 'b' }>>",
+            "INSERT INTO tb <<{ 'hk': 'a', 'rk': 1, 'attr': ***(Redacted) }>>"
+        ),
+        RedactionTestCase(
+            "INSERT INTO tb <<{ 'hk': 'a', 'rk': 1, 'attr': { 'hk': 'a' }}>>",
+            "INSERT INTO tb <<{ 'hk': 'a', 'rk': 1, 'attr': { ***(Redacted): ***(Redacted) }}>>"
+        ),
+        RedactionTestCase(
+            "UPSERT INTO testTable2 << { 'dummy1' : 'hashKey', 'dummy2' : 'rangeKey', 'dummyTestAttribute' : '123' } >>",
+            "UPSERT INTO testTable2 << { 'dummy1' : ***(Redacted), 'dummy2' : ***(Redacted), 'dummyTestAttribute' : ***(Redacted) } >>"
+        ),
+        RedactionTestCase(
+            "REPLACE INTO testTable2 << { 'dummy1' : 'hashKey', 'dummy2' : 'rangeKey', 'dummyTestAttribute' : '123' } >>",
+            "REPLACE INTO testTable2 << { 'dummy1' : ***(Redacted), 'dummy2' : ***(Redacted), 'dummyTestAttribute' : ***(Redacted) } >>"
+        ),
+        RedactionTestCase(
+            "INSERT INTO testTable2 <<[2, 'some-name']>>",
+            "INSERT INTO testTable2 <<[***(Redacted), ***(Redacted)]>>"
+        ),
         // Update Assignment
         RedactionTestCase(
             "update nonExistentTable set foo = 'bar' where attr1='testValue'",

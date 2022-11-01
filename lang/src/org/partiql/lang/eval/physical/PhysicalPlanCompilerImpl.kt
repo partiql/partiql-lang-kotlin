@@ -80,6 +80,7 @@ import org.partiql.lang.eval.like.parsePattern
 import org.partiql.lang.eval.namedValue
 import org.partiql.lang.eval.numberValue
 import org.partiql.lang.eval.rangeOver
+import org.partiql.lang.eval.relation.RelationType
 import org.partiql.lang.eval.sourceLocationMeta
 import org.partiql.lang.eval.stringValue
 import org.partiql.lang.eval.syntheticColumnName
@@ -268,6 +269,9 @@ internal class PhysicalPlanCompilerImpl(
             // bag operators
             is PartiqlPhysical.Expr.BagOp -> compileBagOp(expr, metas)
             is PartiqlPhysical.Expr.BindingsToValues -> compileBindingsToValues(expr)
+            is PartiqlPhysical.Expr.Pivot -> compilePivot(expr, metas)
+
+            is PartiqlPhysical.Expr.GraphMatch -> TODO("Physical compilation of GraphMatch expression")
         }
     }
 
@@ -275,14 +279,35 @@ internal class PhysicalPlanCompilerImpl(
         val mapThunk = compileAstExpr(expr.exp)
         val bexprThunk: RelationThunkEnv = bexperConverter.convert(expr.query)
 
+        fun createOutputSequence(relationType: RelationType?, elements: Sequence<ExprValue>) = when (relationType) {
+            RelationType.LIST -> valueFactory.newList(elements)
+            RelationType.BAG -> valueFactory.newBag(elements)
+            null -> throw EvaluationException(
+                message = "Unable to recover the output Relation Type",
+                errorCode = ErrorCode.EVALUATOR_GENERIC_EXCEPTION,
+                internal = false
+            )
+        }
+
         return thunkFactory.thunkEnv(expr.metas) { env ->
+            var relationType: RelationType? = null
+            // we create a snapshot for currentRegister to use during the evaluation
+            // this is to avoid issue when iterator planner result
+            val currentRegister = env.registers.clone()
             val elements = sequence {
+                env.load(currentRegister)
                 val relItr = bexprThunk(env)
+                relationType = relItr.relType
                 while (relItr.nextRow()) {
                     yield(mapThunk(env))
                 }
             }
-            valueFactory.newBag(elements)
+
+            // Trick the compiler here to always initialize `relationType`
+            when (elements.firstOrNull()) {
+                null -> createOutputSequence(relationType, emptySequence())
+                else -> createOutputSequence(relationType, elements)
+            }
         }
     }
 
@@ -361,7 +386,7 @@ internal class PhysicalPlanCompilerImpl(
     /**
      *  For operators which could return integer type, check integer overflow in case of [TypingMode.PERMISSIVE].
      */
-    private fun resolveIntConstraint(computeThunk: PhysicalPlanThunk, metas: MetaContainer): PhysicalPlanThunk =
+    private fun checkIntegerOverflow(computeThunk: PhysicalPlanThunk, metas: MetaContainer): PhysicalPlanThunk =
         when (val staticTypes = metas.staticType?.type?.getTypes()) {
             // No staticType, can't validate integer size.
             null -> computeThunk
@@ -422,7 +447,7 @@ internal class PhysicalPlanCompilerImpl(
             (lValue.numberValue() + rValue.numberValue()).exprValue()
         }
 
-        return resolveIntConstraint(computeThunk, metas)
+        return checkIntegerOverflow(computeThunk, metas)
     }
 
     private fun compileMinus(expr: PartiqlPhysical.Expr.Minus, metas: MetaContainer): PhysicalPlanThunk {
@@ -436,7 +461,7 @@ internal class PhysicalPlanCompilerImpl(
             (lValue.numberValue() - rValue.numberValue()).exprValue()
         }
 
-        return resolveIntConstraint(computeThunk, metas)
+        return checkIntegerOverflow(computeThunk, metas)
     }
 
     private fun compilePos(expr: PartiqlPhysical.Expr.Pos, metas: MetaContainer): PhysicalPlanThunk {
@@ -449,7 +474,7 @@ internal class PhysicalPlanCompilerImpl(
             value
         }
 
-        return resolveIntConstraint(computeThunk, metas)
+        return checkIntegerOverflow(computeThunk, metas)
     }
 
     private fun compileNeg(expr: PartiqlPhysical.Expr.Neg, metas: MetaContainer): PhysicalPlanThunk {
@@ -459,7 +484,7 @@ internal class PhysicalPlanCompilerImpl(
             (-value.numberValue()).exprValue()
         }
 
-        return resolveIntConstraint(computeThunk, metas)
+        return checkIntegerOverflow(computeThunk, metas)
     }
 
     private fun compileTimes(expr: PartiqlPhysical.Expr.Times, metas: MetaContainer): PhysicalPlanThunk {
@@ -469,7 +494,7 @@ internal class PhysicalPlanCompilerImpl(
             (lValue.numberValue() * rValue.numberValue()).exprValue()
         }
 
-        return resolveIntConstraint(computeThunk, metas)
+        return checkIntegerOverflow(computeThunk, metas)
     }
 
     private fun compileDivide(expr: PartiqlPhysical.Expr.Divide, metas: MetaContainer): PhysicalPlanThunk {
@@ -497,7 +522,7 @@ internal class PhysicalPlanCompilerImpl(
             }
         }
 
-        return resolveIntConstraint(computeThunk, metas)
+        return checkIntegerOverflow(computeThunk, metas)
     }
 
     private fun compileModulo(expr: PartiqlPhysical.Expr.Modulo, metas: MetaContainer): PhysicalPlanThunk {
@@ -506,13 +531,13 @@ internal class PhysicalPlanCompilerImpl(
         val computeThunk = thunkFactory.thunkFold(metas, argThunks) { lValue, rValue ->
             val denominator = rValue.numberValue()
             if (denominator.isZero()) {
-                err("% by zero", ErrorCode.EVALUATOR_MODULO_BY_ZERO, errorContext = null, internal = false)
+                err("% by zero", ErrorCode.EVALUATOR_MODULO_BY_ZERO, errorContextFrom(metas), internal = false)
             }
 
             (lValue.numberValue() % denominator).exprValue()
         }
 
-        return resolveIntConstraint(computeThunk, metas)
+        return checkIntegerOverflow(computeThunk, metas)
     }
 
     private fun compileEq(expr: PartiqlPhysical.Expr.Eq, metas: MetaContainer): PhysicalPlanThunk {
@@ -885,7 +910,7 @@ internal class PhysicalPlanCompilerImpl(
             }
         }
 
-        return resolveIntConstraint(computeThunk, metas)
+        return checkIntegerOverflow(computeThunk, metas)
     }
 
     private fun compileLit(expr: PartiqlPhysical.Expr.Lit, metas: MetaContainer): PhysicalPlanThunk {
@@ -1860,6 +1885,26 @@ internal class PhysicalPlanCompilerImpl(
                 is PartiqlPhysical.SetQuantifier.Distinct -> op.eval(l, r).distinct()
             }
             valueFactory.newBag(result)
+        }
+    }
+
+    private fun compilePivot(expr: PartiqlPhysical.Expr.Pivot, metas: MetaContainer): PhysicalPlanThunk {
+        val inputBExpr: RelationThunkEnv = bexperConverter.convert(expr.input)
+        // The names are intentionally flipped for clarity; consider fixing this in the AST
+        val valueExpr = compileAstExpr(expr.key)
+        val keyExpr = compileAstExpr(expr.value)
+        return thunkFactory.thunkEnv(metas) { env ->
+            val attributes: Sequence<ExprValue> = sequence {
+                val relation = inputBExpr(env)
+                while (relation.nextRow()) {
+                    val key = keyExpr.invoke(env)
+                    if (key.type.isText) {
+                        val value = valueExpr.invoke(env)
+                        yield(value.namedValue(key))
+                    }
+                }
+            }
+            valueFactory.newStruct(attributes, StructOrdering.UNORDERED)
         }
     }
 
