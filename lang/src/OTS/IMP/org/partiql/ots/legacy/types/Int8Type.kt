@@ -1,8 +1,8 @@
 package OTS.IMP.org.partiql.ots.legacy.types
 
 import OTS.ITF.org.partiql.ots.CompileTimeType
-import OTS.ITF.org.partiql.ots.TypeParameters
 import OTS.ITF.org.partiql.ots.type.ScalarType
+import OTS.ITF.org.partiql.ots.type.TypeParameters
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.numberValue
@@ -12,8 +12,9 @@ object Int8Type : ScalarType {
 
     val compileTimeType: CompileTimeType = CompileTimeType(this, emptyList())
 
-    override val id: String
-        get() = "int8"
+    override val id = "integer8"
+
+    override val names = listOf("int8", "bigint", "integer8")
 
     override val runTimeType: ExprValueType
         get() = ExprValueType.INT

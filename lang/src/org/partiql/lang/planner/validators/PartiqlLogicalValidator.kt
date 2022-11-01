@@ -2,7 +2,6 @@ package org.partiql.lang.planner.validators
 
 import com.amazon.ionelement.api.IntElement
 import com.amazon.ionelement.api.IntElementSize
-import com.amazon.ionelement.api.MetaContainer
 import com.amazon.ionelement.api.TextElement
 import org.partiql.lang.ast.IsCountStarMeta
 import org.partiql.lang.ast.passes.SemanticException
@@ -15,8 +14,7 @@ import org.partiql.lang.eval.EvaluationException
 import org.partiql.lang.eval.TypedOpBehavior
 import org.partiql.lang.eval.err
 import org.partiql.lang.eval.errorContextFrom
-import org.partiql.lang.types.BuiltInScalarType
-import org.partiql.lang.types.TYPE_ALIAS_TO_SCALAR_TYPE
+import org.partiql.lang.util.TypeRegistry
 
 /**
  * Provides rules for basic AST sanity checks that should be performed before any attempt at further AST processing.
@@ -26,7 +24,10 @@ import org.partiql.lang.types.TYPE_ALIAS_TO_SCALAR_TYPE
  * Any exception thrown by this class should always be considered an indication of a bug in one of the following places:
  * - [org.partiql.lang.planner.transforms.AstToLogicalVisitorTransform]
  */
-class PartiqlLogicalValidator(private val typedOpBehavior: TypedOpBehavior) : PartiqlLogical.Visitor() {
+internal class PartiqlLogicalValidator(
+    private val typedOpBehavior: TypedOpBehavior,
+    private val typeRegistry: TypeRegistry
+) : PartiqlLogical.Visitor() {
     override fun visitExprLit(node: PartiqlLogical.Expr.Lit) {
         val ionValue = node.value
         val metas = node.metas
@@ -40,25 +41,12 @@ class PartiqlLogicalValidator(private val typedOpBehavior: TypedOpBehavior) : Pa
         }
     }
 
-    private fun validateDecimalOrNumericType(precision: Long?, scale: Long?, metas: MetaContainer) {
-        if (scale != null && precision != null && typedOpBehavior == TypedOpBehavior.HONOR_PARAMETERS) {
-            if (scale !in 0..precision) {
-                err(
-                    "Scale $scale should be between 0 and precision $precision",
-                    errorCode = ErrorCode.SEMANTIC_INVALID_DECIMAL_ARGUMENTS,
-                    errorContext = errorContextFrom(metas),
-                    internal = false
-                )
-            }
-        }
-    }
-
     override fun visitTypeScalarType(node: PartiqlLogical.Type.ScalarType) {
         super.visitTypeScalarType(node)
 
-        val scalarType = TYPE_ALIAS_TO_SCALAR_TYPE[node.alias.text]
-        if (scalarType == BuiltInScalarType.DECIMAL || scalarType == BuiltInScalarType.NUMERIC) {
-            validateDecimalOrNumericType(node.parameters.getOrNull(0)?.value, node.parameters.getOrNull(1)?.value, node.metas)
+        val scalarType = typeRegistry.getTypeByName(node.alias.text) ?: error("No such type alias: ${node.alias.text}")
+        if (typedOpBehavior == TypedOpBehavior.HONOR_PARAMETERS) {
+            scalarType.validateParameters(node.parameters.map { it.value.toInt() })
         }
     }
 

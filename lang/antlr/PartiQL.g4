@@ -666,5 +666,5 @@ type
     | CHARACTER VARYING ( PAREN_LEFT arg0=LITERAL_INTEGER PAREN_RIGHT )?                                               # TypeVarChar
     | datatype=(DECIMAL|DEC|NUMERIC) ( PAREN_LEFT arg0=LITERAL_INTEGER ( COMMA arg1=LITERAL_INTEGER )? PAREN_RIGHT )?  # TypeArgDouble
     | TIME ( PAREN_LEFT precision=LITERAL_INTEGER PAREN_RIGHT )? (WITH TIME ZONE)?                                     # TypeTimeZone
-    | symbolPrimitive                                                                                                  # TypeCustom
+    | symbolPrimitive ( PAREN_LEFT LITERAL_INTEGER ( COMMA LITERAL_INTEGER )* PAREN_RIGHT )?                           # GenericType
     ;

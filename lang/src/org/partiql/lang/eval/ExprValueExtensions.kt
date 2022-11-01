@@ -21,16 +21,18 @@ import OTS.IMP.org.partiql.ots.legacy.types.ClobType
 import OTS.IMP.org.partiql.ots.legacy.types.DateType
 import OTS.IMP.org.partiql.ots.legacy.types.DecimalType
 import OTS.IMP.org.partiql.ots.legacy.types.DecimalTypeParameters
+import OTS.IMP.org.partiql.ots.legacy.types.DoubleType
 import OTS.IMP.org.partiql.ots.legacy.types.FloatType
 import OTS.IMP.org.partiql.ots.legacy.types.Int2Type
 import OTS.IMP.org.partiql.ots.legacy.types.Int4Type
 import OTS.IMP.org.partiql.ots.legacy.types.Int8Type
 import OTS.IMP.org.partiql.ots.legacy.types.IntType
+import OTS.IMP.org.partiql.ots.legacy.types.RealType
 import OTS.IMP.org.partiql.ots.legacy.types.StringType
 import OTS.IMP.org.partiql.ots.legacy.types.SymbolType
-import OTS.IMP.org.partiql.ots.legacy.types.TimeStampType
 import OTS.IMP.org.partiql.ots.legacy.types.TimeType
 import OTS.IMP.org.partiql.ots.legacy.types.TimeTypeParameter
+import OTS.IMP.org.partiql.ots.legacy.types.TimestampType
 import OTS.IMP.org.partiql.ots.legacy.types.VarcharType
 import OTS.IMP.org.partiql.ots.legacy.types.VarcharTypeParameter
 import OTS.ITF.org.partiql.ots.type.BoolType
@@ -376,6 +378,8 @@ fun ExprValue.cast(
                 }
                 valueFactory.newInt(result)
             }
+            is RealType,
+            is DoubleType,
             is FloatType -> valueFactory.newFloat(this.toDouble())
             is DecimalType -> {
                 if (this.isNaN || this.isNegInf || this.isPosInf) {
@@ -504,6 +508,8 @@ fun ExprValue.cast(
                             }
                         }
                     }
+                    is RealType,
+                    is DoubleType,
                     is FloatType -> when {
                         type == ExprValueType.BOOL -> return if (booleanValue()) 1.0.exprValue(targetType) else 0.0.exprValue(targetType)
                         type.isNumber -> return numberValue().toDouble().exprValue(targetType)
@@ -544,7 +550,7 @@ fun ExprValue.cast(
                             else -> castFailedErr("can't convert string value to BOOL", internal = false)
                         }
                     }
-                    is TimeStampType -> when {
+                    is TimestampType -> when {
                         type.isText -> try {
                             return valueFactory.newTimestamp(Timestamp.valueOf(stringValue()))
                         } catch (e: IllegalArgumentException) {

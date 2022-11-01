@@ -1247,7 +1247,7 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
             PartiQLParser.INTEGER8 -> scalarType("integer8", emptyList(), metas)
             PartiQLParser.BIGINT -> scalarType("bigint", emptyList(), metas)
             PartiQLParser.REAL -> scalarType("real", emptyList(), metas)
-            PartiQLParser.DOUBLE -> scalarType("double_precision", emptyList(), metas)
+            PartiQLParser.DOUBLE -> scalarType("double precision", emptyList(), metas)
             PartiQLParser.TIMESTAMP -> scalarType("timestamp", emptyList(), metas)
             PartiQLParser.CHAR -> scalarType("char", emptyList(), metas)
             PartiQLParser.CHARACTER -> scalarType("character", emptyList(), metas)
@@ -1271,7 +1271,7 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
         val arg0 = if (ctx.arg0 != null) ion.newInt(BigInteger(ctx.arg0.text, 10)) else null
         val metas = ctx.CHARACTER().getSourceMetaContainer()
         assertIntegerValue(ctx.arg0, arg0)
-        scalarType("character_varying", listOfNotNull(arg0?.longValue()), metas)
+        scalarType("character varying", listOfNotNull(arg0?.longValue()), metas)
     }
 
     override fun visitTypeArgSingle(ctx: PartiQLParser.TypeArgSingleContext) = PartiqlAst.build {
@@ -1306,17 +1306,21 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
             throw ctx.precision.err("Unsupported precision", ErrorCode.PARSE_INVALID_PRECISION_FOR_TIME)
         }
         if (ctx.WITH() == null) return@build scalarType("time", listOfNotNull(precision))
-        scalarType("time_with_time_zone", listOfNotNull(precision))
+        scalarType("time with time zone", listOfNotNull(precision))
     }
 
-    override fun visitTypeCustom(ctx: PartiQLParser.TypeCustomContext) = PartiqlAst.build {
+    override fun visitGenericType(ctx: PartiQLParser.GenericTypeContext) = PartiqlAst.build {
         val metas = ctx.symbolPrimitive().getSourceMetaContainer()
-        val customName: String = when (val name = ctx.symbolPrimitive().getString().toLowerCase()) {
-            in customKeywords -> name
-            in customTypeAliases.keys -> customTypeAliases.getOrDefault(name, name)
-            else -> throw ParserException("Invalid custom type name: $name", ErrorCode.PARSE_INVALID_QUERY)
+        when (val name = ctx.symbolPrimitive().getString().toLowerCase()) {
+            in customKeywords, in customTypeAliases.keys -> {
+                val customTypeAlias = customTypeAliases.getOrDefault(name, name)
+                customType_(SymbolPrimitive(customTypeAlias, metas), metas)
+            }
+            else -> {
+                val typeParameters = ctx.LITERAL_INTEGER().map { it.text.toLong() }
+                scalarType(name, typeParameters, metas)
+            }
         }
-        customType_(SymbolPrimitive(customName, metas), metas)
     }
 
     /**

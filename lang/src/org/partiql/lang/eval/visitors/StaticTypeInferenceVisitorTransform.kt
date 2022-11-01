@@ -53,6 +53,7 @@ import org.partiql.lang.types.StructType
 import org.partiql.lang.types.TypedOpParameter
 import org.partiql.lang.types.UnknownArguments
 import org.partiql.lang.types.toTypedOpParameter
+import org.partiql.lang.util.TypeRegistry
 import org.partiql.lang.util.cartesianProduct
 
 /**
@@ -73,7 +74,8 @@ internal class StaticTypeInferenceVisitorTransform(
     customFunctionSignatures: List<FunctionSignature>,
     private val customTypedOpParameters: Map<String, TypedOpParameter>,
     private val problemHandler: ProblemHandler = ProblemThrower(),
-    private val plugin: Plugin
+    private val plugin: Plugin,
+    private val typeRegistry: TypeRegistry
 ) : PartiqlAst.VisitorTransform() {
 
     /** Used to allow certain binding lookups to occur directly in the global scope. */
@@ -1641,6 +1643,6 @@ internal class StaticTypeInferenceVisitorTransform(
         // to keep this function around.
         val sexp = this.toIonElement()
         val physicalType = PartiqlPhysical.transform(sexp) as PartiqlPhysical.Type
-        return physicalType.toTypedOpParameter(customTypedOpParameters)
+        return physicalType.toTypedOpParameter(customTypedOpParameters, typeRegistry)
     }
 }

@@ -13,16 +13,20 @@ import OTS.IMP.org.partiql.ots.legacy.operators.LegacyPosOp
 import OTS.IMP.org.partiql.ots.legacy.types.BlobType
 import OTS.IMP.org.partiql.ots.legacy.types.CharType
 import OTS.IMP.org.partiql.ots.legacy.types.ClobType
+import OTS.IMP.org.partiql.ots.legacy.types.DateType
 import OTS.IMP.org.partiql.ots.legacy.types.DecimalType
 import OTS.IMP.org.partiql.ots.legacy.types.DecimalTypeParameters
+import OTS.IMP.org.partiql.ots.legacy.types.DoubleType
 import OTS.IMP.org.partiql.ots.legacy.types.FloatType
 import OTS.IMP.org.partiql.ots.legacy.types.Int2Type
 import OTS.IMP.org.partiql.ots.legacy.types.Int4Type
 import OTS.IMP.org.partiql.ots.legacy.types.Int8Type
 import OTS.IMP.org.partiql.ots.legacy.types.IntType
+import OTS.IMP.org.partiql.ots.legacy.types.RealType
 import OTS.IMP.org.partiql.ots.legacy.types.StringType
 import OTS.IMP.org.partiql.ots.legacy.types.SymbolType
-import OTS.IMP.org.partiql.ots.legacy.types.TimeStampType
+import OTS.IMP.org.partiql.ots.legacy.types.TimeType
+import OTS.IMP.org.partiql.ots.legacy.types.TimestampType
 import OTS.IMP.org.partiql.ots.legacy.types.VarcharType
 import OTS.IMP.org.partiql.ots.legacy.types.isLob
 import OTS.IMP.org.partiql.ots.legacy.types.isNumeric
@@ -35,8 +39,31 @@ import OTS.ITF.org.partiql.ots.TypeInferenceResult
 import OTS.ITF.org.partiql.ots.Uncertain
 import OTS.ITF.org.partiql.ots.operator.ScalarOp
 import OTS.ITF.org.partiql.ots.type.BoolType
+import OTS.ITF.org.partiql.ots.type.ScalarType
 
 class LegacyPlugin : Plugin {
+    override val scalarTypes: List<ScalarType> = listOf(
+        BoolType,
+        BlobType,
+        CharType,
+        ClobType,
+        DateType,
+        DecimalType,
+        DoubleType,
+        FloatType,
+        Int2Type,
+        Int4Type,
+        Int8Type,
+        IntType,
+        RealType,
+        StringType,
+        SymbolType,
+        TimestampType,
+        TimeType(false),
+        TimeType(true),
+        VarcharType
+    )
+
     override val binaryPlusOp: ScalarOp = LegacyBinaryPlusOp
     override val binaryMinusOp: ScalarOp = LegacyBinaryMinusOp
     override val binaryTimesOp: ScalarOp = LegacyBinaryTimesOp
@@ -58,7 +85,7 @@ class LegacyPlugin : Plugin {
             is StringType,
             is SymbolType -> when {
                 sourceScalarType.isNumeric() || sourceScalarType.isText() -> Successful(targetType)
-                sourceScalarType in listOf(BoolType, TimeStampType) -> Successful(targetType)
+                sourceScalarType in listOf(BoolType, TimestampType) -> Successful(targetType)
                 else -> Failed
             }
             is Int2Type,
@@ -209,8 +236,8 @@ class LegacyPlugin : Plugin {
                 sourceScalarType.isLob() -> Successful(targetType)
                 else -> Failed
             }
-            is TimeStampType -> when {
-                sourceScalarType === TimeStampType -> Successful(targetType)
+            is TimestampType -> when {
+                sourceScalarType === TimestampType -> Successful(targetType)
                 sourceScalarType.isText() -> Uncertain(targetType)
                 else -> Failed
             }

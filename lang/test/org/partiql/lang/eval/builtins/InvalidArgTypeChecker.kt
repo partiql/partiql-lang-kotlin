@@ -12,8 +12,8 @@ import OTS.IMP.org.partiql.ots.legacy.types.Int8Type
 import OTS.IMP.org.partiql.ots.legacy.types.IntType
 import OTS.IMP.org.partiql.ots.legacy.types.StringType
 import OTS.IMP.org.partiql.ots.legacy.types.SymbolType
-import OTS.IMP.org.partiql.ots.legacy.types.TimeStampType
 import OTS.IMP.org.partiql.ots.legacy.types.TimeType
+import OTS.IMP.org.partiql.ots.legacy.types.TimestampType
 import OTS.IMP.org.partiql.ots.legacy.types.VarcharType
 import OTS.ITF.org.partiql.ots.type.BoolType
 import org.partiql.lang.errors.ErrorCode
@@ -59,7 +59,7 @@ private fun SingleType.getExample() = when (this) {
         is BlobType -> "`{{ aGVsbG8= }}`"
         is ClobType -> "`{{ \"HelloWorld\" }}`"
         is BoolType -> "TRUE"
-        is TimeStampType -> "`2017T`"
+        is TimestampType -> "`2017T`"
         is DateType -> "DATE '2012-12-12'"
         is TimeType -> "TIME '23:12:59.128'"
         else -> error("Unrecognized type: $scalarType")

@@ -38,7 +38,9 @@ import org.partiql.lang.syntax.Parser
 import org.partiql.lang.syntax.PartiQLParserBuilder
 import org.partiql.lang.types.CustomType
 import org.partiql.lang.types.StaticType
+import org.partiql.lang.util.TypeRegistry
 import org.partiql.lang.util.interruptibleFold
+import org.partiql.lang.util.validate
 
 /**
  * Contains all information needed for processing steps.
@@ -264,6 +266,15 @@ internal class CompilerPipelineImpl(
     override val plugin: Plugin
 ) : CompilerPipeline {
 
+    private val typeRegistry: TypeRegistry
+
+    init {
+        // Install plugin
+        plugin.validate()
+
+        typeRegistry = TypeRegistry(plugin.scalarTypes)
+    }
+
     private val compiler = EvaluatingCompiler(
         valueFactory,
         functions,
@@ -273,7 +284,8 @@ internal class CompilerPipelineImpl(
             }
         }.flatten().toMap(),
         procedures,
-        compileOptions
+        compileOptions,
+        typeRegistry
     )
 
     override fun compile(query: String): Expression = compile(parser.parseAstStatement(query))
@@ -302,7 +314,8 @@ internal class CompilerPipelineImpl(
                                         Pair(alias.toLowerCase(), customType.typedOpParameter)
                                     }
                                 }.flatten().toMap(),
-                                plugin = plugin
+                                plugin = plugin,
+                                typeRegistry = typeRegistry
                             )
                         )
                     }

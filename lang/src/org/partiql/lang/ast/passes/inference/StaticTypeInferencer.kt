@@ -13,6 +13,8 @@ import org.partiql.lang.eval.visitors.StaticTypeVisitorTransform
 import org.partiql.lang.types.FunctionSignature
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.types.TypedOpParameter
+import org.partiql.lang.util.TypeRegistry
+import org.partiql.lang.util.validate
 
 /**
  * Infers the [StaticType] of a [PartiqlAst.Statement]. Assumes [StaticTypeVisitorTransform] was run before on this
@@ -30,6 +32,15 @@ class StaticTypeInferencer(
     private val customTypedOpParameters: Map<String, TypedOpParameter>,
     private val plugin: Plugin
 ) {
+    private val typeRegistry: TypeRegistry
+
+    init {
+        // Install plugin
+        plugin.validate()
+
+        typeRegistry = TypeRegistry(plugin.scalarTypes)
+    }
+
     /**
      * Infers the [StaticType] of [node] and returns an [InferenceResult]. Currently does not support inference for
      * [PartiqlAst.Statement.Dml] and [PartiqlAst.Statement.Ddl] statements.
@@ -44,7 +55,7 @@ class StaticTypeInferencer(
      */
     fun inferStaticType(node: PartiqlAst.Statement): InferenceResult {
         val problemCollector = ProblemCollector()
-        val inferencer = StaticTypeInferenceVisitorTransform(globalBindings, customFunctionSignatures, customTypedOpParameters, problemCollector, plugin)
+        val inferencer = StaticTypeInferenceVisitorTransform(globalBindings, customFunctionSignatures, customTypedOpParameters, problemCollector, plugin, typeRegistry)
         val transformedPartiqlAst = inferencer.transformStatement(node)
         val inferredStaticType = when (transformedPartiqlAst) {
             is PartiqlAst.Statement.Query ->

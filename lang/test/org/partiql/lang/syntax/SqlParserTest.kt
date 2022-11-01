@@ -618,21 +618,21 @@ class SqlParserTest : SqlParserTestBase() {
     @Test
     fun castAsNumeric() = assertExpression(
         "CAST(a AS NUMERIC)",
-        "(cast (id a case_insensitive) (type numeric))",
+        "(cast (id a case_insensitive) (type decimal))",
         """(cast (id a (case_insensitive) (unqualified)) (scalar_type numeric))"""
     )
 
     @Test
     fun castAsNumericScaleOnly() = assertExpression(
         "CAST(a AS NUMERIC(1))",
-        "(cast (id a case_insensitive) (type numeric 1))",
+        "(cast (id a case_insensitive) (type decimal 1))",
         "(cast (id a (case_insensitive) (unqualified)) (scalar_type numeric 1))"
     )
 
     @Test
     fun castAsNumericScaleAndPrecision() = assertExpression(
         "CAST(a AS NUMERIC(1, 2))",
-        "(cast (id a case_insensitive) (type numeric 1 2))",
+        "(cast (id a case_insensitive) (type decimal 1 2))",
         "(cast (id a (case_insensitive) (unqualified)) (scalar_type numeric 1 2))"
     )
 

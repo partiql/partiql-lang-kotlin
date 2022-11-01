@@ -14,6 +14,7 @@
 
 package org.partiql.lang.compiler
 
+import OTS.ITF.org.partiql.ots.Plugin
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.eval.BindingCase
 import org.partiql.lang.eval.BindingName
@@ -37,6 +38,8 @@ import org.partiql.lang.planner.DML_COMMAND_FIELD_TARGET_UNIQUE_ID
 import org.partiql.lang.planner.DmlAction
 import org.partiql.lang.planner.EvaluatorOptions
 import org.partiql.lang.types.TypedOpParameter
+import org.partiql.lang.util.TypeRegistry
+import org.partiql.lang.util.validate
 
 internal class PartiQLCompilerDefault(
     private val valueFactory: ExprValueFactory,
@@ -44,7 +47,8 @@ internal class PartiQLCompilerDefault(
     private val customTypedOpParameters: Map<String, TypedOpParameter>,
     private val functions: Map<String, ExprFunction>,
     private val procedures: Map<String, StoredProcedure>,
-    private val operatorFactories: Map<RelationalOperatorFactoryKey, RelationalOperatorFactory>
+    private val operatorFactories: Map<RelationalOperatorFactoryKey, RelationalOperatorFactory>,
+    private val plugin: Plugin
 ) : PartiQLCompiler {
 
     private lateinit var exprConverter: PhysicalPlanCompilerImpl
@@ -56,14 +60,22 @@ internal class PartiQLCompilerDefault(
         relationalOperatorFactory = operatorFactories
     )
 
+    private val typeRegistry: TypeRegistry
+
     init {
+        // Install plugin
+        plugin.validate()
+
+        typeRegistry = TypeRegistry(plugin.scalarTypes)
+
         exprConverter = PhysicalPlanCompilerImpl(
             valueFactory = valueFactory,
             functions = functions,
             customTypedOpParameters = customTypedOpParameters,
             procedures = procedures,
             evaluatorOptions = evaluatorOptions,
-            bexperConverter = bexprConverter
+            bexperConverter = bexprConverter,
+            typeRegistry = typeRegistry
         )
     }
 

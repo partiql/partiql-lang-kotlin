@@ -2,12 +2,27 @@
 
 package org.partiql.lang.ast
 
+import OTS.IMP.org.partiql.ots.legacy.types.BlobType
+import OTS.IMP.org.partiql.ots.legacy.types.CharType
+import OTS.IMP.org.partiql.ots.legacy.types.ClobType
+import OTS.IMP.org.partiql.ots.legacy.types.DateType
+import OTS.IMP.org.partiql.ots.legacy.types.DecimalType
+import OTS.IMP.org.partiql.ots.legacy.types.DoubleType
+import OTS.IMP.org.partiql.ots.legacy.types.FloatType
+import OTS.IMP.org.partiql.ots.legacy.types.Int2Type
+import OTS.IMP.org.partiql.ots.legacy.types.Int4Type
+import OTS.IMP.org.partiql.ots.legacy.types.Int8Type
+import OTS.IMP.org.partiql.ots.legacy.types.IntType
+import OTS.IMP.org.partiql.ots.legacy.types.RealType
+import OTS.IMP.org.partiql.ots.legacy.types.StringType
+import OTS.IMP.org.partiql.ots.legacy.types.SymbolType
+import OTS.IMP.org.partiql.ots.legacy.types.TimestampType
+import OTS.IMP.org.partiql.ots.legacy.types.VarcharType
+import OTS.ITF.org.partiql.ots.type.BoolType
 import com.amazon.ion.IonSystem
 import com.amazon.ionelement.api.toIonValue
 import org.partiql.lang.domains.PartiqlAst
-import org.partiql.lang.types.BuiltInScalarType
 import org.partiql.lang.types.StaticType
-import org.partiql.lang.types.TYPE_ALIAS_TO_SCALAR_TYPE
 import org.partiql.lang.util.checkThreadInterrupted
 import org.partiql.lang.util.toIntExact
 import org.partiql.pig.runtime.SymbolPrimitive
@@ -332,27 +347,28 @@ private class StatementTransformer(val ion: IonSystem) {
             is PartiqlAst.Type.SexpType -> DataType(SqlDataType.SEXP, listOf(), metas = metas)
             is PartiqlAst.Type.BagType -> DataType(SqlDataType.BAG, listOf(), metas = metas)
             is PartiqlAst.Type.AnyType -> DataType(SqlDataType.ANY, listOf(), metas = metas)
-            is PartiqlAst.Type.ScalarType -> when (TYPE_ALIAS_TO_SCALAR_TYPE[alias.text]) {
-                BuiltInScalarType.BOOLEAN -> DataType(SqlDataType.BOOLEAN, listOf(), alias.text, metas)
-                BuiltInScalarType.INTEGER -> DataType(SqlDataType.INTEGER, listOf(), alias.text, metas)
-                BuiltInScalarType.SMALLINT -> DataType(SqlDataType.SMALLINT, listOf(), alias.text, metas)
-                BuiltInScalarType.INTEGER4 -> DataType(SqlDataType.INTEGER4, listOf(), alias.text, metas)
-                BuiltInScalarType.INTEGER8 -> DataType(SqlDataType.INTEGER8, listOf(), alias.text, metas)
-                BuiltInScalarType.FLOAT -> DataType(SqlDataType.FLOAT, parameters.map { it.value.toIntExact() }, alias.text, metas)
-                BuiltInScalarType.REAL -> DataType(SqlDataType.REAL, listOf(), alias.text, metas)
-                BuiltInScalarType.DOUBLE_PRECISION -> DataType(SqlDataType.DOUBLE_PRECISION, listOf(), alias.text, metas)
-                BuiltInScalarType.DECIMAL -> DataType(SqlDataType.DECIMAL, parameters.map { it.value.toIntExact() }, alias.text, metas)
-                BuiltInScalarType.NUMERIC -> DataType(SqlDataType.NUMERIC, parameters.map { it.value.toIntExact() }, alias.text, metas)
-                BuiltInScalarType.TIMESTAMP -> DataType(SqlDataType.TIMESTAMP, listOf(), alias.text, metas)
-                BuiltInScalarType.CHARACTER -> DataType(SqlDataType.CHARACTER, parameters.map { it.value.toIntExact() }, alias.text, metas)
-                BuiltInScalarType.CHARACTER_VARYING -> DataType(SqlDataType.CHARACTER_VARYING, parameters.map { it.value.toIntExact() }, alias.text, metas)
-                BuiltInScalarType.STRING -> DataType(SqlDataType.STRING, listOf(), alias.text, metas)
-                BuiltInScalarType.SYMBOL -> DataType(SqlDataType.SYMBOL, listOf(), alias.text, metas)
-                BuiltInScalarType.BLOB -> DataType(SqlDataType.BLOB, listOf(), alias.text, metas)
-                BuiltInScalarType.CLOB -> DataType(SqlDataType.CLOB, listOf(), alias.text, metas)
-                BuiltInScalarType.DATE -> DataType(SqlDataType.DATE, listOf(), alias.text, metas)
-                BuiltInScalarType.TIME -> DataType(SqlDataType.TIME, parameters.map { it.value.toIntExact() }, alias.text, metas)
-                BuiltInScalarType.TIME_WITH_TIME_ZONE -> DataType(SqlDataType.TIME_WITH_TIME_ZONE, parameters.map { it.value.toIntExact() }, alias.text, metas)
+            // The following code has dependencies on specific scalar types. But it does not matter since we will remove this file as we remove ExprNode.
+            // We have to maintain ExprNode and V0 AST if we want to remove dependencies on specific scalar types.
+            is PartiqlAst.Type.ScalarType -> when (alias.text) {
+                in BoolType.names -> DataType(SqlDataType.BOOLEAN, listOf(), alias.text, metas)
+                in IntType.names -> DataType(SqlDataType.INTEGER, listOf(), alias.text, metas)
+                in Int2Type.names -> DataType(SqlDataType.SMALLINT, listOf(), alias.text, metas)
+                in Int4Type.names -> DataType(SqlDataType.INTEGER4, listOf(), alias.text, metas)
+                in Int8Type.names -> DataType(SqlDataType.INTEGER8, listOf(), alias.text, metas)
+                in FloatType.names -> DataType(SqlDataType.FLOAT, parameters.map { it.value.toIntExact() }, alias.text, metas)
+                in RealType.names -> DataType(SqlDataType.REAL, listOf(), alias.text, metas)
+                in DoubleType.names -> DataType(SqlDataType.DOUBLE_PRECISION, listOf(), alias.text, metas)
+                in DecimalType.names -> DataType(SqlDataType.DECIMAL, parameters.map { it.value.toIntExact() }, alias.text, metas)
+                in TimestampType.names -> DataType(SqlDataType.TIMESTAMP, listOf(), alias.text, metas)
+                in CharType.names -> DataType(SqlDataType.CHARACTER, parameters.map { it.value.toIntExact() }, alias.text, metas)
+                in VarcharType.names -> DataType(SqlDataType.CHARACTER_VARYING, parameters.map { it.value.toIntExact() }, alias.text, metas)
+                in StringType.names -> DataType(SqlDataType.STRING, listOf(), alias.text, metas)
+                in SymbolType.names -> DataType(SqlDataType.SYMBOL, listOf(), alias.text, metas)
+                in BlobType.names -> DataType(SqlDataType.BLOB, listOf(), alias.text, metas)
+                in ClobType.names -> DataType(SqlDataType.CLOB, listOf(), alias.text, metas)
+                in DateType.names -> DataType(SqlDataType.DATE, listOf(), alias.text, metas)
+                "time" -> DataType(SqlDataType.TIME, parameters.map { it.value.toIntExact() }, alias.text, metas)
+                "time with time zone" -> DataType(SqlDataType.TIME_WITH_TIME_ZONE, parameters.map { it.value.toIntExact() }, alias.text, metas)
                 else -> error("Unrecognized scalar type ID: ${alias.text}")
             }
             is PartiqlAst.Type.CustomType -> DataType(SqlDataType.CustomDataType(this.name.text), listOf(), metas = metas)

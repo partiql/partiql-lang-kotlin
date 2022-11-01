@@ -10,7 +10,7 @@ import OTS.IMP.org.partiql.ots.legacy.types.Int8Type
 import OTS.IMP.org.partiql.ots.legacy.types.IntType
 import OTS.IMP.org.partiql.ots.legacy.types.StringType
 import OTS.IMP.org.partiql.ots.legacy.types.SymbolType
-import OTS.IMP.org.partiql.ots.legacy.types.TimeStampType
+import OTS.IMP.org.partiql.ots.legacy.types.TimestampType
 import OTS.IMP.org.partiql.ots.legacy.types.VarcharType
 import OTS.ITF.org.partiql.ots.type.BoolType
 import com.amazon.ionelement.api.ionBool
@@ -2803,7 +2803,7 @@ internal fun bagWithCustomElementTests() = listOf(
         """,
         BagType(
             StaticScalarType(
-                TimeStampType,
+                TimestampType,
                 metas = mapOf(
                     ISL_META_KEY to listOf(
                         buildTypeDef("bar", buildTypeConstraint("timestamp"))

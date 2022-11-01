@@ -14,6 +14,7 @@
 
 package org.partiql.lang.planner
 
+import OTS.ITF.org.partiql.ots.Plugin
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.PartiqlLogical
 import org.partiql.lang.domains.PartiqlLogicalResolved
@@ -33,14 +34,26 @@ import org.partiql.lang.planner.transforms.LogicalToLogicalResolvedVisitorTransf
 import org.partiql.lang.planner.transforms.allocateVariableIds
 import org.partiql.lang.planner.validators.PartiqlLogicalResolvedValidator
 import org.partiql.lang.planner.validators.PartiqlLogicalValidator
+import org.partiql.lang.util.TypeRegistry
+import org.partiql.lang.util.validate
 import org.partiql.pig.runtime.asPrimitive
 
 internal class PartiQLPlannerDefault(
     private val globalVariableResolver: GlobalVariableResolver,
     private val physicalPlanPasses: List<PartiQLPlannerPass.Physical>,
     private val callback: PlannerEventCallback?,
-    private val options: PartiQLPlanner.Options
+    private val options: PartiQLPlanner.Options,
+    private val plugin: Plugin
 ) : PartiQLPlanner {
+
+    private val typeRegistry: TypeRegistry
+
+    init {
+        // Install plugin
+        plugin.validate()
+
+        typeRegistry = TypeRegistry(plugin.scalarTypes)
+    }
 
     override fun plan(statement: PartiqlAst.Statement): PartiQLPlanner.Result {
 
@@ -63,7 +76,7 @@ internal class PartiQLPlannerDefault(
         }
         // Validate logical plan
         // TODO: if it is an invalid logical plan, do we want to add it to [problemHandler]?
-        PartiqlLogicalValidator(options.typedOpBehavior).walkPlan(logicalPlan)
+        PartiqlLogicalValidator(options.typedOpBehavior, typeRegistry).walkPlan(logicalPlan)
 
         // Step 3. Replace variable references
         val resolvedLogicalPlan = callback.doEvent("logical_to_logical_resolved", logicalPlan) {

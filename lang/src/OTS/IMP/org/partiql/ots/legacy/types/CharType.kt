@@ -1,13 +1,22 @@
 package OTS.IMP.org.partiql.ots.legacy.types
 
-import OTS.ITF.org.partiql.ots.TypeParameters
-import OTS.ITF.org.partiql.ots.type.ScalarType
+import OTS.ITF.org.partiql.ots.type.ParametricType
+import OTS.ITF.org.partiql.ots.type.TypeParameters
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
 
-object CharType : ScalarType {
-    override val id: String
-        get() = "character"
+object CharType : ParametricType {
+    override val id = "character"
+
+    override val names = listOf("character", "char")
+
+    override fun validateParameters(typeParameters: TypeParameters) {
+        when (typeParameters.size) {
+            0 -> {}
+            1 -> require(typeParameters[0] > 0)
+            else -> error("$id type requires at most 1 parameter")
+        }
+    }
 
     override val runTimeType: ExprValueType
         get() = ExprValueType.STRING

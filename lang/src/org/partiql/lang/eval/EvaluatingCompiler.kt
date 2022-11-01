@@ -58,16 +58,15 @@ import org.partiql.lang.eval.visitors.PartiqlAstSanityValidator
 import org.partiql.lang.syntax.PartiQLParserBuilder
 import org.partiql.lang.types.AnyOfType
 import org.partiql.lang.types.AnyType
-import org.partiql.lang.types.BuiltInScalarType
 import org.partiql.lang.types.FunctionSignature
 import org.partiql.lang.types.SingleType
 import org.partiql.lang.types.StaticScalarType
 import org.partiql.lang.types.StaticType
-import org.partiql.lang.types.TYPE_ALIAS_TO_SCALAR_TYPE
 import org.partiql.lang.types.TypedOpParameter
 import org.partiql.lang.types.UnknownArguments
 import org.partiql.lang.types.UnsupportedTypeCheckException
 import org.partiql.lang.types.toTypedOpParameter
+import org.partiql.lang.util.TypeRegistry
 import org.partiql.lang.util.bigDecimalOf
 import org.partiql.lang.util.checkThreadInterrupted
 import org.partiql.lang.util.codePointSequence
@@ -137,7 +136,8 @@ internal class EvaluatingCompiler(
     private val functions: Map<String, ExprFunction>,
     private val customTypedOpParameters: Map<String, TypedOpParameter>,
     private val procedures: Map<String, StoredProcedure>,
-    private val compileOptions: CompileOptions = CompileOptions.standard()
+    private val compileOptions: CompileOptions = CompileOptions.standard(),
+    private val typeRegistery: TypeRegistry
 ) {
     private val errorSignaler = compileOptions.typingMode.createErrorSignaler(valueFactory)
     private val thunkFactory = compileOptions.typingMode.createThunkFactory<Environment>(compileOptions.thunkOptions, valueFactory)
@@ -325,7 +325,7 @@ internal class EvaluatingCompiler(
         val transformedAst = visitorTransform.transformStatement(originalAst)
         val partiqlAstSanityValidator = PartiqlAstSanityValidator()
 
-        partiqlAstSanityValidator.validate(transformedAst, compileOptions)
+        partiqlAstSanityValidator.validate(transformedAst, compileOptions, typeRegistery)
 
         val thunk = nestCompilationContext(ExpressionContext.NORMAL, emptySet()) {
             compileAstStatement(transformedAst)
@@ -1229,19 +1229,6 @@ internal class EvaluatingCompiler(
         if (typedOpParameter.staticType is AnyType) {
             return thunkFactory.thunkEnv(metas) { valueFactory.newBoolean(true) }
         }
-        if (
-            compileOptions.typedOpBehavior == TypedOpBehavior.HONOR_PARAMETERS &&
-            expr.type is PartiqlAst.Type.ScalarType &&
-            TYPE_ALIAS_TO_SCALAR_TYPE[expr.type.alias.text] === BuiltInScalarType.FLOAT &&
-            expr.type.parameters.isNotEmpty() // if precision of FLOAT is explicitly specified in the original query
-        ) {
-            err(
-                "FLOAT precision parameter is unsupported",
-                ErrorCode.SEMANTIC_FLOAT_PRECISION_UNSUPPORTED,
-                errorContextFrom(expr.type.metas),
-                internal = false
-            )
-        }
 
         val typeMatchFunc = when (val staticType = typedOpParameter.staticType) {
             is SingleType -> makeIsCheck(staticType, typedOpParameter, metas)
@@ -1272,19 +1259,6 @@ internal class EvaluatingCompiler(
         val typedOpParameter = asType.toTypedOpParameter()
         if (typedOpParameter.staticType is AnyType) {
             return expThunk
-        }
-        if (
-            compileOptions.typedOpBehavior == TypedOpBehavior.HONOR_PARAMETERS &&
-            asType is PartiqlAst.Type.ScalarType &&
-            TYPE_ALIAS_TO_SCALAR_TYPE[asType.alias.text] === BuiltInScalarType.FLOAT &&
-            asType.parameters.isNotEmpty() // if precision of FLOAT is explicitly specified in the original query
-        ) {
-            err(
-                "FLOAT precision parameter is unsupported",
-                ErrorCode.SEMANTIC_FLOAT_PRECISION_UNSUPPORTED,
-                errorContextFrom(asType.metas),
-                internal = false
-            )
         }
 
         fun typeOpValidate(
@@ -3020,7 +2994,7 @@ internal class EvaluatingCompiler(
         // to keep this function around.
         val sexp = this.toIonElement()
         val physicalType = PartiqlPhysical.transform(sexp) as PartiqlPhysical.Type
-        return physicalType.toTypedOpParameter(customTypedOpParameters)
+        return physicalType.toTypedOpParameter(customTypedOpParameters, typeRegistery)
     }
 }
 

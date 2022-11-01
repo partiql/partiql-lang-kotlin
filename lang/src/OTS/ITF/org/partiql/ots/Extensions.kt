@@ -1,13 +1,11 @@
 package OTS.ITF.org.partiql.ots
 
 import OTS.ITF.org.partiql.ots.type.ScalarType
+import OTS.ITF.org.partiql.ots.type.TypeParameters
 
 /**
- * For now, we assume all the type parameters are optional and all the type parameters
- * are integers.
+ * A type assigned to data (a scalar value). Basically, a [scalarType] with certain type parameters.
  */
-typealias TypeParameters = List<Int>
-
 data class CompileTimeType(
     val scalarType: ScalarType,
     val parameters: TypeParameters

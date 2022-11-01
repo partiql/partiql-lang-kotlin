@@ -1,11 +1,17 @@
 package OTS.ITF.org.partiql.ots
 
 import OTS.ITF.org.partiql.ots.operator.ScalarOp
+import OTS.ITF.org.partiql.ots.type.ScalarType
 
 /**
  * Used to define a plugin
  */
 interface Plugin {
+    /**
+     * All the scalar types
+     */
+    val scalarTypes: List<ScalarType>
+
     val posOp: ScalarOp
     val negOp: ScalarOp
     val binaryPlusOp: ScalarOp

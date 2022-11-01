@@ -3,10 +3,11 @@ package OTS.IMP.org.partiql.ots.legacy.types
 import OTS.ITF.org.partiql.ots.type.ScalarType
 import org.partiql.lang.eval.ExprValueType
 
-object TimeStampType : ScalarType {
-    override val id: String
-        get() = "timestamp"
+object RealType : ScalarType {
+    override val id = "real"
+
+    override val names = listOf("real")
 
     override val runTimeType: ExprValueType
-        get() = ExprValueType.TIMESTAMP
+        get() = ExprValueType.FLOAT
 }

@@ -14,6 +14,9 @@
 
 package org.partiql.lang.planner
 
+import OTS.IMP.org.partiql.ots.legacy.plugin.LegacyPlugin
+import OTS.ITF.org.partiql.ots.Plugin
+
 /**
  * Builder class to instantiate a [PartiQLPlanner].
  */
@@ -23,6 +26,7 @@ class PartiQLPlannerBuilder private constructor() {
     private var physicalPlanPasses: List<PartiQLPlannerPass.Physical> = emptyList()
     private var callback: PlannerEventCallback? = null
     private var options = PartiQLPlanner.Options()
+    private var plugin: Plugin = LegacyPlugin()
 
     companion object {
 
@@ -46,10 +50,15 @@ class PartiQLPlannerBuilder private constructor() {
         this.callback = callback
     }
 
+    fun plugin(plugin: Plugin) = this.apply {
+        this.plugin = plugin
+    }
+
     fun build(): PartiQLPlanner = PartiQLPlannerDefault(
         globalVariableResolver = globalVariableResolver,
         physicalPlanPasses = physicalPlanPasses,
         callback = callback,
-        options = options
+        options = options,
+        plugin = plugin
     )
 }
