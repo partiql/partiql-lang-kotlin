@@ -392,14 +392,13 @@ internal data class LogicalToLogicalResolvedVisitorTransform(
 
     override fun transformBexprAggregate(node: PartiqlLogical.Bexpr.Aggregate): PartiqlLogicalResolved.Bexpr {
         val scope = getOutputScope(node.source).concatenate(this.inputScope)
-        val keysScope = node.groupList.keys.getOutputScope()
         return PartiqlLogicalResolved.build {
             aggregate(
                 source = transformBexpr(node.source),
-                strategy = super.transformBexprAggregate_strategy(node),
-                groupList = withInputScope(scope) { super.transformBexprAggregate_groupList(node) },
-                functionList = withInputScope(scope.concatenate(keysScope)) { super.transformBexprAggregate_functionList(node) },
-                metas = super.transformBexprAggregate_metas(node)
+                strategy = transformBexprAggregate_strategy(node),
+                groupList = withInputScope(scope) { transformBexprAggregate_groupList(node) },
+                functionList = withInputScope(scope) { transformBexprAggregate_functionList(node) },
+                metas = transformBexprAggregate_metas(node)
             )
         }
     }
@@ -463,7 +462,7 @@ internal data class LogicalToLogicalResolvedVisitorTransform(
             is PartiqlLogical.Bexpr.Offset -> getOutputScope(bexpr.source)
             is PartiqlLogical.Bexpr.Sort -> getOutputScope(bexpr.source)
             is PartiqlLogical.Bexpr.Aggregate -> {
-                val keyVariables = bexpr.groupList.keys.getOutputScope()
+                val keyVariables = bexpr.groupList.keys.map { it.asVar }
                 val functionVariables = bexpr.functionList.functions.map { it.asVar }
                 LocalScope(keyVariables + functionVariables)
             }
@@ -501,8 +500,6 @@ internal data class LogicalToLogicalResolvedVisitorTransform(
                 sourceScope.concatenate(letVariables)
             }
         }
-
-    private fun List<PartiqlLogical.GroupKey>.getOutputScope(): List<PartiqlLogical.VarDecl> = this.map { it.asVar }
 
     private fun LocalScope.concatenate(other: LocalScope): LocalScope =
         this.concatenate(other.varDecls)

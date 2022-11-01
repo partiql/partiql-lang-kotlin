@@ -145,14 +145,14 @@ class EvaluatingCompilerHavingTest : EvaluatorTestBase() {
             EvaluatorTestCase(
                 groupName = "GROUP BY with HAVING that calls SUM()",
                 """
-                    SELECT attributeId, SUM(attributeId) as the_count
+                    SELECT attributeId, SUM(attributeId) as the_sum
                     FROM repeating_things
                     GROUP BY attributeId
                     HAVING SUM(attributeId) >= 160
                 """,
                 """<<
-                  { 'attributeId': 40, 'the_count': 160 },
-                  { 'attributeId': 50, 'the_count': 250 }
+                  { 'attributeId': 40, 'the_sum': 160 },
+                  { 'attributeId': 50, 'the_sum': 250 }
                 >>"""
             ),
             EvaluatorTestCase(

@@ -142,7 +142,7 @@ class GroupKeyReferencesVisitorTransformTests : VisitorTransformTestBase() {
                     expected = "SELECT \"someUniqueName\" AS someProjection FROM t GROUP BY a AS someKey HAVING \"someUniqueName\" > 2"
                 ),
 
-                // SELECT someKey AS someProjection FROM t GROUP BY a AS someKey HAVING COUNT(someKey) > 2
+                // SELECT someKey AS someProjection FROM t GROUP BY a AS someKey HAVING COUNT(a) > 2
                 TransformTestCase(
                     original = PartiqlAst.build {
                         query(
@@ -176,17 +176,17 @@ class GroupKeyReferencesVisitorTransformTests : VisitorTransformTestBase() {
                                     callAgg(
                                         all(),
                                         "count",
-                                        id("someUniqueName", caseSensitive(), unqualified())
+                                        id("a", caseInsensitive(), unqualified())
                                     ),
                                     lit(ionInt(2))
                                 )
                             )
                         )
                     },
-                    expected = "SELECT \"someUniqueName\" AS someProjection FROM t GROUP BY a AS someKey HAVING COUNT(\"someUniqueName\") > 2"
+                    expected = "SELECT \"someUniqueName\" AS someProjection FROM t GROUP BY a AS someKey HAVING COUNT(a) > 2"
                 ),
 
-                // SELECT COUNT(someKey) AS someProjection FROM t GROUP BY a AS someKey HAVING COUNT(someKey) > 2
+                // SELECT COUNT(a) AS someProjection FROM t GROUP BY a AS someKey HAVING COUNT(a) > 2
                 TransformTestCase(
                     original = PartiqlAst.build {
                         query(
@@ -196,7 +196,7 @@ class GroupKeyReferencesVisitorTransformTests : VisitorTransformTestBase() {
                                         callAgg(
                                             all(),
                                             "count",
-                                            id("someKey", caseSensitive(), unqualified())
+                                            id("a", caseInsensitive(), unqualified())
                                         ),
                                         asAlias = "someProjection"
                                     )
@@ -231,7 +231,7 @@ class GroupKeyReferencesVisitorTransformTests : VisitorTransformTestBase() {
                             )
                         )
                     },
-                    expected = "SELECT COUNT(\"someUniqueName\") AS someProjection FROM t GROUP BY a AS someKey HAVING COUNT(\"someUniqueName\") > 2"
+                    expected = "SELECT COUNT(a) AS someProjection FROM t GROUP BY a AS someKey HAVING COUNT(a) > 2"
                 ),
             )
         }
