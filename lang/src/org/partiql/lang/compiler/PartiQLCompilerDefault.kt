@@ -109,6 +109,7 @@ internal class PartiQLCompilerDefault(
         return when (DmlAction.safeValueOf(action)) {
             DmlAction.INSERT -> PartiQLResult.Insert(target, rows)
             DmlAction.DELETE -> PartiQLResult.Delete(target, rows)
+            DmlAction.REPLACE -> PartiQLResult.Replace(target, rows)
             null -> error("Unknown DML Action `$action`")
         }
     }

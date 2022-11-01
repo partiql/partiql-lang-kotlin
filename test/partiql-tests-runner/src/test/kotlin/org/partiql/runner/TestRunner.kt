@@ -34,8 +34,10 @@ private val ERROR_EVAL_MODE_COMPILE_OPTIONS = CompileOptions.build { typingMode(
 
 /*
 The skip lists defined in this file show how the current Kotlin implementation diverges from the PartiQL spec. Most of
-the divergent behavior is due to `partiql-lang-kotlin` not having a STRICT/ERROR typing mode.  The [LEGACY typing mode](https://github.com/partiql/partiql-lang-kotlin/blob/main/lang/src/org/partiql/lang/eval/CompileOptions.kt#L53-L62)
-(which is closer to STRICT/ERROR but not a complete match) was used for testing the STRICT/ERROR typing mode behavior.
+the divergent behavior is due to `partiql-lang-kotlin` not having a STRICT typing mode/ERROR eval mode.  The
+[LEGACY typing mode](https://github.com/partiql/partiql-lang-kotlin/blob/main/lang/src/org/partiql/lang/eval/CompileOptions.kt#L53-L62)
+(which is closer to STRICT typing mode/ERROR eval mode but not a complete match) was used for testing the STRICT typing
+mode/ERROR eval mode.
 
 A lot of the other behavior differences is due to not supporting some syntax mentioned in the spec (like `COLL_*`
 aggregation functions) and due to not supporting coercions.
@@ -50,8 +52,9 @@ private val LANG_KOTLIN_EVAL_SKIP_LIST = listOf(
     // same as above, but since in error mode, should give an error
     Pair("tuple navigation with array notation without explicit CAST to string", ERROR_EVAL_MODE_COMPILE_OPTIONS),
 
-    // for the following, partiql-lang-kotlin doesn't have a STRICT/ERROR typing mode. tested using
-    // partiql-lang-kotlin's LEGACY typing mode, which has some semantic differences from STRICT/ERROR typing mode.
+    // for the following, partiql-lang-kotlin doesn't have a STRICT typing mode/ERROR eval mode. tested using
+    // partiql-lang-kotlin's LEGACY typing mode, which has some semantic differences from STRICT typing mode/ERROR eval
+    // mode.
     Pair("path on string", ERROR_EVAL_MODE_COMPILE_OPTIONS),
     Pair("tuple navigation missing attribute dot notation", ERROR_EVAL_MODE_COMPILE_OPTIONS),
     Pair("tuple navigation missing attribute array notation", ERROR_EVAL_MODE_COMPILE_OPTIONS),
@@ -68,46 +71,124 @@ private val LANG_KOTLIN_EVAL_SKIP_LIST = listOf(
     // TODO: clarify behavior. spec (section 8) says it should return NULL based on 3-value logic
     Pair("missing and true", COERCE_EVAL_MODE_COMPILE_OPTIONS),
 
-    // plk doesn't currently implement subquery coercion. The inner SFW query returns a bag of two elements that when
-    // coerced to a scalar should return MISSING in COERCE mode. As a result, `customerName` should be missing from the
-    // first tuple.
+    // partiql-lang-kotlin doesn't currently implement subquery coercion. The inner SFW query returns a bag of two
+    // elements that when coerced to a scalar should return MISSING in COERCE mode. As a result, `customerName` should
+    // be missing from the first tuple.
     Pair("inner select evaluating to collection with more than one element", COERCE_EVAL_MODE_COMPILE_OPTIONS),
 
-    // coll_* aggregate functions not supported in plk -- results in parser error. coll_* functions will be supported in
-    // https://github.com/partiql/partiql-lang-kotlin/issues/222
+    // coll_* aggregate functions not supported in partiql-lang-kotlin -- results in parser error. coll_* functions
+    // will be supported in https://github.com/partiql/partiql-lang-kotlin/issues/222
     Pair("coll_count without group by", COERCE_EVAL_MODE_COMPILE_OPTIONS),
     Pair("coll_count without group by", ERROR_EVAL_MODE_COMPILE_OPTIONS),
     Pair("coll_count with result of subquery", COERCE_EVAL_MODE_COMPILE_OPTIONS),
     Pair("coll_count with result of subquery", ERROR_EVAL_MODE_COMPILE_OPTIONS),
 
-    // WITH keyword not supported resulting in parse error. windowing will be supported in plk in https://github.com/partiql/partiql-lang-kotlin/issues/603
+    // WITH keyword not supported resulting in parse error
     Pair("windowing simplified with grouping", COERCE_EVAL_MODE_COMPILE_OPTIONS),
     Pair("windowing simplified with grouping", ERROR_EVAL_MODE_COMPILE_OPTIONS),
 
-    // plk doesn't have STRICT/ERROR mode. LEGACY mode used which doesn't error when RHS of `IN` expression is not a
-    // bag, list, or sexp
+    // partiql-lang-kotlin doesn't have STRICT typing mode/ERROR eval mode. LEGACY mode used which doesn't error when
+    // RHS of `IN` expression is not a bag, list, or sexp
     Pair("notInPredicateSingleExpr", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+
+    // PartiQL Test Suite (PTS, https://github.com/partiql/partiql-lang-kotlin/tree/main/test/partiql-pts) tests:
+    // partiql-lang-kotlin doesn't have STRICT typing mode/ERROR eval mode. LEGACY mode used which propagates NULL
+    // rather than missing
+    Pair("""char_length null and missing propagation{in:"missing",result:(success missing::null)}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""character_length null and missing propagation{in:"missing",result:(success missing::null)}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""trim null and missing propagation{sql:"trim(missing)"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""trim null and missing propagation{sql:"trim(leading from missing)"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""trim null and missing propagation{sql:"trim(trailing from missing)"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""trim null and missing propagation{sql:"trim(both from missing)"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""trim null and missing propagation{sql:"trim(leading '' from missing)"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""trim null and missing propagation{sql:"trim(trailing '' from missing)"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""trim null and missing propagation{sql:"trim(both '' from missing)"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""trim null and missing propagation{sql:"trim(leading missing from '')"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""trim null and missing propagation{sql:"trim(trailing missing from '')"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""trim null and missing propagation{sql:"trim(both missing from '')"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""trim null and missing propagation{sql:"trim(leading null from missing)"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""trim null and missing propagation{sql:"trim(trailing null from missing)"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""trim null and missing propagation{sql:"trim(both null from missing)"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""trim null and missing propagation{sql:"trim(leading missing from null)"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""trim null and missing propagation{sql:"trim(trailing missing from null)"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""trim null and missing propagation{sql:"trim(both missing from null)"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""trim null and missing propagation{sql:"trim(leading missing from missing)"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""trim null and missing propagation{sql:"trim(trailing missing from missing)"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""trim null and missing propagation{sql:"trim(both missing from missing)"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""substring null and missing propagation 2 arguments{target:"missing",start_pos:"1"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""substring null and missing propagation 2 arguments{target:"''",start_pos:"missing"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""substring null and missing propagation 2 arguments{target:"missing",start_pos:"missing"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""substring null and missing propagation 2 arguments{target:"null",start_pos:"missing"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""substring null and missing propagation 2 arguments{target:"missing",start_pos:"null"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""substring null and missing propagation 3 arguments{target:"null",start_pos:"1",quantity:"missing"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""substring null and missing propagation 3 arguments{target:"null",start_pos:"null",quantity:"missing"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""substring null and missing propagation 3 arguments{target:"null",start_pos:"missing",quantity:"1"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""substring null and missing propagation 3 arguments{target:"null",start_pos:"missing",quantity:"null"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""substring null and missing propagation 3 arguments{target:"null",start_pos:"missing",quantity:"missing"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""substring null and missing propagation 3 arguments{target:"missing",start_pos:"1",quantity:"1"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""substring null and missing propagation 3 arguments{target:"missing",start_pos:"1",quantity:"null"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""substring null and missing propagation 3 arguments{target:"missing",start_pos:"1",quantity:"missing"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""substring null and missing propagation 3 arguments{target:"missing",start_pos:"null",quantity:"1"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""substring null and missing propagation 3 arguments{target:"missing",start_pos:"null",quantity:"null"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""substring null and missing propagation 3 arguments{target:"missing",start_pos:"null",quantity:"missing"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""substring null and missing propagation 3 arguments{target:"missing",start_pos:"missing",quantity:"1"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""substring null and missing propagation 3 arguments{target:"missing",start_pos:"missing",quantity:"null"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""substring null and missing propagation 3 arguments{target:"missing",start_pos:"missing",quantity:"missing"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""substring null and missing propagation 3 arguments{target:"''",start_pos:"1",quantity:"missing"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""substring null and missing propagation 3 arguments{target:"''",start_pos:"null",quantity:"missing"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""substring null and missing propagation 3 arguments{target:"''",start_pos:"missing",quantity:"1"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""substring null and missing propagation 3 arguments{target:"''",start_pos:"missing",quantity:"null"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""substring null and missing propagation 3 arguments{target:"''",start_pos:"missing",quantity:"missing"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""upper null and missing propagation{param:"missing"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""lower null and missing propagation{param:"missing"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""extract null and missing propagation{time_part:"year",timestamp:"missing"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""|| valid cases{lparam:"null",rparam:"missing",result:missing::null}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""|| valid cases{lparam:"missing",rparam:"null",result:missing::null}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""|| valid cases{lparam:"missing",rparam:"'b'",result:missing::null}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""|| valid cases{lparam:"'a'",rparam:"missing",result:missing::null}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""|| valid cases{lparam:"missing",rparam:"missing",result:missing::null}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""concatenation with null values{left:"MISSING",right:"MISSING"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""concatenation with null values{left:"''",right:"MISSING"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""concatenation with null values{left:"MISSING",right:"''"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""concatenation with null values{left:"'a'",right:"MISSING"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""concatenation with null values{left:"MISSING",right:"'b'"}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    // similar to above partiql-lang-kotlin doesn't have an STRICT typing mode/ERROR eval mode; its LEGACY mode
+    // propagates NULL rather than MISSING
+    Pair("""null comparison{sql:"MISSING = NULL",result:missing::null}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""null comparison{sql:"NULL = MISSING",result:missing::null}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""null comparison{sql:"`null.null` = MISSING",result:missing::null}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""null comparison{sql:"`null.bool` = MISSING",result:missing::null}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""null comparison{sql:"`null.int` = MISSING",result:missing::null}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""null comparison{sql:"`null.decimal` = MISSING",result:missing::null}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""null comparison{sql:"`null.string` = MISSING",result:missing::null}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""null comparison{sql:"`null.symbol` = MISSING",result:missing::null}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""null comparison{sql:"`null.clob` = MISSING",result:missing::null}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""null comparison{sql:"`null.blob` = MISSING",result:missing::null}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""null comparison{sql:"`null.list` = MISSING",result:missing::null}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""null comparison{sql:"`null.struct` = MISSING",result:missing::null}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""null comparison{sql:"`null.sexp` = MISSING",result:missing::null}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
 )
 
 private val LANG_KOTLIN_EVAL_EQUIV_SKIP_LIST = listOf(
-    // plk gives a parser error for tuple path navigation in which the path expression is a string literal
+    // partiql-lang-kotlin gives a parser error for tuple path navigation in which the path expression is a string
+    // literal
     // e.g. { 'a': 1, 'b': 2}.'a' -> 1 (see section 4 of spec)
     Pair("equiv tuple path navigation with array notation", COERCE_EVAL_MODE_COMPILE_OPTIONS),
     Pair("equiv tuple path navigation with array notation", ERROR_EVAL_MODE_COMPILE_OPTIONS),
 
-    // plk doesn't support a STRICT/ERROR mode.
+    // partiql-lang-kotlin doesn't support a STRICT typing mode/ERROR eval mode.
     Pair("equiv attribute value pair unpivot non-missing", ERROR_EVAL_MODE_COMPILE_OPTIONS),
     Pair("equiv attribute value pair unpivot missing", ERROR_EVAL_MODE_COMPILE_OPTIONS),
 
-    // plk doesn't support `LATERAL` keyword which results in a parser error
+    // partiql-lang-kotlin doesn't support `LATERAL` keyword which results in a parser error
     Pair("equiv of comma, cross join, and join", COERCE_EVAL_MODE_COMPILE_OPTIONS),
     Pair("equiv of comma, cross join, and join", ERROR_EVAL_MODE_COMPILE_OPTIONS),
 
-    // plk doesn't support `TUPLEUNION` function which results in an evaluation error
+    // partiql-lang-kotlin doesn't support `TUPLEUNION` function which results in an evaluation error
     Pair("equiv tupleunion with select list", COERCE_EVAL_MODE_COMPILE_OPTIONS),
     Pair("equiv tupleunion with select list", ERROR_EVAL_MODE_COMPILE_OPTIONS),
 
-    // plk doesn't support coercion of subqueries which results in different outputs
+    // partiql-lang-kotlin doesn't support coercion of subqueries which results in different outputs
     Pair("equiv coercion of a SELECT subquery into a scalar", COERCE_EVAL_MODE_COMPILE_OPTIONS),
     Pair("equiv coercion of a SELECT subquery into a scalar", ERROR_EVAL_MODE_COMPILE_OPTIONS),
     Pair("equiv coercion of a SELECT subquery into an array", COERCE_EVAL_MODE_COMPILE_OPTIONS),
@@ -115,15 +196,17 @@ private val LANG_KOTLIN_EVAL_EQUIV_SKIP_LIST = listOf(
     Pair("equiv coercions with explicit literals", COERCE_EVAL_MODE_COMPILE_OPTIONS),
     Pair("equiv coercions with explicit literals", ERROR_EVAL_MODE_COMPILE_OPTIONS),
 
-    // plk doesn't support `GROUP ALL` and `COLL_*` aggregate functions. Currently, results in a parser error
+    // partiql-lang-kotlin doesn't support `GROUP ALL` and `COLL_*` aggregate functions. Currently, results in a parser
+    // error
     Pair("equiv group_all", COERCE_EVAL_MODE_COMPILE_OPTIONS),
     Pair("equiv group_all", ERROR_EVAL_MODE_COMPILE_OPTIONS),
 
-    // plk doesn't support `COLL_*` aggregate functions. Currently, results in an evaluation error
+    // partiql-lang-kotlin doesn't support `COLL_*` aggregate functions. Currently, results in an evaluation error
     Pair("equiv group by with aggregates", COERCE_EVAL_MODE_COMPILE_OPTIONS),
     Pair("equiv group by with aggregates", ERROR_EVAL_MODE_COMPILE_OPTIONS),
 
-    // plk doesn't support using aliases created in select list in `GROUP BY` (and `ORDER BY`). GH issue to track:
+    // partiql-lang-kotlin doesn't support using aliases created in select list in `GROUP BY` (and `ORDER BY`). GH
+    // issue to track:
     // https://github.com/partiql/partiql-lang-kotlin/issues/571
     Pair("equiv aliases from select clause", COERCE_EVAL_MODE_COMPILE_OPTIONS),
     Pair("equiv aliases from select clause", ERROR_EVAL_MODE_COMPILE_OPTIONS),
@@ -177,15 +260,19 @@ class TestRunner {
         val compilerPipeline = CompilerPipeline.builder(ION).compileOptions(evalTC.compileOptions).build()
         val globals = evalTC.env.toExprValue(compilerPipeline.valueFactory).bindings
         val session = EvaluationSession.build { globals(globals) }
-        val expression = compilerPipeline.compile(evalTC.statement)
-
         try {
+            val expression = compilerPipeline.compile(evalTC.statement)
             val actualResult = expression.eval(session)
             when (evalTC.assertion) {
                 is Assertion.EvaluationSuccess -> {
                     val actualResultAsIon = actualResult.toIonValue(ION)
                     if (!PartiQLEqualityChecker().areEqual(evalTC.assertion.expectedResult, actualResultAsIon)) {
-                        error("Expected and actual results differ:\nExpected: ${evalTC.assertion.expectedResult}\nActual:   $actualResultAsIon\nMode: ${evalTC.compileOptions.typingMode}")
+                        val testName = evalTC.name
+                        val evalMode = when (evalTC.compileOptions.typingMode) {
+                            TypingMode.PERMISSIVE -> "COERCE_EVAL_MODE_COMPILE_OPTIONS"
+                            TypingMode.LEGACY -> "ERROR_EVAL_MODE_COMPILE_OPTIONS"
+                        }
+                        error("Pair(\"\"\"$testName\"\"\", $evalMode),\nExpected and actual results differ:\nExpected: ${evalTC.assertion.expectedResult}\nActual:   $actualResultAsIon\nMode: ${evalTC.compileOptions.typingMode}")
                     }
                 }
                 is Assertion.EvaluationFailure -> {
@@ -195,7 +282,7 @@ class TestRunner {
         } catch (e: SqlException) {
             when (evalTC.assertion) {
                 is Assertion.EvaluationSuccess -> {
-                    error("Expected success but exception thrown")
+                    error("Expected success but exception thrown: $e")
                 }
                 is Assertion.EvaluationFailure -> {
                     // Expected failure and test threw when evaluated

@@ -1,8 +1,24 @@
+/*
+ * Copyright 2022 Amazon.com, Inc. or its affiliates.  All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ *  You may not use this file except in compliance with the License.
+ * A copy of the License is located at:
+ *
+ *      http://aws.amazon.com/apache2.0/
+ *
+ *  or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
+ *  language governing permissions and limitations under the License.
+ */
 package org.partiql.lang.eval.visitors
 
+import com.amazon.ionelement.api.MetaContainer
 import com.amazon.ionelement.api.emptyMetaContainer
+import org.partiql.lang.ast.IsGroupAttributeReferenceMeta
 import org.partiql.lang.ast.UniqueNameMeta
 import org.partiql.lang.domains.PartiqlAst
+import org.partiql.lang.domains.metaContainerOf
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.errNoContext
 
@@ -70,11 +86,15 @@ class SelectStarVisitorTransform : VisitorTransformBase() {
                         val uniqueNameMeta = asName.metas[UniqueNameMeta.TAG] as? UniqueNameMeta?
                             ?: error("UniqueNameMeta not found--normally, this is added by GroupByItemAliasVisitorTransform")
 
-                        createProjectExpr(uniqueNameMeta.uniqueName, asName.text)
+                        val metas = it.metas + metaContainerOf(IsGroupAttributeReferenceMeta.instance)
+                        createProjectExpr(uniqueNameMeta.uniqueName, asName.text, metas)
                     }
 
-                    val groupNameItem = transformedExpr.group.groupAsAlias?.text.let {
-                        if (it != null) listOf(createProjectExpr(it)) else emptyList()
+                    val groupNameItem = transformedExpr.group.groupAsAlias.let {
+                        if (it != null) {
+                            val metas = it.metas + metaContainerOf(IsGroupAttributeReferenceMeta.instance)
+                            listOf(createProjectExpr(it.text, metas = metas))
+                        } else emptyList()
                     }
 
                     val newProjection = PartiqlAst.build { projectList(selectListItemsFromGroupBy + groupNameItem, metas = transformMetas(projection.metas)) }
@@ -91,9 +111,9 @@ class SelectStarVisitorTransform : VisitorTransformBase() {
             projectAll(id(name, caseSensitive(), unqualified(), emptyMetaContainer()))
         }
 
-    private fun createProjectExpr(variableName: String, asAlias: String = variableName) =
+    private fun createProjectExpr(variableName: String, asAlias: String = variableName, metas: MetaContainer = emptyMetaContainer()) =
         PartiqlAst.build {
-            projectExpr(id(variableName, caseSensitive(), unqualified(), emptyMetaContainer()), asAlias)
+            projectExpr(id(variableName, caseSensitive(), unqualified(), metas), asAlias)
         }
 
     private class FromSourceAliases(val asAlias: String, val atAlias: String?, val byAlias: String?)

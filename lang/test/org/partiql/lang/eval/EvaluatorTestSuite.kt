@@ -583,6 +583,19 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
         )
 
         test(
+            "pivotMissingKeys",
+            "PIVOT x.v AT x.i FROM [ { 'a' : 'first', 'v' : 'John' }, {'i' : 'last', 'v' : 'doe' } ] AS x",
+            """
+              {
+                last: "doe"
+              }
+            """.trimIndent(),
+            compileOptionsBuilderBlock = {
+                typingMode(TypingMode.PERMISSIVE)
+            }
+        )
+
+        test(
             "pivotLiteralFieldNameFrom",
             """
               PIVOT a.name AT 'name' FROM animals AS a
@@ -1273,9 +1286,9 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
 
     group("floatN") {
         // These test cases ensure we ignore the type parameter of FLOAT in [TypedOpBehavior.LEGACY] mode.
-        test("castAsFloat1", "CAST(1.234 AS FLOAT(1))", "1.234e0")
-        test("canCastAsFloat1", "CAN_CAST(1.234 AS FLOAT(1))", "true")
-        test("isFloat1", "`1.234e0` IS FLOAT(1)", "true")
+        test("castAsFloat1", "CAST(1.234 AS FLOAT(1))", "1.234e0", compileOptionsBuilderBlock = CompOptions.TYPED_OP_BEHAVIOR_LEGACY.optionsBlock)
+        test("canCastAsFloat1", "CAN_CAST(1.234 AS FLOAT(1))", "true", compileOptionsBuilderBlock = CompOptions.TYPED_OP_BEHAVIOR_LEGACY.optionsBlock)
+        test("isFloat1", "`1.234e0` IS FLOAT(1)", "true", compileOptionsBuilderBlock = CompOptions.TYPED_OP_BEHAVIOR_LEGACY.optionsBlock)
     }
 
     group("pathUnpivotMissing") {
@@ -1493,7 +1506,8 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
             SELECT VALUE CAST(v/2 AS INT)
             FROM numbers as v
             """,
-            "$partiql_bag::[0, 1, 1, 2, 2]"
+            "$partiql_bag::[0, 1, 1, 2, 2]",
+            compileOptionsBuilderBlock = CompOptions.TYPED_OP_BEHAVIOR_LEGACY.optionsBlock
         )
         test(
             "arithmetic with null/missing",

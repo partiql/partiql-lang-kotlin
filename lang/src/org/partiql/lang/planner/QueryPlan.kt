@@ -55,7 +55,8 @@ sealed class QueryResult {
  */
 enum class DmlAction {
     INSERT,
-    DELETE;
+    DELETE,
+    REPLACE;
 
     companion object {
         fun safeValueOf(v: String): DmlAction? = try {

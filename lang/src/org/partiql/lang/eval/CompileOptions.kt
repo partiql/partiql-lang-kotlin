@@ -149,7 +149,7 @@ data class CompileOptions private constructor (
     val visitorTransformMode: VisitorTransformMode = VisitorTransformMode.DEFAULT,
     val thunkOptions: ThunkOptions = ThunkOptions.standard(),
     val typingMode: TypingMode = TypingMode.LEGACY,
-    val typedOpBehavior: TypedOpBehavior = TypedOpBehavior.LEGACY,
+    val typedOpBehavior: TypedOpBehavior = TypedOpBehavior.HONOR_PARAMETERS,
     val defaultTimezoneOffset: ZoneOffset = ZoneOffset.UTC
 ) {
 

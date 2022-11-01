@@ -6,6 +6,7 @@ import org.junit.Test
 import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.ast.passes.SemanticException
 import org.partiql.lang.errors.ErrorCode
+import org.partiql.lang.errors.PropertyValueMap
 import org.partiql.lang.types.FunctionSignature
 import org.partiql.lang.types.StaticType
 
@@ -26,7 +27,7 @@ class ExceptionWrappingTest {
 
     private val throwSemanticExceptionExprFunction = object : ExprFunction {
         override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
-            throw SemanticException("Intentionally throw a SemanticException", ErrorCode.SEMANTIC_AMBIGUOUS_BINDING, null)
+            throw SemanticException("Intentionally throw a SemanticException", ErrorCode.SEMANTIC_AMBIGUOUS_BINDING, PropertyValueMap())
         }
 
         override val signature: FunctionSignature

@@ -4,7 +4,48 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+<!-- Template: after a release, copy and paste out below
 ## [Unreleased]
+
+### Added
+
+### Changed
+
+### Deprecated
+
+### Fixed
+
+### Removed
+
+### Security
+-->
+
+
+## [Unreleased]
+
+### Added
+- Adds simple auto-completion to the CLI.
+
+### Changed
+- Now `CompileOption` uses `TypedOpParameter.HONOR_PARAMETERS` as default.
+- Updates the CLI Shell Highlighter to use the ANTLR generated lexer/parser for highlighting user queries
+
+### Deprecated
+
+### Fixed
+
+### Removed
+
+### Security
+
+
+## [0.8.1] - 2022-10-28
+
+### Added
+- Extends statement redaction to support `INSERT/REPLACE/UPSERT INTO`.
+
+
+## [0.8.0] - 2022-10-14
 
 ### Added
 - `CHANGELOG.md` with back-filling of the previous releases to the change log to provide more visibility on unreleased
@@ -14,8 +55,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   on the changes that include these and the alternatives that have been considered.
 - README.md badges for GitHub Actions status, codecov, and license
 - An experimental (pending [#15](https://github.com/partiql/partiql-docs/issues/15)) embedding of a subset of
-  the [GPML (Graph Pattern Matching Language)](https://arxiv.org/abs/2112.06217) graph query into the `FROM` clause,
-  supporting. The use within the grammar is based on the assumption of a new graph data type being added to the
+  the [GPML (Graph Pattern Matching Language)](https://arxiv.org/abs/2112.06217) graph query, as a new expression
+  form `<expr> MATCH <gpml_pattern>`, which can be used as a bag-of-structs data source in the `FROM` clause.   
+  The use within the grammar is based on the assumption of a new graph data type being added to the
   specification of data types within PartiQL, and should be considered experimental until the semantics of the graph
   data type are specified.
   - basic and abbreviated node and edge patterns (section 4.1 of the GPML paper)
@@ -41,10 +83,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
       [#707](https://github.com/partiql/partiql-lang-kotlin/issues/707), [#683](https://github.com/partiql/partiql-lang-kotlin/issues/683),
       and [#730](https://github.com/partiql/partiql-lang-kotlin/issues/730)
 - Parsing of `INSERT` DML with `ON CONFLICT DO REPLACE EXCLUDED` based on [RFC-0011](https://github.com/partiql/partiql-docs/blob/main/RFCs/0011-partiql-insert.md)
-- Adds experimental parsing of `REPLACE INTO` and `UPSERT INTO` DML commands pending approval of the following RFC for moving out of experimental:
-  - https://github.com/partiql/partiql-docs/issues/27
-- Logical plan representation of `INSERT` DML with `ON CONFLICT DO REPLACE EXCLUDED` based on [RFC-0011](https://github.com/partiql/partiql-docs/blob/main/RFCs/0011-partiql-insert.md)
+- Adds a subset of `REPLACE INTO` and `UPSERT INTO` parsing based on [RFC-0030](https://github.com/partiql/partiql-docs/blob/main/RFCs/0030-partiql-upsert-replace.md)
+  - Parsing of target attributes is not supported yet and is pending [#841](https://github.com/partiql/partiql-lang-kotlin/issues/841)
+- Logical plan representation and evaluation support for `INSERT` DML with `ON CONFLICT DO REPLACE EXCLUDED` and `REPLACE INTO` based on [RFC-0011](https://github.com/partiql/partiql-docs/blob/main/RFCs/0011-partiql-insert.md)
+- Logical plan representation of `INSERT` DML with `ON CONFLICT DO UPDATE EXCLUDED` and `UPSERT INTO` based on [RFC-0011](https://github.com/partiql/partiql-docs/blob/main/RFCs/0011-partiql-insert.md)
 - Enabled projection alias support for ORDER BY clause
+- Adds support for PIVOT in the planner consistent with `EvaluatingCompiler`
 
 #### Experimental Planner Additions
 
@@ -70,9 +114,15 @@ stage in the `PlannerPipeline` and to generate performance metrics for the indiv
   query author, e.g. `true and x.id = 42` -> `x.id = 42`), `true and true` -> `true`, etc.
   - `RemoveUselessFiltersPass`, which removes useless filters introduced by the previous pass or by the query author 
   (e.g. `(filter (lit true) <bexpr>))` -> `<bexpr>`.
+- Add support for `UNPIVOT`, the behavior is expected to be compatible with the `evaluating compiler`.
+- Adds support for GROUP BY (aggregations, group keys, etc)
+- Adds support for ORDER BY in Planner
 
 ### Changed
 - The default parser for all components of PartiQL is now the PartiQLParser -- see the deprecation of `SqlParser`
+- Parsing of `ORDER BY` clauses will no longer populate the AST with defaults for the 'sort specification'
+  (i.e., `ASC` or `DESC`) or 'nulls specification' (i.e., `NULLS FIRST` or `NULLS LAST`) when the are not provided in
+  the query text. Defaulting of sort order is moved to the evaluator.
 
 ### Deprecated
 - Deprecates `SqlLexer` and `SqlParser` to be replaced with the `PartiQLParserBuilder`.
@@ -128,13 +178,6 @@ stage in the `PlannerPipeline` and to generate performance metrics for the indiv
   A client program may be interrupted by `NoSuchFieldError` exception.
 - [breaking change] Removal of `NodeMetadata` from `org.partiql.lang.eval`:
   A client program may be interrupted by `NoClassDefFoundError` exception.
-- [breaking change] Removal of the following classes from `org.partiql.lang.eval.like`:
-  - `CodepointCheckpointIterator`
-  - `PatternPart`
-  - `PatternPart.AnyOneChar`
-  - `PatternPart.ExactChars`
-  - `PatternPartKt`
-    A client program may be interrupted by NoClassDefFoundError exception.
 
 ### Fixed
 - Fix `write_file` CLI function; the old function required the input to be a `string`, but it must be a generic type.

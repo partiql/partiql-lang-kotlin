@@ -45,6 +45,21 @@ internal class LogicalResolvedToDefaultPhysicalVisitorTransform(
         }
     }
 
+    /** Copies [PartiqlLogicalResolved.Bexpr.Unpivot] to [PartiqlPhysical.Bexpr.Unpivot], adding the default impl. */
+    override fun transformBexprUnpivot(node: PartiqlLogicalResolved.Bexpr.Unpivot): PartiqlPhysical.Bexpr {
+        val thiz = this
+        return PartiqlPhysical.build {
+            unpivot(
+                i = DEFAULT_IMPL,
+                expr = thiz.transformExpr(node.expr),
+                asDecl = thiz.transformVarDecl(node.asDecl),
+                atDecl = node.atDecl?.let { thiz.transformVarDecl(it) },
+                byDecl = node.byDecl?.let { thiz.transformVarDecl(it) },
+                metas = node.metas
+            )
+        }
+    }
+
     /** Copies [PartiqlLogicalResolved.Bexpr.Filter] to [PartiqlPhysical.Bexpr.Filter], adding the default impl. */
     override fun transformBexprFilter(node: PartiqlLogicalResolved.Bexpr.Filter): PartiqlPhysical.Bexpr {
         val thiz = this
@@ -72,12 +87,38 @@ internal class LogicalResolvedToDefaultPhysicalVisitorTransform(
         }
     }
 
+    override fun transformBexprAggregate(node: PartiqlLogicalResolved.Bexpr.Aggregate): PartiqlPhysical.Bexpr {
+        val thiz = this
+        return PartiqlPhysical.build {
+            aggregate(
+                i = DEFAULT_IMPL,
+                source = thiz.transformBexpr(node.source),
+                strategy = thiz.transformGroupingStrategy(node.strategy),
+                groupList = thiz.transformGroupKeyList(node.groupList),
+                functionList = thiz.transformAggregateFunctionList(node.functionList),
+                metas = node.metas
+            )
+        }
+    }
+
     override fun transformBexprOffset(node: PartiqlLogicalResolved.Bexpr.Offset): PartiqlPhysical.Bexpr {
         val thiz = this
         return PartiqlPhysical.build {
             offset(
                 i = DEFAULT_IMPL,
                 rowCount = thiz.transformExpr(node.rowCount),
+                source = thiz.transformBexpr(node.source),
+                metas = node.metas
+            )
+        }
+    }
+
+    override fun transformBexprSort(node: PartiqlLogicalResolved.Bexpr.Sort): PartiqlPhysical.Bexpr {
+        val thiz = this
+        return PartiqlPhysical.build {
+            sort(
+                i = DEFAULT_IMPL,
+                sortSpecs = node.sortSpecs.map { thiz.transformSortSpec(it) },
                 source = thiz.transformBexpr(node.source),
                 metas = node.metas
             )
@@ -112,8 +153,9 @@ internal class LogicalResolvedToDefaultPhysicalVisitorTransform(
         val action = when (node.operation) {
             is PartiqlLogicalResolved.DmlOperation.DmlInsert -> DmlAction.INSERT
             is PartiqlLogicalResolved.DmlOperation.DmlDelete -> DmlAction.DELETE
-            is PartiqlLogicalResolved.DmlOperation.DmlReplace ->
-                TODO("DmlReplace physical transform hasn't been implemented yet")
+            is PartiqlLogicalResolved.DmlOperation.DmlReplace -> DmlAction.REPLACE
+            is PartiqlLogicalResolved.DmlOperation.DmlUpdate ->
+                TODO("DmlUpdate physical transform is not supported yet")
         }.name.toLowerCase()
 
         return PartiqlPhysical.build {

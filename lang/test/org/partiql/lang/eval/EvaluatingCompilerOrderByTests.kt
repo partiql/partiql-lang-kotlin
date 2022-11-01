@@ -3,7 +3,6 @@ package org.partiql.lang.eval
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestCase
-import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestTarget
 import org.partiql.lang.util.ArgumentsProviderBase
 
 class EvaluatingCompilerOrderByTests : EvaluatorTestBase() {
@@ -282,16 +281,88 @@ class EvaluatingCompilerOrderByTests : EvaluatorTestBase() {
                 "SELECT b AS \"C\" FROM (SELECT a AS b FROM [{'a': <<5>>}, {'a': <<1>>}, {'a': <<10>>}] ORDER BY b DESC) ORDER BY \"C\"",
                 "[{'C': <<1>>}, {'C': <<5>>}, {'C': <<10>>}]"
             ),
+
+            // Empty Output (ordered)
+            EvaluatorTestCase(
+                "SELECT * FROM <<>> ORDER BY true",
+                "[]"
+            ),
+            // Empty Projection item (ordered) -- Output (unordered)
+            EvaluatorTestCase(
+                "SELECT (SELECT * FROM <<>> ORDER BY true) AS ordered FROM <<0>>",
+                "<< { 'ordered': [] } >>"
+            ),
+            // Empty Projection item (unordered) -- Output (ordered)
+            EvaluatorTestCase(
+                "SELECT (SELECT * FROM <<>>) AS ordered FROM <<0>> ORDER BY true",
+                "[ { 'ordered': <<>> } ]"
+            ),
+            // Empty Projection item (ordered) -- Output (ordered)
+            EvaluatorTestCase(
+                "SELECT (SELECT * FROM <<>> ORDER BY true) AS ordered FROM <<0>> ORDER BY true",
+                "[ { 'ordered': [] } ]"
+            ),
+            // Empty Projection item (unordered) -- Output (unordered)
+            EvaluatorTestCase(
+                "SELECT (SELECT * FROM <<>>) AS ordered FROM <<0>>",
+                "<< { 'ordered': <<>> } >>"
+            ),
         )
     }
 
     @ParameterizedTest
     @ArgumentsSource(ArgsProviderValid::class)
     fun validTests(tc: EvaluatorTestCase) = runEvaluatorTestCase(
-        tc = tc.copy(
-            excludeLegacySerializerAssertions = true,
-            targetPipeline = EvaluatorTestTarget.COMPILER_PIPELINE, // planner & phys. alg. have no support for ORDER BY (yet)
-        ),
+        tc = tc.copy(excludeLegacySerializerAssertions = true),
         session = session
     )
+
+    @ParameterizedTest
+    @ArgumentsSource(OrderBySubqueryTestsProvider::class)
+    fun orderBySubqueryTests(tc: EvaluatorTestCase) = runEvaluatorTestCase(
+        tc = tc.copy(excludeLegacySerializerAssertions = true),
+        session = session
+    )
+    class OrderBySubqueryTestsProvider : ArgumentsProviderBase() {
+        override fun getParameters() = listOf(
+            EvaluatorTestCase(
+                query = """
+                    SELECT supplierId_nulls
+                    FROM products_sparse
+                    GROUP BY supplierId_nulls
+                    ORDER BY
+                        (SELECT supplierId_nulls FROM << 0, 1 >>)
+                    DESC NULLS FIRST
+                """,
+                "[{'supplierId_nulls': NULL}, {'supplierId_nulls': 11}, {'supplierId_nulls': 10}]"
+            ),
+            // Nested SELECT in ORDER BY ASC
+            EvaluatorTestCase(
+                query = """
+                    SELECT supplierId_nulls
+                    FROM products_sparse
+                    GROUP BY supplierId_nulls
+                    ORDER BY
+                        (SELECT supplierId_nulls FROM << 0, 1 >>)
+                    ASC NULLS FIRST
+                """,
+                "[{'supplierId_nulls': NULL}, {'supplierId_nulls': 10}, {'supplierId_nulls': 11}]"
+            ),
+            // Nested SELECT in ORDER BY with shadowing
+            // With the following test, we are showing that the nested SELECT `supplierId_nulls` gives preference to
+            // its from source. Therefore, even though the outer ORDER is DESC, the outer ORDER SORT SPEC will always
+            // be the same value -- therefore, it can be treated as a constant -- and ordering won't occur.
+            EvaluatorTestCase(
+                query = """
+                    SELECT supplierId_nulls
+                    FROM products_sparse
+                    GROUP BY supplierId_nulls
+                    ORDER BY
+                        (SELECT 1 FROM products_sparse GROUP BY supplierId_nulls ORDER BY supplierId_nulls ASC NULLS FIRST)
+                    DESC NULLS FIRST
+                """,
+                "[{'supplierId_nulls': NULL}, {'supplierId_nulls': 10}, {'supplierId_nulls': 11}]"
+            ),
+        )
+    }
 }
