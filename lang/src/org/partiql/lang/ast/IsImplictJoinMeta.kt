@@ -24,6 +24,5 @@ class IsImplictJoinMeta private constructor() : Meta {
         const val TAG = "\$is_implicit_join"
 
         val instance = IsImplictJoinMeta()
-        val deserializer = MemoizedMetaDeserializer(TAG, instance)
     }
 }

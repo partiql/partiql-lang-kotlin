@@ -23,6 +23,5 @@ internal class IsGroupAttributeReferenceMeta private constructor() : Meta {
         const val TAG = "\$is_group_attr_reference"
 
         val instance = IsGroupAttributeReferenceMeta()
-        val deserializer = MemoizedMetaDeserializer(TAG, instance)
     }
 }

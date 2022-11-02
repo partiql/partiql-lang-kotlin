@@ -1,19 +1,12 @@
 package org.partiql.lang.ast
 
-import com.amazon.ion.IonValue
 import com.amazon.ion.IonWriter
-import com.amazon.ionelement.api.loadAllElements
 import org.partiql.ionschema.model.IonSchemaModel
 import org.partiql.ionschema.model.toIsl
-import org.partiql.ionschema.parser.parseSchema
 import org.partiql.lang.mappers.ISL_META_KEY
 import org.partiql.lang.mappers.IonSchemaMapper
-import org.partiql.lang.mappers.StaticTypeMapper
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.util.IonWriterContext
-import org.partiql.lang.util.asIonStruct
-import org.partiql.lang.util.field
-import org.partiql.lang.util.stringValue
 
 /**
  * Represents a static type for an AST element.
@@ -52,34 +45,5 @@ data class StaticTypeMeta(val type: StaticType) : Meta {
 
     companion object {
         const val TAG = "\$static_type"
-
-        val deserializer = object : MetaDeserializer {
-            override val tag = TAG
-            override fun deserialize(sexp: IonValue): Meta {
-                val struct = sexp.asIonStruct()
-
-                // get serialized fields
-                val name = struct.field("name").stringValue()!!
-                val hasISL = struct.field("hasISL").stringValue()!!.toBoolean()
-                val isl = struct.field("isl").stringValue()!!
-                // TODO add type parameters/constraints
-
-                // create StaticType from ISL
-                val schema = parseSchema(loadAllElements(isl).toList())
-                val staticType = StaticTypeMapper(schema).toStaticType(name)
-
-                // return StaticType with or without metas as appropriate
-                return when (hasISL) {
-                    true -> StaticTypeMeta(staticType)
-                    false -> {
-                        StaticTypeMeta(staticType.withMetas(staticType.metas.filterKeys { it != ISL_META_KEY }))
-                    }
-                }
-            }
-        }
     }
 }
-
-@Suppress("DEPRECATION")
-@Deprecated("Please use org.partiql.lang.domains.staticType")
-val MetaContainer.staticType: StaticTypeMeta? get() = find(StaticTypeMeta.TAG) as StaticTypeMeta?
