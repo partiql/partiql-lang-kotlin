@@ -1,7 +1,6 @@
 package org.partiql.lang.eval.evaluatortestframework
 
 import org.junit.jupiter.api.fail
-import org.partiql.lang.ION
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.TypingMode
@@ -68,7 +67,7 @@ internal class PlannerPipelineFactory : PipelineFactory {
         }
 
         @Suppress("DEPRECATION")
-        val plannerPipeline = PlannerPipeline.build(ION) {
+        val plannerPipeline = PlannerPipeline.build() {
             // this is for support of the existing test suite and may not be desirable for all future tests.
             allowUndefinedVariables(true)
 

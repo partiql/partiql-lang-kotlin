@@ -21,16 +21,15 @@ import org.partiql.lang.eval.EvaluationException
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.stringValue
+import org.partiql.lang.eval.timestampExprValue
 import org.partiql.lang.types.FunctionSignature
 import org.partiql.lang.types.StaticType
-import org.partiql.lang.util.stringValue
 
 /**
  * PartiQL function to convert a formatted string into an Ion Timestamp.
  */
-class ToTimestampExprFunction(private val valueFactory: ExprValueFactory) : ExprFunction {
+class ToTimestampExprFunction : ExprFunction {
     override val signature = FunctionSignature(
         name = "to_timestamp",
         requiredParameters = listOf(StaticType.STRING),
@@ -50,11 +49,11 @@ class ToTimestampExprFunction(private val valueFactory: ExprValueFactory) : Expr
                 internal = false
             )
         }
-        return valueFactory.newTimestamp(ts)
+        return timestampExprValue(ts)
     }
 
     override fun callWithOptional(session: EvaluationSession, required: List<ExprValue>, opt: ExprValue): ExprValue {
         val ts = TimestampParser.parseTimestamp(required[0].stringValue(), opt.stringValue())
-        return valueFactory.newTimestamp(ts)
+        return timestampExprValue(ts)
     }
 }

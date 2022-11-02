@@ -257,7 +257,7 @@ class TestRunner {
     }
 
     private fun runEvalTestCase(evalTC: EvalTestCase) {
-        val compilerPipeline = CompilerPipeline.builder(ION).compileOptions(evalTC.compileOptions).build()
+        val compilerPipeline = CompilerPipeline.builder().compileOptions(evalTC.compileOptions).build()
         val globals = evalTC.env.toExprValueChangingAnnotation().bindings
         val session = EvaluationSession.build { globals(globals) }
         try {
@@ -292,7 +292,7 @@ class TestRunner {
     }
 
     private fun runEvalEquivTestCase(evalEquivTestCase: EvalEquivTestCase) {
-        val compilerPipeline = CompilerPipeline.builder(ION).compileOptions(evalEquivTestCase.compileOptions).build()
+        val compilerPipeline = CompilerPipeline.builder().compileOptions(evalEquivTestCase.compileOptions).build()
         val globals = evalEquivTestCase.env.toExprValueChangingAnnotation().bindings
         val session = EvaluationSession.build { globals(globals) }
         val statements = evalEquivTestCase.statements

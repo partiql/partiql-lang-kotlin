@@ -193,7 +193,7 @@ class ThreadInterruptedTests {
         val numSteps = 10000000
         var accumulator = 0L
 
-        val pipeline = CompilerPipeline.build(ion) {
+        val pipeline = CompilerPipeline.build() {
             repeat(numSteps) {
                 addPreprocessingStep { expr, _ ->
                     // Burn some CPU so we don't get thru all the pipeline steps before the interrupt.
@@ -205,7 +205,7 @@ class ThreadInterruptedTests {
         } as CompilerPipelineImpl
 
         val expr = PartiqlAst.build { query(lit((ionInt(42)))) }
-        val context = StepContext(pipeline.valueFactory, CompileOptions.standard(), emptyMap(), emptyMap())
+        val context = StepContext(CompileOptions.standard(), emptyMap(), emptyMap())
 
         testThreadInterrupt {
             pipeline.executePreProcessingSteps(expr, context)

@@ -5,19 +5,19 @@ import org.partiql.lang.eval.BindingName
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.StructOrdering
+import org.partiql.lang.eval.listExprValue
 import org.partiql.lang.eval.namedValue
+import org.partiql.lang.eval.stringExprValue
 import org.partiql.lang.eval.stringValue
+import org.partiql.lang.eval.structExprValue
 import org.partiql.lang.types.FunctionSignature
 import org.partiql.lang.types.StaticType
 import java.lang.Exception
 import kotlin.collections.HashMap
 
-abstract class MergeKeysBaseExprFunction(
-    val valueFactory: ExprValueFactory,
-) : ExprFunction
+abstract class MergeKeysBaseExprFunction : ExprFunction
 
 /**
  * For the Given [ExprValue] representing collection of structs, merges key/values based on the given inputs in flatten list
@@ -39,8 +39,7 @@ abstract class MergeKeysBaseExprFunction(
  *      {'certificate': ['abc', 'cde', 'ghj', 'klu']}
  *  ]
  */
-class MergeKeyValues(valueFactory: ExprValueFactory) :
-    MergeKeysBaseExprFunction(valueFactory) {
+class MergeKeyValues : MergeKeysBaseExprFunction() {
     override val signature = FunctionSignature(
         name = "merge_key_values",
         requiredParameters = listOf(
@@ -74,16 +73,16 @@ class MergeKeyValues(valueFactory: ExprValueFactory) :
             }
         }
 
-        val keys = result.keys.map { valueFactory.newString(it) }
-        val values = result.values.map { valueFactory.newList(it).flatten() }
+        val keys = result.keys.map { stringExprValue(it) }
+        val values = result.values.map { listExprValue(it).flatten() }
 
         val listOfStructs = keys.zip(values)
             .map {
-                valueFactory.newStruct(
-                    listOf(valueFactory.newList(it.second).namedValue(it.first)).asSequence(),
+                structExprValue(
+                    listOf(listExprValue(it.second).namedValue(it.first)).asSequence(),
                     StructOrdering.UNORDERED
                 )
             }
-        return valueFactory.newList(listOfStructs)
+        return listExprValue(listOfStructs)
     }
 }

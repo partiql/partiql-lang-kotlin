@@ -8,7 +8,6 @@ import org.partiql.lang.eval.CompileOptions
 import org.partiql.lang.eval.EVALUATOR_TEST_SUITE
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.evaluatortestframework.CompilerPipelineFactory
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestCase
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestTarget
@@ -71,7 +70,6 @@ data class IonResultTestCase(
 }
 
 internal fun IonResultTestCase.runTestCase(
-    valueFactory: ExprValueFactory,
     db: MockDb,
     target: EvaluatorTestTarget,
     compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit = { }
@@ -88,7 +86,7 @@ internal fun IonResultTestCase.runTestCase(
 
     val session = EvaluationSession.build {
         globals(db.valueBindings)
-        parameters(EVALUATOR_TEST_SUITE.createParameters(valueFactory))
+        parameters(EVALUATOR_TEST_SUITE.createParameters())
     }
 
     val tc = EvaluatorTestCase(

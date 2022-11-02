@@ -11,7 +11,7 @@ class EvaluatingCompilerSelectStarTests : EvaluatorTestBase() {
         globals(
             Bindings.ofMap(
                 mapOf(
-                    "dogs" to valueFactory.newBag(
+                    "dogs" to bagExprValue(
                         sequenceOf(
                             createExprValue("""{ name: "fido" }""", 100, "addr0"),
                             createExprValue("""{ name: "bella" }""", 101, "addr1"),
@@ -37,8 +37,8 @@ class EvaluatingCompilerSelectStarTests : EvaluatorTestBase() {
     private fun createExprValue(ionText: String, index: Long, address: String) =
         AddressedExprValue(
             ion.singleValue(ionText).toExprValue(),
-            valueFactory.newInt(index),
-            valueFactory.newString(address)
+            intExprValue(index),
+            stringExprValue(address)
         )
 
     @Test

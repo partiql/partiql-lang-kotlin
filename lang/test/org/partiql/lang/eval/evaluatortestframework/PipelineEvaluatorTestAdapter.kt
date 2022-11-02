@@ -95,6 +95,9 @@ internal class PipelineEvaluatorTestAdapter(
                 }
 
                 if (!expectedExprValueResult.exprEquals(actualExprValueResult)) {
+
+                    println("I am here")
+
                     throw EvaluatorAssertionFailedError(
                         EvaluatorTestFailureReason.UNEXPECTED_QUERY_RESULT,
                         tc.testDetails(note = note, actualResult = actualExprValueResult.toString())

@@ -14,10 +14,8 @@
 
 package org.partiql.lang.compiler
 
-import com.amazon.ion.IonSystem
 import com.amazon.ion.system.IonSystemBuilder
 import org.partiql.lang.eval.ExprFunction
-import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.ThunkReturnTypeAssertions
 import org.partiql.lang.eval.builtins.DynamicLookupExprFunction
 import org.partiql.lang.eval.builtins.createBuiltinFunctions
@@ -45,7 +43,6 @@ import org.partiql.lang.types.CustomType
  */
 class PartiQLCompilerBuilder private constructor() {
 
-    private var valueFactory: ExprValueFactory = ExprValueFactory.standard(DEFAULT_ION)
     private var options: EvaluatorOptions = EvaluatorOptions.standard()
     private var customTypes: List<CustomType> = emptyList()
     private var customFunctions: List<ExprFunction> = emptyList()
@@ -65,7 +62,6 @@ class PartiQLCompilerBuilder private constructor() {
             TODO("ThunkReturnTypeAssertions.ENABLED requires a static type pass")
         }
         return PartiQLCompilerDefault(
-            valueFactory = valueFactory,
             evaluatorOptions = options,
             customTypedOpParameters = customTypes.associateBy(
                 keySelector = { it.name },
@@ -78,10 +74,6 @@ class PartiQLCompilerBuilder private constructor() {
             ),
             operatorFactories = allOperatorFactories()
         )
-    }
-
-    fun ionSystem(ion: IonSystem): PartiQLCompilerBuilder = this.apply {
-        this.valueFactory = ExprValueFactory.standard(ion)
     }
 
     fun options(options: EvaluatorOptions) = this.apply {
@@ -119,7 +111,7 @@ class PartiQLCompilerBuilder private constructor() {
     // --- Internal ----------------------------------
 
     private fun allFunctions(): Map<String, ExprFunction> {
-        val builtins = createBuiltinFunctions(valueFactory)
+        val builtins = createBuiltinFunctions()
         val allFunctions = builtins + customFunctions + DynamicLookupExprFunction()
         return allFunctions.associateBy { it.signature.name }
     }

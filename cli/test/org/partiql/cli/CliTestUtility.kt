@@ -6,7 +6,7 @@ import org.junit.Assert
 import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.eval.ExprValueFactory
+import org.partiql.lang.eval.toExprValue
 import java.io.ByteArrayOutputStream
 import java.io.OutputStream
 
@@ -21,12 +21,10 @@ fun makeCliAndGetResult(
     outputFormat: OutputFormat = OutputFormat.ION_TEXT,
     output: OutputStream = ByteArrayOutputStream(),
     ion: IonSystem = IonSystemBuilder.standard().build(),
-    compilerPipeline: CompilerPipeline = CompilerPipeline.standard(ion),
-    valueFactory: ExprValueFactory = ExprValueFactory.standard(ion),
+    compilerPipeline: CompilerPipeline = CompilerPipeline.standard(),
     wrapIon: Boolean = false
 ): String {
     val cli = Cli(
-        valueFactory,
         input?.byteInputStream(Charsets.UTF_8) ?: EmptyInputStream(),
         inputFormat,
         output,
@@ -54,6 +52,8 @@ fun assertAsIon(expected: String, actual: String) {
 fun assertAsIon(ion: IonSystem, expected: String, actual: String) =
     Assert.assertEquals(ion.loader.load(expected), ion.loader.load(actual))
 
-fun String.singleIonExprValue(ion: IonSystem = IonSystemBuilder.standard().build(), valueFactory: ExprValueFactory = ExprValueFactory.standard(ion)) = valueFactory.newFromIonValue(ion.singleValue(this))
+fun String.singleIonExprValue(ion: IonSystem = IonSystemBuilder.standard().build()) =
+    ion.singleValue(this).toExprValue()
+
 fun Map<String, String>.asBinding() =
     Bindings.ofMap(this.mapValues { it.value.singleIonExprValue() })

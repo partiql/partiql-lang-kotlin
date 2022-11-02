@@ -19,77 +19,83 @@ import junit.framework.TestCase.assertNotNull
 import org.junit.Assert.assertThrows
 import org.junit.Test
 import org.partiql.lang.eval.EvaluationSession
-import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.StructOrdering
+import org.partiql.lang.eval.bagExprValue
+import org.partiql.lang.eval.intExprValue
+import org.partiql.lang.eval.listExprValue
 import org.partiql.lang.eval.namedValue
+import org.partiql.lang.eval.sexpExprValue
+import org.partiql.lang.eval.stringExprValue
+import org.partiql.lang.eval.structExprValue
+import org.partiql.lang.eval.symbolExprValue
+import org.partiql.lang.eval.toExprValue
 
 class MergeKeyValuesTests {
     private val ion = IonSystemBuilder.standard().build()
-    private val factory = ExprValueFactory.standard(ion)
     private val session = EvaluationSession.standard()
 
     @Test
     fun testFunction() {
-        val fn = MergeKeyValues(factory)
+        val fn = MergeKeyValues()
 
         val ionValue1 = ion.newList(ion.newString("abc"), ion.newString("cde"))
         val ionValue2 = ion.newList(ion.newString("ghj"), ion.newString("klu"))
         val ionValue3 = ion.newList(ion.newString("ghj"), ion.newString("klu"))
 
         val list1 = listOf(
-            factory.newString("certificate").namedValue(factory.newSymbol("Name")),
-            factory.newFromIonValue(ionValue1).namedValue(factory.newSymbol("Values")),
+            stringExprValue("certificate").namedValue(symbolExprValue("Name")),
+            ionValue1.toExprValue().namedValue(symbolExprValue("Values")),
         )
         val list2 = listOf(
-            factory.newString("certificate").namedValue(factory.newSymbol("Name")),
-            factory.newFromIonValue(ionValue2).namedValue(factory.newSymbol("Values")),
+            stringExprValue("certificate").namedValue(symbolExprValue("Name")),
+            ionValue2.toExprValue().namedValue(symbolExprValue("Values")),
         )
         val list3 = listOf(
-            factory.newString("test").namedValue(factory.newSymbol("Name")),
-            factory.newFromIonValue(ionValue3).namedValue(factory.newSymbol("Values")),
+            stringExprValue("test").namedValue(symbolExprValue("Name")),
+            ionValue3.toExprValue().namedValue(symbolExprValue("Values")),
         )
         val res1 = fn.callWithRequired(
             session,
             listOf(
-                factory.newBag(
+                bagExprValue(
                     listOf(
-                        factory.newStruct(list1.asSequence(), StructOrdering.UNORDERED),
-                        factory.newStruct(list2.asSequence(), StructOrdering.UNORDERED),
-                        factory.newStruct(list3.asSequence(), StructOrdering.UNORDERED)
+                        structExprValue(list1.asSequence(), StructOrdering.UNORDERED),
+                        structExprValue(list2.asSequence(), StructOrdering.UNORDERED),
+                        structExprValue(list3.asSequence(), StructOrdering.UNORDERED)
                     )
                 ),
-                factory.newString("Name"),
-                factory.newString("Values")
+                stringExprValue("Name"),
+                stringExprValue("Values")
             )
         )
 
         val res2 = fn.callWithRequired(
             session,
             listOf(
-                factory.newSexp(
+                sexpExprValue(
                     listOf(
-                        factory.newStruct(list1.asSequence(), StructOrdering.UNORDERED),
-                        factory.newStruct(list2.asSequence(), StructOrdering.UNORDERED),
-                        factory.newStruct(list3.asSequence(), StructOrdering.UNORDERED)
+                        structExprValue(list1.asSequence(), StructOrdering.UNORDERED),
+                        structExprValue(list2.asSequence(), StructOrdering.UNORDERED),
+                        structExprValue(list3.asSequence(), StructOrdering.UNORDERED)
                     )
                 ),
-                factory.newString("Name"),
-                factory.newString("Values")
+                stringExprValue("Name"),
+                stringExprValue("Values")
             )
         )
 
         val res3 = fn.callWithRequired(
             session,
             listOf(
-                factory.newList(
+                listExprValue(
                     listOf(
-                        factory.newStruct(list1.asSequence(), StructOrdering.UNORDERED),
-                        factory.newStruct(list2.asSequence(), StructOrdering.UNORDERED),
-                        factory.newStruct(list3.asSequence(), StructOrdering.UNORDERED)
+                        structExprValue(list1.asSequence(), StructOrdering.UNORDERED),
+                        structExprValue(list2.asSequence(), StructOrdering.UNORDERED),
+                        structExprValue(list3.asSequence(), StructOrdering.UNORDERED)
                     )
                 ),
-                factory.newString("Name"),
-                factory.newString("Values")
+                stringExprValue("Name"),
+                stringExprValue("Values")
             )
         )
 
@@ -105,14 +111,14 @@ class MergeKeyValuesTests {
             fn.callWithRequired(
                 session,
                 listOf(
-                    factory.newList(
+                    listExprValue(
                         listOf(
-                            factory.newInt(10),
-                            factory.newStruct(list2.asSequence(), StructOrdering.UNORDERED),
+                            intExprValue(10),
+                            structExprValue(list2.asSequence(), StructOrdering.UNORDERED),
                         )
                     ),
-                    factory.newString("Name"),
-                    factory.newString("Values")
+                    stringExprValue("Name"),
+                    stringExprValue("Values")
                 )
             )
         }

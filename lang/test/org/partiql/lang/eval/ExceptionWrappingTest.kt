@@ -38,7 +38,7 @@ class ExceptionWrappingTest {
      * To make custom functions available to the PartiQL being executed, they must be passed to
      * [CompilerPipeline.Builder.addFunction].
      */
-    private val pipeline = CompilerPipeline.build(ion) {
+    private val pipeline = CompilerPipeline.build() {
         addFunction(throwIllegalStateExceptionExprFunction)
         addFunction(throwSemanticExceptionExprFunction)
 

@@ -31,8 +31,8 @@ import org.partiql.lang.CompilerPipeline;
 import org.partiql.lang.eval.Bindings;
 import org.partiql.lang.eval.EvaluationSession;
 import org.partiql.lang.eval.ExprValue;
-import org.partiql.lang.eval.ExprValueKt;
 import org.partiql.lang.eval.Expression;
+import org.partiql.lang.eval.IonValueExprValueConvertionKt;
 
 import java.io.IOException;
 import java.io.PrintStream;
@@ -67,7 +67,7 @@ public class S3JavaExample extends Example {
 
         // CompilerPipeline is the main entry point for the PartiQL lib giving you access to the compiler
         // and value factories
-        final CompilerPipeline pipeline = CompilerPipeline.standard(ion);
+        final CompilerPipeline pipeline = CompilerPipeline.standard();
 
         // Compiles the query, the resulting expression can be re-used to query multiple data sets
         final Expression selectAndFilter = pipeline.compile(
@@ -96,7 +96,7 @@ public class S3JavaExample extends Example {
                     // in this case we are binding the data from the S3 bucket into the "myS3Document" name
                     .globals(
                             Bindings.<ExprValue>lazyBindingsBuilder()
-                                    .addBinding("myS3Document", () -> pipeline.getValueFactory().newFromIonValue(values))
+                                    .addBinding("myS3Document", () -> IonValueExprValueConvertionKt.toExprValue(values))
                                     .build()
                     )
                     .build();
@@ -106,7 +106,7 @@ public class S3JavaExample extends Example {
 
             // Uses ion-java to dump the result as JSON. It's possible to build your own writer and dump the ExprValue
             // as any format you want.
-            ExprValueKt.toIonValue(selectAndFilterResult, ion).writeTo(resultWriter);
+            IonValueExprValueConvertionKt.toIonValue(selectAndFilterResult, ion).writeTo(resultWriter);
             // result as JSON below
             // [{"name":"person_2"},{"name":"person_3","address":{"number":555,"street":"1st street","city":"Seattle"}}]
         } catch (IOException e) {

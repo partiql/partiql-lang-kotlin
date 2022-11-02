@@ -4,6 +4,7 @@ import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.address
+import org.partiql.lang.eval.missingExprValue
 import org.partiql.lang.eval.name
 import org.partiql.lang.eval.physical.EvaluatorState
 import org.partiql.lang.eval.physical.SetVariableFunc
@@ -54,11 +55,11 @@ internal val DEFAULT_RELATIONAL_OPERATOR_FACTORIES = listOf(
                         setAsVar(state, item.unnamedValue())
 
                         if (setAtVar != null) {
-                            setAtVar(state, item.name ?: state.valueFactory.missingValue)
+                            setAtVar(state, item.name ?: missingExprValue())
                         }
 
                         if (setByVar != null) {
-                            setByVar(state, item.address ?: state.valueFactory.missingValue)
+                            setByVar(state, item.address ?: missingExprValue())
                         }
                         yield()
                     }

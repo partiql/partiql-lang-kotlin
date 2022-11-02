@@ -21,7 +21,7 @@ import org.partiql.lang.eval.EvaluationException
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.eval.ExprValueFactory
+import org.partiql.lang.eval.stringExprValue
 import org.partiql.lang.eval.stringValue
 import org.partiql.lang.eval.timestampValue
 import org.partiql.lang.types.FunctionSignature
@@ -31,7 +31,7 @@ import java.time.DateTimeException
 import java.time.format.DateTimeFormatter
 import java.time.temporal.UnsupportedTemporalTypeException
 
-class ToStringExprFunction(private val valueFactory: ExprValueFactory) : ExprFunction {
+class ToStringExprFunction : ExprFunction {
 
     override val signature = FunctionSignature(
         name = "to_string",
@@ -51,7 +51,7 @@ class ToStringExprFunction(private val valueFactory: ExprValueFactory) : ExprFun
         val timestamp = required[0].timestampValue()
         val temporalAccessor = TimestampTemporalAccessor(timestamp)
         try {
-            return valueFactory.newString(formatter.format(temporalAccessor))
+            return stringExprValue(formatter.format(temporalAccessor))
         } catch (ex: UnsupportedTemporalTypeException) {
             errInvalidFormatPattern(pattern, ex)
         } catch (ex: DateTimeException) {

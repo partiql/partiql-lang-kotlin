@@ -5,7 +5,6 @@ import org.partiql.lang.ION
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestTarget
 import org.partiql.lang.util.newFromIonText
 
@@ -28,9 +27,7 @@ internal fun checkInvalidArity(
 ) =
     invalidArityChecker.checkInvalidArity(funcName, minArity, maxArity, targetPipeline)
 
-private val valueFactory = ExprValueFactory.standard(ION)
-
-private fun String.toExprValue(): ExprValue = valueFactory.newFromIonText(this)
+private fun String.toExprValue(): ExprValue = newFromIonText(ION, this)
 
 private fun Map<String, String>.toBindings(): Bindings<ExprValue> = Bindings.ofMap(mapValues { it.value.toExprValue() })
 

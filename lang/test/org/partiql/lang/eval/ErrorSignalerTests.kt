@@ -14,11 +14,10 @@ class ErrorSignalerTests {
     private val dummyMetas = metaContainerOf(SourceLocationMeta(4, 2))
 
     private val ion = IonSystemBuilder.standard().build()
-    private val valueFactory = ExprValueFactory.standard(ion)
 
     @Test
     fun permissiveTest() {
-        val b = TypingMode.PERMISSIVE.createErrorSignaler(valueFactory)
+        val b = TypingMode.PERMISSIVE.createErrorSignaler()
 
         assertEquals(50, runTest(b, 5).intValue())
         assertEquals(70, runTest(b, 7).intValue())
@@ -27,7 +26,7 @@ class ErrorSignalerTests {
 
     @Test
     fun legacyTest() {
-        val b = TypingMode.LEGACY.createErrorSignaler(valueFactory)
+        val b = TypingMode.LEGACY.createErrorSignaler()
 
         assertEquals(10, runTest(b, 1).intValue())
         val ex = try {
@@ -47,6 +46,6 @@ class ErrorSignalerTests {
             // The choice of ErrorCode.EVALUATOR_CAST_FAILED is arbitrary just for this test.
             ErrorCode.EVALUATOR_CAST_FAILED,
             { ErrorDetails(dummyMetas, "The value can't be 6") },
-            { valueFactory.newInt(value * 10) }
+            { intExprValue(value * 10) }
         )
 }

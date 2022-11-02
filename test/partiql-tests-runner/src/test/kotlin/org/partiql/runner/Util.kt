@@ -5,9 +5,10 @@ import com.amazon.ion.IonStruct
 import com.amazon.ion.IonSystem
 import com.amazon.ion.IonValue
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.StructOrdering
 import org.partiql.lang.eval.namedValue
+import org.partiql.lang.eval.stringExprValue
+import org.partiql.lang.eval.structExprValue
 import org.partiql.lang.eval.toExprValue
 import org.partiql.lang.eval.toIonValue
 
@@ -26,10 +27,9 @@ internal fun IonValue.toExprValueChangingAnnotation(): ExprValue {
     // `ExprValueFactory`'s [newFromIonValue] relies on a different encoding of PartiQL-specific types than the
     // conformance tests (e.g. `ExprValueFactory` uses $partiql_bag rather than $bag)
     changeAnnotation()
-    val valueFactory = ExprValueFactory.standard(system)
     return when (this) {
         is IonStruct -> {
-            valueFactory.newStruct(map { it.toExprValueChangingAnnotation().namedValue(valueFactory.newString(it.fieldName)) }, StructOrdering.UNORDERED)
+            structExprValue(map { it.toExprValueChangingAnnotation().namedValue(stringExprValue(it.fieldName)) }, StructOrdering.UNORDERED)
         }
         else -> toExprValue()
     }

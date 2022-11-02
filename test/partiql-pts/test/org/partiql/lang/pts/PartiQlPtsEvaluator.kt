@@ -11,6 +11,7 @@ import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.name
 import org.partiql.lang.eval.stringValue
+import org.partiql.lang.eval.toExprValue
 import org.partiql.lang.eval.toIonValue
 import org.partiql.testscript.compiler.AppendedTestExpression
 import org.partiql.testscript.compiler.ExpectedError
@@ -31,7 +32,7 @@ class PartiQlPtsEvaluator(equality: PtsEquality) : Evaluator(equality) {
     private val ion = IonSystemBuilder.standard().build()
     private val missing = ion.singleValue("missing::null")
 
-    private val compilerPipeline = CompilerPipeline.standard(ion)
+    private val compilerPipeline = CompilerPipeline.standard()
 
     override fun evaluate(testExpressions: List<TestScriptExpression>): List<TestResult> =
         testExpressions.map {
@@ -48,7 +49,7 @@ class PartiQlPtsEvaluator(equality: PtsEquality) : Evaluator(equality) {
         // recreate the environment struct using the evaluator ion system
         val ionStruct = ion.newValue(ion.newReader(test.environment).apply { next() }) as IonStruct
 
-        val globals = compilerPipeline.valueFactory.newFromIonValue(ionStruct).bindings
+        val globals = ionStruct.toExprValue().bindings
         val session = EvaluationSession.build { globals(globals) }
         val expression = compilerPipeline.compile(test.statement)
         val actualResult = expression.eval(session).toPtsIon()

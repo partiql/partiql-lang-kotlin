@@ -4,7 +4,8 @@ import com.amazon.ion.Timestamp
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.eval.ExprValueFactory
+import org.partiql.lang.eval.decimalExprValue
+import org.partiql.lang.eval.intExprValue
 import org.partiql.lang.eval.timestampValue
 import org.partiql.lang.types.FunctionSignature
 import org.partiql.lang.types.StaticType
@@ -27,7 +28,7 @@ import java.math.BigDecimal
  *
  * The valid range of argument values is the range of PartiQL's `TIMESTAMP` value.
  */
-internal class UnixTimestampFunction(val valueFactory: ExprValueFactory) : ExprFunction {
+internal class UnixTimestampFunction : ExprFunction {
     override val signature = FunctionSignature(
         name = "unix_timestamp",
         requiredParameters = listOf(),
@@ -39,16 +40,16 @@ internal class UnixTimestampFunction(val valueFactory: ExprValueFactory) : ExprF
     private fun epoch(timestamp: Timestamp): BigDecimal = timestamp.decimalMillis.divide(millisPerSecond)
 
     override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
-        return valueFactory.newInt(epoch(session.now).toLong())
+        return intExprValue(epoch(session.now).toLong())
     }
 
     override fun callWithOptional(session: EvaluationSession, required: List<ExprValue>, opt: ExprValue): ExprValue {
         val timestamp = opt.timestampValue()
         val epochTime = epoch(timestamp)
         return if (timestamp.decimalSecond.scale() == 0) {
-            valueFactory.newInt(epochTime.toLong())
+            intExprValue(epochTime.toLong())
         } else {
-            valueFactory.newDecimal(epochTime)
+            decimalExprValue(epochTime)
         }
     }
 }

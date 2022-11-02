@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
-import org.partiql.lang.ION
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.eval.physical.EvaluatorState
 import org.partiql.lang.eval.physical.SetVariableFunc
@@ -98,7 +97,7 @@ class CustomOperatorFactoryTests {
     @ArgumentsSource(CustomOperatorCases::class)
     fun `make sure custom operator implementations are called`(tc: CustomOperatorCases.TestCase) {
         @Suppress("DEPRECATION")
-        val pipeline = PlannerPipeline.build(ION) {
+        val pipeline = PlannerPipeline.build() {
             fakeOperatorFactories.forEach { addRelationalOperatorFactory(it) }
         }
         val ex = assertThrows<CreateFunctionWasCalledException> {

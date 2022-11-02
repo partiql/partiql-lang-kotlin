@@ -1,10 +1,8 @@
 package org.partiql.lang.planner.memorydb
 
-import org.partiql.lang.ION
 import org.partiql.lang.eval.BindingCase
 import org.partiql.lang.eval.BindingName
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.eval.ExprValueFactory
 import java.util.UUID
 
 class TableMetadata(val tableId: UUID, val name: String, val primaryKeyFields: List<String>)
@@ -16,7 +14,6 @@ class TableMetadata(val tableId: UUID, val name: String, val primaryKeyFields: L
  * This database supports basic SFW and DML operations.
  */
 class MemoryDatabase {
-    val valueFactory = ExprValueFactory.standard(ION)
     private val tables = ArrayList<MemoryTable>()
 
     /**
@@ -47,7 +44,7 @@ class MemoryDatabase {
         }
 
         val metadata = TableMetadata(UUID.randomUUID(), tableName, primaryKeyFields)
-        val newTable = MemoryTable(metadata, valueFactory)
+        val newTable = MemoryTable(metadata)
         tables.add(newTable)
 
         return metadata

@@ -1,17 +1,15 @@
 package org.partiql.examples
 
-import com.amazon.ion.IonValue
-import com.amazon.ion.system.IonSystemBuilder
 import org.partiql.examples.util.Example
 import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.eval.BaseExprValue
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.ExprValueType
+import org.partiql.lang.eval.bagExprValue
 import org.partiql.lang.eval.namedValue
-import org.partiql.lang.eval.stringValue
+import org.partiql.lang.eval.stringExprValue
 import java.io.PrintStream
 
 /**
@@ -22,7 +20,7 @@ import java.io.PrintStream
  *
  * The first column in the row will be assigned the name `_1`, the second `_2` and so on.
  */
-private class CsvRowExprValue(private val valueFactory: ExprValueFactory, private val rowString: String) : BaseExprValue() {
+private class CsvRowExprValue(private val rowString: String) : BaseExprValue() {
 
     /** The Ion type that CsvRowExprValue is must similar to is a struct. */
     override val type: ExprValueType get() = ExprValueType.STRUCT
@@ -36,25 +34,12 @@ private class CsvRowExprValue(private val valueFactory: ExprValueFactory, privat
             .mapIndexed { i, it ->
                 val fieldName = "_${i + 1}"
                 // Note that we invoke
-                fieldName to valueFactory.newString(it).namedValue(valueFactory.newString(fieldName))
+                fieldName to stringExprValue(it).namedValue(stringExprValue(fieldName))
             }.toMap()
-    }
-
-    /** Laziness is even more important here because [ionValue] is likely to never be called. */
-    private val lazyIonValue by lazy {
-        valueFactory.ion.newEmptyStruct().apply {
-            rowValues.map { kvp ->
-                add(kvp.key, valueFactory.ion.newString(kvp.value.stringValue()))
-            }
-            makeReadOnly()
-        }
     }
 
     /** An iterator over the values contained in this instance of [ExprValue], if any. */
     override fun iterator() = rowValues.values.iterator()
-
-    /** The Ion representation of the current value. */
-    fun toIonValue(): IonValue = lazyIonValue
 
     private val bindingsInstance by lazy {
         Bindings.ofMap(rowValues)
@@ -66,9 +51,7 @@ private class CsvRowExprValue(private val valueFactory: ExprValueFactory, privat
 
 class CsvExprValueExample(out: PrintStream) : Example(out) {
 
-    private val ion = IonSystemBuilder.standard().build()
-    private val valueFactory = ExprValueFactory.standard(ion)
-    private val pipeline = CompilerPipeline.standard(valueFactory)
+    private val pipeline = CompilerPipeline.standard()
 
     private val EXAMPLE_CSV_FILE_CONTENTS = "Cat,Nibbler,F\nCat,Hobbes,M\nDog,Fido,M"
 
@@ -88,11 +71,11 @@ class CsvExprValueExample(out: PrintStream) : Example(out) {
 
                 // [SequenceExprValue] represents a PartiQL bag data type.  It is an implementation of [ExprValue] that
                 // contains a Kotlin [Sequence<>] of other [ExprValue] instances.
-                valueFactory.newBag(
+                bagExprValue(
                     EXAMPLE_CSV_FILE_CONTENTS.split('\n').asSequence()
                         .filter { it.isNotEmpty() }
                         .map {
-                            CsvRowExprValue(pipeline.valueFactory, it)
+                            CsvRowExprValue(it)
                         }
                 )
             }

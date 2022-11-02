@@ -2,7 +2,6 @@ package org.partiql.lang.eval
 
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
-import org.partiql.lang.ION
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestTarget
 import org.partiql.lang.util.testdsl.IonResultTestCase
 import org.partiql.lang.util.testdsl.runTestCase
@@ -19,8 +18,7 @@ import org.partiql.lang.util.testdsl.runTestCase
 class EvaluatorStaticTypeTests {
 
     companion object {
-        val valueFactory = ExprValueFactory.standard(ION)
-        private val mockDb = EVALUATOR_TEST_SUITE.mockDb(valueFactory)
+        private val mockDb = EVALUATOR_TEST_SUITE.mockDb()
 
         // These tests are known to be failing.  If they are fixed but not removed from this list
         // the test will fail.  (This forces us to keep this list up-to-date.)
@@ -173,7 +171,6 @@ class EvaluatorStaticTypeTests {
     @MethodSource("evaluatorStaticTypeTests")
     fun allTests(tc: IonResultTestCase) =
         tc.runTestCase(
-            valueFactory = valueFactory,
             db = mockDb,
             // the planner doesn't yet support type inferencing pass needed to make this work
             EvaluatorTestTarget.COMPILER_PIPELINE,

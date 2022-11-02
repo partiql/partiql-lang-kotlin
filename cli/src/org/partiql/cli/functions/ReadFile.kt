@@ -16,14 +16,15 @@ package org.partiql.cli.functions
 
 import com.amazon.ion.IonStruct
 import com.amazon.ion.system.IonReaderBuilder
-import com.amazon.ion.system.IonSystemBuilder
 import org.apache.commons.csv.CSVFormat
 import org.partiql.extensions.cli.functions.BaseFunction
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.eval.ExprValueFactory
+import org.partiql.lang.eval.bagExprValue
+import org.partiql.lang.eval.getExprValueFromIonRead
 import org.partiql.lang.eval.io.DelimitedValues
 import org.partiql.lang.eval.io.DelimitedValues.ConversionMode
+import org.partiql.lang.eval.missingExprValue
 import org.partiql.lang.eval.stringValue
 import org.partiql.lang.eval.toIonValue
 import org.partiql.lang.types.FunctionSignature
@@ -35,9 +36,7 @@ import java.io.FileInputStream
 import java.io.InputStream
 import java.io.InputStreamReader
 
-internal class ReadFile(valueFactory: ExprValueFactory) : BaseFunction(valueFactory) {
-    private val ion = IonSystemBuilder.standard().build()
-
+internal class ReadFile : BaseFunction() {
     override val signature = FunctionSignature(
         name = "read_file",
         requiredParameters = listOf(StaticType.STRING),
@@ -72,16 +71,16 @@ internal class ReadFile(valueFactory: ExprValueFactory) : BaseFunction(valueFact
             .let { if (escape != null) it.withEscape(escape) else it }
             .let { if (quote != null) it.withQuote(quote) else it }
         val seq = Sequence {
-            DelimitedValues.exprValue(valueFactory, reader, csvFormatWithOptions, conversionModeFor(conversion)).iterator()
+            DelimitedValues.exprValue(ion, reader, csvFormatWithOptions, conversionModeFor(conversion)).iterator()
         }
-        valueFactory.newBag(seq)
+        bagExprValue(seq)
     }
 
     private fun ionReadHandler(): (InputStream, IonStruct) -> ExprValue = { input, _ ->
         IonReaderBuilder.standard().build(input).use { reader ->
             val value = when (reader.next()) {
-                null -> valueFactory.missingValue
-                else -> valueFactory.newFromIonReader(reader)
+                null -> missingExprValue()
+                else -> getExprValueFromIonRead(ion, reader)
             }
             if (reader.next() != null) {
                 val message = "As of v0.7.0, PartiQL requires that Ion files contain only a single Ion value for " +
@@ -110,7 +109,7 @@ internal class ReadFile(valueFactory: ExprValueFactory) : BaseFunction(valueFact
         // TODO we should take care to clean up this `FileInputStream` properly
         //  https://github.com/partiql/partiql-lang-kotlin/issues/518
         val fileInput = FileInputStream(fileName)
-        return handler(fileInput, valueFactory.ion.newEmptyStruct())
+        return handler(fileInput, ion.newEmptyStruct())
     }
 
     override fun callWithOptional(session: EvaluationSession, required: List<ExprValue>, opt: ExprValue): ExprValue {

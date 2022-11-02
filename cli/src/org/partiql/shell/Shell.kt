@@ -35,8 +35,9 @@ import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.delegate
+import org.partiql.lang.eval.nullExprValue
+import org.partiql.lang.eval.toExprValue
 import org.partiql.lang.eval.toIonValue
 import org.partiql.lang.syntax.Parser
 import org.partiql.lang.util.ConfigurableExprValueFormatter
@@ -76,7 +77,6 @@ private val EXIT_DELAY: Duration = Duration(3000)
  * opinions on ways to clean this up in later PRs.
  */
 class Shell(
-    private val valueFactory: ExprValueFactory,
     private val output: OutputStream,
     private val parser: Parser,
     private val compiler: CompilerPipeline,
@@ -86,8 +86,8 @@ class Shell(
     private val ion = IonSystemBuilder.standard().build()
 
     private val homeDir: Path = Paths.get(System.getProperty("user.home"))
-    private val globals = ShellGlobalBinding(valueFactory).add(initialGlobal)
-    private var previousResult = valueFactory.nullValue
+    private val globals = ShellGlobalBinding().add(initialGlobal)
+    private var previousResult = nullExprValue()
 
     private val astPrettyPrinter = object : ExprValueFormatter {
         val writer = IonTextWriterBuilder.pretty().build(output)
@@ -264,8 +264,8 @@ class Shell(
         if (query.isNotBlank()) {
             execute(astPrettyPrinter) {
                 val astStatementSexp = parser.parseAstStatement(query).toIonElement()
-                val astStatementIonValue = astStatementSexp.asAnyElement().toIonValue(valueFactory.ion)
-                valueFactory.newFromIonValue(astStatementIonValue)
+                val astStatementIonValue = astStatementSexp.asAnyElement().toIonValue(ion)
+                astStatementIonValue.toExprValue()
             }
         }
     }

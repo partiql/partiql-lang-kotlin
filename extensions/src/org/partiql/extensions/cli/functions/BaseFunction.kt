@@ -14,21 +14,21 @@
 package org.partiql.extensions.cli.functions
 
 import com.amazon.ion.IonStruct
+import com.amazon.ion.IonSystem
 import com.amazon.ion.system.IonSystemBuilder
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.toIonValue
 
-abstract class BaseFunction(val valueFactory: ExprValueFactory) : ExprFunction {
-    private val ion = IonSystemBuilder.standard().build()
+abstract class BaseFunction : ExprFunction {
+    protected val ion: IonSystem = IonSystemBuilder.standard().build()
 
     protected fun optionsStruct(
         requiredArity: Int,
         args: List<ExprValue>,
         optionsIndex: Int = requiredArity
     ): IonStruct = when (args.size) {
-        requiredArity -> valueFactory.ion.newEmptyStruct()
+        requiredArity -> ion.newEmptyStruct()
         requiredArity + 1 -> extractOptVal(args, optionsIndex)
         else -> throw IllegalArgumentException("Bad number of arguments: ${args.size}")
     }

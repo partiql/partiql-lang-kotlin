@@ -215,7 +215,7 @@ class CliTest {
 
     @Test
     fun runQueryInPermissiveMode() {
-        val permissiveModeCP = CompilerPipeline.build(ion) {
+        val permissiveModeCP = CompilerPipeline.build {
             compileOptions {
                 typingMode(TypingMode.PERMISSIVE)
             }
@@ -228,7 +228,7 @@ class CliTest {
 
     @Test
     fun runWithTypedOpBehaviorLegacy() {
-        val pipeline = CompilerPipeline.build(ion) {
+        val pipeline = CompilerPipeline.build {
             compileOptions {
                 typedOpBehavior(TypedOpBehavior.LEGACY)
             }
@@ -241,7 +241,7 @@ class CliTest {
 
     @Test
     fun runWithTypedOpBehaviorHonorParameters() {
-        val pipeline = CompilerPipeline.build(ion) {
+        val pipeline = CompilerPipeline.build {
             compileOptions {
                 typedOpBehavior(TypedOpBehavior.HONOR_PARAMETERS)
             }
@@ -255,7 +255,7 @@ class CliTest {
     @Test(expected = EvaluationException::class)
     fun runWithProjectionIterationFilterMissingFailure() {
         val input = "<<{'a': null, 'b': missing, 'c': 1}>>"
-        val pipeline = CompilerPipeline.build(ion) {
+        val pipeline = CompilerPipeline.build {
             compileOptions {
                 projectionIteration(ProjectionIterationBehavior.FILTER_MISSING)
             }
@@ -267,7 +267,7 @@ class CliTest {
     @Test()
     fun runWithProjectionIterationFilterMissingSuccess() {
         val input = "<<{'a': null, 'b': missing, 'c': 1}>>"
-        val pipeline = CompilerPipeline.build(ion) {
+        val pipeline = CompilerPipeline.build {
             compileOptions {
                 projectionIteration(ProjectionIterationBehavior.FILTER_MISSING)
             }
@@ -280,7 +280,7 @@ class CliTest {
     @Test
     fun runWithProjectionIterationUnfiltered() {
         val input = "<<{'a': null, 'b': missing, 'c': 1}>>"
-        val pipeline = CompilerPipeline.build(ion) {
+        val pipeline = CompilerPipeline.build {
             compileOptions {
                 projectionIteration(ProjectionIterationBehavior.UNFILTERED)
             }
@@ -294,7 +294,7 @@ class CliTest {
     @Test(expected = EvaluationException::class)
     fun runWithUndefinedVariableError() {
         val input = "<<{'a': 1}>>"
-        val pipeline = CompilerPipeline.build(ion) {
+        val pipeline = CompilerPipeline.build {
             compileOptions {
                 undefinedVariable(UndefinedVariableBehavior.ERROR)
             }
@@ -306,7 +306,7 @@ class CliTest {
     @Test()
     fun runWithUndefinedVariableMissing() {
         val input = "<<{'a': 1}>>"
-        val pipeline = CompilerPipeline.build(ion) {
+        val pipeline = CompilerPipeline.build {
             compileOptions {
                 undefinedVariable(UndefinedVariableBehavior.MISSING)
             }

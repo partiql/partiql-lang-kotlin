@@ -23,7 +23,7 @@ import org.partiql.cli.assertAsIon
 import org.partiql.cli.makeCliAndGetResult
 import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.eval.EvaluationSession
-import org.partiql.lang.eval.ExprValueFactory
+import org.partiql.lang.eval.toExprValue
 import org.partiql.lang.eval.toIonValue
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -32,14 +32,13 @@ import java.util.UUID
 
 class WriteFileTest {
     private val ion = IonSystemBuilder.standard().build()
-    private val valueFactory = ExprValueFactory.standard(ion)
-    private val function = WriteFile(valueFactory)
+    private val function = WriteFile()
     private val session = EvaluationSession.standard()
-    private val pipeline: CompilerPipeline = CompilerPipeline.build(ion) {
+    private val pipeline: CompilerPipeline = CompilerPipeline.build() {
         addFunction(function)
     }
 
-    private fun String.exprValue() = valueFactory.newFromIonValue(ion.singleValue(this))
+    private fun String.exprValue() = ion.singleValue(this).toExprValue()
 
     private fun dirPath(fname: String = "") = "/tmp/partiqltest/$fname"
     private fun readFileFromPath(path: String) = File(path).readText()

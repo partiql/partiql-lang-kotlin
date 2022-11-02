@@ -16,7 +16,6 @@
 
 package org.partiql.lang
 
-import com.amazon.ion.IonSystem
 import org.partiql.lang.ast.ExprNode
 import org.partiql.lang.ast.toAstStatement
 import org.partiql.lang.domains.PartiqlAst
@@ -24,7 +23,6 @@ import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.CompileOptions
 import org.partiql.lang.eval.EvaluatingCompiler
 import org.partiql.lang.eval.ExprFunction
-import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.Expression
 import org.partiql.lang.eval.ThunkReturnTypeAssertions
 import org.partiql.lang.eval.builtins.createBuiltinFunctions
@@ -42,9 +40,6 @@ import org.partiql.lang.util.interruptibleFold
  * Contains all information needed for processing steps.
  */
 data class StepContext(
-    /** The instance of [ExprValueFactory] that is used by the pipeline. */
-    val valueFactory: ExprValueFactory,
-
     /** The compilation options. */
     val compileOptions: CompileOptions,
 
@@ -77,8 +72,6 @@ typealias ProcessingStep = (PartiqlAst.Statement, StepContext) -> PartiqlAst.Sta
  * per thread.
  */
 interface CompilerPipeline {
-    val valueFactory: ExprValueFactory
-
     /** The compilation options. */
     val compileOptions: CompileOptions
 
@@ -119,26 +112,15 @@ interface CompilerPipeline {
 
     companion object {
         /** Kotlin style builder for [CompilerPipeline].  If calling from Java instead use [builder]. */
-        fun build(ion: IonSystem, block: Builder.() -> Unit) = build(ExprValueFactory.standard(ion), block)
-
-        /** Kotlin style builder for [CompilerPipeline].  If calling from Java instead use [builder]. */
-        fun build(valueFactory: ExprValueFactory, block: Builder.() -> Unit) = Builder(valueFactory).apply(block).build()
+        fun build(block: Builder.() -> Unit) = Builder().apply(block).build()
 
         /** Fluent style builder.  If calling from Kotlin instead use the [build] method. */
         @JvmStatic
-        fun builder(ion: IonSystem): Builder = builder(ExprValueFactory.standard(ion))
-
-        /** Fluent style builder.  If calling from Kotlin instead use the [build] method. */
-        @JvmStatic
-        fun builder(valueFactory: ExprValueFactory): Builder = Builder(valueFactory)
+        fun builder(): Builder = Builder()
 
         /** Returns an implementation of [CompilerPipeline] with all properties set to their defaults. */
         @JvmStatic
-        fun standard(ion: IonSystem): CompilerPipeline = standard(ExprValueFactory.standard(ion))
-
-        /** Returns an implementation of [CompilerPipeline] with all properties set to their defaults. */
-        @JvmStatic
-        fun standard(valueFactory: ExprValueFactory): CompilerPipeline = builder(valueFactory).build()
+        fun standard(): CompilerPipeline = builder().build()
     }
 
     /**
@@ -146,7 +128,7 @@ interface CompilerPipeline {
      * [CompilerPipeline] is NOT thread safe and should NOT be used to compile queries concurrently. If used in a
      * multithreaded application, use one instance of [CompilerPipeline] per thread.
      */
-    class Builder(val valueFactory: ExprValueFactory) {
+    class Builder() {
         private var parser: Parser? = null
         private var compileOptions: CompileOptions? = null
         private val customFunctions: MutableMap<String, ExprFunction> = HashMap()
@@ -218,7 +200,7 @@ interface CompilerPipeline {
                 }
             }
 
-            val builtinFunctions = createBuiltinFunctions(valueFactory).associateBy {
+            val builtinFunctions = createBuiltinFunctions().associateBy {
                 it.signature.name
             }
 
@@ -227,8 +209,7 @@ interface CompilerPipeline {
             val allFunctions = builtinFunctions + customFunctions
 
             return CompilerPipelineImpl(
-                valueFactory = valueFactory,
-                parser = parser ?: PartiQLParserBuilder().ionSystem(valueFactory.ion).customTypes(customDataTypes).build(),
+                parser = parser ?: PartiQLParserBuilder().customTypes(customDataTypes).build(),
                 compileOptions = compileOptionsToUse,
                 functions = allFunctions,
                 customDataTypes = customDataTypes,
@@ -241,7 +222,6 @@ interface CompilerPipeline {
 }
 
 internal class CompilerPipelineImpl(
-    override val valueFactory: ExprValueFactory,
     private val parser: Parser,
     override val compileOptions: CompileOptions,
     override val functions: Map<String, ExprFunction>,
@@ -252,7 +232,6 @@ internal class CompilerPipelineImpl(
 ) : CompilerPipeline {
 
     private val compiler = EvaluatingCompiler(
-        valueFactory,
         functions,
         customDataTypes.map { customType ->
             (customType.aliases + customType.name).map { alias ->
@@ -268,7 +247,7 @@ internal class CompilerPipelineImpl(
     override fun compile(query: ExprNode): Expression = compile(query.toAstStatement())
 
     override fun compile(query: PartiqlAst.Statement): Expression {
-        val context = StepContext(valueFactory, compileOptions, functions, procedures)
+        val context = StepContext(compileOptions, functions, procedures)
 
         val preProcessedQuery = executePreProcessingSteps(query, context)
 
@@ -280,7 +259,7 @@ internal class CompilerPipelineImpl(
                     null -> null
                     else -> {
                         listOf(
-                            StaticTypeVisitorTransform(valueFactory.ion, globalTypeBindings),
+                            StaticTypeVisitorTransform(globalTypeBindings),
                             StaticTypeInferenceVisitorTransform(
                                 globalBindings = globalTypeBindings,
                                 customFunctionSignatures = functions.values.map { it.signature },

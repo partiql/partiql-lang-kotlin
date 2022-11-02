@@ -14,7 +14,6 @@
 
 package org.partiql.lang.planner
 
-import com.amazon.ion.IonSystem
 import org.partiql.lang.SqlException
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.domains.PartiqlAst
@@ -24,7 +23,6 @@ import org.partiql.lang.errors.ProblemCollector
 import org.partiql.lang.errors.ProblemHandler
 import org.partiql.lang.errors.Property
 import org.partiql.lang.eval.ExprFunction
-import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.Expression
 import org.partiql.lang.eval.ThunkReturnTypeAssertions
 import org.partiql.lang.eval.builtins.DynamicLookupExprFunction
@@ -111,8 +109,6 @@ interface PartiqlPhysicalPass {
  * per thread.
  */
 interface PlannerPipeline {
-    val valueFactory: ExprValueFactory
-
     /**
      * Plans a query only but does not compile it.
      *
@@ -169,32 +165,18 @@ interface PlannerPipeline {
 
         /** Kotlin style builder for [PlannerPipeline].  If calling from Java instead use [builder]. */
         @Deprecated(WARNING)
-        fun build(ion: IonSystem, block: Builder.() -> Unit) = build(ExprValueFactory.standard(ion), block)
-
-        /** Kotlin style builder for [PlannerPipeline].  If calling from Java instead use [builder]. */
-        @Deprecated(WARNING)
-        fun build(valueFactory: ExprValueFactory, block: Builder.() -> Unit) =
-            Builder(valueFactory).apply(block).build()
+        fun build(block: Builder.() -> Unit) =
+            Builder().apply(block).build()
 
         /** Fluent style builder.  If calling from Kotlin instead use the [build] method. */
         @JvmStatic
         @Deprecated(WARNING)
-        fun builder(ion: IonSystem): Builder = builder(ExprValueFactory.standard(ion))
-
-        /** Fluent style builder.  If calling from Kotlin instead use the [build] method. */
-        @JvmStatic
-        @Deprecated(WARNING)
-        fun builder(valueFactory: ExprValueFactory): Builder = Builder(valueFactory)
+        fun builder(): Builder = Builder()
 
         /** Returns an implementation of [PlannerPipeline] with all properties set to their defaults. */
         @JvmStatic
         @Deprecated(WARNING)
-        fun standard(ion: IonSystem): PlannerPipeline = standard(ExprValueFactory.standard(ion))
-
-        /** Returns an implementation of [PlannerPipeline] with all properties set to their defaults. */
-        @JvmStatic
-        @Deprecated(WARNING)
-        fun standard(valueFactory: ExprValueFactory): PlannerPipeline = builder(valueFactory).build()
+        fun standard(): PlannerPipeline = standard()
     }
 
     /**
@@ -202,7 +184,7 @@ interface PlannerPipeline {
      * [PlannerPipeline] is NOT thread safe and should NOT be used to compile queries concurrently. If used in a
      * multithreaded application, use one instance of [PlannerPipeline] per thread.
      */
-    class Builder(val valueFactory: ExprValueFactory) {
+    class Builder {
         private var parser: Parser? = null
         private var evaluatorOptions: EvaluatorOptions? = null
         private val customFunctions: MutableMap<String, ExprFunction> = HashMap()
@@ -403,7 +385,7 @@ interface PlannerPipeline {
                     }
                 }
 
-            val builtinFunctions = createBuiltinFunctions(valueFactory) + DynamicLookupExprFunction()
+            val builtinFunctions = createBuiltinFunctions() + DynamicLookupExprFunction()
             val builtinFunctionsMap = builtinFunctions.associateBy {
                 it.signature.name
             }
@@ -412,8 +394,7 @@ interface PlannerPipeline {
             // built-in functions with the same name.
             val allFunctionsMap = builtinFunctionsMap + customFunctions
             return PlannerPipelineImpl(
-                valueFactory = valueFactory,
-                parser = parser ?: PartiQLParserBuilder().ionSystem(valueFactory.ion).customTypes(this.customDataTypes)
+                parser = parser ?: PartiQLParserBuilder().customTypes(this.customDataTypes)
                     .build(),
                 evaluatorOptions = compileOptionsToUse,
                 functions = allFunctionsMap,
@@ -431,7 +412,6 @@ interface PlannerPipeline {
 }
 
 internal class PlannerPipelineImpl(
-    override val valueFactory: ExprValueFactory,
     private val parser: Parser,
     val evaluatorOptions: EvaluatorOptions,
     val functions: Map<String, ExprFunction>,
@@ -555,7 +535,6 @@ internal class PlannerPipelineImpl(
             var exprConverter: PhysicalPlanCompilerImpl? = null
 
             val bexperConverter = PhysicalBexprToThunkConverter(
-                valueFactory = this.valueFactory,
                 exprConverter = object : PhysicalPlanCompiler {
                     override fun convert(expr: PartiqlPhysical.Expr): PhysicalPlanThunk =
                         exprConverter!!.convert(expr)
@@ -564,7 +543,6 @@ internal class PlannerPipelineImpl(
             )
 
             exprConverter = PhysicalPlanCompilerImpl(
-                valueFactory = valueFactory,
                 functions = functions,
                 customTypedOpParameters = customTypedOpParameters,
                 procedures = procedures,

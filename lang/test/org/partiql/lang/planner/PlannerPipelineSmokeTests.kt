@@ -5,7 +5,6 @@ import com.amazon.ionelement.api.ionString
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import org.partiql.lang.ION
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.errors.Problem
@@ -30,7 +29,7 @@ class PlannerPipelineSmokeTests {
         allowUndefinedVariables: Boolean,
         plannerEventCallback: PlannerEventCallback?,
         block: PlannerPipeline.Builder.() -> Unit = { }
-    ) = PlannerPipeline.build(ION) {
+    ) = PlannerPipeline.build() {
         allowUndefinedVariables(allowUndefinedVariables)
         globalVariableResolver(createFakeGlobalsResolver("Customer" to "fake_uid_for_Customer"))
         plannerEventCallback?.let { plannerEventCallback(it) }
@@ -200,7 +199,7 @@ class PlannerPipelineSmokeTests {
 
         assertThrows<IllegalArgumentException> {
             @Suppress("DEPRECATION") // don't warn about use of experimental APIs.
-            PlannerPipeline.build(ION) {
+            PlannerPipeline.build() {
                 addRelationalOperatorFactory(fakeOperator)
             }
         }

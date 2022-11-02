@@ -24,21 +24,21 @@ private fun createWrongSProcErrorContext(arg: ExprValue, expectedArgTypes: Strin
 
 /** Custom [CompilerPipeline] builder that adds our test stored procedures. */
 private val compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit = {
-    addProcedure(OverriddenZeroArgProcedure(valueFactory))
-    addProcedure(ZeroArgProcedure(valueFactory))
-    addProcedure(OneArgProcedure(valueFactory))
-    addProcedure(TwoArgProcedure(valueFactory))
-    addProcedure(OutputBindingProcedure(valueFactory))
+    addProcedure(OverriddenZeroArgProcedure())
+    addProcedure(ZeroArgProcedure())
+    addProcedure(OneArgProcedure())
+    addProcedure(TwoArgProcedure())
+    addProcedure(OutputBindingProcedure())
 }
 
 /**
  * Simple stored procedure that takes no arguments and outputs 0.
  */
-private class ZeroArgProcedure(val valueFactory: ExprValueFactory) : StoredProcedure {
+private class ZeroArgProcedure : StoredProcedure {
     override val signature = StoredProcedureSignature("zero_arg_procedure", 0)
 
     override fun call(session: EvaluationSession, args: List<ExprValue>): ExprValue {
-        return valueFactory.newInt(0)
+        return intExprValue(0)
     }
 }
 
@@ -46,18 +46,18 @@ private class ZeroArgProcedure(val valueFactory: ExprValueFactory) : StoredProce
  * Simple stored procedure that takes no arguments and outputs -1. Used to show that added stored procedures of the
  * same name will be overridden.
  */
-private class OverriddenZeroArgProcedure(val valueFactory: ExprValueFactory) : StoredProcedure {
+private class OverriddenZeroArgProcedure : StoredProcedure {
     override val signature = StoredProcedureSignature("zero_arg_procedure", 0)
 
     override fun call(session: EvaluationSession, args: List<ExprValue>): ExprValue {
-        return valueFactory.newInt(-1)
+        return intExprValue(-1)
     }
 }
 
 /**
  * Simple stored procedure that takes one integer argument and outputs that argument back.
  */
-private class OneArgProcedure(val valueFactory: ExprValueFactory) : StoredProcedure {
+private class OneArgProcedure : StoredProcedure {
     override val signature = StoredProcedureSignature("one_arg_procedure", 1)
 
     override fun call(session: EvaluationSession, args: List<ExprValue>): ExprValue {
@@ -79,7 +79,7 @@ private class OneArgProcedure(val valueFactory: ExprValueFactory) : StoredProced
  * Simple stored procedure that takes two integer arguments and outputs the args as a string separated by
  * a space.
  */
-private class TwoArgProcedure(val valueFactory: ExprValueFactory) : StoredProcedure {
+private class TwoArgProcedure : StoredProcedure {
     override val signature = StoredProcedureSignature("two_arg_procedure", 2)
 
     override fun call(session: EvaluationSession, args: List<ExprValue>): ExprValue {
@@ -104,7 +104,7 @@ private class TwoArgProcedure(val valueFactory: ExprValueFactory) : StoredProced
                 internal = false
             )
         }
-        return valueFactory.newString("$arg1 $arg2")
+        return stringExprValue("$arg1 $arg2")
     }
 }
 
@@ -112,7 +112,7 @@ private class TwoArgProcedure(val valueFactory: ExprValueFactory) : StoredProced
  * Simple stored procedure that takes one string argument and checks if the binding (case-insensitive) is in the
  * current session's global bindings. If so, returns the value associated with that binding. Otherwise, returns missing.
  */
-private class OutputBindingProcedure(val valueFactory: ExprValueFactory) : StoredProcedure {
+private class OutputBindingProcedure : StoredProcedure {
     override val signature = StoredProcedureSignature("output_binding", 1)
 
     override fun call(session: EvaluationSession, args: List<ExprValue>): ExprValue {
@@ -128,7 +128,7 @@ private class OutputBindingProcedure(val valueFactory: ExprValueFactory) : Store
         }
         val bindingName = BindingName(arg.stringValue(), BindingCase.INSENSITIVE)
         return when (val value = session.globals[bindingName]) {
-            null -> valueFactory.missingValue
+            null -> missingExprValue()
             else -> value
         }
     }

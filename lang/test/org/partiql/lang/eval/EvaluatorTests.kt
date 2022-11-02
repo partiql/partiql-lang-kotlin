@@ -16,14 +16,12 @@ package org.partiql.lang.eval
 
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
-import org.partiql.lang.ION
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestTarget
 import org.partiql.lang.util.testdsl.IonResultTestCase
 import org.partiql.lang.util.testdsl.runTestCase
 
 class EvaluatorTests {
-    private val valueFactory = ExprValueFactory.standard(ION)
-    private val mockDb = EVALUATOR_TEST_SUITE.mockDb(valueFactory)
+    private val mockDb = EVALUATOR_TEST_SUITE.mockDb()
 
     companion object {
         val AST_EVALUATOR_SKIP_LIST = hashSetOf(
@@ -111,9 +109,9 @@ class EvaluatorTests {
 
     @ParameterizedTest
     @MethodSource("astEvaluatorTests")
-    fun astEvaluatorTests(tc: IonResultTestCase) = tc.runTestCase(valueFactory, mockDb, EvaluatorTestTarget.COMPILER_PIPELINE)
+    fun astEvaluatorTests(tc: IonResultTestCase) = tc.runTestCase(mockDb, EvaluatorTestTarget.COMPILER_PIPELINE)
 
     @ParameterizedTest
     @MethodSource("planEvaluatorTests")
-    fun planEvaluatorTests(tc: IonResultTestCase) = tc.runTestCase(valueFactory, mockDb, EvaluatorTestTarget.PLANNER_PIPELINE)
+    fun planEvaluatorTests(tc: IonResultTestCase) = tc.runTestCase(mockDb, EvaluatorTestTarget.PLANNER_PIPELINE)
 }

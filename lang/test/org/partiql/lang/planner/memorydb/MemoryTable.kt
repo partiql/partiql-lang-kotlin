@@ -6,8 +6,9 @@ import org.partiql.lang.eval.BindingCase
 import org.partiql.lang.eval.BindingName
 import org.partiql.lang.eval.DEFAULT_COMPARATOR
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.ExprValueType
+import org.partiql.lang.eval.listExprValue
+import org.partiql.lang.eval.toExprValue
 import org.partiql.lang.eval.toIonValue
 import java.util.TreeMap
 
@@ -15,15 +16,14 @@ import java.util.TreeMap
  * An extremely simple in-memory table, to be used with [MemoryDatabase].
  */
 class MemoryTable(
-    val metadata: TableMetadata,
-    private val valueFactory: ExprValueFactory
+    val metadata: TableMetadata
 ) : Sequence<ExprValue> {
     private val rows = TreeMap<ExprValue, ExprValue>(DEFAULT_COMPARATOR)
 
     private val primaryKeyBindingNames = metadata.primaryKeyFields.map { BindingName(it, BindingCase.SENSITIVE) }
 
     private fun ExprValue.extractPrimaryKey(): ExprValue =
-        valueFactory.newList(
+        listExprValue(
             primaryKeyBindingNames.map {
                 this.bindings[it] ?: error("Row missing primary key field '${it.name}' (case: ${it.bindingCase})")
             }.asIterable()
@@ -53,7 +53,7 @@ class MemoryTable(
             // whenever the value is accessed.  To do this we convert to Ion, which forces full materialization,
             // and then create a new ExprValue based off the Ion.
             val rowStruct = row.toIonValue(ION)
-            rows[primaryKeyExprValue] = valueFactory.newFromIonValue(rowStruct)
+            rows[primaryKeyExprValue] = rowStruct.toExprValue()
         }
     }
 

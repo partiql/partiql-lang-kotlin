@@ -4,9 +4,11 @@ import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.eval.ExprValueFactory
+import org.partiql.lang.eval.decimalExprValue
 import org.partiql.lang.eval.errIntOverflow
 import org.partiql.lang.eval.errNoContext
+import org.partiql.lang.eval.floatExprValue
+import org.partiql.lang.eval.intExprValue
 import org.partiql.lang.eval.numberValue
 import org.partiql.lang.types.FunctionSignature
 import org.partiql.lang.types.StaticType
@@ -29,10 +31,10 @@ import java.math.RoundingMode
  */
 object MathFunctions {
 
-    fun create(valueFactory: ExprValueFactory): List<ExprFunction> = listOf(
-        UnaryNumeric("ceil", valueFactory) { ceil(it) },
-        UnaryNumeric("ceiling", valueFactory) { ceil(it) },
-        UnaryNumeric("floor", valueFactory) { floor(it) },
+    fun create(): List<ExprFunction> = listOf(
+        UnaryNumeric("ceil") { ceil(it) },
+        UnaryNumeric("ceiling") { ceil(it) },
+        UnaryNumeric("floor") { floor(it) },
     )
 }
 
@@ -45,8 +47,7 @@ object MathFunctions {
  */
 private class UnaryNumeric(
     private val identifier: String,
-    private val valueFactory: ExprValueFactory,
-    private val function: (Number) -> Number,
+    private val function: (Number) -> Number
 ) : ExprFunction {
 
     override val signature = FunctionSignature(
@@ -56,7 +57,7 @@ private class UnaryNumeric(
     )
 
     override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue =
-        function.invoke(required.first().numberValue()).exprValue(valueFactory)
+        function.invoke(required.first().numberValue()).exprValue()
 }
 
 private fun ceil(n: Number): Number = when (n) {
@@ -81,11 +82,11 @@ private fun transformIntType(n: BigInteger): Number = when (n) {
 }
 
 // wrapper for converting result to expression value
-private fun Number.exprValue(valueFactory: ExprValueFactory): ExprValue = when (this) {
-    is Int -> valueFactory.newInt(this)
-    is Long -> valueFactory.newInt(this)
-    is Double, is Float -> valueFactory.newFloat(this.toDouble())
-    is BigDecimal -> valueFactory.newDecimal(this)
+private fun Number.exprValue(): ExprValue = when (this) {
+    is Int -> intExprValue(this)
+    is Long -> intExprValue(this)
+    is Double, is Float -> floatExprValue(this.toDouble())
+    is BigDecimal -> decimalExprValue(this)
     else -> errNoContext(
         "Cannot convert number to expression value: $this",
         errorCode = ErrorCode.EVALUATOR_INVALID_CONVERSION,

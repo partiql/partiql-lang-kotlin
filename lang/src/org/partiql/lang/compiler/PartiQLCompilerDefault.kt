@@ -20,7 +20,6 @@ import org.partiql.lang.eval.BindingName
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.Expression
 import org.partiql.lang.eval.PartiQLResult
 import org.partiql.lang.eval.PartiQLStatement
@@ -39,7 +38,6 @@ import org.partiql.lang.planner.EvaluatorOptions
 import org.partiql.lang.types.TypedOpParameter
 
 internal class PartiQLCompilerDefault(
-    private val valueFactory: ExprValueFactory,
     private val evaluatorOptions: EvaluatorOptions,
     private val customTypedOpParameters: Map<String, TypedOpParameter>,
     private val functions: Map<String, ExprFunction>,
@@ -49,7 +47,6 @@ internal class PartiQLCompilerDefault(
 
     private lateinit var exprConverter: PhysicalPlanCompilerImpl
     private val bexprConverter = PhysicalBexprToThunkConverter(
-        valueFactory = this.valueFactory,
         exprConverter = object : PhysicalPlanCompiler {
             override fun convert(expr: PartiqlPhysical.Expr): PhysicalPlanThunk = exprConverter.convert(expr)
         },
@@ -58,7 +55,6 @@ internal class PartiQLCompilerDefault(
 
     init {
         exprConverter = PhysicalPlanCompilerImpl(
-            valueFactory = valueFactory,
             functions = functions,
             customTypedOpParameters = customTypedOpParameters,
             procedures = procedures,

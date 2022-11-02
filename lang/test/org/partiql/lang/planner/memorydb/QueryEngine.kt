@@ -9,7 +9,11 @@ import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.StructOrdering
+import org.partiql.lang.eval.bagExprValue
+import org.partiql.lang.eval.intExprValue
 import org.partiql.lang.eval.namedValue
+import org.partiql.lang.eval.stringExprValue
+import org.partiql.lang.eval.structExprValue
 import org.partiql.lang.planner.DmlAction
 import org.partiql.lang.planner.GlobalResolutionResult
 import org.partiql.lang.planner.GlobalVariableResolver
@@ -84,14 +88,14 @@ class QueryEngine(val db: MemoryDatabase) {
             }
 
             val tableId = UUID.fromString(bindingName.name)
-            return db.valueFactory.newBag(
+            return bagExprValue(
                 db.getFullScanSequence(tableId)
             )
         }
     }
 
     @Suppress("DEPRECATION") // <-- PlannerPipeline is experimental, we are ok with it being deprecated.
-    private val planner = PlannerPipeline.build(db.valueFactory) {
+    private val planner = PlannerPipeline.build() {
         plannerEventCallback {
             fun prettyPrint(label: String, data: Any) {
                 val padding = 10
@@ -191,10 +195,10 @@ class QueryEngine(val db: MemoryDatabase) {
                                 }
 
                                 // returns `{ rows_effected: $rowsEffected }`
-                                db.valueFactory.newStruct(
+                                structExprValue(
                                     listOf(
-                                        db.valueFactory.newInt(rowsEffected)
-                                            .namedValue(db.valueFactory.newString("rows_effected"))
+                                        intExprValue(rowsEffected)
+                                            .namedValue(stringExprValue("rows_effected"))
                                     ),
                                     StructOrdering.UNORDERED
                                 )

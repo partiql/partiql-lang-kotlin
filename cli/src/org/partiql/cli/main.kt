@@ -29,7 +29,6 @@ import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.CompileOptions
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.ProjectionIterationBehavior
 import org.partiql.lang.eval.TypedOpBehavior
 import org.partiql.lang.eval.TypingMode
@@ -46,7 +45,6 @@ import kotlin.system.exitProcess
 
 // TODO how can a user pass the catalog here?
 private val ion = IonSystemBuilder.standard().build()
-private val valueFactory = ExprValueFactory.standard(ion)
 
 private val optParser = OptionParser()
 
@@ -210,10 +208,10 @@ fun main(args: Array<String>) = try {
         }
     }
 
-    val compilerPipeline = CompilerPipeline.build(ion) {
-        addFunction(ReadFile(valueFactory))
-        addFunction(WriteFile(valueFactory))
-        addFunction(QueryDDB(valueFactory))
+    val compilerPipeline = CompilerPipeline.build {
+        addFunction(ReadFile())
+        addFunction(WriteFile())
+        addFunction(QueryDDB())
         compileOptions(compileOptions)
         sqlParser(parser)
     }
@@ -244,7 +242,7 @@ fun main(args: Array<String>) = try {
 
 private fun runShell(environment: Bindings<ExprValue>, optionSet: OptionSet, compilerPipeline: CompilerPipeline, parser: Parser) {
     val config = ShellConfiguration(isMonochrome = optionSet.has(monochromeOpt))
-    Shell(valueFactory, System.out, parser, compilerPipeline, environment, config).start()
+    Shell(System.out, parser, compilerPipeline, environment, config).start()
 }
 
 private fun runCli(environment: Bindings<ExprValue>, optionSet: OptionSet, compilerPipeline: CompilerPipeline) {
@@ -269,7 +267,7 @@ private fun runCli(environment: Bindings<ExprValue>, optionSet: OptionSet, compi
 
     input.use {
         output.use {
-            Cli(valueFactory, input, inputFormat, output, outputFormat, compilerPipeline, environment, query, wrapIon).run()
+            Cli(input, inputFormat, output, outputFormat, compilerPipeline, environment, query, wrapIon).run()
         }
     }
 }

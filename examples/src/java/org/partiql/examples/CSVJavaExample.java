@@ -11,8 +11,8 @@ import org.partiql.lang.eval.BaseExprValue;
 import org.partiql.lang.eval.Bindings;
 import org.partiql.lang.eval.EvaluationSession;
 import org.partiql.lang.eval.ExprValue;
+import org.partiql.lang.eval.ExprValueAPIKt;
 import org.partiql.lang.eval.ExprValueExtensionsKt;
-import org.partiql.lang.eval.ExprValueFactory;
 import org.partiql.lang.eval.ExprValueType;
 import org.partiql.lang.eval.Expression;
 
@@ -37,12 +37,10 @@ public class CSVJavaExample extends Example {
      * ExprValue represents values in the context of a PartiQL Expression.
      */
     static class CsvRowExprValue extends BaseExprValue {
-        private final ExprValueFactory valueFactory;
         private final String rowString;
         private Map<String, ExprValue> rowValues;
 
-        CsvRowExprValue(final ExprValueFactory valueFactory, final String rowString) {
-            this.valueFactory = valueFactory;
+        CsvRowExprValue(final String rowString) {
             this.rowString = rowString;
         }
 
@@ -55,8 +53,8 @@ public class CSVJavaExample extends Example {
                         .collect(Collectors.toMap(
                                 index -> "_" + index,
                                 index -> {
-                                    ExprValue exprValue = valueFactory.newString(split[index]);
-                                    return ExprValueExtensionsKt.namedValue(exprValue, valueFactory.newString("_" + index));
+                                    ExprValue exprValue = ExprValueAPIKt.stringExprValue(split[index]);
+                                    return ExprValueExtensionsKt.namedValue(exprValue, ExprValueAPIKt.stringExprValue("_" + index));
                                 }
                         ));
             }
@@ -96,7 +94,7 @@ public class CSVJavaExample extends Example {
 
         // CompilerPipeline is the main entry point for the PartiQL lib giving you access to the compiler
         // and value factories
-        final CompilerPipeline pipeline = CompilerPipeline.standard(ion);
+        final CompilerPipeline pipeline = CompilerPipeline.standard();
 
         final String query = "SELECT * FROM myCsvDocument csv WHERE CAST(csv._1 AS INT) < 30";
         print("PartiQL query:", query);
@@ -108,9 +106,9 @@ public class CSVJavaExample extends Example {
                 .globals(
                         Bindings.<ExprValue>lazyBindingsBuilder().addBinding("myCsvDocument", () -> {
                             List<CsvRowExprValue> csvValues = Arrays.stream(CSV.split("\n"))
-                                    .map(csvLine -> new CsvRowExprValue(pipeline.getValueFactory(), csvLine))
+                                    .map(CsvRowExprValue::new)
                                     .collect(Collectors.toList());
-                            return pipeline.getValueFactory().newList(csvValues);
+                            return ExprValueAPIKt.listExprValue(csvValues);
                         }).build()
                 ).build();
 

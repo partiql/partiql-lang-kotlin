@@ -4,7 +4,6 @@ import com.amazon.ionelement.api.ionSymbol
 import org.junit.jupiter.api.fail
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
-import org.partiql.lang.ION
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.errors.Problem
 import org.partiql.lang.errors.ProblemHandler
@@ -286,7 +285,7 @@ class FilterScanToKeyLookupTests {
      * pass under test applied.  We will invoke the pass separately.
      */
     @Suppress("DEPRECATION") // <-- PlannerPipeline is experimental, we are ok with it being deprecated.
-    private val planner = PlannerPipeline.build(ION) {
+    private val planner = PlannerPipeline.build() {
         // planner needs to resolve global variables (i.e. tables). By "resolve" we mean to look up the
         // uniqueId of the table.
         globalVariableResolver { bindingName ->

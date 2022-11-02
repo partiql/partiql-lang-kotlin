@@ -7,6 +7,8 @@ import org.junit.jupiter.api.Test
 import org.partiql.lang.ION
 import org.partiql.lang.eval.BindingCase
 import org.partiql.lang.eval.BindingName
+import org.partiql.lang.eval.intExprValue
+import org.partiql.lang.eval.listExprValue
 import org.partiql.lang.eval.toIonValue
 import org.partiql.lang.planner.memorydb.MemoryDatabase
 import org.partiql.lang.planner.memorydb.QueryEngine
@@ -28,7 +30,7 @@ class TestContext {
         assertEquals(expectedIon, result.toIonValue(ION))
     }
 
-    fun intKey(value: Int) = db.valueFactory.newList(listOf(db.valueFactory.newInt(value)))
+    fun intKey(value: Int) = listExprValue(listOf(intExprValue(value)))
 }
 
 /**

@@ -1,6 +1,5 @@
 package org.partiql.examples
 
-import com.amazon.ion.system.IonSystemBuilder
 import org.partiql.examples.util.Example
 import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.eval.EvaluationSession
@@ -8,8 +7,7 @@ import java.io.PrintStream
 
 /** Demonstrates how to compile and evaluate a simple expression. */
 class SimpleExpressionEvaluation(out: PrintStream) : Example(out) {
-    val ion = IonSystemBuilder.standard().build()
-    val pipeline = CompilerPipeline.standard(ion)
+    val pipeline = CompilerPipeline.standard()
 
     override fun run() {
         // An EvaluationSession holds context needed for evaluation of the compiled query.

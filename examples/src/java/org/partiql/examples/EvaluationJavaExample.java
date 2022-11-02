@@ -23,6 +23,7 @@ import org.partiql.lang.CompilerPipeline;
 import org.partiql.lang.eval.Bindings;
 import org.partiql.lang.eval.EvaluationSession;
 import org.partiql.lang.eval.ExprValue;
+import org.partiql.lang.eval.ExprValueAPIKt;
 import org.partiql.lang.eval.Expression;
 
 import java.io.PrintStream;
@@ -46,7 +47,7 @@ public class EvaluationJavaExample extends Example {
         final IonSystem ion = IonSystemBuilder.standard().build();
 
         // An instance of [CompilerPipeline].
-        final CompilerPipeline pipeline = CompilerPipeline.standard(ion);
+        final CompilerPipeline pipeline = CompilerPipeline.standard();
 
         // Compiles a simple expression containing a reference to a global variable.
         final String query = "'Hello, ' || user_name";
@@ -55,7 +56,7 @@ public class EvaluationJavaExample extends Example {
 
         // This is the value of the global variable.
         final String userName = "Homer Simpson";
-        final ExprValue usernameValue = pipeline.getValueFactory().newString(userName);
+        final ExprValue usernameValue = ExprValueAPIKt.stringExprValue(userName);
 
         // [Bindings.ofMap] can be used to construct a [Bindings] instance of
         // bindings with previously materialized values.
