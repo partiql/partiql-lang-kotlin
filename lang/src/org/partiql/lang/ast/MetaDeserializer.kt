@@ -17,15 +17,19 @@
 
 package org.partiql.lang.ast
 
-@Deprecated("AstVersion is used by legacy (de)serializers.  Use PIG-generated PartiqlAst instead.")
-enum class AstVersion(val number: Int) {
-    /**
-     * The "legacy" AST in the form of `(meta <exp> { line: <line>, column: <column> })`.
-     */
-    V0(0);
+import com.amazon.ion.IonValue
 
-    companion object {
-        /** The range of currently supported AST versions in human readable format. */
-        val versionsAsString = values().map { it.number }.joinToString(", ")
-    }
+/**
+ * Deserializes an instance of a node meta from its s-expression representation.
+ */
+interface MetaDeserializer {
+    /**
+     * The tag of the meta which this [MetaDeserializer] can deserialize.
+     */
+    val tag: String
+
+    /**
+     * Perform deserialization of the given s-exp into an instance of [Meta].
+     */
+    fun deserialize(sexp: IonValue): Meta
 }

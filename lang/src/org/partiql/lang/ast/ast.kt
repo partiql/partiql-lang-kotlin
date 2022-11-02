@@ -933,8 +933,7 @@ enum class SetQuantifier {
  * [minArity] and [maxArity] are to be used during AST validation.
  * [symbol] is used to look up an [NAryOp] instance from the token text and must be unique among
  * all instances of [NAryOp].
- * [textName] is the user-friendly name of this operation. It's used to indicate
- * operator in an AST with version [AstVersion.V2] or above.
+ * [textName] is the user-friendly name of this operation.
  */
 enum class NAryOp(val arityRange: IntRange, val symbol: String, val textName: String = symbol) {
     /** Add, but when arity is 1 then this just returns the value of its argument. */

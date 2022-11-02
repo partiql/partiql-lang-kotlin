@@ -398,7 +398,6 @@ class NaturalExprValueComparatorsTest : EvaluatorTestBase() {
         runEvaluatorTestCase(
             query = "$left = $right",
             expectedResult = "true",
-            excludeLegacySerializerAssertions = true,
             expectedResultFormat = ExpectedResultFormat.ION
         )
     }
@@ -427,7 +426,6 @@ class NaturalExprValueComparatorsTest : EvaluatorTestBase() {
                 "\$partiql_missing::null"
             else
                 "null",
-            excludeLegacySerializerAssertions = true,
             expectedResultFormat = ExpectedResultFormat.ION
         )
     }

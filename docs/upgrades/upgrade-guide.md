@@ -1,4 +1,4 @@
-# `partiql-lang-kotlin` Version Migration Guide
+# `partiql-lang-kotlin` Version Upgrade Guide
 
 (Note: this folder's documents will likely be converted to a set of wikis on https://github.com/partiql/partiql-lang-kotlin/wiki
 with each major version bump on a separate wiki page.
@@ -17,24 +17,24 @@ build-related changes)
 The [CHANGELOG](https://github.com/partiql/partiql-lang-kotlin/blob/main/CHANGELOG.md) can also be viewed to see changes
 between releases and also includes a section on features yet to be released (see [Unreleased](https://github.com/partiql/partiql-lang-kotlin/blob/main/CHANGELOG.md#unreleased)).
 
-The repo, [test-partiql-version-migration](https://github.com/alancai98/test-partiql-version-migration), hosts all the 
-example migration code between major versions.
+The repo, [test-partiql-version-upgrade](https://github.com/alancai98/test-partiql-version-migration), hosts all the 
+example upgrade code between major versions.
 TODO: as part of [partiql-lang-kotlin#692](https://github.com/partiql/partiql-lang-kotlin/issues/692), move the repo
 under the `partiql` GitHub organization (either as submodule or as a separate repo).
 
 ---
 
-## To create a new migration guide
+## To create a new upgrade guide
 1. Identify the previous version (call this `vA`) and the new version (call this `vB`)
 2. Ensure `vA` and `vB` are published to Maven
-3. Make a copy of the `vA-to-vB-migration-template.md` and fill in relevant sections from the `CHANGELOG` for versions
+3. Make a copy of the `vA-to-vB-upgrade-template.md` and fill in relevant sections from the `CHANGELOG` for versions
 `vA` and `vB`
-4. Within the `version-migration` directory, make a copy of the `vA-to-vB-migration-template` directory
+4. Within the `version-upgrade` directory, make a copy of the `vA-to-vB-upgrade-template` directory
 5. Update `examples`'s `build.gradle` partiql-lang-kotlin version to `vA`
 6. Update `migrated-examples`'s `build.gradle` partiql-lang-kotlin version to `vB`
 7. In `settings.gradle`, update to include the added Gradle projects
 ```
-'version-migration:vA-to-vB-migration:examples',
-'version-migration:vA-to-vB-migration:migrated-examples'
+'version-upgrade:vA-to-vB-upgrade:examples',
+'version-upgrade:vA-to-vB-upgrade:migrated-examples'
 ```
-8. Add the relevant migration examples to the `BreakingChanges.kt` file
+8. Add the relevant upgrade examples to the `BreakingChanges.kt` file

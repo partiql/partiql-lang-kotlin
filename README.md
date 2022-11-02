@@ -16,7 +16,7 @@ This repository contains an embeddable reference interpreter, test framework, an
 ## About
 
 Check out the [PartiQL Lang Kotlin Wiki](https://github.com/partiql/partiql-lang-kotlin/wiki) for documentation,
-tutorials, migration guides, and more!
+tutorials, upgrade guides, and more!
 
 ## Status
 

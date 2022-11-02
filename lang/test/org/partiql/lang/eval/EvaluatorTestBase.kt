@@ -33,7 +33,6 @@ import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestAdapter
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestCase
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestTarget
 import org.partiql.lang.eval.evaluatortestframework.ExpectedResultFormat
-import org.partiql.lang.eval.evaluatortestframework.LegacySerializerTestAdapter
 import org.partiql.lang.eval.evaluatortestframework.MultipleTestAdapter
 import org.partiql.lang.eval.evaluatortestframework.PartiQLCompilerPipelineFactory
 import org.partiql.lang.eval.evaluatortestframework.PartiqlAstExprNodeRoundTripAdapter
@@ -52,7 +51,6 @@ abstract class EvaluatorTestBase : TestBase() {
             PipelineEvaluatorTestAdapter(PlannerPipelineFactory()),
             PipelineEvaluatorTestAdapter(PartiQLCompilerPipelineFactory()),
             PartiqlAstExprNodeRoundTripAdapter(),
-            LegacySerializerTestAdapter(),
             AstRewriterBaseTestAdapter()
         )
     )
@@ -74,7 +72,6 @@ abstract class EvaluatorTestBase : TestBase() {
         session: EvaluationSession = EvaluationSession.standard(),
         expectedResult: String,
         expectedPermissiveModeResult: String = expectedResult,
-        excludeLegacySerializerAssertions: Boolean = false,
         expectedResultFormat: ExpectedResultFormat = ExpectedResultFormat.ION_WITHOUT_BAG_AND_MISSING_ANNOTATIONS,
         includePermissiveModeTest: Boolean = true,
         target: EvaluatorTestTarget = EvaluatorTestTarget.ALL_PIPELINES,
@@ -87,7 +84,6 @@ abstract class EvaluatorTestBase : TestBase() {
             expectedResult = expectedResult,
             expectedPermissiveModeResult = expectedPermissiveModeResult,
             expectedResultFormat = expectedResultFormat,
-            excludeLegacySerializerAssertions = excludeLegacySerializerAssertions,
             implicitPermissiveModeTest = includePermissiveModeTest,
             target = target,
             compileOptionsBuilderBlock = compileOptionsBuilderBlock,
@@ -115,7 +111,6 @@ abstract class EvaluatorTestBase : TestBase() {
         expectedErrorContext: PropertyValueMap? = null,
         expectedPermissiveModeResult: String? = null,
         expectedInternalFlag: Boolean? = null,
-        excludeLegacySerializerAssertions: Boolean = false,
         compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit = { },
         compileOptionsBuilderBlock: CompileOptions.Builder.() -> Unit = { },
         addtionalExceptionAssertBlock: (SqlException) -> Unit = { },
@@ -129,12 +124,11 @@ abstract class EvaluatorTestBase : TestBase() {
             expectedErrorContext = expectedErrorContext,
             expectedInternalFlag = expectedInternalFlag,
             expectedPermissiveModeResult = expectedPermissiveModeResult,
-            excludeLegacySerializerAssertions = excludeLegacySerializerAssertions,
             implicitPermissiveModeTest = implicitPermissiveModeTest,
+            additionalExceptionAssertBlock = addtionalExceptionAssertBlock,
             targetPipeline = target,
             compileOptionsBuilderBlock = compileOptionsBuilderBlock,
             compilerPipelineBuilderBlock = compilerPipelineBuilderBlock,
-            additionalExceptionAssertBlock = addtionalExceptionAssertBlock,
         )
 
         testHarness.runEvaluatorErrorTestCase(tc, session)

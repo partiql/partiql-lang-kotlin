@@ -30,7 +30,4 @@ interface Parser {
 
     @Deprecated("Please use parseAstStatement() instead--ExprNode is deprecated.")
     fun parseExprNode(source: String): ExprNode
-
-    @Deprecated("Please use parseAstStatement() instead--the return value can be deserialized to backward-compatible IonSexp.")
-    fun parse(source: String): IonSexp
 }

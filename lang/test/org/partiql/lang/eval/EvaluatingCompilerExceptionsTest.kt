@@ -144,8 +144,8 @@ class EvaluatingCompilerExceptionsTest : EvaluatorTestBase() {
         // Same query as previous test--but DO NOT throw exception this time because of UndefinedVariableBehavior.MISSING
         runEvaluatorTestCase(
             sqlWithUndefinedVariable, expectedResult = "[null]",
-            compileOptionsBuilderBlock = { undefinedVariable(UndefinedVariableBehavior.MISSING) },
-            target = EvaluatorTestTarget.COMPILER_PIPELINE
+            target = EvaluatorTestTarget.COMPILER_PIPELINE,
+            compileOptionsBuilderBlock = { undefinedVariable(UndefinedVariableBehavior.MISSING) }
         )
 
     private val sqlWithUndefinedQuotedVariable = "SELECT VALUE \"y\" FROM << 'el1' >> AS x"
@@ -165,8 +165,8 @@ class EvaluatingCompilerExceptionsTest : EvaluatorTestBase() {
         // Same query as previous test--but DO NOT throw exception this time because of UndefinedVariableBehavior.MISSING
         runEvaluatorTestCase(
             sqlWithUndefinedQuotedVariable, expectedResult = "[null]",
-            compileOptionsBuilderBlock = { undefinedVariable(UndefinedVariableBehavior.MISSING) },
-            target = EvaluatorTestTarget.COMPILER_PIPELINE
+            target = EvaluatorTestTarget.COMPILER_PIPELINE,
+            compileOptionsBuilderBlock = { undefinedVariable(UndefinedVariableBehavior.MISSING) }
         )
 
     @Test

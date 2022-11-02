@@ -30,14 +30,7 @@ class SqlParserJoinTest : SqlParserTestBase() {
 
     @Test
     fun selectRightJoin() = assertExpression(
-        "SELECT x FROM stuff s RIGHT CROSS JOIN foo f",
-        """(select
-         (project (list (id x case_insensitive)))
-         (from
-           (right_join
-             (as s (id stuff case_insensitive))
-             (as f (id foo case_insensitive)))))
-        """
+        "SELECT x FROM stuff s RIGHT CROSS JOIN foo f"
     ) {
         selectWithOneJoin(
             joinType = PartiqlAst.JoinType.Right(),
@@ -47,15 +40,7 @@ class SqlParserJoinTest : SqlParserTestBase() {
 
     @Test
     fun selectFullOuterJoinOn() = assertExpression(
-        "SELECT x FROM stuff s FULL OUTER JOIN foo f ON s = f",
-        """(select
-             (project (list (id x case_insensitive)))
-             (from
-               (outer_join
-                 (as s (id stuff case_insensitive))
-                 (as f (id foo case_insensitive))
-                  (= (id s case_insensitive) (id f case_insensitive)))))
-        """
+        "SELECT x FROM stuff s FULL OUTER JOIN foo f ON s = f"
     ) {
         selectWithOneJoin(
             joinType = full(),
@@ -65,19 +50,7 @@ class SqlParserJoinTest : SqlParserTestBase() {
 
     @Test
     fun selectSingleJoinParensTest() = assertExpression(
-        "SELECT x FROM (A INNER JOIN B ON A = B)",
-        """(select
-            (project
-                (list
-                    (id x case_insensitive)))
-            (from
-                (inner_join
-                    (id A case_insensitive)
-                    (id B case_insensitive)
-                    (=
-                        (id A case_insensitive)
-                        (id B case_insensitive)))))
-        """
+        "SELECT x FROM (A INNER JOIN B ON A = B)"
     ) {
         select(
             project = projectX,
@@ -93,19 +66,7 @@ class SqlParserJoinTest : SqlParserTestBase() {
 
     @Test
     fun selectSingleJoinMultiParensTest() = assertExpression(
-        "SELECT x FROM (((A INNER JOIN B ON A = B)))",
-        """(select
-            (project
-                (list
-                    (id x case_insensitive)))
-            (from
-                (inner_join
-                    (id A case_insensitive)
-                    (id B case_insensitive)
-                    (=
-                        (id A case_insensitive)
-                        (id B case_insensitive)))))
-        """
+        "SELECT x FROM (((A INNER JOIN B ON A = B)))"
     ) {
         select(
             project = projectX,
@@ -121,24 +82,7 @@ class SqlParserJoinTest : SqlParserTestBase() {
 
     @Test
     fun selectTwoJoinsNaturalOrderParensTest() = assertExpression(
-        "SELECT x FROM (A INNER JOIN B ON A = B) INNER JOIN C ON B = C",
-        """(select
-            (project
-                (list
-                    (id x case_insensitive)))
-            (from
-                (inner_join
-                    (inner_join
-                        (id A case_insensitive)
-                        (id B case_insensitive)
-                        (=
-                            (id A case_insensitive)
-                            (id B case_insensitive)))
-                    (id C case_insensitive)
-                    (=
-                        (id B case_insensitive)
-                        (id C case_insensitive)))))
-        """
+        "SELECT x FROM (A INNER JOIN B ON A = B) INNER JOIN C ON B = C"
     ) {
         select(
             project = projectX,
@@ -160,23 +104,6 @@ class SqlParserJoinTest : SqlParserTestBase() {
     @Test
     fun selectTwoJoinsSpecifiedOrderParensTest() = assertExpression(
         "SELECT x FROM A INNER JOIN (B INNER JOIN C ON B = C) ON A = B",
-        """(select
-            (project
-                (list
-                    (id x case_insensitive)))
-            (from
-                (inner_join
-                    (id A case_insensitive)
-                    (inner_join
-                        (id B case_insensitive)
-                        (id C case_insensitive)
-                        (=
-                            (id B case_insensitive)
-                            (id C case_insensitive)))
-                    (=
-                        (id A case_insensitive)
-                        (id B case_insensitive)))))
-        """,
         targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
     ) {
         select(
@@ -199,28 +126,6 @@ class SqlParserJoinTest : SqlParserTestBase() {
     @Test
     fun selectThreeJoinsSpecifiedOrderParensTest() = assertExpression(
         "SELECT x FROM A INNER JOIN (B INNER JOIN (C INNER JOIN D ON C = D) ON B = C) ON A = B",
-        """(select
-            (project
-                (list
-                    (id x case_insensitive)))
-            (from
-                (inner_join
-                    (id A case_insensitive)
-                    (inner_join
-                        (id B case_insensitive)
-                        (inner_join
-                            (id C case_insensitive)
-                            (id D case_insensitive)
-                            (=
-                                (id C case_insensitive)
-                                (id D case_insensitive)))
-                        (=
-                            (id B case_insensitive)
-                            (id C case_insensitive)))
-                    (=
-                        (id A case_insensitive)
-                        (id B case_insensitive)))))
-        """,
         targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
     ) {
         select(
@@ -247,17 +152,7 @@ class SqlParserJoinTest : SqlParserTestBase() {
 
     @Test
     fun selectLiteralWrappedInParensTest() = assertExpression(
-        "SELECT x FROM A INNER JOIN (1) ON true",
-        """(select
-            (project
-                (list
-                    (id x case_insensitive)))
-            (from
-                (inner_join
-                    (id A case_insensitive)
-                    (lit 1)
-                    (lit true))))
-        """
+        "SELECT x FROM A INNER JOIN (1) ON true"
     ) {
         select(
             project = projectX,
@@ -273,22 +168,7 @@ class SqlParserJoinTest : SqlParserTestBase() {
 
     @Test
     fun selectSubqueryWrappedInParensTest() = assertExpression(
-        "SELECT x FROM A INNER JOIN (SELECT x FROM 1) ON true",
-        """(select
-            (project
-                (list
-                    (id x case_insensitive)))
-            (from
-                (inner_join
-                    (id A case_insensitive)
-                    (select
-                        (project
-                            (list
-                                (id x case_insensitive)))
-                        (from
-                            (lit 1)))
-                    (lit true))))
-        """
+        "SELECT x FROM A INNER JOIN (SELECT x FROM 1) ON true"
     ) {
         select(
             project = projectX,
@@ -339,48 +219,14 @@ class SqlParserJoinTest : SqlParserTestBase() {
 
     @Test
     fun selectJoins() = assertExpression(
-        "SELECT x FROM a, b CROSS JOIN c LEFT JOIN d ON e RIGHT OUTER CROSS JOIN f OUTER JOIN g ON h",
-        """(select
-             (project (list (id x case_insensitive)))
-             (from
-               (outer_join
-                 (right_join
-                   (left_join
-                     (inner_join
-                       (inner_join
-                         (id a case_insensitive)
-                         (id b case_insensitive))
-                       (id c case_insensitive))
-                     (id d case_insensitive)
-                     (id e case_insensitive))
-                   (id f case_insensitive))
-                 (id g case_insensitive)
-                 (id h case_insensitive))))
-        """
+        "SELECT x FROM a, b CROSS JOIN c LEFT JOIN d ON e RIGHT OUTER CROSS JOIN f OUTER JOIN g ON h"
     ) {
         selectWithFromSource(deeplyNestedJoins)
     }
 
     @Test
     fun selectJoins2() = assertExpression(
-        "SELECT x FROM a INNER CROSS JOIN b CROSS JOIN c LEFT JOIN d ON e RIGHT OUTER CROSS JOIN f OUTER JOIN g ON h",
-        """(select
-             (project (list (id x case_insensitive)))
-             (from
-               (outer_join
-                 (right_join
-                   (left_join
-                     (inner_join
-                       (inner_join
-                         (id a case_insensitive)
-                         (id b case_insensitive))
-                       (id c case_insensitive))
-                     (id d case_insensitive)
-                     (id e case_insensitive))
-                   (id f case_insensitive))
-                 (id g case_insensitive)
-                 (id h case_insensitive))))
-        """
+        "SELECT x FROM a INNER CROSS JOIN b CROSS JOIN c LEFT JOIN d ON e RIGHT OUTER CROSS JOIN f OUTER JOIN g ON h"
     ) {
         selectWithFromSource(deeplyNestedJoins)
     }
