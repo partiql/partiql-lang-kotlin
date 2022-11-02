@@ -35,6 +35,6 @@ under the `partiql` GitHub organization (either as submodule or as a separate re
 7. In `settings.gradle`, update to include the added Gradle projects
 ```
 'version-upgrade:vA-to-vB-upgrade:examples',
-'version-upgrade:vA-to-vB-upgrade:migrated-examples'
+'version-upgrade:vA-to-vB-upgrade:upgraded-examples'
 ```
 8. Add the relevant upgrade examples to the `BreakingChanges.kt` file
