@@ -15,7 +15,7 @@ import org.partiql.lang.ast.passes.SemanticProblemDetails
 import org.partiql.lang.ast.passes.inference.cast
 import org.partiql.lang.ast.passes.inference.filterNullMissing
 import org.partiql.lang.ast.passes.inference.isNullOrMissing
-import org.partiql.lang.ast.passes.inference.isNumeric
+import org.partiql.lang.ast.passes.inference.isNumber
 import org.partiql.lang.ast.passes.inference.isText
 import org.partiql.lang.ast.passes.inference.isUnknown
 import org.partiql.lang.domains.PartiqlAst
@@ -348,9 +348,9 @@ internal class StaticTypeInferenceVisitorTransform(
             val processedNode = super.transformExprPos(node) as PartiqlAst.Expr.Pos
             val argStaticType = processedNode.expr.getStaticType()
 
-            return when (hasValidOperandTypes(listOf(argStaticType), { it.isNumeric() }, "+", processedNode.metas)) {
+            return when (hasValidOperandTypes(listOf(argStaticType), { it.isNumber() }, "+", processedNode.metas)) {
             true -> computeReturnTypeForUnary(argStaticType, ::inferUnaryArithmeticOp)
-            false -> StaticType.NUMERIC // continuation type to prevent incompatible types and unknown errors from propagating
+            false -> StaticType.NUMBER // continuation type to prevent incompatible types and unknown errors from propagating
         }.let { processedNode.withStaticType(it) }
         }
 
@@ -358,9 +358,9 @@ internal class StaticTypeInferenceVisitorTransform(
             val processedNode = super.transformExprNeg(node) as PartiqlAst.Expr.Neg
             val argStaticType = processedNode.expr.getStaticType()
 
-            return when (hasValidOperandTypes(listOf(argStaticType), { it.isNumeric() }, "-", processedNode.metas)) {
+            return when (hasValidOperandTypes(listOf(argStaticType), { it.isNumber() }, "-", processedNode.metas)) {
             true -> computeReturnTypeForUnary(argStaticType, ::inferUnaryArithmeticOp)
-            false -> StaticType.NUMERIC // continuation type to prevent incompatible types and unknown errors from propagating
+            false -> StaticType.NUMBER // continuation type to prevent incompatible types and unknown errors from propagating
         }.let { processedNode.withStaticType(it) }
         }
 
@@ -444,9 +444,9 @@ internal class StaticTypeInferenceVisitorTransform(
             val processedNode = super.transformExprPlus(node) as PartiqlAst.Expr.Plus
             val argsStaticType = processedNode.operands.getStaticType()
 
-            return when (hasValidOperandTypes(argsStaticType, { it.isNumeric() }, "+", processedNode.metas)) {
+            return when (hasValidOperandTypes(argsStaticType, { it.isNumber() }, "+", processedNode.metas)) {
             true -> computeReturnTypeForNAry(argsStaticType, ::inferBinaryArithmeticOp)
-            false -> StaticType.NUMERIC // continuation type to prevent incompatible types and unknown errors from propagating
+            false -> StaticType.NUMBER // continuation type to prevent incompatible types and unknown errors from propagating
         }.let { processedNode.withStaticType(it) }
         }
 
@@ -454,9 +454,9 @@ internal class StaticTypeInferenceVisitorTransform(
             val processedNode = super.transformExprMinus(node) as PartiqlAst.Expr.Minus
             val argsStaticType = processedNode.operands.getStaticType()
 
-            return when (hasValidOperandTypes(argsStaticType, { it.isNumeric() }, "-", processedNode.metas)) {
+            return when (hasValidOperandTypes(argsStaticType, { it.isNumber() }, "-", processedNode.metas)) {
             true -> computeReturnTypeForNAry(argsStaticType, ::inferBinaryArithmeticOp)
-            false -> StaticType.NUMERIC // continuation type to prevent incompatible types and unknown errors from propagating
+            false -> StaticType.NUMBER // continuation type to prevent incompatible types and unknown errors from propagating
         }.let { processedNode.withStaticType(it) }
         }
 
@@ -464,9 +464,9 @@ internal class StaticTypeInferenceVisitorTransform(
             val processedNode = super.transformExprTimes(node) as PartiqlAst.Expr.Times
             val argsStaticType = processedNode.operands.getStaticType()
 
-            return when (hasValidOperandTypes(argsStaticType, { it.isNumeric() }, "*", processedNode.metas)) {
+            return when (hasValidOperandTypes(argsStaticType, { it.isNumber() }, "*", processedNode.metas)) {
             true -> computeReturnTypeForNAry(argsStaticType, ::inferBinaryArithmeticOp)
-            false -> StaticType.NUMERIC // continuation type to prevent incompatible types and unknown errors from propagating
+            false -> StaticType.NUMBER // continuation type to prevent incompatible types and unknown errors from propagating
         }.let { processedNode.withStaticType(it) }
         }
 
@@ -474,9 +474,9 @@ internal class StaticTypeInferenceVisitorTransform(
             val processedNode = super.transformExprDivide(node) as PartiqlAst.Expr.Divide
             val argsStaticType = processedNode.operands.getStaticType()
 
-            return when (hasValidOperandTypes(argsStaticType, { it.isNumeric() }, "/", processedNode.metas)) {
+            return when (hasValidOperandTypes(argsStaticType, { it.isNumber() }, "/", processedNode.metas)) {
             true -> computeReturnTypeForNAry(argsStaticType, ::inferBinaryArithmeticOp)
-            false -> StaticType.NUMERIC // continuation type to prevent incompatible types and unknown errors from propagating
+            false -> StaticType.NUMBER // continuation type to prevent incompatible types and unknown errors from propagating
         }.let { processedNode.withStaticType(it) }
         }
 
@@ -484,9 +484,9 @@ internal class StaticTypeInferenceVisitorTransform(
             val processedNode = super.transformExprModulo(node) as PartiqlAst.Expr.Modulo
             val argsStaticType = processedNode.operands.getStaticType()
 
-            return when (hasValidOperandTypes(argsStaticType, { it.isNumeric() }, "%", processedNode.metas)) {
+            return when (hasValidOperandTypes(argsStaticType, { it.isNumber() }, "%", processedNode.metas)) {
             true -> computeReturnTypeForNAry(argsStaticType, ::inferBinaryArithmeticOp)
-            false -> StaticType.NUMERIC // continuation type to prevent incompatible types and unknown errors from propagating
+            false -> StaticType.NUMBER // continuation type to prevent incompatible types and unknown errors from propagating
         }.let { processedNode.withStaticType(it) }
         }
 
@@ -845,7 +845,7 @@ internal class StaticTypeInferenceVisitorTransform(
                 }
             }
 
-            fun StaticType.isUnknownOrNumeric() = isUnknown() || isNumeric()
+            fun StaticType.isUnknownOrNumeric() = isUnknown() || isNumber()
 
             return when (funcName) {
                 "count" -> StaticType.INT
@@ -853,8 +853,8 @@ internal class StaticTypeInferenceVisitorTransform(
                 "max", "min" -> StaticType.unionOf(elementTypes.convertMissingToNull())
                 "sum" -> when {
                     elementTypes.none { it.isUnknownOrNumeric() } -> {
-                        handleInvalidInputTypeForAggFun(sourceLocation, funcName, elementType, StaticType.unionOf(StaticType.NULL_OR_MISSING, StaticType.NUMERIC).flatten())
-                        StaticType.unionOf(StaticType.NULL, StaticType.NUMERIC)
+                        handleInvalidInputTypeForAggFun(sourceLocation, funcName, elementType, StaticType.unionOf(StaticType.NULL_OR_MISSING, StaticType.NUMBER).flatten())
+                        StaticType.unionOf(StaticType.NULL, StaticType.NUMBER)
                     }
                     // If any single type is mismatched, We should add MISSING to the result types set to indicate there is a chance of data mismatch error
                     elementTypes.any { !it.isUnknownOrNumeric() } -> StaticType.unionOf(
@@ -866,13 +866,13 @@ internal class StaticTypeInferenceVisitorTransform(
                 // "avg" returns DECIMAL or NULL
                 "avg" -> when {
                     elementTypes.none { it.isUnknownOrNumeric() } -> {
-                        handleInvalidInputTypeForAggFun(sourceLocation, funcName, elementType, StaticType.unionOf(StaticType.NULL_OR_MISSING, StaticType.NUMERIC).flatten())
+                        handleInvalidInputTypeForAggFun(sourceLocation, funcName, elementType, StaticType.unionOf(StaticType.NULL_OR_MISSING, StaticType.NUMBER).flatten())
                         StaticType.unionOf(StaticType.NULL, StaticType.DECIMAL)
                     }
                     else -> StaticType.unionOf(
                         mutableSetOf<SingleType>().apply {
                             if (elementTypes.any { it.isUnknown() }) { add(StaticType.NULL) }
-                            if (elementTypes.any { it.isNumeric() }) { add(StaticType.DECIMAL) }
+                            if (elementTypes.any { it.isNumber() }) { add(StaticType.DECIMAL) }
                             // If any single type is mismatched, We should add MISSING to the result types set to indicate there is a chance of data mismatch error
                             if (elementTypes.any { !it.isUnknownOrNumeric() }) { add(StaticType.MISSING) }
                         }

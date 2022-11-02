@@ -78,19 +78,19 @@ class MathFunctionsTest : EvaluatorTestBase() {
         checkInvalidArgType(
             funcName = "ceil",
             args = listOf(
-                Argument(1, StaticType.NUMERIC, ")")
+                Argument(1, StaticType.NUMBER, ")")
             )
         )
         checkInvalidArgType(
             funcName = "ceiling",
             args = listOf(
-                Argument(1, StaticType.NUMERIC, ")")
+                Argument(1, StaticType.NUMBER, ")")
             )
         )
         checkInvalidArgType(
             funcName = "floor",
             args = listOf(
-                Argument(1, StaticType.NUMERIC, ")")
+                Argument(1, StaticType.NUMBER, ")")
             )
         )
     }

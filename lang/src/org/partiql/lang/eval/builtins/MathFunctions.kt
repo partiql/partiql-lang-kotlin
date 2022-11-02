@@ -51,8 +51,8 @@ private class UnaryNumeric(
 
     override val signature = FunctionSignature(
         identifier,
-        listOf(StaticType.NUMERIC),
-        returnType = StaticType.NUMERIC,
+        listOf(StaticType.NUMBER),
+        returnType = StaticType.NUMBER,
     )
 
     override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue =

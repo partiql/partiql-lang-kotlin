@@ -8,7 +8,7 @@ import org.partiql.lang.ast.passes.SemanticProblemDetails
 import org.partiql.lang.ast.passes.inference.StaticTypeInferencer
 import org.partiql.lang.ast.passes.inference.StaticTypeInferencer.InferenceResult
 import org.partiql.lang.ast.passes.inference.isLob
-import org.partiql.lang.ast.passes.inference.isNumeric
+import org.partiql.lang.ast.passes.inference.isNumber
 import org.partiql.lang.ast.passes.inference.isText
 import org.partiql.lang.ast.passes.inference.isUnknown
 import org.partiql.lang.domains.PartiqlAst
@@ -44,7 +44,7 @@ import org.partiql.lang.types.StaticType.Companion.LIST
 import org.partiql.lang.types.StaticType.Companion.MISSING
 import org.partiql.lang.types.StaticType.Companion.NULL
 import org.partiql.lang.types.StaticType.Companion.NULL_OR_MISSING
-import org.partiql.lang.types.StaticType.Companion.NUMERIC
+import org.partiql.lang.types.StaticType.Companion.NUMBER
 import org.partiql.lang.types.StaticType.Companion.SEXP
 import org.partiql.lang.types.StaticType.Companion.STRING
 import org.partiql.lang.types.StaticType.Companion.STRUCT
@@ -202,8 +202,8 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
 
         private val ALL_UNKNOWN_TYPES = listOf(NULL, MISSING, NULL_OR_MISSING)
         private val ALL_NON_UNKNOWN_TYPES = ALL_TYPES.filter { !it.isUnknown() }
-        private val ALL_NUMERIC_TYPES = ALL_NON_UNKNOWN_TYPES.filter { it.isNumeric() }
-        private val ALL_NON_NUMERIC_NON_UNKNOWN_TYPES = ALL_NON_UNKNOWN_TYPES.filter { !it.isNumeric() }
+        private val ALL_NUMERIC_TYPES = ALL_NON_UNKNOWN_TYPES.filter { it.isNumber() }
+        private val ALL_NON_NUMERIC_NON_UNKNOWN_TYPES = ALL_NON_UNKNOWN_TYPES.filter { !it.isNumber() }
         private val ALL_TEXT_TYPES = ALL_NON_UNKNOWN_TYPES.filter { it.isText() }
         private val ALL_NON_TEXT_NON_UNKNOWN_TYPES = ALL_NON_UNKNOWN_TYPES.filter { !it.isText() }
         private val ALL_NON_BOOL_NON_UNKNOWN_TYPES = ALL_NON_UNKNOWN_TYPES.filter { it !is BoolType }
@@ -214,7 +214,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
         // non-unknown [StaticType]s from ALL_TYPES that aren't numeric, text, or lobs
         // This will include all the container types, BOOL, and TIMESTAMP. These are only comparable to unknowns and
         // itself.
-        private val ALL_TYPES_ONLY_COMPARABLE_TO_SELF = ALL_NON_UNKNOWN_TYPES.filter { !it.isNumeric() && !it.isText() && !it.isLob() }
+        private val ALL_TYPES_ONLY_COMPARABLE_TO_SELF = ALL_NON_UNKNOWN_TYPES.filter { !it.isNumber() && !it.isText() && !it.isLob() }
 
         enum class OpType(vararg ops: String) {
             ARITHMETIC("+", "-", "*", "/", "%"),
@@ -7473,7 +7473,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
                             createInvalidArgumentTypeForFunctionError(
                                 sourceLocation = SourceLocationMeta(1L, 1L, 3L),
                                 functionName = "sum",
-                                expectedArgType = unionOf(MISSING, NULL, NUMERIC).flatten(),
+                                expectedArgType = unionOf(MISSING, NULL, NUMBER).flatten(),
                                 actualType = STRING
                             )
                         )
@@ -7489,7 +7489,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
                             createInvalidArgumentTypeForFunctionError(
                                 sourceLocation = SourceLocationMeta(1L, 1L, 3L),
                                 functionName = "avg",
-                                expectedArgType = unionOf(MISSING, NULL, NUMERIC).flatten(),
+                                expectedArgType = unionOf(MISSING, NULL, NUMBER).flatten(),
                                 actualType = STRING
                             )
                         )

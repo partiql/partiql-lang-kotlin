@@ -5,7 +5,7 @@
 package org.partiql.lang.types
 
 import org.partiql.lang.ast.passes.inference.isLob
-import org.partiql.lang.ast.passes.inference.isNumeric
+import org.partiql.lang.ast.passes.inference.isNumber
 import org.partiql.lang.ast.passes.inference.isText
 import org.partiql.lang.ast.passes.inference.isUnknown
 import org.partiql.lang.eval.ExprValue
@@ -54,7 +54,7 @@ sealed class StaticType {
         @JvmField val INT: IntType = IntType(IntType.IntRangeConstraint.UNCONSTRAINED)
         @JvmField val FLOAT: FloatType = FloatType()
         @JvmField val DECIMAL: DecimalType = DecimalType()
-        @JvmField val NUMERIC: StaticType = unionOf(INT2, INT4, INT8, INT, FLOAT, DECIMAL)
+        @JvmField val NUMBER: StaticType = unionOf(INT2, INT4, INT8, INT, FLOAT, DECIMAL)
         @JvmField val DATE: DateType = DateType()
         @JvmField val TIME: TimeType = TimeType()
         @JvmField val TIMESTAMP: TimestampType = TimestampType()
@@ -291,7 +291,7 @@ sealed class SingleType : StaticType() {
             return true
         }
         return when (other) {
-            is SingleType -> (this.isNumeric() && other.isNumeric()) ||
+            is SingleType -> (this.isNumber() && other.isNumber()) ||
                 (this.isText() && other.isText()) ||
                 (this.isLob() && other.isLob()) ||
                 (this.runtimeType == other.runtimeType)

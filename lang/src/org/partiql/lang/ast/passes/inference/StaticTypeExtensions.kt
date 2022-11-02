@@ -20,7 +20,7 @@ import org.partiql.lang.types.SymbolType
 import org.partiql.lang.types.TimestampType
 
 internal fun StaticType.isNullOrMissing(): Boolean = (this is NullType || this is MissingType)
-internal fun StaticType.isNumeric(): Boolean = (this is IntType || this is FloatType || this is DecimalType)
+internal fun StaticType.isNumber(): Boolean = (this is IntType || this is FloatType || this is DecimalType)
 internal fun StaticType.isText(): Boolean = (this is SymbolType || this is StringType)
 internal fun StaticType.isLob(): Boolean = (this is BlobType || this is ClobType)
 internal fun StaticType.isUnknown(): Boolean = (this.isNullOrMissing() || this == StaticType.NULL_OR_MISSING)
@@ -87,7 +87,7 @@ internal fun StaticType.cast(targetType: StaticType): StaticType {
         else -> {
             when (targetType) {
                 is BoolType -> when {
-                    this is BoolType || this.isNumeric() || this.isText() -> return targetType
+                    this is BoolType || this.isNumber() || this.isText() -> return targetType
                 }
                 is IntType -> when {
                     this is BoolType -> return targetType
@@ -145,8 +145,8 @@ internal fun StaticType.cast(targetType: StaticType): StaticType {
                 }
                 is FloatType -> when {
                     this is BoolType -> return targetType
-                    // Conversion to float will always succeed for numeric types
-                    this.isNumeric() -> return targetType
+                    // Conversion to float will always succeed for number types
+                    this.isNumber() -> return targetType
                     this.isText() -> return StaticType.unionOf(targetType, StaticType.MISSING)
                 }
                 is DecimalType -> when {
@@ -186,7 +186,7 @@ internal fun StaticType.cast(targetType: StaticType): StaticType {
                         }
                     }
 
-                    this is BoolType || this.isNumeric() -> return targetType
+                    this is BoolType || this.isNumber() -> return targetType
                     this.isText() -> return StaticType.unionOf(targetType, StaticType.MISSING)
                 }
                 is TimestampType -> when {
@@ -194,7 +194,7 @@ internal fun StaticType.cast(targetType: StaticType): StaticType {
                     this.isText() -> return StaticType.unionOf(targetType, StaticType.MISSING)
                 }
                 is StringType, is SymbolType -> when {
-                    this.isNumeric() || this.isText() -> return targetType
+                    this.isNumber() || this.isText() -> return targetType
                     this is BoolType || this is TimestampType -> return targetType
                 }
                 is ClobType -> when (this) {
