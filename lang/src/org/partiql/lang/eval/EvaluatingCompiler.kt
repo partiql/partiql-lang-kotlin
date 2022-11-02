@@ -2043,7 +2043,7 @@ internal class EvaluatingCompiler(
                     internal = true
                 )
             val uniqueName =
-                (alias.metas.toPartiQlMetaContainer().find(UniqueNameMeta.TAG) as UniqueNameMeta?)?.uniqueName
+                (alias.metas.find(UniqueNameMeta.TAG) as UniqueNameMeta?)?.uniqueName
 
             CompiledGroupByItem(alias.text.exprValue(), uniqueName, compileAstExpr(it.expr))
         }

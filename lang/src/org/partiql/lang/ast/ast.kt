@@ -19,6 +19,7 @@ package org.partiql.lang.ast
 
 import com.amazon.ion.IonType
 import com.amazon.ion.IonValue
+import com.amazon.ionelement.api.MetaContainer
 import org.partiql.lang.util.interruptibleMap
 import org.partiql.lang.util.stringValue
 import java.util.Arrays

@@ -22,7 +22,6 @@ import com.amazon.ionelement.api.toIonValue
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.ast.UNKNOWN_SOURCE_LOCATION
 import org.partiql.lang.ast.sourceLocation
-import org.partiql.lang.ast.toPartiQlMetaContainer
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.domains.staticType
 import org.partiql.lang.domains.toBindingCase

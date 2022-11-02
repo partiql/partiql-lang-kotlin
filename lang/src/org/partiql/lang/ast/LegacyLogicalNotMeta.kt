@@ -38,6 +38,5 @@ class LegacyLogicalNotMeta private constructor() : Meta {
         const val TAG = "\$legacy_logical_not"
 
         val instance = LegacyLogicalNotMeta()
-        val deserializer = MemoizedMetaDeserializer(TAG, instance)
     }
 }

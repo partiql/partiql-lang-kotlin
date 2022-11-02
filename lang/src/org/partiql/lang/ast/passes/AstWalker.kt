@@ -14,6 +14,7 @@
 @file:Suppress("DEPRECATION") // We don't need warnings about ExprNode deprecation.
 package org.partiql.lang.ast.passes
 
+import com.amazon.ionelement.api.MetaContainer
 import org.partiql.lang.ast.AssignmentOp
 import org.partiql.lang.ast.CallAgg
 import org.partiql.lang.ast.Coalesce
@@ -37,7 +38,6 @@ import org.partiql.lang.ast.InsertOp
 import org.partiql.lang.ast.InsertValueOp
 import org.partiql.lang.ast.Literal
 import org.partiql.lang.ast.LiteralMissing
-import org.partiql.lang.ast.MetaContainer
 import org.partiql.lang.ast.NAry
 import org.partiql.lang.ast.NullIf
 import org.partiql.lang.ast.OnConflict

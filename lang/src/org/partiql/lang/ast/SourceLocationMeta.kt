@@ -16,13 +16,9 @@
 
 package org.partiql.lang.ast
 
-import com.amazon.ion.IonValue
 import com.amazon.ion.IonWriter
 import com.amazon.ionelement.api.metaOrNull
 import org.partiql.lang.util.IonWriterContext
-import org.partiql.lang.util.asIonStruct
-import org.partiql.lang.util.field
-import org.partiql.lang.util.longValue
 
 /**
  * Represents a specific location within a source file.
@@ -68,29 +64,9 @@ data class SourceLocationMeta(val lineNum: Long, val charOffset: Long, val lengt
 
     companion object {
         const val TAG = "\$source_location"
-        val deserializer = object : MetaDeserializer {
-            override val tag = TAG
-            override fun deserialize(sexp: IonValue): Meta {
-                val struct = sexp.asIonStruct()
-                val lineNum = struct.field("line_num").longValue()
-                val charOffset = struct.field("char_offset").longValue()
-                val length = struct.field("length").longValue()
-
-                return SourceLocationMeta(lineNum, charOffset, length)
-            }
-        }
     }
 }
 
 val UNKNOWN_SOURCE_LOCATION = SourceLocationMeta(-1, -1, -1)
 
-val PartiQlMetaContainer.sourceLocation: SourceLocationMeta? get() = find(SourceLocationMeta.TAG) as SourceLocationMeta?
 val IonElementMetaContainer.sourceLocation: SourceLocationMeta? get() = metaOrNull(SourceLocationMeta.TAG) as SourceLocationMeta?
-
-// TODO generalize this better against MetaContainer
-
-/** Retrieves the source locations as a container. */
-val PartiQlMetaContainer.sourceLocationContainer: PartiQlMetaContainer
-    get() = sourceLocation?.let {
-        metaContainerOf(it)
-    } ?: emptyMetaContainer

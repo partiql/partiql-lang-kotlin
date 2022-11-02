@@ -47,7 +47,6 @@ import org.partiql.lang.ast.LetSource
 import org.partiql.lang.ast.LetVariables
 import org.partiql.lang.ast.Literal
 import org.partiql.lang.ast.LiteralMissing
-import org.partiql.lang.ast.MetaContainer
 import org.partiql.lang.ast.NAry
 import org.partiql.lang.ast.NullIf
 import org.partiql.lang.ast.OnConflict
