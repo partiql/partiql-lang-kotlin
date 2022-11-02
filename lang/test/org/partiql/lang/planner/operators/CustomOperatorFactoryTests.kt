@@ -9,6 +9,7 @@ import org.partiql.lang.ION
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.eval.physical.EvaluatorState
 import org.partiql.lang.eval.physical.SetVariableFunc
+import org.partiql.lang.eval.physical.VariableBinding
 import org.partiql.lang.eval.physical.operators.FilterRelationalOperatorFactory
 import org.partiql.lang.eval.physical.operators.JoinRelationalOperatorFactory
 import org.partiql.lang.eval.physical.operators.LetRelationalOperatorFactory
@@ -19,7 +20,6 @@ import org.partiql.lang.eval.physical.operators.RelationExpression
 import org.partiql.lang.eval.physical.operators.RelationalOperatorKind
 import org.partiql.lang.eval.physical.operators.ScanRelationalOperatorFactory
 import org.partiql.lang.eval.physical.operators.ValueExpression
-import org.partiql.lang.eval.physical.operators.VariableBinding
 import org.partiql.lang.planner.PlannerPipeline
 import org.partiql.lang.planner.transforms.DEFAULT_IMPL
 import org.partiql.lang.planner.transforms.PLAN_VERSION_NUMBER
