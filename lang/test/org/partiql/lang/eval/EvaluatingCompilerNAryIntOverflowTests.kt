@@ -157,15 +157,15 @@ class EvaluatingCompilerNAryIntOverflowTests : EvaluatorTestBase() {
             query = tc.sqlUnderTest,
             expectedResult = tc.expectedPermissiveModeResult,
             implicitPermissiveModeTest = false,
+            target = EvaluatorTestTarget.COMPILER_PIPELINE,
+            // These tests requires support for globalTypeBindings and thus a static type inference pass
+            // which is not (yet) supported by `PlannerPipeline`
             compilerPipelineBuilderBlock = {
                 globalTypeBindings(defaultEnv.typeBindings)
                 compileOptions {
                     typingMode(TypingMode.PERMISSIVE)
                 }
-            },
-            // These tests requires support for globalTypeBindings and thus a static type inference pass
-            // which is not (yet) supported by `PlannerPipeline`
-            target = EvaluatorTestTarget.COMPILER_PIPELINE
+            }
         )
 
         runEvaluatorTestCase(etc, session)

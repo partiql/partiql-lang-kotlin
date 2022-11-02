@@ -22,8 +22,8 @@ class MakeDateEvaluationTest : EvaluatorTestBase() {
             query = testCase.source,
             expectedResult = testCase.expectedLegacyModeResult,
             expectedPermissiveModeResult = testCase.expectedPermissiveModeResult,
-            includePermissiveModeTest = false,
-            expectedResultFormat = ExpectedResultFormat.STRING
+            expectedResultFormat = ExpectedResultFormat.STRING,
+            includePermissiveModeTest = false
         )
 
     class MakeDatePassCases : ArgumentsProviderBase() {

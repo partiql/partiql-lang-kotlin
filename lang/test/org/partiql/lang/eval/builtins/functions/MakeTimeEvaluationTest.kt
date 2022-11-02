@@ -21,8 +21,8 @@ class MakeTimeEvaluationTest : EvaluatorTestBase() {
         runEvaluatorTestCase(
             query = testCase.source,
             expectedResult = testCase.expectedLegacyModeResult,
-            includePermissiveModeTest = false,
-            expectedResultFormat = ExpectedResultFormat.STRING
+            expectedResultFormat = ExpectedResultFormat.STRING,
+            includePermissiveModeTest = false
         )
 
     class MakeTimePassCases : ArgumentsProviderBase() {

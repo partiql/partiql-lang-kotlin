@@ -18,7 +18,6 @@ package org.partiql.lang.eval
 
 import com.amazon.ion.IntegerSize
 import com.amazon.ion.IonInt
-import com.amazon.ion.IonSexp
 import com.amazon.ion.IonString
 import com.amazon.ion.IonValue
 import com.amazon.ion.Timestamp
@@ -27,8 +26,6 @@ import com.amazon.ionelement.api.ionBool
 import com.amazon.ionelement.api.toIonValue
 import org.partiql.lang.ast.AggregateCallSiteListMeta
 import org.partiql.lang.ast.AggregateRegisterIdMeta
-import org.partiql.lang.ast.AstDeserializerBuilder
-import org.partiql.lang.ast.AstVersion
 import org.partiql.lang.ast.ExprNode
 import org.partiql.lang.ast.IonElementMetaContainer
 import org.partiql.lang.ast.IsCountStarMeta
@@ -347,15 +344,6 @@ internal class EvaluatingCompiler(
         val parser = PartiQLParserBuilder().ionSystem(valueFactory.ion).build()
         val ast = parser.parseAstStatement(source)
         return compile(ast)
-    }
-
-    /**
-     * Evaluates a V0 s-exp based AST against a global set of bindings.
-     */
-    @Deprecated("Please use CompilerPipeline.compile(PartiqlAst.Statement).eval(EvaluationSession) instead.")
-    fun eval(ast: IonSexp, session: EvaluationSession): ExprValue {
-        val exprNode = AstDeserializerBuilder(valueFactory.ion).build().deserialize(ast, AstVersion.V0)
-        return compile(exprNode.toAstStatement()).eval(session)
     }
 
     /**

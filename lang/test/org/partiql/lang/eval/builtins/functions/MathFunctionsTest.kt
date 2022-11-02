@@ -13,9 +13,6 @@ import org.partiql.lang.eval.evaluatortestframework.EvaluatorErrorTestCase
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestTarget
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.util.ArgumentsProviderBase
-import org.partiql.lang.util.div
-import org.partiql.lang.util.minus
-import org.partiql.lang.util.plus
 
 // constant that can be handy in testing
 private val MIN_INT2 = Short.MIN_VALUE
