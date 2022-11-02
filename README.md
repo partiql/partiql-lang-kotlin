@@ -29,9 +29,9 @@ GitHub issues list for details.)
 
 This project is published to [Maven Central](https://search.maven.org/artifact/org.partiql/partiql-lang-kotlin).
 
-| Group ID | Artifact ID | Recommended Version |
-|----------|-------------|---------------------|
-| `org.partiql` | `partiql-lang-kotlin` | `0.7.0`| 
+| Group ID      | Artifact ID           | Recommended Version |
+|---------------|-----------------------|---------------------|
+| `org.partiql` | `partiql-lang-kotlin` | `0.8.1`             | 
 
 
 For Maven builds, add the following to your `pom.xml`:
@@ -62,7 +62,21 @@ Be sure to replace `${version}` with the desired version.
 
 **Pre-requisite**: Building this project requires Java 11+.
 
-To build this project, clone this repository and from its root directory execute:
+This project uses a [git submodule](https://git-scm.com/book/en/v2/Git-Tools-Submodules) to pull in 
+[partiql-tests](https://github.com/partiql/partiql-tests). The easiest way to pull everything in is to clone the 
+repository recursively:
+
+```bash
+$ git clone --recursive https://github.com/partiql/partiql-lang-kotlin.git
+```
+
+You can also initialize the submodules as follows:
+
+```bash
+$ git submodule update --init --recursive
+```
+
+To build this project, from the root directory execute:
 
 ```shell
 ./gradlew build
@@ -70,13 +84,10 @@ To build this project, clone this repository and from its root directory execute
 
 This will build the reference interpreter and test framework, then run all unit and integration tests.
 
-### Building the Documentation
-
-[Instructions on how to build PartiQL's documentation](docs/Docker/README.md)
-
 ## Directory Structure
 
 - `docs` source code for the GitHub Wiki
+- `partiql-grammar` contains the ANTLR files to generate the PartiQL Parser.
 - `lang` contains the source code of the library containing the interpreter.
 - `lang/jmh` contains the JMH benchmarks for PartiQL.
 - `cli` contains the source code of the command-line interface and interactive prompt. (CLI/REPL)

@@ -299,13 +299,7 @@ class SqlParserTest : SqlParserTestBase() {
     fun unaryIonIntLiteral() {
         assertExpression(
             "-1",
-            "(lit -1)",
-            targetParsers = setOf(ParserTypes.SQL_PARSER)
-        )
-        assertExpression(
-            "-1",
-            "(neg (lit 1))",
-            targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
+            "(lit -1)"
         )
     }
 
@@ -314,12 +308,6 @@ class SqlParserTest : SqlParserTestBase() {
         assertExpression(
             "+-+-+-`-5e0`",
             "(lit 5e0)",
-            targetParsers = setOf(ParserTypes.SQL_PARSER)
-        )
-        assertExpression(
-            "+-+-+-`-5e0`",
-            "(pos (neg (pos (neg (pos (neg (lit -5e0)))))))",
-            targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
         )
     }
 
@@ -1711,8 +1699,8 @@ class SqlParserTest : SqlParserTestBase() {
                 (order_by 
                     (sort_spec 
                         (id rk1 (case_insensitive) (unqualified)) 
-                        (asc)
-                        (nulls_last)))))
+                        null
+                        null))))
         """
     )
 
@@ -1737,16 +1725,16 @@ class SqlParserTest : SqlParserTestBase() {
                 (order_by
                     (sort_spec 
                         (id rk1 (case_insensitive) (unqualified)) 
-                        (asc)
-                        (nulls_last)) 
+                        null
+                        null) 
                     (sort_spec 
                         (id rk2 (case_insensitive) (unqualified)) 
-                        (asc)
-                        (nulls_last)) 
+                        null
+                        null) 
                     (sort_spec 
                         (id rk3 (case_insensitive) (unqualified)) 
-                        (asc)
-                        (nulls_last)))))
+                        null
+                        null))))
         """
     )
 
@@ -1772,7 +1760,7 @@ class SqlParserTest : SqlParserTestBase() {
                     (sort_spec 
                         (id rk1 (case_insensitive) (unqualified)) 
                         (desc)
-                        (nulls_first)))))
+                        null))))
         """
     )
 
@@ -1798,106 +1786,107 @@ class SqlParserTest : SqlParserTestBase() {
                     (sort_spec 
                         (id rk1 (case_insensitive) (unqualified)) 
                         (asc)
-                        (nulls_last))
+                        null)
                     (sort_spec 
                         (id rk2 (case_insensitive) (unqualified)) 
                         (desc)
-                        (nulls_first)))))
+                        null))))
         """
     )
 
     @Test
-    fun orderBySingleIdWithoutOrderingAndNullsSpecShouldProduceAscNullsLastAsDefault() = assertExpression("SELECT x FROM tb ORDER BY rk1") {
+    fun orderBySingleIdWithoutOrderingAndNullsSpec() = assertExpression("SELECT x FROM tb ORDER BY rk1") {
         select(
             project = projectX,
             from = scan(id("tb")),
             order = orderBy(
                 listOf(
-                    sortSpec(id("rk1"), asc(), nullsLast())
+                    sortSpec(id("rk1"))
                 )
             )
         )
     }
 
     @Test
-    fun orderByMultipleIdWithoutOrderingAndNullsSpecShouldProduceAscNullsLastAsDefault() = assertExpression("SELECT x FROM tb ORDER BY rk1, rk2, rk3, rk4") {
+    fun orderByMultipleIdWithoutOrderingAndNullsSpec() =
+        assertExpression("SELECT x FROM tb ORDER BY rk1, rk2, rk3, rk4") {
+            select(
+                project = projectX,
+                from = scan(id("tb")),
+                order = orderBy(
+                    listOf(
+                        sortSpec(id("rk1")),
+                        sortSpec(id("rk2")),
+                        sortSpec(id("rk3")),
+                        sortSpec(id("rk4"))
+                    )
+                )
+            )
+        }
+
+    @Test
+    fun orderByWithAsc() = assertExpression("SELECT x FROM tb ORDER BY rk1 asc") {
         select(
             project = projectX,
             from = scan(id("tb")),
             order = orderBy(
                 listOf(
-                    sortSpec(id("rk1"), asc(), nullsLast()),
-                    sortSpec(id("rk2"), asc(), nullsLast()),
-                    sortSpec(id("rk3"), asc(), nullsLast()),
-                    sortSpec(id("rk4"), asc(), nullsLast())
+                    sortSpec(id("rk1"), asc())
                 )
             )
         )
     }
 
     @Test
-    fun orderByWithAscShouldProduceNullsLastAsDefault() = assertExpression("SELECT x FROM tb ORDER BY rk1 asc") {
+    fun orderByWithDesc() = assertExpression("SELECT x FROM tb ORDER BY rk1 desc") {
         select(
             project = projectX,
             from = scan(id("tb")),
             order = orderBy(
                 listOf(
-                    sortSpec(id("rk1"), asc(), nullsLast())
+                    sortSpec(id("rk1"), desc())
                 )
             )
         )
     }
 
     @Test
-    fun orderByWithDescShouldProduceNullsFirstAsDefault() = assertExpression("SELECT x FROM tb ORDER BY rk1 desc") {
+    fun orderByWithAscAndDesc() = assertExpression("SELECT x FROM tb ORDER BY rk1 desc, rk2 asc, rk3 asc, rk4 desc") {
         select(
             project = projectX,
             from = scan(id("tb")),
             order = orderBy(
                 listOf(
-                    sortSpec(id("rk1"), desc(), nullsFirst())
+                    sortSpec(id("rk1"), desc()),
+                    sortSpec(id("rk2"), asc()),
+                    sortSpec(id("rk3"), asc()),
+                    sortSpec(id("rk4"), desc())
                 )
             )
         )
     }
 
     @Test
-    fun orderByWithAscAndDescShouldProduceDefaultNullsSpec() = assertExpression("SELECT x FROM tb ORDER BY rk1 desc, rk2 asc, rk3 asc, rk4 desc") {
+    fun orderByNoAscOrDescWithNullsFirst() = assertExpression("SELECT x FROM tb ORDER BY rk1 NULLS FIRST") {
         select(
             project = projectX,
             from = scan(id("tb")),
             order = orderBy(
                 listOf(
-                    sortSpec(id("rk1"), desc(), nullsFirst()),
-                    sortSpec(id("rk2"), asc(), nullsLast()),
-                    sortSpec(id("rk3"), asc(), nullsLast()),
-                    sortSpec(id("rk4"), desc(), nullsFirst())
+                    sortSpec(id("rk1"), null, nullsFirst())
                 )
             )
         )
     }
 
     @Test
-    fun orderByAscMustBeDefaultIfOrderingSpecIsNotSpecifiedWithNullsFirst() = assertExpression("SELECT x FROM tb ORDER BY rk1 NULLS FIRST") {
+    fun orderByNoAscOrDescWithNullsLast() = assertExpression("SELECT x FROM tb ORDER BY rk1 NULLS LAST") {
         select(
             project = projectX,
             from = scan(id("tb")),
             order = orderBy(
                 listOf(
-                    sortSpec(id("rk1"), asc(), nullsFirst())
-                )
-            )
-        )
-    }
-
-    @Test
-    fun orderByAscMustBeDefaultIfOrderingSpecIsNotSpecifiedWithNullsLast() = assertExpression("SELECT x FROM tb ORDER BY rk1 NULLS LAST") {
-        select(
-            project = projectX,
-            from = scan(id("tb")),
-            order = orderBy(
-                listOf(
-                    sortSpec(id("rk1"), asc(), nullsLast())
+                    sortSpec(id("rk1"), null, nullsLast())
                 )
             )
         )
@@ -2162,20 +2151,25 @@ class SqlParserTest : SqlParserTestBase() {
           )
         """,
         """
-          (dml
+        (dml
             (operations
-              (dml_op_list
-                (insert
-                  (id foo (case_insensitive) (unqualified))
-                  (bag
-                    (list (lit 1) (lit 2))
-                    (list (lit 3) (lit 4))
-                  )
-                )
-              )
-            )
-            (from (scan (id x (case_insensitive) (unqualified)) null null null))
-          )
+                (dml_op_list
+                    (insert
+                        (id foo (case_insensitive) (unqualified))
+                        (bag
+                            (list
+                                (lit 1)
+                                (lit 2))
+                            (list
+                                (lit 3)
+                                (lit 4)))
+                        null)))
+            (from
+                (scan
+                    (id x (case_insensitive) (unqualified))
+                    null
+                    null
+                    null)))
         """
     )
 
@@ -2285,20 +2279,30 @@ class SqlParserTest : SqlParserTestBase() {
           )
         """,
         """
-          (dml
+        (dml
             (operations
-              (dml_op_list
-                (insert
-                  (id foo (case_insensitive) (unqualified))
-                  (select
-                    (project (project_list (project_expr (id y (case_insensitive) (unqualified)) null)))
-                    (from (scan (id bar (case_insensitive) (unqualified)) null null null))
-                  )
-                )
-              )
-            )
-            (from (scan (id x (case_insensitive) (unqualified)) null null null))
-          )
+                (dml_op_list
+                    (insert
+                        (id foo (case_insensitive) (unqualified))
+                        (select
+                            (project
+                                (project_list
+                                    (project_expr
+                                        (id y (case_insensitive) (unqualified))
+                                        null)))
+                            (from
+                                (scan
+                                    (id bar (case_insensitive) (unqualified))
+                                    null
+                                    null
+                                    null)))
+                        null)))
+            (from
+                (scan
+                    (id x (case_insensitive) (unqualified))
+                    null
+                    null
+                    null)))
         """
     )
 
@@ -2373,19 +2377,19 @@ class SqlParserTest : SqlParserTestBase() {
           )
         """,
         """
-          (dml
+        (dml
             (operations
-              (dml_op_list
-                (insert
-                  (id foo (case_insensitive) (unqualified))
-                  (bag
-                    (list (lit 1) (lit 2))
-                    (list (lit 3) (lit 4))
-                  )
-                )
-              )
-            )
-          )
+                (dml_op_list
+                    (insert
+                        (id foo (case_insensitive) (unqualified))
+                        (bag
+                            (list
+                                (lit 1)
+                                (lit 2))
+                            (list
+                                (lit 3)
+                                (lit 4)))
+                        null))))
         """
     )
 
@@ -2479,7 +2483,8 @@ class SqlParserTest : SqlParserTestBase() {
               )
             ))
           )
-        """
+        """,
+        targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
     )
 
     @Test
@@ -2658,20 +2663,455 @@ class SqlParserTest : SqlParserTestBase() {
           )
         """,
         """
-          (dml
+        (dml
             (operations
-              (dml_op_list
-                (insert
-                  (id foo (case_insensitive) (unqualified))
-                  (select
-                    (project (project_list (project_expr (id y (case_insensitive) (unqualified)) null)))
-                    (from (scan (id bar (case_insensitive) (unqualified)) null null null))
-                  )
-                )
-              )
-            )
-          )
+                (dml_op_list
+                    (insert
+                        (id foo (case_insensitive) (unqualified))
+                        (select
+                            (project
+                                (project_list
+                                    (project_expr
+                                        (id y (case_insensitive) (unqualified))
+                                        null)))
+                            (from
+                                (scan
+                                    (id bar (case_insensitive) (unqualified))
+                                    null
+                                    null
+                                    null)))
+                        null))))
         """
+    )
+
+    @Test
+    fun insertWithOnConflictReplaceExcludedWithLiteralValue() = assertExpression(
+        source = "INSERT into foo VALUES (1, 2), (3, 4) ON CONFLICT DO REPLACE EXCLUDED",
+        expectedPigAst = """
+        (dml
+            (operations
+                (dml_op_list
+                    (insert
+                        (id foo (case_insensitive) (unqualified))
+                        (bag
+                            (list
+                                (lit 1)
+                                (lit 2))
+                            (list
+                                (lit 3)
+                                (lit 4)))
+                        (do_replace
+                            (excluded))))))
+        """,
+        targetParsers = setOf(ParserTypes.PARTIQL_PARSER),
+        roundTrip = false
+    )
+
+    @Test
+    fun insertWithOnConflictReplaceExcludedWithLiteralValueWithAlias() = assertExpression(
+        source = "INSERT into foo AS f <<{'id': 1, 'name':'bob'}>> ON CONFLICT DO REPLACE EXCLUDED",
+        expectedPigAst = """
+            (dml
+                (operations
+                    (dml_op_list
+                        (insert
+                            (id f (case_insensitive) (unqualified))
+                            (bag
+                                (struct
+                                    (expr_pair
+                                        (lit "id")
+                                        (lit 1))
+                                    (expr_pair
+                                        (lit "name")
+                                        (lit "bob"))))
+                            (do_replace
+                                (excluded))))))
+        """,
+        targetParsers = setOf(ParserTypes.PARTIQL_PARSER),
+        roundTrip = false
+    )
+
+    @Test
+    fun insertWithOnConflictReplaceExcludedWithSelect() = assertExpression(
+        source = "INSERT into foo SELECT bar.id, bar.name FROM bar ON CONFLICT DO REPLACE EXCLUDED",
+        expectedPigAst = """
+            (dml
+                (operations
+                    (dml_op_list
+                        (insert
+                            (id foo (case_insensitive) (unqualified))
+                            (select
+                                (project
+                                    (project_list
+                                        (project_expr
+                                            (path
+                                                (id bar (case_insensitive) (unqualified))
+                                                (path_expr
+                                                    (lit "id")
+                                                    (case_insensitive)))
+                                            null)
+                                        (project_expr
+                                            (path
+                                                (id bar (case_insensitive) (unqualified))
+                                                (path_expr
+                                                    (lit "name")
+                                                    (case_insensitive)))
+                                            null)))
+                                (from
+                                    (scan
+                                        (id bar (case_insensitive) (unqualified))
+                                        null
+                                        null
+                                        null)))
+                            (do_replace
+                                (excluded))))))
+        """,
+        targetParsers = setOf(ParserTypes.PARTIQL_PARSER),
+        roundTrip = false
+    )
+
+    @Test
+    fun insertWithOnConflictUpdateExcludedWithLiteralValue() = assertExpression(
+        source = "INSERT into foo VALUES (1, 2), (3, 4) ON CONFLICT DO UPDATE EXCLUDED",
+        expectedPigAst = """
+        (dml
+            (operations
+                (dml_op_list
+                    (insert
+                        (id foo (case_insensitive) (unqualified))
+                        (bag
+                            (list
+                                (lit 1)
+                                (lit 2))
+                            (list
+                                (lit 3)
+                                (lit 4)))
+                        (do_update
+                            (excluded))))))
+        """,
+        targetParsers = setOf(ParserTypes.PARTIQL_PARSER),
+        roundTrip = false
+    )
+
+    @Test
+    fun insertWithOnConflictUpdateExcludedWithLiteralValueWithAlias() = assertExpression(
+        source = "INSERT into foo AS f <<{'id': 1, 'name':'bob'}>> ON CONFLICT DO UPDATE EXCLUDED",
+        expectedPigAst = """
+            (dml
+                (operations
+                    (dml_op_list
+                        (insert
+                            (id f (case_insensitive) (unqualified))
+                            (bag
+                                (struct
+                                    (expr_pair
+                                        (lit "id")
+                                        (lit 1))
+                                    (expr_pair
+                                        (lit "name")
+                                        (lit "bob"))))
+                            (do_update
+                                (excluded))))))
+        """,
+        targetParsers = setOf(ParserTypes.PARTIQL_PARSER),
+        roundTrip = false
+    )
+
+    @Test
+    fun insertWithOnConflictUpdateExcludedWithSelect() = assertExpression(
+        source = "INSERT into foo SELECT bar.id, bar.name FROM bar ON CONFLICT DO UPDATE EXCLUDED",
+        expectedPigAst = """
+            (dml
+                (operations
+                    (dml_op_list
+                        (insert
+                            (id foo (case_insensitive) (unqualified))
+                            (select
+                                (project
+                                    (project_list
+                                        (project_expr
+                                            (path
+                                                (id bar (case_insensitive) (unqualified))
+                                                (path_expr
+                                                    (lit "id")
+                                                    (case_insensitive)))
+                                            null)
+                                        (project_expr
+                                            (path
+                                                (id bar (case_insensitive) (unqualified))
+                                                (path_expr
+                                                    (lit "name")
+                                                    (case_insensitive)))
+                                            null)))
+                                (from
+                                    (scan
+                                        (id bar (case_insensitive) (unqualified))
+                                        null
+                                        null
+                                        null)))
+                            (do_update
+                                (excluded))))))
+        """,
+        targetParsers = setOf(ParserTypes.PARTIQL_PARSER),
+        roundTrip = false
+    )
+
+    @Test
+    fun insertWithOnConflictDoNothing() = assertExpression(
+        source = "INSERT into foo <<{'id': 1, 'name':'bob'}>> ON CONFLICT DO NOTHING",
+        expectedPigAst = """
+            (dml
+                (operations
+                    (dml_op_list
+                        (insert
+                            (id foo (case_insensitive) (unqualified))
+                            (bag
+                                (struct
+                                    (expr_pair
+                                        (lit "id")
+                                        (lit 1))
+                                    (expr_pair
+                                        (lit "name")
+                                        (lit "bob"))))
+                            (do_nothing)))))
+        """,
+        targetParsers = setOf(ParserTypes.PARTIQL_PARSER),
+        roundTrip = false
+    )
+
+    @Test
+    fun insertWithOnConflictDoNothingWithLiteralValueWithAlias() = assertExpression(
+        source = "INSERT into foo AS f <<{'id': 1, 'name':'bob'}>> ON CONFLICT DO NOTHING",
+        expectedPigAst = """
+            (dml
+                (operations
+                    (dml_op_list
+                        (insert
+                            (id f (case_insensitive) (unqualified))
+                            (bag
+                                (struct
+                                    (expr_pair
+                                        (lit "id")
+                                        (lit 1))
+                                    (expr_pair
+                                        (lit "name")
+                                        (lit "bob"))))
+                            (do_nothing)))))
+        """,
+        targetParsers = setOf(ParserTypes.PARTIQL_PARSER),
+        roundTrip = false
+    )
+
+    @Test
+    fun insertWithOnConflictDoNothingWithSelect() = assertExpression(
+        source = "INSERT into foo SELECT bar.id, bar.name FROM bar ON CONFLICT DO NOTHING",
+        expectedPigAst = """
+            (dml
+                (operations
+                    (dml_op_list
+                        (insert
+                            (id foo (case_insensitive) (unqualified))
+                            (select
+                                (project
+                                    (project_list
+                                        (project_expr
+                                            (path
+                                                (id bar (case_insensitive) (unqualified))
+                                                (path_expr
+                                                    (lit "id")
+                                                    (case_insensitive)))
+                                            null)
+                                        (project_expr
+                                            (path
+                                                (id bar (case_insensitive) (unqualified))
+                                                (path_expr
+                                                    (lit "name")
+                                                    (case_insensitive)))
+                                            null)))
+                                (from
+                                    (scan
+                                        (id bar (case_insensitive) (unqualified))
+                                        null
+                                        null
+                                        null)))
+                            (do_nothing)))))
+        """,
+        targetParsers = setOf(ParserTypes.PARTIQL_PARSER),
+        roundTrip = false
+    )
+
+    @Test
+    fun replaceCommand() = assertExpression(
+        source = "REPLACE INTO foo <<{'id': 1, 'name':'bob'}>>",
+        expectedPigAst = """
+            (dml
+                (operations
+                    (dml_op_list
+                        (insert
+                            (id foo (case_insensitive) (unqualified))
+                            (bag
+                                (struct
+                                    (expr_pair
+                                        (lit "id")
+                                        (lit 1))
+                                    (expr_pair
+                                        (lit "name")
+                                        (lit "bob"))))
+                            (do_replace
+                                (excluded))))))
+        """,
+        targetParsers = setOf(ParserTypes.PARTIQL_PARSER),
+        roundTrip = false
+    )
+
+    @Test
+    fun replaceCommandWithAsAlias() = assertExpression(
+        source = "REPLACE INTO foo As f <<{'id': 1, 'name':'bob'}>>",
+        expectedPigAst = """
+            (dml
+                (operations
+                    (dml_op_list
+                        (insert
+                            (id f (case_insensitive) (unqualified))
+                            (bag
+                                (struct
+                                    (expr_pair
+                                        (lit "id")
+                                        (lit 1))
+                                    (expr_pair
+                                        (lit "name")
+                                        (lit "bob"))))
+                            (do_replace
+                                (excluded))))))
+        """,
+        targetParsers = setOf(ParserTypes.PARTIQL_PARSER),
+        roundTrip = false
+    )
+
+    @Test
+    fun upsertCommand() = assertExpression(
+        source = "UPSERT INTO foo <<{'id': 1, 'name':'bob'}>>",
+        expectedPigAst = """
+            (dml
+                (operations
+                    (dml_op_list
+                        (insert
+                            (id foo (case_insensitive) (unqualified))
+                            (bag
+                                (struct
+                                    (expr_pair
+                                        (lit "id")
+                                        (lit 1))
+                                    (expr_pair
+                                        (lit "name")
+                                        (lit "bob"))))
+                            (do_update
+                                (excluded))))))
+        """,
+        targetParsers = setOf(ParserTypes.PARTIQL_PARSER),
+        roundTrip = false
+    )
+
+    @Test
+    fun upsertCommandWithAsAlias() = assertExpression(
+        source = "UPSERT INTO foo As f <<{'id': 1, 'name':'bob'}>>",
+        expectedPigAst = """
+            (dml
+                (operations
+                    (dml_op_list
+                        (insert
+                            (id f (case_insensitive) (unqualified))
+                            (bag
+                                (struct
+                                    (expr_pair
+                                        (lit "id")
+                                        (lit 1))
+                                    (expr_pair
+                                        (lit "name")
+                                        (lit "bob"))))
+                            (do_update
+                                (excluded))))))
+        """,
+        targetParsers = setOf(ParserTypes.PARTIQL_PARSER),
+        roundTrip = false
+    )
+
+    @Test
+    fun replaceCommandWithSelect() = assertExpression(
+        source = "REPLACE INTO foo SELECT bar.id, bar.name FROM bar",
+        expectedPigAst = """
+            (dml
+                (operations
+                    (dml_op_list
+                        (insert
+                            (id foo (case_insensitive) (unqualified))
+                            (select
+                                (project
+                                    (project_list
+                                        (project_expr
+                                            (path
+                                                (id bar (case_insensitive) (unqualified))
+                                                (path_expr
+                                                    (lit "id")
+                                                    (case_insensitive)))
+                                            null)
+                                        (project_expr
+                                            (path
+                                                (id bar (case_insensitive) (unqualified))
+                                                (path_expr
+                                                    (lit "name")
+                                                    (case_insensitive)))
+                                            null)))
+                                (from
+                                    (scan
+                                        (id bar (case_insensitive) (unqualified))
+                                        null
+                                        null
+                                        null)))
+                            (do_replace
+                                (excluded))))))
+        """,
+        targetParsers = setOf(ParserTypes.PARTIQL_PARSER),
+        roundTrip = false
+    )
+
+    @Test
+    fun upsertCommandWithSelect() = assertExpression(
+        source = "UPSERT INTO foo SELECT bar.id, bar.name FROM bar",
+        expectedPigAst = """
+        (dml
+            (operations
+                (dml_op_list
+                    (insert
+                        (id foo (case_insensitive) (unqualified))
+                        (select
+                            (project
+                                (project_list
+                                    (project_expr
+                                        (path
+                                            (id bar (case_insensitive) (unqualified))
+                                            (path_expr
+                                                (lit "id")
+                                                (case_insensitive)))
+                                        null)
+                                    (project_expr
+                                        (path
+                                            (id bar (case_insensitive) (unqualified))
+                                            (path_expr
+                                                (lit "name")
+                                                (case_insensitive)))
+                                        null)))
+                            (from
+                                (scan
+                                    (id bar (case_insensitive) (unqualified))
+                                    null
+                                    null
+                                    null)))
+                        (do_update
+                            (excluded))))))
+        """,
+        targetParsers = setOf(ParserTypes.PARTIQL_PARSER),
+        roundTrip = false
     )
 
     @Test
@@ -3322,23 +3762,24 @@ class SqlParserTest : SqlParserTestBase() {
                 (id b case_insensitive))))
         """,
         """
-          (dml
+        (dml
             (operations
-              (dml_op_list
-                (insert
-                  (id k (case_insensitive) (unqualified))
-                  (bag
-                    (lit 1)))))
+                (dml_op_list
+                    (insert
+                        (id k (case_insensitive) (unqualified))
+                        (bag
+                            (lit 1))
+                        null)))
             (from
-              (scan
-                (id x (case_insensitive) (unqualified))
-                y 
-                null
-                null))
+                (scan
+                    (id x (case_insensitive) (unqualified))
+                    y
+                    null
+                    null))
             (where
-              (eq
-                (id a (case_insensitive) (unqualified))
-                (id b (case_insensitive) (unqualified)))))
+                (eq
+                    (id a (case_insensitive) (unqualified))
+                    (id b (case_insensitive) (unqualified)))))
         """
     )
 
@@ -3346,28 +3787,30 @@ class SqlParserTest : SqlParserTestBase() {
     fun updateWithInsertReturningDml() = assertExpression(
         "UPDATE x AS y INSERT INTO k << 1 >> WHERE a = b RETURNING MODIFIED OLD a",
         """
-      (dml
-        (operations
-          (dml_op_list
-            (insert
-              (id k (case_insensitive) (unqualified))
-              (bag
-                (lit 1)))))
-        (from
-          (scan
-            (id x (case_insensitive) (unqualified))
-            y 
-            null
-            null))
-        (where
-          (eq
-            (id a (case_insensitive) (unqualified))
-            (id b (case_insensitive) (unqualified))))
-        (returning 
-            (returning_expr 
-                (returning_elem 
-                    (modified_old) 
-                    (returning_column (id a (case_insensitive) (unqualified)))))))   
+        (dml
+            (operations
+                (dml_op_list
+                    (insert
+                        (id k (case_insensitive) (unqualified))
+                        (bag
+                            (lit 1))
+                        null)))
+            (from
+                (scan
+                    (id x (case_insensitive) (unqualified))
+                    y
+                    null
+                    null))
+            (where
+                (eq
+                    (id a (case_insensitive) (unqualified))
+                    (id b (case_insensitive) (unqualified))))
+            (returning
+                (returning_expr
+                    (returning_elem
+                        (modified_old)
+                        (returning_column
+                            (id a (case_insensitive) (unqualified)))))))
         """
     )
 
@@ -4397,7 +4840,7 @@ class SqlParserTest : SqlParserTestBase() {
         select(
             project = buildProject("x"),
             from = scan(id("a")),
-            order = PartiqlAst.OrderBy(listOf(PartiqlAst.SortSpec(id("y"), PartiqlAst.OrderingSpec.Desc(), PartiqlAst.NullsSpec.NullsFirst()))),
+            order = PartiqlAst.OrderBy(listOf(PartiqlAst.SortSpec(id("y"), PartiqlAst.OrderingSpec.Desc(), null))),
             limit = buildLit("10"),
             offset = buildLit("5")
         )

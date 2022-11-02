@@ -593,17 +593,19 @@ class SqlParser(
                         orderBy(
                             it.children[0].children.map {
                                 when (it.children.size) {
-                                    1 -> sortSpec(it.children[0].toAstExpr(), asc(), nullsLast())
+                                    1 -> sortSpec(it.children[0].toAstExpr(), null, null)
                                     2 -> when (it.children[1].type) {
                                         ParseType.ORDERING_SPEC -> {
                                             val orderingSpec = it.children[1].toOrderingSpec()
-                                            val defaultNullsSpec = when (orderingSpec) {
-                                                is PartiqlAst.OrderingSpec.Asc -> nullsLast()
-                                                is PartiqlAst.OrderingSpec.Desc -> nullsFirst()
-                                            }
-                                            sortSpec(it.children[0].toAstExpr(), orderingSpec, defaultNullsSpec)
+                                            sortSpec(it.children[0].toAstExpr(), orderingSpec, null)
                                         }
-                                        ParseType.NULLS_SPEC -> sortSpec(it.children[0].toAstExpr(), asc(), it.children[1].toNullsSpec())
+
+                                        ParseType.NULLS_SPEC -> sortSpec(
+                                            it.children[0].toAstExpr(),
+                                            null,
+                                            it.children[1].toNullsSpec()
+                                        )
+
                                         else -> errMalformedParseTree("Invalid ordering expressions syntax")
                                     }
                                     3 -> sortSpec(it.children[0].toAstExpr(), it.children[1].toOrderingSpec(), it.children[2].toNullsSpec())
@@ -942,13 +944,12 @@ class SqlParser(
                         if (isCrossJoin) metas + metaContainerOf(IsImplictJoinMeta.instance) else metas
                     )
                 }
-                ParseType.MATCH -> toGraphMatch()
                 else -> unwrapAliasesAndUnpivot()
             }
         }
     }
 
-    private fun ParseNode.toGraphMatch(): PartiqlAst.FromSource {
+    private fun ParseNode.toGraphMatch(): PartiqlAst.Expr {
         val metas = getMetas()
         var selector: PartiqlAst.GraphMatchSelector? = null
 
@@ -985,8 +986,8 @@ class SqlParser(
                 it.toGraphMatchPattern()
             }
 
-            val matchExpr = PartiqlAst.GraphMatchExpr(selector = selector, patterns = patterns, metas = metas)
-            PartiqlAst.FromSource.GraphMatch(expr, matchExpr, metas)
+            val matchExpr = PartiqlAst.GpmlPattern(selector = selector, patterns = patterns, metas = metas)
+            PartiqlAst.Expr.GraphMatch(expr, matchExpr, metas)
         }
     }
 
@@ -1269,7 +1270,13 @@ class SqlParser(
     private fun ParseNode.toInsertReturning(): InsertReturning =
         when (type) {
             ParseType.INSERT -> {
-                val ops = listOf(PartiqlAst.DmlOp.Insert(children[0].toAstExpr(), children[1].toAstExpr(), this.getMetas()))
+                // As `SQLParser` is deprecated, only support extended syntax of `INSERT` with `ON CONFLICT`
+                // in the new ANTLR parser.
+                // TODO: Add the `SQLParser` support for the PartiQL `INSERT` based on the grammar, if we're going to
+                // switch back to the `SQLParser`; see the following RFC for the complete Grammar:
+                // https://github.com/partiql/partiql-docs/blob/main/RFCs/0011-partiql-insert.md#2-proposed-grammar-and-semantics
+                val conflictAction = null
+                val ops = listOf(PartiqlAst.DmlOp.Insert(children[0].toAstExpr(), children[1].toAstExpr(), conflictAction, this.getMetas()))
                 // We will remove items from this collection as we consume them.
                 // If any unconsumed children remain, we've missed something and should throw an exception.
                 val unconsumedChildren = children.drop(2).toMutableList()

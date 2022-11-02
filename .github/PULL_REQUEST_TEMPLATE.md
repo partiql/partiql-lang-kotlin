@@ -1,18 +1,20 @@
-*Issue #, if available:*
+## Relevant Issues
+- [Closes/Related To] Issue #XXX
 
-*Description of changes:*
+## Description
+- < A detailed description >
 
-*Have you updated the `Unreleased` section of `CHANGELOG.md` with your changes? (y/n), If not, please explain why:*
+## Other Information
+- Updated Unreleased Section in CHANGELOG: **[YES/NO]**
+  - < If NO, why? >
+- Any backward-incompatible changes? **[YES/NO]**
+  - < If YES, why? >
+  - < For this purpose, we define backward-incompatible changes as changes that—when consumed—can potentially result in
+errors for users that are using our public APIs or the entities that have `public` visibility in our code-base. >
+- Any new external dependencies? **[YES/NO]**
+  - < If YES, which ones and why? >
+  - < In addition, please also mention any other alternatives you've considered and the reason they've been discarded >
 
-*Does your PR include any backward-incompatible changes? (y/n), if yes, please explain the reason. In addition, please
- also mention any other alternatives you've considered and the reason they've been discarded?:*
-
-```
-For this purpose, we define backward-incompatible changes as changes that—when consumed—can potentially result in 
-errors for users that are using our public APIs or the entities that have `public` visibility in our code-base.
-```
-
-*Does your PR introduce a new external dependency? (y/n), if yes, please explain the reason. In addition, please
-also mention any other alternatives you've considered and the reason they've been discarded?:*
+## License Information
 
 By submitting this pull request, I confirm that my contribution is made under the terms of the Apache 2.0 license.

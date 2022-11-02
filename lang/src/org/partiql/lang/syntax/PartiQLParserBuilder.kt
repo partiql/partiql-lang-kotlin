@@ -25,8 +25,8 @@ import org.partiql.lang.types.CustomType
  *
  * ```
  * val parser = PartiQLParserBuilder.standard().build()
- * val parser = PartiQLParserBuilder.standard().withCustomTypes(types).build()
- * val parser = PartiQLParserBuilder().withIonSystem(ion).withCustomTypes().build()
+ * val parser = PartiQLParserBuilder.standard().customTypes(types).build()
+ * val parser = PartiQLParserBuilder().ionSystem(ion).customTypes().build()
  * ```
  */
 class PartiQLParserBuilder {
@@ -36,18 +36,18 @@ class PartiQLParserBuilder {
 
         @JvmStatic
         fun standard(): PartiQLParserBuilder {
-            return PartiQLParserBuilder().withIonSystem(DEFAULT_ION)
+            return PartiQLParserBuilder().ionSystem(DEFAULT_ION)
         }
     }
 
     private var ion: IonSystem = DEFAULT_ION
     private var customTypes: List<CustomType> = emptyList()
 
-    fun withIonSystem(ion: IonSystem): PartiQLParserBuilder = this.apply {
+    fun ionSystem(ion: IonSystem): PartiQLParserBuilder = this.apply {
         this.ion = ion
     }
 
-    fun withCustomTypes(types: List<CustomType>): PartiQLParserBuilder = this.apply {
+    fun customTypes(types: List<CustomType>): PartiQLParserBuilder = this.apply {
         this.customTypes = types
     }
 

@@ -21,6 +21,7 @@ import org.partiql.lang.util.sourceLocationProperties
 
 class ParserErrorsTest : SqlParserTestBase() {
 
+    // TODO: now we are testing on both parsers(SQL_PARSER AND PARTIQL_PARSER). We need to remove test cases targeting SQL_PARSER once we removed it.
     @Test
     fun emptyQuery() {
         checkInputThrowingParserException(
@@ -1281,6 +1282,36 @@ class ParserErrorsTest : SqlParserTestBase() {
                 Property.COLUMN_NUMBER to 19L,
                 Property.TOKEN_TYPE to TokenType.RIGHT_PAREN,
                 Property.TOKEN_VALUE to ion.newSymbol(")")
+            ),
+            targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
+        )
+    }
+
+    @Test
+    fun callTrimSpecificationMismatch() {
+        // for SQL parser, the logic seems to be if the first token is not one of { NONE | BOTH | LEADING | TRAILING}
+        // treating the token as identifier and expect the trim expression to end
+        checkInputThrowingParserException(
+            "trim(something ' ' from ' string ')",
+            ErrorCode.PARSE_EXPECTED_RIGHT_PAREN_BUILTIN_FUNCTION_CALL,
+            mapOf(
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 16L,
+                Property.TOKEN_TYPE to TokenType.LITERAL,
+                Property.TOKEN_VALUE to ion.newString(" ")
+            ),
+            targetParsers = setOf(ParserTypes.SQL_PARSER)
+        )
+        // for sql parser, the logic is, if the first token is not one of { NONE | BOTH | LEADING | TRAILING}
+        // throw out a parser error
+        checkInputThrowingParserException(
+            "trim(something ' ' from ' string ')",
+            ErrorCode.PARSE_INVALID_TRIM_SPEC,
+            mapOf(
+                Property.LINE_NUMBER to 1L,
+                Property.COLUMN_NUMBER to 6L,
+                Property.TOKEN_TYPE to TokenType.IDENTIFIER,
+                Property.TOKEN_VALUE to ion.newSymbol("something")
             ),
             targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
         )
@@ -3414,9 +3445,9 @@ class ParserErrorsTest : SqlParserTestBase() {
             ErrorCode.PARSE_UNEXPECTED_TOKEN,
             mapOf(
                 Property.LINE_NUMBER to 1L,
-                Property.COLUMN_NUMBER to 13L,
-                Property.TOKEN_TYPE to TokenType.LEFT_BRACKET,
-                Property.TOKEN_VALUE to ion.newSymbol("[")
+                Property.COLUMN_NUMBER to 15L,
+                Property.TOKEN_TYPE to TokenType.OPERATOR,
+                Property.TOKEN_VALUE to ion.newSymbol("+")
             ),
             targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
         )
@@ -4346,9 +4377,9 @@ class ParserErrorsTest : SqlParserTestBase() {
             ErrorCode.PARSE_UNEXPECTED_TOKEN,
             mapOf(
                 Property.LINE_NUMBER to 1L,
-                Property.COLUMN_NUMBER to 23L,
-                Property.TOKEN_TYPE to TokenType.LEFT_BRACKET,
-                Property.TOKEN_VALUE to ion.newSymbol("[")
+                Property.COLUMN_NUMBER to 25L,
+                Property.TOKEN_TYPE to TokenType.OPERATOR,
+                Property.TOKEN_VALUE to ion.newSymbol("+")
             ),
             targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
         )

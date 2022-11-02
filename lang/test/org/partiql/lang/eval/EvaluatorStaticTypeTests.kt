@@ -114,7 +114,6 @@ class EvaluatorStaticTypeTests {
 
             "parameters",
             // STIR does not support aggregates
-            "selectDistinctWithAggregate",
             "selectDistinctAggregationWithGroupBy",
             "selectDistinctWithGroupBy",
             "selectDistinctWithJoin",
@@ -138,9 +137,6 @@ class EvaluatorStaticTypeTests {
             "projectOfUnpivotPath",
 
             // PIVOT not supported by STIR
-            "pivotFrom",
-            "pivotBadFieldType",
-            "pivotLiteralFieldNameFrom",
             "pivotUnpivotWithWhereLimit",
             "unpivotStructWithMissingField",
 

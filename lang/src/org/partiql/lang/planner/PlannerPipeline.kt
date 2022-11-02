@@ -31,8 +31,8 @@ import org.partiql.lang.eval.builtins.DynamicLookupExprFunction
 import org.partiql.lang.eval.builtins.createBuiltinFunctions
 import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedure
 import org.partiql.lang.eval.physical.PhysicalBexprToThunkConverter
-import org.partiql.lang.eval.physical.PhysicalExprToThunkConverter
-import org.partiql.lang.eval.physical.PhysicalExprToThunkConverterImpl
+import org.partiql.lang.eval.physical.PhysicalPlanCompiler
+import org.partiql.lang.eval.physical.PhysicalPlanCompilerImpl
 import org.partiql.lang.eval.physical.PhysicalPlanThunk
 import org.partiql.lang.eval.physical.operators.DEFAULT_RELATIONAL_OPERATOR_FACTORIES
 import org.partiql.lang.eval.physical.operators.RelationalOperatorFactory
@@ -41,8 +41,10 @@ import org.partiql.lang.planner.transforms.normalize
 import org.partiql.lang.planner.transforms.toDefaultPhysicalPlan
 import org.partiql.lang.planner.transforms.toLogicalPlan
 import org.partiql.lang.planner.transforms.toResolvedPlan
+import org.partiql.lang.planner.validators.PartiqlLogicalResolvedValidator
+import org.partiql.lang.planner.validators.PartiqlLogicalValidator
 import org.partiql.lang.syntax.Parser
-import org.partiql.lang.syntax.SqlParser
+import org.partiql.lang.syntax.PartiQLParserBuilder
 import org.partiql.lang.syntax.SyntaxException
 import org.partiql.lang.types.CustomType
 
@@ -171,7 +173,8 @@ interface PlannerPipeline {
 
         /** Kotlin style builder for [PlannerPipeline].  If calling from Java instead use [builder]. */
         @Deprecated(WARNING)
-        fun build(valueFactory: ExprValueFactory, block: Builder.() -> Unit) = Builder(valueFactory).apply(block).build()
+        fun build(valueFactory: ExprValueFactory, block: Builder.() -> Unit) =
+            Builder(valueFactory).apply(block).build()
 
         /** Fluent style builder.  If calling from Kotlin instead use the [build] method. */
         @JvmStatic
@@ -207,14 +210,13 @@ interface PlannerPipeline {
         private val customProcedures: MutableMap<String, StoredProcedure> = HashMap()
         private val physicalPlanPasses = ArrayList<PartiqlPhysicalPass>()
         private val physicalOperatorFactories = ArrayList<RelationalOperatorFactory>()
-        private var globalVariableResolver: GlobalVariableResolver = emptyGlobalsResolver()
+        private var globalVariableResolver: GlobalVariableResolver = GlobalVariableResolver.EMPTY
         private var allowUndefinedVariables: Boolean = false
         private var enableLegacyExceptionHandling: Boolean = false
         private var plannerEventCallback: PlannerEventCallback? = null
 
         /**
          * Specifies the [Parser] to be used to turn an PartiQL query into an instance of [PartiqlAst].
-         * The default is [SqlParser].
          */
         fun sqlParser(p: Parser): Builder = this.apply {
             parser = p
@@ -381,7 +383,8 @@ interface PlannerPipeline {
             val compileOptionsToUse = evaluatorOptions ?: EvaluatorOptions.standard()
 
             when (compileOptionsToUse.thunkOptions.thunkReturnTypeAssertions) {
-                ThunkReturnTypeAssertions.DISABLED -> { /* take no action */ }
+                ThunkReturnTypeAssertions.DISABLED -> { /* take no action */
+                }
                 ThunkReturnTypeAssertions.ENABLED -> error(
                     "TODO: Support ThunkReturnTypeAssertions.ENABLED " +
                         "need a static type pass first)"
@@ -390,14 +393,15 @@ interface PlannerPipeline {
 
             // check for duplicate operator factories.  Unlike [ExprFunctions], we do not allow the default
             // operator implementations to be overridden.
-            val allPhysicalOperatorFactories = (DEFAULT_RELATIONAL_OPERATOR_FACTORIES + physicalOperatorFactories).apply {
-                groupBy { it.key }.entries.firstOrNull { it.value.size > 1 }?.let {
-                    throw IllegalArgumentException(
-                        "More than one BindingsOperatorFactory for ${it.key.operator} " +
-                            "named '${it.value}' was specified."
-                    )
+            val allPhysicalOperatorFactories =
+                (DEFAULT_RELATIONAL_OPERATOR_FACTORIES + physicalOperatorFactories).apply {
+                    groupBy { it.key }.entries.firstOrNull { it.value.size > 1 }?.let {
+                        throw IllegalArgumentException(
+                            "More than one BindingsOperatorFactory for ${it.key.operator} " +
+                                "named '${it.value}' was specified."
+                        )
+                    }
                 }
-            }
 
             val builtinFunctions = createBuiltinFunctions(valueFactory) + DynamicLookupExprFunction()
             val builtinFunctionsMap = builtinFunctions.associateBy {
@@ -409,7 +413,8 @@ interface PlannerPipeline {
             val allFunctionsMap = builtinFunctionsMap + customFunctions
             return PlannerPipelineImpl(
                 valueFactory = valueFactory,
-                parser = parser ?: SqlParser(valueFactory.ion, this.customDataTypes),
+                parser = parser ?: PartiQLParserBuilder().ionSystem(valueFactory.ion).customTypes(this.customDataTypes)
+                    .build(),
                 evaluatorOptions = compileOptionsToUse,
                 functions = allFunctionsMap,
                 customDataTypes = customDataTypes,
@@ -490,6 +495,8 @@ internal class PlannerPipelineImpl(
             return PlannerPassResult.Error(problemHandler.problems)
         }
 
+        PartiqlLogicalValidator(evaluatorOptions.typedOpBehavior).walkPlan(logicalPlan)
+
         // logical plan -> resolved logical plan
         val resolvedLogicalPlan = plannerEventCallback.doEvent("logical_to_logical_resolved", logicalPlan) {
             logicalPlan.toResolvedPlan(problemHandler, globalVariableResolver, allowUndefinedVariables)
@@ -499,6 +506,8 @@ internal class PlannerPipelineImpl(
         if (problemHandler.hasErrors) {
             return PlannerPassResult.Error(problemHandler.problems)
         }
+
+        PartiqlLogicalResolvedValidator().walkPlan(resolvedLogicalPlan)
 
         // Possible future passes:
         // - type checking and inferencing?
@@ -541,20 +550,20 @@ internal class PlannerPipelineImpl(
 
     override fun compile(physicalPlan: PartiqlPhysical.Plan): PlannerPassResult<QueryPlan> =
         plannerEventCallback.doEvent("compile", physicalPlan) {
-            // PhysicalBExprToThunkConverter and PhysicalExprToThunkConverterImpl are mutually recursive therefore
+            // PhysicalBExprToThunkConverter and PhysicalPlanCompilerImpl are mutually recursive therefore
             // we have to fall back on mutable variables to allow them to reference each other.
-            var exprConverter: PhysicalExprToThunkConverterImpl? = null
+            var exprConverter: PhysicalPlanCompilerImpl? = null
 
             val bexperConverter = PhysicalBexprToThunkConverter(
                 valueFactory = this.valueFactory,
-                exprConverter = object : PhysicalExprToThunkConverter {
+                exprConverter = object : PhysicalPlanCompiler {
                     override fun convert(expr: PartiqlPhysical.Expr): PhysicalPlanThunk =
                         exprConverter!!.convert(expr)
                 },
                 relationalOperatorFactory = bindingsOperatorFactories
             )
 
-            exprConverter = PhysicalExprToThunkConverterImpl(
+            exprConverter = PhysicalPlanCompilerImpl(
                 valueFactory = valueFactory,
                 functions = functions,
                 customTypedOpParameters = customTypedOpParameters,

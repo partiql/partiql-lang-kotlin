@@ -10,22 +10,220 @@ import org.partiql.lang.domains.id
 import kotlin.test.assertFailsWith
 
 class SqlParserMatchTest : SqlParserTestBase() {
+
+    // The tests in this suite are for MATCH, so run them only with PartiqlParser (ANTLR).
+    // (After switching from MATCH-as-FROM-source to MATCH-as-expression, SqlParser
+    // no longer parses MATCH-containing source.)
+    private fun assertExpressionNoRoundTrip(
+        source: String,
+        expectedPigBuilder: PartiqlAst.Builder.() -> PartiqlAst.PartiqlAstNode
+    ) {
+        super.assertExpressionNoRoundTrip(source, setOf(ParserTypes.PARTIQL_PARSER), expectedPigBuilder)
+    }
+
+    @Test
+    fun loneMatchExpr1path() = assertExpressionNoRoundTrip(
+        "(MyGraph MATCH (x))"
+    ) {
+        astMygraphMatchAllNodes
+    }
+
+    @Test
+    fun loneMatchExpr1path_noParens() {
+        // fails because it should be in parentheses
+        assertFailsWith<ParserException> {
+            assertExpressionNoRoundTrip(
+                "MyGraph MATCH (x)"
+            ) {
+                astMygraphMatchAllNodes
+            }
+        }
+    }
+
+    @Test
+    fun loneMatchExpr2path() = assertExpressionNoRoundTrip(
+        "( MyGraph MATCH (x), -[u]-> )"
+    ) {
+        astMyGraphMatchAllNodesEdges
+    }
+
+    @Test
+    fun loneMatchExpr2path_noParens() {
+        // fails because it should be in parentheses
+        assertFailsWith<ParserException> {
+            assertExpressionNoRoundTrip(
+                "MyGraph MATCH (x), -[u]-> "
+            ) {
+                astMyGraphMatchAllNodesEdges
+            }
+        }
+    }
+
+    // `MyGraph MATCH (x), -[u]->`
+    val astMyGraphMatchAllNodesEdges = PartiqlAst.build {
+        graphMatch(
+            expr = id("MyGraph"),
+            gpmlPattern = gpmlPattern(
+                patterns = listOf(
+                    graphMatchPattern(
+                        parts = listOf(
+                            node(
+                                prefilter = null,
+                                variable = "x",
+                                label = listOf()
+                            )
+                        )
+                    ),
+                    graphMatchPattern(
+                        parts = listOf(
+                            edge(
+                                direction = edgeRight(),
+                                variable = "u"
+                            )
+                        )
+                    )
+                )
+            )
+        )
+    }
+
+    // `MyGraph MATCH (x)`
+    val astMygraphMatchAllNodes = PartiqlAst.build {
+        graphMatch(
+            expr = id("MyGraph"),
+            gpmlPattern = gpmlPattern(
+                patterns = listOf(
+                    graphMatchPattern(
+                        parts = listOf(
+                            node(
+                                prefilter = null,
+                                variable = "x",
+                                label = listOf()
+                            )
+                        )
+                    )
+                )
+            )
+        )
+    }
+
+    // `SELECT * FROM tbl1`
+    val astSelectStarFromTbl1 = PartiqlAst.build {
+        select(
+            project = projectStar(),
+            from = scan(id("tbl1"))
+        )
+    }
+
+    @Test
+    fun leftMatchExprInUnion() = assertExpressionNoRoundTrip(
+        "(MyGraph MATCH (x)) UNION SELECT * FROM tbl1"
+    ) {
+        bagOp(
+            op = union(),
+            quantifier = distinct(),
+            operands = listOf(
+                astMygraphMatchAllNodes,
+                astSelectStarFromTbl1
+            )
+        )
+    }
+
+    @Test
+    fun leftMatchExprInUnion_noParens() {
+        // fails because it should be in parentheses
+        assertFailsWith<ParserException> {
+            assertExpressionNoRoundTrip(
+                "MyGraph MATCH (x) UNION SELECT * FROM tbl1"
+            ) {
+                bagOp(
+                    op = union(),
+                    quantifier = distinct(),
+                    operands = listOf(
+                        astMygraphMatchAllNodes,
+                        astSelectStarFromTbl1
+                    )
+                )
+            }
+        }
+    }
+
+    @Test
+    fun rightMatchExprInUnion() = assertExpressionNoRoundTrip(
+        "SELECT * FROM tbl1 UNION (MyGraph MATCH (x))"
+    ) {
+        bagOp(
+            op = union(),
+            quantifier = distinct(),
+            operands = listOf(
+                astSelectStarFromTbl1,
+                astMygraphMatchAllNodes
+            )
+        )
+    }
+
+    @Test
+    fun rightMatchExprInUnion_noParens() {
+        // fails because it should be in parentheses
+        assertFailsWith<ParserException> {
+            assertExpressionNoRoundTrip(
+                "SELECT * FROM tbl1 UNION MyGraph MATCH (x)"
+            ) {
+                bagOp(
+                    op = union(),
+                    quantifier = distinct(),
+                    operands = listOf(
+                        astSelectStarFromTbl1,
+                        astMygraphMatchAllNodes
+                    )
+                )
+            }
+        }
+    }
+
+    @Test
+    fun matchLeftTight() = assertExpressionNoRoundTrip(
+        "3 + (MyGraph MATCH (x))"
+    ) {
+        plus(
+            lit(ionInt(3)),
+            astMygraphMatchAllNodes
+        )
+    }
+
+    @Test
+    fun matchLeftTight_noParens() {
+        // fails because it should be in parentheses
+        assertFailsWith<ParserException> {
+            assertExpressionNoRoundTrip(
+                "3 + MyGraph MATCH (x)"
+            ) {
+                plus(
+                    lit(ionInt(3)),
+                    astMygraphMatchAllNodes
+                )
+            }
+        }
+    }
+
     @Test
     fun allNodesNoLabel() = assertExpressionNoRoundTrip(
         "SELECT 1 FROM my_graph MATCH ()"
     ) {
         select(
             project = projectList(projectExpr(lit(ionInt(1)))),
-            from = graphMatch(
-                expr = id("my_graph"),
-                graphExpr = graphMatchExpr(
-                    patterns = listOf(
-                        graphMatchPattern(
-                            parts = listOf(
-                                node(
-                                    prefilter = null,
-                                    variable = null,
-                                    label = listOf()
+            from = scan(
+                graphMatch(
+                    expr = id("my_graph"),
+                    gpmlPattern = gpmlPattern(
+                        patterns = listOf(
+                            graphMatchPattern(
+                                parts = listOf(
+                                    node(
+                                        prefilter = null,
+                                        variable = null,
+                                        label = listOf()
+                                    )
                                 )
                             )
                         )
@@ -42,16 +240,18 @@ class SqlParserMatchTest : SqlParserTestBase() {
     ) {
         select(
             project = projectStar(),
-            from = graphMatch(
-                expr = id("my_graph"),
-                graphExpr = graphMatchExpr(
-                    patterns = listOf(
-                        graphMatchPattern(
-                            parts = listOf(
-                                node(
-                                    prefilter = null,
-                                    variable = null,
-                                    label = listOf()
+            from = scan(
+                graphMatch(
+                    expr = id("my_graph"),
+                    gpmlPattern = gpmlPattern(
+                        patterns = listOf(
+                            graphMatchPattern(
+                                parts = listOf(
+                                    node(
+                                        prefilter = null,
+                                        variable = null,
+                                        label = listOf()
+                                    )
                                 )
                             )
                         )
@@ -67,16 +267,18 @@ class SqlParserMatchTest : SqlParserTestBase() {
     ) {
         select(
             project = projectList(projectExpr(lit(ionInt(1)))),
-            from = graphMatch(
-                expr = id("my_graph"),
-                graphExpr = graphMatchExpr(
-                    patterns = listOf(
-                        graphMatchPattern(
-                            parts = listOf(
-                                node(
-                                    prefilter = null,
-                                    variable = null,
-                                    label = listOf()
+            from = scan(
+                graphMatch(
+                    expr = id("my_graph"),
+                    gpmlPattern = gpmlPattern(
+                        patterns = listOf(
+                            graphMatchPattern(
+                                parts = listOf(
+                                    node(
+                                        prefilter = null,
+                                        variable = null,
+                                        label = listOf()
+                                    )
                                 )
                             )
                         )
@@ -87,28 +289,41 @@ class SqlParserMatchTest : SqlParserTestBase() {
         )
     }
 
+    val bindAllNodesAST =
+        { projection: PartiqlAst.Projection, asVar: String? ->
+            PartiqlAst.build {
+                select(
+                    project = projection,
+                    from = scan(
+                        expr = graphMatch(
+                            expr = id("my_graph"),
+                            gpmlPattern = gpmlPattern(
+                                patterns = listOf(
+                                    graphMatchPattern(
+                                        parts = listOf(
+                                            node(
+                                                prefilter = null,
+                                                variable = "x",
+                                                label = listOf()
+                                            )
+                                        )
+                                    )
+                                )
+                            )
+                        ),
+                        asAlias = asVar
+                    )
+                )
+            }
+        }
+
     @Test
     fun bindAllNodesProjectBound() = assertExpressionNoRoundTrip(
         "SELECT x FROM my_graph MATCH (x)"
     ) {
-        select(
-            project = projectList(projectExpr(expr = id("x"))),
-            from = graphMatch(
-                expr = id("my_graph"),
-                graphExpr = graphMatchExpr(
-                    patterns = listOf(
-                        graphMatchPattern(
-                            parts = listOf(
-                                node(
-                                    prefilter = null,
-                                    variable = "x",
-                                    label = listOf()
-                                )
-                            )
-                        )
-                    )
-                )
-            )
+        bindAllNodesAST(
+            projectList(projectExpr(expr = id("x"))),
+            null
         )
     }
 
@@ -116,24 +331,29 @@ class SqlParserMatchTest : SqlParserTestBase() {
     fun bindAllNodesProjectStar() = assertExpressionNoRoundTrip(
         "SELECT * FROM my_graph MATCH (x)"
     ) {
-        select(
-            project = projectStar(),
-            from = graphMatch(
-                expr = id("my_graph"),
-                graphExpr = graphMatchExpr(
-                    patterns = listOf(
-                        graphMatchPattern(
-                            parts = listOf(
-                                node(
-                                    prefilter = null,
-                                    variable = "x",
-                                    label = listOf()
-                                )
-                            )
-                        )
-                    )
-                )
-            )
+        bindAllNodesAST(
+            projectStar(),
+            null
+        )
+    }
+
+    @Test
+    fun bindAllNodesProjectBoundWithAS() = assertExpressionNoRoundTrip(
+        "SELECT * FROM my_graph MATCH (x) AS a"
+    ) {
+        bindAllNodesAST(
+            projectStar(),
+            "a"
+        )
+    }
+
+    @Test
+    fun bindAllNodesProjectBoundWithParensAS() = assertExpressionNoRoundTrip(
+        "SELECT * FROM (my_graph MATCH (x)) AS a"
+    ) {
+        bindAllNodesAST(
+            projectStar(),
+            "a"
         )
     }
 
@@ -148,16 +368,18 @@ class SqlParserMatchTest : SqlParserTestBase() {
                     asAlias = "info"
                 )
             ),
-            from = graphMatch(
-                expr = id("my_graph"),
-                graphExpr = graphMatchExpr(
-                    patterns = listOf(
-                        graphMatchPattern(
-                            parts = listOf(
-                                node(
-                                    prefilter = null,
-                                    variable = "x",
-                                    label = listOf()
+            from = scan(
+                graphMatch(
+                    expr = id("my_graph"),
+                    gpmlPattern = gpmlPattern(
+                        patterns = listOf(
+                            graphMatchPattern(
+                                parts = listOf(
+                                    node(
+                                        prefilter = null,
+                                        variable = "x",
+                                        label = listOf()
+                                    )
                                 )
                             )
                         )
@@ -177,16 +399,18 @@ class SqlParserMatchTest : SqlParserTestBase() {
     ) {
         select(
             project = projectList(projectExpr(expr = id("x"), asAlias = "target")),
-            from = graphMatch(
-                expr = id("my_graph"),
-                graphExpr = graphMatchExpr(
-                    patterns = listOf(
-                        graphMatchPattern(
-                            parts = listOf(
-                                node(
-                                    prefilter = null,
-                                    variable = "x",
-                                    label = listOf("Label")
+            from = scan(
+                graphMatch(
+                    expr = id("my_graph"),
+                    gpmlPattern = gpmlPattern(
+                        patterns = listOf(
+                            graphMatchPattern(
+                                parts = listOf(
+                                    node(
+                                        prefilter = null,
+                                        variable = "x",
+                                        label = listOf("Label")
+                                    )
                                 )
                             )
                         )
@@ -208,18 +432,98 @@ class SqlParserMatchTest : SqlParserTestBase() {
     ) {
         select(
             project = projectList(projectExpr(lit(ionInt(1)))),
-            from = graphMatch(
-                expr = id("g"),
-                graphExpr = graphMatchExpr(
-                    patterns = listOf(
-                        graphMatchPattern(
-                            parts = listOf(
-                                edge(
-                                    direction = edgeRight(),
-                                    quantifier = null,
-                                    prefilter = null,
-                                    variable = null,
-                                    label = listOf()
+            from = scan(
+                graphMatch(
+                    expr = id("g"),
+                    gpmlPattern = gpmlPattern(
+                        patterns = listOf(
+                            graphMatchPattern(
+                                parts = listOf(
+                                    edge(
+                                        direction = edgeRight(),
+                                        quantifier = null,
+                                        prefilter = null,
+                                        variable = null,
+                                        label = listOf()
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+            ),
+            where = null
+        )
+    }
+
+    @Test
+    fun allEdgesAllNodes() = assertExpressionNoRoundTrip(
+        "SELECT 1 FROM (g MATCH -[]->, ())",
+    ) {
+        select(
+            project = projectList(projectExpr(lit(ionInt(1)))),
+            from = scan(
+                graphMatch(
+                    expr = id("g"),
+                    gpmlPattern = gpmlPattern(
+                        patterns = listOf(
+                            graphMatchPattern(
+                                parts = listOf(
+                                    edge(
+                                        direction = edgeRight(),
+                                        quantifier = null,
+                                        prefilter = null,
+                                        variable = null,
+                                        label = listOf()
+                                    ),
+                                )
+                            ),
+                            graphMatchPattern(
+                                parts = listOf(
+                                    node(
+                                        prefilter = null,
+                                        variable = null,
+                                        label = listOf()
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+            ),
+            where = null
+        )
+    }
+
+    @Test
+    fun allNodesAllEdges() = assertExpressionNoRoundTrip(
+        "SELECT 1 FROM (g MATCH (), -[]-> )",
+    ) {
+        select(
+            project = projectList(projectExpr(lit(ionInt(1)))),
+            from = scan(
+                graphMatch(
+                    expr = id("g"),
+                    gpmlPattern = gpmlPattern(
+                        patterns = listOf(
+                            graphMatchPattern(
+                                parts = listOf(
+                                    node(
+                                        prefilter = null,
+                                        variable = null,
+                                        label = listOf()
+                                    )
+                                )
+                            ),
+                            graphMatchPattern(
+                                parts = listOf(
+                                    edge(
+                                        direction = edgeRight(),
+                                        quantifier = null,
+                                        prefilter = null,
+                                        variable = null,
+                                        label = listOf()
+                                    )
                                 )
                             )
                         )
@@ -235,30 +539,32 @@ class SqlParserMatchTest : SqlParserTestBase() {
             PartiqlAst.build {
                 select(
                     project = projectList(projectExpr(id("a")), projectExpr(id("b"))),
-                    from = graphMatch(
-                        expr = id("g"),
-                        graphExpr = graphMatchExpr(
-                            patterns = listOf(
-                                graphMatchPattern(
-                                    quantifier = null,
-                                    parts = listOf(
-                                        node(
-                                            prefilter = null,
-                                            variable = "a",
-                                            label = listOf("A")
-                                        ),
-                                        edge(
-                                            direction = direction,
-                                            quantifier = quantifier,
-                                            prefilter = null,
-                                            variable = variable,
-                                            label = label ?: emptyList()
-                                        ),
-                                        node(
-                                            prefilter = null,
-                                            variable = "b",
-                                            label = listOf("B")
-                                        ),
+                    from = scan(
+                        graphMatch(
+                            expr = id("g"),
+                            gpmlPattern = gpmlPattern(
+                                patterns = listOf(
+                                    graphMatchPattern(
+                                        quantifier = null,
+                                        parts = listOf(
+                                            node(
+                                                prefilter = null,
+                                                variable = "a",
+                                                label = listOf("A")
+                                            ),
+                                            edge(
+                                                direction = direction,
+                                                quantifier = quantifier,
+                                                prefilter = null,
+                                                variable = variable,
+                                                label = label ?: emptyList()
+                                            ),
+                                            node(
+                                                prefilter = null,
+                                                variable = "b",
+                                                label = listOf("B")
+                                            ),
+                                        )
                                     )
                                 )
                             )
@@ -438,29 +744,31 @@ class SqlParserMatchTest : SqlParserTestBase() {
                     asAlias = "dest"
                 )
             ),
-            from = graphMatch(
-                expr = id("my_graph"),
-                graphExpr = graphMatchExpr(
-                    patterns = listOf(
-                        graphMatchPattern(
-                            parts = listOf(
-                                node(
-                                    prefilter = null,
-                                    variable = "the_a",
-                                    label = listOf("a")
-                                ),
-                                edge(
-                                    direction = edgeRight(),
-                                    quantifier = null,
-                                    prefilter = null,
-                                    variable = "the_y",
-                                    label = listOf("y")
-                                ),
-                                node(
-                                    prefilter = null,
-                                    variable = "the_b",
-                                    label = listOf("b")
-                                ),
+            from = scan(
+                graphMatch(
+                    expr = id("my_graph"),
+                    gpmlPattern = gpmlPattern(
+                        patterns = listOf(
+                            graphMatchPattern(
+                                parts = listOf(
+                                    node(
+                                        prefilter = null,
+                                        variable = "the_a",
+                                        label = listOf("a")
+                                    ),
+                                    edge(
+                                        direction = edgeRight(),
+                                        quantifier = null,
+                                        prefilter = null,
+                                        variable = "the_y",
+                                        label = listOf("y")
+                                    ),
+                                    node(
+                                        prefilter = null,
+                                        variable = "the_b",
+                                        label = listOf("b")
+                                    ),
+                                )
                             )
                         )
                     )
@@ -477,57 +785,59 @@ class SqlParserMatchTest : SqlParserTestBase() {
 
     @Test
     fun twoHopTriples() = assertExpressionNoRoundTrip(
-        "SELECT a,b FROM g MATCH ((a) -[:has]-> (x), (x)-[:contains]->(b))",
+        "SELECT a,b FROM (g MATCH (a) -[:has]-> (x), (x)-[:contains]->(b))",
     ) {
         select(
             project = projectList(
                 projectExpr(expr = id("a")),
                 projectExpr(expr = id("b"))
             ),
-            from = graphMatch(
-                expr = id("g"),
-                graphExpr = graphMatchExpr(
-                    patterns = listOf(
-                        graphMatchPattern(
-                            parts = listOf(
-                                node(
-                                    prefilter = null,
-                                    variable = "a",
-                                    label = listOf()
-                                ),
-                                edge(
-                                    direction = edgeRight(),
-                                    quantifier = null,
-                                    prefilter = null,
-                                    variable = null,
-                                    label = listOf("has")
-                                ),
-                                node(
-                                    prefilter = null,
-                                    variable = "x",
-                                    label = listOf()
-                                ),
-                            )
-                        ),
-                        graphMatchPattern(
-                            parts = listOf(
-                                node(
-                                    prefilter = null,
-                                    variable = "x",
-                                    label = listOf()
-                                ),
-                                edge(
-                                    direction = edgeRight(),
-                                    quantifier = null,
-                                    prefilter = null,
-                                    variable = null,
-                                    label = listOf("contains")
-                                ),
-                                node(
-                                    prefilter = null,
-                                    variable = "b",
-                                    label = listOf()
-                                ),
+            from = scan(
+                graphMatch(
+                    expr = id("g"),
+                    gpmlPattern = gpmlPattern(
+                        patterns = listOf(
+                            graphMatchPattern(
+                                parts = listOf(
+                                    node(
+                                        prefilter = null,
+                                        variable = "a",
+                                        label = listOf()
+                                    ),
+                                    edge(
+                                        direction = edgeRight(),
+                                        quantifier = null,
+                                        prefilter = null,
+                                        variable = null,
+                                        label = listOf("has")
+                                    ),
+                                    node(
+                                        prefilter = null,
+                                        variable = "x",
+                                        label = listOf()
+                                    ),
+                                )
+                            ),
+                            graphMatchPattern(
+                                parts = listOf(
+                                    node(
+                                        prefilter = null,
+                                        variable = "x",
+                                        label = listOf()
+                                    ),
+                                    edge(
+                                        direction = edgeRight(),
+                                        quantifier = null,
+                                        prefilter = null,
+                                        variable = null,
+                                        label = listOf("contains")
+                                    ),
+                                    node(
+                                        prefilter = null,
+                                        variable = "b",
+                                        label = listOf()
+                                    ),
+                                )
                             )
                         )
                     )
@@ -545,41 +855,43 @@ class SqlParserMatchTest : SqlParserTestBase() {
                 projectExpr(expr = id("a")),
                 projectExpr(expr = id("b"))
             ),
-            from = graphMatch(
-                expr = id("g"),
-                graphExpr = graphMatchExpr(
-                    patterns = listOf(
-                        graphMatchPattern(
-                            parts = listOf(
-                                node(
-                                    prefilter = null,
-                                    variable = "a",
-                                    label = listOf()
-                                ),
-                                edge(
-                                    direction = edgeRight(),
-                                    quantifier = null,
-                                    prefilter = null,
-                                    variable = null,
-                                    label = listOf("has")
-                                ),
-                                node(
-                                    prefilter = null,
-                                    variable = null,
-                                    label = listOf()
-                                ),
-                                edge(
-                                    direction = edgeRight(),
-                                    quantifier = null,
-                                    prefilter = null,
-                                    variable = null,
-                                    label = listOf("contains")
-                                ),
-                                node(
-                                    prefilter = null,
-                                    variable = "b",
-                                    label = listOf()
-                                ),
+            from = scan(
+                graphMatch(
+                    expr = id("g"),
+                    gpmlPattern = gpmlPattern(
+                        patterns = listOf(
+                            graphMatchPattern(
+                                parts = listOf(
+                                    node(
+                                        prefilter = null,
+                                        variable = "a",
+                                        label = listOf()
+                                    ),
+                                    edge(
+                                        direction = edgeRight(),
+                                        quantifier = null,
+                                        prefilter = null,
+                                        variable = null,
+                                        label = listOf("has")
+                                    ),
+                                    node(
+                                        prefilter = null,
+                                        variable = null,
+                                        label = listOf()
+                                    ),
+                                    edge(
+                                        direction = edgeRight(),
+                                        quantifier = null,
+                                        prefilter = null,
+                                        variable = null,
+                                        label = listOf("contains")
+                                    ),
+                                    node(
+                                        prefilter = null,
+                                        variable = "b",
+                                        label = listOf()
+                                    ),
+                                )
                             )
                         )
                     )
@@ -595,26 +907,28 @@ class SqlParserMatchTest : SqlParserTestBase() {
         PartiqlAst.build {
             select(
                 project = projectList(projectExpr(id("a")), projectExpr(id("b"))),
-                from = graphMatch(
-                    expr = id("g"),
-                    graphExpr = graphMatchExpr(
-                        patterns = listOf(
-                            graphMatchPattern(
-                                variable = "p",
-                                parts = listOf(
-                                    node(
-                                        variable = "a",
-                                        label = listOf("A")
-                                    ),
-                                    edge(
-                                        direction = edgeRight(),
-                                        variable = "e",
-                                        label = listOf("E")
-                                    ),
-                                    node(
-                                        variable = "b",
-                                        label = listOf("B")
-                                    ),
+                from = scan(
+                    graphMatch(
+                        expr = id("g"),
+                        gpmlPattern = gpmlPattern(
+                            patterns = listOf(
+                                graphMatchPattern(
+                                    variable = "p",
+                                    parts = listOf(
+                                        node(
+                                            variable = "a",
+                                            label = listOf("A")
+                                        ),
+                                        edge(
+                                            direction = edgeRight(),
+                                            variable = "e",
+                                            label = listOf("E")
+                                        ),
+                                        node(
+                                            variable = "b",
+                                            label = listOf("B")
+                                        ),
+                                    )
                                 )
                             )
                         )
@@ -632,34 +946,36 @@ class SqlParserMatchTest : SqlParserTestBase() {
         PartiqlAst.build {
             select(
                 project = projectList(projectExpr(id("a")), projectExpr(id("b"))),
-                from = graphMatch(
-                    expr = id("g"),
-                    graphExpr = graphMatchExpr(
-                        patterns = listOf(
-                            graphMatchPattern(
-                                parts = listOf(
-                                    pattern(
-                                        graphMatchPattern(
-                                            prefilter = eq(
-                                                path(id("a"), pathExpr(lit(ionString("owner")), caseInsensitive())),
-                                                path(id("b"), pathExpr(lit(ionString("owner")), caseInsensitive()))
-                                            ),
-                                            quantifier = graphMatchQuantifier(lower = 2, upper = 5),
-                                            parts = listOf(
-                                                node(
-                                                    variable = "a",
-                                                    label = listOf("A")
+                from = scan(
+                    graphMatch(
+                        expr = id("g"),
+                        gpmlPattern = gpmlPattern(
+                            patterns = listOf(
+                                graphMatchPattern(
+                                    parts = listOf(
+                                        pattern(
+                                            graphMatchPattern(
+                                                prefilter = eq(
+                                                    path(id("a"), pathExpr(lit(ionString("owner")), caseInsensitive())),
+                                                    path(id("b"), pathExpr(lit(ionString("owner")), caseInsensitive()))
                                                 ),
-                                                edge(
-                                                    direction = edgeRight(),
-                                                    variable = "e",
-                                                    label = listOf("Edge")
+                                                quantifier = graphMatchQuantifier(lower = 2, upper = 5),
+                                                parts = listOf(
+                                                    node(
+                                                        variable = "a",
+                                                        label = listOf("A")
+                                                    ),
+                                                    edge(
+                                                        direction = edgeRight(),
+                                                        variable = "e",
+                                                        label = listOf("Edge")
+                                                    ),
+                                                    node(
+                                                        variable = "b",
+                                                        label = listOf("A")
+                                                    ),
                                                 ),
-                                                node(
-                                                    variable = "b",
-                                                    label = listOf("A")
-                                                ),
-                                            ),
+                                            )
                                         )
                                     )
                                 )
@@ -679,35 +995,37 @@ class SqlParserMatchTest : SqlParserTestBase() {
         PartiqlAst.build {
             select(
                 project = projectList(projectExpr(id("a")), projectExpr(id("b"))),
-                from = graphMatch(
-                    expr = id("g"),
-                    graphExpr = graphMatchExpr(
-                        patterns = listOf(
-                            graphMatchPattern(
-                                variable = "pathVar",
-                                parts = listOf(
-                                    node(
-                                        variable = "a",
-                                        label = listOf("A")
-                                    ),
-                                    pattern(
-                                        graphMatchPattern(
-                                            quantifier = graphMatchQuantifier(lower = 1, upper = 3),
-                                            parts = listOf(
-                                                node(),
-                                                edge(
-                                                    direction = edgeRight(),
-                                                    variable = "e",
-                                                    label = listOf("Edge")
-                                                ),
-                                                node(),
+                from = scan(
+                    graphMatch(
+                        expr = id("g"),
+                        gpmlPattern = gpmlPattern(
+                            patterns = listOf(
+                                graphMatchPattern(
+                                    variable = "pathVar",
+                                    parts = listOf(
+                                        node(
+                                            variable = "a",
+                                            label = listOf("A")
+                                        ),
+                                        pattern(
+                                            graphMatchPattern(
+                                                quantifier = graphMatchQuantifier(lower = 1, upper = 3),
+                                                parts = listOf(
+                                                    node(),
+                                                    edge(
+                                                        direction = edgeRight(),
+                                                        variable = "e",
+                                                        label = listOf("Edge")
+                                                    ),
+                                                    node(),
+                                                )
                                             )
-                                        )
-                                    ),
-                                    node(
-                                        variable = "b",
-                                        label = listOf("B")
-                                    ),
+                                        ),
+                                        node(
+                                            variable = "b",
+                                            label = listOf("B")
+                                        ),
+                                    )
                                 )
                             )
                         )
@@ -722,33 +1040,35 @@ class SqlParserMatchTest : SqlParserTestBase() {
         PartiqlAst.build {
             select(
                 project = projectList(projectExpr(id("a")), projectExpr(id("b"))),
-                from = graphMatch(
-                    expr = id("g"),
-                    graphExpr = graphMatchExpr(
-                        patterns = listOf(
-                            graphMatchPattern(
-                                variable = "pathVar",
-                                parts = listOf(
-                                    node(
-                                        variable = "a",
-                                        label = listOf("A")
-                                    ),
-                                    pattern(
-                                        graphMatchPattern(
-                                            quantifier = graphMatchQuantifier(lower = 0, upper = null),
-                                            parts = listOf(
-                                                edge(
-                                                    direction = edgeRight(),
-                                                    variable = "e",
-                                                    label = listOf("Edge")
-                                                ),
+                from = scan(
+                    graphMatch(
+                        expr = id("g"),
+                        gpmlPattern = gpmlPattern(
+                            patterns = listOf(
+                                graphMatchPattern(
+                                    variable = "pathVar",
+                                    parts = listOf(
+                                        node(
+                                            variable = "a",
+                                            label = listOf("A")
+                                        ),
+                                        pattern(
+                                            graphMatchPattern(
+                                                quantifier = graphMatchQuantifier(lower = 0, upper = null),
+                                                parts = listOf(
+                                                    edge(
+                                                        direction = edgeRight(),
+                                                        variable = "e",
+                                                        label = listOf("Edge")
+                                                    ),
+                                                )
                                             )
-                                        )
-                                    ),
-                                    node(
-                                        variable = "b",
-                                        label = listOf("B")
-                                    ),
+                                        ),
+                                        node(
+                                            variable = "b",
+                                            label = listOf("B")
+                                        ),
+                                    )
                                 )
                             )
                         )
@@ -780,52 +1100,57 @@ class SqlParserMatchTest : SqlParserTestBase() {
         PartiqlAst.build {
             select(
                 project = projectList(projectExpr(id("u"), asAlias = "banCandidate")),
-                from = graphMatch(
-                    expr = id("g"),
-                    graphExpr = graphMatchExpr(
-                        patterns = listOf(
-                            graphMatchPattern(
-                                parts = listOf(
-                                    node(
-                                        variable = "p",
-                                        label = listOf("Post"),
-                                        prefilter = eq(
-                                            path(id("p"), pathExpr(lit(ionString("isFlagged")), caseInsensitive())),
-                                            lit(ionBool(true))
-                                        )
-                                    ),
-                                    edge(
-                                        direction = edgeLeft(),
-                                        label = listOf("createdPost")
-                                    ),
-                                    node(
-                                        variable = "u",
-                                        label = listOf("Usr"),
-                                        prefilter = and(
-                                            eq(
-                                                path(id("u"), pathExpr(lit(ionString("isBanned")), caseInsensitive())),
-                                                lit(ionBool(false))
-                                            ),
-                                            lt(
-                                                path(id("u"), pathExpr(lit(ionString("karma")), caseInsensitive())),
-                                                lit(ionInt(20))
+                from = scan(
+                    graphMatch(
+                        expr = id("g"),
+                        gpmlPattern = gpmlPattern(
+                            patterns = listOf(
+                                graphMatchPattern(
+                                    parts = listOf(
+                                        node(
+                                            variable = "p",
+                                            label = listOf("Post"),
+                                            prefilter = eq(
+                                                path(id("p"), pathExpr(lit(ionString("isFlagged")), caseInsensitive())),
+                                                lit(ionBool(true))
                                             )
-                                        )
+                                        ),
+                                        edge(
+                                            direction = edgeLeft(),
+                                            label = listOf("createdPost")
+                                        ),
+                                        node(
+                                            variable = "u",
+                                            label = listOf("Usr"),
+                                            prefilter = and(
+                                                eq(
+                                                    path(
+                                                        id("u"),
+                                                        pathExpr(lit(ionString("isBanned")), caseInsensitive())
+                                                    ),
+                                                    lit(ionBool(false))
+                                                ),
+                                                lt(
+                                                    path(id("u"), pathExpr(lit(ionString("karma")), caseInsensitive())),
+                                                    lit(ionInt(20))
+                                                )
+                                            )
+                                        ),
+                                        edge(
+                                            direction = edgeRight(),
+                                            label = listOf("createdComment")
+                                        ),
+                                        node(
+                                            variable = "c",
+                                            label = listOf("Comment"),
+                                            prefilter =
+                                            eq(
+                                                path(id("c"), pathExpr(lit(ionString("isFlagged")), caseInsensitive())),
+                                                lit(ionBool(true))
+                                            )
+                                        ),
                                     ),
-                                    edge(
-                                        direction = edgeRight(),
-                                        label = listOf("createdComment")
-                                    ),
-                                    node(
-                                        variable = "c",
-                                        label = listOf("Comment"),
-                                        prefilter =
-                                        eq(
-                                            path(id("c"), pathExpr(lit(ionString("isFlagged")), caseInsensitive())),
-                                            lit(ionBool(true))
-                                        )
-                                    ),
-                                ),
+                                )
                             )
                         )
                     )
@@ -842,36 +1167,38 @@ class SqlParserMatchTest : SqlParserTestBase() {
         PartiqlAst.build {
             select(
                 project = projectList(projectExpr(id("p"))),
-                from = graphMatch(
-                    expr = id("g"),
-                    graphExpr = graphMatchExpr(
-                        patterns = listOf(
-                            graphMatchPattern(
-                                restrictor = restrictor,
-                                variable = "p",
-                                parts = listOf(
-                                    node(
-                                        variable = "a",
-                                        prefilter =
-                                        eq(
-                                            path(id("a"), pathExpr(lit(ionString("owner")), caseInsensitive())),
-                                            lit(ionString("Dave"))
+                from = scan(
+                    graphMatch(
+                        expr = id("g"),
+                        gpmlPattern = gpmlPattern(
+                            patterns = listOf(
+                                graphMatchPattern(
+                                    restrictor = restrictor,
+                                    variable = "p",
+                                    parts = listOf(
+                                        node(
+                                            variable = "a",
+                                            prefilter =
+                                            eq(
+                                                path(id("a"), pathExpr(lit(ionString("owner")), caseInsensitive())),
+                                                lit(ionString("Dave"))
+                                            ),
                                         ),
-                                    ),
-                                    edge(
-                                        direction = edgeRight(),
-                                        variable = "t",
-                                        label = listOf("Transfer"),
-                                        quantifier = graphMatchQuantifier(0)
-                                    ),
-                                    node(
-                                        variable = "b",
-                                        prefilter =
-                                        eq(
-                                            path(id("b"), pathExpr(lit(ionString("owner")), caseInsensitive())),
-                                            lit(ionString("Aretha"))
+                                        edge(
+                                            direction = edgeRight(),
+                                            variable = "t",
+                                            label = listOf("Transfer"),
+                                            quantifier = graphMatchQuantifier(0)
                                         ),
-                                    ),
+                                        node(
+                                            variable = "b",
+                                            prefilter =
+                                            eq(
+                                                path(id("b"), pathExpr(lit(ionString("owner")), caseInsensitive())),
+                                                lit(ionString("Aretha"))
+                                            ),
+                                        ),
+                                    )
                                 )
                             )
                         )
@@ -907,36 +1234,38 @@ class SqlParserMatchTest : SqlParserTestBase() {
         PartiqlAst.build {
             select(
                 project = projectList(projectExpr(id("p"))),
-                from = graphMatch(
-                    expr = id("g"),
-                    graphExpr = graphMatchExpr(
-                        selector = selector,
-                        patterns = listOf(
-                            graphMatchPattern(
-                                variable = "p",
-                                parts = listOf(
-                                    node(
-                                        variable = "a",
-                                        prefilter =
-                                        eq(
-                                            path(id("a"), pathExpr(lit(ionString("owner")), caseInsensitive())),
-                                            lit(ionString("Dave"))
+                from = scan(
+                    graphMatch(
+                        expr = id("g"),
+                        gpmlPattern = gpmlPattern(
+                            selector = selector,
+                            patterns = listOf(
+                                graphMatchPattern(
+                                    variable = "p",
+                                    parts = listOf(
+                                        node(
+                                            variable = "a",
+                                            prefilter =
+                                            eq(
+                                                path(id("a"), pathExpr(lit(ionString("owner")), caseInsensitive())),
+                                                lit(ionString("Dave"))
+                                            ),
                                         ),
-                                    ),
-                                    edge(
-                                        direction = edgeRight(),
-                                        variable = "t",
-                                        label = listOf("Transfer"),
-                                        quantifier = graphMatchQuantifier(0)
-                                    ),
-                                    node(
-                                        variable = "b",
-                                        prefilter =
-                                        eq(
-                                            path(id("b"), pathExpr(lit(ionString("owner")), caseInsensitive())),
-                                            lit(ionString("Aretha"))
+                                        edge(
+                                            direction = edgeRight(),
+                                            variable = "t",
+                                            label = listOf("Transfer"),
+                                            quantifier = graphMatchQuantifier(0)
                                         ),
-                                    ),
+                                        node(
+                                            variable = "b",
+                                            prefilter =
+                                            eq(
+                                                path(id("b"), pathExpr(lit(ionString("owner")), caseInsensitive())),
+                                                lit(ionString("Aretha"))
+                                            ),
+                                        ),
+                                    )
                                 )
                             )
                         )
@@ -991,22 +1320,24 @@ class SqlParserMatchTest : SqlParserTestBase() {
 
     val joinedMatch = {
         val match = PartiqlAst.build {
-            graphMatch(
-                expr = id("graph"),
-                graphExpr = graphMatchExpr(
-                    patterns = listOf(
-                        graphMatchPattern(
-                            parts = listOf(
-                                node(variable = "a"),
-                                edge(direction = edgeRight()),
-                                node(variable = "b"),
-                            )
-                        ),
-                        graphMatchPattern(
-                            parts = listOf(
-                                node(variable = "a"),
-                                edge(direction = edgeRight()),
-                                node(variable = "c"),
+            scan(
+                graphMatch(
+                    expr = id("graph"),
+                    gpmlPattern = gpmlPattern(
+                        patterns = listOf(
+                            graphMatchPattern(
+                                parts = listOf(
+                                    node(variable = "a"),
+                                    edge(direction = edgeRight()),
+                                    node(variable = "b"),
+                                )
+                            ),
+                            graphMatchPattern(
+                                parts = listOf(
+                                    node(variable = "a"),
+                                    edge(direction = edgeRight()),
+                                    node(variable = "c"),
+                                )
                             )
                         )
                     )
@@ -1046,20 +1377,47 @@ class SqlParserMatchTest : SqlParserTestBase() {
     }
 
     @Test
-    fun matchAndJoinCommasParenthesized() = assertExpressionNoRoundTrip(
-        "SELECT a,b,c, t1.x as x, t2.y as y FROM graph MATCH ((a) -> (b), (a) -> (c)), table1 as t1, table2 as t2",
-    ) {
-        joinedMatch()
+    fun matchAndJoinCommasParenthesized() {
+        // fails because of the outer parentheses in ((a) -> (b), (a) -> (c)))
+        assertFailsWith<ParserException> {
+            assertExpressionNoRoundTrip(
+                "SELECT a,b,c, t1.x as x, t2.y as y FROM graph MATCH ((a) -> (b), (a) -> (c)), table1 as t1, table2 as t2",
+            ) {
+                joinedMatch()
+            }
+        }
     }
 
     @Test
     fun matchAndJoinCommas() {
+        // fails because of the comma in the pattern and no parentheses like `(graph MATCH ...)`
         assertFailsWith<ParserException> {
             assertExpressionNoRoundTrip(
                 "SELECT a,b,c, t1.x as x, t2.y as y FROM graph MATCH (a) -> (b), (a) -> (c), table1 as t1, table2 as t2",
             ) {
                 joinedMatch()
             }
+        }
+    }
+
+    @Test
+    fun matchAndJoinCommasParenthesized_outerParens() {
+        // fails because of the outer parentheses in ((a) -> (b), (a) -> (c)))
+        assertFailsWith<ParserException> {
+            assertExpressionNoRoundTrip(
+                "SELECT a,b,c, t1.x as x, t2.y as y FROM (graph MATCH ((a) -> (b), (a) -> (c))), table1 as t1, table2 as t2",
+            ) {
+                joinedMatch()
+            }
+        }
+    }
+
+    @Test
+    fun matchAndJoinCommas_outerParens() {
+        assertExpressionNoRoundTrip(
+            "SELECT a,b,c, t1.x as x, t2.y as y FROM (graph MATCH (a) -> (b), (a) -> (c)), table1 as t1, table2 as t2",
+        ) {
+            joinedMatch()
         }
     }
 

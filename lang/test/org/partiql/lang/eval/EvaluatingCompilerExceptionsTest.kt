@@ -45,19 +45,19 @@ class EvaluatingCompilerExceptionsTest : EvaluatorTestBase() {
                 query = """CAST(12 AS FLOAT(1))""",
                 expectedErrorCode = ErrorCode.SEMANTIC_FLOAT_PRECISION_UNSUPPORTED,
                 expectedErrorContext = propertyValueMapOf(1, 13),
-                compileOptionsBuilderBlock = CompOptions.TYPED_OP_BEHAVIOR_HONOR_PARAMS.optionsBlock
+                compileOptionsBuilderBlock = CompOptions.STANDARD.optionsBlock
             ),
             EvaluatorErrorTestCase(
                 query = """CAN_CAST(12 AS FLOAT(1))""",
                 expectedErrorCode = ErrorCode.SEMANTIC_FLOAT_PRECISION_UNSUPPORTED,
                 expectedErrorContext = propertyValueMapOf(1, 17),
-                compileOptionsBuilderBlock = CompOptions.TYPED_OP_BEHAVIOR_HONOR_PARAMS.optionsBlock
+                compileOptionsBuilderBlock = CompOptions.STANDARD.optionsBlock
             ),
             EvaluatorErrorTestCase(
                 query = """12 IS FLOAT(1)""",
                 expectedErrorCode = ErrorCode.SEMANTIC_FLOAT_PRECISION_UNSUPPORTED,
                 expectedErrorContext = propertyValueMapOf(1, 8),
-                compileOptionsBuilderBlock = CompOptions.TYPED_OP_BEHAVIOR_HONOR_PARAMS.optionsBlock
+                compileOptionsBuilderBlock = CompOptions.STANDARD.optionsBlock
             )
         )
     }
@@ -90,7 +90,7 @@ class EvaluatingCompilerExceptionsTest : EvaluatorTestBase() {
           WHERE x NOT BETWEEN 1 AND 'Y'
         """,
         ErrorCode.EVALUATOR_INVALID_COMPARISION,
-        expectedErrorContext = propertyValueMapOf(4, 19),
+        expectedErrorContext = propertyValueMapOf(4, 23),
         expectedPermissiveModeResult = "<<>>"
     )
 

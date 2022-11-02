@@ -7428,11 +7428,11 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
             // valid tests
             listOf(
                 // count
-                createAggFunctionValidTests("COUNT", NULL, INT8),
-                createAggFunctionValidTests("COUNT", MISSING, INT8),
-                createAggFunctionValidTests("COUNT", ANY, INT8),
-                createAggFunctionValidTests("COUNT", unionOf(NULL, MISSING, INT), INT8),
-                createAggFunctionValidTests("COUNT", unionOf(NULL, MISSING, INT), INT8),
+                createAggFunctionValidTests("COUNT", NULL, INT),
+                createAggFunctionValidTests("COUNT", MISSING, INT),
+                createAggFunctionValidTests("COUNT", ANY, INT),
+                createAggFunctionValidTests("COUNT", unionOf(NULL, MISSING, INT), INT),
+                createAggFunctionValidTests("COUNT", unionOf(NULL, MISSING, INT), INT),
 
                 // min
                 createAggFunctionValidTests("MIN", MISSING, NULL),
@@ -7449,17 +7449,19 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
                 // avg
                 createAggFunctionValidTests("AVG", MISSING, NULL),
                 createAggFunctionValidTests("AVG", unionOf(MISSING, NULL), NULL),
-                createAggFunctionValidTests("AVG", unionOf(MISSING, NULL, INT), DECIMAL),
+                createAggFunctionValidTests("AVG", unionOf(MISSING, NULL, INT), unionOf(NULL, DECIMAL)),
                 createAggFunctionValidTests("AVG", unionOf(INT, DECIMAL, FLOAT), DECIMAL),
+                createAggFunctionValidTests("AVG", unionOf(INT, DECIMAL, FLOAT, STRING), unionOf(MISSING, DECIMAL)),
 
                 // SUM
                 createAggFunctionValidTests("SUM", MISSING, NULL),
                 createAggFunctionValidTests("SUM", unionOf(MISSING, NULL), NULL),
-                createAggFunctionValidTests("SUM", unionOf(MISSING, NULL, INT2), INT2),
-                createAggFunctionValidTests("SUM", unionOf(INT2, INT4), INT4),
-                createAggFunctionValidTests("SUM", unionOf(INT2, INT4, INT8), INT8),
-                createAggFunctionValidTests("SUM", unionOf(INT2, INT4, INT8, FLOAT), FLOAT),
-                createAggFunctionValidTests("SUM", unionOf(INT2, INT4, INT8, FLOAT, DECIMAL), DECIMAL),
+                createAggFunctionValidTests("SUM", unionOf(MISSING, NULL, INT2), unionOf(NULL, INT2)),
+                createAggFunctionValidTests("SUM", unionOf(INT2, INT4), unionOf(INT2, INT4)),
+                createAggFunctionValidTests("SUM", unionOf(INT2, INT4, INT8), unionOf(INT2, INT4, INT8)),
+                createAggFunctionValidTests("SUM", unionOf(INT2, INT4, INT8, FLOAT), unionOf(INT2, INT4, INT8, FLOAT)),
+                createAggFunctionValidTests("SUM", unionOf(INT2, INT4, INT8, FLOAT, DECIMAL), unionOf(INT2, INT4, INT8, FLOAT, DECIMAL)),
+                createAggFunctionValidTests("SUM", unionOf(INT2, INT4, INT8, FLOAT, DECIMAL, STRING), unionOf(INT2, INT4, INT8, FLOAT, DECIMAL, MISSING))
             ) +
                 // sum input type not compatible
                 TestCase(
@@ -7471,7 +7473,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
                             createInvalidArgumentTypeForFunctionError(
                                 sourceLocation = SourceLocationMeta(1L, 1L, 3L),
                                 functionName = "sum",
-                                expectedArgType = unionOf(MISSING, NULL, NUMERIC),
+                                expectedArgType = unionOf(MISSING, NULL, NUMERIC).flatten(),
                                 actualType = STRING
                             )
                         )
@@ -7487,7 +7489,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
                             createInvalidArgumentTypeForFunctionError(
                                 sourceLocation = SourceLocationMeta(1L, 1L, 3L),
                                 functionName = "avg",
-                                expectedArgType = unionOf(MISSING, NULL, NUMERIC),
+                                expectedArgType = unionOf(MISSING, NULL, NUMERIC).flatten(),
                                 actualType = STRING
                             )
                         )

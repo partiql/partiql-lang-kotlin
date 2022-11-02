@@ -129,6 +129,9 @@ may then be further optimized by selecting better implementations of each operat
             // Bag operators
             (bag_op op::bag_op_type quantifier::set_quantifier operands::(* expr 2))
 
+            // GPML graph pattern match:  <expr> MATCH <gpml_pattern>
+            (graph_match expr::expr gpml_pattern::gpml_pattern)
+
             // Other expression types
             (path root::expr steps::(* path_step 1))
             (call func_name::symbol args::(* expr 1))
@@ -208,11 +211,9 @@ may then be further optimized by selecting better implementations of each operat
             // UNPIVOT <expr> [AS <id>] [AT <id>] [BY <id>]
             (unpivot expr::expr as_alias::(? symbol) at_alias::(? symbol) by_alias::(? symbol))
 
-             // <from_source> JOIN [INNER | LEFT | RIGHT | FULL] <from_source> ON <expr>
-             (join type::join_type left::from_source right::from_source predicate::(? expr))
-
-             // <expr> MATCH <graph_pattern>
-             (graph_match expr::expr graph_expr::graph_match_expr))
+            // <from_source> JOIN [INNER | LEFT | RIGHT | FULL] <from_source> ON <expr>
+            (join type::join_type left::from_source right::from_source predicate::(? expr))
+        )
 
         // Indicates the logical type of join.
         (sum join_type (inner) (left) (right) (full))
@@ -302,9 +303,9 @@ may then be further optimized by selecting better implementations of each operat
              (selector_shortest_k k::int)
              (selector_shortest_k_group k::int))
 
-        // A graph match clause as defined in GPML
+        // A graph pattern as defined in GPML
         // See https://arxiv.org/abs/2112.06217
-        (product graph_match_expr
+        (product gpml_pattern
                  selector::(? graph_match_selector)
                  patterns::(* graph_match_pattern 1))
 
@@ -372,8 +373,9 @@ may then be further optimized by selecting better implementations of each operat
         (product dml_op_list ops::(* dml_op 1))
 
         (sum dml_op
-            // `INSERT INTO <expr> <expr>`
-            (insert target::expr values::expr)
+            // See the following RFC for more details:
+            // https://github.com/partiql/partiql-docs/blob/main/RFCs/0011-partiql-insert.md
+            (insert target::expr values::expr conflict_action::(? conflict_action))
 
             // `INSERT INTO <expr> VALUE <expr> [AT <expr>]` [ON CONFLICT WHERE <expr> DO NOTHING]`
             (insert_value target::expr value::expr index::(? expr) on_conflict::(? on_conflict))
@@ -393,7 +395,12 @@ may then be further optimized by selecting better implementations of each operat
 
         // `CONFLICT_ACTION <action>`
         (sum conflict_action
+            (do_replace value::on_conflict_value)
+            (do_update value::on_conflict_value)
             (do_nothing))
+
+        (sum on_conflict_value
+            (excluded))
 
         // A data definition operation.
         (sum ddl_op
@@ -591,6 +598,10 @@ may then be further optimized by selecting better implementations of each operat
                 // TODO:  in the future, when the legacy AST compiler has been removed and the AST is no longer
                 // part of the public API, we should consider moving this definition to the partiql_ast domain.
                 (struct parts::(* struct_part 1))
+
+                // The PIVOT clause produces a single tuple whose attributes are the key and value expression evaluated
+                //   for all input tuples. The tuple is a value, not a bindings expr, hence why this isn't an operator.
+                (pivot input::bexpr key::expr value::expr)
             )
         )
 
@@ -605,6 +616,26 @@ may then be further optimized by selecting better implementations of each operat
         // Change let_binding so that it has a var_decl instead of only a name to represent bindings.
         (exclude let_binding)
         (include (product let_binding value::expr decl::var_decl))
+
+        // Inputs to Aggregations
+        (include
+            (product group_key
+                     expr::expr
+                     as_var::var_decl
+            )
+            (product group_key_list
+                     keys::(* group_key 1)
+            )
+            (product aggregate_function
+                quantifier::set_quantifier
+                name::symbol
+                arg::expr
+                as_var::var_decl
+            )
+            (product aggregate_function_list
+                functions::(* aggregate_function 1)
+            )
+        )
 
         // Now we include new stuff, including PartiQL's relational algebra.
         (include
@@ -630,9 +661,23 @@ may then be further optimized by selecting better implementations of each operat
                 // value, it is converted into a singleton bag.
                 (scan expr::expr as_decl::var_decl at_decl::(? var_decl) by_decl::(? var_decl))
 
+                 // Similar to scan, the unpivot operator converts a value collection to a binding collection.
+                 // The logical plan uses unpivot operator in place of the AST's unpivot from_source node.
+                (unpivot expr::expr as_decl::var_decl at_decl::(? var_decl) by_decl::(? var_decl))
+
                 // Evaluates `predicate` within the scope of every row of `bexpr`, and only returns those
                 // rows for which `predicate` returns true.
                 (filter predicate::expr source::bexpr)
+
+                // The relational algebra operator for aggregations. Using the output scope of the `source` and any
+                //  passed input scope, we group on the `group_key_list` calculate aggregations using the
+                //  `aggregate_function_list`. To note: GROUP AS is represented as an aggregation function
+                (aggregate
+                     source::bexpr
+                     strategy::grouping_strategy
+                     group_list::group_key_list
+                     function_list::aggregate_function_list
+                )
 
                 // Basic join operator.  Covers cross, inner, left, right and full joins.
                 // To represent a cross join, set `predicate` to `null`.
@@ -640,7 +685,11 @@ may then be further optimized by selecting better implementations of each operat
                     join_type::join_type
                     left::bexpr
                     right::bexpr
-                    predicate::(? expr))
+                    predicate::(? expr)
+                )
+
+                // Converts a bindings collection into a sorted bindings collection.
+                (sort source::bexpr sort_specs::(* sort_spec 1))
 
                 // Skips `row_count` rows, then emits all remaining rows.
                 (offset row_count::expr source::bexpr)
@@ -658,8 +707,8 @@ may then be further optimized by selecting better implementations of each operat
             (sum dml_operation
                 (dml_insert)
                 (dml_delete)
-                // TODO:
-                // (dml_update)
+                (dml_replace)
+                (dml_update)
             )
         )
 
@@ -691,15 +740,10 @@ may then be further optimized by selecting better implementations of each operat
 
         (exclude
             group_by
-            grouping_strategy
             group_key
             group_key_list
-            order_by
-            sort_spec
-            ordering_spec
-
+            order_by             // Replaced with SORT node
             let
-
             dml_op
             dml_op_list
             ddl_op
@@ -828,8 +872,8 @@ may then be further optimized by selecting better implementations of each operat
 
                 // Operators below this point are the same as in the logical algebra, but also include an i::impl
                 // element.
-
                 (scan i::impl expr::expr as_decl::var_decl at_decl::(? var_decl) by_decl::(? var_decl))
+                (unpivot i::impl expr::expr as_decl::var_decl at_decl::(? var_decl) by_decl::(? var_decl))
                 (filter i::impl predicate::expr source::bexpr)
                 (join
                     i::impl
@@ -838,6 +882,16 @@ may then be further optimized by selecting better implementations of each operat
                     right::bexpr
                     predicate::(? expr))
 
+                (sort i::impl source::bexpr sort_specs::(* sort_spec 1))
+
+                (aggregate
+                    i::impl
+                    source::bexpr
+                    strategy::grouping_strategy
+                    group_list::group_key_list
+                    function_list::aggregate_function_list
+                )
+
                 (offset i::impl row_count::expr source::bexpr)
                 (limit i::impl row_count::expr source::bexpr)
                 (let i::impl source::bexpr bindings::(* let_binding 1))
@@ -845,4 +899,3 @@ may then be further optimized by selecting better implementations of each operat
         )
     )
 )
-

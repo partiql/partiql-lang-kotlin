@@ -5,19 +5,19 @@ import org.partiql.examples.util.Example
 import org.partiql.lang.errors.Property
 import org.partiql.lang.syntax.Parser
 import org.partiql.lang.syntax.ParserException
-import org.partiql.lang.syntax.SqlParser
+import org.partiql.lang.syntax.PartiQLParserBuilder
 import java.io.PrintStream
 
 /**
- * Demonstrates the use of [SqlParser], [AstSerializer] and [AstDeserializer].
+ * Demonstrates the use of [Parser], [AstSerializer] and [AstDeserializer].
  */
 class ParserErrorExample(out: PrintStream) : Example(out) {
 
-    /** A standard instance of [IonSystem], which is required by [SqlParser].  */
+    /** A standard instance of [IonSystem], which is required by [Parser].  */
     internal var ion = IonSystemBuilder.standard().build()
 
-    /** An instance of [SqlParser].  */
-    private var parser: Parser = SqlParser(ion)
+    /** An instance of [Parser].  */
+    private var parser: Parser = PartiQLParserBuilder().ionSystem(ion).build()
 
     /** Demonstrates handling of syntax errors.  */
     override fun run() = try {

@@ -1,7 +1,6 @@
 package org.partiql.lang.planner.transforms
 
 import com.amazon.ionelement.api.ionSymbol
-import org.partiql.lang.ast.DeleteOp.name
 import org.partiql.lang.ast.sourceLocation
 import org.partiql.lang.domains.PartiqlLogical
 import org.partiql.lang.domains.PartiqlLogicalResolved
@@ -130,7 +129,7 @@ private fun GlobalResolutionResult.toResolvedVariable() =
  */
 private data class LocalScope(val varDecls: List<PartiqlLogical.VarDecl>)
 
-private data class LogicalToLogicalResolvedVisitorTransform(
+internal data class LogicalToLogicalResolvedVisitorTransform(
     /** If set to `true`, do not log errors about undefined variables. Rewrite such variables to a `dynamic_id` node. */
     val allowUndefinedVariables: Boolean,
     /** Where to send error reports. */
@@ -375,6 +374,15 @@ private data class LogicalToLogicalResolvedVisitorTransform(
         }
     }
 
+    override fun transformBexprSort_sortSpecs(node: PartiqlLogical.Bexpr.Sort): List<PartiqlLogicalResolved.SortSpec> {
+        val bindings = getOutputScope(node.source).concatenate(this.inputScope)
+        return withInputScope(bindings) {
+            node.sortSpecs.map {
+                this.transformSortSpec(it)
+            }
+        }
+    }
+
     override fun transformBexprFilter_predicate(node: PartiqlLogical.Bexpr.Filter): PartiqlLogicalResolved.Expr {
         val bindings = getOutputScope(node.source)
         return withInputScope(bindings) {
@@ -382,10 +390,38 @@ private data class LogicalToLogicalResolvedVisitorTransform(
         }
     }
 
+    override fun transformBexprAggregate(node: PartiqlLogical.Bexpr.Aggregate): PartiqlLogicalResolved.Bexpr {
+        val scope = getOutputScope(node.source).concatenate(this.inputScope)
+        return PartiqlLogicalResolved.build {
+            aggregate(
+                source = transformBexpr(node.source),
+                strategy = super.transformBexprAggregate_strategy(node),
+                groupList = withInputScope(scope) { super.transformBexprAggregate_groupList(node) },
+                functionList = withInputScope(scope) { super.transformBexprAggregate_functionList(node) },
+                metas = super.transformBexprAggregate_metas(node)
+            )
+        }
+    }
+
     override fun transformBexprJoin_predicate(node: PartiqlLogical.Bexpr.Join): PartiqlLogicalResolved.Expr? {
         val bindings = getOutputScope(node)
         return withInputScope(bindings) {
             node.predicate?.let { this.transformExpr(it) }
+        }
+    }
+
+    /**
+     * Rewrites PIVOT with resolved variables of the relevant scope
+     */
+    override fun transformExprPivot(node: PartiqlLogical.Expr.Pivot): PartiqlLogicalResolved.Expr {
+        val scope = getOutputScope(node.input).concatenate(this.inputScope)
+        return PartiqlLogicalResolved.build {
+            pivot(
+                input = transformBexpr(node.input),
+                key = withInputScope(scope) { transformExpr(node.key) },
+                value = withInputScope(scope) { transformExpr(node.value) },
+                metas = transformMetas(node.metas)
+            )
         }
     }
 
@@ -424,7 +460,20 @@ private data class LogicalToLogicalResolvedVisitorTransform(
             is PartiqlLogical.Bexpr.Filter -> getOutputScope(bexpr.source)
             is PartiqlLogical.Bexpr.Limit -> getOutputScope(bexpr.source)
             is PartiqlLogical.Bexpr.Offset -> getOutputScope(bexpr.source)
+            is PartiqlLogical.Bexpr.Sort -> getOutputScope(bexpr.source)
+            is PartiqlLogical.Bexpr.Aggregate -> {
+                val keyVariables = bexpr.groupList.keys.map { it.asVar }
+                val functionVariables = bexpr.functionList.functions.map { it.asVar }
+                LocalScope(keyVariables + functionVariables)
+            }
             is PartiqlLogical.Bexpr.Scan -> {
+                LocalScope(
+                    listOfNotNull(bexpr.asDecl.markForDynamicResolution(), bexpr.atDecl, bexpr.byDecl).also {
+                        checkForDuplicateVariables(it)
+                    }
+                )
+            }
+            is PartiqlLogical.Bexpr.Unpivot -> {
                 LocalScope(
                     listOfNotNull(bexpr.asDecl.markForDynamicResolution(), bexpr.atDecl, bexpr.byDecl).also {
                         checkForDuplicateVariables(it)
@@ -492,5 +541,6 @@ private data class LogicalToLogicalResolvedVisitorTransform(
 
 /** Marks a variable for dynamic resolution--i.e. if undefined, this vardecl will be included in any dynamic_id lookup. */
 private fun PartiqlLogical.VarDecl.markForDynamicResolution() = this.withMeta("\$include_in_dynamic_resolution", Unit)
+
 /** Returns true of the [VarDecl] has been marked to participate in unqualified field resolution */
 private val PartiqlLogical.VarDecl.includeInDynamicResolution get() = this.metas.containsKey("\$include_in_dynamic_resolution")

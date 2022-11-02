@@ -4,7 +4,7 @@ This project is an implementation of the [PartiQL Specification](https://partiql
 PartiQL is based on SQL-92 and has added support for working with schemaless hierarchical data. PartiQL’s extensions to
 SQL are easy to understand, treat nested data as first class citizens and compose seamlessly with each other and SQL.
 
-You can find more information on [our website](https://partiql.org).
+You can find more information on [our website](https://partiql.org)!
 
 # Contributing
 

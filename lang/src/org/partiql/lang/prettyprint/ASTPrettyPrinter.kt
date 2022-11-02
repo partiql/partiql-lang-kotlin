@@ -2,7 +2,7 @@ package org.partiql.lang.prettyprint
 
 import com.amazon.ion.system.IonSystemBuilder
 import org.partiql.lang.domains.PartiqlAst
-import org.partiql.lang.syntax.SqlParser
+import org.partiql.lang.syntax.PartiQLParserBuilder
 import org.partiql.pig.runtime.SymbolPrimitive
 
 /**
@@ -38,7 +38,7 @@ class ASTPrettyPrinter {
      */
     fun prettyPrintAST(query: String): String {
         val ion = IonSystemBuilder.standard().build()
-        val ast = SqlParser(ion).parseAstStatement(query)
+        val ast = PartiQLParserBuilder().ionSystem(ion).build().parseAstStatement(query)
 
         return prettyPrintAST(ast)
     }
@@ -213,6 +213,8 @@ class ASTPrettyPrinter {
                 astType = "DoNothing",
                 attrOfParent = attrOfParent
             )
+            is PartiqlAst.ConflictAction.DoReplace -> TODO("PrettyPrinter doesn't support DO REPLACE yet.")
+            is PartiqlAst.ConflictAction.DoUpdate -> TODO("PrettyPrinter doesn't support DO UPDATE yet.")
         }
 
     private fun toRecursionTree(node: PartiqlAst.ReturningExpr, attrOfParent: String? = null): RecursionTree =
@@ -555,6 +557,7 @@ class ASTPrettyPrinter {
                     if (node.offset == null) it else (it.plusElement(toRecursionTree(node.offset, "offset")))
                 }
             )
+            is PartiqlAst.Expr.GraphMatch -> TODO("Unsupported GraphMatch AST node")
         }
 
     private fun toRecursionTreeList(nodes: List<PartiqlAst.Expr>, attrOfParent: String? = null): List<RecursionTree> =
@@ -666,7 +669,6 @@ class ASTPrettyPrinter {
                     if (node.byAlias == null) it else { it.plusElement(toRecursionTree(node.byAlias, attrOfParent = "by")) }
                 }
             )
-            else -> TODO("Unsupported FROM AST node")
         }
 
     private fun toRecursionTree(node: PartiqlAst.Let, attrOfParent: String? = null): RecursionTree =

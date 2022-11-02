@@ -195,8 +195,8 @@ fun main(args: Array<String>) = try {
     // Parser Options
     val parser = when (optionSet.valueOf(parserOpt)) {
         ParserImplementation.LEGACY -> SqlParser(ion)
-        ParserImplementation.STANDARD -> PartiQLParserBuilder().withIonSystem(ion).build()
-        else -> PartiQLParserBuilder().withIonSystem(ion).build()
+        ParserImplementation.STANDARD -> PartiQLParserBuilder().ionSystem(ion).build()
+        else -> PartiQLParserBuilder().ionSystem(ion).build()
     }
 
     // Compile Options

@@ -43,7 +43,7 @@ import org.partiql.pig.runtime.toIonElement
 
 abstract class SqlParserTestBase : TestBase() {
     // Default Parser
-    val parser = PartiQLParserBuilder().withIonSystem(ion).withCustomTypes(CUSTOM_TEST_TYPES).build()
+    val parser = PartiQLParserBuilder().ionSystem(ion).customTypes(CUSTOM_TEST_TYPES).build()
 
     protected fun parse(source: String): PartiqlAst.Statement = parser.parseAstStatement(source)
 

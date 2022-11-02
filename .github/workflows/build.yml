@@ -1,5 +1,15 @@
 name: "Build and Report Generation"
-on: [push, pull_request]
+on: 
+  push:
+    paths:
+      - '**'
+      - '!docs/**'
+      - '!**/*.md'
+  pull_request:
+    paths:
+      - '**'
+      - '!docs/**'
+      - '!**.*.md'
 
 jobs:
   test:
@@ -9,6 +19,8 @@ jobs:
         java: [11, 17]
     steps:
       - uses: actions/checkout@v2
+        with:
+          submodules: recursive
       - name: Use Java ${{ matrix.java }}
         uses: actions/setup-java@v1
         with:
@@ -20,6 +32,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+        with:
+          submodules: recursive
       - name: Use Java 17
         uses: actions/setup-java@v1
         with:
@@ -40,17 +54,17 @@ jobs:
           file: lang/build/reports/jacoco/test/jacocoTestReport.xml
           flags: LANG
 
-      - name: Upload PTS coverage
+      - name: Upload PARTIQL_PTS coverage
         uses: codecov/codecov-action@v3
         with:
-          file: pts/build/reports/jacoco/test/jacocoTestReport.xml
-          flags: PTS
+          file: partiql-pts/build/reports/jacoco/test/jacocoTestReport.xml
+          flags: PARTIQL_PTS
 
-      - name: Upload TEST_SCRIPT coverage
+      - name: Upload PARTIQL_TEST_SCRIPT coverage
         uses: codecov/codecov-action@v3
         with:
-          file: testscript/build/reports/jacoco/test/jacocoTestReport.xml
-          flags: TEST_SCRIPT
+          file: partiql-testscript/build/reports/jacoco/test/jacocoTestReport.xml
+          flags: PARTIQL_TEST_SCRIPT
 
       - name: Upload EXAMPLES coverage
         uses: codecov/codecov-action@v3

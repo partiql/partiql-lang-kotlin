@@ -5,7 +5,7 @@ import com.amazon.ionelement.api.StringElement
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.ast.sourceLocation
 import org.partiql.lang.domains.PartiqlAst
-import org.partiql.lang.syntax.SqlParser
+import org.partiql.lang.syntax.PartiQLParserBuilder
 
 /**
  * This is a function alias for determining which UDF input arguments need to be redacted.
@@ -20,7 +20,7 @@ import org.partiql.lang.syntax.SqlParser
 typealias UserDefinedFunctionRedactionLambda = (List<PartiqlAst.Expr>) -> List<PartiqlAst.Expr>
 
 private val ion = IonSystemBuilder.standard().build()
-private val parser = SqlParser(ion)
+private val parser = PartiQLParserBuilder().ionSystem(ion).build()
 private const val maskPattern = "***(Redacted)"
 
 const val INVALID_NUM_ARGS = "Invalid number of args in node"
@@ -161,6 +161,13 @@ private class StatementRedactionVisitor(
         }
     }
 
+    override fun visitDmlOpInsert(node: PartiqlAst.DmlOp.Insert) {
+        when (node.values) {
+            is PartiqlAst.Expr.Bag -> redactBagInInserOpValues(node.values)
+            else -> redactExpr(node.values)
+        }
+    }
+
     private fun redactExpr(node: PartiqlAst.Expr) {
         if (node.isNAry()) {
             redactNAry(node)
@@ -278,6 +285,27 @@ private class StatementRedactionVisitor(
         if (typed.value is PartiqlAst.Expr.Id && !skipRedaction(typed.value, safeFieldNames)) {
             val sourceLocation = typed.type.metas.sourceLocation ?: error("Cannot redact due to missing source location")
             sourceLocationMetaForRedaction.add(sourceLocation)
+        }
+    }
+
+    /**
+     * For [PartiqlAst.DmlOp.Insert], redacts every element of VALUES clause BAG value; for struct elements in the bag, it
+     * follows the redaction rules that [redactStructInInsertValueOp] applies.
+     * For example, given:
+     * INSERT INTO tb <<{ 'hk': 'a', 'rk': 1, 'attr': { 'hk': 'a' }}>>"
+     * REPLACE INTO tb << { 'dummy1' : 'hashKey', 'dummy2' : 'rangeKey', 'dummyTestAttribute' : '123' } >>
+     *
+     * Expected:
+     * INSERT INTO tb <<{ 'hk': 'a', 'rk': 1, 'attr': { ***(Redacted): ***(Redacted) }}>>
+     * REPLACE INTO tb <<{ 'dummy1' : ***(Redacted), 'dummy2' : ***(Redacted), 'dummyTestAttribute' : ***(Redacted) }>>
+     */
+    private fun redactBagInInserOpValues(bag: PartiqlAst.Expr.Bag) {
+        bag.values.map {
+            if (it is PartiqlAst.Expr.Struct) {
+                redactStructInInsertValueOp(it)
+            } else {
+                redactExpr(it)
+            }
         }
     }
 
