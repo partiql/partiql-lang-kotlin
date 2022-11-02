@@ -101,7 +101,7 @@ class BreakingChanges {
      *  - As mentioned above, the new PartiQLParserBuilder will not expose a [Lexer] -- although it will be used to replicate
      *  the same functionality internally via the compilation pipeline. Unsupported generated lexer files using
      *  ANTLR may be used (not as a 1-for-1 replacement) to mimic the same functionality -- but PartiQL will not be
-     *  supporting this use-case. See the `migrated-examples` for more information.
+     *  supporting this use-case. See the `upgraded-examples` for more information.
      *  - v0.9 will remove [SqlLexer]
      */
     @Test

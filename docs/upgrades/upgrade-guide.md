@@ -31,7 +31,7 @@ under the `partiql` GitHub organization (either as submodule or as a separate re
 `vA` and `vB`
 4. Within the `version-upgrade` directory, make a copy of the `vA-to-vB-upgrade-template` directory
 5. Update `examples`'s `build.gradle` partiql-lang-kotlin version to `vA`
-6. Update `migrated-examples`'s `build.gradle` partiql-lang-kotlin version to `vB`
+6. Update `upgraded-examples`'s `build.gradle` partiql-lang-kotlin version to `vB`
 7. In `settings.gradle`, update to include the added Gradle projects
 ```
 'version-upgrade:vA-to-vB-upgrade:examples',
