@@ -1576,8 +1576,8 @@ internal class PhysicalPlanCompilerImpl(
         val patternExpr = expr.pattern
         val escapeExpr = expr.escape
 
-        val patternLocationMeta = patternExpr.metas.toPartiQlMetaContainer().sourceLocation
-        val escapeLocationMeta = escapeExpr?.metas?.toPartiQlMetaContainer()?.sourceLocation
+        val patternLocationMeta = patternExpr.metas.sourceLocation
+        val escapeLocationMeta = escapeExpr?.metas?.sourceLocation
 
         // This is so that null short-circuits can be supported.
         fun getRegexPattern(pattern: ExprValue, escape: ExprValue?): (() -> Pattern)? {

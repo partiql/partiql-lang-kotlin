@@ -19,6 +19,7 @@ package org.partiql.lang.ast
 import junitparams.Parameters
 import org.junit.Test
 import org.partiql.lang.TestBase
+import org.partiql.lang.domains.metaContainerOf
 
 /**
  * This class contains tests for (de)serialization of metas.

@@ -26,16 +26,12 @@ fun ExprNode.toAstStatement(): PartiqlAst.Statement {
     }
 }
 
-@Suppress("TYPEALIAS_EXPANSION_DEPRECATION")
-internal fun PartiQlMetaContainer.toIonElementMetaContainer(): IonElementMetaContainer =
-    com.amazon.ionelement.api.metaContainerOf(map { it.tag to it })
-
 private fun SymbolicName.toSymbolPrimitive(): SymbolPrimitive =
-    SymbolPrimitive(this.name, this.metas.toIonElementMetaContainer())
+    SymbolPrimitive(this.name, this.metas)
 
 private fun ExprNode.toAstDdl(): PartiqlAst.Statement {
     val thiz = this
-    val metas = metas.toIonElementMetaContainer()
+    val metas = metas
 
     return PartiqlAst.build {
         when (thiz) {
@@ -75,7 +71,7 @@ private fun ExprNode.toAstDdl(): PartiqlAst.Statement {
 
 private fun ExprNode.toAstExec(): PartiqlAst.Statement {
     val node = this
-    val metas = metas.toIonElementMetaContainer()
+    val metas = metas
 
     return PartiqlAst.build {
         when (node) {
@@ -88,7 +84,7 @@ private fun ExprNode.toAstExec(): PartiqlAst.Statement {
 fun ExprNode.toAstExpr(): PartiqlAst.Expr {
     checkThreadInterrupted()
     val node = this
-    val metas = this.metas.toIonElementMetaContainer()
+    val metas = this.metas
 
     return PartiqlAst.build {
         when (node) {
@@ -150,7 +146,7 @@ fun ExprNode.toAstExpr(): PartiqlAst.Expr {
             is CallAgg -> {
                 val symbol1 = (node.funcExpr as? VariableReference)
                     ?: error("Expected CallAgg.funcExpr to be a VariableReference")
-                val symbol1Primitive = symbol1.id.asPrimitive(symbol1.metas.toIonElementMetaContainer())
+                val symbol1Primitive = symbol1.id.asPrimitive(symbol1.metas)
                 // TODO:  we are losing case-sensitivity of the function name here.  Do we care?
                 callAgg_(node.setQuantifier.toAstSetQuantifier(), symbol1Primitive, node.arg.toAstExpr(), metas)
             }
@@ -267,11 +263,11 @@ private fun GroupBy.toAstGroupSpec(): PartiqlAst.GroupBy =
             this@toAstGroupSpec.grouping.toAstGroupStrategy(),
             groupKeyList(
                 this@toAstGroupSpec.groupByItems.map {
-                    val keyMetas = it.asName?.metas?.toIonElementMetaContainer() ?: emptyMetaContainer()
+                    val keyMetas = it.asName?.metas ?: emptyMetaContainer()
                     groupKey_(it.expr.toAstExpr(), it.asName?.name?.asPrimitive(keyMetas))
                 }
             ),
-            this@toAstGroupSpec.groupName?.name?.asPrimitive(this@toAstGroupSpec.groupName.metas.toIonElementMetaContainer())
+            this@toAstGroupSpec.groupName?.name?.asPrimitive(this@toAstGroupSpec.groupName.metas)
         )
     }
 
@@ -317,11 +313,11 @@ private fun SelectProjection.toAstSelectProject(): PartiqlAst.Projection {
     val thiz = this
     return PartiqlAst.build {
         when (thiz) {
-            is SelectProjectionValue -> projectValue(thiz.expr.toAstExpr(), thiz.metas.toIonElementMetaContainer())
+            is SelectProjectionValue -> projectValue(thiz.expr.toAstExpr(), thiz.metas)
             is SelectProjectionList -> {
                 if (thiz.items.any { it is SelectListItemStar }) {
                     if (thiz.items.size > 1) error("More than one select item when SELECT * was present.")
-                    val metas = (thiz.items[0] as SelectListItemStar).metas.toIonElementMetaContainer()
+                    val metas = (thiz.items[0] as SelectListItemStar).metas
                     projectStar(metas)
                 } else {
                     projectList(
@@ -330,23 +326,23 @@ private fun SelectProjection.toAstSelectProject(): PartiqlAst.Projection {
                                 is SelectListItemExpr -> projectExpr_(
                                     it.expr.toAstExpr(),
                                     it.asName?.toPrimitive(),
-                                    it.expr.metas.toIonElementMetaContainer()
+                                    it.expr.metas
                                 )
                                 is SelectListItemProjectAll -> projectAll(
                                     it.expr.toAstExpr(),
-                                    it.expr.metas.toIonElementMetaContainer()
+                                    it.expr.metas
                                 )
                                 is SelectListItemStar -> error("this should happen due to `when` branch above.")
                             }
                         },
-                        metas = thiz.metas.toIonElementMetaContainer()
+                        metas = thiz.metas
                     )
                 }
             }
             is SelectProjectionPivot -> projectPivot(
                 thiz.nameExpr.toAstExpr(),
                 thiz.valueExpr.toAstExpr(),
-                thiz.metas.toIonElementMetaContainer()
+                thiz.metas
             )
         }
     }
@@ -354,7 +350,7 @@ private fun SelectProjection.toAstSelectProject(): PartiqlAst.Projection {
 
 private fun FromSource.toAstFromSource(): PartiqlAst.FromSource {
     val thiz = this
-    val metas = thiz.metas().toIonElementMetaContainer()
+    val metas = thiz.metas()
     return PartiqlAst.build {
         when (thiz) {
             is FromSourceExpr -> scan_(
@@ -362,7 +358,7 @@ private fun FromSource.toAstFromSource(): PartiqlAst.FromSource {
                 thiz.variables.asName?.toPrimitive(),
                 thiz.variables.atName?.toPrimitive(),
                 thiz.variables.byName?.toPrimitive(),
-                thiz.expr.metas.toIonElementMetaContainer()
+                thiz.expr.metas
             )
             is FromSourceJoin -> {
                 val jt = when (thiz.joinOp) {
@@ -384,7 +380,7 @@ private fun FromSource.toAstFromSource(): PartiqlAst.FromSource {
                 thiz.variables.asName?.toPrimitive(),
                 thiz.variables.atName?.toPrimitive(),
                 thiz.variables.byName?.toPrimitive(),
-                thiz.metas.toIonElementMetaContainer()
+                thiz.metas
             )
         }
     }
@@ -403,7 +399,7 @@ private fun LetSource.toAstLetSource(): PartiqlAst.Let {
 
 private fun PathComponent.toAstPathStep(): PartiqlAst.PathStep {
     val thiz = this
-    val metas = thiz.metas.toIonElementMetaContainer()
+    val metas = thiz.metas
     return PartiqlAst.build {
         when (thiz) {
             is PathComponentExpr -> pathExpr(thiz.expr.toAstExpr(), thiz.case.toAstCaseSensitivity(), metas)
@@ -433,7 +429,7 @@ private fun DataManipulation.toAstDml(): PartiqlAst.Statement {
             thiz.from?.toAstFromSource(),
             thiz.where?.toAstExpr(),
             thiz.returning?.toAstReturningExpr(),
-            thiz.metas.toIonElementMetaContainer()
+            thiz.metas
         )
     }
 }
@@ -444,7 +440,7 @@ private fun DmlOpList.toAstDmlOps(dml: DataManipulation): PartiqlAst.DmlOpList =
             this@toAstDmlOps.ops.map {
                 it.toAstDmlOp(dml)
             },
-            metas = dml.metas.toIonElementMetaContainer()
+            metas = dml.metas
         )
     }
 
@@ -462,7 +458,7 @@ private fun DataManipulationOperation.toAstDmlOp(dml: DataManipulation): Partiql
                     thiz.value.toAstExpr(),
                     thiz.position?.toAstExpr(),
                     thiz.onConflict?.toAstOnConflict(),
-                    dml.metas.toIonElementMetaContainer()
+                    dml.metas
                 )
             is AssignmentOp ->
                 set(
@@ -509,7 +505,7 @@ private fun ReturningMapping.toReturningMapping(): PartiqlAst.ReturningMapping {
 
 fun DataType.toAstType(): PartiqlAst.Type {
     val thiz = this
-    val metas = thiz.metas.toIonElementMetaContainer()
+    val metas = thiz.metas
     val arg1 = thiz.args.getOrNull(0)?.toLong()
     val arg2 = thiz.args.getOrNull(1)?.toLong()
 
@@ -549,4 +545,4 @@ fun DataType.toAstType(): PartiqlAst.Type {
 }
 
 private fun SymbolicName.toPrimitive(): SymbolPrimitive =
-    SymbolPrimitive(this.name, this.metas.toIonElementMetaContainer())
+    SymbolPrimitive(this.name, this.metas)

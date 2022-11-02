@@ -62,3 +62,6 @@ interface HasMetas {
 
 infix fun Class<*>.to(m: Meta) = Pair(this, m)
 
+fun MetaContainer.find(tagName: String): Meta? = this[tagName] as Meta?
+
+fun MetaContainer.hasMeta(tagName: String) = this.containsKey(tagName)

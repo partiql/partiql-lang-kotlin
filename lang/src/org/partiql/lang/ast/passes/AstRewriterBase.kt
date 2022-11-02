@@ -15,6 +15,7 @@
 
 package org.partiql.lang.ast.passes
 
+import com.amazon.ionelement.api.MetaContainer
 import org.partiql.lang.ast.Assignment
 import org.partiql.lang.ast.AssignmentOp
 import org.partiql.lang.ast.CallAgg

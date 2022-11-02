@@ -31,9 +31,9 @@ import org.partiql.lang.ast.IonElementMetaContainer
 import org.partiql.lang.ast.IsCountStarMeta
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.ast.UniqueNameMeta
+import org.partiql.lang.ast.find
 import org.partiql.lang.ast.sourceLocation
 import org.partiql.lang.ast.toAstStatement
-import org.partiql.lang.ast.toPartiQlMetaContainer
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.domains.staticType
@@ -2644,8 +2644,8 @@ internal class EvaluatingCompiler(
         val patternExpr = expr.pattern
         val escapeExpr = expr.escape
 
-        val patternLocationMeta = patternExpr.metas.toPartiQlMetaContainer().sourceLocation
-        val escapeLocationMeta = escapeExpr?.metas?.toPartiQlMetaContainer()?.sourceLocation
+        val patternLocationMeta = patternExpr.metas.sourceLocation
+        val escapeLocationMeta = escapeExpr?.metas?.sourceLocation
 
         // This is so that null short-circuits can be supported.
         fun getRegexPattern(pattern: ExprValue, escape: ExprValue?): (() -> Pattern)? {
