@@ -41,6 +41,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - MetaContainerImpl
   - MetaDeserializer
   - MemoizedMetaDeserializer
+- Removes the deprecated Rewriter/AstWalker/AstVisitor in the code base, removed interfaces and classes include:
+  - AstRewriter Interface & AstRewriterBase class
+  - AstVisitor Interface & AstVisitorBase class
+  - AstWalker class
+  - MetaStrippingRewriter class
 
 ### Security
 
