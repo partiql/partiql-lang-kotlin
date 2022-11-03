@@ -34,9 +34,17 @@ import org.partiql.lang.eval.physical.PhysicalBexprToThunkConverter
 import org.partiql.lang.eval.physical.PhysicalPlanCompiler
 import org.partiql.lang.eval.physical.PhysicalPlanCompilerImpl
 import org.partiql.lang.eval.physical.PhysicalPlanThunk
-import org.partiql.lang.eval.physical.operators.DEFAULT_RELATIONAL_OPERATOR_FACTORIES
+import org.partiql.lang.eval.physical.operators.AggregateOperatorFactoryDefault
+import org.partiql.lang.eval.physical.operators.FilterRelationalOperatorFactoryDefault
+import org.partiql.lang.eval.physical.operators.JoinRelationalOperatorFactoryDefault
+import org.partiql.lang.eval.physical.operators.LetRelationalOperatorFactoryDefault
+import org.partiql.lang.eval.physical.operators.LimitRelationalOperatorFactoryDefault
+import org.partiql.lang.eval.physical.operators.OffsetRelationalOperatorFactoryDefault
 import org.partiql.lang.eval.physical.operators.RelationalOperatorFactory
 import org.partiql.lang.eval.physical.operators.RelationalOperatorFactoryKey
+import org.partiql.lang.eval.physical.operators.ScanRelationalOperatorFactoryDefault
+import org.partiql.lang.eval.physical.operators.SortOperatorFactoryDefault
+import org.partiql.lang.eval.physical.operators.UnpivotOperatorFactoryDefault
 import org.partiql.lang.planner.transforms.normalize
 import org.partiql.lang.planner.transforms.toDefaultPhysicalPlan
 import org.partiql.lang.planner.transforms.toLogicalPlan
@@ -214,6 +222,24 @@ interface PlannerPipeline {
         private var allowUndefinedVariables: Boolean = false
         private var enableLegacyExceptionHandling: Boolean = false
         private var plannerEventCallback: PlannerEventCallback? = null
+
+        companion object {
+
+            /**
+             * TODO remove PlannerPipeline.kt as part of experimental cleanup
+             */
+            private val DEFAULT_RELATIONAL_OPERATOR_FACTORIES = listOf<RelationalOperatorFactory>(
+                AggregateOperatorFactoryDefault,
+                SortOperatorFactoryDefault,
+                UnpivotOperatorFactoryDefault,
+                FilterRelationalOperatorFactoryDefault,
+                ScanRelationalOperatorFactoryDefault,
+                JoinRelationalOperatorFactoryDefault,
+                OffsetRelationalOperatorFactoryDefault,
+                LimitRelationalOperatorFactoryDefault,
+                LetRelationalOperatorFactoryDefault,
+            )
+        }
 
         /**
          * Specifies the [Parser] to be used to turn an PartiQL query into an instance of [PartiqlAst].

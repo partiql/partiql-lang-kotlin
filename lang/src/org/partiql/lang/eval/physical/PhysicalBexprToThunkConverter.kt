@@ -25,7 +25,6 @@ import org.partiql.lang.eval.physical.operators.RelationalOperatorKind
 import org.partiql.lang.eval.physical.operators.ScanRelationalOperatorFactory
 import org.partiql.lang.eval.physical.operators.SortOperatorFactory
 import org.partiql.lang.eval.physical.operators.UnpivotOperatorFactory
-import org.partiql.lang.eval.physical.operators.VariableBinding
 import org.partiql.lang.eval.physical.operators.valueExpression
 import org.partiql.lang.util.toIntExact
 
