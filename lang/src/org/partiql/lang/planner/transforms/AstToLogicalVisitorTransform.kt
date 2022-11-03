@@ -2,17 +2,11 @@ package org.partiql.lang.planner.transforms
 
 import com.amazon.ionelement.api.emptyMetaContainer
 import com.amazon.ionelement.api.ionSymbol
-import org.partiql.lang.ast.IsGroupAttributeReferenceMeta
-import org.partiql.lang.ast.UniqueNameMeta
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.PartiqlAstToPartiqlLogicalVisitorTransform
 import org.partiql.lang.domains.PartiqlLogical
-import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Problem
 import org.partiql.lang.errors.ProblemHandler
-import org.partiql.lang.errors.Property
-import org.partiql.lang.eval.EvaluationException
-import org.partiql.lang.eval.errorContextFrom
 import org.partiql.lang.eval.physical.sourceLocationMetaOrUnknown
 import org.partiql.lang.eval.visitors.VisitorTransformBase
 import org.partiql.lang.planner.PlanningProblemDetails
@@ -112,9 +106,6 @@ internal class AstToLogicalVisitorTransform(
             return null
         }
 
-        // Assert that projection identifiers all reference grouping attributes
-        CheckProjectionsForGroups().walkExprSelect(node)
-
         return transformedNode to PartiqlLogical.build {
             val groupAsFunction = node.group?.groupAsAlias?.let { convertGroupAsAlias(it, node.from) }
             val aggFunctions = aggregationReplacer.getAggregations().map { (name, callAgg) -> convertCallAgg(callAgg, name) }
@@ -130,12 +121,11 @@ internal class AstToLogicalVisitorTransform(
 
     override fun transformGroupKey(node: PartiqlAst.GroupKey): PartiqlLogical.GroupKey {
         val thiz = this
-        val varDeclName = node.asAlias?.metas?.get(UniqueNameMeta.TAG) as? UniqueNameMeta
         return PartiqlLogical.build {
             groupKey(
                 expr = thiz.transformExpr(node.expr),
                 asVar = varDecl(
-                    name = varDeclName?.uniqueName ?: errAstNotNormalized(
+                    name = node.asAlias?.text ?: errAstNotNormalized(
                         "The group key should have encountered a unique name. This is typically added by the GroupByItemAliasVisitorTransform."
                     ),
                     metas = node.asAlias.metas
@@ -559,38 +549,6 @@ private class CallAggregationReplacer() : VisitorTransformBase() {
      * Returns unique (per [PartiqlAst.Expr.Select]) strings for each aggregation.
      */
     private fun getAggregationIdName(): String = "\$__partiql_aggregation_${varDeclIncrement++}"
-}
-
-/**
- * Asserts whether each found [PartiqlAst.Expr.Id] is a Group Key or Group As reference by checking for the
- * existence of a [IsGroupAttributeReferenceMeta]. Does not recurse into more than 1 [PartiqlAst.Expr.Select]. Designed
- * to be called directly on a single [PartiqlAst.Expr.Select].
- */
-private class CheckProjectionsForGroups(var level: Int = 0) : PartiqlAst.Visitor() {
-
-    override fun walkExprSelect(node: PartiqlAst.Expr.Select) {
-        if (level == 0) {
-            level++
-            super.walkProjection(node.project)
-        }
-    }
-
-    override fun visitExprId(node: PartiqlAst.Expr.Id) {
-        if (node.metas.containsKey(IsGroupAttributeReferenceMeta.TAG).not()) {
-            throw EvaluationException(
-                "Variable not in GROUP BY or aggregation function: ${node.name.text}",
-                ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
-                errorContextFrom(node.metas).also {
-                    it[Property.BINDING_NAME] = node.name.text
-                },
-                internal = false
-            )
-        }
-    }
-
-    override fun walkExprCallAgg(node: PartiqlAst.Expr.CallAgg) {
-        return
-    }
 }
 
 private val INVALID_STATEMENT = PartiqlLogical.build {
