@@ -24,8 +24,6 @@ import com.amazon.ionelement.api.toIonValue
 import org.partiql.lang.CUSTOM_TEST_TYPES
 import org.partiql.lang.ION
 import org.partiql.lang.TestBase
-import org.partiql.lang.ast.ExprNode
-import org.partiql.lang.ast.passes.MetaStrippingRewriter
 import org.partiql.lang.ast.toAstStatement
 import org.partiql.lang.ast.toExprNode
 import org.partiql.lang.domains.PartiqlAst
@@ -198,7 +196,6 @@ abstract class SqlParserTestBase : TestBase() {
         assertEquals(actualStatement, actualStatement.toExprNode(ion).toAstStatement())
 
     private fun loadIonSexp(expectedSexpAst: String) = ion.singleValue(expectedSexpAst).asIonSexp()
-    private fun ExprNode.stripMetas() = MetaStrippingRewriter.stripMetas(this)
 
     protected fun checkInputThrowingParserException(
         input: String,

@@ -26,7 +26,6 @@ import org.partiql.lang.SqlException
 import org.partiql.lang.TestBase
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.PropertyValueMap
-import org.partiql.lang.eval.evaluatortestframework.AstRewriterBaseTestAdapter
 import org.partiql.lang.eval.evaluatortestframework.CompilerPipelineFactory
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorErrorTestCase
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestAdapter
@@ -38,6 +37,7 @@ import org.partiql.lang.eval.evaluatortestframework.PartiQLCompilerPipelineFacto
 import org.partiql.lang.eval.evaluatortestframework.PartiqlAstExprNodeRoundTripAdapter
 import org.partiql.lang.eval.evaluatortestframework.PipelineEvaluatorTestAdapter
 import org.partiql.lang.eval.evaluatortestframework.PlannerPipelineFactory
+import org.partiql.lang.eval.evaluatortestframework.VisitorTransformBaseTestAdapter
 import org.partiql.lang.util.asSequence
 import org.partiql.lang.util.newFromIonText
 
@@ -51,7 +51,7 @@ abstract class EvaluatorTestBase : TestBase() {
             PipelineEvaluatorTestAdapter(PlannerPipelineFactory()),
             PipelineEvaluatorTestAdapter(PartiQLCompilerPipelineFactory()),
             PartiqlAstExprNodeRoundTripAdapter(),
-            AstRewriterBaseTestAdapter()
+            VisitorTransformBaseTestAdapter()
         )
     )
 

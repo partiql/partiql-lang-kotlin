@@ -7,25 +7,12 @@ import org.partiql.lang.util.partiql_missing
 import org.partiql.lang.util.testdsl.IonResultTestSuite
 import org.partiql.lang.util.testdsl.defineTestSuite
 
-class EvaluatorTestCasesAsExprNodeTestCases : ArgumentsProviderBase() {
+class EvaluatorTestCasesAsStatementTestCases : ArgumentsProviderBase() {
 
     companion object {
-        private val EXPR_NODE_SKIP_LIST = setOf(
-            // OUTER bag operators are not in the legacy AST and should be skipped
-            "outerUnionDistinct",
-            "outerUnionAll",
-            "outerIntersectDistinct",
-            "outerIntersectAll",
-            "outerExceptDistinct",
-            "outerExceptAll",
-            "outerUnionCoerceScalar",
-            "outerUnionCoerceStruct",
-            "outerUnionCoerceNullMissing",
-            "outerUnionCoerceList"
-        )
+        private val STATEMENT_SKIP_LIST = emptySet<String>()
     }
-
-    override fun getParameters() = EVALUATOR_TEST_SUITE.allTestsAsExprNodeTestCases(EXPR_NODE_SKIP_LIST)
+    override fun getParameters() = EVALUATOR_TEST_SUITE.allTestsAsStatementTestCases(STATEMENT_SKIP_LIST)
 }
 
 /**
