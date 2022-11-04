@@ -97,10 +97,9 @@ internal class AggregationVisitorTransform(
         internal fun uniqueAlias(level: Int, index: Int) = "$GROUP_PREFIX$level$GROUP_DELIMITER$index"
     }
 
-    /**
-     * Every ExprSelect adds to the [contextStack] during [transformExprSelect_group].
-     */
     override fun transformExprSelect(node: PartiqlAst.Expr.Select): PartiqlAst.Expr {
+        // Every transformExprSelect implicitly adds to the contextStack during the nested transformExprSelect_group.
+        // Therefore, after transforming the ExprSelect, we need to pop from the contextStack.
         return super.transformExprSelectEvaluationOrder(node).also { contextStack.removeLast() }
     }
 
@@ -140,6 +139,12 @@ internal class AggregationVisitorTransform(
         }
     }
 
+    override fun transformExprSelect_having(node: PartiqlAst.Expr.Select): PartiqlAst.Expr? = node.having?.let { having ->
+        itemTransform.transformExpr(having)
+    }
+
+    override fun transformSortSpec_expr(node: PartiqlAst.SortSpec) = itemTransform.transformSortSpec_expr(node)
+
     /**
      * Replaces [node] with [PartiqlAst.Projection.ProjectList] IF there are Group Keys and/or a Group Alias
      */
@@ -167,12 +172,6 @@ internal class AggregationVisitorTransform(
                 metas = node.metas
             )
         }
-
-    override fun transformSortSpec_expr(node: PartiqlAst.SortSpec) = itemTransform.transformSortSpec_expr(node)
-
-    override fun transformExprSelect_having(node: PartiqlAst.Expr.Select): PartiqlAst.Expr? = node.having?.let { having ->
-        itemTransform.transformExpr(having)
-    }
 
     override fun transformProjectionProjectList(node: PartiqlAst.Projection.ProjectList): PartiqlAst.Projection =
         PartiqlAst.build {
@@ -215,7 +214,7 @@ internal class AggregationVisitorTransform(
             hasAggregations = true
         }
 
-        override fun walkExprSelect(node: PartiqlAst.Expr.Select) { }
+        override fun walkExprSelect(node: PartiqlAst.Expr.Select) { return }
     }
 
     /**
