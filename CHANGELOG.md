@@ -25,12 +25,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Adds simple auto-completion to the CLI.
+- Adds support for HAVING clause in planner
 
 ### Changed
 - Now `CompileOption` uses `TypedOpParameter.HONOR_PARAMETERS` as default.
 - Updates the CLI Shell Highlighter to use the ANTLR generated lexer/parser for highlighting user queries
+- Simplifies the aggregation operator in the experimental planner by removing the use of metas
 
 ### Deprecated
+- Marks the GroupKeyReferencesVisitorTransform as deprecated. There is no functionally equivalent class.
 
 ### Fixed
 
