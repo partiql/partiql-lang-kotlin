@@ -5,10 +5,9 @@ import org.partiql.lang.eval.numberValue
 import org.partiql.lang.eval.physical.EvaluatorState
 import org.partiql.lang.eval.physical.operators.ValueExpression
 
-class Lag() : NavigationWindowFunction() {
-    override val signature: WindowFunctionSignature = WindowFunctionSignature(
-        name = "lag"
-    )
+@Experimental
+internal class Lag : NavigationWindowFunction() {
+    override val name = "lag"
 
     override fun processRow(state: EvaluatorState, arguments: List<ValueExpression>, currentPos: Int): ExprValue {
         val (target, offset, default) = when (arguments.size) {

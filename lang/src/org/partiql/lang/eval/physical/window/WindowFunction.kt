@@ -5,10 +5,10 @@ import org.partiql.lang.eval.physical.EvaluatorState
 import org.partiql.lang.eval.physical.SetVariableFunc
 import org.partiql.lang.eval.physical.operators.ValueExpression
 
-sealed class Arguments
-
+@Experimental
 interface WindowFunction {
-    val signature: WindowFunctionSignature
+
+    val name: String
 
     /**
      * The reset function should be called before enter a new partition ( including the first one).

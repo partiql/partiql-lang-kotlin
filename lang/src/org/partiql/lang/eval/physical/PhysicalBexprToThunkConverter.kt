@@ -29,6 +29,7 @@ import org.partiql.lang.eval.physical.operators.UnpivotOperatorFactory
 import org.partiql.lang.eval.physical.operators.VariableBinding
 import org.partiql.lang.eval.physical.operators.WindowRelationalOperatorFactory
 import org.partiql.lang.eval.physical.operators.valueExpression
+import org.partiql.lang.eval.physical.window.Experimental
 import org.partiql.lang.eval.physical.window.createBuiltinWindowFunctions
 import org.partiql.lang.util.toIntExact
 
@@ -296,6 +297,7 @@ internal class PhysicalBexprToThunkConverter(
     }
 
     // TODO: Remove from experimental once https://github.com/partiql/partiql-docs/issues/31 is resolved and a RFC is approved
+    @Experimental
     override fun convertWindow(node: PartiqlPhysical.Bexpr.Window): RelationThunkEnv {
         val source = this.convert(node.source)
 
@@ -309,30 +311,25 @@ internal class PhysicalBexprToThunkConverter(
 
         val compiledOrderBy = windowSortSpecList?.sortSpecs?.let { compileSortSpecs(it) } ?: emptyList()
 
-        val compiledWindowFunctionParameter = node.windowExpression.args.map {
-            exprConverter.convert(it).toValueExpr(it.metas.sourceLocationMeta)
-        }
-
         // window function map
         val builtinWindowFunctions = createBuiltinWindowFunctions()
         val builtinWindowFunctionsMap = builtinWindowFunctions.associateBy {
-            it.signature.name
+            it.name
         }
 
-        // We need compiled window function here.
-        val compiledWindowFunction = CompiledWindowFunction(
-            builtinWindowFunctionsMap[node.windowExpression.funcName.text] ?: error("window function not supported yet"),
-            compiledWindowFunctionParameter,
-            node.windowExpression.decl.toSetVariableFunc()
-        )
-
-        // val allWindowFunctionsMap = builtinWindowFunctionsMap
+        val compiledWindowFunctions = node.windowExpressionList.map { windowExpression ->
+            CompiledWindowFunction(
+                builtinWindowFunctionsMap[windowExpression.funcName.text] ?: error("window function not supported yet"),
+                windowExpression.args.map { exprConverter.convert(it).toValueExpr(it.metas.sourceLocationMeta) },
+                windowExpression.decl.toSetVariableFunc()
+            )
+        }
 
         // locate operator factory
         val factory = findOperatorFactory<WindowRelationalOperatorFactory>(RelationalOperatorKind.WINDOW, node.i.name.text)
 
         // create operator implementation
-        val bindingsExpr = factory.create(source, compiledPartitionBy, compiledOrderBy, compiledWindowFunction)
+        val bindingsExpr = factory.create(source, compiledPartitionBy, compiledOrderBy, compiledWindowFunctions)
         // wrap in thunk
         return bindingsExpr.toRelationThunk(node.metas)
     }

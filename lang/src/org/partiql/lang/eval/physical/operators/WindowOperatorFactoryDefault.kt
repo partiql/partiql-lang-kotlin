@@ -4,6 +4,7 @@ import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.NaturalExprValueComparators
 import org.partiql.lang.eval.exprEquals
 import org.partiql.lang.eval.physical.EvaluatorState
+import org.partiql.lang.eval.physical.window.Experimental
 import org.partiql.lang.eval.relation.RelationIterator
 import org.partiql.lang.eval.relation.RelationType
 import org.partiql.lang.eval.relation.relation
@@ -18,21 +19,22 @@ import org.partiql.lang.planner.transforms.DEFAULT_IMPL_NAME
  * After partition is materialized, `LAG` and `LEAD` function can use index to access the target row, if the target row is with in the partition.
  *
  */
-
+@Experimental
 internal object WindowOperatorFactoryDefault : WindowRelationalOperatorFactory(DEFAULT_IMPL_NAME) {
     override fun create(
         source: RelationExpression,
         windowPartitionList: List<ValueExpression>,
         windowSortSpecList: List<CompiledSortKey>,
-        compiledWindowFunction: CompiledWindowFunction
-    ): RelationExpression = WindowOperatorDefault(source, windowPartitionList, windowSortSpecList, compiledWindowFunction)
+        compiledWindowFunctions: List<CompiledWindowFunction>
+    ): RelationExpression = WindowOperatorDefault(source, windowPartitionList, windowSortSpecList, compiledWindowFunctions)
 }
 
+@OptIn(Experimental::class)
 internal class WindowOperatorDefault(
     private val source: RelationExpression,
     private val windowPartitionList: List<ValueExpression>,
     private val windowSortSpecList: List<CompiledSortKey>,
-    private val compiledWindowFunction: CompiledWindowFunction
+    private val compiledWindowFunctions: List<CompiledWindowFunction>
 ) : RelationExpression {
     override fun evaluate(state: EvaluatorState): RelationIterator {
         // the following corresponding to materialization process
@@ -91,16 +93,17 @@ internal class WindowOperatorDefault(
 
         return relation(RelationType.BAG) {
             partition.forEach { rowsInPartition ->
-                val windowFunc = compiledWindowFunction.func
-                // set the window function partition to the current partition
-                windowFunc.reset(rowsInPartition)
+                compiledWindowFunctions.forEach {
+                    val windowFunc = it.func
+                    // set the window function partition to the current partition
+                    windowFunc.reset(rowsInPartition)
+                }
 
-                rowsInPartition.forEach { row ->
-                    // reset state
-                    state.load(row)
-
+                rowsInPartition.forEach {
                     // process current row
-                    windowFunc.processRow(state, compiledWindowFunction.parameters, compiledWindowFunction.setWindowVal)
+                    compiledWindowFunctions.forEach { compiledWindowFunction ->
+                        compiledWindowFunction.func.processRow(state, compiledWindowFunction.parameters, compiledWindowFunction.setWindowVal)
+                    }
 
                     // yield the result
                     yield()

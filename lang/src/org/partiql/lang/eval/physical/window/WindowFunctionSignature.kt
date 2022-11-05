@@ -7,6 +7,7 @@ package org.partiql.lang.eval.physical.window
  *
  * In the future we can add additional parameter such as frame information here.
  */
+@Experimental
 class WindowFunctionSignature(
     val name: String
 )

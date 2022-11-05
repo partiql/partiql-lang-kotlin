@@ -109,7 +109,9 @@ internal class LogicalResolvedToDefaultPhysicalVisitorTransform(
                 i = DEFAULT_IMPL,
                 source = thiz.transformBexpr(node.source),
                 windowSpecification = thiz.transformOver(node.windowSpecification),
-                windowExpression = thiz.transformWindowExpression(node.windowExpression)
+                windowExpressionList = node.windowExpressionList.map {
+                    thiz.transformWindowExpression(it)
+                }
             )
         }
     }

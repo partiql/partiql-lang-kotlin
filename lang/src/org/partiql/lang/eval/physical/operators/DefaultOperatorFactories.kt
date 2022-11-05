@@ -9,6 +9,7 @@ import org.partiql.lang.eval.physical.EvaluatorState
 import org.partiql.lang.eval.physical.SetVariableFunc
 import org.partiql.lang.eval.physical.evalLimitRowCount
 import org.partiql.lang.eval.physical.evalOffsetRowCount
+import org.partiql.lang.eval.physical.window.Experimental
 import org.partiql.lang.eval.relation.RelationType
 import org.partiql.lang.eval.relation.relation
 import org.partiql.lang.eval.unnamedValue
@@ -28,6 +29,7 @@ internal val DEFAULT_RELATIONAL_OPERATOR_FACTORIES = listOf(
     AggregateOperatorFactoryDefault,
     SortOperatorFactoryDefault,
     UnpivotOperatorFactoryDefault,
+    @OptIn(Experimental::class)
     WindowOperatorFactoryDefault,
 
     object : ScanRelationalOperatorFactory(DEFAULT_IMPL_NAME) {
