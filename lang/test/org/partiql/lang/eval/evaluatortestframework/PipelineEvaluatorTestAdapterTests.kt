@@ -7,6 +7,7 @@ import org.junit.jupiter.api.assertThrows
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.DATE_ANNOTATION
 import org.partiql.lang.eval.EvaluationSession
+import org.partiql.lang.eval.TIME_ANNOTATION
 import org.partiql.lang.util.propertyValueMapOf
 
 private fun assertTestFails(
@@ -116,7 +117,7 @@ class PipelineEvaluatorTestAdapterTests {
             astPipelineTestAdapter.runEvaluatorTestCase(
                 EvaluatorTestCase(
                     query = "TIME '12:12:01'",
-                    expectedResult = "\$partiql_time::{hour:12,minute:12,second:1.,timezone_hour:null.int,timezone_minute:null.int}",
+                    expectedResult = "$TIME_ANNOTATION::{hour:12,minute:12,second:1.,timezone_hour:null.int,timezone_minute:null.int}",
                     expectedResultFormat = ExpectedResultFormat.ION
                 ),
                 EvaluationSession.standard()
@@ -207,7 +208,7 @@ class PipelineEvaluatorTestAdapterTests {
             astPipelineTestAdapter.runEvaluatorTestCase(
                 EvaluatorTestCase(
                     query = "TIME '12:12:01'",
-                    expectedResult = "\$partiql_time::{hour:12,minute:12,second:1.,timezone_hour:null.int,timezone_minute:null.int}",
+                    expectedResult = "$TIME_ANNOTATION::{hour:12,minute:12,second:1.,timezone_hour:null.int,timezone_minute:null.int}",
                     expectedResultFormat = ExpectedResultFormat.ION_WITHOUT_BAG_AND_MISSING_ANNOTATIONS
                 ),
                 EvaluationSession.standard()

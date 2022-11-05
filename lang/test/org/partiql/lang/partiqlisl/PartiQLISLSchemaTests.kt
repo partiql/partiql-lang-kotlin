@@ -7,6 +7,7 @@ import org.junit.Test
 import org.partiql.lang.eval.BAG_ANNOTATION
 import org.partiql.lang.eval.DATE_ANNOTATION
 import org.partiql.lang.eval.MISSING_ANNOTATION
+import org.partiql.lang.eval.TIME_ANNOTATION
 
 class PartiQLISLSchemaTests {
 
@@ -191,7 +192,7 @@ class PartiQLISLSchemaTests {
         val violations = dateType.validate(
             ION.singleValue(
                 """
-            ${'$'}partiql_time::{
+            $TIME_ANNOTATION::{
                 hour: 23,
                 min: 59,
                 sec: 59,
@@ -228,7 +229,7 @@ class PartiQLISLSchemaTests {
         Assert.assertEquals(
             """
             Validation failed:
-            - missing annotation(s): ${'$'}partiql_time
+            - missing annotation(s): $TIME_ANNOTATION
             """.trimIndent(),
             violations.toString().trimIndent()
         )
@@ -244,7 +245,7 @@ class PartiQLISLSchemaTests {
         val violations = dateType.validate(
             ION.singleValue(
                 """
-            ${'$'}partiql_time::{
+            $TIME_ANNOTATION::{
                 hour: 23,
                 min: 59,
                 sec: 59
@@ -266,7 +267,7 @@ class PartiQLISLSchemaTests {
         val violations = dateType.validate(
             ION.singleValue(
                 """
-            ${'$'}partiql_time::{
+            $TIME_ANNOTATION::{
                 hour: 23,
                 min: 59
             }
@@ -297,7 +298,7 @@ class PartiQLISLSchemaTests {
         val violations = dateType.validate(
             ION.singleValue(
                 """
-            ${'$'}partiql_time::{
+            $TIME_ANNOTATION::{
                 hour: 24,
                 min: 59,
                 sec: 1
@@ -328,7 +329,7 @@ class PartiQLISLSchemaTests {
         val violations = dateType.validate(
             ION.singleValue(
                 """
-            ${'$'}partiql_time::{
+            $TIME_ANNOTATION::{
                 hour: 23,
                 min: 59,
                 sec: 1,

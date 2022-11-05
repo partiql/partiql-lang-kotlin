@@ -74,7 +74,7 @@ class ExprValueFactoryTest {
             TestCase(ExprValueType.CLOB, someTestBytes, ion.newClob(someTestBytes), factory.newClob(someTestBytes)),
             TestCase(ExprValueType.BLOB, someTestBytes, ion.newBlob(someTestBytes), factory.newBlob(someTestBytes)),
             TestCase(ExprValueType.DATE, localDate, ion.singleValue("$DATE_ANNOTATION::2022-01-01"), factory.newDate(localDate)),
-            TestCase(ExprValueType.TIME, time, ion.singleValue("\$partiql_time::{hour:17,minute:40,second:1.123456789,timezone_hour:1,timezone_minute:5}"), factory.newTime(time))
+            TestCase(ExprValueType.TIME, time, ion.singleValue("$TIME_ANNOTATION::{hour:17,minute:40,second:1.123456789,timezone_hour:1,timezone_minute:5}"), factory.newTime(time))
         )
     }
 
@@ -509,7 +509,7 @@ class ExprValueFactoryTest {
     @Test
     fun testIonTime() {
         // Arrange
-        val ionValueString = "\$partiql_time::{hour:0,minute:40,second:1.123456789,timezone_hour:1,timezone_minute:5}"
+        val ionValueString = "$TIME_ANNOTATION::{hour:0,minute:40,second:1.123456789,timezone_hour:1,timezone_minute:5}"
         val ionValue = ion.singleValue(ionValueString)
         val expected = Time.of(0, 40, 1, 123456789, 9, 65)
 

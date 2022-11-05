@@ -31,5 +31,5 @@ type::{
         sec_fraction: {type: int, occurs: optional, valid_values: range::[0,999999]}
     },
     content: closed,
-    annotations: [required::$partiql_time]
+    annotations: [required::$time]
 }

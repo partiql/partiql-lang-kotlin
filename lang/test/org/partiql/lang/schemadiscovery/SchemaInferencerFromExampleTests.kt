@@ -10,6 +10,7 @@ import org.partiql.ionschema.model.toIsl
 import org.partiql.ionschema.parser.parseSchema
 import org.partiql.lang.TestBase
 import org.partiql.lang.eval.DATE_ANNOTATION
+import org.partiql.lang.eval.TIME_ANNOTATION
 import org.partiql.lang.partiqlisl.ResourceAuthority
 import org.partiql.lang.util.ArgumentsProviderBase
 import java.lang.AssertionError
@@ -103,7 +104,7 @@ class SchemaInferencerFromExampleTests : TestBase() {
         private val structOneTwoFloatIon = """{ one: 1, two: 2e0 }"""
         private val examplesOneTwoThreeIon = """{ one: 1 }{ two: 2 }{ three: 3 }"""
         private val timeIon = """
-                ${'$'}partiql_time::{
+                $TIME_ANNOTATION::{
                     hour: 23,
                     min: 59,
                     sec: 59,
@@ -995,9 +996,9 @@ class SchemaInferencerFromExampleTests : TestBase() {
                 }
                 """
             ),
-            // $partiql_time
+            // $time
             ExampleInferenceTestCase(timeIon, "type::{ name:$typeName, type: time }"),
-            // $partiql_time in struct
+            // $time in struct
             ExampleInferenceTestCase(
                 "{ curTime: $timeIon }",
                 """
@@ -1009,7 +1010,7 @@ class SchemaInferencerFromExampleTests : TestBase() {
                 }
                 """
             ),
-            // $partiql_time and conflicting struct
+            // $time and conflicting struct
             ExampleInferenceTestCase(
                 "{ curTime: $timeIon }" + "{ curTime: 1 }",
                 """
@@ -1026,7 +1027,7 @@ class SchemaInferencerFromExampleTests : TestBase() {
                 }
                 """
             ),
-            // $partiql_time and empty struct
+            // $time and empty struct
             ExampleInferenceTestCase(
                 "{ curTime: $timeIon }" + "{ }",
                 """

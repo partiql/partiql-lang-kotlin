@@ -4,6 +4,7 @@ import com.amazon.ion.IonStruct
 import com.amazon.ion.IonSystem
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.EvaluationException
+import org.partiql.lang.eval.TIME_ANNOTATION
 import org.partiql.lang.eval.err
 import org.partiql.lang.util.getOffsetHHmm
 import org.partiql.lang.util.propertyValueMapOf
@@ -19,7 +20,6 @@ import kotlin.math.min
 
 // Constants related to the TIME
 
-internal const val PARTIQL_TIME_ANNOTATION = "\$partiql_time"
 internal const val HOURS_PER_DAY = 24
 internal const val MINUTES_PER_HOUR = 60
 internal const val SECONDS_PER_MINUTE = 60
@@ -168,7 +168,7 @@ data class Time private constructor(val localTime: LocalTime, val precision: Int
             add("second", ion.newDecimal(secondsWithFractionalPart))
             add("timezone_hour", ion.newInt(timezoneHour))
             add("timezone_minute", ion.newInt(timezoneMinute))
-            addTypeAnnotation(PARTIQL_TIME_ANNOTATION)
+            addTypeAnnotation(TIME_ANNOTATION)
         }
 
     /**

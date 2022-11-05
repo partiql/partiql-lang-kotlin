@@ -535,12 +535,12 @@ abstract class CastTestBase : EvaluatorTestBase() {
                     case("1.1", ErrorCode.EVALUATOR_INVALID_CAST),
                     case("-20.1", ErrorCode.EVALUATOR_INVALID_CAST),
                     // timestamp
-                    case("`2007-10-10T`", "\$partiql_time::{hour:0,minute:0,second:0.,timezone_hour:null.int,timezone_minute:null.int}", CastQuality.LOSSY),
-                    case("`2007-02-23T12:14Z`", "\$partiql_time::{hour:12,minute:14,second:0.,timezone_hour:null.int,timezone_minute:null.int}", CastQuality.LOSSY),
-                    case("`2007-02-23T12:14:33.079Z`", "\$partiql_time::{hour:12,minute:14,second:33.079,timezone_hour:null.int,timezone_minute:null.int}", CastQuality.LOSSY),
-                    case("`2007-02-23T12:14:33.079-08:00`", "\$partiql_time::{hour:12,minute:14,second:33.079,timezone_hour:null.int,timezone_minute:null.int}", CastQuality.LOSSY),
-                    case("`2007-02T`", "\$partiql_time::{hour:0,minute:0,second:0.,timezone_hour:null.int,timezone_minute:null.int}", CastQuality.LOSSY),
-                    case("`2007T`", "\$partiql_time::{hour:0,minute:0,second:0.,timezone_hour:null.int,timezone_minute:null.int}", CastQuality.LOSSY),
+                    case("`2007-10-10T`", "$TIME_ANNOTATION::{hour:0,minute:0,second:0.,timezone_hour:null.int,timezone_minute:null.int}", CastQuality.LOSSY),
+                    case("`2007-02-23T12:14Z`", "$TIME_ANNOTATION::{hour:12,minute:14,second:0.,timezone_hour:null.int,timezone_minute:null.int}", CastQuality.LOSSY),
+                    case("`2007-02-23T12:14:33.079Z`", "$TIME_ANNOTATION::{hour:12,minute:14,second:33.079,timezone_hour:null.int,timezone_minute:null.int}", CastQuality.LOSSY),
+                    case("`2007-02-23T12:14:33.079-08:00`", "$TIME_ANNOTATION::{hour:12,minute:14,second:33.079,timezone_hour:null.int,timezone_minute:null.int}", CastQuality.LOSSY),
+                    case("`2007-02T`", "$TIME_ANNOTATION::{hour:0,minute:0,second:0.,timezone_hour:null.int,timezone_minute:null.int}", CastQuality.LOSSY),
+                    case("`2007T`", "$TIME_ANNOTATION::{hour:0,minute:0,second:0.,timezone_hour:null.int,timezone_minute:null.int}", CastQuality.LOSSY),
                     // text
                     case("'hello'", ErrorCode.EVALUATOR_CAST_FAILED),
                     case("'2016-03-01T01:12:12Z'", ErrorCode.EVALUATOR_CAST_FAILED),
