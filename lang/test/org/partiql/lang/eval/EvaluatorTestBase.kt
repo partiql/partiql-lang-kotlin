@@ -192,8 +192,8 @@ internal fun IonValue.removeBagAndMissingAnnotations() {
  * This is tech debt of the unhappy variety:  all of those test cases should really be updated and this function
  * should be deleted.
  *
- * NOTE: this function does not remove $partiql_date annotations ever!  There are tests that depend on this too.
- * $partiql_date however, was added AFTER this function was created, and so no test cases needed to remove that
+ * NOTE: this function does not remove $date annotations ever!  There are tests that depend on this too.
+ * $date however, was added AFTER this function was created, and so no test cases needed to remove that
  * annotation.
  */
 internal fun IonValue.cloneAndRemoveBagAndMissingAnnotations() = this.clone().apply {

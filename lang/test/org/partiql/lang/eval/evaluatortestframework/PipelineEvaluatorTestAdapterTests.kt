@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
 import org.partiql.lang.errors.ErrorCode
+import org.partiql.lang.eval.DATE_ANNOTATION
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.util.propertyValueMapOf
 
@@ -101,7 +102,7 @@ class PipelineEvaluatorTestAdapterTests {
             astPipelineTestAdapter.runEvaluatorTestCase(
                 EvaluatorTestCase(
                     query = "DATE '2001-01-01'",
-                    expectedResult = "\$partiql_date::2001-01-01",
+                    expectedResult = "$DATE_ANNOTATION::2001-01-01",
                     expectedResultFormat = ExpectedResultFormat.ION
                 ),
                 EvaluationSession.standard()
@@ -192,7 +193,7 @@ class PipelineEvaluatorTestAdapterTests {
             astPipelineTestAdapter.runEvaluatorTestCase(
                 EvaluatorTestCase(
                     query = "DATE '2001-01-01'",
-                    expectedResult = "\$partiql_date::2001-01-01",
+                    expectedResult = "$DATE_ANNOTATION::2001-01-01",
                     expectedResultFormat = ExpectedResultFormat.ION_WITHOUT_BAG_AND_MISSING_ANNOTATIONS
                 ),
                 EvaluationSession.standard()

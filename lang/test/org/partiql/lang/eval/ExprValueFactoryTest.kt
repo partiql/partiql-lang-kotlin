@@ -73,7 +73,7 @@ class ExprValueFactoryTest {
             TestCase(ExprValueType.SYMBOL, "", ion.newSymbol(""), factory.newSymbol("")),
             TestCase(ExprValueType.CLOB, someTestBytes, ion.newClob(someTestBytes), factory.newClob(someTestBytes)),
             TestCase(ExprValueType.BLOB, someTestBytes, ion.newBlob(someTestBytes), factory.newBlob(someTestBytes)),
-            TestCase(ExprValueType.DATE, localDate, ion.singleValue("\$partiql_date::2022-01-01"), factory.newDate(localDate)),
+            TestCase(ExprValueType.DATE, localDate, ion.singleValue("$DATE_ANNOTATION::2022-01-01"), factory.newDate(localDate)),
             TestCase(ExprValueType.TIME, time, ion.singleValue("\$partiql_time::{hour:17,minute:40,second:1.123456789,timezone_hour:1,timezone_minute:5}"), factory.newTime(time))
         )
     }
@@ -439,7 +439,7 @@ class ExprValueFactoryTest {
 
         val ionDate =
             ion.newTimestamp(Timestamp.forDay(date.year, date.monthValue, date.dayOfMonth)).apply {
-                addTypeAnnotation("\$partiql_date")
+                addTypeAnnotation(DATE_ANNOTATION)
             }.seal()
 
         val dateExprValue = factory.newDate(date)
@@ -495,7 +495,7 @@ class ExprValueFactoryTest {
     @Test
     fun testIonDate() {
         // Arrange
-        val ionValueString = "\$partiql_date::2022-01-01"
+        val ionValueString = "$DATE_ANNOTATION::2022-01-01"
         val ionValue = ion.singleValue(ionValueString)
         val expected = LocalDate.of(2022, 1, 1)
 

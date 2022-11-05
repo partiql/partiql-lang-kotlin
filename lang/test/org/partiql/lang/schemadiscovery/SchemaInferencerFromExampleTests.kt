@@ -9,6 +9,7 @@ import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.ionschema.model.toIsl
 import org.partiql.ionschema.parser.parseSchema
 import org.partiql.lang.TestBase
+import org.partiql.lang.eval.DATE_ANNOTATION
 import org.partiql.lang.partiqlisl.ResourceAuthority
 import org.partiql.lang.util.ArgumentsProviderBase
 import java.lang.AssertionError
@@ -951,11 +952,11 @@ class SchemaInferencerFromExampleTests : TestBase() {
                 """,
                 maxExampleCount = 4
             ),
-            // $partiql_date
-            ExampleInferenceTestCase("\$partiql_date::2020-01-01", "type::{ name:$typeName, type: date}"),
-            // $partiql_date in struct
+            // $date
+            ExampleInferenceTestCase("$DATE_ANNOTATION::2020-01-01", "type::{ name:$typeName, type: date}"),
+            // $date in struct
             ExampleInferenceTestCase(
-                "{ today: \$partiql_date::2020-01-01 }",
+                "{ today: $DATE_ANNOTATION::2020-01-01 }",
                 """
                 type::{ name: $typeName, type: struct,
                     content: closed,
@@ -965,9 +966,9 @@ class SchemaInferencerFromExampleTests : TestBase() {
                 }
                 """
             ),
-            // $partiql_date and timestamp
+            // $date and timestamp
             ExampleInferenceTestCase(
-                "{ today: \$partiql_date::2020-01-01 }" + "{ today: \"2000-01-01T00:00:00Z\" }",
+                "{ today: $DATE_ANNOTATION::2020-01-01 }" + "{ today: \"2000-01-01T00:00:00Z\" }",
                 """
                 type::{ name: $typeName, type: struct,
                     content: closed,
@@ -982,9 +983,9 @@ class SchemaInferencerFromExampleTests : TestBase() {
                 }
                 """
             ),
-            // $partiql_date and empty struct
+            // $date and empty struct
             ExampleInferenceTestCase(
-                "{ today: \$partiql_date::2020-01-01 }" + "{ }",
+                "{ today: $DATE_ANNOTATION::2020-01-01 }" + "{ }",
                 """
                 type::{ name: $typeName, type: struct,
                     content: closed,

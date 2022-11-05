@@ -47,7 +47,7 @@ import kotlin.collections.asSequence
 
 internal const val MISSING_ANNOTATION = "\$partiql_missing"
 internal const val BAG_ANNOTATION = "\$partiql_bag"
-internal const val DATE_ANNOTATION = "\$partiql_date"
+internal const val DATE_ANNOTATION = "\$date"
 internal const val TIME_ANNOTATION = "\$partiql_time"
 
 /**

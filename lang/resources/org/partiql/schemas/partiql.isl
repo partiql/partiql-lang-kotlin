@@ -18,7 +18,7 @@ type::{
     type: {
         timestamp_precision: day
     },
-    annotations: [required::$partiql_date]
+    annotations: [required::$date]
 }
 
 type::{

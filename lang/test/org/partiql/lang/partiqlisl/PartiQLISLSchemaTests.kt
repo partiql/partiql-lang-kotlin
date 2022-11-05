@@ -5,6 +5,7 @@ import com.amazon.ionschema.IonSchemaSystemBuilder
 import org.junit.Assert
 import org.junit.Test
 import org.partiql.lang.eval.BAG_ANNOTATION
+import org.partiql.lang.eval.DATE_ANNOTATION
 import org.partiql.lang.eval.MISSING_ANNOTATION
 
 class PartiQLISLSchemaTests {
@@ -150,7 +151,7 @@ class PartiQLISLSchemaTests {
         Assert.assertTrue(dateType.isl.isReadOnly)
         Assert.assertNull(dateType.isl.container)
 
-        val violations = dateType.validate(ION.singleValue("\$partiql_date::1992-02-29"))
+        val violations = dateType.validate(ION.singleValue("$DATE_ANNOTATION::1992-02-29"))
         Assert.assertNotNull(violations)
         Assert.assertTrue(violations.isValid())
     }
@@ -165,7 +166,7 @@ class PartiQLISLSchemaTests {
         Assert.assertNotNull(violations)
         Assert.assertFalse(violations.isValid())
         Assert.assertTrue(violations.violations.size > 0)
-        Assert.assertEquals("missing annotation(s): \$partiql_date", violations.violations[0].message)
+        Assert.assertEquals("missing annotation(s): $DATE_ANNOTATION", violations.violations[0].message)
     }
 
     @Test
@@ -174,7 +175,7 @@ class PartiQLISLSchemaTests {
         Assert.assertTrue(dateType.isl.isReadOnly)
         Assert.assertNull(dateType.isl.container)
 
-        val violations = dateType.validate(ION.singleValue("\$partiql_date::2000-01-01T00:00Z"))
+        val violations = dateType.validate(ION.singleValue("$DATE_ANNOTATION::2000-01-01T00:00Z"))
         Assert.assertFalse(violations.isValid())
         Assert.assertTrue(violations.violations.size > 0)
         Assert.assertEquals("expected type {timestamp_precision:day}", violations.violations[0].message)
