@@ -21,7 +21,9 @@ import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.partiql.lang.CompilerPipeline
+import org.partiql.lang.eval.BAG_ANNOTATION
 import org.partiql.lang.eval.EvaluationException
+import org.partiql.lang.eval.MISSING_ANNOTATION
 import org.partiql.lang.eval.ProjectionIterationBehavior
 import org.partiql.lang.eval.TypedOpBehavior
 import org.partiql.lang.eval.TypingMode
@@ -35,7 +37,7 @@ class CliTest {
     private val ion = IonSystemBuilder.standard().build()
     private val output = ByteArrayOutputStream()
     private val testFile = File("test.ion")
-    private val partiqlBagAnnotation = "\$partiql_bag::"
+    private val partiqlBagAnnotation = "$BAG_ANNOTATION::"
 
     @Before
     fun setUp() {
@@ -223,7 +225,7 @@ class CliTest {
         val query = "1 + 'foo'"
         val actual = makeCliAndGetResult(query, compilerPipeline = permissiveModeCP)
 
-        assertAsIon("\$partiql_missing::null", actual)
+        assertAsIon("$MISSING_ANNOTATION::null", actual)
     }
 
     @Test

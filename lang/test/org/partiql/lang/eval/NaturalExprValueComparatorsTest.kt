@@ -423,7 +423,7 @@ class NaturalExprValueComparatorsTest : EvaluatorTestBase() {
         runEvaluatorTestCase(
             query = "$left = $right",
             expectedResult = if (left == "missing" || right == "missing")
-                "\$partiql_missing::null"
+                "$MISSING_ANNOTATION::null"
             else
                 "null",
             expectedResultFormat = ExpectedResultFormat.ION

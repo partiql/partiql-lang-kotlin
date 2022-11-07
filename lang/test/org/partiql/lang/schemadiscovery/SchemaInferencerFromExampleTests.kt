@@ -9,7 +9,9 @@ import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.ionschema.model.toIsl
 import org.partiql.ionschema.parser.parseSchema
 import org.partiql.lang.TestBase
+import org.partiql.lang.eval.BAG_ANNOTATION
 import org.partiql.lang.eval.DATE_ANNOTATION
+import org.partiql.lang.eval.MISSING_ANNOTATION
 import org.partiql.lang.eval.TIME_ANNOTATION
 import org.partiql.lang.partiqlisl.ResourceAuthority
 import org.partiql.lang.util.ArgumentsProviderBase
@@ -133,7 +135,7 @@ class SchemaInferencerFromExampleTests : TestBase() {
             // blob
             ExampleInferenceTestCase("{{ +AB/ }}", "type::{ name: $typeName, type: blob }"),
             // empty bag
-            ExampleInferenceTestCase("\$partiql_bag::[]", "type::{ name: $typeName, type: bag }"),
+            ExampleInferenceTestCase("$BAG_ANNOTATION::[]", "type::{ name: $typeName, type: bag }"),
             // empty list
             ExampleInferenceTestCase("[]", "type::{ name: $typeName, type: list }"),
             // empty sexp
@@ -141,10 +143,10 @@ class SchemaInferencerFromExampleTests : TestBase() {
             // empty struct
             ExampleInferenceTestCase("{ }", "type::{ name: $typeName, type: struct, content: closed }"),
             // missing
-            ExampleInferenceTestCase("\$partiql_missing::null", "type::{ name: $typeName, type: missing }"),
+            ExampleInferenceTestCase("$MISSING_ANNOTATION::null", "type::{ name: $typeName, type: missing }"),
             // null and missing
             ExampleInferenceTestCase(
-                "{ val: \$partiql_missing::null }" + "{ val: null }",
+                "{ val: $MISSING_ANNOTATION::null }" + "{ val: null }",
                 """
                 type::{name: $typeName, type: struct,
                     content: closed,
@@ -298,7 +300,7 @@ class SchemaInferencerFromExampleTests : TestBase() {
             ),
             // bag of bag
             ExampleInferenceTestCase(
-                "\$partiql_bag::[\$partiql_bag::[1]]",
+                "$BAG_ANNOTATION::[$BAG_ANNOTATION::[1]]",
                 """
                 type::{name: $typeName, type: bag,
                     element: { type: bag,
@@ -309,7 +311,7 @@ class SchemaInferencerFromExampleTests : TestBase() {
             ),
             // bag of different types
             ExampleInferenceTestCase(
-                "\$partiql_bag::[3, 3e0]",
+                "$BAG_ANNOTATION::[3, 3e0]",
                 """
                 type::{name: $typeName, type: bag,
                     element: {
@@ -515,7 +517,7 @@ class SchemaInferencerFromExampleTests : TestBase() {
             ),
             // list of sexp and bag of int
             ExampleInferenceTestCase(
-                "[ ( 1 ), \$partiql_bag::[ 1 ] ] ",
+                "[ ( 1 ), $BAG_ANNOTATION::[ 1 ] ] ",
                 """
                 type::{ name: $typeName, type: list,
                     element: {
@@ -529,7 +531,7 @@ class SchemaInferencerFromExampleTests : TestBase() {
             ),
             // sexp and bag
             ExampleInferenceTestCase(
-                "{ one: ( 1 ) }" + "{ one: \$partiql_bag::[ 1 ] }",
+                "{ one: ( 1 ) }" + "{ one: $BAG_ANNOTATION::[ 1 ] }",
                 """
                 type::{ name: $typeName, type: struct,
                     content: closed,
@@ -546,7 +548,7 @@ class SchemaInferencerFromExampleTests : TestBase() {
             ),
             // list and bag
             ExampleInferenceTestCase(
-                "{ one: [ 1 ] }" + "{ one: \$partiql_bag::[ 1 ] }",
+                "{ one: [ 1 ] }" + "{ one: $BAG_ANNOTATION::[ 1 ] }",
                 """
                 type::{ name: $typeName, type: struct,
                     content: closed,
@@ -870,7 +872,7 @@ class SchemaInferencerFromExampleTests : TestBase() {
             // bag of lists + structs
             ExampleInferenceTestCase(
                 """
-                ${'$'}partiql_bag::[ { a: 1,   b: [1, 2, 3],       c: { x: 1,   y: 2} },
+                $BAG_ANNOTATION::[ { a: 1,   b: [1, 2, 3],       c: { x: 1,   y: 2} },
                                      { a: 10,  b: [10, 20, 30],    c: { x: 10,  y: 20} },
                                      { a: 100, b: [100, 200, 300], c: { x: 100, y: 200} } ]
                 """,
@@ -1390,7 +1392,7 @@ class SchemaInferencerFromExampleTests : TestBase() {
             ),
             // bag of different int2 and int4
             ExampleInferenceTestCase(
-                "\$partiql_bag::[12345, $MAX_INT4]",
+                "$BAG_ANNOTATION::[12345, $MAX_INT4]",
                 """
                 type::{name: $typeName, type: bag,
                     element: { type: int, $INT4_VALID_VALUES }
@@ -1478,9 +1480,9 @@ class SchemaInferencerFromExampleTests : TestBase() {
             // bag of lists + structs
             ExampleInferenceTestCase(
                 """
-                ${'$'}partiql_bag::[ { a: 1,          b: [1, 2, 3],       c: { x: 1,   y: 2 } },
-                                     { a: 10,         b: [10, 20, 30],    c: { x: 10,  y: $POS_BIG_INT } },
-                                     { a: $MAX_INT4, b: [100, 200, 300], c: { x: 100, y: 200 } } ]
+                $BAG_ANNOTATION::[ { a: 1,          b: [1, 2, 3],       c: { x: 1,   y: 2 } },
+                                   { a: 10,         b: [10, 20, 30],    c: { x: 10,  y: $POS_BIG_INT } },
+                                   { a: $MAX_INT4, b: [100, 200, 300], c: { x: 100, y: 200 } } ]
                 """,
                 """
                 type::{ name: $typeName, type: bag,
@@ -1715,9 +1717,9 @@ class SchemaInferencerFromExampleTests : TestBase() {
             // bag of structs with nullable field
             ExampleInferenceTestCase(
                 """
-                ${'$'}partiql_bag::[ { a: null },
-                                     { a: 10 },
-                                     { a: 100 } ]
+                $BAG_ANNOTATION::[ { a: null },
+                                   { a: 10 },
+                                   { a: 100 } ]
                 """,
                 """
                 type::{ name: $typeName, type: bag,
@@ -1733,10 +1735,10 @@ class SchemaInferencerFromExampleTests : TestBase() {
             // bag of nullable structs with nullable field
             ExampleInferenceTestCase(
                 """
-                ${'$'}partiql_bag::[ { a: null },
-                                     { a: 10 },
-                                     { a: 100 },
-                                     null ]
+                $BAG_ANNOTATION::[ { a: null },
+                                   { a: 10 },
+                                   { a: 100 },
+                                   null ]
                 """,
                 """
                 type::{ name: $typeName, type: bag,
@@ -1752,9 +1754,9 @@ class SchemaInferencerFromExampleTests : TestBase() {
             // bag of structs with nullable lists
             ExampleInferenceTestCase(
                 """
-                ${'$'}partiql_bag::[ { b: [1, 2, 3] },
-                                     { b: null },
-                                     { b: [100, 200, 300] }]
+                $BAG_ANNOTATION::[ { b: [1, 2, 3] },
+                                   { b: null },
+                                   { b: [100, 200, 300] }]
                 """,
                 """
                 type::{ name: $typeName, type: bag,
@@ -1771,9 +1773,9 @@ class SchemaInferencerFromExampleTests : TestBase() {
             // bag of structs with nullable structs and nullable field
             ExampleInferenceTestCase(
                 """
-                ${'$'}partiql_bag::[ { c: { x: null, y: 2} },
-                                     { c: { x: 10,   y: 20} },
-                                     { c: null } ]
+                $BAG_ANNOTATION::[ { c: { x: null, y: 2} },
+                                   { c: { x: 10,   y: 20} },
+                                   { c: null } ]
                 """,
                 """
                 type::{ name: $typeName, type: bag,
@@ -1795,9 +1797,9 @@ class SchemaInferencerFromExampleTests : TestBase() {
             // (combined) bag of structs with nullable fields
             ExampleInferenceTestCase(
                 """
-                ${'$'}partiql_bag::[ { a: null,   b: [1, 2, 3],       c: { x: null,   y: 2} },
-                                     { a: 10,     b: null,            c: { x: 10,  y: 20} },
-                                     { a: 100,    b: [100, 200, 300], c: null } ]
+                $BAG_ANNOTATION::[ { a: null,   b: [1, 2, 3],       c: { x: null,   y: 2} },
+                                   { a: 10,     b: null,            c: { x: 10,  y: 20} },
+                                   { a: 100,    b: [100, 200, 300], c: null } ]
                 """,
                 """
                 type::{ name: $typeName, type: bag,
@@ -2012,7 +2014,7 @@ class SchemaInferencerFromExampleTests : TestBase() {
             ),
             InferenceAndDefiniteUnifyTestCase(
                 name = "bag of struct unified with additional decimal constraint",
-                examples = "\$partiql_bag::[ { a: 1d0 } ]",
+                examples = "$BAG_ANNOTATION::[ { a: 1d0 } ]",
                 definiteIslAsString =
                 """
                     type::{ name: $typeName, type: bag,
@@ -2038,7 +2040,7 @@ class SchemaInferencerFromExampleTests : TestBase() {
             ),
             InferenceAndDefiniteUnifyTestCase(
                 name = "bag of struct unified with additional decimal constraint",
-                examples = "\$partiql_bag::[ { a: 1d0 } ]",
+                examples = "$BAG_ANNOTATION::[ { a: 1d0 } ]",
                 definiteIslAsString =
                 """
                     type::{ name: $typeName, type: bag,
@@ -2066,9 +2068,9 @@ class SchemaInferencerFromExampleTests : TestBase() {
                 name = "bag of structs unified with additional constraints",
                 examples =
                 """
-                    ${'$'}partiql_bag::[ { a: 1,   b: ["a", "b", "c"],       c: { x: 1.,   y: {{ +AA/ }} } },
-                                         { a: 10,  b: ["aa", "bb", "cc"],    c: { x: 10.,  y: {{ +BB/ }} } },
-                                         { a: 100, b: ["aaa", "bbb", "ccc"], c: { x: 100., y: {{ +CC/ }} } } ]
+                    $BAG_ANNOTATION::[ { a: 1,   b: ["a", "b", "c"],       c: { x: 1.,   y: {{ +AA/ }} } },
+                                       { a: 10,  b: ["aa", "bb", "cc"],    c: { x: 10.,  y: {{ +BB/ }} } },
+                                       { a: 100, b: ["aaa", "bbb", "ccc"], c: { x: 100., y: {{ +CC/ }} } } ]
                     """,
                 definiteIslAsString =
                 """
