@@ -311,7 +311,6 @@ internal class PhysicalBexprToThunkConverter(
 
         val compiledOrderBy = windowSortSpecList?.sortSpecs?.let { compileSortSpecs(it) } ?: emptyList()
 
-        // window function map
         val builtinWindowFunctions = createBuiltinWindowFunctions()
         val builtinWindowFunctionsMap = builtinWindowFunctions.associateBy {
             it.name
@@ -319,9 +318,9 @@ internal class PhysicalBexprToThunkConverter(
 
         val compiledWindowFunctions = node.windowExpressionList.map { windowExpression ->
             CompiledWindowFunction(
-                builtinWindowFunctionsMap[windowExpression.funcName.text] ?: error("window function not supported yet"),
+                builtinWindowFunctionsMap[windowExpression.funcName.text]?.javaClass?.newInstance() ?: error("window function not supported yet"),
                 windowExpression.args.map { exprConverter.convert(it).toValueExpr(it.metas.sourceLocationMeta) },
-                windowExpression.decl.toSetVariableFunc()
+                windowExpression.decl
             )
         }
 

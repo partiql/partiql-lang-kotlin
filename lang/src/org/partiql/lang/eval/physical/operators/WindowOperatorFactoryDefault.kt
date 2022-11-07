@@ -102,7 +102,7 @@ internal class WindowOperatorDefault(
                 rowsInPartition.forEach {
                     // process current row
                     compiledWindowFunctions.forEach { compiledWindowFunction ->
-                        compiledWindowFunction.func.processRow(state, compiledWindowFunction.parameters, compiledWindowFunction.setWindowVal)
+                        compiledWindowFunction.func.processRow(state, compiledWindowFunction.parameters, compiledWindowFunction.windowVarDecl)
                     }
 
                     // yield the result
