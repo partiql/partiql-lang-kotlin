@@ -29,10 +29,10 @@ class DynamicLookupExprFunctionTest : EvaluatorTestBase() {
     fun runPassTests(testCase: ExprFunctionTestCase) =
         runEvaluatorTestCase(
             query = testCase.source,
+            session = session,
             expectedResult = testCase.expectedLegacyModeResult,
-            target = EvaluatorTestTarget.PLANNER_PIPELINE,
             expectedResultFormat = ExpectedResultFormat.ION,
-            session = session
+            target = EvaluatorTestTarget.PLANNER_PIPELINE
         )
 
     // We rely on the built-in [DEFAULT_COMPARATOR] for the actual definition of equality, which is not being tested

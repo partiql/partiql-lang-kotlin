@@ -25,6 +25,5 @@ class IsValuesExprMeta private constructor() : Meta {
         const val TAG = "\$is_values_expr"
 
         val instance = IsValuesExprMeta()
-        val deserializer = MemoizedMetaDeserializer(TAG, instance)
     }
 }

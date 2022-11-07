@@ -16,7 +16,7 @@ This repository contains an embeddable reference interpreter, test framework, an
 ## About
 
 Check out the [PartiQL Lang Kotlin Wiki](https://github.com/partiql/partiql-lang-kotlin/wiki) for documentation,
-tutorials, migration guides, and more!
+tutorials, upgrade guides, and more!
 
 ## Status
 
@@ -29,9 +29,9 @@ GitHub issues list for details.)
 
 This project is published to [Maven Central](https://search.maven.org/artifact/org.partiql/partiql-lang-kotlin).
 
-| Group ID | Artifact ID | Recommended Version |
-|----------|-------------|---------------------|
-| `org.partiql` | `partiql-lang-kotlin` | `0.8.0`| 
+| Group ID      | Artifact ID           | Recommended Version |
+|---------------|-----------------------|---------------------|
+| `org.partiql` | `partiql-lang-kotlin` | `0.8.1`             | 
 
 
 For Maven builds, add the following to your `pom.xml`:

@@ -1,4 +1,4 @@
-# Rewriter Migration → PIG VisitorTransform 
+# Rewriter Upgrade → PIG VisitorTransform 
 
 ## General Procedure
 
@@ -7,7 +7,7 @@
 1. Make a copy of `FooRewriter` named `FooVisitorTransform` 
 2. Similarly for the rewriter tests (if they exist) i.e. `FooRewriterTests` → `FooVisitorTransformTests`
 3. Make the `FooVisitorTransform` have a base class of `PartiqlAst.VisitorTransform` rather than `AstRewriter`
-4. Decide which code will require a migration to PIG
+4. Decide which code will require a upgrade to PIG
     1. Most commonly: anything involving `ExprNode` and ast.kt’s `MetaContainer`
 5. For any call to override function `rewriteXXX`, find the equivalent `transformXXX` method in `partiql-domains.kt`
     1. First you need to find the `ExprNode` type’s equivalent `PartiqlAst` type. You can look at how the `ExprNode` is converted to a `PartiqlAst` in [`ExprNodeToStatement.kt`](https://github.com/partiql/partiql-lang-kotlin/blob/master/lang/src/org/partiql/lang/ast/ExprNodeToStatement.kt). Usually, this is a pretty simple 1:1 mapping, but there can be some ambiguities and differences between `ExprNode` and `PartiqlAst`. Some cases can be found in the “Common Conversions” section.

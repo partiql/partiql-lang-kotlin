@@ -32,6 +32,5 @@ class IsPathIndexMeta private constructor() : Meta {
         const val TAG = "\$is_path_index"
 
         val instance = IsPathIndexMeta()
-        val deserializer = MemoizedMetaDeserializer(TAG, instance)
     }
 }

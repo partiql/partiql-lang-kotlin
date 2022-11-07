@@ -16,17 +16,8 @@
 package org.partiql.lang.ast
 
 import com.amazon.ion.IonSystem
-import org.partiql.lang.errors.Property
-import org.partiql.lang.errors.PropertyValueMap
-
-@Suppress("DEPRECATION")
-fun PropertyValueMap.addSourceLocation(metas: MetaContainer): PropertyValueMap {
-    (metas.find(SourceLocationMeta.TAG) as? SourceLocationMeta)?.let {
-        this[Property.LINE_NUMBER] = it.lineNum
-        this[Property.COLUMN_NUMBER] = it.charOffset
-    }
-    return this
-}
+import com.amazon.ionelement.api.MetaContainer
+import org.partiql.lang.domains.metaContainerOf
 
 /**
  * Creates an instance of [CallAgg] which is intended to be used to represent `COUNT(*)` when it is
@@ -39,7 +30,7 @@ fun createCountStar(ion: IonSystem, metas: MetaContainer): CallAgg {
     val srcLocationMetaOnly = metas.find(SourceLocationMeta.TAG)
         ?.let { metaContainerOf(it) } ?: metaContainerOf()
 
-    // optimize count(*) to count(1). 
+    // optimize count(*) to count(1).
     return CallAgg(
         funcExpr = VariableReference(
             id = "count",

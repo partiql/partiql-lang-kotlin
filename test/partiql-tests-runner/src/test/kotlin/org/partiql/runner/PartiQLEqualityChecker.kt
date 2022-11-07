@@ -8,6 +8,8 @@ import com.amazon.ion.IonStruct
 import com.amazon.ion.IonTimestamp
 import com.amazon.ion.IonType
 import com.amazon.ion.IonValue
+import org.partiql.lang.eval.BAG_ANNOTATION
+import org.partiql.lang.eval.MISSING_ANNOTATION
 import java.lang.IllegalArgumentException
 
 /**

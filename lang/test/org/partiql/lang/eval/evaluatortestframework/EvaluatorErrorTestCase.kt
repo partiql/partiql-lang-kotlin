@@ -45,12 +45,6 @@ data class EvaluatorErrorTestCase(
     override val expectedPermissiveModeResult: String? = null,
 
     /**
-     * Set to true to avoid testing the legacy AST serializers which are deprecated
-     * and not being updated to include new AST nodes.
-     */
-    override val excludeLegacySerializerAssertions: Boolean = false,
-
-    /**
      * Include permissive mode test.
      */
     override val implicitPermissiveModeTest: Boolean = true,

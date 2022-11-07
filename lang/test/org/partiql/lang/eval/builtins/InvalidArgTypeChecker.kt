@@ -130,7 +130,6 @@ class InvalidArgTypeChecker : EvaluatorTestBase() {
                 Property.EXPECTED_ARGUMENT_TYPES to expectedArgTypeErrorMsg(expectedTypes.typeDomain.toList()),
                 Property.ACTUAL_ARGUMENT_TYPES to actualType.runtimeType.toString()
             ),
-            expectedPermissiveModeResult = "MISSING",
-            excludeLegacySerializerAssertions = true
+            expectedPermissiveModeResult = "MISSING"
         )
 }

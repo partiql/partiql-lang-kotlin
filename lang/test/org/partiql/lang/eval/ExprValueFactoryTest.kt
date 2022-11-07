@@ -73,8 +73,8 @@ class ExprValueFactoryTest {
             TestCase(ExprValueType.SYMBOL, "", ion.newSymbol(""), factory.newSymbol("")),
             TestCase(ExprValueType.CLOB, someTestBytes, ion.newClob(someTestBytes), factory.newClob(someTestBytes)),
             TestCase(ExprValueType.BLOB, someTestBytes, ion.newBlob(someTestBytes), factory.newBlob(someTestBytes)),
-            TestCase(ExprValueType.DATE, localDate, ion.singleValue("\$partiql_date::2022-01-01"), factory.newDate(localDate)),
-            TestCase(ExprValueType.TIME, time, ion.singleValue("\$partiql_time::{hour:17,minute:40,second:1.123456789,timezone_hour:1,timezone_minute:5}"), factory.newTime(time))
+            TestCase(ExprValueType.DATE, localDate, ion.singleValue("$DATE_ANNOTATION::2022-01-01"), factory.newDate(localDate)),
+            TestCase(ExprValueType.TIME, time, ion.singleValue("$TIME_ANNOTATION::{hour:17,minute:40,second:1.123456789,timezone_hour:1,timezone_minute:5}"), factory.newTime(time))
         )
     }
 
@@ -267,7 +267,7 @@ class ExprValueFactoryTest {
                 assertEquals(tc.expectedIonValue, tc.value.ionValue)
 
                 val fromIonValue = factory.newFromIonValue(tc.value.ionValue)
-                assertEquals(ExprValueType.BAG, fromIonValue.type) // Ion has no bag type--[bag.ionVaule] converts to a list with annotation $partiql_bag
+                assertEquals(ExprValueType.BAG, fromIonValue.type) // Ion has no bag type--[bag.ionVaule] converts to a list with annotation $bag
                 assertBagValues(fromIonValue)
                 assertEquals(fromIonValue.ionValue, tc.value.ionValue)
 
@@ -404,7 +404,7 @@ class ExprValueFactoryTest {
         val missingIonValue = factory.missingValue.ionValue
         assertTrue(missingIonValue.isMissing, "The ion value should be ionNull with annotation $MISSING_ANNOTATION")
 
-        // Ensure round trip doesn't add the annotation if it already has $partiql_missing annotation
+        // Ensure round trip doesn't add the annotation if it already has $missing annotation
         val roundTrippedMissingExprValue = factory.newFromIonValue(exprValueFromFactory.ionValue)
         assertTrue(roundTrippedMissingExprValue.ionValue.isMissing, "The ion value should be ionNull with annotation $MISSING_ANNOTATION")
         assertEquals(1, roundTrippedMissingExprValue.ionValue.typeAnnotations.size)
@@ -419,14 +419,14 @@ class ExprValueFactoryTest {
         assertEquals(ExprValueType.BAG, exprValue.type)
         assertEquals(exprValue.ionValue, ionValue)
 
-        // Deserialize - IonValue to ExprValue using newBag, newBag adds $partiql_bag annotation to the list
+        // Deserialize - IonValue to ExprValue using newBag, newBag adds $BAG_ANNOTATION annotation to the list
         val exprValueFromFactory = factory.newBag(listOf(factory.newInt(1), factory.newInt(2), factory.newInt(3)).asSequence())
         assertEquals(ExprValueType.BAG, exprValueFromFactory.type)
 
         // Serialize - ExprValue to IonValue using ionValue by lazy
         assertTrue(exprValueFromFactory.ionValue.isBag)
 
-        // Ensure round trip doesn't add the annotation if it already has $partiql_bag annotation
+        // Ensure round trip doesn't add the annotation if it already has $BAG_ANNOTATION annotation
         val roundTrippedBagExprValue = factory.newFromIonValue(exprValueFromFactory.ionValue)
         assertTrue(roundTrippedBagExprValue.ionValue.isBag, "The ion value should be ionList with annotation $BAG_ANNOTATION")
         assertEquals(1, roundTrippedBagExprValue.ionValue.typeAnnotations.size)
@@ -439,7 +439,7 @@ class ExprValueFactoryTest {
 
         val ionDate =
             ion.newTimestamp(Timestamp.forDay(date.year, date.monthValue, date.dayOfMonth)).apply {
-                addTypeAnnotation("\$partiql_date")
+                addTypeAnnotation(DATE_ANNOTATION)
             }.seal()
 
         val dateExprValue = factory.newDate(date)
@@ -495,7 +495,7 @@ class ExprValueFactoryTest {
     @Test
     fun testIonDate() {
         // Arrange
-        val ionValueString = "\$partiql_date::2022-01-01"
+        val ionValueString = "$DATE_ANNOTATION::2022-01-01"
         val ionValue = ion.singleValue(ionValueString)
         val expected = LocalDate.of(2022, 1, 1)
 
@@ -509,7 +509,7 @@ class ExprValueFactoryTest {
     @Test
     fun testIonTime() {
         // Arrange
-        val ionValueString = "\$partiql_time::{hour:0,minute:40,second:1.123456789,timezone_hour:1,timezone_minute:5}"
+        val ionValueString = "$TIME_ANNOTATION::{hour:0,minute:40,second:1.123456789,timezone_hour:1,timezone_minute:5}"
         val ionValue = ion.singleValue(ionValueString)
         val expected = Time.of(0, 40, 1, 123456789, 9, 65)
 

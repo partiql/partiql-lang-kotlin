@@ -3,14 +3,14 @@ $ion_schema_1_0
 type::{
     name: missing,
     type: $null,
-    annotations: [required::$partiql_missing],
+    annotations: [required::$missing],
     valid_values: [null]
 }
 
 type::{
     name: bag,
     type: list,
-    annotations: [required::$partiql_bag]
+    annotations: [required::$bag]
 }
 
 type::{
@@ -18,7 +18,7 @@ type::{
     type: {
         timestamp_precision: day
     },
-    annotations: [required::$partiql_date]
+    annotations: [required::$date]
 }
 
 type::{
@@ -31,5 +31,5 @@ type::{
         sec_fraction: {type: int, occurs: optional, valid_values: range::[0,999999]}
     },
     content: closed,
-    annotations: [required::$partiql_time]
+    annotations: [required::$time]
 }

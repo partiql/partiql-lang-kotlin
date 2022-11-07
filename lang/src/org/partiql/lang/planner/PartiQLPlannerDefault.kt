@@ -19,11 +19,12 @@ import org.partiql.lang.domains.PartiqlLogical
 import org.partiql.lang.domains.PartiqlLogicalResolved
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.errors.ProblemCollector
+import org.partiql.lang.eval.CompileOptions
+import org.partiql.lang.eval.TypedOpBehavior
+import org.partiql.lang.eval.visitors.AggregationVisitorTransform
 import org.partiql.lang.eval.visitors.FromSourceAliasVisitorTransform
-import org.partiql.lang.eval.visitors.GroupByItemAliasVisitorTransform
-import org.partiql.lang.eval.visitors.GroupByPathExpressionVisitorTransform
-import org.partiql.lang.eval.visitors.GroupKeyReferencesVisitorTransform
 import org.partiql.lang.eval.visitors.OrderBySortSpecVisitorTransform
+import org.partiql.lang.eval.visitors.PartiqlAstSanityValidator
 import org.partiql.lang.eval.visitors.PipelinedVisitorTransform
 import org.partiql.lang.eval.visitors.SelectListItemAliasVisitorTransform
 import org.partiql.lang.eval.visitors.SelectStarVisitorTransform
@@ -53,6 +54,7 @@ internal class PartiQLPlannerDefault(
         if (problemHandler.hasErrors) {
             return PartiQLPlanner.Result.Error(problemHandler.problems)
         }
+        normalized.validate(options.typedOpBehavior)
 
         // Step 2. AST -> LogicalPlan
         val logicalPlan = callback.doEvent("ast_to_logical", normalized) {
@@ -112,12 +114,19 @@ internal class PartiQLPlannerDefault(
             SelectListItemAliasVisitorTransform(),
             FromSourceAliasVisitorTransform(),
             OrderBySortSpecVisitorTransform(),
-            GroupByItemAliasVisitorTransform(),
-            GroupByPathExpressionVisitorTransform(),
-            GroupKeyReferencesVisitorTransform(),
+            AggregationVisitorTransform(),
             SelectStarVisitorTransform()
         )
         return transform.transformStatement(this)
+    }
+
+    /**
+     * Performs a validation of the AST. The [PartiqlAstSanityValidator] only requires the
+     * [TypedOpBehavior] to perform assertions, so we pass this along.
+     */
+    private fun PartiqlAst.Statement.validate(behavior: TypedOpBehavior) {
+        val validatorCompileOptions = CompileOptions.build { typedOpBehavior(behavior) }
+        PartiqlAstSanityValidator().validate(this, validatorCompileOptions)
     }
 
     /**
