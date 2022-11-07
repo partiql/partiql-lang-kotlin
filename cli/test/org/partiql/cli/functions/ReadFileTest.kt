@@ -26,6 +26,7 @@ import org.partiql.lang.eval.BAG_ANNOTATION
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
+import org.partiql.lang.eval.toIonValue
 import org.partiql.lang.eval.MISSING_ANNOTATION
 import org.partiql.lang.util.asSequence
 import java.io.File
@@ -84,7 +85,7 @@ class ReadFileTest {
     private fun assertValues(expectedIon: String, value: ExprValue) {
         val expectedValues = ion.singleValue(expectedIon)
 
-        assertEquals(expectedValues, value.ionValue.cloneAndRemoveAnnotations())
+        assertEquals(expectedValues, value.toIonValue(ion).cloneAndRemoveAnnotations())
     }
 
     @Test
