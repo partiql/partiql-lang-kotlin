@@ -194,7 +194,6 @@ private class StatementTransformer(val ion: IonSystem) {
                 )
             is PartiqlAst.Expr.NullIf -> NullIf(expr1.toExprNode(), expr2.toExprNode(), metas)
             is PartiqlAst.Expr.Coalesce -> Coalesce(args.map { it.toExprNode() }, metas)
-
             is PartiqlAst.Expr.GraphMatch -> error("$this node has no representation in prior ASTs.")
             is PartiqlAst.Expr.CallWindow -> TODO("ExprNode doesn't support Call Window.")
         }

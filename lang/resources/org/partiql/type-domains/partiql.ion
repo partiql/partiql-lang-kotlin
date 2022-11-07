@@ -944,7 +944,7 @@ may then be further optimized by selecting better implementations of each operat
                 (limit i::impl row_count::expr source::bexpr)
                 (let i::impl source::bexpr bindings::(* let_binding 1))
                 // Notice that the physical window operator contains a list of window expression
-                // That is because, we potentially want to combine the window functions that is operating on the same window to a single window operator
+                // That is because, we want to combine the window functions that are operating on the same window to a single window operator
                 (window i::impl source:: bexpr window_specification:: over window_expression_list:: (* window_expression 1))
             )
         )
