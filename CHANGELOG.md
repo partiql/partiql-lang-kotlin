@@ -44,10 +44,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 - Removes the deprecated V0 AST in the codebase.
 - Removes the deprecated MetaContainer in the codebase, removed interfaces and classes include:
-  - MetaContainer Interface
-  - MetaContainerImpl
-  - MetaDeserializer
-  - MemoizedMetaDeserializer
+  - [MetaContainer] Interface
+  - [MetaContainerImpl]
+  - [MetaDeserialize]
+  - [MemoizedMetaDeserializer]
+- Removes the deprecated Rewriter/AstWalker/AstVisitor in the code base, removed interfaces and classes include:
+  - [AstRewriter] Interface & [AstRewriterBase] class
+  - [AstVisitor] Interface & [AstVisitorBase] class
+  - [AstWalker] class
+  - [MetaStrippingRewriter] class
 
 ### Security
 

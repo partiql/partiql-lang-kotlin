@@ -63,10 +63,9 @@ data class IonResultTestCase(
 
     override fun toString(): String = listOfNotNull(group, name, note, cleanedSqlUnderTest).joinToString(" - ")
 
-    fun toExprNodeTestCase(): ExprNodeTestCase =
+    fun toStatementTestCase(): StatementTestCase =
         assertDoesNotThrow("IonResultTestCase ${toString()} should not throw when parsing") {
-            @Suppress("DEPRECATION")
-            ExprNodeTestCase(name, PartiQLParser(ION).parseExprNode(sqlUnderTest))
+            StatementTestCase(name, PartiQLParser(ION).parseAstStatement(sqlUnderTest))
         }
 }
 

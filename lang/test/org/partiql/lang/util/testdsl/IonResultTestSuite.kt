@@ -54,11 +54,11 @@ data class IonResultTestSuite(
     }
 
     /**
-     * Calls [getAllTests] and then maps the result to a [List<ExprNodeTestCase>].
+     * Calls [getAllTests] and then maps the result to a [List<StatementTestCase>].
      */
-    fun allTestsAsExprNodeTestCases(failingTestNames: Set<String> = emptySet()) = getAllTests(failingTestNames)
+    fun allTestsAsStatementTestCases(failingTestNames: Set<String> = emptySet()) = getAllTests(failingTestNames)
         .filter { !it.expectFailure }
-        .map { it.toExprNodeTestCase() }
+        .map { it.toStatementTestCase() }
 
     /** Invokes [factoryBlock] to create the parameters needed for the tests in the suite. */
     fun createParameters(vf: ExprValueFactory) = factoryBlock(vf)

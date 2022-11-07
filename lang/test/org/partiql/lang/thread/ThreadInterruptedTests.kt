@@ -17,9 +17,6 @@ import org.partiql.lang.ast.NAry
 import org.partiql.lang.ast.NAryOp
 import org.partiql.lang.ast.ScopeQualifier
 import org.partiql.lang.ast.VariableReference
-import org.partiql.lang.ast.passes.AstRewriterBase
-import org.partiql.lang.ast.passes.AstVisitor
-import org.partiql.lang.ast.passes.AstWalker
 import org.partiql.lang.ast.toAstExpr
 import org.partiql.lang.ast.toExprNode
 import org.partiql.lang.domains.PartiqlAst
@@ -113,14 +110,6 @@ class ThreadInterruptedTests {
     }
 
     @Test
-    fun astWalker() {
-        val walker = AstWalker(object : AstVisitor {})
-        testThreadInterrupt {
-            walker.walk(reallyBigNAry)
-        }
-    }
-
-    @Test
     fun partiqlAstToExprNode() {
         testThreadInterrupt {
             reallyBigNAry.toAstExpr()
@@ -131,15 +120,6 @@ class ThreadInterruptedTests {
     fun astToPartiqlAst() {
         testThreadInterrupt {
             bigPartiqlAst.toExprNode(ion)
-        }
-    }
-
-    @Test
-    fun astRewriterBase() {
-        @Suppress("DEPRECATION")
-        val identityRewriter = AstRewriterBase()
-        testThreadInterrupt {
-            identityRewriter.rewriteExprNode(reallyBigNAry)
         }
     }
 
