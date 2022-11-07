@@ -85,7 +85,7 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
     fun testDateLiteral() {
         runEvaluatorTestCase(
             query = "DATE '2000-01-02'",
-            expectedResult = "\$partiql_date::2000-01-02"
+            expectedResult = "$DATE_ANNOTATION::2000-01-02"
         )
     }
 

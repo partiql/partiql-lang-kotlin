@@ -21,9 +21,9 @@ import org.partiql.lang.eval.evaluatortestframework.ExpectedResultFormat
 class CoalesceEvaluationTest : EvaluatorTestBase() {
     // Note that we can't use `assertEval` for the following tests because it requires expected result
     // to be expressed in Ion, which doesn't currently disambiguate between `MISSING` and `NULL`.
-    // Note that `ExprValue.ionValue` *does* add the `$partiql_missing::` annotation -- however this is
+    // Note that `ExprValue.ionValue` *does* add the `$missing::` annotation -- however this is
     // currently being removed before the assertions are made so we don't have to update thousands of test
-    // to include `$partiql_missing::` in their expected results.
+    // to include `$missing::` in their expected results.
 
     data class CoalesceTestCase(
         val args: List<String>,

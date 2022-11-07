@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.partiql.lang.ION
+import org.partiql.lang.eval.BAG_ANNOTATION
 import org.partiql.lang.eval.BindingCase
 import org.partiql.lang.eval.BindingName
 import org.partiql.lang.planner.memorydb.MemoryDatabase
@@ -59,10 +60,10 @@ class IntegrationTests {
         // ctx.queryEngine.enableDebugOutput = true
 
         // run some simple SFW queries
-        ctx.executeAndAssert("\$partiql_bag::[{ name: \"bob\"}]", "SELECT c.name FROM customer AS c WHERE c.id = 1")
-        ctx.executeAndAssert("\$partiql_bag::[{ name: \"jane\"}]", "SELECT c.name FROM customer AS c WHERE c.id = 2")
-        ctx.executeAndAssert("\$partiql_bag::[{ name: \"moe\"}]", "SELECT c.name FROM customer AS c WHERE c.id = 3")
-        ctx.executeAndAssert("\$partiql_bag::[{ name: \"sue\"}]", "SELECT c.name FROM customer AS c WHERE c.id = 4")
+        ctx.executeAndAssert("$BAG_ANNOTATION::[{ name: \"bob\"}]", "SELECT c.name FROM customer AS c WHERE c.id = 1")
+        ctx.executeAndAssert("$BAG_ANNOTATION::[{ name: \"jane\"}]", "SELECT c.name FROM customer AS c WHERE c.id = 2")
+        ctx.executeAndAssert("$BAG_ANNOTATION::[{ name: \"moe\"}]", "SELECT c.name FROM customer AS c WHERE c.id = 3")
+        ctx.executeAndAssert("$BAG_ANNOTATION::[{ name: \"sue\"}]", "SELECT c.name FROM customer AS c WHERE c.id = 4")
 
         // now delete 2 rows and assert that they are no longer present (test DELETE FROM with WHERE predicate)
 
@@ -103,7 +104,7 @@ class IntegrationTests {
         assertTrue(db.tableContainsKey(moreCustomerMetadata.tableId, ctx.intKey(3)))
 
         // lastly, assert we have the correct data
-        ctx.executeAndAssert("\$partiql_bag::[{ name: \"bob\"}]", "SELECT c.name FROM more_customer AS c where c.id = 1")
-        ctx.executeAndAssert("\$partiql_bag::[{ name: \"moe\"}]", "SELECT c.name FROM more_customer AS c where c.id = 3")
+        ctx.executeAndAssert("$BAG_ANNOTATION::[{ name: \"bob\"}]", "SELECT c.name FROM more_customer AS c where c.id = 1")
+        ctx.executeAndAssert("$BAG_ANNOTATION::[{ name: \"moe\"}]", "SELECT c.name FROM more_customer AS c where c.id = 3")
     }
 }

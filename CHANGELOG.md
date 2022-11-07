@@ -30,6 +30,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Now `CompileOption` uses `TypedOpParameter.HONOR_PARAMETERS` as default.
 - Updates the CLI Shell Highlighter to use the ANTLR generated lexer/parser for highlighting user queries
+- PartiQL MISSING in Ion representation now becomes ion null with annotation of `$missing`, instead of `$partiql_missing`
+- PartiQL BAG in Ion representation now becomes ion list with annotation of `$bag`, instead of `$partiql_bag`
+- PartiQL DATE in Ion representation now becomes ion timestamp with annotation of `$date`, instead of `$partiql_date`
+- PartiQL TIME in Ion representation now becomes ion struct with annotation of `$time`, instead of `$partiql_time`
 - Simplifies the aggregation operator in the experimental planner by removing the use of metas
 
 ### Deprecated

@@ -7,16 +7,15 @@ import com.amazon.ion.IonSexp
 import com.amazon.ion.IonStruct
 import com.amazon.ion.IonSystem
 import com.amazon.ion.IonValue
+import org.partiql.lang.eval.BAG_ANNOTATION
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.ExprValueType
+import org.partiql.lang.eval.MISSING_ANNOTATION
 import org.partiql.lang.eval.StructOrdering
 import org.partiql.lang.eval.name
 import org.partiql.lang.eval.namedValue
 import org.partiql.lang.eval.stringValue
-
-const val BAG_ANNOTATION = "\$bag"
-const val MISSING_ANNOTATION = "\$missing"
 
 /**
  * Converts the conformance test's encoding of PartiQL values in Ion to an [ExprValue]. The conformance tests have a
@@ -26,7 +25,7 @@ const val MISSING_ANNOTATION = "\$missing"
 internal fun IonValue.toExprValue(exprValueFactory: ExprValueFactory): ExprValue {
     // Need to create a different IonValue to ExprValue conversion function because the default provided by
     // `ExprValueFactory`'s [newFromIonValue] relies on a different encoding of PartiQL-specific types than the
-    // conformance tests (e.g. `ExprValueFactory` uses $partiql_bag rather than $bag)
+    // conformance tests (e.g. `ExprValueFactory` uses $bag rather than $bag)
     val elem = this
     val annotations = elem.typeAnnotations
     return when {

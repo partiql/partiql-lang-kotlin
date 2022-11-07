@@ -45,10 +45,10 @@ import java.math.BigInteger
 import java.time.LocalDate
 import kotlin.collections.asSequence
 
-internal const val MISSING_ANNOTATION = "\$partiql_missing"
-internal const val BAG_ANNOTATION = "\$partiql_bag"
-internal const val DATE_ANNOTATION = "\$partiql_date"
-internal const val TIME_ANNOTATION = "\$partiql_time"
+const val MISSING_ANNOTATION = "\$missing"
+const val BAG_ANNOTATION = "\$bag"
+const val DATE_ANNOTATION = "\$date"
+const val TIME_ANNOTATION = "\$time"
 
 /**
  * Provides a standard way of creating instances of ExprValue.

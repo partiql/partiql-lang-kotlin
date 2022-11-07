@@ -167,11 +167,11 @@ abstract class EvaluatorTestBase : TestBase() {
 
 internal fun IonValue.removeBagAndMissingAnnotations() {
     when (this.type) {
-        // Remove $partiql_missing annotation from NULL for assertions
+        // Remove $missing annotation from NULL for assertions
         IonType.NULL -> this.removeTypeAnnotation(MISSING_ANNOTATION)
         // Recurse into all container types.
         IonType.DATAGRAM, IonType.SEXP, IonType.STRUCT, IonType.LIST -> {
-            // Remove $partiql_bag annotation from LIST for assertions
+            // Remove $bag annotation from LIST for assertions
             if (this.type == IonType.LIST) {
                 this.removeTypeAnnotation(BAG_ANNOTATION)
             }
@@ -185,15 +185,15 @@ internal fun IonValue.removeBagAndMissingAnnotations() {
 }
 
 /**
- * Clones and removes $partiql_bag and $partiql_missing annotations from the clone and any child values.
+ * Clones and removes $bag and $missing annotations from the clone and any child values.
  *
  * There are many tests which were created before these annotations were present and thus do not include them
  * in their expected values.  This function provides an alternative to having to go and update all of them.
  * This is tech debt of the unhappy variety:  all of those test cases should really be updated and this function
  * should be deleted.
  *
- * NOTE: this function does not remove $partiql_date annotations ever!  There are tests that depend on this too.
- * $partiql_date however, was added AFTER this function was created, and so no test cases needed to remove that
+ * NOTE: this function does not remove $date annotations ever!  There are tests that depend on this too.
+ * $date however, was added AFTER this function was created, and so no test cases needed to remove that
  * annotation.
  */
 internal fun IonValue.cloneAndRemoveBagAndMissingAnnotations() = this.clone().apply {
