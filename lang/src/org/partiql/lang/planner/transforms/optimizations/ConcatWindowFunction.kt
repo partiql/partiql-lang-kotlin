@@ -59,16 +59,6 @@ private fun PartiqlPhysical.Bexpr.Window.rewriteWindowExpression(): PartiqlPhysi
             return handleIdenticalOver(rewritten, rewritten.source, rewritten)
         }
 
-        /**
-         * Consider a chain of window operator w1 -> w2 -> w3 -> scan
-         * start with w3, since the w3's source is a scan, we want to return a exact copy of w3
-         * now w2, we want to check if w2 and w3 has an identical over, if so, we want to concatenate the window functions
-         * otherwise we return w2. Denoted w2', which may or may not contains a window node in source
-         * now w1, we want to check if w1 has a idential over with w2' if so, we want to concatenate the window function and done
-         * if not, we want to check if the source of w2' is window, if so, we check again
-         * otherwise we are done.
-         */
-
         private fun handleIdenticalOver(
             toCompareNode: PartiqlPhysical.Bexpr.Window,
             previousNode: PartiqlPhysical.Bexpr,
