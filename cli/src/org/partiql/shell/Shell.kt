@@ -25,8 +25,9 @@ import org.jline.reader.History
 import org.jline.reader.LineReader
 import org.jline.reader.LineReaderBuilder
 import org.jline.reader.UserInterruptException
-import org.jline.reader.impl.completer.NullCompleter
+import org.jline.reader.impl.completer.AggregateCompleter
 import org.jline.terminal.TerminalBuilder
+import org.jline.utils.AttributedString
 import org.jline.utils.AttributedStringBuilder
 import org.jline.utils.AttributedStyle
 import org.jline.utils.InfoCmp
@@ -68,6 +69,11 @@ private const val HELP = """
 !exit               Exits the shell
 !clear              Clears the screen
 """
+
+private val SUCCESS: AttributedStyle = AttributedStyle.DEFAULT.foreground(AttributedStyle.GREEN)
+private val ERROR: AttributedStyle = AttributedStyle.DEFAULT.foreground(AttributedStyle.RED)
+private val INFO: AttributedStyle = AttributedStyle.DEFAULT
+private val WARN: AttributedStyle = AttributedStyle.DEFAULT.foreground(AttributedStyle.YELLOW)
 
 private val EXIT_DELAY: Duration = Duration(3000)
 
@@ -130,10 +136,15 @@ class Shell(
             this.config.isMonochrome -> null
             else -> ShellHighlighter()
         }
+        val completer = AggregateCompleter(CompleterDefault())
         val reader = LineReaderBuilder.builder()
             .terminal(terminal)
             .parser(ShellParser)
-            .completer(NullCompleter())
+            .completer(completer)
+            .option(LineReader.Option.GROUP_PERSIST, true)
+            .option(LineReader.Option.AUTO_LIST, true)
+            .option(LineReader.Option.CASE_INSENSITIVE, true)
+            .variable(LineReader.LIST_MAX, 10)
             .highlighter(highlighter)
             .expander(ShellExpander)
             .variable(LineReader.HISTORY_FILE, homeDir.resolve(".partiql/.history"))
@@ -292,6 +303,16 @@ private fun History.Entry.pretty(): String {
         .append(entry.trimEnd())
         .toAnsi()
 }
+
+private fun ansi(string: String, style: AttributedStyle) = AttributedString(string, style).toAnsi()
+
+private fun PrintStream.success(string: String) = this.println(ansi(string, SUCCESS))
+
+private fun PrintStream.error(string: String) = this.println(ansi(string, ERROR))
+
+private fun PrintStream.info(string: String) = this.println(ansi(string, INFO))
+
+private fun PrintStream.warn(string: String) = this.println(ansi(string, WARN))
 
 private class ThreadInterrupter : Closeable {
     private val thread = Thread.currentThread()

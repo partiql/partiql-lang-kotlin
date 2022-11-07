@@ -125,8 +125,8 @@ class LikePredicateTest : EvaluatorTestBase() {
                 INT -> {
                     runEvaluatorErrorTestCase(
                         query = query,
-                        session = session,
                         expectedErrorCode = ErrorCode.EVALUATOR_LIKE_INVALID_INPUTS,
+                        session = session,
                     )
                 }
             }

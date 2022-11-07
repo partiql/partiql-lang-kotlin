@@ -14,8 +14,10 @@
 
 package org.partiql.lang.ast
 
+import com.amazon.ionelement.api.emptyMetaContainer
 import org.junit.Assert
 import org.junit.Test
+import org.partiql.lang.domains.metaContainerOf
 import kotlin.test.assertEquals
 
 @Suppress("DEPRECATION")
@@ -36,7 +38,7 @@ class VariableReferenceTest {
         Assert.assertTrue(!vr1.equals(vr2))
     }
 
-    val sensitiveFoo = VariableReference("foo", CaseSensitivity.SENSITIVE, ScopeQualifier.UNQUALIFIED, emptyMetaContainer)
+    val sensitiveFoo = VariableReference("foo", CaseSensitivity.SENSITIVE, ScopeQualifier.UNQUALIFIED, emptyMetaContainer())
     val insensitiveFoo = sensitiveFoo.copy(case = CaseSensitivity.INSENSITIVE)
 
     @Test

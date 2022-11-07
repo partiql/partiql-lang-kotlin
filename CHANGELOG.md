@@ -4,13 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+<!-- Template: after a release, copy and paste out below
 ## [Unreleased]
 
 ### Added
-- Extends statement redaction to support `INSERT/REPLACE/UPSERT INTO`.
 
 ### Changed
-- Now `CompileOption` uses `TypedOpParameter.HONOR_PARAMETERS` as default.
 
 ### Deprecated
 
@@ -19,6 +18,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 ### Security
+-->
+
+
+## [Unreleased]
+
+### Added
+- Adds simple auto-completion to the CLI.
+- Adds support for HAVING clause in planner
+
+### Changed
+- Now `CompileOption` uses `TypedOpParameter.HONOR_PARAMETERS` as default.
+- Updates the CLI Shell Highlighter to use the ANTLR generated lexer/parser for highlighting user queries
+- PartiQL MISSING in Ion representation now becomes ion null with annotation of `$missing`, instead of `$partiql_missing`
+- PartiQL BAG in Ion representation now becomes ion list with annotation of `$bag`, instead of `$partiql_bag`
+- PartiQL DATE in Ion representation now becomes ion timestamp with annotation of `$date`, instead of `$partiql_date`
+- PartiQL TIME in Ion representation now becomes ion struct with annotation of `$time`, instead of `$partiql_time`
+- Simplifies the aggregation operator in the experimental planner by removing the use of metas
+
+### Deprecated
+- Marks the GroupKeyReferencesVisitorTransform as deprecated. There is no functionally equivalent class.
+
+### Fixed
+
+### Removed
+- Removes the deprecated V0 AST in the codebase.
+- Removes the deprecated MetaContainer in the codebase, removed interfaces and classes include:
+  - MetaContainer Interface
+  - MetaContainerImpl
+  - MetaDeserializer
+  - MemoizedMetaDeserializer
+
+### Security
+
+
+## [0.8.1] - 2022-10-28
+
+### Added
+- Extends statement redaction to support `INSERT/REPLACE/UPSERT INTO`.
+
 
 ## [0.8.0] - 2022-10-14
 
@@ -153,13 +191,6 @@ stage in the `PlannerPipeline` and to generate performance metrics for the indiv
   A client program may be interrupted by `NoSuchFieldError` exception.
 - [breaking change] Removal of `NodeMetadata` from `org.partiql.lang.eval`:
   A client program may be interrupted by `NoClassDefFoundError` exception.
-- [breaking change] Removal of the following classes from `org.partiql.lang.eval.like`:
-  - `CodepointCheckpointIterator`
-  - `PatternPart`
-  - `PatternPart.AnyOneChar`
-  - `PatternPart.ExactChars`
-  - `PatternPartKt`
-    A client program may be interrupted by NoClassDefFoundError exception.
 
 ### Fixed
 - Fix `write_file` CLI function; the old function required the input to be a `string`, but it must be a generic type.

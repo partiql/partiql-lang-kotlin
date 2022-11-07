@@ -21,7 +21,9 @@ import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.partiql.lang.CompilerPipeline
+import org.partiql.lang.eval.BAG_ANNOTATION
 import org.partiql.lang.eval.EvaluationException
+import org.partiql.lang.eval.MISSING_ANNOTATION
 import org.partiql.lang.eval.ProjectionIterationBehavior
 import org.partiql.lang.eval.TypedOpBehavior
 import org.partiql.lang.eval.TypingMode
@@ -35,7 +37,6 @@ class CliTest {
     private val ion = IonSystemBuilder.standard().build()
     private val output = ByteArrayOutputStream()
     private val testFile = File("test.ion")
-    private val partiqlBagAnnotation = "\$partiql_bag::"
 
     @Before
     fun setUp() {
@@ -51,7 +52,7 @@ class CliTest {
     fun runQueryOnSingleValue() {
         val query = "SELECT * FROM input_data"
         val input = "[{'a': 1}]"
-        val expected = "$partiqlBagAnnotation[{a: 1}]"
+        val expected = "$BAG_ANNOTATION::[{a: 1}]"
 
         val ionInputResult = makeCliAndGetResult(query, input, inputFormat = InputFormat.ION)
         val partiqlInputResult = makeCliAndGetResult(query, input, inputFormat = InputFormat.PARTIQL)
@@ -71,7 +72,7 @@ class CliTest {
     fun runQueryOnMultipleIonValuesSuccess() {
         val query = "SELECT * FROM input_data"
         val input = "{a:1} {a:2}"
-        val expected = "$partiqlBagAnnotation[{a:1}, {a:2}]"
+        val expected = "$BAG_ANNOTATION::[{a:1}, {a:2}]"
 
         val result = makeCliAndGetResult(query, input, wrapIon = true)
 
@@ -90,7 +91,7 @@ class CliTest {
     fun runQueryOnMultipleValues() {
         val query = "SELECT * FROM input_data"
         val input = "[{'a': 1},{'a': 2},{'a': 3}]"
-        val expected = "$partiqlBagAnnotation[{a: 1},{a: 2},{a: 3}]"
+        val expected = "$BAG_ANNOTATION::[{a: 1},{a: 2},{a: 3}]"
 
         val ionInputResult = makeCliAndGetResult(query, input, inputFormat = InputFormat.ION)
         val partiqlInputResult = makeCliAndGetResult(query, input, inputFormat = InputFormat.PARTIQL)
@@ -103,7 +104,7 @@ class CliTest {
     fun caseInsensitiveBindingName() {
         val query = "SELECT * FROM input_dAta"
         val input = "[{'a': 1}]"
-        val expected = "$partiqlBagAnnotation[{a: 1}]"
+        val expected = "$BAG_ANNOTATION::[{a: 1}]"
 
         val ionInputResult = makeCliAndGetResult(query, input, inputFormat = InputFormat.ION)
         val partiqlInputResult = makeCliAndGetResult(query, input, inputFormat = InputFormat.PARTIQL)
@@ -118,7 +119,7 @@ class CliTest {
         val input = "[{'a': 1}]"
         val wrappedInput = "{'a': 1}"
         val bindings = mapOf("bound_value" to "{b: 1}").asBinding()
-        val expected = "$partiqlBagAnnotation[{v: {b: 1}, d: {a: 1}}]"
+        val expected = "$BAG_ANNOTATION::[{v: {b: 1}, d: {a: 1}}]"
 
         val wrappedInputResult = makeCliAndGetResult(query, wrappedInput, bindings = bindings, wrapIon = true)
         val ionInputResult = makeCliAndGetResult(query, input, bindings = bindings)
@@ -135,7 +136,7 @@ class CliTest {
         val input = "[{'a': 1}]"
         val wrappedInput = "{'a': 1}"
         val bindings = mapOf("input_data" to "{b: 1}").asBinding()
-        val expected = "$partiqlBagAnnotation[{a: 1}]"
+        val expected = "$BAG_ANNOTATION::[{a: 1}]"
 
         val wrappedInputResult = makeCliAndGetResult(query, wrappedInput, bindings = bindings, wrapIon = true)
         val ionInputResult = makeCliAndGetResult(query, input, bindings = bindings)
@@ -175,7 +176,7 @@ class CliTest {
     fun withIonTextOutput() {
         val query = "SELECT * FROM input_data"
         val input = "[{a: 1}, {b: 1}]"
-        val expected = "$partiqlBagAnnotation[{a:1}\n,{b:1}\n]"
+        val expected = "$BAG_ANNOTATION::[{a:1}\n,{b:1}\n]"
 
         val actual = makeCliAndGetResult(query, input, inputFormat = InputFormat.ION, outputFormat = OutputFormat.ION_TEXT)
 
@@ -186,7 +187,7 @@ class CliTest {
     fun withIonTextOutputToFile() {
         val query = "SELECT * FROM input_data"
         val input = "[{'a': 1}, {'b': 1}]"
-        val expected = "$partiqlBagAnnotation[{a:1}\n,{b:1}\n]"
+        val expected = "$BAG_ANNOTATION::[{a:1}\n,{b:1}\n]"
 
         makeCliAndGetResult(query, input, inputFormat = InputFormat.ION, outputFormat = OutputFormat.ION_TEXT, output = FileOutputStream(testFile))
         val ionInputResult = testFile.bufferedReader().use { it.readText() }
@@ -223,7 +224,7 @@ class CliTest {
         val query = "1 + 'foo'"
         val actual = makeCliAndGetResult(query, compilerPipeline = permissiveModeCP)
 
-        assertAsIon("\$partiql_missing::null", actual)
+        assertAsIon("$MISSING_ANNOTATION::null", actual)
     }
 
     @Test
@@ -274,7 +275,7 @@ class CliTest {
         }
         val query = "SELECT * FROM input_data"
         val actual = makeCliAndGetResult(query, input, compilerPipeline = pipeline, inputFormat = InputFormat.PARTIQL)
-        assertAsIon("$partiqlBagAnnotation[{a:null,c:1}]", actual)
+        assertAsIon("$BAG_ANNOTATION::[{a:null,c:1}]", actual)
     }
 
     @Test
@@ -288,7 +289,7 @@ class CliTest {
         val query = "SELECT a, b, c FROM input_data"
         val actual = makeCliAndGetResult(query, input, compilerPipeline = pipeline, inputFormat = InputFormat.PARTIQL)
 
-        assertAsIon("$partiqlBagAnnotation[{a:null,c:1}]", actual)
+        assertAsIon("$BAG_ANNOTATION::[{a:null,c:1}]", actual)
     }
 
     @Test(expected = EvaluationException::class)
@@ -313,14 +314,14 @@ class CliTest {
         }
         val query = "SELECT * FROM undefined_variable"
         val actual = makeCliAndGetResult(query, input, compilerPipeline = pipeline, inputFormat = InputFormat.PARTIQL)
-        assertAsIon("$partiqlBagAnnotation[{}]", actual)
+        assertAsIon("$BAG_ANNOTATION::[{}]", actual)
     }
 
     @Test
     fun partiqlInputSuccess() {
         val query = "SELECT * FROM input_data"
         val input = "<<{'a': 1}, {'b': 1}>>"
-        val expected = "$partiqlBagAnnotation[{a:1}\n,{b:1}\n]"
+        val expected = "$BAG_ANNOTATION::[{a:1}\n,{b:1}\n]"
 
         val partiqlInputResult = makeCliAndGetResult(query, input, inputFormat = InputFormat.PARTIQL)
         assertAsIon(expected, partiqlInputResult)

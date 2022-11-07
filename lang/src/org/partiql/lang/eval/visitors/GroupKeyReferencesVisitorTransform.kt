@@ -47,6 +47,10 @@ import org.partiql.lang.planner.transforms.errAstNotNormalized
  *
  * ```
  */
+@Deprecated(
+    "This class is subject to removal.",
+    level = DeprecationLevel.WARNING
+)
 public class GroupKeyReferencesVisitorTransform(
     private val keys: Map<String, PartiqlAst.GroupKey> = emptyMap(),
     private val groupAliases: Set<String> = emptySet()

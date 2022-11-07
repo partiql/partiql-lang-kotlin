@@ -22,10 +22,11 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
 import org.junit.BeforeClass
 import org.junit.Test
+import org.partiql.lang.eval.BAG_ANNOTATION
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
-import org.partiql.lang.eval.toIonValue
+import org.partiql.lang.eval.MISSING_ANNOTATION
 import org.partiql.lang.util.asSequence
 import java.io.File
 
@@ -56,15 +57,15 @@ class ReadFileTest {
 
     private fun IonValue.removeAnnotations() {
         when (this.type) {
-            // Remove $partiql_missing annotation from NULL for assertions
-            IonType.NULL -> this.removeTypeAnnotation("\$partiql_missing")
+            // Remove $missing annotation from NULL for assertions
+            IonType.NULL -> this.removeTypeAnnotation(MISSING_ANNOTATION)
             IonType.DATAGRAM,
             IonType.SEXP,
             IonType.STRUCT,
             IonType.LIST -> {
-                // Remove $partiql_bag annotation from LIST for assertions
+                // Remove $bag annotation from LIST for assertions
                 if (this.type == IonType.LIST) {
-                    this.removeTypeAnnotation("\$partiql_bag")
+                    this.removeTypeAnnotation(BAG_ANNOTATION)
                 }
                 // Recursively remove annotations
                 this.asSequence().forEach {
@@ -83,7 +84,7 @@ class ReadFileTest {
     private fun assertValues(expectedIon: String, value: ExprValue) {
         val expectedValues = ion.singleValue(expectedIon)
 
-        assertEquals(expectedValues, value.toIonValue(ion).cloneAndRemoveAnnotations())
+        assertEquals(expectedValues, value.ionValue.cloneAndRemoveAnnotations())
     }
 
     @Test

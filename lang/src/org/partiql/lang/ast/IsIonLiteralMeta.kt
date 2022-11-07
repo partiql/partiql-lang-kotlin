@@ -28,6 +28,5 @@ class IsIonLiteralMeta private constructor() : Meta {
         const val TAG = "\$is_ion_literal"
 
         val instance = IsIonLiteralMeta()
-        val deserializer = MemoizedMetaDeserializer(TAG, instance)
     }
 }

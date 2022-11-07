@@ -5,12 +5,12 @@ package org.partiql.lang.ast
 import com.amazon.ion.IonSystem
 import com.amazon.ionelement.api.toIonValue
 import org.partiql.lang.domains.PartiqlAst
+import org.partiql.lang.domains.metaContainerOf
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.util.checkThreadInterrupted
 import org.partiql.lang.util.toIntExact
 import org.partiql.pig.runtime.SymbolPrimitive
 
-internal typealias PartiQlMetaContainer = org.partiql.lang.ast.MetaContainer
 internal typealias IonElementMetaContainer = com.amazon.ionelement.api.MetaContainer
 
 /** Converts a [partiql_ast.statement] to an [ExprNode], preserving all metas where possible. */
@@ -26,18 +26,6 @@ internal fun PartiqlAst.SetQuantifier.toExprNodeSetQuantifier(): SetQuantifier =
         is PartiqlAst.SetQuantifier.All -> SetQuantifier.ALL
         is PartiqlAst.SetQuantifier.Distinct -> SetQuantifier.DISTINCT
     }
-
-internal fun com.amazon.ionelement.api.MetaContainer.toPartiQlMetaContainer(): PartiQlMetaContainer {
-    val nonLocationMetas: List<Meta> = this.values.map {
-        // We may need to account for this in the future, but for now we require that all metas placed
-        // on any `partiql_ast` instances to implement Meta.  It's not clear how to deal with that now
-        // so we should wait until it's needed.
-        val partiQlMeta = it as? Meta ?: error("The meta was not an instance of Meta.")
-        partiQlMeta
-    }
-
-    return metaContainerOf(nonLocationMetas)
-}
 
 private class StatementTransformer(val ion: IonSystem) {
     fun transform(stmt: PartiqlAst.Statement): ExprNode =
@@ -60,7 +48,7 @@ private class StatementTransformer(val ion: IonSystem) {
 
     private fun PartiqlAst.Expr.toExprNode(): ExprNode {
         checkThreadInterrupted()
-        val metas = this.metas.toPartiQlMetaContainer()
+        val metas = this.metas
         return when (this) {
             is PartiqlAst.Expr.Missing -> LiteralMissing(metas)
             // https://github.com/amzn/ion-element-kotlin/issues/35, .asAnyElement() is unfortunately needed for now
@@ -127,7 +115,7 @@ private class StatementTransformer(val ion: IonSystem) {
                 Path(
                     root.toExprNode(),
                     steps.map {
-                        val componentMetas = it.metas.toPartiQlMetaContainer()
+                        val componentMetas = it.metas
                         when (it) {
                             is PartiqlAst.PathStep.PathExpr ->
                                 PathComponentExpr(
@@ -149,7 +137,7 @@ private class StatementTransformer(val ion: IonSystem) {
                             funcName.text,
                             CaseSensitivity.INSENSITIVE,
                             ScopeQualifier.UNQUALIFIED,
-                            emptyMetaContainer
+                            metaContainerOf()
                         )
                     ) + args.map { it.toExprNode() },
                     metas
@@ -160,7 +148,7 @@ private class StatementTransformer(val ion: IonSystem) {
                         funcName.text,
                         CaseSensitivity.INSENSITIVE,
                         ScopeQualifier.UNQUALIFIED,
-                        funcName.metas.toPartiQlMetaContainer()
+                        funcName.metas
                     ),
                     setq.toSetQuantifier(),
                     arg.toExprNode(),
@@ -199,7 +187,7 @@ private class StatementTransformer(val ion: IonSystem) {
     }
 
     private fun PartiqlAst.Projection.toSelectProjection(): SelectProjection {
-        val metas = this.metas.toPartiQlMetaContainer()
+        val metas = this.metas
         return when (this) {
             is PartiqlAst.Projection.ProjectStar -> SelectProjectionList(listOf(SelectListItemStar(metas)), metas)
             is PartiqlAst.Projection.ProjectValue -> SelectProjectionValue(this.value.toExprNode(), metas)
@@ -222,7 +210,7 @@ private class StatementTransformer(val ion: IonSystem) {
     }
 
     private fun PartiqlAst.FromSource.toFromSource(): FromSource {
-        val metas = this.metas.toPartiQlMetaContainer()
+        val metas = this.metas
         return when (this) {
             is PartiqlAst.FromSource.Scan ->
                 FromSourceExpr(
@@ -275,7 +263,7 @@ private class StatementTransformer(val ion: IonSystem) {
         )
     }
 
-    private fun SymbolPrimitive.toSymbolicName() = SymbolicName(this.text, this.metas.toPartiQlMetaContainer())
+    private fun SymbolPrimitive.toSymbolicName() = SymbolicName(this.text, this.metas)
 
     private fun PartiqlAst.OrderBy.toOrderBy(): OrderBy =
         OrderBy(
@@ -319,7 +307,7 @@ private class StatementTransformer(val ion: IonSystem) {
         }
 
     private fun PartiqlAst.Type.toExprNodeType(): DataType {
-        val metas = this.metas.toPartiQlMetaContainer()
+        val metas = this.metas
 
         return when (this) {
             is PartiqlAst.Type.NullType -> DataType(SqlDataType.NULL, listOf(), metas)
@@ -409,7 +397,7 @@ private class StatementTransformer(val ion: IonSystem) {
         val ops = this.operations
         val dmlOps = ops.toDmlOps()
 
-        return DataManipulation(dmlOps, fromSource, where, returningExpr, this.metas.toPartiQlMetaContainer())
+        return DataManipulation(dmlOps, fromSource, where, returningExpr, this.metas)
     }
 
     private fun PartiqlAst.DmlOpList.toDmlOps(): DmlOpList =
@@ -451,7 +439,7 @@ private class StatementTransformer(val ion: IonSystem) {
         )
 
     private fun PartiqlAst.ColumnComponent.toColumnComponent(): ColumnComponent {
-        val metas = this.metas.toPartiQlMetaContainer()
+        val metas = this.metas
         return when (this) {
             is PartiqlAst.ColumnComponent.ReturningColumn -> ReturningColumn(this.expr.toExprNode())
             is PartiqlAst.ColumnComponent.ReturningWildcard -> ReturningWildcard(metas)
@@ -468,7 +456,7 @@ private class StatementTransformer(val ion: IonSystem) {
 
     private fun PartiqlAst.Statement.Ddl.toExprNode(): ExprNode {
         val op = this.op
-        val metas = this.metas.toPartiQlMetaContainer()
+        val metas = this.metas
         return when (op) {
             is PartiqlAst.DdlOp.CreateTable -> CreateTable(op.tableName.text, metas)
             is PartiqlAst.DdlOp.DropTable ->
@@ -476,7 +464,7 @@ private class StatementTransformer(val ion: IonSystem) {
                     tableId = Identifier(
                         id = op.tableName.name.text,
                         case = op.tableName.case.toCaseSensitivity(),
-                        metas = emptyMetaContainer
+                        metas = metaContainerOf()
                     ),
                     metas = metas
                 )
@@ -485,7 +473,7 @@ private class StatementTransformer(val ion: IonSystem) {
                     tableId = Identifier(
                         id = op.indexName.name.text,
                         case = op.indexName.case.toCaseSensitivity(),
-                        metas = emptyMetaContainer
+                        metas = metaContainerOf()
                     ),
                     keys = op.fields.map { it.toExprNode() },
                     metas = metas
@@ -495,12 +483,12 @@ private class StatementTransformer(val ion: IonSystem) {
                     tableId = Identifier(
                         id = op.table.name.text,
                         case = op.table.case.toCaseSensitivity(),
-                        metas = emptyMetaContainer
+                        metas = metaContainerOf()
                     ),
                     indexId = Identifier(
                         id = op.keys.name.text,
                         case = op.keys.case.toCaseSensitivity(),
-                        metas = emptyMetaContainer
+                        metas = metaContainerOf()
                     ),
                     metas = metas
                 )
@@ -508,6 +496,6 @@ private class StatementTransformer(val ion: IonSystem) {
     }
 
     private fun PartiqlAst.Statement.Exec.toExprNode(): ExprNode {
-        return Exec(procedureName.toSymbolicName(), this.args.toExprNodeList(), metas.toPartiQlMetaContainer())
+        return Exec(procedureName.toSymbolicName(), this.args.toExprNodeList(), metas)
     }
 }

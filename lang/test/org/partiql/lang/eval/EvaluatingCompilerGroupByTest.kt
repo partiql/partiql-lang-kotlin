@@ -140,8 +140,8 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
                                 groupName = coGroupName,
                                 query = applySqlTemplate("COUNT"),
                                 expectedResult = it,
-                                compileOptionsBuilderBlock = compOptions.optionsBlock,
-                                targetPipeline = pipeline
+                                targetPipeline = pipeline,
+                                compileOptionsBuilderBlock = compOptions.optionsBlock
                             )
                         )
                     }
@@ -151,8 +151,8 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
                                 groupName = coGroupName,
                                 query = applySqlTemplate("SUM"),
                                 expectedResult = it,
-                                compileOptionsBuilderBlock = compOptions.optionsBlock,
-                                targetPipeline = pipeline
+                                targetPipeline = pipeline,
+                                compileOptionsBuilderBlock = compOptions.optionsBlock
                             )
                         )
                     }
@@ -162,8 +162,8 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
                                 groupName = coGroupName,
                                 query = applySqlTemplate("MIN"),
                                 expectedResult = it,
-                                compileOptionsBuilderBlock = compOptions.optionsBlock,
-                                targetPipeline = pipeline
+                                targetPipeline = pipeline,
+                                compileOptionsBuilderBlock = compOptions.optionsBlock
                             )
                         )
                     }
@@ -173,8 +173,8 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
                                 groupName = coGroupName,
                                 query = applySqlTemplate("MAX"),
                                 expectedResult = it,
-                                compileOptionsBuilderBlock = compOptions.optionsBlock,
-                                targetPipeline = pipeline
+                                targetPipeline = pipeline,
+                                compileOptionsBuilderBlock = compOptions.optionsBlock
                             )
                         )
                     }
@@ -184,8 +184,8 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
                                 groupName = coGroupName,
                                 applySqlTemplate("AVG"),
                                 expectedResult = it,
-                                compileOptionsBuilderBlock = compOptions.optionsBlock,
-                                targetPipeline = pipeline
+                                targetPipeline = pipeline,
+                                compileOptionsBuilderBlock = compOptions.optionsBlock
                             )
                         )
                     }
@@ -227,8 +227,8 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
             EvaluatorTestCase(
                 query = query,
                 expectedResult = expected,
-                compileOptionsBuilderBlock = co.optionsBlock,
-                targetPipeline = pipeline
+                targetPipeline = pipeline,
+                compileOptionsBuilderBlock = co.optionsBlock
             )
         }
 
@@ -239,8 +239,8 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
                     EvaluatorTestCase(
                         query = q,
                         expectedResult = expected,
-                        compileOptionsBuilderBlock = co.optionsBlock,
-                        targetPipeline = pipeline
+                        targetPipeline = pipeline,
+                        compileOptionsBuilderBlock = co.optionsBlock
                     )
                 }
             }
@@ -1318,8 +1318,8 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
             ErrorCode.EVALUATOR_QUOTED_BINDING_DOES_NOT_EXIST,
             propertyValueMapOf(2, 28, Property.BINDING_NAME to "O"),
             expectedPermissiveModeResult = "<<{'_2': 10}>>",
-            session = session,
-            target = EvaluatorTestTarget.COMPILER_PIPELINE
+            target = EvaluatorTestTarget.COMPILER_PIPELINE,
+            session = session
         )
         runEvaluatorErrorTestCase(
             """
@@ -1328,8 +1328,8 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
                 """,
             ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
             propertyValueMapOf(2, 28, Property.BINDING_NAME to "O"),
-            session = session,
-            target = EvaluatorTestTarget.PLANNER_PIPELINE
+            target = EvaluatorTestTarget.PLANNER_PIPELINE,
+            session = session
         )
     }
 

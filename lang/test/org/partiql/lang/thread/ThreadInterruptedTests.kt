@@ -12,21 +12,18 @@ import org.junit.jupiter.api.parallel.ExecutionMode
 import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.CompilerPipelineImpl
 import org.partiql.lang.StepContext
-import org.partiql.lang.ast.AstDeserializerInternal
-import org.partiql.lang.ast.AstSerializer
-import org.partiql.lang.ast.AstVersion
 import org.partiql.lang.ast.CaseSensitivity
 import org.partiql.lang.ast.NAry
 import org.partiql.lang.ast.NAryOp
 import org.partiql.lang.ast.ScopeQualifier
 import org.partiql.lang.ast.VariableReference
-import org.partiql.lang.ast.metaContainerOf
 import org.partiql.lang.ast.passes.AstRewriterBase
 import org.partiql.lang.ast.passes.AstVisitor
 import org.partiql.lang.ast.passes.AstWalker
 import org.partiql.lang.ast.toAstExpr
 import org.partiql.lang.ast.toExprNode
 import org.partiql.lang.domains.PartiqlAst
+import org.partiql.lang.domains.metaContainerOf
 import org.partiql.lang.eval.CompileOptions
 import org.partiql.lang.eval.visitors.VisitorTransformBase
 import org.partiql.lang.syntax.SqlParser
@@ -54,12 +51,6 @@ class ThreadInterruptedTests {
     private val reallyBigNAry = makeBigExprNode(20000000)
     private val bigNAry = makeBigExprNode(10000000)
     private val bigPartiqlAst = makeBigPartiqlAstExpr(10000000)
-
-    private fun makeBigSexpAst() =
-        makeBigExprNode(1000000).let { nary ->
-            @Suppress("DEPRECATION")
-            AstSerializer.serialize(nary, AstVersion.V0, ion)
-        }
 
     /**
      * A "fake" list that contains [size] elements of [item].
@@ -140,34 +131,6 @@ class ThreadInterruptedTests {
     fun astToPartiqlAst() {
         testThreadInterrupt {
             bigPartiqlAst.toExprNode(ion)
-        }
-    }
-
-    @Test
-    fun serialize() {
-        testThreadInterrupt {
-            @Suppress("DEPRECATION")
-            AstSerializer.serialize(bigNAry, AstVersion.V0, ion)
-        }
-    }
-
-    @Test
-    fun deserialize_validate() {
-        val bigSexpAst = makeBigSexpAst()
-        val deserializer = AstDeserializerInternal(AstVersion.V0, ion, emptyMap())
-
-        testThreadInterrupt {
-            deserializer.validate(bigSexpAst)
-        }
-    }
-
-    @Test
-    fun deserialize_deserializeExprNode() {
-        val bigSexpAst = makeBigSexpAst()
-        val deserializer = AstDeserializerInternal(AstVersion.V0, ion, emptyMap())
-
-        testThreadInterrupt {
-            deserializer.deserializeExprNode(bigSexpAst)
         }
     }
 

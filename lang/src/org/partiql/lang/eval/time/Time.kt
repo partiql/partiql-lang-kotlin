@@ -20,7 +20,6 @@ import kotlin.math.min
 
 // Constants related to the TIME
 
-internal const val PARTIQL_TIME_ANNOTATION = "\$partiql_time"
 internal const val HOURS_PER_DAY = 24
 internal const val MINUTES_PER_HOUR = 60
 internal const val SECONDS_PER_MINUTE = 60

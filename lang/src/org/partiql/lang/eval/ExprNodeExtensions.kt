@@ -17,9 +17,9 @@
 package org.partiql.lang.eval
 
 import com.amazon.ion.IonString
+import com.amazon.ionelement.api.MetaContainer
 import org.partiql.lang.ast.ExprNode
 import org.partiql.lang.ast.Literal
-import org.partiql.lang.ast.MetaContainer
 import org.partiql.lang.ast.Path
 import org.partiql.lang.ast.PathComponentExpr
 import org.partiql.lang.ast.Typed

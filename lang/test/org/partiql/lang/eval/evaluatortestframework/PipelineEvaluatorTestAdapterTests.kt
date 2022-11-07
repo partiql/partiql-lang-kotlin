@@ -5,7 +5,10 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
 import org.partiql.lang.errors.ErrorCode
+import org.partiql.lang.eval.DATE_ANNOTATION
 import org.partiql.lang.eval.EvaluationSession
+import org.partiql.lang.eval.MISSING_ANNOTATION
+import org.partiql.lang.eval.TIME_ANNOTATION
 import org.partiql.lang.util.propertyValueMapOf
 
 private fun assertTestFails(
@@ -73,7 +76,7 @@ class PipelineEvaluatorTestAdapterTests {
                 EvaluatorTestCase(
                     query = "1 + MISSING", // Note:unknown propagation works differently in legacy vs permissive modes.
                     expectedResult = "null",
-                    expectedPermissiveModeResult = "\$partiql_missing::null",
+                    expectedPermissiveModeResult = "$MISSING_ANNOTATION::null",
                     expectedResultFormat = ExpectedResultFormat.ION
                 ),
                 EvaluationSession.standard()
@@ -87,7 +90,7 @@ class PipelineEvaluatorTestAdapterTests {
             astPipelineTestAdapter.runEvaluatorTestCase(
                 EvaluatorTestCase(
                     query = "MISSING",
-                    expectedResult = "\$partiql_missing::null",
+                    expectedResult = "$MISSING_ANNOTATION::null",
                     expectedResultFormat = ExpectedResultFormat.ION
                 ),
                 EvaluationSession.standard()
@@ -101,7 +104,7 @@ class PipelineEvaluatorTestAdapterTests {
             astPipelineTestAdapter.runEvaluatorTestCase(
                 EvaluatorTestCase(
                     query = "DATE '2001-01-01'",
-                    expectedResult = "\$partiql_date::2001-01-01",
+                    expectedResult = "$DATE_ANNOTATION::2001-01-01",
                     expectedResultFormat = ExpectedResultFormat.ION
                 ),
                 EvaluationSession.standard()
@@ -115,7 +118,7 @@ class PipelineEvaluatorTestAdapterTests {
             astPipelineTestAdapter.runEvaluatorTestCase(
                 EvaluatorTestCase(
                     query = "TIME '12:12:01'",
-                    expectedResult = "\$partiql_time::{hour:12,minute:12,second:1.,timezone_hour:null.int,timezone_minute:null.int}",
+                    expectedResult = "$TIME_ANNOTATION::{hour:12,minute:12,second:1.,timezone_hour:null.int,timezone_minute:null.int}",
                     expectedResultFormat = ExpectedResultFormat.ION
                 ),
                 EvaluationSession.standard()
@@ -192,7 +195,7 @@ class PipelineEvaluatorTestAdapterTests {
             astPipelineTestAdapter.runEvaluatorTestCase(
                 EvaluatorTestCase(
                     query = "DATE '2001-01-01'",
-                    expectedResult = "\$partiql_date::2001-01-01",
+                    expectedResult = "$DATE_ANNOTATION::2001-01-01",
                     expectedResultFormat = ExpectedResultFormat.ION_WITHOUT_BAG_AND_MISSING_ANNOTATIONS
                 ),
                 EvaluationSession.standard()
@@ -206,7 +209,7 @@ class PipelineEvaluatorTestAdapterTests {
             astPipelineTestAdapter.runEvaluatorTestCase(
                 EvaluatorTestCase(
                     query = "TIME '12:12:01'",
-                    expectedResult = "\$partiql_time::{hour:12,minute:12,second:1.,timezone_hour:null.int,timezone_minute:null.int}",
+                    expectedResult = "$TIME_ANNOTATION::{hour:12,minute:12,second:1.,timezone_hour:null.int,timezone_minute:null.int}",
                     expectedResultFormat = ExpectedResultFormat.ION_WITHOUT_BAG_AND_MISSING_ANNOTATIONS
                 ),
                 EvaluationSession.standard()
@@ -331,9 +334,8 @@ class PipelineEvaluatorTestAdapterTests {
             astPipelineTestAdapter.runEvaluatorTestCase(
                 EvaluatorTestCase(
                     query = "1",
-                    expectedResult = "1",
-                    extraResultAssertions = { throw FooException() }
-                ),
+                    expectedResult = "1"
+                ) { throw FooException() },
                 EvaluationSession.standard()
             )
         }

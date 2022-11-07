@@ -25,11 +25,6 @@ interface EvaluatorTestDefinition {
      * always assume the result will be `MISSING`.
      */
     val expectedPermissiveModeResult: String?
-    /**
-     * Set to true to avoid testing the legacy AST serializers which are deprecated
-     * and not being updated to include new AST nodes.
-     */
-    val excludeLegacySerializerAssertions: Boolean
 
     /**
      * Include permissive mode test.

@@ -313,14 +313,14 @@ class EvaluatingCompilerOrderByTests : EvaluatorTestBase() {
     @ParameterizedTest
     @ArgumentsSource(ArgsProviderValid::class)
     fun validTests(tc: EvaluatorTestCase) = runEvaluatorTestCase(
-        tc = tc.copy(excludeLegacySerializerAssertions = true),
+        tc = tc,
         session = session
     )
 
     @ParameterizedTest
     @ArgumentsSource(OrderBySubqueryTestsProvider::class)
     fun orderBySubqueryTests(tc: EvaluatorTestCase) = runEvaluatorTestCase(
-        tc = tc.copy(excludeLegacySerializerAssertions = true),
+        tc = tc,
         session = session
     )
     class OrderBySubqueryTestsProvider : ArgumentsProviderBase() {

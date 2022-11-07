@@ -7,7 +7,11 @@ import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestTarget
 class CountTests : EvaluatorTestBase() {
     @Test
     fun countEmpty() =
-        runEvaluatorTestCase(query = "COUNT(`[]`)", expectedResult = "0", target = EvaluatorTestTarget.COMPILER_PIPELINE)
+        runEvaluatorTestCase(
+            query = "COUNT(`[]`)",
+            expectedResult = "0",
+            target = EvaluatorTestTarget.COMPILER_PIPELINE
+        )
 
     @Test
     fun countNull() = runEvaluatorTestCase(
