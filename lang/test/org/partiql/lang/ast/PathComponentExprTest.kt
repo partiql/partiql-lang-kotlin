@@ -16,6 +16,7 @@ package org.partiql.lang.ast
 
 import com.amazon.ion.IonSystem
 import com.amazon.ion.system.IonSystemBuilder
+import com.amazon.ionelement.api.emptyMetaContainer
 import junitparams.JUnitParamsRunner
 import junitparams.Parameters
 import org.junit.Test
@@ -29,13 +30,13 @@ import kotlin.test.assertTrue
 @RunWith(JUnitParamsRunner::class)
 class PathComponentExprTest {
     private val ion: IonSystem = IonSystemBuilder.standard().build()
-    private fun litString(str: String) = Literal(ion.newString(str), emptyMetaContainer)
-    private fun litInt(value: Int) = Literal(ion.newInt(value), emptyMetaContainer)
+    private fun litString(str: String) = Literal(ion.newString(str), emptyMetaContainer())
+    private fun litInt(value: Int) = Literal(ion.newInt(value), emptyMetaContainer())
 
-    private val oneSensitive = PathComponentExpr(litInt(1), CaseSensitivity.SENSITIVE, emptyMetaContainer)
+    private val oneSensitive = PathComponentExpr(litInt(1), CaseSensitivity.SENSITIVE, emptyMetaContainer())
     private val oneInsensitive = oneSensitive.copy(case = CaseSensitivity.INSENSITIVE)
 
-    private val fooInsensitive = PathComponentExpr(litString("foo"), CaseSensitivity.INSENSITIVE, emptyMetaContainer)
+    private val fooInsensitive = PathComponentExpr(litString("foo"), CaseSensitivity.INSENSITIVE, emptyMetaContainer())
     private val fooSensitive = fooInsensitive.copy(case = CaseSensitivity.SENSITIVE)
 
     data class TestCase(val a: PathComponentExpr, val b: PathComponentExpr, val shouldBeEquivalent: Boolean)

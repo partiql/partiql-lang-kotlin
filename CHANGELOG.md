@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Adds simple auto-completion to the CLI.
+- Adds support for HAVING clause in planner
 
 ### Changed
 - Now `CompileOption` uses `TypedOpParameter.HONOR_PARAMETERS` as default.
@@ -33,13 +34,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - PartiQL BAG in ION representation now becomes ion list with annotation of `$bag`, instead of `$partiql_bag`
 - PartiQL DATE in ION representation now becomes ion timestamp with annotation of `$date`, instead of `$partiql_date`
 - PartiQL TIME in ION representation now becomes ion struct with annotation of `$time`, instead of `$partiql_time`
+- Simplifies the aggregation operator in the experimental planner by removing the use of metas
 
 ### Deprecated
+- Marks the GroupKeyReferencesVisitorTransform as deprecated. There is no functionally equivalent class.
 
 ### Fixed
 
 ### Removed
 - Removes the deprecated V0 AST in the codebase.
+- Removes the deprecated MetaContainer in the codebase, removed interfaces and classes include:
+  - MetaContainer Interface
+  - MetaContainerImpl
+  - MetaDeserializer
+  - MemoizedMetaDeserializer
 
 ### Security
 

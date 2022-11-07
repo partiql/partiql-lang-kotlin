@@ -22,7 +22,6 @@ import com.amazon.ionelement.api.toIonValue
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.ast.UNKNOWN_SOURCE_LOCATION
 import org.partiql.lang.ast.sourceLocation
-import org.partiql.lang.ast.toPartiQlMetaContainer
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.domains.staticType
 import org.partiql.lang.domains.toBindingCase
@@ -1577,8 +1576,8 @@ internal class PhysicalPlanCompilerImpl(
         val patternExpr = expr.pattern
         val escapeExpr = expr.escape
 
-        val patternLocationMeta = patternExpr.metas.toPartiQlMetaContainer().sourceLocation
-        val escapeLocationMeta = escapeExpr?.metas?.toPartiQlMetaContainer()?.sourceLocation
+        val patternLocationMeta = patternExpr.metas.sourceLocation
+        val escapeLocationMeta = escapeExpr?.metas?.sourceLocation
 
         // This is so that null short-circuits can be supported.
         fun getRegexPattern(pattern: ExprValue, escape: ExprValue?): (() -> Pattern)? {

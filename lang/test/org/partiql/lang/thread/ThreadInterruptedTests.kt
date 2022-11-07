@@ -17,13 +17,13 @@ import org.partiql.lang.ast.NAry
 import org.partiql.lang.ast.NAryOp
 import org.partiql.lang.ast.ScopeQualifier
 import org.partiql.lang.ast.VariableReference
-import org.partiql.lang.ast.metaContainerOf
 import org.partiql.lang.ast.passes.AstRewriterBase
 import org.partiql.lang.ast.passes.AstVisitor
 import org.partiql.lang.ast.passes.AstWalker
 import org.partiql.lang.ast.toAstExpr
 import org.partiql.lang.ast.toExprNode
 import org.partiql.lang.domains.PartiqlAst
+import org.partiql.lang.domains.metaContainerOf
 import org.partiql.lang.eval.CompileOptions
 import org.partiql.lang.eval.visitors.VisitorTransformBase
 import org.partiql.lang.syntax.SqlParser
