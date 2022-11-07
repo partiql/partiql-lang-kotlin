@@ -1,7 +1,5 @@
 package org.partiql.lang.eval.physical.operators
 
-import com.amazon.ion.IntegerSize
-import com.amazon.ion.IonInt
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property

@@ -26,8 +26,8 @@ import org.partiql.lang.eval.BAG_ANNOTATION
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
-import org.partiql.lang.eval.toIonValue
 import org.partiql.lang.eval.MISSING_ANNOTATION
+import org.partiql.lang.eval.toIonValue
 import org.partiql.lang.util.asSequence
 import java.io.File
 

@@ -488,7 +488,7 @@ internal class EvaluatingCompiler(
                 val longValue: Long = value.scalar.numberValue()?.toLong()
                     ?: error(
                         "ExprValue.numberValue() must not be `NULL` when its type is INT." +
-                                "This indicates that the ExprValue instance has a bug."
+                            "This indicates that the ExprValue instance has a bug."
                     )
 
                 // PRO-TIP:  make sure to use the `Long` primitive type here with `.contains` otherwise
@@ -550,7 +550,7 @@ internal class EvaluatingCompiler(
                                             if (staticTypes.all { it is IntType }) {
                                                 error(
                                                     "The expression's static type was supposed to be INT but instead it was $type" +
-                                                            "This may indicate the presence of a bug in the type inferencer."
+                                                        "This may indicate the presence of a bug in the type inferencer."
                                                 )
                                             } else {
                                                 naryResult
@@ -983,7 +983,7 @@ internal class EvaluatingCompiler(
                     "${func.signature.name} takes exactly ${func.signature.arity.first} arguments, received: ${funcArgThunks.size}"
                 else ->
                     "${func.signature.name} takes between ${func.signature.arity.first} and " +
-                            "${func.signature.arity.last} arguments, received: ${funcArgThunks.size}"
+                        "${func.signature.arity.last} arguments, received: ${funcArgThunks.size}"
             }
 
             err(
@@ -1860,12 +1860,12 @@ internal class EvaluatingCompiler(
                                         groupAsName.run {
                                             val seq = fromSourceBindingNames.asSequence().map { pair ->
                                                 (
-                                                        fromProduction.env.current[pair.bindingName] ?: errNoContext(
-                                                            "Could not resolve from source binding name during group as variable mapping",
-                                                            errorCode = ErrorCode.INTERNAL_ERROR,
-                                                            internal = true
-                                                        )
-                                                        ).namedValue(pair.nameExprValue)
+                                                    fromProduction.env.current[pair.bindingName] ?: errNoContext(
+                                                        "Could not resolve from source binding name during group as variable mapping",
+                                                        errorCode = ErrorCode.INTERNAL_ERROR,
+                                                        internal = true
+                                                    )
+                                                    ).namedValue(pair.nameExprValue)
                                             }.asSequence()
 
                                             group.groupValues.add(createStructExprValue(seq, StructOrdering.UNORDERED))
@@ -2850,7 +2850,7 @@ internal class EvaluatingCompiler(
                     "${procedure.signature.name} takes exactly ${procedure.signature.arity.first} arguments, received: ${args.size}"
                 else ->
                     "${procedure.signature.name} takes between ${procedure.signature.arity.first} and " +
-                            "${procedure.signature.arity.last} arguments, received: ${args.size}"
+                        "${procedure.signature.arity.last} arguments, received: ${args.size}"
             }
 
             err(
