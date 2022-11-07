@@ -35,6 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - PartiQL DATE in ION representation now becomes ion timestamp with annotation of `$date`, instead of `$partiql_date`
 - PartiQL TIME in ION representation now becomes ion struct with annotation of `$time`, instead of `$partiql_time`
 - Simplifies the aggregation operator in the experimental planner by removing the use of metas
+- Simplifies the aggregation operator in the experimental planner by removing the use of metas
 
 ### Deprecated
 - Marks the GroupKeyReferencesVisitorTransform as deprecated. There is no functionally equivalent class.
