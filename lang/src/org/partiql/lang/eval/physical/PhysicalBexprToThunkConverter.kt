@@ -30,7 +30,7 @@ import org.partiql.lang.eval.physical.operators.VariableBinding
 import org.partiql.lang.eval.physical.operators.WindowRelationalOperatorFactory
 import org.partiql.lang.eval.physical.operators.valueExpression
 import org.partiql.lang.eval.physical.window.Experimental
-import org.partiql.lang.eval.physical.window.createBuiltinWindowFunctions
+import org.partiql.lang.eval.physical.window.createBuiltinWindowFunction
 import org.partiql.lang.util.toIntExact
 
 /** A specialization of [Thunk] that we use for evaluation of physical plans. */
@@ -311,14 +311,9 @@ internal class PhysicalBexprToThunkConverter(
 
         val compiledOrderBy = windowSortSpecList?.sortSpecs?.let { compileSortSpecs(it) } ?: emptyList()
 
-        val builtinWindowFunctions = createBuiltinWindowFunctions()
-        val builtinWindowFunctionsMap = builtinWindowFunctions.associateBy {
-            it.name
-        }
-
         val compiledWindowFunctions = node.windowExpressionList.map { windowExpression ->
             CompiledWindowFunction(
-                builtinWindowFunctionsMap[windowExpression.funcName.text]?.javaClass?.newInstance() ?: error("window function not supported yet"),
+                createBuiltinWindowFunction(windowExpression.funcName.text),
                 windowExpression.args.map { exprConverter.convert(it).toValueExpr(it.metas.sourceLocationMeta) },
                 windowExpression.decl
             )
