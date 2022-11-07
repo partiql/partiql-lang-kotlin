@@ -11,7 +11,7 @@ import org.partiql.lang.eval.physical.toSetVariableFunc
  *
  * TODO: When we support FIRST_VALUE, etc, we probably need to modify the process row function, since those function requires frame
  */
-@Experimental
+@ExperimentalWindowFunc
 abstract class NavigationWindowFunction() : WindowFunction {
 
     lateinit var currentPartition: List<Array<ExprValue>>

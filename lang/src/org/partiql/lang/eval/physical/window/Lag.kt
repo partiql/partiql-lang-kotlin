@@ -5,7 +5,7 @@ import org.partiql.lang.eval.numberValue
 import org.partiql.lang.eval.physical.EvaluatorState
 import org.partiql.lang.eval.physical.operators.ValueExpression
 
-@Experimental
+@ExperimentalWindowFunc
 internal class Lag : NavigationWindowFunction() {
     override val name = "lag"
 

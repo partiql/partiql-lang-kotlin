@@ -4,7 +4,7 @@ import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.NaturalExprValueComparators
 import org.partiql.lang.eval.exprEquals
 import org.partiql.lang.eval.physical.EvaluatorState
-import org.partiql.lang.eval.physical.window.Experimental
+import org.partiql.lang.eval.physical.window.ExperimentalWindowFunc
 import org.partiql.lang.eval.relation.RelationIterator
 import org.partiql.lang.eval.relation.RelationType
 import org.partiql.lang.eval.relation.relation
@@ -12,14 +12,12 @@ import org.partiql.lang.planner.transforms.DEFAULT_IMPL_NAME
 
 /**
  * This is an experimental implementation of the window operator
- * Many concepts are missing from this implementation as the first step is to implementation partition based function `LAG` and `LEAD`.
  *
- * The general concept here is to sort the input relation, first by partition keys (if not null) then by sort keys ( if not null).
- * After sorting, we can do a sequence scan to create partition and materialize all the element in the same partition
- * After partition is materialized, `LAG` and `LEAD` function can use index to access the target row, if the target row is with in the partition.
+ * The general concept here is to sort the input relation, first by partition keys (if not null) then by sort keys (if not null).
+ * After sorting, we do a sequence scan to create partition and materialize all the element in the same partition
  *
  */
-@Experimental
+@ExperimentalWindowFunc
 internal object WindowOperatorFactoryDefault : WindowRelationalOperatorFactory(DEFAULT_IMPL_NAME) {
     override fun create(
         source: RelationExpression,
@@ -29,7 +27,7 @@ internal object WindowOperatorFactoryDefault : WindowRelationalOperatorFactory(D
     ): RelationExpression = WindowOperatorDefault(source, windowPartitionList, windowSortSpecList, compiledWindowFunctions)
 }
 
-@OptIn(Experimental::class)
+@ExperimentalWindowFunc
 internal class WindowOperatorDefault(
     private val source: RelationExpression,
     private val windowPartitionList: List<ValueExpression>,

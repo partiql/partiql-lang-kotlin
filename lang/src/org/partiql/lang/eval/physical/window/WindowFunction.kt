@@ -5,7 +5,7 @@ import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.physical.EvaluatorState
 import org.partiql.lang.eval.physical.operators.ValueExpression
 
-@Experimental
+@ExperimentalWindowFunc
 interface WindowFunction {
 
     val name: String

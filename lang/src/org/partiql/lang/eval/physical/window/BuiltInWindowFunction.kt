@@ -1,6 +1,6 @@
 package org.partiql.lang.eval.physical.window
 
-@OptIn(Experimental::class)
+@ExperimentalWindowFunc
 internal fun createBuiltinWindowFunction(name: String) =
     when (name) {
         "lag" -> Lag()

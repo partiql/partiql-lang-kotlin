@@ -1,10 +1,10 @@
 package org.partiql.lang.eval.physical.operators
 
 import org.partiql.lang.domains.PartiqlPhysical
-import org.partiql.lang.eval.physical.window.Experimental
+import org.partiql.lang.eval.physical.window.ExperimentalWindowFunc
 import org.partiql.lang.eval.physical.window.WindowFunction
 
-@Experimental
+@ExperimentalWindowFunc
 abstract class WindowRelationalOperatorFactory(name: String) : RelationalOperatorFactory {
 
     final override val key: RelationalOperatorFactoryKey = RelationalOperatorFactoryKey(RelationalOperatorKind.WINDOW, name)
@@ -19,7 +19,7 @@ abstract class WindowRelationalOperatorFactory(name: String) : RelationalOperato
     ): RelationExpression
 }
 
-@OptIn(Experimental::class)
+@ExperimentalWindowFunc
 class CompiledWindowFunction(
     val func: WindowFunction,
     val parameters: List<ValueExpression>,

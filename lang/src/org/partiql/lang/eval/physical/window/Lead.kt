@@ -5,7 +5,7 @@ import org.partiql.lang.eval.numberValue
 import org.partiql.lang.eval.physical.EvaluatorState
 import org.partiql.lang.eval.physical.operators.ValueExpression
 
-@OptIn(Experimental::class)
+@ExperimentalWindowFunc
 internal class Lead : NavigationWindowFunction() {
 
     override val name = "lead"
