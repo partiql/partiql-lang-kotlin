@@ -163,6 +163,12 @@ stage in the `PlannerPipeline` and to generate performance metrics for the indiv
 - **Breaking Change**: [PartiqlAst.Type.toTypedOpParameter()] is removed
 - **Breaking Change**: [PartiqlAstSanityValidator] now becomes an internal class
 - **Breaking Change**: [PartiqlPhysicalSanityValidator] is removed
+- **Breaking Change**: the following custom type AST nodes are removed from `partiql.ion` file: `es_boolean`, `es_integer`, `es_float`,
+    `es_text`, `es_any`, `spark_short`, `spark_integer`, `spark_long`, `spark_double`, `spark_boolean`, `spark_float`,
+    `rs_varchar_max`, `rs_integer`, `rs_bigint`, `rs_boolean`, `rs_real`, `rs_double_precision`.
+    The related visitor transform `CustomTypeVisitorTransform` is also removed.
+    See [Issue 510](https://github.com/partiql/partiql-lang-kotlin/issues/510) for more details.
+
 
 ### Security
 
