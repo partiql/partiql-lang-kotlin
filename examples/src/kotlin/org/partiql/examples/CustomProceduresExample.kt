@@ -1,7 +1,5 @@
 package org.partiql.examples
 
-import com.amazon.ion.IonDecimal
-import com.amazon.ion.IonStruct
 import com.amazon.ion.system.IonSystemBuilder
 import org.partiql.examples.util.Example
 import org.partiql.lang.CompilerPipeline
@@ -16,8 +14,11 @@ import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.ExprValueType
+import org.partiql.lang.eval.StructOrdering
 import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedure
 import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedureSignature
+import org.partiql.lang.eval.namedValue
+import org.partiql.lang.eval.numberValue
 import org.partiql.lang.eval.stringValue
 import java.io.PrintStream
 import java.math.BigDecimal
@@ -26,12 +27,8 @@ import java.math.RoundingMode
 private val ion = IonSystemBuilder.standard().build()
 
 /**
- * A simple custom stored procedure that calculates the moon weight for each crewmate of the given crew, storing the
- * moon weight in the [EvaluationSession] global bindings. This procedure also returns the number of crewmates we
- * calculated the moon weight for, returning -1 if no crew is found.
- *
- * This example demonstrates how to create a custom stored procedure, check argument types, and modify the
- * [EvaluationSession].
+ * A simple custom stored procedure that calculates the moon weight for each crewmate of the given crew, and returns
+ * them in a list
  */
 class CalculateCrewMoonWeight(private val valueFactory: ExprValueFactory) : StoredProcedure {
     private val MOON_GRAVITATIONAL_CONSTANT = BigDecimal(1.622 / 9.81)
@@ -71,16 +68,23 @@ class CalculateCrewMoonWeight(private val valueFactory: ExprValueFactory) : Stor
         // Now that we've confirmed the given `crewName` is in the session's global bindings, we calculate and store
         // the moon weight for each crewmate in the crew.
         // In addition, we keep a running a tally of how many crewmates we do this for.
-        var numCalculated = 0
+        val result = mutableListOf<ExprValue>()
         for (crewmateBinding in crewBindings) {
-            val crewmate = crewmateBinding.ionValue as IonStruct
-            val mass = crewmate["mass"] as IonDecimal
-            val moonWeight = (mass.decimalValue() * MOON_GRAVITATIONAL_CONSTANT).setScale(1, RoundingMode.HALF_UP)
-            crewmate.add("moonWeight", ion.newDecimal(moonWeight))
+            val nameBindingName = BindingName("name", BindingCase.INSENSITIVE)
+            val name = crewmateBinding.bindings[nameBindingName]!!
 
-            numCalculated++
+            val massBindingName = BindingName("mass", BindingCase.INSENSITIVE)
+            val mass = crewmateBinding.bindings[massBindingName]!!
+
+            val moonWeight = (mass.numberValue() as BigDecimal * MOON_GRAVITATIONAL_CONSTANT).setScale(1, RoundingMode.HALF_UP)
+            val moonWeightExprValue = valueFactory.newDecimal(moonWeight).namedValue(valueFactory.newString("moonWeight"))
+
+            result.add(
+                valueFactory.newStruct(listOf(name, moonWeightExprValue), StructOrdering.UNORDERED)
+            )
         }
-        return valueFactory.newInt(numCalculated)
+
+        return valueFactory.newList(result)
     }
 }
 
@@ -125,14 +129,9 @@ class CustomProceduresExample(out: PrintStream) : Example(out) {
         print("Crew 2:", "${session.globals[crew2BindingName]}")
 
         // We call our custom stored procedure using PartiQL's `EXEC` clause. Here we call our stored procedure
-        // 'calculate_crew_moon_weight' with the arg 'crew1', which outputs the number of crewmates we've calculated
-        // the moon weight for
+        // 'calculate_crew_moon_weight' with the arg 'crew1', which outputs the calculated moon weights
         val procedureCall = "EXEC calculate_crew_moon_weight 'crew1'"
         val procedureCallOutput = pipeline.compile(procedureCall).eval(session)
-        print("Number of calculated moon weights:", "$procedureCallOutput")
-
-        out.println("Updated global session bindings:")
-        print("Crew 1:", "${session.globals[crew1BindingName]}")
-        print("Crew 2:", "${session.globals[crew2BindingName]}")
+        print("Calculated moon weights:", "$procedureCallOutput")
     }
 }
