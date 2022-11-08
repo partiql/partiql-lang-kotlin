@@ -6,7 +6,7 @@ import org.junit.Test
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.id
 
-class SqlParserJoinTest : SqlParserTestBase() {
+class PartiQLParserJoinTest : PartiQLParserTestBase() {
     private val projectX = PartiqlAst.build { projectList(projectExpr(id("x"))) }
 
     private fun PartiqlAst.Builder.selectWithOneJoin(
@@ -103,8 +103,7 @@ class SqlParserJoinTest : SqlParserTestBase() {
 
     @Test
     fun selectTwoJoinsSpecifiedOrderParensTest() = assertExpression(
-        "SELECT x FROM A INNER JOIN (B INNER JOIN C ON B = C) ON A = B",
-        targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
+        "SELECT x FROM A INNER JOIN (B INNER JOIN C ON B = C) ON A = B"
     ) {
         select(
             project = projectX,
@@ -125,8 +124,7 @@ class SqlParserJoinTest : SqlParserTestBase() {
 
     @Test
     fun selectThreeJoinsSpecifiedOrderParensTest() = assertExpression(
-        "SELECT x FROM A INNER JOIN (B INNER JOIN (C INNER JOIN D ON C = D) ON B = C) ON A = B",
-        targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
+        "SELECT x FROM A INNER JOIN (B INNER JOIN (C INNER JOIN D ON C = D) ON B = C) ON A = B"
     ) {
         select(
             project = projectX,

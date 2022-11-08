@@ -23,7 +23,7 @@ import org.partiql.lang.domains.metaContainerOf
 
 /**
  * This class contains tests for (de)serialization of metas.
- * For tests related to basic structure of the serialized [ExprNode]s, see [org.partiql.lang.syntax.SqlParserTest].
+ * For tests related to basic structure of the serialized [ExprNode]s, see [org.partiql.lang.syntax.PartiQLParserTest].
  */
 class AstSerDeTests : TestBase() {
 
