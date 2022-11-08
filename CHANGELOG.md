@@ -26,6 +26,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Adds simple auto-completion to the CLI.
 - Adds support for HAVING clause in planner
+- Adds support for collection aggregation functions in the EvaluatingCompiler and experimental planner
+- Adds support for the syntactic sugar of using aggregations functions in place of their collection aggregation function
+  counterparts (in the experimental planner)
 
 ### Changed
 - Now `CompileOption` uses `TypedOpParameter.HONOR_PARAMETERS` as default.
@@ -53,6 +56,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - [AstVisitor] Interface & [AstVisitorBase] class
   - [AstWalker] class
   - [MetaStrippingRewriter] class
+- **Breaking**: Removes the `CallAgg` node from the Logical, LogicalResolved, and Physical plans
 
 ### Security
 

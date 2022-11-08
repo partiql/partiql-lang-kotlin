@@ -565,6 +565,10 @@ may then be further optimized by selecting better implementations of each operat
         (with expr
             // Remove the select and struct node from the `expr` sum type, which will be replaced below.
             (exclude select struct)
+              
+            // CallAgg's such as SUM, MIN, MAX, etc. either become calls to built-in-functions (example: call COLL_SUM)
+            // or aggregate functions within the logical aggregate operator.
+            (exclude call_agg)
 
             (include
                 // Invokes `exp` once in the context of every binding tuple returned by `query`, returning a

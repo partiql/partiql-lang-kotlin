@@ -498,6 +498,144 @@ class AstToLogicalVisitorTransformTests {
                     )
                 }
             ),
+
+            TestCase(
+                sql = """
+                    SUM(1)
+                """,
+                PartiqlLogical.build {
+                    query(
+                        call(
+                            "coll_sum",
+                            listOf(
+                                lit(ionString("all")),
+                                lit(ionInt(1))
+                            )
+                        )
+                    )
+                }
+            ),
+            TestCase(
+                sql = """
+                    SUM(DISTINCT 1)
+                """,
+                PartiqlLogical.build {
+                    query(
+                        call(
+                            "coll_sum",
+                            listOf(
+                                lit(ionString("distinct")),
+                                lit(ionInt(1))
+                            )
+                        )
+                    )
+                }
+            ),
+            TestCase(
+                sql = """
+                    SELECT SUM(a) AS sum_a
+                    FROM t AS t
+                    LET SUM(c) AS sum_c
+                    WHERE SUM(ALL b)
+                    GROUP BY d AS e
+                    HAVING AVG(ALL f)
+                    ORDER BY MIN(DISTINCT g)
+                    LIMIT SUM(DISTINCT 2)
+                """,
+                PartiqlLogical.build {
+                    val scan = scan(id("t"), varDecl("t"))
+                    val let = let(scan, letBinding(call("coll_sum", listOf(lit(ionString("all")), id("c"))), varDecl("sum_c")))
+                    val where = filter(call("coll_sum", listOf(lit(ionString("all")), id("b"))), let)
+                    val agg = aggregate(
+                        where,
+                        groupFull(),
+                        groupKeyList(groupKey(id("d"), varDecl("e"))),
+                        aggregateFunctionList(
+                            aggregateFunction(all(), "sum", id("a"), varDecl("\$__partiql_aggregation_0")),
+                            aggregateFunction(all(), "avg", id("f"), varDecl("\$__partiql_aggregation_1")),
+                            aggregateFunction(distinct(), "min", id("g"), varDecl("\$__partiql_aggregation_2")),
+                        )
+                    )
+                    val having = filter(id("\$__partiql_aggregation_1"), agg)
+                    val order = sort(having, sortSpec(id("\$__partiql_aggregation_2")))
+                    val limit = limit(call("coll_sum", listOf(lit(ionString("distinct")), lit(ionInt(2)))), order)
+                    val projection = bindingsToValues(struct(structField(lit(ionSymbol("sum_a")), id("\$__partiql_aggregation_0"))), limit)
+                    query(projection)
+                }
+            ),
+            TestCase(
+                sql = """
+                    SELECT SUM(a) + COLL_COUNT('distinct', a) AS sum_a
+                    FROM t AS t
+                """,
+                PartiqlLogical.build {
+                    val scan = scan(id("t"), varDecl("t"))
+                    val agg = aggregate(
+                        scan,
+                        groupFull(),
+                        groupKeyList(emptyList()),
+                        aggregateFunctionList(
+                            aggregateFunction(all(), "sum", id("a"), varDecl("\$__partiql_aggregation_0")),
+                        )
+                    )
+                    val expression = plus(
+                        id("\$__partiql_aggregation_0"),
+                        call("coll_count", listOf(lit(ionString("distinct")), id("a")))
+                    )
+                    val projection = bindingsToValues(struct(structField(lit(ionSymbol("sum_a")), expression)), agg)
+                    query(projection)
+                }
+            ),
+            TestCase(
+                sql = """
+                    SELECT (
+                        SELECT SUM(a) + COLL_COUNT('distinct', b) AS agg_proj
+                        FROM t1 AS t1
+                    ) AS inner_query
+                    FROM (
+                        SELECT AVG(c) + COLL_MAX('all', d) AS agg_from
+                        FROM t2 AS t2
+                    ) AS src
+                """,
+                PartiqlLogical.build {
+                    // Create Sub-Query in PROJECTION
+                    val scanProj = scan(id("t1"), varDecl("t1"))
+                    val aggProj = aggregate(
+                        scanProj,
+                        groupFull(),
+                        groupKeyList(emptyList()),
+                        aggregateFunctionList(
+                            aggregateFunction(all(), "sum", id("a"), varDecl("\$__partiql_aggregation_0")),
+                        )
+                    )
+                    val exprProj = plus(
+                        id("\$__partiql_aggregation_0"),
+                        call("coll_count", listOf(lit(ionString("distinct")), id("b")))
+                    )
+                    val bindingsProj = bindingsToValues(struct(structField(lit(ionSymbol("agg_proj")), exprProj)), aggProj)
+
+                    // Create Sub-Query in FROM
+                    val scanFrom = scan(id("t2"), varDecl("t2"))
+                    val aggFrom = aggregate(
+                        scanFrom,
+                        groupFull(),
+                        groupKeyList(emptyList()),
+                        aggregateFunctionList(
+                            aggregateFunction(all(), "avg", id("c"), varDecl("\$__partiql_aggregation_0")),
+                        )
+                    )
+                    val exprFrom = plus(
+                        id("\$__partiql_aggregation_0"),
+                        call("coll_max", listOf(lit(ionString("all")), id("d")))
+                    )
+                    val bindingsFrom = bindingsToValues(struct(structField(lit(ionSymbol("agg_from")), exprFrom)), aggFrom)
+
+                    // Create Full Query
+                    val scanOuter = scan(bindingsFrom, varDecl("src"))
+                    val projection = bindingsToValues(struct(structField(lit(ionSymbol("inner_query")), bindingsProj)), scanOuter)
+                    query(projection)
+                }
+            ),
         )
     }
 
