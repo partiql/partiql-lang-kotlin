@@ -4,7 +4,6 @@ import com.amazon.ionelement.api.IntElement
 import com.amazon.ionelement.api.IntElementSize
 import com.amazon.ionelement.api.MetaContainer
 import com.amazon.ionelement.api.TextElement
-import org.partiql.lang.ast.IsCountStarMeta
 import org.partiql.lang.ast.passes.SemanticException
 import org.partiql.lang.domains.PartiqlLogical
 import org.partiql.lang.domains.addSourceLocation
@@ -58,19 +57,6 @@ class PartiqlLogicalValidator(private val typedOpBehavior: TypedOpBehavior) : Pa
 
     override fun visitTypeNumericType(node: PartiqlLogical.Type.NumericType) {
         validateDecimalOrNumericType(node.scale, node.precision, node.metas)
-    }
-
-    override fun visitExprCallAgg(node: PartiqlLogical.Expr.CallAgg) {
-        val setQuantifier = node.setq
-        val metas = node.metas
-        if (setQuantifier is PartiqlLogical.SetQuantifier.Distinct && metas.containsKey(IsCountStarMeta.TAG)) {
-            err(
-                "COUNT(DISTINCT *) is not supported",
-                ErrorCode.EVALUATOR_COUNT_DISTINCT_STAR,
-                errorContextFrom(metas),
-                internal = false
-            )
-        }
     }
 
     override fun visitExprStruct(node: PartiqlLogical.Expr.Struct) {
