@@ -34,7 +34,7 @@ abstract class NavigationWindowFunction() : WindowFunction {
         windowVarDecl.toSetVariableFunc().invoke(state, value)
         // make sure the change of state is reflected in the partition
         // so the result of the current window function won't get removed by the time we process the next window function at the same row level.
-        currentPartition[currentPos][windowVarDecl.index.value.toInt()] = state.registers[windowVarDecl.index.value.toInt()]
+        currentPartition[currentPos][windowVarDecl.index.value.toInt()] = value
         currentPos += 1
     }
 
