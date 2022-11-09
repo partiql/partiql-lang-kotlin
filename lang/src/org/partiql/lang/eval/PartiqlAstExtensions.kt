@@ -5,6 +5,7 @@ import com.amazon.ionelement.api.TextElement
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.ast.sourceLocation
 import org.partiql.lang.domains.PartiqlAst
+import org.partiql.pig.runtime.DomainNode
 
 /**
  * Determines an appropriate column name for the given [PartiqlAst.Expr].

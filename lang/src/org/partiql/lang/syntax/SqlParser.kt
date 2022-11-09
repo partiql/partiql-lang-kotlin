@@ -30,7 +30,6 @@ import org.partiql.lang.ast.LegacyLogicalNotMeta
 import org.partiql.lang.ast.Meta
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.ast.SqlDataType
-import org.partiql.lang.ast.toExprNode
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.metaContainerOf
 import org.partiql.lang.errors.ErrorCode
@@ -4142,13 +4141,6 @@ class SqlParser(
                 dmlListTokenSeen = dmlListTokenSeen || node.type == SqlParser.ParseType.DML_LIST
             )
         }
-    }
-
-    /** Entry point into the parser. */
-    @Deprecated("`ExprNode` is deprecated. Please use `parseAstStatement` instead. ")
-    @Suppress("DEPRECATION")
-    override fun parseExprNode(source: String): org.partiql.lang.ast.ExprNode {
-        return parseAstStatement(source).toExprNode(ion)
     }
 
     /**

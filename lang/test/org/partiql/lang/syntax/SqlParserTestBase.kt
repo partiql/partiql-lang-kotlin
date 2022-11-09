@@ -24,8 +24,6 @@ import com.amazon.ionelement.api.toIonValue
 import org.partiql.lang.CUSTOM_TEST_TYPES
 import org.partiql.lang.ION
 import org.partiql.lang.TestBase
-import org.partiql.lang.ast.toAstStatement
-import org.partiql.lang.ast.toExprNode
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
@@ -66,13 +64,12 @@ abstract class SqlParserTestBase : TestBase() {
 
     /**
      * This method is used by test cases for parsing a string.
-     * The test are performed with only PIG AST.
+     * The test are performed with PIG AST.
      * The expected PIG AST is a string.
      */
     protected fun assertExpression(
         source: String,
         expectedPigAst: String,
-        roundTrip: Boolean = true,
         targetParsers: Set<ParserTypes> = defaultParserTypes
     ) {
         targetParsers.forEach { parser ->
@@ -86,11 +83,6 @@ abstract class SqlParserTestBase : TestBase() {
 
             // Perform checks for Pig AST. See the comments inside the function to see what checks are performed.
             pigDomainAssert(actualStatement, expectedElement)
-
-            // Check equals for actual value after round trip transformation: astStatement -> ExprNode -> astStatement
-            if (roundTrip) {
-                assertRoundTripPigAstToExprNode(actualStatement)
-            }
         }
     }
 
@@ -108,7 +100,7 @@ abstract class SqlParserTestBase : TestBase() {
         val expectedPigAst = PartiqlAst.build { expectedPigBuilder() }.toIonElement().toString()
 
         // Refer to comments inside the main body of the following function to see what checks are performed.
-        assertExpression(source, expectedPigAst, roundTrip = false, targetParsers = targetParsers)
+        assertExpression(source, expectedPigAst, targetParsers = targetParsers)
     }
 
     /**
@@ -124,22 +116,7 @@ abstract class SqlParserTestBase : TestBase() {
         val expectedPigAst = PartiqlAst.build { expectedPigBuilder() }.toIonElement().toString()
 
         // Refer to comments inside the main body of the following function to see what checks are performed.
-        assertExpression(source, expectedPigAst, roundTrip = true, targetParsers)
-    }
-
-    /**
-     * This method is used by test cases for parsing a string.
-     * The test are performed with PIG AST.
-     * The expected PIG AST is a string.
-     */
-    protected fun assertExpression(
-        source: String,
-        expectedPigAst: String,
-        targetParsers: Set<ParserTypes> = defaultParserTypes
-    ) {
-        targetParsers.forEach { _ ->
-            assertExpression(source, expectedPigAst, roundTrip = true, targetParsers = targetParsers)
-        }
+        assertExpression(source, expectedPigAst, targetParsers)
     }
 
     /**
@@ -188,12 +165,6 @@ abstract class SqlParserTestBase : TestBase() {
      */
     private fun assertRoundTripPigAstToSexpElement(actualStatement: PartiqlAst.Statement) =
         assertEquals(actualStatement, PartiqlAst.transform(actualStatement.toIonElement()) as PartiqlAst.Statement)
-
-    /**
-     * Check equal after transformation: PIG AST -> ExprNode -> PIG AST
-     */
-    private fun assertRoundTripPigAstToExprNode(actualStatement: PartiqlAst.Statement) =
-        assertEquals(actualStatement, actualStatement.toExprNode(ion).toAstStatement())
 
     private fun loadIonSexp(expectedSexpAst: String) = ion.singleValue(expectedSexpAst).asIonSexp()
 

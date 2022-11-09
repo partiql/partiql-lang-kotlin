@@ -23,8 +23,6 @@ import org.antlr.v4.runtime.RecognitionException
 import org.antlr.v4.runtime.Recognizer
 import org.antlr.v4.runtime.Token
 import org.antlr.v4.runtime.tree.ParseTree
-import org.partiql.lang.ast.ExprNode
-import org.partiql.lang.ast.toExprNode
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
@@ -101,11 +99,6 @@ internal class PartiQLParser(
             }
         }
         return tokenIndexToParameterIndex
-    }
-
-    @Deprecated("Please use parseAstStatement() instead--ExprNode is deprecated.")
-    override fun parseExprNode(source: String): @Suppress("DEPRECATION") ExprNode {
-        return parseAstStatement(source).toExprNode(ion)
     }
 
     /**

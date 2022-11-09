@@ -413,23 +413,10 @@ data class InsertReturning(
     override val children: List<AstNode> get() = ops
 }
 
-/**
- * Represents `SET <lvalueExpr> = <rvalueExpr>...`
- */
-data class AssignmentOp(val assignment: Assignment) : DataManipulationOperation(name = "set") {
-    override val children: List<AstNode> get() = listOf(assignment)
-}
-
-/** Represents `REMOVE <lvalueExpr>` */
-data class RemoveOp(val lvalue: ExprNode) : DataManipulationOperation(name = "remove") {
-    override val children: List<AstNode> get() = listOf(lvalue)
-}
-
 /** Represents a legacy SQL `DELETE` whose target is implicit (over the `FROM`/`WHERE` clause) */
 object DeleteOp : DataManipulationOperation(name = "delete") {
     override val children: List<AstNode> get() = emptyList()
 }
-fun DeleteOp() = DeleteOp
 
 /** Represents `RETURNING <returning element> [ ',' <returning element>]*` */
 data class ReturningExpr(

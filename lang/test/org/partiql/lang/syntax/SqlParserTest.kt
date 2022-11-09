@@ -2207,8 +2207,7 @@ class SqlParserTest : SqlParserTestBase() {
                         (do_replace
                             (excluded))))))
         """,
-        targetParsers = setOf(ParserTypes.PARTIQL_PARSER),
-        roundTrip = false
+        targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
     )
 
     @Test
@@ -2231,8 +2230,7 @@ class SqlParserTest : SqlParserTestBase() {
                             (do_replace
                                 (excluded))))))
         """,
-        targetParsers = setOf(ParserTypes.PARTIQL_PARSER),
-        roundTrip = false
+        targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
     )
 
     @Test
@@ -2270,8 +2268,7 @@ class SqlParserTest : SqlParserTestBase() {
                             (do_replace
                                 (excluded))))))
         """,
-        targetParsers = setOf(ParserTypes.PARTIQL_PARSER),
-        roundTrip = false
+        targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
     )
 
     @Test
@@ -2293,8 +2290,7 @@ class SqlParserTest : SqlParserTestBase() {
                         (do_update
                             (excluded))))))
         """,
-        targetParsers = setOf(ParserTypes.PARTIQL_PARSER),
-        roundTrip = false
+        targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
     )
 
     @Test
@@ -2317,8 +2313,7 @@ class SqlParserTest : SqlParserTestBase() {
                             (do_update
                                 (excluded))))))
         """,
-        targetParsers = setOf(ParserTypes.PARTIQL_PARSER),
-        roundTrip = false
+        targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
     )
 
     @Test
@@ -2356,8 +2351,7 @@ class SqlParserTest : SqlParserTestBase() {
                             (do_update
                                 (excluded))))))
         """,
-        targetParsers = setOf(ParserTypes.PARTIQL_PARSER),
-        roundTrip = false
+        targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
     )
 
     @Test
@@ -2379,8 +2373,7 @@ class SqlParserTest : SqlParserTestBase() {
                                         (lit "bob"))))
                             (do_nothing)))))
         """,
-        targetParsers = setOf(ParserTypes.PARTIQL_PARSER),
-        roundTrip = false
+        targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
     )
 
     @Test
@@ -2402,8 +2395,7 @@ class SqlParserTest : SqlParserTestBase() {
                                         (lit "bob"))))
                             (do_nothing)))))
         """,
-        targetParsers = setOf(ParserTypes.PARTIQL_PARSER),
-        roundTrip = false
+        targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
     )
 
     @Test
@@ -2440,8 +2432,7 @@ class SqlParserTest : SqlParserTestBase() {
                                         null)))
                             (do_nothing)))))
         """,
-        targetParsers = setOf(ParserTypes.PARTIQL_PARSER),
-        roundTrip = false
+        targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
     )
 
     @Test
@@ -2464,8 +2455,7 @@ class SqlParserTest : SqlParserTestBase() {
                             (do_replace
                                 (excluded))))))
         """,
-        targetParsers = setOf(ParserTypes.PARTIQL_PARSER),
-        roundTrip = false
+        targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
     )
 
     @Test
@@ -2488,8 +2478,7 @@ class SqlParserTest : SqlParserTestBase() {
                             (do_replace
                                 (excluded))))))
         """,
-        targetParsers = setOf(ParserTypes.PARTIQL_PARSER),
-        roundTrip = false
+        targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
     )
 
     @Test
@@ -2512,8 +2501,7 @@ class SqlParserTest : SqlParserTestBase() {
                             (do_update
                                 (excluded))))))
         """,
-        targetParsers = setOf(ParserTypes.PARTIQL_PARSER),
-        roundTrip = false
+        targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
     )
 
     @Test
@@ -2536,8 +2524,7 @@ class SqlParserTest : SqlParserTestBase() {
                             (do_update
                                 (excluded))))))
         """,
-        targetParsers = setOf(ParserTypes.PARTIQL_PARSER),
-        roundTrip = false
+        targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
     )
 
     @Test
@@ -2575,8 +2562,7 @@ class SqlParserTest : SqlParserTestBase() {
                             (do_replace
                                 (excluded))))))
         """,
-        targetParsers = setOf(ParserTypes.PARTIQL_PARSER),
-        roundTrip = false
+        targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
     )
 
     @Test
@@ -2614,8 +2600,7 @@ class SqlParserTest : SqlParserTestBase() {
                         (do_update
                             (excluded))))))
         """,
-        targetParsers = setOf(ParserTypes.PARTIQL_PARSER),
-        roundTrip = false
+        targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
     )
 
     @Test
