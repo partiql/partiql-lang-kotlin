@@ -14,7 +14,7 @@ abstract class WindowRelationalOperatorFactory(name: String) : RelationalOperato
         source: RelationExpression,
         windowPartitionList: List<ValueExpression>,
         windowSortSpecList: List<CompiledSortKey>,
-        windowFunction: List<CompiledWindowFunction>
+        compiledWindowFunctions: List<CompiledWindowFunction>
 
     ): RelationExpression
 }
