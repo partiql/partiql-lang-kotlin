@@ -1,23 +1,23 @@
 //
-//@file:Suppress("DEPRECATION") // We don't need warnings about ExprNode deprecation.
+// @file:Suppress("DEPRECATION") // We don't need warnings about ExprNode deprecation.
 //
 package org.partiql.lang.ast
 //
-//import com.amazon.ion.IonSystem
-//import com.amazon.ion.system.IonSystemBuilder
-//import com.amazon.ionelement.api.metaContainerOf
-//import junitparams.JUnitParamsRunner
-//import junitparams.Parameters
-//import org.junit.Assert.assertEquals
-//import org.junit.Assert.assertTrue
-//import org.junit.Test
-//import org.junit.runner.RunWith
-//import org.partiql.lang.syntax.PartiQLParser
+// import com.amazon.ion.IonSystem
+// import com.amazon.ion.system.IonSystemBuilder
+// import com.amazon.ionelement.api.metaContainerOf
+// import junitparams.JUnitParamsRunner
+// import junitparams.Parameters
+// import org.junit.Assert.assertEquals
+// import org.junit.Assert.assertTrue
+// import org.junit.Test
+// import org.junit.runner.RunWith
+// import org.partiql.lang.syntax.PartiQLParser
 //
-//// TODO:  add tests for DDL & DML ExprNodes.
+// // TODO:  add tests for DDL & DML ExprNodes.
 //
-//@RunWith(JUnitParamsRunner::class)
-//class AstNodeTest {
+// @RunWith(JUnitParamsRunner::class)
+// class AstNodeTest {
 //    // This test builds some invalid AST nodes but since we are focusing on testing AstNode interface we only care
 //    // about the node and it's children so it's ok
 //
@@ -467,4 +467,4 @@ package org.partiql.lang.ast
 //
 //    @Test
 //    fun dataTypeChildren() = assertTrue(DataType(SqlDataType.BAG, listOf(), emptyMeta).children.isEmpty())
-//}
+// }

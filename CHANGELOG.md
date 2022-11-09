@@ -53,16 +53,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - [AstVisitor] Interface & [AstVisitorBase] class
   - [AstWalker] class
   - [MetaStrippingRewriter] class
-- Removes
-  - AstSerDeTests
-  - Parser Tests no longer do round trip. 
-  - PartiqlAstExprNodeRoundTripAdapter
-  - CompilerPipeline fun compile(query: ExprNode): Expression -> implementation of such function in Evaluting compiler is also deleted. 
-  - ThreadInterruptedTests
-  - ExprNodeToStatement.kt
-  - Parser fun parseExprNode(source: String): ExprNode -> implementation of such function in PartiQLParser and SqlParser
-  - StatementToExprNode
-  - ExprNodeExtension
+- Removes the deprecated ExprNode and related files in the code base. 
+  - [Parser] API `parseExprNode(source: String): ExprNode` has been removed.
+  - [CompilerPipeline] API `compile(query: ExprNode): Expression` has been removed.
+  - [ExprNode] and [AstNode] have been removed.
+  - Functions related to conversions between ExprNode and PartiqlAst have been removed. 
+  - Parser Tests no longer do round trip.
+  - [PartiqlAstExprNodeRoundTripAdapter] has been removed.
 
 ### Security
 
