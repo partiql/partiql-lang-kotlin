@@ -12,8 +12,6 @@
  *  language governing permissions and limitations under the License.
  */
 
-@file:Suppress("DEPRECATION") // We don't need warnings about ExprNode deprecation.
-
 package org.partiql.lang.eval
 
 import com.amazon.ion.IntegerSize
