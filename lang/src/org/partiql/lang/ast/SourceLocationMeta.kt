@@ -12,11 +12,10 @@
  *  language governing permissions and limitations under the License.
  */
 
-@file:Suppress("DEPRECATION", "TYPEALIAS_EXPANSION_DEPRECATION") // We don't need warnings about ExprNode deprecation.
-
 package org.partiql.lang.ast
 
 import com.amazon.ion.IonWriter
+import com.amazon.ionelement.api.MetaContainer
 import com.amazon.ionelement.api.metaOrNull
 import org.partiql.lang.util.IonWriterContext
 
@@ -69,4 +68,4 @@ data class SourceLocationMeta(val lineNum: Long, val charOffset: Long, val lengt
 
 val UNKNOWN_SOURCE_LOCATION = SourceLocationMeta(-1, -1, -1)
 
-val IonElementMetaContainer.sourceLocation: SourceLocationMeta? get() = metaOrNull(SourceLocationMeta.TAG) as SourceLocationMeta?
+val MetaContainer.sourceLocation: SourceLocationMeta? get() = metaOrNull(SourceLocationMeta.TAG) as SourceLocationMeta?

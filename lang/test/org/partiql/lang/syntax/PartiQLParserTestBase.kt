@@ -23,8 +23,6 @@ import com.amazon.ionelement.api.toIonElement
 import com.amazon.ionelement.api.toIonValue
 import org.partiql.lang.CUSTOM_TEST_TYPES
 import org.partiql.lang.TestBase
-import org.partiql.lang.ast.toAstStatement
-import org.partiql.lang.ast.toExprNode
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
@@ -56,13 +54,12 @@ abstract class PartiQLParserTestBase : TestBase() {
 
     /**
      * This method is used by test cases for parsing a string.
-     * The test are performed with only PIG AST.
+     * The test are performed with PIG AST.
      * The expected PIG AST is a string.
      */
     protected fun assertExpression(
         source: String,
         expectedPigAst: String,
-        roundTrip: Boolean = true
     ) {
         val actualStatement = parser.parseAstStatement(source)
         val expectedIonSexp = loadIonSexp(expectedPigAst)
@@ -74,27 +71,6 @@ abstract class PartiQLParserTestBase : TestBase() {
 
         // Perform checks for Pig AST. See the comments inside the function to see what checks are performed.
         pigDomainAssert(actualStatement, expectedElement)
-
-        // Check equals for actual value after round trip transformation: astStatement -> ExprNode -> astStatement
-        if (roundTrip) {
-            assertRoundTripPigAstToExprNode(actualStatement)
-        }
-    }
-
-    /**
-     * This method is used by test cases for parsing a string.
-     * The test are performed with only PIG AST.
-     * The expected PIG AST is a PIG builder.
-     * No ExprNode <-> PIG AST round trip is performed.
-     */
-    protected fun assertExpressionNoRoundTrip(
-        source: String,
-        expectedPigBuilder: PartiqlAst.Builder.() -> PartiqlAst.PartiqlAstNode
-    ) {
-        val expectedPigAst = PartiqlAst.build { expectedPigBuilder() }.toIonElement().toString()
-
-        // Refer to comments inside the main body of the following function to see what checks are performed.
-        assertExpression(source, expectedPigAst, roundTrip = false)
     }
 
     /**
@@ -110,18 +86,6 @@ abstract class PartiQLParserTestBase : TestBase() {
 
         // Refer to comments inside the main body of the following function to see what checks are performed.
         assertExpression(source, expectedPigAst)
-    }
-
-    /**
-     * This method is used by test cases for parsing a string.
-     * The test are performed with PIG AST.
-     * The expected PIG AST is a string.
-     */
-    protected fun assertExpression(
-        source: String,
-        expectedPigAst: String,
-    ) {
-        assertExpression(source, expectedPigAst, roundTrip = true)
     }
 
     /**
@@ -170,12 +134,6 @@ abstract class PartiQLParserTestBase : TestBase() {
      */
     private fun assertRoundTripPigAstToSexpElement(actualStatement: PartiqlAst.Statement) =
         assertEquals(actualStatement, PartiqlAst.transform(actualStatement.toIonElement()) as PartiqlAst.Statement)
-
-    /**
-     * Check equal after transformation: PIG AST -> ExprNode -> PIG AST
-     */
-    private fun assertRoundTripPigAstToExprNode(actualStatement: PartiqlAst.Statement) =
-        assertEquals(actualStatement, actualStatement.toExprNode(ion).toAstStatement())
 
     private fun loadIonSexp(expectedSexpAst: String) = ion.singleValue(expectedSexpAst).asIonSexp()
 

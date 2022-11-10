@@ -51,7 +51,7 @@ data class UniqueNameMeta(val uniqueName: String) : InternalMeta(TAG) {
 }
 
 /**
- * Attached to [SymbolicName] instances that were synthetically calculated based on context
+ * Attached to [SymbolPrimitive] instances that were synthetically calculated based on context
  * because they were not explicitly specified.
  */
 class IsSyntheticNameMeta private constructor() : InternalMeta(TAG) {

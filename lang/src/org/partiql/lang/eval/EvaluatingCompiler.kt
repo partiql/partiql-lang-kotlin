@@ -12,8 +12,6 @@
  *  language governing permissions and limitations under the License.
  */
 
-@file:Suppress("DEPRECATION") // We don't need warnings about ExprNode deprecation.
-
 package org.partiql.lang.eval
 
 import com.amazon.ion.IntegerSize
@@ -26,14 +24,11 @@ import com.amazon.ionelement.api.ionBool
 import com.amazon.ionelement.api.toIonValue
 import org.partiql.lang.ast.AggregateCallSiteListMeta
 import org.partiql.lang.ast.AggregateRegisterIdMeta
-import org.partiql.lang.ast.ExprNode
-import org.partiql.lang.ast.IonElementMetaContainer
 import org.partiql.lang.ast.IsCountStarMeta
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.ast.UniqueNameMeta
 import org.partiql.lang.ast.find
 import org.partiql.lang.ast.sourceLocation
-import org.partiql.lang.ast.toAstStatement
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.domains.staticType
@@ -300,9 +295,6 @@ internal class EvaluatingCompiler(
                 }
             )
         }
-
-    @Deprecated("ExprNode is deprecated. Please use PIG generated AST. ")
-    fun compile(exprNode: ExprNode): Expression = compile(exprNode.toAstStatement())
 
     /**
      * Compiles a [PartiqlAst.Statement] tree to an [Expression].
@@ -2268,7 +2260,7 @@ internal class EvaluatingCompiler(
             asName: String?,
             atName: String?,
             byName: String?,
-            metas: IonElementMetaContainer
+            metas: MetaContainer
         ) {
             sources.add(
                 CompiledFromSource(

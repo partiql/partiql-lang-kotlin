@@ -1,4 +1,3 @@
-@file: Suppress("DEPRECATION") // suppress warnings about ExprNode deprecation.
 package org.partiql.lang.eval.evaluatortestframework
 
 import org.partiql.lang.CUSTOM_TEST_TYPES

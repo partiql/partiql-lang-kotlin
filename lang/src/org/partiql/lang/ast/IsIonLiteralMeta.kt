@@ -12,13 +12,11 @@
  *  language governing permissions and limitations under the License.
  */
 
-/*
-
- */
 package org.partiql.lang.ast
+import org.partiql.lang.domains.PartiqlAst
 
 /**
- * Meta node intended to be attached to an instance of [Literal] to indicate that it was
+ * Meta node intended to be attached to an instance of [PartiqlAst.Expr.Lit] to indicate that it was
  * designated as an `ionLiteral` in the parsed statement.
  */
 class IsIonLiteralMeta private constructor() : Meta {

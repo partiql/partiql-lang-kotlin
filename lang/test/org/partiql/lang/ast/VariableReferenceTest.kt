@@ -14,63 +14,58 @@
 
 package org.partiql.lang.ast
 
-import com.amazon.ionelement.api.emptyMetaContainer
-import org.junit.Assert
-import org.junit.Test
-import org.partiql.lang.domains.metaContainerOf
-import kotlin.test.assertEquals
-
-@Suppress("DEPRECATION")
-class VariableReferenceTest {
-
-    /**
-     * Asserts that [vr1] and [vr2] are equal according to .equals and that they have the same hash code.
-     */
-    private fun assertEquals(vr1: VariableReference, vr2: VariableReference) {
-        Assert.assertTrue("vr1 and vr2 must be equal", vr1.equals(vr2))
-        Assert.assertEquals(vr1.hashCode(), vr2.hashCode())
-    }
-
-    /**
-     * Asserts that [vr1] and [vr2] are not equal.
-     */
-    private fun assertNotEquals(vr1: VariableReference, vr2: VariableReference) {
-        Assert.assertTrue(!vr1.equals(vr2))
-    }
-
-    val sensitiveFoo = VariableReference("foo", CaseSensitivity.SENSITIVE, ScopeQualifier.UNQUALIFIED, emptyMetaContainer())
-    val insensitiveFoo = sensitiveFoo.copy(case = CaseSensitivity.INSENSITIVE)
-
-    @Test
-    fun caseSensitiveEquals() {
-        assertEquals(
-            sensitiveFoo,
-            sensitiveFoo.copy()
-        )
-    }
-
-    @Test
-    fun caseSensitiveNotEquals() {
-        assertNotEquals(sensitiveFoo, sensitiveFoo.copy(id = "fop"))
-        assertNotEquals(sensitiveFoo, insensitiveFoo)
-        assertNotEquals(sensitiveFoo, sensitiveFoo.copy(scopeQualifier = ScopeQualifier.LEXICAL))
-        assertNotEquals(sensitiveFoo, sensitiveFoo.copy(metas = metaContainerOf(SourceLocationMeta(1, 1))))
-    }
-
-    @Test
-    fun caseInsensitiveEquals() {
-        assertEquals(insensitiveFoo, insensitiveFoo.copy())
-
-        assertEquals(insensitiveFoo, insensitiveFoo.copy(id = "foO"))
-        assertEquals(insensitiveFoo, insensitiveFoo.copy(id = "fOo"))
-        assertEquals(insensitiveFoo, insensitiveFoo.copy(id = "Foo"))
-        assertEquals(insensitiveFoo, insensitiveFoo.copy(id = "FOO"))
-    }
-
-    @Test
-    fun caseInsensitiveNotEquals() {
-        assertNotEquals(insensitiveFoo, sensitiveFoo)
-        assertNotEquals(insensitiveFoo, insensitiveFoo.copy(scopeQualifier = ScopeQualifier.LEXICAL))
-        assertNotEquals(insensitiveFoo, insensitiveFoo.copy(metas = metaContainerOf(SourceLocationMeta(1, 1))))
-    }
-}
+// TODO: This is a test for node equivalence for the deprecated ExprNode.It has not been removed because of this issue: https://github.com/partiql/partiql-lang-kotlin/issues/878
+// @Suppress("DEPRECATION")
+// class VariableReferenceTest {
+//
+//    /**
+//     * Asserts that [vr1] and [vr2] are equal according to .equals and that they have the same hash code.
+//     */
+//    private fun assertEquals(vr1: VariableReference, vr2: VariableReference) {
+//        Assert.assertTrue("vr1 and vr2 must be equal", vr1.equals(vr2))
+//        Assert.assertEquals(vr1.hashCode(), vr2.hashCode())
+//    }
+//
+//    /**
+//     * Asserts that [vr1] and [vr2] are not equal.
+//     */
+//    private fun assertNotEquals(vr1: VariableReference, vr2: VariableReference) {
+//        Assert.assertTrue(!vr1.equals(vr2))
+//    }
+//
+//    val sensitiveFoo = VariableReference("foo", CaseSensitivity.SENSITIVE, ScopeQualifier.UNQUALIFIED, emptyMetaContainer())
+//    val insensitiveFoo = sensitiveFoo.copy(case = CaseSensitivity.INSENSITIVE)
+//
+//    @Test
+//    fun caseSensitiveEquals() {
+//        assertEquals(
+//            sensitiveFoo,
+//            sensitiveFoo.copy()
+//        )
+//    }
+//
+//    @Test
+//    fun caseSensitiveNotEquals() {
+//        assertNotEquals(sensitiveFoo, sensitiveFoo.copy(id = "fop"))
+//        assertNotEquals(sensitiveFoo, insensitiveFoo)
+//        assertNotEquals(sensitiveFoo, sensitiveFoo.copy(scopeQualifier = ScopeQualifier.LEXICAL))
+//        assertNotEquals(sensitiveFoo, sensitiveFoo.copy(metas = metaContainerOf(SourceLocationMeta(1, 1))))
+//    }
+//
+//    @Test
+//    fun caseInsensitiveEquals() {
+//        assertEquals(insensitiveFoo, insensitiveFoo.copy())
+//
+//        assertEquals(insensitiveFoo, insensitiveFoo.copy(id = "foO"))
+//        assertEquals(insensitiveFoo, insensitiveFoo.copy(id = "fOo"))
+//        assertEquals(insensitiveFoo, insensitiveFoo.copy(id = "Foo"))
+//        assertEquals(insensitiveFoo, insensitiveFoo.copy(id = "FOO"))
+//    }
+//
+//    @Test
+//    fun caseInsensitiveNotEquals() {
+//        assertNotEquals(insensitiveFoo, sensitiveFoo)
+//        assertNotEquals(insensitiveFoo, insensitiveFoo.copy(scopeQualifier = ScopeQualifier.LEXICAL))
+//        assertNotEquals(insensitiveFoo, insensitiveFoo.copy(metas = metaContainerOf(SourceLocationMeta(1, 1))))
+//    }
+// }
