@@ -60,9 +60,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - [Parser] API `parseExprNode(source: String): ExprNode` has been removed.
   - [CompilerPipeline] API `compile(query: ExprNode): Expression` has been removed.
   - [ExprNode] and [AstNode] have been removed.
-  - Functions related to conversions between ExprNode and PartiqlAst have been removed. 
-  - Parser Tests no longer do round trip.
-  - [PartiqlAstExprNodeRoundTripAdapter] has been removed.
+  - Functions related to conversions between ExprNode and PartiqlAst have been removed.
 - Removes the deprecated SqlParser and SqlLexer
 - **Breaking**: Removes the `CallAgg` node from the Logical, LogicalResolved, and Physical plans
 

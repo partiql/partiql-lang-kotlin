@@ -24,7 +24,6 @@ import com.amazon.ionelement.api.ionBool
 import com.amazon.ionelement.api.toIonValue
 import org.partiql.lang.ast.AggregateCallSiteListMeta
 import org.partiql.lang.ast.AggregateRegisterIdMeta
-import org.partiql.lang.ast.IonElementMetaContainer
 import org.partiql.lang.ast.IsCountStarMeta
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.ast.UniqueNameMeta
@@ -2261,7 +2260,7 @@ internal class EvaluatingCompiler(
             asName: String?,
             atName: String?,
             byName: String?,
-            metas: IonElementMetaContainer
+            metas: MetaContainer
         ) {
             sources.add(
                 CompiledFromSource(

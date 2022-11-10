@@ -68,4 +68,3 @@ fun MetaContainer.hasMeta(tagName: String) = this.containsKey(tagName)
 
 fun MetaContainer.add(meta: Meta): MetaContainer = this.plus(metaContainerOf(meta))
 
-internal typealias IonElementMetaContainer = com.amazon.ionelement.api.MetaContainer
