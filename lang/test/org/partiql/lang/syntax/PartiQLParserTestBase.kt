@@ -46,8 +46,8 @@ abstract class PartiQLParserTestBase : TestBase() {
         if (!expectedValue.equals(actualValue)) {
             fail(
                 "Expected and actual values do not match: $message\n" +
-                        "Expected:\n${SexpAstPrettyPrinter.format(expectedValue)}\n" +
-                        "Actual:\n${SexpAstPrettyPrinter.format(actualValue)}"
+                    "Expected:\n${SexpAstPrettyPrinter.format(expectedValue)}\n" +
+                    "Actual:\n${SexpAstPrettyPrinter.format(actualValue)}"
             )
         }
     }
