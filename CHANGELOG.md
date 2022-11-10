@@ -56,6 +56,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - [AstVisitor] Interface & [AstVisitorBase] class
   - [AstWalker] class
   - [MetaStrippingRewriter] class
+- Removes the deprecated SqlParser and SqlLexer 
 - **Breaking**: Removes the `CallAgg` node from the Logical, LogicalResolved, and Physical plans
 
 ### Security

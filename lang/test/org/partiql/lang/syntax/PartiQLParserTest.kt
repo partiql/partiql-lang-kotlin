@@ -35,7 +35,7 @@ import kotlin.concurrent.thread
  * - Conversion of PIG-generated ast to [ExprNode].
  * - Conversion of [ExprNode] to legacy and new s-exp ASTs.
  */
-class SqlParserTest : SqlParserTestBase() {
+class PartiQLParserTest : PartiQLParserTestBase() {
 
     // ****************************************
     // literals
@@ -1998,8 +1998,7 @@ class SqlParserTest : SqlParserTestBase() {
               )
             ))
           )
-        """,
-        targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
+        """
     )
 
     @Test
@@ -2207,7 +2206,6 @@ class SqlParserTest : SqlParserTestBase() {
                         (do_replace
                             (excluded))))))
         """,
-        targetParsers = setOf(ParserTypes.PARTIQL_PARSER),
         roundTrip = false
     )
 
@@ -2231,7 +2229,6 @@ class SqlParserTest : SqlParserTestBase() {
                             (do_replace
                                 (excluded))))))
         """,
-        targetParsers = setOf(ParserTypes.PARTIQL_PARSER),
         roundTrip = false
     )
 
@@ -2270,7 +2267,6 @@ class SqlParserTest : SqlParserTestBase() {
                             (do_replace
                                 (excluded))))))
         """,
-        targetParsers = setOf(ParserTypes.PARTIQL_PARSER),
         roundTrip = false
     )
 
@@ -2293,7 +2289,6 @@ class SqlParserTest : SqlParserTestBase() {
                         (do_update
                             (excluded))))))
         """,
-        targetParsers = setOf(ParserTypes.PARTIQL_PARSER),
         roundTrip = false
     )
 
@@ -2317,7 +2312,6 @@ class SqlParserTest : SqlParserTestBase() {
                             (do_update
                                 (excluded))))))
         """,
-        targetParsers = setOf(ParserTypes.PARTIQL_PARSER),
         roundTrip = false
     )
 
@@ -2356,7 +2350,6 @@ class SqlParserTest : SqlParserTestBase() {
                             (do_update
                                 (excluded))))))
         """,
-        targetParsers = setOf(ParserTypes.PARTIQL_PARSER),
         roundTrip = false
     )
 
@@ -2379,7 +2372,6 @@ class SqlParserTest : SqlParserTestBase() {
                                         (lit "bob"))))
                             (do_nothing)))))
         """,
-        targetParsers = setOf(ParserTypes.PARTIQL_PARSER),
         roundTrip = false
     )
 
@@ -2402,7 +2394,6 @@ class SqlParserTest : SqlParserTestBase() {
                                         (lit "bob"))))
                             (do_nothing)))))
         """,
-        targetParsers = setOf(ParserTypes.PARTIQL_PARSER),
         roundTrip = false
     )
 
@@ -2440,7 +2431,6 @@ class SqlParserTest : SqlParserTestBase() {
                                         null)))
                             (do_nothing)))))
         """,
-        targetParsers = setOf(ParserTypes.PARTIQL_PARSER),
         roundTrip = false
     )
 
@@ -2464,7 +2454,6 @@ class SqlParserTest : SqlParserTestBase() {
                             (do_replace
                                 (excluded))))))
         """,
-        targetParsers = setOf(ParserTypes.PARTIQL_PARSER),
         roundTrip = false
     )
 
@@ -2488,7 +2477,6 @@ class SqlParserTest : SqlParserTestBase() {
                             (do_replace
                                 (excluded))))))
         """,
-        targetParsers = setOf(ParserTypes.PARTIQL_PARSER),
         roundTrip = false
     )
 
@@ -2512,7 +2500,6 @@ class SqlParserTest : SqlParserTestBase() {
                             (do_update
                                 (excluded))))))
         """,
-        targetParsers = setOf(ParserTypes.PARTIQL_PARSER),
         roundTrip = false
     )
 
@@ -2536,7 +2523,6 @@ class SqlParserTest : SqlParserTestBase() {
                             (do_update
                                 (excluded))))))
         """,
-        targetParsers = setOf(ParserTypes.PARTIQL_PARSER),
         roundTrip = false
     )
 
@@ -2575,7 +2561,6 @@ class SqlParserTest : SqlParserTestBase() {
                             (do_replace
                                 (excluded))))))
         """,
-        targetParsers = setOf(ParserTypes.PARTIQL_PARSER),
         roundTrip = false
     )
 
@@ -2614,7 +2599,6 @@ class SqlParserTest : SqlParserTestBase() {
                         (do_update
                             (excluded))))))
         """,
-        targetParsers = setOf(ParserTypes.PARTIQL_PARSER),
         roundTrip = false
     )
 

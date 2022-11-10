@@ -8,7 +8,6 @@ import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.eval.CompileOptions
 import org.partiql.lang.eval.EvaluationSession
-import org.partiql.lang.syntax.SqlParser
 import java.io.PrintStream
 
 /**

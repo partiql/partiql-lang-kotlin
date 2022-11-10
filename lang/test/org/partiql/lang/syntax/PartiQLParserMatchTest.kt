@@ -9,17 +9,7 @@ import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.id
 import kotlin.test.assertFailsWith
 
-class SqlParserMatchTest : SqlParserTestBase() {
-
-    // The tests in this suite are for MATCH, so run them only with PartiqlParser (ANTLR).
-    // (After switching from MATCH-as-FROM-source to MATCH-as-expression, SqlParser
-    // no longer parses MATCH-containing source.)
-    private fun assertExpressionNoRoundTrip(
-        source: String,
-        expectedPigBuilder: PartiqlAst.Builder.() -> PartiqlAst.PartiqlAstNode
-    ) {
-        super.assertExpressionNoRoundTrip(source, setOf(ParserTypes.PARTIQL_PARSER), expectedPigBuilder)
-    }
+class PartiQLParserMatchTest : PartiQLParserTestBase() {
 
     @Test
     fun loneMatchExpr1path() = assertExpressionNoRoundTrip(
