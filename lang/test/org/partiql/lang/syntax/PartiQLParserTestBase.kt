@@ -54,13 +54,12 @@ abstract class PartiQLParserTestBase : TestBase() {
 
     /**
      * This method is used by test cases for parsing a string.
-     * The test are performed with only PIG AST.
+     * The test are performed with PIG AST.
      * The expected PIG AST is a string.
      */
     protected fun assertExpression(
         source: String,
         expectedPigAst: String,
-        roundTrip: Boolean = true
     ) {
         val actualStatement = parser.parseAstStatement(source)
         val expectedIonSexp = loadIonSexp(expectedPigAst)
@@ -78,22 +77,6 @@ abstract class PartiQLParserTestBase : TestBase() {
      * This method is used by test cases for parsing a string.
      * The test are performed with only PIG AST.
      * The expected PIG AST is a PIG builder.
-     * No ExprNode <-> PIG AST round trip is performed.
-     */
-    protected fun assertExpressionNoRoundTrip(
-        source: String,
-        expectedPigBuilder: PartiqlAst.Builder.() -> PartiqlAst.PartiqlAstNode
-    ) {
-        val expectedPigAst = PartiqlAst.build { expectedPigBuilder() }.toIonElement().toString()
-
-        // Refer to comments inside the main body of the following function to see what checks are performed.
-        assertExpression(source, expectedPigAst, roundTrip = false)
-    }
-
-    /**
-     * This method is used by test cases for parsing a string.
-     * The test are performed with only PIG AST.
-     * The expected PIG AST is a PIG builder.
      */
     protected fun assertExpression(
         source: String,
@@ -103,18 +86,6 @@ abstract class PartiQLParserTestBase : TestBase() {
 
         // Refer to comments inside the main body of the following function to see what checks are performed.
         assertExpression(source, expectedPigAst)
-    }
-
-    /**
-     * This method is used by test cases for parsing a string.
-     * The test are performed with PIG AST.
-     * The expected PIG AST is a string.
-     */
-    protected fun assertExpression(
-        source: String,
-        expectedPigAst: String,
-    ) {
-        assertExpression(source, expectedPigAst, roundTrip = true)
     }
 
     /**

@@ -2205,8 +2205,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                                 (lit 4)))
                         (do_replace
                             (excluded))))))
-        """,
-        roundTrip = false
+        """
     )
 
     @Test
@@ -2228,8 +2227,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                                         (lit "bob"))))
                             (do_replace
                                 (excluded))))))
-        """,
-        roundTrip = false
+        """
     )
 
     @Test
@@ -2266,8 +2264,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                                         null)))
                             (do_replace
                                 (excluded))))))
-        """,
-        roundTrip = false
+        """
     )
 
     @Test
@@ -2288,8 +2285,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                                 (lit 4)))
                         (do_update
                             (excluded))))))
-        """,
-        roundTrip = false
+        """
     )
 
     @Test
@@ -2311,8 +2307,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                                         (lit "bob"))))
                             (do_update
                                 (excluded))))))
-        """,
-        roundTrip = false
+        """
     )
 
     @Test
@@ -2349,8 +2344,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                                         null)))
                             (do_update
                                 (excluded))))))
-        """,
-        roundTrip = false
+        """
     )
 
     @Test
@@ -2371,8 +2365,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                                         (lit "name")
                                         (lit "bob"))))
                             (do_nothing)))))
-        """,
-        roundTrip = false
+        """
     )
 
     @Test
@@ -2393,8 +2386,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                                         (lit "name")
                                         (lit "bob"))))
                             (do_nothing)))))
-        """,
-        roundTrip = false
+        """
     )
 
     @Test
@@ -2430,8 +2422,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                                         null
                                         null)))
                             (do_nothing)))))
-        """,
-        roundTrip = false
+        """
     )
 
     @Test
@@ -2453,8 +2444,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                                         (lit "bob"))))
                             (do_replace
                                 (excluded))))))
-        """,
-        roundTrip = false
+        """
     )
 
     @Test
@@ -2476,8 +2466,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                                         (lit "bob"))))
                             (do_replace
                                 (excluded))))))
-        """,
-        roundTrip = false
+        """
     )
 
     @Test
@@ -2499,8 +2488,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                                         (lit "bob"))))
                             (do_update
                                 (excluded))))))
-        """,
-        roundTrip = false
+        """
     )
 
     @Test
@@ -2522,8 +2510,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                                         (lit "bob"))))
                             (do_update
                                 (excluded))))))
-        """,
-        roundTrip = false
+        """
     )
 
     @Test
@@ -2560,8 +2547,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                                         null)))
                             (do_replace
                                 (excluded))))))
-        """,
-        roundTrip = false
+        """
     )
 
     @Test
@@ -2598,8 +2584,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                                     null)))
                         (do_update
                             (excluded))))))
-        """,
-        roundTrip = false
+        """
     )
 
     @Test
@@ -3651,8 +3636,8 @@ class PartiQLParserTest : PartiQLParserTestBase() {
             op = PartiqlAst.BagOpType.Union(),
             quantifier = PartiqlAst.SetQuantifier.Distinct(),
             operands = listOf(
-                this.id("a"),
-                this.id("b")
+                id("a"),
+                id("b")
             )
         )
     }
@@ -3665,8 +3650,8 @@ class PartiQLParserTest : PartiQLParserTestBase() {
             op = PartiqlAst.BagOpType.Union(),
             quantifier = PartiqlAst.SetQuantifier.Distinct(),
             operands = listOf(
-                this.id("a"),
-                this.id("b")
+                id("a"),
+                id("b")
             )
         )
     }
@@ -3679,8 +3664,8 @@ class PartiQLParserTest : PartiQLParserTestBase() {
             op = PartiqlAst.BagOpType.Union(),
             quantifier = PartiqlAst.SetQuantifier.All(),
             operands = listOf(
-                this.id("a"),
-                this.id("b")
+                id("a"),
+                id("b")
             )
         )
     }
@@ -3693,8 +3678,8 @@ class PartiQLParserTest : PartiQLParserTestBase() {
             op = PartiqlAst.BagOpType.Intersect(),
             quantifier = PartiqlAst.SetQuantifier.Distinct(),
             operands = listOf(
-                this.id("a"),
-                this.id("b")
+                id("a"),
+                id("b")
             )
         )
     }
@@ -3707,8 +3692,8 @@ class PartiQLParserTest : PartiQLParserTestBase() {
             op = PartiqlAst.BagOpType.Intersect(),
             quantifier = PartiqlAst.SetQuantifier.Distinct(),
             operands = listOf(
-                this.id("a"),
-                this.id("b")
+                id("a"),
+                id("b")
             )
         )
     }
@@ -3721,8 +3706,8 @@ class PartiQLParserTest : PartiQLParserTestBase() {
             op = PartiqlAst.BagOpType.Intersect(),
             quantifier = PartiqlAst.SetQuantifier.All(),
             operands = listOf(
-                this.id("a"),
-                this.id("b")
+                id("a"),
+                id("b")
             )
         )
     }
@@ -3735,8 +3720,8 @@ class PartiQLParserTest : PartiQLParserTestBase() {
             op = PartiqlAst.BagOpType.Except(),
             quantifier = PartiqlAst.SetQuantifier.Distinct(),
             operands = listOf(
-                this.id("a"),
-                this.id("b")
+                id("a"),
+                id("b")
             )
         )
     }
@@ -3749,8 +3734,8 @@ class PartiQLParserTest : PartiQLParserTestBase() {
             op = PartiqlAst.BagOpType.Except(),
             quantifier = PartiqlAst.SetQuantifier.Distinct(),
             operands = listOf(
-                this.id("a"),
-                this.id("b")
+                id("a"),
+                id("b")
             )
         )
     }
@@ -3763,14 +3748,14 @@ class PartiQLParserTest : PartiQLParserTestBase() {
             op = PartiqlAst.BagOpType.Except(),
             quantifier = PartiqlAst.SetQuantifier.All(),
             operands = listOf(
-                this.id("a"),
-                this.id("b")
+                id("a"),
+                id("b")
             )
         )
     }
 
     @Test
-    fun outerUnion() = assertExpressionNoRoundTrip(
+    fun outerUnion() = assertExpression(
         "a OUTER UNION b"
     ) {
         bagOp(
@@ -3784,7 +3769,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
     }
 
     @Test
-    fun outerUnionDistinct() = assertExpressionNoRoundTrip(
+    fun outerUnionDistinct() = assertExpression(
         "a OUTER UNION DISTINCT b"
     ) {
         bagOp(
@@ -3798,7 +3783,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
     }
 
     @Test
-    fun outerUnionAll() = assertExpressionNoRoundTrip(
+    fun outerUnionAll() = assertExpression(
         "a OUTER UNION ALL b"
     ) {
         bagOp(
@@ -3812,7 +3797,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
     }
 
     @Test
-    fun outerIntersect() = assertExpressionNoRoundTrip(
+    fun outerIntersect() = assertExpression(
         "a OUTER INTERSECT b"
     ) {
         bagOp(
@@ -3826,7 +3811,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
     }
 
     @Test
-    fun outerIntersectDistinct() = assertExpressionNoRoundTrip(
+    fun outerIntersectDistinct() = assertExpression(
         "a OUTER INTERSECT DISTINCT b"
     ) {
         bagOp(
@@ -3840,7 +3825,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
     }
 
     @Test
-    fun outerIntersectAll() = assertExpressionNoRoundTrip(
+    fun outerIntersectAll() = assertExpression(
         "a OUTER INTERSECT ALL b"
     ) {
         bagOp(
@@ -3854,7 +3839,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
     }
 
     @Test
-    fun outerExcept() = assertExpressionNoRoundTrip(
+    fun outerExcept() = assertExpression(
         "a OUTER EXCEPT b"
     ) {
         bagOp(
@@ -3868,7 +3853,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
     }
 
     @Test
-    fun outerExceptDistinct() = assertExpressionNoRoundTrip(
+    fun outerExceptDistinct() = assertExpression(
         "a OUTER EXCEPT DISTINCT b"
     ) {
         bagOp(
@@ -3882,7 +3867,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
     }
 
     @Test
-    fun outerExceptAll() = assertExpressionNoRoundTrip(
+    fun outerExceptAll() = assertExpression(
         "a OUTER EXCEPT ALL b"
     ) {
         bagOp(

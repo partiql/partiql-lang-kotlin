@@ -12,7 +12,7 @@ import kotlin.test.assertFailsWith
 class PartiQLParserMatchTest : PartiQLParserTestBase() {
 
     @Test
-    fun loneMatchExpr1path() = assertExpressionNoRoundTrip(
+    fun loneMatchExpr1path() = assertExpression(
         "(MyGraph MATCH (x))"
     ) {
         astMygraphMatchAllNodes
@@ -22,7 +22,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
     fun loneMatchExpr1path_noParens() {
         // fails because it should be in parentheses
         assertFailsWith<ParserException> {
-            assertExpressionNoRoundTrip(
+            assertExpression(
                 "MyGraph MATCH (x)"
             ) {
                 astMygraphMatchAllNodes
@@ -31,7 +31,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
     }
 
     @Test
-    fun loneMatchExpr2path() = assertExpressionNoRoundTrip(
+    fun loneMatchExpr2path() = assertExpression(
         "( MyGraph MATCH (x), -[u]-> )"
     ) {
         astMyGraphMatchAllNodesEdges
@@ -41,7 +41,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
     fun loneMatchExpr2path_noParens() {
         // fails because it should be in parentheses
         assertFailsWith<ParserException> {
-            assertExpressionNoRoundTrip(
+            assertExpression(
                 "MyGraph MATCH (x), -[u]-> "
             ) {
                 astMyGraphMatchAllNodesEdges
@@ -106,7 +106,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
     }
 
     @Test
-    fun leftMatchExprInUnion() = assertExpressionNoRoundTrip(
+    fun leftMatchExprInUnion() = assertExpression(
         "(MyGraph MATCH (x)) UNION SELECT * FROM tbl1"
     ) {
         bagOp(
@@ -123,7 +123,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
     fun leftMatchExprInUnion_noParens() {
         // fails because it should be in parentheses
         assertFailsWith<ParserException> {
-            assertExpressionNoRoundTrip(
+            assertExpression(
                 "MyGraph MATCH (x) UNION SELECT * FROM tbl1"
             ) {
                 bagOp(
@@ -139,7 +139,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
     }
 
     @Test
-    fun rightMatchExprInUnion() = assertExpressionNoRoundTrip(
+    fun rightMatchExprInUnion() = assertExpression(
         "SELECT * FROM tbl1 UNION (MyGraph MATCH (x))"
     ) {
         bagOp(
@@ -156,7 +156,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
     fun rightMatchExprInUnion_noParens() {
         // fails because it should be in parentheses
         assertFailsWith<ParserException> {
-            assertExpressionNoRoundTrip(
+            assertExpression(
                 "SELECT * FROM tbl1 UNION MyGraph MATCH (x)"
             ) {
                 bagOp(
@@ -172,7 +172,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
     }
 
     @Test
-    fun matchLeftTight() = assertExpressionNoRoundTrip(
+    fun matchLeftTight() = assertExpression(
         "3 + (MyGraph MATCH (x))"
     ) {
         plus(
@@ -185,7 +185,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
     fun matchLeftTight_noParens() {
         // fails because it should be in parentheses
         assertFailsWith<ParserException> {
-            assertExpressionNoRoundTrip(
+            assertExpression(
                 "3 + MyGraph MATCH (x)"
             ) {
                 plus(
@@ -197,7 +197,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
     }
 
     @Test
-    fun allNodesNoLabel() = assertExpressionNoRoundTrip(
+    fun allNodesNoLabel() = assertExpression(
         "SELECT 1 FROM my_graph MATCH ()"
     ) {
         select(
@@ -225,7 +225,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
     }
 
     @Test
-    fun starAllNodesNoLabel() = assertExpressionNoRoundTrip(
+    fun starAllNodesNoLabel() = assertExpression(
         "SELECT * FROM my_graph MATCH ()"
     ) {
         select(
@@ -252,7 +252,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
     }
 
     @Test
-    fun allNodesNoLabelFilter() = assertExpressionNoRoundTrip(
+    fun allNodesNoLabelFilter() = assertExpression(
         "SELECT 1 FROM my_graph MATCH () WHERE contains_value('1')",
     ) {
         select(
@@ -308,7 +308,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
         }
 
     @Test
-    fun bindAllNodesProjectBound() = assertExpressionNoRoundTrip(
+    fun bindAllNodesProjectBound() = assertExpression(
         "SELECT x FROM my_graph MATCH (x)"
     ) {
         bindAllNodesAST(
@@ -318,7 +318,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
     }
 
     @Test
-    fun bindAllNodesProjectStar() = assertExpressionNoRoundTrip(
+    fun bindAllNodesProjectStar() = assertExpression(
         "SELECT * FROM my_graph MATCH (x)"
     ) {
         bindAllNodesAST(
@@ -328,7 +328,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
     }
 
     @Test
-    fun bindAllNodesProjectBoundWithAS() = assertExpressionNoRoundTrip(
+    fun bindAllNodesProjectBoundWithAS() = assertExpression(
         "SELECT * FROM my_graph MATCH (x) AS a"
     ) {
         bindAllNodesAST(
@@ -338,7 +338,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
     }
 
     @Test
-    fun bindAllNodesProjectBoundWithParensAS() = assertExpressionNoRoundTrip(
+    fun bindAllNodesProjectBoundWithParensAS() = assertExpression(
         "SELECT * FROM (my_graph MATCH (x)) AS a"
     ) {
         bindAllNodesAST(
@@ -348,7 +348,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
     }
 
     @Test
-    fun allNodes() = assertExpressionNoRoundTrip(
+    fun allNodes() = assertExpression(
         "SELECT x.info AS info FROM my_graph MATCH (x) WHERE x.name LIKE 'foo'",
     ) {
         select(
@@ -384,7 +384,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
     }
 
     @Test
-    fun labelledNodes() = assertExpressionNoRoundTrip(
+    fun labelledNodes() = assertExpression(
         "SELECT x AS target FROM my_graph MATCH (x:Label) WHERE x.has_data = true",
     ) {
         select(
@@ -417,7 +417,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
     }
 
     @Test
-    fun allEdges() = assertExpressionNoRoundTrip(
+    fun allEdges() = assertExpression(
         "SELECT 1 FROM g MATCH -[]-> ",
     ) {
         select(
@@ -447,7 +447,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
     }
 
     @Test
-    fun allEdgesAllNodes() = assertExpressionNoRoundTrip(
+    fun allEdgesAllNodes() = assertExpression(
         "SELECT 1 FROM (g MATCH -[]->, ())",
     ) {
         select(
@@ -486,7 +486,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
     }
 
     @Test
-    fun allNodesAllEdges() = assertExpressionNoRoundTrip(
+    fun allNodesAllEdges() = assertExpression(
         "SELECT 1 FROM (g MATCH (), -[]-> )",
     ) {
         select(
@@ -566,161 +566,161 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
         }
 
     @Test
-    fun rightDirected() = assertExpressionNoRoundTrip(
+    fun rightDirected() = assertExpression(
         "SELECT a,b FROM g MATCH (a:A) -[e:E]-> (b:B)",
     ) {
         simpleGraphAST(edgeRight(), null, "e", listOf("E"))
     }
 
     @Test
-    fun rightDirectedAbbreviated() = assertExpressionNoRoundTrip(
+    fun rightDirectedAbbreviated() = assertExpression(
         "SELECT a,b FROM g MATCH (a:A) -> (b:B)",
     ) {
         simpleGraphAST(edgeRight(), null, null, null)
     }
 
     @Test
-    fun leftDirected() = assertExpressionNoRoundTrip(
+    fun leftDirected() = assertExpression(
         "SELECT a,b FROM g MATCH (a:A) <-[e:E]- (b:B)",
     ) {
         simpleGraphAST(edgeLeft(), null, "e", listOf("E"))
     }
 
     @Test
-    fun leftDirectedAbbreviated() = assertExpressionNoRoundTrip(
+    fun leftDirectedAbbreviated() = assertExpression(
         "SELECT a,b FROM g MATCH (a:A) <- (b:B)",
     ) {
         simpleGraphAST(edgeLeft(), null, null, null)
     }
 
     @Test
-    fun undirected() = assertExpressionNoRoundTrip(
+    fun undirected() = assertExpression(
         "SELECT a,b FROM g MATCH (a:A) ~[e:E]~ (b:B)",
     ) {
         simpleGraphAST(edgeUndirected(), null, "e", listOf("E"))
     }
 
     @Test
-    fun undirectedAbbreviated() = assertExpressionNoRoundTrip(
+    fun undirectedAbbreviated() = assertExpression(
         "SELECT a,b FROM g MATCH (a:A) ~ (b:B)",
     ) {
         simpleGraphAST(edgeUndirected(), null, null, null)
     }
 
     @Test
-    fun rightOrUnDirected() = assertExpressionNoRoundTrip(
+    fun rightOrUnDirected() = assertExpression(
         "SELECT a,b FROM g MATCH (a:A) ~[e:E]~> (b:B)",
     ) {
         simpleGraphAST(edgeUndirectedOrRight(), null, "e", listOf("E"))
     }
 
     @Test
-    fun rightOrUnDirectedAbbreviated() = assertExpressionNoRoundTrip(
+    fun rightOrUnDirectedAbbreviated() = assertExpression(
         "SELECT a,b FROM g MATCH (a:A) ~> (b:B)",
     ) {
         simpleGraphAST(edgeUndirectedOrRight(), null, null, null)
     }
 
     @Test
-    fun leftOrUnDirected() = assertExpressionNoRoundTrip(
+    fun leftOrUnDirected() = assertExpression(
         "SELECT a,b FROM g MATCH (a:A) <~[e:E]~ (b:B)",
     ) {
         simpleGraphAST(edgeLeftOrUndirected(), null, "e", listOf("E"))
     }
 
     @Test
-    fun leftOrUnDirectedAbbreviated() = assertExpressionNoRoundTrip(
+    fun leftOrUnDirectedAbbreviated() = assertExpression(
         "SELECT a,b FROM g MATCH (a:A) <~ (b:B)",
     ) {
         simpleGraphAST(edgeLeftOrUndirected(), null, null, null)
     }
 
     @Test
-    fun leftOrRight() = assertExpressionNoRoundTrip(
+    fun leftOrRight() = assertExpression(
         "SELECT a,b FROM g MATCH (a:A) <-[e:E]-> (b:B)",
     ) {
         simpleGraphAST(edgeLeftOrRight(), null, "e", listOf("E"))
     }
 
     @Test
-    fun leftOrRightAbbreviated() = assertExpressionNoRoundTrip(
+    fun leftOrRightAbbreviated() = assertExpression(
         "SELECT a,b FROM g MATCH (a:A) <-> (b:B)",
     ) {
         simpleGraphAST(edgeLeftOrRight(), null, null, null)
     }
 
     @Test
-    fun leftOrRightOrUndirected() = assertExpressionNoRoundTrip(
+    fun leftOrRightOrUndirected() = assertExpression(
         "SELECT a,b FROM g MATCH (a:A) -[e:E]- (b:B)",
     ) {
         simpleGraphAST(edgeLeftOrUndirectedOrRight(), null, "e", listOf("E"))
     }
 
     @Test
-    fun leftOrRightOrUndirectedAbbreviated() = assertExpressionNoRoundTrip(
+    fun leftOrRightOrUndirectedAbbreviated() = assertExpression(
         "SELECT a,b FROM g MATCH (a:A) - (b:B)",
     ) {
         simpleGraphAST(edgeLeftOrUndirectedOrRight(), null, null, null)
     }
 
     @Test
-    fun quantifierStar() = assertExpressionNoRoundTrip(
+    fun quantifierStar() = assertExpression(
         "SELECT a,b FROM g MATCH (a:A)-[:edge]->*(b:B)",
     ) {
         simpleGraphAST(edgeRight(), graphMatchQuantifier(lower = 0, upper = null), null, listOf("edge"))
     }
 
     @Test
-    fun quantifierPlus() = assertExpressionNoRoundTrip(
+    fun quantifierPlus() = assertExpression(
         "SELECT a,b FROM g MATCH (a:A)<-[:edge]-+(b:B)",
     ) {
         simpleGraphAST(edgeLeft(), graphMatchQuantifier(lower = 1, upper = null), null, listOf("edge"))
     }
 
     @Test
-    fun quantifierM() = assertExpressionNoRoundTrip(
+    fun quantifierM() = assertExpression(
         "SELECT a,b FROM g MATCH (a:A)~[:edge]~{5,}(b:B)",
     ) {
         simpleGraphAST(edgeUndirected(), graphMatchQuantifier(lower = 5, upper = null), null, listOf("edge"))
     }
 
     @Test
-    fun quantifierMN() = assertExpressionNoRoundTrip(
+    fun quantifierMN() = assertExpression(
         "SELECT a,b FROM g MATCH (a:A)-[e:edge]-{2,6}(b:B)",
     ) {
         simpleGraphAST(edgeLeftOrUndirectedOrRight(), graphMatchQuantifier(lower = 2, upper = 6), "e", listOf("edge"))
     }
 
     @Test
-    fun quantifierAbbreviatedStar() = assertExpressionNoRoundTrip(
+    fun quantifierAbbreviatedStar() = assertExpression(
         "SELECT a,b FROM g MATCH (a:A)->*(b:B)",
     ) {
         simpleGraphAST(edgeRight(), graphMatchQuantifier(lower = 0, upper = null), null, null)
     }
 
     @Test
-    fun quantifierAbbreviatedPlus() = assertExpressionNoRoundTrip(
+    fun quantifierAbbreviatedPlus() = assertExpression(
         "SELECT a,b FROM g MATCH (a:A)<-+(b:B)",
     ) {
         simpleGraphAST(edgeLeft(), graphMatchQuantifier(lower = 1, upper = null), null, null)
     }
 
     @Test
-    fun quantifierAbbreviatedM() = assertExpressionNoRoundTrip(
+    fun quantifierAbbreviatedM() = assertExpression(
         "SELECT a,b FROM g MATCH (a:A)~{5,}(b:B)",
     ) {
         simpleGraphAST(edgeUndirected(), graphMatchQuantifier(lower = 5, upper = null), null, null)
     }
 
     @Test
-    fun quantifierAbbreviatedMN() = assertExpressionNoRoundTrip(
+    fun quantifierAbbreviatedMN() = assertExpression(
         "SELECT a,b FROM g MATCH (a:A)-{2,6}(b:B)",
     ) {
         simpleGraphAST(edgeLeftOrUndirectedOrRight(), graphMatchQuantifier(lower = 2, upper = 6), null, null)
     }
 
     @Test
-    fun singleEdgeMatch() = assertExpressionNoRoundTrip(
+    fun singleEdgeMatch() = assertExpression(
         "SELECT the_a.name AS src, the_b.name AS dest FROM my_graph MATCH (the_a:a) -[the_y:y]-> (the_b:b) WHERE the_y.score > 10",
     ) {
         select(
@@ -774,7 +774,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
     }
 
     @Test
-    fun twoHopTriples() = assertExpressionNoRoundTrip(
+    fun twoHopTriples() = assertExpression(
         "SELECT a,b FROM (g MATCH (a) -[:has]-> (x), (x)-[:contains]->(b))",
     ) {
         select(
@@ -837,7 +837,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
     }
 
     @Test
-    fun twoHopPattern() = assertExpressionNoRoundTrip(
+    fun twoHopPattern() = assertExpression(
         "SELECT a,b FROM g MATCH (a)-[:has]->()-[:contains]->(b)",
     ) {
         select(
@@ -891,7 +891,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
     }
 
     @Test
-    fun pathVariable() = assertExpressionNoRoundTrip(
+    fun pathVariable() = assertExpression(
         "SELECT a,b FROM g MATCH p = (a:A) -[e:E]-> (b:B)",
     ) {
         PartiqlAst.build {
@@ -930,7 +930,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
     }
 
     @Test
-    fun parenthesizedPatternWithFilter() = assertExpressionNoRoundTrip(
+    fun parenthesizedPatternWithFilter() = assertExpression(
         "SELECT a,b FROM g MATCH [(a:A)-[e:Edge]->(b:A) WHERE a.owner=b.owner]{2,5}",
     ) {
         PartiqlAst.build {
@@ -979,7 +979,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
     }
 
     @Test
-    fun parenthesizedEdgePattern() = assertExpressionNoRoundTrip(
+    fun parenthesizedEdgePattern() = assertExpression(
         "SELECT a,b FROM g MATCH pathVar = (a:A)[()-[e:Edge]->()]{1,3}(b:B)",
     ) {
         PartiqlAst.build {
@@ -1070,21 +1070,21 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
     }
 
     @Test
-    fun squareParenthesizedEdgeStar() = assertExpressionNoRoundTrip(
+    fun squareParenthesizedEdgeStar() = assertExpression(
         "SELECT a,b FROM g MATCH pathVar = (a:A)[-[e:Edge]->]*(b:B)",
     ) {
         parenthesizedEdgeStarAST()
     }
 
     @Test
-    fun roundParenthesizedEdgeStar() = assertExpressionNoRoundTrip(
+    fun roundParenthesizedEdgeStar() = assertExpression(
         "SELECT a,b FROM g MATCH pathVar = (a:A)(-[e:Edge]->)*(b:B)",
     ) {
         parenthesizedEdgeStarAST()
     }
 
     @Test
-    fun prefilters() = assertExpressionNoRoundTrip(
+    fun prefilters() = assertExpression(
         "SELECT u as banCandidate FROM g MATCH (p:Post Where p.isFlagged = true) <-[:createdPost]- (u:Usr WHERE u.isBanned = false AND u.karma < 20) -[:createdComment]->(c:Comment WHERE c.isFlagged = true) WHERE p.title LIKE '%considered harmful%'",
     ) {
         PartiqlAst.build {
@@ -1200,21 +1200,21 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
     }
 
     @Test
-    fun restrictorTrail() = assertExpressionNoRoundTrip(
+    fun restrictorTrail() = assertExpression(
         "SELECT p FROM g MATCH TRAIL p = (a WHERE a.owner='Dave') -[t:Transfer]-> * (b WHERE b.owner='Aretha')",
     ) {
         restrictorAst(restrictorTrail())
     }
 
     @Test
-    fun restrictorAcyclic() = assertExpressionNoRoundTrip(
+    fun restrictorAcyclic() = assertExpression(
         "SELECT p FROM g MATCH ACYCLIC p = (a WHERE a.owner='Dave') -[t:Transfer]-> * (b WHERE b.owner='Aretha')",
     ) {
         restrictorAst(restrictorAcyclic())
     }
 
     @Test
-    fun restrictorSimple() = assertExpressionNoRoundTrip(
+    fun restrictorSimple() = assertExpression(
         "SELECT p FROM g MATCH SIMPLE p = (a WHERE a.owner='Dave') -[t:Transfer]-> * (b WHERE b.owner='Aretha')",
     ) {
         restrictorAst(restrictorSimple())
@@ -1267,42 +1267,42 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
     }
 
     @Test
-    fun selectorAnyShortest() = assertExpressionNoRoundTrip(
+    fun selectorAnyShortest() = assertExpression(
         "SELECT p FROM g MATCH ANY SHORTEST p = (a WHERE a.owner='Dave') -[t:Transfer]-> * (b WHERE b.owner='Aretha')",
     ) {
         selectorAST(selectorAnyShortest())
     }
 
     @Test
-    fun selectorAllShortest() = assertExpressionNoRoundTrip(
+    fun selectorAllShortest() = assertExpression(
         "SELECT p FROM g MATCH All SHORTEST p = (a WHERE a.owner='Dave') -[t:Transfer]-> * (b WHERE b.owner='Aretha')",
     ) {
         selectorAST(selectorAllShortest())
     }
 
     @Test
-    fun selectorAny() = assertExpressionNoRoundTrip(
+    fun selectorAny() = assertExpression(
         "SELECT p FROM g MATCH ANY p = (a WHERE a.owner='Dave') -[t:Transfer]-> * (b WHERE b.owner='Aretha')",
     ) {
         selectorAST(selectorAny())
     }
 
     @Test
-    fun selectorAnyK() = assertExpressionNoRoundTrip(
+    fun selectorAnyK() = assertExpression(
         "SELECT p FROM g MATCH ANY 5 p = (a WHERE a.owner='Dave') -[t:Transfer]-> * (b WHERE b.owner='Aretha')",
     ) {
         selectorAST(selectorAnyK(5))
     }
 
     @Test
-    fun selectorShortestK() = assertExpressionNoRoundTrip(
+    fun selectorShortestK() = assertExpression(
         "SELECT p FROM g MATCH SHORTEST 5 p = (a WHERE a.owner='Dave') -[t:Transfer]-> * (b WHERE b.owner='Aretha')",
     ) {
         selectorAST(selectorShortestK(5))
     }
 
     @Test
-    fun selectorShortestKGroup() = assertExpressionNoRoundTrip(
+    fun selectorShortestKGroup() = assertExpression(
         "SELECT p FROM g MATCH SHORTEST 5 GROUP p = (a WHERE a.owner='Dave') -[t:Transfer]-> * (b WHERE b.owner='Aretha')",
     ) {
         selectorAST(selectorShortestKGroup(5))
@@ -1370,7 +1370,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
     fun matchAndJoinCommasParenthesized() {
         // fails because of the outer parentheses in ((a) -> (b), (a) -> (c)))
         assertFailsWith<ParserException> {
-            assertExpressionNoRoundTrip(
+            assertExpression(
                 "SELECT a,b,c, t1.x as x, t2.y as y FROM graph MATCH ((a) -> (b), (a) -> (c)), table1 as t1, table2 as t2",
             ) {
                 joinedMatch()
@@ -1382,7 +1382,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
     fun matchAndJoinCommas() {
         // fails because of the comma in the pattern and no parentheses like `(graph MATCH ...)`
         assertFailsWith<ParserException> {
-            assertExpressionNoRoundTrip(
+            assertExpression(
                 "SELECT a,b,c, t1.x as x, t2.y as y FROM graph MATCH (a) -> (b), (a) -> (c), table1 as t1, table2 as t2",
             ) {
                 joinedMatch()
@@ -1394,7 +1394,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
     fun matchAndJoinCommasParenthesized_outerParens() {
         // fails because of the outer parentheses in ((a) -> (b), (a) -> (c)))
         assertFailsWith<ParserException> {
-            assertExpressionNoRoundTrip(
+            assertExpression(
                 "SELECT a,b,c, t1.x as x, t2.y as y FROM (graph MATCH ((a) -> (b), (a) -> (c))), table1 as t1, table2 as t2",
             ) {
                 joinedMatch()
@@ -1404,7 +1404,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
 
     @Test
     fun matchAndJoinCommas_outerParens() {
-        assertExpressionNoRoundTrip(
+        assertExpression(
             "SELECT a,b,c, t1.x as x, t2.y as y FROM (graph MATCH (a) -> (b), (a) -> (c)), table1 as t1, table2 as t2",
         ) {
             joinedMatch()
@@ -1414,7 +1414,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
     // TODO label combinators
     @Test
     @Ignore
-    fun labelDisjunction() = assertExpressionNoRoundTrip(
+    fun labelDisjunction() = assertExpression(
         "SELECT x FROM g MATCH (x:Label|OtherLabel)",
     ) {
         TODO()
@@ -1422,7 +1422,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
 
     @Test
     @Ignore
-    fun labelConjunction() = assertExpressionNoRoundTrip(
+    fun labelConjunction() = assertExpression(
         "SELECT x FROM g MATCH (x:Label&OtherLabel)",
     ) {
         TODO()
@@ -1430,7 +1430,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
 
     @Test
     @Ignore
-    fun labelNegation() = assertExpressionNoRoundTrip(
+    fun labelNegation() = assertExpression(
         "SELECT x FROM g MATCH (x:!Label)",
     ) {
         TODO()
@@ -1438,7 +1438,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
 
     @Test
     @Ignore
-    fun labelWildcard() = assertExpressionNoRoundTrip(
+    fun labelWildcard() = assertExpression(
         "SELECT x FROM g MATCH (x:%)",
     ) {
         TODO()
@@ -1446,7 +1446,7 @@ class PartiQLParserMatchTest : PartiQLParserTestBase() {
 
     @Test
     @Ignore
-    fun labelCombo() = assertExpressionNoRoundTrip(
+    fun labelCombo() = assertExpression(
         "SELECT x FROM g MATCH (x: L1|L2&L3|!L4|(L5&%)",
     ) {
         TODO()
