@@ -27,8 +27,9 @@ import java.math.RoundingMode
 private val ion = IonSystemBuilder.standard().build()
 
 /**
- * A simple custom stored procedure that calculates the moon weight for each crewmate of the given crew, and returns
- * them in a list
+ * A simple custom stored procedure that calculates and returns the moon weight for each crewmate of the given crew.
+ * This procedure also returns the number of crewmates we calculated the moon weight for, returning -1 if no crew is
+ * found.
  */
 class CalculateCrewMoonWeight(private val valueFactory: ExprValueFactory) : StoredProcedure {
     private val MOON_GRAVITATIONAL_CONSTANT = BigDecimal(1.622 / 9.81)
@@ -65,9 +66,8 @@ class CalculateCrewMoonWeight(private val valueFactory: ExprValueFactory) : Stor
         val crewBindings = sessionGlobals[BindingName(crewName.stringValue(), BindingCase.INSENSITIVE)]
             ?: return valueFactory.newInt(-1)
 
-        // Now that we've confirmed the given `crewName` is in the session's global bindings, we calculate and store
+        // Now that we've confirmed the given `crewName` is in the session's global bindings, we calculate and return
         // the moon weight for each crewmate in the crew.
-        // In addition, we keep a running a tally of how many crewmates we do this for.
         val result = mutableListOf<ExprValue>()
         for (crewmateBinding in crewBindings) {
             val nameBindingName = BindingName("name", BindingCase.INSENSITIVE)
