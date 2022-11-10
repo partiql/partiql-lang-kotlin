@@ -63,6 +63,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Functions related to conversions between ExprNode and PartiqlAst have been removed. 
   - Parser Tests no longer do round trip.
   - [PartiqlAstExprNodeRoundTripAdapter] has been removed.
+- Removes the deprecated SqlParser and SqlLexer
 - **Breaking**: Removes the `CallAgg` node from the Logical, LogicalResolved, and Physical plans
 
 ### Security

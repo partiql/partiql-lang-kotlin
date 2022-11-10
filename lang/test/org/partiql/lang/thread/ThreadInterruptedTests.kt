@@ -13,7 +13,6 @@ import org.partiql.lang.StepContext
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.eval.CompileOptions
 import org.partiql.lang.eval.visitors.VisitorTransformBase
-import org.partiql.lang.syntax.SqlParser
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.concurrent.thread
 
@@ -66,17 +65,6 @@ class ThreadInterruptedTests {
         t.interrupt()
         t.join(WAIT_FOR_THREAD_TERMINATION_MS)
         assertTrue(wasInterrupted.get(), "Thread should have been interrupted.")
-    }
-
-    @Test
-    fun parser() {
-        testThreadInterrupt {
-            val sqlParser = SqlParser(ion)
-            val endlessTokenList = EndlessTokenList(ion)
-            sqlParser.run {
-                endlessTokenList.parseExpression()
-            }
-        }
     }
 
     @Test

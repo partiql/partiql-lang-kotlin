@@ -12,6 +12,8 @@
  *  language governing permissions and limitations under the License.
  */
 
+@file:Suppress("DEPRECATION") // Don't need warnings about ExprNode deprecation.
+
 package org.partiql.lang.syntax
 
 import com.amazon.ion.IonSexp
@@ -20,7 +22,6 @@ import com.amazon.ionelement.api.SexpElement
 import com.amazon.ionelement.api.toIonElement
 import com.amazon.ionelement.api.toIonValue
 import org.partiql.lang.CUSTOM_TEST_TYPES
-import org.partiql.lang.ION
 import org.partiql.lang.TestBase
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.errors.ErrorCode
@@ -31,20 +32,11 @@ import org.partiql.lang.util.checkErrorAndErrorContext
 import org.partiql.lang.util.softAssert
 import org.partiql.pig.runtime.toIonElement
 
-abstract class SqlParserTestBase : TestBase() {
-    // Default Parser
+abstract class PartiQLParserTestBase : TestBase() {
+
     val parser = PartiQLParserBuilder().ionSystem(ion).customTypes(CUSTOM_TEST_TYPES).build()
 
     protected fun parse(source: String): PartiqlAst.Statement = parser.parseAstStatement(source)
-
-    enum class ParserTypes(val parser: Parser) {
-        SQL_PARSER(SqlParser(ION, CUSTOM_TEST_TYPES)),
-        PARTIQL_PARSER(PartiQLParser(ION, CUSTOM_TEST_TYPES))
-    }
-
-    companion object {
-        val defaultParserTypes = setOf(ParserTypes.SQL_PARSER, ParserTypes.PARTIQL_PARSER)
-    }
 
     private fun assertSexpEquals(
         expectedValue: IonValue,
@@ -54,34 +46,32 @@ abstract class SqlParserTestBase : TestBase() {
         if (!expectedValue.equals(actualValue)) {
             fail(
                 "Expected and actual values do not match: $message\n" +
-                    "Expected:\n${SexpAstPrettyPrinter.format(expectedValue)}\n" +
-                    "Actual:\n${SexpAstPrettyPrinter.format(actualValue)}"
+                        "Expected:\n${SexpAstPrettyPrinter.format(expectedValue)}\n" +
+                        "Actual:\n${SexpAstPrettyPrinter.format(actualValue)}"
             )
         }
     }
 
     /**
      * This method is used by test cases for parsing a string.
-     * The test are performed with PIG AST.
+     * The test are performed with only PIG AST.
      * The expected PIG AST is a string.
      */
     protected fun assertExpression(
         source: String,
         expectedPigAst: String,
-        targetParsers: Set<ParserTypes> = defaultParserTypes
+        roundTrip: Boolean = true
     ) {
-        targetParsers.forEach { parser ->
-            val actualStatement = parser.parser.parseAstStatement(source)
-            val expectedIonSexp = loadIonSexp(expectedPigAst)
+        val actualStatement = parser.parseAstStatement(source)
+        val expectedIonSexp = loadIonSexp(expectedPigAst)
 
-            // Check equals for actual value and expected value in IonSexp format
-            checkEqualInIonSexp(actualStatement, expectedIonSexp, source)
+        // Check equals for actual value and expected value in IonSexp format
+        checkEqualInIonSexp(actualStatement, expectedIonSexp, source)
 
-            val expectedElement = expectedIonSexp.toIonElement().asSexp()
+        val expectedElement = expectedIonSexp.toIonElement().asSexp()
 
-            // Perform checks for Pig AST. See the comments inside the function to see what checks are performed.
-            pigDomainAssert(actualStatement, expectedElement)
-        }
+        // Perform checks for Pig AST. See the comments inside the function to see what checks are performed.
+        pigDomainAssert(actualStatement, expectedElement)
     }
 
     /**
@@ -92,13 +82,12 @@ abstract class SqlParserTestBase : TestBase() {
      */
     protected fun assertExpressionNoRoundTrip(
         source: String,
-        targetParsers: Set<ParserTypes> = defaultParserTypes,
         expectedPigBuilder: PartiqlAst.Builder.() -> PartiqlAst.PartiqlAstNode
     ) {
         val expectedPigAst = PartiqlAst.build { expectedPigBuilder() }.toIonElement().toString()
 
         // Refer to comments inside the main body of the following function to see what checks are performed.
-        assertExpression(source, expectedPigAst, targetParsers = targetParsers)
+        assertExpression(source, expectedPigAst, roundTrip = false)
     }
 
     /**
@@ -108,13 +97,24 @@ abstract class SqlParserTestBase : TestBase() {
      */
     protected fun assertExpression(
         source: String,
-        targetParsers: Set<ParserTypes> = defaultParserTypes,
         expectedPigBuilder: PartiqlAst.Builder.() -> PartiqlAst.PartiqlAstNode
     ) {
         val expectedPigAst = PartiqlAst.build { expectedPigBuilder() }.toIonElement().toString()
 
         // Refer to comments inside the main body of the following function to see what checks are performed.
-        assertExpression(source, expectedPigAst, targetParsers)
+        assertExpression(source, expectedPigAst)
+    }
+
+    /**
+     * This method is used by test cases for parsing a string.
+     * The test are performed with PIG AST.
+     * The expected PIG AST is a string.
+     */
+    protected fun assertExpression(
+        source: String,
+        expectedPigAst: String,
+    ) {
+        assertExpression(source, expectedPigAst, roundTrip = true)
     }
 
     /**
@@ -169,20 +169,16 @@ abstract class SqlParserTestBase : TestBase() {
     protected fun checkInputThrowingParserException(
         input: String,
         errorCode: ErrorCode,
-        expectErrorContextValues: Map<Property, Any>,
-        targetParsers: Set<ParserTypes> = defaultParserTypes
+        expectErrorContextValues: Map<Property, Any>
     ) {
-
         softAssert {
-            targetParsers.forEach {
-                try {
-                    it.parser.parseAstStatement(input)
-                    fail("Expected ParserException but there was no Exception")
-                } catch (pex: ParserException) {
-                    checkErrorAndErrorContext(errorCode, pex, expectErrorContextValues)
-                } catch (ex: Exception) {
-                    fail("Expected ParserException but a different exception was thrown \n\t  $ex")
-                }
+            try {
+                parser.parseAstStatement(input)
+                fail("Expected ParserException but there was no Exception")
+            } catch (pex: ParserException) {
+                checkErrorAndErrorContext(errorCode, pex, expectErrorContextValues)
+            } catch (ex: Exception) {
+                fail("Expected ParserException but a different exception was thrown \n\t  $ex")
             }
         }
     }

@@ -4,7 +4,7 @@ import org.junit.Test
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.id
 
-class SqlParserCorrelatedJoinTests : SqlParserTestBase() {
+class PartiQLParserCorrelatedJoinTests : PartiQLParserTestBase() {
     private fun PartiqlAst.Builder.callFWithS() =
         call("f", id("s", caseInsensitive(), unqualified()))
 
