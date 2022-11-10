@@ -67,4 +67,3 @@ fun MetaContainer.find(tagName: String): Meta? = this[tagName] as Meta?
 fun MetaContainer.hasMeta(tagName: String) = this.containsKey(tagName)
 
 fun MetaContainer.add(meta: Meta): MetaContainer = this.plus(metaContainerOf(meta))
-
