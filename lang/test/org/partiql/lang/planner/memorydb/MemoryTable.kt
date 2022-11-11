@@ -1,7 +1,6 @@
 package org.partiql.lang.planner.memorydb
 
 import org.partiql.lang.ION
-import org.partiql.lang.ast.DeleteOp.name
 import org.partiql.lang.eval.BindingCase
 import org.partiql.lang.eval.BindingName
 import org.partiql.lang.eval.DEFAULT_COMPARATOR
@@ -47,7 +46,7 @@ class MemoryTable(
         val primaryKeyExprValue = row.extractPrimaryKey()
 
         if (rows.containsKey(primaryKeyExprValue)) {
-            error("Table '$name' already contains a row with the specified primary key ")
+            error("Table '${this.metadata.name}' already contains a row with the specified primary key ")
         } else {
             // We have to detatch the ExprValue from any lazily evaluated query that may get invoked
             // whenever the value is accessed.  To do this we convert to Ion, which forces full materialization,
@@ -68,8 +67,8 @@ class MemoryTable(
     }
 
     override fun iterator(): Iterator<ExprValue> =
-        // the call to .toList below is important to allow the table contents to be modified during query
-        // execution.  (Otherwise we will hit a ConcurrentModificationException in the case a DELETE FROM statement
+    // the call to .toList below is important to allow the table contents to be modified during query
+    // execution.  (Otherwise we will hit a ConcurrentModificationException in the case a DELETE FROM statement
         // is executed)
         rows.values.toList().iterator()
 }

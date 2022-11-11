@@ -8,6 +8,8 @@ import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.eval.CompileOptions
 import org.partiql.lang.eval.EvaluationSession
+import org.partiql.lang.eval.toIonValue
+import org.partiql.lang.syntax.SqlParser
 import java.io.PrintStream
 
 /**
@@ -68,7 +70,7 @@ private class PartialEvaluationVisitorTransform(val ion: IonSystem, val compileO
             transformedOps.all { it is PartiqlAst.Expr.Lit } -> {
                 val e = pipeline.compile(PartiqlAst.build { query(transformedNAry) })
                 val partiallyEvaluatedResult = e.eval(session)
-                PartiqlAst.build { lit(partiallyEvaluatedResult.ionValue.toIonElement(), metas) }
+                PartiqlAst.build { lit(partiallyEvaluatedResult.toIonValue(ion).toIonElement(), metas) }
             }
             else -> {
                 transformedNAry
