@@ -12,9 +12,6 @@
  *  language governing permissions and limitations under the License.
  */
 
-// We don't need warnings about deprecated ExprNode.
-@file:Suppress("DEPRECATION")
-
 package org.partiql.lang.eval
 
 import com.amazon.ion.IonType
@@ -26,7 +23,6 @@ import org.partiql.lang.SqlException
 import org.partiql.lang.TestBase
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.PropertyValueMap
-import org.partiql.lang.eval.evaluatortestframework.AstRewriterBaseTestAdapter
 import org.partiql.lang.eval.evaluatortestframework.CompilerPipelineFactory
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorErrorTestCase
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestAdapter
@@ -35,9 +31,9 @@ import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestTarget
 import org.partiql.lang.eval.evaluatortestframework.ExpectedResultFormat
 import org.partiql.lang.eval.evaluatortestframework.MultipleTestAdapter
 import org.partiql.lang.eval.evaluatortestframework.PartiQLCompilerPipelineFactory
-import org.partiql.lang.eval.evaluatortestframework.PartiqlAstExprNodeRoundTripAdapter
 import org.partiql.lang.eval.evaluatortestframework.PipelineEvaluatorTestAdapter
 import org.partiql.lang.eval.evaluatortestframework.PlannerPipelineFactory
+import org.partiql.lang.eval.evaluatortestframework.VisitorTransformBaseTestAdapter
 import org.partiql.lang.util.asSequence
 import org.partiql.lang.util.newFromIonText
 
@@ -50,8 +46,7 @@ abstract class EvaluatorTestBase : TestBase() {
             PipelineEvaluatorTestAdapter(CompilerPipelineFactory()),
             PipelineEvaluatorTestAdapter(PlannerPipelineFactory()),
             PipelineEvaluatorTestAdapter(PartiQLCompilerPipelineFactory()),
-            PartiqlAstExprNodeRoundTripAdapter(),
-            AstRewriterBaseTestAdapter()
+            VisitorTransformBaseTestAdapter()
         )
     )
 

@@ -24,10 +24,7 @@ class IsIonLiteralMetaTest {
     @Test
     fun testIonLiteralMetaPreserved() {
         val ion = IonSystemBuilder.standard().build()
-        @Suppress("DEPRECATION")
-        val ionLiteral = PartiQLParser(ion).parseExprNode("`1.0`")
+        val ionLiteral = PartiQLParser(ion).parseAstStatement("`1.0`")
         Assert.assertTrue(ionLiteral.metas.hasMeta(IsIonLiteralMeta.TAG))
-        val roundTrippedIonLiteral = ionLiteral.toAstStatement().toExprNode(ion)
-        Assert.assertTrue(roundTrippedIonLiteral.metas.hasMeta(IsIonLiteralMeta.TAG))
     }
 }

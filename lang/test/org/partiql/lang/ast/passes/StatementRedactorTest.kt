@@ -4,9 +4,9 @@ import com.amazon.ionelement.api.StringElement
 import junitparams.Parameters
 import org.junit.Test
 import org.partiql.lang.domains.PartiqlAst
-import org.partiql.lang.syntax.SqlParserTestBase
+import org.partiql.lang.syntax.PartiQLParserTestBase
 
-class StatementRedactorTest : SqlParserTestBase() {
+class StatementRedactorTest : PartiQLParserTestBase() {
     private val testSafeFieldNames = setOf("hk", "rk")
 
     data class RedactionTestCase(val originalStatement: String, val redactedStatement: String)

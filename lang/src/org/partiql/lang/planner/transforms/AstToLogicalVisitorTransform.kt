@@ -1,12 +1,14 @@
 package org.partiql.lang.planner.transforms
 
 import com.amazon.ionelement.api.emptyMetaContainer
+import com.amazon.ionelement.api.ionString
 import com.amazon.ionelement.api.ionSymbol
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.PartiqlAstToPartiqlLogicalVisitorTransform
 import org.partiql.lang.domains.PartiqlLogical
 import org.partiql.lang.errors.Problem
 import org.partiql.lang.errors.ProblemHandler
+import org.partiql.lang.eval.builtins.CollectionAggregationFunction
 import org.partiql.lang.eval.physical.sourceLocationMetaOrUnknown
 import org.partiql.lang.eval.visitors.VisitorTransformBase
 import org.partiql.lang.planner.PlanningProblemDetails
@@ -65,6 +67,18 @@ internal class AstToLogicalVisitorTransform(
             is PartiqlAst.SetQuantifier.Distinct -> call("filter_distinct", expr)
             else -> expr
         }
+    }
+
+    // This transformation is used for top-level expression transformations and for the SFW clauses prior to the
+    //  `aggregation` relational algebra operator.
+    override fun transformExprCallAgg(node: PartiqlAst.Expr.CallAgg): PartiqlLogical.Expr = PartiqlLogical.build {
+        call(
+            "${CollectionAggregationFunction.collectionAggregationPrefix}${node.funcName.text}",
+            listOf(
+                lit(ionString(node.setq.javaClass.simpleName.toLowerCase())),
+                transformExpr(node.arg)
+            )
+        )
     }
 
     /**
@@ -493,6 +507,10 @@ private class CallAggregationsProjectionReplacer(var level: Int = 0) : VisitorTr
 
     override fun transformExprSelect_having(node: PartiqlAst.Expr.Select): PartiqlAst.Expr? = node.having?.let { having ->
         callAggregationVisitorTransform.transformExpr(having)
+    }
+
+    override fun transformSortSpec_expr(node: PartiqlAst.SortSpec): PartiqlAst.Expr {
+        return callAggregationVisitorTransform.transformExpr(node.expr)
     }
 
     override fun transformExprSelect(node: PartiqlAst.Expr.Select): PartiqlAst.Expr {

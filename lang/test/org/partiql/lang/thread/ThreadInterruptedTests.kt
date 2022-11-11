@@ -1,6 +1,4 @@
 
-@file:Suppress("DEPRECATION") // Don't need warnings about ExprNode deprecation.
-
 package org.partiql.lang.thread
 
 import com.amazon.ion.system.IonSystemBuilder
@@ -12,21 +10,9 @@ import org.junit.jupiter.api.parallel.ExecutionMode
 import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.CompilerPipelineImpl
 import org.partiql.lang.StepContext
-import org.partiql.lang.ast.CaseSensitivity
-import org.partiql.lang.ast.NAry
-import org.partiql.lang.ast.NAryOp
-import org.partiql.lang.ast.ScopeQualifier
-import org.partiql.lang.ast.VariableReference
-import org.partiql.lang.ast.passes.AstRewriterBase
-import org.partiql.lang.ast.passes.AstVisitor
-import org.partiql.lang.ast.passes.AstWalker
-import org.partiql.lang.ast.toAstExpr
-import org.partiql.lang.ast.toExprNode
 import org.partiql.lang.domains.PartiqlAst
-import org.partiql.lang.domains.metaContainerOf
 import org.partiql.lang.eval.CompileOptions
 import org.partiql.lang.eval.visitors.VisitorTransformBase
-import org.partiql.lang.syntax.SqlParser
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.concurrent.thread
 
@@ -48,8 +34,6 @@ const val WAIT_FOR_THREAD_TERMINATION_MS: Long = 1000
 @Execution(ExecutionMode.SAME_THREAD)
 class ThreadInterruptedTests {
     private val ion = IonSystemBuilder.standard().build()
-    private val reallyBigNAry = makeBigExprNode(20000000)
-    private val bigNAry = makeBigExprNode(10000000)
     private val bigPartiqlAst = makeBigPartiqlAstExpr(10000000)
 
     /**
@@ -59,16 +43,6 @@ class ThreadInterruptedTests {
      */
     class FakeList<T>(override val size: Int, private val item: T) : AbstractList<T>() {
         override fun get(index: Int): T = item
-    }
-
-    private fun makeBigExprNode(n: Int): NAry {
-        val emptyMetas = metaContainerOf()
-        val variableA = VariableReference("a", CaseSensitivity.INSENSITIVE, ScopeQualifier.UNQUALIFIED, emptyMetas)
-        return NAry(
-            NAryOp.ADD,
-            FakeList(n, variableA),
-            emptyMetas
-        )
     }
 
     private fun makeBigPartiqlAstExpr(n: Int): PartiqlAst.Expr =
@@ -91,56 +65,6 @@ class ThreadInterruptedTests {
         t.interrupt()
         t.join(WAIT_FOR_THREAD_TERMINATION_MS)
         assertTrue(wasInterrupted.get(), "Thread should have been interrupted.")
-    }
-
-    @Test
-    fun parser() {
-        testThreadInterrupt {
-            val sqlParser = SqlParser(ion)
-            val endlessTokenList = EndlessTokenList(ion)
-            sqlParser.run {
-                endlessTokenList.parseExpression()
-            }
-        }
-    }
-
-    @Test
-    fun astChildIterator() {
-        testThreadInterrupt {
-            @Suppress("DEPRECATION")
-            reallyBigNAry.iterator()
-        }
-    }
-
-    @Test
-    fun astWalker() {
-        val walker = AstWalker(object : AstVisitor {})
-        testThreadInterrupt {
-            walker.walk(reallyBigNAry)
-        }
-    }
-
-    @Test
-    fun partiqlAstToExprNode() {
-        testThreadInterrupt {
-            reallyBigNAry.toAstExpr()
-        }
-    }
-
-    @Test
-    fun astToPartiqlAst() {
-        testThreadInterrupt {
-            bigPartiqlAst.toExprNode(ion)
-        }
-    }
-
-    @Test
-    fun astRewriterBase() {
-        @Suppress("DEPRECATION")
-        val identityRewriter = AstRewriterBase()
-        testThreadInterrupt {
-            identityRewriter.rewriteExprNode(reallyBigNAry)
-        }
     }
 
     @Test

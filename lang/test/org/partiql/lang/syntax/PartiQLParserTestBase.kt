@@ -22,12 +22,7 @@ import com.amazon.ionelement.api.SexpElement
 import com.amazon.ionelement.api.toIonElement
 import com.amazon.ionelement.api.toIonValue
 import org.partiql.lang.CUSTOM_TEST_TYPES
-import org.partiql.lang.ION
 import org.partiql.lang.TestBase
-import org.partiql.lang.ast.ExprNode
-import org.partiql.lang.ast.passes.MetaStrippingRewriter
-import org.partiql.lang.ast.toAstStatement
-import org.partiql.lang.ast.toExprNode
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
@@ -37,20 +32,11 @@ import org.partiql.lang.util.checkErrorAndErrorContext
 import org.partiql.lang.util.softAssert
 import org.partiql.pig.runtime.toIonElement
 
-abstract class SqlParserTestBase : TestBase() {
-    // Default Parser
+abstract class PartiQLParserTestBase : TestBase() {
+
     val parser = PartiQLParserBuilder().ionSystem(ion).customTypes(CUSTOM_TEST_TYPES).build()
 
     protected fun parse(source: String): PartiqlAst.Statement = parser.parseAstStatement(source)
-
-    enum class ParserTypes(val parser: Parser) {
-        SQL_PARSER(SqlParser(ION, CUSTOM_TEST_TYPES)),
-        PARTIQL_PARSER(PartiQLParser(ION, CUSTOM_TEST_TYPES))
-    }
-
-    companion object {
-        val defaultParserTypes = setOf(ParserTypes.SQL_PARSER, ParserTypes.PARTIQL_PARSER)
-    }
 
     private fun assertSexpEquals(
         expectedValue: IonValue,
@@ -68,80 +54,38 @@ abstract class SqlParserTestBase : TestBase() {
 
     /**
      * This method is used by test cases for parsing a string.
-     * The test are performed with only PIG AST.
-     * The expected PIG AST is a string.
-     */
-    protected fun assertExpression(
-        source: String,
-        expectedPigAst: String,
-        roundTrip: Boolean = true,
-        targetParsers: Set<ParserTypes> = defaultParserTypes
-    ) {
-        targetParsers.forEach { parser ->
-            val actualStatement = parser.parser.parseAstStatement(source)
-            val expectedIonSexp = loadIonSexp(expectedPigAst)
-
-            // Check equals for actual value and expected value in IonSexp format
-            checkEqualInIonSexp(actualStatement, expectedIonSexp, source)
-
-            val expectedElement = expectedIonSexp.toIonElement().asSexp()
-
-            // Perform checks for Pig AST. See the comments inside the function to see what checks are performed.
-            pigDomainAssert(actualStatement, expectedElement)
-
-            // Check equals for actual value after round trip transformation: astStatement -> ExprNode -> astStatement
-            if (roundTrip) {
-                assertRoundTripPigAstToExprNode(actualStatement)
-            }
-        }
-    }
-
-    /**
-     * This method is used by test cases for parsing a string.
-     * The test are performed with only PIG AST.
-     * The expected PIG AST is a PIG builder.
-     * No ExprNode <-> PIG AST round trip is performed.
-     */
-    protected fun assertExpressionNoRoundTrip(
-        source: String,
-        targetParsers: Set<ParserTypes> = defaultParserTypes,
-        expectedPigBuilder: PartiqlAst.Builder.() -> PartiqlAst.PartiqlAstNode
-    ) {
-        val expectedPigAst = PartiqlAst.build { expectedPigBuilder() }.toIonElement().toString()
-
-        // Refer to comments inside the main body of the following function to see what checks are performed.
-        assertExpression(source, expectedPigAst, roundTrip = false, targetParsers = targetParsers)
-    }
-
-    /**
-     * This method is used by test cases for parsing a string.
-     * The test are performed with only PIG AST.
-     * The expected PIG AST is a PIG builder.
-     */
-    protected fun assertExpression(
-        source: String,
-        targetParsers: Set<ParserTypes> = defaultParserTypes,
-        expectedPigBuilder: PartiqlAst.Builder.() -> PartiqlAst.PartiqlAstNode
-    ) {
-        val expectedPigAst = PartiqlAst.build { expectedPigBuilder() }.toIonElement().toString()
-
-        // Refer to comments inside the main body of the following function to see what checks are performed.
-        assertExpression(source, expectedPigAst, roundTrip = true, targetParsers)
-    }
-
-    /**
-     * This method is used by test cases for parsing a string.
      * The test are performed with PIG AST.
      * The expected PIG AST is a string.
      */
     protected fun assertExpression(
         source: String,
         expectedPigAst: String,
-        targetParsers: Set<ParserTypes> = defaultParserTypes
     ) {
-        targetParsers.forEach { _ ->
-            assertExpression(source, expectedPigAst, roundTrip = true, targetParsers = targetParsers)
-        }
+        val actualStatement = parser.parseAstStatement(source)
+        val expectedIonSexp = loadIonSexp(expectedPigAst)
+
+        // Check equals for actual value and expected value in IonSexp format
+        checkEqualInIonSexp(actualStatement, expectedIonSexp, source)
+
+        val expectedElement = expectedIonSexp.toIonElement().asSexp()
+
+        // Perform checks for Pig AST. See the comments inside the function to see what checks are performed.
+        pigDomainAssert(actualStatement, expectedElement)
+    }
+
+    /**
+     * This method is used by test cases for parsing a string.
+     * The test are performed with only PIG AST.
+     * The expected PIG AST is a PIG builder.
+     */
+    protected fun assertExpression(
+        source: String,
+        expectedPigBuilder: PartiqlAst.Builder.() -> PartiqlAst.PartiqlAstNode
+    ) {
+        val expectedPigAst = PartiqlAst.build { expectedPigBuilder() }.toIonElement().toString()
+
+        // Refer to comments inside the main body of the following function to see what checks are performed.
+        assertExpression(source, expectedPigAst)
     }
 
     /**
@@ -191,32 +135,21 @@ abstract class SqlParserTestBase : TestBase() {
     private fun assertRoundTripPigAstToSexpElement(actualStatement: PartiqlAst.Statement) =
         assertEquals(actualStatement, PartiqlAst.transform(actualStatement.toIonElement()) as PartiqlAst.Statement)
 
-    /**
-     * Check equal after transformation: PIG AST -> ExprNode -> PIG AST
-     */
-    private fun assertRoundTripPigAstToExprNode(actualStatement: PartiqlAst.Statement) =
-        assertEquals(actualStatement, actualStatement.toExprNode(ion).toAstStatement())
-
     private fun loadIonSexp(expectedSexpAst: String) = ion.singleValue(expectedSexpAst).asIonSexp()
-    private fun ExprNode.stripMetas() = MetaStrippingRewriter.stripMetas(this)
 
     protected fun checkInputThrowingParserException(
         input: String,
         errorCode: ErrorCode,
-        expectErrorContextValues: Map<Property, Any>,
-        targetParsers: Set<ParserTypes> = defaultParserTypes
+        expectErrorContextValues: Map<Property, Any>
     ) {
-
         softAssert {
-            targetParsers.forEach {
-                try {
-                    it.parser.parseAstStatement(input)
-                    fail("Expected ParserException but there was no Exception")
-                } catch (pex: ParserException) {
-                    checkErrorAndErrorContext(errorCode, pex, expectErrorContextValues)
-                } catch (ex: Exception) {
-                    fail("Expected ParserException but a different exception was thrown \n\t  $ex")
-                }
+            try {
+                parser.parseAstStatement(input)
+                fail("Expected ParserException but there was no Exception")
+            } catch (pex: ParserException) {
+                checkErrorAndErrorContext(errorCode, pex, expectErrorContextValues)
+            } catch (ex: Exception) {
+                fail("Expected ParserException but a different exception was thrown \n\t  $ex")
             }
         }
     }

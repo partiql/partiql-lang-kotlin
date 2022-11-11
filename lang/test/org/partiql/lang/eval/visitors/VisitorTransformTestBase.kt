@@ -21,10 +21,10 @@ import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestFailureReason
 import org.partiql.lang.eval.evaluatortestframework.assertThrowsSqlException
 import org.partiql.lang.syntax.PartiQLParserBuilder
-import org.partiql.lang.syntax.SqlParserTestBase
+import org.partiql.lang.syntax.PartiQLParserTestBase
 
 /** Provides some basic functionality for parameterized testing implementation of [PartiqlAst.VisitorTransform]. */
-abstract class VisitorTransformTestBase : SqlParserTestBase() {
+abstract class VisitorTransformTestBase : PartiQLParserTestBase() {
 
     class TransformTestCase() {
         val parser = PartiQLParserBuilder.standard().build()

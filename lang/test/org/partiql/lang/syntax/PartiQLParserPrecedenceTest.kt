@@ -20,7 +20,7 @@ import junitparams.naming.TestCaseName
 import org.junit.Test
 import org.partiql.lang.domains.PartiqlAst
 
-class SqlParserPrecedenceTest : SqlParserTestBase() {
+class PartiQLParserPrecedenceTest : PartiQLParserTestBase() {
 
     @Test
     @Parameters
@@ -983,50 +983,10 @@ class SqlParserPrecedenceTest : SqlParserTestBase() {
         /* (not, is_not)        */ "not a is not boolean" to "(not (not (is_type (id a (case_insensitive) (unqualified)) (boolean_type))))"
     )
 
-    @Test
     @Parameters
     @TestCaseName("{0}")
-    fun notComboPrecedence(pair: Pair<String, String>) = runTest(pair, targetParsers = setOf(ParserTypes.SQL_PARSER))
+    fun notComboPrecedence(pair: Pair<String, String>) = runTest(pair)
     fun parametersForNotComboPrecedence() = listOf(
-        // not combination
-        "not a and b or c and not d or not e" to """
-            (or
-                (or
-                    (and
-                        (not (id a (case_insensitive) (unqualified)))
-                        (id b (case_insensitive) (unqualified))
-                    )
-                    (and
-                        (id c (case_insensitive) (unqualified))
-                        (not (id d (case_insensitive) (unqualified)))
-                    )
-                )
-                (not (id e (case_insensitive) (unqualified)))
-            )""",
-
-        // pos and neg
-        "- a + b" to "(plus (neg (id a (case_insensitive) (unqualified))) (id b (case_insensitive) (unqualified)) )",
-
-        "(a+-5e0) and (c-+7.0)" to """
-            (and
-                (plus (id a (case_insensitive) (unqualified)) (lit -5.) )
-                (minus (id c (case_insensitive) (unqualified)) (lit 7.0) )
-            )""",
-
-        "d*-+-9 and e>=+-+foo" to """
-            (and
-                (times (id d (case_insensitive) (unqualified)) (lit 9) )
-                (gte
-                    (id e (case_insensitive) (unqualified))
-                    (pos (neg (pos (id foo (case_insensitive) (unqualified)))))
-                )
-            )"""
-    )
-
-    @Parameters
-    @TestCaseName("{0}")
-    fun notComboPrecedencePartiQL(pair: Pair<String, String>) = runTest(pair, targetParsers = setOf(ParserTypes.PARTIQL_PARSER))
-    fun parametersForNotComboPrecedencePartiQL() = listOf(
         // not combination
         "not a and b or c and not d or not e" to """
             (or
@@ -1062,55 +1022,10 @@ class SqlParserPrecedenceTest : SqlParserTestBase() {
             )"""
     )
 
-    /**
-     * TODO: These are all the wrong precedences. SqlParser has the wrong precedence and needs to be fixed to match the
-     *  PartiQLParser results further below.
-     */
     @Test
     @Parameters
     @TestCaseName("{0}")
-    fun sqlOnly(pair: Pair<String, String>) = runTest(pair, targetParsers = setOf(ParserTypes.SQL_PARSER))
-    fun parametersForSqlOnly() = listOf(
-        /* (||, +)                      */ "a || b + c" to "(plus (concat (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (id c (case_insensitive) (unqualified)))",
-        /* (||, -)                      */ "a || b - c" to "(minus (concat (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (id c (case_insensitive) (unqualified)))",
-        /* (not (in, <)                  */ "a not in b < c" to "(not (in_collection (id a (case_insensitive) (unqualified)) (lt (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified)))))",
-        /* (not (in, <=)                 */ "a not in b <= c" to "(not (in_collection (id a (case_insensitive) (unqualified)) (lte (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified)))))",
-        /* (not (in, >)                  */ "a not in b > c" to "(not (in_collection (id a (case_insensitive) (unqualified)) (gt (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified)))))",
-        /* (not (in, >=)                 */ "a not in b >= c" to "(not (in_collection (id a (case_insensitive) (unqualified)) (gte (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified)))))",
-        /* (not (in, between)            */ "a not in b between w and c" to "(not (in_collection (id a (case_insensitive) (unqualified)) (between (id b (case_insensitive) (unqualified)) (id w (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified)))))",
-        /* (not (in, not_between)        */ "a not in b not between y and c" to "(not (in_collection (id a (case_insensitive) (unqualified)) (not (between (id b (case_insensitive) (unqualified)) (id y (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))))",
-        /* (not (in, like)               */ "a not in b like c" to "(not (in_collection (id a (case_insensitive) (unqualified)) (like (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified)) null)))",
-        /* (not (in, not_like)           */ "a not in b not like c" to "(not (in_collection (id a (case_insensitive) (unqualified)) (not (like (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified)) null))))",
-        /* (in, <)                      */ "a in b < c" to "(in_collection (id a (case_insensitive) (unqualified)) (lt (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
-        /* (in, <=)                     */ "a in b <= c" to "(in_collection (id a (case_insensitive) (unqualified)) (lte (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
-        /* (in, >)                      */ "a in b > c" to "(in_collection (id a (case_insensitive) (unqualified)) (gt (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
-        /* (in, >=)                     */ "a in b >= c" to "(in_collection (id a (case_insensitive) (unqualified)) (gte (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
-        /* (in, between)                */ "a in b between w and c" to "(in_collection (id a (case_insensitive) (unqualified)) (between (id b (case_insensitive) (unqualified)) (id w (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
-        /* (in, not_between)            */ "a in b not between y and c" to "(in_collection (id a (case_insensitive) (unqualified)) (not (between (id b (case_insensitive) (unqualified)) (id y (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified)))))",
-        /* (in, like)                   */ "a in b like c" to "(in_collection (id a (case_insensitive) (unqualified)) (like (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified)) null))",
-        /* (in, not_like)               */ "a in b not like c" to "(in_collection (id a (case_insensitive) (unqualified)) (not (like (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified)) null)))",
-        /* (<>, <)                      */ "a <> b < c" to "(ne (id a (case_insensitive) (unqualified)) (lt (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
-        /* (<>, <=)                     */ "a <> b <= c" to "(ne (id a (case_insensitive) (unqualified)) (lte (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
-        /* (<>, >)                      */ "a <> b > c" to "(ne (id a (case_insensitive) (unqualified)) (gt (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
-        /* (<>, >=)                     */ "a <> b >= c" to "(ne (id a (case_insensitive) (unqualified)) (gte (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
-        /* (<>, between)                */ "a <> b between w and c" to "(ne (id a (case_insensitive) (unqualified)) (between (id b (case_insensitive) (unqualified)) (id w (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
-        /* (<>, not_between)            */ "a <> b not between y and c" to "(ne (id a (case_insensitive) (unqualified)) (not (between (id b (case_insensitive) (unqualified)) (id y (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified)))))",
-        /* (<>, like)                   */ "a <> b like c" to "(ne (id a (case_insensitive) (unqualified)) (like (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified)) null))",
-        /* (<>, not_like)               */ "a <> b not like c" to "(ne (id a (case_insensitive) (unqualified)) (not (like (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified)) null)))",
-        /* (=, <)                       */ "a = b < c" to "(eq (id a (case_insensitive) (unqualified)) (lt (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
-        /* (=, <=)                      */ "a = b <= c" to "(eq (id a (case_insensitive) (unqualified)) (lte (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
-        /* (=, >)                       */ "a = b > c" to "(eq (id a (case_insensitive) (unqualified)) (gt (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
-        /* (=, >=)                      */ "a = b >= c" to "(eq (id a (case_insensitive) (unqualified)) (gte (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
-        /* (=, between)                 */ "a = b between w and c" to "(eq (id a (case_insensitive) (unqualified)) (between (id b (case_insensitive) (unqualified)) (id w (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
-        /* (=, not_between)             */ "a = b not between y and c" to "(eq (id a (case_insensitive) (unqualified)) (not (between (id b (case_insensitive) (unqualified)) (id y (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified)))))",
-        /* (=, like)                    */ "a = b like c" to "(eq (id a (case_insensitive) (unqualified)) (like (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified)) null))",
-        /* (=, not_like)                */ "a = b not like c" to "(eq (id a (case_insensitive) (unqualified)) (not (like (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified)) null)))",
-    )
-
-    @Test
-    @Parameters
-    @TestCaseName("{0}")
-    fun partiQLOnly(pair: Pair<String, String>) = runTest(pair, targetParsers = setOf(ParserTypes.PARTIQL_PARSER))
+    fun partiQLOnly(pair: Pair<String, String>) = runTest(pair)
     fun parametersForPartiQLOnly() = listOf(
         /* (||, +)                      */ "a || b + c" to "(concat (id a (case_insensitive) (unqualified)) (plus (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
         /* (||, -)                      */ "a || b - c" to "(concat (id a (case_insensitive) (unqualified)) (minus (id b (case_insensitive) (unqualified)) (id c (case_insensitive) (unqualified))))",
@@ -1148,15 +1063,11 @@ class SqlParserPrecedenceTest : SqlParserTestBase() {
         /* (=, not_like)                */ "a = b not like c" to "(not (like (eq (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified))) (id c (case_insensitive) (unqualified)) null))",
     )
 
-    /**
-     * TODO: These tests that currently parse with the SqlParser should NOT be able to be parsed. Similar to PartiQLParser,
-     *  the SqlParser SHOULD fail on parse.
-     */
     @Test
     @Parameters
     @TestCaseName("{0}")
-    fun noLongerAllowedInPartiQL(pair: Pair<String, String>) = runTestMixedResults(pair, failParsers = setOf(ParserTypes.PARTIQL_PARSER), passParsers = setOf(ParserTypes.SQL_PARSER))
-    fun parametersForNoLongerAllowedInPartiQL() = listOf(
+    fun failureCases(pair: Pair<String, String>) = assertFailure(pair)
+    fun parametersForFailureCases() = listOf(
         /* (is, +)                      */ "a is boolean + c" to "(plus (is_type (id a (case_insensitive) (unqualified)) (boolean_type)) (id c (case_insensitive) (unqualified)))",
         /* (is, -)                      */ "a is boolean - c" to "(minus (is_type (id a (case_insensitive) (unqualified)) (boolean_type)) (id c (case_insensitive) (unqualified)))",
         /* (is, ||)                     */ "a is boolean || c" to "(concat (is_type (id a (case_insensitive) (unqualified)) (boolean_type)) (id c (case_insensitive) (unqualified)))",
@@ -1171,36 +1082,22 @@ class SqlParserPrecedenceTest : SqlParserTestBase() {
         /* (not (is, %)                  */ "a is not boolean % c" to "(modulo (not (is_type (id a (case_insensitive) (unqualified)) (boolean_type))) (id c (case_insensitive) (unqualified)))",
     )
 
-    private fun runTest(pair: Pair<String, String>, targetParsers: Set<ParserTypes> = defaultParserTypes) {
+    private fun runTest(pair: Pair<String, String>) {
         val (source, expectedAst) = pair
 
         val expectedExpr = PartiqlAst.transform(ion.singleValue(expectedAst).toIonElement()) as PartiqlAst.Expr
         val expectedStatement = PartiqlAst.build { query(expectedExpr) }
 
-        targetParsers.forEach { parser ->
-            val actualStatement = parser.parser.parseAstStatement(source)
-            assertEquals(expectedStatement, actualStatement)
-        }
+        val actualStatement = parser.parseAstStatement(source)
+        assertEquals(expectedStatement, actualStatement)
     }
 
-    /**
-     * Tests where functionality should not exist for the [failParsers] but should exist for the [passParsers]
-     */
-    private fun runTestMixedResults(pair: Pair<String, String>, passParsers: Set<ParserTypes>, failParsers: Set<ParserTypes>) {
+    private fun assertFailure(pair: Pair<String, String>) {
         val (source, expectedAst) = pair
-
         val expectedExpr = PartiqlAst.transform(ion.singleValue(expectedAst).toIonElement()) as PartiqlAst.Expr
         val expectedStatement = PartiqlAst.build { query(expectedExpr) }
-
-        passParsers.forEach { parser ->
-            val actualStatement = parser.parser.parseAstStatement(source)
-            assertEquals(expectedStatement, actualStatement)
-        }
-
-        failParsers.forEach { parser ->
-            assertThrows(ParserException::class.java) {
-                parser.parser.parseAstStatement(source)
-            }
+        assertThrows(ParserException::class.java) {
+            parser.parseAstStatement(source)
         }
     }
 }

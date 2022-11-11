@@ -1,3 +1,5 @@
+# This Doc covers the ExprNode AST, which has been deprecated and removed from the Codebase. 
+
 # Introduction to the ExprNode AST
 
 It seems the term "AST" is often extended to mean more things than just "Abstract Syntax Tree" and our use of the term

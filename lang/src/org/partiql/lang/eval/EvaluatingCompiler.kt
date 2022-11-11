@@ -12,10 +12,10 @@
  *  language governing permissions and limitations under the License.
  */
 
-@file:Suppress("DEPRECATION") // We don't need warnings about ExprNode deprecation.
-
 package org.partiql.lang.eval
 
+import com.amazon.ion.IntegerSize
+import com.amazon.ion.IonInt
 import com.amazon.ion.IonString
 import com.amazon.ion.IonValue
 import com.amazon.ion.Timestamp
@@ -24,14 +24,11 @@ import com.amazon.ionelement.api.ionBool
 import com.amazon.ionelement.api.toIonValue
 import org.partiql.lang.ast.AggregateCallSiteListMeta
 import org.partiql.lang.ast.AggregateRegisterIdMeta
-import org.partiql.lang.ast.ExprNode
-import org.partiql.lang.ast.IonElementMetaContainer
 import org.partiql.lang.ast.IsCountStarMeta
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.ast.UniqueNameMeta
 import org.partiql.lang.ast.find
 import org.partiql.lang.ast.sourceLocation
-import org.partiql.lang.ast.toAstStatement
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.domains.staticType
@@ -71,6 +68,7 @@ import org.partiql.lang.util.rem
 import org.partiql.lang.util.stringValue
 import org.partiql.lang.util.take
 import org.partiql.lang.util.times
+import org.partiql.lang.util.timestampValue
 import org.partiql.lang.util.totalMinutes
 import org.partiql.lang.util.unaryMinus
 import org.partiql.pig.runtime.SymbolPrimitive
@@ -221,7 +219,7 @@ internal class EvaluatingCompiler(
             fun checkIsNumberType(funcName: String, value: ExprValue) {
                 if (!value.type.isNumber) {
                     errNoContext(
-                        message = "Aggregate function $funcName expects arguments of NUMBER type but the following value was provided: $value, with type of ${value.type}",
+                        message = "Aggregate function $funcName expects arguments of NUMBER type but the following value was provided: ${value.ionValue}, with type of ${value.type}",
                         errorCode = ErrorCode.EVALUATOR_INVALID_ARGUMENTS_FOR_AGG_FUNCTION,
                         internal = false
                     )
@@ -297,9 +295,6 @@ internal class EvaluatingCompiler(
                 }
             )
         }
-
-    @Deprecated("ExprNode is deprecated. Please use PIG generated AST. ")
-    fun compile(exprNode: ExprNode): Expression = compile(exprNode.toAstStatement())
 
     /**
      * Compiles a [PartiqlAst.Statement] tree to an [Expression].
@@ -1418,7 +1413,7 @@ internal class EvaluatingCompiler(
                     // Short-circuit timestamp -> date roundtrip if precision isn't [Timestamp.Precision.DAY] or
                     //   [Timestamp.Precision.MONTH] or [Timestamp.Precision.YEAR]
                     ExprValueType.TIMESTAMP -> when (typedOpParameter.staticType) {
-                        StaticType.DATE -> when (sourceValue.timestampValue().precision) {
+                        StaticType.DATE -> when (sourceValue.ionValue.timestampValue().precision) {
                             Timestamp.Precision.DAY, Timestamp.Precision.MONTH, Timestamp.Precision.YEAR -> roundTrip()
                             else -> valueFactory.newBoolean(false)
                         }
@@ -1603,16 +1598,24 @@ internal class EvaluatingCompiler(
             )
         }
 
-        val originalLimitValue = limitExprValue.numberValue()
-        val limitValue = originalLimitValue.toLong()
-        if (originalLimitValue != limitValue as Number) { // Make sure `Number.toLong()` is a lossless transformation
+        // `Number.toLong()` (used below) does *not* cause an overflow exception if the underlying [Number]
+        // implementation (i.e. Decimal or BigInteger) exceeds the range that can be represented by Longs.
+        // This can cause very confusing behavior if the user specifies a LIMIT value that exceeds
+        // Long.MAX_VALUE, because no results will be returned from their query.  That no overflow exception
+        // is thrown is not a problem as long as PartiQL's restriction of integer values to +/- 2^63 remains.
+        // We throw an exception here if the value exceeds the supported range (say if we change that
+        // restriction or if a custom [ExprValue] is provided which exceeds that value).
+        val limitIonValue = limitExprValue.ionValue as IonInt
+        if (limitIonValue.integerSize == IntegerSize.BIG_INTEGER) {
             err(
-                "Too large integer provided as LIMIT value",
+                "IntegerSize.BIG_INTEGER not supported for LIMIT values",
                 ErrorCode.INTERNAL_ERROR,
                 errorContextFrom(limitLocationMeta),
                 internal = true
             )
         }
+
+        val limitValue = limitExprValue.numberValue().toLong()
 
         if (limitValue < 0) {
             err(
@@ -1642,16 +1645,24 @@ internal class EvaluatingCompiler(
             )
         }
 
-        val originalOffsetValue = offsetExprValue.numberValue()
-        val offsetValue = originalOffsetValue.toLong()
-        if (originalOffsetValue != offsetValue as Number) { // Make sure `Number.toLong()` is a lossless transformation
+        // `Number.toLong()` (used below) does *not* cause an overflow exception if the underlying [Number]
+        // implementation (i.e. Decimal or BigInteger) exceeds the range that can be represented by Longs.
+        // This can cause very confusing behavior if the user specifies a OFFSET value that exceeds
+        // Long.MAX_VALUE, because no results will be returned from their query.  That no overflow exception
+        // is thrown is not a problem as long as PartiQL's restriction of integer values to +/- 2^63 remains.
+        // We throw an exception here if the value exceeds the supported range (say if we change that
+        // restriction or if a custom [ExprValue] is provided which exceeds that value).
+        val offsetIonValue = offsetExprValue.ionValue as IonInt
+        if (offsetIonValue.integerSize == IntegerSize.BIG_INTEGER) {
             err(
-                "Too large integer provided as OFFSET value",
+                "IntegerSize.BIG_INTEGER not supported for OFFSET values",
                 ErrorCode.INTERNAL_ERROR,
                 errorContextFrom(offsetLocationMeta),
                 internal = true
             )
         }
+
+        val offsetValue = offsetExprValue.numberValue().toLong()
 
         if (offsetValue < 0) {
             err(
@@ -2249,7 +2260,7 @@ internal class EvaluatingCompiler(
             asName: String?,
             atName: String?,
             byName: String?,
-            metas: IonElementMetaContainer
+            metas: MetaContainer
         ) {
             sources.add(
                 CompiledFromSource(
@@ -2638,15 +2649,15 @@ internal class EvaluatingCompiler(
                         "LIKE expression must be given non-null strings as input",
                         ErrorCode.EVALUATOR_LIKE_INVALID_INPUTS,
                         errorContextFrom(metas).also {
-                            it[Property.LIKE_PATTERN] = pattern.toString()
-                            if (escape != null) it[Property.LIKE_ESCAPE] = escape.toString()
+                            it[Property.LIKE_PATTERN] = pattern.ionValue.toString()
+                            if (escape != null) it[Property.LIKE_ESCAPE] = escape.ionValue.toString()
                         },
                         internal = false
                     )
                 }
                 else -> {
                     val (patternString: String, escapeChar: Int?) =
-                        checkPattern(pattern.stringValue(), patternLocationMeta, escape?.stringValue(), escapeLocationMeta)
+                        checkPattern(pattern.ionValue, patternLocationMeta, escape?.ionValue, escapeLocationMeta)
                     val likeRegexPattern = when {
                         patternString.isEmpty() -> Pattern.compile("")
                         else -> parsePattern(patternString, escapeChar)
@@ -2663,7 +2674,7 @@ internal class EvaluatingCompiler(
                     "LIKE expression must be given non-null strings as input",
                     ErrorCode.EVALUATOR_LIKE_INVALID_INPUTS,
                     errorContextFrom(metas).also {
-                        it[Property.LIKE_VALUE] = value.toString()
+                        it[Property.LIKE_VALUE] = value.ionValue.toString()
                     },
                     internal = false
                 )
@@ -2749,35 +2760,43 @@ internal class EvaluatingCompiler(
      * and the size of the search pattern excluding uses of the escape character
      */
     private fun checkPattern(
-        pattern: String,
+        pattern: IonValue,
         patternLocationMeta: SourceLocationMeta?,
-        escape: String?,
+        escape: IonValue?,
         escapeLocationMeta: SourceLocationMeta?
     ): Pair<String, Int?> {
+
+        val patternString = pattern.stringValue()
+            ?: err(
+                "Must provide a non-null value for PATTERN in a LIKE predicate: $pattern",
+                ErrorCode.EVALUATOR_LIKE_PATTERN_INVALID_ESCAPE_SEQUENCE,
+                errorContextFrom(patternLocationMeta),
+                internal = false
+            )
 
         escape?.let {
             val escapeCharString = checkEscapeChar(escape, escapeLocationMeta)
             val escapeCharCodePoint = escapeCharString.codePointAt(0) // escape is a string of length 1
             val validEscapedChars = setOf('_'.toInt(), '%'.toInt(), escapeCharCodePoint)
-            val iter = pattern.codePointSequence().iterator()
+            val iter = patternString.codePointSequence().iterator()
 
             while (iter.hasNext()) {
                 val current = iter.next()
                 if (current == escapeCharCodePoint && (!iter.hasNext() || !validEscapedChars.contains(iter.next()))) {
                     err(
-                        "Invalid escape sequence : $pattern",
+                        "Invalid escape sequence : $patternString",
                         ErrorCode.EVALUATOR_LIKE_PATTERN_INVALID_ESCAPE_SEQUENCE,
                         errorContextFrom(patternLocationMeta).apply {
-                            set(Property.LIKE_PATTERN, pattern)
+                            set(Property.LIKE_PATTERN, patternString)
                             set(Property.LIKE_ESCAPE, escapeCharString)
                         },
                         internal = false
                     )
                 }
             }
-            return Pair(pattern, escapeCharCodePoint)
+            return Pair(patternString, escapeCharCodePoint)
         }
-        return Pair(pattern, null)
+        return Pair(patternString, null)
     }
 
     /**
@@ -2793,8 +2812,14 @@ internal class EvaluatingCompiler(
      *
      * @return the escape character as a [String] or throws an exception when the input is invalid
      */
-    private fun checkEscapeChar(escape: String, locationMeta: SourceLocationMeta?): String {
-        when (escape) {
+    private fun checkEscapeChar(escape: IonValue, locationMeta: SourceLocationMeta?): String {
+        val escapeChar = escape.stringValue() ?: err(
+            "Must provide a value when using ESCAPE in a LIKE predicate: $escape",
+            ErrorCode.EVALUATOR_LIKE_PATTERN_INVALID_ESCAPE_SEQUENCE,
+            errorContextFrom(locationMeta),
+            internal = false
+        )
+        when (escapeChar) {
             "" -> {
                 err(
                     "Cannot use empty character as ESCAPE character in a LIKE predicate: $escape",
@@ -2804,9 +2829,9 @@ internal class EvaluatingCompiler(
                 )
             }
             else -> {
-                if (escape.trim().length != 1) {
+                if (escapeChar.trim().length != 1) {
                     err(
-                        "Escape character must have size 1 : $escape",
+                        "Escape character must have size 1 : $escapeChar",
                         ErrorCode.EVALUATOR_LIKE_PATTERN_INVALID_ESCAPE_SEQUENCE,
                         errorContextFrom(locationMeta),
                         internal = false
@@ -2814,7 +2839,7 @@ internal class EvaluatingCompiler(
                 }
             }
         }
-        return escape
+        return escapeChar
     }
 
     private fun compileDdl(node: PartiqlAst.Statement.Ddl): ThunkEnv =
@@ -2916,6 +2941,8 @@ internal class EvaluatingCompiler(
     private class UnpivotedExprValue(private val values: Iterable<ExprValue>) : BaseExprValue() {
         override val type = ExprValueType.BAG
         override fun iterator() = values.iterator()
+
+        // XXX this value is only ever produced in a FROM iteration, thus none of these should ever be called
         override val ionValue
             get() = throw UnsupportedOperationException("Synthetic value cannot provide ion value")
     }

@@ -210,7 +210,6 @@ internal class PhysicalPlanCompilerImpl(
             is PartiqlPhysical.Expr.SearchedCase -> compileSearchedCase(expr, metas)
             is PartiqlPhysical.Expr.Path -> compilePath(expr, metas)
             is PartiqlPhysical.Expr.Struct -> compileStruct(expr)
-            is PartiqlPhysical.Expr.CallAgg -> compileCallAgg(expr, metas)
             is PartiqlPhysical.Expr.Parameter -> compileParameter(expr, metas)
             is PartiqlPhysical.Expr.Date -> compileDate(expr, metas)
             is PartiqlPhysical.Expr.LitTime -> compileLitTime(expr, metas)
@@ -1414,9 +1413,6 @@ internal class PhysicalPlanCompilerImpl(
             )
         }
     }
-
-    @Suppress("UNUSED_PARAMETER")
-    private fun compileCallAgg(expr: PartiqlPhysical.Expr.CallAgg, metas: MetaContainer): PhysicalPlanThunk = TODO("call_agg")
 
     private fun compilePath(expr: PartiqlPhysical.Expr.Path, metas: MetaContainer): PhysicalPlanThunk {
         val rootThunk = compileAstExpr(expr.root)

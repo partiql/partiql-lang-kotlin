@@ -140,24 +140,6 @@ enum class ExprValueType(
             is PartiqlAst.Type.TimeType,
             is PartiqlAst.Type.TimeWithTimeZoneType -> TIME
             is PartiqlAst.Type.CustomType -> null
-            // TODO: Remove these hardcoded nodes from the PIG domain once [https://github.com/partiql/partiql-lang-kotlin/issues/510] is resolved.
-            is PartiqlAst.Type.EsBoolean,
-            is PartiqlAst.Type.EsInteger,
-            is PartiqlAst.Type.EsText,
-            is PartiqlAst.Type.EsAny,
-            is PartiqlAst.Type.EsFloat,
-            is PartiqlAst.Type.RsBigint,
-            is PartiqlAst.Type.RsBoolean,
-            is PartiqlAst.Type.RsDoublePrecision,
-            is PartiqlAst.Type.RsInteger,
-            is PartiqlAst.Type.RsReal,
-            is PartiqlAst.Type.RsVarcharMax,
-            is PartiqlAst.Type.SparkBoolean,
-            is PartiqlAst.Type.SparkDouble,
-            is PartiqlAst.Type.SparkFloat,
-            is PartiqlAst.Type.SparkInteger,
-            is PartiqlAst.Type.SparkLong,
-            is PartiqlAst.Type.SparkShort -> error("$this node should not be present in PartiQLAST. Consider transforming the AST using CustomTypeVisitorTransform.")
         }
     }
 }

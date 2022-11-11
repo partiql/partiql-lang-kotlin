@@ -26,6 +26,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Adds simple auto-completion to the CLI.
 - Adds support for HAVING clause in planner
+- Adds support for collection aggregation functions in the EvaluatingCompiler and experimental planner
+- Adds support for the syntactic sugar of using aggregations functions in place of their collection aggregation function
+  counterparts (in the experimental planner)
 
 ### Changed
 - Now `CompileOption` uses `TypedOpParameter.HONOR_PARAMETERS` as default.
@@ -44,10 +47,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 - Removes the deprecated V0 AST in the codebase.
 - Removes the deprecated MetaContainer in the codebase, removed interfaces and classes include:
-  - MetaContainer Interface
-  - MetaContainerImpl
-  - MetaDeserializer
-  - MemoizedMetaDeserializer
+  - [MetaContainer] Interface
+  - [MetaContainerImpl]
+  - [MetaDeserialize]
+  - [MemoizedMetaDeserializer]
+- Removes the deprecated Rewriter/AstWalker/AstVisitor in the code base, removed interfaces and classes include:
+  - [AstRewriter] Interface & [AstRewriterBase] class
+  - [AstVisitor] Interface & [AstVisitorBase] class
+  - [AstWalker] class
+  - [MetaStrippingRewriter] class
+- Removes the deprecated ExprNode and related files in the code base. 
+  - [Parser] API `parseExprNode(source: String): ExprNode` has been removed.
+  - [CompilerPipeline] API `compile(query: ExprNode): Expression` has been removed.
+  - [ExprNode] and [AstNode] have been removed.
+  - Functions related to conversions between ExprNode and PartiqlAst have been removed.
+- Removes the deprecated SqlParser and SqlLexer
+- **Breaking**: Removes the `CallAgg` node from the Logical, LogicalResolved, and Physical plans
 
 ### Security
 
@@ -158,6 +173,12 @@ stage in the `PlannerPipeline` and to generate performance metrics for the indiv
 - **Breaking Change**: [PartiqlAst.Type.toTypedOpParameter()] is removed
 - **Breaking Change**: [PartiqlAstSanityValidator] now becomes an internal class
 - **Breaking Change**: [PartiqlPhysicalSanityValidator] is removed
+- **Breaking Change**: the following custom type AST nodes are removed from `partiql.ion` file: `es_boolean`, `es_integer`, `es_float`,
+    `es_text`, `es_any`, `spark_short`, `spark_integer`, `spark_long`, `spark_double`, `spark_boolean`, `spark_float`,
+    `rs_varchar_max`, `rs_integer`, `rs_bigint`, `rs_boolean`, `rs_real`, `rs_double_precision`.
+    The related visitor transform `CustomTypeVisitorTransform` is also removed.
+    See [Issue 510](https://github.com/partiql/partiql-lang-kotlin/issues/510) for more details.
+
 
 ### Security
 
