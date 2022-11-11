@@ -67,8 +67,8 @@ class MemoryTable(
     }
 
     override fun iterator(): Iterator<ExprValue> =
-    // the call to .toList below is important to allow the table contents to be modified during query
-    // execution.  (Otherwise we will hit a ConcurrentModificationException in the case a DELETE FROM statement
+        // the call to .toList below is important to allow the table contents to be modified during query
+        // execution.  (Otherwise we will hit a ConcurrentModificationException in the case a DELETE FROM statement
         // is executed)
         rows.values.toList().iterator()
 }
