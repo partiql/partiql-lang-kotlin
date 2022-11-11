@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Adds support for collection aggregation functions in the EvaluatingCompiler and experimental planner
 - Adds support for the syntactic sugar of using aggregations functions in place of their collection aggregation function
   counterparts (in the experimental planner)
+- Added `ExprValue.toIonValue(ion: IonSystem)` in kotlin, and `ExprValueKt.toIonValue(value: ExprValue, ion: IonSystem)` in Java to transform one `ExprValue` to a corresponding `IonValue`. 
 
 ### Changed
 - Now `CompileOption` uses `TypedOpParameter.HONOR_PARAMETERS` as default.
@@ -41,6 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Deprecated
 - Marks the GroupKeyReferencesVisitorTransform as deprecated. There is no functionally equivalent class.
+- Marks `ionValue` property in `ExprValue` interface as deprecated. The functional equivalent method is `ExprValue.toIonValue(ion: IonSystem)` in kotlin, and `ExprValueKt.toIonValue(value: ExprValue, ion: IonSystem)` in Java. 
 
 ### Fixed
 
