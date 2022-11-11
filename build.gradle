@@ -62,6 +62,35 @@ configure(subprojects.findAll { it.name != 'example' }) {
 subprojects { proj ->
 
     apply plugin: "org.jetbrains.kotlin.jvm"
+
+    testing {
+        suites {
+            test {
+                useJUnitJupiter()
+            }
+
+            fuzzTest(JvmTestSuite) {
+                dependencies {
+                    implementation project.sourceSets.test.output
+                    implementation project
+                    implementation "junit:junit:4.12"
+                    implementation 'org.jetbrains.kotlin:kotlin-test-junit5'
+                    implementation 'pl.pragmatists:JUnitParams:[1.0.0,1.1.0)'
+                }
+                sources {
+                    kotlin {
+                        srcDirs = ['fuzzTest']
+                    }
+                }
+            }
+        }
+    }
+
+    // Configure the check task to depend on all Fuzz Test targets.
+    tasks.named('check') {
+        dependsOn.add(testing.suites.fuzzTest)
+    }
+
     tasks.withType(Test) {
         jvmArgs += ['-Duser.language=en', '-Duser.country=US']
         maxHeapSize = "4g"
@@ -69,27 +98,31 @@ subprojects { proj ->
             events "failed"
             exceptionFormat "full"
         }
-        useJUnitPlatform()
-        jacocoTestReport {
-            reports {
-                xml.required.set(true)
-                html.required.set(true)
-                html.outputLocation.set(file("${buildDir}/reports/jacoco/html"))
-            }
-            afterEvaluate {
-                classDirectories.setFrom(files(classDirectories.files.collect {
-                    // exclude PIG generated files.
-                    fileTree(dir: it, exclude: [
-                            "org/partiql/lang/domains/*.class",
-                            "org/partiql/ionschema/model/*.class"
-                    ])
-                }))
-            }
-        }
-
         // Make the ktlinCheck task run *before* unit tests--faster failure here means we won't need to re-run the
         // tests (which can take several minutes) after applying formatting fixes.
         dependsOn.add(ktlintCheck)
+    }
+
+    jacocoTestReport {
+        dependsOn test
+        dependsOn fuzzTest
+        dependsOn ktlintCheck
+        // The test Coverage report should not depend on unit test. We want the code coverage to be deterministic.
+        executionData.setFrom(fileTree(buildDir).include("/jacoco/test.exec"))
+        reports {
+            xml.required.set(true)
+            html.required.set(true)
+            html.outputLocation.set(file("${buildDir}/reports/jacoco/html"))
+        }
+        afterEvaluate {
+            classDirectories.setFrom(files(classDirectories.files.collect {
+                // exclude PIG generated files.
+                fileTree(dir: it, exclude: [
+                        "org/partiql/lang/domains/*.class",
+                        "org/partiql/ionschema/model/*.class"
+                ])
+            }))
+        }
     }
 
     tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
