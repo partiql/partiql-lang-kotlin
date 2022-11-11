@@ -114,25 +114,25 @@ val ExprValue.address: ExprValue?
     get() = asFacet(Addressed::class.java)?.address
 
 fun ExprValue.booleanValue(): Boolean =
-    scalar.booleanValue() ?: errNoContext("Expected boolean: ${toString()}", errorCode = ErrorCode.EVALUATOR_UNEXPECTED_VALUE_TYPE, internal = false)
+    scalar.booleanValue() ?: errNoContext("Expected boolean: $this", errorCode = ErrorCode.EVALUATOR_UNEXPECTED_VALUE_TYPE, internal = false)
 
 fun ExprValue.numberValue(): Number =
-    scalar.numberValue() ?: errNoContext("Expected number: ${toString()}", errorCode = ErrorCode.EVALUATOR_UNEXPECTED_VALUE_TYPE, internal = false)
+    scalar.numberValue() ?: errNoContext("Expected number: $this", errorCode = ErrorCode.EVALUATOR_UNEXPECTED_VALUE_TYPE, internal = false)
 
 fun ExprValue.dateValue(): LocalDate =
-    scalar.dateValue() ?: errNoContext("Expected date: ${toString()}", errorCode = ErrorCode.EVALUATOR_UNEXPECTED_VALUE_TYPE, internal = false)
+    scalar.dateValue() ?: errNoContext("Expected date: $this", errorCode = ErrorCode.EVALUATOR_UNEXPECTED_VALUE_TYPE, internal = false)
 
 fun ExprValue.timeValue(): Time =
-    scalar.timeValue() ?: errNoContext("Expected time: ${toString()}", errorCode = ErrorCode.EVALUATOR_UNEXPECTED_VALUE_TYPE, internal = false)
+    scalar.timeValue() ?: errNoContext("Expected time: $this", errorCode = ErrorCode.EVALUATOR_UNEXPECTED_VALUE_TYPE, internal = false)
 
 fun ExprValue.timestampValue(): Timestamp =
-    scalar.timestampValue() ?: errNoContext("Expected timestamp: ${toString()}", errorCode = ErrorCode.EVALUATOR_UNEXPECTED_VALUE_TYPE, internal = false)
+    scalar.timestampValue() ?: errNoContext("Expected timestamp: $this", errorCode = ErrorCode.EVALUATOR_UNEXPECTED_VALUE_TYPE, internal = false)
 
 fun ExprValue.stringValue(): String =
-    scalar.stringValue() ?: errNoContext("Expected string: ${toString()}", errorCode = ErrorCode.EVALUATOR_UNEXPECTED_VALUE_TYPE, internal = false)
+    scalar.stringValue() ?: errNoContext("Expected string: $this", errorCode = ErrorCode.EVALUATOR_UNEXPECTED_VALUE_TYPE, internal = false)
 
 fun ExprValue.bytesValue(): ByteArray =
-    scalar.bytesValue() ?: errNoContext("Expected boolean: ${toString()}", errorCode = ErrorCode.EVALUATOR_UNEXPECTED_VALUE_TYPE, internal = false)
+    scalar.bytesValue() ?: errNoContext("Expected boolean: $this", errorCode = ErrorCode.EVALUATOR_UNEXPECTED_VALUE_TYPE, internal = false)
 
 internal fun ExprValue.dateTimePartValue(): DateTimePart =
     try {

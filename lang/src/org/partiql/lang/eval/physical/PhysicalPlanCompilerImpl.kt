@@ -1878,6 +1878,9 @@ internal class PhysicalPlanCompilerImpl(
     private class UnpivotedExprValue(private val values: Iterable<ExprValue>) : BaseExprValue() {
         override val type = ExprValueType.BAG
         override fun iterator() = values.iterator()
+        // XXX this value is only ever produced in a FROM iteration, thus none of these should ever be called
+        override val ionValue
+            get() = throw UnsupportedOperationException("Synthetic value cannot provide ion value")
     }
 
     /** Unpivots a `struct`, and synthesizes a synthetic singleton `struct` for other [ExprValue]. */

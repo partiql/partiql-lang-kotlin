@@ -43,6 +43,15 @@ interface ExprValue : Iterable<ExprValue>, Faceted {
     /** The type of value independent of its implementation. */
     val type: ExprValueType
 
+    /**
+     * Materializes the expression value as an [IonValue].
+     *
+     * The returned value may or may not be tethered to a container, so it is
+     * the callers responsibility to deal with that accordingly (e.g. via `clone`).
+     */
+    @Deprecated("Please use [ExprValue.toIonValue()] to transform [ExprValue] to [IonValue]")
+    val ionValue: IonValue
+
     /** Returns the [Scalar] view of this value. */
     val scalar: Scalar
 
@@ -51,6 +60,7 @@ interface ExprValue : Iterable<ExprValue>, Faceted {
      *
      * This is generally used to access a component of a value by name.
      */
+    // TODO: Improve ergonomics of this API
     val bindings: Bindings<ExprValue>
 
     /**
@@ -58,6 +68,7 @@ interface ExprValue : Iterable<ExprValue>, Faceted {
      *
      * This is generally used to access a component of a value by index.
      */
+    // TODO: Improve ergonomics of this API
     val ordinalBindings: OrdinalBindings
 
     /**
@@ -75,6 +86,9 @@ interface ExprValue : Iterable<ExprValue>, Faceted {
     val metas: Map<String, Any?>
 }
 
+/**
+ * This method should only be used in case we want to get result from querying an Ion file or an [IonValue]
+ */
 fun ExprValue.toIonValue(ion: IonSystem): IonValue =
     when (type) {
         ExprValueType.NULL -> {
@@ -150,6 +164,8 @@ fun IonValue.toExprValue(): ExprValue {
                 get() = mapOf(
                     Pair("ion_null_type", this@toExprValue.type)
                 )
+            override val ionValue: IonValue
+                get() = this@toExprValue
         } // NULL
         this is IonBool -> valueFactory.newBoolean(booleanValue()) // BOOL
         this is IonInt -> valueFactory.newInt(longValue()) // INT
@@ -161,13 +177,13 @@ fun IonValue.toExprValue(): ExprValue {
         } // DATE
         this is IonTimestamp -> valueFactory.newTimestamp(timestampValue()) // TIMESTAMP
         this is IonStruct && hasTypeAnnotation(TIME_ANNOTATION) -> {
-            val hourValue = (get("hour") as IonInt).intValue()
-            val minuteValue = (get("minute") as IonInt).intValue()
-            val secondInDecimal = (get("second") as IonDecimal).decimalValue()
+            val hourValue = (this["hour"] as IonInt).intValue()
+            val minuteValue = (this["minute"] as IonInt).intValue()
+            val secondInDecimal = (this["second"] as IonDecimal).decimalValue()
             val secondValue = secondInDecimal.toInt()
             val nanoValue = secondInDecimal.remainder(BigDecimal.ONE).multiply(NANOS_PER_SECOND.toBigDecimal()).toInt()
-            val timeZoneHourValue = (get("timezone_hour") as IonInt).intValue()
-            val timeZoneMinuteValue = (get("timezone_minute") as IonInt).intValue()
+            val timeZoneHourValue = (this["timezone_hour"] as IonInt).intValue()
+            val timeZoneMinuteValue = (this["timezone_minute"] as IonInt).intValue()
             valueFactory.newTime(Time.of(hourValue, minuteValue, secondValue, nanoValue, secondInDecimal.scale(), timeZoneHourValue * 60 + timeZoneMinuteValue))
         } // TIME
         this is IonSymbol -> valueFactory.newSymbol(stringValue()) // SYMBOL
@@ -178,14 +194,15 @@ fun IonValue.toExprValue(): ExprValue {
         this is IonList -> valueFactory.newList(map { it.toExprValue() }) // LIST
         this is IonSexp -> valueFactory.newSexp(map { it.toExprValue() }) // SEXP
         this is IonStruct -> IonStructExprValue(valueFactory, this) // STRUCT
-        else -> error("Invalid IonValue")
+        else -> error("Unrecognized IonValue to transform to ExprValue: $this")
     }
 }
 
 private class IonStructExprValue(
     valueFactory: ExprValueFactory,
-    ionStruct: IonStruct
+    private val ionStruct: IonStruct
 ) : StructExprValue(
+    valueFactory.ion,
     StructOrdering.UNORDERED,
     ionStruct.asSequence().map {
         it.toExprValue().namedValue(valueFactory.newString(it.fieldName))
@@ -193,4 +210,7 @@ private class IonStructExprValue(
 ) {
     override val bindings: Bindings<ExprValue> =
         IonStructBindings(valueFactory, ionStruct)
+
+    override val ionValue: IonValue
+        get() = ionStruct
 }

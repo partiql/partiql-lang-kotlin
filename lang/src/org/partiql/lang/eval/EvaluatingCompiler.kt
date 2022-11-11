@@ -1603,7 +1603,16 @@ internal class EvaluatingCompiler(
             )
         }
 
-        val limitValue = limitExprValue.numberValue().toLong()
+        val originalLimitValue = limitExprValue.numberValue()
+        val limitValue = originalLimitValue.toLong()
+        if (originalLimitValue != limitValue as Number) { // Make sure `Number.toLong()` is a lossless transformation
+            err(
+                "Too large integer provided as LIMIT value",
+                ErrorCode.INTERNAL_ERROR,
+                errorContextFrom(limitLocationMeta),
+                internal = true
+            )
+        }
 
         if (limitValue < 0) {
             err(
@@ -1633,7 +1642,16 @@ internal class EvaluatingCompiler(
             )
         }
 
-        val offsetValue = offsetExprValue.numberValue().toLong()
+        val originalOffsetValue = offsetExprValue.numberValue()
+        val offsetValue = originalOffsetValue.toLong()
+        if (originalOffsetValue != offsetValue as Number) { // Make sure `Number.toLong()` is a lossless transformation
+            err(
+                "Too large integer provided as OFFSET value",
+                ErrorCode.INTERNAL_ERROR,
+                errorContextFrom(offsetLocationMeta),
+                internal = true
+            )
+        }
 
         if (offsetValue < 0) {
             err(
@@ -2024,7 +2042,7 @@ internal class EvaluatingCompiler(
                 }
                 value
             }
-            GroupKeyExprValue(keyValues.asSequence(), uniqueNames)
+            GroupKeyExprValue(valueFactory.ion, keyValues.asSequence(), uniqueNames)
         }
 
     private fun compileOrderByExpression(sortSpecs: List<PartiqlAst.SortSpec>): List<CompiledOrderByItem> =
@@ -2898,6 +2916,8 @@ internal class EvaluatingCompiler(
     private class UnpivotedExprValue(private val values: Iterable<ExprValue>) : BaseExprValue() {
         override val type = ExprValueType.BAG
         override fun iterator() = values.iterator()
+        override val ionValue
+            get() = throw UnsupportedOperationException("Synthetic value cannot provide ion value")
     }
 
     /** Unpivots a `struct`, and synthesizes a synthetic singleton `struct` for other [ExprValue]. */

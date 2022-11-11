@@ -83,7 +83,17 @@ internal class OffsetOperator(
             )
         }
 
-        val offsetValue = offsetExprValue.numberValue().toLong()
+        val originalOffsetValue = offsetExprValue.numberValue()
+        val offsetValue = originalOffsetValue.toLong()
+        if (originalOffsetValue != offsetValue as Number) { // Make sure `Number.toLong()` is a lossless transformation
+            err(
+                "Too large integer provided as OFFSET value",
+                ErrorCode.INTERNAL_ERROR,
+                errorContextFrom(rowCountExpr.sourceLocation),
+                internal = true
+            )
+        }
+
         if (offsetValue < 0) {
             err(
                 "negative OFFSET",

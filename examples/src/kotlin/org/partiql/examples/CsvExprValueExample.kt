@@ -11,7 +11,6 @@ import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.namedValue
-import org.partiql.lang.eval.stringValue
 import java.io.PrintStream
 
 /**
@@ -40,21 +39,8 @@ private class CsvRowExprValue(private val valueFactory: ExprValueFactory, privat
             }.toMap()
     }
 
-    /** Laziness is even more important here because [ionValue] is likely to never be called. */
-    private val lazyIonValue by lazy {
-        valueFactory.ion.newEmptyStruct().apply {
-            rowValues.map { kvp ->
-                add(kvp.key, valueFactory.ion.newString(kvp.value.stringValue()))
-            }
-            makeReadOnly()
-        }
-    }
-
     /** An iterator over the values contained in this instance of [ExprValue], if any. */
     override fun iterator() = rowValues.values.iterator()
-
-    /** The Ion representation of the current value. */
-    fun toIonValue(): IonValue = lazyIonValue
 
     private val bindingsInstance by lazy {
         Bindings.ofMap(rowValues)
@@ -62,6 +48,9 @@ private class CsvRowExprValue(private val valueFactory: ExprValueFactory, privat
 
     override val bindings: Bindings<ExprValue>
         get() = bindingsInstance
+
+    override val ionValue: IonValue
+        get() = error("ExprValue.ionValue Will be removed")
 }
 
 class CsvExprValueExample(out: PrintStream) : Example(out) {
