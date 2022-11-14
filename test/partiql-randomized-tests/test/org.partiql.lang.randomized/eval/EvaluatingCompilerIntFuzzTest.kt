@@ -12,11 +12,12 @@
  *  language governing permissions and limitations under the License.
  */
 
-package org.partiql.lang.eval
+package org.partiql.lang.randomized.eval
 
 import junitparams.Parameters
 import org.junit.BeforeClass
 import org.junit.Test
+import org.partiql.lang.eval.EvaluatorTestBase
 import java.util.Random
 
 /**

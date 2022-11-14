@@ -1,12 +1,11 @@
-package org.partiql.lang.eval
+package org.partiql.lang.randomized.eval
 
-import com.amazon.ion.IonStruct
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
+import org.partiql.lang.eval.EvaluatorTestBase
 import org.partiql.lang.eval.evaluatortestframework.ExpectedResultFormat
 import org.partiql.lang.eval.time.Time
 import org.partiql.lang.util.ArgumentsProviderBase
-import java.math.RoundingMode
 import java.time.ZoneOffset
 import kotlin.math.absoluteValue
 import kotlin.random.Random
@@ -81,24 +80,6 @@ class EvaluatingCompilerDateTimeFuzzTests : EvaluatorTestBase() {
             override fun getParameters(): List<Any> = super.RANDOM_TIMES_WITH_PRECISION + super.RANDOM_TIMES_WITH_PRECISION_AND_TIMEZONE
         }
     }
-
-    private fun secondsWithPrecision(time: TimeForValidation) =
-        ion.newDecimal(time.second.toBigDecimal() + time.nano.toBigDecimal().divide(NANOS_PER_SECOND.toBigDecimal()).setScale(time.precision, RoundingMode.HALF_UP))
-
-    private fun assertEqualsIonTimeStruct(actual: IonStruct, expectedTime: TimeForValidation) {
-        assertEquals(ion.newInt(expectedTime.hour), actual["hour"])
-        assertEquals(ion.newInt(expectedTime.minute), actual["minute"])
-        assertEquals(secondsWithPrecision(expectedTime), actual["second"])
-        assertEquals(ion.newInt(expectedTime.tz_minutes?.div(MINUTES_PER_HOUR)), actual["timezone_hour"])
-        assertEquals(ion.newInt(expectedTime.tz_minutes?.rem(MINUTES_PER_HOUR)), actual["timezone_minute"])
-    }
-
-    data class TimeTestCase(
-        val query: String,
-        val expected: String,
-        val expectedTime: TimeForValidation? = null,
-        val compileOptionsBlock: CompileOptions.Builder.() -> Unit
-    )
 
     data class TimeForValidation(
         val hour: Int,

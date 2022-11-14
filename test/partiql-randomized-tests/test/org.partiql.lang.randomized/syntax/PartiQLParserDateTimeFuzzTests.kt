@@ -1,6 +1,7 @@
-package org.partiql.lang.syntax
+package org.partiql.lang.randomized.syntax
 
 import org.junit.Test
+import org.partiql.lang.syntax.PartiQLParserTestBase
 import java.util.Random
 
 class PartiQLParserDateTimeFuzzTests : PartiQLParserTestBase() {
