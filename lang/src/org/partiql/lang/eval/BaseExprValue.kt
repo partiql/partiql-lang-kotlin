@@ -16,8 +16,6 @@ package org.partiql.lang.eval
 
 import org.partiql.lang.util.downcast
 
-private val emptyMetas = emptyMap<String, Any?>()
-
 /**
  * Base implementation of [ExprValue] that provides a bare minimum implementation of
  * a value.
@@ -45,7 +43,4 @@ abstract class BaseExprValue : ExprValue {
     open fun <T> provideFacet(type: Class<T>?): T? = null
 
     override fun toString(): String = stringify()
-
-    override val metas: Map<String, Any?>
-        get() = emptyMetas
 }

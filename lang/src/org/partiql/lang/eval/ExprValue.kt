@@ -77,13 +77,6 @@ interface ExprValue : Iterable<ExprValue>, Faceted {
      * If this value has no children, then it should return the empty iterator.
      */
     override operator fun iterator(): Iterator<ExprValue>
-
-    /**
-     * Only used for conversion between [ExprValue] and other data formats
-     *
-     * We can use metas to provide additional information when representing data w/r other data formats
-     */
-    val metas: Map<String, Any?>
 }
 
 /**
@@ -91,10 +84,7 @@ interface ExprValue : Iterable<ExprValue>, Faceted {
  */
 fun ExprValue.toIonValue(ion: IonSystem): IonValue =
     when (type) {
-        ExprValueType.NULL -> {
-            val ionType = metas["ion_null_type"] as? IonType ?: IonType.NULL
-            ion.newNull(ionType)
-        }
+        ExprValueType.NULL -> ion.newNull(asFacet(IonType::class.java))
         ExprValueType.MISSING -> ion.newNull().apply { addTypeAnnotation(MISSING_ANNOTATION) }
         ExprValueType.BOOL -> ion.newBool(booleanValue())
         ExprValueType.INT -> ion.newInt(longValue())
@@ -135,13 +125,6 @@ fun ExprValue.toIonValue(ion: IonSystem): IonValue =
         ExprValueType.STRUCT -> toIonStruct(ion)
     }
 
-/**
- * [SequenceExprValue] may call this function to get a mutable instance of the IonValue that it can add
- * directly to its lazily constructed list.  This is a performance optimization--otherwise the value would be
- * cloned twice: once by this class's implementation of [ionValue], and again before adding the value to its list.
- *
- * Note: it is not possible to add a sealed (non-mutuable) [IonValue] as a child of a container.
- */
 private fun ExprValue.toIonStruct(ion: IonSystem): IonStruct {
     return ion.newEmptyStruct().apply {
         this@toIonStruct.forEach {
@@ -158,15 +141,7 @@ fun IonValue.toExprValue(): ExprValue {
     val valueFactory = ExprValueFactory.standard(system)
     return when {
         isNullValue && hasTypeAnnotation(MISSING_ANNOTATION) -> valueFactory.missingValue // MISSING
-        isNullValue -> object : BaseExprValue() {
-            override val type = ExprValueType.NULL
-            override val metas: Map<String, Any?>
-                get() = mapOf(
-                    Pair("ion_null_type", this@toExprValue.type)
-                )
-            override val ionValue: IonValue
-                get() = this@toExprValue
-        } // NULL
+        isNullValue -> NullExprValue(system, type) // NULL
         this is IonBool -> valueFactory.newBoolean(booleanValue()) // BOOL
         this is IonInt -> valueFactory.newInt(longValue()) // INT
         this is IonFloat -> valueFactory.newFloat(doubleValue()) // FLOAT

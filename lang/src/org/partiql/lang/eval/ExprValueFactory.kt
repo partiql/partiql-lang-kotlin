@@ -17,6 +17,7 @@ package org.partiql.lang.eval
 import com.amazon.ion.IonBool
 import com.amazon.ion.IonReader
 import com.amazon.ion.IonSystem
+import com.amazon.ion.IonType
 import com.amazon.ion.IonValue
 import com.amazon.ion.Timestamp
 import org.partiql.lang.errors.ErrorCode
@@ -267,9 +268,15 @@ private class ExprValueFactoryImpl(override val ion: IonSystem) : ExprValueFacto
  * `ion.int`, we have to return a null value of type int and cannot ignore the type of it. We might need to consider
  * add a [metas] field in [ExprValue], instead.
  */
-private class NullExprValue(private val ion: IonSystem) : BaseExprValue() {
+internal class NullExprValue(private val ion: IonSystem, private val ionType: IonType = IonType.NULL) : BaseExprValue() {
     override val type: ExprValueType get() = ExprValueType.NULL
     override val ionValue by lazy { toIonValue(ion) }
+
+    @Suppress("UNCHECKED_CAST")
+    override fun <T> provideFacet(type: Class<T>?): T? = when (type) {
+        IonType::class.java -> ionType as T?
+        else -> null
+    }
 }
 
 /** A base class for the `MISSING` value, intended to be memoized. */
