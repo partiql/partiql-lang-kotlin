@@ -4,7 +4,7 @@ import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.errors.ProblemHandler
 import org.partiql.lang.planner.PartiqlPhysicalPass
 
-fun createConcatWindowFunctionPass(): PartiqlPhysicalPass =
+internal fun createConcatWindowFunctionPass(): PartiqlPhysicalPass =
     ConcatWindowFunction()
 
 /**
