@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Adds support for collection aggregation functions in the EvaluatingCompiler and experimental planner
 - Adds support for the syntactic sugar of using aggregations functions in place of their collection aggregation function
   counterparts (in the experimental planner)
+- Experimental implementation for window function `Lag` and `Lead`. 
 
 ### Changed
 - Now `CompileOption` uses `TypedOpParameter.HONOR_PARAMETERS` as default.
