@@ -15,13 +15,11 @@
 package org.partiql.lang.eval
 
 import junitparams.Parameters
-import org.junit.BeforeClass
 import org.junit.Test
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.util.propertyValueMapOf
 import java.math.BigInteger
-import java.util.Random
 
 /**
  * This class tests evaluation-time behavior for integer and integer overflows that existed *prior* to the
@@ -29,19 +27,6 @@ import java.util.Random
  * integer arithmetic in the absence of [StaticType] information.
  */
 class EvaluatingCompilerIntTest : EvaluatorTestBase() {
-    companion object {
-        private val RANDOM = Random()
-
-        @JvmStatic
-        @BeforeClass
-        fun setupRandomSeed() {
-            val seed = System.nanoTime()
-
-            println("IntTest seed = $seed, use it to reproduce failures")
-
-            RANDOM.setSeed(seed)
-        }
-    }
 
     private val closeToMaxLong = (Long.MAX_VALUE - 1)
     private val closeToMinLong = (Long.MIN_VALUE + 1)
@@ -54,14 +39,7 @@ class EvaluatingCompilerIntTest : EvaluatorTestBase() {
     fun values(pair: Pair<String, String>) = assertPair(pair)
 
     fun parametersForValues(): List<Pair<String, String>> {
-        val transform: (Number) -> Pair<String, String> = { i -> "$i" to "$i" }
-
         val parameters = mutableListOf<Pair<String, String>>()
-
-        (1..20).map { RANDOM.nextInt() }.mapTo(parameters, transform)
-        (1..20).map { RANDOM.nextLong() }.mapTo(parameters, transform)
-
-        // defined manually
         parameters.add("$closeToMaxLong" to "$closeToMaxLong")
         parameters.add("$closeToMinLong" to "$closeToMinLong")
         parameters.add("`0x00ffFFffFFffFFff`" to "72057594037927935")
@@ -88,19 +66,8 @@ class EvaluatingCompilerIntTest : EvaluatorTestBase() {
     fun plus(pair: Pair<String, String>) = assertPair(pair)
 
     fun parametersForPlus(): List<Pair<String, String>> {
-        val transform: (Triple<Long, Long, Long>) -> Pair<String, String> =
-            { (left, right, result) -> "$left + $right" to "$result" }
-
         val parameters = mutableListOf<Pair<String, String>>()
-
-        (1..20).map {
-            // generating an integer to ensure addition won't overflow
-            val left = RANDOM.nextInt().toLong()
-            val right = RANDOM.nextInt().toLong()
-
-            Triple(left, right, left + right)
-        }.mapTo(parameters, transform)
-
+        // Deliberately kept in case we need to manually add test case in the future.
         return parameters
     }
 
@@ -117,19 +84,8 @@ class EvaluatingCompilerIntTest : EvaluatorTestBase() {
     fun minus(pair: Pair<String, String>) = assertPair(pair)
 
     fun parametersForMinus(): List<Pair<String, String>> {
-        val transform: (Triple<Long, Long, Long>) -> Pair<String, String> =
-            { (left, right, result) -> "$left - $right" to "$result" }
-
         val parameters = mutableListOf<Pair<String, String>>()
-
-        (1..20).map {
-            // generating an integer to ensure addition won't overflow
-            val left = RANDOM.nextInt().toLong()
-            val right = RANDOM.nextInt().toLong()
-
-            Triple(left, right, left - right)
-        }.mapTo(parameters, transform)
-
+        // Deliberately kept in case we need to manually add test case in the future.
         return parameters
     }
 
@@ -146,19 +102,7 @@ class EvaluatingCompilerIntTest : EvaluatorTestBase() {
     fun times(pair: Pair<String, String>) = assertPair(pair)
 
     fun parametersForTimes(): List<Pair<String, String>> {
-        val transform: (Triple<Long, Long, Long>) -> Pair<String, String> =
-            { (left, right, result) -> "$left * $right" to "$result" }
-
         val parameters = mutableListOf<Pair<String, String>>()
-
-        (1..40).map { i ->
-            var left = RANDOM.nextInt(1_000).toLong()
-            if (i % 2 == 0) left = -left
-
-            val right = RANDOM.nextInt(1_000).toLong()
-
-            Triple(left, right, left * right)
-        }.mapTo(parameters, transform)
 
         parameters.add("${Long.MAX_VALUE} * -1" to "-${Long.MAX_VALUE}")
 
@@ -186,19 +130,7 @@ class EvaluatingCompilerIntTest : EvaluatorTestBase() {
     fun division(pair: Pair<String, String>) = assertPair(pair)
 
     fun parametersForDivision(): List<Pair<String, String>> {
-        val transform: (Triple<Long, Long, Long>) -> Pair<String, String> =
-            { (left, right, result) -> "$left / $right" to "$result" }
-
         val parameters = mutableListOf<Pair<String, String>>()
-
-        (1..40).map { i ->
-            var left = RANDOM.nextInt(1_000).toLong()
-            if (i % 2 == 0) left = -left
-
-            val right = RANDOM.nextInt(1_000).toLong() + 1 // to avoid being 0
-
-            Triple(left, right, left / right)
-        }.mapTo(parameters, transform)
 
         parameters.add("${Long.MAX_VALUE} / -1" to "-${Long.MAX_VALUE}")
 

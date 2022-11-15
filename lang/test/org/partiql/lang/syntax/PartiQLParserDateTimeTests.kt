@@ -8,16 +8,10 @@ import org.partiql.lang.domains.id
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.util.to
-import java.util.Random
 
 class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
 
     data class DateTimeTestCase(val source: String, val skipTest: Boolean = false, val block: PartiqlAst.Builder.() -> PartiqlAst.PartiqlAstNode)
-    private data class Date(val year: Int, val month: Int, val day: Int)
-
-    private val monthsWith31Days = listOf(1, 3, 5, 7, 8, 10, 12)
-    private val randomGenerator = generateRandomSeed()
-    private val randomDates = List(500) { randomGenerator.nextDate() }
 
     @Test
     @Parameters
@@ -190,40 +184,6 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
             litTime(timeValue(23, 59, 59, 123456790, 9, true, 1080))
         }
     )
-
-    private fun generateRandomSeed(): Random {
-        val rng = Random()
-        val seed = rng.nextLong()
-        println("Randomly generated seed is $seed.  Use this to reproduce failures in dev environment.")
-        rng.setSeed(seed)
-        return rng
-    }
-
-    private fun Random.nextDate(): Date {
-        val year = nextInt(10000)
-        val month = nextInt(12) + 1
-        val day = when (month) {
-            in monthsWith31Days -> nextInt(31)
-            2 -> when ((year % 4 == 0 && year % 100 != 0) || (year % 400 == 0)) {
-                true -> nextInt(29)
-                false -> nextInt(28)
-            }
-            else -> nextInt(30)
-        } + 1
-        return Date(year, month, day)
-    }
-
-    @Test
-    fun testRandomDates() {
-        randomDates.map { date ->
-            val yearStr = date.year.toString().padStart(4, '0')
-            val monthStr = date.month.toString().padStart(2, '0')
-            val dayStr = date.day.toString().padStart(2, '0')
-            assertExpression("DATE '$yearStr-$monthStr-$dayStr'") {
-                date(date.year.toLong(), date.month.toLong(), date.day.toLong())
-            }
-        }
-    }
 
     private fun createErrorCaseForTime(source: String, errorCode: ErrorCode, line: Long, col: Long, tokenType: TokenType, tokenValue: IonValue, skipTest: Boolean = false): () -> Unit = {
         if (!skipTest) {

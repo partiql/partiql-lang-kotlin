@@ -43,7 +43,7 @@ buildDir = new File(rootProject.projectDir, "gradle-build/" + project.name)
 
 configure(subprojects.findAll { it.name != 'example' }) {
     apply plugin: 'io.gitlab.arturbosch.detekt'
-    
+
     detekt {
         input = files("src/")
         parallel = true                                       // Builds the AST in parallel. Rules are always executed in parallel. Can lead to speedups in larger projects. `false` by default.
