@@ -23,7 +23,7 @@ jobs:
         with:
           submodules: recursive
       - name: Use Java ${{ matrix.java }}
-        uses: actions/setup-java@v2
+        uses: actions/setup-java@v3
         with:
           distribution: 'corretto'
           java-version: ${{ matrix.java }}
@@ -41,7 +41,7 @@ jobs:
         with:
           submodules: recursive
       - name: Use Java ${{ matrix.java }}
-        uses: actions/setup-java@v2
+        uses: actions/setup-java@v3
         with:
           distribution: 'corretto'
           java-version: ${{ matrix.java }}
@@ -56,7 +56,7 @@ jobs:
         with:
           submodules: recursive
       - name: Use Java 17
-        uses: actions/setup-java@v2
+        uses: actions/setup-java@v3
         with:
           distribution: 'corretto'
           java-version: 17
