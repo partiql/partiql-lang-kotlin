@@ -15,6 +15,7 @@
 package org.partiql.lang.syntax
 
 import com.amazon.ion.IntegerSize
+import com.amazon.ion.IonException
 import com.amazon.ion.IonInt
 import com.amazon.ion.IonSystem
 import com.amazon.ion.IonValue
@@ -1208,8 +1209,13 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
     }
 
     override fun visitLiteralIon(ctx: PartiQLParser.LiteralIonContext) = PartiqlAst.build {
+        val ionValue = try {
+            ion.singleValue(ctx.ION_CLOSURE().getStringValue()).toIonElement()
+        } catch (e: IonException) {
+            throw ParserException("Unable to parse Ion value.", ErrorCode.PARSE_UNEXPECTED_TOKEN, cause = e)
+        }
         lit(
-            ion.singleValue(ctx.ION_CLOSURE().getStringValue()).toIonElement(),
+            ionValue,
             ctx.ION_CLOSURE().getSourceMetaContainer() + metaContainerOf(IsIonLiteralMeta.instance)
         )
     }

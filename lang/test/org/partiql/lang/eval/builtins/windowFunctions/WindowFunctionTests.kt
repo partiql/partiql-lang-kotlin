@@ -408,8 +408,7 @@ class WindowFunctionTests : EvaluatorTestBase() {
                     { 'date': `2022-09-30`, 'ticker': 'GOOG', 'current_price': 96.15, 'previous_price': NULL, 'next_price': 99.30},
                     { 'date': `2022-10-03`, 'ticker': 'GOOG', 'current_price': 99.30, 'previous_price': 96.15, 'next_price': 101.04},
                     { 'date': `2022-10-04`, 'ticker': 'GOOG', 'current_price': 101.04, 'previous_price': 99.30, 'next_price': NULL}
-                >>""",
-                excludeLegacySerializerAssertions = true
+                >>"""
             ),
             EvaluatorTestCase(
                 query = """

@@ -12,13 +12,10 @@
  *  language governing permissions and limitations under the License.
  */
 
-@file:Suppress("DEPRECATION") // We don't need warnings about ExprNode deprecation.
-
 package org.partiql.lang.eval
 
 import com.amazon.ion.IntegerSize
 import com.amazon.ion.IonInt
-import com.amazon.ion.IonSexp
 import com.amazon.ion.IonString
 import com.amazon.ion.IonValue
 import com.amazon.ion.Timestamp
@@ -27,17 +24,13 @@ import com.amazon.ionelement.api.ionBool
 import com.amazon.ionelement.api.toIonValue
 import org.partiql.lang.ast.AggregateCallSiteListMeta
 import org.partiql.lang.ast.AggregateRegisterIdMeta
-import org.partiql.lang.ast.AstDeserializerBuilder
-import org.partiql.lang.ast.AstVersion
-import org.partiql.lang.ast.ExprNode
-import org.partiql.lang.ast.IonElementMetaContainer
 import org.partiql.lang.ast.IsCountStarMeta
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.ast.UniqueNameMeta
+import org.partiql.lang.ast.find
 import org.partiql.lang.ast.sourceLocation
-import org.partiql.lang.ast.toAstStatement
-import org.partiql.lang.ast.toPartiQlMetaContainer
 import org.partiql.lang.domains.PartiqlAst
+import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.domains.staticType
 import org.partiql.lang.domains.toBindingCase
 import org.partiql.lang.errors.ErrorCode
@@ -138,7 +131,7 @@ internal class EvaluatingCompiler(
     private val compilationContextStack = Stack<CompilationContext>()
 
     private val currentCompilationContext: CompilationContext
-        get() = compilationContextStack.peek() ?: throw EvaluationException(
+        get() = compilationContextStack.peek() ?: errNoContext(
             "compilationContextStack was empty.", ErrorCode.EVALUATOR_UNEXPECTED_VALUE, internal = true
         )
 
@@ -303,9 +296,6 @@ internal class EvaluatingCompiler(
             )
         }
 
-    @Deprecated("ExprNode is deprecated. Please use PIG generated AST. ")
-    fun compile(exprNode: ExprNode): Expression = compile(exprNode.toAstStatement())
-
     /**
      * Compiles a [PartiqlAst.Statement] tree to an [Expression].
      *
@@ -346,15 +336,6 @@ internal class EvaluatingCompiler(
         val parser = PartiQLParserBuilder().ionSystem(valueFactory.ion).build()
         val ast = parser.parseAstStatement(source)
         return compile(ast)
-    }
-
-    /**
-     * Evaluates a V0 s-exp based AST against a global set of bindings.
-     */
-    @Deprecated("Please use CompilerPipeline.compile(PartiqlAst.Statement).eval(EvaluationSession) instead.")
-    fun eval(ast: IonSexp, session: EvaluationSession): ExprValue {
-        val exprNode = AstDeserializerBuilder(valueFactory.ion).build().deserialize(ast, AstVersion.V0)
-        return compile(exprNode.toAstStatement()).eval(session)
     }
 
     /**
@@ -520,7 +501,7 @@ internal class EvaluatingCompiler(
     /**
      *  For operators which could return integer type, check integer overflow in case of [TypingMode.PERMISSIVE].
      */
-    private fun resolveArithmeticOverflow(computeThunk: ThunkEnv, metas: MetaContainer): ThunkEnv =
+    private fun checkIntegerOverflow(computeThunk: ThunkEnv, metas: MetaContainer): ThunkEnv =
         when (val staticTypes = metas.staticType?.type?.getTypes()) {
             // No staticType, can't validate integer size.
             null -> computeThunk
@@ -594,7 +575,7 @@ internal class EvaluatingCompiler(
             (lValue.numberValue() + rValue.numberValue()).exprValue()
         }
 
-        return resolveArithmeticOverflow(computeThunk, metas)
+        return checkIntegerOverflow(computeThunk, metas)
     }
 
     private fun compileMinus(expr: PartiqlAst.Expr.Minus, metas: MetaContainer): ThunkEnv {
@@ -608,7 +589,7 @@ internal class EvaluatingCompiler(
             (lValue.numberValue() - rValue.numberValue()).exprValue()
         }
 
-        return resolveArithmeticOverflow(computeThunk, metas)
+        return checkIntegerOverflow(computeThunk, metas)
     }
 
     private fun compilePos(expr: PartiqlAst.Expr.Pos, metas: MetaContainer): ThunkEnv {
@@ -621,7 +602,7 @@ internal class EvaluatingCompiler(
             value
         }
 
-        return resolveArithmeticOverflow(computeThunk, metas)
+        return checkIntegerOverflow(computeThunk, metas)
     }
 
     private fun compileNeg(expr: PartiqlAst.Expr.Neg, metas: MetaContainer): ThunkEnv {
@@ -631,7 +612,7 @@ internal class EvaluatingCompiler(
             (-value.numberValue()).exprValue()
         }
 
-        return resolveArithmeticOverflow(computeThunk, metas)
+        return checkIntegerOverflow(computeThunk, metas)
     }
 
     private fun compileTimes(expr: PartiqlAst.Expr.Times, metas: MetaContainer): ThunkEnv {
@@ -641,7 +622,7 @@ internal class EvaluatingCompiler(
             (lValue.numberValue() * rValue.numberValue()).exprValue()
         }
 
-        return resolveArithmeticOverflow(computeThunk, metas)
+        return checkIntegerOverflow(computeThunk, metas)
     }
 
     private fun compileDivide(expr: PartiqlAst.Expr.Divide, metas: MetaContainer): ThunkEnv {
@@ -663,13 +644,14 @@ internal class EvaluatingCompiler(
                     throw EvaluationException(
                         cause = e,
                         errorCode = ErrorCode.EVALUATOR_ARITHMETIC_EXCEPTION,
+                        errorContext = errorContextFrom(metas),
                         internal = true
                     )
                 }
             }
         }
 
-        return resolveArithmeticOverflow(computeThunk, metas)
+        return checkIntegerOverflow(computeThunk, metas)
     }
 
     private fun compileModulo(expr: PartiqlAst.Expr.Modulo, metas: MetaContainer): ThunkEnv {
@@ -678,13 +660,13 @@ internal class EvaluatingCompiler(
         val computeThunk = thunkFactory.thunkFold(metas, argThunks) { lValue, rValue ->
             val denominator = rValue.numberValue()
             if (denominator.isZero()) {
-                err("% by zero", ErrorCode.EVALUATOR_MODULO_BY_ZERO, null, false)
+                err("% by zero", ErrorCode.EVALUATOR_MODULO_BY_ZERO, errorContextFrom(metas), false)
             }
 
             (lValue.numberValue() % denominator).exprValue()
         }
 
-        return resolveArithmeticOverflow(computeThunk, metas)
+        return checkIntegerOverflow(computeThunk, metas)
     }
 
     private fun compileEq(expr: PartiqlAst.Expr.Eq, metas: MetaContainer): ThunkEnv {
@@ -1000,7 +982,7 @@ internal class EvaluatingCompiler(
                         "${func.signature.arity.last} arguments, received: ${funcArgThunks.size}"
             }
 
-            throw EvaluationException(
+            err(
                 message,
                 ErrorCode.EVALUATOR_INCORRECT_NUMBER_OF_ARGUMENTS_TO_FUNC_CALL,
                 errorContext,
@@ -1058,7 +1040,7 @@ internal class EvaluatingCompiler(
             }
         }
 
-        return resolveArithmeticOverflow(computeThunk, metas)
+        return checkIntegerOverflow(computeThunk, metas)
     }
 
     private fun compileLit(expr: PartiqlAst.Expr.Lit, metas: MetaContainer): ThunkEnv {
@@ -1083,7 +1065,7 @@ internal class EvaluatingCompiler(
                             when (val value = env.current[bindingName]) {
                                 null -> {
                                     if (fromSourceNames.any { bindingName.isEquivalentTo(it) }) {
-                                        throw EvaluationException(
+                                        err(
                                             "Variable not in GROUP BY or aggregation function: ${bindingName.name}",
                                             ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
                                             errorContextFrom(metas).also {
@@ -1101,7 +1083,7 @@ internal class EvaluatingCompiler(
                                             is PartiqlAst.CaseSensitivity.CaseInsensitive ->
                                                 Pair(ErrorCode.EVALUATOR_BINDING_DOES_NOT_EXIST, "")
                                         }
-                                        throw EvaluationException(
+                                        err(
                                             "No such binding: ${bindingName.name}.$hint",
                                             errorCode,
                                             errorContextFrom(metas).also {
@@ -1151,7 +1133,7 @@ internal class EvaluatingCompiler(
         return { env ->
             val params = env.session.parameters
             if (params.size <= index) {
-                throw EvaluationException(
+                err(
                     "Unbound parameter for ordinal: $ordinal",
                     ErrorCode.EVALUATOR_UNBOUND_PARAMETER,
                     errorContextFrom(metas).also {
@@ -1217,7 +1199,7 @@ internal class EvaluatingCompiler(
 
     private fun compileIs(expr: PartiqlAst.Expr.IsType, metas: MetaContainer): ThunkEnv {
         val expThunk = compileAstExpr(expr.value)
-        val typedOpParameter = expr.type.toTypedOpParameter(customTypedOpParameters)
+        val typedOpParameter = expr.type.toTypedOpParameter()
         if (typedOpParameter.staticType is AnyType) {
             return thunkFactory.thunkEnv(metas) { valueFactory.newBoolean(true) }
         }
@@ -1256,7 +1238,7 @@ internal class EvaluatingCompiler(
 
     private fun compileCastHelper(value: PartiqlAst.Expr, asType: PartiqlAst.Type, metas: MetaContainer): ThunkEnv {
         val expThunk = compileAstExpr(value)
-        val typedOpParameter = asType.toTypedOpParameter(customTypedOpParameters)
+        val typedOpParameter = asType.toTypedOpParameter()
         if (typedOpParameter.staticType is AnyType) {
             return expThunk
         }
@@ -1283,7 +1265,7 @@ internal class EvaluatingCompiler(
 
                 locationMeta?.let { fillErrorContext(errorContext, it) }
 
-                throw EvaluationException(
+                err(
                     "Validation failure for $asType",
                     ErrorCode.EVALUATOR_CAST_FAILED,
                     errorContext,
@@ -1347,7 +1329,7 @@ internal class EvaluatingCompiler(
         thunkFactory.thunkEnv(metas, compileCastHelper(expr.value, expr.asType, metas))
 
     private fun compileCanCast(expr: PartiqlAst.Expr.CanCast, metas: MetaContainer): ThunkEnv {
-        val typedOpParameter = expr.asType.toTypedOpParameter(customTypedOpParameters)
+        val typedOpParameter = expr.asType.toTypedOpParameter()
         if (typedOpParameter.staticType is AnyType) {
             return thunkFactory.thunkEnv(metas) { valueFactory.newBoolean(true) }
         }
@@ -1382,7 +1364,7 @@ internal class EvaluatingCompiler(
     }
 
     private fun compileCanLosslessCast(expr: PartiqlAst.Expr.CanLosslessCast, metas: MetaContainer): ThunkEnv {
-        val typedOpParameter = expr.asType.toTypedOpParameter(customTypedOpParameters)
+        val typedOpParameter = expr.asType.toTypedOpParameter()
         if (typedOpParameter.staticType is AnyType) {
             return thunkFactory.thunkEnv(metas) { valueFactory.newBoolean(true) }
         }
@@ -2054,7 +2036,7 @@ internal class EvaluatingCompiler(
                     internal = true
                 )
             val uniqueName =
-                (alias.metas.toPartiQlMetaContainer().find(UniqueNameMeta.TAG) as UniqueNameMeta?)?.uniqueName
+                (alias.metas.find(UniqueNameMeta.TAG) as UniqueNameMeta?)?.uniqueName
 
             CompiledGroupByItem(alias.text.exprValue(), uniqueName, compileAstExpr(it.expr))
         }
@@ -2114,10 +2096,9 @@ internal class EvaluatingCompiler(
                 val env = resolveEnvironment(row, offsetLocationMeta)
                 orderByItem.thunk(env)
             }
-        } ?: err(
+        } ?: errNoContext(
             "Order BY comparator cannot be null",
             ErrorCode.EVALUATOR_ORDER_BY_NULL_COMPARATOR,
-            null,
             internal = true
         )
 
@@ -2280,7 +2261,7 @@ internal class EvaluatingCompiler(
             asName: String?,
             atName: String?,
             byName: String?,
-            metas: IonElementMetaContainer
+            metas: MetaContainer
         ) {
             sources.add(
                 CompiledFromSource(
@@ -2656,8 +2637,8 @@ internal class EvaluatingCompiler(
         val patternExpr = expr.pattern
         val escapeExpr = expr.escape
 
-        val patternLocationMeta = patternExpr.metas.toPartiQlMetaContainer().sourceLocation
-        val escapeLocationMeta = escapeExpr?.metas?.toPartiQlMetaContainer()?.sourceLocation
+        val patternLocationMeta = patternExpr.metas.sourceLocation
+        val escapeLocationMeta = escapeExpr?.metas?.sourceLocation
 
         // This is so that null short-circuits can be supported.
         fun getRegexPattern(pattern: ExprValue, escape: ExprValue?): (() -> Pattern)? {
@@ -2916,7 +2897,7 @@ internal class EvaluatingCompiler(
                         "${procedure.signature.arity.last} arguments, received: ${args.size}"
             }
 
-            throw EvaluationException(
+            err(
                 message,
                 ErrorCode.EVALUATOR_INCORRECT_NUMBER_OF_ARGUMENTS_TO_PROCEDURE_CALL,
                 errorContext,
@@ -2989,6 +2970,22 @@ internal class EvaluatingCompiler(
             },
             ordering
         )
+
+    /** Helper to convert [PartiqlAst.Type] in AST to a [TypedOpParameter]. */
+    private fun PartiqlAst.Type.toTypedOpParameter(): TypedOpParameter {
+        // hack: to avoid duplicating the function `PartiqlAst.Type.toTypedOpParameter`, we have to convert this
+        // PartiqlAst.Type to PartiqlPhysical.Type. The easiest way to do that without using a visitor transform
+        // (which is overkill and comes with some downsides for something this simple), is to transform to and from
+        // s-expressions again.  This will work without difficulty as long as PartiqlAst.Type remains unchanged in all
+        // permuted domains between PartiqlAst and PartiqlPhysical.
+
+        // This is really just a temporary measure, however, which must exist for as long as the type inferencer works only
+        // on PartiqlAst.  When it has been migrated to use PartiqlPhysical instead, there should no longer be a reason
+        // to keep this function around.
+        val sexp = this.toIonElement()
+        val physicalType = PartiqlPhysical.transform(sexp) as PartiqlPhysical.Type
+        return physicalType.toTypedOpParameter(customTypedOpParameters)
+    }
 }
 
 /**

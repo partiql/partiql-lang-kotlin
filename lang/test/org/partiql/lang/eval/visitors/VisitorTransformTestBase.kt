@@ -17,23 +17,28 @@ package org.partiql.lang.eval.visitors
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.fail
 import org.partiql.lang.domains.PartiqlAst
+import org.partiql.lang.errors.ErrorCode
+import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestFailureReason
+import org.partiql.lang.eval.evaluatortestframework.assertThrowsSqlException
 import org.partiql.lang.syntax.PartiQLParserBuilder
-import org.partiql.lang.syntax.SqlParserTestBase
+import org.partiql.lang.syntax.PartiQLParserTestBase
 
 /** Provides some basic functionality for parameterized testing implementation of [PartiqlAst.VisitorTransform]. */
-abstract class VisitorTransformTestBase : SqlParserTestBase() {
+abstract class VisitorTransformTestBase : PartiQLParserTestBase() {
 
     class TransformTestCase() {
         val parser = PartiQLParserBuilder.standard().build()
+        var name = ""
         lateinit var original: PartiqlAst.Statement
         lateinit var expected: PartiqlAst.Statement
-        constructor(original: String, expected: String) : this() {
+        constructor(original: String, expected: String, name: String = "") : this() {
             this.original = assertDoesNotThrow("Parsing Original SQL") {
                 this.parser.parseAstStatement(original)
             }
             this.expected = assertDoesNotThrow("Parsing Expected SQL") {
                 this.parser.parseAstStatement(expected)
             }
+            this.name = name
         }
 
         constructor(original: PartiqlAst.Statement, expected: PartiqlAst.Statement) : this() {
@@ -45,6 +50,20 @@ abstract class VisitorTransformTestBase : SqlParserTestBase() {
             this.original = original
             this.expected = assertDoesNotThrow("Parsing Expected SQL") {
                 this.parser.parseAstStatement(expected)
+            }
+        }
+
+        override fun toString(): String {
+            return "$name --> $original"
+        }
+    }
+
+    data class TransformErrorTestCase(val query: String, val expectedErrorCode: ErrorCode) {
+        internal fun testDetails(actualErrorCode: ErrorCode? = null): String {
+            return buildString {
+                appendLine("Query               : $query")
+                appendLine("Expected Error Code : $expectedErrorCode")
+                appendLine("Actual Error Code   : $actualErrorCode")
             }
         }
     }
@@ -79,6 +98,25 @@ abstract class VisitorTransformTestBase : SqlParserTestBase() {
         }
 
         assertEquals("The expected AST must match the transformed AST", tc.expected, actualStatement)
+    }
+
+    protected fun runErrorTest(tc: TransformErrorTestCase, transform: PartiqlAst.VisitorTransform) {
+
+        val ex = assertThrowsSqlException(
+            EvaluatorTestFailureReason.EXPECTED_SQL_EXCEPTION_BUT_THERE_WAS_NONE,
+            { tc.testDetails() }
+        ) {
+            val ast = org.junit.jupiter.api.assertDoesNotThrow("Parsing Original SQL") {
+                this.parser.parseAstStatement(tc.query)
+            }
+            transform.transformStatement(ast)
+        }
+
+        org.partiql.lang.eval.evaluatortestframework.assertEquals(
+            tc.expectedErrorCode,
+            ex.errorCode,
+            EvaluatorTestFailureReason.UNEXPECTED_ERROR_CODE
+        ) { tc.testDetails(actualErrorCode = ex.errorCode) }
     }
 
     private fun <T> assertDoesNotThrow(message: String, block: () -> T): T {

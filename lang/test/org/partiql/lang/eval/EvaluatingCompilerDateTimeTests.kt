@@ -85,8 +85,7 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
     fun testDateLiteral() {
         runEvaluatorTestCase(
             query = "DATE '2000-01-02'",
-            expectedResult = "\$partiql_date::2000-01-02",
-            excludeLegacySerializerAssertions = true
+            expectedResult = "$DATE_ANNOTATION::2000-01-02"
         )
     }
 
@@ -114,7 +113,6 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
         runEvaluatorTestCase(
             query = tc.query,
             expectedResult = tc.expected,
-            excludeLegacySerializerAssertions = true,
             expectedResultFormat = ExpectedResultFormat.STRING,
             compileOptionsBuilderBlock = tc.compileOptionsBlock
         ) { actualExprValue ->
@@ -221,7 +219,6 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
         runEvaluatorTestCase(
             query = query,
             expectedResult = expected,
-            excludeLegacySerializerAssertions = true,
             expectedResultFormat = ExpectedResultFormat.STRING
         )
     }
@@ -234,7 +231,6 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
         runEvaluatorTestCase(
             query = query,
             expectedResult = expected,
-            excludeLegacySerializerAssertions = true,
             expectedResultFormat = ExpectedResultFormat.STRING
         )
     }
@@ -247,7 +243,6 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
         runEvaluatorTestCase(
             query = query,
             expectedResult = expected,
-            excludeLegacySerializerAssertions = true,
             expectedResultFormat = ExpectedResultFormat.STRING
         )
     }
@@ -260,7 +255,6 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
         runEvaluatorTestCase(
             query = query,
             expectedResult = expected,
-            excludeLegacySerializerAssertions = true,
             expectedResultFormat = ExpectedResultFormat.STRING
         )
     }
@@ -273,14 +267,12 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
                 runEvaluatorErrorTestCase(
                     query = tc.query,
                     expectedErrorCode = ErrorCode.EVALUATOR_INVALID_COMPARISION,
-                    expectedPermissiveModeResult = "MISSING",
-                    excludeLegacySerializerAssertions = true
+                    expectedPermissiveModeResult = "MISSING"
                 )
             else -> {
                 runEvaluatorTestCase(
                     query = tc.query,
                     expectedResult = tc.expected,
-                    excludeLegacySerializerAssertions = true,
                     expectedResultFormat = ExpectedResultFormat.STRING
                 )
             }

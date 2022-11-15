@@ -415,10 +415,10 @@ internal data class LogicalToLogicalResolvedVisitorTransform(
         return PartiqlLogicalResolved.build {
             aggregate(
                 source = transformBexpr(node.source),
-                strategy = super.transformBexprAggregate_strategy(node),
-                groupList = withInputScope(scope) { super.transformBexprAggregate_groupList(node) },
-                functionList = withInputScope(scope) { super.transformBexprAggregate_functionList(node) },
-                metas = super.transformBexprAggregate_metas(node)
+                strategy = transformBexprAggregate_strategy(node),
+                groupList = withInputScope(scope) { transformBexprAggregate_groupList(node) },
+                functionList = withInputScope(scope) { transformBexprAggregate_functionList(node) },
+                metas = transformBexprAggregate_metas(node)
             )
         }
     }

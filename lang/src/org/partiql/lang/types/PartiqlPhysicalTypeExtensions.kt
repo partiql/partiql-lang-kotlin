@@ -5,7 +5,7 @@ import org.partiql.lang.domains.PartiqlPhysical
 /**
  * Helper to convert [PartiqlPhysical.Type] in AST to a [TypedOpParameter].
  */
-fun PartiqlPhysical.Type.toTypedOpParameter(customTypedOpParameters: Map<String, TypedOpParameter>): TypedOpParameter = when (this) {
+internal fun PartiqlPhysical.Type.toTypedOpParameter(customTypedOpParameters: Map<String, TypedOpParameter>): TypedOpParameter = when (this) {
     is PartiqlPhysical.Type.MissingType -> TypedOpParameter(StaticType.MISSING)
     is PartiqlPhysical.Type.NullType -> TypedOpParameter(StaticType.NULL)
     is PartiqlPhysical.Type.BooleanType -> TypedOpParameter(StaticType.BOOL)
@@ -65,21 +65,4 @@ fun PartiqlPhysical.Type.toTypedOpParameter(customTypedOpParameters: Map<String,
     is PartiqlPhysical.Type.TimeWithTimeZoneType -> TypedOpParameter(
         TimeType(this.precision?.value?.toInt(), withTimeZone = true)
     )
-    is PartiqlPhysical.Type.EsAny,
-    is PartiqlPhysical.Type.EsBoolean,
-    is PartiqlPhysical.Type.EsFloat,
-    is PartiqlPhysical.Type.EsInteger,
-    is PartiqlPhysical.Type.EsText,
-    is PartiqlPhysical.Type.RsBigint,
-    is PartiqlPhysical.Type.RsBoolean,
-    is PartiqlPhysical.Type.RsDoublePrecision,
-    is PartiqlPhysical.Type.RsInteger,
-    is PartiqlPhysical.Type.RsReal,
-    is PartiqlPhysical.Type.RsVarcharMax,
-    is PartiqlPhysical.Type.SparkBoolean,
-    is PartiqlPhysical.Type.SparkDouble,
-    is PartiqlPhysical.Type.SparkFloat,
-    is PartiqlPhysical.Type.SparkInteger,
-    is PartiqlPhysical.Type.SparkLong,
-    is PartiqlPhysical.Type.SparkShort -> error("$this node should not be present in PartiqlPhysical. Consider transforming the AST using CustomTypeVisitorTransform.")
 }

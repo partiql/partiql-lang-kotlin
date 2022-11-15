@@ -2,7 +2,7 @@ package org.partiql.lang.syntax
 
 import org.junit.Test
 
-class SqlParserWindowTests : SqlParserTestBase() {
+class SqlParserWindowTests : PartiQLParserTestBase() {
     // TODO: In the future when we support custom-defined window frame, we will need to change this
     @Test
     fun lagWithInlinePartitionBYOrderBy() = assertExpression(
@@ -38,9 +38,7 @@ class SqlParserWindowTests : SqlParserTestBase() {
                     null
                     null
                     null)))
-        """,
-        targetParsers = setOf(ParserTypes.PARTIQL_PARSER),
-        roundTrip = false
+        """
     )
 
     @Test
@@ -77,9 +75,7 @@ class SqlParserWindowTests : SqlParserTestBase() {
                     null
                     null
                     null)))
-        """,
-        targetParsers = setOf(ParserTypes.PARTIQL_PARSER),
-        roundTrip = false
+        """
     )
 
     @Test
@@ -118,9 +114,7 @@ class SqlParserWindowTests : SqlParserTestBase() {
                     null
                     null
                     null)))
-        """,
-        targetParsers = setOf(ParserTypes.PARTIQL_PARSER),
-        roundTrip = false
+        """
     )
 
     @Test
@@ -158,9 +152,7 @@ class SqlParserWindowTests : SqlParserTestBase() {
                     null
                     null
                     null)))
-        """,
-        targetParsers = setOf(ParserTypes.PARTIQL_PARSER),
-        roundTrip = false
+        """
     )
 
     @Test
@@ -198,9 +190,7 @@ class SqlParserWindowTests : SqlParserTestBase() {
                     null
                     null
                     null)))
-        """,
-        targetParsers = setOf(ParserTypes.PARTIQL_PARSER),
-        roundTrip = false
+        """
     )
 
     @Test
@@ -239,8 +229,6 @@ class SqlParserWindowTests : SqlParserTestBase() {
                     null
                     null
                     null)))
-        """,
-        targetParsers = setOf(ParserTypes.PARTIQL_PARSER),
-        roundTrip = false
+        """
     )
 }

@@ -450,7 +450,7 @@ PartiQL> write_file('out.ion', SELECT * FROM _);
 
 A file called `out.ion` will be created in the `cli` directory with the following contents:
 ```ion
-$partiql_bag::[
+$bag::[
     {
         city: Honolulu
     },
@@ -460,7 +460,7 @@ $partiql_bag::[
 ]
 ```
 
-Notice that PartiQL added the annotation of `$partiql_bag` to the Ion list. When outputting to Ion, we use type 
+Notice that PartiQL added the annotation of `$bag` to the Ion list. When outputting to Ion, we use type 
 annotations to represent some PartiQL values/types not in Ion.
 
 Functions and expressions can be used in the *global configuration* as well.  Consider

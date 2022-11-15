@@ -45,19 +45,19 @@ class EvaluatingCompilerExceptionsTest : EvaluatorTestBase() {
                 query = """CAST(12 AS FLOAT(1))""",
                 expectedErrorCode = ErrorCode.SEMANTIC_FLOAT_PRECISION_UNSUPPORTED,
                 expectedErrorContext = propertyValueMapOf(1, 13),
-                compileOptionsBuilderBlock = CompOptions.TYPED_OP_BEHAVIOR_HONOR_PARAMS.optionsBlock
+                compileOptionsBuilderBlock = CompOptions.STANDARD.optionsBlock
             ),
             EvaluatorErrorTestCase(
                 query = """CAN_CAST(12 AS FLOAT(1))""",
                 expectedErrorCode = ErrorCode.SEMANTIC_FLOAT_PRECISION_UNSUPPORTED,
                 expectedErrorContext = propertyValueMapOf(1, 17),
-                compileOptionsBuilderBlock = CompOptions.TYPED_OP_BEHAVIOR_HONOR_PARAMS.optionsBlock
+                compileOptionsBuilderBlock = CompOptions.STANDARD.optionsBlock
             ),
             EvaluatorErrorTestCase(
                 query = """12 IS FLOAT(1)""",
                 expectedErrorCode = ErrorCode.SEMANTIC_FLOAT_PRECISION_UNSUPPORTED,
                 expectedErrorContext = propertyValueMapOf(1, 8),
-                compileOptionsBuilderBlock = CompOptions.TYPED_OP_BEHAVIOR_HONOR_PARAMS.optionsBlock
+                compileOptionsBuilderBlock = CompOptions.STANDARD.optionsBlock
             )
         )
     }
@@ -144,8 +144,8 @@ class EvaluatingCompilerExceptionsTest : EvaluatorTestBase() {
         // Same query as previous test--but DO NOT throw exception this time because of UndefinedVariableBehavior.MISSING
         runEvaluatorTestCase(
             sqlWithUndefinedVariable, expectedResult = "[null]",
-            compileOptionsBuilderBlock = { undefinedVariable(UndefinedVariableBehavior.MISSING) },
-            target = EvaluatorTestTarget.COMPILER_PIPELINE
+            target = EvaluatorTestTarget.COMPILER_PIPELINE,
+            compileOptionsBuilderBlock = { undefinedVariable(UndefinedVariableBehavior.MISSING) }
         )
 
     private val sqlWithUndefinedQuotedVariable = "SELECT VALUE \"y\" FROM << 'el1' >> AS x"
@@ -165,8 +165,8 @@ class EvaluatingCompilerExceptionsTest : EvaluatorTestBase() {
         // Same query as previous test--but DO NOT throw exception this time because of UndefinedVariableBehavior.MISSING
         runEvaluatorTestCase(
             sqlWithUndefinedQuotedVariable, expectedResult = "[null]",
-            compileOptionsBuilderBlock = { undefinedVariable(UndefinedVariableBehavior.MISSING) },
-            target = EvaluatorTestTarget.COMPILER_PIPELINE
+            target = EvaluatorTestTarget.COMPILER_PIPELINE,
+            compileOptionsBuilderBlock = { undefinedVariable(UndefinedVariableBehavior.MISSING) }
         )
 
     @Test

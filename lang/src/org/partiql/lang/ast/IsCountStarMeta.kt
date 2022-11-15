@@ -18,8 +18,6 @@ class IsCountStarMeta private constructor() : Meta {
     override val tag = TAG
     companion object {
         const val TAG = "\$is_count_star"
-
         val instance = IsCountStarMeta()
-        val deserializer = MemoizedMetaDeserializer(TAG, instance)
     }
 }

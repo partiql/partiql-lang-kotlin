@@ -81,7 +81,6 @@ abstract class CastTestBase : EvaluatorTestBase() {
                             ErrorBehaviorInPermissiveMode.RETURN_MISSING -> "MISSING"
                         },
                         expectedInternalFlag = null, // <-- disables internal flag assertion
-                        excludeLegacySerializerAssertions = true,
                         compilerPipelineBuilderBlock = compilerPipelineBuilderBlock,
                         compileOptionsBuilderBlock = compileOptionBlock,
                         implicitPermissiveModeTest = false,
@@ -94,7 +93,6 @@ abstract class CastTestBase : EvaluatorTestBase() {
             else -> runEvaluatorTestCase(
                 castCase.expression,
                 expectedResult = castCase.expected,
-                excludeLegacySerializerAssertions = true,
                 expectedResultFormat = expectedResultFormat,
                 includePermissiveModeTest = false,
                 compileOptionsBuilderBlock = compileOptionBlock,
@@ -500,16 +498,16 @@ abstract class CastTestBase : EvaluatorTestBase() {
                     case("1.1", ErrorCode.EVALUATOR_INVALID_CAST),
                     case("-20.1", ErrorCode.EVALUATOR_INVALID_CAST),
                     // timestamp
-                    case("`2007-10-10T`", "\$partiql_date::2007-10-10", NotImplemented(CastQuality.LOSSLESS)),
-                    case("`2007-02-23T12:14Z`", "\$partiql_date::2007-02-23", CastQuality.LOSSY),
-                    case("`2007-02-23T12:14:33.079Z`", "\$partiql_date::2007-02-23", CastQuality.LOSSY),
-                    case("`2007-02-23T12:14:33.079-08:00`", "\$partiql_date::2007-02-23", CastQuality.LOSSY),
-                    case("`2007-02T`", "\$partiql_date::2007-02-01", NotImplemented(CastQuality.LOSSLESS)),
-                    case("`2007T`", "\$partiql_date::2007-01-01", NotImplemented(CastQuality.LOSSLESS)),
+                    case("`2007-10-10T`", "$DATE_ANNOTATION::2007-10-10", NotImplemented(CastQuality.LOSSLESS)),
+                    case("`2007-02-23T12:14Z`", "$DATE_ANNOTATION::2007-02-23", CastQuality.LOSSY),
+                    case("`2007-02-23T12:14:33.079Z`", "$DATE_ANNOTATION::2007-02-23", CastQuality.LOSSY),
+                    case("`2007-02-23T12:14:33.079-08:00`", "$DATE_ANNOTATION::2007-02-23", CastQuality.LOSSY),
+                    case("`2007-02T`", "$DATE_ANNOTATION::2007-02-01", NotImplemented(CastQuality.LOSSLESS)),
+                    case("`2007T`", "$DATE_ANNOTATION::2007-01-01", NotImplemented(CastQuality.LOSSLESS)),
                     // text
                     case("'hello'", ErrorCode.EVALUATOR_CAST_FAILED),
                     case("'2016-03-01T01:12:12Z'", ErrorCode.EVALUATOR_CAST_FAILED),
-                    case("""`"2001-01-01"`""", "\$partiql_date::2001-01-01", CastQuality.LOSSLESS),
+                    case("""`"2001-01-01"`""", "$DATE_ANNOTATION::2001-01-01", CastQuality.LOSSLESS),
                     case("""`"+20212-02-01"`""", ErrorCode.EVALUATOR_CAST_FAILED),
                     case("""`"20212-02-01"`""", ErrorCode.EVALUATOR_CAST_FAILED),
                     case("""`'2000T'`""", ErrorCode.EVALUATOR_CAST_FAILED),
@@ -537,12 +535,12 @@ abstract class CastTestBase : EvaluatorTestBase() {
                     case("1.1", ErrorCode.EVALUATOR_INVALID_CAST),
                     case("-20.1", ErrorCode.EVALUATOR_INVALID_CAST),
                     // timestamp
-                    case("`2007-10-10T`", "\$partiql_time::{hour:0,minute:0,second:0.,timezone_hour:null.int,timezone_minute:null.int}", CastQuality.LOSSY),
-                    case("`2007-02-23T12:14Z`", "\$partiql_time::{hour:12,minute:14,second:0.,timezone_hour:null.int,timezone_minute:null.int}", CastQuality.LOSSY),
-                    case("`2007-02-23T12:14:33.079Z`", "\$partiql_time::{hour:12,minute:14,second:33.079,timezone_hour:null.int,timezone_minute:null.int}", CastQuality.LOSSY),
-                    case("`2007-02-23T12:14:33.079-08:00`", "\$partiql_time::{hour:12,minute:14,second:33.079,timezone_hour:null.int,timezone_minute:null.int}", CastQuality.LOSSY),
-                    case("`2007-02T`", "\$partiql_time::{hour:0,minute:0,second:0.,timezone_hour:null.int,timezone_minute:null.int}", CastQuality.LOSSY),
-                    case("`2007T`", "\$partiql_time::{hour:0,minute:0,second:0.,timezone_hour:null.int,timezone_minute:null.int}", CastQuality.LOSSY),
+                    case("`2007-10-10T`", "$TIME_ANNOTATION::{hour:0,minute:0,second:0.,timezone_hour:null.int,timezone_minute:null.int}", CastQuality.LOSSY),
+                    case("`2007-02-23T12:14Z`", "$TIME_ANNOTATION::{hour:12,minute:14,second:0.,timezone_hour:null.int,timezone_minute:null.int}", CastQuality.LOSSY),
+                    case("`2007-02-23T12:14:33.079Z`", "$TIME_ANNOTATION::{hour:12,minute:14,second:33.079,timezone_hour:null.int,timezone_minute:null.int}", CastQuality.LOSSY),
+                    case("`2007-02-23T12:14:33.079-08:00`", "$TIME_ANNOTATION::{hour:12,minute:14,second:33.079,timezone_hour:null.int,timezone_minute:null.int}", CastQuality.LOSSY),
+                    case("`2007-02T`", "$TIME_ANNOTATION::{hour:0,minute:0,second:0.,timezone_hour:null.int,timezone_minute:null.int}", CastQuality.LOSSY),
+                    case("`2007T`", "$TIME_ANNOTATION::{hour:0,minute:0,second:0.,timezone_hour:null.int,timezone_minute:null.int}", CastQuality.LOSSY),
                     // text
                     case("'hello'", ErrorCode.EVALUATOR_CAST_FAILED),
                     case("'2016-03-01T01:12:12Z'", ErrorCode.EVALUATOR_CAST_FAILED),
@@ -1331,7 +1329,7 @@ abstract class CastTestBase : EvaluatorTestBase() {
             ).types(ExprValueType.SYMBOL.typeAliases()),
             listOf(
                 case("DATE '2007-10-10'", "\"2007-10-10\"", CastQuality.LOSSLESS)
-            ).types(ExprValueType.STRING.typeAliases()),
+            ).types(listOf("string", "varchar")),
             listOf(
                 // CAST(<TIME> AS <variants of TIME type>)
                 case("TIME '23:12:12.1267'", "TIME", "$TIME_ANNOTATION::{hour:23, minute:12, second:12.1267, timezone_hour:null.int, timezone_minute:null.int}", CastQuality.LOSSLESS),
@@ -1418,7 +1416,7 @@ abstract class CastTestBase : EvaluatorTestBase() {
                 case("TIME (3) WITH TIME ZONE '23:12:12.1267'", "\"23:12:12.127${defaultTimezoneOffset.getOffsetHHmm()}\"", CastQuality.LOSSLESS),
                 case("TIME (3) WITH TIME ZONE '23:12:12.1267-05:30'", "\"23:12:12.127-05:30\"", CastQuality.LOSSLESS),
                 case("TIME (3) WITH TIME ZONE '23:12:12.1267+05:30'", "\"23:12:12.127+05:30\"", CastQuality.LOSSLESS)
-            ).types(ExprValueType.STRING.typeAliases())
+            ).types(listOf("string", "varchar"))
         ).flatten() +
             listOf(ExprValueType.MISSING, ExprValueType.NULL, ExprValueType.BOOL, ExprValueType.INT, ExprValueType.FLOAT, ExprValueType.DECIMAL, ExprValueType.TIMESTAMP, ExprValueType.CLOB, ExprValueType.BLOB, ExprValueType.LIST, ExprValueType.SEXP, ExprValueType.STRUCT, ExprValueType.BAG)
                 .map {

@@ -10,61 +10,61 @@ import org.partiql.lang.util.ArgumentsProviderBase
  * `CHAR`, `VARCHAR` or `CHARACTER VARYING`.
  *
  * In [TypedOpBehavior.LEGACY] mode, any `IS CHAR(n)` or `IS VARCHAR(n)` returns true for any left-hand value
- * that is an `ExprValueType.STRING`, so only one expected result is needed for both ([expectedResult]).
+ * that is an `ExprValueType.STRING`, so only one expected result is needed for both ([expectedLegacyResult]).
  *
- * In [CompOptions.TYPED_OP_BEHAVIOR_HONOR_PARAMS] mode, `IS CHAR(n)` or `IS VARCHAR(n)` inspect the length of the
+ * In [TypedOpBehavior.HONOR_PARAMETERS] mode, `IS CHAR(n)` or `IS VARCHAR(n)` inspect the length of the
  * left-hand value according to different rules.  The expected results are stored in [expectedIsCharHonorParamsSql]
  * and [expectedIsVarcharHonorParamsSql].
  *
  * When unspecified, the values of [expectedIsCharHonorParamsSql] and [expectedIsVarcharHonorParamsSql] default to
- * [expectedResult].
+ * [expectedLegacyResult].
  */
 private fun isStringTypeTestCase(
     sql: String,
-    expectedResult: String,
-    expectedIsCharHonorParamsSql: String = expectedResult,
-    expectedIsVarcharHonorParamsSql: String = expectedResult
+    expectedLegacyResult: String,
+    expectedIsCharHonorParamsSql: String = expectedLegacyResult,
+    expectedIsVarcharHonorParamsSql: String = expectedLegacyResult
 ) =
     listOf(
         EvaluatorTestCase(
             sql.replace("{TYPE}", "CHAR"),
-            expectedResult,
-            compileOptionsBuilderBlock = CompOptions.STANDARD.optionsBlock
+            expectedLegacyResult,
+            compileOptionsBuilderBlock = CompOptions.TYPED_OP_BEHAVIOR_LEGACY.optionsBlock
         ),
         EvaluatorTestCase(
             sql.replace("{TYPE}", "CHARACTER"),
-            expectedResult,
-            compileOptionsBuilderBlock = CompOptions.STANDARD.optionsBlock
+            expectedLegacyResult,
+            compileOptionsBuilderBlock = CompOptions.TYPED_OP_BEHAVIOR_LEGACY.optionsBlock
         ),
         EvaluatorTestCase(
             sql.replace("{TYPE}", "VARCHAR"),
-            expectedResult,
-            compileOptionsBuilderBlock = CompOptions.STANDARD.optionsBlock
+            expectedLegacyResult,
+            compileOptionsBuilderBlock = CompOptions.TYPED_OP_BEHAVIOR_LEGACY.optionsBlock
         ),
         EvaluatorTestCase(
             sql.replace("{TYPE}", "CHARACTER VARYING"),
-            expectedResult,
-            compileOptionsBuilderBlock = CompOptions.STANDARD.optionsBlock
+            expectedLegacyResult,
+            compileOptionsBuilderBlock = CompOptions.TYPED_OP_BEHAVIOR_LEGACY.optionsBlock
         ),
         EvaluatorTestCase(
             sql.replace("{TYPE}", "CHAR"),
             expectedIsCharHonorParamsSql,
-            compileOptionsBuilderBlock = CompOptions.TYPED_OP_BEHAVIOR_HONOR_PARAMS.optionsBlock
+            compileOptionsBuilderBlock = CompOptions.STANDARD.optionsBlock
         ),
         EvaluatorTestCase(
             sql.replace("{TYPE}", "CHARACTER"),
             expectedIsCharHonorParamsSql,
-            compileOptionsBuilderBlock = CompOptions.TYPED_OP_BEHAVIOR_HONOR_PARAMS.optionsBlock
+            compileOptionsBuilderBlock = CompOptions.STANDARD.optionsBlock
         ),
         EvaluatorTestCase(
             sql.replace("{TYPE}", "VARCHAR"),
             expectedIsVarcharHonorParamsSql,
-            compileOptionsBuilderBlock = CompOptions.TYPED_OP_BEHAVIOR_HONOR_PARAMS.optionsBlock
+            compileOptionsBuilderBlock = CompOptions.STANDARD.optionsBlock
         ),
         EvaluatorTestCase(
             sql.replace("{TYPE}", "CHARACTER VARYING"),
             expectedIsVarcharHonorParamsSql,
-            compileOptionsBuilderBlock = CompOptions.TYPED_OP_BEHAVIOR_HONOR_PARAMS.optionsBlock
+            compileOptionsBuilderBlock = CompOptions.STANDARD.optionsBlock
         )
     )
 
@@ -76,14 +76,14 @@ private fun isStringTypeTestCase(
 private fun isUnicodeStringTestCase(
     strings: List<String>,
     sqlTemplate: String,
-    expectedResult: String,
-    expectedIsCharHonorParamsSql: String = expectedResult,
-    expectedIsVarcharHonorParamsSql: String = expectedResult
+    expectedLegacyResult: String,
+    expectedIsCharHonorParamsSql: String = expectedLegacyResult,
+    expectedIsVarcharHonorParamsSql: String = expectedLegacyResult
 ) =
     strings.map {
         isStringTypeTestCase(
             sql = sqlTemplate.replace("<STRING>", it),
-            expectedResult = expectedResult,
+            expectedLegacyResult = expectedLegacyResult,
             expectedIsCharHonorParamsSql = expectedIsCharHonorParamsSql,
             expectedIsVarcharHonorParamsSql = expectedIsVarcharHonorParamsSql
         )
@@ -95,29 +95,29 @@ private fun isUnicodeStringTestCase(
  */
 private fun isDecimalTypeTestCase(
     sql: String,
-    expectedResult: String,
-    expectedIsDecimalHonorParamsResult: String = expectedResult
+    expectedLegacyResult: String,
+    expectedIsDecimalHonorParamsResult: String = expectedLegacyResult
 ) =
     listOf(
         EvaluatorTestCase(
             sql.replace("{TYPE}", "DECIMAL"),
-            expectedResult,
-            compileOptionsBuilderBlock = CompOptions.STANDARD.optionsBlock
+            expectedLegacyResult,
+            compileOptionsBuilderBlock = CompOptions.TYPED_OP_BEHAVIOR_LEGACY.optionsBlock
         ),
         EvaluatorTestCase(
             sql.replace("{TYPE}", "NUMERIC"),
-            expectedResult,
-            compileOptionsBuilderBlock = CompOptions.STANDARD.optionsBlock
+            expectedLegacyResult,
+            compileOptionsBuilderBlock = CompOptions.TYPED_OP_BEHAVIOR_LEGACY.optionsBlock
         ),
         EvaluatorTestCase(
             sql.replace("{TYPE}", "DECIMAL"),
             expectedIsDecimalHonorParamsResult,
-            compileOptionsBuilderBlock = CompOptions.TYPED_OP_BEHAVIOR_HONOR_PARAMS.optionsBlock
+            compileOptionsBuilderBlock = CompOptions.STANDARD.optionsBlock
         ),
         EvaluatorTestCase(
             sql.replace("{TYPE}", "NUMERIC"),
             expectedIsDecimalHonorParamsResult,
-            compileOptionsBuilderBlock = CompOptions.TYPED_OP_BEHAVIOR_HONOR_PARAMS.optionsBlock
+            compileOptionsBuilderBlock = CompOptions.STANDARD.optionsBlock
         )
     )
 
@@ -129,11 +129,15 @@ private fun isIntDecimalTypeTestCase(
     expectedLegacyResult: String,
     expectedHonorParamsResult: String = expectedLegacyResult
 ) = listOf(
-    EvaluatorTestCase(sql, expectedLegacyResult, compileOptionsBuilderBlock = CompOptions.STANDARD.optionsBlock),
+    EvaluatorTestCase(
+        sql,
+        expectedLegacyResult,
+        compileOptionsBuilderBlock = CompOptions.TYPED_OP_BEHAVIOR_LEGACY.optionsBlock
+    ),
     EvaluatorTestCase(
         sql,
         expectedHonorParamsResult,
-        compileOptionsBuilderBlock = CompOptions.TYPED_OP_BEHAVIOR_HONOR_PARAMS.optionsBlock
+        compileOptionsBuilderBlock = CompOptions.STANDARD.optionsBlock
     )
 )
 
@@ -253,23 +257,23 @@ class EvaluatingCompilerIsTests : EvaluatorTestBase() {
         override fun getParameters(): List<Any> = listOf(
             isStringTypeTestCase(
                 sql = "1 IS {TYPE}(1)",
-                expectedResult = "FALSE"
+                expectedLegacyResult = "FALSE"
             ),
             isStringTypeTestCase(
                 sql = "1.0 IS {TYPE}(1)",
-                expectedResult = "FALSE"
+                expectedLegacyResult = "FALSE"
             ),
             isStringTypeTestCase(
                 sql = "[] IS {TYPE}(1)",
-                expectedResult = "FALSE"
+                expectedLegacyResult = "FALSE"
             ),
             isStringTypeTestCase(
                 sql = "{} IS {TYPE}(1)",
-                expectedResult = "FALSE"
+                expectedLegacyResult = "FALSE"
             ),
             isStringTypeTestCase(
                 sql = "<<>> IS {TYPE}(1)",
-                expectedResult = "FALSE"
+                expectedLegacyResult = "FALSE"
             )
         ).flatten()
     }
@@ -283,13 +287,13 @@ class EvaluatingCompilerIsTests : EvaluatorTestBase() {
         override fun getParameters(): List<Any> = listOf(
             isStringTypeTestCase(
                 sql = "'' IS {TYPE}(1)",
-                expectedResult = "TRUE",
+                expectedLegacyResult = "TRUE",
                 expectedIsCharHonorParamsSql = "FALSE",
                 expectedIsVarcharHonorParamsSql = "TRUE"
             ),
             isStringTypeTestCase(
                 sql = "'' IS {TYPE}(100)",
-                expectedResult = "TRUE",
+                expectedLegacyResult = "TRUE",
                 expectedIsCharHonorParamsSql = "FALSE",
                 expectedIsVarcharHonorParamsSql = "TRUE"
             )
@@ -317,66 +321,66 @@ class EvaluatingCompilerIsTests : EvaluatorTestBase() {
                 isUnicodeStringTestCase(
                     strings = listOf("a", "💩", "😁"),
                     sqlTemplate = "'<STRING>' IS {TYPE}(1)",
-                    expectedResult = "TRUE"
+                    expectedLegacyResult = "TRUE"
                 ),
                 isUnicodeStringTestCase(
                     strings = fourCharacterStrings,
                     sqlTemplate = "'<STRING>' IS {TYPE}(2)",
-                    expectedResult = "TRUE",
+                    expectedLegacyResult = "TRUE",
                     expectedIsCharHonorParamsSql = "FALSE",
                     expectedIsVarcharHonorParamsSql = "FALSE"
                 ),
                 isUnicodeStringTestCase(
                     strings = fourCharacterStrings,
                     sqlTemplate = "'<STRING>' IS {TYPE}(3)",
-                    expectedResult = "TRUE",
+                    expectedLegacyResult = "TRUE",
                     expectedIsCharHonorParamsSql = "FALSE",
                     expectedIsVarcharHonorParamsSql = "FALSE"
                 ),
                 isUnicodeStringTestCase(
                     strings = fourCharacterStrings,
                     sqlTemplate = "'<STRING>' IS {TYPE}(4)",
-                    expectedResult = "TRUE",
+                    expectedLegacyResult = "TRUE",
                     expectedIsCharHonorParamsSql = "TRUE",
                     expectedIsVarcharHonorParamsSql = "TRUE"
                 ),
                 isUnicodeStringTestCase(
                     strings = fourCharacterStrings,
                     sqlTemplate = "'<STRING>' IS {TYPE}(5)",
-                    expectedResult = "TRUE",
+                    expectedLegacyResult = "TRUE",
                     expectedIsCharHonorParamsSql = "FALSE",
                     expectedIsVarcharHonorParamsSql = "TRUE"
                 ),
                 isUnicodeStringTestCase(
                     strings = listOf("a", "💩"),
                     sqlTemplate = "'<STRING>' IS {TYPE}(1)",
-                    expectedResult = "TRUE"
+                    expectedLegacyResult = "TRUE"
                 ),
                 isUnicodeStringTestCase(
                     strings = fourCharacterStrings,
                     sqlTemplate = "'<STRING>' IS {TYPE}(2)",
-                    expectedResult = "TRUE",
+                    expectedLegacyResult = "TRUE",
                     expectedIsCharHonorParamsSql = "FALSE",
                     expectedIsVarcharHonorParamsSql = "FALSE"
                 ),
                 isUnicodeStringTestCase(
                     strings = fourCharacterStrings,
                     sqlTemplate = "'<STRING>' IS {TYPE}(3)",
-                    expectedResult = "TRUE",
+                    expectedLegacyResult = "TRUE",
                     expectedIsCharHonorParamsSql = "FALSE",
                     expectedIsVarcharHonorParamsSql = "FALSE"
                 ),
                 isUnicodeStringTestCase(
                     strings = fourCharacterStrings,
                     sqlTemplate = "'<STRING>' IS {TYPE}(4)",
-                    expectedResult = "TRUE",
+                    expectedLegacyResult = "TRUE",
                     expectedIsCharHonorParamsSql = "TRUE",
                     expectedIsVarcharHonorParamsSql = "TRUE"
                 ),
                 isUnicodeStringTestCase(
                     strings = fourCharacterStrings,
                     sqlTemplate = "'<STRING>' IS {TYPE}(5)",
-                    expectedResult = "TRUE",
+                    expectedLegacyResult = "TRUE",
                     expectedIsCharHonorParamsSql = "FALSE",
                     expectedIsVarcharHonorParamsSql = "TRUE"
                 )
@@ -393,114 +397,114 @@ class EvaluatingCompilerIsTests : EvaluatorTestBase() {
         override fun getParameters(): List<Any> = listOf(
             isDecimalTypeTestCase(
                 sql = "1 IS {TYPE}",
-                expectedResult = "FALSE"
+                expectedLegacyResult = "FALSE"
             ),
             isDecimalTypeTestCase(
                 sql = "`1e0` IS {TYPE}",
-                expectedResult = "FALSE"
+                expectedLegacyResult = "FALSE"
             ), // Note:  Ion literal is a FLOAT )
             isDecimalTypeTestCase(
                 sql = "'foo' IS {TYPE}",
-                expectedResult = "FALSE"
+                expectedLegacyResult = "FALSE"
             ),
             isDecimalTypeTestCase(
                 sql = "`foo` IS {TYPE}",
-                expectedResult = "FALSE"
+                expectedLegacyResult = "FALSE"
             ),
             isDecimalTypeTestCase("{} IS {TYPE}", "FALSE"),
             isDecimalTypeTestCase(
                 sql = "[] IS {TYPE}",
-                expectedResult = "FALSE"
+                expectedLegacyResult = "FALSE"
             ),
             isDecimalTypeTestCase(
                 sql = "<<>> IS {TYPE}",
-                expectedResult = "FALSE"
+                expectedLegacyResult = "FALSE"
             ),
             isDecimalTypeTestCase(
                 sql = "true IS {TYPE}",
-                expectedResult = "FALSE"
+                expectedLegacyResult = "FALSE"
             ),
             isDecimalTypeTestCase(
                 sql = "false IS {TYPE}",
-                expectedResult = "FALSE"
+                expectedLegacyResult = "FALSE"
             ),
 
             // any scale and precision
             isDecimalTypeTestCase(
                 sql = "1.0 IS {TYPE}",
-                expectedResult = "TRUE"
+                expectedLegacyResult = "TRUE"
             ),
             isDecimalTypeTestCase(
                 sql = "1. IS {TYPE}",
-                expectedResult = "TRUE"
+                expectedLegacyResult = "TRUE"
             ),
             isDecimalTypeTestCase(
                 sql = ".1 IS {TYPE}",
-                expectedResult = "TRUE"
+                expectedLegacyResult = "TRUE"
             ),
             isDecimalTypeTestCase(
                 sql = "1234567890.0987654321 IS {TYPE}",
-                expectedResult = "TRUE"
+                expectedLegacyResult = "TRUE"
             ),
 
             // equal scale and precision
             isDecimalTypeTestCase(
                 sql = "123.456 IS {TYPE}(6, 3)",
-                expectedResult = "TRUE"
+                expectedLegacyResult = "TRUE"
             ),
 
             // greater precision and scale
             isDecimalTypeTestCase(
                 sql = "123.456 IS DECIMAL(7, 4)",
-                expectedResult = "TRUE",
+                expectedLegacyResult = "TRUE",
                 expectedIsDecimalHonorParamsResult = "TRUE"
             ),
 
             // less precision and scale
             isDecimalTypeTestCase(
                 sql = "123.456 IS DECIMAL(2, 2)",
-                expectedResult = "TRUE",
+                expectedLegacyResult = "TRUE",
                 expectedIsDecimalHonorParamsResult = "false"
             ),
 
             // less precision but equal scale
             isDecimalTypeTestCase(
                 sql = "123.456 IS {TYPE}(5, 3)",
-                expectedResult = "TRUE",
+                expectedLegacyResult = "TRUE",
                 expectedIsDecimalHonorParamsResult = "FALSE"
             ),
 
             // greater precision but equal scale
             isDecimalTypeTestCase(
                 sql = "123.456 IS {TYPE}(7, 3)",
-                expectedResult = "TRUE"
+                expectedLegacyResult = "TRUE"
             ),
 
             // equal precision but less scale
             isDecimalTypeTestCase(
                 sql = "123.456 IS {TYPE}(6, 2)",
-                expectedResult = "TRUE",
+                expectedLegacyResult = "TRUE",
                 expectedIsDecimalHonorParamsResult = "FALSE"
             ),
 
             // equal precision but greater scale
             isDecimalTypeTestCase(
                 sql = "123.456 IS {TYPE}(6, 4)",
-                expectedResult = "TRUE",
+                expectedLegacyResult = "TRUE",
                 expectedIsDecimalHonorParamsResult = "FALSE"
             ),
 
             // Leading non-significant integral coefficient should not effect the result.
             isDecimalTypeTestCase(
                 sql = "0123.456 IS {TYPE}(6, 3)",
-                expectedResult = "TRUE",
+                expectedLegacyResult = "TRUE",
                 expectedIsDecimalHonorParamsResult = "TRUE"
             ),
 
             // All zeros.
             isDecimalTypeTestCase(
                 sql = "0.00 IS {TYPE}(4, 3)",
-                expectedResult = "TRUE",
+                expectedLegacyResult = "TRUE",
                 expectedIsDecimalHonorParamsResult = "TRUE"
             )
 

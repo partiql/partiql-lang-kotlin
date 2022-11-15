@@ -16,7 +16,7 @@ package org.partiql.lang.eval
 import com.amazon.ion.IonStruct
 import com.amazon.ion.IonSystem
 import com.amazon.ion.IonValue
-import org.partiql.lang.ast.CaseSensitivity
+import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.util.errAmbiguousBinding
 import org.partiql.lang.util.isBindingNameEquivalent
@@ -51,9 +51,9 @@ enum class BindingCase {
 /**
  * Converts a [CaseSensitivity] to a [BindingCase].
  */
-fun CaseSensitivity.toBindingCase(): BindingCase = when (this) {
-    CaseSensitivity.INSENSITIVE -> BindingCase.INSENSITIVE
-    CaseSensitivity.SENSITIVE -> BindingCase.SENSITIVE
+fun PartiqlAst.CaseSensitivity.toBindingCase(): BindingCase = when (this) {
+    is PartiqlAst.CaseSensitivity.CaseInsensitive -> BindingCase.INSENSITIVE
+    is PartiqlAst.CaseSensitivity.CaseSensitive -> BindingCase.SENSITIVE
 }
 
 /**

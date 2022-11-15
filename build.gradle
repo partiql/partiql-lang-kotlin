@@ -36,7 +36,7 @@ allprojects {
 
 subprojects {
     group = 'org.partiql'
-    version = '0.8.0'
+    version = '0.8.2-SNAPSHOT'
 }
 
 buildDir = new File(rootProject.projectDir, "gradle-build/" + project.name)
@@ -144,7 +144,7 @@ subprojects { proj ->
         processResources.dependsOn generateVersionAndHashProperties
     })
 
-    if (project.name == "partiql-isl" || project.name == "partiql-tests-runner") {
+    if (project.name == "partiql-isl" || project.name == "partiql-tests-runner" || project.parent.name.contains("-upgrade")) {
         // skip subprojects using the conventional Gradle layout
         return
     }

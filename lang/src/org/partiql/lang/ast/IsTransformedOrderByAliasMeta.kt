@@ -34,6 +34,5 @@ class IsTransformedOrderByAliasMeta private constructor() : Meta {
         const val TAG = "\$is_transformed_order_by_alias"
 
         val instance = IsTransformedOrderByAliasMeta()
-        val deserializer = MemoizedMetaDeserializer(TAG, instance)
     }
 }

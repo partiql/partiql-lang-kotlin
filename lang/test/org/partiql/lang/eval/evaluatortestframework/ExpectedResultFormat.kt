@@ -16,7 +16,7 @@ enum class ExpectedResultFormat {
     ION,
 
     /**
-     * The expected value is expressed in Ion but does not contain the `$partiql_bag` or `$partiql_missing` annotations.
+     * The expected value is expressed in Ion but does not contain the `$bag` or `$missing` annotations.
      * Otherwise, standard Ion equivalence is used to assert the expected result matches.
      *
      * This is for older test cases that existed prior to these attributes and which not been updated yet.  Yes, this is

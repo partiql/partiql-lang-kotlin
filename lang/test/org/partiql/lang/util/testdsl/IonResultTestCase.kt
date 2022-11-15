@@ -63,10 +63,9 @@ data class IonResultTestCase(
 
     override fun toString(): String = listOfNotNull(group, name, note, cleanedSqlUnderTest).joinToString(" - ")
 
-    fun toExprNodeTestCase(): ExprNodeTestCase =
+    fun toStatementTestCase(): StatementTestCase =
         assertDoesNotThrow("IonResultTestCase ${toString()} should not throw when parsing") {
-            @Suppress("DEPRECATION")
-            ExprNodeTestCase(name, PartiQLParser(ION).parseExprNode(sqlUnderTest))
+            StatementTestCase(name, PartiQLParser(ION).parseAstStatement(sqlUnderTest))
         }
 }
 
@@ -97,7 +96,6 @@ internal fun IonResultTestCase.runTestCase(
         expectedResult = this.expectedLegacyModeIonResult,
         expectedPermissiveModeResult = this.expectedPermissiveModeIonResult,
         expectedResultFormat = ExpectedResultFormat.ION,
-        excludeLegacySerializerAssertions = true,
         implicitPermissiveModeTest = false,
         compileOptionsBuilderBlock = this.compileOptionsBuilderBlock,
         compilerPipelineBuilderBlock = compilerPipelineBuilderBlock,

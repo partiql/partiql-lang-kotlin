@@ -12,9 +12,6 @@
  *  language governing permissions and limitations under the License.
  */
 
-// We don't need warnings about deprecated ExprNode.
-@file:Suppress("DEPRECATION")
-
 package org.partiql.lang.eval
 
 import com.amazon.ion.IonType
@@ -26,19 +23,17 @@ import org.partiql.lang.SqlException
 import org.partiql.lang.TestBase
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.PropertyValueMap
-import org.partiql.lang.eval.evaluatortestframework.AstRewriterBaseTestAdapter
 import org.partiql.lang.eval.evaluatortestframework.CompilerPipelineFactory
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorErrorTestCase
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestAdapter
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestCase
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestTarget
 import org.partiql.lang.eval.evaluatortestframework.ExpectedResultFormat
-import org.partiql.lang.eval.evaluatortestframework.LegacySerializerTestAdapter
 import org.partiql.lang.eval.evaluatortestframework.MultipleTestAdapter
 import org.partiql.lang.eval.evaluatortestframework.PartiQLCompilerPipelineFactory
-import org.partiql.lang.eval.evaluatortestframework.PartiqlAstExprNodeRoundTripAdapter
 import org.partiql.lang.eval.evaluatortestframework.PipelineEvaluatorTestAdapter
 import org.partiql.lang.eval.evaluatortestframework.PlannerPipelineFactory
+import org.partiql.lang.eval.evaluatortestframework.VisitorTransformBaseTestAdapter
 import org.partiql.lang.util.asSequence
 import org.partiql.lang.util.newFromIonText
 
@@ -52,9 +47,7 @@ abstract class EvaluatorTestBase : TestBase() {
             PipelineEvaluatorTestAdapter(CompilerPipelineFactory()),
             PipelineEvaluatorTestAdapter(PlannerPipelineFactory()),
             PipelineEvaluatorTestAdapter(PartiQLCompilerPipelineFactory()),
-            PartiqlAstExprNodeRoundTripAdapter(),
-            LegacySerializerTestAdapter(),
-            AstRewriterBaseTestAdapter()
+            VisitorTransformBaseTestAdapter()
         )
     )
 
@@ -75,7 +68,6 @@ abstract class EvaluatorTestBase : TestBase() {
         session: EvaluationSession = EvaluationSession.standard(),
         expectedResult: String,
         expectedPermissiveModeResult: String = expectedResult,
-        excludeLegacySerializerAssertions: Boolean = false,
         expectedResultFormat: ExpectedResultFormat = ExpectedResultFormat.ION_WITHOUT_BAG_AND_MISSING_ANNOTATIONS,
         includePermissiveModeTest: Boolean = true,
         target: EvaluatorTestTarget = EvaluatorTestTarget.ALL_PIPELINES,
@@ -88,7 +80,6 @@ abstract class EvaluatorTestBase : TestBase() {
             expectedResult = expectedResult,
             expectedPermissiveModeResult = expectedPermissiveModeResult,
             expectedResultFormat = expectedResultFormat,
-            excludeLegacySerializerAssertions = excludeLegacySerializerAssertions,
             implicitPermissiveModeTest = includePermissiveModeTest,
             target = target,
             compileOptionsBuilderBlock = compileOptionsBuilderBlock,
@@ -116,7 +107,6 @@ abstract class EvaluatorTestBase : TestBase() {
         expectedErrorContext: PropertyValueMap? = null,
         expectedPermissiveModeResult: String? = null,
         expectedInternalFlag: Boolean? = null,
-        excludeLegacySerializerAssertions: Boolean = false,
         compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit = { },
         compileOptionsBuilderBlock: CompileOptions.Builder.() -> Unit = { },
         addtionalExceptionAssertBlock: (SqlException) -> Unit = { },
@@ -130,12 +120,11 @@ abstract class EvaluatorTestBase : TestBase() {
             expectedErrorContext = expectedErrorContext,
             expectedInternalFlag = expectedInternalFlag,
             expectedPermissiveModeResult = expectedPermissiveModeResult,
-            excludeLegacySerializerAssertions = excludeLegacySerializerAssertions,
             implicitPermissiveModeTest = implicitPermissiveModeTest,
+            additionalExceptionAssertBlock = addtionalExceptionAssertBlock,
             targetPipeline = target,
             compileOptionsBuilderBlock = compileOptionsBuilderBlock,
             compilerPipelineBuilderBlock = compilerPipelineBuilderBlock,
-            additionalExceptionAssertBlock = addtionalExceptionAssertBlock,
         )
 
         testHarness.runEvaluatorErrorTestCase(tc, session)
@@ -174,11 +163,11 @@ abstract class EvaluatorTestBase : TestBase() {
 
 internal fun IonValue.removeBagAndMissingAnnotations() {
     when (this.type) {
-        // Remove $partiql_missing annotation from NULL for assertions
+        // Remove $missing annotation from NULL for assertions
         IonType.NULL -> this.removeTypeAnnotation(MISSING_ANNOTATION)
         // Recurse into all container types.
         IonType.DATAGRAM, IonType.SEXP, IonType.STRUCT, IonType.LIST -> {
-            // Remove $partiql_bag annotation from LIST for assertions
+            // Remove $bag annotation from LIST for assertions
             if (this.type == IonType.LIST) {
                 this.removeTypeAnnotation(BAG_ANNOTATION)
             }
@@ -192,15 +181,15 @@ internal fun IonValue.removeBagAndMissingAnnotations() {
 }
 
 /**
- * Clones and removes $partiql_bag and $partiql_missing annotations from the clone and any child values.
+ * Clones and removes $bag and $missing annotations from the clone and any child values.
  *
  * There are many tests which were created before these annotations were present and thus do not include them
  * in their expected values.  This function provides an alternative to having to go and update all of them.
  * This is tech debt of the unhappy variety:  all of those test cases should really be updated and this function
  * should be deleted.
  *
- * NOTE: this function does not remove $partiql_date annotations ever!  There are tests that depend on this too.
- * $partiql_date however, was added AFTER this function was created, and so no test cases needed to remove that
+ * NOTE: this function does not remove $date annotations ever!  There are tests that depend on this too.
+ * $date however, was added AFTER this function was created, and so no test cases needed to remove that
  * annotation.
  */
 internal fun IonValue.cloneAndRemoveBagAndMissingAnnotations() = this.clone().apply {

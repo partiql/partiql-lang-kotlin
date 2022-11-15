@@ -22,8 +22,18 @@ import org.partiql.lang.eval.ThunkReturnTypeAssertions
 import org.partiql.lang.eval.builtins.DynamicLookupExprFunction
 import org.partiql.lang.eval.builtins.createBuiltinFunctions
 import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedure
-import org.partiql.lang.eval.physical.operators.DEFAULT_RELATIONAL_OPERATOR_FACTORIES
+import org.partiql.lang.eval.physical.operators.AggregateOperatorFactoryDefault
+import org.partiql.lang.eval.physical.operators.FilterRelationalOperatorFactoryDefault
+import org.partiql.lang.eval.physical.operators.JoinRelationalOperatorFactoryDefault
+import org.partiql.lang.eval.physical.operators.LetRelationalOperatorFactoryDefault
+import org.partiql.lang.eval.physical.operators.LimitRelationalOperatorFactoryDefault
+import org.partiql.lang.eval.physical.operators.OffsetRelationalOperatorFactoryDefault
 import org.partiql.lang.eval.physical.operators.RelationalOperatorFactory
+import org.partiql.lang.eval.physical.operators.ScanRelationalOperatorFactoryDefault
+import org.partiql.lang.eval.physical.operators.SortOperatorFactoryDefault
+import org.partiql.lang.eval.physical.operators.UnpivotOperatorFactoryDefault
+import org.partiql.lang.eval.physical.operators.WindowRelationalOperatorFactoryDefault
+import org.partiql.lang.eval.physical.window.ExperimentalWindowFunc
 import org.partiql.lang.planner.EvaluatorOptions
 import org.partiql.lang.types.CustomType
 
@@ -55,6 +65,29 @@ class PartiQLCompilerBuilder private constructor() {
     companion object {
 
         private val DEFAULT_ION = IonSystemBuilder.standard().build()
+
+        /**
+         * A collection of all the default relational operator implementations provided by PartiQL.
+         *
+         * By default, the query planner will select these as the implementations for all relational operators, but
+         * alternate implementations may be provided and chosen by physical plan passes.
+         *
+         * @see [org.partiql.lang.planner.PlannerPipeline.Builder.addPhysicalPlanPass]
+         * @see [org.partiql.lang.planner.PlannerPipeline.Builder.addRelationalOperatorFactory]
+         */
+        private val DEFAULT_RELATIONAL_OPERATOR_FACTORIES = listOf(
+            AggregateOperatorFactoryDefault,
+            SortOperatorFactoryDefault,
+            UnpivotOperatorFactoryDefault,
+            FilterRelationalOperatorFactoryDefault,
+            ScanRelationalOperatorFactoryDefault,
+            JoinRelationalOperatorFactoryDefault,
+            OffsetRelationalOperatorFactoryDefault,
+            LimitRelationalOperatorFactoryDefault,
+            LetRelationalOperatorFactoryDefault,
+            @OptIn(ExperimentalWindowFunc::class)
+            WindowRelationalOperatorFactoryDefault
+        )
 
         @JvmStatic
         fun standard() = PartiQLCompilerBuilder()

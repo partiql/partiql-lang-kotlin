@@ -14,7 +14,6 @@
 
 package org.partiql.lang.syntax
 
-import com.amazon.ion.IonSexp
 import com.amazon.ion.IonSystem
 import org.antlr.v4.runtime.BaseErrorListener
 import org.antlr.v4.runtime.CharStreams
@@ -24,8 +23,6 @@ import org.antlr.v4.runtime.RecognitionException
 import org.antlr.v4.runtime.Recognizer
 import org.antlr.v4.runtime.Token
 import org.antlr.v4.runtime.tree.ParseTree
-import org.partiql.lang.ast.ExprNode
-import org.partiql.lang.ast.toExprNode
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
@@ -94,27 +91,15 @@ internal class PartiQLParser(
         val lexer = getLexer(query)
         val tokenIndexToParameterIndex = mutableMapOf<Int, Int>()
         var parametersFound = 0
-        val tokens = CommonTokenStream(lexer)
-        for (i in 0 until tokens.numberOfOnChannelTokens) {
-            if (tokens[i].type == GeneratedParser.QUESTION_MARK) {
-                tokenIndexToParameterIndex[tokens[i].tokenIndex] = ++parametersFound
+        val tokenIter = CommonTokenStream(lexer).also { it.fill() }.tokens.iterator()
+        while (tokenIter.hasNext()) {
+            val token = tokenIter.next()
+            if (token.type == GeneratedParser.QUESTION_MARK) {
+                tokenIndexToParameterIndex[token.tokenIndex] = ++parametersFound
             }
         }
         return tokenIndexToParameterIndex
     }
-
-    @Deprecated("Please use parseAstStatement() instead--ExprNode is deprecated.")
-    override fun parseExprNode(source: String): @Suppress("DEPRECATION") ExprNode {
-        return parseAstStatement(source).toExprNode(ion)
-    }
-
-    @Deprecated("Please use parseAstStatement() instead--the return value can be deserialized to backward-compatible IonSexp.")
-    override fun parse(source: String): IonSexp =
-        @Suppress("DEPRECATION")
-        org.partiql.lang.ast.AstSerializer.serialize(
-            parseExprNode(source),
-            org.partiql.lang.ast.AstVersion.V0, ion
-        )
 
     /**
      * Catches Lexical errors (unidentified tokens) and throws a [LexerException]

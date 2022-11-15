@@ -12,12 +12,9 @@
  *  language governing permissions and limitations under the License.
  */
 
-@file:Suppress("DEPRECATION") // We don't need warnings about ExprNode deprecation.
-
 package org.partiql.lang.syntax
 
 import com.amazon.ion.IonSexp
-import org.partiql.lang.ast.ExprNode
 import org.partiql.lang.domains.PartiqlAst
 
 /**
@@ -27,10 +24,4 @@ import org.partiql.lang.domains.PartiqlAst
  */
 interface Parser {
     fun parseAstStatement(source: String): PartiqlAst.Statement
-
-    @Deprecated("Please use parseAstStatement() instead--ExprNode is deprecated.")
-    fun parseExprNode(source: String): ExprNode
-
-    @Deprecated("Please use parseAstStatement() instead--the return value can be deserialized to backward-compatible IonSexp.")
-    fun parse(source: String): IonSexp
 }

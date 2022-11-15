@@ -14,7 +14,7 @@ import org.partiql.lang.util.ArgumentsProviderBase
 import org.partiql.lang.util.propertyValueMapOf
 
 /**
- * Parsing related tests in [org.partiql.lang.syntax.SqlParserTest] and [org.partiql.lang.errors.ParserErrorsTest].
+ * Parsing related tests in [org.partiql.lang.syntax.PartiQLParserTest] and [org.partiql.lang.errors.ParserErrorsTest].
  */
 class ExtractEvaluationTest : EvaluatorTestBase() {
     // Pass test cases
@@ -23,8 +23,7 @@ class ExtractEvaluationTest : EvaluatorTestBase() {
     fun runPassTests(testCase: ExprFunctionTestCase) = runEvaluatorTestCase(
         query = testCase.source,
         session = testCase.session,
-        expectedResult = testCase.expectedLegacyModeResult,
-        excludeLegacySerializerAssertions = true
+        expectedResult = testCase.expectedLegacyModeResult
     )
 
     class ExtractPassCases : ArgumentsProviderBase() {
@@ -144,8 +143,7 @@ class ExtractEvaluationTest : EvaluatorTestBase() {
             testCase.query,
             ErrorCode.EVALUATOR_INVALID_ARGUMENTS_FOR_FUNC_CALL,
             expectedErrorContext = propertyValueMapOf(1, 1),
-            expectedPermissiveModeResult = "MISSING",
-            excludeLegacySerializerAssertions = true
+            expectedPermissiveModeResult = "MISSING"
         )
 
     class InvalidArgCases : ArgumentsProviderBase() {

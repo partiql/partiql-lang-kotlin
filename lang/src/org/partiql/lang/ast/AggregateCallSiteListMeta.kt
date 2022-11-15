@@ -32,6 +32,5 @@ data class AggregateCallSiteListMeta(val aggregateCallSites: List<PartiqlAst.Exp
 
     companion object {
         const val TAG = "\$aggregate_call_sites"
-        // Note: no deserializer if we don't support serialization.
     }
 }

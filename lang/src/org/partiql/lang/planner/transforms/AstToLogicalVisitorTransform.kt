@@ -1,18 +1,14 @@
 package org.partiql.lang.planner.transforms
 
 import com.amazon.ionelement.api.emptyMetaContainer
+import com.amazon.ionelement.api.ionString
 import com.amazon.ionelement.api.ionSymbol
-import org.partiql.lang.ast.IsGroupAttributeReferenceMeta
-import org.partiql.lang.ast.UniqueNameMeta
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.PartiqlAstToPartiqlLogicalVisitorTransform
 import org.partiql.lang.domains.PartiqlLogical
-import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Problem
 import org.partiql.lang.errors.ProblemHandler
-import org.partiql.lang.errors.Property
-import org.partiql.lang.eval.EvaluationException
-import org.partiql.lang.eval.errorContextFrom
+import org.partiql.lang.eval.builtins.CollectionAggregationFunction
 import org.partiql.lang.eval.physical.sourceLocationMetaOrUnknown
 import org.partiql.lang.eval.visitors.VisitorTransformBase
 import org.partiql.lang.planner.PlanningProblemDetails
@@ -41,51 +37,163 @@ internal class AstToLogicalVisitorTransform(
     val problemHandler: ProblemHandler
 ) : PartiqlAstToPartiqlLogicalVisitorTransform() {
 
-    override fun transformExprSelect(node: PartiqlAst.Expr.Select): PartiqlLogical.Expr {
-        checkForUnsupportedSelectClauses(node)
-
-        var algebra: PartiqlLogical.Bexpr = node.from.toBexpr(this, problemHandler)
+    override fun transformExprSelect(node: PartiqlAst.Expr.Select): PartiqlLogical.Expr = PartiqlLogical.build {
+        var algebra: PartiqlLogical.Bexpr = node.from.toBexpr(this@AstToLogicalVisitorTransform, problemHandler)
 
         algebra = node.fromLet?.let { fromLet ->
-            PartiqlLogical.build {
-                let(algebra, fromLet.letBindings.map { transformLetBinding(it) }, node.fromLet.metas)
-            }
+            let(algebra, fromLet.letBindings.map { transformLetBinding(it) }, fromLet.metas)
         } ?: algebra
 
-        algebra = node.where?.let {
-            PartiqlLogical.build { filter(transformExpr(it), algebra, it.metas) }
-        } ?: algebra
+        algebra = node.where?.let { filter(transformExpr(it), algebra, it.metas) } ?: algebra
 
-        var selectAlgebraPair = transformAggregations(node, algebra) ?: (node to algebra)
+        var selectAlgebraPair = transformAggregations(node, algebra) ?: node to algebra
 
-        selectAlgebraPair = transformWindowFunctions(selectAlgebraPair.first, selectAlgebraPair.second) ?: selectAlgebraPair
+        var select = selectAlgebraPair.first
 
-        val select = selectAlgebraPair.first
+        algebra = selectAlgebraPair.second
+
+        algebra = select.having?.let { filter(transformExpr(it), algebra, it.metas) }
+            ?: algebra
+
+        selectAlgebraPair = transformWindowFunctions(select, algebra) ?: (select to algebra)
+
+        select = selectAlgebraPair.first
 
         algebra = selectAlgebraPair.second
 
         algebra = select.order?.let { orderBy ->
             val sortSpecs = orderBy.sortSpecs.map { sortSpec -> transformSortSpec(sortSpec) }
-            PartiqlLogical.build { sort(algebra, sortSpecs, orderBy.metas) }
+            sort(algebra, sortSpecs, orderBy.metas)
         } ?: algebra
 
-        algebra = select.offset?.let {
-            PartiqlLogical.build { offset(transformExpr(it), algebra, select.offset!!.metas) }
-        } ?: algebra
+        algebra = select.offset?.let { offset(transformExpr(it), algebra, it.metas) }
+            ?: algebra
 
-        algebra = select.limit?.let {
-            PartiqlLogical.build { limit(transformExpr(it), algebra, select.limit!!.metas) }
-        } ?: algebra
+        algebra = select.limit?.let { limit(transformExpr(it), algebra, it.metas) }
+            ?: algebra
 
         val expr = transformProjection(select, algebra)
+        when (node.setq) {
+            is PartiqlAst.SetQuantifier.Distinct -> call("filter_distinct", expr)
+            else -> expr
+        }
+    }
 
-        // SELECT DISTINCT ...
-        if (node.setq != null && node.setq is PartiqlAst.SetQuantifier.Distinct) {
-            return PartiqlLogical.build { call("filter_distinct", expr) }
+    // This transformation is used for top-level expression transformations and for the SFW clauses prior to the
+    //  `aggregation` relational algebra operator.
+    override fun transformExprCallAgg(node: PartiqlAst.Expr.CallAgg): PartiqlLogical.Expr = PartiqlLogical.build {
+        call(
+            "${CollectionAggregationFunction.collectionAggregationPrefix}${node.funcName.text}",
+            listOf(
+                lit(ionString(node.setq.javaClass.simpleName.toLowerCase())),
+                transformExpr(node.arg)
+            )
+        )
+    }
+
+    /**
+     * Transforms the input [node] into a pair of two items:
+     *  1. An AST (where all [PartiqlAst.Expr.CallAgg]'s in the input projection list are replaced with references
+     *   ([PartiqlAst.Expr.Id]) to new [PartiqlLogical.VarDecl]'s)
+     *  2. A [PartiqlLogical.Bexpr.Aggregate] with the necessary [PartiqlLogical.GroupKey]'s and
+     *   [PartiqlLogical.AggregateFunction]'s (taken from the input [node]). Also, each [PartiqlLogical.GroupKey] and
+     *   [PartiqlLogical.AggregateFunction] creates a [PartiqlLogical.VarDecl] that is used to create the aforementioned
+     *   references (via [PartiqlAst.Expr.Id])
+     *
+     * Transforms a query like:
+     * ```
+     * SELECT newA, MAX(t.b) AS maxB
+     * FROM t AS t
+     * GROUP BY t.a AS newA GROUP AS g
+     * ```
+     * * into a logical plan similar to:
+     * * ```
+     * FROM
+     *   - t AS t
+     * AGGREGATION
+     *   - Group Keys: t.a AS newA
+     *   - Functions: (GROUP_AS AS g), (MAX AS aggregation_function_0)
+     * PROJECT
+     *   - newA
+     *   - aggregation_function_0 AS maxB
+     * ```
+     */
+    private fun transformAggregations(
+        node: PartiqlAst.Expr.Select,
+        source: PartiqlLogical.Bexpr
+    ): Pair<PartiqlAst.Expr.Select, PartiqlLogical.Bexpr.Aggregate>? {
+        val aggregationReplacer = CallAggregationsProjectionReplacer()
+        val transformedNode = aggregationReplacer.transformExprSelect(node) as PartiqlAst.Expr.Select
+
+        // Check if aggregation is necessary
+        if (node.group == null && aggregationReplacer.getAggregations().isEmpty()) {
+            return null
         }
 
-        return expr
+        return transformedNode to PartiqlLogical.build {
+            val groupAsFunction = node.group?.groupAsAlias?.let { convertGroupAsAlias(it, node.from) }
+            val aggFunctions = aggregationReplacer.getAggregations().map { (name, callAgg) -> convertCallAgg(callAgg, name) }
+            aggregate(
+                source = source,
+                strategy = node.group?.strategy?.let { transformGroupingStrategy(it) } ?: groupFull(),
+                groupList = groupKeyList(node.group?.keyList?.keys?.map { transformGroupKey(it) } ?: emptyList()),
+                functionList = aggregateFunctionList(listOfNotNull(groupAsFunction) + aggFunctions),
+                metas = node.group?.metas ?: emptyMetaContainer()
+            )
+        }
     }
+
+    override fun transformGroupKey(node: PartiqlAst.GroupKey): PartiqlLogical.GroupKey {
+        val thiz = this
+        return PartiqlLogical.build {
+            groupKey(
+                expr = thiz.transformExpr(node.expr),
+                asVar = varDecl(
+                    name = node.asAlias?.text ?: errAstNotNormalized(
+                        "The group key should have encountered a unique name. This is typically added by the GroupByItemAliasVisitorTransform."
+                    ),
+                    metas = node.asAlias.metas
+                )
+            )
+        }
+    }
+
+    private fun convertGroupAsAlias(node: SymbolPrimitive, from: PartiqlAst.FromSource) = PartiqlLogical.build {
+        val sourceAliases = getSourceAliases(from)
+        val structFields = sourceAliases.map { alias ->
+            val aliasText = alias?.text ?: errAstNotNormalized("All FromSources should have aliases")
+            structField(
+                lit(aliasText.toIonElement()),
+                id(aliasText, caseInsensitive(), unqualified())
+            )
+        }
+        aggregateFunction(
+            quantifier = all(),
+            name = "group_as",
+            arg = struct(structFields),
+            asVar = varDecl_(node, node.metas),
+            metas = node.metas
+        )
+    }
+
+    private fun getSourceAliases(node: PartiqlAst.FromSource): List<SymbolPrimitive?> = when (node) {
+        is PartiqlAst.FromSource.Scan -> listOf(node.asAlias ?: errAstNotNormalized("Scan should have alias initialized."))
+        is PartiqlAst.FromSource.Join -> getSourceAliases(node.left).plus(getSourceAliases(node.right))
+        is PartiqlAst.FromSource.Unpivot -> listOf(node.asAlias ?: errAstNotNormalized("Unpivot should have alias initialized."))
+    }
+
+    private fun convertCallAgg(node: PartiqlAst.Expr.CallAgg, name: String): PartiqlLogical.AggregateFunction = PartiqlLogical.build {
+        aggregateFunction(
+            quantifier = transformSetQuantifier(node.setq),
+            name = node.funcName.text,
+            arg = transformExpr(node.arg),
+            asVar = varDecl(name, node.metas),
+            metas = node.metas
+        )
+    }
+
+    override fun transformExprCallWindow(node: PartiqlAst.Expr.CallWindow): PartiqlLogical.Expr =
+        error("Call window node is not transformed (This shall never happend)")
 
     /**
      * Transforms the input [node] into a pair of two items:
@@ -154,111 +262,6 @@ internal class AstToLogicalVisitorTransform(
         return transformedNode to modifiedAlgebra
     }
 
-    /**
-     * Transforms the input [node] into a pair of two items:
-     *  1. An AST (where all [PartiqlAst.Expr.CallAgg]'s in the input projection list are replaced with references
-     *   ([PartiqlAst.Expr.Id]) to new [PartiqlLogical.VarDecl]'s)
-     *  2. A [PartiqlLogical.Bexpr.Aggregate] with the necessary [PartiqlLogical.GroupKey]'s and
-     *   [PartiqlLogical.AggregateFunction]'s (taken from the input [node]). Also, each [PartiqlLogical.GroupKey] and
-     *   [PartiqlLogical.AggregateFunction] creates a [PartiqlLogical.VarDecl] that is used to create the aforementioned
-     *   references (via [PartiqlAst.Expr.Id])
-     *
-     * Transforms a query like:
-     * ```
-     * SELECT newA, MAX(t.b) AS maxB
-     * FROM t AS t
-     * GROUP BY t.a AS newA GROUP AS g
-     * ```
-     * * into a logical plan similar to:
-     * * ```
-     * FROM
-     *   - t AS t
-     * AGGREGATION
-     *   - Group Keys: t.a AS newA
-     *   - Functions: (GROUP_AS AS g), (MAX AS aggregation_function_0)
-     * PROJECT
-     *   - newA
-     *   - aggregation_function_0 AS maxB
-     * ```
-     */
-    private fun transformAggregations(
-        node: PartiqlAst.Expr.Select,
-        source: PartiqlLogical.Bexpr
-    ): Pair<PartiqlAst.Expr.Select, PartiqlLogical.Bexpr.Aggregate>? {
-        val aggregationReplacer = CallAggregationsProjectionReplacer()
-        val transformedNode = aggregationReplacer.transformExprSelect(node) as PartiqlAst.Expr.Select
-
-        // Check if aggregation is necessary
-        if (node.group == null && aggregationReplacer.getAggregations().isEmpty()) {
-            return null
-        }
-
-        // Assert that projection identifiers all reference grouping attributes
-        CheckProjectionsForGroups().walkExprSelect(node)
-
-        return transformedNode to PartiqlLogical.build {
-            val groupAsFunction = node.group?.groupAsAlias?.let { convertGroupAsAlias(it, node.from) }
-            val aggFunctions = aggregationReplacer.getAggregations().map { (name, callAgg) -> convertCallAgg(callAgg, name) }
-            aggregate(
-                source = source,
-                strategy = node.group?.strategy?.let { transformGroupingStrategy(it) } ?: groupFull(),
-                groupList = groupKeyList(node.group?.keyList?.keys?.map { transformGroupKey(it) } ?: emptyList()),
-                functionList = aggregateFunctionList(listOfNotNull(groupAsFunction) + aggFunctions),
-                metas = node.group?.metas ?: emptyMetaContainer()
-            )
-        }
-    }
-
-    override fun transformGroupKey(node: PartiqlAst.GroupKey): PartiqlLogical.GroupKey {
-        val thiz = this
-        val varDeclName = node.asAlias?.metas?.get(UniqueNameMeta.TAG) as? UniqueNameMeta
-        return PartiqlLogical.build {
-            groupKey(
-                expr = thiz.transformExpr(node.expr),
-                asVar = varDecl(
-                    name = varDeclName?.uniqueName ?: errAstNotNormalized(
-                        "The group key should have encountered a unique name. This is typically added by the GroupByItemAliasVisitorTransform."
-                    ),
-                    metas = node.asAlias.metas
-                )
-            )
-        }
-    }
-
-    private fun convertGroupAsAlias(node: SymbolPrimitive, from: PartiqlAst.FromSource) = PartiqlLogical.build {
-        val sourceAliases = getSourceAliases(from)
-        val structFields = sourceAliases.map { alias ->
-            val aliasText = alias?.text ?: errAstNotNormalized("All FromSources should have aliases")
-            structField(
-                lit(aliasText.toIonElement()),
-                id(aliasText, caseInsensitive(), unqualified())
-            )
-        }
-        aggregateFunction(
-            quantifier = all(),
-            name = "group_as",
-            arg = struct(structFields),
-            asVar = varDecl_(node, node.metas),
-            metas = node.metas
-        )
-    }
-
-    private fun getSourceAliases(node: PartiqlAst.FromSource): List<SymbolPrimitive?> = when (node) {
-        is PartiqlAst.FromSource.Scan -> listOf(node.asAlias ?: errAstNotNormalized("Scan should have alias initialized."))
-        is PartiqlAst.FromSource.Join -> getSourceAliases(node.left).plus(getSourceAliases(node.right))
-        is PartiqlAst.FromSource.Unpivot -> listOf(node.asAlias ?: errAstNotNormalized("Unpivot should have alias initialized."))
-    }
-
-    private fun convertCallAgg(node: PartiqlAst.Expr.CallAgg, name: String): PartiqlLogical.AggregateFunction = PartiqlLogical.build {
-        aggregateFunction(
-            quantifier = transformSetQuantifier(node.setq),
-            name = node.funcName.text,
-            arg = transformExpr(node.arg),
-            asVar = varDecl(name, node.metas),
-            metas = node.metas
-        )
-    }
-
     private fun transformProjection(node: PartiqlAst.Expr.Select, algebra: PartiqlLogical.Bexpr): PartiqlLogical.Expr {
         return PartiqlLogical.build {
             when (val project = node.project) {
@@ -290,18 +293,6 @@ internal class AstToLogicalVisitorTransform(
                     )
                 }
             }
-        }
-    }
-
-    /**
-     * Throws [NotImplementedError] if any `SELECT` clauses were used that are not mappable to [PartiqlLogical].
-     *
-     * This function is temporary and will be removed when all the clauses of the `SELECT` expression are mappable
-     * to [PartiqlLogical].
-     */
-    private fun checkForUnsupportedSelectClauses(node: PartiqlAst.Expr.Select) {
-        when {
-            node.having != null -> problemHandler.handleUnimplementedFeature(node.having, "HAVING")
         }
     }
 
@@ -506,9 +497,6 @@ internal class AstToLogicalVisitorTransform(
             )
         }
 
-    override fun transformExprCallWindow(node: PartiqlAst.Expr.CallWindow): PartiqlLogical.Expr =
-        error("Call window node is not transformed (This shall never happend)")
-
     private fun transformProjectList(node: PartiqlAst.Projection.ProjectList): PartiqlLogical.Expr =
         PartiqlLogical.build {
             struct(
@@ -581,91 +569,6 @@ private class FromSourceToBexpr(
 }
 
 /**
- * Given a [PartiqlAst.Expr.Select], transforms all [PartiqlAst.Expr.CallWindow]'s within the projection list to
- * [PartiqlAst.Expr.Id]'s that reference the new [PartiqlLogical.VarDecl].
- * We only want this to convert the window function in the current projection list without recuse into any sub-query.
- *
- * For example:
- * Consider:
- * SELECT
- *  aWinFunc
- * FROM (
- *  SELECT
- *      anotherWinFunc
- *  FROM
- *  ...
- * )
- *
- * The transformation Order is as follows:
- * FROM <-- This is the outer FROM
- *      FROM <- This is the inner FROM
- *          CurrentProjectionListWindowFunctionTransform (1)
- *      SELECT <- This is the inner SELECT
- *          anotherWinFunc <- transformed By CurrentProjectionListWindowFunctionTransform (1)
- *          Transform Projection
- * CurrentProjectionListWindowFunctionTransform (2)
- * SELECT <- This is the outer SELECT
- *      aWindFunc <- transformed By CurrentProjectionListWindowFunctionTransform (2)
- * TransformProjection
- */
-private class CurrentProjectionListWindowFunctionTransform(var level: Int = 0) : VisitorTransformBase() {
-    val callWindowFunctionVisitorTransform = CallWindowReplacer()
-
-    override fun transformProjectItemProjectExpr_expr(node: PartiqlAst.ProjectItem.ProjectExpr): PartiqlAst.Expr {
-        return callWindowFunctionVisitorTransform.transformExpr(node.expr)
-    }
-
-    override fun transformProjectionProjectValue_value(node: PartiqlAst.Projection.ProjectValue): PartiqlAst.Expr {
-        return callWindowFunctionVisitorTransform.transformExpr(node.value)
-    }
-
-    // we don't want to nested in sub-queries, otherwise the inner window function get transformed multiple times.
-    override fun transformExprSelect(node: PartiqlAst.Expr.Select): PartiqlAst.Expr =
-        if (level == 0) {
-            level += 1
-            super.transformExprSelect(node)
-        } else {
-            node
-        }
-
-    fun getWindowFuncs() = callWindowFunctionVisitorTransform.windowFunctions
-}
-
-/**
- * Created to be invoked by the [CurrentProjectionListWindowFunctionTransform] to transform all encountered [PartiqlAst.Expr.CallWindow]'s to
- * [PartiqlAst.Expr.Id]'s. This class is designed to be called directly on [PartiqlAst.Projection]'s and does NOT recurse
- * into [PartiqlAst.Expr.Select]'s if the projection list contains a Select Node.
- */
-private class CallWindowReplacer : VisitorTransformBase() {
-    private var varDeclIncrement = 0
-    val windowFunctions = mutableSetOf<Pair<String, PartiqlAst.Expr.CallWindow>>()
-    override fun transformExprCallWindow(node: PartiqlAst.Expr.CallWindow): PartiqlAst.Expr {
-        val name = getAggregationIdName()
-        windowFunctions.add(name to node)
-        return PartiqlAst.build {
-            id(
-                name = name,
-                case = caseInsensitive(),
-                qualifier = unqualified(),
-                metas = node.metas
-            )
-        }
-    }
-
-    // If this function is called, then the projection list contains a Select Node.
-    // Regardless whether that select node's projection list contains window function
-    // we do not want to transform it at the moment
-    override fun transformExprSelect(node: PartiqlAst.Expr.Select): PartiqlAst.Expr {
-        return node
-    }
-
-    /**
-     * Returns unique (per [PartiqlAst.Expr.Select]) strings for each window function.
-     */
-    private fun getAggregationIdName(): String = "\$__partiql_window_function_${varDeclIncrement++}"
-}
-
-/**
  * Given a [PartiqlAst.Expr.Select], transforms all [PartiqlAst.Expr.CallAgg]'s within the projection list to
  * [PartiqlAst.Expr.Id]'s that reference the new [PartiqlLogical.VarDecl].
  * Does not recurse into more than 1 [PartiqlAst.Expr.Select]. Designed to be invoked directly on a
@@ -680,6 +583,14 @@ private class CallAggregationsProjectionReplacer(var level: Int = 0) : VisitorTr
 
     override fun transformProjectionProjectValue_value(node: PartiqlAst.Projection.ProjectValue): PartiqlAst.Expr {
         return callAggregationVisitorTransform.transformExpr(node.value)
+    }
+
+    override fun transformExprSelect_having(node: PartiqlAst.Expr.Select): PartiqlAst.Expr? = node.having?.let { having ->
+        callAggregationVisitorTransform.transformExpr(having)
+    }
+
+    override fun transformSortSpec_expr(node: PartiqlAst.SortSpec): PartiqlAst.Expr {
+        return callAggregationVisitorTransform.transformExpr(node.expr)
     }
 
     override fun transformExprSelect(node: PartiqlAst.Expr.Select): PartiqlAst.Expr {
@@ -739,35 +650,88 @@ private class CallAggregationReplacer() : VisitorTransformBase() {
 }
 
 /**
- * Asserts whether each found [PartiqlAst.Expr.Id] is a Group Key or Group As reference by checking for the
- * existence of a [IsGroupAttributeReferenceMeta]. Does not recurse into more than 1 [PartiqlAst.Expr.Select]. Designed
- * to be called directly on a single [PartiqlAst.Expr.Select].
+ * Given a [PartiqlAst.Expr.Select], transforms all [PartiqlAst.Expr.CallWindow]'s within the projection list to
+ * [PartiqlAst.Expr.Id]'s that reference the new [PartiqlLogical.VarDecl].
+ * We only want this to convert the window function in the current projection list without recuse into any sub-query.
+ *
+ * For example:
+ * Consider:
+ * SELECT
+ *  aWinFunc
+ * FROM (
+ *  SELECT
+ *      anotherWinFunc
+ *  FROM
+ *  ...
+ * )
+ *
+ * The transformation Order is as follows:
+ * FROM <-- This is the outer FROM
+ *      FROM <- This is the inner FROM
+ *          CurrentProjectionListWindowFunctionTransform (1)
+ *      SELECT <- This is the inner SELECT
+ *          anotherWinFunc <- transformed By CurrentProjectionListWindowFunctionTransform (1)
+ *          Transform Projection
+ * CurrentProjectionListWindowFunctionTransform (2)
+ * SELECT <- This is the outer SELECT
+ *      aWindFunc <- transformed By CurrentProjectionListWindowFunctionTransform (2)
+ * TransformProjection
  */
-private class CheckProjectionsForGroups(var level: Int = 0) : PartiqlAst.Visitor() {
+private class CurrentProjectionListWindowFunctionTransform(var level: Int = 0) : VisitorTransformBase() {
+    val callWindowFunctionVisitorTransform = CallWindowReplacer()
 
-    override fun walkExprSelect(node: PartiqlAst.Expr.Select) {
-        if (level == 0) {
-            level++
-            super.walkProjection(node.project)
-        }
+    override fun transformProjectItemProjectExpr_expr(node: PartiqlAst.ProjectItem.ProjectExpr): PartiqlAst.Expr {
+        return callWindowFunctionVisitorTransform.transformExpr(node.expr)
     }
 
-    override fun visitExprId(node: PartiqlAst.Expr.Id) {
-        if (node.metas.containsKey(IsGroupAttributeReferenceMeta.TAG).not()) {
-            throw EvaluationException(
-                "Variable not in GROUP BY or aggregation function: ${node.name.text}",
-                ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
-                errorContextFrom(node.metas).also {
-                    it[Property.BINDING_NAME] = node.name.text
-                },
-                internal = false
+    override fun transformProjectionProjectValue_value(node: PartiqlAst.Projection.ProjectValue): PartiqlAst.Expr {
+        return callWindowFunctionVisitorTransform.transformExpr(node.value)
+    }
+
+    // we don't want to nested in sub-queries, otherwise the inner window function get transformed multiple times.
+    override fun transformExprSelect(node: PartiqlAst.Expr.Select): PartiqlAst.Expr =
+        if (level == 0) {
+            level += 1
+            super.transformExprSelect(node)
+        } else {
+            node
+        }
+
+    fun getWindowFuncs() = callWindowFunctionVisitorTransform.windowFunctions
+}
+
+/**
+ * Created to be invoked by the [CurrentProjectionListWindowFunctionTransform] to transform all encountered [PartiqlAst.Expr.CallWindow]'s to
+ * [PartiqlAst.Expr.Id]'s. This class is designed to be called directly on [PartiqlAst.Projection]'s and does NOT recurse
+ * into [PartiqlAst.Expr.Select]'s if the projection list contains a Select Node.
+ */
+private class CallWindowReplacer : VisitorTransformBase() {
+    private var varDeclIncrement = 0
+    val windowFunctions = mutableSetOf<Pair<String, PartiqlAst.Expr.CallWindow>>()
+    override fun transformExprCallWindow(node: PartiqlAst.Expr.CallWindow): PartiqlAst.Expr {
+        val name = getWindowFuncIdName()
+        windowFunctions.add(name to node)
+        return PartiqlAst.build {
+            id(
+                name = name,
+                case = caseInsensitive(),
+                qualifier = unqualified(),
+                metas = node.metas
             )
         }
     }
 
-    override fun walkExprCallAgg(node: PartiqlAst.Expr.CallAgg) {
-        return
+    // If this function is called, then the projection list contains a Select Node.
+    // Regardless whether that select node's projection list contains window function
+    // we do not want to transform it at the moment
+    override fun transformExprSelect(node: PartiqlAst.Expr.Select): PartiqlAst.Expr {
+        return node
     }
+
+    /**
+     * Returns unique (per [PartiqlAst.Expr.Select]) strings for each window function.
+     */
+    private fun getWindowFuncIdName(): String = "\$__partiql_window_function_${varDeclIncrement++}"
 }
 
 private val INVALID_STATEMENT = PartiqlLogical.build {

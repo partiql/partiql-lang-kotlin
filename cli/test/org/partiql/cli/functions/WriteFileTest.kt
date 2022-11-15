@@ -22,6 +22,7 @@ import org.junit.Test
 import org.partiql.cli.assertAsIon
 import org.partiql.cli.makeCliAndGetResult
 import org.partiql.lang.CompilerPipeline
+import org.partiql.lang.eval.BAG_ANNOTATION
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValueFactory
 import java.io.ByteArrayOutputStream
@@ -111,7 +112,7 @@ class WriteFileTest {
         val filePath = createRandomTmpFilePath()
         val query = "write_file('$filePath', SELECT * FROM input_data)"
         val input = "{a: 1}"
-        val expected = "\$partiql_bag::[{a: 1}]"
+        val expected = "$BAG_ANNOTATION::[{a: 1}]"
 
         // Act
         val cliResponse =
@@ -128,7 +129,7 @@ class WriteFileTest {
         val filePath = createRandomTmpFilePath()
         val query = "write_file('$filePath', SELECT a.b FROM input_data)"
         val input = "{a: {b: 1}}"
-        val expected = "\$partiql_bag::[{b: 1}]"
+        val expected = "$BAG_ANNOTATION::[{b: 1}]"
 
         // Act
         val cliResponse =
@@ -145,7 +146,7 @@ class WriteFileTest {
         val filePath = createRandomTmpFilePath()
         val query = "write_file('$filePath', SELECT VALUE a FROM input_data)"
         val input = "{a: {b: 1}}"
-        val expected = "\$partiql_bag::[{b: 1}]"
+        val expected = "$BAG_ANNOTATION::[{b: 1}]"
 
         // Act
         val cliResponse =
@@ -162,7 +163,7 @@ class WriteFileTest {
         val filePath = createRandomTmpFilePath()
         val query = "write_file('$filePath', SELECT VALUE a.b FROM input_data)"
         val input = "{a: {b: 1}}"
-        val expected = "\$partiql_bag::[1]"
+        val expected = "$BAG_ANNOTATION::[1]"
 
         // Act
         val cliResponse =
@@ -179,7 +180,7 @@ class WriteFileTest {
         val filePath = createRandomTmpFilePath()
         val query = "write_file('$filePath', SELECT VALUE a.b FROM input_data)"
         val input = "{a: {b: [ 1, 2 ]}}"
-        val expected = "\$partiql_bag::[[ 1, 2 ]]"
+        val expected = "$BAG_ANNOTATION::[[ 1, 2 ]]"
 
         // Act
         val cliResponse =
@@ -196,7 +197,7 @@ class WriteFileTest {
         val filePath = createRandomTmpFilePath()
         val query = "write_file('$filePath', SELECT VALUE a FROM input_data)"
         val input = "{a : 5}"
-        val expected = "\$partiql_bag::[5]"
+        val expected = "$BAG_ANNOTATION::[5]"
 
         // Act
         val cliResponse =

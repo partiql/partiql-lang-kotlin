@@ -66,4 +66,11 @@ sealed class SemanticProblemDetails(override val severity: ProblemSeverity, val 
                     "As a result, this function call will always return null or missing."
             }
         )
+
+    object MissingAlias : SemanticProblemDetails(
+        severity = ProblemSeverity.ERROR,
+        messageFormatter = {
+            "Missing a required ALIAS."
+        }
+    )
 }

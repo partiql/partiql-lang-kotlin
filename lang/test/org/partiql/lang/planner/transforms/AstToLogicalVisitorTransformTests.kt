@@ -11,13 +11,10 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
-import org.partiql.lang.ast.IsGroupAttributeReferenceMeta
 import org.partiql.lang.ast.SourceLocationMeta
-import org.partiql.lang.ast.UniqueNameMeta
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.PartiqlLogical
 import org.partiql.lang.domains.id
-import org.partiql.lang.domains.metaContainerOf
 import org.partiql.lang.domains.pathExpr
 import org.partiql.lang.errors.Problem
 import org.partiql.lang.errors.ProblemCollector
@@ -27,7 +24,6 @@ import org.partiql.lang.planner.PlanningProblemDetails
 import org.partiql.lang.planner.unimplementedProblem
 import org.partiql.lang.syntax.PartiQLParser
 import org.partiql.lang.util.ArgumentsProviderBase
-import org.partiql.pig.runtime.SymbolPrimitive
 
 /**
  * Test cases in this class might seem a little light--that's because [AstToLogicalVisitorTransform] is getting
@@ -46,13 +42,21 @@ class AstToLogicalVisitorTransformTests {
         return input.toLogicalPlan(problemHandler).stmt
     }
 
-    data class TestCase(val original: PartiqlAst.Statement, val expected: PartiqlLogical.Statement) {
+    data class TestCase(val original: PartiqlAst.Statement, val expected: PartiqlLogical.Statement, val originalSql: String? = null) {
         constructor(sql: String, expected: PartiqlLogical.Statement) : this(
             assertDoesNotThrow("Parsing TestCase.sql should not throw") {
                 AstToLogicalVisitorTransformTests().parser.parseAstStatement(sql)
             },
-            expected
+            expected,
+            sql
         )
+
+        override fun toString(): String {
+            return when (this.originalSql) {
+                null -> this.original.toString()
+                else -> this.originalSql
+            }
+        }
     }
 
     private fun runTestCase(tc: TestCase) {
@@ -196,6 +200,79 @@ class AstToLogicalVisitorTransformTests {
             )
         }
 
+        private fun PartiqlAst.Builder.simpleHaving(
+            projections: List<PartiqlAst.ProjectItem>,
+            keys: List<PartiqlAst.GroupKey>,
+            groupAsAlias: String? = null,
+            fromSource: PartiqlAst.FromSource? = null,
+            having: PartiqlAst.Expr
+        ): PartiqlAst.Statement = query(simpleHavingExpr(projections, keys, groupAsAlias, fromSource, having))
+
+        private fun PartiqlAst.Builder.simpleHavingExpr(
+            projections: List<PartiqlAst.ProjectItem>,
+            keys: List<PartiqlAst.GroupKey>,
+            groupAsAlias: String? = null,
+            fromSource: PartiqlAst.FromSource? = null,
+            having: PartiqlAst.Expr
+        ): PartiqlAst.Expr {
+            val from = when (fromSource) {
+                null -> {
+                    scan(
+                        id("bar", caseInsensitive(), unqualified()),
+                        asAlias = "b"
+                    )
+                }
+                else -> fromSource
+            }
+            return select(
+                project = projectList(projections),
+                from = from,
+                group = groupBy(
+                    groupFull(),
+                    groupKeyList(
+                        keys = keys
+                    ),
+                    groupAsAlias = groupAsAlias
+                ),
+                having = having
+            )
+        }
+
+        private fun PartiqlLogical.Builder.simpleHavingLogicalQuery(
+            fields: List<PartiqlLogical.StructPart> = emptyList(),
+            keys: List<PartiqlLogical.GroupKey> = emptyList(),
+            functions: List<PartiqlLogical.AggregateFunction> = emptyList(),
+            source: PartiqlLogical.Bexpr? = null,
+            predicate: PartiqlLogical.Expr
+        ): PartiqlLogical.Statement = query(simpleHavingLogical(fields, keys, functions, source, predicate))
+
+        private fun PartiqlLogical.Builder.simpleHavingLogical(
+            fields: List<PartiqlLogical.StructPart> = emptyList(),
+            keys: List<PartiqlLogical.GroupKey> = emptyList(),
+            functions: List<PartiqlLogical.AggregateFunction> = emptyList(),
+            source: PartiqlLogical.Bexpr? = null,
+            predicate: PartiqlLogical.Expr
+        ): PartiqlLogical.Expr {
+            val sourceBexpr = when (source) {
+                null -> scan(id("bar"), varDecl("b"))
+                else -> source
+            }
+            return bindingsToValues(
+                struct(fields),
+                filter(
+                    predicate = predicate,
+                    source = aggregate(
+                        source = sourceBexpr,
+                        strategy = groupFull(),
+                        groupList = groupKeyList(keys),
+                        functionList = aggregateFunctionList(
+                            functions = functions
+                        )
+                    )
+                )
+            )
+        }
+
         override fun getParameters() = listOf(
             TestCase(
                 // Note:
@@ -284,32 +361,12 @@ class AstToLogicalVisitorTransformTests {
                 }
             ),
 
-            // SELECT k AS keyAlias FROM bar AS b GROUP BY y AS k
             TestCase(
-                PartiqlAst.build {
-                    simpleGroup(
-                        projections = listOf(
-                            projectExpr(
-                                id(
-                                    "k",
-                                    caseInsensitive(),
-                                    unqualified(),
-                                    metas = metaContainerOf(IsGroupAttributeReferenceMeta.instance)
-                                ),
-                                asAlias = "keyAlias"
-                            )
-                        ),
-                        keys = listOf(
-                            groupKey_(
-                                id("y", caseInsensitive(), unqualified()),
-                                asAlias = SymbolPrimitive(
-                                    text = "k",
-                                    metas = metaContainerOf(UniqueNameMeta("someUniqueName"))
-                                )
-                            )
-                        )
-                    )
-                },
+                sql = """
+                    SELECT k AS keyAlias
+                    FROM bar AS b
+                    GROUP BY y AS k
+                """,
                 PartiqlLogical.build {
                     simpleAggregateQuery(
                         fields = listOf(
@@ -318,58 +375,34 @@ class AstToLogicalVisitorTransformTests {
                         keys = listOf(
                             groupKey(
                                 id("y", caseInsensitive(), unqualified()),
-                                asVar = varDecl("someUniqueName")
+                                asVar = varDecl("k")
                             )
                         )
                     )
                 }
             ),
 
-            // SELECT SUM(k) AS keyAlias FROM bar AS b GROUP BY y AS k
             TestCase(
-                PartiqlAst.build {
-                    simpleGroup(
-                        projections = listOf(
-                            projectExpr(
-                                expr = callAgg(
-                                    all(),
-                                    "SUM",
-                                    id(
-                                        "k",
-                                        caseInsensitive(),
-                                        unqualified(),
-                                        metas = metaContainerOf(IsGroupAttributeReferenceMeta.instance)
-                                    ),
-                                ),
-                                asAlias = "keyAlias"
-                            )
-                        ),
-                        keys = listOf(
-                            groupKey_(
-                                id("y", caseInsensitive(), unqualified()),
-                                asAlias = SymbolPrimitive(
-                                    text = "k",
-                                    metas = metaContainerOf(UniqueNameMeta("someUniqueName"))
-                                )
-                            )
-                        )
-                    )
-                },
+                sql = """
+                    SELECT SUM(k) AS sum_k
+                    FROM bar AS b
+                    GROUP BY y AS k
+                """,
                 PartiqlLogical.build {
                     simpleAggregateQuery(
                         fields = listOf(
-                            structField(lit(ionSymbol("keyAlias")), id("\$__partiql_aggregation_0"))
+                            structField(lit(ionSymbol("sum_k")), id("\$__partiql_aggregation_0"))
                         ),
                         keys = listOf(
                             groupKey(
                                 id("y", caseInsensitive(), unqualified()),
-                                asVar = varDecl("someUniqueName")
+                                asVar = varDecl("k")
                             )
                         ),
                         functions = listOf(
                             aggregateFunction(
                                 all(),
-                                "SUM",
+                                "sum",
                                 id("k"),
                                 varDecl("\$__partiql_aggregation_0")
                             )
@@ -378,37 +411,20 @@ class AstToLogicalVisitorTransformTests {
                 }
             ),
 
-            // SELECT SUm(k) AS keyAlias FROM bar AS b
             TestCase(
-                PartiqlAst.build {
-                    simpleGroup(
-                        projections = listOf(
-                            projectExpr(
-                                expr = callAgg(
-                                    all(),
-                                    "SUm",
-                                    id(
-                                        "k",
-                                        caseInsensitive(),
-                                        unqualified(),
-                                        metas = metaContainerOf(IsGroupAttributeReferenceMeta.instance)
-                                    ),
-                                ),
-                                asAlias = "keyAlias"
-                            )
-                        ),
-                        keys = emptyList()
-                    )
-                },
+                sql = """
+                    SELECT SUm(k) AS sum_k
+                    FROM bar AS b
+                """,
                 PartiqlLogical.build {
                     simpleAggregateQuery(
                         fields = listOf(
-                            structField(lit(ionSymbol("keyAlias")), id("\$__partiql_aggregation_0"))
+                            structField(lit(ionSymbol("sum_k")), id("\$__partiql_aggregation_0"))
                         ),
                         functions = listOf(
                             aggregateFunction(
                                 all(),
-                                "SUm",
+                                "sum",
                                 id("k"),
                                 varDecl("\$__partiql_aggregation_0")
                             )
@@ -417,51 +433,24 @@ class AstToLogicalVisitorTransformTests {
                 }
             ),
 
-            // SELECT k, g, COUNT(*) AS count FROM bar AS b GROUP BY y AS k GROUP AS g
             TestCase(
-                PartiqlAst.build {
-                    simpleGroup(
-                        projections = listOf(
-                            projectExpr(
-                                expr = id("k", caseInsensitive(), unqualified(), metas = metaContainerOf(IsGroupAttributeReferenceMeta.instance)),
-                                asAlias = "k",
-                            ),
-                            projectExpr(
-                                expr = id("g", caseInsensitive(), unqualified(), metas = metaContainerOf(IsGroupAttributeReferenceMeta.instance)),
-                                asAlias = "g"
-                            ),
-                            projectExpr(
-                                expr = callAgg(
-                                    all(),
-                                    "COUNT",
-                                    lit(ionInt(1))
-                                ),
-                                asAlias = "count"
-                            )
-                        ),
-                        keys = listOf(
-                            groupKey_(
-                                id("y", caseInsensitive(), unqualified()),
-                                asAlias = SymbolPrimitive(
-                                    text = "k",
-                                    metas = metaContainerOf(UniqueNameMeta("someUniqueName"))
-                                )
-                            )
-                        ),
-                        groupAsAlias = "g"
-                    )
-                },
+                sql = """
+                    SELECT k AS k, g AS g, COUNT(*) AS ct
+                    FROM bar AS b
+                    GROUP BY y AS k
+                    GROUP AS g
+                """,
                 PartiqlLogical.build {
                     simpleAggregateQuery(
                         fields = listOf(
                             structField(lit(ionSymbol("k")), id("k")),
                             structField(lit(ionSymbol("g")), id("g")),
-                            structField(lit(ionSymbol("count")), id("\$__partiql_aggregation_0"))
+                            structField(lit(ionSymbol("ct")), id("\$__partiql_aggregation_0"))
                         ),
                         keys = listOf(
                             groupKey(
                                 id("y", caseInsensitive(), unqualified()),
-                                asVar = varDecl("someUniqueName")
+                                asVar = varDecl("k")
                             )
                         ),
                         functions = listOf(
@@ -478,7 +467,7 @@ class AstToLogicalVisitorTransformTests {
                             ),
                             aggregateFunction(
                                 all(),
-                                "COUNT",
+                                "count",
                                 lit(ionInt(1)),
                                 varDecl("\$__partiql_aggregation_0")
                             ),
@@ -487,77 +476,33 @@ class AstToLogicalVisitorTransformTests {
                 }
             ),
 
-            // SELECT k, MAX(a) AS max FROM (SELECT k, MAX(a) FROM bar AS b GROUP BY c AS k) AS b GROUP BY y AS k
             TestCase(
-                PartiqlAst.build {
-                    val innerQuery = simpleGroupExpr(
-                        projections = listOf(
-                            projectExpr(
-                                expr = id("k", caseInsensitive(), unqualified(), metas = metaContainerOf(IsGroupAttributeReferenceMeta.instance)),
-                                asAlias = "k",
-                            ),
-                            projectExpr(
-                                expr = callAgg(
-                                    all(),
-                                    "MAX",
-                                    id("a", caseInsensitive(), unqualified())
-                                ),
-                                asAlias = "max"
-                            )
-                        ),
-                        keys = listOf(
-                            groupKey_(
-                                id("y", caseInsensitive(), unqualified()),
-                                asAlias = SymbolPrimitive(
-                                    text = "k",
-                                    metas = metaContainerOf(UniqueNameMeta("someUniqueName"))
-                                )
-                            )
-                        )
-                    )
-                    simpleGroup(
-                        projections = listOf(
-                            projectExpr(
-                                expr = id("k", caseInsensitive(), unqualified(), metas = metaContainerOf(IsGroupAttributeReferenceMeta.instance)),
-                                asAlias = "k",
-                            ),
-                            projectExpr(
-                                expr = callAgg(
-                                    all(),
-                                    "MAX",
-                                    id("a", caseInsensitive(), unqualified())
-                                ),
-                                asAlias = "max"
-                            )
-                        ),
-                        keys = listOf(
-                            groupKey_(
-                                id("y", caseInsensitive(), unqualified()),
-                                asAlias = SymbolPrimitive(
-                                    text = "k",
-                                    metas = metaContainerOf(UniqueNameMeta("someUniqueName"))
-                                )
-                            )
-                        ),
-                        fromSource = scan(innerQuery, asAlias = "b")
-                    )
-                },
+                sql = """
+                    SELECT k AS k, MAX(a) AS mx
+                    FROM
+                        (
+                            SELECT k AS k, MAX(a) AS mx
+                            FROM bar AS b
+                            GROUP BY c AS k
+                        ) AS b
+                    GROUP BY y AS k
+                """,
                 PartiqlLogical.build {
                     val innerQuery = simpleAggregate(
                         fields = listOf(
                             structField(lit(ionSymbol("k")), id("k")),
-                            structField(lit(ionSymbol("max")), id("\$__partiql_aggregation_0"))
+                            structField(lit(ionSymbol("mx")), id("\$__partiql_aggregation_0"))
                         ),
                         keys = listOf(
                             groupKey(
-                                id("y", caseInsensitive(), unqualified()),
-                                asVar = varDecl("someUniqueName")
+                                id("c", caseInsensitive(), unqualified()),
+                                asVar = varDecl("k")
                             )
                         ),
                         functions = listOf(
                             aggregateFunction(
                                 all(),
-                                "MAX",
+                                "max",
                                 id("a", caseInsensitive(), unqualified()),
                                 varDecl("\$__partiql_aggregation_0")
                             )
@@ -566,24 +511,185 @@ class AstToLogicalVisitorTransformTests {
                     simpleAggregateQuery(
                         fields = listOf(
                             structField(lit(ionSymbol("k")), id("k")),
-                            structField(lit(ionSymbol("max")), id("\$__partiql_aggregation_0"))
+                            structField(lit(ionSymbol("mx")), id("\$__partiql_aggregation_0"))
                         ),
                         keys = listOf(
                             groupKey(
                                 id("y", caseInsensitive(), unqualified()),
-                                asVar = varDecl("someUniqueName")
+                                asVar = varDecl("k")
                             )
                         ),
                         functions = listOf(
                             aggregateFunction(
                                 all(),
-                                "MAX",
+                                "max",
                                 id("a", caseInsensitive(), unqualified()),
                                 varDecl("\$__partiql_aggregation_0")
                             )
                         ),
                         source = scan(innerQuery, varDecl("b"))
                     )
+                }
+            ),
+
+            TestCase(
+                sql = """
+                    SELECT k AS keyAlias
+                    FROM bar AS b
+                    GROUP BY y AS k
+                    HAVING k > 2
+                """,
+                PartiqlLogical.build {
+                    simpleHavingLogicalQuery(
+                        fields = listOf(
+                            structField(lit(ionSymbol("keyAlias")), id("k"))
+                        ),
+                        keys = listOf(
+                            groupKey(
+                                id("y", caseInsensitive(), unqualified()),
+                                asVar = varDecl("k")
+                            )
+                        ),
+                        predicate = gt(id("k"), lit(ionInt(2)))
+                    )
+                }
+            ),
+
+            TestCase(
+                sql = """
+                    SUM(1)
+                """,
+                PartiqlLogical.build {
+                    query(
+                        call(
+                            "coll_sum",
+                            listOf(
+                                lit(ionString("all")),
+                                lit(ionInt(1))
+                            )
+                        )
+                    )
+                }
+            ),
+            TestCase(
+                sql = """
+                    SUM(DISTINCT 1)
+                """,
+                PartiqlLogical.build {
+                    query(
+                        call(
+                            "coll_sum",
+                            listOf(
+                                lit(ionString("distinct")),
+                                lit(ionInt(1))
+                            )
+                        )
+                    )
+                }
+            ),
+            TestCase(
+                sql = """
+                    SELECT SUM(a) AS sum_a
+                    FROM t AS t
+                    LET SUM(c) AS sum_c
+                    WHERE SUM(ALL b)
+                    GROUP BY d AS e
+                    HAVING AVG(ALL f)
+                    ORDER BY MIN(DISTINCT g)
+                    LIMIT SUM(DISTINCT 2)
+                """,
+                PartiqlLogical.build {
+                    val scan = scan(id("t"), varDecl("t"))
+                    val let = let(scan, letBinding(call("coll_sum", listOf(lit(ionString("all")), id("c"))), varDecl("sum_c")))
+                    val where = filter(call("coll_sum", listOf(lit(ionString("all")), id("b"))), let)
+                    val agg = aggregate(
+                        where,
+                        groupFull(),
+                        groupKeyList(groupKey(id("d"), varDecl("e"))),
+                        aggregateFunctionList(
+                            aggregateFunction(all(), "sum", id("a"), varDecl("\$__partiql_aggregation_0")),
+                            aggregateFunction(all(), "avg", id("f"), varDecl("\$__partiql_aggregation_1")),
+                            aggregateFunction(distinct(), "min", id("g"), varDecl("\$__partiql_aggregation_2")),
+                        )
+                    )
+                    val having = filter(id("\$__partiql_aggregation_1"), agg)
+                    val order = sort(having, sortSpec(id("\$__partiql_aggregation_2")))
+                    val limit = limit(call("coll_sum", listOf(lit(ionString("distinct")), lit(ionInt(2)))), order)
+                    val projection = bindingsToValues(struct(structField(lit(ionSymbol("sum_a")), id("\$__partiql_aggregation_0"))), limit)
+                    query(projection)
+                }
+            ),
+            TestCase(
+                sql = """
+                    SELECT SUM(a) + COLL_COUNT('distinct', a) AS sum_a
+                    FROM t AS t
+                """,
+                PartiqlLogical.build {
+                    val scan = scan(id("t"), varDecl("t"))
+                    val agg = aggregate(
+                        scan,
+                        groupFull(),
+                        groupKeyList(emptyList()),
+                        aggregateFunctionList(
+                            aggregateFunction(all(), "sum", id("a"), varDecl("\$__partiql_aggregation_0")),
+                        )
+                    )
+                    val expression = plus(
+                        id("\$__partiql_aggregation_0"),
+                        call("coll_count", listOf(lit(ionString("distinct")), id("a")))
+                    )
+                    val projection = bindingsToValues(struct(structField(lit(ionSymbol("sum_a")), expression)), agg)
+                    query(projection)
+                }
+            ),
+            TestCase(
+                sql = """
+                    SELECT (
+                        SELECT SUM(a) + COLL_COUNT('distinct', b) AS agg_proj
+                        FROM t1 AS t1
+                    ) AS inner_query
+                    FROM (
+                        SELECT AVG(c) + COLL_MAX('all', d) AS agg_from
+                        FROM t2 AS t2
+                    ) AS src
+                """,
+                PartiqlLogical.build {
+                    // Create Sub-Query in PROJECTION
+                    val scanProj = scan(id("t1"), varDecl("t1"))
+                    val aggProj = aggregate(
+                        scanProj,
+                        groupFull(),
+                        groupKeyList(emptyList()),
+                        aggregateFunctionList(
+                            aggregateFunction(all(), "sum", id("a"), varDecl("\$__partiql_aggregation_0")),
+                        )
+                    )
+                    val exprProj = plus(
+                        id("\$__partiql_aggregation_0"),
+                        call("coll_count", listOf(lit(ionString("distinct")), id("b")))
+                    )
+                    val bindingsProj = bindingsToValues(struct(structField(lit(ionSymbol("agg_proj")), exprProj)), aggProj)
+
+                    // Create Sub-Query in FROM
+                    val scanFrom = scan(id("t2"), varDecl("t2"))
+                    val aggFrom = aggregate(
+                        scanFrom,
+                        groupFull(),
+                        groupKeyList(emptyList()),
+                        aggregateFunctionList(
+                            aggregateFunction(all(), "avg", id("c"), varDecl("\$__partiql_aggregation_0")),
+                        )
+                    )
+                    val exprFrom = plus(
+                        id("\$__partiql_aggregation_0"),
+                        call("coll_max", listOf(lit(ionString("all")), id("d")))
+                    )
+                    val bindingsFrom = bindingsToValues(struct(structField(lit(ionSymbol("agg_from")), exprFrom)), aggFrom)
+
+                    // Create Full Query
+                    val scanOuter = scan(bindingsFrom, varDecl("src"))
+                    val projection = bindingsToValues(struct(structField(lit(ionSymbol("inner_query")), bindingsProj)), scanOuter)
+                    query(projection)
                 }
             ),
         )
@@ -796,9 +902,6 @@ class AstToLogicalVisitorTransformTests {
     class ArgumentsForProblemTests : ArgumentsProviderBase() {
 
         override fun getParameters() = listOf(
-            // SELECT queries are not implemented
-            ProblemTestCase("SELECT b.* FROM bar AS b HAVING x", unimplementedProblem("HAVING", 1, 33)),
-
             // DDL is  not implemented
             ProblemTestCase("CREATE TABLE foo", unimplementedProblem("CREATE TABLE", 1, 1)),
             ProblemTestCase("DROP TABLE foo", unimplementedProblem("DROP TABLE", 1, 1)),

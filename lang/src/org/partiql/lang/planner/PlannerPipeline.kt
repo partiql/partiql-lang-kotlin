@@ -23,10 +23,12 @@ import org.partiql.lang.errors.Problem
 import org.partiql.lang.errors.ProblemCollector
 import org.partiql.lang.errors.ProblemHandler
 import org.partiql.lang.errors.Property
+import org.partiql.lang.eval.CompileOptions
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.Expression
 import org.partiql.lang.eval.ThunkReturnTypeAssertions
+import org.partiql.lang.eval.TypedOpBehavior
 import org.partiql.lang.eval.builtins.DynamicLookupExprFunction
 import org.partiql.lang.eval.builtins.createBuiltinFunctions
 import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedure
@@ -34,13 +36,26 @@ import org.partiql.lang.eval.physical.PhysicalBexprToThunkConverter
 import org.partiql.lang.eval.physical.PhysicalPlanCompiler
 import org.partiql.lang.eval.physical.PhysicalPlanCompilerImpl
 import org.partiql.lang.eval.physical.PhysicalPlanThunk
-import org.partiql.lang.eval.physical.operators.DEFAULT_RELATIONAL_OPERATOR_FACTORIES
+import org.partiql.lang.eval.physical.operators.AggregateOperatorFactoryDefault
+import org.partiql.lang.eval.physical.operators.FilterRelationalOperatorFactoryDefault
+import org.partiql.lang.eval.physical.operators.JoinRelationalOperatorFactoryDefault
+import org.partiql.lang.eval.physical.operators.LetRelationalOperatorFactoryDefault
+import org.partiql.lang.eval.physical.operators.LimitRelationalOperatorFactoryDefault
+import org.partiql.lang.eval.physical.operators.OffsetRelationalOperatorFactoryDefault
 import org.partiql.lang.eval.physical.operators.RelationalOperatorFactory
 import org.partiql.lang.eval.physical.operators.RelationalOperatorFactoryKey
+import org.partiql.lang.eval.physical.operators.ScanRelationalOperatorFactoryDefault
+import org.partiql.lang.eval.physical.operators.SortOperatorFactoryDefault
+import org.partiql.lang.eval.physical.operators.UnpivotOperatorFactoryDefault
+import org.partiql.lang.eval.physical.operators.WindowRelationalOperatorFactoryDefault
+import org.partiql.lang.eval.physical.window.ExperimentalWindowFunc
+import org.partiql.lang.eval.visitors.PartiqlAstSanityValidator
 import org.partiql.lang.planner.transforms.normalize
 import org.partiql.lang.planner.transforms.toDefaultPhysicalPlan
 import org.partiql.lang.planner.transforms.toLogicalPlan
 import org.partiql.lang.planner.transforms.toResolvedPlan
+import org.partiql.lang.planner.validators.PartiqlLogicalResolvedValidator
+import org.partiql.lang.planner.validators.PartiqlLogicalValidator
 import org.partiql.lang.syntax.Parser
 import org.partiql.lang.syntax.PartiQLParserBuilder
 import org.partiql.lang.syntax.SyntaxException
@@ -212,6 +227,26 @@ interface PlannerPipeline {
         private var allowUndefinedVariables: Boolean = false
         private var enableLegacyExceptionHandling: Boolean = false
         private var plannerEventCallback: PlannerEventCallback? = null
+
+        companion object {
+
+            /**
+             * TODO remove PlannerPipeline.kt as part of experimental cleanup
+             */
+            private val DEFAULT_RELATIONAL_OPERATOR_FACTORIES = listOf<RelationalOperatorFactory>(
+                AggregateOperatorFactoryDefault,
+                SortOperatorFactoryDefault,
+                UnpivotOperatorFactoryDefault,
+                FilterRelationalOperatorFactoryDefault,
+                ScanRelationalOperatorFactoryDefault,
+                JoinRelationalOperatorFactoryDefault,
+                OffsetRelationalOperatorFactoryDefault,
+                LimitRelationalOperatorFactoryDefault,
+                LetRelationalOperatorFactoryDefault,
+                @OptIn(ExperimentalWindowFunc::class)
+                WindowRelationalOperatorFactoryDefault
+            )
+        }
 
         /**
          * Specifies the [Parser] to be used to turn an PartiQL query into an instance of [PartiqlAst].
@@ -483,6 +518,7 @@ internal class PlannerPipelineImpl(
         val normalizedAst = plannerEventCallback.doEvent("normalize_ast", ast) {
             ast.normalize()
         }
+        normalizedAst.validate(evaluatorOptions.typedOpBehavior)
 
         // ast -> logical plan
         val logicalPlan = plannerEventCallback.doEvent("ast_to_logical", normalizedAst) {
@@ -493,6 +529,8 @@ internal class PlannerPipelineImpl(
             return PlannerPassResult.Error(problemHandler.problems)
         }
 
+        PartiqlLogicalValidator(evaluatorOptions.typedOpBehavior).walkPlan(logicalPlan)
+
         // logical plan -> resolved logical plan
         val resolvedLogicalPlan = plannerEventCallback.doEvent("logical_to_logical_resolved", logicalPlan) {
             logicalPlan.toResolvedPlan(problemHandler, globalVariableResolver, allowUndefinedVariables)
@@ -502,6 +540,8 @@ internal class PlannerPipelineImpl(
         if (problemHandler.hasErrors) {
             return PlannerPassResult.Error(problemHandler.problems)
         }
+
+        PartiqlLogicalResolvedValidator().walkPlan(resolvedLogicalPlan)
 
         // Possible future passes:
         // - type checking and inferencing?
@@ -540,6 +580,15 @@ internal class PlannerPipelineImpl(
             }
         // If we reach this far, we're successful.  If there were any problems at all, they were just warnings.
         return PlannerPassResult.Success(finalPlan, problemHandler.problems)
+    }
+
+    /**
+     * Performs a validation of the AST. The [PartiqlAstSanityValidator] only requires the
+     * [TypedOpBehavior] to perform assertions, so we pass this along.
+     */
+    private fun PartiqlAst.Statement.validate(behavior: TypedOpBehavior) {
+        val validatorCompileOptions = CompileOptions.build { typedOpBehavior(behavior) }
+        PartiqlAstSanityValidator().validate(this, validatorCompileOptions)
     }
 
     override fun compile(physicalPlan: PartiqlPhysical.Plan): PlannerPassResult<QueryPlan> =

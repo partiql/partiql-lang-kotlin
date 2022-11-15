@@ -1,12 +1,12 @@
 package org.partiql.lang.errors
 
 import org.junit.Test
-import org.partiql.lang.syntax.SqlParserTestBase
+import org.partiql.lang.syntax.PartiQLParserTestBase
 import org.partiql.lang.syntax.TokenType
 
 // TODO: move this to [ParserErrorsTest] once https://github.com/partiql/partiql-docs/issues/31 is resolved and a RFC is approved
 
-class WindowRelatedParserErrorsTest : SqlParserTestBase() {
+class WindowRelatedParserErrorsTest : PartiQLParserTestBase() {
     @Test
     fun lagWithoutOrderBy() {
         checkInputThrowingParserException(
@@ -17,8 +17,7 @@ class WindowRelatedParserErrorsTest : SqlParserTestBase() {
                 Property.COLUMN_NUMBER to 8L,
                 Property.TOKEN_TYPE to TokenType.IDENTIFIER,
                 Property.TOKEN_VALUE to ion.newSymbol("lag")
-            ),
-            targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
+            )
         )
     }
 
@@ -32,8 +31,7 @@ class WindowRelatedParserErrorsTest : SqlParserTestBase() {
                 Property.COLUMN_NUMBER to 17L,
                 Property.TOKEN_TYPE to TokenType.COMMA,
                 Property.TOKEN_VALUE to ion.newSymbol(",")
-            ),
-            targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
+            )
         )
     }
 
@@ -46,8 +44,7 @@ class WindowRelatedParserErrorsTest : SqlParserTestBase() {
                 Property.COLUMN_NUMBER to 8L,
                 Property.TOKEN_TYPE to TokenType.IDENTIFIER,
                 Property.TOKEN_VALUE to ion.newSymbol("lag")
-            ),
-            targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
+            )
         )
     }
 
@@ -61,8 +58,7 @@ class WindowRelatedParserErrorsTest : SqlParserTestBase() {
                 Property.COLUMN_NUMBER to 18L,
                 Property.TOKEN_TYPE to TokenType.COMMA,
                 Property.TOKEN_VALUE to ion.newSymbol(",")
-            ),
-            targetParsers = setOf(ParserTypes.PARTIQL_PARSER)
+            )
         )
     }
 }

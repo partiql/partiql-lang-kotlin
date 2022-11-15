@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+<!-- Template: after a release, copy and paste out below
 ## [Unreleased]
 
 ### Added
@@ -17,6 +18,60 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 ### Security
+-->
+
+
+## [Unreleased]
+
+### Added
+- Adds simple auto-completion to the CLI.
+- Adds support for HAVING clause in planner
+- Adds support for collection aggregation functions in the EvaluatingCompiler and experimental planner
+- Adds support for the syntactic sugar of using aggregations functions in place of their collection aggregation function
+  counterparts (in the experimental planner)
+
+### Changed
+- Now `CompileOption` uses `TypedOpParameter.HONOR_PARAMETERS` as default.
+- Updates the CLI Shell Highlighter to use the ANTLR generated lexer/parser for highlighting user queries
+- PartiQL MISSING in Ion representation now becomes ion null with annotation of `$missing`, instead of `$partiql_missing`
+- PartiQL BAG in Ion representation now becomes ion list with annotation of `$bag`, instead of `$partiql_bag`
+- PartiQL DATE in Ion representation now becomes ion timestamp with annotation of `$date`, instead of `$partiql_date`
+- PartiQL TIME in Ion representation now becomes ion struct with annotation of `$time`, instead of `$partiql_time`
+- Simplifies the aggregation operator in the experimental planner by removing the use of metas
+
+### Deprecated
+- Marks the GroupKeyReferencesVisitorTransform as deprecated. There is no functionally equivalent class.
+
+### Fixed
+
+### Removed
+- Removes the deprecated V0 AST in the codebase.
+- Removes the deprecated MetaContainer in the codebase, removed interfaces and classes include:
+  - [MetaContainer] Interface
+  - [MetaContainerImpl]
+  - [MetaDeserialize]
+  - [MemoizedMetaDeserializer]
+- Removes the deprecated Rewriter/AstWalker/AstVisitor in the code base, removed interfaces and classes include:
+  - [AstRewriter] Interface & [AstRewriterBase] class
+  - [AstVisitor] Interface & [AstVisitorBase] class
+  - [AstWalker] class
+  - [MetaStrippingRewriter] class
+- Removes the deprecated ExprNode and related files in the code base. 
+  - [Parser] API `parseExprNode(source: String): ExprNode` has been removed.
+  - [CompilerPipeline] API `compile(query: ExprNode): Expression` has been removed.
+  - [ExprNode] and [AstNode] have been removed.
+  - Functions related to conversions between ExprNode and PartiqlAst have been removed.
+- Removes the deprecated SqlParser and SqlLexer
+- **Breaking**: Removes the `CallAgg` node from the Logical, LogicalResolved, and Physical plans
+
+### Security
+
+
+## [0.8.1] - 2022-10-28
+
+### Added
+- Extends statement redaction to support `INSERT/REPLACE/UPSERT INTO`.
+
 
 ## [0.8.0] - 2022-10-14
 
@@ -114,6 +169,16 @@ stage in the `PlannerPipeline` and to generate performance metrics for the indiv
 ### Removed
 - README.md badge for travisci
 - **Breaking Change**: removed [ExprValueType.typeNames] as needed by the future work of legacy parser removal and OTS 
+- **Breaking Change**: [PartiqlPhysical.Type.toTypedOpParameter()] now becomes an internal function 
+- **Breaking Change**: [PartiqlAst.Type.toTypedOpParameter()] is removed
+- **Breaking Change**: [PartiqlAstSanityValidator] now becomes an internal class
+- **Breaking Change**: [PartiqlPhysicalSanityValidator] is removed
+- **Breaking Change**: the following custom type AST nodes are removed from `partiql.ion` file: `es_boolean`, `es_integer`, `es_float`,
+    `es_text`, `es_any`, `spark_short`, `spark_integer`, `spark_long`, `spark_double`, `spark_boolean`, `spark_float`,
+    `rs_varchar_max`, `rs_integer`, `rs_bigint`, `rs_boolean`, `rs_real`, `rs_double_precision`.
+    The related visitor transform `CustomTypeVisitorTransform` is also removed.
+    See [Issue 510](https://github.com/partiql/partiql-lang-kotlin/issues/510) for more details.
+
 
 ### Security
 
@@ -147,13 +212,6 @@ stage in the `PlannerPipeline` and to generate performance metrics for the indiv
   A client program may be interrupted by `NoSuchFieldError` exception.
 - [breaking change] Removal of `NodeMetadata` from `org.partiql.lang.eval`:
   A client program may be interrupted by `NoClassDefFoundError` exception.
-- [breaking change] Removal of the following classes from `org.partiql.lang.eval.like`:
-  - `CodepointCheckpointIterator`
-  - `PatternPart`
-  - `PatternPart.AnyOneChar`
-  - `PatternPart.ExactChars`
-  - `PatternPartKt`
-    A client program may be interrupted by NoClassDefFoundError exception.
 
 ### Fixed
 - Fix `write_file` CLI function; the old function required the input to be a `string`, but it must be a generic type.

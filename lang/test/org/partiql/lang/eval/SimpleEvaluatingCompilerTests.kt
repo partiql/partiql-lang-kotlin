@@ -99,16 +99,16 @@ class SimpleEvaluatingCompilerTests : EvaluatorTestBase() {
     @Test
     fun joinWithoutScopeQualifier() = runEvaluatorTestCase(
         """SELECT g2 FROM table_1 AS g, g.a AS g2""",
-        expectedResult = "[{g2:\"from global variable g\"}]",
-        session = sessionWithG
+        session = sessionWithG,
+        expectedResult = "[{g2:\"from global variable g\"}]"
     )
 
     /** Demonstrates that with the scope qualifier ('@'), the `g` in `@g.a' refers to local `g`. */
     @Test
     fun joinWithScopeQualifier() = runEvaluatorTestCase(
         """SELECT g2 FROM table_1 AS g, @g.a AS g2""",
-        expectedResult = "[{g2:{b:1}},{g2:{b:2}}]",
-        session = sessionWithG
+        session = sessionWithG,
+        expectedResult = "[{g2:{b:1}},{g2:{b:2}}]"
     )
 
     @Test
@@ -142,10 +142,26 @@ class SimpleEvaluatingCompilerTests : EvaluatorTestBase() {
     fun sum() {
         // Note: planner & phys. alg. have no support for aggregates (yet)
         runEvaluatorTestCase("SUM(`[1, 2, 3]`)", expectedResult = "6", target = EvaluatorTestTarget.COMPILER_PIPELINE)
-        runEvaluatorTestCase("SUM(`[1, 2e0, 3e0]`)", expectedResult = "6e0", target = EvaluatorTestTarget.COMPILER_PIPELINE)
-        runEvaluatorTestCase("SUM(`[1, 2d0, 3d0]`)", expectedResult = "6d0", target = EvaluatorTestTarget.COMPILER_PIPELINE)
-        runEvaluatorTestCase("SUM(`[1, 2e0, 3d0]`)", expectedResult = "6d0", target = EvaluatorTestTarget.COMPILER_PIPELINE)
-        runEvaluatorTestCase("SUM(`[1, 2d0, 3e0]`)", expectedResult = "6d0", target = EvaluatorTestTarget.COMPILER_PIPELINE)
+        runEvaluatorTestCase(
+            "SUM(`[1, 2e0, 3e0]`)",
+            expectedResult = "6e0",
+            target = EvaluatorTestTarget.COMPILER_PIPELINE
+        )
+        runEvaluatorTestCase(
+            "SUM(`[1, 2d0, 3d0]`)",
+            expectedResult = "6d0",
+            target = EvaluatorTestTarget.COMPILER_PIPELINE
+        )
+        runEvaluatorTestCase(
+            "SUM(`[1, 2e0, 3d0]`)",
+            expectedResult = "6d0",
+            target = EvaluatorTestTarget.COMPILER_PIPELINE
+        )
+        runEvaluatorTestCase(
+            "SUM(`[1, 2d0, 3e0]`)",
+            expectedResult = "6d0",
+            target = EvaluatorTestTarget.COMPILER_PIPELINE
+        )
     }
 
     @Test
@@ -153,9 +169,25 @@ class SimpleEvaluatingCompilerTests : EvaluatorTestBase() {
         // Note: planner & phys. alg. have no support for aggregates (yet)
         runEvaluatorTestCase("max(`[1, 2, 3]`)", expectedResult = "3", target = EvaluatorTestTarget.COMPILER_PIPELINE)
         runEvaluatorTestCase("max(`[1, 2.0, 3]`)", expectedResult = "3", target = EvaluatorTestTarget.COMPILER_PIPELINE)
-        runEvaluatorTestCase("max(`[1, 2e0, 3e0]`)", expectedResult = "3e0", target = EvaluatorTestTarget.COMPILER_PIPELINE)
-        runEvaluatorTestCase("max(`[1, 2d0, 3d0]`)", expectedResult = "3d0", target = EvaluatorTestTarget.COMPILER_PIPELINE)
-        runEvaluatorTestCase("max(`[1, 2e0, 3d0]`)", expectedResult = "3d0", target = EvaluatorTestTarget.COMPILER_PIPELINE)
-        runEvaluatorTestCase("max(`[1, 2d0, 3e0]`)", expectedResult = "3e0", target = EvaluatorTestTarget.COMPILER_PIPELINE)
+        runEvaluatorTestCase(
+            "max(`[1, 2e0, 3e0]`)",
+            expectedResult = "3e0",
+            target = EvaluatorTestTarget.COMPILER_PIPELINE
+        )
+        runEvaluatorTestCase(
+            "max(`[1, 2d0, 3d0]`)",
+            expectedResult = "3d0",
+            target = EvaluatorTestTarget.COMPILER_PIPELINE
+        )
+        runEvaluatorTestCase(
+            "max(`[1, 2e0, 3d0]`)",
+            expectedResult = "3d0",
+            target = EvaluatorTestTarget.COMPILER_PIPELINE
+        )
+        runEvaluatorTestCase(
+            "max(`[1, 2d0, 3e0]`)",
+            expectedResult = "3e0",
+            target = EvaluatorTestTarget.COMPILER_PIPELINE
+        )
     }
 }

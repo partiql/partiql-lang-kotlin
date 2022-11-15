@@ -22,7 +22,6 @@ import com.amazon.ionelement.api.toIonValue
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.ast.UNKNOWN_SOURCE_LOCATION
 import org.partiql.lang.ast.sourceLocation
-import org.partiql.lang.ast.toPartiQlMetaContainer
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.domains.staticType
 import org.partiql.lang.domains.toBindingCase
@@ -82,7 +81,6 @@ import org.partiql.lang.eval.stringValue
 import org.partiql.lang.eval.syntheticColumnName
 import org.partiql.lang.eval.time.Time
 import org.partiql.lang.eval.unnamedValue
-import org.partiql.lang.eval.visitors.PartiqlPhysicalSanityValidator
 import org.partiql.lang.planner.EvaluatorOptions
 import org.partiql.lang.types.AnyOfType
 import org.partiql.lang.types.AnyType
@@ -169,8 +167,6 @@ internal class PhysicalPlanCompilerImpl(
      * hope that long-running compilations may be aborted by the caller.
      */
     fun compile(plan: PartiqlPhysical.Plan): Expression {
-        PartiqlPhysicalSanityValidator(evaluatorOptions).walkPlan(plan)
-
         val thunk = compileAstStatement(plan.stmt)
 
         return object : Expression {
@@ -214,7 +210,6 @@ internal class PhysicalPlanCompilerImpl(
             is PartiqlPhysical.Expr.SearchedCase -> compileSearchedCase(expr, metas)
             is PartiqlPhysical.Expr.Path -> compilePath(expr, metas)
             is PartiqlPhysical.Expr.Struct -> compileStruct(expr)
-            is PartiqlPhysical.Expr.CallAgg -> compileCallAgg(expr, metas)
             is PartiqlPhysical.Expr.Parameter -> compileParameter(expr, metas)
             is PartiqlPhysical.Expr.Date -> compileDate(expr, metas)
             is PartiqlPhysical.Expr.LitTime -> compileLitTime(expr, metas)
@@ -383,7 +378,7 @@ internal class PhysicalPlanCompilerImpl(
     /**
      *  For operators which could return integer type, check integer overflow in case of [TypingMode.PERMISSIVE].
      */
-    private fun resolveIntConstraint(computeThunk: PhysicalPlanThunk, metas: MetaContainer): PhysicalPlanThunk =
+    private fun checkIntegerOverflow(computeThunk: PhysicalPlanThunk, metas: MetaContainer): PhysicalPlanThunk =
         when (val staticTypes = metas.staticType?.type?.getTypes()) {
             // No staticType, can't validate integer size.
             null -> computeThunk
@@ -441,7 +436,7 @@ internal class PhysicalPlanCompilerImpl(
             (lValue.numberValue() + rValue.numberValue()).exprValue()
         }
 
-        return resolveIntConstraint(computeThunk, metas)
+        return checkIntegerOverflow(computeThunk, metas)
     }
 
     private fun compileMinus(expr: PartiqlPhysical.Expr.Minus, metas: MetaContainer): PhysicalPlanThunk {
@@ -455,7 +450,7 @@ internal class PhysicalPlanCompilerImpl(
             (lValue.numberValue() - rValue.numberValue()).exprValue()
         }
 
-        return resolveIntConstraint(computeThunk, metas)
+        return checkIntegerOverflow(computeThunk, metas)
     }
 
     private fun compilePos(expr: PartiqlPhysical.Expr.Pos, metas: MetaContainer): PhysicalPlanThunk {
@@ -468,7 +463,7 @@ internal class PhysicalPlanCompilerImpl(
             value
         }
 
-        return resolveIntConstraint(computeThunk, metas)
+        return checkIntegerOverflow(computeThunk, metas)
     }
 
     private fun compileNeg(expr: PartiqlPhysical.Expr.Neg, metas: MetaContainer): PhysicalPlanThunk {
@@ -478,7 +473,7 @@ internal class PhysicalPlanCompilerImpl(
             (-value.numberValue()).exprValue()
         }
 
-        return resolveIntConstraint(computeThunk, metas)
+        return checkIntegerOverflow(computeThunk, metas)
     }
 
     private fun compileTimes(expr: PartiqlPhysical.Expr.Times, metas: MetaContainer): PhysicalPlanThunk {
@@ -488,7 +483,7 @@ internal class PhysicalPlanCompilerImpl(
             (lValue.numberValue() * rValue.numberValue()).exprValue()
         }
 
-        return resolveIntConstraint(computeThunk, metas)
+        return checkIntegerOverflow(computeThunk, metas)
     }
 
     private fun compileDivide(expr: PartiqlPhysical.Expr.Divide, metas: MetaContainer): PhysicalPlanThunk {
@@ -516,7 +511,7 @@ internal class PhysicalPlanCompilerImpl(
             }
         }
 
-        return resolveIntConstraint(computeThunk, metas)
+        return checkIntegerOverflow(computeThunk, metas)
     }
 
     private fun compileModulo(expr: PartiqlPhysical.Expr.Modulo, metas: MetaContainer): PhysicalPlanThunk {
@@ -525,13 +520,13 @@ internal class PhysicalPlanCompilerImpl(
         val computeThunk = thunkFactory.thunkFold(metas, argThunks) { lValue, rValue ->
             val denominator = rValue.numberValue()
             if (denominator.isZero()) {
-                err("% by zero", ErrorCode.EVALUATOR_MODULO_BY_ZERO, errorContext = null, internal = false)
+                err("% by zero", ErrorCode.EVALUATOR_MODULO_BY_ZERO, errorContextFrom(metas), internal = false)
             }
 
             (lValue.numberValue() % denominator).exprValue()
         }
 
-        return resolveIntConstraint(computeThunk, metas)
+        return checkIntegerOverflow(computeThunk, metas)
     }
 
     private fun compileEq(expr: PartiqlPhysical.Expr.Eq, metas: MetaContainer): PhysicalPlanThunk {
@@ -904,7 +899,7 @@ internal class PhysicalPlanCompilerImpl(
             }
         }
 
-        return resolveIntConstraint(computeThunk, metas)
+        return checkIntegerOverflow(computeThunk, metas)
     }
 
     private fun compileLit(expr: PartiqlPhysical.Expr.Lit, metas: MetaContainer): PhysicalPlanThunk {
@@ -1419,9 +1414,6 @@ internal class PhysicalPlanCompilerImpl(
         }
     }
 
-    @Suppress("UNUSED_PARAMETER")
-    private fun compileCallAgg(expr: PartiqlPhysical.Expr.CallAgg, metas: MetaContainer): PhysicalPlanThunk = TODO("call_agg")
-
     private fun compilePath(expr: PartiqlPhysical.Expr.Path, metas: MetaContainer): PhysicalPlanThunk {
         val rootThunk = compileAstExpr(expr.root)
         val remainingComponents = LinkedList<PartiqlPhysical.PathStep>()
@@ -1580,8 +1572,8 @@ internal class PhysicalPlanCompilerImpl(
         val patternExpr = expr.pattern
         val escapeExpr = expr.escape
 
-        val patternLocationMeta = patternExpr.metas.toPartiQlMetaContainer().sourceLocation
-        val escapeLocationMeta = escapeExpr?.metas?.toPartiQlMetaContainer()?.sourceLocation
+        val patternLocationMeta = patternExpr.metas.sourceLocation
+        val escapeLocationMeta = escapeExpr?.metas?.sourceLocation
 
         // This is so that null short-circuits can be supported.
         fun getRegexPattern(pattern: ExprValue, escape: ExprValue?): (() -> Pattern)? {
