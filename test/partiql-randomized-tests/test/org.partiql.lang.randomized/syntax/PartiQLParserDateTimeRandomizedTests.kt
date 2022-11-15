@@ -4,7 +4,7 @@ import org.junit.Test
 import org.partiql.lang.syntax.PartiQLParserTestBase
 import java.util.Random
 
-class PartiQLParserDateTimeFuzzTests : PartiQLParserTestBase() {
+class PartiQLParserDateTimeRandomizedTests : PartiQLParserTestBase() {
 
     private data class Date(val year: Int, val month: Int, val day: Int)
 
