@@ -14,6 +14,7 @@ enum class RelationalOperatorKind {
     UNPIVOT,
     FILTER,
     JOIN,
+    // TODO: Remove from experimental once https://github.com/partiql/partiql-docs/issues/31 is resolved and a RFC is approved
     WINDOW,
     OFFSET,
     LIMIT,

@@ -4,6 +4,7 @@ import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.errors.ProblemHandler
 import org.partiql.lang.planner.PartiqlPhysicalPass
 
+// TODO: Remove from experimental once https://github.com/partiql/partiql-docs/issues/31 is resolved and a RFC is approved
 internal fun createConcatWindowFunctionPass(): PartiqlPhysicalPass =
     ConcatWindowFunction()
 
@@ -45,9 +46,7 @@ private class ConcatWindowFunction : PartiqlPhysicalPass {
 private fun PartiqlPhysical.Bexpr.Window.rewriteWindowExpression(): PartiqlPhysical.Bexpr {
     val modifiedWindowExpressionList = object : PartiqlPhysical.VisitorTransform() {
 
-        /**
-         * Only allow to recursive into the window node
-         */
+        // Only allow to recursive into the window node
         override fun transformBexpr(node: PartiqlPhysical.Bexpr) =
             when (node) {
                 is PartiqlPhysical.Bexpr.Window -> super.transformBexpr(node)
@@ -87,6 +86,5 @@ private fun PartiqlPhysical.Bexpr.Window.rewriteWindowExpression(): PartiqlPhysi
         }
     }.transformBexpr(this)
 
-    // what should we return here?
     return modifiedWindowExpressionList
 }
