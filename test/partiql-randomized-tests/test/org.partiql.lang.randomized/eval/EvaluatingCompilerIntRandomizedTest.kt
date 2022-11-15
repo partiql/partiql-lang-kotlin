@@ -25,7 +25,7 @@ import java.util.Random
  * introduction of [StaticType].  The behavior described in these tests is still how the we should handle
  * integer arithmetic in the absence of [StaticType] information.
  */
-class EvaluatingCompilerIntFuzzTest : EvaluatorTestBase() {
+class EvaluatingCompilerIntRandomizedTest : EvaluatorTestBase() {
     companion object {
         private val RANDOM = Random()
 
