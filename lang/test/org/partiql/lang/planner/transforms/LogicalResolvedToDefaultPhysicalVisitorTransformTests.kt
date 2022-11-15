@@ -156,7 +156,8 @@ class LogicalResolvedToDefaultPhysicalVisitorTransformTests {
                                 )
                             )
                         ),
-                        windowExpression = windowExpression(
+                        // This is a hack. At this point the window operator should have at most one Window Expression.
+                        windowExpressionList0 = windowExpression(
                             varDecl(1),
                             "lag",
                             path(
@@ -166,7 +167,6 @@ class LogicalResolvedToDefaultPhysicalVisitorTransformTests {
                                 )
                             )
                         )
-
                     )
                 },
                 PartiqlPhysical.build {
@@ -193,13 +193,15 @@ class LogicalResolvedToDefaultPhysicalVisitorTransformTests {
                                 )
                             )
                         ),
-                        windowExpression = windowExpression(
-                            varDecl(1),
-                            "lag",
-                            path(
-                                localId(0),
-                                listOf(
-                                    pathExpr(lit(ionSymbol("b")), PartiqlPhysical.CaseSensitivity.CaseInsensitive())
+                        windowExpressionList = listOf(
+                            windowExpression(
+                                varDecl(1),
+                                "lag",
+                                path(
+                                    localId(0),
+                                    listOf(
+                                        pathExpr(lit(ionSymbol("b")), PartiqlPhysical.CaseSensitivity.CaseInsensitive())
+                                    )
                                 )
                             )
                         )

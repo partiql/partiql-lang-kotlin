@@ -331,19 +331,19 @@ class WindowFunctionTests : EvaluatorTestBase() {
 
             EvaluatorTestCase(
                 query = """
-                    SELECT 
+                    SELECT
                        lead(sp.price) OVER (PARTITION BY sp.ticker ORDER BY sp."date") as next_price,
-                       (SELECT 
+                       (SELECT
                             lead(sp.price) OVER (PARTITION BY sp.ticker ORDER BY sp."date") as Inner_lead
                        FROM <<1>>)
                     FROM stock_price as sp
                 """,
                 expectedResult = """<<
-                    {'next_price': 115.88, '_2': <<{'Inner_lead': NULL}>>}, 
-                    {'next_price': 121.09, '_2': <<{'Inner_lead': NULL}>>}, 
-                    {'next_price': NULL, '_2': <<{'Inner_lead': NULL}>>}, 
-                    {'next_price': 99.30, '_2': <<{'Inner_lead': NULL}>>}, 
-                    {'next_price': 101.04, '_2': <<{'Inner_lead': NULL}>>}, 
+                    {'next_price': 115.88, '_2': <<{'Inner_lead': NULL}>>},
+                    {'next_price': 121.09, '_2': <<{'Inner_lead': NULL}>>},
+                    {'next_price': NULL, '_2': <<{'Inner_lead': NULL}>>},
+                    {'next_price': 99.30, '_2': <<{'Inner_lead': NULL}>>},
+                    {'next_price': 101.04, '_2': <<{'Inner_lead': NULL}>>},
                     {'next_price': NULL, '_2': <<{'Inner_lead': NULL}>>}
                 >>"""
             ),
@@ -410,7 +410,30 @@ class WindowFunctionTests : EvaluatorTestBase() {
                     { 'date': `2022-10-04`, 'ticker': 'GOOG', 'current_price': 101.04, 'previous_price': 99.30, 'next_price': NULL}
                 >>""",
                 excludeLegacySerializerAssertions = true
-            )
+            ),
+            EvaluatorTestCase(
+                query = """
+                    SELECT 
+                        LEAD(a.next_res, 1, 0) OVER (ORDER BY a."date", a.ticker) as next_res_or_zero,
+                        LAG(a.prev_res, 1, 0) OVER (ORDER BY a."date", a.ticker) as prev_res_or_zero
+                     FROM (
+                        SELECT 
+                            LEAD(sp.price) OVER(PARTITION BY sp.ticker ORDER BY sp."date") AS next_res,
+                            LAG(sp.price) OVER(PARTITION BY sp.ticker ORDER BY sp."date") AS prev_res,
+                            sp."date" as "date",
+                            sp.ticker as ticker
+                        FROM stock_price AS sp
+                    ) as a
+                """,
+                expectedResult = """<<
+                    {'next_res_or_zero': 99.30, 'prev_res_or_zero' : 0},
+                    {'next_res_or_zero': 121.09, 'prev_res_or_zero' : NULL},
+                    {'next_res_or_zero': 101.04, 'prev_res_or_zero' : NULL},
+                    {'next_res_or_zero': NULL, 'prev_res_or_zero' : 113.00},
+                    {'next_res_or_zero': NULL, 'prev_res_or_zero' : 96.15},
+                    {'next_res_or_zero': 0, 'prev_res_or_zero' : 115.88}
+                >>"""
+            ),
         )
     }
 }

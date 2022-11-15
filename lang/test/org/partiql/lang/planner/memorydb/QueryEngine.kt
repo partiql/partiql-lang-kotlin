@@ -18,6 +18,7 @@ import org.partiql.lang.planner.PlannerPipeline
 import org.partiql.lang.planner.QueryResult
 import org.partiql.lang.planner.StaticTypeResolver
 import org.partiql.lang.planner.memorydb.operators.GetByKeyProjectRelationalOperatorFactory
+import org.partiql.lang.planner.transforms.optimizations.createConcatWindowFunctionPass
 import org.partiql.lang.planner.transforms.optimizations.createFilterScanToKeyLookupPass
 import org.partiql.lang.planner.transforms.optimizations.createRemoveUselessAndsPass
 import org.partiql.lang.planner.transforms.optimizations.createRemoveUselessFiltersPass
@@ -152,6 +153,8 @@ class QueryEngine(val db: MemoryDatabase) {
         // After the previous pass, we may have some `(filter ... )` nodes with `(lit true)` as a predicate.
         // This pass removes these useless filter nodes.
         addPhysicalPlanPass(createRemoveUselessFiltersPass())
+
+        addPhysicalPlanPass(createConcatWindowFunctionPass())
     }
 
     fun executeQuery(sql: String): ExprValue {

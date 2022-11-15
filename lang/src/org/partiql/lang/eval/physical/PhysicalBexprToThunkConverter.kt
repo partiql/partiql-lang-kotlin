@@ -12,6 +12,7 @@ import org.partiql.lang.eval.physical.operators.AggregateOperatorFactory
 import org.partiql.lang.eval.physical.operators.CompiledAggregateFunction
 import org.partiql.lang.eval.physical.operators.CompiledGroupKey
 import org.partiql.lang.eval.physical.operators.CompiledSortKey
+import org.partiql.lang.eval.physical.operators.CompiledWindowFunction
 import org.partiql.lang.eval.physical.operators.FilterRelationalOperatorFactory
 import org.partiql.lang.eval.physical.operators.JoinRelationalOperatorFactory
 import org.partiql.lang.eval.physical.operators.LetRelationalOperatorFactory
@@ -28,6 +29,8 @@ import org.partiql.lang.eval.physical.operators.UnpivotOperatorFactory
 import org.partiql.lang.eval.physical.operators.VariableBinding
 import org.partiql.lang.eval.physical.operators.WindowRelationalOperatorFactory
 import org.partiql.lang.eval.physical.operators.valueExpression
+import org.partiql.lang.eval.physical.window.ExperimentalWindowFunc
+import org.partiql.lang.eval.physical.window.createBuiltinWindowFunction
 import org.partiql.lang.util.toIntExact
 
 /** A specialization of [Thunk] that we use for evaluation of physical plans. */
@@ -294,6 +297,7 @@ internal class PhysicalBexprToThunkConverter(
     }
 
     // TODO: Remove from experimental once https://github.com/partiql/partiql-docs/issues/31 is resolved and a RFC is approved
+    @ExperimentalWindowFunc
     override fun convertWindow(node: PartiqlPhysical.Bexpr.Window): RelationThunkEnv {
         val source = this.convert(node.source)
 
@@ -307,16 +311,19 @@ internal class PhysicalBexprToThunkConverter(
 
         val compiledOrderBy = windowSortSpecList?.sortSpecs?.let { compileSortSpecs(it) } ?: emptyList()
 
-        val compiledWindowFunctionParameter = node.windowExpression.args.map {
-            exprConverter.convert(it).toValueExpr(it.metas.sourceLocationMeta)
+        val compiledWindowFunctions = node.windowExpressionList.map { windowExpression ->
+            CompiledWindowFunction(
+                createBuiltinWindowFunction(windowExpression.funcName.text),
+                windowExpression.args.map { exprConverter.convert(it).toValueExpr(it.metas.sourceLocationMeta) },
+                windowExpression.decl
+            )
         }
 
         // locate operator factory
         val factory = findOperatorFactory<WindowRelationalOperatorFactory>(RelationalOperatorKind.WINDOW, node.i.name.text)
 
         // create operator implementation
-        val bindingsExpr = factory.create(node.i, source, compiledPartitionBy, compiledOrderBy, node.windowExpression, compiledWindowFunctionParameter)
-
+        val bindingsExpr = factory.create(source, compiledPartitionBy, compiledOrderBy, compiledWindowFunctions)
         // wrap in thunk
         return bindingsExpr.toRelationThunk(node.metas)
     }

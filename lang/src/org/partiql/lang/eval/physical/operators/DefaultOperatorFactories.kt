@@ -9,6 +9,7 @@ import org.partiql.lang.eval.physical.EvaluatorState
 import org.partiql.lang.eval.physical.SetVariableFunc
 import org.partiql.lang.eval.physical.evalLimitRowCount
 import org.partiql.lang.eval.physical.evalOffsetRowCount
+import org.partiql.lang.eval.physical.window.ExperimentalWindowFunc
 import org.partiql.lang.eval.relation.RelationType
 import org.partiql.lang.eval.relation.relation
 import org.partiql.lang.eval.unnamedValue
@@ -28,7 +29,8 @@ internal val DEFAULT_RELATIONAL_OPERATOR_FACTORIES = listOf(
     AggregateOperatorFactoryDefault,
     SortOperatorFactoryDefault,
     UnpivotOperatorFactoryDefault,
-    SortBasedWindowOperator(DEFAULT_IMPL_NAME),
+    @OptIn(ExperimentalWindowFunc::class)
+    WindowOperatorFactoryDefault,
 
     object : ScanRelationalOperatorFactory(DEFAULT_IMPL_NAME) {
         override fun create(
@@ -37,35 +39,34 @@ internal val DEFAULT_RELATIONAL_OPERATOR_FACTORIES = listOf(
             setAsVar: SetVariableFunc,
             setAtVar: SetVariableFunc?,
             setByVar: SetVariableFunc?
-        ): RelationExpression =
-            RelationExpression { state ->
-                val valueToScan = expr(state)
+        ) = RelationExpression { state ->
+            val valueToScan = expr(state)
 
-                // coerces non-collection types to a singleton Sequence<>.
-                val rows: Sequence<ExprValue> = when (valueToScan.type) {
-                    ExprValueType.LIST, ExprValueType.BAG -> valueToScan.asSequence()
-                    else -> sequenceOf(valueToScan)
-                }
+            // coerces non-collection types to a singleton Sequence<>.
+            val rows: Sequence<ExprValue> = when (valueToScan.type) {
+                ExprValueType.LIST, ExprValueType.BAG -> valueToScan.asSequence()
+                else -> sequenceOf(valueToScan)
+            }
 
-                relation(RelationType.BAG) {
-                    val rowsIter: Iterator<ExprValue> = rows.iterator()
-                    while (rowsIter.hasNext()) {
-                        val item = rowsIter.next()
+            relation(RelationType.BAG) {
+                val rowsIter: Iterator<ExprValue> = rows.iterator()
+                while (rowsIter.hasNext()) {
+                    val item = rowsIter.next()
 
-                        // .unnamedValue() removes any ordinal that might exist on item
-                        setAsVar(state, item.unnamedValue())
+                    // .unnamedValue() removes any ordinal that might exist on item
+                    setAsVar(state, item.unnamedValue())
 
-                        if (setAtVar != null) {
-                            setAtVar(state, item.name ?: state.valueFactory.missingValue)
-                        }
-
-                        if (setByVar != null) {
-                            setByVar(state, item.address ?: state.valueFactory.missingValue)
-                        }
-                        yield()
+                    if (setAtVar != null) {
+                        setAtVar(state, item.name ?: state.valueFactory.missingValue)
                     }
+
+                    if (setByVar != null) {
+                        setByVar(state, item.address ?: state.valueFactory.missingValue)
+                    }
+                    yield()
                 }
             }
+        }
     },
     object : FilterRelationalOperatorFactory(DEFAULT_IMPL_NAME) {
         override fun create(impl: PartiqlPhysical.Impl, predicate: ValueExpression, sourceBexpr: RelationExpression) =
