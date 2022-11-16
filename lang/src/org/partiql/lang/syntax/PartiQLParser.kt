@@ -15,13 +15,16 @@
 package org.partiql.lang.syntax
 
 import com.amazon.ion.IonSystem
+import com.amazon.ion.system.IonSystemBuilder
+import org.antlr.v4.runtime.BailErrorStrategy
 import org.antlr.v4.runtime.BaseErrorListener
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
-import org.antlr.v4.runtime.Lexer
 import org.antlr.v4.runtime.RecognitionException
 import org.antlr.v4.runtime.Recognizer
 import org.antlr.v4.runtime.Token
+import org.antlr.v4.runtime.atn.PredictionMode
+import org.antlr.v4.runtime.misc.ParseCancellationException
 import org.antlr.v4.runtime.tree.ParseTree
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.errors.ErrorCode
@@ -30,6 +33,7 @@ import org.partiql.lang.errors.PropertyValueMap
 import org.partiql.lang.types.CustomType
 import org.partiql.lang.util.getIonValue
 import org.partiql.lang.util.getPartiQLTokenType
+import java.io.InputStream
 import java.nio.charset.StandardCharsets
 import org.partiql.lang.syntax.antlr.PartiQLParser as GeneratedParser
 import org.partiql.lang.syntax.antlr.PartiQLTokens as GeneratedLexer
@@ -40,16 +44,21 @@ import org.partiql.lang.syntax.antlr.PartiQLTokens as GeneratedLexer
  * to convert the [ParseTree] into a [PartiqlAst.Statement].
  */
 internal class PartiQLParser(
-    private val ion: IonSystem,
+    private val ion: IonSystem = IonSystemBuilder.standard().build(),
     val customTypes: List<CustomType> = listOf()
 ) : Parser {
+
+    private val charStream = CharStreams.fromStream(InputStream.nullInputStream())
+    private val lexer = GeneratedLexer(charStream)
+    private val tokens = CommonTokenStream(lexer)
+    private val parserSLL = GeneratedParser(tokens)
+    private val parserLL = GeneratedParser(tokens)
 
     override fun parseAstStatement(source: String): PartiqlAst.Statement {
         // TODO: Research use-case of parameters and implementation -- see https://github.com/partiql/partiql-docs/issues/23
         val parameterIndexes = calculateTokenToParameterOrdinals(source)
-        val lexer = getLexer(source)
         val tree = try {
-            parseQuery(lexer)
+            parseQuery(source)
         } catch (e: StackOverflowError) {
             val msg = "Input query too large. This error typically occurs when there are several nested " +
                 "expressions/predicates and can usually be fixed by simplifying expressions."
@@ -59,27 +68,51 @@ internal class PartiQLParser(
         return visitor.visit(tree) as PartiqlAst.Statement
     }
 
-    private fun parseQuery(lexer: Lexer): ParseTree {
-        val parser = getParser(lexer)
-        return parser.statement()
+    /**
+     * To reduce latency costs, the [PartiQLParser] attempts to use [PredictionMode.SLL] and falls back to
+     * [PredictionMode.LL] if a [ParseCancellationException] is thrown by the [BailErrorStrategy].
+     */
+    private fun parseQuery(input: String): ParseTree = try {
+        parseUsingSLL(input)
+    } catch (ex: ParseCancellationException) {
+        parseUsingLL(input)
     }
 
-    private fun getLexer(source: String): Lexer {
-        val inputStream = CharStreams.fromStream(source.byteInputStream(StandardCharsets.UTF_8), StandardCharsets.UTF_8)
-        val lexer = GeneratedLexer(inputStream)
+    internal fun parseUsingSLL(input: String): org.partiql.lang.syntax.antlr.PartiQLParser.StatementContext {
+        resetParserSLL(input)
+        return this.parserSLL.statement()
+    }
+
+    internal fun parseUsingLL(input: String): org.partiql.lang.syntax.antlr.PartiQLParser.StatementContext {
+        resetParserLL(input)
+        return this.parserLL.statement()
+    }
+
+    private fun resetLexer(query: String) {
+        val inputStream = CharStreams.fromStream(query.byteInputStream(StandardCharsets.UTF_8), StandardCharsets.UTF_8)
         val handler = TokenizeErrorListener(ion)
-        lexer.removeErrorListeners()
-        lexer.addErrorListener(handler)
-        return lexer
+        this.lexer.removeErrorListeners()
+        this.lexer.addErrorListener(handler)
+        this.lexer.inputStream = inputStream
+        this.lexer.reset()
+        this.tokens.tokenSource = this.lexer
+        this.tokens.seek(0)
     }
 
-    private fun getParser(lexer: Lexer): GeneratedParser {
-        val tokens = CommonTokenStream(lexer)
-        val parser = GeneratedParser(tokens)
-        val handler = ParseErrorListener(ion)
-        parser.removeErrorListeners()
-        parser.addErrorListener(handler)
-        return parser
+    private fun resetParserSLL(query: String) {
+        resetLexer(query)
+        this.parserSLL.reset()
+        this.parserSLL.interpreter.predictionMode = PredictionMode.SLL
+        this.parserSLL.removeErrorListeners()
+        this.parserSLL.errorHandler = BailErrorStrategy()
+    }
+
+    private fun resetParserLL(query: String) {
+        resetLexer(query)
+        this.parserLL.reset()
+        this.parserLL.interpreter.predictionMode = PredictionMode.LL
+        this.parserLL.removeErrorListeners()
+        this.parserLL.addErrorListener(ParseErrorListener(ion))
     }
 
     /**
@@ -88,10 +121,10 @@ internal class PartiQLParser(
      * NOTE: This needs to create its own lexer. Cannot share with others due to consumption of token stream.
      */
     private fun calculateTokenToParameterOrdinals(query: String): Map<Int, Int> {
-        val lexer = getLexer(query)
+        resetLexer(query)
         val tokenIndexToParameterIndex = mutableMapOf<Int, Int>()
         var parametersFound = 0
-        val tokenIter = CommonTokenStream(lexer).also { it.fill() }.tokens.iterator()
+        val tokenIter = this.tokens.also { it.fill() }.tokens.iterator()
         while (tokenIter.hasNext()) {
             val token = tokenIter.next()
             if (token.type == GeneratedParser.QUESTION_MARK) {
