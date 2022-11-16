@@ -33,7 +33,6 @@ import org.partiql.lang.errors.PropertyValueMap
 import org.partiql.lang.types.CustomType
 import org.partiql.lang.util.getIonValue
 import org.partiql.lang.util.getPartiQLTokenType
-import java.io.InputStream
 import java.nio.charset.StandardCharsets
 import org.partiql.lang.syntax.antlr.PartiQLParser as GeneratedParser
 import org.partiql.lang.syntax.antlr.PartiQLTokens as GeneratedLexer
@@ -47,12 +46,6 @@ internal class PartiQLParser(
     private val ion: IonSystem = IonSystemBuilder.standard().build(),
     val customTypes: List<CustomType> = listOf()
 ) : Parser {
-
-    private val charStream = CharStreams.fromStream(InputStream.nullInputStream())
-    private val lexer = GeneratedLexer(charStream)
-    private val tokens = CommonTokenStream(lexer)
-    private val parserSLL = GeneratedParser(tokens)
-    private val parserLL = GeneratedParser(tokens)
 
     override fun parseAstStatement(source: String): PartiqlAst.Statement {
         // TODO: Research use-case of parameters and implementation -- see https://github.com/partiql/partiql-docs/issues/23
@@ -70,7 +63,8 @@ internal class PartiQLParser(
 
     /**
      * To reduce latency costs, the [PartiQLParser] attempts to use [PredictionMode.SLL] and falls back to
-     * [PredictionMode.LL] if a [ParseCancellationException] is thrown by the [BailErrorStrategy].
+     * [PredictionMode.LL] if a [ParseCancellationException] is thrown by the [BailErrorStrategy]. See [createParserSLL]
+     * and [createParserLL] for more information.
      */
     private fun parseQuery(input: String): ParseTree = try {
         parseUsingSLL(input)
@@ -79,40 +73,54 @@ internal class PartiQLParser(
     }
 
     internal fun parseUsingSLL(input: String): org.partiql.lang.syntax.antlr.PartiQLParser.StatementContext {
-        resetParserSLL(input)
-        return this.parserSLL.statement()
+        val parser = createParserSLL(input)
+        return parser.statement()
     }
 
     internal fun parseUsingLL(input: String): org.partiql.lang.syntax.antlr.PartiQLParser.StatementContext {
-        resetParserLL(input)
-        return this.parserLL.statement()
+        val parser = createParserLL(input)
+        return parser.statement()
     }
 
-    private fun resetLexer(query: String) {
+    private fun createTokenStream(query: String): CommonTokenStream {
         val inputStream = CharStreams.fromStream(query.byteInputStream(StandardCharsets.UTF_8), StandardCharsets.UTF_8)
         val handler = TokenizeErrorListener(ion)
-        this.lexer.removeErrorListeners()
-        this.lexer.addErrorListener(handler)
-        this.lexer.inputStream = inputStream
-        this.lexer.reset()
-        this.tokens.tokenSource = this.lexer
-        this.tokens.seek(0)
+        val lexer = GeneratedLexer(inputStream)
+        lexer.removeErrorListeners()
+        lexer.addErrorListener(handler)
+        return CommonTokenStream(lexer)
     }
 
-    private fun resetParserSLL(query: String) {
-        resetLexer(query)
-        this.parserSLL.reset()
-        this.parserSLL.interpreter.predictionMode = PredictionMode.SLL
-        this.parserSLL.removeErrorListeners()
-        this.parserSLL.errorHandler = BailErrorStrategy()
+    /**
+     * Creates a [GeneratedParser] that uses [PredictionMode.SLL] and the [BailErrorStrategy]. The [GeneratedParser],
+     * upon seeing a syntax error, will throw a [ParseCancellationException] due to the [GeneratedParser.getErrorHandler]
+     * being a [BailErrorStrategy]. The purpose of this is to throw syntax errors as quickly as possible once encountered.
+     * As noted by the [PredictionMode.SLL] documentation, to guarantee results, it is useful to follow-up a failed parse
+     * by parsing with [PredictionMode.LL] -- see [createParserLL] for more information.
+     * See the JavaDocs for [PredictionMode.SLL] and [BailErrorStrategy] for more information.
+     */
+    private fun createParserSLL(query: String): GeneratedParser {
+        val stream = createTokenStream(query)
+        val parser = GeneratedParser(stream)
+        parser.reset()
+        parser.interpreter.predictionMode = PredictionMode.SLL
+        parser.removeErrorListeners()
+        parser.errorHandler = BailErrorStrategy()
+        return parser
     }
 
-    private fun resetParserLL(query: String) {
-        resetLexer(query)
-        this.parserLL.reset()
-        this.parserLL.interpreter.predictionMode = PredictionMode.LL
-        this.parserLL.removeErrorListeners()
-        this.parserLL.addErrorListener(ParseErrorListener(ion))
+    /**
+     * Creates a [GeneratedParser] that uses [PredictionMode.LL]. This is the fastest prediction mode that guarantees
+     * correct parse results. Upon seeing a syntax error, this parser throws a [ParserException].
+     */
+    private fun createParserLL(query: String): GeneratedParser {
+        val stream = createTokenStream(query)
+        val parser = GeneratedParser(stream)
+        parser.reset()
+        parser.interpreter.predictionMode = PredictionMode.LL
+        parser.removeErrorListeners()
+        parser.addErrorListener(ParseErrorListener(ion))
+        return parser
     }
 
     /**
@@ -121,10 +129,10 @@ internal class PartiQLParser(
      * NOTE: This needs to create its own lexer. Cannot share with others due to consumption of token stream.
      */
     private fun calculateTokenToParameterOrdinals(query: String): Map<Int, Int> {
-        resetLexer(query)
+        val stream = createTokenStream(query)
         val tokenIndexToParameterIndex = mutableMapOf<Int, Int>()
         var parametersFound = 0
-        val tokenIter = this.tokens.also { it.fill() }.tokens.iterator()
+        val tokenIter = stream.also { it.fill() }.tokens.iterator()
         while (tokenIter.hasNext()) {
             val token = tokenIter.next()
             if (token.type == GeneratedParser.QUESTION_MARK) {
