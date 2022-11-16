@@ -1751,7 +1751,7 @@ internal class EvaluatingCompiler(
 
                             val quantifiedRows = when (selectExpr.setq ?: PartiqlAst.SetQuantifier.All()) {
                                 // wrap the ExprValue to use ExprValue.equals as the equality
-                                is PartiqlAst.SetQuantifier.Distinct -> projectedRows.filter(createUniqueExprValueFilter())
+                                is PartiqlAst.SetQuantifier.Distinct -> projectedRows.distinct()
                                 is PartiqlAst.SetQuantifier.All -> projectedRows
                             }.let { rowsWithOffsetAndLimit(it, env) }
 

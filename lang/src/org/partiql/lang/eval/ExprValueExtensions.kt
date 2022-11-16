@@ -709,6 +709,8 @@ fun Sequence<ExprValue>.distinct(): Sequence<ExprValue> {
                 yield(it)
             }
         }
+        // clear out the seen set in case we need to call distinct multiple times, i.e. Type Inferencer
+        seen.clear()
     }
 }
 
