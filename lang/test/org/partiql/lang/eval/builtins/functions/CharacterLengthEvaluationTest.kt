@@ -17,7 +17,7 @@ class CharacterLengthEvaluationTest : EvaluatorTestBase() {
     @ParameterizedTest
     @ArgumentsSource(PassCases::class)
     fun characterLengthPassTests(testCase: ExprFunctionTestCase) =
-        runEvaluatorTestCase(testCase.source, expectedResult = testCase.expectedLegacyModeResult)
+        runEvaluatorTestCase(testCase.source, expectedResult = testCase.expectedLegacyModeResult, expectedPermissiveModeResult = testCase.expectedPermissiveModeResult)
 
     class PassCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(
@@ -29,7 +29,7 @@ class CharacterLengthEvaluationTest : EvaluatorTestBase() {
             ExprFunctionTestCase("character_length('ab')", "2"),
             ExprFunctionTestCase("character_length('abcdefghijklmnopqrstuvwxyz')", "26"),
             ExprFunctionTestCase("character_length(null)", "null"),
-            ExprFunctionTestCase("character_length(missing)", "null"),
+            ExprFunctionTestCase("character_length(missing)", "null", "\$missing::null"),
             ExprFunctionTestCase("character_length('ȴȵ💩💋')", "4"),
             ExprFunctionTestCase("character_length('😁😞😸😸')", "4"),
             ExprFunctionTestCase("character_length('話家身圧費谷料村能計税金')", "12"),

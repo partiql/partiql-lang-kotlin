@@ -65,7 +65,7 @@ private fun ExprValueType.typeAliases(): List<String> = when (this) {
 abstract class CastTestBase : EvaluatorTestBase() {
 
     fun ConfiguredCastCase.assertCase(
-        expectedResultFormat: ExpectedResultFormat = ExpectedResultFormat.ION_WITHOUT_BAG_AND_MISSING_ANNOTATIONS
+        expectedResultFormat: ExpectedResultFormat = ExpectedResultFormat.ION
     ) {
         when (castCase.expected) {
             null -> {
@@ -262,22 +262,22 @@ abstract class CastTestBase : EvaluatorTestBase() {
         val commonTestCases =
             listOf(
                 listOf(
-                    case("NULL", "null", CastQuality.LOSSLESS) {
+                    case("NULL", "NULL", CastQuality.LOSSLESS) {
                         assertEquals(ExprValueType.NULL, it.type)
                     }
                 ).types(allTypeNames - ExprValueType.MISSING.typeAliases()),
                 listOf(
-                    case("NULL", "null", CastQuality.LOSSLESS) {
+                    case("NULL", "MISSING", CastQuality.LOSSLESS) {
                         assertEquals(ExprValueType.MISSING, it.type)
                     }
                 ).types(listOf("MISSING")),
                 listOf(
-                    case("MISSING", "null", CastQuality.LOSSLESS) {
+                    case("MISSING", "MISSING", CastQuality.LOSSLESS) {
                         assertEquals(ExprValueType.MISSING, it.type)
                     }
                 ).types(allTypeNames - ExprValueType.NULL.typeAliases()),
                 listOf(
-                    case("MISSING", "null", CastQuality.LOSSLESS) {
+                    case("MISSING", "NULL", CastQuality.LOSSLESS) {
                         assertEquals(ExprValueType.NULL, it.type)
                     }
                 ).types(listOf("NULL")),
@@ -399,21 +399,21 @@ abstract class CastTestBase : EvaluatorTestBase() {
                 ).types(ExprValueType.INT.typeAliases()),
                 listOf(
                     // booleans
-                    case("TRUE AND FALSE", "0e0", CastQuality.LOSSLESS),
-                    case("`true`", "1e0", CastQuality.LOSSLESS),
+                    case("TRUE AND FALSE", "`0e0`", CastQuality.LOSSLESS),
+                    case("`true`", "`1e0`", CastQuality.LOSSLESS),
                     // numbers
-                    case("5", "5e0", CastQuality.LOSSLESS),
-                    case(" 5 ", "5e0", CastQuality.LOSSLESS),
-                    case("`0e0`", "0e0", CastQuality.LOSSLESS),
-                    case("1.1", "1.1e0", CastQuality.LOSSY),
-                    case("-20.1", "-20.1e0", CastQuality.LOSSY),
+                    case("5", "`5e0`", CastQuality.LOSSLESS),
+                    case(" 5 ", "`5e0`", CastQuality.LOSSLESS),
+                    case("`0e0`", "`0e0`", CastQuality.LOSSLESS),
+                    case("1.1", "`1.1e0`", CastQuality.LOSSY),
+                    case("-20.1", "`-20.1e0`", CastQuality.LOSSY),
                     // timestamp
                     case("`2007-10-10T`", ErrorCode.EVALUATOR_INVALID_CAST),
                     // text
                     case("'hello'", ErrorCode.EVALUATOR_CAST_FAILED),
-                    case("'-20'", "-20e0", CastQuality.LOSSY),
-                    case("""`"1000"`""", "1000e0", CastQuality.LOSSY),
-                    case("""`'2e100'`""", "2e100", CastQuality.LOSSY),
+                    case("'-20'", "`-20e0`", CastQuality.LOSSY),
+                    case("""`"1000"`""", "`1000e0`", CastQuality.LOSSY),
+                    case("""`'2e100'`""", "`2e100`", CastQuality.LOSSY),
                     case("""`'2d100'`""", ErrorCode.EVALUATOR_CAST_FAILED),
                     // lob
                     case("""`{{""}}`""", ErrorCode.EVALUATOR_INVALID_CAST),
@@ -444,22 +444,22 @@ abstract class CastTestBase : EvaluatorTestBase() {
                 ).types(ExprValueType.FLOAT.typeAliases()),
                 listOf(
                     // booleans
-                    case("TRUE AND FALSE", "0d0", CastQuality.LOSSLESS),
-                    case("`true`", "1d0", CastQuality.LOSSLESS),
+                    case("TRUE AND FALSE", "`0d0`", CastQuality.LOSSLESS),
+                    case("`true`", "`1d0`", CastQuality.LOSSLESS),
                     // numbers
-                    case("5", "5d0", CastQuality.LOSSLESS),
-                    case("5 ", "5d0", CastQuality.LOSSLESS),
+                    case("5", "`5d0`", CastQuality.LOSSLESS),
+                    case("5 ", "`5d0`", CastQuality.LOSSLESS),
                     case("`0e0`", "0.", CastQuality.LOSSLESS), // TODO formalize this behavior
                     case("`1e0`", "1.", CastQuality.LOSSLESS), // TODO formalize this behavior
-                    case("1.1", "1.1d0", CastQuality.LOSSLESS),
-                    case("-20.1", "-20.1d0", CastQuality.LOSSLESS),
+                    case("1.1", "`1.1d0`", CastQuality.LOSSLESS),
+                    case("-20.1", "`-20.1d0`", CastQuality.LOSSLESS),
                     // timestamp
                     case("`2007-10-10T`", ErrorCode.EVALUATOR_INVALID_CAST),
                     // text
                     case("'hello'", ErrorCode.EVALUATOR_CAST_FAILED),
-                    case("'-20'", "-20d0", CastQuality.LOSSLESS),
-                    case("""`"1000"`""", "1000d0", CastQuality.LOSSLESS),
-                    case("""`'2e100'`""", "2d100", CastQuality.LOSSY),
+                    case("'-20'", "`-20d0`", CastQuality.LOSSLESS),
+                    case("""`"1000"`""", "`1000d0`", CastQuality.LOSSLESS),
+                    case("""`'2e100'`""", "`2d100`", CastQuality.LOSSY),
                     case("""`'2d100'`""", ErrorCode.EVALUATOR_CAST_FAILED),
                     // lob
                     case("""`{{""}}`""", ErrorCode.EVALUATOR_INVALID_CAST),
@@ -498,16 +498,16 @@ abstract class CastTestBase : EvaluatorTestBase() {
                     case("1.1", ErrorCode.EVALUATOR_INVALID_CAST),
                     case("-20.1", ErrorCode.EVALUATOR_INVALID_CAST),
                     // timestamp
-                    case("`2007-10-10T`", "$DATE_ANNOTATION::2007-10-10", NotImplemented(CastQuality.LOSSLESS)),
-                    case("`2007-02-23T12:14Z`", "$DATE_ANNOTATION::2007-02-23", CastQuality.LOSSY),
-                    case("`2007-02-23T12:14:33.079Z`", "$DATE_ANNOTATION::2007-02-23", CastQuality.LOSSY),
-                    case("`2007-02-23T12:14:33.079-08:00`", "$DATE_ANNOTATION::2007-02-23", CastQuality.LOSSY),
-                    case("`2007-02T`", "$DATE_ANNOTATION::2007-02-01", NotImplemented(CastQuality.LOSSLESS)),
-                    case("`2007T`", "$DATE_ANNOTATION::2007-01-01", NotImplemented(CastQuality.LOSSLESS)),
+                    case("`2007-10-10T`", "DATE '2007-10-10'", NotImplemented(CastQuality.LOSSLESS)),
+                    case("`2007-02-23T12:14Z`", "DATE '2007-02-23'", CastQuality.LOSSY),
+                    case("`2007-02-23T12:14:33.079Z`", "DATE '2007-02-23'", CastQuality.LOSSY),
+                    case("`2007-02-23T12:14:33.079-08:00`", "DATE '2007-02-23'", CastQuality.LOSSY),
+                    case("`2007-02T`", "DATE '2007-02-01'", NotImplemented(CastQuality.LOSSLESS)),
+                    case("`2007T`", "DATE '2007-01-01'", NotImplemented(CastQuality.LOSSLESS)),
                     // text
                     case("'hello'", ErrorCode.EVALUATOR_CAST_FAILED),
                     case("'2016-03-01T01:12:12Z'", ErrorCode.EVALUATOR_CAST_FAILED),
-                    case("""`"2001-01-01"`""", "$DATE_ANNOTATION::2001-01-01", CastQuality.LOSSLESS),
+                    case("""`"2001-01-01"`""", "DATE '2001-01-01'", CastQuality.LOSSLESS),
                     case("""`"+20212-02-01"`""", ErrorCode.EVALUATOR_CAST_FAILED),
                     case("""`"20212-02-01"`""", ErrorCode.EVALUATOR_CAST_FAILED),
                     case("""`'2000T'`""", ErrorCode.EVALUATOR_CAST_FAILED),
@@ -535,12 +535,12 @@ abstract class CastTestBase : EvaluatorTestBase() {
                     case("1.1", ErrorCode.EVALUATOR_INVALID_CAST),
                     case("-20.1", ErrorCode.EVALUATOR_INVALID_CAST),
                     // timestamp
-                    case("`2007-10-10T`", "$TIME_ANNOTATION::{hour:0,minute:0,second:0.,timezone_hour:null.int,timezone_minute:null.int}", CastQuality.LOSSY),
-                    case("`2007-02-23T12:14Z`", "$TIME_ANNOTATION::{hour:12,minute:14,second:0.,timezone_hour:null.int,timezone_minute:null.int}", CastQuality.LOSSY),
-                    case("`2007-02-23T12:14:33.079Z`", "$TIME_ANNOTATION::{hour:12,minute:14,second:33.079,timezone_hour:null.int,timezone_minute:null.int}", CastQuality.LOSSY),
-                    case("`2007-02-23T12:14:33.079-08:00`", "$TIME_ANNOTATION::{hour:12,minute:14,second:33.079,timezone_hour:null.int,timezone_minute:null.int}", CastQuality.LOSSY),
-                    case("`2007-02T`", "$TIME_ANNOTATION::{hour:0,minute:0,second:0.,timezone_hour:null.int,timezone_minute:null.int}", CastQuality.LOSSY),
-                    case("`2007T`", "$TIME_ANNOTATION::{hour:0,minute:0,second:0.,timezone_hour:null.int,timezone_minute:null.int}", CastQuality.LOSSY),
+                    case("`2007-10-10T`", "TIME '00:00:00'", CastQuality.LOSSY),
+                    case("`2007-02-23T12:14Z`", "TIME '12:14:00'", CastQuality.LOSSY),
+                    case("`2007-02-23T12:14:33.079Z`", "TIME '12:14:33.079'", CastQuality.LOSSY),
+                    case("`2007-02-23T12:14:33.079-08:00`", "TIME '12:14:33.079'", CastQuality.LOSSY),
+                    case("`2007-02T`", "TIME '00:00:00'", CastQuality.LOSSY),
+                    case("`2007T`", "TIME '00:00:00'", CastQuality.LOSSY),
                     // text
                     case("'hello'", ErrorCode.EVALUATOR_CAST_FAILED),
                     case("'2016-03-01T01:12:12Z'", ErrorCode.EVALUATOR_CAST_FAILED),
@@ -571,13 +571,13 @@ abstract class CastTestBase : EvaluatorTestBase() {
                     case("1.1", ErrorCode.EVALUATOR_INVALID_CAST),
                     case("-20.1", ErrorCode.EVALUATOR_INVALID_CAST),
                     // timestamp
-                    case("`2007-10-10T`", "2007-10-10T", CastQuality.LOSSLESS),
+                    case("`2007-10-10T`", "`2007-10-10`", CastQuality.LOSSLESS),
                     // text
                     case("'hello'", ErrorCode.EVALUATOR_CAST_FAILED),
-                    case("'2016-03-01T01:12:12Z'", "2016-03-01T01:12:12Z", CastQuality.LOSSLESS),
-                    case("""`"2001-01-01"`""", "2001-01-01T", CastQuality.LOSSLESS),
-                    case("""`'2000T'`""", "2000T", CastQuality.LOSSLESS),
-                    case("""`'1999-04T'`""", "1999-04T", CastQuality.LOSSLESS),
+                    case("'2016-03-01T01:12:12Z'", "`2016-03-01T01:12:12Z`", CastQuality.LOSSLESS),
+                    case("""`"2001-01-01"`""", "`2001-01-01`", CastQuality.LOSSLESS),
+                    case("""`'2000T'`""", "`2000T`", CastQuality.LOSSLESS),
+                    case("""`'1999-04T'`""", "`1999-04T`", CastQuality.LOSSLESS),
                     // lob
                     case("""`{{""}}`""", ErrorCode.EVALUATOR_INVALID_CAST),
                     case("`{{}}`", ErrorCode.EVALUATOR_INVALID_CAST),
@@ -592,21 +592,21 @@ abstract class CastTestBase : EvaluatorTestBase() {
                 ).types(ExprValueType.TIMESTAMP.typeAliases()),
                 listOf(
                     // booleans
-                    case("TRUE AND FALSE", "'false'", CastQuality.LOSSLESS),
-                    case("`true`", "'true'", CastQuality.LOSSLESS),
+                    case("TRUE AND FALSE", "`'false'`", CastQuality.LOSSLESS),
+                    case("`true`", "`'true'`", CastQuality.LOSSLESS),
                     // numbers
-                    case("5", "'5'", CastQuality.LOSSLESS),
-                    case("`0e0`", "'0.0'", CastQuality.LOSSLESS),
-                    case("1.1", "'1.1'", CastQuality.LOSSLESS),
-                    case("-20.1", "'-20.1'", CastQuality.LOSSLESS),
+                    case("5", "`'5'`", CastQuality.LOSSLESS),
+                    case("`0e0`", "`'0.0'`", CastQuality.LOSSLESS),
+                    case("1.1", "`'1.1'`", CastQuality.LOSSLESS),
+                    case("-20.1", "`'-20.1'`", CastQuality.LOSSLESS),
                     // timestamp
-                    case("`2007-10-10T`", "'2007-10-10'", CastQuality.LOSSLESS),
+                    case("`2007-10-10T`", "`'2007-10-10'`", CastQuality.LOSSLESS),
                     // text
-                    case("'hello'", "'hello'", CastQuality.LOSSLESS),
-                    case("'-20'", "'-20'", CastQuality.LOSSLESS),
-                    case("""`"1000"`""", "'1000'", CastQuality.LOSSLESS),
-                    case("""`'2e100'`""", "'2e100'", CastQuality.LOSSLESS),
-                    case("""`'2d100'`""", "'2d100'", CastQuality.LOSSLESS),
+                    case("'hello'", "`'hello'`", CastQuality.LOSSLESS),
+                    case("'-20'", "`'-20'`", CastQuality.LOSSLESS),
+                    case("""`"1000"`""", "`'1000'`", CastQuality.LOSSLESS),
+                    case("""`'2e100'`""", "`'2e100'`", CastQuality.LOSSLESS),
+                    case("""`'2d100'`""", "`'2d100'`", CastQuality.LOSSLESS),
                     // lob
                     case("""`{{""}}`""", ErrorCode.EVALUATOR_INVALID_CAST),
                     case("""`{{"0"}}`""", ErrorCode.EVALUATOR_INVALID_CAST),
@@ -636,21 +636,21 @@ abstract class CastTestBase : EvaluatorTestBase() {
                 ).types(ExprValueType.SYMBOL.typeAliases()),
                 listOf(
                     // booleans
-                    case("TRUE AND FALSE", "\"false\"", CastQuality.LOSSLESS),
-                    case("`true`", "\"true\"", CastQuality.LOSSLESS),
+                    case("TRUE AND FALSE", "'false'", CastQuality.LOSSLESS),
+                    case("`true`", "'true'", CastQuality.LOSSLESS),
                     // numbers
-                    case("5", "\"5\"", CastQuality.LOSSLESS),
-                    case("`0e0`", "\"0.0\"", CastQuality.LOSSLESS),
-                    case("1.1", "\"1.1\"", CastQuality.LOSSLESS),
-                    case("-20.1", "\"-20.1\"", CastQuality.LOSSLESS),
+                    case("5", "'5'", CastQuality.LOSSLESS),
+                    case("`0e0`", "'0.0'", CastQuality.LOSSLESS),
+                    case("1.1", "'1.1'", CastQuality.LOSSLESS),
+                    case("-20.1", "'-20.1'", CastQuality.LOSSLESS),
                     // timestamp
-                    case("`2007-10-10T`", "\"2007-10-10\"", CastQuality.LOSSLESS),
+                    case("`2007-10-10T`", "'2007-10-10'", CastQuality.LOSSLESS),
                     // text
-                    case("'hello'", "\"hello\"", CastQuality.LOSSLESS),
-                    case("'-20'", "\"-20\"", CastQuality.LOSSLESS),
-                    case("""`"1000"`""", "\"1000\"", CastQuality.LOSSLESS),
-                    case("""`'2e100'`""", "\"2e100\"", CastQuality.LOSSLESS),
-                    case("""`'2d100'`""", "\"2d100\"", CastQuality.LOSSLESS),
+                    case("'hello'", "'hello'", CastQuality.LOSSLESS),
+                    case("'-20'", "'-20'", CastQuality.LOSSLESS),
+                    case("""`"1000"`""", "'1000'", CastQuality.LOSSLESS),
+                    case("""`'2e100'`""", "'2e100'", CastQuality.LOSSLESS),
+                    case("""`'2d100'`""", "'2d100'", CastQuality.LOSSLESS),
                     // lob
                     case("""`{{""}}`""", ErrorCode.EVALUATOR_INVALID_CAST),
                     case("""`{{"0"}}`""", ErrorCode.EVALUATOR_INVALID_CAST),
@@ -697,14 +697,14 @@ abstract class CastTestBase : EvaluatorTestBase() {
                     case("""`'2e100'`""", ErrorCode.EVALUATOR_INVALID_CAST),
                     case("""`'2d100'`""", ErrorCode.EVALUATOR_INVALID_CAST),
                     // lob
-                    case("""`{{""}}`""", """{{""}}""", CastQuality.LOSSLESS),
-                    case("""`{{"0"}}`""", """{{"0"}}""", CastQuality.LOSSLESS),
-                    case("""`{{"1.0"}}`""", """{{"1.0"}}""", CastQuality.LOSSLESS),
-                    case("""`{{"2e10"}}`""", """{{"2e10"}}""", CastQuality.LOSSLESS),
-                    case("`{{}}`", """{{""}}""", CastQuality.LOSSLESS),
-                    case("`{{MA==}}`", """{{"0"}}""", CastQuality.LOSSLESS),
-                    case("`{{MS4w}}`", """{{"1.0"}}""", CastQuality.LOSSLESS),
-                    case("`{{MmUxMA==}}`", """{{"2e10"}}""", CastQuality.LOSSLESS),
+                    case("""`{{""}}`""", """`{{""}}`""", CastQuality.LOSSLESS),
+                    case("""`{{"0"}}`""", """`{{"0"}}`""", CastQuality.LOSSLESS),
+                    case("""`{{"1.0"}}`""", """`{{"1.0"}}`""", CastQuality.LOSSLESS),
+                    case("""`{{"2e10"}}`""", """`{{"2e10"}}`""", CastQuality.LOSSLESS),
+                    case("`{{}}`", """`{{""}}`""", CastQuality.LOSSLESS),
+                    case("`{{MA==}}`", """`{{"0"}}`""", CastQuality.LOSSLESS),
+                    case("`{{MS4w}}`", """`{{"1.0"}}`""", CastQuality.LOSSLESS),
+                    case("`{{MmUxMA==}}`", """`{{"2e10"}}`""", CastQuality.LOSSLESS),
                     // list
                     case("`[]`", ErrorCode.EVALUATOR_INVALID_CAST),
                     case("['hello']", ErrorCode.EVALUATOR_INVALID_CAST),
@@ -741,14 +741,14 @@ abstract class CastTestBase : EvaluatorTestBase() {
                     case("""`'2e100'`""", ErrorCode.EVALUATOR_INVALID_CAST),
                     case("""`'2d100'`""", ErrorCode.EVALUATOR_INVALID_CAST),
                     // lob
-                    case("""`{{""}}`""", """{{}}""", CastQuality.LOSSLESS),
-                    case("""`{{"0"}}`""", """{{MA==}}""", CastQuality.LOSSLESS),
-                    case("""`{{"1.0"}}`""", """{{MS4w}}""", CastQuality.LOSSLESS),
-                    case("""`{{"2e10"}}`""", """{{MmUxMA==}}""", CastQuality.LOSSLESS),
-                    case("`{{}}`", """{{}}""", CastQuality.LOSSLESS),
-                    case("`{{MA==}}`", """{{MA==}}""", CastQuality.LOSSLESS), // 0
-                    case("`{{MS4w}}`", """{{MS4w}}""", CastQuality.LOSSLESS), // 1.0
-                    case("`{{MmUxMA==}}`", """{{MmUxMA==}}""", CastQuality.LOSSLESS), // 2e10
+                    case("""`{{""}}`""", """`{{}}`""", CastQuality.LOSSLESS),
+                    case("""`{{"0"}}`""", """`{{MA==}}`""", CastQuality.LOSSLESS),
+                    case("""`{{"1.0"}}`""", """`{{MS4w}}`""", CastQuality.LOSSLESS),
+                    case("""`{{"2e10"}}`""", """`{{MmUxMA==}}`""", CastQuality.LOSSLESS),
+                    case("`{{}}`", """`{{}}`""", CastQuality.LOSSLESS),
+                    case("`{{MA==}}`", """`{{MA==}}`""", CastQuality.LOSSLESS), // 0
+                    case("`{{MS4w}}`", """`{{MS4w}}`""", CastQuality.LOSSLESS), // 1.0
+                    case("`{{MmUxMA==}}`", """`{{MmUxMA==}}`""", CastQuality.LOSSLESS), // 2e10
                     // list
                     case("`[]`", ErrorCode.EVALUATOR_INVALID_CAST),
                     case("['hello']", ErrorCode.EVALUATOR_INVALID_CAST),
@@ -795,12 +795,12 @@ abstract class CastTestBase : EvaluatorTestBase() {
                     case("`{{MmUxMA==}}`", ErrorCode.EVALUATOR_INVALID_CAST), // 2e10
                     // list
                     case("`[]`", "[]", CastQuality.LOSSLESS),
-                    case("['hello']", "[\"hello\"]", CastQuality.LOSSLESS),
-                    case("`[-2d0, 0d0]`", "[-2d0, 0d0]", CastQuality.LOSSLESS),
+                    case("['hello']", "['hello']", CastQuality.LOSSLESS),
+                    case("`[-2d0, 0d0]`", "[`-2d0`, `0d0`]", CastQuality.LOSSLESS),
                     // sexp
                     case("`()`", "[]", CastQuality.LOSSLESS),
-                    case("`(1d0)`", "[1d0]", CastQuality.LOSSLESS),
-                    case("`(0d0)`", "[0d0]", CastQuality.LOSSLESS),
+                    case("`(1d0)`", "[`1d0`]", CastQuality.LOSSLESS),
+                    case("`(0d0)`", "[`0d0`]", CastQuality.LOSSLESS),
                     // struct
                     case("`{}`", ErrorCode.EVALUATOR_INVALID_CAST),
                     case("{}", ErrorCode.EVALUATOR_INVALID_CAST),
@@ -808,8 +808,8 @@ abstract class CastTestBase : EvaluatorTestBase() {
                     case("{'b':`-4d0`}", ErrorCode.EVALUATOR_INVALID_CAST),
                     // bag
                     case("<<>>", "[]", CastQuality.LOSSLESS), // TODO bag verification
-                    case("<<`14d0`>>", "[14d0]", CastQuality.LOSSLESS), // TODO bag verification
-                    case("<<`20d0`>>", "[20d0]", CastQuality.LOSSLESS) // TODO bag verification
+                    case("<<`14d0`>>", "[`14d0`]", CastQuality.LOSSLESS), // TODO bag verification
+                    case("<<`20d0`>>", "[`20d0`]", CastQuality.LOSSLESS) // TODO bag verification
                 ).types(ExprValueType.LIST.typeAliases()),
                 listOf(
                     // booleans
@@ -838,22 +838,22 @@ abstract class CastTestBase : EvaluatorTestBase() {
                     case("`{{MS4w}}`", ErrorCode.EVALUATOR_INVALID_CAST), // 1.0
                     case("`{{MmUxMA==}}`", ErrorCode.EVALUATOR_INVALID_CAST), // 2e10
                     // list
-                    case("`[]`", "()", CastQuality.LOSSLESS),
-                    case("['hello']", "(\"hello\")", CastQuality.LOSSLESS),
-                    case("`[-2d0, 0d0]`", "(-2d0 0d0)", CastQuality.LOSSLESS),
+                    case("`[]`", "`()`", CastQuality.LOSSLESS),
+                    case("['hello']", "`(\"hello\")`", CastQuality.LOSSLESS),
+                    case("`[-2d0, 0d0]`", "`(-2d0 0d0)`", CastQuality.LOSSLESS),
                     // sexp
-                    case("`()`", "()", CastQuality.LOSSLESS),
-                    case("`(1d0)`", "(1d0)", CastQuality.LOSSLESS),
-                    case("`(0d0)`", "(0d0)", CastQuality.LOSSLESS),
+                    case("`()`", "`()`", CastQuality.LOSSLESS),
+                    case("`(1d0)`", "`(1d0)`", CastQuality.LOSSLESS),
+                    case("`(0d0)`", "`(0d0)`", CastQuality.LOSSLESS),
                     // struct
                     case("`{}`", ErrorCode.EVALUATOR_INVALID_CAST),
                     case("{}", ErrorCode.EVALUATOR_INVALID_CAST),
                     case("`{a:12d0}`", ErrorCode.EVALUATOR_INVALID_CAST),
                     case("{'b':`-4d0`}", ErrorCode.EVALUATOR_INVALID_CAST),
                     // bag
-                    case("<<>>", "()", CastQuality.LOSSLESS),
-                    case("<<`14d0`>>", "(14d0)", CastQuality.LOSSLESS),
-                    case("<<`20d0`>>", "(20d0)", CastQuality.LOSSLESS)
+                    case("<<>>", "`()`", CastQuality.LOSSLESS),
+                    case("<<`14d0`>>", "`(14d0)`", CastQuality.LOSSLESS),
+                    case("<<`20d0`>>", "`(20d0)`", CastQuality.LOSSLESS)
                 ).types(ExprValueType.SEXP.typeAliases()),
                 listOf(
                     // booleans
@@ -892,8 +892,8 @@ abstract class CastTestBase : EvaluatorTestBase() {
                     // struct
                     case("`{}`", "{}", CastQuality.LOSSLESS),
                     case("{}", "{}", CastQuality.LOSSLESS),
-                    case("`{a:12d0}`", "{a:12d0}", CastQuality.LOSSLESS),
-                    case("{'b':`-4d0`}", "{b:-4d0}", CastQuality.LOSSLESS),
+                    case("`{a:12d0}`", "{'a':`12d0`}", CastQuality.LOSSLESS),
+                    case("{'b':`-4d0`}", "{'b':`-4d0`}", CastQuality.LOSSLESS),
                     // bag
                     case("<<>>", ErrorCode.EVALUATOR_INVALID_CAST),
                     case("<<`14d0`>>", ErrorCode.EVALUATOR_INVALID_CAST),
@@ -926,47 +926,47 @@ abstract class CastTestBase : EvaluatorTestBase() {
                     case("`{{MS4w}}`", ErrorCode.EVALUATOR_INVALID_CAST), // 1.0
                     case("`{{MmUxMA==}}`", ErrorCode.EVALUATOR_INVALID_CAST), // 2e10
                     // list
-                    case("`[]`", "[]", CastQuality.LOSSLESS), // TODO bag verification
-                    case("['hello']", "[\"hello\"]", CastQuality.LOSSLESS), // TODO bag verification
-                    case("`[-2d0, 0d0]`", "[-2d0, 0d0]", CastQuality.LOSSLESS), // TODO bag verification
+                    case("`[]`", "<<>>", CastQuality.LOSSLESS), // TODO bag verification
+                    case("['hello']", "<<'hello'>>", CastQuality.LOSSLESS), // TODO bag verification
+                    case("`[-2d0, 0d0]`", "<<`-2d0`, `0d0`>>", CastQuality.LOSSLESS), // TODO bag verification
                     // sexp
-                    case("`()`", "[]", CastQuality.LOSSLESS), // TODO bag verification
-                    case("`(1d0)`", "[1d0]", CastQuality.LOSSLESS), // TODO bag verification
-                    case("`(0d0)`", "[0d0]", CastQuality.LOSSLESS), // TODO bag verification
+                    case("`()`", "<<>>", CastQuality.LOSSLESS), // TODO bag verification
+                    case("`(1d0)`", "<<`1d0`>>", CastQuality.LOSSLESS), // TODO bag verification
+                    case("`(0d0)`", "<<`0d0`>>", CastQuality.LOSSLESS), // TODO bag verification
                     // struct
                     case("`{}`", ErrorCode.EVALUATOR_INVALID_CAST),
                     case("{}", ErrorCode.EVALUATOR_INVALID_CAST),
                     case("`{a:12d0}`", ErrorCode.EVALUATOR_INVALID_CAST),
                     case("{'b':`-4d0`}", ErrorCode.EVALUATOR_INVALID_CAST),
                     // bag
-                    case("<<>>", "[]", CastQuality.LOSSLESS), // TODO bag verification
-                    case("<<`14d0`>>", "[14d0]", CastQuality.LOSSLESS), // TODO bag verification
-                    case("<<`20d0`>>", "[20d0]", CastQuality.LOSSLESS) // TODO bag verification
+                    case("<<>>", "<<>>", CastQuality.LOSSLESS), // TODO bag verification
+                    case("<<`14d0`>>", "<<`14d0`>>", CastQuality.LOSSLESS), // TODO bag verification
+                    case("<<`20d0`>>", "<<`20d0`>>", CastQuality.LOSSLESS) // TODO bag verification
                 ).types(ExprValueType.BAG.typeAliases())
             ).flatten()
 
         val deviatingLegacyTestCases = listOf(
             listOf(
                 // booleans
-                case("TRUE AND FALSE", "\"false\"", CastQuality.LOSSLESS),
-                case("`true`", "\"true\"", CastQuality.LOSSLESS),
+                case("TRUE AND FALSE", "'false'", CastQuality.LOSSLESS),
+                case("`true`", "'true'", CastQuality.LOSSLESS),
                 // numbers
-                case("5", "\"5\"", CastQuality.LOSSLESS),
-                case("`0e0`", "\"0.0\"", CastQuality.LOSSLESS),
-                case("1.1", "\"1.1\"", CastQuality.LOSSLESS),
-                case("-20.1", "\"-20.1\"", CastQuality.LOSSLESS),
+                case("5", "'5'", CastQuality.LOSSLESS),
+                case("`0e0`", "'0.0'", CastQuality.LOSSLESS),
+                case("1.1", "'1.1'", CastQuality.LOSSLESS),
+                case("-20.1", "'-20.1'", CastQuality.LOSSLESS),
                 // inf, -inf, nan
-                case("`+inf`", "\"Infinity\"", CastQuality.LOSSLESS),
-                case("`-inf`", "\"-Infinity\"", CastQuality.LOSSLESS),
-                case("`nan`", "\"NaN\"", CastQuality.LOSSLESS),
+                case("`+inf`", "'Infinity'", CastQuality.LOSSLESS),
+                case("`-inf`", "'-Infinity'", CastQuality.LOSSLESS),
+                case("`nan`", "'NaN'", CastQuality.LOSSLESS),
                 // timestamp
-                case("`2007-10-10T`", "\"2007-10-10\"", CastQuality.LOSSLESS),
+                case("`2007-10-10T`", "'2007-10-10'", CastQuality.LOSSLESS),
                 // text
-                case("'hello'", "\"hello\"", CastQuality.LOSSLESS),
-                case("'-20'", "\"-20\"", CastQuality.LOSSLESS),
-                case("""`"1000"`""", "\"1000\"", CastQuality.LOSSLESS),
-                case("""`'2e100'`""", "\"2e100\"", CastQuality.LOSSLESS),
-                case("""`'2d100'`""", "\"2d100\"", CastQuality.LOSSLESS),
+                case("'hello'", "'hello'", CastQuality.LOSSLESS),
+                case("'-20'", "'-20'", CastQuality.LOSSLESS),
+                case("""`"1000"`""", "'1000'", CastQuality.LOSSLESS),
+                case("""`'2e100'`""", "'2e100'", CastQuality.LOSSLESS),
+                case("""`'2d100'`""", "'2d100'", CastQuality.LOSSLESS),
                 // lob
                 case("""`{{""}}`""", ErrorCode.EVALUATOR_INVALID_CAST),
                 case("""`{{"0"}}`""", ErrorCode.EVALUATOR_INVALID_CAST),
@@ -1068,43 +1068,43 @@ abstract class CastTestBase : EvaluatorTestBase() {
             ).types(ExprValueType.DECIMAL.typeAliases().map { "$it(5, 2)" }),
             // DECIMAL(4,4) ; LEGACY mode does not respect DECIMAL's precison or scale; precision = scale is valid here
             listOf(
-                case("0.1", "1d-1", CastQuality.LOSSLESS),
+                case("0.1", "`1d-1`", CastQuality.LOSSLESS),
                 case("0.1234", "0.1234", CastQuality.LOSSLESS),
                 case("0.12345", "0.12345", CastQuality.LOSSLESS)
             ).types(ExprValueType.DECIMAL.typeAliases().map { "$it(4,4)" }),
             // DECIMAL(2, 4) ; LEGACY mode does not respect DECIMAL's precison or scale; precision < scale is valid in legacy mode
             listOf(
-                case("1", "1d0", CastQuality.LOSSLESS)
+                case("1", "`1d0`", CastQuality.LOSSLESS)
             ).types(ExprValueType.DECIMAL.typeAliases().map { "$it(2,4)" }),
             // VARCHAR(4) legacy mode doesn't care about params
             listOf(
                 // from string types
-                case("'a'", "\"a\"", CastQuality.LOSSLESS),
-                case("'abcde'", "\"abcde\"", CastQuality.LOSSLESS),
-                case("'💩💩💩💩💩'", "\"💩💩💩💩💩\"", CastQuality.LOSSLESS), // legacy behavior does not truncate.
+                case("'a'", "'a'", CastQuality.LOSSLESS),
+                case("'abcde'", "'abcde'", CastQuality.LOSSLESS),
+                case("'💩💩💩💩💩'", "'💩💩💩💩💩'", CastQuality.LOSSLESS), // legacy behavior does not truncate.
                 // from non-string types
-                case("TRUE AND FALSE", "\"false\"", CastQuality.LOSSLESS),
-                case("`true`", "\"true\"", CastQuality.LOSSLESS),
-                case("5", "\"5\"", CastQuality.LOSSLESS),
-                case("`0e0`", "\"0.0\"", CastQuality.LOSSLESS),
-                case("1.1", "\"1.1\"", CastQuality.LOSSLESS),
-                case("-20.1", "\"-20.1\"", CastQuality.LOSSLESS)
+                case("TRUE AND FALSE", "'false'", CastQuality.LOSSLESS),
+                case("`true`", "'true'", CastQuality.LOSSLESS),
+                case("5", "'5'", CastQuality.LOSSLESS),
+                case("`0e0`", "'0.0'", CastQuality.LOSSLESS),
+                case("1.1", "'1.1'", CastQuality.LOSSLESS),
+                case("-20.1", "'-20.1'", CastQuality.LOSSLESS)
             ).types(listOf("VARCHAR(4)", "CHARACTER VARYING(4)")),
             listOf(
                 // from string types
-                case("'a'", "\"a\"", CastQuality.LOSSLESS),
-                case("'a    '", "\"a    \"", CastQuality.LOSSLESS),
-                case("'a\t\t'", "\"a\t\t\"", CastQuality.LOSSLESS),
-                case("'abcde'", "\"abcde\"", CastQuality.LOSSLESS),
-                case("'💩💩💩💩💩'", "\"💩💩💩💩💩\"", CastQuality.LOSSLESS), // legacy behavior does not truncate.
+                case("'a'", "'a'", CastQuality.LOSSLESS),
+                case("'a    '", "'a    '", CastQuality.LOSSLESS),
+                case("'a\t\t'", "'a\t\t'", CastQuality.LOSSLESS),
+                case("'abcde'", "'abcde'", CastQuality.LOSSLESS),
+                case("'💩💩💩💩💩'", "'💩💩💩💩💩'", CastQuality.LOSSLESS), // legacy behavior does not truncate.
                 // from non-string types
-                case("TRUE AND FALSE", "\"false\"", CastQuality.LOSSLESS),
-                case("`true`", "\"true\"", CastQuality.LOSSLESS),
+                case("TRUE AND FALSE", "'false'", CastQuality.LOSSLESS),
+                case("`true`", "'true'", CastQuality.LOSSLESS),
                 // numbers
-                case("5", "\"5\"", CastQuality.LOSSLESS),
-                case("`0e0`", "\"0.0\"", CastQuality.LOSSLESS),
-                case("1.1", "\"1.1\"", CastQuality.LOSSLESS),
-                case("-20.1", "\"-20.1\"", CastQuality.LOSSLESS)
+                case("5", "'5'", CastQuality.LOSSLESS),
+                case("`0e0`", "'0.0'", CastQuality.LOSSLESS),
+                case("1.1", "'1.1'", CastQuality.LOSSLESS),
+                case("-20.1", "'-20.1'", CastQuality.LOSSLESS)
             ).types(listOf("CHAR(4)", "CHARACTER(4)"))
         ).flatten()
 
@@ -1112,25 +1112,25 @@ abstract class CastTestBase : EvaluatorTestBase() {
             // CHAR without params, equaivalent to CHAR(1)
             listOf(
                 // booleans
-                case("TRUE AND FALSE", "\"f\"", CastQuality.LOSSY),
-                case("`true`", "\"t\"", CastQuality.LOSSY),
+                case("TRUE AND FALSE", "'f'", CastQuality.LOSSY),
+                case("`true`", "'t'", CastQuality.LOSSY),
                 // numbers
-                case("5", "\"5\"", CastQuality.LOSSLESS),
-                case("`0e0`", "\"0\"", CastQuality.LOSSLESS),
-                case("1.1", "\"1\"", CastQuality.LOSSY),
-                case("-20.1", "\"-\"", CastQuality.LOSSY),
+                case("5", "'5'", CastQuality.LOSSLESS),
+                case("`0e0`", "'0'", CastQuality.LOSSLESS),
+                case("1.1", "'1'", CastQuality.LOSSY),
+                case("-20.1", "'-'", CastQuality.LOSSY),
                 // inf, -inf, nan
-                case("`+inf`", "\"I\"", CastQuality.LOSSY),
-                case("`-inf`", "\"-\"", CastQuality.LOSSY),
-                case("`nan`", "\"N\"", CastQuality.LOSSY),
+                case("`+inf`", "'I'", CastQuality.LOSSY),
+                case("`-inf`", "'-'", CastQuality.LOSSY),
+                case("`nan`", "'N'", CastQuality.LOSSY),
                 // timestamp
-                case("`2007-10-10T`", "\"2\"", CastQuality.LOSSY),
+                case("`2007-10-10T`", "'2'", CastQuality.LOSSY),
                 // text
-                case("'hello'", "\"h\"", CastQuality.LOSSY),
-                case("'-20'", "\"-\"", CastQuality.LOSSY),
-                case("""`"1000"`""", "\"1\"", CastQuality.LOSSY),
-                case("""`'2e100'`""", "\"2\"", CastQuality.LOSSY),
-                case("""`'2d100'`""", "\"2\"", CastQuality.LOSSY),
+                case("'hello'", "'h'", CastQuality.LOSSY),
+                case("'-20'", "'-'", CastQuality.LOSSY),
+                case("""`"1000"`""", "'1'", CastQuality.LOSSY),
+                case("""`'2e100'`""", "'2'", CastQuality.LOSSY),
+                case("""`'2d100'`""", "'2'", CastQuality.LOSSY),
                 // lob
                 case("""`{{""}}`""", ErrorCode.EVALUATOR_INVALID_CAST),
                 case("""`{{"0"}}`""", ErrorCode.EVALUATOR_INVALID_CAST),
@@ -1232,7 +1232,7 @@ abstract class CastTestBase : EvaluatorTestBase() {
             ).types(ExprValueType.DECIMAL.typeAliases().map { "$it(5, 2)" }),
             // DECIMAL(4,4) precision = scale is valid in honor_params
             listOf(
-                case("0.1", "1.000d-1", CastQuality.LOSSLESS),
+                case("0.1", "`1.000d-1`", CastQuality.LOSSLESS),
                 case("0.1234", "0.1234", CastQuality.LOSSLESS),
                 case("0.12345", "0.1235", CastQuality.LOSSY)
             ).types(ExprValueType.DECIMAL.typeAliases().map { "$it(4,4)" }),
@@ -1243,32 +1243,32 @@ abstract class CastTestBase : EvaluatorTestBase() {
             // VARCHAR(4) should truncate to size <= 4
             listOf(
                 // from string types
-                case("'a'", "\"a\"", CastQuality.LOSSLESS),
-                case("'a    '", "\"a   \"", CastQuality.LOSSY),
-                case("'abcde'", "\"abcd\"", CastQuality.LOSSY),
+                case("'a'", "'a'", CastQuality.LOSSLESS),
+                case("'a    '", "'a   '", CastQuality.LOSSY),
+                case("'abcde'", "'abcd'", CastQuality.LOSSY),
                 // 4-byte unicode
-                case("'💩💩💩💩💩'", "\"💩💩💩💩\"", CastQuality.LOSSY),
-                case("TRUE AND FALSE", "\"fals\"", CastQuality.LOSSY),
-                case("`true`", "\"true\"", CastQuality.LOSSLESS),
-                case("5", "\"5\"", CastQuality.LOSSLESS),
-                case("`0e0`", "\"0.0\"", CastQuality.LOSSLESS),
-                case("1.1", "\"1.1\"", CastQuality.LOSSLESS),
-                case("-20.1", "\"-20.\"", CastQuality.LOSSY)
+                case("'💩💩💩💩💩'", "'💩💩💩💩'", CastQuality.LOSSY),
+                case("TRUE AND FALSE", "'fals'", CastQuality.LOSSY),
+                case("`true`", "'true'", CastQuality.LOSSLESS),
+                case("5", "'5'", CastQuality.LOSSLESS),
+                case("`0e0`", "'0.0'", CastQuality.LOSSLESS),
+                case("1.1", "'1.1'", CastQuality.LOSSLESS),
+                case("-20.1", "'-20.'", CastQuality.LOSSY)
             ).types(listOf("VARCHAR(4)", "CHARACTER VARYING(4)")),
             // CHAR(4) should truncate or pad with whitespace to size <= 4
             listOf(
                 // from string types
-                case("'a'", "\"a\"", CastQuality.LOSSLESS),
-                case("'a'", "\"a\"", CastQuality.LOSSLESS),
-                case("'abcde'", "\"abcd\"", CastQuality.LOSSY),
-                case("'💩💩💩💩💩'", "\"💩💩💩💩\"", CastQuality.LOSSY),
-                case("TRUE AND FALSE", "\"fals\"", CastQuality.LOSSY),
-                case("`true`", "\"true\"", CastQuality.LOSSLESS),
+                case("'a'", "'a'", CastQuality.LOSSLESS),
+                case("'a'", "'a'", CastQuality.LOSSLESS),
+                case("'abcde'", "'abcd'", CastQuality.LOSSY),
+                case("'💩💩💩💩💩'", "'💩💩💩💩'", CastQuality.LOSSY),
+                case("TRUE AND FALSE", "'fals'", CastQuality.LOSSY),
+                case("`true`", "'true'", CastQuality.LOSSLESS),
                 // numbers
-                case("5", "\"5\"", CastQuality.LOSSLESS),
-                case("`0e0`", "\"0.0\"", CastQuality.LOSSLESS),
-                case("1.1", "\"1.1\"", CastQuality.LOSSLESS),
-                case("-20.1", "\"-20.\"", CastQuality.LOSSY)
+                case("5", "'5'", CastQuality.LOSSLESS),
+                case("`0e0`", "'0.0'", CastQuality.LOSSLESS),
+                case("1.1", "'1.1'", CastQuality.LOSSLESS),
+                case("-20.1", "'-20.'", CastQuality.LOSSY)
             ).types(listOf("CHAR(4)", "CHARACTER(4)"))
         ).flatten()
 
@@ -1282,22 +1282,22 @@ abstract class CastTestBase : EvaluatorTestBase() {
             ).types(ExprValueType.INT.typeAliases() + ExprValueType.DECIMAL.typeAliases()),
             // cast([`+inf` | `-inf` | `nan`] as FLOAT) returns the original value
             listOf(
-                case("`+inf`", "+inf", CastQuality.LOSSLESS),
-                case("`-inf`", "-inf", CastQuality.LOSSLESS),
-                case("`nan`", "nan", CastQuality.LOSSLESS)
+                case("`+inf`", "`+inf`", CastQuality.LOSSLESS),
+                case("`-inf`", "`-inf`", CastQuality.LOSSLESS),
+                case("`nan`", "`nan`", CastQuality.LOSSLESS)
             ).types(ExprValueType.FLOAT.typeAliases()),
             // cast([`+inf` | `-inf` | `nan`] as STRING) returns "Infinity", "-Infinity", and "NaN" respectively.
             // for casting behavor with parametered char, character, see [deviatingParamsTestCases] and [deviatingLegacyTestCases]
             listOf(
-                case("`+inf`", "\"Infinity\"", CastQuality.LOSSLESS),
-                case("`-inf`", "\"-Infinity\"", CastQuality.LOSSLESS),
-                case("`nan`", "\"NaN\"", CastQuality.LOSSLESS)
-            ).types(listOf("STRING", "VARCHAR", "CHARACTER VARYING")),
-            // cast([`+inf` | `-inf` | `nan`] as STRING) returns 'Infinity', '-Infinity', and 'NaN' respectively.
-            listOf(
                 case("`+inf`", "'Infinity'", CastQuality.LOSSLESS),
                 case("`-inf`", "'-Infinity'", CastQuality.LOSSLESS),
                 case("`nan`", "'NaN'", CastQuality.LOSSLESS)
+            ).types(listOf("STRING", "VARCHAR", "CHARACTER VARYING")),
+            // cast([`+inf` | `-inf` | `nan`] as STRING) returns 'Infinity', '-Infinity', and 'NaN' respectively.
+            listOf(
+                case("`+inf`", "`'Infinity'`", CastQuality.LOSSLESS),
+                case("`-inf`", "`'-Infinity'`", CastQuality.LOSSLESS),
+                case("`nan`", "`'NaN'`", CastQuality.LOSSLESS)
             ).types(ExprValueType.SYMBOL.typeAliases()),
             // cast([`+inf` | `-inf` | `nan`] as BOOLEAN) returns true, since none of which has value of 0.
             listOf(
@@ -1322,51 +1322,51 @@ abstract class CastTestBase : EvaluatorTestBase() {
 
         private val commonDateTimeTests = listOf(
             listOf(
-                case("DATE '2007-10-10'", "$DATE_ANNOTATION::2007-10-10", CastQuality.LOSSLESS)
+                case("DATE '2007-10-10'", "DATE '2007-10-10'", CastQuality.LOSSLESS)
             ).types(ExprValueType.DATE.typeAliases()),
             listOf(
-                case("DATE '2007-10-10'", "'2007-10-10'", CastQuality.LOSSLESS)
+                case("DATE '2007-10-10'", "`'2007-10-10'`", CastQuality.LOSSLESS)
             ).types(ExprValueType.SYMBOL.typeAliases()),
             listOf(
-                case("DATE '2007-10-10'", "\"2007-10-10\"", CastQuality.LOSSLESS)
+                case("DATE '2007-10-10'", "'2007-10-10'", CastQuality.LOSSLESS)
             ).types(listOf("string", "varchar")),
             listOf(
                 // CAST(<TIME> AS <variants of TIME type>)
-                case("TIME '23:12:12.1267'", "TIME", "$TIME_ANNOTATION::{hour:23, minute:12, second:12.1267, timezone_hour:null.int, timezone_minute:null.int}", CastQuality.LOSSLESS),
-                case("TIME '23:12:12.1267-05:30'", "TIME WITH TIME ZONE", "$TIME_ANNOTATION::{hour:23, minute:12, second:12.1267, timezone_hour:0, timezone_minute:0}", CastQuality.LOSSLESS),
-                case("TIME '23:12:12.1267+05:30'", "TIME (3)", "$TIME_ANNOTATION::{hour:23, minute:12, second:12.127, timezone_hour:null.int, timezone_minute:null.int}", CastQuality.LOSSY),
-                case("TIME '23:12:12.1267-05:30'", "TIME (3) WITH TIME ZONE", "$TIME_ANNOTATION::{hour:23, minute:12, second:12.127, timezone_hour:0, timezone_minute:0}", CastQuality.LOSSY),
-                case("TIME (3) '23:12:12.1267'", "TIME", "$TIME_ANNOTATION::{hour:23, minute:12, second:12.127, timezone_hour:null.int, timezone_minute:null.int}", CastQuality.LOSSLESS),
-                case("TIME (3) '23:12:12.1267-05:30'", "TIME", "$TIME_ANNOTATION::{hour:23, minute:12, second:12.127, timezone_hour:null.int, timezone_minute:null.int}", CastQuality.LOSSLESS),
-                case("TIME (3) '23:12:12.1267+05:30'", "TIME WITH TIME ZONE", "$TIME_ANNOTATION::{hour:23, minute:12, second:12.127, timezone_hour:0, timezone_minute:0}", CastQuality.LOSSLESS),
-                case("TIME (3) '23:12:12.1267-05:30'", "TIME (9)", "$TIME_ANNOTATION::{hour:23, minute:12, second:12.127000000, timezone_hour:null.int, timezone_minute:null.int}", CastQuality.LOSSLESS),
-                case("TIME WITH TIME ZONE '23:12:12.1267'", "TIME", "$TIME_ANNOTATION::{hour:23, minute:12, second:12.1267, timezone_hour:null.int, timezone_minute:null.int}", CastQuality.LOSSLESS),
-                case("TIME WITH TIME ZONE '23:12:12.1267-05:30'", "TIME WITH TIME ZONE", "$TIME_ANNOTATION::{hour:23, minute:12, second:12.1267, timezone_hour:-5, timezone_minute:-30}", CastQuality.LOSSLESS),
-                case("TIME WITH TIME ZONE '23:12:12.1267+05:30'", "TIME (3) WITH TIME ZONE", "$TIME_ANNOTATION::{hour:23, minute:12, second:12.127, timezone_hour:5, timezone_minute:30}", CastQuality.LOSSY),
-                case("TIME WITH TIME ZONE '23:12:12.1267-05:30'", "TIME", "$TIME_ANNOTATION::{hour:23, minute:12, second:12.1267, timezone_hour:null.int, timezone_minute:null.int}", CastQuality.LOSSY),
-                case("TIME (3) WITH TIME ZONE '23:12:12.1267'", "TIME", "$TIME_ANNOTATION::{hour:23, minute:12, second:12.127, timezone_hour:null.int, timezone_minute:null.int}", CastQuality.LOSSLESS),
-                case("TIME (3) WITH TIME ZONE '23:12:12.1267-05:30'", "TIME WITH TIME ZONE", "$TIME_ANNOTATION::{hour:23, minute:12, second:12.127, timezone_hour:-5, timezone_minute:-30}", CastQuality.LOSSLESS),
-                case("TIME (3) WITH TIME ZONE '23:12:12.1267+05:30'", "TIME (5)", "$TIME_ANNOTATION::{hour:23, minute:12, second:12.12700, timezone_hour:null.int, timezone_minute:null.int}", CastQuality.LOSSY),
-                case("TIME (3) WITH TIME ZONE '23:12:12.1267-05:30'", "TIME (5) WITH TIME ZONE", "$TIME_ANNOTATION::{hour:23, minute:12, second:12.12700, timezone_hour:-5, timezone_minute:-30}", CastQuality.LOSSLESS),
+                case("TIME '23:12:12.1267'", "TIME", "TIME '23:12:12.1267'", CastQuality.LOSSLESS),
+                case("TIME '23:12:12.1267-05:30'", "TIME WITH TIME ZONE", "TIME WITH TIME ZONE '23:12:12.1267'", CastQuality.LOSSLESS),
+                case("TIME '23:12:12.1267+05:30'", "TIME (3)", "TIME (3) '23:12:12.127'", CastQuality.LOSSY),
+                case("TIME '23:12:12.1267-05:30'", "TIME (3) WITH TIME ZONE", "TIME (3) WITH TIME ZONE '23:12:12.127'", CastQuality.LOSSY),
+                case("TIME (3) '23:12:12.1267'", "TIME", "TIME '23:12:12.127'", CastQuality.LOSSLESS),
+                case("TIME (3) '23:12:12.1267-05:30'", "TIME", "TIME '23:12:12.127'", CastQuality.LOSSLESS),
+                case("TIME (3) '23:12:12.1267+05:30'", "TIME WITH TIME ZONE", "TIME WITH TIME ZONE '23:12:12.127'", CastQuality.LOSSLESS),
+                case("TIME (3) '23:12:12.1267-05:30'", "TIME (9)", "TIME (9) '23:12:12.127'", CastQuality.LOSSLESS),
+                case("TIME WITH TIME ZONE '23:12:12.1267'", "TIME", "TIME '23:12:12.1267'", CastQuality.LOSSLESS),
+                case("TIME WITH TIME ZONE '23:12:12.1267-05:30'", "TIME WITH TIME ZONE", "TIME WITH TIME ZONE '23:12:12.1267-05:30'", CastQuality.LOSSLESS),
+                case("TIME WITH TIME ZONE '23:12:12.1267+05:30'", "TIME (3) WITH TIME ZONE", "TIME (3) WITH TIME ZONE '23:12:12.127+05:30'", CastQuality.LOSSY),
+                case("TIME WITH TIME ZONE '23:12:12.1267-05:30'", "TIME", "TIME '23:12:12.1267-05:30'", CastQuality.LOSSY),
+                case("TIME (3) WITH TIME ZONE '23:12:12.1267'", "TIME", "TIME '23:12:12.127'", CastQuality.LOSSLESS),
+                case("TIME (3) WITH TIME ZONE '23:12:12.1267-05:30'", "TIME WITH TIME ZONE", "TIME WITH TIME ZONE '23:12:12.127-05:30'", CastQuality.LOSSLESS),
+                case("TIME (3) WITH TIME ZONE '23:12:12.1267+05:30'", "TIME (5)", "TIME (5) '23:12:12.127+05:30'", CastQuality.LOSSY),
+                case("TIME (3) WITH TIME ZONE '23:12:12.1267-05:30'", "TIME (5) WITH TIME ZONE", "TIME (5) WITH TIME ZONE '23:12:12.127-05:30'", CastQuality.LOSSLESS),
                 // CAST(<TIMESTAMP> AS <variants of TIME type>)
-                case("`2007-02-23T12:14:33.079Z`", "TIME", "$TIME_ANNOTATION::{hour:12, minute:14, second:33.079, timezone_hour:null.int, timezone_minute:null.int}", CastQuality.LOSSY),
-                case("`2007-02-23T12:14:33.079-08:00`", "TIME", "$TIME_ANNOTATION::{hour:12, minute:14, second:33.079, timezone_hour:null.int, timezone_minute:null.int}", CastQuality.LOSSY),
-                case("`2007-02-23T12:14:33.079Z`", "TIME WITH TIME ZONE", "$TIME_ANNOTATION::{hour:12, minute:14, second:33.079, timezone_hour:0, timezone_minute:0}", CastQuality.LOSSY),
-                case("`2007-02-23T12:14:33.079-08:00`", "TIME (1)", "$TIME_ANNOTATION::{hour:12, minute:14, second:33.1, timezone_hour:null.int, timezone_minute:null.int}", CastQuality.LOSSY),
-                case("`2007-02-23T12:14:33.079-08:00`", "TIME (2) WITH TIME ZONE", "$TIME_ANNOTATION::{hour:12, minute:14, second:33.08, timezone_hour:-8, timezone_minute:0}", CastQuality.LOSSY),
+                case("`2007-02-23T12:14:33.079Z`", "TIME", "TIME '12:14:33.079'", CastQuality.LOSSY),
+                case("`2007-02-23T12:14:33.079-08:00`", "TIME", "TIME '12:14:33.079-08:00'", CastQuality.LOSSY),
+                case("`2007-02-23T12:14:33.079Z`", "TIME WITH TIME ZONE", "TIME WITH TIME ZONE '12:14:33.079z'", CastQuality.LOSSY),
+                case("`2007-02-23T12:14:33.079-08:00`", "TIME (1)", "TIME (1) '12:14:33.079-08:00'", CastQuality.LOSSY),
+                case("`2007-02-23T12:14:33.079-08:00`", "TIME (2) WITH TIME ZONE", "TIME (2) WITH TIME ZONE '12:14:33.08-08:00'", CastQuality.LOSSY),
                 // CAST(<text> AS <variants of TIME type>)
-                case("'23:12:12.1267'", "TIME", "$TIME_ANNOTATION::{hour:23, minute:12, second:12.1267, timezone_hour:null.int, timezone_minute:null.int}", CastQuality.LOSSLESS),
-                case("'23:12:12.1267'", "TIME (2)", "$TIME_ANNOTATION::{hour:23, minute:12, second:12.13, timezone_hour:null.int, timezone_minute:null.int}", CastQuality.LOSSY),
-                case("'23:12:12.1267'", "TIME WITH TIME ZONE", "$TIME_ANNOTATION::{hour:23, minute:12, second:12.1267, timezone_hour:0, timezone_minute:0}", CastQuality.LOSSY),
-                case("'23:12:12.1267'", "TIME (2) WITH TIME ZONE", "$TIME_ANNOTATION::{hour:23, minute:12, second:12.13, timezone_hour:0, timezone_minute:0}", CastQuality.LOSSY),
-                case("""`"23:12:12.1267"`""", "TIME", "$TIME_ANNOTATION::{hour:23, minute:12, second:12.1267, timezone_hour:null.int, timezone_minute:null.int}", CastQuality.LOSSLESS),
-                case("""`"23:12:12.1267"`""", "TIME (2)", "$TIME_ANNOTATION::{hour:23, minute:12, second:12.13, timezone_hour:null.int, timezone_minute:null.int}", CastQuality.LOSSY),
-                case("""`"23:12:12.1267"`""", "TIME WITH TIME ZONE", "$TIME_ANNOTATION::{hour:23, minute:12, second:12.1267, timezone_hour:0, timezone_minute:0}", CastQuality.LOSSY),
-                case("""`'23:12:12.1267'`""", "TIME (2) WITH TIME ZONE", "$TIME_ANNOTATION::{hour:23, minute:12, second:12.13, timezone_hour:0, timezone_minute:0}", CastQuality.LOSSY),
-                case("""`'23:12:12.1267'`""", "TIME", "$TIME_ANNOTATION::{hour:23, minute:12, second:12.1267, timezone_hour:null.int, timezone_minute:null.int}", CastQuality.LOSSLESS),
-                case("""`'23:12:12.1267'`""", "TIME (2)", "$TIME_ANNOTATION::{hour:23, minute:12, second:12.13, timezone_hour:null.int, timezone_minute:null.int}", CastQuality.LOSSY),
-                case("""`'23:12:12.1267'`""", "TIME WITH TIME ZONE", "$TIME_ANNOTATION::{hour:23, minute:12, second:12.1267, timezone_hour:0, timezone_minute:0}", CastQuality.LOSSY),
-                case("""`'23:12:12.1267'`""", "TIME (2) WITH TIME ZONE", "$TIME_ANNOTATION::{hour:23, minute:12, second:12.13, timezone_hour:0, timezone_minute:0}", CastQuality.LOSSY),
+                case("'23:12:12.1267'", "TIME", "TIME '23:12:12.1267'", CastQuality.LOSSLESS),
+                case("'23:12:12.1267'", "TIME (2)", "TIME (2) '23:12:12.1267'", CastQuality.LOSSY),
+                case("'23:12:12.1267'", "TIME WITH TIME ZONE", "TIME WITH TIME ZONE '23:12:12.1267'", CastQuality.LOSSY),
+                case("'23:12:12.1267'", "TIME (2) WITH TIME ZONE", "TIME (2) WITH TIME ZONE '23:12:12.13'", CastQuality.LOSSY),
+                case("""`"23:12:12.1267"`""", "TIME", "TIME '23:12:12.1267'", CastQuality.LOSSLESS),
+                case("""`"23:12:12.1267"`""", "TIME (2)", "TIME (2) '23:12:12.1267'", CastQuality.LOSSY),
+                case("""`"23:12:12.1267"`""", "TIME WITH TIME ZONE", "TIME WITH TIME ZONE '23:12:12.1267'", CastQuality.LOSSY),
+                case("""`'23:12:12.1267'`""", "TIME (2) WITH TIME ZONE", "TIME (2) WITH TIME ZONE '23:12:12.13'", CastQuality.LOSSY),
+                case("""`'23:12:12.1267'`""", "TIME", "TIME '23:12:12.1267'", CastQuality.LOSSLESS),
+                case("""`'23:12:12.1267'`""", "TIME (2)", "TIME (2) '23:12:12.1267'", CastQuality.LOSSY),
+                case("""`'23:12:12.1267'`""", "TIME WITH TIME ZONE", "TIME WITH TIME ZONE '23:12:12.1267'", CastQuality.LOSSY),
+                case("""`'23:12:12.1267'`""", "TIME (2) WITH TIME ZONE", "TIME (2) WITH TIME ZONE '23:12:12.13'", CastQuality.LOSSY),
             ),
             // Error cases for TIME
             listOf(
@@ -1389,6 +1389,21 @@ abstract class CastTestBase : EvaluatorTestBase() {
             ),
             // CAST <TIME> AS SYMBOL
             listOf(
+                case("TIME '23:12:12.1267'", "`'23:12:12.1267'`", CastQuality.LOSSLESS),
+                case("TIME '23:12:12.1267-05:30'", "`'23:12:12.1267'`", CastQuality.LOSSLESS),
+                case("TIME '23:12:12.1267+05:30'", "`'23:12:12.1267'`", CastQuality.LOSSLESS),
+                case("TIME (3) '23:12:12.1267'", "`'23:12:12.127'`", CastQuality.LOSSLESS),
+                case("TIME (3) '23:12:12.1267-05:30'", "`'23:12:12.127'`", CastQuality.LOSSLESS),
+                case("TIME (3) '23:12:12.1267+05:30'", "`'23:12:12.127'`", CastQuality.LOSSLESS),
+                case("TIME WITH TIME ZONE '23:12:12.1267'", "`'23:12:12.1267${defaultTimezoneOffset.getOffsetHHmm()}'`", CastQuality.LOSSLESS),
+                case("TIME WITH TIME ZONE '23:12:12.1267-05:30'", "`'23:12:12.1267-05:30'`", CastQuality.LOSSLESS),
+                case("TIME WITH TIME ZONE '23:12:12.1267+05:30'", "`'23:12:12.1267+05:30'`", CastQuality.LOSSLESS),
+                case("TIME (3) WITH TIME ZONE '23:12:12.1267'", "`'23:12:12.127${defaultTimezoneOffset.getOffsetHHmm()}'`", CastQuality.LOSSLESS),
+                case("TIME (3) WITH TIME ZONE '23:12:12.1267-05:30'", "`'23:12:12.127-05:30'`", CastQuality.LOSSLESS),
+                case("TIME (3) WITH TIME ZONE '23:12:12.1267+05:30'", "`'23:12:12.127+05:30'`", CastQuality.LOSSLESS)
+            ).types(ExprValueType.SYMBOL.typeAliases()),
+            // CAST <TIME> AS STRING
+            listOf(
                 case("TIME '23:12:12.1267'", "'23:12:12.1267'", CastQuality.LOSSLESS),
                 case("TIME '23:12:12.1267-05:30'", "'23:12:12.1267'", CastQuality.LOSSLESS),
                 case("TIME '23:12:12.1267+05:30'", "'23:12:12.1267'", CastQuality.LOSSLESS),
@@ -1401,21 +1416,6 @@ abstract class CastTestBase : EvaluatorTestBase() {
                 case("TIME (3) WITH TIME ZONE '23:12:12.1267'", "'23:12:12.127${defaultTimezoneOffset.getOffsetHHmm()}'", CastQuality.LOSSLESS),
                 case("TIME (3) WITH TIME ZONE '23:12:12.1267-05:30'", "'23:12:12.127-05:30'", CastQuality.LOSSLESS),
                 case("TIME (3) WITH TIME ZONE '23:12:12.1267+05:30'", "'23:12:12.127+05:30'", CastQuality.LOSSLESS)
-            ).types(ExprValueType.SYMBOL.typeAliases()),
-            // CAST <TIME> AS STRING
-            listOf(
-                case("TIME '23:12:12.1267'", "\"23:12:12.1267\"", CastQuality.LOSSLESS),
-                case("TIME '23:12:12.1267-05:30'", "\"23:12:12.1267\"", CastQuality.LOSSLESS),
-                case("TIME '23:12:12.1267+05:30'", "\"23:12:12.1267\"", CastQuality.LOSSLESS),
-                case("TIME (3) '23:12:12.1267'", "\"23:12:12.127\"", CastQuality.LOSSLESS),
-                case("TIME (3) '23:12:12.1267-05:30'", "\"23:12:12.127\"", CastQuality.LOSSLESS),
-                case("TIME (3) '23:12:12.1267+05:30'", "\"23:12:12.127\"", CastQuality.LOSSLESS),
-                case("TIME WITH TIME ZONE '23:12:12.1267'", "\"23:12:12.1267${defaultTimezoneOffset.getOffsetHHmm()}\"", CastQuality.LOSSLESS),
-                case("TIME WITH TIME ZONE '23:12:12.1267-05:30'", "\"23:12:12.1267-05:30\"", CastQuality.LOSSLESS),
-                case("TIME WITH TIME ZONE '23:12:12.1267+05:30'", "\"23:12:12.1267+05:30\"", CastQuality.LOSSLESS),
-                case("TIME (3) WITH TIME ZONE '23:12:12.1267'", "\"23:12:12.127${defaultTimezoneOffset.getOffsetHHmm()}\"", CastQuality.LOSSLESS),
-                case("TIME (3) WITH TIME ZONE '23:12:12.1267-05:30'", "\"23:12:12.127-05:30\"", CastQuality.LOSSLESS),
-                case("TIME (3) WITH TIME ZONE '23:12:12.1267+05:30'", "\"23:12:12.127+05:30\"", CastQuality.LOSSLESS)
             ).types(listOf("string", "varchar"))
         ).flatten() +
             listOf(ExprValueType.MISSING, ExprValueType.NULL, ExprValueType.BOOL, ExprValueType.INT, ExprValueType.FLOAT, ExprValueType.DECIMAL, ExprValueType.TIMESTAMP, ExprValueType.CLOB, ExprValueType.BLOB, ExprValueType.LIST, ExprValueType.SEXP, ExprValueType.STRUCT, ExprValueType.BAG)
@@ -1441,7 +1441,7 @@ abstract class CastTestBase : EvaluatorTestBase() {
                 // Note that we do not convert cases where the error is semantic (i.e. static)
                 case.expectedErrorCode != null && case.expectedErrorCode.category != ErrorCategory.SEMANTIC -> {
                     // rewrite error code cases to `MISSING` for permissive mode
-                    case.copy(expected = "null", expectedErrorCode = null) {
+                    case.copy(expected = "MISSING", expectedErrorCode = null) {
                         assertEquals(ExprValueType.MISSING, it.type)
                     }
                 }
@@ -1481,25 +1481,25 @@ abstract class CastTestBase : EvaluatorTestBase() {
             // Configuring default timezone offset through CompileOptions
             listOf(
                 // CAST(<TIME> AS <TIME WITH TIME ZONE>)
-                Pair(case("TIME '23:12:12.1267'", "TIME WITH TIME ZONE", "$TIME_ANNOTATION::{hour:23, minute:12, second:12.1267, timezone_hour:0, timezone_minute:0}", CastQuality.LOSSLESS), createZoneOffset()),
-                Pair(case("TIME '23:12:12.1267'", "TIME WITH TIME ZONE", "$TIME_ANNOTATION::{hour:23, minute:12, second:12.1267, timezone_hour:11, timezone_minute:0}", CastQuality.LOSSLESS), createZoneOffset(11)),
-                Pair(case("TIME '23:12:12.1267-05:30'", "TIME WITH TIME ZONE", "$TIME_ANNOTATION::{hour:23, minute:12, second:12.1267, timezone_hour:1, timezone_minute:0}", CastQuality.LOSSLESS), createZoneOffset(1)),
-                Pair(case("TIME '23:12:12.1267-05:30'", "TIME (2) WITH TIME ZONE", "$TIME_ANNOTATION::{hour:23, minute:12, second:12.13, timezone_hour:-5, timezone_minute:-30}", CastQuality.LOSSY), createZoneOffset(-5, -30)),
+                Pair(case("TIME '23:12:12.1267'", "TIME WITH TIME ZONE", "TIME WITH TIME ZONE '23:12:12.1267'", CastQuality.LOSSLESS), createZoneOffset()),
+                Pair(case("TIME '23:12:12.1267'", "TIME WITH TIME ZONE", "TIME WITH TIME ZONE '23:12:12.1267+11:00'", CastQuality.LOSSLESS), createZoneOffset(11)),
+                Pair(case("TIME '23:12:12.1267-05:30'", "TIME WITH TIME ZONE", "TIME WITH TIME ZONE '23:12:12.1267+01:00'", CastQuality.LOSSLESS), createZoneOffset(1)),
+                Pair(case("TIME '23:12:12.1267-05:30'", "TIME (2) WITH TIME ZONE", "TIME WITH TIME ZONE '23:12:12.13-05:30'", CastQuality.LOSSY), createZoneOffset(-5, -30)),
                 // CAST(<TIMESTAMP> AS <TIME WITH TIME ZONE>)
-                Pair(case("`2007-02-23T12:14:33.079Z`", "TIME WITH TIME ZONE", "$TIME_ANNOTATION::{hour:12, minute:14, second:33.079, timezone_hour:0, timezone_minute:0}", CastQuality.LOSSY), createZoneOffset()),
-                Pair(case("`2007-02-23T12:14:33.079Z`", "TIME WITH TIME ZONE", "$TIME_ANNOTATION::{hour:12, minute:14, second:33.079, timezone_hour:0, timezone_minute:0}", CastQuality.LOSSY), createZoneOffset(11)),
-                Pair(case("`2007-02-23T12:14:33.079-05:30`", "TIME WITH TIME ZONE", "$TIME_ANNOTATION::{hour:12, minute:14, second:33.079, timezone_hour:-5, timezone_minute:-30}", CastQuality.LOSSY), createZoneOffset(1)),
-                Pair(case("`2007-02-23T12:14:33.079Z`", "TIME (2) WITH TIME ZONE", "$TIME_ANNOTATION::{hour:12, minute:14, second:33.08, timezone_hour:0, timezone_minute:0}", CastQuality.LOSSY), createZoneOffset(-5, -30)),
+                Pair(case("`2007-02-23T12:14:33.079Z`", "TIME WITH TIME ZONE", "TIME WITH TIME ZONE '12:14:33.079z'", CastQuality.LOSSY), createZoneOffset()),
+                Pair(case("`2007-02-23T12:14:33.079Z`", "TIME WITH TIME ZONE", "TIME WITH TIME ZONE '12:14:33.079z'", CastQuality.LOSSY), createZoneOffset(11)),
+                Pair(case("`2007-02-23T12:14:33.079-05:30`", "TIME WITH TIME ZONE", "TIME WITH TIME ZONE '12:14:33.079-05:30'", CastQuality.LOSSY), createZoneOffset(1)),
+                Pair(case("`2007-02-23T12:14:33.079Z`", "TIME (2) WITH TIME ZONE", "TIME (2) WITH TIME ZONE '12:14:33.08+00:00'", CastQuality.LOSSY), createZoneOffset(-5, -30)),
                 // CAST(<text> AS <TIME WITH TIME ZONE>)
-                Pair(case("'23:12:12.1267'", "TIME WITH TIME ZONE", "$TIME_ANNOTATION::{hour:23, minute:12, second:12.1267, timezone_hour:0, timezone_minute:0}", CastQuality.LOSSY), createZoneOffset()),
-                Pair(case("'23:12:12.1267'", "TIME WITH TIME ZONE", "$TIME_ANNOTATION::{hour:23, minute:12, second:12.1267, timezone_hour:11, timezone_minute:0}", CastQuality.LOSSY), createZoneOffset(11)),
-                Pair(case("'23:12:12.1267'", "TIME (2) WITH TIME ZONE", "$TIME_ANNOTATION::{hour:23, minute:12, second:12.13, timezone_hour:-5, timezone_minute:-30}", CastQuality.LOSSY), createZoneOffset(-5, -30)),
-                Pair(case("""`'23:12:12.1267'`""", "TIME WITH TIME ZONE", "$TIME_ANNOTATION::{hour:23, minute:12, second:12.1267, timezone_hour:0, timezone_minute:0}", CastQuality.LOSSY), createZoneOffset()),
-                Pair(case("""`'23:12:12.1267'`""", "TIME WITH TIME ZONE", "$TIME_ANNOTATION::{hour:23, minute:12, second:12.1267, timezone_hour:11, timezone_minute:0}", CastQuality.LOSSY), createZoneOffset(11)),
-                Pair(case("""`'23:12:12.1267'`""", "TIME (2) WITH TIME ZONE", "$TIME_ANNOTATION::{hour:23, minute:12, second:12.13, timezone_hour:-5, timezone_minute:-30}", CastQuality.LOSSY), createZoneOffset(-5, -30)),
-                Pair(case("""`"23:12:12.1267"`""", "TIME WITH TIME ZONE", "$TIME_ANNOTATION::{hour:23, minute:12, second:12.1267, timezone_hour:0, timezone_minute:0}", CastQuality.LOSSY), createZoneOffset()),
-                Pair(case("""`"23:12:12.1267"`""", "TIME WITH TIME ZONE", "$TIME_ANNOTATION::{hour:23, minute:12, second:12.1267, timezone_hour:11, timezone_minute:0}", CastQuality.LOSSY), createZoneOffset(11)),
-                Pair(case("""`"23:12:12.1267"`""", "TIME (2) WITH TIME ZONE", "$TIME_ANNOTATION::{hour:23, minute:12, second:12.13, timezone_hour:-5, timezone_minute:-30}", CastQuality.LOSSY), createZoneOffset(-5, -30))
+                Pair(case("'23:12:12.1267'", "TIME WITH TIME ZONE", "TIME WITH TIME ZONE '23:12:12.1267'", CastQuality.LOSSY), createZoneOffset()),
+                Pair(case("'23:12:12.1267'", "TIME WITH TIME ZONE", "TIME WITH TIME ZONE '23:12:12.1267+11:00'", CastQuality.LOSSY), createZoneOffset(11)),
+                Pair(case("'23:12:12.1267'", "TIME (2) WITH TIME ZONE", "TIME (2) WITH TIME ZONE '23:12:12.13-05:30'", CastQuality.LOSSY), createZoneOffset(-5, -30)),
+                Pair(case("""`'23:12:12.1267'`""", "TIME WITH TIME ZONE", "TIME WITH TIME ZONE '23:12:12.1267'", CastQuality.LOSSY), createZoneOffset()),
+                Pair(case("""`'23:12:12.1267'`""", "TIME WITH TIME ZONE", "TIME WITH TIME ZONE '23:12:12.1267+11:00'", CastQuality.LOSSY), createZoneOffset(11)),
+                Pair(case("""`'23:12:12.1267'`""", "TIME (2) WITH TIME ZONE", "TIME (2) WITH TIME ZONE '23:12:12.13-05:30'", CastQuality.LOSSY), createZoneOffset(-5, -30)),
+                Pair(case("""`"23:12:12.1267"`""", "TIME WITH TIME ZONE", "TIME WITH TIME ZONE '23:12:12.1267'", CastQuality.LOSSY), createZoneOffset()),
+                Pair(case("""`"23:12:12.1267"`""", "TIME WITH TIME ZONE", "TIME WITH TIME ZONE '23:12:12.1267+11:00'", CastQuality.LOSSY), createZoneOffset(11)),
+                Pair(case("""`"23:12:12.1267"`""", "TIME (2) WITH TIME ZONE", "TIME (2) WITH TIME ZONE '23:12:12.13-05:30'", CastQuality.LOSSY), createZoneOffset(-5, -30))
             )
 
         private val castConfiguredTestCases = castPermissiveConfiguredTestCases + castLegacyConfiguredTestCases
@@ -1514,7 +1514,7 @@ abstract class CastTestBase : EvaluatorTestBase() {
                 val identityValue = eval(castCase.source)
                 val newCastCase = castCase.copy(
                     type = "ANY",
-                    expected = identityValue.ionValue.cloneAndRemoveBagAndMissingAnnotations().toString(),
+                    expected = castCase.source,
                     expectedErrorCode = null
                 ) {
                     assertEquals(identityValue.type, it.type)

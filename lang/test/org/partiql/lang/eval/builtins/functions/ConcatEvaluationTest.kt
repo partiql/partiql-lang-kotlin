@@ -15,7 +15,7 @@ class ConcatEvaluationTest : EvaluatorTestBase() {
     @ParameterizedTest
     @ArgumentsSource(ConcatPassCases::class)
     fun runPassTests(testCase: ExprFunctionTestCase) =
-        runEvaluatorTestCase(testCase.source, expectedResult = testCase.expectedLegacyModeResult)
+        runEvaluatorTestCase(testCase.source, expectedResult = testCase.expectedLegacyModeResult, expectedPermissiveModeResult = testCase.expectedPermissiveModeResult)
 
     class ConcatPassCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(
@@ -31,7 +31,7 @@ class ConcatEvaluationTest : EvaluatorTestBase() {
             ExprFunctionTestCase("'a' || `b`", "\"ab\""), // 2nd arg: Ion symbol ``
             ExprFunctionTestCase("'a' || `'b'`", "\"ab\""), // 2nd arg: Ion symbol `''`
             ExprFunctionTestCase("'a' || null", "null"), // 2nd arg: null
-            ExprFunctionTestCase("'a' || missing", "null"), // 2nd arg: missing
+            ExprFunctionTestCase("'a' || missing", "null", "\$missing::null"), // 2nd arg: missing
 
             // 1st arg: Ion String
             ExprFunctionTestCase("`\"a\"` || 'b'", "\"ab\""), // 2nd arg: String
@@ -39,7 +39,7 @@ class ConcatEvaluationTest : EvaluatorTestBase() {
             ExprFunctionTestCase("`\"a\"` || `b`", "\"ab\""), // 2nd arg: Ion symbol ``
             ExprFunctionTestCase("`\"a\"` || `'b'`", "\"ab\""), // 2nd arg: Ion symbol `''`
             ExprFunctionTestCase("`\"a\"` || null", "null"), // 2nd arg: null
-            ExprFunctionTestCase("`\"a\"` || missing", "null"), // 2nd arg: missing
+            ExprFunctionTestCase("`\"a\"` || missing", "null", "\$missing::null"), // 2nd arg: missing
 
             // 1st arg: Ion symbol (``)
             ExprFunctionTestCase("`a` || 'b'", "\"ab\""), // 2nd arg: String
@@ -47,7 +47,7 @@ class ConcatEvaluationTest : EvaluatorTestBase() {
             ExprFunctionTestCase("`a` || `b`", "\"ab\""), // 2nd arg: Ion symbol ``
             ExprFunctionTestCase("`a` || `'b'`", "\"ab\""), // 2nd arg: Ion symbol `''`
             ExprFunctionTestCase("`a` || null", "null"), // 2nd arg: null
-            ExprFunctionTestCase("`a` || missing", "null"), // 2nd arg: missing
+            ExprFunctionTestCase("`a` || missing", "null", "\$missing::null"), // 2nd arg: missing
 
             // 1st arg: Ion symbol (``)
             ExprFunctionTestCase("`'a'` || 'b'", "\"ab\""), // 2nd arg: String
@@ -55,7 +55,7 @@ class ConcatEvaluationTest : EvaluatorTestBase() {
             ExprFunctionTestCase("`'a'` || `b`", "\"ab\""), // 2nd arg: Ion symbol ``
             ExprFunctionTestCase("`'a'` || `'b'`", "\"ab\""), // 2nd arg: Ion symbol `''`
             ExprFunctionTestCase("`'a'` || null", "null"), // 2nd arg: null
-            ExprFunctionTestCase("`'a'` || missing", "null"), // 2nd arg: missing
+            ExprFunctionTestCase("`'a'` || missing", "null", "\$missing::null"), // 2nd arg: missing
 
             // 1st arg: null
             ExprFunctionTestCase("null || 'b'", "null"), // 2nd arg: String
@@ -63,15 +63,15 @@ class ConcatEvaluationTest : EvaluatorTestBase() {
             ExprFunctionTestCase("null || `b`", "null"), // 2nd arg: Ion symbol ``
             ExprFunctionTestCase("null || `'b'`", "null"), // 2nd arg: Ion symbol `''`
             ExprFunctionTestCase("null || null", "null"), // 2nd arg: null
-            ExprFunctionTestCase("null || missing", "null"), // 2nd arg: missing
+            ExprFunctionTestCase("null || missing", "null", "\$missing::null"), // 2nd arg: missing
 
             // 1st arg: missing
-            ExprFunctionTestCase("missing || 'b'", "null"), // 2nd arg: String
-            ExprFunctionTestCase("missing || `\"b\"`", "null"), // 2nd arg: Ion String
-            ExprFunctionTestCase("missing || `b`", "null"), // 2nd arg: Ion symbol ``
-            ExprFunctionTestCase("missing || `'b'`", "null"), // 2nd arg: Ion symbol `''`
-            ExprFunctionTestCase("missing || null", "null"), // 2nd arg: null
-            ExprFunctionTestCase("missing || missing", "null"), // 2nd arg: missing
+            ExprFunctionTestCase("missing || 'b'", "null", "\$missing::null"), // 2nd arg: String
+            ExprFunctionTestCase("missing || `\"b\"`", "null", "\$missing::null"), // 2nd arg: Ion String
+            ExprFunctionTestCase("missing || `b`", "null", "\$missing::null"), // 2nd arg: Ion symbol ``
+            ExprFunctionTestCase("missing || `'b'`", "null", "\$missing::null"), // 2nd arg: Ion symbol `''`
+            ExprFunctionTestCase("missing || null", "null", "\$missing::null"), // 2nd arg: null
+            ExprFunctionTestCase("missing || missing", "null", "\$missing::null"), // 2nd arg: missing
 
             // Test for more characters in strings
             ExprFunctionTestCase("'' || 'a'", "\"a\""),

@@ -18,7 +18,8 @@ class FromUnixTimeFunctionTest : EvaluatorTestBase() {
     @ArgumentsSource(FromUnixTimePassCases::class)
     fun runPassTests(tc: ExprFunctionTestCase) = runEvaluatorTestCase(
         tc.source,
-        expectedResult = tc.expectedLegacyModeResult
+        expectedResult = tc.expectedLegacyModeResult,
+        expectedPermissiveModeResult = tc.expectedPermissiveModeResult
     )
 
     class FromUnixTimePassCases : ArgumentsProviderBase() {
@@ -43,7 +44,7 @@ class FromUnixTimeFunctionTest : EvaluatorTestBase() {
             ExprFunctionTestCase("from_unixtime(`1577836800`)", "2020-01-01T00:00:00-00:00"),
             // Null or missing
             ExprFunctionTestCase("from_unixtime(null)", "null"),
-            ExprFunctionTestCase("from_unixtime(missing)", "null"),
+            ExprFunctionTestCase("from_unixtime(missing)", "null", "\$missing::null"),
         )
     }
 

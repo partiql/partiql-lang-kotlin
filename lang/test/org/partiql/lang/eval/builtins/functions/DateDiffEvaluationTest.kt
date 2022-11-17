@@ -27,8 +27,8 @@ class DateDiffEvaluationTest : EvaluatorTestBase() {
         override fun getParameters(): List<Any> = listOf(
             ExprFunctionTestCase("date_diff(second, null, `2017-01-10T05:30:55Z`)", "null"),
             ExprFunctionTestCase("date_diff(second, `2016-01-10T05:30:55Z`, null)", "null"),
-            ExprFunctionTestCase("date_diff(second, missing, `2017-01-10T05:30:55Z`)", "null"),
-            ExprFunctionTestCase("date_diff(second, `2016-01-10T05:30:55Z`, missing)", "null"),
+            ExprFunctionTestCase("date_diff(second, missing, `2017-01-10T05:30:55Z`)", "null", "\$missing::null"),
+            ExprFunctionTestCase("date_diff(second, `2016-01-10T05:30:55Z`, missing)", "null", "\$missing::null"),
             ExprFunctionTestCase(
                 "date_diff(year, a, b)",
                 "1",

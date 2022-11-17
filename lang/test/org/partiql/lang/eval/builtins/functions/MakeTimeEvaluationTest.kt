@@ -21,7 +21,8 @@ class MakeTimeEvaluationTest : EvaluatorTestBase() {
         runEvaluatorTestCase(
             query = testCase.source,
             expectedResult = testCase.expectedLegacyModeResult,
-            expectedResultFormat = ExpectedResultFormat.STRING,
+            expectedPermissiveModeResult = testCase.expectedPermissiveModeResult,
+            expectedResultFormat = ExpectedResultFormat.PARTIQL_STRICT,
             includePermissiveModeTest = false
         )
 
@@ -43,10 +44,10 @@ class MakeTimeEvaluationTest : EvaluatorTestBase() {
             ExprFunctionTestCase("make_time(23, null, 59.999999999, 1080)", "NULL"),
             ExprFunctionTestCase("make_time(23, 59, null, 1080)", "NULL"),
             ExprFunctionTestCase("make_time(23, 59, 59.999999999, null)", "NULL"),
-            ExprFunctionTestCase("make_time(missing, 59,59.999999999, 1080)", "NULL"),
-            ExprFunctionTestCase("make_time(23, 59, missing, 1080)", "NULL"),
-            ExprFunctionTestCase("make_time(23, 59, 59.999999999, missing)", "NULL"),
-            ExprFunctionTestCase("make_time(23, 59, missing, null)", "NULL")
+            ExprFunctionTestCase("make_time(missing, 59,59.999999999, 1080)", "NULL", "MISSING"),
+            ExprFunctionTestCase("make_time(23, 59, missing, 1080)", "NULL", "MISSING"),
+            ExprFunctionTestCase("make_time(23, 59, 59.999999999, missing)", "NULL", "MISSING"),
+            ExprFunctionTestCase("make_time(23, 59, missing, null)", "NULL", "MISSING")
         )
     }
 

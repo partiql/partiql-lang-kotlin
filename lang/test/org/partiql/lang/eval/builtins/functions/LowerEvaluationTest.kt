@@ -16,7 +16,8 @@ class LowerEvaluationTest : EvaluatorTestBase() {
     @ArgumentsSource(LowerPassCases::class)
     fun runPassTests(tc: ExprFunctionTestCase) = runEvaluatorTestCase(
         tc.source,
-        expectedResult = tc.expectedLegacyModeResult
+        expectedResult = tc.expectedLegacyModeResult,
+        expectedPermissiveModeResult = tc.expectedPermissiveModeResult
     )
 
     class LowerPassCases : ArgumentsProviderBase() {
@@ -29,7 +30,7 @@ class LowerEvaluationTest : EvaluatorTestBase() {
             ExprFunctionTestCase("lower('ABCDEF')", "\"abcdef\""),
             ExprFunctionTestCase("lower('abcdef')", "\"abcdef\""),
             ExprFunctionTestCase("lower(null)", "null"),
-            ExprFunctionTestCase("lower(missing)", "null"),
+            ExprFunctionTestCase("lower(missing)", "null", "\$missing::null"),
             ExprFunctionTestCase("lower('123\$%(*&')", "\"123\$%(*&\""),
             ExprFunctionTestCase("lower('ȴȵ💩Z💋')", "\"ȴȵ💩z💋\""),
             ExprFunctionTestCase("lower('話家身圧費谷料村能計税金')", "\"話家身圧費谷料村能計税金\"")

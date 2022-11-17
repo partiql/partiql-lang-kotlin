@@ -63,7 +63,9 @@ import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 import java.util.TreeMap
 import java.util.TreeSet
+import kotlin.math.pow
 import kotlin.math.round
+import kotlin.math.roundToInt
 
 /**
  * Wraps the given [ExprValue] with a delegate that provides the [OrderedBindNames] facet.
@@ -718,4 +720,60 @@ fun Sequence<ExprValue>.multiplicities(): TreeMap<ExprValue, Int> {
         multiplicities.compute(it) { _, v -> (v ?: 0) + 1 }
     }
     return multiplicities
+}
+
+/**
+ * Used to verify the actual `ExprValue` is the same as the expected `ExprValue1 in test
+ */
+internal fun ExprValue.strictEquals(other: ExprValue): Boolean {
+    if (type !== other.type) {
+        return false
+    }
+
+    return when (type) {
+        ExprValueType.MISSING -> true
+        ExprValueType.BAG -> {
+            class Key(val value: ExprValue) {
+                override fun equals(other: Any?): Boolean {
+                    if (other !is Key) {
+                        return false
+                    }
+                    return value.strictEquals(other.value)
+                }
+
+                override fun hashCode(): Int {
+                    return hash(value)
+                }
+            }
+
+            var count = 0
+            val map = mutableMapOf<Key, Int>()
+            for (item in this) {
+                val key = Key(item)
+                when (val num = map[key]) {
+                    null -> map[key] = 1
+                    else -> map[key] = num + 1
+                }
+                count ++
+            }
+
+            for (item in other) {
+                val key = Key(item)
+                when (val num = map.getOrDefault(key, 0)) {
+                    0 -> return false
+                    else -> map[key] = num - 1
+                }
+                count --
+            }
+
+            count == 0
+        }
+        else -> ionValue == other.ionValue
+    }
+}
+
+private fun hash(value: ExprValue): Int = when (value.type) {
+    ExprValueType.MISSING -> 0
+    ExprValueType.BAG -> value.map { hash(it) }.fold(0) { value1: Int, value2: Int -> value1.shl(19).toDouble().pow(value1.shr(13)).roundToInt() + value2 }
+    else -> value.ionValue.hashCode()
 }

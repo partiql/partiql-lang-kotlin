@@ -20,7 +20,7 @@ class ToTimestampEvaluationTest : EvaluatorTestBase() {
     @ParameterizedTest
     @ArgumentsSource(ToTimestampPassCases::class)
     fun runPassTests(testCase: ExprFunctionTestCase) =
-        runEvaluatorTestCase(testCase.source, expectedResult = testCase.expectedLegacyModeResult)
+        runEvaluatorTestCase(testCase.source, expectedResult = testCase.expectedLegacyModeResult, expectedPermissiveModeResult = testCase.expectedPermissiveModeResult)
 
     class ToTimestampPassCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(
@@ -45,9 +45,9 @@ class ToTimestampEvaluationTest : EvaluatorTestBase() {
             ExprFunctionTestCase("to_timestamp(null, 'M-d-yyyy')", "null"),
             ExprFunctionTestCase("to_timestamp('07-20-1969', null)", "null"),
             ExprFunctionTestCase("to_timestamp(null, null)", "null"),
-            ExprFunctionTestCase("to_timestamp(missing)", "null"),
-            ExprFunctionTestCase("to_timestamp(missing, 'M-d-yyyy')", "null"),
-            ExprFunctionTestCase("to_timestamp('07-20-1969', missing)", "null"),
+            ExprFunctionTestCase("to_timestamp(missing)", "null", "\$missing::null"),
+            ExprFunctionTestCase("to_timestamp(missing, 'M-d-yyyy')", "null", "\$missing::null"),
+            ExprFunctionTestCase("to_timestamp('07-20-1969', missing)", "null", "\$missing::null"),
             ExprFunctionTestCase("to_timestamp(null, null)", "null")
         )
     }

@@ -16,7 +16,7 @@ class UpperEvaluationTest : EvaluatorTestBase() {
     @ParameterizedTest
     @ArgumentsSource(UpperPassCases::class)
     fun runPassTests(testCase: ExprFunctionTestCase) =
-        runEvaluatorTestCase(testCase.source, expectedResult = testCase.expectedLegacyModeResult)
+        runEvaluatorTestCase(testCase.source, expectedResult = testCase.expectedLegacyModeResult, expectedPermissiveModeResult = testCase.expectedPermissiveModeResult)
 
     class UpperPassCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(
@@ -28,7 +28,7 @@ class UpperEvaluationTest : EvaluatorTestBase() {
             ExprFunctionTestCase("upper('abcdef')", "\"ABCDEF\""),
             ExprFunctionTestCase("upper('ABCDEF')", "\"ABCDEF\""),
             ExprFunctionTestCase("upper(null)", "null"),
-            ExprFunctionTestCase("upper(missing)", "null"),
+            ExprFunctionTestCase("upper(missing)", "null", "\$missing::null"),
             ExprFunctionTestCase("upper('123\$%(*&')", "\"123\$%(*&\""),
             ExprFunctionTestCase("upper('ȴȵ💩z💋')", "\"ȴȵ💩Z💋\""),
             ExprFunctionTestCase("upper('話家身圧費谷料村能計税金')", "\"話家身圧費谷料村能計税金\"")

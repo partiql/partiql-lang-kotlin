@@ -29,12 +29,12 @@ class EvaluatingCompilerCastTest : CastTestBase() {
 
     @ParameterizedTest
     @ArgumentsSource(ConfiguredCastArguments::class)
-    fun configuredCast(configuredCastCase: ConfiguredCastCase) = configuredCastCase.assertCase()
+    fun configuredCast(configuredCastCase: ConfiguredCastCase) = configuredCastCase.assertCase(ExpectedResultFormat.PARTIQL_STRICT)
 
     @ParameterizedTest
     @ArgumentsSource(DateTimeConfiguredCastArguments::class)
     fun dateTimeConfiguredCast(dateTimeConfiguredCastCase: ConfiguredCastCase) =
         dateTimeConfiguredCastCase.assertCase(
-            ExpectedResultFormat.ION
+            ExpectedResultFormat.PARTIQL_STRICT
         )
 }

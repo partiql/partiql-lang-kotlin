@@ -16,7 +16,7 @@ class SizeEvaluationTest : EvaluatorTestBase() {
     @ParameterizedTest
     @ArgumentsSource(SizePassCases::class)
     fun runPassTests(testCase: ExprFunctionTestCase) =
-        runEvaluatorTestCase(testCase.source, expectedResult = testCase.expectedLegacyModeResult)
+        runEvaluatorTestCase(testCase.source, expectedResult = testCase.expectedLegacyModeResult, expectedPermissiveModeResult = testCase.expectedPermissiveModeResult)
 
     class SizePassCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(
@@ -35,7 +35,7 @@ class SizeEvaluationTest : EvaluatorTestBase() {
             ExprFunctionTestCase("size({})", "0"),
             ExprFunctionTestCase("size(`{}`)", "0"),
             ExprFunctionTestCase("size(null)", "null"),
-            ExprFunctionTestCase("size(missing)", "null")
+            ExprFunctionTestCase("size(missing)", "null", "\$missing::null")
         )
     }
 

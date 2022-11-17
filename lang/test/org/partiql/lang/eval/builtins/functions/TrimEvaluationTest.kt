@@ -19,7 +19,7 @@ class TrimEvaluationTest : EvaluatorTestBase() {
     @ParameterizedTest
     @ArgumentsSource(CharLengthPassCases::class)
     fun runPassTests(testCase: ExprFunctionTestCase) =
-        runEvaluatorTestCase(testCase.source, expectedResult = testCase.expectedLegacyModeResult)
+        runEvaluatorTestCase(testCase.source, expectedResult = testCase.expectedLegacyModeResult, expectedPermissiveModeResult = testCase.expectedPermissiveModeResult)
 
     class CharLengthPassCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(
@@ -57,7 +57,7 @@ class TrimEvaluationTest : EvaluatorTestBase() {
                     SELECT trim(both el from '   1ab1  ') AS trimmed 
                     FROM <<' 1'>> AS el 
                 """.trimIndent(),
-                "[{trimmed:\"ab\"}]"
+                "\$bag::[{trimmed:\"ab\"}]"
             ),
             ExprFunctionTestCase("trim('12' from '1212b1212')", "\"b\""),
             ExprFunctionTestCase("trim('12' from '1212b')", "\"b\""),
@@ -67,11 +67,11 @@ class TrimEvaluationTest : EvaluatorTestBase() {
             ExprFunctionTestCase("trim(null from '')", "null"),
             ExprFunctionTestCase("trim('' from null)", "null"),
             ExprFunctionTestCase("trim(null)", "null"),
-            ExprFunctionTestCase("trim(both missing from '')", "null"),
-            ExprFunctionTestCase("trim(both '' from missing)", "null"),
-            ExprFunctionTestCase("trim(missing from '')", "null"),
-            ExprFunctionTestCase("trim('' from missing)", "null"),
-            ExprFunctionTestCase("trim(missing)", "null"),
+            ExprFunctionTestCase("trim(both missing from '')", "null", "\$missing::null"),
+            ExprFunctionTestCase("trim(both '' from missing)", "null", "\$missing::null"),
+            ExprFunctionTestCase("trim(missing from '')", "null", "\$missing::null"),
+            ExprFunctionTestCase("trim('' from missing)", "null", "\$missing::null"),
+            ExprFunctionTestCase("trim(missing)", "null", "\$missing::null"),
             // test for upper case trim spec
             ExprFunctionTestCase("trim(BOTH from '   string   ')", "\"string\""),
             ExprFunctionTestCase("trim(LEADING from '   string   ')", "\"string   \""),

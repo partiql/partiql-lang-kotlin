@@ -20,7 +20,7 @@ class ToStringEvaluationTest : EvaluatorTestBase() {
     @ParameterizedTest
     @ArgumentsSource(ToStringPassCases::class)
     fun runPassTests(testCase: ExprFunctionTestCase) =
-        runEvaluatorTestCase(testCase.source, expectedResult = testCase.expectedLegacyModeResult)
+        runEvaluatorTestCase(testCase.source, expectedResult = testCase.expectedLegacyModeResult, expectedPermissiveModeResult = testCase.expectedPermissiveModeResult)
 
     class ToStringPassCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(
@@ -35,8 +35,8 @@ class ToStringEvaluationTest : EvaluatorTestBase() {
             ExprFunctionTestCase("to_string(`0001-03-09`, 'y')", "\"1\""),
             ExprFunctionTestCase("to_string(`9999-03-09`, null)", "null"),
             ExprFunctionTestCase("to_string(null, 'M/d/y')", "null"),
-            ExprFunctionTestCase("to_string(`9999-03-09`, missing)", "null"),
-            ExprFunctionTestCase("to_string(missing, 'M/d/y')", "null"),
+            ExprFunctionTestCase("to_string(`9999-03-09`, missing)", "null", "\$missing::null"),
+            ExprFunctionTestCase("to_string(missing, 'M/d/y')", "null", "\$missing::null"),
             ExprFunctionTestCase("to_string(`1969-07-20T20:18Z`, 'MMMM d, y')", "\"July 20, 1969\""),
             ExprFunctionTestCase("to_string(`1969-07-20T20:18Z`, 'MMM d, yyyy')", "\"Jul 20, 1969\""),
             ExprFunctionTestCase("to_string(`1969-07-20T20:18Z`, 'M-d-yy')", "\"7-20-69\""),

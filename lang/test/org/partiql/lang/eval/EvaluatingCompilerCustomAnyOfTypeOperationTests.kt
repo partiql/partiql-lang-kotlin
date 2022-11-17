@@ -5,6 +5,7 @@ import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.anyOfType
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.esAny
+import org.partiql.lang.eval.evaluatortestframework.ExpectedResultFormat
 import org.partiql.lang.types.BagType
 import org.partiql.lang.types.CustomType
 import org.partiql.lang.types.ListType
@@ -42,10 +43,10 @@ class EvaluatingCompilerCustomAnyOfTypeOperationTests : CastTestBase() {
         private val esAnyCastIdentityCases = listOf(
             listOf(
                 // null/missing
-                case("NULL", "null", CastQuality.LOSSLESS) {
+                case("NULL", "NULL", CastQuality.LOSSLESS) {
                     assertEquals(ExprValueType.NULL, it.type)
                 },
-                case("MISSING", "null", FixSemantics(CastQuality.LOSSY)) {
+                case("MISSING", "MISSING", FixSemantics(CastQuality.LOSSY)) {
                     assertEquals(ExprValueType.MISSING, it.type)
                 },
                 // bool
@@ -55,9 +56,9 @@ class EvaluatingCompilerCustomAnyOfTypeOperationTests : CastTestBase() {
                 case("99", "99", CastQuality.LOSSLESS),
                 case("100", "100", CastQuality.LOSSLESS),
                 // float
-                case("`10e0`", "10e0", CastQuality.LOSSLESS),
+                case("`10e0`", "`10e0`", CastQuality.LOSSLESS),
                 // string
-                case("'hey now'", "\"hey now\"", CastQuality.LOSSLESS)
+                case("'hey now'", "'hey now'", CastQuality.LOSSLESS)
             ).types(listOf("ES_ANY"))
         ).flatten()
 
@@ -68,11 +69,11 @@ class EvaluatingCompilerCustomAnyOfTypeOperationTests : CastTestBase() {
                 case("`123e0`", "123", CastQuality.LOSSLESS),
                 // decimal -> float
                 //     This round-trips as 55.1 -> 55.1e0 -> 55.100000000000001421085471520200371742
-                case("55.1", "55.1e0", CastQuality.LOSSY),
+                case("55.1", "`55.1e0`", CastQuality.LOSSY),
                 // timestamp -> string
-                case("`2016-02-27T12:34:56Z`", "\"2016-02-27T12:34:56Z\"", CastQuality.LOSSLESS),
+                case("`2016-02-27T12:34:56Z`", "'2016-02-27T12:34:56Z'", CastQuality.LOSSLESS),
                 // symbol -> string
-                case("`'moo cow'`", "\"moo cow\"", CastQuality.LOSSLESS),
+                case("`'moo cow'`", "'moo cow'", CastQuality.LOSSLESS),
                 // clob
                 case("`{{\"moo\"}}`", ErrorCode.EVALUATOR_CAST_FAILED),
                 // blob
@@ -84,12 +85,12 @@ class EvaluatingCompilerCustomAnyOfTypeOperationTests : CastTestBase() {
                 //   This round trips from <sexp(<sym>, <sym>, <list(<timestamp>)>)> to <sexp(<str>, <str>, <list(<str>)>)>
                 case(
                     "`(a b [2099-01-21T12:34:56Z])`",
-                    "[\"a\", \"b\", [\"2099-01-21T12:34:56Z\"]]",
+                    "`[\"a\", \"b\", [\"2099-01-21T12:34:56Z\"]]`",
                     FixSemantics(CastQuality.LOSSLESS)
                 ),
                 case("`(a b [2099-01-21T12:34:56Z, {{Ymxhcmc=}}])`", ErrorCode.EVALUATOR_CAST_FAILED),
                 // bag
-                case("<<99, 20000, MISSING>>", "[99, 20000, null]", FixSemantics(CastQuality.LOSSY)) {
+                case("<<99, 20000, MISSING>>", "[99, 20000, MISSING]", FixSemantics(CastQuality.LOSSY)) {
                     assertEquals(ExprValueType.LIST, it.type)
                     assertEquals(ExprValueType.MISSING, it.ordinalBindings[2]?.type)
                 },
@@ -97,7 +98,7 @@ class EvaluatingCompilerCustomAnyOfTypeOperationTests : CastTestBase() {
                 // struct
                 case(
                     "`{a: 1000, b: 1312000.1e0, c: 9999000.0, d: null}`",
-                    "{a: 1000, b: 1312000, c: 9999000, d: null}",
+                    "{'a': 1000, 'b': 1312000, 'c': 9999000, 'd': NULL}",
                     CastQuality.LOSSY
                 ),
                 case(
@@ -179,7 +180,7 @@ class EvaluatingCompilerCustomAnyOfTypeOperationTests : CastTestBase() {
 
     @ParameterizedTest
     @ArgumentsSource(EsAnyCastConfiguredCases::class)
-    fun esAnyCast(configuredCastCase: CastTestBase.ConfiguredCastCase) = configuredCastCase.assertCase()
+    fun esAnyCast(configuredCastCase: CastTestBase.ConfiguredCastCase) = configuredCastCase.assertCase(ExpectedResultFormat.PARTIQL_STRICT)
     class EsAnyCastConfiguredCases : ArgumentsProviderBase() {
         override fun getParameters() = esAnyCastCases.toConfiguredCases()
     }

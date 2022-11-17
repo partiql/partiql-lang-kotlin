@@ -8,8 +8,8 @@ import org.partiql.lang.errors.ErrorBehaviorInPermissiveMode
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.TypingMode
-import org.partiql.lang.eval.cloneAndRemoveBagAndMissingAnnotations
 import org.partiql.lang.eval.exprEquals
+import org.partiql.lang.eval.strictEquals
 
 internal class PipelineEvaluatorTestAdapter(
     private val pipelineFactory: PipelineFactory
@@ -65,7 +65,7 @@ internal class PipelineEvaluatorTestAdapter(
             }
 
         when (tc.expectedResultFormat) {
-            ExpectedResultFormat.ION, ExpectedResultFormat.ION_WITHOUT_BAG_AND_MISSING_ANNOTATIONS -> {
+            ExpectedResultFormat.ION -> {
                 val expectedIonResult = assertDoesNotThrow(
                     EvaluatorTestFailureReason.FAILED_TO_PARSE_ION_EXPECTED_RESULT,
                     { tc.testDetails(note = note) }
@@ -73,19 +73,14 @@ internal class PipelineEvaluatorTestAdapter(
                     ION.singleValue(expectedResult)
                 }
 
-                val actualIonResult = actualExprValueResult.ionValue.let {
-                    if (tc.expectedResultFormat == ExpectedResultFormat.ION_WITHOUT_BAG_AND_MISSING_ANNOTATIONS)
-                        it.cloneAndRemoveBagAndMissingAnnotations()
-                    else
-                        it
-                }
+                val actualIonResult = actualExprValueResult.ionValue
                 assertEquals(
                     expectedIonResult,
                     actualIonResult,
                     unexpectedResultErrorCode
                 ) { tc.testDetails(note = note, actualResult = actualIonResult.toString()) }
             }
-            ExpectedResultFormat.PARTIQL -> {
+            ExpectedResultFormat.PARTIQL_STRICT -> {
                 val expectedExprValueResult = assertDoesNotThrow(
                     EvaluatorTestFailureReason.FAILED_TO_EVALUATE_PARTIQL_EXPECTED_RESULT,
                     { tc.testDetails(note = note) }
@@ -93,21 +88,13 @@ internal class PipelineEvaluatorTestAdapter(
                     pipeline.evaluate(expectedResult)
                 }
 
-                if (!expectedExprValueResult.exprEquals(actualExprValueResult)) {
+                if (!expectedExprValueResult.strictEquals(actualExprValueResult)) {
                     throw EvaluatorAssertionFailedError(
                         EvaluatorTestFailureReason.UNEXPECTED_QUERY_RESULT,
                         tc.testDetails(note = note, actualResult = actualExprValueResult.toString())
                     )
                 }
                 Unit
-            }
-            ExpectedResultFormat.STRING -> {
-                val actualResultString = actualExprValueResult.toString()
-                assertEquals(
-                    expectedResult,
-                    actualResultString,
-                    EvaluatorTestFailureReason.UNEXPECTED_QUERY_RESULT,
-                ) { tc.testDetails(note = note, actualResult = actualResultString) }
             }
         }.let { }
         tc.extraResultAssertions(actualExprValueResult)
