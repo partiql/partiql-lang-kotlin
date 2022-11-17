@@ -372,9 +372,11 @@ edgeAbbrev
  */
 
 tableReference
-    : lhs=tableReference tableJoined[$lhs.ctx] # TableRefBase
-    | tableNonJoin                             # TableRefBase
-    | PAREN_LEFT tableReference PAREN_RIGHT    # TableWrapped
+    : lhs=tableReference joinType? CROSS JOIN rhs=joinRhs     # TableCrossJoin
+    | lhs=tableReference COMMA rhs=joinRhs                    # TableCrossJoin
+    | lhs=tableReference joinType? JOIN rhs=joinRhs joinSpec  # TableQualifiedJoin
+    | tableNonJoin                                            # TableRefBase
+    | PAREN_LEFT tableReference PAREN_RIGHT                   # TableWrapped
     ;
 
 tableNonJoin
@@ -390,19 +392,6 @@ tableBaseReference
 
 tableUnpivot
     : UNPIVOT expr asIdent? atIdent? byIdent?;
-
-tableJoined[ParserRuleContext lhs]
-    : tableCrossJoin[$lhs]
-    | tableQualifiedJoin[$lhs]
-    ;
-
-tableCrossJoin[ParserRuleContext lhs]
-    : joinType? CROSS JOIN rhs=joinRhs
-    | COMMA rhs=joinRhs
-    ;
-
-tableQualifiedJoin[ParserRuleContext lhs]
-    : joinType? JOIN rhs=joinRhs joinSpec;
 
 joinRhs
     : tableNonJoin                           # JoinRhsBase
