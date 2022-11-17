@@ -15,13 +15,16 @@
 package org.partiql.lang.syntax
 
 import com.amazon.ion.IonSystem
+import com.amazon.ion.system.IonSystemBuilder
+import org.antlr.v4.runtime.BailErrorStrategy
 import org.antlr.v4.runtime.BaseErrorListener
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
-import org.antlr.v4.runtime.Lexer
 import org.antlr.v4.runtime.RecognitionException
 import org.antlr.v4.runtime.Recognizer
 import org.antlr.v4.runtime.Token
+import org.antlr.v4.runtime.atn.PredictionMode
+import org.antlr.v4.runtime.misc.ParseCancellationException
 import org.antlr.v4.runtime.tree.ParseTree
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.errors.ErrorCode
@@ -40,16 +43,15 @@ import org.partiql.lang.syntax.antlr.PartiQLTokens as GeneratedLexer
  * to convert the [ParseTree] into a [PartiqlAst.Statement].
  */
 internal class PartiQLParser(
-    private val ion: IonSystem,
+    private val ion: IonSystem = IonSystemBuilder.standard().build(),
     val customTypes: List<CustomType> = listOf()
 ) : Parser {
 
     override fun parseAstStatement(source: String): PartiqlAst.Statement {
         // TODO: Research use-case of parameters and implementation -- see https://github.com/partiql/partiql-docs/issues/23
         val parameterIndexes = calculateTokenToParameterOrdinals(source)
-        val lexer = getLexer(source)
         val tree = try {
-            parseQuery(lexer)
+            parseQuery(source)
         } catch (e: StackOverflowError) {
             val msg = "Input query too large. This error typically occurs when there are several nested " +
                 "expressions/predicates and can usually be fixed by simplifying expressions."
@@ -59,26 +61,65 @@ internal class PartiQLParser(
         return visitor.visit(tree) as PartiqlAst.Statement
     }
 
-    private fun parseQuery(lexer: Lexer): ParseTree {
-        val parser = getParser(lexer)
+    /**
+     * As a performance optimization, first attempt to parse using ANTLR's fast, but less powerful [PredictionMode.SLL],
+     * falling back to the slower [PredictionMode.LL] that is capable of parsing all valid ANTLR grammars.
+     */
+    private fun parseQuery(input: String): ParseTree = try {
+        parseUsingSLL(input)
+    } catch (ex: ParseCancellationException) {
+        parseUsingLL(input)
+    }
+
+    internal fun parseUsingSLL(input: String): org.partiql.lang.syntax.antlr.PartiQLParser.StatementContext {
+        val parser = createParserSLL(input)
         return parser.statement()
     }
 
-    private fun getLexer(source: String): Lexer {
-        val inputStream = CharStreams.fromStream(source.byteInputStream(StandardCharsets.UTF_8), StandardCharsets.UTF_8)
-        val lexer = GeneratedLexer(inputStream)
-        val handler = TokenizeErrorListener(ion)
-        lexer.removeErrorListeners()
-        lexer.addErrorListener(handler)
-        return lexer
+    internal fun parseUsingLL(input: String): org.partiql.lang.syntax.antlr.PartiQLParser.StatementContext {
+        val parser = createParserLL(input)
+        return parser.statement()
     }
 
-    private fun getParser(lexer: Lexer): GeneratedParser {
-        val tokens = CommonTokenStream(lexer)
-        val parser = GeneratedParser(tokens)
-        val handler = ParseErrorListener(ion)
+    private fun createTokenStream(query: String): CommonTokenStream {
+        val inputStream = CharStreams.fromStream(query.byteInputStream(StandardCharsets.UTF_8), StandardCharsets.UTF_8)
+        val handler = TokenizeErrorListener(ion)
+        val lexer = GeneratedLexer(inputStream)
+        lexer.removeErrorListeners()
+        lexer.addErrorListener(handler)
+        return CommonTokenStream(lexer)
+    }
+
+    /**
+     * Creates a [GeneratedParser] that uses [PredictionMode.SLL] and the [BailErrorStrategy]. The [GeneratedParser],
+     * upon seeing a syntax error, will throw a [ParseCancellationException] due to the [GeneratedParser.getErrorHandler]
+     * being a [BailErrorStrategy]. The purpose of this is to throw syntax errors as quickly as possible once encountered.
+     * As noted by the [PredictionMode.SLL] documentation, to guarantee results, it is useful to follow-up a failed parse
+     * by parsing with [PredictionMode.LL] -- see [createParserLL] for more information.
+     * See the JavaDocs for [PredictionMode.SLL] and [BailErrorStrategy] for more information.
+     */
+    private fun createParserSLL(query: String): GeneratedParser {
+        val stream = createTokenStream(query)
+        val parser = GeneratedParser(stream)
+        parser.reset()
+        parser.interpreter.predictionMode = PredictionMode.SLL
         parser.removeErrorListeners()
-        parser.addErrorListener(handler)
+        parser.errorHandler = BailErrorStrategy()
+        return parser
+    }
+
+    /**
+     * Creates a [GeneratedParser] that uses [PredictionMode.LL]. This method is capable of parsing all valid inputs
+     * for a grammar, but is slower than [PredictionMode.SLL]. Upon seeing a syntax error, this parser throws a
+     * [ParserException].
+     */
+    private fun createParserLL(query: String): GeneratedParser {
+        val stream = createTokenStream(query)
+        val parser = GeneratedParser(stream)
+        parser.reset()
+        parser.interpreter.predictionMode = PredictionMode.LL
+        parser.removeErrorListeners()
+        parser.addErrorListener(ParseErrorListener(ion))
         return parser
     }
 
@@ -88,10 +129,10 @@ internal class PartiQLParser(
      * NOTE: This needs to create its own lexer. Cannot share with others due to consumption of token stream.
      */
     private fun calculateTokenToParameterOrdinals(query: String): Map<Int, Int> {
-        val lexer = getLexer(query)
+        val stream = createTokenStream(query)
         val tokenIndexToParameterIndex = mutableMapOf<Int, Int>()
         var parametersFound = 0
-        val tokenIter = CommonTokenStream(lexer).also { it.fill() }.tokens.iterator()
+        val tokenIter = stream.also { it.fill() }.tokens.iterator()
         while (tokenIter.hasNext()) {
             val token = tokenIter.next()
             if (token.type == GeneratedParser.QUESTION_MARK) {
