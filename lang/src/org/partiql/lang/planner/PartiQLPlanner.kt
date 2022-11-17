@@ -60,6 +60,6 @@ interface PartiQLPlanner {
      */
     class Options(
         val allowedUndefinedVariables: Boolean = false,
-        val typedOpBehavior: TypedOpBehavior = TypedOpBehavior.LEGACY
+        val typedOpBehavior: TypedOpBehavior = TypedOpBehavior.HONOR_PARAMETERS
     )
 }
