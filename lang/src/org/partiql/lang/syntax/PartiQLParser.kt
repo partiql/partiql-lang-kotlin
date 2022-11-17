@@ -62,9 +62,8 @@ internal class PartiQLParser(
     }
 
     /**
-     * To reduce latency costs, the [PartiQLParser] attempts to use [PredictionMode.SLL] and falls back to
-     * [PredictionMode.LL] if a [ParseCancellationException] is thrown by the [BailErrorStrategy]. See [createParserSLL]
-     * and [createParserLL] for more information.
+     * As a performance optimization, first attempt to parse using ANTLR's fast, but less powerful [PredictionMode.SLL],
+     * falling back to the slower [PredictionMode.LL] that is capable of parsing all valid ANTLR grammars.
      */
     private fun parseQuery(input: String): ParseTree = try {
         parseUsingSLL(input)
@@ -110,8 +109,9 @@ internal class PartiQLParser(
     }
 
     /**
-     * Creates a [GeneratedParser] that uses [PredictionMode.LL]. This is the fastest prediction mode that guarantees
-     * correct parse results. Upon seeing a syntax error, this parser throws a [ParserException].
+     * Creates a [GeneratedParser] that uses [PredictionMode.LL]. This method is capable of parsing all valid inputs
+     * for a grammar, but is slower than [PredictionMode.SLL]. Upon seeing a syntax error, this parser throws a
+     * [ParserException].
      */
     private fun createParserLL(query: String): GeneratedParser {
         val stream = createTokenStream(query)
