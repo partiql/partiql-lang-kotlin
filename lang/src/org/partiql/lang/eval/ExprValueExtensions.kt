@@ -723,7 +723,7 @@ fun Sequence<ExprValue>.multiplicities(): TreeMap<ExprValue, Int> {
 }
 
 /**
- * Used to verify the actual `ExprValue` is the same as the expected `ExprValue1 in test
+ * Used to verify the actual `ExprValue` is the same as the expected `ExprValue` in test
  */
 internal fun ExprValue.strictEquals(other: ExprValue): Boolean {
     if (type !== other.type) {

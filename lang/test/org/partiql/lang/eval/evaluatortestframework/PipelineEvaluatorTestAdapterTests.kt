@@ -5,7 +5,10 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
 import org.partiql.lang.errors.ErrorCode
+import org.partiql.lang.eval.DATE_ANNOTATION
 import org.partiql.lang.eval.EvaluationSession
+import org.partiql.lang.eval.MISSING_ANNOTATION
+import org.partiql.lang.eval.TIME_ANNOTATION
 import org.partiql.lang.util.propertyValueMapOf
 
 private fun assertTestFails(
@@ -73,6 +76,48 @@ class PipelineEvaluatorTestAdapterTests {
                     query = "1 + MISSING", // Note:unknown propagation works differently in legacy vs permissive modes.
                     expectedResult = "NULL",
                     expectedPermissiveModeResult = "MISSING"
+                ),
+                EvaluationSession.standard()
+            )
+        }
+    }
+
+    @Test
+    fun `runEvaluatorTestCase - expected result matches - ExpectedResultFormat-ION (missing)`() {
+        assertDoesNotThrow("happy path - should not throw") {
+            astPipelineTestAdapter.runEvaluatorTestCase(
+                EvaluatorTestCase(
+                    query = "MISSING",
+                    expectedResult = "$MISSING_ANNOTATION::null",
+                    expectedResultFormat = ExpectedResultFormat.ION
+                ),
+                EvaluationSession.standard()
+            )
+        }
+    }
+
+    @Test
+    fun `runEvaluatorTestCase - expected result matches - ExpectedResultFormat-ION (date)`() {
+        assertDoesNotThrow("happy path - should not throw") {
+            astPipelineTestAdapter.runEvaluatorTestCase(
+                EvaluatorTestCase(
+                    query = "DATE '2001-01-01'",
+                    expectedResult = "$DATE_ANNOTATION::2001-01-01",
+                    expectedResultFormat = ExpectedResultFormat.ION
+                ),
+                EvaluationSession.standard()
+            )
+        }
+    }
+
+    @Test
+    fun `runEvaluatorTestCase - expected result matches - ExpectedResultFormat-ION (time)`() {
+        assertDoesNotThrow("happy path - should not throw") {
+            astPipelineTestAdapter.runEvaluatorTestCase(
+                EvaluatorTestCase(
+                    query = "TIME '12:12:01'",
+                    expectedResult = "$TIME_ANNOTATION::{hour:12,minute:12,second:1.,timezone_hour:null.int,timezone_minute:null.int}",
+                    expectedResultFormat = ExpectedResultFormat.ION
                 ),
                 EvaluationSession.standard()
             )
