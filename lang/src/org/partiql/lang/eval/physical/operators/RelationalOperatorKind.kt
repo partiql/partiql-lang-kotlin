@@ -1,5 +1,7 @@
 package org.partiql.lang.eval.physical.operators
 
+import org.partiql.lang.eval.physical.window.ExperimentalWindowFunc
+
 /**
  * Indicates which physical relational operator a [RelationalOperatorFactory] can create instances of.
  *
@@ -14,7 +16,6 @@ enum class RelationalOperatorKind {
     UNPIVOT,
     FILTER,
     JOIN,
-    // TODO: Remove from experimental once https://github.com/partiql/partiql-docs/issues/31 is resolved and a RFC is approved
     WINDOW,
     OFFSET,
     LIMIT,

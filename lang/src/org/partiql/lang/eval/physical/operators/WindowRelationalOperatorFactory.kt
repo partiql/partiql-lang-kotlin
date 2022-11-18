@@ -1,6 +1,7 @@
 package org.partiql.lang.eval.physical.operators
 
 import org.partiql.lang.domains.PartiqlPhysical
+import org.partiql.lang.eval.physical.SetVariableFunc
 import org.partiql.lang.eval.physical.window.ExperimentalWindowFunc
 import org.partiql.lang.eval.physical.window.WindowFunction
 
@@ -24,5 +25,9 @@ abstract class WindowRelationalOperatorFactory(name: String) : RelationalOperato
 class CompiledWindowFunction(
     val func: WindowFunction,
     val parameters: List<ValueExpression>,
+    /**
+     * This is [PartiqlPhysical.VarDecl] instead of [SetVariableFunc] because we would like to access the index of variable in the register
+     * when processing rows within the partition.
+     */
     val windowVarDecl: PartiqlPhysical.VarDecl
 )
