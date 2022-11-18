@@ -701,8 +701,8 @@ internal fun createUniqueExprValueFilter(): (ExprValue) -> Boolean {
 }
 
 fun Sequence<ExprValue>.distinct(): Sequence<ExprValue> {
-    val seen = TreeSet(DEFAULT_COMPARATOR)
     return sequence {
+        val seen = TreeSet(DEFAULT_COMPARATOR)
         this@distinct.forEach {
             if (!seen.contains(it)) {
                 seen.add(it.unnamedValue())

@@ -55,17 +55,10 @@ class EvaluatorStaticTypeTests {
             "unpivotMissingWithAsAndAt",
             "unpivotMissingCrossJoinWithAsAndAt",
 
-            // TODO: why are these failing due to unexpected (empty) result?
-            "selectDistinct",
+            // TODO: why are these failing?
             "selectDistinctStarBags",
             "selectDistinctStarLists",
             "selectDistinctStarMixed",
-            "selectDistinctSubQuery",
-            "selectDistinctWithSubQuery",
-            "selectDistinctStarStructs",
-            "selectDistinctValue",
-            "selectDistinctExpressionAndWhere",
-            "selectDistinctExpression",
             "nestedSelectJoinLimit",
 
             // STIR does not support path wildcards -i.e. `foo[*]` yet
