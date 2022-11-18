@@ -11,7 +11,6 @@ import org.partiql.lang.eval.builtins.ExprFunctionTestCase
 import org.partiql.lang.eval.builtins.checkInvalidArity
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorErrorTestCase
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestTarget
-import org.partiql.lang.eval.evaluatortestframework.ExpectedResultFormat
 import org.partiql.lang.util.ArgumentsProviderBase
 import org.partiql.lang.util.propertyValueMapOf
 import org.partiql.lang.util.to
@@ -31,7 +30,6 @@ class DynamicLookupExprFunctionTest : EvaluatorTestBase() {
             query = testCase.source,
             session = session,
             expectedResult = testCase.expectedLegacyModeResult,
-            expectedResultFormat = ExpectedResultFormat.ION,
             target = EvaluatorTestTarget.PLANNER_PIPELINE
         )
 

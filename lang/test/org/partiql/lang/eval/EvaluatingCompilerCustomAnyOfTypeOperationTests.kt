@@ -5,7 +5,6 @@ import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.anyOfType
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.esAny
-import org.partiql.lang.eval.evaluatortestframework.ExpectedResultFormat
 import org.partiql.lang.types.BagType
 import org.partiql.lang.types.CustomType
 import org.partiql.lang.types.ListType
@@ -180,7 +179,7 @@ class EvaluatingCompilerCustomAnyOfTypeOperationTests : CastTestBase() {
 
     @ParameterizedTest
     @ArgumentsSource(EsAnyCastConfiguredCases::class)
-    fun esAnyCast(configuredCastCase: CastTestBase.ConfiguredCastCase) = configuredCastCase.assertCase(ExpectedResultFormat.PARTIQL_STRICT)
+    fun esAnyCast(configuredCastCase: CastTestBase.ConfiguredCastCase) = configuredCastCase.assertCase()
     class EsAnyCastConfiguredCases : ArgumentsProviderBase() {
         override fun getParameters() = esAnyCastCases.toConfiguredCases()
     }

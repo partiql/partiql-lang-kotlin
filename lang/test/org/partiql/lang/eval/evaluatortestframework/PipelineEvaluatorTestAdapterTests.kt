@@ -5,10 +5,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
 import org.partiql.lang.errors.ErrorCode
-import org.partiql.lang.eval.DATE_ANNOTATION
 import org.partiql.lang.eval.EvaluationSession
-import org.partiql.lang.eval.MISSING_ANNOTATION
-import org.partiql.lang.eval.TIME_ANNOTATION
 import org.partiql.lang.util.propertyValueMapOf
 
 private fun assertTestFails(
@@ -56,13 +53,12 @@ class PipelineEvaluatorTestAdapterTests {
     //
 
     @Test
-    fun `runEvaluatorTestCase - expected result matches - ExpectedResultFormat-ION`() {
+    fun `runEvaluatorTestCase - expected result matches`() {
         assertDoesNotThrow("happy path - should not throw") {
             astPipelineTestAdapter.runEvaluatorTestCase(
                 EvaluatorTestCase(
                     query = "1",
-                    expectedResult = "1",
-                    expectedResultFormat = ExpectedResultFormat.ION
+                    expectedResult = "1"
                 ),
                 EvaluationSession.standard()
             )
@@ -70,14 +66,13 @@ class PipelineEvaluatorTestAdapterTests {
     }
 
     @Test
-    fun `runEvaluatorTestCase - different permissive mode result - ExpectedResultFormat-ION`() {
+    fun `runEvaluatorTestCase - different permissive mode result`() {
         assertDoesNotThrow("happy path - should not throw") {
             astPipelineTestAdapter.runEvaluatorTestCase(
                 EvaluatorTestCase(
                     query = "1 + MISSING", // Note:unknown propagation works differently in legacy vs permissive modes.
-                    expectedResult = "null",
-                    expectedPermissiveModeResult = "$MISSING_ANNOTATION::null",
-                    expectedResultFormat = ExpectedResultFormat.ION
+                    expectedResult = "NULL",
+                    expectedPermissiveModeResult = "MISSING"
                 ),
                 EvaluationSession.standard()
             )
@@ -85,103 +80,23 @@ class PipelineEvaluatorTestAdapterTests {
     }
 
     @Test
-    fun `runEvaluatorTestCase - expected result matches - ExpectedResultFormat-ION (missing)`() {
-        assertDoesNotThrow("happy path - should not throw") {
-            astPipelineTestAdapter.runEvaluatorTestCase(
-                EvaluatorTestCase(
-                    query = "MISSING",
-                    expectedResult = "$MISSING_ANNOTATION::null",
-                    expectedResultFormat = ExpectedResultFormat.ION
-                ),
-                EvaluationSession.standard()
-            )
-        }
-    }
-
-    @Test
-    fun `runEvaluatorTestCase - expected result matches - ExpectedResultFormat-ION (date)`() {
-        assertDoesNotThrow("happy path - should not throw") {
-            astPipelineTestAdapter.runEvaluatorTestCase(
-                EvaluatorTestCase(
-                    query = "DATE '2001-01-01'",
-                    expectedResult = "$DATE_ANNOTATION::2001-01-01",
-                    expectedResultFormat = ExpectedResultFormat.ION
-                ),
-                EvaluationSession.standard()
-            )
-        }
-    }
-
-    @Test
-    fun `runEvaluatorTestCase - expected result matches - ExpectedResultFormat-ION (time)`() {
-        assertDoesNotThrow("happy path - should not throw") {
-            astPipelineTestAdapter.runEvaluatorTestCase(
-                EvaluatorTestCase(
-                    query = "TIME '12:12:01'",
-                    expectedResult = "$TIME_ANNOTATION::{hour:12,minute:12,second:1.,timezone_hour:null.int,timezone_minute:null.int}",
-                    expectedResultFormat = ExpectedResultFormat.ION
-                ),
-                EvaluationSession.standard()
-            )
-        }
-    }
-
-    @Test
-    fun `runEvaluatorTestCase - expected result does not match - ExpectedResultFormat-ION mode`() {
+    fun `runEvaluatorTestCase - expected result does not match`() {
         assertTestFails(
             EvaluatorTestFailureReason.UNEXPECTED_QUERY_RESULT,
             EvaluatorTestCase(
                 query = "1",
-                expectedResult = "2",
-                expectedResultFormat = ExpectedResultFormat.ION
+                expectedResult = "2"
             )
         )
     }
 
     @Test
-    fun `runEvaluatorTestCase - expected result does not match - ExpectedResultFormat-PARTIQL mode`() {
-        assertTestFails(
-            EvaluatorTestFailureReason.UNEXPECTED_QUERY_RESULT,
-            EvaluatorTestCase(
-                query = "1",
-                expectedResult = "2",
-                expectedResultFormat = ExpectedResultFormat.PARTIQL_STRICT
-            )
-        )
-    }
-
-    @Test
-    fun `runEvaluatorTestCase - expected result does not match - ExpectedResultFormat-STRING mode`() {
-        assertTestFails(
-            EvaluatorTestFailureReason.UNEXPECTED_QUERY_RESULT,
-            EvaluatorTestCase(
-                query = "1",
-                expectedResult = "2",
-                expectedResultFormat = ExpectedResultFormat.PARTIQL_STRICT
-            )
-        )
-    }
-
-    @Test
-    fun `runEvaluatorTestCase - syntax error in expected result - ExpectedResultFormat-PARTIQL mode`() {
+    fun `runEvaluatorTestCase - syntax error in expected result mode`() {
         assertTestFails(
             EvaluatorTestFailureReason.FAILED_TO_EVALUATE_PARTIQL_EXPECTED_RESULT,
             EvaluatorTestCase(
                 query = "true",
-                expectedResult = "!@#$ syntax error intentional",
-                expectedResultFormat = ExpectedResultFormat.PARTIQL_STRICT
-            )
-        )
-    }
-
-    @Test
-    fun `runEvaluatorTestCase - syntax error in expected result - ExpectedResultFormat-ION`() {
-        assertTestFails(
-            EvaluatorTestFailureReason.FAILED_TO_PARSE_ION_EXPECTED_RESULT,
-            EvaluatorTestCase(
-                query = "true",
-                expectedResult = "!@#$ syntax error intentional",
-                expectedResultFormat = ExpectedResultFormat.ION
+                expectedResult = "!@#$ syntax error intentional"
             )
         )
     }

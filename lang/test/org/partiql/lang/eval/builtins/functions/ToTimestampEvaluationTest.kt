@@ -24,31 +24,31 @@ class ToTimestampEvaluationTest : EvaluatorTestBase() {
 
     class ToTimestampPassCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(
-            ExprFunctionTestCase("to_timestamp('1969-07-20T20:18:00Z')", "1969-07-20T20:18:00Z"),
-            ExprFunctionTestCase("to_timestamp('July 20, 1969', 'MMMM d, y')", "1969-07-20T"),
-            ExprFunctionTestCase("to_timestamp('Jul 20, 1969', 'MMM d, yyyy')", "1969-07-20T"),
-            ExprFunctionTestCase("to_timestamp('1969-07-20T20:18Z', 'yyyy-MM-dd''T''HH:mmX')", "1969-07-20T20:18Z"),
-            ExprFunctionTestCase("to_timestamp('July 20, 1969 8:18 PM', 'MMMM d, y h:m a')", "1969-07-20T20:18-00:00"),
-            ExprFunctionTestCase("to_timestamp('1969-07-20T20:18:00Z', 'yyyy-MM-dd''T''H:m:ssX')", "1969-07-20T20:18:00Z"),
-            ExprFunctionTestCase("to_timestamp('1969-07-20T20:18:01+08', 'yyyy-MM-dd''T''H:m:ssX')", "1969-07-20T20:18:01+08:00"),
+            ExprFunctionTestCase("to_timestamp('1969-07-20T20:18:00Z')", "`1969-07-20T20:18:00Z`"),
+            ExprFunctionTestCase("to_timestamp('July 20, 1969', 'MMMM d, y')", "`1969-07-20T`"),
+            ExprFunctionTestCase("to_timestamp('Jul 20, 1969', 'MMM d, yyyy')", "`1969-07-20T`"),
+            ExprFunctionTestCase("to_timestamp('1969-07-20T20:18Z', 'yyyy-MM-dd''T''HH:mmX')", "`1969-07-20T20:18Z`"),
+            ExprFunctionTestCase("to_timestamp('July 20, 1969 8:18 PM', 'MMMM d, y h:m a')", "`1969-07-20T20:18-00:00`"),
+            ExprFunctionTestCase("to_timestamp('1969-07-20T20:18:00Z', 'yyyy-MM-dd''T''H:m:ssX')", "`1969-07-20T20:18:00Z`"),
+            ExprFunctionTestCase("to_timestamp('1969-07-20T20:18:01+08', 'yyyy-MM-dd''T''H:m:ssX')", "`1969-07-20T20:18:01+08:00`"),
             ExprFunctionTestCase(
                 "to_timestamp('1969-07-20T20:18:02+0800', 'yyyy-MM-dd''T''H:m:ssXXXX')",
-                "1969-07-20T20:18:02+08:00"
+                "`1969-07-20T20:18:02+08:00`"
             ),
             ExprFunctionTestCase(
                 "to_timestamp('1969-07-20T20:18:03+08:00', 'yyyy-MM-dd''T''H:m:ssXXXXX')",
-                "1969-07-20T20:18:03+08:00"
+                "`1969-07-20T20:18:03+08:00`"
             ),
-            ExprFunctionTestCase("to_timestamp('1969-07-20T20:18:00Z')", "1969-07-20T20:18:00Z"),
-            ExprFunctionTestCase("to_timestamp('1969-07-20T20:18:03+08:00')", "1969-07-20T20:18:03+08:00"),
-            ExprFunctionTestCase("to_timestamp(null)", "null"),
-            ExprFunctionTestCase("to_timestamp(null, 'M-d-yyyy')", "null"),
-            ExprFunctionTestCase("to_timestamp('07-20-1969', null)", "null"),
-            ExprFunctionTestCase("to_timestamp(null, null)", "null"),
-            ExprFunctionTestCase("to_timestamp(missing)", "null", "\$missing::null"),
-            ExprFunctionTestCase("to_timestamp(missing, 'M-d-yyyy')", "null", "\$missing::null"),
-            ExprFunctionTestCase("to_timestamp('07-20-1969', missing)", "null", "\$missing::null"),
-            ExprFunctionTestCase("to_timestamp(null, null)", "null")
+            ExprFunctionTestCase("to_timestamp('1969-07-20T20:18:00Z')", "`1969-07-20T20:18:00Z`"),
+            ExprFunctionTestCase("to_timestamp('1969-07-20T20:18:03+08:00')", "`1969-07-20T20:18:03+08:00`"),
+            ExprFunctionTestCase("to_timestamp(null)", "NULL"),
+            ExprFunctionTestCase("to_timestamp(null, 'M-d-yyyy')", "NULL"),
+            ExprFunctionTestCase("to_timestamp('07-20-1969', null)", "NULL"),
+            ExprFunctionTestCase("to_timestamp(null, null)", "NULL"),
+            ExprFunctionTestCase("to_timestamp(missing)", "NULL", "MISSING"),
+            ExprFunctionTestCase("to_timestamp(missing, 'M-d-yyyy')", "NULL", "MISSING"),
+            ExprFunctionTestCase("to_timestamp('07-20-1969', missing)", "NULL", "MISSING"),
+            ExprFunctionTestCase("to_timestamp(null, null)", "NULL")
         )
     }
 

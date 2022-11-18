@@ -26,26 +26,26 @@ class ToStringEvaluationTest : EvaluatorTestBase() {
         override fun getParameters(): List<Any> = listOf(
             // Note that the amount of testing here is a bit on the light side because most of the testing for the formatting
             // functionality behind `to_string` is in TimestampTemporalAccessorTests.
-            ExprFunctionTestCase("to_string(`0500-03-09`, 'MM/dd/yyyy')", "\"03/09/0500\""),
-            ExprFunctionTestCase("to_string(`0500-03-09`, 'M/d/y')", "\"3/9/500\""),
-            ExprFunctionTestCase("to_string(`0001-03-09`, 'MM/dd/yyyy')", "\"03/09/0001\""),
-            ExprFunctionTestCase("to_string(`0001-03-09`, 'M/d/y')", "\"3/9/1\""),
-            ExprFunctionTestCase("to_string(`9999-03-09`, 'MM/dd/yyyy')", "\"03/09/9999\""),
-            ExprFunctionTestCase("to_string(`9999-03-09`, 'M/d/y')", "\"3/9/9999\""),
-            ExprFunctionTestCase("to_string(`0001-03-09`, 'y')", "\"1\""),
-            ExprFunctionTestCase("to_string(`9999-03-09`, null)", "null"),
-            ExprFunctionTestCase("to_string(null, 'M/d/y')", "null"),
-            ExprFunctionTestCase("to_string(`9999-03-09`, missing)", "null", "\$missing::null"),
-            ExprFunctionTestCase("to_string(missing, 'M/d/y')", "null", "\$missing::null"),
-            ExprFunctionTestCase("to_string(`1969-07-20T20:18Z`, 'MMMM d, y')", "\"July 20, 1969\""),
-            ExprFunctionTestCase("to_string(`1969-07-20T20:18Z`, 'MMM d, yyyy')", "\"Jul 20, 1969\""),
-            ExprFunctionTestCase("to_string(`1969-07-20T20:18Z`, 'M-d-yy')", "\"7-20-69\""),
-            ExprFunctionTestCase("to_string(`1969-07-20T20:18Z`, 'MM-d-y')", "\"07-20-1969\""),
-            ExprFunctionTestCase("to_string(`1969-07-20T20:18Z`, 'MMMM d, y h:m a')", "\"July 20, 1969 8:18 PM\""),
-            ExprFunctionTestCase("to_string(`1969-07-20T20:18Z`, 'y-MM-dd''T''H:m:ssX')", "\"1969-07-20T20:18:00Z\""),
-            ExprFunctionTestCase("to_string(`1969-07-20T20:18+08:00`, 'y-MM-dd''T''H:m:ssX')", "\"1969-07-20T20:18:00+08\""),
-            ExprFunctionTestCase("to_string(`1969-07-20T20:18+08:00`, 'y-MM-dd''T''H:m:ssXXXX')", "\"1969-07-20T20:18:00+0800\""),
-            ExprFunctionTestCase("to_string(`1969-07-20T20:18+08:00`, 'y-MM-dd''T''H:m:ssXXXXX')", "\"1969-07-20T20:18:00+08:00\"")
+            ExprFunctionTestCase("to_string(`0500-03-09`, 'MM/dd/yyyy')", "'03/09/0500'"),
+            ExprFunctionTestCase("to_string(`0500-03-09`, 'M/d/y')", "'3/9/500'"),
+            ExprFunctionTestCase("to_string(`0001-03-09`, 'MM/dd/yyyy')", "'03/09/0001'"),
+            ExprFunctionTestCase("to_string(`0001-03-09`, 'M/d/y')", "'3/9/1'"),
+            ExprFunctionTestCase("to_string(`9999-03-09`, 'MM/dd/yyyy')", "'03/09/9999'"),
+            ExprFunctionTestCase("to_string(`9999-03-09`, 'M/d/y')", "'3/9/9999'"),
+            ExprFunctionTestCase("to_string(`0001-03-09`, 'y')", "'1'"),
+            ExprFunctionTestCase("to_string(`9999-03-09`, null)", "NULL"),
+            ExprFunctionTestCase("to_string(null, 'M/d/y')", "NULL"),
+            ExprFunctionTestCase("to_string(`9999-03-09`, missing)", "NULL", "MISSING"),
+            ExprFunctionTestCase("to_string(missing, 'M/d/y')", "NULL", "MISSING"),
+            ExprFunctionTestCase("to_string(`1969-07-20T20:18Z`, 'MMMM d, y')", "'July 20, 1969'"),
+            ExprFunctionTestCase("to_string(`1969-07-20T20:18Z`, 'MMM d, yyyy')", "'Jul 20, 1969'"),
+            ExprFunctionTestCase("to_string(`1969-07-20T20:18Z`, 'M-d-yy')", "'7-20-69'"),
+            ExprFunctionTestCase("to_string(`1969-07-20T20:18Z`, 'MM-d-y')", "'07-20-1969'"),
+            ExprFunctionTestCase("to_string(`1969-07-20T20:18Z`, 'MMMM d, y h:m a')", "'July 20, 1969 8:18 PM'"),
+            ExprFunctionTestCase("to_string(`1969-07-20T20:18Z`, 'y-MM-dd''T''H:m:ssX')", "'1969-07-20T20:18:00Z'"),
+            ExprFunctionTestCase("to_string(`1969-07-20T20:18+08:00`, 'y-MM-dd''T''H:m:ssX')", "'1969-07-20T20:18:00+08'"),
+            ExprFunctionTestCase("to_string(`1969-07-20T20:18+08:00`, 'y-MM-dd''T''H:m:ssXXXX')", "'1969-07-20T20:18:00+0800'"),
+            ExprFunctionTestCase("to_string(`1969-07-20T20:18+08:00`, 'y-MM-dd''T''H:m:ssXXXXX')", "'1969-07-20T20:18:00+08:00'")
         )
     }
 

@@ -20,18 +20,18 @@ class UpperEvaluationTest : EvaluatorTestBase() {
 
     class UpperPassCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(
-            ExprFunctionTestCase("upper('')", "\"\""),
-            ExprFunctionTestCase("upper(`a`)", "\"A\""),
-            ExprFunctionTestCase("upper(`'a'`)", "\"A\""),
-            ExprFunctionTestCase("upper('a')", "\"A\""),
-            ExprFunctionTestCase("upper(`\"a\"`)", "\"A\""),
-            ExprFunctionTestCase("upper('abcdef')", "\"ABCDEF\""),
-            ExprFunctionTestCase("upper('ABCDEF')", "\"ABCDEF\""),
-            ExprFunctionTestCase("upper(null)", "null"),
-            ExprFunctionTestCase("upper(missing)", "null", "\$missing::null"),
-            ExprFunctionTestCase("upper('123\$%(*&')", "\"123\$%(*&\""),
-            ExprFunctionTestCase("upper('ȴȵ💩z💋')", "\"ȴȵ💩Z💋\""),
-            ExprFunctionTestCase("upper('話家身圧費谷料村能計税金')", "\"話家身圧費谷料村能計税金\"")
+            ExprFunctionTestCase("upper('')", "''"),
+            ExprFunctionTestCase("upper(`a`)", "'A'"),
+            ExprFunctionTestCase("upper(`'a'`)", "'A'"),
+            ExprFunctionTestCase("upper('a')", "'A'"),
+            ExprFunctionTestCase("upper(`\"a\"`)", "'A'"),
+            ExprFunctionTestCase("upper('abcdef')", "'ABCDEF'"),
+            ExprFunctionTestCase("upper('ABCDEF')", "'ABCDEF'"),
+            ExprFunctionTestCase("upper(null)", "NULL"),
+            ExprFunctionTestCase("upper(missing)", "NULL", "MISSING"),
+            ExprFunctionTestCase("upper('123\$%(*&')", "'123\$%(*&'"),
+            ExprFunctionTestCase("upper('ȴȵ💩z💋')", "'ȴȵ💩Z💋'"),
+            ExprFunctionTestCase("upper('話家身圧費谷料村能計税金')", "'話家身圧費谷料村能計税金'")
         )
     }
 

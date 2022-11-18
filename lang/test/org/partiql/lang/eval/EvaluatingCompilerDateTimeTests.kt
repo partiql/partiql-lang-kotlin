@@ -22,7 +22,8 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
     fun testDateLiteral() {
         runEvaluatorTestCase(
             query = "DATE '2000-01-02'",
-            expectedResult = "$DATE_ANNOTATION::2000-01-02"
+            expectedResult = "$DATE_ANNOTATION::2000-01-02",
+            expectedResultFormat = ExpectedResultFormat.ION
         )
     }
 
@@ -50,7 +51,6 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
         runEvaluatorTestCase(
             query = tc.query,
             expectedResult = tc.expected,
-            expectedResultFormat = ExpectedResultFormat.PARTIQL_STRICT,
             compileOptionsBuilderBlock = tc.compileOptionsBlock
         ) { actualExprValue ->
             assertEquals(tc.expected, actualExprValue.toString())
@@ -161,8 +161,7 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
             else -> {
                 runEvaluatorTestCase(
                     query = tc.query,
-                    expectedResult = tc.expected,
-                    expectedResultFormat = ExpectedResultFormat.PARTIQL_STRICT
+                    expectedResult = tc.expected
                 )
             }
         }

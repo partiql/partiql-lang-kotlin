@@ -18,7 +18,6 @@ import org.junit.Test
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestTarget
-import org.partiql.lang.eval.evaluatortestframework.ExpectedResultFormat
 import org.partiql.lang.util.propertyValueMapOf
 
 class QuotedIdentifierTests : EvaluatorTestBase() {
@@ -60,7 +59,6 @@ class QuotedIdentifierTests : EvaluatorTestBase() {
             query = "\"abc\"",
             session = simpleSession,
             expectedResult = "MISSING",
-            expectedResultFormat = ExpectedResultFormat.PARTIQL_STRICT,
             // planner & physical plan have no support for UndefinedVariableBehavior.MISSING (and may never)
             target = EvaluatorTestTarget.COMPILER_PIPELINE,
             compileOptionsBuilderBlock = { undefinedVariableMissingCompileOptionBlock() },
@@ -69,7 +67,6 @@ class QuotedIdentifierTests : EvaluatorTestBase() {
             "\"ABC\"",
             session = simpleSession,
             expectedResult = "MISSING",
-            expectedResultFormat = ExpectedResultFormat.PARTIQL_STRICT,
             // planner & physical plan have no support for UndefinedVariableBehavior.MISSING (and may never)
             target = EvaluatorTestTarget.COMPILER_PIPELINE,
             compileOptionsBuilderBlock = { undefinedVariableMissingCompileOptionBlock() },
@@ -123,9 +120,9 @@ class QuotedIdentifierTests : EvaluatorTestBase() {
 
     @Test
     fun selectFromTablesQuotedIdsAreCaseSensitive() {
-        runEvaluatorTestCase("SELECT * FROM \"Abc\"", sessionWithCaseVaryingTables, "$BAG_ANNOTATION::[{n:1}]")
-        runEvaluatorTestCase("SELECT * FROM \"aBc\"", sessionWithCaseVaryingTables, "$BAG_ANNOTATION::[{n:2}]")
-        runEvaluatorTestCase("SELECT * FROM \"abC\"", sessionWithCaseVaryingTables, "$BAG_ANNOTATION::[{n:3}]")
+        runEvaluatorTestCase("SELECT * FROM \"Abc\"", sessionWithCaseVaryingTables, "<<{'n':1}>>")
+        runEvaluatorTestCase("SELECT * FROM \"aBc\"", sessionWithCaseVaryingTables, "<<{'n':2}>>")
+        runEvaluatorTestCase("SELECT * FROM \"abC\"", sessionWithCaseVaryingTables, "<<{'n':3}>>")
     }
 
     @Test
@@ -133,7 +130,7 @@ class QuotedIdentifierTests : EvaluatorTestBase() {
         runEvaluatorTestCase(
             "SELECT \"Abc\".n AS a, \"aBc\".n AS b, \"abC\".n AS c FROM a as Abc, b as aBc, c as abC",
             simpleSessionWithTables,
-            "$BAG_ANNOTATION::[{a:1, b:2, c:3}]"
+            "<<{'a':1, 'b':2, 'c':3}>>"
         )
 
     @Test
@@ -141,7 +138,7 @@ class QuotedIdentifierTests : EvaluatorTestBase() {
         runEvaluatorTestCase(
             "SELECT \"Abc\".n AS a, \"aBc\".n AS b, \"abC\".n AS c FROM a as \"Abc\", b as \"aBc\", c as \"abC\"",
             simpleSessionWithTables,
-            "$BAG_ANNOTATION::[{a:1, b:2, c:3}]"
+            "<<{'a':1, 'b':2, 'c':3}>>"
         )
 
     val tableWithCaseVaryingFields = "[{ Abc: 1, aBc: 2, abC: 3}]"
@@ -150,7 +147,7 @@ class QuotedIdentifierTests : EvaluatorTestBase() {
     fun quotedStructFieldsAreCaseSensitive() =
         runEvaluatorTestCase(
             "SELECT s.\"Abc\" , s.\"aBc\", s.\"abC\" FROM `$tableWithCaseVaryingFields` AS s",
-            expectedResult = "$BAG_ANNOTATION::$tableWithCaseVaryingFields"
+            expectedResult = "<<{ 'Abc': 1, 'aBc': 2, 'abC': 3}>>"
         )
 
     @Test
@@ -260,7 +257,7 @@ class QuotedIdentifierTests : EvaluatorTestBase() {
 
     @Test
     fun pathIndexing_quotedId() =
-        runEvaluatorTestCase(""" "stores"[0]."books"[2]."title" """, stores.toSession(), "\"C\"")
+        runEvaluatorTestCase(""" "stores"[0]."books"[2]."title" """, stores.toSession(), "'C'")
 
     @Test
     fun pathFieldStructLiteral_quotedId() =
@@ -270,41 +267,41 @@ class QuotedIdentifierTests : EvaluatorTestBase() {
     fun pathWildcard_quotedId() = runEvaluatorTestCase(
         """ "stores"[0]."books"[*]."title" """,
         stores.toSession(),
-        """$BAG_ANNOTATION::["A", "B", "C", "D"]"""
+        """<<'A', 'B', 'C', 'D'>>"""
     )
 
     @Test
     fun pathUnpivotWildcard_quotedId() = runEvaluatorTestCase(
         """ "friends"."kumo"."likes".*."type" """,
         friends.toSession(),
-        """$BAG_ANNOTATION::["dog", "human"]"""
+        """<<'dog', 'human'>>"""
     )
 
     @Test
     fun pathDoubleWildCard_quotedId() = runEvaluatorTestCase(
         """ "stores"[*]."books"[*]."title" """,
         stores.toSession(),
-        """$BAG_ANNOTATION::["A", "B", "C", "D", "A", "E", "F"]"""
+        """<<'A', 'B', 'C', 'D', 'A', 'E', 'F'>>"""
     )
 
     @Test
     fun pathDoubleUnpivotWildCard_quotedId() = runEvaluatorTestCase(
         """ "friends".*."likes".*."type" """,
         friends.toSession(),
-        """$BAG_ANNOTATION::["dog", "human", "dog", "cat"]"""
+        """<<'dog', 'human', 'dog', 'cat'>>"""
     )
 
     @Test
     fun pathWildCardOverScalar_quotedId() = runEvaluatorTestCase(
         """ "s"[*] """,
         globalHello.toSession(),
-        """$BAG_ANNOTATION::["hello"]"""
+        """<<'hello'>>"""
     )
 
     @Test
     fun pathUnpivotWildCardOverScalar_quotedId() = runEvaluatorTestCase(
         """ "s".*  """,
         globalHello.toSession(),
-        """$BAG_ANNOTATION::["hello"]"""
+        """<<'hello'>>"""
     )
 }

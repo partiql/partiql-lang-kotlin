@@ -22,18 +22,18 @@ class LowerEvaluationTest : EvaluatorTestBase() {
 
     class LowerPassCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(
-            ExprFunctionTestCase("lower('')", "\"\""),
-            ExprFunctionTestCase("lower(`A`)", "\"a\""),
-            ExprFunctionTestCase("lower(`'A'`)", "\"a\""),
-            ExprFunctionTestCase("lower('A')", "\"a\""),
-            ExprFunctionTestCase("lower(`\"A\"`)", "\"a\""),
-            ExprFunctionTestCase("lower('ABCDEF')", "\"abcdef\""),
-            ExprFunctionTestCase("lower('abcdef')", "\"abcdef\""),
-            ExprFunctionTestCase("lower(null)", "null"),
-            ExprFunctionTestCase("lower(missing)", "null", "\$missing::null"),
-            ExprFunctionTestCase("lower('123\$%(*&')", "\"123\$%(*&\""),
-            ExprFunctionTestCase("lower('ȴȵ💩Z💋')", "\"ȴȵ💩z💋\""),
-            ExprFunctionTestCase("lower('話家身圧費谷料村能計税金')", "\"話家身圧費谷料村能計税金\"")
+            ExprFunctionTestCase("lower('')", "''"),
+            ExprFunctionTestCase("lower(`A`)", "'a'"),
+            ExprFunctionTestCase("lower(`'A'`)", "'a'"),
+            ExprFunctionTestCase("lower('A')", "'a'"),
+            ExprFunctionTestCase("lower(`\"A\"`)", "'a'"),
+            ExprFunctionTestCase("lower('ABCDEF')", "'abcdef'"),
+            ExprFunctionTestCase("lower('abcdef')", "'abcdef'"),
+            ExprFunctionTestCase("lower(null)", "NULL"),
+            ExprFunctionTestCase("lower(missing)", "NULL", "MISSING"),
+            ExprFunctionTestCase("lower('123\$%(*&')", "'123\$%(*&'"),
+            ExprFunctionTestCase("lower('ȴȵ💩Z💋')", "'ȴȵ💩z💋'"),
+            ExprFunctionTestCase("lower('話家身圧費谷料村能計税金')", "'話家身圧費谷料村能計税金'")
         )
     }
 

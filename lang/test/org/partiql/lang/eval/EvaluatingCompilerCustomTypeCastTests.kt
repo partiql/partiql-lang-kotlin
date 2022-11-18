@@ -4,7 +4,6 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.CUSTOM_TEST_TYPES
 import org.partiql.lang.errors.ErrorCode
-import org.partiql.lang.eval.evaluatortestframework.ExpectedResultFormat
 import org.partiql.lang.util.ArgumentsProviderBase
 import org.partiql.lang.util.honorTypedOpParameters
 import org.partiql.lang.util.legacyTypingMode
@@ -197,5 +196,5 @@ class EvaluatingCompilerCustomTypeCastTests : CastTestBase() {
 
     @ParameterizedTest
     @ArgumentsSource(ConfiguredCastArguments::class)
-    fun configuredCast(configuredCastCase: CastTestBase.ConfiguredCastCase) = configuredCastCase.assertCase(ExpectedResultFormat.PARTIQL_STRICT)
+    fun configuredCast(configuredCastCase: CastTestBase.ConfiguredCastCase) = configuredCastCase.assertCase()
 }

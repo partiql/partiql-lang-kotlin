@@ -21,7 +21,6 @@ import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestCase
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestTarget
-import org.partiql.lang.eval.evaluatortestframework.ExpectedResultFormat
 import org.partiql.lang.types.FunctionSignature
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.types.UnknownArguments
@@ -570,8 +569,7 @@ class EvaluatingCompilerUnknownValuesTest : EvaluatorTestBase() {
     fun andShortCircuits() = runEvaluatorTestCase(
         query = "SELECT s.x FROM [{'x': '1.1'},{'x': '2'},{'x': '3'},{'x': '4'},{'x': '5'}] as s WHERE FALSE AND CAST(s.x as INT)",
         session = boolsWithUnknowns,
-        expectedResult = "<<>>",
-        expectedResultFormat = ExpectedResultFormat.PARTIQL_STRICT
+        expectedResult = "<<>>"
     )
 
     @Test
@@ -598,24 +596,21 @@ class EvaluatingCompilerUnknownValuesTest : EvaluatorTestBase() {
     fun whereClauseExprEvalsToNull() = runEvaluatorTestCase(
         query = "SELECT VALUE D.val from nullSample as D WHERE D.control",
         session = nullSample,
-        expectedResult = "<<'A'>>",
-        expectedResultFormat = ExpectedResultFormat.PARTIQL_STRICT
+        expectedResult = "<<'A'>>"
     )
 
     @Test
     fun whereClauseExprEvalsToMissing() = runEvaluatorTestCase(
         query = "SELECT VALUE D.val from missingSample as D WHERE D.control",
         session = missingSample,
-        expectedResult = "<<'A'>>",
-        expectedResultFormat = ExpectedResultFormat.PARTIQL_STRICT
+        expectedResult = "<<'A'>>"
     )
 
     @Test
     fun whereClauseExprEvalsToNullAndMissing() = runEvaluatorTestCase(
         query = "SELECT VALUE D.val from missingAndNullSample as D WHERE D.control",
         session = missingAndNullSample,
-        expectedResult = "<<'A'>>",
-        expectedResultFormat = ExpectedResultFormat.PARTIQL_STRICT
+        expectedResult = "<<'A'>>"
     )
 
     // ////////////////////////////////////////////////
@@ -626,7 +621,7 @@ class EvaluatingCompilerUnknownValuesTest : EvaluatorTestBase() {
     fun aggregateSumWithNull() = runEvaluatorTestCase(
         "SELECT sum(x.n) from nullSample as x",
         nullSample,
-        "\$bag::[{_1: 4}]",
+        "<<{'_1': 4}>>",
         target = EvaluatorTestTarget.COMPILER_PIPELINE, // planner & phys. alg. have no support for aggregates (yet)
     )
 
@@ -634,7 +629,7 @@ class EvaluatingCompilerUnknownValuesTest : EvaluatorTestBase() {
     fun aggregateSumWithMissing() = runEvaluatorTestCase(
         "SELECT sum(x.n) from missingSample as x",
         missingSample,
-        "\$bag::[{_1: 3}]",
+        "<<{'_1': 3}>>",
         target = EvaluatorTestTarget.COMPILER_PIPELINE, // planner & phys. alg. have no support for aggregates (yet)
     )
 
@@ -642,7 +637,7 @@ class EvaluatingCompilerUnknownValuesTest : EvaluatorTestBase() {
     fun aggregateSumWithMissingAndNull() = runEvaluatorTestCase(
         "SELECT sum(x.n) from missingAndNullSample as x",
         missingAndNullSample,
-        "\$bag::[{_1: 9}]",
+        "<<{'_1': 9}>>",
         target = EvaluatorTestTarget.COMPILER_PIPELINE, // planner & phys. alg. have no support for aggregates (yet)
     )
 
@@ -650,7 +645,7 @@ class EvaluatingCompilerUnknownValuesTest : EvaluatorTestBase() {
     fun aggregateMinWithNull() = runEvaluatorTestCase(
         "SELECT min(x.n) from nullSample as x",
         nullSample,
-        "\$bag::[{_1: 1}]",
+        "<<{'_1': 1}>>",
         target = EvaluatorTestTarget.COMPILER_PIPELINE, // planner & phys. alg. have no support for aggregates (yet)
     )
 
@@ -658,7 +653,7 @@ class EvaluatingCompilerUnknownValuesTest : EvaluatorTestBase() {
     fun aggregateMinWithMissing() = runEvaluatorTestCase(
         "SELECT min(x.n) from missingSample as x",
         missingSample,
-        "\$bag::[{_1: 1}]",
+        "<<{'_1': 1}>>",
         target = EvaluatorTestTarget.COMPILER_PIPELINE, // planner & phys. alg. have no support for aggregates (yet)
     )
 
@@ -666,7 +661,7 @@ class EvaluatingCompilerUnknownValuesTest : EvaluatorTestBase() {
     fun aggregateMinWithMissingAndNull() = runEvaluatorTestCase(
         "SELECT min(x.n) from missingAndNullSample as x",
         missingAndNullSample,
-        "\$bag::[{_1: 2}]",
+        "<<{'_1': 2}>>",
         target = EvaluatorTestTarget.COMPILER_PIPELINE, // planner & phys. alg. have no support for aggregates (yet)
     )
 
@@ -674,7 +669,7 @@ class EvaluatingCompilerUnknownValuesTest : EvaluatorTestBase() {
     fun aggregateAvgWithNull() = runEvaluatorTestCase(
         "SELECT avg(x.n) from nullSample as x",
         nullSample,
-        "\$bag::[{_1: 2.}]",
+        "<<{'_1': 2.}>>",
         target = EvaluatorTestTarget.COMPILER_PIPELINE, // planner & phys. alg. have no support for aggregates (yet)
     )
 
@@ -682,7 +677,7 @@ class EvaluatingCompilerUnknownValuesTest : EvaluatorTestBase() {
     fun aggregateAvgWithMissing() = runEvaluatorTestCase(
         "SELECT avg(x.n) from missingSample as x",
         missingSample,
-        "\$bag::[{_1: 1.5}]",
+        "<<{'_1': 1.5}>>",
         target = EvaluatorTestTarget.COMPILER_PIPELINE, // planner & phys. alg. have no support for aggregates (yet)
     )
 
@@ -690,7 +685,7 @@ class EvaluatingCompilerUnknownValuesTest : EvaluatorTestBase() {
     fun aggregateAvgWithMissingAndNull() = runEvaluatorTestCase(
         "SELECT avg(x.n) from missingAndNullSample as x",
         missingAndNullSample,
-        "\$bag::[{_1: 3.}]",
+        "<<{'_1': 3.}>>",
         target = EvaluatorTestTarget.COMPILER_PIPELINE, // planner & phys. alg. have no support for aggregates (yet)
     )
 
@@ -698,7 +693,7 @@ class EvaluatingCompilerUnknownValuesTest : EvaluatorTestBase() {
     fun aggregateCountWithNull() = runEvaluatorTestCase(
         "SELECT count(x.n) from nullSample as x",
         nullSample,
-        "\$bag::[{_1: 2}]",
+        "<<{'_1': 2}>>",
         target = EvaluatorTestTarget.COMPILER_PIPELINE, // planner & phys. alg. have no support for aggregates (yet)
     )
 
@@ -706,7 +701,7 @@ class EvaluatingCompilerUnknownValuesTest : EvaluatorTestBase() {
     fun aggregateCountWithMissing() = runEvaluatorTestCase(
         "SELECT count(x.n) from missingSample as x",
         missingSample,
-        "\$bag::[{_1: 2}]",
+        "<<{'_1': 2}>>",
         target = EvaluatorTestTarget.COMPILER_PIPELINE, // planner & phys. alg. have no support for aggregates (yet)
     )
 
@@ -714,14 +709,14 @@ class EvaluatingCompilerUnknownValuesTest : EvaluatorTestBase() {
     fun aggregateCountWithMissingAndNull() = runEvaluatorTestCase(
         "SELECT count(x.n) from missingAndNullSample as x",
         missingAndNullSample,
-        "\$bag::[{_1: 3}]",
+        "<<{'_1': 3}>>",
         target = EvaluatorTestTarget.COMPILER_PIPELINE, // planner & phys. alg. have no support for aggregates (yet)
     )
 
     @Test
     fun countEmpty() = runEvaluatorTestCase(
         "SELECT count(*) from `[]`",
-        expectedResult = "\$bag::[{_1: 0}]",
+        expectedResult = "<<{'_1': 0}>>",
         target = EvaluatorTestTarget.COMPILER_PIPELINE, // planner & phys. alg. have no support for aggregates (yet)
     )
 
@@ -729,14 +724,14 @@ class EvaluatingCompilerUnknownValuesTest : EvaluatorTestBase() {
     fun countEmptyTuple() =
         runEvaluatorTestCase(
             "SELECT count(*) from `[{}]`",
-            expectedResult = "\$bag::[{_1: 1}]",
+            expectedResult = "<<{'_1': 1}>>",
             target = EvaluatorTestTarget.COMPILER_PIPELINE, // planner & phys. alg. have no support for aggregates (yet)
         )
 
     @Test
     fun sumEmpty() = runEvaluatorTestCase(
         "SELECT sum(x.i) from `[]` as x",
-        expectedResult = "\$bag::[{_1: null}]",
+        expectedResult = "<<{'_1': NULL}>>",
         target = EvaluatorTestTarget.COMPILER_PIPELINE, // planner & phys. alg. have no support for aggregates (yet)
     )
 
@@ -744,14 +739,14 @@ class EvaluatingCompilerUnknownValuesTest : EvaluatorTestBase() {
     fun sumEmptyTuple() =
         runEvaluatorTestCase(
             "SELECT sum(x.i) from `[{}]` as x",
-            expectedResult = "\$bag::[{_1: null}]",
+            expectedResult = "<<{'_1': NULL}>>",
             target = EvaluatorTestTarget.COMPILER_PIPELINE, // planner & phys. alg. have no support for aggregates (yet)
         )
 
     @Test
     fun avgEmpty() = runEvaluatorTestCase(
         "SELECT avg(x.i) from `[]` as x",
-        expectedResult = "\$bag::[{_1: null}]",
+        expectedResult = "<<{'_1': NULL}>>",
         target = EvaluatorTestTarget.COMPILER_PIPELINE, // planner & phys. alg. have no support for aggregates (yet)
     )
 
@@ -759,41 +754,41 @@ class EvaluatingCompilerUnknownValuesTest : EvaluatorTestBase() {
     fun avgEmptyTuple() =
         runEvaluatorTestCase(
             "SELECT avg(x.i) from `[{}]` as x",
-            expectedResult = "\$bag::[{_1: null}]",
+            expectedResult = "<<{'_1': null}>>",
             target = EvaluatorTestTarget.COMPILER_PIPELINE, // planner & phys. alg. have no support for aggregates (yet)
         )
 
     @Test
     fun avgSomeEmptyTuples() = runEvaluatorTestCase(
         "SELECT avg(x.i) from `[{i: 1}, {}, {i:3}]` as x",
-        expectedResult = "\$bag::[{_1: 2.}]",
+        expectedResult = "<<{'_1': 2.}>>",
         target = EvaluatorTestTarget.COMPILER_PIPELINE, // planner & phys. alg. have no support for aggregates (yet)
     )
 
     @Test
     fun avgSomeEmptyAndNullTuples() = runEvaluatorTestCase(
         "SELECT avg(x.i) from `[{i: 1}, {}, {i:null}, {i:3}]` as x",
-        expectedResult = "\$bag::[{_1: 2.}]",
+        expectedResult = "<<{'_1': 2.}>>",
         target = EvaluatorTestTarget.COMPILER_PIPELINE, // planner & phys. alg. have no support for aggregates (yet)
     )
 
     @Test
     fun minSomeEmptyTuples() = runEvaluatorTestCase(
         "SELECT min(x.i) from `[{i: null}, {}, {i:3}]` as x",
-        expectedResult = "\$bag::[{_1: 3}]",
+        expectedResult = "<<{'_1': 3}>>",
         target = EvaluatorTestTarget.COMPILER_PIPELINE, // planner & phys. alg. have no support for aggregates (yet)
     )
 
     @Test
     fun maxSomeEmptyTuples() = runEvaluatorTestCase(
         "SELECT max(x.i) from `[{i: null}, {}, {i:3}, {i:10}]` as x",
-        expectedResult = "\$bag::[{_1: 10}]",
+        expectedResult = "<<{'_1': 10}>>",
         target = EvaluatorTestTarget.COMPILER_PIPELINE, // planner & phys. alg. have no support for aggregates (yet)
     )
     @Test
     fun minEmpty() = runEvaluatorTestCase(
         "SELECT min(x.i) from `[]` as x",
-        expectedResult = "\$bag::[{_1: null}]",
+        expectedResult = "<<{'_1': NULL}>>",
         target = EvaluatorTestTarget.COMPILER_PIPELINE, // planner & phys. alg. have no support for aggregates (yet)
     )
 
@@ -801,14 +796,14 @@ class EvaluatingCompilerUnknownValuesTest : EvaluatorTestBase() {
     fun minEmptyTuple() =
         runEvaluatorTestCase(
             "SELECT min(x.i) from `[{}]` as x",
-            expectedResult = "\$bag::[{_1: null}]",
+            expectedResult = "<<{'_1': NULL}>>",
             target = EvaluatorTestTarget.COMPILER_PIPELINE, // planner & phys. alg. have no support for aggregates (yet)
         )
 
     @Test
     fun maxEmpty() = runEvaluatorTestCase(
         "SELECT max(x.i) from `[]` as x",
-        expectedResult = "\$bag::[{_1: null}]",
+        expectedResult = "<<{'_1': NULL}>>",
         target = EvaluatorTestTarget.COMPILER_PIPELINE, // planner & phys. alg. have no support for aggregates (yet)
     )
 
@@ -816,42 +811,42 @@ class EvaluatingCompilerUnknownValuesTest : EvaluatorTestBase() {
     fun maxEmptyTuple() =
         runEvaluatorTestCase(
             "SELECT max(x.i) from `[{}]` as x",
-            expectedResult = "\$bag::[{_1: null}]",
+            expectedResult = "<<{'_1': NULL}>>",
             target = EvaluatorTestTarget.COMPILER_PIPELINE, // planner & phys. alg. have no support for aggregates (yet)
         )
 
     @Test
     fun maxSomeEmptyTuple() = runEvaluatorTestCase(
         "SELECT max(x.i) from `[{}, {i:1}, {}, {i:2}]` as x",
-        expectedResult = "\$bag::[{_1: 2}]",
+        expectedResult = "<<{'_1': 2}>>",
         target = EvaluatorTestTarget.COMPILER_PIPELINE, // planner & phys. alg. have no support for aggregates (yet)
     )
 
     @Test
     fun minSomeEmptyTuple() = runEvaluatorTestCase(
         "SELECT min(x.i) from `[{}, {i:1}, {}, {i:2}]` as x",
-        expectedResult = "\$bag::[{_1: 1}]",
+        expectedResult = "<<{'_1': 1}>>",
         target = EvaluatorTestTarget.COMPILER_PIPELINE, // planner & phys. alg. have no support for aggregates (yet)
     )
 
     @Test
     fun sumSomeEmptyTuple() = runEvaluatorTestCase(
         "SELECT sum(x.i) from `[{}, {i:1}, {}, {i:2}]` as x",
-        expectedResult = "\$bag::[{_1: 3}]",
+        expectedResult = "<<{'_1': 3}>>",
         target = EvaluatorTestTarget.COMPILER_PIPELINE, // planner & phys. alg. have no support for aggregates (yet)
     )
 
     @Test
     fun countSomeEmptyTuple() = runEvaluatorTestCase(
         "SELECT count(x.i) from `[{}, {i:1}, {}, {i:2}]` as x",
-        expectedResult = "\$bag::[{_1: 2}]",
+        expectedResult = "<<{'_1': 2}>>",
         target = EvaluatorTestTarget.COMPILER_PIPELINE, // planner & phys. alg. have no support for aggregates (yet)
     )
 
     @Test
     fun countStar() = runEvaluatorTestCase(
         "SELECT count(*) from `[{}, {i:1}, {}, {i:2}]` as x",
-        expectedResult = "\$bag::[{_1: 4}]",
+        expectedResult = "<<{'_1': 4}>>",
         target = EvaluatorTestTarget.COMPILER_PIPELINE, // planner & phys. alg. have no support for aggregates (yet)
     )
 
@@ -859,7 +854,7 @@ class EvaluatingCompilerUnknownValuesTest : EvaluatorTestBase() {
     fun countLiteral() =
         runEvaluatorTestCase(
             "SELECT count(1) from `[{}, {}, {}, {}]` as x",
-            expectedResult = "\$bag::[{_1: 4}]",
+            expectedResult = "<<{'_1': 4}>>",
             target = EvaluatorTestTarget.COMPILER_PIPELINE, // planner & phys. alg. have no support for aggregates (yet)
         )
 }

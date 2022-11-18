@@ -15,7 +15,6 @@ package org.partiql.lang.eval
 
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
-import org.partiql.lang.eval.evaluatortestframework.ExpectedResultFormat
 import org.partiql.lang.util.ArgumentsProviderBase
 
 class EvaluatingCompilerCastTest : CastTestBase() {
@@ -29,12 +28,10 @@ class EvaluatingCompilerCastTest : CastTestBase() {
 
     @ParameterizedTest
     @ArgumentsSource(ConfiguredCastArguments::class)
-    fun configuredCast(configuredCastCase: ConfiguredCastCase) = configuredCastCase.assertCase(ExpectedResultFormat.PARTIQL_STRICT)
+    fun configuredCast(configuredCastCase: ConfiguredCastCase) = configuredCastCase.assertCase()
 
     @ParameterizedTest
     @ArgumentsSource(DateTimeConfiguredCastArguments::class)
     fun dateTimeConfiguredCast(dateTimeConfiguredCastCase: ConfiguredCastCase) =
-        dateTimeConfiguredCastCase.assertCase(
-            ExpectedResultFormat.PARTIQL_STRICT
-        )
+        dateTimeConfiguredCastCase.assertCase()
 }

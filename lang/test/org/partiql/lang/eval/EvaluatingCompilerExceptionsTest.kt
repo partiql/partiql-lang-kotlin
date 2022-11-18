@@ -143,7 +143,8 @@ class EvaluatingCompilerExceptionsTest : EvaluatorTestBase() {
     fun missingAlias() =
         // Same query as previous test--but DO NOT throw exception this time because of UndefinedVariableBehavior.MISSING
         runEvaluatorTestCase(
-            sqlWithUndefinedVariable, expectedResult = "\$bag::[\$missing::null]",
+            sqlWithUndefinedVariable,
+            expectedResult = "<<MISSING>>",
             target = EvaluatorTestTarget.COMPILER_PIPELINE,
             compileOptionsBuilderBlock = { undefinedVariable(UndefinedVariableBehavior.MISSING) }
         )
@@ -164,7 +165,8 @@ class EvaluatingCompilerExceptionsTest : EvaluatorTestBase() {
     fun missingQuotedAlias() =
         // Same query as previous test--but DO NOT throw exception this time because of UndefinedVariableBehavior.MISSING
         runEvaluatorTestCase(
-            sqlWithUndefinedQuotedVariable, expectedResult = "\$bag::[\$missing::null]",
+            sqlWithUndefinedQuotedVariable,
+            expectedResult = "<<MISSING>>",
             target = EvaluatorTestTarget.COMPILER_PIPELINE,
             compileOptionsBuilderBlock = { undefinedVariable(UndefinedVariableBehavior.MISSING) }
         )

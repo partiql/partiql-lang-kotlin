@@ -17,7 +17,6 @@ package org.partiql.lang.eval
 import junitparams.Parameters
 import org.junit.Test
 import org.junit.jupiter.api.assertDoesNotThrow
-import org.partiql.lang.eval.evaluatortestframework.ExpectedResultFormat
 import java.util.Collections
 import java.util.Random
 
@@ -397,8 +396,7 @@ class NaturalExprValueComparatorsTest : EvaluatorTestBase() {
 
         runEvaluatorTestCase(
             query = "$left = $right",
-            expectedResult = "true",
-            expectedResultFormat = ExpectedResultFormat.ION
+            expectedResult = "TRUE"
         )
     }
 
@@ -422,11 +420,10 @@ class NaturalExprValueComparatorsTest : EvaluatorTestBase() {
 
         runEvaluatorTestCase(
             query = "$left = $right",
-            expectedResult = if (left == "missing" || right == "missing")
-                "$MISSING_ANNOTATION::null"
-            else
-                "null",
-            expectedResultFormat = ExpectedResultFormat.ION
+            expectedResult = when {
+                left == "missing" || right == "missing" -> "MISSING"
+                else -> "NULL"
+            }
         )
     }
 }

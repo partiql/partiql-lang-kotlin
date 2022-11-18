@@ -67,7 +67,7 @@ abstract class EvaluatorTestBase : TestBase() {
         session: EvaluationSession = EvaluationSession.standard(),
         expectedResult: String,
         expectedPermissiveModeResult: String = expectedResult,
-        expectedResultFormat: ExpectedResultFormat = ExpectedResultFormat.ION,
+        expectedResultFormat: ExpectedResultFormat = ExpectedResultFormat.PARTIQL,
         includePermissiveModeTest: Boolean = true,
         target: EvaluatorTestTarget = EvaluatorTestTarget.ALL_PIPELINES,
         compileOptionsBuilderBlock: CompileOptions.Builder.() -> Unit = { },

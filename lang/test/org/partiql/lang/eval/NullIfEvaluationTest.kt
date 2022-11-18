@@ -16,7 +16,6 @@ package org.partiql.lang.eval
 
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
-import org.partiql.lang.eval.evaluatortestframework.ExpectedResultFormat
 
 class NullIfEvaluationTest : EvaluatorTestBase() {
 
@@ -30,8 +29,7 @@ class NullIfEvaluationTest : EvaluatorTestBase() {
     @MethodSource("nullifEvaluationTests")
     fun runTests(tc: NullIfTestCase) = runEvaluatorTestCase(
         query = "nullif(${tc.expr1}, ${tc.expr2})",
-        expectedResult = tc.expected,
-        expectedResultFormat = ExpectedResultFormat.PARTIQL_STRICT
+        expectedResult = tc.expected
     )
 
     companion object {

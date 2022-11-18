@@ -4,7 +4,6 @@ import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.errors.ErrorBehaviorInPermissiveMode
 import org.partiql.lang.errors.ErrorCategory
 import org.partiql.lang.errors.ErrorCode
-import org.partiql.lang.eval.evaluatortestframework.ExpectedResultFormat
 import org.partiql.lang.util.getOffsetHHmm
 import org.partiql.lang.util.honorTypedOpParameters
 import org.partiql.lang.util.legacyCastBehavior
@@ -64,9 +63,7 @@ private fun ExprValueType.typeAliases(): List<String> = when (this) {
 
 abstract class CastTestBase : EvaluatorTestBase() {
 
-    fun ConfiguredCastCase.assertCase(
-        expectedResultFormat: ExpectedResultFormat = ExpectedResultFormat.ION
-    ) {
+    fun ConfiguredCastCase.assertCase() {
         when (castCase.expected) {
             null -> {
                 val expectedErrorCode: ErrorCode? = castCase.expectedErrorCode
@@ -93,7 +90,6 @@ abstract class CastTestBase : EvaluatorTestBase() {
             else -> runEvaluatorTestCase(
                 castCase.expression,
                 expectedResult = castCase.expected,
-                expectedResultFormat = expectedResultFormat,
                 includePermissiveModeTest = false,
                 compileOptionsBuilderBlock = compileOptionBlock,
                 compilerPipelineBuilderBlock = compilerPipelineBuilderBlock,

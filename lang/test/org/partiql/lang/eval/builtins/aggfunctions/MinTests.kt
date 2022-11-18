@@ -64,63 +64,63 @@ class MinTests : EvaluatorTestBase() {
     @Test
     fun minString0() = runEvaluatorTestCase(
         query = "min(['a', 'abc', '3'])",
-        expectedResult = "\"3\"",
+        expectedResult = "'3'",
         target = EvaluatorTestTarget.COMPILER_PIPELINE
     )
 
     @Test
     fun minString1() = runEvaluatorTestCase(
         query = "min(['1', '2', '3', null])",
-        expectedResult = "\"1\"",
+        expectedResult = "'1'",
         target = EvaluatorTestTarget.COMPILER_PIPELINE
     )
 
     @Test
     fun minTimestamp0() = runEvaluatorTestCase(
         query = "min([`2020-01-01T00:00:00Z`, `2020-01-01T00:00:01Z`, `2020-01-01T00:00:02Z`])",
-        expectedResult = "2020-01-01T00:00:00Z",
+        expectedResult = "`2020-01-01T00:00:00Z`",
         target = EvaluatorTestTarget.COMPILER_PIPELINE
     )
 
     @Test
     fun minTimestamp1() = runEvaluatorTestCase(
         query = "min([`2020-01-01T00:00:00Z`, `2020-01-01T00:01:00Z`, `2020-01-01T00:02:00Z`])",
-        expectedResult = "2020-01-01T00:00:00Z",
+        expectedResult = "`2020-01-01T00:00:00Z`",
         target = EvaluatorTestTarget.COMPILER_PIPELINE
     )
 
     @Test
     fun minTimestamp2() = runEvaluatorTestCase(
         query = "min([`2020-01-01T00:00:00Z`, `2020-01-01T01:00:00Z`, `2020-01-01T02:00:00Z`])",
-        expectedResult = "2020-01-01T00:00:00Z",
+        expectedResult = "`2020-01-01T00:00:00Z`",
         target = EvaluatorTestTarget.COMPILER_PIPELINE
     )
 
     @Test
     fun minTimestamp3() = runEvaluatorTestCase(
         query = "min([`2020-01-01T00:00:00Z`, `2020-01-02T00:00:00Z`, `2020-01-03T00:00:00Z`])",
-        expectedResult = "2020-01-01T00:00:00Z",
+        expectedResult = "`2020-01-01T00:00:00Z`",
         target = EvaluatorTestTarget.COMPILER_PIPELINE
     )
 
     @Test
     fun minTimestamp4() = runEvaluatorTestCase(
         query = "min([`2020-01-01T00:00:00Z`, `2020-02-01T00:00:00Z`, `2020-03-01T00:00:00Z`])",
-        expectedResult = "2020-01-01T00:00:00Z",
+        expectedResult = "`2020-01-01T00:00:00Z`",
         target = EvaluatorTestTarget.COMPILER_PIPELINE
     )
 
     @Test
     fun minTimestamp5() = runEvaluatorTestCase(
         query = "min([`2020-01-01T00:00:00Z`, `2021-01-01T00:00:00Z`, `2022-01-01T00:00:00Z`])",
-        expectedResult = "2020-01-01T00:00:00Z",
+        expectedResult = "`2020-01-01T00:00:00Z`",
         target = EvaluatorTestTarget.COMPILER_PIPELINE
     )
 
     @Test
     fun minTimestamp6() = runEvaluatorTestCase(
         query = "min([`2020-01-01T00:00:00Z`, `2020-01-01T00:00:01Z`, `2020-01-01T00:00:02Z`, null])",
-        expectedResult = "2020-01-01T00:00:00Z",
+        expectedResult = "`2020-01-01T00:00:00Z`",
         target = EvaluatorTestTarget.COMPILER_PIPELINE
     )
 
@@ -134,14 +134,14 @@ class MinTests : EvaluatorTestBase() {
     @Test
     fun minBlob() = runEvaluatorTestCase(
         query = "min([`{{ aaaa }}`, `{{ aaab }}`])",
-        expectedResult = "{{aaaa}}",
+        expectedResult = "`{{aaaa}}`",
         target = EvaluatorTestTarget.COMPILER_PIPELINE
     )
 
     @Test
     fun minClob() = runEvaluatorTestCase(
         query = "min([`{{\"a\"}}`, `{{\"b\"}}`])",
-        expectedResult = "{{\"a\"}}",
+        expectedResult = "`{{\"a\"}}`",
         target = EvaluatorTestTarget.COMPILER_PIPELINE
     )
 
@@ -162,14 +162,14 @@ class MinTests : EvaluatorTestBase() {
     @Test
     fun minMixed2() = runEvaluatorTestCase(
         query = "min([`2020-01-01T00:00:00Z`, '1'])",
-        expectedResult = "2020-01-01T00:00:00Z",
+        expectedResult = "`2020-01-01T00:00:00Z`",
         target = EvaluatorTestTarget.COMPILER_PIPELINE
     )
 
     @Test
     fun minMixed3() = runEvaluatorTestCase(
         query = "min([`{{\"abcd\"}}`, '1'])",
-        expectedResult = "\"1\"",
+        expectedResult = "'1'",
         target = EvaluatorTestTarget.COMPILER_PIPELINE
     )
 }

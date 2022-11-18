@@ -30,28 +30,28 @@ class SumTests : EvaluatorTestBase() {
     @Test
     fun sum1() = runEvaluatorTestCase(
         query = "SUM(`[1, 2e0, 3e0]`)",
-        expectedResult = "6e0",
+        expectedResult = "`6e0`",
         target = EvaluatorTestTarget.COMPILER_PIPELINE
     )
 
     @Test
     fun sum2() = runEvaluatorTestCase(
         query = "SUM(`[1, 2d0, 3d0]`)",
-        expectedResult = "6d0",
+        expectedResult = "`6d0`",
         target = EvaluatorTestTarget.COMPILER_PIPELINE
     )
 
     @Test
     fun sum3() = runEvaluatorTestCase(
         query = "SUM(`[1, 2e0, 3d0]`)",
-        expectedResult = "6d0",
+        expectedResult = "`6d0`",
         target = EvaluatorTestTarget.COMPILER_PIPELINE
     )
 
     @Test
     fun sum4() = runEvaluatorTestCase(
         query = "SUM(`[1, 2d0, 3e0]`)",
-        expectedResult = "6d0",
+        expectedResult = "`6d0`",
         target = EvaluatorTestTarget.COMPILER_PIPELINE
     )
 

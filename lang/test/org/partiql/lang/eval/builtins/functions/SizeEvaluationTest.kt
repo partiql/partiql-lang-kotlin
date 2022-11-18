@@ -34,8 +34,8 @@ class SizeEvaluationTest : EvaluatorTestBase() {
             ExprFunctionTestCase("size(`{ a: 1, b: 2, c: 3 }`)", "3"),
             ExprFunctionTestCase("size({})", "0"),
             ExprFunctionTestCase("size(`{}`)", "0"),
-            ExprFunctionTestCase("size(null)", "null"),
-            ExprFunctionTestCase("size(missing)", "null", "\$missing::null")
+            ExprFunctionTestCase("size(null)", "NULL"),
+            ExprFunctionTestCase("size(missing)", "NULL", "MISSING")
         )
     }
 

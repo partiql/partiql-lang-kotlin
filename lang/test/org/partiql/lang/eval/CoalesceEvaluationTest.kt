@@ -16,7 +16,6 @@ package org.partiql.lang.eval
 
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
-import org.partiql.lang.eval.evaluatortestframework.ExpectedResultFormat
 
 class CoalesceEvaluationTest : EvaluatorTestBase() {
     // Note that we can't use `assertEval` for the following tests because it requires expected result
@@ -37,8 +36,7 @@ class CoalesceEvaluationTest : EvaluatorTestBase() {
         runEvaluatorTestCase(
             "coalesce(${tc.args.joinToString(",")})",
             expectedResult = tc.expectedLegacyResult,
-            expectedPermissiveModeResult = tc.expectedPermissiveResult,
-            expectedResultFormat = ExpectedResultFormat.PARTIQL_STRICT
+            expectedPermissiveModeResult = tc.expectedPermissiveResult
         )
 
     companion object {

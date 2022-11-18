@@ -15,7 +15,7 @@ class EvaluatingCompilerLimitTests : EvaluatorTestBase() {
         runEvaluatorTestCase(
             "SELECT * FROM foo LIMIT 0",
             session,
-            "\$bag::[]"
+            "<<>>"
         )
 
     @Test
@@ -23,7 +23,7 @@ class EvaluatingCompilerLimitTests : EvaluatorTestBase() {
         runEvaluatorTestCase(
             "SELECT * FROM foo LIMIT 1",
             session,
-            "\$bag::[{a: 1}]"
+            "<<{'a': 1}>>"
         )
 
     @Test
@@ -31,7 +31,7 @@ class EvaluatingCompilerLimitTests : EvaluatorTestBase() {
         runEvaluatorTestCase(
             "SELECT * FROM foo LIMIT 2",
             session,
-            "\$bag::[{a: 1}, {a: 2}]"
+            "<<{'a': 1}, {'a': 2}>>"
         )
 
     @Test
@@ -39,7 +39,7 @@ class EvaluatingCompilerLimitTests : EvaluatorTestBase() {
         runEvaluatorTestCase(
             "SELECT * FROM foo LIMIT ${Integer.MAX_VALUE}",
             session,
-            "\$bag::[ { a: 1 }, { a: 2 }, { a: 3 }, { a: 4 }, { a: 5 } ]"
+            "<< { 'a': 1 }, { 'a': 2 }, { 'a': 3 }, { 'a': 4 }, { 'a': 5 } >>"
         )
 
     @Test
@@ -47,7 +47,7 @@ class EvaluatingCompilerLimitTests : EvaluatorTestBase() {
         runEvaluatorTestCase(
             "SELECT * FROM foo LIMIT ${Long.MAX_VALUE}",
             session,
-            "\$bag::[ { a: 1 }, { a: 2 }, { a: 3 }, { a: 4 }, { a: 5 } ]"
+            "<< { 'a': 1 }, { 'a': 2 }, { 'a': 3 }, { 'a': 4 }, { 'a': 5 } >>"
         )
 
     @Test
@@ -71,7 +71,7 @@ class EvaluatingCompilerLimitTests : EvaluatorTestBase() {
     fun `LIMIT applied after GROUP BY`() =
         runEvaluatorTestCase(
             "SELECT g FROM `[{foo: 1, bar: 10}, {foo: 1, bar: 11}]` AS f GROUP BY f.foo GROUP AS g LIMIT 1",
-            expectedResult = "$BAG_ANNOTATION::[{g:$BAG_ANNOTATION::[{f:{foo:1,bar:10}},{f:{foo:1,bar:11}}]}]",
+            expectedResult = "<<{'g':<<{'f':{'foo':1,'bar':10}},{'f':{'foo':1,'bar':11}}>>}>>",
             target = EvaluatorTestTarget.COMPILER_PIPELINE // planner & physical plan have no support for GROUP BY (yet)
         )
 }

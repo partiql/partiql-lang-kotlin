@@ -8,12 +8,17 @@ package org.partiql.lang.eval.evaluatortestframework
  */
 enum class ExpectedResultFormat {
     /**
-     * The expected value is expressed in Ion and Ion's equivalence is used to assert the correct option.  This is the
-     * strictest (and preferred) option when the result isn't a bag because it doesn't support PartiQL's BAG semantics,
-     * thus, a query might have the correct result but in a different order the expected value, this would cause a
-     * false negative.
+     * Transform the compiler's actual output [ExprValue] to [IonValue], and then compare it with the specified
+     * expected [IonValue]. It can cause false negative when comparing PartiQL bags, since order matters in Ion list
      */
     ION,
 
-    PARTIQL_STRICT
+    /**
+     * Directly compare the compiler's output [ExprValue] with an expected [ExprValue] evaluated from a specified
+     * PartiQL expression. This is preferred as it resolves the bag comparison problem [ExpectedResultFormat.ION] has.
+     * Also, PartiQL expressions are easier to read & write (no annotations needed).
+     *
+     * New tests should use this format.
+     */
+    PARTIQL
 }

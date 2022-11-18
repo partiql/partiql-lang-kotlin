@@ -3,7 +3,6 @@ package org.partiql.lang.randomized.eval
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.eval.EvaluatorTestBase
-import org.partiql.lang.eval.evaluatortestframework.ExpectedResultFormat
 import org.partiql.lang.eval.time.Time
 import org.partiql.lang.util.ArgumentsProviderBase
 import java.time.ZoneOffset
@@ -120,8 +119,7 @@ class EvaluatingCompilerDateTimeRandomizedTests : EvaluatorTestBase() {
         val expected = "TIME '${time.expectedTimeString(withTimeZone = false)}'"
         runEvaluatorTestCase(
             query = query,
-            expectedResult = expected,
-            expectedResultFormat = ExpectedResultFormat.PARTIQL_STRICT
+            expectedResult = expected
         )
     }
 
@@ -132,8 +130,7 @@ class EvaluatingCompilerDateTimeRandomizedTests : EvaluatorTestBase() {
         val expected = "TIME '${time.expectedTimeString(withTimeZone = false)}'"
         runEvaluatorTestCase(
             query = query,
-            expectedResult = expected,
-            expectedResultFormat = ExpectedResultFormat.PARTIQL_STRICT
+            expectedResult = expected
         )
     }
 
@@ -144,8 +141,7 @@ class EvaluatingCompilerDateTimeRandomizedTests : EvaluatorTestBase() {
         val expected = "TIME WITH TIME ZONE '${time.expectedTimeString(withTimeZone = true)}'"
         runEvaluatorTestCase(
             query = query,
-            expectedResult = expected,
-            expectedResultFormat = ExpectedResultFormat.PARTIQL_STRICT
+            expectedResult = expected
         )
     }
 
@@ -156,8 +152,7 @@ class EvaluatingCompilerDateTimeRandomizedTests : EvaluatorTestBase() {
         val expected = "TIME WITH TIME ZONE '${time.expectedTimeString(withTimeZone = true)}'"
         runEvaluatorTestCase(
             query = query,
-            expectedResult = expected,
-            expectedResultFormat = ExpectedResultFormat.PARTIQL_STRICT
+            expectedResult = expected
         )
     }
 }

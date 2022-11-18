@@ -80,7 +80,7 @@ internal class PipelineEvaluatorTestAdapter(
                     unexpectedResultErrorCode
                 ) { tc.testDetails(note = note, actualResult = actualIonResult.toString()) }
             }
-            ExpectedResultFormat.PARTIQL_STRICT -> {
+            ExpectedResultFormat.PARTIQL -> {
                 val expectedExprValueResult = assertDoesNotThrow(
                     EvaluatorTestFailureReason.FAILED_TO_EVALUATE_PARTIQL_EXPECTED_RESULT,
                     { tc.testDetails(note = note) }

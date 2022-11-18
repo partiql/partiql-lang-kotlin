@@ -25,26 +25,26 @@ class FromUnixTimeFunctionTest : EvaluatorTestBase() {
     class FromUnixTimePassCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(
             // negative unix epochs output timestamp before last epoch
-            ExprFunctionTestCase("from_unixtime(-1)", "1969-12-31T23:59:59-00:00"),
-            ExprFunctionTestCase("from_unixtime(-0.1)", "1969-12-31T23:59:59.9-00:00"),
-            ExprFunctionTestCase("from_unixtime(`-1`)", "1969-12-31T23:59:59-00:00"),
-            ExprFunctionTestCase("from_unixtime(`-0.1`)", "1969-12-31T23:59:59.9-00:00"),
+            ExprFunctionTestCase("from_unixtime(-1)", "`1969-12-31T23:59:59-00:00`"),
+            ExprFunctionTestCase("from_unixtime(-0.1)", "`1969-12-31T23:59:59.9-00:00`"),
+            ExprFunctionTestCase("from_unixtime(`-1`)", "`1969-12-31T23:59:59-00:00`"),
+            ExprFunctionTestCase("from_unixtime(`-0.1`)", "`1969-12-31T23:59:59.9-00:00`"),
             // non-negative cases outputting a timestamp after last epoch
-            ExprFunctionTestCase("from_unixtime(0)", "1970-01-01T00:00:00.000-00:00"),
-            ExprFunctionTestCase("from_unixtime(0.001)", "1970-01-01T00:00:00.001-00:00"),
-            ExprFunctionTestCase("from_unixtime(0.01)", "1970-01-01T00:00:00.01-00:00"),
-            ExprFunctionTestCase("from_unixtime(0.1)", "1970-01-01T00:00:00.1-00:00"),
-            ExprFunctionTestCase("from_unixtime(1)", "1970-01-01T00:00:01-00:00"),
-            ExprFunctionTestCase("from_unixtime(1577836800)", "2020-01-01T00:00:00-00:00"),
-            ExprFunctionTestCase("from_unixtime(`0`)", "1970-01-01T00:00:00.000-00:00"),
-            ExprFunctionTestCase("from_unixtime(`0.001`)", "1970-01-01T00:00:00.001-00:00"),
-            ExprFunctionTestCase("from_unixtime(`0.01`)", "1970-01-01T00:00:00.01-00:00"),
-            ExprFunctionTestCase("from_unixtime(`0.1`)", "1970-01-01T00:00:00.1-00:00"),
-            ExprFunctionTestCase("from_unixtime(`1`)", "1970-01-01T00:00:01-00:00"),
-            ExprFunctionTestCase("from_unixtime(`1577836800`)", "2020-01-01T00:00:00-00:00"),
+            ExprFunctionTestCase("from_unixtime(0)", "`1970-01-01T00:00:00.000-00:00`"),
+            ExprFunctionTestCase("from_unixtime(0.001)", "`1970-01-01T00:00:00.001-00:00`"),
+            ExprFunctionTestCase("from_unixtime(0.01)", "`1970-01-01T00:00:00.01-00:00`"),
+            ExprFunctionTestCase("from_unixtime(0.1)", "`1970-01-01T00:00:00.1-00:00`"),
+            ExprFunctionTestCase("from_unixtime(1)", "`1970-01-01T00:00:01-00:00`"),
+            ExprFunctionTestCase("from_unixtime(1577836800)", "`2020-01-01T00:00:00-00:00`"),
+            ExprFunctionTestCase("from_unixtime(`0`)", "`1970-01-01T00:00:00.000-00:00`"),
+            ExprFunctionTestCase("from_unixtime(`0.001`)", "`1970-01-01T00:00:00.001-00:00`"),
+            ExprFunctionTestCase("from_unixtime(`0.01`)", "`1970-01-01T00:00:00.01-00:00`"),
+            ExprFunctionTestCase("from_unixtime(`0.1`)", "`1970-01-01T00:00:00.1-00:00`"),
+            ExprFunctionTestCase("from_unixtime(`1`)", "`1970-01-01T00:00:01-00:00`"),
+            ExprFunctionTestCase("from_unixtime(`1577836800`)", "`2020-01-01T00:00:00-00:00`"),
             // Null or missing
-            ExprFunctionTestCase("from_unixtime(null)", "null"),
-            ExprFunctionTestCase("from_unixtime(missing)", "null", "\$missing::null"),
+            ExprFunctionTestCase("from_unixtime(null)", "NULL"),
+            ExprFunctionTestCase("from_unixtime(missing)", "NULL", "MISSING"),
         )
     }
 

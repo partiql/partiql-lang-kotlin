@@ -9,7 +9,6 @@ import org.partiql.lang.eval.builtins.Argument
 import org.partiql.lang.eval.builtins.ExprFunctionTestCase
 import org.partiql.lang.eval.builtins.checkInvalidArgType
 import org.partiql.lang.eval.builtins.checkInvalidArity
-import org.partiql.lang.eval.evaluatortestframework.ExpectedResultFormat
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.util.ArgumentsProviderBase
 import org.partiql.lang.util.propertyValueMapOf
@@ -22,7 +21,6 @@ class MakeDateEvaluationTest : EvaluatorTestBase() {
             query = testCase.source,
             expectedResult = testCase.expectedLegacyModeResult,
             expectedPermissiveModeResult = testCase.expectedPermissiveModeResult,
-            expectedResultFormat = ExpectedResultFormat.PARTIQL_STRICT,
             includePermissiveModeTest = false
         )
 
@@ -49,7 +47,7 @@ class MakeDateEvaluationTest : EvaluatorTestBase() {
             ExprFunctionTestCase("make_date(NULL, NULL, 28)", "NULL"),
             ExprFunctionTestCase("make_date(NULL, NULL, 28)", "NULL"),
             ExprFunctionTestCase("make_date(MISSING, MISSING, MISSING)", "NULL", "MISSING"),
-            ExprFunctionTestCase("make_date(2021, 03, 17) IS DATE", "true")
+            ExprFunctionTestCase("make_date(2021, 03, 17) IS DATE", "TRUE")
         )
     }
 

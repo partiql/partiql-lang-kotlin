@@ -20,20 +20,20 @@ class ExistsEvaluationTest : EvaluatorTestBase() {
 
     class ExistsPassCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(
-            ExprFunctionTestCase("exists(<<1, 2, 3>>)", "true"),
-            ExprFunctionTestCase("exists(<<>>)", "false"),
-            ExprFunctionTestCase("exists(sexp(1,2,3))", "true"),
-            ExprFunctionTestCase("exists(`(1 2 3)`)", "true"),
-            ExprFunctionTestCase("exists(sexp())", "false"),
-            ExprFunctionTestCase("exists(`()`)", "false"),
-            ExprFunctionTestCase("exists([1, 2, 3])", "true"),
-            ExprFunctionTestCase("exists(`[1, 2, 3]`)", "true"),
-            ExprFunctionTestCase("exists([])", "false"),
-            ExprFunctionTestCase("exists(`[]`)", "false"),
-            ExprFunctionTestCase("exists({ `a`: 1, `b`: 2, `c`: 3 })", "true"),
-            ExprFunctionTestCase("exists(`{ a: 1, b: 2, c: 3 }`)", "true"),
-            ExprFunctionTestCase("exists({})", "false"),
-            ExprFunctionTestCase("exists(`{}`)", "false")
+            ExprFunctionTestCase("exists(<<1, 2, 3>>)", "TRUE"),
+            ExprFunctionTestCase("exists(<<>>)", "FALSE"),
+            ExprFunctionTestCase("exists(sexp(1,2,3))", "TRUE"),
+            ExprFunctionTestCase("exists(`(1 2 3)`)", "TRUE"),
+            ExprFunctionTestCase("exists(sexp())", "FALSE"),
+            ExprFunctionTestCase("exists(`()`)", "FALSE"),
+            ExprFunctionTestCase("exists([1, 2, 3])", "TRUE"),
+            ExprFunctionTestCase("exists(`[1, 2, 3]`)", "TRUE"),
+            ExprFunctionTestCase("exists([])", "FALSE"),
+            ExprFunctionTestCase("exists(`[]`)", "FALSE"),
+            ExprFunctionTestCase("exists({ `a`: 1, `b`: 2, `c`: 3 })", "TRUE"),
+            ExprFunctionTestCase("exists(`{ a: 1, b: 2, c: 3 }`)", "TRUE"),
+            ExprFunctionTestCase("exists({})", "FALSE"),
+            ExprFunctionTestCase("exists(`{}`)", "FALSE")
         )
     }
 
