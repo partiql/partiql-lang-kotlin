@@ -11,6 +11,10 @@ import org.partiql.lang.eval.physical.operators.ValueExpression
 internal class Lag : NavigationWindowFunction() {
     override val name = "lag"
 
+    companion object {
+        const val DEFAULT_OFFSET_VALUE = 1L
+    }
+
     override fun processRow(state: EvaluatorState, arguments: List<ValueExpression>, currentPos: Int): ExprValue {
         val (target, offset, default) = when (arguments.size) {
             1 -> listOf(arguments[0], null, null)
@@ -26,7 +30,7 @@ internal class Lag : NavigationWindowFunction() {
             } else {
                 error("offset need to be non-negative integer")
             }
-        } ?: 1L // default offset is one
+        } ?: DEFAULT_OFFSET_VALUE
         val defaultValue = default?.invoke(state) ?: state.valueFactory.nullValue
         val targetIndex = currentPos - offsetValue
 
