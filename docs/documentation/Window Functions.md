@@ -3,9 +3,11 @@
 Window function:
 PartiQL currently supports SQL’s window functions with in-line window specification, i.e. `f(x) OVER( [window specification])`.  Note that frame clause is not currently supported ( but will be in the future).
 
-Window function are special functions that compute aggregated values over a window of input binding tuples. Like a general function, a window function returns a value for every binding tuple in the binding collection. However, at a very high level, window functions behaves as if they can access binding tuples other than the current one in the binding collection.
+Window function are special functions that compute aggregated values over a window of input binding tuples. Like a general function, a window function returns a value for every binding tuple in the binding collection. At a very high level, window functions behaves as if they can access binding tuples other than the current one in the binding collection.
 
-A window function call is identified by an OVER clause, which can optionally contains three sub-clauses `PARTITION BY`, `ORDER BY`. The `PARTITION BY` sub-clause acts similar to `GROUP BY`, which splits the input data into partitions based on partition keys. For example, a set of cars may be partition by makers. The window function can only access the binding tuples within the same partition, and if there is no partition by, all the binding tuples are within one partition. The `ORDER BY` sub-clauses uses the same logic as a normal `ORDER BY` clause, but it determine only the ordering of binding tuples within each partition, and may not necessarily has effects on the final order of the results.
+A window function call is identified by an OVER clause, which can optionally contains three sub-clauses `PARTITION BY`, `ORDER BY`. The `PARTITION BY` sub-clause acts similar to `GROUP BY`, which splits the input data into partitions based on partition keys. For example, a set of cars may be partitioned by makers, a set of stock may be partitioned by ticker. 
+
+The window function can only access the binding tuples within the same partition, and if there is no partition by, all the binding tuples are within one partition. The `ORDER BY` sub-clauses uses the same logic as a normal `ORDER BY` clause, but it determine only the ordering of binding tuples within each partition, and may not necessarily has effects on the final order of the results.
 
 ## Support Window Functions:
 - [Lag](#lag-function)
@@ -19,7 +21,7 @@ LAG(expr [, offset [, default]] )
 ```
 
 Purpose:
-Returns the value from a binding tuple at a given offset prior to the current binding tuple position in the window partition.
+Returns the value from a binding tuple at a given offset *prior to* the current binding tuple position in the window partition.
 
 Arguments:
 * expr: 
