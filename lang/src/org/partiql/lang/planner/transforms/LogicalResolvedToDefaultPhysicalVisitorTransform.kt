@@ -101,6 +101,21 @@ internal class LogicalResolvedToDefaultPhysicalVisitorTransform(
         }
     }
 
+    // TODO : Remove from experimental once https://github.com/partiql/partiql-docs/issues/31 is resolved and a RFC is approved
+    override fun transformBexprWindow(node: PartiqlLogicalResolved.Bexpr.Window): PartiqlPhysical.Bexpr {
+        val thiz = this
+        return PartiqlPhysical.build {
+            window(
+                i = DEFAULT_IMPL,
+                source = thiz.transformBexpr(node.source),
+                windowSpecification = thiz.transformOver(node.windowSpecification),
+                windowExpressionList = node.windowExpressionList.map {
+                    thiz.transformWindowExpression(it)
+                }
+            )
+        }
+    }
+
     override fun transformBexprOffset(node: PartiqlLogicalResolved.Bexpr.Offset): PartiqlPhysical.Bexpr {
         val thiz = this
         return PartiqlPhysical.build {

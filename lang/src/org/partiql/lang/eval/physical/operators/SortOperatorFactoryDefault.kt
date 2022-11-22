@@ -60,7 +60,7 @@ internal class SortOperatorDefault(private val sortKeys: List<CompiledSortKey>, 
  * Returns a [Comparator] that compares arrays of registers by using un-evaluated sort keys. It does this by modifying
  * the [state] to allow evaluation of the [sortKeys]
  */
-private fun getSortingComparator(sortKeys: List<CompiledSortKey>, state: EvaluatorState): Comparator<Array<ExprValue>> {
+internal fun getSortingComparator(sortKeys: List<CompiledSortKey>, state: EvaluatorState): Comparator<Array<ExprValue>> {
     val initial: Comparator<Array<ExprValue>>? = null
     return sortKeys.interruptibleFold(initial) { intermediate, sortKey ->
         if (intermediate == null) {

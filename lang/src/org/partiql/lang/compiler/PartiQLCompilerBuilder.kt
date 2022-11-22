@@ -32,6 +32,8 @@ import org.partiql.lang.eval.physical.operators.RelationalOperatorFactory
 import org.partiql.lang.eval.physical.operators.ScanRelationalOperatorFactoryDefault
 import org.partiql.lang.eval.physical.operators.SortOperatorFactoryDefault
 import org.partiql.lang.eval.physical.operators.UnpivotOperatorFactoryDefault
+import org.partiql.lang.eval.physical.operators.WindowRelationalOperatorFactoryDefault
+import org.partiql.lang.eval.physical.window.ExperimentalWindowFunc
 import org.partiql.lang.planner.EvaluatorOptions
 import org.partiql.lang.types.CustomType
 
@@ -83,6 +85,8 @@ class PartiQLCompilerBuilder private constructor() {
             OffsetRelationalOperatorFactoryDefault,
             LimitRelationalOperatorFactoryDefault,
             LetRelationalOperatorFactoryDefault,
+            @OptIn(ExperimentalWindowFunc::class)
+            WindowRelationalOperatorFactoryDefault
         )
 
         @JvmStatic

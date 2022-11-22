@@ -41,7 +41,8 @@ import org.partiql.lang.util.newFromIonText
  * [EvaluatorTestBase] contains testing infrastructure needed by all test classes that need to evaluate a query.
  */
 abstract class EvaluatorTestBase : TestBase() {
-    private val testHarness: EvaluatorTestAdapter = MultipleTestAdapter(
+    // TODO: Make it private again once we finish removing ExprNode
+    open val testHarness: EvaluatorTestAdapter = MultipleTestAdapter(
         listOf(
             PipelineEvaluatorTestAdapter(CompilerPipelineFactory()),
             PipelineEvaluatorTestAdapter(PlannerPipelineFactory()),

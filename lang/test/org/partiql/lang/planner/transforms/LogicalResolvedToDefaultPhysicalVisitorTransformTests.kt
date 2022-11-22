@@ -1,3 +1,4 @@
+
 package org.partiql.lang.planner.transforms
 
 import com.amazon.ionelement.api.ionBool
@@ -129,7 +130,84 @@ class LogicalResolvedToDefaultPhysicalVisitorTransformTests {
                         )
                     )
                 }
-            )
+            ),
+
+            // TODO: Test for window function, remove from experimental once https://github.com/partiql/partiql-docs/issues/31 is resolved and a RFC is approved
+            BexprTestCase(
+                PartiqlLogicalResolved.build {
+                    window(
+                        source = scan(
+                            expr = globalId("foo"),
+                            asDecl = varDecl(0)
+                        ),
+                        windowSpecification = over(
+                            windowPartitionList(
+                                path(
+                                    localId(0),
+                                    listOf(pathExpr(lit(ionSymbol("a")), PartiqlLogicalResolved.CaseSensitivity.CaseInsensitive()))
+                                )
+                            ),
+                            windowSortSpecList(
+                                sortSpec(
+                                    path(
+                                        localId(0),
+                                        listOf(pathExpr(lit(ionSymbol("b")), PartiqlLogicalResolved.CaseSensitivity.CaseInsensitive()))
+                                    )
+                                )
+                            )
+                        ),
+                        // This is a hack. At this point the window operator should have at most one Window Expression.
+                        windowExpressionList0 = windowExpression(
+                            varDecl(1),
+                            "lag",
+                            path(
+                                localId(0),
+                                listOf(
+                                    pathExpr(lit(ionSymbol("b")), PartiqlLogicalResolved.CaseSensitivity.CaseInsensitive())
+                                )
+                            )
+                        )
+                    )
+                },
+                PartiqlPhysical.build {
+                    window(
+                        i = DEFAULT_IMPL,
+                        source = scan(
+                            i = DEFAULT_IMPL,
+                            expr = globalId("foo"),
+                            asDecl = varDecl(0)
+                        ),
+                        windowSpecification = over(
+                            windowPartitionList(
+                                path(
+                                    localId(0),
+                                    listOf(pathExpr(lit(ionSymbol("a")), PartiqlPhysical.CaseSensitivity.CaseInsensitive()))
+                                )
+                            ),
+                            windowSortSpecList(
+                                sortSpec(
+                                    path(
+                                        localId(0),
+                                        listOf(pathExpr(lit(ionSymbol("b")), PartiqlPhysical.CaseSensitivity.CaseInsensitive()))
+                                    )
+                                )
+                            )
+                        ),
+                        windowExpressionList = listOf(
+                            windowExpression(
+                                varDecl(1),
+                                "lag",
+                                path(
+                                    localId(0),
+                                    listOf(
+                                        pathExpr(lit(ionSymbol("b")), PartiqlPhysical.CaseSensitivity.CaseInsensitive())
+                                    )
+                                )
+                            )
+                        )
+                    )
+                }
+            ),
         )
     }
 

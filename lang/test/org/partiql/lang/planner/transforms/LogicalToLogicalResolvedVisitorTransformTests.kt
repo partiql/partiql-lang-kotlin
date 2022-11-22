@@ -822,6 +822,45 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                     problem(1, 8, PlanningProblemDetails.UndefinedVariable("a", false)),
                     problem(1, 16, PlanningProblemDetails.UndefinedVariable("b", false))
                 ),
+            )
+        )
+    }
+
+    // TODO: Test for window function, remove from experimental once https://github.com/partiql/partiql-docs/issues/31 is resolved and a RFC is approved
+    @ParameterizedTest
+    @ArgumentsSource(WithWindowFunction::class)
+    fun `queries-with-window-function`(tc: TestCase) = runTestCase(tc)
+    class WithWindowFunction : ArgumentsProviderBase() {
+        override fun getParameters() = listOf(
+            TestCase(
+                "SELECT lag(l.co) OVER(PARTITION BY l.sensor ORDER BY l.record_time) as previous_co FROM << {'sensor' : 2, 'co': 0.2, 'recordtime': 1000}, {'sensor' : 1, 'co': 0.4, 'recordtime': 2000}, {'sensor' : 2, 'co': 0.8, 'recordtime': 3000}, {'sensor' : 1, 'co': 1.0, 'recordtime': 4000} >> as l",
+                Expectation.Success(
+                    ResolvedId(1, 12) { localId(0) },
+                    ResolvedId(1, 36) { localId(0) },
+                    ResolvedId(1, 54) { localId(0) },
+                    ResolvedId(1, 8) { localId(1) },
+                ).withLocals(
+                    localVariable("l", 0),
+                    localVariable("\$__partiql_window_function_0", 1)
+                )
+            ),
+            // Multiple window functions
+            TestCase(
+                "SELECT lag(l.co) OVER(PARTITION BY l.sensor ORDER BY l.record_time) as previous_co, lead(l.co) OVER(PARTITION BY l.sensor ORDER BY l.record_time) as next_co FROM << {'sensor' : 2, 'co': 0.2, 'recordtime': 1000}, {'sensor' : 1, 'co': 0.4, 'recordtime': 2000}, {'sensor' : 2, 'co': 0.8, 'recordtime': 3000}, {'sensor' : 1, 'co': 1.0, 'recordtime': 4000} >> as l",
+                Expectation.Success(
+                    ResolvedId(1, 12) { localId(0) },
+                    ResolvedId(1, 36) { localId(0) },
+                    ResolvedId(1, 54) { localId(0) },
+                    ResolvedId(1, 8) { localId(1) },
+                    ResolvedId(1, 90) { localId(0) },
+                    ResolvedId(1, 114) { localId(0) },
+                    ResolvedId(1, 132) { localId(0) },
+                    ResolvedId(1, 85) { localId(2) },
+                ).withLocals(
+                    localVariable("l", 0),
+                    localVariable("\$__partiql_window_function_0", 1),
+                    localVariable("\$__partiql_window_function_1", 2)
+                )
             ),
         )
     }

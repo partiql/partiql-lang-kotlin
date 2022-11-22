@@ -47,6 +47,8 @@ import org.partiql.lang.eval.physical.operators.RelationalOperatorFactoryKey
 import org.partiql.lang.eval.physical.operators.ScanRelationalOperatorFactoryDefault
 import org.partiql.lang.eval.physical.operators.SortOperatorFactoryDefault
 import org.partiql.lang.eval.physical.operators.UnpivotOperatorFactoryDefault
+import org.partiql.lang.eval.physical.operators.WindowRelationalOperatorFactoryDefault
+import org.partiql.lang.eval.physical.window.ExperimentalWindowFunc
 import org.partiql.lang.eval.visitors.PartiqlAstSanityValidator
 import org.partiql.lang.planner.transforms.normalize
 import org.partiql.lang.planner.transforms.toDefaultPhysicalPlan
@@ -241,6 +243,8 @@ interface PlannerPipeline {
                 OffsetRelationalOperatorFactoryDefault,
                 LimitRelationalOperatorFactoryDefault,
                 LetRelationalOperatorFactoryDefault,
+                @OptIn(ExperimentalWindowFunc::class)
+                WindowRelationalOperatorFactoryDefault
             )
         }
 

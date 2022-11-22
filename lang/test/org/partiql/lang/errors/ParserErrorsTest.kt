@@ -1000,6 +1000,8 @@ class ParserErrorsTest : PartiQLParserTestBase() {
         )
     }
 
+    // Some of the ORDER BY related tests are changed
+    // because the window function adds an additional rule that uses ORDER BY.
     @Test
     fun orderByMissingBYAndSortSpec() {
         checkInputThrowingParserException(
@@ -1007,23 +1009,24 @@ class ParserErrorsTest : PartiQLParserTestBase() {
             ErrorCode.PARSE_UNEXPECTED_TOKEN,
             mapOf(
                 Property.LINE_NUMBER to 1L,
-                Property.COLUMN_NUMBER to 23L,
-                Property.TOKEN_TYPE to TokenType.EOF,
-                Property.TOKEN_VALUE to ion.newSymbol("EOF")
+                Property.COLUMN_NUMBER to 18L,
+                Property.TOKEN_TYPE to TokenType.KEYWORD,
+                Property.TOKEN_VALUE to ion.newSymbol("order")
             ),
         )
     }
 
     @Test
     fun orderByMissingBy() {
+        // This is changed because the window function adds an additional rule that uses ORDER BY.
         checkInputThrowingParserException(
             "SELECT a FROM tb ORDER foo",
             ErrorCode.PARSE_UNEXPECTED_TOKEN,
             mapOf(
                 Property.LINE_NUMBER to 1L,
-                Property.COLUMN_NUMBER to 24L,
-                Property.TOKEN_TYPE to TokenType.IDENTIFIER,
-                Property.TOKEN_VALUE to ion.newSymbol("foo")
+                Property.COLUMN_NUMBER to 18L,
+                Property.TOKEN_TYPE to TokenType.KEYWORD,
+                Property.TOKEN_VALUE to ion.newSymbol("order")
             ),
         )
     }
@@ -1035,9 +1038,9 @@ class ParserErrorsTest : PartiQLParserTestBase() {
             ErrorCode.PARSE_UNEXPECTED_TOKEN,
             mapOf(
                 Property.LINE_NUMBER to 1L,
-                Property.COLUMN_NUMBER to 26L,
-                Property.TOKEN_TYPE to TokenType.EOF,
-                Property.TOKEN_VALUE to ion.newSymbol("EOF")
+                Property.COLUMN_NUMBER to 18L,
+                Property.TOKEN_TYPE to TokenType.KEYWORD,
+                Property.TOKEN_VALUE to ion.newSymbol("order")
             ),
         )
     }
@@ -1077,9 +1080,9 @@ class ParserErrorsTest : PartiQLParserTestBase() {
             ErrorCode.PARSE_UNEXPECTED_TOKEN,
             mapOf(
                 Property.LINE_NUMBER to 1L,
-                Property.COLUMN_NUMBER to 27L,
-                Property.TOKEN_TYPE to TokenType.ASC,
-                Property.TOKEN_VALUE to ion.newSymbol("asc")
+                Property.COLUMN_NUMBER to 18L,
+                Property.TOKEN_TYPE to TokenType.KEYWORD,
+                Property.TOKEN_VALUE to ion.newSymbol("order")
             ),
         )
     }
@@ -1091,9 +1094,9 @@ class ParserErrorsTest : PartiQLParserTestBase() {
             ErrorCode.PARSE_UNEXPECTED_TOKEN,
             mapOf(
                 Property.LINE_NUMBER to 1L,
-                Property.COLUMN_NUMBER to 27L,
-                Property.TOKEN_TYPE to TokenType.ASC,
-                Property.TOKEN_VALUE to ion.newSymbol("asc")
+                Property.COLUMN_NUMBER to 18L,
+                Property.TOKEN_TYPE to TokenType.KEYWORD,
+                Property.TOKEN_VALUE to ion.newSymbol("order")
             ),
         )
     }
@@ -1119,9 +1122,9 @@ class ParserErrorsTest : PartiQLParserTestBase() {
             ErrorCode.PARSE_UNEXPECTED_TOKEN,
             mapOf(
                 Property.LINE_NUMBER to 1L,
-                Property.COLUMN_NUMBER to 33L,
-                Property.TOKEN_TYPE to TokenType.EOF,
-                Property.TOKEN_VALUE to ion.newSymbol("EOF")
+                Property.COLUMN_NUMBER to 18L,
+                Property.TOKEN_TYPE to TokenType.KEYWORD,
+                Property.TOKEN_VALUE to ion.newSymbol("order")
             ),
         )
     }

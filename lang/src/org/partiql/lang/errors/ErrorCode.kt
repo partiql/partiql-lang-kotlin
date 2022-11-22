@@ -1198,6 +1198,16 @@ enum class ErrorCode(
         "Union type not permitted"
     ),
 
+    PARSE_EXPECTED_WINDOW_ORDER_BY(
+        ErrorCategory.PARSER,
+        LOC_TOKEN,
+        "Expect ORDER BY in window specification"
+    ) {
+        override fun getErrorMessage(errorContext: PropertyValueMap?): String {
+            return "Expect ORDER BY in window specification"
+        }
+    },
+
     // Generic errors
     UNIMPLEMENTED_FEATURE(
         ErrorCategory.SEMANTIC,

@@ -244,6 +244,26 @@ internal data class LogicalToLogicalResolvedVisitorTransform(
         }
     }
 
+    // TODO: Remove from experimental once https://github.com/partiql/partiql-docs/issues/31 is resolved and a RFC is approved
+    override fun transformBexprWindow_windowSpecification(node: PartiqlLogical.Bexpr.Window): PartiqlLogicalResolved.Over {
+        val bindings = getOutputScope(node).concatenate(this.inputScope)
+        return withInputScope(bindings) {
+            node.windowSpecification.let {
+                this.transformOver(it)
+            }
+        }
+    }
+
+    // TODO: Remove from experimental once https://github.com/partiql/partiql-docs/issues/31 is resolved and a RFC is approved
+    override fun transformBexprWindow_windowExpressionList(node: PartiqlLogical.Bexpr.Window): List<PartiqlLogicalResolved.WindowExpression> {
+        val bindings = getOutputScope(node).concatenate(this.inputScope)
+        return withInputScope(bindings) {
+            node.windowExpressionList.map {
+                this.transformWindowExpression(it)
+            }
+        }
+    }
+
     // We are currently using bindings_to_values to denote a sub-query, which works for all the use cases we are
     // presented with today, as every SELECT statement is replaced with `bindings_to_values at the top level.
     override fun transformExprBindingsToValues(node: PartiqlLogical.Expr.BindingsToValues): PartiqlLogicalResolved.Expr =
@@ -499,6 +519,13 @@ internal data class LogicalToLogicalResolvedVisitorTransform(
                 val letVariables = bexpr.bindings.reversed().map { it.decl }
                 sourceScope.concatenate(letVariables)
             }
+
+            // TODO: Remove from experimental once https://github.com/partiql/partiql-docs/issues/31 is resolved and a RFC is approved
+            is PartiqlLogical.Bexpr.Window -> {
+                val sourceScope = getOutputScope(bexpr.source)
+                val windowVariable = bexpr.windowExpressionList.map { it.decl }
+                sourceScope.concatenate(windowVariable)
+            }
         }
 
     private fun LocalScope.concatenate(other: LocalScope): LocalScope =
@@ -506,6 +533,11 @@ internal data class LogicalToLogicalResolvedVisitorTransform(
 
     private fun LocalScope.concatenate(other: List<PartiqlLogical.VarDecl>): LocalScope {
         val concatenatedScopeVariables = this.varDecls + other
+        return LocalScope(concatenatedScopeVariables)
+    }
+
+    private fun LocalScope.concatenate(other: PartiqlLogical.VarDecl): LocalScope {
+        val concatenatedScopeVariables = this.varDecls + listOf(other)
         return LocalScope(concatenatedScopeVariables)
     }
 
