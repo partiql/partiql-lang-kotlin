@@ -10,7 +10,7 @@
 4. Decide which code will require a upgrade to PIG
     1. Most commonly: anything involving `ExprNode` and ast.kt’s `MetaContainer`
 5. For any call to override function `rewriteXXX`, find the equivalent `transformXXX` method in `partiql-domains.kt`
-    1. First you need to find the `ExprNode` type’s equivalent `PartiqlAst` type. You can look at how the `ExprNode` is converted to a `PartiqlAst` in [`ExprNodeToStatement.kt`](https://github.com/partiql/partiql-lang-kotlin/blob/master/lang/src/org/partiql/lang/ast/ExprNodeToStatement.kt). Usually, this is a pretty simple 1:1 mapping, but there can be some ambiguities and differences between `ExprNode` and `PartiqlAst`. Some cases can be found in the “Common Conversions” section.
+    1. First you need to find the `ExprNode` type’s equivalent `PartiqlAst` type. You can look at how the `ExprNode` is converted to a `PartiqlAst` in [`ExprNodeToStatement.kt`](https://github.com/partiql/partiql-lang-kotlin/blob/1bd69346f0532dd7fcd20ef26e174b115c3d22e2/lang/src/org/partiql/lang/ast/ExprNodeToStatement.kt). Usually, this is a pretty simple 1:1 mapping, but there can be some ambiguities and differences between `ExprNode` and `PartiqlAst`. Some cases can be found in the “Common Conversions” section.
     2. After finding the type to convert, there should be a corresponding `transform` function in `partiql-domains.kt`. 
     3. You may need to add extension functions to do the same as an `ExprNode` but using `PartiqlAst`. Add these to `lang/domains/util.kt`
     4. Sometimes there are some trickier conversions. These cases are found in the sections below:
