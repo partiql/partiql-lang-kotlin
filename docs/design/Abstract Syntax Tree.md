@@ -63,13 +63,13 @@ Consider the following:
 
 ```Kotlin
     when(expr) {
-        is VariableReference -> case {
+        is Id -> case {
             ...
         }
-        is Literal -> case {
+        is Lit -> case {
             ...
         }
-        // and so on for all types derived from ExprNode
+        // and so on for all types derived from Expr
     }.toUnit()
 ```
 
@@ -99,7 +99,7 @@ When `case()` and `toUnit()` are used together in this fashion the Kotlin compil
 and will require that a branch exists for all derived types or that an `else` branch is present.
 
 This helps improve maintainability of code that uses the AST because when a new type that inherits from
-`ExprNode` is added then those `when` expressions which do not include an `else` branch will generate compiler errors
+`PartiqlAst.Expr` is added then those `when` expressions which do not include an `else` branch will generate compiler errors
 and the developer will know they need to be updated to include the new node type. For this reason, the developer should
 carefully consider the use of `else` branches and instead should consider explicit empty branches for each of the
 derived types instead.
@@ -109,12 +109,12 @@ other means.  For example, the compiler will still require a branch for every de
 result of the `when` becomes the function's return value:
 
 ```Kotlin
-   fun transformNode(exprNode: ExprNode): ExprNode = when(exprNode) {
-       is Literal -> { // case() is not needed
+   fun transformNode(astNode: PartiqlAst.Expr): PartiqlAst.Expr = when(astNode) {
+       is Lit -> { // case() is not needed
            //Perform cloning transform
            ...
        }
-       is VariableReference -> { // case() is not needed
+       is Id -> { // case() is not needed
            //Perform cloning transform
            ...
        }
@@ -122,52 +122,6 @@ result of the `when` becomes the function's return value:
        ...
    } //.toUnit() is not needed
 ```
-
-2. Destructuring
-
-Another potential maintainability issue can arise when new properties are added to existing node types.  Knowing the
-locations of the code which must be modified to account for the new property can be a challenge.
-
-Another way in which the Kotlin compiler can be enlisted to help improve code maintainability is with the use of 
-[destructuring](https://kotlinlang.org/docs/reference/multi-declarations.html).  There is also a shortcoming in Kotlin's
-destructuring feature which we solve almost by accident.
-
-Consider the following:
-
-```Kotlin
-    when(expr) {
-        //...
-        is VariableReference -> {
-            val (id, caseSensitivity) = expr
-        }
-        //...
-    }
-```
-
-Unlike some languages, Kotlin's destructuring feature doesn't require that all the properties are mapped to variables on
-the left side of `=`.  Unfortunately, this means that if a new property is added to `VariableReference`, the above
-example of destructuring will not result in an compile error of any kind.
-
-By chance, all of the node types in the AST contain an additional property:  `metas: MetaContainer`.  The fact that this
-is *always* the last property defined in a node type is intentional.  In fact, any and all new properties should be
-added immediately *before* the `metas: MetaContainer`.  Consider:
-
-```Kotlin
-    val (id, caseSensitivity, m) = expr
-```
-
-If a new property is added to `VariableReference` *before* `metas`, the type of varialbe `m` will be the type of that
-new property and *this* will result in compile-time errors from the Kotlin compiler at the locations where `m` is
-referenced. This is great for circumstances where `m` is needed, but there are also many cases where a node's
-`metas` are ignored, and if `m` is unused, the Kotlin compiler will issue a warning. For that scenario use the
-following:
-
-```Kotlin
-    val (id, caseSensitivity, _: MetaContainer) = varRef
-```
-
-The `_: MetaContainer` component here simply causes a compile-time assertion that the third property of
-`VariableReference` is of type `MetaContainer`, resulting in a compile-time error whenever a new property is added.
 
 3. Arbitrary Meta Information Can Be Attached to Any Node
 
