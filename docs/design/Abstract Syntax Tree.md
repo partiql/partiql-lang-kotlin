@@ -13,7 +13,7 @@ graph. Our implementation for PartiQL's AST is a tree and *not* a graph. It cont
 reference its children.
 
 ## Implementation
-There were multiple alternative implementations of PartiQL AST, e.g. S-expression & `ExprNode`, which were already deprecated & removed. Now we are using PIG generated AST for better maintainability. See https://github.com/partiql/partiql-ir-generator to learn more about PIG. The domain file is here, [partiql.ion](https://github.com/partiql/partiql-lang-kotlin/blob/main/lang/resources/org/partiql/type-domains/partiql.ion), where the tree structure just mirrors the PartiQL grammar. 
+PartiQL uses [PIG](https://github.com/partiql/partiql-ir-generator/wiki) to concisely defines the structure of our ASTs. [partiql.ion](https://github.com/partiql/partiql-lang-kotlin/blob/main/lang/resources/org/partiql/type-domains/partiql.ion) contains the type universe, which specified named constraints for every node and its attributes in the generated AST. 
 
 The rest of this doc describes some points of the implementation of PIG-generated code. 
 
