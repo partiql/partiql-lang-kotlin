@@ -61,8 +61,8 @@ internal class PartiQLParserSpyTest {
     @Test
     fun manuallyShowDoubleParsingSameQueriesWorks() {
         val query00 = "SELECT a1 FROM t1"
-        val ast00 = PartiQLVisitor(ion).visit(parser.parseUsingSLL(query00))
-        val ast01 = PartiQLVisitor(ion).visit(parser.parseUsingLL(query00))
+        val ast00 = parser.parseQuery(query00) { parser.createParserSLL(it) }
+        val ast01 = parser.parseQuery(query00) { parser.createParserLL(it) }
         assertEquals(ast00, ast01)
     }
 
@@ -73,8 +73,8 @@ internal class PartiQLParserSpyTest {
     fun manuallyShowDoubleParsingWorks() {
         val query00 = "SELECT a1 FROM t1"
         val query01 = "SELECT a2 FROM t2"
-        PartiQLVisitor(ion).visit(parser.parseUsingSLL(query00))
-        PartiQLVisitor(ion).visit(parser.parseUsingLL(query01))
+        parser.parseQuery(query00) { parser.createParserSLL(it) }
+        parser.parseQuery(query01) { parser.createParserLL(it) }
     }
 
     /**
@@ -89,8 +89,8 @@ internal class PartiQLParserSpyTest {
         val ast = parser.parseAstStatement(query00)
 
         // Assert
-        verify(exactly = 1) { parser.parseUsingSLL(query00) }
-        verify(exactly = 0) { parser.parseUsingLL(query00) }
+        verify(exactly = 1) { parser.createParserSLL(any()) }
+        verify(exactly = 0) { parser.createParserLL(any()) }
         assertEquals(
             ast,
             PartiqlAst.build {
@@ -118,15 +118,15 @@ internal class PartiQLParserSpyTest {
         // Arrange
         val query00 = "SELECT a FROM t"
         every {
-            parser.parseUsingSLL(query00)
+            parser.createParserSLL(any())
         } throws ParseCancellationException()
 
         // Act
         val ast = parser.parseAstStatement(query00)
 
         // Assert
-        verify(exactly = 1) { parser.parseUsingSLL(query00) }
-        verify(exactly = 1) { parser.parseUsingLL(query00) }
+        verify(exactly = 1) { parser.createParserSLL(any()) }
+        verify(exactly = 1) { parser.createParserLL(any()) }
         assertEquals(
             ast,
             PartiqlAst.build {
@@ -153,7 +153,7 @@ internal class PartiQLParserSpyTest {
     fun badQueryThrowsSLLCancellationException() {
         val query00 = "1++++++++++++"
         assertThrows<ParseCancellationException> {
-            parser.parseUsingSLL(query00)
+            parser.parseQuery(query00) { parser.createParserSLL(it) }
         }
     }
 
@@ -164,7 +164,7 @@ internal class PartiQLParserSpyTest {
     fun badQueryThrowsLLParserException() {
         val query00 = "1++++++++++++"
         assertThrows<ParserException> {
-            parser.parseUsingLL(query00)
+            parser.parseQuery(query00) { parser.createParserLL(it) }
         }
     }
 
@@ -177,7 +177,7 @@ internal class PartiQLParserSpyTest {
         assertThrows<ParserException> {
             parser.parseAstStatement(query00)
         }
-        verify(exactly = 1) { parser.parseUsingSLL(query00) }
-        verify(exactly = 1) { parser.parseUsingLL(query00) }
+        verify(exactly = 1) { parser.createParserSLL(any()) }
+        verify(exactly = 1) { parser.createParserLL(any()) }
     }
 }
