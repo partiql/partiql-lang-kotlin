@@ -1,7 +1,7 @@
 # PartiQL Window Function Doc
 
 Window function:
-PartiQL currently supports SQL’s window functions with in-line window specification, i.e. `f(x) OVER( [window specification])`.  Note that frame clause is not currently supported ( but will be in the future).
+This PartiQL implementation currently supports SQL’s window functions with in-line window specification, i.e. `f(x) OVER( [window specification])`.  Note that frame clause is not currently supported ( but will be in the future).
 
 Window functions are special functions that compute aggregated values over a window of input binding tuples. Like a general function, a window function returns a value for every binding tuple in the binding collection. At a very high level, window functions behave as if they can access binding tuples other than the current one in a binding collection.
 
@@ -27,7 +27,8 @@ Returns the value from a binding tuple at a given offset *prior to* the current 
 
 Arguments:
 * expr: 
-  * The expression to be evaluated based on specific offset. `expr` can be an expression of any type (literal, attribute name, path expression, or subquery) but another window function expression.
+  * The expression to be evaluated based on specific offset. `expr` can be an expression of any type but another window function expression.
+  * For example, `expr` can be in form of literal, attribute name, path expression, or subquery, but `LAG(LAG(...) OVER ... ) OVER ...)` is not allowed. 
 * offset: 
   * The number of “rows” back from the current binding tuple from which the `expr` should be evaluated upon. If `offset` is not specified, the default value is 1. `offset` can be an expression of any type but window function. If `offset` is not a constant value, it should be evaluated upon the current binding tuple instead of the offset binding tuple. `offset` should be evaluated to a non-negative integer.
 * default: 
@@ -104,7 +105,7 @@ The result is
 >>     
 ```
 
-2. Use of aggregation function:
+2. Use of aggregate function:
 ```
 SELECT 
     month as current_month, 
@@ -185,9 +186,11 @@ LEAD(expr [, offset [, default]] )
 Purpose:
 Returns the value from a binding tuple at a given offset *after* the current binding tuple position in the window partition.
 
+Note that `Lag` and `Lead` perform similar operation and have similar semantics, except for the fact that `Lag` looks for `x` rows prior to the current row and `Lead` looks for `x` rows after.
+
 Arguments:
 * expr:
-    * The expression to be evaluated based on specific offset. `expr` can be an expression of any type (literal, attribute name, path expression, or subquery) but another window function expression.
+    * The expression to be evaluated based on specific offset. `expr` can be an expression of any type but another window function expression.
 * offset:
     * The number of “rows” after the current binding tuple from which the `expr` should be evaluated upon. If `offset` is not specified, the default value is 1. `offset` can be an expression of any type but window function. If `offset` is not a constant value, it should be evaluated upon the current binding tuple instead of the offset binding tuple. `offset` should be evaluated to a non-negative integer.
 * default:
@@ -234,4 +237,4 @@ The result is
 >>     
 ```
 
-`Lag` and `Lead` perform similar operation and have similar semantics, except for the fact that `Lag` looks for `x` rows prior to the current row and `Lead` looks for `x` rows after. To see more example, you can go to the example section in [Lag function](#lag-function).
+To see more example, you can go to the example section in [Lag function](#lag-function).
