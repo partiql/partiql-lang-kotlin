@@ -1,7 +1,7 @@
 # PartiQL Window Function Doc
 
 Window function:
-This PartiQL implementation currently supports SQL’s window functions with in-line window specification, i.e. `f(x) OVER([window specification])`.  Note that frame clause is not currently supported ( but will be in the future).
+This PartiQL implementation currently supports SQL’s window functions with in-line window specification, i.e. `f(x) OVER ([window-specification])`.  Note that frame clause is not currently supported (but will be in the future).
 
 Window functions are special functions that compute aggregated values over a window of input binding tuples. Like a general function, a window function returns a value for every binding tuple in the binding collection. At a very high level, window functions behave as if they can access binding tuples other than the current one in a binding collection.
 
