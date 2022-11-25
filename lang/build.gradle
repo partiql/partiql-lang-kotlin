@@ -73,7 +73,7 @@ task generatePigDomains {
     // https://github.com/partiql/partiql-ir-generator/issues/5
 
 
-    def typeUniverse = new File(projectDir, "resources/org/partiql/type-domains/partiql.ion")
+    def typeUniverse = new File(projectDir, "src/main/resources/org/partiql/type-domains/partiql.ion")
     def targetLanguage = new TargetLanguage.Kotlin("org.partiql.lang.domains", PIG_OUTPUT_DIR, null)
     def cmd = new Command.Generate(typeUniverse , targetLanguage)
 
@@ -105,13 +105,6 @@ sourceSets {
     main {
         kotlin.srcDirs += [PIG_SOURCE_ROOT, ANTLR_SOURCE_ROOT]
         java.srcDirs += [ANTLR_SOURCE_ROOT]
-        antlr.srcDirs = ['antlr']
-    }
-    jmh {
-        java.srcDirs = ['src/jmh/java']
-        kotlin.srcDirs = ["jmh"]
-        resources.srcDirs = ['src/jmh/resources']
-        compileClasspath += sourceSets.main.runtimeClasspath
     }
 }
 
