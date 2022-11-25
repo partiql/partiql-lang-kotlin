@@ -28,6 +28,9 @@ import org.partiql.lang.util.SexpAstPrettyPrinter
 import org.partiql.pig.runtime.DomainNode
 import java.util.UUID
 
+// This file is to be removed after we removed the PlannerPipeline and migrate to PartiQLCompilerPipeline
+@Suppress("DEPRECATION")
+
 // The name of the database in the context variable.
 internal const val DB_CONTEXT_VAR = "in-memory-database"
 

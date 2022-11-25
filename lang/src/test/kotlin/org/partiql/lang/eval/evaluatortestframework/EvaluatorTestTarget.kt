@@ -19,8 +19,8 @@ enum class EvaluatorTestTarget {
     COMPILER_PIPELINE,
 
     /**
-     * Run the test only on [org.partiql.lang.planner.PlannerPipeline]. Set this when the test case covers features not
+     * Run the test on [org.partiql.lang.planner.PlannerPipeline]. Set this when the test case covers features not
      * supported by [org.partiql.lang.CompilerPipeline], or when testing features unique to the former.
      */
-    PLANNER_PIPELINE
+    PLANNER_PIPELINE,
 }

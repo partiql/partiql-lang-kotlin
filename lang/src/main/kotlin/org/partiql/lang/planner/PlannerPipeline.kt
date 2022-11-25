@@ -123,6 +123,7 @@ interface PartiqlPhysicalPass {
  * used to compile queries concurrently. If used in a multithreaded application, use one instance of [PlannerPipeline]
  * per thread.
  */
+@Deprecated("Planner Pipeline is deprecated. Please use PartiQLCompilerPipeline instead")
 interface PlannerPipeline {
     val valueFactory: ExprValueFactory
 
