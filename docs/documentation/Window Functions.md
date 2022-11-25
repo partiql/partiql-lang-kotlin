@@ -3,15 +3,15 @@
 Window function:
 PartiQL currently supports SQL’s window functions with in-line window specification, i.e. `f(x) OVER( [window specification])`.  Note that frame clause is not currently supported ( but will be in the future).
 
-Window function are special functions that compute aggregated values over a window of input binding tuples. Like a general function, a window function returns a value for every binding tuple in the binding collection. At a very high level, window functions behaves as if they can access binding tuples other than the current one in the binding collection.
+Window functions are special functions that compute aggregated values over a window of input binding tuples. Like a general function, a window function returns a value for every binding tuple in the binding collection. At a very high level, window functions behave as if they can access binding tuples other than the current one in a binding collection.
 
-A window function call is identified by an OVER clause, which can optionally contains three sub-clauses `PARTITION BY`, `ORDER BY`, and frame clause(*not supported at the moment). 
+A window function call is identified by an OVER clause, which can optionally contain three sub-clauses `PARTITION BY`, `ORDER BY`, and `FRAME` (`FRAME` is not supported at the moment). 
 
-The `PARTITION BY` sub-clause acts similar to `GROUP BY`, which splits the input data into partitions based on partition keys. For example, a set of cars may be partitioned by makers, a set of stock may be partitioned by ticker. The window function can only access the binding tuples within the same partition, and if there is no partition by, all the binding tuples are within one partition. 
+The `PARTITION BY` sub-clause acts similar to `GROUP BY`, which splits the input data into partitions based on partition keys. For example, a set of cars may be partitioned by makers, a set of stocks may be partitioned by ticker. The window function can only access the binding tuples within the same partition, and if there is no `PARTITION BY`, all the binding tuples are within one partition. 
 
-The `ORDER BY` sub-clauses uses the same logic as a normal `ORDER BY` clause, but it determine only the ordering of binding tuples within each partition, and may not necessarily has effects on the final order of the results.
+The `ORDER BY` sub-clause uses the same logic as a normal `ORDER BY` clause, but it determine only the ordering of binding tuples within each partition, and may not necessarily has effects on the final order of the results.
 
-## Support Window Functions:
+## Supported Window Functions:
 - [Lag](#lag-function)
 - [Lead](#lead-function)
 
@@ -40,7 +40,7 @@ Window specification:
 
 Example:
 
-Consider our dataset is :
+Consider our dataset to be:
 
 ```
 stock_price : <<
@@ -173,7 +173,7 @@ The result is :
 ```
 
 The first row returns `{ 'previous_a': 'Out of Partition' }` because current row is the first row in partition, and `lag(sp.a)` tries to access the row before, which is out of the window partition. Therefore it returns the default value.
-The second row returns an empty struct `{}` , this is because the current row is now the second row , and `lag(sp.a)` essentially evaluate `sp.a` over the binding tuple `{ date: 2022-09-30, ticker: AMZN, price: 113.00}`. since there is no binding name `a` in the binding tuple, the query returns `missing`.
+The second row returns an empty struct `{}` , this is because the current row is now the second row , and `lag(sp.a)` essentially evaluates `sp.a` over the binding tuple `{ date: 2022-09-30, ticker: AMZN, price: 113.00}`. Since there is no binding name `a` in the binding tuple, the query returns `missing`.
 
 ### Lead Function:
 Syntax:
@@ -234,4 +234,4 @@ The result is
 >>     
 ```
 
-`Lag` and `Lead` performs similar operation and have similar semantics, expect for the fact that `Lag` looks for x rows prior to the current row and `Lead` looks for x rows after. To see more example, you can go to the example section in [Lag function](#lag-function).
+`Lag` and `Lead` perform similar operation and have similar semantics, except for the fact that `Lag` looks for `x` rows prior to the current row and `Lead` looks for `x` rows after. To see more example, you can go to the example section in [Lag function](#lag-function).
