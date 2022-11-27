@@ -52,11 +52,10 @@ class EvaluatingCompilerFromLetTests : EvaluatorTestBase() {
                 target = EvaluatorTestTarget.COMPILER_PIPELINE // no support in physical plans yet for HAVING
             ),
             // LET shadowed binding
-            // TODO this is failing in the PlannerPipeline
-            // EvaluatorTestCase(
-            //     "SELECT X FROM A LET 1 AS X, 2 AS X",
-            //     """<< {'X': 2} >>"""
-            // ),
+            EvaluatorTestCase(
+                "SELECT X FROM A LET 1 AS X, 2 AS X",
+                """<< {'X': 2} >>"""
+            ),
 
             // For the two tests immediately below--one tests the AST evaluator only and the other tests
             // the phys. plan evaluator only.  The query is the same but the expected result is different
