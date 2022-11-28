@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - The PartiQLParser now attempts to parse queries using the SLL Prediction Mode set by ANTLR
   - If unable to parse via SLL Prediction Mode, it attempts to parse using the slower LL Prediction Mode
   - Modifications have also been made to the ANTLR grammar to increase the speed of parsing joined table references
+  - Updates how the PartiQLParser handles parameter indexes to remove the double-pass while lexing
 
 ### Deprecated
 
