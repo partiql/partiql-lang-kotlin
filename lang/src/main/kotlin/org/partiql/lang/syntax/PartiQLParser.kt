@@ -202,11 +202,12 @@ internal class PartiQLParser(
     }
 
     /**
-     * This token stream creates [parameterIndexes], which is a map with key-value pairs, where the keys represent the
+     * This token stream creates [parameterIndexes], which is a map, where the keys represent the
      * indexes of all [GeneratedLexer.QUESTION_MARK]'s and the values represent their relative index amongst all other
      * [GeneratedLexer.QUESTION_MARK]'s.
      */
     internal open class CountingTokenStream(tokenSource: TokenSource) : CommonTokenStream(tokenSource) {
+        // TODO: Research use-case of parameters and implementation -- see https://github.com/partiql/partiql-docs/issues/23
         val parameterIndexes = mutableMapOf<Int, Int>()
         private var parametersFound = 0
         override fun LT(k: Int): Token? {
