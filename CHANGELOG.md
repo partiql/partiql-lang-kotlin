@@ -8,6 +8,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+
+### Changed
+
+### Deprecated
+
+### Fixed
+
+### Removed
+
+### Security
+-->
+
+## [0.8.2] - 2022-11-28
+### Added
 - Extends statement redaction to support `INSERT/REPLACE/UPSERT INTO`.
 - Adds simple auto-completion to the CLI.
 
@@ -24,16 +38,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - If unable to parse via SLL Prediction Mode, it attempts to parse using the slower LL Prediction Mode
   - Modifications have also been made to the ANTLR grammar to increase the speed of parsing joined table references
   - Updates how the PartiQLParser handles parameter indexes to remove the double-pass while lexing
-
-### Deprecated
-
-### Fixed
-
-### Removed
-
-### Security
--->
-
 
 ## [0.8.1] - 2022-10-28
 
