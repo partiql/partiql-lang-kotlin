@@ -57,6 +57,7 @@ import org.partiql.lang.syntax.antlr.PartiQLParser
 import org.partiql.lang.types.CustomType
 import org.partiql.lang.util.DATE_PATTERN_REGEX
 import org.partiql.lang.util.bigDecimalOf
+import org.partiql.lang.util.checkThreadInterrupted
 import org.partiql.lang.util.error
 import org.partiql.lang.util.getPrecisionFromTimeString
 import org.partiql.lang.util.ionValue
@@ -444,7 +445,10 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
 
     override fun visitLimitClause(ctx: PartiQLParser.LimitClauseContext): PartiqlAst.Expr = visit(ctx.arg, PartiqlAst.Expr::class)
 
-    override fun visitExpr(ctx: PartiQLParser.ExprContext) = visit(ctx.exprBagOp(), PartiqlAst.Expr::class)
+    override fun visitExpr(ctx: PartiQLParser.ExprContext): PartiqlAst.Expr {
+        checkThreadInterrupted()
+        return visit(ctx.exprBagOp(), PartiqlAst.Expr::class)
+    }
 
     override fun visitOffsetByClause(ctx: PartiQLParser.OffsetByClauseContext) = visit(ctx.arg, PartiqlAst.Expr::class)
 
