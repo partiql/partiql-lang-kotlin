@@ -2,22 +2,6 @@ plugins {
     id 'application'
 }
 
-plugins.withId('java', { _ ->
-    sourceSets {
-        main.java.srcDirs = ["src/java"]
-        main.resources.srcDirs = ["resources"]
-        test.java.srcDirs = ["test/java"]
-        test.resources.srcDirs = ["test-resources"]
-    }
-})
-
-plugins.withId('org.jetbrains.kotlin.jvm', { _ ->
-    sourceSets {
-        main.kotlin.srcDirs = ["src/kotlin", "src/java"]
-        test.kotlin.srcDirs = ["test"]
-    }
-})
-
 application {
     mainClass.set("org.partiql.examples.util.Main")
 }
