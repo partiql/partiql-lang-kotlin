@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Adds support for collection aggregation functions in the EvaluatingCompiler and experimental planner
 - Adds support for the syntactic sugar of using aggregations functions in place of their collection aggregation function
   counterparts (in the experimental planner)
+- Experimental implementation for window function `Lag` and `Lead`.
 - Added `ExprValue.toIonValue(ion: IonSystem)` in kotlin, and `ExprValueKt.toIonValue(value: ExprValue, ion: IonSystem)` in Java to transform one `ExprValue` to a corresponding `IonValue`. 
 
 ### Changed
@@ -39,6 +40,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - PartiQL DATE in Ion representation now becomes ion timestamp with annotation of `$date`, instead of `$partiql_date`
 - PartiQL TIME in Ion representation now becomes ion struct with annotation of `$time`, instead of `$partiql_time`
 - Simplifies the aggregation operator in the experimental planner by removing the use of metas
+- Increases the performance of the PartiQLParser by changing the parsing strategy
+  - The PartiQLParser now attempts to parse queries using the SLL Prediction Mode set by ANTLR
+  - If unable to parse via SLL Prediction Mode, it attempts to parse using the slower LL Prediction Mode
+  - Modifications have also been made to the ANTLR grammar to increase the speed of parsing joined table references
 
 ### Deprecated
 - Marks the GroupKeyReferencesVisitorTransform as deprecated. There is no functionally equivalent class.

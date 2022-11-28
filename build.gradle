@@ -43,7 +43,7 @@ buildDir = new File(rootProject.projectDir, "gradle-build/" + project.name)
 
 configure(subprojects.findAll { it.name != 'example' }) {
     apply plugin: 'io.gitlab.arturbosch.detekt'
-    
+
     detekt {
         input = files("src/")
         parallel = true                                       // Builds the AST in parallel. Rules are always executed in parallel. Can lead to speedups in larger projects. `false` by default.
@@ -142,26 +142,5 @@ subprojects { proj ->
             }
         }
         processResources.dependsOn generateVersionAndHashProperties
-    })
-
-    if (project.name == "partiql-isl" || project.name == "partiql-tests-runner" || project.parent.name.contains("-upgrade")) {
-        // skip subprojects using the conventional Gradle layout
-        return
-    }
-
-    plugins.withId('java', { _ ->
-        sourceSets {
-            main.java.srcDirs = ["src"]
-            main.resources.srcDirs = ["resources"]
-            test.java.srcDirs = ["test"]
-            test.resources.srcDirs = ["test-resources"]
-        }
-    })
-
-    plugins.withId('org.jetbrains.kotlin.jvm', { _ ->
-        sourceSets {
-            main.kotlin.srcDirs = ["src"]
-            test.kotlin.srcDirs = ["test"]
-        }
     })
 }
