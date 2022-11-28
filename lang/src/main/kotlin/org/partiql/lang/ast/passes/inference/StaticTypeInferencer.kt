@@ -50,7 +50,8 @@ class StaticTypeInferencer(
                     ?: error("Expected query's inferred StaticType to not be null")
             is PartiqlAst.Statement.Dml,
             is PartiqlAst.Statement.Ddl,
-            is PartiqlAst.Statement.Exec -> error("Type inference for DML, DDL, EXEC statements is not currently supported")
+            is PartiqlAst.Statement.Explain,
+            is PartiqlAst.Statement.Exec -> error("Type inference for DML, DDL, EXEC, and EXPLAIN statements is not currently supported")
         }
         return when {
             problemCollector.hasErrors -> InferenceResult.Failure(inferredStaticType, transformedPartiqlAst, problemCollector.problems)

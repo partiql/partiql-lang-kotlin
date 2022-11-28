@@ -11,6 +11,9 @@ options {
  *
  */
 
+topStatement
+    : (EXPLAIN (PAREN_LEFT explainOption (COMMA explainOption)* PAREN_RIGHT)? )? statement;
+
 statement
     : dql COLON_SEMI? EOF          # QueryDql
     | dml COLON_SEMI? EOF          # QueryDml
@@ -23,6 +26,9 @@ statement
  * COMMON STRUCTURES
  *
  */
+
+explainOption
+    : param=IDENTIFIER value=IDENTIFIER;
 
 asIdent
     : AS symbolPrimitive;

@@ -640,6 +640,7 @@ internal class PlannerPipelineImpl(
                     QueryPlan { session -> expression.eval(session).toDmlCommand() }
                 is PartiqlPhysical.Statement.Query, is PartiqlPhysical.Statement.Exec ->
                     QueryPlan { session -> QueryResult.Value(expression.eval(session)) }
+                is PartiqlPhysical.Statement.Explain -> error("EXPLAIN is not supported in the PlannerPipeline.")
             }
             PlannerPassResult.Success(queryPlan, listOf())
         }

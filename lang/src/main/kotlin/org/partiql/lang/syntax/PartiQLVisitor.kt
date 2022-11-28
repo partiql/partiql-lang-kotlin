@@ -99,6 +99,26 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
 
     override fun visitQueryDml(ctx: PartiQLParser.QueryDmlContext): PartiqlAst.PartiqlAstNode = visit(ctx.dml())
 
+    override fun visitTopStatement(ctx: PartiQLParser.TopStatementContext) = when (ctx.EXPLAIN()) {
+        null -> visit(ctx.statement()) as PartiqlAst.Statement
+        else -> PartiqlAst.build {
+            var type: String? = null
+            var format: String? = null
+            ctx.explainOption().forEach { option ->
+                when (option.param.text.toLowerCase()) {
+                    "type" -> { type = option.value.text.toLowerCase() }
+                    "format" -> { format = option.value.text.toLowerCase() }
+                    else -> throw ParserException("Unknown EXPLAIN parameter.", ErrorCode.PARSE_UNEXPECTED_TOKEN)
+                }
+            }
+            explain(
+                statement = visit(ctx.statement()) as PartiqlAst.Statement,
+                type = type,
+                format = format
+            )
+        }
+    }
+
     /**
      *
      * COMMON USAGES

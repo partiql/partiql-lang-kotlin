@@ -14,7 +14,11 @@
 
 package org.partiql.lang.compiler
 
+import org.partiql.lang.domains.PartiqlAst
+import org.partiql.lang.domains.PartiqlLogical
+import org.partiql.lang.domains.PartiqlLogicalResolved
 import org.partiql.lang.domains.PartiqlPhysical
+import org.partiql.lang.errors.PartiQLException
 import org.partiql.lang.eval.BindingCase
 import org.partiql.lang.eval.BindingName
 import org.partiql.lang.eval.Bindings
@@ -36,6 +40,7 @@ import org.partiql.lang.planner.DML_COMMAND_FIELD_ROWS
 import org.partiql.lang.planner.DML_COMMAND_FIELD_TARGET_UNIQUE_ID
 import org.partiql.lang.planner.DmlAction
 import org.partiql.lang.planner.EvaluatorOptions
+import org.partiql.lang.planner.PartiQLPlanner
 import org.partiql.lang.types.TypedOpParameter
 
 internal class PartiQLCompilerDefault(
@@ -67,16 +72,66 @@ internal class PartiQLCompilerDefault(
         )
     }
 
-    override fun compile(statement: PartiqlPhysical.Plan): PartiQLStatement {
+    override fun compile(statement: PartiqlPhysical.Plan, details: PartiQLPlanner.PlanningDetails): PartiQLStatement {
         val expression = exprConverter.compile(statement)
         return when (statement.stmt) {
             is PartiqlPhysical.Statement.DmlQuery -> PartiQLStatement { expression.eval(it).toDML() }
             is PartiqlPhysical.Statement.Exec,
             is PartiqlPhysical.Statement.Query -> PartiQLStatement { expression.eval(it).toValue() }
+            is PartiqlPhysical.Statement.Explain -> PartiQLStatement { compileExplain(statement.stmt, details) }
         }
     }
 
     // --- INTERNAL -------------------
+
+    private enum class ExplainDomains {
+        AST,
+        AST_NORMALIZED,
+        LOGICAL,
+        LOGICAL_RESOLVED,
+        PHYSICAL,
+        PHYSICAL_TRANSFORMED
+    }
+
+    private fun compileExplain(statement: PartiqlPhysical.Statement.Explain, details: PartiQLPlanner.PlanningDetails): PartiQLResult.Explain.Domain {
+        val format = statement.format?.text
+        val type = statement.type?.text?.toUpperCase() ?: ExplainDomains.AST.name
+        val domain = try {
+            ExplainDomains.valueOf(type)
+        } catch (ex: IllegalArgumentException) {
+            throw PartiQLException("Illegal argument: $type")
+        }
+        return when (domain) {
+            ExplainDomains.AST -> {
+                val explain = details.ast!! as PartiqlAst.Statement.Explain
+                PartiQLResult.Explain.Domain(explain.statement, format)
+            }
+            ExplainDomains.AST_NORMALIZED -> {
+                val explain = details.astNormalized!! as PartiqlAst.Statement.Explain
+                PartiQLResult.Explain.Domain(explain.statement, format)
+            }
+            ExplainDomains.LOGICAL -> {
+                val explain = details.logical!!.stmt as PartiqlLogical.Statement.Explain
+                val plan = details.logical.copy(stmt = explain.statement)
+                PartiQLResult.Explain.Domain(plan, format)
+            }
+            ExplainDomains.LOGICAL_RESOLVED -> {
+                val explain = details.logicalResolved!!.stmt as PartiqlLogicalResolved.Statement.Explain
+                val plan = details.logicalResolved.copy(stmt = explain.statement)
+                PartiQLResult.Explain.Domain(plan, format)
+            }
+            ExplainDomains.PHYSICAL -> {
+                val explain = details.physical!!.stmt as PartiqlPhysical.Statement.Explain
+                val plan = details.physical.copy(stmt = explain.statement)
+                PartiQLResult.Explain.Domain(plan, format)
+            }
+            ExplainDomains.PHYSICAL_TRANSFORMED -> {
+                val explain = details.physicalTransformed!!.stmt as PartiqlPhysical.Statement.Explain
+                val plan = details.physicalTransformed.copy(stmt = explain.statement)
+                PartiQLResult.Explain.Domain(plan, format)
+            }
+        }
+    }
 
     /**
      * The physical expr converter is EvaluatingCompiler with s/Ast/Physical and `bindingsToValues -> Thunk`
