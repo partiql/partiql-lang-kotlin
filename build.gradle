@@ -143,25 +143,4 @@ subprojects { proj ->
         }
         processResources.dependsOn generateVersionAndHashProperties
     })
-
-    if (project.name == "partiql-isl" || project.name == "partiql-tests-runner" || project.parent.name.contains("-upgrade")) {
-        // skip subprojects using the conventional Gradle layout
-        return
-    }
-
-    plugins.withId('java', { _ ->
-        sourceSets {
-            main.java.srcDirs = ["src"]
-            main.resources.srcDirs = ["resources"]
-            test.java.srcDirs = ["test"]
-            test.resources.srcDirs = ["test-resources"]
-        }
-    })
-
-    plugins.withId('org.jetbrains.kotlin.jvm', { _ ->
-        sourceSets {
-            main.kotlin.srcDirs = ["src"]
-            test.kotlin.srcDirs = ["test"]
-        }
-    })
 }

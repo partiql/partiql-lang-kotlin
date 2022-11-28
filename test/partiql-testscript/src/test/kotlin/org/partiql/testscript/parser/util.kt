@@ -3,7 +3,7 @@ package org.partiql.testscript.parser
 import java.io.File
 import java.nio.charset.Charset
 
-val inputBasePath = "${File(".").absolutePath.removeSuffix("/.")}/test/resources"
+val inputBasePath = "${File(".").absolutePath.removeSuffix("/.")}/src/test/resources"
 
 /**
  * Creates the input and replaces `#` by `$`. We use `#` in the test fixtures because escaping `$` in a kotlin
