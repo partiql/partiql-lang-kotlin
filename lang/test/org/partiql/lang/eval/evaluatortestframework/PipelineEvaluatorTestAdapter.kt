@@ -9,7 +9,7 @@ import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.TypingMode
 import org.partiql.lang.eval.exprEquals
-import org.partiql.lang.eval.strictEquals
+import org.partiql.lang.strictEquals
 
 internal class PipelineEvaluatorTestAdapter(
     private val pipelineFactory: PipelineFactory

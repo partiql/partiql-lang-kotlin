@@ -103,7 +103,8 @@ class EvaluatingCompilerFromLetTests : EvaluatorTestBase() {
             // LET outer query has correct value
             EvaluatorTestCase(
                 "SELECT X FROM (SELECT VALUE X FROM A LET 1 AS X) LET 2 AS X",
-                """<< {'X': 2} >>"""
+                """<< {'X': 2} >>""",
+                target = EvaluatorTestTarget.PLANNER_PIPELINE
             )
         )
     }
