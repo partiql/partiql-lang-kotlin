@@ -67,7 +67,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - [ExprNode] and [AstNode] have been removed.
   - Functions related to conversions between ExprNode and PartiqlAst have been removed.
 - Removes the deprecated SqlParser and SqlLexer
-- **Breaking**: Removes the `CallAgg` node from the Logical, LogicalResolved, and Physical plans
+- **Breaking**: Removes the `CallAgg` node from the Logical, LogicalResolved, and Physical plans.
+- Removes the experimental `PlannerPipeline` and replaces it with `PartiQLCompilerPipeline`.
 
 ### Security
 
