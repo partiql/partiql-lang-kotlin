@@ -19,7 +19,7 @@ import org.partiql.lang.errors.ProblemHandler
 import org.partiql.pig.runtime.DomainNode
 
 /**
- * [PartiQLPlannerPass] is a transformation of the plan representation of the a PartiQL query.
+ * [PartiQLPlannerPass] is a transformation of the plan representation of a PartiQL query.
  *
  * TODO lower the upper bound of T to `Plan` after https://github.com/partiql/partiql-ir-generator/issues/65
  */

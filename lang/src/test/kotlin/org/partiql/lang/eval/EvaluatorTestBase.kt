@@ -32,7 +32,6 @@ import org.partiql.lang.eval.evaluatortestframework.ExpectedResultFormat
 import org.partiql.lang.eval.evaluatortestframework.MultipleTestAdapter
 import org.partiql.lang.eval.evaluatortestframework.PartiQLCompilerPipelineFactory
 import org.partiql.lang.eval.evaluatortestframework.PipelineEvaluatorTestAdapter
-import org.partiql.lang.eval.evaluatortestframework.PlannerPipelineFactory
 import org.partiql.lang.eval.evaluatortestframework.VisitorTransformBaseTestAdapter
 import org.partiql.lang.util.asSequence
 import org.partiql.lang.util.newFromIonText
@@ -45,7 +44,6 @@ abstract class EvaluatorTestBase : TestBase() {
     open val testHarness: EvaluatorTestAdapter = MultipleTestAdapter(
         listOf(
             PipelineEvaluatorTestAdapter(CompilerPipelineFactory()),
-            PipelineEvaluatorTestAdapter(PlannerPipelineFactory()),
             PipelineEvaluatorTestAdapter(PartiQLCompilerPipelineFactory()),
             VisitorTransformBaseTestAdapter()
         )

@@ -3,12 +3,12 @@ package org.partiql.lang.planner.transforms.optimizations
 import com.amazon.ionelement.api.TextElement
 import com.amazon.ionelement.api.ionBool
 import com.amazon.ionelement.api.ionSymbol
+import org.partiql.lang.compiler.PartiQLCompilerBuilder
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.domains.toBindingCase
 import org.partiql.lang.errors.ProblemHandler
 import org.partiql.lang.eval.BindingName
 import org.partiql.lang.planner.PartiqlPhysicalPass
-import org.partiql.lang.planner.PlannerPipeline
 import org.partiql.lang.planner.StaticTypeResolver
 import org.partiql.lang.planner.transforms.DEFAULT_IMPL
 import org.partiql.lang.types.BagType
@@ -28,7 +28,7 @@ data class FieldEqualityPredicate(val keyFieldName: String, val equivalentValue:
  * record by its primary key.
  *
  * The implementation of the `project` operator is specified by [customProjectOperatorName],
- * which must be supplied separately by the user (see [PlannerPipeline.Builder.addRelationalOperatorFactory]).  (More
+ * which must be supplied separately by the user (see [PartiQLCompilerBuilder.customOperatorFactories]).  (More
  * details on this operator below).
  *
  * For example, given a `filter` node with a nested `scan`, such as:

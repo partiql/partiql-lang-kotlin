@@ -2,6 +2,7 @@ package org.partiql.lang.eval.evaluatortestframework
 
 import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.SqlException
+import org.partiql.lang.compiler.PartiQLCompilerPipeline
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.PropertyValueMap
 import org.partiql.lang.eval.CompileOptions
@@ -56,7 +57,7 @@ data class EvaluatorErrorTestCase(
 
     /**
      * Determines which pipeline this test should run against; the [CompilerPipeline],
-     * [org.partiql.lang.planner.PlannerPipeline] or both.
+     * [PartiQLCompilerPipeline] or both.
      */
     override val targetPipeline: EvaluatorTestTarget = EvaluatorTestTarget.ALL_PIPELINES,
 
