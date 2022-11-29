@@ -87,7 +87,7 @@ internal class OffsetOperator(
         val offsetValue = originalOffsetValue.toLong()
         if (originalOffsetValue != offsetValue as Number) { // Make sure `Number.toLong()` is a lossless transformation
             err(
-                "Too large integer provided as OFFSET value",
+                "Integer exceeds Long.MAX_VALUE provided as OFFSET value",
                 ErrorCode.INTERNAL_ERROR,
                 errorContextFrom(rowCountExpr.sourceLocation),
                 internal = true

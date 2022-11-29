@@ -83,7 +83,7 @@ internal class LimitOperator(
         val limitValue = originalLimitValue.toLong()
         if (originalLimitValue != limitValue as Number) { // Make sure `Number.toLong()` is a lossless transformation
             err(
-                "Too large integer provided as LIMIT value",
+                "Integer exceeds Long.MAX_VALUE provided as LIMIT value",
                 ErrorCode.INTERNAL_ERROR,
                 errorContextFrom(rowCountExpr.sourceLocation),
                 internal = true

@@ -1589,7 +1589,7 @@ internal class EvaluatingCompiler(
         val limitValue = originalLimitValue.toLong()
         if (originalLimitValue != limitValue as Number) { // Make sure `Number.toLong()` is a lossless transformation
             err(
-                "Too large integer provided as LIMIT value",
+                "Integer exceeds Long.MAX_VALUE provided as LIMIT value",
                 ErrorCode.INTERNAL_ERROR,
                 errorContextFrom(limitLocationMeta),
                 internal = true
@@ -1628,7 +1628,7 @@ internal class EvaluatingCompiler(
         val offsetValue = originalOffsetValue.toLong()
         if (originalOffsetValue != offsetValue as Number) { // Make sure `Number.toLong()` is a lossless transformation
             err(
-                "Too large integer provided as OFFSET value",
+                "Integer exceeds Long.MAX_VALUE provided as OFFSET value",
                 ErrorCode.INTERNAL_ERROR,
                 errorContextFrom(offsetLocationMeta),
                 internal = true
