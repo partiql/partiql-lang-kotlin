@@ -31,7 +31,7 @@ private val Timestamp.nanoOfSecond: Long get() = this.decimalSecond.multiply(NAN
 
 private val Timestamp.milliOfSecond: Long get() = this.decimalSecond.multiply(MILLIS_PER_SECOND_BD).toLong() % MILLIS_PER_SECOND
 
-internal class TimestampTemporalAccessor(val ts: Timestamp) : TemporalAccessor {
+class TimestampTemporalAccessor(val ts: Timestamp) : TemporalAccessor {
 
     /**
      * This method should return true to indicate whether a given TemporalField is supported.
