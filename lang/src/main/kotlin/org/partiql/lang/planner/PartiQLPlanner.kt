@@ -47,7 +47,7 @@ interface PartiQLPlanner {
      */
     sealed class Result {
 
-        data class Success(
+        data class Success @JvmOverloads constructor(
             val plan: PartiqlPhysical.Plan,
             val warnings: List<Problem>,
             val details: PlanningDetails = PlanningDetails()

@@ -107,6 +107,7 @@ class PartiQLCompilerPipeline(
     /**
      * Compiles a [PartiqlPhysical.Plan] representation of a query into an executable [PartiQLStatement].
      */
+    @JvmOverloads
     fun compile(statement: PartiqlPhysical.Plan, details: PartiQLPlanner.PlanningDetails = PartiQLPlanner.PlanningDetails()): PartiQLStatement {
         return compiler.compile(statement, details)
     }
