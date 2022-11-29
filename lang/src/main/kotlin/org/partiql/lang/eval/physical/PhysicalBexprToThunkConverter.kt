@@ -28,8 +28,8 @@ import org.partiql.lang.eval.physical.operators.SortOperatorFactory
 import org.partiql.lang.eval.physical.operators.UnpivotOperatorFactory
 import org.partiql.lang.eval.physical.operators.WindowRelationalOperatorFactory
 import org.partiql.lang.eval.physical.operators.valueExpression
-import org.partiql.lang.eval.physical.window.ExperimentalWindowFunc
 import org.partiql.lang.eval.physical.window.createBuiltinWindowFunction
+import org.partiql.lang.util.PartiQLExperimental
 import org.partiql.lang.util.toIntExact
 
 /** A specialization of [Thunk] that we use for evaluation of physical plans. */
@@ -296,7 +296,7 @@ internal class PhysicalBexprToThunkConverter(
     }
 
     // TODO: Remove from experimental once https://github.com/partiql/partiql-docs/issues/31 is resolved and a RFC is approved
-    @ExperimentalWindowFunc
+    @PartiQLExperimental
     override fun convertWindow(node: PartiqlPhysical.Bexpr.Window): RelationThunkEnv {
         val source = this.convert(node.source)
 

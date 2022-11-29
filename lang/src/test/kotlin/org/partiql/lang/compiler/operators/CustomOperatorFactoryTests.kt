@@ -24,16 +24,18 @@ import org.partiql.lang.eval.physical.operators.ValueExpression
 import org.partiql.lang.planner.transforms.DEFAULT_IMPL
 import org.partiql.lang.planner.transforms.PLAN_VERSION_NUMBER
 import org.partiql.lang.util.ArgumentsProviderBase
+import org.partiql.lang.util.PartiQLExperimental
 
 private const val FAKE_IMPL_NAME = "fake_impl"
 private val FAKE_IMPL_NODE = PartiqlPhysical.build { impl(FAKE_IMPL_NAME) }
+
 class CreateFunctionWasCalledException(val thrownFromOperator: RelationalOperatorKind) :
     Exception("The create function was called!")
 
 class CustomOperatorFactoryTests {
     // it's too expensive to create reasonable facsimiles of these operator factories, so we cheat by making them
     // all just throw CreateFunctionWasCalledException and asserting that this exception is thrown.
-    val fakeOperatorFactories = listOf(
+    private val fakeOperatorFactories = listOf(
         object : ProjectRelationalOperatorFactory(FAKE_IMPL_NAME) {
             override fun create(
                 impl: PartiqlPhysical.Impl,
@@ -96,6 +98,7 @@ class CustomOperatorFactoryTests {
 
     @ParameterizedTest
     @ArgumentsSource(CustomOperatorCases::class)
+    @PartiQLExperimental
     fun `make sure custom operator implementations are called`(tc: CustomOperatorCases.TestCase) {
         val pipeline = PartiQLCompilerPipeline.build {
             compiler

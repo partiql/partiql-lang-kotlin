@@ -22,6 +22,7 @@ import org.partiql.lang.types.BagType
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.types.StructType
 import org.partiql.lang.util.ArgumentsProviderBase
+import org.partiql.lang.util.PartiQLExperimental
 
 private const val FAKE_GET_BY_KEY_PROJECT_OPERATOR_NAME = "foo"
 private const val TABLE_WITH_1_FIELD_PK = "table_with_1_field_pk"
@@ -31,6 +32,7 @@ private const val TABLE_WITH_1_FIELD_PK_UUID = "uuid_for_table_with_1_field_pk"
 private const val TABLE_WITH_3_FIELD_PK = "table_with_3_field_pk"
 private const val TABLE_WITH_3_FIELD_PK_UUID = "uuid_for_table_with_3_field_pk"
 
+@PartiQLExperimental
 class FilterScanToKeyLookupTests {
     /** A test case for [PartiqlPhysicalPass] implementations that work on expressions in the [PartiqlPhysical] domain. */
     data class TestCase(

@@ -14,12 +14,14 @@ import org.partiql.lang.planner.GlobalVariableResolver
 import org.partiql.lang.planner.PartiQLPlanner
 import org.partiql.lang.planner.PartiQLPlannerBuilder
 import org.partiql.lang.syntax.PartiQLParserBuilder
+import org.partiql.lang.util.PartiQLExperimental
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNull
 
 /**
  * TODO delete this once evaluator tests are replaced by `partiql-tests`
  */
+@PartiQLExperimental
 internal class PartiQLCompilerPipelineFactory : PipelineFactory {
 
     override val pipelineName: String = "PartiQLCompilerPipeline"

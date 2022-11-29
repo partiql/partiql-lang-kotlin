@@ -16,10 +16,12 @@ package org.partiql.lang.compiler
 
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.eval.PartiQLStatement
+import org.partiql.lang.util.PartiQLExperimental
 
 /**
  * [PartiQLCompiler] is responsible for transforming a [PartiqlPhysical.Plan] into an executable [PartiQLStatement].
  */
+@PartiQLExperimental
 interface PartiQLCompiler {
 
     /**

@@ -18,11 +18,13 @@ import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.errors.Problem
 import org.partiql.lang.eval.TypedOpBehavior
+import org.partiql.lang.util.PartiQLExperimental
 
 /**
  * [PartiQLPlanner] is responsible for transforming a [PartiqlAst.Statement] representation of a query into an
  * equivalent [PartiqlPhysical.Plan] representation of the query.
  */
+@PartiQLExperimental
 interface PartiQLPlanner {
 
     /**

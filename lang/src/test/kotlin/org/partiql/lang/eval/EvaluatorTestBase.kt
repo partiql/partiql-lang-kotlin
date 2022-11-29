@@ -33,6 +33,7 @@ import org.partiql.lang.eval.evaluatortestframework.MultipleTestAdapter
 import org.partiql.lang.eval.evaluatortestframework.PartiQLCompilerPipelineFactory
 import org.partiql.lang.eval.evaluatortestframework.PipelineEvaluatorTestAdapter
 import org.partiql.lang.eval.evaluatortestframework.VisitorTransformBaseTestAdapter
+import org.partiql.lang.util.PartiQLExperimental
 import org.partiql.lang.util.asSequence
 import org.partiql.lang.util.newFromIonText
 
@@ -41,6 +42,7 @@ import org.partiql.lang.util.newFromIonText
  */
 abstract class EvaluatorTestBase : TestBase() {
     // TODO: Make it private again once we finish removing ExprNode
+    @OptIn(PartiQLExperimental::class)
     open val testHarness: EvaluatorTestAdapter = MultipleTestAdapter(
         listOf(
             PipelineEvaluatorTestAdapter(CompilerPipelineFactory()),

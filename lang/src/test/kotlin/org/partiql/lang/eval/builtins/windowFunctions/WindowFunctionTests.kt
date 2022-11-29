@@ -9,8 +9,10 @@ import org.partiql.lang.eval.evaluatortestframework.MultipleTestAdapter
 import org.partiql.lang.eval.evaluatortestframework.PartiQLCompilerPipelineFactory
 import org.partiql.lang.eval.evaluatortestframework.PipelineEvaluatorTestAdapter
 import org.partiql.lang.util.ArgumentsProviderBase
+import org.partiql.lang.util.PartiQLExperimental
 
 // TODO: Remove from experimental once https://github.com/partiql/partiql-docs/issues/31 is resolved and a RFC is approved
+@PartiQLExperimental
 class WindowFunctionTests : EvaluatorTestBase() {
     // The new AST node is not supported by ExprNode
     override val testHarness: EvaluatorTestAdapter = MultipleTestAdapter(

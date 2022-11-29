@@ -14,9 +14,12 @@
 
 package org.partiql.lang.planner
 
+import org.partiql.lang.util.PartiQLExperimental
+
 /**
  * Builder class to instantiate a [PartiQLPlanner].
  */
+@PartiQLExperimental
 class PartiQLPlannerBuilder private constructor() {
 
     private var globalVariableResolver = GlobalVariableResolver.EMPTY

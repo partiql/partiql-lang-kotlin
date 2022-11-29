@@ -34,8 +34,10 @@ import org.partiql.lang.planner.transforms.LogicalToLogicalResolvedVisitorTransf
 import org.partiql.lang.planner.transforms.allocateVariableIds
 import org.partiql.lang.planner.validators.PartiqlLogicalResolvedValidator
 import org.partiql.lang.planner.validators.PartiqlLogicalValidator
+import org.partiql.lang.util.PartiQLExperimental
 import org.partiql.pig.runtime.asPrimitive
 
+@PartiQLExperimental
 internal class PartiQLPlannerDefault(
     private val globalVariableResolver: GlobalVariableResolver,
     private val physicalPlanPasses: List<PartiQLPlannerPass.Physical>,

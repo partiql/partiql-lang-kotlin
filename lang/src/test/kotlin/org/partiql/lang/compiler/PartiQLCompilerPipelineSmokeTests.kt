@@ -24,7 +24,9 @@ import org.partiql.lang.planner.PlanningProblemDetails
 import org.partiql.lang.planner.createFakeGlobalsResolver
 import org.partiql.lang.planner.transforms.DEFAULT_IMPL_NAME
 import org.partiql.lang.planner.transforms.PLAN_VERSION_NUMBER
+import org.partiql.lang.util.PartiQLExperimental
 
+@PartiQLExperimental
 class PartiQLCompilerPipelineSmokeTests {
 
     private fun createPlannerPipelineForTest(

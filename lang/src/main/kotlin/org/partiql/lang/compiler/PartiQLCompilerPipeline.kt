@@ -22,6 +22,7 @@ import org.partiql.lang.planner.PartiQLPlanner
 import org.partiql.lang.planner.PartiQLPlannerBuilder
 import org.partiql.lang.syntax.Parser
 import org.partiql.lang.syntax.PartiQLParserBuilder
+import org.partiql.lang.util.PartiQLExperimental
 
 /**
  * [PartiQLCompilerPipeline] is the top-level class for embedded usage of PartiQL.
@@ -40,6 +41,7 @@ import org.partiql.lang.syntax.PartiQLParserBuilder
  * }
  * ```
  */
+@PartiQLExperimental
 class PartiQLCompilerPipeline(
     private val parser: Parser,
     private val planner: PartiQLPlanner,

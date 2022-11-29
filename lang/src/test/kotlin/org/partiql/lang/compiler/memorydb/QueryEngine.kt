@@ -23,6 +23,7 @@ import org.partiql.lang.planner.transforms.optimizations.createRemoveUselessAnds
 import org.partiql.lang.planner.transforms.optimizations.createRemoveUselessFiltersPass
 import org.partiql.lang.types.BagType
 import org.partiql.lang.types.StructType
+import org.partiql.lang.util.PartiQLExperimental
 import org.partiql.lang.util.SexpAstPrettyPrinter
 import org.partiql.pig.runtime.DomainNode
 import java.util.UUID
@@ -31,8 +32,9 @@ import java.util.UUID
 internal const val DB_CONTEXT_VAR = "in-memory-database"
 
 /**
- * This class is a demonstration of how to integrate a storage layer with PartiQL's query planner.
+ * This class is a demonstration of how to integrate a storage layer with the experimental PartiQLCompilerPipeline.
  */
+@PartiQLExperimental
 class QueryEngine(val db: MemoryDatabase) {
     var enableDebugOutput = false
 

@@ -10,7 +10,9 @@ import org.partiql.lang.compiler.memorydb.QueryEngine
 import org.partiql.lang.eval.BAG_ANNOTATION
 import org.partiql.lang.eval.BindingCase
 import org.partiql.lang.eval.BindingName
+import org.partiql.lang.util.PartiQLExperimental
 
+@PartiQLExperimental
 class TestContext {
     val db = MemoryDatabase().also {
         it.createTable("customer", listOf("id"))
@@ -34,6 +36,7 @@ class TestContext {
 /**
  * Tests the query planner with some basic DML and SFW queries against using [QueryEngine] and [MemoryDatabase].
  */
+@PartiQLExperimental
 class IntegrationTests {
 
     @Test

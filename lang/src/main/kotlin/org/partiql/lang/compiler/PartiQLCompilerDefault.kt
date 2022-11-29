@@ -37,7 +37,9 @@ import org.partiql.lang.planner.DML_COMMAND_FIELD_TARGET_UNIQUE_ID
 import org.partiql.lang.planner.DmlAction
 import org.partiql.lang.planner.EvaluatorOptions
 import org.partiql.lang.types.TypedOpParameter
+import org.partiql.lang.util.PartiQLExperimental
 
+@PartiQLExperimental
 internal class PartiQLCompilerDefault(
     private val valueFactory: ExprValueFactory,
     private val evaluatorOptions: EvaluatorOptions,
