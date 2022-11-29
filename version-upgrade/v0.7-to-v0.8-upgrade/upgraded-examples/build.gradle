@@ -22,5 +22,5 @@ dependencies {
     testImplementation("org.jetbrains.kotlin:kotlin-test")
     testImplementation("org.junit.jupiter:junit-jupiter-params:5.8.2")
 
-    testImplementation("org.partiql:partiql-lang-kotlin:0.8.0")
+    testImplementation("org.partiql:partiql-lang-kotlin:0.8.2")
 }

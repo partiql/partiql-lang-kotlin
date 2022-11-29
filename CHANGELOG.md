@@ -73,6 +73,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 
 
+## [0.8.2] - 2022-11-28
+### Added
+- Adds simple auto-completion to the CLI.
+
+### Changed
+- Now `CompileOption` uses `TypedOpParameter.HONOR_PARAMETERS` as default.
+- Updates the CLI Shell Highlighter to use the ANTLR generated lexer/parser for highlighting user queries
+- PartiQL MISSING in Ion representation now becomes ion null with annotation of `$missing`, instead of `$partiql_missing`
+- PartiQL BAG in Ion representation now becomes ion list with annotation of `$bag`, instead of `$partiql_bag`
+- PartiQL DATE in Ion representation now becomes ion timestamp with annotation of `$date`, instead of `$partiql_date`
+- PartiQL TIME in Ion representation now becomes ion struct with annotation of `$time`, instead of `$partiql_time`
+- Simplifies the aggregation operator in the experimental planner by removing the use of metas
+- Increases the performance of the PartiQLParser by changing the parsing strategy
+  - The PartiQLParser now attempts to parse queries using the SLL Prediction Mode set by ANTLR
+  - If unable to parse via SLL Prediction Mode, it attempts to parse using the slower LL Prediction Mode
+  - Modifications have also been made to the ANTLR grammar to increase the speed of parsing joined table references
+  - Updates how the PartiQLParser handles parameter indexes to remove the double-pass while lexing
+
 ## [0.8.1] - 2022-10-28
 
 ### Added
