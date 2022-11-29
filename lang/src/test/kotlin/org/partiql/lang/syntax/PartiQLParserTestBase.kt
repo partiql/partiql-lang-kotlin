@@ -98,7 +98,13 @@ abstract class PartiQLParserTestBase : TestBase() {
             is PartiqlAst.Statement.Dml,
             is PartiqlAst.Statement.Ddl,
             is PartiqlAst.Statement.Exec -> statement.toIonElement()
-            is PartiqlAst.Statement.Explain -> unwrapQuery(statement.statement)
+            is PartiqlAst.Statement.Explain -> unwrapExplainTarget(statement.target)
+        }
+    }
+
+    private fun unwrapExplainTarget(target: PartiqlAst.ExplainTarget): SexpElement {
+        return when (target) {
+            is PartiqlAst.ExplainTarget.Domain -> unwrapQuery(target.statement)
         }
     }
 

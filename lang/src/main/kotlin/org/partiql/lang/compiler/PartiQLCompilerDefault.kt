@@ -72,12 +72,21 @@ internal class PartiQLCompilerDefault(
         )
     }
 
-    override fun compile(statement: PartiqlPhysical.Plan, details: PartiQLPlanner.PlanningDetails): PartiQLStatement {
+    override fun compile(statement: PartiqlPhysical.Plan): PartiQLStatement {
         val expression = exprConverter.compile(statement)
         return when (statement.stmt) {
             is PartiqlPhysical.Statement.DmlQuery -> PartiQLStatement { expression.eval(it).toDML() }
             is PartiqlPhysical.Statement.Exec,
             is PartiqlPhysical.Statement.Query -> PartiQLStatement { expression.eval(it).toValue() }
+            is PartiqlPhysical.Statement.Explain -> throw PartiQLException("Unable to compile EXPLAIN without details.")
+        }
+    }
+
+    override fun compile(statement: PartiqlPhysical.Plan, details: PartiQLPlanner.PlanningDetails): PartiQLStatement {
+        return when (statement.stmt) {
+            is PartiqlPhysical.Statement.DmlQuery,
+            is PartiqlPhysical.Statement.Exec,
+            is PartiqlPhysical.Statement.Query -> compile(statement)
             is PartiqlPhysical.Statement.Explain -> PartiQLStatement { compileExplain(statement.stmt, details) }
         }
     }
@@ -94,6 +103,12 @@ internal class PartiQLCompilerDefault(
     }
 
     private fun compileExplain(statement: PartiqlPhysical.Statement.Explain, details: PartiQLPlanner.PlanningDetails): PartiQLResult.Explain.Domain {
+        return when (statement.target) {
+            is PartiqlPhysical.ExplainTarget.Domain -> compileExplainDomain(statement.target, details)
+        }
+    }
+
+    private fun compileExplainDomain(statement: PartiqlPhysical.ExplainTarget.Domain, details: PartiQLPlanner.PlanningDetails): PartiQLResult.Explain.Domain {
         val format = statement.format?.text
         val type = statement.type?.text?.toUpperCase() ?: ExplainDomains.AST.name
         val domain = try {
@@ -104,30 +119,36 @@ internal class PartiQLCompilerDefault(
         return when (domain) {
             ExplainDomains.AST -> {
                 val explain = details.ast!! as PartiqlAst.Statement.Explain
-                PartiQLResult.Explain.Domain(explain.statement, format)
+                val target = explain.target as PartiqlAst.ExplainTarget.Domain
+                PartiQLResult.Explain.Domain(target.statement, format)
             }
             ExplainDomains.AST_NORMALIZED -> {
                 val explain = details.astNormalized!! as PartiqlAst.Statement.Explain
-                PartiQLResult.Explain.Domain(explain.statement, format)
+                val target = explain.target as PartiqlAst.ExplainTarget.Domain
+                PartiQLResult.Explain.Domain(target.statement, format)
             }
             ExplainDomains.LOGICAL -> {
                 val explain = details.logical!!.stmt as PartiqlLogical.Statement.Explain
-                val plan = details.logical.copy(stmt = explain.statement)
+                val target = explain.target as PartiqlLogical.ExplainTarget.Domain
+                val plan = details.logical.copy(stmt = target.statement)
                 PartiQLResult.Explain.Domain(plan, format)
             }
             ExplainDomains.LOGICAL_RESOLVED -> {
                 val explain = details.logicalResolved!!.stmt as PartiqlLogicalResolved.Statement.Explain
-                val plan = details.logicalResolved.copy(stmt = explain.statement)
+                val target = explain.target as PartiqlLogicalResolved.ExplainTarget.Domain
+                val plan = details.logicalResolved.copy(stmt = target.statement)
                 PartiQLResult.Explain.Domain(plan, format)
             }
             ExplainDomains.PHYSICAL -> {
                 val explain = details.physical!!.stmt as PartiqlPhysical.Statement.Explain
-                val plan = details.physical.copy(stmt = explain.statement)
+                val target = explain.target as PartiqlPhysical.ExplainTarget.Domain
+                val plan = details.physical.copy(stmt = target.statement)
                 PartiQLResult.Explain.Domain(plan, format)
             }
             ExplainDomains.PHYSICAL_TRANSFORMED -> {
                 val explain = details.physicalTransformed!!.stmt as PartiqlPhysical.Statement.Explain
-                val plan = details.physicalTransformed.copy(stmt = explain.statement)
+                val target = explain.target as PartiqlPhysical.ExplainTarget.Domain
+                val plan = details.physicalTransformed.copy(stmt = target.statement)
                 PartiQLResult.Explain.Domain(plan, format)
             }
         }

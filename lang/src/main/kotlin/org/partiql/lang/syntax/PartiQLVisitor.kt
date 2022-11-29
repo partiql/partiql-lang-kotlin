@@ -104,6 +104,7 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
         else -> PartiqlAst.build {
             var type: String? = null
             var format: String? = null
+            val metas = ctx.EXPLAIN().getSourceMetaContainer()
             ctx.explainOption().forEach { option ->
                 when (option.param.text.toLowerCase()) {
                     "type" -> { type = option.value.text.toLowerCase() }
@@ -112,9 +113,13 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
                 }
             }
             explain(
-                statement = visit(ctx.statement()) as PartiqlAst.Statement,
-                type = type,
-                format = format
+                target = domain(
+                    statement = visit(ctx.statement()) as PartiqlAst.Statement,
+                    type = type,
+                    format = format,
+                    metas = metas
+                ),
+                metas = metas
             )
         }
     }

@@ -74,7 +74,11 @@ class ASTPrettyPrinter {
     // ********
     // * EXPLAIN *
     // ********
-    private fun toRecursionTree(node: PartiqlAst.Statement.Explain): RecursionTree = when (val stmt = node.statement) {
+    private fun toRecursionTree(node: PartiqlAst.Statement.Explain): RecursionTree = when (val target = node.target) {
+        is PartiqlAst.ExplainTarget.Domain -> toRecursionTree(target)
+    }
+
+    private fun toRecursionTree(node: PartiqlAst.ExplainTarget.Domain): RecursionTree = when (val stmt = node.statement) {
         is PartiqlAst.Statement.Query -> toRecursionTree(stmt.expr)
         is PartiqlAst.Statement.Dml -> toRecursionTree(stmt)
         is PartiqlAst.Statement.Ddl -> toRecursionTree(stmt)
