@@ -37,5 +37,14 @@ enum class ExpectedResultFormat {
      * This is suboptimal (really, don't use this in new tests) but it is easier to support this here than it is to
      * refactor hundreds of expected values.
      */
-    STRING
+    STRING,
+
+    /**
+     * Directly compare the compiler's output [ExprValue] with an expected [ExprValue] evaluated from a specified
+     * PartiQL expression. This is preferred as it resolves the bag comparison problem [ExpectedResultFormat.ION] has.
+     * Also, PartiQL expressions are easier to read & write (no annotations needed).
+     *
+     * New tests should use this format.
+     */
+    PARTIQL_STRICT
 }

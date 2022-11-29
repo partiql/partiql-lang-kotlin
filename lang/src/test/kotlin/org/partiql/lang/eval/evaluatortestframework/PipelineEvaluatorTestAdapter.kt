@@ -10,6 +10,7 @@ import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.TypingMode
 import org.partiql.lang.eval.cloneAndRemoveBagAndMissingAnnotations
 import org.partiql.lang.eval.exprEquals
+import org.partiql.lang.strictEquals
 
 internal class PipelineEvaluatorTestAdapter(
     private val pipelineFactory: PipelineFactory
@@ -108,6 +109,22 @@ internal class PipelineEvaluatorTestAdapter(
                     actualResultString,
                     EvaluatorTestFailureReason.UNEXPECTED_QUERY_RESULT,
                 ) { tc.testDetails(note = note, actualResult = actualResultString) }
+            }
+            ExpectedResultFormat.PARTIQL_STRICT -> {
+                val expectedExprValueResult = assertDoesNotThrow(
+                    EvaluatorTestFailureReason.FAILED_TO_EVALUATE_PARTIQL_EXPECTED_RESULT,
+                    { tc.testDetails(note = note) }
+                ) {
+                    pipeline.evaluate(expectedResult)
+                }
+
+                if (!expectedExprValueResult.strictEquals(actualExprValueResult)) {
+                    throw EvaluatorAssertionFailedError(
+                        EvaluatorTestFailureReason.UNEXPECTED_QUERY_RESULT,
+                        tc.testDetails(note = note, actualResult = actualExprValueResult.toString())
+                    )
+                }
+                Unit
             }
         }.let { }
         tc.extraResultAssertions(actualExprValueResult)
