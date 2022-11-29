@@ -39,6 +39,6 @@ sealed class PartiQLResult {
     ) : PartiQLResult()
 
     sealed class Explain : PartiQLResult() {
-        class Domain(val value: DomainNode, val format: String?) : Explain()
+        data class Domain(val value: DomainNode, val format: String?) : Explain()
     }
 }

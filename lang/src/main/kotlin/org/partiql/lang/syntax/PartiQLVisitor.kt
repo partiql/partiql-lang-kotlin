@@ -107,9 +107,9 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
             val metas = ctx.EXPLAIN().getSourceMetaContainer()
             ctx.explainOption().forEach { option ->
                 when (option.param.text.toLowerCase()) {
-                    "type" -> { type = option.value.text.toLowerCase() }
-                    "format" -> { format = option.value.text.toLowerCase() }
-                    else -> throw ParserException("Unknown EXPLAIN parameter.", ErrorCode.PARSE_UNEXPECTED_TOKEN)
+                    "type" -> { type = option.value.text }
+                    "format" -> { format = option.value.text }
+                    else -> throw option.param.error("Unknown EXPLAIN parameter.", ErrorCode.PARSE_UNEXPECTED_TOKEN)
                 }
             }
             explain(
