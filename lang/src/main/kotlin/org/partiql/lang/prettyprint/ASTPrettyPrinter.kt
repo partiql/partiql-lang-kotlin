@@ -54,6 +54,7 @@ class ASTPrettyPrinter {
             is PartiqlAst.Statement.Dml -> toRecursionTree(ast)
             is PartiqlAst.Statement.Ddl -> toRecursionTree(ast)
             is PartiqlAst.Statement.Exec -> toRecursionTree(ast)
+            is PartiqlAst.Statement.Explain -> toRecursionTree(ast)
         }
 
         return recursionTree.convertToString()
@@ -69,6 +70,21 @@ class ASTPrettyPrinter {
                 toRecursionTree(node.procedureName, "procedureName")
             ) + node.args.mapIndexed { index, expr -> toRecursionTree(expr, "arg${index + 1}") }
         )
+
+    // ********
+    // * EXPLAIN *
+    // ********
+    private fun toRecursionTree(node: PartiqlAst.Statement.Explain): RecursionTree = when (val target = node.target) {
+        is PartiqlAst.ExplainTarget.Domain -> toRecursionTree(target)
+    }
+
+    private fun toRecursionTree(node: PartiqlAst.ExplainTarget.Domain): RecursionTree = when (val stmt = node.statement) {
+        is PartiqlAst.Statement.Query -> toRecursionTree(stmt.expr)
+        is PartiqlAst.Statement.Dml -> toRecursionTree(stmt)
+        is PartiqlAst.Statement.Ddl -> toRecursionTree(stmt)
+        is PartiqlAst.Statement.Exec -> toRecursionTree(stmt)
+        is PartiqlAst.Statement.Explain -> toRecursionTree(stmt)
+    }
 
     // *******
     // * DDL *

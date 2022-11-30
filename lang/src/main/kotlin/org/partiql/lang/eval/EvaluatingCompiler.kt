@@ -355,6 +355,11 @@ internal class EvaluatingCompiler(
             is PartiqlAst.Statement.Ddl -> compileDdl(ast)
             is PartiqlAst.Statement.Dml -> compileDml(ast)
             is PartiqlAst.Statement.Exec -> compileExec(ast)
+            is PartiqlAst.Statement.Explain -> throw EvaluationException(
+                "EXPLAIN is not supported in the Evaluating Compiler",
+                ErrorCode.UNIMPLEMENTED_FEATURE,
+                internal = false
+            )
         }
     }
 

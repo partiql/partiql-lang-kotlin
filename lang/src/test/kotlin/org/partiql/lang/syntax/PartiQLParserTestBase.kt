@@ -98,6 +98,7 @@ abstract class PartiQLParserTestBase : TestBase() {
             is PartiqlAst.Statement.Dml,
             is PartiqlAst.Statement.Ddl,
             is PartiqlAst.Statement.Exec -> statement.toIonElement()
+            is PartiqlAst.Statement.Explain -> statement.toIonElement()
         }
     }
 

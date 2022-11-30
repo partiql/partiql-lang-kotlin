@@ -14,6 +14,8 @@
 
 package org.partiql.lang.eval
 
+import org.partiql.pig.runtime.DomainNode
+
 /**
  * Result of an evaluated PartiQLStatement
  */
@@ -35,4 +37,8 @@ sealed class PartiQLResult {
         val target: String,
         val rows: Iterable<ExprValue>
     ) : PartiQLResult()
+
+    sealed class Explain : PartiQLResult() {
+        data class Domain(val value: DomainNode, val format: String?) : Explain()
+    }
 }

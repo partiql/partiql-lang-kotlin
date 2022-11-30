@@ -17,6 +17,8 @@
   * [Implementation & Specification Comparison](https://github.com/partiql/partiql-lang-kotlin/wiki/Implementation-&-Specification-Comparison)
   * [Test Script Specification](https://github.com/partiql/partiql-lang-kotlin/wiki/Test-Script-Specification)
   * [Further Reading](https://github.com/partiql/partiql-lang-kotlin/wiki/Further-Reading)
+* Clauses
+  * [EXPLAIN](https://github.com/partiql/partiql-lang-kotlin/wiki/Explain)
 * Upgrade Guides
   * [Upgrade Guide General](https://github.com/partiql/partiql-lang-kotlin/wiki/upgrade-guide)
   * [CLI Versions](https://github.com/partiql/partiql-lang-kotlin/wiki/cli-versions)

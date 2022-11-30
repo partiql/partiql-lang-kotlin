@@ -97,7 +97,7 @@ internal class PartiQLParser(
         val queryStream = createInputStream(input)
         val tokenStream = createTokenStream(queryStream)
         val parser = parserInit(tokenStream)
-        val tree = parser.statement()
+        val tree = parser.root()
         val visitor = PartiQLVisitor(ion, customTypes, tokenStream.parameterIndexes)
         return visitor.visit(tree) as PartiqlAst.Statement
     }

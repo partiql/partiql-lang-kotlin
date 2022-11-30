@@ -3,17 +3,17 @@ package org.partiql.cli
 import com.amazon.ion.IonSystem
 import com.amazon.ion.system.IonSystemBuilder
 import org.junit.Assert
-import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
+import org.partiql.pipeline.AbstractPipeline
 import java.io.ByteArrayOutputStream
 import java.io.OutputStream
 
 /**
  * Initializes a CLI and runs the passed-in query
  */
-fun makeCliAndGetResult(
+internal fun makeCliAndGetResult(
     query: String,
     input: String? = null,
     inputFormat: InputFormat = InputFormat.ION,
@@ -21,7 +21,7 @@ fun makeCliAndGetResult(
     outputFormat: OutputFormat = OutputFormat.ION_TEXT,
     output: OutputStream = ByteArrayOutputStream(),
     ion: IonSystem = IonSystemBuilder.standard().build(),
-    compilerPipeline: CompilerPipeline = CompilerPipeline.standard(ion),
+    pipeline: AbstractPipeline = AbstractPipeline.standard(),
     valueFactory: ExprValueFactory = ExprValueFactory.standard(ion),
     wrapIon: Boolean = false
 ): String {
@@ -31,7 +31,7 @@ fun makeCliAndGetResult(
         inputFormat,
         output,
         outputFormat,
-        compilerPipeline,
+        pipeline,
         bindings,
         query,
         wrapIon
