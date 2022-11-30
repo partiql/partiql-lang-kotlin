@@ -83,7 +83,7 @@ internal class EvaluatingCompilerCollectionAggregationsTest : EvaluatorTestBase(
                     + COLL_MAX('all', [1, 1, 2])     -- + 2
                     + COLL_COUNT('all', [1, 1, 2])   -- + 3 = 12
                 """,
-                expectedResult = "12"
+                expectedResult = "12."
             ),
             EvaluatorTestCase(
                 groupName = "Top-level call with all aggregation functions (using 'distinct')",
@@ -214,8 +214,8 @@ internal class EvaluatingCompilerCollectionAggregationsTest : EvaluatorTestBase(
                             'k': [2, 4],
                             'coll_sum_a': 6,
                             'coll_sum_inner': [
-                                { 'coll_avg_inner_k': 35, 'avg_inner_b': 45 },
-                                { 'coll_avg_inner_k': 85, 'avg_inner_b': 60 }
+                                { 'coll_avg_inner_k': 35., 'avg_inner_b': 45. },
+                                { 'coll_avg_inner_k': 85., 'avg_inner_b': 60. }
                             ],
                             'sum_b': 30
                         },
@@ -223,8 +223,8 @@ internal class EvaluatingCompilerCollectionAggregationsTest : EvaluatorTestBase(
                             'k': [6, 7],
                             'coll_sum_a': 13,
                             'coll_sum_inner': [
-                                { 'coll_avg_inner_k': 35, 'avg_inner_b': 45 },
-                                { 'coll_avg_inner_k': 85, 'avg_inner_b': 60 }
+                                { 'coll_avg_inner_k': 35., 'avg_inner_b': 45. },
+                                { 'coll_avg_inner_k': 85., 'avg_inner_b': 60. }
                             ],
                             'sum_b': 20
                         }

@@ -60,7 +60,7 @@ class QuotedIdentifierTests : EvaluatorTestBase() {
             query = "\"abc\"",
             session = simpleSession,
             expectedResult = "MISSING",
-            expectedResultFormat = ExpectedResultFormat.PARTIQL,
+            expectedResultFormat = ExpectedResultFormat.PARTIQL_STRICT,
             // planner & physical plan have no support for UndefinedVariableBehavior.MISSING (and may never)
             target = EvaluatorTestTarget.COMPILER_PIPELINE,
             compileOptionsBuilderBlock = { undefinedVariableMissingCompileOptionBlock() },
@@ -69,7 +69,7 @@ class QuotedIdentifierTests : EvaluatorTestBase() {
             "\"ABC\"",
             session = simpleSession,
             expectedResult = "MISSING",
-            expectedResultFormat = ExpectedResultFormat.PARTIQL,
+            expectedResultFormat = ExpectedResultFormat.PARTIQL_STRICT,
             // planner & physical plan have no support for UndefinedVariableBehavior.MISSING (and may never)
             target = EvaluatorTestTarget.COMPILER_PIPELINE,
             compileOptionsBuilderBlock = { undefinedVariableMissingCompileOptionBlock() },

@@ -526,7 +526,7 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
             expectedResultForSum = "<< { '_1': 25 } >>",
             expectedResultForMin = "<< { '_1': 5 } >>",
             expectedResultForMax = "<< { '_1': 5 } >>",
-            expectedResultForAvg = "<< { '_1': 5 } >>"
+            expectedResultForAvg = "<< { '_1': 5. } >>"
         ) +
             createAggregateTestCasesFromSqlStrings(
                 groupName = "variable argument",
@@ -578,7 +578,7 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
                 expectedResultForSum = "<< { 'agg': 111 } >>",
                 expectedResultForMin = "<< { 'agg': 1 } >>",
                 expectedResultForMax = "<< { 'agg': 100 } >>",
-                expectedResultForAvg = "<< { 'agg': 37 } >>"
+                expectedResultForAvg = "<< { 'agg': 37. } >>"
             ) +
             createAggregateTestCasesFromSqlStrings(
                 groupName = "variable or path argument and WHERE clause (2)",
@@ -591,7 +591,7 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
                 expectedResultForSum = "<< { 'agg': 11000 } >>",
                 expectedResultForMin = "<< { 'agg': 1000 } >>",
                 expectedResultForMax = "<< { 'agg': 10000 } >>",
-                expectedResultForAvg = "<< { 'agg': 5500 } >>"
+                expectedResultForAvg = "<< { 'agg': 5500. } >>"
             ) +
             createAggregateTestCasesFromSqlStrings(
                 groupName = "variable or path argument and WHERE clause (3)",
@@ -617,7 +617,7 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
                 expectedResultForSum = "<< { 'agg': 11100 } >>",
                 expectedResultForMin = "<< { 'agg': 100 } >>",
                 expectedResultForMax = "<< { 'agg': 10000 } >>",
-                expectedResultForAvg = "<< { 'agg': 3700 } >>"
+                expectedResultForAvg = "<< { 'agg': 3700. } >>"
             ) +
             createAggregateTestCasesFromSqlStrings(
                 groupName = "GROUP BY (1 column) (#1)",
@@ -644,8 +644,8 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
                  { 'supplierId': 11, 'agg': 10000 }
             >>""",
                 expectedResultForAvg = """<<
-                 { 'supplierId': 10, 'agg': 37 },
-                 { 'supplierId': 11, 'agg': 5500 }
+                 { 'supplierId': 10, 'agg': 37. },
+                 { 'supplierId': 11, 'agg': 5500. }
             >>"""
             ) +
             createAggregateTestCasesFromSqlStrings(
@@ -674,7 +674,7 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
             >>""",
                 expectedResultForAvg = """<<
                  { 'categoryId': 20, 'agg': 5.5 },
-                 { 'categoryId': 21, 'agg': 3700 }
+                 { 'categoryId': 21, 'agg': 3700. }
             >>"""
             ) +
             createAggregateTestCasesFromSqlStrings(
@@ -702,8 +702,8 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
                  { 'supplierId': 11, 'agg': 10000 }
             >>""",
                 expectedResultForAvg = """<<
-                 { 'supplierId': 10, 'agg': 55 },
-                 { 'supplierId': 11, 'agg': 10000 }
+                 { 'supplierId': 10, 'agg': 55. },
+                 { 'supplierId': 11, 'agg': 10000. }
             >>"""
             ) +
             createAggregateTestCasesFromSqlStrings(
@@ -731,8 +731,8 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
                  { 'categoryId': 21, 'agg': 10000 }
             >>""",
                 expectedResultForAvg = """<<
-                 { 'categoryId': 20, 'agg': 10 },
-                 { 'categoryId': 21, 'agg': 5050 }
+                 { 'categoryId': 20, 'agg': 10. },
+                 { 'categoryId': 21, 'agg': 5050. }
             >>"""
             ) +
             createAggregateTestCasesFromSqlStrings(
@@ -765,8 +765,8 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
             >>""",
                 expectedResultForAvg = """<<
                  { 'supplierId': 10, 'categoryId': 20, 'agg': 5.5 },
-                 { 'supplierId': 10, 'categoryId': 21, 'agg': 100 },
-                 { 'supplierId': 11, 'categoryId': 21, 'agg': 5500 }
+                 { 'supplierId': 10, 'categoryId': 21, 'agg': 100. },
+                 { 'supplierId': 11, 'categoryId': 21, 'agg': 5500. }
             >>"""
             ) +
             createAggregateTestCasesFromSqlStrings(
@@ -794,7 +794,7 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
             >>""",
                 expectedResultForAvg = """<<
                  { 'supplierId': 10, 'categoryId': 20, 'agg': 5.5 },
-                 { 'supplierId': 11, 'categoryId': 21, 'agg': 1000 }
+                 { 'supplierId': 11, 'categoryId': 21, 'agg': 1000. }
             >>"""
             ) +
             createAggregateTestCasesFromSqlTemplates(
@@ -809,10 +809,10 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
                     SqlTemplate("SELECT COUNT(1) AS the_count, {{agg}}(p.price_mixed)    AS the_agg FROM products_sparse AS p")
                 ),
                 expectedResultForCount = "<< { 'the_count': 10, 'the_agg': 5 } >>",
-                expectedResultForSum = "<< { 'the_count': 10, 'the_agg': 15 } >>",
-                expectedResultForMin = "<< { 'the_count': 10, 'the_agg': 1 } >>",
-                expectedResultForMax = "<< { 'the_count': 10, 'the_agg': 5 } >>",
-                expectedResultForAvg = "<< { 'the_count': 10, 'the_agg': 3 } >>"
+                expectedResultForSum = "<< { 'the_count': 10, 'the_agg': 15. } >>",
+                expectedResultForMin = "<< { 'the_count': 10, 'the_agg': 1. } >>",
+                expectedResultForMax = "<< { 'the_count': 10, 'the_agg': 5. } >>",
+                expectedResultForAvg = "<< { 'the_count': 10, 'the_agg': 3. } >>"
             ) +
             createAggregateTestCasesFromSqlTemplates(
                 groupName = "null and missing aggregate arguments with GROUP BY",
@@ -840,19 +840,19 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
                 { 'categoryId': 21, 'the_count': 6, 'the_agg': 2 }
                 >>""",
                 expectedResultForSum = """<<
-                { 'categoryId': 20, 'the_count': 4, 'the_agg': 6 },
-                { 'categoryId': 21, 'the_count': 6, 'the_agg': 9 }
+                { 'categoryId': 20, 'the_count': 4, 'the_agg': 6. },
+                { 'categoryId': 21, 'the_count': 6, 'the_agg': 9. }
                 >>""",
                 expectedResultForMin = """<<
-                { 'categoryId': 20, 'the_count': 4, 'the_agg': 1 },
-                { 'categoryId': 21, 'the_count': 6, 'the_agg': 4 }
+                { 'categoryId': 20, 'the_count': 4, 'the_agg': 1. },
+                { 'categoryId': 21, 'the_count': 6, 'the_agg': 4. }
                 >>""",
                 expectedResultForMax = """<<
-                { 'categoryId': 20, 'the_count': 4, 'the_agg': 3 },
-                { 'categoryId': 21, 'the_count': 6, 'the_agg': 5 }
+                { 'categoryId': 20, 'the_count': 4, 'the_agg': 3. },
+                { 'categoryId': 21, 'the_count': 6, 'the_agg': 5. }
                 >>""",
                 expectedResultForAvg = """<<
-                { 'categoryId': 20, 'the_count': 4, 'the_agg': 2 },
+                { 'categoryId': 20, 'the_count': 4, 'the_agg': 2. },
                 { 'categoryId': 21, 'the_count': 6, 'the_agg': 4.5 }
                 >>"""
             )
@@ -926,7 +926,7 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
         EvaluatorTestCase(
             groupName = "SELECT with GROUP BY path expression having more than 1 component.",
             query = "SELECT avg(age) as avg_employee_age, manager.address.city FROM employees GROUP BY manager.address.city",
-            expectedResult = "<<{'avg_employee_age': 22, 'city': 'Chicago'}, {'avg_employee_age': 26, 'city': 'Seattle'}>>"
+            expectedResult = "<<{'avg_employee_age': 22., 'city': `Chicago`}, {'avg_employee_age': 26., 'city': `Seattle`}>>"
         ),
         EvaluatorTestCase(
             groupName = "SELECT with nested aggregates (complex)",
@@ -1181,11 +1181,11 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
                             'g':
                                 <<
                                     { 'simple_1_col_1_group': { 'col1': 1 }, 'different_types_per_row': {'a': 1001} },
-                                    { 'simple_1_col_1_group': { 'col1': 1 }, 'different_types_per_row': 1002 },
-                                    { 'simple_1_col_1_group': { 'col1': 1 }, 'different_types_per_row': 'one-thousand and three' },
+                                    { 'simple_1_col_1_group': { 'col1': 1 }, 'different_types_per_row': 1002. },
+                                    { 'simple_1_col_1_group': { 'col1': 1 }, 'different_types_per_row': `'one-thousand and three'` },
                                     { 'simple_1_col_1_group': { 'col1': 1 }, 'different_types_per_row': {'a': 1001} },
-                                    { 'simple_1_col_1_group': { 'col1': 1 }, 'different_types_per_row': 1002 },
-                                    { 'simple_1_col_1_group': { 'col1': 1 }, 'different_types_per_row': 'one-thousand and three' }
+                                    { 'simple_1_col_1_group': { 'col1': 1 }, 'different_types_per_row': 1002. },
+                                    { 'simple_1_col_1_group': { 'col1': 1 }, 'different_types_per_row': `'one-thousand and three'` }
                                 >>
                         }
                     >>
