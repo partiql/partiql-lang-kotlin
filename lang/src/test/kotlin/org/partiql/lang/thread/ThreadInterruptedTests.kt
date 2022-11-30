@@ -62,14 +62,15 @@ class ThreadInterruptedTests {
 
     private fun testThreadInterrupt(interruptAfter: Long = INTERRUPT_AFTER_MS, interruptWait: Long = WAIT_FOR_THREAD_TERMINATION_MS, block: () -> Unit) {
         val wasInterrupted = AtomicBoolean(false)
-        val t = thread {
+        val t = thread(start = false) {
             try {
                 block()
             } catch (_: InterruptedException) {
                 wasInterrupted.set(true)
             }
         }
-
+        t.setUncaughtExceptionHandler { _, ex -> throw ex }
+        t.start()
         Thread.sleep(interruptAfter)
         t.interrupt()
         t.join(interruptWait)
@@ -83,7 +84,7 @@ class ThreadInterruptedTests {
         every {
             parser.createTokenStream(any())
         } returns EndlessTokenStream(PartiQLTokens(CharStreams.fromStream(InputStream.nullInputStream())))
-        testThreadInterrupt(5) { parser.run { parseAstStatement(query) } }
+        testThreadInterrupt(2) { parser.run { parseAstStatement(query) } }
     }
 
     @Test
@@ -91,7 +92,7 @@ class ThreadInterruptedTests {
         val parser = PartiQLParser()
         val tokenStream = EndlessTokenStream(PartiQLTokens(CharStreams.fromStream(InputStream.nullInputStream())))
         val sllParser = parser.createParserSLL(tokenStream)
-        testThreadInterrupt(5) { sllParser.run { statement() } }
+        testThreadInterrupt(2) { sllParser.run { statement() } }
     }
 
     @Test
@@ -99,7 +100,7 @@ class ThreadInterruptedTests {
         val parser = PartiQLParser()
         val tokenStream = EndlessTokenStream(PartiQLTokens(CharStreams.fromStream(InputStream.nullInputStream())))
         val llParser = parser.createParserLL(tokenStream)
-        testThreadInterrupt(5) { llParser.run { statement() } }
+        testThreadInterrupt(2) { llParser.run { statement() } }
     }
 
     @Test

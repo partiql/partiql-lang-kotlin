@@ -49,6 +49,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Marks the GroupKeyReferencesVisitorTransform as deprecated. There is no functionally equivalent class.
 
 ### Fixed
+- Fixes the ThreadInterruptedTests by modifying the time to interrupt parses. Also adds better exception exposure to
+facilitate debugging.
 
 ### Removed
 - Removes the deprecated V0 AST in the codebase.
