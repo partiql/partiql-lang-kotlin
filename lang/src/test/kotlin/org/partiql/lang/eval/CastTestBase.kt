@@ -1,5 +1,6 @@
 package org.partiql.lang.eval
 
+import org.junit.Ignore
 import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.errors.ErrorBehaviorInPermissiveMode
 import org.partiql.lang.errors.ErrorCategory
@@ -214,6 +215,15 @@ abstract class CastTestBase : EvaluatorTestBase() {
         override fun toString() = "$castCase$additionalDescription"
     }
 
+    /**
+     * TODO fix tests — this is static final wasteland of util methods; not a test class.
+     *
+     * This is considered a test class by junit because TestBase uses the junit4 RunWith annotation.
+     *
+     * Consider replacing junit4 with junit5 because this is out of hand
+     * https://resources.jetbrains.com/storage/products/kotlinconf2018/slides/4_Best%20Practices%20for%20Unit%20Testing%20in%20Kotlin.pdf
+     */
+    @Ignore
     companion object : EvaluatorTestBase() {
 
         /** Partial application of the source expression and the expected Ion value without type. Assumes [Implemented] logic*/

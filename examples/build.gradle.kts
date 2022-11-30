@@ -14,22 +14,15 @@
  */
 
 plugins {
-    id 'partiql.conventions'
+    id(Plugins.application)
+    id(Plugins.conventions)
+}
+
+application {
+    mainClass.set("org.partiql.examples.util.Main")
 }
 
 dependencies {
-    testImplementation project(':lang')
-    testImplementation project(':lang').sourceSets.test.output
-    testImplementation 'org.jetbrains.kotlin:kotlin-test-junit5'
-    testImplementation 'pl.pragmatists:JUnitParams:[1.0.0,1.1.0)'
-    testImplementation 'org.junit.vintage:junit-vintage-engine:5.7.0'
-    testImplementation 'org.junit.jupiter:junit-jupiter-params:5.7.0'
-}
-
-project(':test:partiql-randomized-tests') {
-    test {
-        onlyIf {
-            project.hasProperty("randomTests")
-        }
-    }
+    implementation(project(":lang"))
+    implementation(Deps.awsSdkS3)
 }

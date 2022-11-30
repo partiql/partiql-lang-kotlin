@@ -17,11 +17,11 @@ package org.partiql.cli.functions
 import com.amazon.ion.IonType
 import com.amazon.ion.IonValue
 import com.amazon.ion.system.IonSystemBuilder
-import org.junit.AfterClass
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertThrows
-import org.junit.BeforeClass
-import org.junit.Test
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.partiql.lang.eval.BAG_ANNOTATION
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
@@ -42,13 +42,13 @@ class ReadFileTest {
     companion object {
         fun dirPath(fname: String = "") = "tst-resources/$fname"
 
-        @BeforeClass
+        @BeforeAll
         @JvmStatic
         fun setUp() {
             File(dirPath()).mkdir()
         }
 
-        @AfterClass
+        @AfterAll
         @JvmStatic
         fun tearDown() {
             File(dirPath()).deleteRecursively()
@@ -116,7 +116,7 @@ class ReadFileTest {
 
         val args = listOf("\"${dirPath("data.ion")}\"").map { it.exprValue() }
         val additionalOptions = "{type:\"ion\"}".exprValue()
-        assertThrows(IllegalStateException::class.java) {
+        assertThrows<IllegalStateException> {
             function.callWithOptional(session, args, additionalOptions)
         }
     }

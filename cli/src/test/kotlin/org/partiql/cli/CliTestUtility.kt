@@ -2,7 +2,7 @@ package org.partiql.cli
 
 import com.amazon.ion.IonSystem
 import com.amazon.ion.system.IonSystemBuilder
-import org.junit.Assert
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
@@ -51,8 +51,7 @@ fun assertAsIon(expected: String, actual: String) {
 /**
  * An assertion helper
  */
-fun assertAsIon(ion: IonSystem, expected: String, actual: String) =
-    Assert.assertEquals(ion.loader.load(expected), ion.loader.load(actual))
+fun assertAsIon(ion: IonSystem, expected: String, actual: String) = assertEquals(ion.loader.load(expected), ion.loader.load(actual))
 
 fun String.singleIonExprValue(ion: IonSystem = IonSystemBuilder.standard().build(), valueFactory: ExprValueFactory = ExprValueFactory.standard(ion)) = valueFactory.newFromIonValue(ion.singleValue(this))
 fun Map<String, String>.asBinding() =

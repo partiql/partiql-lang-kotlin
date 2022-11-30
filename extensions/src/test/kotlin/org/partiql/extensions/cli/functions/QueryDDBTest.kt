@@ -17,18 +17,18 @@ import com.amazon.ion.system.IonSystemBuilder
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
 import com.amazonaws.services.dynamodbv2.model.ExecuteStatementResult
-import org.junit.Assert
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.runner.RunWith
+import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito
 import org.mockito.MockitoAnnotations
-import org.mockito.junit.MockitoJUnitRunner
+import org.mockito.junit.jupiter.MockitoExtension
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValueFactory
 
-@RunWith(MockitoJUnitRunner::class)
+@ExtendWith(MockitoExtension::class)
 class QueryDDBTest {
 
     private val ion = IonSystemBuilder.standard().build()
@@ -81,6 +81,6 @@ class QueryDDBTest {
     }
 
     private fun assertAsIon(expected: String, actual: String) {
-        Assert.assertEquals(ion.loader.load(expected), ion.loader.load(actual))
+        assertEquals(ion.loader.load(expected), ion.loader.load(actual))
     }
 }

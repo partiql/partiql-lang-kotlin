@@ -15,10 +15,11 @@
 package org.partiql.cli
 
 import com.amazon.ion.IonException
-import org.junit.After
-import org.junit.Assert.assertEquals
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.partiql.lang.eval.BAG_ANNOTATION
 import org.partiql.lang.eval.EvaluationException
 import org.partiql.lang.eval.MISSING_ANNOTATION
@@ -34,16 +35,17 @@ import java.nio.file.Files
 
 class CliTest {
     private val output = ByteArrayOutputStream()
-    private val testFile = File("test.ion")
+    private var testFile: File? = null
 
-    @Before
+    @BeforeEach
     fun setUp() {
         output.reset()
+        testFile = Files.createTempFile("test", "ion").toFile()
     }
 
-    @After
+    @AfterEach
     fun cleanTestFile() {
-        Files.deleteIfExists(testFile.toPath())
+        Files.deleteIfExists(testFile!!.toPath())
     }
 
     @Test
@@ -59,11 +61,13 @@ class CliTest {
         assertAsIon(expected, partiqlInputResult)
     }
 
-    @Test(expected = java.lang.IllegalStateException::class)
+    @Test
     fun runQueryOnMultipleIonValuesFailure() {
         val query = "SELECT * FROM input_data"
         val input = "1 2"
-        makeCliAndGetResult(query, input)
+        assertThrows<java.lang.IllegalStateException> {
+            makeCliAndGetResult(query, input)
+        }
     }
 
     @Test
@@ -77,12 +81,13 @@ class CliTest {
         assertAsIon(expected, result)
     }
 
-    @Test(expected = IllegalArgumentException::class)
+    @Test
     fun specifyingWrapIonWithPartiQLInput() {
         val query = "SELECT * FROM input_data"
         val input = "{a:1} {a:2}"
-
-        makeCliAndGetResult(query, input, wrapIon = true, inputFormat = InputFormat.PARTIQL)
+        assertThrows<IllegalArgumentException> {
+            makeCliAndGetResult(query, input, wrapIon = true, inputFormat = InputFormat.PARTIQL)
+        }
     }
 
     @Test
@@ -186,13 +191,12 @@ class CliTest {
         val query = "SELECT * FROM input_data"
         val input = "[{'a': 1}, {'b': 1}]"
         val expected = "$BAG_ANNOTATION::[{a:1}\n,{b:1}\n]"
-
         makeCliAndGetResult(query, input, inputFormat = InputFormat.ION, outputFormat = OutputFormat.ION_TEXT, output = FileOutputStream(testFile))
-        val ionInputResult = testFile.bufferedReader().use { it.readText() }
+        val ionInputResult = testFile!!.bufferedReader().use { it.readText() }
         assertAsIon(expected, ionInputResult)
 
         makeCliAndGetResult(query, input, inputFormat = InputFormat.PARTIQL, outputFormat = OutputFormat.ION_TEXT, output = FileOutputStream(testFile))
-        val partiqlInputResult = testFile.bufferedReader().use { it.readText() }
+        val partiqlInputResult = testFile!!.bufferedReader().use { it.readText() }
         assertAsIon(expected, partiqlInputResult)
     }
 
@@ -206,10 +210,12 @@ class CliTest {
         assertAsIon(expected, actual)
     }
 
-    @Test(expected = EvaluationException::class)
+    @Test
     fun withoutInputWithInputDataBindingThrowsException() {
         val query = "SELECT * FROM input_data"
-        makeCliAndGetResult(query)
+        assertThrows<EvaluationException> {
+            makeCliAndGetResult(query)
+        }
     }
 
     @Test
@@ -239,12 +245,14 @@ class CliTest {
         assertAsIon("\"abc\"", actual)
     }
 
-    @Test(expected = EvaluationException::class)
+    @Test
     fun runWithProjectionIterationFilterMissingFailure() {
         val pipeline = AbstractPipeline.create(AbstractPipeline.PipelineOptions(projectionIterationBehavior = ProjectionIterationBehavior.FILTER_MISSING))
         val input = "<<{'a': null, 'b': missing, 'c': 1}>>"
         val query = "SELECT a, b, c FROM input_data"
-        makeCliAndGetResult(query, input, pipeline = pipeline, inputFormat = InputFormat.PARTIQL)
+        assertThrows<EvaluationException> {
+            makeCliAndGetResult(query, input, pipeline = pipeline, inputFormat = InputFormat.PARTIQL)
+        }
     }
 
     @Test()
@@ -265,15 +273,17 @@ class CliTest {
         assertAsIon("$BAG_ANNOTATION::[{a:null,c:1}]", actual)
     }
 
-    @Test(expected = EvaluationException::class)
+    @Test
     fun runWithUndefinedVariableError() {
         val pipeline = AbstractPipeline.create(AbstractPipeline.PipelineOptions(undefinedVariableBehavior = UndefinedVariableBehavior.ERROR))
         val input = "<<{'a': 1}>>"
         val query = "SELECT * FROM undefined_variable"
-        makeCliAndGetResult(query, input, pipeline = pipeline, inputFormat = InputFormat.PARTIQL)
+        assertThrows<EvaluationException> {
+            makeCliAndGetResult(query, input, pipeline = pipeline, inputFormat = InputFormat.PARTIQL)
+        }
     }
 
-    @Test()
+    @Test
     fun runWithUndefinedVariableMissing() {
         val pipeline = AbstractPipeline.create(AbstractPipeline.PipelineOptions(undefinedVariableBehavior = UndefinedVariableBehavior.MISSING))
         val input = "<<{'a': 1}>>"
@@ -292,11 +302,12 @@ class CliTest {
         assertAsIon(expected, partiqlInputResult)
     }
 
-    @Test(expected = IonException::class)
+    @Test
     fun partiqlInputFailure() {
         val query = "SELECT * FROM input_data"
         val input = "<<{'a': 1}, {'b': 1}>>"
-
-        makeCliAndGetResult(query, input, inputFormat = InputFormat.ION)
+        assertThrows<IonException> {
+            makeCliAndGetResult(query, input, inputFormat = InputFormat.ION)
+        }
     }
 }

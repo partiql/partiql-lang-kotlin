@@ -14,22 +14,23 @@
  */
 
 plugins {
-    id 'partiql.conventions'
+    id(Plugins.conventions)
+    id(Plugins.library)
 }
 
 dependencies {
-    testImplementation project(':lang')
-    testImplementation project(':lang').sourceSets.test.output
-    testImplementation 'org.jetbrains.kotlin:kotlin-test-junit5'
-    testImplementation 'pl.pragmatists:JUnitParams:[1.0.0,1.1.0)'
-    testImplementation 'org.junit.vintage:junit-vintage-engine:5.7.0'
-    testImplementation 'org.junit.jupiter:junit-jupiter-params:5.7.0'
+    testImplementation(project(":lang"))
 }
 
-project(':test:partiql-randomized-tests') {
-    test {
-        onlyIf {
-            project.hasProperty("randomTests")
-        }
-    }
+val tests = "../partiql-tests/partiql-tests-data"
+
+object Env {
+    const val PARTIQL_EVAL = "PARTIQL_EVAL_TESTS_DATA"
+    const val PARTIQL_EQUIV = "PARTIQL_EVAL_EQUIV_TESTS_DATA"
+}
+
+tasks.test {
+    useJUnitPlatform()
+    environment(Env.PARTIQL_EVAL, file("$tests/eval/").absolutePath)
+    environment(Env.PARTIQL_EQUIV, file("$tests/eval-equiv/").absolutePath)
 }

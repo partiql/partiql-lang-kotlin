@@ -15,10 +15,10 @@
 package org.partiql.cli.functions
 
 import com.amazon.ion.system.IonSystemBuilder
-import org.junit.After
-import org.junit.Assert
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Test
 import org.partiql.cli.assertAsIon
 import org.partiql.cli.makeCliAndGetResult
 import org.partiql.lang.eval.BAG_ANNOTATION
@@ -26,11 +26,13 @@ import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.pipeline.AbstractPipeline
 import java.io.ByteArrayOutputStream
-import java.io.File
 import java.io.OutputStream
+import java.nio.file.Files
+import java.nio.file.Path
 import java.util.UUID
 
 class WriteFileTest {
+
     private val ion = IonSystemBuilder.standard().build()
     private val valueFactory = ExprValueFactory.standard(ion)
     private val function = WriteFile(valueFactory)
@@ -45,41 +47,32 @@ class WriteFileTest {
 
     private fun String.exprValue() = valueFactory.newFromIonValue(ion.singleValue(this))
 
-    private fun dirPath(fname: String = "") = "/tmp/partiqltest/$fname"
-    private fun readFileFromPath(path: String) = File(path).readText()
-    private fun createRandomTmpFilePath(extension: String? = "ion"): String {
-        val prefix: UUID = UUID.randomUUID()
-        val name = if (extension != null) "$prefix.$extension" else prefix.toString()
-        return dirPath(name)
-    }
-
     private val outputStream: OutputStream = ByteArrayOutputStream()
 
     companion object {
-        private const val TRUE_STRING: String = "true"
+
+        private var tmp: Path? = null
+
+        const val TRUE_STRING = "true"
+
+        @JvmStatic
+        @BeforeAll
+        fun beforeAll() {
+            try {
+                tmp = Files.createTempDirectory("partiqltest")
+            } catch (_: IllegalArgumentException) {
+                // already existed
+            }
+        }
+
+        @JvmStatic
+        @AfterAll
+        fun afterAll() {
+            tmp!!.toFile().deleteRecursively()
+        }
+
+        fun createRandomTmpFilePath(): Path = Files.createTempFile(tmp!!, UUID.randomUUID().toString(), ".ion")
     }
-
-    /**
-     *
-     * CONFIG
-     *
-     */
-
-    @Before
-    fun setUp() {
-        File(dirPath()).mkdir()
-    }
-
-    @After
-    fun tearDown() {
-        File(dirPath()).deleteRecursively()
-    }
-
-    /**
-     *
-     * UNIT TESTS
-     *
-     */
 
     @Test
     fun unit_success_writeIonAsDefault() {
@@ -89,7 +82,7 @@ class WriteFileTest {
 
         val expected = "[1, 2]"
 
-        Assert.assertEquals(ion.loader.load(expected), ion.loader.load(readFileFromPath(filePath)))
+        assertEquals(ion.loader.load(expected), ion.loader.load(filePath.toFile().readText()))
     }
 
     @Test
@@ -101,14 +94,8 @@ class WriteFileTest {
 
         val expected = "[1, 2]"
 
-        Assert.assertEquals(ion.loader.load(expected), ion.loader.load(readFileFromPath(filePath)))
+        assertEquals(ion.loader.load(expected), ion.loader.load(filePath.toFile().readText()))
     }
-
-    /**
-     *
-     * INTEGRATION TESTS
-     *
-     */
 
     @Test
     fun integration_success_singleValueStruct() {
@@ -124,7 +111,7 @@ class WriteFileTest {
 
         // Assert
         assertAsIon(TRUE_STRING, cliResponse)
-        Assert.assertEquals(ion.loader.load(expected), ion.loader.load(readFileFromPath(filePath)))
+        assertEquals(ion.loader.load(expected), ion.loader.load(filePath.toFile().readText()))
     }
 
     @Test
@@ -141,7 +128,7 @@ class WriteFileTest {
 
         // Assert
         assertAsIon(TRUE_STRING, cliResponse)
-        Assert.assertEquals(ion.loader.load(expected), ion.loader.load(readFileFromPath(filePath)))
+        assertEquals(ion.loader.load(expected), ion.loader.load(filePath.toFile().readText()))
     }
 
     @Test
@@ -158,7 +145,7 @@ class WriteFileTest {
 
         // Assert
         assertAsIon(TRUE_STRING, cliResponse)
-        Assert.assertEquals(ion.loader.load(expected), ion.loader.load(readFileFromPath(filePath)))
+        assertEquals(ion.loader.load(expected), ion.loader.load(filePath.toFile().readText()))
     }
 
     @Test
@@ -175,7 +162,7 @@ class WriteFileTest {
 
         // Assert
         assertAsIon(TRUE_STRING, cliResponse)
-        Assert.assertEquals(ion.loader.load(expected), ion.loader.load(readFileFromPath(filePath)))
+        assertEquals(ion.loader.load(expected), ion.loader.load(filePath.toFile().readText()))
     }
 
     @Test
@@ -192,13 +179,13 @@ class WriteFileTest {
 
         // Assert
         assertAsIon(TRUE_STRING, cliResponse)
-        Assert.assertEquals(ion.loader.load(expected), ion.loader.load(readFileFromPath(filePath)))
+        assertEquals(ion.loader.load(expected), ion.loader.load(filePath.toFile().readText()))
     }
 
     @Test
     fun integration_success_int() {
         // Arrange
-        val filePath = createRandomTmpFilePath()
+        val filePath = Files.createTempFile("integration_success_int", ".ion")
         val query = "write_file('$filePath', SELECT VALUE a FROM input_data)"
         val input = "{a : 5}"
         val expected = "$BAG_ANNOTATION::[5]"
@@ -209,6 +196,6 @@ class WriteFileTest {
 
         // Assert
         assertAsIon(TRUE_STRING, cliResponse)
-        Assert.assertEquals(ion.loader.load(expected), ion.loader.load(readFileFromPath(filePath)))
+        assertEquals(ion.loader.load(expected), ion.loader.load(filePath.toFile().readText()))
     }
 }
