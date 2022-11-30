@@ -15,6 +15,8 @@
 package org.partiql.lang.planner
 
 import org.partiql.lang.domains.PartiqlAst
+import org.partiql.lang.domains.PartiqlLogical
+import org.partiql.lang.domains.PartiqlLogicalResolved
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.errors.Problem
 import org.partiql.lang.eval.TypedOpBehavior
@@ -45,15 +47,25 @@ interface PartiQLPlanner {
      */
     sealed class Result {
 
-        data class Success(
+        data class Success @JvmOverloads constructor(
             val plan: PartiqlPhysical.Plan,
-            val warnings: List<Problem>
+            val warnings: List<Problem>,
+            val details: PlanningDetails = PlanningDetails()
         ) : Result()
 
         data class Error(val problems: List<Problem>) : Result() {
             override fun toString(): String = problems.joinToString()
         }
     }
+
+    data class PlanningDetails(
+        val ast: PartiqlAst.Statement? = null,
+        val astNormalized: PartiqlAst.Statement? = null,
+        val logical: PartiqlLogical.Plan? = null,
+        val logicalResolved: PartiqlLogicalResolved.Plan? = null,
+        val physical: PartiqlPhysical.Plan? = null,
+        val physicalTransformed: PartiqlPhysical.Plan? = null
+    )
 
     /**
      * Options which control [PartiQLPlanner] behavior.

@@ -18,6 +18,7 @@ import com.amazon.ion.IonString
 import com.amazon.ion.IonValue
 import com.amazon.ion.Timestamp
 import com.amazon.ionelement.api.MetaContainer
+import com.amazon.ionelement.api.emptyMetaContainer
 import com.amazon.ionelement.api.toIonValue
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.ast.UNKNOWN_SOURCE_LOCATION
@@ -194,6 +195,10 @@ internal class PhysicalPlanCompilerImpl(
             is PartiqlPhysical.Statement.Query -> compileAstExpr(ast.expr)
             is PartiqlPhysical.Statement.DmlQuery -> compileAstExpr(ast.expr)
             is PartiqlPhysical.Statement.Exec -> compileExec(ast)
+            is PartiqlPhysical.Statement.Explain -> {
+                val value = valueFactory.newBoolean(true)
+                thunkFactory.thunkEnv(emptyMetaContainer()) { value }
+            }
         }
     }
 
