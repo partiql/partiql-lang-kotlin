@@ -8,7 +8,7 @@ class EvaluatingCompilerFromSourceByTests : EvaluatorTestBase() {
     class AddressedExprValue(val value: Long, val valueFactory: ExprValueFactory) : BaseExprValue(), Scalar, Addressed {
 
         override val ionValue: IonValue
-            get() = valueFactory.ion.newInt(value)
+            get() = error("ExprValue.ionValue will be removed")
 
         override val type: ExprValueType
             get() = ExprValueType.INT

@@ -15,6 +15,7 @@
 package org.partiql.cli
 
 import com.amazon.ion.system.IonReaderBuilder
+import com.amazon.ion.system.IonSystemBuilder
 import com.amazon.ion.system.IonTextWriterBuilder
 import org.partiql.format.ExplainFormatter
 import org.partiql.lang.eval.Bindings
@@ -23,6 +24,7 @@ import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.PartiQLResult
 import org.partiql.lang.eval.delegate
+import org.partiql.lang.eval.toIonValue
 import org.partiql.lang.util.ConfigurableExprValueFormatter
 import org.partiql.pipeline.AbstractPipeline
 import java.io.InputStream
@@ -40,6 +42,8 @@ internal class Cli(
     private val query: String,
     private val wrapIon: Boolean
 ) : PartiQLCommand {
+
+    private val ion = IonSystemBuilder.standard().build()
 
     init {
         if (wrapIon && inputFormat != InputFormat.ION) {
@@ -114,8 +118,8 @@ internal class Cli(
 
     private fun outputResult(result: ExprValue) {
         when (outputFormat) {
-            OutputFormat.ION_TEXT -> ionTextWriterBuilder.build(output).use { result.ionValue.writeTo(it) }
-            OutputFormat.ION_BINARY -> valueFactory.ion.newBinaryWriter(output).use { result.ionValue.writeTo(it) }
+            OutputFormat.ION_TEXT -> ionTextWriterBuilder.build(output).use { result.toIonValue(ion).writeTo(it) }
+            OutputFormat.ION_BINARY -> valueFactory.ion.newBinaryWriter(output).use { result.toIonValue(ion).writeTo(it) }
             OutputFormat.PARTIQL -> OutputStreamWriter(output).use { it.write(result.toString()) }
             OutputFormat.PARTIQL_PRETTY -> OutputStreamWriter(output).use {
                 ConfigurableExprValueFormatter.pretty.formatTo(result, it)

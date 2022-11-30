@@ -10,6 +10,7 @@ import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.TypingMode
 import org.partiql.lang.eval.cloneAndRemoveBagAndMissingAnnotations
 import org.partiql.lang.eval.exprEquals
+import org.partiql.lang.eval.toIonValue
 
 internal class PipelineEvaluatorTestAdapter(
     private val pipelineFactory: PipelineFactory
@@ -73,7 +74,7 @@ internal class PipelineEvaluatorTestAdapter(
                     ION.singleValue(expectedResult)
                 }
 
-                val actualIonResult = actualExprValueResult.ionValue.let {
+                val actualIonResult = actualExprValueResult.toIonValue(ION).let {
                     if (tc.expectedResultFormat == ExpectedResultFormat.ION_WITHOUT_BAG_AND_MISSING_ANNOTATIONS)
                         it.cloneAndRemoveBagAndMissingAnnotations()
                     else
@@ -131,7 +132,7 @@ internal class PipelineEvaluatorTestAdapter(
             // errors are compile-time and others are evaluation-time.  We really aught to create a way for tests to
             // indicate when the exception should be thrown.  This is undone.
             // The call to .ionValue below is important since query execution won't actually begin otherwise.
-            pipeline.evaluate(tc.query).ionValue
+            pipeline.evaluate(tc.query).toIonValue(ION)
         }
 
         assertEquals(

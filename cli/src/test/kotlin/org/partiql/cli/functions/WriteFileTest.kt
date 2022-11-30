@@ -24,6 +24,7 @@ import org.partiql.cli.makeCliAndGetResult
 import org.partiql.lang.eval.BAG_ANNOTATION
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValueFactory
+import org.partiql.lang.eval.toIonValue
 import org.partiql.pipeline.AbstractPipeline
 import java.io.ByteArrayOutputStream
 import java.io.OutputStream
@@ -78,7 +79,7 @@ class WriteFileTest {
     fun unit_success_writeIonAsDefault() {
         val filePath = createRandomTmpFilePath()
         val args = listOf("\"$filePath\"", "[1, 2]").map { it.exprValue() }
-        function.callWithRequired(session, args).ionValue
+        function.callWithRequired(session, args).toIonValue(ion)
 
         val expected = "[1, 2]"
 
@@ -90,7 +91,7 @@ class WriteFileTest {
         val filePath = createRandomTmpFilePath()
         val args = listOf("\"$filePath\"", "[1, 2]").map { it.exprValue() }
         val additionalOptions = """{type: "ion"}""".exprValue()
-        function.callWithOptional(session, args, additionalOptions).ionValue
+        function.callWithOptional(session, args, additionalOptions).toIonValue(ion)
 
         val expected = "[1, 2]"
 

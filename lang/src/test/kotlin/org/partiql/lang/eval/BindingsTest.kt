@@ -145,7 +145,7 @@ class BindingsTest {
     fun BindingsOfIonStruct_caseSensitiveFound() =
         assertEquals(
             ION.newInt(1),
-            bindingForCaseSensitiveTests[BindingName("valueThatExists", BindingCase.SENSITIVE)]?.ionValue
+            bindingForCaseSensitiveTests[BindingName("valueThatExists", BindingCase.SENSITIVE)]?.toIonValue(ION)
         )
 
     @Test
@@ -165,7 +165,7 @@ class BindingsTest {
     fun BindingsOfIonStruct_caseInsensitiveFound() =
         assertEquals(
             ION.newInt(1),
-            bindingForCaseInsensitiveTests[BindingName("valueThatExists", BindingCase.INSENSITIVE)]?.ionValue
+            bindingForCaseInsensitiveTests[BindingName("valueThatExists", BindingCase.INSENSITIVE)]?.toIonValue(ION)
         )
 
     @Test

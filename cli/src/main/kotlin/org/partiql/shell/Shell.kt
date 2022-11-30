@@ -85,7 +85,6 @@ internal class Shell(
     private val initialGlobal: Bindings<ExprValue>,
     private val config: ShellConfiguration = ShellConfiguration()
 ) {
-
     private val homeDir: Path = Paths.get(System.getProperty("user.home"))
     private val globals = ShellGlobalBinding(valueFactory).add(initialGlobal)
     private var previousResult = valueFactory.nullValue

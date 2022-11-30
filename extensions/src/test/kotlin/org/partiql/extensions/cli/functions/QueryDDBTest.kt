@@ -27,6 +27,7 @@ import org.mockito.MockitoAnnotations
 import org.mockito.junit.jupiter.MockitoExtension
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValueFactory
+import org.partiql.lang.eval.toIonValue
 
 @ExtendWith(MockitoExtension::class)
 class QueryDDBTest {
@@ -58,7 +59,7 @@ class QueryDDBTest {
         val result = function.callWithRequired(session, arguments)
 
         // Assert
-        assertAsIon(expected, result.ionValue.toString())
+        assertAsIon(expected, result.toIonValue(ion).toString())
     }
 
     @Test
@@ -77,7 +78,7 @@ class QueryDDBTest {
         val result = function.callWithRequired(session, arguments)
 
         // Assert
-        assertAsIon(expected, result.ionValue.toString())
+        assertAsIon(expected, result.toIonValue(ion).toString())
     }
 
     private fun assertAsIon(expected: String, actual: String) {

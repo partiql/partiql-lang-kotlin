@@ -1,7 +1,5 @@
 package org.partiql.lang.eval.physical.operators
 
-import com.amazon.ion.IntegerSize
-import com.amazon.ion.IonInt
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
@@ -80,23 +78,18 @@ internal class LimitOperator(
                 internal = false
             )
         }
-        // `Number.toLong()` (used below) does *not* cause an overflow exception if the underlying [Number]
-        // implementation (i.e. Decimal or BigInteger) exceeds the range that can be represented by Longs.
-        // This can cause very confusing behavior if the user specifies a LIMIT value that exceeds
-        // Long.MAX_VALUE, because no results will be returned from their query.  That no overflow exception
-        // is thrown is not a problem as long as PartiQL's restriction of integer values to +/- 2^63 remains.
-        // We throw an exception here if the value exceeds the supported range (say if we change that
-        // restriction or if a custom [ExprValue] is provided which exceeds that value).
-        val limitIonValue = limitExprValue.ionValue as IonInt
-        if (limitIonValue.integerSize == IntegerSize.BIG_INTEGER) {
+
+        val originalLimitValue = limitExprValue.numberValue()
+        val limitValue = originalLimitValue.toLong()
+        if (originalLimitValue != limitValue as Number) { // Make sure `Number.toLong()` is a lossless transformation
             err(
-                "IntegerSize.BIG_INTEGER not supported for LIMIT values",
+                "Integer exceeds Long.MAX_VALUE provided as LIMIT value",
                 ErrorCode.INTERNAL_ERROR,
                 errorContextFrom(rowCountExpr.sourceLocation),
                 internal = true
             )
         }
-        val limitValue = limitExprValue.numberValue().toLong()
+
         if (limitValue < 0) {
             err(
                 "negative LIMIT",

@@ -32,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Experimental implementation for window function `Lag` and `Lead`.
 - Adds support for EXPLAIN
 - Adds the `pipeline` flag to the CLI to provide experimental usage of the PartiQLCompilerPipeline
+- Added `ExprValue.toIonValue(ion: IonSystem)` in kotlin, and `ExprValueKt.toIonValue(value: ExprValue, ion: IonSystem)` in Java to transform one `ExprValue` to a corresponding `IonValue`.
 
 ### Changed
 - Now `CompileOption` uses `TypedOpParameter.HONOR_PARAMETERS` as default.
@@ -49,10 +50,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Deprecated
 - Marks the GroupKeyReferencesVisitorTransform as deprecated. There is no functionally equivalent class.
+- Marks `ionValue` property in `ExprValue` interface as deprecated. The functional equivalent method is `ExprValue.toIonValue(ion: IonSystem)` in kotlin, and `ExprValueKt.toIonValue(value: ExprValue, ion: IonSystem)` in Java.
 
 ### Fixed
 - Fixes the ThreadInterruptedTests by modifying the time to interrupt parses. Also adds better exception exposure to
-facilitate debugging.
+  facilitate debugging.
 
 ### Removed
 - Removes the deprecated V0 AST in the codebase.
@@ -66,7 +68,7 @@ facilitate debugging.
   - [AstVisitor] Interface & [AstVisitorBase] class
   - [AstWalker] class
   - [MetaStrippingRewriter] class
-- Removes the deprecated ExprNode and related files in the code base. 
+- Removes the deprecated ExprNode and related files in the code base.
   - [Parser] API `parseExprNode(source: String): ExprNode` has been removed.
   - [CompilerPipeline] API `compile(query: ExprNode): Expression` has been removed.
   - [ExprNode] and [AstNode] have been removed.
@@ -142,27 +144,27 @@ facilitate debugging.
 #### Experimental Planner Additions
 
 - Renamed `PassResult` to PlannerPassResult for clarity. (This is part of the experimental query planner API.)
-- The `PlannerPipeline` API now has experimental and partial support for `INSERT` and `DELETE` DML statements— 
-tracking PartiQL specification issues are [partiql-docs/#4](https://github.com/partiql/partiql-docs/issues/4) (only
-a subset has been implemented--see examples below) and 
-[partiql-docs/#19](https://github.com/partiql/partiql-docs/issues/19).
+- The `PlannerPipeline` API now has experimental and partial support for `INSERT` and `DELETE` DML statements—
+  tracking PartiQL specification issues are [partiql-docs/#4](https://github.com/partiql/partiql-docs/issues/4) (only
+  a subset has been implemented--see examples below) and
+  [partiql-docs/#19](https://github.com/partiql/partiql-docs/issues/19).
   - Examples of supported statements include:
     - `INSERT INTO foo << { 'id': 1, 'name': 'bob' }, { 'id': 2, 'name' : 'sue' } >>` (multi record insert)
     - `INSERT INTO foo SELECT c.id, c.name FROM customer AS c` (insert the results of a query into another table)
     - `DELETE FROM foo` (delete all records in a table)
     - `DELETE FROM foo AS f WHERE f.zipCode = '90210'` (delete all records matching a predicate)
-- Introduced planner event callbacks as a means to provide a facility that allows the query to be visualized at every 
-stage in the `PlannerPipeline` and to generate performance metrics for the individual phases of query planning.  See
-`PlannerPipe.Builder.plannerEventCallback` for details.
+- Introduced planner event callbacks as a means to provide a facility that allows the query to be visualized at every
+  stage in the `PlannerPipeline` and to generate performance metrics for the individual phases of query planning.  See
+  `PlannerPipe.Builder.plannerEventCallback` for details.
 - Adds the following optimization passes, none of which are enabled by default:
-  - `FilterScanToKeyLookupPass` which performs a simple optimization common to most databases: it converts a filter 
-  predicate covering a table's complete primary key into a single get-by-key operation, thereby avoiding a full table
-  scan.  This may pass leave behind some useless `and` expressions if more `and` operands exist in the filter predicate 
-  other than primary key field equality expressions.
-  - `RemoveUselessAndsPass`, which removes any useless `and` expressions introduced by the previous pass or by the 
-  query author, e.g. `true and x.id = 42` -> `x.id = 42`), `true and true` -> `true`, etc.
-  - `RemoveUselessFiltersPass`, which removes useless filters introduced by the previous pass or by the query author 
-  (e.g. `(filter (lit true) <bexpr>))` -> `<bexpr>`.
+  - `FilterScanToKeyLookupPass` which performs a simple optimization common to most databases: it converts a filter
+    predicate covering a table's complete primary key into a single get-by-key operation, thereby avoiding a full table
+    scan.  This may pass leave behind some useless `and` expressions if more `and` operands exist in the filter predicate
+    other than primary key field equality expressions.
+  - `RemoveUselessAndsPass`, which removes any useless `and` expressions introduced by the previous pass or by the
+    query author, e.g. `true and x.id = 42` -> `x.id = 42`), `true and true` -> `true`, etc.
+  - `RemoveUselessFiltersPass`, which removes useless filters introduced by the previous pass or by the query author
+    (e.g. `(filter (lit true) <bexpr>))` -> `<bexpr>`.
 - Add support for `UNPIVOT`, the behavior is expected to be compatible with the `evaluating compiler`.
 - Adds support for GROUP BY (aggregations, group keys, etc)
 - Adds support for ORDER BY in Planner
@@ -184,28 +186,28 @@ stage in the `PlannerPipeline` and to generate performance metrics for the indiv
 - GitHub Actions capability to run on forks
 - Negation overflow caused by minimum INT8
 - Type mismatch error caused by evaluator's integer overflow check
-- Cast function's behavior on positive_infinity, negative_infinity, and NaN explicitly defined and handled. 
+- Cast function's behavior on positive_infinity, negative_infinity, and NaN explicitly defined and handled.
 - Changed Trim Function Specification handling(fixed error message, and now can take case-insensitive trim spec)
 
 ### Removed
 - README.md badge for travisci
-- **Breaking Change**: removed [ExprValueType.typeNames] as needed by the future work of legacy parser removal and OTS 
-- **Breaking Change**: [PartiqlPhysical.Type.toTypedOpParameter()] now becomes an internal function 
+- **Breaking Change**: removed [ExprValueType.typeNames] as needed by the future work of legacy parser removal and OTS
+- **Breaking Change**: [PartiqlPhysical.Type.toTypedOpParameter()] now becomes an internal function
 - **Breaking Change**: [PartiqlAst.Type.toTypedOpParameter()] is removed
 - **Breaking Change**: [PartiqlAstSanityValidator] now becomes an internal class
 - **Breaking Change**: [PartiqlPhysicalSanityValidator] is removed
 - **Breaking Change**: the following custom type AST nodes are removed from `partiql.ion` file: `es_boolean`, `es_integer`, `es_float`,
-    `es_text`, `es_any`, `spark_short`, `spark_integer`, `spark_long`, `spark_double`, `spark_boolean`, `spark_float`,
-    `rs_varchar_max`, `rs_integer`, `rs_bigint`, `rs_boolean`, `rs_real`, `rs_double_precision`.
-    The related visitor transform `CustomTypeVisitorTransform` is also removed.
-    See [Issue 510](https://github.com/partiql/partiql-lang-kotlin/issues/510) for more details.
+  `es_text`, `es_any`, `spark_short`, `spark_integer`, `spark_long`, `spark_double`, `spark_boolean`, `spark_float`,
+  `rs_varchar_max`, `rs_integer`, `rs_bigint`, `rs_boolean`, `rs_real`, `rs_double_precision`.
+  The related visitor transform `CustomTypeVisitorTransform` is also removed.
+  See [Issue 510](https://github.com/partiql/partiql-lang-kotlin/issues/510) for more details.
 
 
 ### Security
 
 ## [0.7.0-alpha] - 2022-06-23
 ### Added
-- An experimental query planner API along with logical and physical plans structures with the support of non-default 
+- An experimental query planner API along with logical and physical plans structures with the support of non-default
   physical operator implementations.
 - An optional flag, `--wrap-ion`, to give users the old functionality of reading multiple Ion values (previous behavior).
 - Benchmark framework and benchmark implementation for `LIKE` performance
@@ -215,10 +217,10 @@ stage in the `PlannerPipeline` and to generate performance metrics for the indiv
 - Replacement of REPL with [JLine](https://jline.github.io/) shell
 - Syntax highlighting for CLI
 - Three additional CLI flags:
-  - `-r --projection-iter-behavior:` Controls the behavior of ExprValue.iterator in the projection result: 
+  - `-r --projection-iter-behavior:` Controls the behavior of ExprValue.iterator in the projection result:
     (default: FILTER_MISSING) [FILTER_MISSING, UNFILTERED]
   - `-t --typed-op-behavior`: indicates how CAST should behave: (default: HONOR_PARAMETERS) [LEGACY, HONOR_PARAMETERS]
-  - `-v --undefined-variable-behavior`: Defines the behavior when a non-existent variable is referenced: 
+  - `-v --undefined-variable-behavior`: Defines the behavior when a non-existent variable is referenced:
     (default: ERROR) [ERROR, MISSING]
 - `--input-format` flag to the CLI
 - `CEIL` and `FLOOR` functions
@@ -239,7 +241,7 @@ stage in the `PlannerPipeline` and to generate performance metrics for the indiv
 - Add `ktlint` task dependency to enable execution optimizations and reducing he build time by ~ `30%`.
 - Adjust handling of Ion input (requiring single value)
 - Adjust handling of Ion output (outputting the real value)
-- Adds missing metas to `ORDER BY` `ExprNode` and `PartiqlAst` (E.g. source location), which limits error message 
+- Adds missing metas to `ORDER BY` `ExprNode` and `PartiqlAst` (E.g. source location), which limits error message
   reporting.
 
 ## [0.6.0-alpha] - 2022-04-06
@@ -256,9 +258,9 @@ stage in the `PlannerPipeline` and to generate performance metrics for the indiv
 - Changed `Path` AST node to use its root node source location [#527](https://github.com/partiql/partiql-lang-kotlin/pull/527)
 - Improve the `CAST` assertion assertEval [#523](https://github.com/partiql/partiql-lang-kotlin/pull/523)
 - [build] Bump Kotlin version to `1.4.32` from `1.4.0` [#548](https://github.com/partiql/partiql-lang-kotlin/pull/548)
-- [breaking-change] changing `ExprFunction`'s usage of `Environment` to `EvaluationSession` along with some other 
+- [breaking-change] changing `ExprFunction`'s usage of `Environment` to `EvaluationSession` along with some other
   classes containing implementation details made internal as part of [#559](https://github.com/partiql/partiql-lang-kotlin/pull/559).
-  
+
 ### Deprecated
 - Deprecate `ExprNode` [#535](https://github.com/partiql/partiql-lang-kotlin/pull/535)
 
@@ -281,7 +283,7 @@ stage in the `PlannerPipeline` and to generate performance metrics for the indiv
 - Adds evaluation-time function call (`ExprFunction`) argument type checks
 - Adds `integer8`, `int8`, `bigint`, `int2`, and `integer2` as type names
 - Adds support for `OFFSET` [#451](https://github.com/partiql/partiql-lang-kotlin/pull/451)
-- [cli] Uses Apache's CSVParser for file reading [#474](https://github.com/partiql/partiql-lang-kotlin/pull/474) and 
+- [cli] Uses Apache's CSVParser for file reading [#474](https://github.com/partiql/partiql-lang-kotlin/pull/474) and
 - ability to read custom CSV configurations [#480](https://github.com/partiql/partiql-lang-kotlin/pull/480)
 
 ### Changed
@@ -308,7 +310,7 @@ stage in the `PlannerPipeline` and to generate performance metrics for the indiv
 - [cli] Fixes `CLI` bug when outputting `IONTEXT` to file [#479](https://github.com/partiql/partiql-lang-kotlin/pull/479)
 
 ### Removed
-- Removes wildcard imports in cli [#483](https://github.com/partiql/partiql-lang-kotlin/pull/483) and 
+- Removes wildcard imports in cli [#483](https://github.com/partiql/partiql-lang-kotlin/pull/483) and
   lang [#488](https://github.com/partiql/partiql-lang-kotlin/pull/488)
 - Removes `DateTimeType` `sealed` class [#489](https://github.com/partiql/partiql-lang-kotlin/pull/489)
 - Renames `DateTimePart` type to `DatePart` [#506](https://github.com/partiql/partiql-lang-kotlin/pull/506)
@@ -330,15 +332,15 @@ stage in the `PlannerPipeline` and to generate performance metrics for the indiv
 ## [0.2.7-alpha] - 2021-09-13
 
 ### Fixed
-- Cherry picks "Fix bug causing multiple nested nots to parse very slowly [#436](https://github.com/partiql/partiql-lang-kotlin/pull/436) 
-  for `v0.2.7` release [#439](https://github.com/partiql/partiql-lang-kotlin/pull/439) 
+- Cherry picks "Fix bug causing multiple nested nots to parse very slowly [#436](https://github.com/partiql/partiql-lang-kotlin/pull/436)
+  for `v0.2.7` release [#439](https://github.com/partiql/partiql-lang-kotlin/pull/439)
 - Cherry picks "Use LazyThreadSafteyMode.PUBLICATION instead of NONE [#433](https://github.com/partiql/partiql-lang-kotlin/pull/433)
   for `v0.2.7` release [#440](https://github.com/partiql/partiql-lang-kotlin/pull/440)
 
 ## [0.1.7-alpha] - 2021-09-13
 
 ### Fixed
-- Cherry picks "Fix bug causing multiple nested nots to parse very slowly [#436](https://github.com/partiql/partiql-lang-kotlin/pull/436) 
+- Cherry picks "Fix bug causing multiple nested nots to parse very slowly [#436](https://github.com/partiql/partiql-lang-kotlin/pull/436)
   for `v0.1.7` release [#441](https://github.com/partiql/partiql-lang-kotlin/pull/441)
 - Cherry picks "Use LazyThreadSafteyMode.PUBLICATION instead of NONE [#433](https://github.com/partiql/partiql-lang-kotlin/pull/433)
   for `v0.1.7` release [#442](https://github.com/partiql/partiql-lang-kotlin/pull/442)
@@ -359,7 +361,7 @@ stage in the `PlannerPipeline` and to generate performance metrics for the indiv
 ### Added
 - `DATE` and `TIME` data types
 - Enhancements made by/for DynamoDB
-- Compile-time `Thread.interrupted()` checks were added to help mitigate the impact of compiling extremely large SQL 
+- Compile-time `Thread.interrupted()` checks were added to help mitigate the impact of compiling extremely large SQL
   queries.
 - Various performance improvements to the compiler were added.
 
@@ -371,7 +373,7 @@ stage in the `PlannerPipeline` and to generate performance metrics for the indiv
 ### Fixed
 - Fixes parser for the top level tokens [#369](https://github.com/partiql/partiql-lang-kotlin/pull/369)
 - Make `SIZE` function work with s-expressions. [#379](https://github.com/partiql/partiql-lang-kotlin/pull/379)
-- A number of other minor bug fixes and technical debt has been addressed. For a complete list of PRs that made it into 
+- A number of other minor bug fixes and technical debt has been addressed. For a complete list of PRs that made it into
   this release, please see the v0.3.0 GitHub milestone.
 
 ## [0.1.6-alpha] - 2021-05-13
@@ -399,7 +401,7 @@ stage in the `PlannerPipeline` and to generate performance metrics for the indiv
 ## [0.2.5-alpha] - 2021-01-12
 
 ### Added
-- System stored procedure calls (`EXEC`) [#345](https://github.com/partiql/partiql-lang-kotlin/pull/345). 
+- System stored procedure calls (`EXEC`) [#345](https://github.com/partiql/partiql-lang-kotlin/pull/345).
   More details on usage can be found [here](https://github.com/partiql/partiql-spec/issues/17)
 - CLI: version number and commit hash in REPL [#339](https://github.com/partiql/partiql-lang-kotlin/pull/339)
 - CLI: `PARTIQL_PRETTY` output-format for non-interactive use [#349](https://github.com/partiql/partiql-lang-kotlin/pull/349)
@@ -427,7 +429,7 @@ stage in the `PlannerPipeline` and to generate performance metrics for the indiv
 ## [0.1.4-alpha] - 2020-09-30
 
 ### Fixed
-- This release is a backport of [#286](https://github.com/partiql/partiql-lang-kotlin/pull/286) which was applied on top 
+- This release is a backport of [#286](https://github.com/partiql/partiql-lang-kotlin/pull/286) which was applied on top
   of v0.1.3-alpha.
 
 ## [0.2.2-alpha] - 2020-09-29
@@ -449,7 +451,7 @@ stage in the `PlannerPipeline` and to generate performance metrics for the indiv
 
 ### Changed
 - [breaking-change] `JOIN` is now **required** to provide an `ON` clause. In previous version an `ON` clause was optional
-  which caused ambiguous parsing of multiple `JOIN` for which some had `ON` clause and some had not. The old behaviour 
+  which caused ambiguous parsing of multiple `JOIN` for which some had `ON` clause and some had not. The old behaviour
   was also out of Spec.
 
 ### Fixed
@@ -458,7 +460,7 @@ stage in the `PlannerPipeline` and to generate performance metrics for the indiv
 - Fix float negative zero equality
 
 ### Removed
-- Removes invalid syntax check on case expressions with type parameters, e.g., `CAST(a AS DECIMAL(1, 2))` now does not 
+- Removes invalid syntax check on case expressions with type parameters, e.g., `CAST(a AS DECIMAL(1, 2))` now does not
   throw
 
 ## [0.1.3-alpha] - 2020-03-26

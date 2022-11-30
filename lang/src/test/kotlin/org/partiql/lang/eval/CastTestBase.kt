@@ -1524,7 +1524,7 @@ abstract class CastTestBase : EvaluatorTestBase() {
                 val identityValue = eval(castCase.source)
                 val newCastCase = castCase.copy(
                     type = "ANY",
-                    expected = identityValue.ionValue.cloneAndRemoveBagAndMissingAnnotations().toString(),
+                    expected = identityValue.toIonValue(ion).cloneAndRemoveBagAndMissingAnnotations().toString(),
                     expectedErrorCode = null
                 ) {
                     assertEquals(identityValue.type, it.type)

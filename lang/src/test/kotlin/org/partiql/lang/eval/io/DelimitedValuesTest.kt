@@ -23,6 +23,7 @@ import org.partiql.lang.eval.cloneAndRemoveBagAndMissingAnnotations
 import org.partiql.lang.eval.io.DelimitedValues.ConversionMode.AUTO
 import org.partiql.lang.eval.io.DelimitedValues.ConversionMode.NONE
 import org.partiql.lang.eval.orderedNamesValue
+import org.partiql.lang.eval.toIonValue
 import org.partiql.lang.util.newFromIonText
 import java.io.StringReader
 import java.io.StringWriter
@@ -32,7 +33,7 @@ class DelimitedValuesTest : TestBase() {
         val expectedValues = ion.singleValue(expectedIon)
 
         assertSame(ExprValueType.BAG, value.type)
-        assertEquals(expectedValues, value.ionValue.cloneAndRemoveBagAndMissingAnnotations())
+        assertEquals(expectedValues, value.toIonValue(ion).cloneAndRemoveBagAndMissingAnnotations())
     }
 
     private fun read(

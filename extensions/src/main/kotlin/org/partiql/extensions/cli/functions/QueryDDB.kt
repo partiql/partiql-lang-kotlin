@@ -19,6 +19,7 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder
 import com.amazonaws.services.dynamodbv2.document.ItemUtils
 import com.amazonaws.services.dynamodbv2.model.ExecuteStatementRequest
 import org.partiql.lang.eval.EvaluationSession
+import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.stringValue
@@ -34,7 +35,7 @@ import org.partiql.lang.types.StaticType
  * overrides. Reference the CLI.md file within this repository for more information.
  * Example CLI usage: query_ddb('SELECT <attribute> FROM <table> WHERE <key> = <value>');
  */
-class QueryDDB(valueFactory: ExprValueFactory) : BaseFunction(valueFactory) {
+class QueryDDB(private val valueFactory: ExprValueFactory) : ExprFunction {
 
     private lateinit var client: AmazonDynamoDB
 
