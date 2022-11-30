@@ -13,7 +13,6 @@
  */
 
 plugins {
-    id(Plugins.library)
     id(Plugins.conventions)
 }
 

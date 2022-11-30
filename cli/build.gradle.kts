@@ -27,6 +27,7 @@ dependencies {
     implementation(Deps.jline)
     implementation(Deps.joda)
     implementation(Deps.jopt)
+    implementation(Deps.kotlinReflect)
 }
 
 application {

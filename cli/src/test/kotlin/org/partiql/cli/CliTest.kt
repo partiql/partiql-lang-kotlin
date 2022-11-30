@@ -250,7 +250,9 @@ class CliTest {
         val pipeline = AbstractPipeline.create(AbstractPipeline.PipelineOptions(projectionIterationBehavior = ProjectionIterationBehavior.FILTER_MISSING))
         val input = "<<{'a': null, 'b': missing, 'c': 1}>>"
         val query = "SELECT a, b, c FROM input_data"
-        makeCliAndGetResult(query, input, pipeline = pipeline, inputFormat = InputFormat.PARTIQL)
+        assertThrows<EvaluationException> {
+            makeCliAndGetResult(query, input, pipeline = pipeline, inputFormat = InputFormat.PARTIQL)
+        }
     }
 
     @Test()
@@ -276,10 +278,12 @@ class CliTest {
         val pipeline = AbstractPipeline.create(AbstractPipeline.PipelineOptions(undefinedVariableBehavior = UndefinedVariableBehavior.ERROR))
         val input = "<<{'a': 1}>>"
         val query = "SELECT * FROM undefined_variable"
-        makeCliAndGetResult(query, input, pipeline = pipeline, inputFormat = InputFormat.PARTIQL)
+        assertThrows<EvaluationException> {
+            makeCliAndGetResult(query, input, pipeline = pipeline, inputFormat = InputFormat.PARTIQL)
+        }
     }
 
-    @Test()
+    @Test
     fun runWithUndefinedVariableMissing() {
         val pipeline = AbstractPipeline.create(AbstractPipeline.PipelineOptions(undefinedVariableBehavior = UndefinedVariableBehavior.MISSING))
         val input = "<<{'a': 1}>>"

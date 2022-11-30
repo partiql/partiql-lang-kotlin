@@ -13,11 +13,10 @@
  */
 
 plugins {
-    id(Plugins.library)
     id(Plugins.conventions)
 }
 
 dependencies {
     // TODO specify partiql-lang-kotlin version A
-    testImplementation("org.partiql:partiql-lang-kotlin:A"
+    testImplementation("org.partiql:partiql-lang-kotlin:A")
 }

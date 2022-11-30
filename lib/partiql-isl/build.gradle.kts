@@ -43,5 +43,4 @@ pig {
 
 tasks.dokkaHtml {
     dependsOn(tasks.withType(PigTask::class))
-    outputDirectory.set(File("$buildDir/javadoc"))
 }
