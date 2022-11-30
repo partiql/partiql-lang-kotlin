@@ -3,6 +3,7 @@
 * Tutorials
   * [General Tutorial](https://github.com/partiql/partiql-lang-kotlin/wiki/Tutorial)
   * [Cookbook](https://github.com/partiql/partiql-lang-kotlin/wiki/Cookbook)
+  * [Manipulating the AST](https://github.com/partiql/partiql-lang-kotlin/wiki/Manipulating-the-AST)
 * Design & Development Documents
   * [Abstract Syntax Tree](https://github.com/partiql/partiql-lang-kotlin/wiki/Abstract-Syntax-Tree)
   * [Architecture Design](https://github.com/partiql/partiql-lang-kotlin/wiki/Architecture-Design)
