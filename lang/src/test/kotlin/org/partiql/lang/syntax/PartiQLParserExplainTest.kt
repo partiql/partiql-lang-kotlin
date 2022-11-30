@@ -144,6 +144,17 @@ class PartiQLParserExplainTest : PartiQLParserTestBase() {
                     Property.TOKEN_TYPE to TokenType.EOF,
                     Property.TOKEN_VALUE to ION.newSymbol("EOF")
                 )
+            ),
+            ParserErrorTestCase(
+                description = "Setting option twice",
+                query = "EXPLAIN (TYPE ast, TYPE logical) a",
+                code = ErrorCode.PARSE_UNEXPECTED_TOKEN,
+                context = mapOf(
+                    Property.LINE_NUMBER to 1L,
+                    Property.COLUMN_NUMBER to 25L,
+                    Property.TOKEN_TYPE to TokenType.IDENTIFIER,
+                    Property.TOKEN_VALUE to ION.newSymbol("logical")
+                )
             )
         )
     }

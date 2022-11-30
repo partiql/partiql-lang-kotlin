@@ -42,6 +42,8 @@ internal object DotFormatter : NodeFormatter {
     }
 
     override fun format(input: DomainNode): String {
+        NODE_MAP.clear()
+        CLUSTER_COUNT = 0
         val graph = digraph("DotGraph") {
             node {
                 shape = DotNodeShape.RECTANGLE

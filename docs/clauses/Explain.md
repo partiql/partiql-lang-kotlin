@@ -42,7 +42,7 @@ The following will show the `PHYSICAL` plan in `TREE` format:
 
 ```postgresql
 EXPLAIN (TYPE PHYSICAL, FORMAT TREE)
-SELECT t.a FROM t;
+    SELECT t.a FROM t;
 ```
 
 While the following typically creates extremely long URLs -- to get a URL to a rendered Dot graph of a `LOGICAL` plan,
@@ -50,7 +50,7 @@ execute:
 
 ```postgresql
 EXPLAIN (TYPE LOGICAL, FORMAT DOT_URL)
-SELECT t.a FROM t;
+    SELECT t.a FROM t;
 ```
 
 Or, alternatively, if you have [viu](https://github.com/atanunq/viu), [dot](https://graphviz.org/doc/info/command.html),

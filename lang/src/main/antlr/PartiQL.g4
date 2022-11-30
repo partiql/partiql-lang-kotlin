@@ -11,7 +11,7 @@ options {
  *
  */
 
-topStatement
+root
     : (EXPLAIN (PAREN_LEFT explainOption (COMMA explainOption)* PAREN_RIGHT)? )? statement;
 
 statement

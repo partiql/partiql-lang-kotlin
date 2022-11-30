@@ -64,6 +64,7 @@ import org.partiql.lang.util.ionValue
 import org.partiql.lang.util.numberValue
 import org.partiql.lang.util.unaryMinus
 import org.partiql.pig.runtime.SymbolPrimitive
+import java.lang.IllegalArgumentException
 import java.math.BigInteger
 import java.time.LocalDate
 import java.time.LocalTime
@@ -99,17 +100,21 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
 
     override fun visitQueryDml(ctx: PartiQLParser.QueryDmlContext): PartiqlAst.PartiqlAstNode = visit(ctx.dml())
 
-    override fun visitTopStatement(ctx: PartiQLParser.TopStatementContext) = when (ctx.EXPLAIN()) {
+    override fun visitRoot(ctx: PartiQLParser.RootContext) = when (ctx.EXPLAIN()) {
         null -> visit(ctx.statement()) as PartiqlAst.Statement
         else -> PartiqlAst.build {
             var type: String? = null
             var format: String? = null
             val metas = ctx.EXPLAIN().getSourceMetaContainer()
             ctx.explainOption().forEach { option ->
-                when (option.param.text.toLowerCase()) {
-                    "type" -> { type = option.value.text }
-                    "format" -> { format = option.value.text }
-                    else -> throw option.param.error("Unknown EXPLAIN parameter.", ErrorCode.PARSE_UNEXPECTED_TOKEN)
+                val parameter = try {
+                    ExplainParameters.valueOf(option.param.text.toUpperCase())
+                } catch (ex: IllegalArgumentException) {
+                    throw option.param.error("Unknown EXPLAIN parameter.", ErrorCode.PARSE_UNEXPECTED_TOKEN, cause = ex)
+                }
+                when (parameter) {
+                    ExplainParameters.TYPE -> { type = parameter.getCompliantString(type, option.value) }
+                    ExplainParameters.FORMAT -> { format = parameter.getCompliantString(format, option.value) }
                 }
             }
             explain(
@@ -1752,6 +1757,16 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
             throw token.err("Expected an integer value.", ErrorCode.PARSE_MALFORMED_PARSE_TREE)
         if (ionValue.integerSize == IntegerSize.LONG || ionValue.integerSize == IntegerSize.BIG_INTEGER)
             throw token.err("Type parameter exceeded maximum value", ErrorCode.PARSE_TYPE_PARAMETER_EXCEEDED_MAXIMUM_VALUE)
+    }
+
+    private enum class ExplainParameters {
+        TYPE,
+        FORMAT;
+
+        fun getCompliantString(target: String?, input: Token): String = when (target) {
+            null -> input.text!!
+            else -> throw input.error("Cannot set EXPLAIN parameter ${this.name} multiple times.", ErrorCode.PARSE_UNEXPECTED_TOKEN)
+        }
     }
 
     private fun TerminalNode?.err(msg: String, code: ErrorCode, ctx: PropertyValueMap = PropertyValueMap(), cause: Throwable? = null) = this.error(msg, code, ctx, cause, ion)
