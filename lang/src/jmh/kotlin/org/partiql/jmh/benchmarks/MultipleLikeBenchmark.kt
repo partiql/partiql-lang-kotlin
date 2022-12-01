@@ -1,14 +1,35 @@
-package org.partiql.jmh
+/*
+ * Copyright 2022 Amazon.com, Inc. or its affiliates.  All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at:
+ *
+ *      http://aws.amazon.com/apache2.0/
+ *
+ * or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
+ * language governing permissions and limitations under the License.
+ */
+
+package org.partiql.jmh.benchmarks
 
 import com.amazon.ion.system.IonSystemBuilder
 import org.openjdk.jmh.annotations.Benchmark
 import org.openjdk.jmh.annotations.BenchmarkMode
 import org.openjdk.jmh.annotations.Fork
+import org.openjdk.jmh.annotations.Measurement
 import org.openjdk.jmh.annotations.Mode
 import org.openjdk.jmh.annotations.OutputTimeUnit
 import org.openjdk.jmh.annotations.Scope
 import org.openjdk.jmh.annotations.State
+import org.openjdk.jmh.annotations.Warmup
 import org.openjdk.jmh.infra.Blackhole
+import org.partiql.jmh.utils.FORK_VALUE_RECOMMENDED
+import org.partiql.jmh.utils.MEASUREMENT_ITERATION_VALUE_RECOMMENDED
+import org.partiql.jmh.utils.MEASUREMENT_TIME_VALUE_RECOMMENDED
+import org.partiql.jmh.utils.WARMUP_ITERATION_VALUE_RECOMMENDED
+import org.partiql.jmh.utils.WARMUP_TIME_VALUE_RECOMMENDED
 import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.syntax.PartiQLParserBuilder
@@ -17,7 +38,18 @@ import java.util.concurrent.TimeUnit
 /**
  * JMH micro-benchmark for parse/compile/eval of multiple `LIKE` expressions.
  */
+@BenchmarkMode(Mode.AverageTime)
+@OutputTimeUnit(TimeUnit.MICROSECONDS)
 open class MultipleLikeBenchmark {
+
+    companion object {
+        private const val FORK_VALUE: Int = FORK_VALUE_RECOMMENDED
+        private const val MEASUREMENT_ITERATION_VALUE: Int = MEASUREMENT_ITERATION_VALUE_RECOMMENDED
+        private const val MEASUREMENT_TIME_VALUE: Int = MEASUREMENT_TIME_VALUE_RECOMMENDED
+        private const val WARMUP_ITERATION_VALUE: Int = WARMUP_ITERATION_VALUE_RECOMMENDED
+        private const val WARMUP_TIME_VALUE: Int = WARMUP_TIME_VALUE_RECOMMENDED
+    }
+
     @State(Scope.Thread)
     open class MyState {
         val ion = IonSystemBuilder.standard().build()
@@ -318,9 +350,9 @@ open class MultipleLikeBenchmark {
      * Benchmarks parsing a query containing 15 `OR`ed `LIKE` expressions
      */
     @Benchmark
-    @BenchmarkMode(Mode.AverageTime)
-    @OutputTimeUnit(TimeUnit.MICROSECONDS)
-    @Fork(value = 2)
+    @Fork(value = FORK_VALUE)
+    @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
+    @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
     fun testPartiQLParser15(state: MyState, blackhole: Blackhole) {
         val expr = state.parser.parseAstStatement(state.query15)
         blackhole.consume(expr)
@@ -330,9 +362,9 @@ open class MultipleLikeBenchmark {
      * Benchmarks compiling a query containing 15 `OR`ed `LIKE` expressions
      */
     @Benchmark
-    @BenchmarkMode(Mode.AverageTime)
-    @OutputTimeUnit(TimeUnit.MICROSECONDS)
-    @Fork(value = 2)
+    @Fork(value = FORK_VALUE)
+    @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
+    @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
     fun testPartiQLCompiler15(state: MyState, blackhole: Blackhole) {
         val exprValue = state.pipeline.compile(state.astStatement15)
         blackhole.consume(exprValue)
@@ -343,9 +375,9 @@ open class MultipleLikeBenchmark {
      * against 10,201 rows of strings each of which are ~20 to ~220 codepoints long
      */
     @Benchmark
-    @BenchmarkMode(Mode.AverageTime)
-    @OutputTimeUnit(TimeUnit.MICROSECONDS)
-    @Fork(value = 2)
+    @Fork(value = FORK_VALUE)
+    @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
+    @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
     fun testPartiQLEvaluator15(state: MyState, blackhole: Blackhole) {
         val exprValue = state.expression15.eval(state.session)
         blackhole.consume(exprValue)
@@ -356,9 +388,9 @@ open class MultipleLikeBenchmark {
      * Benchmarks parsing a query containing 30 `OR`ed `LIKE` expressions
      */
     @Benchmark
-    @BenchmarkMode(Mode.AverageTime)
-    @OutputTimeUnit(TimeUnit.MICROSECONDS)
-    @Fork(value = 2)
+    @Fork(value = FORK_VALUE)
+    @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
+    @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
     fun testPartiQLParser30(state: MyState, blackhole: Blackhole) {
         val expr = state.parser.parseAstStatement(state.query30)
         blackhole.consume(expr)
@@ -368,9 +400,9 @@ open class MultipleLikeBenchmark {
      * Benchmarks compiling a query containing 30 `OR`ed `LIKE` expressions
      */
     @Benchmark
-    @BenchmarkMode(Mode.AverageTime)
-    @OutputTimeUnit(TimeUnit.MICROSECONDS)
-    @Fork(value = 2)
+    @Fork(value = FORK_VALUE)
+    @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
+    @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
     fun testPartiQLCompiler30(state: MyState, blackhole: Blackhole) {
         val exprValue = state.pipeline.compile(state.astStatement30)
         blackhole.consume(exprValue)
@@ -381,9 +413,9 @@ open class MultipleLikeBenchmark {
      * against 10,201 rows of strings each of which are ~20 to ~220 codepoints long
      */
     @Benchmark
-    @BenchmarkMode(Mode.AverageTime)
-    @OutputTimeUnit(TimeUnit.MICROSECONDS)
-    @Fork(value = 2)
+    @Fork(value = FORK_VALUE)
+    @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
+    @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
     fun testPartiQLEvaluator30(state: MyState, blackhole: Blackhole) {
         val exprValue = state.expression30.eval(state.session)
         blackhole.consume(exprValue)
@@ -395,9 +427,9 @@ open class MultipleLikeBenchmark {
      * against 102,010 rows of strings each of which are ~20 to ~220 codepoints long
      */
     @Benchmark
-    @BenchmarkMode(Mode.AverageTime)
-    @OutputTimeUnit(TimeUnit.MICROSECONDS)
-    @Fork(value = 2)
+    @Fork(value = FORK_VALUE)
+    @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
+    @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
     fun testPartiQLEvaluator30WithData10(state: MyState, blackhole: Blackhole) {
         val exprValue = state.expression30.eval(state.session10)
         blackhole.consume(exprValue)
