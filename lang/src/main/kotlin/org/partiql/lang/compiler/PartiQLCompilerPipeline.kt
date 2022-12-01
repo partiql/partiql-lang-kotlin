@@ -14,6 +14,7 @@
 
 package org.partiql.lang.compiler
 
+import org.partiql.annotations.PartiQLExperimental
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.errors.PartiQLException
@@ -40,6 +41,7 @@ import org.partiql.lang.syntax.PartiQLParserBuilder
  * }
  * ```
  */
+@PartiQLExperimental
 class PartiQLCompilerPipeline(
     private val parser: Parser,
     private val planner: PartiQLPlanner,

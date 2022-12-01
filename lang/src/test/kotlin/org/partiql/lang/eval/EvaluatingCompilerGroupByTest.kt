@@ -104,7 +104,7 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
         )
 
         /**
-         * The [EvaluatorTestTarget.PLANNER_PIPELINE] does NOT support [UndefinedVariableBehavior.MISSING], so if the
+         * The [EvaluatorTestTarget.PARTIQL_PIPELINE] does NOT support [UndefinedVariableBehavior.MISSING], so if the
          * [compOptions] includes the [UndefinedVariableBehavior], we should use the [EvaluatorTestTarget.COMPILER_PIPELINE]
          */
         private fun getTestTarget(compOptions: CompOptions, default: EvaluatorTestTarget): EvaluatorTestTarget = when (compOptions) {
@@ -965,7 +965,7 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
                     }
                 >>
             """,
-            targetPipeline = EvaluatorTestTarget.PLANNER_PIPELINE
+            targetPipeline = EvaluatorTestTarget.PARTIQL_PIPELINE
         ),
     )
 
@@ -1010,7 +1010,7 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
                     }
                 >>
             """,
-            targetPipeline = EvaluatorTestTarget.PLANNER_PIPELINE
+            targetPipeline = EvaluatorTestTarget.PARTIQL_PIPELINE
         ),
     )
 
@@ -1262,7 +1262,7 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
             "SELECT foo AS someSelectListAlias FROM <<{ 'a': 1 }>> GROUP BY someSelectListAlias",
             ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
             propertyValueMapOf(1, 8, Property.BINDING_NAME to "foo"),
-            target = EvaluatorTestTarget.PLANNER_PIPELINE
+            target = EvaluatorTestTarget.PARTIQL_PIPELINE
         )
     }
 
@@ -1328,7 +1328,7 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
                 """,
             ErrorCode.EVALUATOR_VARIABLE_NOT_INCLUDED_IN_GROUP_BY,
             propertyValueMapOf(2, 28, Property.BINDING_NAME to "O"),
-            target = EvaluatorTestTarget.PLANNER_PIPELINE,
+            target = EvaluatorTestTarget.PARTIQL_PIPELINE,
             session = session
         )
     }

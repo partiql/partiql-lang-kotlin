@@ -18,6 +18,7 @@ import com.amazon.ionelement.api.ionInt
 import org.junit.Assert.assertEquals
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
+import org.partiql.annotations.PartiQLExperimental
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.PartiqlLogical
 import org.partiql.lang.domains.PartiqlLogicalResolved
@@ -27,6 +28,7 @@ import org.partiql.lang.eval.PartiQLResult
 import org.partiql.lang.planner.transforms.PLAN_VERSION_NUMBER
 import org.partiql.lang.util.ArgumentsProviderBase
 
+@PartiQLExperimental
 class PartiQLCompilerPipelineExplainTests {
 
     val compiler = PartiQLCompilerPipeline.standard()

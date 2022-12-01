@@ -16,7 +16,7 @@ import org.partiql.lang.planner.DML_COMMAND_FIELD_TARGET_UNIQUE_ID
 import org.partiql.lang.util.ArgumentsProviderBase
 import kotlin.test.fail
 
-class LogicalResolvedToDefaultPhysicalVisitorTransformTests {
+class LogicalResolvedToDefaultPartiQLPhysicalVisitorTransformTestsPass {
     data class BexprTestCase(val input: PartiqlLogicalResolved.Bexpr, val expected: PartiqlPhysical.Bexpr)
 
     @ParameterizedTest

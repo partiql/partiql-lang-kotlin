@@ -14,13 +14,13 @@ enum class EvaluatorTestTarget {
 
     /**
      * Run the test only on [org.partiql.lang.CompilerPipeline]. Set this when the test case covers features not yet
-     * supported by [org.partiql.lang.planner.PlannerPipeline] or when testing features unique to the former.
+     * supported by [org.partiql.lang.compiler.PartiQLCompilerPipeline] or when testing features unique to the former.
      */
     COMPILER_PIPELINE,
 
     /**
-     * Run the test only on [org.partiql.lang.planner.PlannerPipeline]. Set this when the test case covers features not
+     * Run the test on [org.partiql.lang.compiler.PartiQLCompilerPipeline]. Set this when the test case covers features not
      * supported by [org.partiql.lang.CompilerPipeline], or when testing features unique to the former.
      */
-    PLANNER_PIPELINE
+    PARTIQL_PIPELINE,
 }

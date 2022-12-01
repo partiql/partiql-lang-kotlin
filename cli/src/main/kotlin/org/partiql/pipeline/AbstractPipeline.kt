@@ -16,6 +16,7 @@ package org.partiql.pipeline
 
 import com.amazon.ion.IonSystem
 import com.amazon.ion.system.IonSystemBuilder
+import org.partiql.annotations.PartiQLExperimental
 import org.partiql.cli.Pipeline
 import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.compiler.PartiQLCompilerBuilder
@@ -99,6 +100,7 @@ internal sealed class AbstractPipeline(open val options: PipelineOptions) {
     /**
      * Wraps the PartiQLCompilerPipeline
      */
+    @OptIn(PartiQLExperimental::class)
     class PipelineExperimental(options: PipelineOptions) : AbstractPipeline(options) {
 
         private val evaluatorOptions = org.partiql.lang.planner.EvaluatorOptions.Builder()

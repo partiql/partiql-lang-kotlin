@@ -16,6 +16,7 @@ package org.partiql.lang.eval
 
 import com.amazon.ion.IonType
 import com.amazon.ion.IonValue
+import org.partiql.annotations.PartiQLExperimental
 import org.partiql.lang.CUSTOM_TEST_TYPES
 import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.ION
@@ -32,7 +33,6 @@ import org.partiql.lang.eval.evaluatortestframework.ExpectedResultFormat
 import org.partiql.lang.eval.evaluatortestframework.MultipleTestAdapter
 import org.partiql.lang.eval.evaluatortestframework.PartiQLCompilerPipelineFactory
 import org.partiql.lang.eval.evaluatortestframework.PipelineEvaluatorTestAdapter
-import org.partiql.lang.eval.evaluatortestframework.PlannerPipelineFactory
 import org.partiql.lang.eval.evaluatortestframework.VisitorTransformBaseTestAdapter
 import org.partiql.lang.util.asSequence
 import org.partiql.lang.util.newFromIonText
@@ -41,11 +41,10 @@ import org.partiql.lang.util.newFromIonText
  * [EvaluatorTestBase] contains testing infrastructure needed by all test classes that need to evaluate a query.
  */
 abstract class EvaluatorTestBase : TestBase() {
-    // TODO: Make it private again once we finish removing ExprNode
-    open val testHarness: EvaluatorTestAdapter = MultipleTestAdapter(
+    @OptIn(PartiQLExperimental::class)
+    private val testHarness: EvaluatorTestAdapter = MultipleTestAdapter(
         listOf(
             PipelineEvaluatorTestAdapter(CompilerPipelineFactory()),
-            PipelineEvaluatorTestAdapter(PlannerPipelineFactory()),
             PipelineEvaluatorTestAdapter(PartiQLCompilerPipelineFactory()),
             VisitorTransformBaseTestAdapter()
         )

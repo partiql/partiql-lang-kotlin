@@ -4,7 +4,7 @@ import org.partiql.lang.eval.EvaluationSession
 
 /**
  * The implementation of this interface is passed to the constructor of [PipelineEvaluatorTestAdapter].  Determines
- * which pipeline (either [org.partiql.lang.CompilerPipeline] or [org.partiql.lang.planner.PlannerPipeline]) will be
+ * which pipeline (either [org.partiql.lang.CompilerPipeline] or [org.partiql.lang.compiler.PartiQLCompilerPipeline]) will be
  * tested.
  */
 internal interface PipelineFactory {

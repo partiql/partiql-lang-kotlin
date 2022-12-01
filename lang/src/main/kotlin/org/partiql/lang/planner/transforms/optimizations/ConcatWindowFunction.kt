@@ -2,14 +2,14 @@ package org.partiql.lang.planner.transforms.optimizations
 
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.errors.ProblemHandler
-import org.partiql.lang.planner.PartiqlPhysicalPass
+import org.partiql.lang.planner.PartiQLPhysicalPass
 
 // TODO: Remove from experimental once https://github.com/partiql/partiql-docs/issues/31 is resolved and a RFC is approved
-internal fun createConcatWindowFunctionPass(): PartiqlPhysicalPass =
+internal fun createConcatWindowFunctionPass(): PartiQLPhysicalPass =
     ConcatWindowFunction()
 
 /**
- * Creates an instance of [PartiqlPhysicalPass] that concatenate window functions if they are
+ * Creates an instance of [PartiQLPhysicalPass] that concatenate window functions if they are
  * 1) in the same query level (we don't want to concatenate sub-query's window function)
  * 2) operate the same window partition
  *
@@ -30,16 +30,14 @@ internal fun createConcatWindowFunctionPass(): PartiqlPhysicalPass =
  *      windowExpression(varDecl("\$__partiql_window_function_1"), "lead", listOf(id("a")))
  * )
  */
-private class ConcatWindowFunction : PartiqlPhysicalPass {
-    override val passName: String = "concat_window_function"
-
-    override fun rewrite(inputPlan: PartiqlPhysical.Plan, problemHandler: ProblemHandler): PartiqlPhysical.Plan {
+private class ConcatWindowFunction : PartiQLPhysicalPass {
+    override fun apply(plan: PartiqlPhysical.Plan, problemHandler: ProblemHandler): PartiqlPhysical.Plan {
         return object : PartiqlPhysical.VisitorTransform() {
             override fun transformBexprWindow(node: PartiqlPhysical.Bexpr.Window): PartiqlPhysical.Bexpr {
                 val rewritten = super.transformBexprWindow(node) as PartiqlPhysical.Bexpr.Window
                 return rewritten.rewriteWindowExpression()
             }
-        }.transformPlan(inputPlan)
+        }.transformPlan(plan)
     }
 }
 
