@@ -135,7 +135,7 @@ class QueryEngine(val db: MemoryDatabase) {
                                     )
                                 }
                             }
-                        ).rewrite(plan, problemHandler)
+                        ).apply(plan, problemHandler)
                     },
                     // Note that the order of the following plans is relevant--the "remove useless filters" pass
                     // will not work correctly if "remove useless ands" pass is not executed first.
@@ -147,17 +147,17 @@ class QueryEngine(val db: MemoryDatabase) {
                     // with a single `(lit true)`.
                     // A constant folding pass might one day eliminate the need for this, but that is not within the current scope.
                     PartiQLPlannerPass.Physical { plan, problemHandler ->
-                        createRemoveUselessAndsPass().rewrite(plan, problemHandler)
+                        createRemoveUselessAndsPass().apply(plan, problemHandler)
                     },
 
                     // After the previous pass, we may have some `(filter ... )` nodes with `(lit true)` as a predicate.
                     // This pass removes these useless filter nodes.
                     PartiQLPlannerPass.Physical { plan, problemHandler ->
-                        createRemoveUselessFiltersPass().rewrite(plan, problemHandler)
+                        createRemoveUselessFiltersPass().apply(plan, problemHandler)
                     },
 
                     PartiQLPlannerPass.Physical { plan, problemHandler ->
-                        createConcatWindowFunctionPass().rewrite(plan, problemHandler)
+                        createConcatWindowFunctionPass().apply(plan, problemHandler)
                     },
                 )
             )

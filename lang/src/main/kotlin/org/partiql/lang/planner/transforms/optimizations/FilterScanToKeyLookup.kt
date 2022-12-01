@@ -8,7 +8,7 @@ import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.domains.toBindingCase
 import org.partiql.lang.errors.ProblemHandler
 import org.partiql.lang.eval.BindingName
-import org.partiql.lang.planner.PartiqlPhysicalPass
+import org.partiql.lang.planner.PartiQLPlannerPass
 import org.partiql.lang.planner.StaticTypeResolver
 import org.partiql.lang.planner.transforms.DEFAULT_IMPL
 import org.partiql.lang.types.BagType
@@ -82,16 +82,16 @@ fun createFilterScanToKeyLookupPass(
     customProjectOperatorName: String,
     staticTypeResolver: StaticTypeResolver,
     createKeyValueConstructor: (StructType, List<FieldEqualityPredicate>) -> PartiqlPhysical.Expr
-): PartiqlPhysicalPass =
+): PartiQLPlannerPass.Physical =
     FilterScanToKeyLookupPass(staticTypeResolver, customProjectOperatorName, createKeyValueConstructor)
 
 private class FilterScanToKeyLookupPass(
     private val staticTypeResolver: StaticTypeResolver,
     private val customProjectOperatorName: String,
     private val createKeyValueConstructor: (StructType, List<FieldEqualityPredicate>) -> PartiqlPhysical.Expr
-) : PartiqlPhysicalPass {
-    override val passName: String get() = "filter_scan_to_key_lookup"
-    override fun rewrite(inputPlan: PartiqlPhysical.Plan, problemHandler: ProblemHandler): PartiqlPhysical.Plan {
+) : PartiQLPlannerPass.Physical {
+    // override val passName: String get() = "filter_scan_to_key_lookup"
+    override fun apply(plan: PartiqlPhysical.Plan, problemHandler: ProblemHandler): PartiqlPhysical.Plan {
         return object : PartiqlPhysical.VisitorTransform() {
             override fun transformBexprFilter(node: PartiqlPhysical.Bexpr.Filter): PartiqlPhysical.Bexpr {
                 // Rewrite children first.
@@ -159,7 +159,7 @@ private class FilterScanToKeyLookupPass(
                     else -> return rewritten // didn't match--return the original node unmodified.
                 }
             }
-        }.transformPlan(inputPlan)
+        }.transformPlan(plan)
     }
 }
 

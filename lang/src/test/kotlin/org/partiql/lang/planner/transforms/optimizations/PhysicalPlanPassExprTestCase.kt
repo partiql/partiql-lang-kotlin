@@ -4,19 +4,19 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.errors.Problem
 import org.partiql.lang.errors.ProblemHandler
-import org.partiql.lang.planner.PartiqlPhysicalPass
+import org.partiql.lang.planner.PartiQLPlannerPass
 import org.partiql.lang.planner.transforms.PLAN_VERSION_NUMBER
 
-/** A test case for [PartiqlPhysicalPass] implementations that work on expressions in the [PartiqlPhysical] domain. */
+/** A test case for [PartiQLPlannerPass.Physical] implementations that work on expressions in the [PartiqlPhysical] domain. */
 data class PhysicalPlanPassExprTestCase(
     private val inputExpr: PartiqlPhysical.Expr,
     private val expectedOutputExpr: PartiqlPhysical.Expr
 ) {
-    fun runTest(pass: PartiqlPhysicalPass) {
+    fun runTest(pass: PartiQLPlannerPass.Physical) {
         val expectedOutputPlan = makeFakePlan(expectedOutputExpr)
         val inputPlan = makeFakePlan(inputExpr)
 
-        val actualOutputPlan = pass.rewrite(
+        val actualOutputPlan = pass.apply(
             inputPlan,
             object : ProblemHandler {
                 override fun handleProblem(problem: Problem) {

@@ -11,7 +11,7 @@ import org.partiql.lang.planner.GlobalResolutionResult
 import org.partiql.lang.planner.GlobalVariableResolver
 import org.partiql.lang.planner.PartiQLPlanner
 import org.partiql.lang.planner.PartiQLPlannerBuilder
-import org.partiql.lang.planner.PartiqlPhysicalPass
+import org.partiql.lang.planner.PartiQLPlannerPass
 import org.partiql.lang.planner.assertSexpEquals
 import org.partiql.lang.planner.litInt
 import org.partiql.lang.planner.litTrue
@@ -34,7 +34,7 @@ private const val TABLE_WITH_3_FIELD_PK_UUID = "uuid_for_table_with_3_field_pk"
 
 @PartiQLExperimental
 class FilterScanToKeyLookupTests {
-    /** A test case for [PartiqlPhysicalPass] implementations that work on expressions in the [PartiqlPhysical] domain. */
+    /** A test case for [PartiQLPlannerPass.Physical] implementations that work on expressions in the [PartiqlPhysical] domain. */
     data class TestCase(
         /** The input SQL. */
         val inputSql: String,
@@ -64,14 +64,14 @@ class FilterScanToKeyLookupTests {
 
         if (tc.expectedOutputBexpr != null) {
             val expectedOutputPlan = makeFakePlan(tc.expectedOutputBexpr)
-            val actualOutputPlan = x.rewrite(physicalPlan, fakeProblemHandler)
+            val actualOutputPlan = x.apply(physicalPlan, fakeProblemHandler)
             assertSexpEquals(
                 expectedOutputPlan.toIonElement(),
                 actualOutputPlan.toIonElement(),
                 "expected the rewrite to change the input plan"
             )
         } else {
-            val actualOutputPlan = x.rewrite(physicalPlan, fakeProblemHandler)
+            val actualOutputPlan = x.apply(physicalPlan, fakeProblemHandler)
             assertSexpEquals(
                 physicalPlan.toIonElement(),
                 actualOutputPlan.toIonElement(),
