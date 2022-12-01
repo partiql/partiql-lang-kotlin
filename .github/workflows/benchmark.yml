@@ -1,0 +1,38 @@
+name: JMH Example
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  deployments: write
+
+jobs:
+  benchmark:
+    name: Run JMH benchmarks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-java@v2
+        with:
+          distribution: 'corretto'
+          java-version: '11'
+
+      - name: Run Benchmark
+        run: |
+          ./gradlew :lang:jmh -Pinclude="PartiQLBenchmark" -Piterations=3 -PwarmupIterations=3 -Pfork=1
+
+      # TODO: Use personal access token instead of GITHUB_TOKEN due to https://github.community/t/github-action-not-triggering-gh-pages-upon-push/16096
+      # TODO: comment-on-alert: true
+      # TODO: alert-comment-cc-users: '@'${{ github.event.commits[0].author.username }}
+      - name: Store Benchmark Result
+        uses: benchmark-action/github-action-benchmark@v1
+        with:
+          name: JMH Benchmark
+          tool: 'jmh'
+          output-file-path: jmh-result.json
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          auto-push: true
+          alert-threshold: '200%'
+          fail-on-alert: true
