@@ -3,11 +3,11 @@ package org.partiql.lang.planner.transforms.optimizations
 import com.amazon.ionelement.api.ionBool
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.errors.ProblemHandler
-import org.partiql.lang.planner.PartiQLPlannerPass
+import org.partiql.lang.planner.PartiQLPhysicalPass
 import org.partiql.lang.planner.transforms.isLitTrue
 
 /**
- * Creates an instance of [PartiQLPlannerPass.Physical] that removes useless "AND" expressions by, i.e.:
+ * Creates an instance of [PartiQLPhysicalPass] that removes useless "AND" expressions by, i.e.:
  *
  * - `(and (lit true) (lit true))` -> `(lit true)`
  * - `(and (lit true) <expr>))` -> `<expr>`
@@ -19,12 +19,10 @@ import org.partiql.lang.planner.transforms.isLitTrue
  * Note that in the future, it may be possible to do this with a more general constant folding rewrite but that is
  * currently out of scope.
  */
-fun createRemoveUselessAndsPass(): PartiQLPlannerPass.Physical =
+fun createRemoveUselessAndsPass(): PartiQLPhysicalPass =
     RemoveUselessAndsPass()
 
-private class RemoveUselessAndsPass : PartiQLPlannerPass.Physical {
-    // override val passName: String get() = "remove_useless_ands"
-
+private class RemoveUselessAndsPass : PartiQLPhysicalPass {
     override fun apply(plan: PartiqlPhysical.Plan, problemHandler: ProblemHandler): PartiqlPhysical.Plan =
         object : PartiqlPhysical.VisitorTransform() {
             override fun transformExprAnd(node: PartiqlPhysical.Expr.And): PartiqlPhysical.Expr {

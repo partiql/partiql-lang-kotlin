@@ -25,6 +25,6 @@ import org.partiql.pig.runtime.DomainNode
  */
 fun interface PartiQLPlannerPass<T : DomainNode> {
     fun apply(plan: T, problemHandler: ProblemHandler): T
-
-    fun interface Physical : PartiQLPlannerPass<PartiqlPhysical.Plan>
 }
+
+fun interface PartiQLPhysicalPass : PartiQLPlannerPass<PartiqlPhysical.Plan>

@@ -3,23 +3,14 @@ package org.partiql.lang.eval.builtins.windowFunctions
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.eval.EvaluatorTestBase
-import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestAdapter
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestCase
-import org.partiql.lang.eval.evaluatortestframework.MultipleTestAdapter
-import org.partiql.lang.eval.evaluatortestframework.PartiQLCompilerPipelineFactory
-import org.partiql.lang.eval.evaluatortestframework.PipelineEvaluatorTestAdapter
+import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestTarget
 import org.partiql.lang.util.ArgumentsProviderBase
 import org.partiql.lang.util.PartiQLExperimental
 
 // TODO: Remove from experimental once https://github.com/partiql/partiql-docs/issues/31 is resolved and a RFC is approved
 @PartiQLExperimental
 class WindowFunctionTests : EvaluatorTestBase() {
-    // The new AST node is not supported by ExprNode
-    override val testHarness: EvaluatorTestAdapter = MultipleTestAdapter(
-        listOf(
-            PipelineEvaluatorTestAdapter(PartiQLCompilerPipelineFactory())
-        )
-    )
     private val session = mapOf(
         "stock_price" to """[
             { date: 2022-09-30, ticker: AMZN, price: 113.00},
@@ -34,7 +25,7 @@ class WindowFunctionTests : EvaluatorTestBase() {
     @ParameterizedTest
     @ArgumentsSource(LagFunctionTestsProvider::class)
     fun lagFunctionTests(tc: EvaluatorTestCase) = runEvaluatorTestCase(
-        tc = tc,
+        tc = tc.copy(targetPipeline = EvaluatorTestTarget.PARTIQL_PIPELINE),
         session = session
     )
     class LagFunctionTestsProvider : ArgumentsProviderBase() {
@@ -213,7 +204,7 @@ class WindowFunctionTests : EvaluatorTestBase() {
     @ParameterizedTest
     @ArgumentsSource(LeadFunctionTestsProvider::class)
     fun leadFunctionTests(tc: EvaluatorTestCase) = runEvaluatorTestCase(
-        tc = tc,
+        tc = tc.copy(targetPipeline = EvaluatorTestTarget.PARTIQL_PIPELINE),
         session = session
     )
 
@@ -387,8 +378,8 @@ class WindowFunctionTests : EvaluatorTestBase() {
     @ParameterizedTest
     @ArgumentsSource(MultipleFunctionTestsProvider::class)
     fun multipleFunctionTests(tc: EvaluatorTestCase) = runEvaluatorTestCase(
-        tc = tc,
-        session = session
+        tc = tc.copy(targetPipeline = EvaluatorTestTarget.PARTIQL_PIPELINE),
+        session = session,
     )
     class MultipleFunctionTestsProvider : ArgumentsProviderBase() {
         override fun getParameters() = listOf(

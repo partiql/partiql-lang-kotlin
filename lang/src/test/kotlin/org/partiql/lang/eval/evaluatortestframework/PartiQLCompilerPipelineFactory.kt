@@ -26,7 +26,7 @@ internal class PartiQLCompilerPipelineFactory : PipelineFactory {
 
     override val pipelineName: String = "PartiQLCompilerPipeline"
 
-    override val target: EvaluatorTestTarget = EvaluatorTestTarget.PLANNER_PIPELINE
+    override val target: EvaluatorTestTarget = EvaluatorTestTarget.PARTIQL_PIPELINE
 
     override fun createPipeline(
         evaluatorTestDefinition: EvaluatorTestDefinition,

@@ -11,7 +11,6 @@ import org.partiql.lang.planner.GlobalResolutionResult
 import org.partiql.lang.planner.GlobalVariableResolver
 import org.partiql.lang.planner.PartiQLPlanner
 import org.partiql.lang.planner.PartiQLPlannerBuilder
-import org.partiql.lang.planner.PartiQLPlannerPass
 import org.partiql.lang.planner.assertSexpEquals
 import org.partiql.lang.planner.litInt
 import org.partiql.lang.planner.litTrue
@@ -34,7 +33,7 @@ private const val TABLE_WITH_3_FIELD_PK_UUID = "uuid_for_table_with_3_field_pk"
 
 @PartiQLExperimental
 class FilterScanToKeyLookupTests {
-    /** A test case for [PartiQLPlannerPass.Physical] implementations that work on expressions in the [PartiqlPhysical] domain. */
+    /** A test case for [PartiQLPhysicalPass] implementations that work on expressions in the [PartiqlPhysical] domain. */
     data class TestCase(
         /** The input SQL. */
         val inputSql: String,

@@ -17,8 +17,8 @@ import org.partiql.lang.eval.physical.operators.RelationExpression
 import org.partiql.lang.eval.physical.operators.ScanRelationalOperatorFactory
 import org.partiql.lang.eval.physical.operators.ValueExpression
 import org.partiql.lang.eval.physical.sourceLocationMetaOrUnknown
+import org.partiql.lang.planner.PartiQLPhysicalPass
 import org.partiql.lang.planner.PartiQLPlanner
-import org.partiql.lang.planner.PartiQLPlannerPass
 import org.partiql.lang.planner.PlannerEventCallback
 import org.partiql.lang.planner.PlanningProblemDetails
 import org.partiql.lang.planner.createFakeGlobalsResolver
@@ -88,15 +88,15 @@ class PartiQLCompilerPipelineSmokeTests {
         val qp = createPlannerPipelineForTest(allowUndefinedVariables = false, plannerEventCallback = null) {
             planner.physicalPlannerPasses(
                 listOf(
-                    PartiQLPlannerPass.Physical { plan, _ ->
+                    PartiQLPhysicalPass { plan, _ ->
                         assertEquals(createFakePlan(1), plan)
                         createFakePlan(2)
                     },
-                    PartiQLPlannerPass.Physical { plan, _ ->
+                    PartiQLPhysicalPass { plan, _ ->
                         assertEquals(createFakePlan(2), plan)
                         createFakePlan(3)
                     },
-                    PartiQLPlannerPass.Physical { plan, _ ->
+                    PartiQLPhysicalPass { plan, _ ->
                         assertEquals(createFakePlan(3), plan)
                         createFakePlan(4)
                     },
@@ -122,19 +122,19 @@ class PartiQLCompilerPipelineSmokeTests {
         val qp = createPlannerPipelineForTest(allowUndefinedVariables = false, plannerEventCallback = null) {
             planner.physicalPlannerPasses(
                 listOf(
-                    PartiQLPlannerPass.Physical { plan, problemHandler ->
+                    PartiQLPhysicalPass { plan, problemHandler ->
                         problemHandler.handleProblem(
                             createFakeErrorProblem(plan.stmt.metas.sourceLocationMetaOrUnknown)
                         )
                         plan
                     },
-                    PartiQLPlannerPass.Physical { _, _ ->
+                    PartiQLPhysicalPass { _, _ ->
                         error(
                             "This pass should not be reached due to an error being sent to to the problem handler " +
                                 "in the previous pass"
                         )
                     },
-                    PartiQLPlannerPass.Physical { plan, _ ->
+                    PartiQLPhysicalPass { plan, _ ->
                         assertEquals(createFakePlan(3), plan)
                         createFakePlan(4)
                     },

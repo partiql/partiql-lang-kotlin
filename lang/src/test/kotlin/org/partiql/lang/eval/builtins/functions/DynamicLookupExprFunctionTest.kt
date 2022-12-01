@@ -32,7 +32,7 @@ class DynamicLookupExprFunctionTest : EvaluatorTestBase() {
             session = session,
             expectedResult = testCase.expectedLegacyModeResult,
             expectedResultFormat = ExpectedResultFormat.ION,
-            target = EvaluatorTestTarget.PLANNER_PIPELINE
+            target = EvaluatorTestTarget.PARTIQL_PIPELINE
         )
 
     // We rely on the built-in [DEFAULT_COMPARATOR] for the actual definition of equality, which is not being tested
@@ -81,7 +81,7 @@ class DynamicLookupExprFunctionTest : EvaluatorTestBase() {
         runEvaluatorErrorTestCase(
             testCase.copy(
                 expectedPermissiveModeResult = "MISSING",
-                targetPipeline = EvaluatorTestTarget.PLANNER_PIPELINE
+                targetPipeline = EvaluatorTestTarget.PARTIQL_PIPELINE
             ),
             session = session
         )
@@ -132,7 +132,7 @@ class DynamicLookupExprFunctionTest : EvaluatorTestBase() {
                 Property.ARGUMENT_POSITION to testCase.argumentPosition
             ),
             expectedPermissiveModeResult = "MISSING",
-            target = EvaluatorTestTarget.PLANNER_PIPELINE
+            target = EvaluatorTestTarget.PARTIQL_PIPELINE
         )
 
     class InvalidArgCases : ArgumentsProviderBase() {
@@ -148,6 +148,6 @@ class DynamicLookupExprFunctionTest : EvaluatorTestBase() {
         funcName = "\"$DYNAMIC_LOOKUP_FUNCTION_NAME\"",
         maxArity = Int.MAX_VALUE,
         minArity = 3,
-        targetPipeline = EvaluatorTestTarget.PLANNER_PIPELINE
+        targetPipeline = EvaluatorTestTarget.PARTIQL_PIPELINE
     )
 }

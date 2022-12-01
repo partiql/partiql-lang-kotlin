@@ -80,7 +80,7 @@ internal fun IonResultTestCase.runTestCase(
     val adapter = PipelineEvaluatorTestAdapter(
         when (target) {
             EvaluatorTestTarget.COMPILER_PIPELINE -> CompilerPipelineFactory()
-            EvaluatorTestTarget.PLANNER_PIPELINE -> PartiQLCompilerPipelineFactory()
+            EvaluatorTestTarget.PARTIQL_PIPELINE -> PartiQLCompilerPipelineFactory()
             // We don't support ALL_PIPELINES here because each pipeline needs a separate skip list, which
             // is decided by the caller of this function.
             EvaluatorTestTarget.ALL_PIPELINES -> error("May only test one pipeline at a time with IonResultTestCase")

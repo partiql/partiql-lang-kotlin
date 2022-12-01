@@ -4,15 +4,15 @@ import org.junit.jupiter.api.Assertions
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.errors.Problem
 import org.partiql.lang.errors.ProblemHandler
-import org.partiql.lang.planner.PartiQLPlannerPass
+import org.partiql.lang.planner.PartiQLPhysicalPass
 import org.partiql.lang.planner.transforms.PLAN_VERSION_NUMBER
 
-/** A test case for [PartiQLPlannerPass.Physical] implementations that work on expressions in the [PartiqlPhysical] domain. */
+/** A test case for [PartiQLPhysicalPass] implementations that work on expressions in the [PartiqlPhysical] domain. */
 data class PhysicalPlanPassBexprTestCase(
     private val inputBexpr: PartiqlPhysical.Bexpr,
     private val expectedOutputBexpr: PartiqlPhysical.Bexpr
 ) {
-    fun runTest(pass: PartiQLPlannerPass.Physical) {
+    fun runTest(pass: PartiQLPhysicalPass) {
         val expectedOutputPlan = makeFakePlan(expectedOutputBexpr)
         val inputPlan = makeFakePlan(inputBexpr)
 

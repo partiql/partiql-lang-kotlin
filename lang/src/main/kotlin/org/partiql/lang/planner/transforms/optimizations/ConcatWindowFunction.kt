@@ -2,14 +2,14 @@ package org.partiql.lang.planner.transforms.optimizations
 
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.errors.ProblemHandler
-import org.partiql.lang.planner.PartiQLPlannerPass
+import org.partiql.lang.planner.PartiQLPhysicalPass
 
 // TODO: Remove from experimental once https://github.com/partiql/partiql-docs/issues/31 is resolved and a RFC is approved
-internal fun createConcatWindowFunctionPass(): PartiQLPlannerPass.Physical =
+internal fun createConcatWindowFunctionPass(): PartiQLPhysicalPass =
     ConcatWindowFunction()
 
 /**
- * Creates an instance of [PartiQLPlannerPass.Physical] that concatenate window functions if they are
+ * Creates an instance of [PartiQLPhysicalPass] that concatenate window functions if they are
  * 1) in the same query level (we don't want to concatenate sub-query's window function)
  * 2) operate the same window partition
  *
@@ -30,7 +30,7 @@ internal fun createConcatWindowFunctionPass(): PartiQLPlannerPass.Physical =
  *      windowExpression(varDecl("\$__partiql_window_function_1"), "lead", listOf(id("a")))
  * )
  */
-private class ConcatWindowFunction : PartiQLPlannerPass.Physical {
+private class ConcatWindowFunction : PartiQLPhysicalPass {
     override fun apply(plan: PartiqlPhysical.Plan, problemHandler: ProblemHandler): PartiqlPhysical.Plan {
         return object : PartiqlPhysical.VisitorTransform() {
             override fun transformBexprWindow(node: PartiqlPhysical.Bexpr.Window): PartiqlPhysical.Bexpr {

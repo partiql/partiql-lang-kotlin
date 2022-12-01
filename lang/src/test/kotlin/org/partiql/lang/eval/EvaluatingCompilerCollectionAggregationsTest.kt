@@ -47,14 +47,14 @@ internal class EvaluatingCompilerCollectionAggregationsTest : EvaluatorTestBase(
     @ParameterizedTest
     @ArgumentsSource(ValidTestArguments::class)
     fun validTests(tc: EvaluatorTestCase) {
-        val newTc = tc.copy(targetPipeline = EvaluatorTestTarget.PLANNER_PIPELINE)
+        val newTc = tc.copy(targetPipeline = EvaluatorTestTarget.PARTIQL_PIPELINE)
         runEvaluatorTestCase(newTc, SESSION)
     }
 
     @ParameterizedTest
     @ArgumentsSource(ErrorTestArguments::class)
     fun errorTests(tc: EvaluatorErrorTestCase) {
-        val newTc = tc.copy(targetPipeline = EvaluatorTestTarget.PLANNER_PIPELINE)
+        val newTc = tc.copy(targetPipeline = EvaluatorTestTarget.PARTIQL_PIPELINE)
         runEvaluatorErrorTestCase(newTc, SESSION)
     }
 

@@ -23,7 +23,7 @@ import org.partiql.lang.util.PartiQLExperimental
 class PartiQLPlannerBuilder private constructor() {
 
     private var globalVariableResolver = GlobalVariableResolver.EMPTY
-    private var physicalPlanPasses: List<PartiQLPlannerPass.Physical> = emptyList()
+    private var partiQLPhysicalPassPlanPasses: List<PartiQLPhysicalPass> = emptyList()
     private var callback: PlannerEventCallback? = null
     private var options = PartiQLPlanner.Options()
 
@@ -37,8 +37,8 @@ class PartiQLPlannerBuilder private constructor() {
         this.globalVariableResolver = globalVariableResolver
     }
 
-    fun physicalPlannerPasses(physicalPlanPasses: List<PartiQLPlannerPass.Physical>) = this.apply {
-        this.physicalPlanPasses = physicalPlanPasses
+    fun physicalPlannerPasses(partiQLPhysicalPassPlanPasses: List<PartiQLPhysicalPass>) = this.apply {
+        this.partiQLPhysicalPassPlanPasses = partiQLPhysicalPassPlanPasses
     }
 
     fun options(options: PartiQLPlanner.Options) = this.apply {
@@ -51,7 +51,7 @@ class PartiQLPlannerBuilder private constructor() {
 
     fun build(): PartiQLPlanner = PartiQLPlannerDefault(
         globalVariableResolver = globalVariableResolver,
-        physicalPlanPasses = physicalPlanPasses,
+        partiQLPhysicalPassPlanPasses = partiQLPhysicalPassPlanPasses,
         callback = callback,
         options = options
     )

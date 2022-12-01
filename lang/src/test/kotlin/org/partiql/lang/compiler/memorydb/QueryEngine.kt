@@ -15,7 +15,7 @@ import org.partiql.lang.eval.StructOrdering
 import org.partiql.lang.eval.namedValue
 import org.partiql.lang.planner.GlobalResolutionResult
 import org.partiql.lang.planner.GlobalVariableResolver
-import org.partiql.lang.planner.PartiQLPlannerPass
+import org.partiql.lang.planner.PartiQLPhysicalPass
 import org.partiql.lang.planner.StaticTypeResolver
 import org.partiql.lang.planner.transforms.optimizations.createConcatWindowFunctionPass
 import org.partiql.lang.planner.transforms.optimizations.createFilterScanToKeyLookupPass
@@ -118,7 +118,7 @@ class QueryEngine(val db: MemoryDatabase) {
             .physicalPlannerPasses(
                 listOf(
                     // TODO: push-down filters on top of scans before this pass.
-                    PartiQLPlannerPass.Physical { plan, problemHandler ->
+                    PartiQLPhysicalPass { plan, problemHandler ->
                         createFilterScanToKeyLookupPass(
                             customProjectOperatorName = GET_BY_KEY_PROJECT_IMPL_NAME,
                             staticTypeResolver = staticTypeResolver,
@@ -146,17 +146,17 @@ class QueryEngine(val db: MemoryDatabase) {
                     // This happens recursively, so an entire tree of useless `(and ...)` expressions will be replaced
                     // with a single `(lit true)`.
                     // A constant folding pass might one day eliminate the need for this, but that is not within the current scope.
-                    PartiQLPlannerPass.Physical { plan, problemHandler ->
+                    PartiQLPhysicalPass { plan, problemHandler ->
                         createRemoveUselessAndsPass().apply(plan, problemHandler)
                     },
 
                     // After the previous pass, we may have some `(filter ... )` nodes with `(lit true)` as a predicate.
                     // This pass removes these useless filter nodes.
-                    PartiQLPlannerPass.Physical { plan, problemHandler ->
+                    PartiQLPhysicalPass { plan, problemHandler ->
                         createRemoveUselessFiltersPass().apply(plan, problemHandler)
                     },
 
-                    PartiQLPlannerPass.Physical { plan, problemHandler ->
+                    PartiQLPhysicalPass { plan, problemHandler ->
                         createConcatWindowFunctionPass().apply(plan, problemHandler)
                     },
                 )
