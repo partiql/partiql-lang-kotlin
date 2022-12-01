@@ -40,7 +40,7 @@ import org.partiql.pig.runtime.asPrimitive
 @PartiQLExperimental
 internal class PartiQLPlannerDefault(
     private val globalVariableResolver: GlobalVariableResolver,
-    private val partiQLPhysicalPassPlanPasses: List<PartiQLPhysicalPass>,
+    private val physicalPlanPasses: List<PartiQLPhysicalPass>,
     private val callback: PlannerEventCallback?,
     private val options: PartiQLPlanner.Options
 ) : PartiQLPlanner {
@@ -87,7 +87,7 @@ internal class PartiQLPlannerDefault(
         }
 
         // Step 5. Apply additional physical transformations
-        val plan = partiQLPhysicalPassPlanPasses.fold(physicalPlan) { plan, pass ->
+        val plan = physicalPlanPasses.fold(physicalPlan) { plan, pass ->
             val result = callback.doEvent("pass_${pass::class.java.simpleName}", plan) {
                 pass.apply(plan, problemHandler)
             }
