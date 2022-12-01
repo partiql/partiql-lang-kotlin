@@ -65,7 +65,7 @@ internal fun <T : IonElement> T.requireUniqueAnnotations(): T {
     this.annotations
         .groupBy { it }.entries
         .firstOrNull { it.value.size > 1 }
-        ?.let { (key, value) ->
+        ?.let { (key, _) ->
             parseError(this, Error.DuplicateAnnotationsNotAllowed(key))
         }
     return this

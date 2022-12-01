@@ -24,18 +24,18 @@ import joptsimple.OptionSet
 import org.partiql.cli.functions.ReadFile
 import org.partiql.cli.functions.WriteFile
 import org.partiql.extensions.cli.functions.QueryDDB
-import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.eval.Bindings
-import org.partiql.lang.eval.CompileOptions
 import org.partiql.lang.eval.EvaluationSession
+import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
+import org.partiql.lang.eval.PartiQLResult
 import org.partiql.lang.eval.ProjectionIterationBehavior
 import org.partiql.lang.eval.TypedOpBehavior
 import org.partiql.lang.eval.TypingMode
 import org.partiql.lang.eval.UndefinedVariableBehavior
-import org.partiql.lang.syntax.Parser
 import org.partiql.lang.syntax.PartiQLParserBuilder
+import org.partiql.pipeline.AbstractPipeline
 import org.partiql.shell.Shell
 import org.partiql.shell.Shell.ShellConfiguration
 import java.io.File
@@ -79,6 +79,10 @@ enum class InputFormat {
 
 enum class OutputFormat {
     ION_TEXT, ION_BINARY, PARTIQL, PARTIQL_PRETTY
+}
+
+enum class Pipeline {
+    STANDARD, EXPERIMENTAL
 }
 
 // opt parser options
@@ -143,6 +147,12 @@ private val outputFormatOpt = optParser.acceptsAll(listOf("output-format", "of")
     .describedAs("(${OutputFormat.values().joinToString("|")})")
     .defaultsTo(OutputFormat.PARTIQL)
 
+private val pipelineOpt = optParser.acceptsAll(listOf("pipeline"), "pipeline implementation")
+    .withRequiredArg()
+    .ofType(Pipeline::class.java)
+    .describedAs("(${Pipeline.values().joinToString("|")})")
+    .defaultsTo(Pipeline.STANDARD)
+
 /**
  * Runs PartiQL CLI.
  *
@@ -180,41 +190,17 @@ fun main(args: Array<String>) = try {
         throw IllegalArgumentException("Non option arguments are not allowed!")
     }
 
-    val parser = PartiQLParserBuilder().ionSystem(ion).build()
-
-    // Compile Options
-    val compileOptions = CompileOptions.build {
-        typedOpBehavior(optionSet.valueOf(typedOpBehaviorOpt))
-        projectionIteration(optionSet.valueOf(projectionIterationBehaviorOpt))
-        undefinedVariable(optionSet.valueOf(undefinedVariableBehaviorOpt))
-        when (optionSet.has(permissiveModeOpt)) {
-            true -> typingMode(TypingMode.PERMISSIVE)
-            false -> typingMode(TypingMode.LEGACY)
-        }
-    }
-
-    val compilerPipeline = CompilerPipeline.build(ion) {
-        addFunction(ReadFile(valueFactory))
-        addFunction(WriteFile(valueFactory))
-        addFunction(QueryDDB(valueFactory))
-        compileOptions(compileOptions)
-        sqlParser(parser)
-    }
-
-    // common options
-    val environment = when {
-        optionSet.has(environmentOpt) -> {
-            val configSource = optionSet.valueOf(environmentOpt).readText(charset("UTF-8"))
-            val config = compilerPipeline.compile(configSource).eval(EvaluationSession.standard())
-            config.bindings
-        }
+    // Create Pipeline and Environment
+    val options = createPipelineOptions(optionSet)
+    val pipeline = AbstractPipeline.create(options)
+    val environment = when (optionSet.has(environmentOpt)) {
+        true -> getEnvironment(optionSet.valueOf(environmentOpt), pipeline)
         else -> Bindings.empty()
     }
 
-    if (optionSet.has(queryOpt)) {
-        runCli(environment, optionSet, compilerPipeline)
-    } else {
-        runShell(environment, optionSet, compilerPipeline, parser)
+    when (optionSet.has(queryOpt)) {
+        true -> runCli(environment, optionSet, pipeline)
+        false -> runShell(environment, optionSet, pipeline)
     }
 } catch (e: OptionException) {
     System.err.println("${e.message}\n")
@@ -225,34 +211,65 @@ fun main(args: Array<String>) = try {
     exitProcess(1)
 }
 
-private fun runShell(environment: Bindings<ExprValue>, optionSet: OptionSet, compilerPipeline: CompilerPipeline, parser: Parser) {
-    val config = ShellConfiguration(isMonochrome = optionSet.has(monochromeOpt))
-    Shell(valueFactory, System.out, parser, compilerPipeline, environment, config).start()
-}
-
-private fun runCli(environment: Bindings<ExprValue>, optionSet: OptionSet, compilerPipeline: CompilerPipeline) {
-    val input = if (optionSet.has(inputFileOpt)) {
-        FileInputStream(optionSet.valueOf(inputFileOpt))
-    } else {
-        EmptyInputStream()
+private fun createPipelineOptions(optionSet: OptionSet): AbstractPipeline.PipelineOptions {
+    val ion = IonSystemBuilder.standard().build()
+    val pipeline = optionSet.valueOf(pipelineOpt)
+    val typedOpBehavior = optionSet.valueOf(typedOpBehaviorOpt)
+    val projectionIteration = optionSet.valueOf(projectionIterationBehaviorOpt)
+    val undefinedVariable = optionSet.valueOf(undefinedVariableBehaviorOpt)
+    val permissiveMode = when (optionSet.has(permissiveModeOpt)) {
+        true -> TypingMode.PERMISSIVE
+        false -> TypingMode.LEGACY
     }
 
-    val output = if (optionSet.has(outputFileOpt)) {
-        FileOutputStream(optionSet.valueOf(outputFileOpt))
-    } else {
-        UnclosableOutputStream(System.out)
+    val functions: List<(ExprValueFactory) -> ExprFunction> = listOf(
+        { valueFactory -> ReadFile(valueFactory) },
+        { valueFactory -> WriteFile(valueFactory) },
+        { valueFactory -> QueryDDB(valueFactory) }
+    )
+
+    val parser = PartiQLParserBuilder().ionSystem(ion).build()
+    return AbstractPipeline.PipelineOptions(
+        pipeline,
+        ion,
+        parser,
+        typedOpBehavior,
+        projectionIteration,
+        undefinedVariable,
+        permissiveMode,
+        functions = functions
+    )
+}
+
+private fun getEnvironment(environmentFile: File, pipeline: AbstractPipeline): Bindings<ExprValue> {
+    val configSource = environmentFile.readText(charset("UTF-8"))
+    val config = pipeline.compile(configSource, EvaluationSession.standard()) as PartiQLResult.Value
+    return config.value.bindings
+}
+
+private fun runShell(environment: Bindings<ExprValue>, optionSet: OptionSet, pipeline: AbstractPipeline) {
+    val config = ShellConfiguration(isMonochrome = optionSet.has(monochromeOpt))
+    Shell(valueFactory, System.out, pipeline, environment, config).start()
+}
+
+private fun runCli(environment: Bindings<ExprValue>, optionSet: OptionSet, pipeline: AbstractPipeline) {
+    val input = when (optionSet.has(inputFileOpt)) {
+        true -> FileInputStream(optionSet.valueOf(inputFileOpt))
+        false -> EmptyInputStream()
+    }
+    val output = when (optionSet.has(outputFileOpt)) {
+        true -> FileOutputStream(optionSet.valueOf(outputFileOpt))
+        false -> UnclosableOutputStream(System.out)
     }
 
     val inputFormat = optionSet.valueOf(inputFormatOpt)
     val outputFormat = optionSet.valueOf(outputFormatOpt)
-
     val wrapIon = optionSet.has(wrapIonOpt)
-
     val query = optionSet.valueOf(queryOpt)
 
     input.use {
         output.use {
-            Cli(valueFactory, input, inputFormat, output, outputFormat, compilerPipeline, environment, query, wrapIon).run()
+            Cli(valueFactory, input, inputFormat, output, outputFormat, pipeline, environment, query, wrapIon).run()
         }
     }
 }

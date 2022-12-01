@@ -16,6 +16,7 @@ package org.partiql.lang.compiler
 
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.eval.PartiQLStatement
+import org.partiql.lang.planner.PartiQLPlanner
 
 /**
  * [PartiQLCompiler] is responsible for transforming a [PartiqlPhysical.Plan] into an executable [PartiQLStatement].
@@ -26,4 +27,9 @@ interface PartiQLCompiler {
      * Compiles the [PartiqlPhysical.Plan] to an executable [PartiQLStatement].
      */
     fun compile(statement: PartiqlPhysical.Plan): PartiQLStatement
+
+    /**
+     * Compiles the [PartiqlPhysical.Statement.Explain] with the details provided in [details]
+     */
+    fun compile(statement: PartiqlPhysical.Plan, details: PartiQLPlanner.PlanningDetails): PartiQLStatement
 }

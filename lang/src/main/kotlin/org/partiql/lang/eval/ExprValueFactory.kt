@@ -15,31 +15,14 @@
 package org.partiql.lang.eval
 
 import com.amazon.ion.IonBool
-import com.amazon.ion.IonContainer
-import com.amazon.ion.IonNull
 import com.amazon.ion.IonReader
-import com.amazon.ion.IonSequence
-import com.amazon.ion.IonStruct
 import com.amazon.ion.IonSystem
 import com.amazon.ion.IonType
 import com.amazon.ion.IonValue
 import com.amazon.ion.Timestamp
 import org.partiql.lang.errors.ErrorCode
-import org.partiql.lang.eval.time.MINUTES_PER_HOUR
-import org.partiql.lang.eval.time.NANOS_PER_SECOND
 import org.partiql.lang.eval.time.Time
-import org.partiql.lang.util.booleanValueOrNull
-import org.partiql.lang.util.bytesValueOrNull
-import org.partiql.lang.util.isBag
-import org.partiql.lang.util.isDate
-import org.partiql.lang.util.isMissing
-import org.partiql.lang.util.isTime
-import org.partiql.lang.util.numberValueOrNull
-import org.partiql.lang.util.ordinal
 import org.partiql.lang.util.propertyValueMapOf
-import org.partiql.lang.util.seal
-import org.partiql.lang.util.stringValueOrNull
-import org.partiql.lang.util.timestampValueOrNull
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.time.LocalDate
@@ -184,11 +167,11 @@ private class ExprValueFactoryImpl(override val ion: IonSystem) : ExprValueFacto
         private val MIN_LONG_VALUE = BigInteger.valueOf(Long.MIN_VALUE)
     }
 
-    override val missingValue = MissingExprValue(ion.newNull())
-    override val nullValue = NullExprValue(ion.newNull())
+    override val missingValue = MissingExprValue(ion)
+    override val nullValue = NullExprValue(ion)
 
-    private val trueValue = TrueBoolExprValue(ion.newBool(true))
-    private val falseValue = FalseBoolExprValue(ion.newBool(false))
+    private val trueValue = TrueBoolExprValue(ion)
+    private val falseValue = FalseBoolExprValue(ion)
 
     private val emptyString = StringExprValue(ion, "")
 
@@ -251,7 +234,7 @@ private class ExprValueFactoryImpl(override val ion: IonSystem) : ExprValueFacto
         BlobExprValue(ion, value)
 
     override fun newFromIonValue(value: IonValue): ExprValue =
-        IonExprValue(this, value)
+        value.toExprValue()
 
     override fun newFromIonReader(reader: IonReader): ExprValue =
         newFromIonValue(ion.newValue(reader))
@@ -278,85 +261,87 @@ private class ExprValueFactoryImpl(override val ion: IonSystem) : ExprValueFacto
     override fun newSexp(value: Iterable<ExprValue>): ExprValue = newSexp(value.asSequence())
 }
 
-/** A base class for the `NULL` value, intended to be memoized. */
-private class NullExprValue(value: IonNull) : BaseExprValue() {
-    override val ionValue = value
+/**
+ * A base class for the `NULL` value, intended to be memoized.
+ *
+ * [ionType] indicates which ion type this null has. When we are querying an Ion file, if we find the result is, e.g.,
+ * `ion.int`, we have to return a null value of type int and cannot ignore the type of it. We might need to consider
+ * add a [metas] field in [ExprValue], instead.
+ */
+internal class NullExprValue(private val ion: IonSystem, private val ionType: IonType = IonType.NULL) : BaseExprValue() {
     override val type: ExprValueType get() = ExprValueType.NULL
+    override val ionValue by lazy { toIonValue(ion) }
+
+    @Suppress("UNCHECKED_CAST")
+    override fun <T> provideFacet(type: Class<T>?): T? = when (type) {
+        IonType::class.java -> ionType as T?
+        else -> null
+    }
 }
 
 /** A base class for the `MISSING` value, intended to be memoized. */
-private class MissingExprValue(value: IonNull) : BaseExprValue() {
-    override val ionValue = value.also {
-        if (!it.hasTypeAnnotation(MISSING_ANNOTATION)) {
-            it.addTypeAnnotation(MISSING_ANNOTATION)
-        }
-    }
+private class MissingExprValue(private val ion: IonSystem) : BaseExprValue() {
     override val type: ExprValueType get() = ExprValueType.MISSING
+    override val ionValue by lazy { toIonValue(ion) }
 }
 
 /** An ExprValue class just for boolean values. [value] holds a memoized instance of [IonBool].
  */
-private abstract class BooleanExprValue(value: IonBool) : BaseExprValue(), Scalar {
+private abstract class BooleanExprValue : BaseExprValue(), Scalar {
     override val scalar: Scalar
         get() = this
 
     override val type: ExprValueType
         get() = ExprValueType.BOOL
-
-    override val ionValue = value
 }
 
 /** Basic implementation for scalar [ExprValue] types. */
 private abstract class ScalarExprValue : BaseExprValue(), Scalar {
     override val scalar: Scalar
         get() = this
-
-    abstract fun ionValueFun(): IonValue
-
-    // LazyThreadSafetyMode.PUBLICATION is ok here because the worst that can happen is that [ionValueFun] is invoked
-    // from multiple threads.  This should be ok because [IonSystem] is thread-safe.
-    override val ionValue by lazy(LazyThreadSafetyMode.PUBLICATION) { ionValueFun().seal() }
 }
 
 /** A base class for the `true` boolean value, intended to be memoized. */
-private class TrueBoolExprValue(val value: IonBool) : BooleanExprValue(value) {
-    override fun booleanValue(): Boolean? = true
+private class TrueBoolExprValue(private val ion: IonSystem) : BooleanExprValue() {
+    override fun booleanValue(): Boolean = true
+    override val ionValue by lazy { toIonValue(ion) }
 }
 
 /** A base class for the `false` boolean value, intended to be memoized. */
-private class FalseBoolExprValue(val value: IonBool) : BooleanExprValue(value) {
-    override fun booleanValue(): Boolean? = false
+private class FalseBoolExprValue(private val ion: IonSystem) : BooleanExprValue() {
+    override fun booleanValue(): Boolean = false
+    override val ionValue by lazy { toIonValue(ion) }
 }
 
-private class StringExprValue(val ion: IonSystem, val value: String) : ScalarExprValue() {
+private class StringExprValue(private val ion: IonSystem, val value: String) : ScalarExprValue() {
     override val type: ExprValueType = ExprValueType.STRING
     override fun stringValue() = value
-    override fun ionValueFun(): IonValue = ion.newString(value)
+    override val ionValue by lazy { toIonValue(ion) }
 }
 
-private class IntExprValue(val ion: IonSystem, val value: Long) : ScalarExprValue() {
+private class IntExprValue(private val ion: IonSystem, val value: Long) : ScalarExprValue() {
     override val type: ExprValueType = ExprValueType.INT
     override fun numberValue() = value
-    override fun ionValueFun(): IonValue = ion.newInt(value)
+    override val ionValue by lazy { toIonValue(ion) }
 }
 
-private class FloatExprValue(val ion: IonSystem, val value: Double) : ScalarExprValue() {
+private class FloatExprValue(private val ion: IonSystem, val value: Double) : ScalarExprValue() {
     override val type: ExprValueType = ExprValueType.FLOAT
     override fun numberValue() = value
-    override fun ionValueFun(): IonValue = ion.newFloat(value)
+    override val ionValue by lazy { toIonValue(ion) }
 }
 
-private class DecimalExprValue(val ion: IonSystem, val value: BigDecimal) : ScalarExprValue() {
+private class DecimalExprValue(private val ion: IonSystem, val value: BigDecimal) : ScalarExprValue() {
     override val type: ExprValueType = ExprValueType.DECIMAL
     override fun numberValue() = value
-    override fun ionValueFun(): IonValue = ion.newDecimal(value)
+    override val ionValue by lazy { toIonValue(ion) }
 }
 
 /**
  * [ExprValue] to represent DATE in PartiQL.
  * [LocalDate] represents date without time and time zone.
  */
-private class DateExprValue(val ion: IonSystem, val value: LocalDate) : ScalarExprValue() {
+private class DateExprValue(private val ion: IonSystem, val value: LocalDate) : ScalarExprValue() {
 
     init {
         // validate that the local date is not an extended date.
@@ -370,141 +355,39 @@ private class DateExprValue(val ion: IonSystem, val value: LocalDate) : ScalarEx
         }
     }
 
-    private fun createIonDate() =
-        ion.newTimestamp(Timestamp.forDay(value.year, value.monthValue, value.dayOfMonth)).apply {
-            addTypeAnnotation(DATE_ANNOTATION)
-        }.seal()
-
     override val type: ExprValueType = ExprValueType.DATE
     override fun dateValue(): LocalDate? = value
-    override fun ionValueFun(): IonValue = createIonDate()
+    override val ionValue by lazy { toIonValue(ion) }
 }
 
-private class TimestampExprValue(val ion: IonSystem, val value: Timestamp) : ScalarExprValue() {
+private class TimestampExprValue(private val ion: IonSystem, val value: Timestamp) : ScalarExprValue() {
     override val type: ExprValueType = ExprValueType.TIMESTAMP
     override fun timestampValue(): Timestamp? = value
-    override fun ionValueFun(): IonValue = ion.newTimestamp(value)
+    override val ionValue by lazy { toIonValue(ion) }
 }
 
-private class TimeExprValue(val ion: IonSystem, val value: Time) : ScalarExprValue() {
+private class TimeExprValue(private val ion: IonSystem, val value: Time) : ScalarExprValue() {
     override val type = ExprValueType.TIME
     override fun timeValue(): Time = value
-    override fun ionValueFun() = value.toIonValue(ion)
+    override val ionValue by lazy { toIonValue(ion) }
 }
 
-private class SymbolExprValue(val ion: IonSystem, val value: String) : ScalarExprValue() {
+private class SymbolExprValue(private val ion: IonSystem, val value: String) : ScalarExprValue() {
     override val type: ExprValueType = ExprValueType.SYMBOL
     override fun stringValue() = value
-    override fun ionValueFun(): IonValue = ion.newSymbol(value)
+    override val ionValue by lazy { toIonValue(ion) }
 }
 
-private class ClobExprValue(val ion: IonSystem, val value: ByteArray) : ScalarExprValue() {
+private class ClobExprValue(private val ion: IonSystem, val value: ByteArray) : ScalarExprValue() {
     override val type: ExprValueType = ExprValueType.CLOB
     override fun bytesValue() = value
-    override fun ionValueFun(): IonValue = ion.newClob(value)
+    override val ionValue by lazy { toIonValue(ion) }
 }
 
-private class BlobExprValue(val ion: IonSystem, val value: ByteArray) : ScalarExprValue() {
+private class BlobExprValue(private val ion: IonSystem, val value: ByteArray) : ScalarExprValue() {
     override val type: ExprValueType = ExprValueType.BLOB
     override fun bytesValue() = value
-    override fun ionValueFun(): IonValue = ion.newBlob(value)
-}
-
-/**
- * Core [ExprValue] over an [IonValue].
- */
-internal class IonExprValue(private val valueFactory: ExprValueFactory, override val ionValue: IonValue) : BaseExprValue() {
-
-    init {
-        if (valueFactory.ion !== ionValue.system) {
-            throw IllegalArgumentException("valueFactory must have the same instance of IonSystem as ionValue")
-        }
-    }
-
-    private val namedFacet: Named? = when {
-        ionValue.fieldName != null -> valueFactory.newString(ionValue.fieldName).asNamed()
-        ionValue.type != IonType.DATAGRAM &&
-            ionValue.container != null &&
-            ionValue.ordinal >= 0 -> valueFactory.newInt(ionValue.ordinal).asNamed()
-        else -> null
-    }
-
-    override val type = when {
-        ionValue.isMissing -> ExprValueType.MISSING
-        ionValue.isNullValue -> ExprValueType.NULL
-        ionValue.isBag -> ExprValueType.BAG
-        ionValue.isDate -> ExprValueType.DATE
-        ionValue.isTime -> ExprValueType.TIME
-        else -> ExprValueType.fromIonType(ionValue.type)
-    }
-
-    override val scalar: Scalar by lazy {
-        object : Scalar {
-            override fun booleanValue(): Boolean? = ionValue.booleanValueOrNull()
-            override fun numberValue(): Number? = ionValue.numberValueOrNull()
-            override fun timestampValue(): Timestamp? = ionValue.timestampValueOrNull()
-            override fun stringValue(): String? = ionValue.stringValueOrNull()
-            override fun bytesValue(): ByteArray? = ionValue.bytesValueOrNull()
-            override fun dateValue(): LocalDate? {
-                val timestamp = timestampValue() ?: return null
-                return LocalDate.of(timestamp.year, timestamp.month, timestamp.day)
-            }
-            override fun timeValue(): Time? {
-                val hour = bindings[BindingName("hour", BindingCase.SENSITIVE)]?.intValue() ?: return null
-                val minute = bindings[BindingName("minute", BindingCase.SENSITIVE)]?.intValue() ?: return null
-                val second = bindings[BindingName("second", BindingCase.SENSITIVE)]?.intValue() ?: return null
-                val nano = bindings[BindingName("second", BindingCase.SENSITIVE)]?.bigDecimalValue()?.remainder(BigDecimal.ONE)?.multiply(NANOS_PER_SECOND.toBigDecimal())?.toInt() ?: 0
-                val precision = bindings[BindingName("second", BindingCase.SENSITIVE)]?.bigDecimalValue()?.scale() ?: 0
-                val tzHours = bindings[BindingName("timezone_hour", BindingCase.SENSITIVE)]?.intValue() ?: 0
-                val tzMinutes = bindings[BindingName("timezone_minute", BindingCase.SENSITIVE)]?.intValue() ?: 0
-                return Time.of(
-                    hour,
-                    minute,
-                    second,
-                    nano,
-                    precision,
-                    tzHours.times(MINUTES_PER_HOUR) + tzMinutes
-                )
-            }
-        }
-    }
-
-    override val bindings by lazy {
-        if (ionValue is IonStruct) {
-            IonStructBindings(valueFactory, ionValue)
-        } else {
-            Bindings.empty<ExprValue>()
-        }
-    }
-
-    override val ordinalBindings: OrdinalBindings by lazy {
-        object : OrdinalBindings {
-            override fun get(index: Int): ExprValue? =
-                when (ionValue) {
-                    is IonSequence -> {
-                        when {
-                            index < 0 -> null
-                            index >= ionValue.size -> null
-                            else -> valueFactory.newFromIonValue(ionValue[index])
-                                .namedValue(valueFactory.newInt(index))
-                        }
-                    }
-                    else -> null
-                }
-        }
-    }
-
-    override fun iterator() = when (ionValue) {
-        is IonContainer -> ionValue.asSequence()
-            .map { v -> valueFactory.newFromIonValue(v) }.iterator()
-        else -> emptyList<ExprValue>().iterator()
-    }
-
-    @Suppress("UNCHECKED_CAST")
-    override fun <T> provideFacet(type: Class<T>?) = when (type) {
-        Named::class.java -> namedFacet
-        else -> null
-    } as T?
+    override val ionValue by lazy { toIonValue(ion) }
 }
 
 /**
@@ -531,29 +414,6 @@ internal class SequenceExprValue( // dl todo: make private again
         }
     }
 
-    override val ionValue: IonValue by lazy {
-        sequence
-            .mapTo(
-                when (type) {
-                    // dont add annotation if already present.
-                    ExprValueType.BAG -> ion.newEmptyList().also {
-                        if (!it.hasTypeAnnotation(BAG_ANNOTATION)) {
-                            it.addTypeAnnotation(BAG_ANNOTATION)
-                        }
-                    }
-                    ExprValueType.LIST -> ion.newEmptyList()
-                    ExprValueType.SEXP -> ion.newEmptySexp()
-                    else -> throw IllegalStateException("Invalid type: $type")
-                }
-            ) {
-                if (it is StructExprValue)
-                    it.createMutableValue()
-                else
-                    it.ionValue.clone()
-            }
-            .seal()
-    }
-
     override val ordinalBindings: OrdinalBindings by lazy {
         when (type) {
             // no ordinal access over BAG
@@ -566,4 +426,6 @@ internal class SequenceExprValue( // dl todo: make private again
     }
 
     override fun iterator() = sequence.iterator()
+
+    override val ionValue by lazy { toIonValue(ion) }
 }

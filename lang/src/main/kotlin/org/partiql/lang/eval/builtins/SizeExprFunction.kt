@@ -14,7 +14,6 @@
 
 package org.partiql.lang.eval.builtins
 
-import com.amazon.ion.IonContainer
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
@@ -22,7 +21,6 @@ import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.types.AnyOfType
 import org.partiql.lang.types.FunctionSignature
 import org.partiql.lang.types.StaticType
-import org.partiql.lang.util.size
 
 /**
  * Built in function to return the size of a container type, i.e. size of Lists, Structs and Bags. This function
@@ -38,8 +36,8 @@ internal class SizeExprFunction(val valueFactory: ExprValueFactory) : ExprFuncti
     )
 
     override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
-        val ionContainer = required.first().ionValue as IonContainer
+        val container = required.first()
 
-        return valueFactory.newInt(ionContainer.size)
+        return valueFactory.newInt(container.count())
     }
 }

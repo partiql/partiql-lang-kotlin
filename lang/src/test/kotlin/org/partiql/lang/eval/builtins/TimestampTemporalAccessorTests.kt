@@ -10,49 +10,11 @@ import org.junit.runner.RunWith
 import java.time.DateTimeException
 import java.time.format.DateTimeFormatter
 import java.time.temporal.UnsupportedTemporalTypeException
-import java.util.Random
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
 @RunWith(JUnitParamsRunner::class)
 class TimestampTemporalAccessorTests {
-    private val ITERATION_COUNT = 1000000
-
-    fun createRng(): Random {
-        val rng = Random()
-        val seed = rng.nextLong()
-        println("Randomly generated seed is $seed.  Use this to reproduce failures in dev environment.")
-        rng.setSeed(seed)
-        return rng
-    }
-
-    @Test
-    @Parameters
-    @TestCaseName("formatRandomTimesWithSymbol_{0}")
-    fun formatRandomTimesWithAllDateFormatSymbolsTest(formatSymbol: String) {
-        System.out.println(
-            String.format(
-                "Generating %,d random dates, formatting each of them with \"%s\" comparing the result...",
-                ITERATION_COUNT, formatSymbol
-            )
-        )
-
-        val rng = createRng()
-
-        val formatter = DateTimeFormatter.ofPattern(formatSymbol)
-
-        (0..ITERATION_COUNT).toList().parallelStream().forEach { _ ->
-            val timestamp = rng.nextTimestamp()
-            val offsetDatetime = timestamp.toOffsetDateTime()
-
-            val temporalAccessor = timestamp.toTemporalAccessor()
-
-            val formattedTimestamp = formatter.format(temporalAccessor)
-            val formattedOffsetDateTime = formatter.format(offsetDatetime)
-            assertEquals(formattedOffsetDateTime, formattedTimestamp)
-        }
-    }
-    fun parametersForFormatRandomTimesWithAllDateFormatSymbolsTest(): Set<Char> = TIMESTAMP_FORMAT_SYMBOLS
 
     @Test
     fun timestampWithUnknownOffset() {
@@ -60,7 +22,7 @@ class TimestampTemporalAccessorTests {
         val timestamp = Timestamp.forSecond(1969, 7, 20, 20, 18, 36, null)
         assertNull(timestamp.localOffset)
 
-        val temporalAccessor = timestamp.toTemporalAccessor()
+        val temporalAccessor = TimestampTemporalAccessor(timestamp)
         val formatter = DateTimeFormatter.ofPattern("Z")
 
         assertEquals("+0000", formatter.format(temporalAccessor))
@@ -75,7 +37,7 @@ class TimestampTemporalAccessorTests {
     @TestCaseName("handleUnsupportedFormatSymbols_{0}")
     fun handleUnsupportedFormatSymbolsTest(testCase: UnsupportedSymbolTestCase) {
         val timestamp = Timestamp.forSecond(1969, 7, 20, 20, 18, 36, 0)
-        val temporalAccessor = timestamp.toTemporalAccessor()
+        val temporalAccessor = TimestampTemporalAccessor(timestamp)
         val formatter = DateTimeFormatter.ofPattern(testCase.formatSymbol)
 
         assertThatThrownBy { formatter.format(temporalAccessor) }
@@ -95,7 +57,7 @@ class TimestampTemporalAccessorTests {
         UnsupportedSymbolTestCase("F", UnsupportedTemporalTypeException::class.java), // Week of month
         UnsupportedSymbolTestCase("K", UnsupportedTemporalTypeException::class.java), // hour of am-pm (0-11)
         UnsupportedSymbolTestCase("k", UnsupportedTemporalTypeException::class.java), // clock of am-pm (1-24)
-        UnsupportedSymbolTestCase("A", UnsupportedTemporalTypeException::class.java), // Millsecond of day (0-85,499,999)
+        UnsupportedSymbolTestCase("A", UnsupportedTemporalTypeException::class.java), // Millisecond of day (0-85,499,999)
         UnsupportedSymbolTestCase("N", UnsupportedTemporalTypeException::class.java), // Nano of day (0-85,499,999,999,999)
         UnsupportedSymbolTestCase("Y", UnsupportedTemporalTypeException::class.java), // Week based year
         UnsupportedSymbolTestCase("w", UnsupportedTemporalTypeException::class.java), // Week of week based year

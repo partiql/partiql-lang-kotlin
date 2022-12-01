@@ -22,6 +22,7 @@ import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
+import org.partiql.lang.eval.stringValue
 import org.partiql.lang.types.FunctionSignature
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.util.stringValue
@@ -39,7 +40,7 @@ class ToTimestampExprFunction(private val valueFactory: ExprValueFactory) : Expr
 
     override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
         val ts = try {
-            Timestamp.valueOf(required[0].ionValue.stringValue())
+            Timestamp.valueOf(required[0].stringValue())
         } catch (ex: IllegalArgumentException) {
             throw EvaluationException(
                 message = "Timestamp was not a valid ion timestamp",
@@ -53,7 +54,7 @@ class ToTimestampExprFunction(private val valueFactory: ExprValueFactory) : Expr
     }
 
     override fun callWithOptional(session: EvaluationSession, required: List<ExprValue>, opt: ExprValue): ExprValue {
-        val ts = TimestampParser.parseTimestamp(required[0].ionValue.stringValue()!!, opt.ionValue.stringValue()!!)
+        val ts = TimestampParser.parseTimestamp(required[0].stringValue(), opt.stringValue())
         return valueFactory.newTimestamp(ts)
     }
 }

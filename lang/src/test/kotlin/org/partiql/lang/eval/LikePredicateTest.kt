@@ -665,7 +665,7 @@ class LikePredicateTest : EvaluatorTestBase() {
     fun patternNotAString() = runEvaluatorErrorTestCase(
         "SELECT * FROM <<>> AS a WHERE 'a' LIKE 1 ESCAPE '['",
         ErrorCode.EVALUATOR_LIKE_INVALID_INPUTS,
-        expectedErrorContext = propertyValueMapOf(1, 35, Property.LIKE_PATTERN to "1", Property.LIKE_ESCAPE to "\"[\"")
+        expectedErrorContext = propertyValueMapOf(1, 35, Property.LIKE_PATTERN to "1", Property.LIKE_ESCAPE to "'['")
     )
 
     @Test
@@ -673,7 +673,7 @@ class LikePredicateTest : EvaluatorTestBase() {
         // column is marked at the position of LIKE
         "SELECT * FROM <<>> AS a WHERE 'a' LIKE 'a' ESCAPE 1",
         ErrorCode.EVALUATOR_LIKE_INVALID_INPUTS,
-        expectedErrorContext = propertyValueMapOf(1, 35, Property.LIKE_PATTERN to "\"a\"", Property.LIKE_ESCAPE to "1")
+        expectedErrorContext = propertyValueMapOf(1, 35, Property.LIKE_PATTERN to "'a'", Property.LIKE_ESCAPE to "1")
     )
 
     @Test
@@ -746,7 +746,7 @@ class LikePredicateTest : EvaluatorTestBase() {
     fun nonLiteralsNonStringEscape() = runEvaluatorErrorTestCase(
         "SELECT * FROM `[{name:1, type:\"a\"}]` as a WHERE a.type LIKE '%' ESCAPE a.name",
         ErrorCode.EVALUATOR_LIKE_INVALID_INPUTS,
-        expectedErrorContext = propertyValueMapOf(1, 56, Property.LIKE_PATTERN to "\"%\"", Property.LIKE_ESCAPE to "1")
+        expectedErrorContext = propertyValueMapOf(1, 56, Property.LIKE_PATTERN to "'%'", Property.LIKE_ESCAPE to "1")
     )
 
     @Test
