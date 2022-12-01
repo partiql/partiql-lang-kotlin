@@ -2,7 +2,7 @@ package org.partiql.lang.eval.builtins.windowFunctions
 
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
-import org.partiql.annotation.PartiQLExperimental
+import org.partiql.annotations.PartiQLExperimental
 import org.partiql.lang.eval.EvaluatorTestBase
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestCase
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestTarget

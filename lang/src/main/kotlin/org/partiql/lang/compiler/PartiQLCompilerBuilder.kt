@@ -16,7 +16,7 @@ package org.partiql.lang.compiler
 
 import com.amazon.ion.IonSystem
 import com.amazon.ion.system.IonSystemBuilder
-import org.partiql.annotation.PartiQLExperimental
+import org.partiql.annotations.PartiQLExperimental
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.ThunkReturnTypeAssertions

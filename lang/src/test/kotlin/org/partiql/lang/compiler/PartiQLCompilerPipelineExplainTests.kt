@@ -18,7 +18,7 @@ import com.amazon.ionelement.api.ionInt
 import org.junit.Assert.assertEquals
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
-import org.partiql.annotation.PartiQLExperimental
+import org.partiql.annotations.PartiQLExperimental
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.PartiqlLogical
 import org.partiql.lang.domains.PartiqlLogicalResolved

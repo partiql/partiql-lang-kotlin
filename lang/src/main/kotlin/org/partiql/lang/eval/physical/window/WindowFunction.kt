@@ -1,6 +1,6 @@
 package org.partiql.lang.eval.physical.window
 
-import org.partiql.annotation.PartiQLExperimental
+import org.partiql.annotations.PartiQLExperimental
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.physical.EvaluatorState

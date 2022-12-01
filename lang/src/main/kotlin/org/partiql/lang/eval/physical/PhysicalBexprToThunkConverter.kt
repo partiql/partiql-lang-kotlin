@@ -2,7 +2,7 @@ package org.partiql.lang.eval.physical
 
 import com.amazon.ionelement.api.BoolElement
 import com.amazon.ionelement.api.MetaContainer
-import org.partiql.annotation.PartiQLExperimental
+import org.partiql.annotations.PartiQLExperimental
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.eval.ExprValueFactory

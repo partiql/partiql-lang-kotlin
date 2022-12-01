@@ -14,7 +14,7 @@
 
 package org.partiql.lang.compiler
 
-import org.partiql.annotation.PartiQLExperimental
+import org.partiql.annotations.PartiQLExperimental
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.eval.PartiQLStatement
 import org.partiql.lang.planner.PartiQLPlanner

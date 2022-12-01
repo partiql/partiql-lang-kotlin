@@ -16,7 +16,7 @@ package org.partiql.lang.eval
 
 import com.amazon.ion.IonType
 import com.amazon.ion.IonValue
-import org.partiql.annotation.PartiQLExperimental
+import org.partiql.annotations.PartiQLExperimental
 import org.partiql.lang.CUSTOM_TEST_TYPES
 import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.ION

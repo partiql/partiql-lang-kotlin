@@ -2,7 +2,7 @@ package org.partiql.lang.util.testdsl
 
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
-import org.partiql.annotation.PartiQLExperimental
+import org.partiql.annotations.PartiQLExperimental
 import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.ION
 import org.partiql.lang.eval.CompileOptions

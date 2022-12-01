@@ -16,7 +16,7 @@ package org.partiql.pipeline
 
 import com.amazon.ion.IonSystem
 import com.amazon.ion.system.IonSystemBuilder
-import org.partiql.annotation.PartiQLExperimental
+import org.partiql.annotations.PartiQLExperimental
 import org.partiql.cli.Pipeline
 import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.compiler.PartiQLCompilerBuilder

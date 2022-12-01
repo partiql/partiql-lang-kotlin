@@ -14,7 +14,7 @@
 
 package org.partiql.lang.planner
 
-import org.partiql.annotation.PartiQLExperimental
+import org.partiql.annotations.PartiQLExperimental
 
 /**
  * Builder class to instantiate a [PartiQLPlanner].

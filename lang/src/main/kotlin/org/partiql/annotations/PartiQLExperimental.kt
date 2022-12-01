@@ -1,4 +1,4 @@
-package org.partiql.annotation
+package org.partiql.annotations
 
 /**
  * This is a "global" annotation class to mark a certain feature as experimental in the codebase

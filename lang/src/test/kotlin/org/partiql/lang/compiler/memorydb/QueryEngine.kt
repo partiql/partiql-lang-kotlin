@@ -1,7 +1,7 @@
 package org.partiql.lang.compiler.memorydb
 
 import com.amazon.ionelement.api.toIonValue
-import org.partiql.annotation.PartiQLExperimental
+import org.partiql.annotations.PartiQLExperimental
 import org.partiql.lang.ION
 import org.partiql.lang.compiler.PartiQLCompilerPipeline
 import org.partiql.lang.compiler.memorydb.operators.GetByKeyProjectRelationalOperatorFactory
