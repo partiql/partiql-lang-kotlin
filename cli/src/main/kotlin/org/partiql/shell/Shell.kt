@@ -14,8 +14,6 @@
 
 package org.partiql.shell
 
-import com.amazon.ion.system.IonTextWriterBuilder
-import com.amazon.ionelement.api.toIonValue
 import com.google.common.base.CharMatcher
 import com.google.common.util.concurrent.Uninterruptibles
 import org.fusesource.jansi.AnsiConsole
@@ -31,15 +29,16 @@ import org.jline.utils.AttributedStringBuilder
 import org.jline.utils.AttributedStyle
 import org.jline.utils.InfoCmp
 import org.joda.time.Duration
-import org.partiql.lang.CompilerPipeline
+import org.partiql.format.ExplainFormatter
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
+import org.partiql.lang.eval.PartiQLResult
 import org.partiql.lang.eval.delegate
-import org.partiql.lang.syntax.Parser
 import org.partiql.lang.util.ConfigurableExprValueFormatter
 import org.partiql.lang.util.ExprValueFormatter
+import org.partiql.pipeline.AbstractPipeline
 import java.io.Closeable
 import java.io.OutputStream
 import java.io.PrintStream
@@ -79,28 +78,16 @@ private val EXIT_DELAY: Duration = Duration(3000)
  * Initial work to replace the REPL with JLine3. I have attempted to keep this similar to Repl.kt, but have some
  * opinions on ways to clean this up in later PRs.
  */
-class Shell(
+internal class Shell(
     private val valueFactory: ExprValueFactory,
     private val output: OutputStream,
-    private val parser: Parser,
-    private val compiler: CompilerPipeline,
+    private val compiler: AbstractPipeline,
     private val initialGlobal: Bindings<ExprValue>,
     private val config: ShellConfiguration = ShellConfiguration()
 ) {
-
     private val homeDir: Path = Paths.get(System.getProperty("user.home"))
     private val globals = ShellGlobalBinding(valueFactory).add(initialGlobal)
     private var previousResult = valueFactory.nullValue
-
-    private val astPrettyPrinter = object : ExprValueFormatter {
-        val writer = IonTextWriterBuilder.pretty().build(output)
-
-        override fun formatTo(value: ExprValue, out: Appendable) {
-            value.ionValue.writeTo(writer)
-            writer.flush()
-        }
-    }
-
     private val out = PrintStream(output)
 
     fun start() {
@@ -149,7 +136,7 @@ class Shell(
             .build()
 
         out.info(WELCOME_MSG)
-        out.info("Typing mode: ${compiler.compileOptions.typingMode.name}")
+        out.info("Typing mode: ${compiler.options.typingMode.name}")
         out.info("Using version: ${retrievePartiQLVersionAndHash()}")
 
         while (!exiting.get()) {
@@ -163,12 +150,6 @@ class Shell(
             } catch (ex: EndOfFileException) {
                 out.info("^D")
                 return
-            }
-
-            // Pretty print AST
-            if (line.endsWith("\n!!")) {
-                printAST(line.removeSuffix("!!"))
-                continue
             }
 
             if (line.isBlank()) {
@@ -191,20 +172,20 @@ class Shell(
                         out.error("!add_to_global_env requires 1 parameter")
                         continue
                     }
-                    execute {
+                    executeAndPrint {
                         val locals = Bindings.buildLazyBindings<ExprValue> {
                             addBinding("_") {
                                 previousResult
                             }
                         }.delegate(globals.bindings)
-                        val result = compiler.compile(arg).eval(EvaluationSession.build { globals(locals) })
-                        globals.add(result.bindings)
+                        val result = compiler.compile(arg, EvaluationSession.build { globals(locals) }) as PartiQLResult.Value
+                        globals.add(result.value.bindings)
                         result
                     }
                     continue
                 }
                 "!global_env" -> {
-                    execute { globals.asExprValue() }
+                    executeAndPrint { AbstractPipeline.convertExprValue(globals.asExprValue()) }
                     continue
                 }
                 "!clear" -> {
@@ -226,13 +207,11 @@ class Shell(
 
             // Execute PartiQL
             try {
-                execute {
+                executeAndPrint {
                     val locals = Bindings.buildLazyBindings<ExprValue> {
-                        addBinding("_") {
-                            previousResult
-                        }
+                        addBinding("_") { previousResult }
                     }.delegate(globals.bindings)
-                    compiler.compile(line).eval(EvaluationSession.build { globals(locals) })
+                    compiler.compile(line, EvaluationSession.build { globals(locals) })
                 }
             } catch (ex: Exception) {
                 out.error(ex.stackTraceToString())
@@ -240,42 +219,49 @@ class Shell(
         }
     }
 
-    private fun execute(func: () -> ExprValue?) {
-        execute(ConfigurableExprValueFormatter.pretty, func)
-    }
-
-    private fun execute(formatter: ExprValueFormatter, func: () -> ExprValue?) {
-        try {
-            val result = func.invoke()
-            if (result != null) {
-                out.info(BAR_1)
-                formatter.formatTo(result, out)
-                out.println()
-                out.info(BAR_2)
-                previousResult = result
-            }
-            out.success("OK!")
-            out.flush()
+    private fun executeAndPrint(func: () -> PartiQLResult?) {
+        val result: PartiQLResult? = try {
+            func.invoke()
         } catch (ex: Exception) {
             out.error(ex.stackTraceToString())
             out.error("ERROR!")
+            null
         }
+        printPartiQLResult(result)
+    }
+
+    private fun printPartiQLResult(result: PartiQLResult?) {
+        when (result) {
+            null -> {
+                out.success("OK!")
+                out.flush()
+            }
+            is PartiQLResult.Value -> printExprValue(ConfigurableExprValueFormatter.pretty, result.value)
+            is PartiQLResult.Explain.Domain -> {
+                val explain = ExplainFormatter.format(result)
+                out.println(explain)
+                out.flush()
+            }
+            is PartiQLResult.Insert,
+            is PartiQLResult.Replace,
+            is PartiQLResult.Delete -> error("Insert/Replace/Delete are not yet supported")
+        }
+    }
+
+    private fun printExprValue(formatter: ExprValueFormatter, result: ExprValue) {
+        out.info(BAR_1)
+        formatter.formatTo(result, out)
+        out.println()
+        out.info(BAR_2)
+        previousResult = result
+        out.success("OK!")
+        out.flush()
     }
 
     private fun retrievePartiQLVersionAndHash(): String {
         val properties = Properties()
         properties.load(this.javaClass.getResourceAsStream("/partiql.properties"))
         return "${properties.getProperty("version")}-${properties.getProperty("commit")}"
-    }
-
-    private fun printAST(query: String) {
-        if (query.isNotBlank()) {
-            execute(astPrettyPrinter) {
-                val astStatementSexp = parser.parseAstStatement(query).toIonElement()
-                val astStatementIonValue = astStatementSexp.asAnyElement().toIonValue(valueFactory.ion)
-                valueFactory.newFromIonValue(astStatementIonValue)
-            }
-        }
     }
 
     /**

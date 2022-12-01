@@ -10,6 +10,7 @@ import org.partiql.lang.compiler.memorydb.QueryEngine
 import org.partiql.lang.eval.BAG_ANNOTATION
 import org.partiql.lang.eval.BindingCase
 import org.partiql.lang.eval.BindingName
+import org.partiql.lang.eval.toIonValue
 import org.partiql.lang.util.PartiQLExperimental
 
 @PartiQLExperimental
@@ -27,7 +28,7 @@ class TestContext {
     ) {
         val expectedIon = ION.singleValue(expectedResultAsIonText)
         val result = queryEngine.executeQuery(sql)
-        assertEquals(expectedIon, result.ionValue)
+        assertEquals(expectedIon, result.toIonValue(ION))
     }
 
     fun intKey(value: Int) = db.valueFactory.newList(listOf(db.valueFactory.newInt(value)))

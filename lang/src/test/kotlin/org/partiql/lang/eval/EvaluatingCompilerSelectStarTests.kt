@@ -36,7 +36,7 @@ class EvaluatingCompilerSelectStarTests : EvaluatorTestBase() {
 
     private fun createExprValue(ionText: String, index: Long, address: String) =
         AddressedExprValue(
-            IonExprValue(valueFactory, ion.singleValue(ionText)),
+            ion.singleValue(ionText).toExprValue(),
             valueFactory.newInt(index),
             valueFactory.newString(address)
         )

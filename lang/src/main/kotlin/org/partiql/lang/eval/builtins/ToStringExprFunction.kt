@@ -22,6 +22,7 @@ import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
+import org.partiql.lang.eval.stringValue
 import org.partiql.lang.eval.timestampValue
 import org.partiql.lang.types.FunctionSignature
 import org.partiql.lang.types.StaticType
@@ -39,7 +40,7 @@ class ToStringExprFunction(private val valueFactory: ExprValueFactory) : ExprFun
     )
 
     override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
-        val pattern = required[1].ionValue.stringValue()!!
+        val pattern = required[1].stringValue()
 
         val formatter: DateTimeFormatter = try {
             DateTimeFormatter.ofPattern(pattern)

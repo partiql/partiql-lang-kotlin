@@ -219,6 +219,7 @@ class QueryEngine(val db: MemoryDatabase) {
                 )
             }
             is PartiQLResult.Replace -> TODO("Not implemented yet")
+            is PartiQLResult.Explain.Domain -> TODO("Not implemented yet")
         }
     }
 }

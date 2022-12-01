@@ -4,6 +4,7 @@ import com.amazon.ion.IonStruct
 import org.junit.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
+import org.partiql.lang.ION
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.evaluatortestframework.ExpectedResultFormat
 import org.partiql.lang.eval.time.MINUTES_PER_HOUR
@@ -55,7 +56,7 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
         ) { actualExprValue ->
             assertEquals(tc.expected, actualExprValue.toString())
             if (actualExprValue.type == ExprValueType.TIME) {
-                val timeIonValue = actualExprValue.ionValue
+                val timeIonValue = actualExprValue.toIonValue(ION)
                 timeIonValue as IonStruct
                 assertNotNull(tc.expectedTime)
                 assertEqualsIonTimeStruct(timeIonValue, tc.expectedTime!!)

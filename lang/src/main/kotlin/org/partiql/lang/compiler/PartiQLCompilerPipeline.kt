@@ -103,14 +103,15 @@ class PartiQLCompilerPipeline(
             throw PartiQLException(result.problems.toString())
         }
         val plan = (result as PartiQLPlanner.Result.Success).plan
-        return compile(plan)
+        return compile(plan, result.details)
     }
 
     /**
      * Compiles a [PartiqlPhysical.Plan] representation of a query into an executable [PartiQLStatement].
      */
-    fun compile(statement: PartiqlPhysical.Plan): PartiQLStatement {
-        return compiler.compile(statement)
+    @JvmOverloads
+    fun compile(statement: PartiqlPhysical.Plan, details: PartiQLPlanner.PlanningDetails = PartiQLPlanner.PlanningDetails()): PartiQLStatement {
+        return compiler.compile(statement, details)
     }
 
     class Builder internal constructor() {

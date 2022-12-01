@@ -3,6 +3,12 @@ package org.partiql.lang.thread
 
 import com.amazon.ion.system.IonSystemBuilder
 import com.amazon.ionelement.api.ionInt
+import io.mockk.every
+import io.mockk.spyk
+import org.antlr.v4.runtime.CharStreams
+import org.antlr.v4.runtime.CommonToken
+import org.antlr.v4.runtime.Token
+import org.antlr.v4.runtime.TokenSource
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.parallel.Execution
@@ -13,6 +19,9 @@ import org.partiql.lang.StepContext
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.eval.CompileOptions
 import org.partiql.lang.eval.visitors.VisitorTransformBase
+import org.partiql.lang.syntax.PartiQLParser
+import org.partiql.lang.syntax.antlr.PartiQLTokens
+import java.io.InputStream
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.concurrent.thread
 
@@ -51,20 +60,54 @@ class ThreadInterruptedTests {
             plus(FakeList(n, variableA))
         }
 
-    private fun testThreadInterrupt(block: () -> Unit) {
+    private fun testThreadInterrupt(interruptAfter: Long = INTERRUPT_AFTER_MS, interruptWait: Long = WAIT_FOR_THREAD_TERMINATION_MS, block: () -> Unit) {
         val wasInterrupted = AtomicBoolean(false)
-        val t = thread {
+        val t = thread(start = false) {
             try {
                 block()
             } catch (_: InterruptedException) {
                 wasInterrupted.set(true)
             }
         }
-
-        Thread.sleep(INTERRUPT_AFTER_MS)
+        t.setUncaughtExceptionHandler { _, ex -> throw ex }
+        t.start()
+        Thread.sleep(interruptAfter)
         t.interrupt()
-        t.join(WAIT_FOR_THREAD_TERMINATION_MS)
+        t.join(interruptWait)
         assertTrue(wasInterrupted.get(), "Thread should have been interrupted.")
+    }
+
+    @Test
+    fun parserPartiQL() {
+        val parser = spyk<PartiQLParser>()
+        val query = "hello world"
+        every {
+            parser.createTokenStream(any())
+        } returns EndlessTokenStream(PartiQLTokens(CharStreams.fromStream(InputStream.nullInputStream())))
+        testThreadInterrupt(2) { parser.run { parseAstStatement(query) } }
+    }
+
+    @Test
+    fun parserPartiQLUsingSLL() {
+        val parser = PartiQLParser()
+        val tokenStream = EndlessTokenStream(PartiQLTokens(CharStreams.fromStream(InputStream.nullInputStream())))
+        val sllParser = parser.createParserSLL(tokenStream)
+        testThreadInterrupt(2) { sllParser.run { statement() } }
+    }
+
+    @Test
+    fun parserPartiQLUsingLL() {
+        val parser = PartiQLParser()
+        val tokenStream = EndlessTokenStream(PartiQLTokens(CharStreams.fromStream(InputStream.nullInputStream())))
+        val llParser = parser.createParserLL(tokenStream)
+        testThreadInterrupt(2) { llParser.run { statement() } }
+    }
+
+    @Test
+    fun parserPartiQLTokenStream() {
+        val parser = PartiQLParser()
+        val endlessStream = EndlessInputStream()
+        testThreadInterrupt { parser.run { createTokenStream(endlessStream) } }
     }
 
     @Test
@@ -105,6 +148,19 @@ class ThreadInterruptedTests {
         }
 
         assertTrue(accumulator != 0L)
+    }
+
+    private class EndlessInputStream : InputStream() {
+        override fun read(): Int {
+            return 1
+        }
+    }
+
+    private class EndlessTokenStream(source: TokenSource) : PartiQLParser.CountingTokenStream(source) {
+        override fun size(): Int = Int.MAX_VALUE
+        override fun LT(k: Int): Token {
+            return CommonToken(PartiQLTokens.PLUS)
+        }
     }
 }
 

@@ -14,26 +14,26 @@
 
 package org.partiql.cli.functions
 
-import com.amazon.ion.IonStruct
 import com.amazon.ion.system.IonReaderBuilder
 import org.apache.commons.csv.CSVFormat
-import org.partiql.extensions.cli.functions.BaseFunction
+import org.partiql.lang.eval.BindingCase
+import org.partiql.lang.eval.BindingName
+import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.EvaluationSession
+import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
+import org.partiql.lang.eval.booleanValue
 import org.partiql.lang.eval.io.DelimitedValues
 import org.partiql.lang.eval.io.DelimitedValues.ConversionMode
 import org.partiql.lang.eval.stringValue
 import org.partiql.lang.types.FunctionSignature
 import org.partiql.lang.types.StaticType
-import org.partiql.lang.util.asIonStruct
-import org.partiql.lang.util.booleanValue
-import org.partiql.lang.util.stringValue
 import java.io.FileInputStream
 import java.io.InputStream
 import java.io.InputStreamReader
 
-internal class ReadFile(valueFactory: ExprValueFactory) : BaseFunction(valueFactory) {
+internal class ReadFile(private val valueFactory: ExprValueFactory) : ExprFunction {
     override val signature = FunctionSignature(
         name = "read_file",
         requiredParameters = listOf(StaticType.STRING),
@@ -45,19 +45,19 @@ internal class ReadFile(valueFactory: ExprValueFactory) : BaseFunction(valueFact
         ConversionMode.values().find { it.name.toLowerCase() == name }
             ?: throw IllegalArgumentException("Unknown conversion: $name")
 
-    private fun fileReadHandler(csvFormat: CSVFormat): (InputStream, IonStruct) -> ExprValue = { input, options ->
-        val encoding = options["encoding"]?.stringValue() ?: "UTF-8"
+    private fun fileReadHandler(csvFormat: CSVFormat): (InputStream, Bindings<ExprValue>) -> ExprValue = { input, bindings ->
+        val encoding = bindings[BindingName("encoding", BindingCase.SENSITIVE)]?.stringValue() ?: "UTF-8"
         val reader = InputStreamReader(input, encoding)
-        val conversion = options["conversion"]?.stringValue() ?: "none"
+        val conversion = bindings[BindingName("conversion", BindingCase.SENSITIVE)]?.stringValue() ?: "none"
 
-        val hasHeader = options["header"]?.booleanValue() ?: false
-        val ignoreEmptyLine = options["ignore_empty_line"]?.booleanValue() ?: true
-        val ignoreSurroundingSpace = options["ignore_surrounding_space"]?.booleanValue() ?: true
-        val trim = options["trim"]?.booleanValue() ?: true
-        val delimiter = options["delimiter"]?.stringValue()?.first() // CSVParser library only accepts a single character as delimiter
-        val record = options["line_breaker"]?.stringValue()
-        val escape = options["escape"]?.stringValue()?.first() // CSVParser library only accepts a single character as escape
-        val quote = options["quote"]?.stringValue()?.first() // CSVParser library only accepts a single character as quote
+        val hasHeader = bindings[BindingName("header", BindingCase.SENSITIVE)]?.booleanValue() ?: false
+        val ignoreEmptyLine = bindings[BindingName("ignore_empty_line", BindingCase.SENSITIVE)]?.booleanValue() ?: true
+        val ignoreSurroundingSpace = bindings[BindingName("ignore_surrounding_space", BindingCase.SENSITIVE)]?.booleanValue() ?: true
+        val trim = bindings[BindingName("trim", BindingCase.SENSITIVE)]?.booleanValue() ?: true
+        val delimiter = bindings[BindingName("delimiter", BindingCase.SENSITIVE)]?.stringValue()?.first() // CSVParser library only accepts a single character as delimiter
+        val record = bindings[BindingName("line_breaker", BindingCase.SENSITIVE)]?.stringValue()
+        val escape = bindings[BindingName("escape", BindingCase.SENSITIVE)]?.stringValue()?.first() // CSVParser library only accepts a single character as escape
+        val quote = bindings[BindingName("quote", BindingCase.SENSITIVE)]?.stringValue()?.first() // CSVParser library only accepts a single character as quote
 
         val csvFormatWithOptions = csvFormat.withIgnoreEmptyLines(ignoreEmptyLine)
             .withIgnoreSurroundingSpaces(ignoreSurroundingSpace)
@@ -73,7 +73,7 @@ internal class ReadFile(valueFactory: ExprValueFactory) : BaseFunction(valueFact
         valueFactory.newBag(seq)
     }
 
-    private fun ionReadHandler(): (InputStream, IonStruct) -> ExprValue = { input, _ ->
+    private fun ionReadHandler(): (InputStream, Bindings<ExprValue>) -> ExprValue = { input, _ ->
         IonReaderBuilder.standard().build(input).use { reader ->
             val value = when (reader.next()) {
                 null -> valueFactory.missingValue
@@ -102,21 +102,20 @@ internal class ReadFile(valueFactory: ExprValueFactory) : BaseFunction(valueFact
     override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
         val fileName = required[0].stringValue()
         val fileType = "ion"
-        val handler = readHandlers[fileType] ?: throw IllegalArgumentException("Unknown file type: $fileType")
+        val handler: (InputStream, Bindings<ExprValue>) -> ExprValue = readHandlers[fileType] ?: throw IllegalArgumentException("Unknown file type: $fileType")
         // TODO we should take care to clean up this `FileInputStream` properly
         //  https://github.com/partiql/partiql-lang-kotlin/issues/518
         val fileInput = FileInputStream(fileName)
-        return handler(fileInput, valueFactory.ion.newEmptyStruct())
+        return handler(fileInput, Bindings.empty())
     }
 
     override fun callWithOptional(session: EvaluationSession, required: List<ExprValue>, opt: ExprValue): ExprValue {
-        val options = opt.ionValue.asIonStruct()
         val fileName = required[0].stringValue()
-        val fileType = options["type"]?.stringValue() ?: "ion"
+        val fileType = opt.bindings[BindingName("type", BindingCase.SENSITIVE)]?.stringValue() ?: "ion"
         val handler = readHandlers[fileType] ?: throw IllegalArgumentException("Unknown file type: $fileType")
         // TODO we should take care to clean up this `FileInputStream` properly
         //  https://github.com/partiql/partiql-lang-kotlin/issues/518
         val fileInput = FileInputStream(fileName)
-        return handler(fileInput, options)
+        return handler(fileInput, opt.bindings)
     }
 }

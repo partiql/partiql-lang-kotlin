@@ -99,6 +99,7 @@ internal class PartiQLCompilerPipelineFactory : PipelineFactory {
                     is PartiQLResult.Insert,
                     is PartiQLResult.Replace -> error("DML is not supported by test suite")
                     is PartiQLResult.Value -> result.value
+                    is PartiQLResult.Explain -> error("EXPLAIN is not supported by test suite")
                 }
             }
         }

@@ -1,7 +1,7 @@
 package org.partiql.examples
 
-import org.junit.Assert
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
 import org.partiql.examples.util.Example
 import java.io.ByteArrayOutputStream
 import java.io.PrintStream
@@ -16,6 +16,6 @@ abstract class BaseExampleTest {
 
         example(PrintStream(outBuffer)).run()
 
-        Assert.assertEquals(expected, outBuffer.toString("UTF-8"))
+        assertEquals(expected, outBuffer.toString("UTF-8"))
     }
 }

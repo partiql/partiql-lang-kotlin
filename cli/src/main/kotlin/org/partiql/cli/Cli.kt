@@ -15,32 +15,35 @@
 package org.partiql.cli
 
 import com.amazon.ion.system.IonReaderBuilder
+import com.amazon.ion.system.IonSystemBuilder
 import com.amazon.ion.system.IonTextWriterBuilder
-import org.partiql.lang.CompilerPipeline
+import org.partiql.format.ExplainFormatter
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
+import org.partiql.lang.eval.PartiQLResult
 import org.partiql.lang.eval.delegate
+import org.partiql.lang.eval.toIonValue
 import org.partiql.lang.util.ConfigurableExprValueFormatter
+import org.partiql.pipeline.AbstractPipeline
 import java.io.InputStream
 import java.io.OutputStream
 import java.io.OutputStreamWriter
 
-/**
- * TODO builder, kdoc
- */
 internal class Cli(
     private val valueFactory: ExprValueFactory,
     private val input: InputStream,
     private val inputFormat: InputFormat,
     private val output: OutputStream,
     private val outputFormat: OutputFormat,
-    private val compilerPipeline: CompilerPipeline,
+    private val compilerPipeline: AbstractPipeline,
     private val globals: Bindings<ExprValue>,
     private val query: String,
     private val wrapIon: Boolean
 ) : PartiQLCommand {
+
+    private val ion = IonSystemBuilder.standard().build()
 
     init {
         if (wrapIon && inputFormat != InputFormat.ION) {
@@ -79,7 +82,7 @@ internal class Cli(
                     "--wrap-ion flag. Use --help for more information."
                 throw IllegalStateException(message)
             }
-            val result = compilerPipeline.compile(query).eval(EvaluationSession.build { globals(bindings) })
+            val result = compilerPipeline.compile(query, EvaluationSession.build { globals(bindings) })
             outputResult(result)
         }
     }
@@ -89,16 +92,18 @@ internal class Cli(
             val inputIonValue = valueFactory.ion.iterate(reader).asSequence().map { valueFactory.newFromIonValue(it) }
             val inputExprValue = valueFactory.newBag(inputIonValue)
             val bindings = getBindingsFromIonValue(inputExprValue)
-            val result = compilerPipeline.compile(query).eval(EvaluationSession.build { globals(bindings) })
+            val result = compilerPipeline.compile(query, EvaluationSession.build { globals(bindings) })
             outputResult(result)
         }
     }
 
     private fun runWithPartiQLInput() {
-        val inputEnvironment =
-            compilerPipeline.compile(input.readBytes().toString(Charsets.UTF_8)).eval(EvaluationSession.standard())
-        val bindings = getBindingsFromIonValue(inputEnvironment)
-        val result = compilerPipeline.compile(query).eval(EvaluationSession.build { globals(bindings) })
+        val inputEnvironment = compilerPipeline.compile(
+            input.readBytes().toString(Charsets.UTF_8),
+            EvaluationSession.standard()
+        ) as PartiQLResult.Value
+        val bindings = getBindingsFromIonValue(inputEnvironment.value)
+        val result = compilerPipeline.compile(query, EvaluationSession.build { globals(bindings) })
         outputResult(result)
     }
 
@@ -113,11 +118,25 @@ internal class Cli(
 
     private fun outputResult(result: ExprValue) {
         when (outputFormat) {
-            OutputFormat.ION_TEXT -> ionTextWriterBuilder.build(output).use { result.ionValue.writeTo(it) }
-            OutputFormat.ION_BINARY -> valueFactory.ion.newBinaryWriter(output).use { result.ionValue.writeTo(it) }
+            OutputFormat.ION_TEXT -> ionTextWriterBuilder.build(output).use { result.toIonValue(ion).writeTo(it) }
+            OutputFormat.ION_BINARY -> valueFactory.ion.newBinaryWriter(output).use { result.toIonValue(ion).writeTo(it) }
             OutputFormat.PARTIQL -> OutputStreamWriter(output).use { it.write(result.toString()) }
             OutputFormat.PARTIQL_PRETTY -> OutputStreamWriter(output).use {
                 ConfigurableExprValueFormatter.pretty.formatTo(result, it)
+            }
+        }
+    }
+
+    private fun outputResult(result: PartiQLResult) {
+        when (result) {
+            is PartiQLResult.Value -> outputResult(result.value)
+            is PartiQLResult.Delete,
+            is PartiQLResult.Replace,
+            is PartiQLResult.Insert -> TODO("Delete, Replace, and Insert do not have CLI support yet.")
+            is PartiQLResult.Explain.Domain -> {
+                OutputStreamWriter(output).use {
+                    it.append(ExplainFormatter.format(result))
+                }
             }
         }
     }

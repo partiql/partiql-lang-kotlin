@@ -1,11 +1,13 @@
 package org.partiql.lang.util
 
+import com.amazon.ion.system.IonSystemBuilder
 import com.amazon.ion.system.IonTextWriterBuilder
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.dateValue
 import org.partiql.lang.eval.name
 import org.partiql.lang.eval.timeValue
+import org.partiql.lang.eval.toIonValue
 
 private const val MISSING_STRING = "MISSING"
 private const val NULL_STRING = "NULL"
@@ -35,6 +37,8 @@ class ConfigurableExprValueFormatter(private val config: Configuration) : ExprVa
     }
 
     private class PrettyFormatter(val out: Appendable, val config: Configuration) {
+        private val ion = IonSystemBuilder.standard().build()
+
         private var currentIndentation: Int = 0
 
         fun recursivePrettyPrint(value: ExprValue) {
@@ -107,7 +111,7 @@ class ConfigurableExprValueFormatter(private val config: Configuration) : ExprVa
         }
 
         private fun prettyPrintIonLiteral(value: ExprValue) {
-            val ionValue = value.ionValue
+            val ionValue = value.toIonValue(ion)
             out.append("`")
 
             // We intentionally do *not* want to call [IonWriter.close()] on the [IonWriter] here because

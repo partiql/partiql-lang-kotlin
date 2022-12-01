@@ -1,0 +1,944 @@
+/*
+Domains defined in this file are listed below.  They are listed in transformation order and ultimately arrive at a
+physical algebra that is ready to be evaluated.
+
+- partiql_ast: the result of parsing the PartiQL query.  Structure resembles the PartiQL syntax.
+- partiql_logical: a direct conversion from the partiql_ast to a logical query plan, with no semantic checking.
+- partiql_logical_resolved: a variation of partiql_logical wherein all variable declarations have been allocated unique
+identifiers and variable references have been resolved to a local or global variable and their unique identifiers have
+been identified.  Partial push-downs of filters and projections may be applied here.
+- partiql_physical: this is the same as partiql_logical_resolved, but with additional relational operators.  Also, all
+relational operators include an operand to identify the algorithm to be used at evaluation time.  After transforming
+from the logical algebra to physical, all operators will be set to use default implementations.  The physical algebra
+may then be further optimized by selecting better implementations of each operator.
+
+*/
+
+
+// Domain transformations
+
+// Makes PIG emit PartiqlAstToPartiqlLogicalVisitorTransform
+(transform partiql_ast partiql_logical)
+
+// Makes PIG emit PartiqlLogicalToPartiqlLogicalResolvedVisitorTransform
+(transform partiql_logical partiql_logical_resolved)
+
+// Makes PIG emit PartiqlLogicalResolvedToPartiqlPhysicalVisitorTransform
+(transform partiql_logical_resolved partiql_physical)
+
+/*
+    The PartiQL AST.
+
+    Within the partiql_ast type domain, the most fundamental of the data types is the `statement` sum type.  Start
+    there and work your way to the other types.
+*/
+(define partiql_ast
+    (domain
+        // `statement` encompasses within it all possible PartiQL statements and expressions.
+        //  Note that DDL and DML statements are not expressions and cannot be used in the context where an expression
+        //  is required.  (For example, `1 + (DROP TABLE foo)`)
+        (sum statement
+            // any expression that can be used in a context that requires a result.
+            (query expr::expr)
+
+            // Data manipulation operations cannot be composed with other `expr` nodes, although they may
+            // contain `expr` nodes themselves.
+            // TODO:  The `dml` variant and `dml_op` sum type closely mirrors the historical `V0` AST. The disadvantage
+            // of this approach is that different DML operations allow or require different combinations of FROM source
+            // and WHERE predicate. For instance, DELETE requires FROM source while REMOVE does not. It may be
+            // necessary to check the validity of these nodes during compilation or another phase.  In the future, we
+            // should consider changing the modeling of these so such validity checks are not needed.
+            (dml
+                (operations ops::dml_op_list)
+                (from from::(? from_source))
+                (where where::(? expr))
+                (returning returning::(? returning_expr)))
+
+            // Data definition operations also cannot be composed with other `expr` nodes.
+            (ddl op::ddl_op)
+
+            // Stored procedure calls are only allowed at the top level of a query and cannot be used as an expression
+            // Currently supports stored procedure calls with the unnamed argument syntax:
+            //     EXEC <symbol> [<expr>.*]
+            (exec procedure_name::symbol args::(* expr 0))
+
+            // Explain Statement
+            (explain target::explain_target)
+        )
+        
+        (sum explain_target
+             (domain
+                 statement::statement
+                 type::(? symbol)
+                 format::(? symbol)
+             )
+        )
+
+        // The expressions that can result in values.
+        (sum expr
+            // The literal missing value.
+            (missing)
+
+            // A literal value.  Can be a literal in the PartiQL syntax or a back-tick quoted Ion literal.
+            // Also represents a literal NULL value (i.e. `(lit null)`.)
+            (lit value::ion)
+
+            // A variable reference
+            (id name::symbol case::case_sensitivity qualifier::scope_qualifier)
+
+            // A parameter, i.e. `?`
+            (parameter index::int)
+
+            // Unary operators
+            (not expr::expr)
+            (pos expr::expr) // +
+            (neg expr::expr) // -
+
+            // Applies to all variants with a single (* expr 2) element below: https://github.com/partiql/partiql-lang-kotlin/issues/241
+            // Arithmetic operators
+            (plus operands::(* expr 2))
+            (minus operands::(* expr 2))
+            (times operands::(* expr 2))
+            (divide operands::(* expr 2))
+            (modulo operands::(* expr 2))
+            (concat operands::(* expr 2))
+
+            // Logical operators
+            (and operands::(* expr 2))
+            (or operands::(* expr 2))
+
+            // Comparison operators
+            (eq operands::(* expr 2))
+            (ne operands::(* expr 2))
+            (gt operands::(* expr 2))
+            (gte operands::(* expr 2))
+            (lt operands::(* expr 2))
+            (lte operands::(* expr 2))
+            (like value::expr pattern::expr escape::(? expr))
+            (between value::expr from::expr to::expr)
+            // The PartiQL `IN` operator cannot be named `in` since that is a Kotlin keyword.
+            (in_collection operands::(* expr 2))
+            // The PartiQL `IS` operator  cannot be named `is` since that is a Kotlin keyword.
+            (is_type value::expr type::type)
+
+            // CASE <expr> [ WHEN <expr> THEN <expr> ]... [ ELSE <expr> ] END
+            (simple_case expr::expr cases::expr_pair_list default::(? expr))
+
+            // CASE [ WHEN <expr> THEN <expr> ]... [ ELSE <expr> ] END
+            (searched_case cases::expr_pair_list default::(? expr))
+
+            // Constructors
+            (struct fields::(* expr_pair 0))
+            // https://github.com/partiql/partiql-lang-kotlin/issues/239
+            (bag values::(* expr 0))
+            (list values::(* expr 0))
+            (sexp values::(* expr 0))
+
+            // Constructors for DateTime types
+            (date year::int month::int day::int)
+            (lit_time value::time_value)
+
+            // Bag operators
+            (bag_op op::bag_op_type quantifier::set_quantifier operands::(* expr 2))
+
+            // GPML graph pattern match:  <expr> MATCH <gpml_pattern>
+            (graph_match expr::expr gpml_pattern::gpml_pattern)
+
+            // Other expression types
+            (path root::expr steps::(* path_step 1))
+            (call func_name::symbol args::(* expr 1))
+            (call_agg setq::set_quantifier func_name::symbol arg::expr)
+            // TODO: In the feature, when we allow use of aggregation function as window function, we need to consider incorporate in setq
+            (call_window func_name::symbol over::over args::(* expr 1))
+            (cast value::expr as_type::type)
+            (can_cast value::expr as_type::type)
+            (can_lossless_cast value::expr as_type::type)
+            (null_if expr1::expr expr2::expr)
+            (coalesce args::(* expr 1))
+
+            // `SELECT` and its parts.
+            // Once variadic record element support is added (https://github.com/partiql/partiql-ir-generator/issues/44),
+            // the let clauses may be modeled directly using let_binding.
+            (select
+                (setq (? set_quantifier))
+                (project projection)
+                (from from_source)
+                (from_let (? let))
+                (where (? expr))
+                (group (? group_by))
+                (having (? expr))
+                (order (? order_by))
+                (limit (? expr))
+                (offset (? expr))))
+        // end of sum expr
+
+        // Time
+        (product time_value hour::int minute::int second::int nano::int precision::int with_time_zone::bool tz_minutes::(? int))
+
+        // A "step" within a path expression; that is the components of the expression following the root.
+        (sum path_step
+            // `someRoot[<expr>]`, or `someRoot.someField` which is equivalent to `someRoot['someField']`.
+            (path_expr index::expr case::case_sensitivity)
+            // `someRoot[*]`]
+            (path_wildcard)
+            // `someRoot.*`
+            (path_unpivot))
+
+        // Indicates the type of projection in a SFW query.
+        (sum projection
+            // SELECT *
+            (project_star)
+            // SELECT <project_item>... (SQL-92 style select list with optional AS aliases or <expr>.*)
+            (project_list project_items::(* project_item 1))
+            // PIVOT <id> AT <id>
+            (project_pivot value::expr key::expr)
+            // SELECT VALUE <expr>
+            (project_value value::expr))
+
+        // An item to be projected in a `SELECT`-list.
+        (sum project_item
+            // For `.*` in SELECT list
+            (project_all expr::expr)
+            // For `<expr> [AS <id>]`
+            (project_expr expr::expr as_alias::(? symbol)))
+
+        // A list of LET bindings
+        (product let let_bindings::(* let_binding 1))
+
+        // A LET binding
+        (product let_binding expr::expr name::symbol)
+
+        // Models the FROM clause of an SFW query
+        // Note that modeling `scan` and `unpivot` separately is effectively re-introducing the same problem described
+        // here: https://github.com/partiql/partiql-lang-kotlin/issues/39 . We should consider removing both the `scan`
+        // and `unpivot` nodes and replacing them with `from_let` node that has an element indicating if it is a `scan
+        // or from ``and add another element to scan to indicate if this `scan` or `unpivot`. Something along the lines of:
+        // https://github.com/partiql/partiql-lang-kotlin/issues/242
+        //     (sum from_let_type (scan) (unpivot))
+        //     (sum from_source
+        //          (from_let expr from_let_type (? symbol) (? symbol) (? symbol))
+        //          (join ...))
+        (sum from_source
+            // <expr> [AS <id>] [AT <id>] [BY <id>]
+            (scan expr::expr as_alias::(? symbol) at_alias::(? symbol) by_alias::(? symbol))
+
+            // UNPIVOT <expr> [AS <id>] [AT <id>] [BY <id>]
+            (unpivot expr::expr as_alias::(? symbol) at_alias::(? symbol) by_alias::(? symbol))
+
+            // <from_source> JOIN [INNER | LEFT | RIGHT | FULL] <from_source> ON <expr>
+            (join type::join_type left::from_source right::from_source predicate::(? expr))
+        )
+
+        // Indicates the logical type of join.
+        (sum join_type (inner) (left) (right) (full))
+
+        // The direction of an edge
+        // | Orientation               | Edge pattern | Abbreviation |
+        // |---------------------------+--------------+--------------|
+        // | Pointing left             | <−[ spec ]−  | <−           |
+        // | Undirected                | ~[ spec ]~   | ~            |
+        // | Pointing right            | −[ spec ]−>  | −>           |
+        // | Left or undirected        | <~[ spec ]~  | <~           |
+        // | Undirected or right       | ~[ spec ]~>  | ~>           |
+        // | Left or right             | <−[ spec ]−> | <−>          |
+        // | Left, undirected or right | −[ spec ]−   | −            |
+        //
+        // Fig. 5. Table of edge patterns:
+        // https://arxiv.org/abs/2112.06217
+        (sum graph_match_direction
+             (edge_left)
+             (edge_undirected)
+             (edge_right)
+             (edge_left_or_undirected)
+             (edge_undirected_or_right)
+             (edge_left_or_right)
+             (edge_left_or_undirected_or_right))
+
+        // A part of a graph pattern
+        (sum graph_match_pattern_part
+             // A single node in a graph pattern.
+             (node
+                 prefilter::(? expr)   // an optional node pre-filter, e.g.: `WHERE c.name='Alarm'` in `MATCH (c WHERE c.name='Alarm')`
+                 variable::(? symbol)  // the optional element variable of the node match, e.g.: `x` in `MATCH (x)`
+                 label::(* symbol 0))  // the optional label(s) to match for the node, e.g.: `Entity` in `MATCH (x:Entity)`
+
+             // A single edge in a graph pattern.
+             (edge
+                 direction::graph_match_direction       // edge direction
+                 quantifier::(? graph_match_quantifier) // an optional quantifier for the entire pattern match, e.g. `{2,5}` in `MATCH (a:Account)−[:Transfer]−>{2,5}(b:Account)`
+                 prefilter::(? expr)   // an optional edge pre-filter, e.g.: `WHERE t.capacity>100` in `MATCH −[t:hasSupply WHERE t.capacity>100]−>`
+                 variable::(? symbol)  // the optional element variable of the edge match, e.g.: `t` in `MATCH −[t]−>`
+                 label::(* symbol 0))  // the optional label(s) to match for the edge. e.g.: `Target` in `MATCH −[t:Target]−>`
+             // A sub-pattern.
+             (pattern pattern::graph_match_pattern))
+
+        // A quantifier for graph edges or patterns. (e.g., the `{2,5}` in `MATCH (x)->{2,5}(y)`)
+        (product graph_match_quantifier lower::int upper::(? int))
+
+        // A path restrictor
+        // | Keyword        | Description
+        // |----------------+--------------
+        // | TRAIL          | No repeated edges.
+        // | ACYCLIC        | No repeated nodes.
+        // | SIMPLE         | No repeated nodes, except that the ﬁrst and last nodes may be the same.
+        //
+        // Fig. 7. Table of restrictors:
+        // https://arxiv.org/abs/2112.06217
+        (sum graph_match_restrictor
+             (restrictor_trail)
+             (restrictor_acyclic)
+             (restrictor_simple))
+
+        // A single graph match pattern.
+        (product graph_match_pattern
+             restrictor::(? graph_match_restrictor)
+             prefilter::(? expr)    // an optional pattern pre-filter, e.g.: `WHERE a.name=b.name` in `MATCH [(a)->(b) WHERE a.name=b.name]`
+             variable::(? symbol)   // the optional element variable of the pattern, e.g.: `p` in `MATCH p = (a) −[t]−> (b)`
+             quantifier::(? graph_match_quantifier) // an optional quantifier for the entire pattern match, e.g. `{2,5}` in `MATCH (a:Account)−[:Transfer]−>{2,5}(b:Account)`
+             parts::(* graph_match_pattern_part 1)) // the ordered pattern parts
+
+        // A path selector
+        // | Keyword
+        // |------------------
+        // | ANY SHORTEST
+        // | ALL SHORTEST
+        // | ANY
+        // | ANY k
+        // | SHORTEST k
+        // | SHORTEST k GROUP
+        //
+        // Fig. 8. Table of restrictors:
+        // https://arxiv.org/abs/2112.06217
+        (sum graph_match_selector
+             (selector_any_shortest)
+             (selector_all_shortest)
+             (selector_any)
+             (selector_any_k k::int)
+             (selector_shortest_k k::int)
+             (selector_shortest_k_group k::int))
+
+        // A graph pattern as defined in GPML
+        // See https://arxiv.org/abs/2112.06217
+        (product gpml_pattern
+                 selector::(? graph_match_selector)
+                 patterns::(* graph_match_pattern 1))
+
+
+        // A generic pair of expressions.  Used in the `struct`, `searched_case` and `simple_case` expr variants above.
+        (product expr_pair first::expr second::expr)
+
+        // A list of expr_pair. Used in the `struct`, `searched_case` and `simple_case` expr variants above.
+        (product expr_pair_list pairs::(* expr_pair 0))
+
+        // GROUP BY <grouping_strategy> <group_key_list>... [AS <symbol>]
+        (product group_by
+            strategy::grouping_strategy
+            // Note that `group_key_list` is a separate type instead of a variadic element because of the
+            // PIG limitation that product types cannot have both optional and variadic elements.
+            key_list::group_key_list
+            group_as_alias::(? symbol))  // `GROUP AS` alias
+
+        // Desired grouping qualifier:  ALL or PARTIAL.  Note: the `group_` prefix is needed to avoid naming clashes.
+        (sum grouping_strategy
+            (group_full)
+            (group_partial))
+
+        // <group_key>[, <group_key>]...
+        (product group_key_list keys::(* group_key 1))
+
+        // <expr> [AS <symbol>]
+        (product group_key expr::expr as_alias::(? symbol))
+
+        // ORDER BY <sort_spec>...
+        (product order_by sort_specs::(* sort_spec 1))
+
+        // <expr> [ASC | DESC] [NULLS FIRST | NULLS LAST]
+        (product sort_spec expr::expr ordering_spec::(? ordering_spec) nulls_spec::(? nulls_spec))
+
+        // Desired ordering spec: ASC or DESC
+        (sum ordering_spec
+            (asc)
+            (desc)
+        )
+
+        // Desired null/missing ordering spec: NULLS FIRST or NULLS LAST
+        (sum nulls_spec
+             (nulls_first)
+             (nulls_last)
+        )
+
+        // Over clause of a window function.
+        // OVER ([PARTITION BY <expr> [, <expr>]... ] [ORDER BY <sort_spec> [, <sort_spec>]... ])
+        // TODO: In the future, we need to add support for custom declared frame clause
+        // TODO: Remove from experimental once https://github.com/partiql/partiql-docs/issues/31 is resolved and a RFC is approved
+        (product over partition_by::(? window_partition_list ) order_by::(? window_sort_spec_list ) )
+
+        // <expr>[, <expr>]...
+        (product window_partition_list exprs::(* expr 1 ))
+
+        // <sort_spec>[, <sort_spec>]...
+        (product window_sort_spec_list sort_specs::(* sort_spec 1 ))
+
+        // Indicates if variable lookup should be case-sensitive or not.
+        (sum case_sensitivity (case_sensitive) (case_insensitive))
+
+        // Indicates scope search order when resolving variables.  Has no effect except within `FROM` sources.
+        (sum scope_qualifier
+            // Use the default search order.
+            (unqualified)
+            // Skip the globals first check within FROM sources and resolve starting with the local scope.
+            (locals_first))
+
+        // Indicates if a set should be reduced to its distinct elements or not.
+        (sum set_quantifier (all) (distinct))
+
+        (sum bag_op_type (union) (intersect) (except) (outer_union) (outer_intersect) (outer_except))
+
+        // A Data Manipulation Operation.
+        // TODO:  domain of `expr` is too broad for several elements below: https://github.com/partiql/partiql-lang-kotlin/issues/243
+        (product dml_op_list ops::(* dml_op 1))
+
+        (sum dml_op
+            // See the following RFC for more details:
+            // https://github.com/partiql/partiql-docs/blob/main/RFCs/0011-partiql-insert.md
+            (insert target::expr values::expr conflict_action::(? conflict_action))
+
+            // `INSERT INTO <expr> VALUE <expr> [AT <expr>]` [ON CONFLICT WHERE <expr> DO NOTHING]`
+            (insert_value target::expr value::expr index::(? expr) on_conflict::(? on_conflict))
+
+            // `SET <assignment>...`
+            (set assignment::assignment)
+
+            // `REMOVE <expr>`
+            (remove target::expr)
+
+            // DELETE
+            (delete)
+         )
+
+        // `ON CONFLICT WHERE <expr> <conflict_action>`
+        (product on_conflict expr::expr conflict_action::conflict_action)
+
+        // `CONFLICT_ACTION <action>`
+        (sum conflict_action
+            (do_replace value::on_conflict_value)
+            (do_update value::on_conflict_value)
+            (do_nothing))
+
+        (sum on_conflict_value
+            (excluded))
+
+        // A data definition operation.
+        (sum ddl_op
+            // `CREATE TABLE <symbol>`
+            (create_table table_name::symbol)
+
+            // `DROP TABLE <identifier>`
+            (drop_table table_name::identifier)
+
+            // `CREATE INDEX ON <identifier> (<expr> [, <expr>]...)`
+            // TODO: add optional table name
+            (create_index index_name::identifier fields::(* expr 1))
+
+
+            // DROP INDEX <identifier> ON <identifier>
+            // In Statement, first <identifier> represents keys, second represents table
+            (drop_index
+                (table identifier)
+                (keys identifier)))
+
+        // `RETURNING (<returning_elem> [, <returning_elem>]...)`
+        (product returning_expr elems::(* returning_elem 1))
+
+        // `<returning mapping> (<expr> [, <expr>]...)`
+        (product returning_elem mapping::returning_mapping column::column_component)
+
+        (sum column_component
+            (returning_wildcard)
+            (returning_column expr::expr)
+        )
+
+        // ( MODIFIED | ALL ) ( NEW | OLD )
+        (sum returning_mapping
+            (modified_new)
+            (modified_old)
+            (all_new)
+            (all_old)
+        )
+
+        // `identifier` can be used for names that need to be looked up with a notion of case-sensitivity.
+
+        // For both `create_index` and `create_table`, there is no notion of case-sensitivity
+        // for table identifiers since they are *defining* new identifiers.  However, for `drop_index` and
+        // `drop_table` *do* have the notion of case sensitivity since they are referring to existing names.
+        // Identifiers with case-sensitivity is already modeled with the `id` variant of `expr`,
+        // but there is no way to specify to PIG that we want to only allow a single variant of a sum as
+        // an element of a type.  (Even though in the Kotlin code each varaint is its own type.)  Hence, we
+        // define an `identifier` type above which can be used without opening up an element's domain to all of
+        // `expr`.
+        (product identifier name::symbol case::case_sensitivity)
+
+        // Represents `<expr> = <expr>` in a DML SET operation.  Note that in this case, `=` is representing
+        // an assignment operation and *not* the equality operator.
+        (product assignment target::expr value::expr)
+
+        // Represents all possible PartiQL data types. (`_type` suffixes below prevent naming clashes.)
+        (sum type
+
+            // SQL-92 types
+            // `NULL`
+            (null_type)
+
+            // `BOOL`
+            (boolean_type)
+
+            // `SMALLINT`
+            (smallint_type)
+
+            // `INT4` 4-byte integer
+            (integer4_type)
+
+            // `INT8` 8-byte integer
+            (integer8_type)
+
+            // `INT`
+            (integer_type)
+
+            // `FLOAT`
+            (float_type precision::(? int))
+
+            // `REAL`
+            (real_type)
+
+            // `DOUBLE_PRECISION`
+            (double_precision_type)
+
+            // `DECIMAL[(<int> [, int])]`.  Elements are precision then scale.
+            (decimal_type precision::(? int) scale::(? int))
+
+            // `NUMERIC[(<int> [, int])]`.  Elements are precision then scale.
+            (numeric_type precision::(? int) scale::(? int))
+
+            // `TIMESTAMP`
+            (timestamp_type)
+
+            // `CHAR(<int>)`
+            (character_type length::(? int))
+
+            // `VARCHAR`
+            (character_varying_type length::(? int))
+
+            // PartiQL types.
+            (missing_type)
+            (string_type)
+            (symbol_type)
+            (blob_type)
+            (clob_type)
+            (date_type)
+
+            // TIME : timezoneSpecified is 1 if time zone is specified else 0
+            //        precision is defaulted to the length of the mantissa of the second's value if the precision is not specified.
+            // Note: This logic is implemented in SqlParser.
+            (time_type precision::(? int))
+            (time_with_time_zone_type precision::(? int))
+
+            (struct_type)
+            (tuple_type)
+            (list_type)
+            (sexp_type)
+            (bag_type)
+
+            // Special types
+            (any_type)
+
+            (custom_type name::symbol)
+        )
+
+
+    ) // end of domain
+) // end of define
+
+// Same as partiql_ast, but without the syntactic representation of SFW queries and introduces PartiQL's relational
+// algebra.  Also removes some nodes not (yet) supported by the query planner and plan evaluator.
+(define partiql_logical
+    (permute_domain partiql_ast
+        (include
+            // This is the new top-level node for plans that are intended to be persisted to storage or survive across
+            // boundaries.  These need to include a version number so at least it is possible to know if a persisted
+            // plan is compatible with the current version of PartiQL.
+            (record plan
+                (stmt statement)
+                (version symbol) // This should really be a string: https://github.com/partiql/partiql-ir-generator/issues/122
+            )
+
+            // Defines a field within a struct constructor or an expression which is expected to be a container
+            // that is included in the final struct.
+            (sum struct_part
+                // For `.*` in SELECT list
+                // If `<part_expr>` is a struct, the fields of that struct will be part of the merged struct.
+                // If `<part_expr>` is not a struct, The field `_n` will be included in the struct, where `n` is the
+                // ordinal of the field in the final merged struct. If `<part_expr>` returns a container that is not a
+                // struct, field names will be assigned in the format of `_n` where `n` is the ordinal position of the
+                // field within the merged struct.  If `<part_expr>` returns a scalar value, it will be coerced into a
+                // singleton bag and the previous logic will apply.
+                (struct_fields part_expr::expr)
+
+                // For `<expr> [AS <id>]`.  If `field_name` returns a non-text value, in legacy mode an exception
+                // will be thrown.  In permissive mode, the field will be excluded from the final struct.
+                (struct_field field_name::expr value::expr))
+        )
+
+        (with expr
+            // Remove the select and struct node from the `expr` sum type, which will be replaced below.
+            // Remove the call_window node from the `expr` sum type, because the call_window contains two parts:
+            // Window specification and window function, we want to define a stand alone operator for this
+            (exclude select struct call_window)
+              
+            // CallAgg's such as SUM, MIN, MAX, etc. either become calls to built-in-functions (example: call COLL_SUM)
+            // or aggregate functions within the logical aggregate operator.
+            (exclude call_agg)
+
+            (include
+                // Invokes `exp` once in the context of every binding tuple returned by `query`, returning a
+                // collection of values produced by `exp`.  The returned collection's type (bag or list) is the same
+                // as the bindings collection returned by `query`.
+                (bindings_to_values exp::expr query::bexpr)
+
+                // `struct` is the primary struct constructor and also encapsulates semantics needed for
+                // `SELECT <expr>.*`, and `SELECT <expr> AS y`.  It can be used as a regular struct constructor, or as
+                // a struct-union expression.
+                //
+                // Example as struct constructor:
+                //    (struct
+                //        (struct_field (lit a) (lit 42))
+                //        (struct_field (lit b) (lit 43)))
+                // Returns: { a: 42, b: 43 }
+                //
+                // Example as a struct-union. Given a global environment with `foo` bound to `{ a: 42 }` and `bar`
+                // bound to `{ b: 43}`, then:
+                //     (struct
+                //         (struct_fields (id foo))
+                //         (struct_fields (id bar)))
+                // Returns { a: 42, b: 43 }
+                // Note that `struct_field` and `struct_fields` may be used in combination:
+                //     (struct
+                //         (struct_fields (id foo))
+                //         (struct_fields (id bar))
+                //         (struct_field (lit c) (lit 44)))
+                // Returns { a: 42, b: 43, c: 44 }
+                //
+                // TODO:  in the future, when the legacy AST compiler has been removed and the AST is no longer
+                // part of the public API, we should consider moving this definition to the partiql_ast domain.
+                (struct parts::(* struct_part 1))
+
+                // The PIVOT clause produces a single tuple whose attributes are the key and value expression evaluated
+                //   for all input tuples. The tuple is a value, not a bindings expr, hence why this isn't an operator.
+                (pivot input::bexpr key::expr value::expr)
+            )
+        )
+
+        // These should be excluded as well since they were referenced only by the `select` variant of `expr`, which
+        // was excluded above.
+        (exclude
+            project_item
+            projection
+            from_source
+        )
+
+        // Change let_binding so that it has a var_decl instead of only a name to represent bindings.
+        (exclude let_binding)
+        (include (product let_binding value::expr decl::var_decl))
+
+        // Inputs to Aggregations
+        (include
+            (product group_key
+                     expr::expr
+                     as_var::var_decl
+            )
+            (product group_key_list
+                     keys::(* group_key 1)
+            )
+            (product aggregate_function
+                quantifier::set_quantifier
+                name::symbol
+                arg::expr
+                as_var::var_decl
+            )
+            (product aggregate_function_list
+                functions::(* aggregate_function 1)
+            )
+        )
+
+        (include (product window_expression decl::var_decl func_name::symbol args::(* expr 1)))
+
+        // Now we include new stuff, including PartiQL's relational algebra.
+        (include
+            // Every instance of `var_decl` introduces a new binding in the current scope.
+            // Every part of the AST that can introduce a variable should be represented with one of these nodes.
+            // Examples of variable declarations include:
+            // - The `AS`, `AT`, and `BY` sub-clauses in `FROM`
+            // - The `AS` sub-clauses in within a `LET` clause.
+            // - The `AS` and `AT` names specified with, `PIVOT`, i.e. `PIVOT x AS y AT z`
+            // Note that `AS` aliases specified in a select list (i.e. `SELECT x AS y`) are *not* variables, they are
+            // fields.
+            // Modeling this with a separate node (as opposed to just a symbol) is beneficial because it is easy to
+            // identify all variable declarations within a logical plan during tree traversal, and because in later
+            // permuted domains we can add information to this type such as the variable's assigned index.
+            // Elements:
+            // - `name`: the name of the variable as specified by the query author or determined statically.
+            (product var_decl name::symbol)
+
+            // The operators of PartiQL's relational algebra.
+            (sum bexpr
+                // Converts a value collection to a bindings collection.  Not used to perform physical reads.  (For
+                // that, see bexpr.project in the partiql_physical domain.)  If evaluating `expr` results in a scalar
+                // value, it is converted into a singleton bag.
+                (scan expr::expr as_decl::var_decl at_decl::(? var_decl) by_decl::(? var_decl))
+
+                 // Similar to scan, the unpivot operator converts a value collection to a binding collection.
+                 // The logical plan uses unpivot operator in place of the AST's unpivot from_source node.
+                (unpivot expr::expr as_decl::var_decl at_decl::(? var_decl) by_decl::(? var_decl))
+
+                // Evaluates `predicate` within the scope of every row of `bexpr`, and only returns those
+                // rows for which `predicate` returns true.
+                (filter predicate::expr source::bexpr)
+
+                // The relational algebra operator for aggregations. Using the output scope of the `source` and any
+                //  passed input scope, we group on the `group_key_list` calculate aggregations using the
+                //  `aggregate_function_list`. To note: GROUP AS is represented as an aggregation function
+                (aggregate
+                     source::bexpr
+                     strategy::grouping_strategy
+                     group_list::group_key_list
+                     function_list::aggregate_function_list
+                )
+
+                // Basic join operator.  Covers cross, inner, left, right and full joins.
+                // To represent a cross join, set `predicate` to `null`.
+                (join
+                    join_type::join_type
+                    left::bexpr
+                    right::bexpr
+                    predicate::(? expr)
+                )
+
+                (window
+                    source:: bexpr
+                    window_specification:: over
+                    window_expression_list:: (* window_expression 1)
+                )
+
+                 // Converts a bindings collection into a sorted bindings collection.
+                (sort source::bexpr sort_specs::(* sort_spec 1))
+
+                // Skips `row_count` rows, then emits all remaining rows.
+                (offset row_count::expr source::bexpr)
+
+                // Emits `row_count` rows, discards all remaining rows.
+                (limit row_count::expr source::bexpr)
+
+                // For every row of `source`, adds each specified `let_binding`.
+                (let source::bexpr bindings::(* let_binding 1))
+            )
+        )
+
+        (include
+            // Indicates kind of DML operation.
+            (sum dml_operation
+                (dml_insert)
+                (dml_delete)
+                (dml_replace)
+                (dml_update)
+            )
+        )
+
+        // Redefine statement.dml to be a simpler subset of the full DML functionality expressed with PartiQL's DML
+        // syntax.  Full functionality is out of scope for now.  This is factored minimally to support
+        // `INSERT INTO` and `DELETE FROM ... [WHERE <predicate>]` but this may need refactoring when
+        // `FROM ... UPDATE` and `UPDATE` is supported later.
+        (with statement
+            (exclude dml)
+            (include
+                // A DML operation, such as `INSERT`, `UPDATE` or `DELETE`
+                (dml
+                    // The target is an expression that is indicates the table whose data is to be manipulated.
+                    // With current PartiQL Parser `SqlParser`, this can be an identifier or a simplified path expression
+                    // consisting of only literal path steps (and with no wildcard or unpivot operators).
+                    // Note: partiql_ast uses the `expr` sum type for this, which is too broad.  We're not
+                    // changing that at this time because `partiql_ast` is established public API.
+                    target::identifier
+                    operation::dml_operation
+                    rows::expr
+                )
+            )
+        )
+
+        // Nodes excluded below this line will eventually have a representation in the logical algebra, but not
+        // initially.
+
+        (with statement (exclude ddl))
+
+        (exclude
+            group_by
+            group_key
+            group_key_list
+            order_by             // Replaced with SORT node
+            let
+            dml_op
+            dml_op_list
+            ddl_op
+            conflict_action
+            on_conflict
+            returning_expr
+            returning_elem
+            column_component
+            returning_mapping
+            assignment
+        )
+    )
+)
+
+// partiql_logical_resolved is a variation of partiql_logical wherein all variable declarations have been allocated
+// unique identifiers and variable references have been resolved.   The first set of optimizations such as partial
+// push-downs of filters and projections may be applied to this domain.
+(define partiql_logical_resolved
+    (permute_domain partiql_logical
+        // Add `locals` to `plan`.
+        (exclude plan)
+        (include
+            (record plan
+                (stmt statement)
+                (version symbol) // This should really be a string: https://github.com/partiql/partiql-ir-generator/issues/122
+                (locals (* local_variable 0))
+            )
+
+            // Local variables currently include a name and register index.  In the future, something to indicate the
+            // static type of the variable may also be included here.  The index is included explicitly (instead of
+            // allowing it to be identified by ordinal position) simply to allow it to be easily identified by humans
+            // when examining plans with many local variables.
+            (product local_variable name::symbol register_index::int)
+        )
+
+
+        // For `var_decl`, `name` with `index`.  The name of the variable can still be determined by looking at the
+        // `local_variable` with the same index.
+        (exclude var_decl scope_qualifier)
+        (include
+            (product var_decl index::int)
+        )
+
+        (with expr
+            // At this point there should be no undefined variables in the plan.  All variables are rewritten to
+            // `local_id`, `global_id`.
+            (exclude id)
+            (include
+                // A resolved reference to a variable that was defined within a query.  Otherwise known as a local
+                // variable. "Resolved" means that the variable is guaranteed to exist and we know its register index.
+                // Elements:
+                // - `index`: the index of the `var_decl` that this variable refers to, i.e. this always corresponds to
+                // the `var_decl` with the same index.
+                (local_id index::int)
+
+                // Global variable reference--typically a table although it can actually be bound to any value.  Unlike
+                // local variables, global variables are not stored in registers.  Instead, they are typically
+                // retrieved from an implementation defined storage system, persistent or otherwise.  Evaluating a
+                // `global_id` will return a value with an open iterator.  There is no syntactic representation of this
+                // node in PartiQL--`global_id` nodes are produced by the planner during the variable resolution pass
+                // when a variable is resolved to a global variable.
+                // Elements:
+                // - `name`: the original name of the variable, kept mostly just for error reporting purposes.
+                // - `uniqueId`: any Ion value that uniquely identifies the global variable, typically a storage
+                // defined UUID or the name of the table in its original letter case.
+                // The value of `uniqueId` is PartiQL integration defined and can be any symbol that uniquely
+                // identifies the global variable.  Examples include database object ids or the name of the variable
+                // in its the original letter case (as it was defined).
+                (global_id uniqueId::symbol)
+            )
+        )
+
+        // Replace statement.dml.target with statement.dml.uniqueId (the "resolved" corollary).
+        (with statement
+            (exclude dml)
+            (include (dml uniqueId::symbol operation::dml_operation rows::expr))
+        )
+    )
+)
+
+// Redefines `bexpr` of `partiql_logical_resolved` to include an `(impl ...)` node within every operator.  Following
+// transformation from partiql_logical_resolved, the implementation of each `bexpr` will be `(impl default)`.
+// Optimizations on this domain include but are not limited to: selection of `(impl ...)` other than `default` and
+// rewriting of `filter/scan` `mapValues/scan` to perform final push-down of filters and projections, and optimal
+// operator implementation selection (i.e. hash or merge join, etc)
+(define partiql_physical
+    (permute_domain partiql_logical_resolved
+        (include
+            // Identifies an implementation that has been selected for an instance of a physical operator and
+            // identifies any static arguments required. This will initially have the `(impl default)` value, with
+            // different implementations being selected as needed.
+            // Elements:
+            // - `name`: the unique name of the implementation.  Each relational operator has a different namespace
+            // containing its default and custom implementations.
+            // - `static_args`: Any static arguments.  These are arbitrary Ion values and are specific to the
+            // implementation.  These values are made available to the implementation at compile-time and evaluation
+            // time.
+            (product impl name::symbol static_args::(* ion 0))
+        )
+
+        // drop DML stuff added in partiql_logical (these should be rewritten into queries).
+        (exclude dml_operation)
+        (with statement
+            (exclude dml)
+            (include
+                // Include the dml_query variant, so that we know how to interpret the results of the query.
+                (dml_query expr::expr))
+        )
+
+        // Every variant of bexpr changes by adding an `impl` element in the physical algebra, so let's replace it
+        // entirely.
+        (exclude bexpr)
+        (include
+            (sum bexpr
+                // A generic physical read operation.  At the moment, implementations of this operator may only
+                // bind each row read to `binding`.  In the future, `binding` might be replaced with multiple
+                // projection templates (these are Ion like path extractors but are capable of extracting subsets of an
+                // Ion container.)  Examples of physical read operations include:
+                // - full scan
+                // - index scan
+                // - index range scan
+                // - get-row-by-primary key
+                // - and many, others.
+                // The specific read operation represented by this node is determined by the `i::impl` element.
+                (project i::impl binding::var_decl args::(* arguments::expr 0))
+
+                // Operators below this point are the same as in the logical algebra, but also include an i::impl
+                // element.
+                (scan i::impl expr::expr as_decl::var_decl at_decl::(? var_decl) by_decl::(? var_decl))
+                (unpivot i::impl expr::expr as_decl::var_decl at_decl::(? var_decl) by_decl::(? var_decl))
+                (filter i::impl predicate::expr source::bexpr)
+                (join
+                    i::impl
+                    join_type::join_type
+                    left::bexpr
+                    right::bexpr
+                    predicate::(? expr))
+
+                (sort i::impl source::bexpr sort_specs::(* sort_spec 1))
+
+                (aggregate
+                    i::impl
+                    source::bexpr
+                    strategy::grouping_strategy
+                    group_list::group_key_list
+                    function_list::aggregate_function_list
+                )
+
+                (offset i::impl row_count::expr source::bexpr)
+                (limit i::impl row_count::expr source::bexpr)
+                (let i::impl source::bexpr bindings::(* let_binding 1))
+                // Notice that the physical window operator contains a list of window expression
+                // That is because, we want to combine the window functions that are operating on the same window to a single window operator
+                (window i::impl source:: bexpr window_specification:: over window_expression_list:: (* window_expression 1))
+            )
+        )
+    )
+)
