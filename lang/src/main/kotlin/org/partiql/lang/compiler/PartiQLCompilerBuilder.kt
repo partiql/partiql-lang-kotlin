@@ -16,6 +16,7 @@ package org.partiql.lang.compiler
 
 import com.amazon.ion.IonSystem
 import com.amazon.ion.system.IonSystemBuilder
+import org.partiql.annotation.PartiQLExperimental
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.ThunkReturnTypeAssertions
@@ -35,7 +36,6 @@ import org.partiql.lang.eval.physical.operators.UnpivotOperatorFactoryDefault
 import org.partiql.lang.eval.physical.operators.WindowRelationalOperatorFactoryDefault
 import org.partiql.lang.planner.EvaluatorOptions
 import org.partiql.lang.types.CustomType
-import org.partiql.lang.util.PartiQLExperimental
 
 /**
  * Builder class to instantiate a [PartiQLCompiler].

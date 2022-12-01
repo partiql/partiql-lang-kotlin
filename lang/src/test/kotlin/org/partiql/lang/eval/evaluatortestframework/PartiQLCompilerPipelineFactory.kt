@@ -1,5 +1,6 @@
 package org.partiql.lang.eval.evaluatortestframework
 
+import org.partiql.annotation.PartiQLExperimental
 import org.partiql.lang.ION
 import org.partiql.lang.compiler.PartiQLCompilerBuilder
 import org.partiql.lang.compiler.PartiQLCompilerPipeline
@@ -14,7 +15,6 @@ import org.partiql.lang.planner.GlobalVariableResolver
 import org.partiql.lang.planner.PartiQLPlanner
 import org.partiql.lang.planner.PartiQLPlannerBuilder
 import org.partiql.lang.syntax.PartiQLParserBuilder
-import org.partiql.lang.util.PartiQLExperimental
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNull
 

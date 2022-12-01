@@ -14,6 +14,7 @@
 
 package org.partiql.lang.compiler
 
+import org.partiql.annotation.PartiQLExperimental
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.PartiqlLogical
 import org.partiql.lang.domains.PartiqlLogicalResolved
@@ -42,7 +43,6 @@ import org.partiql.lang.planner.DmlAction
 import org.partiql.lang.planner.EvaluatorOptions
 import org.partiql.lang.planner.PartiQLPlanner
 import org.partiql.lang.types.TypedOpParameter
-import org.partiql.lang.util.PartiQLExperimental
 
 @PartiQLExperimental
 internal class PartiQLCompilerDefault(

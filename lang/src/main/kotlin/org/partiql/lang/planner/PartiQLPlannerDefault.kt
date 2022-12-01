@@ -14,6 +14,7 @@
 
 package org.partiql.lang.planner
 
+import org.partiql.annotation.PartiQLExperimental
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.PartiqlLogical
 import org.partiql.lang.domains.PartiqlLogicalResolved
@@ -34,7 +35,6 @@ import org.partiql.lang.planner.transforms.LogicalToLogicalResolvedVisitorTransf
 import org.partiql.lang.planner.transforms.allocateVariableIds
 import org.partiql.lang.planner.validators.PartiqlLogicalResolvedValidator
 import org.partiql.lang.planner.validators.PartiqlLogicalValidator
-import org.partiql.lang.util.PartiQLExperimental
 import org.partiql.pig.runtime.asPrimitive
 
 @PartiQLExperimental

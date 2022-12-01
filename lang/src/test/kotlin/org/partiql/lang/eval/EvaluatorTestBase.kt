@@ -16,6 +16,7 @@ package org.partiql.lang.eval
 
 import com.amazon.ion.IonType
 import com.amazon.ion.IonValue
+import org.partiql.annotation.PartiQLExperimental
 import org.partiql.lang.CUSTOM_TEST_TYPES
 import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.ION
@@ -33,7 +34,6 @@ import org.partiql.lang.eval.evaluatortestframework.MultipleTestAdapter
 import org.partiql.lang.eval.evaluatortestframework.PartiQLCompilerPipelineFactory
 import org.partiql.lang.eval.evaluatortestframework.PipelineEvaluatorTestAdapter
 import org.partiql.lang.eval.evaluatortestframework.VisitorTransformBaseTestAdapter
-import org.partiql.lang.util.PartiQLExperimental
 import org.partiql.lang.util.asSequence
 import org.partiql.lang.util.newFromIonText
 

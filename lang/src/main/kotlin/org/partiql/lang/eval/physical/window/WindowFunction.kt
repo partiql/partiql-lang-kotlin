@@ -1,10 +1,10 @@
 package org.partiql.lang.eval.physical.window
 
+import org.partiql.annotation.PartiQLExperimental
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.physical.EvaluatorState
 import org.partiql.lang.eval.physical.operators.ValueExpression
-import org.partiql.lang.util.PartiQLExperimental
 
 // TODO: Remove from experimental once https://github.com/partiql/partiql-docs/issues/31 is resolved and a RFC is approved
 @PartiQLExperimental

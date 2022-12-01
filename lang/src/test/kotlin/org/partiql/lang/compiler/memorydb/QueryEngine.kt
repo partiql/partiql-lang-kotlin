@@ -1,6 +1,7 @@
 package org.partiql.lang.compiler.memorydb
 
 import com.amazon.ionelement.api.toIonValue
+import org.partiql.annotation.PartiQLExperimental
 import org.partiql.lang.ION
 import org.partiql.lang.compiler.PartiQLCompilerPipeline
 import org.partiql.lang.compiler.memorydb.operators.GetByKeyProjectRelationalOperatorFactory
@@ -23,7 +24,6 @@ import org.partiql.lang.planner.transforms.optimizations.createRemoveUselessAnds
 import org.partiql.lang.planner.transforms.optimizations.createRemoveUselessFiltersPass
 import org.partiql.lang.types.BagType
 import org.partiql.lang.types.StructType
-import org.partiql.lang.util.PartiQLExperimental
 import org.partiql.lang.util.SexpAstPrettyPrinter
 import org.partiql.pig.runtime.DomainNode
 import java.util.UUID

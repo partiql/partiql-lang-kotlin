@@ -14,6 +14,7 @@
 
 package org.partiql.lang.compiler
 
+import org.partiql.annotation.PartiQLExperimental
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.errors.PartiQLException
@@ -22,7 +23,6 @@ import org.partiql.lang.planner.PartiQLPlanner
 import org.partiql.lang.planner.PartiQLPlannerBuilder
 import org.partiql.lang.syntax.Parser
 import org.partiql.lang.syntax.PartiQLParserBuilder
-import org.partiql.lang.util.PartiQLExperimental
 
 /**
  * [PartiQLCompilerPipeline] is the top-level class for embedded usage of PartiQL.

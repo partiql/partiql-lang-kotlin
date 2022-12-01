@@ -1,9 +1,9 @@
 package org.partiql.lang.eval.physical.operators
 
+import org.partiql.annotation.PartiQLExperimental
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.eval.physical.SetVariableFunc
 import org.partiql.lang.eval.physical.window.WindowFunction
-import org.partiql.lang.util.PartiQLExperimental
 
 // TODO: Remove from experimental once https://github.com/partiql/partiql-docs/issues/31 is resolved and a RFC is approved
 @PartiQLExperimental

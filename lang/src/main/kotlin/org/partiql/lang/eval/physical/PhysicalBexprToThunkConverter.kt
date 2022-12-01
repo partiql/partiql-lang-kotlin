@@ -2,6 +2,7 @@ package org.partiql.lang.eval.physical
 
 import com.amazon.ionelement.api.BoolElement
 import com.amazon.ionelement.api.MetaContainer
+import org.partiql.annotation.PartiQLExperimental
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.eval.ExprValueFactory
@@ -29,7 +30,6 @@ import org.partiql.lang.eval.physical.operators.UnpivotOperatorFactory
 import org.partiql.lang.eval.physical.operators.WindowRelationalOperatorFactory
 import org.partiql.lang.eval.physical.operators.valueExpression
 import org.partiql.lang.eval.physical.window.createBuiltinWindowFunction
-import org.partiql.lang.util.PartiQLExperimental
 import org.partiql.lang.util.toIntExact
 
 /** A specialization of [Thunk] that we use for evaluation of physical plans. */

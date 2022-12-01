@@ -4,6 +4,7 @@ import com.amazon.ionelement.api.ionSymbol
 import org.junit.jupiter.api.fail
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
+import org.partiql.annotation.PartiQLExperimental
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.errors.Problem
 import org.partiql.lang.errors.ProblemHandler
@@ -21,7 +22,6 @@ import org.partiql.lang.types.BagType
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.types.StructType
 import org.partiql.lang.util.ArgumentsProviderBase
-import org.partiql.lang.util.PartiQLExperimental
 
 private const val FAKE_GET_BY_KEY_PROJECT_OPERATOR_NAME = "foo"
 private const val TABLE_WITH_1_FIELD_PK = "table_with_1_field_pk"

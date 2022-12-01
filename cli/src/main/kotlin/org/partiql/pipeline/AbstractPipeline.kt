@@ -16,6 +16,7 @@ package org.partiql.pipeline
 
 import com.amazon.ion.IonSystem
 import com.amazon.ion.system.IonSystemBuilder
+import org.partiql.annotation.PartiQLExperimental
 import org.partiql.cli.Pipeline
 import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.compiler.PartiQLCompilerBuilder
@@ -36,7 +37,6 @@ import org.partiql.lang.planner.GlobalVariableResolver
 import org.partiql.lang.planner.PartiQLPlannerBuilder
 import org.partiql.lang.syntax.Parser
 import org.partiql.lang.syntax.PartiQLParserBuilder
-import org.partiql.lang.util.PartiQLExperimental
 import java.time.ZoneOffset
 
 /**

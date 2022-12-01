@@ -2,6 +2,7 @@ package org.partiql.lang.util.testdsl
 
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
+import org.partiql.annotation.PartiQLExperimental
 import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.ION
 import org.partiql.lang.eval.CompileOptions
@@ -17,7 +18,6 @@ import org.partiql.lang.eval.evaluatortestframework.PartiQLCompilerPipelineFacto
 import org.partiql.lang.eval.evaluatortestframework.PipelineEvaluatorTestAdapter
 import org.partiql.lang.mockdb.MockDb
 import org.partiql.lang.syntax.PartiQLParser
-import org.partiql.lang.util.PartiQLExperimental
 
 /** Defines a test case for query evaluation. */
 data class IonResultTestCase(

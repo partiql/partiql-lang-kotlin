@@ -1,5 +1,6 @@
 package org.partiql.lang.eval.physical.operators
 
+import org.partiql.annotation.PartiQLExperimental
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.NaturalExprValueComparators
 import org.partiql.lang.eval.exprEquals
@@ -8,7 +9,6 @@ import org.partiql.lang.eval.relation.RelationIterator
 import org.partiql.lang.eval.relation.RelationType
 import org.partiql.lang.eval.relation.relation
 import org.partiql.lang.planner.transforms.DEFAULT_IMPL_NAME
-import org.partiql.lang.util.PartiQLExperimental
 
 /**
  * This is an experimental implementation of the window operator

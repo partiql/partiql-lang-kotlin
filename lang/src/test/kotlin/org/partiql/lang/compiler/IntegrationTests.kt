@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import org.partiql.annotation.PartiQLExperimental
 import org.partiql.lang.ION
 import org.partiql.lang.compiler.memorydb.MemoryDatabase
 import org.partiql.lang.compiler.memorydb.QueryEngine
@@ -11,7 +12,6 @@ import org.partiql.lang.eval.BAG_ANNOTATION
 import org.partiql.lang.eval.BindingCase
 import org.partiql.lang.eval.BindingName
 import org.partiql.lang.eval.toIonValue
-import org.partiql.lang.util.PartiQLExperimental
 
 @PartiQLExperimental
 class TestContext {
