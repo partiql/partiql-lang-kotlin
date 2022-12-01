@@ -10,8 +10,8 @@ import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.TypingMode
 import org.partiql.lang.eval.cloneAndRemoveBagAndMissingAnnotations
 import org.partiql.lang.eval.exprEquals
-import org.partiql.lang.strictEquals
 import org.partiql.lang.eval.toIonValue
+import org.partiql.lang.strictEquals
 
 internal class PipelineEvaluatorTestAdapter(
     private val pipelineFactory: PipelineFactory
@@ -187,7 +187,7 @@ internal class PipelineEvaluatorTestAdapter(
                 assertNull(
                     tc.expectedPermissiveModeResult,
                     "An expectedPermissiveModeResult must not be specified when " +
-                            "ErrorCode.errorBehaviorInPermissiveMode is set to THROW_EXCEPTION"
+                        "ErrorCode.errorBehaviorInPermissiveMode is set to THROW_EXCEPTION"
                 )
 
                 // Run the query once in permissive mode.
@@ -209,7 +209,7 @@ internal class PipelineEvaluatorTestAdapter(
                 assertNotNull(
                     tc.expectedPermissiveModeResult,
                     "Required non null expectedPermissiveModeResult when ErrorCode.errorBehaviorInPermissiveMode is " +
-                            "set to ErrorBehaviorInPermissiveMode.RETURN_MISSING"
+                        "set to ErrorBehaviorInPermissiveMode.RETURN_MISSING"
                 )
 
                 // Compute the expected return value

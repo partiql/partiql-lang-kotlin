@@ -7,8 +7,8 @@ import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.dateValue
 import org.partiql.lang.eval.name
 import org.partiql.lang.eval.timeValue
-import java.math.BigDecimal
 import org.partiql.lang.eval.toIonValue
+import java.math.BigDecimal
 
 private const val MISSING_STRING = "MISSING"
 private const val NULL_STRING = "NULL"
