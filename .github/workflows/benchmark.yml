@@ -1,4 +1,4 @@
-name: JMH Example
+name: JMH Benchmark
 on:
   push:
     branches:
@@ -31,7 +31,7 @@ jobs:
         with:
           name: JMH Benchmark
           tool: 'jmh'
-          output-file-path: jmh-result.json
+          output-file-path: lang/build/reports/jmh/results.json
           github-token: ${{ secrets.GITHUB_TOKEN }}
           auto-push: true
           alert-threshold: '200%'
