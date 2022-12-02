@@ -1,3 +1,9 @@
+##
+# JMH Benchmarks workflow.
+# - Runs the JMH benchmarks and places the results in the project's GH pages.
+# - On alert, notifies the PartiQL team
+##
+
 name: JMH Benchmarks
 
 on:
@@ -6,7 +12,8 @@ on:
       - main
 
 env:
-  JMH_RESULTS_PATH: lang/build/reports/jmh/results.json
+  JMH_RESULTS_PATH_FROM_ROOT: lang/build/reports/jmh/results.json
+  JMH_RESULTS_PATH: build/reports/jmh/results.json
 
 permissions:
   contents: write
@@ -37,7 +44,7 @@ jobs:
         with:
           name: JMH Benchmark
           tool: 'jmh'
-          output-file-path: ${{ env.JMH_RESULTS_PATH }}
+          output-file-path: ${{ env.JMH_RESULTS_PATH_FROM_ROOT }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           auto-push: true
           alert-threshold: '200%'
