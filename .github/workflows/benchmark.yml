@@ -1,7 +1,7 @@
 ##
 # JMH Benchmarks workflow.
 # - Runs the JMH benchmarks and places the results in the project's GH pages.
-# - On alert, notifies the PartiQL team
+# - On alert, notifies the PartiQL team and the commit author
 ##
 
 name: JMH Benchmarks
@@ -47,7 +47,7 @@ jobs:
           output-file-path: ${{ env.JMH_RESULTS_PATH_FROM_ROOT }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           auto-push: true
-          alert-threshold: '200%'
+          alert-threshold: '110%'
           fail-on-alert: true
           comment-on-alert: true
           alert-comment-cc-users: '@${{ github.event.commits[0].author.username }}'
