@@ -1,15 +1,13 @@
 ##
 # JMH Benchmarks workflow.
-# - Runs the JMH benchmarks and places the results in the project's GH pages.
-# - On alert, notifies the PartiQL team, the actor, and the commit author
+# - Runs the JMH benchmarks.
+# - On alert, notifies the actor and the commit author
+# - Does NOT update the GH pages branch
 ##
 
-name: JMH Benchmarks (Main)
+name: JMH Benchmarks (PR and Manual)
 
-on:
-  push:
-    branches:
-      - main
+on: [pull_request, workflow_dispatch]
 
 env:
   JMH_RESULTS_PATH_FROM_ROOT: lang/build/reports/jmh/results.json
@@ -57,8 +55,9 @@ jobs:
           tool: 'jmh'
           output-file-path: ${{ env.JMH_RESULTS_PATH_FROM_ROOT }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          auto-push: true
+          auto-push: false
           alert-threshold: '110%'
           fail-on-alert: true
           comment-on-alert: true
+          comment-always: true
           alert-comment-cc-users: "${{ env.AUTHOR }},${{ env.ACTOR }},${{ env.REPO_OWNER }}"
