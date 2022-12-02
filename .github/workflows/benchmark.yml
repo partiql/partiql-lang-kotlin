@@ -25,7 +25,7 @@ permissions:
 
 jobs:
   benchmark:
-    name: Run JMH benchmarks
+    name: Run JMH Benchmarks
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -38,8 +38,8 @@ jobs:
         run: |
           echo "Owner: ${{ env.REPO_OWNER }}"
           echo "Repo: ${{ env.REPO }}"
-          echo "Actor: @${{ env.ACTOR }}"
-          echo "Author: @${{ env.AUTHOR }}"
+          echo "Actor: ${{ env.ACTOR }}"
+          echo "Author: ${{ env.AUTHOR }}"
 
       - name: Run Benchmark
         run: |
