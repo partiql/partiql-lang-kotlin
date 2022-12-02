@@ -36,7 +36,7 @@ object Versions {
     const val joda = "2.12.1"
     const val jopt = "5.0"
     const val ktlint = "10.2.1"
-    const val pig = "0.6.0"
+    const val pig = "0.6.1"
     //---Testing
     const val assertj = "3.11.0"
     const val jacoco = "0.8.8"
