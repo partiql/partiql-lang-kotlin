@@ -10,6 +10,7 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch
 
 env:
   JMH_RESULTS_PATH_FROM_ROOT: lang/build/reports/jmh/results.json
