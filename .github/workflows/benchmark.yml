@@ -14,6 +14,7 @@ on:
 env:
   JMH_RESULTS_PATH_FROM_ROOT: lang/build/reports/jmh/results.json
   JMH_RESULTS_PATH: build/reports/jmh/results.json
+  AUTHOR: "@${{ github.event.commits[0].author.username }}"
 
 permissions:
   contents: write
@@ -32,10 +33,11 @@ jobs:
 
       - name: Print Environment Variables
         run: |
-          echo "Owner: @${{ env.GITHUB_REPOSITORY_OWNER }}"
-          echo "Repo: ${{ env.GITHUB_REPOSITORY }}"
-          echo "Actor: @${{ env.GITHUB_ACTOR }}"
+          echo "Owner: @${{ github.repository_owner }}"
+          echo "Repo: ${{ github.repository }}"
+          echo "Actor: @${{ github.actor }}"
           echo "Author: @${{ github.event.commits[0].author.username }}"
+          echo "Environment Author: ${{ env.AUTHOR }}"
 
       - name: Run Benchmark
         run: |
@@ -57,4 +59,4 @@ jobs:
           alert-threshold: '110%'
           fail-on-alert: true
           comment-on-alert: true
-          alert-comment-cc-users: '@${{ github.event.commits[0].author.username }}'
+          alert-comment-cc-users: "@${{ github.event.commits[0].author.username }}"
