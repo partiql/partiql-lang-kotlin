@@ -1,8 +1,12 @@
-name: JMH Benchmark
+name: JMH Benchmarks
+
 on:
   push:
     branches:
       - main
+
+env:
+  JMH_RESULTS_PATH: lang/build/reports/jmh/results.json
 
 permissions:
   contents: write
@@ -21,18 +25,22 @@ jobs:
 
       - name: Run Benchmark
         run: |
-          ./gradlew :lang:jmh -Pinclude="PartiQLBenchmark" -Piterations=3 -PwarmupIterations=3 -Pfork=1
+          ./gradlew :lang:jmh \
+            -Pinclude="PartiQLBenchmark" \
+            -Piterations=3 \
+            -PwarmupIterations=3 \
+            -Pfork=1 \
+            -PresultsFile="${{ env.JMH_RESULTS_PATH }}"
 
-      # TODO: Use personal access token instead of GITHUB_TOKEN due to https://github.community/t/github-action-not-triggering-gh-pages-upon-push/16096
-      # TODO: comment-on-alert: true
-      # TODO: alert-comment-cc-users: '@'${{ github.event.commits[0].author.username }}
       - name: Store Benchmark Result
         uses: benchmark-action/github-action-benchmark@v1
         with:
           name: JMH Benchmark
           tool: 'jmh'
-          output-file-path: lang/build/reports/jmh/results.json
+          output-file-path: ${{ env.JMH_RESULTS_PATH }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           auto-push: true
           alert-threshold: '200%'
           fail-on-alert: true
+          comment-on-alert: true
+          alert-comment-cc-users: '@${{ github.event.commits[0].author.username }}'

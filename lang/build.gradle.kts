@@ -60,7 +60,7 @@ tasks.generateGrammarSource {
 
 jmh {
     resultFormat = properties["resultFormat"] as String? ?: "json"
-    resultsFile = project.file(properties["resultFile"] as String? ?: "$buildDir/reports/jmh/results.json")
+    resultsFile = project.file(properties["resultsFile"] as String? ?: "$buildDir/reports/jmh/results.json")
     include = listOfNotNull(properties["include"] as String?)
     properties["warmupIterations"]?.let { it -> warmupIterations = Integer.parseInt(it as String) }
     properties["iterations"]?.let { it -> iterations = Integer.parseInt(it as String) }
