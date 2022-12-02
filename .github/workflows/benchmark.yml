@@ -30,6 +30,13 @@ jobs:
           distribution: 'corretto'
           java-version: '11'
 
+      - name: Print Environment Variables
+        run: |
+          echo "Owner: @${{ env.GITHUB_REPOSITORY_OWNER }}"
+          echo "Repo: ${{ env.GITHUB_REPOSITORY }}"
+          echo "Actor: @${{ env.GITHUB_ACTOR }}"
+          echo "Author: @${{ github.event.commits[0].author.username }}"
+
       - name: Run Benchmark
         run: |
           ./gradlew :lang:jmh \
