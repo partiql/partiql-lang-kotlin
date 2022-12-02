@@ -9,10 +9,10 @@ import org.partiql.examples.CustomProceduresExample
 import org.partiql.examples.EvaluationJavaExample
 import org.partiql.examples.EvaluationWithBindings
 import org.partiql.examples.EvaluationWithLazyBindings
+import org.partiql.examples.ExperimentalFeatureExample
 import org.partiql.examples.ParserErrorExample
 import org.partiql.examples.ParserExample
 import org.partiql.examples.ParserJavaExample
-import org.partiql.examples.ExperimentalFeatureExample
 import org.partiql.examples.PartialEvaluationVisitorTransformExample
 import org.partiql.examples.PreventJoinVisitorExample
 import org.partiql.examples.S3JavaExample
