@@ -14,6 +14,7 @@
 
 package org.partiql.lang.planner
 
+import org.partiql.annotations.PartiQLExperimental
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.PartiqlLogical
 import org.partiql.lang.domains.PartiqlLogicalResolved
@@ -36,9 +37,10 @@ import org.partiql.lang.planner.validators.PartiqlLogicalResolvedValidator
 import org.partiql.lang.planner.validators.PartiqlLogicalValidator
 import org.partiql.pig.runtime.asPrimitive
 
+@PartiQLExperimental
 internal class PartiQLPlannerDefault(
     private val globalVariableResolver: GlobalVariableResolver,
-    private val physicalPlanPasses: List<PartiQLPlannerPass.Physical>,
+    private val physicalPlanPasses: List<PartiQLPhysicalPass>,
     private val callback: PlannerEventCallback?,
     private val options: PartiQLPlanner.Options
 ) : PartiQLPlanner {

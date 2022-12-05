@@ -14,13 +14,16 @@
 
 package org.partiql.lang.planner
 
+import org.partiql.annotations.PartiQLExperimental
+
 /**
  * Builder class to instantiate a [PartiQLPlanner].
  */
+@PartiQLExperimental
 class PartiQLPlannerBuilder private constructor() {
 
     private var globalVariableResolver = GlobalVariableResolver.EMPTY
-    private var physicalPlanPasses: List<PartiQLPlannerPass.Physical> = emptyList()
+    private var physicalPlanPasses: List<PartiQLPhysicalPass> = emptyList()
     private var callback: PlannerEventCallback? = null
     private var options = PartiQLPlanner.Options()
 
@@ -34,8 +37,8 @@ class PartiQLPlannerBuilder private constructor() {
         this.globalVariableResolver = globalVariableResolver
     }
 
-    fun physicalPlannerPasses(physicalPlanPasses: List<PartiQLPlannerPass.Physical>) = this.apply {
-        this.physicalPlanPasses = physicalPlanPasses
+    fun physicalPlannerPasses(partiQLPhysicalPassPlanPasses: List<PartiQLPhysicalPass>) = this.apply {
+        this.physicalPlanPasses = partiQLPhysicalPassPlanPasses
     }
 
     fun options(options: PartiQLPlanner.Options) = this.apply {

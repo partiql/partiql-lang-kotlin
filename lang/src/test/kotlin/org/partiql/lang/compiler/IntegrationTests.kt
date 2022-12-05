@@ -1,25 +1,27 @@
-package org.partiql.lang.planner
+package org.partiql.lang.compiler
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import org.partiql.annotations.PartiQLExperimental
 import org.partiql.lang.ION
+import org.partiql.lang.compiler.memorydb.MemoryDatabase
+import org.partiql.lang.compiler.memorydb.QueryEngine
 import org.partiql.lang.eval.BAG_ANNOTATION
 import org.partiql.lang.eval.BindingCase
 import org.partiql.lang.eval.BindingName
 import org.partiql.lang.eval.toIonValue
-import org.partiql.lang.planner.memorydb.MemoryDatabase
-import org.partiql.lang.planner.memorydb.QueryEngine
 
+@PartiQLExperimental
 class TestContext {
     val db = MemoryDatabase().also {
         it.createTable("customer", listOf("id"))
         it.createTable("more_customer", listOf("id"))
     }
-    val queryEngine = QueryEngine(db)
+    private val queryEngine = QueryEngine(db)
 
-    // Executes [sql]
+    // Executes query
     fun executeAndAssert(
         expectedResultAsIonText: String,
         sql: String,
@@ -35,6 +37,7 @@ class TestContext {
 /**
  * Tests the query planner with some basic DML and SFW queries against using [QueryEngine] and [MemoryDatabase].
  */
+@PartiQLExperimental
 class IntegrationTests {
 
     @Test

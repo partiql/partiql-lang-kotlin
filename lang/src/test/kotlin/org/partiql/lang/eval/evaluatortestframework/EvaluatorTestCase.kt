@@ -56,7 +56,7 @@ data class EvaluatorTestCase(
 
     /**
      * Determines which pipeline this test should run against; the [CompilerPipeline],
-     * [org.partiql.lang.planner.PlannerPipeline] or both.
+     * [org.partiql.lang.compiler.PartiQLCompilerPipeline] or both.
      */
     override val targetPipeline: EvaluatorTestTarget = EvaluatorTestTarget.ALL_PIPELINES,
 

@@ -1,12 +1,12 @@
 package org.partiql.lang.eval.physical.operators
 
+import org.partiql.annotations.PartiQLExperimental
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.eval.physical.SetVariableFunc
-import org.partiql.lang.eval.physical.window.ExperimentalWindowFunc
 import org.partiql.lang.eval.physical.window.WindowFunction
 
 // TODO: Remove from experimental once https://github.com/partiql/partiql-docs/issues/31 is resolved and a RFC is approved
-@ExperimentalWindowFunc
+@PartiQLExperimental
 abstract class WindowRelationalOperatorFactory(name: String) : RelationalOperatorFactory {
 
     final override val key: RelationalOperatorFactoryKey = RelationalOperatorFactoryKey(RelationalOperatorKind.WINDOW, name)
@@ -21,7 +21,7 @@ abstract class WindowRelationalOperatorFactory(name: String) : RelationalOperato
     ): RelationExpression
 }
 
-@ExperimentalWindowFunc
+@PartiQLExperimental
 class CompiledWindowFunction(
     val func: WindowFunction,
     val parameters: List<ValueExpression>,

@@ -2,6 +2,7 @@ package org.partiql.lang.util.testdsl
 
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
+import org.partiql.annotations.PartiQLExperimental
 import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.ION
 import org.partiql.lang.eval.CompileOptions
@@ -13,8 +14,8 @@ import org.partiql.lang.eval.evaluatortestframework.CompilerPipelineFactory
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestCase
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestTarget
 import org.partiql.lang.eval.evaluatortestframework.ExpectedResultFormat
+import org.partiql.lang.eval.evaluatortestframework.PartiQLCompilerPipelineFactory
 import org.partiql.lang.eval.evaluatortestframework.PipelineEvaluatorTestAdapter
-import org.partiql.lang.eval.evaluatortestframework.PlannerPipelineFactory
 import org.partiql.lang.mockdb.MockDb
 import org.partiql.lang.syntax.PartiQLParser
 
@@ -69,6 +70,7 @@ data class IonResultTestCase(
         }
 }
 
+@OptIn(PartiQLExperimental::class)
 internal fun IonResultTestCase.runTestCase(
     valueFactory: ExprValueFactory,
     db: MockDb,
@@ -78,7 +80,7 @@ internal fun IonResultTestCase.runTestCase(
     val adapter = PipelineEvaluatorTestAdapter(
         when (target) {
             EvaluatorTestTarget.COMPILER_PIPELINE -> CompilerPipelineFactory()
-            EvaluatorTestTarget.PLANNER_PIPELINE -> PlannerPipelineFactory()
+            EvaluatorTestTarget.PARTIQL_PIPELINE -> PartiQLCompilerPipelineFactory()
             // We don't support ALL_PIPELINES here because each pipeline needs a separate skip list, which
             // is decided by the caller of this function.
             EvaluatorTestTarget.ALL_PIPELINES -> error("May only test one pipeline at a time with IonResultTestCase")

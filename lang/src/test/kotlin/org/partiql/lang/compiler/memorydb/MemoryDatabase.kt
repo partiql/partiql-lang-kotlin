@@ -1,4 +1,4 @@
-package org.partiql.lang.planner.memorydb
+package org.partiql.lang.compiler.memorydb
 
 import org.partiql.lang.ION
 import org.partiql.lang.eval.BindingCase

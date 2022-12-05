@@ -1,10 +1,10 @@
 package org.partiql.lang.eval.physical.operators
 
+import org.partiql.annotations.PartiQLExperimental
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.NaturalExprValueComparators
 import org.partiql.lang.eval.exprEquals
 import org.partiql.lang.eval.physical.EvaluatorState
-import org.partiql.lang.eval.physical.window.ExperimentalWindowFunc
 import org.partiql.lang.eval.relation.RelationIterator
 import org.partiql.lang.eval.relation.RelationType
 import org.partiql.lang.eval.relation.relation
@@ -18,7 +18,7 @@ import org.partiql.lang.planner.transforms.DEFAULT_IMPL_NAME
  *
  */
 // TODO: Remove from experimental once https://github.com/partiql/partiql-docs/issues/31 is resolved and a RFC is approved
-@ExperimentalWindowFunc
+@PartiQLExperimental
 internal object WindowRelationalOperatorFactoryDefault : WindowRelationalOperatorFactory(DEFAULT_IMPL_NAME) {
     override fun create(
         source: RelationExpression,
@@ -28,7 +28,7 @@ internal object WindowRelationalOperatorFactoryDefault : WindowRelationalOperato
     ): RelationExpression = WindowOperatorDefault(source, windowPartitionList, windowSortSpecList, compiledWindowFunctions)
 }
 
-@ExperimentalWindowFunc
+@PartiQLExperimental
 internal class WindowOperatorDefault(
     private val source: RelationExpression,
     private val windowPartitionList: List<ValueExpression>,

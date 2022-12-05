@@ -9,6 +9,7 @@ import org.partiql.examples.CustomProceduresExample
 import org.partiql.examples.EvaluationJavaExample
 import org.partiql.examples.EvaluationWithBindings
 import org.partiql.examples.EvaluationWithLazyBindings
+import org.partiql.examples.ExperimentalFeatureExample
 import org.partiql.examples.ParserErrorExample
 import org.partiql.examples.ParserExample
 import org.partiql.examples.ParserJavaExample
@@ -36,7 +37,8 @@ private val examples = mapOf(
     ParserExample::class.java.simpleName to ParserExample(System.out),
     PartialEvaluationVisitorTransformExample::class.java.simpleName to PartialEvaluationVisitorTransformExample(System.out),
     PreventJoinVisitorExample::class.java.simpleName to PreventJoinVisitorExample(System.out),
-    SimpleExpressionEvaluation::class.java.simpleName to SimpleExpressionEvaluation(System.out)
+    SimpleExpressionEvaluation::class.java.simpleName to SimpleExpressionEvaluation(System.out),
+    ExperimentalFeatureExample::class.java.simpleName to ExperimentalFeatureExample(System.out)
 )
 
 fun main(args: Array<String>) {

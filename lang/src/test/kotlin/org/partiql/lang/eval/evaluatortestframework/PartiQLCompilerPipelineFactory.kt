@@ -1,5 +1,6 @@
 package org.partiql.lang.eval.evaluatortestframework
 
+import org.partiql.annotations.PartiQLExperimental
 import org.partiql.lang.ION
 import org.partiql.lang.compiler.PartiQLCompilerBuilder
 import org.partiql.lang.compiler.PartiQLCompilerPipeline
@@ -20,11 +21,12 @@ import kotlin.test.assertNull
 /**
  * TODO delete this once evaluator tests are replaced by `partiql-tests`
  */
+@PartiQLExperimental
 internal class PartiQLCompilerPipelineFactory : PipelineFactory {
 
     override val pipelineName: String = "PartiQLCompilerPipeline"
 
-    override val target: EvaluatorTestTarget = EvaluatorTestTarget.PLANNER_PIPELINE
+    override val target: EvaluatorTestTarget = EvaluatorTestTarget.PARTIQL_PIPELINE
 
     override fun createPipeline(
         evaluatorTestDefinition: EvaluatorTestDefinition,

@@ -3,12 +3,12 @@ package org.partiql.lang.planner.transforms.optimizations
 import com.amazon.ionelement.api.TextElement
 import com.amazon.ionelement.api.ionBool
 import com.amazon.ionelement.api.ionSymbol
+import org.partiql.lang.compiler.PartiQLCompilerBuilder
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.domains.toBindingCase
 import org.partiql.lang.errors.ProblemHandler
 import org.partiql.lang.eval.BindingName
-import org.partiql.lang.planner.PartiqlPhysicalPass
-import org.partiql.lang.planner.PlannerPipeline
+import org.partiql.lang.planner.PartiQLPhysicalPass
 import org.partiql.lang.planner.StaticTypeResolver
 import org.partiql.lang.planner.transforms.DEFAULT_IMPL
 import org.partiql.lang.types.BagType
@@ -28,7 +28,7 @@ data class FieldEqualityPredicate(val keyFieldName: String, val equivalentValue:
  * record by its primary key.
  *
  * The implementation of the `project` operator is specified by [customProjectOperatorName],
- * which must be supplied separately by the user (see [PlannerPipeline.Builder.addRelationalOperatorFactory]).  (More
+ * which must be supplied separately by the user (see [PartiQLCompilerBuilder.customOperatorFactories]).  (More
  * details on this operator below).
  *
  * For example, given a `filter` node with a nested `scan`, such as:
@@ -82,16 +82,15 @@ fun createFilterScanToKeyLookupPass(
     customProjectOperatorName: String,
     staticTypeResolver: StaticTypeResolver,
     createKeyValueConstructor: (StructType, List<FieldEqualityPredicate>) -> PartiqlPhysical.Expr
-): PartiqlPhysicalPass =
+): PartiQLPhysicalPass =
     FilterScanToKeyLookupPass(staticTypeResolver, customProjectOperatorName, createKeyValueConstructor)
 
 private class FilterScanToKeyLookupPass(
     private val staticTypeResolver: StaticTypeResolver,
     private val customProjectOperatorName: String,
     private val createKeyValueConstructor: (StructType, List<FieldEqualityPredicate>) -> PartiqlPhysical.Expr
-) : PartiqlPhysicalPass {
-    override val passName: String get() = "filter_scan_to_key_lookup"
-    override fun rewrite(inputPlan: PartiqlPhysical.Plan, problemHandler: ProblemHandler): PartiqlPhysical.Plan {
+) : PartiQLPhysicalPass {
+    override fun apply(plan: PartiqlPhysical.Plan, problemHandler: ProblemHandler): PartiqlPhysical.Plan {
         return object : PartiqlPhysical.VisitorTransform() {
             override fun transformBexprFilter(node: PartiqlPhysical.Bexpr.Filter): PartiqlPhysical.Bexpr {
                 // Rewrite children first.
@@ -159,7 +158,7 @@ private class FilterScanToKeyLookupPass(
                     else -> return rewritten // didn't match--return the original node unmodified.
                 }
             }
-        }.transformPlan(inputPlan)
+        }.transformPlan(plan)
     }
 }
 

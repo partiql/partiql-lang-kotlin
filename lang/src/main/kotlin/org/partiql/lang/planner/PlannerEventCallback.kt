@@ -3,7 +3,7 @@ package org.partiql.lang.planner
 import java.time.Duration
 import java.time.Instant
 
-/** Called by [PlannerPipeline] after a phase of query planning has completed. */
+/** Called by [PartiQLPlanner] after a phase of query planning has completed. */
 typealias PlannerEventCallback = (PlannerEvent) -> Unit
 
 /** Information about a planner event. */

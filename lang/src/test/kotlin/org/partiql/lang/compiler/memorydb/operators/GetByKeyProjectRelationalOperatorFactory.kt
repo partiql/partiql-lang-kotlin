@@ -1,5 +1,8 @@
-package org.partiql.lang.planner.memorydb.operators
+package org.partiql.lang.compiler.memorydb.operators
 
+import org.partiql.lang.compiler.memorydb.DB_CONTEXT_VAR
+import org.partiql.lang.compiler.memorydb.GET_BY_KEY_PROJECT_IMPL_NAME
+import org.partiql.lang.compiler.memorydb.MemoryDatabase
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.eval.physical.SetVariableFunc
 import org.partiql.lang.eval.physical.operators.ProjectRelationalOperatorFactory
@@ -9,9 +12,6 @@ import org.partiql.lang.eval.relation.RelationIterator
 import org.partiql.lang.eval.relation.RelationScope
 import org.partiql.lang.eval.relation.RelationType
 import org.partiql.lang.eval.relation.relation
-import org.partiql.lang.planner.memorydb.DB_CONTEXT_VAR
-import org.partiql.lang.planner.memorydb.GET_BY_KEY_PROJECT_IMPL_NAME
-import org.partiql.lang.planner.memorydb.MemoryDatabase
 import java.util.UUID
 
 /**

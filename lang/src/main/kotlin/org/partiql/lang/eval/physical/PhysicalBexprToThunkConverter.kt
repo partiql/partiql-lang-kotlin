@@ -2,6 +2,7 @@ package org.partiql.lang.eval.physical
 
 import com.amazon.ionelement.api.BoolElement
 import com.amazon.ionelement.api.MetaContainer
+import org.partiql.annotations.PartiQLExperimental
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.eval.ExprValueFactory
@@ -28,7 +29,6 @@ import org.partiql.lang.eval.physical.operators.SortOperatorFactory
 import org.partiql.lang.eval.physical.operators.UnpivotOperatorFactory
 import org.partiql.lang.eval.physical.operators.WindowRelationalOperatorFactory
 import org.partiql.lang.eval.physical.operators.valueExpression
-import org.partiql.lang.eval.physical.window.ExperimentalWindowFunc
 import org.partiql.lang.eval.physical.window.createBuiltinWindowFunction
 import org.partiql.lang.util.toIntExact
 
@@ -296,7 +296,7 @@ internal class PhysicalBexprToThunkConverter(
     }
 
     // TODO: Remove from experimental once https://github.com/partiql/partiql-docs/issues/31 is resolved and a RFC is approved
-    @ExperimentalWindowFunc
+    @PartiQLExperimental
     override fun convertWindow(node: PartiqlPhysical.Bexpr.Window): RelationThunkEnv {
         val source = this.convert(node.source)
 

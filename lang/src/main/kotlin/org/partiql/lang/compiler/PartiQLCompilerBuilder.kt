@@ -16,6 +16,7 @@ package org.partiql.lang.compiler
 
 import com.amazon.ion.IonSystem
 import com.amazon.ion.system.IonSystemBuilder
+import org.partiql.annotations.PartiQLExperimental
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.ThunkReturnTypeAssertions
@@ -33,7 +34,6 @@ import org.partiql.lang.eval.physical.operators.ScanRelationalOperatorFactoryDef
 import org.partiql.lang.eval.physical.operators.SortOperatorFactoryDefault
 import org.partiql.lang.eval.physical.operators.UnpivotOperatorFactoryDefault
 import org.partiql.lang.eval.physical.operators.WindowRelationalOperatorFactoryDefault
-import org.partiql.lang.eval.physical.window.ExperimentalWindowFunc
 import org.partiql.lang.planner.EvaluatorOptions
 import org.partiql.lang.types.CustomType
 
@@ -53,6 +53,7 @@ import org.partiql.lang.types.CustomType
  *                                      .build()
  * ```
  */
+@PartiQLExperimental
 class PartiQLCompilerBuilder private constructor() {
 
     private var valueFactory: ExprValueFactory = ExprValueFactory.standard(DEFAULT_ION)
@@ -85,7 +86,6 @@ class PartiQLCompilerBuilder private constructor() {
             OffsetRelationalOperatorFactoryDefault,
             LimitRelationalOperatorFactoryDefault,
             LetRelationalOperatorFactoryDefault,
-            @OptIn(ExperimentalWindowFunc::class)
             WindowRelationalOperatorFactoryDefault
         )
 
