@@ -8,19 +8,18 @@ information on individual classes and interfaces.
 ```java
 IonSystem ion = IonSystemBuilder.standard().build();
 
-IonValue myTable = ion.newLoader()
-    .load("{name: \"zoe\",  age: 12}\n" +
-        "{name: \"jan\",  age: 20}\n" +
-        "{name: \"bill\", age: 19}\n" +
-        "{name: \"lisa\", age: 10}\n" +
-        "{name: \"tim\",  age: 30}\n" +
-        "{name: \"mary\", age: 19}\n");
+String myTable = "[{name: \"zoe\",  age: 12},\n" +
+        "{name: \"jan\",  age: 20},\n" +
+        "{name: \"bill\", age: 19},\n" +
+        "{name: \"lisa\", age: 10},\n" +
+        "{name: \"tim\",  age: 30},\n" +
+        "{name: \"mary\", age: 19}]";
 
 CompilerPipeline pipeline = CompilerPipeline.standard(ion);
 
 Expression expression = pipeline.compile("SELECT t.name FROM myTable AS t WHERE t.age > 20");
 
-ExprValue boundValue = pipeline.getValueFactory().newFromIonValue(myTable);
+ExprValue boundValue = pipeline.getValueFactory().newFromIonValue(ion.singleValue(myTable));
 Bindings myGlobalBindings = bindingName -> {
     ExprValue exprValue;
     if (BindingCase.SENSITIVE.equals(bindingName.getBindingCase())) {
@@ -33,7 +32,7 @@ Bindings myGlobalBindings = bindingName -> {
 };
 
 EvaluationSession session = EvaluationSession.builder()
-    .globals(Bindings.lazyBindingsBuilder().addBinding("myTable", () -> boundValue).build())
+    .globals(myGlobalBindings)
     .build();
 
 ExprValue exprValue = expression.eval(session);
@@ -44,25 +43,25 @@ IonValue queryResultAsIon = exprValue.getIonValue();
 ```kotlin
 val ion = IonSystemBuilder.standard().build()
 
-val myTable: IonValue = ion.newLoader().load("""
-        {name: "zoe",  age: 12}
-        {name: "jan",  age: 20}
-        {name: "bill", age: 19}
-        {name: "lisa", age: 10}
-        {name: "tim",  age: 30}
-        {name: "mary", age: 19}
-    """)
+val myTable = """[
+        {name: "zoe",  age: 12},
+        {name: "jan",  age: 20},
+        {name: "bill", age: 19},
+        {name: "lisa", age: 10},
+        {name: "tim",  age: 30},
+        {name: "mary", age: 19}]
+    """
 
 val pipeline = CompilerPipeline.standard(ion)
 val expression = pipeline.compile("SELECT t.name FROM myTable AS t WHERE t.age > 20")
 
-val boundValue = pipeline.valueFactory.newFromIonValue(myTable)
+val boundValue = pipeline.valueFactory.newFromIonValue(ion.singleValue(myTable))
 val session = EvaluationSession.builder()
     .globals(Bindings.buildLazyBindings { addBinding("myTable") { boundValue } })
     .build()
 
 val exprValue = expression.eval(session)
-val queryResultAsIon = exprValue.ionValue
+val queryResultAsIon = exprValue.toIonValue(ion)
 ```
 
 # Data Types
