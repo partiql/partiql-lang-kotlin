@@ -31,6 +31,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   counterparts (in the experimental planner)
 - Experimental implementation for window function `Lag` and `Lead`.
 - Adds support for EXPLAIN
+- Adds continuous performance benchmarking to the CI for existing JMH benchmarks
+  - Benchmark results can be seen on the project's GitHub Pages site
 - Adds the `pipeline` flag to the CLI to provide experimental usage of the PartiQLCompilerPipeline
 - Added `ExprValue.toIonValue(ion: IonSystem)` in kotlin, and `ExprValueKt.toIonValue(value: ExprValue, ion: IonSystem)` in Java to transform one `ExprValue` to a corresponding `IonValue`.
 
