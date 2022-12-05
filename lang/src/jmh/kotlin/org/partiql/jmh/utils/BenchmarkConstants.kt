@@ -15,7 +15,7 @@
 package org.partiql.jmh.utils
 
 internal const val FORK_VALUE_RECOMMENDED: Int = 2
-internal const val MEASUREMENT_ITERATION_VALUE_RECOMMENDED: Int = 3
+internal const val MEASUREMENT_ITERATION_VALUE_RECOMMENDED: Int = 10
 internal const val MEASUREMENT_TIME_VALUE_RECOMMENDED: Int = 1
-internal const val WARMUP_ITERATION_VALUE_RECOMMENDED: Int = 2
+internal const val WARMUP_ITERATION_VALUE_RECOMMENDED: Int = 5
 internal const val WARMUP_TIME_VALUE_RECOMMENDED: Int = 1
