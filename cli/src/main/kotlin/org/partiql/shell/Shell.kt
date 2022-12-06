@@ -35,6 +35,7 @@ import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.PartiQLResult
 import org.partiql.lang.eval.delegate
+import org.partiql.lang.syntax.PartiQLParserBuilder
 import org.partiql.lang.eval.exprNull
 import org.partiql.lang.util.ConfigurableExprValueFormatter
 import org.partiql.lang.util.ExprValueFormatter
@@ -151,6 +152,12 @@ internal class Shell(
                 return
             }
 
+            // Pretty print AST
+            if (line.endsWith("\n!!")) {
+                printAST(line.removeSuffix("!!"))
+                continue
+            }
+
             if (line.isBlank()) {
                 out.success("OK!")
                 continue
@@ -261,6 +268,17 @@ internal class Shell(
         val properties = Properties()
         properties.load(this.javaClass.getResourceAsStream("/partiql.properties"))
         return "${properties.getProperty("version")}-${properties.getProperty("commit")}"
+    }
+
+    private fun printAST(query: String) {
+        if (query.isNotBlank()) {
+            val parser = PartiQLParserBuilder.standard().build()
+            val ast = parser.parseAstStatement(query)
+            val explain = PartiQLResult.Explain.Domain(value = ast, format = null)
+            val output = ExplainFormatter.format(explain)
+            out.println(output)
+            out.flush()
+        }
     }
 
     /**

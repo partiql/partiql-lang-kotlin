@@ -14,6 +14,7 @@
 
 package org.partiql.lang.compiler
 
+import org.partiql.annotations.PartiQLExperimental
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ThunkReturnTypeAssertions
 import org.partiql.lang.eval.builtins.DynamicLookupExprFunction
@@ -30,7 +31,6 @@ import org.partiql.lang.eval.physical.operators.ScanRelationalOperatorFactoryDef
 import org.partiql.lang.eval.physical.operators.SortOperatorFactoryDefault
 import org.partiql.lang.eval.physical.operators.UnpivotOperatorFactoryDefault
 import org.partiql.lang.eval.physical.operators.WindowRelationalOperatorFactoryDefault
-import org.partiql.lang.eval.physical.window.ExperimentalWindowFunc
 import org.partiql.lang.planner.EvaluatorOptions
 import org.partiql.lang.types.CustomType
 
@@ -50,6 +50,7 @@ import org.partiql.lang.types.CustomType
  *                                      .build()
  * ```
  */
+@PartiQLExperimental
 class PartiQLCompilerBuilder private constructor() {
 
     private var options: EvaluatorOptions = EvaluatorOptions.standard()
@@ -78,7 +79,6 @@ class PartiQLCompilerBuilder private constructor() {
             OffsetRelationalOperatorFactoryDefault,
             LimitRelationalOperatorFactoryDefault,
             LetRelationalOperatorFactoryDefault,
-            @OptIn(ExperimentalWindowFunc::class)
             WindowRelationalOperatorFactoryDefault
         )
 

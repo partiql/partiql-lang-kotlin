@@ -44,15 +44,15 @@ class EvaluatorTests {
                     }
                 )
             } +
-                unskippedTests.map {
-                    it.copy(
-                        note = "permissive typing",
-                        compileOptionsBuilderBlock = {
-                            it.compileOptionsBuilderBlock(this)
-                            typingMode(TypingMode.PERMISSIVE)
-                        }
-                    )
-                }
+                    unskippedTests.map {
+                        it.copy(
+                            note = "permissive typing",
+                            compileOptionsBuilderBlock = {
+                                it.compileOptionsBuilderBlock(this)
+                                typingMode(TypingMode.PERMISSIVE)
+                            }
+                        )
+                    }
         }
 
         private val PLAN_EVALUATOR_SKIP_LIST = hashSetOf(
@@ -101,8 +101,8 @@ class EvaluatorTests {
         @JvmStatic
         @Suppress("UNUSED")
         fun planEvaluatorTests(): List<IonResultTestCase> =
-            // Since the physical plan evaluator is a modified copy of the AST evaluator, it inherits the
-            // AST evaluator's current skip list.  The physical plan evaluator also doesn't yet implement
+        // Since the physical plan evaluator is a modified copy of the AST evaluator, it inherits the
+        // AST evaluator's current skip list.  The physical plan evaluator also doesn't yet implement
             // everything that the AST evaluator does, so has a separate skip list.
             astEvaluatorTests().filter { it.name !in PLAN_EVALUATOR_SKIP_LIST }
     }
@@ -113,5 +113,5 @@ class EvaluatorTests {
 
     @ParameterizedTest
     @MethodSource("planEvaluatorTests")
-    fun planEvaluatorTests(tc: IonResultTestCase) = tc.runTestCase(mockDb, EvaluatorTestTarget.PLANNER_PIPELINE)
+    fun planEvaluatorTests(tc: IonResultTestCase) = tc.runTestCase(mockDb, EvaluatorTestTarget.PARTIQL_PIPELINE)
 }
