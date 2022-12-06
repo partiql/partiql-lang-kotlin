@@ -1,4 +1,4 @@
-package org.partiql.lang
+package org.partiql.lang.eval.evaluatortestframework
 
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
@@ -14,13 +14,18 @@ import org.partiql.lang.eval.timeValue
 import org.partiql.lang.eval.timestampValue
 
 /**
- * Used to verify the actual `ExprValue` is the same as the expected `ExprValue` in test
+ * Only used to verify the actual `ExprValue` is the same as the expected `ExprValue` in test
  *
  * Ensures 2 [ExprValue]s to have the same type & value
  */
 fun ExprValue.strictEquals(other: ExprValue): Boolean =
     ExprValueStrictComparator.compare(this, other) == 0
 
+/**
+ * We implement this comparator since to compare 2 bags, we sort them first and then compare each item.
+ *
+ * The order defined in this comparator of [ExprValue] is not related to the order defined by [ExprValue.exprEquals()]
+ */
 private object ExprValueStrictComparator : Comparator<ExprValue> {
     override fun compare(v1: ExprValue, v2: ExprValue): Int {
         if (v1.type !== v2.type) {

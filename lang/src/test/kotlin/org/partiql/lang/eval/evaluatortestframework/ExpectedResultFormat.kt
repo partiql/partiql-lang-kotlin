@@ -25,6 +25,12 @@ enum class ExpectedResultFormat {
     ION_WITHOUT_BAG_AND_MISSING_ANNOTATIONS,
 
     /**
+     * The expected value is expressed using PartiQL syntax, which is evaluated under the same pipeline and compile
+     * options and session as the query under test. PartiQL equivalence is used to compare the result.
+     */
+    PARTIQL,
+
+    /**
      * The expected value is an arbitrary string.  [org.partiql.lang.eval.ExprValue.toString]` is called on the result
      * of the query and the expected/actual assertion is performed with regular string equality.
      *
@@ -34,13 +40,13 @@ enum class ExpectedResultFormat {
     STRING,
 
     /**
-     * Directly compare the compiler's output [ExprValue] with an expected [ExprValue] evaluated from a specified
-     * PartiQL expression.
+     * The expected value is expressed using PartiQL syntax, which is evaluated under the same pipeline & compile
+     * options and session as the query under test. [ExprValue.strictEquals] is used here.
      *
-     * This is preferred as it resolves the bag comparison problem [ExpectedResultFormat.ION] has. Also, PartiQL
-     * expressions are easier to read & write (no annotations needed).
+     * This is preferred as it resolves the bag comparison problem [ExpectedResultFormat.ION] has, and respects both
+     * data types & data values, compares to [ExpectedResultFormat.PARTIQL]
      *
      * New tests should use this format.
      */
-    PARTIQL_STRICT
+    STRICT
 }

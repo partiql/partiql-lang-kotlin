@@ -11,7 +11,6 @@ import org.partiql.lang.eval.TypingMode
 import org.partiql.lang.eval.cloneAndRemoveBagAndMissingAnnotations
 import org.partiql.lang.eval.exprEquals
 import org.partiql.lang.eval.toIonValue
-import org.partiql.lang.strictEquals
 
 internal class PipelineEvaluatorTestAdapter(
     private val pipelineFactory: PipelineFactory
@@ -95,7 +94,7 @@ internal class PipelineEvaluatorTestAdapter(
                     EvaluatorTestFailureReason.UNEXPECTED_QUERY_RESULT,
                 ) { tc.testDetails(note = note, actualResult = actualResultString) }
             }
-            ExpectedResultFormat.PARTIQL_STRICT -> {
+            ExpectedResultFormat.STRICT -> {
                 val expectedExprValueResult = assertDoesNotThrow(
                     EvaluatorTestFailureReason.FAILED_TO_EVALUATE_PARTIQL_EXPECTED_RESULT,
                     { tc.testDetails(note = note) }

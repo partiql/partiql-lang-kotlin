@@ -43,7 +43,7 @@ data class EvaluatorTestCase(
      *
      * @see [ExpectedResultFormat]
      */
-    val expectedResultFormat: ExpectedResultFormat = ExpectedResultFormat.PARTIQL_STRICT,
+    val expectedResultFormat: ExpectedResultFormat = ExpectedResultFormat.STRICT,
 
     /**
      * When true, after running the test once with compile options unmodified, run the test again in permissive mode.
@@ -76,7 +76,7 @@ data class EvaluatorTestCase(
         query: String,
         expectedResult: String,
         expectedPermissiveModeResult: String = expectedResult,
-        expectedResultFormat: ExpectedResultFormat = ExpectedResultFormat.PARTIQL_STRICT,
+        expectedResultFormat: ExpectedResultFormat = ExpectedResultFormat.STRICT,
         implicitPermissiveModeTest: Boolean = true,
         target: EvaluatorTestTarget = EvaluatorTestTarget.ALL_PIPELINES,
         compileOptionsBuilderBlock: CompileOptions.Builder.() -> Unit = { },

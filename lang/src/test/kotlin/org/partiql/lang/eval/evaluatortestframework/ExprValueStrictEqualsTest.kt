@@ -1,9 +1,10 @@
-package org.partiql.lang
+package org.partiql.lang.eval.evaluatortestframework
 
 import com.amazon.ion.system.IonSystemBuilder
 import org.junit.Assert
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
+import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.util.ArgumentsProviderBase
 
