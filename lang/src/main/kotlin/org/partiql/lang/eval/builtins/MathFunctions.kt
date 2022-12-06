@@ -30,10 +30,22 @@ import java.math.RoundingMode
 object MathFunctions {
 
     fun create(valueFactory: ExprValueFactory): List<ExprFunction> = listOf(
-        UnaryNumeric("ceil", valueFactory) { ceil(it) },
-        UnaryNumeric("ceiling", valueFactory) { ceil(it) },
-        UnaryNumeric("floor", valueFactory) { floor(it) },
+        createCeil(valueFactory),
+        createCeiling(valueFactory),
+        createFloor(valueFactory),
     )
+
+    fun createCeil(valueFactory: ExprValueFactory): ExprFunction = UnaryNumeric("ceil", valueFactory) {
+        ceil(it)
+    }
+
+    fun createCeiling(valueFactory: ExprValueFactory): ExprFunction = UnaryNumeric("ceiling", valueFactory) {
+        ceil(it)
+    }
+
+    fun createFloor(valueFactory: ExprValueFactory): ExprFunction = UnaryNumeric("floor", valueFactory) {
+        floor(it)
+    }
 }
 
 /**

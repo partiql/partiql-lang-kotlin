@@ -75,3 +75,7 @@ tasks.processResources {
         include("**/*.g4")
     }
 }
+
+jmh {
+    include = listOf("BuiltinsBenchmark")
+}
