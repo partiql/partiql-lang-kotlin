@@ -1,7 +1,8 @@
 ##
-# JMH Benchmarks workflow.
-# - Runs the JMH benchmarks and places the results in the project's GH pages.
-# - On alert, notifies the PartiQL team, the actor, and the commit author
+# JMH Benchmarks Workflow (Main)
+# - Runs the JMH benchmarks.
+# - On alert, notifies the PartiQL team, the actor, and the commit author.
+# - Places the results in the project's GH pages.
 ##
 
 name: JMH Benchmarks (Main)
@@ -44,9 +45,9 @@ jobs:
       - name: Run Benchmark
         run: |
           ./gradlew :lang:jmh \
-            -Piterations=5 \
-            -PwarmupIterations=3 \
-            -Pfork=1 \
+            -Piterations=10 \
+            -PwarmupIterations=5 \
+            -Pfork=2 \
             -PresultsFile="${{ env.JMH_RESULTS_PATH }}"
 
       - name: Store Benchmark Result

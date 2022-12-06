@@ -1,13 +1,13 @@
 ##
-# JMH Benchmarks workflow
+# JMH Benchmarks Workflow (Manual Trigger)
 # - Runs the JMH benchmarks.
 # - On alert, notifies the actor and the commit author.
 # - Does NOT update the GH pages branch.
 ##
 
-name: JMH Benchmarks (PR and Manual)
+name: JMH Benchmarks (Manual Trigger)
 
-on: [pull_request, workflow_dispatch]
+on: [workflow_dispatch]
 
 env:
   JMH_RESULTS_PATH_FROM_ROOT: lang/build/reports/jmh/results.json
@@ -42,9 +42,9 @@ jobs:
       - name: Run Benchmark
         run: |
           ./gradlew :lang:jmh \
-            -Piterations=5 \
-            -PwarmupIterations=3 \
-            -Pfork=1 \
+            -Piterations=10 \
+            -PwarmupIterations=5 \
+            -Pfork=2 \
             -PresultsFile="${{ env.JMH_RESULTS_PATH }}"
 
       - name: Store Benchmark Result
