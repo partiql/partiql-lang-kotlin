@@ -90,7 +90,7 @@ abstract class PublishPlugin : Plugin<Project> {
                         developers {
                             developer {
                                 name.set("PartiQL Team")
-                                email.set("partiql-team@amazon.com")
+                                email.set("partiql-dev@amazon.com")
                                 organization.set("PartiQL")
                                 organizationUrl.set("https://github.com/partiql")
                             }
