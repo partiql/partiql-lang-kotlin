@@ -33,6 +33,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Adds support for EXPLAIN
 - Adds the `pipeline` flag to the CLI to provide experimental usage of the PartiQLCompilerPipeline
 - Added `ExprValue.toIonValue(ion: IonSystem)` in kotlin, and `ExprValueKt.toIonValue(value: ExprValue, ion: IonSystem)` in Java to transform one `ExprValue` to a corresponding `IonValue`.
+- Added the following public methods to construct `ExprValue` (which replace `ExprValueFactory`): 
+  - `org.partiql.lang.eval.exprMissing`
+  - `org.partiql.lang.eval.exprNull`
+  - `org.partiql.lang.eval.exprBoolean`
+  - `org.partiql.lang.eval.exprString`
+  - `org.partiql.lang.eval.exprSymbol`
+  - `org.partiql.lang.eval.exprInt`
+  - `org.partiql.lang.eval.exprFloat`
+  - `org.partiql.lang.eval.exprDecimal`
+  - `org.partiql.lang.eval.exprDate`
+  - `org.partiql.lang.eval.exprTimestamp`
+  - `org.partiql.lang.eval.exprTime`
+  - `org.partiql.lang.eval.exprClob`
+  - `org.partiql.lang.eval.exprBlob`
+  - `org.partiql.lang.eval.exprList`
+  - `org.partiql.lang.eval.emptyExprList`
+  - `org.partiql.lang.eval.exprBag`
+  - `org.partiql.lang.eval.emptyExprBag`
+  - `org.partiql.lang.eval.exprSexp`
+  - `org.partiql.lang.eval.emptyExprSexp`
+  - `org.partiql.lang.eval.exprStruct`
+  - `org.partiql.lang.eval.emptyExprStruct`
+  - `org.partiql.lang.eval.exprValue`
+
 
 ### Changed
 - Now `CompileOption` uses `TypedOpParameter.HONOR_PARAMETERS` as default.
@@ -51,6 +75,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Deprecated
 - Marks the GroupKeyReferencesVisitorTransform as deprecated. There is no functionally equivalent class.
 - Marks `ionValue` property in `ExprValue` interface as deprecated. The functional equivalent method is `ExprValue.toIonValue(ion: IonSystem)` in kotlin, and `ExprValueKt.toIonValue(value: ExprValue, ion: IonSystem)` in Java.
+- Marks `org.partiql.lang.eval.ExprValueFactory` as deprecated. 
 
 ### Fixed
 - Fixes the ThreadInterruptedTests by modifying the time to interrupt parses. Also adds better exception exposure to
