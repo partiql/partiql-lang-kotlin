@@ -40,7 +40,7 @@ import kotlin.test.assertTrue
 import kotlin.test.fail
 
 @RunWith(JUnitParamsRunner::class)
-class ExprValueFactoryTest {
+class ExprValueUtilTest {
     companion object {
         /**
          * We need to store the IonSystem and ExprValueFactory in the companion object to ensure everything uses the
@@ -49,7 +49,6 @@ class ExprValueFactoryTest {
          * instance field would result in multiple instances of IonSystem being used.
          */
         private val ion = IonSystemBuilder.standard().build()
-        private val factory = ExprValueFactory.standard(ion)
         private val someTestBytes = "some test bytes".toByteArray(Charsets.UTF_8)
     }
 
@@ -60,28 +59,28 @@ class ExprValueFactoryTest {
         val localDate = LocalDate.of(2022, 1, 1)
         val time = Time.of(localTime, 9, ZoneOffset.ofHoursMinutes(1, 5))
         return listOf(
-            TestCase(ExprValueType.BOOL, true, ion.newBool(true), factory.newBoolean(true)),
-            TestCase(ExprValueType.BOOL, false, ion.newBool(false), factory.newBoolean(false)),
-            TestCase(ExprValueType.INT, 100L, ion.newInt(100), factory.newInt(100)), // <--Int converted to Long
-            TestCase(ExprValueType.INT, 101L, ion.newInt(101), factory.newInt(101L)),
-            TestCase(ExprValueType.FLOAT, 103.0, ion.newFloat(103.0), factory.newFloat(103.0)),
-            TestCase(ExprValueType.DECIMAL, BigDecimal(104), ion.newDecimal(BigDecimal(104)), factory.newDecimal(104)),
-            TestCase(ExprValueType.DECIMAL, BigDecimal(105), ion.newDecimal(BigDecimal(105)), factory.newDecimal(105L)),
-            TestCase(ExprValueType.DECIMAL, BigDecimal(106), ion.newDecimal(BigDecimal(106)), factory.newDecimal(BigDecimal(106))),
-            TestCase(ExprValueType.STRING, "107", ion.newString("107"), factory.newString("107")),
-            TestCase(ExprValueType.STRING, "", ion.newString(""), factory.newString("")),
-            TestCase(ExprValueType.SYMBOL, "108", ion.newSymbol("108"), factory.newSymbol("108")),
-            TestCase(ExprValueType.SYMBOL, "", ion.newSymbol(""), factory.newSymbol("")),
-            TestCase(ExprValueType.CLOB, someTestBytes, ion.newClob(someTestBytes), factory.newClob(someTestBytes)),
-            TestCase(ExprValueType.BLOB, someTestBytes, ion.newBlob(someTestBytes), factory.newBlob(someTestBytes)),
-            TestCase(ExprValueType.DATE, localDate, ion.singleValue("$DATE_ANNOTATION::2022-01-01"), factory.newDate(localDate)),
-            TestCase(ExprValueType.TIME, time, ion.singleValue("$TIME_ANNOTATION::{hour:17,minute:40,second:1.123456789,timezone_hour:1,timezone_minute:5}"), factory.newTime(time))
+            TestCase(ExprValueType.BOOL, true, ion.newBool(true), exprBoolean(true)),
+            TestCase(ExprValueType.BOOL, false, ion.newBool(false), exprBoolean(false)),
+            TestCase(ExprValueType.INT, 100L, ion.newInt(100), exprInt(100)), // <--Int converted to Long
+            TestCase(ExprValueType.INT, 101L, ion.newInt(101), exprInt(101L)),
+            TestCase(ExprValueType.FLOAT, 103.0, ion.newFloat(103.0), exprFloat(103.0)),
+            TestCase(ExprValueType.DECIMAL, BigDecimal(104), ion.newDecimal(BigDecimal(104)), exprDecimal(104)),
+            TestCase(ExprValueType.DECIMAL, BigDecimal(105), ion.newDecimal(BigDecimal(105)), exprDecimal(105L)),
+            TestCase(ExprValueType.DECIMAL, BigDecimal(106), ion.newDecimal(BigDecimal(106)), exprDecimal(BigDecimal(106))),
+            TestCase(ExprValueType.STRING, "107", ion.newString("107"), exprString("107")),
+            TestCase(ExprValueType.STRING, "", ion.newString(""), exprString("")),
+            TestCase(ExprValueType.SYMBOL, "108", ion.newSymbol("108"), exprSymbol("108")),
+            TestCase(ExprValueType.SYMBOL, "", ion.newSymbol(""), exprSymbol("")),
+            TestCase(ExprValueType.CLOB, someTestBytes, ion.newClob(someTestBytes), exprClob(someTestBytes)),
+            TestCase(ExprValueType.BLOB, someTestBytes, ion.newBlob(someTestBytes), exprBlob(someTestBytes)),
+            TestCase(ExprValueType.DATE, localDate, ion.singleValue("$DATE_ANNOTATION::2022-01-01"), exprDate(localDate)),
+            TestCase(ExprValueType.TIME, time, ion.singleValue("$TIME_ANNOTATION::{hour:17,minute:40,second:1.123456789,timezone_hour:1,timezone_minute:5}"), exprTime(time))
         )
     }
 
     @Test
     @Parameters
-    fun exprValueFactoryTest(tc: TestCase) {
+    fun exprValueUtilTest(tc: TestCase) {
         val expectedValue = tc.expectedValue
 
         // None of these values should be named
@@ -94,7 +93,7 @@ class ExprValueFactoryTest {
         assertEquals(tc.expectedIonValue, tc.value.toIonValue(ION))
 
         // An ExprValue created from tc.expectedIonValue must be equivalent to tc.value
-        val exprValueFromExpectedIonValue = factory.newFromIonValue(tc.expectedIonValue)
+        val exprValueFromExpectedIonValue = tc.expectedIonValue.toExprValue()
         assertEquals(0, DEFAULT_COMPARATOR.compare(exprValueFromExpectedIonValue, tc.value))
 
         // Converting to Ion and back again should yield an equivalent value
@@ -193,7 +192,7 @@ class ExprValueFactoryTest {
     }
 
     private fun assertEquivalentAfterConversionToIon(value: ExprValue) {
-        val reconstitutedValue = factory.newFromIonValue(value.toIonValue(ION))
+        val reconstitutedValue = value.toIonValue(ION).toExprValue()
         assertEquals(0, DEFAULT_COMPARATOR.compare(value, reconstitutedValue))
     }
 
@@ -207,46 +206,46 @@ class ExprValueFactoryTest {
 
     @Test
     fun emptyBag() {
-        assertEquals(ExprValueType.BAG, factory.emptyBag.type)
-        assertTrue(factory.emptyBag.none())
-        assertEquals(ion.singleValue("$BAG_ANNOTATION::[]"), factory.emptyBag.toIonValue(ION))
+        assertEquals(ExprValueType.BAG, emptyExprBag().type)
+        assertTrue(emptyExprBag().none())
+        assertEquals(ion.singleValue("$BAG_ANNOTATION::[]"), emptyExprBag().toIonValue(ION))
     }
 
     @Test
     fun emptyList() {
-        assertEquals(ExprValueType.LIST, factory.emptyList.type)
-        assertTrue(factory.emptyList.none())
-        assertEquals(ion.singleValue("[]"), factory.emptyList.toIonValue(ION))
-        assertEquivalentAfterConversionToIon(factory.emptyList)
+        assertEquals(ExprValueType.LIST, emptyExprList().type)
+        assertTrue(emptyExprList().none())
+        assertEquals(ion.singleValue("[]"), emptyExprList().toIonValue(ION))
+        assertEquivalentAfterConversionToIon(emptyExprList())
     }
 
     @Test
     fun emptySexp() {
-        assertEquals(ExprValueType.SEXP, factory.emptySexp.type)
-        assertTrue(factory.emptySexp.none())
-        assertEquivalentAfterConversionToIon(factory.emptySexp)
+        assertEquals(ExprValueType.SEXP, emptyExprSexp().type)
+        assertTrue(emptyExprSexp().none())
+        assertEquivalentAfterConversionToIon(emptyExprSexp())
     }
 
     @Test
     fun emptyStruct() {
-        assertEquals(ExprValueType.STRUCT, factory.emptyStruct.type)
-        assertTrue(factory.emptyBag.none())
-        assertEquivalentAfterConversionToIon(factory.emptyStruct)
+        assertEquals(ExprValueType.STRUCT, emptyExprStruct().type)
+        assertTrue(emptyExprBag().none())
+        assertEquivalentAfterConversionToIon(emptyExprStruct())
     }
 
     private val testList = listOf(1L, 2L, 3L)
-    private val testListExprValues = testList.map { factory.newInt(it) }
+    private val testListExprValues = testList.map { exprInt(it) }
     private val ionList = ion.singleValue("[1,2,3]")
     private val ionSexp = ion.singleValue("(1 2 3)")
     private val testBag = "$BAG_ANNOTATION::[1,2,3]"
-    private val bagFromSequence = factory.newBag(testListExprValues.asSequence())
-    private val bagFromList = factory.newBag(testListExprValues)
+    private val bagFromSequence = exprBag(testListExprValues.asSequence())
+    private val bagFromList = exprBag(testListExprValues)
 
     fun parametersForNonEmptyContainers() = listOf(
-        TestCase(ExprValueType.LIST, null, ionList, factory.newList(testListExprValues.asSequence())),
-        TestCase(ExprValueType.LIST, null, ionList, factory.newList(testListExprValues)),
-        TestCase(ExprValueType.SEXP, null, ionSexp, factory.newSexp(testListExprValues.asSequence())),
-        TestCase(ExprValueType.SEXP, null, ionSexp, factory.newSexp(testListExprValues)),
+        TestCase(ExprValueType.LIST, null, ionList, exprList(testListExprValues.asSequence())),
+        TestCase(ExprValueType.LIST, null, ionList, exprList(testListExprValues)),
+        TestCase(ExprValueType.SEXP, null, ionSexp, exprSexp(testListExprValues.asSequence())),
+        TestCase(ExprValueType.SEXP, null, ionSexp, exprSexp(testListExprValues)),
         TestCase(ExprValueType.BAG, null, ion.singleValue(testBag), bagFromSequence),
         TestCase(ExprValueType.BAG, null, ion.singleValue(testBag), bagFromList)
     )
@@ -261,7 +260,7 @@ class ExprValueFactoryTest {
                 assertTrue(tc.value.toIonValue(ION).isBag)
                 assertEquals(tc.expectedIonValue, tc.value.toIonValue(ION))
 
-                val fromIonValue = factory.newFromIonValue(tc.value.toIonValue(ION))
+                val fromIonValue = tc.value.toIonValue(ION).toExprValue()
                 assertEquals(ExprValueType.BAG, fromIonValue.type) // Ion has no bag type--[bag.ionVaule] converts to a list with annotation $bag
                 assertBagValues(fromIonValue)
                 assertEquals(fromIonValue.toIonValue(ION), tc.value.toIonValue(ION))
@@ -309,14 +308,14 @@ class ExprValueFactoryTest {
 
     fun nonEmptyUnorderedStructs(): Array<ExprValue> {
         val list = listOf(
-            factory.newInt(1).namedValue(factory.newSymbol("foo")),
-            factory.newInt(2).namedValue(factory.newSymbol("bar")),
-            factory.newInt(3).namedValue(factory.newSymbol("bat"))
+            exprInt(1).namedValue(exprSymbol("foo")),
+            exprInt(2).namedValue(exprSymbol("bar")),
+            exprInt(3).namedValue(exprSymbol("bat"))
         )
 
         return arrayOf(
-            factory.newStruct(list.asSequence(), StructOrdering.UNORDERED),
-            factory.newStruct(list, StructOrdering.UNORDERED)
+            exprStruct(list.asSequence(), StructOrdering.UNORDERED),
+            exprStruct(list, StructOrdering.UNORDERED)
         )
     }
 
@@ -324,7 +323,7 @@ class ExprValueFactoryTest {
     @Parameters(method = "nonEmptyUnorderedStructs")
     fun nonEmptyUnorderedStruct(struct: ExprValue) {
         assertUnorderderedStructValues(struct)
-        assertUnorderderedStructValues(factory.newFromIonValue(struct.toIonValue(ION)))
+        assertUnorderderedStructValues(struct.toIonValue(ION).toExprValue())
         assertEquivalentAfterConversionToIon(struct)
     }
 
@@ -340,14 +339,14 @@ class ExprValueFactoryTest {
 
     fun nonEmptyOrderedStructs(): Array<ExprValue> {
         val list = listOf(
-            factory.newInt(1).namedValue(factory.newSymbol("foo")),
-            factory.newInt(2).namedValue(factory.newSymbol("bar")),
-            factory.newInt(3).namedValue(factory.newSymbol("bat"))
+            exprInt(1).namedValue(exprSymbol("foo")),
+            exprInt(2).namedValue(exprSymbol("bar")),
+            exprInt(3).namedValue(exprSymbol("bat"))
         )
 
         return arrayOf(
-            factory.newStruct(list.asSequence(), StructOrdering.ORDERED),
-            factory.newStruct(list, StructOrdering.ORDERED)
+            exprStruct(list.asSequence(), StructOrdering.ORDERED),
+            exprStruct(list, StructOrdering.ORDERED)
         )
     }
 
@@ -355,7 +354,7 @@ class ExprValueFactoryTest {
     @Parameters(method = "nonEmptyOrderedStructs")
     fun nonEmptyOrderedStruct(struct: ExprValue) {
         assertOrderedStructValues(struct)
-        assertOrderedStructValues(factory.newFromIonValue(struct.toIonValue(ION)))
+        assertOrderedStructValues(struct.toIonValue(ION).toExprValue())
         assertEquivalentAfterConversionToIon(struct)
     }
 
@@ -376,20 +375,20 @@ class ExprValueFactoryTest {
     fun serializeDeserializeMissing() {
         // Deserialize - IonValue to ExprValue using newFromIonValue
         val ionValue = ion.newNull().also { it.addTypeAnnotation(MISSING_ANNOTATION) }
-        val exprValue = factory.newFromIonValue(ionValue)
+        val exprValue = ionValue.toExprValue()
         assertEquals(ExprValueType.MISSING, exprValue.type)
         assertEquals(exprValue.toIonValue(ION), ionValue)
 
         // Deserialize - IonValue to ExprValue using factory's missing value
-        val exprValueFromFactory = factory.missingValue
+        val exprValueFromFactory = exprMissing()
         assertEquals(ExprValueType.MISSING, exprValueFromFactory.type)
 
         // Serialize - ExprValue to IonValue using ionValue by lazy
-        val missingIonValue = factory.missingValue.toIonValue(ION)
+        val missingIonValue = exprMissing().toIonValue(ION)
         assertTrue(missingIonValue.isMissing, "The ion value should be ionNull with annotation $MISSING_ANNOTATION")
 
         // Ensure round trip doesn't add the annotation if it already has $missing annotation
-        val roundTrippedMissingExprValue = factory.newFromIonValue(exprValueFromFactory.toIonValue(ION))
+        val roundTrippedMissingExprValue = exprValueFromFactory.toIonValue(ION).toExprValue()
         assertTrue(roundTrippedMissingExprValue.toIonValue(ION).isMissing, "The ion value should be ionNull with annotation $MISSING_ANNOTATION")
         assertEquals(1, roundTrippedMissingExprValue.toIonValue(ION).typeAnnotations.size)
         assertEquals(MISSING_ANNOTATION, roundTrippedMissingExprValue.toIonValue(ION).typeAnnotations[0])
@@ -399,19 +398,19 @@ class ExprValueFactoryTest {
     fun serializeDeserializeBag() {
         // Deserialize - IonValue to ExprValue using newFromIonValue
         val ionValue = ion.newList(ion.newInt(1), ion.newInt(2), ion.newInt(3)).also { it.addTypeAnnotation(BAG_ANNOTATION) }
-        val exprValue = factory.newFromIonValue(ionValue)
+        val exprValue = ionValue.toExprValue()
         assertEquals(ExprValueType.BAG, exprValue.type)
         assertEquals(exprValue.toIonValue(ION), ionValue)
 
         // Deserialize - IonValue to ExprValue using newBag, newBag adds $BAG_ANNOTATION annotation to the list
-        val exprValueFromFactory = factory.newBag(listOf(factory.newInt(1), factory.newInt(2), factory.newInt(3)).asSequence())
+        val exprValueFromFactory = exprBag(listOf(exprInt(1), exprInt(2), exprInt(3)).asSequence())
         assertEquals(ExprValueType.BAG, exprValueFromFactory.type)
 
         // Serialize - ExprValue to IonValue using ionValue by lazy
         assertTrue(exprValueFromFactory.toIonValue(ION).isBag)
 
         // Ensure round trip doesn't add the annotation if it already has $bag annotation
-        val roundTrippedBagExprValue = factory.newFromIonValue(exprValueFromFactory.toIonValue(ION))
+        val roundTrippedBagExprValue = exprValueFromFactory.toIonValue(ION).toExprValue()
         assertTrue(roundTrippedBagExprValue.toIonValue(ION).isBag, "The ion value should be ionList with annotation $BAG_ANNOTATION")
         assertEquals(1, roundTrippedBagExprValue.toIonValue(ION).typeAnnotations.size)
         assertEquals(BAG_ANNOTATION, roundTrippedBagExprValue.toIonValue(ION).typeAnnotations[0])
@@ -426,7 +425,7 @@ class ExprValueFactoryTest {
                 addTypeAnnotation(DATE_ANNOTATION)
             }.seal()
 
-        val dateExprValue = factory.newDate(date)
+        val dateExprValue = exprDate(date)
         val dateIonValue = dateExprValue.toIonValue(ION)
         assertEquals(ionDate, dateIonValue, "Expected ionValues to be equal.")
         dateIonValue as IonTimestamp
@@ -438,7 +437,7 @@ class ExprValueFactoryTest {
 
     @Test
     fun genericTimeExprValueTest() {
-        val timeExprValue = factory.newTime(Time.of(23, 2, 29, 23, 2))
+        val timeExprValue = exprTime(Time.of(23, 2, 29, 23, 2))
         assertEquals(
             expected = LocalTime.of(23, 2, 29),
             actual = timeExprValue.scalar.timeValue()!!.localTime,
@@ -448,7 +447,7 @@ class ExprValueFactoryTest {
 
     @Test
     fun genericTimeExprValueTest2() {
-        val timeExprValue = factory.newTime(Time.of(23, 2, 29, 23, 2, -720))
+        val timeExprValue = exprTime(Time.of(23, 2, 29, 23, 2, -720))
         assertEquals(
             expected = OffsetTime.of(23, 2, 29, 0, ZoneOffset.ofTotalSeconds(-720 * 60)),
             actual = timeExprValue.scalar.timeValue()!!.offsetTime,
@@ -484,7 +483,7 @@ class ExprValueFactoryTest {
         val expected = LocalDate.of(2022, 1, 1)
 
         // Act
-        val exprValue = factory.newFromIonValue(ionValue)
+        val exprValue = ionValue.toExprValue()
 
         // Assert
         assertEquals(expected, exprValue.dateValue())
@@ -498,7 +497,7 @@ class ExprValueFactoryTest {
         val expected = Time.of(0, 40, 1, 123456789, 9, 65)
 
         // Act
-        val exprValue = factory.newFromIonValue(ionValue)
+        val exprValue = ionValue.toExprValue()
 
         // Assert
         assertEquals(expected, exprValue.timeValue())

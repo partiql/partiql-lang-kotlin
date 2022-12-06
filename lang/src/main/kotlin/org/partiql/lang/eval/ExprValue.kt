@@ -137,20 +137,19 @@ private fun ExprValue.toIonStruct(ion: IonSystem): IonStruct {
     }
 }
 
-fun IonValue.toExprValue(): ExprValue {
-    val valueFactory = ExprValueFactory.standard(system)
-    return when {
-        isNullValue && hasTypeAnnotation(MISSING_ANNOTATION) -> valueFactory.missingValue // MISSING
-        isNullValue -> NullExprValue(system, type) // NULL
-        this is IonBool -> valueFactory.newBoolean(booleanValue()) // BOOL
-        this is IonInt -> valueFactory.newInt(longValue()) // INT
-        this is IonFloat -> valueFactory.newFloat(doubleValue()) // FLOAT
-        this is IonDecimal -> valueFactory.newDecimal(decimalValue()) // DECIMAL
+fun IonValue.toExprValue(): ExprValue =
+    when {
+        isNullValue && hasTypeAnnotation(MISSING_ANNOTATION) -> exprMissing() // MISSING
+        isNullValue -> exprNull(type) // NULL
+        this is IonBool -> exprBoolean(booleanValue()) // BOOL
+        this is IonInt -> exprInt(longValue()) // INT
+        this is IonFloat -> exprFloat(doubleValue()) // FLOAT
+        this is IonDecimal -> exprDecimal(decimalValue()) // DECIMAL
         this is IonTimestamp && hasTypeAnnotation(DATE_ANNOTATION) -> {
             val timestampValue = timestampValue()
-            valueFactory.newDate(timestampValue.year, timestampValue.month, timestampValue.day)
+            exprDate(timestampValue.year, timestampValue.month, timestampValue.day)
         } // DATE
-        this is IonTimestamp -> valueFactory.newTimestamp(timestampValue()) // TIMESTAMP
+        this is IonTimestamp -> exprTimestamp(timestampValue()) // TIMESTAMP
         this is IonStruct && hasTypeAnnotation(TIME_ANNOTATION) -> {
             val hourValue = (this["hour"] as IonInt).intValue()
             val minuteValue = (this["minute"] as IonInt).intValue()
@@ -159,32 +158,30 @@ fun IonValue.toExprValue(): ExprValue {
             val nanoValue = secondInDecimal.remainder(BigDecimal.ONE).multiply(NANOS_PER_SECOND.toBigDecimal()).toInt()
             val timeZoneHourValue = (this["timezone_hour"] as IonInt).intValue()
             val timeZoneMinuteValue = (this["timezone_minute"] as IonInt).intValue()
-            valueFactory.newTime(Time.of(hourValue, minuteValue, secondValue, nanoValue, secondInDecimal.scale(), timeZoneHourValue * 60 + timeZoneMinuteValue))
+            exprTime(Time.of(hourValue, minuteValue, secondValue, nanoValue, secondInDecimal.scale(), timeZoneHourValue * 60 + timeZoneMinuteValue))
         } // TIME
-        this is IonSymbol -> valueFactory.newSymbol(stringValue()) // SYMBOL
-        this is IonString -> valueFactory.newString(stringValue()) // STRING
-        this is IonClob -> valueFactory.newClob(bytesValue()) // CLOB
-        this is IonBlob -> valueFactory.newBlob(bytesValue()) // BLOB
-        this is IonList && hasTypeAnnotation(BAG_ANNOTATION) -> valueFactory.newBag(map { it.toExprValue() }) // BAG
-        this is IonList -> valueFactory.newList(map { it.toExprValue() }) // LIST
-        this is IonSexp -> valueFactory.newSexp(map { it.toExprValue() }) // SEXP
-        this is IonStruct -> IonStructExprValue(valueFactory, this) // STRUCT
+        this is IonSymbol -> exprSymbol(stringValue()) // SYMBOL
+        this is IonString -> exprString(stringValue()) // STRING
+        this is IonClob -> exprClob(bytesValue()) // CLOB
+        this is IonBlob -> exprBlob(bytesValue()) // BLOB
+        this is IonList && hasTypeAnnotation(BAG_ANNOTATION) -> exprBag(map { it.toExprValue() }) // BAG
+        this is IonList -> exprList(map { it.toExprValue() }) // LIST
+        this is IonSexp -> exprSexp(map { it.toExprValue() }) // SEXP
+        this is IonStruct -> IonStructExprValue(this) // STRUCT
         else -> error("Unrecognized IonValue to transform to ExprValue: $this")
     }
-}
 
 private class IonStructExprValue(
-    valueFactory: ExprValueFactory,
     private val ionStruct: IonStruct
 ) : StructExprValue(
-    valueFactory.ion,
+    ionStruct.system,
     StructOrdering.UNORDERED,
     ionStruct.asSequence().map {
-        it.toExprValue().namedValue(valueFactory.newString(it.fieldName))
+        it.toExprValue().namedValue(exprString(it.fieldName))
     }
 ) {
     override val bindings: Bindings<ExprValue> =
-        IonStructBindings(valueFactory, ionStruct)
+        IonStructBindings(ionStruct)
 
     override val ionValue: IonValue
         get() = ionStruct

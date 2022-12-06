@@ -17,6 +17,9 @@ package org.partiql.lang.eval.physical.operators
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.address
+import org.partiql.lang.eval.exprBag
+import org.partiql.lang.eval.exprMissing
+import org.partiql.lang.eval.exprString
 import org.partiql.lang.eval.name
 import org.partiql.lang.eval.namedValue
 import org.partiql.lang.eval.physical.EvaluatorState
@@ -45,25 +48,25 @@ internal class UnpivotOperatorDefault(
 ) : RelationExpression {
     override fun evaluate(state: EvaluatorState): RelationIterator {
         val originalValue = expr(state)
-        val unpivot = originalValue.unpivot(state)
+        val unpivot = originalValue.unpivot()
 
         return relation(RelationType.BAG) {
             val iter = unpivot.iterator()
             while (iter.hasNext()) {
                 val item = iter.next()
                 setAsVar(state, item.unnamedValue())
-                setAtVar?.let { it(state, item.name ?: state.valueFactory.missingValue) }
-                setByVar?.let { it(state, item.address ?: state.valueFactory.missingValue) }
+                setAtVar?.let { it(state, item.name ?: exprMissing()) }
+                setByVar?.let { it(state, item.address ?: exprMissing()) }
                 yield()
             }
         }
     }
 
-    private fun ExprValue.unpivot(state: EvaluatorState): ExprValue = when (type) {
+    private fun ExprValue.unpivot(): ExprValue = when (type) {
         ExprValueType.STRUCT, ExprValueType.MISSING -> this
-        else -> state.valueFactory.newBag(
+        else -> exprBag(
             listOf(
-                this.namedValue(state.valueFactory.newString(syntheticColumnName(0)))
+                this.namedValue(exprString(syntheticColumnName(0)))
             )
         )
     }

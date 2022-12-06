@@ -4,7 +4,6 @@ import com.amazon.ion.IonValue
 import org.junit.jupiter.api.fail
 import org.partiql.lang.ION
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.mockdb.MockDb
 import org.partiql.lang.util.createPartiqlIonSchemaSystem
 
@@ -19,7 +18,7 @@ import org.partiql.lang.util.createPartiqlIonSchemaSystem
 data class IonResultTestSuite(
     val globals: Map<String, IonValue>,
     val groups: List<IonResultTestGroup>,
-    val factoryBlock: (ExprValueFactory) -> List<ExprValue>
+    val factoryBlock: () -> List<ExprValue>
 ) {
 
     /**
@@ -61,11 +60,10 @@ data class IonResultTestSuite(
         .map { it.toStatementTestCase() }
 
     /** Invokes [factoryBlock] to create the parameters needed for the tests in the suite. */
-    fun createParameters(vf: ExprValueFactory) = factoryBlock(vf)
+    fun createParameters() = factoryBlock()
 
     /** Instantiates an instance of [MockDb] with values and types instantiated using [globals]. */
-    fun mockDb(valueFactory: ExprValueFactory): MockDb =
-        MockDb(globals, valueFactory, createPartiqlIonSchemaSystem(ION))
+    fun mockDb(): MockDb = MockDb(globals, createPartiqlIonSchemaSystem(ION))
 }
 
 /**

@@ -25,7 +25,6 @@ import org.partiql.lang.eval.CompileOptions
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.PartiQLResult
 import org.partiql.lang.eval.ProjectionIterationBehavior
 import org.partiql.lang.eval.ThunkOptions
@@ -67,7 +66,7 @@ internal sealed class AbstractPipeline(open val options: PipelineOptions) {
         val projectionIterationBehavior: ProjectionIterationBehavior = ProjectionIterationBehavior.FILTER_MISSING,
         val undefinedVariableBehavior: UndefinedVariableBehavior = UndefinedVariableBehavior.ERROR,
         val typingMode: TypingMode = TypingMode.LEGACY,
-        val functions: List<(ExprValueFactory) -> ExprFunction> = emptyList()
+        val functions: List<ExprFunction> = emptyList()
     )
 
     /**
@@ -82,9 +81,8 @@ internal sealed class AbstractPipeline(open val options: PipelineOptions) {
             typingMode(options.typingMode)
         }
 
-        private val compilerPipeline = CompilerPipeline.build(options.ion) {
-            options.functions.forEach { functionBlock ->
-                val function = functionBlock.invoke(valueFactory)
+        private val compilerPipeline = CompilerPipeline.build {
+            options.functions.forEach { function ->
                 addFunction(function)
             }
             compileOptions(compileOptions)
@@ -125,7 +123,6 @@ internal sealed class AbstractPipeline(open val options: PipelineOptions) {
                     .globalVariableResolver(globalVariableResolver)
                     .build(),
                 compiler = PartiQLCompilerBuilder.standard()
-                    .ionSystem(options.ion)
                     .options(evaluatorOptions)
                     .build(),
             )

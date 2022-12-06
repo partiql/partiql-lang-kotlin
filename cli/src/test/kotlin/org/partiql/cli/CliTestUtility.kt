@@ -5,7 +5,7 @@ import com.amazon.ion.system.IonSystemBuilder
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.eval.ExprValueFactory
+import org.partiql.lang.eval.toExprValue
 import org.partiql.pipeline.AbstractPipeline
 import java.io.ByteArrayOutputStream
 import java.io.OutputStream
@@ -22,11 +22,9 @@ internal fun makeCliAndGetResult(
     output: OutputStream = ByteArrayOutputStream(),
     ion: IonSystem = IonSystemBuilder.standard().build(),
     pipeline: AbstractPipeline = AbstractPipeline.standard(),
-    valueFactory: ExprValueFactory = ExprValueFactory.standard(ion),
     wrapIon: Boolean = false
 ): String {
     val cli = Cli(
-        valueFactory,
         input?.byteInputStream(Charsets.UTF_8) ?: EmptyInputStream(),
         inputFormat,
         output,
@@ -53,6 +51,6 @@ fun assertAsIon(expected: String, actual: String) {
  */
 fun assertAsIon(ion: IonSystem, expected: String, actual: String) = assertEquals(ion.loader.load(expected), ion.loader.load(actual))
 
-fun String.singleIonExprValue(ion: IonSystem = IonSystemBuilder.standard().build(), valueFactory: ExprValueFactory = ExprValueFactory.standard(ion)) = valueFactory.newFromIonValue(ion.singleValue(this))
+fun String.singleIonExprValue(ion: IonSystem = IonSystemBuilder.standard().build()) = ion.singleValue(this).toExprValue()
 fun Map<String, String>.asBinding() =
     Bindings.ofMap(this.mapValues { it.value.singleIonExprValue() })

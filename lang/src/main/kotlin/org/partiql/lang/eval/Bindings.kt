@@ -135,7 +135,7 @@ interface Bindings<T> {
          * Returns an instance of [Bindings<T>] that is backed by an [IonStruct].
          */
         @JvmStatic
-        fun ofIonStruct(struct: IonStruct, valueFactory: ExprValueFactory): Bindings<ExprValue> = IonStructBindings(valueFactory, struct)
+        fun ofIonStruct(struct: IonStruct): Bindings<ExprValue> = IonStructBindings(struct)
     }
 
     /** An implementation of the builder pattern for instances of [Bindings<T>]. */

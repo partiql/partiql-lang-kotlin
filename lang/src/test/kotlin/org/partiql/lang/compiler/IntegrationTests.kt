@@ -11,6 +11,8 @@ import org.partiql.lang.compiler.memorydb.QueryEngine
 import org.partiql.lang.eval.BAG_ANNOTATION
 import org.partiql.lang.eval.BindingCase
 import org.partiql.lang.eval.BindingName
+import org.partiql.lang.eval.exprInt
+import org.partiql.lang.eval.exprList
 import org.partiql.lang.eval.toIonValue
 
 @PartiQLExperimental
@@ -31,7 +33,7 @@ class TestContext {
         assertEquals(expectedIon, result.toIonValue(ION))
     }
 
-    fun intKey(value: Int) = db.valueFactory.newList(listOf(db.valueFactory.newInt(value)))
+    fun intKey(value: Int) = exprList(listOf(exprInt(value)))
 }
 
 /**

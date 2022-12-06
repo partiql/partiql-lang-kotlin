@@ -14,11 +14,7 @@
 
 package org.partiql.lang.compiler
 
-import com.amazon.ion.IonSystem
-import com.amazon.ion.system.IonSystemBuilder
-import org.partiql.annotations.PartiQLExperimental
 import org.partiql.lang.eval.ExprFunction
-import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.ThunkReturnTypeAssertions
 import org.partiql.lang.eval.builtins.DynamicLookupExprFunction
 import org.partiql.lang.eval.builtins.createBuiltinFunctions
@@ -34,6 +30,7 @@ import org.partiql.lang.eval.physical.operators.ScanRelationalOperatorFactoryDef
 import org.partiql.lang.eval.physical.operators.SortOperatorFactoryDefault
 import org.partiql.lang.eval.physical.operators.UnpivotOperatorFactoryDefault
 import org.partiql.lang.eval.physical.operators.WindowRelationalOperatorFactoryDefault
+import org.partiql.lang.eval.physical.window.ExperimentalWindowFunc
 import org.partiql.lang.planner.EvaluatorOptions
 import org.partiql.lang.types.CustomType
 
@@ -53,10 +50,8 @@ import org.partiql.lang.types.CustomType
  *                                      .build()
  * ```
  */
-@PartiQLExperimental
 class PartiQLCompilerBuilder private constructor() {
 
-    private var valueFactory: ExprValueFactory = ExprValueFactory.standard(DEFAULT_ION)
     private var options: EvaluatorOptions = EvaluatorOptions.standard()
     private var customTypes: List<CustomType> = emptyList()
     private var customFunctions: List<ExprFunction> = emptyList()
@@ -64,9 +59,6 @@ class PartiQLCompilerBuilder private constructor() {
     private var customOperatorFactories: List<RelationalOperatorFactory> = emptyList()
 
     companion object {
-
-        private val DEFAULT_ION = IonSystemBuilder.standard().build()
-
         /**
          * A collection of all the default relational operator implementations provided by PartiQL.
          *
@@ -86,6 +78,7 @@ class PartiQLCompilerBuilder private constructor() {
             OffsetRelationalOperatorFactoryDefault,
             LimitRelationalOperatorFactoryDefault,
             LetRelationalOperatorFactoryDefault,
+            @OptIn(ExperimentalWindowFunc::class)
             WindowRelationalOperatorFactoryDefault
         )
 
@@ -98,7 +91,6 @@ class PartiQLCompilerBuilder private constructor() {
             TODO("ThunkReturnTypeAssertions.ENABLED requires a static type pass")
         }
         return PartiQLCompilerDefault(
-            valueFactory = valueFactory,
             evaluatorOptions = options,
             customTypedOpParameters = customTypes.associateBy(
                 keySelector = { it.name },
@@ -111,10 +103,6 @@ class PartiQLCompilerBuilder private constructor() {
             ),
             operatorFactories = allOperatorFactories()
         )
-    }
-
-    fun ionSystem(ion: IonSystem): PartiQLCompilerBuilder = this.apply {
-        this.valueFactory = ExprValueFactory.standard(ion)
     }
 
     fun options(options: EvaluatorOptions) = this.apply {
@@ -152,7 +140,7 @@ class PartiQLCompilerBuilder private constructor() {
     // --- Internal ----------------------------------
 
     private fun allFunctions(): Map<String, ExprFunction> {
-        val builtins = createBuiltinFunctions(valueFactory)
+        val builtins = createBuiltinFunctions()
         val allFunctions = builtins + customFunctions + DynamicLookupExprFunction()
         return allFunctions.associateBy { it.signature.name }
     }

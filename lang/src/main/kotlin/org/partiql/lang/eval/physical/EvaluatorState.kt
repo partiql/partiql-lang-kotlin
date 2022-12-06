@@ -16,7 +16,6 @@ package org.partiql.lang.eval.physical
 
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.eval.ExprValueFactory
 
 /**
  * Contains state needed during query evaluation such as an instance of [EvaluationSession] and an array of [registers]
@@ -30,9 +29,6 @@ import org.partiql.lang.eval.ExprValueFactory
 class EvaluatorState(
     /** The current [EvaluationSession]. */
     val session: EvaluationSession,
-
-    /** The current [ExprValueFactory], provided here as a convenience. */
-    val valueFactory: ExprValueFactory,
 
     /**
      * An array of registers containing [ExprValue]s needed during query execution.  Generally, there is

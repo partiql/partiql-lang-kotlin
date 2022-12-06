@@ -125,18 +125,16 @@ internal val DEFAULT_EXCEPTION_HANDLER_FOR_PERMISSIVE_MODE: ThunkExceptionHandle
  *  - when [TypingMode] is [TypingMode.PERMISSIVE], creates [PermissiveThunkFactory]
  */
 internal fun <TEnv> TypingMode.createThunkFactory(
-    thunkOptions: ThunkOptions,
-    valueFactory: ExprValueFactory
+    thunkOptions: ThunkOptions
 ): ThunkFactory<TEnv> = when (this) {
-    TypingMode.LEGACY -> LegacyThunkFactory(thunkOptions, valueFactory)
-    TypingMode.PERMISSIVE -> PermissiveThunkFactory(thunkOptions, valueFactory)
+    TypingMode.LEGACY -> LegacyThunkFactory(thunkOptions)
+    TypingMode.PERMISSIVE -> PermissiveThunkFactory(thunkOptions)
 }
 /**
  * Provides methods for constructing new thunks according to the specified [CompileOptions].
  */
 internal abstract class ThunkFactory<TEnv>(
-    val thunkOptions: ThunkOptions,
-    val valueFactory: ExprValueFactory
+    val thunkOptions: ThunkOptions
 ) {
     private fun checkEvaluationTimeType(thunkResult: ExprValue, metas: MetaContainer): ExprValue {
         // When this check is enabled we throw an exception the [MetaContainer] does not have a
@@ -425,8 +423,7 @@ internal abstract class ThunkFactory<TEnv>(
  */
 internal class LegacyThunkFactory<TEnv>(
     thunkOptions: ThunkOptions,
-    valueFactory: ExprValueFactory
-) : ThunkFactory<TEnv>(thunkOptions, valueFactory) {
+) : ThunkFactory<TEnv>(thunkOptions) {
 
     override fun propagateUnknowns(
         getVal1: () -> ExprValue,
@@ -436,17 +433,17 @@ internal class LegacyThunkFactory<TEnv>(
     ): ExprValue {
         val val1 = getVal1()
         return when {
-            val1.isUnknown() -> valueFactory.nullValue
+            val1.isUnknown() -> exprNull()
             else -> {
                 val val2 = getVal2?.let { it() }
                 when {
                     val2 == null -> compute(val1, null, null)
-                    val2.isUnknown() -> valueFactory.nullValue
+                    val2.isUnknown() -> exprNull()
                     else -> {
                         val val3 = getVal3?.let { it() }
                         when {
                             val3 == null -> compute(val1, val2, null)
-                            val3.isUnknown() -> valueFactory.nullValue
+                            val3.isUnknown() -> exprNull()
                             else -> compute(val1, val2, val3)
                         }
                     }
@@ -464,7 +461,7 @@ internal class LegacyThunkFactory<TEnv>(
         val argValues = mutableListOf<ExprValue>()
         operands.forEach {
             when {
-                it.isUnknown() -> return valueFactory.nullValue
+                it.isUnknown() -> return exprNull()
                 else -> argValues.add(it)
             }
         }
@@ -485,12 +482,12 @@ internal class LegacyThunkFactory<TEnv>(
             val firstValue = firstThunk(env)
             when {
                 // Short-circuit at first NULL or MISSING value and return NULL.
-                firstValue.isUnknown() -> valueFactory.nullValue
+                firstValue.isUnknown() -> exprNull()
                 else -> {
                     otherThunks.fold(firstValue) { acc, curr ->
                         val currValue = curr(env)
                         if (currValue.type.isUnknown) {
-                            return@thunkBlock valueFactory.nullValue
+                            return@thunkBlock exprNull()
                         }
                         op(acc, currValue)
                     }
@@ -514,24 +511,24 @@ internal class LegacyThunkFactory<TEnv>(
             val firstValue = firstThunk(env)
             when {
                 // If the first value is unknown, short circuit returning null.
-                firstValue.isUnknown() -> valueFactory.nullValue
+                firstValue.isUnknown() -> exprNull()
                 else -> {
                     otherThunks.fold(firstValue) { lastValue, currentThunk ->
 
                         val currentValue = currentThunk(env)
                         if (currentValue.isUnknown()) {
-                            return@thunkBlock valueFactory.nullValue
+                            return@thunkBlock exprNull()
                         }
 
                         val result = op(lastValue, currentValue)
                         if (!result) {
-                            return@thunkBlock valueFactory.newBoolean(false)
+                            return@thunkBlock exprBoolean(false)
                         }
 
                         currentValue
                     }
 
-                    valueFactory.newBoolean(true)
+                    exprBoolean(true)
                 }
             }
         }
@@ -564,9 +561,8 @@ internal class LegacyThunkFactory<TEnv>(
  * [TypingMode.PERMISSIVE] behaviour.
  */
 internal class PermissiveThunkFactory<TEnv>(
-    thunkOptions: ThunkOptions,
-    valueFactory: ExprValueFactory
-) : ThunkFactory<TEnv>(thunkOptions, valueFactory) {
+    thunkOptions: ThunkOptions
+) : ThunkFactory<TEnv>(thunkOptions) {
 
     override fun propagateUnknowns(
         getVal1: () -> ExprValue,
@@ -576,17 +572,17 @@ internal class PermissiveThunkFactory<TEnv>(
     ): ExprValue {
         val val1 = getVal1()
         return when (val1.type) {
-            ExprValueType.MISSING -> valueFactory.missingValue
+            ExprValueType.MISSING -> exprMissing()
             else -> {
                 val val2 = getVal2?.let { it() }
                 when {
                     val2 == null -> nullOrCompute(val1, null, null, compute)
-                    val2.type == ExprValueType.MISSING -> valueFactory.missingValue
+                    val2.type == ExprValueType.MISSING -> exprMissing()
                     else -> {
                         val val3 = getVal3?.let { it() }
                         when {
                             val3 == null -> nullOrCompute(val1, val2, null, compute)
-                            val3.type == ExprValueType.MISSING -> valueFactory.missingValue
+                            val3.type == ExprValueType.MISSING -> exprMissing()
                             else -> nullOrCompute(val1, val2, val3, compute)
                         }
                     }
@@ -605,13 +601,13 @@ internal class PermissiveThunkFactory<TEnv>(
         val argValues = mutableListOf<ExprValue>()
         operands.forEach {
             when (it.type) {
-                ExprValueType.MISSING -> return valueFactory.missingValue
+                ExprValueType.MISSING -> return exprMissing()
                 else -> argValues.add(it)
             }
         }
         return when {
             // if any result is `NULL`, propagate return null instead.
-            argValues.any { it.type == ExprValueType.NULL } -> valueFactory.nullValue
+            argValues.any { it.type == ExprValueType.NULL } -> exprNull()
             else -> compute(argValues)
         }
     }
@@ -625,7 +621,7 @@ internal class PermissiveThunkFactory<TEnv>(
         when {
             v1.type == ExprValueType.NULL ||
                 (v2?.let { it.type == ExprValueType.NULL }) ?: false ||
-                (v3?.let { it.type == ExprValueType.NULL }) ?: false -> valueFactory.nullValue
+                (v3?.let { it.type == ExprValueType.NULL }) ?: false -> exprNull()
             else -> compute(v1, v2, v3)
         }
 
@@ -642,13 +638,13 @@ internal class PermissiveThunkFactory<TEnv>(
                 val v = it(env)
                 when (v.type) {
                     // Short-circuit at first detected MISSING value.
-                    ExprValueType.MISSING -> return@thunkEnv valueFactory.missingValue
+                    ExprValueType.MISSING -> return@thunkEnv exprMissing()
                     else -> v
                 }
             }
             when {
                 // Propagate NULL if any operand is NULL.
-                values.any { it.type == ExprValueType.NULL } -> valueFactory.nullValue
+                values.any { it.type == ExprValueType.NULL } -> exprNull()
                 // compute the final value.
                 else -> values.reduce { first, second -> op(first, second) }
             }
@@ -668,20 +664,20 @@ internal class PermissiveThunkFactory<TEnv>(
                 val v = it(env)
                 when (v.type) {
                     // Short-circuit at first detected MISSING value.
-                    ExprValueType.MISSING -> return@thunkBlock valueFactory.missingValue
+                    ExprValueType.MISSING -> return@thunkBlock exprMissing()
                     else -> v
                 }
             }
             when {
                 // Propagate NULL if any operand is NULL.
-                values.any { it.type == ExprValueType.NULL } -> valueFactory.nullValue
+                values.any { it.type == ExprValueType.NULL } -> exprNull()
                 else -> {
                     (0..(values.size - 2)).forEach { i ->
                         if (!op(values[i], values[i + 1]))
-                            return@thunkBlock valueFactory.newBoolean(false)
+                            return@thunkBlock exprBoolean(false)
                     }
 
-                    return@thunkBlock valueFactory.newBoolean(true)
+                    return@thunkBlock exprBoolean(true)
                 }
             }
         }
@@ -705,7 +701,7 @@ internal class PermissiveThunkFactory<TEnv>(
             when (e.errorCode.errorBehaviorInPermissiveMode) {
                 // Rethrows the exception as it does in LEGACY mode.
                 ErrorBehaviorInPermissiveMode.THROW_EXCEPTION -> throw populateErrorContext(e, sourceLocation)
-                ErrorBehaviorInPermissiveMode.RETURN_MISSING -> valueFactory.missingValue
+                ErrorBehaviorInPermissiveMode.RETURN_MISSING -> exprMissing()
             }
         } catch (e: Exception) {
             thunkOptions.handleExceptionForLegacyMode(e, sourceLocation)

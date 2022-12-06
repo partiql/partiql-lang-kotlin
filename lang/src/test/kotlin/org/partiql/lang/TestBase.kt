@@ -18,7 +18,6 @@ import com.amazon.ion.IonSystem
 import junitparams.JUnitParamsRunner
 import org.junit.Assert
 import org.junit.runner.RunWith
-import org.partiql.lang.eval.ExprValueFactory
 
 /**
  * Most inheriting test classes access JUnit4's `assert*` methods through the protected methods of [TestBase]'s
@@ -30,7 +29,5 @@ import org.partiql.lang.eval.ExprValueFactory
  */
 @RunWith(JUnitParamsRunner::class)
 abstract class TestBase : Assert() {
-
     val ion: IonSystem = ION
-    val valueFactory = ExprValueFactory.standard(ion)
 }

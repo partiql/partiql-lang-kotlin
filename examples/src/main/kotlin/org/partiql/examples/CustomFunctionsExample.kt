@@ -1,6 +1,5 @@
 package org.partiql.examples
 
-import com.amazon.ion.system.IonSystemBuilder
 import org.partiql.examples.util.Example
 import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.errors.ErrorCode
@@ -8,9 +7,12 @@ import org.partiql.lang.eval.EvaluationException
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.StructOrdering
+import org.partiql.lang.eval.exprInt
+import org.partiql.lang.eval.exprList
+import org.partiql.lang.eval.exprString
+import org.partiql.lang.eval.exprStruct
 import org.partiql.lang.eval.namedValue
 import org.partiql.lang.types.FunctionSignature
 import org.partiql.lang.types.StaticType
@@ -34,7 +36,7 @@ private fun calcFib(n: Long): Long = when (n) {
  * If the arguments of the function should *not* trigger null-propagation (e.g.
  * `COALESCE`), the [ExprFunction] interface should be implemented directly.
  */
-class FibScalarExprFunc(private val valueFactory: ExprValueFactory) : ExprFunction {
+class FibScalarExprFunc : ExprFunction {
     override val signature = FunctionSignature(
         name = "fib_scalar",
         requiredParameters = listOf(StaticType.INT),
@@ -56,7 +58,7 @@ class FibScalarExprFunc(private val valueFactory: ExprValueFactory) : ExprFuncti
 
         val n = argN.scalar.numberValue()!!.toLong()
 
-        return valueFactory.newInt(calcFib(n))
+        return exprInt(calcFib(n))
     }
 }
 
@@ -68,7 +70,7 @@ class FibScalarExprFunc(private val valueFactory: ExprValueFactory) : ExprFuncti
  * fashion demonstrates how one could implement what would be known as a table-valued
  * function in a traditional SQL implementation.
  */
-class FibListExprFunc(private val valueFactory: ExprValueFactory) : ExprFunction {
+class FibListExprFunc : ExprFunction {
     override val signature = FunctionSignature(
         name = "fib_list",
         requiredParameters = listOf(StaticType.INT),
@@ -87,11 +89,11 @@ class FibListExprFunc(private val valueFactory: ExprValueFactory) : ExprFunction
         val listElements = (0L..n).map { i ->
             // Due to the call to .asSequence() below, this closure will be lazily executed
             // to fetch one element at a time as they are needed.
-            val fieldValue = valueFactory.newInt(calcFib(i)).namedValue(valueFactory.newString("n"))
-            valueFactory.newStruct(sequenceOf(fieldValue), StructOrdering.UNORDERED)
+            val fieldValue = exprInt(calcFib(i)).namedValue(exprString("n"))
+            exprStruct(sequenceOf(fieldValue), StructOrdering.UNORDERED)
         }.asSequence()
 
-        return valueFactory.newList(listElements)
+        return exprList(listElements)
     }
 }
 
@@ -102,16 +104,13 @@ class FibListExprFunc(private val valueFactory: ExprValueFactory) : ExprFunction
  * the two custom functions: [FibScalarExprFunc] and [FibListExprFunc] are implemented.
  */
 class CustomFunctionsExample(out: PrintStream) : Example(out) {
-
-    private val ion = IonSystemBuilder.standard().build()
-
     /**
      * To make custom functions available to the PartiQL being executed, they must be passed to
      * [CompilerPipeline.Builder.addFunction].
      */
-    val pipeline = CompilerPipeline.build(ion) {
-        addFunction(FibScalarExprFunc(valueFactory))
-        addFunction(FibListExprFunc(valueFactory))
+    val pipeline = CompilerPipeline.build {
+        addFunction(FibScalarExprFunc())
+        addFunction(FibListExprFunc())
     }
 
     /** Evaluates the given [query] with as standard [EvaluationSession]. */

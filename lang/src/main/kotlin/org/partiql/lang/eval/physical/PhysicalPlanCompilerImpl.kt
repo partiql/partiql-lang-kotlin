@@ -15,8 +15,10 @@
 package org.partiql.lang.eval.physical
 
 import com.amazon.ion.IonString
+import com.amazon.ion.IonSystem
 import com.amazon.ion.IonValue
 import com.amazon.ion.Timestamp
+import com.amazon.ion.system.IonSystemBuilder
 import com.amazon.ionelement.api.MetaContainer
 import com.amazon.ionelement.api.emptyMetaContainer
 import com.amazon.ionelement.api.toIonValue
@@ -42,7 +44,6 @@ import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueBagOp
-import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.Expression
 import org.partiql.lang.eval.Named
@@ -50,7 +51,6 @@ import org.partiql.lang.eval.ProjectionIterationBehavior
 import org.partiql.lang.eval.RequiredArgs
 import org.partiql.lang.eval.RequiredWithOptional
 import org.partiql.lang.eval.RequiredWithVariadic
-import org.partiql.lang.eval.SequenceExprValue
 import org.partiql.lang.eval.StructOrdering
 import org.partiql.lang.eval.ThunkValue
 import org.partiql.lang.eval.TypedOpBehavior
@@ -65,10 +65,19 @@ import org.partiql.lang.eval.createThunkFactory
 import org.partiql.lang.eval.distinct
 import org.partiql.lang.eval.err
 import org.partiql.lang.eval.errInvalidArgumentType
-import org.partiql.lang.eval.errNoContext
 import org.partiql.lang.eval.errorContextFrom
 import org.partiql.lang.eval.errorIf
+import org.partiql.lang.eval.exprBag
+import org.partiql.lang.eval.exprBoolean
+import org.partiql.lang.eval.exprDate
 import org.partiql.lang.eval.exprEquals
+import org.partiql.lang.eval.exprList
+import org.partiql.lang.eval.exprMissing
+import org.partiql.lang.eval.exprNull
+import org.partiql.lang.eval.exprSexp
+import org.partiql.lang.eval.exprString
+import org.partiql.lang.eval.exprStruct
+import org.partiql.lang.eval.exprTime
 import org.partiql.lang.eval.fillErrorContext
 import org.partiql.lang.eval.isNotUnknown
 import org.partiql.lang.eval.isUnknown
@@ -82,6 +91,7 @@ import org.partiql.lang.eval.stringValue
 import org.partiql.lang.eval.syntheticColumnName
 import org.partiql.lang.eval.time.Time
 import org.partiql.lang.eval.timestampValue
+import org.partiql.lang.eval.toExprValue
 import org.partiql.lang.eval.unnamedValue
 import org.partiql.lang.planner.EvaluatorOptions
 import org.partiql.lang.types.AnyOfType
@@ -97,6 +107,7 @@ import org.partiql.lang.types.toTypedOpParameter
 import org.partiql.lang.util.checkThreadInterrupted
 import org.partiql.lang.util.codePointSequence
 import org.partiql.lang.util.div
+import org.partiql.lang.util.exprValue
 import org.partiql.lang.util.isZero
 import org.partiql.lang.util.minus
 import org.partiql.lang.util.plus
@@ -106,7 +117,6 @@ import org.partiql.lang.util.times
 import org.partiql.lang.util.toIntExact
 import org.partiql.lang.util.totalMinutes
 import org.partiql.lang.util.unaryMinus
-import java.math.BigDecimal
 import java.util.LinkedList
 import java.util.TreeSet
 import java.util.regex.Pattern
@@ -132,33 +142,18 @@ import java.util.regex.Pattern
  * [1]: https://www.complang.tuwien.ac.at/anton/lvas/sem06w/fest.pdf
  */
 internal class PhysicalPlanCompilerImpl(
-    private val valueFactory: ExprValueFactory,
     private val functions: Map<String, ExprFunction>,
     private val customTypedOpParameters: Map<String, TypedOpParameter>,
     private val procedures: Map<String, StoredProcedure>,
     private val evaluatorOptions: EvaluatorOptions = EvaluatorOptions.standard(),
     private val bexperConverter: PhysicalBexprToThunkConverter,
 ) : PhysicalPlanCompiler {
-    private val errorSignaler = evaluatorOptions.typingMode.createErrorSignaler(valueFactory)
-    private val thunkFactory = evaluatorOptions.typingMode.createThunkFactory<EvaluatorState>(
-        evaluatorOptions.thunkOptions,
-        valueFactory
-    )
+    // The following property is used only for the transformation: [IonElement] -> [IonValue] -> [ExprValue] for literals
+    // TODO: remove this once we have converter betwwen [ExprValue] & [IonElement]
+    private val ion: IonSystem = IonSystemBuilder.standard().build()
 
-    private fun Number.exprValue(): ExprValue = when (this) {
-        is Int -> valueFactory.newInt(this)
-        is Long -> valueFactory.newInt(this)
-        is Double -> valueFactory.newFloat(this)
-        is BigDecimal -> valueFactory.newDecimal(this)
-        else -> errNoContext(
-            "Cannot convert number to expression value: $this",
-            errorCode = ErrorCode.EVALUATOR_INVALID_CONVERSION,
-            internal = true
-        )
-    }
-
-    private fun Boolean.exprValue(): ExprValue = valueFactory.newBoolean(this)
-    private fun String.exprValue(): ExprValue = valueFactory.newString(this)
+    private val errorSignaler = evaluatorOptions.typingMode.createErrorSignaler()
+    private val thunkFactory = evaluatorOptions.typingMode.createThunkFactory<EvaluatorState>(evaluatorOptions.thunkOptions)
 
     /**
      * Compiles a [PartiqlPhysical.Statement] tree to an [Expression].
@@ -174,8 +169,7 @@ internal class PhysicalPlanCompilerImpl(
             override fun eval(session: EvaluationSession): ExprValue {
                 val env = EvaluatorState(
                     session = session,
-                    valueFactory = valueFactory,
-                    registers = Array(plan.locals.size) { valueFactory.missingValue }
+                    registers = Array(plan.locals.size) { exprMissing() }
                 )
 
                 return thunk(env)
@@ -196,7 +190,7 @@ internal class PhysicalPlanCompilerImpl(
             is PartiqlPhysical.Statement.DmlQuery -> compileAstExpr(ast.expr)
             is PartiqlPhysical.Statement.Exec -> compileExec(ast)
             is PartiqlPhysical.Statement.Explain -> {
-                val value = valueFactory.newBoolean(true)
+                val value = exprBoolean(true)
                 thunkFactory.thunkEnv(emptyMetaContainer()) { value }
             }
         }
@@ -276,8 +270,8 @@ internal class PhysicalPlanCompilerImpl(
         val bexprThunk: RelationThunkEnv = bexperConverter.convert(expr.query)
 
         fun createOutputSequence(relationType: RelationType?, elements: Sequence<ExprValue>) = when (relationType) {
-            RelationType.LIST -> valueFactory.newList(elements)
-            RelationType.BAG -> valueFactory.newBag(elements)
+            RelationType.LIST -> exprList(elements)
+            RelationType.BAG -> exprBag(elements)
             null -> throw EvaluationException(
                 message = "Unable to recover the output Relation Type",
                 errorCode = ErrorCode.EVALUATOR_GENERIC_EXCEPTION,
@@ -318,7 +312,7 @@ internal class PhysicalPlanCompilerImpl(
             val expr1Value = expr1Thunk(env)
             val expr2Value = expr2Thunk(env)
             when {
-                expr1Value.exprEquals(expr2Value) -> valueFactory.nullValue
+                expr1Value.exprEquals(expr2Value) -> exprNull()
                 else -> expr1Value
             }
         }
@@ -343,8 +337,8 @@ internal class PhysicalPlanCompilerImpl(
             }
             when (knownValue) {
                 null -> when {
-                    evaluatorOptions.typingMode == TypingMode.PERMISSIVE && !nullFound -> valueFactory.missingValue
-                    else -> valueFactory.nullValue
+                    evaluatorOptions.typingMode == TypingMode.PERMISSIVE && !nullFound -> exprMissing()
+                    else -> exprNull()
                 }
                 else -> knownValue
             }
@@ -545,7 +539,7 @@ internal class PhysicalPlanCompilerImpl(
         val argThunks = compileAstExprs(expr.operands)
 
         return thunkFactory.thunkFold(metas, argThunks) { lValue, rValue ->
-            ((!lValue.exprEquals(rValue)).exprValue())
+            exprBoolean(!lValue.exprEquals(rValue))
         }
     }
 
@@ -579,7 +573,7 @@ internal class PhysicalPlanCompilerImpl(
         val toThunk = compileAstExpr(expr.to)
 
         return thunkFactory.thunkEnvOperands(metas, valueThunk, fromThunk, toThunk) { _, v, f, t ->
-            (v >= f && v <= t).exprValue()
+            exprBoolean(v >= f && v <= t)
         }
     }
 
@@ -615,19 +609,13 @@ internal class PhysicalPlanCompilerImpl(
             // [Object.equals].
             val precomputedLiteralsMap = values
                 .filterIsInstance<PartiqlPhysical.Expr.Lit>()
-                .mapTo(TreeSet<ExprValue>(DEFAULT_COMPARATOR)) {
-                    valueFactory.newFromIonValue(
-                        it.value.toIonValue(
-                            valueFactory.ion
-                        )
-                    )
-                }
+                .mapTo(TreeSet<ExprValue>(DEFAULT_COMPARATOR)) { it.value.toIonValue(ion).toExprValue() }
 
             // the compiled thunk simply checks if the left side is contained on the right side.
             // thunkEnvOperands takes care of unknown propagation for the left side; for the right,
             // this unknown propagation does not apply since we've eliminated the possibility of unknowns above.
             return thunkFactory.thunkEnvOperands(metas, leftThunk) { _, leftValue ->
-                precomputedLiteralsMap.contains(leftValue).exprValue()
+                exprBoolean(precomputedLiteralsMap.contains(leftValue))
             }
         }
 
@@ -647,11 +635,9 @@ internal class PhysicalPlanCompilerImpl(
                 // Permissive mode:
                 //      Returns MISSING when the right side of IN is not a sequence
                 //      Returns MISSING if the right side is MISSING or any value on the right side is MISSING
-                val (propagateMissingAs, propagateNotASeqAs) = with(valueFactory) {
-                    when (evaluatorOptions.typingMode) {
-                        TypingMode.LEGACY -> nullValue to newBoolean(false)
-                        TypingMode.PERMISSIVE -> missingValue to missingValue
-                    }
+                val (propagateMissingAs, propagateNotASeqAs) = when (evaluatorOptions.typingMode) {
+                    TypingMode.LEGACY -> exprNull() to exprBoolean(false)
+                    TypingMode.PERMISSIVE -> exprMissing() to exprMissing()
                 }
 
                 // Note that standard unknown propagation applies to the left and right operands. Both [TypingMode]s
@@ -671,7 +657,7 @@ internal class PhysicalPlanCompilerImpl(
                                     ExprValueType.MISSING -> missingSeen = true
                                     // short-circuit to TRUE on the first matching value
                                     else -> if (it.exprEquals(leftValue)) {
-                                        return@thunkEnvOperands valueFactory.newBoolean(true)
+                                        return@thunkEnvOperands exprBoolean(true)
                                     }
                                 }
                             }
@@ -679,8 +665,8 @@ internal class PhysicalPlanCompilerImpl(
                             // Note that if both MISSING and NULL was encountered, MISSING takes precedence.
                             when {
                                 missingSeen -> propagateMissingAs
-                                nullSeen -> valueFactory.nullValue
-                                else -> valueFactory.newBoolean(false)
+                                nullSeen -> exprNull()
+                                else -> exprBoolean(false)
                             }
                         }
                     }
@@ -693,7 +679,7 @@ internal class PhysicalPlanCompilerImpl(
         val argThunk = compileAstExpr(expr.expr)
 
         return thunkFactory.thunkEnvOperands(metas, argThunk) { _, value ->
-            (!value.booleanValue()).exprValue()
+            exprBoolean(!value.booleanValue())
         }
     }
 
@@ -710,13 +696,13 @@ internal class PhysicalPlanCompilerImpl(
                     when {
                         currValue.isUnknown() -> hasUnknowns = true
                         // Short circuit only if we encounter a known false value.
-                        !currValue.booleanValue() -> return@thunk valueFactory.newBoolean(false)
+                        !currValue.booleanValue() -> return@thunk exprBoolean(false)
                     }
                 }
 
                 when (hasUnknowns) {
-                    true -> valueFactory.nullValue
-                    false -> valueFactory.newBoolean(true)
+                    true -> exprNull()
+                    false -> exprBoolean(true)
                 }
             }
             TypingMode.PERMISSIVE -> thunkFactory.thunkEnv(metas) thunk@{ env ->
@@ -726,7 +712,7 @@ internal class PhysicalPlanCompilerImpl(
                     val currValue = currThunk(env)
                     when (currValue.type) {
                         // Short circuit only if we encounter a known false value.
-                        ExprValueType.BOOL -> if (!currValue.booleanValue()) return@thunk valueFactory.newBoolean(false)
+                        ExprValueType.BOOL -> if (!currValue.booleanValue()) return@thunk exprBoolean(false)
                         ExprValueType.NULL -> hasNull = true
                         // type mismatch, return missing
                         else -> hasMissing = true
@@ -734,9 +720,9 @@ internal class PhysicalPlanCompilerImpl(
                 }
 
                 when {
-                    hasMissing -> valueFactory.missingValue
-                    hasNull -> valueFactory.nullValue
-                    else -> valueFactory.newBoolean(true)
+                    hasMissing -> exprMissing()
+                    hasNull -> exprNull()
+                    else -> exprBoolean(true)
                 }
             }
         }
@@ -761,13 +747,13 @@ internal class PhysicalPlanCompilerImpl(
                         // (strange but true)
                         when {
                             currValue.isUnknown() -> hasUnknowns = true
-                            currValue.booleanValue() -> return@thunk valueFactory.newBoolean(true)
+                            currValue.booleanValue() -> return@thunk exprBoolean(true)
                         }
                     }
 
                     when (hasUnknowns) {
-                        true -> valueFactory.nullValue
-                        false -> valueFactory.newBoolean(false)
+                        true -> exprNull()
+                        false -> exprBoolean(false)
                     }
                 }
             TypingMode.PERMISSIVE -> thunkFactory.thunkEnv(metas) thunk@{ env ->
@@ -777,16 +763,16 @@ internal class PhysicalPlanCompilerImpl(
                     val currValue = currThunk(env)
                     when (currValue.type) {
                         // Short circuit only if we encounter a known true value.
-                        ExprValueType.BOOL -> if (currValue.booleanValue()) return@thunk valueFactory.newBoolean(true)
+                        ExprValueType.BOOL -> if (currValue.booleanValue()) return@thunk exprBoolean(true)
                         ExprValueType.NULL -> hasNull = true
                         else -> hasMissing = true // type mismatch, return missing.
                     }
                 }
 
                 when {
-                    hasMissing -> valueFactory.missingValue
-                    hasNull -> valueFactory.nullValue
-                    else -> valueFactory.newBoolean(false)
+                    hasMissing -> exprMissing()
+                    hasNull -> exprNull()
+                    else -> exprBoolean(false)
                 }
             }
         }
@@ -801,7 +787,7 @@ internal class PhysicalPlanCompilerImpl(
 
             if (lType.isText && rType.isText) {
                 // null/missing propagation is handled before getting here
-                (lValue.stringValue() + rValue.stringValue()).exprValue()
+                exprString(lValue.stringValue() + rValue.stringValue())
             } else {
                 err(
                     "Wrong argument type for ||",
@@ -907,13 +893,13 @@ internal class PhysicalPlanCompilerImpl(
     }
 
     private fun compileLit(expr: PartiqlPhysical.Expr.Lit, metas: MetaContainer): PhysicalPlanThunk {
-        val value = valueFactory.newFromIonValue(expr.value.toIonValue(valueFactory.ion))
+        val value = expr.value.toIonValue(ion).toExprValue()
 
         return thunkFactory.thunkEnv(metas) { value }
     }
 
     private fun compileMissing(metas: MetaContainer): PhysicalPlanThunk =
-        thunkFactory.thunkEnv(metas) { valueFactory.missingValue }
+        thunkFactory.thunkEnv(metas) { exprMissing() }
 
     private fun compileGlobalId(expr: PartiqlPhysical.Expr.GlobalId): PhysicalPlanThunk {
         // TODO: we really should consider using something other than `Bindings<ExprValue>` for global variables
@@ -1007,7 +993,7 @@ internal class PhysicalPlanCompilerImpl(
         val expThunk = compileAstExpr(expr.value)
         val typedOpParameter = expr.type.toTypedOpParameter(customTypedOpParameters)
         if (typedOpParameter.staticType is AnyType) {
-            return thunkFactory.thunkEnv(metas) { valueFactory.newBoolean(true) }
+            return thunkFactory.thunkEnv(metas) { exprBoolean(true) }
         }
         if (evaluatorOptions.typedOpBehavior == TypedOpBehavior.HONOR_PARAMETERS && expr.type is PartiqlPhysical.Type.FloatType && expr.type.precision != null) {
             err(
@@ -1038,7 +1024,7 @@ internal class PhysicalPlanCompilerImpl(
 
         return thunkFactory.thunkEnv(metas) { env ->
             val expValue = expThunk(env)
-            typeMatchFunc(expValue).exprValue()
+            exprBoolean(typeMatchFunc(expValue))
         }
     }
 
@@ -1085,7 +1071,6 @@ internal class PhysicalPlanCompilerImpl(
             return { value ->
                 val castOutput = value.cast(
                     singleType,
-                    valueFactory,
                     evaluatorOptions.typedOpBehavior,
                     locationMeta,
                     evaluatorOptions.defaultTimezoneOffset
@@ -1111,7 +1096,7 @@ internal class PhysicalPlanCompilerImpl(
             is SingleType -> compileSingleTypeCast(type)
             is AnyOfType -> {
                 val locationMeta = metas.sourceLocationMeta
-                val castTable = AnyOfCastTable(type, metas, valueFactory, ::singleTypeCastFunc);
+                val castTable = AnyOfCastTable(type, metas, ::singleTypeCastFunc);
 
                 // We do not use thunkFactory here because we want to explicitly avoid
                 // the optional evaluation-time type check for CAN_CAST below.
@@ -1137,7 +1122,7 @@ internal class PhysicalPlanCompilerImpl(
     private fun compileCanCast(expr: PartiqlPhysical.Expr.CanCast, metas: MetaContainer): PhysicalPlanThunk {
         val typedOpParameter = expr.asType.toTypedOpParameter(customTypedOpParameters)
         if (typedOpParameter.staticType is AnyType) {
-            return thunkFactory.thunkEnv(metas) { valueFactory.newBoolean(true) }
+            return thunkFactory.thunkEnv(metas) { exprBoolean(true) }
         }
 
         val expThunk = compileAstExpr(expr.value)
@@ -1150,13 +1135,13 @@ internal class PhysicalPlanCompilerImpl(
             try {
                 when {
                     // NULL/MISSING can cast to anything as themselves
-                    sourceValue.isUnknown() -> valueFactory.newBoolean(true)
+                    sourceValue.isUnknown() -> exprBoolean(true)
                     else -> {
                         val castedValue = castThunkEnv(env)
                         when {
                             // NULL/MISSING from cast is a permissive way to signal failure
-                            castedValue.isUnknown() -> valueFactory.newBoolean(false)
-                            else -> valueFactory.newBoolean(true)
+                            castedValue.isUnknown() -> exprBoolean(false)
+                            else -> exprBoolean(true)
                         }
                     }
                 }
@@ -1164,7 +1149,7 @@ internal class PhysicalPlanCompilerImpl(
                 if (e.internal) {
                     throw e
                 }
-                valueFactory.newBoolean(false)
+                exprBoolean(false)
             }
         }
     }
@@ -1172,7 +1157,7 @@ internal class PhysicalPlanCompilerImpl(
     private fun compileCanLosslessCast(expr: PartiqlPhysical.Expr.CanLosslessCast, metas: MetaContainer): PhysicalPlanThunk {
         val typedOpParameter = expr.asType.toTypedOpParameter(customTypedOpParameters)
         if (typedOpParameter.staticType is AnyType) {
-            return thunkFactory.thunkEnv(metas) { valueFactory.newBoolean(true) }
+            return thunkFactory.thunkEnv(metas) { exprBoolean(true) }
         }
 
         val expThunk = compileAstExpr(expr.value)
@@ -1191,7 +1176,6 @@ internal class PhysicalPlanCompilerImpl(
                     { value: ExprValue ->
                         value.cast(
                             singleType,
-                            valueFactory,
                             evaluatorOptions.typedOpBehavior,
                             locationMeta,
                             evaluatorOptions.defaultTimezoneOffset
@@ -1201,7 +1185,7 @@ internal class PhysicalPlanCompilerImpl(
                 val roundTripped = when (sourceType) {
                     is SingleType -> castFunc(sourceType)(castedValue)
                     is AnyOfType -> {
-                        val castTable = AnyOfCastTable(sourceType, metas, valueFactory, ::castFunc)
+                        val castTable = AnyOfCastTable(sourceType, metas, ::castFunc)
                         castTable.cast(sourceValue)
                     }
                     // Should not be possible
@@ -1209,22 +1193,22 @@ internal class PhysicalPlanCompilerImpl(
                 }
 
                 val lossless = sourceValue.exprEquals(roundTripped)
-                return valueFactory.newBoolean(lossless)
+                return exprBoolean(lossless)
             }
 
             try {
                 when (sourceValue.type) {
                     // NULL can cast to anything as itself
-                    ExprValueType.NULL -> valueFactory.newBoolean(true)
+                    ExprValueType.NULL -> exprBoolean(true)
 
                     // Short-circuit timestamp -> date roundtrip if precision isn't [Timestamp.Precision.DAY] or
                     //   [Timestamp.Precision.MONTH] or [Timestamp.Precision.YEAR]
                     ExprValueType.TIMESTAMP -> when (typedOpParameter.staticType) {
                         StaticType.DATE -> when (sourceValue.timestampValue().precision) {
                             Timestamp.Precision.DAY, Timestamp.Precision.MONTH, Timestamp.Precision.YEAR -> roundTrip()
-                            else -> valueFactory.newBoolean(false)
+                            else -> exprBoolean(false)
                         }
-                        StaticType.TIME -> valueFactory.newBoolean(false)
+                        StaticType.TIME -> exprBoolean(false)
                         else -> roundTrip()
                     }
 
@@ -1235,7 +1219,7 @@ internal class PhysicalPlanCompilerImpl(
                 if (e.internal) {
                     throw e
                 }
-                valueFactory.newBoolean(false)
+                exprBoolean(false)
             }
         }
     }
@@ -1244,7 +1228,7 @@ internal class PhysicalPlanCompilerImpl(
         val valueThunk = compileAstExpr(expr.expr)
         val branchThunks = expr.cases.pairs.map { Pair(compileAstExpr(it.first), compileAstExpr(it.second)) }
         val elseThunk = when (expr.default) {
-            null -> thunkFactory.thunkEnv(metas) { valueFactory.nullValue }
+            null -> thunkFactory.thunkEnv(metas) { exprNull() }
             else -> compileAstExpr(expr.default)
         }
 
@@ -1276,7 +1260,7 @@ internal class PhysicalPlanCompilerImpl(
     private fun compileSearchedCase(expr: PartiqlPhysical.Expr.SearchedCase, metas: MetaContainer): PhysicalPlanThunk {
         val branchThunks = expr.cases.pairs.map { compileAstExpr(it.first) to compileAstExpr(it.second) }
         val elseThunk = when (expr.default) {
-            null -> thunkFactory.thunkEnv(metas) { valueFactory.nullValue }
+            null -> thunkFactory.thunkEnv(metas) { exprNull() }
             else -> compileAstExpr(expr.default)
         }
 
@@ -1352,7 +1336,7 @@ internal class PhysicalPlanCompilerImpl(
 
                             val children = value.asSequence()
                             if (!children.any() || value.type.isSequence) {
-                                val name = syntheticColumnName(columns.size).exprValue()
+                                val name = exprString(syntheticColumnName(columns.size))
                                 columns.add(value.namedValue(name))
                             } else {
                                 val valuesToProject =
@@ -1365,7 +1349,7 @@ internal class PhysicalPlanCompilerImpl(
                                 for (childValue in valuesToProject) {
                                     val namedFacet = childValue.asFacet(Named::class.java)
                                     val name = namedFacet?.name
-                                        ?: syntheticColumnName(columns.size).exprValue()
+                                        ?: exprString(syntheticColumnName(columns.size))
                                     columns.add(childValue.namedValue(name))
                                 }
                             }
@@ -1409,12 +1393,12 @@ internal class PhysicalPlanCompilerImpl(
         }
 
         return thunkFactory.thunkEnv(metas) { env ->
-            // todo:  use valueFactory.newSequence() instead.
-            SequenceExprValue(
-                valueFactory.ion,
-                seqType,
-                makeItemThunkSequence(env)
-            )
+            when (seqType) {
+                ExprValueType.BAG -> exprBag(makeItemThunkSequence(env))
+                ExprValueType.LIST -> exprList(makeItemThunkSequence(env))
+                ExprValueType.SEXP -> exprSexp(makeItemThunkSequence(env))
+                else -> error("sequence type required")
+            }
         }
     }
 
@@ -1450,13 +1434,13 @@ internal class PhysicalPlanCompilerImpl(
                         when {
                             // If indexExpr is a literal string, there is no need to evaluate it--just compile a
                             // thunk that directly returns a bound value
-                            indexExpr is PartiqlPhysical.Expr.Lit && indexExpr.value.toIonValue(valueFactory.ion) is IonString -> {
+                            indexExpr is PartiqlPhysical.Expr.Lit && indexExpr.value.toIonValue(ion) is IonString -> {
                                 val lookupName = BindingName(
-                                    indexExpr.value.toIonValue(valueFactory.ion).stringValue()!!,
+                                    indexExpr.value.toIonValue(ion).stringValue()!!,
                                     caseSensitivity.toBindingCase()
                                 )
                                 thunkFactory.thunkEnvValue(componentMetas) { _, componentValue ->
-                                    componentValue.bindings[lookupName] ?: valueFactory.missingValue
+                                    componentValue.bindings[lookupName] ?: exprMissing()
                                 }
                             }
                             else -> {
@@ -1480,10 +1464,10 @@ internal class PhysicalPlanCompilerImpl(
                                                     errorContextFrom(componentMetas),
                                                     internal = false
                                                 )
-                                                TypingMode.PERMISSIVE -> valueFactory.missingValue
+                                                TypingMode.PERMISSIVE -> exprMissing()
                                             }
                                         }
-                                    } ?: valueFactory.missingValue
+                                    } ?: exprMissing()
                                 }
                             }
                         }
@@ -1496,12 +1480,12 @@ internal class PhysicalPlanCompilerImpl(
                                     val mapped = componentValue.unpivot()
                                         .flatMap { tempThunk(env, it).rangeOver() }
                                         .asSequence()
-                                    valueFactory.newBag(mapped)
+                                    exprBag(mapped)
                                 }
                             }
                             else ->
                                 thunkFactory.thunkEnvValue(componentMetas) { _, componentValue ->
-                                    valueFactory.newBag(componentValue.unpivot().asSequence())
+                                    exprBag(componentValue.unpivot().asSequence())
                                 }
                         }
                     }
@@ -1520,7 +1504,7 @@ internal class PhysicalPlanCompilerImpl(
                                             .map { tempThunk(env, it) }
                                             .asSequence()
 
-                                        valueFactory.newBag(mapped)
+                                        exprBag(mapped)
                                     }
                                     else -> thunkFactory.thunkEnvValue(componentMetas) { env, componentValue ->
                                         val mapped = componentValue
@@ -1531,14 +1515,14 @@ internal class PhysicalPlanCompilerImpl(
                                             }
                                             .asSequence()
 
-                                        valueFactory.newBag(mapped)
+                                        exprBag(mapped)
                                     }
                                 }
                             }
                             else -> {
                                 thunkFactory.thunkEnvValue(componentMetas) { _, componentValue ->
                                     val mapped = componentValue.rangeOver().asSequence()
-                                    valueFactory.newBag(mapped)
+                                    exprBag(mapped)
                                 }
                             }
                         }
@@ -1609,7 +1593,7 @@ internal class PhysicalPlanCompilerImpl(
 
         fun matchRegexPattern(value: ExprValue, likePattern: (() -> Pattern)?): ExprValue {
             return when {
-                likePattern == null || value.type.isUnknown -> valueFactory.nullValue
+                likePattern == null || value.type.isUnknown -> exprNull()
                 !value.type.isText -> err(
                     "LIKE expression must be given non-null strings as input",
                     ErrorCode.EVALUATOR_LIKE_INVALID_INPUTS,
@@ -1618,7 +1602,7 @@ internal class PhysicalPlanCompilerImpl(
                     },
                     internal = false
                 )
-                else -> valueFactory.newBoolean(likePattern().matcher(value.stringValue()).matches())
+                else -> exprBoolean(likePattern().matcher(value.stringValue()).matches())
             }
         }
 
@@ -1629,15 +1613,14 @@ internal class PhysicalPlanCompilerImpl(
         return when {
             patternExpr is PartiqlPhysical.Expr.Lit && (escapeExpr == null || escapeExpr is PartiqlPhysical.Expr.Lit) -> {
                 val patternParts = getRegexPattern(
-                    valueFactory.newFromIonValue(patternExpr.value.toIonValue(valueFactory.ion)),
-                    (escapeExpr as? PartiqlPhysical.Expr.Lit)?.value?.toIonValue(valueFactory.ion)
-                        ?.let { valueFactory.newFromIonValue(it) }
+                    patternExpr.value.toIonValue(ion).toExprValue(),
+                    (escapeExpr as? PartiqlPhysical.Expr.Lit)?.value?.toIonValue(ion)?.toExprValue()
                 )
 
                 // If valueExpr is also a literal then we can evaluate this at compile time and return a constant.
                 if (valueExpr is PartiqlPhysical.Expr.Lit) {
                     val resultValue = matchRegexPattern(
-                        valueFactory.newFromIonValue(valueExpr.value.toIonValue(valueFactory.ion)),
+                        valueExpr.value.toIonValue(ion).toExprValue(),
                         patternParts
                     )
                     return thunkFactory.thunkEnv(metas) { resultValue }
@@ -1817,7 +1800,7 @@ internal class PhysicalPlanCompilerImpl(
 
     private fun compileDate(expr: PartiqlPhysical.Expr.Date, metas: MetaContainer): PhysicalPlanThunk =
         thunkFactory.thunkEnv(metas) {
-            valueFactory.newDate(
+            exprDate(
                 expr.year.value.toInt(),
                 expr.month.value.toInt(),
                 expr.day.value.toInt()
@@ -1827,7 +1810,7 @@ internal class PhysicalPlanCompilerImpl(
     private fun compileLitTime(expr: PartiqlPhysical.Expr.LitTime, metas: MetaContainer): PhysicalPlanThunk =
         thunkFactory.thunkEnv(metas) {
             // Add the default time zone if the type "TIME WITH TIME ZONE" does not have an explicitly specified time zone.
-            valueFactory.newTime(
+            exprTime(
                 Time.of(
                     expr.value.hour.value.toInt(),
                     expr.value.minute.value.toInt(),
@@ -1850,7 +1833,7 @@ internal class PhysicalPlanCompilerImpl(
                 is PartiqlPhysical.SetQuantifier.All -> op.eval(l, r)
                 is PartiqlPhysical.SetQuantifier.Distinct -> op.eval(l, r).distinct()
             }
-            valueFactory.newBag(result)
+            exprBag(result)
         }
     }
 
@@ -1870,7 +1853,7 @@ internal class PhysicalPlanCompilerImpl(
                     }
                 }
             }
-            valueFactory.newStruct(attributes, StructOrdering.UNORDERED)
+            exprStruct(attributes, StructOrdering.UNORDERED)
         }
     }
 
@@ -1892,13 +1875,13 @@ internal class PhysicalPlanCompilerImpl(
         // for non-struct, this wraps any value into a BAG with a synthetic name
         else -> UnpivotedExprValue(
             listOf(
-                this.namedValue(valueFactory.newString(syntheticColumnName(0)))
+                this.namedValue(exprString(syntheticColumnName(0)))
             )
         )
     }
 
     private fun createStructExprValue(seq: Sequence<ExprValue>, ordering: StructOrdering) =
-        valueFactory.newStruct(
+        exprStruct(
             when (evaluatorOptions.projectionIteration) {
                 ProjectionIterationBehavior.FILTER_MISSING -> seq.filter { it.type != ExprValueType.MISSING }
                 ProjectionIterationBehavior.UNFILTERED -> seq

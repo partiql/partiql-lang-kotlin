@@ -23,8 +23,8 @@ import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.booleanValue
+import org.partiql.lang.eval.exprBoolean
 import org.partiql.lang.eval.io.DelimitedValues
 import org.partiql.lang.eval.stringValue
 import org.partiql.lang.eval.toIonValue
@@ -34,7 +34,7 @@ import java.io.FileOutputStream
 import java.io.OutputStream
 import java.io.OutputStreamWriter
 
-internal class WriteFile(private val valueFactory: ExprValueFactory) : ExprFunction {
+internal class WriteFile(private val ion: IonSystem) : ExprFunction {
     override val signature = FunctionSignature(
         name = "write_file",
         requiredParameters = listOf(StaticType.STRING, StaticType.ANY),
@@ -60,7 +60,7 @@ internal class WriteFile(private val valueFactory: ExprValueFactory) : ExprFunct
 
         val writer = OutputStreamWriter(out, encoding)
         writer.use {
-            DelimitedValues.writeTo(valueFactory.ion, writer, results, delimiter, nl, writeHeader)
+            DelimitedValues.writeTo(ion, writer, results, delimiter, nl, writeHeader)
         }
     }
 
@@ -79,10 +79,10 @@ internal class WriteFile(private val valueFactory: ExprValueFactory) : ExprFunct
             FileOutputStream(fileName).use {
                 handler(results, it, Bindings.empty())
             }
-            valueFactory.newBoolean(true)
+            exprBoolean(true)
         } catch (e: Exception) {
             e.printStackTrace()
-            valueFactory.newBoolean(false)
+            exprBoolean(false)
         }
     }
 
@@ -96,10 +96,10 @@ internal class WriteFile(private val valueFactory: ExprValueFactory) : ExprFunct
             FileOutputStream(fileName).use {
                 handler(results, it, opt.bindings)
             }
-            valueFactory.newBoolean(true)
+            exprBoolean(true)
         } catch (e: Exception) {
             e.printStackTrace()
-            valueFactory.newBoolean(false)
+            exprBoolean(false)
         }
     }
 }

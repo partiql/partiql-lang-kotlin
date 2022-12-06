@@ -5,7 +5,7 @@ import org.junit.Test
 
 class EvaluatingCompilerFromSourceByTests : EvaluatorTestBase() {
 
-    class AddressedExprValue(val value: Long, val valueFactory: ExprValueFactory) : BaseExprValue(), Scalar, Addressed {
+    class AddressedExprValue(val value: Long) : BaseExprValue(), Scalar, Addressed {
 
         override val ionValue: IonValue
             get() = error("ExprValue.ionValue will be removed")
@@ -15,7 +15,7 @@ class EvaluatingCompilerFromSourceByTests : EvaluatorTestBase() {
 
         /** This dummy address is [value] + 100. */
         override val address: ExprValue
-            get() = valueFactory.newInt(value + 100)
+            get() = exprInt(value + 100)
 
         override val scalar: Scalar get() = this
 
@@ -26,18 +26,18 @@ class EvaluatingCompilerFromSourceByTests : EvaluatorTestBase() {
         globals(
             Bindings.ofMap(
                 mapOf(
-                    "someList" to valueFactory.newList(
+                    "someList" to exprList(
                         sequenceOf(
-                            AddressedExprValue(1, valueFactory),
-                            AddressedExprValue(2, valueFactory),
-                            AddressedExprValue(3, valueFactory)
+                            AddressedExprValue(1),
+                            AddressedExprValue(2),
+                            AddressedExprValue(3)
                         )
                     ),
-                    "someBag" to valueFactory.newBag(
+                    "someBag" to exprBag(
                         sequenceOf(
-                            AddressedExprValue(11, valueFactory),
-                            AddressedExprValue(12, valueFactory),
-                            AddressedExprValue(13, valueFactory)
+                            AddressedExprValue(11),
+                            AddressedExprValue(12),
+                            AddressedExprValue(13)
                         )
                     )
                 )

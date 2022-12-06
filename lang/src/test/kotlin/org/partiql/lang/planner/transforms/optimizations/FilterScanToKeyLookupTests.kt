@@ -4,20 +4,18 @@ import com.amazon.ionelement.api.ionSymbol
 import org.junit.jupiter.api.fail
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
-import org.partiql.annotations.PartiQLExperimental
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.errors.Problem
 import org.partiql.lang.errors.ProblemHandler
 import org.partiql.lang.planner.GlobalResolutionResult
-import org.partiql.lang.planner.GlobalVariableResolver
-import org.partiql.lang.planner.PartiQLPlanner
-import org.partiql.lang.planner.PartiQLPlannerBuilder
+import org.partiql.lang.planner.PartiqlPhysicalPass
+import org.partiql.lang.planner.PlannerPassResult
+import org.partiql.lang.planner.PlannerPipeline
 import org.partiql.lang.planner.assertSexpEquals
 import org.partiql.lang.planner.litInt
 import org.partiql.lang.planner.litTrue
 import org.partiql.lang.planner.transforms.DEFAULT_IMPL
 import org.partiql.lang.planner.transforms.PLAN_VERSION_NUMBER
-import org.partiql.lang.syntax.PartiQLParserBuilder
 import org.partiql.lang.types.BagType
 import org.partiql.lang.types.StaticType
 import org.partiql.lang.types.StructType
@@ -31,9 +29,8 @@ private const val TABLE_WITH_1_FIELD_PK_UUID = "uuid_for_table_with_1_field_pk"
 private const val TABLE_WITH_3_FIELD_PK = "table_with_3_field_pk"
 private const val TABLE_WITH_3_FIELD_PK_UUID = "uuid_for_table_with_3_field_pk"
 
-@PartiQLExperimental
 class FilterScanToKeyLookupTests {
-    /** A test case for [PartiQLPhysicalPass] implementations that work on expressions in the [PartiqlPhysical] domain. */
+    /** A test case for [PartiqlPhysicalPass] implementations that work on expressions in the [PartiqlPhysical] domain. */
     data class TestCase(
         /** The input SQL. */
         val inputSql: String,
@@ -48,13 +45,11 @@ class FilterScanToKeyLookupTests {
     @ArgumentsSource(Arguments::class)
     fun runTestCase(tc: TestCase) {
 
-        val parser = PartiQLParserBuilder.standard().build()
-
-        val statement = parser.parseAstStatement(tc.inputSql)
-
-        val physicalPlan = when (val planningResult = pipeline.plan(statement)) {
-            is PartiQLPlanner.Result.Success -> planningResult.plan
-            is PartiQLPlanner.Result.Error -> fail("Expected no errors but found ${planningResult.problems}")
+        val physicalPlan = when (val planningResult = planner.plan(tc.inputSql)) {
+            is PlannerPassResult.Success -> planningResult.output
+            is PlannerPassResult.Error -> {
+                fail("Expected no errors but found ${planningResult.errors}")
+            }
         }
 
         val fakeProblemHandler = object : ProblemHandler {
@@ -63,14 +58,14 @@ class FilterScanToKeyLookupTests {
 
         if (tc.expectedOutputBexpr != null) {
             val expectedOutputPlan = makeFakePlan(tc.expectedOutputBexpr)
-            val actualOutputPlan = x.apply(physicalPlan, fakeProblemHandler)
+            val actualOutputPlan = x.rewrite(physicalPlan, fakeProblemHandler)
             assertSexpEquals(
                 expectedOutputPlan.toIonElement(),
                 actualOutputPlan.toIonElement(),
                 "expected the rewrite to change the input plan"
             )
         } else {
-            val actualOutputPlan = x.apply(physicalPlan, fakeProblemHandler)
+            val actualOutputPlan = x.rewrite(physicalPlan, fakeProblemHandler)
             assertSexpEquals(
                 physicalPlan.toIonElement(),
                 actualOutputPlan.toIonElement(),
@@ -285,22 +280,20 @@ class FilterScanToKeyLookupTests {
         )
     )
 
-    // planner needs to resolve global variables (i.e. tables). By "resolve" we mean to look up the
-    // uniqueId of the table.
-    val globalVariableResolver = GlobalVariableResolver { bindingName ->
-        tables.firstOrNull { bindingName.isEquivalentTo(it.tableName) }
-            ?.let { GlobalResolutionResult.GlobalVariable(it.uniqueId) }
-            ?: GlobalResolutionResult.Undefined
-    }
-
     /**
      * We need a minimal PlannerPipeline to go from [TestCase.inputSql] to a physical plan, without the
      * pass under test applied.  We will invoke the pass separately.
      */
-    private val pipeline = PartiQLPlannerBuilder
-        .standard()
-        .globalVariableResolver(globalVariableResolver)
-        .build()
+    @Suppress("DEPRECATION") // <-- PlannerPipeline is experimental, we are ok with it being deprecated.
+    private val planner = PlannerPipeline.build {
+        // planner needs to resolve global variables (i.e. tables). By "resolve" we mean to look up the
+        // uniqueId of the table.
+        globalVariableResolver { bindingName ->
+            tables.firstOrNull { bindingName.isEquivalentTo(it.tableName) }
+                ?.let { GlobalResolutionResult.GlobalVariable(it.uniqueId) }
+                ?: GlobalResolutionResult.Undefined
+        }
+    }
 
     val x = createFilterScanToKeyLookupPass(
         customProjectOperatorName = FAKE_GET_BY_KEY_PROJECT_OPERATOR_NAME,

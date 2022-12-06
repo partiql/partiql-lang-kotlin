@@ -3,7 +3,6 @@ package org.partiql.lang.eval
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
-import org.partiql.lang.ION
 import org.partiql.lang.ast.StaticTypeMeta
 import org.partiql.lang.domains.metaContainerOf
 import org.partiql.lang.errors.ErrorCode
@@ -24,13 +23,11 @@ class ThunkFactoryTests {
             evaluationTimeTypeChecks(ThunkReturnTypeAssertions.ENABLED)
         }
 
-        private val valueFactory = ExprValueFactory.standard(ION)
-
-        private val STRING_SHORT = valueFactory.newString("Hello, I'm a string")
-        private val STRING_LONG = valueFactory.newString("Hello, I'm a loooooooooooooooooooooooooooooooooooong string!")
-        private val INT_42 = valueFactory.newInt(42)
-        private val INT_42000 = valueFactory.newInt(42000)
-        private val IRRELEVANT = valueFactory.newString("doesn't matter")
+        private val STRING_SHORT = exprString("Hello, I'm a string")
+        private val STRING_LONG = exprString("Hello, I'm a loooooooooooooooooooooooooooooooooooong string!")
+        private val INT_42 = exprInt(42)
+        private val INT_42000 = exprInt(42000)
+        private val IRRELEVANT = exprString("doesn't matter")
         private val IRRELEVANT_METAS = metaContainerOf(StaticTypeMeta(StaticType.STRING))
         private val EXPECT_BOOL_METAS = metaContainerOf(StaticTypeMeta(StaticType.BOOL))
 
@@ -49,8 +46,8 @@ class ThunkFactoryTests {
             thunkReturnValue: ExprValue,
             expectError: Boolean
         ) = listOf(
-            TestCase(expectedType, thunkReturnValue, expectError, LegacyThunkFactory(compileOptions, valueFactory)),
-            TestCase(expectedType, thunkReturnValue, expectError, PermissiveThunkFactory(compileOptions, valueFactory))
+            TestCase(expectedType, thunkReturnValue, expectError, LegacyThunkFactory(compileOptions)),
+            TestCase(expectedType, thunkReturnValue, expectError, PermissiveThunkFactory(compileOptions))
         )
 
         @JvmStatic
@@ -87,7 +84,7 @@ class ThunkFactoryTests {
         assertInvoke(tc.expectError) {
             tc.thunkFactory.thunkEnvValue(tc.metas) { _, _ ->
                 tc.thunkReturnValue
-            }.invoke(Environment.standard(), valueFactory.newString("doesn't matter"))
+            }.invoke(Environment.standard(), exprString("doesn't matter"))
         }
 
     @ParameterizedTest

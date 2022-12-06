@@ -18,7 +18,6 @@ import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.physical.operators.Accumulator
 import org.partiql.lang.eval.stringValue
 import org.partiql.lang.types.AnyOfType
@@ -55,7 +54,7 @@ import kotlin.reflect.full.primaryConstructor
  * aggregate operator, so we internally convert the AVG to a [CollectionAggregationFunction] (which is just an expression
  * function call).
  */
-internal sealed class CollectionAggregationFunction(private val valueFactory: ExprValueFactory) : ExprFunction {
+internal sealed class CollectionAggregationFunction : ExprFunction {
 
     internal abstract val aggregationName: String
 
@@ -66,16 +65,16 @@ internal sealed class CollectionAggregationFunction(private val valueFactory: Ex
 
     companion object {
         internal const val collectionAggregationPrefix = "coll_"
-        internal fun createAll(valueFactory: ExprValueFactory): List<CollectionAggregationFunction> =
+        internal fun createAll(): List<CollectionAggregationFunction> =
             CollectionAggregationFunction::class.sealedSubclasses.map { subClass ->
-                subClass.primaryConstructor?.call(valueFactory)!!
+                subClass.primaryConstructor?.call()!!
             }
     }
 
     override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
         val inputSequence = required[Parameters.ARGUMENT.index]
         val quantifier = getQuantifier(required[Parameters.QUANTIFIER.index].stringValue())
-        val accumulator = Accumulator.create(aggregationName, quantifier, valueFactory)
+        val accumulator = Accumulator.create(aggregationName, quantifier)
         inputSequence.asSequence().forEach { exprValue -> accumulator.next(exprValue) }
         return accumulator.compute()
     }
@@ -93,26 +92,27 @@ internal sealed class CollectionAggregationFunction(private val valueFactory: Ex
     )
 }
 
-internal class CollectionMaxFunction(valueFactory: ExprValueFactory) : CollectionAggregationFunction(valueFactory) {
+internal class CollectionMaxFunction() : CollectionAggregationFunction() {
     override val aggregationName: String = "max"
     override val signature = getFunctionSignature(this.aggregationName)
 }
 
-internal class CollectionMinFunction(valueFactory: ExprValueFactory) : CollectionAggregationFunction(valueFactory) {
+internal class CollectionMinFunction() : CollectionAggregationFunction() {
     override val aggregationName: String = "min"
     override val signature = getFunctionSignature(this.aggregationName)
 }
 
-internal class CollectionAvgFunction(valueFactory: ExprValueFactory) : CollectionAggregationFunction(valueFactory) {
+internal class CollectionAvgFunction() : CollectionAggregationFunction() {
     override val aggregationName: String = "avg"
     override val signature = getFunctionSignature(this.aggregationName)
 }
 
-internal class CollectionSumFunction(valueFactory: ExprValueFactory) : CollectionAggregationFunction(valueFactory) {
+internal class CollectionSumFunction() : CollectionAggregationFunction() {
     override val aggregationName: String = "sum"
     override val signature = getFunctionSignature(this.aggregationName)
 }
-internal class CollectionCountFunction(valueFactory: ExprValueFactory) : CollectionAggregationFunction(valueFactory) {
+
+internal class CollectionCountFunction() : CollectionAggregationFunction() {
     override val aggregationName: String = "count"
     override val signature = getFunctionSignature(this.aggregationName)
 }

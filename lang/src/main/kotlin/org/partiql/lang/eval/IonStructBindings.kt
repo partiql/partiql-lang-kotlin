@@ -28,7 +28,7 @@ import org.partiql.lang.util.errAmbiguousBinding
  *
  * Important: this class is critical to performance for many queries.  Change with caution.
  */
-internal class IonStructBindings(private val valueFactory: ExprValueFactory, private val myStruct: IonStruct) : Bindings<ExprValue> {
+internal class IonStructBindings(private val myStruct: IonStruct) : Bindings<ExprValue> {
 
     private val caseInsensitiveFieldMap by lazy {
         HashMap<String, ArrayList<IonValue>>().apply {
@@ -67,6 +67,6 @@ internal class IonStructBindings(private val valueFactory: ExprValueFactory, pri
             BindingCase.SENSITIVE -> caseSensitiveLookup(bindingName.name)
             BindingCase.INSENSITIVE -> caseInsensitiveLookup(bindingName.name)
         }?.let {
-            it.toExprValue().namedValue(valueFactory.newString(it.fieldName))
+            it.toExprValue().namedValue(exprString(it.fieldName))
         }
 }

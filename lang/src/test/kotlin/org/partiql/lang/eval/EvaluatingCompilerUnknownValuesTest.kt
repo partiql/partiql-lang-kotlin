@@ -51,7 +51,7 @@ class EvaluatingCompilerUnknownValuesTest : EvaluatorTestBase() {
                                 )
 
                             override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue =
-                                valueFactory.newInt(required.map { it.numberValue().toLong() }.sum())
+                                exprInt(required.sumOf { it.numberValue().toLong() })
                         }
                     )
                 }

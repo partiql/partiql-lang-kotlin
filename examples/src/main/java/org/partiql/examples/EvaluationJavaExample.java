@@ -14,8 +14,6 @@
 
 package org.partiql.examples;
 
-import com.amazon.ion.IonSystem;
-import com.amazon.ion.system.IonSystemBuilder;
 import kotlin.Unit;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.examples.util.Example;
@@ -23,6 +21,7 @@ import org.partiql.lang.CompilerPipeline;
 import org.partiql.lang.eval.Bindings;
 import org.partiql.lang.eval.EvaluationSession;
 import org.partiql.lang.eval.ExprValue;
+import org.partiql.lang.eval.ExprValueUtilKt;
 import org.partiql.lang.eval.Expression;
 
 import java.io.PrintStream;
@@ -41,12 +40,8 @@ public class EvaluationJavaExample extends Example {
 
     @Override
     public void run() {
-
-        // A standard instance of [IonSystem], which is required by [CompilerPipeline].
-        final IonSystem ion = IonSystemBuilder.standard().build();
-
         // An instance of [CompilerPipeline].
-        final CompilerPipeline pipeline = CompilerPipeline.standard(ion);
+        final CompilerPipeline pipeline = CompilerPipeline.standard();
 
         // Compiles a simple expression containing a reference to a global variable.
         final String query = "'Hello, ' || user_name";
@@ -55,7 +50,7 @@ public class EvaluationJavaExample extends Example {
 
         // This is the value of the global variable.
         final String userName = "Homer Simpson";
-        final ExprValue usernameValue = pipeline.getValueFactory().newString(userName);
+        final ExprValue usernameValue = ExprValueUtilKt.exprString(userName);
 
         // [Bindings.ofMap] can be used to construct a [Bindings] instance of
         // bindings with previously materialized values.

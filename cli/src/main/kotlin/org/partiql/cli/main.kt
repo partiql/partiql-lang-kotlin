@@ -28,7 +28,6 @@ import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.PartiQLResult
 import org.partiql.lang.eval.ProjectionIterationBehavior
 import org.partiql.lang.eval.TypedOpBehavior
@@ -44,9 +43,6 @@ import java.io.FileOutputStream
 import kotlin.system.exitProcess
 
 // TODO how can a user pass the catalog here?
-private val ion = IonSystemBuilder.standard().build()
-private val valueFactory = ExprValueFactory.standard(ion)
-
 private val optParser = OptionParser()
 
 private val formatter = object : BuiltinHelpFormatter(120, 2) {
@@ -222,10 +218,10 @@ private fun createPipelineOptions(optionSet: OptionSet): AbstractPipeline.Pipeli
         false -> TypingMode.LEGACY
     }
 
-    val functions: List<(ExprValueFactory) -> ExprFunction> = listOf(
-        { valueFactory -> ReadFile(valueFactory) },
-        { valueFactory -> WriteFile(valueFactory) },
-        { valueFactory -> QueryDDB(valueFactory) }
+    val functions: List<ExprFunction> = listOf(
+        ReadFile(ion),
+        WriteFile(ion),
+        QueryDDB(ion)
     )
 
     val parser = PartiQLParserBuilder().ionSystem(ion).build()
@@ -249,7 +245,7 @@ private fun getEnvironment(environmentFile: File, pipeline: AbstractPipeline): B
 
 private fun runShell(environment: Bindings<ExprValue>, optionSet: OptionSet, pipeline: AbstractPipeline) {
     val config = ShellConfiguration(isMonochrome = optionSet.has(monochromeOpt))
-    Shell(valueFactory, System.out, pipeline, environment, config).start()
+    Shell(System.out, pipeline, environment, config).start()
 }
 
 private fun runCli(environment: Bindings<ExprValue>, optionSet: OptionSet, pipeline: AbstractPipeline) {
@@ -269,7 +265,7 @@ private fun runCli(environment: Bindings<ExprValue>, optionSet: OptionSet, pipel
 
     input.use {
         output.use {
-            Cli(valueFactory, input, inputFormat, output, outputFormat, pipeline, environment, query, wrapIon).run()
+            Cli(input, inputFormat, output, outputFormat, pipeline, environment, query, wrapIon).run()
         }
     }
 }

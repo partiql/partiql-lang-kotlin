@@ -1,7 +1,6 @@
 
 package org.partiql.lang.thread
 
-import com.amazon.ion.system.IonSystemBuilder
 import com.amazon.ionelement.api.ionInt
 import io.mockk.every
 import io.mockk.spyk
@@ -42,7 +41,6 @@ const val WAIT_FOR_THREAD_TERMINATION_MS: Long = 1000
 // Enforce execution of tests in same thread as we need the execution to be deterministic for interruption behavior.
 @Execution(ExecutionMode.SAME_THREAD)
 class ThreadInterruptedTests {
-    private val ion = IonSystemBuilder.standard().build()
     private val bigPartiqlAst = makeBigPartiqlAstExpr(10000000)
 
     /**
@@ -123,7 +121,7 @@ class ThreadInterruptedTests {
         val numSteps = 10000000
         var accumulator = 0L
 
-        val pipeline = CompilerPipeline.build(ion) {
+        val pipeline = CompilerPipeline.build {
             repeat(numSteps) {
                 addPreprocessingStep { expr, _ ->
                     // Burn some CPU so we don't get thru all the pipeline steps before the interrupt.
@@ -135,7 +133,7 @@ class ThreadInterruptedTests {
         } as CompilerPipelineImpl
 
         val expr = PartiqlAst.build { query(lit((ionInt(42)))) }
-        val context = StepContext(pipeline.valueFactory, CompileOptions.standard(), emptyMap(), emptyMap())
+        val context = StepContext(CompileOptions.standard(), emptyMap(), emptyMap())
 
         testThreadInterrupt {
             pipeline.executePreProcessingSteps(expr, context)

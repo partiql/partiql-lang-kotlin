@@ -28,11 +28,14 @@ import org.apache.commons.csv.CSVPrinter
 import org.partiql.lang.eval.BindingCase
 import org.partiql.lang.eval.BindingName
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.StructOrdering
+import org.partiql.lang.eval.exprBag
+import org.partiql.lang.eval.exprString
+import org.partiql.lang.eval.exprStruct
 import org.partiql.lang.eval.namedValue
 import org.partiql.lang.eval.orderedNames
 import org.partiql.lang.eval.syntheticColumnName
+import org.partiql.lang.eval.toExprValue
 import org.partiql.lang.eval.toIonValue
 import org.partiql.lang.util.stringValue
 import java.io.BufferedReader
@@ -50,24 +53,22 @@ object DelimitedValues {
     enum class ConversionMode {
         /** Attempt to parse each value as a scalar, and fall back to string. */
         AUTO {
-            override fun convert(valueFactory: ExprValueFactory, raw: String): ExprValue = try {
-                val converted = valueFactory.ion.singleValue(raw)
-                when (converted) {
-                    is IonInt, is IonFloat, is IonDecimal, is IonTimestamp ->
-                        valueFactory.newFromIonValue(converted)
+            override fun convert(ion: IonSystem, raw: String): ExprValue = try {
+                when (val converted = ion.singleValue(raw)) {
+                    is IonInt, is IonFloat, is IonDecimal, is IonTimestamp -> converted.toExprValue()
                     // if we can't convert the above, we just use the input string as-is
-                    else -> valueFactory.newString(raw)
+                    else -> exprString(raw)
                 }
             } catch (e: IonException) {
-                valueFactory.newString(raw)
+                exprString(raw)
             }
         },
         /** Each field is a string. */
         NONE {
-            override fun convert(valueFactory: ExprValueFactory, raw: String): ExprValue = valueFactory.newString(raw)
+            override fun convert(ion: IonSystem, raw: String): ExprValue = exprString(raw)
         };
 
-        abstract fun convert(valueFactory: ExprValueFactory, raw: String): ExprValue
+        abstract fun convert(ion: IonSystem, raw: String): ExprValue
     }
 
     /**
@@ -80,7 +81,7 @@ object DelimitedValues {
      */
     @JvmStatic
     fun exprValue(
-        valueFactory: ExprValueFactory,
+        ion: IonSystem,
         input: Reader,
         csvFormat: CSVFormat,
         conversionMode: ConversionMode
@@ -90,19 +91,19 @@ object DelimitedValues {
         val columns: List<String> = csvParser.headerNames
 
         val seq = csvParser.asSequence().map { csvRecord ->
-            valueFactory.newStruct(
+            exprStruct(
                 csvRecord.mapIndexed { i, value ->
                     val name = when {
                         i < columns.size -> columns[i]
                         else -> syntheticColumnName(i)
                     }
-                    conversionMode.convert(valueFactory, value).namedValue(valueFactory.newString(name))
+                    conversionMode.convert(ion, value).namedValue(exprString(name))
                 },
                 StructOrdering.ORDERED
             )
         }
 
-        return valueFactory.newBag(seq)
+        return exprBag(seq)
     }
 
     // TODO make this configurable

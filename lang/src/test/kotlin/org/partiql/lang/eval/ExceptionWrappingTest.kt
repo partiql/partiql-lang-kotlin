@@ -1,6 +1,5 @@
 package org.partiql.lang.eval
 
-import com.amazon.ion.system.IonSystemBuilder
 import org.assertj.core.api.Assertions
 import org.junit.Test
 import org.partiql.lang.CompilerPipeline
@@ -14,8 +13,6 @@ import org.partiql.lang.types.StaticType
  * A class to test if the wrapping of internal exceptions are correct.
  */
 class ExceptionWrappingTest {
-    private val ion = IonSystemBuilder.standard().build()
-
     private val throwIllegalStateExceptionExprFunction = object : ExprFunction {
         override val signature: FunctionSignature
             get() = FunctionSignature("throw_illegal_state_exception", listOf(), returnType = StaticType.ANY)
@@ -38,7 +35,7 @@ class ExceptionWrappingTest {
      * To make custom functions available to the PartiQL being executed, they must be passed to
      * [CompilerPipeline.Builder.addFunction].
      */
-    private val pipeline = CompilerPipeline.build(ion) {
+    private val pipeline = CompilerPipeline.build() {
         addFunction(throwIllegalStateExceptionExprFunction)
         addFunction(throwSemanticExceptionExprFunction)
 

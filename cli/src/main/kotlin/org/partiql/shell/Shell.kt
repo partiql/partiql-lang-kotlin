@@ -33,10 +33,9 @@ import org.partiql.format.ExplainFormatter
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.PartiQLResult
 import org.partiql.lang.eval.delegate
-import org.partiql.lang.syntax.PartiQLParserBuilder
+import org.partiql.lang.eval.exprNull
 import org.partiql.lang.util.ConfigurableExprValueFormatter
 import org.partiql.lang.util.ExprValueFormatter
 import org.partiql.pipeline.AbstractPipeline
@@ -80,15 +79,14 @@ private val EXIT_DELAY: Duration = Duration(3000)
  * opinions on ways to clean this up in later PRs.
  */
 internal class Shell(
-    private val valueFactory: ExprValueFactory,
     private val output: OutputStream,
     private val compiler: AbstractPipeline,
     private val initialGlobal: Bindings<ExprValue>,
     private val config: ShellConfiguration = ShellConfiguration()
 ) {
     private val homeDir: Path = Paths.get(System.getProperty("user.home"))
-    private val globals = ShellGlobalBinding(valueFactory).add(initialGlobal)
-    private var previousResult = valueFactory.nullValue
+    private val globals = ShellGlobalBinding().add(initialGlobal)
+    private var previousResult = exprNull()
     private val out = PrintStream(output)
 
     fun start() {
@@ -151,12 +149,6 @@ internal class Shell(
             } catch (ex: EndOfFileException) {
                 out.info("^D")
                 return
-            }
-
-            // Pretty print AST
-            if (line.endsWith("\n!!")) {
-                printAST(line.removeSuffix("!!"))
-                continue
             }
 
             if (line.isBlank()) {
@@ -269,17 +261,6 @@ internal class Shell(
         val properties = Properties()
         properties.load(this.javaClass.getResourceAsStream("/partiql.properties"))
         return "${properties.getProperty("version")}-${properties.getProperty("commit")}"
-    }
-
-    private fun printAST(query: String) {
-        if (query.isNotBlank()) {
-            val parser = PartiQLParserBuilder.standard().build()
-            val ast = parser.parseAstStatement(query)
-            val explain = PartiQLResult.Explain.Domain(value = ast, format = null)
-            val output = ExplainFormatter.format(explain)
-            out.println(output)
-            out.flush()
-        }
     }
 
     /**

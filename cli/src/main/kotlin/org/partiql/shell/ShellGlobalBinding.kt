@@ -18,12 +18,12 @@ import org.partiql.lang.eval.BindingCase
 import org.partiql.lang.eval.BindingName
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.MapBindings
 import org.partiql.lang.eval.StructOrdering
 import org.partiql.lang.eval.delegate
+import org.partiql.lang.eval.exprStruct
 
-class ShellGlobalBinding(private val valueFactory: ExprValueFactory) {
+class ShellGlobalBinding {
     private val knownNames = mutableSetOf<String>()
     var bindings = Bindings.empty<ExprValue>()
         private set
@@ -47,6 +47,6 @@ class ShellGlobalBinding(private val valueFactory: ExprValueFactory) {
             bindings[BindingName(it, BindingCase.SENSITIVE)]
         }.filterNotNull().asSequence()
 
-        return valueFactory.newStruct(values, StructOrdering.UNORDERED)
+        return exprStruct(values, StructOrdering.UNORDERED)
     }
 }

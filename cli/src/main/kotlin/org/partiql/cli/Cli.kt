@@ -21,9 +21,11 @@ import org.partiql.format.ExplainFormatter
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.PartiQLResult
 import org.partiql.lang.eval.delegate
+import org.partiql.lang.eval.exprBag
+import org.partiql.lang.eval.exprValue
+import org.partiql.lang.eval.toExprValue
 import org.partiql.lang.eval.toIonValue
 import org.partiql.lang.util.ConfigurableExprValueFormatter
 import org.partiql.pipeline.AbstractPipeline
@@ -32,7 +34,6 @@ import java.io.OutputStream
 import java.io.OutputStreamWriter
 
 internal class Cli(
-    private val valueFactory: ExprValueFactory,
     private val input: InputStream,
     private val inputFormat: InputFormat,
     private val output: OutputStream,
@@ -74,7 +75,7 @@ internal class Cli(
         IonReaderBuilder.standard().build(input).use { reader ->
             val bindings = when (reader.next()) {
                 null -> Bindings.buildLazyBindings<ExprValue> {}.delegate(globals)
-                else -> getBindingsFromIonValue(valueFactory.newFromIonReader(reader))
+                else -> getBindingsFromIonValue(exprValue(ion, reader))
             }
             if (reader.next() != null) {
                 val message = "As of v0.7.0, PartiQL requires that Ion files contain only a single Ion value for " +
@@ -89,8 +90,8 @@ internal class Cli(
 
     private fun runWithIonInputWrapped() {
         IonReaderBuilder.standard().build(input).use { reader ->
-            val inputIonValue = valueFactory.ion.iterate(reader).asSequence().map { valueFactory.newFromIonValue(it) }
-            val inputExprValue = valueFactory.newBag(inputIonValue)
+            val inputIonValue = ion.iterate(reader).asSequence().map { it.toExprValue() }
+            val inputExprValue = exprBag(inputIonValue)
             val bindings = getBindingsFromIonValue(inputExprValue)
             val result = compilerPipeline.compile(query, EvaluationSession.build { globals(bindings) })
             outputResult(result)
@@ -119,7 +120,7 @@ internal class Cli(
     private fun outputResult(result: ExprValue) {
         when (outputFormat) {
             OutputFormat.ION_TEXT -> ionTextWriterBuilder.build(output).use { result.toIonValue(ion).writeTo(it) }
-            OutputFormat.ION_BINARY -> valueFactory.ion.newBinaryWriter(output).use { result.toIonValue(ion).writeTo(it) }
+            OutputFormat.ION_BINARY -> ion.newBinaryWriter(output).use { result.toIonValue(ion).writeTo(it) }
             OutputFormat.PARTIQL -> OutputStreamWriter(output).use { it.write(result.toString()) }
             OutputFormat.PARTIQL_PRETTY -> OutputStreamWriter(output).use {
                 ConfigurableExprValueFormatter.pretty.formatTo(result, it)

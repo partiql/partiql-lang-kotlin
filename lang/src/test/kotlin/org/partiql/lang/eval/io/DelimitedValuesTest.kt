@@ -20,6 +20,7 @@ import org.partiql.lang.TestBase
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.cloneAndRemoveBagAndMissingAnnotations
+import org.partiql.lang.eval.exprBag
 import org.partiql.lang.eval.io.DelimitedValues.ConversionMode.AUTO
 import org.partiql.lang.eval.io.DelimitedValues.ConversionMode.NONE
 import org.partiql.lang.eval.orderedNamesValue
@@ -41,7 +42,7 @@ class DelimitedValuesTest : TestBase() {
         csvFormat: CSVFormat,
         conversionMode: DelimitedValues.ConversionMode
     ): ExprValue =
-        DelimitedValues.exprValue(valueFactory, StringReader(text), csvFormat, conversionMode)
+        DelimitedValues.exprValue(ion, StringReader(text), csvFormat, conversionMode)
 
     private fun assertWrite(
         expectedText: String,
@@ -53,8 +54,8 @@ class DelimitedValuesTest : TestBase() {
     ) {
         val actualText = StringWriter().use {
 
-            val rowExprValue = valueFactory.newFromIonText(valueText)
-            val exprValue = valueFactory.newBag(
+            val rowExprValue = newFromIonText(ion, valueText)
+            val exprValue = exprBag(
                 rowExprValue.asSequence().map {
                     // apply the "schema"
                     it.orderedNamesValue(names)
@@ -196,8 +197,8 @@ class DelimitedValuesTest : TestBase() {
 
     @Test(expected = IllegalArgumentException::class)
     fun mismatchSchema() = voidWrite(
-        valueFactory.newBag(
-            valueFactory.newFromIonText("[{a:1}, {b:2}]")
+        exprBag(
+            newFromIonText(ion, "[{a:1}, {b:2}]")
                 .asSequence()
                 .mapIndexed { index, exprValue ->
                     when (index) {
@@ -211,7 +212,7 @@ class DelimitedValuesTest : TestBase() {
 
     @Test(expected = IllegalArgumentException::class)
     fun noSchema() = voidWrite(
-        valueFactory.newFromIonText("[{a:1}, {b:2}]"),
+        newFromIonText(ion, "[{a:1}, {b:2}]"),
         writeHeader = false
     )
 }

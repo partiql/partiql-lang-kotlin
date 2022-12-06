@@ -12,14 +12,19 @@ import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.EvaluationException
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.StructOrdering
 import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedure
 import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedureSignature
+import org.partiql.lang.eval.exprDecimal
+import org.partiql.lang.eval.exprInt
+import org.partiql.lang.eval.exprList
+import org.partiql.lang.eval.exprString
+import org.partiql.lang.eval.exprStruct
 import org.partiql.lang.eval.namedValue
 import org.partiql.lang.eval.numberValue
 import org.partiql.lang.eval.stringValue
+import org.partiql.lang.eval.toExprValue
 import java.io.PrintStream
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -31,7 +36,7 @@ private val ion = IonSystemBuilder.standard().build()
  * This procedure also returns the number of crewmates we calculated the moon weight for, returning -1 if no crew is
  * found.
  */
-class CalculateCrewMoonWeight(private val valueFactory: ExprValueFactory) : StoredProcedure {
+class CalculateCrewMoonWeight : StoredProcedure {
     private val MOON_GRAVITATIONAL_CONSTANT = BigDecimal(1.622 / 9.81)
 
     // [StoredProcedureSignature] takes two arguments:
@@ -64,7 +69,7 @@ class CalculateCrewMoonWeight(private val valueFactory: ExprValueFactory) : Stor
         // Next we check if the given `crewName` is in the [EvaluationSession]'s global bindings. If not, we return 0.
         val sessionGlobals = session.globals
         val crewBindings = sessionGlobals[BindingName(crewName.stringValue(), BindingCase.INSENSITIVE)]
-            ?: return valueFactory.newInt(-1)
+            ?: return exprInt(-1)
 
         // Now that we've confirmed the given `crewName` is in the session's global bindings, we calculate and return
         // the moon weight for each crewmate in the crew.
@@ -77,14 +82,14 @@ class CalculateCrewMoonWeight(private val valueFactory: ExprValueFactory) : Stor
             val mass = crewmateBinding.bindings[massBindingName]!!
 
             val moonWeight = (mass.numberValue() as BigDecimal * MOON_GRAVITATIONAL_CONSTANT).setScale(1, RoundingMode.HALF_UP)
-            val moonWeightExprValue = valueFactory.newDecimal(moonWeight).namedValue(valueFactory.newString("moonWeight"))
+            val moonWeightExprValue = exprDecimal(moonWeight).namedValue(exprString("moonWeight"))
 
             result.add(
-                valueFactory.newStruct(listOf(name, moonWeightExprValue), StructOrdering.UNORDERED)
+                exprStruct(listOf(name, moonWeightExprValue), StructOrdering.UNORDERED)
             )
         }
 
-        return valueFactory.newList(result)
+        return exprList(result)
     }
 }
 
@@ -97,26 +102,22 @@ class CustomProceduresExample(out: PrintStream) : Example(out) {
          * To make custom stored procedures available to the PartiQL query being executed, they must be passed to
          * [CompilerPipeline.Builder.addProcedure].
          */
-        val pipeline = CompilerPipeline.build(ion) {
-            addProcedure(CalculateCrewMoonWeight(valueFactory))
+        val pipeline = CompilerPipeline.build {
+            addProcedure(CalculateCrewMoonWeight())
         }
 
         // Here, we initialize the crews to be stored in our global session bindings
         val initialCrews = Bindings.ofMap(
             mapOf(
-                "crew1" to pipeline.valueFactory.newFromIonValue(
-                    ion.singleValue(
-                        """[ { name: "Neil",    mass: 80.5 }, 
+                "crew1" to ion.singleValue(
+                    """[ { name: "Neil",    mass: 80.5 }, 
                                          { name: "Buzz",    mass: 72.3 },
                                          { name: "Michael", mass: 89.9 } ]"""
-                    )
-                ),
-                "crew2" to pipeline.valueFactory.newFromIonValue(
-                    ion.singleValue(
-                        """[ { name: "James", mass: 77.1 }, 
+                ).toExprValue(),
+                "crew2" to ion.singleValue(
+                    """[ { name: "James", mass: 77.1 }, 
                                          { name: "Spock", mass: 81.6 } ]"""
-                    )
-                )
+                ).toExprValue()
             )
         )
         val session = EvaluationSession.build { globals(initialCrews) }
