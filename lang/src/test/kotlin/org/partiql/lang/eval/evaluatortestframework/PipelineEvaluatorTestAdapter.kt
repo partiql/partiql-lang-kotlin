@@ -86,6 +86,22 @@ internal class PipelineEvaluatorTestAdapter(
                     unexpectedResultErrorCode
                 ) { tc.testDetails(note = note, actualResult = actualIonResult.toString()) }
             }
+            ExpectedResultFormat.PARTIQL -> {
+                val expectedExprValueResult = assertDoesNotThrow(
+                    EvaluatorTestFailureReason.FAILED_TO_EVALUATE_PARTIQL_EXPECTED_RESULT,
+                    { tc.testDetails(note = note) }
+                ) {
+                    pipeline.evaluate(expectedResult)
+                }
+
+                if (!expectedExprValueResult.exprEquals(actualExprValueResult)) {
+                    throw EvaluatorAssertionFailedError(
+                        EvaluatorTestFailureReason.UNEXPECTED_QUERY_RESULT,
+                        tc.testDetails(note = note, actualResult = actualExprValueResult.toString())
+                    )
+                }
+                Unit
+            }
             ExpectedResultFormat.STRING -> {
                 val actualResultString = actualExprValueResult.toString()
                 assertEquals(

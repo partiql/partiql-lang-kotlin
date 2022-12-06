@@ -27,6 +27,9 @@ enum class ExpectedResultFormat {
     /**
      * The expected value is expressed using PartiQL syntax, which is evaluated under the same pipeline and compile
      * options and session as the query under test. PartiQL equivalence is used to compare the result.
+     *
+     * Note that this is not being used anywhere in test currently. But we keep it here, since we cannot be 100% sure
+     * whether this is not useful at all. We will remove it once we finish the work of test formats cleanup.
      */
     PARTIQL,
 
