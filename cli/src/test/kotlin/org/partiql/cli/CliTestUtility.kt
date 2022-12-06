@@ -20,7 +20,6 @@ internal fun makeCliAndGetResult(
     bindings: Bindings<ExprValue> = Bindings.empty(),
     outputFormat: OutputFormat = OutputFormat.ION_TEXT,
     output: OutputStream = ByteArrayOutputStream(),
-    ion: IonSystem = IonSystemBuilder.standard().build(),
     pipeline: AbstractPipeline = AbstractPipeline.standard(),
     wrapIon: Boolean = false
 ): String {

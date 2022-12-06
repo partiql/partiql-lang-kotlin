@@ -35,8 +35,8 @@ import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.PartiQLResult
 import org.partiql.lang.eval.delegate
-import org.partiql.lang.syntax.PartiQLParserBuilder
 import org.partiql.lang.eval.exprNull
+import org.partiql.lang.syntax.PartiQLParserBuilder
 import org.partiql.lang.util.ConfigurableExprValueFormatter
 import org.partiql.lang.util.ExprValueFormatter
 import org.partiql.pipeline.AbstractPipeline

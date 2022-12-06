@@ -13,6 +13,10 @@ import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.PartiQLResult
 import org.partiql.lang.eval.StructOrdering
+import org.partiql.lang.eval.exprBag
+import org.partiql.lang.eval.exprInt
+import org.partiql.lang.eval.exprString
+import org.partiql.lang.eval.exprStruct
 import org.partiql.lang.eval.namedValue
 import org.partiql.lang.planner.GlobalResolutionResult
 import org.partiql.lang.planner.GlobalVariableResolver
@@ -86,7 +90,7 @@ class QueryEngine(val db: MemoryDatabase) {
             }
 
             val tableId = UUID.fromString(bindingName.name)
-            return db.valueFactory.newBag(
+            return exprBag(
                 db.getFullScanSequence(tableId)
             )
         }
@@ -162,7 +166,6 @@ class QueryEngine(val db: MemoryDatabase) {
                 )
             )
         compiler
-            .ionSystem(ION)
             .customOperatorFactories(
                 listOf(
                     GetByKeyProjectRelationalOperatorFactory()
@@ -195,10 +198,10 @@ class QueryEngine(val db: MemoryDatabase) {
                     db.delete(targetTableId, it)
                     rowsEffected ++
                 }
-                db.valueFactory.newStruct(
+                exprStruct(
                     listOf(
-                        db.valueFactory.newInt(rowsEffected)
-                            .namedValue(db.valueFactory.newString("rows_effected"))
+                        exprInt(rowsEffected)
+                            .namedValue(exprString("rows_effected"))
                     ),
                     StructOrdering.UNORDERED
                 )
@@ -210,10 +213,10 @@ class QueryEngine(val db: MemoryDatabase) {
                     db.insert(targetTableId, it)
                     rowsEffected ++
                 }
-                db.valueFactory.newStruct(
+                exprStruct(
                     listOf(
-                        db.valueFactory.newInt(rowsEffected)
-                            .namedValue(db.valueFactory.newString("rows_effected"))
+                        exprInt(rowsEffected)
+                            .namedValue(exprString("rows_effected"))
                     ),
                     StructOrdering.UNORDERED
                 )

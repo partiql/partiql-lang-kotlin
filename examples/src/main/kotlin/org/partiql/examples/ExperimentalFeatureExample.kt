@@ -69,7 +69,6 @@ class ExperimentalFeatureExample(out: PrintStream) : Example(out) {
         planner
             .globalVariableResolver(globalVariableResolver)
         compiler
-            .ionSystem(myIonSystem)
             .options(evaluatorOptions)
     }
 
