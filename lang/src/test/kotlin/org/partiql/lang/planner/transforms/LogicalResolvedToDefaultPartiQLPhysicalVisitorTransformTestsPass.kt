@@ -14,6 +14,7 @@ import org.partiql.lang.planner.DML_COMMAND_FIELD_ACTION
 import org.partiql.lang.planner.DML_COMMAND_FIELD_ROWS
 import org.partiql.lang.planner.DML_COMMAND_FIELD_TARGET_UNIQUE_ID
 import org.partiql.lang.util.ArgumentsProviderBase
+import org.partiql.pig.runtime.Experimental
 import kotlin.test.fail
 
 class LogicalResolvedToDefaultPartiQLPhysicalVisitorTransformTestsPass {
@@ -28,6 +29,8 @@ class LogicalResolvedToDefaultPartiQLPhysicalVisitorTransformTestsPass {
     }
 
     class ArgumentsForToPhysicalTests : ArgumentsProviderBase() {
+
+        @OptIn(Experimental::class)
         override fun getParameters() = listOf(
             BexprTestCase(
                 PartiqlLogicalResolved.build {

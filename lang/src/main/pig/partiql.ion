@@ -142,14 +142,16 @@ may then be further optimized by selecting better implementations of each operat
             (bag_op op::bag_op_type quantifier::set_quantifier operands::(* expr 2))
 
             // GPML graph pattern match:  <expr> MATCH <gpml_pattern>
-            (graph_match expr::expr gpml_pattern::gpml_pattern)
+            experimental::(graph_match expr::expr gpml_pattern::gpml_pattern)
 
             // Other expression types
             (path root::expr steps::(* path_step 1))
             (call func_name::symbol args::(* expr 1))
             (call_agg setq::set_quantifier func_name::symbol arg::expr)
-            // TODO: In the feature, when we allow use of aggregation function as window function, we need to consider incorporate in setq
-            (call_window func_name::symbol over::over args::(* expr 1))
+
+            // TODO: In the future, when we allow use of aggregation function as window function, we need to consider incorporate in setq
+            experimental::(call_window func_name::symbol over::over args::(* expr 1))
+
             (cast value::expr as_type::type)
             (can_cast value::expr as_type::type)
             (can_lossless_cast value::expr as_type::type)
@@ -245,7 +247,7 @@ may then be further optimized by selecting better implementations of each operat
         //
         // Fig. 5. Table of edge patterns:
         // https://arxiv.org/abs/2112.06217
-        (sum graph_match_direction
+        experimental::(sum graph_match_direction
              (edge_left)
              (edge_undirected)
              (edge_right)
@@ -255,7 +257,7 @@ may then be further optimized by selecting better implementations of each operat
              (edge_left_or_undirected_or_right))
 
         // A part of a graph pattern
-        (sum graph_match_pattern_part
+        experimental::(sum graph_match_pattern_part
              // A single node in a graph pattern.
              (node
                  prefilter::(? expr)   // an optional node pre-filter, e.g.: `WHERE c.name='Alarm'` in `MATCH (c WHERE c.name='Alarm')`
@@ -273,7 +275,7 @@ may then be further optimized by selecting better implementations of each operat
              (pattern pattern::graph_match_pattern))
 
         // A quantifier for graph edges or patterns. (e.g., the `{2,5}` in `MATCH (x)->{2,5}(y)`)
-        (product graph_match_quantifier lower::int upper::(? int))
+        experimental::(product graph_match_quantifier lower::int upper::(? int))
 
         // A path restrictor
         // | Keyword        | Description
@@ -284,13 +286,13 @@ may then be further optimized by selecting better implementations of each operat
         //
         // Fig. 7. Table of restrictors:
         // https://arxiv.org/abs/2112.06217
-        (sum graph_match_restrictor
+        experimental::(sum graph_match_restrictor
              (restrictor_trail)
              (restrictor_acyclic)
              (restrictor_simple))
 
         // A single graph match pattern.
-        (product graph_match_pattern
+        experimental::(product graph_match_pattern
              restrictor::(? graph_match_restrictor)
              prefilter::(? expr)    // an optional pattern pre-filter, e.g.: `WHERE a.name=b.name` in `MATCH [(a)->(b) WHERE a.name=b.name]`
              variable::(? symbol)   // the optional element variable of the pattern, e.g.: `p` in `MATCH p = (a) −[t]−> (b)`
@@ -309,7 +311,7 @@ may then be further optimized by selecting better implementations of each operat
         //
         // Fig. 8. Table of restrictors:
         // https://arxiv.org/abs/2112.06217
-        (sum graph_match_selector
+        experimental::(sum graph_match_selector
              (selector_any_shortest)
              (selector_all_shortest)
              (selector_any)
@@ -319,7 +321,7 @@ may then be further optimized by selecting better implementations of each operat
 
         // A graph pattern as defined in GPML
         // See https://arxiv.org/abs/2112.06217
-        (product gpml_pattern
+        experimental::(product gpml_pattern
                  selector::(? graph_match_selector)
                  patterns::(* graph_match_pattern 1))
 
@@ -371,13 +373,13 @@ may then be further optimized by selecting better implementations of each operat
         // OVER ([PARTITION BY <expr> [, <expr>]... ] [ORDER BY <sort_spec> [, <sort_spec>]... ])
         // TODO: In the future, we need to add support for custom declared frame clause
         // TODO: Remove from experimental once https://github.com/partiql/partiql-docs/issues/31 is resolved and a RFC is approved
-        (product over partition_by::(? window_partition_list ) order_by::(? window_sort_spec_list ) )
+        experimental::(product over partition_by::(? window_partition_list ) order_by::(? window_sort_spec_list ) )
 
         // <expr>[, <expr>]...
-        (product window_partition_list exprs::(* expr 1 ))
+        experimental::(product window_partition_list exprs::(* expr 1 ))
 
         // <sort_spec>[, <sort_spec>]...
-        (product window_sort_spec_list sort_specs::(* sort_spec 1 ))
+        experimental::(product window_sort_spec_list sort_specs::(* sort_spec 1 ))
 
         // Indicates if variable lookup should be case-sensitive or not.
         (sum case_sensitivity (case_sensitive) (case_insensitive))
