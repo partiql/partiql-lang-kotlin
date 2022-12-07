@@ -47,10 +47,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - If unable to parse via SLL Prediction Mode, it attempts to parse using the slower LL Prediction Mode
   - Modifications have also been made to the ANTLR grammar to increase the speed of parsing joined table references
   - Updates how the PartiQLParser handles parameter indexes to remove the double-pass while lexing
+- Changes the expected `Property`'s of `TOKEN_INFO` to use `Property.TOKEN_DESCRIPTION` instead of `Property.TOKEN_TYPE`
 
 ### Deprecated
 - Marks the GroupKeyReferencesVisitorTransform as deprecated. There is no functionally equivalent class.
 - Marks `ionValue` property in `ExprValue` interface as deprecated. The functional equivalent method is `ExprValue.toIonValue(ion: IonSystem)` in kotlin, and `ExprValueKt.toIonValue(value: ExprValue, ion: IonSystem)` in Java.
+- Marks `Lexer`, `Token`, `TokenType`, `SourcePosition`, and `SourceSpan` as deprecated. These will be removed without
+any replacement.
+- Marks approximately 60 `ErrorCode`'s as deprecated. These will be removed without any replacement.
+- Marks `Property.TOKEN_TYPE` as deprecated. Please use `Property.TOKEN_DESCRIPTION`.
 
 ### Fixed
 - Fixes the ThreadInterruptedTests by modifying the time to interrupt parses. Also adds better exception exposure to

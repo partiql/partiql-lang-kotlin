@@ -12,6 +12,8 @@
  *  language governing permissions and limitations under the License.
  */
 
+@file:Suppress("DEPRECATION")
+
 package org.partiql.lang.errors
 
 import com.amazon.ion.IonValue
@@ -50,7 +52,15 @@ enum class Property(val propertyName: String, val propertyType: PropertyType) {
     CAST_TO("cast_to", PropertyType.STRING_CLASS),
     CAST_FROM("cast_from", PropertyType.STRING_CLASS),
     KEYWORD("keyword", PropertyType.STRING_CLASS),
+
+    @Deprecated(
+        message = "TOKEN_TYPE is subject to removal.",
+        replaceWith = ReplaceWith("TOKEN_DESCRIPTION"),
+        level = DeprecationLevel.WARNING
+    ) // To be removed before 1.0
     TOKEN_TYPE("token_type", PropertyType.TOKEN_CLASS),
+
+    TOKEN_DESCRIPTION("token_description", PropertyType.STRING_CLASS),
     EXPECTED_TOKEN_TYPE("expected_token_type", PropertyType.TOKEN_CLASS),
     EXPECTED_TOKEN_TYPE_1_OF_2("expected_token_type_1_of_2", PropertyType.TOKEN_CLASS),
     EXPECTED_TOKEN_TYPE_2_OF_2("expected_token_type_2_of_2", PropertyType.TOKEN_CLASS),

@@ -36,8 +36,8 @@ import org.partiql.lang.errors.Property
 import org.partiql.lang.errors.PropertyValueMap
 import org.partiql.lang.types.CustomType
 import org.partiql.lang.util.checkThreadInterrupted
+import org.partiql.lang.util.getAntlrDisplayString
 import org.partiql.lang.util.getIonValue
-import org.partiql.lang.util.getPartiQLTokenType
 import java.io.InputStream
 import java.nio.channels.ClosedByInterruptException
 import java.nio.charset.StandardCharsets
@@ -182,10 +182,11 @@ internal class PartiQLParser(
             msg: String,
             e: RecognitionException?
         ) {
+            if (offendingSymbol !is Token) { throw IllegalArgumentException("Offending symbol is not a Token.") }
             val propertyValues = PropertyValueMap()
             propertyValues[Property.LINE_NUMBER] = line.toLong()
             propertyValues[Property.COLUMN_NUMBER] = charPositionInLine.toLong() + 1
-            propertyValues[Property.TOKEN_TYPE] = getPartiQLTokenType(offendingSymbol as Token)
+            propertyValues[Property.TOKEN_DESCRIPTION] = offendingSymbol.type.getAntlrDisplayString()
             propertyValues[Property.TOKEN_VALUE] = getIonValue(ion, offendingSymbol)
             throw ParserException(message = msg, errorCode = ErrorCode.PARSE_UNEXPECTED_TOKEN, errorContext = propertyValues, cause = e)
         }
