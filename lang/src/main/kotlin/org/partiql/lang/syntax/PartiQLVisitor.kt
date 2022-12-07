@@ -41,6 +41,7 @@ import org.antlr.v4.runtime.tree.TerminalNode
 import org.partiql.lang.ast.IsCountStarMeta
 import org.partiql.lang.ast.IsImplictJoinMeta
 import org.partiql.lang.ast.IsIonLiteralMeta
+import org.partiql.lang.ast.IsListParenthesizedMeta
 import org.partiql.lang.ast.IsPathIndexMeta
 import org.partiql.lang.ast.IsValuesExprMeta
 import org.partiql.lang.ast.LegacyLogicalNotMeta
@@ -890,7 +891,7 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
             val possibleRhs = visitExpr(ctx.expr())
             if (possibleRhs is PartiqlAst.Expr.Select || possibleRhs.metas.containsKey(IsValuesExprMeta.TAG))
                 possibleRhs
-            else list(possibleRhs)
+            else list(possibleRhs, metas = possibleRhs.metas + metaContainerOf(IsListParenthesizedMeta.instance))
         } else {
             visit(ctx.rhs, PartiqlAst.Expr::class)
         }
@@ -996,12 +997,12 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
 
     override fun visitValueRow(ctx: PartiQLParser.ValueRowContext) = PartiqlAst.build {
         val expressions = visitOrEmpty(ctx.expr(), PartiqlAst.Expr::class)
-        list(expressions)
+        list(expressions, metas = ctx.PAREN_LEFT().getSourceMetaContainer() + metaContainerOf(IsListParenthesizedMeta.instance))
     }
 
     override fun visitValueList(ctx: PartiQLParser.ValueListContext) = PartiqlAst.build {
         val expressions = visitOrEmpty(ctx.expr(), PartiqlAst.Expr::class)
-        list(expressions)
+        list(expressions, metas = ctx.PAREN_LEFT().getSourceMetaContainer() + metaContainerOf(IsListParenthesizedMeta.instance))
     }
 
     /**
