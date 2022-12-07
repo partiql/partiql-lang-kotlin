@@ -22,12 +22,12 @@ class WindowFunctionTests : EvaluatorTestBase() {
     )
     private val session = mapOf(
         "stock_price" to """[
-            { date: 2022-09-30, ticker: AMZN, price: 113.00},
-            { date: 2022-10-03, ticker: AMZN, price: 115.88},
-            { date: 2022-10-04, ticker: AMZN, price: 121.09},
-            { date: 2022-09-30, ticker: GOOG, price: 96.15},
-            { date: 2022-10-03, ticker: GOOG, price: 99.30},
-            { date: 2022-10-04, ticker: GOOG, price: 101.04}
+            { date: 2022-09-30, ticker: "AMZN", price: 113.00},
+            { date: 2022-10-03, ticker: "AMZN", price: 115.88},
+            { date: 2022-10-04, ticker: "AMZN", price: 121.09},
+            { date: 2022-09-30, ticker: "GOOG", price: 96.15},
+            { date: 2022-10-03, ticker: "GOOG", price: 99.30},
+            { date: 2022-10-04, ticker: "GOOG", price: 101.04}
         ]""",
     ).toSession()
 
@@ -49,12 +49,12 @@ class WindowFunctionTests : EvaluatorTestBase() {
                     FROM stock_price as sp
                 """,
                 expectedResult = """<<
-                    { 'date': `2022-09-30`, 'ticker': `AMZN`, 'current_price': 113.00, 'previous_price': NULL},
-                    { 'date': `2022-10-03`, 'ticker': `AMZN`, 'current_price': 115.88, 'previous_price': 113.00},
-                    { 'date': `2022-10-04`, 'ticker': `AMZN`, 'current_price': 121.09, 'previous_price': 115.88},
-                    { 'date': `2022-09-30`, 'ticker': `GOOG`, 'current_price': 96.15, 'previous_price': NULL},
-                    { 'date': `2022-10-03`, 'ticker': `GOOG`, 'current_price': 99.30, 'previous_price': 96.15},
-                    { 'date': `2022-10-04`, 'ticker': `GOOG`, 'current_price': 101.04, 'previous_price': 99.30}
+                    { 'date': `2022-09-30`, 'ticker': 'AMZN', 'current_price': 113.00, 'previous_price': NULL},
+                    { 'date': `2022-10-03`, 'ticker': 'AMZN', 'current_price': 115.88, 'previous_price': 113.00},
+                    { 'date': `2022-10-04`, 'ticker': 'AMZN', 'current_price': 121.09, 'previous_price': 115.88},
+                    { 'date': `2022-09-30`, 'ticker': 'GOOG', 'current_price': 96.15, 'previous_price': NULL},
+                    { 'date': `2022-10-03`, 'ticker': 'GOOG', 'current_price': 99.30, 'previous_price': 96.15},
+                    { 'date': `2022-10-04`, 'ticker': 'GOOG', 'current_price': 101.04, 'previous_price': 99.30}
                 >>"""
             ),
 
@@ -68,12 +68,12 @@ class WindowFunctionTests : EvaluatorTestBase() {
                     FROM stock_price as sp
                 """,
                 expectedResult = """<<
-                    { 'date': `2022-09-30`, 'ticker': `AMZN`, 'current_price': 113.00, 'previous_a': 'OUT OF PARTITION'},
-                    { 'date': `2022-10-03`, 'ticker': `AMZN`, 'current_price': 115.88},
-                    { 'date': `2022-10-04`, 'ticker': `AMZN`, 'current_price': 121.09},
-                    { 'date': `2022-09-30`, 'ticker': `GOOG`, 'current_price': 96.15, 'previous_a': 'OUT OF PARTITION'},
-                    { 'date': `2022-10-03`, 'ticker': `GOOG`, 'current_price': 99.30},
-                    { 'date': `2022-10-04`, 'ticker': `GOOG`, 'current_price': 101.04}
+                    { 'date': `2022-09-30`, 'ticker': 'AMZN', 'current_price': 113.00, 'previous_a': 'OUT OF PARTITION'},
+                    { 'date': `2022-10-03`, 'ticker': 'AMZN', 'current_price': 115.88},
+                    { 'date': `2022-10-04`, 'ticker': 'AMZN', 'current_price': 121.09},
+                    { 'date': `2022-09-30`, 'ticker': 'GOOG', 'current_price': 96.15, 'previous_a': 'OUT OF PARTITION'},
+                    { 'date': `2022-10-03`, 'ticker': 'GOOG', 'current_price': 99.30},
+                    { 'date': `2022-10-04`, 'ticker': 'GOOG', 'current_price': 101.04}
                 >>"""
             ),
 
@@ -87,12 +87,12 @@ class WindowFunctionTests : EvaluatorTestBase() {
                     FROM stock_price as sp
                 """,
                 expectedResult = """<<
-                    { 'date': `2022-09-30`, 'ticker': `AMZN`, 'current_price': 113.00, 'previous_price': NULL},
-                    { 'date': `2022-10-03`, 'ticker': `AMZN`, 'current_price': 115.88, 'previous_price': 213.00},
-                    { 'date': `2022-10-04`, 'ticker': `AMZN`, 'current_price': 121.09, 'previous_price': 215.88},
-                    { 'date': `2022-09-30`, 'ticker': `GOOG`, 'current_price': 96.15, 'previous_price': NULL},
-                    { 'date': `2022-10-03`, 'ticker': `GOOG`, 'current_price': 99.30, 'previous_price': 196.15},
-                    { 'date': `2022-10-04`, 'ticker': `GOOG`, 'current_price': 101.04, 'previous_price': 199.30}
+                    { 'date': `2022-09-30`, 'ticker': 'AMZN', 'current_price': 113.00, 'previous_price': NULL},
+                    { 'date': `2022-10-03`, 'ticker': 'AMZN', 'current_price': 115.88, 'previous_price': 213.00},
+                    { 'date': `2022-10-04`, 'ticker': 'AMZN', 'current_price': 121.09, 'previous_price': 215.88},
+                    { 'date': `2022-09-30`, 'ticker': 'GOOG', 'current_price': 96.15, 'previous_price': NULL},
+                    { 'date': `2022-10-03`, 'ticker': 'GOOG', 'current_price': 99.30, 'previous_price': 196.15},
+                    { 'date': `2022-10-04`, 'ticker': 'GOOG', 'current_price': 101.04, 'previous_price': 199.30}
                 >>"""
             ),
 
@@ -107,12 +107,12 @@ class WindowFunctionTests : EvaluatorTestBase() {
                     ORDER BY sp."date" DESC
                 """,
                 expectedResult = """[
-                    { 'date': `2022-10-04`, 'ticker': `AMZN`, 'current_price': 121.09, 'previous_price': 115.88},
-                    { 'date': `2022-10-04`, 'ticker': `GOOG`, 'current_price': 101.04, 'previous_price': 99.30},
-                    { 'date': `2022-10-03`, 'ticker': `AMZN`, 'current_price': 115.88, 'previous_price': 113.00},
-                    { 'date': `2022-10-03`, 'ticker': `GOOG`, 'current_price': 99.30, 'previous_price': 96.15},
-                    { 'date': `2022-09-30`, 'ticker': `AMZN`, 'current_price': 113.00, 'previous_price': NULL},
-                    { 'date': `2022-09-30`, 'ticker': `GOOG`, 'current_price': 96.15, 'previous_price': NULL}
+                    { 'date': `2022-10-04`, 'ticker': 'AMZN', 'current_price': 121.09, 'previous_price': 115.88},
+                    { 'date': `2022-10-04`, 'ticker': 'GOOG', 'current_price': 101.04, 'previous_price': 99.30},
+                    { 'date': `2022-10-03`, 'ticker': 'AMZN', 'current_price': 115.88, 'previous_price': 113.00},
+                    { 'date': `2022-10-03`, 'ticker': 'GOOG', 'current_price': 99.30, 'previous_price': 96.15},
+                    { 'date': `2022-09-30`, 'ticker': 'AMZN', 'current_price': 113.00, 'previous_price': NULL},
+                    { 'date': `2022-09-30`, 'ticker': 'GOOG', 'current_price': 96.15, 'previous_price': NULL}
                 ]"""
             ),
 
@@ -128,10 +128,10 @@ class WindowFunctionTests : EvaluatorTestBase() {
                     GROUP BY EXTRACT(MONTH FROM sp."date") as month, sp.ticker as ticker GROUP AS g
                 """,
                 expectedResult = """<<
-                    { 'current_month': 9., 'ticker': `AMZN`, 'current_month_average': 113.00, 'previous_month_avg': NULL},
-                    { 'current_month': 10., 'ticker': `AMZN`, 'current_month_average': 118.485, 'previous_month_avg': 113.00},
-                    { 'current_month': 9., 'ticker': `GOOG`, 'current_month_average': 96.15, 'previous_month_avg': NULL},
-                    { 'current_month': 10., 'ticker': `GOOG`, 'current_month_average': 100.17, 'previous_month_avg': 96.15}
+                    { 'current_month': 9., 'ticker': 'AMZN', 'current_month_average': 113.00, 'previous_month_avg': NULL},
+                    { 'current_month': 10., 'ticker':'AMZN', 'current_month_average': 118.485, 'previous_month_avg': 113.00},
+                    { 'current_month': 9., 'ticker': 'GOOG', 'current_month_average': 96.15, 'previous_month_avg': NULL},
+                    { 'current_month': 10., 'ticker': 'GOOG', 'current_month_average': 100.17, 'previous_month_avg': 96.15}
                 >>"""
             ),
 
@@ -228,12 +228,12 @@ class WindowFunctionTests : EvaluatorTestBase() {
                     FROM stock_price as sp
                 """,
                 expectedResult = """<<
-                    { 'date': `2022-09-30`, 'ticker': `AMZN`, 'current_price': 113.00, 'next_price': 115.88},
-                    { 'date': `2022-10-03`, 'ticker': `AMZN`, 'current_price': 115.88, 'next_price': 121.09},
-                    { 'date': `2022-10-04`, 'ticker': `AMZN`, 'current_price': 121.09, 'next_price': NULL},
-                    { 'date': `2022-09-30`, 'ticker': `GOOG`, 'current_price': 96.15, 'next_price': 99.30},
-                    { 'date': `2022-10-03`, 'ticker': `GOOG`, 'current_price': 99.30, 'next_price': 101.04},
-                    { 'date': `2022-10-04`, 'ticker': `GOOG`, 'current_price': 101.04, 'next_price': NULL}
+                    { 'date': `2022-09-30`, 'ticker': 'AMZN', 'current_price': 113.00, 'next_price': 115.88},
+                    { 'date': `2022-10-03`, 'ticker': 'AMZN', 'current_price': 115.88, 'next_price': 121.09},
+                    { 'date': `2022-10-04`, 'ticker': 'AMZN', 'current_price': 121.09, 'next_price': NULL},
+                    { 'date': `2022-09-30`, 'ticker': 'GOOG', 'current_price': 96.15, 'next_price': 99.30},
+                    { 'date': `2022-10-03`, 'ticker': 'GOOG', 'current_price': 99.30, 'next_price': 101.04},
+                    { 'date': `2022-10-04`, 'ticker': 'GOOG', 'current_price': 101.04, 'next_price': NULL}
                 >>"""
             ),
 
@@ -246,12 +246,12 @@ class WindowFunctionTests : EvaluatorTestBase() {
                     FROM stock_price as sp
                 """,
                 expectedResult = """<<
-                    { 'date': `2022-09-30`, 'ticker': `AMZN`, 'current_price': 113.00},
-                    { 'date': `2022-10-03`, 'ticker': `AMZN`, 'current_price': 115.88},
-                    { 'date': `2022-10-04`, 'ticker': `AMZN`, 'current_price': 121.09, 'next_price': 'OUT OF PARTITION'},
-                    { 'date': `2022-09-30`, 'ticker': `GOOG`, 'current_price': 96.15},
-                    { 'date': `2022-10-03`, 'ticker': `GOOG`, 'current_price': 99.30},
-                    { 'date': `2022-10-04`, 'ticker': `GOOG`, 'current_price': 101.04, 'next_price': 'OUT OF PARTITION'}
+                    { 'date': `2022-09-30`, 'ticker': 'AMZN', 'current_price': 113.00},
+                    { 'date': `2022-10-03`, 'ticker': 'AMZN', 'current_price': 115.88},
+                    { 'date': `2022-10-04`, 'ticker': 'AMZN', 'current_price': 121.09, 'next_price': 'OUT OF PARTITION'},
+                    { 'date': `2022-09-30`, 'ticker': 'GOOG', 'current_price': 96.15},
+                    { 'date': `2022-10-03`, 'ticker': 'GOOG', 'current_price': 99.30},
+                    { 'date': `2022-10-04`, 'ticker': 'GOOG', 'current_price': 101.04, 'next_price': 'OUT OF PARTITION'}
                 >>"""
             ),
 
@@ -264,12 +264,12 @@ class WindowFunctionTests : EvaluatorTestBase() {
                     FROM stock_price as sp
                 """,
                 expectedResult = """<<
-                    { 'date': `2022-09-30`, 'ticker': `AMZN`, 'current_price': 113.00, 'next_price': 215.88},
-                    { 'date': `2022-10-03`, 'ticker': `AMZN`, 'current_price': 115.88, 'next_price': 221.09},
-                    { 'date': `2022-10-04`, 'ticker': `AMZN`, 'current_price': 121.09, 'next_price': NULL},
-                    { 'date': `2022-09-30`, 'ticker': `GOOG`, 'current_price': 96.15, 'next_price': 199.30},
-                    { 'date': `2022-10-03`, 'ticker': `GOOG`, 'current_price': 99.30, 'next_price': 201.04},
-                    { 'date': `2022-10-04`, 'ticker': `GOOG`, 'current_price': 101.04, 'next_price': NULL}
+                    { 'date': `2022-09-30`, 'ticker': 'AMZN', 'current_price': 113.00, 'next_price': 215.88},
+                    { 'date': `2022-10-03`, 'ticker': 'AMZN', 'current_price': 115.88, 'next_price': 221.09},
+                    { 'date': `2022-10-04`, 'ticker': 'AMZN', 'current_price': 121.09, 'next_price': NULL},
+                    { 'date': `2022-09-30`, 'ticker': 'GOOG', 'current_price': 96.15, 'next_price': 199.30},
+                    { 'date': `2022-10-03`, 'ticker': 'GOOG', 'current_price': 99.30, 'next_price': 201.04},
+                    { 'date': `2022-10-04`, 'ticker': 'GOOG', 'current_price': 101.04, 'next_price': NULL}
                 >>"""
             ),
 
@@ -283,12 +283,12 @@ class WindowFunctionTests : EvaluatorTestBase() {
                     ORDER BY sp."date" DESC
                 """,
                 expectedResult = """[
-                    { 'date': `2022-10-04`, 'ticker': `AMZN`, 'current_price': 121.09, 'next_price': NULL},
-                    { 'date': `2022-10-04`, 'ticker': `GOOG`, 'current_price': 101.04, 'next_price': NULL},
-                    { 'date': `2022-10-03`, 'ticker': `AMZN`, 'current_price': 115.88, 'next_price': 121.09},
-                    { 'date': `2022-10-03`, 'ticker': `GOOG`, 'current_price': 99.30, 'next_price': 101.04},
-                    { 'date': `2022-09-30`, 'ticker': `AMZN`, 'current_price': 113.00, 'next_price': 115.88},
-                    { 'date': `2022-09-30`, 'ticker': `GOOG`, 'current_price': 96.15, 'next_price': 99.30}
+                    { 'date': `2022-10-04`, 'ticker': 'AMZN', 'current_price': 121.09, 'next_price': NULL},
+                    { 'date': `2022-10-04`, 'ticker': 'GOOG', 'current_price': 101.04, 'next_price': NULL},
+                    { 'date': `2022-10-03`, 'ticker': 'AMZN', 'current_price': 115.88, 'next_price': 121.09},
+                    { 'date': `2022-10-03`, 'ticker': 'GOOG', 'current_price': 99.30, 'next_price': 101.04},
+                    { 'date': `2022-09-30`, 'ticker': 'AMZN', 'current_price': 113.00, 'next_price': 115.88},
+                    { 'date': `2022-09-30`, 'ticker': 'GOOG', 'current_price': 96.15, 'next_price': 99.30}
                 ]"""
             ),
 
@@ -303,10 +303,10 @@ class WindowFunctionTests : EvaluatorTestBase() {
                     GROUP BY EXTRACT(MONTH FROM sp."date") as month, sp.ticker as ticker GROUP AS g
                 """,
                 expectedResult = """<<
-                    { 'current_month': 9., 'ticker': `AMZN`, 'current_month_average': 113.00, 'next_month_avg': 118.485},
-                    { 'current_month': 10., 'ticker': `AMZN`, 'current_month_average': 118.485, 'next_month_avg': NULL},
-                    { 'current_month': 9., 'ticker': `GOOG`, 'current_month_average': 96.15, 'next_month_avg': 100.17},
-                    { 'current_month': 10., 'ticker': `GOOG`, 'current_month_average': 100.17, 'next_month_avg': NULL}
+                    { 'current_month': 9., 'ticker': 'AMZN', 'current_month_average': 113.00, 'next_month_avg': 118.485},
+                    { 'current_month': 10., 'ticker': 'AMZN', 'current_month_average': 118.485, 'next_month_avg': NULL},
+                    { 'current_month': 9., 'ticker': 'GOOG', 'current_month_average': 96.15, 'next_month_avg': 100.17},
+                    { 'current_month': 10., 'ticker': 'GOOG', 'current_month_average': 100.17, 'next_month_avg': NULL}
                 >>"""
             ),
 
@@ -402,12 +402,12 @@ class WindowFunctionTests : EvaluatorTestBase() {
                     FROM stock_price as sp
                 """,
                 expectedResult = """<<
-                    { 'date': `2022-09-30`, 'ticker': `AMZN`, 'current_price': 113.00, 'previous_price': NULL, 'next_price': 115.88},
-                    { 'date': `2022-10-03`, 'ticker': `AMZN`, 'current_price': 115.88, 'previous_price': 113.00, 'next_price': 121.09},
-                    { 'date': `2022-10-04`, 'ticker': `AMZN`, 'current_price': 121.09, 'previous_price': 115.88, 'next_price': NULL},
-                    { 'date': `2022-09-30`, 'ticker': `GOOG`, 'current_price': 96.15, 'previous_price': NULL, 'next_price': 99.30},
-                    { 'date': `2022-10-03`, 'ticker': `GOOG`, 'current_price': 99.30, 'previous_price': 96.15, 'next_price': 101.04},
-                    { 'date': `2022-10-04`, 'ticker': `GOOG`, 'current_price': 101.04, 'previous_price': 99.30, 'next_price': NULL}
+                    { 'date': `2022-09-30`, 'ticker': 'AMZN', 'current_price': 113.00, 'previous_price': NULL, 'next_price': 115.88},
+                    { 'date': `2022-10-03`, 'ticker': 'AMZN', 'current_price': 115.88, 'previous_price': 113.00, 'next_price': 121.09},
+                    { 'date': `2022-10-04`, 'ticker': 'AMZN', 'current_price': 121.09, 'previous_price': 115.88, 'next_price': NULL},
+                    { 'date': `2022-09-30`, 'ticker': 'GOOG', 'current_price': 96.15, 'previous_price': NULL, 'next_price': 99.30},
+                    { 'date': `2022-10-03`, 'ticker': 'GOOG', 'current_price': 99.30, 'previous_price': 96.15, 'next_price': 101.04},
+                    { 'date': `2022-10-04`, 'ticker': 'GOOG', 'current_price': 101.04, 'previous_price': 99.30, 'next_price': NULL}
                 >>"""
             ),
             EvaluatorTestCase(

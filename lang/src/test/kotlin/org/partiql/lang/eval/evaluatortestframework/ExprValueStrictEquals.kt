@@ -14,17 +14,26 @@ import org.partiql.lang.eval.timeValue
 import org.partiql.lang.eval.timestampValue
 
 /**
- * Only used to verify the actual `ExprValue` is the same as the expected `ExprValue` in test
+ * Strict equality that captures equality in the PartQL data model. That is, for 2 scalars, they are considered as equal
+ * if they have the same type & value. For 2 collections, each element in one collection must be strictly equal to
+ * an element in the other collection. The equality of collections respects elements order for sexp & list, and not for
+ * bag & struct.
  *
- * Ensures 2 [ExprValue]s to have the same type & value
+ * Note that, the equality we define here is different from [ExprValue.exprEquals]. That one is used for PartiQL equals
+ * operator & ORDER BY clause. The equality there ignores data types in some cases, e.g., the partiql expressions
+ * `1.0 = 1` returns true (`1.0` is a decimal, while `1` is an integer).
+ *
+ * This implementation is currently only intended for use in tests, as it has not been validated for efficiency.
  */
 fun ExprValue.strictEquals(other: ExprValue): Boolean =
     ExprValueStrictComparator.compare(this, other) == 0
 
 /**
- * We implement this comparator since to compare 2 bags, we sort them first and then compare each item.
- *
- * The order defined in this comparator of [ExprValue] is not related to the order defined by [ExprValue.exprEquals()]
+ * A comparator defining an (arbitrary) total order on [ExprValue].
+
+ * This comparator is a private implementation detail of [strictEquals]. It does not have any interesting semantic
+ * meaning, except for being able to compare any two values in a manner consistent with their strictEquals identity.
+ * This is essential for ignoring element order when comparing bags and structs.
  */
 private object ExprValueStrictComparator : Comparator<ExprValue> {
     override fun compare(v1: ExprValue, v2: ExprValue): Int {
