@@ -106,10 +106,10 @@ class ASTPrettyPrinterTest {
                         op1: Insert
                             target: Id foo (case_insensitive) (unqualified)
                             values: Bag
-                                List
+                                ListImplicit
                                     Lit 1
                                     Lit 2
-                                List
+                                ListImplicit
                                     Lit 3
                                     Lit 4
             """.trimIndent()

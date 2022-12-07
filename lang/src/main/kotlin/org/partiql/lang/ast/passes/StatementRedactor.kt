@@ -174,6 +174,7 @@ private class StatementRedactionVisitor(
         } else when (node) {
             is PartiqlAst.Expr.Lit -> redactLiteral(node)
             is PartiqlAst.Expr.List -> redactSeq(node)
+            is PartiqlAst.Expr.ListImplicit -> redactSeq(node)
             is PartiqlAst.Expr.Sexp -> redactSeq(node)
             is PartiqlAst.Expr.Bag -> redactSeq(node)
             is PartiqlAst.Expr.Struct -> redactStruct(node)
@@ -259,6 +260,7 @@ private class StatementRedactionVisitor(
     // once `bag`, `list`, and `sexp` modeled as described here: https://github.com/partiql/partiql-lang-kotlin/issues/239,
     // delete duplicated code
     private fun redactSeq(seq: PartiqlAst.Expr.List) = seq.values.map { redactExpr(it) }
+    private fun redactSeq(seq: PartiqlAst.Expr.ListImplicit) = seq.values.map { redactExpr(it) }
     private fun redactSeq(seq: PartiqlAst.Expr.Bag) = seq.values.map { redactExpr(it) }
     private fun redactSeq(seq: PartiqlAst.Expr.Sexp) = seq.values.map { redactExpr(it) }
 

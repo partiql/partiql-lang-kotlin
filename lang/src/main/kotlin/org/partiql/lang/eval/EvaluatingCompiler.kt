@@ -407,6 +407,7 @@ internal class EvaluatingCompiler(
 
             // sequence constructors
             is PartiqlAst.Expr.List -> compileSeq(ExprValueType.LIST, expr.values, metas)
+            is PartiqlAst.Expr.ListImplicit -> compileSeq(ExprValueType.LIST, expr.values, metas)
             is PartiqlAst.Expr.Sexp -> compileSeq(ExprValueType.SEXP, expr.values, metas)
             is PartiqlAst.Expr.Bag -> compileSeq(ExprValueType.BAG, expr.values, metas)
 

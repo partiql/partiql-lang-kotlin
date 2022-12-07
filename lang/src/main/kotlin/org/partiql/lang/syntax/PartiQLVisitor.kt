@@ -890,7 +890,7 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
             val possibleRhs = visitExpr(ctx.expr())
             if (possibleRhs is PartiqlAst.Expr.Select || possibleRhs.metas.containsKey(IsValuesExprMeta.TAG))
                 possibleRhs
-            else list(possibleRhs)
+            else listImplicit(possibleRhs)
         } else {
             visit(ctx.rhs, PartiqlAst.Expr::class)
         }
@@ -990,18 +990,18 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
     }
 
     override fun visitValues(ctx: PartiQLParser.ValuesContext) = PartiqlAst.build {
-        val rows = visitOrEmpty(ctx.valueRow(), PartiqlAst.Expr.List::class)
+        val rows = visitOrEmpty(ctx.valueRow(), PartiqlAst.Expr.ListImplicit::class)
         bag(rows, ctx.VALUES().getSourceMetaContainer() + metaContainerOf(IsValuesExprMeta.instance))
     }
 
     override fun visitValueRow(ctx: PartiQLParser.ValueRowContext) = PartiqlAst.build {
         val expressions = visitOrEmpty(ctx.expr(), PartiqlAst.Expr::class)
-        list(expressions)
+        listImplicit(expressions)
     }
 
     override fun visitValueList(ctx: PartiQLParser.ValueListContext) = PartiqlAst.build {
         val expressions = visitOrEmpty(ctx.expr(), PartiqlAst.Expr::class)
-        list(expressions)
+        listImplicit(expressions)
     }
 
     /**

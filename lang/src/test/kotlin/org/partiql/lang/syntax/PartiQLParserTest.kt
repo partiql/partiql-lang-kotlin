@@ -139,25 +139,25 @@ class PartiQLParserTest : PartiQLParserTestBase() {
     @Test
     fun rowValueConstructorWithSimpleExpressions() = assertExpression(
         "(1, 2, 3, 4)",
-        """(list (lit 1) (lit 2) (lit 3) (lit 4))"""
+        """(list_implicit (lit 1) (lit 2) (lit 3) (lit 4))"""
     )
 
     @Test
     fun rowValueConstructorWithRowValueConstructors() = assertExpression(
         "((1, 2), (3, 4))",
-        """(list (list (lit 1) (lit 2)) (list (lit 3) (lit 4)))"""
+        """(list_implicit (list_implicit (lit 1) (lit 2)) (list_implicit (lit 3) (lit 4)))"""
     )
 
     @Test
     fun tableValueConstructorWithRowValueConstructors() = assertExpression(
         "VALUES (1, 2), (3, 4)",
-        """(bag (list (lit 1) (lit 2)) (list (lit 3) (lit 4)))"""
+        """(bag (list_implicit (lit 1) (lit 2)) (list_implicit (lit 3) (lit 4)))"""
     )
 
     @Test
     fun tableValueConstructorWithSingletonRowValueConstructors() = assertExpression(
         "VALUES (1), (2), (3)",
-        """(bag (list (lit 1)) (list (lit 2)) (list (lit 3)))"""
+        """(bag (list_implicit (lit 1)) (list_implicit (lit 2)) (list_implicit (lit 3)))"""
     )
 
     // ****************************************
@@ -669,7 +669,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
         "a IN (1, 2, 3, 4)",
         """(in_collection
              (id a (case_insensitive) (unqualified))
-             (list (lit 1) (lit 2) (lit 3) (lit 4))
+             (list_implicit (lit 1) (lit 2) (lit 3) (lit 4))
            )
         """
     )
@@ -680,7 +680,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
         """(not
           (in_collection
              (id a (case_insensitive) (unqualified))
-             (list (lit 1) (lit 2) (lit 3) (lit 4))))
+             (list_implicit (lit 1) (lit 2) (lit 3) (lit 4))))
         """
     )
 
@@ -688,8 +688,8 @@ class PartiQLParserTest : PartiQLParserTestBase() {
     fun inOperatorWithImplicitValuesRowConstructor() = assertExpression(
         "(a, b) IN ((1, 2), (3, 4))",
         """(in_collection
-             (list (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))
-             (list (list (lit 1) (lit 2)) (list (lit 3) (lit 4)))
+             (list_implicit (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))
+             (list_implicit (list_implicit (lit 1) (lit 2)) (list_implicit (lit 3) (lit 4)))
            )
         """
     )
@@ -1721,10 +1721,10 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                     (insert
                         (id foo (case_insensitive) (unqualified))
                         (bag
-                            (list
+                            (list_implicit
                                 (lit 1)
                                 (lit 2))
-                            (list
+                            (list_implicit
                                 (lit 3)
                                 (lit 4)))
                         null)))
@@ -1898,10 +1898,10 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                     (insert
                         (id foo (case_insensitive) (unqualified))
                         (bag
-                            (list
+                            (list_implicit
                                 (lit 1)
                                 (lit 2))
-                            (list
+                            (list_implicit
                                 (lit 3)
                                 (lit 4)))
                         null))))
@@ -2197,10 +2197,10 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                     (insert
                         (id foo (case_insensitive) (unqualified))
                         (bag
-                            (list
+                            (list_implicit
                                 (lit 1)
                                 (lit 2))
-                            (list
+                            (list_implicit
                                 (lit 3)
                                 (lit 4)))
                         (do_replace
@@ -2277,10 +2277,10 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                     (insert
                         (id foo (case_insensitive) (unqualified))
                         (bag
-                            (list
+                            (list_implicit
                                 (lit 1)
                                 (lit 2))
-                            (list
+                            (list_implicit
                                 (lit 3)
                                 (lit 4)))
                         (do_update

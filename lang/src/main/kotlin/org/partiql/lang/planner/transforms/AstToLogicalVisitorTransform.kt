@@ -325,7 +325,7 @@ internal class AstToLogicalVisitorTransform(
                 // VALUES constructor.  Since parser uses the same nodes for the alternate syntactic representations
                 // `<< [ ... ] ... >>` and `BAG(LIST(...), ...)` those get blocked too.  This is probably just as well.
                 if (dmlOp.values is PartiqlAst.Expr.Bag) {
-                    dmlOp.values.values.firstOrNull { it is PartiqlAst.Expr.List }?.let {
+                    dmlOp.values.values.firstOrNull { it is PartiqlAst.Expr.List || it is PartiqlAst.Expr.ListImplicit }?.let {
                         problemHandler.handleProblem(
                             Problem(
                                 node.metas.sourceLocationMetaOrUnknown,
@@ -517,6 +517,13 @@ internal class AstToLogicalVisitorTransform(
                 }
             )
         }
+
+    override fun transformExprListImplicit(node: PartiqlAst.Expr.ListImplicit) = PartiqlLogical.build {
+        list(
+            node.values.map { transformExpr(it) },
+            node.metas
+        )
+    }
 }
 
 private fun PartiqlAst.FromSource.toBexpr(

@@ -159,15 +159,28 @@ class QueryPrettyPrinter {
                 writeAstNodeCheckSubQuery(dmlOp.target, sb, 0)
                 sb.append(" VALUES ")
                 val bag = dmlOp.values as PartiqlAst.Expr.Bag
-                bag.values.forEach {
-                    val list = it as PartiqlAst.Expr.List
-                    sb.append('(')
-                    list.values.forEach { value ->
-                        writeAstNodeCheckSubQuery(value, sb, 0)
-                        sb.append(", ")
+                bag.values.forEach { list ->
+                    when (list) {
+                        is PartiqlAst.Expr.List -> {
+                            sb.append('(')
+                            list.values.forEach { value ->
+                                writeAstNodeCheckSubQuery(value, sb, 0)
+                                sb.append(", ")
+                            }
+                            sb.removeLast(2)
+                            sb.append("), ")
+                        }
+                        is PartiqlAst.Expr.ListImplicit -> {
+                            sb.append('(')
+                            list.values.forEach { value ->
+                                writeAstNodeCheckSubQuery(value, sb, 0)
+                                sb.append(", ")
+                            }
+                            sb.removeLast(2)
+                            sb.append("), ")
+                        }
+                        else -> throw IllegalArgumentException("DML INSERT VALUES requires a LIST.")
                     }
-                    sb.removeLast(2)
-                    sb.append("), ")
                 }
                 sb.removeLast(2)
             }
@@ -254,6 +267,7 @@ class QueryPrettyPrinter {
             is PartiqlAst.Expr.Sexp -> writeAstNode(node, sb, level)
             is PartiqlAst.Expr.Struct -> writeAstNode(node, sb, level)
             is PartiqlAst.Expr.List -> writeAstNode(node, sb, level)
+            is PartiqlAst.Expr.ListImplicit -> writeAstNode(node, sb, level)
             is PartiqlAst.Expr.Parameter -> writeAstNode(node, sb)
             is PartiqlAst.Expr.Path -> writeAstNode(node, sb, level)
             is PartiqlAst.Expr.Call -> writeAstNode(node, sb, level)
@@ -409,6 +423,20 @@ class QueryPrettyPrinter {
             sb.removeLast(2)
         }
         sb.append(" ]")
+    }
+
+    @Suppress("UNUSED_PARAMETER")
+    private fun writeAstNode(node: PartiqlAst.Expr.ListImplicit, sb: StringBuilder, level: Int) {
+        sb.append("(")
+        node.values.forEach {
+            // Print anything as one line inside a list
+            writeAstNodeCheckSubQuery(it, sb, -1)
+            sb.append(", ")
+        }
+        if (node.values.isNotEmpty()) {
+            sb.removeLast(2)
+        }
+        sb.append(")")
     }
 
     @Suppress("UNUSED_PARAMETER")

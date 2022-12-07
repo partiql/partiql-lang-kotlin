@@ -470,6 +470,11 @@ class ASTPrettyPrinter {
                 attrOfParent = attrOfParent,
                 children = toRecursionTreeList(node.values)
             )
+            is PartiqlAst.Expr.ListImplicit -> RecursionTree(
+                astType = "ListImplicit",
+                attrOfParent = attrOfParent,
+                children = toRecursionTreeList(node.values)
+            )
             is PartiqlAst.Expr.Sexp -> RecursionTree(
                 astType = "Sexp",
                 attrOfParent = attrOfParent,

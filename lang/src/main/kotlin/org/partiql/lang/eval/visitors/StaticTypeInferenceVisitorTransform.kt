@@ -1108,6 +1108,11 @@ internal class StaticTypeInferenceVisitorTransform(
             return transformSeq(seq, seq.values) { ListType(it) }
         }
 
+        override fun transformExprListImplicit(node: PartiqlAst.Expr.ListImplicit): PartiqlAst.Expr {
+            val seq = super.transformExprListImplicit(node) as PartiqlAst.Expr.ListImplicit
+            return transformSeq(seq, seq.values) { ListType(it) }
+        }
+
         override fun transformExprSexp(node: PartiqlAst.Expr.Sexp): PartiqlAst.Expr {
             val seq = super.transformExprSexp(node) as PartiqlAst.Expr.Sexp
             return transformSeq(seq, seq.values) { SexpType(it) }

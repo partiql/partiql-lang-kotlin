@@ -132,6 +132,7 @@ may then be further optimized by selecting better implementations of each operat
             // https://github.com/partiql/partiql-lang-kotlin/issues/239
             (bag values::(* expr 0))
             (list values::(* expr 0))
+            (list_implicit values::(* expr 0))
             (sexp values::(* expr 0))
 
             // Constructors for DateTime types
@@ -593,6 +594,9 @@ may then be further optimized by selecting better implementations of each operat
             // Remove the call_window node from the `expr` sum type, because the call_window contains two parts:
             // Window specification and window function, we want to define a stand alone operator for this
             (exclude select struct call_window)
+
+            // This is only used for syntax purposes. Gets converted to a list.
+            (exclude list_implicit)
               
             // CallAgg's such as SUM, MIN, MAX, etc. either become calls to built-in-functions (example: call COLL_SUM)
             // or aggregate functions within the logical aggregate operator.
