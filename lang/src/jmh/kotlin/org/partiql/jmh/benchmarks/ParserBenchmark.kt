@@ -36,7 +36,10 @@ import org.partiql.lang.syntax.PartiQLParserBuilder
 import java.util.concurrent.TimeUnit
 
 // TODO: If https://github.com/benchmark-action/github-action-benchmark/issues/141 gets fixed, we can move to using
-//  parameterized tests.
+//  parameterized tests. This file intentionally uses the same prefix `parse` and `parseFail` for each benchmark. It
+//  expects that the parameter `name` will be used in the future, so it adds `Name` to prefix each argument. This will
+//  potentially make it easier to transition to the continuous benchmarking framework if parameterized benchmarks
+//  are supported.
 
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.MICROSECONDS)
@@ -55,8 +58,8 @@ internal open class ParserBenchmark {
     @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
     @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
     @Suppress("UNUSED")
-    fun parseSuccessQueryIndex0(state: MyState, blackhole: Blackhole) {
-        val expr = state.parser.parseAstStatement(state.queries[0])
+    fun parseNameQuerySimple(state: MyState, blackhole: Blackhole) {
+        val expr = state.parser.parseAstStatement(state.queries[state::querySimple.name]!!)
         blackhole.consume(expr)
     }
 
@@ -65,8 +68,8 @@ internal open class ParserBenchmark {
     @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
     @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
     @Suppress("UNUSED")
-    fun parseSuccessQueryIndex1(state: MyState, blackhole: Blackhole) {
-        val expr = state.parser.parseAstStatement(state.queries[1])
+    fun parseNameNestedParen(state: MyState, blackhole: Blackhole) {
+        val expr = state.parser.parseAstStatement(state.queries[state::nestedParen.name]!!)
         blackhole.consume(expr)
     }
 
@@ -75,8 +78,8 @@ internal open class ParserBenchmark {
     @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
     @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
     @Suppress("UNUSED")
-    fun parseSuccessQueryIndex2(state: MyState, blackhole: Blackhole) {
-        val expr = state.parser.parseAstStatement(state.queries[2])
+    fun parseNameSomeJoins(state: MyState, blackhole: Blackhole) {
+        val expr = state.parser.parseAstStatement(state.queries[state::someJoins.name]!!)
         blackhole.consume(expr)
     }
 
@@ -85,8 +88,8 @@ internal open class ParserBenchmark {
     @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
     @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
     @Suppress("UNUSED")
-    fun parseSuccessQueryIndex3(state: MyState, blackhole: Blackhole) {
-        val expr = state.parser.parseAstStatement(state.queries[3])
+    fun parseNameSeveralJoins(state: MyState, blackhole: Blackhole) {
+        val expr = state.parser.parseAstStatement(state.queries[state::severalJoins.name]!!)
         blackhole.consume(expr)
     }
 
@@ -95,8 +98,8 @@ internal open class ParserBenchmark {
     @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
     @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
     @Suppress("UNUSED")
-    fun parseSuccessQueryIndex4(state: MyState, blackhole: Blackhole) {
-        val expr = state.parser.parseAstStatement(state.queries[4])
+    fun parseNameSomeSelect(state: MyState, blackhole: Blackhole) {
+        val expr = state.parser.parseAstStatement(state.queries[state::someSelect.name]!!)
         blackhole.consume(expr)
     }
 
@@ -105,8 +108,8 @@ internal open class ParserBenchmark {
     @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
     @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
     @Suppress("UNUSED")
-    fun parseSuccessQueryIndex5(state: MyState, blackhole: Blackhole) {
-        val expr = state.parser.parseAstStatement(state.queries[5])
+    fun parseNameSeveralSelect(state: MyState, blackhole: Blackhole) {
+        val expr = state.parser.parseAstStatement(state.queries[state::severalSelect.name]!!)
         blackhole.consume(expr)
     }
 
@@ -115,8 +118,8 @@ internal open class ParserBenchmark {
     @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
     @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
     @Suppress("UNUSED")
-    fun parseSuccessQueryIndex6(state: MyState, blackhole: Blackhole) {
-        val expr = state.parser.parseAstStatement(state.queries[6])
+    fun parseNameSomeProjections(state: MyState, blackhole: Blackhole) {
+        val expr = state.parser.parseAstStatement(state.queries[state::someProjections.name]!!)
         blackhole.consume(expr)
     }
 
@@ -125,8 +128,8 @@ internal open class ParserBenchmark {
     @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
     @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
     @Suppress("UNUSED")
-    fun parseSuccessQueryIndex7(state: MyState, blackhole: Blackhole) {
-        val expr = state.parser.parseAstStatement(state.queries[7])
+    fun parseNameSeveralProjections(state: MyState, blackhole: Blackhole) {
+        val expr = state.parser.parseAstStatement(state.queries[state::severalProjections.name]!!)
         blackhole.consume(expr)
     }
 
@@ -135,8 +138,8 @@ internal open class ParserBenchmark {
     @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
     @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
     @Suppress("UNUSED")
-    fun parseSuccessQueryIndex8(state: MyState, blackhole: Blackhole) {
-        val expr = state.parser.parseAstStatement(state.queries[8])
+    fun parseNameQueryFunc(state: MyState, blackhole: Blackhole) {
+        val expr = state.parser.parseAstStatement(state.queries[state::queryFunc.name]!!)
         blackhole.consume(expr)
     }
 
@@ -145,8 +148,8 @@ internal open class ParserBenchmark {
     @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
     @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
     @Suppress("UNUSED")
-    fun parseSuccessQueryIndex9(state: MyState, blackhole: Blackhole) {
-        val expr = state.parser.parseAstStatement(state.queries[9])
+    fun parseNameQueryFuncInProjection(state: MyState, blackhole: Blackhole) {
+        val expr = state.parser.parseAstStatement(state.queries[state::queryFuncInProjection.name]!!)
         blackhole.consume(expr)
     }
 
@@ -155,8 +158,8 @@ internal open class ParserBenchmark {
     @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
     @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
     @Suppress("UNUSED")
-    fun parseSuccessQueryIndex10(state: MyState, blackhole: Blackhole) {
-        val expr = state.parser.parseAstStatement(state.queries[10])
+    fun parseNameQueryList(state: MyState, blackhole: Blackhole) {
+        val expr = state.parser.parseAstStatement(state.queries[state::queryList.name]!!)
         blackhole.consume(expr)
     }
 
@@ -165,8 +168,8 @@ internal open class ParserBenchmark {
     @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
     @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
     @Suppress("UNUSED")
-    fun parseSuccessQueryIndex11(state: MyState, blackhole: Blackhole) {
-        val expr = state.parser.parseAstStatement(state.queries[11])
+    fun parseNameQuery15OrsAndLikes(state: MyState, blackhole: Blackhole) {
+        val expr = state.parser.parseAstStatement(state.queries[state::query15OrsAndLikes.name]!!)
         blackhole.consume(expr)
     }
 
@@ -175,8 +178,8 @@ internal open class ParserBenchmark {
     @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
     @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
     @Suppress("UNUSED")
-    fun parseSuccessQueryIndex12(state: MyState, blackhole: Blackhole) {
-        val expr = state.parser.parseAstStatement(state.queries[12])
+    fun parseNameQuery30Plus(state: MyState, blackhole: Blackhole) {
+        val expr = state.parser.parseAstStatement(state.queries[state::query30Plus.name]!!)
         blackhole.consume(expr)
     }
 
@@ -185,8 +188,8 @@ internal open class ParserBenchmark {
     @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
     @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
     @Suppress("UNUSED")
-    fun parseSuccessQueryIndex13(state: MyState, blackhole: Blackhole) {
-        val expr = state.parser.parseAstStatement(state.queries[13])
+    fun parseNameQueryNestedSelect(state: MyState, blackhole: Blackhole) {
+        val expr = state.parser.parseAstStatement(state.queries[state::queryNestedSelect.name]!!)
         blackhole.consume(expr)
     }
 
@@ -195,8 +198,8 @@ internal open class ParserBenchmark {
     @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
     @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
     @Suppress("UNUSED")
-    fun parseSuccessQueryIndex14(state: MyState, blackhole: Blackhole) {
-        val expr = state.parser.parseAstStatement(state.queries[14])
+    fun parseNameGraphPattern(state: MyState, blackhole: Blackhole) {
+        val expr = state.parser.parseAstStatement(state.queries[state::graphPattern.name]!!)
         blackhole.consume(expr)
     }
 
@@ -205,8 +208,8 @@ internal open class ParserBenchmark {
     @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
     @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
     @Suppress("UNUSED")
-    fun parseSuccessQueryIndex15(state: MyState, blackhole: Blackhole) {
-        val expr = state.parser.parseAstStatement(state.queries[15])
+    fun parseNameGraphPreFilters(state: MyState, blackhole: Blackhole) {
+        val expr = state.parser.parseAstStatement(state.queries[state::graphPreFilters.name]!!)
         blackhole.consume(expr)
     }
 
@@ -215,8 +218,8 @@ internal open class ParserBenchmark {
     @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
     @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
     @Suppress("UNUSED")
-    fun parseSuccessQueryIndex16(state: MyState, blackhole: Blackhole) {
-        val expr = state.parser.parseAstStatement(state.queries[16])
+    fun parseNameManyJoins(state: MyState, blackhole: Blackhole) {
+        val expr = state.parser.parseAstStatement(state.queries[state::manyJoins.name]!!)
         blackhole.consume(expr)
     }
 
@@ -225,8 +228,8 @@ internal open class ParserBenchmark {
     @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
     @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
     @Suppress("UNUSED")
-    fun parseSuccessQueryIndex17(state: MyState, blackhole: Blackhole) {
-        val expr = state.parser.parseAstStatement(state.queries[17])
+    fun parseNameTimeZone(state: MyState, blackhole: Blackhole) {
+        val expr = state.parser.parseAstStatement(state.queries[state::timeZone.name]!!)
         blackhole.consume(expr)
     }
 
@@ -235,8 +238,8 @@ internal open class ParserBenchmark {
     @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
     @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
     @Suppress("UNUSED")
-    fun parseSuccessQueryIndex18(state: MyState, blackhole: Blackhole) {
-        val expr = state.parser.parseAstStatement(state.queries[18])
+    fun parseNameCaseWhenThen(state: MyState, blackhole: Blackhole) {
+        val expr = state.parser.parseAstStatement(state.queries[state::caseWhenThen.name]!!)
         blackhole.consume(expr)
     }
 
@@ -245,8 +248,8 @@ internal open class ParserBenchmark {
     @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
     @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
     @Suppress("UNUSED")
-    fun parseSuccessQueryIndex19(state: MyState, blackhole: Blackhole) {
-        val expr = state.parser.parseAstStatement(state.queries[19])
+    fun parseNameSimpleInsert(state: MyState, blackhole: Blackhole) {
+        val expr = state.parser.parseAstStatement(state.queries[state::simpleInsert.name]!!)
         blackhole.consume(expr)
     }
 
@@ -255,8 +258,8 @@ internal open class ParserBenchmark {
     @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
     @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
     @Suppress("UNUSED")
-    fun parseSuccessQueryIndex20(state: MyState, blackhole: Blackhole) {
-        val expr = state.parser.parseAstStatement(state.queries[20])
+    fun parseNameExceptUnionIntersectSixty(state: MyState, blackhole: Blackhole) {
+        val expr = state.parser.parseAstStatement(state.queries[state::exceptUnionIntersectSixty.name]!!)
         blackhole.consume(expr)
     }
 
@@ -265,8 +268,8 @@ internal open class ParserBenchmark {
     @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
     @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
     @Suppress("UNUSED")
-    fun parseSuccessQueryIndex21(state: MyState, blackhole: Blackhole) {
-        val expr = state.parser.parseAstStatement(state.queries[21])
+    fun parseNameExec20Expressions(state: MyState, blackhole: Blackhole) {
+        val expr = state.parser.parseAstStatement(state.queries[state::exec20Expressions.name]!!)
         blackhole.consume(expr)
     }
 
@@ -275,8 +278,8 @@ internal open class ParserBenchmark {
     @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
     @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
     @Suppress("UNUSED")
-    fun parseSuccessQueryIndex22(state: MyState, blackhole: Blackhole) {
-        val expr = state.parser.parseAstStatement(state.queries[22])
+    fun parseNameFromLet(state: MyState, blackhole: Blackhole) {
+        val expr = state.parser.parseAstStatement(state.queries[state::fromLet.name]!!)
         blackhole.consume(expr)
     }
 
@@ -285,8 +288,8 @@ internal open class ParserBenchmark {
     @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
     @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
     @Suppress("UNUSED")
-    fun parseSuccessQueryIndex23(state: MyState, blackhole: Blackhole) {
-        val expr = state.parser.parseAstStatement(state.queries[23])
+    fun parseNameGroupLimit(state: MyState, blackhole: Blackhole) {
+        val expr = state.parser.parseAstStatement(state.queries[state::groupLimit.name]!!)
         blackhole.consume(expr)
     }
 
@@ -295,8 +298,8 @@ internal open class ParserBenchmark {
     @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
     @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
     @Suppress("UNUSED")
-    fun parseSuccessQueryIndex24(state: MyState, blackhole: Blackhole) {
-        val expr = state.parser.parseAstStatement(state.queries[24])
+    fun parseNamePivot(state: MyState, blackhole: Blackhole) {
+        val expr = state.parser.parseAstStatement(state.queries[state::pivot.name]!!)
         blackhole.consume(expr)
     }
 
@@ -305,8 +308,8 @@ internal open class ParserBenchmark {
     @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
     @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
     @Suppress("UNUSED")
-    fun parseSuccessQueryIndex25(state: MyState, blackhole: Blackhole) {
-        val expr = state.parser.parseAstStatement(state.queries[25])
+    fun parseNameLongFromSourceOrderBy(state: MyState, blackhole: Blackhole) {
+        val expr = state.parser.parseAstStatement(state.queries[state::longFromSourceOrderBy.name]!!)
         blackhole.consume(expr)
     }
 
@@ -315,8 +318,8 @@ internal open class ParserBenchmark {
     @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
     @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
     @Suppress("UNUSED")
-    fun parseSuccessQueryIndex26(state: MyState, blackhole: Blackhole) {
-        val expr = state.parser.parseAstStatement(state.queries[26])
+    fun parseNameNestedAggregates(state: MyState, blackhole: Blackhole) {
+        val expr = state.parser.parseAstStatement(state.queries[state::nestedAggregates.name]!!)
         blackhole.consume(expr)
     }
 
@@ -325,8 +328,8 @@ internal open class ParserBenchmark {
     @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
     @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
     @Suppress("UNUSED")
-    fun parseSuccessQueryIndex27(state: MyState, blackhole: Blackhole) {
-        val expr = state.parser.parseAstStatement(state.queries[27])
+    fun parseNameComplexQuery(state: MyState, blackhole: Blackhole) {
+        val expr = state.parser.parseAstStatement(state.queries[state::complexQuery.name]!!)
         blackhole.consume(expr)
     }
 
@@ -335,8 +338,8 @@ internal open class ParserBenchmark {
     @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
     @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
     @Suppress("UNUSED")
-    fun parseSuccessQueryIndex28(state: MyState, blackhole: Blackhole) {
-        val expr = state.parser.parseAstStatement(state.queries[28])
+    fun parseNameComplexQuery01(state: MyState, blackhole: Blackhole) {
+        val expr = state.parser.parseAstStatement(state.queries[state::complexQuery01.name]!!)
         blackhole.consume(expr)
     }
 
@@ -345,8 +348,8 @@ internal open class ParserBenchmark {
     @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
     @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
     @Suppress("UNUSED")
-    fun parseSuccessQueryIndex29(state: MyState, blackhole: Blackhole) {
-        val expr = state.parser.parseAstStatement(state.queries[29])
+    fun parseNameComplexQuery02(state: MyState, blackhole: Blackhole) {
+        val expr = state.parser.parseAstStatement(state.queries[state::complexQuery02.name]!!)
         blackhole.consume(expr)
     }
 
@@ -355,8 +358,8 @@ internal open class ParserBenchmark {
     @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
     @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
     @Suppress("UNUSED")
-    fun parseSuccessQueryIndex30(state: MyState, blackhole: Blackhole) {
-        val expr = state.parser.parseAstStatement(state.queries[30])
+    fun parseNameVeryLongQuery(state: MyState, blackhole: Blackhole) {
+        val expr = state.parser.parseAstStatement(state.queries[state::veryLongQuery.name]!!)
         blackhole.consume(expr)
     }
 
@@ -365,8 +368,8 @@ internal open class ParserBenchmark {
     @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
     @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
     @Suppress("UNUSED")
-    fun parseSuccessQueryIndex31(state: MyState, blackhole: Blackhole) {
-        val expr = state.parser.parseAstStatement(state.queries[31])
+    fun parseNameVeryLongQuery01(state: MyState, blackhole: Blackhole) {
+        val expr = state.parser.parseAstStatement(state.queries[state::veryLongQuery01.name]!!)
         blackhole.consume(expr)
     }
 
@@ -375,19 +378,9 @@ internal open class ParserBenchmark {
     @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
     @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
     @Suppress("UNUSED")
-    fun parseSuccessQueryIndex32(state: MyState, blackhole: Blackhole) {
-        val expr = state.parser.parseAstStatement(state.queries[32])
-        blackhole.consume(expr)
-    }
-
-    @Benchmark
-    @Fork(value = FORK_VALUE)
-    @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
-    @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
-    @Suppress("UNUSED")
-    fun parseFailQueryIndex0(state: MyState, blackhole: Blackhole) {
+    fun parseFailNameQuerySimple(state: MyState, blackhole: Blackhole) {
         try {
-            val expr = state.parser.parseAstStatement(state.queriesFailingHalfway[0])
+            val expr = state.parser.parseAstStatement(state.queriesFail[state::querySimple.name]!!)
             blackhole.consume(expr)
             throw RuntimeException()
         } catch (ex: ParserException) {
@@ -400,9 +393,9 @@ internal open class ParserBenchmark {
     @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
     @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
     @Suppress("UNUSED")
-    fun parseFailQueryIndex1(state: MyState, blackhole: Blackhole) {
+    fun parseFailNameNestedParen(state: MyState, blackhole: Blackhole) {
         try {
-            val expr = state.parser.parseAstStatement(state.queriesFailingHalfway[1])
+            val expr = state.parser.parseAstStatement(state.queriesFail[state::nestedParen.name]!!)
             blackhole.consume(expr)
             throw RuntimeException()
         } catch (ex: ParserException) {
@@ -415,9 +408,9 @@ internal open class ParserBenchmark {
     @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
     @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
     @Suppress("UNUSED")
-    fun parseFailQueryIndex2(state: MyState, blackhole: Blackhole) {
+    fun parseFailNameSomeJoins(state: MyState, blackhole: Blackhole) {
         try {
-            val expr = state.parser.parseAstStatement(state.queriesFailingHalfway[2])
+            val expr = state.parser.parseAstStatement(state.queriesFail[state::someJoins.name]!!)
             blackhole.consume(expr)
             throw RuntimeException()
         } catch (ex: ParserException) {
@@ -430,9 +423,9 @@ internal open class ParserBenchmark {
     @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
     @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
     @Suppress("UNUSED")
-    fun parseFailQueryIndex3(state: MyState, blackhole: Blackhole) {
+    fun parseFailNameSeveralJoins(state: MyState, blackhole: Blackhole) {
         try {
-            val expr = state.parser.parseAstStatement(state.queriesFailingHalfway[3])
+            val expr = state.parser.parseAstStatement(state.queriesFail[state::severalJoins.name]!!)
             blackhole.consume(expr)
             throw RuntimeException()
         } catch (ex: ParserException) {
@@ -445,9 +438,9 @@ internal open class ParserBenchmark {
     @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
     @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
     @Suppress("UNUSED")
-    fun parseFailQueryIndex4(state: MyState, blackhole: Blackhole) {
+    fun parseFailNameSomeSelect(state: MyState, blackhole: Blackhole) {
         try {
-            val expr = state.parser.parseAstStatement(state.queriesFailingHalfway[4])
+            val expr = state.parser.parseAstStatement(state.queriesFail[state::someSelect.name]!!)
             blackhole.consume(expr)
             throw RuntimeException()
         } catch (ex: ParserException) {
@@ -460,9 +453,9 @@ internal open class ParserBenchmark {
     @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
     @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
     @Suppress("UNUSED")
-    fun parseFailQueryIndex5(state: MyState, blackhole: Blackhole) {
+    fun parseFailNameSeveralSelect(state: MyState, blackhole: Blackhole) {
         try {
-            val expr = state.parser.parseAstStatement(state.queriesFailingHalfway[5])
+            val expr = state.parser.parseAstStatement(state.queriesFail[state::severalSelect.name]!!)
             blackhole.consume(expr)
             throw RuntimeException()
         } catch (ex: ParserException) {
@@ -475,9 +468,9 @@ internal open class ParserBenchmark {
     @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
     @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
     @Suppress("UNUSED")
-    fun parseFailQueryIndex6(state: MyState, blackhole: Blackhole) {
+    fun parseFailNameSomeProjections(state: MyState, blackhole: Blackhole) {
         try {
-            val expr = state.parser.parseAstStatement(state.queriesFailingHalfway[6])
+            val expr = state.parser.parseAstStatement(state.queriesFail[state::someProjections.name]!!)
             blackhole.consume(expr)
             throw RuntimeException()
         } catch (ex: ParserException) {
@@ -490,9 +483,9 @@ internal open class ParserBenchmark {
     @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
     @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
     @Suppress("UNUSED")
-    fun parseFailQueryIndex7(state: MyState, blackhole: Blackhole) {
+    fun parseFailNameSeveralProjections(state: MyState, blackhole: Blackhole) {
         try {
-            val expr = state.parser.parseAstStatement(state.queriesFailingHalfway[7])
+            val expr = state.parser.parseAstStatement(state.queriesFail[state::severalProjections.name]!!)
             blackhole.consume(expr)
             throw RuntimeException()
         } catch (ex: ParserException) {
@@ -505,9 +498,9 @@ internal open class ParserBenchmark {
     @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
     @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
     @Suppress("UNUSED")
-    fun parseFailQueryIndex8(state: MyState, blackhole: Blackhole) {
+    fun parseFailNameQueryFunc(state: MyState, blackhole: Blackhole) {
         try {
-            val expr = state.parser.parseAstStatement(state.queriesFailingHalfway[8])
+            val expr = state.parser.parseAstStatement(state.queriesFail[state::queryFunc.name]!!)
             blackhole.consume(expr)
             throw RuntimeException()
         } catch (ex: ParserException) {
@@ -520,9 +513,9 @@ internal open class ParserBenchmark {
     @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
     @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
     @Suppress("UNUSED")
-    fun parseFailQueryIndex9(state: MyState, blackhole: Blackhole) {
+    fun parseFailNameQueryFuncInProjection(state: MyState, blackhole: Blackhole) {
         try {
-            val expr = state.parser.parseAstStatement(state.queriesFailingHalfway[9])
+            val expr = state.parser.parseAstStatement(state.queriesFail[state::queryFuncInProjection.name]!!)
             blackhole.consume(expr)
             throw RuntimeException()
         } catch (ex: ParserException) {
@@ -535,9 +528,9 @@ internal open class ParserBenchmark {
     @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
     @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
     @Suppress("UNUSED")
-    fun parseFailQueryIndex10(state: MyState, blackhole: Blackhole) {
+    fun parseFailNameQueryList(state: MyState, blackhole: Blackhole) {
         try {
-            val expr = state.parser.parseAstStatement(state.queriesFailingHalfway[10])
+            val expr = state.parser.parseAstStatement(state.queriesFail[state::queryList.name]!!)
             blackhole.consume(expr)
             throw RuntimeException()
         } catch (ex: ParserException) {
@@ -550,9 +543,9 @@ internal open class ParserBenchmark {
     @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
     @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
     @Suppress("UNUSED")
-    fun parseFailQueryIndex11(state: MyState, blackhole: Blackhole) {
+    fun parseFailNameQuery15OrsAndLikes(state: MyState, blackhole: Blackhole) {
         try {
-            val expr = state.parser.parseAstStatement(state.queriesFailingHalfway[11])
+            val expr = state.parser.parseAstStatement(state.queriesFail[state::query15OrsAndLikes.name]!!)
             blackhole.consume(expr)
             throw RuntimeException()
         } catch (ex: ParserException) {
@@ -565,9 +558,9 @@ internal open class ParserBenchmark {
     @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
     @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
     @Suppress("UNUSED")
-    fun parseFailQueryIndex12(state: MyState, blackhole: Blackhole) {
+    fun parseFailNameQuery30Plus(state: MyState, blackhole: Blackhole) {
         try {
-            val expr = state.parser.parseAstStatement(state.queriesFailingHalfway[12])
+            val expr = state.parser.parseAstStatement(state.queriesFail[state::query30Plus.name]!!)
             blackhole.consume(expr)
             throw RuntimeException()
         } catch (ex: ParserException) {
@@ -580,9 +573,9 @@ internal open class ParserBenchmark {
     @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
     @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
     @Suppress("UNUSED")
-    fun parseFailQueryIndex13(state: MyState, blackhole: Blackhole) {
+    fun parseFailNameQueryNestedSelect(state: MyState, blackhole: Blackhole) {
         try {
-            val expr = state.parser.parseAstStatement(state.queriesFailingHalfway[13])
+            val expr = state.parser.parseAstStatement(state.queriesFail[state::queryNestedSelect.name]!!)
             blackhole.consume(expr)
             throw RuntimeException()
         } catch (ex: ParserException) {
@@ -595,9 +588,9 @@ internal open class ParserBenchmark {
     @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
     @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
     @Suppress("UNUSED")
-    fun parseFailQueryIndex14(state: MyState, blackhole: Blackhole) {
+    fun parseFailNameGraphPattern(state: MyState, blackhole: Blackhole) {
         try {
-            val expr = state.parser.parseAstStatement(state.queriesFailingHalfway[14])
+            val expr = state.parser.parseAstStatement(state.queriesFail[state::graphPattern.name]!!)
             blackhole.consume(expr)
             throw RuntimeException()
         } catch (ex: ParserException) {
@@ -610,9 +603,9 @@ internal open class ParserBenchmark {
     @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
     @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
     @Suppress("UNUSED")
-    fun parseFailQueryIndex15(state: MyState, blackhole: Blackhole) {
+    fun parseFailNameGraphPreFilters(state: MyState, blackhole: Blackhole) {
         try {
-            val expr = state.parser.parseAstStatement(state.queriesFailingHalfway[15])
+            val expr = state.parser.parseAstStatement(state.queriesFail[state::graphPreFilters.name]!!)
             blackhole.consume(expr)
             throw RuntimeException()
         } catch (ex: ParserException) {
@@ -625,9 +618,9 @@ internal open class ParserBenchmark {
     @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
     @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
     @Suppress("UNUSED")
-    fun parseFailQueryIndex16(state: MyState, blackhole: Blackhole) {
+    fun parseFailNameManyJoins(state: MyState, blackhole: Blackhole) {
         try {
-            val expr = state.parser.parseAstStatement(state.queriesFailingHalfway[16])
+            val expr = state.parser.parseAstStatement(state.queriesFail[state::manyJoins.name]!!)
             blackhole.consume(expr)
             throw RuntimeException()
         } catch (ex: ParserException) {
@@ -640,9 +633,9 @@ internal open class ParserBenchmark {
     @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
     @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
     @Suppress("UNUSED")
-    fun parseFailQueryIndex17(state: MyState, blackhole: Blackhole) {
+    fun parseFailNameTimeZone(state: MyState, blackhole: Blackhole) {
         try {
-            val expr = state.parser.parseAstStatement(state.queriesFailingHalfway[17])
+            val expr = state.parser.parseAstStatement(state.queriesFail[state::timeZone.name]!!)
             blackhole.consume(expr)
             throw RuntimeException()
         } catch (ex: ParserException) {
@@ -655,9 +648,9 @@ internal open class ParserBenchmark {
     @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
     @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
     @Suppress("UNUSED")
-    fun parseFailQueryIndex18(state: MyState, blackhole: Blackhole) {
+    fun parseFailNameCaseWhenThen(state: MyState, blackhole: Blackhole) {
         try {
-            val expr = state.parser.parseAstStatement(state.queriesFailingHalfway[18])
+            val expr = state.parser.parseAstStatement(state.queriesFail[state::caseWhenThen.name]!!)
             blackhole.consume(expr)
             throw RuntimeException()
         } catch (ex: ParserException) {
@@ -670,9 +663,9 @@ internal open class ParserBenchmark {
     @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
     @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
     @Suppress("UNUSED")
-    fun parseFailQueryIndex19(state: MyState, blackhole: Blackhole) {
+    fun parseFailNameSimpleInsert(state: MyState, blackhole: Blackhole) {
         try {
-            val expr = state.parser.parseAstStatement(state.queriesFailingHalfway[19])
+            val expr = state.parser.parseAstStatement(state.queriesFail[state::simpleInsert.name]!!)
             blackhole.consume(expr)
             throw RuntimeException()
         } catch (ex: ParserException) {
@@ -685,9 +678,9 @@ internal open class ParserBenchmark {
     @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
     @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
     @Suppress("UNUSED")
-    fun parseFailQueryIndex20(state: MyState, blackhole: Blackhole) {
+    fun parseFailNameExceptUnionIntersectSixty(state: MyState, blackhole: Blackhole) {
         try {
-            val expr = state.parser.parseAstStatement(state.queriesFailingHalfway[20])
+            val expr = state.parser.parseAstStatement(state.queriesFail[state::exceptUnionIntersectSixty.name]!!)
             blackhole.consume(expr)
             throw RuntimeException()
         } catch (ex: ParserException) {
@@ -700,9 +693,9 @@ internal open class ParserBenchmark {
     @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
     @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
     @Suppress("UNUSED")
-    fun parseFailQueryIndex21(state: MyState, blackhole: Blackhole) {
+    fun parseFailNameExec20Expressions(state: MyState, blackhole: Blackhole) {
         try {
-            val expr = state.parser.parseAstStatement(state.queriesFailingHalfway[21])
+            val expr = state.parser.parseAstStatement(state.queriesFail[state::exec20Expressions.name]!!)
             blackhole.consume(expr)
             throw RuntimeException()
         } catch (ex: ParserException) {
@@ -715,9 +708,9 @@ internal open class ParserBenchmark {
     @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
     @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
     @Suppress("UNUSED")
-    fun parseFailQueryIndex22(state: MyState, blackhole: Blackhole) {
+    fun parseFailNameFromLet(state: MyState, blackhole: Blackhole) {
         try {
-            val expr = state.parser.parseAstStatement(state.queriesFailingHalfway[22])
+            val expr = state.parser.parseAstStatement(state.queriesFail[state::fromLet.name]!!)
             blackhole.consume(expr)
             throw RuntimeException()
         } catch (ex: ParserException) {
@@ -730,9 +723,9 @@ internal open class ParserBenchmark {
     @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
     @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
     @Suppress("UNUSED")
-    fun parseFailQueryIndex23(state: MyState, blackhole: Blackhole) {
+    fun parseFailNameGroupLimit(state: MyState, blackhole: Blackhole) {
         try {
-            val expr = state.parser.parseAstStatement(state.queriesFailingHalfway[23])
+            val expr = state.parser.parseAstStatement(state.queriesFail[state::groupLimit.name]!!)
             blackhole.consume(expr)
             throw RuntimeException()
         } catch (ex: ParserException) {
@@ -745,9 +738,9 @@ internal open class ParserBenchmark {
     @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
     @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
     @Suppress("UNUSED")
-    fun parseFailQueryIndex24(state: MyState, blackhole: Blackhole) {
+    fun parseFailNamePivot(state: MyState, blackhole: Blackhole) {
         try {
-            val expr = state.parser.parseAstStatement(state.queriesFailingHalfway[24])
+            val expr = state.parser.parseAstStatement(state.queriesFail[state::pivot.name]!!)
             blackhole.consume(expr)
             throw RuntimeException()
         } catch (ex: ParserException) {
@@ -760,9 +753,9 @@ internal open class ParserBenchmark {
     @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
     @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
     @Suppress("UNUSED")
-    fun parseFailQueryIndex25(state: MyState, blackhole: Blackhole) {
+    fun parseFailNameLongFromSourceOrderBy(state: MyState, blackhole: Blackhole) {
         try {
-            val expr = state.parser.parseAstStatement(state.queriesFailingHalfway[25])
+            val expr = state.parser.parseAstStatement(state.queriesFail[state::longFromSourceOrderBy.name]!!)
             blackhole.consume(expr)
             throw RuntimeException()
         } catch (ex: ParserException) {
@@ -775,9 +768,9 @@ internal open class ParserBenchmark {
     @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
     @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
     @Suppress("UNUSED")
-    fun parseFailQueryIndex26(state: MyState, blackhole: Blackhole) {
+    fun parseFailNameNestedAggregates(state: MyState, blackhole: Blackhole) {
         try {
-            val expr = state.parser.parseAstStatement(state.queriesFailingHalfway[26])
+            val expr = state.parser.parseAstStatement(state.queriesFail[state::nestedAggregates.name]!!)
             blackhole.consume(expr)
             throw RuntimeException()
         } catch (ex: ParserException) {
@@ -790,9 +783,9 @@ internal open class ParserBenchmark {
     @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
     @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
     @Suppress("UNUSED")
-    fun parseFailQueryIndex27(state: MyState, blackhole: Blackhole) {
+    fun parseFailNameComplexQuery(state: MyState, blackhole: Blackhole) {
         try {
-            val expr = state.parser.parseAstStatement(state.queriesFailingHalfway[27])
+            val expr = state.parser.parseAstStatement(state.queriesFail[state::complexQuery.name]!!)
             blackhole.consume(expr)
             throw RuntimeException()
         } catch (ex: ParserException) {
@@ -805,9 +798,9 @@ internal open class ParserBenchmark {
     @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
     @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
     @Suppress("UNUSED")
-    fun parseFailQueryIndex28(state: MyState, blackhole: Blackhole) {
+    fun parseFailNameComplexQuery01(state: MyState, blackhole: Blackhole) {
         try {
-            val expr = state.parser.parseAstStatement(state.queriesFailingHalfway[28])
+            val expr = state.parser.parseAstStatement(state.queriesFail[state::complexQuery01.name]!!)
             blackhole.consume(expr)
             throw RuntimeException()
         } catch (ex: ParserException) {
@@ -820,9 +813,9 @@ internal open class ParserBenchmark {
     @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
     @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
     @Suppress("UNUSED")
-    fun parseFailQueryIndex29(state: MyState, blackhole: Blackhole) {
+    fun parseFailNameComplexQuery02(state: MyState, blackhole: Blackhole) {
         try {
-            val expr = state.parser.parseAstStatement(state.queriesFailingHalfway[29])
+            val expr = state.parser.parseAstStatement(state.queriesFail[state::complexQuery02.name]!!)
             blackhole.consume(expr)
             throw RuntimeException()
         } catch (ex: ParserException) {
@@ -835,9 +828,9 @@ internal open class ParserBenchmark {
     @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
     @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
     @Suppress("UNUSED")
-    fun parseFailQueryIndex30(state: MyState, blackhole: Blackhole) {
+    fun parseFailNameVeryLongQuery(state: MyState, blackhole: Blackhole) {
         try {
-            val expr = state.parser.parseAstStatement(state.queriesFailingHalfway[30])
+            val expr = state.parser.parseAstStatement(state.queriesFail[state::veryLongQuery.name]!!)
             blackhole.consume(expr)
             throw RuntimeException()
         } catch (ex: ParserException) {
@@ -850,24 +843,9 @@ internal open class ParserBenchmark {
     @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
     @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
     @Suppress("UNUSED")
-    fun parseFailQueryIndex31(state: MyState, blackhole: Blackhole) {
+    fun parseFailNameVeryLongQuery01(state: MyState, blackhole: Blackhole) {
         try {
-            val expr = state.parser.parseAstStatement(state.queriesFailingHalfway[31])
-            blackhole.consume(expr)
-            throw RuntimeException()
-        } catch (ex: ParserException) {
-            blackhole.consume(ex)
-        }
-    }
-
-    @Benchmark
-    @Fork(value = FORK_VALUE)
-    @Measurement(iterations = MEASUREMENT_ITERATION_VALUE, time = MEASUREMENT_TIME_VALUE)
-    @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
-    @Suppress("UNUSED")
-    fun parseFailQueryIndex32(state: MyState, blackhole: Blackhole) {
-        try {
-            val expr = state.parser.parseAstStatement(state.queriesFailingHalfway[32])
+            val expr = state.parser.parseAstStatement(state.queriesFail[state::veryLongQuery01.name]!!)
             blackhole.consume(expr)
             throw RuntimeException()
         } catch (ex: ParserException) {
@@ -881,7 +859,7 @@ internal open class ParserBenchmark {
         private val ion: IonSystem = IonSystemBuilder.standard().build()
         val parser = PartiQLParserBuilder().ionSystem(ion).build()
 
-        private val query15OrsAndLikes = """
+        val query15OrsAndLikes = """
             SELECT * 
             FROM hr.employees as emp
             WHERE lower(emp.name) LIKE '%bob smith%'
@@ -901,15 +879,15 @@ internal open class ParserBenchmark {
                OR lower(emp.name) LIKE '%jakobe townsend%'
             """
 
-        private val query30Plus = """
+        val query30Plus = """
            1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1
         """
 
-        private val querySimple = """
+        val querySimple = """
             SELECT a FROM t
         """
 
-        private val queryNestedSelect = """
+        val queryNestedSelect = """
             SELECT
                 (
                     SELECT a AS p
@@ -937,47 +915,47 @@ internal open class ParserBenchmark {
             GROUP BY t.a AS groupKey
         """
 
-        private val queryList = """
+        val queryList = """
             [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29]
         """
 
-        private val queryFunc = """
+        val queryFunc = """
             f(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29)
         """
 
-        private val queryFuncInProjection = """
+        val queryFuncInProjection = """
             SELECT
                 f(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29)
             FROM t
         """
 
-        private val someJoins = """
+        val someJoins = """
            SELECT a
            FROM a, b, c
         """
 
-        private val severalJoins = """
+        val severalJoins = """
            SELECT a
            FROM a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p 
         """
 
-        private val someProjections = """
+        val someProjections = """
            SELECT a, b, c
            FROM t
         """
 
-        private val severalProjections = """
+        val severalProjections = """
            SELECT a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p
            FROM t
         """
 
-        private val someSelect = """
+        val someSelect = """
            (SELECT a FROM t) +
            (SELECT a FROM t) +
            (SELECT a FROM t)
         """
 
-        private val severalSelect = """
+        val severalSelect = """
            (SELECT a FROM t) +
            (SELECT a FROM t) +
            (SELECT a FROM t) +
@@ -990,36 +968,36 @@ internal open class ParserBenchmark {
            (SELECT a FROM t)
         """
 
-        private val nestedParen = """
+        val nestedParen = """
             ((((((((((((((((((((((((((((((0))))))))))))))))))))))))))))))
         """
 
-        private val graphPreFilters = """
+        val graphPreFilters = """
         SELECT u as banCandidate
         FROM g
         MATCH (p:Post Where p.isFlagged = true) <-[:createdPost]- (u:Usr WHERE u.isBanned = false AND u.karma < 20) -[:createdComment]->(c:Comment WHERE c.isFlagged = true)
         WHERE p.title LIKE '%considered harmful%'
         """.trimIndent()
 
-        private val graphPattern = """
+        val graphPattern = """
         SELECT the_a.name AS src, the_b.name AS dest
         FROM my_graph MATCH (the_a:a) -[the_y:y]-> (the_b:b)
         WHERE the_y.score > 10
         """.trimIndent()
 
-        private val manyJoins = """
+        val manyJoins = """
             SELECT x FROM a INNER CROSS JOIN b CROSS JOIN c LEFT JOIN d ON e RIGHT OUTER CROSS JOIN f OUTER JOIN g ON h
         """
 
-        private val timeZone = "TIME WITH TIME ZONE '23:59:59.123456789+18:00'"
+        val timeZone = "TIME WITH TIME ZONE '23:59:59.123456789+18:00'"
 
-        private val caseWhenThen = "CASE WHEN name = 'zoe' THEN 1 WHEN name > 'kumo' THEN 2 ELSE 0 END"
+        val caseWhenThen = "CASE WHEN name = 'zoe' THEN 1 WHEN name > 'kumo' THEN 2 ELSE 0 END"
 
-        private val simpleInsert = """
+        val simpleInsert = """
         INSERT INTO foo VALUE 1 AT bar RETURNING MODIFIED OLD bar, MODIFIED NEW bar, ALL NEW *
         """
 
-        private val exceptUnionIntersectSixty = """
+        val exceptUnionIntersectSixty = """
             a EXCEPT a INTERSECT a UNION a
             EXCEPT a INTERSECT a UNION a
             EXCEPT a INTERSECT a UNION a
@@ -1042,7 +1020,7 @@ internal open class ParserBenchmark {
             EXCEPT a INTERSECT a UNION a
         """
 
-        private val exec20Expressions = """
+        val exec20Expressions = """
             EXEC
                 a
                 b,
@@ -1066,25 +1044,25 @@ internal open class ParserBenchmark {
                 a
         """
 
-        private val fromLet =
+        val fromLet =
             "SELECT C.region, MAX(nameLength) AS maxLen FROM C LET char_length(C.name) AS nameLength GROUP BY C.region"
 
-        private val groupLimit =
+        val groupLimit =
             "SELECT g FROM `[{foo: 1, bar: 10}, {foo: 1, bar: 11}]` AS f GROUP BY f.foo GROUP AS g LIMIT 1"
 
-        private val pivot = """
+        val pivot = """
                     PIVOT foo.a AT foo.b 
                     FROM <<{'a': 1, 'b':'I'}, {'a': 2, 'b':'II'}, {'a': 3, 'b':'III'}>> AS foo
                     LIMIT 1 OFFSET 1
         """.trimIndent()
 
-        private val longFromSourceOrderBy = """
+        val longFromSourceOrderBy = """
             SELECT *
             FROM [{'a': {'a': 5}}, {'a': {'a': 'b'}}, {'a': {'a': true}}, {'a': {'a': []}}, {'a': {'a': {}}}, {'a': {'a': <<>>}}, {'a': {'a': `{{}}`}}, {'a': {'a': null}}]
             ORDER BY a DESC
         """.trimIndent()
 
-        private val nestedAggregates = """
+        val nestedAggregates = """
                 SELECT
                     i2 AS outerKey,
                     g2 AS outerGroupAs,
@@ -1104,7 +1082,7 @@ internal open class ParserBenchmark {
                 GROUP BY innerQuery.i AS i2, innerQuery.g AS g2
         """.trimIndent()
 
-        private val complexQuery = """
+        val complexQuery = """
             1 + (
                 SELECT a, b, c
                 FROM [
@@ -1129,7 +1107,7 @@ internal open class ParserBenchmark {
             )
         """.trimIndent()
 
-        private val complexQuery01 = """
+        val complexQuery01 = """
             SELECT
             DATE_FORMAT(co.order_date, '%Y-%m') AS order_month,
             DATE_FORMAT(co.order_date, '%Y-%m-%d') AS order_day,
@@ -1144,7 +1122,7 @@ internal open class ParserBenchmark {
             ORDER BY co.order_date ASC;
         """.trimIndent()
 
-        private val complexQuery02 = """
+        val complexQuery02 = """
             SELECT
             c.calendar_date,
             c.calendar_year,
@@ -1169,7 +1147,7 @@ internal open class ParserBenchmark {
             ORDER BY c.calendar_date ASC;
         """.trimIndent()
 
-        private val veryLongQuery = """
+        val veryLongQuery = """
             SELECT
               e.employee_id AS "Employee#", e.first_name || '' || e.last_name AS "Name", e.email AS "Email",
               e.phone_number AS "Phone", TO_CHAR(e.hire_date, 'MM/DD/YYYY') AS "Hire Date",
@@ -1209,7 +1187,7 @@ internal open class ParserBenchmark {
             ORDER BY e.employee_id;
         """.trimIndent()
 
-        private val veryLongQuery01 = """
+        val veryLongQuery01 = """
             SELECT
                 id as feedId,
                 (IF(groupId > 0, groupId, IF(friendId > 0, friendId, userId))) as wallOwnerId,
@@ -1322,47 +1300,46 @@ internal open class ParserBenchmark {
             ON newsfeed.id = page.feedId WHERE privacy != 10 
         """.trimIndent()
 
-        val queries = listOf(
-            querySimple, // 0
-            nestedParen, // 1
-            someJoins, // 2
-            severalJoins, // 3
-            someSelect, // 4
-            severalSelect, // 5
-            someProjections, // 6
-            severalProjections, // 7
-            nestedParen, // 8
-            queryFunc, // 9
-            queryFuncInProjection, // 10
-            queryList, // 11
-            query15OrsAndLikes, // 12
-            query30Plus, // 13
-            queryNestedSelect, // 14
-            graphPattern, // 15
-            graphPreFilters, // 16
-            manyJoins, // 17
-            timeZone, // 18
-            caseWhenThen, // 19
-            simpleInsert, // 20
-            exceptUnionIntersectSixty, // 21
-            exec20Expressions, // 22
-            fromLet, // 23
-            groupLimit, // 24
-            pivot, // 25
-            longFromSourceOrderBy, // 26
-            nestedAggregates, // 27
-            complexQuery, // 28
-            complexQuery01, // 29
-            complexQuery02, // 30
-            veryLongQuery, // 31
-            veryLongQuery01, // 32
+        val queries = mapOf(
+            ::querySimple.name to querySimple,
+            ::nestedParen.name to nestedParen,
+            ::someJoins.name to someJoins,
+            ::severalJoins.name to severalJoins,
+            ::someSelect.name to someSelect,
+            ::severalSelect.name to severalSelect,
+            ::someProjections.name to someProjections,
+            ::severalProjections.name to severalProjections,
+            ::queryFunc.name to queryFunc,
+            ::queryFuncInProjection.name to queryFuncInProjection,
+            ::queryList.name to queryList,
+            ::query15OrsAndLikes.name to query15OrsAndLikes,
+            ::query30Plus.name to query30Plus,
+            ::queryNestedSelect.name to queryNestedSelect,
+            ::graphPattern.name to graphPattern,
+            ::graphPreFilters.name to graphPreFilters,
+            ::manyJoins.name to manyJoins,
+            ::timeZone.name to timeZone,
+            ::caseWhenThen.name to caseWhenThen,
+            ::simpleInsert.name to simpleInsert,
+            ::exceptUnionIntersectSixty.name to exceptUnionIntersectSixty,
+            ::exec20Expressions.name to exec20Expressions,
+            ::fromLet.name to fromLet,
+            ::groupLimit.name to groupLimit,
+            ::pivot.name to pivot,
+            ::longFromSourceOrderBy.name to longFromSourceOrderBy,
+            ::nestedAggregates.name to nestedAggregates,
+            ::complexQuery.name to complexQuery,
+            ::complexQuery01.name to complexQuery01,
+            ::complexQuery02.name to complexQuery02,
+            ::veryLongQuery.name to veryLongQuery,
+            ::veryLongQuery01.name to veryLongQuery01,
         )
 
-        val queriesFailingHalfway = queries.map { query ->
+        val queriesFail = queries.map { (name, query) ->
             val splitQuery = query.split("\\s".toRegex()).toMutableList()
             val index = (splitQuery.lastIndex * .50).toInt()
             splitQuery.add(index, ";")
-            splitQuery.joinToString(separator = " ")
-        }
+            name to splitQuery.joinToString(separator = " ")
+        }.toMap()
     }
 }
