@@ -15,6 +15,10 @@
 package org.partiql.lang.syntax
 
 /** Supported categories of tokens. */
+@Deprecated(
+    message = "This class is subject to removal.",
+    level = DeprecationLevel.WARNING
+) // To be removed before 1.0
 enum class TokenType {
     LEFT_PAREN,
     RIGHT_PAREN,
@@ -54,5 +58,5 @@ enum class TokenType {
     DATETIME_PART,
     EOF // End of Stream token.
     ;
-    fun isIdentifier() = this == TokenType.IDENTIFIER || this == TokenType.QUOTED_IDENTIFIER
+    fun isIdentifier() = this == IDENTIFIER || this == QUOTED_IDENTIFIER
 }

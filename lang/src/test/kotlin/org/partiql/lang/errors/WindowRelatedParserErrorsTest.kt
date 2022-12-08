@@ -2,7 +2,8 @@ package org.partiql.lang.errors
 
 import org.junit.Test
 import org.partiql.lang.syntax.PartiQLParserTestBase
-import org.partiql.lang.syntax.TokenType
+import org.partiql.lang.syntax.antlr.PartiQLParser
+import org.partiql.lang.util.getAntlrDisplayString
 
 // TODO: move this to [ParserErrorsTest] once https://github.com/partiql/partiql-docs/issues/31 is resolved and a RFC is approved
 
@@ -15,7 +16,7 @@ class WindowRelatedParserErrorsTest : PartiQLParserTestBase() {
             mapOf(
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 8L,
-                Property.TOKEN_TYPE to TokenType.IDENTIFIER,
+                Property.TOKEN_DESCRIPTION to PartiQLParser.LAG.getAntlrDisplayString(),
                 Property.TOKEN_VALUE to ion.newSymbol("lag")
             )
         )
@@ -29,7 +30,7 @@ class WindowRelatedParserErrorsTest : PartiQLParserTestBase() {
             mapOf(
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 17L,
-                Property.TOKEN_TYPE to TokenType.COMMA,
+                Property.TOKEN_DESCRIPTION to PartiQLParser.COMMA.getAntlrDisplayString(),
                 Property.TOKEN_VALUE to ion.newSymbol(",")
             )
         )
@@ -42,7 +43,7 @@ class WindowRelatedParserErrorsTest : PartiQLParserTestBase() {
             mapOf(
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 8L,
-                Property.TOKEN_TYPE to TokenType.IDENTIFIER,
+                Property.TOKEN_DESCRIPTION to PartiQLParser.LAG.getAntlrDisplayString(),
                 Property.TOKEN_VALUE to ion.newSymbol("lag")
             )
         )
@@ -56,7 +57,7 @@ class WindowRelatedParserErrorsTest : PartiQLParserTestBase() {
             mapOf(
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 18L,
-                Property.TOKEN_TYPE to TokenType.COMMA,
+                Property.TOKEN_DESCRIPTION to PartiQLParser.COMMA.getAntlrDisplayString(),
                 Property.TOKEN_VALUE to ion.newSymbol(",")
             )
         )

@@ -12,6 +12,8 @@
  *  language governing permissions and limitations under the License.
  */
 
+@file:Suppress("DEPRECATION")
+
 package org.partiql.lang.syntax
 
 import org.partiql.lang.syntax.TokenType.KEYWORD

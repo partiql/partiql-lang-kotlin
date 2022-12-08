@@ -12,6 +12,8 @@
  *  language governing permissions and limitations under the License.
  */
 
+@file:Suppress("DEPRECATION")
+
 package org.partiql.lang.syntax
 
 /**
@@ -19,6 +21,10 @@ package org.partiql.lang.syntax
  *
  * Implementations must be thread-safe.
  */
+@Deprecated(
+    message = "This class is subject to removal.",
+    level = DeprecationLevel.WARNING
+) // To be removed before 1.0
 interface Lexer {
     fun tokenize(source: String): List<Token>
 }
