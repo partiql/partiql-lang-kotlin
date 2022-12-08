@@ -60,6 +60,6 @@ jobs:
           auto-push: true
           comment-always: true
           comment-on-alert: true
-          alert-threshold: '200%'
+          alert-threshold: '250%'
           fail-on-alert: true
           alert-comment-cc-users: "${{ env.AUTHOR }},${{ env.ACTOR }},${{ env.REPO_OWNER }}"
