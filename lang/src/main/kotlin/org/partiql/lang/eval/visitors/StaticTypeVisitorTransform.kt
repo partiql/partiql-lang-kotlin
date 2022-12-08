@@ -4,6 +4,7 @@
 
 package org.partiql.lang.eval.visitors
 
+import com.amazon.ion.IonSystem
 import com.amazon.ionelement.api.MetaContainer
 import com.amazon.ionelement.api.ionString
 import com.amazon.ionelement.api.metaContainerOf
@@ -61,6 +62,13 @@ class StaticTypeVisitorTransform(
     globalBindings: Bindings<StaticType>,
     constraints: Set<StaticTypeVisitorTransformConstraints> = setOf()
 ) : VisitorTransformBase() {
+
+    @Deprecated("Please constructor method `StaticTypeVisitorTransform(globalBindings: Bindings<StaticType>, constraints: Set<StaticTypeVisitorTransformConstraints> = setOf())`")
+    constructor(
+        ion: IonSystem,
+        globalBindings: Bindings<StaticType>,
+        constraints: Set<StaticTypeVisitorTransformConstraints> = setOf()
+    ) : this(globalBindings, constraints)
 
     /** Used to allow certain binding lookups to occur directly in the global scope. */
     private val globalEnv = wrapBindings(globalBindings, 0)

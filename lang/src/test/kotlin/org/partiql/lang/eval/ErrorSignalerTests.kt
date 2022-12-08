@@ -1,5 +1,6 @@
 package org.partiql.lang.eval
 
+import com.amazon.ion.system.IonSystemBuilder
 import org.junit.Test
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.domains.metaContainerOf
@@ -12,9 +13,12 @@ import kotlin.test.fail
 class ErrorSignalerTests {
     private val dummyMetas = metaContainerOf(SourceLocationMeta(4, 2))
 
+    private val ion = IonSystemBuilder.standard().build()
+    private val valueFactory = ExprValueFactory.standard(ion)
+
     @Test
     fun permissiveTest() {
-        val b = TypingMode.PERMISSIVE.createErrorSignaler()
+        val b = TypingMode.PERMISSIVE.createErrorSignaler(valueFactory)
 
         assertEquals(50, runTest(b, 5).intValue())
         assertEquals(70, runTest(b, 7).intValue())
@@ -23,7 +27,7 @@ class ErrorSignalerTests {
 
     @Test
     fun legacyTest() {
-        val b = TypingMode.LEGACY.createErrorSignaler()
+        val b = TypingMode.LEGACY.createErrorSignaler(valueFactory)
 
         assertEquals(10, runTest(b, 1).intValue())
         val ex = try {

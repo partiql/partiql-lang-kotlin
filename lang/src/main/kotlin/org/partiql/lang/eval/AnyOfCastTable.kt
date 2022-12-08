@@ -155,6 +155,8 @@ private data class CastNil(val sourceType: ExprValueType, val metas: MetaContain
 internal class AnyOfCastTable(
     private val anyOfType: AnyOfType,
     private val metas: MetaContainer,
+    // TODO: remove [valueFactory] once we remove [ExprValueFactory]
+    private val valueFactory: ExprValueFactory,
     singleTypeCast: (SingleType) -> CastFunc
 ) {
     val castFuncTable: Map<ExprValueType, List<CastFunc>>
@@ -221,15 +223,15 @@ internal class AnyOfCastTable(
                 val children = source.asSequence().map { cast(it) }
 
                 when (targetType) {
-                    ExprValueType.LIST -> exprList(children)
-                    ExprValueType.SEXP -> exprSexp(children)
-                    ExprValueType.BAG -> exprBag(children)
+                    ExprValueType.LIST -> valueFactory.newList(children)
+                    ExprValueType.SEXP -> valueFactory.newSexp(children)
+                    ExprValueType.BAG -> valueFactory.newBag(children)
                     ExprValueType.STRUCT -> {
                         if (source.type != ExprValueType.STRUCT) {
                             // Should not be possible
                             throw IllegalStateException("Cannot cast from non-struct to struct")
                         }
-                        exprStruct(
+                        valueFactory.newStruct(
                             children.zip(source.asSequence()).map { (child, original) ->
                                 child.namedValue(original.name!!)
                             },

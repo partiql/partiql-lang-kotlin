@@ -2,7 +2,6 @@ package org.partiql.lang.eval.physical.window
 
 import org.partiql.annotations.PartiQLExperimental
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.eval.exprNull
 import org.partiql.lang.eval.numberValue
 import org.partiql.lang.eval.physical.EvaluatorState
 import org.partiql.lang.eval.physical.operators.ValueExpression
@@ -33,7 +32,7 @@ internal class Lag : NavigationWindowFunction() {
                 error("offset need to be non-negative integer")
             }
         } ?: DEFAULT_OFFSET_VALUE
-        val defaultValue = default?.invoke(state) ?: exprNull()
+        val defaultValue = default?.invoke(state) ?: state.valueFactory.nullValue
         val targetIndex = currentPos - offsetValue
 
         if (targetIndex >= 0 && targetIndex <= currentPartition.lastIndex) {

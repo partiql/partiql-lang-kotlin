@@ -43,8 +43,8 @@ class PartiQLParserBuilder {
     private var ion: IonSystem = DEFAULT_ION
     private var customTypes: List<CustomType> = emptyList()
 
-    fun ionSystem(ion: IonSystem): PartiQLParserBuilder = this.apply {
-        this.ion = ion
+    fun ionSystem(ion: IonSystem?): PartiQLParserBuilder = this.apply {
+        this.ion = ion ?: DEFAULT_ION
     }
 
     fun customTypes(types: List<CustomType>): PartiQLParserBuilder = this.apply {

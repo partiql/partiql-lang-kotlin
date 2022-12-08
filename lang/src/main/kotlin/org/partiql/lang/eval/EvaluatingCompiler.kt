@@ -15,10 +15,8 @@
 package org.partiql.lang.eval
 
 import com.amazon.ion.IonString
-import com.amazon.ion.IonSystem
 import com.amazon.ion.IonValue
 import com.amazon.ion.Timestamp
-import com.amazon.ion.system.IonSystemBuilder
 import com.amazon.ionelement.api.MetaContainer
 import com.amazon.ionelement.api.ionBool
 import com.amazon.ionelement.api.toIonValue
@@ -117,17 +115,14 @@ private typealias ThunkEnvValue<T> = ThunkValue<Environment, T>
  * @param compileOptions Various options that effect how the source code is compiled.
  */
 internal class EvaluatingCompiler(
+    private val valueFactory: ExprValueFactory,
     private val functions: Map<String, ExprFunction>,
     private val customTypedOpParameters: Map<String, TypedOpParameter>,
     private val procedures: Map<String, StoredProcedure>,
     private val compileOptions: CompileOptions = CompileOptions.standard()
 ) {
-    // The following property is used only for the transformation: [IonElement] -> [IonValue] -> [ExprValue] for literals
-    // TODO: remove this once we have converter betwwen [ExprValue] & [IonElement]
-    private val ion: IonSystem = IonSystemBuilder.standard().build()
-
-    private val errorSignaler = compileOptions.typingMode.createErrorSignaler()
-    private val thunkFactory = compileOptions.typingMode.createThunkFactory<Environment>(compileOptions.thunkOptions)
+    private val errorSignaler = compileOptions.typingMode.createErrorSignaler(valueFactory)
+    private val thunkFactory = compileOptions.typingMode.createThunkFactory<Environment>(compileOptions.thunkOptions, valueFactory)
 
     private val compilationContextStack = Stack<CompilationContext>()
 
@@ -160,8 +155,8 @@ internal class EvaluatingCompiler(
         }
     }
 
-    private fun Boolean.exprValue(): ExprValue = exprBoolean(this)
-    private fun String.exprValue(): ExprValue = exprString(this)
+    private fun Boolean.exprValue(): ExprValue = valueFactory.newBoolean(this)
+    private fun String.exprValue(): ExprValue = valueFactory.newString(this)
 
     /** Represents an instance of a compiled `GROUP BY` expression and alias. */
     private class CompiledGroupByItem(val alias: ExprValue, val uniqueId: String?, val thunk: ThunkEnv)
@@ -191,7 +186,7 @@ internal class EvaluatingCompiler(
             }
         }
 
-        override fun compute() = current ?: exprNull()
+        override fun compute() = current ?: valueFactory.nullValue
     }
 
     private fun comparisonAccumulator(comparator: NaturalExprValueComparators): (ExprValue?, ExprValue) -> ExprValue =
@@ -215,10 +210,10 @@ internal class EvaluatingCompiler(
                 }
             }
 
-            val countAccFunc: (ExprValue?, ExprValue) -> ExprValue = { accumulated, _ -> (accumulated!!.longValue() + 1L).exprValue() }
+            val countAccFunc: (ExprValue?, ExprValue) -> ExprValue = { accumulated, _ -> (accumulated!!.longValue() + 1L).exprValue(valueFactory) }
             val sumAccFunc: (ExprValue?, ExprValue) -> ExprValue = { accumulated, nextItem ->
                 checkIsNumberType("SUM", nextItem)
-                accumulated?.let { (it.numberValue() + nextItem.numberValue()).exprValue() } ?: nextItem
+                accumulated?.let { (it.numberValue() + nextItem.numberValue()).exprValue(valueFactory) } ?: nextItem
             }
             val minAccFunc = comparisonAccumulator(NaturalExprValueComparators.NULLS_LAST_ASC)
             val maxAccFunc = comparisonAccumulator(NaturalExprValueComparators.NULLS_LAST_DESC)
@@ -236,18 +231,19 @@ internal class EvaluatingCompiler(
                     }
 
                     override fun compute() =
-                        sum?.let { (it / bigDecimalOf(count)).exprValue() } ?: exprNull()
+                        sum?.let { (it / bigDecimalOf(count)).exprValue(valueFactory) }
+                            ?: this@EvaluatingCompiler.valueFactory.nullValue
                 }
             }
             val allFilter: (ExprValue) -> Boolean = { _ -> true }
             // each distinct ExprAggregator must get its own createUniqueExprValueFilter()
             mapOf(
                 Pair("count", PartiqlAst.SetQuantifier.All()) to ExprAggregatorFactory.over {
-                    Accumulator((0L).exprValue(), countAccFunc, allFilter)
+                    Accumulator((0L).exprValue(valueFactory), countAccFunc, allFilter)
                 },
 
                 Pair("count", PartiqlAst.SetQuantifier.Distinct()) to ExprAggregatorFactory.over {
-                    Accumulator((0L).exprValue(), countAccFunc, createUniqueExprValueFilter())
+                    Accumulator((0L).exprValue(valueFactory), countAccFunc, createUniqueExprValueFilter())
                 },
 
                 Pair("sum", PartiqlAst.SetQuantifier.All()) to ExprAggregatorFactory.over {
@@ -421,7 +417,7 @@ internal class EvaluatingCompiler(
             val expr1Value = expr1Thunk(env)
             val expr2Value = expr2Thunk(env)
             when {
-                expr1Value.exprEquals(expr2Value) -> exprNull()
+                expr1Value.exprEquals(expr2Value) -> valueFactory.nullValue
                 else -> expr1Value
             }
         }
@@ -446,8 +442,8 @@ internal class EvaluatingCompiler(
             }
             when (knownValue) {
                 null -> when {
-                    compileOptions.typingMode == TypingMode.PERMISSIVE && !nullFound -> exprMissing()
-                    else -> exprNull()
+                    compileOptions.typingMode == TypingMode.PERMISSIVE && !nullFound -> valueFactory.missingValue
+                    else -> valueFactory.nullValue
                 }
                 else -> knownValue
             }
@@ -555,7 +551,7 @@ internal class EvaluatingCompiler(
         val argThunks = compileAstExprs(expr.operands)
 
         val computeThunk = thunkFactory.thunkFold(metas, argThunks) { lValue, rValue ->
-            (lValue.numberValue() + rValue.numberValue()).exprValue()
+            (lValue.numberValue() + rValue.numberValue()).exprValue(valueFactory)
         }
 
         return checkIntegerOverflow(computeThunk, metas)
@@ -569,7 +565,7 @@ internal class EvaluatingCompiler(
         val argThunks = compileAstExprs(expr.operands)
 
         val computeThunk = thunkFactory.thunkFold(metas, argThunks) { lValue, rValue ->
-            (lValue.numberValue() - rValue.numberValue()).exprValue()
+            (lValue.numberValue() - rValue.numberValue()).exprValue(valueFactory)
         }
 
         return checkIntegerOverflow(computeThunk, metas)
@@ -592,7 +588,7 @@ internal class EvaluatingCompiler(
         val exprThunk = compileAstExpr(expr.expr)
 
         val computeThunk = thunkFactory.thunkEnvOperands(metas, exprThunk) { _, value ->
-            (-value.numberValue()).exprValue()
+            (-value.numberValue()).exprValue(valueFactory)
         }
 
         return checkIntegerOverflow(computeThunk, metas)
@@ -602,7 +598,7 @@ internal class EvaluatingCompiler(
         val argThunks = compileAstExprs(expr.operands)
 
         val computeThunk = thunkFactory.thunkFold(metas, argThunks) { lValue, rValue ->
-            (lValue.numberValue() * rValue.numberValue()).exprValue()
+            (lValue.numberValue() * rValue.numberValue()).exprValue(valueFactory)
         }
 
         return checkIntegerOverflow(computeThunk, metas)
@@ -620,7 +616,7 @@ internal class EvaluatingCompiler(
                 { ErrorDetails(metas, "/ by zero") }
             ) {
                 try {
-                    (lValue.numberValue() / denominator).exprValue()
+                    (lValue.numberValue() / denominator).exprValue(valueFactory)
                 } catch (e: ArithmeticException) {
                     // Setting the internal flag as true as it is not clear what
                     // ArithmeticException may be thrown by the above
@@ -646,7 +642,7 @@ internal class EvaluatingCompiler(
                 err("% by zero", ErrorCode.EVALUATOR_MODULO_BY_ZERO, errorContextFrom(metas), false)
             }
 
-            (lValue.numberValue() % denominator).exprValue()
+            (lValue.numberValue() % denominator).exprValue(valueFactory)
         }
 
         return checkIntegerOverflow(computeThunk, metas)
@@ -736,7 +732,11 @@ internal class EvaluatingCompiler(
             val precomputedLiteralsMap = values
                 .filterIsInstance<PartiqlAst.Expr.Lit>()
                 .mapTo(TreeSet<ExprValue>(DEFAULT_COMPARATOR)) {
-                    it.value.toIonValue(ion).toExprValue()
+                    valueFactory.newFromIonValue(
+                        it.value.toIonValue(
+                            valueFactory.ion
+                        )
+                    )
                 }
 
             // the compiled thunk simply checks if the left side is contained on the right side.
@@ -763,9 +763,11 @@ internal class EvaluatingCompiler(
                 // Permissive mode:
                 //      Returns MISSING when the right side of IN is not a sequence
                 //      Returns MISSING if the right side is MISSING or any value on the right side is MISSING
-                val (propagateMissingAs, propagateNotASeqAs) = when (compileOptions.typingMode) {
-                    TypingMode.LEGACY -> exprNull() to exprBoolean(false)
-                    TypingMode.PERMISSIVE -> exprMissing() to exprMissing()
+                val (propagateMissingAs, propagateNotASeqAs) = with(valueFactory) {
+                    when (compileOptions.typingMode) {
+                        TypingMode.LEGACY -> nullValue to newBoolean(false)
+                        TypingMode.PERMISSIVE -> missingValue to missingValue
+                    }
                 }
 
                 // Note that standard unknown propagation applies to the left and right operands. Both [TypingMode]s
@@ -785,7 +787,7 @@ internal class EvaluatingCompiler(
                                     ExprValueType.MISSING -> missingSeen = true
                                     // short-circuit to TRUE on the first matching value
                                     else -> if (it.exprEquals(leftValue)) {
-                                        return@thunkEnvOperands exprBoolean(true)
+                                        return@thunkEnvOperands valueFactory.newBoolean(true)
                                     }
                                 }
                             }
@@ -793,8 +795,8 @@ internal class EvaluatingCompiler(
                             // Note that if both MISSING and NULL was encountered, MISSING takes precedence.
                             when {
                                 missingSeen -> propagateMissingAs
-                                nullSeen -> exprNull()
-                                else -> exprBoolean(false)
+                                nullSeen -> valueFactory.nullValue
+                                else -> valueFactory.newBoolean(false)
                             }
                         }
                     }
@@ -829,8 +831,8 @@ internal class EvaluatingCompiler(
                 }
 
                 when (hasUnknowns) {
-                    true -> exprNull()
-                    false -> exprBoolean(true)
+                    true -> valueFactory.nullValue
+                    false -> valueFactory.newBoolean(true)
                 }
             }
             TypingMode.PERMISSIVE -> thunkFactory.thunkEnv(metas) thunk@{ env ->
@@ -840,7 +842,7 @@ internal class EvaluatingCompiler(
                     val currValue = currThunk(env)
                     when (currValue.type) {
                         // Short circuit only if we encounter a known false value.
-                        ExprValueType.BOOL -> if (!currValue.booleanValue()) return@thunk exprBoolean(false)
+                        ExprValueType.BOOL -> if (!currValue.booleanValue()) return@thunk valueFactory.newBoolean(false)
                         ExprValueType.NULL -> hasNull = true
                         // type mismatch, return missing
                         else -> hasMissing = true
@@ -848,9 +850,9 @@ internal class EvaluatingCompiler(
                 }
 
                 when {
-                    hasMissing -> exprMissing()
-                    hasNull -> exprNull()
-                    else -> exprBoolean(true)
+                    hasMissing -> valueFactory.missingValue
+                    hasNull -> valueFactory.nullValue
+                    else -> valueFactory.newBoolean(true)
                 }
             }
         }
@@ -875,13 +877,13 @@ internal class EvaluatingCompiler(
                         // (strange but true)
                         when {
                             currValue.isUnknown() -> hasUnknowns = true
-                            currValue.booleanValue() -> return@thunk exprBoolean(true)
+                            currValue.booleanValue() -> return@thunk valueFactory.newBoolean(true)
                         }
                     }
 
                     when (hasUnknowns) {
-                        true -> exprNull()
-                        false -> exprBoolean(false)
+                        true -> valueFactory.nullValue
+                        false -> valueFactory.newBoolean(false)
                     }
                 }
             TypingMode.PERMISSIVE -> thunkFactory.thunkEnv(metas) thunk@{ env ->
@@ -891,16 +893,16 @@ internal class EvaluatingCompiler(
                     val currValue = currThunk(env)
                     when (currValue.type) {
                         // Short circuit only if we encounter a known true value.
-                        ExprValueType.BOOL -> if (currValue.booleanValue()) return@thunk exprBoolean(true)
+                        ExprValueType.BOOL -> if (currValue.booleanValue()) return@thunk valueFactory.newBoolean(true)
                         ExprValueType.NULL -> hasNull = true
                         else -> hasMissing = true // type mismatch, return missing.
                     }
                 }
 
                 when {
-                    hasMissing -> exprMissing()
-                    hasNull -> exprNull()
-                    else -> exprBoolean(false)
+                    hasMissing -> valueFactory.missingValue
+                    hasNull -> valueFactory.nullValue
+                    else -> valueFactory.newBoolean(false)
                 }
             }
         }
@@ -1021,13 +1023,13 @@ internal class EvaluatingCompiler(
     }
 
     private fun compileLit(expr: PartiqlAst.Expr.Lit, metas: MetaContainer): ThunkEnv {
-        val value = expr.value.toIonValue(ion).toExprValue()
+        val value = valueFactory.newFromIonValue(expr.value.toIonValue(valueFactory.ion))
 
         return thunkFactory.thunkEnv(metas) { value }
     }
 
     private fun compileMissing(metas: MetaContainer): ThunkEnv =
-        thunkFactory.thunkEnv(metas) { exprMissing() }
+        thunkFactory.thunkEnv(metas) { valueFactory.missingValue }
 
     private fun compileId(expr: PartiqlAst.Expr.Id, metas: MetaContainer): ThunkEnv {
         val uniqueNameMeta = metas[UniqueNameMeta.TAG] as? UniqueNameMeta
@@ -1075,7 +1077,7 @@ internal class EvaluatingCompiler(
                         }
                     UndefinedVariableBehavior.MISSING ->
                         thunkFactory.thunkEnv(metas) { env ->
-                            env.current[bindingName] ?: exprMissing()
+                            env.current[bindingName] ?: valueFactory.missingValue
                         }
                 }
 
@@ -1178,7 +1180,7 @@ internal class EvaluatingCompiler(
         val expThunk = compileAstExpr(expr.value)
         val typedOpParameter = expr.type.toTypedOpParameter()
         if (typedOpParameter.staticType is AnyType) {
-            return thunkFactory.thunkEnv(metas) { exprBoolean(true) }
+            return thunkFactory.thunkEnv(metas) { valueFactory.newBoolean(true) }
         }
         if (compileOptions.typedOpBehavior == TypedOpBehavior.HONOR_PARAMETERS && expr.type is PartiqlAst.Type.FloatType && expr.type.precision != null) {
             err(
@@ -1256,6 +1258,7 @@ internal class EvaluatingCompiler(
             return { value ->
                 val castOutput = value.cast(
                     singleType,
+                    valueFactory,
                     compileOptions.typedOpBehavior,
                     locationMeta,
                     compileOptions.defaultTimezoneOffset
@@ -1281,7 +1284,7 @@ internal class EvaluatingCompiler(
             is SingleType -> compileSingleTypeCast(type)
             is AnyOfType -> {
                 val locationMeta = metas.sourceLocationMeta
-                val castTable = AnyOfCastTable(type, metas, ::singleTypeCastFunc);
+                val castTable = AnyOfCastTable(type, metas, valueFactory, ::singleTypeCastFunc);
 
                 // We do not use thunkFactory here because we want to explicitly avoid
                 // the optional evaluation-time type check for CAN_CAST below.
@@ -1307,7 +1310,7 @@ internal class EvaluatingCompiler(
     private fun compileCanCast(expr: PartiqlAst.Expr.CanCast, metas: MetaContainer): ThunkEnv {
         val typedOpParameter = expr.asType.toTypedOpParameter()
         if (typedOpParameter.staticType is AnyType) {
-            return thunkFactory.thunkEnv(metas) { exprBoolean(true) }
+            return thunkFactory.thunkEnv(metas) { valueFactory.newBoolean(true) }
         }
 
         val expThunk = compileAstExpr(expr.value)
@@ -1320,13 +1323,13 @@ internal class EvaluatingCompiler(
             try {
                 when {
                     // NULL/MISSING can cast to anything as themselves
-                    sourceValue.isUnknown() -> exprBoolean(true)
+                    sourceValue.isUnknown() -> valueFactory.newBoolean(true)
                     else -> {
                         val castedValue = castThunkEnv(env)
                         when {
                             // NULL/MISSING from cast is a permissive way to signal failure
-                            castedValue.isUnknown() -> exprBoolean(false)
-                            else -> exprBoolean(true)
+                            castedValue.isUnknown() -> valueFactory.newBoolean(false)
+                            else -> valueFactory.newBoolean(true)
                         }
                     }
                 }
@@ -1334,7 +1337,7 @@ internal class EvaluatingCompiler(
                 if (e.internal) {
                     throw e
                 }
-                exprBoolean(false)
+                valueFactory.newBoolean(false)
             }
         }
     }
@@ -1342,7 +1345,7 @@ internal class EvaluatingCompiler(
     private fun compileCanLosslessCast(expr: PartiqlAst.Expr.CanLosslessCast, metas: MetaContainer): ThunkEnv {
         val typedOpParameter = expr.asType.toTypedOpParameter()
         if (typedOpParameter.staticType is AnyType) {
-            return thunkFactory.thunkEnv(metas) { exprBoolean(true) }
+            return thunkFactory.thunkEnv(metas) { valueFactory.newBoolean(true) }
         }
 
         val expThunk = compileAstExpr(expr.value)
@@ -1361,6 +1364,7 @@ internal class EvaluatingCompiler(
                     { value: ExprValue ->
                         value.cast(
                             singleType,
+                            valueFactory,
                             compileOptions.typedOpBehavior,
                             locationMeta,
                             compileOptions.defaultTimezoneOffset
@@ -1370,7 +1374,7 @@ internal class EvaluatingCompiler(
                 val roundTripped = when (sourceType) {
                     is SingleType -> castFunc(sourceType)(castedValue)
                     is AnyOfType -> {
-                        val castTable = AnyOfCastTable(sourceType, metas, ::castFunc)
+                        val castTable = AnyOfCastTable(sourceType, metas, valueFactory, ::castFunc)
                         castTable.cast(sourceValue)
                     }
                     // Should not be possible
@@ -1378,22 +1382,22 @@ internal class EvaluatingCompiler(
                 }
 
                 val lossless = sourceValue.exprEquals(roundTripped)
-                return exprBoolean(lossless)
+                return valueFactory.newBoolean(lossless)
             }
 
             try {
                 when (sourceValue.type) {
                     // NULL can cast to anything as itself
-                    ExprValueType.NULL -> exprBoolean(true)
+                    ExprValueType.NULL -> valueFactory.newBoolean(true)
 
                     // Short-circuit timestamp -> date roundtrip if precision isn't [Timestamp.Precision.DAY] or
                     //   [Timestamp.Precision.MONTH] or [Timestamp.Precision.YEAR]
                     ExprValueType.TIMESTAMP -> when (typedOpParameter.staticType) {
                         StaticType.DATE -> when (sourceValue.timestampValue().precision) {
                             Timestamp.Precision.DAY, Timestamp.Precision.MONTH, Timestamp.Precision.YEAR -> roundTrip()
-                            else -> exprBoolean(false)
+                            else -> valueFactory.newBoolean(false)
                         }
-                        StaticType.TIME -> exprBoolean(false)
+                        StaticType.TIME -> valueFactory.newBoolean(false)
                         else -> roundTrip()
                     }
 
@@ -1404,7 +1408,7 @@ internal class EvaluatingCompiler(
                 if (e.internal) {
                     throw e
                 }
-                exprBoolean(false)
+                valueFactory.newBoolean(false)
             }
         }
     }
@@ -1413,7 +1417,7 @@ internal class EvaluatingCompiler(
         val valueThunk = compileAstExpr(expr.expr)
         val branchThunks = expr.cases.pairs.map { Pair(compileAstExpr(it.first), compileAstExpr(it.second)) }
         val elseThunk = when (expr.default) {
-            null -> thunkFactory.thunkEnv(metas) { exprNull() }
+            null -> thunkFactory.thunkEnv(metas) { valueFactory.nullValue }
             else -> compileAstExpr(expr.default)
         }
 
@@ -1445,7 +1449,7 @@ internal class EvaluatingCompiler(
     private fun compileSearchedCase(expr: PartiqlAst.Expr.SearchedCase, metas: MetaContainer): ThunkEnv {
         val branchThunks = expr.cases.pairs.map { compileAstExpr(it.first) to compileAstExpr(it.second) }
         val elseThunk = when (expr.default) {
-            null -> thunkFactory.thunkEnv(metas) { exprNull() }
+            null -> thunkFactory.thunkEnv(metas) { valueFactory.nullValue }
             else -> compileAstExpr(expr.default)
         }
 
@@ -1531,17 +1535,17 @@ internal class EvaluatingCompiler(
                 }
             }
             else -> { env: Environment ->
-                itemThunks.asSequence().mapIndexed { i, itemThunk -> itemThunk(env).namedValue(i.exprValue()) }
+                itemThunks.asSequence().mapIndexed { i, itemThunk -> itemThunk(env).namedValue(i.exprValue(valueFactory)) }
             }
         }
 
         return thunkFactory.thunkEnv(metas) { env ->
-            when (seqType) {
-                ExprValueType.BAG -> exprBag(makeItemThunkSequence(env))
-                ExprValueType.LIST -> exprList(makeItemThunkSequence(env))
-                ExprValueType.SEXP -> exprSexp(makeItemThunkSequence(env))
-                else -> error("sequence type required")
-            }
+            // todo:  use valueFactory.newSequence() instead.
+            SequenceExprValue(
+                valueFactory.ion,
+                seqType,
+                makeItemThunkSequence(env)
+            )
         }
     }
 
@@ -1556,7 +1560,7 @@ internal class EvaluatingCompiler(
                 is PartiqlAst.SetQuantifier.All -> op.eval(l, r)
                 is PartiqlAst.SetQuantifier.Distinct -> op.eval(l, r).distinct()
             }
-            exprBag(result)
+            valueFactory.newBag(result)
         }
     }
 
@@ -1717,14 +1721,14 @@ internal class EvaluatingCompiler(
 
                             // if order by is specified, return list otherwise bag
                             when (orderByThunk) {
-                                null -> exprBag(
+                                null -> valueFactory.newBag(
                                     quantifiedRows.map {
                                         // TODO make this expose the ordinal for ordered sequences
                                         // make sure we don't expose the underlying value's name out of a SELECT
                                         it.unnamedValue()
                                     }
                                 )
-                                else -> exprList(quantifiedRows.map { it.unnamedValue() })
+                                else -> valueFactory.newList(quantifiedRows.map { it.unnamedValue() })
                             }
                         }
                     else -> {
@@ -1777,7 +1781,7 @@ internal class EvaluatingCompiler(
 
                                     // note: the group key can be anything here because we only ever have a single
                                     // group when aggregates are used without GROUP BY expression
-                                    val syntheticGroup = Group(exprNull(), registers)
+                                    val syntheticGroup = Group(valueFactory.nullValue, registers)
 
                                     // iterate over the values from the FROM clause and populate our
                                     // aggregate register values.
@@ -1795,8 +1799,8 @@ internal class EvaluatingCompiler(
 
                                     // if order by is specified, return list otherwise bag
                                     when (orderByThunk) {
-                                        null -> exprBag(listOf(groupResult).asSequence())
-                                        else -> exprList(listOf(groupResult).asSequence())
+                                        null -> valueFactory.newBag(listOf(groupResult).asSequence())
+                                        else -> valueFactory.newList(listOf(groupResult).asSequence())
                                     }
                                 }
                             }
@@ -1874,8 +1878,8 @@ internal class EvaluatingCompiler(
 
                                     // if order by is specified, return list otherwise bag
                                     when (orderByThunk) {
-                                        null -> exprBag(projectedRows)
-                                        else -> exprList(projectedRows)
+                                        null -> valueFactory.newBag(projectedRows)
+                                        else -> valueFactory.newList(projectedRows)
                                     }
                                 }
                             }
@@ -2013,7 +2017,7 @@ internal class EvaluatingCompiler(
                 }
                 value
             }
-            GroupKeyExprValue(ion, keyValues.asSequence(), uniqueNames)
+            GroupKeyExprValue(valueFactory.ion, keyValues.asSequence(), uniqueNames)
         }
 
     private fun compileOrderByExpression(sortSpecs: List<PartiqlAst.SortSpec>): List<CompiledOrderByItem> =
@@ -2100,7 +2104,7 @@ internal class EvaluatingCompiler(
             groupAsName != null -> { groupByEnv, currentGroup ->
                 val groupAsBindings = Bindings.buildLazyBindings<ExprValue> {
                     addBinding(groupAsName.text) {
-                        exprBag(currentGroup.groupValues.asSequence())
+                        valueFactory.newBag(currentGroup.groupValues.asSequence())
                     }
                 }
 
@@ -2321,7 +2325,7 @@ internal class EvaluatingCompiler(
         compiledLetSources: List<CompiledLetSource>?
     ): (Environment) -> Sequence<FromProduction> {
 
-        val localsBinder = compiledSources.map { it.alias }.localsBinder(exprMissing())
+        val localsBinder = compiledSources.map { it.alias }.localsBinder(valueFactory.missingValue)
         val whereThunk = ast.where?.let { compileAstExpr(it) }
 
         return { rootEnv ->
@@ -2339,11 +2343,11 @@ internal class EvaluatingCompiler(
                                     addBinding(alias.asName) { value }
                                     if (alias.atName != null)
                                         addBinding(alias.atName) {
-                                            value.name ?: exprMissing()
+                                            value.name ?: valueFactory.missingValue
                                         }
                                     if (alias.byName != null)
                                         addBinding(alias.byName) {
-                                            value.address ?: exprMissing()
+                                            value.address ?: valueFactory.missingValue
                                         }
                                 },
                                 Environment.CurrentMode.GLOBALS_THEN_LOCALS
@@ -2379,7 +2383,7 @@ internal class EvaluatingCompiler(
 
                     if (!iter.hasNext()) {
                         iter = when (source.joinExpansion) {
-                            JoinExpansion.OUTER -> listOf(correlatedBind(exprNull())).iterator()
+                            JoinExpansion.OUTER -> listOf(correlatedBind(valueFactory.nullValue)).iterator()
                             JoinExpansion.INNER -> iter
                         }
                     }
@@ -2430,7 +2434,7 @@ internal class EvaluatingCompiler(
                 is PartiqlAst.ProjectItem.ProjectExpr -> {
                     val alias = it.asAlias?.text ?: it.expr.extractColumnAlias(idx)
                     val thunk = compileAstExpr(it.expr)
-                    SingleProjectionElement(exprString(alias), thunk)
+                    SingleProjectionElement(valueFactory.newString(alias), thunk)
                 }
                 is PartiqlAst.ProjectItem.ProjectAll -> {
                     MultipleProjectionElement(listOf(compileAstExpr(it.expr)))
@@ -2470,13 +2474,13 @@ internal class EvaluatingCompiler(
                         when {
                             // If indexExpr is a literal string, there is no need to evaluate it--just compile a
                             // thunk that directly returns a bound value
-                            indexExpr is PartiqlAst.Expr.Lit && indexExpr.value.toIonValue(ion) is IonString -> {
+                            indexExpr is PartiqlAst.Expr.Lit && indexExpr.value.toIonValue(valueFactory.ion) is IonString -> {
                                 val lookupName = BindingName(
-                                    indexExpr.value.toIonValue(ion).stringValue()!!,
+                                    indexExpr.value.toIonValue(valueFactory.ion).stringValue()!!,
                                     caseSensitivity.toBindingCase()
                                 )
                                 thunkFactory.thunkEnvValue(componentMetas) { _, componentValue ->
-                                    componentValue.bindings[lookupName] ?: exprMissing()
+                                    componentValue.bindings[lookupName] ?: valueFactory.missingValue
                                 }
                             }
                             else -> {
@@ -2500,10 +2504,10 @@ internal class EvaluatingCompiler(
                                                     errorContextFrom(componentMetas),
                                                     internal = false
                                                 )
-                                                TypingMode.PERMISSIVE -> exprMissing()
+                                                TypingMode.PERMISSIVE -> valueFactory.missingValue
                                             }
                                         }
-                                    } ?: exprMissing()
+                                    } ?: valueFactory.missingValue
                                 }
                             }
                         }
@@ -2516,12 +2520,12 @@ internal class EvaluatingCompiler(
                                     val mapped = componentValue.unpivot()
                                         .flatMap { tempThunk(env, it).rangeOver() }
                                         .asSequence()
-                                    exprBag(mapped)
+                                    valueFactory.newBag(mapped)
                                 }
                             }
                             else ->
                                 thunkFactory.thunkEnvValue(componentMetas) { _, componentValue ->
-                                    exprBag(componentValue.unpivot().asSequence())
+                                    valueFactory.newBag(componentValue.unpivot().asSequence())
                                 }
                         }
                     }
@@ -2540,7 +2544,7 @@ internal class EvaluatingCompiler(
                                             .map { tempThunk(env, it) }
                                             .asSequence()
 
-                                        exprBag(mapped)
+                                        valueFactory.newBag(mapped)
                                     }
                                     else -> thunkFactory.thunkEnvValue(componentMetas) { env, componentValue ->
                                         val mapped = componentValue
@@ -2551,14 +2555,14 @@ internal class EvaluatingCompiler(
                                             }
                                             .asSequence()
 
-                                        exprBag(mapped)
+                                        valueFactory.newBag(mapped)
                                     }
                                 }
                             }
                             else -> {
                                 thunkFactory.thunkEnvValue(componentMetas) { _, componentValue ->
                                     val mapped = componentValue.rangeOver().asSequence()
-                                    exprBag(mapped)
+                                    valueFactory.newBag(mapped)
                                 }
                             }
                         }
@@ -2629,7 +2633,7 @@ internal class EvaluatingCompiler(
 
         fun matchRegexPattern(value: ExprValue, likePattern: (() -> Pattern)?): ExprValue {
             return when {
-                likePattern == null || value.type.isUnknown -> exprNull()
+                likePattern == null || value.type.isUnknown -> valueFactory.nullValue
                 !value.type.isText -> err(
                     "LIKE expression must be given non-null strings as input",
                     ErrorCode.EVALUATOR_LIKE_INVALID_INPUTS,
@@ -2638,7 +2642,7 @@ internal class EvaluatingCompiler(
                     },
                     internal = false
                 )
-                else -> exprBoolean(likePattern().matcher(value.stringValue()).matches())
+                else -> valueFactory.newBoolean(likePattern().matcher(value.stringValue()).matches())
             }
         }
 
@@ -2649,14 +2653,15 @@ internal class EvaluatingCompiler(
         return when {
             patternExpr is PartiqlAst.Expr.Lit && (escapeExpr == null || escapeExpr is PartiqlAst.Expr.Lit) -> {
                 val patternParts = getRegexPattern(
-                    patternExpr.value.toIonValue(ion).toExprValue(),
-                    (escapeExpr as? PartiqlAst.Expr.Lit)?.value?.toIonValue(ion)?.toExprValue()
+                    valueFactory.newFromIonValue(patternExpr.value.toIonValue(valueFactory.ion)),
+                    (escapeExpr as? PartiqlAst.Expr.Lit)?.value?.toIonValue(valueFactory.ion)
+                        ?.let { valueFactory.newFromIonValue(it) }
                 )
 
                 // If valueExpr is also a literal then we can evaluate this at compile time and return a constant.
                 if (valueExpr is PartiqlAst.Expr.Lit) {
                     val resultValue = matchRegexPattern(
-                        valueExpr.value.toIonValue(ion).toExprValue(),
+                        valueFactory.newFromIonValue(valueExpr.value.toIonValue(valueFactory.ion)),
                         patternParts
                     )
                     return thunkFactory.thunkEnv(metas) { resultValue }
@@ -2860,7 +2865,7 @@ internal class EvaluatingCompiler(
 
     private fun compileDate(expr: PartiqlAst.Expr.Date, metas: MetaContainer): ThunkEnv =
         thunkFactory.thunkEnv(metas) {
-            exprDate(
+            valueFactory.newDate(
                 expr.year.value.toInt(),
                 expr.month.value.toInt(),
                 expr.day.value.toInt()
@@ -2870,7 +2875,7 @@ internal class EvaluatingCompiler(
     private fun compileLitTime(expr: PartiqlAst.Expr.LitTime, metas: MetaContainer): ThunkEnv =
         thunkFactory.thunkEnv(metas) {
             // Add the default time zone if the type "TIME WITH TIME ZONE" does not have an explicitly specified time zone.
-            exprTime(
+            valueFactory.newTime(
                 Time.of(
                     expr.value.hour.value.toInt(),
                     expr.value.minute.value.toInt(),
@@ -2899,13 +2904,13 @@ internal class EvaluatingCompiler(
         // for non-struct, this wraps any value into a BAG with a synthetic name
         else -> UnpivotedExprValue(
             listOf(
-                this.namedValue(exprString(syntheticColumnName(0)))
+                this.namedValue(valueFactory.newString(syntheticColumnName(0)))
             )
         )
     }
 
     private fun createStructExprValue(seq: Sequence<ExprValue>, ordering: StructOrdering) =
-        exprStruct(
+        valueFactory.newStruct(
             when (compileOptions.projectionIteration) {
                 ProjectionIterationBehavior.FILTER_MISSING -> seq.filter { it.type != ExprValueType.MISSING }
                 ProjectionIterationBehavior.UNFILTERED -> seq

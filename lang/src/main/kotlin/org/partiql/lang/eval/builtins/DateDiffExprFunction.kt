@@ -19,9 +19,9 @@ import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.dateTimePartValue
 import org.partiql.lang.eval.errNoContext
-import org.partiql.lang.eval.exprInt
 import org.partiql.lang.eval.timestampValue
 import org.partiql.lang.syntax.DateTimePart
 import org.partiql.lang.types.FunctionSignature
@@ -46,7 +46,7 @@ import java.time.ZoneOffset
  * - date_diff(day, `2010-01-01T`, `2010-01-02T`) results in 1
  * - date_diff(day, `2010-01-01T23:00Z`, `2010-01-02T01:00Z`) results in 0 as they are only 2h apart
  */
-internal class DateDiffExprFunction : ExprFunction {
+internal class DateDiffExprFunction(val valueFactory: ExprValueFactory) : ExprFunction {
     override val signature = FunctionSignature(
         name = "date_diff",
         requiredParameters = listOf(StaticType.SYMBOL, StaticType.TIMESTAMP, StaticType.TIMESTAMP),
@@ -109,6 +109,6 @@ internal class DateDiffExprFunction : ExprFunction {
             )
         }
 
-        return exprInt(difference.toLong())
+        return valueFactory.newInt(difference.toLong())
     }
 }

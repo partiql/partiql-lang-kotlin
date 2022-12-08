@@ -19,12 +19,11 @@ import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.dateTimePartValue
 import org.partiql.lang.eval.dateValue
 import org.partiql.lang.eval.errNoContext
-import org.partiql.lang.eval.exprDecimal
-import org.partiql.lang.eval.exprNull
 import org.partiql.lang.eval.isUnknown
 import org.partiql.lang.eval.time.Time
 import org.partiql.lang.eval.timeValue
@@ -49,7 +48,7 @@ private const val SECONDS_PER_MINUTE = 60
  *
  * `EXTRACT(<date part> FROM <datetime_type>)`
  */
-internal class ExtractExprFunction : ExprFunction {
+internal class ExtractExprFunction(val valueFactory: ExprValueFactory) : ExprFunction {
     override val signature = FunctionSignature(
         name = "extract",
         requiredParameters = listOf(
@@ -72,7 +71,7 @@ internal class ExtractExprFunction : ExprFunction {
 
     override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
         return when {
-            required[1].isUnknown() -> exprNull()
+            required[1].isUnknown() -> valueFactory.nullValue
             else -> eval(required)
         }
     }
@@ -141,6 +140,6 @@ internal class ExtractExprFunction : ExprFunction {
             )
         }
 
-        return exprDecimal(extractedValue)
+        return valueFactory.newDecimal(extractedValue)
     }
 }

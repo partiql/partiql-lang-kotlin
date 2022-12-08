@@ -1,5 +1,6 @@
 package org.partiql.lang.eval.io
 
+import com.amazon.ion.system.IonSystemBuilder
 import org.junit.Test
 import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.eval.CompileOptions
@@ -25,7 +26,8 @@ class CustomExceptionHandlerTest {
     fun verifyCustomExceptionHandler() {
         var customHandlerWasInvoked = false
 
-        val compilerPipeline = CompilerPipeline.build {
+        val ion = IonSystemBuilder.standard().build()
+        val compilerPipeline = CompilerPipeline.build(ion) {
             addFunction(AlwaysThrowsFunc())
             compileOptions(
                 CompileOptions.build {
@@ -54,7 +56,8 @@ class CustomExceptionHandlerTest {
     fun verifyCustomExceptionHandlerForJavaBuilder() {
         var customHandlerWasInvoked = false
 
-        val compilerPipeline = CompilerPipeline.builder()
+        val ion = IonSystemBuilder.standard().build()
+        val compilerPipeline = CompilerPipeline.builder(ion)
             .addFunction(AlwaysThrowsFunc())
             .compileOptions(
                 CompileOptions.builder()

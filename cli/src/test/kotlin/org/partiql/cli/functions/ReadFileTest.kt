@@ -25,6 +25,7 @@ import org.junit.jupiter.api.assertThrows
 import org.partiql.lang.eval.BAG_ANNOTATION
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.MISSING_ANNOTATION
 import org.partiql.lang.eval.toExprValue
 import org.partiql.lang.eval.toIonValue
@@ -33,7 +34,8 @@ import java.io.File
 
 class ReadFileTest {
     private val ion = IonSystemBuilder.standard().build()
-    private val function = ReadFile(ion)
+    private val valueFactory = ExprValueFactory.standard(ion)
+    private val function = ReadFile(valueFactory)
     private val session = EvaluationSession.standard()
 
     private fun String.exprValue() = ion.singleValue(this).toExprValue()

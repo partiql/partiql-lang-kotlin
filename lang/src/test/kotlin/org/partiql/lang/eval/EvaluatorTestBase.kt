@@ -150,7 +150,7 @@ abstract class EvaluatorTestBase : TestBase() {
         session: EvaluationSession = EvaluationSession.standard(),
         compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit = { }
     ): ExprValue {
-        val pipeline = CompilerPipeline.builder().apply {
+        val pipeline = CompilerPipeline.builder(ION).apply {
             customDataTypes(CUSTOM_TEST_TYPES)
             compileOptions(compileOptions)
             compilerPipelineBuilderBlock()

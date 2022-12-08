@@ -1,6 +1,7 @@
 package org.partiql.lang.eval.evaluatortestframework
 
 import org.partiql.lang.CompilerPipeline
+import org.partiql.lang.ION
 import org.partiql.lang.eval.CompileOptions
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
@@ -42,7 +43,7 @@ internal fun EvaluatorTestDefinition.createCompilerPipeline(forcePermissiveMode:
         }
     }
 
-    val concretePipeline = CompilerPipeline.build {
+    val concretePipeline = CompilerPipeline.build(ION) {
         compileOptions(compileOptions)
         this@createCompilerPipeline.compilerPipelineBuilderBlock(this)
     }

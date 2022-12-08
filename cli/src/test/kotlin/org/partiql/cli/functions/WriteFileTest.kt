@@ -23,6 +23,7 @@ import org.partiql.cli.assertAsIon
 import org.partiql.cli.makeCliAndGetResult
 import org.partiql.lang.eval.BAG_ANNOTATION
 import org.partiql.lang.eval.EvaluationSession
+import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.toExprValue
 import org.partiql.lang.eval.toIonValue
 import org.partiql.pipeline.AbstractPipeline
@@ -35,11 +36,14 @@ import java.util.UUID
 class WriteFileTest {
 
     private val ion = IonSystemBuilder.standard().build()
-    private val function = WriteFile(ion)
+    private val valueFactory = ExprValueFactory.standard(ion)
+    private val function = WriteFile(valueFactory)
     private val session = EvaluationSession.standard()
     private val pipeline = AbstractPipeline.create(
         AbstractPipeline.PipelineOptions(
-            functions = listOf(WriteFile(ion))
+            functions = listOf { valueFactory ->
+                WriteFile(valueFactory)
+            }
         )
     )
 

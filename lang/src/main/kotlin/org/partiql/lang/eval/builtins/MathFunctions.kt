@@ -3,6 +3,7 @@ package org.partiql.lang.eval.builtins
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.errIntOverflow
 import org.partiql.lang.eval.numberValue
 import org.partiql.lang.types.FunctionSignature
@@ -21,10 +22,10 @@ import java.math.RoundingMode
  */
 object MathFunctions {
 
-    fun create(): List<ExprFunction> = listOf(
-        UnaryNumeric("ceil") { ceil(it) },
-        UnaryNumeric("ceiling") { ceil(it) },
-        UnaryNumeric("floor") { floor(it) },
+    fun create(valueFactory: ExprValueFactory): List<ExprFunction> = listOf(
+        UnaryNumeric("ceil", valueFactory) { ceil(it) },
+        UnaryNumeric("ceiling", valueFactory) { ceil(it) },
+        UnaryNumeric("floor", valueFactory) { floor(it) },
     )
 }
 
@@ -37,6 +38,7 @@ object MathFunctions {
  */
 private class UnaryNumeric(
     private val identifier: String,
+    private val valueFactory: ExprValueFactory,
     private val function: (Number) -> Number,
 ) : ExprFunction {
 
@@ -47,7 +49,7 @@ private class UnaryNumeric(
     )
 
     override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue =
-        function.invoke(required.first().numberValue()).exprValue()
+        function.invoke(required.first().numberValue()).exprValue(valueFactory)
 }
 
 private fun ceil(n: Number): Number = when (n) {

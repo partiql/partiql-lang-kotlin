@@ -26,11 +26,6 @@ import java.math.BigDecimal
 import java.time.LocalDate
 import kotlin.collections.asSequence
 
-const val MISSING_ANNOTATION = "\$missing"
-const val BAG_ANNOTATION = "\$bag"
-const val DATE_ANNOTATION = "\$date"
-const val TIME_ANNOTATION = "\$time"
-
 // TODO: remove this when we remvoe [ExprValue.ionValue]
 private val ion = IonSystemBuilder.standard().build()
 

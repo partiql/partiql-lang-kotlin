@@ -16,6 +16,7 @@ package org.partiql.lang.eval
 import com.amazon.ion.IonStruct
 import com.amazon.ion.IonSystem
 import com.amazon.ion.IonValue
+import com.amazon.ion.system.IonSystemBuilder
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.util.errAmbiguousBinding
@@ -135,7 +136,14 @@ interface Bindings<T> {
          * Returns an instance of [Bindings<T>] that is backed by an [IonStruct].
          */
         @JvmStatic
-        fun ofIonStruct(struct: IonStruct): Bindings<ExprValue> = IonStructBindings(struct)
+        fun ofIonStruct(struct: IonStruct): Bindings<ExprValue> = IonStructBindings(ExprValueFactory.standard(IonSystemBuilder.standard().build()), struct)
+
+        @Deprecated("Please use `ofIonStruct(struct: IonStruct): Bindings<ExprValue>`")
+        /**
+         * Returns an instance of [Bindings<T>] that is backed by an [IonStruct].
+         */
+        @JvmStatic
+        fun ofIonStruct(struct: IonStruct, valueFactory: ExprValueFactory): Bindings<ExprValue> = IonStructBindings(valueFactory, struct)
     }
 
     /** An implementation of the builder pattern for instances of [Bindings<T>]. */

@@ -31,6 +31,7 @@ import com.amazon.ion.IonType
 import com.amazon.ion.IonValue
 import com.amazon.ion.Timestamp
 import com.amazon.ion.facet.Faceted
+import com.amazon.ion.system.IonSystemBuilder
 import org.partiql.lang.eval.time.NANOS_PER_SECOND
 import org.partiql.lang.eval.time.Time
 import org.partiql.lang.util.bytesValue
@@ -181,7 +182,7 @@ private class IonStructExprValue(
     }
 ) {
     override val bindings: Bindings<ExprValue> =
-        IonStructBindings(ionStruct)
+        IonStructBindings(ExprValueFactory.standard(IonSystemBuilder.standard().build()), ionStruct)
 
     override val ionValue: IonValue
         get() = ionStruct

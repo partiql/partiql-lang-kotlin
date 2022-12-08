@@ -5,6 +5,7 @@ import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.CompilerPipeline
+import org.partiql.lang.ION
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.types.StaticType.Companion.BLOB
@@ -74,7 +75,7 @@ class StaticTypeTests {
     )
 
     fun eval(sql: String): ExprValue =
-        CompilerPipeline.standard().compile(sql).eval(EvaluationSession.standard())
+        CompilerPipeline.standard(ION).compile(sql).eval(EvaluationSession.standard())
 
     @ParameterizedTest
     @ArgumentsSource(ScalarIsInstanceArguments::class)

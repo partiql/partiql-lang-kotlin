@@ -4,7 +4,6 @@ import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.address
-import org.partiql.lang.eval.exprMissing
 import org.partiql.lang.eval.name
 import org.partiql.lang.eval.physical.EvaluatorState
 import org.partiql.lang.eval.physical.SetVariableFunc
@@ -74,8 +73,8 @@ internal class ScanOperator(
                 val item = rows.next()
                 // .unnamedValue() removes any ordinal that might exist on item
                 setAsVar(state, item.unnamedValue())
-                setAtVar?.let { it(state, item.name ?: exprMissing()) }
-                setByVar?.let { it(state, item.address ?: exprMissing()) }
+                setAtVar?.let { it(state, item.name ?: state.valueFactory.missingValue) }
+                setByVar?.let { it(state, item.address ?: state.valueFactory.missingValue) }
                 yield()
             }
         }

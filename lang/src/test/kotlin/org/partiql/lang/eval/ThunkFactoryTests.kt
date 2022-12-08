@@ -3,6 +3,7 @@ package org.partiql.lang.eval
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
+import org.partiql.lang.ION
 import org.partiql.lang.ast.StaticTypeMeta
 import org.partiql.lang.domains.metaContainerOf
 import org.partiql.lang.errors.ErrorCode
@@ -22,6 +23,8 @@ class ThunkFactoryTests {
         private val compileOptions = ThunkOptions.build {
             evaluationTimeTypeChecks(ThunkReturnTypeAssertions.ENABLED)
         }
+
+        private val valueFactory = ExprValueFactory.standard(ION)
 
         private val STRING_SHORT = exprString("Hello, I'm a string")
         private val STRING_LONG = exprString("Hello, I'm a loooooooooooooooooooooooooooooooooooong string!")
@@ -46,8 +49,8 @@ class ThunkFactoryTests {
             thunkReturnValue: ExprValue,
             expectError: Boolean
         ) = listOf(
-            TestCase(expectedType, thunkReturnValue, expectError, LegacyThunkFactory(compileOptions)),
-            TestCase(expectedType, thunkReturnValue, expectError, PermissiveThunkFactory(compileOptions))
+            TestCase(expectedType, thunkReturnValue, expectError, LegacyThunkFactory(compileOptions, valueFactory)),
+            TestCase(expectedType, thunkReturnValue, expectError, PermissiveThunkFactory(compileOptions, valueFactory))
         )
 
         @JvmStatic

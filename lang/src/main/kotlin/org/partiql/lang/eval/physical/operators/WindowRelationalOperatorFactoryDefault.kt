@@ -4,7 +4,6 @@ import org.partiql.annotations.PartiQLExperimental
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.NaturalExprValueComparators
 import org.partiql.lang.eval.exprEquals
-import org.partiql.lang.eval.exprSexp
 import org.partiql.lang.eval.physical.EvaluatorState
 import org.partiql.lang.eval.relation.RelationIterator
 import org.partiql.lang.eval.relation.RelationType
@@ -68,7 +67,7 @@ internal class WindowOperatorDefault(
             while (iter.hasNext()) {
                 val currentRow = iter.next()
                 state.load(currentRow)
-                val currentPartition = exprSexp(
+                val currentPartition = state.valueFactory.newSexp(
                     windowPartitionList.map {
                         it.invoke(state)
                     }

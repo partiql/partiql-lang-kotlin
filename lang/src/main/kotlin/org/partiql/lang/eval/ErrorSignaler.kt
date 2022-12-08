@@ -51,10 +51,10 @@ internal class ErrorDetails(
     val errorContext: PropertyValueMap? = null
 )
 
-internal fun TypingMode.createErrorSignaler() =
+internal fun TypingMode.createErrorSignaler(valueFactory: ExprValueFactory) =
     when (this) {
         TypingMode.LEGACY -> LegacyErrorSignaler()
-        TypingMode.PERMISSIVE -> PermissiveErrorSignaler(exprMissing())
+        TypingMode.PERMISSIVE -> PermissiveErrorSignaler(valueFactory.missingValue)
     }
 
 /** Defines legacy error signaling. */

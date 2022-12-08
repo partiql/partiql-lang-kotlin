@@ -19,11 +19,9 @@ import com.amazon.ion.IonSystem
 import com.amazon.ion.IonValue
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.errIntOverflow
 import org.partiql.lang.eval.errNoContext
-import org.partiql.lang.eval.exprDecimal
-import org.partiql.lang.eval.exprFloat
-import org.partiql.lang.eval.exprInt
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.MathContext
@@ -116,11 +114,11 @@ fun Number.ionValue(ion: IonSystem): IonValue = when (this) {
     else -> throw IllegalArgumentException("Cannot convert to IonValue: $this")
 }
 
-internal fun Number.exprValue(): ExprValue = when (this) {
-    is Int -> exprInt(this)
-    is Long -> exprInt(this)
-    is Double -> exprFloat(this)
-    is BigDecimal -> exprDecimal(this)
+internal fun Number.exprValue(valueFactory: ExprValueFactory): ExprValue = when (this) {
+    is Int -> valueFactory.newInt(this)
+    is Long -> valueFactory.newInt(this)
+    is Double -> valueFactory.newFloat(this)
+    is BigDecimal -> valueFactory.newDecimal(this)
     else -> errNoContext(
         "Cannot convert number to expression value: $this",
         errorCode = ErrorCode.EVALUATOR_INVALID_CONVERSION,

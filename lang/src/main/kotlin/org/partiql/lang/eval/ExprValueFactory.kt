@@ -28,6 +28,11 @@ import java.math.BigInteger
 import java.time.LocalDate
 import kotlin.collections.asSequence
 
+const val MISSING_ANNOTATION = "\$missing"
+const val BAG_ANNOTATION = "\$bag"
+const val DATE_ANNOTATION = "\$date"
+const val TIME_ANNOTATION = "\$time"
+
 @Deprecated("Please use [ExprValue] construction methods defined in [org.partiql.lang.eval.ExprValueUtilKt] instead")
 /**
  * Provides a standard way of creating instances of ExprValue.

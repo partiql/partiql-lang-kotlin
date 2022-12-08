@@ -14,11 +14,14 @@
 
 package org.partiql.lang
 
+import com.amazon.ion.IonSystem
+import com.amazon.ion.system.IonSystemBuilder
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.CompileOptions
 import org.partiql.lang.eval.EvaluatingCompiler
 import org.partiql.lang.eval.ExprFunction
+import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.Expression
 import org.partiql.lang.eval.ThunkReturnTypeAssertions
 import org.partiql.lang.eval.builtins.createBuiltinFunctions
@@ -36,6 +39,10 @@ import org.partiql.lang.util.interruptibleFold
  * Contains all information needed for processing steps.
  */
 data class StepContext(
+    @Deprecated("[ExprValueFactory] is deprecated")
+    /** The instance of [ExprValueFactory] that is used by the pipeline. */
+    val valueFactory: ExprValueFactory?,
+
     /** The compilation options. */
     val compileOptions: CompileOptions,
 
@@ -68,6 +75,9 @@ typealias ProcessingStep = (PartiqlAst.Statement, StepContext) -> PartiqlAst.Sta
  * per thread.
  */
 interface CompilerPipeline {
+    @Deprecated("[ExprValueFactory] is deprecated")
+    val valueFactory: ExprValueFactory
+
     /** The compilation options. */
     val compileOptions: CompileOptions
 
@@ -103,13 +113,41 @@ interface CompilerPipeline {
     fun compile(query: PartiqlAst.Statement): Expression
 
     companion object {
+        @Deprecated("Please use `CompilerPipeline.build(block: Builder.() -> Unit)`")
+        /** Kotlin style builder for [CompilerPipeline].  If calling from Java instead use [builder]. */
+        fun build(ion: IonSystem, block: Builder.() -> Unit) = build(ExprValueFactory.standard(ion), block)
+
+        @Deprecated("Please use `CompilerPipeline.build(block: Builder.() -> Unit)`")
+        /** Kotlin style builder for [CompilerPipeline].  If calling from Java instead use [builder]. */
+        fun build(valueFactory: ExprValueFactory, block: Builder.() -> Unit) = Builder(valueFactory).apply(block).build()
+
         /** Kotlin style builder for [CompilerPipeline].  If calling from Java instead use [builder]. */
         @JvmStatic
         fun build(block: Builder.() -> Unit) = Builder().apply(block).build()
 
+        @Deprecated("Please use `CompilerPipeline.builder()`")
+        /** Fluent style builder.  If calling from Kotlin instead use the [build] method. */
+        @JvmStatic
+        fun builder(ion: IonSystem): Builder = builder(ExprValueFactory.standard(ion))
+
+        @Deprecated("Please use `CompilerPipeline.builder()`")
+        /** Fluent style builder.  If calling from Kotlin instead use the [build] method. */
+        @JvmStatic
+        fun builder(valueFactory: ExprValueFactory): Builder = Builder(valueFactory)
+
         /** Fluent style builder.  If calling from Kotlin instead use the [build] method. */
         @JvmStatic
         fun builder(): Builder = Builder()
+
+        @Deprecated("Please use `CompilerPipeline.standard(): CompilerPipeline`")
+        /** Returns an implementation of [CompilerPipeline] with all properties set to their defaults. */
+        @JvmStatic
+        fun standard(ion: IonSystem): CompilerPipeline = standard(ExprValueFactory.standard(ion))
+
+        @Deprecated("Please use `CompilerPipeline.standard(): CompilerPipeline`")
+        /** Returns an implementation of [CompilerPipeline] with all properties set to their defaults. */
+        @JvmStatic
+        fun standard(valueFactory: ExprValueFactory): CompilerPipeline = builder(valueFactory).build()
 
         /** Returns an implementation of [CompilerPipeline] with all properties set to their defaults. */
         @JvmStatic
@@ -121,7 +159,7 @@ interface CompilerPipeline {
      * [CompilerPipeline] is NOT thread safe and should NOT be used to compile queries concurrently. If used in a
      * multithreaded application, use one instance of [CompilerPipeline] per thread.
      */
-    class Builder {
+    class Builder(val valueFactory: ExprValueFactory = ExprValueFactory.standard(IonSystemBuilder.standard().build())) {
         private var parser: Parser? = null
         private var compileOptions: CompileOptions? = null
         private val customFunctions: MutableMap<String, ExprFunction> = HashMap()
@@ -193,7 +231,7 @@ interface CompilerPipeline {
                 }
             }
 
-            val builtinFunctions = createBuiltinFunctions().associateBy {
+            val builtinFunctions = createBuiltinFunctions(valueFactory).associateBy {
                 it.signature.name
             }
 
@@ -202,7 +240,8 @@ interface CompilerPipeline {
             val allFunctions = builtinFunctions + customFunctions
 
             return CompilerPipelineImpl(
-                parser = parser ?: PartiQLParserBuilder().customTypes(customDataTypes).build(),
+                valueFactory = valueFactory,
+                parser = parser ?: PartiQLParserBuilder().ionSystem(valueFactory.ion).customTypes(customDataTypes).build(),
                 compileOptions = compileOptionsToUse,
                 functions = allFunctions,
                 customDataTypes = customDataTypes,
@@ -215,6 +254,7 @@ interface CompilerPipeline {
 }
 
 internal class CompilerPipelineImpl(
+    override val valueFactory: ExprValueFactory,
     private val parser: Parser,
     override val compileOptions: CompileOptions,
     override val functions: Map<String, ExprFunction>,
@@ -225,6 +265,7 @@ internal class CompilerPipelineImpl(
 ) : CompilerPipeline {
 
     private val compiler = EvaluatingCompiler(
+        valueFactory,
         functions,
         customDataTypes.map { customType ->
             (customType.aliases + customType.name).map { alias ->
@@ -238,7 +279,7 @@ internal class CompilerPipelineImpl(
     override fun compile(query: String): Expression = compile(parser.parseAstStatement(query))
 
     override fun compile(query: PartiqlAst.Statement): Expression {
-        val context = StepContext(compileOptions, functions, procedures)
+        val context = StepContext(valueFactory, compileOptions, functions, procedures)
 
         val preProcessedQuery = executePreProcessingSteps(query, context)
 
