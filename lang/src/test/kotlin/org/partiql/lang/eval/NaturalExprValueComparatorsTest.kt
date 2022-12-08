@@ -364,13 +364,13 @@ class NaturalExprValueComparatorsTest : EvaluatorTestBase() {
         }
         val orderedIter = ordered.iterator()
         case.expected.map { it.toMutableList() }.forEach { equivs ->
-            equivs.forEach {
+            while (equivs.isNotEmpty()) {
                 assertTrue("Not enough elements", orderedIter.hasNext())
                 val actualNext = orderedIter.next()
                 // use reference equality
                 assertTrue(
                     "Could not find $actualNext in $equivs",
-                    it.exprEquals(actualNext)
+                    equivs.removeIf { it === actualNext }
                 )
             }
         }

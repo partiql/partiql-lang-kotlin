@@ -15,14 +15,29 @@
 package org.partiql.lang.eval
 
 import com.amazon.ion.IonBool
+import com.amazon.ion.IonContainer
 import com.amazon.ion.IonReader
+import com.amazon.ion.IonSequence
+import com.amazon.ion.IonStruct
 import com.amazon.ion.IonSystem
 import com.amazon.ion.IonType
 import com.amazon.ion.IonValue
 import com.amazon.ion.Timestamp
 import org.partiql.lang.errors.ErrorCode
+import org.partiql.lang.eval.time.MINUTES_PER_HOUR
+import org.partiql.lang.eval.time.NANOS_PER_SECOND
 import org.partiql.lang.eval.time.Time
+import org.partiql.lang.util.booleanValueOrNull
+import org.partiql.lang.util.bytesValueOrNull
+import org.partiql.lang.util.isBag
+import org.partiql.lang.util.isDate
+import org.partiql.lang.util.isMissing
+import org.partiql.lang.util.isTime
+import org.partiql.lang.util.numberValueOrNull
+import org.partiql.lang.util.ordinal
 import org.partiql.lang.util.propertyValueMapOf
+import org.partiql.lang.util.stringValueOrNull
+import org.partiql.lang.util.timestampValueOrNull
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.time.LocalDate
@@ -267,7 +282,7 @@ private class ExprValueFactoryImpl(override val ion: IonSystem) : ExprValueFacto
         BlobExprValue(ion, value)
 
     override fun newFromIonValue(value: IonValue): ExprValue =
-        value.toExprValue()
+        IonExprValue(this, value)
 
     override fun newFromIonReader(reader: IonReader): ExprValue =
         newFromIonValue(ion.newValue(reader))
@@ -421,6 +436,103 @@ private class BlobExprValue(private val ion: IonSystem, val value: ByteArray) : 
     override val type: ExprValueType = ExprValueType.BLOB
     override fun bytesValue() = value
     override val ionValue by lazy { toIonValue(ion) }
+}
+
+/**
+ * Core [ExprValue] over an [IonValue].
+ */
+internal class IonExprValue(private val valueFactory: ExprValueFactory, override val ionValue: IonValue) : BaseExprValue() {
+
+    init {
+        if (valueFactory.ion !== ionValue.system) {
+            throw IllegalArgumentException("valueFactory must have the same instance of IonSystem as ionValue")
+        }
+    }
+
+    private val namedFacet: Named? = when {
+        ionValue.fieldName != null -> valueFactory.newString(ionValue.fieldName).asNamed()
+        ionValue.type != IonType.DATAGRAM &&
+            ionValue.container != null &&
+            ionValue.ordinal >= 0 -> valueFactory.newInt(ionValue.ordinal).asNamed()
+        else -> null
+    }
+
+    override val type = when {
+        ionValue.isMissing -> ExprValueType.MISSING
+        ionValue.isNullValue -> ExprValueType.NULL
+        ionValue.isBag -> ExprValueType.BAG
+        ionValue.isDate -> ExprValueType.DATE
+        ionValue.isTime -> ExprValueType.TIME
+        else -> ExprValueType.fromIonType(ionValue.type)
+    }
+
+    override val scalar: Scalar by lazy {
+        object : Scalar {
+            override fun booleanValue(): Boolean? = ionValue.booleanValueOrNull()
+            override fun numberValue(): Number? = ionValue.numberValueOrNull()
+            override fun timestampValue(): Timestamp? = ionValue.timestampValueOrNull()
+            override fun stringValue(): String? = ionValue.stringValueOrNull()
+            override fun bytesValue(): ByteArray? = ionValue.bytesValueOrNull()
+            override fun dateValue(): LocalDate? {
+                val timestamp = timestampValue() ?: return null
+                return LocalDate.of(timestamp.year, timestamp.month, timestamp.day)
+            }
+            override fun timeValue(): Time? {
+                val hour = bindings[BindingName("hour", BindingCase.SENSITIVE)]?.intValue() ?: return null
+                val minute = bindings[BindingName("minute", BindingCase.SENSITIVE)]?.intValue() ?: return null
+                val second = bindings[BindingName("second", BindingCase.SENSITIVE)]?.intValue() ?: return null
+                val nano = bindings[BindingName("second", BindingCase.SENSITIVE)]?.bigDecimalValue()?.remainder(BigDecimal.ONE)?.multiply(NANOS_PER_SECOND.toBigDecimal())?.toInt() ?: 0
+                val precision = bindings[BindingName("second", BindingCase.SENSITIVE)]?.bigDecimalValue()?.scale() ?: 0
+                val tzHours = bindings[BindingName("timezone_hour", BindingCase.SENSITIVE)]?.intValue() ?: 0
+                val tzMinutes = bindings[BindingName("timezone_minute", BindingCase.SENSITIVE)]?.intValue() ?: 0
+                return Time.of(
+                    hour,
+                    minute,
+                    second,
+                    nano,
+                    precision,
+                    tzHours.times(MINUTES_PER_HOUR) + tzMinutes
+                )
+            }
+        }
+    }
+
+    override val bindings by lazy {
+        if (ionValue is IonStruct) {
+            IonStructBindings(valueFactory, ionValue)
+        } else {
+            Bindings.empty<ExprValue>()
+        }
+    }
+
+    override val ordinalBindings: OrdinalBindings by lazy {
+        object : OrdinalBindings {
+            override fun get(index: Int): ExprValue? =
+                when (ionValue) {
+                    is IonSequence -> {
+                        when {
+                            index < 0 -> null
+                            index >= ionValue.size -> null
+                            else -> valueFactory.newFromIonValue(ionValue[index])
+                                .namedValue(valueFactory.newInt(index))
+                        }
+                    }
+                    else -> null
+                }
+        }
+    }
+
+    override fun iterator() = when (ionValue) {
+        is IonContainer -> ionValue.asSequence()
+            .map { v -> valueFactory.newFromIonValue(v) }.iterator()
+        else -> emptyList<ExprValue>().iterator()
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    override fun <T> provideFacet(type: Class<T>?) = when (type) {
+        Named::class.java -> namedFacet
+        else -> null
+    } as T?
 }
 
 /**

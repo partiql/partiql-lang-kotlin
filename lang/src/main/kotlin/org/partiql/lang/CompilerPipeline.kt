@@ -41,7 +41,7 @@ import org.partiql.lang.util.interruptibleFold
 data class StepContext(
     @Deprecated("[ExprValueFactory] is deprecated")
     /** The instance of [ExprValueFactory] that is used by the pipeline. */
-    val valueFactory: ExprValueFactory?,
+    val valueFactory: ExprValueFactory,
 
     /** The compilation options. */
     val compileOptions: CompileOptions,
