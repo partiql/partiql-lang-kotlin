@@ -1,7 +1,7 @@
 package org.partiql.lang.eval.evaluatortestframework
 
 import com.amazon.ion.system.IonSystemBuilder
-import org.junit.Assert
+import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.CompilerPipeline
@@ -21,7 +21,7 @@ class ExprValueStrictEqualsTest {
         val v1 = pipeline.compile(eqTest.q1).eval(session)
         val v2 = pipeline.compile(eqTest.q2).eval(session)
 
-        Assert.assertEquals(eqTest.equals, v1.strictEquals(v2))
+        Assertions.assertEquals(eqTest.equals, v1.strictEquals(v2))
     }
 
     class StrictEqualCases : ArgumentsProviderBase() {
