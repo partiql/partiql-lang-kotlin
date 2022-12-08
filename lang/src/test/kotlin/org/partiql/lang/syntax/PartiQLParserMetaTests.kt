@@ -12,7 +12,7 @@ internal class PartiQLParserMetaTests : PartiQLParserTestBase() {
         val ast = parse(query) as PartiqlAst.Statement.Query
         val list = ast.expr as PartiqlAst.Expr.List
 
-        assert(list.metas.containsKey(IsListParenthesizedMeta.TAG))
+        assert(list.metas.containsKey(IsListParenthesizedMeta.tag))
     }
 
     @Test
@@ -21,7 +21,7 @@ internal class PartiQLParserMetaTests : PartiQLParserTestBase() {
         val ast = parse(query) as PartiqlAst.Statement.Query
         val list = ast.expr as PartiqlAst.Expr.List
 
-        assert(list.metas.containsKey(IsListParenthesizedMeta.TAG).not())
+        assert(list.metas.containsKey(IsListParenthesizedMeta.tag).not())
     }
 
     @Test
@@ -31,7 +31,7 @@ internal class PartiQLParserMetaTests : PartiQLParserTestBase() {
         val inCollection = ast.expr as PartiqlAst.Expr.InCollection
         val list = inCollection.operands[1] as PartiqlAst.Expr.List
 
-        assert(list.metas.containsKey(IsListParenthesizedMeta.TAG))
+        assert(list.metas.containsKey(IsListParenthesizedMeta.tag))
     }
 
     @Test
@@ -41,7 +41,7 @@ internal class PartiQLParserMetaTests : PartiQLParserTestBase() {
         val inCollection = ast.expr as PartiqlAst.Expr.InCollection
         val list = inCollection.operands[1] as PartiqlAst.Expr.List
 
-        assert(list.metas.containsKey(IsListParenthesizedMeta.TAG).not())
+        assert(list.metas.containsKey(IsListParenthesizedMeta.tag).not())
     }
 
     @Test
@@ -51,6 +51,6 @@ internal class PartiQLParserMetaTests : PartiQLParserTestBase() {
         val inCollection = ast.expr as PartiqlAst.Expr.InCollection
         val list = inCollection.operands[1] as PartiqlAst.Expr.List
 
-        assert(list.metas.containsKey(IsListParenthesizedMeta.TAG))
+        assert(list.metas.containsKey(IsListParenthesizedMeta.tag))
     }
 }

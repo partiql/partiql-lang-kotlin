@@ -9,12 +9,6 @@ package org.partiql.lang.ast
  * The existence of this meta on a [org.partiql.lang.domains.PartiqlAst.Expr.List] node indicates that the list uses
  * the second syntax above (using parenthesis).
  */
-public class IsListParenthesizedMeta private constructor() : Meta {
-
-    override val tag = TAG
-
-    companion object {
-        const val TAG = "\$is_list_parenthesized"
-        val instance = IsListParenthesizedMeta()
-    }
+public object IsListParenthesizedMeta : Meta {
+    override val tag = "\$is_list_parenthesized"
 }
