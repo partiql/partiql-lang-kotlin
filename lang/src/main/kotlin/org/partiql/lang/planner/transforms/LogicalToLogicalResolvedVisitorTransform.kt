@@ -14,6 +14,7 @@ import org.partiql.lang.eval.physical.sourceLocationMetaOrUnknown
 import org.partiql.lang.planner.GlobalResolutionResult
 import org.partiql.lang.planner.GlobalVariableResolver
 import org.partiql.lang.planner.PlanningProblemDetails
+import org.partiql.pig.runtime.Experimental
 import org.partiql.pig.runtime.asPrimitive
 
 /**
@@ -129,6 +130,7 @@ private fun GlobalResolutionResult.toResolvedVariable() =
  */
 private data class LocalScope(val varDecls: List<PartiqlLogical.VarDecl>)
 
+@OptIn(Experimental::class)
 internal data class LogicalToLogicalResolvedVisitorTransform(
     /** If set to `true`, do not log errors about undefined variables. Rewrite such variables to a `dynamic_id` node. */
     val allowUndefinedVariables: Boolean,

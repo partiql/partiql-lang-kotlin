@@ -38,6 +38,7 @@ internal typealias PhysicalPlanThunk = Thunk<EvaluatorState>
 /** A specialization of [ThunkValue] that we use for evaluation of physical plans. */
 internal typealias PhysicalPlanThunkValue<T> = ThunkValue<EvaluatorState, T>
 
+@OptIn(org.partiql.pig.runtime.Experimental::class)
 internal class PhysicalBexprToThunkConverter(
     private val exprConverter: PhysicalPlanCompiler,
     private val valueFactory: ExprValueFactory,

@@ -671,7 +671,7 @@ may then be further optimized by selecting better implementations of each operat
             )
         )
 
-        (include (product window_expression decl::var_decl func_name::symbol args::(* expr 1)))
+        (include experimental::(product window_expression decl::var_decl func_name::symbol args::(* expr 1)))
 
         // Now we include new stuff, including PartiQL's relational algebra.
         (include
