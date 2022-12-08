@@ -20,8 +20,8 @@ import org.partiql.lang.eval.timestampValue
  * bag & struct.
  *
  * Note that, the equality we define here is different from [ExprValue.exprEquals]. That one is used for PartiQL equals
- * operator & ORDER BY clause. The equality there ignores data types in some cases, e.g., the partiql expressions
- * `1.0 = 1` returns true (`1.0` is a decimal, while `1` is an integer).
+ * operator. The equality there equates values of distinct data types in some cases, e.g., the partiql expression
+ * `1.0 = 1` returns true, even though `1.0` is a decimal, while `1` is an integer.
  *
  * This implementation is currently only intended for use in tests, as it has not been validated for efficiency.
  */
