@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Adds simple auto-completion to the CLI.
+- Adds the IsListParenthesizedMeta meta to aid in differentiating between parenthesized and non-parenthesized lists
 - Adds support for HAVING clause in planner
 - Adds support for collection aggregation functions in the EvaluatingCompiler and experimental planner
 - Adds support for the syntactic sugar of using aggregations functions in place of their collection aggregation function
