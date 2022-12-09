@@ -8,7 +8,6 @@ import org.partiql.lang.errors.ErrorBehaviorInPermissiveMode
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.TypingMode
-import org.partiql.lang.eval.cloneAndRemoveBagAndMissingAnnotations
 import org.partiql.lang.eval.exprEquals
 import org.partiql.lang.eval.toIonValue
 
@@ -66,7 +65,7 @@ internal class PipelineEvaluatorTestAdapter(
             }
 
         when (tc.expectedResultFormat) {
-            ExpectedResultFormat.ION, ExpectedResultFormat.ION_WITHOUT_BAG_AND_MISSING_ANNOTATIONS -> {
+            ExpectedResultFormat.ION -> {
                 val expectedIonResult = assertDoesNotThrow(
                     EvaluatorTestFailureReason.FAILED_TO_PARSE_ION_EXPECTED_RESULT,
                     { tc.testDetails(note = note) }
@@ -74,12 +73,7 @@ internal class PipelineEvaluatorTestAdapter(
                     ION.singleValue(expectedResult)
                 }
 
-                val actualIonResult = actualExprValueResult.toIonValue(ION).let {
-                    if (tc.expectedResultFormat == ExpectedResultFormat.ION_WITHOUT_BAG_AND_MISSING_ANNOTATIONS)
-                        it.cloneAndRemoveBagAndMissingAnnotations()
-                    else
-                        it
-                }
+                val actualIonResult = actualExprValueResult.toIonValue(ION)
                 assertEquals(
                     expectedIonResult,
                     actualIonResult,

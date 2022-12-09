@@ -5,6 +5,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
+import org.partiql.lang.eval.BAG_ANNOTATION
 import org.partiql.lang.eval.EvaluatorTestBase
 import org.partiql.lang.eval.builtins.ExprFunctionTestCase
 import org.partiql.lang.eval.builtins.checkInvalidArity
@@ -25,15 +26,15 @@ class FilterDistinctEvaluationTest : EvaluatorTestBase() {
         override fun getParameters(): List<Any> = listOf(
 
             // These three tests ensure we can accept lists, bags, s-expressions and structs
-            ExprFunctionTestCase("filter_distinct([0, 0, 1])", "[0, 1]"), // list
-            ExprFunctionTestCase("filter_distinct(<<0, 0, 1>>)", "[0, 1]"), // bag
-            ExprFunctionTestCase("filter_distinct(SEXP(0, 0, 1))", "[0, 1]"), // s-exp
-            ExprFunctionTestCase("filter_distinct({'a': 0, 'b': 0, 'c': 1})", "[0, 1]"), // struct
+            ExprFunctionTestCase("filter_distinct([0, 0, 1])", "$BAG_ANNOTATION::[0, 1]"), // list
+            ExprFunctionTestCase("filter_distinct(<<0, 0, 1>>)", "$BAG_ANNOTATION::[0, 1]"), // bag
+            ExprFunctionTestCase("filter_distinct(SEXP(0, 0, 1))", "$BAG_ANNOTATION::[0, 1]"), // s-exp
+            ExprFunctionTestCase("filter_distinct({'a': 0, 'b': 0, 'c': 1})", "$BAG_ANNOTATION::[0, 1]"), // struct
 
             // Some "smoke tests" to ensure the basic plumbing is working right.
-            ExprFunctionTestCase("filter_distinct(['foo', 'foo', 1, 1, `symbol`, `symbol`])", "[\"foo\", 1, symbol]"),
-            ExprFunctionTestCase("filter_distinct([{ 'a': 1 }, { 'a': 1 }, { 'a': 1 }])", "[{ 'a': 1 }]"),
-            ExprFunctionTestCase("filter_distinct([[1, 1], [1, 1], [2, 2]])", "[[1,1], [2, 2]]"),
+            ExprFunctionTestCase("filter_distinct(['foo', 'foo', 1, 1, `symbol`, `symbol`])", "$BAG_ANNOTATION::[\"foo\", 1, symbol]"),
+            ExprFunctionTestCase("filter_distinct([{ 'a': 1 }, { 'a': 1 }, { 'a': 1 }])", "$BAG_ANNOTATION::[{ 'a': 1 }]"),
+            ExprFunctionTestCase("filter_distinct([[1, 1], [1, 1], [2, 2]])", "$BAG_ANNOTATION::[[1,1], [2, 2]]"),
         )
     }
 

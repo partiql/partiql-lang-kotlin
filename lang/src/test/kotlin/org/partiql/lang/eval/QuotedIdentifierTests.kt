@@ -123,9 +123,9 @@ class QuotedIdentifierTests : EvaluatorTestBase() {
 
     @Test
     fun selectFromTablesQuotedIdsAreCaseSensitive() {
-        runEvaluatorTestCase("SELECT * FROM \"Abc\"", sessionWithCaseVaryingTables, "[{n:1}]")
-        runEvaluatorTestCase("SELECT * FROM \"aBc\"", sessionWithCaseVaryingTables, "[{n:2}]")
-        runEvaluatorTestCase("SELECT * FROM \"abC\"", sessionWithCaseVaryingTables, "[{n:3}]")
+        runEvaluatorTestCase("SELECT * FROM \"Abc\"", sessionWithCaseVaryingTables, "$BAG_ANNOTATION::[{n:1}]")
+        runEvaluatorTestCase("SELECT * FROM \"aBc\"", sessionWithCaseVaryingTables, "$BAG_ANNOTATION::[{n:2}]")
+        runEvaluatorTestCase("SELECT * FROM \"abC\"", sessionWithCaseVaryingTables, "$BAG_ANNOTATION::[{n:3}]")
     }
 
     @Test
@@ -133,7 +133,7 @@ class QuotedIdentifierTests : EvaluatorTestBase() {
         runEvaluatorTestCase(
             "SELECT \"Abc\".n AS a, \"aBc\".n AS b, \"abC\".n AS c FROM a as Abc, b as aBc, c as abC",
             simpleSessionWithTables,
-            "[{a:1, b:2, c:3}]"
+            "$BAG_ANNOTATION::[{a:1, b:2, c:3}]"
         )
 
     @Test
@@ -141,10 +141,10 @@ class QuotedIdentifierTests : EvaluatorTestBase() {
         runEvaluatorTestCase(
             "SELECT \"Abc\".n AS a, \"aBc\".n AS b, \"abC\".n AS c FROM a as \"Abc\", b as \"aBc\", c as \"abC\"",
             simpleSessionWithTables,
-            "[{a:1, b:2, c:3}]"
+            "$BAG_ANNOTATION::[{a:1, b:2, c:3}]"
         )
 
-    val tableWithCaseVaryingFields = "[{ Abc: 1, aBc: 2, abC: 3}]"
+    val tableWithCaseVaryingFields = "$BAG_ANNOTATION::[{ Abc: 1, aBc: 2, abC: 3}]"
 
     @Test
     fun quotedStructFieldsAreCaseSensitive() =
@@ -270,41 +270,41 @@ class QuotedIdentifierTests : EvaluatorTestBase() {
     fun pathWildcard_quotedId() = runEvaluatorTestCase(
         """ "stores"[0]."books"[*]."title" """,
         stores.toSession(),
-        """["A", "B", "C", "D"]"""
+        """$BAG_ANNOTATION::["A", "B", "C", "D"]"""
     )
 
     @Test
     fun pathUnpivotWildcard_quotedId() = runEvaluatorTestCase(
         """ "friends"."kumo"."likes".*."type" """,
         friends.toSession(),
-        """["dog", "human"]"""
+        """$BAG_ANNOTATION::["dog", "human"]"""
     )
 
     @Test
     fun pathDoubleWildCard_quotedId() = runEvaluatorTestCase(
         """ "stores"[*]."books"[*]."title" """,
         stores.toSession(),
-        """["A", "B", "C", "D", "A", "E", "F"]"""
+        """$BAG_ANNOTATION::["A", "B", "C", "D", "A", "E", "F"]"""
     )
 
     @Test
     fun pathDoubleUnpivotWildCard_quotedId() = runEvaluatorTestCase(
         """ "friends".*."likes".*."type" """,
         friends.toSession(),
-        """["dog", "human", "dog", "cat"]"""
+        """$BAG_ANNOTATION::["dog", "human", "dog", "cat"]"""
     )
 
     @Test
     fun pathWildCardOverScalar_quotedId() = runEvaluatorTestCase(
         """ "s"[*] """,
         globalHello.toSession(),
-        """["hello"]"""
+        """$BAG_ANNOTATION::["hello"]"""
     )
 
     @Test
     fun pathUnpivotWildCardOverScalar_quotedId() = runEvaluatorTestCase(
         """ "s".*  """,
         globalHello.toSession(),
-        """["hello"]"""
+        """$BAG_ANNOTATION::["hello"]"""
     )
 }

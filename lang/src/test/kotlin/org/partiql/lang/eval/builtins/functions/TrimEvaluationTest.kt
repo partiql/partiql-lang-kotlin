@@ -5,7 +5,9 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
+import org.partiql.lang.eval.BAG_ANNOTATION
 import org.partiql.lang.eval.EvaluatorTestBase
+import org.partiql.lang.eval.MISSING_ANNOTATION
 import org.partiql.lang.eval.builtins.Argument
 import org.partiql.lang.eval.builtins.ExprFunctionTestCase
 import org.partiql.lang.eval.builtins.checkInvalidArgType
@@ -19,7 +21,7 @@ class TrimEvaluationTest : EvaluatorTestBase() {
     @ParameterizedTest
     @ArgumentsSource(CharLengthPassCases::class)
     fun runPassTests(testCase: ExprFunctionTestCase) =
-        runEvaluatorTestCase(testCase.source, expectedResult = testCase.expectedLegacyModeResult)
+        runEvaluatorTestCase(testCase.source, expectedResult = testCase.expectedLegacyModeResult, expectedPermissiveModeResult = testCase.expectedPermissiveModeResult)
 
     class CharLengthPassCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(
@@ -57,7 +59,7 @@ class TrimEvaluationTest : EvaluatorTestBase() {
                     SELECT trim(both el from '   1ab1  ') AS trimmed 
                     FROM <<' 1'>> AS el 
                 """.trimIndent(),
-                "[{trimmed:\"ab\"}]"
+                "$BAG_ANNOTATION::[{trimmed:\"ab\"}]"
             ),
             ExprFunctionTestCase("trim('12' from '1212b1212')", "\"b\""),
             ExprFunctionTestCase("trim('12' from '1212b')", "\"b\""),
@@ -67,11 +69,11 @@ class TrimEvaluationTest : EvaluatorTestBase() {
             ExprFunctionTestCase("trim(null from '')", "null"),
             ExprFunctionTestCase("trim('' from null)", "null"),
             ExprFunctionTestCase("trim(null)", "null"),
-            ExprFunctionTestCase("trim(both missing from '')", "null"),
-            ExprFunctionTestCase("trim(both '' from missing)", "null"),
-            ExprFunctionTestCase("trim(missing from '')", "null"),
-            ExprFunctionTestCase("trim('' from missing)", "null"),
-            ExprFunctionTestCase("trim(missing)", "null"),
+            ExprFunctionTestCase("trim(both missing from '')", "null", "$MISSING_ANNOTATION::null"),
+            ExprFunctionTestCase("trim(both '' from missing)", "null", "$MISSING_ANNOTATION::null"),
+            ExprFunctionTestCase("trim(missing from '')", "null", "$MISSING_ANNOTATION::null"),
+            ExprFunctionTestCase("trim('' from missing)", "null", "$MISSING_ANNOTATION::null"),
+            ExprFunctionTestCase("trim(missing)", "null", "$MISSING_ANNOTATION::null"),
             // test for upper case trim spec
             ExprFunctionTestCase("trim(BOTH from '   string   ')", "\"string\""),
             ExprFunctionTestCase("trim(LEADING from '   string   ')", "\"string   \""),

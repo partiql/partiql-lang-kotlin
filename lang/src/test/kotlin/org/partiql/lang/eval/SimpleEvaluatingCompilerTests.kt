@@ -28,46 +28,46 @@ class SimpleEvaluatingCompilerTests : EvaluatorTestBase() {
 
     @Test
     fun selectValue() {
-        runEvaluatorTestCase("SELECT VALUE someScalar FROM someScalar", session, "[1]")
+        runEvaluatorTestCase("SELECT VALUE someScalar FROM someScalar", session, "$BAG_ANNOTATION::[1]")
     }
 
     @Test
     fun selectValueWithAsAlias() {
-        runEvaluatorTestCase("SELECT VALUE s FROM someScalar as s", session, "[1]")
+        runEvaluatorTestCase("SELECT VALUE s FROM someScalar as s", session, "$BAG_ANNOTATION::[1]")
     }
 
     @Test
     fun selectStar() {
-        runEvaluatorTestCase("SELECT * FROM `[{a: 100, b: 101}]`", expectedResult = "[{a: 100, b: 101}]")
+        runEvaluatorTestCase("SELECT * FROM `[{a: 100, b: 101}]`", expectedResult = "$BAG_ANNOTATION::[{a: 100, b: 101}]")
     }
 
     @Test
     fun selectStarWhere() {
         runEvaluatorTestCase(
             "SELECT * FROM `[{a: 100, b: 1000}, {a: 101, b: 1001}]` WHERE a > 100",
-            expectedResult = "[{a: 101, b: 1001}]"
+            expectedResult = "$BAG_ANNOTATION::[{a: 101, b: 1001}]"
         )
     }
 
     @Test
     fun selectList() {
-        runEvaluatorTestCase("SELECT a, b FROM `[{a: 100, b: 101}]`", expectedResult = "[{a: 100, b: 101}]")
+        runEvaluatorTestCase("SELECT a, b FROM `[{a: 100, b: 101}]`", expectedResult = "$BAG_ANNOTATION::[{a: 100, b: 101}]")
     }
 
     @Test
     fun selectListWithBinaryExpr() {
-        runEvaluatorTestCase("SELECT a + b FROM `[{a: 100, b: 101}]`", expectedResult = "[{_1: 201}]")
+        runEvaluatorTestCase("SELECT a + b FROM `[{a: 100, b: 101}]`", expectedResult = "$BAG_ANNOTATION::[{_1: 201}]")
     }
 
     @Test
     fun selectListWithBinaryExprAndAlias() {
-        runEvaluatorTestCase("SELECT a + b AS c FROM `[{a: 100, b: 101}]`", expectedResult = "[{c: 201}]")
+        runEvaluatorTestCase("SELECT a + b AS c FROM `[{a: 100, b: 101}]`", expectedResult = "$BAG_ANNOTATION::[{c: 201}]")
     }
 
     @Test
     fun unpivot() = runEvaluatorTestCase(
         "SELECT name, val FROM UNPIVOT `{a:1, b:2, c:3, d:4, e:5, f:6}` AS val AT name",
-        expectedResult = """[
+        expectedResult = """$BAG_ANNOTATION::[
                     {name:"a",val:1},
                     {name:"b",val:2},
                     {name:"c",val:3},
@@ -82,7 +82,7 @@ class SimpleEvaluatingCompilerTests : EvaluatorTestBase() {
     @Test
     fun simpleJoin() = runEvaluatorTestCase(
         """SELECT * FROM `[{a: 1}, {a: 2}]` AS t1 INNER CROSS JOIN `[{b: 1, c: "one" }, {b: 2, c: "two" }]`""",
-        expectedResult = """[
+        expectedResult = """$BAG_ANNOTATION::[
                     {a:1,b:1,c:"one"},
                     {a:1,b:2,c:"two"},
                     {a:2,b:1,c:"one"},
@@ -100,7 +100,7 @@ class SimpleEvaluatingCompilerTests : EvaluatorTestBase() {
     fun joinWithoutScopeQualifier() = runEvaluatorTestCase(
         """SELECT g2 FROM table_1 AS g, g.a AS g2""",
         session = sessionWithG,
-        expectedResult = "[{g2:\"from global variable g\"}]"
+        expectedResult = "$BAG_ANNOTATION::[{g2:\"from global variable g\"}]"
     )
 
     /** Demonstrates that with the scope qualifier ('@'), the `g` in `@g.a' refers to local `g`. */
@@ -108,7 +108,7 @@ class SimpleEvaluatingCompilerTests : EvaluatorTestBase() {
     fun joinWithScopeQualifier() = runEvaluatorTestCase(
         """SELECT g2 FROM table_1 AS g, @g.a AS g2""",
         session = sessionWithG,
-        expectedResult = "[{g2:{b:1}},{g2:{b:2}}]"
+        expectedResult = "$BAG_ANNOTATION::[{g2:{b:1}},{g2:{b:2}}]"
     )
 
     @Test
@@ -118,7 +118,7 @@ class SimpleEvaluatingCompilerTests : EvaluatorTestBase() {
             FROM `[{a: 1}, {a: 2}]` AS t1
                 INNER JOIN `[{b: 1, c: "one" }, {b: 2, c:"two" }]` AS t2
                     ON t1.a = t2.b""",
-        expectedResult = """[
+        expectedResult = """$BAG_ANNOTATION::[
                     {a:1,b:1,c:"one"},
                     {a:2,b:2,c:"two"}
                 ]"""
@@ -127,7 +127,7 @@ class SimpleEvaluatingCompilerTests : EvaluatorTestBase() {
     @Test
     fun tableAliases() = runEvaluatorTestCase(
         "SELECT _2 FROM `[{_1: a, _2: 1}, {_1: a, _2: 'a'}, {_1: a, _2: 3}]` WHERE _2 = 21",
-        expectedResult = "[]"
+        expectedResult = "$BAG_ANNOTATION::[]"
     )
 
     @Test
