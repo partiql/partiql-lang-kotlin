@@ -276,7 +276,7 @@ class PipelineEvaluatorTestAdapterTests {
             EvaluatorTestCase(
                 query = "1",
                 expectedResult = "2",
-                expectedResultFormat = ExpectedResultFormat.PARTIQL
+                expectedResultFormat = ExpectedResultFormat.STRICT
             )
         )
     }
@@ -300,7 +300,7 @@ class PipelineEvaluatorTestAdapterTests {
             EvaluatorTestCase(
                 query = "true",
                 expectedResult = "!@#$ syntax error intentional",
-                expectedResultFormat = ExpectedResultFormat.PARTIQL
+                expectedResultFormat = ExpectedResultFormat.STRICT
             )
         )
     }

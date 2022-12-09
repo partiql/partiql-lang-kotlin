@@ -27,6 +27,9 @@ enum class ExpectedResultFormat {
     /**
      * The expected value is expressed using PartiQL syntax, which is evaluated under the same pipeline and compile
      * options and session as the query under test. PartiQL equivalence is used to compare the result.
+     *
+     * Note that this is not being used anywhere in test currently. But we keep it here, since we cannot be 100% sure
+     * whether this is not useful at all. We will remove it once we finish the work of test formats cleanup.
      */
     PARTIQL,
 
@@ -37,5 +40,16 @@ enum class ExpectedResultFormat {
      * This is suboptimal (really, don't use this in new tests) but it is easier to support this here than it is to
      * refactor hundreds of expected values.
      */
-    STRING
+    STRING,
+
+    /**
+     * The expected value is expressed using PartiQL syntax, which is evaluated under the same pipeline & compile
+     * options and session as the query under test. [ExprValue.strictEquals] is used here.
+     *
+     * This is preferred as it resolves the bag comparison problem [ExpectedResultFormat.ION] has, and respects both
+     * data types & data values, compares to [ExpectedResultFormat.PARTIQL]
+     *
+     * New tests should use this format.
+     */
+    STRICT
 }

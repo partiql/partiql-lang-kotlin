@@ -8,6 +8,7 @@ import org.partiql.lang.eval.dateValue
 import org.partiql.lang.eval.name
 import org.partiql.lang.eval.timeValue
 import org.partiql.lang.eval.toIonValue
+import java.math.BigDecimal
 
 private const val MISSING_STRING = "MISSING"
 private const val NULL_STRING = "NULL"
@@ -46,7 +47,15 @@ class ConfigurableExprValueFormatter(private val config: Configuration) : ExprVa
                 ExprValueType.MISSING -> out.append(MISSING_STRING)
                 ExprValueType.NULL -> out.append(NULL_STRING)
                 ExprValueType.BOOL -> out.append(value.scalar.booleanValue().toString())
-                ExprValueType.INT, ExprValueType.DECIMAL -> out.append(value.scalar.numberValue().toString())
+                ExprValueType.INT -> out.append(value.scalar.numberValue().toString())
+                ExprValueType.DECIMAL -> {
+                    val decimalValue = value.scalar.numberValue() as? BigDecimal
+                    out.append(decimalValue.toString())
+                    // If this is a decimal with scale to be 0, we need to add a decimal point to differentiate it from an integer
+                    if (decimalValue != null && decimalValue.scale() == 0) {
+                        out.append(".")
+                    }
+                }
                 ExprValueType.STRING -> out.append("'${value.scalar.stringValue()}'")
                 ExprValueType.DATE -> out.append("DATE '${value.dateValue()}'")
                 ExprValueType.TIME -> {

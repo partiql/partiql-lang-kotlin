@@ -31,7 +31,7 @@ class NullIfEvaluationTest : EvaluatorTestBase() {
     fun runTests(tc: NullIfTestCase) = runEvaluatorTestCase(
         query = "nullif(${tc.expr1}, ${tc.expr2})",
         expectedResult = tc.expected,
-        expectedResultFormat = ExpectedResultFormat.PARTIQL
+        expectedResultFormat = ExpectedResultFormat.STRICT
     )
 
     companion object {
