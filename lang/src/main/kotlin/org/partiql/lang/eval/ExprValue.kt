@@ -43,15 +43,6 @@ interface ExprValue : Iterable<ExprValue>, Faceted {
     /** The type of value independent of its implementation. */
     val type: ExprValueType
 
-    /**
-     * Materializes the expression value as an [IonValue].
-     *
-     * The returned value may or may not be tethered to a container, so it is
-     * the callers responsibility to deal with that accordingly (e.g. via `clone`).
-     */
-    @Deprecated("Please use [ExprValue.toIonValue()] to transform [ExprValue] to [IonValue]")
-    val ionValue: IonValue
-
     /** Returns the [Scalar] view of this value. */
     val scalar: Scalar
 
@@ -141,7 +132,7 @@ fun IonValue.toExprValue(): ExprValue {
     val valueFactory = ExprValueFactory.standard(system)
     return when {
         isNullValue && hasTypeAnnotation(MISSING_ANNOTATION) -> valueFactory.missingValue // MISSING
-        isNullValue -> NullExprValue(system, type) // NULL
+        isNullValue -> NullExprValue(type) // NULL
         this is IonBool -> valueFactory.newBoolean(booleanValue()) // BOOL
         this is IonInt -> valueFactory.newInt(longValue()) // INT
         this is IonFloat -> valueFactory.newFloat(doubleValue()) // FLOAT
@@ -177,7 +168,6 @@ private class IonStructExprValue(
     valueFactory: ExprValueFactory,
     private val ionStruct: IonStruct
 ) : StructExprValue(
-    valueFactory.ion,
     StructOrdering.UNORDERED,
     ionStruct.asSequence().map {
         it.toExprValue().namedValue(valueFactory.newString(it.fieldName))
@@ -185,7 +175,4 @@ private class IonStructExprValue(
 ) {
     override val bindings: Bindings<ExprValue> =
         IonStructBindings(valueFactory, ionStruct)
-
-    override val ionValue: IonValue
-        get() = ionStruct
 }

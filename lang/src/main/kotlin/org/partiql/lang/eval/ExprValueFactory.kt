@@ -167,13 +167,13 @@ private class ExprValueFactoryImpl(override val ion: IonSystem) : ExprValueFacto
         private val MIN_LONG_VALUE = BigInteger.valueOf(Long.MIN_VALUE)
     }
 
-    override val missingValue = MissingExprValue(ion)
-    override val nullValue = NullExprValue(ion)
+    override val missingValue = MissingExprValue()
+    override val nullValue = NullExprValue()
 
-    private val trueValue = TrueBoolExprValue(ion)
-    private val falseValue = FalseBoolExprValue(ion)
+    private val trueValue = TrueBoolExprValue()
+    private val falseValue = FalseBoolExprValue()
 
-    private val emptyString = StringExprValue(ion, "")
+    private val emptyString = StringExprValue("")
 
     override val emptyStruct = newStruct(sequenceOf(), StructOrdering.UNORDERED)
 
@@ -189,28 +189,28 @@ private class ExprValueFactoryImpl(override val ion: IonSystem) : ExprValueFacto
     override fun newString(value: String): ExprValue =
         when {
             value.isEmpty() -> emptyString
-            else -> StringExprValue(ion, value)
+            else -> StringExprValue(value)
         }
 
-    override fun newInt(value: Int): ExprValue = IntExprValue(ion, value.toLong())
+    override fun newInt(value: Int): ExprValue = IntExprValue(value.toLong())
 
     override fun newInt(value: Long) =
-        IntExprValue(ion, value)
+        IntExprValue(value)
 
     override fun newFloat(value: Double): ExprValue =
-        FloatExprValue(ion, value)
+        FloatExprValue(value)
 
     override fun newDecimal(value: BigDecimal): ExprValue =
-        DecimalExprValue(ion, value)
+        DecimalExprValue(value)
 
     override fun newDecimal(value: Int): ExprValue =
-        DecimalExprValue(ion, BigDecimal.valueOf(value.toLong()))
+        DecimalExprValue(BigDecimal.valueOf(value.toLong()))
 
     override fun newDecimal(value: Long): ExprValue =
-        DecimalExprValue(ion, BigDecimal.valueOf(value))
+        DecimalExprValue(BigDecimal.valueOf(value))
 
     override fun newDate(value: LocalDate): ExprValue =
-        DateExprValue(ion, value)
+        DateExprValue(value)
 
     override fun newDate(year: Int, month: Int, day: Int) =
         newDate(LocalDate.of(year, month, day))
@@ -219,19 +219,19 @@ private class ExprValueFactoryImpl(override val ion: IonSystem) : ExprValueFacto
         newDate(LocalDate.parse(dateString))
 
     override fun newTimestamp(value: Timestamp): ExprValue =
-        TimestampExprValue(ion, value)
+        TimestampExprValue(value)
 
     override fun newTime(value: Time): ExprValue =
-        TimeExprValue(ion, value)
+        TimeExprValue(value)
 
     override fun newSymbol(value: String): ExprValue =
-        SymbolExprValue(ion, value)
+        SymbolExprValue(value)
 
     override fun newClob(value: ByteArray): ExprValue =
-        ClobExprValue(ion, value)
+        ClobExprValue(value)
 
     override fun newBlob(value: ByteArray): ExprValue =
-        BlobExprValue(ion, value)
+        BlobExprValue(value)
 
     override fun newFromIonValue(value: IonValue): ExprValue =
         value.toExprValue()
@@ -240,7 +240,7 @@ private class ExprValueFactoryImpl(override val ion: IonSystem) : ExprValueFacto
         newFromIonValue(ion.newValue(reader))
 
     override fun newStruct(value: Sequence<ExprValue>, ordering: StructOrdering): ExprValue =
-        StructExprValue(ion, ordering, value)
+        StructExprValue(ordering, value)
 
     override fun newStruct(value: Iterable<ExprValue>, ordering: StructOrdering): ExprValue =
         newStruct(value.asSequence(), ordering)
@@ -268,9 +268,8 @@ private class ExprValueFactoryImpl(override val ion: IonSystem) : ExprValueFacto
  * `ion.int`, we have to return a null value of type int and cannot ignore the type of it. We might need to consider
  * add a [metas] field in [ExprValue], instead.
  */
-internal class NullExprValue(private val ion: IonSystem, private val ionType: IonType = IonType.NULL) : BaseExprValue() {
+internal class NullExprValue(private val ionType: IonType = IonType.NULL) : BaseExprValue() {
     override val type: ExprValueType get() = ExprValueType.NULL
-    override val ionValue by lazy { toIonValue(ion) }
 
     @Suppress("UNCHECKED_CAST")
     override fun <T> provideFacet(type: Class<T>?): T? = when (type) {
@@ -280,9 +279,8 @@ internal class NullExprValue(private val ion: IonSystem, private val ionType: Io
 }
 
 /** A base class for the `MISSING` value, intended to be memoized. */
-private class MissingExprValue(private val ion: IonSystem) : BaseExprValue() {
+private class MissingExprValue : BaseExprValue() {
     override val type: ExprValueType get() = ExprValueType.MISSING
-    override val ionValue by lazy { toIonValue(ion) }
 }
 
 /** An ExprValue class just for boolean values. [value] holds a memoized instance of [IonBool].
@@ -302,46 +300,40 @@ private abstract class ScalarExprValue : BaseExprValue(), Scalar {
 }
 
 /** A base class for the `true` boolean value, intended to be memoized. */
-private class TrueBoolExprValue(private val ion: IonSystem) : BooleanExprValue() {
+private class TrueBoolExprValue : BooleanExprValue() {
     override fun booleanValue(): Boolean = true
-    override val ionValue by lazy { toIonValue(ion) }
 }
 
 /** A base class for the `false` boolean value, intended to be memoized. */
-private class FalseBoolExprValue(private val ion: IonSystem) : BooleanExprValue() {
+private class FalseBoolExprValue : BooleanExprValue() {
     override fun booleanValue(): Boolean = false
-    override val ionValue by lazy { toIonValue(ion) }
 }
 
-private class StringExprValue(private val ion: IonSystem, val value: String) : ScalarExprValue() {
+private class StringExprValue(val value: String) : ScalarExprValue() {
     override val type: ExprValueType = ExprValueType.STRING
     override fun stringValue() = value
-    override val ionValue by lazy { toIonValue(ion) }
 }
 
-private class IntExprValue(private val ion: IonSystem, val value: Long) : ScalarExprValue() {
+private class IntExprValue(val value: Long) : ScalarExprValue() {
     override val type: ExprValueType = ExprValueType.INT
     override fun numberValue() = value
-    override val ionValue by lazy { toIonValue(ion) }
 }
 
-private class FloatExprValue(private val ion: IonSystem, val value: Double) : ScalarExprValue() {
+private class FloatExprValue(val value: Double) : ScalarExprValue() {
     override val type: ExprValueType = ExprValueType.FLOAT
     override fun numberValue() = value
-    override val ionValue by lazy { toIonValue(ion) }
 }
 
-private class DecimalExprValue(private val ion: IonSystem, val value: BigDecimal) : ScalarExprValue() {
+private class DecimalExprValue(val value: BigDecimal) : ScalarExprValue() {
     override val type: ExprValueType = ExprValueType.DECIMAL
     override fun numberValue() = value
-    override val ionValue by lazy { toIonValue(ion) }
 }
 
 /**
  * [ExprValue] to represent DATE in PartiQL.
  * [LocalDate] represents date without time and time zone.
  */
-private class DateExprValue(private val ion: IonSystem, val value: LocalDate) : ScalarExprValue() {
+private class DateExprValue(val value: LocalDate) : ScalarExprValue() {
 
     init {
         // validate that the local date is not an extended date.
@@ -357,37 +349,31 @@ private class DateExprValue(private val ion: IonSystem, val value: LocalDate) : 
 
     override val type: ExprValueType = ExprValueType.DATE
     override fun dateValue(): LocalDate? = value
-    override val ionValue by lazy { toIonValue(ion) }
 }
 
-private class TimestampExprValue(private val ion: IonSystem, val value: Timestamp) : ScalarExprValue() {
+private class TimestampExprValue(val value: Timestamp) : ScalarExprValue() {
     override val type: ExprValueType = ExprValueType.TIMESTAMP
     override fun timestampValue(): Timestamp? = value
-    override val ionValue by lazy { toIonValue(ion) }
 }
 
-private class TimeExprValue(private val ion: IonSystem, val value: Time) : ScalarExprValue() {
+private class TimeExprValue(val value: Time) : ScalarExprValue() {
     override val type = ExprValueType.TIME
     override fun timeValue(): Time = value
-    override val ionValue by lazy { toIonValue(ion) }
 }
 
-private class SymbolExprValue(private val ion: IonSystem, val value: String) : ScalarExprValue() {
+private class SymbolExprValue(val value: String) : ScalarExprValue() {
     override val type: ExprValueType = ExprValueType.SYMBOL
     override fun stringValue() = value
-    override val ionValue by lazy { toIonValue(ion) }
 }
 
-private class ClobExprValue(private val ion: IonSystem, val value: ByteArray) : ScalarExprValue() {
+private class ClobExprValue(val value: ByteArray) : ScalarExprValue() {
     override val type: ExprValueType = ExprValueType.CLOB
     override fun bytesValue() = value
-    override val ionValue by lazy { toIonValue(ion) }
 }
 
-private class BlobExprValue(private val ion: IonSystem, val value: ByteArray) : ScalarExprValue() {
+private class BlobExprValue(val value: ByteArray) : ScalarExprValue() {
     override val type: ExprValueType = ExprValueType.BLOB
     override fun bytesValue() = value
-    override val ionValue by lazy { toIonValue(ion) }
 }
 
 /**
@@ -426,6 +412,4 @@ internal class SequenceExprValue( // dl todo: make private again
     }
 
     override fun iterator() = sequence.iterator()
-
-    override val ionValue by lazy { toIonValue(ion) }
 }

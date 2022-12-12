@@ -2029,7 +2029,7 @@ internal class EvaluatingCompiler(
                 }
                 value
             }
-            GroupKeyExprValue(valueFactory.ion, keyValues.asSequence(), uniqueNames)
+            GroupKeyExprValue(keyValues.asSequence(), uniqueNames)
         }
 
     private fun compileOrderByExpression(sortSpecs: List<PartiqlAst.SortSpec>): List<CompiledOrderByItem> =
@@ -2903,8 +2903,6 @@ internal class EvaluatingCompiler(
     private class UnpivotedExprValue(private val values: Iterable<ExprValue>) : BaseExprValue() {
         override val type = ExprValueType.BAG
         override fun iterator() = values.iterator()
-        override val ionValue
-            get() = throw UnsupportedOperationException("Synthetic value cannot provide ion value")
     }
 
     /** Unpivots a `struct`, and synthesizes a synthetic singleton `struct` for other [ExprValue]. */

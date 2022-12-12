@@ -14,7 +14,6 @@
 
 package org.partiql.lang.eval
 
-import com.amazon.ion.IonSystem
 import org.partiql.lang.errors.ErrorCode
 
 /** Indicates if a struct is ordered or not. */
@@ -27,7 +26,6 @@ enum class StructOrdering {
  * Provides a [ExprValueType.STRUCT] implementation lazily backed by a sequence.
  */
 internal open class StructExprValue(
-    private val ion: IonSystem,
     private val ordering: StructOrdering,
     private val sequence: Sequence<ExprValue>
 ) : BaseExprValue() {
@@ -82,8 +80,4 @@ internal open class StructExprValue(
     }
 
     override fun iterator() = sequence.iterator()
-
-    override val ionValue by lazy {
-        toIonValue(ion)
-    }
 }
