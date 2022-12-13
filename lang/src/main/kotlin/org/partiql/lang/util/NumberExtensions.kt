@@ -259,19 +259,15 @@ val Number.isPosInf get() = when (this) {
 }
 
 /**
- * This is necessary because the semantic of precision differs between SQL's data model and BigDecimal.
- * In SQL, a precision of x generally refers to the total digit of a number, whereas in BigDecimal this is not necessary true.
- * Consider 0.001, BigDecimal(0.001) has precision of 1 and scale of 3, whereas in SQL such number can be represented using Decimal(3,3)
+ * Returns the given BigDecimal with precision equals to mathContext.precision.
  *
- * For arbitrary precision calculation
- * The idea is: the result of we round the result to x * 10 ^ -scale, where x is [1,10).
+ * This is for formatting purpose, all the digit that we are supposedly saying is correct will be shown.
  */
 private fun BigDecimal.roundToDigits(mathContext: MathContext): BigDecimal {
     val stripped = this.stripTrailingZeros()
     val scale = stripped.scale() - stripped.precision() + 1
     val mantissa = stripped.scaleByPowerOfTen(scale)
     return if (mantissa.precision() != mathContext.precision) {
-        // mantissa is in btw
         mantissa.round(mathContext).setScale(mathContext.precision - 1).scaleByPowerOfTen(-scale)
     } else {
         stripped.round(mathContext)

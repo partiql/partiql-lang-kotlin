@@ -33,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Adds support for EXPLAIN
 - Adds the `pipeline` flag to the CLI to provide experimental usage of the PartiQLCompilerPipeline
 - Added `ExprValue.toIonValue(ion: IonSystem)` in kotlin, and `ExprValueKt.toIonValue(value: ExprValue, ion: IonSystem)` in Java to transform one `ExprValue` to a corresponding `IonValue`.
+- Added numeric functions `abs`, `sqrt`, `exp`, `ln`, `pow`.
 
 ### Changed
 - Now `CompileOption` uses `TypedOpParameter.HONOR_PARAMETERS` as default.
