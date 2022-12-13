@@ -24,6 +24,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+
+### Changed
+
+### Deprecated
+
+### Fixed
+
+### Removed
+
+### Security
+
+## [0.9.0] - 2022-12-13
+
+### Added
 - Adds simple auto-completion to the CLI.
 - Adds the IsListParenthesizedMeta meta to aid in differentiating between parenthesized and non-parenthesized lists
 - Adds support for HAVING clause in planner
