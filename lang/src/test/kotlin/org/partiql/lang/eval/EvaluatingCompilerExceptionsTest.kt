@@ -299,22 +299,6 @@ class EvaluatingCompilerExceptionsTest : EvaluatorTestBase() {
     )
 
     @Test
-    fun ambiguousFieldOnStructCaseSensitiveLookup() = runEvaluatorErrorTestCase(
-        """ select "repeated" from `[{repeated:1, repeated:2}]` """,
-        ErrorCode.EVALUATOR_AMBIGUOUS_BINDING,
-        propertyValueMapOf(1, 9, Property.BINDING_NAME to "repeated", Property.BINDING_NAME_MATCHES to "repeated, repeated"),
-        expectedPermissiveModeResult = "<<{}>>"
-    )
-
-    @Test
-    fun ambiguousFieldOnStructCaseInsensitiveLookup() = runEvaluatorErrorTestCase(
-        """ select REPEATED from `[{repeated:1, repeated:2}]` """,
-        ErrorCode.EVALUATOR_AMBIGUOUS_BINDING,
-        propertyValueMapOf(1, 9, Property.BINDING_NAME to "REPEATED", Property.BINDING_NAME_MATCHES to "repeated, repeated"),
-        expectedPermissiveModeResult = "<<{}>>"
-    )
-
-    @Test
     fun invalidEscapeSequenceInLike() = runEvaluatorErrorTestCase(
         """ '' like '^1' escape '^' """,
         ErrorCode.EVALUATOR_LIKE_PATTERN_INVALID_ESCAPE_SEQUENCE,

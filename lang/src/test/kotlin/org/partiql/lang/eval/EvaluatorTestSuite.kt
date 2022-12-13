@@ -347,6 +347,18 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
             """SELECT a.x AS x, a.y AS y FROM `[{x:5}, {y:6}]` AS a""",
             """$BAG_ANNOTATION::[{x:5}, {y:6}]"""
         )
+
+        test(
+            "selectCollidedFieldNameInStruct",
+            """SELECT repeated FROM <<{'repeated': 1, 'repeated': 2}>>""",
+            """$BAG_ANNOTATION::[{repeated: 1}]"""
+        )
+
+        test(
+            "selectCollidedFieldNameInIonStruct",
+            """SELECT repeated FROM `[{repeated: 1, repeated: 2}]`""",
+            """$BAG_ANNOTATION::[{repeated: 1}]"""
+        )
     }
 
     group("joins") {

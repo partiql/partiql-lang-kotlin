@@ -36,6 +36,7 @@ class EvaluatorStaticTypeTests {
             "selectJoinOnClauseScoping",
 
             // Unimplemented features:
+            "selectCollidedFieldNameInStruct", // Duplicate keys in struct is not yet handled for type inferencer
 
             // Support non-struct types for wildcard projections in STIVT
             // https://github.com/partiql/partiql-lang-kotlin/issues/500

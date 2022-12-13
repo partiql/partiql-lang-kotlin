@@ -168,24 +168,13 @@ fun IonValue.toExprValue(): ExprValue {
         this is IonList && hasTypeAnnotation(BAG_ANNOTATION) -> valueFactory.newBag(map { it.toExprValue() }) // BAG
         this is IonList -> valueFactory.newList(map { it.toExprValue() }) // LIST
         this is IonSexp -> valueFactory.newSexp(map { it.toExprValue() }) // SEXP
-        this is IonStruct -> IonStructExprValue(valueFactory, this) // STRUCT
+        this is IonStruct -> StructExprValue(
+            system,
+            StructOrdering.UNORDERED,
+            asSequence().map {
+                it.toExprValue().namedValue(valueFactory.newString(it.fieldName))
+            }
+        ) // STRUCT
         else -> error("Unrecognized IonValue to transform to ExprValue: $this")
     }
-}
-
-private class IonStructExprValue(
-    valueFactory: ExprValueFactory,
-    private val ionStruct: IonStruct
-) : StructExprValue(
-    valueFactory.ion,
-    StructOrdering.UNORDERED,
-    ionStruct.asSequence().map {
-        it.toExprValue().namedValue(valueFactory.newString(it.fieldName))
-    }
-) {
-    override val bindings: Bindings<ExprValue> =
-        IonStructBindings(valueFactory, ionStruct)
-
-    override val ionValue: IonValue
-        get() = ionStruct
 }
