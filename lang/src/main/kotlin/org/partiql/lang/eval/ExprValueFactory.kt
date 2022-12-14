@@ -234,7 +234,7 @@ private class ExprValueFactoryImpl(override val ion: IonSystem) : ExprValueFacto
         BlobExprValue(ion, value)
 
     override fun newFromIonValue(value: IonValue): ExprValue =
-        value.toExprValue()
+        ExprValue.of(value)
 
     override fun newFromIonReader(reader: IonReader): ExprValue =
         newFromIonValue(ion.newValue(reader))

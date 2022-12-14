@@ -16,6 +16,10 @@ package org.partiql.lang.eval
 
 import com.amazon.ion.IntegerSize
 import com.amazon.ion.IonInt
+import com.amazon.ion.IonStruct
+import com.amazon.ion.IonSystem
+import com.amazon.ion.IonType
+import com.amazon.ion.IonValue
 import com.amazon.ion.Timestamp
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.errors.ErrorCode
@@ -719,4 +723,62 @@ fun Sequence<ExprValue>.multiplicities(): TreeMap<ExprValue, Int> {
         multiplicities.compute(it) { _, v -> (v ?: 0) + 1 }
     }
     return multiplicities
+}
+
+/**
+ * This method should only be used in case we want to get result from querying an Ion file or an [IonValue]
+ */
+fun ExprValue.toIonValue(ion: IonSystem): IonValue =
+    when (type) {
+        ExprValueType.NULL -> ion.newNull(asFacet(IonType::class.java))
+        ExprValueType.MISSING -> ion.newNull().apply { addTypeAnnotation(MISSING_ANNOTATION) }
+        ExprValueType.BOOL -> ion.newBool(booleanValue())
+        ExprValueType.INT -> ion.newInt(longValue())
+        ExprValueType.FLOAT -> ion.newFloat(numberValue().toDouble())
+        ExprValueType.DECIMAL -> ion.newDecimal(bigDecimalValue())
+        ExprValueType.DATE -> {
+            val value = dateValue()
+            ion.newTimestamp(Timestamp.forDay(value.year, value.monthValue, value.dayOfMonth)).apply {
+                addTypeAnnotation(DATE_ANNOTATION)
+            }
+        }
+        ExprValueType.TIMESTAMP -> ion.newTimestamp(timestampValue())
+        ExprValueType.TIME -> timeValue().toIonValue(ion)
+        ExprValueType.SYMBOL -> ion.newSymbol(stringValue())
+        ExprValueType.STRING -> ion.newString(stringValue())
+        ExprValueType.CLOB -> ion.newClob(bytesValue())
+        ExprValueType.BLOB -> ion.newBlob(bytesValue())
+        ExprValueType.LIST -> mapTo(ion.newEmptyList()) {
+            if (it is StructExprValue)
+                it.toIonStruct(ion)
+            else
+                it.toIonValue(ion).clone()
+        }
+        ExprValueType.SEXP -> mapTo(ion.newEmptySexp()) {
+            if (it is StructExprValue)
+                it.toIonStruct(ion)
+            else
+                it.toIonValue(ion).clone()
+        }
+        ExprValueType.BAG -> mapTo(
+            ion.newEmptyList().apply { addTypeAnnotation(BAG_ANNOTATION) }
+        ) {
+            if (it is StructExprValue)
+                it.toIonStruct(ion)
+            else
+                it.toIonValue(ion).clone()
+        }
+        ExprValueType.STRUCT -> toIonStruct(ion)
+    }
+
+private fun ExprValue.toIonStruct(ion: IonSystem): IonStruct {
+    return ion.newEmptyStruct().apply {
+        this@toIonStruct.forEach {
+            val nameVal = it.name
+            if (nameVal != null && nameVal.type.isText && it.type != ExprValueType.MISSING) {
+                val name = nameVal.stringValue()
+                add(name, it.toIonValue(ion).clone())
+            }
+        }
+    }
 }

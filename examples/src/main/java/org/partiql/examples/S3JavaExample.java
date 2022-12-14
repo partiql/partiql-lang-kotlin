@@ -31,7 +31,7 @@ import org.partiql.lang.CompilerPipeline;
 import org.partiql.lang.eval.Bindings;
 import org.partiql.lang.eval.EvaluationSession;
 import org.partiql.lang.eval.ExprValue;
-import org.partiql.lang.eval.ExprValueKt;
+import org.partiql.lang.eval.ExprValueExtensionsKt;
 import org.partiql.lang.eval.Expression;
 
 import java.io.IOException;
@@ -106,7 +106,7 @@ public class S3JavaExample extends Example {
 
             // Uses ion-java to dump the result as JSON. It's possible to build your own writer and dump the ExprValue
             // as any format you want.
-            ExprValueKt.toIonValue(selectAndFilterResult, ion).writeTo(resultWriter);
+            ExprValueExtensionsKt.toIonValue(selectAndFilterResult, ion).writeTo(resultWriter);
             // result as JSON below
             // [{"name":"person_2"},{"name":"person_3","address":{"number":555,"street":"1st street","city":"Seattle"}}]
         } catch (IOException e) {
