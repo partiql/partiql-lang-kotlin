@@ -9,6 +9,7 @@ import org.partiql.lang.planner.DML_COMMAND_FIELD_ACTION
 import org.partiql.lang.planner.DML_COMMAND_FIELD_ROWS
 import org.partiql.lang.planner.DML_COMMAND_FIELD_TARGET_UNIQUE_ID
 import org.partiql.lang.planner.DmlAction
+import org.partiql.pig.runtime.Experimental
 
 /**
  * Transforms an instance of [PartiqlLogicalResolved.Statement] to [PartiqlPhysical.Statement],
@@ -26,6 +27,7 @@ internal fun PartiqlPhysical.Builder.structField(name: String, value: String) =
 internal fun PartiqlPhysical.Builder.structField(name: String, value: PartiqlPhysical.Expr) =
     structField(lit(ionSymbol(name)), value)
 
+@OptIn(Experimental::class)
 internal class LogicalResolvedToDefaultPhysicalVisitorTransform(
     val problemHandler: ProblemHandler
 ) : PartiqlLogicalResolvedToPartiqlPhysicalVisitorTransform() {

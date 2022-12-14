@@ -1,3 +1,5 @@
+@file:OptIn(Experimental::class)
+
 package org.partiql.lang.planner.transforms
 
 import com.amazon.ionelement.api.emptyMetaContainer
@@ -13,6 +15,7 @@ import org.partiql.lang.eval.physical.sourceLocationMetaOrUnknown
 import org.partiql.lang.eval.visitors.VisitorTransformBase
 import org.partiql.lang.planner.PlanningProblemDetails
 import org.partiql.lang.planner.handleUnimplementedFeature
+import org.partiql.pig.runtime.Experimental
 import org.partiql.pig.runtime.SymbolPrimitive
 import org.partiql.pig.runtime.toIonElement
 

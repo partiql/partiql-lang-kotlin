@@ -24,11 +24,13 @@ import org.partiql.lang.planner.PlanningProblemDetails
 import org.partiql.lang.planner.unimplementedProblem
 import org.partiql.lang.syntax.PartiQLParser
 import org.partiql.lang.util.ArgumentsProviderBase
+import org.partiql.pig.runtime.Experimental
 
 /**
  * Test cases in this class might seem a little light--that's because [AstToLogicalVisitorTransform] is getting
  * heavily exercised during many other integration tests.  These should be considered "smoke tests".
  */
+@OptIn(Experimental::class)
 class AstToLogicalVisitorTransformTests {
     private val ion = IonSystemBuilder.standard().build()
     internal val parser = PartiQLParser(ion)
