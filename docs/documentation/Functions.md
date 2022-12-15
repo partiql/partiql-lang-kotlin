@@ -985,7 +985,7 @@ FLOOR(`nan`) = `nan` -- Float
 ### ABS
 Returns the absolute value of the given number. 
 
-Note that abs(n) will throw an EVALUATOR_INTEGER_OVERFLOW when n is of Type `INT` and n = `INT.MIN_VALUE`.
+Note that abs(n) will throw an EVALUATOR_INTEGER_OVERFLOW when n is both of type `INT` and n = `INT.MIN_VALUE`.
 
 Signature : `ABS: Numeric -> Numeric`
 
@@ -1008,7 +1008,7 @@ abs(`nan`) = `nan`
 
 Returns the square root of the given number.
 
-The input number are required to be non-negative.
+The input number is required to be non-negative.
 
 Signature : `SQRT: Numeric -> Numeric`
 
@@ -1029,7 +1029,7 @@ sqrt(`nan`) = `nan`
 
 ### LN
 
-Returns the natural log of given number.
+Returns the natural log of the given number.
 
 Signature : `LN: Numeric -> Numeric`
 
@@ -1054,7 +1054,7 @@ Examples:
 ln(2) = `0.6931471805599453e0`
 ln(2.0) = 0.69314718055994530941723212145817656808
 ln(`+inf`) = `+inf`
-ln(`Nan`) = `nan`
+ln(`nan`) = `nan`
 ```
 
 ### EXP
@@ -1076,12 +1076,12 @@ exp(-Inf) is 0.0
 | INT            | FLOAT       |
 | FLOAT          | FLOAT       | 
 | DECIMAL        | DECIMAL     |
-| +inf, nan,-inf | FLOAT       |
+| +inf, nan, -inf | FLOAT       |
 
 Examples:
 ```sql
 exp(1) = `2.718281828459045e0`
-exp(1.0) = 2.7182818284590452353602874713526624978
+exp(1.0) = 2.7182818284590452353602874713526624978 -- DECIMAL
 exp(`+inf`) = `inf` 
 exp(`-inf`) = `0e0` 
 exp(`nan`) = `nan`
@@ -1091,7 +1091,7 @@ exp(`nan`) = `nan`
 
 POW(x,y) return x^y.
 
-Note that if x is a negative number, than y must be integer value, (not necessarily integer type), otherwise an EVALUATOR_ARITHMETIC_EXCEPTION will be thrown. 
+Note that if x is a negative number, than y must be an integer value, (not necessarily integer type), otherwise an EVALUATOR_ARITHMETIC_EXCEPTION will be thrown. 
 
 Special Case: 
 
@@ -1103,7 +1103,7 @@ pow(x, NaN) is NaN;
 
 pow(NaN, x) is NaN for x != 0.0;
 
-pow(x, Inf) is NaN for abs(b) == 1.0
+pow(x, Inf) is NaN for abs(x) == 1.0
 
 Signature : `POWER: (Numeric, Numeric) -> Numeric`
 
