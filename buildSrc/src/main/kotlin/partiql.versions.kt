@@ -84,7 +84,7 @@ object Deps {
 object Plugins {
     //---PartiQL
     val conventions = "partiql.conventions"
-    val pig = "org.partiql.gradle.plugin.pig"
+    val pig = "org.partiql.pig.pig-gradle-plugin"
     val publish = "org.partiql.gradle.plugin.publish"
     //---3P
     val antlr = "org.gradle.antlr"
