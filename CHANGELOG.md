@@ -51,7 +51,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - If unable to parse via SLL Prediction Mode, it attempts to parse using the slower LL Prediction Mode
   - Modifications have also been made to the ANTLR grammar to increase the speed of parsing joined table references
   - Updates how the PartiQLParser handles parameter indexes to remove the double-pass while lexing
-- WINDOW and GPML AST nodes are marked experimental and will produce compiler warnings
 - Changes the expected `Property`'s of `TOKEN_INFO` to use `Property.TOKEN_DESCRIPTION` instead of `Property.TOKEN_TYPE`
 
 ### Deprecated
