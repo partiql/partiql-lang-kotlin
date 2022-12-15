@@ -188,7 +188,7 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
         test("pathNullDotName", "(NULL).a IS MISSING", "true")
         test("pathIndexing", "stores[0].books[2].title", "\"C\"")
         test("pathIndexListLiteral", "[1, 2, 3][1]", "2")
-        test("pathIndexBagLiteral", "<<1, 2, 3>>[1]", "\$missing::null")
+        test("pathIndexBagLiteral", "<<1, 2, 3>>[1]", "$MISSING_ANNOTATION::null")
         test("pathFieldStructLiteral", "{'a': 1, 'b': 2, 'b': 3}.a", "1")
         test("pathIndexStructLiteral", "{'a': 1, 'b': 2, 'b': 3}[1]", "2")
         test("pathIndexStructOutOfBoundsLowLiteral", "{'a': 1, 'b': 2, 'b': 3}[-1]", "$MISSING_ANNOTATION::null")
