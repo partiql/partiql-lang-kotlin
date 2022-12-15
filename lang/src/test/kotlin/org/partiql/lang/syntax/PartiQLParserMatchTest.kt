@@ -7,10 +7,8 @@ import org.junit.Ignore
 import org.junit.Test
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.id
-import org.partiql.pig.runtime.Experimental
 import kotlin.test.assertFailsWith
 
-@OptIn(Experimental::class)
 class PartiQLParserMatchTest : PartiQLParserTestBase() {
 
     @Test

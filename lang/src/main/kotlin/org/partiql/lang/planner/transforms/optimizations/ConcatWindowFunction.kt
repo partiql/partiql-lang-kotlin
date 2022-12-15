@@ -3,7 +3,6 @@ package org.partiql.lang.planner.transforms.optimizations
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.errors.ProblemHandler
 import org.partiql.lang.planner.PartiQLPhysicalPass
-import org.partiql.pig.runtime.Experimental
 
 // TODO: Remove from experimental once https://github.com/partiql/partiql-docs/issues/31 is resolved and a RFC is approved
 internal fun createConcatWindowFunctionPass(): PartiQLPhysicalPass =
@@ -42,7 +41,6 @@ private class ConcatWindowFunction : PartiQLPhysicalPass {
     }
 }
 
-@OptIn(Experimental::class)
 private fun PartiqlPhysical.Bexpr.Window.rewriteWindowExpression(): PartiqlPhysical.Bexpr {
     val modifiedWindowExpressionList = object : PartiqlPhysical.VisitorTransform() {
 

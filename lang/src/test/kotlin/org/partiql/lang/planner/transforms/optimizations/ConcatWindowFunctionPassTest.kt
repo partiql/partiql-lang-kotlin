@@ -7,10 +7,8 @@ import org.partiql.annotations.PartiQLExperimental
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.planner.transforms.DEFAULT_IMPL
 import org.partiql.lang.util.ArgumentsProviderBase
-import org.partiql.pig.runtime.Experimental
 
 @PartiQLExperimental
-@OptIn(Experimental::class)
 class ConcatWindowFunctionPassTest {
     @ParameterizedTest
     @ArgumentsSource(Arguments::class)

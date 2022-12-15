@@ -64,7 +64,6 @@ import org.partiql.lang.util.getPrecisionFromTimeString
 import org.partiql.lang.util.ionValue
 import org.partiql.lang.util.numberValue
 import org.partiql.lang.util.unaryMinus
-import org.partiql.pig.runtime.Experimental
 import org.partiql.pig.runtime.SymbolPrimitive
 import java.lang.IllegalArgumentException
 import java.math.BigInteger
@@ -80,7 +79,6 @@ import kotlin.reflect.cast
  * Extends ANTLR's generated [PartiQLBaseVisitor] to visit an ANTLR ParseTree and convert it into a PartiQL AST. This
  * class uses the [PartiqlAst.PartiqlAstNode] to represent all nodes within the new AST.
  */
-@OptIn(Experimental::class)
 internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = listOf(), private val parameterIndexes: Map<Int, Int> = mapOf()) :
     PartiQLBaseVisitor<PartiqlAst.PartiqlAstNode>() {
 
