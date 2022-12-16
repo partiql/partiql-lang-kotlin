@@ -15,11 +15,11 @@
 rootProject.name = "partiql"
 
 include(
-    "lang",
+    "partiql-core:partiql-lang",
     "partiql-app:partiql-cli",
+    "partiql-lib:partiql-isl",
     "examples",
     "extensions",
-    "lib:partiql-isl",
     "test:partiql-tests-runner",
     "test:partiql-randomized-tests",
 )

@@ -23,7 +23,7 @@ application {
 }
 
 dependencies {
-    implementation(project(":lang"))
+    implementation(project(":partiql-core:partiql-lang"))
     implementation(Deps.awsSdkS3)
 }
 

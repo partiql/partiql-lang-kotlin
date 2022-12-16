@@ -19,7 +19,7 @@ plugins {
 }
 
 dependencies {
-    testImplementation(project(":lang"))
+    testImplementation(project(":partiql-core:partiql-lang"))
 }
 
 val tests = "../partiql-tests/partiql-tests-data"

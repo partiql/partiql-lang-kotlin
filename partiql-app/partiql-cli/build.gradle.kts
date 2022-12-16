@@ -19,7 +19,7 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":lang"))
+    implementation(project(":partiql-core:partiql-lang"))
     implementation(project(":extensions"))
     implementation(Deps.csv)
     implementation(Deps.guava)

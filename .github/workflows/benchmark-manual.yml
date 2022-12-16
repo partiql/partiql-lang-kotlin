@@ -10,7 +10,7 @@ name: JMH Benchmarks (Manual Trigger)
 on: [workflow_dispatch]
 
 env:
-  JMH_RESULTS_PATH_FROM_ROOT: lang/build/reports/jmh/results.json
+  JMH_RESULTS_PATH_FROM_ROOT: partiql-core/partiql-lang/build/reports/jmh/results.json
   JMH_RESULTS_PATH: build/reports/jmh/results.json
   AUTHOR: "@${{ github.event.commits[0].author.username }}"
   REPO: "@${{ github.repository }}"
@@ -41,7 +41,7 @@ jobs:
 
       - name: Run Benchmark
         run: |
-          ./gradlew :lang:jmh \
+          ./gradlew :partiql-core:partiql-lang:jmh \
             -Piterations=10 \
             -PwarmupIterations=5 \
             -Pfork=2 \

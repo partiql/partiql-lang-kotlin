@@ -74,7 +74,7 @@ jobs:
       - name: Upload LANG coverage
         uses: codecov/codecov-action@v3
         with:
-          file: lang/build/reports/jacoco/test/jacocoTestReport.xml
+          file: partiql-core/partiql-lang/build/reports/jacoco/test/jacocoTestReport.xml
           flags: LANG
 
       - name: Upload PARTIQL_PTS coverage
