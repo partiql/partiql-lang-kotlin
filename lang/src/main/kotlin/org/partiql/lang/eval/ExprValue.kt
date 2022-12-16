@@ -108,26 +108,15 @@ interface ExprValue : Iterable<ExprValue>, Faceted {
                 value is IonList && value.hasTypeAnnotation(BAG_ANNOTATION) -> valueFactory.newBag(value.map { of(it) }) // BAG
                 value is IonList -> valueFactory.newList(value.map { of(it) }) // LIST
                 value is IonSexp -> valueFactory.newSexp(value.map { of(it) }) // SEXP
-                value is IonStruct -> IonStructExprValue(valueFactory, value) // STRUCT
+                value is IonStruct -> StructExprValue(
+                    value.system,
+                    StructOrdering.UNORDERED,
+                    value.asSequence().map {
+                        of(it).namedValue(valueFactory.newString(it.fieldName))
+                    }
+                ) // STRUCT
                 else -> error("Unrecognized IonValue to transform to ExprValue: $value")
             }
         }
-    }
-
-    private class IonStructExprValue(
-        valueFactory: ExprValueFactory,
-        private val ionStruct: IonStruct
-    ) : StructExprValue(
-        valueFactory.ion,
-        StructOrdering.UNORDERED,
-        ionStruct.asSequence().map {
-            of(it).namedValue(valueFactory.newString(it.fieldName))
-        }
-    ) {
-        override val bindings: Bindings<ExprValue> =
-            IonStructBindings(valueFactory, ionStruct)
-
-        override val ionValue: IonValue
-            get() = ionStruct
     }
 }
