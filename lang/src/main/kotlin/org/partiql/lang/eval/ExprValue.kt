@@ -25,11 +25,8 @@ import com.amazon.ion.IonSexp
 import com.amazon.ion.IonString
 import com.amazon.ion.IonStruct
 import com.amazon.ion.IonSymbol
-import com.amazon.ion.IonSystem
 import com.amazon.ion.IonTimestamp
-import com.amazon.ion.IonType
 import com.amazon.ion.IonValue
-import com.amazon.ion.Timestamp
 import com.amazon.ion.facet.Faceted
 import org.partiql.lang.eval.time.NANOS_PER_SECOND
 import org.partiql.lang.eval.time.Time
@@ -77,104 +74,60 @@ interface ExprValue : Iterable<ExprValue>, Faceted {
      * If this value has no children, then it should return the empty iterator.
      */
     override operator fun iterator(): Iterator<ExprValue>
-}
 
-/**
- * This method should only be used in case we want to get result from querying an Ion file or an [IonValue]
- */
-fun ExprValue.toIonValue(ion: IonSystem): IonValue =
-    when (type) {
-        ExprValueType.NULL -> ion.newNull(asFacet(IonType::class.java))
-        ExprValueType.MISSING -> ion.newNull().apply { addTypeAnnotation(MISSING_ANNOTATION) }
-        ExprValueType.BOOL -> ion.newBool(booleanValue())
-        ExprValueType.INT -> ion.newInt(longValue())
-        ExprValueType.FLOAT -> ion.newFloat(numberValue().toDouble())
-        ExprValueType.DECIMAL -> ion.newDecimal(bigDecimalValue())
-        ExprValueType.DATE -> {
-            val value = dateValue()
-            ion.newTimestamp(Timestamp.forDay(value.year, value.monthValue, value.dayOfMonth)).apply {
-                addTypeAnnotation(DATE_ANNOTATION)
-            }
-        }
-        ExprValueType.TIMESTAMP -> ion.newTimestamp(timestampValue())
-        ExprValueType.TIME -> timeValue().toIonValue(ion)
-        ExprValueType.SYMBOL -> ion.newSymbol(stringValue())
-        ExprValueType.STRING -> ion.newString(stringValue())
-        ExprValueType.CLOB -> ion.newClob(bytesValue())
-        ExprValueType.BLOB -> ion.newBlob(bytesValue())
-        ExprValueType.LIST -> mapTo(ion.newEmptyList()) {
-            if (it is StructExprValue)
-                it.toIonStruct(ion)
-            else
-                it.toIonValue(ion).clone()
-        }
-        ExprValueType.SEXP -> mapTo(ion.newEmptySexp()) {
-            if (it is StructExprValue)
-                it.toIonStruct(ion)
-            else
-                it.toIonValue(ion).clone()
-        }
-        ExprValueType.BAG -> mapTo(
-            ion.newEmptyList().apply { addTypeAnnotation(BAG_ANNOTATION) }
-        ) {
-            if (it is StructExprValue)
-                it.toIonStruct(ion)
-            else
-                it.toIonValue(ion).clone()
-        }
-        ExprValueType.STRUCT -> toIonStruct(ion)
-    }
-
-private fun ExprValue.toIonStruct(ion: IonSystem): IonStruct {
-    return ion.newEmptyStruct().apply {
-        this@toIonStruct.forEach {
-            val nameVal = it.name
-            if (nameVal != null && nameVal.type.isText && it.type != ExprValueType.MISSING) {
-                val name = nameVal.stringValue()
-                add(name, it.toIonValue(ion).clone())
+    companion object {
+        @JvmStatic
+        fun of(value: IonValue): ExprValue {
+            val valueFactory = ExprValueFactory.standard(value.system)
+            return when {
+                value.isNullValue && value.hasTypeAnnotation(MISSING_ANNOTATION) -> valueFactory.missingValue // MISSING
+                value.isNullValue -> NullExprValue(value.system, value.type) // NULL
+                value is IonBool -> valueFactory.newBoolean(value.booleanValue()) // BOOL
+                value is IonInt -> valueFactory.newInt(value.longValue()) // INT
+                value is IonFloat -> valueFactory.newFloat(value.doubleValue()) // FLOAT
+                value is IonDecimal -> valueFactory.newDecimal(value.decimalValue()) // DECIMAL
+                value is IonTimestamp && value.hasTypeAnnotation(DATE_ANNOTATION) -> {
+                    val timestampValue = value.timestampValue()
+                    valueFactory.newDate(timestampValue.year, timestampValue.month, timestampValue.day)
+                } // DATE
+                value is IonTimestamp -> valueFactory.newTimestamp(value.timestampValue()) // TIMESTAMP
+                value is IonStruct && value.hasTypeAnnotation(TIME_ANNOTATION) -> {
+                    val hourValue = (value["hour"] as IonInt).intValue()
+                    val minuteValue = (value["minute"] as IonInt).intValue()
+                    val secondInDecimal = (value["second"] as IonDecimal).decimalValue()
+                    val secondValue = secondInDecimal.toInt()
+                    val nanoValue = secondInDecimal.remainder(BigDecimal.ONE).multiply(NANOS_PER_SECOND.toBigDecimal()).toInt()
+                    val timeZoneHourValue = (value["timezone_hour"] as IonInt).intValue()
+                    val timeZoneMinuteValue = (value["timezone_minute"] as IonInt).intValue()
+                    valueFactory.newTime(Time.of(hourValue, minuteValue, secondValue, nanoValue, secondInDecimal.scale(), timeZoneHourValue * 60 + timeZoneMinuteValue))
+                } // TIME
+                value is IonSymbol -> valueFactory.newSymbol(value.stringValue()) // SYMBOL
+                value is IonString -> valueFactory.newString(value.stringValue()) // STRING
+                value is IonClob -> valueFactory.newClob(value.bytesValue()) // CLOB
+                value is IonBlob -> valueFactory.newBlob(value.bytesValue()) // BLOB
+                value is IonList && value.hasTypeAnnotation(BAG_ANNOTATION) -> valueFactory.newBag(value.map { of(it) }) // BAG
+                value is IonList -> valueFactory.newList(value.map { of(it) }) // LIST
+                value is IonSexp -> valueFactory.newSexp(value.map { of(it) }) // SEXP
+                value is IonStruct -> IonStructExprValue(valueFactory, value) // STRUCT
+                else -> error("Unrecognized IonValue to transform to ExprValue: $value")
             }
         }
     }
-}
 
-fun IonValue.toExprValue(): ExprValue {
-    val valueFactory = ExprValueFactory.standard(system)
-    return when {
-        isNullValue && hasTypeAnnotation(MISSING_ANNOTATION) -> valueFactory.missingValue // MISSING
-        isNullValue -> NullExprValue(system, type) // NULL
-        this is IonBool -> valueFactory.newBoolean(booleanValue()) // BOOL
-        this is IonInt -> valueFactory.newInt(longValue()) // INT
-        this is IonFloat -> valueFactory.newFloat(doubleValue()) // FLOAT
-        this is IonDecimal -> valueFactory.newDecimal(decimalValue()) // DECIMAL
-        this is IonTimestamp && hasTypeAnnotation(DATE_ANNOTATION) -> {
-            val timestampValue = timestampValue()
-            valueFactory.newDate(timestampValue.year, timestampValue.month, timestampValue.day)
-        } // DATE
-        this is IonTimestamp -> valueFactory.newTimestamp(timestampValue()) // TIMESTAMP
-        this is IonStruct && hasTypeAnnotation(TIME_ANNOTATION) -> {
-            val hourValue = (this["hour"] as IonInt).intValue()
-            val minuteValue = (this["minute"] as IonInt).intValue()
-            val secondInDecimal = (this["second"] as IonDecimal).decimalValue()
-            val secondValue = secondInDecimal.toInt()
-            val nanoValue = secondInDecimal.remainder(BigDecimal.ONE).multiply(NANOS_PER_SECOND.toBigDecimal()).toInt()
-            val timeZoneHourValue = (this["timezone_hour"] as IonInt).intValue()
-            val timeZoneMinuteValue = (this["timezone_minute"] as IonInt).intValue()
-            valueFactory.newTime(Time.of(hourValue, minuteValue, secondValue, nanoValue, secondInDecimal.scale(), timeZoneHourValue * 60 + timeZoneMinuteValue))
-        } // TIME
-        this is IonSymbol -> valueFactory.newSymbol(stringValue()) // SYMBOL
-        this is IonString -> valueFactory.newString(stringValue()) // STRING
-        this is IonClob -> valueFactory.newClob(bytesValue()) // CLOB
-        this is IonBlob -> valueFactory.newBlob(bytesValue()) // BLOB
-        this is IonList && hasTypeAnnotation(BAG_ANNOTATION) -> valueFactory.newBag(map { it.toExprValue() }) // BAG
-        this is IonList -> valueFactory.newList(map { it.toExprValue() }) // LIST
-        this is IonSexp -> valueFactory.newSexp(map { it.toExprValue() }) // SEXP
-        this is IonStruct -> StructExprValue(
-            system,
-            StructOrdering.UNORDERED,
-            asSequence().map {
-                it.toExprValue().namedValue(valueFactory.newString(it.fieldName))
-            }
-        ) // STRUCT
-        else -> error("Unrecognized IonValue to transform to ExprValue: $this")
+    private class IonStructExprValue(
+        valueFactory: ExprValueFactory,
+        private val ionStruct: IonStruct
+    ) : StructExprValue(
+        valueFactory.ion,
+        StructOrdering.UNORDERED,
+        ionStruct.asSequence().map {
+            of(it).namedValue(valueFactory.newString(it.fieldName))
+        }
+    ) {
+        override val bindings: Bindings<ExprValue> =
+            IonStructBindings(valueFactory, ionStruct)
+
+        override val ionValue: IonValue
+            get() = ionStruct
     }
 }
