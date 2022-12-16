@@ -52,11 +52,6 @@ internal class PipelineEvaluatorTestAdapter(
     ) {
         val pipeline = pipelineFactory.createPipeline(tc, session)
 
-        if (tc.query == "SELECT repeated FROM <<{'repeated': 1, 'repeated': 2}>>") {
-            pipeline.evaluate(tc.query)
-            println(1)
-        }
-
         val actualExprValueResult: ExprValue = assertDoesNotThrow(
             EvaluatorTestFailureReason.FAILED_TO_EVALUATE_QUERY,
             { tc.testDetails(note = note) }
