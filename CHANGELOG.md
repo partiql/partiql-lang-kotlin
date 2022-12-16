@@ -24,6 +24,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+
+### Changed
+
+### Deprecated
+
+### Fixed
+
+### Removed
+
+### Security
+
+## [0.9.0] - 2022-12-13
+
+### Added
 - Adds simple auto-completion to the CLI.
 - Adds the IsListParenthesizedMeta meta to aid in differentiating between parenthesized and non-parenthesized lists
 - Adds support for HAVING clause in planner
@@ -35,7 +49,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Adds continuous performance benchmarking to the CI for existing JMH benchmarks
   - Benchmark results can be seen on the project's GitHub Pages site
 - Adds the `pipeline` flag to the CLI to provide experimental usage of the PartiQLCompilerPipeline
-- Added `ExprValue.toIonValue(ion: IonSystem)` in kotlin, and `ExprValueKt.toIonValue(value: ExprValue, ion: IonSystem)` in Java to transform one `ExprValue` to a corresponding `IonValue`.
+- Added `ExprValue.toIonValue(ion: IonSystem)` in kotlin, and `ExprValueExtensionKt.toIonValue(value: ExprValue, ion: IonSystem)` in Java to transform one `ExprValue` to a corresponding `IonValue`.
+- Added `ExprValue.of(value: IonValue)` method to construct an `ExprValue` from an `IonValue`. 
 
 ### Changed
 - Now `CompileOption` uses `TypedOpParameter.HONOR_PARAMETERS` as default.

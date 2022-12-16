@@ -67,6 +67,6 @@ internal class IonStructBindings(private val valueFactory: ExprValueFactory, pri
             BindingCase.SENSITIVE -> caseSensitiveLookup(bindingName.name)
             BindingCase.INSENSITIVE -> caseInsensitiveLookup(bindingName.name)
         }?.let {
-            it.toExprValue().namedValue(valueFactory.newString(it.fieldName))
+            ExprValue.of(it).namedValue(valueFactory.newString(it.fieldName))
         }
 }
