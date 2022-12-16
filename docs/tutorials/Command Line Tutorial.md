@@ -62,7 +62,7 @@ To start an interactive read, eval, print loop (REPL) execute:
 > Note that running directly with Gradle will eat arrow keys and control sequences due to the Gradle daemon.
 
 ```shell
-./cli/shell.sh
+./partiql-app/partiql-cli/shell.sh
 ```
 
 You will see a prompt that looks as follows:
