@@ -13,8 +13,6 @@
  * permissions and limitations under the License.
  */
 
-import org.partiql.gradle.plugin.pig.PigTask
-
 plugins {
     id(Plugins.antlr)
     id(Plugins.conventions)
@@ -76,7 +74,7 @@ tasks.compileKotlin {
 }
 
 tasks.dokkaHtml {
-    dependsOn(tasks.withType(PigTask::class))
+    dependsOn(tasks.withType(org.partiql.pig.gradle.PigTask::class))
 }
 
 tasks.processResources {

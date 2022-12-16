@@ -12,9 +12,7 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
-
-import org.partiql.gradle.plugin.pig.PigTask
-
+//
 plugins {
     id(Plugins.conventions)
     id(Plugins.dokka)
@@ -42,5 +40,5 @@ pig {
 }
 
 tasks.dokkaHtml {
-    dependsOn(tasks.withType(PigTask::class))
+    dependsOn(tasks.withType(org.partiql.pig.gradle.PigTask::class))
 }
