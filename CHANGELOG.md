@@ -32,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 ### Removed
+- The deprecated `IonValue` property in `ExprValue` interface is now removed. 
 
 ### Security
 
