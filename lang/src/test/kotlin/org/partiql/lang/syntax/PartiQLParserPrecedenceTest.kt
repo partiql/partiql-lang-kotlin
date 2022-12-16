@@ -1066,20 +1066,20 @@ class PartiQLParserPrecedenceTest : PartiQLParserTestBase() {
     @Test
     @Parameters
     @TestCaseName("{0}")
-    fun failureCases(pair: Pair<String, String>) = assertFailure(pair)
+    fun failureCases(query: String) = assertFailure(query)
     fun parametersForFailureCases() = listOf(
-        /* (is, +)                      */ "a is boolean + c" to "(plus (is_type (id a (case_insensitive) (unqualified)) (boolean_type)) (id c (case_insensitive) (unqualified)))",
-        /* (is, -)                      */ "a is boolean - c" to "(minus (is_type (id a (case_insensitive) (unqualified)) (boolean_type)) (id c (case_insensitive) (unqualified)))",
-        /* (is, ||)                     */ "a is boolean || c" to "(concat (is_type (id a (case_insensitive) (unqualified)) (boolean_type)) (id c (case_insensitive) (unqualified)))",
-        /* (is, *)                      */ "a is boolean * c" to "(times (is_type (id a (case_insensitive) (unqualified)) (boolean_type)) (id c (case_insensitive) (unqualified)))",
-        /* (is, /)                      */ "a is boolean / c" to "(divide (is_type (id a (case_insensitive) (unqualified)) (boolean_type)) (id c (case_insensitive) (unqualified)))",
-        /* (is, %)                      */ "a is boolean % c" to "(modulo (is_type (id a (case_insensitive) (unqualified)) (boolean_type)) (id c (case_insensitive) (unqualified)))",
-        /* (not (is, +)                  */ "a is not boolean + c" to "(plus (not (is_type (id a (case_insensitive) (unqualified)) (boolean_type))) (id c (case_insensitive) (unqualified)))",
-        /* (not (is, -)                  */ "a is not boolean - c" to "(minus (not (is_type (id a (case_insensitive) (unqualified)) (boolean_type))) (id c (case_insensitive) (unqualified)))",
-        /* (not (is, ||)                 */ "a is not boolean || c" to "(concat (not (is_type (id a (case_insensitive) (unqualified)) (boolean_type))) (id c (case_insensitive) (unqualified)))",
-        /* (not (is, *)                  */ "a is not boolean * c" to "(times (not (is_type (id a (case_insensitive) (unqualified)) (boolean_type))) (id c (case_insensitive) (unqualified)))",
-        /* (not (is, /)                  */ "a is not boolean / c" to "(divide (not (is_type (id a (case_insensitive) (unqualified)) (boolean_type))) (id c (case_insensitive) (unqualified)))",
-        /* (not (is, %)                  */ "a is not boolean % c" to "(modulo (not (is_type (id a (case_insensitive) (unqualified)) (boolean_type))) (id c (case_insensitive) (unqualified)))",
+        /* (is, +)                      */ "a is boolean + c",
+        /* (is, -)                      */ "a is boolean - c",
+        /* (is, ||)                     */ "a is boolean || c",
+        /* (is, *)                      */ "a is boolean * c",
+        /* (is, /)                      */ "a is boolean / c",
+        /* (is, %)                      */ "a is boolean % c",
+        /* (not (is, +)                  */ "a is not boolean + c",
+        /* (not (is, -)                  */ "a is not boolean - c",
+        /* (not (is, ||)                 */ "a is not boolean || c",
+        /* (not (is, *)                  */ "a is not boolean * c",
+        /* (not (is, /)                  */ "a is not boolean / c",
+        /* (not (is, %)                  */ "a is not boolean % c",
     )
 
     private fun runTest(pair: Pair<String, String>) {
@@ -1092,12 +1092,9 @@ class PartiQLParserPrecedenceTest : PartiQLParserTestBase() {
         assertEquals(expectedStatement, actualStatement)
     }
 
-    private fun assertFailure(pair: Pair<String, String>) {
-        val (source, expectedAst) = pair
-        val expectedExpr = PartiqlAst.transform(ion.singleValue(expectedAst).toIonElement()) as PartiqlAst.Expr
-        val expectedStatement = PartiqlAst.build { query(expectedExpr) }
-        assertThrows(ParserException::class.java) {
-            parser.parseAstStatement(source)
+    private fun assertFailure(query: String) {
+        org.junit.jupiter.api.Assertions.assertThrows(ParserException::class.java) {
+            parser.parseAstStatement(query)
         }
     }
 }
