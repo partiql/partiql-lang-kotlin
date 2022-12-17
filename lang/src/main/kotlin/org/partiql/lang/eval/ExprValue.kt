@@ -197,7 +197,7 @@ interface ExprValue : Iterable<ExprValue>, Faceted {
         private fun constructStructValue(values: Sequence<ExprValue>, ordering: StructOrdering): ExprValue =
             StructExprValue(ordering, values)
 
-        // States for optimization
+        // Memoized values for optimization
         private val trueValue = constructBoolValue(true)
         private val falseValue = constructBoolValue(false)
         private val emptyString = constructStringValue("")

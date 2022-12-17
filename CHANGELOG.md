@@ -24,10 +24,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- The public `ExprValue` construction methods are migrated from `ExprValueFactory` to `ExprValue` interface as public static methods & states. 
 
 ### Changed
 
 ### Deprecated
+- `ExprValueFactory` interface marked as deprecated. 
 
 ### Fixed
 
