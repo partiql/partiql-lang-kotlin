@@ -33,7 +33,6 @@ import org.partiql.format.ExplainFormatter
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.PartiQLResult
 import org.partiql.lang.eval.delegate
 import org.partiql.lang.syntax.PartiQLParserBuilder
@@ -80,15 +79,14 @@ private val EXIT_DELAY: Duration = Duration(3000)
  * opinions on ways to clean this up in later PRs.
  */
 internal class Shell(
-    private val valueFactory: ExprValueFactory,
     private val output: OutputStream,
     private val compiler: AbstractPipeline,
     private val initialGlobal: Bindings<ExprValue>,
     private val config: ShellConfiguration = ShellConfiguration()
 ) {
     private val homeDir: Path = Paths.get(System.getProperty("user.home"))
-    private val globals = ShellGlobalBinding(valueFactory).add(initialGlobal)
-    private var previousResult = valueFactory.nullValue
+    private val globals = ShellGlobalBinding().add(initialGlobal)
+    private var previousResult = ExprValue.nullValue
     private val out = PrintStream(output)
 
     fun start() {

@@ -86,7 +86,7 @@ class QueryEngine(val db: MemoryDatabase) {
             }
 
             val tableId = UUID.fromString(bindingName.name)
-            return db.valueFactory.newBag(
+            return ExprValue.newBag(
                 db.getFullScanSequence(tableId)
             )
         }
@@ -195,10 +195,10 @@ class QueryEngine(val db: MemoryDatabase) {
                     db.delete(targetTableId, it)
                     rowsEffected ++
                 }
-                db.valueFactory.newStruct(
+                ExprValue.newStruct(
                     listOf(
-                        db.valueFactory.newInt(rowsEffected)
-                            .namedValue(db.valueFactory.newString("rows_effected"))
+                        ExprValue.newInt(rowsEffected)
+                            .namedValue(ExprValue.newString("rows_effected"))
                     ),
                     StructOrdering.UNORDERED
                 )
@@ -210,10 +210,10 @@ class QueryEngine(val db: MemoryDatabase) {
                     db.insert(targetTableId, it)
                     rowsEffected ++
                 }
-                db.valueFactory.newStruct(
+                ExprValue.newStruct(
                     listOf(
-                        db.valueFactory.newInt(rowsEffected)
-                            .namedValue(db.valueFactory.newString("rows_effected"))
+                        ExprValue.newInt(rowsEffected)
+                            .namedValue(ExprValue.newString("rows_effected"))
                     ),
                     StructOrdering.UNORDERED
                 )

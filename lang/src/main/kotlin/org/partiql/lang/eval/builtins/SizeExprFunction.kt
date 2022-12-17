@@ -17,7 +17,6 @@ package org.partiql.lang.eval.builtins
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.types.AnyOfType
 import org.partiql.lang.types.FunctionSignature
 import org.partiql.lang.types.StaticType
@@ -28,7 +27,7 @@ import org.partiql.lang.types.StaticType
  *
  * syntax: `size(<container>)` where container can be a BAG, SEXP, STRUCT or LIST.
  */
-internal class SizeExprFunction(val valueFactory: ExprValueFactory) : ExprFunction {
+internal class SizeExprFunction : ExprFunction {
     override val signature = FunctionSignature(
         name = "size",
         requiredParameters = listOf(AnyOfType(setOf(StaticType.LIST, StaticType.BAG, StaticType.STRUCT, StaticType.SEXP))),
@@ -38,6 +37,6 @@ internal class SizeExprFunction(val valueFactory: ExprValueFactory) : ExprFuncti
     override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
         val container = required.first()
 
-        return valueFactory.newInt(container.count())
+        return ExprValue.newInt(container.count())
     }
 }

@@ -14,12 +14,10 @@
 
 package org.partiql.lang.eval.builtins
 
-import com.amazon.ion.system.IonSystemBuilder
 import org.partiql.lang.eval.DEFAULT_COMPARATOR
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.stringValue
 import org.partiql.lang.eval.unnamedValue
 import org.partiql.lang.types.AnyOfType
@@ -33,34 +31,34 @@ internal const val DYNAMIC_LOOKUP_FUNCTION_NAME = "\$__dynamic_lookup__"
 internal fun createBuiltinFunctionSignatures(): Map<String, FunctionSignature> =
     // Creating a new IonSystem in this instance is not the problem it would normally be since we are
     // discarding the created instances of the built-in functions after extracting all of the [FunctionSignature].
-    createBuiltinFunctions(ExprValueFactory.standard(IonSystemBuilder.standard().build()))
+    createBuiltinFunctions()
         .map { it.signature }
         .associateBy { it.name }
 
-internal fun createBuiltinFunctions(valueFactory: ExprValueFactory) =
+internal fun createBuiltinFunctions() =
     listOf(
-        createUpper(valueFactory),
-        createLower(valueFactory),
-        createExists(valueFactory),
-        createCharacterLength("character_length", valueFactory),
-        createCharacterLength("char_length", valueFactory),
-        createUtcNow(valueFactory),
-        createFilterDistinct(valueFactory),
-        DateAddExprFunction(valueFactory),
-        DateDiffExprFunction(valueFactory),
-        ExtractExprFunction(valueFactory),
-        MakeDateExprFunction(valueFactory),
-        MakeTimeExprFunction(valueFactory),
-        SubstringExprFunction(valueFactory),
-        TrimExprFunction(valueFactory),
-        ToStringExprFunction(valueFactory),
-        ToTimestampExprFunction(valueFactory),
-        SizeExprFunction(valueFactory),
-        FromUnixTimeFunction(valueFactory),
-        UnixTimestampFunction(valueFactory)
-    ) + MathFunctions.create(valueFactory) + CollectionAggregationFunction.createAll(valueFactory)
+        createUpper(),
+        createLower(),
+        createExists(),
+        createCharacterLength("character_length"),
+        createCharacterLength("char_length"),
+        createUtcNow(),
+        createFilterDistinct(),
+        DateAddExprFunction(),
+        DateDiffExprFunction(),
+        ExtractExprFunction(),
+        MakeDateExprFunction(),
+        MakeTimeExprFunction(),
+        SubstringExprFunction(),
+        TrimExprFunction(),
+        ToStringExprFunction(),
+        ToTimestampExprFunction(),
+        SizeExprFunction(),
+        FromUnixTimeFunction(),
+        UnixTimestampFunction()
+    ) + MathFunctions.create() + CollectionAggregationFunction.createAll()
 
-internal fun createExists(valueFactory: ExprValueFactory): ExprFunction = object : ExprFunction {
+internal fun createExists(): ExprFunction = object : ExprFunction {
     override val signature = FunctionSignature(
         "exists",
         listOf(StaticType.unionOf(StaticType.SEXP, StaticType.LIST, StaticType.BAG, StaticType.STRUCT)),
@@ -69,10 +67,10 @@ internal fun createExists(valueFactory: ExprValueFactory): ExprFunction = object
     )
 
     override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue =
-        valueFactory.newBoolean(required[0].any())
+        ExprValue.newBoolean(required[0].any())
 }
 
-internal fun createUtcNow(valueFactory: ExprValueFactory): ExprFunction = object : ExprFunction {
+internal fun createUtcNow(): ExprFunction = object : ExprFunction {
     override val signature = FunctionSignature(
         "utcnow",
         listOf(),
@@ -80,10 +78,10 @@ internal fun createUtcNow(valueFactory: ExprValueFactory): ExprFunction = object
     )
 
     override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue =
-        valueFactory.newTimestamp(session.now)
+        ExprValue.newTimestamp(session.now)
 }
 
-internal fun createFilterDistinct(valueFactory: ExprValueFactory): ExprFunction = object : ExprFunction {
+internal fun createFilterDistinct(): ExprFunction = object : ExprFunction {
     override val signature = FunctionSignature(
         "filter_distinct",
         listOf(StaticType.unionOf(StaticType.BAG, StaticType.LIST, StaticType.SEXP, StaticType.STRUCT)),
@@ -94,7 +92,7 @@ internal fun createFilterDistinct(valueFactory: ExprValueFactory): ExprFunction 
         val argument = required.first()
         // We cannot use a [HashSet] here because [ExprValue] does not implement .equals() and .hashCode()
         val encountered = TreeSet(DEFAULT_COMPARATOR)
-        return valueFactory.newBag(
+        return ExprValue.newBag(
             sequence {
                 argument.asSequence().forEach {
                     if (!encountered.contains(it)) {
@@ -106,7 +104,7 @@ internal fun createFilterDistinct(valueFactory: ExprValueFactory): ExprFunction 
         )
     }
 }
-internal fun createCharacterLength(name: String, valueFactory: ExprValueFactory): ExprFunction =
+internal fun createCharacterLength(name: String): ExprFunction =
     object : ExprFunction {
         override val signature: FunctionSignature
             get() {
@@ -120,11 +118,11 @@ internal fun createCharacterLength(name: String, valueFactory: ExprValueFactory)
 
         override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
             val s = required.first().stringValue()
-            return valueFactory.newInt(s.codePointCount(0, s.length))
+            return ExprValue.newInt(s.codePointCount(0, s.length))
         }
     }
 
-internal fun createUpper(valueFactory: ExprValueFactory): ExprFunction = object : ExprFunction {
+internal fun createUpper(): ExprFunction = object : ExprFunction {
     override val signature: FunctionSignature
         get() = FunctionSignature(
             "upper",
@@ -133,10 +131,10 @@ internal fun createUpper(valueFactory: ExprValueFactory): ExprFunction = object 
         )
 
     override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue =
-        valueFactory.newString(required.first().stringValue().toUpperCase())
+        ExprValue.newString(required.first().stringValue().toUpperCase())
 }
 
-internal fun createLower(valueFactory: ExprValueFactory): ExprFunction = object : ExprFunction {
+internal fun createLower(): ExprFunction = object : ExprFunction {
     override val signature: FunctionSignature
         get() = FunctionSignature(
             "lower",
@@ -145,5 +143,5 @@ internal fun createLower(valueFactory: ExprValueFactory): ExprFunction = object 
         )
 
     override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue =
-        valueFactory.newString(required.first().stringValue().toLowerCase())
+        ExprValue.newString(required.first().stringValue().toLowerCase())
 }

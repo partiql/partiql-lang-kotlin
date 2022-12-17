@@ -55,7 +55,7 @@ public class EvaluationJavaExample extends Example {
 
         // This is the value of the global variable.
         final String userName = "Homer Simpson";
-        final ExprValue usernameValue = pipeline.getValueFactory().newString(userName);
+        final ExprValue usernameValue = ExprValue.newString(userName);
 
         // [Bindings.ofMap] can be used to construct a [Bindings] instance of
         // bindings with previously materialized values.

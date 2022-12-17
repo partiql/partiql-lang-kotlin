@@ -1,8 +1,6 @@
 package org.partiql.examples;
 
-import com.amazon.ion.IonStruct;
 import com.amazon.ion.IonSystem;
-import com.amazon.ion.IonValue;
 import com.amazon.ion.system.IonSystemBuilder;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.examples.util.Example;
@@ -12,7 +10,6 @@ import org.partiql.lang.eval.Bindings;
 import org.partiql.lang.eval.EvaluationSession;
 import org.partiql.lang.eval.ExprValue;
 import org.partiql.lang.eval.ExprValueExtensionsKt;
-import org.partiql.lang.eval.ExprValueFactory;
 import org.partiql.lang.eval.ExprValueType;
 import org.partiql.lang.eval.Expression;
 
@@ -37,12 +34,10 @@ public class CSVJavaExample extends Example {
      * ExprValue represents values in the context of a PartiQL Expression.
      */
     static class CsvRowExprValue extends BaseExprValue {
-        private final ExprValueFactory valueFactory;
         private final String rowString;
         private Map<String, ExprValue> rowValues;
 
-        CsvRowExprValue(final ExprValueFactory valueFactory, final String rowString) {
-            this.valueFactory = valueFactory;
+        CsvRowExprValue(final String rowString) {
             this.rowString = rowString;
         }
 
@@ -55,8 +50,8 @@ public class CSVJavaExample extends Example {
                         .collect(Collectors.toMap(
                                 index -> "_" + index,
                                 index -> {
-                                    ExprValue exprValue = valueFactory.newString(split[index]);
-                                    return ExprValueExtensionsKt.namedValue(exprValue, valueFactory.newString("_" + index));
+                                    ExprValue exprValue = ExprValue.newString(split[index]);
+                                    return ExprValueExtensionsKt.namedValue(exprValue, ExprValue.newString("_" + index));
                                 }
                         ));
             }
@@ -108,9 +103,9 @@ public class CSVJavaExample extends Example {
                 .globals(
                         Bindings.<ExprValue>lazyBindingsBuilder().addBinding("myCsvDocument", () -> {
                             List<CsvRowExprValue> csvValues = Arrays.stream(CSV.split("\n"))
-                                    .map(csvLine -> new CsvRowExprValue(pipeline.getValueFactory(), csvLine))
+                                    .map(csvLine -> new CsvRowExprValue(csvLine))
                                     .collect(Collectors.toList());
-                            return pipeline.getValueFactory().newList(csvValues);
+                            return ExprValue.newList(csvValues);
                         }).build()
                 ).build();
 

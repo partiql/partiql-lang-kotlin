@@ -18,7 +18,6 @@ import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.errNoContext
 import org.partiql.lang.eval.intValue
 import org.partiql.lang.eval.stringValue
@@ -94,7 +93,7 @@ import org.partiql.lang.types.StaticType
  *              L1 = E1 - S1
  *              return java's substring(C, S1, E1)
  */
-internal class SubstringExprFunction(private val valueFactory: ExprValueFactory) : ExprFunction {
+internal class SubstringExprFunction : ExprFunction {
     override val signature = FunctionSignature(
         name = "substring",
         requiredParameters = listOf(StaticType.STRING, StaticType.INT),
@@ -120,7 +119,7 @@ internal class SubstringExprFunction(private val valueFactory: ExprValueFactory)
     ): ExprValue {
         val codePointCount = target.codePointCount(0, target.length)
         if (startPosition > codePointCount) {
-            return valueFactory.newString("")
+            return ExprValue.newString("")
         }
 
         // startPosition starts at 1
@@ -134,12 +133,12 @@ internal class SubstringExprFunction(private val valueFactory: ExprValueFactory)
         val adjustedStartPosition = Integer.max(0, startPosition - 1)
 
         if (endPosition < adjustedStartPosition) {
-            return valueFactory.newString("")
+            return ExprValue.newString("")
         }
 
         val byteIndexStart = target.offsetByCodePoints(0, adjustedStartPosition)
         val byteIndexEnd = target.offsetByCodePoints(0, endPosition)
 
-        return valueFactory.newString(target.substring(byteIndexStart, byteIndexEnd))
+        return ExprValue.newString(target.substring(byteIndexStart, byteIndexEnd))
     }
 }

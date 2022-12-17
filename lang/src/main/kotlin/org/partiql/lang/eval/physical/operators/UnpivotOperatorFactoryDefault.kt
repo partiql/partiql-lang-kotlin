@@ -52,8 +52,8 @@ internal class UnpivotOperatorDefault(
             while (iter.hasNext()) {
                 val item = iter.next()
                 setAsVar(state, item.unnamedValue())
-                setAtVar?.let { it(state, item.name ?: state.valueFactory.missingValue) }
-                setByVar?.let { it(state, item.address ?: state.valueFactory.missingValue) }
+                setAtVar?.let { it(state, item.name ?: ExprValue.missingValue) }
+                setByVar?.let { it(state, item.address ?: ExprValue.missingValue) }
                 yield()
             }
         }
@@ -61,9 +61,9 @@ internal class UnpivotOperatorDefault(
 
     private fun ExprValue.unpivot(state: EvaluatorState): ExprValue = when (type) {
         ExprValueType.STRUCT, ExprValueType.MISSING -> this
-        else -> state.valueFactory.newBag(
+        else -> ExprValue.newBag(
             listOf(
-                this.namedValue(state.valueFactory.newString(syntheticColumnName(0)))
+                this.namedValue(ExprValue.newString(syntheticColumnName(0)))
             )
         )
     }

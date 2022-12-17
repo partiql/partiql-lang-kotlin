@@ -96,7 +96,7 @@ public class S3JavaExample extends Example {
                     // in this case we are binding the data from the S3 bucket into the "myS3Document" name
                     .globals(
                             Bindings.<ExprValue>lazyBindingsBuilder()
-                                    .addBinding("myS3Document", () -> pipeline.getValueFactory().newFromIonValue(values))
+                                    .addBinding("myS3Document", () -> ExprValue.of(values))
                                     .build()
                     )
                     .build();

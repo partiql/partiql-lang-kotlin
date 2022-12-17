@@ -21,8 +21,8 @@ class EvaluatorTestCasesAsStatementTestCases : ArgumentsProviderBase() {
 internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
     // construction of parameters must be deferred because we do not have an ExprValueFactory at the time the
     // test suite is defined.
-    parameterFactory { vf: ExprValueFactory ->
-        listOf("spam", "baz").map { vf.newString(it) }
+    parameterFactory {
+        listOf("spam", "baz").map { ExprValue.newString(it) }
     }
 
     // define global variables to be used in the test cases below.

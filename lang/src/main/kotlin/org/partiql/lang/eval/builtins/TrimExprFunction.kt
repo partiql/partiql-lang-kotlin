@@ -18,7 +18,6 @@ import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.builtins.TrimSpecification.BOTH
 import org.partiql.lang.eval.builtins.TrimSpecification.LEADING
 import org.partiql.lang.eval.builtins.TrimSpecification.NONE
@@ -59,7 +58,7 @@ import org.partiql.lang.types.VarargFormalParameter
  *  * `<trim character> ::= <character value expression>`
  *  * `<trim source> ::= <character value expression>`
  */
-internal class TrimExprFunction(private val valueFactory: ExprValueFactory) : ExprFunction {
+internal class TrimExprFunction : ExprFunction {
     override val signature =
         FunctionSignature(
             name = "trim",
@@ -107,9 +106,9 @@ internal class TrimExprFunction(private val valueFactory: ExprValueFactory) : Ex
 
     private fun trim(type: TrimSpecification, toRemove: IntArray, sourceString: IntArray): ExprValue {
         return when (type) {
-            BOTH, NONE -> valueFactory.newString(sourceString.trim(toRemove))
-            LEADING -> valueFactory.newString(sourceString.leadingTrim(toRemove))
-            TRAILING -> valueFactory.newString(sourceString.trailingTrim(toRemove))
+            BOTH, NONE -> ExprValue.newString(sourceString.trim(toRemove))
+            LEADING -> ExprValue.newString(sourceString.leadingTrim(toRemove))
+            TRAILING -> ExprValue.newString(sourceString.trailingTrim(toRemove))
         }
     }
 

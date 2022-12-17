@@ -21,14 +21,14 @@ import org.partiql.lang.util.newFromIonText
 class ExprValueAdaptersTest : TestBase() {
     @Test
     fun asNamed() {
-        val value = valueFactory.newFromIonText("5")
+        val value = newFromIonText("5")
         val named = value.asNamed()
         assertSame(value, named.name)
     }
 
     @Test
     fun unnamedValue() {
-        val value = valueFactory.newFromIonText("{a:5}").bindings[BindingName("a", BindingCase.SENSITIVE)]!!
+        val value = newFromIonText("{a:5}").bindings[BindingName("a", BindingCase.SENSITIVE)]!!
         assertNotNull(value.name)
         assertNull(value.unnamedValue().name)
     }

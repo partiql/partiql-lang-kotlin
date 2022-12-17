@@ -51,7 +51,7 @@ abstract class EvaluatorTestBase : TestBase() {
     )
 
     protected fun Map<String, String>.toSession() = EvaluationSession.build {
-        globals(Bindings.ofMap(this@toSession.mapValues { valueFactory.newFromIonText(it.value) }))
+        globals(Bindings.ofMap(this@toSession.mapValues { newFromIonText(it.value) }))
     }
 
     /**

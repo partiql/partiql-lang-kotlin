@@ -5,6 +5,7 @@ import org.partiql.examples.util.Example
 import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.EvaluationSession
+import org.partiql.lang.eval.ExprValue
 import java.io.PrintStream
 
 /** Demonstrates how to supply a global variable to the session. */
@@ -20,7 +21,7 @@ class EvaluationWithBindings(out: PrintStream) : Example(out) {
 
         // This is the value of the global variable.
         val userName = "Homer Simpson"
-        val usernameValue = pipeline.valueFactory.newString(userName)
+        val usernameValue = ExprValue.newString(userName)
 
         // [Bindings.ofMap] can be used to construct a [Bindings] instance of
         // bindings with previously materialized values.

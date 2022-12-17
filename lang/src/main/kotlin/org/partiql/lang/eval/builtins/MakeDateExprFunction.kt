@@ -5,7 +5,6 @@ import org.partiql.lang.errors.Property
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.err
 import org.partiql.lang.eval.intValue
@@ -20,7 +19,7 @@ import java.time.DateTimeException
  *
  * make_date(<year_value>, <month_value>, <day_value>)
  */
-internal class MakeDateExprFunction(val valueFactory: ExprValueFactory) : ExprFunction {
+internal class MakeDateExprFunction : ExprFunction {
 
     override val signature = FunctionSignature(
         name = "make_date",
@@ -47,7 +46,7 @@ internal class MakeDateExprFunction(val valueFactory: ExprValueFactory) : ExprFu
         val (year, month, day) = required.map { it.intValue() }
 
         try {
-            return valueFactory.newDate(year, month, day)
+            return ExprValue.newDate(year, month, day)
         } catch (e: DateTimeException) {
             err(
                 message = "Date field value out of range. $year-$month-$day",

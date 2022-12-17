@@ -7,7 +7,6 @@ import org.partiql.lang.compiler.PartiQLCompilerPipeline
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.PartiQLResult
 import org.partiql.lang.eval.ProjectionIterationBehavior
 import org.partiql.lang.planner.EvaluatorOptions
@@ -27,8 +26,6 @@ class ExperimentalFeatureExample(out: PrintStream) : Example(out) {
 
     private val myIonSystem = IonSystemBuilder.standard().build()
 
-    private val valueFactory = ExprValueFactory.standard(myIonSystem)
-
     private val myTable = """[ 
         {name: "zoe",  age: 12},
         {name: "jan",  age: 20},
@@ -40,7 +37,7 @@ class ExperimentalFeatureExample(out: PrintStream) : Example(out) {
 
     private val globalVariables = Bindings.buildLazyBindings<ExprValue> {
         addBinding("myTable") {
-            valueFactory.newFromIonValue(
+            ExprValue.of(
                 myIonSystem.singleValue(myTable)
             )
         }

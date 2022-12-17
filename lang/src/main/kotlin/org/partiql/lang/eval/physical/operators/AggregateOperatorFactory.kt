@@ -78,10 +78,10 @@ internal class AggregateOperatorDefault(
 
             // Initialize the AggregationMap
             val evaluatedGroupByKeys =
-                keys.map { it.value.invoke(state) }.let { state.valueFactory.newList(it) }
+                keys.map { it.value.invoke(state) }.let { ExprValue.newList(it) }
             val accumulators = aggregationMap.getOrPut(evaluatedGroupByKeys) {
                 functions.map { function ->
-                    Accumulator.create(function.name, function.quantifier, state.valueFactory)
+                    Accumulator.create(function.name, function.quantifier)
                 }
             }
 
@@ -95,7 +95,7 @@ internal class AggregateOperatorDefault(
         // No Aggregations Created
         if (keys.isEmpty() && aggregationMap.isEmpty()) {
             functions.forEach { function ->
-                val accumulator = Accumulator.create(function.name, function.quantifier, state.valueFactory)
+                val accumulator = Accumulator.create(function.name, function.quantifier)
                 function.setAggregateVal(state, accumulator.compute())
             }
             yield()

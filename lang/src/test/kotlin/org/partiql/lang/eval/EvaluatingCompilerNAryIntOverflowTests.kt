@@ -59,14 +59,14 @@ class EvaluatingCompilerNAryIntOverflowTests : EvaluatorTestBase() {
         maxValue: Long
     ) =
         listOf(
-            Variable("${prefix}_1", type, valueFactory.newInt(1)),
-            Variable("${prefix}_2", type, valueFactory.newInt(2)),
-            Variable("${prefix}_neg1", type, valueFactory.newInt(-1)),
-            Variable("${prefix}_neg2", type, valueFactory.newInt(-2)),
-            Variable("${prefix}_max", type, valueFactory.newInt(maxValue)),
-            Variable("${prefix}_min", type, valueFactory.newInt(minValue)),
-            Variable("${prefix}_maxMinus1", type, valueFactory.newInt(maxValue - 1)),
-            Variable("${prefix}_minPlus1", type, valueFactory.newInt(minValue + 1))
+            Variable("${prefix}_1", type, ExprValue.newInt(1)),
+            Variable("${prefix}_2", type, ExprValue.newInt(2)),
+            Variable("${prefix}_neg1", type, ExprValue.newInt(-1)),
+            Variable("${prefix}_neg2", type, ExprValue.newInt(-2)),
+            Variable("${prefix}_max", type, ExprValue.newInt(maxValue)),
+            Variable("${prefix}_min", type, ExprValue.newInt(minValue)),
+            Variable("${prefix}_maxMinus1", type, ExprValue.newInt(maxValue - 1)),
+            Variable("${prefix}_minPlus1", type, ExprValue.newInt(minValue + 1))
         )
 
     // TODO: need to include union types types other than strings...?
@@ -132,13 +132,13 @@ class EvaluatingCompilerNAryIntOverflowTests : EvaluatorTestBase() {
                 Variable(
                     name = "int2_or_string_string",
                     type = StaticType.unionOf(StaticType.INT2, StaticType.STRING),
-                    value = valueFactory.newString("foo")
+                    value = ExprValue.newString("foo")
                 ),
                 // This variable has the type of `any_of(int2, string) and has a value that is a integer
                 Variable(
                     name = "int2_or_string_int",
                     type = StaticType.unionOf(StaticType.INT2, StaticType.STRING),
-                    value = valueFactory.newInt(1)
+                    value = ExprValue.newInt(1)
                 )
             )
         ).flatten()

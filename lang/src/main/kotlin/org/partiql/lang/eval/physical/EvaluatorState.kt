@@ -31,6 +31,7 @@ class EvaluatorState(
     /** The current [EvaluationSession]. */
     val session: EvaluationSession,
 
+    @Deprecated("[ExprValueFactory] is deprecated")
     /** The current [ExprValueFactory], provided here as a convenience. */
     val valueFactory: ExprValueFactory,
 

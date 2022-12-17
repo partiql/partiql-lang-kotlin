@@ -38,6 +38,7 @@ import org.partiql.lang.util.interruptibleFold
  * Contains all information needed for processing steps.
  */
 data class StepContext(
+    @Deprecated("[ExprValueFactory] is deprecated")
     /** The instance of [ExprValueFactory] that is used by the pipeline. */
     val valueFactory: ExprValueFactory,
 
@@ -73,6 +74,7 @@ typealias ProcessingStep = (PartiqlAst.Statement, StepContext) -> PartiqlAst.Sta
  * per thread.
  */
 interface CompilerPipeline {
+    @Deprecated("[ExprValueFactory] is deprecated")
     val valueFactory: ExprValueFactory
 
     /** The compilation options. */
@@ -111,26 +113,29 @@ interface CompilerPipeline {
 
     companion object {
         /** Kotlin style builder for [CompilerPipeline].  If calling from Java instead use [builder]. */
-        fun build(ion: IonSystem, block: Builder.() -> Unit) = build(ExprValueFactory.standard(ion), block)
+        fun build(ion: IonSystem, block: Builder.() -> Unit) = Builder(ion).apply(block).build()
 
+        @Deprecated("[ExprValueFactory] is deprecated. Please use `build(ion: IonSystem, block: Builder.() -> Unit)`.")
         /** Kotlin style builder for [CompilerPipeline].  If calling from Java instead use [builder]. */
-        fun build(valueFactory: ExprValueFactory, block: Builder.() -> Unit) = Builder(valueFactory).apply(block).build()
+        fun build(valueFactory: ExprValueFactory, block: Builder.() -> Unit) = build(valueFactory.ion, block)
 
         /** Fluent style builder.  If calling from Kotlin instead use the [build] method. */
         @JvmStatic
-        fun builder(ion: IonSystem): Builder = builder(ExprValueFactory.standard(ion))
+        fun builder(ion: IonSystem): Builder = Builder(ion)
 
+        @Deprecated("[ExprValueFactory] is deprecated. Please use `builder(ion: IonSystem): Builder = builder(ion)`.")
         /** Fluent style builder.  If calling from Kotlin instead use the [build] method. */
         @JvmStatic
-        fun builder(valueFactory: ExprValueFactory): Builder = Builder(valueFactory)
+        fun builder(valueFactory: ExprValueFactory): Builder = builder(valueFactory.ion)
 
         /** Returns an implementation of [CompilerPipeline] with all properties set to their defaults. */
         @JvmStatic
-        fun standard(ion: IonSystem): CompilerPipeline = standard(ExprValueFactory.standard(ion))
+        fun standard(ion: IonSystem): CompilerPipeline = builder(ion).build()
 
+        @Deprecated("[ExprValueFactory] is deprecated. Please use `standard(ion: IonSystem): CompilerPipeline`.")
         /** Returns an implementation of [CompilerPipeline] with all properties set to their defaults. */
         @JvmStatic
-        fun standard(valueFactory: ExprValueFactory): CompilerPipeline = builder(valueFactory).build()
+        fun standard(valueFactory: ExprValueFactory): CompilerPipeline = standard(valueFactory.ion)
     }
 
     /**
@@ -138,7 +143,15 @@ interface CompilerPipeline {
      * [CompilerPipeline] is NOT thread safe and should NOT be used to compile queries concurrently. If used in a
      * multithreaded application, use one instance of [CompilerPipeline] per thread.
      */
-    class Builder(val valueFactory: ExprValueFactory) {
+    class Builder(val ion: IonSystem) {
+
+        @Deprecated("[ExprValueFactory] is depreacted. Please use constructor `Builder(ion: IonSystem)` instead.")
+        constructor(valueFactory: ExprValueFactory) : this(valueFactory.ion) {
+            this.valueFactory = valueFactory
+        }
+
+        private var valueFactory: ExprValueFactory = ExprValueFactory.standard(ion)
+
         private var parser: Parser? = null
         private var compileOptions: CompileOptions? = null
         private val customFunctions: MutableMap<String, ExprFunction> = HashMap()
@@ -210,7 +223,7 @@ interface CompilerPipeline {
                 }
             }
 
-            val builtinFunctions = createBuiltinFunctions(valueFactory).associateBy {
+            val builtinFunctions = createBuiltinFunctions().associateBy {
                 it.signature.name
             }
 
@@ -220,6 +233,7 @@ interface CompilerPipeline {
 
             return CompilerPipelineImpl(
                 valueFactory = valueFactory,
+                ion = ion,
                 parser = parser ?: PartiQLParserBuilder().ionSystem(valueFactory.ion).customTypes(customDataTypes).build(),
                 compileOptions = compileOptionsToUse,
                 functions = allFunctions,
@@ -234,6 +248,7 @@ interface CompilerPipeline {
 
 internal class CompilerPipelineImpl(
     override val valueFactory: ExprValueFactory,
+    private val ion: IonSystem,
     private val parser: Parser,
     override val compileOptions: CompileOptions,
     override val functions: Map<String, ExprFunction>,
@@ -244,7 +259,7 @@ internal class CompilerPipelineImpl(
 ) : CompilerPipeline {
 
     private val compiler = EvaluatingCompiler(
-        valueFactory,
+        ion,
         functions,
         customDataTypes.map { customType ->
             (customType.aliases + customType.name).map { alias ->
@@ -270,7 +285,7 @@ internal class CompilerPipelineImpl(
                     null -> null
                     else -> {
                         listOf(
-                            StaticTypeVisitorTransform(valueFactory.ion, globalTypeBindings),
+                            StaticTypeVisitorTransform(ion, globalTypeBindings),
                             StaticTypeInferenceVisitorTransform(
                                 globalBindings = globalTypeBindings,
                                 customFunctionSignatures = functions.values.map { it.signature },

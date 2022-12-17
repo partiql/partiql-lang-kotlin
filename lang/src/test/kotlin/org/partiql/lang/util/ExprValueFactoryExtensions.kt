@@ -14,8 +14,8 @@
 
 package org.partiql.lang.util
 
+import org.partiql.lang.ION
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.eval.ExprValueFactory
 
-internal fun ExprValueFactory.newFromIonText(ionText: String): ExprValue =
-    this.newFromIonValue(this.ion.singleValue(ionText))
+internal fun newFromIonText(ionText: String): ExprValue =
+    ExprValue.of(ION.singleValue(ionText))

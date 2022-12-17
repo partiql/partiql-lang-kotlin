@@ -21,6 +21,7 @@ import com.amazon.ion.IonSystem
 import com.amazon.ion.IonType
 import com.amazon.ion.IonValue
 import com.amazon.ion.Timestamp
+import com.amazon.ion.system.IonSystemBuilder
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
@@ -53,7 +54,6 @@ import org.partiql.lang.util.coerce
 import org.partiql.lang.util.compareTo
 import org.partiql.lang.util.downcast
 import org.partiql.lang.util.getPrecisionFromTimeString
-import org.partiql.lang.util.ionValue
 import org.partiql.lang.util.isNaN
 import org.partiql.lang.util.isNegInf
 import org.partiql.lang.util.isPosInf
@@ -68,6 +68,11 @@ import java.time.format.DateTimeParseException
 import java.util.TreeMap
 import java.util.TreeSet
 import kotlin.math.round
+
+const val MISSING_ANNOTATION = "\$missing"
+const val BAG_ANNOTATION = "\$bag"
+const val DATE_ANNOTATION = "\$date"
+const val TIME_ANNOTATION = "\$time"
 
 /**
  * Wraps the given [ExprValue] with a delegate that provides the [OrderedBindNames] facet.
@@ -271,7 +276,6 @@ private val genericTimeRegex = Regex("\\d\\d:\\d\\d:\\d\\d(\\.\\d*)?([+|-]\\d\\d
  */
 fun ExprValue.cast(
     targetType: SingleType,
-    valueFactory: ExprValueFactory,
     typedOpBehavior: TypedOpBehavior,
     locationMeta: SourceLocationMeta?,
     defaultTimezoneOffset: ZoneOffset
@@ -363,23 +367,19 @@ fun ExprValue.cast(
                 }
                 it.toLong()
             }
-            valueFactory.newInt(result)
+            ExprValue.newInt(result)
         }
-        is FloatType -> valueFactory.newFloat(this.toDouble())
+        is FloatType -> ExprValue.newFloat(this.toDouble())
         is DecimalType -> {
             if (this.isNaN || this.isNegInf || this.isPosInf) {
                 castFailedErr("Can't convert Infinity or NaN to DECIMAL.", internal = false)
             }
 
             when (typedOpBehavior) {
-                TypedOpBehavior.LEGACY -> valueFactory.newFromIonValue(
-                    this.coerce(BigDecimal::class.java).ionValue(valueFactory.ion)
-                )
+                TypedOpBehavior.LEGACY -> ExprValue.newDecimal(coerce(BigDecimal::class.java))
                 TypedOpBehavior.HONOR_PARAMETERS ->
                     when (type.precisionScaleConstraint) {
-                        DecimalType.PrecisionScaleConstraint.Unconstrained -> valueFactory.newFromIonValue(
-                            this.coerce(BigDecimal::class.java).ionValue(valueFactory.ion)
-                        )
+                        DecimalType.PrecisionScaleConstraint.Unconstrained -> ExprValue.newDecimal(coerce(BigDecimal::class.java))
                         is DecimalType.PrecisionScaleConstraint.Constrained -> {
                             val constraint = type.precisionScaleConstraint
                             val decimal = this.coerce(BigDecimal::class.java) as BigDecimal
@@ -389,7 +389,7 @@ fun ExprValue.cast(
                                 // Following PostgresSQL behavior here. Java will increase precision if needed.
                                 castFailedErr("target type DECIMAL(${constraint.precision}, ${constraint.scale}) too small for value $decimal.", internal = false)
                             } else {
-                                valueFactory.newFromIonValue(result.ionValue(valueFactory.ion))
+                                ExprValue.newDecimal(result)
                             }
                         }
                     }
@@ -400,9 +400,9 @@ fun ExprValue.cast(
 
     fun String.exprValue(type: SingleType) = when (type) {
         is StringType -> when (typedOpBehavior) {
-            TypedOpBehavior.LEGACY -> valueFactory.newString(this)
+            TypedOpBehavior.LEGACY -> ExprValue.newString(this)
             TypedOpBehavior.HONOR_PARAMETERS -> when (type.lengthConstraint) {
-                StringType.StringLengthConstraint.Unconstrained -> valueFactory.newString(this)
+                StringType.StringLengthConstraint.Unconstrained -> ExprValue.newString(this)
                 is StringType.StringLengthConstraint.Constrained -> {
                     val actualCodepointCount = this.codePointCount(0, this.length)
                     val lengthConstraint = type.lengthConstraint.length.value
@@ -412,7 +412,7 @@ fun ExprValue.cast(
                         this.substring(0, this.offsetByCodePoints(0, lengthConstraint))
                     }
 
-                    valueFactory.newString(
+                    ExprValue.newString(
                         when (type.lengthConstraint.length) {
                             is NumberConstraint.Equals -> truncatedString.trimEnd { c -> c == '\u0020' }
                             is NumberConstraint.UpTo -> truncatedString
@@ -421,14 +421,14 @@ fun ExprValue.cast(
                 }
             }
         }
-        is SymbolType -> valueFactory.newSymbol(this)
+        is SymbolType -> ExprValue.newSymbol(this)
 
         else -> castFailedErr("Invalid type for textual conversion: $type (this code should be unreachable)", internal = true)
     }
 
     when {
-        type.isUnknown && targetType is MissingType -> return valueFactory.missingValue
-        type.isUnknown && targetType is NullType -> return valueFactory.nullValue
+        type.isUnknown && targetType is MissingType -> return ExprValue.missingValue
+        type.isUnknown && targetType is NullType -> return ExprValue.nullValue
         type.isUnknown -> return this
         // Note that the ExprValueType for TIME and TIME WITH TIME ZONE is the same i.e. ExprValueType.TIME.
         // We further need to check for the time zone and hence we do not short circuit here when the type is TIME.
@@ -443,12 +443,12 @@ fun ExprValue.cast(
             when (targetType) {
                 is BoolType -> when {
                     type.isNumber -> return when {
-                        numberValue().compareTo(0L) == 0 -> valueFactory.newBoolean(false)
-                        else -> valueFactory.newBoolean(true)
+                        numberValue().compareTo(0L) == 0 -> ExprValue.newBoolean(false)
+                        else -> ExprValue.newBoolean(true)
                     }
                     type.isText -> return when (stringValue().toLowerCase()) {
-                        "true" -> valueFactory.newBoolean(true)
-                        "false" -> valueFactory.newBoolean(false)
+                        "true" -> ExprValue.newBoolean(true)
+                        "false" -> ExprValue.newBoolean(false)
                         else -> castFailedErr("can't convert string value to BOOL", internal = false)
                     }
                 }
@@ -456,9 +456,12 @@ fun ExprValue.cast(
                     type == ExprValueType.BOOL -> return if (booleanValue()) 1L.exprValue(targetType) else 0L.exprValue(targetType)
                     type.isNumber -> return numberValue().exprValue(targetType)
                     type.isText -> {
+                        // Here, we use ion java library to help the transform from string to int
+                        // See if we can get rid of ion here.
+                        val ion = IonSystemBuilder.standard().build()
                         val value = try {
                             val normalized = stringValue().normalizeForCastToInt()
-                            valueFactory.ion.singleValue(normalized) as IonInt
+                            ion.singleValue(normalized) as IonInt
                         } catch (e: Exception) {
                             castFailedErr("can't convert string value to INT", internal = false, cause = e)
                         }
@@ -495,7 +498,7 @@ fun ExprValue.cast(
                 }
                 is TimestampType -> when {
                     type.isText -> try {
-                        return valueFactory.newTimestamp(Timestamp.valueOf(stringValue()))
+                        return ExprValue.newTimestamp(Timestamp.valueOf(stringValue()))
                     } catch (e: IllegalArgumentException) {
                         castFailedErr("can't convert string value to TIMESTAMP", internal = false, cause = e)
                     }
@@ -503,7 +506,7 @@ fun ExprValue.cast(
                 is DateType -> when {
                     type == ExprValueType.TIMESTAMP -> {
                         val ts = timestampValue()
-                        return valueFactory.newDate(LocalDate.of(ts.year, ts.month, ts.day))
+                        return ExprValue.newDate(LocalDate.of(ts.year, ts.month, ts.day))
                     }
                     type.isText -> try {
                         // validate that the date string follows the format YYYY-MM-DD
@@ -515,7 +518,7 @@ fun ExprValue.cast(
                             )
                         }
                         val date = LocalDate.parse(stringValue())
-                        return valueFactory.newDate(date)
+                        return ExprValue.newDate(date)
                     } catch (e: DateTimeParseException) {
                         castFailedErr(
                             "Can't convert string value to DATE. Expected valid date string " +
@@ -533,7 +536,7 @@ fun ExprValue.cast(
                                 true -> time.zoneOffset ?: defaultTimezoneOffset
                                 else -> null
                             }
-                            return valueFactory.newTime(
+                            return ExprValue.newTime(
                                 Time.of(
                                     time.localTime,
                                     precision ?: time.precision,
@@ -550,7 +553,7 @@ fun ExprValue.cast(
                                 )
                                 else -> null
                             }
-                            return valueFactory.newTime(
+                            return ExprValue.newTime(
                                 Time.of(
                                     ts.hour,
                                     ts.minute,
@@ -578,7 +581,7 @@ fun ExprValue.cast(
                             val zoneOffsetString = matcher.group(2)
                             val zoneOffset = zoneOffsetString?.let { ZoneOffset.of(it) } ?: defaultTimezoneOffset
 
-                            return valueFactory.newTime(
+                            return ExprValue.newTime(
                                 Time.of(
                                     localTime,
                                     precision ?: getPrecisionFromTimeString(stringValue()),
@@ -606,14 +609,14 @@ fun ExprValue.cast(
                     type == ExprValueType.TIMESTAMP -> return timestampValue().toString().exprValue(targetType)
                 }
                 is ClobType -> when {
-                    type.isLob -> return valueFactory.newClob(bytesValue())
+                    type.isLob -> return ExprValue.newClob(bytesValue())
                 }
                 is BlobType -> when {
-                    type.isLob -> return valueFactory.newBlob(bytesValue())
+                    type.isLob -> return ExprValue.newBlob(bytesValue())
                 }
-                is ListType -> if (type.isSequence) return valueFactory.newList(asSequence())
-                is SexpType -> if (type.isSequence) return valueFactory.newSexp(asSequence())
-                is BagType -> if (type.isSequence) return valueFactory.newBag(asSequence())
+                is ListType -> if (type.isSequence) return ExprValue.newList(asSequence())
+                is SexpType -> if (type.isSequence) return ExprValue.newSexp(asSequence())
+                is BagType -> if (type.isSequence) return ExprValue.newBag(asSequence())
                 // no support for anything else
                 else -> {}
             }

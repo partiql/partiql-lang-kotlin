@@ -4,7 +4,6 @@ import com.amazon.ion.Timestamp
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.bigDecimalValue
 import org.partiql.lang.types.FunctionSignature
 import org.partiql.lang.types.StaticType
@@ -24,7 +23,7 @@ import java.math.BigDecimal
  * When given a non-negative numeric value, this function returns a PartiQL `TIMESTAMP` [ExprValue] after the last
  * epoch.
  */
-internal class FromUnixTimeFunction(val valueFactory: ExprValueFactory) : ExprFunction {
+internal class FromUnixTimeFunction : ExprFunction {
     override val signature = FunctionSignature(
         name = "from_unixtime",
         requiredParameters = listOf(unionOf(StaticType.DECIMAL, StaticType.INT)),
@@ -39,6 +38,6 @@ internal class FromUnixTimeFunction(val valueFactory: ExprValueFactory) : ExprFu
         val numMillis = unixTimestamp.times(millisPerSecond).stripTrailingZeros()
 
         val timestamp = Timestamp.forMillis(numMillis, null)
-        return valueFactory.newTimestamp(timestamp)
+        return ExprValue.newTimestamp(timestamp)
     }
 }
