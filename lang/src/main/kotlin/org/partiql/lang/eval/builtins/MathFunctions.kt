@@ -177,11 +177,19 @@ private fun ln(n: Number): Number {
     }
 }
 
+// Coercion is needed for this operation, since it is binary.
+// if the operation involves special value `+inf`, `-inf`, `nan`, the result will be a float.
+// else if the operation involves decimal, the result will be a decimal
+// else the result will be a float.
 private fun pow(n: Number, p: Number): Number {
+    // CoerceNumber(double, bigDecimal) will attempt to convert the double value to bigDecimal
+    // and in case of the double value being one of the special number, `+inf`, `-inf`, `nan`,
+    // an error will be thrown.
+    // we (presumably) want to avoid this
     val (first, second) = if (n.isPosInf || n.isNegInf || n.isNaN) {
         n to p.toDouble()
     } else if (p.isPosInf || p.isNegInf || p.isNaN) {
-        n.toDouble() to p.toDouble()
+        n.toDouble() to p
     } else {
         coerceNumbers(n, p)
     }

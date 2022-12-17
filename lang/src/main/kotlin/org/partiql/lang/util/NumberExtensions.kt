@@ -276,42 +276,46 @@ private fun BigDecimal.roundToDigits(mathContext: MathContext): BigDecimal {
 
 /**
  * Computes the nth root of a given BigDecimal x.
- * where x needs to be positive.
+ * where x needs to be positive integer.
  */
 private fun BigDecimal.intRoot(
-    index: Int,
+    root: Int,
     mathContext: MathContext
 ): BigDecimal {
+    if (this.signum() < 0) {
+        throw ArithmeticException("Cannot take root of a negative number")
+    }
+
     val operationMC = MathContext(
         if (mathContext.precision + 2 < 0) Int.MAX_VALUE else mathContext.precision + 2,
         mathContext.roundingMode
     )
 
-    val tolerance: BigDecimal = BigDecimal.valueOf(5L).movePointLeft(mathContext.precision)
+    val tolerance: BigDecimal = BigDecimal.valueOf(5L).movePointLeft(mathContext.precision + 1)
 
     // using Newton's method
-    // x_i = ( (r-1) (x_i-1) ^ r + n) / r (x_i-1) ^(r-1)
-    // where n is the number whose rth root we want to compute
-    val r = BigDecimal.valueOf(index.toLong())
-    val rMinusOne = BigDecimal.valueOf(index.toLong() - 1L)
+    // x_i = ( (n-1) (x_i-1) ^ n + a) / n (x_i-1) ^(n-1)
+    // where a is the number whose nth root we want to compute
+    val n = BigDecimal.valueOf(root.toLong())
+    val nMinusOne = BigDecimal.valueOf(root.toLong() - 1L)
 
-    // The initial approximation is x/index.
-    var res = this.divide(r, mathContext)
+    // The initial approximation is x/n.
+    var res = this.divide(n, mathContext)
 
     var resPrev: BigDecimal
     do {
-        // x^(index-1)
-        val xToRMinusOne = res.pow(index - 1, operationMC)
-        // x^index
-        val xToR = res.multiply(xToRMinusOne, operationMC)
+        // x^(n-1)
+        val xToNMinusOne = res.pow(root - 1, operationMC)
+        // x^n
+        val xToN = res.multiply(xToNMinusOne, operationMC)
 
-        // n + (index-1)*(x^index)
-        val numerator = this.add(rMinusOne.multiply(xToR, operationMC), operationMC)
+        // n + (n-1)*(x^n)
+        val numerator = this.add(nMinusOne.multiply(xToN, operationMC), operationMC)
 
-        // (index*(x^(index-1))
-        val denominator = r.multiply(xToRMinusOne, operationMC)
+        // (n*(x^(n-1))
+        val denominator = n.multiply(xToNMinusOne, operationMC)
 
-        // x = (n + (index-1)*(x^index)) / (index*(x^(index-1)))
+        // x = (n + (n-1)*(x^n)) / (n*(x^(n-1)))
         resPrev = res
 
         res = numerator.divide(denominator, operationMC)
@@ -326,6 +330,11 @@ private fun BigDecimal.intRoot(
 fun BigDecimal.squareRoot(mathContext: MathContext = MATH_CONTEXT): BigDecimal {
     if (this.signum() < 0) {
         throw ArithmeticException("Cannot take root of a negative number")
+    }
+
+    // Special case:
+    if (this.signum() == 0) {
+        return BigDecimal.ZERO.roundToDigits(mathContext)
     }
 
     // We want to utilize the floating number's sqrt method to take an educated guess
@@ -360,7 +369,7 @@ fun BigDecimal.squareRoot(mathContext: MathContext = MATH_CONTEXT): BigDecimal {
     } while (guessPrecision < targetPrecision + 2)
 
     // scale modification
-    val unModifiedRes = approx.scaleByPowerOfTen(-scaleAdj / 2).round(MATH_CONTEXT)
+    val unModifiedRes = approx.scaleByPowerOfTen(-scaleAdj / 2).round(mathContext)
 
     return unModifiedRes.roundToDigits(mathContext)
 }
@@ -370,7 +379,7 @@ fun BigDecimal.squareRoot(mathContext: MathContext = MATH_CONTEXT): BigDecimal {
  */
 fun BigDecimal.exp(mathContext: MathContext = MATH_CONTEXT): BigDecimal {
     val operationMC = MathContext(
-        if (2 * mathContext.precision < 0) Int.MAX_VALUE else 2 * mathContext.precision,
+        if (10 + mathContext.precision < 0) Int.MAX_VALUE else 10 + mathContext.precision,
         mathContext.roundingMode
     )
     return if (this.signum() == 0) {
@@ -394,7 +403,7 @@ private fun BigDecimal.expHelper(mathContext: MathContext): BigDecimal {
     // For faster convergence, we break exponent into integer and fraction parts.
     // e^x = e^(i+f) = (e^(1+f/i)) ^i
     // 1 + f/i < 2
-    var intPart = this.divideToIntegralValue(BigDecimal.ONE).setScale(0)
+    var intPart = this.setScale(0, RoundingMode.DOWN)
 
     if (intPart.signum() == 0) {
         return this.expTaylor(mathContext)
@@ -467,10 +476,10 @@ fun BigDecimal.ln(mathContext: MathContext = MATH_CONTEXT): BigDecimal {
     if (this.compareTo(BigDecimal.ONE) == 0) {
         return BigDecimal.ZERO.roundToDigits(MATH_CONTEXT)
     }
-    val intPart = this.divideToIntegralValue(BigDecimal.ONE).setScale(0)
+    val intPart = this.setScale(0, RoundingMode.DOWN)
     val intPartLength = intPart.precision()
     val operationMC = MathContext(
-        if (2 * mathContext.precision < 0) Int.MAX_VALUE else 2 * mathContext.precision,
+        if (10 + mathContext.precision < 0) Int.MAX_VALUE else 10 + mathContext.precision,
         mathContext.roundingMode
     )
     // For faster converge, we calculate m*ln(root(x,m)) for m >= 3.
@@ -493,7 +502,7 @@ private fun BigDecimal.lnNewton(mathContext: MathContext): BigDecimal {
         mathContext.roundingMode
     )
 
-    val tolerance: BigDecimal = BigDecimal.valueOf(5L).movePointLeft(mathContext.precision)
+    val tolerance: BigDecimal = BigDecimal.valueOf(5L).movePointLeft(mathContext.precision + 1)
 
     // x_i = x_i-1 - (e^x_i-1 - n) / e^x_i-1
     var x = this
@@ -517,12 +526,12 @@ fun BigDecimal.power(
     mathContext: MathContext = MATH_CONTEXT
 ): BigDecimal {
     val operationMC = MathContext(
-        if (2 * mathContext.precision < 0) Int.MAX_VALUE else 2 * mathContext.precision,
+        if (10 + mathContext.precision < 0) Int.MAX_VALUE else 10 + mathContext.precision,
         mathContext.roundingMode
     )
 
     // x^(p) = x^(i + f) = x^i * x^f
-    var intPart = power.divideToIntegralValue(BigDecimal.ONE).setScale(0)
+    var intPart = power.setScale(0, RoundingMode.DOWN)
     val fractionPart = power.subtract(intPart)
 
     if (fractionPart.compareTo(BigDecimal.ZERO) != 0 && this < BigDecimal.ZERO) {
