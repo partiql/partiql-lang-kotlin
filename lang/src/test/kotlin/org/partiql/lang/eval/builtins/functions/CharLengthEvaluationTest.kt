@@ -4,6 +4,7 @@ import org.junit.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.eval.EvaluatorTestBase
+import org.partiql.lang.eval.MISSING_ANNOTATION
 import org.partiql.lang.eval.builtins.Argument
 import org.partiql.lang.eval.builtins.ExprFunctionTestCase
 import org.partiql.lang.eval.builtins.checkInvalidArgType
@@ -16,7 +17,7 @@ class CharLengthEvaluationTest : EvaluatorTestBase() {
     @ParameterizedTest
     @ArgumentsSource(PassCases::class)
     fun charLengthPassTests(testCase: ExprFunctionTestCase) =
-        runEvaluatorTestCase(testCase.source, expectedResult = testCase.expectedLegacyModeResult)
+        runEvaluatorTestCase(testCase.source, expectedResult = testCase.expectedLegacyModeResult, expectedPermissiveModeResult = testCase.expectedPermissiveModeResult)
 
     class PassCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(
@@ -28,7 +29,7 @@ class CharLengthEvaluationTest : EvaluatorTestBase() {
             ExprFunctionTestCase("char_length('ab')", "2"),
             ExprFunctionTestCase("char_length('abcdefghijklmnopqrstuvwxyz')", "26"),
             ExprFunctionTestCase("char_length(null)", "null"),
-            ExprFunctionTestCase("char_length(missing)", "null"),
+            ExprFunctionTestCase("char_length(missing)", "null", "$MISSING_ANNOTATION::null"),
             ExprFunctionTestCase("char_length('ȴȵ💩💋')", "4"),
             ExprFunctionTestCase("char_length('😁😞😸😸')", "4"),
             ExprFunctionTestCase("char_length('話家身圧費谷料村能計税金')", "12"),

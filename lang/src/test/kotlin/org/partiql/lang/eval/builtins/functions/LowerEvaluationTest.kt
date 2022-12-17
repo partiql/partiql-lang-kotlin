@@ -4,6 +4,7 @@ import org.junit.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.eval.EvaluatorTestBase
+import org.partiql.lang.eval.MISSING_ANNOTATION
 import org.partiql.lang.eval.builtins.Argument
 import org.partiql.lang.eval.builtins.ExprFunctionTestCase
 import org.partiql.lang.eval.builtins.checkInvalidArgType
@@ -16,7 +17,8 @@ class LowerEvaluationTest : EvaluatorTestBase() {
     @ArgumentsSource(LowerPassCases::class)
     fun runPassTests(tc: ExprFunctionTestCase) = runEvaluatorTestCase(
         tc.source,
-        expectedResult = tc.expectedLegacyModeResult
+        expectedResult = tc.expectedLegacyModeResult,
+        expectedPermissiveModeResult = tc.expectedPermissiveModeResult
     )
 
     class LowerPassCases : ArgumentsProviderBase() {
@@ -29,7 +31,7 @@ class LowerEvaluationTest : EvaluatorTestBase() {
             ExprFunctionTestCase("lower('ABCDEF')", "\"abcdef\""),
             ExprFunctionTestCase("lower('abcdef')", "\"abcdef\""),
             ExprFunctionTestCase("lower(null)", "null"),
-            ExprFunctionTestCase("lower(missing)", "null"),
+            ExprFunctionTestCase("lower(missing)", "null", "$MISSING_ANNOTATION::null"),
             ExprFunctionTestCase("lower('123\$%(*&')", "\"123\$%(*&\""),
             ExprFunctionTestCase("lower('ȴȵ💩Z💋')", "\"ȴȵ💩z💋\""),
             ExprFunctionTestCase("lower('話家身圧費谷料村能計税金')", "\"話家身圧費谷料村能計税金\"")

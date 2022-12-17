@@ -66,7 +66,7 @@ private fun ExprValueType.typeAliases(): List<String> = when (this) {
 abstract class CastTestBase : EvaluatorTestBase() {
 
     fun ConfiguredCastCase.assertCase(
-        expectedResultFormat: ExpectedResultFormat = ExpectedResultFormat.ION_WITHOUT_BAG_AND_MISSING_ANNOTATIONS
+        expectedResultFormat: ExpectedResultFormat = ExpectedResultFormat.ION
     ) {
         when (castCase.expected) {
             null -> {
@@ -277,12 +277,12 @@ abstract class CastTestBase : EvaluatorTestBase() {
                     }
                 ).types(allTypeNames - ExprValueType.MISSING.typeAliases()),
                 listOf(
-                    case("NULL", "null", CastQuality.LOSSLESS) {
+                    case("NULL", "$MISSING_ANNOTATION::null", CastQuality.LOSSLESS) {
                         assertEquals(ExprValueType.MISSING, it.type)
                     }
                 ).types(listOf("MISSING")),
                 listOf(
-                    case("MISSING", "null", CastQuality.LOSSLESS) {
+                    case("MISSING", "$MISSING_ANNOTATION::null", CastQuality.LOSSLESS) {
                         assertEquals(ExprValueType.MISSING, it.type)
                     }
                 ).types(allTypeNames - ExprValueType.NULL.typeAliases()),
@@ -817,9 +817,9 @@ abstract class CastTestBase : EvaluatorTestBase() {
                     case("`{a:12d0}`", ErrorCode.EVALUATOR_INVALID_CAST),
                     case("{'b':`-4d0`}", ErrorCode.EVALUATOR_INVALID_CAST),
                     // bag
-                    case("<<>>", "[]", CastQuality.LOSSLESS), // TODO bag verification
-                    case("<<`14d0`>>", "[14d0]", CastQuality.LOSSLESS), // TODO bag verification
-                    case("<<`20d0`>>", "[20d0]", CastQuality.LOSSLESS) // TODO bag verification
+                    case("<<>>", "[]", CastQuality.LOSSLESS),
+                    case("<<`14d0`>>", "[14d0]", CastQuality.LOSSLESS),
+                    case("<<`20d0`>>", "[20d0]", CastQuality.LOSSLESS)
                 ).types(ExprValueType.LIST.typeAliases()),
                 listOf(
                     // booleans
@@ -936,22 +936,22 @@ abstract class CastTestBase : EvaluatorTestBase() {
                     case("`{{MS4w}}`", ErrorCode.EVALUATOR_INVALID_CAST), // 1.0
                     case("`{{MmUxMA==}}`", ErrorCode.EVALUATOR_INVALID_CAST), // 2e10
                     // list
-                    case("`[]`", "[]", CastQuality.LOSSLESS), // TODO bag verification
-                    case("['hello']", "[\"hello\"]", CastQuality.LOSSLESS), // TODO bag verification
-                    case("`[-2d0, 0d0]`", "[-2d0, 0d0]", CastQuality.LOSSLESS), // TODO bag verification
+                    case("`[]`", "$BAG_ANNOTATION::[]", CastQuality.LOSSLESS),
+                    case("['hello']", "$BAG_ANNOTATION::[\"hello\"]", CastQuality.LOSSLESS),
+                    case("`[-2d0, 0d0]`", "$BAG_ANNOTATION::[-2d0, 0d0]", CastQuality.LOSSLESS),
                     // sexp
-                    case("`()`", "[]", CastQuality.LOSSLESS), // TODO bag verification
-                    case("`(1d0)`", "[1d0]", CastQuality.LOSSLESS), // TODO bag verification
-                    case("`(0d0)`", "[0d0]", CastQuality.LOSSLESS), // TODO bag verification
+                    case("`()`", "$BAG_ANNOTATION::[]", CastQuality.LOSSLESS),
+                    case("`(1d0)`", "$BAG_ANNOTATION::[1d0]", CastQuality.LOSSLESS),
+                    case("`(0d0)`", "$BAG_ANNOTATION::[0d0]", CastQuality.LOSSLESS),
                     // struct
                     case("`{}`", ErrorCode.EVALUATOR_INVALID_CAST),
                     case("{}", ErrorCode.EVALUATOR_INVALID_CAST),
                     case("`{a:12d0}`", ErrorCode.EVALUATOR_INVALID_CAST),
                     case("{'b':`-4d0`}", ErrorCode.EVALUATOR_INVALID_CAST),
                     // bag
-                    case("<<>>", "[]", CastQuality.LOSSLESS), // TODO bag verification
-                    case("<<`14d0`>>", "[14d0]", CastQuality.LOSSLESS), // TODO bag verification
-                    case("<<`20d0`>>", "[20d0]", CastQuality.LOSSLESS) // TODO bag verification
+                    case("<<>>", "$BAG_ANNOTATION::[]", CastQuality.LOSSLESS),
+                    case("<<`14d0`>>", "$BAG_ANNOTATION::[14d0]", CastQuality.LOSSLESS),
+                    case("<<`20d0`>>", "$BAG_ANNOTATION::[20d0]", CastQuality.LOSSLESS)
                 ).types(ExprValueType.BAG.typeAliases())
             ).flatten()
 
@@ -1451,7 +1451,7 @@ abstract class CastTestBase : EvaluatorTestBase() {
                 // Note that we do not convert cases where the error is semantic (i.e. static)
                 case.expectedErrorCode != null && case.expectedErrorCode.category != ErrorCategory.SEMANTIC -> {
                     // rewrite error code cases to `MISSING` for permissive mode
-                    case.copy(expected = "null", expectedErrorCode = null) {
+                    case.copy(expected = "$MISSING_ANNOTATION::null", expectedErrorCode = null) {
                         assertEquals(ExprValueType.MISSING, it.type)
                     }
                 }
@@ -1524,7 +1524,7 @@ abstract class CastTestBase : EvaluatorTestBase() {
                 val identityValue = eval(castCase.source)
                 val newCastCase = castCase.copy(
                     type = "ANY",
-                    expected = identityValue.toIonValue(ion).cloneAndRemoveBagAndMissingAnnotations().toString(),
+                    expected = identityValue.toIonValue(ion).toString(),
                     expectedErrorCode = null
                 ) {
                     assertEquals(identityValue.type, it.type)

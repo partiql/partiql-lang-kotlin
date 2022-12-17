@@ -5,6 +5,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.EvaluatorTestBase
+import org.partiql.lang.eval.MISSING_ANNOTATION
 import org.partiql.lang.eval.builtins.Argument
 import org.partiql.lang.eval.builtins.ExprFunctionTestCase
 import org.partiql.lang.eval.builtins.checkInvalidArgType
@@ -23,7 +24,8 @@ class ExtractEvaluationTest : EvaluatorTestBase() {
     fun runPassTests(testCase: ExprFunctionTestCase) = runEvaluatorTestCase(
         query = testCase.source,
         session = testCase.session,
-        expectedResult = testCase.expectedLegacyModeResult
+        expectedResult = testCase.expectedLegacyModeResult,
+        expectedPermissiveModeResult = testCase.expectedPermissiveModeResult
     )
 
     class ExtractPassCases : ArgumentsProviderBase() {
@@ -36,14 +38,14 @@ class ExtractEvaluationTest : EvaluatorTestBase() {
             ExprFunctionTestCase("extract(second FROM null)", "null"),
             ExprFunctionTestCase("extract(timezone_hour FROM null)", "null"),
             ExprFunctionTestCase("extract(timezone_minute FROM null)", "null"),
-            ExprFunctionTestCase("extract(year FROM missing)", "null"),
-            ExprFunctionTestCase("extract(month FROM missing)", "null"),
-            ExprFunctionTestCase("extract(day FROM missing)", "null"),
-            ExprFunctionTestCase("extract(hour FROM missing)", "null"),
-            ExprFunctionTestCase("extract(minute FROM missing)", "null"),
-            ExprFunctionTestCase("extract(second FROM missing)", "null"),
-            ExprFunctionTestCase("extract(timezone_hour FROM missing)", "null"),
-            ExprFunctionTestCase("extract(timezone_minute FROM missing)", "null"),
+            ExprFunctionTestCase("extract(year FROM missing)", "null", "$MISSING_ANNOTATION::null"),
+            ExprFunctionTestCase("extract(month FROM missing)", "null", "$MISSING_ANNOTATION::null"),
+            ExprFunctionTestCase("extract(day FROM missing)", "null", "$MISSING_ANNOTATION::null"),
+            ExprFunctionTestCase("extract(hour FROM missing)", "null", "$MISSING_ANNOTATION::null"),
+            ExprFunctionTestCase("extract(minute FROM missing)", "null", "$MISSING_ANNOTATION::null"),
+            ExprFunctionTestCase("extract(second FROM missing)", "null", "$MISSING_ANNOTATION::null"),
+            ExprFunctionTestCase("extract(timezone_hour FROM missing)", "null", "$MISSING_ANNOTATION::null"),
+            ExprFunctionTestCase("extract(timezone_minute FROM missing)", "null", "$MISSING_ANNOTATION::null"),
             ExprFunctionTestCase("extract(second FROM a)", "55.", session = mapOf("a" to "2017-01-10T05:30:55Z").toSession()),
             // just year
             ExprFunctionTestCase("extract(year FROM `2017T`)", "2017."),

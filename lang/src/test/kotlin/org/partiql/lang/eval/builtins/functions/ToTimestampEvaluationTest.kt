@@ -6,6 +6,7 @@ import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.eval.EvaluatorTestBase
+import org.partiql.lang.eval.MISSING_ANNOTATION
 import org.partiql.lang.eval.builtins.Argument
 import org.partiql.lang.eval.builtins.ExprFunctionTestCase
 import org.partiql.lang.eval.builtins.checkInvalidArgType
@@ -20,7 +21,7 @@ class ToTimestampEvaluationTest : EvaluatorTestBase() {
     @ParameterizedTest
     @ArgumentsSource(ToTimestampPassCases::class)
     fun runPassTests(testCase: ExprFunctionTestCase) =
-        runEvaluatorTestCase(testCase.source, expectedResult = testCase.expectedLegacyModeResult)
+        runEvaluatorTestCase(testCase.source, expectedResult = testCase.expectedLegacyModeResult, expectedPermissiveModeResult = testCase.expectedPermissiveModeResult)
 
     class ToTimestampPassCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(
@@ -45,9 +46,9 @@ class ToTimestampEvaluationTest : EvaluatorTestBase() {
             ExprFunctionTestCase("to_timestamp(null, 'M-d-yyyy')", "null"),
             ExprFunctionTestCase("to_timestamp('07-20-1969', null)", "null"),
             ExprFunctionTestCase("to_timestamp(null, null)", "null"),
-            ExprFunctionTestCase("to_timestamp(missing)", "null"),
-            ExprFunctionTestCase("to_timestamp(missing, 'M-d-yyyy')", "null"),
-            ExprFunctionTestCase("to_timestamp('07-20-1969', missing)", "null"),
+            ExprFunctionTestCase("to_timestamp(missing)", "null", "$MISSING_ANNOTATION::null"),
+            ExprFunctionTestCase("to_timestamp(missing, 'M-d-yyyy')", "null", "$MISSING_ANNOTATION::null"),
+            ExprFunctionTestCase("to_timestamp('07-20-1969', missing)", "null", "$MISSING_ANNOTATION::null"),
             ExprFunctionTestCase("to_timestamp(null, null)", "null")
         )
     }
