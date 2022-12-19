@@ -83,7 +83,18 @@ class KotlinGenerator(private val options: KotlinOptions) : Generator<KotlinResu
         product = this,
         props = props.map { KotlinNodeSpec.Prop(it.name.toCamelCase(), symbols.typeNameOf(it.ref)) },
         clazz = symbols.clazz(ref),
-        types = props.filterIsInstance<TypeProp.Enum>().map { it.def.generate(symbols) }.toMutableList(),
+        children = props.filterIsInstance<TypeProp.Inline>().mapNotNull {
+            when (it.def) {
+                is TypeDef.Product, is TypeDef.Sum -> it.def.generate(symbols)
+                else -> null
+            }
+        },
+        types = props.filterIsInstance<TypeProp.Inline>().mapNotNull {
+            when (it.def) {
+                is TypeDef.Enum -> it.def.generate(symbols)
+                else -> null
+            }
+        }
     ).apply {
         props.forEach {
             val para = ParameterSpec.builder(it.name, it.type).build()
@@ -96,6 +107,7 @@ class KotlinGenerator(private val options: KotlinOptions) : Generator<KotlinResu
             KotlinNodeOptions.Modifier.DATA -> if (props.isNotEmpty()) builder.addModifiers(KModifier.DATA)
             KotlinNodeOptions.Modifier.OPEN -> builder.addModifiers(KModifier.OPEN)
         }
+        children.forEach { it.builder.superclass(symbols.base) }
     }
 
     /**
@@ -106,7 +118,7 @@ class KotlinGenerator(private val options: KotlinOptions) : Generator<KotlinResu
         variants = variants.mapNotNull { it.generate(symbols) },
         clazz = symbols.clazz(ref),
     ).apply {
-        variants.forEach { it.builder.superclass(clazz) }
+        children.forEach { it.builder.superclass(clazz) }
     }
 
     /**

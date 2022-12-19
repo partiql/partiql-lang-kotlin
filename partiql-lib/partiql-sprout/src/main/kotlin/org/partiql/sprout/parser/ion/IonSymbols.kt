@@ -27,41 +27,56 @@ internal class IonSymbols private constructor(val root: Node) {
 
     companion object {
 
+        val RESERVED = setOf("map", "list", "set")
+
         fun build(definitions: List<IonValue>) = IonSymbols(
             root = Node(id = "_root").apply {
                 definitions.forEach { type ->
-                    val child = Visitor().visit(type, this)!!
+                    val child = Visitor().visit(type, this)
                     children.add(child)
                 }
             }
         )
+
+        fun assertNonReserved(id: String, context: String) = assert(!RESERVED.contains(id)) {
+            "Cannot used reserved name `$id` for a type definition, $context."
+        }
     }
 
     private class Visitor : IonVisitor<Node, Node?> {
 
         override fun visit(v: IonList, ctx: Node?): Node {
+            val id = v.id()
+            assertNonReserved(id, if (ctx != null) "child of $ctx" else "top-level type")
             val node = Node(
-                id = v.id(),
+                id = id,
                 parent = ctx
             )
             if (!v.isEnum()) {
-                v.forEach { node.children.add(visit(it, node)!!) }
+                v.forEach { node.children.add(visit(it, node)) }
             }
             return node
         }
 
         override fun visit(v: IonStruct, ctx: Node?): Node {
+            val id = v.id()
+            assertNonReserved(id, if (ctx != null) "child of $ctx" else "top-level type")
             val node = Node(
-                id = v.id(),
-                parent = ctx
+                id = id,
+                parent = ctx,
             )
-            v.filter { it.isInlineEnum() }.forEach {
-                node.children.add(
-                    Node(
-                        id = it.fieldName,
-                        parent = node,
-                    )
-                )
+            v.filter { (it is IonList || it is IonStruct) }.forEach {
+                // Add implicit type definition name if not reserved
+                if (it.typeAnnotations.isEmpty()) {
+                    assertNonReserved(it.fieldName, "implicit type definition name in $id")
+                    it.setTypeAnnotations(it.fieldName)
+                }
+                // Skip if list, set, or map
+                if (RESERVED.contains(it.id())) {
+                    return@forEach
+                }
+                // Add inline definition to the graph
+                node.children.add(visit(it, node))
             }
             return node
         }

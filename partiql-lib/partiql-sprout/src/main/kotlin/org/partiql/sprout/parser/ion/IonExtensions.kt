@@ -23,7 +23,7 @@ import java.util.Stack
 
 internal fun IonValue.id(): String {
     if (typeAnnotations.size != 1) {
-        error("Ion value requires a single identifier annotation")
+        error("Ion value requires a single identifier annotation, $this")
     }
     return typeAnnotations[0]
 }
@@ -44,8 +44,6 @@ internal fun IonValue.isEnum(): Boolean = when {
     }
     else -> false
 }
-
-internal fun IonValue.isInlineEnum(): Boolean = isEnum() && typeAnnotations.isEmpty()
 
 /**
  * Depth-first tree walk

@@ -120,6 +120,7 @@ class KotlinJacksonPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
             }
             addStatement(")")
         }
+        super.apply(node)
     }
 
     override fun apply(node: KotlinNodeSpec.Sum) {

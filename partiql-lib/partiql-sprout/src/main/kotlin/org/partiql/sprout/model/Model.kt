@@ -48,7 +48,7 @@ sealed class TypeDef(
      */
     class Product(ref: TypeRef.Path, val props: List<TypeProp>) : TypeDef(ref) {
 
-        override val children: List<TypeDef> = props.filterIsInstance<TypeProp.Enum>().map { it.def }
+        override val children: List<TypeDef> = props.filterIsInstance<TypeProp.Inline>().map { it.def }
 
         override fun toString() = "product::$ref(${props.joinToString()})"
     }
@@ -144,7 +144,7 @@ sealed class TypeProp(
 
     class Ref(name: String, ref: TypeRef) : TypeProp(name, ref)
 
-    class Enum(name: String, val def: TypeDef.Enum) : TypeProp(name, def.ref)
+    class Inline(name: String, val def: TypeDef) : TypeProp(name, def.ref)
 }
 
 /**

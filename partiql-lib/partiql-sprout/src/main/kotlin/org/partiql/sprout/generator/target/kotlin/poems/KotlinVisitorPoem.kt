@@ -100,6 +100,7 @@ class KotlinVisitorPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
                 .addStatement("return visitor.%L(this, ctx)", node.product.ref.visitMethodName())
                 .build()
         )
+        super.apply(node)
     }
 
     /**

@@ -57,6 +57,7 @@ sealed class KotlinNodeSpec(
     class Product(
         val product: TypeDef.Product,
         val props: List<Prop>,
+        override val children: List<KotlinNodeSpec>,
         clazz: ClassName,
         types: List<TypeSpec> = emptyList(),
     ) : KotlinNodeSpec(

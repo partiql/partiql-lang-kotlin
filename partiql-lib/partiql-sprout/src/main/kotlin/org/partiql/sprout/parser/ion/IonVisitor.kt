@@ -41,9 +41,9 @@ import com.amazon.ion.IonValue
 interface IonVisitor<R, C> {
 
     /*
-     * This could be `<R,C> IonValue.accept(v: Visitor<R, C>, ctx: C): R?`, but this is slightly cleaner.
+     * This could be `<R,C> IonValue.accept(v: Visitor<R, C>, ctx: C): R`, but this is slightly cleaner.
      */
-    fun visit(v: IonValue, ctx: C): R? = when (v) {
+    fun visit(v: IonValue, ctx: C): R = when (v) {
         is IonBlob -> visit(v, ctx)
         is IonBool -> visit(v, ctx)
         is IonClob -> visit(v, ctx)
@@ -65,41 +65,41 @@ interface IonVisitor<R, C> {
         else -> throw IllegalArgumentException("unknown IonValue $v")
     }
 
-    fun visit(v: IonBool, ctx: C): R? = defaultVisit(v, ctx)
+    fun visit(v: IonBool, ctx: C): R = defaultVisit(v, ctx)
 
-    fun visit(v: IonBlob, ctx: C): R? = defaultVisit(v, ctx)
+    fun visit(v: IonBlob, ctx: C): R = defaultVisit(v, ctx)
 
-    fun visit(v: IonClob, ctx: C): R? = defaultVisit(v, ctx)
+    fun visit(v: IonClob, ctx: C): R = defaultVisit(v, ctx)
 
-    fun visit(v: IonDatagram, ctx: C): R? = defaultVisit(v, ctx)
+    fun visit(v: IonDatagram, ctx: C): R = defaultVisit(v, ctx)
 
-    fun visit(v: IonDecimal, ctx: C): R? = defaultVisit(v, ctx)
+    fun visit(v: IonDecimal, ctx: C): R = defaultVisit(v, ctx)
 
-    fun visit(v: IonFloat, ctx: C): R? = defaultVisit(v, ctx)
+    fun visit(v: IonFloat, ctx: C): R = defaultVisit(v, ctx)
 
-    fun visit(v: IonInt, ctx: C): R? = defaultVisit(v, ctx)
+    fun visit(v: IonInt, ctx: C): R = defaultVisit(v, ctx)
 
-    fun visit(v: IonList, ctx: C): R? = defaultVisit(v, ctx)
+    fun visit(v: IonList, ctx: C): R = defaultVisit(v, ctx)
 
-    fun visit(v: IonLob, ctx: C): R? = defaultVisit(v, ctx)
+    fun visit(v: IonLob, ctx: C): R = defaultVisit(v, ctx)
 
-    fun visit(v: IonNull, ctx: C): R? = defaultVisit(v, ctx)
+    fun visit(v: IonNull, ctx: C): R = defaultVisit(v, ctx)
 
-    fun visit(v: IonNumber, ctx: C): R? = defaultVisit(v, ctx)
+    fun visit(v: IonNumber, ctx: C): R = defaultVisit(v, ctx)
 
-    fun visit(v: IonSexp, ctx: C): R? = defaultVisit(v, ctx)
+    fun visit(v: IonSexp, ctx: C): R = defaultVisit(v, ctx)
 
-    fun visit(v: IonSequence, ctx: C): R? = defaultVisit(v, ctx)
+    fun visit(v: IonSequence, ctx: C): R = defaultVisit(v, ctx)
 
-    fun visit(v: IonString, ctx: C): R? = defaultVisit(v, ctx)
+    fun visit(v: IonString, ctx: C): R = defaultVisit(v, ctx)
 
-    fun visit(v: IonStruct, ctx: C): R? = defaultVisit(v, ctx)
+    fun visit(v: IonStruct, ctx: C): R = defaultVisit(v, ctx)
 
-    fun visit(v: IonSymbol, ctx: C): R? = defaultVisit(v, ctx)
+    fun visit(v: IonSymbol, ctx: C): R = defaultVisit(v, ctx)
 
-    fun visit(v: IonText, ctx: C): R? = defaultVisit(v, ctx)
+    fun visit(v: IonText, ctx: C): R = defaultVisit(v, ctx)
 
-    fun visit(v: IonTimestamp, ctx: C): R? = defaultVisit(v, ctx)
+    fun visit(v: IonTimestamp, ctx: C): R = defaultVisit(v, ctx)
 
-    fun defaultVisit(v: IonValue, ctx: C) = null
+    fun defaultVisit(v: IonValue, ctx: C): R
 }

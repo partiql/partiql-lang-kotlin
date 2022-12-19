@@ -25,13 +25,33 @@ node::{
 }
 
 collection::[
-  set::{
+  my_list::{
     values: set::[int],
   },
-  list::{
+  my_list::{
     values: list::[int],
   },
-  map::{
+  my_map::{
     values: list::[int],
   }
 ]
+
+inlines::{
+  enum: bar::[
+    A,
+    B,
+    C,
+  ],
+  product: foo::{
+    x: int,
+    y: bar,
+  },
+  sum: [
+    u::{
+      foo: string,
+    },
+    v::{
+      bar: string,
+    }
+  ]
+}
