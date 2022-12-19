@@ -133,7 +133,7 @@ class PipelineEvaluatorTestAdapterTests {
                 EvaluatorTestCase(
                     query = "SEXP(1, 2, 3)",
                     expectedResult = "`(1 2 3)`", // <-- ExprValue.toString() produces this
-                    expectedResultFormat = ExpectedResultFormat.STRING
+                    expectedResultFormat = ExpectedResultFormat.STRICT
                 ),
                 EvaluationSession.standard()
             )
@@ -171,7 +171,7 @@ class PipelineEvaluatorTestAdapterTests {
             EvaluatorTestCase(
                 query = "1",
                 expectedResult = "2",
-                expectedResultFormat = ExpectedResultFormat.STRING
+                expectedResultFormat = ExpectedResultFormat.STRICT
             )
         )
     }

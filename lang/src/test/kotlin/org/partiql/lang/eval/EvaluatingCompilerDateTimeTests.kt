@@ -51,7 +51,7 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
         runEvaluatorTestCase(
             query = tc.query,
             expectedResult = tc.expected,
-            expectedResultFormat = ExpectedResultFormat.STRING,
+            expectedResultFormat = ExpectedResultFormat.STRICT,
             compileOptionsBuilderBlock = tc.compileOptionsBlock
         ) { actualExprValue ->
             assertEquals(tc.expected, actualExprValue.toString())
@@ -163,7 +163,7 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
                 runEvaluatorTestCase(
                     query = tc.query,
                     expectedResult = tc.expected,
-                    expectedResultFormat = ExpectedResultFormat.STRING
+                    expectedResultFormat = ExpectedResultFormat.STRICT
                 )
             }
         }
