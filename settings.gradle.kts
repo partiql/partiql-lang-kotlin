@@ -19,7 +19,8 @@ include(
     "partiql-app:partiql-cli",
     "examples",
     "extensions",
-    "lib:partiql-isl",
+    "partiql-lib:partiql-isl",
+    "partiql-lib:partiql-sprout",
     "test:partiql-tests-runner",
     "test:partiql-randomized-tests",
 )
