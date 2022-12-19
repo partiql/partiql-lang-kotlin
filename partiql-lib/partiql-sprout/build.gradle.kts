@@ -15,7 +15,7 @@
 
 plugins {
     id(Plugins.conventions)
-    id(Plugins.library)
+    id(Plugins.application)
 }
 
 dependencies {
@@ -23,4 +23,16 @@ dependencies {
     implementation("com.amazon.ion:ion-element:1.0.0")
     implementation("net.pearx.kasechange:kasechange:1.3.0")
     implementation("io.github.rchowell:dotlin:1.0.2")
+    implementation("info.picocli:picocli:4.6.3")
+}
+
+application {
+    applicationName = "sprout"
+    mainClass.set("org.partiql.sprout.SproutKt")
+}
+
+distributions {
+    main {
+        distributionBaseName.set("sprout")
+    }
 }
