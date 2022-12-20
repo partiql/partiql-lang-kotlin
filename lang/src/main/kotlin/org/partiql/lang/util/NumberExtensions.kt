@@ -109,6 +109,13 @@ fun Number.ionValue(ion: IonSystem): IonValue = when (this) {
     else -> throw IllegalArgumentException("Cannot convert to IonValue: $this")
 }
 
+operator fun Decimal.unaryMinus(): Decimal =
+    if (isZero()) {
+        Decimal.negativeZero(this.scale())
+    } else {
+        Decimal.valueOf(negate())
+    }
+
 operator fun Number.unaryMinus(): Number {
     return when (this) {
         // - LONG.MIN_VALUE will result in LONG.MIN_VALUE in JVM because LONG is a signed two's-complement integers
