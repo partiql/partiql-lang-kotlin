@@ -36,3 +36,7 @@ distributions {
         distributionBaseName.set("sprout")
     }
 }
+
+tasks.register<GradleBuild>("install") {
+    tasks = listOf("assembleDist", "distZip", "installDist")
+}
