@@ -25,9 +25,8 @@ Generates Kotlin sources from type universe definitions
 ```
 
 ## Considerations from ISL
-- Inline definitions -- why? need examples
-- Constants (?) -- why? need examples
-- Imported non-node types
-- Root-level referencing
-- Properties of sum types
-- Default values (ie just write the value, the type can be inferred)
+- [ ] Inline product definitions
+- [ ] Imported non-node types
+- [ ] Root-level referencing
+- [ ] Properties of sum types
+- [ ] Default values (ie just write the value, the type can be inferred)

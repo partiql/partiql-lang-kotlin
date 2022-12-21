@@ -32,6 +32,6 @@ interface SproutParser {
 
     companion object {
 
-        fun ion(): SproutParser = IonTypeParser
+        fun default(): SproutParser = IonTypeParser
     }
 }

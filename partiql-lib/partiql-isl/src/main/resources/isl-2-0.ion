@@ -106,7 +106,7 @@ constraint::[
   ],
   // Constraint which indicates that the collection is expected to contain all the specified values, in no particular order
   contains::{
-    values: list::['$ion'],
+    values: list::[ion],
   },
   // Constraint which defines the type and/or constraints for all values within a homogeneous collection
   element::{
@@ -235,13 +235,13 @@ range::[
     bounds: bounds,
   },
   number::{
-    lower: 'int?',
-    upper: 'int?',
+    lower: 'double?',
+    upper: 'double?',
     bounds: bounds,
   },
   timestamp::{
-    lower: '$timestamp',
-    upper: '$timestamp',
+    lower: '.timestamp?',
+    upper: '.timestamp?',
     bounds: bounds,
   },
   timestamp_precision::{

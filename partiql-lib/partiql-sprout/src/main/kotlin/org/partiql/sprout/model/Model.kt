@@ -78,7 +78,7 @@ sealed class TypeRef(
     val nullable: Boolean,
 ) {
 
-    override fun equals(other: kotlin.Any?) =
+    override fun equals(other: Any?) =
         if (other !is TypeRef) false else (id == other.id && nullable == other.nullable)
 
     override fun hashCode() = id.hashCode()
@@ -91,11 +91,6 @@ sealed class TypeRef(
     ) : TypeRef(
         id = type.toString().toLowerCase(),
         nullable = nullable,
-    )
-
-    class Any(nullable: Boolean = false) : TypeRef(
-        "any",
-        nullable = nullable
     )
 
     class List(
@@ -114,12 +109,8 @@ sealed class TypeRef(
         nullable = nullable,
     )
 
-    /**
-     * TODO determine keyType restrictions following protobuf learnings
-     * https://developers.google.com/protocol-buffers/docs/proto3#maps
-     */
     class Map(
-        val keyType: TypeRef,
+        val keyType: Scalar,
         val valType: TypeRef,
         nullable: Boolean = false,
     ) : TypeRef(
@@ -136,6 +127,17 @@ sealed class TypeRef(
     ) {
         val path = ids.asList()
         val name = ids.last().toPascalCase()
+    }
+
+    class Import(
+        nullable: Boolean = false,
+        val namespace: String,
+        vararg ids: String,
+    ) : TypeRef(
+        id = "$namespace#${ids.joinToString(".")}",
+        nullable = nullable
+    ) {
+        val path = ids.asList()
     }
 }
 
@@ -168,5 +170,5 @@ enum class ScalarType {
     FLOAT, // IEEE 754 (32 bit)
     DOUBLE, // IEEE 754 (64 bit)
     BYTES, // Array of unsigned bytes
-    STRING // Unicode char sequence
+    STRING, // Unicode char sequence
 }

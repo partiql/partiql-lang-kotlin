@@ -48,19 +48,6 @@ class Generate : Callable<Int> {
     lateinit var file: File
 
     @CommandLine.Option(
-        names = ["-I"],
-        description = ["Path of included type definitions"]
-    )
-    lateinit var includes: Path
-
-    @CommandLine.Option(
-        names = ["-s", "--syntax"],
-        description = ["Syntax version for the type universe definition"],
-        defaultValue = "ion",
-    )
-    lateinit var syntax: String
-
-    @CommandLine.Option(
         names = ["-p", "--package"],
         description = ["Package root"]
     )
@@ -74,7 +61,7 @@ class Generate : Callable<Int> {
 
     override fun call(): Int {
         val input = BufferedReader(FileInputStream(file).reader()).readText()
-        val parser = SproutParser.ion() // -- only ion for now
+        val parser = SproutParser.default()
         val universe = parser.parse(file.name, input)
         val options = Options(
             packageRoot = packageRoot,

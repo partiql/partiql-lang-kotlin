@@ -29,9 +29,7 @@ import org.partiql.sprout.model.Universe
 import org.partiql.sprout.parser.SproutParser
 
 /**
- * Parser for the prototype .ion grammar — attempting to stay similar to Protobuf.
- *
- * TODO enforce than an enum cannot be a variant of a TypeDef.Sum
+ * Parser for the prototype .ion grammar
  */
 internal object IonTypeParser : SproutParser {
 
@@ -41,7 +39,7 @@ internal object IonTypeParser : SproutParser {
         val reader = ion.newReader(input)
         var type = reader.next()
 
-        var importsValue: IonList? = null
+        var importsValue: IonStruct? = null
         val definitions: MutableList<IonValue> = mutableListOf()
 
         while (type != null) {
@@ -51,10 +49,13 @@ internal object IonTypeParser : SproutParser {
                     if (importsValue != null) {
                         error("`imports` has already been set")
                     }
-                    if (type != IonType.LIST) {
-                        error("`imports` must be a list")
+                    if (type != IonType.STRUCT) {
+                        error("`imports` must be a struct")
                     }
-                    importsValue = value as IonList
+                    if (definitions.isNotEmpty()) {
+                        error("`imports` must appear before all definitions")
+                    }
+                    importsValue = value as IonStruct
                 }
                 else -> {
                     if (type != IonType.LIST && type != IonType.STRUCT) {
@@ -68,11 +69,12 @@ internal object IonTypeParser : SproutParser {
 
         // Build the symbol graph prior to parsing definitions
         val symbols = IonSymbolGraph.build(definitions)
+        val imports = IonImportsMap.build(importsValue)
 
         return Universe(
             id = id,
             types = definitions.map {
-                val ctx = Context(symbols.root)
+                val ctx = Context(symbols.root, imports)
                 Visitor.visit(it, ctx)!!
             },
             domains = emptyList() // TODO
@@ -129,7 +131,10 @@ internal object IonTypeParser : SproutParser {
     /**
      * Context encapsulates mutable state to keep the Visitor stateless
      */
-    private class Context(root: IonSymbolGraph.Node) {
+    private class Context(
+        private val root: IonSymbolGraph.Node,
+        private val imports: IonImportsMap,
+    ) {
 
         private var tip: IonSymbolGraph.Node = root
         private val defs: MutableList<TypeDef> = mutableListOf()
@@ -163,33 +168,42 @@ internal object IonTypeParser : SproutParser {
         }
 
         /**
-         * Resolve a symbolic reference
+         * Resolve a symbolic reference with the given rules
          */
         private fun resolve(v: IonSymbol): TypeRef {
-            val (symbol, nullable) = split(v.stringValue())
-            return try {
-                when (val s = symbol.toUpperCase()) {
-                    "ANY" -> TypeRef.Any(nullable = nullable)
-                    else -> TypeRef.Scalar(
-                        type = ScalarType.valueOf(s),
-                        nullable = nullable,
-                    )
-                }
-            } catch (_: IllegalArgumentException) {
-                // search _up_ the tree for the symbol
-                val node = tip.search(symbol) ?: error("symbol `$symbol` not found")
-                TypeRef.Path(
+            val (symbol, absolute, nullable) = symbol(v.stringValue())
+            // 1. Attempt as scalar
+            try {
+                return TypeRef.Scalar(
+                    type = ScalarType.valueOf(symbol.toUpperCase()),
+                    nullable = nullable,
+                )
+            } catch (_: IllegalArgumentException) {}
+            // 2. Attempt to find the symbol in the definitions
+            val node = if (absolute) root.search(symbol) else tip.search(symbol)
+            if (node != null) {
+                return TypeRef.Path(
                     nullable = nullable,
                     ids = (node.path.toTypedArray()),
                 )
             }
+            // 3. Attempt to find the symbol in the imports
+            val import = imports[symbol]
+            if (import != null) {
+                return TypeRef.Import(
+                    namespace = import.namespace,
+                    ids = import.ids.toTypedArray(),
+                )
+            }
+            // 4. Error nothing found
+            error("symbol `$symbol` not found")
         }
 
         /**
          * Resolve the collection type
          */
         private fun resolve(v: IonList): TypeRef {
-            val (symbol, nullable) = split(v.id())
+            val (symbol, _, nullable) = symbol(v.id())
             return when (symbol.toLowerCase()) {
                 "list" -> {
                     assert(v.size == 1)
@@ -205,8 +219,9 @@ internal object IonTypeParser : SproutParser {
                     assert(v.size == 2)
                     val kt = resolve(v[0])
                     val vt = resolve(v[1])
+                    assert(kt is TypeRef.Scalar)
                     assert(!kt.nullable)
-                    TypeRef.Map(kt, vt, nullable)
+                    TypeRef.Map(kt as TypeRef.Scalar, vt, nullable)
                 }
                 else -> error("invalid collection type $symbol; must be one of `list`, `set`, or `map`")
             }
@@ -216,13 +231,16 @@ internal object IonTypeParser : SproutParser {
          * Resolve the fully specified property definition
          */
         private fun resolve(v: IonStruct): TypeRef {
-            TODO("fully specified property definitions")
+            TODO("fully specified property definitions have not been specified")
         }
 
-        private fun split(name: String): Pair<String, Boolean> {
-            val nullable = name.last() == '?'
-            val symbol = if (nullable) name.dropLast(1) else name
-            return Pair(symbol, nullable)
+        private fun symbol(id: String): Triple<String, Boolean, Boolean> {
+            val nullable = id.last() == '?'
+            val absolute = id.startsWith(".")
+            var symbol = id
+            symbol = if (nullable) symbol.dropLast(1) else symbol
+            symbol = if (absolute) symbol.drop(1) else symbol
+            return Triple(symbol, absolute, nullable)
         }
     }
 }
