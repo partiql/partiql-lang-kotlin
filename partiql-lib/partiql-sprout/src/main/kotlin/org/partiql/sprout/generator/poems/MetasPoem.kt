@@ -15,20 +15,21 @@
 
 package org.partiql.sprout.generator.poems
 
+import com.squareup.kotlinpoet.ANY
+import com.squareup.kotlinpoet.MUTABLE_MAP
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.PropertySpec
+import com.squareup.kotlinpoet.STRING
 import org.partiql.sprout.generator.Poem
 import org.partiql.sprout.generator.Symbols
 import org.partiql.sprout.generator.spec.UniverseSpec
-import org.partiql.sprout.generator.types.KotlinTypes
-import org.partiql.sprout.generator.types.ScalarTypes
 
 class MetasPoem(symbols: Symbols) : Poem(symbols) {
 
     override val id = "metas"
 
     // Consider a TypeAlias
-    private val stringMapOfAny = KotlinTypes.mutableMap.parameterizedBy(ScalarTypes.string, KotlinTypes.any)
+    private val stringMapOfAny = MUTABLE_MAP.parameterizedBy(STRING, ANY)
 
     private val metas = PropertySpec.builder("metadata", stringMapOfAny).initializer("mutableMapOf()").build()
 

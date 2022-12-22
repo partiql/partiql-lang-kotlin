@@ -85,3 +85,16 @@ internal fun IonSymbolGraph.Node.search(id: String): IonSymbolGraph.Node? {
     }
     return null
 }
+
+/**
+ * Search path starting from this
+ */
+internal fun IonSymbolGraph.Node.search(path: List<String>): IonSymbolGraph.Node? {
+    var i = 0
+    var node: IonSymbolGraph.Node? = this
+    while (node != null && i < path.size) {
+        node = node.children.find { it.id == path[i] }
+        i += 1
+    }
+    return node
+}

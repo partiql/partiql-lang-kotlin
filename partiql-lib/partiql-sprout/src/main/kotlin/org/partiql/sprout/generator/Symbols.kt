@@ -15,13 +15,24 @@
 
 package org.partiql.sprout.generator
 
+import com.squareup.kotlinpoet.BOOLEAN
+import com.squareup.kotlinpoet.BYTE_ARRAY
 import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.DOUBLE
+import com.squareup.kotlinpoet.FLOAT
+import com.squareup.kotlinpoet.INT
+import com.squareup.kotlinpoet.LIST
+import com.squareup.kotlinpoet.LONG
+import com.squareup.kotlinpoet.MAP
+import com.squareup.kotlinpoet.MUTABLE_LIST
+import com.squareup.kotlinpoet.MUTABLE_MAP
+import com.squareup.kotlinpoet.MUTABLE_SET
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
+import com.squareup.kotlinpoet.SET
+import com.squareup.kotlinpoet.STRING
 import com.squareup.kotlinpoet.TypeName
 import net.pearx.kasechange.toCamelCase
 import net.pearx.kasechange.toPascalCase
-import org.partiql.sprout.generator.types.KotlinTypes
-import org.partiql.sprout.generator.types.ScalarTypes
 import org.partiql.sprout.model.Domain
 import org.partiql.sprout.model.ScalarType
 import org.partiql.sprout.model.TypeDef
@@ -64,11 +75,11 @@ class Symbols private constructor(
     private val camels: MutableMap<TypeRef.Path, String> = mutableMapOf()
 
     /**
-     * Map all type references back to their definitions
+     * Map all type references back to their definitions. Use `id` as to not include `nullable` in the key `equals`
      */
-    private val defs: Map<TypeRef.Path, TypeDef> by lazy {
-        val d = mutableMapOf<TypeRef.Path, TypeDef>()
-        universe.forEachType { d[it.ref] = it }
+    private val defs: Map<String, TypeDef> by lazy {
+        val d = mutableMapOf<String, TypeDef>()
+        universe.forEachType { d[it.ref.id] = it }
         d
     }
 
@@ -97,36 +108,50 @@ class Symbols private constructor(
         ref.path.joinToString("_").toCamelCase()
     }
 
-    fun def(ref: TypeRef.Path): TypeDef = defs[ref]!!
+    fun def(ref: TypeRef.Path): TypeDef = defs[ref.id] ?: error("no definition found for type `$ref`")
 
     /**
      * Computes a type name for the given [TypeRef]
      */
-    fun typeNameOf(ref: TypeRef): TypeName = when (ref) {
+    fun typeNameOf(ref: TypeRef, mutable: Boolean = false): TypeName = when (ref) {
         is TypeRef.Scalar -> typeNameOf(ref)
-        is TypeRef.Any -> typeNameOf(ref)
         is TypeRef.Path -> clazz(ref)
-        is TypeRef.List -> typeNameOf(ref)
-        is TypeRef.Set -> typeNameOf(ref)
-        is TypeRef.Map -> typeNameOf(ref)
+        is TypeRef.List -> typeNameOf(ref, mutable)
+        is TypeRef.Set -> typeNameOf(ref, mutable)
+        is TypeRef.Map -> typeNameOf(ref, mutable)
+        is TypeRef.Import -> ClassName(ref.namespace, ref.path)
     }
-
-    fun typeNameOf(type: ScalarType): TypeName = ScalarTypes.typeNameOf(type)
 
     // --- Internal -------------------------------
 
-    private fun typeNameOf(ref: TypeRef.Scalar) = typeNameOf(ref.type)
+    private fun typeNameOf(ref: TypeRef.Scalar) = when (ref.type) {
+        ScalarType.BOOL -> BOOLEAN
+        ScalarType.INT -> INT
+        ScalarType.LONG -> LONG
+        ScalarType.FLOAT -> FLOAT
+        ScalarType.DOUBLE -> DOUBLE
+        ScalarType.BYTES -> BYTE_ARRAY
+        ScalarType.STRING -> STRING
+    }
 
-    private fun typeNameOf(ref: TypeRef.Any) = KotlinTypes.any
+    private fun typeNameOf(ref: TypeRef.List, mutable: Boolean = false): TypeName {
+        val t = typeNameOf(ref.type, mutable)
+        val list = if (mutable) MUTABLE_LIST else LIST
+        return list.parameterizedBy(t)
+    }
 
-    private fun typeNameOf(ref: TypeRef.List) = KotlinTypes.list.parameterizedBy(typeNameOf(ref.type))
+    private fun typeNameOf(ref: TypeRef.Set, mutable: Boolean = false): TypeName {
+        val t = typeNameOf(ref.type, mutable)
+        val set = if (mutable) MUTABLE_SET else SET
+        return set.parameterizedBy(t)
+    }
 
-    private fun typeNameOf(ref: TypeRef.Set) = KotlinTypes.set.parameterizedBy(typeNameOf(ref.type))
-
-    private fun typeNameOf(ref: TypeRef.Map) = KotlinTypes.map.parameterizedBy(
-        typeNameOf(ref.keyType),
-        typeNameOf(ref.valType)
-    )
+    private fun typeNameOf(ref: TypeRef.Map, mutable: Boolean = false): TypeName {
+        val kt = typeNameOf(ref.keyType)
+        val vt = typeNameOf(ref.valType)
+        val map = if (mutable) MUTABLE_MAP else MAP
+        return map.parameterizedBy(kt, vt)
+    }
 
     /**
      * Returns the subset of type definitions for the given domain
@@ -149,9 +174,8 @@ class Symbols private constructor(
      * Lives here for now because of the special treatment primitives
      */
     fun valueMapping(ref: TypeRef, v: String): String = when (ref) {
-        is TypeRef.Any -> v // TODO!
         is TypeRef.List -> "$v.map { n -> ${valueMapping(ref.type, "n")} }"
-        is TypeRef.Map -> TODO("determine if a map key can be anything other than strings")
+        is TypeRef.Map -> TODO("Jackson databind for maps")
         is TypeRef.Set -> "$v.map { n -> ${valueMapping(ref.type, "n")} }.toSet()"
         is TypeRef.Scalar -> when (ref.type) {
             ScalarType.BOOL -> "$v.asBoolean()"
@@ -169,5 +193,7 @@ class Symbols private constructor(
                 is TypeDef.Sum -> "_${camel(ref)}($v)"
             }
         }
+        // Make this invoke the default deserializer and see how far the gets us
+        is TypeRef.Import -> TODO("Jackson databind is currently not supported for imported types")
     }
 }

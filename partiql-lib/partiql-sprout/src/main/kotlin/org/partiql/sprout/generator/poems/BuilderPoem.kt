@@ -164,19 +164,18 @@ class BuilderPoem(symbols: Symbols) : Poem(symbols) {
         )
     }.build()
 
-    /**
-     * For now, this does not handle collection types
-     */
     private fun NodeSpec.Product.dslConstructs(): Pair<TypeSpec, FunSpec> {
-        val name = symbols.camel(product.ref)
-        val receiverType = builderClass.nestedClass("_${name.toPascalCase()}")
+        val receiverName = symbols.camel(product.ref)
+        val receiverType = builderClass.nestedClass("_${receiverName.toPascalCase()}")
         val receiverConstructor = FunSpec.constructorBuilder()
         val receiver = TypeSpec.classBuilder(receiverType)
-        val dslFunction = FunSpec.builder(name).returns(clazz)
-        props.forEach {
-            val type = it.type.copy(nullable = true)
-            val para = ParameterSpec.builder(it.name, type).defaultValue("null").build()
-            val prop = PropertySpec.builder(it.name, type).initializer(it.name).mutable().build()
+        val dslFunction = FunSpec.builder(receiverName).returns(clazz)
+        product.props.forEachIndexed { i, it ->
+            // we want a mutable and nullable type for builder
+            val type = symbols.typeNameOf(it.ref, mutable = true).copy(true)
+            val name = props[i].name
+            val para = ParameterSpec.builder(name, type).defaultValue("null").build()
+            val prop = PropertySpec.builder(name, type).initializer(name).mutable().build()
             receiver.addProperty(prop)
             receiverConstructor.addParameter(para)
             dslFunction.addParameter(para)
@@ -197,7 +196,7 @@ class BuilderPoem(symbols: Symbols) : Poem(symbols) {
         val f = dslFunction
             .addStatement("val b = %T(${props.joinToString { it.name }})", receiverType)
             .addStatement("b.block()")
-            .addStatement("return factory.$name(${props.joinToString { "${it.name} = b.${it.name}!!" }})")
+            .addStatement("return factory.$receiverName(${props.joinToString { "${it.name} = b.${it.name}!!" }})")
             .build()
         return Pair(r, f)
     }

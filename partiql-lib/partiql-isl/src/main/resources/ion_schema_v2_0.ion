@@ -12,8 +12,8 @@
 
 imports::{
   kotlin: [
-    ion::'com.amazon.ion.element#AnyElement',
-    timestamp::'com.amazon.ion.element#TimestampElement',
+    ion::'com.amazon.ionelement.api#AnyElement',
+    timestamp::'com.amazon.ionelement.api#TimestampElement',
   ],
 }
 
@@ -21,13 +21,13 @@ imports::{
 schema::{
   version: version,
   header: 'header?',
-  definitions: list::[definition],
+  definitions: list::[type],
   footer: 'footer?',
 }
 
 header::{
   imports: list::[import],
-  user_reserved_fields: user_reservered_fields,
+  user_reserved_fields: user_reserved_fields,
 }
 
 user_reserved_fields::{
@@ -42,19 +42,19 @@ footer::{}
 import::{
   schema: string,
   type: 'type?',
-  as: 'string?',
+  alias: 'string?',
 }
 
 //---[Version Marker]---
 version::[
-  'v1_0',
-  'v2_0',
+  'V1_0',
+  'V2_0',
 ]
 
 //---[Type Definition]---
 type::{
   name: string,
-  constraints: list::[constraint]
+  constraints: list::[constraint],
 }
 
 //---[Type Reference]---
@@ -79,7 +79,7 @@ ref::[
 constraint::[
   //
   range::{
-    range: range,
+    range: '.range',
   },
   //
   all_of::{

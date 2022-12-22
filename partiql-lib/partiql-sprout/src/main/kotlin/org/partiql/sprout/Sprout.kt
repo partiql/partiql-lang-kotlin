@@ -54,6 +54,12 @@ class Generate : Callable<Int> {
     lateinit var packageRoot: String
 
     @CommandLine.Option(
+        names = ["-u", "--universe"],
+        description = ["Universe identifier"]
+    )
+    lateinit var id: String
+
+    @CommandLine.Option(
         names = ["-o", "--out"],
         description = ["Generated source output directory"]
     )
@@ -62,7 +68,7 @@ class Generate : Callable<Int> {
     override fun call(): Int {
         val input = BufferedReader(FileInputStream(file).reader()).readText()
         val parser = SproutParser.default()
-        val universe = parser.parse(file.name, input)
+        val universe = parser.parse(id, input)
         val options = Options(
             packageRoot = packageRoot,
             node = NodeOptions(

@@ -19,7 +19,6 @@ plugins {
     id(Plugins.conventions)
     id(Plugins.dokka)
     id(Plugins.library)
-    id(Plugins.pig)
     id(Plugins.publish)
 }
 
@@ -27,7 +26,6 @@ dependencies {
     api(Deps.ionElement)
     api(Deps.ionJava)
     api(Deps.ionSchema)
-    api(Deps.pigRuntime)
 }
 
 publish {
@@ -35,12 +33,4 @@ publish {
     name = "PartiQL ISL Kotlin"
     description = "An object model that allows for programmatic manipulation of Ion Schema Language schemas."
     url = "https://github.com/partiql/partiql-lang-kotlin/tree/main/lib/partiql-isl"
-}
-
-pig {
-    namespace = "org.partiql.ionschema.model"
-}
-
-tasks.dokkaHtml {
-    dependsOn(tasks.withType(org.partiql.pig.gradle.PigTask::class))
 }

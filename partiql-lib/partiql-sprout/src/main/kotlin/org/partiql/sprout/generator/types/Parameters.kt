@@ -15,11 +15,9 @@
 
 package org.partiql.sprout.generator.types
 
-import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.TypeVariableName
-import com.squareup.kotlinpoet.asTypeName
 
-object KotlinTypes {
+object Parameters {
 
     val R = TypeVariableName("R")
 
@@ -32,18 +30,4 @@ object KotlinTypes {
     val `C?` = TypeVariableName("C?")
 
     val `T?` = TypeVariableName("T?")
-
-    val list = ClassName("kotlin.collections", "List")
-
-    val set = ClassName("kotlin.collections", "Set")
-
-    val map = ClassName("kotlin.collections", "Map")
-
-    val mutableMap = ClassName("kotlin.collections", "MutableMap")
-
-    val any = Any::class.asTypeName()
-
-    val `any?` = Any::class.asTypeName().copy(true)
-
-    val nothing = ClassName("kotlin", "Nothing")
 }

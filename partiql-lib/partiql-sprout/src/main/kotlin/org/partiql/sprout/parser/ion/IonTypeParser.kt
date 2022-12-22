@@ -180,7 +180,12 @@ internal object IonTypeParser : SproutParser {
                 )
             } catch (_: IllegalArgumentException) {}
             // 2. Attempt to find the symbol in the definitions
-            val node = if (absolute) root.search(symbol) else tip.search(symbol)
+            val node = if (absolute) {
+                val path = symbol.split(".")
+                root.search(path)
+            } else {
+                tip.search(symbol)
+            }
             if (node != null) {
                 return TypeRef.Path(
                     nullable = nullable,

@@ -22,7 +22,6 @@ import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
 import net.pearx.kasechange.toCamelCase
 import org.partiql.sprout.generator.poems.BuilderPoem
-import org.partiql.sprout.generator.poems.JacksonPoem
 import org.partiql.sprout.generator.poems.VisitorPoem
 import org.partiql.sprout.generator.spec.DomainSpec
 import org.partiql.sprout.generator.spec.FileSpec
@@ -42,9 +41,9 @@ class Generator(private val options: Options) {
         // In the future, this list will be dynamic
         val poems = listOf(
             VisitorPoem(symbols),
-            // ListenerPoem(symbols),
             BuilderPoem(symbols),
-            JacksonPoem(symbols),
+            // ListenerPoem(symbols),
+            // JacksonPoem(symbols),
         )
 
         // --- Generate skeleton

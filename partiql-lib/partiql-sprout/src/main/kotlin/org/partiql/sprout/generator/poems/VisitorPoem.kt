@@ -20,6 +20,7 @@ import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
+import com.squareup.kotlinpoet.LIST
 import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.PropertySpec
@@ -29,8 +30,8 @@ import org.partiql.sprout.generator.Symbols
 import org.partiql.sprout.generator.spec.NodeSpec
 import org.partiql.sprout.generator.spec.PackageSpec
 import org.partiql.sprout.generator.spec.UniverseSpec
-import org.partiql.sprout.generator.types.KotlinTypes
-import org.partiql.sprout.model.TypeProp
+import org.partiql.sprout.generator.types.Parameters
+import org.partiql.sprout.model.TypeDef
 import org.partiql.sprout.model.TypeRef
 
 /**
@@ -40,17 +41,17 @@ class VisitorPoem(symbols: Symbols) : Poem(symbols) {
 
     override val id = "visitor"
 
-    private val children = PropertySpec.builder("children", KotlinTypes.list.parameterizedBy(symbols.base)).build()
+    private val children = PropertySpec.builder("children", LIST.parameterizedBy(symbols.base)).build()
 
     private val visitorPackageName = "${symbols.rootPackage}.visitor"
     private val baseVisitorName = "${symbols.rootId}Visitor"
     private val baseVisitorClass = ClassName(visitorPackageName, baseVisitorName)
 
     private val accept = FunSpec.builder("accept")
-        .addTypeVariable(KotlinTypes.R)
-        .addTypeVariable(KotlinTypes.C)
-        .addParameter("visitor", baseVisitorClass.parameterizedBy(KotlinTypes.R, KotlinTypes.C))
-        .returns(KotlinTypes.`R?`)
+        .addTypeVariable(Parameters.R)
+        .addTypeVariable(Parameters.C)
+        .addParameter("visitor", baseVisitorClass.parameterizedBy(Parameters.R, Parameters.C))
+        .returns(Parameters.`R?`)
         .build()
 
     /**
@@ -66,7 +67,7 @@ class VisitorPoem(symbols: Symbols) : Poem(symbols) {
         universe.base.addFunction(
             accept.toBuilder()
                 .addModifiers(KModifier.ABSTRACT)
-                .addParameter(ParameterSpec.builder("ctx", KotlinTypes.`C?`).defaultValue("null").build())
+                .addParameter(ParameterSpec.builder("ctx", Parameters.`C?`).defaultValue("null").build())
                 .build()
         )
         universe.packages.add(
@@ -100,7 +101,7 @@ class VisitorPoem(symbols: Symbols) : Poem(symbols) {
         node.builder.addFunction(
             accept.toBuilder()
                 .addModifiers(KModifier.OVERRIDE)
-                .addParameter(ParameterSpec.builder("ctx", KotlinTypes.`C?`).build())
+                .addParameter(ParameterSpec.builder("ctx", Parameters.`C?`).build())
                 .addStatement("return visitor.visit(this, ctx)")
                 .build()
         )
@@ -113,7 +114,7 @@ class VisitorPoem(symbols: Symbols) : Poem(symbols) {
         node.builder.addFunction(
             accept.toBuilder()
                 .addModifiers(KModifier.OVERRIDE)
-                .addParameter(ParameterSpec.builder("ctx", KotlinTypes.`C?`).build())
+                .addParameter(ParameterSpec.builder("ctx", Parameters.`C?`).build())
                 .apply {
                     beginControlFlow("return when (this)")
                     node.sum.variants.forEach {
@@ -139,14 +140,10 @@ class VisitorPoem(symbols: Symbols) : Poem(symbols) {
             .addStatement("val kids = mutableListOf<%T>()", symbols.base)
             .apply {
                 product.props.forEachIndexed { i, prop ->
-                    if (prop is TypeProp.Enum) {
-                        // skip inline enum definitions
-                        return@forEachIndexed
-                    }
                     val kid = prop.ref
                     val name = props[i].name
                     when {
-                        (kid is TypeRef.Path) -> addStatement("kids.add($name)")
+                        (kid is TypeRef.Path && symbols.def(kid) !is TypeDef.Enum) -> addStatement("kids.add($name)")
                         (kid is TypeRef.List && kid.type is TypeRef.Path) -> addStatement("kids.addAll($name)")
                         (kid is TypeRef.Set && kid.type is TypeRef.Path) -> addStatement("kids.addAll($name)")
                         else -> n -= 1
@@ -161,7 +158,10 @@ class VisitorPoem(symbols: Symbols) : Poem(symbols) {
     /**
      * Generate all visitors for this universe
      */
-    private fun UniverseSpec.visitors(): List<FileSpec> = listOf(visitor(), visitorFold())
+    private fun UniverseSpec.visitors(): List<FileSpec> = listOf(
+        visitor(),
+        // visitorFold(), VisitorFold is a less useful version of Visitor
+    )
 
     /**
      * Generates the base visitor for this universe
@@ -170,8 +170,8 @@ class VisitorPoem(symbols: Symbols) : Poem(symbols) {
         val defaultVisit = FunSpec.builder("defaultVisit")
             .addModifiers(KModifier.OPEN)
             .addParameter(ParameterSpec("node", symbols.base))
-            .addParameter(ParameterSpec("ctx", KotlinTypes.`C?`))
-            .returns(KotlinTypes.`R?`)
+            .addParameter(ParameterSpec("ctx", Parameters.`C?`))
+            .returns(Parameters.`R?`)
             .beginControlFlow("for (child in node.children)")
             .addStatement("child.accept(this, ctx)")
             .endControlFlow()
@@ -179,8 +179,8 @@ class VisitorPoem(symbols: Symbols) : Poem(symbols) {
             .build()
         val visitor = TypeSpec.classBuilder(baseVisitorName)
             .addModifiers(KModifier.ABSTRACT)
-            .addTypeVariable(KotlinTypes.R)
-            .addTypeVariable(KotlinTypes.C)
+            .addTypeVariable(Parameters.R)
+            .addTypeVariable(Parameters.C)
             .apply {
                 forEachNode {
                     addFunction(it.visit())
@@ -197,13 +197,13 @@ class VisitorPoem(symbols: Symbols) : Poem(symbols) {
         val defaultVisit = FunSpec.builder("defaultVisit")
             .addModifiers(KModifier.OVERRIDE)
             .addParameter(ParameterSpec("node", symbols.base))
-            .addParameter(ParameterSpec("ctx", KotlinTypes.`T?`))
-            .returns(KotlinTypes.`T?`)
+            .addParameter(ParameterSpec("ctx", Parameters.`T?`))
+            .returns(Parameters.`T?`)
             .addStatement("return node.children.foldRight(node.accept(this, ctx)) { child, acc -> child.accept(this, acc) }")
             .build()
         val visitor = TypeSpec.classBuilder(foldVisitorClass)
-            .addTypeVariable(KotlinTypes.T)
-            .superclass(baseVisitorClass.parameterizedBy(listOf(KotlinTypes.T, KotlinTypes.T)))
+            .addTypeVariable(Parameters.T)
+            .superclass(baseVisitorClass.parameterizedBy(listOf(Parameters.T, Parameters.T)))
             .addFunction(defaultVisit)
             .build()
         return FileSpec.builder(visitorPackageName, foldVisitorName).addType(visitor).build()
@@ -217,16 +217,16 @@ class VisitorPoem(symbols: Symbols) : Poem(symbols) {
     private fun NodeSpec.Product.visit() = FunSpec.builder("visit")
         .addModifiers(KModifier.OPEN)
         .addParameter(ParameterSpec("node", clazz))
-        .addParameter(ParameterSpec("ctx", KotlinTypes.`C?`))
-        .returns(KotlinTypes.`R?`)
+        .addParameter(ParameterSpec("ctx", Parameters.`C?`))
+        .returns(Parameters.`R?`)
         .addStatement("return defaultVisit(node, ctx)")
         .build()
 
     private fun NodeSpec.Sum.visit() = FunSpec.builder("visit")
         .addModifiers(KModifier.OPEN)
         .addParameter(ParameterSpec("node", clazz))
-        .addParameter(ParameterSpec("ctx", KotlinTypes.`C?`))
-        .returns(KotlinTypes.`R?`)
+        .addParameter(ParameterSpec("ctx", Parameters.`C?`))
+        .returns(Parameters.`R?`)
         .apply {
             beginControlFlow("return when (node)")
             sum.variants.forEach {
