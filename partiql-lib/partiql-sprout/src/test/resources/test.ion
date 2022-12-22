@@ -1,0 +1,261 @@
+// Copyright Amazon.com, Inc. or its affiliates.  All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License").
+// You may not use this file except in compliance with the License.
+// A copy of the License is located at:
+//
+//      http://aws.amazon.com/apache2.0/
+//
+// or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
+// language governing permissions and limitations under the License.
+
+imports::{
+  kotlin: [
+    ion::'com.amazon.ionelement.api#AnyElement',
+    timestamp::'com.amazon.ionelement.api#TimestampElement',
+  ],
+}
+
+//---[Schemas]---
+schema::{
+  version: version,
+  header: 'header?',
+  definitions: list::[type],
+  footer: 'footer?',
+}
+
+header::{
+  imports: list::[import],
+  user_reserved_fields: user_reserved_fields,
+}
+
+user_reserved_fields::{
+  header: list::[string],
+  type: list::[string],
+  footer: list::[string],
+}
+
+footer::{}
+
+//---[Imports]---
+import::{
+  schema: string,
+  type: 'type?',
+  alias: 'string?',
+}
+
+//---[Version Marker]---
+version::[
+  'V1_0',
+  'V2_0',
+]
+
+//---[Type Definition]---
+type::{
+  name: string,
+  constraints: list::[constraint],
+}
+
+//---[Type Reference]---
+ref::[
+  type::{
+    name: string,
+    nullable: bool,
+  },
+  inline::{
+    constraints: list::[constraint],
+    nullable: bool,
+  },
+  import::{
+    schema: string,
+    type: string,
+    nullable: bool,
+  }
+]
+
+
+//---[Constraints]----
+constraint::[
+  //
+  range::{
+    range: '.range',
+  },
+  //
+  all_of::{
+    types: list::[ref],
+  },
+  // Constraint where the value must match any of the specified types
+  any_of::{
+    types: list::[ref],
+  },
+  //
+  annotations::{
+
+  },
+  // Constraint which enforces an element's length for the given measure
+  length::[
+    equals::{
+      measure: measure,
+      length: int,
+    },
+    range::{
+      measure: measure,
+      range: '.range.int',
+    },
+  ],
+  // Constraint which indicates that the collection is expected to contain all the specified values, in no particular order
+  contains::{
+    values: list::[ion],
+  },
+  // Constraint which defines the type and/or constraints for all values within a homogeneous collection
+  element::{
+    type: ref,
+    distinct: 'bool?',
+  },
+  // Constraint which specifies an exact or minimum/maximum range indicating the exponent of an Ion decimal
+  exponent::[
+    equals::{
+      value: int,
+    },
+    range::{
+      range: '.range.int',
+    },
+  ],
+  //
+  field_names::{
+    type: ref,
+    distinct: 'bool?',
+  },
+  //
+  fields::{
+    closed: 'bool?',
+    fields: list::[field],
+  },
+  // Constraint which allows you to test whether a float value is losslessly compatible with the given IEEE 754 interchange format
+  ieee754_float::{
+    format: [
+      BINARY_16,
+      BINARY_32,
+      BINARY_64,
+    ],
+  },
+  //
+  not::{
+    type: ref,
+  },
+  //
+  one_of::{
+    types: list::[ref],
+  },
+  // Each value in a list, S-expression, or document is expected to be valid against the type in the corresponding position of the specified types list
+  ordered_elements::{
+    types: list::[ref],
+  },
+  //
+  precision::[
+    equals::{
+      value: int,
+    },
+    range::{
+      range: '.range.int',
+    },
+  ],
+  // Tests whether a symbol or string has any matches for the given regular expression.
+  regex::{
+    pattern: string,
+    flags: [
+      MULTILINE,
+      CASE_INSENSITIVE,
+    ]
+  },
+  // Limits the timestamp offsets that are allowed.
+  timestamp_offset::{
+    pattern: string,
+  },
+  // Indicates the exact or minimum/maximum precision of a timestamp
+  timestamp_precision::[
+    equals::{
+      value: '.timestamp_precision',
+    },
+    range::{
+      range: '.range.timestamp_precision',
+    },
+  ],
+  // Indicates the type that a value shall be validated against
+  type::{
+    type: ref,
+  },
+  //
+  valid_values::{
+    values: list::[value]
+  },
+]
+
+// Used by the length constraint
+// TODO: In the future, this could be defined inline on the sum type
+measure::[
+  BYTES,
+  CODEPOINTS,
+  ELEMENTS,
+  UTF8,
+]
+
+timestamp_precision::[
+  YEAR,
+  MONTH,
+  DAY,
+  MIN,
+  SECOND,
+  MILLISECOND,
+  MICROSECOND,
+  NANOSECOND,
+]
+
+// TODO move to inline
+field::{
+  name: string,
+  type: ref,
+}
+
+// TODO move to inline
+value::[
+  ion::{
+    value: ion,
+  },
+  range::{
+    value: '.constraint.range',
+  },
+]
+
+range::[
+  int::{
+    lower: 'int?',
+    upper: 'int?',
+    bounds: bounds,
+  },
+  number::{
+    lower: 'double?',
+    upper: 'double?',
+    bounds: bounds,
+  },
+  timestamp::{
+    lower: '.timestamp?',
+    upper: '.timestamp?',
+    bounds: bounds,
+  },
+  timestamp_precision::{
+    lower: '.timestamp_precision?',
+    upper: '.timestamp_precision?',
+    bounds: bounds,
+  },
+]
+
+// Used by the range constraint
+// TODO: In the future, this could be defined inline on the sum type
+bounds::[
+  INCLUSIVE,
+  EXCLUSIVE,
+  L_EXCLUSIVE,
+  R_EXCLUSIVE,
+]
