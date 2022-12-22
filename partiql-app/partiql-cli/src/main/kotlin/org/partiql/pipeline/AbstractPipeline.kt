@@ -17,7 +17,9 @@ package org.partiql.pipeline
 import com.amazon.ion.IonSystem
 import com.amazon.ion.system.IonSystemBuilder
 import org.partiql.annotations.PartiQLExperimental
-import org.partiql.cli.Pipeline
+import org.partiql.extensions.cli.functions.QueryDDB
+import org.partiql.functions.ReadFile
+import org.partiql.functions.WriteFile
 import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.compiler.PartiQLCompilerBuilder
 import org.partiql.lang.compiler.PartiQLCompilerPipeline
@@ -48,8 +50,8 @@ internal sealed class AbstractPipeline(open val options: PipelineOptions) {
 
     companion object {
         internal fun create(options: PipelineOptions): AbstractPipeline = when (options.pipeline) {
-            Pipeline.STANDARD -> PipelineStandard(options)
-            Pipeline.EXPERIMENTAL -> PipelineExperimental(options)
+            PipelineType.STANDARD -> PipelineStandard(options)
+            PipelineType.EXPERIMENTAL -> PipelineExperimental(options)
         }
         internal fun convertExprValue(value: ExprValue): PartiQLResult {
             return PartiQLResult.Value(value)
@@ -57,10 +59,36 @@ internal sealed class AbstractPipeline(open val options: PipelineOptions) {
         internal fun standard(): AbstractPipeline {
             return create(PipelineOptions())
         }
+
+        internal fun createPipelineOptions(
+            pipeline: PipelineType,
+            typedOpBehavior: TypedOpBehavior,
+            projectionIteration: ProjectionIterationBehavior,
+            undefinedVariable: UndefinedVariableBehavior,
+            permissiveMode: TypingMode
+        ): PipelineOptions {
+            val ion = IonSystemBuilder.standard().build()
+            val functions: List<(ExprValueFactory) -> ExprFunction> = listOf(
+                { valueFactory -> ReadFile(valueFactory) },
+                { valueFactory -> WriteFile(valueFactory) },
+                { valueFactory -> QueryDDB(valueFactory) }
+            )
+            val parser = PartiQLParserBuilder().ionSystem(ion).build()
+            return PipelineOptions(
+                pipeline,
+                ion,
+                parser,
+                typedOpBehavior,
+                projectionIteration,
+                undefinedVariable,
+                permissiveMode,
+                functions = functions
+            )
+        }
     }
 
     data class PipelineOptions(
-        val pipeline: Pipeline = Pipeline.STANDARD,
+        val pipeline: PipelineType = PipelineType.STANDARD,
         val ion: IonSystem = IonSystemBuilder.standard().build(),
         val parser: Parser = PartiQLParserBuilder.standard().build(),
         val typedOpBehavior: TypedOpBehavior = TypedOpBehavior.HONOR_PARAMETERS,
@@ -69,6 +97,11 @@ internal sealed class AbstractPipeline(open val options: PipelineOptions) {
         val typingMode: TypingMode = TypingMode.LEGACY,
         val functions: List<(ExprValueFactory) -> ExprFunction> = emptyList()
     )
+
+    internal enum class PipelineType {
+        STANDARD,
+        EXPERIMENTAL
+    }
 
     /**
      * Wraps the EvaluatingCompiler

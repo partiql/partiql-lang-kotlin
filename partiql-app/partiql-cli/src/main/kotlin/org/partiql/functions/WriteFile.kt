@@ -12,7 +12,7 @@
  *  language governing permissions and limitations under the License.
  */
 
-package org.partiql.cli.functions
+package org.partiql.functions
 
 import com.amazon.ion.IonSystem
 import com.amazon.ion.system.IonSystemBuilder

@@ -1,7 +1,6 @@
 # Getting Started
 
-PartiQL provides an interactive shell, or Read Evaluate Print Loop (REPL),
-that allows users to write and evaluate PartiQL queries.
+PartiQL provides an interactive shell that allows users to write and evaluate PartiQL queries.
 
 ## Prerequisites
 
@@ -14,9 +13,9 @@ You can obtain the *latest* version of the Java Runtime from either
 [Follow the instructions on how to set](https://docs.oracle.com/cd/E19182-01/820-7851/inst_cli_jdk_javahome_t/)
 `JAVA_HOME` to the path where your Java Runtime is installed.
 
-## Download the PartiQL REPL
+## Download the PartiQL CLI
 
-Each release of PartiQL comes with an archive that contains the PartiQL REPL as a
+Each release of PartiQL comes with an archive that contains the PartiQL CLI as a
 zip file.
 
 1. [Download](https://github.com/partiql/partiql-lang-kotlin/releases).
@@ -58,20 +57,20 @@ The root folder `partiql-cli` contains a `README.md` file and 3 subfolders
     1. Sample query output files with the extension `.output`. These files
        contain sample output from running the tutorial queries on the
        appropriate data.
+    1. Alternatively, you can use the online [CLI Tutorial](https://github.com/partiql/partiql-lang-kotlin/wiki/Command-Line-Tutorial).
 
 
 
 
-## Running the PartiQL REPL
+## Running the PartiQL CLI
 
 ### Windows
 
 Run (double click on) `partiql.bat`. This should open a command-line
-prompt and start the PartiQL REPL which displays:
+prompt and start the PartiQL CLI which displays:
 
 ```shell
-Welcome to the PartiQL REPL!
-PartiQL> 
+Welcome to the PartiQL CLI!
 ```
 
 ### macOS (Mac) and Unix
@@ -82,85 +81,12 @@ PartiQL>
 The folder name will have the PartiQL version as a suffix, i.e., `partiql-cli-0.1.0`.
 
 ```shell
-Welcome to the PartiQL REPL!
-PartiQL>
+Welcome to the PartiQL CLI!
 ```
 
-## Testing the PartiQL REPL
+### Command Line Tutorial
 
-Let's write a simple query to verify that our PartiQL REPL is working. At the `PartiQL>` prompt type:
-
-```shell
-PartiQL> SELECT * FROM [1,2,3]
-```
-
-and press `ENTER` *twice*. The output should look similar to:
-
-```partiql
-<<
-  {
-    '_1': 1
-  },
-  {
-    '_1': 2
-  },
-  {
-    '_1': 3
-  }
->>
-```
-
-Congratulations! You successfully installed and run the PartiQL REPL.
-The PartiQL REPL is now waiting for more input.
-
-To exit the PartiQL REPL, press:
-
-* `Control+D` in macOS or Unix
-* `Control+C` on Windows
-
-or close the terminal/command prompt window.
-
-
-## Loading data from a file
-
-An easy way to load the necessary data into the REPL
-is use the `-e` switch when starting the REPL
-and provide the name of a file that contains your data.
-
-```shell
-./bin/partiql  -e Tutorial/code/q1.env
-```
-
-You can then see what is loaded in the REPL's global environment using
-the **special** REPL command `!global_env`, i.e.,
-
-```shell
-PartiQL> !global_env;
-```
-```partiql
-{
-  'hr': {
-    'employees': <<
-      {
-        'id': 3,
-        'name': 'Bob Smith',
-        'title': NULL
-      },
-      {
-        'id': 4,
-        'name': 'Susan Smith',
-        'title': 'Dev Mgr'
-      },
-      {
-        'id': 6,
-        'name': 'Jane Smith',
-        'title': 'Software Eng 2'
-      }
-    >>
-  }
-}
-```
-
+To get a deeper understanding of PartiQL, check out the [CLI Tutorial](https://github.com/partiql/partiql-lang-kotlin/wiki/Command-Line-Tutorial).
 
 # Introduction 
 

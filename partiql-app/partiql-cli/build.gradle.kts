@@ -26,13 +26,13 @@ dependencies {
     implementation(Deps.jansi)
     implementation(Deps.jline)
     implementation(Deps.joda)
-    implementation(Deps.jopt)
+    implementation(Deps.picoCli)
     implementation(Deps.kotlinReflect)
 }
 
 application {
     applicationName = "partiql"
-    mainClass.set("org.partiql.cli.Main")
+    mainClass.set("org.partiql.Main")
 }
 
 distributions {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Amazon.com, Inc. or its affiliates.  All rights reserved.
+ * Copyright 2022 Amazon.com, Inc. or its affiliates.  All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  *  You may not use this file except in compliance with the License.
@@ -12,8 +12,15 @@
  *  language governing permissions and limitations under the License.
  */
 
-package org.partiql.cli
+package org.partiql.pico
 
-interface PartiQLCommand {
-    fun run()
+import picocli.CommandLine
+import java.util.Properties
+
+internal class PartiQLVersionProvider : CommandLine.IVersionProvider {
+    override fun getVersion(): Array<String> {
+        val properties = Properties()
+        properties.load(this.javaClass.getResourceAsStream("/partiql.properties"))
+        return Array(1) { "PartiQL ${properties.getProperty("version")}-${properties.getProperty("commit")}" }
+    }
 }

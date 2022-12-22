@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
+import org.partiql.pico.CommandQuery
 import org.partiql.pipeline.AbstractPipeline
 import java.io.ByteArrayOutputStream
 import java.io.OutputStream
@@ -16,9 +17,9 @@ import java.io.OutputStream
 internal fun makeCliAndGetResult(
     query: String,
     input: String? = null,
-    inputFormat: InputFormat = InputFormat.ION,
+    inputFormat: CommandQuery.InputFormat = CommandQuery.InputFormat.ION,
     bindings: Bindings<ExprValue> = Bindings.empty(),
-    outputFormat: OutputFormat = OutputFormat.ION_TEXT,
+    outputFormat: CommandQuery.OutputFormat = CommandQuery.OutputFormat.ION_TEXT,
     output: OutputStream = ByteArrayOutputStream(),
     ion: IonSystem = IonSystemBuilder.standard().build(),
     pipeline: AbstractPipeline = AbstractPipeline.standard(),

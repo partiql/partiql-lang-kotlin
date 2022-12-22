@@ -26,6 +26,7 @@ import org.partiql.lang.eval.PartiQLResult
 import org.partiql.lang.eval.delegate
 import org.partiql.lang.eval.toIonValue
 import org.partiql.lang.util.ConfigurableExprValueFormatter
+import org.partiql.pico.CommandQuery
 import org.partiql.pipeline.AbstractPipeline
 import java.io.InputStream
 import java.io.OutputStream
@@ -34,20 +35,20 @@ import java.io.OutputStreamWriter
 internal class Cli(
     private val valueFactory: ExprValueFactory,
     private val input: InputStream,
-    private val inputFormat: InputFormat,
+    private val inputFormat: CommandQuery.InputFormat,
     private val output: OutputStream,
-    private val outputFormat: OutputFormat,
+    private val outputFormat: CommandQuery.OutputFormat,
     private val compilerPipeline: AbstractPipeline,
     private val globals: Bindings<ExprValue>,
     private val query: String,
     private val wrapIon: Boolean
-) : PartiQLCommand {
+) {
 
     private val ion = IonSystemBuilder.standard().build()
 
     init {
-        if (wrapIon && inputFormat != InputFormat.ION) {
-            throw IllegalArgumentException("Specifying --wrap-ion requires that the input format be ${InputFormat.ION}.")
+        if (wrapIon && inputFormat != CommandQuery.InputFormat.ION) {
+            throw IllegalArgumentException("Specifying --wrap-ion requires that the input format be ${CommandQuery.InputFormat.ION}.")
         }
     }
 
@@ -56,10 +57,10 @@ internal class Cli(
             .withWriteTopLevelValuesOnNewLines(true)
     }
 
-    override fun run() {
+    internal fun run() {
         when (inputFormat) {
-            InputFormat.ION -> runWithIonInput()
-            InputFormat.PARTIQL -> runWithPartiQLInput()
+            CommandQuery.InputFormat.ION -> runWithIonInput()
+            CommandQuery.InputFormat.PARTIQL -> runWithPartiQLInput()
         }
     }
 
@@ -118,10 +119,10 @@ internal class Cli(
 
     private fun outputResult(result: ExprValue) {
         when (outputFormat) {
-            OutputFormat.ION_TEXT -> ionTextWriterBuilder.build(output).use { result.toIonValue(ion).writeTo(it) }
-            OutputFormat.ION_BINARY -> valueFactory.ion.newBinaryWriter(output).use { result.toIonValue(ion).writeTo(it) }
-            OutputFormat.PARTIQL -> OutputStreamWriter(output).use { it.write(result.toString()) }
-            OutputFormat.PARTIQL_PRETTY -> OutputStreamWriter(output).use {
+            CommandQuery.OutputFormat.ION_TEXT -> ionTextWriterBuilder.build(output).use { result.toIonValue(ion).writeTo(it) }
+            CommandQuery.OutputFormat.ION_BINARY -> valueFactory.ion.newBinaryWriter(output).use { result.toIonValue(ion).writeTo(it) }
+            CommandQuery.OutputFormat.PARTIQL -> OutputStreamWriter(output).use { it.write(result.toString()) }
+            CommandQuery.OutputFormat.PARTIQL_PRETTY -> OutputStreamWriter(output).use {
                 ConfigurableExprValueFormatter.pretty.formatTo(result, it)
             }
         }

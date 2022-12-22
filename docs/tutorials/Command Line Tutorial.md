@@ -1,74 +1,43 @@
 # PartiQL CLI
 
-```
-PartiQL CLI
-Command line interface for executing PartiQL queries. Can be run in an interactive (REPL) mode or non-interactive.
+## Build and Run the CLI 
 
-Examples:
-To run in REPL mode simply execute the executable without any arguments:
-     partiql
-
-In non-interactive mode we use Ion as the format for input data which is bound to a global variable
-named "input_data", in the example below /logs/log.ion is bound to "input_data":
-     partiql --query="SELECT * FROM input_data" --input=/logs/log.ion
-
-The cli can output using PartiQL syntax or Ion using the --output-format option, e.g. to output binary ion:
-     partiql --query="SELECT * FROM input_data" --output-format=ION_BINARY --input=/logs/log.ion
-
-To pipe input data in via stdin:
-     cat /logs/log.ion | partiql --query="SELECT * FROM input_data" --format=ION_BINARY > output.10n
-
-Option                                Description
-------                                -----------
--e, --environment <File>              initial global environment (optional)
--h, --help                            prints this help
--i, --input <File>                    input file, requires the query option (optional)
--if, --input-format <InputFormat>     input format, requires the query option (default: ION) [ION, PARTIQL]
--w, --wrap-ion                        wraps Ion input file values in a bag, requires the input format to be ION, requires the query option
--m, --monochrome                      removes syntax highlighting for the REPL
--o, --output <File>                   output file, requires the query option (default: stdout)
--of, --output-format <OutputFormat>   output format, requires the query option (default: PARTIQL) [PARTIQL, PARTIQL_PRETTY, ION_TEXT, ION_BINARY]
--p, --permissive                      run the PartiQL query in PERMISSIVE typing mode
--q, --query <String>                  PartiQL query, triggers non interactive mode
-```
-
-## Building the CLI 
-
-The root Gradle build also builds the CLI. To build the CLI separately, execute:
+The following command will build and run the CLI:
 
 ```shell
-./gradlew :cli:build
+# To build and run
+./partiql-app/partiql-cli/shell.sh
+
+# To build (only)
+./gradlew :partiql-app:partiql-cli:install
+
+# To Run (only)
+./partiql-app/partiql-cli/build/install/partiql-cli/bin/partiql
 ```
 
-After building, distributable jars are located in the `cli/build/distributions` directory (relative to the 
+After building the entire project, distributable jars are located in the `cli/build/distributions` directory (relative to the 
 project root).
 
 Be sure to include the correct relative path to `gradlew` if you are not in the project root.
 
-## Using the CLI
+## CLI Commands
 
-The following command will build any dependencies before starting the CLI.
+To view all commands available, run the CLI with the `--help` option.
 
-```shell
-./gradlew :cli:run -q --args="<command line arguments>"
-```
+## Shell
 
-The CLI can be run in two manners, non-interactive and interactive (REPL).
-
-## REPL
-
-To start an interactive read, eval, print loop (REPL) execute:
+To start an interactive shell, execute:
 
 > Note that running directly with Gradle will eat arrow keys and control sequences due to the Gradle daemon.
 
 ```shell
-./partiql-app/partiql-cli/shell.sh
+./partiql-app/partiql-cli/shell.sh shell
 ```
 
 You will see a prompt that looks as follows:
 
 ```shell
-Welcome to the PartiQL REPL!
+Welcome to the PartiQL Shell!
 PartiQL> 
 ```
 
@@ -173,7 +142,7 @@ The variables `animals` and `types` can both be bound to the execution environme
 To bind the environment file to the execution environment, start the REPL with the following command:
 
 ```shell
-$ ./gradlew :cli:run -q --console=plain --args='-e config.env'
+$ ./partiql-app/partiql-cli/shell.sh shell -e config.env
 ```
 
 **Note**: Shell expansions such as `~` do not work within the value of the `args` argument.
@@ -181,7 +150,7 @@ $ ./gradlew :cli:run -q --console=plain --args='-e config.env'
 Or, if you have extracted one of the compressed archives:
 
 ```shell
-$ ./bin/partiql -e config.env
+$ ./bin/partiql shell -e config.env
 ```
 
 Expressions can then use the environment defined by `config.env`:

@@ -56,7 +56,7 @@ private const val PROMPT_1 = "PartiQL> "
 private const val PROMPT_2 = "   | "
 private const val BAR_1 = "===' "
 private const val BAR_2 = "--- "
-private const val WELCOME_MSG = "Welcome to the PartiQL REPL!"
+private const val WELCOME_MSG = "Welcome to the PartiQL Shell!"
 
 private const val HELP = """
 !add_to_global_env  Adds a value to the global environment
