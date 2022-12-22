@@ -25,16 +25,13 @@ import org.openjdk.jmh.annotations.OutputTimeUnit
 import org.openjdk.jmh.annotations.Scope
 import org.openjdk.jmh.annotations.State
 import org.openjdk.jmh.annotations.Warmup
-import org.openjdk.jmh.infra.Blackhole
 import org.partiql.jmh.utils.FORK_VALUE_RECOMMENDED
 import org.partiql.jmh.utils.MEASUREMENT_ITERATION_VALUE_RECOMMENDED
 import org.partiql.jmh.utils.MEASUREMENT_TIME_VALUE_RECOMMENDED
 import org.partiql.jmh.utils.WARMUP_ITERATION_VALUE_RECOMMENDED
 import org.partiql.jmh.utils.WARMUP_TIME_VALUE_RECOMMENDED
-import org.partiql.lang.syntax.ParserException
 import org.partiql.lang.syntax.PartiQLParserBuilder
 import java.util.concurrent.TimeUnit
-
 
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.MICROSECONDS)
@@ -297,9 +294,11 @@ internal open class LiteralBenchmark {
     @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
     @Suppress("UNUSED")
     fun parseClobLiteral(state: MyState) {
-        state.parser.parseAstStatement("""
+        state.parser.parseAstStatement(
+            """
             `{{ "This is a CLOB of text." }}`
-        """.trimIndent())
+            """.trimIndent()
+        )
     }
 
     @Benchmark
@@ -308,9 +307,11 @@ internal open class LiteralBenchmark {
     @Warmup(iterations = WARMUP_ITERATION_VALUE, time = WARMUP_TIME_VALUE)
     @Suppress("UNUSED")
     fun parseBlobLiteral(state: MyState) {
-        state.parser.parseAstStatement("""
+        state.parser.parseAstStatement(
+            """
             `{{ VG8gaW5maW5pdHkuLi4gYW5kIGJleW9uZCE= }}`
-        """.trimIndent())
+            """.trimIndent()
+        )
     }
 
     @Benchmark
