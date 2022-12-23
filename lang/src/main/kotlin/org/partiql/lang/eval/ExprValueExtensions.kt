@@ -382,7 +382,7 @@ fun ExprValue.cast(
                         DecimalType.PrecisionScaleConstraint.Unconstrained -> ExprValue.newDecimal(coerce(BigDecimal::class.java))
                         is DecimalType.PrecisionScaleConstraint.Constrained -> {
                             val constraint = type.precisionScaleConstraint
-                            val decimal = this.coerce(BigDecimal::class.java) as BigDecimal
+                            val decimal = this.coerce(BigDecimal::class.java)
                             val result = decimal.round(MathContext(constraint.precision))
                                 .setScale(constraint.scale, RoundingMode.HALF_UP)
                             if (result.precision() > constraint.precision) {
