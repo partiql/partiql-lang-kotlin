@@ -121,31 +121,19 @@ class PartiQLCompilerBuilder private constructor() {
         this.options = options
     }
 
-    /**
-     * TODO This will be replaced by the open type system.
-     *  - https://github.com/partiql/partiql-lang-kotlin/milestone/4
-     */
-    internal fun customFunctions(customFunctions: List<ExprFunction>) = this.apply {
+    fun customFunctions(customFunctions: List<ExprFunction>) = this.apply {
         this.customFunctions = customFunctions
     }
 
-    /**
-     * TODO This will be replaced by the open type system.
-     *  - https://github.com/partiql/partiql-lang-kotlin/milestone/4
-     */
-    internal fun customTypes(customTypes: List<CustomType>) = this.apply {
+    fun customTypes(customTypes: List<CustomType>) = this.apply {
         this.customTypes = customTypes
     }
 
-    /**
-     * TODO This will be replaced by the open type system.
-     *  - https://github.com/partiql/partiql-lang-kotlin/milestone/4
-     */
-    internal fun customProcedures(customProcedures: List<StoredProcedure>) = this.apply {
+    fun customProcedures(customProcedures: List<StoredProcedure>) = this.apply {
         this.customProcedures = customProcedures
     }
 
-    internal fun customOperatorFactories(customOperatorFactories: List<RelationalOperatorFactory>) = this.apply {
+    fun customOperatorFactories(customOperatorFactories: List<RelationalOperatorFactory>) = this.apply {
         this.customOperatorFactories = customOperatorFactories
     }
 
