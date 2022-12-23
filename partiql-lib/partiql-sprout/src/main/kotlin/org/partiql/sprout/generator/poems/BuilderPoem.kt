@@ -32,6 +32,7 @@ import org.partiql.sprout.generator.spec.NodeSpec
 import org.partiql.sprout.generator.spec.PackageSpec
 import org.partiql.sprout.generator.spec.UniverseSpec
 import org.partiql.sprout.generator.types.Annotations
+import org.partiql.sprout.model.TypeRef
 
 /**
  * Poem which creates a DSL for instantiation
@@ -171,10 +172,18 @@ class BuilderPoem(symbols: Symbols) : Poem(symbols) {
         val receiver = TypeSpec.classBuilder(receiverType)
         val dslFunction = FunSpec.builder(receiverName).returns(clazz)
         product.props.forEachIndexed { i, it ->
-            // we want a mutable and nullable type for builder
-            val type = symbols.typeNameOf(it.ref, mutable = true).copy(true)
+            var type = symbols.typeNameOf(it.ref, mutable = true)
             val name = props[i].name
-            val para = ParameterSpec.builder(name, type).defaultValue("null").build()
+            val default = when (it.ref) {
+                is TypeRef.List -> "mutableListOf()"
+                is TypeRef.Set -> "mutableSetOf()"
+                is TypeRef.Map -> "mutableMapOf()"
+                else -> {
+                    type = type.copy(nullable = true)
+                    "null"
+                }
+            }
+            val para = ParameterSpec.builder(name, type).defaultValue(default).build()
             val prop = PropertySpec.builder(name, type).initializer(name).mutable().build()
             receiver.addProperty(prop)
             receiverConstructor.addParameter(para)

@@ -1,12 +1,12 @@
 package org.partiql.isl
 
 import com.amazon.ion.IonValue
+import com.amazon.ionelement.api.IonElement
 import com.amazon.ionschema.IonSchemaSystem
 import com.amazon.ionschema.IonSchemaSystemBuilder
 import org.partiql.isl.builder.IonSchemaFactory
 import org.partiql.isl.internal.IonSchemaTranslator
 import org.partiql.isl.internal.IonSchemaWriter
-import org.partiql.isl.model.Schema
 
 object ISL {
 
@@ -42,10 +42,10 @@ object ISL {
     ): Schema = IonSchemaTranslator(factory).translate(iss.newSchema(isl))
 
     /**
-     * Returns an IonValue representing the given schema
+     * Returns an IonElement representing the given schema
      *
      * @param schema
      * @return
      */
-    fun toIon(schema: Schema): IonValue = IonSchemaWriter.toIon(schema)
+    fun toIon(schema: Schema): Iterator<IonElement> = IonSchemaWriter.toIon(schema)
 }

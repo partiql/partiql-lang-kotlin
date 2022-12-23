@@ -1,20 +1,17 @@
-// ********************************************************************************************************************
-//  GENERATED : DO NOT EDIT
-// ********************************************************************************************************************
 package org.partiql.isl.visitor
 
-import org.partiql.isl.model.Constraint
-import org.partiql.isl.model.Field
-import org.partiql.isl.model.Footer
-import org.partiql.isl.model.Header
-import org.partiql.isl.model.Import
-import org.partiql.isl.model.IonSchemaNode
-import org.partiql.isl.model.Range
-import org.partiql.isl.model.Ref
-import org.partiql.isl.model.Schema
-import org.partiql.isl.model.Type
-import org.partiql.isl.model.UserReservedFields
-import org.partiql.isl.model.Value
+import org.partiql.isl.Constraint
+import org.partiql.isl.Field
+import org.partiql.isl.Footer
+import org.partiql.isl.Header
+import org.partiql.isl.Import
+import org.partiql.isl.IonSchemaNode
+import org.partiql.isl.Range
+import org.partiql.isl.Ref
+import org.partiql.isl.Schema
+import org.partiql.isl.Type
+import org.partiql.isl.UserReservedFields
+import org.partiql.isl.Value
 
 public abstract class IonSchemaVisitor<R, C> {
   public open fun visit(node: Schema, ctx: C?): R? = defaultVisit(node, ctx)
@@ -25,7 +22,17 @@ public abstract class IonSchemaVisitor<R, C> {
 
   public open fun visit(node: Footer, ctx: C?): R? = defaultVisit(node, ctx)
 
-  public open fun visit(node: Import, ctx: C?): R? = defaultVisit(node, ctx)
+  public open fun visit(node: Import, ctx: C?): R? = when (node) {
+    is Import.Schema -> visit(node, ctx)
+    is Import.Type -> visit(node, ctx)
+    is Import.TypeAlias -> visit(node, ctx)
+  }
+
+  public open fun visit(node: Import.Schema, ctx: C?): R? = defaultVisit(node, ctx)
+
+  public open fun visit(node: Import.Type, ctx: C?): R? = defaultVisit(node, ctx)
+
+  public open fun visit(node: Import.TypeAlias, ctx: C?): R? = defaultVisit(node, ctx)
 
   public open fun visit(node: Type, ctx: C?): R? = defaultVisit(node, ctx)
 

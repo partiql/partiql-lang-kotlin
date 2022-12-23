@@ -1,7 +1,4 @@
-// ********************************************************************************************************************
-//  GENERATED : DO NOT EDIT
-// ********************************************************************************************************************
-package org.partiql.isl.model
+package org.partiql.isl
 
 import com.amazon.ionelement.api.TimestampElement
 import kotlin.Boolean
@@ -66,20 +63,50 @@ public class Footer : IonSchemaNode() {
       visitor.visit(this, ctx)
 }
 
-public data class Import(
-  public val schema: String,
-  public val type: Type,
-  public val alias: String
-) : IonSchemaNode() {
-  public override val children: List<IonSchemaNode> by lazy {
-    val kids = mutableListOf<IonSchemaNode>()
-    kids.add(type)
-    kids
+public sealed class Import : IonSchemaNode() {
+  public override fun <R, C> accept(visitor: IonSchemaVisitor<R, C>, ctx: C?): R? = when (this) {
+    is Schema -> visitor.visit(this, ctx)
+    is Type -> visitor.visit(this, ctx)
+    is TypeAlias -> visitor.visit(this, ctx)
   }
 
+  public data class Schema(
+    public val id: String
+  ) : Import() {
+    public override fun <R, C> accept(visitor: IonSchemaVisitor<R, C>, ctx: C?): R? =
+        visitor.visit(this, ctx)
+  }
 
-  public override fun <R, C> accept(visitor: IonSchemaVisitor<R, C>, ctx: C?): R? =
-      visitor.visit(this, ctx)
+  public data class Type(
+    public val id: String,
+    public val type: org.partiql.isl.Type
+  ) : Import() {
+    public override val children: List<IonSchemaNode> by lazy {
+      val kids = mutableListOf<IonSchemaNode>()
+      kids.add(type)
+      kids
+    }
+
+
+    public override fun <R, C> accept(visitor: IonSchemaVisitor<R, C>, ctx: C?): R? =
+        visitor.visit(this, ctx)
+  }
+
+  public data class TypeAlias(
+    public val id: String,
+    public val type: org.partiql.isl.Type,
+    public val alias: String
+  ) : Import() {
+    public override val children: List<IonSchemaNode> by lazy {
+      val kids = mutableListOf<IonSchemaNode>()
+      kids.add(type)
+      kids
+    }
+
+
+    public override fun <R, C> accept(visitor: IonSchemaVisitor<R, C>, ctx: C?): R? =
+        visitor.visit(this, ctx)
+  }
 }
 
 public data class Type(
@@ -162,7 +189,7 @@ public sealed class Constraint : IonSchemaNode() {
   }
 
   public data class Range(
-    public val range: org.partiql.isl.model.Range
+    public val range: org.partiql.isl.Range
   ) : Constraint() {
     public override val children: List<IonSchemaNode> by lazy {
       val kids = mutableListOf<IonSchemaNode>()
@@ -224,7 +251,7 @@ public sealed class Constraint : IonSchemaNode() {
 
     public data class Range(
       public val measure: Measure,
-      public val range: org.partiql.isl.model.Range.Int
+      public val range: org.partiql.isl.Range.Int
     ) : Length() {
       public override val children: List<IonSchemaNode> by lazy {
         val kids = mutableListOf<IonSchemaNode>()
@@ -281,7 +308,7 @@ public sealed class Constraint : IonSchemaNode() {
     }
 
     public data class Range(
-      public val range: org.partiql.isl.model.Range.Int
+      public val range: org.partiql.isl.Range.Int
     ) : Exponent() {
       public override val children: List<IonSchemaNode> by lazy {
         val kids = mutableListOf<IonSchemaNode>()
@@ -394,7 +421,7 @@ public sealed class Constraint : IonSchemaNode() {
     }
 
     public data class Range(
-      public val range: org.partiql.isl.model.Range.Int
+      public val range: org.partiql.isl.Range.Int
     ) : Precision() {
       public override val children: List<IonSchemaNode> by lazy {
         val kids = mutableListOf<IonSchemaNode>()
@@ -435,14 +462,14 @@ public sealed class Constraint : IonSchemaNode() {
     }
 
     public data class Equals(
-      public val `value`: org.partiql.isl.model.TimestampPrecision
+      public val `value`: org.partiql.isl.TimestampPrecision
     ) : TimestampPrecision() {
       public override fun <R, C> accept(visitor: IonSchemaVisitor<R, C>, ctx: C?): R? =
           visitor.visit(this, ctx)
     }
 
     public data class Range(
-      public val range: org.partiql.isl.model.Range.TimestampPrecision
+      public val range: org.partiql.isl.Range.TimestampPrecision
     ) : TimestampPrecision() {
       public override val children: List<IonSchemaNode> by lazy {
         val kids = mutableListOf<IonSchemaNode>()
@@ -571,8 +598,8 @@ public sealed class Range : IonSchemaNode() {
   }
 
   public data class TimestampPrecision(
-    public val lower: org.partiql.isl.model.TimestampPrecision,
-    public val upper: org.partiql.isl.model.TimestampPrecision,
+    public val lower: org.partiql.isl.TimestampPrecision,
+    public val upper: org.partiql.isl.TimestampPrecision,
     public val bounds: Bounds
   ) : Range() {
     public override fun <R, C> accept(visitor: IonSchemaVisitor<R, C>, ctx: C?): R? =

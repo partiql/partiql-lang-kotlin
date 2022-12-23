@@ -41,11 +41,15 @@ public abstract class IonSchemaFactory {
 
   public open fun footer() = Footer()
 
-  public open fun `import`(
-    schema: String,
+  public open fun importSchema(id: String) = Import.Schema(id)
+
+  public open fun importType(id: String, type: Type) = Import.Type(id, type)
+
+  public open fun importTypeAlias(
+    id: String,
     type: Type,
     alias: String
-  ) = Import(schema, type, alias)
+  ) = Import.TypeAlias(id, type, alias)
 
   public open fun type(name: String, constraints: List<Constraint>) = Type(name, constraints)
 

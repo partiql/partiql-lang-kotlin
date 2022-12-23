@@ -31,9 +31,7 @@ $ ./partiql-lib/partiql-sprout/build/install/sprout/bin/sprout \
       -u IonSchema \
       ./partiql-lib/partiql-isl/src/main/resources/ion_schema_v2_0.ion  
       
-# sources where generated in partiql-lang-kotlin/generated
-
-$ mv ./generated/org/partiql/isl ./partiql-lib/partiql-isl/src/main/kotlin/org/partiql   
+# sources are generated in partiql-lang-kotlin/generated/
 ```
 
 ## Considerations from ISL

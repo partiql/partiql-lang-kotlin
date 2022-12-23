@@ -1,6 +1,3 @@
-// ********************************************************************************************************************
-//  GENERATED : DO NOT EDIT
-// ********************************************************************************************************************
 package org.partiql.isl.builder
 
 import com.amazon.ionelement.api.TimestampElement
@@ -10,24 +7,24 @@ import kotlin.Int
 import kotlin.String
 import kotlin.Suppress
 import kotlin.Unit
-import kotlin.collections.List
+import kotlin.collections.MutableList
 import kotlin.jvm.JvmStatic
-import org.partiql.isl.model.Bounds
-import org.partiql.isl.model.Constraint
-import org.partiql.isl.model.Field
-import org.partiql.isl.model.Footer
-import org.partiql.isl.model.Header
-import org.partiql.isl.model.Import
-import org.partiql.isl.model.IonSchemaNode
-import org.partiql.isl.model.Measure
-import org.partiql.isl.model.Range
-import org.partiql.isl.model.Ref
-import org.partiql.isl.model.Schema
-import org.partiql.isl.model.TimestampPrecision
-import org.partiql.isl.model.Type
-import org.partiql.isl.model.UserReservedFields
-import org.partiql.isl.model.Value
-import org.partiql.isl.model.Version
+import org.partiql.isl.Bounds
+import org.partiql.isl.Constraint
+import org.partiql.isl.Field
+import org.partiql.isl.Footer
+import org.partiql.isl.Header
+import org.partiql.isl.Import
+import org.partiql.isl.IonSchemaNode
+import org.partiql.isl.Measure
+import org.partiql.isl.Range
+import org.partiql.isl.Ref
+import org.partiql.isl.Schema
+import org.partiql.isl.TimestampPrecision
+import org.partiql.isl.Type
+import org.partiql.isl.UserReservedFields
+import org.partiql.isl.Value
+import org.partiql.isl.Version
 
 /**
  * The Builder is inside this private final class for DSL aesthetics
@@ -40,7 +37,7 @@ public class IonSchema private constructor() {
     public fun schema(
       version: Version? = null,
       header: Header? = null,
-      definitions: List<Type>? = null,
+      definitions: MutableList<Type> = mutableListOf(),
       footer: Footer? = null,
       block: _Schema.() -> Unit = {}
     ): Schema {
@@ -51,7 +48,7 @@ public class IonSchema private constructor() {
     }
 
     public fun header(
-      imports: List<Import>? = null,
+      imports: MutableList<Import> = mutableListOf(),
       userReservedFields: UserReservedFields? = null,
       block: _Header.() -> Unit = {}
     ): Header {
@@ -61,9 +58,9 @@ public class IonSchema private constructor() {
     }
 
     public fun userReservedFields(
-      header: List<String>? = null,
-      type: List<String>? = null,
-      footer: List<String>? = null,
+      header: MutableList<String> = mutableListOf(),
+      type: MutableList<String> = mutableListOf(),
+      footer: MutableList<String> = mutableListOf(),
       block: _UserReservedFields.() -> Unit = {}
     ): UserReservedFields {
       val b = _UserReservedFields(header, type, footer)
@@ -77,20 +74,37 @@ public class IonSchema private constructor() {
       return factory.footer()
     }
 
-    public fun `import`(
-      schema: String? = null,
+    public fun importSchema(id: String? = null, block: _ImportSchema.() -> Unit = {}):
+        Import.Schema {
+      val b = _ImportSchema(id)
+      b.block()
+      return factory.importSchema(id = b.id!!)
+    }
+
+    public fun importType(
+      id: String? = null,
+      type: Type? = null,
+      block: _ImportType.() -> Unit = {}
+    ): Import.Type {
+      val b = _ImportType(id, type)
+      b.block()
+      return factory.importType(id = b.id!!, type = b.type!!)
+    }
+
+    public fun importTypeAlias(
+      id: String? = null,
       type: Type? = null,
       alias: String? = null,
-      block: _Import.() -> Unit = {}
-    ): Import {
-      val b = _Import(schema, type, alias)
+      block: _ImportTypeAlias.() -> Unit = {}
+    ): Import.TypeAlias {
+      val b = _ImportTypeAlias(id, type, alias)
       b.block()
-      return factory.import(schema = b.schema!!, type = b.type!!, alias = b.alias!!)
+      return factory.importTypeAlias(id = b.id!!, type = b.type!!, alias = b.alias!!)
     }
 
     public fun type(
       name: String? = null,
-      constraints: List<Constraint>? = null,
+      constraints: MutableList<Constraint> = mutableListOf(),
       block: _Type.() -> Unit = {}
     ): Type {
       val b = _Type(name, constraints)
@@ -109,7 +123,7 @@ public class IonSchema private constructor() {
     }
 
     public fun refInline(
-      constraints: List<Constraint>? = null,
+      constraints: MutableList<Constraint> = mutableListOf(),
       nullable: Boolean? = null,
       block: _RefInline.() -> Unit = {}
     ): Ref.Inline {
@@ -136,15 +150,15 @@ public class IonSchema private constructor() {
       return factory.constraintRange(range = b.range!!)
     }
 
-    public fun constraintAllOf(types: List<Ref>? = null, block: _ConstraintAllOf.() -> Unit = {}):
-        Constraint.AllOf {
+    public fun constraintAllOf(types: MutableList<Ref> = mutableListOf(),
+        block: _ConstraintAllOf.() -> Unit = {}): Constraint.AllOf {
       val b = _ConstraintAllOf(types)
       b.block()
       return factory.constraintAllOf(types = b.types!!)
     }
 
-    public fun constraintAnyOf(types: List<Ref>? = null, block: _ConstraintAnyOf.() -> Unit = {}):
-        Constraint.AnyOf {
+    public fun constraintAnyOf(types: MutableList<Ref> = mutableListOf(),
+        block: _ConstraintAnyOf.() -> Unit = {}): Constraint.AnyOf {
       val b = _ConstraintAnyOf(types)
       b.block()
       return factory.constraintAnyOf(types = b.types!!)
@@ -177,8 +191,8 @@ public class IonSchema private constructor() {
       return factory.constraintLengthRange(measure = b.measure!!, range = b.range!!)
     }
 
-    public fun constraintContains(values: List<Value.Ion>? = null, block: _ConstraintContains.() ->
-        Unit = {}): Constraint.Contains {
+    public fun constraintContains(values: MutableList<Value.Ion> = mutableListOf(),
+        block: _ConstraintContains.() -> Unit = {}): Constraint.Contains {
       val b = _ConstraintContains(values)
       b.block()
       return factory.constraintContains(values = b.values!!)
@@ -220,7 +234,7 @@ public class IonSchema private constructor() {
 
     public fun constraintFields(
       closed: Boolean? = null,
-      fields: List<Field>? = null,
+      fields: MutableList<Field> = mutableListOf(),
       block: _ConstraintFields.() -> Unit = {}
     ): Constraint.Fields {
       val b = _ConstraintFields(closed, fields)
@@ -242,14 +256,14 @@ public class IonSchema private constructor() {
       return factory.constraintNot(type = b.type!!)
     }
 
-    public fun constraintOneOf(types: List<Ref>? = null, block: _ConstraintOneOf.() -> Unit = {}):
-        Constraint.OneOf {
+    public fun constraintOneOf(types: MutableList<Ref> = mutableListOf(),
+        block: _ConstraintOneOf.() -> Unit = {}): Constraint.OneOf {
       val b = _ConstraintOneOf(types)
       b.block()
       return factory.constraintOneOf(types = b.types!!)
     }
 
-    public fun constraintOrderedElements(types: List<Ref>? = null,
+    public fun constraintOrderedElements(types: MutableList<Ref> = mutableListOf(),
         block: _ConstraintOrderedElements.() -> Unit = {}): Constraint.OrderedElements {
       val b = _ConstraintOrderedElements(types)
       b.block()
@@ -310,7 +324,7 @@ public class IonSchema private constructor() {
       return factory.constraintType(type = b.type!!)
     }
 
-    public fun constraintValidValues(values: List<Value>? = null,
+    public fun constraintValidValues(values: MutableList<Value> = mutableListOf(),
         block: _ConstraintValidValues.() -> Unit = {}): Constraint.ValidValues {
       val b = _ConstraintValidValues(values)
       b.block()
@@ -388,32 +402,41 @@ public class IonSchema private constructor() {
     public class _Schema(
       public var version: Version? = null,
       public var header: Header? = null,
-      public var definitions: List<Type>? = null,
+      public var definitions: MutableList<Type> = mutableListOf(),
       public var footer: Footer? = null
     )
 
     public class _Header(
-      public var imports: List<Import>? = null,
+      public var imports: MutableList<Import> = mutableListOf(),
       public var userReservedFields: UserReservedFields? = null
     )
 
     public class _UserReservedFields(
-      public var header: List<String>? = null,
-      public var type: List<String>? = null,
-      public var footer: List<String>? = null
+      public var header: MutableList<String> = mutableListOf(),
+      public var type: MutableList<String> = mutableListOf(),
+      public var footer: MutableList<String> = mutableListOf()
     )
 
     public class _Footer
 
-    public class _Import(
-      public var schema: String? = null,
+    public class _ImportSchema(
+      public var id: String? = null
+    )
+
+    public class _ImportType(
+      public var id: String? = null,
+      public var type: Type? = null
+    )
+
+    public class _ImportTypeAlias(
+      public var id: String? = null,
       public var type: Type? = null,
       public var alias: String? = null
     )
 
     public class _Type(
       public var name: String? = null,
-      public var constraints: List<Constraint>? = null
+      public var constraints: MutableList<Constraint> = mutableListOf()
     )
 
     public class _RefType(
@@ -422,7 +445,7 @@ public class IonSchema private constructor() {
     )
 
     public class _RefInline(
-      public var constraints: List<Constraint>? = null,
+      public var constraints: MutableList<Constraint> = mutableListOf(),
       public var nullable: Boolean? = null
     )
 
@@ -437,11 +460,11 @@ public class IonSchema private constructor() {
     )
 
     public class _ConstraintAllOf(
-      public var types: List<Ref>? = null
+      public var types: MutableList<Ref> = mutableListOf()
     )
 
     public class _ConstraintAnyOf(
-      public var types: List<Ref>? = null
+      public var types: MutableList<Ref> = mutableListOf()
     )
 
     public class _ConstraintAnnotations
@@ -457,7 +480,7 @@ public class IonSchema private constructor() {
     )
 
     public class _ConstraintContains(
-      public var values: List<Value.Ion>? = null
+      public var values: MutableList<Value.Ion> = mutableListOf()
     )
 
     public class _ConstraintElement(
@@ -480,7 +503,7 @@ public class IonSchema private constructor() {
 
     public class _ConstraintFields(
       public var closed: Boolean? = null,
-      public var fields: List<Field>? = null
+      public var fields: MutableList<Field> = mutableListOf()
     )
 
     public class _ConstraintIeee754Float(
@@ -492,11 +515,11 @@ public class IonSchema private constructor() {
     )
 
     public class _ConstraintOneOf(
-      public var types: List<Ref>? = null
+      public var types: MutableList<Ref> = mutableListOf()
     )
 
     public class _ConstraintOrderedElements(
-      public var types: List<Ref>? = null
+      public var types: MutableList<Ref> = mutableListOf()
     )
 
     public class _ConstraintPrecisionEquals(
@@ -529,7 +552,7 @@ public class IonSchema private constructor() {
     )
 
     public class _ConstraintValidValues(
-      public var values: List<Value>? = null
+      public var values: MutableList<Value> = mutableListOf()
     )
 
     public class _Field(

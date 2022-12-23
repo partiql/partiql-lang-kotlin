@@ -39,11 +39,20 @@ user_reserved_fields::{
 footer::{}
 
 //---[Imports]---
-import::{
-  schema: string,
-  type: 'type?',
-  alias: 'string?',
-}
+import::[
+  schema::{
+    id: string,
+  },
+  type::{
+    id: string,
+    type: '.type',
+  },
+  type_alias::{
+    id: string,
+    type: '.type',
+    alias: string,
+  },
+]
 
 //---[Version Marker]---
 version::[
