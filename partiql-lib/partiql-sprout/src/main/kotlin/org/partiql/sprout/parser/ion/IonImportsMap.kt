@@ -26,22 +26,24 @@ internal class IonImportsMap private constructor(private val imports: Map<String
                     else -> error("import target `${it.fieldName}` is unsupported")
                 }
             }
-            // KISS hack since only Kotlin is supported
+            // KISS hack since only Kotlin is implemented
             return IonImportsMap(imports.first())
         }
 
         /**
-         * Parses an import using the Java ServiceLoader syntax
+         * Parses an import using the Java ClassLoader syntax
          */
         private fun IonList.kotlin(): Map<String, Import> = associate {
             assert(it is IonSymbol)
             val symbol = it as IonSymbol
             val alias = symbol.id()
-            val parts = symbol.stringValue().split("#")
-            assert(parts.size == 2)
+            val path = symbol.stringValue()
+            val i = path.lastIndexOf(".")
+            val packageName = path.substring(0, i)
+            val simpleNames = path.substring(i + 1).split("$")
             alias to Import(
-                namespace = parts[0],
-                ids = parts[1].split(".")
+                namespace = packageName,
+                ids = simpleNames
             )
         }
     }

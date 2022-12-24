@@ -12,8 +12,8 @@
 
 imports::{
   kotlin: [
-    ion::'com.amazon.ionelement.api#AnyElement',
-    timestamp::'com.amazon.ionelement.api#TimestampElement',
+    ion::'com.amazon.ionelement.api.IonElement',
+    timestamp::'com.amazon.ionelement.api.TimestampElement',
   ],
 }
 
@@ -21,7 +21,7 @@ imports::{
 schema::{
   version: version,
   header: 'header?',
-  definitions: list::[type],
+  definitions: list::[definition],
   footer: 'footer?',
 }
 
@@ -45,11 +45,11 @@ import::[
   },
   type::{
     id: string,
-    type: '.type',
+    type: string,
   },
   type_alias::{
     id: string,
-    type: '.type',
+    type: string,
     alias: string,
   },
 ]
@@ -61,87 +61,80 @@ version::[
 ]
 
 //---[Type Definition]---
-type::{
+definition::{
   name: string,
   constraints: list::[constraint],
 }
 
 //---[Type Reference]---
-ref::[
-  type::{
+type::[
+  ref::{
     name: string,
     nullable: bool,
   },
   inline::{
     constraints: list::[constraint],
     nullable: bool,
+    occurs: 'occurs?',
   },
   import::{
     schema: string,
     type: string,
     nullable: bool,
-  }
+  },
 ]
-
 
 //---[Constraints]----
 constraint::[
   //
-  range::{
-    range: '.range',
-  },
-  //
   all_of::{
-    types: list::[ref],
+    types: list::['.type'],
   },
-  // Constraint where the value must match any of the specified types
   any_of::{
-    types: list::[ref],
+    types: list::['.type'],
   },
-  //
-  annotations::{
-
-  },
-  // Constraint which enforces an element's length for the given measure
+  annotations::[
+    values::{
+      modifier: [ REQUIRED, CLOSED ],
+      values: list::[string],
+    },
+    type::{
+      type: '.type',
+    },
+  ],
   length::[
     equals::{
       measure: measure,
-      length: int,
+      length: long,
     },
     range::{
       measure: measure,
       range: '.range.int',
     },
   ],
-  // Constraint which indicates that the collection is expected to contain all the specified values, in no particular order
   contains::{
     values: list::[ion],
   },
-  // Constraint which defines the type and/or constraints for all values within a homogeneous collection
   element::{
-    type: ref,
+    type: '.type',
     distinct: 'bool?',
   },
-  // Constraint which specifies an exact or minimum/maximum range indicating the exponent of an Ion decimal
   exponent::[
     equals::{
-      value: int,
+      value: long,
     },
     range::{
       range: '.range.int',
     },
   ],
-  //
   field_names::{
-    type: ref,
+    type: type,
     distinct: 'bool?',
   },
-  //
   fields::{
     closed: 'bool?',
-    fields: list::[field],
+    fields: map::[string,'.type'],
   },
-  // Constraint which allows you to test whether a float value is losslessly compatible with the given IEEE 754 interchange format
   ieee754_float::{
     format: [
       BINARY_16,
@@ -149,40 +142,30 @@ constraint::[
       BINARY_64,
     ],
   },
-  //
   not::{
-    type: ref,
+    type: type,
   },
-  //
   one_of::{
-    types: list::[ref],
+    types: list::['.type'],
   },
-  // Each value in a list, S-expression, or document is expected to be valid against the type in the corresponding position of the specified types list
   ordered_elements::{
-    types: list::[ref],
+    types: list::['.type'],
   },
-  //
   precision::[
     equals::{
-      value: int,
+      value: long,
     },
     range::{
       range: '.range.int',
     },
   ],
-  // Tests whether a symbol or string has any matches for the given regular expression.
   regex::{
     pattern: string,
-    flags: [
-      MULTILINE,
-      CASE_INSENSITIVE,
-    ]
+    flags: list::[flag],
   },
-  // Limits the timestamp offsets that are allowed.
   timestamp_offset::{
-    pattern: string,
+    offsets: list::[string],
   },
-  // Indicates the exact or minimum/maximum precision of a timestamp
   timestamp_precision::[
     equals::{
       value: '.timestamp_precision',
@@ -191,13 +174,11 @@ constraint::[
       range: '.range.timestamp_precision',
     },
   ],
-  // Indicates the type that a value shall be validated against
   type::{
-    type: ref,
+    type: '.type',
   },
-  //
   valid_values::{
-    values: list::[value]
+    values: list::[value],
   },
 ]
 
@@ -222,25 +203,19 @@ timestamp_precision::[
 ]
 
 // TODO move to inline
-field::{
-  name: string,
-  type: ref,
-}
-
-// TODO move to inline
 value::[
   ion::{
-    value: ion,
+    value: '.ion',
   },
   range::{
-    value: '.constraint.range',
+    value: '.range',
   },
 ]
 
 range::[
   int::{
-    lower: 'int?',
-    upper: 'int?',
+    lower: 'long?',
+    upper: 'long?',
     bounds: bounds,
   },
   number::{
@@ -267,4 +242,21 @@ bounds::[
   EXCLUSIVE,
   L_EXCLUSIVE,
   R_EXCLUSIVE,
+]
+
+// An interesting use case — define inline enum while used in a list
+flag::[
+  MULTILINE,
+  CASE_INSENSITIVE,
+]
+
+occurs::[
+  equal::{
+    value: long,
+  },
+  range::{
+    range: '.range.int',
+  },
+  optional::{},
+  required::{},
 ]

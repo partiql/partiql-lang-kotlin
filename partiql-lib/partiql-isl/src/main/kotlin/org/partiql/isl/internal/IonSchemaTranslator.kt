@@ -3,9 +3,9 @@ package org.partiql.isl.internal
 import com.amazon.ionschema.Import
 import com.amazon.ionschema.Schema
 import com.amazon.ionschema.Type
+import org.partiql.isl.Version
 import org.partiql.isl.builder.IonSchema
 import org.partiql.isl.builder.IonSchemaFactory
-import org.partiql.isl.Version
 
 /**
  * Translates from [com.amazon.ionschema.Schema] to [org.partiql.isl.model.Schema]
@@ -39,16 +39,10 @@ internal class IonSchemaTranslator(private val factory: IonSchemaFactory) {
      * Translate from an IonSchema import to an ISL Import
      */
     private fun IonSchema.Builder.translate(import: Import): List<org.partiql.isl.Import> {
-        val types = import.getTypes().asSequence().toList().map {
-            importType(
-                id = import.id,
-                type = translate(it),
-            )
-        }
-        return types.ifEmpty { listOf(importSchema(import.id)) }
+        TODO("Cannot translate without looking at IonValue. The constraints are not exposed")
     }
 
-    private fun IonSchema.Builder.translate(type: Type) = type {
+    private fun IonSchema.Builder.translate(type: Type) = definition {
         TODO("Cannot translate without looking at IonValue. The constraints are not exposed")
     }
 }

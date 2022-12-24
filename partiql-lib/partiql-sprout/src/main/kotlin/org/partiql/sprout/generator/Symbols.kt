@@ -120,7 +120,7 @@ class Symbols private constructor(
         is TypeRef.Set -> typeNameOf(ref, mutable)
         is TypeRef.Map -> typeNameOf(ref, mutable)
         is TypeRef.Import -> ClassName(ref.namespace, ref.path)
-    }
+    }.copy(ref.nullable)
 
     // --- Internal -------------------------------
 

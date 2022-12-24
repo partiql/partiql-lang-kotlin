@@ -10,7 +10,6 @@ import org.partiql.isl.internal.IonSchemaWriter
 
 object ISL {
 
-    // https://media.giphy.com/media/B6YPtHTg7Nn9qRWGJ4/giphy.gif
     private val ISS = IonSchemaSystemBuilder.standard().build()
 
     /**

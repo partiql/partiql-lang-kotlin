@@ -131,26 +131,25 @@ class VisitorPoem(symbols: Symbols) : Poem(symbols) {
 
     /**
      * Returns a CodeBlock which represents a list of all nodes
-     *
-     * Note: currently doesn't handle list of enums correctly
      */
     private fun NodeSpec.Product.kids(): CodeBlock? {
         var n = product.props.size
+        val isNode: (ref: TypeRef) -> Boolean = { (it is TypeRef.Path) && (symbols.def(it) !is TypeDef.Enum) }
         val block = CodeBlock.builder()
-            .addStatement("val kids = mutableListOf<%T>()", symbols.base)
+            .addStatement("val kids = mutableListOf<%T?>()", symbols.base)
             .apply {
                 product.props.forEachIndexed { i, prop ->
                     val kid = prop.ref
                     val name = props[i].name
                     when {
-                        (kid is TypeRef.Path && symbols.def(kid) !is TypeDef.Enum) -> addStatement("kids.add($name)")
-                        (kid is TypeRef.List && kid.type is TypeRef.Path) -> addStatement("kids.addAll($name)")
-                        (kid is TypeRef.Set && kid.type is TypeRef.Path) -> addStatement("kids.addAll($name)")
+                        isNode(kid) -> addStatement("kids.add($name)")
+                        (kid is TypeRef.List && isNode(kid.type)) -> addStatement("kids.addAll($name)")
+                        (kid is TypeRef.Set && isNode(kid.type)) -> addStatement("kids.addAll($name)")
                         else -> n -= 1
                     }
                 }
             }
-            .addStatement("kids")
+            .addStatement("kids.filterNotNull()")
             .build()
         return if (n != 0) block else null
     }

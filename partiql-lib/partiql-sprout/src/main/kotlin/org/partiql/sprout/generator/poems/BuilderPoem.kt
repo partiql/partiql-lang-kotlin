@@ -33,6 +33,7 @@ import org.partiql.sprout.generator.spec.PackageSpec
 import org.partiql.sprout.generator.spec.UniverseSpec
 import org.partiql.sprout.generator.types.Annotations
 import org.partiql.sprout.model.TypeRef
+import java.lang.StringBuilder
 
 /**
  * Poem which creates a DSL for instantiation
@@ -171,6 +172,7 @@ class BuilderPoem(symbols: Symbols) : Poem(symbols) {
         val receiverConstructor = FunSpec.constructorBuilder()
         val receiver = TypeSpec.classBuilder(receiverType)
         val dslFunction = FunSpec.builder(receiverName).returns(clazz)
+        val args = mutableListOf<String>()
         product.props.forEachIndexed { i, it ->
             var type = symbols.typeNameOf(it.ref, mutable = true)
             val name = props[i].name
@@ -188,24 +190,24 @@ class BuilderPoem(symbols: Symbols) : Poem(symbols) {
             receiver.addProperty(prop)
             receiverConstructor.addParameter(para)
             dslFunction.addParameter(para)
+            val assertion = if (!it.ref.nullable && default == "null") "!!" else ""
+            args += "$name = b.$name$assertion"
         }
         // block last
         dslFunction.addParameter(
-            ParameterSpec.builder(
-                "block",
-                LambdaTypeName.get(
+            ParameterSpec.builder("block", LambdaTypeName.get(
                     receiver = receiverType,
                     returnType = Unit::class.asTypeName()
                 )
             )
-                .defaultValue("{}")
-                .build()
+            .defaultValue("{}")
+            .build()
         )
         val r = receiver.primaryConstructor(receiverConstructor.build()).build()
         val f = dslFunction
             .addStatement("val b = %T(${props.joinToString { it.name }})", receiverType)
             .addStatement("b.block()")
-            .addStatement("return factory.$receiverName(${props.joinToString { "${it.name} = b.${it.name}!!" }})")
+            .addStatement("return factory.$receiverName(${args.joinToString()})")
             .build()
         return Pair(r, f)
     }
