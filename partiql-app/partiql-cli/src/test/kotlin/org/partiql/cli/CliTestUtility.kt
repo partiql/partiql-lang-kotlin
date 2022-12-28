@@ -3,11 +3,13 @@ package org.partiql.cli
 import com.amazon.ion.IonSystem
 import com.amazon.ion.system.IonSystemBuilder
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.partiql.cli.pico.PartiQLCommand
+import org.partiql.cli.pipeline.AbstractPipeline
+import org.partiql.cli.query.Cli
+import org.partiql.cli.utils.EmptyInputStream
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
-import org.partiql.pico.CommandQuery
-import org.partiql.pipeline.AbstractPipeline
 import java.io.ByteArrayOutputStream
 import java.io.OutputStream
 
@@ -17,9 +19,9 @@ import java.io.OutputStream
 internal fun makeCliAndGetResult(
     query: String,
     input: String? = null,
-    inputFormat: CommandQuery.InputFormat = CommandQuery.InputFormat.ION,
+    inputFormat: PartiQLCommand.InputFormat = PartiQLCommand.InputFormat.ION,
     bindings: Bindings<ExprValue> = Bindings.empty(),
-    outputFormat: CommandQuery.OutputFormat = CommandQuery.OutputFormat.ION_TEXT,
+    outputFormat: PartiQLCommand.OutputFormat = PartiQLCommand.OutputFormat.ION_TEXT,
     output: OutputStream = ByteArrayOutputStream(),
     ion: IonSystem = IonSystemBuilder.standard().build(),
     pipeline: AbstractPipeline = AbstractPipeline.standard(),

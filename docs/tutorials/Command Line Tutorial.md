@@ -20,18 +20,38 @@ project root).
 
 Be sure to include the correct relative path to `gradlew` if you are not in the project root.
 
-## CLI Commands
+## CLI Options
 
-To view all commands available, run the CLI with the `--help` option.
+To view all available options, run the CLI with the `--help` option.
 
-## Shell
+## Non-Interactive (Single Query Execution)
+
+To execute a single query, run:
+
+```shell
+./partiql-app/partiql-cli/shell.sh -q query.partiql
+```
+
+where `query.partiql` contains the PartiQL query to execute.
+
+Alternatively, you may pipe input into the native command:
+
+```shell
+# Via `echo`
+echo "SELECT * FROM [0, 1, 2]" | ./partiql-app/partiql-cli/build/install/partiql-cli/bin/partiql
+
+# Via `cat`
+echo ~/Desktop/query.partiql | ./partiql-app/partiql-cli/build/install/partiql-cli/bin/partiql
+```
+
+## Interactive (Shell)
 
 To start an interactive shell, execute:
 
 > Note that running directly with Gradle will eat arrow keys and control sequences due to the Gradle daemon.
 
 ```shell
-./partiql-app/partiql-cli/shell.sh shell
+./partiql-app/partiql-cli/shell.sh
 ```
 
 You will see a prompt that looks as follows:
@@ -82,7 +102,7 @@ PartiQL> SELECT id + 4 AS name FROM _;
 
 Press control-D to exit the REPL.
 
-### Advanced REPL Features
+### Advanced Shell Features
 
 To view the AST of a PartiQL statement, type the statement and press enter only *once*, then type `!!` and press enter:
 
@@ -118,7 +138,7 @@ OK!
 
 ### Initial Environment
 
-The initial environment for the REPL can be setup with a configuration file, which should be a PartiQL file with a 
+The initial environment for the Shell can be setup with a configuration file, which should be a PartiQL file with a 
 single `struct` containing the initial *global environment*.
 
 For example, a file named `config.env` contains the following:
@@ -139,18 +159,16 @@ For example, a file named `config.env` contains the following:
 ```
 
 The variables `animals` and `types` can both be bound to the execution environment for later access.
-To bind the environment file to the execution environment, start the REPL with the following command:
+To bind the environment file to the execution environment, start the Shell with the following command:
 
 ```shell
-$ ./partiql-app/partiql-cli/shell.sh shell -e config.env
+$ ./partiql-app/partiql-cli/shell.sh -e config.env
 ```
-
-**Note**: Shell expansions such as `~` do not work within the value of the `args` argument.
 
 Or, if you have extracted one of the compressed archives:
 
 ```shell
-$ ./bin/partiql shell -e config.env
+$ ./bin/partiql -e config.env
 ```
 
 Expressions can then use the environment defined by `config.env`:
@@ -178,7 +196,7 @@ PartiQL> SELECT name, type, is_magic FROM animals, types WHERE type = id
 >>
 ```
 
-To see the current REPL environment you can use `!global_env`, for example for the file above: 
+To see the current Shell environment you can use `!global_env`, for example for the file above: 
 
 ```shell
 PartiQL> !global_env;
@@ -380,7 +398,7 @@ PartiQL> SELECT * FROM stores AS s
 ```
 
 ## Reading/Writing Files
-The REPL provides the `read_file` function to stream data from a file. The files need to be placed in the folder `cli`, 
+The CLI provides the `read_file` function to stream data from a file. The files need to be placed in the folder `cli`, 
 and, if using the default file type (Ion), they must contain only a single Ion value (typically a list).
 
 **Note**: Later on, we will introduce reading different file types, but we will first focus on the default (Ion).
@@ -411,7 +429,7 @@ PartiQL> SELECT city FROM read_file('data.ion') AS c, `["HI", "NY"]` AS s WHERE 
 >>
 ```
 
-The REPL also has the capability to write files with the `write_file` function:
+The CLI also has the capability to write files with the `write_file` function:
 
 ```shell
 PartiQL> write_file('out.ion', SELECT * FROM _);
@@ -687,7 +705,7 @@ For in-depth documentation on valid DDB PartiQL queries, please reference the of
 [AWS DynamoDB PartiQL Docs](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/ql-reference.html).
 
 ## Permissive Typing Mode
-By default, the CLI/REPL runs in [LEGACY](https://github.com/partiql/partiql-lang-kotlin/blob/main/lang/src/org/partiql/lang/eval/CompileOptions.kt#L53-L62)
+By default, the CLI runs in [LEGACY](https://github.com/partiql/partiql-lang-kotlin/blob/main/lang/src/org/partiql/lang/eval/CompileOptions.kt#L53-L62)
 typing mode, which will give an evaluation time error in the case of data type mismatches.
 
 ```shell

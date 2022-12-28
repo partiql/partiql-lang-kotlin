@@ -32,7 +32,7 @@ dependencies {
 
 application {
     applicationName = "partiql"
-    mainClass.set("org.partiql.Main")
+    mainClass.set("org.partiql.cli.Main")
 }
 
 distributions {

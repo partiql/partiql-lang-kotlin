@@ -67,10 +67,10 @@ The root folder `partiql-cli` contains a `README.md` file and 3 subfolders
 ### Windows
 
 Run (double click on) `partiql.bat`. This should open a command-line
-prompt and start the PartiQL CLI which displays:
+prompt and start the PartiQL Shell which displays:
 
 ```shell
-Welcome to the PartiQL CLI!
+Welcome to the PartiQL Shell!
 ```
 
 ### macOS (Mac) and Unix
@@ -81,7 +81,7 @@ Welcome to the PartiQL CLI!
 The folder name will have the PartiQL version as a suffix, i.e., `partiql-cli-0.1.0`.
 
 ```shell
-Welcome to the PartiQL CLI!
+Welcome to the PartiQL Shell!
 ```
 
 ### Command Line Tutorial

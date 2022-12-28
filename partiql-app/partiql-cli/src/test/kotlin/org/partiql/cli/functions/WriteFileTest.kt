@@ -21,12 +21,11 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.partiql.cli.assertAsIon
 import org.partiql.cli.makeCliAndGetResult
-import org.partiql.functions.WriteFile
 import org.partiql.lang.eval.BAG_ANNOTATION
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.toIonValue
-import org.partiql.pipeline.AbstractPipeline
+import org.partiql.cli.pipeline.AbstractPipeline
 import java.io.ByteArrayOutputStream
 import java.io.OutputStream
 import java.nio.file.Files

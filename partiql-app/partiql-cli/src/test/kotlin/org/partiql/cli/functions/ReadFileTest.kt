@@ -22,7 +22,6 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import org.partiql.functions.ReadFile
 import org.partiql.lang.eval.BAG_ANNOTATION
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
