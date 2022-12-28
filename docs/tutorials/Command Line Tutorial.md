@@ -29,7 +29,7 @@ To view all available options, run the CLI with the `--help` option.
 To execute a single query, run:
 
 ```shell
-./partiql-app/partiql-cli/shell.sh -q query.partiql
+./partiql-app/partiql-cli/shell.sh query.partiql
 ```
 
 where `query.partiql` contains the PartiQL query to execute.

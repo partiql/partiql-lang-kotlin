@@ -113,7 +113,7 @@ internal class PartiQLCommand(private val valueFactory: ExprValueFactory) : Runn
         @CommandLine.Option(names = ["-w", "--wrap-ion"], description = ["Indicates that the input Ion file contains a sequence of Ion values rather than a single Ion collection"])
         var wrapIon: Boolean = false
 
-        @CommandLine.Option(names = ["-q", "--query"], description = ["The filepath of the PartiQL query to execute"], paramLabel = "FILE")
+        @CommandLine.Parameters(arity = "0..1", index = "0..1", description = ["The filepath of the PartiQL query to execute"], paramLabel = "PARTIQL_FILE")
         var query: File? = null
     }
 
