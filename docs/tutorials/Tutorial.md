@@ -70,7 +70,7 @@ Run (double click on) `partiql.bat`. This should open a command-line
 prompt and start the PartiQL Shell which displays:
 
 ```shell
-Welcome to the PartiQL Shell!
+Welcome to the PartiQL shell!
 ```
 
 ### macOS (Mac) and Unix
@@ -81,7 +81,7 @@ Welcome to the PartiQL Shell!
 The folder name will have the PartiQL version as a suffix, i.e., `partiql-cli-0.1.0`.
 
 ```shell
-Welcome to the PartiQL Shell!
+Welcome to the PartiQL shell!
 ```
 
 ### Command Line Tutorial

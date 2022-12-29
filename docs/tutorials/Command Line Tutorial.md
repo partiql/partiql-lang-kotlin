@@ -57,7 +57,7 @@ To start an interactive shell, execute:
 You will see a prompt that looks as follows:
 
 ```shell
-Welcome to the PartiQL Shell!
+Welcome to the PartiQL shell!
 PartiQL> 
 ```
 

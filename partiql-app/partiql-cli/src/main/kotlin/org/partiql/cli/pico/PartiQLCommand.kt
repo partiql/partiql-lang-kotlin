@@ -102,13 +102,13 @@ internal class PartiQLCommand(private val valueFactory: ExprValueFactory) : Runn
         @CommandLine.Option(names = ["-i", "--in"], description = ["The path to the input file"], paramLabel = "FILE")
         var inputFile: File? = null
 
-        @CommandLine.Option(names = ["-f", "--in-format"], description = ["The input file format: [\${COMPLETION-CANDIDATES}]"], paramLabel = "FORMAT")
+        @CommandLine.Option(names = ["--in-format"], description = ["The input file format: [\${COMPLETION-CANDIDATES}]"], paramLabel = "FORMAT")
         var inputFormat: InputFormat = InputFormat.ION
 
         @CommandLine.Option(names = ["-o", "--out"], description = ["The path to the output file"], paramLabel = "FILE")
         var outputFile: File? = null
 
-        @CommandLine.Option(names = ["-F", "--out-format"], description = ["The output file format: [\${COMPLETION-CANDIDATES}]"], paramLabel = "FORMAT")
+        @CommandLine.Option(names = ["--out-format"], description = ["The output file format: [\${COMPLETION-CANDIDATES}]"], paramLabel = "FORMAT")
         var outputFormat: OutputFormat = OutputFormat.PARTIQL
 
         @CommandLine.Option(names = ["-w", "--wrap-ion"], description = ["Indicates that the input Ion file contains a sequence of Ion values rather than a single Ion collection"])

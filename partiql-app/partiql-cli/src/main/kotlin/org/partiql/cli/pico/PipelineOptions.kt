@@ -34,16 +34,16 @@ internal class PipelineOptions {
     @CommandLine.Option(names = ["-e", "--environment"], description = ["File containing the global environment"], paramLabel = "FILE")
     var environmentFile: File? = null
 
-    @CommandLine.Option(names = ["-t", "--typing-mode"], description = ["Specifies the typing mode: [\${COMPLETION-CANDIDATES}]"], paramLabel = "MODE")
+    @CommandLine.Option(names = ["--typing-mode"], description = ["Specifies the typing mode: [\${COMPLETION-CANDIDATES}]"], paramLabel = "MODE")
     var typingMode: TypingMode = TypingMode.LEGACY
 
-    @CommandLine.Option(names = ["-T", "--typed-behavior"], description = ["Indicates how CAST should behave: [\${COMPLETION-CANDIDATES}]"], paramLabel = "OPT")
+    @CommandLine.Option(names = ["--typed-op-behavior"], description = ["Indicates how CAST should behave: [\${COMPLETION-CANDIDATES}]"], paramLabel = "OPT")
     var typedOpBehavior: TypedOpBehavior = TypedOpBehavior.HONOR_PARAMETERS
 
-    @CommandLine.Option(names = ["-I", "--iter-behavior"], description = ["Controls the behavior of ExprValue.iterator in the projection result: [\${COMPLETION-CANDIDATES}]"], paramLabel = "OPT")
+    @CommandLine.Option(names = ["--projection-iter-behavior"], description = ["Controls the behavior of ExprValue.iterator in the projection result: [\${COMPLETION-CANDIDATES}]"], paramLabel = "OPT")
     var projIterBehavior: ProjectionIterationBehavior = ProjectionIterationBehavior.FILTER_MISSING
 
-    @CommandLine.Option(names = ["-u", "--undef-behavior"], description = ["Defines the behavior when a non-existent variable is referenced: [\${COMPLETION-CANDIDATES}]"], paramLabel = "OPT")
+    @CommandLine.Option(names = ["-u", "--undefined-variable-behavior"], description = ["Defines the behavior when a non-existent variable is referenced: [\${COMPLETION-CANDIDATES}]"], paramLabel = "OPT")
     var undefinedVarBehavior: UndefinedVariableBehavior = UndefinedVariableBehavior.ERROR
 
     private val pipelineOptions = AbstractPipeline.createPipelineOptions(
