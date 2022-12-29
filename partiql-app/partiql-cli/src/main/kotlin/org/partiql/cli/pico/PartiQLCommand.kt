@@ -57,12 +57,13 @@ internal class PartiQLCommand(private val valueFactory: ExprValueFactory) : Runn
      * Run the CLI or Shell (default)
      */
     override fun run() {
+        val command = executionOptions ?: ExecutionOptions()
+        val shell = shellOptions ?: ShellOptions()
+        val stdin = System.`in`
         when {
-            executionOptions?.query != null -> runCli(executionOptions!!, executionOptions!!.query!!.inputStream())
-            executionOptions != null && System.`in`.available() > 0 -> runCli(executionOptions!!, System.`in`)
-            System.`in`.available() > 0 -> runCli(ExecutionOptions(), System.`in`)
-            shellOptions != null -> runShell(shellOptions!!)
-            else -> runShell()
+            command.query != null -> runCli(command, command.query!!.inputStream())
+            stdin.available() > 0 -> runCli(command, stdin)
+            else -> runShell(shell)
         }
     }
 
