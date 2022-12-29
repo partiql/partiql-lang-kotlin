@@ -705,7 +705,7 @@ For in-depth documentation on valid DDB PartiQL queries, please reference the of
 [AWS DynamoDB PartiQL Docs](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/ql-reference.html).
 
 ## Permissive Typing Mode
-By default, the CLI runs in [LEGACY](https://github.com/partiql/partiql-lang-kotlin/blob/main/lang/src/org/partiql/lang/eval/CompileOptions.kt#L53-L62)
+By default, the CLI runs in [LEGACY](https://github.com/partiql/partiql-lang-kotlin/blob/main/lang/src/main/kotlin/org/partiql/lang/eval/CompileOptions.kt#L62)
 typing mode, which will give an evaluation time error in the case of data type mismatches.
 
 ```shell
