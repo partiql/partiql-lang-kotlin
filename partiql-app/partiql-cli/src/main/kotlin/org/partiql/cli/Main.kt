@@ -11,9 +11,25 @@
  *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
  *  language governing permissions and limitations under the License.
  */
+@file:JvmName("Main")
+
+@file:Suppress("DEPRECATION")
 
 package org.partiql.cli
 
-interface PartiQLCommand {
-    fun run()
+import com.amazon.ion.system.IonSystemBuilder
+import org.partiql.cli.pico.PartiQLCommand
+import org.partiql.lang.eval.ExprValueFactory
+import picocli.CommandLine
+import kotlin.system.exitProcess
+
+/**
+ * Runs the PartiQL CLI.
+ */
+fun main(args: Array<String>) {
+    val ion = IonSystemBuilder.standard().build()
+    val valueFactory = ExprValueFactory.standard(ion)
+    val command = CommandLine(PartiQLCommand(valueFactory))
+    val exitCode = command.execute(*args)
+    exitProcess(exitCode)
 }

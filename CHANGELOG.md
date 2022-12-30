@@ -24,8 +24,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Adds ability to pipe queries to the CLI
 
 ### Changed
+- Updates the CLI to use Pico CLI and modifies several CLI options
 
 ### Deprecated
 

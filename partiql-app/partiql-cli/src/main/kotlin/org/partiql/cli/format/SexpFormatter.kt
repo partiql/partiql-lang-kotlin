@@ -12,22 +12,14 @@
  * language governing permissions and limitations under the License.
  */
 
-package org.partiql.format
+package org.partiql.cli.format
 
-import org.partiql.lang.eval.PartiQLResult
+import com.amazon.ion.system.IonTextWriterBuilder
+import org.partiql.pig.runtime.DomainNode
 
-internal object ExplainFormatter {
-
-    internal fun format(result: PartiQLResult.Explain.Domain): String {
-        val format = result.format?.toUpperCase() ?: ExplainFormats.ION_SEXP.name
-        val formatOption = ExplainFormats.valueOf(format)
-        return formatOption.formatter.format(result.value)
-    }
-
-    private enum class ExplainFormats(val formatter: NodeFormatter) {
-        ION_SEXP(SexpFormatter),
-        TREE(TreeFormatter),
-        DOT(DotFormatter),
-        DOT_URL(DotUrlFormatter)
+internal object SexpFormatter : NodeFormatter {
+    override fun format(input: DomainNode): String = buildString {
+        val writer = IonTextWriterBuilder.pretty().build(this)
+        input.toIonElement().writeTo(writer)
     }
 }
