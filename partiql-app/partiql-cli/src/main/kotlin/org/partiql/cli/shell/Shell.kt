@@ -12,7 +12,7 @@
  * language governing permissions and limitations under the License.
  */
 
-package org.partiql.shell
+package org.partiql.cli.shell
 
 import com.google.common.base.CharMatcher
 import com.google.common.util.concurrent.Uninterruptibles
@@ -29,7 +29,8 @@ import org.jline.utils.AttributedStringBuilder
 import org.jline.utils.AttributedStyle
 import org.jline.utils.InfoCmp
 import org.joda.time.Duration
-import org.partiql.format.ExplainFormatter
+import org.partiql.cli.format.ExplainFormatter
+import org.partiql.cli.pipeline.AbstractPipeline
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
@@ -39,7 +40,6 @@ import org.partiql.lang.eval.delegate
 import org.partiql.lang.syntax.PartiQLParserBuilder
 import org.partiql.lang.util.ConfigurableExprValueFormatter
 import org.partiql.lang.util.ExprValueFormatter
-import org.partiql.pipeline.AbstractPipeline
 import java.io.Closeable
 import java.io.OutputStream
 import java.io.PrintStream
@@ -56,7 +56,7 @@ private const val PROMPT_1 = "PartiQL> "
 private const val PROMPT_2 = "   | "
 private const val BAR_1 = "===' "
 private const val BAR_2 = "--- "
-private const val WELCOME_MSG = "Welcome to the PartiQL REPL!"
+private const val WELCOME_MSG = "Welcome to the PartiQL shell!"
 
 private const val HELP = """
 !add_to_global_env  Adds a value to the global environment

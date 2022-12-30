@@ -12,7 +12,7 @@
  * language governing permissions and limitations under the License.
  */
 
-package org.partiql.format.dot
+package org.partiql.cli.format.dot
 
 import kotlin.properties.ObservableProperty
 import kotlin.properties.ReadWriteProperty
@@ -105,7 +105,7 @@ sealed class DotGraph(
 
     /**
      * I couldn't figure out how to chain edges while also attaching edge attributes
-     *  hence why these return a org.partiql.format.DotEdgeStmt and not the rhs
+     *  hence why these return a org.partiql.cli.format.DotEdgeStmt and not the rhs
      */
 
     /**
@@ -475,7 +475,7 @@ interface DotEntity {
 }
 
 /**
- * Calling a org.partiql.format.DotVertex entities that can be the source or target of an edge -- i.e. node ids and subgraphs
+ * Calling a org.partiql.cli.format.DotVertex entities that can be the source or target of an edge -- i.e. node ids and subgraphs
  * This affects indentation in Dot generating.
  */
 interface DotVertex {

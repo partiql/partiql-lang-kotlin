@@ -12,7 +12,7 @@
  * language governing permissions and limitations under the License.
  */
 
-package org.partiql.shell
+package org.partiql.cli.shell
 
 import org.partiql.lang.eval.BindingCase
 import org.partiql.lang.eval.BindingName

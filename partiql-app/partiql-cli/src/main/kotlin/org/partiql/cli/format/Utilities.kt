@@ -12,14 +12,11 @@
  * language governing permissions and limitations under the License.
  */
 
-package org.partiql.format
+package org.partiql.cli.format
 
-import com.amazon.ion.system.IonTextWriterBuilder
 import org.partiql.pig.runtime.DomainNode
+import kotlin.reflect.full.memberProperties
 
-internal object SexpFormatter : NodeFormatter {
-    override fun format(input: DomainNode): String = buildString {
-        val writer = IonTextWriterBuilder.pretty().build(this)
-        input.toIonElement().writeTo(writer)
-    }
+internal fun DomainNode.properties() = this.javaClass.kotlin.memberProperties.filter { property ->
+    property.name.toLowerCase() != "metas" && property.name.toLowerCase() != "myhashcode"
 }

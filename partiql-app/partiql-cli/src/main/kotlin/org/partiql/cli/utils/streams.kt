@@ -12,7 +12,7 @@
  *  language governing permissions and limitations under the License.
  */
 
-package org.partiql.cli
+package org.partiql.cli.utils
 
 import java.io.FilterOutputStream
 import java.io.InputStream
