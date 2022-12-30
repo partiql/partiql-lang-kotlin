@@ -1,19 +1,19 @@
-package org.partiql.sprout.generator
+package org.partiql.sprout.generator.target.kotlin
 
 import org.junit.jupiter.api.Test
 import org.partiql.sprout.parser.SproutParser
 
-internal class GeneratorTest {
+internal class KotlinGeneratorTest {
 
     @Test
     fun generate() {
-        val input = GeneratorTest::class.java.getResource("/test.ion")!!.readText()
+        val input = KotlinGeneratorTest::class.java.getResource("/test.ion")!!.readText()
         val parser = SproutParser.default()
-        val generator = Generator(
-            options = Options(
+        val generator = KotlinGenerator(
+            options = KotlinOptions(
                 packageRoot = "org.partiql.sprout.test.generated",
-                node = NodeOptions(
-                    modifier = NodeOptions.Modifier.DATA
+                node = KotlinNodeOptions(
+                    modifier = KotlinNodeOptions.Modifier.DATA
                 )
             )
         )

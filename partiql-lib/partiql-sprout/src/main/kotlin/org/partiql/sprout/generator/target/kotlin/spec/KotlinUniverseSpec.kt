@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package org.partiql.sprout.generator.spec
+package org.partiql.sprout.generator.target.kotlin.spec
 
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.TypeSpec
@@ -24,16 +24,14 @@ import org.partiql.sprout.model.Universe
  *
  * @property universe       Universe definition
  * @property nodes          Node builders
- * @property domains        Domain builders
  * @property base           Base node builder
  * @property packages       Additional packages to include in the universe package
  * @property types          Additional non-node types to include in the universe package
  * @property files          Additional files to include in the universe package
  */
-class UniverseSpec(
+class KotlinUniverseSpec(
     val universe: Universe,
-    val nodes: List<NodeSpec>,
-    val domains: List<DomainSpec>,
+    val nodes: List<KotlinNodeSpec>,
     val base: TypeSpec.Builder,
     val packages: MutableList<PackageSpec> = mutableListOf(),
     val types: MutableList<TypeSpec> = mutableListOf(),
@@ -45,10 +43,7 @@ class UniverseSpec(
      *
      * <root>
      *  ├── Types.kt
-     *  ├── <ext>.kt
      *  ├── ...
-     *  ├── domains
-     *  │   └── ...
      *  ├── builder
      *  │   └── <Universe>Builder.kt
      *  ├── listener
@@ -72,17 +67,11 @@ class UniverseSpec(
         files += this.files
         // <root>/<package>/...
         files += packages.flatMap { it.files }
-
-        // <root>/domains/<domain>/<domain>.kt
-        // files += domains.map { it.file(root) }
-        //
-        // // <root>/domains/<domain>/<ext>.kt
-        // files += domains.flatMap { domain -> domain.ext.map { it.file("$root.domains") } }
         return files
     }
 
-    fun forEachNode(action: (NodeSpec) -> Unit) {
-        fun List<NodeSpec>.applyToAll() {
+    fun forEachNode(action: (KotlinNodeSpec) -> Unit) {
+        fun List<KotlinNodeSpec>.applyToAll() {
             forEach {
                 action(it)
                 it.children.applyToAll()
@@ -90,8 +79,4 @@ class UniverseSpec(
         }
         nodes.applyToAll()
     }
-
-    fun DomainSpec.file(root: String) = FileSpec.builder("$root.domain", name.simpleName)
-        .addType(build())
-        .build()
 }

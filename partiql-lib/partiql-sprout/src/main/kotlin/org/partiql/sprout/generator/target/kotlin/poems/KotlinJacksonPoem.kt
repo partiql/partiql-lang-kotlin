@@ -1,19 +1,4 @@
-/*
- * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License").
- * You may not use this file except in compliance with the License.
- * A copy of the License is located at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * or in the "license" file accompanying this file. This file is distributed
- * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
- * express or implied. See the License for the specific language governing
- * permissions and limitations under the License.
- */
-
-package org.partiql.sprout.generator.poems
+package org.partiql.sprout.generator.target.kotlin.poems
 
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
@@ -27,18 +12,18 @@ import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.STRING
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.TypeVariableName
-import org.partiql.sprout.generator.Poem
-import org.partiql.sprout.generator.Symbols
-import org.partiql.sprout.generator.spec.NodeSpec
-import org.partiql.sprout.generator.spec.PackageSpec
-import org.partiql.sprout.generator.spec.UniverseSpec
-import org.partiql.sprout.generator.types.JacksonTypes
-import org.partiql.sprout.generator.types.Parameters
+import org.partiql.sprout.generator.target.kotlin.KotlinPoem
+import org.partiql.sprout.generator.target.kotlin.KotlinSymbols
+import org.partiql.sprout.generator.target.kotlin.spec.KotlinNodeSpec
+import org.partiql.sprout.generator.target.kotlin.spec.KotlinUniverseSpec
+import org.partiql.sprout.generator.target.kotlin.spec.PackageSpec
+import org.partiql.sprout.generator.target.kotlin.types.JacksonTypes
+import org.partiql.sprout.generator.target.kotlin.types.Parameters
 
 /**
  * Poem for Jackson Databind
  */
-class JacksonPoem(symbols: Symbols) : Poem(symbols) {
+class KotlinJacksonPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
 
     override val id: String = "jackson"
 
@@ -83,7 +68,7 @@ class JacksonPoem(symbols: Symbols) : Poem(symbols) {
         .build()
     private val initBlock = CodeBlock.builder()
 
-    override fun apply(universe: UniverseSpec) {
+    override fun apply(universe: KotlinUniverseSpec) {
         // Jackson will serialize inherited properties; collect and ignore these before descending
         universe.base.propertySpecs.forEach { inheritedProps.add(it.name) }
         universe.addBaseDeserializer()
@@ -102,7 +87,7 @@ class JacksonPoem(symbols: Symbols) : Poem(symbols) {
         )
     }
 
-    override fun apply(node: NodeSpec.Product) {
+    override fun apply(node: KotlinNodeSpec.Product) {
 
         // --- Serialization
 
@@ -137,7 +122,7 @@ class JacksonPoem(symbols: Symbols) : Poem(symbols) {
         }
     }
 
-    override fun apply(node: NodeSpec.Sum) {
+    override fun apply(node: KotlinNodeSpec.Sum) {
         node.addDeserializer {
             beginControlFlow("when (val id = it.id())")
             node.variants.forEach {
@@ -149,11 +134,11 @@ class JacksonPoem(symbols: Symbols) : Poem(symbols) {
         super.apply(node)
     }
 
-    private fun NodeSpec.addDeserializer(mapping: CodeBlock.Builder.() -> Unit) {
+    private fun KotlinNodeSpec.addDeserializer(mapping: CodeBlock.Builder.() -> Unit) {
         val method = symbols.camel(def.ref)
         // Add node mapping function
         module.addProperty(
-            PropertySpec.builder("_$method", mappingInterfaceName.parameterizedBy(clazz))
+            PropertySpec.Companion.builder("_$method", mappingInterfaceName.parameterizedBy(clazz))
                 .addModifiers(KModifier.PRIVATE)
                 .initializer(
                     CodeBlock.builder()
@@ -216,7 +201,7 @@ class JacksonPoem(symbols: Symbols) : Poem(symbols) {
     /**
      * Map every type definition (except enums) to its class
      */
-    private fun UniverseSpec.addBaseDeserializer() {
+    private fun KotlinUniverseSpec.addBaseDeserializer() {
         module.addProperty(
             PropertySpec.builder("_base", mappingInterfaceName.parameterizedBy(symbols.base))
                 .addModifiers(KModifier.PRIVATE)

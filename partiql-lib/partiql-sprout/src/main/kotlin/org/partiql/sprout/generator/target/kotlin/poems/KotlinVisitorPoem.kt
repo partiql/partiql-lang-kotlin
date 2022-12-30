@@ -1,19 +1,4 @@
-/*
- * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License").
- * You may not use this file except in compliance with the License.
- * A copy of the License is located at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * or in the "license" file accompanying this file. This file is distributed
- * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
- * express or implied. See the License for the specific language governing
- * permissions and limitations under the License.
- */
-
-package org.partiql.sprout.generator.poems
+package org.partiql.sprout.generator.target.kotlin.poems
 
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
@@ -25,23 +10,23 @@ import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
-import org.partiql.sprout.generator.Poem
-import org.partiql.sprout.generator.Symbols
-import org.partiql.sprout.generator.spec.NodeSpec
-import org.partiql.sprout.generator.spec.PackageSpec
-import org.partiql.sprout.generator.spec.UniverseSpec
-import org.partiql.sprout.generator.types.Parameters
+import org.partiql.sprout.generator.target.kotlin.KotlinPoem
+import org.partiql.sprout.generator.target.kotlin.KotlinSymbols
+import org.partiql.sprout.generator.target.kotlin.spec.KotlinNodeSpec
+import org.partiql.sprout.generator.target.kotlin.spec.KotlinUniverseSpec
+import org.partiql.sprout.generator.target.kotlin.spec.PackageSpec
+import org.partiql.sprout.generator.target.kotlin.types.Parameters
 import org.partiql.sprout.model.TypeDef
 import org.partiql.sprout.model.TypeRef
 
 /**
  * Poem which makes nodes traversable via `children` and a `<Universe>Visitor`
  */
-class VisitorPoem(symbols: Symbols) : Poem(symbols) {
+class KotlinVisitorPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
 
     override val id = "visitor"
 
-    private val children = PropertySpec.builder("children", LIST.parameterizedBy(symbols.base)).build()
+    private val children = PropertySpec.Companion.builder("children", LIST.parameterizedBy(symbols.base)).build()
 
     private val visitorPackageName = "${symbols.rootPackage}.visitor"
     private val baseVisitorName = "${symbols.rootId}Visitor"
@@ -57,7 +42,7 @@ class VisitorPoem(symbols: Symbols) : Poem(symbols) {
     /**
      * Defines the open `children` property and the abstract`accept` method on the base node
      */
-    override fun apply(universe: UniverseSpec) {
+    override fun apply(universe: KotlinUniverseSpec) {
         universe.base.addProperty(
             children.toBuilder()
                 .addModifiers(KModifier.OPEN)
@@ -82,7 +67,7 @@ class VisitorPoem(symbols: Symbols) : Poem(symbols) {
     /**
      * Overrides `children` and `accept` for this product node
      */
-    override fun apply(node: NodeSpec.Product) {
+    override fun apply(node: KotlinNodeSpec.Product) {
         val kids = node.kids()
         if (kids != null) {
             node.builder.addProperty(
@@ -110,7 +95,7 @@ class VisitorPoem(symbols: Symbols) : Poem(symbols) {
     /**
      * Overrides `accept` for this sum node
      */
-    override fun apply(node: NodeSpec.Sum) {
+    override fun apply(node: KotlinNodeSpec.Sum) {
         node.builder.addFunction(
             accept.toBuilder()
                 .addModifiers(KModifier.OVERRIDE)
@@ -132,7 +117,7 @@ class VisitorPoem(symbols: Symbols) : Poem(symbols) {
     /**
      * Returns a CodeBlock which represents a list of all nodes
      */
-    private fun NodeSpec.Product.kids(): CodeBlock? {
+    private fun KotlinNodeSpec.Product.kids(): CodeBlock? {
         var n = product.props.size
         val isNode: (ref: TypeRef) -> Boolean = { (it is TypeRef.Path) && (symbols.def(it) !is TypeDef.Enum) }
         val block = CodeBlock.builder()
@@ -157,7 +142,7 @@ class VisitorPoem(symbols: Symbols) : Poem(symbols) {
     /**
      * Generate all visitors for this universe
      */
-    private fun UniverseSpec.visitors(): List<FileSpec> = listOf(
+    private fun KotlinUniverseSpec.visitors(): List<FileSpec> = listOf(
         visitor(),
         // visitorFold(), VisitorFold is a less useful version of Visitor
     )
@@ -165,7 +150,7 @@ class VisitorPoem(symbols: Symbols) : Poem(symbols) {
     /**
      * Generates the base visitor for this universe
      */
-    private fun UniverseSpec.visitor(): FileSpec {
+    private fun KotlinUniverseSpec.visitor(): FileSpec {
         val defaultVisit = FunSpec.builder("defaultVisit")
             .addModifiers(KModifier.OPEN)
             .addParameter(ParameterSpec("node", symbols.base))
@@ -208,12 +193,12 @@ class VisitorPoem(symbols: Symbols) : Poem(symbols) {
         return FileSpec.builder(visitorPackageName, foldVisitorName).addType(visitor).build()
     }
 
-    private fun NodeSpec.visit(): FunSpec = when (this) {
-        is NodeSpec.Product -> this.visit()
-        is NodeSpec.Sum -> this.visit()
+    private fun KotlinNodeSpec.visit(): FunSpec = when (this) {
+        is KotlinNodeSpec.Product -> this.visit()
+        is KotlinNodeSpec.Sum -> this.visit()
     }
 
-    private fun NodeSpec.Product.visit() = FunSpec.builder("visit")
+    private fun KotlinNodeSpec.Product.visit() = FunSpec.builder("visit")
         .addModifiers(KModifier.OPEN)
         .addParameter(ParameterSpec("node", clazz))
         .addParameter(ParameterSpec("ctx", Parameters.`C?`))
@@ -221,7 +206,7 @@ class VisitorPoem(symbols: Symbols) : Poem(symbols) {
         .addStatement("return defaultVisit(node, ctx)")
         .build()
 
-    private fun NodeSpec.Sum.visit() = FunSpec.builder("visit")
+    private fun KotlinNodeSpec.Sum.visit() = FunSpec.builder("visit")
         .addModifiers(KModifier.OPEN)
         .addParameter(ParameterSpec("node", clazz))
         .addParameter(ParameterSpec("ctx", Parameters.`C?`))

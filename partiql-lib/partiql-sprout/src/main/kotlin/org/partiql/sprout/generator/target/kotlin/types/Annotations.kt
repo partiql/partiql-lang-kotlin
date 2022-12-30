@@ -13,28 +13,13 @@
  * permissions and limitations under the License.
  */
 
-package org.partiql.sprout.generator
+package org.partiql.sprout.generator.target.kotlin.types
 
-/**
- * Generator options are entirely independent of the type definitions
- *
- * @property packageRoot
- */
-class Options(
-    val packageRoot: String,
-    val node: NodeOptions = NodeOptions(),
-)
+import com.squareup.kotlinpoet.AnnotationSpec
 
-/**
- * Consider other options as this is Kotlin specific
- */
-class NodeOptions(
-    val modifier: Modifier = Modifier.FINAL,
-) {
+object Annotations {
 
-    enum class Modifier {
-        FINAL,
-        DATA,
-        OPEN,
-    }
+    val jvmStatic = AnnotationSpec.builder(JvmStatic::class).build()
+
+    fun suppress(what: String) = AnnotationSpec.builder(Suppress::class).addMember("\"$what\"").build()
 }

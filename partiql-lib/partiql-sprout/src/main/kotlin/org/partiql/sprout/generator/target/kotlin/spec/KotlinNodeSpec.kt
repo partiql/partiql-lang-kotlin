@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package org.partiql.sprout.generator.spec
+package org.partiql.sprout.generator.target.kotlin.spec
 
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FunSpec
@@ -31,7 +31,7 @@ import org.partiql.sprout.model.TypeDef
  * @property constructor    Implementation constructor
  * @property types          Non-node types defined within this node
  */
-sealed class NodeSpec(
+sealed class KotlinNodeSpec(
     val def: TypeDef,
     val clazz: ClassName,
     val builder: TypeSpec.Builder,
@@ -39,7 +39,7 @@ sealed class NodeSpec(
     val types: MutableList<TypeSpec> = mutableListOf(),
 ) {
 
-    open val children: List<NodeSpec> = emptyList()
+    open val children: List<KotlinNodeSpec> = emptyList()
 
     /**
      * Returns the built Pair<Base, Impl>
@@ -59,7 +59,7 @@ sealed class NodeSpec(
         val props: List<Prop>,
         clazz: ClassName,
         types: List<TypeSpec> = emptyList(),
-    ) : NodeSpec(
+    ) : KotlinNodeSpec(
         def = product,
         clazz = clazz,
         builder = TypeSpec.classBuilder(clazz),
@@ -72,15 +72,15 @@ sealed class NodeSpec(
      */
     class Sum(
         val sum: TypeDef.Sum,
-        val variants: List<NodeSpec>,
+        val variants: List<KotlinNodeSpec>,
         clazz: ClassName,
-    ) : NodeSpec(
+    ) : KotlinNodeSpec(
         def = sum,
         clazz = clazz,
         builder = TypeSpec.classBuilder(clazz).addModifiers(KModifier.SEALED),
         constructor = FunSpec.constructorBuilder(),
     ) {
-        override val children: List<NodeSpec> = variants
+        override val children: List<KotlinNodeSpec> = variants
     }
 
     /**

@@ -77,7 +77,6 @@ internal object IonTypeParser : SproutParser {
                 val ctx = Context(symbols.root, imports)
                 Visitor.visit(it, ctx)!!
             },
-            domains = emptyList() // TODO
         )
     }
 

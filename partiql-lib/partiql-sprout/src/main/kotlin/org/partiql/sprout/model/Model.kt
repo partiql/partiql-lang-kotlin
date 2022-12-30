@@ -8,7 +8,6 @@ import net.pearx.kasechange.toPascalCase
 class Universe(
     val id: String,
     val types: List<TypeDef>,
-    val domains: List<Domain> = emptyList()
 ) {
 
     fun forEachType(action: (TypeDef) -> Unit) {
@@ -21,14 +20,6 @@ class Universe(
         types.applyToAll()
     }
 }
-
-/**
- * Named subset of the universe
- */
-class Domain(
-    val id: String,
-    val members: List<TypeRef>
-)
 
 /**
  * Definition of some type

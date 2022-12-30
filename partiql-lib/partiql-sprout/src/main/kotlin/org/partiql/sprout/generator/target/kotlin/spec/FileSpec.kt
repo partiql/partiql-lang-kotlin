@@ -13,13 +13,23 @@
  * permissions and limitations under the License.
  */
 
-package org.partiql.sprout.generator.types
+package org.partiql.sprout.generator.target.kotlin.spec
 
-import com.squareup.kotlinpoet.AnnotationSpec
+import java.io.IOException
 
-object Annotations {
+/**
+ * For now, this just inverts the KotlinPoet FileSpec dependency
+ */
+class FileSpec internal constructor(
+    private val file: com.squareup.kotlinpoet.FileSpec
+) {
 
-    val jvmStatic = AnnotationSpec.builder(JvmStatic::class).build()
+    val name: String = file.name
 
-    fun suppress(what: String) = AnnotationSpec.builder(Suppress::class).addMember("\"$what\"").build()
+    val packageName: String = file.packageName
+
+    @Throws(IOException::class)
+    fun writeTo(out: Appendable) {
+        file.writeTo(out)
+    }
 }

@@ -1,19 +1,4 @@
-/*
- * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License").
- * You may not use this file except in compliance with the License.
- * A copy of the License is located at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * or in the "license" file accompanying this file. This file is distributed
- * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
- * express or implied. See the License for the specific language governing
- * permissions and limitations under the License.
- */
-
-package org.partiql.sprout.generator.poems
+package org.partiql.sprout.generator.target.kotlin.poems
 
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FileSpec
@@ -26,19 +11,18 @@ import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.TypeVariableName
 import com.squareup.kotlinpoet.asTypeName
 import net.pearx.kasechange.toPascalCase
-import org.partiql.sprout.generator.Poem
-import org.partiql.sprout.generator.Symbols
-import org.partiql.sprout.generator.spec.NodeSpec
-import org.partiql.sprout.generator.spec.PackageSpec
-import org.partiql.sprout.generator.spec.UniverseSpec
-import org.partiql.sprout.generator.types.Annotations
+import org.partiql.sprout.generator.target.kotlin.KotlinPoem
+import org.partiql.sprout.generator.target.kotlin.KotlinSymbols
+import org.partiql.sprout.generator.target.kotlin.spec.KotlinNodeSpec
+import org.partiql.sprout.generator.target.kotlin.spec.KotlinUniverseSpec
+import org.partiql.sprout.generator.target.kotlin.spec.PackageSpec
+import org.partiql.sprout.generator.target.kotlin.types.Annotations
 import org.partiql.sprout.model.TypeRef
-import java.lang.StringBuilder
 
 /**
  * Poem which creates a DSL for instantiation
  */
-class BuilderPoem(symbols: Symbols) : Poem(symbols) {
+class KotlinBuilderPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
 
     override val id: String = "builder"
 
@@ -78,7 +62,7 @@ class BuilderPoem(symbols: Symbols) : Poem(symbols) {
                 .build()
         )
 
-    override fun apply(universe: UniverseSpec) {
+    override fun apply(universe: KotlinUniverseSpec) {
         super.apply(universe)
         universe.packages.add(
             PackageSpec(
@@ -100,7 +84,7 @@ class BuilderPoem(symbols: Symbols) : Poem(symbols) {
         )
     }
 
-    override fun apply(node: NodeSpec.Product) {
+    override fun apply(node: KotlinNodeSpec.Product) {
         // Simple `create` functions
         factory.addFunction(
             FunSpec.builder(symbols.camel(node.product.ref))
@@ -166,7 +150,7 @@ class BuilderPoem(symbols: Symbols) : Poem(symbols) {
         )
     }.build()
 
-    private fun NodeSpec.Product.dslConstructs(): Pair<TypeSpec, FunSpec> {
+    private fun KotlinNodeSpec.Product.dslConstructs(): Pair<TypeSpec, FunSpec> {
         val receiverName = symbols.camel(product.ref)
         val receiverType = builderClass.nestedClass("_${receiverName.toPascalCase()}")
         val receiverConstructor = FunSpec.constructorBuilder()
@@ -195,13 +179,15 @@ class BuilderPoem(symbols: Symbols) : Poem(symbols) {
         }
         // block last
         dslFunction.addParameter(
-            ParameterSpec.builder("block", LambdaTypeName.get(
+            ParameterSpec.builder(
+                "block",
+                LambdaTypeName.get(
                     receiver = receiverType,
                     returnType = Unit::class.asTypeName()
                 )
             )
-            .defaultValue("{}")
-            .build()
+                .defaultValue("{}")
+                .build()
         )
         val r = receiver.primaryConstructor(receiverConstructor.build()).build()
         val f = dslFunction

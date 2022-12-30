@@ -1,19 +1,4 @@
-/*
- * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License").
- * You may not use this file except in compliance with the License.
- * A copy of the License is located at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * or in the "license" file accompanying this file. This file is distributed
- * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
- * express or implied. See the License for the specific language governing
- * permissions and limitations under the License.
- */
-
-package org.partiql.sprout.generator.poems
+package org.partiql.sprout.generator.target.kotlin.poems
 
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FileSpec
@@ -21,13 +6,13 @@ import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.TypeSpec
-import org.partiql.sprout.generator.Poem
-import org.partiql.sprout.generator.Symbols
-import org.partiql.sprout.generator.spec.NodeSpec
-import org.partiql.sprout.generator.spec.PackageSpec
-import org.partiql.sprout.generator.spec.UniverseSpec
+import org.partiql.sprout.generator.target.kotlin.KotlinPoem
+import org.partiql.sprout.generator.target.kotlin.KotlinSymbols
+import org.partiql.sprout.generator.target.kotlin.spec.KotlinNodeSpec
+import org.partiql.sprout.generator.target.kotlin.spec.KotlinUniverseSpec
+import org.partiql.sprout.generator.target.kotlin.spec.PackageSpec
 
-class ListenerPoem(symbols: Symbols) : Poem(symbols) {
+class KotlinListenerPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
 
     override val id = "listener"
 
@@ -41,7 +26,7 @@ class ListenerPoem(symbols: Symbols) : Poem(symbols) {
     /**
      * Defines the open `children` property and the abstract`accept` method on the base node
      */
-    override fun apply(universe: UniverseSpec) {
+    override fun apply(universe: KotlinUniverseSpec) {
         universe.base.addFunction(enter.toBuilder().addModifiers(KModifier.ABSTRACT).build())
         universe.base.addFunction(exit.toBuilder().addModifiers(KModifier.ABSTRACT).build())
         universe.packages.add(
@@ -53,7 +38,7 @@ class ListenerPoem(symbols: Symbols) : Poem(symbols) {
         super.apply(universe)
     }
 
-    override fun apply(node: NodeSpec) {
+    override fun apply(node: KotlinNodeSpec) {
         val name = node.simpleName()
         node.builder.addFunction(
             enter.toBuilder()
@@ -72,7 +57,7 @@ class ListenerPoem(symbols: Symbols) : Poem(symbols) {
 
     // --- Internal -----------------------------------
 
-    private fun UniverseSpec.listener(): FileSpec {
+    private fun KotlinUniverseSpec.listener(): FileSpec {
         val listener = TypeSpec.classBuilder(baseListenerClass)
             .addModifiers(KModifier.ABSTRACT)
             .apply {
@@ -132,5 +117,5 @@ class ListenerPoem(symbols: Symbols) : Poem(symbols) {
             .build()
     }
 
-    private fun NodeSpec.simpleName() = clazz.simpleNames.joinToString("")
+    private fun KotlinNodeSpec.simpleName() = clazz.simpleNames.joinToString("")
 }

@@ -11,21 +11,22 @@ $ gg :partiql-lib:partiql-sprout:install
 ## Usage
 
 ```shell
-$ ./partiql-lib/partiql-sprout/build/install/sprout/bin/sprout --help
+$ ./partiql-lib/partiql-sprout/build/install/sprout/bin/sprout generate kotlin --help
 
-Usage: generate [-hV] [-o=<out>] [-p=<packageRoot>] <file>
+Usage: sprout generate kotlin [-hV] [-o=<out>] [-p=<packageRoot>] [-u=<id>]
+                              <file>
 Generates Kotlin sources from type universe definitions
-      <file>        Type definition file
-  -h, --help        Show this help message and exit.
-  -o, --out=<out>   Generated source output directory
+      <file>            Type definition file
+  -h, --help            Show this help message and exit.
+  -o, --out=<out>       Generated source output directory
   -p, --package=<packageRoot>
-                    Package root
-  -V, --version     Print version information and exit.
+                        Package root
+  -u, --universe=<id>   Universe identifier
 ```
 
 **Example**
 ```shell
-$ ./partiql-lib/partiql-sprout/build/install/sprout/bin/sprout \
+$ ./partiql-lib/partiql-sprout/build/install/sprout/bin/sprout generate kotlin \
       -o ./generated \
       -p org.partiql.isl \ 
       -u IonSchema \

@@ -13,17 +13,21 @@
  * permissions and limitations under the License.
  */
 
-package org.partiql.sprout.generator.spec
+package org.partiql.sprout.generator.target.kotlin.types
 
-import com.squareup.kotlinpoet.FileSpec
+import com.squareup.kotlinpoet.TypeVariableName
 
-/**
- * A place to define a new package within a domain or universe
- *
- * @property name
- * @property files
- */
-class PackageSpec(
-    val name: String,
-    val files: MutableList<FileSpec> = mutableListOf(),
-)
+object Parameters {
+
+    val R = TypeVariableName("R")
+
+    val C = TypeVariableName("C")
+
+    val T = TypeVariableName("T")
+
+    val `R?` = TypeVariableName("R?")
+
+    val `C?` = TypeVariableName("C?")
+
+    val `T?` = TypeVariableName("T?")
+}

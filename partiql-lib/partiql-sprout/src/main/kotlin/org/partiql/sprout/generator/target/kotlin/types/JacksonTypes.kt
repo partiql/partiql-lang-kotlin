@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package org.partiql.sprout.generator.types
+package org.partiql.sprout.generator.target.kotlin.types
 
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName

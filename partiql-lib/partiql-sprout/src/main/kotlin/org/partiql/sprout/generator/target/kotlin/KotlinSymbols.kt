@@ -1,19 +1,4 @@
-/*
- * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License").
- * You may not use this file except in compliance with the License.
- * A copy of the License is located at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * or in the "license" file accompanying this file. This file is distributed
- * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
- * express or implied. See the License for the specific language governing
- * permissions and limitations under the License.
- */
-
-package org.partiql.sprout.generator
+package org.partiql.sprout.generator.target.kotlin
 
 import com.squareup.kotlinpoet.BOOLEAN
 import com.squareup.kotlinpoet.BYTE_ARRAY
@@ -33,7 +18,6 @@ import com.squareup.kotlinpoet.STRING
 import com.squareup.kotlinpoet.TypeName
 import net.pearx.kasechange.toCamelCase
 import net.pearx.kasechange.toPascalCase
-import org.partiql.sprout.model.Domain
 import org.partiql.sprout.model.ScalarType
 import org.partiql.sprout.model.TypeDef
 import org.partiql.sprout.model.TypeRef
@@ -47,9 +31,9 @@ import org.partiql.sprout.model.Universe
  *
  * TODO consider thread safe memoization — that was removed because of iterating the refs while updating the backing map
  */
-class Symbols private constructor(
+class KotlinSymbols private constructor(
     private val universe: Universe,
-    private val options: Options,
+    private val options: KotlinOptions,
 ) {
 
     /**
@@ -66,8 +50,6 @@ class Symbols private constructor(
      * Base node for the Universe
      */
     val base: ClassName = ClassName(rootPackage, "${rootId}Node")
-
-    private val domains: MutableMap<Domain, ClassName> = mutableMapOf()
 
     /**
      * Memoize converting a TypeRef.Path to a camel case identifier to be used as method/function names
@@ -88,7 +70,7 @@ class Symbols private constructor(
         /**
          * Named constructor somewhat hints at the initial emptiness (when memoized) of the symbol table
          */
-        fun init(universe: Universe, options: Options): Symbols = Symbols(universe, options)
+        fun init(universe: Universe, options: KotlinOptions): KotlinSymbols = KotlinSymbols(universe, options)
     }
 
     /**
@@ -151,21 +133,6 @@ class Symbols private constructor(
         val vt = typeNameOf(ref.valType)
         val map = if (mutable) MUTABLE_MAP else MAP
         return map.parameterizedBy(kt, vt)
-    }
-
-    /**
-     * Returns the subset of type definitions for the given domain
-     */
-    fun membersOf(domain: Domain): List<TypeDef> {
-        val refs = domain.members.toSet()
-        return universe.types.filter { it.ref in refs }
-    }
-
-    fun typeNameOf(domain: Domain): ClassName = domains.computeIfAbsent(domain) {
-        ClassName(
-            packageName = "$rootPackage.${domain.id}".toLowerCase(),
-            simpleNames = listOf(domain.id.toPascalCase())
-        )
     }
 
     /**
