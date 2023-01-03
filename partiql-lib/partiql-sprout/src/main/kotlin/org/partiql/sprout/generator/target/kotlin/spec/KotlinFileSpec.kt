@@ -20,7 +20,7 @@ import java.io.IOException
 /**
  * For now, this just inverts the KotlinPoet FileSpec dependency
  */
-class FileSpec internal constructor(
+class KotlinFileSpec internal constructor(
     private val file: com.squareup.kotlinpoet.FileSpec
 ) {
 

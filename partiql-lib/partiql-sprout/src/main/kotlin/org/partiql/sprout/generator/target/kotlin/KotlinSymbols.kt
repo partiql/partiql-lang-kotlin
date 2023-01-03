@@ -101,7 +101,7 @@ class KotlinSymbols private constructor(
         is TypeRef.List -> typeNameOf(ref, mutable)
         is TypeRef.Set -> typeNameOf(ref, mutable)
         is TypeRef.Map -> typeNameOf(ref, mutable)
-        is TypeRef.Import -> ClassName(ref.namespace, ref.path)
+        is TypeRef.Import -> import(ref.symbol)
     }.copy(ref.nullable)
 
     // --- Internal -------------------------------
@@ -162,5 +162,19 @@ class KotlinSymbols private constructor(
         }
         // Make this invoke the default deserializer and see how far the gets us
         is TypeRef.Import -> TODO("Jackson databind is currently not supported for imported types")
+    }
+
+    /**
+     * Parse the ClassLoader string to a KotlinPoet ClassName. Could improve error handling here..
+     */
+    private fun import(symbol: String): ClassName {
+        if (!universe.imports.containsKey("kotlin")) {
+            error("Missing `kotlin` target from imports")
+        }
+        val path = universe.imports["kotlin"]!![symbol]!!
+        val i = path.lastIndexOf(".")
+        val packageName = path.substring(0, i)
+        val simpleNames = path.substring(i + 1).split("$")
+        return ClassName(packageName, simpleNames)
     }
 }

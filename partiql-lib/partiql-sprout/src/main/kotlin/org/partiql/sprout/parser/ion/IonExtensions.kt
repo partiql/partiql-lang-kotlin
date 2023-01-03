@@ -45,9 +45,9 @@ internal fun IonValue.isInlineEnum(): Boolean = isEnum() && typeAnnotations.isEm
 /**
  * Depth-first tree walk
  */
-internal inline fun IonSymbolGraph.Node.walk(action: (parent: IonSymbolGraph.Node, child: IonSymbolGraph.Node) -> Unit) {
-    val seen = mutableSetOf<IonSymbolGraph.Node>()
-    val stack = Stack<IonSymbolGraph.Node>()
+internal inline fun IonSymbols.Node.walk(action: (parent: IonSymbols.Node, child: IonSymbols.Node) -> Unit) {
+    val seen = mutableSetOf<IonSymbols.Node>()
+    val stack = Stack<IonSymbols.Node>()
     stack.push(this)
     while (stack.isNotEmpty()) {
         val parent = stack.pop()
@@ -65,9 +65,9 @@ internal inline fun IonSymbolGraph.Node.walk(action: (parent: IonSymbolGraph.Nod
 /**
  * Breadth-first search
  */
-internal fun IonSymbolGraph.Node.search(id: String): IonSymbolGraph.Node? {
-    val seen = mutableSetOf<IonSymbolGraph.Node>()
-    val queue = LinkedList<IonSymbolGraph.Node>()
+internal fun IonSymbols.Node.search(id: String): IonSymbols.Node? {
+    val seen = mutableSetOf<IonSymbols.Node>()
+    val queue = LinkedList<IonSymbols.Node>()
     queue.add(this)
     while (queue.isNotEmpty()) {
         val node = queue.pop()
@@ -89,9 +89,9 @@ internal fun IonSymbolGraph.Node.search(id: String): IonSymbolGraph.Node? {
 /**
  * Search path starting from this
  */
-internal fun IonSymbolGraph.Node.search(path: List<String>): IonSymbolGraph.Node? {
+internal fun IonSymbols.Node.search(path: List<String>): IonSymbols.Node? {
     var i = 0
-    var node: IonSymbolGraph.Node? = this
+    var node: IonSymbols.Node? = this
     while (node != null && i < path.size) {
         node = node.children.find { it.id == path[i] }
         i += 1

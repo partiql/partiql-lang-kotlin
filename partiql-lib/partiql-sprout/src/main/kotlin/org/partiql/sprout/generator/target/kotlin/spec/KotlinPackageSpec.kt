@@ -23,7 +23,7 @@ import com.squareup.kotlinpoet.FileSpec
  * @property name
  * @property files
  */
-class PackageSpec(
+class KotlinPackageSpec(
     val name: String,
     val files: MutableList<FileSpec> = mutableListOf(),
 )

@@ -68,8 +68,8 @@ internal object IonTypeParser : SproutParser {
         }
 
         // Build the symbol graph prior to parsing definitions
-        val symbols = IonSymbolGraph.build(definitions)
-        val imports = IonImportsMap.build(importsValue)
+        val symbols = IonSymbols.build(definitions)
+        val imports = IonImports.build(importsValue)
 
         return Universe(
             id = id,
@@ -77,11 +77,12 @@ internal object IonTypeParser : SproutParser {
                 val ctx = Context(symbols.root, imports)
                 Visitor.visit(it, ctx)!!
             },
+            imports = imports.map,
         )
     }
 
     /**
-     * Visitor builds a [TypeDef] graph while tracking scope (`ctx.scope`) in the [IonSymbolGraph].
+     * Visitor builds a [TypeDef] graph while tracking scope (`ctx.scope`) in the [IonSymbols].
      */
     private object Visitor : IonVisitor<TypeDef, Context> {
 
@@ -131,15 +132,15 @@ internal object IonTypeParser : SproutParser {
      * Context encapsulates mutable state to keep the Visitor stateless
      */
     private class Context(
-        private val root: IonSymbolGraph.Node,
-        private val imports: IonImportsMap,
+        private val root: IonSymbols.Node,
+        private val imports: IonImports,
     ) {
 
-        private var tip: IonSymbolGraph.Node = root
+        private var tip: IonSymbols.Node = root
         private val defs: MutableList<TypeDef> = mutableListOf()
 
         /**
-         * Produce a [TypeRef] for the current position in the [IonSymbolGraph]
+         * Produce a [TypeRef] for the current position in the [IonSymbols]
          */
         fun ref() = TypeRef.Path(ids = tip.path.toTypedArray())
 
@@ -149,7 +150,7 @@ internal object IonTypeParser : SproutParser {
         }
 
         /**
-         * Track position in the [IonSymbolGraph] for type reference searches
+         * Track position in the [IonSymbols] for type reference searches
          */
         fun scope(v: IonValue, block: Context.() -> TypeDef): TypeDef {
             val id = v.id()
@@ -192,12 +193,8 @@ internal object IonTypeParser : SproutParser {
                 )
             }
             // 3. Attempt to find the symbol in the imports
-            val import = imports[symbol]
-            if (import != null) {
-                return TypeRef.Import(
-                    namespace = import.namespace,
-                    ids = import.ids.toTypedArray(),
-                )
+            if (imports.symbols.contains(symbol)) {
+                return TypeRef.Import(symbol, nullable)
             }
             // 4. Error nothing found
             error("symbol `$symbol` not found")

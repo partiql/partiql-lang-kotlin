@@ -14,7 +14,7 @@ internal class KotlinGeneratorTest {
                 packageRoot = "org.partiql.sprout.test.generated",
                 node = KotlinNodeOptions(
                     modifier = KotlinNodeOptions.Modifier.DATA
-                )
+                ),
             )
         )
         val universe = parser.parse("sprout_test", input)

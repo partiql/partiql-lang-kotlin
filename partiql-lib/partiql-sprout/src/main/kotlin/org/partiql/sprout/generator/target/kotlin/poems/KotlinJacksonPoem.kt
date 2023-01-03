@@ -15,8 +15,8 @@ import com.squareup.kotlinpoet.TypeVariableName
 import org.partiql.sprout.generator.target.kotlin.KotlinPoem
 import org.partiql.sprout.generator.target.kotlin.KotlinSymbols
 import org.partiql.sprout.generator.target.kotlin.spec.KotlinNodeSpec
+import org.partiql.sprout.generator.target.kotlin.spec.KotlinPackageSpec
 import org.partiql.sprout.generator.target.kotlin.spec.KotlinUniverseSpec
-import org.partiql.sprout.generator.target.kotlin.spec.PackageSpec
 import org.partiql.sprout.generator.target.kotlin.types.JacksonTypes
 import org.partiql.sprout.generator.target.kotlin.types.Parameters
 
@@ -76,7 +76,7 @@ class KotlinJacksonPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
         module.addHelpers()
         module.addInitializerBlock(initBlock.build())
         universe.packages.add(
-            PackageSpec(
+            KotlinPackageSpec(
                 name = databindPackageName,
                 files = mutableListOf(
                     FileSpec.builder(databindPackageName, moduleName)

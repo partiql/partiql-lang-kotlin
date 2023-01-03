@@ -48,7 +48,7 @@ class KotlinCommand : Callable<Int> {
             packageRoot = packageRoot,
             node = KotlinNodeOptions(
                 modifier = KotlinNodeOptions.Modifier.DATA,
-            )
+            ),
         )
         val generator = KotlinGenerator(options)
         val result = generator.generate(universe)

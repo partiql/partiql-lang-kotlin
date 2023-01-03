@@ -6,10 +6,9 @@ import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
 import net.pearx.kasechange.toCamelCase
 import org.partiql.sprout.generator.Generator
-import org.partiql.sprout.generator.Result
 import org.partiql.sprout.generator.target.kotlin.poems.KotlinBuilderPoem
 import org.partiql.sprout.generator.target.kotlin.poems.KotlinVisitorPoem
-import org.partiql.sprout.generator.target.kotlin.spec.FileSpec
+import org.partiql.sprout.generator.target.kotlin.spec.KotlinFileSpec
 import org.partiql.sprout.generator.target.kotlin.spec.KotlinNodeSpec
 import org.partiql.sprout.generator.target.kotlin.spec.KotlinUniverseSpec
 import org.partiql.sprout.model.TypeDef
@@ -19,9 +18,9 @@ import org.partiql.sprout.model.Universe
 /**
  * Generates and applies
  */
-class KotlinGenerator(private val options: KotlinOptions) : Generator {
+class KotlinGenerator(private val options: KotlinOptions) : Generator<KotlinResult> {
 
-    override fun generate(universe: Universe): Result {
+    override fun generate(universe: Universe): KotlinResult {
 
         // --- Initialize an empty symbol table(?)
         val symbols = KotlinSymbols.init(universe, options)
@@ -41,15 +40,13 @@ class KotlinGenerator(private val options: KotlinOptions) : Generator {
             base = TypeSpec.classBuilder(symbols.base).addModifiers(KModifier.ABSTRACT),
             types = universe.types(symbols)
         )
-
-        return Result(
-            specs = with(spec) {
-                // Apply each poem
-                poems.forEach { it.apply(this) }
-                // Finalize each spec/builder
-                build(options.packageRoot).map { FileSpec(it) }
-            }
-        )
+        val specs = with(spec) {
+            // Apply each poem
+            poems.forEach { it.apply(this) }
+            // Finalize each spec/builder
+            build(options.packageRoot).map { KotlinFileSpec(it) }
+        }
+        return KotlinResult(specs)
     }
 
     // --- Internal -----------------------------------

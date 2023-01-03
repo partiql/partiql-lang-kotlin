@@ -14,8 +14,8 @@ import net.pearx.kasechange.toPascalCase
 import org.partiql.sprout.generator.target.kotlin.KotlinPoem
 import org.partiql.sprout.generator.target.kotlin.KotlinSymbols
 import org.partiql.sprout.generator.target.kotlin.spec.KotlinNodeSpec
+import org.partiql.sprout.generator.target.kotlin.spec.KotlinPackageSpec
 import org.partiql.sprout.generator.target.kotlin.spec.KotlinUniverseSpec
-import org.partiql.sprout.generator.target.kotlin.spec.PackageSpec
 import org.partiql.sprout.generator.target.kotlin.types.Annotations
 import org.partiql.sprout.model.TypeRef
 
@@ -65,7 +65,7 @@ class KotlinBuilderPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
     override fun apply(universe: KotlinUniverseSpec) {
         super.apply(universe)
         universe.packages.add(
-            PackageSpec(
+            KotlinPackageSpec(
                 name = builderPackageName,
                 files = mutableListOf(
                     FileSpec.builder(builderPackageName, factoryName)

@@ -13,8 +13,8 @@ import com.squareup.kotlinpoet.TypeSpec
 import org.partiql.sprout.generator.target.kotlin.KotlinPoem
 import org.partiql.sprout.generator.target.kotlin.KotlinSymbols
 import org.partiql.sprout.generator.target.kotlin.spec.KotlinNodeSpec
+import org.partiql.sprout.generator.target.kotlin.spec.KotlinPackageSpec
 import org.partiql.sprout.generator.target.kotlin.spec.KotlinUniverseSpec
-import org.partiql.sprout.generator.target.kotlin.spec.PackageSpec
 import org.partiql.sprout.generator.target.kotlin.types.Parameters
 import org.partiql.sprout.model.TypeDef
 import org.partiql.sprout.model.TypeRef
@@ -56,7 +56,7 @@ class KotlinVisitorPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
                 .build()
         )
         universe.packages.add(
-            PackageSpec(
+            KotlinPackageSpec(
                 name = visitorPackageName,
                 files = universe.visitors().toMutableList(),
             )

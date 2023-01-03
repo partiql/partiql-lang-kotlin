@@ -23,11 +23,11 @@ import io.github.rchowell.dotlin.graph
 /**
  * Produce a graph of type identifiers from a list of type definitions.
  */
-internal class IonSymbolGraph private constructor(val root: Node) {
+internal class IonSymbols private constructor(val root: Node) {
 
     companion object {
 
-        fun build(definitions: List<IonValue>) = IonSymbolGraph(
+        fun build(definitions: List<IonValue>) = IonSymbols(
             root = Node(id = "_root").apply {
                 definitions.forEach { type ->
                     val child = Visitor().visit(type, this)!!

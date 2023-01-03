@@ -9,8 +9,8 @@ import com.squareup.kotlinpoet.TypeSpec
 import org.partiql.sprout.generator.target.kotlin.KotlinPoem
 import org.partiql.sprout.generator.target.kotlin.KotlinSymbols
 import org.partiql.sprout.generator.target.kotlin.spec.KotlinNodeSpec
+import org.partiql.sprout.generator.target.kotlin.spec.KotlinPackageSpec
 import org.partiql.sprout.generator.target.kotlin.spec.KotlinUniverseSpec
-import org.partiql.sprout.generator.target.kotlin.spec.PackageSpec
 
 class KotlinListenerPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
 
@@ -30,7 +30,7 @@ class KotlinListenerPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
         universe.base.addFunction(enter.toBuilder().addModifiers(KModifier.ABSTRACT).build())
         universe.base.addFunction(exit.toBuilder().addModifiers(KModifier.ABSTRACT).build())
         universe.packages.add(
-            PackageSpec(
+            KotlinPackageSpec(
                 name = listenerPackageName,
                 files = mutableListOf(universe.listener(), walker()),
             )

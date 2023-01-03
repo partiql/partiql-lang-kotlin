@@ -15,21 +15,12 @@
 
 package org.partiql.sprout.generator
 
-import org.partiql.sprout.generator.target.kotlin.spec.FileSpec
 import org.partiql.sprout.model.Universe
 
 /**
  * Interface for a Sprout generator
  */
-interface Generator {
+interface Generator<T> {
 
-    fun generate(universe: Universe): Result
-}
-
-/**
- * Generator result
- */
-class Result(private val specs: List<FileSpec>) {
-
-    fun write(action: (FileSpec) -> Unit) = specs.forEach(action)
+    fun generate(universe: Universe): T
 }

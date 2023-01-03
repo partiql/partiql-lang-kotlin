@@ -33,7 +33,7 @@ class KotlinUniverseSpec(
     val universe: Universe,
     val nodes: List<KotlinNodeSpec>,
     val base: TypeSpec.Builder,
-    val packages: MutableList<PackageSpec> = mutableListOf(),
+    val packages: MutableList<KotlinPackageSpec> = mutableListOf(),
     val types: MutableList<TypeSpec> = mutableListOf(),
     val files: MutableList<FileSpec> = mutableListOf()
 ) {

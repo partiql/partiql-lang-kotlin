@@ -2,12 +2,15 @@ package org.partiql.sprout.model
 
 import net.pearx.kasechange.toPascalCase
 
+typealias Imports = Map<String, String>
+
 /**
  * Top-level model of a Sprout grammar
  */
 class Universe(
     val id: String,
     val types: List<TypeDef>,
+    val imports: Map<String, Imports>,
 ) {
 
     fun forEachType(action: (TypeDef) -> Unit) {
@@ -121,15 +124,12 @@ sealed class TypeRef(
     }
 
     class Import(
+        val symbol: String,
         nullable: Boolean = false,
-        val namespace: String,
-        vararg ids: String,
     ) : TypeRef(
-        id = "$namespace#${ids.joinToString(".")}",
+        id = "import<$symbol>",
         nullable = nullable
-    ) {
-        val path = ids.asList()
-    }
+    )
 }
 
 /**
