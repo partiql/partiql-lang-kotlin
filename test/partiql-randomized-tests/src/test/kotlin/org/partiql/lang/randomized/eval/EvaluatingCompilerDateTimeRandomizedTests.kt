@@ -136,7 +136,7 @@ class EvaluatingCompilerDateTimeRandomizedTests : EvaluatorTestBase() {
         runEvaluatorTestCase(
             query = query,
             expectedResult = expected,
-            expectedResultFormat = ExpectedResultFormat.STRING
+            expectedResultFormat = ExpectedResultFormat.STRICT
         )
     }
 
@@ -148,7 +148,7 @@ class EvaluatingCompilerDateTimeRandomizedTests : EvaluatorTestBase() {
         runEvaluatorTestCase(
             query = query,
             expectedResult = expected,
-            expectedResultFormat = ExpectedResultFormat.STRING
+            expectedResultFormat = ExpectedResultFormat.STRICT
         )
     }
 
@@ -160,7 +160,7 @@ class EvaluatingCompilerDateTimeRandomizedTests : EvaluatorTestBase() {
         runEvaluatorTestCase(
             query = query,
             expectedResult = expected,
-            expectedResultFormat = ExpectedResultFormat.STRING
+            expectedResultFormat = ExpectedResultFormat.STRICT
         )
     }
 
@@ -172,7 +172,7 @@ class EvaluatingCompilerDateTimeRandomizedTests : EvaluatorTestBase() {
         runEvaluatorTestCase(
             query = query,
             expectedResult = expected,
-            expectedResultFormat = ExpectedResultFormat.STRING
+            expectedResultFormat = ExpectedResultFormat.STRICT
         )
     }
 }

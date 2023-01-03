@@ -20,6 +20,8 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.partiql.cli.pico.PartiQLCommand
+import org.partiql.cli.pipeline.AbstractPipeline
 import org.partiql.lang.eval.BAG_ANNOTATION
 import org.partiql.lang.eval.EvaluationException
 import org.partiql.lang.eval.MISSING_ANNOTATION
@@ -27,7 +29,6 @@ import org.partiql.lang.eval.ProjectionIterationBehavior
 import org.partiql.lang.eval.TypedOpBehavior
 import org.partiql.lang.eval.TypingMode
 import org.partiql.lang.eval.UndefinedVariableBehavior
-import org.partiql.pipeline.AbstractPipeline
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
@@ -54,8 +55,8 @@ class CliTest {
         val input = "[{'a': 1}]"
         val expected = "$BAG_ANNOTATION::[{a: 1}]"
 
-        val ionInputResult = makeCliAndGetResult(query, input, inputFormat = InputFormat.ION)
-        val partiqlInputResult = makeCliAndGetResult(query, input, inputFormat = InputFormat.PARTIQL)
+        val ionInputResult = makeCliAndGetResult(query, input, inputFormat = PartiQLCommand.InputFormat.ION)
+        val partiqlInputResult = makeCliAndGetResult(query, input, inputFormat = PartiQLCommand.InputFormat.PARTIQL)
 
         assertAsIon(expected, ionInputResult)
         assertAsIon(expected, partiqlInputResult)
@@ -86,7 +87,7 @@ class CliTest {
         val query = "SELECT * FROM input_data"
         val input = "{a:1} {a:2}"
         assertThrows<IllegalArgumentException> {
-            makeCliAndGetResult(query, input, wrapIon = true, inputFormat = InputFormat.PARTIQL)
+            makeCliAndGetResult(query, input, wrapIon = true, inputFormat = PartiQLCommand.InputFormat.PARTIQL)
         }
     }
 
@@ -96,8 +97,8 @@ class CliTest {
         val input = "[{'a': 1},{'a': 2},{'a': 3}]"
         val expected = "$BAG_ANNOTATION::[{a: 1},{a: 2},{a: 3}]"
 
-        val ionInputResult = makeCliAndGetResult(query, input, inputFormat = InputFormat.ION)
-        val partiqlInputResult = makeCliAndGetResult(query, input, inputFormat = InputFormat.PARTIQL)
+        val ionInputResult = makeCliAndGetResult(query, input, inputFormat = PartiQLCommand.InputFormat.ION)
+        val partiqlInputResult = makeCliAndGetResult(query, input, inputFormat = PartiQLCommand.InputFormat.PARTIQL)
 
         assertAsIon(expected, ionInputResult)
         assertAsIon(expected, partiqlInputResult)
@@ -109,8 +110,8 @@ class CliTest {
         val input = "[{'a': 1}]"
         val expected = "$BAG_ANNOTATION::[{a: 1}]"
 
-        val ionInputResult = makeCliAndGetResult(query, input, inputFormat = InputFormat.ION)
-        val partiqlInputResult = makeCliAndGetResult(query, input, inputFormat = InputFormat.PARTIQL)
+        val ionInputResult = makeCliAndGetResult(query, input, inputFormat = PartiQLCommand.InputFormat.ION)
+        val partiqlInputResult = makeCliAndGetResult(query, input, inputFormat = PartiQLCommand.InputFormat.PARTIQL)
 
         assertAsIon(expected, ionInputResult)
         assertAsIon(expected, partiqlInputResult)
@@ -126,7 +127,7 @@ class CliTest {
 
         val wrappedInputResult = makeCliAndGetResult(query, wrappedInput, bindings = bindings, wrapIon = true)
         val ionInputResult = makeCliAndGetResult(query, input, bindings = bindings)
-        val partiqlInputResult = makeCliAndGetResult(query, input, bindings = bindings, inputFormat = InputFormat.PARTIQL)
+        val partiqlInputResult = makeCliAndGetResult(query, input, bindings = bindings, inputFormat = PartiQLCommand.InputFormat.PARTIQL)
 
         assertAsIon(expected, wrappedInputResult)
         assertAsIon(expected, ionInputResult)
@@ -143,7 +144,7 @@ class CliTest {
 
         val wrappedInputResult = makeCliAndGetResult(query, wrappedInput, bindings = bindings, wrapIon = true)
         val ionInputResult = makeCliAndGetResult(query, input, bindings = bindings)
-        val partiqlInputResult = makeCliAndGetResult(query, input, bindings = bindings, inputFormat = InputFormat.PARTIQL)
+        val partiqlInputResult = makeCliAndGetResult(query, input, bindings = bindings, inputFormat = PartiQLCommand.InputFormat.PARTIQL)
 
         assertAsIon(expected, wrappedInputResult)
         assertAsIon(expected, ionInputResult)
@@ -157,8 +158,8 @@ class CliTest {
         val wrappedInput = "{a: 1}"
         val expected = "<<{'a': 1}>>"
 
-        val wrappedInputResult = makeCliAndGetResult(query, wrappedInput, wrapIon = true, outputFormat = OutputFormat.PARTIQL)
-        val ionInputResult = makeCliAndGetResult(query, input, inputFormat = InputFormat.ION, outputFormat = OutputFormat.PARTIQL)
+        val wrappedInputResult = makeCliAndGetResult(query, wrappedInput, wrapIon = true, outputFormat = PartiQLCommand.OutputFormat.PARTIQL)
+        val ionInputResult = makeCliAndGetResult(query, input, inputFormat = PartiQLCommand.InputFormat.ION, outputFormat = PartiQLCommand.OutputFormat.PARTIQL)
 
         assertEquals(expected, wrappedInputResult)
         assertEquals(expected, ionInputResult)
@@ -170,7 +171,7 @@ class CliTest {
         val input = "[{a: 1, b: 2}]"
         val expected = "<<\n  {\n    'a': 1,\n    'b': 2\n  }\n>>"
 
-        val actual = makeCliAndGetResult(query, input, inputFormat = InputFormat.ION, outputFormat = OutputFormat.PARTIQL_PRETTY)
+        val actual = makeCliAndGetResult(query, input, inputFormat = PartiQLCommand.InputFormat.ION, outputFormat = PartiQLCommand.OutputFormat.PARTIQL_PRETTY)
 
         assertEquals(expected, actual)
     }
@@ -181,7 +182,7 @@ class CliTest {
         val input = "[{a: 1}, {b: 1}]"
         val expected = "$BAG_ANNOTATION::[{a:1}\n,{b:1}\n]"
 
-        val actual = makeCliAndGetResult(query, input, inputFormat = InputFormat.ION, outputFormat = OutputFormat.ION_TEXT)
+        val actual = makeCliAndGetResult(query, input, inputFormat = PartiQLCommand.InputFormat.ION, outputFormat = PartiQLCommand.OutputFormat.ION_TEXT)
 
         assertAsIon(expected, actual)
     }
@@ -191,11 +192,11 @@ class CliTest {
         val query = "SELECT * FROM input_data"
         val input = "[{'a': 1}, {'b': 1}]"
         val expected = "$BAG_ANNOTATION::[{a:1}\n,{b:1}\n]"
-        makeCliAndGetResult(query, input, inputFormat = InputFormat.ION, outputFormat = OutputFormat.ION_TEXT, output = FileOutputStream(testFile))
+        makeCliAndGetResult(query, input, inputFormat = PartiQLCommand.InputFormat.ION, outputFormat = PartiQLCommand.OutputFormat.ION_TEXT, output = FileOutputStream(testFile))
         val ionInputResult = testFile!!.bufferedReader().use { it.readText() }
         assertAsIon(expected, ionInputResult)
 
-        makeCliAndGetResult(query, input, inputFormat = InputFormat.PARTIQL, outputFormat = OutputFormat.ION_TEXT, output = FileOutputStream(testFile))
+        makeCliAndGetResult(query, input, inputFormat = PartiQLCommand.InputFormat.PARTIQL, outputFormat = PartiQLCommand.OutputFormat.ION_TEXT, output = FileOutputStream(testFile))
         val partiqlInputResult = testFile!!.bufferedReader().use { it.readText() }
         assertAsIon(expected, partiqlInputResult)
     }
@@ -251,7 +252,7 @@ class CliTest {
         val input = "<<{'a': null, 'b': missing, 'c': 1}>>"
         val query = "SELECT a, b, c FROM input_data"
         assertThrows<EvaluationException> {
-            makeCliAndGetResult(query, input, pipeline = pipeline, inputFormat = InputFormat.PARTIQL)
+            makeCliAndGetResult(query, input, pipeline = pipeline, inputFormat = PartiQLCommand.InputFormat.PARTIQL)
         }
     }
 
@@ -260,7 +261,7 @@ class CliTest {
         val pipeline = AbstractPipeline.create(AbstractPipeline.PipelineOptions(projectionIterationBehavior = ProjectionIterationBehavior.FILTER_MISSING))
         val input = "<<{'a': null, 'b': missing, 'c': 1}>>"
         val query = "SELECT * FROM input_data"
-        val actual = makeCliAndGetResult(query, input, pipeline = pipeline, inputFormat = InputFormat.PARTIQL)
+        val actual = makeCliAndGetResult(query, input, pipeline = pipeline, inputFormat = PartiQLCommand.InputFormat.PARTIQL)
         assertAsIon("$BAG_ANNOTATION::[{a:null,c:1}]", actual)
     }
 
@@ -269,7 +270,7 @@ class CliTest {
         val pipeline = AbstractPipeline.create(AbstractPipeline.PipelineOptions(projectionIterationBehavior = ProjectionIterationBehavior.UNFILTERED))
         val input = "<<{'a': null, 'b': missing, 'c': 1}>>"
         val query = "SELECT a, b, c FROM input_data"
-        val actual = makeCliAndGetResult(query, input, pipeline = pipeline, inputFormat = InputFormat.PARTIQL)
+        val actual = makeCliAndGetResult(query, input, pipeline = pipeline, inputFormat = PartiQLCommand.InputFormat.PARTIQL)
         assertAsIon("$BAG_ANNOTATION::[{a:null,c:1}]", actual)
     }
 
@@ -279,7 +280,7 @@ class CliTest {
         val input = "<<{'a': 1}>>"
         val query = "SELECT * FROM undefined_variable"
         assertThrows<EvaluationException> {
-            makeCliAndGetResult(query, input, pipeline = pipeline, inputFormat = InputFormat.PARTIQL)
+            makeCliAndGetResult(query, input, pipeline = pipeline, inputFormat = PartiQLCommand.InputFormat.PARTIQL)
         }
     }
 
@@ -288,7 +289,7 @@ class CliTest {
         val pipeline = AbstractPipeline.create(AbstractPipeline.PipelineOptions(undefinedVariableBehavior = UndefinedVariableBehavior.MISSING))
         val input = "<<{'a': 1}>>"
         val query = "SELECT * FROM undefined_variable"
-        val actual = makeCliAndGetResult(query, input, pipeline = pipeline, inputFormat = InputFormat.PARTIQL)
+        val actual = makeCliAndGetResult(query, input, pipeline = pipeline, inputFormat = PartiQLCommand.InputFormat.PARTIQL)
         assertAsIon("$BAG_ANNOTATION::[{}]", actual)
     }
 
@@ -298,7 +299,7 @@ class CliTest {
         val input = "<<{'a': 1}, {'b': 1}>>"
         val expected = "$BAG_ANNOTATION::[{a:1}\n,{b:1}\n]"
 
-        val partiqlInputResult = makeCliAndGetResult(query, input, inputFormat = InputFormat.PARTIQL)
+        val partiqlInputResult = makeCliAndGetResult(query, input, inputFormat = PartiQLCommand.InputFormat.PARTIQL)
         assertAsIon(expected, partiqlInputResult)
     }
 
@@ -307,7 +308,7 @@ class CliTest {
         val query = "SELECT * FROM input_data"
         val input = "<<{'a': 1}, {'b': 1}>>"
         assertThrows<IonException> {
-            makeCliAndGetResult(query, input, inputFormat = InputFormat.ION)
+            makeCliAndGetResult(query, input, inputFormat = PartiQLCommand.InputFormat.ION)
         }
     }
 }

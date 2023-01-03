@@ -24,17 +24,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- The public `ExprValue` construction methods are migrated from `ExprValueFactory` to `ExprValue` interface as public static methods & states. 
+- The public `ExprValue` construction methods are migrated from `ExprValueFactory` to `ExprValue` interface as public static methods & states.
+- Adds ability to pipe queries to the CLI
 
 ### Changed
+- Updates the CLI to use Pico CLI and modifies several CLI options
 
 ### Deprecated
-- `ExprValueFactory` interface marked as deprecated. 
+- `ExprValueFactory` interface marked as deprecated.
 
 ### Fixed
 
 ### Removed
-- The deprecated `IonValue` property in `ExprValue` interface is now removed. 
+- The deprecated `IonValue` property in `ExprValue` interface is now removed.
 
 ### Security
 
@@ -53,7 +55,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Benchmark results can be seen on the project's GitHub Pages site
 - Adds the `pipeline` flag to the CLI to provide experimental usage of the PartiQLCompilerPipeline
 - Added `ExprValue.toIonValue(ion: IonSystem)` in kotlin, and `ExprValueExtensionKt.toIonValue(value: ExprValue, ion: IonSystem)` in Java to transform one `ExprValue` to a corresponding `IonValue`.
-- Added `ExprValue.of(value: IonValue)` method to construct an `ExprValue` from an `IonValue`. 
+- Added `ExprValue.of(value: IonValue)` method to construct an `ExprValue` from an `IonValue`.
 
 ### Changed
 - Now `CompileOption` uses `TypedOpParameter.HONOR_PARAMETERS` as default.
@@ -74,7 +76,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Marks the GroupKeyReferencesVisitorTransform as deprecated. There is no functionally equivalent class.
 - Marks `ionValue` property in `ExprValue` interface as deprecated. The functional equivalent method is `ExprValue.toIonValue(ion: IonSystem)` in kotlin, and `ExprValueKt.toIonValue(value: ExprValue, ion: IonSystem)` in Java.
 - Marks `Lexer`, `Token`, `TokenType`, `SourcePosition`, and `SourceSpan` as deprecated. These will be removed without
-any replacement.
+  any replacement.
 - Marks approximately 60 `ErrorCode`'s as deprecated. These will be removed without any replacement.
 - Marks `Property.TOKEN_TYPE` as deprecated. Please use `Property.TOKEN_DESCRIPTION`.
 

@@ -25,15 +25,6 @@ enum class ExpectedResultFormat {
     PARTIQL,
 
     /**
-     * The expected value is an arbitrary string.  [org.partiql.lang.eval.ExprValue.toString]` is called on the result
-     * of the query and the expected/actual assertion is performed with regular string equality.
-     *
-     * This is suboptimal (really, don't use this in new tests) but it is easier to support this here than it is to
-     * refactor hundreds of expected values.
-     */
-    STRING,
-
-    /**
      * The expected value is expressed using PartiQL syntax, which is evaluated under the same pipeline & compile
      * options and session as the query under test. [ExprValue.strictEquals] is used here.
      *

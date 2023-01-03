@@ -21,7 +21,7 @@ class MakeTimeEvaluationTest : EvaluatorTestBase() {
         runEvaluatorTestCase(
             query = testCase.source,
             expectedResult = testCase.expectedLegacyModeResult,
-            expectedResultFormat = ExpectedResultFormat.STRING,
+            expectedResultFormat = ExpectedResultFormat.STRICT,
             includePermissiveModeTest = false
         )
 
