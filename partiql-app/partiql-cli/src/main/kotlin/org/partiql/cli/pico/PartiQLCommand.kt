@@ -53,6 +53,10 @@ internal class PartiQLCommand(private val ion: IonSystem) : Runnable {
     @CommandLine.ArgGroup(exclusive = false, heading = "%n@|bold,underline Interactive (Shell) Configurations|@%n%n")
     internal var shellOptions: ShellOptions? = null
 
+    internal companion object {
+        private const val SHEBANG_PREFIX = "#!"
+    }
+
     /**
      * Run the CLI or Shell (default)
      */
@@ -80,9 +84,14 @@ internal class PartiQLCommand(private val ion: IonSystem) : Runnable {
             else -> FileOutputStream(exec.outputFile!!)
         }
         val query = stream.readBytes().toString(Charsets.UTF_8)
+        val queryLines = query.lines()
+        val queryWithoutShebang = when (queryLines.firstOrNull()?.startsWith(SHEBANG_PREFIX)) {
+            false -> query
+            else -> queryLines.subList(1, queryLines.size).joinToString(System.lineSeparator())
+        }
         input.use {
             output.use {
-                Cli(ion, input, exec.inputFormat, output, exec.outputFormat, options.pipeline, options.globalEnvironment, query, exec.wrapIon).run()
+                Cli(ion, input, exec.inputFormat, output, exec.outputFormat, options.pipeline, options.globalEnvironment, queryWithoutShebang, exec.wrapIon).run()
                 output.write(System.lineSeparator().toByteArray(Charsets.UTF_8))
             }
         }
