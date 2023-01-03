@@ -67,10 +67,10 @@ internal sealed class AbstractPipeline(open val options: PipelineOptions) {
             permissiveMode: TypingMode
         ): PipelineOptions {
             val ion = IonSystemBuilder.standard().build()
-            val functions: List<(ExprValueFactory) -> ExprFunction> = listOf(
-                { valueFactory -> ReadFile(valueFactory) },
-                { valueFactory -> WriteFile(valueFactory) },
-                { valueFactory -> QueryDDB(valueFactory) }
+            val functions: List<ExprFunction> = listOf(
+                ReadFile(ion),
+                WriteFile(ion),
+                QueryDDB(ion)
             )
             val parser = PartiQLParserBuilder().ionSystem(ion).build()
             return PipelineOptions(
