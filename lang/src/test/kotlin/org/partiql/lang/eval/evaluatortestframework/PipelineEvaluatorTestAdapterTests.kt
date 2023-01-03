@@ -127,118 +127,13 @@ class PipelineEvaluatorTestAdapterTests {
     }
 
     @Test
-    fun `runEvaluatorTestCase - expected result matches - ExpectedResultFormat-ION_WITHOUT_BAG_AND_MISSING_ANNOTATIONS mode (int)`() {
-        assertDoesNotThrow("happy path - should not throw") {
-            astPipelineTestAdapter.runEvaluatorTestCase(
-                EvaluatorTestCase(
-                    query = "1",
-                    expectedResult = "1",
-                    expectedResultFormat = ExpectedResultFormat.ION_WITHOUT_BAG_AND_MISSING_ANNOTATIONS
-                ),
-                EvaluationSession.standard()
-            )
-        }
-    }
-
-    @Test
-    fun `runEvaluatorTestCase - different permissive mode result - ExpectedResultFormat-ION_WITHOUT_BAG_AND_MISSING_ANNOTATIONS`() {
-        assertDoesNotThrow("happy path - should not throw") {
-            astPipelineTestAdapter.runEvaluatorTestCase(
-                EvaluatorTestCase(
-                    query = "1 + MISSING",
-                    expectedResult = "null",
-                    // note: In this ExpectedResultFormat we lose the fact that this is MISSING and not an
-                    // ordinary Ion null. This is unfortunate, but expected.
-                    expectedPermissiveModeResult = "null",
-                    expectedResultFormat = ExpectedResultFormat.ION_WITHOUT_BAG_AND_MISSING_ANNOTATIONS
-                ),
-                EvaluationSession.standard()
-            )
-        }
-    }
-
-    @Test
-    fun `runEvaluatorTestCase - expected result matches - ExpectedResultFormat-ION_WITHOUT_BAG_AND_MISSING_ANNOTATIONS mode (bag)`() {
-        assertDoesNotThrow("happy path - should not throw") {
-            astPipelineTestAdapter.runEvaluatorTestCase(
-                EvaluatorTestCase(
-                    query = "<<1>>",
-                    // note: In this ExpectedResultFormat we lose the fact that this a BAG and not an
-                    // ordinary Ion list. This is unfortunate, but expected.
-                    expectedResult = "[1]",
-                    expectedResultFormat = ExpectedResultFormat.ION_WITHOUT_BAG_AND_MISSING_ANNOTATIONS
-                ),
-                EvaluationSession.standard()
-            )
-        }
-    }
-
-    @Test
-    fun `runEvaluatorTestCase - expected result matches - ExpectedResultFormat-ION_WITHOUT_BAG_AND_MISSING_ANNOTATIONS mode (missing)`() {
-        assertDoesNotThrow("happy path - should not throw") {
-            astPipelineTestAdapter.runEvaluatorTestCase(
-                EvaluatorTestCase(
-                    query = "MISSING",
-                    // note: In this ExpectedResultFormat we lose the fact that this MISSING and not an
-                    // ordinary Ion null. This is unfortunate, but expected.
-                    expectedResult = "null",
-                    expectedResultFormat = ExpectedResultFormat.ION_WITHOUT_BAG_AND_MISSING_ANNOTATIONS
-                ),
-                EvaluationSession.standard()
-            )
-        }
-    }
-
-    @Test
-    fun `runEvaluatorTestCase - expected result matches - ExpectedResultFormat-ION_WITHOUT_BAG_AND_MISSING_ANNOTATIONS mode (date)`() {
-        assertDoesNotThrow("happy path - should not throw") {
-            astPipelineTestAdapter.runEvaluatorTestCase(
-                EvaluatorTestCase(
-                    query = "DATE '2001-01-01'",
-                    expectedResult = "$DATE_ANNOTATION::2001-01-01",
-                    expectedResultFormat = ExpectedResultFormat.ION_WITHOUT_BAG_AND_MISSING_ANNOTATIONS
-                ),
-                EvaluationSession.standard()
-            )
-        }
-    }
-
-    @Test
-    fun `runEvaluatorTestCase - expected result matches - ExpectedResultFormat-ION_WITHOUT_BAG_AND_MISSING_ANNOTATIONS mode (time)`() {
-        assertDoesNotThrow("happy path - should not throw") {
-            astPipelineTestAdapter.runEvaluatorTestCase(
-                EvaluatorTestCase(
-                    query = "TIME '12:12:01'",
-                    expectedResult = "$TIME_ANNOTATION::{hour:12,minute:12,second:1.,timezone_hour:null.int,timezone_minute:null.int}",
-                    expectedResultFormat = ExpectedResultFormat.ION_WITHOUT_BAG_AND_MISSING_ANNOTATIONS
-                ),
-                EvaluationSession.standard()
-            )
-        }
-    }
-
-    @Test
-    fun `runEvaluatorTestCase - expected result matches - ExpectedResultFormat-ION_WITHOUT_BAG_AND_MISSING_ANNOTATIONS mode`() {
-        assertDoesNotThrow("happy path - should not throw") {
-            astPipelineTestAdapter.runEvaluatorTestCase(
-                EvaluatorTestCase(
-                    query = "<<1>>",
-                    expectedResult = "[1]",
-                    expectedResultFormat = ExpectedResultFormat.ION_WITHOUT_BAG_AND_MISSING_ANNOTATIONS
-                ),
-                EvaluationSession.standard()
-            )
-        }
-    }
-
-    @Test
     fun `runEvaluatorTestCase - expected result matches - ExpectedResultFormat-STRING mode`() {
         assertDoesNotThrow("happy path - should not throw") {
             astPipelineTestAdapter.runEvaluatorTestCase(
                 EvaluatorTestCase(
                     query = "SEXP(1, 2, 3)",
                     expectedResult = "`(1 2 3)`", // <-- ExprValue.toString() produces this
-                    expectedResultFormat = ExpectedResultFormat.STRING
+                    expectedResultFormat = ExpectedResultFormat.STRICT
                 ),
                 EvaluationSession.standard()
             )
@@ -258,25 +153,13 @@ class PipelineEvaluatorTestAdapterTests {
     }
 
     @Test
-    fun `runEvaluatorTestCase - expected result does not match - ExpectedResultFormat-ION_WITHOUT_BAG_AND_MISSING_ANNOTATIONS mode`() {
-        assertTestFails(
-            EvaluatorTestFailureReason.UNEXPECTED_QUERY_RESULT,
-            EvaluatorTestCase(
-                query = "1",
-                expectedResult = "2",
-                expectedResultFormat = ExpectedResultFormat.ION_WITHOUT_BAG_AND_MISSING_ANNOTATIONS
-            )
-        )
-    }
-
-    @Test
     fun `runEvaluatorTestCase - expected result does not match - ExpectedResultFormat-PARTIQL mode`() {
         assertTestFails(
             EvaluatorTestFailureReason.UNEXPECTED_QUERY_RESULT,
             EvaluatorTestCase(
                 query = "1",
                 expectedResult = "2",
-                expectedResultFormat = ExpectedResultFormat.PARTIQL
+                expectedResultFormat = ExpectedResultFormat.STRICT
             )
         )
     }
@@ -288,7 +171,7 @@ class PipelineEvaluatorTestAdapterTests {
             EvaluatorTestCase(
                 query = "1",
                 expectedResult = "2",
-                expectedResultFormat = ExpectedResultFormat.STRING
+                expectedResultFormat = ExpectedResultFormat.STRICT
             )
         )
     }
@@ -300,7 +183,7 @@ class PipelineEvaluatorTestAdapterTests {
             EvaluatorTestCase(
                 query = "true",
                 expectedResult = "!@#$ syntax error intentional",
-                expectedResultFormat = ExpectedResultFormat.PARTIQL
+                expectedResultFormat = ExpectedResultFormat.STRICT
             )
         )
     }

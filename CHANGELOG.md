@@ -24,16 +24,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Adds ability to pipe queries to the CLI
+- Added numeric functions `abs`, `sqrt`, `exp`, `ln`, `pow`.
+
+### Changed
+- Updates the CLI to use Pico CLI and modifies several CLI options
+
+### Deprecated
+
+### Fixed
+
+### Removed
+- The deprecated `IonValue` property in `ExprValue` interface is now removed. 
+
+### Security
+
+## [0.9.0] - 2022-12-13
+
+### Added
 - Adds simple auto-completion to the CLI.
+- Adds the IsListParenthesizedMeta meta to aid in differentiating between parenthesized and non-parenthesized lists
 - Adds support for HAVING clause in planner
 - Adds support for collection aggregation functions in the EvaluatingCompiler and experimental planner
 - Adds support for the syntactic sugar of using aggregations functions in place of their collection aggregation function
   counterparts (in the experimental planner)
 - Experimental implementation for window function `Lag` and `Lead`.
 - Adds support for EXPLAIN
+- Adds continuous performance benchmarking to the CI for existing JMH benchmarks
+  - Benchmark results can be seen on the project's GitHub Pages site
 - Adds the `pipeline` flag to the CLI to provide experimental usage of the PartiQLCompilerPipeline
-- Added `ExprValue.toIonValue(ion: IonSystem)` in kotlin, and `ExprValueKt.toIonValue(value: ExprValue, ion: IonSystem)` in Java to transform one `ExprValue` to a corresponding `IonValue`.
-- Added numeric functions `abs`, `sqrt`, `exp`, `ln`, `pow`.
+- Added `ExprValue.toIonValue(ion: IonSystem)` in kotlin, and `ExprValueExtensionKt.toIonValue(value: ExprValue, ion: IonSystem)` in Java to transform one `ExprValue` to a corresponding `IonValue`.
+- Added `ExprValue.of(value: IonValue)` method to construct an `ExprValue` from an `IonValue`. 
 
 ### Changed
 - Now `CompileOption` uses `TypedOpParameter.HONOR_PARAMETERS` as default.
@@ -48,10 +69,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - If unable to parse via SLL Prediction Mode, it attempts to parse using the slower LL Prediction Mode
   - Modifications have also been made to the ANTLR grammar to increase the speed of parsing joined table references
   - Updates how the PartiQLParser handles parameter indexes to remove the double-pass while lexing
+- Changes the expected `Property`'s of `TOKEN_INFO` to use `Property.TOKEN_DESCRIPTION` instead of `Property.TOKEN_TYPE`
 
 ### Deprecated
 - Marks the GroupKeyReferencesVisitorTransform as deprecated. There is no functionally equivalent class.
 - Marks `ionValue` property in `ExprValue` interface as deprecated. The functional equivalent method is `ExprValue.toIonValue(ion: IonSystem)` in kotlin, and `ExprValueKt.toIonValue(value: ExprValue, ion: IonSystem)` in Java.
+- Marks `Lexer`, `Token`, `TokenType`, `SourcePosition`, and `SourceSpan` as deprecated. These will be removed without
+any replacement.
+- Marks approximately 60 `ErrorCode`'s as deprecated. These will be removed without any replacement.
+- Marks `Property.TOKEN_TYPE` as deprecated. Please use `Property.TOKEN_DESCRIPTION`.
 
 ### Fixed
 - Fixes the ThreadInterruptedTests by modifying the time to interrupt parses. Also adds better exception exposure to

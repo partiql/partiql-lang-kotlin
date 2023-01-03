@@ -2,16 +2,20 @@ package org.partiql.lang.syntax
 
 import com.amazon.ion.IonValue
 import junitparams.Parameters
+import junitparams.naming.TestCaseName
 import org.junit.Test
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.id
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
+import org.partiql.lang.syntax.antlr.PartiQLParser
+import org.partiql.lang.util.getAntlrDisplayString
 import org.partiql.lang.util.to
 
 class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
 
     data class DateTimeTestCase(val source: String, val skipTest: Boolean = false, val block: PartiqlAst.Builder.() -> PartiqlAst.PartiqlAstNode)
+    data class ErrorTimeTestCase(val source: String, val errorCode: ErrorCode, val ctx: Map<Property, Any>, val skipTest: Boolean = false)
 
     @Test
     @Parameters
@@ -21,6 +25,27 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
         } else {
             // Skip test, do nothing
         }
+
+    private fun createErrorCaseForTime(source: String, errorCode: ErrorCode, line: Long, col: Long, tokenType: Int, tokenValue: IonValue, skipTest: Boolean = false): ErrorTimeTestCase {
+        val displayTokenType = tokenType.getAntlrDisplayString()
+        val ctx = mapOf(
+            Property.LINE_NUMBER to line,
+            Property.COLUMN_NUMBER to col,
+            Property.TOKEN_DESCRIPTION to displayTokenType,
+            Property.TOKEN_VALUE to tokenValue
+        )
+        return ErrorTimeTestCase(source, errorCode, ctx, skipTest)
+    }
+
+    private fun runErrorTimeTestCase(tc: ErrorTimeTestCase) {
+        if (!tc.skipTest) {
+            checkInputThrowingParserException(
+                tc.source,
+                tc.errorCode,
+                tc.ctx
+            )
+        }
+    }
 
     fun parametersForDateLiteralTests() = listOf(
         DateTimeTestCase("DATE '2012-02-29'") {
@@ -185,28 +210,7 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
         }
     )
 
-    private fun createErrorCaseForTime(source: String, errorCode: ErrorCode, line: Long, col: Long, tokenType: TokenType, tokenValue: IonValue, skipTest: Boolean = false): () -> Unit = {
-        if (!skipTest) {
-            checkInputThrowingParserException(
-                source,
-                errorCode,
-                mapOf(
-                    Property.LINE_NUMBER to line,
-                    Property.COLUMN_NUMBER to col,
-                    Property.TOKEN_TYPE to tokenType,
-                    Property.TOKEN_VALUE to tokenValue
-                )
-            )
-        }
-    }
-
-    private fun createErrorCaseForTime(source: String, errorCode: ErrorCode, errorContext: Map<Property, Any>): () -> Unit = {
-        checkInputThrowingParserException(
-            source,
-            errorCode,
-            errorContext
-        )
-    }
+    private fun createErrorCaseForTime(source: String, errorCode: ErrorCode, errorContext: Map<Property, Any>) = ErrorTimeTestCase(source, errorCode, errorContext)
 
     fun parametersForTimeParserErrorTests() = listOf(
         createErrorCaseForTime(
@@ -214,7 +218,7 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
             line = 1L,
             col = 5L,
             errorCode = ErrorCode.PARSE_UNEXPECTED_TOKEN,
-            tokenType = TokenType.EOF,
+            tokenType = PartiQLParser.EOF,
             tokenValue = ion.newSymbol("EOF")
         ),
         createErrorCaseForTime(
@@ -222,7 +226,7 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
             line = 1L,
             col = 6L,
             errorCode = ErrorCode.PARSE_UNEXPECTED_TOKEN,
-            tokenType = TokenType.LITERAL,
+            tokenType = PartiQLParser.LITERAL_INTEGER,
             tokenValue = ion.newInt(123)
         ),
         createErrorCaseForTime(
@@ -230,7 +234,7 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
             line = 1L,
             col = 6L,
             errorCode = ErrorCode.PARSE_INVALID_TIME_STRING,
-            tokenType = TokenType.LITERAL,
+            tokenType = PartiQLParser.LITERAL_STRING,
             tokenValue = ion.newString("time_string")
         ),
         createErrorCaseForTime(
@@ -238,7 +242,7 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
             line = 1L,
             col = 6L,
             errorCode = ErrorCode.PARSE_UNEXPECTED_TOKEN,
-            tokenType = TokenType.LITERAL,
+            tokenType = PartiQLParser.LITERAL_DECIMAL,
             tokenValue = ion.singleValue("123.23")
         ),
         createErrorCaseForTime(
@@ -246,7 +250,7 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
             line = 1L,
             col = 6L,
             errorCode = ErrorCode.PARSE_UNEXPECTED_TOKEN,
-            tokenType = TokenType.ION_LITERAL,
+            tokenType = PartiQLParser.ION_CLOSURE,
             tokenValue = ion.singleValue("2012-12-12")
         ),
         createErrorCaseForTime(
@@ -254,7 +258,7 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
             line = 1L,
             col = 6L,
             errorCode = ErrorCode.PARSE_INVALID_TIME_STRING,
-            tokenType = TokenType.LITERAL,
+            tokenType = PartiQLParser.LITERAL_STRING,
             tokenValue = ion.newString("2012-12-12")
         ),
         createErrorCaseForTime(
@@ -262,7 +266,7 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
             line = 1L,
             col = 6L,
             errorCode = ErrorCode.PARSE_INVALID_TIME_STRING,
-            tokenType = TokenType.LITERAL,
+            tokenType = PartiQLParser.LITERAL_STRING,
             tokenValue = ion.newString("12")
         ),
         // This is a valid time string in PostgreSQL
@@ -271,7 +275,7 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
             line = 1L,
             col = 6L,
             errorCode = ErrorCode.PARSE_INVALID_TIME_STRING,
-            tokenType = TokenType.LITERAL,
+            tokenType = PartiQLParser.LITERAL_STRING,
             tokenValue = ion.newString("12:30")
         ),
         // This is a valid time string in PostgreSQL
@@ -280,7 +284,7 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
             line = 1L,
             col = 6L,
             errorCode = ErrorCode.PARSE_INVALID_TIME_STRING,
-            tokenType = TokenType.LITERAL,
+            tokenType = PartiQLParser.LITERAL_STRING,
             tokenValue = ion.newString("34:59")
         ),
         // This is a valid time string in PostgreSQL
@@ -289,7 +293,7 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
             line = 1L,
             col = 6L,
             errorCode = ErrorCode.PARSE_INVALID_TIME_STRING,
-            tokenType = TokenType.LITERAL,
+            tokenType = PartiQLParser.LITERAL_STRING,
             tokenValue = ion.newString("59.12345")
         ),
         // This is a valid time string in PostgreSQL
@@ -298,7 +302,7 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
             line = 1L,
             col = 6L,
             errorCode = ErrorCode.PARSE_INVALID_TIME_STRING,
-            tokenType = TokenType.LITERAL,
+            tokenType = PartiQLParser.LITERAL_STRING,
             tokenValue = ion.newString("1:30:38")
         ),
         // This is a valid time string in PostgreSQL
@@ -307,7 +311,7 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
             line = 1L,
             col = 6L,
             errorCode = ErrorCode.PARSE_INVALID_TIME_STRING,
-            tokenType = TokenType.LITERAL,
+            tokenType = PartiQLParser.LITERAL_STRING,
             tokenValue = ion.newString("1:30:38")
         ),
         createErrorCaseForTime(
@@ -315,7 +319,7 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
             line = 1L,
             col = 6L,
             errorCode = ErrorCode.PARSE_INVALID_TIME_STRING,
-            tokenType = TokenType.LITERAL,
+            tokenType = PartiQLParser.LITERAL_STRING,
             tokenValue = ion.newString("12:59:61.0000")
         ),
         createErrorCaseForTime(
@@ -323,7 +327,7 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
             line = 1L,
             col = 6L,
             errorCode = ErrorCode.PARSE_INVALID_TIME_STRING,
-            tokenType = TokenType.LITERAL,
+            tokenType = PartiQLParser.LITERAL_STRING,
             tokenValue = ion.newString("12.123:45.123:54.123")
         ),
         createErrorCaseForTime(
@@ -331,7 +335,7 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
             line = 1L,
             col = 6L,
             errorCode = ErrorCode.PARSE_INVALID_TIME_STRING,
-            tokenType = TokenType.LITERAL,
+            tokenType = PartiQLParser.LITERAL_STRING,
             tokenValue = ion.newString("-19:45:13")
         ),
         createErrorCaseForTime(
@@ -339,7 +343,7 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
             line = 1L,
             col = 6L,
             errorCode = ErrorCode.PARSE_INVALID_TIME_STRING,
-            tokenType = TokenType.LITERAL,
+            tokenType = PartiQLParser.LITERAL_STRING,
             tokenValue = ion.newString("24:00:00")
         ),
         createErrorCaseForTime(
@@ -347,7 +351,7 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
             line = 1L,
             col = 6L,
             errorCode = ErrorCode.PARSE_INVALID_TIME_STRING,
-            tokenType = TokenType.LITERAL,
+            tokenType = PartiQLParser.LITERAL_STRING,
             tokenValue = ion.newString("23:59:59.99999 05:30")
         ),
         createErrorCaseForTime(
@@ -355,7 +359,7 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
             line = 1L,
             col = 6L,
             errorCode = ErrorCode.PARSE_INVALID_TIME_STRING,
-            tokenType = TokenType.LITERAL,
+            tokenType = PartiQLParser.LITERAL_STRING,
             tokenValue = ion.newString("23:59:59+05:30.00")
         ),
         // TODO: Investigate why the build fails in GH actions for these two tests.
@@ -364,7 +368,7 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
             line = 1L,
             col = 6L,
             errorCode = ErrorCode.PARSE_INVALID_TIME_STRING,
-            tokenType = TokenType.LITERAL,
+            tokenType = PartiQLParser.LITERAL_STRING,
             tokenValue = ion.newString("23:59:59+24:00"),
             skipTest = true
         ),
@@ -373,7 +377,7 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
             line = 1L,
             col = 6L,
             errorCode = ErrorCode.PARSE_INVALID_TIME_STRING,
-            tokenType = TokenType.LITERAL,
+            tokenType = PartiQLParser.LITERAL_STRING,
             tokenValue = ion.newString("23:59:59-24:00"),
             skipTest = true
         ),
@@ -383,7 +387,7 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
             line = 1L,
             col = 6L,
             errorCode = ErrorCode.PARSE_INVALID_TIME_STRING,
-            tokenType = TokenType.LITERAL,
+            tokenType = PartiQLParser.LITERAL_STRING,
             tokenValue = ion.newString("08:59:59.99999 AM")
         ),
         // This is a valid time string in PostgreSQL
@@ -392,7 +396,7 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
             line = 1L,
             col = 6L,
             errorCode = ErrorCode.PARSE_INVALID_TIME_STRING,
-            tokenType = TokenType.LITERAL,
+            tokenType = PartiQLParser.LITERAL_STRING,
             tokenValue = ion.newString("08:59:59.99999 PM")
         ),
         createErrorCaseForTime(
@@ -400,15 +404,15 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
             line = 1L,
             col = 8L,
             errorCode = ErrorCode.PARSE_UNEXPECTED_TOKEN,
-            tokenType = TokenType.LITERAL,
-            tokenValue = ion.newString("23:59:59.99999")
+            tokenType = PartiQLParser.LITERAL_STRING,
+            tokenValue = ion.newString("23:59:59.99999"),
         ),
         createErrorCaseForTime(
             source = "TIME () '23:59:59.99999'",
             line = 1L,
             col = 7L,
             errorCode = ErrorCode.PARSE_UNEXPECTED_TOKEN,
-            tokenType = TokenType.RIGHT_PAREN,
+            tokenType = PartiQLParser.PAREN_RIGHT,
             tokenValue = ion.newSymbol(")")
         ),
         createErrorCaseForTime(
@@ -416,7 +420,7 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
             line = 1L,
             col = 6L,
             errorCode = ErrorCode.PARSE_UNEXPECTED_TOKEN,
-            tokenType = TokenType.LEFT_BRACKET,
+            tokenType = PartiQLParser.BRACKET_LEFT,
             tokenValue = ion.newSymbol("[")
         ),
         createErrorCaseForTime(
@@ -424,7 +428,7 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
             line = 1L,
             col = 6L,
             errorCode = ErrorCode.PARSE_UNEXPECTED_TOKEN,
-            tokenType = TokenType.LEFT_CURLY,
+            tokenType = PartiQLParser.BRACE_LEFT,
             tokenValue = ion.newSymbol("{")
         ),
         createErrorCaseForTime(
@@ -432,7 +436,7 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
             line = 1L,
             col = 6L,
             errorCode = ErrorCode.PARSE_UNEXPECTED_TOKEN,
-            tokenType = TokenType.LITERAL,
+            tokenType = PartiQLParser.LITERAL_INTEGER,
             tokenValue = ion.newInt(4)
         ),
         createErrorCaseForTime(
@@ -440,15 +444,15 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
             line = 1L,
             col = 7L,
             errorCode = ErrorCode.PARSE_UNEXPECTED_TOKEN,
-            tokenType = TokenType.LITERAL,
-            tokenValue = ion.newString("4")
+            tokenType = PartiQLParser.LITERAL_STRING,
+            tokenValue = ion.newString("4"),
         ),
         createErrorCaseForTime(
             source = "TIME (-1) '23:59:59.99999'",
             line = 1L,
             col = 7L,
             errorCode = ErrorCode.PARSE_UNEXPECTED_TOKEN,
-            tokenType = TokenType.OPERATOR,
+            tokenType = PartiQLParser.MINUS,
             tokenValue = ion.newSymbol("-")
         ),
         createErrorCaseForTime(
@@ -456,7 +460,7 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
             line = 1L,
             col = 7L,
             errorCode = ErrorCode.PARSE_INVALID_PRECISION_FOR_TIME,
-            tokenType = TokenType.LITERAL,
+            tokenType = PartiQLParser.LITERAL_INTEGER,
             tokenValue = ion.newInt(10)
         ),
         createErrorCaseForTime(
@@ -464,7 +468,7 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
             line = 1L,
             col = 7L,
             errorCode = ErrorCode.PARSE_UNEXPECTED_TOKEN,
-            tokenType = TokenType.LITERAL,
+            tokenType = PartiQLParser.LITERAL_STRING,
             tokenValue = ion.newString("four")
         ),
         createErrorCaseForTime(
@@ -472,7 +476,7 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
             line = 1L,
             col = 20L,
             errorCode = ErrorCode.PARSE_UNEXPECTED_TOKEN,
-            tokenType = TokenType.EOF,
+            tokenType = PartiQLParser.EOF,
             tokenValue = ion.newSymbol("EOF")
         ),
         createErrorCaseForTime(
@@ -480,7 +484,7 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
             line = 1L,
             col = 21L,
             errorCode = ErrorCode.PARSE_INVALID_TIME_STRING,
-            tokenType = TokenType.LITERAL,
+            tokenType = PartiQLParser.LITERAL_STRING,
             tokenValue = ion.newString("12:20")
         ),
         createErrorCaseForTime(
@@ -488,7 +492,7 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
             line = 1L,
             col = 21L,
             errorCode = ErrorCode.PARSE_INVALID_TIME_STRING,
-            tokenType = TokenType.LITERAL,
+            tokenType = PartiQLParser.LITERAL_STRING,
             tokenValue = ion.newString("34:59")
         ),
         createErrorCaseForTime(
@@ -496,7 +500,7 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
             line = 1L,
             col = 21L,
             errorCode = ErrorCode.PARSE_INVALID_TIME_STRING,
-            tokenType = TokenType.LITERAL,
+            tokenType = PartiQLParser.LITERAL_STRING,
             tokenValue = ion.newString("59.12345")
         ),
         createErrorCaseForTime(
@@ -504,25 +508,23 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
             line = 1L,
             col = 21L,
             errorCode = ErrorCode.PARSE_INVALID_TIME_STRING,
-            tokenType = TokenType.LITERAL,
+            tokenType = PartiQLParser.LITERAL_STRING,
             tokenValue = ion.newString("12:20")
         ),
         createErrorCaseForTime(
             source = "TIME WITH TIMEZONE '23:59:59.99999'",
             errorCode = ErrorCode.PARSE_UNEXPECTED_TOKEN,
-            errorContext = mapOf(
-                Property.LINE_NUMBER to 1L,
-                Property.COLUMN_NUMBER to 11L,
-                Property.TOKEN_TYPE to TokenType.IDENTIFIER,
-                Property.TOKEN_VALUE to ion.newSymbol("TIMEZONE")
-            ),
+            line = 1L,
+            col = 11L,
+            tokenType = PartiQLParser.IDENTIFIER,
+            tokenValue = ion.newSymbol("TIMEZONE")
         ),
         createErrorCaseForTime(
             source = "TIME WITH_TIME_ZONE '23:59:59.99999'",
             line = 1L,
             col = 6L,
             errorCode = ErrorCode.PARSE_UNEXPECTED_TOKEN,
-            tokenType = TokenType.IDENTIFIER,
+            tokenType = PartiQLParser.IDENTIFIER,
             tokenValue = ion.newSymbol("WITH_TIME_ZONE")
         ),
         createErrorCaseForTime(
@@ -530,7 +532,7 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
             line = 1L,
             col = 6L,
             errorCode = ErrorCode.PARSE_UNEXPECTED_TOKEN,
-            tokenType = TokenType.IDENTIFIER,
+            tokenType = PartiQLParser.IDENTIFIER,
             tokenValue = ion.newSymbol("WITHTIMEZONE")
         ),
         // PartiQL doesn't support "WITHOUT TIME ZONE" yet. TIME '<time_string>' is in effect the same as TIME WITHOUT TIME ZONE '<time_string>'
@@ -539,7 +541,7 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
             line = 1L,
             col = 6L,
             errorCode = ErrorCode.PARSE_UNEXPECTED_TOKEN,
-            tokenType = TokenType.IDENTIFIER,
+            tokenType = PartiQLParser.IDENTIFIER,
             tokenValue = ion.newSymbol("WITHOUT")
         ),
         createErrorCaseForTime(
@@ -548,9 +550,9 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
             errorContext = mapOf(
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 16L,
-                Property.TOKEN_TYPE to TokenType.IDENTIFIER,
+                Property.TOKEN_DESCRIPTION to PartiQLParser.IDENTIFIER.getAntlrDisplayString(),
                 Property.TOKEN_VALUE to ion.newSymbol("PHONE")
-            ),
+            )
         ),
         createErrorCaseForTime(
             source = "TIME WITH (4) TIME ZONE '23:59:59.99999'",
@@ -558,7 +560,7 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
             errorContext = mapOf(
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 11L,
-                Property.TOKEN_TYPE to TokenType.LEFT_PAREN,
+                Property.TOKEN_DESCRIPTION to PartiQLParser.PAREN_LEFT.getAntlrDisplayString(),
                 Property.TOKEN_VALUE to ion.newSymbol("(")
             )
         ),
@@ -568,7 +570,7 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
             errorContext = mapOf(
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 16L,
-                Property.TOKEN_TYPE to TokenType.LEFT_PAREN,
+                Property.TOKEN_DESCRIPTION to PartiQLParser.PAREN_LEFT.getAntlrDisplayString(),
                 Property.TOKEN_VALUE to ion.newSymbol("(")
             )
         ),
@@ -577,7 +579,7 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
             line = 1L,
             col = 21L,
             errorCode = ErrorCode.PARSE_UNEXPECTED_TOKEN,
-            tokenType = TokenType.LEFT_PAREN,
+            tokenType = PartiQLParser.PAREN_LEFT,
             tokenValue = ion.newSymbol("(")
         ),
         createErrorCaseForTime(
@@ -585,7 +587,7 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
             line = 1L,
             col = 21L,
             errorCode = ErrorCode.PARSE_INVALID_TIME_STRING,
-            tokenType = TokenType.LITERAL,
+            tokenType = PartiQLParser.LITERAL_STRING,
             tokenValue = ion.newString("time_string")
         ),
         createErrorCaseForTime(
@@ -593,7 +595,7 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
             line = 1L,
             col = 21L,
             errorCode = ErrorCode.PARSE_INVALID_TIME_STRING,
-            tokenType = TokenType.LITERAL,
+            tokenType = PartiQLParser.LITERAL_STRING,
             tokenValue = ion.newString("23:59:59+18:00.00")
         ),
         createErrorCaseForTime(
@@ -601,7 +603,7 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
             line = 1L,
             col = 21L,
             errorCode = ErrorCode.PARSE_INVALID_TIME_STRING,
-            tokenType = TokenType.LITERAL,
+            tokenType = PartiQLParser.LITERAL_STRING,
             tokenValue = ion.newString("23:59:59-18:00.00")
         ),
         createErrorCaseForTime(
@@ -609,7 +611,7 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
             line = 1L,
             col = 21L,
             errorCode = ErrorCode.PARSE_INVALID_TIME_STRING,
-            tokenType = TokenType.LITERAL,
+            tokenType = PartiQLParser.LITERAL_STRING,
             tokenValue = ion.newString("23:59:59+18:01")
         ),
         // time zone offset out of range
@@ -618,7 +620,7 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
             line = 1L,
             col = 21L,
             errorCode = ErrorCode.PARSE_INVALID_TIME_STRING,
-            tokenType = TokenType.LITERAL,
+            tokenType = PartiQLParser.LITERAL_STRING,
             tokenValue = ion.newString("23:59:59-18:01")
         ),
         // time zone offset out of range
@@ -627,15 +629,15 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
             line = 1L,
             col = 7L,
             errorCode = ErrorCode.PARSE_UNEXPECTED_TOKEN,
-            tokenType = TokenType.LITERAL,
-            tokenValue = ion.newString("4")
+            tokenType = PartiQLParser.LITERAL_STRING,
+            tokenValue = ion.newString("4"),
         ),
         createErrorCaseForTime(
             source = "TIME WITH TIME ZONE '23:59:59-18-01'",
             line = 1L,
             col = 21L,
             errorCode = ErrorCode.PARSE_INVALID_TIME_STRING,
-            tokenType = TokenType.LITERAL,
+            tokenType = PartiQLParser.LITERAL_STRING,
             tokenValue = ion.newString("23:59:59-18-01")
         ),
         // This is valid in PostgreSQL.
@@ -644,12 +646,13 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
             line = 1L,
             col = 21L,
             errorCode = ErrorCode.PARSE_INVALID_TIME_STRING,
-            tokenType = TokenType.LITERAL,
+            tokenType = PartiQLParser.LITERAL_STRING,
             tokenValue = ion.newString("23:59:59 PST")
         )
     )
 
     @Test
     @Parameters
-    fun timeParserErrorTests(block: () -> Unit) = block()
+    @TestCaseName("{method} {0}")
+    fun timeParserErrorTests(tc: ErrorTimeTestCase) = runErrorTimeTestCase(tc)
 }

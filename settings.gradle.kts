@@ -16,24 +16,10 @@ rootProject.name = "partiql"
 
 include(
     "lang",
-    "cli",
+    "partiql-app:partiql-cli",
     "examples",
     "extensions",
     "lib:partiql-isl",
     "test:partiql-tests-runner",
     "test:partiql-randomized-tests",
-    "version-upgrade:v0.1-to-v0.2-upgrade:examples",
-    "version-upgrade:v0.1-to-v0.2-upgrade:upgraded-examples",
-    "version-upgrade:v0.2-to-v0.3-upgrade:examples",
-    "version-upgrade:v0.2-to-v0.3-upgrade:upgraded-examples",
-    "version-upgrade:v0.3-to-v0.4-upgrade:examples",
-    "version-upgrade:v0.3-to-v0.4-upgrade:upgraded-examples",
-    "version-upgrade:v0.4-to-v0.5-upgrade:examples",
-    "version-upgrade:v0.4-to-v0.5-upgrade:upgraded-examples",
-    "version-upgrade:v0.5-to-v0.6-upgrade:examples",
-    "version-upgrade:v0.5-to-v0.6-upgrade:upgraded-examples",
-    "version-upgrade:v0.6-to-v0.7-upgrade:examples",
-    "version-upgrade:v0.6-to-v0.7-upgrade:upgraded-examples",
-    "version-upgrade:v0.7-to-v0.8-upgrade:examples",
-    "version-upgrade:v0.7-to-v0.8-upgrade:upgraded-examples"
 )

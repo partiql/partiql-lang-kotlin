@@ -4,6 +4,7 @@ import org.junit.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.eval.EvaluatorTestBase
+import org.partiql.lang.eval.MISSING_ANNOTATION
 import org.partiql.lang.eval.builtins.Argument
 import org.partiql.lang.eval.builtins.ExprFunctionTestCase
 import org.partiql.lang.eval.builtins.checkInvalidArgType
@@ -15,7 +16,7 @@ class SubstringEvaluationTest : EvaluatorTestBase() {
     @ParameterizedTest
     @ArgumentsSource(SubstringPassCases::class)
     fun runPassTests(testCase: ExprFunctionTestCase) =
-        runEvaluatorTestCase(testCase.source, expectedResult = testCase.expectedLegacyModeResult)
+        runEvaluatorTestCase(testCase.source, expectedResult = testCase.expectedLegacyModeResult, expectedPermissiveModeResult = testCase.expectedPermissiveModeResult)
 
     class SubstringPassCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(
@@ -45,10 +46,10 @@ class SubstringEvaluationTest : EvaluatorTestBase() {
             ExprFunctionTestCase("substring(null FROM 1 FOR 1)", "null"),
             ExprFunctionTestCase("substring('abc' FROM null FOR 1)", "null"),
             ExprFunctionTestCase("substring('abc' FROM 1 FOR null)", "null"),
-            ExprFunctionTestCase("substring(missing FROM 1)", "null"),
-            ExprFunctionTestCase("substring('abc' FROM missing)", "null"),
-            ExprFunctionTestCase("substring(missing FROM 1 FOR 1)", "null"),
-            ExprFunctionTestCase("substring('abc' FROM missing FOR 1)", "null"),
+            ExprFunctionTestCase("substring(missing FROM 1)", "null", "$MISSING_ANNOTATION::null"),
+            ExprFunctionTestCase("substring('abc' FROM missing)", "null", "$MISSING_ANNOTATION::null"),
+            ExprFunctionTestCase("substring(missing FROM 1 FOR 1)", "null", "$MISSING_ANNOTATION::null"),
+            ExprFunctionTestCase("substring('abc' FROM missing FOR 1)", "null", "$MISSING_ANNOTATION::null"),
             ExprFunctionTestCase("substring('' FROM -1)", "\"\""),
             ExprFunctionTestCase("substring('' FROM 0)", "\"\""),
             ExprFunctionTestCase("substring('' FROM 99)", "\"\""),
@@ -79,11 +80,11 @@ class SubstringEvaluationTest : EvaluatorTestBase() {
             ExprFunctionTestCase("substring(null, 1, 1)", "null"),
             ExprFunctionTestCase("substring('abc', null, 1)", "null"),
             ExprFunctionTestCase("substring('abc', 1, null)", "null"),
-            ExprFunctionTestCase("substring(missing, 1)", "null"),
-            ExprFunctionTestCase("substring('abc', missing)", "null"),
-            ExprFunctionTestCase("substring(missing, 1, 1)", "null"),
-            ExprFunctionTestCase("substring('abc', missing, 1)", "null"),
-            ExprFunctionTestCase("substring('abc', 1, missing)", "null"),
+            ExprFunctionTestCase("substring(missing, 1)", "null", "$MISSING_ANNOTATION::null"),
+            ExprFunctionTestCase("substring('abc', missing)", "null", "$MISSING_ANNOTATION::null"),
+            ExprFunctionTestCase("substring(missing, 1, 1)", "null", "$MISSING_ANNOTATION::null"),
+            ExprFunctionTestCase("substring('abc', missing, 1)", "null", "$MISSING_ANNOTATION::null"),
+            ExprFunctionTestCase("substring('abc', 1, missing)", "null", "$MISSING_ANNOTATION::null"),
             ExprFunctionTestCase("substring('', -1)", "\"\""),
             ExprFunctionTestCase("substring('', 0)", "\"\""),
             ExprFunctionTestCase("substring('', 99)", "\"\""),

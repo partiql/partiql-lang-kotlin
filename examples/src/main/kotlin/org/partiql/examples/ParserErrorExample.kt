@@ -33,7 +33,7 @@ class ParserErrorExample(out: PrintStream) : Example(out) {
         val errorInformation = "errorCode: ${e.errorCode}" +
             "\nLINE_NUMBER: ${errorContext[Property.LINE_NUMBER]}" +
             "\nCOLUMN_NUMBER: ${errorContext[Property.COLUMN_NUMBER]}" +
-            "\nTOKEN_TYPE: ${errorContext[Property.TOKEN_TYPE]}" +
+            "\nTOKEN_DESCRIPTION: ${errorContext[Property.TOKEN_DESCRIPTION]}" +
             "\nTOKEN_VALUE: ${errorContext[Property.TOKEN_VALUE]}"
         print("Error message:", e.generateMessage())
         print("Error information:", errorInformation)

@@ -20,7 +20,9 @@ import org.partiql.lang.ION
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
+import org.partiql.lang.syntax.antlr.PartiQLParser
 import org.partiql.lang.util.ArgumentsProviderBase
+import org.partiql.lang.util.getAntlrDisplayString
 
 class PartiQLParserExplainTest : PartiQLParserTestBase() {
 
@@ -130,7 +132,7 @@ class PartiQLParserExplainTest : PartiQLParserTestBase() {
                 context = mapOf(
                     Property.LINE_NUMBER to 1L,
                     Property.COLUMN_NUMBER to 10L,
-                    Property.TOKEN_TYPE to TokenType.IDENTIFIER,
+                    Property.TOKEN_DESCRIPTION to PartiQLParser.IDENTIFIER.getAntlrDisplayString(),
                     Property.TOKEN_VALUE to ION.newSymbol("typ")
                 )
             ),
@@ -141,7 +143,7 @@ class PartiQLParserExplainTest : PartiQLParserTestBase() {
                 context = mapOf(
                     Property.LINE_NUMBER to 1L,
                     Property.COLUMN_NUMBER to 36L,
-                    Property.TOKEN_TYPE to TokenType.EOF,
+                    Property.TOKEN_DESCRIPTION to PartiQLParser.EOF.getAntlrDisplayString(),
                     Property.TOKEN_VALUE to ION.newSymbol("EOF")
                 )
             ),
@@ -152,7 +154,7 @@ class PartiQLParserExplainTest : PartiQLParserTestBase() {
                 context = mapOf(
                     Property.LINE_NUMBER to 1L,
                     Property.COLUMN_NUMBER to 25L,
-                    Property.TOKEN_TYPE to TokenType.IDENTIFIER,
+                    Property.TOKEN_DESCRIPTION to PartiQLParser.IDENTIFIER.getAntlrDisplayString(),
                     Property.TOKEN_VALUE to ION.newSymbol("logical")
                 )
             )

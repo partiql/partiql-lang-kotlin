@@ -13,8 +13,6 @@
  * permissions and limitations under the License.
  */
 
-import org.partiql.gradle.plugin.pig.PigTask
-
 plugins {
     id(Plugins.antlr)
     id(Plugins.conventions)
@@ -58,6 +56,15 @@ tasks.generateGrammarSource {
     outputDirectory = File(antlrSources)
 }
 
+jmh {
+    resultFormat = properties["resultFormat"] as String? ?: "json"
+    resultsFile = project.file(properties["resultsFile"] as String? ?: "$buildDir/reports/jmh/results.json")
+    include = listOfNotNull(properties["include"] as String?)
+    properties["warmupIterations"]?.let { it -> warmupIterations = Integer.parseInt(it as String) }
+    properties["iterations"]?.let { it -> iterations = Integer.parseInt(it as String) }
+    properties["fork"]?.let { it -> fork = Integer.parseInt(it as String) }
+}
+
 tasks.javadoc {
     exclude("**/antlr/**")
 }
@@ -67,7 +74,7 @@ tasks.compileKotlin {
 }
 
 tasks.dokkaHtml {
-    dependsOn(tasks.withType(PigTask::class))
+    dependsOn(tasks.withType(org.partiql.pig.gradle.PigTask::class))
 }
 
 tasks.processResources {

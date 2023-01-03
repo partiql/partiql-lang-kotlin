@@ -4,6 +4,7 @@ import org.junit.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.eval.EvaluatorTestBase
+import org.partiql.lang.eval.MISSING_ANNOTATION
 import org.partiql.lang.eval.builtins.Argument
 import org.partiql.lang.eval.builtins.ExprFunctionTestCase
 import org.partiql.lang.eval.builtins.checkInvalidArgType
@@ -27,8 +28,8 @@ class DateDiffEvaluationTest : EvaluatorTestBase() {
         override fun getParameters(): List<Any> = listOf(
             ExprFunctionTestCase("date_diff(second, null, `2017-01-10T05:30:55Z`)", "null"),
             ExprFunctionTestCase("date_diff(second, `2016-01-10T05:30:55Z`, null)", "null"),
-            ExprFunctionTestCase("date_diff(second, missing, `2017-01-10T05:30:55Z`)", "null"),
-            ExprFunctionTestCase("date_diff(second, `2016-01-10T05:30:55Z`, missing)", "null"),
+            ExprFunctionTestCase("date_diff(second, missing, `2017-01-10T05:30:55Z`)", "null", "$MISSING_ANNOTATION::null"),
+            ExprFunctionTestCase("date_diff(second, `2016-01-10T05:30:55Z`, missing)", "null", "$MISSING_ANNOTATION::null"),
             ExprFunctionTestCase(
                 "date_diff(year, a, b)",
                 "1",

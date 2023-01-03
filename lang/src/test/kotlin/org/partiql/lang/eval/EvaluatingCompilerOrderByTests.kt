@@ -193,7 +193,7 @@ class EvaluatingCompilerOrderByTests : EvaluatorTestBase() {
             // text types compared by lexicographical ordering of Unicode scalar (ASC)
             EvaluatorTestCase(
                 """SELECT * FROM [{ 'a': `'\uD83D\uDCA9'`}, { 'a': 'Z'}, { 'a': '9' }, { 'a': 'A'}, { 'a': `"\U0001F4A9"`}, { 'a': 'a'}, { 'a': 'z'}, { 'a': '0' }] ORDER BY a""",
-                """[{'a': '0'}, {'a': '9'}, {'a': 'A'}, {'a': 'Z'}, {'a': 'a'}, {'a': 'z'}, {'a': `"\U0001F4A9"`}, {'a': `'\uD83D\uDCA9'`}]"""
+                """[{'a': '0'}, {'a': '9'}, {'a': 'A'}, {'a': 'Z'}, {'a': 'a'}, {'a': 'z'}, {'a': `'\uD83D\uDCA9'`}, {'a': `"\U0001F4A9"`}]"""
             ),
             // text types compared by lexicographical ordering of Unicode scalar (DESC)
             EvaluatorTestCase(

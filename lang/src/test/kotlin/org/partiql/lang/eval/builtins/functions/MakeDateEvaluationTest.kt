@@ -22,7 +22,7 @@ class MakeDateEvaluationTest : EvaluatorTestBase() {
             query = testCase.source,
             expectedResult = testCase.expectedLegacyModeResult,
             expectedPermissiveModeResult = testCase.expectedPermissiveModeResult,
-            expectedResultFormat = ExpectedResultFormat.STRING,
+            expectedResultFormat = ExpectedResultFormat.STRICT,
             includePermissiveModeTest = false
         )
 

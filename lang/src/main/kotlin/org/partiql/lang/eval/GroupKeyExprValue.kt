@@ -14,7 +14,6 @@
 
 package org.partiql.lang.eval
 
-import com.amazon.ion.IonSystem
 import org.partiql.lang.eval.visitors.GroupByItemAliasVisitorTransform
 
 /**
@@ -24,8 +23,8 @@ import org.partiql.lang.eval.visitors.GroupByItemAliasVisitorTransform
  * group by expressions.  See [GroupByItemAliasVisitorTransform] and other uses of
  * [org.partiql.lang.ast.UniqueNameMeta].
  */
-internal class GroupKeyExprValue(ion: IonSystem, sequence: Sequence<ExprValue>, private val uniqueNames: Map<String, ExprValue>) :
-    StructExprValue(ion, StructOrdering.UNORDERED, sequence) {
+internal class GroupKeyExprValue(sequence: Sequence<ExprValue>, private val uniqueNames: Map<String, ExprValue>) :
+    StructExprValue(StructOrdering.UNORDERED, sequence) {
 
     private val keyBindings by lazy {
         when {

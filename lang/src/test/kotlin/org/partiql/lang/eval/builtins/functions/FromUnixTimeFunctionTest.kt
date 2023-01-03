@@ -5,6 +5,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.EvaluatorTestBase
+import org.partiql.lang.eval.MISSING_ANNOTATION
 import org.partiql.lang.eval.builtins.Argument
 import org.partiql.lang.eval.builtins.ExprFunctionTestCase
 import org.partiql.lang.eval.builtins.checkInvalidArgType
@@ -18,7 +19,8 @@ class FromUnixTimeFunctionTest : EvaluatorTestBase() {
     @ArgumentsSource(FromUnixTimePassCases::class)
     fun runPassTests(tc: ExprFunctionTestCase) = runEvaluatorTestCase(
         tc.source,
-        expectedResult = tc.expectedLegacyModeResult
+        expectedResult = tc.expectedLegacyModeResult,
+        expectedPermissiveModeResult = tc.expectedPermissiveModeResult
     )
 
     class FromUnixTimePassCases : ArgumentsProviderBase() {
@@ -43,7 +45,7 @@ class FromUnixTimeFunctionTest : EvaluatorTestBase() {
             ExprFunctionTestCase("from_unixtime(`1577836800`)", "2020-01-01T00:00:00-00:00"),
             // Null or missing
             ExprFunctionTestCase("from_unixtime(null)", "null"),
-            ExprFunctionTestCase("from_unixtime(missing)", "null"),
+            ExprFunctionTestCase("from_unixtime(missing)", "null", "$MISSING_ANNOTATION::null"),
         )
     }
 
