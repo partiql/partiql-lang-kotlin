@@ -76,8 +76,8 @@ internal class Cli(
             }
             if (reader.next() != null) {
                 val message = "As of v0.7.0, PartiQL requires that Ion files contain only a single Ion value for " +
-                        "processing. Please consider wrapping multiple values in a list, or consider passing in the " +
-                        "--wrap-ion flag. Use --help for more information."
+                    "processing. Please consider wrapping multiple values in a list, or consider passing in the " +
+                    "--wrap-ion flag. Use --help for more information."
                 throw IllegalStateException(message)
             }
             val result = compilerPipeline.compile(query, EvaluationSession.build { globals(bindings) })
