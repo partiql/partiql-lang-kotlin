@@ -6,7 +6,7 @@ The following command will build and run the CLI:
 
 ```shell
 # To build and run
-./partiql-app/partiql-cli/shell.sh
+./partiql-app/partiql-cli/partiql.sh
 
 # To build (only)
 ./gradlew :partiql-app:partiql-cli:install
@@ -29,7 +29,7 @@ To view all available options, run the CLI with the `--help` option.
 To execute a single query, run:
 
 ```shell
-./partiql-app/partiql-cli/shell.sh query.partiql
+./partiql-app/partiql-cli/partiql.sh query.partiql
 ```
 
 where `query.partiql` contains the PartiQL query to execute.
@@ -51,7 +51,7 @@ To start an interactive shell, execute:
 > Note that running directly with Gradle will eat arrow keys and control sequences due to the Gradle daemon.
 
 ```shell
-./partiql-app/partiql-cli/shell.sh
+./partiql-app/partiql-cli/partiql.sh
 ```
 
 You will see a prompt that looks as follows:
@@ -162,7 +162,7 @@ The variables `animals` and `types` can both be bound to the execution environme
 To bind the environment file to the execution environment, start the Shell with the following command:
 
 ```shell
-$ ./partiql-app/partiql-cli/shell.sh -e config.env
+$ ./partiql-app/partiql-cli/partiql.sh -e config.env
 ```
 
 Or, if you have extracted one of the compressed archives:

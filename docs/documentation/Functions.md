@@ -982,6 +982,167 @@ FLOOR(`-inf`) = `-inf` -- Float
 FLOOR(`nan`) = `nan` -- Float
 ```
 
+### ABS
+Returns the absolute value of the given number. 
+
+Note that abs(n) will throw an EVALUATOR_INTEGER_OVERFLOW when n is both of type `INT` and n = `INT.MIN_VALUE`.
+
+Signature : `ABS: Numeric -> Numeric`
+
+| Number Type     | Result Type |
+|-----------------|-------------|
+| INT             | INT         |
+| FLOAT           | FLOAT       | 
+| DECIMAL         | DECIMAL     |
+| +inf, nan, -inf | FLOAT       |
+
+```sql
+abs(-4) = 4
+abs(-4.0) = 4.0
+abs(`-4e0`) = 4e0
+abs(`-inf`) = `+inf`
+abs(`nan`) = `nan`
+```
+
+### SQRT
+
+Returns the square root of the given number.
+
+The input number is required to be non-negative.
+
+Signature : `SQRT: Numeric -> Numeric`
+
+| Number Type | Result Type |
+|-------------|-------------|
+| INT         | FLOAT       |
+| FLOAT       | FLOAT       | 
+| DECIMAL     | DECIMAL     |
+| +inf, nan   | FLOAT       |
+
+Examples:
+```sql
+sqrt(4) = `2e0` 
+sqrt(4.0) = 2.0000000000000000000000000000000000000 -- DECIMAL
+sqrt(`+inf`) = `+inf`
+sqrt(`nan`) = `nan`
+```
+
+### LN
+
+Returns the natural log of the given number.
+
+Signature : `LN: Numeric -> Numeric`
+
+The input number is required to be a positive number, otherwise an EVALUATOR_ARITHMETIC_EXCEPTION will be thrown.
+
+Special cases:
+
+ln(NaN) is NaN
+
+ln(+Inf) is +Inf
+
+
+| Number Type | Result Type |
+|-------------|-------------|
+| INT         | FLOAT       |
+| FLOAT       | FLOAT       | 
+| DECIMAL     | DECIMAL     |
+| +inf, nan   | FLOAT       |
+
+Examples:
+```sql
+ln(2) = `0.6931471805599453e0`
+ln(2.0) = 0.69314718055994530941723212145817656808
+ln(`+inf`) = `+inf`
+ln(`nan`) = `nan`
+```
+
+### EXP
+
+Returns e^x for a given x.
+
+Signature : `SQRT: Numeric -> Numeric`
+
+Special Case: 
+
+exp(NaN) is NaN
+
+exp(+Inf) is +Inf
+
+exp(-Inf) is 0.0
+
+| Number Type    | Result Type |
+|----------------|-------------|
+| INT            | FLOAT       |
+| FLOAT          | FLOAT       | 
+| DECIMAL        | DECIMAL     |
+| +inf, nan, -inf | FLOAT       |
+
+Examples:
+```sql
+exp(1) = `2.718281828459045e0`
+exp(1.0) = 2.7182818284590452353602874713526624978 -- DECIMAL
+exp(`+inf`) = `inf` 
+exp(`-inf`) = `0e0` 
+exp(`nan`) = `nan`
+```
+
+### POWER
+
+POW(x,y) return x^y.
+
+Note that if x is a negative number, than y must be an integer value, (not necessarily integer type), otherwise an EVALUATOR_ARITHMETIC_EXCEPTION will be thrown. 
+
+Special Case: 
+
+pow(x, 0.0) is 1.0;
+
+pow(x, 1.0) == x;
+
+pow(x, NaN) is NaN;
+
+pow(NaN, x) is NaN for x != 0.0;
+
+pow(x, Inf) is NaN for abs(x) == 1.0
+
+Signature : `POWER: (Numeric, Numeric) -> Numeric`
+
+
+|          x Type           |          y Type           | Result Type |
+|:-------------------------:|:-------------------------:|:-----------:| 
+|            INT            |            INT            |    FLOAT    | 
+|            INT            |           FLOAT           |    FLOAT    |
+|            INT            |          DECIMAL          |   DECIMAL   | 
+|           FLOAT           |            INT            |    FLOAT    |
+|           FLOAT           |           FLOAT           |    FLOAT    | 
+|           FLOAT           |          DECIMAL          |   DECIMAL   |
+|          DECIMAL          |            INT            |   DECIMAL   |
+|          DECIMAL          |           FLOAT           |   DECIMAL   |
+|          DECIMAL          |          DECIMAL          |   DECIMAL   |
+| `+inf` or `-inf` or `nan` |          Numeric          |    FLOAT    |
+|          NUMERIC          | `+inf` or `-inf` or `nan` |    FLOAT    |
+
+
+Examples:
+```sql
+pow(2,2) = `4e0`
+pow(2,`2e0`) = `4e0`
+pow(2, 2.0) = 4.0000000000000000000000000000000000000
+pow(`2e0`, 2) =  `4e0`
+pow(`2e0`, `2e0`) =  `4e0`
+pow(`2e0`, 2.0) = 4.0000000000000000000000000000000000000
+pow(2.0, 2) = 4.0000000000000000000000000000000000000
+pow(2.0, `2e0`) = 4.0000000000000000000000000000000000000
+pow(2.0, 2.0) = 4.0000000000000000000000000000000000000
+-- special rule
+pow(`+inf`, 0) = `1e0`
+pow(`+inf`, 1) = `+inf`
+pow(`+inf`, `nan`) = `nan`;  
+pow(`nan`, 0) = `1e0`
+pow(`nan`, 1) = `nan`
+pow(1, `+inf`) = `nan`
+```
+
 This is the template for writing documentations for an PartiQL built-in function. 
 
 There are 5 parts to a function's documentation 
