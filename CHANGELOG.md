@@ -24,19 +24,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Adds ability to pipe queries to the CLI
 
 ### Changed
-- Updates the CLI to use Pico CLI and modifies several CLI options
 
 ### Deprecated
 
 ### Fixed
 
 ### Removed
-- The deprecated `IonValue` property in `ExprValue` interface is now removed. 
 
 ### Security
+
+## [0.9.1] - 2023-01-04
+
+### Added
+- Adds ability to pipe queries to the CLI
+- The following `PartiQLCompilerBuilder` functions are moved to public
+  - `customOperatorFactories`
+  - `customFunctions`
+  - `customProcedures`
+  - `customTypes`
+
+### Changed
+- Updates the CLI to use Pico CLI and modifies several CLI options
+
+### Removed
+- The deprecated `IonValue` property in `ExprValue` interface is now removed.
 
 ## [0.9.0] - 2022-12-13
 
