@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Adds ability to pipe queries to the CLI
+- Added numeric functions `abs`, `sqrt`, `exp`, `ln`, `pow`.
 
 ### Changed
 - Updates the CLI to use Pico CLI and modifies several CLI options
