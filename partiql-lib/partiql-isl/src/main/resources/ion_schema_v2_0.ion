@@ -1,0 +1,258 @@
+// Copyright Amazon.com, Inc. or its affiliates.  All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License").
+// You may not use this file except in compliance with the License.
+// A copy of the License is located at:
+//
+//      http://aws.amazon.com/apache2.0/
+//
+// or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
+// language governing permissions and limitations under the License.
+
+imports::{
+  kotlin: [
+    ion::'com.amazon.ionelement.api.IonElement',
+    timestamp::'com.amazon.ionelement.api.TimestampElement',
+  ],
+}
+
+//---[Schemas]---
+schema::{
+  version: version,
+  header: 'header?',
+  definitions: list::[definition],
+  footer: 'footer?',
+}
+
+header::{
+  imports: list::[import],
+  user_reserved_fields: user_reserved_fields,
+}
+
+user_reserved_fields::{
+  header: list::[string],
+  type: list::[string],
+  footer: list::[string],
+}
+
+footer::{}
+
+//---[Imports]---
+import::[
+  schema::{
+    id: string,
+  },
+  type::{
+    id: string,
+    type: string,
+  },
+  type_alias::{
+    id: string,
+    type: string,
+    alias: string,
+  },
+]
+
+//---[Version Marker]---
+version::[
+  'V1_0',
+  'V2_0',
+]
+
+//---[Type Definition]---
+definition::{
+  name: string,
+  constraints: list::[constraint],
+}
+
+//---[Type Reference]---
+type::[
+  ref::{
+    name: string,
+    nullable: bool,
+  },
+  inline::{
+    constraints: list::[constraint],
+    nullable: bool,
+    occurs: 'occurs?',
+  },
+  import::{
+    schema: string,
+    type: string,
+    nullable: bool,
+  },
+]
+
+//---[Constraints]----
+constraint::[
+  //
+  all_of::{
+    types: list::['.type'],
+  },
+  any_of::{
+    types: list::['.type'],
+  },
+  annotations::[
+    values::{
+      modifier: [ REQUIRED, CLOSED ],
+      values: list::[string],
+    },
+    type::{
+      type: '.type',
+    },
+  ],
+  length::[
+    equals::{
+      measure: measure,
+      length: long,
+    },
+    range::{
+      measure: measure,
+      range: '.range.int',
+    },
+  ],
+  contains::{
+    values: list::[ion],
+  },
+  element::{
+    type: '.type',
+    distinct: 'bool?',
+  },
+  exponent::[
+    equals::{
+      value: long,
+    },
+    range::{
+      range: '.range.int',
+    },
+  ],
+  field_names::{
+    type: type,
+    distinct: 'bool?',
+  },
+  fields::{
+    closed: 'bool?',
+    fields: map::[string,'.type'],
+  },
+  ieee754_float::{
+    format: [
+      BINARY_16,
+      BINARY_32,
+      BINARY_64,
+    ],
+  },
+  not::{
+    type: type,
+  },
+  one_of::{
+    types: list::['.type'],
+  },
+  ordered_elements::{
+    types: list::['.type'],
+  },
+  precision::[
+    equals::{
+      value: long,
+    },
+    range::{
+      range: '.range.int',
+    },
+  ],
+  regex::{
+    pattern: string,
+    flags: list::[regex_flag],
+  },
+  timestamp_offset::{
+    offsets: list::[string],
+  },
+  timestamp_precision::[
+    equals::{
+      value: '.timestamp_precision',
+    },
+    range::{
+      range: '.range.timestamp_precision',
+    },
+  ],
+  type::{
+    type: '.type',
+  },
+  valid_values::{
+    values: list::[value],
+  },
+]
+
+// Used by the length constraint — consider inline on the sum type
+measure::[
+  BYTES,
+  CODEPOINTS,
+  ELEMENTS,
+  UTF8,
+]
+
+timestamp_precision::[
+  YEAR,
+  MONTH,
+  DAY,
+  MIN,
+  SECOND,
+  MILLISECOND,
+  MICROSECOND,
+  NANOSECOND,
+]
+
+value::[
+  ion::{
+    value: '.ion',
+  },
+  range::{
+    value: '.range',
+  },
+]
+
+range::[
+  int::{
+    lower: 'long?',
+    upper: 'long?',
+    bounds: bounds,
+  },
+  number::{
+    lower: 'double?',
+    upper: 'double?',
+    bounds: bounds,
+  },
+  timestamp::{
+    lower: '.timestamp?',
+    upper: '.timestamp?',
+    bounds: bounds,
+  },
+  timestamp_precision::{
+    lower: '.timestamp_precision?',
+    upper: '.timestamp_precision?',
+    bounds: bounds,
+  },
+]
+
+// Used by the range constraint — consider inline on the sum type
+bounds::[
+  INCLUSIVE,
+  EXCLUSIVE,
+  L_EXCLUSIVE,
+  R_EXCLUSIVE,
+]
+
+regex_flag::[
+  MULTILINE,
+  CASE_INSENSITIVE,
+]
+
+occurs::[
+  equal::{
+    value: long,
+  },
+  range::{
+    range: '.range.int',
+  },
+  optional::{},
+  required::{},
+]
