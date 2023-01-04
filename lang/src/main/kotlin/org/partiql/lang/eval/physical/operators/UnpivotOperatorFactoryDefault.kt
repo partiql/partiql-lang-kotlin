@@ -45,7 +45,7 @@ internal class UnpivotOperatorDefault(
 ) : RelationExpression {
     override fun evaluate(state: EvaluatorState): RelationIterator {
         val originalValue = expr(state)
-        val unpivot = originalValue.unpivot(state)
+        val unpivot = originalValue.unpivot()
 
         return relation(RelationType.BAG) {
             val iter = unpivot.iterator()
@@ -59,7 +59,7 @@ internal class UnpivotOperatorDefault(
         }
     }
 
-    private fun ExprValue.unpivot(state: EvaluatorState): ExprValue = when (type) {
+    private fun ExprValue.unpivot(): ExprValue = when (type) {
         ExprValueType.STRUCT, ExprValueType.MISSING -> this
         else -> ExprValue.newBag(
             listOf(

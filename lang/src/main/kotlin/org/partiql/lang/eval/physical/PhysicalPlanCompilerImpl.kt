@@ -15,9 +15,9 @@
 package org.partiql.lang.eval.physical
 
 import com.amazon.ion.IonString
-import com.amazon.ion.IonSystem
 import com.amazon.ion.IonValue
 import com.amazon.ion.Timestamp
+import com.amazon.ion.system.IonSystemBuilder
 import com.amazon.ionelement.api.MetaContainer
 import com.amazon.ionelement.api.emptyMetaContainer
 import com.amazon.ionelement.api.toIonValue
@@ -131,13 +131,15 @@ import java.util.regex.Pattern
  * [1]: https://www.complang.tuwien.ac.at/anton/lvas/sem06w/fest.pdf
  */
 internal class PhysicalPlanCompilerImpl(
-    private val ion: IonSystem,
     private val functions: Map<String, ExprFunction>,
     private val customTypedOpParameters: Map<String, TypedOpParameter>,
     private val procedures: Map<String, StoredProcedure>,
     private val evaluatorOptions: EvaluatorOptions = EvaluatorOptions.standard(),
     private val bexperConverter: PhysicalBexprToThunkConverter,
 ) : PhysicalPlanCompiler {
+    // TODO: remove this once we migrate from `IonValue` to `IonElement`.
+    private val ion = IonSystemBuilder.standard().build()
+
     private val errorSignaler = evaluatorOptions.typingMode.createErrorSignaler()
     private val thunkFactory = evaluatorOptions.typingMode.createThunkFactory<EvaluatorState>(evaluatorOptions.thunkOptions)
 

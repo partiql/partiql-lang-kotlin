@@ -15,9 +15,9 @@
 package org.partiql.lang.eval
 
 import com.amazon.ion.IonString
-import com.amazon.ion.IonSystem
 import com.amazon.ion.IonValue
 import com.amazon.ion.Timestamp
+import com.amazon.ion.system.IonSystemBuilder
 import com.amazon.ionelement.api.MetaContainer
 import com.amazon.ionelement.api.ionBool
 import com.amazon.ionelement.api.toIonValue
@@ -116,12 +116,14 @@ private typealias ThunkEnvValue<T> = ThunkValue<Environment, T>
  * @param compileOptions Various options that effect how the source code is compiled.
  */
 internal class EvaluatingCompiler(
-    private val ion: IonSystem,
     private val functions: Map<String, ExprFunction>,
     private val customTypedOpParameters: Map<String, TypedOpParameter>,
     private val procedures: Map<String, StoredProcedure>,
     private val compileOptions: CompileOptions = CompileOptions.standard()
 ) {
+    // TODO: remove this once we migrate from `IonValue` to `IonElement`.
+    private val ion = IonSystemBuilder.standard().build()
+
     private val errorSignaler = compileOptions.typingMode.createErrorSignaler()
     private val thunkFactory = compileOptions.typingMode.createThunkFactory<Environment>(compileOptions.thunkOptions)
 

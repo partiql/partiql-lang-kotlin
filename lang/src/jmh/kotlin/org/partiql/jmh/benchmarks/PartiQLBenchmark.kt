@@ -14,8 +14,6 @@
 
 package org.partiql.jmh.benchmarks
 
-import com.amazon.ion.IonSystem
-import com.amazon.ion.system.IonSystemBuilder
 import org.openjdk.jmh.annotations.Benchmark
 import org.openjdk.jmh.annotations.BenchmarkMode
 import org.openjdk.jmh.annotations.Fork
@@ -55,9 +53,8 @@ open class PartiQLBenchmark {
 
     @State(Scope.Thread)
     open class MyState {
-        val ion: IonSystem = IonSystemBuilder.standard().build()
         val parser = PartiQLParserBuilder.standard().build()
-        val pipeline = CompilerPipeline.standard(ion)
+        val pipeline = CompilerPipeline.standard()
 
         val data = """
             { 

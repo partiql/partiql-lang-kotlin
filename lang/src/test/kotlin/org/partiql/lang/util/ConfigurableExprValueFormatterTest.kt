@@ -17,7 +17,7 @@ class ConfigurableExprValueFormatterTest {
 
     private val ion = IonSystemBuilder.standard().build()
     private val parser = PartiQLParser(ion)
-    private val compiler = CompilerPipeline.builder(ion).sqlParser(parser).build()
+    private val compiler = CompilerPipeline.builder().sqlParser(parser).build()
 
     private val pretty = ConfigurableExprValueFormatter.pretty
     private val standard = ConfigurableExprValueFormatter.standard

@@ -97,7 +97,6 @@ class PartiQLCompilerBuilder private constructor() {
             TODO("ThunkReturnTypeAssertions.ENABLED requires a static type pass")
         }
         return PartiQLCompilerDefault(
-            ion = ion,
             evaluatorOptions = options,
             customTypedOpParameters = customTypes.associateBy(
                 keySelector = { it.name },

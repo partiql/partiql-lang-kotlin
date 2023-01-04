@@ -67,7 +67,7 @@ public class S3JavaExample extends Example {
 
         // CompilerPipeline is the main entry point for the PartiQL lib giving you access to the compiler
         // and value factories
-        final CompilerPipeline pipeline = CompilerPipeline.standard(ion);
+        final CompilerPipeline pipeline = CompilerPipeline.standard();
 
         // Compiles the query, the resulting expression can be re-used to query multiple data sets
         final Expression selectAndFilter = pipeline.compile(

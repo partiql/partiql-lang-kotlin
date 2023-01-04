@@ -1,6 +1,5 @@
 package org.partiql.examples
 
-import com.amazon.ion.system.IonSystemBuilder
 import org.partiql.examples.util.Example
 import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.eval.BaseExprValue
@@ -50,8 +49,7 @@ private class CsvRowExprValue(private val rowString: String) : BaseExprValue() {
 
 class CsvExprValueExample(out: PrintStream) : Example(out) {
 
-    private val ion = IonSystemBuilder.standard().build()
-    private val pipeline = CompilerPipeline.standard(ion)
+    private val pipeline = CompilerPipeline.standard()
 
     private val EXAMPLE_CSV_FILE_CONTENTS = "Cat,Nibbler,F\nCat,Hobbes,M\nDog,Fido,M"
 

@@ -24,14 +24,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- The public `ExprValue` construction methods are migrated from `ExprValueFactory` to `ExprValue` interface as public static methods & states.
 - Adds ability to pipe queries to the CLI
 
 ### Changed
 - Updates the CLI to use Pico CLI and modifies several CLI options
 
 ### Deprecated
-- `ExprValueFactory` interface marked as deprecated.
+- `ExprValueFactory` interface marked as deprecated. Equivalent `ExprValue` construction methods are implemented in the `ExprValue` interface as static methods. 
 
 ### Fixed
 

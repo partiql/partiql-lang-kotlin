@@ -79,6 +79,7 @@ internal fun Number.isZero() = when (this) {
     else -> throw IllegalStateException()
 }
 
+@Suppress("UNCHECKED_CAST")
 /** Provides a narrowing or widening operator on supported numbers. */
 fun <T> Number.coerce(type: Class<T>): T where T : Number {
     val conv = CONVERTERS[type] ?: throw IllegalArgumentException("No converter for $type")

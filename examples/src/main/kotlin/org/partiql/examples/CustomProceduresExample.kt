@@ -96,7 +96,7 @@ class CustomProceduresExample(out: PrintStream) : Example(out) {
          * To make custom stored procedures available to the PartiQL query being executed, they must be passed to
          * [CompilerPipeline.Builder.addProcedure].
          */
-        val pipeline = CompilerPipeline.build(ion) {
+        val pipeline = CompilerPipeline.build {
             addProcedure(CalculateCrewMoonWeight())
         }
 

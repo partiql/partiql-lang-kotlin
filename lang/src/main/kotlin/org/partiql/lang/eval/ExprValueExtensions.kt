@@ -376,10 +376,10 @@ fun ExprValue.cast(
             }
 
             when (typedOpBehavior) {
-                TypedOpBehavior.LEGACY -> ExprValue.newDecimal(coerce(BigDecimal::class.java))
+                TypedOpBehavior.LEGACY -> ExprValue.newDecimal(this.coerce(BigDecimal::class.java))
                 TypedOpBehavior.HONOR_PARAMETERS ->
                     when (type.precisionScaleConstraint) {
-                        DecimalType.PrecisionScaleConstraint.Unconstrained -> ExprValue.newDecimal(coerce(BigDecimal::class.java))
+                        DecimalType.PrecisionScaleConstraint.Unconstrained -> ExprValue.newDecimal(this.coerce(BigDecimal::class.java))
                         is DecimalType.PrecisionScaleConstraint.Constrained -> {
                             val constraint = type.precisionScaleConstraint
                             val decimal = this.coerce(BigDecimal::class.java)
@@ -457,20 +457,23 @@ fun ExprValue.cast(
                     type.isNumber -> return numberValue().exprValue(targetType)
                     type.isText -> {
                         // Here, we use ion java library to help the transform from string to int
-                        // See if we can get rid of ion here.
-                        val ion = IonSystemBuilder.standard().build()
-                        val value = try {
-                            val normalized = stringValue().normalizeForCastToInt()
-                            ion.singleValue(normalized) as IonInt
-                        } catch (e: Exception) {
-                            castFailedErr("can't convert string value to INT", internal = false, cause = e)
+                        // TODO: have our own parser implemented and remove dependency on Ion, https://github.com/partiql/partiql-lang-kotlin/issues/956
+                        fun parseToLong(s: String): Long {
+                            val ion = IonSystemBuilder.standard().build()
+                            val value = try {
+                                val normalized = s.normalizeForCastToInt()
+                                ion.singleValue(normalized) as IonInt
+                            } catch (e: Exception) {
+                                castFailedErr("can't convert string value to INT", internal = false, cause = e)
+                            }
+                            return when (value.integerSize) {
+                                // Our numbers comparison machinery does not handle big integers yet, fail fast
+                                IntegerSize.BIG_INTEGER -> errIntOverflow(8, errorContextFrom(locationMeta))
+                                else -> value.longValue()
+                            }
                         }
 
-                        return when (value.integerSize) {
-                            // Our numbers comparison machinery does not handle big integers yet, fail fast
-                            IntegerSize.BIG_INTEGER -> errIntOverflow(8, errorContextFrom(locationMeta))
-                            else -> value.longValue().exprValue(targetType)
-                        }
+                        return parseToLong(stringValue()).exprValue(targetType)
                     }
                 }
                 is FloatType -> when {

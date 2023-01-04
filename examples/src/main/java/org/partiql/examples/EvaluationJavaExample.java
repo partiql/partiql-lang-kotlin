@@ -42,11 +42,8 @@ public class EvaluationJavaExample extends Example {
     @Override
     public void run() {
 
-        // A standard instance of [IonSystem], which is required by [CompilerPipeline].
-        final IonSystem ion = IonSystemBuilder.standard().build();
-
         // An instance of [CompilerPipeline].
-        final CompilerPipeline pipeline = CompilerPipeline.standard(ion);
+        final CompilerPipeline pipeline = CompilerPipeline.standard();
 
         // Compiles a simple expression containing a reference to a global variable.
         final String query = "'Hello, ' || user_name";

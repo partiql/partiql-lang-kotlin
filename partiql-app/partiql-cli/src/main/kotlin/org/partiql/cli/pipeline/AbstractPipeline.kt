@@ -114,7 +114,7 @@ internal sealed class AbstractPipeline(open val options: PipelineOptions) {
             typingMode(options.typingMode)
         }
 
-        private val compilerPipeline = CompilerPipeline.build(options.ion) {
+        private val compilerPipeline = CompilerPipeline.build {
             options.functions.forEach { function ->
                 addFunction(function)
             }

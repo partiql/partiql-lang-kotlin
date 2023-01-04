@@ -1,7 +1,5 @@
 package org.partiql.examples;
 
-import com.amazon.ion.IonSystem;
-import com.amazon.ion.system.IonSystemBuilder;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.examples.util.Example;
 import org.partiql.lang.CompilerPipeline;
@@ -86,12 +84,9 @@ public class CSVJavaExample extends Example {
 
         print("CSV Data:", CSV);
 
-        // Initializes the ion system used by PartiQL
-        final IonSystem ion = IonSystemBuilder.standard().build();
-
         // CompilerPipeline is the main entry point for the PartiQL lib giving you access to the compiler
         // and value factories
-        final CompilerPipeline pipeline = CompilerPipeline.standard(ion);
+        final CompilerPipeline pipeline = CompilerPipeline.standard();
 
         final String query = "SELECT * FROM myCsvDocument csv WHERE CAST(csv._1 AS INT) < 30";
         print("PartiQL query:", query);

@@ -1,6 +1,5 @@
 package org.partiql.examples
 
-import com.amazon.ion.system.IonSystemBuilder
 import org.partiql.examples.util.Example
 import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.errors.ErrorCode
@@ -101,14 +100,11 @@ class FibListExprFunc : ExprFunction {
  * the two custom functions: [FibScalarExprFunc] and [FibListExprFunc] are implemented.
  */
 class CustomFunctionsExample(out: PrintStream) : Example(out) {
-
-    private val ion = IonSystemBuilder.standard().build()
-
     /**
      * To make custom functions available to the PartiQL being executed, they must be passed to
      * [CompilerPipeline.Builder.addFunction].
      */
-    val pipeline = CompilerPipeline.build(ion) {
+    val pipeline = CompilerPipeline.build {
         addFunction(FibScalarExprFunc())
         addFunction(FibListExprFunc())
     }

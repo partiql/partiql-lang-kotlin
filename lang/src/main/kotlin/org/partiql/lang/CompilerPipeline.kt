@@ -15,6 +15,7 @@
 package org.partiql.lang
 
 import com.amazon.ion.IonSystem
+import com.amazon.ion.system.IonSystemBuilder
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.CompileOptions
@@ -113,29 +114,29 @@ interface CompilerPipeline {
 
     companion object {
         /** Kotlin style builder for [CompilerPipeline].  If calling from Java instead use [builder]. */
-        fun build(ion: IonSystem, block: Builder.() -> Unit) = Builder(ion).apply(block).build()
+        fun build(block: Builder.() -> Unit) = Builder().apply(block).build()
 
         @Deprecated("[ExprValueFactory] is deprecated. Please use `build(ion: IonSystem, block: Builder.() -> Unit)`.")
         /** Kotlin style builder for [CompilerPipeline].  If calling from Java instead use [builder]. */
-        fun build(valueFactory: ExprValueFactory, block: Builder.() -> Unit) = build(valueFactory.ion, block)
+        fun build(valueFactory: ExprValueFactory, block: Builder.() -> Unit) = Builder(valueFactory).apply(block).build()
 
         /** Fluent style builder.  If calling from Kotlin instead use the [build] method. */
         @JvmStatic
-        fun builder(ion: IonSystem): Builder = Builder(ion)
+        fun builder(): Builder = Builder()
 
         @Deprecated("[ExprValueFactory] is deprecated. Please use `builder(ion: IonSystem): Builder = builder(ion)`.")
         /** Fluent style builder.  If calling from Kotlin instead use the [build] method. */
         @JvmStatic
-        fun builder(valueFactory: ExprValueFactory): Builder = builder(valueFactory.ion)
+        fun builder(valueFactory: ExprValueFactory): Builder = Builder(valueFactory)
 
         /** Returns an implementation of [CompilerPipeline] with all properties set to their defaults. */
         @JvmStatic
-        fun standard(ion: IonSystem): CompilerPipeline = builder(ion).build()
+        fun standard(): CompilerPipeline = builder().build()
 
         @Deprecated("[ExprValueFactory] is deprecated. Please use `standard(ion: IonSystem): CompilerPipeline`.")
         /** Returns an implementation of [CompilerPipeline] with all properties set to their defaults. */
         @JvmStatic
-        fun standard(valueFactory: ExprValueFactory): CompilerPipeline = standard(valueFactory.ion)
+        fun standard(valueFactory: ExprValueFactory): CompilerPipeline = builder(valueFactory).build()
     }
 
     /**
@@ -143,13 +144,15 @@ interface CompilerPipeline {
      * [CompilerPipeline] is NOT thread safe and should NOT be used to compile queries concurrently. If used in a
      * multithreaded application, use one instance of [CompilerPipeline] per thread.
      */
-    class Builder(val ion: IonSystem) {
+    class Builder() {
 
         @Deprecated("[ExprValueFactory] is depreacted. Please use constructor `Builder(ion: IonSystem)` instead.")
-        constructor(valueFactory: ExprValueFactory) : this(valueFactory.ion) {
+        constructor(valueFactory: ExprValueFactory) : this() {
             this.valueFactory = valueFactory
         }
 
+        // TODO: remove this once we migrate from `IonValue` to `IonElement`.
+        private val ion = IonSystemBuilder.standard().build()
         private var valueFactory: ExprValueFactory = ExprValueFactory.standard(ion)
 
         private var parser: Parser? = null
@@ -259,7 +262,6 @@ internal class CompilerPipelineImpl(
 ) : CompilerPipeline {
 
     private val compiler = EvaluatingCompiler(
-        ion,
         functions,
         customDataTypes.map { customType ->
             (customType.aliases + customType.name).map { alias ->

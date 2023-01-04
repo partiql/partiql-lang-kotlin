@@ -11,7 +11,7 @@ import java.io.PrintStream
 /** Demonstrates how to supply a global variable whose value is lazily materialized. */
 class EvaluationWithLazyBindings(out: PrintStream) : Example(out) {
     val ion = IonSystemBuilder.standard().build()
-    val pipeline = CompilerPipeline.standard(ion)
+    val pipeline = CompilerPipeline.standard()
 
     override fun run() {
         // Compile a simple SELECT query

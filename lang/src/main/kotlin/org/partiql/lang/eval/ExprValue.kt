@@ -74,147 +74,127 @@ interface ExprValue : Iterable<ExprValue>, Faceted {
     override operator fun iterator(): Iterator<ExprValue>
 
     companion object {
-        // Constructor functions
-        private fun constructMissingValue() =
-            object : BaseExprValue() {
-                override val type = ExprValueType.MISSING
-            }
+        // Constructor classes
+        private class NullExprValue(val ionType: IonType = IonType.NULL) : BaseExprValue() {
+            override val type = ExprValueType.NULL
 
-        private fun constructNullValue(ionType: IonType = IonType.NULL) =
-            object : BaseExprValue() {
-                override val type = ExprValueType.NULL
-
-                @Suppress("UNCHECKED_CAST")
-                override fun <T> provideFacet(type: Class<T>?): T? = when (type) {
-                    IonType::class.java -> ionType as T?
-                    else -> null
-                }
+            @Suppress("UNCHECKED_CAST")
+            override fun <T> provideFacet(type: Class<T>?): T? = when (type) {
+                IonType::class.java -> ionType as T?
+                else -> null
             }
+        }
 
         private abstract class ScalarExprValue : BaseExprValue(), Scalar {
             override val scalar: Scalar
                 get() = this
         }
 
-        private fun constructBoolValue(value: Boolean) =
-            object : ScalarExprValue() {
-                override val type = ExprValueType.BOOL
-                override fun booleanValue(): Boolean = value
-            }
-
-        private fun constructStringValue(value: String) =
-            object : ScalarExprValue() {
-                override val type = ExprValueType.STRING
-                override fun stringValue() = value
-            }
-
-        private fun constructSymbolValue(value: String) =
-            object : ScalarExprValue() {
-                override val type = ExprValueType.SYMBOL
-                override fun stringValue() = value
-            }
-
-        private fun constructIntValue(value: Long) =
-            object : ScalarExprValue() {
-                override val type = ExprValueType.INT
-                override fun numberValue() = value
-            }
-
-        private fun constructFloatValue(value: Double) =
-            object : ScalarExprValue() {
-                override val type = ExprValueType.FLOAT
-                override fun numberValue() = value
-            }
-
-        private fun constructDecimalValue(value: BigDecimal) =
-            object : ScalarExprValue() {
-                override val type = ExprValueType.DECIMAL
-                override fun numberValue() = value
-            }
-
-        private fun constructDateValue(value: LocalDate): ExprValue {
-            // validate that the local date is not an extended date.
-            if (value.year < 0 || value.year > 9999) {
-                err(
-                    "Year should be in the range 0 to 9999 inclusive.",
-                    ErrorCode.EVALUATOR_DATE_FIELD_OUT_OF_RANGE,
-                    propertyValueMapOf(),
-                    false
-                )
-            }
-
-            return object : ScalarExprValue() {
-                override val type = ExprValueType.DATE
-                override fun dateValue() = value
-            }
+        private class BooleanExprValue(val value: Boolean) : ScalarExprValue() {
+            override val type = ExprValueType.BOOL
+            override fun booleanValue(): Boolean = value
         }
 
-        private fun constructTimestampValue(value: Timestamp) =
-            object : ScalarExprValue() {
-                override val type = ExprValueType.TIMESTAMP
-                override fun timestampValue() = value
+        private class StringExprValue(val value: String) : ScalarExprValue() {
+            override val type = ExprValueType.STRING
+            override fun stringValue() = value
+        }
+
+        private class SymbolExprValue(val value: String) : ScalarExprValue() {
+            override val type = ExprValueType.SYMBOL
+            override fun stringValue() = value
+        }
+
+        private class IntExprValue(val value: Long) : ScalarExprValue() {
+            override val type = ExprValueType.INT
+            override fun numberValue() = value
+        }
+
+        private class FloatExprValue(val value: Double) : ScalarExprValue() {
+            override val type = ExprValueType.FLOAT
+            override fun numberValue() = value
+        }
+
+        private class DecimalExprValue(val value: BigDecimal) : ScalarExprValue() {
+            override val type = ExprValueType.DECIMAL
+            override fun numberValue() = value
+        }
+
+        private class DateExprValue(val value: LocalDate) : ScalarExprValue() {
+            init {
+                // validate that the local date is not an extended date.
+                if (value.year < 0 || value.year > 9999) {
+                    err(
+                        "Year should be in the range 0 to 9999 inclusive.",
+                        ErrorCode.EVALUATOR_DATE_FIELD_OUT_OF_RANGE,
+                        propertyValueMapOf(),
+                        false
+                    )
+                }
             }
 
-        private fun constructTimeValue(value: Time) =
-            object : ScalarExprValue() {
-                override val type = ExprValueType.TIME
-                override fun timeValue() = value
-            }
+            override val type: ExprValueType = ExprValueType.DATE
+            override fun dateValue(): LocalDate = value
+        }
 
-        private fun constructClobValue(value: ByteArray) =
-            object : ScalarExprValue() {
-                override val type = ExprValueType.CLOB
-                override fun bytesValue() = value
-            }
+        private class TimestampExprValue(val value: Timestamp) : ScalarExprValue() {
+            override val type: ExprValueType = ExprValueType.TIMESTAMP
+            override fun timestampValue(): Timestamp = value
+        }
 
-        private fun constructBlobValue(value: ByteArray) =
-            object : ScalarExprValue() {
-                override val type = ExprValueType.BLOB
-                override fun bytesValue() = value
-            }
+        private class TimeExprValue(val value: Time) : ScalarExprValue() {
+            override val type = ExprValueType.TIME
+            override fun timeValue(): Time = value
+        }
 
-        private fun constructListValue(values: Sequence<ExprValue>) =
-            object : BaseExprValue() {
-                override val type = ExprValueType.LIST
-                override val ordinalBindings by lazy { OrdinalBindings.ofList(toList()) }
-                override fun iterator() = values.mapIndexed { i, v -> v.namedValue(newInt(i)) }.iterator()
-            }
+        private class ClobExprValue(val value: ByteArray) : ScalarExprValue() {
+            override val type: ExprValueType = ExprValueType.CLOB
+            override fun bytesValue() = value
+        }
 
-        private fun constructBagValue(values: Sequence<ExprValue>) =
-            object : BaseExprValue() {
-                override val type = ExprValueType.BAG
-                override val ordinalBindings = OrdinalBindings.EMPTY
-                override fun iterator() = values.iterator()
-            }
+        private class BlobExprValue(val value: ByteArray) : ScalarExprValue() {
+            override val type: ExprValueType = ExprValueType.BLOB
+            override fun bytesValue() = value
+        }
 
-        private fun constructSexpValue(values: Sequence<ExprValue>) =
-            object : BaseExprValue() {
-                override val type = ExprValueType.SEXP
-                override val ordinalBindings by lazy { OrdinalBindings.ofList(toList()) }
-                override fun iterator() = values.mapIndexed { i, v -> v.namedValue(newInt(i)) }.iterator()
-            }
+        private class ListExprValue(val values: Sequence<ExprValue>) : BaseExprValue() {
+            override val type = ExprValueType.LIST
+            override val ordinalBindings by lazy { OrdinalBindings.ofList(toList()) }
+            override fun iterator() = values.mapIndexed { i, v -> v.namedValue(newInt(i)) }.iterator()
+        }
 
-        private fun constructStructValue(values: Sequence<ExprValue>, ordering: StructOrdering): ExprValue =
-            StructExprValue(ordering, values)
+        private class BagExprValue(val values: Sequence<ExprValue>) : BaseExprValue() {
+            override val type = ExprValueType.BAG
+            override val ordinalBindings = OrdinalBindings.EMPTY
+            override fun iterator() = values.iterator()
+        }
+
+        private class SexpExprValue(val values: Sequence<ExprValue>) : BaseExprValue() {
+            override val type = ExprValueType.SEXP
+            override val ordinalBindings by lazy { OrdinalBindings.ofList(toList()) }
+            override fun iterator() = values.mapIndexed { i, v -> v.namedValue(newInt(i)) }.iterator()
+        }
 
         // Memoized values for optimization
-        private val trueValue = constructBoolValue(true)
-        private val falseValue = constructBoolValue(false)
-        private val emptyString = constructStringValue("")
-        private val emptySymbol = constructSymbolValue("")
+        private val trueValue = BooleanExprValue(true)
+        private val falseValue = BooleanExprValue(false)
+        private val emptyString = StringExprValue("")
+        private val emptySymbol = SymbolExprValue("")
 
         // Public API
         @JvmStatic
-        val missingValue: ExprValue = constructMissingValue()
+        val missingValue: ExprValue = object : BaseExprValue() {
+            override val type = ExprValueType.MISSING
+        }
 
         @JvmStatic
-        val nullValue: ExprValue = constructNullValue()
+        val nullValue: ExprValue = NullExprValue()
 
         @JvmStatic
         fun newNull(ionType: IonType): ExprValue =
             when (ionType) {
                 IonType.NULL -> nullValue
-                else -> constructNullValue(ionType)
+                else -> NullExprValue(ionType)
             }
 
         @JvmStatic
@@ -228,111 +208,111 @@ interface ExprValue : Iterable<ExprValue>, Faceted {
         fun newString(value: String): ExprValue =
             when {
                 value.isEmpty() -> emptyString
-                else -> constructStringValue(value)
+                else -> StringExprValue(value)
             }
 
         @JvmStatic
         fun newSymbol(value: String): ExprValue =
             when {
                 value.isEmpty() -> emptySymbol
-                else -> constructSymbolValue(value)
+                else -> SymbolExprValue(value)
             }
 
         @JvmStatic
         fun newInt(value: Long): ExprValue =
-            constructIntValue(value)
+            IntExprValue(value)
 
         @JvmStatic
         fun newInt(value: Int): ExprValue =
-            constructIntValue(value.toLong())
+            IntExprValue(value.toLong())
 
         @JvmStatic
         fun newFloat(value: Double): ExprValue =
-            constructFloatValue(value)
+            FloatExprValue(value)
 
         @JvmStatic
         fun newDecimal(value: BigDecimal): ExprValue =
-            constructDecimalValue(value)
+            DecimalExprValue(value)
 
         @JvmStatic
         fun newDecimal(value: Int): ExprValue =
-            constructDecimalValue(BigDecimal.valueOf(value.toLong()))
+            DecimalExprValue(BigDecimal.valueOf(value.toLong()))
 
         @JvmStatic
         fun newDecimal(value: Long): ExprValue =
-            constructDecimalValue(BigDecimal.valueOf(value))
+            DecimalExprValue(BigDecimal.valueOf(value))
 
         @JvmStatic
         fun newDate(value: LocalDate): ExprValue =
-            constructDateValue(value)
+            DateExprValue(value)
 
         @JvmStatic
         fun newDate(year: Int, month: Int, day: Int): ExprValue =
-            constructDateValue(LocalDate.of(year, month, day))
+            DateExprValue(LocalDate.of(year, month, day))
 
         @JvmStatic
         fun newDate(value: String): ExprValue =
-            constructDateValue(LocalDate.parse(value))
+            DateExprValue(LocalDate.parse(value))
 
         @JvmStatic
         fun newTimestamp(value: Timestamp): ExprValue =
-            constructTimestampValue(value)
+            TimestampExprValue(value)
 
         @JvmStatic
         fun newTime(value: Time): ExprValue =
-            constructTimeValue(value)
+            TimeExprValue(value)
 
         @JvmStatic
         fun newClob(value: ByteArray): ExprValue =
-            constructClobValue(value)
+            ClobExprValue(value)
 
         @JvmStatic
         fun newBlob(value: ByteArray): ExprValue =
-            constructBlobValue(value)
+            BlobExprValue(value)
 
         @JvmStatic
         fun newList(values: Sequence<ExprValue>): ExprValue =
-            constructListValue(values)
+            ListExprValue(values)
 
         @JvmStatic
         fun newList(values: Iterable<ExprValue>): ExprValue =
-            constructListValue(values.asSequence())
+            ListExprValue(values.asSequence())
 
         @JvmStatic
-        val emptyList = constructListValue(sequenceOf())
+        val emptyList: ExprValue = ListExprValue(sequenceOf())
 
         @JvmStatic
         fun newBag(values: Sequence<ExprValue>): ExprValue =
-            constructBagValue(values)
+            BagExprValue(values)
 
         @JvmStatic
         fun newBag(values: Iterable<ExprValue>): ExprValue =
-            constructBagValue(values.asSequence())
+            BagExprValue(values.asSequence())
 
         @JvmStatic
-        val emptyBag = constructBagValue(sequenceOf())
+        val emptyBag: ExprValue = BagExprValue(sequenceOf())
 
         @JvmStatic
         fun newSexp(values: Sequence<ExprValue>): ExprValue =
-            constructSexpValue(values)
+            SexpExprValue(values)
 
         @JvmStatic
         fun newSexp(values: Iterable<ExprValue>): ExprValue =
-            constructSexpValue(values.asSequence())
+            SexpExprValue(values.asSequence())
 
         @JvmStatic
-        val emptySexp = constructSexpValue(sequenceOf())
+        val emptySexp: ExprValue = SexpExprValue(sequenceOf())
 
         @JvmStatic
         fun newStruct(values: Sequence<ExprValue>, ordering: StructOrdering): ExprValue =
-            constructStructValue(values, ordering)
+            StructExprValue(ordering, values)
 
         @JvmStatic
         fun newStruct(values: Iterable<ExprValue>, ordering: StructOrdering): ExprValue =
-            newStruct(values.asSequence(), ordering)
+            StructExprValue(ordering, values.asSequence())
 
         @JvmStatic
-        val emptyStruct = constructStructValue(sequenceOf(), StructOrdering.UNORDERED)
+        val emptyStruct: ExprValue = StructExprValue(StructOrdering.UNORDERED, sequenceOf())
 
         @JvmStatic
         fun newFromIonReader(ion: IonSystem, reader: IonReader): ExprValue =

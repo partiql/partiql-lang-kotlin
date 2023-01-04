@@ -144,7 +144,7 @@ class EvaluatingCompilerNAryTests : EvaluatorTestBase() {
         astExpr: PartiqlAst.Statement,
         expectedExprValue: ExprValue
     ) {
-        val pipeline = CompilerPipeline.standard(ion)
+        val pipeline = CompilerPipeline.standard()
         val expr = pipeline.compile(astExpr)
         val result = expr.eval(session)
         assertEquals(expectedExprValue.toIonValue(ION), result.toIonValue(ION))

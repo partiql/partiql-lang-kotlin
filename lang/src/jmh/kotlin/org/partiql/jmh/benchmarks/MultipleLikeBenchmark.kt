@@ -54,7 +54,7 @@ open class MultipleLikeBenchmark {
     open class MyState {
         val ion = IonSystemBuilder.standard().build()
         val parser = PartiQLParserBuilder().ionSystem(ion).build()
-        val pipeline = CompilerPipeline.standard(ion)
+        val pipeline = CompilerPipeline.standard()
 
         val name1 = listOf(
             "Bob",

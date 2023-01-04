@@ -14,7 +14,6 @@
 
 package org.partiql.lang.compiler
 
-import com.amazon.ion.IonSystem
 import org.partiql.annotations.PartiQLExperimental
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.PartiqlLogical
@@ -46,7 +45,6 @@ import org.partiql.lang.types.TypedOpParameter
 
 @PartiQLExperimental
 internal class PartiQLCompilerDefault(
-    private val ion: IonSystem,
     private val evaluatorOptions: EvaluatorOptions,
     private val customTypedOpParameters: Map<String, TypedOpParameter>,
     private val functions: Map<String, ExprFunction>,
@@ -64,7 +62,6 @@ internal class PartiQLCompilerDefault(
 
     init {
         exprConverter = PhysicalPlanCompilerImpl(
-            ion = ion,
             functions = functions,
             customTypedOpParameters = customTypedOpParameters,
             procedures = procedures,
