@@ -35,6 +35,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+## [0.9.1] - 2023-01-04
+
+### Added
+- Makes the following `PartiQLCompilerBuilder` functions are moved to public
+  - `customOperatorFactories`
+  - `customFunctions`
+  - `customProcedures`
+  - `customTypes`
+
 ## [0.9.0] - 2022-12-13
 
 ### Added
