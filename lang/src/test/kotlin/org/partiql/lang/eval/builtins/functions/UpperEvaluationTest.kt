@@ -4,6 +4,7 @@ import org.junit.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.eval.EvaluatorTestBase
+import org.partiql.lang.eval.MISSING_ANNOTATION
 import org.partiql.lang.eval.builtins.Argument
 import org.partiql.lang.eval.builtins.ExprFunctionTestCase
 import org.partiql.lang.eval.builtins.checkInvalidArgType
@@ -16,7 +17,7 @@ class UpperEvaluationTest : EvaluatorTestBase() {
     @ParameterizedTest
     @ArgumentsSource(UpperPassCases::class)
     fun runPassTests(testCase: ExprFunctionTestCase) =
-        runEvaluatorTestCase(testCase.source, expectedResult = testCase.expectedLegacyModeResult)
+        runEvaluatorTestCase(testCase.source, expectedResult = testCase.expectedLegacyModeResult, expectedPermissiveModeResult = testCase.expectedPermissiveModeResult)
 
     class UpperPassCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(
@@ -28,7 +29,7 @@ class UpperEvaluationTest : EvaluatorTestBase() {
             ExprFunctionTestCase("upper('abcdef')", "\"ABCDEF\""),
             ExprFunctionTestCase("upper('ABCDEF')", "\"ABCDEF\""),
             ExprFunctionTestCase("upper(null)", "null"),
-            ExprFunctionTestCase("upper(missing)", "null"),
+            ExprFunctionTestCase("upper(missing)", "null", "$MISSING_ANNOTATION::null"),
             ExprFunctionTestCase("upper('123\$%(*&')", "\"123\$%(*&\""),
             ExprFunctionTestCase("upper('ȴȵ💩z💋')", "\"ȴȵ💩Z💋\""),
             ExprFunctionTestCase("upper('話家身圧費谷料村能計税金')", "\"話家身圧費谷料村能計税金\"")

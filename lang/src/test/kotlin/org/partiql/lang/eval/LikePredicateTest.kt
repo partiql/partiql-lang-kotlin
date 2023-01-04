@@ -43,55 +43,55 @@ class LikePredicateTest : EvaluatorTestBase() {
 
     @Test
     fun emptyTextUnderscorePattern() =
-        runEvaluatorTestCase("""SELECT * FROM `[true]` as a WHERE '' LIKE '_'  """, animals, "[]")
+        runEvaluatorTestCase("""SELECT * FROM `[true]` as a WHERE '' LIKE '_'  """, animals, "$BAG_ANNOTATION::[]")
 
     @Test
     fun emptyTextPercentPattern() = runEvaluatorTestCase(
         """SELECT * FROM `[true]` as a WHERE '' LIKE '%'  """, animals,
-        "[{_1: true}]"
+        "$BAG_ANNOTATION::[{_1: true}]"
     )
 
     @Test
     fun allLiteralsAndEscapeIsNull() = runEvaluatorTestCase(
         """SELECT * FROM animals as a WHERE 'A' LIKE 'B' ESCAPE null """,
         animals,
-        "[]"
+        "$BAG_ANNOTATION::[]"
     )
 
     @Test
     fun valueLiteralPatternNull() =
-        runEvaluatorTestCase("""SELECT * FROM animals as a WHERE 'A' LIKE null """, animals, "[]")
+        runEvaluatorTestCase("""SELECT * FROM animals as a WHERE 'A' LIKE null """, animals, "$BAG_ANNOTATION::[]")
 
     @Test
     fun valueNullPatternLiteral() =
-        runEvaluatorTestCase("""SELECT * FROM animals as a WHERE null LIKE 'A' """, animals, "[]")
+        runEvaluatorTestCase("""SELECT * FROM animals as a WHERE null LIKE 'A' """, animals, "$BAG_ANNOTATION::[]")
 
     @Test
     fun valueNullPatternLiteralEscapeNull() = runEvaluatorTestCase(
         """SELECT * FROM animals as a WHERE null LIKE 'A' ESCAPE null""",
         animals,
-        "[]"
+        "$BAG_ANNOTATION::[]"
     )
 
     @Test
     fun valueNullPatternNullEscapeLiteral() = runEvaluatorTestCase(
         """SELECT * FROM animals as a WHERE null LIKE null ESCAPE '['""",
         animals,
-        "[]"
+        "$BAG_ANNOTATION::[]"
     )
 
     @Test
     fun valueLiteralPatternNullEscapeNull() = runEvaluatorTestCase(
         """SELECT * FROM animals as a WHERE 'A' LIKE null ESCAPE null""",
         animals,
-        "[]"
+        "$BAG_ANNOTATION::[]"
     )
 
     @Test
     fun valueNullPatternNullEscapeNull() = runEvaluatorTestCase(
         """SELECT * FROM animals as a WHERE null LIKE null ESCAPE null""",
         animals,
-        "[]"
+        "$BAG_ANNOTATION::[]"
     )
 
     @Test
@@ -115,12 +115,12 @@ class LikePredicateTest : EvaluatorTestBase() {
 
         // Run the test with the given parameters
         fun runTest(whereClause: String, vararg types: Param) {
-            val input = """[{num: 1, str: "string", esc: "\\"}]"""
+            val input = """$BAG_ANNOTATION::[{num: 1, str: "string", esc: "\\"}]"""
             val session = mapOf("Object" to input).toSession()
             val query = "Select * From Object a Where " + whereClause
 
             when (types.map { it.type }.minByOrNull { it.precedence }) {
-                NULL -> runEvaluatorTestCase(query, session, "[]")
+                NULL -> runEvaluatorTestCase(query, session, "$BAG_ANNOTATION::[]")
                 STR -> runEvaluatorTestCase(query, session, input)
                 INT -> {
                     runEvaluatorErrorTestCase(
@@ -146,7 +146,7 @@ class LikePredicateTest : EvaluatorTestBase() {
         """ SELECT * FROM animals WHERE '' LIKE '' """,
         animals,
         """
-             [
+             $BAG_ANNOTATION::[
                 {name: "Kumo", type: "dog"},
                 {name:"Mochi",type:"dog"},
                 {name:"Lilikoi",type:"unicorn"}
@@ -159,7 +159,7 @@ class LikePredicateTest : EvaluatorTestBase() {
         """ SELECT * FROM animals WHERE 'Kumo' LIKE '' """,
         animals,
         """
-             []
+             $BAG_ANNOTATION::[]
             """
     )
 
@@ -168,7 +168,7 @@ class LikePredicateTest : EvaluatorTestBase() {
         """SELECT * FROM animals as a WHERE 'Kumo' LIKE 'Kumo' """,
         animals,
         """
-          [
+          $BAG_ANNOTATION::[
             {name: "Kumo", type: "dog"},
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
@@ -181,7 +181,7 @@ class LikePredicateTest : EvaluatorTestBase() {
         """SELECT * FROM animals as a WHERE 'Kumo' LIKE 'KuMo' """,
         animals,
         """
-          []
+          $BAG_ANNOTATION::[]
         """
     )
 
@@ -190,7 +190,7 @@ class LikePredicateTest : EvaluatorTestBase() {
         """SELECT * FROM animals as a WHERE 'xxx' LIKE 'Kumo' """,
         animals,
         """
-          []
+          $BAG_ANNOTATION::[]
         """
     )
 
@@ -199,7 +199,7 @@ class LikePredicateTest : EvaluatorTestBase() {
         """SELECT * FROM animals as a WHERE 'Kumo' LIKE 'K_mo' """,
         animals,
         """
-          [
+          $BAG_ANNOTATION::[
             {name: "Kumo", type: "dog"},
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
@@ -212,7 +212,7 @@ class LikePredicateTest : EvaluatorTestBase() {
         """SELECT * FROM animals as a WHERE 'Kuumo' LIKE 'K_mo' """,
         animals,
         """
-          []
+          $BAG_ANNOTATION::[]
         """
     )
 
@@ -221,7 +221,7 @@ class LikePredicateTest : EvaluatorTestBase() {
         """SELECT * FROM animals as a WHERE 'KKumo' LIKE 'K_mo' """,
         animals,
         """
-          []
+          $BAG_ANNOTATION::[]
         """
     )
 
@@ -230,7 +230,7 @@ class LikePredicateTest : EvaluatorTestBase() {
         """SELECT * FROM animals as a WHERE 'Kumo' LIKE 'K__o' """,
         animals,
         """
-          [
+          $BAG_ANNOTATION::[
             {name: "Kumo", type: "dog"},
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
@@ -243,7 +243,7 @@ class LikePredicateTest : EvaluatorTestBase() {
         """SELECT * FROM animals as a WHERE 'Kumo' LIKE '_u_o' """,
         animals,
         """
-          [
+          $BAG_ANNOTATION::[
             {name: "Kumo", type: "dog"},
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
@@ -256,7 +256,7 @@ class LikePredicateTest : EvaluatorTestBase() {
         """SELECT * FROM animals as a WHERE 'Kumo' LIKE 'Kum_' """,
         animals,
         """
-          [
+          $BAG_ANNOTATION::[
             {name: "Kumo", type: "dog"},
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
@@ -269,7 +269,7 @@ class LikePredicateTest : EvaluatorTestBase() {
         """SELECT * FROM animals as a WHERE 'Kumo' LIKE 'Ku%o' """,
         animals,
         """
-          [
+          $BAG_ANNOTATION::[
             {name: "Kumo", type: "dog"},
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
@@ -282,7 +282,7 @@ class LikePredicateTest : EvaluatorTestBase() {
         """SELECT * FROM animals as a WHERE 'KKumo' LIKE 'Ku%o' """,
         animals,
         """
-          []
+          $BAG_ANNOTATION::[]
         """
     )
 
@@ -291,7 +291,7 @@ class LikePredicateTest : EvaluatorTestBase() {
         """SELECT * FROM animals as a WHERE 'Kumol' LIKE 'Ku%o' """,
         animals,
         """
-          []
+          $BAG_ANNOTATION::[]
         """
     )
 
@@ -300,7 +300,7 @@ class LikePredicateTest : EvaluatorTestBase() {
         """SELECT * FROM animals as a WHERE 'Kumo' LIKE 'K%%o' """,
         animals,
         """
-          [
+          $BAG_ANNOTATION::[
             {name: "Kumo", type: "dog"},
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
@@ -313,7 +313,7 @@ class LikePredicateTest : EvaluatorTestBase() {
         """SELECT * FROM animals as a WHERE 'Kumo' LIKE 'K%m%' """,
         animals,
         """
-          [
+          $BAG_ANNOTATION::[
             {name: "Kumo", type: "dog"},
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
@@ -326,7 +326,7 @@ class LikePredicateTest : EvaluatorTestBase() {
         """SELECT * FROM animals as a WHERE 'Kumo' LIKE '%umo' """,
         animals,
         """
-          [
+          $BAG_ANNOTATION::[
             {name: "Kumo", type: "dog"},
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
@@ -339,7 +339,7 @@ class LikePredicateTest : EvaluatorTestBase() {
         """SELECT * FROM animals as a WHERE 'Kumo' LIKE 'Kum%' """,
         animals,
         """
-          [
+          $BAG_ANNOTATION::[
             {name: "Kumo", type: "dog"},
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
@@ -352,7 +352,7 @@ class LikePredicateTest : EvaluatorTestBase() {
         """SELECT * FROM animals as a WHERE 'Kumo' LIKE 'K_%mo' """,
         animals,
         """
-          [
+          $BAG_ANNOTATION::[
             {name: "Kumo", type: "dog"},
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
@@ -365,7 +365,7 @@ class LikePredicateTest : EvaluatorTestBase() {
         """SELECT * FROM animals as a WHERE 'Kumo' LIKE 'K_m%' """,
         animals,
         """
-          [
+          $BAG_ANNOTATION::[
             {name: "Kumo", type: "dog"},
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
@@ -378,7 +378,7 @@ class LikePredicateTest : EvaluatorTestBase() {
         """SELECT * FROM animals as a WHERE 'Kumo' LIKE '____' """,
         animals,
         """
-          [
+          $BAG_ANNOTATION::[
             {name: "Kumo", type: "dog"},
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
@@ -391,7 +391,7 @@ class LikePredicateTest : EvaluatorTestBase() {
         """SELECT * FROM animals as a WHERE 'Kumo' LIKE '%' """,
         animals,
         """
-          [
+          $BAG_ANNOTATION::[
             {name: "Kumo", type: "dog"},
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
@@ -404,7 +404,7 @@ class LikePredicateTest : EvaluatorTestBase() {
         """SELECT * FROM animals as a WHERE '' LIKE '%' """,
         animals,
         """
-          [
+          $BAG_ANNOTATION::[
             {name: "Kumo", type: "dog"},
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
@@ -417,7 +417,7 @@ class LikePredicateTest : EvaluatorTestBase() {
         """SELECT * FROM animals as a WHERE '%' LIKE '[%' ESCAPE '[' """,
         animals,
         """
-          [
+          $BAG_ANNOTATION::[
             {name: "Kumo", type: "dog"},
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
@@ -430,7 +430,7 @@ class LikePredicateTest : EvaluatorTestBase() {
         """SELECT * FROM animals as a WHERE '100%' LIKE '1%[%' ESCAPE '[' """,
         animals,
         """
-          [
+          $BAG_ANNOTATION::[
             {name:"Kumo", type: "dog"},
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
@@ -443,7 +443,7 @@ class LikePredicateTest : EvaluatorTestBase() {
         """SELECT * FROM animals as a WHERE '100%' LIKE '1%\%' ESCAPE '\' """,
         animals,
         """
-          [
+          $BAG_ANNOTATION::[
             {name: "Kumo", type: "dog"},
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
@@ -456,7 +456,7 @@ class LikePredicateTest : EvaluatorTestBase() {
         """SELECT * FROM animals as a WHERE '100%' LIKE '1__[%' ESCAPE '[' """,
         animals,
         """
-          [
+          $BAG_ANNOTATION::[
             {name: "Kumo", type: "dog"},
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
@@ -469,7 +469,7 @@ class LikePredicateTest : EvaluatorTestBase() {
         """SELECT * FROM animals as a WHERE '%100' LIKE '[%%' ESCAPE '[' """,
         animals,
         """
-          [
+          $BAG_ANNOTATION::[
             {name: "Kumo", type: "dog"},
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
@@ -482,7 +482,7 @@ class LikePredicateTest : EvaluatorTestBase() {
         """SELECT * FROM animals as a WHERE '%100' LIKE '[%_00' ESCAPE '[' """,
         animals,
         """
-          [
+          $BAG_ANNOTATION::[
             {name: "Kumo", type: "dog"},
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
@@ -495,7 +495,7 @@ class LikePredicateTest : EvaluatorTestBase() {
         """SELECT * FROM animals as a WHERE '%1XX' LIKE '[%_00' ESCAPE '[' """,
         animals,
         """
-          []
+          $BAG_ANNOTATION::[]
         """
     )
 
@@ -504,7 +504,7 @@ class LikePredicateTest : EvaluatorTestBase() {
         """SELECT * FROM animals as a WHERE '1_000_000%' LIKE '1[_000[_000[%' ESCAPE '[' """,
         animals,
         """
-          [
+          $BAG_ANNOTATION::[
             {name: "Kumo", type: "dog"},
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
@@ -517,7 +517,7 @@ class LikePredicateTest : EvaluatorTestBase() {
         """SELECT * FROM animals as a WHERE '1_000_000%' LIKE '1[____[_%[%' ESCAPE '[' """,
         animals,
         """
-          [
+          $BAG_ANNOTATION::[
             {name: "Kumo", type: "dog"},
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
@@ -530,7 +530,7 @@ class LikePredicateTest : EvaluatorTestBase() {
         """SELECT * FROM animals as a WHERE '1_000_000%' LIKE '_[_%[_%[%' ESCAPE '[' """,
         animals,
         """
-          [
+          $BAG_ANNOTATION::[
             {name: "Kumo", type: "dog"},
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
@@ -543,7 +543,7 @@ class LikePredicateTest : EvaluatorTestBase() {
         """SELECT * FROM animals as a WHERE a.name LIKE 'Kumo' """,
         animals,
         """
-          [
+          $BAG_ANNOTATION::[
             {name: "Kumo", type: "dog"}
           ]
         """
@@ -554,7 +554,7 @@ class LikePredicateTest : EvaluatorTestBase() {
         """SELECT * FROM animals as a WHERE a.name || 'xx' LIKE '%xx' """,
         animals,
         """
-          [
+          $BAG_ANNOTATION::[
             {name: "Kumo", type: "dog"},
             {name:"Mochi",type:"dog"},
             {name:"Lilikoi",type:"unicorn"}
@@ -571,7 +571,7 @@ class LikePredicateTest : EvaluatorTestBase() {
                   ]` as a
                WHERE a.name LIKE a.pattern """,
         expectedResult = """
-                  [
+                  $BAG_ANNOTATION::[
                      { name:"Abcd" },
                      { name:"100"}
                   ]
@@ -587,7 +587,7 @@ class LikePredicateTest : EvaluatorTestBase() {
                   ]` as a
                WHERE a.name LIKE a.pattern ESCAPE '\' """,
         expectedResult = """
-                  [
+                  $BAG_ANNOTATION::[
                      { name:"Abcd" },
                      { name:"100%"}
                   ]
@@ -603,7 +603,7 @@ class LikePredicateTest : EvaluatorTestBase() {
                   ]` as a
                WHERE a.name LIKE a.pattern ESCAPE a.escapeChar """,
         expectedResult = """
-                  [
+                  $BAG_ANNOTATION::[
                      { name:"Abcd" },
                      { name:"100%"}
                   ]
@@ -619,7 +619,7 @@ class LikePredicateTest : EvaluatorTestBase() {
                   ]` as a
                WHERE a.name NOT LIKE a.pattern ESCAPE a.escapeChar """,
         expectedResult = """
-                  [
+                  $BAG_ANNOTATION::[
                      { name:"Abcd" },
                      { name:"1000%"}
                   ]
@@ -678,22 +678,22 @@ class LikePredicateTest : EvaluatorTestBase() {
 
     @Test
     fun valueIsNull() =
-        runEvaluatorTestCase("SELECT * FROM <<>> AS a WHERE null LIKE 'a' ESCAPE '['", expectedResult = "[]")
+        runEvaluatorTestCase("SELECT * FROM <<>> AS a WHERE null LIKE 'a' ESCAPE '['", expectedResult = "$BAG_ANNOTATION::[]")
 
     @Test
     fun patternIsNull() =
-        runEvaluatorTestCase("SELECT * FROM <<>> AS a WHERE 'a' LIKE null ESCAPE '['", expectedResult = "[]")
+        runEvaluatorTestCase("SELECT * FROM <<>> AS a WHERE 'a' LIKE null ESCAPE '['", expectedResult = "$BAG_ANNOTATION::[]")
 
     @Test
     fun escapeIsNull() =
-        runEvaluatorTestCase("SELECT * FROM <<>> AS a WHERE 'a' LIKE 'a' ESCAPE null", expectedResult = "[]")
+        runEvaluatorTestCase("SELECT * FROM <<>> AS a WHERE 'a' LIKE 'a' ESCAPE null", expectedResult = "$BAG_ANNOTATION::[]")
 
     @Test
     fun nonLiteralsMissingValue() = runEvaluatorTestCase(
         """SELECT * FROM animals as a WHERE a.xxx LIKE '%' """,
         animals,
         """
-          []
+          $BAG_ANNOTATION::[]
         """
     )
 
@@ -702,7 +702,7 @@ class LikePredicateTest : EvaluatorTestBase() {
         """SELECT * FROM animals as a WHERE a.name LIKE a.xxx """,
         animals,
         """
-          []
+          $BAG_ANNOTATION::[]
         """
     )
 
@@ -711,7 +711,7 @@ class LikePredicateTest : EvaluatorTestBase() {
         """SELECT * FROM animals as a WHERE a.name LIKE '%' ESCAPE a.xxx""",
         animals,
         """
-          []
+          $BAG_ANNOTATION::[]
         """
     )
 
@@ -720,7 +720,7 @@ class LikePredicateTest : EvaluatorTestBase() {
         """SELECT * FROM animalsWithNulls as a WHERE a.name LIKE '%' """,
         animalsWithNulls,
         """
-          []
+          $BAG_ANNOTATION::[]
         """
     )
 
@@ -729,7 +729,7 @@ class LikePredicateTest : EvaluatorTestBase() {
         """SELECT * FROM animalsWithNulls as a WHERE a.type LIKE a.name """,
         animalsWithNulls,
         """
-          []
+          $BAG_ANNOTATION::[]
         """
     )
 
@@ -738,7 +738,7 @@ class LikePredicateTest : EvaluatorTestBase() {
         """SELECT * FROM animalsWithNulls as a WHERE a.type LIKE '%' ESCAPE a.name""",
         animalsWithNulls,
         """
-          []
+          $BAG_ANNOTATION::[]
         """
     )
 

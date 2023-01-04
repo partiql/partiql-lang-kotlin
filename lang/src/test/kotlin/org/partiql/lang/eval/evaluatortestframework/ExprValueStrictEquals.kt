@@ -1,5 +1,6 @@
 package org.partiql.lang.eval.evaluatortestframework
 
+import com.amazon.ion.IonType
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.bigDecimalValue
@@ -43,7 +44,7 @@ private object ExprValueStrictComparator : Comparator<ExprValue> {
 
         return when (v1.type) {
             ExprValueType.MISSING -> 0
-            ExprValueType.NULL -> v1.ionValue.type.compareTo(v2.ionValue.type)
+            ExprValueType.NULL -> v1.asFacet(IonType::class.java).compareTo(v2.asFacet(IonType::class.java))
             ExprValueType.BOOL -> v1.booleanValue().compareTo(v2.booleanValue())
             ExprValueType.INT -> v1.intValue().compareTo(v2.intValue())
             ExprValueType.FLOAT -> v1.numberValue().toDouble().compareTo(v2.numberValue().toDouble())

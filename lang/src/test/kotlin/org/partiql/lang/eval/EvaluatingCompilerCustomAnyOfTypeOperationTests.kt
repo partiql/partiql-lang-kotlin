@@ -45,7 +45,7 @@ class EvaluatingCompilerCustomAnyOfTypeOperationTests : CastTestBase() {
                 case("NULL", "null", CastQuality.LOSSLESS) {
                     assertEquals(ExprValueType.NULL, it.type)
                 },
-                case("MISSING", "null", FixSemantics(CastQuality.LOSSY)) {
+                case("MISSING", "$MISSING_ANNOTATION::null", FixSemantics(CastQuality.LOSSY)) {
                     assertEquals(ExprValueType.MISSING, it.type)
                 },
                 // bool
@@ -89,7 +89,7 @@ class EvaluatingCompilerCustomAnyOfTypeOperationTests : CastTestBase() {
                 ),
                 case("`(a b [2099-01-21T12:34:56Z, {{Ymxhcmc=}}])`", ErrorCode.EVALUATOR_CAST_FAILED),
                 // bag
-                case("<<99, 20000, MISSING>>", "[99, 20000, null]", FixSemantics(CastQuality.LOSSY)) {
+                case("<<99, 20000, MISSING>>", "[99, 20000, $MISSING_ANNOTATION::null]", FixSemantics(CastQuality.LOSSY)) {
                     assertEquals(ExprValueType.LIST, it.type)
                     assertEquals(ExprValueType.MISSING, it.ordinalBindings[2]?.type)
                 },

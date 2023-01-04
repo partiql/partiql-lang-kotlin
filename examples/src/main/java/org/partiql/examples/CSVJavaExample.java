@@ -81,18 +81,6 @@ public class CSVJavaExample extends Example {
         public ExprValueType getType() {
             return ExprValueType.STRUCT;
         }
-
-        @NotNull
-        @Override
-        public IonValue getIonValue() {
-            IonSystem ionSystem = valueFactory.getIon();
-
-            final IonStruct struct = ionSystem.newEmptyStruct();
-            rowValues().forEach((key, value) -> struct.add(key, ionSystem.newString(value.getScalar().stringValue())));
-            struct.makeReadOnly();
-
-            return struct;
-        }
     }
 
     @Override

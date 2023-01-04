@@ -4,6 +4,7 @@ import org.junit.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.eval.EvaluatorTestBase
+import org.partiql.lang.eval.MISSING_ANNOTATION
 import org.partiql.lang.eval.builtins.Argument
 import org.partiql.lang.eval.builtins.ExprFunctionTestCase
 import org.partiql.lang.eval.builtins.checkInvalidArgType
@@ -16,7 +17,7 @@ class SizeEvaluationTest : EvaluatorTestBase() {
     @ParameterizedTest
     @ArgumentsSource(SizePassCases::class)
     fun runPassTests(testCase: ExprFunctionTestCase) =
-        runEvaluatorTestCase(testCase.source, expectedResult = testCase.expectedLegacyModeResult)
+        runEvaluatorTestCase(testCase.source, expectedResult = testCase.expectedLegacyModeResult, expectedPermissiveModeResult = testCase.expectedPermissiveModeResult)
 
     class SizePassCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(
@@ -35,7 +36,7 @@ class SizeEvaluationTest : EvaluatorTestBase() {
             ExprFunctionTestCase("size({})", "0"),
             ExprFunctionTestCase("size(`{}`)", "0"),
             ExprFunctionTestCase("size(null)", "null"),
-            ExprFunctionTestCase("size(missing)", "null")
+            ExprFunctionTestCase("size(missing)", "null", "$MISSING_ANNOTATION::null")
         )
     }
 

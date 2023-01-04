@@ -1,6 +1,5 @@
 package org.partiql.examples
 
-import com.amazon.ion.IonValue
 import com.amazon.ion.system.IonSystemBuilder
 import org.partiql.examples.util.Example
 import org.partiql.lang.CompilerPipeline
@@ -48,9 +47,6 @@ private class CsvRowExprValue(private val valueFactory: ExprValueFactory, privat
 
     override val bindings: Bindings<ExprValue>
         get() = bindingsInstance
-
-    override val ionValue: IonValue
-        get() = error("ExprValue.ionValue Will be removed")
 }
 
 class CsvExprValueExample(out: PrintStream) : Example(out) {

@@ -34,7 +34,7 @@ object Versions {
     const val jline = "3.21.0"
     const val jmh = "0.5.3"
     const val joda = "2.12.1"
-    const val jopt = "5.0"
+    const val picoCli = "4.7.0"
     const val ktlint = "10.2.1"
     const val pig = "0.6.1"
     //---Testing
@@ -66,7 +66,7 @@ object Deps {
     val jansi = "org.fusesource.jansi:jansi:${Versions.jansi}"
     val jline = "org.jline:jline:${Versions.jline}"
     val joda = "joda-time:joda-time:${Versions.joda}"
-    val jopt = "net.sf.jopt-simple:jopt-simple:${Versions.jopt}"
+    const val picoCli = "info.picocli:picocli:${Versions.picoCli}"
     val pig = "org.partiql:partiql-ir-generator:${Versions.pig}"
     val pigRuntime = "org.partiql:partiql-ir-generator-runtime:${Versions.pig}"
     //---Testing
@@ -84,7 +84,7 @@ object Deps {
 object Plugins {
     //---PartiQL
     val conventions = "partiql.conventions"
-    val pig = "org.partiql.gradle.plugin.pig"
+    val pig = "org.partiql.pig.pig-gradle-plugin"
     val publish = "org.partiql.gradle.plugin.publish"
     //---3P
     val antlr = "org.gradle.antlr"
