@@ -4,6 +4,7 @@ import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.errIntOverflow
 import org.partiql.lang.eval.errNoContext
 import org.partiql.lang.eval.numberValue
@@ -28,11 +29,16 @@ import java.math.BigInteger
 import java.math.RoundingMode
 import kotlin.math.pow
 
+// TODO: this should be internal at the first place. Remove it in the next release.
+@Deprecated("Please do not use [MathFunctions] from outside PartiQL library")
 /**
  * A place to keep supported mathematical functions. We are missing many in comparison to PostgresQL.
  * https://www.postgresql.org/docs/14/functions-math.html
  */
 object MathFunctions {
+    // TODO: remove this method in the next release
+    fun create(valueFactory: ExprValueFactory) = create()
+
     fun create(): List<ExprFunction> = listOf(
         UnaryNumeric("ceil") { ceil(it) },
         UnaryNumeric("ceiling") { ceil(it) },
