@@ -83,6 +83,7 @@ internal class PartiQLCommand(private val ion: IonSystem) : Runnable {
         input.use {
             output.use {
                 Cli(ion, input, exec.inputFormat, output, exec.outputFormat, options.pipeline, options.globalEnvironment, query, exec.wrapIon).run()
+                output.write(System.lineSeparator().toByteArray(Charsets.UTF_8))
             }
         }
     }
