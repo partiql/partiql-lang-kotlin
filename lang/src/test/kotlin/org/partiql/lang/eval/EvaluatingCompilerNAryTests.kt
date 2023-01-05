@@ -135,7 +135,7 @@ class EvaluatingCompilerNAryTests : EvaluatorTestBase() {
             )
         }
 
-        val expectedExprValue = tc.expectedResult?.let { valueFactory.newInt(it) } ?: valueFactory.nullValue
+        val expectedExprValue = tc.expectedResult?.let { ExprValue.newInt(it) } ?: ExprValue.nullValue
 
         assertEvalStatement(query, expectedExprValue)
     }
@@ -144,7 +144,7 @@ class EvaluatingCompilerNAryTests : EvaluatorTestBase() {
         astExpr: PartiqlAst.Statement,
         expectedExprValue: ExprValue
     ) {
-        val pipeline = CompilerPipeline.standard(ion)
+        val pipeline = CompilerPipeline.standard()
         val expr = pipeline.compile(astExpr)
         val result = expr.eval(session)
         assertEquals(expectedExprValue.toIonValue(ION), result.toIonValue(ION))
@@ -233,7 +233,7 @@ class EvaluatingCompilerNAryTests : EvaluatorTestBase() {
             )
         }
 
-        val expectedExprValue = tc.expectedResult?.let { valueFactory.newBoolean(it) } ?: valueFactory.nullValue
+        val expectedExprValue = tc.expectedResult?.let { ExprValue.newBoolean(it) } ?: ExprValue.nullValue
 
         assertEvalStatement(query, expectedExprValue)
     }
@@ -296,7 +296,7 @@ class EvaluatingCompilerNAryTests : EvaluatorTestBase() {
             )
         }
 
-        val expectedExprValue = tc.expectedResult?.let { valueFactory.newBoolean(it) } ?: valueFactory.nullValue
+        val expectedExprValue = tc.expectedResult?.let { ExprValue.newBoolean(it) } ?: ExprValue.nullValue
 
         assertEvalStatement(query, expectedExprValue)
     }

@@ -6,7 +6,6 @@ import org.partiql.lang.ION
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.mappers.StaticTypeMapper
 import org.partiql.lang.schemadiscovery.NormalizeDecimalPrecisionsToUpToRange
 import org.partiql.lang.schemadiscovery.SchemaInferencerFromExampleImpl
@@ -23,7 +22,6 @@ import org.partiql.lang.types.StaticType
  */
 class MockDb(
     val globals: Map<String, IonValue>,
-    valueFactory: ExprValueFactory,
     iss: IonSchemaSystem
 ) {
     /**
@@ -31,7 +29,7 @@ class MockDb(
      * other global variables of our mock database.
      */
     val valueBindings: Bindings<ExprValue> = Bindings.ofMap(
-        globals.mapValues { valueFactory.newFromIonValue(it.value) }
+        globals.mapValues { ExprValue.of(it.value) }
     )
 
     /**

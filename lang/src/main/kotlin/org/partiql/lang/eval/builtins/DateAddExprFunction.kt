@@ -21,7 +21,6 @@ import org.partiql.lang.eval.EvaluationException
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.dateTimePartValue
 import org.partiql.lang.eval.errNoContext
 import org.partiql.lang.eval.intValue
@@ -30,7 +29,7 @@ import org.partiql.lang.syntax.DateTimePart
 import org.partiql.lang.types.FunctionSignature
 import org.partiql.lang.types.StaticType
 
-internal class DateAddExprFunction(val valueFactory: ExprValueFactory) : ExprFunction {
+internal class DateAddExprFunction : ExprFunction {
     override val signature = FunctionSignature(
         name = "date_add",
         requiredParameters = listOf(StaticType.SYMBOL, StaticType.INT, StaticType.TIMESTAMP),
@@ -118,7 +117,7 @@ internal class DateAddExprFunction(val valueFactory: ExprValueFactory) : ExprFun
                 )
             }
 
-            return valueFactory.newTimestamp(addedTimestamp)
+            return ExprValue.newTimestamp(addedTimestamp)
         } catch (e: IllegalArgumentException) {
             // illegal argument exception are thrown when the resulting timestamp go out of supported timestamp boundaries
             throw EvaluationException(e, errorCode = ErrorCode.EVALUATOR_TIMESTAMP_OUT_OF_BOUNDS, internal = false)

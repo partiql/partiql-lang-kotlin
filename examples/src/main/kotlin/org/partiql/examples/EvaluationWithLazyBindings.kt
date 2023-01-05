@@ -11,7 +11,7 @@ import java.io.PrintStream
 /** Demonstrates how to supply a global variable whose value is lazily materialized. */
 class EvaluationWithLazyBindings(out: PrintStream) : Example(out) {
     val ion = IonSystemBuilder.standard().build()
-    val pipeline = CompilerPipeline.standard(ion)
+    val pipeline = CompilerPipeline.standard()
 
     override fun run() {
         // Compile a simple SELECT query
@@ -26,7 +26,7 @@ class EvaluationWithLazyBindings(out: PrintStream) : Example(out) {
                 // The first time "pets" is encountered during query evaluation this closure will be
                 // invoked to obtain its value, which will then be cached for later use.
                 // "pets" is the PartiQL equivalent of a a "table" (actually an Ion list of structs)
-                pipeline.valueFactory.newFromIonValue(
+                ExprValue.of(
                     ion.singleValue("""[ { name: "Nibbler", age: 2 }, { name: "Hobbes", age: 6 } ]""")
                 )
             }

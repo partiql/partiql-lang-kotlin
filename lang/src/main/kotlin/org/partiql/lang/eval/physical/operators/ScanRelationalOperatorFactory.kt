@@ -73,8 +73,8 @@ internal class ScanOperator(
                 val item = rows.next()
                 // .unnamedValue() removes any ordinal that might exist on item
                 setAsVar(state, item.unnamedValue())
-                setAtVar?.let { it(state, item.name ?: state.valueFactory.missingValue) }
-                setByVar?.let { it(state, item.address ?: state.valueFactory.missingValue) }
+                setAtVar?.let { it(state, item.name ?: ExprValue.missingValue) }
+                setByVar?.let { it(state, item.address ?: ExprValue.missingValue) }
                 yield()
             }
         }

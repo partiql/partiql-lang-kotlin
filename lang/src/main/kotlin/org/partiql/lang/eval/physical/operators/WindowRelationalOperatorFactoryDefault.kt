@@ -67,7 +67,7 @@ internal class WindowOperatorDefault(
             while (iter.hasNext()) {
                 val currentRow = iter.next()
                 state.load(currentRow)
-                val currentPartition = state.valueFactory.newSexp(
+                val currentPartition = ExprValue.newSexp(
                     windowPartitionList.map {
                         it.invoke(state)
                     }

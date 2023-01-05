@@ -14,6 +14,7 @@ import org.partiql.lang.util.bigDecimalOf
 import org.partiql.lang.util.coerceNumbers
 import org.partiql.lang.util.compareTo
 import org.partiql.lang.util.exp
+import org.partiql.lang.util.exprValue
 import org.partiql.lang.util.isNaN
 import org.partiql.lang.util.isNegInf
 import org.partiql.lang.util.isPosInf
@@ -28,21 +29,25 @@ import java.math.BigInteger
 import java.math.RoundingMode
 import kotlin.math.pow
 
+// TODO: this should be internal at the first place. Remove it in the next release.
+@Deprecated("Please do not use [MathFunctions] from outside PartiQL library")
 /**
  * A place to keep supported mathematical functions. We are missing many in comparison to PostgresQL.
  * https://www.postgresql.org/docs/14/functions-math.html
  */
 object MathFunctions {
+    // TODO: remove this method in the next release
+    fun create(valueFactory: ExprValueFactory) = create()
 
-    fun create(valueFactory: ExprValueFactory): List<ExprFunction> = listOf(
-        UnaryNumeric("ceil", valueFactory) { ceil(it) },
-        UnaryNumeric("ceiling", valueFactory) { ceil(it) },
-        UnaryNumeric("floor", valueFactory) { floor(it) },
-        UnaryNumeric("abs", valueFactory) { abs(it) },
-        UnaryNumeric("sqrt", valueFactory) { sqrt(it) },
-        UnaryNumeric("exp", valueFactory) { exp(it) },
-        UnaryNumeric("ln", valueFactory) { ln(it) },
-        BinaryNumeric("pow", valueFactory) { n, p -> pow(n, p) }
+    fun create(): List<ExprFunction> = listOf(
+        UnaryNumeric("ceil") { ceil(it) },
+        UnaryNumeric("ceiling") { ceil(it) },
+        UnaryNumeric("floor") { floor(it) },
+        UnaryNumeric("abs") { abs(it) },
+        UnaryNumeric("sqrt") { sqrt(it) },
+        UnaryNumeric("exp") { exp(it) },
+        UnaryNumeric("ln") { ln(it) },
+        BinaryNumeric("pow") { n, p -> pow(n, p) }
     )
 }
 
@@ -50,13 +55,11 @@ object MathFunctions {
  * A convenience class to wrap `(Number) -> Number` as a PartiQL ExprFunction.
  *
  * @property identifier Symbol for the given function
- * @property valueFactory Used to create the output ExprValue
  * @property function Function to invoke for the given signature
  */
 private class UnaryNumeric(
     private val identifier: String,
-    private val valueFactory: ExprValueFactory,
-    private val function: (Number) -> Number
+    private val function: (Number) -> Number,
 ) : ExprFunction {
 
     override val signature = FunctionSignature(
@@ -66,7 +69,7 @@ private class UnaryNumeric(
     )
 
     override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue =
-        function.invoke(required.first().numberValue()).exprValue(valueFactory)
+        function.invoke(required.first().numberValue()).exprValue()
 }
 
 /**
@@ -78,7 +81,6 @@ private class UnaryNumeric(
  */
 private class BinaryNumeric(
     private val identifier: String,
-    private val valueFactory: ExprValueFactory,
     private val function: (Number, Number) -> Number
 ) : ExprFunction {
 
@@ -89,7 +91,7 @@ private class BinaryNumeric(
     )
 
     override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue =
-        function.invoke(required.first().numberValue(), required[1].numberValue()).exprValue(valueFactory)
+        function.invoke(required.first().numberValue(), required[1].numberValue()).exprValue()
 }
 
 private fun ceil(n: Number): Number = when (n) {
@@ -228,19 +230,4 @@ private fun transformIntType(n: BigInteger): Number = when (n) {
      * currently PariQL-lang-kotlin did not support integer value bigger than 64 bits.
      */
     else -> errIntOverflow(8)
-}
-
-// wrapper for converting result to expression value
-private fun Number.exprValue(valueFactory: ExprValueFactory): ExprValue {
-    return when (this) {
-        is Int -> valueFactory.newInt(this)
-        is Long -> valueFactory.newInt(this)
-        is Float, is Double -> valueFactory.newFloat(this.toDouble())
-        is BigDecimal -> valueFactory.newDecimal(this)
-        else -> errNoContext(
-            "Cannot convert number to expression value: $this",
-            errorCode = ErrorCode.EVALUATOR_INVALID_CONVERSION,
-            internal = true
-        )
-    }
 }

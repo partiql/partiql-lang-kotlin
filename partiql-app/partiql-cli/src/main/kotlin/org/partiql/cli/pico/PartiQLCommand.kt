@@ -14,11 +14,11 @@
 
 package org.partiql.cli.pico
 
+import com.amazon.ion.IonSystem
 import org.partiql.cli.query.Cli
 import org.partiql.cli.shell.Shell
 import org.partiql.cli.utils.EmptyInputStream
 import org.partiql.cli.utils.UnclosableOutputStream
-import org.partiql.lang.eval.ExprValueFactory
 import picocli.CommandLine
 import java.io.File
 import java.io.FileInputStream
@@ -37,7 +37,7 @@ import java.io.InputStream
     ],
     showDefaultValues = true
 )
-internal class PartiQLCommand(private val valueFactory: ExprValueFactory) : Runnable {
+internal class PartiQLCommand(private val ion: IonSystem) : Runnable {
 
     @CommandLine.Mixin
     internal lateinit var options: PipelineOptions
@@ -82,7 +82,7 @@ internal class PartiQLCommand(private val valueFactory: ExprValueFactory) : Runn
         val query = stream.readBytes().toString(Charsets.UTF_8)
         input.use {
             output.use {
-                Cli(valueFactory, input, exec.inputFormat, output, exec.outputFormat, options.pipeline, options.globalEnvironment, query, exec.wrapIon).run()
+                Cli(ion, input, exec.inputFormat, output, exec.outputFormat, options.pipeline, options.globalEnvironment, query, exec.wrapIon).run()
             }
         }
     }
@@ -92,7 +92,7 @@ internal class PartiQLCommand(private val valueFactory: ExprValueFactory) : Runn
      */
     private fun runShell(shell: ShellOptions = ShellOptions()) {
         val config = Shell.ShellConfiguration(isMonochrome = shell.isMonochrome)
-        Shell(valueFactory, System.out, options.pipeline, options.globalEnvironment, config).start()
+        Shell(System.out, options.pipeline, options.globalEnvironment, config).start()
     }
 
     /**

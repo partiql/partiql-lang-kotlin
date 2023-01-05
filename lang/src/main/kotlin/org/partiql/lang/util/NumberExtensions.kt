@@ -17,7 +17,10 @@ package org.partiql.lang.util
 import com.amazon.ion.Decimal
 import com.amazon.ion.IonSystem
 import com.amazon.ion.IonValue
+import org.partiql.lang.errors.ErrorCode
+import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.errIntOverflow
+import org.partiql.lang.eval.errNoContext
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.MathContext
@@ -77,10 +80,11 @@ internal fun Number.isZero() = when (this) {
     else -> throw IllegalStateException()
 }
 
+@Suppress("UNCHECKED_CAST")
 /** Provides a narrowing or widening operator on supported numbers. */
-fun Number.coerce(type: Class<out Number>): Number {
+fun <T> Number.coerce(type: Class<T>): T where T : Number {
     val conv = CONVERTERS[type] ?: throw IllegalArgumentException("No converter for $type")
-    return conv(this)
+    return conv(this) as T
 }
 
 /**
@@ -108,6 +112,18 @@ fun Number.ionValue(ion: IonSystem): IonValue = when (this) {
     is Double -> ion.newFloat(this)
     is BigDecimal -> ion.newDecimal(this)
     else -> throw IllegalArgumentException("Cannot convert to IonValue: $this")
+}
+
+internal fun Number.exprValue(): ExprValue = when (this) {
+    is Int -> ExprValue.newInt(this)
+    is Long -> ExprValue.newInt(this)
+    is Double -> ExprValue.newFloat(this)
+    is BigDecimal -> ExprValue.newDecimal(this)
+    else -> errNoContext(
+        "Cannot convert number to expression value: $this",
+        errorCode = ErrorCode.EVALUATOR_INVALID_CONVERSION,
+        internal = true
+    )
 }
 
 operator fun Number.unaryMinus(): Number {

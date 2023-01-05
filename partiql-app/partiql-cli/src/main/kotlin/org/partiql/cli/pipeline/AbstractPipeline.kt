@@ -27,7 +27,6 @@ import org.partiql.lang.eval.CompileOptions
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.PartiQLResult
 import org.partiql.lang.eval.ProjectionIterationBehavior
 import org.partiql.lang.eval.ThunkOptions
@@ -68,10 +67,10 @@ internal sealed class AbstractPipeline(open val options: PipelineOptions) {
             permissiveMode: TypingMode
         ): PipelineOptions {
             val ion = IonSystemBuilder.standard().build()
-            val functions: List<(ExprValueFactory) -> ExprFunction> = listOf(
-                { valueFactory -> ReadFile(valueFactory) },
-                { valueFactory -> WriteFile(valueFactory) },
-                { valueFactory -> QueryDDB(valueFactory) }
+            val functions: List<ExprFunction> = listOf(
+                ReadFile(ion),
+                WriteFile(ion),
+                QueryDDB(ion)
             )
             val parser = PartiQLParserBuilder().ionSystem(ion).build()
             return PipelineOptions(
@@ -95,7 +94,7 @@ internal sealed class AbstractPipeline(open val options: PipelineOptions) {
         val projectionIterationBehavior: ProjectionIterationBehavior = ProjectionIterationBehavior.FILTER_MISSING,
         val undefinedVariableBehavior: UndefinedVariableBehavior = UndefinedVariableBehavior.ERROR,
         val typingMode: TypingMode = TypingMode.LEGACY,
-        val functions: List<(ExprValueFactory) -> ExprFunction> = emptyList()
+        val functions: List<ExprFunction> = emptyList()
     )
 
     internal enum class PipelineType {
@@ -115,9 +114,8 @@ internal sealed class AbstractPipeline(open val options: PipelineOptions) {
             typingMode(options.typingMode)
         }
 
-        private val compilerPipeline = CompilerPipeline.build(options.ion) {
-            options.functions.forEach { functionBlock ->
-                val function = functionBlock.invoke(valueFactory)
+        private val compilerPipeline = CompilerPipeline.build {
+            options.functions.forEach { function ->
                 addFunction(function)
             }
             compileOptions(compileOptions)

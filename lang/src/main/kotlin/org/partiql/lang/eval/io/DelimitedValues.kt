@@ -22,6 +22,7 @@ import com.amazon.ion.IonSystem
 import com.amazon.ion.IonTimestamp
 import com.amazon.ion.IonType
 import com.amazon.ion.IonValue
+import com.amazon.ion.system.IonSystemBuilder
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVParser
 import org.apache.commons.csv.CSVPrinter
@@ -61,13 +62,30 @@ object DelimitedValues {
             } catch (e: IonException) {
                 valueFactory.newString(raw)
             }
+
+            override fun convert(raw: String): ExprValue = try {
+                val ion = IonSystemBuilder.standard().build()
+                when (val converted = ion.singleValue(raw)) {
+                    is IonInt, is IonFloat, is IonDecimal, is IonTimestamp ->
+                        ExprValue.of(converted)
+                    // if we can't convert the above, we just use the input string as-is
+                    else -> ExprValue.newString(raw)
+                }
+            } catch (e: IonException) {
+                ExprValue.newString(raw)
+            }
         },
         /** Each field is a string. */
         NONE {
             override fun convert(valueFactory: ExprValueFactory, raw: String): ExprValue = valueFactory.newString(raw)
+
+            override fun convert(raw: String): ExprValue = ExprValue.newString(raw)
         };
 
+        @Deprecated("[ExprValueFactory] is deprecated. Please use `convert(row: String): ExprValue` instead")
         abstract fun convert(valueFactory: ExprValueFactory, raw: String): ExprValue
+
+        abstract fun convert(raw: String): ExprValue
     }
 
     /**
@@ -80,7 +98,7 @@ object DelimitedValues {
      */
     @JvmStatic
     fun exprValue(
-        valueFactory: ExprValueFactory,
+        ion: IonSystem,
         input: Reader,
         csvFormat: CSVFormat,
         conversionMode: ConversionMode
@@ -90,19 +108,19 @@ object DelimitedValues {
         val columns: List<String> = csvParser.headerNames
 
         val seq = csvParser.asSequence().map { csvRecord ->
-            valueFactory.newStruct(
+            ExprValue.newStruct(
                 csvRecord.mapIndexed { i, value ->
                     val name = when {
                         i < columns.size -> columns[i]
                         else -> syntheticColumnName(i)
                     }
-                    conversionMode.convert(valueFactory, value).namedValue(valueFactory.newString(name))
+                    conversionMode.convert(value).namedValue(ExprValue.newString(name))
                 },
                 StructOrdering.ORDERED
             )
         }
 
-        return valueFactory.newBag(seq)
+        return ExprValue.newBag(seq)
     }
 
     // TODO make this configurable

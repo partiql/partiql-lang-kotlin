@@ -70,7 +70,7 @@ fun interface ExprValueBagOp {
  */
 internal fun ExprValue.coerceToBag(): Sequence<ExprValue> = when {
     isUnknown() -> emptySequence()
-    this is StructExprValue || this is Scalar -> sequenceOf(this)
+    type === ExprValueType.STRUCT || type.isScalar -> sequenceOf(this)
     else -> this.asSequence()
 }
 

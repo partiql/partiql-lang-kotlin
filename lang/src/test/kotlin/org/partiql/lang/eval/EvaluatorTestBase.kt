@@ -19,7 +19,6 @@ import com.amazon.ion.IonValue
 import org.partiql.annotations.PartiQLExperimental
 import org.partiql.lang.CUSTOM_TEST_TYPES
 import org.partiql.lang.CompilerPipeline
-import org.partiql.lang.ION
 import org.partiql.lang.SqlException
 import org.partiql.lang.TestBase
 import org.partiql.lang.errors.ErrorCode
@@ -51,7 +50,7 @@ abstract class EvaluatorTestBase : TestBase() {
     )
 
     protected fun Map<String, String>.toSession() = EvaluationSession.build {
-        globals(Bindings.ofMap(this@toSession.mapValues { valueFactory.newFromIonText(it.value) }))
+        globals(Bindings.ofMap(this@toSession.mapValues { newFromIonText(it.value) }))
     }
 
     /**
@@ -150,7 +149,7 @@ abstract class EvaluatorTestBase : TestBase() {
         session: EvaluationSession = EvaluationSession.standard(),
         compilerPipelineBuilderBlock: CompilerPipeline.Builder.() -> Unit = { }
     ): ExprValue {
-        val pipeline = CompilerPipeline.builder(ION).apply {
+        val pipeline = CompilerPipeline.builder().apply {
             customDataTypes(CUSTOM_TEST_TYPES)
             compileOptions(compileOptions)
             compilerPipelineBuilderBlock()

@@ -32,7 +32,7 @@ internal class Lag : NavigationWindowFunction() {
                 error("offset need to be non-negative integer")
             }
         } ?: DEFAULT_OFFSET_VALUE
-        val defaultValue = default?.invoke(state) ?: state.valueFactory.nullValue
+        val defaultValue = default?.invoke(state) ?: ExprValue.nullValue
         val targetIndex = currentPos - offsetValue
 
         if (targetIndex >= 0 && targetIndex <= currentPartition.lastIndex) {
