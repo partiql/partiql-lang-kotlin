@@ -5,7 +5,6 @@ import org.partiql.lang.eval.EvaluationException
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.bigDecimalValue
 import org.partiql.lang.eval.err
 import org.partiql.lang.eval.intValue
@@ -21,7 +20,7 @@ import java.math.BigDecimal
  *
  * make_time(<hour_value>, <minute_value>, <second_value>, <optional_timezone_minutes>?)
  */
-internal class MakeTimeExprFunction(val valueFactory: ExprValueFactory) : ExprFunction {
+internal class MakeTimeExprFunction : ExprFunction {
     override val signature = FunctionSignature(
         name = "make_time",
         requiredParameters = listOf(StaticType.INT, StaticType.INT, StaticType.DECIMAL),
@@ -46,7 +45,7 @@ internal class MakeTimeExprFunction(val valueFactory: ExprValueFactory) : ExprFu
         tzMinutes: Int?
     ): ExprValue {
         try {
-            return valueFactory.newTime(
+            return ExprValue.newTime(
                 Time.of(
                     hour,
                     minute,

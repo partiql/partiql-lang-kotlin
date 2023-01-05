@@ -12,8 +12,14 @@
  *  language governing permissions and limitations under the License.
  */
 
-package org.partiql.cli
+package org.partiql.cli.utils
 
-interface PartiQLCommand {
-    fun run()
+import java.util.concurrent.TimeUnit
+
+fun <T> timeIt(block: () -> T): Long {
+    val start = System.nanoTime()
+    block()
+    val end = System.nanoTime()
+
+    return TimeUnit.MILLISECONDS.convert(end - start, TimeUnit.NANOSECONDS)
 }

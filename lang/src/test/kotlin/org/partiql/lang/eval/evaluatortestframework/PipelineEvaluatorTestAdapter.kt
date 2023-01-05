@@ -96,14 +96,6 @@ internal class PipelineEvaluatorTestAdapter(
                 }
                 Unit
             }
-            ExpectedResultFormat.STRING -> {
-                val actualResultString = actualExprValueResult.toString()
-                assertEquals(
-                    expectedResult,
-                    actualResultString,
-                    EvaluatorTestFailureReason.UNEXPECTED_QUERY_RESULT,
-                ) { tc.testDetails(note = note, actualResult = actualResultString) }
-            }
             ExpectedResultFormat.STRICT -> {
                 val expectedExprValueResult = assertDoesNotThrow(
                     EvaluatorTestFailureReason.FAILED_TO_EVALUATE_PARTIQL_EXPECTED_RESULT,

@@ -13,6 +13,7 @@
  */
 package org.partiql.extensions.cli.functions
 
+import com.amazon.ion.IonSystem
 import com.amazon.ion.system.IonReaderBuilder
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder
@@ -21,7 +22,6 @@ import com.amazonaws.services.dynamodbv2.model.ExecuteStatementRequest
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.stringValue
 import org.partiql.lang.types.FunctionSignature
 import org.partiql.lang.types.StaticType
@@ -35,11 +35,11 @@ import org.partiql.lang.types.StaticType
  * overrides. Reference the CLI.md file within this repository for more information.
  * Example CLI usage: query_ddb('SELECT <attribute> FROM <table> WHERE <key> = <value>');
  */
-class QueryDDB(private val valueFactory: ExprValueFactory) : ExprFunction {
+class QueryDDB(private val ion: IonSystem) : ExprFunction {
 
     private lateinit var client: AmazonDynamoDB
 
-    constructor(valueFactory: ExprValueFactory, client: AmazonDynamoDB) : this(valueFactory) {
+    constructor(ion: IonSystem, client: AmazonDynamoDB) : this(ion) {
         this.client = client
     }
 
@@ -66,10 +66,10 @@ class QueryDDB(private val valueFactory: ExprValueFactory) : ExprFunction {
             val ionValues = mutableListOf<ExprValue>()
             var type = reader.next()
             while (type != null) {
-                ionValues.add(valueFactory.newFromIonReader(reader))
+                ionValues.add(ExprValue.newFromIonReader(ion, reader))
                 type = reader.next()
             }
-            valueFactory.newList(ionValues)
+            ExprValue.newList(ionValues)
         }
     }
 

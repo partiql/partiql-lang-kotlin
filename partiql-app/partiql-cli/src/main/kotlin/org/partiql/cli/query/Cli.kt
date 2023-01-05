@@ -12,42 +12,40 @@
  *  language governing permissions and limitations under the License.
  */
 
-package org.partiql.cli
+package org.partiql.cli.query
 
+import com.amazon.ion.IonSystem
 import com.amazon.ion.system.IonReaderBuilder
-import com.amazon.ion.system.IonSystemBuilder
 import com.amazon.ion.system.IonTextWriterBuilder
-import org.partiql.format.ExplainFormatter
+import org.partiql.cli.format.ExplainFormatter
+import org.partiql.cli.pico.PartiQLCommand
+import org.partiql.cli.pipeline.AbstractPipeline
+import org.partiql.cli.utils.EmptyInputStream
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.PartiQLResult
 import org.partiql.lang.eval.delegate
 import org.partiql.lang.eval.toIonValue
 import org.partiql.lang.util.ConfigurableExprValueFormatter
-import org.partiql.pipeline.AbstractPipeline
 import java.io.InputStream
 import java.io.OutputStream
 import java.io.OutputStreamWriter
 
 internal class Cli(
-    private val valueFactory: ExprValueFactory,
+    private val ion: IonSystem,
     private val input: InputStream,
-    private val inputFormat: InputFormat,
+    private val inputFormat: PartiQLCommand.InputFormat,
     private val output: OutputStream,
-    private val outputFormat: OutputFormat,
+    private val outputFormat: PartiQLCommand.OutputFormat,
     private val compilerPipeline: AbstractPipeline,
     private val globals: Bindings<ExprValue>,
     private val query: String,
     private val wrapIon: Boolean
-) : PartiQLCommand {
-
-    private val ion = IonSystemBuilder.standard().build()
-
+) {
     init {
-        if (wrapIon && inputFormat != InputFormat.ION) {
-            throw IllegalArgumentException("Specifying --wrap-ion requires that the input format be ${InputFormat.ION}.")
+        if (wrapIon && inputFormat != PartiQLCommand.InputFormat.ION) {
+            throw IllegalArgumentException("Specifying --wrap-ion requires that the input format be ${PartiQLCommand.InputFormat.ION}.")
         }
     }
 
@@ -56,10 +54,10 @@ internal class Cli(
             .withWriteTopLevelValuesOnNewLines(true)
     }
 
-    override fun run() {
+    internal fun run() {
         when (inputFormat) {
-            InputFormat.ION -> runWithIonInput()
-            InputFormat.PARTIQL -> runWithPartiQLInput()
+            PartiQLCommand.InputFormat.ION -> runWithIonInput()
+            PartiQLCommand.InputFormat.PARTIQL -> runWithPartiQLInput()
         }
     }
 
@@ -74,7 +72,7 @@ internal class Cli(
         IonReaderBuilder.standard().build(input).use { reader ->
             val bindings = when (reader.next()) {
                 null -> Bindings.buildLazyBindings<ExprValue> {}.delegate(globals)
-                else -> getBindingsFromIonValue(valueFactory.newFromIonReader(reader))
+                else -> getBindingsFromIonValue(ExprValue.newFromIonReader(ion, reader))
             }
             if (reader.next() != null) {
                 val message = "As of v0.7.0, PartiQL requires that Ion files contain only a single Ion value for " +
@@ -89,8 +87,8 @@ internal class Cli(
 
     private fun runWithIonInputWrapped() {
         IonReaderBuilder.standard().build(input).use { reader ->
-            val inputIonValue = valueFactory.ion.iterate(reader).asSequence().map { valueFactory.newFromIonValue(it) }
-            val inputExprValue = valueFactory.newBag(inputIonValue)
+            val inputIonValue = ion.iterate(reader).asSequence().map { ExprValue.of(it) }
+            val inputExprValue = ExprValue.newBag(inputIonValue)
             val bindings = getBindingsFromIonValue(inputExprValue)
             val result = compilerPipeline.compile(query, EvaluationSession.build { globals(bindings) })
             outputResult(result)
@@ -118,10 +116,10 @@ internal class Cli(
 
     private fun outputResult(result: ExprValue) {
         when (outputFormat) {
-            OutputFormat.ION_TEXT -> ionTextWriterBuilder.build(output).use { result.toIonValue(ion).writeTo(it) }
-            OutputFormat.ION_BINARY -> valueFactory.ion.newBinaryWriter(output).use { result.toIonValue(ion).writeTo(it) }
-            OutputFormat.PARTIQL -> OutputStreamWriter(output).use { it.write(result.toString()) }
-            OutputFormat.PARTIQL_PRETTY -> OutputStreamWriter(output).use {
+            PartiQLCommand.OutputFormat.ION_TEXT -> ionTextWriterBuilder.build(output).use { result.toIonValue(ion).writeTo(it) }
+            PartiQLCommand.OutputFormat.ION_BINARY -> ion.newBinaryWriter(output).use { result.toIonValue(ion).writeTo(it) }
+            PartiQLCommand.OutputFormat.PARTIQL -> OutputStreamWriter(output).use { it.write(result.toString()) }
+            PartiQLCommand.OutputFormat.PARTIQL_PRETTY -> OutputStreamWriter(output).use {
                 ConfigurableExprValueFormatter.pretty.formatTo(result, it)
             }
         }

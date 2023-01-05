@@ -15,7 +15,6 @@
 package org.partiql.cli.functions
 
 import com.amazon.ion.IonSystem
-import com.amazon.ion.system.IonSystemBuilder
 import com.amazon.ion.system.IonTextWriterBuilder
 import org.partiql.lang.eval.BindingCase
 import org.partiql.lang.eval.BindingName
@@ -23,7 +22,6 @@ import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.booleanValue
 import org.partiql.lang.eval.io.DelimitedValues
 import org.partiql.lang.eval.stringValue
@@ -34,7 +32,7 @@ import java.io.FileOutputStream
 import java.io.OutputStream
 import java.io.OutputStreamWriter
 
-internal class WriteFile(private val valueFactory: ExprValueFactory) : ExprFunction {
+internal class WriteFile(private val ion: IonSystem) : ExprFunction {
     override val signature = FunctionSignature(
         name = "write_file",
         requiredParameters = listOf(StaticType.STRING, StaticType.ANY),
@@ -42,14 +40,9 @@ internal class WriteFile(private val valueFactory: ExprValueFactory) : ExprFunct
         returnType = StaticType.BOOL
     )
 
-    companion object {
-        @JvmField
-        val ion: IonSystem = IonSystemBuilder.standard().build()
-
-        @JvmStatic private val PRETTY_ION_WRITER: (ExprValue, OutputStream, Bindings<ExprValue>) -> Unit = { results, out, _ ->
-            IonTextWriterBuilder.pretty().build(out).use { w ->
-                results.toIonValue(ion).writeTo(w)
-            }
+    private val PRETTY_ION_WRITER: (ExprValue, OutputStream, Bindings<ExprValue>) -> Unit = { results, out, _ ->
+        IonTextWriterBuilder.pretty().build(out).use { w ->
+            results.toIonValue(ion).writeTo(w)
         }
     }
 
@@ -60,7 +53,7 @@ internal class WriteFile(private val valueFactory: ExprValueFactory) : ExprFunct
 
         val writer = OutputStreamWriter(out, encoding)
         writer.use {
-            DelimitedValues.writeTo(valueFactory.ion, writer, results, delimiter, nl, writeHeader)
+            DelimitedValues.writeTo(ion, writer, results, delimiter, nl, writeHeader)
         }
     }
 
@@ -79,10 +72,10 @@ internal class WriteFile(private val valueFactory: ExprValueFactory) : ExprFunct
             FileOutputStream(fileName).use {
                 handler(results, it, Bindings.empty())
             }
-            valueFactory.newBoolean(true)
+            ExprValue.newBoolean(true)
         } catch (e: Exception) {
             e.printStackTrace()
-            valueFactory.newBoolean(false)
+            ExprValue.newBoolean(false)
         }
     }
 
@@ -96,10 +89,10 @@ internal class WriteFile(private val valueFactory: ExprValueFactory) : ExprFunct
             FileOutputStream(fileName).use {
                 handler(results, it, opt.bindings)
             }
-            valueFactory.newBoolean(true)
+            ExprValue.newBoolean(true)
         } catch (e: Exception) {
             e.printStackTrace()
-            valueFactory.newBoolean(false)
+            ExprValue.newBoolean(false)
         }
     }
 }

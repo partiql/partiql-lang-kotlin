@@ -28,11 +28,7 @@ import java.math.BigInteger
 import java.time.LocalDate
 import kotlin.collections.asSequence
 
-const val MISSING_ANNOTATION = "\$missing"
-const val BAG_ANNOTATION = "\$bag"
-const val DATE_ANNOTATION = "\$date"
-const val TIME_ANNOTATION = "\$time"
-
+@Deprecated("Please use static constructor methods defined in [ExprValue] instead")
 /**
  * Provides a standard way of creating instances of ExprValue.
  *
@@ -49,72 +45,95 @@ interface ExprValueFactory {
     /** The IonSystem instance. */
     val ion: IonSystem
 
+    @Deprecated("Please use [org.partiql.lang.eval.ExprValue.missingValue] instead")
     /** A possibly memoized, immutable [ExprValue] representing the PartiQL missing value. */
     val missingValue: ExprValue
 
+    @Deprecated("Please use [org.partiql.lang.eval.ExprValue.nullValue] instead")
     /** A possibly memoized, immutable [ExprValue] representing the PartiQL null value. */
     val nullValue: ExprValue
 
+    @Deprecated("Please use [org.partiql.lang.eval.ExprValue.emptyStruct] instead")
     /** A possibly memoized, immutable [ExprValue] representing an empty struct. */
     val emptyStruct: ExprValue
 
+    @Deprecated("Please use [org.partiql.lang.eval.ExprValue.emptyList] instead")
     /** A possibly memoized, immutable [ExprValue] representing an empty list. */
     val emptyList: ExprValue
 
+    @Deprecated("Please use [org.partiql.lang.eval.ExprValue.emptySexp] instead")
     /** A possibly memoized, immutable [ExprValue] representing an empty sexp. */
     val emptySexp: ExprValue
 
+    @Deprecated("Please use [org.partiql.lang.eval.ExprValue.emptyBag] instead")
     /** A possibly memoized, immutable [ExprValue] representing an empty bag. */
     val emptyBag: ExprValue
 
+    @Deprecated("Please use [org.partiql.lang.eval.ExprValue.newBoolean] instead")
     /** Returns a possibly memoized instance of [ExprValue] representing the specified [Boolean]. */
     fun newBoolean(value: Boolean): ExprValue
 
+    @Deprecated("Please use [org.partiql.lang.eval.ExprValue.newString] instead")
     /** Returns a possibly memoized [ExprValue] instance representing the specified [String]. */
     fun newString(value: String): ExprValue
 
+    @Deprecated("Please use [org.partiql.lang.eval.ExprValue.newInt] instead")
     /** Returns a PartiQL `INT` ][ExprValue] instance representing the specified [Int]. */
     fun newInt(value: Int): ExprValue
 
+    @Deprecated("Please use [org.partiql.lang.eval.ExprValue.newInt] instead")
     /** Returns a PartiQL `INT` [ExprValue] instance representing the specified [Long]. */
     fun newInt(value: Long): ExprValue
 
+    @Deprecated("Please use [org.partiql.lang.eval.ExprValue.newFloat] instead")
     /** Returns a PartiQL `FLOAT` [ExprValue] instance representing the specified [Float]. */
     fun newFloat(value: Double): ExprValue
 
+    @Deprecated("Please use [org.partiql.lang.eval.ExprValue.newDecimal] instead")
     /** Returns a PartiQL `DECIMAL` [ExprValue] instance representing the specified [Int]. */
     fun newDecimal(value: Int): ExprValue
 
+    @Deprecated("Please use [org.partiql.lang.eval.ExprValue.newDecimal] instead")
     /** Returns a PartiQL `DECIMAL` [ExprValue] instance representing the specified [Long]. */
     fun newDecimal(value: Long): ExprValue
 
+    @Deprecated("Please use [org.partiql.lang.eval.ExprValue.newDecimal] instead")
     /** Returns a PartiQL `DECIMAL` [ExprValue] instance representing the specified [BigDecimal]. */
     fun newDecimal(value: BigDecimal): ExprValue
 
+    @Deprecated("Please use [org.partiql.lang.eval.ExprValue.newDate] instead")
     /** Returns a PartiQL `DATE` [ExprValue] instance representing the specified [LocalDate]. */
     fun newDate(value: LocalDate): ExprValue
 
+    @Deprecated("Please use [org.partiql.lang.eval.ExprValue.newDate] instead")
     /** Returns a PartiQL `DATE` [ExprValue] instance representing the specified year, month and day. */
     fun newDate(year: Int, month: Int, day: Int): ExprValue
 
+    @Deprecated("Please use [org.partiql.lang.eval.ExprValue.newDate] instead")
     /** Returns a PartiQL `DATE` [ExprValue] instance representing the specified date string of the format yyyy-MM-dd. */
     fun newDate(dateString: String): ExprValue
 
+    @Deprecated("Please use [org.partiql.lang.eval.ExprValue.newTimestamp] instead")
     /** Returns a PartiQL `TIMESTAMP` [ExprValue] instance representing the specified [Timestamp]. */
     fun newTimestamp(value: Timestamp): ExprValue
 
+    @Deprecated("Please use [org.partiql.lang.eval.ExprValue.newTime] instead")
     /** Returns a PartiQL `TIME` [ExprValue] instance representing the specified [Time]. */
     fun newTime(value: Time): ExprValue
 
+    @Deprecated("Please use [org.partiql.lang.eval.ExprValue.newSymbol] instead")
     /** Returns an  PartiQL `SYMBOL` [ExprValue] instance representing the specified [String]. */
     fun newSymbol(value: String): ExprValue
 
+    @Deprecated("Please use [org.partiql.lang.eval.ExprValue.newClob] instead")
     /** Returns a PartiQL `CLOB` [ExprValue] instance representing the specified [ByteArray]. */
     fun newClob(value: ByteArray): ExprValue
 
+    @Deprecated("Please use [org.partiql.lang.eval.ExprValue.newBlob] instead")
     /** Returns a PartiQL `BLOB` [ExprValue] instance representing the specified [ByteArray]. */
     fun newBlob(value: ByteArray): ExprValue
 
+    @Deprecated("Please use [org.partiql.lang.eval.ExprValue.newStruct] instead")
     /**
      * Returns a possibly lazily evaluated instance of [ExprValue] representing a `PartiQL` `STRUCT`.
      * The [ExprValue] instances within [values] should be [Named].
@@ -123,27 +142,35 @@ interface ExprValueFactory {
      */
     fun newStruct(value: Sequence<ExprValue>, ordering: StructOrdering): ExprValue
 
+    @Deprecated("Please use [org.partiql.lang.eval.ExprValue.ExprValue.newStruct] instead")
     /** See newStruct(Sequence) */
     fun newStruct(value: Iterable<ExprValue>, ordering: StructOrdering): ExprValue
 
+    @Deprecated("Please use [org.partiql.lang.eval.ExprValue.ExprValue.newBag] instead")
     /** Returns a possibly lazily evaluated instance of [ExprValue] representing a `PartiQL` `BAG`. */
     fun newBag(value: Sequence<ExprValue>): ExprValue
 
+    @Deprecated("Please use [org.partiql.lang.eval.ExprValue.ExprValue.newBag] instead")
     /** See newBag(Sequence) */
     fun newBag(value: Iterable<ExprValue>): ExprValue
 
+    @Deprecated("Please use [org.partiql.lang.eval.ExprValue.ExprValue.newList] instead")
     /** Returns a possibly lazily evaluated instance of [ExprValue] representing a `PartiQL` `LIST`. */
     fun newList(value: Sequence<ExprValue>): ExprValue
 
+    @Deprecated("Please use [org.partiql.lang.eval.ExprValue.ExprValue.newList] instead")
     /** See newList(Sequence) */
     fun newList(value: Iterable<ExprValue>): ExprValue
 
+    @Deprecated("Please use [org.partiql.lang.eval.ExprValue.ExprValue.newSexp] instead")
     /** Returns a possibly lazily evaluated instance of [ExprValue] representing a `PartiQL` `SEXP`. */
     fun newSexp(value: Sequence<ExprValue>): ExprValue
 
+    @Deprecated("Please use [ExprValue.newSexp] instead")
     /** See newSexp(Sequence) */
     fun newSexp(value: Iterable<ExprValue>): ExprValue
 
+    @Deprecated("Please use [org.partiql.lang.eval.ExprValue.ExprValue.of] instead")
     /**
      * Creates a new [ExprValue] instance from any Ion value.
      *
@@ -152,6 +179,7 @@ interface ExprValueFactory {
      */
     fun newFromIonValue(value: IonValue): ExprValue
 
+    @Deprecated("Please use [org.partiql.lang.eval.ExprValue.ExprValue.newFromIonReader] instead")
     /**
      * Creates a new [ExprValue] instance from the next value available from the specified [IonReader].
      *

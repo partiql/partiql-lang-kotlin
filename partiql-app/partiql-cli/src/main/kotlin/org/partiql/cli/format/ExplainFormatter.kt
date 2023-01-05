@@ -12,11 +12,22 @@
  * language governing permissions and limitations under the License.
  */
 
-package org.partiql.format
+package org.partiql.cli.format
 
-import org.partiql.pig.runtime.DomainNode
-import kotlin.reflect.full.memberProperties
+import org.partiql.lang.eval.PartiQLResult
 
-internal fun DomainNode.properties() = this.javaClass.kotlin.memberProperties.filter { property ->
-    property.name.toLowerCase() != "metas" && property.name.toLowerCase() != "myhashcode"
+internal object ExplainFormatter {
+
+    internal fun format(result: PartiQLResult.Explain.Domain): String {
+        val format = result.format?.toUpperCase() ?: ExplainFormats.ION_SEXP.name
+        val formatOption = ExplainFormats.valueOf(format)
+        return formatOption.formatter.format(result.value)
+    }
+
+    private enum class ExplainFormats(val formatter: NodeFormatter) {
+        ION_SEXP(SexpFormatter),
+        TREE(TreeFormatter),
+        DOT(DotFormatter),
+        DOT_URL(DotUrlFormatter)
+    }
 }

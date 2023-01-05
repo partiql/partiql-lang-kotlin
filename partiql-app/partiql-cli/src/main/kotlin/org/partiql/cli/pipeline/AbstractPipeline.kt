@@ -12,12 +12,14 @@
  * language governing permissions and limitations under the License.
  */
 
-package org.partiql.pipeline
+package org.partiql.cli.pipeline
 
 import com.amazon.ion.IonSystem
 import com.amazon.ion.system.IonSystemBuilder
 import org.partiql.annotations.PartiQLExperimental
-import org.partiql.cli.Pipeline
+import org.partiql.cli.functions.ReadFile
+import org.partiql.cli.functions.WriteFile
+import org.partiql.extensions.cli.functions.QueryDDB
 import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.compiler.PartiQLCompilerBuilder
 import org.partiql.lang.compiler.PartiQLCompilerPipeline
@@ -25,7 +27,6 @@ import org.partiql.lang.eval.CompileOptions
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.PartiQLResult
 import org.partiql.lang.eval.ProjectionIterationBehavior
 import org.partiql.lang.eval.ThunkOptions
@@ -48,8 +49,8 @@ internal sealed class AbstractPipeline(open val options: PipelineOptions) {
 
     companion object {
         internal fun create(options: PipelineOptions): AbstractPipeline = when (options.pipeline) {
-            Pipeline.STANDARD -> PipelineStandard(options)
-            Pipeline.EXPERIMENTAL -> PipelineExperimental(options)
+            PipelineType.STANDARD -> PipelineStandard(options)
+            PipelineType.EXPERIMENTAL -> PipelineExperimental(options)
         }
         internal fun convertExprValue(value: ExprValue): PartiQLResult {
             return PartiQLResult.Value(value)
@@ -57,18 +58,49 @@ internal sealed class AbstractPipeline(open val options: PipelineOptions) {
         internal fun standard(): AbstractPipeline {
             return create(PipelineOptions())
         }
+
+        internal fun createPipelineOptions(
+            pipeline: PipelineType,
+            typedOpBehavior: TypedOpBehavior,
+            projectionIteration: ProjectionIterationBehavior,
+            undefinedVariable: UndefinedVariableBehavior,
+            permissiveMode: TypingMode
+        ): PipelineOptions {
+            val ion = IonSystemBuilder.standard().build()
+            val functions: List<ExprFunction> = listOf(
+                ReadFile(ion),
+                WriteFile(ion),
+                QueryDDB(ion)
+            )
+            val parser = PartiQLParserBuilder().ionSystem(ion).build()
+            return PipelineOptions(
+                pipeline,
+                ion,
+                parser,
+                typedOpBehavior,
+                projectionIteration,
+                undefinedVariable,
+                permissiveMode,
+                functions = functions
+            )
+        }
     }
 
     data class PipelineOptions(
-        val pipeline: Pipeline = Pipeline.STANDARD,
+        val pipeline: PipelineType = PipelineType.STANDARD,
         val ion: IonSystem = IonSystemBuilder.standard().build(),
         val parser: Parser = PartiQLParserBuilder.standard().build(),
         val typedOpBehavior: TypedOpBehavior = TypedOpBehavior.HONOR_PARAMETERS,
         val projectionIterationBehavior: ProjectionIterationBehavior = ProjectionIterationBehavior.FILTER_MISSING,
         val undefinedVariableBehavior: UndefinedVariableBehavior = UndefinedVariableBehavior.ERROR,
         val typingMode: TypingMode = TypingMode.LEGACY,
-        val functions: List<(ExprValueFactory) -> ExprFunction> = emptyList()
+        val functions: List<ExprFunction> = emptyList()
     )
+
+    internal enum class PipelineType {
+        STANDARD,
+        EXPERIMENTAL
+    }
 
     /**
      * Wraps the EvaluatingCompiler
@@ -82,9 +114,8 @@ internal sealed class AbstractPipeline(open val options: PipelineOptions) {
             typingMode(options.typingMode)
         }
 
-        private val compilerPipeline = CompilerPipeline.build(options.ion) {
-            options.functions.forEach { functionBlock ->
-                val function = functionBlock.invoke(valueFactory)
+        private val compilerPipeline = CompilerPipeline.build {
+            options.functions.forEach { function ->
                 addFunction(function)
             }
             compileOptions(compileOptions)

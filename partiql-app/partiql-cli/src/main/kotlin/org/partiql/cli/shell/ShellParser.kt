@@ -12,7 +12,7 @@
  * language governing permissions and limitations under the License.
  */
 
-package org.partiql.shell
+package org.partiql.cli.shell
 
 import org.jline.reader.EOFError
 import org.jline.reader.ParsedLine

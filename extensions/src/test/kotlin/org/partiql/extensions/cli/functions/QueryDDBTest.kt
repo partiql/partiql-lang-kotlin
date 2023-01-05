@@ -26,14 +26,13 @@ import org.mockito.Mockito
 import org.mockito.MockitoAnnotations
 import org.mockito.junit.jupiter.MockitoExtension
 import org.partiql.lang.eval.EvaluationSession
-import org.partiql.lang.eval.ExprValueFactory
+import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.toIonValue
 
 @ExtendWith(MockitoExtension::class)
 class QueryDDBTest {
 
     private val ion = IonSystemBuilder.standard().build()
-    private val factory = ExprValueFactory.standard(ion)
     private val session = EvaluationSession.standard()
     private val client: AmazonDynamoDBClient = Mockito.mock(AmazonDynamoDBClient::class.java)
     private lateinit var function: QueryDDB
@@ -41,13 +40,13 @@ class QueryDDBTest {
     @BeforeEach
     fun setUp() {
         MockitoAnnotations.openMocks(this)
-        this.function = QueryDDB(factory, client)
+        this.function = QueryDDB(ion, client)
     }
 
     @Test
     fun basicQuery() {
         // Arrange
-        val arguments = listOf(factory.newString("SELECT * FROM test;"))
+        val arguments = listOf(ExprValue.newString("SELECT * FROM test;"))
         val mockAttrValue = AttributeValue()
         mockAttrValue.s = "value"
         val mockResults = listOf(mapOf("key" to mockAttrValue))
@@ -65,7 +64,7 @@ class QueryDDBTest {
     @Test
     fun basicQueryWithNextToken() {
         // Arrange
-        val arguments = listOf(factory.newString("SELECT * FROM test;"))
+        val arguments = listOf(ExprValue.newString("SELECT * FROM test;"))
         val mockAttrValue = AttributeValue()
         mockAttrValue.s = "value"
         val mockResults = listOf(mapOf("key" to mockAttrValue))

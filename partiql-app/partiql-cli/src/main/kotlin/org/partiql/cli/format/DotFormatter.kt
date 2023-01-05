@@ -12,13 +12,13 @@
  * language governing permissions and limitations under the License.
  */
 
-package org.partiql.format
+package org.partiql.cli.format
 
-import org.partiql.format.dot.DotGraph
-import org.partiql.format.dot.DotNodeId
-import org.partiql.format.dot.DotNodeShape
-import org.partiql.format.dot.DotNodeStmt
-import org.partiql.format.dot.digraph
+import org.partiql.cli.format.dot.DotGraph
+import org.partiql.cli.format.dot.DotNodeId
+import org.partiql.cli.format.dot.DotNodeShape
+import org.partiql.cli.format.dot.DotNodeStmt
+import org.partiql.cli.format.dot.digraph
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.PartiqlLogical
 import org.partiql.lang.domains.PartiqlLogicalResolved

@@ -4,7 +4,6 @@ import com.amazon.ion.IonValue
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.partiql.lang.ION
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.eval.ExprValueFactory
 
 /** Builds a new test suite. */
 @TestDslMarker
@@ -13,13 +12,13 @@ interface SuiteBuilder {
     fun group(groupName: String, block: GroupBuilder.() -> Unit)
 
     infix fun String.hasVal(ionText: String): IonValue?
-    fun parameterFactory(block: (ExprValueFactory) -> List<ExprValue>)
+    fun parameterFactory(block: () -> List<ExprValue>)
 }
 
 class SuiteBuilderImpl : SuiteBuilder {
     private val groups = mutableListOf<IonResultTestGroup>()
     private val globals = mutableMapOf<String, IonValue>()
-    private var factoryBlock: (ExprValueFactory) -> List<ExprValue> = { listOf() }
+    private var factoryBlock: () -> List<ExprValue> = { listOf() }
 
     /** Builds a category to be added to the suite. */
     override fun group(groupName: String, block: GroupBuilder.() -> Unit) {
@@ -34,7 +33,7 @@ class SuiteBuilderImpl : SuiteBuilder {
             }
         )
 
-    override fun parameterFactory(block: (ExprValueFactory) -> List<ExprValue>) {
+    override fun parameterFactory(block: () -> List<ExprValue>) {
         factoryBlock = block
     }
 

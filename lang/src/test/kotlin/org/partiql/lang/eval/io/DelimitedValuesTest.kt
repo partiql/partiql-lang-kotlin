@@ -41,7 +41,7 @@ class DelimitedValuesTest : TestBase() {
         csvFormat: CSVFormat,
         conversionMode: DelimitedValues.ConversionMode
     ): ExprValue =
-        DelimitedValues.exprValue(valueFactory, StringReader(text), csvFormat, conversionMode)
+        DelimitedValues.exprValue(ion, StringReader(text), csvFormat, conversionMode)
 
     private fun assertWrite(
         expectedText: String,
@@ -53,8 +53,8 @@ class DelimitedValuesTest : TestBase() {
     ) {
         val actualText = StringWriter().use {
 
-            val rowExprValue = valueFactory.newFromIonText(valueText)
-            val exprValue = valueFactory.newBag(
+            val rowExprValue = newFromIonText(valueText)
+            val exprValue = ExprValue.newBag(
                 rowExprValue.asSequence().map {
                     // apply the "schema"
                     it.orderedNamesValue(names)
@@ -196,8 +196,8 @@ class DelimitedValuesTest : TestBase() {
 
     @Test(expected = IllegalArgumentException::class)
     fun mismatchSchema() = voidWrite(
-        valueFactory.newBag(
-            valueFactory.newFromIonText("[{a:1}, {b:2}]")
+        ExprValue.newBag(
+            newFromIonText("[{a:1}, {b:2}]")
                 .asSequence()
                 .mapIndexed { index, exprValue ->
                     when (index) {
@@ -211,7 +211,7 @@ class DelimitedValuesTest : TestBase() {
 
     @Test(expected = IllegalArgumentException::class)
     fun noSchema() = voidWrite(
-        valueFactory.newFromIonText("[{a:1}, {b:2}]"),
+        newFromIonText("[{a:1}, {b:2}]"),
         writeHeader = false
     )
 }

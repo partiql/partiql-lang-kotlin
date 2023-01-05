@@ -5,7 +5,7 @@ import com.amazon.ionelement.api.MetaContainer
 import org.partiql.annotations.PartiQLExperimental
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.domains.PartiqlPhysical
-import org.partiql.lang.eval.ExprValueFactory
+import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.NaturalExprValueComparators
 import org.partiql.lang.eval.Thunk
 import org.partiql.lang.eval.ThunkValue
@@ -40,7 +40,6 @@ internal typealias PhysicalPlanThunkValue<T> = ThunkValue<EvaluatorState, T>
 
 internal class PhysicalBexprToThunkConverter(
     private val exprConverter: PhysicalPlanCompiler,
-    private val valueFactory: ExprValueFactory,
     private val relationalOperatorFactory: Map<RelationalOperatorFactoryKey, RelationalOperatorFactory>
 ) : PartiqlPhysical.Bexpr.Converter<RelationThunkEnv> {
 
@@ -171,13 +170,13 @@ internal class PhysicalBexprToThunkConverter(
         // side of the join is empty or no rows match the predicate.
         val leftVariableIndexes = node.left.extractAccessibleVarDecls().map { it.index.value.toIntExact() }
         val setLeftSideVariablesToNull: (EvaluatorState) -> Unit = { state ->
-            leftVariableIndexes.forEach { state.registers[it] = valueFactory.nullValue }
+            leftVariableIndexes.forEach { state.registers[it] = ExprValue.nullValue }
         }
         // Compute a function to set the right-side variables to NULL.  This is for use with LEFT JOIN, when the right
         // side of the join is empty or no rows match the predicate.
         val rightVariableIndexes = node.right.extractAccessibleVarDecls().map { it.index.value.toIntExact() }
         val setRightSideVariablesToNull: (EvaluatorState) -> Unit = { state ->
-            rightVariableIndexes.forEach { state.registers[it] = valueFactory.nullValue }
+            rightVariableIndexes.forEach { state.registers[it] = ExprValue.nullValue }
         }
 
         return factory.create(

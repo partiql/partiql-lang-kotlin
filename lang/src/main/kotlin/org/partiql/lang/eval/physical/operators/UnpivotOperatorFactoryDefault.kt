@@ -45,25 +45,25 @@ internal class UnpivotOperatorDefault(
 ) : RelationExpression {
     override fun evaluate(state: EvaluatorState): RelationIterator {
         val originalValue = expr(state)
-        val unpivot = originalValue.unpivot(state)
+        val unpivot = originalValue.unpivot()
 
         return relation(RelationType.BAG) {
             val iter = unpivot.iterator()
             while (iter.hasNext()) {
                 val item = iter.next()
                 setAsVar(state, item.unnamedValue())
-                setAtVar?.let { it(state, item.name ?: state.valueFactory.missingValue) }
-                setByVar?.let { it(state, item.address ?: state.valueFactory.missingValue) }
+                setAtVar?.let { it(state, item.name ?: ExprValue.missingValue) }
+                setByVar?.let { it(state, item.address ?: ExprValue.missingValue) }
                 yield()
             }
         }
     }
 
-    private fun ExprValue.unpivot(state: EvaluatorState): ExprValue = when (type) {
+    private fun ExprValue.unpivot(): ExprValue = when (type) {
         ExprValueType.STRUCT, ExprValueType.MISSING -> this
-        else -> state.valueFactory.newBag(
+        else -> ExprValue.newBag(
             listOf(
-                this.namedValue(state.valueFactory.newString(syntheticColumnName(0)))
+                this.namedValue(ExprValue.newString(syntheticColumnName(0)))
             )
         )
     }

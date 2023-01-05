@@ -1,6 +1,5 @@
 package org.partiql.lang.eval.evaluatortestframework
 
-import com.amazon.ion.system.IonSystemBuilder
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
@@ -11,8 +10,7 @@ import org.partiql.lang.util.ArgumentsProviderBase
 class ExprValueStrictEqualsTest {
     data class EqTest(val q1: String, val q2: String, val equals: Boolean)
 
-    val ion = IonSystemBuilder.standard().build()
-    val pipeline = CompilerPipeline.builder(ion).build()
+    val pipeline = CompilerPipeline.builder().build()
     val session = EvaluationSession.standard()
 
     @ParameterizedTest

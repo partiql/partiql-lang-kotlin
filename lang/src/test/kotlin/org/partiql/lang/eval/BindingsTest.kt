@@ -25,12 +25,10 @@ import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.util.newFromIonText
 
 class BindingsTest {
-    private val valueFactory = ExprValueFactory.standard(ION)
-
     @Test
     fun delegate() {
-        val innerBindings = valueFactory.newFromIonText("{a:1, b:2}").bindings
-        val outerBindings = valueFactory.newFromIonText("{b:3, c:4}").bindings
+        val innerBindings = newFromIonText("{a:1, b:2}").bindings
+        val outerBindings = newFromIonText("{b:3, c:4}").bindings
 
         val delegatedBindings = innerBindings.delegate(outerBindings)
 
@@ -49,19 +47,19 @@ class BindingsTest {
         val testBindings = Bindings.buildLazyBindings<ExprValue> {
             addBinding("foo") {
                 fooEvaluateCount++
-                valueFactory.newInt(10)
+                ExprValue.newInt(10)
             }
             addBinding("bar") {
                 barEvaluateCount++
-                valueFactory.newInt(20)
+                ExprValue.newInt(20)
             }
             addBinding("bAt") {
                 bAtEvaluateCount++
-                valueFactory.newInt(30)
+                ExprValue.newInt(30)
             }
             addBinding("BaT") {
                 BaTEvaluateCount++
-                valueFactory.newInt(40)
+                ExprValue.newInt(40)
             }
         }
 
@@ -124,8 +122,7 @@ class BindingsTest {
             add("valueThatExists", ION.newInt(1))
             add("duplicateFieldName", ION.newInt(1))
             add("duplicateFieldName", ION.newInt(2))
-        },
-        valueFactory
+        }
     )
 
     private val bindingForCaseInsensitiveTests = Bindings.ofIonStruct(
@@ -133,8 +130,7 @@ class BindingsTest {
             add("valueThatExists", ION.newInt(1))
             add("ambiguousFieldName", ION.newInt(1))
             add("AmbiguousFieldName", ION.newInt(2))
-        },
-        valueFactory
+        }
     )
 
     @Test
