@@ -10,6 +10,7 @@ import org.partiql.examples.EvaluationJavaExample
 import org.partiql.examples.EvaluationWithBindings
 import org.partiql.examples.EvaluationWithLazyBindings
 import org.partiql.examples.ExperimentalFeatureExample
+import org.partiql.examples.ExperimentalFeatureJavaExample
 import org.partiql.examples.ParserErrorExample
 import org.partiql.examples.ParserExample
 import org.partiql.examples.ParserJavaExample
@@ -26,6 +27,7 @@ private val examples = mapOf(
     S3JavaExample::class.java.simpleName to S3JavaExample(System.out),
     EvaluationJavaExample::class.java.simpleName to EvaluationJavaExample(System.out),
     ParserJavaExample::class.java.simpleName to ParserJavaExample(System.out),
+    ExperimentalFeatureJavaExample::class.java.simpleName to ExperimentalFeatureJavaExample(System.out),
 
     // Kotlin Examples
     CsvExprValueExample::class.java.simpleName to CsvExprValueExample(System.out),
