@@ -57,6 +57,11 @@ class KotlinSymbols private constructor(
     private val camels: MutableMap<TypeRef.Path, String> = mutableMapOf()
 
     /**
+     * Memoize converting a TypeRef.Path to a pascal case identifier
+     */
+    private val pascals: MutableMap<TypeRef.Path, String> = mutableMapOf()
+
+    /**
      * Map all type references back to their definitions. Use `id` as to not include `nullable` in the key `equals`
      */
     private val defs: Map<String, TypeDef> by lazy {
@@ -88,6 +93,13 @@ class KotlinSymbols private constructor(
      */
     fun camel(ref: TypeRef.Path): String = camels.computeIfAbsent(ref) {
         ref.path.joinToString("_").toCamelCase()
+    }
+
+    /**
+     * Again, this causes naming conflicts for names like `a_b` and `a.b`
+     */
+    fun pascal(ref: TypeRef.Path): String = pascals.computeIfAbsent(ref) {
+        ref.path.joinToString("_").toPascalCase()
     }
 
     fun def(ref: TypeRef.Path): TypeDef = defs[ref.id] ?: error("no definition found for type `$ref`")

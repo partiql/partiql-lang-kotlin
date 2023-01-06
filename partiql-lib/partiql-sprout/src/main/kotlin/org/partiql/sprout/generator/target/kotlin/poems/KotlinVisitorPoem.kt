@@ -29,13 +29,18 @@ class KotlinVisitorPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
     private val children = PropertySpec.Companion.builder("children", LIST.parameterizedBy(symbols.base)).build()
 
     private val visitorPackageName = "${symbols.rootPackage}.visitor"
-    private val baseVisitorName = "${symbols.rootId}Visitor"
-    private val baseVisitorClass = ClassName(visitorPackageName, baseVisitorName)
+
+    // Interface visitor
+    private val visitorName = "${symbols.rootId}Visitor"
+    private val visitorClass = ClassName(visitorPackageName, visitorName).parameterizedBy(Parameters.R, Parameters.C)
+
+    // Abstract visitor with default walking
+    private val baseVisitorName = "${symbols.rootId}BaseVisitor"
 
     private val accept = FunSpec.builder("accept")
         .addTypeVariable(Parameters.R)
         .addTypeVariable(Parameters.C)
-        .addParameter("visitor", baseVisitorClass.parameterizedBy(Parameters.R, Parameters.C))
+        .addParameter("visitor", visitorClass)
         .returns(Parameters.`R?`)
         .build()
 
@@ -87,7 +92,7 @@ class KotlinVisitorPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
             accept.toBuilder()
                 .addModifiers(KModifier.OVERRIDE)
                 .addParameter(ParameterSpec.builder("ctx", Parameters.`C?`).build())
-                .addStatement("return visitor.visit(this, ctx)")
+                .addStatement("return visitor.%L(this, ctx)", node.product.ref.visitMethodName())
                 .build()
         )
     }
@@ -103,7 +108,7 @@ class KotlinVisitorPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
                 .apply {
                     beginControlFlow("return when (this)")
                     node.sum.variants.forEach {
-                        addStatement("is %T -> visitor.visit(this, ctx)", symbols.clazz(it.ref))
+                        addStatement("is %T -> visitor.%L(this, ctx)", symbols.clazz(it.ref), it.ref.visitMethodName())
                     }
                     endControlFlow()
                 }
@@ -142,15 +147,29 @@ class KotlinVisitorPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
     /**
      * Generate all visitors for this universe
      */
-    private fun KotlinUniverseSpec.visitors(): List<FileSpec> = listOf(
-        visitor(),
-        // visitorFold(), VisitorFold is a less useful version of Visitor
-    )
+    private fun KotlinUniverseSpec.visitors(): List<FileSpec> = listOf(visitor(), baseVisitor())
+
+    /**
+     * Generates the visitor interface for this universe
+     */
+    private fun KotlinUniverseSpec.visitor(): FileSpec {
+        val visitor = TypeSpec.interfaceBuilder(visitorName)
+            .addTypeVariable(Parameters.R)
+            .addTypeVariable(Parameters.C)
+            .apply {
+                forEachNode {
+                    val visit = it.visit().addModifiers(KModifier.ABSTRACT).build()
+                    addFunction(visit)
+                }
+            }
+            .build()
+        return FileSpec.builder(visitorPackageName, visitorName).addType(visitor).build()
+    }
 
     /**
      * Generates the base visitor for this universe
      */
-    private fun KotlinUniverseSpec.visitor(): FileSpec {
+    private fun KotlinUniverseSpec.baseVisitor(): FileSpec {
         val defaultVisit = FunSpec.builder("defaultVisit")
             .addModifiers(KModifier.OPEN)
             .addParameter(ParameterSpec("node", symbols.base))
@@ -162,12 +181,13 @@ class KotlinVisitorPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
             .addStatement("return null")
             .build()
         val visitor = TypeSpec.classBuilder(baseVisitorName)
+            .addSuperinterface(visitorClass)
             .addModifiers(KModifier.ABSTRACT)
             .addTypeVariable(Parameters.R)
             .addTypeVariable(Parameters.C)
             .apply {
                 forEachNode {
-                    addFunction(it.visit())
+                    addFunction(it.baseVisit())
                 }
             }
             .addFunction(defaultVisit)
@@ -175,48 +195,34 @@ class KotlinVisitorPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
         return FileSpec.builder(visitorPackageName, baseVisitorName).addType(visitor).build()
     }
 
-    private fun visitorFold(): FileSpec {
-        val foldVisitorName = "${baseVisitorName}Fold"
-        val foldVisitorClass = ClassName(visitorPackageName, foldVisitorName)
-        val defaultVisit = FunSpec.builder("defaultVisit")
-            .addModifiers(KModifier.OVERRIDE)
-            .addParameter(ParameterSpec("node", symbols.base))
-            .addParameter(ParameterSpec("ctx", Parameters.`T?`))
-            .returns(Parameters.`T?`)
-            .addStatement("return node.children.foldRight(node.accept(this, ctx)) { child, acc -> child.accept(this, acc) }")
-            .build()
-        val visitor = TypeSpec.classBuilder(foldVisitorClass)
-            .addTypeVariable(Parameters.T)
-            .superclass(baseVisitorClass.parameterizedBy(listOf(Parameters.T, Parameters.T)))
-            .addFunction(defaultVisit)
-            .build()
-        return FileSpec.builder(visitorPackageName, foldVisitorName).addType(visitor).build()
-    }
-
-    private fun KotlinNodeSpec.visit(): FunSpec = when (this) {
-        is KotlinNodeSpec.Product -> this.visit()
-        is KotlinNodeSpec.Sum -> this.visit()
-    }
-
-    private fun KotlinNodeSpec.Product.visit() = FunSpec.builder("visit")
-        .addModifiers(KModifier.OPEN)
+    /**
+     * Visit interface method
+     */
+    private fun KotlinNodeSpec.visit() = FunSpec.builder(def.ref.visitMethodName())
         .addParameter(ParameterSpec("node", clazz))
         .addParameter(ParameterSpec("ctx", Parameters.`C?`))
         .returns(Parameters.`R?`)
-        .addStatement("return defaultVisit(node, ctx)")
-        .build()
 
-    private fun KotlinNodeSpec.Sum.visit() = FunSpec.builder("visit")
-        .addModifiers(KModifier.OPEN)
-        .addParameter(ParameterSpec("node", clazz))
-        .addParameter(ParameterSpec("ctx", Parameters.`C?`))
-        .returns(Parameters.`R?`)
+    /**
+     * Visit base method
+     */
+    private fun KotlinNodeSpec.baseVisit() = visit()
+        .addModifiers(KModifier.OVERRIDE)
         .apply {
-            beginControlFlow("return when (node)")
-            sum.variants.forEach {
-                addStatement("is %T -> visit(node, ctx)", symbols.clazz(it.ref))
+            when (this@baseVisit) {
+                is KotlinNodeSpec.Product -> addStatement("return defaultVisit(node, ctx)")
+                is KotlinNodeSpec.Sum -> {
+                    beginControlFlow("return when (node)")
+                    sum.variants.forEach {
+                        addStatement("is %T -> %L(node, ctx)", symbols.clazz(it.ref), it.ref.visitMethodName())
+                    }
+                    endControlFlow()
+                }
             }
-            endControlFlow()
-        }
-        .build()
+        }.build()
+
+    /**
+     * Returns the visit method name of the given TypeRef.Path
+     */
+    private fun TypeRef.Path.visitMethodName() = "visit${symbols.pascal(this)}"
 }
