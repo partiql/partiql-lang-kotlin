@@ -63,10 +63,9 @@ internal class PartiQLCommand(private val ion: IonSystem) : Runnable {
     override fun run() {
         val command = executionOptions ?: ExecutionOptions()
         val shell = shellOptions ?: ShellOptions()
-        val stdin = System.`in`
         when {
             command.query != null -> runCli(command, command.query!!.inputStream())
-            stdin.available() > 0 -> runCli(command, stdin)
+            System.console() == null -> runCli(command, System.`in`)
             else -> runShell(shell)
         }
     }
@@ -89,10 +88,10 @@ internal class PartiQLCommand(private val ion: IonSystem) : Runnable {
             false -> query
             else -> queryLines.subList(1, queryLines.size).joinToString(System.lineSeparator())
         }
-        input.use {
-            output.use {
-                Cli(ion, input, exec.inputFormat, output, exec.outputFormat, options.pipeline, options.globalEnvironment, queryWithoutShebang, exec.wrapIon).run()
-                output.write(System.lineSeparator().toByteArray(Charsets.UTF_8))
+        input.use { src ->
+            output.use { out ->
+                Cli(ion, src, exec.inputFormat, out, exec.outputFormat, options.pipeline, options.globalEnvironment, queryWithoutShebang, exec.wrapIon).run()
+                out.write(System.lineSeparator().toByteArray(Charsets.UTF_8))
             }
         }
     }
