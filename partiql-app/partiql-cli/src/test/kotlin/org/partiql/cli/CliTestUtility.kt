@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.partiql.cli.pico.PartiQLCommand
 import org.partiql.cli.pipeline.AbstractPipeline
 import org.partiql.cli.query.Cli
-import org.partiql.cli.utils.EmptyInputStream
+import org.partiql.cli.utils.InputSource
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.ExprValue
 import java.io.ByteArrayOutputStream
@@ -26,9 +26,13 @@ internal fun makeCliAndGetResult(
     pipeline: AbstractPipeline = AbstractPipeline.standard(),
     wrapIon: Boolean = false
 ): String {
+    val stream = when (input) {
+        null -> InputSource.StringSource("")
+        else -> InputSource.StringSource(input)
+    }
     val cli = Cli(
         ion,
-        input?.byteInputStream(Charsets.UTF_8) ?: EmptyInputStream(),
+        stream,
         inputFormat,
         output,
         outputFormat,

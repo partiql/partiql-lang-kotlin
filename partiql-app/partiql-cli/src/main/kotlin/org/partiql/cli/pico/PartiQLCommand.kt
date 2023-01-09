@@ -17,11 +17,10 @@ package org.partiql.cli.pico
 import com.amazon.ion.IonSystem
 import org.partiql.cli.query.Cli
 import org.partiql.cli.shell.Shell
-import org.partiql.cli.utils.EmptyInputStream
+import org.partiql.cli.utils.InputSource
 import org.partiql.cli.utils.UnclosableOutputStream
 import picocli.CommandLine
 import java.io.File
-import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.InputStream
 
@@ -74,10 +73,7 @@ internal class PartiQLCommand(private val ion: IonSystem) : Runnable {
      * Runs the CLI
      */
     private fun runCli(exec: ExecutionOptions, stream: InputStream) {
-        val input = when (exec.inputFile) {
-            null -> EmptyInputStream()
-            else -> FileInputStream(exec.inputFile!!)
-        }
+        val input = exec.inputFile?.let { InputSource.FileSource(it) }
         val output = when (exec.outputFile) {
             null -> UnclosableOutputStream(System.out)
             else -> FileOutputStream(exec.outputFile!!)

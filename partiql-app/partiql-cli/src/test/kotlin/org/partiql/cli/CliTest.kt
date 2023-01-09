@@ -24,11 +24,14 @@ import org.partiql.cli.pico.PartiQLCommand
 import org.partiql.cli.pipeline.AbstractPipeline
 import org.partiql.lang.eval.BAG_ANNOTATION
 import org.partiql.lang.eval.EvaluationException
+import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.MISSING_ANNOTATION
+import org.partiql.lang.eval.PartiQLResult
 import org.partiql.lang.eval.ProjectionIterationBehavior
 import org.partiql.lang.eval.TypedOpBehavior
 import org.partiql.lang.eval.TypingMode
 import org.partiql.lang.eval.UndefinedVariableBehavior
+import org.partiql.lang.eval.exprEquals
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
@@ -161,8 +164,12 @@ class CliTest {
         val wrappedInputResult = makeCliAndGetResult(query, wrappedInput, wrapIon = true, outputFormat = PartiQLCommand.OutputFormat.PARTIQL)
         val ionInputResult = makeCliAndGetResult(query, input, inputFormat = PartiQLCommand.InputFormat.ION, outputFormat = PartiQLCommand.OutputFormat.PARTIQL)
 
-        assertEquals(expected, wrappedInputResult)
-        assertEquals(expected, ionInputResult)
+        // Gather results and evaluate
+        val expectedPartiQL = AbstractPipeline.standard().compile(expected, EvaluationSession.standard()) as PartiQLResult.Value
+        val wrappedResult = AbstractPipeline.standard().compile(wrappedInputResult, EvaluationSession.standard()) as PartiQLResult.Value
+        val ionResult = AbstractPipeline.standard().compile(ionInputResult, EvaluationSession.standard()) as PartiQLResult.Value
+        assert(expectedPartiQL.value.exprEquals(wrappedResult.value))
+        assert(expectedPartiQL.value.exprEquals(ionResult.value))
     }
 
     @Test

@@ -20,7 +20,7 @@ import com.amazon.ion.system.IonTextWriterBuilder
 import org.partiql.cli.format.ExplainFormatter
 import org.partiql.cli.pico.PartiQLCommand
 import org.partiql.cli.pipeline.AbstractPipeline
-import org.partiql.cli.utils.EmptyInputStream
+import org.partiql.cli.utils.InputSource
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
@@ -28,13 +28,12 @@ import org.partiql.lang.eval.PartiQLResult
 import org.partiql.lang.eval.delegate
 import org.partiql.lang.eval.toIonValue
 import org.partiql.lang.util.ConfigurableExprValueFormatter
-import java.io.InputStream
 import java.io.OutputStream
 import java.io.OutputStreamWriter
 
 internal class Cli(
     private val ion: IonSystem,
-    private val input: InputStream,
+    private val input: InputSource?,
     private val inputFormat: PartiQLCommand.InputFormat,
     private val output: OutputStream,
     private val outputFormat: PartiQLCommand.OutputFormat,
@@ -54,22 +53,27 @@ internal class Cli(
             .withWriteTopLevelValuesOnNewLines(true)
     }
 
-    internal fun run() {
+    fun run() {
+        if (input == null) {
+            val result = compilerPipeline.compile(query, EvaluationSession.build { })
+            outputResult(result)
+            return
+        }
         when (inputFormat) {
-            PartiQLCommand.InputFormat.ION -> runWithIonInput()
-            PartiQLCommand.InputFormat.PARTIQL -> runWithPartiQLInput()
+            PartiQLCommand.InputFormat.ION -> runWithIonInput(input)
+            PartiQLCommand.InputFormat.PARTIQL -> runWithPartiQLInput(input)
         }
     }
 
-    private fun runWithIonInput() {
+    private fun runWithIonInput(input: InputSource) {
         when (wrapIon) {
-            true -> runWithIonInputWrapped()
-            false -> runWithIonInputDefault()
+            true -> runWithIonInputWrapped(input)
+            false -> runWithIonInputDefault(input)
         }
     }
 
-    private fun runWithIonInputDefault() {
-        IonReaderBuilder.standard().build(input).use { reader ->
+    private fun runWithIonInputDefault(input: InputSource) {
+        ion.newReader(input.stream()).use { reader ->
             val bindings = when (reader.next()) {
                 null -> Bindings.buildLazyBindings<ExprValue> {}.delegate(globals)
                 else -> getBindingsFromIonValue(ExprValue.newFromIonReader(ion, reader))
@@ -85,8 +89,8 @@ internal class Cli(
         }
     }
 
-    private fun runWithIonInputWrapped() {
-        IonReaderBuilder.standard().build(input).use { reader ->
+    private fun runWithIonInputWrapped(input: InputSource) {
+        IonReaderBuilder.standard().build(input.stream()).use { reader ->
             val inputIonValue = ion.iterate(reader).asSequence().map { ExprValue.of(it) }
             val inputExprValue = ExprValue.newBag(inputIonValue)
             val bindings = getBindingsFromIonValue(inputExprValue)
@@ -95,9 +99,9 @@ internal class Cli(
         }
     }
 
-    private fun runWithPartiQLInput() {
+    private fun runWithPartiQLInput(input: InputSource) {
         val inputEnvironment = compilerPipeline.compile(
-            input.readBytes().toString(Charsets.UTF_8),
+            input.stream().readBytes().toString(Charsets.UTF_8),
             EvaluationSession.standard()
         ) as PartiQLResult.Value
         val bindings = getBindingsFromIonValue(inputEnvironment.value)
@@ -108,7 +112,7 @@ internal class Cli(
     private fun getBindingsFromIonValue(value: ExprValue): Bindings<ExprValue> {
         return Bindings.buildLazyBindings<ExprValue> {
             // If `input` is a class of `EmptyInputStream`, it means there is no input data provided by user.
-            if (input !is EmptyInputStream) {
+            if (input != null) {
                 addBinding("input_data") { value }
             }
         }.delegate(globals)

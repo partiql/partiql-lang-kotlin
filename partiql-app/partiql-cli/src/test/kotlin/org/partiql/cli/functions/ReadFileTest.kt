@@ -119,6 +119,16 @@ class ReadFileTest {
             function.callWithOptional(session, args, additionalOptions)
         }
     }
+    @Test
+    fun readUnwrappedIon() {
+        writeFile("data.ion", "1 2")
+
+        val args = listOf("\"${dirPath("data.ion")}\"").map { it.exprValue() }
+        val additionalOptions = "{type:\"ion\", 'wrap-ion':true}".exprValue()
+        val actual = function.callWithOptional(session, args, additionalOptions)
+        val expected = "[1, 2]"
+        assertValues(expected, actual)
+    }
 
     @Test
     fun readCsv() {
