@@ -14,7 +14,7 @@
 
 package org.partiql.lang.compiler
 
-import org.partiql.annotations.PartiQLExperimental
+import org.partiql.annotations.ExperimentalPartiQLCompilerPipeline
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.errors.PartiQLException
@@ -41,7 +41,7 @@ import org.partiql.lang.syntax.PartiQLParserBuilder
  * }
  * ```
  */
-@PartiQLExperimental
+@ExperimentalPartiQLCompilerPipeline
 class PartiQLCompilerPipeline(
     private val parser: Parser,
     private val planner: PartiQLPlanner,
@@ -115,8 +115,8 @@ class PartiQLCompilerPipeline(
     }
 
     class Builder internal constructor() {
-        val parser = PartiQLParserBuilder.standard()
-        val planner = PartiQLPlannerBuilder.standard()
-        val compiler = PartiQLCompilerBuilder.standard()
+        var parser = PartiQLParserBuilder.standard()
+        var planner = PartiQLPlannerBuilder.standard()
+        var compiler = PartiQLCompilerBuilder.standard()
     }
 }

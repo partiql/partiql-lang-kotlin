@@ -16,7 +16,6 @@ package org.partiql.lang.eval
 
 import com.amazon.ion.IonType
 import com.amazon.ion.IonValue
-import org.partiql.annotations.PartiQLExperimental
 import org.partiql.lang.CUSTOM_TEST_TYPES
 import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.SqlException
@@ -39,12 +38,11 @@ import org.partiql.lang.util.newFromIonText
 /**
  * [EvaluatorTestBase] contains testing infrastructure needed by all test classes that need to evaluate a query.
  */
-abstract class EvaluatorTestBase : TestBase() {
-    @OptIn(PartiQLExperimental::class)
+abstract class EvaluatorTestBase(experimentalFeatures: Boolean = false) : TestBase() {
     private val testHarness: EvaluatorTestAdapter = MultipleTestAdapter(
         listOf(
             PipelineEvaluatorTestAdapter(CompilerPipelineFactory()),
-            PipelineEvaluatorTestAdapter(PartiQLCompilerPipelineFactory()),
+            PipelineEvaluatorTestAdapter(PartiQLCompilerPipelineFactory(experimentalFeatures)),
             VisitorTransformBaseTestAdapter()
         )
     )

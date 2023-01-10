@@ -2,7 +2,7 @@ package org.partiql.lang.eval.physical
 
 import com.amazon.ionelement.api.BoolElement
 import com.amazon.ionelement.api.MetaContainer
-import org.partiql.annotations.PartiQLExperimental
+import org.partiql.annotations.ExperimentalWindowFunctions
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.eval.ExprValue
@@ -295,7 +295,7 @@ internal class PhysicalBexprToThunkConverter(
     }
 
     // TODO: Remove from experimental once https://github.com/partiql/partiql-docs/issues/31 is resolved and a RFC is approved
-    @PartiQLExperimental
+    @ExperimentalWindowFunctions
     override fun convertWindow(node: PartiqlPhysical.Bexpr.Window): RelationThunkEnv {
         val source = this.convert(node.source)
 

@@ -1,6 +1,6 @@
 package org.partiql.lang.eval.physical.window
 
-import org.partiql.annotations.PartiQLExperimental
+import org.partiql.annotations.ExperimentalWindowFunctions
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.numberValue
 import org.partiql.lang.eval.physical.EvaluatorState
@@ -8,7 +8,7 @@ import org.partiql.lang.eval.physical.operators.ValueExpression
 
 // TODO: Remove from experimental once https://github.com/partiql/partiql-docs/issues/31 is resolved and a RFC is approved
 // TODO: Decide if we should reduce the code duplication by combining lead and lag function
-@PartiQLExperimental
+@ExperimentalWindowFunctions
 internal class Lag : NavigationWindowFunction() {
     override val name = "lag"
 

@@ -1,7 +1,7 @@
 package org.partiql.examples
 
 import com.amazon.ion.system.IonSystemBuilder
-import org.partiql.annotations.PartiQLExperimental
+import org.partiql.annotations.ExperimentalPartiQLCompilerPipeline
 import org.partiql.examples.util.Example
 import org.partiql.lang.compiler.PartiQLCompilerPipeline
 import org.partiql.lang.eval.Bindings
@@ -15,14 +15,12 @@ import org.partiql.lang.planner.GlobalVariableResolver
 import java.io.PrintStream
 
 /**
- * This example demonstrate how to use PartiQL's experimental features.
- * We use the new PartiQLCompilerPipeline as an example.
- * To use the experimental features, you would have to explicitly opt in to avoid the compiler warining.
- * One way to do so is to add the `Optin(PartiQLExperimental::class) before the class.
+ * This example demonstrate how to use PartiQLCompilerPipeline. This feature is currently in experimental stage.
+ * To use this experimental feature, you would have to explicitly opt in to avoid the compiler warning.
+ * One way to do so is to add the `Optin(Experimental<X>::class) before the class. where <X> is the feature name.
  * Also see: https://kotlinlang.org/docs/opt-in-requirements.html#module-wide-opt-in
  */
-@OptIn(PartiQLExperimental::class)
-class ExperimentalFeatureExample(out: PrintStream) : Example(out) {
+class PartiQLCompilerPipelineExample(out: PrintStream) : Example(out) {
 
     private val myIonSystem = IonSystemBuilder.standard().build()
 
@@ -60,6 +58,7 @@ class ExperimentalFeatureExample(out: PrintStream) : Example(out) {
         .projectionIteration(ProjectionIterationBehavior.UNFILTERED)
         .build()
 
+    @OptIn(ExperimentalPartiQLCompilerPipeline::class)
     private val partiQLCompilerPipeline = PartiQLCompilerPipeline.build {
         parser
             .ionSystem(myIonSystem)
@@ -70,10 +69,21 @@ class ExperimentalFeatureExample(out: PrintStream) : Example(out) {
             .options(evaluatorOptions)
     }
 
+    // See the following example to use the experimental operators.
+    /*
+    @OptIn(ExperimentalPartiQLCompilerPipeline::class, ExperimentalWindowFunctions::class)
+    private val partiQLCompilerPipelineExperimentalFeatures = PartiQLCompilerPipeline.build {
+        parser = PartiQLParserBuilder.standard().ionSystem(myIonSystem)
+        planner = PartiQLPlannerBuilder.standard().globalVariableResolver(globalVariableResolver)
+        compiler = PartiQLCompilerBuilder.experimental().ionSystem(myIonSystem).options(evaluatorOptions)
+    }
+     */
+
     override fun run() {
         val query = "SELECT t.name FROM myTable AS t WHERE t.age > 20"
 
         print("PartiQL query:", query)
+        @OptIn(ExperimentalPartiQLCompilerPipeline::class)
         val exprValue = when (val result = partiQLCompilerPipeline.compile(query).eval(session)) {
             is PartiQLResult.Value -> result.value
             is PartiQLResult.Delete,

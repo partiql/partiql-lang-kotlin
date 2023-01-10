@@ -16,7 +16,8 @@ package org.partiql.lang.compiler
 
 import com.amazon.ion.IonSystem
 import com.amazon.ion.system.IonSystemBuilder
-import org.partiql.annotations.PartiQLExperimental
+import org.partiql.annotations.ExperimentalPartiQLCompilerPipeline
+import org.partiql.annotations.ExperimentalWindowFunctions
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ThunkReturnTypeAssertions
 import org.partiql.lang.eval.builtins.DynamicLookupExprFunction
@@ -52,7 +53,8 @@ import org.partiql.lang.types.CustomType
  *                                      .build()
  * ```
  */
-@PartiQLExperimental
+
+@ExperimentalPartiQLCompilerPipeline
 class PartiQLCompilerBuilder private constructor() {
 
     private var ion: IonSystem = DEFAULT_ION
@@ -75,6 +77,7 @@ class PartiQLCompilerBuilder private constructor() {
          * @see [org.partiql.lang.planner.PlannerPipeline.Builder.addPhysicalPlanPass]
          * @see [org.partiql.lang.planner.PlannerPipeline.Builder.addRelationalOperatorFactory]
          */
+
         private val DEFAULT_RELATIONAL_OPERATOR_FACTORIES = listOf(
             AggregateOperatorFactoryDefault,
             SortOperatorFactoryDefault,
@@ -84,12 +87,25 @@ class PartiQLCompilerBuilder private constructor() {
             JoinRelationalOperatorFactoryDefault,
             OffsetRelationalOperatorFactoryDefault,
             LimitRelationalOperatorFactoryDefault,
-            LetRelationalOperatorFactoryDefault,
+            LetRelationalOperatorFactoryDefault
+        )
+
+        /**
+         * A collection of all the default relational operator implementations provided by PartiQL that are in the experimental stage.
+         * This is necessary so users do not need the experimental annotation is they want to use the stabilized operators only. (after PartiQLCompilerPipeline graduates from experimental)
+         */
+        @ExperimentalWindowFunctions
+        private val EXPERIMENTAL_RELATIONAL_OPERATOR_FACTORIES = listOf(
             WindowRelationalOperatorFactoryDefault
         )
 
         @JvmStatic
         fun standard() = PartiQLCompilerBuilder()
+
+        @ExperimentalWindowFunctions
+        @JvmStatic
+        // This is a hack to inject the experimental operators to the compiler.
+        fun experimental() = PartiQLCompilerBuilder().customOperatorFactories(EXPERIMENTAL_RELATIONAL_OPERATOR_FACTORIES)
     }
 
     fun build(): PartiQLCompiler {

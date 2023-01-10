@@ -16,7 +16,7 @@ package org.partiql.cli.pipeline
 
 import com.amazon.ion.IonSystem
 import com.amazon.ion.system.IonSystemBuilder
-import org.partiql.annotations.PartiQLExperimental
+import org.partiql.annotations.ExperimentalPartiQLCompilerPipeline
 import org.partiql.cli.functions.ReadFile
 import org.partiql.cli.functions.WriteFile
 import org.partiql.extensions.cli.functions.QueryDDB
@@ -131,7 +131,7 @@ internal sealed class AbstractPipeline(open val options: PipelineOptions) {
     /**
      * Wraps the PartiQLCompilerPipeline
      */
-    @OptIn(PartiQLExperimental::class)
+    @OptIn(ExperimentalPartiQLCompilerPipeline::class)
     class PipelineExperimental(options: PipelineOptions) : AbstractPipeline(options) {
 
         private val evaluatorOptions = org.partiql.lang.planner.EvaluatorOptions.Builder()

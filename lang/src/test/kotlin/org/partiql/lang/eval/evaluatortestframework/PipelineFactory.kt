@@ -14,6 +14,6 @@ internal interface PipelineFactory {
     fun createPipeline(
         evaluatorTestDefinition: EvaluatorTestDefinition,
         session: EvaluationSession,
-        forcePermissiveMode: Boolean = false,
+        forcePermissiveMode: Boolean = false
     ): AbstractPipeline
 }

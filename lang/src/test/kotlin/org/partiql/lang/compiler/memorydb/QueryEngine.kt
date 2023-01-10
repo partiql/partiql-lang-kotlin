@@ -1,7 +1,7 @@
 package org.partiql.lang.compiler.memorydb
 
 import com.amazon.ionelement.api.toIonValue
-import org.partiql.annotations.PartiQLExperimental
+import org.partiql.annotations.ExperimentalPartiQLCompilerPipeline
 import org.partiql.lang.ION
 import org.partiql.lang.compiler.PartiQLCompilerPipeline
 import org.partiql.lang.compiler.memorydb.operators.GetByKeyProjectRelationalOperatorFactory
@@ -34,7 +34,8 @@ internal const val DB_CONTEXT_VAR = "in-memory-database"
 /**
  * This class is a demonstration of how to integrate a storage layer with the experimental PartiQLCompilerPipeline.
  */
-@PartiQLExperimental
+
+@OptIn(ExperimentalPartiQLCompilerPipeline::class)
 class QueryEngine(val db: MemoryDatabase) {
     var enableDebugOutput = false
 
