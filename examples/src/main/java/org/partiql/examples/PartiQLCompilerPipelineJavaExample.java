@@ -16,7 +16,11 @@ import org.partiql.lang.syntax.PartiQLParserBuilder;
 
 import java.io.PrintStream;
 
-
+/**
+ * This is an example of using PartiQLCompilerPipeline in Java.
+ * Unfortunately, it seems like the Java does not recognize the Optin annotation specified in Kotlin.
+ * Java users will be able to access the experimental APIs freely, and not be warned at all.
+ */
 public class PartiQLCompilerPipelineJavaExample extends Example {
 
     public PartiQLCompilerPipelineJavaExample(@NotNull PrintStream out) {
