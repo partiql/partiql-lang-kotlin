@@ -28,10 +28,15 @@ internal fun IonValue.id(): String {
     return typeAnnotations[0]
 }
 
+/**
+ * True iff every value is a Symbol matching [A-Z][A-Z_]*
+ */
+private val enumValueRegex = Regex("[A-Z][A-Z_]*")
+
 internal fun IonValue.isEnum(): Boolean = when {
     (this is IonList) && this.isNotEmpty() -> {
         this.forEach {
-            if (it !is IonSymbol) {
+            if (it !is IonSymbol || !enumValueRegex.matches(it.stringValue())) {
                 return false
             }
         }

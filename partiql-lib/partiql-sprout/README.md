@@ -5,7 +5,7 @@
 > Note, all commands in this document are run from the partiql-lang-kotlin root
 
 ```shell
-$ gg :partiql-lib:partiql-sprout:install  
+./gradlew :partiql-lib:partiql-sprout:install  
 ```
 
 ## Usage

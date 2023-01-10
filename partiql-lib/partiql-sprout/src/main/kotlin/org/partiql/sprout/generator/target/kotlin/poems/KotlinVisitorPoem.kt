@@ -41,7 +41,8 @@ class KotlinVisitorPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
         .addTypeVariable(Parameters.R)
         .addTypeVariable(Parameters.C)
         .addParameter("visitor", visitorClass)
-        .returns(Parameters.`R?`)
+        .addParameter("ctx", Parameters.C)
+        .returns(Parameters.R)
         .build()
 
     /**
@@ -57,7 +58,6 @@ class KotlinVisitorPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
         universe.base.addFunction(
             accept.toBuilder()
                 .addModifiers(KModifier.ABSTRACT)
-                .addParameter(ParameterSpec.builder("ctx", Parameters.`C?`).defaultValue("null").build())
                 .build()
         )
         universe.packages.add(
@@ -91,7 +91,6 @@ class KotlinVisitorPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
         node.builder.addFunction(
             accept.toBuilder()
                 .addModifiers(KModifier.OVERRIDE)
-                .addParameter(ParameterSpec.builder("ctx", Parameters.`C?`).build())
                 .addStatement("return visitor.%L(this, ctx)", node.product.ref.visitMethodName())
                 .build()
         )
@@ -104,7 +103,6 @@ class KotlinVisitorPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
         node.builder.addFunction(
             accept.toBuilder()
                 .addModifiers(KModifier.OVERRIDE)
-                .addParameter(ParameterSpec.builder("ctx", Parameters.`C?`).build())
                 .apply {
                     beginControlFlow("return when (this)")
                     node.sum.variants.forEach {
@@ -173,12 +171,18 @@ class KotlinVisitorPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
         val defaultVisit = FunSpec.builder("defaultVisit")
             .addModifiers(KModifier.OPEN)
             .addParameter(ParameterSpec("node", symbols.base))
-            .addParameter(ParameterSpec("ctx", Parameters.`C?`))
-            .returns(Parameters.`R?`)
+            .addParameter(ParameterSpec("ctx", Parameters.C))
+            .returns(Parameters.R)
             .beginControlFlow("for (child in node.children)")
             .addStatement("child.accept(this, ctx)")
             .endControlFlow()
-            .addStatement("return null")
+            .addStatement("return defaultReturn(node, ctx)")
+            .build()
+        val defaultReturn = FunSpec.builder("defaultReturn")
+            .addModifiers(KModifier.ABSTRACT)
+            .addParameter(ParameterSpec("node", symbols.base))
+            .addParameter(ParameterSpec("ctx", Parameters.C))
+            .returns(Parameters.R)
             .build()
         val visitor = TypeSpec.classBuilder(baseVisitorName)
             .addSuperinterface(visitorClass)
@@ -191,6 +195,7 @@ class KotlinVisitorPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
                 }
             }
             .addFunction(defaultVisit)
+            .addFunction(defaultReturn)
             .build()
         return FileSpec.builder(visitorPackageName, baseVisitorName).addType(visitor).build()
     }
@@ -200,8 +205,8 @@ class KotlinVisitorPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
      */
     private fun KotlinNodeSpec.visit() = FunSpec.builder(def.ref.visitMethodName())
         .addParameter(ParameterSpec("node", clazz))
-        .addParameter(ParameterSpec("ctx", Parameters.`C?`))
-        .returns(Parameters.`R?`)
+        .addParameter(ParameterSpec("ctx", Parameters.C))
+        .returns(Parameters.R)
 
     /**
      * Visit base method

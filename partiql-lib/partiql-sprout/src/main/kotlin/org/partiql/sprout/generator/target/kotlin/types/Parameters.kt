@@ -24,10 +24,4 @@ object Parameters {
     val C = TypeVariableName("C")
 
     val T = TypeVariableName("T")
-
-    val `R?` = TypeVariableName("R?")
-
-    val `C?` = TypeVariableName("C?")
-
-    val `T?` = TypeVariableName("T?")
 }
