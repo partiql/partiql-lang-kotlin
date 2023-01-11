@@ -1,0 +1,2 @@
+This is the "ion" parser because it parses an Ion DSL. Developed but unpublished are parsers for other type modeling
+languages such as PIG's Ion DSL. So it's a bit funny now to have just this one internal `ion` package.
