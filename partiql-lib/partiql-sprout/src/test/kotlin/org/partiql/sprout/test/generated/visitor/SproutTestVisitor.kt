@@ -1,6 +1,5 @@
 package org.partiql.sprout.test.generated.visitor
 
-import com.amazon.ionelement.api.ionTimestamp
 import org.partiql.sprout.test.generated.Collection
 import org.partiql.sprout.test.generated.Node
 import org.partiql.sprout.test.generated.SproutTestNode
@@ -28,8 +27,10 @@ public abstract class SproutTestBaseVisitor<R, C> : SproutTestVisitor<R, C> {
 
     public override fun visitCollectionSet(node: Collection.Set, ctx: C): R = defaultVisit(node, ctx)
 
-    public override fun visitCollectionList(node: Collection.List, ctx: C): R = defaultVisit(node,
-        ctx)
+    public override fun visitCollectionList(node: Collection.List, ctx: C): R = defaultVisit(
+        node,
+        ctx
+    )
 
     public override fun visitCollectionMap(node: Collection.Map, ctx: C): R = defaultVisit(node, ctx)
 

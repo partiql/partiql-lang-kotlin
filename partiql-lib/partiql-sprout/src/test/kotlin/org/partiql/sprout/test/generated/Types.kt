@@ -1,12 +1,8 @@
 package org.partiql.sprout.test.generated
 
 import com.amazon.ionelement.api.TimestampElement
-import kotlin.Boolean
-import kotlin.Float
-import kotlin.Int
-import kotlin.String
-import kotlin.collections.List
 import org.partiql.sprout.test.generated.visitor.SproutTestVisitor
+import kotlin.collections.List
 
 public abstract class SproutTestNode {
     public open val children: List<SproutTestNode> = emptyList()
