@@ -5,6 +5,8 @@ import org.partiql.sprout.test.generated.Node
 import org.partiql.sprout.test.generated.SproutTestNode
 
 public interface SproutTestVisitor<R, C> {
+    public fun visit(node: SproutTestNode, ctx: C): R
+
     public fun visitNode(node: Node, ctx: C): R
 
     public fun visitCollection(node: Collection, ctx: C): R
@@ -17,6 +19,8 @@ public interface SproutTestVisitor<R, C> {
 }
 
 public abstract class SproutTestBaseVisitor<R, C> : SproutTestVisitor<R, C> {
+    public override fun visit(node: SproutTestNode, ctx: C): R = node.accept(this, ctx)
+
     public override fun visitNode(node: Node, ctx: C): R = defaultVisit(node, ctx)
 
     public override fun visitCollection(node: Collection, ctx: C): R = when (node) {
@@ -28,8 +32,7 @@ public abstract class SproutTestBaseVisitor<R, C> : SproutTestVisitor<R, C> {
     public override fun visitCollectionSet(node: Collection.Set, ctx: C): R = defaultVisit(node, ctx)
 
     public override fun visitCollectionList(node: Collection.List, ctx: C): R = defaultVisit(
-        node,
-        ctx
+        node, ctx
     )
 
     public override fun visitCollectionMap(node: Collection.Map, ctx: C): R = defaultVisit(node, ctx)

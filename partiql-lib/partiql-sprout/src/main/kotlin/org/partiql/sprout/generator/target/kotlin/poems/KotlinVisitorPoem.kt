@@ -45,6 +45,12 @@ class KotlinVisitorPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
         .returns(Parameters.R)
         .build()
 
+    private val baseVisit = FunSpec.builder("visit")
+        .addParameter("node", symbols.base)
+        .addParameter("ctx", Parameters.C)
+        .returns(Parameters.R)
+        .build()
+
     /**
      * Defines the open `children` property and the abstract`accept` method on the base node
      */
@@ -155,6 +161,7 @@ class KotlinVisitorPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
             .addTypeVariable(Parameters.R)
             .addTypeVariable(Parameters.C)
             .apply {
+                addFunction(baseVisit.toBuilder().addModifiers(KModifier.ABSTRACT).build())
                 forEachNode {
                     val visit = it.visit().addModifiers(KModifier.ABSTRACT).build()
                     addFunction(visit)
@@ -190,8 +197,14 @@ class KotlinVisitorPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
             .addTypeVariable(Parameters.R)
             .addTypeVariable(Parameters.C)
             .apply {
+                addFunction(
+                    baseVisit.toBuilder()
+                        .addModifiers(KModifier.OVERRIDE)
+                        .addCode("return node.accept(this, ctx)")
+                        .build()
+                )
                 forEachNode {
-                    addFunction(it.baseVisit())
+                    addFunction(it.defaultVisit())
                 }
             }
             .addFunction(defaultVisit)
@@ -209,12 +222,12 @@ class KotlinVisitorPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
         .returns(Parameters.R)
 
     /**
-     * Visit base method
+     * Visit default method
      */
-    private fun KotlinNodeSpec.baseVisit() = visit()
+    private fun KotlinNodeSpec.defaultVisit() = visit()
         .addModifiers(KModifier.OVERRIDE)
         .apply {
-            when (this@baseVisit) {
+            when (this@defaultVisit) {
                 is KotlinNodeSpec.Product -> addStatement("return defaultVisit(node, ctx)")
                 is KotlinNodeSpec.Sum -> {
                     beginControlFlow("return when (node)")

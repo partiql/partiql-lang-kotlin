@@ -14,10 +14,10 @@ class IonExtensionsTest {
         val a = ion.singleValue("[ a, b, c, ]") as IonList
         val b = ion.singleValue("[ A, B, C, ]") as IonList
         val c = ion.singleValue("[ A_X, B_Y, C_Z, ]") as IonList
-        val d = ion.singleValue("[ ABC_DEF_1 ]") as IonList
+        val d = ion.singleValue("[ ABC_DEF_1, X_123, Y456 ]") as IonList
         assertFalse(a.isEnum())
         assert(b.isEnum())
         assert(c.isEnum())
-        assertFalse(d.isEnum())
+        assert(d.isEnum())
     }
 }
