@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Adds ability to pipe queries to the CLI
+- Adds ability to run PartiQL files as executables by adding support for shebangs
 - Added numeric functions `abs`, `sqrt`, `exp`, `ln`, `pow`.
 
 ### Changed

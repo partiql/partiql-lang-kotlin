@@ -26,6 +26,8 @@ To view all available options, run the CLI with the `--help` option.
 
 ## Non-Interactive (Single Query Execution)
 
+### Using the Script
+
 To execute a single query, run:
 
 ```shell
@@ -33,6 +35,8 @@ To execute a single query, run:
 ```
 
 where `query.partiql` contains the PartiQL query to execute.
+
+### Using the `partiql` Command Directly
 
 Alternatively, you may pipe input into the native command:
 
@@ -42,6 +46,55 @@ echo "SELECT * FROM [0, 1, 2]" | ./partiql-app/partiql-cli/build/install/partiql
 
 # Via `cat`
 echo ~/Desktop/query.partiql | ./partiql-app/partiql-cli/build/install/partiql-cli/bin/partiql
+```
+
+### Running a PartiQL Executable File (Unix)
+
+Users can also create and run executable files containing PartiQL queries. To use this feature,
+please add `partiql` (the built executable) to your path:
+
+```shell
+# file: ~/.bashrc or ~/.zshrc
+# desc: Example configuration update of BASH or ZSH shells
+
+# Example adding gradle-built partiql command. Need to build the executable (see directions above).
+PATH_TO_PARTIQL_LANG_KOTLIN="${HOME}/partiql-lang-kotlin"
+PATH="$PATH_TO_PARTIQL_LANG_KOTLIN/partiql-app/partiql-cli/build/install/partiql-cli/bin:$PATH"
+export PATH
+```
+
+Once you have saved your configurations, remember to source your configuration file.
+```shell
+# For ZSH
+source ~/.zshrc
+
+# For Bash
+source ~/.bashrc
+```
+
+Now, with the `partiql` executable on your path, you can write PartiQL files such as the below file (`example.partiql`):
+```partiql
+#!/usr/bin/env partiql
+
+-- file: example.partiql
+-- desc: A simple PartiQL query
+
+SELECT t.a AS result
+FROM <<
+  { 'a': 1 },
+  { 'a': 9 },
+  { 'a': 4 },
+  { 'a': 6 }
+>> AS t
+WHERE a > 2
+ORDER BY a DESC
+```
+
+Now, you can convert this file into an executable and run it directly!
+```shell
+$ chmod +x ./example.partiql
+$ ./example.partiql
+[{'result': 9}, {'result': 6}, {'result': 4}]
 ```
 
 ## Interactive (Shell)
