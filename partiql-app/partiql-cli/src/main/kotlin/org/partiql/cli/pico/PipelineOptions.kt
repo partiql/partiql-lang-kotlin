@@ -46,15 +46,17 @@ internal class PipelineOptions {
     @CommandLine.Option(names = ["-u", "--undefined-variable-behavior"], description = ["Defines the behavior when a non-existent variable is referenced: [\${COMPLETION-CANDIDATES}]"], paramLabel = "OPT")
     var undefinedVarBehavior: UndefinedVariableBehavior = UndefinedVariableBehavior.ERROR
 
-    private val pipelineOptions = AbstractPipeline.createPipelineOptions(
-        pipelineType,
-        typedOpBehavior,
-        projIterBehavior,
-        undefinedVarBehavior,
-        typingMode
-    )
-
-    internal val pipeline = AbstractPipeline.create(pipelineOptions)
+    internal val pipeline: AbstractPipeline
+        get() {
+            val options = AbstractPipeline.createPipelineOptions(
+                pipelineType,
+                typedOpBehavior,
+                projIterBehavior,
+                undefinedVarBehavior,
+                typingMode
+            )
+            return AbstractPipeline.create(options)
+        }
 
     internal val globalEnvironment = when (environmentFile) {
         null -> Bindings.empty()
