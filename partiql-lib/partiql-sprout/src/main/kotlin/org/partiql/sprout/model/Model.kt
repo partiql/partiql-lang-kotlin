@@ -60,7 +60,19 @@ sealed class TypeDef(
      */
     class Enum(ref: TypeRef.Path, val values: List<String>) : TypeDef(ref) {
 
-        override fun toString() = "enum::$ref"
+        override fun toString() = "enum::$ref::[${values.joinToString()}]"
+    }
+
+    /**
+     * Copy this definition, but make the reference nullable.
+     */
+    fun nullable(): TypeDef {
+        val ref = TypeRef.Path(nullable = true, *ref.path.toTypedArray())
+        return when (this) {
+            is Sum -> Sum(ref, variants)
+            is Product -> Product(ref, props)
+            is Enum -> Enum(ref, values)
+        }
     }
 }
 

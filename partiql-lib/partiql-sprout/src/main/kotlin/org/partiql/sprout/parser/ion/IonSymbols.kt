@@ -27,7 +27,7 @@ internal class IonSymbols private constructor(val root: Node) {
 
     companion object {
 
-        val RESERVED = setOf("map", "list", "set")
+        val COLLECTIONS = setOf("map", "list", "set")
 
         fun build(definitions: List<IonValue>) = IonSymbols(
             root = Node(id = "_root").apply {
@@ -38,7 +38,10 @@ internal class IonSymbols private constructor(val root: Node) {
             }
         )
 
-        fun assertNonReserved(id: String, context: String) = assert(!RESERVED.contains(id)) {
+        /**
+         * Consider asserting more thorough type definition naming rules ie enforce lower snake case
+         */
+        fun assertNonReserved(id: String, context: String) = assert(!COLLECTIONS.contains(id)) {
             "Cannot used reserved name `$id` for a type definition, $context."
         }
     }
@@ -65,18 +68,16 @@ internal class IonSymbols private constructor(val root: Node) {
                 id = id,
                 parent = ctx,
             )
-            v.filter { (it is IonList || it is IonStruct) }.forEach {
-                // Add implicit type definition name if not reserved
-                if (it.typeAnnotations.isEmpty()) {
-                    assertNonReserved(it.fieldName, "implicit type definition name in $id")
-                    it.setTypeAnnotations(it.fieldName)
-                }
-                // Skip if list, set, or map
-                if (RESERVED.contains(it.id())) {
-                    return@forEach
-                }
-                // Add inline definition to the graph
-                node.children.add(visit(it, node))
+            v.filter { it.isInline() }.forEach {
+                val (symbol, nullable) = it.ref()
+                // DANGER! Mutate annotations to set the definition id as if it weren't an inline
+                it.setTypeAnnotations(symbol)
+                // Parse as any other definition
+                val child = visit(it, node)
+                // DANGER! Add back the dropped "optional" annotation
+                if (nullable) it.setTypeAnnotations("optional", symbol)
+                // Include the inline definition as a child of this node
+                node.children.add(child)
             }
             return node
         }
@@ -84,6 +85,9 @@ internal class IonSymbols private constructor(val root: Node) {
         override fun defaultVisit(v: IonValue, ctx: Node?) = error("cannot parse value $v")
     }
 
+    /**
+     * For debugging, consider prefixing node names since names must be globally unique in DOT
+     */
     override fun toString() = graph {
         root.children.forEach {
             +subgraph(it.id) {

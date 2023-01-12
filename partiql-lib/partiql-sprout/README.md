@@ -35,9 +35,6 @@ $ ./partiql-lib/partiql-sprout/build/install/sprout/bin/sprout generate kotlin \
 # sources are generated in partiql-lang-kotlin/generated/
 ```
 
-## Considerations from ISL
-- [ ] Inline product definitions
-- [x] Imported non-node types
-- [x] Root-level referencing
-- [ ] Properties of sum types
-- [ ] Default values (ie just write the value, the type can be inferred)
+## Note
+
+- Next work item is switching to IonElement

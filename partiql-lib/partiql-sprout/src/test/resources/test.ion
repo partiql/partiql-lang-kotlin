@@ -20,24 +20,24 @@ node::{
   a: bool,
   b: int,
   c: string,
-  d: 'float?',
+  d: optional::float,
   e: timestamp,
 }
 
 collection::[
-  my_list::{
+  my_set::{
     values: set::[int],
   },
   my_list::{
     values: list::[int],
   },
   my_map::{
-    values: list::[int],
+    values: map::[string,int],
   }
 ]
 
 inlines::{
-  enum: bar::[
+  enum: optional::bar::[
     A,
     B,
     C,
