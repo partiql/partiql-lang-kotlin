@@ -10,6 +10,7 @@ import org.partiql.cli.utils.InputSource
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.ExprValue
 import java.io.ByteArrayOutputStream
+import java.io.File
 import java.io.OutputStream
 
 /**
@@ -26,13 +27,40 @@ internal fun makeCliAndGetResult(
     pipeline: AbstractPipeline = AbstractPipeline.standard(),
     wrapIon: Boolean = false
 ): String {
-    val stream = when (input) {
-        null -> InputSource.StringSource("")
-        else -> InputSource.StringSource(input)
-    }
+    val source = InputSource.StringSource(input ?: "")
     val cli = Cli(
         ion,
-        stream,
+        source,
+        inputFormat,
+        output,
+        outputFormat,
+        pipeline,
+        bindings,
+        query,
+        wrapIon
+    )
+    cli.run()
+    return output.toString()
+}
+
+/**
+ * Initializes a CLI and runs the passed-in query
+ */
+internal fun makeCliAndGetResult(
+    query: String,
+    input: File,
+    inputFormat: PartiQLCommand.InputFormat = PartiQLCommand.InputFormat.ION,
+    bindings: Bindings<ExprValue> = Bindings.empty(),
+    outputFormat: PartiQLCommand.OutputFormat = PartiQLCommand.OutputFormat.ION_TEXT,
+    output: OutputStream = ByteArrayOutputStream(),
+    ion: IonSystem = IonSystemBuilder.standard().build(),
+    pipeline: AbstractPipeline = AbstractPipeline.standard(),
+    wrapIon: Boolean = false
+): String {
+    val source = InputSource.FileSource(input)
+    val cli = Cli(
+        ion,
+        source,
         inputFormat,
         output,
         outputFormat,

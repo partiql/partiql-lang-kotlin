@@ -15,8 +15,10 @@
 package org.partiql.cli.functions
 
 import com.amazon.ion.IonSystem
-import com.amazon.ion.system.IonReaderBuilder
 import org.apache.commons.csv.CSVFormat
+import org.partiql.cli.utils.DelimitedFileIterable
+import org.partiql.cli.utils.InputSource
+import org.partiql.cli.utils.InputSourceIterable
 import org.partiql.lang.eval.BindingCase
 import org.partiql.lang.eval.BindingName
 import org.partiql.lang.eval.Bindings
@@ -24,13 +26,11 @@ import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.booleanValue
-import org.partiql.lang.eval.io.DelimitedValues
 import org.partiql.lang.eval.io.DelimitedValues.ConversionMode
 import org.partiql.lang.eval.stringValue
 import org.partiql.lang.types.FunctionSignature
 import org.partiql.lang.types.StaticType
 import java.io.File
-import java.io.InputStreamReader
 
 internal class ReadFile(private val ion: IonSystem) : ExprFunction {
     override val signature = FunctionSignature(
@@ -40,13 +40,14 @@ internal class ReadFile(private val ion: IonSystem) : ExprFunction {
         returnType = StaticType.BAG
     )
 
-    private fun conversionModeFor(name: String) =
-        ConversionMode.values().find { it.name.toLowerCase() == name }
-            ?: throw IllegalArgumentException("Unknown conversion: $name")
+    companion object {
+        fun conversionModeFor(name: String) =
+            ConversionMode.values().find { it.name.toLowerCase() == name }
+                ?: throw IllegalArgumentException("Unknown conversion: $name")
+    }
 
     private fun fileReadHandler(csvFormat: CSVFormat): (File, Bindings<ExprValue>) -> ExprValue = { input, bindings ->
         val encoding = bindings[BindingName("encoding", BindingCase.SENSITIVE)]?.stringValue() ?: "UTF-8"
-        val reader = InputStreamReader(input.inputStream(), encoding)
         val conversion = bindings[BindingName("conversion", BindingCase.SENSITIVE)]?.stringValue() ?: "none"
 
         val hasHeader = bindings[BindingName("header", BindingCase.SENSITIVE)]?.booleanValue() ?: false
@@ -66,36 +67,33 @@ internal class ReadFile(private val ion: IonSystem) : ExprFunction {
             .let { if (record != null) it.withRecordSeparator(record) else it }
             .let { if (escape != null) it.withEscape(escape) else it }
             .let { if (quote != null) it.withQuote(quote) else it }
-        val seq = Sequence {
-            DelimitedValues.exprValue(ion, reader, csvFormatWithOptions, conversionModeFor(conversion)).iterator()
-        }
-        ExprValue.newBag(seq)
+
+        val inputSource = InputSource.FileSource(input)
+        val iterable = DelimitedFileIterable(ion, inputSource, csvFormatWithOptions, encoding, conversion)
+        iterable.use { ExprValue.newBag(it) }
     }
 
     private fun ionReadHandler(): (File, Bindings<ExprValue>) -> ExprValue = { file, bindings ->
         when (bindings[BindingName("wrap-ion", BindingCase.SENSITIVE)]?.booleanValue() ?: false) {
             true -> {
-                val stream = file.inputStream()
-                val inputIonValue = ion.iterate(ion.newReader(stream)).asSequence().map { ExprValue.of(it) }.asIterable()
-                val iterable = object : Iterable<ExprValue> {
-                    override fun iterator(): Iterator<ExprValue> {
-                        return inputIonValue.iterator()
-                    }
-                }
-                ExprValue.newBag(iterable)
+                val inputSource = InputSource.FileSource(file)
+                val iterable = InputSourceIterable(ion, inputSource)
+                iterable.use { iter -> ExprValue.newBag(iter) }
             }
             false -> {
-                IonReaderBuilder.standard().build(file.inputStream()).use { reader ->
-                    val value = when (reader.next()) {
-                        null -> ExprValue.missingValue
-                        else -> ExprValue.newFromIonReader(ion, reader)
+                file.inputStream().use { stream ->
+                    ion.newReader(stream).use { reader ->
+                        when (reader.next()) {
+                            null -> ExprValue.missingValue
+                            else -> ExprValue.newFromIonReader(ion, reader)
+                        }.also {
+                            if (reader.next() != null) {
+                                val message = "PartiQL requires that Ion files contain only a single Ion value for " +
+                                    "processing. Please consider using option 'wrap-ion'."
+                                throw IllegalStateException(message)
+                            }
+                        }
                     }
-                    if (reader.next() != null) {
-                        val message = "PartiQL requires that Ion files contain only a single Ion value for " +
-                            "processing. Please consider using option 'wrap-ion'."
-                        throw IllegalStateException(message)
-                    }
-                    value
                 }
             }
         }
@@ -116,8 +114,6 @@ internal class ReadFile(private val ion: IonSystem) : ExprFunction {
         val fileName = required[0].stringValue()
         val fileType = "ion"
         val handler: (File, Bindings<ExprValue>) -> ExprValue = readHandlers[fileType] ?: throw IllegalArgumentException("Unknown file type: $fileType")
-        // TODO we should take care to clean up this `FileInputStream` properly
-        //  https://github.com/partiql/partiql-lang-kotlin/issues/518
         val fileInput = File(fileName)
         return handler(fileInput, Bindings.empty())
     }
@@ -126,8 +122,6 @@ internal class ReadFile(private val ion: IonSystem) : ExprFunction {
         val fileName = required[0].stringValue()
         val fileType = opt.bindings[BindingName("type", BindingCase.SENSITIVE)]?.stringValue() ?: "ion"
         val handler = readHandlers[fileType] ?: throw IllegalArgumentException("Unknown file type: $fileType")
-        // TODO we should take care to clean up this `FileInputStream` properly
-        //  https://github.com/partiql/partiql-lang-kotlin/issues/518
         val fileInput = File(fileName)
         return handler(fileInput, opt.bindings)
     }

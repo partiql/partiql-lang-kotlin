@@ -35,8 +35,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `ExprValueFactory` interface marked as deprecated. Equivalent `ExprValue` construction methods are implemented in the `ExprValue` interface as static methods. 
 
 ### Fixed
-
-- Fixes ability to reference data on disk multiple times
+- Fixes ability to reference data on disk multiple times from the CLI. Specifically, multiple references to data using
+  the `--in` and `-i` flags and the `read_file()` are fixed.
 
 ### Removed
 - The deprecated `IonValue` property in `ExprValue` interface is now removed.

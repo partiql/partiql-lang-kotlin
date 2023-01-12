@@ -22,6 +22,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.partiql.cli.utils.TestUtils
 import org.partiql.lang.eval.BAG_ANNOTATION
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
@@ -118,16 +119,6 @@ class ReadFileTest {
         assertThrows<IllegalStateException> {
             function.callWithOptional(session, args, additionalOptions)
         }
-    }
-    @Test
-    fun readUnwrappedIon() {
-        writeFile("data.ion", "1 2")
-
-        val args = listOf("\"${dirPath("data.ion")}\"").map { it.exprValue() }
-        val additionalOptions = "{type:\"ion\", 'wrap-ion':true}".exprValue()
-        val actual = function.callWithOptional(session, args, additionalOptions)
-        val expected = "[1, 2]"
-        assertValues(expected, actual)
     }
 
     @Test
@@ -331,6 +322,26 @@ class ReadFileTest {
         val actual = function.callWithOptional(session, args, additionalOptions)
         val expected = "[{id:\"1,\",name:\"Bob\",balance:\"10000.00\"}]"
 
+        assertValues(expected, actual)
+    }
+
+    @Test
+    fun readUnwrappedIon() {
+        val filePath = TestUtils.getResourceFile(TestUtils.ResourceFileNames.TEST_BAG).absolutePath
+        val args = listOf("\"$filePath\"").map { it.exprValue() }
+        val additionalOptions = "{type:\"ion\", 'wrap-ion':true}".exprValue()
+        val actual = function.callWithOptional(session, args, additionalOptions)
+        val expected = "[{a:0},{a:1},{a:2}]"
+        assertValues(expected, actual)
+    }
+
+    @Test
+    fun readWrappedIon() {
+        val filePath = TestUtils.getResourceFile(TestUtils.ResourceFileNames.WRAPPED_VALUES).absolutePath
+        val args = listOf("\"$filePath\"").map { it.exprValue() }
+        val additionalOptions = "{type:\"ion\"}".exprValue()
+        val actual = function.callWithOptional(session, args, additionalOptions)
+        val expected = "[{a:0},{a:1},{a:2}]"
         assertValues(expected, actual)
     }
 }

@@ -22,6 +22,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.partiql.cli.pico.PartiQLCommand
 import org.partiql.cli.pipeline.AbstractPipeline
+import org.partiql.cli.utils.TestUtils
 import org.partiql.lang.eval.BAG_ANNOTATION
 import org.partiql.lang.eval.EvaluationException
 import org.partiql.lang.eval.EvaluationSession
@@ -317,5 +318,60 @@ class CliTest {
         assertThrows<IonException> {
             makeCliAndGetResult(query, input, inputFormat = PartiQLCommand.InputFormat.ION)
         }
+    }
+
+    @Test
+    fun referenceToIonInputFile() {
+        val file = TestUtils.getResourceFile(TestUtils.ResourceFileNames.TEST_BAG)
+        val query = "SELECT VALUE a FROM input_data ORDER BY a"
+        val expected = "[0, 1, 2]"
+        val result = makeCliAndGetResult(query, file, wrapIon = true)
+        assertAsIon(expected, result)
+    }
+
+    @Test
+    fun multipleReferencesToIonInputFile() {
+        val file = TestUtils.getResourceFile(TestUtils.ResourceFileNames.TEST_BAG)
+        val query = "SELECT VALUE a FROM input_data AS i1, input_data AS i2 ORDER BY a"
+        val expected = "[0, 0, 0, 1, 1, 1, 2, 2, 2]"
+        val result = makeCliAndGetResult(query, file, wrapIon = true)
+        assertAsIon(expected, result)
+    }
+
+    @Test
+    fun referenceToIonWrappedInputFile() {
+        val file = TestUtils.getResourceFile(TestUtils.ResourceFileNames.WRAPPED_VALUES)
+        val query = "SELECT VALUE a FROM input_data ORDER BY a"
+        val expected = "[0, 1, 2]"
+        val result = makeCliAndGetResult(query, file)
+        assertAsIon(expected, result)
+    }
+
+    @Test
+    fun multipleReferencesToIonWrappedInputFile() {
+        val file = TestUtils.getResourceFile(TestUtils.ResourceFileNames.WRAPPED_VALUES)
+        val query = "SELECT VALUE a FROM input_data AS i1, input_data AS i2 ORDER BY a"
+        val expected = "[0, 0, 0, 1, 1, 1, 2, 2, 2]"
+        val result = makeCliAndGetResult(query, file)
+        assertAsIon(expected, result)
+    }
+    @Test
+    fun multipleReadFileFunctionsWithIonSequence() {
+        val filePath = TestUtils.getResourceFile(TestUtils.ResourceFileNames.TEST_BAG).absolutePath
+        val readFileString = "read_file('$filePath', { 'wrap-ion': true })"
+        val query = "SELECT VALUE a FROM $readFileString AS i1, $readFileString AS i2 ORDER BY a"
+        val expected = "[0, 0, 0, 1, 1, 1, 2, 2, 2]"
+        val result = makeCliAndGetResult(query)
+        assertAsIon(expected, result)
+    }
+
+    @Test
+    fun multipleReadFileFunctionsWithIonList() {
+        val filePath = TestUtils.getResourceFile(TestUtils.ResourceFileNames.WRAPPED_VALUES).absolutePath
+        val readFileString = "read_file('$filePath')"
+        val query = "SELECT VALUE a FROM $readFileString AS i1, $readFileString AS i2 ORDER BY a"
+        val expected = "[0, 0, 0, 1, 1, 1, 2, 2, 2]"
+        val result = makeCliAndGetResult(query)
+        assertAsIon(expected, result)
     }
 }

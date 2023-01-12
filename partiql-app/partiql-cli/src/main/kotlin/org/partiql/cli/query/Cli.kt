@@ -15,12 +15,12 @@
 package org.partiql.cli.query
 
 import com.amazon.ion.IonSystem
-import com.amazon.ion.system.IonReaderBuilder
 import com.amazon.ion.system.IonTextWriterBuilder
 import org.partiql.cli.format.ExplainFormatter
 import org.partiql.cli.pico.PartiQLCommand
 import org.partiql.cli.pipeline.AbstractPipeline
 import org.partiql.cli.utils.InputSource
+import org.partiql.cli.utils.InputSourceIterable
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
@@ -90,9 +90,8 @@ internal class Cli(
     }
 
     private fun runWithIonInputWrapped(input: InputSource) {
-        IonReaderBuilder.standard().build(input.stream()).use { reader ->
-            val inputIonValue = ion.iterate(reader).asSequence().map { ExprValue.of(it) }
-            val inputExprValue = ExprValue.newBag(inputIonValue)
+        InputSourceIterable(ion, input).use { iterable ->
+            val inputExprValue = ExprValue.newBag(iterable)
             val bindings = getBindingsFromIonValue(inputExprValue)
             val result = compilerPipeline.compile(query, EvaluationSession.build { globals(bindings) })
             outputResult(result)
@@ -101,7 +100,7 @@ internal class Cli(
 
     private fun runWithPartiQLInput(input: InputSource) {
         val inputEnvironment = compilerPipeline.compile(
-            input.stream().readBytes().toString(Charsets.UTF_8),
+            input.stream().use { src -> src.readBytes().toString(Charsets.UTF_8) },
             EvaluationSession.standard()
         ) as PartiQLResult.Value
         val bindings = getBindingsFromIonValue(inputEnvironment.value)
@@ -111,7 +110,6 @@ internal class Cli(
 
     private fun getBindingsFromIonValue(value: ExprValue): Bindings<ExprValue> {
         return Bindings.buildLazyBindings<ExprValue> {
-            // If `input` is a class of `EmptyInputStream`, it means there is no input data provided by user.
             if (input != null) {
                 addBinding("input_data") { value }
             }

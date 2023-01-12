@@ -58,7 +58,11 @@ internal sealed class AbstractPipeline(open val options: PipelineOptions) {
         internal fun standard(): AbstractPipeline {
             return create(PipelineOptions())
         }
-
+        internal fun createDefaultCliFunctions(ion: IonSystem): List<ExprFunction> = listOf(
+            ReadFile(ion),
+            WriteFile(ion),
+            QueryDDB(ion)
+        )
         internal fun createPipelineOptions(
             pipeline: PipelineType,
             typedOpBehavior: TypedOpBehavior,
@@ -67,11 +71,6 @@ internal sealed class AbstractPipeline(open val options: PipelineOptions) {
             permissiveMode: TypingMode
         ): PipelineOptions {
             val ion = IonSystemBuilder.standard().build()
-            val functions: List<ExprFunction> = listOf(
-                ReadFile(ion),
-                WriteFile(ion),
-                QueryDDB(ion)
-            )
             val parser = PartiQLParserBuilder().ionSystem(ion).build()
             return PipelineOptions(
                 pipeline,
@@ -81,7 +80,7 @@ internal sealed class AbstractPipeline(open val options: PipelineOptions) {
                 projectionIteration,
                 undefinedVariable,
                 permissiveMode,
-                functions = functions
+                functions = createDefaultCliFunctions(ion)
             )
         }
     }
@@ -94,7 +93,7 @@ internal sealed class AbstractPipeline(open val options: PipelineOptions) {
         val projectionIterationBehavior: ProjectionIterationBehavior = ProjectionIterationBehavior.FILTER_MISSING,
         val undefinedVariableBehavior: UndefinedVariableBehavior = UndefinedVariableBehavior.ERROR,
         val typingMode: TypingMode = TypingMode.LEGACY,
-        val functions: List<ExprFunction> = emptyList()
+        val functions: List<ExprFunction> = createDefaultCliFunctions(ion)
     )
 
     internal enum class PipelineType {
