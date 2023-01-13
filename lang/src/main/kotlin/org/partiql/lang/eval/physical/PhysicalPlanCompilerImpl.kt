@@ -268,7 +268,11 @@ internal class PhysicalPlanCompilerImpl(
         }
 
         return thunkFactory.thunkEnv(expr.metas) { env ->
+            // we create a snapshot for currentRegister to use during the evaluation
+            // this is to avoid issue when iterator planner result
+            val currentRegister = env.registers.clone()
             val elements = sequence {
+                env.load(currentRegister)
                 val relItr = bexprThunk(env)
                 while (relItr.nextRow()) {
                     yield(mapThunk(env))
