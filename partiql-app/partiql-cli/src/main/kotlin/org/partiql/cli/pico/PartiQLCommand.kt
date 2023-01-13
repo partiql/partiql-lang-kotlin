@@ -90,7 +90,7 @@ internal class PartiQLCommand(private val valueFactory: ExprValueFactory) : Runn
         }
         input.use { src ->
             output.use { out ->
-                Cli(valueFactory, src, exec.inputFormat, out, exec.outputFormat, options.pipeline, options.globalEnvironment, queryWithoutShebang, exec.wrapIon).run()
+                Cli(valueFactory, src, exec.inputFormat, out, exec.outputFormat, options.pipeline, options.environment, queryWithoutShebang, exec.wrapIon).run()
                 out.write(System.lineSeparator().toByteArray(Charsets.UTF_8))
             }
         }
@@ -101,7 +101,7 @@ internal class PartiQLCommand(private val valueFactory: ExprValueFactory) : Runn
      */
     private fun runShell(shell: ShellOptions = ShellOptions()) {
         val config = Shell.ShellConfiguration(isMonochrome = shell.isMonochrome)
-        Shell(valueFactory, System.out, options.pipeline, options.globalEnvironment, config).start()
+        Shell(valueFactory, System.out, options.pipeline, options.environment, config).start()
     }
 
     /**
