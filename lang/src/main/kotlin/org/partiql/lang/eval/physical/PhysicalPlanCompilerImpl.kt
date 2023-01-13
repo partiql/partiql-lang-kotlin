@@ -21,6 +21,7 @@ import com.amazon.ion.system.IonSystemBuilder
 import com.amazon.ionelement.api.MetaContainer
 import com.amazon.ionelement.api.emptyMetaContainer
 import com.amazon.ionelement.api.toIonValue
+import org.partiql.lang.ast.IsOrderedMeta
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.ast.UNKNOWN_SOURCE_LOCATION
 import org.partiql.lang.ast.sourceLocation
@@ -261,34 +262,21 @@ internal class PhysicalPlanCompilerImpl(
         val mapThunk = compileAstExpr(expr.exp)
         val bexprThunk: RelationThunkEnv = bexperConverter.convert(expr.query)
 
-        fun createOutputSequence(relationType: RelationType?, elements: Sequence<ExprValue>) = when (relationType) {
-            RelationType.LIST -> ExprValue.newList(elements)
-            RelationType.BAG -> ExprValue.newBag(elements)
-            null -> throw EvaluationException(
-                message = "Unable to recover the output Relation Type",
-                errorCode = ErrorCode.EVALUATOR_GENERIC_EXCEPTION,
-                internal = false
-            )
+        val relationType = when (expr.metas.containsKey(IsOrderedMeta.tag)) {
+            true -> RelationType.LIST
+            false -> RelationType.BAG
         }
 
         return thunkFactory.thunkEnv(expr.metas) { env ->
-            var relationType: RelationType? = null
-            // we create a snapshot for currentRegister to use during the evaluation
-            // this is to avoid issue when iterator planner result
-            val currentRegister = env.registers.clone()
             val elements = sequence {
-                env.load(currentRegister)
                 val relItr = bexprThunk(env)
-                relationType = relItr.relType
                 while (relItr.nextRow()) {
                     yield(mapThunk(env))
                 }
             }
-
-            // Trick the compiler here to always initialize `relationType`
-            when (elements.firstOrNull()) {
-                null -> createOutputSequence(relationType, emptySequence())
-                else -> createOutputSequence(relationType, elements)
+            when (relationType) {
+                RelationType.LIST -> ExprValue.newList(elements)
+                RelationType.BAG -> ExprValue.newBag(elements)
             }
         }
     }

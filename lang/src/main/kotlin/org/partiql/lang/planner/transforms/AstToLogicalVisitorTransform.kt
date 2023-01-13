@@ -3,9 +3,11 @@ package org.partiql.lang.planner.transforms
 import com.amazon.ionelement.api.emptyMetaContainer
 import com.amazon.ionelement.api.ionString
 import com.amazon.ionelement.api.ionSymbol
+import org.partiql.lang.ast.IsOrderedMeta
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.PartiqlAstToPartiqlLogicalVisitorTransform
 import org.partiql.lang.domains.PartiqlLogical
+import org.partiql.lang.domains.metaContainerOf
 import org.partiql.lang.errors.Problem
 import org.partiql.lang.errors.ProblemHandler
 import org.partiql.lang.eval.builtins.CollectionAggregationFunction
@@ -263,20 +265,25 @@ internal class AstToLogicalVisitorTransform(
     }
 
     private fun transformProjection(node: PartiqlAst.Expr.Select, algebra: PartiqlLogical.Bexpr): PartiqlLogical.Expr {
+        val project = node.project
+        val metas = when (node.order) {
+            null -> project.metas
+            else -> project.metas + metaContainerOf(IsOrderedMeta)
+        }
         return PartiqlLogical.build {
-            when (val project = node.project) {
+            when (project) {
                 is PartiqlAst.Projection.ProjectValue -> {
                     bindingsToValues(
                         exp = transformExpr(project.value),
                         query = algebra,
-                        metas = project.metas
+                        metas = metas
                     )
                 }
                 is PartiqlAst.Projection.ProjectList -> {
                     bindingsToValues(
                         exp = transformProjectList(project),
                         query = algebra,
-                        metas = project.metas
+                        metas = metas
                     )
                 }
                 is PartiqlAst.Projection.ProjectStar -> {
@@ -289,7 +296,7 @@ internal class AstToLogicalVisitorTransform(
                         input = algebra,
                         key = transformExpr(project.key),
                         value = transformExpr(project.value),
-                        metas = project.metas
+                        metas = metas
                     )
                 }
             }

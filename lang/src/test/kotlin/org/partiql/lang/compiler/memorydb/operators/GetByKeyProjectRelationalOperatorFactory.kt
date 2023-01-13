@@ -57,10 +57,16 @@ class GetByKeyProjectRelationalOperatorFactory : ProjectRelationalOperatorFactor
         // Parse the tableId so we don't have to at evaluation-time
         val tableId = UUID.fromString(impl.staticArgs.single().textValue)
 
+        var exhausted = false
+
         // Finally, return a RelationExpression which evaluates the key value expression and returns a
         // RelationIterator containing a single row corresponding to the key (or no rows if nothing matches)
         return RelationExpression { state ->
             // this code runs at evaluation-time.
+
+            if (exhausted) {
+                throw IllegalStateException("Exhausted result set")
+            }
 
             // Get the current database from the EvaluationSession context.
             // Please note that the state.session.context map is immutable, therefore it is not possible
@@ -73,6 +79,8 @@ class GetByKeyProjectRelationalOperatorFactory : ProjectRelationalOperatorFactor
 
             // get the record requested.
             val record = db.getRecordByKey(tableId, keyValue)
+
+            exhausted = true
 
             // if the record was not found, return an empty relation:
             if (record == null)
