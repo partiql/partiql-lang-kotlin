@@ -90,7 +90,7 @@ internal class PartiQLCommand(private val ion: IonSystem) : Runnable {
         }
         input.use { src ->
             output.use { out ->
-                Cli(ion, src, exec.inputFormat, out, exec.outputFormat, options.pipeline, options.globalEnvironment, queryWithoutShebang, exec.wrapIon).run()
+                Cli(ion, src, exec.inputFormat, out, exec.outputFormat, options.pipeline, options.environment, queryWithoutShebang, exec.wrapIon).run()
                 out.write(System.lineSeparator().toByteArray(Charsets.UTF_8))
             }
         }
@@ -101,7 +101,7 @@ internal class PartiQLCommand(private val ion: IonSystem) : Runnable {
      */
     private fun runShell(shell: ShellOptions = ShellOptions()) {
         val config = Shell.ShellConfiguration(isMonochrome = shell.isMonochrome)
-        Shell(System.out, options.pipeline, options.globalEnvironment, config).start()
+        Shell(System.out, options.pipeline, options.environment, config).start()
     }
 
     /**
