@@ -172,8 +172,8 @@ internal class EvaluatingCompilerCollectionAggregationsTest : EvaluatorTestBase(
                 """,
                 expectedResult = """
                     <<
-                        {'k': [2, 4], 'coll_sum_a': 6, 'coll_sum_inner': <<6>>, 'sum_b': 30},
-                        {'k': [6, 7], 'coll_sum_a': 13, 'coll_sum_inner': <<13>>, 'sum_b': 20}
+                        {'k': [2, 4], 'coll_sum_a': 6, 'sum_b': 30,  'coll_sum_inner': <<6>>},
+                        {'k': [6, 7], 'coll_sum_a': 13,  'sum_b': 20, 'coll_sum_inner': <<13>>}
                     >>
                 """
             ),
