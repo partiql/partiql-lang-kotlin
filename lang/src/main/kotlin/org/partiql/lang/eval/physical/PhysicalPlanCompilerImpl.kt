@@ -17,6 +17,7 @@ package org.partiql.lang.eval.physical
 import com.amazon.ion.IonString
 import com.amazon.ion.IonValue
 import com.amazon.ion.Timestamp
+import com.amazon.ion.system.IonSystemBuilder
 import com.amazon.ionelement.api.MetaContainer
 import com.amazon.ionelement.api.emptyMetaContainer
 import com.amazon.ionelement.api.toIonValue
@@ -132,7 +133,6 @@ import java.util.regex.Pattern
  * [1]: https://www.complang.tuwien.ac.at/anton/lvas/sem06w/fest.pdf
  */
 internal class PhysicalPlanCompilerImpl(
-    private val valueFactory: ExprValueFactory,
     private val functions: Map<String, ExprFunction>,
     private val customTypedOpParameters: Map<String, TypedOpParameter>,
     private val procedures: Map<String, StoredProcedure>,
@@ -275,34 +275,25 @@ internal class PhysicalPlanCompilerImpl(
         val mapThunk = compileAstExpr(expr.exp)
         val bexprThunk: RelationThunkEnv = bexperConverter.convert(expr.query)
 
-        fun createOutputSequence(relationType: RelationType?, elements: Sequence<ExprValue>) = when (relationType) {
-            RelationType.LIST -> valueFactory.newList(elements)
-            RelationType.BAG -> valueFactory.newBag(elements)
-            null -> throw EvaluationException(
-                message = "Unable to recover the output Relation Type",
-                errorCode = ErrorCode.EVALUATOR_GENERIC_EXCEPTION,
-                internal = false
-            )
+        val relationType = when (expr.metas.containsKey(IsOrderedMeta.tag)) {
+            true -> RelationType.LIST
+            false -> RelationType.BAG
         }
 
         return thunkFactory.thunkEnv(expr.metas) { env ->
-            var relationType: RelationType? = null
             // we create a snapshot for currentRegister to use during the evaluation
             // this is to avoid issue when iterator planner result
             val currentRegister = env.registers.clone()
             val elements = sequence {
                 env.load(currentRegister)
                 val relItr = bexprThunk(env)
-                relationType = relItr.relType
                 while (relItr.nextRow()) {
                     yield(mapThunk(env))
                 }
             }
-
-            // Trick the compiler here to always initialize `relationType`
-            when (elements.firstOrNull()) {
-                null -> createOutputSequence(relationType, emptySequence())
-                else -> createOutputSequence(relationType, elements)
+            when (relationType) {
+                RelationType.LIST -> ExprValue.newList(elements)
+                RelationType.BAG -> ExprValue.newBag(elements)
             }
         }
     }
@@ -1609,7 +1600,7 @@ internal class PhysicalPlanCompilerImpl(
 
         fun matchRegexPattern(value: ExprValue, likePattern: (() -> Pattern)?): ExprValue {
             return when {
-                likePattern == null || value.type.isUnknown -> valueFactory.nullValue
+                likePattern == null || value.type.isUnknown -> ExprValue.nullValue
                 !value.type.isText -> err(
                     "LIKE expression must be given non-null strings as input",
                     ErrorCode.EVALUATOR_LIKE_INVALID_INPUTS,
