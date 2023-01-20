@@ -21,6 +21,7 @@ import com.amazon.ion.system.IonSystemBuilder
 import com.amazon.ionelement.api.MetaContainer
 import com.amazon.ionelement.api.emptyMetaContainer
 import com.amazon.ionelement.api.toIonValue
+import org.partiql.lang.ast.IsOrderedMeta
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.ast.UNKNOWN_SOURCE_LOCATION
 import org.partiql.lang.ast.sourceLocation
@@ -133,6 +134,7 @@ import java.util.regex.Pattern
  * [1]: https://www.complang.tuwien.ac.at/anton/lvas/sem06w/fest.pdf
  */
 internal class PhysicalPlanCompilerImpl(
+    private val valueFactory: ExprValueFactory,
     private val functions: Map<String, ExprFunction>,
     private val customTypedOpParameters: Map<String, TypedOpParameter>,
     private val procedures: Map<String, StoredProcedure>,
@@ -292,8 +294,8 @@ internal class PhysicalPlanCompilerImpl(
                 }
             }
             when (relationType) {
-                RelationType.LIST -> ExprValue.newList(elements)
-                RelationType.BAG -> ExprValue.newBag(elements)
+                RelationType.LIST -> valueFactory.newList(elements)
+                RelationType.BAG -> valueFactory.newBag(elements)
             }
         }
     }
@@ -1600,7 +1602,7 @@ internal class PhysicalPlanCompilerImpl(
 
         fun matchRegexPattern(value: ExprValue, likePattern: (() -> Pattern)?): ExprValue {
             return when {
-                likePattern == null || value.type.isUnknown -> ExprValue.nullValue
+                likePattern == null || value.type.isUnknown -> valueFactory.nullValue
                 !value.type.isText -> err(
                     "LIKE expression must be given non-null strings as input",
                     ErrorCode.EVALUATOR_LIKE_INVALID_INPUTS,
