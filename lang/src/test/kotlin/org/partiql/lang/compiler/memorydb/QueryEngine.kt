@@ -34,7 +34,6 @@ internal const val DB_CONTEXT_VAR = "in-memory-database"
 /**
  * This class is a demonstration of how to integrate a storage layer with the experimental PartiQLCompilerPipeline.
  */
-
 @OptIn(ExperimentalPartiQLCompilerPipeline::class)
 class QueryEngine(val db: MemoryDatabase) {
     var enableDebugOutput = false

@@ -294,8 +294,7 @@ internal class PhysicalBexprToThunkConverter(
         CompiledSortKey(comp, value)
     }
 
-    // TODO: Remove from experimental once https://github.com/partiql/partiql-docs/issues/31 is resolved and a RFC is approved
-    @ExperimentalWindowFunctions
+    @OptIn(ExperimentalWindowFunctions::class)
     override fun convertWindow(node: PartiqlPhysical.Bexpr.Window): RelationThunkEnv {
         val source = this.convert(node.source)
 

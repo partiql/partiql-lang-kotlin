@@ -87,25 +87,14 @@ class PartiQLCompilerBuilder private constructor() {
             JoinRelationalOperatorFactoryDefault,
             OffsetRelationalOperatorFactoryDefault,
             LimitRelationalOperatorFactoryDefault,
-            LetRelationalOperatorFactoryDefault
-        )
-
-        /**
-         * A collection of all the default relational operator implementations provided by PartiQL that are in the experimental stage.
-         * This is necessary so users do not need the experimental annotation is they want to use the stabilized operators only. (after PartiQLCompilerPipeline graduates from experimental)
-         */
-        @ExperimentalWindowFunctions
-        private val EXPERIMENTAL_RELATIONAL_OPERATOR_FACTORIES = listOf(
-            WindowRelationalOperatorFactoryDefault
+            LetRelationalOperatorFactoryDefault,
+            // Notice here we will not propagate the optin requirement to the user
+            @OptIn(ExperimentalWindowFunctions::class)
+            WindowRelationalOperatorFactoryDefault,
         )
 
         @JvmStatic
         fun standard() = PartiQLCompilerBuilder()
-
-        @ExperimentalWindowFunctions
-        @JvmStatic
-        // This is a hack to inject the experimental operators to the compiler.
-        fun experimental() = PartiQLCompilerBuilder().customOperatorFactories(EXPERIMENTAL_RELATIONAL_OPERATOR_FACTORIES)
     }
 
     fun build(): PartiQLCompiler {

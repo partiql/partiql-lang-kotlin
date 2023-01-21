@@ -5,7 +5,6 @@ import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.eval.physical.SetVariableFunc
 import org.partiql.lang.eval.physical.window.WindowFunction
 
-// TODO: Remove from experimental once https://github.com/partiql/partiql-docs/issues/31 is resolved and a RFC is approved
 @ExperimentalWindowFunctions
 abstract class WindowRelationalOperatorFactory(name: String) : RelationalOperatorFactory {
 

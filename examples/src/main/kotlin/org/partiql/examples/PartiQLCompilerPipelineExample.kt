@@ -69,16 +69,6 @@ class PartiQLCompilerPipelineExample(out: PrintStream) : Example(out) {
             .options(evaluatorOptions)
     }
 
-    // See the following example to use the experimental operators.
-    /*
-    @OptIn(ExperimentalPartiQLCompilerPipeline::class, ExperimentalWindowFunctions::class)
-    private val partiQLCompilerPipelineExperimentalFeatures = PartiQLCompilerPipeline.build {
-        parser = PartiQLParserBuilder.standard().ionSystem(myIonSystem)
-        planner = PartiQLPlannerBuilder.standard().globalVariableResolver(globalVariableResolver)
-        compiler = PartiQLCompilerBuilder.experimental().ionSystem(myIonSystem).options(evaluatorOptions)
-    }
-     */
-
     override fun run() {
         val query = "SELECT t.name FROM myTable AS t WHERE t.age > 20"
 

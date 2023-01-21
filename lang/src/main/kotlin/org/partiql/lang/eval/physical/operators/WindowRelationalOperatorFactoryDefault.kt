@@ -17,7 +17,6 @@ import org.partiql.lang.planner.transforms.DEFAULT_IMPL_NAME
  * After sorting, we do a sequence scan to create partition and materialize all the element in the same partition
  *
  */
-// TODO: Remove from experimental once https://github.com/partiql/partiql-docs/issues/31 is resolved and a RFC is approved
 @ExperimentalWindowFunctions
 internal object WindowRelationalOperatorFactoryDefault : WindowRelationalOperatorFactory(DEFAULT_IMPL_NAME) {
     override fun create(

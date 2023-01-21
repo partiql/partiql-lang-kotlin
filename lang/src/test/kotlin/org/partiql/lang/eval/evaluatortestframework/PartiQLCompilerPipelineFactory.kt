@@ -1,7 +1,6 @@
 package org.partiql.lang.eval.evaluatortestframework
 
 import org.partiql.annotations.ExperimentalPartiQLCompilerPipeline
-import org.partiql.annotations.ExperimentalWindowFunctions
 import org.partiql.lang.ION
 import org.partiql.lang.compiler.PartiQLCompilerBuilder
 import org.partiql.lang.compiler.PartiQLCompilerPipeline
@@ -23,7 +22,7 @@ import kotlin.test.assertNull
  * TODO delete this once evaluator tests are replaced by `partiql-tests`
  */
 @OptIn(ExperimentalPartiQLCompilerPipeline::class)
-internal class PartiQLCompilerPipelineFactory(private val experimentalFeatures: Boolean) : PipelineFactory {
+internal class PartiQLCompilerPipelineFactory() : PipelineFactory {
 
     override val pipelineName: String = "PartiQLCompilerPipeline"
 
@@ -74,16 +73,13 @@ internal class PartiQLCompilerPipelineFactory(private val experimentalFeatures: 
             typedOpBehavior = evaluatorOptions.typedOpBehavior
         )
 
-        @OptIn(ExperimentalWindowFunctions::class)
-        val compiler = if (experimentalFeatures) PartiQLCompilerBuilder.experimental() else PartiQLCompilerBuilder.standard()
-
         val pipeline = PartiQLCompilerPipeline(
             parser = PartiQLParserBuilder().ionSystem(ION).customTypes(legacyPipeline.customDataTypes).build(),
             planner = PartiQLPlannerBuilder.standard()
                 .options(plannerOptions)
                 .globalVariableResolver(globalVariableResolver)
                 .build(),
-            compiler = compiler
+            compiler = PartiQLCompilerBuilder.standard()
                 .ionSystem(ION)
                 .options(evaluatorOptions)
                 .customTypes(legacyPipeline.customDataTypes)

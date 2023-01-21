@@ -7,8 +7,7 @@ import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestCase
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestTarget
 import org.partiql.lang.util.ArgumentsProviderBase
 
-// TODO: Remove from experimental once https://github.com/partiql/partiql-docs/issues/31 is resolved and a RFC is approved
-class WindowFunctionTests : EvaluatorTestBase(experimentalFeatures = true) {
+class WindowFunctionTests : EvaluatorTestBase() {
     private val session = mapOf(
         "stock_price" to """[
             { date: 2022-09-30, ticker: "AMZN", price: 113.00},
