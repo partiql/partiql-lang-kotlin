@@ -1,74 +1,116 @@
 # PartiQL CLI
 
-```
-PartiQL CLI
-Command line interface for executing PartiQL queries. Can be run in an interactive (REPL) mode or non-interactive.
+## Build and Run the CLI 
 
-Examples:
-To run in REPL mode simply execute the executable without any arguments:
-     partiql
-
-In non-interactive mode we use Ion as the format for input data which is bound to a global variable
-named "input_data", in the example below /logs/log.ion is bound to "input_data":
-     partiql --query="SELECT * FROM input_data" --input=/logs/log.ion
-
-The cli can output using PartiQL syntax or Ion using the --output-format option, e.g. to output binary ion:
-     partiql --query="SELECT * FROM input_data" --output-format=ION_BINARY --input=/logs/log.ion
-
-To pipe input data in via stdin:
-     cat /logs/log.ion | partiql --query="SELECT * FROM input_data" --format=ION_BINARY > output.10n
-
-Option                                Description
-------                                -----------
--e, --environment <File>              initial global environment (optional)
--h, --help                            prints this help
--i, --input <File>                    input file, requires the query option (optional)
--if, --input-format <InputFormat>     input format, requires the query option (default: ION) [ION, PARTIQL]
--w, --wrap-ion                        wraps Ion input file values in a bag, requires the input format to be ION, requires the query option
--m, --monochrome                      removes syntax highlighting for the REPL
--o, --output <File>                   output file, requires the query option (default: stdout)
--of, --output-format <OutputFormat>   output format, requires the query option (default: PARTIQL) [PARTIQL, PARTIQL_PRETTY, ION_TEXT, ION_BINARY]
--p, --permissive                      run the PartiQL query in PERMISSIVE typing mode
--q, --query <String>                  PartiQL query, triggers non interactive mode
-```
-
-## Building the CLI 
-
-The root Gradle build also builds the CLI. To build the CLI separately, execute:
+The following command will build and run the CLI:
 
 ```shell
-./gradlew :cli:build
+# To build and run
+./partiql-app/partiql-cli/shell.sh
+
+# To build (only)
+./gradlew :partiql-app:partiql-cli:install
+
+# To Run (only)
+./partiql-app/partiql-cli/build/install/partiql-cli/bin/partiql
 ```
 
-After building, distributable jars are located in the `cli/build/distributions` directory (relative to the 
+After building the entire project, distributable jars are located in the `cli/build/distributions` directory (relative to the 
 project root).
 
 Be sure to include the correct relative path to `gradlew` if you are not in the project root.
 
-## Using the CLI
+## CLI Options
 
-The following command will build any dependencies before starting the CLI.
+To view all available options, run the CLI with the `--help` option.
+
+## Non-Interactive (Single Query Execution)
+
+### Using the Script
+
+To execute a single query, run:
 
 ```shell
-./gradlew :cli:run -q --args="<command line arguments>"
+./partiql-app/partiql-cli/shell.sh query.partiql
 ```
 
-The CLI can be run in two manners, non-interactive and interactive (REPL).
+where `query.partiql` contains the PartiQL query to execute.
 
-## REPL
+### Using the `partiql` Command Directly
 
-To start an interactive read, eval, print loop (REPL) execute:
+Alternatively, you may pipe input into the native command:
+
+```shell
+# Via `echo`
+echo "SELECT * FROM [0, 1, 2]" | ./partiql-app/partiql-cli/build/install/partiql-cli/bin/partiql
+
+# Via `cat`
+echo ~/Desktop/query.partiql | ./partiql-app/partiql-cli/build/install/partiql-cli/bin/partiql
+```
+
+### Running a PartiQL Executable File (Unix)
+
+Users can also create and run executable files containing PartiQL queries. To use this feature,
+please add `partiql` (the built executable) to your path:
+
+```shell
+# file: ~/.bashrc or ~/.zshrc
+# desc: Example configuration update of BASH or ZSH shells
+
+# Example adding gradle-built partiql command. Need to build the executable (see directions above).
+PATH_TO_PARTIQL_LANG_KOTLIN="${HOME}/partiql-lang-kotlin"
+PATH="$PATH_TO_PARTIQL_LANG_KOTLIN/partiql-app/partiql-cli/build/install/partiql-cli/bin:$PATH"
+export PATH
+```
+
+Once you have saved your configurations, remember to source your configuration file.
+```shell
+# For ZSH
+source ~/.zshrc
+
+# For Bash
+source ~/.bashrc
+```
+
+Now, with the `partiql` executable on your path, you can write PartiQL files such as the below file (`example.partiql`):
+```partiql
+#!/usr/bin/env partiql
+
+-- file: example.partiql
+-- desc: A simple PartiQL query
+
+SELECT t.a AS result
+FROM <<
+  { 'a': 1 },
+  { 'a': 9 },
+  { 'a': 4 },
+  { 'a': 6 }
+>> AS t
+WHERE a > 2
+ORDER BY a DESC
+```
+
+Now, you can convert this file into an executable and run it directly!
+```shell
+$ chmod +x ./example.partiql
+$ ./example.partiql
+[{'result': 9}, {'result': 6}, {'result': 4}]
+```
+
+## Interactive (Shell)
+
+To start an interactive shell, execute:
 
 > Note that running directly with Gradle will eat arrow keys and control sequences due to the Gradle daemon.
 
 ```shell
-./cli/shell.sh
+./partiql-app/partiql-cli/shell.sh
 ```
 
 You will see a prompt that looks as follows:
 
 ```shell
-Welcome to the PartiQL REPL!
+Welcome to the PartiQL shell!
 PartiQL> 
 ```
 
@@ -113,7 +155,7 @@ PartiQL> SELECT id + 4 AS name FROM _;
 
 Press control-D to exit the REPL.
 
-### Advanced REPL Features
+### Advanced Shell Features
 
 To view the AST of a PartiQL statement, type the statement and press enter only *once*, then type `!!` and press enter:
 
@@ -149,7 +191,7 @@ OK!
 
 ### Initial Environment
 
-The initial environment for the REPL can be setup with a configuration file, which should be a PartiQL file with a 
+The initial environment for the Shell can be setup with a configuration file, which should be a PartiQL file with a 
 single `struct` containing the initial *global environment*.
 
 For example, a file named `config.env` contains the following:
@@ -170,13 +212,11 @@ For example, a file named `config.env` contains the following:
 ```
 
 The variables `animals` and `types` can both be bound to the execution environment for later access.
-To bind the environment file to the execution environment, start the REPL with the following command:
+To bind the environment file to the execution environment, start the Shell with the following command:
 
 ```shell
-$ ./gradlew :cli:run -q --console=plain --args='-e config.env'
+$ ./partiql-app/partiql-cli/shell.sh -e config.env
 ```
-
-**Note**: Shell expansions such as `~` do not work within the value of the `args` argument.
 
 Or, if you have extracted one of the compressed archives:
 
@@ -209,7 +249,7 @@ PartiQL> SELECT name, type, is_magic FROM animals, types WHERE type = id
 >>
 ```
 
-To see the current REPL environment you can use `!global_env`, for example for the file above: 
+To see the current Shell environment you can use `!global_env`, for example for the file above: 
 
 ```shell
 PartiQL> !global_env;
@@ -411,7 +451,7 @@ PartiQL> SELECT * FROM stores AS s
 ```
 
 ## Reading/Writing Files
-The REPL provides the `read_file` function to stream data from a file. The files need to be placed in the folder `cli`, 
+The CLI provides the `read_file` function to stream data from a file. The files need to be placed in the folder `cli`, 
 and, if using the default file type (Ion), they must contain only a single Ion value (typically a list).
 
 **Note**: Later on, we will introduce reading different file types, but we will first focus on the default (Ion).
@@ -442,7 +482,7 @@ PartiQL> SELECT city FROM read_file('data.ion') AS c, `["HI", "NY"]` AS s WHERE 
 >>
 ```
 
-The REPL also has the capability to write files with the `write_file` function:
+The CLI also has the capability to write files with the `write_file` function:
 
 ```shell
 PartiQL> write_file('out.ion', SELECT * FROM _);
@@ -718,7 +758,7 @@ For in-depth documentation on valid DDB PartiQL queries, please reference the of
 [AWS DynamoDB PartiQL Docs](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/ql-reference.html).
 
 ## Permissive Typing Mode
-By default, the CLI/REPL runs in [LEGACY](https://github.com/partiql/partiql-lang-kotlin/blob/main/lang/src/org/partiql/lang/eval/CompileOptions.kt#L53-L62)
+By default, the CLI runs in [LEGACY](https://github.com/partiql/partiql-lang-kotlin/blob/main/lang/src/main/kotlin/org/partiql/lang/eval/CompileOptions.kt#L62)
 typing mode, which will give an evaluation time error in the case of data type mismatches.
 
 ```shell

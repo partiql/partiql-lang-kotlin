@@ -105,7 +105,7 @@ internal class AggregationVisitorTransform(
 
     override fun transformExprSelect_group(node: PartiqlAst.Expr.Select): PartiqlAst.GroupBy? {
         // Return with Empty Context if without Group
-        val containsAggregations = AggregationFinder.containsAggregations(node.project)
+        val containsAggregations = AggregationFinder().containsAggregations(node.project)
         if (node.group == null) {
             val context = VisitorContext(emptyList(), null, containsAggregations)
             contextStack.add(context)
@@ -202,7 +202,8 @@ internal class AggregationVisitorTransform(
      * Recursively searches through a [PartiqlAst.Projection] to find [PartiqlAst.Expr.CallAgg]'s, but does NOT recurse
      * into [PartiqlAst.Expr.Select]. Designed to be called directly using [containsAggregations].
      */
-    private object AggregationFinder : PartiqlAst.Visitor() {
+    private class AggregationFinder : PartiqlAst.Visitor() {
+
         var hasAggregations: Boolean = false
 
         fun containsAggregations(node: PartiqlAst.Projection): Boolean {
@@ -276,7 +277,7 @@ internal class AggregationVisitorTransform(
         }
 
         /**
-         * IDs outside of aggregation functions should always be replaced with the Group Key uniue aliases. If no
+         * IDs outside of aggregation functions should always be replaced with the Group Key unique aliases. If no
          * replacement is found, we throw an EvaluationException.
          */
         private fun getReplacementForIdOutsideOfAggregationFunction(node: PartiqlAst.Expr.Id): PartiqlAst.Expr {
