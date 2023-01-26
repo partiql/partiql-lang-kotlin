@@ -15,25 +15,30 @@ Sprout is a graphical IR generator. It is inspired by PIG, ANTLR, and Protobuf.
 ```shell
 $ ./partiql-lib/partiql-sprout/build/install/sprout/bin/sprout generate kotlin --help
 
-Usage: sprout generate kotlin [-hV] [-o=<out>] [-p=<packageRoot>] [-u=<id>]
+Usage: sprout generate kotlin [-hV] [-m=<modifier>] [-o=<out>]
+                              [-p=<packageRoot>] [-u=<id>] [--poems=<poems>]...
                               <file>
 Generates Kotlin sources from type universe definitions
       <file>            Type definition file
   -h, --help            Show this help message and exit.
+  -m, --modifier=<modifier>
+                        Generated node class modifier. Options FINAL, DATA, OPEN
   -o, --out=<out>       Generated source output directory
   -p, --package=<packageRoot>
                         Package root
+      --poems=<poems>   Poem templates to apply
   -u, --universe=<id>   Universe identifier
 ```
 
 **Example**
 ```shell
 $ ./partiql-lib/partiql-sprout/build/install/sprout/bin/sprout generate kotlin \
-      -o ./generated \
-      -p org.partiql.isl \ 
-      -u IonSchema \
-      ./partiql-lib/partiql-isl/src/main/resources/ion_schema_v2_0.ion  
-      
+     -o ./generated\
+     -p org.partiql.example\
+     -u Example\
+     -m OPEN\
+     -poems visitor example.ion
+  
 # sources are generated in partiql-lang-kotlin/generated/
 ```
 
