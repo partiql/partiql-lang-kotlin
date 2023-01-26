@@ -1,9 +1,8 @@
 package org.partiql.lang.eval.physical.window
 
-import org.partiql.annotations.PartiQLExperimental
+import org.partiql.annotations.ExperimentalWindowFunctions
 
-// TODO: Remove from experimental once https://github.com/partiql/partiql-docs/issues/31 is resolved and a RFC is approved
-@PartiQLExperimental
+@ExperimentalWindowFunctions
 internal fun createBuiltinWindowFunction(name: String) =
     when (name) {
         "lag" -> Lag()

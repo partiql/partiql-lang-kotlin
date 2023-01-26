@@ -1,6 +1,6 @@
 package org.partiql.lang.eval.evaluatortestframework
 
-import org.partiql.annotations.PartiQLExperimental
+import org.partiql.annotations.ExperimentalPartiQLCompilerPipeline
 import org.partiql.lang.ION
 import org.partiql.lang.compiler.PartiQLCompilerBuilder
 import org.partiql.lang.compiler.PartiQLCompilerPipeline
@@ -21,8 +21,8 @@ import kotlin.test.assertNull
 /**
  * TODO delete this once evaluator tests are replaced by `partiql-tests`
  */
-@PartiQLExperimental
-internal class PartiQLCompilerPipelineFactory : PipelineFactory {
+@OptIn(ExperimentalPartiQLCompilerPipeline::class)
+internal class PartiQLCompilerPipelineFactory() : PipelineFactory {
 
     override val pipelineName: String = "PartiQLCompilerPipeline"
 
@@ -85,7 +85,7 @@ internal class PartiQLCompilerPipelineFactory : PipelineFactory {
                 .customTypes(legacyPipeline.customDataTypes)
                 .customFunctions(legacyPipeline.functions.values.toList())
                 .customProcedures(legacyPipeline.procedures.values.toList())
-                .build(),
+                .build()
         )
 
         return object : AbstractPipeline {

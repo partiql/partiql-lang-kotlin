@@ -9,10 +9,11 @@ import org.partiql.examples.CustomProceduresExample
 import org.partiql.examples.EvaluationJavaExample
 import org.partiql.examples.EvaluationWithBindings
 import org.partiql.examples.EvaluationWithLazyBindings
-import org.partiql.examples.ExperimentalFeatureExample
 import org.partiql.examples.ParserErrorExample
 import org.partiql.examples.ParserExample
 import org.partiql.examples.ParserJavaExample
+import org.partiql.examples.PartiQLCompilerPipelineExample
+import org.partiql.examples.PartiQLCompilerPipelineJavaExample
 import org.partiql.examples.PartialEvaluationVisitorTransformExample
 import org.partiql.examples.PreventJoinVisitorExample
 import org.partiql.examples.S3JavaExample
@@ -26,6 +27,7 @@ private val examples = mapOf(
     S3JavaExample::class.java.simpleName to S3JavaExample(System.out),
     EvaluationJavaExample::class.java.simpleName to EvaluationJavaExample(System.out),
     ParserJavaExample::class.java.simpleName to ParserJavaExample(System.out),
+    PartiQLCompilerPipelineJavaExample::class.java.simpleName to PartiQLCompilerPipelineJavaExample(System.out),
 
     // Kotlin Examples
     CsvExprValueExample::class.java.simpleName to CsvExprValueExample(System.out),
@@ -38,7 +40,7 @@ private val examples = mapOf(
     PartialEvaluationVisitorTransformExample::class.java.simpleName to PartialEvaluationVisitorTransformExample(System.out),
     PreventJoinVisitorExample::class.java.simpleName to PreventJoinVisitorExample(System.out),
     SimpleExpressionEvaluation::class.java.simpleName to SimpleExpressionEvaluation(System.out),
-    ExperimentalFeatureExample::class.java.simpleName to ExperimentalFeatureExample(System.out)
+    PartiQLCompilerPipelineExample::class.java.simpleName to PartiQLCompilerPipelineExample(System.out)
 )
 
 fun main(args: Array<String>) {

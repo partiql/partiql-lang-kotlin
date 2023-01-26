@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
-import org.partiql.annotations.PartiQLExperimental
+import org.partiql.annotations.ExperimentalPartiQLCompilerPipeline
 import org.partiql.lang.ION
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.domains.PartiqlPhysical
@@ -26,7 +26,7 @@ import org.partiql.lang.planner.createFakeGlobalsResolver
 import org.partiql.lang.planner.transforms.DEFAULT_IMPL_NAME
 import org.partiql.lang.planner.transforms.PLAN_VERSION_NUMBER
 
-@PartiQLExperimental
+@OptIn(ExperimentalPartiQLCompilerPipeline::class)
 class PartiQLCompilerPipelineSmokeTests {
 
     private fun createPlannerPipelineForTest(

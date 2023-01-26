@@ -1,13 +1,12 @@
 package org.partiql.lang.eval.physical.window
 
-import org.partiql.annotations.PartiQLExperimental
+import org.partiql.annotations.ExperimentalWindowFunctions
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.physical.EvaluatorState
 import org.partiql.lang.eval.physical.operators.ValueExpression
 
-// TODO: Remove from experimental once https://github.com/partiql/partiql-docs/issues/31 is resolved and a RFC is approved
-@PartiQLExperimental
+@ExperimentalWindowFunctions
 interface WindowFunction {
 
     val name: String

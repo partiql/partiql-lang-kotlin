@@ -244,7 +244,6 @@ internal data class LogicalToLogicalResolvedVisitorTransform(
         }
     }
 
-    // TODO: Remove from experimental once https://github.com/partiql/partiql-docs/issues/31 is resolved and a RFC is approved
     override fun transformBexprWindow_windowSpecification(node: PartiqlLogical.Bexpr.Window): PartiqlLogicalResolved.Over {
         val bindings = getOutputScope(node).concatenate(this.inputScope)
         return withInputScope(bindings) {
@@ -254,7 +253,6 @@ internal data class LogicalToLogicalResolvedVisitorTransform(
         }
     }
 
-    // TODO: Remove from experimental once https://github.com/partiql/partiql-docs/issues/31 is resolved and a RFC is approved
     override fun transformBexprWindow_windowExpressionList(node: PartiqlLogical.Bexpr.Window): List<PartiqlLogicalResolved.WindowExpression> {
         val bindings = getOutputScope(node).concatenate(this.inputScope)
         return withInputScope(bindings) {
@@ -520,7 +518,6 @@ internal data class LogicalToLogicalResolvedVisitorTransform(
                 sourceScope.concatenate(letVariables)
             }
 
-            // TODO: Remove from experimental once https://github.com/partiql/partiql-docs/issues/31 is resolved and a RFC is approved
             is PartiqlLogical.Bexpr.Window -> {
                 val sourceScope = getOutputScope(bexpr.source)
                 val windowVariable = bexpr.windowExpressionList.map { it.decl }

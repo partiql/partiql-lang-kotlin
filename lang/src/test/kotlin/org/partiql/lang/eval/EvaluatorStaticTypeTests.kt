@@ -167,7 +167,7 @@ class EvaluatorStaticTypeTests {
             db = mockDb,
             // the planner doesn't yet support type inferencing pass needed to make this work
             EvaluatorTestTarget.COMPILER_PIPELINE,
-            // Enable the static type inferencer for this
-            compilerPipelineBuilderBlock = { this.globalTypeBindings(mockDb.typeBindings) },
         )
+        // Enable the static type inferencer for this
+        { this.globalTypeBindings(mockDb.typeBindings) }
 }

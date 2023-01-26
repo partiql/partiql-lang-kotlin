@@ -1,6 +1,6 @@
 package org.partiql.lang.eval.physical.window
 
-import org.partiql.annotations.PartiQLExperimental
+import org.partiql.annotations.ExperimentalWindowFunctions
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.physical.EvaluatorState
@@ -10,9 +10,8 @@ import org.partiql.lang.eval.physical.toSetVariableFunc
 /**
  * This abstract class holds some common logic for navigation window function, i.e., LAG, LEAD
  * TODO: When we support FIRST_VALUE, etc, we probably need to modify the process row function, since those function requires frame
- * TODO: Remove from experimental once https://github.com/partiql/partiql-docs/issues/31 is resolved and a RFC is approved
  */
-@PartiQLExperimental
+@ExperimentalWindowFunctions
 abstract class NavigationWindowFunction() : WindowFunction {
 
     lateinit var currentPartition: List<Array<ExprValue>>

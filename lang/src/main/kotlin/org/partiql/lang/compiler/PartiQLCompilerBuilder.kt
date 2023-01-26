@@ -16,7 +16,8 @@ package org.partiql.lang.compiler
 
 import com.amazon.ion.IonSystem
 import com.amazon.ion.system.IonSystemBuilder
-import org.partiql.annotations.PartiQLExperimental
+import org.partiql.annotations.ExperimentalPartiQLCompilerPipeline
+import org.partiql.annotations.ExperimentalWindowFunctions
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ThunkReturnTypeAssertions
 import org.partiql.lang.eval.builtins.DynamicLookupExprFunction
@@ -52,7 +53,8 @@ import org.partiql.lang.types.CustomType
  *                                      .build()
  * ```
  */
-@PartiQLExperimental
+
+@ExperimentalPartiQLCompilerPipeline
 class PartiQLCompilerBuilder private constructor() {
 
     private var ion: IonSystem = DEFAULT_ION
@@ -75,6 +77,7 @@ class PartiQLCompilerBuilder private constructor() {
          * @see [org.partiql.lang.planner.PlannerPipeline.Builder.addPhysicalPlanPass]
          * @see [org.partiql.lang.planner.PlannerPipeline.Builder.addRelationalOperatorFactory]
          */
+
         private val DEFAULT_RELATIONAL_OPERATOR_FACTORIES = listOf(
             AggregateOperatorFactoryDefault,
             SortOperatorFactoryDefault,
@@ -85,7 +88,9 @@ class PartiQLCompilerBuilder private constructor() {
             OffsetRelationalOperatorFactoryDefault,
             LimitRelationalOperatorFactoryDefault,
             LetRelationalOperatorFactoryDefault,
-            WindowRelationalOperatorFactoryDefault
+            // Notice here we will not propagate the optin requirement to the user
+            @OptIn(ExperimentalWindowFunctions::class)
+            WindowRelationalOperatorFactoryDefault,
         )
 
         @JvmStatic
