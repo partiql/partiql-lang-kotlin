@@ -24,12 +24,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Adds ability to pipe queries to the CLI
-- Adds ability to run PartiQL files as executables by adding support for shebangs
 - Added numeric functions `abs`, `sqrt`, `exp`, `ln`, `pow`.
 
 ### Changed
-- Updates the CLI to use Pico CLI and modifies several CLI options
 - Deprecates the project level opt-in annotation `PartiQLExperimental` and split it into feature level. `ExperimentalPartiQLCompilerPipeline` and `ExperimentalWindowFunctions`.
 
 ### Deprecated
@@ -41,6 +38,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The deprecated `IonValue` property in `ExprValue` interface is now removed.
 
 ### Security
+
+## [0.9.2] - 2023-01-20
+
+### Added
+- Adds ability to pipe queries to the CLI
+- Adds ability to run PartiQL files as executables by adding support for shebangs
+
+### Changed
+
+### Deprecated
+
+### Fixed
+- Fixes list/bag ExprValue creation in plan evaluator
+- Fixes gradle build issues.
 
 ## [0.9.1] - 2023-01-04
 
