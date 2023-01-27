@@ -4,7 +4,6 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import org.partiql.annotations.PartiQLExperimental
 import org.partiql.lang.ION
 import org.partiql.lang.compiler.memorydb.MemoryDatabase
 import org.partiql.lang.compiler.memorydb.QueryEngine
@@ -14,7 +13,6 @@ import org.partiql.lang.eval.BindingName
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.toIonValue
 
-@PartiQLExperimental
 class TestContext {
     val db = MemoryDatabase().also {
         it.createTable("customer", listOf("id"))
@@ -38,7 +36,7 @@ class TestContext {
 /**
  * Tests the query planner with some basic DML and SFW queries against using [QueryEngine] and [MemoryDatabase].
  */
-@PartiQLExperimental
+
 class IntegrationTests {
 
     @Test

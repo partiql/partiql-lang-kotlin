@@ -3,12 +3,10 @@ package org.partiql.lang.planner.transforms.optimizations
 import com.amazon.ionelement.api.ionSymbol
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
-import org.partiql.annotations.PartiQLExperimental
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.planner.transforms.DEFAULT_IMPL
 import org.partiql.lang.util.ArgumentsProviderBase
 
-@PartiQLExperimental
 class ConcatWindowFunctionPassTest {
     @ParameterizedTest
     @ArgumentsSource(Arguments::class)

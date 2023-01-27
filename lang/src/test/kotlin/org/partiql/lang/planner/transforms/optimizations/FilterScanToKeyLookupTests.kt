@@ -4,7 +4,7 @@ import com.amazon.ionelement.api.ionSymbol
 import org.junit.jupiter.api.fail
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
-import org.partiql.annotations.PartiQLExperimental
+import org.partiql.annotations.ExperimentalPartiQLCompilerPipeline
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.errors.Problem
 import org.partiql.lang.errors.ProblemHandler
@@ -31,7 +31,7 @@ private const val TABLE_WITH_1_FIELD_PK_UUID = "uuid_for_table_with_1_field_pk"
 private const val TABLE_WITH_3_FIELD_PK = "table_with_3_field_pk"
 private const val TABLE_WITH_3_FIELD_PK_UUID = "uuid_for_table_with_3_field_pk"
 
-@PartiQLExperimental
+@OptIn(ExperimentalPartiQLCompilerPipeline::class)
 class FilterScanToKeyLookupTests {
     /** A test case for [PartiQLPhysicalPass] implementations that work on expressions in the [PartiqlPhysical] domain. */
     data class TestCase(

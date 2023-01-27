@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
-import org.partiql.annotations.PartiQLExperimental
+import org.partiql.annotations.ExperimentalPartiQLCompilerPipeline
 import org.partiql.lang.ION
 import org.partiql.lang.compiler.PartiQLCompilerPipeline
 import org.partiql.lang.domains.PartiqlPhysical
@@ -32,6 +32,7 @@ private val FAKE_IMPL_NODE = PartiqlPhysical.build { impl(FAKE_IMPL_NAME) }
 class CreateFunctionWasCalledException(val thrownFromOperator: RelationalOperatorKind) :
     Exception("The create function was called!")
 
+@OptIn(ExperimentalPartiQLCompilerPipeline::class)
 class CustomOperatorFactoryTests {
     // it's too expensive to create reasonable facsimiles of these operator factories, so we cheat by making them
     // all just throw CreateFunctionWasCalledException and asserting that this exception is thrown.
@@ -98,7 +99,6 @@ class CustomOperatorFactoryTests {
 
     @ParameterizedTest
     @ArgumentsSource(CustomOperatorCases::class)
-    @PartiQLExperimental
     fun `make sure custom operator implementations are called`(tc: CustomOperatorCases.TestCase) {
         val pipeline = PartiQLCompilerPipeline.build {
             compiler

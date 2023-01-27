@@ -14,7 +14,7 @@
 
 package org.partiql.lang.planner
 
-import org.partiql.annotations.PartiQLExperimental
+import org.partiql.annotations.ExperimentalPartiQLCompilerPipeline
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.PartiqlLogical
 import org.partiql.lang.domains.PartiqlLogicalResolved
@@ -26,7 +26,7 @@ import org.partiql.lang.eval.TypedOpBehavior
  * [PartiQLPlanner] is responsible for transforming a [PartiqlAst.Statement] representation of a query into an
  * equivalent [PartiqlPhysical.Plan] representation of the query.
  */
-@PartiQLExperimental
+@ExperimentalPartiQLCompilerPipeline
 interface PartiQLPlanner {
 
     /**
