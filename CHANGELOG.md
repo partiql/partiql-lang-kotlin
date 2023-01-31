@@ -33,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `ExprValueFactory` interface marked as deprecated. Equivalent `ExprValue` construction methods are implemented in the `ExprValue` interface as static methods. 
 
 ### Fixed
+- Constrained Decimal matching logic.
 
 ### Removed
 - The deprecated `IonValue` property in `ExprValue` interface is now removed.
