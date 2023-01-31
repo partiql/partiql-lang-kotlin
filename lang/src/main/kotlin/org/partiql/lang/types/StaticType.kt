@@ -15,6 +15,7 @@ import org.partiql.lang.eval.numberValue
 import org.partiql.lang.eval.stringValue
 import org.partiql.lang.eval.timeValue
 import java.math.BigDecimal
+import java.math.RoundingMode
 
 /**
  * Represents static types available in the language and ways to extends them to create new types.
@@ -445,11 +446,19 @@ data class DecimalType(
 
         data class Constrained(val precision: Int, val scale: Int = 0) : PrecisionScaleConstraint() {
             override fun matches(d: BigDecimal): Boolean {
-                val dv = d.stripTrailingZeros()
-
-                val integerDigits = dv.precision() - dv.scale()
+                // check scale
+                val decimalPoint = if (d.scale() >= 0) d.scale() else 0
+                if (decimalPoint > scale) {
+                    return false
+                }
+                // check integer part
+                val integerPart = d.setScale(0, RoundingMode.DOWN)
+                val integerLength = if (integerPart.signum() != 0) integerPart.precision() - integerPart.scale() else 0
+                // PartiQL precision semantics -> the maximum number of total digit (left of decimal place + right of decimal place)
+                // PartiQL scale semantics -> the total number of digit after the decimal point.
                 val expectedIntegerDigits = precision - scale
-                return integerDigits <= expectedIntegerDigits && dv.scale() <= scale
+
+                return expectedIntegerDigits >= integerLength
             }
         }
     }
