@@ -200,13 +200,20 @@ internal object IonTypeParser : SproutParser {
             if (absolute) {
                 val path = symbol.trimStart('.').split(".")
                 val node = root.search(path)
-                if (node != null) {
-                    return TypeRef.Path(
-                        nullable = nullable,
-                        ids = (node.path.toTypedArray()),
-                    )
-                } else {
-                    error("type reference `$symbol` not found")
+                return when {
+                    node != null -> {
+                        TypeRef.Path(
+                            nullable = nullable,
+                            ids = (node.path.toTypedArray()),
+                        )
+                    }
+                    path.size == 1 && imports.symbols.contains(path.first()) -> {
+                        // Import type reference using '.'
+                        TypeRef.Import(symbol, nullable)
+                    }
+                    else -> {
+                        error("type reference `$symbol` not found")
+                    }
                 }
             }
             // 2. Attempt as scalar
