@@ -581,19 +581,21 @@ MAKE_TIME(21, 02, missing)               -- null
 MAKE_TIME(21, 02, 28., null)             -- null
 MAKE_TIME(21, 02, 28., missing)          -- null
 ```
-### SIZE   
+### SIZE / CARDINALITY
 
 Given any container data type (i.e., list, structure or bag) return the number of elements in the container. 
 
 Signature
-: `SIZE: Container -> Integer`
+- `SIZE: Container -> Integer`
+- `CARDINALITY: Container -> Integer`
 
 Header
-: `SIZE(c)`
+- `SIZE(c)`
+- `CARDINALITY(c)`
 
 Purpose 
 : Given a container, `c`, return the number of elements in the container. 
-If the input to `SIZE` is not a container 
+If the input to `SIZE/CARDINALITY` is not a container 
 the implementation throws an error. 
 
 Examples
@@ -1004,6 +1006,27 @@ abs(`-inf`) = `+inf`
 abs(`nan`) = `nan`
 ```
 
+### MOD
+
+MOD operates on two exact numeric arguments with scale 0 (zero) and returns
+the modulus (remainder) of the first argument divided by the second argument as an exact numeric with scale 0 (zero).
+
+If the second argument is zero, an EVALUATOR_ARITHMETIC_EXCEPTION will be thrown.
+
+Signature : `MOD: Int, Int -> Int`
+
+Examples:
+```sql
+mod(1, 1)      -- 0
+mod(10, 1)     -- 0
+mod(17, 1)     -- 0
+mod(-17, 4)    -- -1
+mod(17, -4)    -- 1
+mod(10, 3)     -- 1
+mod(17, 1)     -- 0
+mod(17, 3)     -- 2
+```
+
 ### SQRT
 
 Returns the square root of the given number.
@@ -1159,7 +1182,6 @@ Here is an example for the imaginary function `add`
 
 Given 1 or more values return ther sum 
 
-
 Signature
 : `ADD: PosInt PosInt -> PosInt`
 
@@ -1174,7 +1196,6 @@ function returns the current sum up to that point.
   
 Examples
 : 
-<!-- intentional blank line to make pdf generation work -->                     
 ```sql  
 ADD(1)         -- 1 (wrap extra explanations with parens)
 ADD(1,2)       -- 3
@@ -1183,3 +1204,94 @@ ADD()          -- 0
 ADD("a")       -- 0
 ```
 
+## BIT_LENGTH
+
+Returns the number of bits in the input string.
+
+Signature
+: `BIT_LENGTH: String —> Int`
+
+Header
+: `BIT_LENGTH(str)`
+
+Examples
+:
+```sql
+bit_length('jose') -- 32
+```
+
+## OCTET_LENGTH
+
+Returns the number of bytes in the input string.
+
+Signature
+: `OCTET_LENGTH: String —> Int`
+
+Header
+: `OCTET_LENGTH(str)`
+
+Examples
+:
+```sql
+octet_length('jose') -- 4
+```
+
+## POSITION
+
+Position determines the first position (counting from 1), if any, at which one string, str1, occurs within
+another, str2. If str1 is of length zero, then it occurs at position 1 (one) for any value of str2. If str1
+does not occur in str2, then zero is returned. The declared type of a <position expression> is exact numeric
+
+Signature
+: `POSITION: String, String —> Int`
+
+Header
+- `POSITION(str1 IN str2)`
+- `POSITION(str1, str2)`
+
+Examples
+:
+```sql
+position('foo' in 'hello')     -- 0
+position('' in 'hello')        -- 1
+position('h' in 'hello')       -- 1
+position('o' in 'hello')       -- 5
+position('ll' in 'hello')      -- 3
+position('lo' in 'hello')      -- 4
+position('hello' in 'hello')   -- 1
+position('xx' in 'xxyyxxyy')   -- 1
+position('yy' in 'xxyyxxyy')   -- 3
+```
+
+
+## OVERLAY
+
+OVERLAY modifies a string argument by replacing a given substring of the string, which is specified by a given numeric 
+starting position and a given numeric length, with another string (called the replacement string). When the length of
+the substring is zero, nothing is removed from the original string and the string returned by the
+function is the result of inserting the replacement string into the original string at the starting position.
+
+Signature
+- `OVERLAY: String, String, Int —> String`
+- `OVERLAY: String, String, Int, Int —> String`
+
+Header
+- `OVERLAY(str1 PLACING str2 FROM pos)`
+- `OVERLAY(str1 PLACING str2 FROM pos FOR for)`
+
+Examples
+:
+```sql
+overlay('hello' placing '' from 1)              -- "hello
+overlay('hello' placing '' from 2 for 3)         -- "ho
+overlay('hello' placing '' from 2 for 4)        -- "h
+overlay('hello' placing 'XX' from 1)            -- "XXllo
+overlay('hello' placing 'XX' from 1 for 3)      -- "XXlo
+overlay('hello' placing 'XX' from 1 for 1)      -- "XXello
+overlay('hello' placing 'XX' from 1 for 100)    -- "XX
+overlay('hello' placing 'XX' from 1 for 0)      -- "XXhello
+overlay('hello' placing 'XX' from 7)            -- "helloXX
+overlay('hello' placing 'XX' from 100 for 100)  -- "helloXX
+overlay('hello' placing 'XX' from 2 for 1)      -- "hXXllo
+overlay('hello' placing 'XX' from 2 for 3)      -- "hXXo
+```

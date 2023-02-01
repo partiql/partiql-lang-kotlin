@@ -99,7 +99,7 @@ class TrimEvaluationTest : EvaluatorTestBase() {
     fun trimInvalidArgTypeTest1() = checkInvalidArgType(
         funcName = "trim",
         args = listOf(
-            Argument(1, StaticType.unionOf(StaticType.STRING, StaticType.SYMBOL), ")")
+            Argument(1, StaticType.TEXT, ")")
         )
     )
 
@@ -118,7 +118,7 @@ class TrimEvaluationTest : EvaluatorTestBase() {
         funcName = "trim",
         syntaxSuffix = "(from ",
         args = listOf(
-            Argument(1, StaticType.unionOf(StaticType.STRING, StaticType.SYMBOL), ")")
+            Argument(1, StaticType.TEXT, ")")
         )
     )
 

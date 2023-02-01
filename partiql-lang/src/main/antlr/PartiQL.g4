@@ -549,6 +549,8 @@ exprPrimary
     | cast                       # ExprPrimaryBase
     | sequenceConstructor        # ExprPrimaryBase
     | substring                  # ExprPrimaryBase
+    | position                   # ExprPrimaryBase
+    | overlay                    # ExprPrimaryBase
     | canCast                    # ExprPrimaryBase
     | canLosslessCast            # ExprPrimaryBase
     | extract                    # ExprPrimaryBase
@@ -605,6 +607,24 @@ sequenceConstructor
 substring
     : SUBSTRING PAREN_LEFT expr ( COMMA expr ( COMMA expr )? )? PAREN_RIGHT
     | SUBSTRING PAREN_LEFT expr ( FROM expr ( FOR expr )? )? PAREN_RIGHT
+    ;
+
+/**
+* POSITION(<str>, <str>)
+* POSITION(<str> IN <str>)
+*/
+position
+    : POSITION PAREN_LEFT expr COMMA expr PAREN_RIGHT
+    | POSITION PAREN_LEFT expr IN expr PAREN_RIGHT
+    ;
+
+/**
+* OVERLAY(<str>, <str>, <int> [, <int>])
+* OVERLAY(<str> PLACING <str> FROM <int> [FOR <int>])
+*/
+overlay
+    : OVERLAY PAREN_LEFT expr COMMA expr COMMA expr (COMMA expr)? PAREN_RIGHT
+    | OVERLAY PAREN_LEFT expr PLACING expr FROM expr (FOR expr)? PAREN_RIGHT
     ;
 
 aggregate

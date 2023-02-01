@@ -85,7 +85,7 @@ internal class AstToLogicalVisitorTransform(
     //  `aggregation` relational algebra operator.
     override fun transformExprCallAgg(node: PartiqlAst.Expr.CallAgg): PartiqlLogical.Expr = PartiqlLogical.build {
         call(
-            "${CollectionAggregationFunction.collectionAggregationPrefix}${node.funcName.text}",
+            "${CollectionAggregationFunction.PREFIX}${node.funcName.text}",
             listOf(
                 lit(ionString(node.setq.javaClass.simpleName.toLowerCase())),
                 transformExpr(node.arg)

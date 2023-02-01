@@ -30,7 +30,7 @@ import org.partiql.lang.eval.BindingCase
 import org.partiql.lang.eval.BindingName
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.ExprValueType
-import org.partiql.lang.eval.builtins.createBuiltinFunctionSignatures
+import org.partiql.lang.eval.builtins.SCALAR_BUILTINS_DEFAULT
 import org.partiql.lang.eval.delegate
 import org.partiql.lang.eval.getStartingSourceLocationMeta
 import org.partiql.lang.types.FunctionSignature
@@ -95,7 +95,7 @@ internal class StaticTypeInferenceVisitorTransform(
 
     /** The built-in functions + the custom functions. */
     private val allFunctions: Map<String, FunctionSignature> =
-        createBuiltinFunctionSignatures() + customFunctionSignatures.associateBy { it.name }
+        SCALAR_BUILTINS_DEFAULT.associate { it.signature.name to it.signature } + customFunctionSignatures.associateBy { it.name }
 
     /**
      * @param parentEnv the enclosing bindings

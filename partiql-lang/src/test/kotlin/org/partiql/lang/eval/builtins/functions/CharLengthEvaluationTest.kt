@@ -42,7 +42,7 @@ class CharLengthEvaluationTest : EvaluatorTestBase() {
     fun charLengthInvalidArgTypeTest() = checkInvalidArgType(
         funcName = "char_length",
         args = listOf(
-            Argument(1, StaticType.unionOf(StaticType.STRING, StaticType.SYMBOL), ")")
+            Argument(1, StaticType.TEXT, ")")
         )
     )
 

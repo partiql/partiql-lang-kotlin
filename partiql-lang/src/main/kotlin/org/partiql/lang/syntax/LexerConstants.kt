@@ -19,17 +19,28 @@ package org.partiql.lang.syntax
 import org.partiql.lang.syntax.TokenType.KEYWORD
 import org.partiql.lang.syntax.TokenType.OPERATOR
 
-@JvmField internal val TRIM_SPECIFICATION_KEYWORDS = setOf("both", "leading", "trailing")
+@JvmField
+internal val TRIM_SPECIFICATION_KEYWORDS = setOf("both", "leading", "trailing")
 
 internal enum class DateTimePart {
-    YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, TIMEZONE_HOUR, TIMEZONE_MINUTE
+    YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, TIMEZONE_HOUR, TIMEZONE_MINUTE;
+
+    companion object {
+
+        fun safeValueOf(value: String): DateTimePart? = try {
+            DateTimePart.valueOf(value.toUpperCase().trim())
+        } catch (_: IllegalArgumentException) {
+            null
+        }
+    }
 }
 
 internal val DATE_TIME_PART_KEYWORDS: Set<String> = DateTimePart.values()
     .map { it.toString().toLowerCase() }.toSet()
 
 /** All SQL-92 keywords. */
-@JvmField internal val SQL92_KEYWORDS = setOf(
+@JvmField
+internal val SQL92_KEYWORDS = setOf(
     "absolute",
     "action",
     "add",
@@ -255,7 +266,8 @@ internal val DATE_TIME_PART_KEYWORDS: Set<String> = DateTimePart.values()
 // Similarly, TRIM_SPECIFICATION_KEYWORDS are only keywords within the context of the TRIM function.
 
 /** PartiQL additional keywords. */
-@JvmField internal val SQLPP_KEYWORDS = setOf(
+@JvmField
+internal val SQLPP_KEYWORDS = setOf(
     "can_cast",
     "can_lossless_cast",
     "missing",
@@ -307,10 +319,12 @@ internal val DATE_TIME_PART_KEYWORDS: Set<String> = DateTimePart.values()
 )
 
 /** All Keywords. */
-@JvmField internal val KEYWORDS = SQL92_KEYWORDS union SQLPP_KEYWORDS
+@JvmField
+internal val KEYWORDS = SQL92_KEYWORDS union SQLPP_KEYWORDS
 
 /** Keywords that are aliases for type keywords. */
-@JvmField internal val TYPE_ALIASES = mapOf(
+@JvmField
+internal val TYPE_ALIASES = mapOf(
     "varchar" to "character_varying",
     "char" to "character",
     "dec" to "decimal",
@@ -328,7 +342,8 @@ internal val DATE_TIME_PART_KEYWORDS: Set<String> = DateTimePart.values()
  * Some of these types (e.g. VARCHAR) requires a parameters, but many implementations
  * don't require that.
  */
-@JvmField internal val CORE_TYPE_NAME_ARITY_MAP = mapOf(
+@JvmField
+internal val CORE_TYPE_NAME_ARITY_MAP = mapOf(
     "missing" to 0..0, // PartiQL
     "null" to 0..0, // Ion
     "boolean" to 0..0, // Ion & SQL-99
@@ -359,17 +374,20 @@ internal val DATE_TIME_PART_KEYWORDS: Set<String> = DateTimePart.values()
 )
 
 /** Indicates the keywords that indicate special union types. */
-@JvmField internal val UNION_TYPE_NAME_ARITY_MAP = mapOf(
+@JvmField
+internal val UNION_TYPE_NAME_ARITY_MAP = mapOf(
     "any" to 0..0,
     /* ElasticSearch Data Types */
     "es_any" to 0..0
 )
 
 /** All type names and their arity. */
-@JvmField internal val ALL_TYPE_NAME_ARITY_MAP = CORE_TYPE_NAME_ARITY_MAP + UNION_TYPE_NAME_ARITY_MAP
+@JvmField
+internal val ALL_TYPE_NAME_ARITY_MAP = CORE_TYPE_NAME_ARITY_MAP + UNION_TYPE_NAME_ARITY_MAP
 
 /** Keywords that are normal function names. */
-@JvmField internal val FUNCTION_NAME_KEYWORDS = setOf(
+@JvmField
+internal val FUNCTION_NAME_KEYWORDS = setOf(
     "exists",
 
     // aggregate functions
@@ -399,7 +417,8 @@ internal val DATE_TIME_PART_KEYWORDS: Set<String> = DateTimePart.values()
 )
 
 /** Aggregates functions. */
-@JvmField val STANDARD_AGGREGATE_FUNCTIONS = setOf(
+@JvmField
+val STANDARD_AGGREGATE_FUNCTIONS = setOf(
     "count",
     "avg",
     "max",
@@ -407,29 +426,35 @@ internal val DATE_TIME_PART_KEYWORDS: Set<String> = DateTimePart.values()
     "sum"
 )
 
-@JvmField internal val BASE_DML_KEYWORDS = setOf("insert_into", "set", "remove")
+@JvmField
+internal val BASE_DML_KEYWORDS = setOf("insert_into", "set", "remove")
 
 /**
  * These reserved keywords cannot be used as identifiers for items in `select list`.
  * Note that this list is not exhaustive.
  */
-@JvmField internal val RESERVED_KEYWORDS = BASE_DML_KEYWORDS + setOf("update", "delete", "select", "from", "where")
+@JvmField
+internal val RESERVED_KEYWORDS = BASE_DML_KEYWORDS + setOf("update", "delete", "select", "from", "where")
 
-@JvmField internal val BOOLEAN_KEYWORDS = setOf("true", "false")
+@JvmField
+internal val BOOLEAN_KEYWORDS = setOf("true", "false")
 
 /** Operator renames for the AST. */
-@JvmField internal val OPERATOR_ALIASES = mapOf(
+@JvmField
+internal val OPERATOR_ALIASES = mapOf(
     "!=" to "<>"
 )
 
 /** Operators that parse as infix, but have special parsing rules. */
-@JvmField internal val SPECIAL_INFIX_OPERATORS = setOf(
+@JvmField
+internal val SPECIAL_INFIX_OPERATORS = setOf(
     "between", "not_between",
     "like", "not_like" // optionally a ternary operator when `ESCAPE` is present
 )
 
 /** Binary operators with verbatim lexical token equivalents. */
-@JvmField internal val SINGLE_LEXEME_BINARY_OPERATORS = setOf(
+@JvmField
+internal val SINGLE_LEXEME_BINARY_OPERATORS = setOf(
     "+", "-", "/", "%", "*",
     "<", "<=", ">", ">=", "=", "<>",
     "||",
@@ -439,7 +464,8 @@ internal val DATE_TIME_PART_KEYWORDS: Set<String> = DateTimePart.values()
 )
 
 /** Tokens comprising multiple lexemes (**happens before** keyword aliasing). */
-@JvmField internal val MULTI_LEXEME_TOKEN_MAP = mapOf(
+@JvmField
+internal val MULTI_LEXEME_TOKEN_MAP = mapOf(
     listOf("not", "in") to ("not_in" to OPERATOR),
     listOf("is", "not") to ("is_not" to OPERATOR),
     listOf("not", "between") to ("not_between" to OPERATOR),
@@ -499,36 +525,45 @@ internal val DATE_TIME_PART_KEYWORDS: Set<String> = DateTimePart.values()
     listOf("all", "new") to ("all_new" to KEYWORD)
 )
 
-@JvmField internal val MULTI_LEXEME_MIN_LENGTH = MULTI_LEXEME_TOKEN_MAP.keys.minOf { it.size }
-@JvmField internal val MULTI_LEXEME_MAX_LENGTH = MULTI_LEXEME_TOKEN_MAP.keys.maxOf { it.size }
+@JvmField
+internal val MULTI_LEXEME_MIN_LENGTH = MULTI_LEXEME_TOKEN_MAP.keys.minOf { it.size }
+@JvmField
+internal val MULTI_LEXEME_MAX_LENGTH = MULTI_LEXEME_TOKEN_MAP.keys.maxOf { it.size }
 
-@JvmField internal val MULTI_LEXEME_BINARY_OPERATORS =
+@JvmField
+internal val MULTI_LEXEME_BINARY_OPERATORS =
     MULTI_LEXEME_TOKEN_MAP.values.filter {
         it.second == TokenType.OPERATOR && it.first !in SPECIAL_INFIX_OPERATORS
     }.map { it.first }
 
 /** Binary operators. */
-@JvmField internal val BINARY_OPERATORS =
+@JvmField
+internal val BINARY_OPERATORS =
     SINGLE_LEXEME_BINARY_OPERATORS + MULTI_LEXEME_BINARY_OPERATORS
 
 /** Unary operators. */
-@JvmField internal val UNARY_OPERATORS = setOf(
+@JvmField
+internal val UNARY_OPERATORS = setOf(
     "+", "-", "not"
 )
 
 /** Operators specific to the `MATCH` clause. */
-@JvmField internal val MATCH_OPERATORS = setOf(
+@JvmField
+internal val MATCH_OPERATORS = setOf(
     "~"
 )
 
 /** All operators with special parsing rules. */
-@JvmField internal val SPECIAL_OPERATORS = SPECIAL_INFIX_OPERATORS + setOf(
+@JvmField
+internal val SPECIAL_OPERATORS = SPECIAL_INFIX_OPERATORS + setOf(
     "@"
 )
 
-@JvmField internal val ALL_SINGLE_LEXEME_OPERATORS =
+@JvmField
+internal val ALL_SINGLE_LEXEME_OPERATORS =
     SINGLE_LEXEME_BINARY_OPERATORS + UNARY_OPERATORS + SPECIAL_OPERATORS + MATCH_OPERATORS
-@JvmField internal val ALL_OPERATORS =
+@JvmField
+internal val ALL_OPERATORS =
     BINARY_OPERATORS + UNARY_OPERATORS + SPECIAL_OPERATORS + MATCH_OPERATORS
 
 /**
@@ -550,7 +585,8 @@ enum class OperatorPrecedenceGroups(val precedence: Int) {
  * Precedence rank integer is ascending with higher precedence and is in terms of the
  * un-aliased names of the operators.
  */
-@JvmField internal val OPERATOR_PRECEDENCE = mapOf(
+@JvmField
+internal val OPERATOR_PRECEDENCE = mapOf(
     // set operator group
     "union" to OperatorPrecedenceGroups.SET.precedence,
     "union_distinct" to OperatorPrecedenceGroups.SET.precedence,
@@ -617,14 +653,18 @@ internal const val SIGN_CHARS = "+-"
 internal const val NON_ZERO_DIGIT_CHARS = "123456789"
 internal const val DIGIT_CHARS = "0" + NON_ZERO_DIGIT_CHARS
 
-@JvmField internal val E_NOTATION_CHARS = allCase("E")
+@JvmField
+internal val E_NOTATION_CHARS = allCase("E")
 
 internal const val NON_OVERLOADED_OPERATOR_CHARS = "^%=@+~"
 internal const val OPERATOR_CHARS = NON_OVERLOADED_OPERATOR_CHARS + "-*/<>|!"
 
-@JvmField internal val ALPHA_CHARS = allCase("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
-@JvmField internal val IDENT_START_CHARS = "_\$" + ALPHA_CHARS
-@JvmField internal val IDENT_CONTINUE_CHARS = IDENT_START_CHARS + DIGIT_CHARS
+@JvmField
+internal val ALPHA_CHARS = allCase("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+@JvmField
+internal val IDENT_START_CHARS = "_\$" + ALPHA_CHARS
+@JvmField
+internal val IDENT_CONTINUE_CHARS = IDENT_START_CHARS + DIGIT_CHARS
 
 internal const val NL_WHITESPACE_CHARS = "\u000D\u000A" // CR, LF
 internal const val NON_NL_WHITESPACE_CHARS = "\u0009\u000B\u000C\u0020" // TAB, VT, FF, SPACE

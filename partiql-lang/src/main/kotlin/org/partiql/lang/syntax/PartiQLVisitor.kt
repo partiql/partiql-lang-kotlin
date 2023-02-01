@@ -1115,6 +1115,18 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
         call(ctx.SUBSTRING().text.toLowerCase(), args, metas)
     }
 
+    override fun visitPosition(ctx: PartiQLParser.PositionContext) = PartiqlAst.build {
+        val args = visitOrEmpty(ctx.expr(), PartiqlAst.Expr::class)
+        val metas = ctx.POSITION().getSourceMetaContainer()
+        call(ctx.POSITION().text.toLowerCase(), args, metas)
+    }
+
+    override fun visitOverlay(ctx: PartiQLParser.OverlayContext) = PartiqlAst.build {
+        val args = visitOrEmpty(ctx.expr(), PartiqlAst.Expr::class)
+        val metas = ctx.OVERLAY().getSourceMetaContainer()
+        call(ctx.OVERLAY().text.toLowerCase(), args, metas)
+    }
+
     override fun visitCountAll(ctx: PartiQLParser.CountAllContext) = PartiqlAst.build {
         callAgg(
             all(),
