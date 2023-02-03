@@ -1,6 +1,5 @@
 name: Conformance Test Report Generation
 on: [push, pull_request]
-
 env:
   PATH_TO_TEST_RUNNER: test/partiql-tests-runner/
   CONFORMANCE_REPORT_NAME: conformance_test_results.ion
