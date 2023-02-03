@@ -1,0 +1,98 @@
+name: Conformance Test Report Generation
+on: [push, pull_request]
+
+env:
+  PATH_TO_TEST_RUNNER: test/partiql-tests-runner/
+  CONFORMANCE_REPORT_NAME: conformance_test_results.ion
+  COMPARISON_REPORT_NAME: comparison_report.md
+
+jobs:
+  conformance-report:
+    name: Create conformance report for `push` and `pull_request` events
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+      - name: Use Java 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'corretto'
+          java-version: 17
+          cache: gradle
+      # Run the conformance tests and save to an Ion file.
+      - name: gradle test of the conformance tests (can fail) and save to Ion file
+        continue-on-error: true
+        run: gradle :test:partiql-tests-runner:test --tests "*ConformanceTestsReportRunner" -PconformanceReport
+      # Upload conformance report for future viewing and comparison with future runs -- this hasn't yet been included.
+      # Since the conformance report is uploaded as part of `push` events, we could download it in the
+      # `conformance-report-comparison` for `pull-request` events, which could save build time for the target branch.
+      - name: Upload `conformance_test_results.ion`
+        uses: actions/upload-artifact@v3
+        with:
+          path: $PATH_TO_TEST_RUNNER/$CONFORMANCE_REPORT_NAME
+      # Cache the conformance report for `conformance-report-comparison` job (pull_request event only)
+      - name: Cache conformance report and build
+        if: github.event_name == 'pull_request'
+        uses: actions/cache@v3
+        id: restore-build-and-conformance
+        with:
+          path: ./*
+          key: ${{ github.sha }}-conformance-report
+  conformance-report-comparison:
+    name: Create comparison report for `pull_request` event
+    runs-on: ubuntu-latest
+    needs: [ conformance-report ]
+    if: github.event_name == 'pull_request'
+    steps:
+      # Pull down cached `gradle build` and conformance report
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+      - uses: actions/cache@v3
+        id: restore-build-and-conformance
+        with:
+          path: ./*
+          key: ${{ github.sha }}-conformance-report
+      - name: Use Java 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'corretto'
+          java-version: 17
+          cache: gradle
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          path: ${{ github.event.pull_request.base.sha }}
+          ref: ${{ github.event.pull_request.base.sha }}
+      # Run the conformance tests (i.e. `gradle test`) and save to an Ion file.
+      - name: gradle test of the conformance tests (can fail) and save to Ion file
+        continue-on-error: true
+        run: |
+          cd ${{ github.event.pull_request.base.sha }}
+          gradle :test:partiql-tests-runner:test --tests "*ConformanceTestsReportRunner" -PconformanceReport
+      # Run conformance report comparison. Generates `comparison_report.md`
+      - run: |
+          ARGS="$CONFORMANCE_REPORT_NAME $GITHUB_WORKSPACE/${{ github.event.pull_request.base.sha }}/$PATH_TO_TEST_RUNNER/$CONFORMANCE_REPORT_NAME ${{ github.event.pull_request.base.sha }} $GITHUB_SHA $COMPARISON_REPORT_NAME"
+          gradle :test:partiql-tests-runner:run --args="$ARGS"
+      # Print conformance report to GitHub actions workflow summary page
+      - name: print markdown in run
+        run: cat $PATH_TO_TEST_RUNNER/$COMPARISON_REPORT_NAME >> $GITHUB_STEP_SUMMARY
+      # Find comment w/ conformance comparison if previous comment published
+      - name: Find Comment
+        uses: peter-evans/find-comment@v2
+        continue-on-error: true
+        id: fc
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: 'github-actions[bot]'
+          body-includes: Conformance
+      # Create or update (if previous comment exists) with markdown version of comparison report
+      - name: Create or update comment
+        continue-on-error: true
+        uses: peter-evans/create-or-update-comment@v2
+        with:
+          comment-id: ${{ steps.fc.outputs.comment-id }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body-file: ${{ env.PATH_TO_TEST_RUNNER }}/${{ env.COMPARISON_REPORT_NAME }}
+          edit-mode: replace
