@@ -131,7 +131,7 @@ internal fun createUpper(): ExprFunction = object : ExprFunction {
         )
 
     override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue =
-        ExprValue.newString(required.first().stringValue().toUpperCase())
+        ExprValue.newString(required.first().stringValue())
 }
 
 internal fun createLower(): ExprFunction = object : ExprFunction {
