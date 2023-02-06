@@ -30,7 +30,7 @@ jobs:
       - name: Upload `conformance_test_results.ion`
         uses: actions/upload-artifact@v3
         with:
-          path: $PATH_TO_TEST_RUNNER/$CONFORMANCE_REPORT_NAME
+          path: ${{ env.PATH_TO_TEST_RUNNER }}/${{ env.CONFORMANCE_REPORT_NAME }}
       # Cache the conformance report for `conformance-report-comparison` job (pull_request event only)
       - name: Cache conformance report and build
         if: github.event_name == 'pull_request'
