@@ -66,13 +66,14 @@ jobs:
           workflow: conformance-report.yml
           commit: ${{ github.event.pull_request.base.sha }}
       # (If download of target branch report fails) Run the conformance tests (i.e. `gradle test`) and save to an Ion file.
-      - uses: actions/checkout@v3
+      - name: (If download of target branch conformance report fails) Checkout target branch
+        uses: actions/checkout@v3
         if: ${{ steps.download-report.outcome == 'failure' }}
         with:
           submodules: recursive
           path: ${{ github.event.pull_request.base.sha }}
           ref: ${{ github.event.pull_request.base.sha }}
-      - name: gradle test of the conformance tests (can fail) and save to Ion file
+      - name: (If download of target branch conformance report fails) Generate conformance test report for target branch
         if: ${{ steps.download-report.outcome == 'failure' }}
         continue-on-error: true
         run: |
