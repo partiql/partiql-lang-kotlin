@@ -24,9 +24,7 @@ jobs:
       - name: gradle test of the conformance tests (can fail) and save to Ion file
         continue-on-error: true
         run: gradle :test:partiql-tests-runner:test --tests "*ConformanceTestsReportRunner" -PconformanceReport
-      # Upload conformance report for future viewing and comparison with future runs -- this hasn't yet been included.
-      # Since the conformance report is uploaded as part of `push` events, we could download it in the
-      # `conformance-report-comparison` for `pull-request` events, which could save build time for the target branch.
+      # Upload conformance report for future viewing and comparison with future runs.
       - name: Upload `conformance_test_results.ion`
         uses: actions/upload-artifact@v3
         with:
