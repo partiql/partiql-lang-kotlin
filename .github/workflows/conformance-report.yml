@@ -60,20 +60,32 @@ jobs:
           distribution: 'corretto'
           java-version: 17
           cache: gradle
+      - name: Download `conformance_test_results.ion` from target branch
+        uses: dawidd6/action-download-artifact@v2
+        id: download-report
+        continue-on-error: true
+        with:
+          workflow: conformance-report.yml
+          commit: ${{ github.event.pull_request.base.sha }}
+      # (If download of target branch report fails) Run the conformance tests (i.e. `gradle test`) and save to an Ion file.
       - uses: actions/checkout@v3
+        if: ${{ steps.download-report.outcome == 'failure' }}
         with:
           submodules: recursive
           path: ${{ github.event.pull_request.base.sha }}
           ref: ${{ github.event.pull_request.base.sha }}
-      # Run the conformance tests (i.e. `gradle test`) and save to an Ion file.
       - name: gradle test of the conformance tests (can fail) and save to Ion file
+        if: ${{ steps.download-report.outcome == 'failure' }}
         continue-on-error: true
         run: |
           cd ${{ github.event.pull_request.base.sha }}
           gradle :test:partiql-tests-runner:test --tests "*ConformanceTestsReportRunner" -PconformanceReport
+          mkdir -p $GITHUB_WORKSPACE/artifact
+          cp -r $GITHUB_WORKSPACE/${{ github.event.pull_request.base.sha }}/$PATH_TO_TEST_RUNNER/$CONFORMANCE_REPORT_NAME $GITHUB_WORKSPACE/artifact/$CONFORMANCE_REPORT_NAME
       # Run conformance report comparison. Generates `comparison_report.md`
-      - run: |
-          ARGS="$GITHUB_WORKSPACE/${{ github.event.pull_request.base.sha }}/$PATH_TO_TEST_RUNNER/$CONFORMANCE_REPORT_NAME $CONFORMANCE_REPORT_NAME ${{ github.event.pull_request.base.sha }} $GITHUB_SHA $COMPARISON_REPORT_NAME"
+      - name: Run conformance report comparison. Generates `comparison_report.md`
+        run: |
+          ARGS="./artifact/$CONFORMANCE_REPORT_NAME $CONFORMANCE_REPORT_NAME ${{ github.event.pull_request.base.sha }} $GITHUB_SHA $COMPARISON_REPORT_NAME"
           gradle :test:partiql-tests-runner:run --args="$ARGS"
       # Print conformance report to GitHub actions workflow summary page
       - name: print markdown in run
