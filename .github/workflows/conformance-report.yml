@@ -78,7 +78,10 @@ jobs:
         continue-on-error: true
         run: |
           cd ${{ github.event.pull_request.base.sha }}
-          gradle :test:partiql-tests-runner:test --tests "*ConformanceTestsReportRunner" -PconformanceReport --continue
+          gradle :test:partiql-tests-runner:test --tests "*ConformanceTestsReportRunner" -PconformanceReport
+      - name: (If download of target branch conformance report fails) Move conformance test report of target branch to ./artifact directory
+        if: ${{ steps.download-report.outcome == 'failure' }}
+        run: |
           mkdir -p $GITHUB_WORKSPACE/artifact
           cp -r $GITHUB_WORKSPACE/${{ github.event.pull_request.base.sha }}/$PATH_TO_TEST_RUNNER/$CONFORMANCE_REPORT_NAME $GITHUB_WORKSPACE/artifact/$CONFORMANCE_REPORT_NAME
       # Run conformance report comparison. Generates `comparison_report.md`
