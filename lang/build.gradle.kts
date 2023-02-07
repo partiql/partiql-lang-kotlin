@@ -73,7 +73,7 @@ tasks.compileKotlin {
     dependsOn(tasks.generateGrammarSource)
 }
 
-tasks.dokkaHtml {
+tasks.dokkaHtml.configure {
     dependsOn(tasks.withType(org.partiql.pig.gradle.PigTask::class))
 }
 

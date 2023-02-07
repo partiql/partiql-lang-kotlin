@@ -23,6 +23,7 @@ import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.api.publish.maven.plugins.MavenPublishPlugin
 import org.gradle.api.publish.maven.tasks.PublishToMavenRepository
+import org.gradle.jvm.tasks.Jar
 import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.get
 import org.gradle.kotlin.dsl.getByName
@@ -65,12 +66,21 @@ abstract class PublishPlugin : Plugin<Project> {
             withJavadocJar()
         }
 
+        // Add dokkaHtml output to the javadocJar
+        tasks.getByName<Jar>("javadocJar") {
+            dependsOn(JavaPlugin.CLASSES_TASK_NAME)
+            archiveClassifier.set("javadoc")
+            from(tasks.named("dokkaHtml"))
+        }
+
         // Setup Maven Central Publishing
         val publishing = extensions.getByType(PublishingExtension::class.java).apply {
             publications {
                 create<MavenPublication>("maven") {
                     artifactId = ext.artifactId
                     from(components["java"])
+                    artifact(tasks["sourcesJar"])
+                    artifact(tasks["javadocJar"])
                     pom {
                         packaging = "jar"
                         name.set(ext.name)
