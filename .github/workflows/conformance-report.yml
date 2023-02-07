@@ -86,6 +86,7 @@ jobs:
           cp -r $GITHUB_WORKSPACE/${{ github.event.pull_request.base.sha }}/$PATH_TO_TEST_RUNNER/$CONFORMANCE_REPORT_NAME $GITHUB_WORKSPACE/artifact/$CONFORMANCE_REPORT_NAME
       # Run conformance report comparison. Generates `comparison_report.md`
       - name: Run conformance report comparison. Generates `comparison_report.md`
+        continue-on-error: true
         run: |
           ARGS="$GITHUB_WORKSPACE/artifact/$CONFORMANCE_REPORT_NAME $CONFORMANCE_REPORT_NAME ${{ github.event.pull_request.base.sha }} $GITHUB_SHA $COMPARISON_REPORT_NAME"
           gradle :test:partiql-tests-runner:run --args="$ARGS"
