@@ -81,6 +81,7 @@ jobs:
           gradle :test:partiql-tests-runner:test --tests "*ConformanceTestsReportRunner" -PconformanceReport
       - name: (If download of target branch conformance report fails) Move conformance test report of target branch to ./artifact directory
         if: ${{ steps.download-report.outcome == 'failure' }}
+        continue-on-error: true
         run: |
           mkdir -p $GITHUB_WORKSPACE/artifact
           cp -r $GITHUB_WORKSPACE/${{ github.event.pull_request.base.sha }}/$PATH_TO_TEST_RUNNER/$CONFORMANCE_REPORT_NAME $GITHUB_WORKSPACE/artifact/$CONFORMANCE_REPORT_NAME
@@ -91,7 +92,8 @@ jobs:
           ARGS="$GITHUB_WORKSPACE/artifact/$CONFORMANCE_REPORT_NAME $CONFORMANCE_REPORT_NAME ${{ github.event.pull_request.base.sha }} $GITHUB_SHA $COMPARISON_REPORT_NAME"
           gradle :test:partiql-tests-runner:run --args="$ARGS"
       # Print conformance report to GitHub actions workflow summary page
-      - name: print markdown in run
+      - name: Print markdown in run
+        continue-on-error: true
         run: cat $PATH_TO_TEST_RUNNER/$COMPARISON_REPORT_NAME >> $GITHUB_STEP_SUMMARY
       # Find comment w/ conformance comparison if previous comment published
       - name: Find Comment
