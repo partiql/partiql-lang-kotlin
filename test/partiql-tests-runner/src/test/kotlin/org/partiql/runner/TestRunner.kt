@@ -222,6 +222,78 @@ private val LANG_KOTLIN_EVAL_FAIL_LIST = listOf(
     Pair("""null comparison{sql:"`null.list` = MISSING",result:missing::null}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
     Pair("""null comparison{sql:"`null.struct` = MISSING",result:missing::null}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
     Pair("""null comparison{sql:"`null.sexp` = MISSING",result:missing::null}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+
+    // `partiql-lang-kotlin` does not implement STRICT/ERROR mode. LEGACY typing mode outputs `NULL` rather than `MISSING`
+    Pair("""MISSING LIKE 'some pattern'""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""'some value' LIKE MISSING""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""MISSING LIKE MISSING""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""NULL LIKE MISSING""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""MISSING LIKE NULL""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""MISSING LIKE 'some pattern' ESCAPE '/'""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""'some value' LIKE MISSING ESCAPE '/'""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""'some value' LIKE 'some pattern' ESCAPE MISSING""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""NULL LIKE 'some pattern' ESCAPE MISSING""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""'some value' LIKE NULL ESCAPE MISSING""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    // Bad types for arguments should result in `MISSING` when run in PERMISSIVE/COERCE mode
+    Pair("""LIKE bad value type""", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""LIKE bad pattern type""", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""LIKE bad escape type""", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+    // `NULLIF(MISSING, MISSING)` should output `MISSING` rather than `NULL` https://github.com/partiql/partiql-lang-kotlin/issues/973
+    Pair("""nullif valid cases{first:"missing",second:"missing",result:missing}""", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""nullif valid cases{first:"missing",second:"missing",result:missing}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    // `POSITION` not yet implemented
+    Pair("""POSITION empty string in string""", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""POSITION empty string in string""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""POSITION string at start""", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""POSITION string at start""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""POSITION string in middle""", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""POSITION string in middle""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""POSITION string at end""", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""POSITION string at end""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""POSITION string not in string""", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""POSITION string not in string""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""POSITION NULL in string""", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""POSITION NULL in string""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""POSITION MISSING in string""", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""POSITION MISSING in string""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""POSITION string in NULL""", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""POSITION string in NULL""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""POSITION string in MISSING""", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""POSITION string in MISSING""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""POSITION NULL in MISSING""", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""POSITION NULL in MISSING""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""POSITION MISSING in NULL""", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""POSITION MISSING in NULL""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""POSITION NULL in NULL""", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""POSITION NULL in NULL""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""POSITION MISSING in MISSING""", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""POSITION MISSING in MISSING""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""POSITION invalid type in string""", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""POSITION string in invalid type""", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+    // `BIT_LENGTH` not yet implemented
+    Pair("""BIT_LENGTH empty string""", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""BIT_LENGTH empty string""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""BIT_LENGTH string""", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""BIT_LENGTH string""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""BIT_LENGTH NULL""", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""BIT_LENGTH NULL""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""BIT_LENGTH MISSING""", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""BIT_LENGTH MISSING""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""BIT_LENGTH invalid type""", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""BIT_LENGTH special character""", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""BIT_LENGTH special character""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    // `OCTET_LENGTH` not yet implemented
+    Pair("""OCTET_LENGTH empty string""", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""OCTET_LENGTH empty string""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""OCTET_LENGTH string""", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""OCTET_LENGTH string""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""OCTET_LENGTH NULL""", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""OCTET_LENGTH NULL""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""OCTET_LENGTH MISSING""", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""OCTET_LENGTH MISSING""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""OCTET_LENGTH invalid type""", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""OCTET_LENGTH special character""", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""OCTET_LENGTH special character""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
 )
 
 private val LANG_KOTLIN_EVAL_EQUIV_FAIL_LIST = listOf(
@@ -318,12 +390,7 @@ class TestRunner {
                 is Assertion.EvaluationSuccess -> {
                     val actualResultAsIon = actualResult.toIonValue(ION)
                     if (!expectedFailedTests.contains(Pair(evalTC.name, evalTC.compileOptions)) && !PartiQLEqualityChecker().areEqual(evalTC.assertion.expectedResult, actualResultAsIon)) {
-                        val testName = evalTC.name
-                        val evalMode = when (evalTC.compileOptions.typingMode) {
-                            TypingMode.PERMISSIVE -> "COERCE_EVAL_MODE_COMPILE_OPTIONS"
-                            TypingMode.LEGACY -> "ERROR_EVAL_MODE_COMPILE_OPTIONS"
-                        }
-                        error("Pair(\"\"\"$testName\"\"\", $evalMode),\nExpected and actual results differ:\nExpected: ${evalTC.assertion.expectedResult}\nActual:   $actualResultAsIon\nMode: ${evalTC.compileOptions.typingMode}")
+                        error("Expected: ${evalTC.assertion.expectedResult}\nActual:   $actualResultAsIon\nMode: ${evalTC.compileOptions.typingMode}")
                     }
                 }
                 is Assertion.EvaluationFailure -> {
