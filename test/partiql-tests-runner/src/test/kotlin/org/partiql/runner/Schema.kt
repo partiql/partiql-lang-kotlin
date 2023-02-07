@@ -32,7 +32,11 @@ data class EvalTestCase(
     override val env: IonStruct,
     override val compileOptions: CompileOptions,
     override val assertion: Assertion
-) : TestCase()
+) : TestCase() {
+    override fun toString(): String {
+        return name + ", compileOption: " + compileOptions.typingMode
+    }
+}
 
 data class EvalEquivTestCase(
     override val name: String,
@@ -40,4 +44,8 @@ data class EvalEquivTestCase(
     override val env: IonStruct,
     override val compileOptions: CompileOptions,
     override val assertion: Assertion
-) : TestCase()
+) : TestCase() {
+    override fun toString(): String {
+        return name + ", compileOption: " + compileOptions.typingMode
+    }
+}

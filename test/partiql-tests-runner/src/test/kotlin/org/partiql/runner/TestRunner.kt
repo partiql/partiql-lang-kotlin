@@ -14,7 +14,13 @@
 
 package org.partiql.runner
 
+import com.amazon.ion.IonType
 import com.amazon.ion.system.IonSystemBuilder
+import com.amazon.ion.system.IonTextWriterBuilder
+import org.junit.jupiter.api.extension.AfterAllCallback
+import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.jupiter.api.extension.ExtensionContext
+import org.junit.jupiter.api.extension.TestWatcher
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.CompilerPipeline
@@ -34,8 +40,55 @@ private val ION = IonSystemBuilder.standard().build()
 private val COERCE_EVAL_MODE_COMPILE_OPTIONS = CompileOptions.build { typingMode(TypingMode.PERMISSIVE) }
 private val ERROR_EVAL_MODE_COMPILE_OPTIONS = CompileOptions.build { typingMode(TypingMode.LEGACY) }
 
+class ConformanceTestReportGenerator : TestWatcher, AfterAllCallback {
+    var failingTests = emptySet<String>()
+    var passingTests = emptySet<String>()
+    var ignoredTests = emptySet<String>()
+    override fun testFailed(context: ExtensionContext?, cause: Throwable?) {
+        failingTests += context?.displayName ?: ""
+        super.testFailed(context, cause)
+    }
+
+    override fun testSuccessful(context: ExtensionContext?) {
+        passingTests += context?.displayName ?: ""
+        super.testSuccessful(context)
+    }
+
+    override fun afterAll(p0: ExtensionContext?) {
+        val file = File("./conformance_test_results.ion")
+        val outputStream = file.outputStream()
+        val writer = IonTextWriterBuilder.pretty().build(outputStream)
+        writer.stepIn(IonType.STRUCT) // in: outer struct
+
+        // set struct field for passing
+        writer.setFieldName("passing")
+        writer.stepIn(IonType.LIST)
+        passingTests.forEach { passingTest ->
+            writer.writeString(passingTest)
+        }
+        writer.stepOut()
+        // set struct field for failing
+        writer.setFieldName("failing")
+        writer.stepIn(IonType.LIST)
+        failingTests.forEach { failingTest ->
+            writer.writeString(failingTest)
+        }
+        writer.stepOut()
+
+        // set struct field for ignored
+        writer.setFieldName("ignored")
+        writer.stepIn(IonType.LIST)
+        ignoredTests.forEach { ignoredTest ->
+            writer.writeString(ignoredTest)
+        }
+        writer.stepOut()
+
+        writer.stepOut() // out: outer struct
+    }
+}
+
 /*
-The skip lists defined in this file show how the current Kotlin implementation diverges from the PartiQL spec. Most of
+The fail lists defined in this file show how the current Kotlin implementation diverges from the PartiQL spec. Most of
 the divergent behavior is due to `partiql-lang-kotlin` not having a STRICT typing mode/ERROR eval mode.  The
 [LEGACY typing mode](https://github.com/partiql/partiql-lang-kotlin/blob/main/lang/src/org/partiql/lang/eval/CompileOptions.kt#L53-L62)
 (which is closer to STRICT typing mode/ERROR eval mode but not a complete match) was used for testing the STRICT typing
@@ -47,7 +100,7 @@ aggregation functions) and due to not supporting coercions.
 The remaining divergent behavior causing certain conformance tests to fail are likely bugs. Tracking issue:
 https://github.com/partiql/partiql-lang-kotlin/issues/804.
  */
-private val LANG_KOTLIN_EVAL_SKIP_LIST = listOf(
+private val LANG_KOTLIN_EVAL_FAIL_LIST = listOf(
     // from the spec: no explicit CAST to string means the query is "treated as an array navigation with wrongly typed
     // data" and will return `MISSING`
     Pair("tuple navigation with array notation without explicit CAST to string", COERCE_EVAL_MODE_COMPILE_OPTIONS),
@@ -169,9 +222,81 @@ private val LANG_KOTLIN_EVAL_SKIP_LIST = listOf(
     Pair("""null comparison{sql:"`null.list` = MISSING",result:missing::null}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
     Pair("""null comparison{sql:"`null.struct` = MISSING",result:missing::null}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
     Pair("""null comparison{sql:"`null.sexp` = MISSING",result:missing::null}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+
+    // `partiql-lang-kotlin` does not implement STRICT/ERROR mode. LEGACY typing mode outputs `NULL` rather than `MISSING`
+    Pair("""MISSING LIKE 'some pattern'""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""'some value' LIKE MISSING""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""MISSING LIKE MISSING""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""NULL LIKE MISSING""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""MISSING LIKE NULL""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""MISSING LIKE 'some pattern' ESCAPE '/'""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""'some value' LIKE MISSING ESCAPE '/'""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""'some value' LIKE 'some pattern' ESCAPE MISSING""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""NULL LIKE 'some pattern' ESCAPE MISSING""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""'some value' LIKE NULL ESCAPE MISSING""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    // Bad types for arguments should result in `MISSING` when run in PERMISSIVE/COERCE mode
+    Pair("""LIKE bad value type""", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""LIKE bad pattern type""", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""LIKE bad escape type""", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+    // `NULLIF(MISSING, MISSING)` should output `MISSING` rather than `NULL` https://github.com/partiql/partiql-lang-kotlin/issues/973
+    Pair("""nullif valid cases{first:"missing",second:"missing",result:missing}""", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""nullif valid cases{first:"missing",second:"missing",result:missing}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    // `POSITION` not yet implemented
+    Pair("""POSITION empty string in string""", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""POSITION empty string in string""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""POSITION string at start""", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""POSITION string at start""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""POSITION string in middle""", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""POSITION string in middle""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""POSITION string at end""", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""POSITION string at end""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""POSITION string not in string""", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""POSITION string not in string""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""POSITION NULL in string""", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""POSITION NULL in string""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""POSITION MISSING in string""", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""POSITION MISSING in string""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""POSITION string in NULL""", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""POSITION string in NULL""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""POSITION string in MISSING""", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""POSITION string in MISSING""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""POSITION NULL in MISSING""", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""POSITION NULL in MISSING""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""POSITION MISSING in NULL""", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""POSITION MISSING in NULL""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""POSITION NULL in NULL""", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""POSITION NULL in NULL""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""POSITION MISSING in MISSING""", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""POSITION MISSING in MISSING""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""POSITION invalid type in string""", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""POSITION string in invalid type""", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+    // `BIT_LENGTH` not yet implemented
+    Pair("""BIT_LENGTH empty string""", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""BIT_LENGTH empty string""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""BIT_LENGTH string""", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""BIT_LENGTH string""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""BIT_LENGTH NULL""", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""BIT_LENGTH NULL""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""BIT_LENGTH MISSING""", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""BIT_LENGTH MISSING""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""BIT_LENGTH invalid type""", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""BIT_LENGTH special character""", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""BIT_LENGTH special character""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    // `OCTET_LENGTH` not yet implemented
+    Pair("""OCTET_LENGTH empty string""", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""OCTET_LENGTH empty string""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""OCTET_LENGTH string""", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""OCTET_LENGTH string""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""OCTET_LENGTH NULL""", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""OCTET_LENGTH NULL""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""OCTET_LENGTH MISSING""", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""OCTET_LENGTH MISSING""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""OCTET_LENGTH invalid type""", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""OCTET_LENGTH special character""", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""OCTET_LENGTH special character""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
 )
 
-private val LANG_KOTLIN_EVAL_EQUIV_SKIP_LIST = listOf(
+private val LANG_KOTLIN_EVAL_EQUIV_FAIL_LIST = listOf(
     // partiql-lang-kotlin gives a parser error for tuple path navigation in which the path expression is a string
     // literal
     // e.g. { 'a': 1, 'b': 2}.'a' -> 1 (see section 4 of spec)
@@ -239,7 +364,7 @@ class TestRunner {
         }
     }
 
-    private fun loadTests(path: String, skipList: List<Pair<String, CompileOptions>> = emptyList()): List<TestCase> {
+    private fun loadTests(path: String): List<TestCase> {
         val allFiles = File(path).walk()
             .filter { it.isFile }
             .filter { it.path.endsWith(".ion") }
@@ -250,15 +375,11 @@ class TestRunner {
 
         val allTestCases = filesAsNamespaces.flatMap { ns ->
             allTestsFromNamespace(ns)
-        }.filter {
-            // Currently, just filtering the expected failing tests defined by the `skipList`. As an enhancement to the
-            // test runner, we could instead run the failing tests to assert they still fail.
-            !skipList.contains(Pair(it.name, it.compileOptions))
         }
         return allTestCases
     }
 
-    private fun runEvalTestCase(evalTC: EvalTestCase) {
+    private fun runEvalTestCase(evalTC: EvalTestCase, expectedFailedTests: List<Pair<String, CompileOptions>>) {
         val compilerPipeline = CompilerPipeline.builder().compileOptions(evalTC.compileOptions).build()
         val globals = ExprValue.of(evalTC.env).bindings
         val session = EvaluationSession.build { globals(globals) }
@@ -268,23 +389,22 @@ class TestRunner {
             when (evalTC.assertion) {
                 is Assertion.EvaluationSuccess -> {
                     val actualResultAsIon = actualResult.toIonValue(ION)
-                    if (!PartiQLEqualityChecker().areEqual(evalTC.assertion.expectedResult, actualResultAsIon)) {
-                        val testName = evalTC.name
-                        val evalMode = when (evalTC.compileOptions.typingMode) {
-                            TypingMode.PERMISSIVE -> "COERCE_EVAL_MODE_COMPILE_OPTIONS"
-                            TypingMode.LEGACY -> "ERROR_EVAL_MODE_COMPILE_OPTIONS"
-                        }
-                        error("Pair(\"\"\"$testName\"\"\", $evalMode),\nExpected and actual results differ:\nExpected: ${evalTC.assertion.expectedResult}\nActual:   $actualResultAsIon\nMode: ${evalTC.compileOptions.typingMode}")
+                    if (!expectedFailedTests.contains(Pair(evalTC.name, evalTC.compileOptions)) && !PartiQLEqualityChecker().areEqual(evalTC.assertion.expectedResult, actualResultAsIon)) {
+                        error("Expected: ${evalTC.assertion.expectedResult}\nActual:   $actualResultAsIon\nMode: ${evalTC.compileOptions.typingMode}")
                     }
                 }
                 is Assertion.EvaluationFailure -> {
-                    error("Expected error to be thrown but none was thrown.\n${evalTC.name}\nActual result: ${actualResult.toIonValue(ION)}")
+                    if (!expectedFailedTests.contains(Pair(evalTC.name, evalTC.compileOptions))) {
+                        error("Expected error to be thrown but none was thrown.\n${evalTC.name}\nActual result: ${actualResult.toIonValue(ION)}")
+                    }
                 }
             }
         } catch (e: SqlException) {
             when (evalTC.assertion) {
                 is Assertion.EvaluationSuccess -> {
-                    error("Expected success but exception thrown: $e")
+                    if (!expectedFailedTests.contains(Pair(evalTC.name, evalTC.compileOptions))) {
+                        error("Expected success but exception thrown: $e")
+                    }
                 }
                 is Assertion.EvaluationFailure -> {
                     // Expected failure and test threw when evaluated
@@ -293,31 +413,35 @@ class TestRunner {
         }
     }
 
-    private fun runEvalEquivTestCase(evalEquivTestCase: EvalEquivTestCase) {
+    private fun runEvalEquivTestCase(evalEquivTestCase: EvalEquivTestCase, expectedFailedTests: List<Pair<String, CompileOptions>>) {
         val compilerPipeline = CompilerPipeline.builder().compileOptions(evalEquivTestCase.compileOptions).build()
         val globals = ExprValue.of(evalEquivTestCase.env).bindings
         val session = EvaluationSession.build { globals(globals) }
         val statements = evalEquivTestCase.statements
 
         statements.forEach { statement ->
-            val expression = compilerPipeline.compile(statement)
             try {
+                val expression = compilerPipeline.compile(statement)
                 val actualResult = expression.eval(session)
                 when (evalEquivTestCase.assertion) {
                     is Assertion.EvaluationSuccess -> {
                         val actualResultAsIon = actualResult.toIonValue(ION)
-                        if (!PartiQLEqualityChecker().areEqual(evalEquivTestCase.assertion.expectedResult, actualResultAsIon)) {
+                        if (!expectedFailedTests.contains(Pair(evalEquivTestCase.name, evalEquivTestCase.compileOptions)) && !PartiQLEqualityChecker().areEqual(evalEquivTestCase.assertion.expectedResult, actualResultAsIon)) {
                             error("Expected and actual results differ:\nExpected: ${evalEquivTestCase.assertion.expectedResult}\nActual:   $actualResultAsIon\nMode: ${evalEquivTestCase.compileOptions.typingMode}")
                         }
                     }
                     is Assertion.EvaluationFailure -> {
-                        error("Expected error to be thrown but none was thrown.\n${evalEquivTestCase.name}\nActual result: ${actualResult.toIonValue(ION)}")
+                        if (!expectedFailedTests.contains(Pair(evalEquivTestCase.name, evalEquivTestCase.compileOptions))) {
+                            error("Expected error to be thrown but none was thrown.\n${evalEquivTestCase.name}\nActual result: ${actualResult.toIonValue(ION)}")
+                        }
                     }
                 }
             } catch (e: SqlException) {
                 when (evalEquivTestCase.assertion) {
                     is Assertion.EvaluationSuccess -> {
-                        error("Expected success but exception thrown: $e")
+                        if (!expectedFailedTests.contains(Pair(evalEquivTestCase.name, evalEquivTestCase.compileOptions))) {
+                            error("Expected success but exception thrown: $e")
+                        }
                     }
                     is Assertion.EvaluationFailure -> {
                         // Expected failure and test threw when evaluated
@@ -327,35 +451,73 @@ class TestRunner {
         }
     }
 
-    // Tests the eval tests with the Kotlin implementation
-    @ParameterizedTest
-    @ArgumentsSource(EvalTestCases::class)
-    fun validatePartiQLEvalTestData(tc: TestCase) {
-        when (tc) {
-            is EvalTestCase -> TestRunner().runEvalTestCase(tc)
-            else -> error("Unsupported test case category")
+    /**
+     * Runs the conformance tests with an expected list of failing tests. Ensures that tests not in the failing list
+     * succeed with the expected result. Ensures that tests included in the failing list fail.
+     *
+     * These tests are included in the normal test/building.
+     */
+    class DefaultConformanceTestRunner {
+        // Tests the eval tests with the Kotlin implementation
+        @ParameterizedTest(name = "{arguments}")
+        @ArgumentsSource(EvalTestCases::class)
+        fun validatePartiQLEvalTestData(tc: TestCase) {
+            when (tc) {
+                is EvalTestCase -> TestRunner().runEvalTestCase(tc, LANG_KOTLIN_EVAL_FAIL_LIST)
+                else -> error("Unsupported test case category")
+            }
+        }
+
+        // Tests the eval equivalence tests with the Kotlin implementation
+        @ParameterizedTest(name = "{arguments}")
+        @ArgumentsSource(EvalEquivTestCases::class)
+        fun validatePartiQLEvalEquivTestData(tc: TestCase) {
+            when (tc) {
+                is EvalEquivTestCase -> TestRunner().runEvalEquivTestCase(tc, LANG_KOTLIN_EVAL_EQUIV_FAIL_LIST)
+                else -> error("Unsupported test case category")
+            }
+        }
+    }
+
+    /**
+     * Runs the conformance tests without a fail list, so we can document the passing/failing tests in the conformance
+     * report.
+     *
+     * These tests are excluded from normal testing/building unless the `conformanceReport` gradle property is
+     * specified (i.e. `gradle test ... -PconformanceReport`)
+     */
+    @ExtendWith(ConformanceTestReportGenerator::class)
+    class ConformanceTestsReportRunner {
+        // Tests the eval tests with the Kotlin implementation without a fail list
+        @ParameterizedTest(name = "{arguments}")
+        @ArgumentsSource(EvalTestCases::class)
+        fun validatePartiQLEvalTestData(tc: TestCase) {
+            when (tc) {
+                is EvalTestCase -> TestRunner().runEvalTestCase(tc, emptyList())
+                else -> error("Unsupported test case category")
+            }
+        }
+
+        // Tests the eval equivalence tests with the Kotlin implementation without a fail list
+        @ParameterizedTest(name = "{arguments}")
+        @ArgumentsSource(EvalEquivTestCases::class)
+        fun validatePartiQLEvalEquivTestData(tc: TestCase) {
+            when (tc) {
+                is EvalEquivTestCase -> TestRunner().runEvalEquivTestCase(tc, emptyList())
+                else -> error("Unsupported test case category")
+            }
         }
     }
 
     class EvalTestCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> {
-            return TestRunner().loadTests(PARTIQL_EVAL_TEST_DATA_DIR, LANG_KOTLIN_EVAL_SKIP_LIST)
-        }
-    }
-
-    // Tests the eval equivalence tests with the Kotlin implementation
-    @ParameterizedTest
-    @ArgumentsSource(EvalEquivTestCases::class)
-    fun validatePartiQLEvalEquivTestData(tc: TestCase) {
-        when (tc) {
-            is EvalEquivTestCase -> TestRunner().runEvalEquivTestCase(tc)
-            else -> error("Unsupported test case category")
+            return TestRunner().loadTests(PARTIQL_EVAL_TEST_DATA_DIR)
         }
     }
 
     class EvalEquivTestCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> {
-            return TestRunner().loadTests(PARTIQL_EVAL_EQUIV_TEST_DATA_DIR, LANG_KOTLIN_EVAL_EQUIV_SKIP_LIST)
+            return TestRunner().loadTests(PARTIQL_EVAL_EQUIV_TEST_DATA_DIR)
         }
     }
 }
