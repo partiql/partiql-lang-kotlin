@@ -22,46 +22,17 @@ jobs:
       - uses: actions/checkout@v2
         with:
           submodules: recursive
+
       - name: Use Java ${{ matrix.java }}
         uses: actions/setup-java@v3
         with:
           distribution: 'corretto'
           java-version: ${{ matrix.java }}
-          cache: gradle
-      - name: Build and test
-        run: ./gradlew build
 
-  randomized-test:
-    runs-on: ubuntu-20.04
-    strategy:
-      matrix:
-        java: [ 11, 17 ]
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          submodules: recursive
-      - name: Use Java ${{ matrix.java }}
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'corretto'
-          java-version: ${{ matrix.java }}
-          cache: gradle
-      - name: Build and test
-        run: ./gradlew :test:partiql-randomized-tests:test -PrandomTests
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
 
-  report-generation:
-    runs-on: ubuntu-20.04
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          submodules: recursive
-      - name: Use Java 17
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'corretto'
-          java-version: 17
-          cache: gradle
-      - name: Generate test coverage report
+      - name: Test and Report
         run: ./gradlew build jacocoTestReport
 
       # Upload coverage for CLI, LANG, PTS, TEST_SCRIPT, and EXAMPLES
@@ -100,3 +71,21 @@ jobs:
         with:
           file: extensions/build/reports/jacoco/test/jacocoTestReport.xml
           flags: EXTENSIONS
+
+  randomized-test:
+    runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        java: [ 11, 17 ]
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - name: Use Java ${{ matrix.java }}
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'corretto'
+          java-version: ${{ matrix.java }}
+          cache: gradle
+      - name: Build and test
+        run: ./gradlew :test:partiql-randomized-tests:test -PrandomTests
