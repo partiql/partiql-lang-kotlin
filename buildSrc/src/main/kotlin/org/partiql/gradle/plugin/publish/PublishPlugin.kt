@@ -55,10 +55,8 @@ abstract class PublishPlugin : Plugin<Project> {
     private fun Project.publish(ext: PublishExtension) {
         val releaseVersion = !version.toString().endsWith("-SNAPSHOT")
 
-        // Generate "javadoc"
-        tasks.getByName<DokkaTask>("dokkaHtml") {
-            outputDirectory.set(File("${buildDir}/javadoc"))
-        }
+        // Run dokka unless the environment explicitly specifies false
+        val runDokka = (System.getenv()["DOKKA"] != "false") || releaseVersion
 
         // Include "sources" and "javadoc" in the JAR
         extensions.getByType(JavaPluginExtension::class.java).run {
@@ -66,8 +64,18 @@ abstract class PublishPlugin : Plugin<Project> {
             withJavadocJar()
         }
 
+        tasks.getByName<DokkaTask>("dokkaHtml") {
+            // Only generate javadoc for a release as this consumes a lot of build time
+            // 2022 M1 Pro
+            //             `./gradlew clean build --no-build-cache` BUILD SUCCESSFUL in 8m 22s
+            // `DOKKA=false ./gradlew clean build --no-build-cache` BUILD SUCCESSFUL in 5m 14s
+            onlyIf { runDokka }
+            outputDirectory.set(File("${buildDir}/javadoc"))
+        }
+
         // Add dokkaHtml output to the javadocJar
         tasks.getByName<Jar>("javadocJar") {
+            onlyIf { runDokka }
             dependsOn(JavaPlugin.CLASSES_TASK_NAME)
             archiveClassifier.set("javadoc")
             from(tasks.named("dokkaHtml"))
