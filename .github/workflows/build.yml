@@ -20,8 +20,6 @@ jobs:
         java: [11, 17]
     steps:
       - uses: actions/checkout@v2
-        env:
-          DOKKA: false
         with:
           submodules: recursive
 
@@ -35,6 +33,8 @@ jobs:
         uses: gradle/gradle-build-action@v2
 
       - name: Test and Report
+        env:
+          DOKKA: false
         run: ./gradlew build jacocoTestReport
 
       # Upload coverage for CLI, LANG, PTS, TEST_SCRIPT, and EXAMPLES
