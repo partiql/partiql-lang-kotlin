@@ -1,0 +1,92 @@
+// Experimental plan representation
+// - PIVOT
+// - SELECT VALUE / VALUE CONSTRUCTOR
+
+imports::{
+  kotlin: [
+    expr::'org.partiql.lang.domains.PartiqlAst.Expr',
+    type::'org.partiql.lang.types.StaticType',
+    any::'kotlin.Any',
+  ],
+}
+
+// Grouping of common fields without implications of interfaces or inheritance
+common::{
+  schema: map::[string,type],
+  properties: set::[property],
+  metas: map::[string,any],
+}
+
+property::[
+  ORDERED,
+]
+
+rel::[
+  // FROM
+  scan::{
+    common: common,
+    value: expr,
+    as: optional::string,
+    at: optional::string,
+    by: optional::string,
+  },
+  // FROM
+  cross::{
+    common: common,
+    lhs: rel,
+    rhs: rel,
+  },
+  // WHERE, HAVING
+  filter::{
+    common: common,
+    input: rel,
+    condition: expr,
+  },
+  // ORDER BY
+  sort::{
+    common: common,
+    expr: expr,
+    dir: [ ASC, DESC ],
+    nulls: [ FIRST, LAST ],
+  },
+  // UNION, INTERSECT, EXCEPT
+  bag::{
+    common: common,
+    lhs: rel,
+    rhs: rel,
+    op: [ UNION, INTERSECT, EXCEPT ],
+  },
+  // LIMIT, OFFSET, FETCH
+  fetch::{
+    common: common,
+    input: rel,
+    limit: long,
+    offset: long,
+  },
+  // SELECT
+  project::{
+    common: common,
+    input: rel,
+    exprs: list::[binding]
+  },
+  // JOIN
+  join::{
+    common: common,
+    lhs: rel,
+    rhs: rel,
+    condition: optional::expr,
+    type: [ INNER, LEFT, RIGHT, FULL ],
+  },
+  // SELECT <aggregate calls> [GROUP BY <groups>]
+  aggregate::{
+    common: common,
+    input: rel,
+    calls: list::[binding],
+    groups: list::[expr],
+  }
+]
+
+binding::{
+  name: string,
+  value: expr,
+}
