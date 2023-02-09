@@ -248,20 +248,17 @@ internal object IonTypeParser : SproutParser {
             return when (symbol.toLowerCase()) {
                 "list" -> {
                     assert(v.size == 1) { "list must have exactly one type" }
-                    // assert(v[0] is IonSymbol) { "list type parameter must be a symbol" }
                     val t = resolve(v[0])
                     TypeRef.List(t, nullable)
                 }
                 "set" -> {
                     assert(v.size == 1) { "set must have exactly one type" }
-                    // assert(v[0] is IonSymbol) { "set type parameter must be a symbol" }
                     val t = resolve(v[0])
                     TypeRef.Set(t, nullable)
                 }
                 "map" -> {
                     assert(v.size == 2) { "map must have exactly two types" }
-                    // assert(v[0] is IonSymbol) { "map key type parameter must be a symbol" }
-                    // assert(v[1] is IonSymbol) { "map value type parameter must be a symbol" }
+                    assert(v[0] is IonSymbol) { "map key type parameter must be a symbol" }
                     val kt = resolve(v[0])
                     val vt = resolve(v[1])
                     assert(kt is TypeRef.Scalar) { "map key type `$kt` must a scalar" }
