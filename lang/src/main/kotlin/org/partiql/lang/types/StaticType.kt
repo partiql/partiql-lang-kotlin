@@ -67,6 +67,7 @@ sealed class StaticType {
         @JvmField val SEXP: SexpType = SexpType()
         @JvmField val STRUCT: StructType = StructType()
         @JvmField val BAG: BagType = BagType()
+        @JvmField val GRAPH: GraphType = GraphType()
 
         @JvmStatic
         fun fromExprValueType(exprValueType: ExprValueType): StaticType =
@@ -88,6 +89,7 @@ sealed class StaticType {
                 ExprValueType.SEXP -> SEXP
                 ExprValueType.STRUCT -> STRUCT
                 ExprValueType.BAG -> BAG
+                ExprValueType.GRAPH -> GRAPH
             }
 
         @JvmStatic
@@ -206,6 +208,7 @@ sealed class StaticType {
             is AnyOfType -> copy(metas = metas)
             is DateType -> copy(metas = metas)
             is TimeType -> copy(metas = metas)
+            is GraphType -> copy(metas = metas)
         }
 
     /**
@@ -712,6 +715,20 @@ data class StructType(
             }
         }
     }
+}
+
+// TODO: Consider parameterizing by the type of node/edge payload, by making it a subclass of CollectionType.
+data class GraphType(
+    override val metas: Map<String, Any> = mapOf()
+) : SingleType() {
+
+    override val runtimeType: ExprValueType
+        get() = ExprValueType.GRAPH
+
+    override val allTypes: List<StaticType>
+        get() = listOf(this)
+
+    override fun toString(): String = "graph"
 }
 
 /**

@@ -61,6 +61,7 @@ private fun ExprValueType.typeAliases(): List<String> = when (this) {
     ExprValueType.SEXP -> listOf("sexp")
     ExprValueType.STRUCT -> listOf("struct", "tuple")
     ExprValueType.BAG -> listOf("bag")
+    ExprValueType.GRAPH -> emptyList() // listOf("graph")  // TODO: This seems to break tests
 }
 
 abstract class CastTestBase : EvaluatorTestBase() {

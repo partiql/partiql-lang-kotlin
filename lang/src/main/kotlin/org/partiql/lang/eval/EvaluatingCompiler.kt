@@ -42,6 +42,16 @@ import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedure
 import org.partiql.lang.eval.like.parsePattern
 import org.partiql.lang.eval.time.Time
 import org.partiql.lang.eval.visitors.PartiqlAstSanityValidator
+import org.partiql.lang.graph.DirSpec
+import org.partiql.lang.graph.EdgeSpec
+import org.partiql.lang.graph.ElemSpec
+import org.partiql.lang.graph.Graph
+import org.partiql.lang.graph.GraphEngine
+import org.partiql.lang.graph.LabelSpec
+import org.partiql.lang.graph.MatchSpec
+import org.partiql.lang.graph.NodeSpec
+import org.partiql.lang.graph.Stride
+import org.partiql.lang.graph.StrideSpec
 import org.partiql.lang.types.AnyOfType
 import org.partiql.lang.types.AnyType
 import org.partiql.lang.types.FunctionSignature
@@ -303,11 +313,22 @@ internal class EvaluatingCompiler(
 
         return object : Expression {
             override fun eval(session: EvaluationSession): ExprValue {
+                val Gs = org.partiql.lang.graph.SampleGraphs
+                val augmented_HACK = Bindings.buildLazyBindings<ExprValue> {
+                    addBinding("g1") { ExprValue.newGraph(Gs.g1) }
+                    addBinding("g1L") { ExprValue.newGraph(Gs.g1L) }
+                    addBinding("g2") { ExprValue.newGraph(Gs.g2) }
+                    addBinding("g3") { ExprValue.newGraph(Gs.g3) }
+                }.delegate(session.globals)
 
                 val env = Environment(
                     session = session,
+/*
                     locals = session.globals,
                     current = session.globals
+*/
+                    locals = augmented_HACK,
+                    current = augmented_HACK
                 )
 
                 return thunk(env)
@@ -404,7 +425,7 @@ internal class EvaluatingCompiler(
             // bag operators
             is PartiqlAst.Expr.BagOp -> compileBagOp(expr, metas)
 
-            is PartiqlAst.Expr.GraphMatch -> TODO("Compilation of GraphMatch expression")
+            is PartiqlAst.Expr.GraphMatch -> compileGraphMatch(expr, metas)
             is PartiqlAst.Expr.CallWindow -> TODO("Evaluating Compiler doesn't support window function")
         }
     }
@@ -1560,6 +1581,151 @@ internal class EvaluatingCompiler(
             ExprValue.newBag(result)
         }
     }
+
+    private fun compileGraphMatch(node: PartiqlAst.Expr.GraphMatch, metas: MetaContainer): ThunkEnv {
+        val graphExpr = compileAstExpr(node.expr)
+        val pattern = GpmlTranslator.translateGpmlPattern(node.gpmlPattern)
+        return thunkFactory.thunkEnv(metas) { env ->
+            val graph = when (val g = graphExpr(env)) {
+                is ExprValue.Companion.GraphExprValue -> g.graph
+                else -> error("A graph value required, but got: $g") // TODO something better than error()
+            }
+            val matchResult = GraphEngine.evaluate(graph, pattern)
+            ExprValue.newBag(matchResult2Table(matchResult))
+        }
+    }
+
+    /** Translate an AST graph pattern into a "plan spec" to be executed by the graph engine.
+     *  Currently, the only non-trivial aspect is making sure (in [patchElemList]) that node and edge elements alternate.
+     *  This (as well as the plan specs) is expected to become more sophisticated
+     *  as more graph pattern features are supported (esp. quantifiers and alternation).
+     */
+    private object GpmlTranslator {
+        fun translateGpmlPattern(gpml: PartiqlAst.GpmlPattern): MatchSpec {
+
+            if (gpml.selector != null) TODO("Evaluation of GPML selectors is not yet supported")
+            return MatchSpec(gpml.patterns.map { StrideSpec(patchElemList(translatePathPat(it))) })
+        }
+
+        fun translatePathPat(path: PartiqlAst.GraphMatchPattern): List<ElemSpec> {
+            if (path.prefilter != null || path.quantifier != null || path.restrictor != null || path.variable != null)
+                TODO("Not yet supported in evaluating a GPML path pattern: prefiletrs, quantifiers, restrictors, binder variables.")
+            return path.parts.flatMap { translatePartPat(it) }
+        }
+
+        fun translatePartPat(part: PartiqlAst.GraphMatchPatternPart): List<ElemSpec> =
+            when (part) {
+                is PartiqlAst.GraphMatchPatternPart.Node ->
+                    listOf(translateNodePat(part))
+                is PartiqlAst.GraphMatchPatternPart.Edge ->
+                    listOf(translateEdgePat(part))
+                is PartiqlAst.GraphMatchPatternPart.Pattern ->
+                    translatePathPat(part.pattern)
+            }
+
+        fun translateNodePat(node: PartiqlAst.GraphMatchPatternPart.Node): NodeSpec {
+            if (node.prefilter != null) TODO("Not yet supported in evaluating a GPML node pattern: prefilter.")
+            return NodeSpec(
+                binder = node.variable?.text,
+                label = translateLabels(node.label)
+            )
+        }
+
+        fun translateEdgePat(edge: PartiqlAst.GraphMatchPatternPart.Edge): EdgeSpec {
+            if (edge.prefilter != null || edge.quantifier != null)
+                TODO("Not yet supported in evaluating a GPML edge pattern: prefilter, quantifier.")
+            return EdgeSpec(
+                binder = edge.variable?.text,
+                label = translateLabels(edge.label),
+                dir = translateDirection(edge.direction)
+            )
+        }
+
+        fun translateLabels(labels: List<SymbolPrimitive>): LabelSpec {
+            return when (labels.size) {
+                0 -> LabelSpec.Whatever
+                1 -> LabelSpec.OneOf(labels[0].text)
+                else -> TODO("Not yet supported in evaluating a GPML graph element pattern: multiple/alternating labels")
+            }
+        }
+
+        fun translateDirection(dir: PartiqlAst.GraphMatchDirection): DirSpec =
+            when (dir) {
+                is PartiqlAst.GraphMatchDirection.EdgeLeft -> DirSpec.`(--`
+                is PartiqlAst.GraphMatchDirection.EdgeUndirected -> DirSpec.`~~~`
+                is PartiqlAst.GraphMatchDirection.EdgeRight -> DirSpec.`--)`
+                is PartiqlAst.GraphMatchDirection.EdgeLeftOrUndirected -> DirSpec.`(~~`
+                is PartiqlAst.GraphMatchDirection.EdgeUndirectedOrRight -> DirSpec.`~~)`
+                is PartiqlAst.GraphMatchDirection.EdgeLeftOrRight -> DirSpec.`(-)`
+                is PartiqlAst.GraphMatchDirection.EdgeLeftOrUndirectedOrRight -> DirSpec.`---`
+            }
+
+        /** Make sure there is proper alternation of NodeSpec and EdgeSpec entries,
+         *  by inserting a [NodeSpec] between adjacent [EdgeSpec]s.
+         *  TODO: Deal with adjacent [NodeSpec]s -- by "unification" or prohibit.
+         */
+        fun patchElemList(elems: List<ElemSpec>): List<ElemSpec> {
+            // println("Before patching: ${elems}")
+            val fillerNode = NodeSpec(null, LabelSpec.Whatever)
+            val patched = mutableListOf<ElemSpec>()
+            var expectNode = true
+            for (x in elems) {
+                if (expectNode) {
+                    when (x) {
+                        is NodeSpec -> { patched.add(x); expectNode = false }
+                        is EdgeSpec -> { patched.add(fillerNode); patched.add(x) }
+                    }
+                } else { // expectNode == false
+                    when (x) {
+                        is NodeSpec -> TODO("Deal with adjacent nodes in a pattern.  Unify? Prohibit?")
+                        is EdgeSpec -> { patched.add(x); expectNode = true }
+                    }
+                }
+            }
+            if (expectNode) patched.add(fillerNode)
+            // println("After  patching: ${patched}")
+            return patched.toList()
+        }
+    }
+
+    /** Given the result of a graph pattern match, read off payloads at bound pattern variables
+     *  for further consumption in PartiQL, as a table, i.e. a collection of PartiQL structs.
+     */
+    private fun matchResult2Table(result: org.partiql.lang.graph.MatchResult): Sequence<ExprValue> =
+        result.result.asSequence().map { map2struct(strides2map(result.specs, it)) }
+
+    /** Given a single match result, produces a map that associates each binder variable
+     * with its matched graph element.
+     */
+    private fun strides2map(specs: List<StrideSpec>, strides: List<Stride>): Map<String, Graph.Elem> {
+        check(specs.size == strides.size)
+        val elemSpecs = specs.flatMap { it.elems }
+        val elems = strides.flatMap { it.elems }
+        check(elemSpecs.size == elems.size)
+        val xxx = elemSpecs zip elems
+        val m = mutableMapOf<String, Graph.Elem>()
+        for ((s, e) in xxx) {
+            check((s is NodeSpec && e is Graph.Node) || (s is EdgeSpec && e is Graph.Edge))
+            // Populate the map for each binder variable in the spec,
+            // while checking that if a variable is met more than once, it is bound to the same element.
+            // Note: only singleton variables are currently supported. (No group variables yet.)
+            if (s.binder != null) {
+                val v = s.binder!!
+                if (m.containsKey(v)) {
+                    check(m[v] == e)
+                } else {
+                    m.put(v, e)
+                }
+            }
+        }
+        return m.toMap()
+    }
+
+    private fun map2struct(m: Map<String, Graph.Elem>): ExprValue =
+        ExprValue.newStruct(
+            m.entries.map { it.value.payload.namedValue(ExprValue.newSymbol(it.key)) },
+            StructOrdering.UNORDERED
+        )
 
     private fun evalLimit(limitThunk: ThunkEnv, env: Environment, limitLocationMeta: SourceLocationMeta?): Long {
         val limitExprValue = limitThunk(env)

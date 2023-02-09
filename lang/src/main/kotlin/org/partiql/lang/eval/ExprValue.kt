@@ -35,11 +35,11 @@ import com.amazon.ion.facet.Faceted
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.time.NANOS_PER_SECOND
 import org.partiql.lang.eval.time.Time
+import org.partiql.lang.graph.Graph
 import org.partiql.lang.util.bytesValue
 import org.partiql.lang.util.propertyValueMapOf
 import java.math.BigDecimal
 import java.time.LocalDate
-
 /**
  * Representation of a value within the context of an [Expression].
  */
@@ -173,6 +173,14 @@ interface ExprValue : Iterable<ExprValue>, Faceted {
             override val type = ExprValueType.SEXP
             override val ordinalBindings by lazy { OrdinalBindings.ofList(toList()) }
             override fun iterator() = values.mapIndexed { i, v -> v.namedValue(newInt(i)) }.iterator()
+        }
+
+        // VG-note: GraphExprValue is not a private class, because I'd like to highlight
+        // hesitation to introduce ExprValue.graphValue() method.
+        // In general, I am yet to figure out why ExprValue.xxxValue() methods are a good idea,
+        // as opposed to exposing the subclasses of ExprValue.
+        class GraphExprValue(val graph: Graph) : BaseExprValue() {
+            override val type = ExprValueType.GRAPH
         }
 
         // Memoized values for optimization
@@ -313,6 +321,10 @@ interface ExprValue : Iterable<ExprValue>, Faceted {
 
         @JvmStatic
         val emptyStruct: ExprValue = StructExprValue(StructOrdering.UNORDERED, sequenceOf())
+
+        @JvmStatic
+        fun newGraph(graph: Graph): ExprValue =
+            GraphExprValue(graph)
 
         @JvmStatic
         fun newFromIonReader(ion: IonSystem, reader: IonReader): ExprValue =

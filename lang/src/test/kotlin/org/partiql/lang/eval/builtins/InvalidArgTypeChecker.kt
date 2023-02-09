@@ -11,6 +11,7 @@ import org.partiql.lang.types.ClobType
 import org.partiql.lang.types.DateType
 import org.partiql.lang.types.DecimalType
 import org.partiql.lang.types.FloatType
+import org.partiql.lang.types.GraphType
 import org.partiql.lang.types.IntType
 import org.partiql.lang.types.ListType
 import org.partiql.lang.types.MissingType
@@ -54,6 +55,7 @@ private fun SingleType.getExample() = when (this) {
     is SexpType -> "sexp()"
     is StructType -> "{}"
     is BagType -> "<<>>"
+    is GraphType -> "graph{}" // TODO: something better after we have concrete syntax for graphs
     is MissingType,
     is NullType -> throw Exception("NULL or MISSING should be the problem of permissive mode, not type checking.")
 }
