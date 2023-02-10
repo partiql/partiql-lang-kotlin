@@ -82,7 +82,11 @@ tasks.dokkaHtml.configure {
 }
 
 tasks.processResources {
-    from("antlr") {
+    from("src/main/antlr") {
         include("**/*.g4")
+    }
+    from("src/main/pig") {
+        include("partiql.ion")
+        into("org/partiql/type-domains/")
     }
 }

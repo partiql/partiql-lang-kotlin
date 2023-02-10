@@ -35,6 +35,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Javadoc jar now contains dokka docs (was broken by gradle commit from 0.9.0)
 
+- ANTLR (PartiQL.g4, PartiQLTokens.g4) and PIG (org/partiql/type-domains/partiql.ion) sources 
+  are back to being distributed with the jar.
+
 ### Removed
 - The deprecated `IonValue` property in `ExprValue` interface is now removed.
 
