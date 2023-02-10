@@ -23,6 +23,7 @@ import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.api.publish.maven.plugins.MavenPublishPlugin
 import org.gradle.api.publish.maven.tasks.PublishToMavenRepository
+import org.gradle.jvm.tasks.Jar
 import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.get
 import org.gradle.kotlin.dsl.getByName
@@ -54,15 +55,30 @@ abstract class PublishPlugin : Plugin<Project> {
     private fun Project.publish(ext: PublishExtension) {
         val releaseVersion = !version.toString().endsWith("-SNAPSHOT")
 
-        // Generate "javadoc"
-        tasks.getByName<DokkaTask>("dokkaHtml") {
-            outputDirectory.set(File("${buildDir}/javadoc"))
-        }
+        // Run dokka unless the environment explicitly specifies false
+        val runDokka = (System.getenv()["DOKKA"] != "false") || releaseVersion
 
         // Include "sources" and "javadoc" in the JAR
         extensions.getByType(JavaPluginExtension::class.java).run {
             withSourcesJar()
             withJavadocJar()
+        }
+
+        tasks.getByName<DokkaTask>("dokkaHtml") {
+            // Only generate javadoc for a release as this consumes a lot of build time
+            // 2022 M1 Pro
+            //             `./gradlew clean build --no-build-cache` BUILD SUCCESSFUL in 8m 22s
+            // `DOKKA=false ./gradlew clean build --no-build-cache` BUILD SUCCESSFUL in 5m 14s
+            onlyIf { runDokka }
+            outputDirectory.set(File("${buildDir}/javadoc"))
+        }
+
+        // Add dokkaHtml output to the javadocJar
+        tasks.getByName<Jar>("javadocJar") {
+            onlyIf { runDokka }
+            dependsOn(JavaPlugin.CLASSES_TASK_NAME)
+            archiveClassifier.set("javadoc")
+            from(tasks.named("dokkaHtml"))
         }
 
         // Setup Maven Central Publishing
@@ -71,6 +87,8 @@ abstract class PublishPlugin : Plugin<Project> {
                 create<MavenPublication>("maven") {
                     artifactId = ext.artifactId
                     from(components["java"])
+                    artifact(tasks["sourcesJar"])
+                    artifact(tasks["javadocJar"])
                     pom {
                         packaging = "jar"
                         name.set(ext.name)
