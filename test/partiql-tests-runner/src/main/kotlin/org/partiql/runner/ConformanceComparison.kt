@@ -56,7 +56,7 @@ fun main(args: Array<String>) {
 | | Base ($origCommitId) | $newCommitId | +/- |
 | --- | ---: | ---: | ---: |
 | % Passing | ${"%.2f".format(origPassingPercent)}% | ${"%.2f".format(newPassingPercent)}% | ${"%.2f".format(newPassingPercent - origPassingPercent)}% |
-| :white_check_mark: Passing | $numOrigPassing | $numNewPassing | ${numNewPassing - numOrigFailing} |
+| :white_check_mark: Passing | $numOrigPassing | $numNewPassing | ${numNewPassing - numOrigPassing} |
 | :x: Failing | $numOrigFailing | $numNewFailing | ${numNewFailing - numOrigFailing} |
 | :large_orange_diamond: Ignored | $numOrigIgnored | $numNewIgnored | ${numNewIgnored - numOrigIgnored} |
 | Total Tests | $totalOrig | $totalNew | ${totalNew - totalOrig} |
