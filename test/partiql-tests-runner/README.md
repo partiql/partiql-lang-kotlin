@@ -10,3 +10,14 @@ This package enables:
 Eventually, the `partiql-test-runner` module will replace the `partiql-pts` and `partiql-testscript` modules along with some other 
 tests in `lang` that were ported to `partiql-tests` 
 (see [partiql-lang-kotlin#789](https://github.com/partiql/partiql-lang-kotlin/issues/789)).
+
+## Run Conformance Tests Locally
+
+```shell
+# default, test data from partiql-tests submodule will be used
+./gradlew :test:partiql-tests-runner:test --tests "*ConformanceTestsReportRunner" -PconformanceReport
+
+# override test data location
+PARTIQL_TESTS_DATA=/path/to/partiql-tests/data \
+./gradlew :test:partiql-tests-runner:test --tests "*ConformanceTestsReportRunner" -PconformanceReport
+```
