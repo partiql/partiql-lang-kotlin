@@ -2,7 +2,13 @@ package org.partiql.sprout.test.generated
 
 import com.amazon.ionelement.api.TimestampElement
 import org.partiql.sprout.test.generated.visitor.SproutTestVisitor
+import kotlin.Boolean
+import kotlin.Float
+import kotlin.Int
+import kotlin.String
 import kotlin.collections.List
+import kotlin.collections.Map
+import kotlin.collections.Set
 
 public abstract class SproutTestNode {
     public open val children: List<SproutTestNode> = emptyList()
@@ -23,29 +29,80 @@ public data class Node(
 
 public sealed class Collection : SproutTestNode() {
     public override fun <R, C> accept(visitor: SproutTestVisitor<R, C>, ctx: C): R = when (this) {
-        is Set -> visitor.visitCollectionSet(this, ctx)
-        is List -> visitor.visitCollectionList(this, ctx)
-        is Map -> visitor.visitCollectionMap(this, ctx)
+        is MySet -> visitor.visitCollectionMySet(this, ctx)
+        is MyList -> visitor.visitCollectionMyList(this, ctx)
+        is MyMap -> visitor.visitCollectionMyMap(this, ctx)
     }
 
-    public data class Set(
-        public val values: kotlin.collections.Set<Int>
+    public data class MySet(
+        public val values: Set<Int>
     ) : Collection() {
         public override fun <R, C> accept(visitor: SproutTestVisitor<R, C>, ctx: C): R =
-            visitor.visitCollectionSet(this, ctx)
+            visitor.visitCollectionMySet(this, ctx)
     }
 
-    public data class List(
-        public val values: kotlin.collections.List<Int>
+    public data class MyList(
+        public val values: List<Int>
     ) : Collection() {
         public override fun <R, C> accept(visitor: SproutTestVisitor<R, C>, ctx: C): R =
-            visitor.visitCollectionList(this, ctx)
+            visitor.visitCollectionMyList(this, ctx)
     }
 
-    public data class Map(
-        public val values: kotlin.collections.List<Int>
+    public data class MyMap(
+        public val values: Map<String, Int>
     ) : Collection() {
         public override fun <R, C> accept(visitor: SproutTestVisitor<R, C>, ctx: C): R =
-            visitor.visitCollectionMap(this, ctx)
+            visitor.visitCollectionMyMap(this, ctx)
+    }
+}
+
+public data class Inlines(
+    public val `enum`: Bar?,
+    public val product: Foo,
+    public val sum: Sum
+) : SproutTestNode() {
+    public override val children: List<SproutTestNode> by lazy {
+        val kids = mutableListOf<SproutTestNode?>()
+        kids.add(product)
+        kids.add(sum)
+        kids.filterNotNull()
+    }
+
+    public override fun <R, C> accept(visitor: SproutTestVisitor<R, C>, ctx: C): R =
+        visitor.visitInlines(this, ctx)
+
+    public enum class Bar {
+        A,
+        B,
+        C,
+    }
+
+    public data class Foo(
+        public val x: Int,
+        public val y: Bar
+    ) : SproutTestNode() {
+        public override fun <R, C> accept(visitor: SproutTestVisitor<R, C>, ctx: C): R =
+            visitor.visitInlinesFoo(this, ctx)
+    }
+
+    public sealed class Sum : SproutTestNode() {
+        public override fun <R, C> accept(visitor: SproutTestVisitor<R, C>, ctx: C): R = when (this) {
+            is U -> visitor.visitInlinesSumU(this, ctx)
+            is V -> visitor.visitInlinesSumV(this, ctx)
+        }
+
+        public data class U(
+            public val foo: String
+        ) : Sum() {
+            public override fun <R, C> accept(visitor: SproutTestVisitor<R, C>, ctx: C): R =
+                visitor.visitInlinesSumU(this, ctx)
+        }
+
+        public data class V(
+            public val bar: String
+        ) : Sum() {
+            public override fun <R, C> accept(visitor: SproutTestVisitor<R, C>, ctx: C): R =
+                visitor.visitInlinesSumV(this, ctx)
+        }
     }
 }

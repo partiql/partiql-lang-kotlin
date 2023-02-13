@@ -27,41 +27,57 @@ internal class IonSymbols private constructor(val root: Node) {
 
     companion object {
 
+        val COLLECTIONS = setOf("map", "list", "set")
+
         fun build(definitions: List<IonValue>) = IonSymbols(
             root = Node(id = "_root").apply {
                 definitions.forEach { type ->
-                    val child = Visitor().visit(type, this)!!
+                    val child = Visitor().visit(type, this)
                     children.add(child)
                 }
             }
         )
+
+        /**
+         * Consider asserting more thorough type definition naming rules ie enforce lower snake case
+         */
+        fun assertNonReserved(id: String, context: String) = assert(!COLLECTIONS.contains(id)) {
+            "Cannot used reserved name `$id` for a type definition, $context."
+        }
     }
 
     private class Visitor : IonVisitor<Node, Node?> {
 
         override fun visit(v: IonList, ctx: Node?): Node {
+            val id = v.id()
+            assertNonReserved(id, if (ctx != null) "child of $ctx" else "top-level type")
             val node = Node(
-                id = v.id(),
+                id = id,
                 parent = ctx
             )
             if (!v.isEnum()) {
-                v.forEach { node.children.add(visit(it, node)!!) }
+                v.forEach { node.children.add(visit(it, node)) }
             }
             return node
         }
 
         override fun visit(v: IonStruct, ctx: Node?): Node {
+            val id = v.id()
+            assertNonReserved(id, if (ctx != null) "child of $ctx" else "top-level type")
             val node = Node(
-                id = v.id(),
-                parent = ctx
+                id = id,
+                parent = ctx,
             )
-            v.filter { it.isInlineEnum() }.forEach {
-                node.children.add(
-                    Node(
-                        id = it.fieldName,
-                        parent = node,
-                    )
-                )
+            v.filter { it.isInline() }.forEach {
+                val (symbol, nullable) = it.ref()
+                // DANGER! Mutate annotations to set the definition id as if it weren't an inline
+                it.setTypeAnnotations(symbol)
+                // Parse as any other definition
+                val child = visit(it, node)
+                // DANGER! Add back the dropped "optional" annotation
+                if (nullable) it.setTypeAnnotations("optional", symbol)
+                // Include the inline definition as a child of this node
+                node.children.add(child)
             }
             return node
         }
@@ -69,6 +85,9 @@ internal class IonSymbols private constructor(val root: Node) {
         override fun defaultVisit(v: IonValue, ctx: Node?) = error("cannot parse value $v")
     }
 
+    /**
+     * For debugging, consider prefixing node names since names must be globally unique in DOT
+     */
     override fun toString() = graph {
         root.children.forEach {
             +subgraph(it.id) {

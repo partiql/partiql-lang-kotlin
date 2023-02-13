@@ -7,6 +7,9 @@ import com.squareup.kotlinpoet.TypeSpec
 import net.pearx.kasechange.toCamelCase
 import org.partiql.sprout.generator.Generator
 import org.partiql.sprout.generator.target.kotlin.poems.KotlinBuilderPoem
+import org.partiql.sprout.generator.target.kotlin.poems.KotlinJacksonPoem
+import org.partiql.sprout.generator.target.kotlin.poems.KotlinListenerPoem
+import org.partiql.sprout.generator.target.kotlin.poems.KotlinMetasPoem
 import org.partiql.sprout.generator.target.kotlin.poems.KotlinVisitorPoem
 import org.partiql.sprout.generator.target.kotlin.spec.KotlinFileSpec
 import org.partiql.sprout.generator.target.kotlin.spec.KotlinNodeSpec
@@ -25,13 +28,18 @@ class KotlinGenerator(private val options: KotlinOptions) : Generator<KotlinResu
         // --- Initialize an empty symbol table(?)
         val symbols = KotlinSymbols.init(universe, options)
 
-        // In the future, this list will be dynamic
-        val poems = listOf(
-            KotlinVisitorPoem(symbols),
-            KotlinBuilderPoem(symbols),
-            // ListenerPoem(symbols),
-            // JacksonPoem(symbols),
-        )
+        // Still not sure if poems should be registered with an injector
+        // This is sufficient for now
+        val poems = options.poems.map {
+            when (it) {
+                "visitor" -> KotlinVisitorPoem(symbols)
+                "builder" -> KotlinBuilderPoem(symbols)
+                "listener" -> KotlinListenerPoem(symbols)
+                "metas" -> KotlinMetasPoem(symbols)
+                "jackson" -> KotlinJacksonPoem(symbols)
+                else -> error("unknown poem $it, expected: visitor, builder, listener, metas, jackson")
+            }
+        }
 
         // --- Generate skeleton
         val spec = KotlinUniverseSpec(
@@ -83,7 +91,18 @@ class KotlinGenerator(private val options: KotlinOptions) : Generator<KotlinResu
         product = this,
         props = props.map { KotlinNodeSpec.Prop(it.name.toCamelCase(), symbols.typeNameOf(it.ref)) },
         clazz = symbols.clazz(ref),
-        types = props.filterIsInstance<TypeProp.Enum>().map { it.def.generate(symbols) }.toMutableList(),
+        children = props.filterIsInstance<TypeProp.Inline>().mapNotNull {
+            when (it.def) {
+                is TypeDef.Product, is TypeDef.Sum -> it.def.generate(symbols)
+                else -> null
+            }
+        },
+        types = props.filterIsInstance<TypeProp.Inline>().mapNotNull {
+            when (it.def) {
+                is TypeDef.Enum -> it.def.generate(symbols)
+                else -> null
+            }
+        }
     ).apply {
         props.forEach {
             val para = ParameterSpec.builder(it.name, it.type).build()
@@ -96,6 +115,7 @@ class KotlinGenerator(private val options: KotlinOptions) : Generator<KotlinResu
             KotlinNodeOptions.Modifier.DATA -> if (props.isNotEmpty()) builder.addModifiers(KModifier.DATA)
             KotlinNodeOptions.Modifier.OPEN -> builder.addModifiers(KModifier.OPEN)
         }
+        children.forEach { it.builder.superclass(symbols.base) }
     }
 
     /**
@@ -106,7 +126,7 @@ class KotlinGenerator(private val options: KotlinOptions) : Generator<KotlinResu
         variants = variants.mapNotNull { it.generate(symbols) },
         clazz = symbols.clazz(ref),
     ).apply {
-        variants.forEach { it.builder.superclass(clazz) }
+        children.forEach { it.builder.superclass(clazz) }
     }
 
     /**

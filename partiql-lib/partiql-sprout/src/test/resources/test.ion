@@ -20,18 +20,38 @@ node::{
   a: bool,
   b: int,
   c: string,
-  d: 'float?',
+  d: optional::float,
   e: timestamp,
 }
 
 collection::[
-  set::{
+  my_set::{
     values: set::[int],
   },
-  list::{
+  my_list::{
     values: list::[int],
   },
-  map::{
-    values: list::[int],
+  my_map::{
+    values: map::[string,int],
   }
 ]
+
+inlines::{
+  enum: optional::bar::[
+    A,
+    B,
+    C,
+  ],
+  product: foo::{
+    x: int,
+    y: bar,
+  },
+  sum: [
+    u::{
+      foo: string,
+    },
+    v::{
+      bar: string,
+    }
+  ]
+}

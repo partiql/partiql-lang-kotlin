@@ -2,6 +2,7 @@ package org.partiql.sprout.generator.target.kotlin
 
 import org.partiql.sprout.parser.SproutParser
 import picocli.CommandLine
+import picocli.CommandLine.Command
 import java.io.BufferedReader
 import java.io.File
 import java.io.FileInputStream
@@ -40,14 +41,28 @@ class KotlinCommand : Callable<Int> {
     )
     lateinit var out: Path
 
+    @CommandLine.Option(
+        names = ["--poems"],
+        description = ["Poem templates to apply"],
+    )
+    var poems: List<String> = emptyList()
+
+    @CommandLine.Option(
+        names = ["-m", "--modifier"],
+        description = ["Generated node class modifier. Options \${COMPLETION-CANDIDATES}"],
+        defaultValue = "DATA"
+    )
+    lateinit var modifier: KotlinNodeOptions.Modifier
+
     override fun call(): Int {
         val input = BufferedReader(FileInputStream(file).reader()).readText()
         val parser = SproutParser.default()
         val universe = parser.parse(id, input)
         val options = KotlinOptions(
             packageRoot = packageRoot,
+            poems = poems,
             node = KotlinNodeOptions(
-                modifier = KotlinNodeOptions.Modifier.DATA,
+                modifier = modifier,
             ),
         )
         val generator = KotlinGenerator(options)

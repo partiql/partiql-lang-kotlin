@@ -75,7 +75,7 @@ internal object IonTypeParser : SproutParser {
             id = id,
             types = definitions.map {
                 val ctx = Context(symbols.root, imports)
-                Visitor.visit(it, ctx)!!
+                Visitor.visit(it, ctx)
             },
             imports = imports.map,
         )
@@ -83,10 +83,15 @@ internal object IonTypeParser : SproutParser {
 
     /**
      * Visitor builds a [TypeDef] graph while tracking scope (`ctx.scope`) in the [IonSymbols].
+     *
+     * Instead of tracking in the symbol graph, we could just search from the root, then do the BFS. That is simpler.
      */
     private object Visitor : IonVisitor<TypeDef, Context> {
 
-        override fun visit(v: IonList, ctx: Context) = ctx.scope(v) {
+        /**
+         * Parse a [TypeDef.Sum] or [TypeDef.Enum]
+         */
+        override fun visit(v: IonList, ctx: Context): TypeDef = ctx.scope(v) {
             val ref = ctx.ref()
             val type = when {
                 v.isEnum() -> TypeDef.Enum(
@@ -95,41 +100,56 @@ internal object IonTypeParser : SproutParser {
                 )
                 else -> TypeDef.Sum(
                     ref = ref,
-                    variants = v.map { t -> visit(t, ctx)!! }
+                    variants = v.map { t -> visit(t, ctx) }
                 )
             }
             ctx.define(type)
         }
 
-        override fun visit(v: IonStruct, ctx: Context) = ctx.scope(v) {
-            val properties = v.map {
-                val name = it.fieldName
-                when {
-                    it.isInlineEnum() -> {
-                        it.setTypeAnnotations(name)
-                        TypeProp.Enum(
-                            name = name,
-                            def = visit(it as IonList, ctx) as TypeDef.Enum
-                        )
-                    }
-                    else -> TypeProp.Ref(
-                        name = name,
-                        ref = resolve(it)
-                    )
-                }
-            }
+        /**
+         * Parse a [TypeDef.Product]
+         */
+        override fun visit(v: IonStruct, ctx: Context): TypeDef = ctx.scope(v) {
+            val ref = ctx.ref()
             val type = TypeDef.Product(
-                ref = ctx.ref(),
-                props = properties,
+                ref = ref,
+                props = v.map { property(it, ctx) }
             )
             ctx.define(type)
         }
 
-        override fun defaultVisit(v: IonValue, ctx: Context) = error("cannot parse value $v")
+        /**
+         * Parse a [TypeProp.Ref] or [TypeProp.Inline]
+         */
+        private fun property(v: IonValue, ctx: Context): TypeProp {
+            val (symbol, nullable) = v.ref()
+            return when {
+                v.isInline() -> {
+                    // DANGER! Mutate annotations to set the definition id as if it weren't an inline
+                    v.setTypeAnnotations(symbol)
+                    var def = visit(v, ctx)
+                    // DANGER! Add back the dropped "optional" annotation
+                    if (nullable) {
+                        v.setTypeAnnotations("optional", symbol)
+                        def = def.nullable()
+                    }
+                    TypeProp.Inline(
+                        name = v.fieldName,
+                        def = def
+                    )
+                }
+                else -> TypeProp.Ref(
+                    name = v.fieldName,
+                    ref = ctx.resolve(v),
+                )
+            }
+        }
+
+        override fun defaultVisit(v: IonValue, ctx: Context) = error("cannot parse value $v, expect 'struct' or 'list'")
     }
 
     /**
-     * Context encapsulates mutable state to keep the Visitor stateless
+     * Context tracks the visitor scope to keep position in the [IonSymbols] graph.
      */
     private class Context(
         private val root: IonSymbols.Node,
@@ -154,12 +174,15 @@ internal object IonTypeParser : SproutParser {
          */
         fun scope(v: IonValue, block: Context.() -> TypeDef): TypeDef {
             val id = v.id()
-            tip = tip.children.find { it.id == id }!!
+            tip = tip.children.find { it.id == id } ?: error("could not find symbol `$id`")
             val def = block.invoke(this)
             tip = tip.parent!! // never pop root
             return def
         }
 
+        /**
+         * Create a TypeRef by searching the symbol graph
+         */
         fun resolve(v: IonValue): TypeRef = when (v) {
             is IonSymbol -> resolve(v)
             is IonList -> resolve(v)
@@ -171,57 +194,75 @@ internal object IonTypeParser : SproutParser {
          * Resolve a symbolic reference with the given rules
          */
         private fun resolve(v: IonSymbol): TypeRef {
-            val (symbol, absolute, nullable) = symbol(v.stringValue())
-            // 1. Attempt as scalar
+            val (symbol, nullable) = v.ref()
+            val absolute = symbol.startsWith(".")
+            // 1. If absolute, search or err
+            if (absolute) {
+                val path = symbol.trimStart('.').split(".")
+                val node = root.search(path)
+                return when {
+                    node != null -> {
+                        TypeRef.Path(
+                            nullable = nullable,
+                            ids = (node.path.toTypedArray()),
+                        )
+                    }
+                    path.size == 1 && imports.symbols.contains(path.first()) -> {
+                        // Import type reference using '.'
+                        TypeRef.Import(symbol, nullable)
+                    }
+                    else -> {
+                        error("type reference `$symbol` not found")
+                    }
+                }
+            }
+            // 2. Attempt as scalar
             try {
                 return TypeRef.Scalar(
                     type = ScalarType.valueOf(symbol.toUpperCase()),
                     nullable = nullable,
                 )
-            } catch (_: IllegalArgumentException) {}
-            // 2. Attempt to find the symbol in the definitions
-            val node = if (absolute) {
-                val path = symbol.split(".")
-                root.search(path)
-            } else {
-                tip.search(symbol)
+            } catch (_: IllegalArgumentException) {
             }
+            // 3. Attempt to find the symbol relative to the current position
+            val node = tip.search(symbol)
             if (node != null) {
                 return TypeRef.Path(
                     nullable = nullable,
                     ids = (node.path.toTypedArray()),
                 )
             }
-            // 3. Attempt to find the symbol in the imports
+            // 4. Attempt to find the symbol in the imports
             if (imports.symbols.contains(symbol)) {
                 return TypeRef.Import(symbol, nullable)
             }
-            // 4. Error nothing found
-            error("symbol `$symbol` not found")
+            // 5. Error nothing found
+            error("type reference `$symbol` not found")
         }
 
         /**
          * Resolve the collection type
          */
         private fun resolve(v: IonList): TypeRef {
-            val (symbol, _, nullable) = symbol(v.id())
+            val (symbol, nullable) = v.ref()
             return when (symbol.toLowerCase()) {
                 "list" -> {
-                    assert(v.size == 1)
+                    assert(v.size == 1) { "list must have exactly one type" }
                     val t = resolve(v[0])
                     TypeRef.List(t, nullable)
                 }
                 "set" -> {
-                    assert(v.size == 1)
+                    assert(v.size == 1) { "set must have exactly one type" }
                     val t = resolve(v[0])
                     TypeRef.Set(t, nullable)
                 }
                 "map" -> {
-                    assert(v.size == 2)
+                    assert(v.size == 2) { "map must have exactly two types" }
+                    assert(v[0] is IonSymbol) { "map key type parameter must be a symbol" }
                     val kt = resolve(v[0])
                     val vt = resolve(v[1])
-                    assert(kt is TypeRef.Scalar)
-                    assert(!kt.nullable)
+                    assert(kt is TypeRef.Scalar) { "map key type `$kt` must a scalar" }
+                    assert(!kt.nullable) { "map key type `$kt` cannot be nullable" }
                     TypeRef.Map(kt as TypeRef.Scalar, vt, nullable)
                 }
                 else -> error("invalid collection type $symbol; must be one of `list`, `set`, or `map`")
@@ -232,16 +273,7 @@ internal object IonTypeParser : SproutParser {
          * Resolve the fully specified property definition
          */
         private fun resolve(v: IonStruct): TypeRef {
-            TODO("fully specified property definitions have not been specified")
-        }
-
-        private fun symbol(id: String): Triple<String, Boolean, Boolean> {
-            val nullable = id.last() == '?'
-            val absolute = id.startsWith(".")
-            var symbol = id
-            symbol = if (nullable) symbol.dropLast(1) else symbol
-            symbol = if (absolute) symbol.drop(1) else symbol
-            return Triple(symbol, absolute, nullable)
+            TODO("fully specified property definitions have not been implemented: $v")
         }
     }
 }
