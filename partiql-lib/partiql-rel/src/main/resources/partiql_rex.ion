@@ -1,0 +1,50 @@
+// Experimental compact expression representation
+// All special forms are normalized to
+
+imports::{
+  kotlin: [
+    ion::'com.amazon.ionelement.api.AnyElement',
+  ],
+}
+
+rex::[
+  id::{
+    name: string,
+  },
+  path::{
+    root: rex,
+
+  },
+  unary::{
+    rex: rex,
+    op: [ NOT, POS, NEG, ],
+  },
+  binary::{
+    lhs: rex,
+    rhs: rex,
+    op: [
+      PLUS, MINUS, TIMES, MODULO, CONCAT,
+      AND, OR,
+      EQ, NEQ, GTE, GT, LT, LTE,
+    ],
+  },
+  call::{
+    id: string,
+    args: list::[rex],
+  },
+  agg::{
+    id: string,
+    args: list::[rex],
+    modifier: optional::[ DISTINCT ],
+    // filter: rex — later SQL feature, not sure if we'll support this
+  },
+  lit::[
+    collection::{
+      type: [ LIST, BAG, SEXP ],
+      values: list::[rex],
+    },
+    scalar::{
+      value: ion,
+    },
+  ],
+]
