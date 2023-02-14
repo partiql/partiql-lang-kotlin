@@ -1,7 +1,6 @@
 package org.partiql.ir.rel.builder
 
 import kotlin.Any
-import kotlin.Long
 import kotlin.String
 import kotlin.collections.List
 import kotlin.collections.Map
@@ -10,6 +9,7 @@ import org.partiql.ir.rel.Binding
 import org.partiql.ir.rel.Common
 import org.partiql.ir.rel.Property
 import org.partiql.ir.rel.Rel
+import org.partiql.ir.rel.SortSpec
 import org.partiql.ir.rex.RexNode
 
 public abstract class RelFactory {
@@ -41,10 +41,9 @@ public abstract class RelFactory {
 
   public open fun relSort(
     common: Common,
-    rex: RexNode,
-    dir: Rel.Sort.Dir,
-    nulls: Rel.Sort.Nulls
-  ) = Rel.Sort(common, rex, dir, nulls)
+    input: Rel,
+    specs: List<SortSpec>
+  ) = Rel.Sort(common, input, specs)
 
   public open fun relBag(
     common: Common,
@@ -56,8 +55,8 @@ public abstract class RelFactory {
   public open fun relFetch(
     common: Common,
     input: Rel,
-    limit: Long,
-    offset: Long
+    limit: RexNode,
+    offset: RexNode
   ) = Rel.Fetch(common, input, limit, offset)
 
   public open fun relProject(
@@ -78,10 +77,17 @@ public abstract class RelFactory {
     common: Common,
     input: Rel,
     calls: List<Binding>,
-    groups: List<RexNode>
-  ) = Rel.Aggregate(common, input, calls, groups)
+    groups: List<Binding>,
+    strategy: Rel.Aggregate.Strategy
+  ) = Rel.Aggregate(common, input, calls, groups, strategy)
 
-  public open fun binding(name: String, `value`: RexNode) = Binding(name, value)
+  public open fun sortSpec(
+    rex: RexNode,
+    dir: SortSpec.Dir,
+    nulls: SortSpec.Nulls
+  ) = SortSpec(rex, dir, nulls)
+
+  public open fun binding(name: String, rex: RexNode) = Binding(name, rex)
 
   public companion object {
     public val DEFAULT: RelFactory = object : RelFactory() {}

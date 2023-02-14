@@ -6,6 +6,7 @@ imports::{
   kotlin: [
     type::'org.partiql.lang.types.StaticType',
     rex::'org.partiql.ir.rex.RexNode',
+    agg::'org.partiql.ir.rex.Rex.Agg',
     any::'kotlin.Any',
   ],
 }
@@ -45,9 +46,8 @@ rel::[
   // ORDER BY
   sort::{
     common: common,
-    rex: rex,
-    dir: [ ASC, DESC ],
-    nulls: [ FIRST, LAST ],
+    input: rel,
+    specs: list::[sort_spec],
   },
   // UNION, INTERSECT, EXCEPT
   bag::{
@@ -60,8 +60,8 @@ rel::[
   fetch::{
     common: common,
     input: rel,
-    limit: long,
-    offset: long,
+    limit: rex,
+    offset: rex,
   },
   // SELECT
   project::{
@@ -82,11 +82,18 @@ rel::[
     common: common,
     input: rel,
     calls: list::[binding],
-    groups: list::[rex],
+    groups: list::[binding],
+    strategy: [ FULL, PARTIAL ]
   }
 ]
 
+sort_spec::{
+  rex: rex,
+  dir: [ ASC, DESC ],
+  nulls: [ FIRST, LAST ],
+}
+
 binding::{
   name: string,
-  value: rex,
+  rex: rex,
 }
