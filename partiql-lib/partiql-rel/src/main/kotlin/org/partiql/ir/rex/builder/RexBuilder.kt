@@ -1,12 +1,13 @@
 package org.partiql.ir.rex.builder
 
-import com.amazon.ionelement.api.AnyElement
+import com.amazon.ionelement.api.IonElement
 import kotlin.String
 import kotlin.Suppress
 import kotlin.Unit
 import kotlin.collections.MutableList
 import kotlin.jvm.JvmStatic
 import org.partiql.ir.rex.RexNode
+import org.partiql.ir.rex.StructPart
 
 /**
  * The Builder is inside this private final class for DSL aesthetics
@@ -69,24 +70,48 @@ public class Rex private constructor() {
     ): org.partiql.ir.rex.Rex.Agg {
       val b = _RexAgg(id, args, modifier)
       b.block()
-      return factory.rexAgg(id = b.id!!, args = b.args, modifier = b.modifier)
+      return factory.rexAgg(id = b.id!!, args = b.args, modifier = b.modifier!!)
     }
 
-    public fun rexLitCollection(
-      type: org.partiql.ir.rex.Rex.Lit.Collection.Type? = null,
+    public fun rexLit(`value`: IonElement? = null, block: _RexLit.() -> Unit = {}):
+        org.partiql.ir.rex.Rex.Lit {
+      val b = _RexLit(value)
+      b.block()
+      return factory.rexLit(value = b.value!!)
+    }
+
+    public fun rexCollection(
+      type: org.partiql.ir.rex.Rex.Collection.Type? = null,
       values: MutableList<org.partiql.ir.rex.Rex> = mutableListOf(),
-      block: _RexLitCollection.() -> Unit = {}
-    ): org.partiql.ir.rex.Rex.Lit.Collection {
-      val b = _RexLitCollection(type, values)
+      block: _RexCollection.() -> Unit = {}
+    ): org.partiql.ir.rex.Rex.Collection {
+      val b = _RexCollection(type, values)
       b.block()
-      return factory.rexLitCollection(type = b.type!!, values = b.values)
+      return factory.rexCollection(type = b.type!!, values = b.values)
     }
 
-    public fun rexLitScalar(`value`: AnyElement? = null, block: _RexLitScalar.() -> Unit = {}):
-        org.partiql.ir.rex.Rex.Lit.Scalar {
-      val b = _RexLitScalar(value)
+    public fun rexStruct(fields: MutableList<StructPart> = mutableListOf(), block: _RexStruct.() ->
+        Unit = {}): org.partiql.ir.rex.Rex.Struct {
+      val b = _RexStruct(fields)
       b.block()
-      return factory.rexLitScalar(value = b.value!!)
+      return factory.rexStruct(fields = b.fields)
+    }
+
+    public fun structPartFields(rex: org.partiql.ir.rex.Rex? = null, block: _StructPartFields.() ->
+        Unit = {}): StructPart.Fields {
+      val b = _StructPartFields(rex)
+      b.block()
+      return factory.structPartFields(rex = b.rex!!)
+    }
+
+    public fun structPartField(
+      name: org.partiql.ir.rex.Rex? = null,
+      rex: org.partiql.ir.rex.Rex? = null,
+      block: _StructPartField.() -> Unit = {}
+    ): StructPart.Field {
+      val b = _StructPartField(name, rex)
+      b.block()
+      return factory.structPartField(name = b.name!!, rex = b.rex!!)
     }
 
     public class _RexId(
@@ -119,13 +144,26 @@ public class Rex private constructor() {
       public var modifier: org.partiql.ir.rex.Rex.Agg.Modifier? = null
     )
 
-    public class _RexLitCollection(
-      public var type: org.partiql.ir.rex.Rex.Lit.Collection.Type? = null,
+    public class _RexLit(
+      public var `value`: IonElement? = null
+    )
+
+    public class _RexCollection(
+      public var type: org.partiql.ir.rex.Rex.Collection.Type? = null,
       public var values: MutableList<org.partiql.ir.rex.Rex> = mutableListOf()
     )
 
-    public class _RexLitScalar(
-      public var `value`: AnyElement? = null
+    public class _RexStruct(
+      public var fields: MutableList<StructPart> = mutableListOf()
+    )
+
+    public class _StructPartFields(
+      public var rex: org.partiql.ir.rex.Rex? = null
+    )
+
+    public class _StructPartField(
+      public var name: org.partiql.ir.rex.Rex? = null,
+      public var rex: org.partiql.ir.rex.Rex? = null
     )
   }
 

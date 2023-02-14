@@ -1,7 +1,6 @@
 package org.partiql.ir.rel.builder
 
 import kotlin.Any
-import kotlin.Long
 import kotlin.String
 import kotlin.Suppress
 import kotlin.Unit
@@ -13,6 +12,7 @@ import org.partiql.ir.rel.Binding
 import org.partiql.ir.rel.Common
 import org.partiql.ir.rel.Property
 import org.partiql.ir.rel.RelNode
+import org.partiql.ir.rel.SortSpec
 import org.partiql.ir.rex.RexNode
 
 /**
@@ -72,14 +72,13 @@ public class Rel private constructor() {
 
     public fun relSort(
       common: Common? = null,
-      rex: RexNode? = null,
-      dir: org.partiql.ir.rel.Rel.Sort.Dir? = null,
-      nulls: org.partiql.ir.rel.Rel.Sort.Nulls? = null,
+      input: org.partiql.ir.rel.Rel? = null,
+      specs: MutableList<SortSpec> = mutableListOf(),
       block: _RelSort.() -> Unit = {}
     ): org.partiql.ir.rel.Rel.Sort {
-      val b = _RelSort(common, rex, dir, nulls)
+      val b = _RelSort(common, input, specs)
       b.block()
-      return factory.relSort(common = b.common!!, rex = b.rex!!, dir = b.dir!!, nulls = b.nulls!!)
+      return factory.relSort(common = b.common!!, input = b.input!!, specs = b.specs)
     }
 
     public fun relBag(
@@ -97,8 +96,8 @@ public class Rel private constructor() {
     public fun relFetch(
       common: Common? = null,
       input: org.partiql.ir.rel.Rel? = null,
-      limit: Long? = null,
-      offset: Long? = null,
+      limit: RexNode? = null,
+      offset: RexNode? = null,
       block: _RelFetch.() -> Unit = {}
     ): org.partiql.ir.rel.Rel.Fetch {
       val b = _RelFetch(common, input, limit, offset)
@@ -136,23 +135,35 @@ public class Rel private constructor() {
       common: Common? = null,
       input: org.partiql.ir.rel.Rel? = null,
       calls: MutableList<Binding> = mutableListOf(),
-      groups: MutableList<RexNode> = mutableListOf(),
+      groups: MutableList<Binding> = mutableListOf(),
+      strategy: org.partiql.ir.rel.Rel.Aggregate.Strategy? = null,
       block: _RelAggregate.() -> Unit = {}
     ): org.partiql.ir.rel.Rel.Aggregate {
-      val b = _RelAggregate(common, input, calls, groups)
+      val b = _RelAggregate(common, input, calls, groups, strategy)
       b.block()
       return factory.relAggregate(common = b.common!!, input = b.input!!, calls = b.calls, groups =
-          b.groups)
+          b.groups, strategy = b.strategy!!)
+    }
+
+    public fun sortSpec(
+      rex: RexNode? = null,
+      dir: SortSpec.Dir? = null,
+      nulls: SortSpec.Nulls? = null,
+      block: _SortSpec.() -> Unit = {}
+    ): SortSpec {
+      val b = _SortSpec(rex, dir, nulls)
+      b.block()
+      return factory.sortSpec(rex = b.rex!!, dir = b.dir!!, nulls = b.nulls!!)
     }
 
     public fun binding(
       name: String? = null,
-      `value`: RexNode? = null,
+      rex: RexNode? = null,
       block: _Binding.() -> Unit = {}
     ): Binding {
-      val b = _Binding(name, value)
+      val b = _Binding(name, rex)
       b.block()
-      return factory.binding(name = b.name!!, value = b.value!!)
+      return factory.binding(name = b.name!!, rex = b.rex!!)
     }
 
     public class _Common(
@@ -183,9 +194,8 @@ public class Rel private constructor() {
 
     public class _RelSort(
       public var common: Common? = null,
-      public var rex: RexNode? = null,
-      public var dir: org.partiql.ir.rel.Rel.Sort.Dir? = null,
-      public var nulls: org.partiql.ir.rel.Rel.Sort.Nulls? = null
+      public var input: org.partiql.ir.rel.Rel? = null,
+      public var specs: MutableList<SortSpec> = mutableListOf()
     )
 
     public class _RelBag(
@@ -198,8 +208,8 @@ public class Rel private constructor() {
     public class _RelFetch(
       public var common: Common? = null,
       public var input: org.partiql.ir.rel.Rel? = null,
-      public var limit: Long? = null,
-      public var offset: Long? = null
+      public var limit: RexNode? = null,
+      public var offset: RexNode? = null
     )
 
     public class _RelProject(
@@ -220,12 +230,19 @@ public class Rel private constructor() {
       public var common: Common? = null,
       public var input: org.partiql.ir.rel.Rel? = null,
       public var calls: MutableList<Binding> = mutableListOf(),
-      public var groups: MutableList<RexNode> = mutableListOf()
+      public var groups: MutableList<Binding> = mutableListOf(),
+      public var strategy: org.partiql.ir.rel.Rel.Aggregate.Strategy? = null
+    )
+
+    public class _SortSpec(
+      public var rex: RexNode? = null,
+      public var dir: SortSpec.Dir? = null,
+      public var nulls: SortSpec.Nulls? = null
     )
 
     public class _Binding(
       public var name: String? = null,
-      public var `value`: RexNode? = null
+      public var rex: RexNode? = null
     )
   }
 

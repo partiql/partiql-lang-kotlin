@@ -1,7 +1,6 @@
 package org.partiql.ir.rel
 
 import kotlin.Any
-import kotlin.Long
 import kotlin.String
 import kotlin.collections.List
 import kotlin.collections.Map
@@ -92,29 +91,20 @@ public sealed class Rel : RelNode() {
 
   public data class Sort(
     public val common: Common,
-    public val rex: RexNode,
-    public val dir: Dir,
-    public val nulls: Nulls
+    public val input: Rel,
+    public val specs: List<SortSpec>
   ) : Rel() {
     public override val children: List<RelNode> by lazy {
       val kids = mutableListOf<RelNode?>()
       kids.add(common)
+      kids.add(input)
+      kids.addAll(specs)
       kids.filterNotNull()
     }
 
 
     public override fun <R, C> accept(visitor: RelVisitor<R, C>, ctx: C): R =
         visitor.visitRelSort(this, ctx)
-
-    public enum class Dir {
-      ASC,
-      DESC,
-    }
-
-    public enum class Nulls {
-      FIRST,
-      LAST,
-    }
   }
 
   public data class Bag(
@@ -145,8 +135,8 @@ public sealed class Rel : RelNode() {
   public data class Fetch(
     public val common: Common,
     public val input: Rel,
-    public val limit: Long,
-    public val offset: Long
+    public val limit: RexNode,
+    public val offset: RexNode
   ) : Rel() {
     public override val children: List<RelNode> by lazy {
       val kids = mutableListOf<RelNode?>()
@@ -209,25 +199,51 @@ public sealed class Rel : RelNode() {
     public val common: Common,
     public val input: Rel,
     public val calls: List<Binding>,
-    public val groups: List<RexNode>
+    public val groups: List<Binding>,
+    public val strategy: Strategy
   ) : Rel() {
     public override val children: List<RelNode> by lazy {
       val kids = mutableListOf<RelNode?>()
       kids.add(common)
       kids.add(input)
       kids.addAll(calls)
+      kids.addAll(groups)
       kids.filterNotNull()
     }
 
 
     public override fun <R, C> accept(visitor: RelVisitor<R, C>, ctx: C): R =
         visitor.visitRelAggregate(this, ctx)
+
+    public enum class Strategy {
+      FULL,
+      PARTIAL,
+    }
+  }
+}
+
+public data class SortSpec(
+  public val rex: RexNode,
+  public val dir: Dir,
+  public val nulls: Nulls
+) : RelNode() {
+  public override fun <R, C> accept(visitor: RelVisitor<R, C>, ctx: C): R =
+      visitor.visitSortSpec(this, ctx)
+
+  public enum class Dir {
+    ASC,
+    DESC,
+  }
+
+  public enum class Nulls {
+    FIRST,
+    LAST,
   }
 }
 
 public data class Binding(
   public val name: String,
-  public val `value`: RexNode
+  public val rex: RexNode
 ) : RelNode() {
   public override fun <R, C> accept(visitor: RelVisitor<R, C>, ctx: C): R =
       visitor.visitBinding(this, ctx)
