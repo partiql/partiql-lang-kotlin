@@ -4,8 +4,8 @@
 
 imports::{
   kotlin: [
-    expr::'org.partiql.lang.domains.PartiqlAst.Expr',
     type::'org.partiql.lang.types.StaticType',
+    rex::'org.partiql.ir.rex.RexNode',
     any::'kotlin.Any',
   ],
 }
@@ -25,8 +25,8 @@ rel::[
   // FROM
   scan::{
     common: common,
-    value: expr,
-    as: optional::string,
+    value: rex,
+    alias: optional::string,
     at: optional::string,
     by: optional::string,
   },
@@ -40,12 +40,12 @@ rel::[
   filter::{
     common: common,
     input: rel,
-    condition: expr,
+    condition: rex,
   },
   // ORDER BY
   sort::{
     common: common,
-    expr: expr,
+    rex: rex,
     dir: [ ASC, DESC ],
     nulls: [ FIRST, LAST ],
   },
@@ -67,14 +67,14 @@ rel::[
   project::{
     common: common,
     input: rel,
-    exprs: list::[binding]
+    rexs: list::[binding]
   },
   // JOIN
   join::{
     common: common,
     lhs: rel,
     rhs: rel,
-    condition: optional::expr,
+    condition: optional::rex,
     type: [ INNER, LEFT, RIGHT, FULL ],
   },
   // SELECT <aggregate calls> [GROUP BY <groups>]
@@ -82,11 +82,11 @@ rel::[
     common: common,
     input: rel,
     calls: list::[binding],
-    groups: list::[expr],
+    groups: list::[rex],
   }
 ]
 
 binding::{
   name: string,
-  value: expr,
+  value: rex,
 }
