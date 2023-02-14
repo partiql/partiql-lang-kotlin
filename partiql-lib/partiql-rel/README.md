@@ -15,26 +15,34 @@ need different projection operators for the cases of
 - SELECT VALUE: binding tuples -> value
 
 SELECT VALUE _is_ the general case, but the domain change is neither functional nor compact. It's not functional because
-it cannot be composed with other operators (without a scan). It's not compact because its unnecessary to round trip the
-values from binding tuples -> values -> binding tuples.
+it cannot be composed with other operators (without a scan which creates the pipeline block). It's not compact because 
+its unnecessary to round trip the values from binding tuples -> values -> binding tuples.
 
-This work is experimental and not fully understood (by rchowell) at the moment. An accompanying formal specification
-adapted from the Redshift paper is 
-
+This work is experimental and not fully understood (at least by rchowell) at the moment. An accompanying formal 
+specification is in the works.
 
 ## Generating Sources
 
-Undecided if we will generate the internal representation, but the serialized format will be generated.
+Undecided if we will even generate the internal representation, but the serialized format will be generated.
 
 **How To**
-> naming is bad right now
+> Naming is bad right now, so I'm just going with Calcite's Rex and Rel for the expression and relation operator domains
+> respectively. They are deliberately separated.
 ```shell
 # running from partiql-rel/
 $HOME/Desktop/sprout/bin/sprout generate kotlin\
  -o ./rel\
  -p org.partiql.ir.rel\
- -u Plan\
+ -u Rel\
  -m DATA\
  --poems visitor --poems builder \
  ./src/main/resources/partiql_rel.ion
+ 
+$HOME/Desktop/sprout/bin/sprout generate kotlin\
+ -o ./rex\
+ -p org.partiql.ir.rex\
+ -u Rex\
+ -m DATA\
+ --poems visitor --poems builder \
+ ./src/main/resources/partiql_rex.ion
 ```
