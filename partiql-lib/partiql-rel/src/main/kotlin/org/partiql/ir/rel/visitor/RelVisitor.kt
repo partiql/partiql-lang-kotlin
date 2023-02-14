@@ -4,6 +4,7 @@ import org.partiql.ir.rel.Binding
 import org.partiql.ir.rel.Common
 import org.partiql.ir.rel.Rel
 import org.partiql.ir.rel.RelNode
+import org.partiql.ir.rel.SortSpec
 
 public interface RelVisitor<R, C> {
   public fun visit(node: RelNode, ctx: C): R
@@ -29,6 +30,8 @@ public interface RelVisitor<R, C> {
   public fun visitRelJoin(node: Rel.Join, ctx: C): R
 
   public fun visitRelAggregate(node: Rel.Aggregate, ctx: C): R
+
+  public fun visitSortSpec(node: SortSpec, ctx: C): R
 
   public fun visitBinding(node: Binding, ctx: C): R
 }

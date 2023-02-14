@@ -4,6 +4,7 @@ import org.partiql.ir.rel.Binding
 import org.partiql.ir.rel.Common
 import org.partiql.ir.rel.Rel
 import org.partiql.ir.rel.RelNode
+import org.partiql.ir.rel.SortSpec
 
 public abstract class RelBaseVisitor<R, C> : RelVisitor<R, C> {
   public override fun visit(node: RelNode, ctx: C): R = node.accept(this, ctx)
@@ -39,6 +40,8 @@ public abstract class RelBaseVisitor<R, C> : RelVisitor<R, C> {
   public override fun visitRelJoin(node: Rel.Join, ctx: C): R = defaultVisit(node, ctx)
 
   public override fun visitRelAggregate(node: Rel.Aggregate, ctx: C): R = defaultVisit(node, ctx)
+
+  public override fun visitSortSpec(node: SortSpec, ctx: C): R = defaultVisit(node, ctx)
 
   public override fun visitBinding(node: Binding, ctx: C): R = defaultVisit(node, ctx)
 

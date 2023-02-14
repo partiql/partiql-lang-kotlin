@@ -2,6 +2,7 @@ package org.partiql.ir.rex.visitor
 
 import org.partiql.ir.rex.Rex
 import org.partiql.ir.rex.RexNode
+import org.partiql.ir.rex.StructPart
 
 public interface RexVisitor<R, C> {
   public fun visit(node: RexNode, ctx: C): R
@@ -22,7 +23,13 @@ public interface RexVisitor<R, C> {
 
   public fun visitRexLit(node: Rex.Lit, ctx: C): R
 
-  public fun visitRexLitCollection(node: Rex.Lit.Collection, ctx: C): R
+  public fun visitRexCollection(node: Rex.Collection, ctx: C): R
 
-  public fun visitRexLitScalar(node: Rex.Lit.Scalar, ctx: C): R
+  public fun visitRexStruct(node: Rex.Struct, ctx: C): R
+
+  public fun visitStructPart(node: StructPart, ctx: C): R
+
+  public fun visitStructPartFields(node: StructPart.Fields, ctx: C): R
+
+  public fun visitStructPartField(node: StructPart.Field, ctx: C): R
 }
