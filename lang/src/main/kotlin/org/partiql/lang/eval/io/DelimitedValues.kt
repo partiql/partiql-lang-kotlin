@@ -50,19 +50,10 @@ object DelimitedValues {
     enum class ConversionMode {
         /** Attempt to parse each value as a scalar, and fall back to string. */
         AUTO {
-            @Deprecated("[ExprValueFactory] is deprecated. Please use `convert(raw: String): ExprValue` instead")
+            @Deprecated("[ExprValueFactory] is deprecated.", replaceWith = ReplaceWith("convert(raw)"))
             @Suppress("DEPRECATION") // Deprecation of ExprValueFactory.
-            override fun convert(valueFactory: org.partiql.lang.eval.ExprValueFactory, raw: String): ExprValue = try {
-                val converted = valueFactory.ion.singleValue(raw)
-                when (converted) {
-                    is IonInt, is IonFloat, is IonDecimal, is IonTimestamp ->
-                        valueFactory.newFromIonValue(converted)
-                    // if we can't convert the above, we just use the input string as-is
-                    else -> valueFactory.newString(raw)
-                }
-            } catch (e: IonException) {
-                valueFactory.newString(raw)
-            }
+            override fun convert(valueFactory: org.partiql.lang.eval.ExprValueFactory, raw: String): ExprValue =
+                convert(raw)
 
             override fun convert(raw: String): ExprValue = try {
                 val ion = IonSystemBuilder.standard().build()
@@ -78,17 +69,15 @@ object DelimitedValues {
         },
         /** Each field is a string. */
         NONE {
-            @Deprecated(
-                "[ExprValueFactory] is deprecated. Please use `convert(raw: String): ExprValue` instead",
-                replaceWith = ReplaceWith("convert(raw)")
-            )
+            @Deprecated("[ExprValueFactory] is deprecated.", replaceWith = ReplaceWith("convert(raw)"))
             @Suppress("DEPRECATION") // Deprecation of ExprValueFactory.
-            override fun convert(valueFactory: org.partiql.lang.eval.ExprValueFactory, raw: String): ExprValue = valueFactory.newString(raw)
+            override fun convert(valueFactory: org.partiql.lang.eval.ExprValueFactory, raw: String): ExprValue =
+                convert(raw)
 
             override fun convert(raw: String): ExprValue = ExprValue.newString(raw)
         };
 
-        @Deprecated("[ExprValueFactory] is deprecated. Please use `convert(raw: String): ExprValue` instead")
+        @Deprecated("[ExprValueFactory] is deprecated.", replaceWith = ReplaceWith("convert(raw)"))
         @Suppress("DEPRECATION") // Deprecation of ExprValueFactory.
         abstract fun convert(valueFactory: org.partiql.lang.eval.ExprValueFactory, raw: String): ExprValue
 
