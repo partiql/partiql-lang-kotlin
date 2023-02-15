@@ -39,6 +39,7 @@ interface ExprValueFactory {
     companion object {
         /** Returns a standard instance of [ExprValueFactory]. */
         @JvmStatic
+        @Suppress("DEPRECATION") // Deprecation of ExprValueFactory.
         fun standard(ion: IonSystem): ExprValueFactory = ExprValueFactoryImpl(ion)
     }
 
@@ -188,6 +189,7 @@ interface ExprValueFactory {
     fun newFromIonReader(reader: IonReader): ExprValue
 }
 
+@Suppress("DEPRECATION") // Deprecation of ExprValueFactory.
 private class ExprValueFactoryImpl(override val ion: IonSystem) : ExprValueFactory {
 
     companion object {

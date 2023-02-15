@@ -68,7 +68,7 @@ internal class ReadFile(private val ion: IonSystem) : ExprFunction {
             .let { if (escape != null) it.withEscape(escape) else it }
             .let { if (quote != null) it.withQuote(quote) else it }
         val seq = Sequence {
-            DelimitedValues.exprValue(ion, reader, csvFormatWithOptions, conversionModeFor(conversion)).iterator()
+            DelimitedValues.exprValue(reader, csvFormatWithOptions, conversionModeFor(conversion)).iterator()
         }
         ExprValue.newBag(seq)
     }

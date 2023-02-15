@@ -16,7 +16,6 @@ package org.partiql.lang.eval.physical
 
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.eval.ExprValueFactory
 
 /**
  * Contains state needed during query evaluation such as an instance of [EvaluationSession] and an array of [registers]
@@ -42,12 +41,13 @@ class EvaluatorState(
     internal val registers: Array<ExprValue>
 ) {
     @Deprecated("Please use constructor `EvaluatorState(session: EvaluationSession, registers: Array<ExprValue>)` instead")
+    @Suppress("DEPRECATION", "UNUSED_PARAMETER") // Deprecation of ExprValueFactory.
     constructor(
         /** The current [EvaluationSession]. */
         session: EvaluationSession,
 
         /** The current [ExprValueFactory], provided here as a convenience. */
-        valueFactory: ExprValueFactory,
+        valueFactory: org.partiql.lang.eval.ExprValueFactory,
 
         /**
          * An array of registers containing [ExprValue]s needed during query execution.  Generally, there is

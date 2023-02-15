@@ -41,7 +41,7 @@ class DelimitedValuesTest : TestBase() {
         csvFormat: CSVFormat,
         conversionMode: DelimitedValues.ConversionMode
     ): ExprValue =
-        DelimitedValues.exprValue(ion, StringReader(text), csvFormat, conversionMode)
+        DelimitedValues.exprValue(StringReader(text), csvFormat, conversionMode)
 
     private fun assertWrite(
         expectedText: String,

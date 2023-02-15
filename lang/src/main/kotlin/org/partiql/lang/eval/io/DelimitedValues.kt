@@ -29,7 +29,6 @@ import org.apache.commons.csv.CSVPrinter
 import org.partiql.lang.eval.BindingCase
 import org.partiql.lang.eval.BindingName
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.StructOrdering
 import org.partiql.lang.eval.namedValue
 import org.partiql.lang.eval.orderedNames
@@ -51,7 +50,9 @@ object DelimitedValues {
     enum class ConversionMode {
         /** Attempt to parse each value as a scalar, and fall back to string. */
         AUTO {
-            override fun convert(valueFactory: ExprValueFactory, raw: String): ExprValue = try {
+            @Deprecated("[ExprValueFactory] is deprecated. Please use `convert(raw: String): ExprValue` instead")
+            @Suppress("DEPRECATION") // Deprecation of ExprValueFactory.
+            override fun convert(valueFactory: org.partiql.lang.eval.ExprValueFactory, raw: String): ExprValue = try {
                 val converted = valueFactory.ion.singleValue(raw)
                 when (converted) {
                     is IonInt, is IonFloat, is IonDecimal, is IonTimestamp ->
@@ -77,13 +78,16 @@ object DelimitedValues {
         },
         /** Each field is a string. */
         NONE {
-            override fun convert(valueFactory: ExprValueFactory, raw: String): ExprValue = valueFactory.newString(raw)
+            @Deprecated("[ExprValueFactory] is deprecated. Please use `convert(raw: String): ExprValue` instead")
+            @Suppress("DEPRECATION") // Deprecation of ExprValueFactory.
+            override fun convert(valueFactory: org.partiql.lang.eval.ExprValueFactory, raw: String): ExprValue = valueFactory.newString(raw)
 
             override fun convert(raw: String): ExprValue = ExprValue.newString(raw)
         };
 
-        @Deprecated("[ExprValueFactory] is deprecated. Please use `convert(row: String): ExprValue` instead")
-        abstract fun convert(valueFactory: ExprValueFactory, raw: String): ExprValue
+        @Deprecated("[ExprValueFactory] is deprecated. Please use `convert(raw: String): ExprValue` instead")
+        @Suppress("DEPRECATION") // Deprecation of ExprValueFactory.
+        abstract fun convert(valueFactory: org.partiql.lang.eval.ExprValueFactory, raw: String): ExprValue
 
         abstract fun convert(raw: String): ExprValue
     }
@@ -98,7 +102,6 @@ object DelimitedValues {
      */
     @JvmStatic
     fun exprValue(
-        ion: IonSystem,
         input: Reader,
         csvFormat: CSVFormat,
         conversionMode: ConversionMode
