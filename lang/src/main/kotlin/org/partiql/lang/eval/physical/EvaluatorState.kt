@@ -40,7 +40,10 @@ class EvaluatorState(
      */
     internal val registers: Array<ExprValue>
 ) {
-    @Deprecated("Please use constructor `EvaluatorState(session: EvaluationSession, registers: Array<ExprValue>)` instead")
+    @Deprecated(
+        "Please use constructor `EvaluatorState(session: EvaluationSession, registers: Array<ExprValue>)` instead",
+        replaceWith = ReplaceWith("EvaluatorState(session, registers)")
+    )
     @Suppress("DEPRECATION", "UNUSED_PARAMETER") // Deprecation of ExprValueFactory.
     constructor(
         /** The current [EvaluationSession]. */

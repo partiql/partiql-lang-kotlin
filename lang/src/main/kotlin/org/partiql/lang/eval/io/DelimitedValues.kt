@@ -78,7 +78,10 @@ object DelimitedValues {
         },
         /** Each field is a string. */
         NONE {
-            @Deprecated("[ExprValueFactory] is deprecated. Please use `convert(raw: String): ExprValue` instead")
+            @Deprecated(
+                "[ExprValueFactory] is deprecated. Please use `convert(raw: String): ExprValue` instead",
+                replaceWith = ReplaceWith("convert(raw)")
+            )
             @Suppress("DEPRECATION") // Deprecation of ExprValueFactory.
             override fun convert(valueFactory: org.partiql.lang.eval.ExprValueFactory, raw: String): ExprValue = valueFactory.newString(raw)
 
@@ -91,6 +94,19 @@ object DelimitedValues {
 
         abstract fun convert(raw: String): ExprValue
     }
+
+    @JvmStatic
+    @Deprecated(
+        "Deprecated, because of the deprecated [ExprValueFactory] argument.",
+        replaceWith = ReplaceWith("exprValue(input, csvFormat, conversionMode)")
+    )
+    fun exprValue(
+        @Suppress("DEPRECATION", "UNUSED_PARAMETER")
+        valueFactory: org.partiql.lang.eval.ExprValueFactory,
+        input: Reader,
+        csvFormat: CSVFormat,
+        conversionMode: ConversionMode
+    ): ExprValue = exprValue(input, csvFormat, conversionMode)
 
     /**
      * Lazily loads a stream of values from a [Reader] into a sequence backed [ExprValue].
