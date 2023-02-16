@@ -4,9 +4,12 @@ import com.amazon.ionelement.api.MetaContainer
 import com.amazon.ionelement.api.ionInt
 import com.amazon.ionelement.api.ionString
 import org.partiql.lang.domains.PartiqlAst
+import org.partiql.lang.eval.CompileOptions
+import org.partiql.lang.eval.TypedOpBehavior
 import org.partiql.lang.eval.visitors.AggregationVisitorTransform
 import org.partiql.lang.eval.visitors.FromSourceAliasVisitorTransform
 import org.partiql.lang.eval.visitors.OrderBySortSpecVisitorTransform
+import org.partiql.lang.eval.visitors.PartiqlAstSanityValidator
 import org.partiql.lang.eval.visitors.PipelinedVisitorTransform
 import org.partiql.lang.eval.visitors.SelectListItemAliasVisitorTransform
 import org.partiql.lang.eval.visitors.SelectStarVisitorTransform
@@ -30,10 +33,11 @@ object AstToRel {
      * @return
      */
     fun convert(statement: PartiqlAst.Statement): Rel {
-        if (statement !is PartiqlAst.Statement.Query) {
-            unsupported(statement)
+        val ast = statement.normalize()
+        if (ast !is PartiqlAst.Statement.Query) {
+            unsupported(ast)
         }
-        val plan = when (val query = normalize(statement).expr) {
+        val plan = when (val query = ast.expr) {
             is PartiqlAst.Expr.Select -> RelConverter.convert(query)
             else -> {
                 // This is incorrect for now, we don't want to coerce into a bag
@@ -63,13 +67,15 @@ object AstToRel {
     }
 
     /**
-     * Normalizes a query AST
+     * Normalizes a statement AST node. Copied from EvaluatingCompiler, and include the validation.
      *
      * Notes:
      *  - AST normalization assumes operating on statement rather than a query statement, but the normalization
-     *    only changes the SFW nodes. There's room to simplify here.
+     *    only changes the SFW nodes. There's room to simplify here. Also, you have to enter the transform at
+     *    `transformStatement` or nothing happens. I initially had `transformQuery` but that doesn't work because
+     *    the pipelinedVisitorTransform traversal can only be entered on statement.
      */
-    private fun normalize(query: PartiqlAst.Statement.Query): PartiqlAst.Statement.Query {
+    private fun PartiqlAst.Statement.normalize(): PartiqlAst.Statement {
         val transform = PipelinedVisitorTransform(
             SelectListItemAliasVisitorTransform(),
             FromSourceAliasVisitorTransform(),
@@ -77,7 +83,12 @@ object AstToRel {
             AggregationVisitorTransform(),
             SelectStarVisitorTransform()
         )
-        return transform.transformStatementQuery(query) as PartiqlAst.Statement.Query
+        // normalize
+        val ast = transform.transformStatement(this)
+        // validate
+        val validatorCompileOptions = CompileOptions.build { typedOpBehavior(TypedOpBehavior.HONOR_PARAMETERS) }
+        PartiqlAstSanityValidator().validate(this, validatorCompileOptions)
+        return ast
     }
 
     /**
@@ -291,7 +302,7 @@ object AstToRel {
             is PartiqlAst.Projection.ProjectList -> convertProjectList(input, projection)
             is PartiqlAst.Projection.ProjectPivot -> convertProjectPivot(input, projection)
             is PartiqlAst.Projection.ProjectStar -> error("AST not normalized, found project star")
-            is PartiqlAst.Projection.ProjectValue -> TODO()
+            is PartiqlAst.Projection.ProjectValue -> convertProjectValue(input, projection)
         }
 
         /**
@@ -301,9 +312,11 @@ object AstToRel {
          * @param projection
          * @return
          */
-        private fun convertProjectList(input: Rel, projection: PartiqlAst.Projection.ProjectList): Rel {
-            unsupported(projection)
-        }
+        private fun convertProjectList(input: Rel, projection: PartiqlAst.Projection.ProjectList) = Rel.Project(
+            common = COMMON,
+            input = input,
+            bindings = projection.projectItems.bindings()
+        )
 
         /**
          * TODO model PIVOT
@@ -315,7 +328,7 @@ object AstToRel {
         /**
          * TODO model PROJECT VALUE
          */
-        private fun convertProjectValue(input: Rel, projection: PartiqlAst.Projection.ProjectList): Rel {
+        private fun convertProjectValue(input: Rel, projection: PartiqlAst.Projection.ProjectValue): Rel {
             unsupported(projection)
         }
 
@@ -383,6 +396,25 @@ object AstToRel {
                     error("not normalized, scan is missing an alias")
                 }
                 listOf(asAlias!!.text)
+            }
+        }
+
+        /**
+         * Helper to convert ProjectItems to bindings
+         *
+         * As of now, bindings is just a list, not a tuple.
+         * Binding and Tuple/Struct will be consolidated.
+         */
+        private fun List<PartiqlAst.ProjectItem>.bindings() = map {
+            when (it) {
+                is PartiqlAst.ProjectItem.ProjectAll -> Binding(
+                    name = "*",
+                    rex = RexConverter.convert(it.expr),
+                )
+                is PartiqlAst.ProjectItem.ProjectExpr -> Binding(
+                    name = it.asAlias?.text ?: error("not normalized"),
+                    rex = RexConverter.convert(it.expr),
+                )
             }
         }
 

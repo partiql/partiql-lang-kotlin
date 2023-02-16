@@ -101,12 +101,12 @@ public class Plan private constructor() {
     public fun relProject(
       common: Common? = null,
       input: Rel? = null,
-      rexs: MutableList<Binding> = mutableListOf(),
+      bindings: MutableList<Binding> = mutableListOf(),
       block: _RelProject.() -> Unit = {}
     ): Rel.Project {
-      val b = _RelProject(common, input, rexs)
+      val b = _RelProject(common, input, bindings)
       b.block()
-      return factory.relProject(common = b.common!!, input = b.input!!, rexs = b.rexs)
+      return factory.relProject(common = b.common!!, input = b.input!!, bindings = b.bindings)
     }
 
     public fun relJoin(
@@ -309,7 +309,7 @@ public class Plan private constructor() {
     public class _RelProject(
       public var common: Common? = null,
       public var input: Rel? = null,
-      public var rexs: MutableList<Binding> = mutableListOf()
+      public var bindings: MutableList<Binding> = mutableListOf()
     )
 
     public class _RelJoin(

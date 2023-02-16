@@ -61,7 +61,7 @@ rel::[
   project::{
     common: common,
     input: rel,
-    rexs: list::[binding]
+    bindings: list::[binding]
   },
   // FROM x, y / FROM x JOIN y
   join::{
