@@ -17,7 +17,6 @@ package org.partiql.lang.errors
 import org.junit.Before
 import org.junit.Test
 import org.partiql.lang.TestBase
-import org.partiql.lang.syntax.TokenType
 
 class PropertyValueMapTest : TestBase() {
 
@@ -28,7 +27,6 @@ class PropertyValueMapTest : TestBase() {
     @Before
     fun setUp() {
         onlyColumnValueMap[Property.COLUMN_NUMBER] = 11L
-        oneOfEachType[Property.EXPECTED_TOKEN_TYPE] = TokenType.COMMA
         oneOfEachType[Property.KEYWORD] = "test"
         oneOfEachType[Property.EXPECTED_ARITY_MAX] = 1
         oneOfEachType[Property.TOKEN_VALUE] = ion.newEmptyList()
@@ -45,7 +43,6 @@ class PropertyValueMapTest : TestBase() {
 
     @Test fun getValues() {
         assertEquals(11L, oneOfEachType[Property.COLUMN_NUMBER]?.longValue())
-        assertEquals(TokenType.COMMA, oneOfEachType[Property.EXPECTED_TOKEN_TYPE]?.tokenTypeValue())
         assertEquals("test", oneOfEachType[Property.KEYWORD]?.stringValue())
         assertEquals(1, oneOfEachType[Property.EXPECTED_ARITY_MAX]?.integerValue())
         assertEquals(11L, oneOfEachType[Property.COLUMN_NUMBER]?.longValue())
