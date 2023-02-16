@@ -505,7 +505,7 @@ internal class EvaluatingCompiler(
                     }
 
                     TypingMode.PERMISSIVE -> {
-                        val biggestIntegerType = staticTypes.filterIsInstance<IntType>().maxBy {
+                        val biggestIntegerType = staticTypes.filterIsInstance<IntType>().maxByOrNull {
                             it.rangeConstraint.numBytes
                         }
                         when (biggestIntegerType) {
