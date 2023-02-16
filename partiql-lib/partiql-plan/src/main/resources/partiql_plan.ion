@@ -4,10 +4,9 @@
 
 imports::{
   kotlin: [
-    type::'org.partiql.lang.types.StaticType',
-    rex::'org.partiql.ir.rex.RexNode',
-    agg::'org.partiql.ir.rex.Rex.Agg',
     any::'kotlin.Any',
+    ion::'com.amazon.ionelement.api.IonElement',
+    type::'org.partiql.lang.types.StaticType',
   ],
 }
 
@@ -22,20 +21,15 @@ property::[
   ORDERED,
 ]
 
+// Operators that return binding collections
 rel::[
-  // FROM
+  // FROM <rex>
   scan::{
     common: common,
-    value: rex,
+    rex: rex,
     alias: optional::string,
     at: optional::string,
     by: optional::string,
-  },
-  // FROM
-  cross::{
-    common: common,
-    lhs: rel,
-    rhs: rel,
   },
   // WHERE, HAVING
   filter::{
@@ -69,7 +63,7 @@ rel::[
     input: rel,
     rexs: list::[binding]
   },
-  // JOIN
+  // FROM x, y / FROM x JOIN y
   join::{
     common: common,
     lhs: rel,
@@ -84,15 +78,81 @@ rel::[
     calls: list::[binding],
     groups: list::[binding],
     strategy: [ FULL, PARTIAL ]
-  }
+  },
 ]
 
+// Operators that return any value
+rex::[
+  id::{
+    name: string,
+  },
+  path::{
+    root: rex,
+    // TODO
+  },
+  unary::{
+    rex: rex,
+    op: [ NOT, POS, NEG, ],
+  },
+  binary::{
+    lhs: rex,
+    rhs: rex,
+    op: [
+      PLUS, MINUS, TIMES, DIV, MODULO, CONCAT,
+      AND, OR,
+      EQ, NEQ, GTE, GT, LT, LTE,
+    ],
+  },
+  call::{
+    id: string,
+    args: list::[rex],
+  },
+  agg::{
+    id: string,
+    args: list::[rex],
+    modifier: [ ALL, DISTINCT ],
+    // filter: rex — later SQL feature, not sure if we'll support this
+  },
+  lit::{
+    value: ion,
+  },
+  collection::{
+    type: [ LIST, BAG, SEXP ],
+    values: list::[rex],
+  },
+  struct::{
+    fields: list::[struct_part],
+  },
+  subquery::[
+    tuple::{
+      rel: rel,
+    },
+    scalar::{
+      rel: rel,
+    },
+  ],
+]
+
+// Same as partiql.ion struct / struct_part
+// Consider consolidating Rel Binding with struct_part.field
+struct_part::[
+  fields::{
+    rex: rex,
+  },
+  field::{
+    name: rex,
+    rex: rex,
+  },
+]
+
+// Consider defining in `_` once supported
 sort_spec::{
   rex: rex,
   dir: [ ASC, DESC ],
   nulls: [ FIRST, LAST ],
 }
 
+// Representation of `rex AS name` in projections
 binding::{
   name: string,
   rex: rex,

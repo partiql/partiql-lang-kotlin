@@ -56,6 +56,18 @@ private const val PROMPT_2 = "   | "
 private const val BAR_1 = "===' "
 private const val BAR_2 = "--- "
 private const val WELCOME_MSG = "Welcome to the PartiQL shell!"
+private const val DEBUG_MSG = """    
+■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+
+    ██████╗ ███████╗██████╗ ██╗   ██╗ ██████╗ 
+    ██╔══██╗██╔════╝██╔══██╗██║   ██║██╔════╝ 
+    ██║  ██║█████╗  ██████╔╝██║   ██║██║  ███╗
+    ██║  ██║██╔══╝  ██╔══██╗██║   ██║██║   ██║
+    ██████╔╝███████╗██████╔╝╚██████╔╝╚██████╔╝
+    ╚═════╝ ╚══════╝╚═════╝  ╚═════╝  ╚═════╝ 
+    
+■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+"""
 
 private const val HELP = """
 !add_to_global_env  Adds a value to the global environment
@@ -137,6 +149,11 @@ internal class Shell(
         out.info(WELCOME_MSG)
         out.info("Typing mode: ${compiler.options.typingMode.name}")
         out.info("Using version: ${retrievePartiQLVersionAndHash()}")
+        if (compiler is AbstractPipeline.PipelineDebug) {
+            out.println("\n\n")
+            out.success(DEBUG_MSG)
+            out.println("\n\n")
+        }
 
         while (!exiting.get()) {
             val line: String = try {

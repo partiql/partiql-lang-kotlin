@@ -21,6 +21,7 @@ plugins {
 dependencies {
     implementation(project(":lang"))
     implementation(project(":extensions"))
+    implementation(project(":partiql-lib:partiql-plan"))
     implementation(Deps.csv)
     implementation(Deps.guava)
     implementation(Deps.jansi)
