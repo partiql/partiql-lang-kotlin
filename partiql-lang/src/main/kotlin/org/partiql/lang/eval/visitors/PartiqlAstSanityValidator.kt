@@ -44,11 +44,11 @@ import org.partiql.pig.runtime.LongPrimitive
  * - A visitor transform pass (internal or external)
  *
  */
-internal class PartiqlAstSanityValidator : PartiqlAst.Visitor() {
+class PartiqlAstSanityValidator : PartiqlAst.Visitor() {
 
     private var compileOptions = CompileOptions.standard()
 
-    internal fun validate(statement: PartiqlAst.Statement, compileOptions: CompileOptions = CompileOptions.standard()) {
+    fun validate(statement: PartiqlAst.Statement, compileOptions: CompileOptions = CompileOptions.standard()) {
         this.compileOptions = compileOptions
         this.walkStatement(statement)
     }
