@@ -29,20 +29,12 @@ Undecided if we will even generate the internal representation, but the serializ
 > Naming is bad right now, so I'm just going with Calcite's Rex and Rel for the expression and relation operator domains
 > respectively. They are deliberately separated.
 ```shell
-# running from partiql-rel/
+# running from partiql-plan/
 $HOME/Desktop/sprout/bin/sprout generate kotlin\
- -o ./rel\
- -p org.partiql.ir.rel\
- -u Rel\
+ -o ./ir\
+ -p org.partiql.plan.ir\
+ -u Plan\
  -m DATA\
  --poems visitor --poems builder \
- ./src/main/resources/partiql_rel.ion
- 
-$HOME/Desktop/sprout/bin/sprout generate kotlin\
- -o ./rex\
- -p org.partiql.ir.rex\
- -u Rex\
- -m DATA\
- --poems visitor --poems builder \
- ./src/main/resources/partiql_rex.ion
+ ./src/main/resources/partiql_plan.ion
 ```

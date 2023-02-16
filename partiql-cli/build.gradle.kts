@@ -21,6 +21,7 @@ plugins {
 dependencies {
     implementation(project(":partiql-lang"))
     implementation(project(":partiql-types"))
+    implementation(project(":partiql-lib:partiql-plan"))
     implementation(Deps.csv)
     implementation(Deps.awsSdkBom)
     implementation(Deps.awsSdkDynamodb)

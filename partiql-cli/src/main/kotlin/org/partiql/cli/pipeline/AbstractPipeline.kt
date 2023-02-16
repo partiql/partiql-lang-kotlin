@@ -16,8 +16,13 @@ package org.partiql.cli.pipeline
 
 import com.amazon.ion.IonSystem
 import com.amazon.ion.system.IonSystemBuilder
+import com.amazon.ionelement.api.ionInt
+import com.amazon.ionelement.api.ionString
+import com.amazon.ionelement.api.ionStructOf
+import com.amazon.ionelement.api.toIonValue
 import org.partiql.annotations.ExperimentalPartiQLCompilerPipeline
 import org.partiql.cli.functions.QueryDDB
+import org.partiql.cli.Debug
 import org.partiql.cli.functions.ReadFile
 import org.partiql.cli.functions.WriteFile
 import org.partiql.lang.CompilerPipeline
@@ -51,6 +56,7 @@ internal sealed class AbstractPipeline(open val options: PipelineOptions) {
         internal fun create(options: PipelineOptions): AbstractPipeline = when (options.pipeline) {
             PipelineType.STANDARD -> PipelineStandard(options)
             PipelineType.EXPERIMENTAL -> PipelineExperimental(options)
+            PipelineType.DEBUG -> PipelineDebug(options)
         }
         internal fun convertExprValue(value: ExprValue): PartiQLResult {
             return PartiQLResult.Value(value)
@@ -99,7 +105,28 @@ internal sealed class AbstractPipeline(open val options: PipelineOptions) {
 
     internal enum class PipelineType {
         STANDARD,
-        EXPERIMENTAL
+        EXPERIMENTAL,
+        DEBUG,
+    }
+
+    /**
+     * Wrap the Main.kt debug function in a pipeline
+     */
+    internal class PipelineDebug(options: PipelineOptions) : AbstractPipeline(options) {
+
+        override fun compile(input: String, session: EvaluationSession): PartiQLResult {
+            val (message, status) = try {
+                Debug.action(input, session)
+                "ok" to 0L
+            } catch (e: Exception) {
+                e.stackTraceToString() to 1L
+            }
+            val value = ionStructOf(
+                "message" to ionString(message),
+                "status" to ionInt(status),
+            )
+            return PartiQLResult.Value(ExprValue.of(value.toIonValue(options.ion)))
+        }
     }
 
     /**

@@ -615,7 +615,7 @@ private class CallAggregationsProjectionReplacer(var level: Int = 0) : VisitorTr
  *
  * As an example, this transforms:
  * ```
- * SELECT g, SUM(t.b) AS sumB
+ * SELECT g, h, SUM(t.b) AS sumB
  * FROM t
  * GROUP BY t.a AS g GROUP AS h
  * ```
@@ -623,9 +623,9 @@ private class CallAggregationsProjectionReplacer(var level: Int = 0) : VisitorTr
  * into:
  *
  * ```
- * SELECT g, t.b, h, $__partiql_aggregation_0 AS sumB
+ * SELECT g, h, $__partiql_aggregation_0 AS sumB
  * FROM t
- * GROUP BY t.a AS g, t.b GROUP AS h
+ * GROUP BY t.a AS g GROUP AS h
  * ```
  *
  */
