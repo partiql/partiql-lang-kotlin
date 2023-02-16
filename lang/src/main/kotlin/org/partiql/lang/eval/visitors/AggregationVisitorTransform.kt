@@ -85,7 +85,7 @@ import org.partiql.lang.eval.sourceLocationMeta
  * ```
  *
  */
-internal class AggregationVisitorTransform(
+class AggregationVisitorTransform(
     private val contextStack: MutableList<VisitorContext> = mutableListOf()
 ) : VisitorTransformBase() {
 
@@ -348,13 +348,13 @@ internal class AggregationVisitorTransform(
         }
     }
 
-    internal data class VisitorContext(
+    data class VisitorContext(
         val groupKeys: List<GroupKeyInformation>,
         val groupAsAlias: String?,
         val hasLogicalAggregate: Boolean
     )
 
-    internal data class GroupKeyInformation(
+    data class GroupKeyInformation(
         val groupKey: PartiqlAst.GroupKey,
         val represents: PartiqlAst.Expr,
         val publicAlias: String,

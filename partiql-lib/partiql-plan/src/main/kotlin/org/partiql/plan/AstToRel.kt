@@ -3,19 +3,25 @@ package org.partiql.plan
 import com.amazon.ionelement.api.MetaContainer
 import com.amazon.ionelement.api.ionInt
 import com.amazon.ionelement.api.ionString
-import org.partiql.ir.rel.Binding
-import org.partiql.ir.rel.Common
-import org.partiql.ir.rel.Rel
-import org.partiql.ir.rel.SortSpec
-import org.partiql.ir.rex.Rex
-import org.partiql.ir.rex.StructPart
 import org.partiql.lang.domains.PartiqlAst
+import org.partiql.lang.eval.visitors.AggregationVisitorTransform
+import org.partiql.lang.eval.visitors.FromSourceAliasVisitorTransform
+import org.partiql.lang.eval.visitors.OrderBySortSpecVisitorTransform
+import org.partiql.lang.eval.visitors.PipelinedVisitorTransform
+import org.partiql.lang.eval.visitors.SelectListItemAliasVisitorTransform
+import org.partiql.lang.eval.visitors.SelectStarVisitorTransform
 import org.partiql.lang.eval.visitors.VisitorTransformBase
+import org.partiql.plan.ir.Binding
+import org.partiql.plan.ir.Common
+import org.partiql.plan.ir.Rel
+import org.partiql.plan.ir.Rex
+import org.partiql.plan.ir.SortSpec
+import org.partiql.plan.ir.StructPart
 
 /**
  * Experimental PartiqlAst.Statement to [Rel] transformation.
  */
-internal object AstToRel {
+object AstToRel {
 
     /**
      * Entry point for PartiqlAst to Rel translation
@@ -27,17 +33,18 @@ internal object AstToRel {
         if (statement !is PartiqlAst.Statement.Query) {
             unsupported(statement)
         }
-        return when (val node = statement.expr) {
-            is PartiqlAst.Expr.Select -> RelConverter.convert(node)
+        val plan = when (val query = normalize(statement).expr) {
+            is PartiqlAst.Expr.Select -> RelConverter.convert(query)
             else -> {
-                // This is incorrect for now
-                val rex = RexConverter.convert(node)
+                // This is incorrect for now, we don't want to coerce into a bag
+                val rex = RexConverter.convert(query)
                 Rel.Scan(COMMON, rex, alias = null, at = null, by = null)
             }
         }
+        return plan
     }
 
-    //--- Internal ---------------------------------------------
+    // --- Internal ---------------------------------------------
 
     /**
      * As of now, the COMMON property of relation operators is under development, so just use empty for now
@@ -56,6 +63,24 @@ internal object AstToRel {
     }
 
     /**
+     * Normalizes a query AST
+     *
+     * Notes:
+     *  - AST normalization assumes operating on statement rather than a query statement, but the normalization
+     *    only changes the SFW nodes. There's room to simplify here.
+     */
+    private fun normalize(query: PartiqlAst.Statement.Query): PartiqlAst.Statement.Query {
+        val transform = PipelinedVisitorTransform(
+            SelectListItemAliasVisitorTransform(),
+            FromSourceAliasVisitorTransform(),
+            OrderBySortSpecVisitorTransform(),
+            AggregationVisitorTransform(),
+            SelectStarVisitorTransform()
+        )
+        return transform.transformStatementQuery(query) as PartiqlAst.Statement.Query
+    }
+
+    /**
      * Lexically scoped state for use in translating an individual SELECT statement.
      * Calcite uses a similar object called Blackboard.
      */
@@ -68,7 +93,7 @@ internal object AstToRel {
         }
 
         // synthetic binding name counter
-        private var i = 0;
+        private var i = 0
 
         // generate a synthetic binding name
         private fun nextBindingName(): String = "\$__v${i++}"
@@ -92,17 +117,53 @@ internal object AstToRel {
             rel = convertHaving(rel, sel.having)
             rel = convertOrderBy(rel, sel.order)
             rel = convertFetch(rel, sel.limit, sel.offset)
+            rel = convertProject(rel, sel.project)
             return rel
         }
 
         /**
-         * TODO
+         * Appends the appropriate [Rel] operator for the given FROM source
+         *
+         * Notes:
+         *  - TODO model PIVOT
          */
         private fun convertFrom(from: PartiqlAst.FromSource): Rel = when (from) {
-            is PartiqlAst.FromSource.Join -> unsupported(from)
-            is PartiqlAst.FromSource.Scan -> unsupported(from)
+            is PartiqlAst.FromSource.Join -> convertJoin(from)
+            is PartiqlAst.FromSource.Scan -> convertScan(from)
             is PartiqlAst.FromSource.Unpivot -> unsupported(from)
         }
+
+        /**
+         * Appends [Rel.Join] where the left and right sides are converted FROM sources
+         */
+        private fun convertJoin(join: PartiqlAst.FromSource.Join): Rel {
+            val lhs = convertFrom(join.left)
+            val rhs = convertFrom(join.right)
+            val condition = if (join.predicate != null) RexConverter.convert(join.predicate!!) else null
+            return Rel.Join(
+                common = COMMON,
+                lhs = lhs,
+                rhs = rhs,
+                condition = condition,
+                type = when (join.type) {
+                    is PartiqlAst.JoinType.Full -> Rel.Join.Type.FULL
+                    is PartiqlAst.JoinType.Inner -> Rel.Join.Type.INNER
+                    is PartiqlAst.JoinType.Left -> Rel.Join.Type.LEFT
+                    is PartiqlAst.JoinType.Right -> Rel.Join.Type.RIGHT
+                }
+            )
+        }
+
+        /**
+         * Appends [Rel.Scan] which takes no input relational expression
+         */
+        private fun convertScan(scan: PartiqlAst.FromSource.Scan) = Rel.Scan(
+            common = COMMON,
+            rex = RexConverter.convert(scan.expr),
+            alias = scan.asAlias?.text,
+            at = scan.atAlias?.text,
+            by = scan.byAlias?.text,
+        )
 
         /**
          * Append [Rel.Filter] only if a WHERE condition exists
@@ -130,7 +191,7 @@ internal object AstToRel {
         ): Pair<PartiqlAst.Expr.Select, Rel> {
 
             // Rewrite and extract all aggregations in the SELECT clause
-            val (sel, aggregations) = AggregationTransform().apply(select)
+            val (sel, aggregations) = AggregationTransform.apply(select)
 
             // No aggregation planning required for GROUP BY
             if (aggregations.isEmpty()) {
@@ -226,6 +287,38 @@ internal object AstToRel {
             )
         }
 
+        private fun convertProject(input: Rel, projection: PartiqlAst.Projection) = when (projection) {
+            is PartiqlAst.Projection.ProjectList -> convertProjectList(input, projection)
+            is PartiqlAst.Projection.ProjectPivot -> convertProjectPivot(input, projection)
+            is PartiqlAst.Projection.ProjectStar -> error("AST not normalized, found project star")
+            is PartiqlAst.Projection.ProjectValue -> TODO()
+        }
+
+        /**
+         * Appends a [Rel.Project] which projects the result of each binding rex into its binding name.
+         *
+         * @param input
+         * @param projection
+         * @return
+         */
+        private fun convertProjectList(input: Rel, projection: PartiqlAst.Projection.ProjectList): Rel {
+            unsupported(projection)
+        }
+
+        /**
+         * TODO model PIVOT
+         */
+        private fun convertProjectPivot(input: Rel, projection: PartiqlAst.Projection.ProjectPivot): Rel {
+            unsupported(projection)
+        }
+
+        /**
+         * TODO model PROJECT VALUE
+         */
+        private fun convertProjectValue(input: Rel, projection: PartiqlAst.Projection.ProjectList): Rel {
+            unsupported(projection)
+        }
+
         /**
          * Converts Ast.SortSpec to SortSpec.
          *
@@ -250,7 +343,7 @@ internal object AstToRel {
         /**
          * Converts a GROUP AS X clause to a binding of the form:
          * ```
-         * { 'X': Rex.Agg.group_as({ 'a_0': e_0, ..., 'a_n': e_n }) }
+         * { 'X': group_as({ 'a_0': e_0, ..., 'a_n': e_n }) }
          * ```
          *
          * Notes:
@@ -313,8 +406,11 @@ internal object AstToRel {
          * ```
          *
          * Where $__v0 is the binding name of SUM(t.b) in the aggregation output
+         *
+         * Inner object class to have access to current SELECT-FROM-WHERE converter state
          */
-        private inner class AggregationTransform : VisitorTransformBase() {
+        @Suppress("PrivatePropertyName")
+        private val AggregationTransform = object : VisitorTransformBase() {
 
             private var level = 0
             private var aggregations = mutableListOf<Binding>()
@@ -377,17 +473,26 @@ internal object AstToRel {
     /**
      * Some workarounds for transforming a PIG tree without having to create another visitor:
      * - Using the VisitorFold with Ctx struct to create a parameterized return and scoped arguments/context
-     * - Overriding walks rather than visits to control traversal
-     * - Visit methods are not implemented because the walk methods are effectively the same
-     * - Walks have if/else blocks generated for sum types so in the absence of OO style, we can use it as if it were "accept"
+     * - Using walks to control traversal, also walks have generated if/else blocks for sum types so its more useful
      */
     @Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE")
     private object RexConverter : PartiqlAst.VisitorFold<Ctx>() {
 
         /**
-         * read as `val rex = node.accept(visitor = RexVisitor.INSTANCE, args = emptyList())`
+         * Read as `val rex = node.accept(visitor = RexVisitor.INSTANCE, args = emptyList())`
+         * Only works because RexConverter errs for all non Expr AST nodes, and Expr is one sum type.
          */
         fun convert(node: PartiqlAst.Expr) = RexConverter.walkExpr(node, Ctx(node)).rex!!
+
+        /**
+         * List version of hacked "accept"
+         */
+        fun convert(nodes: List<PartiqlAst.Expr>) = nodes.map { convert(it) }
+
+        /**
+         * Helper so the visitor "body" looks like it has Rex as the return value
+         */
+        fun visit(node: PartiqlAst.PartiqlAstNode, block: () -> Rex) = Ctx(node, block())
 
         /**
          * !! DEFAULT VISIT !!
@@ -398,5 +503,218 @@ internal object AstToRel {
          * is coming from which is why the current node is stuffed into Ctx
          */
         override fun walkMetas(node: MetaContainer, ctx: Ctx) = unsupported(ctx.node)
+
+        override fun walkExprMissing(node: PartiqlAst.Expr.Missing, accumulator: Ctx): Ctx {
+            TODO()
+        }
+
+        override fun walkExprLit(node: PartiqlAst.Expr.Lit, accumulator: Ctx) = visit(node) { Rex.Lit(node.value) }
+
+        // add case sensitivity and scope
+        override fun walkExprId(node: PartiqlAst.Expr.Id, accumulator: Ctx) = visit(node) { Rex.Id(node.name.text) }
+
+        override fun walkExprNot(node: PartiqlAst.Expr.Not, accumulator: Ctx) = node.unary(node.expr, Rex.Unary.Op.NOT)
+
+        override fun walkExprPos(node: PartiqlAst.Expr.Pos, accumulator: Ctx) = node.unary(node.expr, Rex.Unary.Op.POS)
+
+        override fun walkExprNeg(node: PartiqlAst.Expr.Neg, accumulator: Ctx) = node.unary(node.expr, Rex.Unary.Op.NEG)
+
+        override fun walkExprPlus(node: PartiqlAst.Expr.Plus, accumulator: Ctx) = visit(node) {
+            Rex.Binary(
+                lhs = convert(node.operands[0]),
+                rhs = convert(node.operands[1]),
+                op = Rex.Binary.Op.PLUS,
+            )
+        }
+
+        override fun walkExprMinus(node: PartiqlAst.Expr.Minus, accumulator: Ctx) = visit(node) {
+            Rex.Binary(
+                lhs = convert(node.operands[0]),
+                rhs = convert(node.operands[1]),
+                op = Rex.Binary.Op.MINUS,
+            )
+        }
+
+        override fun walkExprTimes(node: PartiqlAst.Expr.Times, accumulator: Ctx) = visit(node) {
+            Rex.Binary(
+                lhs = convert(node.operands[0]),
+                rhs = convert(node.operands[1]),
+                op = Rex.Binary.Op.TIMES,
+            )
+        }
+
+        override fun walkExprDivide(node: PartiqlAst.Expr.Divide, accumulator: Ctx) = visit(node) {
+            Rex.Binary(
+                lhs = convert(node.operands[0]),
+                rhs = convert(node.operands[1]),
+                op = Rex.Binary.Op.DIV,
+            )
+        }
+
+        override fun walkExprModulo(node: PartiqlAst.Expr.Modulo, accumulator: Ctx) = visit(node) {
+            Rex.Binary(
+                lhs = convert(node.operands[0]),
+                rhs = convert(node.operands[1]),
+                op = Rex.Binary.Op.MODULO,
+            )
+        }
+
+        override fun walkExprConcat(node: PartiqlAst.Expr.Concat, accumulator: Ctx) = visit(node) {
+            Rex.Binary(
+                lhs = convert(node.operands[0]),
+                rhs = convert(node.operands[1]),
+                op = Rex.Binary.Op.CONCAT,
+            )
+        }
+
+        override fun walkExprAnd(node: PartiqlAst.Expr.And, accumulator: Ctx) = visit(node) {
+            Rex.Binary(
+                lhs = convert(node.operands[0]),
+                rhs = convert(node.operands[1]),
+                op = Rex.Binary.Op.AND,
+            )
+        }
+
+        override fun walkExprOr(node: PartiqlAst.Expr.Or, accumulator: Ctx) = visit(node) {
+            Rex.Binary(
+                lhs = convert(node.operands[0]),
+                rhs = convert(node.operands[1]),
+                op = Rex.Binary.Op.OR,
+            )
+        }
+
+        override fun walkExprEq(node: PartiqlAst.Expr.Eq, accumulator: Ctx) = visit(node) {
+            Rex.Binary(
+                lhs = convert(node.operands[0]),
+                rhs = convert(node.operands[1]),
+                op = Rex.Binary.Op.EQ,
+            )
+        }
+
+        override fun walkExprNe(node: PartiqlAst.Expr.Ne, accumulator: Ctx) = visit(node) {
+            Rex.Binary(
+                lhs = convert(node.operands[0]),
+                rhs = convert(node.operands[1]),
+                op = Rex.Binary.Op.NEQ,
+            )
+        }
+
+        override fun walkExprGt(node: PartiqlAst.Expr.Gt, accumulator: Ctx) = visit(node) {
+            Rex.Binary(
+                lhs = convert(node.operands[0]),
+                rhs = convert(node.operands[1]),
+                op = Rex.Binary.Op.GT,
+            )
+        }
+
+        override fun walkExprGte(node: PartiqlAst.Expr.Gte, accumulator: Ctx) = visit(node) {
+            Rex.Binary(
+                lhs = convert(node.operands[0]),
+                rhs = convert(node.operands[1]),
+                op = Rex.Binary.Op.GTE,
+            )
+        }
+
+        override fun walkExprLt(node: PartiqlAst.Expr.Lt, accumulator: Ctx) = visit(node) {
+            Rex.Binary(
+                lhs = convert(node.operands[0]),
+                rhs = convert(node.operands[1]),
+                op = Rex.Binary.Op.LT,
+            )
+        }
+
+        override fun walkExprLte(node: PartiqlAst.Expr.Lte, accumulator: Ctx) = visit(node) {
+            Rex.Binary(
+                lhs = convert(node.operands[0]),
+                rhs = convert(node.operands[1]),
+                op = Rex.Binary.Op.LTE,
+            )
+        }
+
+        override fun walkExprLike(node: PartiqlAst.Expr.Like, accumulator: Ctx) = visit(node) {
+            when (node.escape) {
+                null -> Rex.Call(
+                    id = "like",
+                    args = listOf(convert(node.value), convert(node.pattern))
+                )
+                else -> Rex.Call(
+                    id = "like_escape",
+                    args = listOf(convert(node.value), convert(node.pattern), convert(node.escape!!))
+                )
+            }
+        }
+
+        override fun walkExprBetween(node: PartiqlAst.Expr.Between, accumulator: Ctx) = visit(node) {
+            Rex.Call(
+                id = "between",
+                args = listOf(convert(node.value), convert(node.from), convert(node.to)),
+            )
+        }
+
+        override fun walkExprInCollection(node: PartiqlAst.Expr.InCollection, accumulator: Ctx) = visit(node) {
+            Rex.Call(
+                id = "in_collection",
+                args = convert(node.operands),
+            )
+        }
+
+        override fun walkExprStruct(node: PartiqlAst.Expr.Struct, accumulator: Ctx): Ctx {
+            return super.walkExprStruct(node, accumulator)
+        }
+
+        override fun walkExprBag(node: PartiqlAst.Expr.Bag, accumulator: Ctx) = visit(node) {
+            Rex.Collection(
+                type = Rex.Collection.Type.BAG,
+                values = convert(node.values),
+            )
+        }
+
+        override fun walkExprList(node: PartiqlAst.Expr.List, accumulator: Ctx) = visit(node) {
+            Rex.Collection(
+                type = Rex.Collection.Type.LIST,
+                values = convert(node.values),
+            )
+        }
+
+        override fun walkExprCall(node: PartiqlAst.Expr.Call, accumulator: Ctx) = visit(node) {
+            Rex.Call(
+                id = node.funcName.text,
+                args = convert(node.args),
+            )
+        }
+
+        override fun walkExprCallAgg(node: PartiqlAst.Expr.CallAgg, accumulator: Ctx) = visit(node) {
+            Rex.Agg(
+                id = node.funcName.text,
+                args = listOf(convert(node.arg)),
+                modifier = when (node.setq) {
+                    is PartiqlAst.SetQuantifier.All -> Rex.Agg.Modifier.ALL
+                    is PartiqlAst.SetQuantifier.Distinct -> Rex.Agg.Modifier.DISTINCT
+                }
+            )
+        }
+
+        /**
+         * Return a Ctx with a [Rex.Binary]
+         */
+        private fun PartiqlAst.Expr.unary(expr: PartiqlAst.Expr, op: Rex.Unary.Op) = Ctx(
+            node = this,
+            rex = Rex.Unary(
+                rex = convert(expr),
+                op = op,
+            )
+        )
+
+        /**
+         * Return a Ctx with a [Rex.Binary]
+         */
+        private fun PartiqlAst.Expr.binary(lhs: PartiqlAst.Expr, rhs: PartiqlAst.Expr, op: Rex.Binary.Op) = Ctx(
+            node = this,
+            rex = Rex.Binary(
+                lhs = convert(lhs),
+                rhs = convert(rhs),
+                op = op,
+            )
+        )
     }
 }
