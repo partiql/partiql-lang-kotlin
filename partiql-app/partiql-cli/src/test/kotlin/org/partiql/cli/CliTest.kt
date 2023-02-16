@@ -230,6 +230,7 @@ class CliTest {
 
     @Test
     fun runWithTypedOpBehaviorLegacy() {
+        @Suppress("DEPRECATION") // TypedOpBehavior.LEGACY is deprecated.
         val pipeline = AbstractPipeline.create(AbstractPipeline.PipelineOptions(typedOpBehavior = TypedOpBehavior.LEGACY))
         val query = "CAST('abcde' as VARCHAR(3));"
         val actual = makeCliAndGetResult(query, pipeline = pipeline)

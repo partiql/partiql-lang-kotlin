@@ -1148,6 +1148,7 @@ internal class EvaluatingCompiler(
             (isTypeMatch && typedOpParameter.validationThunk?.let { it(expValue) } != false)
         }
 
+        @Suppress("DEPRECATION") // TypedOpBehavior.LEGACY is deprecated.
         return when (compileOptions.typedOpBehavior) {
             TypedOpBehavior.LEGACY -> simpleTypeMatchFunc
             TypedOpBehavior.HONOR_PARAMETERS -> { expValue: ExprValue ->
