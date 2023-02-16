@@ -58,8 +58,8 @@ public abstract class PlanFactory {
   public open fun relProject(
     common: Common,
     input: Rel,
-    rexs: List<Binding>
-  ) = Rel.Project(common, input, rexs)
+    bindings: List<Binding>
+  ) = Rel.Project(common, input, bindings)
 
   public open fun relJoin(
     common: Common,

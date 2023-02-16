@@ -138,13 +138,13 @@ public sealed class Rel : PlanNode() {
   public data class Project(
     public val common: Common,
     public val input: Rel,
-    public val rexs: List<Binding>
+    public val bindings: List<Binding>
   ) : Rel() {
     public override val children: List<PlanNode> by lazy {
       val kids = mutableListOf<PlanNode?>()
       kids.add(common)
       kids.add(input)
-      kids.addAll(rexs)
+      kids.addAll(bindings)
       kids.filterNotNull()
     }
 
