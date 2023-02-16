@@ -61,6 +61,7 @@ public class GroupKeyReferencesVisitorTransform(
     override fun transformExprSelect(node: PartiqlAst.Expr.Select): PartiqlAst.Expr {
         val keys = getGroupByKeys(node) + this.keys
         val aliases = setOfNotNull(getGroupAsAlias(node)) + this.groupAliases
+        @Suppress("DEPRECATION") // GroupKeyReferencesVisitorTransform is deprecated
         return GroupKeyReferencesVisitorTransform(keys, aliases).transformExprSelectSupport(node)
     }
 
@@ -146,6 +147,7 @@ private class GroupKeyReferencesToUniqueNameIdsVisitorTransform(val keys: Map<St
     }
 
     override fun transformExprSelect(node: PartiqlAst.Expr.Select): PartiqlAst.Expr {
+        @Suppress("DEPRECATION") // GroupKeyReferencesVisitorTransform is deprecated
         return GroupKeyReferencesVisitorTransform(keys, aliases).transformExprSelect(node)
     }
 }

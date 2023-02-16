@@ -26,6 +26,7 @@ class GroupKeyReferencesVisitorTransformTests : VisitorTransformTestBase() {
 
     @ParameterizedTest
     @ArgumentsSource(ArgsProvider::class)
+    @Suppress("DEPRECATION") // GroupKeyReferencesVisitorTransform is deprecated
     fun transform(tc: TransformTestCase) = runTestForIdempotentTransform(tc, GroupKeyReferencesVisitorTransform())
 
     class ArgsProvider : ArgumentsProviderBase() {
