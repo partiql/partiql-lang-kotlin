@@ -1,6 +1,9 @@
 package org.partiql.sprout.test.generated.builder
 
 import com.amazon.ionelement.api.TimestampElement
+import org.partiql.sprout.test.generated.Collection
+import org.partiql.sprout.test.generated.Inlines
+import org.partiql.sprout.test.generated.Node
 import kotlin.Boolean
 import kotlin.Float
 import kotlin.Int
@@ -8,9 +11,6 @@ import kotlin.String
 import kotlin.collections.MutableList
 import kotlin.collections.MutableMap
 import kotlin.collections.MutableSet
-import org.partiql.sprout.test.generated.Collection
-import org.partiql.sprout.test.generated.Inlines
-import org.partiql.sprout.test.generated.Node
 
 public class NodeBuilder {
     public var a: Boolean? = null
@@ -45,8 +45,11 @@ public class NodeBuilder {
 
     public fun build(): Node = build(SproutTestFactory.DEFAULT)
 
-    public fun build(factory: SproutTestFactory = SproutTestFactory.DEFAULT): Node = factory.node(a =
-    a!!, b = b!!, c = c!!, d = d, e = e!!)
+    public fun build(factory: SproutTestFactory = SproutTestFactory.DEFAULT): Node = factory.node(
+        a =
+        a!!,
+        b = b!!, c = c!!, d = d, e = e!!
+    )
 }
 
 public class CollectionMySetBuilder {
