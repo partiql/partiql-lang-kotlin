@@ -29,6 +29,7 @@ import org.partiql.sprout.model.TypeDef
  * @property clazz          Type ClassName
  * @property builder        Type builder
  * @property constructor    Implementation constructor
+ * @property companion      A place for static methods on nodes
  * @property types          Non-node types defined within this node
  */
 sealed class KotlinNodeSpec(
@@ -36,6 +37,7 @@ sealed class KotlinNodeSpec(
     val clazz: ClassName,
     val builder: TypeSpec.Builder,
     val constructor: FunSpec.Builder,
+    val companion: TypeSpec.Builder,
     val types: MutableList<TypeSpec> = mutableListOf(),
 ) {
 
@@ -48,6 +50,9 @@ sealed class KotlinNodeSpec(
         primaryConstructor(constructor.build())
         types.forEach { addType(it) }
         children.forEach { addType(it.build()) }
+        if (companion.propertySpecs.isNotEmpty() || companion.funSpecs.isNotEmpty()) {
+            addType(companion.build())
+        }
         build()
     }
 
@@ -65,6 +70,7 @@ sealed class KotlinNodeSpec(
         clazz = clazz,
         builder = TypeSpec.classBuilder(clazz),
         constructor = FunSpec.constructorBuilder(),
+        companion = TypeSpec.companionObjectBuilder(),
         types = types.toMutableList()
     )
 
@@ -80,6 +86,7 @@ sealed class KotlinNodeSpec(
         clazz = clazz,
         builder = TypeSpec.classBuilder(clazz).addModifiers(KModifier.SEALED),
         constructor = FunSpec.constructorBuilder(),
+        companion = TypeSpec.companionObjectBuilder(),
     ) {
         override val children: List<KotlinNodeSpec> = variants
     }

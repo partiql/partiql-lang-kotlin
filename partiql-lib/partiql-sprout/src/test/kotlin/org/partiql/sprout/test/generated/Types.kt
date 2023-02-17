@@ -1,14 +1,15 @@
 package org.partiql.sprout.test.generated
 
 import com.amazon.ionelement.api.TimestampElement
+import org.partiql.sprout.test.generated.builder.CollectionMyListBuilder
+import org.partiql.sprout.test.generated.builder.CollectionMyMapBuilder
+import org.partiql.sprout.test.generated.builder.CollectionMySetBuilder
+import org.partiql.sprout.test.generated.builder.InlinesBuilder
+import org.partiql.sprout.test.generated.builder.InlinesFooBuilder
+import org.partiql.sprout.test.generated.builder.InlinesSumUBuilder
+import org.partiql.sprout.test.generated.builder.InlinesSumVBuilder
+import org.partiql.sprout.test.generated.builder.NodeBuilder
 import org.partiql.sprout.test.generated.visitor.SproutTestVisitor
-import kotlin.Boolean
-import kotlin.Float
-import kotlin.Int
-import kotlin.String
-import kotlin.collections.List
-import kotlin.collections.Map
-import kotlin.collections.Set
 
 public abstract class SproutTestNode {
     public open val children: List<SproutTestNode> = emptyList()
@@ -25,6 +26,11 @@ public data class Node(
 ) : SproutTestNode() {
     public override fun <R, C> accept(visitor: SproutTestVisitor<R, C>, ctx: C): R =
         visitor.visitNode(this, ctx)
+
+    public companion object {
+        @JvmStatic
+        public fun builder(): NodeBuilder = NodeBuilder()
+    }
 }
 
 public sealed class Collection : SproutTestNode() {
@@ -39,6 +45,11 @@ public sealed class Collection : SproutTestNode() {
     ) : Collection() {
         public override fun <R, C> accept(visitor: SproutTestVisitor<R, C>, ctx: C): R =
             visitor.visitCollectionMySet(this, ctx)
+
+        public companion object {
+            @JvmStatic
+            public fun builder(): CollectionMySetBuilder = CollectionMySetBuilder()
+        }
     }
 
     public data class MyList(
@@ -46,6 +57,11 @@ public sealed class Collection : SproutTestNode() {
     ) : Collection() {
         public override fun <R, C> accept(visitor: SproutTestVisitor<R, C>, ctx: C): R =
             visitor.visitCollectionMyList(this, ctx)
+
+        public companion object {
+            @JvmStatic
+            public fun builder(): CollectionMyListBuilder = CollectionMyListBuilder()
+        }
     }
 
     public data class MyMap(
@@ -53,6 +69,11 @@ public sealed class Collection : SproutTestNode() {
     ) : Collection() {
         public override fun <R, C> accept(visitor: SproutTestVisitor<R, C>, ctx: C): R =
             visitor.visitCollectionMyMap(this, ctx)
+
+        public companion object {
+            @JvmStatic
+            public fun builder(): CollectionMyMapBuilder = CollectionMyMapBuilder()
+        }
     }
 }
 
@@ -83,6 +104,11 @@ public data class Inlines(
     ) : SproutTestNode() {
         public override fun <R, C> accept(visitor: SproutTestVisitor<R, C>, ctx: C): R =
             visitor.visitInlinesFoo(this, ctx)
+
+        public companion object {
+            @JvmStatic
+            public fun builder(): InlinesFooBuilder = InlinesFooBuilder()
+        }
     }
 
     public sealed class Sum : SproutTestNode() {
@@ -96,6 +122,11 @@ public data class Inlines(
         ) : Sum() {
             public override fun <R, C> accept(visitor: SproutTestVisitor<R, C>, ctx: C): R =
                 visitor.visitInlinesSumU(this, ctx)
+
+            public companion object {
+                @JvmStatic
+                public fun builder(): InlinesSumUBuilder = InlinesSumUBuilder()
+            }
         }
 
         public data class V(
@@ -103,6 +134,16 @@ public data class Inlines(
         ) : Sum() {
             public override fun <R, C> accept(visitor: SproutTestVisitor<R, C>, ctx: C): R =
                 visitor.visitInlinesSumV(this, ctx)
+
+            public companion object {
+                @JvmStatic
+                public fun builder(): InlinesSumVBuilder = InlinesSumVBuilder()
+            }
         }
+    }
+
+    public companion object {
+        @JvmStatic
+        public fun builder(): InlinesBuilder = InlinesBuilder()
     }
 }

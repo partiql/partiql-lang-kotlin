@@ -10,6 +10,7 @@ import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.TypeVariableName
 import com.squareup.kotlinpoet.asTypeName
+import net.pearx.kasechange.toCamelCase
 import net.pearx.kasechange.toPascalCase
 import org.partiql.sprout.generator.target.kotlin.KotlinPoem
 import org.partiql.sprout.generator.target.kotlin.KotlinSymbols
@@ -28,39 +29,64 @@ class KotlinBuilderPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
 
     private val builderPackageName = "${symbols.rootPackage}.builder"
 
+    // Abstract factory which can be used by DSL blocks
     private val factoryName = "${symbols.rootId}Factory"
     private val factoryClass = ClassName(builderPackageName, factoryName)
     private val factory = TypeSpec.classBuilder(factoryClass).addModifiers(KModifier.ABSTRACT)
-        .addType(
-            TypeSpec.companionObjectBuilder()
-                .addProperty(
-                    PropertySpec.builder("DEFAULT", factoryClass)
-                        .initializer("object : %T() {}", factoryClass)
-                        .build()
-                )
-                .build()
-        )
+    private val factoryParamDefault = ParameterSpec.builder("factory", factoryClass)
+        .defaultValue("%T.DEFAULT", factoryClass)
+        .build()
 
-    private val containerClass = ClassName(builderPackageName, symbols.rootId)
-    private val container = TypeSpec.classBuilder(containerClass)
-        .addKdoc("The Builder is inside this private final class for DSL aesthetics")
-        .primaryConstructor(FunSpec.constructorBuilder().addModifiers(KModifier.PRIVATE).build())
+    // Java style builders, used by the DSL
+    private val buildersName = "${symbols.rootId}Builders"
+    private val buildersFile = FileSpec.builder(builderPackageName, buildersName)
 
-    private val builderName = "${symbols.rootId}Builder"
-    private val builderClass = containerClass.nestedClass("Builder")
-    private val builder = TypeSpec.classBuilder(builderClass)
-        .addAnnotation(Annotations.suppress("ClassName"))
+    // Top-Level DSL holder, so that was close on the factory
+    private val dslName = "${symbols.rootId}Builder"
+    private val dslClass = ClassName(builderPackageName, dslName)
+    private val dslSpec = TypeSpec.classBuilder(dslClass)
         .addProperty(
             PropertySpec.builder("factory", factoryClass)
                 .addModifiers(KModifier.PRIVATE)
                 .initializer("factory")
                 .build()
         )
-        .primaryConstructor(
-            FunSpec.constructorBuilder()
-                .addParameter(ParameterSpec.builder("factory", factoryClass).build())
-                .build()
+        .primaryConstructor(FunSpec.constructorBuilder().addParameter(factoryParamDefault).build())
+
+    // T : FooNode
+    private val boundedT = TypeVariableName("T", symbols.base)
+
+    // Static top-level entry point for DSL
+    private val dslFunc = FunSpec.builder(symbols.rootId.toCamelCase())
+        .addTypeVariable(boundedT)
+        .addParameter(factoryParamDefault)
+        .addParameter(
+            ParameterSpec.builder(
+                "block",
+                LambdaTypeName.get(
+                    receiver = dslClass,
+                    returnType = boundedT,
+                )
+            ).build()
         )
+        .addStatement("return %T(factory).block()", dslClass)
+        .build()
+
+    // Static companion object entry point for factory, similar to PIG "build"
+    private val factoryFunc = FunSpec.builder("create")
+        .addAnnotation(Annotations.jvmStatic)
+        .addTypeVariable(boundedT)
+        .addParameter(
+            ParameterSpec.builder(
+                "block",
+                LambdaTypeName.get(
+                    receiver = factoryClass,
+                    returnType = boundedT,
+                )
+            ).build()
+        )
+        .addStatement("return %T.DEFAULT.block()", factoryClass)
+        .build()
 
     override fun apply(universe: KotlinUniverseSpec) {
         super.apply(universe)
@@ -68,16 +94,16 @@ class KotlinBuilderPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
             KotlinPackageSpec(
                 name = builderPackageName,
                 files = mutableListOf(
+                    // Factory
                     FileSpec.builder(builderPackageName, factoryName)
-                        .addType(factory.build())
+                        .addType(factory.addType(factoryCompanion()).build())
                         .build(),
-                    FileSpec.builder(builderPackageName, builderName)
-                        .addType(
-                            container
-                                .addType(builder.build())
-                                .addType(builderCompanion())
-                                .build()
-                        )
+                    // Java Builders
+                    buildersFile.build(),
+                    // DSL
+                    FileSpec.builder(builderPackageName, dslName)
+                        .addFunction(dslFunc)
+                        .addType(dslSpec.build())
                         .build(),
                 )
             )
@@ -90,73 +116,47 @@ class KotlinBuilderPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
             FunSpec.builder(symbols.camel(node.product.ref))
                 .addModifiers(KModifier.OPEN)
                 .apply {
-                    node.props.forEach {
-                        addParameter(it.name, it.type)
-                    }
+                    node.props.forEach { addParameter(it.name, it.type) }
                     addStatement("return %T(${node.props.joinToString { it.name }})", node.clazz)
                 }
                 .build()
         )
         // DSL Receiver and Function
-        val dsl = node.dslConstructs()
-        builder.addType(dsl.first)
-        builder.addFunction(dsl.second)
+        val (builder, func) = node.builderToFunc()
+        buildersFile.addType(builder)
+        dslSpec.addFunction(func)
         super.apply(node)
     }
 
     // --- Internal -------------------
 
     /**
-     * Creates the static entry-points for the DSL and Factory
+     * Returns a Pair of the Java builder and the Kotlin builder receiver function
+     * This could be split for clarity, but it could be repetitive.
      */
-    private fun builderCompanion() = TypeSpec.companionObjectBuilder().apply {
-        val t = TypeVariableName("T", symbols.base)
-        addFunction(
-            FunSpec.builder("build")
-                .addAnnotation(Annotations.jvmStatic)
-                .addTypeVariable(t)
-                .addParameter(
-                    ParameterSpec.builder("factory", factoryClass)
-                        .defaultValue("%T.DEFAULT", factoryClass)
-                        .build()
-                )
-                .addParameter(
-                    ParameterSpec.builder(
-                        "block",
-                        LambdaTypeName.get(
-                            receiver = builderClass,
-                            returnType = t,
-                        )
-                    ).build()
-                )
-                .addStatement("return %T(factory).block()", builderClass)
-                .build()
-        )
-        addFunction(
-            FunSpec.builder("create")
-                .addAnnotation(Annotations.jvmStatic)
-                .addTypeVariable(t)
-                .addParameter(
-                    ParameterSpec.builder(
-                        "block",
-                        LambdaTypeName.get(
-                            receiver = factoryClass,
-                            returnType = t,
-                        )
-                    ).build()
-                )
-                .addStatement("return %T.DEFAULT.block()", factoryClass)
-                .build()
-        )
-    }.build()
+    private fun KotlinNodeSpec.Product.builderToFunc(): Pair<TypeSpec, FunSpec> {
+        // Java Builder, empty constructor
+        val builderName = symbols.camel(product.ref)
+        val builderType = ClassName(builderPackageName, "${builderName.toPascalCase()}Builder")
+        val builder = TypeSpec.classBuilder(builderType)
 
-    private fun KotlinNodeSpec.Product.dslConstructs(): Pair<TypeSpec, FunSpec> {
-        val receiverName = symbols.camel(product.ref)
-        val receiverType = builderClass.nestedClass("_${receiverName.toPascalCase()}")
-        val receiverConstructor = FunSpec.constructorBuilder()
-        val receiver = TypeSpec.classBuilder(receiverType)
-        val dslFunction = FunSpec.builder(receiverName).returns(clazz)
+        // DSL Function
+        val funcDsl = FunSpec.builder(builderName).returns(clazz)
+        funcDsl.addStatement("val builder = %T()", builderType)
+
+        // Java builder `build(factory: Factory = DEFAULT): T`
+        val funcBuild = FunSpec.builder("build").addParameter(factoryParamDefault).returns(clazz)
         val args = mutableListOf<String>()
+
+        companion.addFunction(
+            FunSpec.builder("builder")
+                .addAnnotation(Annotations.jvmStatic)
+                .returns(builderType)
+                .addStatement("return %T()", builderType)
+                .build()
+        )
+
+        // Add all props to Java builder, DSL function, and Factory call
         product.props.forEachIndexed { i, it ->
             var type = symbols.typeNameOf(it.ref, mutable = true)
             val name = props[i].name
@@ -169,32 +169,67 @@ class KotlinBuilderPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
                     "null"
                 }
             }
-            val para = ParameterSpec.builder(name, type).defaultValue(default).build()
-            val prop = PropertySpec.builder(name, type).initializer(name).mutable().build()
-            receiver.addProperty(prop)
-            receiverConstructor.addParameter(para)
-            dslFunction.addParameter(para)
+            // t: T = default
+            val para = ParameterSpec.builder(name, type).build()
+            funcDsl.addParameter(para.toBuilder().defaultValue(default).build())
+            // public var t: T
+            val prop = PropertySpec.builder(name, type).initializer(default).mutable().build()
+            builder.addProperty(prop)
+
+            // Fluent builder method, only setters for now, can add collection manipulation later
+            builder.addFunction(
+                FunSpec.builder(name)
+                    .returns(builderType)
+                    .addParameter(para)
+                    .beginControlFlow("return this.apply")
+                    .addStatement("this.%N = %N", para, para)
+                    .endControlFlow()
+                    .build()
+            )
+
+            // Add parameter to `build(factory: Factory =)` me
             val assertion = if (!it.ref.nullable && default == "null") "!!" else ""
-            args += "$name = b.$name$assertion"
+            args += "$name = $name$assertion"
         }
-        // block last
-        dslFunction.addParameter(
+
+        // Add block as last parameter
+        funcDsl.addParameter(
             ParameterSpec.builder(
                 "block",
                 LambdaTypeName.get(
-                    receiver = receiverType,
+                    receiver = builderType,
                     returnType = Unit::class.asTypeName()
                 )
             )
                 .defaultValue("{}")
                 .build()
         )
-        val r = receiver.primaryConstructor(receiverConstructor.build()).build()
-        val f = dslFunction
-            .addStatement("val b = %T(${props.joinToString { it.name }})", receiverType)
-            .addStatement("b.block()")
-            .addStatement("return factory.$receiverName(${args.joinToString()})")
-            .build()
-        return Pair(r, f)
+
+        // End of factory.foo call
+        funcBuild.addStatement("return factory.$builderName(${args.joinToString()})")
+
+        // Finalize Java builder
+        builder.addFunction(
+            FunSpec.builder("build")
+                .returns(clazz)
+                .addStatement("return build(%T.DEFAULT)", factoryClass)
+                .build()
+        )
+        builder.addFunction(funcBuild.build())
+
+        // Finalize DSL function
+        funcDsl.addStatement("builder.block()")
+        funcDsl.addStatement("return builder.build(factory)")
+
+        return Pair(builder.build(), funcDsl.build())
     }
+
+    private fun factoryCompanion() = TypeSpec.companionObjectBuilder()
+        .addProperty(
+            PropertySpec.builder("DEFAULT", factoryClass)
+                .initializer("object : %T() {}", factoryClass)
+                .build()
+        )
+        .addFunction(factoryFunc)
+        .build()
 }
