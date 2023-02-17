@@ -26,6 +26,7 @@ dependencies {
     implementation(Deps.awsSdkBom)
     implementation(Deps.awsSdkDynamodb)
     implementation(Deps.guava)
+    implementation(Deps.jackson)
     implementation(Deps.jansi)
     implementation(Deps.jline)
     implementation(Deps.joda)

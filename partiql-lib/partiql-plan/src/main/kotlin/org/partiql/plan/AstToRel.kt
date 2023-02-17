@@ -684,9 +684,14 @@ object AstToRel {
         }
 
         override fun walkExprInCollection(node: PartiqlAst.Expr.InCollection, accumulator: Ctx) = visit(node) {
+            val lhs = convert(node.operands[0])
+            var rhs = convert(node.operands[1])
+            if (rhs is Rex.Subquery.Scalar) {
+                rhs = Rex.Subquery.Collection(rhs.rel)
+            }
             Rex.Call(
                 id = "in_collection",
-                args = convert(node.operands),
+                args = listOf(lhs, rhs),
             )
         }
 
@@ -723,6 +728,12 @@ object AstToRel {
                     is PartiqlAst.SetQuantifier.All -> Rex.Agg.Modifier.ALL
                     is PartiqlAst.SetQuantifier.Distinct -> Rex.Agg.Modifier.DISTINCT
                 }
+            )
+        }
+
+        override fun walkExprSelect(node: PartiqlAst.Expr.Select, accumulator: Ctx) = visit(node) {
+            Rex.Subquery.Scalar(
+                rel = RelConverter.convert(node)
             )
         }
 

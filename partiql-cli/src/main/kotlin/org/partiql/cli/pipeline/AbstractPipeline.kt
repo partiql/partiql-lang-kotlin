@@ -116,8 +116,7 @@ internal sealed class AbstractPipeline(open val options: PipelineOptions) {
 
         override fun compile(input: String, session: EvaluationSession): PartiQLResult {
             val (message, status) = try {
-                Debug.action(input, session)
-                "ok" to 0L
+                Debug.action(input, session) to 0L
             } catch (e: Exception) {
                 e.stackTraceToString() to 1L
             }
