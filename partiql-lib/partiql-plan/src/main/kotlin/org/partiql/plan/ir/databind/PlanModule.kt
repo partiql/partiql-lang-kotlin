@@ -1,6 +1,6 @@
 package org.partiql.plan.ir.databind
 
-import com.amazon.ionelement.api.ionString
+import com.amazon.ionelement.api.loadSingleElement
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.databind.DeserializationContext
 import com.fasterxml.jackson.databind.JsonDeserializer
@@ -8,11 +8,12 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.module.SimpleModule
 import org.partiql.plan.ir.Binding
 import org.partiql.plan.ir.Common
+import org.partiql.plan.ir.Plan
 import org.partiql.plan.ir.PlanNode
 import org.partiql.plan.ir.Rel
 import org.partiql.plan.ir.Rex
 import org.partiql.plan.ir.SortSpec
-import org.partiql.plan.ir.StructPart
+import org.partiql.plan.ir.Step
 import org.partiql.plan.ir.builder.PlanFactory
 import org.partiql.plan.ir.databind.PlanModule.Mapping
 
@@ -21,9 +22,17 @@ public class PlanModule(
 ) : SimpleModule() {
     private val _base: Mapping<PlanNode> = Mapping {
         when (val id = it.id()) {
+            "plan" -> _plan(it)
             "common" -> _common(it)
+            "binding" -> _binding(it)
+            "step" -> _step(it)
+            "step.rex" -> _stepRex(it)
+            "step.wildcard" -> _stepWildcard(it)
+            "step.unpivot" -> _stepUnpivot(it)
+            "sort_spec" -> _sortSpec(it)
             "rel" -> _rel(it)
             "rel.scan" -> _relScan(it)
+            "rel.unpivot" -> _relUnpivot(it)
             "rel.filter" -> _relFilter(it)
             "rel.sort" -> _relSort(it)
             "rel.bag" -> _relBag(it)
@@ -41,17 +50,20 @@ public class PlanModule(
             "rex.lit" -> _rexLit(it)
             "rex.collection" -> _rexCollection(it)
             "rex.struct" -> _rexStruct(it)
-            "rex.subquery" -> _rexSubquery(it)
-            "rex.subquery.tuple" -> _rexSubqueryTuple(it)
-            "rex.subquery.scalar" -> _rexSubqueryScalar(it)
-            "rex.subquery.collection" -> _rexSubqueryCollection(it)
-            "struct_part" -> _structPart(it)
-            "struct_part.fields" -> _structPartFields(it)
-            "struct_part.field" -> _structPartField(it)
-            "sort_spec" -> _sortSpec(it)
-            "binding" -> _binding(it)
+            "rex.query" -> _rexQuery(it)
+            "rex.query.scalar" -> _rexQueryScalar(it)
+            "rex.query.scalar.coerce" -> _rexQueryScalarCoerce(it)
+            "rex.query.scalar.pivot" -> _rexQueryScalarPivot(it)
+            "rex.query.collection" -> _rexQueryCollection(it)
             else -> err(id)
         }
+    }
+
+    private val _plan: Mapping<Plan> = Mapping {
+        factory.plan(
+            version = org.partiql.plan.ir.Plan.Version.valueOf(it["version"].asText().toUpperCase()),
+            root = _rex(it["root"]),
+        )
     }
 
     private val _common: Mapping<Common> = Mapping {
@@ -67,9 +79,49 @@ public class PlanModule(
         )
     }
 
+    private val _binding: Mapping<Binding> = Mapping {
+        factory.binding(
+            name = _rex(it["name"]),
+            rex = _rex(it["rex"]),
+        )
+    }
+
+    private val _step: Mapping<Step> = Mapping {
+        when (val id = it.id()) {
+            "step.rex" -> _stepRex(it)
+            "step.wildcard" -> _stepWildcard(it)
+            "step.unpivot" -> _stepUnpivot(it)
+            else -> err(id)
+        }
+    }
+
+    private val _stepRex: Mapping<Step.Rex> = Mapping {
+        factory.stepRex(
+            index = _rex(it["index"]),
+            case = org.partiql.plan.ir.Case.valueOf(it["case"].asText().toUpperCase()),
+        )
+    }
+
+    private val _stepWildcard: Mapping<Step.Wildcard> = Mapping {
+        factory.stepWildcard()
+    }
+
+    private val _stepUnpivot: Mapping<Step.Unpivot> = Mapping {
+        factory.stepUnpivot()
+    }
+
+    private val _sortSpec: Mapping<SortSpec> = Mapping {
+        factory.sortSpec(
+            rex = _rex(it["rex"]),
+            dir = org.partiql.plan.ir.SortSpec.Dir.valueOf(it["dir"].asText().toUpperCase()),
+            nulls = org.partiql.plan.ir.SortSpec.Nulls.valueOf(it["nulls"].asText().toUpperCase()),
+        )
+    }
+
     private val _rel: Mapping<Rel> = Mapping {
         when (val id = it.id()) {
             "rel.scan" -> _relScan(it)
+            "rel.unpivot" -> _relUnpivot(it)
             "rel.filter" -> _relFilter(it)
             "rel.sort" -> _relSort(it)
             "rel.bag" -> _relBag(it)
@@ -83,6 +135,16 @@ public class PlanModule(
 
     private val _relScan: Mapping<Rel.Scan> = Mapping {
         factory.relScan(
+            common = _common(it["common"]),
+            rex = _rex(it["rex"]),
+            alias = it["alias"].asText(),
+            at = it["at"].asText(),
+            by = it["by"].asText(),
+        )
+    }
+
+    private val _relUnpivot: Mapping<Rel.Unpivot> = Mapping {
+        factory.relUnpivot(
             common = _common(it["common"]),
             rex = _rex(it["rex"]),
             alias = it["alias"].asText(),
@@ -165,7 +227,7 @@ public class PlanModule(
             "rex.lit" -> _rexLit(it)
             "rex.collection" -> _rexCollection(it)
             "rex.struct" -> _rexStruct(it)
-            "rex.subquery" -> _rexSubquery(it)
+            "rex.query" -> _rexQuery(it)
             else -> err(id)
         }
     }
@@ -173,12 +235,15 @@ public class PlanModule(
     private val _rexId: Mapping<Rex.Id> = Mapping {
         factory.rexId(
             name = it["name"].asText(),
+            case = org.partiql.plan.ir.Case.valueOf(it["case"].asText().toUpperCase()),
+            qualifier = org.partiql.plan.ir.Rex.Id.Qualifier.valueOf(it["qualifier"].asText().toUpperCase()),
         )
     }
 
     private val _rexPath: Mapping<Rex.Path> = Mapping {
         factory.rexPath(
             root = _rex(it["root"]),
+            steps = it["steps"].map { n -> _step(n) },
         )
     }
 
@@ -213,9 +278,8 @@ public class PlanModule(
     }
 
     private val _rexLit: Mapping<Rex.Lit> = Mapping {
-        // TODO ION HACK
         factory.rexLit(
-            value = ionString(it["value"].asText()),
+            value = loadSingleElement(it["value"].asText()),
         )
     }
 
@@ -228,78 +292,60 @@ public class PlanModule(
 
     private val _rexStruct: Mapping<Rex.Struct> = Mapping {
         factory.rexStruct(
-            fields = it["fields"].map { n -> _structPart(n) },
+            fields = it["fields"].map { n -> _binding(n) },
         )
     }
 
-    private val _rexSubquery: Mapping<Rex.Subquery> = Mapping {
+    private val _rexQuery: Mapping<Rex.Query> = Mapping {
         when (val id = it.id()) {
-            "rex.subquery.tuple" -> _rexSubqueryTuple(it)
-            "rex.subquery.scalar" -> _rexSubqueryScalar(it)
-            "rex.subquery.collection" -> _rexSubqueryCollection(it)
+            "rex.query.scalar" -> _rexQueryScalar(it)
+            "rex.query.collection" -> _rexQueryCollection(it)
             else -> err(id)
         }
     }
 
-    private val _rexSubqueryTuple: Mapping<Rex.Subquery.Tuple> = Mapping {
-        factory.rexSubqueryTuple(
-            rel = _rel(it["rel"]),
-        )
-    }
-
-    private val _rexSubqueryScalar: Mapping<Rex.Subquery.Scalar> = Mapping {
-        factory.rexSubqueryScalar(
-            rel = _rel(it["rel"]),
-        )
-    }
-
-    private val _rexSubqueryCollection: Mapping<Rex.Subquery.Collection> = Mapping {
-        factory.rexSubqueryCollection(
-            rel = _rel(it["rel"]),
-        )
-    }
-
-    private val _structPart: Mapping<StructPart> = Mapping {
+    private val _rexQueryScalar: Mapping<Rex.Query.Scalar> = Mapping {
         when (val id = it.id()) {
-            "struct_part.fields" -> _structPartFields(it)
-            "struct_part.field" -> _structPartField(it)
+            "rex.query.scalar.coerce" -> _rexQueryScalarCoerce(it)
+            "rex.query.scalar.pivot" -> _rexQueryScalarPivot(it)
             else -> err(id)
         }
     }
 
-    private val _structPartFields: Mapping<StructPart.Fields> = Mapping {
-        factory.structPartFields(
-            rex = _rex(it["rex"]),
+    private val _rexQueryScalarCoerce: Mapping<Rex.Query.Scalar.Coerce> = Mapping {
+        factory.rexQueryScalarCoerce(
+            query = _rexQueryCollection(it["query"]),
         )
     }
 
-    private val _structPartField: Mapping<StructPart.Field> = Mapping {
-        factory.structPartField(
-            name = _rex(it["name"]),
+    private val _rexQueryScalarPivot: Mapping<Rex.Query.Scalar.Pivot> = Mapping {
+        factory.rexQueryScalarPivot(
+            rel = _rel(it["rel"]),
             rex = _rex(it["rex"]),
+            at = _rex(it["at"]),
         )
     }
 
-    private val _sortSpec: Mapping<SortSpec> = Mapping {
-        factory.sortSpec(
-            rex = _rex(it["rex"]),
-            dir = org.partiql.plan.ir.SortSpec.Dir.valueOf(it["dir"].asText().toUpperCase()),
-            nulls = org.partiql.plan.ir.SortSpec.Nulls.valueOf(it["nulls"].asText().toUpperCase()),
-        )
-    }
-
-    private val _binding: Mapping<Binding> = Mapping {
-        factory.binding(
-            name = it["name"].asText(),
-            rex = _rex(it["rex"]),
+    private val _rexQueryCollection: Mapping<Rex.Query.Collection> = Mapping {
+        factory.rexQueryCollection(
+            rel = _rel(it["rel"]),
+            constructor = _rex(it["constructor"]),
         )
     }
 
     init {
         addDeserializer(PlanNode::class.java, map(_base))
+        addDeserializer(Plan::class.java, map(_plan))
         addDeserializer(Common::class.java, map(_common))
+        addDeserializer(Binding::class.java, map(_binding))
+        addDeserializer(Step::class.java, map(_step))
+        addDeserializer(Step.Rex::class.java, map(_stepRex))
+        addDeserializer(Step.Wildcard::class.java, map(_stepWildcard))
+        addDeserializer(Step.Unpivot::class.java, map(_stepUnpivot))
+        addDeserializer(SortSpec::class.java, map(_sortSpec))
         addDeserializer(Rel::class.java, map(_rel))
         addDeserializer(Rel.Scan::class.java, map(_relScan))
+        addDeserializer(Rel.Unpivot::class.java, map(_relUnpivot))
         addDeserializer(Rel.Filter::class.java, map(_relFilter))
         addDeserializer(Rel.Sort::class.java, map(_relSort))
         addDeserializer(Rel.Bag::class.java, map(_relBag))
@@ -317,15 +363,11 @@ public class PlanModule(
         addDeserializer(Rex.Lit::class.java, map(_rexLit))
         addDeserializer(Rex.Collection::class.java, map(_rexCollection))
         addDeserializer(Rex.Struct::class.java, map(_rexStruct))
-        addDeserializer(Rex.Subquery::class.java, map(_rexSubquery))
-        addDeserializer(Rex.Subquery.Tuple::class.java, map(_rexSubqueryTuple))
-        addDeserializer(Rex.Subquery.Scalar::class.java, map(_rexSubqueryScalar))
-        addDeserializer(Rex.Subquery.Collection::class.java, map(_rexSubqueryCollection))
-        addDeserializer(StructPart::class.java, map(_structPart))
-        addDeserializer(StructPart.Fields::class.java, map(_structPartFields))
-        addDeserializer(StructPart.Field::class.java, map(_structPartField))
-        addDeserializer(SortSpec::class.java, map(_sortSpec))
-        addDeserializer(Binding::class.java, map(_binding))
+        addDeserializer(Rex.Query::class.java, map(_rexQuery))
+        addDeserializer(Rex.Query.Scalar::class.java, map(_rexQueryScalar))
+        addDeserializer(Rex.Query.Scalar.Coerce::class.java, map(_rexQueryScalarCoerce))
+        addDeserializer(Rex.Query.Scalar.Pivot::class.java, map(_rexQueryScalarPivot))
+        addDeserializer(Rex.Query.Collection::class.java, map(_rexQueryCollection))
     }
 
     private fun JsonNode.id(): String = get("_id").asText()

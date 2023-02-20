@@ -2,19 +2,39 @@ package org.partiql.plan.ir.visitor
 
 import org.partiql.plan.ir.Binding
 import org.partiql.plan.ir.Common
+import org.partiql.plan.ir.Plan
 import org.partiql.plan.ir.PlanNode
 import org.partiql.plan.ir.Rel
 import org.partiql.plan.ir.Rex
 import org.partiql.plan.ir.SortSpec
-import org.partiql.plan.ir.StructPart
+import org.partiql.plan.ir.Step
 
 public abstract class PlanBaseVisitor<R, C> : PlanVisitor<R, C> {
     public override fun visit(node: PlanNode, ctx: C): R = node.accept(this, ctx)
 
+    public override fun visitPlan(node: Plan, ctx: C): R = defaultVisit(node, ctx)
+
     public override fun visitCommon(node: Common, ctx: C): R = defaultVisit(node, ctx)
+
+    public override fun visitBinding(node: Binding, ctx: C): R = defaultVisit(node, ctx)
+
+    public override fun visitStep(node: Step, ctx: C): R = when (node) {
+        is Step.Rex -> visitStepRex(node, ctx)
+        is Step.Wildcard -> visitStepWildcard(node, ctx)
+        is Step.Unpivot -> visitStepUnpivot(node, ctx)
+    }
+
+    public override fun visitStepRex(node: Step.Rex, ctx: C): R = defaultVisit(node, ctx)
+
+    public override fun visitStepWildcard(node: Step.Wildcard, ctx: C): R = defaultVisit(node, ctx)
+
+    public override fun visitStepUnpivot(node: Step.Unpivot, ctx: C): R = defaultVisit(node, ctx)
+
+    public override fun visitSortSpec(node: SortSpec, ctx: C): R = defaultVisit(node, ctx)
 
     public override fun visitRel(node: Rel, ctx: C): R = when (node) {
         is Rel.Scan -> visitRelScan(node, ctx)
+        is Rel.Unpivot -> visitRelUnpivot(node, ctx)
         is Rel.Filter -> visitRelFilter(node, ctx)
         is Rel.Sort -> visitRelSort(node, ctx)
         is Rel.Bag -> visitRelBag(node, ctx)
@@ -25,6 +45,8 @@ public abstract class PlanBaseVisitor<R, C> : PlanVisitor<R, C> {
     }
 
     public override fun visitRelScan(node: Rel.Scan, ctx: C): R = defaultVisit(node, ctx)
+
+    public override fun visitRelUnpivot(node: Rel.Unpivot, ctx: C): R = defaultVisit(node, ctx)
 
     public override fun visitRelFilter(node: Rel.Filter, ctx: C): R = defaultVisit(node, ctx)
 
@@ -50,7 +72,7 @@ public abstract class PlanBaseVisitor<R, C> : PlanVisitor<R, C> {
         is Rex.Lit -> visitRexLit(node, ctx)
         is Rex.Collection -> visitRexCollection(node, ctx)
         is Rex.Struct -> visitRexStruct(node, ctx)
-        is Rex.Subquery -> visitRexSubquery(node, ctx)
+        is Rex.Query -> visitRexQuery(node, ctx)
     }
 
     public override fun visitRexId(node: Rex.Id, ctx: C): R = defaultVisit(node, ctx)
@@ -71,39 +93,24 @@ public abstract class PlanBaseVisitor<R, C> : PlanVisitor<R, C> {
 
     public override fun visitRexStruct(node: Rex.Struct, ctx: C): R = defaultVisit(node, ctx)
 
-    public override fun visitRexSubquery(node: Rex.Subquery, ctx: C): R = when (node) {
-        is Rex.Subquery.Tuple -> visitRexSubqueryTuple(node, ctx)
-        is Rex.Subquery.Scalar -> visitRexSubqueryScalar(node, ctx)
-        is Rex.Subquery.Collection -> visitRexSubqueryCollection(node, ctx)
+    public override fun visitRexQuery(node: Rex.Query, ctx: C): R = when (node) {
+        is Rex.Query.Scalar -> visitRexQueryScalar(node, ctx)
+        is Rex.Query.Collection -> visitRexQueryCollection(node, ctx)
     }
 
-    public override fun visitRexSubqueryTuple(node: Rex.Subquery.Tuple, ctx: C): R =
-        defaultVisit(node, ctx)
-
-    public override fun visitRexSubqueryScalar(node: Rex.Subquery.Scalar, ctx: C): R =
-        defaultVisit(node, ctx)
-
-    public override fun visitRexSubqueryCollection(node: Rex.Subquery.Collection, ctx: C): R =
-        defaultVisit(node, ctx)
-
-    public override fun visitStructPart(node: StructPart, ctx: C): R = when (node) {
-        is StructPart.Fields -> visitStructPartFields(node, ctx)
-        is StructPart.Field -> visitStructPartField(node, ctx)
+    public override fun visitRexQueryScalar(node: Rex.Query.Scalar, ctx: C): R = when (node) {
+        is Rex.Query.Scalar.Coerce -> visitRexQueryScalarCoerce(node, ctx)
+        is Rex.Query.Scalar.Pivot -> visitRexQueryScalarPivot(node, ctx)
     }
 
-    public override fun visitStructPartFields(node: StructPart.Fields, ctx: C): R = defaultVisit(
-        node,
-        ctx
-    )
+    public override fun visitRexQueryScalarCoerce(node: Rex.Query.Scalar.Coerce, ctx: C): R =
+        defaultVisit(node, ctx)
 
-    public override fun visitStructPartField(node: StructPart.Field, ctx: C): R = defaultVisit(
-        node,
-        ctx
-    )
+    public override fun visitRexQueryScalarPivot(node: Rex.Query.Scalar.Pivot, ctx: C): R =
+        defaultVisit(node, ctx)
 
-    public override fun visitSortSpec(node: SortSpec, ctx: C): R = defaultVisit(node, ctx)
-
-    public override fun visitBinding(node: Binding, ctx: C): R = defaultVisit(node, ctx)
+    public override fun visitRexQueryCollection(node: Rex.Query.Collection, ctx: C): R =
+        defaultVisit(node, ctx)
 
     public open fun defaultVisit(node: PlanNode, ctx: C): R {
         for (child in node.children) {
