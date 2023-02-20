@@ -24,7 +24,7 @@ import com.fasterxml.jackson.databind.SerializerProvider
 import org.partiql.cli.pico.PartiQLCommand
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.syntax.PartiQLParserBuilder
-import org.partiql.plan.AstToRel
+import org.partiql.plan.Planner
 import org.partiql.plan.debug.PlanPrinter
 import org.partiql.plan.ir.databind.PlanModule
 import picocli.CommandLine
@@ -74,7 +74,7 @@ object Debug {
         val out = PrintStream(System.out)
         val parser = PartiQLParserBuilder.standard().build()
         val ast = parser.parseAstStatement(input)
-        val plan = AstToRel.convert(ast)
+        val plan = Planner.default.plan(ast)
         // print plan as tree
         PlanPrinter.append(out, plan)
         // return serialized plan

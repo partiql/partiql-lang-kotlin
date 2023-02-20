@@ -23,7 +23,7 @@ abstract class PlanRewriter : PlanBaseVisitor<PlanNode, Unit>() {
         val constructor = node::class.primaryConstructor!!
         val props = node.javaClass.kotlin.declaredMemberProperties
         // rewrite props, traverse constructor params to get proper argument order
-        val args = constructor.parameters.mapNotNull {para ->
+        val args = constructor.parameters.mapNotNull { para ->
             val prop = props.find { prop -> prop.name == para.name } ?: return@mapNotNull null
             var arg: Any? = prop.get(node)
             if (arg is PlanNode) {
