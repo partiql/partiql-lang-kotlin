@@ -1,6 +1,4 @@
 // Experimental plan representation
-// - PIVOT
-// - SELECT VALUE / VALUE CONSTRUCTOR
 
 imports::{
   kotlin: [
@@ -10,6 +8,12 @@ imports::{
   ],
 }
 
+// Top-Level structure for a PartiQL Plan
+plan::{
+  version: [ PARTIQL_V0 ],
+  root: rex,
+}
+
 // Grouping of common fields without implications of interfaces or inheritance
 common::{
   schema: map::[string,type],
@@ -17,14 +21,52 @@ common::{
   metas: map::[string,any],
 }
 
+// Relation properties
 property::[
   ORDERED,
 ]
 
+// Representation of `<rex> AS <name>` in projections
+binding::{
+  name: rex,
+  rex: rex,
+}
+
+// Identifier case rules
+case::[
+  SENSITIVE,
+  INSENSITIVE,
+]
+
+// Define in `_` once supported
+step::[
+  rex::{
+    index: '.rex',
+    case: optional::case,
+  },
+  wildcard::{},
+  unpivot::{},
+]
+
+// Define in `_` once supported
+sort_spec::{
+  rex: rex,
+  dir: [ ASC, DESC ],
+  nulls: [ FIRST, LAST ],
+}
+
 // Operators that return binding collections
 rel::[
-  // FROM <rex>
+  // FROM <rex> [AS <string>] [AT <string>] [BY <string>]
   scan::{
+    common: common,
+    rex: rex,
+    alias: optional::string,
+    at: optional::string,
+    by: optional::string,
+  },
+  // UNPIVOT <rex> [AS <string>] [AT <string>] [BY <string>]
+  unpivot::{
     common: common,
     rex: rex,
     alias: optional::string,
@@ -61,7 +103,7 @@ rel::[
   project::{
     common: common,
     input: rel,
-    bindings: list::[binding]
+    bindings: list::[binding],
   },
   // FROM x, y / FROM x JOIN y
   join::{
@@ -77,7 +119,7 @@ rel::[
     input: rel,
     calls: list::[binding],
     groups: list::[binding],
-    strategy: [ FULL, PARTIAL ]
+    strategy: [ FULL, PARTIAL ],
   },
 ]
 
@@ -85,10 +127,12 @@ rel::[
 rex::[
   id::{
     name: string,
+    case: optional::case,
+    qualifier: [ UNQUALIFIED, LOCALS_FIRST ]
   },
   path::{
     root: rex,
-    // TODO
+    steps: list::[step],
   },
   unary::{
     rex: rex,
@@ -117,46 +161,30 @@ rex::[
     value: ion,
   },
   collection::{
-    type: [ LIST, BAG, SEXP ],
+    type: [ LIST, BAG ],
     values: list::[rex],
   },
   struct::{
-    fields: list::[struct_part],
+    // - If binding.name is '*' and binding.rex is a struct, the fields of binding.rex are merged to this struct
+    // - If binding.name is '*' and binding.rex is not a struct, the field _n will be add to this struct where n
+    //   is the ordinal of the field in the final merged struct.
+    // - Else, add the pair (binding.name, binding.rex) to the final merged struct.
+    fields: list::[binding],
   },
-  subquery::[
-    tuple::{
-      rel: rel,
-    },
-    scalar::{
-      rel: rel,
-    },
+  query::[
+    scalar::[
+      coerce::{
+        query: '.rex.query.collection',
+      },
+      pivot::{
+        rel: rel,
+        rex: rex,
+        at: rex,
+      },
+    ],
     collection::{
       rel: rel,
+      constructor: optional::rex,
     },
   ],
 ]
-
-// Same as partiql.ion struct / struct_part
-// Consider consolidating Rel Binding with struct_part.field
-struct_part::[
-  fields::{
-    rex: rex,
-  },
-  field::{
-    name: rex,
-    rex: rex,
-  },
-]
-
-// Consider defining in `_` once supported
-sort_spec::{
-  rex: rex,
-  dir: [ ASC, DESC ],
-  nulls: [ FIRST, LAST ],
-}
-
-// Representation of `rex AS name` in projections
-binding::{
-  name: string,
-  rex: rex,
-}

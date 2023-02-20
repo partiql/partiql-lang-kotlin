@@ -2,20 +2,37 @@ package org.partiql.plan.ir.visitor
 
 import org.partiql.plan.ir.Binding
 import org.partiql.plan.ir.Common
+import org.partiql.plan.ir.Plan
 import org.partiql.plan.ir.PlanNode
 import org.partiql.plan.ir.Rel
 import org.partiql.plan.ir.Rex
 import org.partiql.plan.ir.SortSpec
-import org.partiql.plan.ir.StructPart
+import org.partiql.plan.ir.Step
 
 public interface PlanVisitor<R, C> {
     public fun visit(node: PlanNode, ctx: C): R
 
+    public fun visitPlan(node: Plan, ctx: C): R
+
     public fun visitCommon(node: Common, ctx: C): R
+
+    public fun visitBinding(node: Binding, ctx: C): R
+
+    public fun visitStep(node: Step, ctx: C): R
+
+    public fun visitStepRex(node: Step.Rex, ctx: C): R
+
+    public fun visitStepWildcard(node: Step.Wildcard, ctx: C): R
+
+    public fun visitStepUnpivot(node: Step.Unpivot, ctx: C): R
+
+    public fun visitSortSpec(node: SortSpec, ctx: C): R
 
     public fun visitRel(node: Rel, ctx: C): R
 
     public fun visitRelScan(node: Rel.Scan, ctx: C): R
+
+    public fun visitRelUnpivot(node: Rel.Unpivot, ctx: C): R
 
     public fun visitRelFilter(node: Rel.Filter, ctx: C): R
 
@@ -51,21 +68,13 @@ public interface PlanVisitor<R, C> {
 
     public fun visitRexStruct(node: Rex.Struct, ctx: C): R
 
-    public fun visitRexSubquery(node: Rex.Subquery, ctx: C): R
+    public fun visitRexQuery(node: Rex.Query, ctx: C): R
 
-    public fun visitRexSubqueryTuple(node: Rex.Subquery.Tuple, ctx: C): R
+    public fun visitRexQueryScalar(node: Rex.Query.Scalar, ctx: C): R
 
-    public fun visitRexSubqueryScalar(node: Rex.Subquery.Scalar, ctx: C): R
+    public fun visitRexQueryScalarCoerce(node: Rex.Query.Scalar.Coerce, ctx: C): R
 
-    public fun visitRexSubqueryCollection(node: Rex.Subquery.Collection, ctx: C): R
+    public fun visitRexQueryScalarPivot(node: Rex.Query.Scalar.Pivot, ctx: C): R
 
-    public fun visitStructPart(node: StructPart, ctx: C): R
-
-    public fun visitStructPartFields(node: StructPart.Fields, ctx: C): R
-
-    public fun visitStructPartField(node: StructPart.Field, ctx: C): R
-
-    public fun visitSortSpec(node: SortSpec, ctx: C): R
-
-    public fun visitBinding(node: Binding, ctx: C): R
+    public fun visitRexQueryCollection(node: Rex.Query.Collection, ctx: C): R
 }
