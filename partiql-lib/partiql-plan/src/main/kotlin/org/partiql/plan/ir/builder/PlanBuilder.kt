@@ -4,6 +4,7 @@ import com.amazon.ionelement.api.IonElement
 import org.partiql.plan.ir.Binding
 import org.partiql.plan.ir.Case
 import org.partiql.plan.ir.Common
+import org.partiql.plan.ir.Field
 import org.partiql.plan.ir.PlanNode
 import org.partiql.plan.ir.Property
 import org.partiql.plan.ir.Rel
@@ -41,13 +42,23 @@ public class PlanBuilder private constructor() {
         }
 
         public fun binding(
-            name: Rex? = null,
-            rex: Rex? = null,
+            name: String? = null,
+            `value`: Rex? = null,
             block: _Binding.() -> Unit = {}
         ): Binding {
-            val b = _Binding(name, rex)
+            val b = _Binding(name, value)
             b.block()
-            return factory.binding(name = b.name!!, rex = b.rex!!)
+            return factory.binding(name = b.name!!, value = b.value!!)
+        }
+
+        public fun `field`(
+            name: Rex? = null,
+            `value`: Rex? = null,
+            block: _Field.() -> Unit = {}
+        ): Field {
+            val b = _Field(name, value)
+            b.block()
+            return factory.field(name = b.name!!, value = b.value!!)
         }
 
         public fun stepRex(
@@ -73,47 +84,43 @@ public class PlanBuilder private constructor() {
         }
 
         public fun sortSpec(
-            rex: Rex? = null,
+            `value`: Rex? = null,
             dir: SortSpec.Dir? = null,
             nulls: SortSpec.Nulls? = null,
             block: _SortSpec.() -> Unit = {}
         ): SortSpec {
-            val b = _SortSpec(rex, dir, nulls)
+            val b = _SortSpec(value, dir, nulls)
             b.block()
-            return factory.sortSpec(rex = b.rex!!, dir = b.dir!!, nulls = b.nulls!!)
+            return factory.sortSpec(value = b.value!!, dir = b.dir!!, nulls = b.nulls!!)
         }
 
         public fun relScan(
             common: Common? = null,
-            rex: Rex? = null,
+            `value`: Rex? = null,
             alias: String? = null,
             at: String? = null,
             `by`: String? = null,
             block: _RelScan.() -> Unit = {}
         ): Rel.Scan {
-            val b = _RelScan(common, rex, alias, at, by)
+            val b = _RelScan(common, value, alias, at, by)
             b.block()
             return factory.relScan(
-                common = b.common!!, rex = b.rex!!, alias = b.alias, at = b.at,
-                by =
-                b.by
+                common = b.common!!, value = b.value!!, alias = b.alias, at = b.at, by = b.by
             )
         }
 
         public fun relUnpivot(
             common: Common? = null,
-            rex: Rex? = null,
+            `value`: Rex? = null,
             alias: String? = null,
             at: String? = null,
             `by`: String? = null,
             block: _RelUnpivot.() -> Unit = {}
         ): Rel.Unpivot {
-            val b = _RelUnpivot(common, rex, alias, at, by)
+            val b = _RelUnpivot(common, value, alias, at, by)
             b.block()
             return factory.relUnpivot(
-                common = b.common!!, rex = b.rex!!, alias = b.alias, at = b.at,
-                by =
-                b.by
+                common = b.common!!, value = b.value!!, alias = b.alias, at = b.at, by = b.by
             )
         }
 
@@ -161,9 +168,7 @@ public class PlanBuilder private constructor() {
             val b = _RelFetch(common, input, limit, offset)
             b.block()
             return factory.relFetch(
-                common = b.common!!, input = b.input!!, limit = b.limit!!,
-                offset =
-                b.offset!!
+                common = b.common!!, input = b.input!!, limit = b.limit!!, offset = b.offset!!
             )
         }
 
@@ -189,10 +194,7 @@ public class PlanBuilder private constructor() {
             val b = _RelJoin(common, lhs, rhs, condition, type)
             b.block()
             return factory.relJoin(
-                common = b.common!!, lhs = b.lhs!!, rhs = b.rhs!!,
-                condition =
-                b.condition,
-                type = b.type!!
+                common = b.common!!, lhs = b.lhs!!, rhs = b.rhs!!, condition = b.condition, type = b.type!!
             )
         }
 
@@ -207,10 +209,7 @@ public class PlanBuilder private constructor() {
             val b = _RelAggregate(common, input, calls, groups, strategy)
             b.block()
             return factory.relAggregate(
-                common = b.common!!, input = b.input!!, calls = b.calls,
-                groups =
-                b.groups,
-                strategy = b.strategy!!
+                common = b.common!!, input = b.input!!, calls = b.calls, groups = b.groups, strategy = b.strategy!!
             )
         }
 
@@ -236,13 +235,13 @@ public class PlanBuilder private constructor() {
         }
 
         public fun rexUnary(
-            rex: Rex? = null,
+            `value`: Rex? = null,
             op: Rex.Unary.Op? = null,
             block: _RexUnary.() -> Unit = {}
         ): Rex.Unary {
-            val b = _RexUnary(rex, op)
+            val b = _RexUnary(value, op)
             b.block()
-            return factory.rexUnary(rex = b.rex!!, op = b.op!!)
+            return factory.rexUnary(value = b.value!!, op = b.op!!)
         }
 
         public fun rexBinary(
@@ -293,14 +292,13 @@ public class PlanBuilder private constructor() {
             return factory.rexCollection(type = b.type!!, values = b.values)
         }
 
-        public fun rexStruct(
-            fields: MutableList<Binding> = mutableListOf(),
-            block: _RexStruct.() ->
-            Unit = {}
-        ): Rex.Struct {
-            val b = _RexStruct(fields)
+        public fun rexTuple(
+            fields: MutableList<Field> = mutableListOf(),
+            block: _RexTuple.() -> Unit = {}
+        ): Rex.Tuple {
+            val b = _RexTuple(fields)
             b.block()
-            return factory.rexStruct(fields = b.fields)
+            return factory.rexTuple(fields = b.fields)
         }
 
         public fun rexQueryScalarCoerce(
@@ -314,13 +312,13 @@ public class PlanBuilder private constructor() {
 
         public fun rexQueryScalarPivot(
             rel: Rel? = null,
-            rex: Rex? = null,
+            `value`: Rex? = null,
             at: Rex? = null,
             block: _RexQueryScalarPivot.() -> Unit = {}
         ): Rex.Query.Scalar.Pivot {
-            val b = _RexQueryScalarPivot(rel, rex, at)
+            val b = _RexQueryScalarPivot(rel, value, at)
             b.block()
-            return factory.rexQueryScalarPivot(rel = b.rel!!, rex = b.rex!!, at = b.at!!)
+            return factory.rexQueryScalarPivot(rel = b.rel!!, value = b.value!!, at = b.at!!)
         }
 
         public fun rexQueryCollection(
@@ -345,8 +343,13 @@ public class PlanBuilder private constructor() {
         )
 
         public class _Binding(
+            public var name: String? = null,
+            public var `value`: Rex? = null
+        )
+
+        public class _Field(
             public var name: Rex? = null,
-            public var rex: Rex? = null
+            public var `value`: Rex? = null
         )
 
         public class _StepRex(
@@ -359,14 +362,14 @@ public class PlanBuilder private constructor() {
         public class _StepUnpivot
 
         public class _SortSpec(
-            public var rex: Rex? = null,
+            public var `value`: Rex? = null,
             public var dir: SortSpec.Dir? = null,
             public var nulls: SortSpec.Nulls? = null
         )
 
         public class _RelScan(
             public var common: Common? = null,
-            public var rex: Rex? = null,
+            public var `value`: Rex? = null,
             public var alias: String? = null,
             public var at: String? = null,
             public var `by`: String? = null
@@ -374,7 +377,7 @@ public class PlanBuilder private constructor() {
 
         public class _RelUnpivot(
             public var common: Common? = null,
-            public var rex: Rex? = null,
+            public var `value`: Rex? = null,
             public var alias: String? = null,
             public var at: String? = null,
             public var `by`: String? = null
@@ -440,7 +443,7 @@ public class PlanBuilder private constructor() {
         )
 
         public class _RexUnary(
-            public var rex: Rex? = null,
+            public var `value`: Rex? = null,
             public var op: Rex.Unary.Op? = null
         )
 
@@ -470,8 +473,8 @@ public class PlanBuilder private constructor() {
             public var values: MutableList<Rex> = mutableListOf()
         )
 
-        public class _RexStruct(
-            public var fields: MutableList<Binding> = mutableListOf()
+        public class _RexTuple(
+            public var fields: MutableList<Field> = mutableListOf()
         )
 
         public class _RexQueryScalarCoerce(
@@ -480,7 +483,7 @@ public class PlanBuilder private constructor() {
 
         public class _RexQueryScalarPivot(
             public var rel: Rel? = null,
-            public var rex: Rex? = null,
+            public var `value`: Rex? = null,
             public var at: Rex? = null
         )
 
@@ -494,8 +497,7 @@ public class PlanBuilder private constructor() {
         @JvmStatic
         public fun <T : PlanNode> build(
             factory: PlanFactory = PlanFactory.DEFAULT,
-            block: Builder.() ->
-            T
+            block: Builder.() -> T
         ) = Builder(factory).block()
 
         @JvmStatic

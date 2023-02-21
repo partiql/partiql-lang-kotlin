@@ -8,5 +8,4 @@ dependencies {
     implementation(project(":lang"))
     // pretty printing
     implementation(Deps.kotlinReflect)
-    implementation(Deps.jackson)
 }

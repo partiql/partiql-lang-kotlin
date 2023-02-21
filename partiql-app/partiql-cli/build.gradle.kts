@@ -24,7 +24,6 @@ dependencies {
     implementation(project(":partiql-lib:partiql-plan"))
     implementation(Deps.csv)
     implementation(Deps.guava)
-    implementation(Deps.jackson)
     implementation(Deps.jansi)
     implementation(Deps.jline)
     implementation(Deps.joda)

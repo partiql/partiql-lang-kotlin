@@ -4,12 +4,18 @@ import com.amazon.ionelement.api.IonElement
 import org.partiql.plan.ir.Binding
 import org.partiql.plan.ir.Case
 import org.partiql.plan.ir.Common
+import org.partiql.plan.ir.Field
 import org.partiql.plan.ir.Plan
 import org.partiql.plan.ir.Property
 import org.partiql.plan.ir.Rel
 import org.partiql.plan.ir.Rex
 import org.partiql.plan.ir.SortSpec
 import org.partiql.plan.ir.Step
+import kotlin.Any
+import kotlin.String
+import kotlin.collections.List
+import kotlin.collections.Map
+import kotlin.collections.Set
 
 public abstract class PlanFactory {
     public open fun plan(version: Plan.Version, root: Rex) = Plan(version, root)
@@ -20,7 +26,9 @@ public abstract class PlanFactory {
         metas: Map<String, Any>
     ) = Common(schema, properties, metas)
 
-    public open fun binding(name: Rex, rex: Rex) = Binding(name, rex)
+    public open fun binding(name: String, `value`: Rex) = Binding(name, value)
+
+    public open fun `field`(name: Rex, `value`: Rex) = Field(name, value)
 
     public open fun stepRex(index: Rex, case: Case?) = Step.Rex(index, case)
 
@@ -29,26 +37,26 @@ public abstract class PlanFactory {
     public open fun stepUnpivot() = Step.Unpivot()
 
     public open fun sortSpec(
-        rex: Rex,
+        `value`: Rex,
         dir: SortSpec.Dir,
         nulls: SortSpec.Nulls
-    ) = SortSpec(rex, dir, nulls)
+    ) = SortSpec(value, dir, nulls)
 
     public open fun relScan(
         common: Common,
-        rex: Rex,
+        `value`: Rex,
         alias: String?,
         at: String?,
         `by`: String?
-    ) = Rel.Scan(common, rex, alias, at, by)
+    ) = Rel.Scan(common, value, alias, at, by)
 
     public open fun relUnpivot(
         common: Common,
-        rex: Rex,
+        `value`: Rex,
         alias: String?,
         at: String?,
         `by`: String?
-    ) = Rel.Unpivot(common, rex, alias, at, by)
+    ) = Rel.Unpivot(common, value, alias, at, by)
 
     public open fun relFilter(
         common: Common,
@@ -106,7 +114,7 @@ public abstract class PlanFactory {
 
     public open fun rexPath(root: Rex, steps: List<Step>) = Rex.Path(root, steps)
 
-    public open fun rexUnary(rex: Rex, op: Rex.Unary.Op) = Rex.Unary(rex, op)
+    public open fun rexUnary(`value`: Rex, op: Rex.Unary.Op) = Rex.Unary(value, op)
 
     public open fun rexBinary(
         lhs: Rex,
@@ -129,15 +137,15 @@ public abstract class PlanFactory {
         values
     )
 
-    public open fun rexStruct(fields: List<Binding>) = Rex.Struct(fields)
+    public open fun rexTuple(fields: List<Field>) = Rex.Tuple(fields)
 
     public open fun rexQueryScalarCoerce(query: Rex.Query.Collection) = Rex.Query.Scalar.Coerce(query)
 
     public open fun rexQueryScalarPivot(
         rel: Rel,
-        rex: Rex,
+        `value`: Rex,
         at: Rex
-    ) = Rex.Query.Scalar.Pivot(rel, rex, at)
+    ) = Rex.Query.Scalar.Pivot(rel, value, at)
 
     public open fun rexQueryCollection(rel: Rel, `constructor`: Rex?) = Rex.Query.Collection(
         rel,
