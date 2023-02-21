@@ -17,10 +17,8 @@ package org.partiql.lang.eval.physical
 import com.amazon.ion.IonString
 import com.amazon.ion.IonValue
 import com.amazon.ion.Timestamp
-import com.amazon.ion.system.IonSystemBuilder
 import com.amazon.ionelement.api.MetaContainer
 import com.amazon.ionelement.api.emptyMetaContainer
-import com.amazon.ionelement.api.toIonValue
 import org.partiql.lang.ast.IsOrderedMeta
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.ast.UNKNOWN_SOURCE_LOCATION
@@ -69,6 +67,7 @@ import org.partiql.lang.eval.errorContextFrom
 import org.partiql.lang.eval.errorIf
 import org.partiql.lang.eval.exprEquals
 import org.partiql.lang.eval.fillErrorContext
+import org.partiql.lang.eval.io.IonicParse
 import org.partiql.lang.eval.isNotUnknown
 import org.partiql.lang.eval.isUnknown
 import org.partiql.lang.eval.like.parsePattern
@@ -101,7 +100,6 @@ import org.partiql.lang.util.isZero
 import org.partiql.lang.util.minus
 import org.partiql.lang.util.plus
 import org.partiql.lang.util.rem
-import org.partiql.lang.util.stringValue
 import org.partiql.lang.util.times
 import org.partiql.lang.util.toIntExact
 import org.partiql.lang.util.totalMinutes
@@ -137,9 +135,6 @@ internal class PhysicalPlanCompilerImpl(
     private val evaluatorOptions: EvaluatorOptions = EvaluatorOptions.standard(),
     private val bexperConverter: PhysicalBexprToThunkConverter,
 ) : PhysicalPlanCompiler {
-    // TODO: remove this once we migrate from `IonValue` to `IonElement`.
-    private val ion = IonSystemBuilder.standard().build()
-
     private val errorSignaler = evaluatorOptions.typingMode.createErrorSignaler()
     private val thunkFactory = evaluatorOptions.typingMode.createThunkFactory<EvaluatorState>(evaluatorOptions.thunkOptions)
 
@@ -593,7 +588,7 @@ internal class PhysicalPlanCompilerImpl(
                 .filterIsInstance<PartiqlPhysical.Expr.Lit>()
                 .mapTo(TreeSet<ExprValue>(DEFAULT_COMPARATOR)) {
                     ExprValue.of(
-                        it.value.toIonValue(ion)
+                        IonicParse.element4ExprValue(it.value)
                     )
                 }
 
@@ -879,7 +874,7 @@ internal class PhysicalPlanCompilerImpl(
     }
 
     private fun compileLit(expr: PartiqlPhysical.Expr.Lit, metas: MetaContainer): PhysicalPlanThunk {
-        val value = ExprValue.of(expr.value.toIonValue(ion))
+        val value = ExprValue.of(IonicParse.element4ExprValue(expr.value))
 
         return thunkFactory.thunkEnv(metas) { value }
     }
@@ -1421,9 +1416,9 @@ internal class PhysicalPlanCompilerImpl(
                         when {
                             // If indexExpr is a literal string, there is no need to evaluate it--just compile a
                             // thunk that directly returns a bound value
-                            indexExpr is PartiqlPhysical.Expr.Lit && indexExpr.value.toIonValue(ion) is IonString -> {
+                            indexExpr is PartiqlPhysical.Expr.Lit && IonicParse.element4Tycheck(indexExpr.value) is IonString -> {
                                 val lookupName = BindingName(
-                                    indexExpr.value.toIonValue(ion).stringValue()!!,
+                                    IonicParse.element2String(indexExpr.value)!!,
                                     caseSensitivity.toBindingCase()
                                 )
                                 thunkFactory.thunkEnvValue(componentMetas) { _, componentValue ->
@@ -1600,15 +1595,15 @@ internal class PhysicalPlanCompilerImpl(
         return when {
             patternExpr is PartiqlPhysical.Expr.Lit && (escapeExpr == null || escapeExpr is PartiqlPhysical.Expr.Lit) -> {
                 val patternParts = getRegexPattern(
-                    ExprValue.of(patternExpr.value.toIonValue(ion)),
-                    (escapeExpr as? PartiqlPhysical.Expr.Lit)?.value?.toIonValue(ion)
-                        ?.let { ExprValue.of(it) }
+                    ExprValue.of(IonicParse.element4ExprValue(patternExpr.value)),
+                    (escapeExpr as? PartiqlPhysical.Expr.Lit)?.value
+                        ?.let { ExprValue.of(IonicParse.element4ExprValue(it)) }
                 )
 
                 // If valueExpr is also a literal then we can evaluate this at compile time and return a constant.
                 if (valueExpr is PartiqlPhysical.Expr.Lit) {
                     val resultValue = matchRegexPattern(
-                        ExprValue.of(valueExpr.value.toIonValue(ion)),
+                        ExprValue.of(IonicParse.element4ExprValue(valueExpr.value)),
                         patternParts
                     )
                     return thunkFactory.thunkEnv(metas) { resultValue }

@@ -22,7 +22,6 @@ import com.amazon.ion.IonSystem
 import com.amazon.ion.IonTimestamp
 import com.amazon.ion.IonType
 import com.amazon.ion.IonValue
-import com.amazon.ion.system.IonSystemBuilder
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVParser
 import org.apache.commons.csv.CSVPrinter
@@ -56,8 +55,7 @@ object DelimitedValues {
                 convert(raw)
 
             override fun convert(raw: String): ExprValue = try {
-                val ion = IonSystemBuilder.standard().build()
-                when (val converted = ion.singleValue(raw)) {
+                when (val converted = IonicParse.simpleIon4ExprValue(raw)) {
                     is IonInt, is IonFloat, is IonDecimal, is IonTimestamp ->
                         ExprValue.of(converted)
                     // if we can't convert the above, we just use the input string as-is

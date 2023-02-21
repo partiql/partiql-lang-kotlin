@@ -10,6 +10,7 @@ import org.partiql.lang.compiler.PartiQLCompiler;
 import org.partiql.lang.compiler.PartiQLCompilerBuilder;
 import org.partiql.lang.compiler.PartiQLCompilerPipeline;
 import org.partiql.lang.eval.*;
+import org.partiql.lang.eval.io.IonicParse;
 import org.partiql.lang.planner.*;
 import org.partiql.lang.syntax.Parser;
 import org.partiql.lang.syntax.PartiQLParserBuilder;
@@ -42,7 +43,7 @@ public class PartiQLCompilerPipelineJavaExample extends Example {
                 "]";
 
         final Bindings<ExprValue> globalVariables = Bindings.<ExprValue>lazyBindingsBuilder().addBinding("myTable", () -> {
-            ExprValue exprValue = ExprValue.of(ion.singleValue(myTable));
+            ExprValue exprValue = ExprValue.of(IonicParse.INSTANCE.complexIon4ExprValue(myTable));
             return exprValue;
         }).build();
 

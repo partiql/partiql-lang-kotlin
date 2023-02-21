@@ -1,6 +1,5 @@
 package org.partiql.examples
 
-import com.amazon.ion.system.IonSystemBuilder
 import org.partiql.examples.util.Example
 import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.errors.ErrorCode
@@ -16,6 +15,7 @@ import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.StructOrdering
 import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedure
 import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedureSignature
+import org.partiql.lang.eval.io.IonicParse
 import org.partiql.lang.eval.namedValue
 import org.partiql.lang.eval.numberValue
 import org.partiql.lang.eval.stringValue
@@ -89,7 +89,6 @@ class CalculateCrewMoonWeight : StoredProcedure {
  * Demonstrates the use of custom stored procedure [CalculateCrewMoonWeight] in PartiQL queries.
  */
 class CustomProceduresExample(out: PrintStream) : Example(out) {
-    private val ion = IonSystemBuilder.standard().build()
 
     override fun run() {
         /**
@@ -104,14 +103,14 @@ class CustomProceduresExample(out: PrintStream) : Example(out) {
         val initialCrews = Bindings.ofMap(
             mapOf(
                 "crew1" to ExprValue.of(
-                    ion.singleValue(
+                    IonicParse.complexIon4ExprValue(
                         """[ { name: "Neil",    mass: 80.5 }, 
                                          { name: "Buzz",    mass: 72.3 },
                                          { name: "Michael", mass: 89.9 } ]"""
                     )
                 ),
                 "crew2" to ExprValue.of(
-                    ion.singleValue(
+                    IonicParse.complexIon4ExprValue(
                         """[ { name: "James", mass: 77.1 }, 
                                          { name: "Spock", mass: 81.6 } ]"""
                     )

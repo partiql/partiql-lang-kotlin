@@ -981,7 +981,7 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
         tc: STRTestCase
     ) {
         val globalBindings = Bindings.ofMap(tc.globals)
-        val transformer = StaticTypeVisitorTransform(ion, globalBindings, tc.constraints)
+        val transformer = StaticTypeVisitorTransform(globalBindings, tc.constraints)
 
         // We always pass the query under test through all of the basic transformers primarily because we need
         // FromSourceAliasVisitorTransform to execute first but also to help ensure the queries we're testing

@@ -9,6 +9,7 @@ import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.PartiQLResult
 import org.partiql.lang.eval.ProjectionIterationBehavior
+import org.partiql.lang.eval.io.IonicParse
 import org.partiql.lang.planner.EvaluatorOptions
 import org.partiql.lang.planner.GlobalResolutionResult
 import org.partiql.lang.planner.GlobalVariableResolver
@@ -36,7 +37,7 @@ class PartiQLCompilerPipelineExample(out: PrintStream) : Example(out) {
     private val globalVariables = Bindings.buildLazyBindings<ExprValue> {
         addBinding("myTable") {
             ExprValue.of(
-                myIonSystem.singleValue(myTable)
+                IonicParse.complexIon4ExprValue(myTable)
             )
         }
     }

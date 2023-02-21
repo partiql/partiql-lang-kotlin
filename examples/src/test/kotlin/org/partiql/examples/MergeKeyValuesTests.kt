@@ -13,7 +13,6 @@
  */
 package org.partiql.examples
 
-import com.amazon.ion.system.IonSystemBuilder
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertThrows
@@ -21,19 +20,19 @@ import org.junit.jupiter.api.Test
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.StructOrdering
+import org.partiql.lang.eval.io.IonicParse
 import org.partiql.lang.eval.namedValue
 
 class MergeKeyValuesTests {
-    private val ion = IonSystemBuilder.standard().build()
     private val session = EvaluationSession.standard()
 
     @Test
     fun testFunction() {
         val fn = MergeKeyValues()
 
-        val ionValue1 = ion.newList(ion.newString("abc"), ion.newString("cde"))
-        val ionValue2 = ion.newList(ion.newString("ghj"), ion.newString("klu"))
-        val ionValue3 = ion.newList(ion.newString("ghj"), ion.newString("klu"))
+        val ionValue1 = IonicParse.complexIon4ExprValue(""" [ "abc", "cde" ] """)
+        val ionValue2 = IonicParse.complexIon4ExprValue(""" [ "ghj", "klu" ] """)
+        val ionValue3 = IonicParse.complexIon4ExprValue(""" [ "ghj", "klu" ] """)
 
         val list1 = listOf(
             ExprValue.newString("certificate").namedValue(ExprValue.newSymbol("Name")),

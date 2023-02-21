@@ -15,17 +15,16 @@
 package org.partiql.lang.eval
 
 import com.amazon.ion.IntegerSize
-import com.amazon.ion.IonInt
 import com.amazon.ion.IonStruct
 import com.amazon.ion.IonSystem
 import com.amazon.ion.IonType
 import com.amazon.ion.IonValue
 import com.amazon.ion.Timestamp
-import com.amazon.ion.system.IonSystemBuilder
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.errors.PropertyValueMap
+import org.partiql.lang.eval.io.IonicParse
 import org.partiql.lang.eval.time.NANOS_PER_SECOND
 import org.partiql.lang.eval.time.Time
 import org.partiql.lang.syntax.DATE_TIME_PART_KEYWORDS
@@ -462,22 +461,16 @@ fun ExprValue.cast(
                     type.isText -> {
                         // Here, we use ion java library to help the transform from string to int
                         // TODO: have our own parser implemented and remove dependency on Ion, https://github.com/partiql/partiql-lang-kotlin/issues/956
-                        fun parseToLong(s: String): Long {
-                            val ion = IonSystemBuilder.standard().build()
-                            val value = try {
-                                val normalized = s.normalizeForCastToInt()
-                                ion.singleValue(normalized) as IonInt
-                            } catch (e: Exception) {
-                                castFailedErr("can't convert string value to INT", internal = false, cause = e)
-                            }
-                            return when (value.integerSize) {
-                                // Our numbers comparison machinery does not handle big integers yet, fail fast
-                                IntegerSize.BIG_INTEGER -> errIntOverflow(8, errorContextFrom(locationMeta))
-                                else -> value.longValue()
-                            }
+                        val value = try {
+                            IonicParse.parseToIonInt(stringValue())
+                        } catch (e: Exception) {
+                            castFailedErr("can't convert string value to INT", internal = false, cause = e)
                         }
-
-                        return parseToLong(stringValue()).exprValue(targetType)
+                        return when (value.integerSize) {
+                            // Our numbers comparison machinery does not handle big integers yet, fail fast
+                            IntegerSize.BIG_INTEGER -> errIntOverflow(8, errorContextFrom(locationMeta))
+                            else -> value.longValue().exprValue(targetType)
+                        }
                     }
                 }
                 is FloatType -> when {
@@ -638,58 +631,6 @@ fun ExprValue.cast(
 
     // incompatible types
     err("Cannot convert $type to $targetType", errorCode, castExceptionContext(), internal = false)
-}
-/**
- * Remove leading spaces in decimal notation and the plus sign
- *
- * Examples:
- * - `"00001".normalizeForIntCast() == "1"`
- * - `"-00001".normalizeForIntCast() == "-1"`
- * - `"0x00001".normalizeForIntCast() == "0x00001"`
- * - `"+0x00001".normalizeForIntCast() == "0x00001"`
- * - `"000a".normalizeForIntCast() == "a"`
- */
-private fun String.normalizeForCastToInt(): String {
-    fun Char.isSign() = this == '-' || this == '+'
-    fun Char.isHexOrBase2Marker(): Boolean {
-        val c = this.toLowerCase()
-
-        return c == 'x' || c == 'b'
-    }
-
-    fun String.possiblyHexOrBase2() = (length >= 2 && this[1].isHexOrBase2Marker()) ||
-        (length >= 3 && this[0].isSign() && this[2].isHexOrBase2Marker())
-
-    return when {
-        length == 0 -> this
-        possiblyHexOrBase2() -> {
-            if (this[0] == '+') {
-                this.drop(1)
-            } else {
-                this
-            }
-        }
-        else -> {
-            val (isNegative, startIndex) = when (this[0]) {
-                '-' -> Pair(true, 1)
-                '+' -> Pair(false, 1)
-                else -> Pair(false, 0)
-            }
-
-            var toDrop = startIndex
-            while (toDrop < length && this[toDrop] == '0') {
-                toDrop += 1
-            }
-
-            when {
-                toDrop == length -> "0" // string is all zeros
-                toDrop == 0 -> this
-                toDrop == 1 && isNegative -> this
-                toDrop > 1 && isNegative -> '-' + this.drop(toDrop)
-                else -> this.drop(toDrop)
-            }
-        }
-    }
 }
 
 /**

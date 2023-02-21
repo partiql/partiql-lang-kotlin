@@ -14,7 +14,6 @@
 
 package org.partiql.lang
 
-import com.amazon.ion.IonSystem
 import com.amazon.ion.system.IonSystemBuilder
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.eval.Bindings
@@ -252,7 +251,6 @@ interface CompilerPipeline {
             val allFunctions = builtinFunctions + customFunctions
 
             return CompilerPipelineImpl(
-                ion = ion,
                 parser = parser ?: PartiQLParserBuilder().ionSystem(ion).customTypes(customDataTypes).build(),
                 compileOptions = compileOptionsToUse,
                 functions = allFunctions,
@@ -266,7 +264,6 @@ interface CompilerPipeline {
 }
 
 internal class CompilerPipelineImpl(
-    private val ion: IonSystem,
     private val parser: Parser,
     override val compileOptions: CompileOptions,
     override val functions: Map<String, ExprFunction>,
@@ -287,7 +284,6 @@ internal class CompilerPipelineImpl(
     private constructor (
         @Suppress("DEPRECATION") // Deprecation of ExprValueFactory.
         valueFactory: org.partiql.lang.eval.ExprValueFactory,
-        ion: IonSystem,
         parser: Parser,
         compileOptions: CompileOptions,
         functions: Map<String, ExprFunction>,
@@ -295,7 +291,7 @@ internal class CompilerPipelineImpl(
         procedures: Map<String, StoredProcedure>,
         preProcessingSteps: List<ProcessingStep>,
         globalTypeBindings: Bindings<StaticType>?
-    ) : this(ion, parser, compileOptions, functions, customDataTypes, procedures, preProcessingSteps, globalTypeBindings) {
+    ) : this(parser, compileOptions, functions, customDataTypes, procedures, preProcessingSteps, globalTypeBindings) {
         @Suppress("DEPRECATION")
         this.valueFactory = valueFactory
     }
@@ -326,7 +322,7 @@ internal class CompilerPipelineImpl(
                     null -> null
                     else -> {
                         listOf(
-                            StaticTypeVisitorTransform(ion, globalTypeBindings),
+                            StaticTypeVisitorTransform(globalTypeBindings),
                             StaticTypeInferenceVisitorTransform(
                                 globalBindings = globalTypeBindings,
                                 customFunctionSignatures = functions.values.map { it.signature },

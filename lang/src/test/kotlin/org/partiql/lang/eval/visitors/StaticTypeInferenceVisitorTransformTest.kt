@@ -1,6 +1,5 @@
 package org.partiql.lang.eval.visitors
 
-import com.amazon.ion.system.IonSystemBuilder
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.lang.ast.SourceLocationMeta
@@ -167,7 +166,6 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
 
     private fun runTest(tc: TestCase) {
         val globalBindings = Bindings.ofMap(tc.globals)
-        val ion = IonSystemBuilder.standard().build()
         val inferencer = StaticTypeInferencer(
             globalBindings = globalBindings,
             customFunctionSignatures = tc.customFunctionSignatures,
@@ -175,7 +173,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
         )
 
         val defaultVisitorTransforms = basicVisitorTransforms()
-        val staticTypeVisitorTransform = StaticTypeVisitorTransform(ion, globalBindings)
+        val staticTypeVisitorTransform = StaticTypeVisitorTransform(globalBindings)
         val originalStatement = parse(tc.originalSql).let {
             // We always pass the query under test through all of the basic VisitorTransforms primarily because we need
             // FromSourceAliasVisitorTransform to execute first but also to help ensure the queries we're testing

@@ -6,8 +6,9 @@ package org.partiql.lang.eval.visitors
 
 import com.amazon.ion.IonSystem
 import com.amazon.ionelement.api.MetaContainer
+import com.amazon.ionelement.api.ionString
 import com.amazon.ionelement.api.metaContainerOf
-import com.amazon.ionelement.api.toIonElement
+// import com.amazon.ionelement.api.toIonElement
 import org.partiql.lang.ast.StaticTypeMeta
 import org.partiql.lang.ast.passes.SemanticException
 import org.partiql.lang.domains.PartiqlAst
@@ -59,10 +60,17 @@ enum class StaticTypeVisitorTransformConstraints {
  * @param constraints Additional constraints on what variable scoping, or other rules should be followed.
  */
 class StaticTypeVisitorTransform(
-    private val ion: IonSystem,
     globalBindings: Bindings<StaticType>,
     constraints: Set<StaticTypeVisitorTransformConstraints> = setOf()
 ) : VisitorTransformBase() {
+
+    @Deprecated("The IonSystem parameter to the StaticTypeVisitorTransform constructor is deprecated. Use the constructor witout it.")
+    @Suppress("UNUSED_PARAMETER")
+    constructor(
+        ion: IonSystem,
+        globalBindings: Bindings<StaticType>,
+        constraints: Set<StaticTypeVisitorTransformConstraints> = setOf()
+    ) : this(globalBindings, constraints)
 
     /** Used to allow certain binding lookups to occur directly in the global scope. */
     private val globalEnv = wrapBindings(globalBindings, 0)
@@ -156,7 +164,7 @@ class StaticTypeVisitorTransform(
 
         private fun PartiqlAst.Expr.Id.toPathExpr(): PartiqlAst.PathStep.PathExpr =
             PartiqlAst.build {
-                pathExpr(index = lit(ion.newString(name.text).toIonElement(), this@toPathExpr.extractSourceLocation()), case = case, metas = metas)
+                pathExpr(index = lit(ionString(name.text), this@toPathExpr.extractSourceLocation()), case = case, metas = metas)
             }
 
         private fun errUnboundName(name: String, case: PartiqlAst.CaseSensitivity, metas: MetaContainer): Nothing =
