@@ -2,8 +2,8 @@ package org.partiql.plan
 
 import com.amazon.ionelement.api.MetaContainer
 import org.partiql.lang.domains.PartiqlAst
-import org.partiql.plan.ir.Binding
 import org.partiql.plan.ir.Case
+import org.partiql.plan.ir.Field
 import org.partiql.plan.ir.Rex
 import org.partiql.plan.ir.Step
 
@@ -93,21 +93,21 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
 
     override fun walkExprNot(node: PartiqlAst.Expr.Not, accumulator: Ctx) = visit(node) {
         Rex.Unary(
-            rex = convert(node.expr),
+            value = convert(node.expr),
             op = Rex.Unary.Op.NOT,
         )
     }
 
     override fun walkExprPos(node: PartiqlAst.Expr.Pos, accumulator: Ctx) = visit(node) {
         Rex.Unary(
-            rex = convert(node.expr),
+            value = convert(node.expr),
             op = Rex.Unary.Op.POS,
         )
     }
 
     override fun walkExprNeg(node: PartiqlAst.Expr.Neg, accumulator: Ctx) = visit(node) {
         Rex.Unary(
-            rex = convert(node.expr),
+            value = convert(node.expr),
             op = Rex.Unary.Op.NEG,
         )
     }
@@ -257,11 +257,11 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
     }
 
     override fun walkExprStruct(node: PartiqlAst.Expr.Struct, accumulator: Ctx) = visit(node) {
-        Rex.Struct(
+        Rex.Tuple(
             fields = node.fields.map {
-                Binding(
+                Field(
                     name = convert(it.first),
-                    rex = convert(it.second)
+                    value = convert(it.second)
                 )
             }
         )
@@ -276,7 +276,7 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
 
     override fun walkExprList(node: PartiqlAst.Expr.List, accumulator: Ctx) = visit(node) {
         Rex.Collection(
-            type = Rex.Collection.Type.LIST,
+            type = Rex.Collection.Type.ARRAY,
             values = convert(node.values),
         )
     }

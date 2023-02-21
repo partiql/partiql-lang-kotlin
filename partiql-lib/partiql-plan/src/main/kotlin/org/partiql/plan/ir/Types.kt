@@ -1,10 +1,12 @@
 package org.partiql.plan.ir
 
 import com.amazon.ionelement.api.IonElement
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.annotation.JsonPropertyOrder
 import org.partiql.plan.ir.visitor.PlanVisitor
+import kotlin.Any
+import kotlin.String
+import kotlin.collections.List
+import kotlin.collections.Map
+import kotlin.collections.Set
 
 public abstract class PlanNode {
     public open val children: List<PlanNode> = emptyList()
@@ -12,8 +14,6 @@ public abstract class PlanNode {
     public abstract fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R
 }
 
-@JsonIgnoreProperties("children")
-@JsonPropertyOrder("_id")
 public data class Plan(
     public val version: Version,
     public val root: Rex
@@ -23,9 +23,6 @@ public data class Plan(
         kids.add(root)
         kids.filterNotNull()
     }
-
-    @JsonProperty("_id")
-    private val _id: String = "plan"
 
     public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitPlan(
         this,
@@ -37,38 +34,42 @@ public data class Plan(
     }
 }
 
-@JsonIgnoreProperties("children")
-@JsonPropertyOrder("_id")
 public data class Common(
     public val schema: Map<String, Rel.Join.Type>,
     public val properties: Set<Property>,
     public val metas: Map<String, Any>
 ) : PlanNode() {
-    @JsonProperty("_id")
-    private val _id: String = "common"
-
     public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
         visitor.visitCommon(this, ctx)
 }
 
-@JsonIgnoreProperties("children")
-@JsonPropertyOrder("_id")
 public data class Binding(
+    public val name: String,
+    public val `value`: Rex
+) : PlanNode() {
+    public override val children: List<PlanNode> by lazy {
+        val kids = mutableListOf<PlanNode?>()
+        kids.add(value)
+        kids.filterNotNull()
+    }
+
+    public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+        visitor.visitBinding(this, ctx)
+}
+
+public data class Field(
     public val name: Rex,
-    public val rex: Rex
+    public val `value`: Rex
 ) : PlanNode() {
     public override val children: List<PlanNode> by lazy {
         val kids = mutableListOf<PlanNode?>()
         kids.add(name)
-        kids.add(rex)
+        kids.add(value)
         kids.filterNotNull()
     }
 
-    @JsonProperty("_id")
-    private val _id: String = "binding"
-
     public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
-        visitor.visitBinding(this, ctx)
+        visitor.visitField(this, ctx)
 }
 
 public sealed class Step : PlanNode() {
@@ -78,8 +79,6 @@ public sealed class Step : PlanNode() {
         is Unpivot -> visitor.visitStepUnpivot(this, ctx)
     }
 
-    @JsonIgnoreProperties("children")
-    @JsonPropertyOrder("_id")
     public data class Rex(
         public val index: org.partiql.plan.ir.Rex,
         public val case: Case?
@@ -90,49 +89,31 @@ public sealed class Step : PlanNode() {
             kids.filterNotNull()
         }
 
-        @JsonProperty("_id")
-        private val _id: String = "step.rex"
-
         public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
             visitor.visitStepRex(this, ctx)
     }
 
-    @JsonIgnoreProperties("children")
-    @JsonPropertyOrder("_id")
     public class Wildcard : Step() {
-        @JsonProperty("_id")
-        private val _id: String = "step.wildcard"
-
         public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
             visitor.visitStepWildcard(this, ctx)
     }
 
-    @JsonIgnoreProperties("children")
-    @JsonPropertyOrder("_id")
     public class Unpivot : Step() {
-        @JsonProperty("_id")
-        private val _id: String = "step.unpivot"
-
         public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
             visitor.visitStepUnpivot(this, ctx)
     }
 }
 
-@JsonIgnoreProperties("children")
-@JsonPropertyOrder("_id")
 public data class SortSpec(
-    public val rex: Rex,
+    public val `value`: Rex,
     public val dir: Dir,
     public val nulls: Nulls
 ) : PlanNode() {
     public override val children: List<PlanNode> by lazy {
         val kids = mutableListOf<PlanNode?>()
-        kids.add(rex)
+        kids.add(value)
         kids.filterNotNull()
     }
-
-    @JsonProperty("_id")
-    private val _id: String = "sort_spec"
 
     public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
         visitor.visitSortSpec(this, ctx)
@@ -161,11 +142,9 @@ public sealed class Rel : PlanNode() {
         is Aggregate -> visitor.visitRelAggregate(this, ctx)
     }
 
-    @JsonIgnoreProperties("children")
-    @JsonPropertyOrder("_id")
     public data class Scan(
         public val common: Common,
-        public val rex: Rex,
+        public val `value`: Rex,
         public val alias: String?,
         public val at: String?,
         public val `by`: String?
@@ -173,22 +152,17 @@ public sealed class Rel : PlanNode() {
         public override val children: List<PlanNode> by lazy {
             val kids = mutableListOf<PlanNode?>()
             kids.add(common)
-            kids.add(rex)
+            kids.add(value)
             kids.filterNotNull()
         }
-
-        @JsonProperty("_id")
-        private val _id: String = "rel.scan"
 
         public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
             visitor.visitRelScan(this, ctx)
     }
 
-    @JsonIgnoreProperties("children")
-    @JsonPropertyOrder("_id")
     public data class Unpivot(
         public val common: Common,
-        public val rex: Rex,
+        public val `value`: Rex,
         public val alias: String?,
         public val at: String?,
         public val `by`: String?
@@ -196,19 +170,14 @@ public sealed class Rel : PlanNode() {
         public override val children: List<PlanNode> by lazy {
             val kids = mutableListOf<PlanNode?>()
             kids.add(common)
-            kids.add(rex)
+            kids.add(value)
             kids.filterNotNull()
         }
-
-        @JsonProperty("_id")
-        private val _id: String = "rel.unpivot"
 
         public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
             visitor.visitRelUnpivot(this, ctx)
     }
 
-    @JsonIgnoreProperties("children")
-    @JsonPropertyOrder("_id")
     public data class Filter(
         public val common: Common,
         public val input: Rel,
@@ -222,15 +191,10 @@ public sealed class Rel : PlanNode() {
             kids.filterNotNull()
         }
 
-        @JsonProperty("_id")
-        private val _id: String = "rel.filter"
-
         public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
             visitor.visitRelFilter(this, ctx)
     }
 
-    @JsonIgnoreProperties("children")
-    @JsonPropertyOrder("_id")
     public data class Sort(
         public val common: Common,
         public val input: Rel,
@@ -244,15 +208,10 @@ public sealed class Rel : PlanNode() {
             kids.filterNotNull()
         }
 
-        @JsonProperty("_id")
-        private val _id: String = "rel.sort"
-
         public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
             visitor.visitRelSort(this, ctx)
     }
 
-    @JsonIgnoreProperties("children")
-    @JsonPropertyOrder("_id")
     public data class Bag(
         public val common: Common,
         public val lhs: Rel,
@@ -267,9 +226,6 @@ public sealed class Rel : PlanNode() {
             kids.filterNotNull()
         }
 
-        @JsonProperty("_id")
-        private val _id: String = "rel.bag"
-
         public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
             visitor.visitRelBag(this, ctx)
 
@@ -280,8 +236,6 @@ public sealed class Rel : PlanNode() {
         }
     }
 
-    @JsonIgnoreProperties("children")
-    @JsonPropertyOrder("_id")
     public data class Fetch(
         public val common: Common,
         public val input: Rel,
@@ -297,15 +251,10 @@ public sealed class Rel : PlanNode() {
             kids.filterNotNull()
         }
 
-        @JsonProperty("_id")
-        private val _id: String = "rel.fetch"
-
         public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
             visitor.visitRelFetch(this, ctx)
     }
 
-    @JsonIgnoreProperties("children")
-    @JsonPropertyOrder("_id")
     public data class Project(
         public val common: Common,
         public val input: Rel,
@@ -319,15 +268,10 @@ public sealed class Rel : PlanNode() {
             kids.filterNotNull()
         }
 
-        @JsonProperty("_id")
-        private val _id: String = "rel.project"
-
         public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
             visitor.visitRelProject(this, ctx)
     }
 
-    @JsonIgnoreProperties("children")
-    @JsonPropertyOrder("_id")
     public data class Join(
         public val common: Common,
         public val lhs: Rel,
@@ -344,9 +288,6 @@ public sealed class Rel : PlanNode() {
             kids.filterNotNull()
         }
 
-        @JsonProperty("_id")
-        private val _id: String = "rel.join"
-
         public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
             visitor.visitRelJoin(this, ctx)
 
@@ -358,8 +299,6 @@ public sealed class Rel : PlanNode() {
         }
     }
 
-    @JsonIgnoreProperties("children")
-    @JsonPropertyOrder("_id")
     public data class Aggregate(
         public val common: Common,
         public val input: Rel,
@@ -375,9 +314,6 @@ public sealed class Rel : PlanNode() {
             kids.addAll(groups)
             kids.filterNotNull()
         }
-
-        @JsonProperty("_id")
-        private val _id: String = "rel.aggregate"
 
         public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
             visitor.visitRelAggregate(this, ctx)
@@ -399,20 +335,15 @@ public sealed class Rex : PlanNode() {
         is Agg -> visitor.visitRexAgg(this, ctx)
         is Lit -> visitor.visitRexLit(this, ctx)
         is Collection -> visitor.visitRexCollection(this, ctx)
-        is Struct -> visitor.visitRexStruct(this, ctx)
+        is Tuple -> visitor.visitRexTuple(this, ctx)
         is Query -> visitor.visitRexQuery(this, ctx)
     }
 
-    @JsonIgnoreProperties("children")
-    @JsonPropertyOrder("_id")
     public data class Id(
         public val name: String,
         public val case: Case?,
         public val qualifier: Qualifier
     ) : Rex() {
-        @JsonProperty("_id")
-        private val _id: String = "rex.id"
-
         public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
             visitor.visitRexId(this, ctx)
 
@@ -422,8 +353,6 @@ public sealed class Rex : PlanNode() {
         }
     }
 
-    @JsonIgnoreProperties("children")
-    @JsonPropertyOrder("_id")
     public data class Path(
         public val root: Rex,
         public val steps: List<Step>
@@ -435,27 +364,19 @@ public sealed class Rex : PlanNode() {
             kids.filterNotNull()
         }
 
-        @JsonProperty("_id")
-        private val _id: String = "rex.path"
-
         public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
             visitor.visitRexPath(this, ctx)
     }
 
-    @JsonIgnoreProperties("children")
-    @JsonPropertyOrder("_id")
     public data class Unary(
-        public val rex: Rex,
+        public val `value`: Rex,
         public val op: Op
     ) : Rex() {
         public override val children: List<PlanNode> by lazy {
             val kids = mutableListOf<PlanNode?>()
-            kids.add(rex)
+            kids.add(value)
             kids.filterNotNull()
         }
-
-        @JsonProperty("_id")
-        private val _id: String = "rex.unary"
 
         public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
             visitor.visitRexUnary(this, ctx)
@@ -467,8 +388,6 @@ public sealed class Rex : PlanNode() {
         }
     }
 
-    @JsonIgnoreProperties("children")
-    @JsonPropertyOrder("_id")
     public data class Binary(
         public val lhs: Rex,
         public val rhs: Rex,
@@ -480,9 +399,6 @@ public sealed class Rex : PlanNode() {
             kids.add(rhs)
             kids.filterNotNull()
         }
-
-        @JsonProperty("_id")
-        private val _id: String = "rex.binary"
 
         public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
             visitor.visitRexBinary(this, ctx)
@@ -505,8 +421,6 @@ public sealed class Rex : PlanNode() {
         }
     }
 
-    @JsonIgnoreProperties("children")
-    @JsonPropertyOrder("_id")
     public data class Call(
         public val id: String,
         public val args: List<Rex>
@@ -517,15 +431,10 @@ public sealed class Rex : PlanNode() {
             kids.filterNotNull()
         }
 
-        @JsonProperty("_id")
-        private val _id: String = "rex.call"
-
         public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
             visitor.visitRexCall(this, ctx)
     }
 
-    @JsonIgnoreProperties("children")
-    @JsonPropertyOrder("_id")
     public data class Agg(
         public val id: String,
         public val args: List<Rex>,
@@ -537,9 +446,6 @@ public sealed class Rex : PlanNode() {
             kids.filterNotNull()
         }
 
-        @JsonProperty("_id")
-        private val _id: String = "rex.agg"
-
         public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
             visitor.visitRexAgg(this, ctx)
 
@@ -549,20 +455,13 @@ public sealed class Rex : PlanNode() {
         }
     }
 
-    @JsonIgnoreProperties("children")
-    @JsonPropertyOrder("_id")
     public data class Lit(
         public val `value`: IonElement
     ) : Rex() {
-        @JsonProperty("_id")
-        private val _id: String = "rex.lit"
-
         public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
             visitor.visitRexLit(this, ctx)
     }
 
-    @JsonIgnoreProperties("children")
-    @JsonPropertyOrder("_id")
     public data class Collection(
         public val type: Type,
         public val values: List<Rex>
@@ -573,22 +472,17 @@ public sealed class Rex : PlanNode() {
             kids.filterNotNull()
         }
 
-        @JsonProperty("_id")
-        private val _id: String = "rex.collection"
-
         public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
             visitor.visitRexCollection(this, ctx)
 
         public enum class Type {
-            LIST,
+            ARRAY,
             BAG,
         }
     }
 
-    @JsonIgnoreProperties("children")
-    @JsonPropertyOrder("_id")
-    public data class Struct(
-        public val fields: List<Binding>
+    public data class Tuple(
+        public val fields: List<Field>
     ) : Rex() {
         public override val children: List<PlanNode> by lazy {
             val kids = mutableListOf<PlanNode?>()
@@ -596,11 +490,8 @@ public sealed class Rex : PlanNode() {
             kids.filterNotNull()
         }
 
-        @JsonProperty("_id")
-        private val _id: String = "rex.struct"
-
         public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
-            visitor.visitRexStruct(this, ctx)
+            visitor.visitRexTuple(this, ctx)
     }
 
     public sealed class Query : Rex() {
@@ -615,8 +506,6 @@ public sealed class Rex : PlanNode() {
                 is Pivot -> visitor.visitRexQueryScalarPivot(this, ctx)
             }
 
-            @JsonIgnoreProperties("children")
-            @JsonPropertyOrder("_id")
             public data class Coerce(
                 public val query: Collection
             ) : Scalar() {
@@ -626,38 +515,28 @@ public sealed class Rex : PlanNode() {
                     kids.filterNotNull()
                 }
 
-                @JsonProperty("_id")
-                private val _id: String = "rex.query.scalar.coerce"
-
                 public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
                     visitor.visitRexQueryScalarCoerce(this, ctx)
             }
 
-            @JsonIgnoreProperties("children")
-            @JsonPropertyOrder("_id")
             public data class Pivot(
                 public val rel: Rel,
-                public val rex: Rex,
+                public val `value`: Rex,
                 public val at: Rex
             ) : Scalar() {
                 public override val children: List<PlanNode> by lazy {
                     val kids = mutableListOf<PlanNode?>()
                     kids.add(rel)
-                    kids.add(rex)
+                    kids.add(value)
                     kids.add(at)
                     kids.filterNotNull()
                 }
-
-                @JsonProperty("_id")
-                private val _id: String = "rex.query.scalar.pivot"
 
                 public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
                     visitor.visitRexQueryScalarPivot(this, ctx)
             }
         }
 
-        @JsonIgnoreProperties("children")
-        @JsonPropertyOrder("_id")
         public data class Collection(
             public val rel: Rel,
             public val `constructor`: Rex?
@@ -668,9 +547,6 @@ public sealed class Rex : PlanNode() {
                 kids.add(constructor)
                 kids.filterNotNull()
             }
-
-            @JsonProperty("_id")
-            private val _id: String = "rex.query.collection"
 
             public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
                 visitor.visitRexQueryCollection(this, ctx)

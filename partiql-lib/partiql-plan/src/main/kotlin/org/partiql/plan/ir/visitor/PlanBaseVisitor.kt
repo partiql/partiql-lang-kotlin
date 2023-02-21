@@ -2,6 +2,7 @@ package org.partiql.plan.ir.visitor
 
 import org.partiql.plan.ir.Binding
 import org.partiql.plan.ir.Common
+import org.partiql.plan.ir.Field
 import org.partiql.plan.ir.Plan
 import org.partiql.plan.ir.PlanNode
 import org.partiql.plan.ir.Rel
@@ -17,6 +18,8 @@ public abstract class PlanBaseVisitor<R, C> : PlanVisitor<R, C> {
     public override fun visitCommon(node: Common, ctx: C): R = defaultVisit(node, ctx)
 
     public override fun visitBinding(node: Binding, ctx: C): R = defaultVisit(node, ctx)
+
+    public override fun visitField(node: Field, ctx: C): R = defaultVisit(node, ctx)
 
     public override fun visitStep(node: Step, ctx: C): R = when (node) {
         is Step.Rex -> visitStepRex(node, ctx)
@@ -71,7 +74,7 @@ public abstract class PlanBaseVisitor<R, C> : PlanVisitor<R, C> {
         is Rex.Agg -> visitRexAgg(node, ctx)
         is Rex.Lit -> visitRexLit(node, ctx)
         is Rex.Collection -> visitRexCollection(node, ctx)
-        is Rex.Struct -> visitRexStruct(node, ctx)
+        is Rex.Tuple -> visitRexTuple(node, ctx)
         is Rex.Query -> visitRexQuery(node, ctx)
     }
 
@@ -91,7 +94,7 @@ public abstract class PlanBaseVisitor<R, C> : PlanVisitor<R, C> {
 
     public override fun visitRexCollection(node: Rex.Collection, ctx: C): R = defaultVisit(node, ctx)
 
-    public override fun visitRexStruct(node: Rex.Struct, ctx: C): R = defaultVisit(node, ctx)
+    public override fun visitRexTuple(node: Rex.Tuple, ctx: C): R = defaultVisit(node, ctx)
 
     public override fun visitRexQuery(node: Rex.Query, ctx: C): R = when (node) {
         is Rex.Query.Scalar -> visitRexQueryScalar(node, ctx)
