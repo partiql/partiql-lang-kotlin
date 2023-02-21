@@ -162,7 +162,6 @@ class QueryEngine(val db: MemoryDatabase) {
                 )
             )
         compiler
-            .ionSystem(ION)
             .customOperatorFactories(
                 listOf(
                     GetByKeyProjectRelationalOperatorFactory()

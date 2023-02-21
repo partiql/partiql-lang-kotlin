@@ -15,7 +15,6 @@
 package org.partiql.lang.compiler
 
 import com.amazon.ion.IonSystem
-import com.amazon.ion.system.IonSystemBuilder
 import org.partiql.annotations.ExperimentalPartiQLCompilerPipeline
 import org.partiql.annotations.ExperimentalWindowFunctions
 import org.partiql.lang.eval.ExprFunction
@@ -48,7 +47,6 @@ import org.partiql.lang.types.CustomType
  *
  * // Fluent builder
  * val compiler = PartiQLCompilerBuilder.standard()
- *                                      .ionSystem(myIonSystem)
  *                                      .customFunctions(myCustomFunctionList)
  *                                      .build()
  * ```
@@ -57,7 +55,6 @@ import org.partiql.lang.types.CustomType
 @ExperimentalPartiQLCompilerPipeline
 class PartiQLCompilerBuilder private constructor() {
 
-    private var ion: IonSystem = DEFAULT_ION
     private var options: EvaluatorOptions = EvaluatorOptions.standard()
     private var customTypes: List<CustomType> = emptyList()
     private var customFunctions: List<ExprFunction> = emptyList()
@@ -65,8 +62,6 @@ class PartiQLCompilerBuilder private constructor() {
     private var customOperatorFactories: List<RelationalOperatorFactory> = emptyList()
 
     companion object {
-
-        private val DEFAULT_ION = IonSystemBuilder.standard().build()
 
         /**
          * A collection of all the default relational operator implementations provided by PartiQL.
@@ -116,8 +111,9 @@ class PartiQLCompilerBuilder private constructor() {
         )
     }
 
+    @Deprecated("An IonSystem is no longer needed to construct a PartiQLCompiler. Do not use this setter.")
+    @Suppress("UNUSED_PARAMETER")
     fun ionSystem(ion: IonSystem): PartiQLCompilerBuilder = this.apply {
-        this.ion = ion
     }
 
     fun options(options: EvaluatorOptions) = this.apply {

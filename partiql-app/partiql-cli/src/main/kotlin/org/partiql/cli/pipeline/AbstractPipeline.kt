@@ -156,7 +156,6 @@ internal sealed class AbstractPipeline(open val options: PipelineOptions) {
                     .globalVariableResolver(globalVariableResolver)
                     .build(),
                 compiler = PartiQLCompilerBuilder.standard()
-                    .ionSystem(options.ion)
                     .options(evaluatorOptions)
                     .build(),
             )

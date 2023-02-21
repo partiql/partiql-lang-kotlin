@@ -6,7 +6,6 @@ import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.annotations.ExperimentalPartiQLCompilerPipeline
-import org.partiql.lang.ION
 import org.partiql.lang.compiler.PartiQLCompilerPipeline
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.eval.physical.EvaluatorState
@@ -102,7 +101,6 @@ class CustomOperatorFactoryTests {
     fun `make sure custom operator implementations are called`(tc: CustomOperatorCases.TestCase) {
         val pipeline = PartiQLCompilerPipeline.build {
             compiler
-                .ionSystem(ION)
                 .customOperatorFactories(
                     fakeOperatorFactories.map {
                         it
