@@ -7,6 +7,7 @@ import org.partiql.lang.eval.visitors.VisitorTransformBase
 import org.partiql.plan.ir.Binding
 import org.partiql.plan.ir.Case
 import org.partiql.plan.ir.Common
+import org.partiql.plan.ir.Field
 import org.partiql.plan.ir.Rel
 import org.partiql.plan.ir.Rex
 import org.partiql.plan.ir.SortSpec
@@ -38,7 +39,7 @@ internal class RelConverter {
                 is PartiqlAst.Projection.ProjectPivot -> {
                     Rex.Query.Scalar.Pivot(
                         rel = rel,
-                        rex = RexConverter.convert(projection.value),
+                        value = RexConverter.convert(projection.value),
                         at = RexConverter.convert(projection.key),
                     )
                 }
@@ -131,7 +132,7 @@ internal class RelConverter {
      */
     private fun convertScan(scan: PartiqlAst.FromSource.Scan) = Rel.Scan(
         common = empty,
-        rex = RexConverter.convert(scan.expr),
+        value = RexConverter.convert(scan.expr),
         alias = scan.asAlias?.text,
         at = scan.atAlias?.text,
         by = scan.byAlias?.text,
@@ -142,7 +143,7 @@ internal class RelConverter {
      */
     private fun convertUnpivot(scan: PartiqlAst.FromSource.Unpivot) = Rel.Unpivot(
         common = empty,
-        rex = RexConverter.convert(scan.expr),
+        value = RexConverter.convert(scan.expr),
         alias = scan.asAlias?.text,
         at = scan.atAlias?.text,
         by = scan.byAlias?.text,
@@ -291,7 +292,7 @@ internal class RelConverter {
      *  - DESC NULLS FIRST (default for DESC)
      */
     private fun convertSortSpec(sortSpec: PartiqlAst.SortSpec) = SortSpec(
-        rex = RexConverter.convert(sortSpec.expr),
+        value = RexConverter.convert(sortSpec.expr),
         dir = when (sortSpec.orderingSpec) {
             is PartiqlAst.OrderingSpec.Desc -> SortSpec.Dir.DESC
             is PartiqlAst.OrderingSpec.Asc -> SortSpec.Dir.ASC
@@ -315,17 +316,17 @@ internal class RelConverter {
      *    but perhaps we don't want to represent GROUP AS with an agg function.
      */
     private fun convertGroupAs(name: String, from: PartiqlAst.FromSource): Binding {
-        val bindings = from.bindings().map { n ->
-            Binding(
+        val fields = from.bindings().map { n ->
+            Field(
                 name = Rex.Lit(ionString(n)),
-                rex = Rex.Id(n, Case.SENSITIVE, Rex.Id.Qualifier.UNQUALIFIED),
+                value = Rex.Id(n, Case.SENSITIVE, Rex.Id.Qualifier.UNQUALIFIED),
             )
         }
         return Binding(
-            name = Rex.Lit(ionString(name)),
-            rex = Rex.Agg(
+            name = name,
+            value = Rex.Agg(
                 id = "group_as",
-                args = listOf(Rex.Struct(bindings)),
+                args = listOf(Rex.Tuple(fields)),
                 modifier = Rex.Agg.Modifier.ALL,
             )
         )
@@ -437,7 +438,7 @@ internal class RelConverter {
      * Binding helper
      */
     private fun binding(name: String, expr: PartiqlAst.Expr) = Binding(
-        name = Rex.Lit(ionString(name)),
-        rex = RexConverter.convert(expr)
+        name = name,
+        value = RexConverter.convert(expr)
     )
 }

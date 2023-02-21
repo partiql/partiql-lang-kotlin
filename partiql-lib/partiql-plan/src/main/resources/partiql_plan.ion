@@ -28,8 +28,14 @@ property::[
 
 // Representation of `<rex> AS <name>` in projections
 binding::{
+  name: string,
+  value: rex,
+}
+
+// Representation of `a_i : e_i` where a and e are expressions
+field::{
   name: rex,
-  rex: rex,
+  value: rex,
 }
 
 // Identifier case rules
@@ -50,7 +56,7 @@ step::[
 
 // Define in `_` once supported
 sort_spec::{
-  rex: rex,
+  value: rex,
   dir: [ ASC, DESC ],
   nulls: [ FIRST, LAST ],
 }
@@ -60,7 +66,7 @@ rel::[
   // FROM <rex> [AS <string>] [AT <string>] [BY <string>]
   scan::{
     common: common,
-    rex: rex,
+    value: rex,
     alias: optional::string,
     at: optional::string,
     by: optional::string,
@@ -68,7 +74,7 @@ rel::[
   // UNPIVOT <rex> [AS <string>] [AT <string>] [BY <string>]
   unpivot::{
     common: common,
-    rex: rex,
+    value: rex,
     alias: optional::string,
     at: optional::string,
     by: optional::string,
@@ -135,7 +141,7 @@ rex::[
     steps: list::[step],
   },
   unary::{
-    rex: rex,
+    value: rex,
     op: [ NOT, POS, NEG, ],
   },
   binary::{
@@ -161,15 +167,15 @@ rex::[
     value: ion,
   },
   collection::{
-    type: [ LIST, BAG ],
+    type: [ ARRAY, BAG ],
     values: list::[rex],
   },
-  struct::{
-    // - If binding.name is '*' and binding.rex is a struct, the fields of binding.rex are merged to this struct
-    // - If binding.name is '*' and binding.rex is not a struct, the field _n will be add to this struct where n
-    //   is the ordinal of the field in the final merged struct.
-    // - Else, add the pair (binding.name, binding.rex) to the final merged struct.
-    fields: list::[binding],
+  // - If binding.name is '*' and binding.rex is a struct, the fields of binding.rex are merged to this struct
+  // - If binding.name is '*' and binding.rex is not a struct, the field _n will be add to this struct where n
+  //   is the ordinal of the field in the final merged struct.
+  // - Else, add the pair (binding.name, binding.rex) to the final merged struct.
+  tuple::{
+    fields: list::[field],
   },
   query::[
     scalar::[
@@ -178,7 +184,7 @@ rex::[
       },
       pivot::{
         rel: rel,
-        rex: rex,
+        value: rex,
         at: rex,
       },
     ],

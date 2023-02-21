@@ -16,17 +16,11 @@
 package org.partiql.cli
 
 import com.amazon.ion.system.IonSystemBuilder
-import com.amazon.ionelement.api.IonElement
-import com.fasterxml.jackson.core.JsonGenerator
-import com.fasterxml.jackson.databind.JsonSerializer
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.SerializerProvider
 import org.partiql.cli.pico.PartiQLCommand
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.syntax.PartiQLParserBuilder
 import org.partiql.plan.Planner
 import org.partiql.plan.debug.PlanPrinter
-import org.partiql.plan.ir.databind.PlanModule
 import picocli.CommandLine
 import java.io.PrintStream
 import kotlin.system.exitProcess
@@ -49,25 +43,6 @@ fun main(args: Array<String>) {
  */
 object Debug {
 
-    private val mapper = ObjectMapper()
-
-    init {
-        // setup for imported types
-        val module = PlanModule()
-        module.addSerializer(
-            IonElement::class.java,
-            object : JsonSerializer<IonElement>() {
-                override fun serialize(value: IonElement, gen: JsonGenerator, serializers: SerializerProvider) {
-                    gen.writeStartObject()
-                    gen.writeStringField("type", value.type.toString())
-                    gen.writeStringField("ion", value.toString())
-                    gen.writeEndObject()
-                }
-            }
-        )
-        mapper.registerModule(module)
-    }
-
     @Throws(Exception::class)
     fun action(input: String, session: EvaluationSession): String {
         // IMPLEMENT DEBUG BEHAVIOR HERE
@@ -77,7 +52,6 @@ object Debug {
         val plan = Planner.default.plan(ast)
         // print plan as tree
         PlanPrinter.append(out, plan)
-        // return serialized plan
-        return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(plan)
+        return "OK"
     }
 }
