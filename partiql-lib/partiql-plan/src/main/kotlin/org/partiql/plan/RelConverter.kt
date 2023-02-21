@@ -89,7 +89,7 @@ internal class RelConverter {
         rel = convertOrderBy(rel, sel.order)
         rel = convertFetch(rel, sel.limit, sel.offset)
         // append SQL projection if present
-        rel = when (val projection = node.project) {
+        rel = when (val projection = sel.project) {
             is PartiqlAst.Projection.ProjectList -> convertProjectList(rel, projection)
             is PartiqlAst.Projection.ProjectStar -> error("AST not normalized, found project star")
             else -> rel // skip
