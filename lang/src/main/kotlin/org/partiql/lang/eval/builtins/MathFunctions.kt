@@ -29,7 +29,6 @@ import java.math.RoundingMode
 import kotlin.math.pow
 
 // TODO: this should be internal at the first place. Remove it in the next release.
-// Rather, un-deprecate and make internal in 0.10.0
 @Deprecated("Please do not use [MathFunctions] from outside PartiQL library")
 /**
  * A place to keep supported mathematical functions. We are missing many in comparison to PostgresQL.
