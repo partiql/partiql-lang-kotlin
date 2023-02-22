@@ -21,6 +21,7 @@ import org.partiql.lang.domains.staticType
 import org.partiql.lang.errors.ErrorBehaviorInPermissiveMode
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
+import org.partiql.lang.types.StaticTypeUtils.isInstance
 
 /**
  * A thunk with no parameters other than the current environment.
@@ -141,7 +142,7 @@ internal abstract class ThunkFactory<TEnv>(
         // [StaticTypeMeta].  This indicates a bug or unimplemented support for an AST node in
         // [StaticTypeInferenceVisitorTransform].
         val staticType = metas.staticType?.type ?: error("Metas collection does not have a StaticTypeMeta")
-        if (!staticType.isInstance(thunkResult)) {
+        if (!isInstance(thunkResult, staticType)) {
             throw EvaluationException(
                 "Runtime type does not match the expected StaticType",
                 ErrorCode.EVALUATOR_VALUE_NOT_INSTANCE_OF_EXPECTED_TYPE,

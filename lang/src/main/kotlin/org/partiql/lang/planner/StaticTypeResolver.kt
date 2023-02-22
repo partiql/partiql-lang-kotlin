@@ -1,6 +1,6 @@
 package org.partiql.lang.planner
 
-import org.partiql.lang.types.StaticType
+import org.partiql.types.StaticType
 
 /**
  * Identifies a global variable's type, given its uniqueId.

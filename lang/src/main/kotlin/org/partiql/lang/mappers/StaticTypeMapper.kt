@@ -4,25 +4,26 @@ import com.amazon.ionelement.api.AnyElement
 import org.partiql.ionschema.model.IonSchemaModel
 import org.partiql.ionschema.model.toIsl
 import org.partiql.lang.eval.ExprValueType
-import org.partiql.lang.types.AnyOfType
-import org.partiql.lang.types.AnyType
-import org.partiql.lang.types.BagType
-import org.partiql.lang.types.DecimalType
-import org.partiql.lang.types.IntType
-import org.partiql.lang.types.ListType
-import org.partiql.lang.types.NumberConstraint
-import org.partiql.lang.types.SexpType
-import org.partiql.lang.types.StaticType
-import org.partiql.lang.types.StringType
-import org.partiql.lang.types.StructType
+import org.partiql.lang.types.StaticTypeUtils.getTypeDomain
 import org.partiql.lang.util.toIntExact
+import org.partiql.types.AnyOfType
+import org.partiql.types.AnyType
+import org.partiql.types.BagType
+import org.partiql.types.DecimalType
+import org.partiql.types.IntType
+import org.partiql.types.ListType
+import org.partiql.types.NumberConstraint
+import org.partiql.types.SexpType
+import org.partiql.types.StaticType
+import org.partiql.types.StringType
+import org.partiql.types.StructType
 import kotlin.reflect.KClass
 
 internal typealias TypeDefMap = Map<String, IonSchemaModel.TypeDefinition>
 
 // FIXME: Duplicated from StaticType because of - https://github.com/partiql/partiql-lang-kotlin/issues/515
-internal fun isOptional(type: StaticType) = type.typeDomain.contains(ExprValueType.MISSING)
-internal fun isNullable(type: StaticType) = type.typeDomain.contains(ExprValueType.NULL)
+internal fun isOptional(type: StaticType) = getTypeDomain(type).contains(ExprValueType.MISSING)
+internal fun isNullable(type: StaticType) = getTypeDomain(type).contains(ExprValueType.NULL)
 internal fun asOptional(type: StaticType) = when {
     isOptional(type) -> type
     else -> StaticType.unionOf(type, StaticType.MISSING).flatten()

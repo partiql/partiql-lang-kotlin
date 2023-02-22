@@ -21,6 +21,7 @@ include(
     "extensions",
     "partiql-lib:partiql-isl",
     "partiql-lib:partiql-sprout",
+    "partiql-types",
     "test:partiql-tests-runner",
     "test:partiql-randomized-tests",
 )

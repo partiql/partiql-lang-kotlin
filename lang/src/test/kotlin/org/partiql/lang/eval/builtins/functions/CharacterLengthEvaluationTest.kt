@@ -9,8 +9,8 @@ import org.partiql.lang.eval.builtins.Argument
 import org.partiql.lang.eval.builtins.ExprFunctionTestCase
 import org.partiql.lang.eval.builtins.checkInvalidArgType
 import org.partiql.lang.eval.builtins.checkInvalidArity
-import org.partiql.lang.types.StaticType
 import org.partiql.lang.util.ArgumentsProviderBase
+import org.partiql.types.StaticType
 
 // Everything here for CharacterLength() is the same as CharLength(), since they are the same functions.
 class CharacterLengthEvaluationTest : EvaluatorTestBase() {

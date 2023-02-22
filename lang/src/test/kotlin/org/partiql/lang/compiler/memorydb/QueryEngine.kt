@@ -22,10 +22,10 @@ import org.partiql.lang.planner.transforms.optimizations.createConcatWindowFunct
 import org.partiql.lang.planner.transforms.optimizations.createFilterScanToKeyLookupPass
 import org.partiql.lang.planner.transforms.optimizations.createRemoveUselessAndsPass
 import org.partiql.lang.planner.transforms.optimizations.createRemoveUselessFiltersPass
-import org.partiql.lang.types.BagType
-import org.partiql.lang.types.StructType
 import org.partiql.lang.util.SexpAstPrettyPrinter
 import org.partiql.pig.runtime.DomainNode
+import org.partiql.types.BagType
+import org.partiql.types.StructType
 import java.util.UUID
 
 // The name of the database in the context variable.

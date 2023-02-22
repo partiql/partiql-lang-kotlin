@@ -11,24 +11,24 @@ import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.ionschema.model.IonSchemaModel
 import org.partiql.ionschema.model.toIsl
 import org.partiql.ionschema.parser.parseSchema
-import org.partiql.lang.types.AnyOfType
-import org.partiql.lang.types.AnyType
-import org.partiql.lang.types.BagType
-import org.partiql.lang.types.BlobType
-import org.partiql.lang.types.BoolType
-import org.partiql.lang.types.ClobType
-import org.partiql.lang.types.DecimalType
-import org.partiql.lang.types.FloatType
-import org.partiql.lang.types.IntType
-import org.partiql.lang.types.ListType
-import org.partiql.lang.types.NumberConstraint
-import org.partiql.lang.types.SexpType
-import org.partiql.lang.types.StaticType
-import org.partiql.lang.types.StringType
-import org.partiql.lang.types.StructType
-import org.partiql.lang.types.SymbolType
-import org.partiql.lang.types.TimestampType
 import org.partiql.pig.runtime.toIonElement
+import org.partiql.types.AnyOfType
+import org.partiql.types.AnyType
+import org.partiql.types.BagType
+import org.partiql.types.BlobType
+import org.partiql.types.BoolType
+import org.partiql.types.ClobType
+import org.partiql.types.DecimalType
+import org.partiql.types.FloatType
+import org.partiql.types.IntType
+import org.partiql.types.ListType
+import org.partiql.types.NumberConstraint
+import org.partiql.types.SexpType
+import org.partiql.types.StaticType
+import org.partiql.types.StringType
+import org.partiql.types.StructType
+import org.partiql.types.SymbolType
+import org.partiql.types.TimestampType
 
 internal fun buildTypeDef(name: String? = null, vararg constraints: IonSchemaModel.Constraint) =
     IonSchemaModel.build { typeDefinition(name, constraintList(constraints.toList())) }

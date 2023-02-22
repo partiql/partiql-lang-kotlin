@@ -24,7 +24,7 @@ import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.stringValue
 import org.partiql.lang.types.FunctionSignature
-import org.partiql.lang.types.StaticType
+import org.partiql.types.StaticType
 
 /**
  * [QueryDDB] is a function to perform a single query on DDB using PartiQL.

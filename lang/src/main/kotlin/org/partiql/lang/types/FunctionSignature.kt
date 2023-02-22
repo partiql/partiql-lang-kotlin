@@ -4,6 +4,8 @@
 
 package org.partiql.lang.types
 
+import org.partiql.types.StaticType
+
 /**
  * A typed version of function signature.
  *

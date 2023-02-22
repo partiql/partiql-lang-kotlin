@@ -8,7 +8,6 @@ import org.partiql.lang.eval.errIntOverflow
 import org.partiql.lang.eval.errNoContext
 import org.partiql.lang.eval.numberValue
 import org.partiql.lang.types.FunctionSignature
-import org.partiql.lang.types.StaticType
 import org.partiql.lang.util.bigDecimalOf
 import org.partiql.lang.util.coerceNumbers
 import org.partiql.lang.util.compareTo
@@ -20,6 +19,7 @@ import org.partiql.lang.util.isPosInf
 import org.partiql.lang.util.ln
 import org.partiql.lang.util.power
 import org.partiql.lang.util.squareRoot
+import org.partiql.types.StaticType
 import java.lang.Double.NEGATIVE_INFINITY
 import java.lang.Double.NaN
 import java.lang.Double.POSITIVE_INFINITY

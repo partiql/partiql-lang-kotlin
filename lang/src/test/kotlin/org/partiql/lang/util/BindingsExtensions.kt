@@ -3,7 +3,8 @@ package org.partiql.lang.util
 import org.partiql.lang.eval.BindingName
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.types.StaticType
+import org.partiql.lang.types.StaticTypeUtils.staticTypeFromExprValueType
+import org.partiql.types.StaticType
 
 /**
  * Derives a [Bindings<StaticType>] from a [Bindings<ExprValue>].
@@ -16,7 +17,7 @@ fun Bindings<ExprValue>.toTypedBindings() = this.let { valuedBindings ->
     object : Bindings<StaticType> {
         override fun get(bindingName: BindingName): StaticType? {
             val exprValue = valuedBindings[bindingName] ?: return null
-            return exprValue.type.let { StaticType.fromExprValueType(it) }
+            return staticTypeFromExprValueType(exprValue.type)
         }
     }
 }

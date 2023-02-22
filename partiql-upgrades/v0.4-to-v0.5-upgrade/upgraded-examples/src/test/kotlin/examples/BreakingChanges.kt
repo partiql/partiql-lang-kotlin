@@ -11,7 +11,7 @@ import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.syntax.SqlParser
 import org.partiql.lang.types.FunctionSignature
-import org.partiql.lang.types.StaticType
+import org.partiql.types.StaticType
 import org.partiql.lang.types.VarargFormalParameter
 import kotlin.test.Test
 import kotlin.test.assertEquals
