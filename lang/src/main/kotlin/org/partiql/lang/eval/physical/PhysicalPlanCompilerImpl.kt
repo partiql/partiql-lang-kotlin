@@ -948,6 +948,7 @@ internal class PhysicalPlanCompilerImpl(
             (isTypeMatch && typedOpParameter.validationThunk?.let { it(expValue) } != false)
         }
 
+        @Suppress("DEPRECATION") // TypedOpBehavior.LEGACY is deprecated.
         return when (evaluatorOptions.typedOpBehavior) {
             TypedOpBehavior.LEGACY -> simpleTypeMatchFunc
             TypedOpBehavior.HONOR_PARAMETERS -> { expValue: ExprValue ->
