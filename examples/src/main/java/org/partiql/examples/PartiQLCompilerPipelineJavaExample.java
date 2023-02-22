@@ -71,7 +71,7 @@ public class PartiQLCompilerPipelineJavaExample extends Example {
         final PartiQLPlanner planner = PartiQLPlannerBuilder.standard().globalVariableResolver(globalVariableResolver).build();
 
         @OptIn(markerClass = ExperimentalPartiQLCompilerPipeline.class)
-        final PartiQLCompiler compiler = PartiQLCompilerBuilder.standard().ionSystem(ion).options(evaluatorOptions).build();
+        final PartiQLCompiler compiler = PartiQLCompilerBuilder.standard().options(evaluatorOptions).build();
 
         @OptIn(markerClass = ExperimentalPartiQLCompilerPipeline.class)
         final PartiQLCompilerPipeline pipeline = new PartiQLCompilerPipeline(

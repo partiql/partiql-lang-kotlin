@@ -80,7 +80,6 @@ internal class PartiQLCompilerPipelineFactory() : PipelineFactory {
                 .globalVariableResolver(globalVariableResolver)
                 .build(),
             compiler = PartiQLCompilerBuilder.standard()
-                .ionSystem(ION)
                 .options(evaluatorOptions)
                 .customTypes(legacyPipeline.customDataTypes)
                 .customFunctions(legacyPipeline.functions.values.toList())
