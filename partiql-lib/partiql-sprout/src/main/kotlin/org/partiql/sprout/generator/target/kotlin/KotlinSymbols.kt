@@ -149,12 +149,11 @@ class KotlinSymbols private constructor(
 
     /**
      * Determine the appropriate mapping method from a JsonNode to the Kotlin value; this could certainly be improved.
-     *
-     * Lives here for now because of the special treatment primitives
+     * https://fasterxml.github.io/jackson-databind/javadoc/2.7/com/fasterxml/jackson/databind/JsonNode.html
      */
     fun valueMapping(ref: TypeRef, v: String): String = when (ref) {
         is TypeRef.List -> "$v.map { n -> ${valueMapping(ref.type, "n")} }"
-        is TypeRef.Map -> TODO("Jackson databind for maps")
+        is TypeRef.Map -> "$v.fields().asSequence().associate { e -> e.key to ${valueMapping(ref.valType, "e.value")} }"
         is TypeRef.Set -> "$v.map { n -> ${valueMapping(ref.type, "n")} }.toSet()"
         is TypeRef.Scalar -> when (ref.type) {
             ScalarType.BOOL -> "$v.asBoolean()"
@@ -172,8 +171,8 @@ class KotlinSymbols private constructor(
                 is TypeDef.Sum -> "_${camel(ref)}($v)"
             }
         }
-        // Make this invoke the default deserializer and see how far the gets us
-        is TypeRef.Import -> TODO("Jackson databind is currently not supported for imported types")
+        // invoke the default deserializer
+        is TypeRef.Import -> "ctxt.readValue($v, ${import(ref.symbol).canonicalName}.javaClass)"
     }
 
     /**
