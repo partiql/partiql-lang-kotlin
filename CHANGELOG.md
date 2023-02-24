@@ -38,6 +38,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ANTLR (PartiQL.g4, PartiQLTokens.g4) and PIG (org/partiql/type-domains/partiql.ion) sources 
   are back to being distributed with the jar.
 
+- CLI no longer terminates on user errors in submitted PartiQL (when printing out the AST with !!)
+  and no longer prints out stack traces upon user errors. 
+
 ### Removed
 - The deprecated `IonValue` property in `ExprValue` interface is now removed.
 
