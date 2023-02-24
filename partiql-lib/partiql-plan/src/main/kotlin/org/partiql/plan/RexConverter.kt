@@ -80,8 +80,8 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
             root = convert(node.root),
             steps = node.steps.map {
                 when (it) {
-                    is PartiqlAst.PathStep.PathExpr -> Step.Rex(
-                        index = convert(it.index),
+                    is PartiqlAst.PathStep.PathExpr -> Step.Key(
+                        value = convert(it.index),
                         case = convertCase(it.case)
                     )
                     is PartiqlAst.PathStep.PathUnpivot -> Step.Unpivot()
