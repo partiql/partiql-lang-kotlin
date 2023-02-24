@@ -31,6 +31,7 @@ import org.jline.utils.InfoCmp
 import org.joda.time.Duration
 import org.partiql.cli.format.ExplainFormatter
 import org.partiql.cli.pipeline.AbstractPipeline
+import org.partiql.lang.SqlException
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
@@ -58,7 +59,7 @@ private const val BAR_2 = "--- "
 private const val WELCOME_MSG = "Welcome to the PartiQL shell!"
 
 private const val HELP = """
-!add_to_global_env  Adds a value to the global environment
+!add_to_global_env  Adds to the global environment key/value pairs of the supplied struct
 !global_env         Displays the current global environment
 !list_commands      Prints this message
 !help               Prints this message
@@ -211,26 +212,22 @@ internal class Shell(
             }
 
             // Execute PartiQL
-            try {
-                executeAndPrint {
-                    val locals = Bindings.buildLazyBindings<ExprValue> {
-                        addBinding("_") { previousResult }
-                    }.delegate(globals.bindings)
-                    compiler.compile(line, EvaluationSession.build { globals(locals) })
-                }
-            } catch (ex: Exception) {
-                out.error(ex.stackTraceToString())
+            executeAndPrint {
+                val locals = Bindings.buildLazyBindings<ExprValue> {
+                    addBinding("_") { previousResult }
+                }.delegate(globals.bindings)
+                compiler.compile(line, EvaluationSession.build { globals(locals) })
             }
         }
     }
 
-    private fun executeAndPrint(func: () -> PartiQLResult?) {
+    private fun executeAndPrint(func: () -> PartiQLResult) {
         val result: PartiQLResult? = try {
             func.invoke()
-        } catch (ex: Exception) {
-            out.error(ex.stackTraceToString())
-            out.error("ERROR!")
-            null
+        } catch (ex: SqlException) {
+            out.error(ex.generateMessage())
+            out.error(ex.message)
+            null // signals that there was an error
         }
         printPartiQLResult(result)
     }
@@ -238,19 +235,24 @@ internal class Shell(
     private fun printPartiQLResult(result: PartiQLResult?) {
         when (result) {
             null -> {
-                out.success("OK!")
-                out.flush()
+                out.error("ERROR!")
             }
-            is PartiQLResult.Value -> printExprValue(ConfigurableExprValueFormatter.pretty, result.value)
+            is PartiQLResult.Value -> {
+                printExprValue(ConfigurableExprValueFormatter.pretty, result.value)
+                out.success("OK!")
+            }
             is PartiQLResult.Explain.Domain -> {
                 val explain = ExplainFormatter.format(result)
                 out.println(explain)
-                out.flush()
+                out.success("OK!")
             }
             is PartiQLResult.Insert,
             is PartiQLResult.Replace,
-            is PartiQLResult.Delete -> error("Insert/Replace/Delete are not yet supported")
+            is PartiQLResult.Delete -> {
+                out.warn("Insert/Replace/Delete are not yet supported")
+            }
         }
+        out.flush()
     }
 
     private fun printExprValue(formatter: ExprValueFormatter, result: ExprValue) {
@@ -259,8 +261,6 @@ internal class Shell(
         out.println()
         out.info(BAR_2)
         previousResult = result
-        out.success("OK!")
-        out.flush()
     }
 
     private fun retrievePartiQLVersionAndHash(): String {
@@ -272,10 +272,19 @@ internal class Shell(
     private fun printAST(query: String) {
         if (query.isNotBlank()) {
             val parser = PartiQLParserBuilder.standard().build()
-            val ast = parser.parseAstStatement(query)
+            val ast = try {
+                parser.parseAstStatement(query)
+            } catch (ex: SqlException) {
+                out.error(ex.generateMessage())
+                out.error(ex.message)
+                out.error("ERROR!")
+                out.flush()
+                return
+            }
             val explain = PartiQLResult.Explain.Domain(value = ast, format = null)
             val output = ExplainFormatter.format(explain)
             out.println(output)
+            out.success("OK!")
             out.flush()
         }
     }
