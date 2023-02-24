@@ -22,6 +22,7 @@ dependencies {
     implementation(project(":lang"))
     implementation(project(":extensions"))
     implementation(project(":partiql-lib:partiql-plan"))
+    implementation(project(":partiql-spi"))
     implementation(Deps.csv)
     implementation("com.google.code.gson:gson:2.10.1")
     implementation(Deps.guava)

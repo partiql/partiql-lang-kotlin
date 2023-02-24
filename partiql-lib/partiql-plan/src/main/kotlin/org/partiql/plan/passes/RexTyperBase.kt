@@ -5,15 +5,15 @@ import org.partiql.lang.eval.BindingName
 import org.partiql.lang.infer.PlannerContext
 import org.partiql.lang.infer.QualifiedObjectName
 import org.partiql.lang.infer.Session
-import org.partiql.lang.types.BagType
-import org.partiql.lang.types.StaticType
-import org.partiql.lang.types.StructType
 import org.partiql.plan.ir.Case
 import org.partiql.plan.ir.Rel
 import org.partiql.plan.ir.Rex
 import org.partiql.plan.utils.PlanUtils
 import org.partiql.spi.connector.ConnectorSession
 import org.partiql.spi.sources.TableSchema
+import org.partiql.spi.types.BagType
+import org.partiql.spi.types.StaticType
+import org.partiql.spi.types.StructType
 
 /**
  * TODO: Add description

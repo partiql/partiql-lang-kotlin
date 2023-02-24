@@ -36,30 +36,35 @@ import org.partiql.lang.eval.getStartingSourceLocationMeta
 import org.partiql.lang.infer.Metadata
 import org.partiql.lang.infer.QualifiedObjectName
 import org.partiql.lang.infer.Session
-import org.partiql.lang.types.AnyOfType
-import org.partiql.lang.types.AnyType
-import org.partiql.lang.types.BagType
-import org.partiql.lang.types.BoolType
-import org.partiql.lang.types.CollectionType
-import org.partiql.lang.types.DecimalType
-import org.partiql.lang.types.FloatType
+import org.partiql.lang.infer.TableHandle
 import org.partiql.lang.types.FunctionSignature
-import org.partiql.lang.types.IntType
-import org.partiql.lang.types.ListType
-import org.partiql.lang.types.MissingType
-import org.partiql.lang.types.NullType
-import org.partiql.lang.types.NumberConstraint
-import org.partiql.lang.types.SexpType
-import org.partiql.lang.types.SingleType
-import org.partiql.lang.types.StaticType
-import org.partiql.lang.types.StringType
-import org.partiql.lang.types.StructType
-import org.partiql.lang.types.SymbolType
+import org.partiql.lang.types.StaticTypeUtils.areStaticTypesComparable
+import org.partiql.lang.types.StaticTypeUtils.getTypeDomain
+import org.partiql.lang.types.StaticTypeUtils.isSubTypeOf
+import org.partiql.lang.types.StaticTypeUtils.staticTypeFromExprValueType
 import org.partiql.lang.types.TypedOpParameter
 import org.partiql.lang.types.UnknownArguments
 import org.partiql.lang.types.toTypedOpParameter
 import org.partiql.lang.util.cartesianProduct
 import org.partiql.spi.sources.TableSchema
+import org.partiql.spi.types.AnyOfType
+import org.partiql.spi.types.AnyType
+import org.partiql.spi.types.BagType
+import org.partiql.spi.types.BoolType
+import org.partiql.spi.types.CollectionType
+import org.partiql.spi.types.DecimalType
+import org.partiql.spi.types.FloatType
+import org.partiql.spi.types.IntType
+import org.partiql.spi.types.ListType
+import org.partiql.spi.types.MissingType
+import org.partiql.spi.types.NullType
+import org.partiql.spi.types.NumberConstraint
+import org.partiql.spi.types.SexpType
+import org.partiql.spi.types.SingleType
+import org.partiql.spi.types.StaticType
+import org.partiql.spi.types.StringType
+import org.partiql.spi.types.StructType
+import org.partiql.spi.types.SymbolType
 
 /**
  * A [PartiqlAst.VisitorTransform] that annotates nodes with their static type.
@@ -91,6 +96,40 @@ internal class StaticTypeInferenceVisitorTransform(
     ) {
         this.metadata = metadata
         this.session = session
+    }
+
+    internal constructor(
+        globalBindings: Bindings<StaticType>,
+        customFunctionSignatures: List<FunctionSignature>,
+        customTypedOpParameters: Map<String, TypedOpParameter>,
+        problemHandler: ProblemHandler = ProblemThrower(),
+        session: Session,
+        metadata: Metadata
+    ) : this(
+        globalBindings = globalBindings,
+        customFunctionSignatures = customFunctionSignatures,
+        customTypedOpParameters = customTypedOpParameters,
+        problemHandler = problemHandler
+    ) {
+        this.metadata = metadata
+        this.session = session
+    }
+
+    init {
+        if (this::metadata.isInitialized.not()) {
+            this.metadata = object : Metadata {
+                override fun catalogExists(session: Session, catalogName: String) = false
+                override fun schemaExists(session: Session, catalogName: String, schemaName: String) = false
+                override fun getTableHandle(session: Session, tableName: QualifiedObjectName): TableHandle? = null
+                override fun getTableSchema(session: Session, handle: TableHandle): TableSchema {
+                    error("Not supported.")
+                }
+            }
+        }
+        // TODO: Figure this out
+        if (this::session.isInitialized.not()) {
+            this.session = Session("random_query_id", null, null)
+        }
     }
 
     /** Used to allow certain binding lookups to occur directly in the global scope. */
@@ -355,7 +394,7 @@ internal class StaticTypeInferenceVisitorTransform(
             // check for comparability of all operands. currently only adds one data type mismatch error
             outerLoop@ for (i in argsStaticType.indices) {
                 for (j in i + 1 until argsStaticType.size) {
-                    if (!argsStaticType[i].isComparableTo(argsStaticType[j])) {
+                    if (!areStaticTypesComparable(argsStaticType[i], argsStaticType[j])) {
                         handleIncompatibleDataTypesForOpError(argsStaticType, op, metas.getSourceLocation())
                         hasValidOperands = false
                         break@outerLoop
@@ -681,7 +720,7 @@ internal class StaticTypeInferenceVisitorTransform(
             // Propagate missing as missing. Missing has precedence over null
             lhs is MissingType || rhs is MissingType -> StaticType.MISSING
             lhs is NullType || rhs is NullType -> StaticType.NULL
-            lhs.isComparableTo(rhs) -> StaticType.BOOL
+            areStaticTypesComparable(lhs, rhs) -> StaticType.BOOL
             else -> StaticType.MISSING
         }
 
@@ -710,7 +749,7 @@ internal class StaticTypeInferenceVisitorTransform(
                 when {
                     // If any one of the operands is null or missing, return NULL
                     argsSingleType.any { it is NullType || it is MissingType } -> possibleReturnTypes.add(StaticType.NULL)
-                    argsSingleType[0].isComparableTo(argsSingleType[1]) || argsSingleType[0].isComparableTo(argsSingleType[2]) -> possibleReturnTypes.add(StaticType.BOOL)
+                    areStaticTypesComparable(argsSingleType[0], argsSingleType[1]) || areStaticTypesComparable(argsSingleType[0], argsSingleType[2]) -> possibleReturnTypes.add(StaticType.BOOL)
                     else -> possibleReturnTypes.add(StaticType.MISSING)
                 }
             }
@@ -734,7 +773,7 @@ internal class StaticTypeInferenceVisitorTransform(
 
             // if none of the [rhs] types are [CollectionType]s with comparable element types to [lhs], then data type
             // mismatch error
-            if (!rhs.isUnknown() && rhs.allTypes.none { it is CollectionType && it.elementType.isComparableTo(lhs) }) {
+            if (!rhs.isUnknown() && rhs.allTypes.none { it is CollectionType && areStaticTypesComparable(it.elementType, lhs) }) {
                 handleIncompatibleDataTypesForOpError(operands, "IN", processedNode.metas.getSourceLocation())
                 errorAdded = true
             }
@@ -964,7 +1003,7 @@ internal class StaticTypeInferenceVisitorTransform(
                     allArgsValid = false
                 } else {
                     val actualNonUnknownType = actualType.filterNullMissing()
-                    if (actualNonUnknownType.typeDomain.intersect(expectedType.typeDomain).isEmpty()) {
+                    if (getTypeDomain(actualNonUnknownType).intersect(getTypeDomain(expectedType)).isEmpty()) {
                         handleInvalidArgumentTypeForFunction(
                             functionName = functionName,
                             expectedType = expectedType,
@@ -1009,7 +1048,7 @@ internal class StaticTypeInferenceVisitorTransform(
                         // want to give a warning that a data type mismatch could occur
                         // (https://github.com/partiql/partiql-lang-kotlin/issues/507)
                         StaticType.MISSING.takeIf {
-                            actualType.allTypes.any { it is MissingType } || !actualType.filterNullMissing().isSubTypeOf(expectedType)
+                            actualType.allTypes.any { it is MissingType } || !isSubTypeOf(actualType.filterNullMissing(), expectedType)
                         },
                         // if any type is `NULL`, add `NULL` to possible return types
                         StaticType.NULL.takeIf { actualType.allTypes.any { it is NullType } }
@@ -1034,7 +1073,7 @@ internal class StaticTypeInferenceVisitorTransform(
             val requiredArgumentsMatch = arguments
                 .zip(signature.requiredParameters)
                 .all { (actual, expected) ->
-                    actual.getStaticType().typeDomain.intersect(expected.typeDomain).isNotEmpty()
+                    getTypeDomain(actual.getStaticType()).intersect(getTypeDomain(expected)).isNotEmpty()
                 }
 
             val optionalArgumentMatches = when (signature.optionalParameter) {
@@ -1042,8 +1081,8 @@ internal class StaticTypeInferenceVisitorTransform(
                 else ->
                     arguments
                         .getOrNull(signature.requiredParameters.size)
-                        ?.getStaticType()?.typeDomain
-                        ?.intersect(signature.optionalParameter.typeDomain)
+                        ?.getStaticType()?.let { getTypeDomain(it) }
+                        ?.intersect(getTypeDomain(signature.optionalParameter))
                         ?.isNotEmpty()
                         ?: true
             }
@@ -1055,7 +1094,7 @@ internal class StaticTypeInferenceVisitorTransform(
                         .drop(signature.requiredParameters.size)
                         .all { arg ->
                             val argType = arg.getStaticType()
-                            argType.typeDomain.intersect(signature.variadicParameter.type.typeDomain).isNotEmpty()
+                            getTypeDomain(argType).intersect(getTypeDomain(signature.variadicParameter.type)).isNotEmpty()
                         }
             }
 
@@ -1069,8 +1108,8 @@ internal class StaticTypeInferenceVisitorTransform(
          */
         private fun matchesAllArguments(arguments: List<PartiqlAst.Expr>, signature: FunctionSignature): Boolean {
             // Checks if the actual StaticType is subtype of expected StaticType ( filtering the null/missing for PROPAGATING functions
-            fun isSubType(actual: StaticType, expected: StaticType) =
-                when (signature.unknownArguments) {
+            fun isSubType(actual: StaticType, expected: StaticType): Boolean {
+                val lhs = when (signature.unknownArguments) {
                     UnknownArguments.PROPAGATE -> when (actual) {
                         is AnyOfType -> actual.copy(
                             types = actual.types.filter {
@@ -1081,7 +1120,8 @@ internal class StaticTypeInferenceVisitorTransform(
                     }
                     UnknownArguments.PASS_THRU -> actual
                 }
-                    .isSubTypeOf(expected)
+                return isSubTypeOf(lhs, expected)
+            }
 
             val requiredArgumentsMatch = arguments
                 .zip(signature.requiredParameters)
@@ -1122,7 +1162,7 @@ internal class StaticTypeInferenceVisitorTransform(
         override fun transformExprLit(node: PartiqlAst.Expr.Lit): PartiqlAst.Expr {
             val literal = super.transformExprLit(node) as PartiqlAst.Expr.Lit
             val exprValueType = ExprValueType.fromIonType(literal.value.type.toIonType())
-            return literal.withStaticType(StaticType.fromExprValueType(exprValueType))
+            return literal.withStaticType(staticTypeFromExprValueType(exprValueType))
         }
 
         override fun transformExprMissing(node: PartiqlAst.Expr.Missing): PartiqlAst.Expr {
@@ -1181,7 +1221,7 @@ internal class StaticTypeInferenceVisitorTransform(
                 }
 
                 // if caseValueType is incomparable to whenExprType -> data type mismatch
-                else if (!caseValueType.isComparableTo(whenExprType)) {
+                else if (!areStaticTypesComparable(caseValueType, whenExprType)) {
                     handleIncompatibleDataTypesForOpError(
                         actualTypes = listOf(caseValueType, whenExprType),
                         op = "CASE",
@@ -1377,8 +1417,8 @@ internal class StaticTypeInferenceVisitorTransform(
             addLocal(asSymbolicName.text, elementType)
 
             node.atAlias?.let {
-                val hasLists = fromExprType.typeDomain.contains(ExprValueType.LIST)
-                val hasOnlyLists = hasLists && (fromExprType.typeDomain.size == 1)
+                val hasLists = getTypeDomain(fromExprType).contains(ExprValueType.LIST)
+                val hasOnlyLists = hasLists && (getTypeDomain(fromExprType).size == 1)
                 when {
                     hasOnlyLists -> {
                         addLocal(it.text, StaticType.INT)
@@ -1469,8 +1509,8 @@ internal class StaticTypeInferenceVisitorTransform(
             addLocal(asSymbolicName.text, valueType)
 
             node.atAlias?.let {
-                val valueHasMissing = valueType.typeDomain.contains(ExprValueType.MISSING)
-                val valueOnlyHasMissing = valueHasMissing && valueType.typeDomain.size == 1
+                val valueHasMissing = getTypeDomain(valueType).contains(ExprValueType.MISSING)
+                val valueOnlyHasMissing = valueHasMissing && getTypeDomain(valueType).size == 1
                 when {
                     valueOnlyHasMissing -> {
                         addLocal(it.text, StaticType.MISSING)

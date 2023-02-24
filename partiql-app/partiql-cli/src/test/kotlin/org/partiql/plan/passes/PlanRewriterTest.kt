@@ -15,7 +15,7 @@ internal class PlanRewriterTest {
     internal fun rewriterExample() {
 
         val default = Common(
-            schema = emptyMap(),
+            schema = emptyList(),
             properties = emptySet(),
             metas = emptyMap(),
         )
@@ -25,16 +25,16 @@ internal class PlanRewriterTest {
                 common = default
                 condition = rexBinary {
                     lhs = rexBinary {
-                        lhs = rexId("x")
-                        rhs = rexId("y")
+                        lhs = rexId("x", qualifier = Rex.Id.Qualifier.UNQUALIFIED)
+                        rhs = rexId("y", qualifier = Rex.Id.Qualifier.UNQUALIFIED)
                         op = Rex.Binary.Op.TIMES
                     }
-                    rhs = rexId("z")
+                    rhs = rexId("z", qualifier = Rex.Id.Qualifier.UNQUALIFIED)
                     op = Rex.Binary.Op.DIV
                 }
                 input = relScan {
                     common = default
-                    rex = rexId("foo")
+                    value = rexId("foo", qualifier = Rex.Id.Qualifier.UNQUALIFIED)
                 }
             }
         }
@@ -47,7 +47,7 @@ internal class PlanRewriterTest {
         PlanPrinter.append(System.out, after)
     }
 
-    private object BinaryFlip : PlanRewriter() {
+    private object BinaryFlip : PlanRewriter<Unit>() {
 
         override fun visitRexBinary(node: Rex.Binary, ctx: Unit) = Rex.Binary(
             lhs = node.rhs.accept(this, ctx) as Rex,

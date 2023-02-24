@@ -1,11 +1,11 @@
 package org.partiql.cli.plugin.localdb
 
-import org.partiql.lang.types.DecimalType
-import org.partiql.lang.types.IntType
-import org.partiql.lang.types.StringType
 import org.partiql.spi.connector.ConnectorTableHandle
 import org.partiql.spi.sources.ColumnMetadata
 import org.partiql.spi.sources.TableSchema
+import org.partiql.spi.types.DecimalType
+import org.partiql.spi.types.IntType
+import org.partiql.spi.types.StringType
 
 internal class LocalConnectorTableHandle(
     private val schema: String

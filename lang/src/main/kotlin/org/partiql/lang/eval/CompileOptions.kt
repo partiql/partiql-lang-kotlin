@@ -126,7 +126,7 @@ enum class VisitorTransformMode {
 
 /**
  * When [ENABLED], the compiler adds additional evaluation-time checks to every thunk that verify that the
- * [ExprValue] instance returned conforms to the expected [org.partiql.lang.types.StaticType].
+ * [ExprValue] instance returned conforms to the expected [org.partiql.spi.types.StaticType].
  *
  * This is intended only for testing and diagnostic purposes as it likely comes with a significant performance penalty.
  * Production use may not be desirable.

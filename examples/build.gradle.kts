@@ -24,6 +24,7 @@ application {
 
 dependencies {
     implementation(project(":lang"))
+    implementation(project(":partiql-spi"))
     implementation(Deps.awsSdkS3)
 }
 

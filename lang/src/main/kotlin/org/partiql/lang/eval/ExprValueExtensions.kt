@@ -30,24 +30,7 @@ import org.partiql.lang.eval.time.NANOS_PER_SECOND
 import org.partiql.lang.eval.time.Time
 import org.partiql.lang.syntax.DATE_TIME_PART_KEYWORDS
 import org.partiql.lang.syntax.DateTimePart
-import org.partiql.lang.types.BagType
-import org.partiql.lang.types.BlobType
-import org.partiql.lang.types.BoolType
-import org.partiql.lang.types.ClobType
-import org.partiql.lang.types.DateType
-import org.partiql.lang.types.DecimalType
-import org.partiql.lang.types.FloatType
-import org.partiql.lang.types.IntType
-import org.partiql.lang.types.ListType
-import org.partiql.lang.types.MissingType
-import org.partiql.lang.types.NullType
-import org.partiql.lang.types.NumberConstraint
-import org.partiql.lang.types.SexpType
-import org.partiql.lang.types.SingleType
-import org.partiql.lang.types.StringType
-import org.partiql.lang.types.SymbolType
-import org.partiql.lang.types.TimeType
-import org.partiql.lang.types.TimestampType
+import org.partiql.lang.types.StaticTypeUtils.getRuntimeType
 import org.partiql.lang.util.ConfigurableExprValueFormatter
 import org.partiql.lang.util.bigDecimalOf
 import org.partiql.lang.util.coerce
@@ -57,6 +40,24 @@ import org.partiql.lang.util.getPrecisionFromTimeString
 import org.partiql.lang.util.isNaN
 import org.partiql.lang.util.isNegInf
 import org.partiql.lang.util.isPosInf
+import org.partiql.spi.types.BagType
+import org.partiql.spi.types.BlobType
+import org.partiql.spi.types.BoolType
+import org.partiql.spi.types.ClobType
+import org.partiql.spi.types.DateType
+import org.partiql.spi.types.DecimalType
+import org.partiql.spi.types.FloatType
+import org.partiql.spi.types.IntType
+import org.partiql.spi.types.ListType
+import org.partiql.spi.types.MissingType
+import org.partiql.spi.types.NullType
+import org.partiql.spi.types.NumberConstraint
+import org.partiql.spi.types.SexpType
+import org.partiql.spi.types.SingleType
+import org.partiql.spi.types.StringType
+import org.partiql.spi.types.SymbolType
+import org.partiql.spi.types.TimeType
+import org.partiql.spi.types.TimestampType
 import java.math.BigDecimal
 import java.math.MathContext
 import java.math.RoundingMode
@@ -283,7 +284,7 @@ fun ExprValue.cast(
     fun castExceptionContext(): PropertyValueMap {
         val errorContext = PropertyValueMap().also {
             it[Property.CAST_FROM] = this.type.toString()
-            it[Property.CAST_TO] = targetType.runtimeType.toString()
+            it[Property.CAST_TO] = getRuntimeType(targetType).toString()
         }
 
         locationMeta?.let { fillErrorContext(errorContext, it) }
@@ -378,10 +379,9 @@ fun ExprValue.cast(
             when (typedOpBehavior) {
                 TypedOpBehavior.LEGACY -> ExprValue.newDecimal(this.coerce(BigDecimal::class.java))
                 TypedOpBehavior.HONOR_PARAMETERS ->
-                    when (type.precisionScaleConstraint) {
+                    when (val constraint = type.precisionScaleConstraint) {
                         DecimalType.PrecisionScaleConstraint.Unconstrained -> ExprValue.newDecimal(this.coerce(BigDecimal::class.java))
                         is DecimalType.PrecisionScaleConstraint.Constrained -> {
-                            val constraint = type.precisionScaleConstraint
                             val decimal = this.coerce(BigDecimal::class.java)
                             val result = decimal.round(MathContext(constraint.precision))
                                 .setScale(constraint.scale, RoundingMode.HALF_UP)
@@ -401,11 +401,11 @@ fun ExprValue.cast(
     fun String.exprValue(type: SingleType) = when (type) {
         is StringType -> when (typedOpBehavior) {
             TypedOpBehavior.LEGACY -> ExprValue.newString(this)
-            TypedOpBehavior.HONOR_PARAMETERS -> when (type.lengthConstraint) {
+            TypedOpBehavior.HONOR_PARAMETERS -> when (val constraint = type.lengthConstraint) {
                 StringType.StringLengthConstraint.Unconstrained -> ExprValue.newString(this)
                 is StringType.StringLengthConstraint.Constrained -> {
                     val actualCodepointCount = this.codePointCount(0, this.length)
-                    val lengthConstraint = type.lengthConstraint.length.value
+                    val lengthConstraint = constraint.length.value
                     val truncatedString = if (actualCodepointCount <= lengthConstraint) {
                         this // no truncation needed
                     } else {
@@ -413,7 +413,7 @@ fun ExprValue.cast(
                     }
 
                     ExprValue.newString(
-                        when (type.lengthConstraint.length) {
+                        when (constraint.length) {
                             is NumberConstraint.Equals -> truncatedString.trimEnd { c -> c == '\u0020' }
                             is NumberConstraint.UpTo -> truncatedString
                         }
@@ -432,7 +432,7 @@ fun ExprValue.cast(
         type.isUnknown -> return this
         // Note that the ExprValueType for TIME and TIME WITH TIME ZONE is the same i.e. ExprValueType.TIME.
         // We further need to check for the time zone and hence we do not short circuit here when the type is TIME.
-        type == targetType.runtimeType && type != ExprValueType.TIME -> {
+        type == getRuntimeType(targetType) && type != ExprValueType.TIME -> {
             return when (targetType) {
                 is IntType, is FloatType, is DecimalType -> numberValue().exprValue(targetType)
                 is StringType -> stringValue().exprValue(targetType)

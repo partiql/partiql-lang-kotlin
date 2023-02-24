@@ -23,7 +23,7 @@ import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.stringValue
 import org.partiql.lang.types.FunctionSignature
-import org.partiql.lang.types.StaticType
+import org.partiql.spi.types.StaticType
 
 /**
  * PartiQL function to convert a formatted string into an Ion Timestamp.

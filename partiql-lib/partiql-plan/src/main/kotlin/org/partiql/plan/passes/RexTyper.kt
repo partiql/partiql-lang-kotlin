@@ -1,8 +1,8 @@
 package org.partiql.plan.passes
 
-import org.partiql.lang.types.StaticType
 import org.partiql.plan.ir.PlanNode
 import org.partiql.plan.ir.visitor.PlanBaseVisitor
+import org.partiql.spi.types.StaticType
 import kotlin.reflect.full.declaredMemberProperties
 import kotlin.reflect.full.primaryConstructor
 

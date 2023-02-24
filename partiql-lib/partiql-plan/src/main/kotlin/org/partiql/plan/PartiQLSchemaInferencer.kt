@@ -8,14 +8,14 @@ import org.partiql.lang.infer.PlannerContext
 import org.partiql.lang.infer.Session
 import org.partiql.lang.planner.transforms.normalize
 import org.partiql.lang.syntax.PartiQLParserBuilder
-import org.partiql.lang.types.CollectionType
-import org.partiql.lang.types.StaticType
-import org.partiql.lang.types.StructType
 import org.partiql.plan.ir.Rex
 import org.partiql.plan.passes.PlanTyper
 import org.partiql.plan.utils.PlanUtils
 import org.partiql.spi.sources.ColumnMetadata
 import org.partiql.spi.sources.TableSchema
+import org.partiql.spi.types.CollectionType
+import org.partiql.spi.types.StaticType
+import org.partiql.spi.types.StructType
 
 /**
  * Infers the output schema of a query.

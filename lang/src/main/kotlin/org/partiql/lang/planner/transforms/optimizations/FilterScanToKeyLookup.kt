@@ -11,9 +11,9 @@ import org.partiql.lang.eval.BindingName
 import org.partiql.lang.planner.PartiQLPhysicalPass
 import org.partiql.lang.planner.StaticTypeResolver
 import org.partiql.lang.planner.transforms.DEFAULT_IMPL
-import org.partiql.lang.types.BagType
-import org.partiql.lang.types.ListType
-import org.partiql.lang.types.StructType
+import org.partiql.spi.types.BagType
+import org.partiql.spi.types.ListType
+import org.partiql.spi.types.StructType
 
 /**
  * The "filter scan to key lookup" pass identifies all equality expressions where either side is a primary key

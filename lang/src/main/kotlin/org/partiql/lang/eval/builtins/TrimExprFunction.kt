@@ -25,9 +25,9 @@ import org.partiql.lang.eval.builtins.TrimSpecification.TRAILING
 import org.partiql.lang.eval.errNoContext
 import org.partiql.lang.eval.stringValue
 import org.partiql.lang.types.FunctionSignature
-import org.partiql.lang.types.StaticType
-import org.partiql.lang.types.StaticType.Companion.unionOf
 import org.partiql.lang.types.VarargFormalParameter
+import org.partiql.spi.types.StaticType
+import org.partiql.spi.types.StaticType.Companion.unionOf
 
 /**
  * From section 6.7 of SQL 92 spec:

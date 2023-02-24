@@ -1,14 +1,14 @@
 package org.partiql.plan.passes
 
 import org.partiql.lang.infer.PlannerContext
-import org.partiql.lang.types.BagType
-import org.partiql.lang.types.StaticType
-import org.partiql.lang.types.StructType
 import org.partiql.plan.ir.Attribute
 import org.partiql.plan.ir.PlanNode
 import org.partiql.plan.ir.Rel
 import org.partiql.plan.ir.Rex
 import org.partiql.spi.connector.ConnectorSession
+import org.partiql.spi.types.BagType
+import org.partiql.spi.types.StaticType
+import org.partiql.spi.types.StructType
 
 public object PlanTyper : PlanRewriter<PlanTyper.Context>() {
 

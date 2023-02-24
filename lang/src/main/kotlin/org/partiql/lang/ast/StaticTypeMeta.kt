@@ -5,8 +5,8 @@ import org.partiql.ionschema.model.IonSchemaModel
 import org.partiql.ionschema.model.toIsl
 import org.partiql.lang.mappers.ISL_META_KEY
 import org.partiql.lang.mappers.IonSchemaMapper
-import org.partiql.lang.types.StaticType
 import org.partiql.lang.util.IonWriterContext
+import org.partiql.spi.types.StaticType
 
 /**
  * Represents a static type for an AST element.

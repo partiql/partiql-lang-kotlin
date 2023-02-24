@@ -7,21 +7,28 @@ import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.types.StaticType.Companion.BLOB
-import org.partiql.lang.types.StaticType.Companion.BOOL
-import org.partiql.lang.types.StaticType.Companion.CLOB
-import org.partiql.lang.types.StaticType.Companion.DECIMAL
-import org.partiql.lang.types.StaticType.Companion.FLOAT
-import org.partiql.lang.types.StaticType.Companion.INT
-import org.partiql.lang.types.StaticType.Companion.INT2
-import org.partiql.lang.types.StaticType.Companion.INT4
-import org.partiql.lang.types.StaticType.Companion.INT8
-import org.partiql.lang.types.StaticType.Companion.MISSING
-import org.partiql.lang.types.StaticType.Companion.NULL
-import org.partiql.lang.types.StaticType.Companion.STRING
-import org.partiql.lang.types.StaticType.Companion.SYMBOL
-import org.partiql.lang.types.StaticType.Companion.TIMESTAMP
+import org.partiql.lang.types.StaticTypeUtils.isInstance
 import org.partiql.lang.util.ArgumentsProviderBase
+import org.partiql.spi.types.AnyOfType
+import org.partiql.spi.types.ListType
+import org.partiql.spi.types.MissingType
+import org.partiql.spi.types.SexpType
+import org.partiql.spi.types.StaticType
+import org.partiql.spi.types.StaticType.Companion.BLOB
+import org.partiql.spi.types.StaticType.Companion.BOOL
+import org.partiql.spi.types.StaticType.Companion.CLOB
+import org.partiql.spi.types.StaticType.Companion.DECIMAL
+import org.partiql.spi.types.StaticType.Companion.FLOAT
+import org.partiql.spi.types.StaticType.Companion.INT
+import org.partiql.spi.types.StaticType.Companion.INT2
+import org.partiql.spi.types.StaticType.Companion.INT4
+import org.partiql.spi.types.StaticType.Companion.INT8
+import org.partiql.spi.types.StaticType.Companion.MISSING
+import org.partiql.spi.types.StaticType.Companion.NULL
+import org.partiql.spi.types.StaticType.Companion.STRING
+import org.partiql.spi.types.StaticType.Companion.SYMBOL
+import org.partiql.spi.types.StaticType.Companion.TIMESTAMP
+import org.partiql.spi.types.StructType
 import java.math.BigInteger
 
 /**
@@ -85,7 +92,7 @@ class StaticTypeTests {
         }
 
         assertEquals(
-            tc.expectedIsInstanceResult, tc.staticType.isInstance(exprValue),
+            tc.expectedIsInstanceResult, isInstance(exprValue, tc.staticType),
             "The result of StaticType.isInstance() should match the expected value for type ${tc.staticType} and \"${tc.sqlValue}\""
         )
     }
@@ -109,7 +116,7 @@ class StaticTypeTests {
         }
 
         assertEquals(
-            tc.expectedIsInstanceResult, tc.staticType.isInstance(exprValue),
+            tc.expectedIsInstanceResult, isInstance(exprValue, tc.staticType),
             "The result of StaticType.isInstance() should match the expected value for type ${tc.staticType} and \"${tc.sqlValue}\""
         )
     }
@@ -193,7 +200,7 @@ class StaticTypeTests {
         }
 
         assertEquals(
-            tc.expectedIsInstanceResult, tc.staticType.isInstance(exprValue),
+            tc.expectedIsInstanceResult, isInstance(exprValue, tc.staticType),
             "The result of StaticType.isInstance() should match the expected value for type ${tc.staticType} and \"${tc.sqlValue}\""
         )
     }

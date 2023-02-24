@@ -32,8 +32,8 @@ import org.partiql.lang.eval.visitors.StaticTypeVisitorTransform
 import org.partiql.lang.syntax.Parser
 import org.partiql.lang.syntax.PartiQLParserBuilder
 import org.partiql.lang.types.CustomType
-import org.partiql.lang.types.StaticType
 import org.partiql.lang.util.interruptibleFold
+import org.partiql.spi.types.StaticType
 
 /**
  * Contains all information needed for processing steps.

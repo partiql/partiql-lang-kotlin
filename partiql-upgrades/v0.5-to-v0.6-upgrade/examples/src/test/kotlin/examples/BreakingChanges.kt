@@ -4,7 +4,7 @@ import org.partiql.lang.eval.Environment
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.types.FunctionSignature
-import org.partiql.lang.types.StaticType
+import org.partiql.spi.types.StaticType
 import kotlin.test.Test
 
 class BreakingChanges {

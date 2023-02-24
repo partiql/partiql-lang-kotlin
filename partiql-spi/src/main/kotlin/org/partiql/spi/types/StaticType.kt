@@ -2,18 +2,8 @@
  * Copyright 2017 Amazon.com, Inc. or its affiliates.  All rights reserved.
  */
 
-package org.partiql.lang.types
+package org.partiql.spi.types
 
-import org.partiql.lang.ast.passes.inference.isLob
-import org.partiql.lang.ast.passes.inference.isNumeric
-import org.partiql.lang.ast.passes.inference.isText
-import org.partiql.lang.ast.passes.inference.isUnknown
-import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.eval.ExprValueType
-import org.partiql.lang.eval.name
-import org.partiql.lang.eval.numberValue
-import org.partiql.lang.eval.stringValue
-import org.partiql.lang.eval.timeValue
 import java.math.BigDecimal
 
 /**
@@ -68,38 +58,6 @@ sealed class StaticType {
         @JvmField val STRUCT: StructType = StructType()
         @JvmField val BAG: BagType = BagType()
 
-        @JvmStatic
-        fun fromExprValueType(exprValueType: ExprValueType): StaticType =
-            when (exprValueType) {
-                ExprValueType.MISSING -> MISSING
-                ExprValueType.NULL -> NULL
-                ExprValueType.BOOL -> BOOL
-                ExprValueType.INT -> INT
-                ExprValueType.FLOAT -> FLOAT
-                ExprValueType.DECIMAL -> DECIMAL
-                ExprValueType.DATE -> DATE
-                ExprValueType.TIME -> TIME
-                ExprValueType.TIMESTAMP -> TIMESTAMP
-                ExprValueType.SYMBOL -> SYMBOL
-                ExprValueType.STRING -> STRING
-                ExprValueType.CLOB -> CLOB
-                ExprValueType.BLOB -> BLOB
-                ExprValueType.LIST -> LIST
-                ExprValueType.SEXP -> SEXP
-                ExprValueType.STRUCT -> STRUCT
-                ExprValueType.BAG -> BAG
-            }
-
-        @JvmStatic
-        fun fromExprValue(exprValue: ExprValue): StaticType =
-            when (exprValue.type) {
-                ExprValueType.TIME -> {
-                    val timeValue = exprValue.timeValue()
-                    TimeType(precision = timeValue.precision, withTimeZone = timeValue.zoneOffset != null)
-                }
-                else -> fromExprValueType(exprValue.type)
-            }
-
         /** All the StaticTypes, except for `ANY`. */
         @JvmStatic
         val ALL_TYPES = listOf(
@@ -127,27 +85,6 @@ sealed class StaticType {
     }
 
     /**
-     * Checks to see if the given [ExprValue] conforms to the current [StaticType].
-     *
-     * Throwing [UnsupportedTypeCheckException] is temporary while some classes derived from [StaticType]
-     * do not fully implement this function and is thrown when the encounter situations that can't yet be checked.
-     */
-    @Throws(UnsupportedTypeCheckException::class)
-    abstract fun isInstance(value: ExprValue): Boolean
-
-    /**
-     * Returns true if [other] [StaticType] is comparable to the current [StaticType]. Currently, two types are
-     * comparable if
-     *  - they are both numeric
-     *  - they are both text
-     *  - they are both lobs
-     *  - they are both [SingleType]s with the same [SingleType.runtimeType]
-     *  - one [StaticType] from current [StaticType]'s [allTypes] is comparable to a [StaticType] from [other]'s
-     *   [allTypes]
-     */
-    abstract fun isComparableTo(other: StaticType): Boolean
-
-    /**
      *  Returns a nullable version of the current [StaticType].
      *
      *  If it already nullable, returns the original type.
@@ -169,23 +106,14 @@ sealed class StaticType {
             else -> unionOf(this, MISSING).flatten()
         }
 
-    /**
-     * Checks if this subtype of the given [StaticType].
-     *
-     * A [StaticType] is subtype of another iff if its type domain in equal or smaller than the given type.
-     */
-    fun isSubTypeOf(otherType: StaticType): Boolean = this.typeDomain.isNotEmpty() && otherType.typeDomain.containsAll(this.typeDomain)
-
     abstract val metas: Map<String, Any>
-
-    abstract val typeDomain: Set<ExprValueType>
 
     /**
      * Convenience method to copy over StaticType to a new instance with given `metas`
      * MissingType is a singleton and there can only be one representation for it
      * i.e. you cannot have two instances of MissingType with different metas.
      */
-    internal fun withMetas(metas: Map<String, Any>): StaticType =
+    fun withMetas(metas: Map<String, Any>): StaticType =
         when (this) {
             is AnyType -> copy(metas = metas)
             is ListType -> copy(metas = metas)
@@ -211,7 +139,7 @@ sealed class StaticType {
     /**
      * Type is nullable if it is of Null type or is an AnyOfType that contains a Null type
      */
-    internal fun isNullable(): Boolean =
+    fun isNullable(): Boolean =
         when (this) {
             is AnyOfType -> types.any { it.isNullable() }
             is AnyType, is NullType -> true
@@ -234,7 +162,7 @@ sealed class StaticType {
      * - For non-union types, this returns list with a single entry.
      * - For union types, this returns the complete list of all types in the union.  (Nested unions are flattened.)
      */
-    internal abstract val allTypes: List<StaticType>
+    public abstract val allTypes: List<StaticType>
 
     abstract fun flatten(): StaticType
 }
@@ -245,18 +173,11 @@ sealed class StaticType {
 // TODO: Remove `NULL` from here. This affects inference as operations (especially NAry) can produce
 //  `NULL` or `MISSING` depending on a null propagation or an incorrect argument.
 data class AnyType(override val metas: Map<String, Any> = mapOf()) : StaticType() {
-    // AnyType encompasses all PartiQL types (including Null type)
-    override fun isInstance(value: ExprValue): Boolean = true
-    override fun isComparableTo(other: StaticType): Boolean = true
-
-    override val typeDomain: Set<ExprValueType>
-        get() = enumValues<ExprValueType>().toSet()
-
     /**
      * Converts this into an [AnyOfType] representation. This method is helpful in inference when
      * it wants to iterate over all possible types of an expression.
      */
-    fun toAnyOfType() = AnyOfType(typeDomain.map { fromExprValueType(it) }.toSet())
+    fun toAnyOfType() = AnyOfType(ALL_TYPES.toSet())
 
     override fun flatten(): StaticType = this
 
@@ -270,35 +191,7 @@ data class AnyType(override val metas: Map<String, Any> = mapOf()) : StaticType(
  * Represents a [StaticType] that is type of a single [ExprValueType].
  */
 sealed class SingleType : StaticType() {
-    abstract val runtimeType: ExprValueType
-    override val typeDomain: Set<ExprValueType>
-        get() = setOf(runtimeType)
-
     override fun flatten(): StaticType = this
-
-    /**
-     * For [SingleType], provides a default implementation of [isInstance] that returns true
-     * if the [ExprValueType] of [value] is the same as the [runtimeType].
-     *
-     * That is appropriate for all [SingleType]-derived classes that do not have specific constraints but this must be
-     * overridden in any [SingleType]s that have constraints such as [IntType], [StringType] and [DecimalType].
-     * [NullType] also has custom implementation of this function to support `MISSING IS NULL` semantics.
-     */
-    override fun isInstance(value: ExprValue): Boolean = runtimeType == value.type
-
-    override fun isComparableTo(other: StaticType): Boolean {
-        if (this.isUnknown() || other.isUnknown()) {
-            return true
-        }
-        return when (other) {
-            is SingleType -> (this.isNumeric() && other.isNumeric()) ||
-                (this.isText() && other.isText()) ||
-                (this.isLob() && other.isLob()) ||
-                (this.runtimeType == other.runtimeType)
-            is AnyType -> true
-            is AnyOfType -> other.allTypes.filter { !it.isUnknown() }.any { this.isComparableTo(it) }
-        }
-    }
 }
 
 /**
@@ -315,16 +208,6 @@ class UnsupportedTypeCheckException(message: String) : RuntimeException(message)
  */
 sealed class CollectionType : SingleType() {
     abstract val elementType: StaticType
-
-    override fun isInstance(value: ExprValue): Boolean {
-        if (!super.isInstance(value)) return false
-
-        return when (this.elementType) {
-            StaticType.ANY -> true // no need to check every element if the elementType is ANY.
-
-            else -> value.all { this.elementType.isInstance(it) }
-        }
-    }
 }
 
 // Single types from ExprValueType.
@@ -335,12 +218,6 @@ sealed class CollectionType : SingleType() {
  * This is not a singleton since there may be more that one representation of a Null type (each with different metas)
  */
 data class NullType(override val metas: Map<String, Any> = mapOf()) : SingleType() {
-    override val runtimeType: ExprValueType
-        get() = ExprValueType.NULL
-
-    override fun isInstance(value: ExprValue): Boolean =
-        value.type == ExprValueType.MISSING || value.type == ExprValueType.NULL
-
     override val allTypes: List<StaticType>
         get() = listOf(this)
 
@@ -354,9 +231,6 @@ data class NullType(override val metas: Map<String, Any> = mapOf()) : SingleType
  * more that one representations of a missing type.
  */
 object MissingType : SingleType() {
-    override val runtimeType: ExprValueType
-        get() = ExprValueType.MISSING
-
     override val metas: Map<String, Any> = mapOf()
 
     override val allTypes: List<StaticType>
@@ -366,9 +240,6 @@ object MissingType : SingleType() {
 }
 
 data class BoolType(override val metas: Map<String, Any> = mapOf()) : SingleType() {
-    override val runtimeType: ExprValueType
-        get() = ExprValueType.BOOL
-
     override val allTypes: List<StaticType>
         get() = listOf(this)
 
@@ -397,9 +268,6 @@ data class IntType(
         UNCONSTRAINED(8, Long.MIN_VALUE..Long.MAX_VALUE),
     }
 
-    override val runtimeType: ExprValueType
-        get() = ExprValueType.INT
-
     override val allTypes: List<StaticType>
         get() = listOf(this)
 
@@ -408,22 +276,9 @@ data class IntType(
             IntRangeConstraint.UNCONSTRAINED -> "int"
             else -> "int${rangeConstraint.numBytes}"
         }
-
-    override fun isInstance(value: ExprValue): Boolean {
-        if (value.type != ExprValueType.INT) {
-            return false
-        }
-
-        val longValue = value.numberValue().toLong()
-
-        return rangeConstraint.validRange.contains(longValue)
-    }
 }
 
 data class FloatType(override val metas: Map<String, Any> = mapOf()) : SingleType() {
-    override val runtimeType: ExprValueType
-        get() = ExprValueType.FLOAT
-
     override val allTypes: List<StaticType>
         get() = listOf(this)
 
@@ -454,25 +309,13 @@ data class DecimalType(
         }
     }
 
-    override val runtimeType: ExprValueType
-        get() = ExprValueType.DECIMAL
-
     override val allTypes: List<StaticType>
         get() = listOf(this)
 
     override fun toString(): String = "decimal"
-
-    override fun isInstance(value: ExprValue): Boolean =
-        when (value.type) {
-            ExprValueType.DECIMAL -> precisionScaleConstraint.matches(value.scalar.numberValue() as BigDecimal)
-            else -> false
-        }
 }
 
 data class DateType(override val metas: Map<String, Any> = mapOf()) : SingleType() {
-    override val runtimeType: ExprValueType
-        get() = ExprValueType.DATE
-
     override val allTypes: List<StaticType>
         get() = listOf(this)
 
@@ -484,9 +327,6 @@ data class TimeType(
     val withTimeZone: Boolean = false,
     override val metas: Map<String, Any> = mapOf()
 ) : SingleType() {
-    override val runtimeType: ExprValueType
-        get() = ExprValueType.TIME
-
     override val allTypes: List<StaticType>
         get() = listOf(this)
 
@@ -497,9 +337,6 @@ data class TimeType(
 }
 
 data class TimestampType(override val metas: Map<String, Any> = mapOf()) : SingleType() {
-    override val runtimeType: ExprValueType
-        get() = ExprValueType.TIMESTAMP
-
     override val allTypes: List<StaticType>
         get() = listOf(this)
 
@@ -507,9 +344,6 @@ data class TimestampType(override val metas: Map<String, Any> = mapOf()) : Singl
 }
 
 data class SymbolType(override val metas: Map<String, Any> = mapOf()) : SingleType() {
-    override val runtimeType: ExprValueType
-        get() = ExprValueType.SYMBOL
-
     override val allTypes: List<StaticType>
         get() = listOf(this)
 
@@ -522,43 +356,19 @@ data class StringType(
 ) : SingleType() {
 
     sealed class StringLengthConstraint {
-        /** Returns true if the code point count of [value] falls within the constraints.  */
-        abstract fun matches(value: ExprValue): Boolean
-
-        object Unconstrained : StringLengthConstraint() {
-            override fun matches(value: ExprValue): Boolean = true
-        }
-
-        data class Constrained(val length: NumberConstraint) : StringLengthConstraint() {
-            override fun matches(value: ExprValue): Boolean {
-                val str = value.scalar.stringValue()
-                    ?: error("value.scalar.stringValue() unexpectedly returned null")
-                return length.matches(str.codePointCount(0, str.length))
-            }
-        }
+        object Unconstrained : StringLengthConstraint()
+        data class Constrained(val length: NumberConstraint) : StringLengthConstraint()
     }
-
-    override val runtimeType: ExprValueType
-        get() = ExprValueType.STRING
 
     override val allTypes: List<StaticType>
         get() = listOf(this)
 
     override fun toString(): String = "string"
 
-    override fun isInstance(value: ExprValue): Boolean =
-        when (value.type) {
-            ExprValueType.STRING -> lengthConstraint.matches(value)
-            else -> false
-        }
-
-    internal constructor(numberConstraint: NumberConstraint) : this(StringLengthConstraint.Constrained(numberConstraint))
+    constructor(numberConstraint: NumberConstraint) : this(StringLengthConstraint.Constrained(numberConstraint))
 }
 
 data class BlobType(override val metas: Map<String, Any> = mapOf()) : SingleType() {
-    override val runtimeType: ExprValueType
-        get() = ExprValueType.BLOB
-
     override val allTypes: List<StaticType>
         get() = listOf(this)
 
@@ -566,9 +376,6 @@ data class BlobType(override val metas: Map<String, Any> = mapOf()) : SingleType
 }
 
 data class ClobType(override val metas: Map<String, Any> = mapOf()) : SingleType() {
-    override val runtimeType: ExprValueType
-        get() = ExprValueType.CLOB
-
     override val allTypes: List<StaticType>
         get() = listOf(this)
 
@@ -582,9 +389,6 @@ data class ListType(
     override val elementType: StaticType = ANY,
     override val metas: Map<String, Any> = mapOf()
 ) : CollectionType() {
-
-    override val runtimeType: ExprValueType
-        get() = ExprValueType.LIST
     override fun flatten(): StaticType = this
 
     override val allTypes: List<StaticType>
@@ -600,8 +404,6 @@ data class SexpType(
     override val elementType: StaticType = ANY,
     override val metas: Map<String, Any> = mapOf()
 ) : CollectionType() {
-    override val runtimeType: ExprValueType
-        get() = ExprValueType.SEXP
     override fun flatten(): StaticType = this
 
     override val allTypes: List<StaticType>
@@ -617,9 +419,6 @@ data class BagType(
     override val elementType: StaticType = ANY,
     override val metas: Map<String, Any> = mapOf()
 ) : CollectionType() {
-    override val runtimeType: ExprValueType
-        get() = ExprValueType.BAG
-
     override fun flatten(): StaticType = this
 
     override val allTypes: List<StaticType>
@@ -634,9 +433,6 @@ data class StructType(
     val primaryKeyFields: List<String> = listOf(),
     override val metas: Map<String, Any> = mapOf()
 ) : SingleType() {
-    override val runtimeType: ExprValueType
-        get() = ExprValueType.STRUCT
-
     override fun flatten(): StaticType = this
 
     override val allTypes: List<StaticType>
@@ -650,76 +446,12 @@ data class StructType(
             else -> "struct($firstSeveral, ... and ${entries.size - 3} other field(s))"
         }
     }
-
-    /**
-     * By far, structs have the most complicated logic behind their instance check.
-     *
-     * This method returns true if:
-     *
-     * - All fields are instance of the correct type (as identified by [fields]).
-     * - If [contentClosed] and there are no fields other than those listed in [fields].
-     *
-     * Duplicate fields are supported, but all instances of a field with the same name
-     * must match the type specified in [fields].
-     *
-     * If the struct contains any non-text key, this automatically means that the struct is not an instance of this
-     * [StructType].  We do not even have the ability to model that with Ion/Ion Schema anyway.
-     */
-    override fun isInstance(value: ExprValue): Boolean = when {
-        fields.isEmpty() && !contentClosed -> value.type == ExprValueType.STRUCT
-        else -> {
-            if (value.type != ExprValueType.STRUCT) {
-                false
-            } else {
-                // build a multi-map of fields in the struct.
-                val scratchPad = HashMap<String, MutableList<ExprValue>>().also { map ->
-                    value.forEach { v ->
-                        // return false early if the struct key is not a string or symbol.
-                        val structKey = v.name.takeIf { it?.type?.isText ?: false } ?: return false
-                        map.getOrPut(structKey.stringValue()) { ArrayList() }.add(v)
-                    }
-                }
-
-                // now go thru each of the [fields] and remove those that are valid
-                fields.forEach { (fieldName, fieldType) ->
-                    val fieldValues = scratchPad.remove(fieldName)
-
-                    // Field was *not* present
-                    if (fieldValues == null) {
-                        // if field was required, the struct is not an instance of this [StructType]
-                        if (!fieldType.isOptional()) {
-                            return false
-                        }
-                        // else there is no violation, keep checking other fields
-                    } else {
-                        // in the case of multiple fields with the same name, all values must match
-                        if (!fieldValues.all { fieldType.isInstance(it) }) {
-                            return false
-                        }
-                        // else there is no violation, keep checking other fields
-                    }
-                }
-
-                // if we reach this point, we didn't find any fields that do not comply with their final types.
-
-                // If no fields remain [value] is an instance of this [StaticType]
-                if (scratchPad.none()) {
-                    true
-                } else {
-                    // There are some fields left over, so we only need to check if we are closedContent or not.
-                    !contentClosed
-                }
-            }
-        }
-    }
 }
 
 /**
  * Represents a [StaticType] that's defined by the union of multiple [StaticType]s.
  */
 data class AnyOfType(val types: Set<StaticType>, override val metas: Map<String, Any> = mapOf()) : StaticType() {
-    override val typeDomain = types.flatMap { it.typeDomain }.toSet()
-
     /**
      * Flattens a union type by traversing the types and recursively bubbling up the underlying union types.
      *
@@ -759,29 +491,6 @@ data class AnyOfType(val types: Set<StaticType>, override val metas: Map<String,
 
     override val allTypes: List<StaticType>
         get() = this.types.map { it.flatten() }
-
-    /**
-     * Returns true if the value matches any of the [types].
-     */
-    override fun isInstance(value: ExprValue): Boolean = types.any { it.isInstance(value) }
-
-    override fun isComparableTo(other: StaticType): Boolean {
-        if (this.isUnknown() || other.isUnknown()) {
-            return true
-        }
-
-        val typesA = this.allTypes.filter { !it.isUnknown() }
-        val typesB = other.allTypes.filter { !it.isUnknown() }
-
-        typesA.forEach { tA ->
-            typesB.forEach { tB ->
-                if (tA.isComparableTo(tB)) {
-                    return true
-                }
-            }
-        }
-        return false
-    }
 }
 
 sealed class NumberConstraint {
@@ -799,3 +508,9 @@ sealed class NumberConstraint {
         override fun matches(num: Int): Boolean = value >= num
     }
 }
+
+internal fun StaticType.isNullOrMissing(): Boolean = (this is NullType || this is MissingType)
+internal fun StaticType.isNumeric(): Boolean = (this is IntType || this is FloatType || this is DecimalType)
+internal fun StaticType.isText(): Boolean = (this is SymbolType || this is StringType)
+internal fun StaticType.isLob(): Boolean = (this is BlobType || this is ClobType)
+internal fun StaticType.isUnknown(): Boolean = (this.isNullOrMissing() || this == StaticType.NULL_OR_MISSING)

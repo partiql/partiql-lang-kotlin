@@ -11,8 +11,8 @@ import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.physical.throwUndefinedVariableException
 import org.partiql.lang.eval.stringValue
 import org.partiql.lang.types.FunctionSignature
-import org.partiql.lang.types.StaticType
 import org.partiql.lang.types.VarargFormalParameter
+import org.partiql.spi.types.StaticType
 
 /**
  * Performs dynamic variable resolution.  Query authors should never call this function directly (and indeed it is

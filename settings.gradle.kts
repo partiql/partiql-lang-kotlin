@@ -22,6 +22,7 @@ include(
     "partiql-lib:partiql-isl",
     "partiql-lib:partiql-sprout",
     "partiql-lib:partiql-plan",
+    "partiql-spi",
     "test:partiql-tests-runner",
     "test:partiql-randomized-tests",
 )

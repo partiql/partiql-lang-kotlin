@@ -42,15 +42,14 @@ import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedure
 import org.partiql.lang.eval.like.parsePattern
 import org.partiql.lang.eval.time.Time
 import org.partiql.lang.eval.visitors.PartiqlAstSanityValidator
-import org.partiql.lang.types.AnyOfType
-import org.partiql.lang.types.AnyType
 import org.partiql.lang.types.FunctionSignature
-import org.partiql.lang.types.IntType
-import org.partiql.lang.types.SingleType
-import org.partiql.lang.types.StaticType
+import org.partiql.lang.types.StaticTypeUtils.getRuntimeType
+import org.partiql.lang.types.StaticTypeUtils.getTypeDomain
+import org.partiql.lang.types.StaticTypeUtils.isInstance
+import org.partiql.lang.types.StaticTypeUtils.isSubTypeOf
+import org.partiql.lang.types.StaticTypeUtils.staticTypeFromExprValue
 import org.partiql.lang.types.TypedOpParameter
 import org.partiql.lang.types.UnknownArguments
-import org.partiql.lang.types.UnsupportedTypeCheckException
 import org.partiql.lang.types.toTypedOpParameter
 import org.partiql.lang.util.bigDecimalOf
 import org.partiql.lang.util.checkThreadInterrupted
@@ -70,6 +69,12 @@ import org.partiql.lang.util.times
 import org.partiql.lang.util.totalMinutes
 import org.partiql.lang.util.unaryMinus
 import org.partiql.pig.runtime.SymbolPrimitive
+import org.partiql.spi.types.AnyOfType
+import org.partiql.spi.types.AnyType
+import org.partiql.spi.types.IntType
+import org.partiql.spi.types.SingleType
+import org.partiql.spi.types.StaticType
+import org.partiql.spi.types.UnsupportedTypeCheckException
 import java.util.LinkedList
 import java.util.Stack
 import java.util.TreeSet
@@ -970,12 +975,12 @@ internal class EvaluatingCompiler(
 
         fun checkArgumentTypes(signature: FunctionSignature, args: List<ExprValue>): Arguments {
             fun checkArgumentType(formalStaticType: StaticType, actualArg: ExprValue, position: Int) {
-                val formalExprValueTypeDomain = formalStaticType.typeDomain
+                val formalExprValueTypeDomain = getTypeDomain(formalStaticType)
 
                 val actualExprValueType = actualArg.type
-                val actualStaticType = StaticType.fromExprValue(actualArg)
+                val actualStaticType = staticTypeFromExprValue(actualArg)
 
-                if (!actualStaticType.isSubTypeOf(formalStaticType)) {
+                if (!isSubTypeOf(actualStaticType, formalStaticType)) {
                     errInvalidArgumentType(
                         signature = signature,
                         position = position,
@@ -1135,7 +1140,7 @@ internal class EvaluatingCompiler(
         typedOpParameter: TypedOpParameter,
         metas: MetaContainer
     ): (ExprValue) -> Boolean {
-        val exprValueType = staticType.runtimeType
+        val exprValueType = getRuntimeType(staticType)
 
         // The "simple" type match function only looks at the [ExprValueType] of the [ExprValue]
         // and invokes the custom [validationThunk] if one exists.
@@ -1153,7 +1158,7 @@ internal class EvaluatingCompiler(
             TypedOpBehavior.HONOR_PARAMETERS -> { expValue: ExprValue ->
                 staticType.allTypes.any {
                     val matchesStaticType = try {
-                        it.isInstance(expValue)
+                        isInstance(expValue, it)
                     } catch (e: UnsupportedTypeCheckException) {
                         err(
                             e.message!!,
@@ -1261,7 +1266,7 @@ internal class EvaluatingCompiler(
                     locationMeta,
                     compileOptions.defaultTimezoneOffset
                 )
-                typeOpValidate(value, castOutput, singleType.runtimeType.toString(), locationMeta)
+                typeOpValidate(value, castOutput, getRuntimeType(singleType).toString(), locationMeta)
                 castOutput
             }
         }
@@ -1352,7 +1357,7 @@ internal class EvaluatingCompiler(
         val castThunkEnv = compileCastHelper(expr.value, expr.asType, expr.metas)
         return thunkFactory.thunkEnv(metas) { env ->
             val sourceValue = expThunk(env)
-            val sourceType = StaticType.fromExprValue(sourceValue)
+            val sourceType = staticTypeFromExprValue(sourceValue)
 
             fun roundTrip(): ExprValue {
                 val castedValue = castThunkEnv(env)

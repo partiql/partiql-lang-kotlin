@@ -2,10 +2,15 @@ package org.partiql.plan.ir
 
 import com.amazon.ionelement.api.IonElement
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 import org.partiql.lang.types.StaticType
 import org.partiql.plan.ir.visitor.PlanVisitor
 >>>>>>> 780d0657 (Adds SPI framework, schema inference, cli tool, localdb connector, and plan typing)
+=======
+import org.partiql.plan.ir.visitor.PlanVisitor
+import org.partiql.spi.types.StaticType
+>>>>>>> 916ec3df (Moves StaticType into new SPI project)
 import kotlin.Any
 import kotlin.String
 import kotlin.collections.List

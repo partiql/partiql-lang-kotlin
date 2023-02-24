@@ -1,6 +1,12 @@
 package org.partiql.lang.types
 
 import org.partiql.lang.domains.PartiqlPhysical
+import org.partiql.spi.types.DecimalType
+import org.partiql.spi.types.IntType
+import org.partiql.spi.types.NumberConstraint
+import org.partiql.spi.types.StaticType
+import org.partiql.spi.types.StringType
+import org.partiql.spi.types.TimeType
 
 /**
  * Helper to convert [PartiqlPhysical.Type] in AST to a [TypedOpParameter].
@@ -30,7 +36,13 @@ internal fun PartiqlPhysical.Type.toTypedOpParameter(customTypedOpParameters: Ma
     }
     is PartiqlPhysical.Type.TimestampType -> TypedOpParameter(StaticType.TIMESTAMP)
     is PartiqlPhysical.Type.CharacterType -> when {
-        this.length == null -> TypedOpParameter(StringType(StringType.StringLengthConstraint.Constrained(NumberConstraint.Equals(1))))
+        this.length == null -> TypedOpParameter(
+            StringType(
+                StringType.StringLengthConstraint.Constrained(
+                    NumberConstraint.Equals(1)
+                )
+            )
+        )
         else -> TypedOpParameter(
             StringType(
                 StringType.StringLengthConstraint.Constrained(

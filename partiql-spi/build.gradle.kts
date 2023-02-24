@@ -14,14 +14,9 @@
  */
 
 plugins {
-    id(Plugins.application)
     id(Plugins.conventions)
 }
 
 dependencies {
-    implementation(project(":lang"))
-    implementation(project(":partiql-spi"))
-    implementation(Deps.awsSdkBom)
-    implementation(Deps.awsSdkDynamodb)
-    testImplementation(Deps.mockito)
+    implementation(Deps.ionElement)
 }

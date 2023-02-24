@@ -1,29 +1,35 @@
 package org.partiql.lang.ast.passes.inference
 
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.types.AnyOfType
-import org.partiql.lang.types.AnyType
-import org.partiql.lang.types.BlobType
-import org.partiql.lang.types.BoolType
-import org.partiql.lang.types.ClobType
-import org.partiql.lang.types.CollectionType
-import org.partiql.lang.types.DecimalType
-import org.partiql.lang.types.FloatType
-import org.partiql.lang.types.IntType
-import org.partiql.lang.types.MissingType
-import org.partiql.lang.types.NullType
-import org.partiql.lang.types.SingleType
-import org.partiql.lang.types.StaticType
-import org.partiql.lang.types.StringType
-import org.partiql.lang.types.StructType
-import org.partiql.lang.types.SymbolType
-import org.partiql.lang.types.TimestampType
+import org.partiql.spi.types.AnyOfType
+import org.partiql.spi.types.AnyType
+import org.partiql.spi.types.BlobType
+import org.partiql.spi.types.BoolType
+import org.partiql.spi.types.ClobType
+import org.partiql.spi.types.CollectionType
+import org.partiql.spi.types.DecimalType
+import org.partiql.spi.types.FloatType
+import org.partiql.spi.types.IntType
+import org.partiql.spi.types.MissingType
+import org.partiql.spi.types.NullType
+import org.partiql.spi.types.SingleType
+import org.partiql.spi.types.StaticType
+import org.partiql.spi.types.StringType
+import org.partiql.spi.types.StructType
+import org.partiql.spi.types.SymbolType
+import org.partiql.spi.types.TimestampType
 
 internal fun StaticType.isNullOrMissing(): Boolean = (this is NullType || this is MissingType)
 internal fun StaticType.isNumeric(): Boolean = (this is IntType || this is FloatType || this is DecimalType)
 internal fun StaticType.isText(): Boolean = (this is SymbolType || this is StringType)
 internal fun StaticType.isLob(): Boolean = (this is BlobType || this is ClobType)
 internal fun StaticType.isUnknown(): Boolean = (this.isNullOrMissing() || this == StaticType.NULL_OR_MISSING)
+internal fun StaticType.isNullable(): Boolean =
+    when (this) {
+        is AnyOfType -> types.any { it.isNullable() }
+        is AnyType, is NullType -> true
+        else -> false
+    }
 
 /**
  * Returns the maximum number of digits a decimal can hold after reserving digits for scale
@@ -35,12 +41,12 @@ private fun DecimalType.maxDigits(): Int {
     val precision = when (precisionScaleConstraint) {
         // TODO: What's PartiQL's max allowed precision?
         DecimalType.PrecisionScaleConstraint.Unconstrained -> Int.MAX_VALUE
-        is DecimalType.PrecisionScaleConstraint.Constrained -> precisionScaleConstraint.precision
+        is DecimalType.PrecisionScaleConstraint.Constrained -> (precisionScaleConstraint as DecimalType.PrecisionScaleConstraint.Constrained).precision
     }
 
     val scale = when (precisionScaleConstraint) {
         DecimalType.PrecisionScaleConstraint.Unconstrained -> 0
-        is DecimalType.PrecisionScaleConstraint.Constrained -> precisionScaleConstraint.scale
+        is DecimalType.PrecisionScaleConstraint.Constrained -> (precisionScaleConstraint as DecimalType.PrecisionScaleConstraint.Constrained).scale
     }
 
     return precision - scale

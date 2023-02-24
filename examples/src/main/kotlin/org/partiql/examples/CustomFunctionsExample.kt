@@ -11,7 +11,7 @@ import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.StructOrdering
 import org.partiql.lang.eval.namedValue
 import org.partiql.lang.types.FunctionSignature
-import org.partiql.lang.types.StaticType
+import org.partiql.spi.types.StaticType
 import java.io.PrintStream
 
 /** A simple fibonacci calculator. */

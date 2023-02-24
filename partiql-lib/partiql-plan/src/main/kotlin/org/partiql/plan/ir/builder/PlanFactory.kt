@@ -2,6 +2,7 @@ package org.partiql.plan.ir.builder
 
 import com.amazon.ionelement.api.IonElement
 <<<<<<< HEAD
+<<<<<<< HEAD
 import kotlin.Any
 import kotlin.String
 import kotlin.collections.List
@@ -9,6 +10,8 @@ import kotlin.collections.Map
 import kotlin.collections.Set
 =======
 import org.partiql.lang.types.StaticType
+=======
+>>>>>>> 916ec3df (Moves StaticType into new SPI project)
 import org.partiql.plan.ir.Attribute
 >>>>>>> 780d0657 (Adds SPI framework, schema inference, cli tool, localdb connector, and plan typing)
 import org.partiql.plan.ir.Binding
@@ -21,6 +24,15 @@ import org.partiql.plan.ir.Rel
 import org.partiql.plan.ir.Rex
 import org.partiql.plan.ir.SortSpec
 import org.partiql.plan.ir.Step
+<<<<<<< HEAD
+=======
+import org.partiql.spi.types.StaticType
+import kotlin.Any
+import kotlin.String
+import kotlin.collections.List
+import kotlin.collections.Map
+import kotlin.collections.Set
+>>>>>>> 916ec3df (Moves StaticType into new SPI project)
 
 public abstract class PlanFactory {
 <<<<<<< HEAD

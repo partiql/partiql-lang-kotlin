@@ -27,7 +27,7 @@ import org.partiql.lang.eval.io.DelimitedValues
 import org.partiql.lang.eval.stringValue
 import org.partiql.lang.eval.toIonValue
 import org.partiql.lang.types.FunctionSignature
-import org.partiql.lang.types.StaticType
+import org.partiql.spi.types.StaticType
 import java.io.FileOutputStream
 import java.io.OutputStream
 import java.io.OutputStreamWriter

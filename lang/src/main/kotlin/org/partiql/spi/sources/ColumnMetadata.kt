@@ -1,6 +1,6 @@
 package org.partiql.spi.sources
 
-import org.partiql.lang.types.StaticType
+import org.partiql.spi.types.StaticType
 
 public class ColumnMetadata(
     public val name: String,

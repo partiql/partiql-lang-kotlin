@@ -8,12 +8,12 @@ import org.partiql.lang.infer.QualifiedObjectName
 import org.partiql.lang.infer.Session
 import org.partiql.lang.infer.TableHandle
 import org.partiql.lang.plugin.PluginManager
-import org.partiql.lang.types.DecimalType
-import org.partiql.lang.types.StaticType
 import org.partiql.plan.PartiQLSchemaInferencer
 import org.partiql.spi.connector.ConnectorMetadata
 import org.partiql.spi.connector.ConnectorSession
 import org.partiql.spi.sources.TableSchema
+import org.partiql.spi.types.DecimalType
+import org.partiql.spi.types.StaticType
 import picocli.CommandLine
 import java.io.File
 

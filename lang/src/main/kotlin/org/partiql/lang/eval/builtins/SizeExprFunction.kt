@@ -17,9 +17,9 @@ package org.partiql.lang.eval.builtins
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.types.AnyOfType
 import org.partiql.lang.types.FunctionSignature
-import org.partiql.lang.types.StaticType
+import org.partiql.spi.types.AnyOfType
+import org.partiql.spi.types.StaticType
 
 /**
  * Built in function to return the size of a container type, i.e. size of Lists, Structs and Bags. This function

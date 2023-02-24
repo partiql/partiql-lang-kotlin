@@ -23,11 +23,12 @@ import org.partiql.lang.eval.delegate
 import org.partiql.lang.infer.Metadata
 import org.partiql.lang.infer.QualifiedObjectName
 import org.partiql.lang.infer.Session
-import org.partiql.lang.types.BagType
-import org.partiql.lang.types.StaticType
-import org.partiql.lang.types.StructType
+import org.partiql.lang.infer.TableHandle
 import org.partiql.lang.util.propertyValueMapOf
 import org.partiql.spi.sources.TableSchema
+import org.partiql.spi.types.BagType
+import org.partiql.spi.types.StaticType
+import org.partiql.spi.types.StructType
 
 /**
  * Extra constraints which may be imposed on the type checking.
@@ -80,6 +81,23 @@ class StaticTypeVisitorTransform(
     ) {
         this.metadata = metadata
         this.session = session
+    }
+
+    init {
+        if (this::metadata.isInitialized.not()) {
+            this.metadata = object : Metadata {
+                override fun catalogExists(session: Session, catalogName: String) = false
+                override fun schemaExists(session: Session, catalogName: String, schemaName: String) = false
+                override fun getTableHandle(session: Session, tableName: QualifiedObjectName): TableHandle? = null
+                override fun getTableSchema(session: Session, handle: TableHandle): TableSchema {
+                    error("Not supported.")
+                }
+            }
+        }
+        // TODO: Figure this out
+        if (this::session.isInitialized.not()) {
+            this.session = Session("random_query_id", null, null)
+        }
     }
 
     /** Used to allow certain binding lookups to occur directly in the global scope. */
