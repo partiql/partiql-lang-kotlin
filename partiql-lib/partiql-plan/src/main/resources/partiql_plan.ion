@@ -4,7 +4,7 @@ imports::{
   kotlin: [
     any::'kotlin.Any',
     ion::'com.amazon.ionelement.api.IonElement',
-    type::'org.partiql.lang.types.StaticType',
+    static_type::'org.partiql.lang.types.StaticType',
   ],
 }
 
@@ -16,9 +16,14 @@ plan::{
 
 // Grouping of common fields without implications of interfaces or inheritance
 common::{
-  schema: map::[string,type],
+  schema: list::[attribute],
   properties: set::[property],
   metas: map::[string,any],
+}
+
+attribute::{
+  name: string,
+  type: static_type
 }
 
 // Relation properties

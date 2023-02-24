@@ -33,6 +33,9 @@ import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.builtins.createBuiltinFunctionSignatures
 import org.partiql.lang.eval.delegate
 import org.partiql.lang.eval.getStartingSourceLocationMeta
+import org.partiql.lang.infer.Metadata
+import org.partiql.lang.infer.QualifiedObjectName
+import org.partiql.lang.infer.Session
 import org.partiql.lang.types.AnyOfType
 import org.partiql.lang.types.AnyType
 import org.partiql.lang.types.BagType
@@ -56,6 +59,7 @@ import org.partiql.lang.types.TypedOpParameter
 import org.partiql.lang.types.UnknownArguments
 import org.partiql.lang.types.toTypedOpParameter
 import org.partiql.lang.util.cartesianProduct
+import org.partiql.spi.sources.TableSchema
 
 /**
  * A [PartiqlAst.VisitorTransform] that annotates nodes with their static type.
@@ -76,6 +80,18 @@ internal class StaticTypeInferenceVisitorTransform(
     private val customTypedOpParameters: Map<String, TypedOpParameter>,
     private val problemHandler: ProblemHandler = ProblemThrower()
 ) : PartiqlAst.VisitorTransform() {
+
+    private lateinit var metadata: Metadata
+    private lateinit var session: Session
+
+    internal constructor(session: Session, metadata: Metadata) : this(
+        globalBindings = Bindings.empty(),
+        customFunctionSignatures = emptyList(),
+        customTypedOpParameters = emptyMap()
+    ) {
+        this.metadata = metadata
+        this.session = session
+    }
 
     /** Used to allow certain binding lookups to occur directly in the global scope. */
     private val globalTypeEnv = wrapBindings(globalBindings, 0)
@@ -250,15 +266,37 @@ internal class StaticTypeInferenceVisitorTransform(
                 is PartiqlAst.ScopeQualifier.LocalsFirst -> ScopeSearchOrder.LEXICAL
                 is PartiqlAst.ScopeQualifier.Unqualified -> this.scopeOrder
             }
-            val scopes: List<Bindings<TypeAndDepth>> = when (overriddenScopeSearchOrder) {
-                ScopeSearchOrder.GLOBALS_THEN_LEXICAL -> listOf(globalTypeEnv, currentEnv)
-                ScopeSearchOrder.LEXICAL -> listOf(currentEnv, globalTypeEnv)
-            }
 
-            return scopes
-                .asSequence()
-                .mapNotNull { it.lookupBinding(bindingName) }
-                .firstOrNull()
+            val qualifiedObjectName = QualifiedObjectName(session.catalog?.toBindingName(), session.schema?.toBindingName(), bindingName)
+            when (overriddenScopeSearchOrder) {
+                ScopeSearchOrder.GLOBALS_THEN_LEXICAL -> {
+                    globalTypeEnv.lookupBinding(bindingName)?.let { return it }
+                    metadata.getTableHandle(session, qualifiedObjectName)?.let { handle ->
+                        metadata.getTableSchema(session, handle).toStaticType().let { return it }
+                    }
+                    return currentEnv.lookupBinding(bindingName)
+                }
+                ScopeSearchOrder.LEXICAL -> {
+                    currentEnv.lookupBinding(bindingName)?.let { return it }
+                    metadata.getTableHandle(session, qualifiedObjectName)?.let { handle ->
+                        metadata.getTableSchema(session, handle).toStaticType().let { return it }
+                    }
+                    return globalTypeEnv.lookupBinding(bindingName)
+                }
+            }
+        }
+
+        private fun String.toBindingName() = BindingName(this, BindingCase.SENSITIVE)
+
+        private fun TableSchema.toStaticType(): StaticType {
+            return BagType(
+                StructType(
+                    fields = this.attributes.associate {
+                        it.name to it.type
+                    },
+                    contentClosed = true
+                )
+            )
         }
 
         override fun transformExprId(node: PartiqlAst.Expr.Id): PartiqlAst.Expr {

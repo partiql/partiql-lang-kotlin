@@ -1,5 +1,6 @@
 package org.partiql.plan.ir.visitor
 
+import org.partiql.plan.ir.Attribute
 import org.partiql.plan.ir.Binding
 import org.partiql.plan.ir.Common
 import org.partiql.plan.ir.Field
@@ -17,7 +18,13 @@ public interface PlanVisitor<R, C> {
 
   public fun visitCommon(node: Common, ctx: C): R
 
+<<<<<<< HEAD
   public fun visitBinding(node: Binding, ctx: C): R
+=======
+    public fun visitAttribute(node: Attribute, ctx: C): R
+
+    public fun visitBinding(node: Binding, ctx: C): R
+>>>>>>> 780d0657 (Adds SPI framework, schema inference, cli tool, localdb connector, and plan typing)
 
   public fun visitField(node: Field, ctx: C): R
 

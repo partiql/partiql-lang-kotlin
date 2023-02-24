@@ -1,6 +1,11 @@
 package org.partiql.plan.ir
 
 import com.amazon.ionelement.api.IonElement
+<<<<<<< HEAD
+=======
+import org.partiql.lang.types.StaticType
+import org.partiql.plan.ir.visitor.PlanVisitor
+>>>>>>> 780d0657 (Adds SPI framework, schema inference, cli tool, localdb connector, and plan typing)
 import kotlin.Any
 import kotlin.String
 import kotlin.collections.List
@@ -34,12 +39,35 @@ public data class Plan(
 }
 
 public data class Common(
+<<<<<<< HEAD
   public val schema: Map<String, Rel.Join.Type>,
   public val properties: Set<Property>,
   public val metas: Map<String, Any>
 ) : PlanNode() {
   public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
       visitor.visitCommon(this, ctx)
+=======
+    public val schema: List<Attribute>,
+    public val properties: Set<Property>,
+    public val metas: Map<String, Any>
+) : PlanNode() {
+    public override val children: List<PlanNode> by lazy {
+        val kids = mutableListOf<PlanNode?>()
+        kids.addAll(schema)
+        kids.filterNotNull()
+    }
+
+    public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+        visitor.visitCommon(this, ctx)
+>>>>>>> 780d0657 (Adds SPI framework, schema inference, cli tool, localdb connector, and plan typing)
+}
+
+public data class Attribute(
+    public val name: String,
+    public val type: StaticType
+) : PlanNode() {
+    public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+        visitor.visitAttribute(this, ctx)
 }
 
 public data class Binding(

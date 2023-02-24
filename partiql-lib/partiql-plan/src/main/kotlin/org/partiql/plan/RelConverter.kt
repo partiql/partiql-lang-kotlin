@@ -21,7 +21,7 @@ internal class RelConverter {
      * As of now, the COMMON property of relation operators is under development, so just use empty for now
      */
     private val empty = Common(
-        schema = emptyMap(),
+        schema = emptyList(),
         properties = emptySet(),
         metas = emptyMap(),
     )
