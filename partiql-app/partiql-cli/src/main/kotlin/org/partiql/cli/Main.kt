@@ -18,9 +18,8 @@ package org.partiql.cli
 import com.amazon.ion.system.IonSystemBuilder
 import org.partiql.cli.pico.InferCommand
 import org.partiql.cli.pico.PartiQLCommand
-import org.partiql.cli.plugin.localdb.LocalConnectorManagerFactory
+import org.partiql.cli.plugin.localdb.LocalPlugin
 import org.partiql.lang.eval.EvaluationSession
-import org.partiql.lang.plugin.PluginManager
 import org.partiql.lang.syntax.PartiQLParserBuilder
 import org.partiql.plan.Planner
 import org.partiql.plan.debug.PlanPrinter
@@ -32,11 +31,10 @@ import kotlin.system.exitProcess
  * Runs the PartiQL CLI.
  */
 fun main(args: Array<String>) {
-    val manager = PluginManager(listOf(LocalConnectorManagerFactory()))
     val ion = IonSystemBuilder.standard().build()
     val command = CommandLine(PartiQLCommand(ion))
     command.addSubcommand(
-        InferCommand(manager)
+        InferCommand(listOf(LocalPlugin()))
     )
     val exitCode = command.execute(*args)
     exitProcess(exitCode)

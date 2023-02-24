@@ -18,13 +18,9 @@ public abstract class PlanBaseVisitor<R, C> : PlanVisitor<R, C> {
 
   public override fun visitCommon(node: Common, ctx: C): R = defaultVisit(node, ctx)
 
-<<<<<<< HEAD
-  public override fun visitBinding(node: Binding, ctx: C): R = defaultVisit(node, ctx)
-=======
-    public override fun visitAttribute(node: Attribute, ctx: C): R = defaultVisit(node, ctx)
+  public override fun visitAttribute(node: Attribute, ctx: C): R = defaultVisit(node, ctx)
 
-    public override fun visitBinding(node: Binding, ctx: C): R = defaultVisit(node, ctx)
->>>>>>> 780d0657 (Adds SPI framework, schema inference, cli tool, localdb connector, and plan typing)
+  public override fun visitBinding(node: Binding, ctx: C): R = defaultVisit(node, ctx)
 
   public override fun visitField(node: Field, ctx: C): R = defaultVisit(node, ctx)
 

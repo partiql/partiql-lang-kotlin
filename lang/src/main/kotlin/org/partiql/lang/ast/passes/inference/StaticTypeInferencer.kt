@@ -9,13 +9,8 @@ import org.partiql.lang.errors.ProblemSeverity
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.visitors.StaticTypeInferenceVisitorTransform
 import org.partiql.lang.eval.visitors.StaticTypeVisitorTransform
-import org.partiql.lang.infer.Metadata
-import org.partiql.lang.infer.QualifiedObjectName
-import org.partiql.lang.infer.Session
-import org.partiql.lang.infer.TableHandle
 import org.partiql.lang.types.FunctionSignature
 import org.partiql.lang.types.TypedOpParameter
-import org.partiql.spi.sources.TableSchema
 import org.partiql.spi.types.StaticType
 
 /**
@@ -31,38 +26,8 @@ import org.partiql.spi.types.StaticType
 class StaticTypeInferencer(
     private val globalBindings: Bindings<StaticType>,
     private val customFunctionSignatures: List<FunctionSignature>,
-    private val customTypedOpParameters: Map<String, TypedOpParameter>
+    private val customTypedOpParameters: Map<String, TypedOpParameter>,
 ) {
-
-    private lateinit var metadata: Metadata
-    private lateinit var session: Session
-
-    public constructor(session: Session, metadata: Metadata) : this(
-        globalBindings = Bindings.empty(),
-        customFunctionSignatures = emptyList(),
-        customTypedOpParameters = emptyMap()
-    ) {
-        this.metadata = metadata
-        this.session = session
-    }
-
-    init {
-        if (this::metadata.isInitialized.not()) {
-            this.metadata = object : Metadata {
-                override fun catalogExists(session: Session, catalogName: String) = false
-                override fun schemaExists(session: Session, catalogName: String, schemaName: String) = false
-                override fun getTableHandle(session: Session, tableName: QualifiedObjectName): TableHandle? = null
-                override fun getTableSchema(session: Session, handle: TableHandle): TableSchema {
-                    error("Not supported.")
-                }
-            }
-        }
-        // TODO: Figure this out
-        if (this::session.isInitialized.not()) {
-            this.session = Session("random_query_id", null, null)
-        }
-    }
-
     /**
      * Infers the [StaticType] of [node] and returns an [InferenceResult]. Currently does not support inference for
      * [PartiqlAst.Statement.Dml] and [PartiqlAst.Statement.Ddl] statements.
@@ -77,7 +42,7 @@ class StaticTypeInferencer(
      */
     fun inferStaticType(node: PartiqlAst.Statement): InferenceResult {
         val problemCollector = ProblemCollector()
-        val inferencer = StaticTypeInferenceVisitorTransform(globalBindings, customFunctionSignatures, customTypedOpParameters, problemCollector, metadata = metadata, session = session)
+        val inferencer = StaticTypeInferenceVisitorTransform(globalBindings, customFunctionSignatures, customTypedOpParameters, problemCollector)
         val transformedPartiqlAst = inferencer.transformStatement(node)
         val inferredStaticType = when (transformedPartiqlAst) {
             is PartiqlAst.Statement.Query ->

@@ -1,4 +1,4 @@
-package org.partiql.lang.infer
+package org.partiql.plan
 
 import org.partiql.spi.connector.ConnectorTableHandle
 

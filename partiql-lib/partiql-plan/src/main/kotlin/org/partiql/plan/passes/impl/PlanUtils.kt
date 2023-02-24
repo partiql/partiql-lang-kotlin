@@ -1,4 +1,4 @@
-package org.partiql.plan.utils
+package org.partiql.plan.passes.impl
 
 import org.partiql.plan.ir.Attribute
 import org.partiql.plan.ir.Rel

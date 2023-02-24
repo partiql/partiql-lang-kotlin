@@ -1,19 +1,22 @@
-package org.partiql.plan.passes
+package org.partiql.plan.passes.impl
 
-import org.partiql.lang.infer.PlannerContext
+import org.partiql.plan.PlannerSession
+import org.partiql.plan.impl.PlannerContext
 import org.partiql.plan.ir.Attribute
 import org.partiql.plan.ir.PlanNode
 import org.partiql.plan.ir.Rel
 import org.partiql.plan.ir.Rex
-import org.partiql.spi.connector.ConnectorSession
+import org.partiql.plan.passes.PlanRewriter
 import org.partiql.spi.types.BagType
 import org.partiql.spi.types.StaticType
 import org.partiql.spi.types.StructType
 
-public object PlanTyper : PlanRewriter<PlanTyper.Context>() {
+internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
 
     /**
-     * Given a [Rex], types the logical plan.
+     * Given a [Rex], types the logical plan by adding the output schema to each relational operator.
+     *
+     * Along with typing, this also validates expressions for typing issues.
      */
     public fun type(node: Rex, ctx: Context): Rex {
         return visitRex(node, ctx) as Rex
@@ -23,7 +26,7 @@ public object PlanTyper : PlanRewriter<PlanTyper.Context>() {
      * Used for maintaining state through the visitors
      */
     public class Context(
-        internal val session: ConnectorSession,
+        internal val session: PlannerSession,
         internal val plannerCtx: PlannerContext
     )
 

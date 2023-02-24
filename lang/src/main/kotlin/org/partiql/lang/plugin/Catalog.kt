@@ -1,8 +1,8 @@
 package org.partiql.lang.plugin
 
-import org.partiql.spi.connector.ConnectorManager
+import org.partiql.spi.connector.Connector
 
 public class Catalog(
     public val connectorName: String,
-    public val connectorManager: ConnectorManager
+    public val connector: Connector
 )

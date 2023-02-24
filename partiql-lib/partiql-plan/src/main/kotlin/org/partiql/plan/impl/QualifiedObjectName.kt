@@ -1,8 +1,8 @@
-package org.partiql.lang.infer
+package org.partiql.plan.impl
 
 import org.partiql.lang.eval.BindingName
 
-public class QualifiedObjectName(
+internal class QualifiedObjectName(
     public val catalogName: BindingName?,
     public val schemaName: BindingName?,
     public val objectName: BindingName?

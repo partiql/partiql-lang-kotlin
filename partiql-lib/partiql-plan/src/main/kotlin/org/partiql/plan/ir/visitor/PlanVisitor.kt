@@ -18,13 +18,9 @@ public interface PlanVisitor<R, C> {
 
   public fun visitCommon(node: Common, ctx: C): R
 
-<<<<<<< HEAD
-  public fun visitBinding(node: Binding, ctx: C): R
-=======
-    public fun visitAttribute(node: Attribute, ctx: C): R
+  public fun visitAttribute(node: Attribute, ctx: C): R
 
-    public fun visitBinding(node: Binding, ctx: C): R
->>>>>>> 780d0657 (Adds SPI framework, schema inference, cli tool, localdb connector, and plan typing)
+  public fun visitBinding(node: Binding, ctx: C): R
 
   public fun visitField(node: Field, ctx: C): R
 

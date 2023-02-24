@@ -1,6 +1,6 @@
 package org.partiql.cli.plugin.localdb
 
-import org.partiql.lang.eval.BindingName
+import org.partiql.spi.BindingName
 import org.partiql.spi.connector.ConnectorMetadata
 import org.partiql.spi.connector.ConnectorSession
 import org.partiql.spi.connector.ConnectorTableHandle
@@ -22,9 +22,10 @@ class LocalConnectorMetadata : ConnectorMetadata {
 
     override fun getTableHandle(
         session: ConnectorSession,
-        schema: BindingName,
+        schema: BindingName?,
         table: BindingName
     ): ConnectorTableHandle? {
+        if (schema == null) { return null }
         if (schemaExists(session, schema).not()) return null
 
         val schemaPaths = Files.list(catalogDir).toList()
@@ -38,7 +39,7 @@ class LocalConnectorMetadata : ConnectorMetadata {
             val filename = path.getName(path.nameCount - 1).toString().removeSuffix(".json")
             table.isEquivalentTo(filename)
         } ?: return null
-        val tableDefString = Files.readString(tableDef)
+        val tableDefString = String(Files.readAllBytes(tableDef))
         return LocalConnectorTableHandle(tableDefString)
     }
 

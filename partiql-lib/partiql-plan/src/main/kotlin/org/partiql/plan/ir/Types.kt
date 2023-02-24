@@ -1,22 +1,44 @@
 package org.partiql.plan.ir
 
 import com.amazon.ionelement.api.IonElement
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-import org.partiql.lang.types.StaticType
-import org.partiql.plan.ir.visitor.PlanVisitor
->>>>>>> 780d0657 (Adds SPI framework, schema inference, cli tool, localdb connector, and plan typing)
-=======
-import org.partiql.plan.ir.visitor.PlanVisitor
-import org.partiql.spi.types.StaticType
->>>>>>> 916ec3df (Moves StaticType into new SPI project)
 import kotlin.Any
 import kotlin.String
 import kotlin.collections.List
 import kotlin.collections.Map
 import kotlin.collections.Set
+import kotlin.jvm.JvmStatic
+import org.partiql.plan.ir.builder.AttributeBuilder
+import org.partiql.plan.ir.builder.BindingBuilder
+import org.partiql.plan.ir.builder.CommonBuilder
+import org.partiql.plan.ir.builder.FieldBuilder
+import org.partiql.plan.ir.builder.PlanBuilder
+import org.partiql.plan.ir.builder.RelAggregateBuilder
+import org.partiql.plan.ir.builder.RelBagBuilder
+import org.partiql.plan.ir.builder.RelFetchBuilder
+import org.partiql.plan.ir.builder.RelFilterBuilder
+import org.partiql.plan.ir.builder.RelJoinBuilder
+import org.partiql.plan.ir.builder.RelProjectBuilder
+import org.partiql.plan.ir.builder.RelScanBuilder
+import org.partiql.plan.ir.builder.RelSortBuilder
+import org.partiql.plan.ir.builder.RelUnpivotBuilder
+import org.partiql.plan.ir.builder.RexAggBuilder
+import org.partiql.plan.ir.builder.RexBinaryBuilder
+import org.partiql.plan.ir.builder.RexCallBuilder
+import org.partiql.plan.ir.builder.RexCollectionBuilder
+import org.partiql.plan.ir.builder.RexIdBuilder
+import org.partiql.plan.ir.builder.RexLitBuilder
+import org.partiql.plan.ir.builder.RexPathBuilder
+import org.partiql.plan.ir.builder.RexQueryCollectionBuilder
+import org.partiql.plan.ir.builder.RexQueryScalarCoerceBuilder
+import org.partiql.plan.ir.builder.RexQueryScalarPivotBuilder
+import org.partiql.plan.ir.builder.RexTupleBuilder
+import org.partiql.plan.ir.builder.RexUnaryBuilder
+import org.partiql.plan.ir.builder.SortSpecBuilder
+import org.partiql.plan.ir.builder.StepKeyBuilder
+import org.partiql.plan.ir.builder.StepUnpivotBuilder
+import org.partiql.plan.ir.builder.StepWildcardBuilder
 import org.partiql.plan.ir.visitor.PlanVisitor
+import org.partiql.spi.types.StaticType
 
 public abstract class PlanNode {
   public open val children: List<PlanNode> = emptyList()
@@ -41,38 +63,45 @@ public data class Plan(
   public enum class Version {
     PARTIQL_V0,
   }
+
+  public companion object {
+    @JvmStatic
+    public fun builder(): PlanBuilder = PlanBuilder()
+  }
 }
 
 public data class Common(
-<<<<<<< HEAD
-  public val schema: Map<String, Rel.Join.Type>,
+  public val schema: List<Attribute>,
   public val properties: Set<Property>,
   public val metas: Map<String, Any>
 ) : PlanNode() {
+  public override val children: List<PlanNode> by lazy {
+    val kids = mutableListOf<PlanNode?>()
+    kids.addAll(schema)
+    kids.filterNotNull()
+  }
+
+
   public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
       visitor.visitCommon(this, ctx)
-=======
-    public val schema: List<Attribute>,
-    public val properties: Set<Property>,
-    public val metas: Map<String, Any>
-) : PlanNode() {
-    public override val children: List<PlanNode> by lazy {
-        val kids = mutableListOf<PlanNode?>()
-        kids.addAll(schema)
-        kids.filterNotNull()
-    }
 
-    public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
-        visitor.visitCommon(this, ctx)
->>>>>>> 780d0657 (Adds SPI framework, schema inference, cli tool, localdb connector, and plan typing)
+  public companion object {
+    @JvmStatic
+    public fun builder(): CommonBuilder = CommonBuilder()
+  }
 }
 
 public data class Attribute(
-    public val name: String,
-    public val type: StaticType
+  public val name: String,
+  public val type: StaticType
 ) : PlanNode() {
-    public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
-        visitor.visitAttribute(this, ctx)
+  public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+      visitor.visitAttribute(this, ctx)
+
+  public companion object {
+    @JvmStatic
+    public fun builder(): AttributeBuilder = AttributeBuilder()
+  }
 }
 
 public data class Binding(
@@ -88,6 +117,11 @@ public data class Binding(
 
   public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
       visitor.visitBinding(this, ctx)
+
+  public companion object {
+    @JvmStatic
+    public fun builder(): BindingBuilder = BindingBuilder()
+  }
 }
 
 public data class Field(
@@ -104,6 +138,11 @@ public data class Field(
 
   public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
       visitor.visitField(this, ctx)
+
+  public companion object {
+    @JvmStatic
+    public fun builder(): FieldBuilder = FieldBuilder()
+  }
 }
 
 public sealed class Step : PlanNode() {
@@ -126,16 +165,31 @@ public sealed class Step : PlanNode() {
 
     public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
         visitor.visitStepKey(this, ctx)
+
+    public companion object {
+      @JvmStatic
+      public fun builder(): StepKeyBuilder = StepKeyBuilder()
+    }
   }
 
   public class Wildcard : Step() {
     public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
         visitor.visitStepWildcard(this, ctx)
+
+    public companion object {
+      @JvmStatic
+      public fun builder(): StepWildcardBuilder = StepWildcardBuilder()
+    }
   }
 
   public class Unpivot : Step() {
     public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
         visitor.visitStepUnpivot(this, ctx)
+
+    public companion object {
+      @JvmStatic
+      public fun builder(): StepUnpivotBuilder = StepUnpivotBuilder()
+    }
   }
 }
 
@@ -162,6 +216,11 @@ public data class SortSpec(
   public enum class Nulls {
     FIRST,
     LAST,
+  }
+
+  public companion object {
+    @JvmStatic
+    public fun builder(): SortSpecBuilder = SortSpecBuilder()
   }
 }
 
@@ -195,6 +254,11 @@ public sealed class Rel : PlanNode() {
 
     public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
         visitor.visitRelScan(this, ctx)
+
+    public companion object {
+      @JvmStatic
+      public fun builder(): RelScanBuilder = RelScanBuilder()
+    }
   }
 
   public data class Unpivot(
@@ -214,6 +278,11 @@ public sealed class Rel : PlanNode() {
 
     public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
         visitor.visitRelUnpivot(this, ctx)
+
+    public companion object {
+      @JvmStatic
+      public fun builder(): RelUnpivotBuilder = RelUnpivotBuilder()
+    }
   }
 
   public data class Filter(
@@ -232,6 +301,11 @@ public sealed class Rel : PlanNode() {
 
     public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
         visitor.visitRelFilter(this, ctx)
+
+    public companion object {
+      @JvmStatic
+      public fun builder(): RelFilterBuilder = RelFilterBuilder()
+    }
   }
 
   public data class Sort(
@@ -250,6 +324,11 @@ public sealed class Rel : PlanNode() {
 
     public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
         visitor.visitRelSort(this, ctx)
+
+    public companion object {
+      @JvmStatic
+      public fun builder(): RelSortBuilder = RelSortBuilder()
+    }
   }
 
   public data class Bag(
@@ -275,6 +354,11 @@ public sealed class Rel : PlanNode() {
       INTERSECT,
       EXCEPT,
     }
+
+    public companion object {
+      @JvmStatic
+      public fun builder(): RelBagBuilder = RelBagBuilder()
+    }
   }
 
   public data class Fetch(
@@ -295,6 +379,11 @@ public sealed class Rel : PlanNode() {
 
     public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
         visitor.visitRelFetch(this, ctx)
+
+    public companion object {
+      @JvmStatic
+      public fun builder(): RelFetchBuilder = RelFetchBuilder()
+    }
   }
 
   public data class Project(
@@ -313,6 +402,11 @@ public sealed class Rel : PlanNode() {
 
     public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
         visitor.visitRelProject(this, ctx)
+
+    public companion object {
+      @JvmStatic
+      public fun builder(): RelProjectBuilder = RelProjectBuilder()
+    }
   }
 
   public data class Join(
@@ -341,6 +435,11 @@ public sealed class Rel : PlanNode() {
       RIGHT,
       FULL,
     }
+
+    public companion object {
+      @JvmStatic
+      public fun builder(): RelJoinBuilder = RelJoinBuilder()
+    }
   }
 
   public data class Aggregate(
@@ -366,6 +465,11 @@ public sealed class Rel : PlanNode() {
     public enum class Strategy {
       FULL,
       PARTIAL,
+    }
+
+    public companion object {
+      @JvmStatic
+      public fun builder(): RelAggregateBuilder = RelAggregateBuilder()
     }
   }
 }
@@ -396,6 +500,11 @@ public sealed class Rex : PlanNode() {
       UNQUALIFIED,
       LOCALS_FIRST,
     }
+
+    public companion object {
+      @JvmStatic
+      public fun builder(): RexIdBuilder = RexIdBuilder()
+    }
   }
 
   public data class Path(
@@ -412,6 +521,11 @@ public sealed class Rex : PlanNode() {
 
     public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
         visitor.visitRexPath(this, ctx)
+
+    public companion object {
+      @JvmStatic
+      public fun builder(): RexPathBuilder = RexPathBuilder()
+    }
   }
 
   public data class Unary(
@@ -432,6 +546,11 @@ public sealed class Rex : PlanNode() {
       NOT,
       POS,
       NEG,
+    }
+
+    public companion object {
+      @JvmStatic
+      public fun builder(): RexUnaryBuilder = RexUnaryBuilder()
     }
   }
 
@@ -467,6 +586,11 @@ public sealed class Rex : PlanNode() {
       LT,
       LTE,
     }
+
+    public companion object {
+      @JvmStatic
+      public fun builder(): RexBinaryBuilder = RexBinaryBuilder()
+    }
   }
 
   public data class Call(
@@ -482,6 +606,11 @@ public sealed class Rex : PlanNode() {
 
     public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
         visitor.visitRexCall(this, ctx)
+
+    public companion object {
+      @JvmStatic
+      public fun builder(): RexCallBuilder = RexCallBuilder()
+    }
   }
 
   public data class Agg(
@@ -503,6 +632,11 @@ public sealed class Rex : PlanNode() {
       ALL,
       DISTINCT,
     }
+
+    public companion object {
+      @JvmStatic
+      public fun builder(): RexAggBuilder = RexAggBuilder()
+    }
   }
 
   public data class Lit(
@@ -510,6 +644,11 @@ public sealed class Rex : PlanNode() {
   ) : Rex() {
     public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
         visitor.visitRexLit(this, ctx)
+
+    public companion object {
+      @JvmStatic
+      public fun builder(): RexLitBuilder = RexLitBuilder()
+    }
   }
 
   public data class Collection(
@@ -530,6 +669,11 @@ public sealed class Rex : PlanNode() {
       ARRAY,
       BAG,
     }
+
+    public companion object {
+      @JvmStatic
+      public fun builder(): RexCollectionBuilder = RexCollectionBuilder()
+    }
   }
 
   public data class Tuple(
@@ -544,6 +688,11 @@ public sealed class Rex : PlanNode() {
 
     public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
         visitor.visitRexTuple(this, ctx)
+
+    public companion object {
+      @JvmStatic
+      public fun builder(): RexTupleBuilder = RexTupleBuilder()
+    }
   }
 
   public sealed class Query : Rex() {
@@ -570,6 +719,11 @@ public sealed class Rex : PlanNode() {
 
         public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
             visitor.visitRexQueryScalarCoerce(this, ctx)
+
+        public companion object {
+          @JvmStatic
+          public fun builder(): RexQueryScalarCoerceBuilder = RexQueryScalarCoerceBuilder()
+        }
       }
 
       public data class Pivot(
@@ -588,6 +742,11 @@ public sealed class Rex : PlanNode() {
 
         public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
             visitor.visitRexQueryScalarPivot(this, ctx)
+
+        public companion object {
+          @JvmStatic
+          public fun builder(): RexQueryScalarPivotBuilder = RexQueryScalarPivotBuilder()
+        }
       }
     }
 
@@ -605,6 +764,11 @@ public sealed class Rex : PlanNode() {
 
       public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
           visitor.visitRexQueryCollection(this, ctx)
+
+      public companion object {
+        @JvmStatic
+        public fun builder(): RexQueryCollectionBuilder = RexQueryCollectionBuilder()
+      }
     }
   }
 }

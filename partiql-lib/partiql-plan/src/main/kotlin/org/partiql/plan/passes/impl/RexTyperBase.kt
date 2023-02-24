@@ -1,24 +1,23 @@
-package org.partiql.plan.passes
+package org.partiql.plan.passes.impl
 
 import org.partiql.lang.eval.BindingCase
 import org.partiql.lang.eval.BindingName
-import org.partiql.lang.infer.PlannerContext
-import org.partiql.lang.infer.QualifiedObjectName
-import org.partiql.lang.infer.Session
+import org.partiql.plan.PlannerSession
+import org.partiql.plan.impl.PlannerContext
+import org.partiql.plan.impl.QualifiedObjectName
 import org.partiql.plan.ir.Case
 import org.partiql.plan.ir.Rel
 import org.partiql.plan.ir.Rex
-import org.partiql.plan.utils.PlanUtils
-import org.partiql.spi.connector.ConnectorSession
+import org.partiql.plan.passes.RexTyper
 import org.partiql.spi.sources.TableSchema
 import org.partiql.spi.types.BagType
 import org.partiql.spi.types.StaticType
 import org.partiql.spi.types.StructType
 
 /**
- * TODO: Add description
+ * Poses as a mechanism to return the [StaticType] of an arbitrary [Rex].
  */
-object RexTyperBase : RexTyper<RexTyperBase.Context>() {
+internal object RexTyperBase : RexTyper<RexTyperBase.Context>() {
 
     /**
      * Returns the inferred static type
@@ -32,7 +31,7 @@ object RexTyperBase : RexTyper<RexTyperBase.Context>() {
      */
     public class Context(
         internal val input: Rel?,
-        internal val session: ConnectorSession,
+        internal val session: PlannerSession,
         internal val plannerContext: PlannerContext,
         internal val scopingOrder: ScopingOrder
     ) {
@@ -48,6 +47,19 @@ object RexTyperBase : RexTyper<RexTyperBase.Context>() {
     public enum class ScopingOrder {
         GLOBALS_THEN_LEXICAL,
         LEXICAL_THEN_GLOBALS
+    }
+
+    override fun visitRexPath(node: Rex.Path, ctx: Context): StaticType {
+        if (node.root is Rex.Id) {
+            // TODO: Check if global binding
+
+            // TODO: Check if catalog
+
+            // TODO: Check if schema
+
+            // TODO: Visit
+        }
+        return super.visitRexPath(node, ctx)
     }
 
     override fun visitRexId(node: Rex.Id, ctx: Context): StaticType {
@@ -82,16 +94,13 @@ object RexTyperBase : RexTyper<RexTyperBase.Context>() {
         }
     )
 
-    // TODO: Don't hard-code
+    // TODO: Add global bindings
     private fun findGlobalBind(name: BindingName, ctx: Context): StaticType? {
-        val session = connectorSessionToSession(ctx.session)
-        val qualifiedName = QualifiedObjectName(
-            BindingName("localdb", BindingCase.SENSITIVE),
-            BindingName("house", BindingCase.SENSITIVE),
-            name
-        )
-        ctx.metadata.getTableHandle(session, qualifiedName)?.let { handle ->
-            ctx.metadata.getTableSchema(session, handle).toStaticType().let { return it }
+        val catalogName = ctx.session.catalog?.let { BindingName(it, BindingCase.SENSITIVE) } // TODO: Check case
+        val schemaName = ctx.session.schema?.let { BindingName(it, BindingCase.SENSITIVE) } // TODO: Check case
+        val qualifiedName = QualifiedObjectName(catalogName, schemaName, name)
+        ctx.metadata.getTableHandle(ctx.session, qualifiedName)?.let { handle ->
+            ctx.metadata.getTableSchema(ctx.session, handle).toStaticType().let { return it }
         }
         return null
     }
@@ -100,19 +109,6 @@ object RexTyperBase : RexTyper<RexTyperBase.Context>() {
         return ctx.inputSchema.firstOrNull {
             name.isEquivalentTo(it.name)
         }?.type
-    }
-
-    /**
-     * TODO: This is due to a cyclic dependency. Plan relies on Lang for StaticType. Session should be part of Lang.
-     *  StaticType should be part of SPI. Then the graph would be: SPI -> Plan -> Lang (Exec).
-     *  Remove hard-code when the project structuring works out. Or maybe, temporarily move Session to Plan.
-     */
-    private fun connectorSessionToSession(session: ConnectorSession): Session {
-        return Session(
-            queryId = session.getQueryId(),
-            catalog = "localdb",
-            schema = "house"
-        )
     }
 
     private fun TableSchema.toStaticType(): StaticType {
