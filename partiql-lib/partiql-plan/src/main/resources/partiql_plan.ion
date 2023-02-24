@@ -130,6 +130,9 @@ rex::[
     scalar::{
       rel: rel,
     },
+    collection::{
+      rel: rel,
+    },
   ],
 ]
 

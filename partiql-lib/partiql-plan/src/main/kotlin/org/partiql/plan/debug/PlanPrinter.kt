@@ -1,8 +1,10 @@
 package org.partiql.plan.debug
 
+import org.partiql.plan.ir.Common
 import org.partiql.plan.ir.PlanNode
 import org.partiql.plan.ir.Rel
 import org.partiql.plan.ir.visitor.PlanBaseVisitor
+import kotlin.reflect.KVisibility
 import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.full.memberProperties
 import kotlin.reflect.jvm.jvmErasure
@@ -65,8 +67,9 @@ object PlanPrinter {
             }
             out.append(EOL)
             // print child nodes
-            node.children.sortedWith(relLast).forEachIndexed { i, child ->
-                val args = Args(out, levels + !last, last = i == node.children.size - 1)
+            val children = node.children.filter { it !is Common }.sortedWith(relLast)
+            children.forEachIndexed { i, child ->
+                val args = Args(out, levels + !last, last = i == children.size - 1)
                 child.accept(Visitor, args)
             }
         }
@@ -79,7 +82,7 @@ object PlanPrinter {
                 val notNode = !t.isSubclassOf(PlanNode::class)
                 // not currently correct
                 val notCollectionOfNodes = !(t.isSubclassOf(Collection::class))
-                notChildren && notNode && notCollectionOfNodes
+                notChildren && notNode && notCollectionOfNodes && it.visibility == KVisibility.PUBLIC
             }
             .map { it.name to it.get(this) }
     }
