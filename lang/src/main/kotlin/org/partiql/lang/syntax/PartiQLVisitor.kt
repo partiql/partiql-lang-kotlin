@@ -190,22 +190,11 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
         tableDef(parts)
     }
 
-    override fun visitTableDefColumn(ctx: PartiQLParser.TableDefColumnContext) = PartiqlAst.build {
-        val col = visitColumnDecl(ctx.columnDecl())
-        tdpartColumn(col)
-    }
-
-    override fun visitColumnDecl(ctx: PartiQLParser.ColumnDeclContext) = PartiqlAst.build {
+    override fun visitColumnDeclaration(ctx: PartiQLParser.ColumnDeclarationContext) = PartiqlAst.build {
         val name = visitSymbolPrimitive(ctx.columnName().symbolPrimitive()).name.text
-        val def = visitColumnDef(ctx.columnDef())
-        columnDecl(name, def)
-    }
-
-    override fun visitColumnDef(ctx: PartiQLParser.ColumnDefContext) = PartiqlAst.build {
         val type = visit(ctx.type(), PartiqlAst.Type::class)
         val constrs = ctx.columnConstraint().map { visitColumnConstraint(it) }
-        // process constraints as well
-        columnDef(type, constrs)
+        columnDeclaration(name, type, constrs)
     }
 
     override fun visitColumnConstraint(ctx: PartiQLParser.ColumnConstraintContext) = PartiqlAst.build {
@@ -225,11 +214,6 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
     override fun visitColConstrCheck(ctx: PartiQLParser.ColConstrCheckContext) = PartiqlAst.build {
         val expr = visitExpr(ctx.expr())
         columnCheck(expr, ctx.CHECK().getSourceMetaContainer())
-    }
-
-    override fun visitTableDefConstr(ctx: PartiQLParser.TableDefConstrContext) = PartiqlAst.build {
-        val constr = visitTableConstraint(ctx.tableConstraint())
-        tdpartConstr(constr)
     }
 
     override fun visitTableConstraint(ctx: PartiQLParser.TableConstraintContext) = PartiqlAst.build {
