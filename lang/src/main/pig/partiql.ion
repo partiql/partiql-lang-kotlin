@@ -430,8 +430,8 @@ may then be further optimized by selecting better implementations of each operat
 
         // A data definition operation.
         (sum ddl_op
-            // `CREATE TABLE <symbol>`
-            (create_table table_name::symbol)
+            // `CREATE TABLE <symbol> ( <table_def> )`
+            (create_table table_name::symbol def::table_def)
 
             // `DROP TABLE <identifier>`
             (drop_table table_name::identifier)
@@ -440,12 +440,37 @@ may then be further optimized by selecting better implementations of each operat
             // TODO: add optional table name
             (create_index index_name::identifier fields::(* expr 1))
 
-
             // DROP INDEX <identifier> ON <identifier>
             // In Statement, first <identifier> represents keys, second represents table
             (drop_index
                 (table identifier)
                 (keys identifier)))
+
+        // This would be natural for table_def AST:
+        // (product table_def columns::(* column_decl 1) constraints::(* table_constraint 0))
+        // but PIG does not support more than one "variadic" component.
+
+        (product table_def parts::(* table_def_part 1))
+
+        (sum table_def_part
+            (tdpart_column column::column_decl)
+            (tdpart_constr constr::table_constraint))
+
+        (product column_decl name::symbol def::column_def)
+
+        (product column_def type::type constraints::(* column_constraint 0))
+
+        (product column_constraint name::(? symbol) def::column_constraint_def)
+
+        (sum column_constraint_def
+            (column_notnull)
+            (column_null)
+            (column_check expr::expr))
+
+        (product table_constraint name::(? symbol) def::table_constraint_def)
+
+        (sum table_constraint_def
+            (table_check expr::expr))
 
         // `RETURNING (<returning_elem> [, <returning_elem>]...)`
         (product returning_expr elems::(* returning_elem 1))

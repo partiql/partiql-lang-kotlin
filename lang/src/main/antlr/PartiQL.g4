@@ -43,6 +43,11 @@ symbolPrimitive
     : ident=( IDENTIFIER | IDENTIFIER_QUOTED )
     ;
 
+tableName : symbolPrimitive;
+tableConstraintName : symbolPrimitive;
+columnName : symbolPrimitive;
+columnConstraintName : symbolPrimitive;
+
 /**
  *
  * DATA QUERY LANGUAGE (DQL)
@@ -76,13 +81,48 @@ ddl
     ;
 
 createCommand
-    : CREATE TABLE symbolPrimitive                                                              # CreateTable
+    : CREATE TABLE tableName PAREN_LEFT tableDef PAREN_RIGHT                                    # CreateTable
     | CREATE INDEX ON symbolPrimitive PAREN_LEFT pathSimple ( COMMA pathSimple )* PAREN_RIGHT   # CreateIndex
     ;
 
 dropCommand
-    : DROP TABLE target=symbolPrimitive                         # DropTable
+    : DROP TABLE target=tableName                               # DropTable
     | DROP INDEX target=symbolPrimitive ON on=symbolPrimitive   # DropIndex
+    ;
+
+tableDef
+    : tableDefPart ( COMMA tableDefPart )*
+    ;
+
+tableDefPart
+    : columnDecl                        # TableDefColumn
+    | tableConstraint                   # TableDefConstr
+    ;
+
+columnDecl
+    : columnName columnDef
+    ;
+
+columnDef
+    : type columnConstraint*
+    ;
+
+columnConstraint
+    : ( CONSTRAINT columnConstraintName )?  columnConstraintDef
+    ;
+
+columnConstraintDef
+    : NOT NULL                                  # ColConstrNotNull
+    | NULL                                      # ColConstrNull
+    | CHECK PAREN_LEFT expr PAREN_RIGHT         # ColConstrCheck
+    ;
+
+tableConstraint
+    : ( CONSTRAINT tableConstraintName )?  tableConstraintDef
+    ;
+
+tableConstraintDef
+    : CHECK PAREN_LEFT expr PAREN_RIGHT         # TblConstrCheck
     ;
 
 /**

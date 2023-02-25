@@ -3543,13 +3543,13 @@ class PartiQLParserTest : PartiQLParserTestBase() {
     // ****************************************
     @Test
     fun createTable() = assertExpression(
-        "CREATE TABLE foo",
+        "CREATE TABLE foo (boo string)",
         "(ddl (create_table foo))"
     )
 
     @Test
     fun createTableWithQuotedIdentifier() = assertExpression(
-        "CREATE TABLE \"user\"",
+        "CREATE TABLE \"user\" (\"lastname\" string)",
         "(ddl (create_table user))"
     )
 

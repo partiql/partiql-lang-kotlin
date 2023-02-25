@@ -59,7 +59,7 @@ class ASTPrettyPrinterTest {
     @Test
     fun createTable() {
         checkPrettyPrintAst(
-            "CREATE TABLE foo",
+            "CREATE TABLE foo (boo string)",
             """
                 Ddl
                     op: CreateTable
