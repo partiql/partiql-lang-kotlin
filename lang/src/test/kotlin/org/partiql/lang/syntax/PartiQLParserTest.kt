@@ -3544,13 +3544,57 @@ class PartiQLParserTest : PartiQLParserTestBase() {
     @Test
     fun createTable() = assertExpression(
         "CREATE TABLE foo (boo string)",
-        "(ddl (create_table foo))"
+        """
+            (ddl (create_table foo  (table_def
+                (column_declaration boo (string_type)))))
+        """.trimIndent()
     )
 
     @Test
     fun createTableWithQuotedIdentifier() = assertExpression(
         "CREATE TABLE \"user\" (\"lastname\" string)",
-        "(ddl (create_table user))"
+        """
+            (ddl (create_table user (table_def
+                (column_declaration lastname (string_type)))))
+        """.trimIndent()
+    )
+
+    @Test
+    fun createTableWithConstraints() = assertExpression(
+        """
+            CREATE TABLE Customer (
+               name string NOT NULL, 
+               age int CONSTRAINT is_adult CHECK (age >= 21),
+               city string NULL,
+               state string NULL,
+               CHECK ((state IS NOT NULL) OR (city IS NULL))
+            )
+        """.trimIndent(),
+        """
+            (ddl
+                (create_table
+                    Customer (table_def
+                        (column_declaration name (string_type)
+                            (column_constraint null (column_notnull)))
+                        (column_declaration age (integer_type)
+                            (column_constraint is_adult (column_check
+                                    (gte
+                                        (id age (case_insensitive) (unqualified))
+                                        (lit 21)))))
+                        (column_declaration city (string_type)
+                            (column_constraint null (column_null)))
+                        (column_declaration state (string_type)
+                            (column_constraint null (column_null)))
+                        (table_constraint null (table_check
+                                (or
+                                    (not
+                                        (is_type
+                                            (id state (case_insensitive) (unqualified))
+                                            (null_type)))
+                                    (is_type
+                                        (id city (case_insensitive) (unqualified))
+                                        (null_type))))))))                                        
+        """.trimIndent()
     )
 
     @Test

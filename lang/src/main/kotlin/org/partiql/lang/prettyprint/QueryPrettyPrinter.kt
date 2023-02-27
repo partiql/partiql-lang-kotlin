@@ -117,11 +117,46 @@ class QueryPrettyPrinter {
     }
 
     private fun writeAstNode(node: PartiqlAst.DdlOp.CreateTable, sb: StringBuilder) {
-        sb.append("CREATE TABLE ${node.tableName.text}")
-        for (x in node.def.parts) {
-            // TODO
+        var separator = "\n\t"
+        sb.append("CREATE TABLE ${node.tableName.text} (")
+        for (n in node.def.parts) {
+            sb.append(separator)
+            when (n) {
+                is PartiqlAst.TableDefPart.ColumnDeclaration -> writeAstNode(n, sb)
+                is PartiqlAst.TableDefPart.TableConstraint -> writeAstNode(n, sb)
+            }
+            separator = ",\n\t"
         }
-        sb.append(")")
+        sb.append("\n)")
+    }
+
+    private fun writeAstNode(node: PartiqlAst.TableDefPart.ColumnDeclaration, sb: StringBuilder) {
+        sb.append("${node.name.text} ")
+        writeType(node.type, sb)
+        for (c in node.constraints) {
+            sb.append(" ")
+            c.name?.let { sb.append("CONSTRAINT ${it.text} ") }
+            when (c.def) {
+                is PartiqlAst.ColumnConstraintDef.ColumnNull -> sb.append("NULL")
+                is PartiqlAst.ColumnConstraintDef.ColumnNotnull -> sb.append("NOT NULL")
+                is PartiqlAst.ColumnConstraintDef.ColumnCheck -> {
+                    sb.append("CHECK (")
+                    writeAstNode(c.def.expr, sb, -1)
+                    sb.append(")")
+                }
+            }
+        }
+    }
+
+    private fun writeAstNode(node: PartiqlAst.TableDefPart.TableConstraint, sb: StringBuilder) {
+        node.name?.let { sb.append("CONSTRAINT ${it.text} ") }
+        when (node.def) {
+            is PartiqlAst.TableConstraintDef.TableCheck -> {
+                sb.append("CHECK (")
+                writeAstNode(node.def.expr, sb, -1)
+                sb.append(")")
+            }
+        }
     }
 
     // *******
