@@ -124,7 +124,8 @@ interface CompilerPipeline {
         @JvmStatic
         fun builder(): Builder = Builder()
 
-        @Deprecated("[ExprValueFactory] is deprecated. Please use `builder(ion: IonSystem): Builder = builder(ion)`.")
+        @Deprecated("[ExprValueFactory] is deprecated", replaceWith = ReplaceWith("builder(ion: IonSystem): Builder = builder(ion)"))
+        @Suppress("DEPRECATION")
         /** Fluent style builder.  If calling from Kotlin instead use the [build] method. */
         @JvmStatic
         fun builder(valueFactory: ExprValueFactory): Builder = Builder(valueFactory)

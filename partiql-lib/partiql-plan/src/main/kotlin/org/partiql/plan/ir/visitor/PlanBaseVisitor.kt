@@ -3,7 +3,7 @@ package org.partiql.plan.ir.visitor
 import org.partiql.plan.ir.Binding
 import org.partiql.plan.ir.Common
 import org.partiql.plan.ir.Field
-import org.partiql.plan.ir.Plan
+import org.partiql.plan.ir.PartiQLPlan
 import org.partiql.plan.ir.PlanNode
 import org.partiql.plan.ir.Rel
 import org.partiql.plan.ir.Rex
@@ -13,7 +13,7 @@ import org.partiql.plan.ir.Step
 public abstract class PlanBaseVisitor<R, C> : PlanVisitor<R, C> {
     public override fun visit(node: PlanNode, ctx: C): R = node.accept(this, ctx)
 
-    public override fun visitPlan(node: Plan, ctx: C): R = defaultVisit(node, ctx)
+    public override fun visitPartiQLPlan(node: PartiQLPlan, ctx: C): R = defaultVisit(node, ctx)
 
     public override fun visitCommon(node: Common, ctx: C): R = defaultVisit(node, ctx)
 
@@ -92,7 +92,16 @@ public abstract class PlanBaseVisitor<R, C> : PlanVisitor<R, C> {
 
     public override fun visitRexLit(node: Rex.Lit, ctx: C): R = defaultVisit(node, ctx)
 
-    public override fun visitRexCollection(node: Rex.Collection, ctx: C): R = defaultVisit(node, ctx)
+    public override fun visitRexCollection(node: Rex.Collection, ctx: C): R = when (node) {
+        is Rex.Collection.Array -> visitRexCollectionArray(node, ctx)
+        is Rex.Collection.Bag -> visitRexCollectionBag(node, ctx)
+    }
+
+    public override fun visitRexCollectionArray(node: Rex.Collection.Array, ctx: C): R =
+        defaultVisit(node, ctx)
+
+    public override fun visitRexCollectionBag(node: Rex.Collection.Bag, ctx: C): R =
+        defaultVisit(node, ctx)
 
     public override fun visitRexTuple(node: Rex.Tuple, ctx: C): R = defaultVisit(node, ctx)
 

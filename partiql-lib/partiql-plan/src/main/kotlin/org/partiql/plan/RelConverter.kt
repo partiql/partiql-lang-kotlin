@@ -4,6 +4,7 @@ import com.amazon.ionelement.api.ionInt
 import com.amazon.ionelement.api.ionString
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.eval.visitors.VisitorTransformBase
+import org.partiql.lang.types.StaticType
 import org.partiql.plan.ir.Binding
 import org.partiql.plan.ir.Case
 import org.partiql.plan.ir.Common
@@ -41,6 +42,7 @@ internal class RelConverter {
                         rel = rel,
                         value = RexConverter.convert(projection.value),
                         at = RexConverter.convert(projection.key),
+                        type = null,
                     )
                 }
                 // SELECT VALUE ... FROM
@@ -318,16 +320,17 @@ internal class RelConverter {
     private fun convertGroupAs(name: String, from: PartiqlAst.FromSource): Binding {
         val fields = from.bindings().map { n ->
             Field(
-                name = Rex.Lit(ionString(n)),
-                value = Rex.Id(n, Case.SENSITIVE, Rex.Id.Qualifier.UNQUALIFIED),
+                name = Rex.Lit(ionString(n), StaticType.STRING),
+                value = Rex.Id(n, Case.SENSITIVE, Rex.Id.Qualifier.UNQUALIFIED, type = StaticType.STRUCT),
             )
         }
         return Binding(
             name = name,
             value = Rex.Agg(
                 id = "group_as",
-                args = listOf(Rex.Tuple(fields)),
+                args = listOf(Rex.Tuple(fields, StaticType.STRUCT)),
                 modifier = Rex.Agg.Modifier.ALL,
+                type = StaticType.STRUCT,
             )
         )
     }

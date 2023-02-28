@@ -10,10 +10,10 @@ import org.partiql.lang.eval.visitors.PartiqlAstSanityValidator
 import org.partiql.lang.eval.visitors.PipelinedVisitorTransform
 import org.partiql.lang.eval.visitors.SelectListItemAliasVisitorTransform
 import org.partiql.lang.eval.visitors.SelectStarVisitorTransform
-import org.partiql.plan.ir.Plan
+import org.partiql.plan.ir.PartiQLPlan
 import org.partiql.plan.ir.Rex
 
-typealias Pass = (Plan) -> Plan
+typealias Pass = (PartiQLPlan) -> PartiQLPlan
 
 /**
  * Experimental [PartiqlAst.Statement] to PartiQL [Plan]
@@ -40,7 +40,7 @@ class Planner(private val passes: List<Pass>) {
     /**
      * Raise an interface later
      */
-    fun plan(statement: PartiqlAst.Statement): Plan {
+    fun plan(statement: PartiqlAst.Statement): PartiQLPlan {
         // 1. Normalize
         val ast = statement.normalize()
         if (ast !is PartiqlAst.Statement.Query) {
@@ -49,8 +49,8 @@ class Planner(private val passes: List<Pass>) {
         // 2. Translate AST
         val root = convert(ast.expr)
         // 3. Initial plan
-        val plan = Plan(
-            version = Plan.Version.PARTIQL_V0,
+        val plan = PartiQLPlan(
+            version = PartiQLPlan.Version.PARTIQL_V0,
             root = root,
         )
         // 4. Apply all passes

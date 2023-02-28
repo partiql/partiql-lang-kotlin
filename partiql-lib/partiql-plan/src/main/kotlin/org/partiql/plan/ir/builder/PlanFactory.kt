@@ -1,11 +1,13 @@
 package org.partiql.plan.ir.builder
 
 import com.amazon.ionelement.api.IonElement
+import org.partiql.lang.types.StaticType
 import org.partiql.plan.ir.Binding
 import org.partiql.plan.ir.Case
 import org.partiql.plan.ir.Common
 import org.partiql.plan.ir.Field
-import org.partiql.plan.ir.Plan
+import org.partiql.plan.ir.PartiQLPlan
+import org.partiql.plan.ir.PlanNode
 import org.partiql.plan.ir.Property
 import org.partiql.plan.ir.Rel
 import org.partiql.plan.ir.Rex
@@ -16,9 +18,10 @@ import kotlin.String
 import kotlin.collections.List
 import kotlin.collections.Map
 import kotlin.collections.Set
+import kotlin.jvm.JvmStatic
 
 public abstract class PlanFactory {
-    public open fun plan(version: Plan.Version, root: Rex) = Plan(version, root)
+    public open fun partiQLPlan(version: PartiQLPlan.Version, root: Rex) = PartiQLPlan(version, root)
 
     public open fun common(
         schema: Map<String, Rel.Join.Type>,
@@ -109,43 +112,61 @@ public abstract class PlanFactory {
     public open fun rexId(
         name: String,
         case: Case?,
-        qualifier: Rex.Id.Qualifier
-    ) = Rex.Id(name, case, qualifier)
+        qualifier: Rex.Id.Qualifier,
+        type: StaticType?
+    ) = Rex.Id(name, case, qualifier, type)
 
-    public open fun rexPath(root: Rex, steps: List<Step>) = Rex.Path(root, steps)
+    public open fun rexPath(
+        root: Rex,
+        steps: List<Step>,
+        type: StaticType?
+    ) = Rex.Path(root, steps, type)
 
-    public open fun rexUnary(`value`: Rex, op: Rex.Unary.Op) = Rex.Unary(value, op)
+    public open fun rexUnary(
+        `value`: Rex,
+        op: Rex.Unary.Op,
+        type: StaticType?
+    ) = Rex.Unary(value, op, type)
 
     public open fun rexBinary(
         lhs: Rex,
         rhs: Rex,
-        op: Rex.Binary.Op
-    ) = Rex.Binary(lhs, rhs, op)
+        op: Rex.Binary.Op,
+        type: StaticType?
+    ) = Rex.Binary(lhs, rhs, op, type)
 
-    public open fun rexCall(id: String, args: List<Rex>) = Rex.Call(id, args)
+    public open fun rexCall(
+        id: String,
+        args: List<Rex>,
+        type: StaticType?
+    ) = Rex.Call(id, args, type)
 
     public open fun rexAgg(
         id: String,
         args: List<Rex>,
-        modifier: Rex.Agg.Modifier
-    ) = Rex.Agg(id, args, modifier)
+        modifier: Rex.Agg.Modifier,
+        type: StaticType?
+    ) = Rex.Agg(id, args, modifier, type)
 
-    public open fun rexLit(`value`: IonElement) = Rex.Lit(value)
+    public open fun rexLit(`value`: IonElement, type: StaticType?) = Rex.Lit(value, type)
 
-    public open fun rexCollection(type: Rex.Collection.Type, values: List<Rex>) = Rex.Collection(
-        type,
-        values
-    )
+    public open fun rexCollectionArray(values: List<Rex>, type: StaticType?) =
+        Rex.Collection.Array(values, type)
 
-    public open fun rexTuple(fields: List<Field>) = Rex.Tuple(fields)
+    public open fun rexCollectionBag(values: List<Rex>, type: StaticType?) =
+        Rex.Collection.Bag(values, type)
 
-    public open fun rexQueryScalarCoerce(query: Rex.Query.Collection) = Rex.Query.Scalar.Coerce(query)
+    public open fun rexTuple(fields: List<Field>, type: StaticType?) = Rex.Tuple(fields, type)
+
+    public open fun rexQueryScalarCoerce(query: Rex.Query.Collection, type: StaticType?) =
+        Rex.Query.Scalar.Coerce(query, type)
 
     public open fun rexQueryScalarPivot(
         rel: Rel,
         `value`: Rex,
-        at: Rex
-    ) = Rex.Query.Scalar.Pivot(rel, value, at)
+        at: Rex,
+        type: StaticType?
+    ) = Rex.Query.Scalar.Pivot(rel, value, at, type)
 
     public open fun rexQueryCollection(rel: Rel, `constructor`: Rex?) = Rex.Query.Collection(
         rel,
@@ -154,5 +175,8 @@ public abstract class PlanFactory {
 
     public companion object {
         public val DEFAULT: PlanFactory = object : PlanFactory() {}
+
+        @JvmStatic
+        public fun <T : PlanNode> create(block: PlanFactory.() -> T) = PlanFactory.DEFAULT.block()
     }
 }

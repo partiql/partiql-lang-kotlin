@@ -181,6 +181,8 @@ class KotlinSymbols private constructor(
     private fun import(symbol: String): ClassName {
         if (!universe.imports.containsKey("kotlin")) {
             error("Missing `kotlin` target from imports")
+        } else if (!universe.imports["kotlin"]!!.containsKey(symbol)) {
+            error("Missing `kotlin` target for `$symbol` in imports")
         }
         val path = universe.imports["kotlin"]!![symbol]!!
         val i = path.lastIndexOf(".")
