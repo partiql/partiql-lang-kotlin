@@ -9,7 +9,7 @@ imports::{
 }
 
 // Top-Level structure for a PartiQL Plan
-plan::{
+parti_q_l_plan::{
   version: [ PARTIQL_V0 ],
   root: rex,
 }

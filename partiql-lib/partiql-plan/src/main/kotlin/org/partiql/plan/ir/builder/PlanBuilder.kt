@@ -12,7 +12,7 @@ import org.partiql.plan.ir.Binding
 import org.partiql.plan.ir.Case
 import org.partiql.plan.ir.Common
 import org.partiql.plan.ir.Field
-import org.partiql.plan.ir.Plan
+import org.partiql.plan.ir.PartiQLPlan
 import org.partiql.plan.ir.PlanNode
 import org.partiql.plan.ir.Property
 import org.partiql.plan.ir.Rel
@@ -27,12 +27,12 @@ public fun <T : PlanNode> plan(factory: PlanFactory = PlanFactory.DEFAULT, block
 public class PlanBuilder(
   private val factory: PlanFactory = PlanFactory.DEFAULT
 ) {
-  public fun plan(
-    version: Plan.Version? = null,
+  public fun partiQLPlan(
+    version: PartiQLPlan.Version? = null,
     root: Rex? = null,
-    block: PlanBuilder.() -> Unit = {}
-  ): Plan {
-    val builder = PlanBuilder()
+    block: PartiQlPlanBuilder.() -> Unit = {}
+  ): PartiQLPlan {
+    val builder = PartiQlPlanBuilder()
     builder.block()
     return builder.build(factory)
   }

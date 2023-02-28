@@ -11,7 +11,7 @@ import org.partiql.plan.ir.builder.AttributeBuilder
 import org.partiql.plan.ir.builder.BindingBuilder
 import org.partiql.plan.ir.builder.CommonBuilder
 import org.partiql.plan.ir.builder.FieldBuilder
-import org.partiql.plan.ir.builder.PlanBuilder
+import org.partiql.plan.ir.builder.PartiQlPlanBuilder
 import org.partiql.plan.ir.builder.RelAggregateBuilder
 import org.partiql.plan.ir.builder.RelBagBuilder
 import org.partiql.plan.ir.builder.RelFetchBuilder
@@ -46,7 +46,7 @@ public abstract class PlanNode {
   public abstract fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R
 }
 
-public data class Plan(
+public data class PartiQLPlan(
   public val version: Version,
   public val root: Rex
 ) : PlanNode() {
@@ -57,8 +57,8 @@ public data class Plan(
   }
 
 
-  public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R = visitor.visitPlan(this,
-      ctx)
+  public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+      visitor.visitPartiQLPlan(this, ctx)
 
   public enum class Version {
     PARTIQL_V0,
@@ -66,7 +66,7 @@ public data class Plan(
 
   public companion object {
     @JvmStatic
-    public fun builder(): PlanBuilder = PlanBuilder()
+    public fun builder(): PartiQlPlanBuilder = PartiQlPlanBuilder()
   }
 }
 

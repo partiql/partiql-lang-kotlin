@@ -11,7 +11,7 @@ import org.partiql.plan.ir.Binding
 import org.partiql.plan.ir.Case
 import org.partiql.plan.ir.Common
 import org.partiql.plan.ir.Field
-import org.partiql.plan.ir.Plan
+import org.partiql.plan.ir.PartiQLPlan
 import org.partiql.plan.ir.Property
 import org.partiql.plan.ir.Rel
 import org.partiql.plan.ir.Rex
@@ -19,23 +19,23 @@ import org.partiql.plan.ir.SortSpec
 import org.partiql.plan.ir.Step
 import org.partiql.spi.types.StaticType
 
-public class PlanBuilder {
-  public var version: Plan.Version? = null
+public class PartiQlPlanBuilder {
+  public var version: PartiQLPlan.Version? = null
 
   public var root: Rex? = null
 
-  public fun version(version: Plan.Version?): PlanBuilder = this.apply {
+  public fun version(version: PartiQLPlan.Version?): PartiQlPlanBuilder = this.apply {
     this.version = version
   }
 
-  public fun root(root: Rex?): PlanBuilder = this.apply {
+  public fun root(root: Rex?): PartiQlPlanBuilder = this.apply {
     this.root = root
   }
 
-  public fun build(): Plan = build(PlanFactory.DEFAULT)
+  public fun build(): PartiQLPlan = build(PlanFactory.DEFAULT)
 
-  public fun build(factory: PlanFactory = PlanFactory.DEFAULT): Plan = factory.plan(version =
-      version!!, root = root!!)
+  public fun build(factory: PlanFactory = PlanFactory.DEFAULT): PartiQLPlan =
+      factory.partiQLPlan(version = version!!, root = root!!)
 }
 
 public class CommonBuilder {
