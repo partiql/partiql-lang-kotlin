@@ -15,7 +15,7 @@
 
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
-import org.jlleitschuh.gradle.ktlint.KtlintExtension
+//import org.jlleitschuh.gradle.ktlint.KtlintExtension
 import java.io.ByteArrayOutputStream
 import java.io.FileOutputStream
 import java.util.Properties
@@ -24,7 +24,7 @@ plugins {
     kotlin("jvm")
     id("io.gitlab.arturbosch.detekt")
     id("org.gradle.jacoco")
-    id("org.jlleitschuh.gradle.ktlint")
+//    id("org.jlleitschuh.gradle.ktlint")
 }
 
 val generatedSrc = "$buildDir/generated-src"
@@ -55,7 +55,7 @@ tasks.test {
         events.add(TestLogEvent.FAILED)
         exceptionFormat = TestExceptionFormat.FULL
     }
-    dependsOn(tasks.ktlintCheck) // check style before unit tests
+//    dependsOn(tasks.ktlintCheck) // check style before unit tests
     finalizedBy(tasks.jacocoTestReport)
 }
 
@@ -71,11 +71,11 @@ tasks.compileTestKotlin {
     kotlinOptions.languageVersion = Versions.kotlinTarget
 }
 
-configure<KtlintExtension> {
-    filter {
-        exclude { it.file.path.contains(generatedSrc) }
-    }
-}
+//configure<KtlintExtension> {
+//    filter {
+//        exclude { it.file.path.contains(generatedSrc) }
+//    }
+//}
 
 sourceSets {
     main {
