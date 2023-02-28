@@ -27,7 +27,7 @@ import org.partiql.lang.eval.intValue
 import org.partiql.lang.eval.timestampValue
 import org.partiql.lang.syntax.DateTimePart
 import org.partiql.lang.types.FunctionSignature
-import org.partiql.spi.types.StaticType
+import org.partiql.lang.types.StaticType
 
 internal class DateAddExprFunction : ExprFunction {
     override val signature = FunctionSignature(

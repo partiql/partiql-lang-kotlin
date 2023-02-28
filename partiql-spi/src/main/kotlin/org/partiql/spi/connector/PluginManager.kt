@@ -1,4 +1,4 @@
-package org.partiql.lang.plugin
+package org.partiql.spi.connector
 
 import org.partiql.spi.connector.Connector
 

@@ -10,7 +10,7 @@ import org.partiql.lang.eval.err
 import org.partiql.lang.eval.intValue
 import org.partiql.lang.types.FunctionSignature
 import org.partiql.lang.util.propertyValueMapOf
-import org.partiql.spi.types.StaticType
+import org.partiql.lang.types.StaticType
 import java.time.DateTimeException
 
 /**

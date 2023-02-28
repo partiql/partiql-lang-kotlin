@@ -29,8 +29,8 @@ import org.partiql.lang.eval.timeValue
 import org.partiql.lang.eval.timestampValue
 import org.partiql.lang.syntax.DateTimePart
 import org.partiql.lang.types.FunctionSignature
-import org.partiql.spi.types.AnyOfType
-import org.partiql.spi.types.StaticType
+import org.partiql.lang.types.AnyOfType
+import org.partiql.lang.types.StaticType
 import java.math.BigDecimal
 import java.time.LocalDate
 

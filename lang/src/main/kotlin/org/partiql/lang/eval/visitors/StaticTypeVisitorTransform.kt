@@ -21,7 +21,7 @@ import org.partiql.lang.eval.BindingName
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.delegate
 import org.partiql.lang.util.propertyValueMapOf
-import org.partiql.spi.types.StaticType
+import org.partiql.lang.types.StaticType
 
 /**
  * Extra constraints which may be imposed on the type checking.

@@ -18,5 +18,6 @@ plugins {
 }
 
 dependencies {
+    implementation(project(":lang"))
     implementation(Deps.ionElement)
 }

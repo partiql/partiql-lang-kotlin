@@ -1,6 +1,4 @@
-package org.partiql.lang.session
-
-import org.partiql.spi.connector.ConnectorSession
+package org.partiql.spi.connector
 
 class ConnectorSessionBase(
     private val queryId: String,

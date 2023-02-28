@@ -4,8 +4,8 @@ import org.partiql.plan.PartiQLSchemaInferencer
 import org.partiql.plan.PlannerSession
 import org.partiql.spi.Plugin
 import org.partiql.spi.sources.TableSchema
-import org.partiql.spi.types.DecimalType
-import org.partiql.spi.types.StaticType
+import org.partiql.lang.types.DecimalType
+import org.partiql.lang.types.StaticType
 import picocli.CommandLine
 import java.io.File
 import java.time.Instant

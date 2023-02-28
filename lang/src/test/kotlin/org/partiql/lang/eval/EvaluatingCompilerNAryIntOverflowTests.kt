@@ -6,8 +6,8 @@ import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestCase
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestTarget
 import org.partiql.lang.eval.visitors.StaticTypeInferenceVisitorTransform
 import org.partiql.lang.util.ArgumentsProviderBase
-import org.partiql.spi.types.IntType
-import org.partiql.spi.types.StaticType
+import org.partiql.lang.types.IntType
+import org.partiql.lang.types.StaticType
 
 /**
  * This class tests the runtime behavior of integer operations when we have [StaticType] information

@@ -22,8 +22,8 @@ import org.partiql.lang.eval.stringValue
 import org.partiql.lang.eval.unnamedValue
 import org.partiql.lang.types.FunctionSignature
 import org.partiql.lang.types.UnknownArguments
-import org.partiql.spi.types.AnyOfType
-import org.partiql.spi.types.StaticType
+import org.partiql.lang.types.AnyOfType
+import org.partiql.lang.types.StaticType
 import java.util.TreeSet
 
 internal const val DYNAMIC_LOOKUP_FUNCTION_NAME = "\$__dynamic_lookup__"

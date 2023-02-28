@@ -1,12 +1,12 @@
 package org.partiql.lang.types
 
 import org.partiql.lang.domains.PartiqlPhysical
-import org.partiql.spi.types.DecimalType
-import org.partiql.spi.types.IntType
-import org.partiql.spi.types.NumberConstraint
-import org.partiql.spi.types.StaticType
-import org.partiql.spi.types.StringType
-import org.partiql.spi.types.TimeType
+import org.partiql.lang.types.DecimalType
+import org.partiql.lang.types.IntType
+import org.partiql.lang.types.NumberConstraint
+import org.partiql.lang.types.StaticType
+import org.partiql.lang.types.StringType
+import org.partiql.lang.types.TimeType
 
 /**
  * Helper to convert [PartiqlPhysical.Type] in AST to a [TypedOpParameter].

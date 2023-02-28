@@ -11,7 +11,7 @@ import org.partiql.lang.eval.builtins.checkInvalidArgType
 import org.partiql.lang.eval.builtins.checkInvalidArity
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorErrorTestCase
 import org.partiql.lang.util.ArgumentsProviderBase
-import org.partiql.spi.types.StaticType
+import org.partiql.lang.types.StaticType
 
 // constant that can be handy in testing
 private val MIN_INT2 = Short.MIN_VALUE

@@ -24,8 +24,8 @@ import org.partiql.lang.planner.transforms.optimizations.createRemoveUselessAnds
 import org.partiql.lang.planner.transforms.optimizations.createRemoveUselessFiltersPass
 import org.partiql.lang.util.SexpAstPrettyPrinter
 import org.partiql.pig.runtime.DomainNode
-import org.partiql.spi.types.BagType
-import org.partiql.spi.types.StructType
+import org.partiql.lang.types.BagType
+import org.partiql.lang.types.StructType
 import java.util.UUID
 
 // The name of the database in the context variable.

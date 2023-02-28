@@ -4,7 +4,7 @@ import org.partiql.lang.eval.BindingName
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.types.StaticTypeUtils.staticTypeFromExprValueType
-import org.partiql.spi.types.StaticType
+import org.partiql.lang.types.StaticType
 
 /**
  * Derives a [Bindings<StaticType>] from a [Bindings<ExprValue>].

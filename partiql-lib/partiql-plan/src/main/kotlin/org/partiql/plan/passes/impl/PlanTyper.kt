@@ -7,9 +7,9 @@ import org.partiql.plan.ir.PlanNode
 import org.partiql.plan.ir.Rel
 import org.partiql.plan.ir.Rex
 import org.partiql.plan.passes.PlanRewriter
-import org.partiql.spi.types.BagType
-import org.partiql.spi.types.StaticType
-import org.partiql.spi.types.StructType
+import org.partiql.lang.types.BagType
+import org.partiql.lang.types.StaticType
+import org.partiql.lang.types.StructType
 
 internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
 

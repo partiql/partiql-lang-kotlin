@@ -21,8 +21,8 @@ import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.physical.operators.Accumulator
 import org.partiql.lang.eval.stringValue
 import org.partiql.lang.types.FunctionSignature
-import org.partiql.spi.types.AnyOfType
-import org.partiql.spi.types.StaticType
+import org.partiql.lang.types.AnyOfType
+import org.partiql.lang.types.StaticType
 import kotlin.reflect.full.primaryConstructor
 
 /**

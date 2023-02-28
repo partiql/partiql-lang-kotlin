@@ -10,9 +10,9 @@ import org.partiql.plan.ir.Rel
 import org.partiql.plan.ir.Rex
 import org.partiql.plan.passes.RexTyper
 import org.partiql.spi.sources.TableSchema
-import org.partiql.spi.types.BagType
-import org.partiql.spi.types.StaticType
-import org.partiql.spi.types.StructType
+import org.partiql.lang.types.BagType
+import org.partiql.lang.types.StaticType
+import org.partiql.lang.types.StructType
 
 /**
  * Poses as a mechanism to return the [StaticType] of an arbitrary [Rex].

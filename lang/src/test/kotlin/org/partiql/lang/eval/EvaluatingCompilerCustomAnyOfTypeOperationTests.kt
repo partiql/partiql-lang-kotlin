@@ -11,13 +11,13 @@ import org.partiql.lang.util.ArgumentsProviderBase
 import org.partiql.lang.util.honorTypedOpParameters
 import org.partiql.lang.util.legacyTypingMode
 import org.partiql.lang.util.permissiveTypingMode
-import org.partiql.spi.types.BagType
-import org.partiql.spi.types.ListType
-import org.partiql.spi.types.NumberConstraint
-import org.partiql.spi.types.SexpType
-import org.partiql.spi.types.StaticType
-import org.partiql.spi.types.StringType
-import org.partiql.spi.types.StructType
+import org.partiql.lang.types.BagType
+import org.partiql.lang.types.ListType
+import org.partiql.lang.types.NumberConstraint
+import org.partiql.lang.types.SexpType
+import org.partiql.lang.types.StaticType
+import org.partiql.lang.types.StringType
+import org.partiql.lang.types.StructType
 
 /**
  * This test class covers use of [TypedOpParameter] with custom [AnyOfType] types such as `ES_ANY`.

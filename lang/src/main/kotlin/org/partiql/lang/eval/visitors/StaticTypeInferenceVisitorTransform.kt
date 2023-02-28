@@ -42,24 +42,24 @@ import org.partiql.lang.types.TypedOpParameter
 import org.partiql.lang.types.UnknownArguments
 import org.partiql.lang.types.toTypedOpParameter
 import org.partiql.lang.util.cartesianProduct
-import org.partiql.spi.types.AnyOfType
-import org.partiql.spi.types.AnyType
-import org.partiql.spi.types.BagType
-import org.partiql.spi.types.BoolType
-import org.partiql.spi.types.CollectionType
-import org.partiql.spi.types.DecimalType
-import org.partiql.spi.types.FloatType
-import org.partiql.spi.types.IntType
-import org.partiql.spi.types.ListType
-import org.partiql.spi.types.MissingType
-import org.partiql.spi.types.NullType
-import org.partiql.spi.types.NumberConstraint
-import org.partiql.spi.types.SexpType
-import org.partiql.spi.types.SingleType
-import org.partiql.spi.types.StaticType
-import org.partiql.spi.types.StringType
-import org.partiql.spi.types.StructType
-import org.partiql.spi.types.SymbolType
+import org.partiql.lang.types.AnyOfType
+import org.partiql.lang.types.AnyType
+import org.partiql.lang.types.BagType
+import org.partiql.lang.types.BoolType
+import org.partiql.lang.types.CollectionType
+import org.partiql.lang.types.DecimalType
+import org.partiql.lang.types.FloatType
+import org.partiql.lang.types.IntType
+import org.partiql.lang.types.ListType
+import org.partiql.lang.types.MissingType
+import org.partiql.lang.types.NullType
+import org.partiql.lang.types.NumberConstraint
+import org.partiql.lang.types.SexpType
+import org.partiql.lang.types.SingleType
+import org.partiql.lang.types.StaticType
+import org.partiql.lang.types.StringType
+import org.partiql.lang.types.StructType
+import org.partiql.lang.types.SymbolType
 
 /**
  * A [PartiqlAst.VisitorTransform] that annotates nodes with their static type.

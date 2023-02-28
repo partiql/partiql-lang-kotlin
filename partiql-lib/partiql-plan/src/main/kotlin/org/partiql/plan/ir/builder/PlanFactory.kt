@@ -13,7 +13,7 @@ import org.partiql.plan.ir.Rel
 import org.partiql.plan.ir.Rex
 import org.partiql.plan.ir.SortSpec
 import org.partiql.plan.ir.Step
-import org.partiql.spi.types.StaticType
+import org.partiql.lang.types.StaticType
 import kotlin.Any
 import kotlin.String
 import kotlin.collections.List

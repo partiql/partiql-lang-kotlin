@@ -20,7 +20,7 @@ import org.partiql.lang.util.isPosInf
 import org.partiql.lang.util.ln
 import org.partiql.lang.util.power
 import org.partiql.lang.util.squareRoot
-import org.partiql.spi.types.StaticType
+import org.partiql.lang.types.StaticType
 import java.lang.Double.NEGATIVE_INFINITY
 import java.lang.Double.NaN
 import java.lang.Double.POSITIVE_INFINITY

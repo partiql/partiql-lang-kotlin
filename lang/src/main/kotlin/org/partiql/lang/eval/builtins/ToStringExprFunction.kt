@@ -24,7 +24,7 @@ import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.stringValue
 import org.partiql.lang.eval.timestampValue
 import org.partiql.lang.types.FunctionSignature
-import org.partiql.spi.types.StaticType
+import org.partiql.lang.types.StaticType
 import java.time.DateTimeException
 import java.time.format.DateTimeFormatter
 import java.time.temporal.UnsupportedTemporalTypeException

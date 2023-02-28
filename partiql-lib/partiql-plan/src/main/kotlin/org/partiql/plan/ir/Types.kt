@@ -32,7 +32,7 @@ import org.partiql.plan.ir.builder.StepKeyBuilder
 import org.partiql.plan.ir.builder.StepUnpivotBuilder
 import org.partiql.plan.ir.builder.StepWildcardBuilder
 import org.partiql.plan.ir.visitor.PlanVisitor
-import org.partiql.spi.types.StaticType
+import org.partiql.lang.types.StaticType
 import kotlin.Any
 import kotlin.String
 import kotlin.collections.List

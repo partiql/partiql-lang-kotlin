@@ -2,7 +2,7 @@
  * Copyright 2017 Amazon.com, Inc. or its affiliates.  All rights reserved.
  */
 
-package org.partiql.spi.types
+package org.partiql.lang.types
 
 import java.math.BigDecimal
 

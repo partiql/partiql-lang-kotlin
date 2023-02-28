@@ -7,7 +7,7 @@ import org.partiql.lang.ast.passes.SemanticException
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.PropertyValueMap
 import org.partiql.lang.types.FunctionSignature
-import org.partiql.spi.types.StaticType
+import org.partiql.lang.types.StaticType
 
 /**
  * A class to test if the wrapping of internal exceptions are correct.

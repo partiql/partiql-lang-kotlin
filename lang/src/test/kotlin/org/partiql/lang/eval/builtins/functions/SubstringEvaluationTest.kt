@@ -9,7 +9,7 @@ import org.partiql.lang.eval.builtins.Argument
 import org.partiql.lang.eval.builtins.ExprFunctionTestCase
 import org.partiql.lang.eval.builtins.checkInvalidArgType
 import org.partiql.lang.util.ArgumentsProviderBase
-import org.partiql.spi.types.StaticType
+import org.partiql.lang.types.StaticType
 
 class SubstringEvaluationTest : EvaluatorTestBase() {
     // Pass test cases

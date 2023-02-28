@@ -1,23 +1,23 @@
 package org.partiql.lang.ast.passes.inference
 
 import org.partiql.lang.eval.ExprValue
-import org.partiql.spi.types.AnyOfType
-import org.partiql.spi.types.AnyType
-import org.partiql.spi.types.BlobType
-import org.partiql.spi.types.BoolType
-import org.partiql.spi.types.ClobType
-import org.partiql.spi.types.CollectionType
-import org.partiql.spi.types.DecimalType
-import org.partiql.spi.types.FloatType
-import org.partiql.spi.types.IntType
-import org.partiql.spi.types.MissingType
-import org.partiql.spi.types.NullType
-import org.partiql.spi.types.SingleType
-import org.partiql.spi.types.StaticType
-import org.partiql.spi.types.StringType
-import org.partiql.spi.types.StructType
-import org.partiql.spi.types.SymbolType
-import org.partiql.spi.types.TimestampType
+import org.partiql.lang.types.AnyOfType
+import org.partiql.lang.types.AnyType
+import org.partiql.lang.types.BlobType
+import org.partiql.lang.types.BoolType
+import org.partiql.lang.types.ClobType
+import org.partiql.lang.types.CollectionType
+import org.partiql.lang.types.DecimalType
+import org.partiql.lang.types.FloatType
+import org.partiql.lang.types.IntType
+import org.partiql.lang.types.MissingType
+import org.partiql.lang.types.NullType
+import org.partiql.lang.types.SingleType
+import org.partiql.lang.types.StaticType
+import org.partiql.lang.types.StringType
+import org.partiql.lang.types.StructType
+import org.partiql.lang.types.SymbolType
+import org.partiql.lang.types.TimestampType
 
 internal fun StaticType.isNullOrMissing(): Boolean = (this is NullType || this is MissingType)
 internal fun StaticType.isNumeric(): Boolean = (this is IntType || this is FloatType || this is DecimalType)

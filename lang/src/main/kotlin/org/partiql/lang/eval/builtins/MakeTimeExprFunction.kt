@@ -11,7 +11,7 @@ import org.partiql.lang.eval.intValue
 import org.partiql.lang.eval.time.NANOS_PER_SECOND
 import org.partiql.lang.eval.time.Time
 import org.partiql.lang.types.FunctionSignature
-import org.partiql.spi.types.StaticType
+import org.partiql.lang.types.StaticType
 import java.math.BigDecimal
 
 /**

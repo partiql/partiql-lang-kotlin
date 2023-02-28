@@ -4,7 +4,7 @@ imports::{
   kotlin: [
     any::'kotlin.Any',
     ion::'com.amazon.ionelement.api.IonElement',
-    static_type::'org.partiql.spi.types.StaticType',
+    static_type::'org.partiql.lang.types.StaticType',
   ],
 }
 

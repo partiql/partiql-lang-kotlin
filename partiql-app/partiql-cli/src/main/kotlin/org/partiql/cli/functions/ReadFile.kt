@@ -28,7 +28,7 @@ import org.partiql.lang.eval.io.DelimitedValues
 import org.partiql.lang.eval.io.DelimitedValues.ConversionMode
 import org.partiql.lang.eval.stringValue
 import org.partiql.lang.types.FunctionSignature
-import org.partiql.spi.types.StaticType
+import org.partiql.lang.types.StaticType
 import java.io.FileInputStream
 import java.io.InputStream
 import java.io.InputStreamReader

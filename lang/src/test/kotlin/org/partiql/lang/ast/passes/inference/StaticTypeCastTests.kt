@@ -5,9 +5,9 @@ import junitparams.Parameters
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.partiql.spi.types.DecimalType
-import org.partiql.spi.types.IntType
-import org.partiql.spi.types.StaticType
+import org.partiql.lang.types.DecimalType
+import org.partiql.lang.types.IntType
+import org.partiql.lang.types.StaticType
 
 @RunWith(JUnitParamsRunner::class)
 class StaticTypeCastTests {

@@ -6,17 +6,17 @@ import org.partiql.ionschema.model.toIsl
 import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.types.StaticTypeUtils.getTypeDomain
 import org.partiql.lang.util.toIntExact
-import org.partiql.spi.types.AnyOfType
-import org.partiql.spi.types.AnyType
-import org.partiql.spi.types.BagType
-import org.partiql.spi.types.DecimalType
-import org.partiql.spi.types.IntType
-import org.partiql.spi.types.ListType
-import org.partiql.spi.types.NumberConstraint
-import org.partiql.spi.types.SexpType
-import org.partiql.spi.types.StaticType
-import org.partiql.spi.types.StringType
-import org.partiql.spi.types.StructType
+import org.partiql.lang.types.AnyOfType
+import org.partiql.lang.types.AnyType
+import org.partiql.lang.types.BagType
+import org.partiql.lang.types.DecimalType
+import org.partiql.lang.types.IntType
+import org.partiql.lang.types.ListType
+import org.partiql.lang.types.NumberConstraint
+import org.partiql.lang.types.SexpType
+import org.partiql.lang.types.StaticType
+import org.partiql.lang.types.StringType
+import org.partiql.lang.types.StructType
 import kotlin.reflect.KClass
 
 internal typealias TypeDefMap = Map<String, IonSchemaModel.TypeDefinition>
