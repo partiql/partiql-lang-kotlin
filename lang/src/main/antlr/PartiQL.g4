@@ -81,7 +81,7 @@ ddl
     ;
 
 createCommand
-    : CREATE TABLE tableName PAREN_LEFT tableDef PAREN_RIGHT                                    # CreateTable
+    : CREATE TABLE tableName ( PAREN_LEFT tableDef PAREN_RIGHT )?                               # CreateTable
     | CREATE INDEX ON symbolPrimitive PAREN_LEFT pathSimple ( COMMA pathSimple )* PAREN_RIGHT   # CreateIndex
     ;
 

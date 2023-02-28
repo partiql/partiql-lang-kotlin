@@ -33,6 +33,13 @@ class QueryPrettyPrinterTest {
     @Test
     fun createTable() {
         checkPrettyPrintQuery(
+            "CREATE TABLE foo", "CREATE TABLE foo"
+        )
+    }
+
+    @Test
+    fun createTableWithColumn() {
+        checkPrettyPrintQuery(
             "CREATE TABLE foo (boo string)",
             """
                 CREATE TABLE foo (

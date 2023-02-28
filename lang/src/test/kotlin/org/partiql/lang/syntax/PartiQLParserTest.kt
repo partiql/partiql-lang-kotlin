@@ -3543,6 +3543,12 @@ class PartiQLParserTest : PartiQLParserTestBase() {
     // ****************************************
     @Test
     fun createTable() = assertExpression(
+        "CREATE TABLE foo",
+        "(ddl (create_table foo null))"
+    )
+
+    @Test
+    fun createTableWithColumn() = assertExpression(
         "CREATE TABLE foo (boo string)",
         """
             (ddl (create_table foo  (table_def

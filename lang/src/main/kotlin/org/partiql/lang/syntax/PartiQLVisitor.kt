@@ -175,7 +175,7 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
 
     override fun visitCreateTable(ctx: PartiQLParser.CreateTableContext) = PartiqlAst.build {
         val name = visitSymbolPrimitive(ctx.tableName().symbolPrimitive()).name
-        val def = visitTableDef(ctx.tableDef())
+        val def = ctx.tableDef()?.let { visitTableDef(it) }
         createTable_(name, def, ctx.CREATE().getSourceMetaContainer())
     }
 

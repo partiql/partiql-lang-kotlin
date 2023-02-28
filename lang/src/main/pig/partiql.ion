@@ -430,8 +430,8 @@ may then be further optimized by selecting better implementations of each operat
 
         // A data definition operation.
         (sum ddl_op
-            // `CREATE TABLE <symbol> ( <table_def> )`
-            (create_table table_name::symbol def::table_def)
+            // `CREATE TABLE <symbol> ( <table_def> )?`
+            (create_table table_name::symbol def::(? table_def))
 
             // `DROP TABLE <identifier>`
             (drop_table table_name::identifier)

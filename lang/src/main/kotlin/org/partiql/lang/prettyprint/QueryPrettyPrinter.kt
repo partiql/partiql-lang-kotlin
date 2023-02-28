@@ -117,17 +117,20 @@ class QueryPrettyPrinter {
     }
 
     private fun writeAstNode(node: PartiqlAst.DdlOp.CreateTable, sb: StringBuilder) {
-        var separator = "\n\t"
-        sb.append("CREATE TABLE ${node.tableName.text} (")
-        for (n in node.def.parts) {
-            sb.append(separator)
-            when (n) {
-                is PartiqlAst.TableDefPart.ColumnDeclaration -> writeAstNode(n, sb)
-                is PartiqlAst.TableDefPart.TableConstraint -> writeAstNode(n, sb)
+        sb.append("CREATE TABLE ${node.tableName.text}")
+        node.def?.let {
+            var separator = "\n\t"
+            sb.append(" (")
+            for (n in it.parts) {
+                sb.append(separator)
+                when (n) {
+                    is PartiqlAst.TableDefPart.ColumnDeclaration -> writeAstNode(n, sb)
+                    is PartiqlAst.TableDefPart.TableConstraint -> writeAstNode(n, sb)
+                }
+                separator = ",\n\t"
             }
-            separator = ",\n\t"
+            sb.append("\n)")
         }
-        sb.append("\n)")
     }
 
     private fun writeAstNode(node: PartiqlAst.TableDefPart.ColumnDeclaration, sb: StringBuilder) {
