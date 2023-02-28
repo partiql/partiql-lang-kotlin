@@ -1,0 +1,8 @@
+- Function Lowering
+- Constant Folding
+- Reduce Logical Expressions
+- Remove always true filters
+- Replace always false filters with empty query
+- Proj/Pred Pushdown
+
+Determine appropriate ordering
