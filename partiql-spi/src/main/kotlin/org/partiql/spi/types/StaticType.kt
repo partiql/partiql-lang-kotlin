@@ -57,6 +57,8 @@ sealed class StaticType {
         @JvmField val SEXP: SexpType = SexpType()
         @JvmField val STRUCT: StructType = StructType()
         @JvmField val BAG: BagType = BagType()
+        @JvmField val SCHEMA: SchemaType = SchemaType()
+
 
         /** All the StaticTypes, except for `ANY`. */
         @JvmStatic
@@ -80,7 +82,8 @@ sealed class StaticType {
             LIST,
             SEXP,
             STRUCT,
-            BAG
+            BAG,
+            SCHEMA,
         )
     }
 
@@ -134,6 +137,7 @@ sealed class StaticType {
             is AnyOfType -> copy(metas = metas)
             is DateType -> copy(metas = metas)
             is TimeType -> copy(metas = metas)
+            is SchemaType -> copy(metas = metas)
         }
 
     /**
@@ -425,6 +429,44 @@ data class BagType(
         get() = listOf(this)
 
     override fun toString(): String = "bag($elementType)"
+}
+
+// Schema type
+
+data class SchemaType(
+    val isOpen: Boolean = false,
+    val attrs: List<SchemaAttr> = listOf(),
+    val constraint: List<SchemaConstraint> = listOf(SchemaConstraint.NoDuplicateAttr),
+    val orderedness: SchemaOrderedness = SchemaOrderedness.Ordered,
+    override val metas: Map<String, Any> = mapOf()
+) : SingleType() {
+    override fun flatten(): StaticType = this
+
+    override val allTypes: List<StaticType>
+        get() = listOf(this)
+
+    override fun toString(): String {
+        TODO()
+    }
+}
+
+data class SchemaAttr(
+    val name: String,
+    val type: StaticType
+)
+
+sealed class SchemaConstraint {
+    object NoConstraint : SchemaConstraint()
+    object NoDuplicateAttr : SchemaConstraint()
+    data class PrimaryKey(val attrs: List<String>) : SchemaConstraint()
+    data class Unique(val attrs: List<String>) : SchemaConstraint()
+    data class NotNull(val attrs: List<String>) : SchemaConstraint()
+    data class NotMissing(val attrs: List<String>) : SchemaConstraint()
+}
+
+enum class SchemaOrderedness {
+    Unordered,
+    Ordered,
 }
 
 data class StructType(

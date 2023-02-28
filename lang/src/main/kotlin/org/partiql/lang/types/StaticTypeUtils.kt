@@ -24,6 +24,7 @@ import org.partiql.spi.types.IntType
 import org.partiql.spi.types.ListType
 import org.partiql.spi.types.MissingType
 import org.partiql.spi.types.NullType
+import org.partiql.spi.types.SchemaType
 import org.partiql.spi.types.SexpType
 import org.partiql.spi.types.SingleType
 import org.partiql.spi.types.StaticType
@@ -115,6 +116,7 @@ public object StaticTypeUtils {
         is SymbolType -> ExprValueType.SYMBOL
         is TimeType -> ExprValueType.TIME
         is TimestampType -> ExprValueType.TIMESTAMP
+        is SchemaType -> ExprValueType.STRUCT // TODO Decide about SchemaType's runtime type
     }
 
     /**

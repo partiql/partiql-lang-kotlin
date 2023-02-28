@@ -23,6 +23,7 @@ import org.partiql.spi.types.SexpType
 import org.partiql.spi.types.SingleType
 import org.partiql.spi.types.StaticType
 import org.partiql.spi.types.StringType
+import org.partiql.spi.types.SchemaType
 import org.partiql.spi.types.StructType
 import org.partiql.spi.types.SymbolType
 import org.partiql.spi.types.TimeType
@@ -57,6 +58,7 @@ private fun SingleType.getExample() = when (this) {
     is SexpType -> "sexp()"
     is StructType -> "{}"
     is BagType -> "<<>>"
+    is SchemaType -> "schema {}"
     is MissingType,
     is NullType -> throw Exception("NULL or MISSING should be the problem of permissive mode, not type checking.")
 }

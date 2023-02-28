@@ -17,6 +17,7 @@ import org.partiql.spi.types.ListType
 import org.partiql.spi.types.MissingType
 import org.partiql.spi.types.NullType
 import org.partiql.spi.types.NumberConstraint
+import org.partiql.spi.types.SchemaType
 import org.partiql.spi.types.SexpType
 import org.partiql.spi.types.StaticType
 import org.partiql.spi.types.StringType
@@ -555,4 +556,5 @@ fun StaticType.getBaseTypeName(): String = when (this) {
         false -> "time"
         true -> "time_with_time_zone"
     }
+    is SchemaType -> "schema"
 }
