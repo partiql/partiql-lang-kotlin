@@ -21,10 +21,8 @@ import kotlin.collections.MutableList
 import kotlin.collections.MutableMap
 import kotlin.collections.MutableSet
 
-public fun <T : PlanNode> plan(
-    factory: PlanFactory = PlanFactory.DEFAULT,
-    block: PlanBuilder.() -> T
-) = PlanBuilder(factory).block()
+public fun <T : PlanNode> plan(factory: PlanFactory = PlanFactory.DEFAULT, block: PlanBuilder.() ->
+T) = PlanBuilder(factory).block()
 
 public class PlanBuilder(
     private val factory: PlanFactory = PlanFactory.DEFAULT
