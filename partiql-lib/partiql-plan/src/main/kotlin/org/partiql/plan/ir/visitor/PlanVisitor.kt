@@ -3,7 +3,7 @@ package org.partiql.plan.ir.visitor
 import org.partiql.plan.ir.Binding
 import org.partiql.plan.ir.Common
 import org.partiql.plan.ir.Field
-import org.partiql.plan.ir.Plan
+import org.partiql.plan.ir.PartiQLPlan
 import org.partiql.plan.ir.PlanNode
 import org.partiql.plan.ir.Rel
 import org.partiql.plan.ir.Rex
@@ -13,7 +13,7 @@ import org.partiql.plan.ir.Step
 public interface PlanVisitor<R, C> {
     public fun visit(node: PlanNode, ctx: C): R
 
-    public fun visitPlan(node: Plan, ctx: C): R
+    public fun visitPartiQLPlan(node: PartiQLPlan, ctx: C): R
 
     public fun visitCommon(node: Common, ctx: C): R
 
@@ -68,6 +68,10 @@ public interface PlanVisitor<R, C> {
     public fun visitRexLit(node: Rex.Lit, ctx: C): R
 
     public fun visitRexCollection(node: Rex.Collection, ctx: C): R
+
+    public fun visitRexCollectionArray(node: Rex.Collection.Array, ctx: C): R
+
+    public fun visitRexCollectionBag(node: Rex.Collection.Bag, ctx: C): R
 
     public fun visitRexTuple(node: Rex.Tuple, ctx: C): R
 

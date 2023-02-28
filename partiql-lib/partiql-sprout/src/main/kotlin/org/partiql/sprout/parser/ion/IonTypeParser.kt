@@ -209,7 +209,7 @@ internal object IonTypeParser : SproutParser {
                     }
                     path.size == 1 && imports.symbols.contains(path.first()) -> {
                         // Import type reference using '.'
-                        TypeRef.Import(symbol, nullable)
+                        TypeRef.Import(path.first(), nullable)
                     }
                     else -> {
                         error("type reference `$symbol` not found")

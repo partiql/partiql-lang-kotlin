@@ -9,7 +9,7 @@ imports::{
 }
 
 // Top-Level structure for a PartiQL Plan
-plan::{
+parti_q_l_plan::{
   version: [ PARTIQL_V0 ],
   root: rex,
 }
@@ -134,15 +134,18 @@ rex::[
   id::{
     name: string,
     case: optional::case,
-    qualifier: [ UNQUALIFIED, LOCALS_FIRST ]
+    qualifier: [ UNQUALIFIED, LOCALS_FIRST ],
+    type: optional::'.type'
   },
   path::{
     root: rex,
     steps: list::[step],
+    type: optional::'.type'
   },
   unary::{
     value: rex,
     op: [ NOT, POS, NEG, ],
+    type: optional::'.type'
   },
   binary::{
     lhs: rex,
@@ -152,40 +155,53 @@ rex::[
       AND, OR,
       EQ, NEQ, GTE, GT, LT, LTE,
     ],
+    type: optional::'.type'
   },
   call::{
     id: string,
     args: list::[rex],
+    type: optional::'.type'
   },
   agg::{
     id: string,
     args: list::[rex],
     modifier: [ ALL, DISTINCT ],
+    type: optional::'.type'
     // filter: rex — later SQL feature, not sure if we'll support this
   },
   lit::{
     value: ion,
+    type: optional::'.type'
   },
-  collection::{
-    type: [ ARRAY, BAG ],
-    values: list::[rex],
-  },
+  collection::[
+    array::{
+      values: list::[rex],
+      type: optional::'.type',
+    },
+    bag::{
+      values: list::[rex],
+      type: optional::'.type',
+    },
+  ],
   // - If binding.name is '*' and binding.rex is a struct, the fields of binding.rex are merged to this struct
   // - If binding.name is '*' and binding.rex is not a struct, the field _n will be add to this struct where n
   //   is the ordinal of the field in the final merged struct.
   // - Else, add the pair (binding.name, binding.rex) to the final merged struct.
   tuple::{
     fields: list::[field],
+    type: optional::'.type'
   },
   query::[
     scalar::[
       coerce::{
         query: '.rex.query.collection',
+        type: optional::'.type'
       },
       pivot::{
         rel: rel,
         value: rex,
         at: rex,
+        type: optional::'.type'
       },
     ],
     collection::{
