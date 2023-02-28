@@ -27,3 +27,6 @@ include(
     "test:partiql-tests-runner",
     "test:partiql-randomized-tests",
 )
+include("untitled")
+include("partiql-lib:partiql-catalog:partiql.partiql-lib.partiql-catalog")
+findProject(":partiql-lib:partiql-catalog:partiql.partiql-lib.partiql-catalog")?.name = "partiql.partiql-lib.partiql-catalog"

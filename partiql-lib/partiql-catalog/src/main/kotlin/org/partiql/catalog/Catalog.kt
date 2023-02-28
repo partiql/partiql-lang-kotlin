@@ -1,5 +1,7 @@
 package org.partiql.catalog
 
+import org.partiql.spi.types.SchemaType
+
 class Catalog {
     var root = Name(value="root")
     fun qualifyName(name: Name, resolver: NameResolver): Name {
@@ -13,7 +15,7 @@ class Catalog {
 
 class Name(value: String) {
     val value = value
-    val objects = mutableListOf<CatalogObject>()
+    val objects = mutableListOf<DbObject>()
     var children = mutableListOf<Name>()
 
     fun addChild(child: Name) {
@@ -25,8 +27,8 @@ class Name(value: String) {
     }
 }
 
-sealed class CatalogObject {
-    data class Table(val name: String) : CatalogObject()
+sealed class DbObject {
+    data class Table(val name: String, val schema: List<SchemaType>) : DbObject()
 }
 
 class BasicNameResolver : NameResolver {
