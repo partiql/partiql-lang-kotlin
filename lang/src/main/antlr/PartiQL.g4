@@ -96,7 +96,6 @@ tableDef
 
 tableDefPart
     : columnName type columnConstraint*                             # ColumnDeclaration
-    | ( CONSTRAINT tableConstraintName )?  tableConstraintDef       # TableConstraint
     ;
 
 columnConstraint
@@ -106,11 +105,6 @@ columnConstraint
 columnConstraintDef
     : NOT NULL                                  # ColConstrNotNull
     | NULL                                      # ColConstrNull
-    | CHECK PAREN_LEFT expr PAREN_RIGHT         # ColConstrCheck
-    ;
-
-tableConstraintDef
-    : CHECK PAREN_LEFT expr PAREN_RIGHT         # TblConstrCheck
     ;
 
 /**

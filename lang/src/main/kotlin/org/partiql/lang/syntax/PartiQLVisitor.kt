@@ -211,23 +211,6 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
         columnNull()
     }
 
-    override fun visitColConstrCheck(ctx: PartiQLParser.ColConstrCheckContext) = PartiqlAst.build {
-        val expr = visitExpr(ctx.expr())
-        columnCheck(expr, ctx.CHECK().getSourceMetaContainer())
-    }
-
-    override fun visitTableConstraint(ctx: PartiQLParser.TableConstraintContext) = PartiqlAst.build {
-        val name = ctx.tableConstraintName()?.let { visitSymbolPrimitive(it.symbolPrimitive()).name.text }
-        val def = visit(ctx.tableConstraintDef(), PartiqlAst.TableConstraintDef::class)
-        tableConstraint(name, def)
-    }
-
-    override fun visitTblConstrCheck(ctx: PartiQLParser.TblConstrCheckContext) = PartiqlAst.build {
-        val expr = visitExpr(ctx.expr())
-        ctx.sourceInterval
-        tableCheck(expr, ctx.CHECK().getSourceMetaContainer())
-    }
-
     /**
      *
      * EXECUTE

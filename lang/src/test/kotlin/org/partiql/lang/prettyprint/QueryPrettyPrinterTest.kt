@@ -54,21 +54,17 @@ class QueryPrettyPrinterTest {
         checkPrettyPrintQuery(
             """
                 create table Customer (
-                   name string NOT NULL, 
-                   age int CONSTRAINT 
-                        is_adult check (age >= 21),
+                   name string CONSTRAINT name_is_present NOT NULL, 
+                   age int, 
                    city string null,
-                   state string NULL,
-                   CHECK ((state IS NOT NULL) 
-                          OR (city IS NULL)))                
+                   state string NULL)
             """.trimIndent(),
             """
                 CREATE TABLE Customer (
-                    name STRING NOT NULL,
-                    age INT CONSTRAINT is_adult CHECK (age >= 21),
+                    name STRING CONSTRAINT name_is_present NOT NULL,
+                    age INT,
                     city STRING NULL,
-                    state STRING NULL,
-                    CHECK ((NOT (state IS NULL)) OR (city IS NULL))
+                    state STRING NULL
                 )
             """.trimIndent()
         )
