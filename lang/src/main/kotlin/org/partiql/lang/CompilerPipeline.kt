@@ -126,9 +126,13 @@ interface CompilerPipeline {
         fun build(block: Builder.() -> Unit) = Builder().apply(block).build()
 
         /** Kotlin style builder for [CompilerPipeline].  If calling from Java instead use [builder]. */
-        @Deprecated("[ExprValueFactory] is deprecated. Please use `build(block: Builder.() -> Unit)`.")
+        @Deprecated(
+            "This builder is deprecated. Use the one without the ExprValueFactory argument.",
+            ReplaceWith("build(block)")
+        )
         @Suppress("DEPRECATION") // Deprecation of ExprValueFactory.
-        fun build(valueFactory: org.partiql.lang.eval.ExprValueFactory, block: Builder.() -> Unit) = Builder(valueFactory).apply(block).build()
+        fun build(valueFactory: org.partiql.lang.eval.ExprValueFactory, block: Builder.() -> Unit) =
+            Builder(valueFactory).apply(block).build()
 
         /** Fluent style builder.  If calling from Kotlin instead use the [build] method. */
         @JvmStatic
@@ -136,7 +140,10 @@ interface CompilerPipeline {
 
         /** Fluent style builder.  If calling from Kotlin instead use the [build] method. */
         @JvmStatic
-        @Deprecated("[ExprValueFactory] is deprecated. Please use `builder(): Builder = builder(ion)`.")
+        @Deprecated(
+            "This builder is deprecated. Use the one without the ExprValueFactory argument.",
+            ReplaceWith("build()")
+        )
         @Suppress("DEPRECATION") // Deprecation of ExprValueFactory.
         fun builder(valueFactory: org.partiql.lang.eval.ExprValueFactory): Builder = Builder(valueFactory)
 
@@ -146,7 +153,10 @@ interface CompilerPipeline {
 
         /** Returns an implementation of [CompilerPipeline] with all properties set to their defaults. */
         @JvmStatic
-        @Deprecated("[ExprValueFactory] is deprecated. Please use `standard(): CompilerPipeline`.")
+        @Deprecated(
+            "This method is deprecated. Use the one without the ExprValueFactory argument.",
+            ReplaceWith("standard()")
+        )
         @Suppress("DEPRECATION") // Deprecation of ExprValueFactory.
         fun standard(valueFactory: org.partiql.lang.eval.ExprValueFactory): CompilerPipeline = builder(valueFactory).build()
     }
