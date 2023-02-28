@@ -57,7 +57,7 @@ object PlanPrinter {
         override fun defaultVisit(node: PlanNode, ctx: Args): Unit = with(ctx) {
             out.append(lead)
             // print node name
-            out.append(node::class.simpleName)
+            out.append(node::class.qualifiedName)
             // print primitive items
             val primitives = node.primitives().filter { it.second != null }
             if (primitives.isNotEmpty()) {

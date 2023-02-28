@@ -46,8 +46,8 @@ case::[
 
 // Define in `_` once supported
 step::[
-  rex::{
-    index: '.rex',
+  key::{
+    value: rex,
     case: optional::case,
   },
   wildcard::{},
