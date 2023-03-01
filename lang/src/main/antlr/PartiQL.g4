@@ -43,11 +43,6 @@ symbolPrimitive
     : ident=( IDENTIFIER | IDENTIFIER_QUOTED )
     ;
 
-tableName : symbolPrimitive;
-tableConstraintName : symbolPrimitive;
-columnName : symbolPrimitive;
-columnConstraintName : symbolPrimitive;
-
 /**
  *
  * DATA QUERY LANGUAGE (DQL)
@@ -72,8 +67,14 @@ execCommand
 /**
  *
  * DATA DEFINITION LANGUAGE (DDL)
- *
+ * Experimental, towards #36 https://github.com/partiql/partiql-docs/issues/36
+ * Currently, this is a small subset of SQL DDL that is likely to make sense for PartiQL as well.
  */
+
+tableName : symbolPrimitive;
+tableConstraintName : symbolPrimitive;
+columnName : symbolPrimitive;
+columnConstraintName : symbolPrimitive;
 
 ddl
     : createCommand
