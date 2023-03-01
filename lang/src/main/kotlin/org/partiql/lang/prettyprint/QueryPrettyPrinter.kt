@@ -125,6 +125,7 @@ class QueryPrettyPrinter {
                 sb.append(separator)
                 when (n) {
                     is PartiqlAst.TableDefPart.ColumnDeclaration -> writeAstNode(n, sb)
+                    is PartiqlAst.TableDefPart.TableConstraint -> writeAstNode(n, sb)
                 }
                 separator = ",\n\t"
             }
@@ -141,6 +142,22 @@ class QueryPrettyPrinter {
             when (c.def) {
                 is PartiqlAst.ColumnConstraintDef.ColumnNull -> sb.append("NULL")
                 is PartiqlAst.ColumnConstraintDef.ColumnNotnull -> sb.append("NOT NULL")
+                is PartiqlAst.ColumnConstraintDef.ColumnCheck -> {
+                    sb.append("CHECK (")
+                    writeAstNode(c.def.expr, sb, -1)
+                    sb.append(")")
+                }
+            }
+        }
+    }
+
+    private fun writeAstNode(node: PartiqlAst.TableDefPart.TableConstraint, sb: StringBuilder) {
+        node.name?.let { sb.append("CONSTRAINT ${it.text} ") }
+        when (node.def) {
+            is PartiqlAst.TableConstraintDef.TableCheck -> {
+                sb.append("CHECK (")
+                writeAstNode(node.def.expr, sb, -1)
+                sb.append(")")
             }
         }
     }

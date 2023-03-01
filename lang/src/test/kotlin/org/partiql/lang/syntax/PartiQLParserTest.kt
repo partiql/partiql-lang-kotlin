@@ -3570,9 +3570,10 @@ class PartiQLParserTest : PartiQLParserTestBase() {
         """
             CREATE TABLE Customer (
                name string CONSTRAINT name_is_present NOT NULL, 
-               age int,
+               age int CONSTRAINT is_adult CHECK (age >= 21),
                city string NULL,
-               state string NULL
+               state string NULL,
+               CHECK ((state IS NOT NULL) OR (city IS NULL))
             )
         """.trimIndent(),
         """
@@ -3581,11 +3582,24 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                     Customer (table_def
                         (column_declaration name (string_type)
                             (column_constraint name_is_present (column_notnull)))
-                        (column_declaration age (integer_type))
+                        (column_declaration age (integer_type)
+                            (column_constraint is_adult (column_check
+                                    (gte
+                                        (id age (case_insensitive) (unqualified))
+                                        (lit 21)))))
                         (column_declaration city (string_type)
                             (column_constraint null (column_null)))
                         (column_declaration state (string_type)
-                            (column_constraint null (column_null))))))
+                            (column_constraint null (column_null)))
+                        (table_constraint null (table_check
+                                (or
+                                    (not
+                                        (is_type
+                                            (id state (case_insensitive) (unqualified))
+                                            (null_type)))
+                                    (is_type
+                                        (id city (case_insensitive) (unqualified))
+                                        (null_type))))))))                                        
         """.trimIndent()
     )
 

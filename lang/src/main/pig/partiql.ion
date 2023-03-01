@@ -450,7 +450,9 @@ may then be further optimized by selecting better implementations of each operat
 
         (sum table_def_part
             // `<column_name> <type> <column_constraint>*`
-            (column_declaration name::symbol type::type constraints::(* column_constraint 0)))
+            (column_declaration name::symbol type::type constraints::(* column_constraint 0))
+            // `CONSTRAINT <name>? <table_constraint_def>`
+            (table_constraint name::(? symbol) def::table_constraint_def))
 
         // `( CONSTRAINT <column_constraint_name> )?  <column_constraint_def>`
         (product column_constraint name::(? symbol) def::column_constraint_def)
@@ -458,7 +460,12 @@ may then be further optimized by selecting better implementations of each operat
         //  `NULL | NOT NULL | CHECK ( <expr> )`
         (sum column_constraint_def
             (column_notnull)
-            (column_null))
+            (column_null)
+            (column_check expr::expr))
+
+        (sum table_constraint_def
+            // `CHECK ( <expr> )`
+            (table_check expr::expr))
 
         // `RETURNING (<returning_elem> [, <returning_elem>]...)`
         (product returning_expr elems::(* returning_elem 1))
