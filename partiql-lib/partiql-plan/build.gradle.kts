@@ -9,6 +9,7 @@ dependencies {
     implementation(project(":lang"))
 
     implementation(project(":partiql-spi"))
+    implementation(project(":partiql-lib:partiql-catalog"))
     // pretty printing
     implementation(Deps.kotlinReflect)
 }

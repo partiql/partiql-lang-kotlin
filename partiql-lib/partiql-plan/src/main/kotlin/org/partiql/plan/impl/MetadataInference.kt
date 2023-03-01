@@ -19,7 +19,7 @@ internal class MetadataInference(
 
     override fun schemaExists(session: PlannerSession, catalogName: String, schemaName: String): Boolean {
         val connectorSession = session.toConnectorSession()
-        val metadata = getMetadata(session.toConnectorSession(), catalogName)
+        val metadata = getMetadata(connectorSession, catalogName)
         return metadata.schemaExists(connectorSession, BindingName(schemaName, BindingCase.SENSITIVE))
     }
 

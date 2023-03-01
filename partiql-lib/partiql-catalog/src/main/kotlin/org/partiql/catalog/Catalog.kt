@@ -4,18 +4,19 @@ import org.partiql.lang.types.SchemaType
 
 class Catalog {
     var root = Name(id="root")
-    fun qualifyName(name: Name, resolver: NameResolver) : Name {
+    var objects = mutableSetOf<Pair<String, Name>>()
+
+    fun qualify(id: String) : Name {
         TODO()
     }
 
-    fun addNames(names: List<Name>) {
-        root.addChildren(names)
+    fun addObject(objectId: String, name: Name) {
+        objects.add(Pair(objectId, name))
     }
 }
 
 class Name(id: String) {
     val id = id
-    val objects = mutableListOf<DbObject>()
     var children = mutableListOf<Name>()
 
     fun addChild(child: Name) {

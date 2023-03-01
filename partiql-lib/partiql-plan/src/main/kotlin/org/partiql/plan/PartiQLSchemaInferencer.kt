@@ -4,9 +4,12 @@ import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.planner.transforms.normalize
 import org.partiql.lang.syntax.PartiQLParserBuilder
 import org.partiql.plan.impl.MetadataInference
+import org.partiql.plan.impl.MetadataInference2
 import org.partiql.plan.impl.PlannerContext
+import org.partiql.plan.impl.PlannerContext2
 import org.partiql.plan.ir.Rex
 import org.partiql.plan.passes.impl.PlanTyper
+import org.partiql.plan.passes.impl.PlanTyper2
 import org.partiql.plan.passes.impl.PlanUtils
 import org.partiql.spi.Plugin
 import org.partiql.spi.sources.ColumnMetadata
@@ -32,6 +35,18 @@ public object PartiQLSchemaInferencer {
         return inferUsingLogicalPlan(session, ctx, normalizedAst)
     }
 
+    public fun eval(
+        query: String,
+        session: PlannerSession2,
+        plugins: List<Plugin>
+    ): TableSchema {
+        val parser = PartiQLParserBuilder.standard().build()
+        val ast = parser.parseAstStatement(query)
+        val normalizedAst = ast.normalize()
+        val ctx = PlannerContext2(MetadataInference2(plugins, session.connector))
+        return evalUsingLogicalPlan(session, ctx, normalizedAst)
+    }
+
     /**
      * Infers using the logical plan.
      */
@@ -40,6 +55,17 @@ public object PartiQLSchemaInferencer {
         val expr = query.expr as PartiqlAst.Expr.Select
         val plan = RelConverter.convert(expr)
         val rewritten = PlanTyper.type(plan, PlanTyper.Context(session = session, plannerCtx = ctx))
+        return convertSchema(rewritten)
+    }
+
+    /**
+     * Infers using the logical plan.
+     */
+    private fun evalUsingLogicalPlan(session: PlannerSession2, ctx: PlannerContext2, normalizedAst: PartiqlAst.Statement): TableSchema {
+        val query = normalizedAst as PartiqlAst.Statement.Query
+        val expr = query.expr as PartiqlAst.Expr.Select
+        val plan = RelConverter.convert(expr)
+        val rewritten = PlanTyper2.type(plan, PlanTyper2.Context(session = session, plannerCtx = ctx))
         return convertSchema(rewritten)
     }
 

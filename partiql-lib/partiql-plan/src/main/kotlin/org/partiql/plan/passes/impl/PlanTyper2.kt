@@ -1,7 +1,5 @@
 package org.partiql.plan.passes.impl
 
-import org.partiql.plan.PlannerSession
-import org.partiql.plan.impl.PlannerContext
 import org.partiql.plan.ir.Attribute
 import org.partiql.plan.ir.PlanNode
 import org.partiql.plan.ir.Rel
@@ -13,7 +11,7 @@ import org.partiql.lang.types.StructType
 import org.partiql.plan.PlannerSession2
 import org.partiql.plan.impl.PlannerContext2
 
-internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
+internal object PlanTyper2 : PlanRewriter<PlanTyper2.Context>() {
 
     /**
      * Given a [Rex], types the logical plan by adding the output schema to each relational operator.
@@ -28,11 +26,6 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
      * Used for maintaining state through the visitors
      */
     public class Context(
-        internal val session: PlannerSession,
-        internal val plannerCtx: PlannerContext
-    )
-
-    public class Context2(
         internal val session: PlannerSession2,
         internal val plannerCtx: PlannerContext2
     )
@@ -61,13 +54,13 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
     override fun visitRelScan(node: Rel.Scan, ctx: Context): PlanNode {
         val type = when (val rex = node.value) {
             is Rex.Query -> TODO("PlanTyper doesn't support nested queries yet")
-            else -> RexTyperBase.type(
+            else -> RexTyperBase2.type(
                 rex,
-                RexTyperBase.Context(
+                RexTyperBase2.Context(
                     null,
                     ctx.session,
                     ctx.plannerCtx,
-                    RexTyperBase.ScopingOrder.GLOBALS_THEN_LEXICAL
+                    RexTyperBase2.ScopingOrder.GLOBALS_THEN_LEXICAL
                 )
             )
         }
@@ -91,13 +84,13 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
     //
 
     private fun inferType(expr: Rex, input: Rel?, ctx: Context): StaticType {
-        return RexTyperBase.type(
+        return RexTyperBase2.type(
             expr,
-            RexTyperBase.Context(
+            RexTyperBase2.Context(
                 input,
                 ctx.session,
                 ctx.plannerCtx,
-                RexTyperBase.ScopingOrder.LEXICAL_THEN_GLOBALS
+                RexTyperBase2.ScopingOrder.LEXICAL_THEN_GLOBALS
             )
         )
     }
