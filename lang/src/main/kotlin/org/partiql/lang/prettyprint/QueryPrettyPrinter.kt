@@ -84,7 +84,7 @@ class QueryPrettyPrinter {
     // *******
     private fun writeAstNode(node: PartiqlAst.Statement.Ddl, sb: StringBuilder) {
         when (node.op) {
-            is PartiqlAst.DdlOp.CreateTable -> sb.append("CREATE TABLE ${node.op.tableName.text}")
+            is PartiqlAst.DdlOp.CreateTable -> writeAstNode(node.op, sb)
             is PartiqlAst.DdlOp.DropTable -> {
                 sb.append("DROP TABLE ")
                 writeAstNode(node.op.tableName, sb)
@@ -113,6 +113,35 @@ class QueryPrettyPrinter {
         when (node.case) {
             is PartiqlAst.CaseSensitivity.CaseSensitive -> sb.append("\"${node.name.text}\"")
             is PartiqlAst.CaseSensitivity.CaseInsensitive -> sb.append(node.name.text)
+        }
+    }
+
+    private fun writeAstNode(node: PartiqlAst.DdlOp.CreateTable, sb: StringBuilder) {
+        sb.append("CREATE TABLE ${node.tableName.text}")
+        node.def?.let {
+            var separator = "\n\t"
+            sb.append(" (")
+            for (n in it.parts) {
+                sb.append(separator)
+                when (n) {
+                    is PartiqlAst.TableDefPart.ColumnDeclaration -> writeAstNode(n, sb)
+                }
+                separator = ",\n\t"
+            }
+            sb.append("\n)")
+        }
+    }
+
+    private fun writeAstNode(node: PartiqlAst.TableDefPart.ColumnDeclaration, sb: StringBuilder) {
+        sb.append("${node.name.text} ")
+        writeType(node.type, sb)
+        for (c in node.constraints) {
+            sb.append(" ")
+            c.name?.let { sb.append("CONSTRAINT ${it.text} ") }
+            when (c.def) {
+                is PartiqlAst.ColumnConstraintDef.ColumnNull -> sb.append("NULL")
+                is PartiqlAst.ColumnConstraintDef.ColumnNotnull -> sb.append("NOT NULL")
+            }
         }
     }
 

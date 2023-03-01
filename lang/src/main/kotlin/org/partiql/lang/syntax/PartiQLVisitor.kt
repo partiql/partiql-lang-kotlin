@@ -163,7 +163,7 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
     }
 
     override fun visitDropTable(ctx: PartiQLParser.DropTableContext) = PartiqlAst.build {
-        val id = visitSymbolPrimitive(ctx.symbolPrimitive())
+        val id = visitSymbolPrimitive(ctx.tableName().symbolPrimitive())
         dropTable(id.toIdentifier(), ctx.DROP().getSourceMetaContainer())
     }
 
@@ -174,14 +174,41 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
     }
 
     override fun visitCreateTable(ctx: PartiQLParser.CreateTableContext) = PartiqlAst.build {
-        val name = visitSymbolPrimitive(ctx.symbolPrimitive()).name
-        createTable_(name, ctx.CREATE().getSourceMetaContainer())
+        val name = visitSymbolPrimitive(ctx.tableName().symbolPrimitive()).name
+        val def = ctx.tableDef()?.let { visitTableDef(it) }
+        createTable_(name, def, ctx.CREATE().getSourceMetaContainer())
     }
 
     override fun visitCreateIndex(ctx: PartiQLParser.CreateIndexContext) = PartiqlAst.build {
         val id = visitSymbolPrimitive(ctx.symbolPrimitive())
         val fields = ctx.pathSimple().map { path -> visitPathSimple(path) }
         createIndex(id.toIdentifier(), fields, ctx.CREATE().getSourceMetaContainer())
+    }
+
+    override fun visitTableDef(ctx: PartiQLParser.TableDefContext) = PartiqlAst.build {
+        val parts = visitOrEmpty(ctx.tableDefPart(), PartiqlAst.TableDefPart::class)
+        tableDef(parts)
+    }
+
+    override fun visitColumnDeclaration(ctx: PartiQLParser.ColumnDeclarationContext) = PartiqlAst.build {
+        val name = visitSymbolPrimitive(ctx.columnName().symbolPrimitive()).name.text
+        val type = visit(ctx.type(), PartiqlAst.Type::class)
+        val constrs = ctx.columnConstraint().map { visitColumnConstraint(it) }
+        columnDeclaration(name, type, constrs)
+    }
+
+    override fun visitColumnConstraint(ctx: PartiQLParser.ColumnConstraintContext) = PartiqlAst.build {
+        val name = ctx.columnConstraintName()?.let { visitSymbolPrimitive(it.symbolPrimitive()).name.text }
+        val def = visit(ctx.columnConstraintDef(), PartiqlAst.ColumnConstraintDef::class)
+        columnConstraint(name, def)
+    }
+
+    override fun visitColConstrNotNull(ctx: PartiQLParser.ColConstrNotNullContext) = PartiqlAst.build {
+        columnNotnull()
+    }
+
+    override fun visitColConstrNull(ctx: PartiQLParser.ColConstrNullContext) = PartiqlAst.build {
+        columnNull()
     }
 
     /**

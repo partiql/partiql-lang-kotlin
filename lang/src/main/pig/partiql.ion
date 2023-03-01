@@ -430,8 +430,8 @@ may then be further optimized by selecting better implementations of each operat
 
         // A data definition operation.
         (sum ddl_op
-            // `CREATE TABLE <symbol>`
-            (create_table table_name::symbol)
+            // `CREATE TABLE <symbol> ( <table_def> )?`
+            (create_table table_name::symbol def::(? table_def))
 
             // `DROP TABLE <identifier>`
             (drop_table table_name::identifier)
@@ -440,12 +440,25 @@ may then be further optimized by selecting better implementations of each operat
             // TODO: add optional table name
             (create_index index_name::identifier fields::(* expr 1))
 
-
             // DROP INDEX <identifier> ON <identifier>
             // In Statement, first <identifier> represents keys, second represents table
             (drop_index
                 (table identifier)
                 (keys identifier)))
+
+        (product table_def parts::(* table_def_part 1))
+
+        (sum table_def_part
+            // `<column_name> <type> <column_constraint>*`
+            (column_declaration name::symbol type::type constraints::(* column_constraint 0)))
+
+        // `( CONSTRAINT <column_constraint_name> )?  <column_constraint_def>`
+        (product column_constraint name::(? symbol) def::column_constraint_def)
+
+        //  `NULL | NOT NULL | CHECK ( <expr> )`
+        (sum column_constraint_def
+            (column_notnull)
+            (column_null))
 
         // `RETURNING (<returning_elem> [, <returning_elem>]...)`
         (product returning_expr elems::(* returning_elem 1))

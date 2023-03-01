@@ -38,6 +38,39 @@ class QueryPrettyPrinterTest {
     }
 
     @Test
+    fun createTableWithColumn() {
+        checkPrettyPrintQuery(
+            "CREATE TABLE foo (boo string)",
+            """
+                CREATE TABLE foo (
+                    boo STRING
+                )
+            """.trimIndent()
+        )
+    }
+
+    @Test
+    fun createTableWithConstraints() {
+        checkPrettyPrintQuery(
+            """
+                create table Customer (
+                   name string CONSTRAINT name_is_present NOT NULL, 
+                   age int, 
+                   city string null,
+                   state string NULL)
+            """.trimIndent(),
+            """
+                CREATE TABLE Customer (
+                    name STRING CONSTRAINT name_is_present NOT NULL,
+                    age INT,
+                    city STRING NULL,
+                    state STRING NULL
+                )
+            """.trimIndent()
+        )
+    }
+
+    @Test
     fun dropTable() {
         checkPrettyPrintQuery(
             "DROP TABLE foo", "DROP TABLE foo"

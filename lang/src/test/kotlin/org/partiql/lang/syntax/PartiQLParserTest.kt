@@ -3544,13 +3544,49 @@ class PartiQLParserTest : PartiQLParserTestBase() {
     @Test
     fun createTable() = assertExpression(
         "CREATE TABLE foo",
-        "(ddl (create_table foo))"
+        "(ddl (create_table foo null))"
+    )
+
+    @Test
+    fun createTableWithColumn() = assertExpression(
+        "CREATE TABLE foo (boo string)",
+        """
+            (ddl (create_table foo  (table_def
+                (column_declaration boo (string_type)))))
+        """.trimIndent()
     )
 
     @Test
     fun createTableWithQuotedIdentifier() = assertExpression(
-        "CREATE TABLE \"user\"",
-        "(ddl (create_table user))"
+        "CREATE TABLE \"user\" (\"lastname\" string)",
+        """
+            (ddl (create_table user (table_def
+                (column_declaration lastname (string_type)))))
+        """.trimIndent()
+    )
+
+    @Test
+    fun createTableWithConstraints() = assertExpression(
+        """
+            CREATE TABLE Customer (
+               name string CONSTRAINT name_is_present NOT NULL, 
+               age int,
+               city string NULL,
+               state string NULL
+            )
+        """.trimIndent(),
+        """
+            (ddl
+                (create_table
+                    Customer (table_def
+                        (column_declaration name (string_type)
+                            (column_constraint name_is_present (column_notnull)))
+                        (column_declaration age (integer_type))
+                        (column_declaration city (string_type)
+                            (column_constraint null (column_null)))
+                        (column_declaration state (string_type)
+                            (column_constraint null (column_null))))))
+        """.trimIndent()
     )
 
     @Test

@@ -877,20 +877,21 @@ class AstToLogicalVisitorTransformTests {
         )
     }
 
-    data class ProblemTestCase(val sql: String, val expectedProblem: Problem)
+    data class ProblemTestCase(val id: Int, val sql: String, val expectedProblem: Problem)
 
     @ParameterizedTest
     @ArgumentsSource(ArgumentsForProblemTests::class)
     fun `unimplemented features are blocked`(tc: ProblemTestCase) {
+        val id by lazy { "[in test case #${tc.id}]" }
         val problemHandler = ProblemCollector()
-        assertDoesNotThrow("Parsing TestCase.sql should not throw") {
+        assertDoesNotThrow("Parsing TestCase.sql should not throw $id") {
             parseAndTransform(tc.sql, problemHandler)
         }
 
-        assertFalse(problemHandler.hasWarnings, "didn't expect any warnings")
-        assertTrue(problemHandler.hasErrors, "at least one error was expected")
+        assertFalse(problemHandler.hasWarnings, "didn't expect any warnings $id")
+        assertTrue(problemHandler.hasErrors, "at least one error was expected $id")
 
-        assertEquals(tc.expectedProblem, problemHandler.problems.first())
+        assertEquals(tc.expectedProblem, problemHandler.problems.first(), "actual problem is not as expected $id")
     }
 
     /**
@@ -903,25 +904,27 @@ class AstToLogicalVisitorTransformTests {
 
         override fun getParameters() = listOf(
             // DDL is  not implemented
-            ProblemTestCase("CREATE TABLE foo", unimplementedProblem("CREATE TABLE", 1, 1)),
-            ProblemTestCase("DROP TABLE foo", unimplementedProblem("DROP TABLE", 1, 1)),
-            ProblemTestCase("CREATE INDEX ON foo (x)", unimplementedProblem("CREATE INDEX", 1, 1)),
-            ProblemTestCase("DROP INDEX bar ON foo", unimplementedProblem("DROP INDEX", 1, 1)),
+            ProblemTestCase(100, "CREATE TABLE foo (boo string)", unimplementedProblem("CREATE TABLE", 1, 1)),
+            ProblemTestCase(101, "DROP TABLE foo", unimplementedProblem("DROP TABLE", 1, 1)),
+            ProblemTestCase(102, "CREATE INDEX ON foo (x)", unimplementedProblem("CREATE INDEX", 1, 1)),
+            ProblemTestCase(103, "DROP INDEX bar ON foo", unimplementedProblem("DROP INDEX", 1, 1)),
 
             // Unimplemented parts of DML
-            ProblemTestCase("FROM x AS xx INSERT INTO foo VALUES (1, 2)", unimplementedProblem("UPDATE / INSERT", 1, 14)),
-            ProblemTestCase("FROM x AS xx SET k = 5", unimplementedProblem("SET", 1, 14)),
-            ProblemTestCase("UPDATE x SET k = 5", unimplementedProblem("SET", 1, 10)),
-            ProblemTestCase("UPDATE x REMOVE k", unimplementedProblem("REMOVE", 1, 10)),
-            ProblemTestCase("UPDATE x INSERT INTO k << 1 >>", unimplementedProblem("UPDATE / INSERT", 1, 10)),
+            ProblemTestCase(200, "FROM x AS xx INSERT INTO foo VALUES (1, 2)", unimplementedProblem("UPDATE / INSERT", 1, 14)),
+            ProblemTestCase(201, "FROM x AS xx SET k = 5", unimplementedProblem("SET", 1, 14)),
+            ProblemTestCase(202, "UPDATE x SET k = 5", unimplementedProblem("SET", 1, 10)),
+            ProblemTestCase(203, "UPDATE x REMOVE k", unimplementedProblem("REMOVE", 1, 10)),
+            ProblemTestCase(204, "UPDATE x INSERT INTO k << 1 >>", unimplementedProblem("UPDATE / INSERT", 1, 10)),
 
             // INSERT INTO ... VALUE ... is not supported because it is redundant with INSERT INTO ... << <expr> >>
             ProblemTestCase(
+                300,
                 "INSERT INTO x VALUE 1",
                 Problem(SourceLocationMeta(1, 1), PlanningProblemDetails.InsertValueDisallowed)
             ),
             // We need schema to support using INSERT INTO without an explicit list of fields.
             ProblemTestCase(
+                301,
                 "INSERT INTO x VALUES (1, 2, 3)",
                 Problem(SourceLocationMeta(1, 1), PlanningProblemDetails.InsertValuesDisallowed)
             )

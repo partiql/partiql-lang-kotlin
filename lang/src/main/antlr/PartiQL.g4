@@ -67,8 +67,14 @@ execCommand
 /**
  *
  * DATA DEFINITION LANGUAGE (DDL)
- *
+ * Experimental, towards #36 https://github.com/partiql/partiql-docs/issues/36
+ * Currently, this is a small subset of SQL DDL that is likely to make sense for PartiQL as well.
  */
+
+tableName : symbolPrimitive;
+tableConstraintName : symbolPrimitive;
+columnName : symbolPrimitive;
+columnConstraintName : symbolPrimitive;
 
 ddl
     : createCommand
@@ -76,13 +82,30 @@ ddl
     ;
 
 createCommand
-    : CREATE TABLE symbolPrimitive                                                              # CreateTable
+    : CREATE TABLE tableName ( PAREN_LEFT tableDef PAREN_RIGHT )?                               # CreateTable
     | CREATE INDEX ON symbolPrimitive PAREN_LEFT pathSimple ( COMMA pathSimple )* PAREN_RIGHT   # CreateIndex
     ;
 
 dropCommand
-    : DROP TABLE target=symbolPrimitive                         # DropTable
+    : DROP TABLE target=tableName                               # DropTable
     | DROP INDEX target=symbolPrimitive ON on=symbolPrimitive   # DropIndex
+    ;
+
+tableDef
+    : tableDefPart ( COMMA tableDefPart )*
+    ;
+
+tableDefPart
+    : columnName type columnConstraint*                             # ColumnDeclaration
+    ;
+
+columnConstraint
+    : ( CONSTRAINT columnConstraintName )?  columnConstraintDef
+    ;
+
+columnConstraintDef
+    : NOT NULL                                  # ColConstrNotNull
+    | NULL                                      # ColConstrNull
     ;
 
 /**
