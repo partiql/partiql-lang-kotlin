@@ -119,6 +119,7 @@ internal class PartiQLPlannerDefault(
      *  2. Synthesizes unspecified `FROM <expr> AS ...` aliases
      *  3. Changes `SELECT * FROM a, b` to SELECT a.*, b.* FROM a, b`
      */
+    @Suppress("UNUSED_PARAMETER") // future work?
     private fun PartiqlAst.Statement.normalize(problems: ProblemCollector): PartiqlAst.Statement {
         val transform = PipelinedVisitorTransform(
             SelectListItemAliasVisitorTransform(),

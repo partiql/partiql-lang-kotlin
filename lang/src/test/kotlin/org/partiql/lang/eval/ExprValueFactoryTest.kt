@@ -40,6 +40,8 @@ import kotlin.test.assertTrue
 import kotlin.test.fail
 
 @RunWith(JUnitParamsRunner::class)
+@Suppress("DEPRECATION") // Deprecation of ExprValueFactory.
+// This file is to be deleted at ExprValueFactory removal --- the tests here are now replicated in ExprValueTest.
 class ExprValueFactoryTest {
     companion object {
         /**

@@ -505,7 +505,7 @@ internal class EvaluatingCompiler(
                     }
 
                     TypingMode.PERMISSIVE -> {
-                        val biggestIntegerType = staticTypes.filterIsInstance<IntType>().maxBy {
+                        val biggestIntegerType = staticTypes.filterIsInstance<IntType>().maxByOrNull {
                             it.rangeConstraint.numBytes
                         }
                         when (biggestIntegerType) {
@@ -1148,6 +1148,7 @@ internal class EvaluatingCompiler(
             (isTypeMatch && typedOpParameter.validationThunk?.let { it(expValue) } != false)
         }
 
+        @Suppress("DEPRECATION") // TypedOpBehavior.LEGACY is deprecated.
         return when (compileOptions.typedOpBehavior) {
             TypedOpBehavior.LEGACY -> simpleTypeMatchFunc
             TypedOpBehavior.HONOR_PARAMETERS -> { expValue: ExprValue ->

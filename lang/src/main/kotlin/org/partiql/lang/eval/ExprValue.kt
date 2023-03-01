@@ -182,11 +182,14 @@ interface ExprValue : Iterable<ExprValue>, Faceted {
         private val emptySymbol = SymbolExprValue("")
 
         // Public API
+
+        /** A possibly memoized, immutable [ExprValue] representing the PartiQL missing value. */
         @JvmStatic
         val missingValue: ExprValue = object : BaseExprValue() {
             override val type = ExprValueType.MISSING
         }
 
+        /** A possibly memoized, immutable [ExprValue] representing the PartiQL null value. */
         @JvmStatic
         val nullValue: ExprValue = NullExprValue()
 
@@ -197,6 +200,7 @@ interface ExprValue : Iterable<ExprValue>, Faceted {
                 else -> NullExprValue(ionType)
             }
 
+        /** Returns a possibly memoized instance of [ExprValue] representing the specified [Boolean]. */
         @JvmStatic
         fun newBoolean(value: Boolean): ExprValue =
             when (value) {
@@ -204,6 +208,7 @@ interface ExprValue : Iterable<ExprValue>, Faceted {
                 false -> falseValue
             }
 
+        /** Returns a possibly memoized [ExprValue] instance representing the specified [String]. */
         @JvmStatic
         fun newString(value: String): ExprValue =
             when {
@@ -211,6 +216,7 @@ interface ExprValue : Iterable<ExprValue>, Faceted {
                 else -> StringExprValue(value)
             }
 
+        /** Returns an  PartiQL `SYMBOL` [ExprValue] instance representing the specified [String]. */
         @JvmStatic
         fun newSymbol(value: String): ExprValue =
             when {
@@ -218,106 +224,147 @@ interface ExprValue : Iterable<ExprValue>, Faceted {
                 else -> SymbolExprValue(value)
             }
 
+        /** Returns a PartiQL `INT` [ExprValue] instance representing the specified [Long]. */
         @JvmStatic
         fun newInt(value: Long): ExprValue =
             IntExprValue(value)
 
+        /** Returns a PartiQL `INT` ][ExprValue] instance representing the specified [Int]. */
         @JvmStatic
         fun newInt(value: Int): ExprValue =
             IntExprValue(value.toLong())
 
+        /** Returns a PartiQL `FLOAT` [ExprValue] instance representing the specified [Float]. */
         @JvmStatic
         fun newFloat(value: Double): ExprValue =
             FloatExprValue(value)
 
+        /** Returns a PartiQL `DECIMAL` [ExprValue] instance representing the specified [BigDecimal]. */
         @JvmStatic
         fun newDecimal(value: BigDecimal): ExprValue =
             DecimalExprValue(value)
 
+        /** Returns a PartiQL `DECIMAL` [ExprValue] instance representing the specified [Int]. */
         @JvmStatic
         fun newDecimal(value: Int): ExprValue =
             DecimalExprValue(BigDecimal.valueOf(value.toLong()))
 
+        /** Returns a PartiQL `DECIMAL` [ExprValue] instance representing the specified [Long]. */
         @JvmStatic
         fun newDecimal(value: Long): ExprValue =
             DecimalExprValue(BigDecimal.valueOf(value))
 
+        /** Returns a PartiQL `DATE` [ExprValue] instance representing the specified [LocalDate]. */
         @JvmStatic
         fun newDate(value: LocalDate): ExprValue =
             DateExprValue(value)
 
+        /** Returns a PartiQL `DATE` [ExprValue] instance representing the specified year, month and day. */
         @JvmStatic
         fun newDate(year: Int, month: Int, day: Int): ExprValue =
             DateExprValue(LocalDate.of(year, month, day))
 
+        /** Returns a PartiQL `DATE` [ExprValue] instance representing the specified date string of the format yyyy-MM-dd. */
         @JvmStatic
         fun newDate(value: String): ExprValue =
             DateExprValue(LocalDate.parse(value))
 
+        /** Returns a PartiQL `TIMESTAMP` [ExprValue] instance representing the specified [Timestamp]. */
         @JvmStatic
         fun newTimestamp(value: Timestamp): ExprValue =
             TimestampExprValue(value)
 
+        /** Returns a PartiQL `TIME` [ExprValue] instance representing the specified [Time]. */
         @JvmStatic
         fun newTime(value: Time): ExprValue =
             TimeExprValue(value)
 
+        /** Returns a PartiQL `CLOB` [ExprValue] instance representing the specified [ByteArray]. */
         @JvmStatic
         fun newClob(value: ByteArray): ExprValue =
             ClobExprValue(value)
 
+        /** Returns a PartiQL `BLOB` [ExprValue] instance representing the specified [ByteArray]. */
         @JvmStatic
         fun newBlob(value: ByteArray): ExprValue =
             BlobExprValue(value)
 
+        /** Returns a possibly lazily evaluated instance of [ExprValue] representing a `PartiQL` `LIST`. */
         @JvmStatic
         fun newList(values: Sequence<ExprValue>): ExprValue =
             ListExprValue(values)
 
+        /** See newList(Sequence) */
         @JvmStatic
         fun newList(values: Iterable<ExprValue>): ExprValue =
             ListExprValue(values.asSequence())
 
+        /** A possibly memoized, immutable [ExprValue] representing an empty list. */
         @JvmStatic
         val emptyList: ExprValue = ListExprValue(sequenceOf())
 
+        /** Returns a possibly lazily evaluated instance of [ExprValue] representing a `PartiQL` `BAG`. */
         @JvmStatic
         fun newBag(values: Sequence<ExprValue>): ExprValue =
             BagExprValue(values)
 
+        /** See newBag(Sequence) */
         @JvmStatic
         fun newBag(values: Iterable<ExprValue>): ExprValue =
             BagExprValue(values.asSequence())
 
+        /** A possibly memoized, immutable [ExprValue] representing an empty bag. */
         @JvmStatic
         val emptyBag: ExprValue = BagExprValue(sequenceOf())
 
+        /** Returns a possibly lazily evaluated instance of [ExprValue] representing a `PartiQL` `SEXP`. */
         @JvmStatic
         fun newSexp(values: Sequence<ExprValue>): ExprValue =
             SexpExprValue(values)
 
+        /** See newSexp(Sequence) */
         @JvmStatic
         fun newSexp(values: Iterable<ExprValue>): ExprValue =
             SexpExprValue(values.asSequence())
 
+        /** A possibly memoized, immutable [ExprValue] representing an empty sexp. */
         @JvmStatic
         val emptySexp: ExprValue = SexpExprValue(sequenceOf())
 
+        /**
+         * Returns a possibly lazily evaluated instance of [ExprValue] representing a `PartiQL` `STRUCT`.
+         * The [ExprValue] instances within [values] should be [Named].
+         *
+         * [ordering] specifies if the field order is to be preserved or not.
+         */
         @JvmStatic
         fun newStruct(values: Sequence<ExprValue>, ordering: StructOrdering): ExprValue =
             StructExprValue(ordering, values)
 
+        /** See newStruct(Sequence) */
         @JvmStatic
         fun newStruct(values: Iterable<ExprValue>, ordering: StructOrdering): ExprValue =
             StructExprValue(ordering, values.asSequence())
 
+        /** A possibly memoized, immutable [ExprValue] representing an empty struct. */
         @JvmStatic
         val emptyStruct: ExprValue = StructExprValue(StructOrdering.UNORDERED, sequenceOf())
 
+        /**
+         * Creates a new [ExprValue] instance from the next value available from the specified [IonReader].
+         *
+         * Implementations should not close the [IonReader].
+         */
         @JvmStatic
         fun newFromIonReader(ion: IonSystem, reader: IonReader): ExprValue =
             of(ion.newValue(reader))
 
+        /**
+         * Creates a new [ExprValue] instance from any Ion value.
+         *
+         * If possible, prefer the use of the other methods instead because they might return [ExprValue] instances
+         * that are better optimized for their specific data type (depending on implementation).
+         */
         @JvmStatic
         fun of(value: IonValue): ExprValue {
             return when {

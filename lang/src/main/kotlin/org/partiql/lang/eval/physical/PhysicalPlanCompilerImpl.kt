@@ -44,7 +44,6 @@ import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueBagOp
-import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.Expression
 import org.partiql.lang.eval.Named
@@ -161,7 +160,6 @@ internal class PhysicalPlanCompilerImpl(
             override fun eval(session: EvaluationSession): ExprValue {
                 val env = EvaluatorState(
                     session = session,
-                    valueFactory = ExprValueFactory.standard(ion),
                     registers = Array(plan.locals.size) { ExprValue.missingValue }
                 )
 
@@ -950,6 +948,7 @@ internal class PhysicalPlanCompilerImpl(
             (isTypeMatch && typedOpParameter.validationThunk?.let { it(expValue) } != false)
         }
 
+        @Suppress("DEPRECATION") // TypedOpBehavior.LEGACY is deprecated.
         return when (evaluatorOptions.typedOpBehavior) {
             TypedOpBehavior.LEGACY -> simpleTypeMatchFunc
             TypedOpBehavior.HONOR_PARAMETERS -> { expValue: ExprValue ->

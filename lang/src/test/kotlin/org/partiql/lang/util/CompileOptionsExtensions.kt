@@ -5,6 +5,7 @@ import org.partiql.lang.eval.TypedOpBehavior
 import org.partiql.lang.eval.TypingMode
 
 fun CompileOptions.Builder.legacyCastBehavior() {
+    @Suppress("DEPRECATION") // TypedOpBehavior.LEGACY is deprecated.
     typedOpBehavior(TypedOpBehavior.LEGACY)
 }
 

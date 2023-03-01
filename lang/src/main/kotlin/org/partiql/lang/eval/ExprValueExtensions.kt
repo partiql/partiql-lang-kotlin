@@ -319,6 +319,7 @@ fun ExprValue.cast(
                 castFailedErr("Can't convert Infinity or NaN to INT.", internal = false)
             }
 
+            @Suppress("DEPRECATION") // TypedOpBehavior.LEGACY is deprecated.
             val rangeForType = when (typedOpBehavior) {
                 // Legacy behavior doesn't honor SMALLINT, INT4 constraints
                 TypedOpBehavior.LEGACY -> LongRange(Long.MIN_VALUE, Long.MAX_VALUE)
@@ -343,6 +344,7 @@ fun ExprValue.cast(
             // Else, rounding is done through https://en.wikipedia.org/wiki/Rounding#Round_half_to_even
             // We don't convert the result to Long within the when block here
             //  because the rounded values can still be out of range for Kotlin's Long.
+            @Suppress("DEPRECATION") // TypedOpBehavior.LEGACY is deprecated.
             val result = when (typedOpBehavior) {
                 TypedOpBehavior.LEGACY -> when (this) {
                     // BigDecimal.toLong inflates the internal BigInteger to the scale before converting it to a long.
@@ -375,6 +377,7 @@ fun ExprValue.cast(
                 castFailedErr("Can't convert Infinity or NaN to DECIMAL.", internal = false)
             }
 
+            @Suppress("DEPRECATION") // TypedOpBehavior.LEGACY is deprecated.
             when (typedOpBehavior) {
                 TypedOpBehavior.LEGACY -> ExprValue.newDecimal(this.coerce(BigDecimal::class.java))
                 TypedOpBehavior.HONOR_PARAMETERS ->
@@ -398,6 +401,7 @@ fun ExprValue.cast(
         else -> castFailedErr("Invalid type for numeric conversion: $type (this code should be unreachable)", internal = true)
     }
 
+    @Suppress("DEPRECATION") // TypedOpBehavior.LEGACY is deprecated.
     fun String.exprValue(type: SingleType) = when (type) {
         is StringType -> when (typedOpBehavior) {
             TypedOpBehavior.LEGACY -> ExprValue.newString(this)

@@ -4,7 +4,6 @@ import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.errIntOverflow
 import org.partiql.lang.eval.errNoContext
 import org.partiql.lang.eval.numberValue
@@ -37,7 +36,8 @@ import kotlin.math.pow
  */
 object MathFunctions {
     // TODO: remove this method in the next release
-    fun create(valueFactory: ExprValueFactory) = create()
+    @Suppress("DEPRECATION", "UNUSED_PARAMETER") // Deprecation of ExprValueFactory.
+    fun create(valueFactory: org.partiql.lang.eval.ExprValueFactory) = create()
 
     fun create(): List<ExprFunction> = listOf(
         UnaryNumeric("ceil") { ceil(it) },

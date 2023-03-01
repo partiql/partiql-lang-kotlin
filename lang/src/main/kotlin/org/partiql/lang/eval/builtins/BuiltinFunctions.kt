@@ -56,7 +56,8 @@ internal fun createBuiltinFunctions() =
         SizeExprFunction(),
         FromUnixTimeFunction(),
         UnixTimestampFunction()
-    ) + MathFunctions.create() + CollectionAggregationFunction.createAll()
+    ) + @Suppress("DEPRECATION") // MathFunctions is temporarily deprecated.
+    MathFunctions.create() + CollectionAggregationFunction.createAll()
 
 internal fun createExists(): ExprFunction = object : ExprFunction {
     override val signature = FunctionSignature(
