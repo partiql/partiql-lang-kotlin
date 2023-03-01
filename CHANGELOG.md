@@ -51,7 +51,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Adds ability to pipe queries to the CLI.
 - Adds ability to run PartiQL files as executables by adding support for shebangs.
-- Adds initial syntax for CREATE TABLE.
+- Adds experimental syntax for CREATE TABLE, towards addressing 
+  [#36](https://github.com/partiql/partiql-docs/issues/36) of specifying PartiQL DDL.
 
 ### Changed
 

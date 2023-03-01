@@ -2609,6 +2609,71 @@ class ParserErrorsTest : PartiQLParserTestBase() {
     )
 
     @Test
+    fun createTableWithoutColumns() = checkInputThrowingParserException(
+        "CREATE TABLE Customer ()",
+        ErrorCode.PARSE_UNEXPECTED_TOKEN,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 24L,
+            Property.TOKEN_DESCRIPTION to PartiQLParser.PAREN_RIGHT.getAntlrDisplayString(),
+            Property.TOKEN_VALUE to ion.newSymbol(")")
+        )
+    )
+
+    @Test
+    fun createTableNoCONSTRAINT() = checkInputThrowingParserException(
+        "CREATE TABLE Customer (name string name_is_present NOT NULL)",
+        ErrorCode.PARSE_UNEXPECTED_TOKEN,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 36L,
+            Property.TOKEN_DESCRIPTION to PartiQLParser.IDENTIFIER.getAntlrDisplayString(),
+            Property.TOKEN_VALUE to ion.newSymbol("name_is_present")
+        )
+    )
+
+    @Test
+    fun createTableNoConstraintName() = checkInputThrowingParserException(
+        "CREATE TABLE Customer (name string CONSTRAINT NOT NULL)",
+        ErrorCode.PARSE_UNEXPECTED_TOKEN,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 47L,
+            Property.TOKEN_DESCRIPTION to PartiQLParser.NOT.getAntlrDisplayString(),
+            Property.TOKEN_VALUE to ion.newSymbol("not")
+        )
+    )
+
+    @Test
+    fun createTableNoComma() = checkInputThrowingParserException(
+        """
+            CREATE TABLE Customer (
+               age int
+               city string NULL       
+            )
+        """.trimMargin(),
+        ErrorCode.PARSE_UNEXPECTED_TOKEN,
+        mapOf(
+            Property.LINE_NUMBER to 3L,
+            Property.COLUMN_NUMBER to 16L,
+            Property.TOKEN_DESCRIPTION to PartiQLParser.IDENTIFIER.getAntlrDisplayString(),
+            Property.TOKEN_VALUE to ion.newSymbol("city")
+        )
+    )
+
+    @Test
+    fun createTableNoColumnType() = checkInputThrowingParserException(
+        "CREATE TABLE Customer (name NOT NULL)",
+        ErrorCode.PARSE_UNEXPECTED_TOKEN,
+        mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 29L,
+            Property.TOKEN_DESCRIPTION to PartiQLParser.NOT.getAntlrDisplayString(),
+            Property.TOKEN_VALUE to ion.newSymbol("not")
+        )
+    )
+
+    @Test
     fun dropTableWithOperatorAfterIdentifier() = checkInputThrowingParserException(
         "DROP TABLE foo+bar",
         ErrorCode.PARSE_UNEXPECTED_TOKEN,
