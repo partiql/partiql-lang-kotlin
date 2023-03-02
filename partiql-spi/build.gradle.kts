@@ -19,5 +19,6 @@ plugins {
 
 dependencies {
     implementation(project(":lang"))
+    implementation(project(":partiql-lib:partiql-catalog"))
     implementation(Deps.ionElement)
 }

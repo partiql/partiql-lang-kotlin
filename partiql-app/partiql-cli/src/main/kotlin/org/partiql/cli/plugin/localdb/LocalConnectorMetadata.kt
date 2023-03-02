@@ -43,6 +43,10 @@ class LocalConnectorMetadata : ConnectorMetadata {
         return LocalConnectorTableHandle(tableDefString)
     }
 
+    override fun getObjectHandle(session: ConnectorSession, objectName: BindingName): ConnectorTableHandle? {
+        TODO("Not yet implemented")
+    }
+
     override fun schemaExists(session: ConnectorSession, name: BindingName): Boolean {
         if (Files.exists(catalogDir).not()) return false
         val schemaPaths = Files.list(catalogDir).toList()

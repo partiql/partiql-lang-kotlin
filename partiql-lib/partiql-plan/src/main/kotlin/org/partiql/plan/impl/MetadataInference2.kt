@@ -5,10 +5,15 @@ import org.partiql.catalog.Name
 import org.partiql.plan.PlannerSession
 import org.partiql.plan.PlannerSession2
 import org.partiql.plan.TableHandle
+import org.partiql.plan.passes.TableHandle2
 import org.partiql.spi.BindingCase
 import org.partiql.spi.BindingName
 import org.partiql.spi.Plugin
+import org.partiql.spi.Plugin2
+import org.partiql.spi.connector.Connector
+import org.partiql.spi.connector.Connector2
 import org.partiql.spi.connector.ConnectorMetadata
+import org.partiql.spi.connector.ConnectorMetadata2
 import org.partiql.spi.connector.ConnectorSession
 import org.partiql.spi.sources.TableSchema
 
@@ -17,50 +22,37 @@ internal class MetadataInference2(
     private val connector: String,
 ) : Metadata2 {
     override fun getCatalog(session: PlannerSession2): Catalog {
-        var catalog = Catalog()
-        var name = Name("localdb")
-        name.addChildren(listOf(Name("house")))
-        catalog.addObject("plant", name)
-        return catalog
-    }
-
-    override fun schemaExists(session: PlannerSession, catalogName: String, schemaName: String): Boolean {
-//        val connectorSession = session.toConnectorSession()
-//        val metadata = getMetadata(connectorSession, catalogName)
-//        return metadata.schemaExists(connectorSession, BindingName(schemaName, BindingCase.SENSITIVE))
         TODO()
     }
 
-    override fun getTableHandle(session: PlannerSession, tableName: QualifiedObjectName): TableHandle? {
-//        val connectorSession = session.toConnectorSession()
-//        val catalogName = tableName.catalogName?.name ?: return null
-//        val metadata = getMetadata(session.toConnectorSession(), catalogName)
-//        val schemaName = convertBindingName(tableName.schemaName!!)
-//        val objectName = convertBindingName(tableName.objectName!!)
-//        return metadata.getTableHandle(connectorSession, schemaName, objectName)?.let {
-//            TableHandle(
-//                connectorHandle = it,
-//                catalogName = catalogName
-//            )
-//        }
-        TODO()
-    }
-
-    override fun getTableSchema(session: PlannerSession, handle: TableHandle): TableSchema {
+    override fun getTableHandle(session: PlannerSession2, name: org.partiql.lang.eval.BindingName): TableHandle2? {
         val connectorSession = session.toConnectorSession()
-//        val metadata = getMetadata(session.toConnectorSession(), handle.catalogName)
-//        return metadata.getTableSchema(connectorSession, handle.connectorHandle)!!
-        TODO()
+        val metadata = getMetadata(session.toConnectorSession(), session.connector)
+        val objectName = convertBindingName(name!!)
+        return metadata.getObjectHandle(connectorSession, objectName)?.let {
+            TableHandle2(
+                connectorHandle = it,
+            )
+        }
     }
 
-//    private fun getMetadata(connectorSession: ConnectorSession, catalogName: String): ConnectorMetadata {
-//        val connectorName = catalogMap[catalogName] ?: error(
-//            "Unknown catalog: $catalogName"
-//        )
-//        val connectorFactory = plugins.flatMap { it.getConnectorFactories() }.first { it.getName() == connectorName }
-//        val connector = connectorFactory.create()
-//        return connector.getMetadata(session = connectorSession)
-//    }
+    override fun getTableSchema(session: PlannerSession2, handle: TableHandle2): TableSchema {
+        val connectorSession = session.toConnectorSession()
+        val metadata = getMetadata(connectorSession, session.connector)
+        return metadata.getTableSchema(connectorSession, handle.connectorHandle)!!
+    }
+
+    private fun getMetadata(connectorSession: ConnectorSession, connectorName: String): ConnectorMetadata {
+        val connectorFactory = plugins.flatMap { it.getConnectorFactories() }.first { it.getName() == connectorName }
+        val connector = connectorFactory.create()
+        return connector.getMetadata(session = connectorSession)
+    }
+
+    private fun getConnector(session: PlannerSession2, connectorName: String): Connector {
+        val connectorSession = session.toConnectorSession()
+        val connectorFactory = plugins.flatMap { it.getConnectorFactories() }.first { it.getName() == connectorName }
+        return connectorFactory.create()
+    }
 
     private fun convertBindingName(name: org.partiql.lang.eval.BindingName): BindingName {
         return BindingName(

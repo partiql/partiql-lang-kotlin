@@ -6,7 +6,7 @@ class Catalog {
     var root = Name(id="root")
     var objects = mutableSetOf<Pair<String, Name>>()
 
-    fun qualify(id: String) : Name {
+    fun qualifyName(id: String) : Name {
         TODO()
     }
 
@@ -15,7 +15,7 @@ class Catalog {
     }
 }
 
-class Name(id: String) {
+class Name(id: String, children: List<Name> = emptyList()) {
     val id = id
     var children = mutableListOf<Name>()
 

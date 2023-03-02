@@ -27,7 +27,7 @@ internal class EvalWithSchemaCommand(
     var queryFile: File? = null
 
     @CommandLine.Option(names = ["-c", "--connector"], description = ["Connector to be used"], paramLabel = "CONNECTOR")
-    var connector: String? = null
+    var connector: String = "localdb"
 
     override fun run() {
         val query = queryFile!!.inputStream().readBytes().toString(Charsets.UTF_8)

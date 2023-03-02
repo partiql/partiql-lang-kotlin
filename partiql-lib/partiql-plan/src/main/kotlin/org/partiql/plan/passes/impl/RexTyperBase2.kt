@@ -98,19 +98,10 @@ internal object RexTyperBase2 : RexTyper<RexTyperBase2.Context>() {
 
     // TODO: Add global bindings
     private fun findGlobalBind(name: BindingName, ctx: Context): StaticType? {
-//        val catalogName = ctx.session.catalog?.let { BindingName(it, BindingCase.SENSITIVE) } // TODO: Check case
-//        val schemaName = ctx.session.schema?.let { BindingName(it, BindingCase.SENSITIVE) } // TODO: Check case
-//        val qualifiedName = QualifiedObjectName(catalogName, schemaName, name)
-//        ctx.metadata.getTableHandle(ctx.session, qualifiedName)?.let { handle ->
-//            ctx.metadata.getTableSchema(ctx.session, handle).toStaticType().let { return it }
-//        }
+        ctx.metadata.getTableHandle(ctx.session, name)?.let { handle ->
+            ctx.metadata.getTableSchema(ctx.session, handle).toStaticType().let { return it }
+        }
         return null
-        val catalog = ctx.metadata.getCatalog(ctx.session)
-        println(catalog)
-        val qualifiedName = catalog.qualify(name.name)
-        ctx.metadata.getTableHandle(ctx.session, qualifiedName)
-
-        TODO()
     }
 
     private fun findLocalBind(name: BindingName, ctx: Context): StaticType? {

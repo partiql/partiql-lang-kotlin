@@ -1,7 +1,11 @@
-package org.partiql.cli.plugin.localdb
+package org.partiql.cli.plugin.localdb2
 
+import org.partiql.catalog.Name
+import org.partiql.cli.plugin.localdb.LocalConnectorTableHandle
 import org.partiql.spi.BindingName
+import org.partiql.catalog.Catalog
 import org.partiql.spi.connector.ConnectorMetadata
+import org.partiql.spi.connector.ConnectorMetadata2
 import org.partiql.spi.connector.ConnectorSession
 import org.partiql.spi.connector.ConnectorTableHandle
 import org.partiql.spi.sources.TableSchema
@@ -14,6 +18,38 @@ class LocalConnectorMetadata2 : ConnectorMetadata {
 
     private val homeDir: Path = Paths.get(System.getProperty("user.home"))
     private val catalogDir = homeDir.resolve(".partiql/localdb")
+    private val catalog = initCatalog()
+
+    fun getCatalog(session: ConnectorSession): Catalog {
+        return catalog
+    }
+
+    private fun initCatalog(): Catalog {
+        var catalog = Catalog()
+        var name = Name("localdb", listOf(Name("house")))
+        catalog.addObject("plant", name)
+        return catalog
+    }
+
+    override fun getObjectHandle(session: ConnectorSession, objectName: BindingName): ConnectorTableHandle? {
+        var qualifiedName = ""
+        println("1")
+        catalog.objects.forEach {(k, v) ->
+            println("v=${v.id}")
+            qualifiedName = v.id
+            v.children.forEach { c ->
+                println("c=$c")
+                qualifiedName = "$qualifiedName/${c.id}"
+            }
+            qualifiedName = "$qualifiedName/$k"
+            println("path=$qualifiedName")
+        }
+
+        println("$qualifiedName.json")
+        val objectPath = homeDir.resolve(".partiql/$qualifiedName.json")
+        val tableDefString = String(Files.readAllBytes(objectPath))
+        return LocalConnectorTableHandle(tableDefString)
+    }
 
     override fun getTableSchema(session: ConnectorSession, handle: ConnectorTableHandle): TableSchema {
         val jsonHandle = handle as LocalConnectorTableHandle

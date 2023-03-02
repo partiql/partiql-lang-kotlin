@@ -17,8 +17,10 @@ package org.partiql.cli
 
 import com.amazon.ion.system.IonSystemBuilder
 import org.partiql.cli.pico.InferCommand
+import org.partiql.cli.pico.EvalWithSchemaCommand
 import org.partiql.cli.pico.PartiQLCommand
 import org.partiql.cli.plugin.localdb.LocalPlugin
+import org.partiql.cli.plugin.localdb2.LocalPlugin2
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.syntax.PartiQLParserBuilder
 import org.partiql.plan.Planner
@@ -35,6 +37,9 @@ fun main(args: Array<String>) {
     val command = CommandLine(PartiQLCommand(ion))
     command.addSubcommand(
         InferCommand(listOf(LocalPlugin()))
+    )
+    command.addSubcommand(
+        EvalWithSchemaCommand(listOf(LocalPlugin(), LocalPlugin2()))
     )
     val exitCode = command.execute(*args)
     exitProcess(exitCode)
