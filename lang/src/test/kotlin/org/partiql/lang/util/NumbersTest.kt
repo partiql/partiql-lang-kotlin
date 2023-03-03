@@ -15,11 +15,12 @@
 package org.partiql.lang.util
 
 import com.amazon.ion.Decimal
-import org.junit.Test
-import org.partiql.lang.TestBase
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 
-class NumbersTest : TestBase() {
+class NumbersTest {
     fun dec(text: String): BigDecimal = bigDecimalOf(text)
     fun dec(value: Double): BigDecimal = bigDecimalOf(value)
 

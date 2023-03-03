@@ -15,12 +15,15 @@
 package org.partiql.lang.syntax
 
 import com.amazon.ion.IonSexp
+import com.amazon.ion.IonSystem
 import com.amazon.ion.IonValue
 import com.amazon.ionelement.api.SexpElement
 import com.amazon.ionelement.api.toIonElement
 import com.amazon.ionelement.api.toIonValue
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.fail
 import org.partiql.lang.CUSTOM_TEST_TYPES
-import org.partiql.lang.TestBase
+import org.partiql.lang.ION
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
@@ -30,8 +33,9 @@ import org.partiql.lang.util.checkErrorAndErrorContext
 import org.partiql.lang.util.softAssert
 import org.partiql.pig.runtime.toIonElement
 
-abstract class PartiQLParserTestBase : TestBase() {
+abstract class PartiQLParserTestBase_J5 {
 
+    val ion: IonSystem = ION
     val parser = PartiQLParserBuilder().ionSystem(ion).customTypes(CUSTOM_TEST_TYPES).build()
 
     protected fun parse(source: String): PartiqlAst.Statement = parser.parseAstStatement(source)

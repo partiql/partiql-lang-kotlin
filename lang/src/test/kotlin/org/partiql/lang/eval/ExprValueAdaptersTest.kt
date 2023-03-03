@@ -14,11 +14,13 @@
 
 package org.partiql.lang.eval
 
-import org.junit.Test
-import org.partiql.lang.TestBase
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Assertions.assertSame
+import org.junit.jupiter.api.Test
 import org.partiql.lang.util.newFromIonText
 
-class ExprValueAdaptersTest : TestBase() {
+class ExprValueAdaptersTest {
     @Test
     fun asNamed() {
         val value = newFromIonText("5")

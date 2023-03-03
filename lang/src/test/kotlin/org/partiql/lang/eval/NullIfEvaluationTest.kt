@@ -38,7 +38,6 @@ class NullIfEvaluationTest : EvaluatorTestBase() {
         fun testCase(expr1: String, expr2: String, expected: String) = NullIfTestCase(expr1, expr2, expected)
 
         @JvmStatic
-        @Suppress("unused")
         fun nullifEvaluationTests() = listOf(
             testCase("1", "1", "null"),
             testCase("1", "2", "1"),
