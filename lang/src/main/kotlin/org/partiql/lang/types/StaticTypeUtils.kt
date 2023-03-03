@@ -126,6 +126,7 @@ public object StaticTypeUtils {
      *  - one [StaticType] from current [StaticType]'s [allTypes] is comparable to a [StaticType] from [other]'s
      *   [allTypes]
      */
+    @JvmStatic
     public fun areStaticTypesComparable(lhs: StaticType, rhs: StaticType): Boolean {
         return when (lhs) {
             is SingleType -> {
