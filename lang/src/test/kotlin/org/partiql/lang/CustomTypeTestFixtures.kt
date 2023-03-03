@@ -3,14 +3,14 @@ package org.partiql.lang
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.numberValue
-import org.partiql.lang.types.AnyOfType
 import org.partiql.lang.types.CustomType
-import org.partiql.lang.types.IntType
-import org.partiql.lang.types.NumberConstraint
-import org.partiql.lang.types.StaticType
-import org.partiql.lang.types.StringType
 import org.partiql.lang.types.TypedOpParameter
 import org.partiql.lang.util.compareTo
+import org.partiql.types.AnyOfType
+import org.partiql.types.IntType
+import org.partiql.types.NumberConstraint
+import org.partiql.types.StaticType
+import org.partiql.types.StringType
 
 /**
  * The types in this file are a set of bare-bones fixtures to assure proper behavior with the *interface* to custom types.

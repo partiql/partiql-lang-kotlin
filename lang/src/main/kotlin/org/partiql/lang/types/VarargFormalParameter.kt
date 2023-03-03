@@ -4,6 +4,8 @@
 
 package org.partiql.lang.types
 
+import org.partiql.types.StaticType
+
 /**
  * Represents a variable number of arguments function parameter. Varargs are monomorpic, i.e. all elements are of
  * the **same** type

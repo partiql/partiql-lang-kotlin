@@ -5,12 +5,13 @@ import org.partiql.lang.ast.sourceLocation
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.errors.PropertyValueMap
-import org.partiql.lang.types.AnyOfType
-import org.partiql.lang.types.AnyType
-import org.partiql.lang.types.CollectionType
-import org.partiql.lang.types.SingleType
-import org.partiql.lang.types.StaticType
-import org.partiql.lang.types.StructType
+import org.partiql.lang.types.StaticTypeUtils.getRuntimeType
+import org.partiql.types.AnyOfType
+import org.partiql.types.AnyType
+import org.partiql.types.CollectionType
+import org.partiql.types.SingleType
+import org.partiql.types.StaticType
+import org.partiql.types.StructType
 
 /**
  * The template table that encodes the type conversion precedence for a source type to target type.
@@ -169,7 +170,7 @@ internal class AnyOfCastTable(
                 is AnyType -> typeErr("Union type cannot have ANY in it")
                 is AnyOfType -> typeErr("Union type cannot have a Union type in it")
                 is SingleType -> {
-                    val runtimeType = it.runtimeType
+                    val runtimeType = getRuntimeType(it)
                     if (typeMap.contains(runtimeType)) {
                         typeErr("Duplicate core type in union type not supported ($runtimeType)")
                     }

@@ -9,7 +9,7 @@ import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.mappers.StaticTypeMapper
 import org.partiql.lang.schemadiscovery.NormalizeDecimalPrecisionsToUpToRange
 import org.partiql.lang.schemadiscovery.SchemaInferencerFromExampleImpl
-import org.partiql.lang.types.StaticType
+import org.partiql.types.StaticType
 
 /**
  * Encapsulates the information needed to provide a "mock" database to our evaluation tests.

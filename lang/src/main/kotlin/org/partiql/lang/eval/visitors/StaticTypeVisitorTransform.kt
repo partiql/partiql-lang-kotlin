@@ -20,8 +20,8 @@ import org.partiql.lang.eval.BindingCase
 import org.partiql.lang.eval.BindingName
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.delegate
-import org.partiql.lang.types.StaticType
 import org.partiql.lang.util.propertyValueMapOf
+import org.partiql.types.StaticType
 
 /**
  * Extra constraints which may be imposed on the type checking.

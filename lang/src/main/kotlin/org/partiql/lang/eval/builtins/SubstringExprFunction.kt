@@ -22,7 +22,7 @@ import org.partiql.lang.eval.errNoContext
 import org.partiql.lang.eval.intValue
 import org.partiql.lang.eval.stringValue
 import org.partiql.lang.types.FunctionSignature
-import org.partiql.lang.types.StaticType
+import org.partiql.types.StaticType
 
 /**
  * Built in function to return the substring of an existing string. This function

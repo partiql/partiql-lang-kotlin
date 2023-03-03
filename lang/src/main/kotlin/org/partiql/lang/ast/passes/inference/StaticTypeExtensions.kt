@@ -1,23 +1,23 @@
 package org.partiql.lang.ast.passes.inference
 
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.types.AnyOfType
-import org.partiql.lang.types.AnyType
-import org.partiql.lang.types.BlobType
-import org.partiql.lang.types.BoolType
-import org.partiql.lang.types.ClobType
-import org.partiql.lang.types.CollectionType
-import org.partiql.lang.types.DecimalType
-import org.partiql.lang.types.FloatType
-import org.partiql.lang.types.IntType
-import org.partiql.lang.types.MissingType
-import org.partiql.lang.types.NullType
-import org.partiql.lang.types.SingleType
-import org.partiql.lang.types.StaticType
-import org.partiql.lang.types.StringType
-import org.partiql.lang.types.StructType
-import org.partiql.lang.types.SymbolType
-import org.partiql.lang.types.TimestampType
+import org.partiql.types.AnyOfType
+import org.partiql.types.AnyType
+import org.partiql.types.BlobType
+import org.partiql.types.BoolType
+import org.partiql.types.ClobType
+import org.partiql.types.CollectionType
+import org.partiql.types.DecimalType
+import org.partiql.types.FloatType
+import org.partiql.types.IntType
+import org.partiql.types.MissingType
+import org.partiql.types.NullType
+import org.partiql.types.SingleType
+import org.partiql.types.StaticType
+import org.partiql.types.StringType
+import org.partiql.types.StructType
+import org.partiql.types.SymbolType
+import org.partiql.types.TimestampType
 
 internal fun StaticType.isNullOrMissing(): Boolean = (this is NullType || this is MissingType)
 internal fun StaticType.isNumeric(): Boolean = (this is IntType || this is FloatType || this is DecimalType)
@@ -35,12 +35,12 @@ private fun DecimalType.maxDigits(): Int {
     val precision = when (precisionScaleConstraint) {
         // TODO: What's PartiQL's max allowed precision?
         DecimalType.PrecisionScaleConstraint.Unconstrained -> Int.MAX_VALUE
-        is DecimalType.PrecisionScaleConstraint.Constrained -> precisionScaleConstraint.precision
+        is DecimalType.PrecisionScaleConstraint.Constrained -> (precisionScaleConstraint as DecimalType.PrecisionScaleConstraint.Constrained).precision
     }
 
     val scale = when (precisionScaleConstraint) {
         DecimalType.PrecisionScaleConstraint.Unconstrained -> 0
-        is DecimalType.PrecisionScaleConstraint.Constrained -> precisionScaleConstraint.scale
+        is DecimalType.PrecisionScaleConstraint.Constrained -> (precisionScaleConstraint as DecimalType.PrecisionScaleConstraint.Constrained).scale
     }
 
     return precision - scale

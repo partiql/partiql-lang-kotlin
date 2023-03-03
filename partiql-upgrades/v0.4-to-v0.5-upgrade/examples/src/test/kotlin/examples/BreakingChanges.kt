@@ -10,8 +10,8 @@ import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.eval.NullPropagatingExprFunction
 import org.partiql.lang.syntax.SqlParser
-import org.partiql.lang.types.StaticType
-import org.partiql.lang.types.UntypedFunctionSignature
+import org.partiql.types.StaticType
+import org.partiql.types.UnTypedFunctionSignature
 import org.partiql.lang.types.VarargFormalParameter
 import kotlin.test.Test
 import kotlin.test.assertEquals

@@ -9,8 +9,8 @@ import org.partiql.lang.eval.builtins.ExprFunctionTestCase
 import org.partiql.lang.eval.builtins.buildSessionWithNow
 import org.partiql.lang.eval.builtins.checkInvalidArgType
 import org.partiql.lang.eval.builtins.checkInvalidArity
-import org.partiql.lang.types.StaticType
 import org.partiql.lang.util.ArgumentsProviderBase
+import org.partiql.types.StaticType
 
 class UnixTimestampFunctionTest : EvaluatorTestBase() {
     // Pass test cases

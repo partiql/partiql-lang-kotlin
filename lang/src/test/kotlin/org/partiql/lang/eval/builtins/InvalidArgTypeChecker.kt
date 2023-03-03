@@ -4,26 +4,29 @@ import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.eval.EvaluatorTestBase
 import org.partiql.lang.eval.expectedArgTypeErrorMsg
-import org.partiql.lang.types.BagType
-import org.partiql.lang.types.BlobType
-import org.partiql.lang.types.BoolType
-import org.partiql.lang.types.ClobType
-import org.partiql.lang.types.DateType
-import org.partiql.lang.types.DecimalType
-import org.partiql.lang.types.FloatType
-import org.partiql.lang.types.IntType
-import org.partiql.lang.types.ListType
-import org.partiql.lang.types.MissingType
-import org.partiql.lang.types.NullType
-import org.partiql.lang.types.SexpType
-import org.partiql.lang.types.SingleType
-import org.partiql.lang.types.StaticType
-import org.partiql.lang.types.StringType
-import org.partiql.lang.types.StructType
-import org.partiql.lang.types.SymbolType
-import org.partiql.lang.types.TimeType
-import org.partiql.lang.types.TimestampType
+import org.partiql.lang.types.StaticTypeUtils.getRuntimeType
+import org.partiql.lang.types.StaticTypeUtils.getTypeDomain
+import org.partiql.lang.types.StaticTypeUtils.isSubTypeOf
 import org.partiql.lang.util.propertyValueMapOf
+import org.partiql.types.BagType
+import org.partiql.types.BlobType
+import org.partiql.types.BoolType
+import org.partiql.types.ClobType
+import org.partiql.types.DateType
+import org.partiql.types.DecimalType
+import org.partiql.types.FloatType
+import org.partiql.types.IntType
+import org.partiql.types.ListType
+import org.partiql.types.MissingType
+import org.partiql.types.NullType
+import org.partiql.types.SexpType
+import org.partiql.types.SingleType
+import org.partiql.types.StaticType
+import org.partiql.types.StringType
+import org.partiql.types.StructType
+import org.partiql.types.SymbolType
+import org.partiql.types.TimeType
+import org.partiql.types.TimestampType
 import java.lang.StringBuilder
 
 /**
@@ -83,7 +86,7 @@ class InvalidArgTypeChecker : EvaluatorTestBase() {
         // If it is, we put the example of it in the current argument position and compose the query, then catch the error,
         expectedTypes.forEachIndexed { index, expectedType ->
             StaticType.ALL_TYPES.filter { it != StaticType.NULL && it != StaticType.MISSING }.forEach { singleType ->
-                if (!singleType.isSubTypeOf(expectedType)) {
+                if (!isSubTypeOf(singleType, expectedType)) {
                     curArgTypeExamples[index] = singleType.getExample()
                     val query = composeQuery("$funcName$syntaxSuffix", delimiters, curArgTypeExamples, size)
                     assertThrowsInvalidArgType(
@@ -127,8 +130,8 @@ class InvalidArgTypeChecker : EvaluatorTestBase() {
                 1, 1,
                 Property.FUNCTION_NAME to funcName,
                 Property.ARGUMENT_POSITION to argPosition,
-                Property.EXPECTED_ARGUMENT_TYPES to expectedArgTypeErrorMsg(expectedTypes.typeDomain.toList()),
-                Property.ACTUAL_ARGUMENT_TYPES to actualType.runtimeType.toString()
+                Property.EXPECTED_ARGUMENT_TYPES to expectedArgTypeErrorMsg(getTypeDomain(expectedTypes).toList()),
+                Property.ACTUAL_ARGUMENT_TYPES to getRuntimeType(actualType).toString()
             ),
             expectedPermissiveModeResult = "MISSING"
         )

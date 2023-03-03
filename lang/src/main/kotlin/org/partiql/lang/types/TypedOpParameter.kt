@@ -1,6 +1,7 @@
 package org.partiql.lang.types
 
 import org.partiql.lang.eval.ExprValue
+import org.partiql.types.StaticType
 
 /**
  * Represents a parameter that can be passed to typed operators i.e CAST/IS

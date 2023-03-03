@@ -18,10 +18,10 @@ import org.partiql.lang.planner.litTrue
 import org.partiql.lang.planner.transforms.DEFAULT_IMPL
 import org.partiql.lang.planner.transforms.PLAN_VERSION_NUMBER
 import org.partiql.lang.syntax.PartiQLParserBuilder
-import org.partiql.lang.types.BagType
-import org.partiql.lang.types.StaticType
-import org.partiql.lang.types.StructType
 import org.partiql.lang.util.ArgumentsProviderBase
+import org.partiql.types.BagType
+import org.partiql.types.StaticType
+import org.partiql.types.StructType
 
 private const val FAKE_GET_BY_KEY_PROJECT_OPERATOR_NAME = "foo"
 private const val TABLE_WITH_1_FIELD_PK = "table_with_1_field_pk"

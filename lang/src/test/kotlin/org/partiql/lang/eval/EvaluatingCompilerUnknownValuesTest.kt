@@ -23,11 +23,11 @@ import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestCase
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestTarget
 import org.partiql.lang.eval.evaluatortestframework.ExpectedResultFormat
 import org.partiql.lang.types.FunctionSignature
-import org.partiql.lang.types.StaticType
 import org.partiql.lang.types.UnknownArguments
 import org.partiql.lang.util.ArgumentsProviderBase
 import org.partiql.lang.util.crossMap
 import org.partiql.lang.util.propertyValueMapOf
+import org.partiql.types.StaticType
 
 /** Test cases for PartiQL unknown values `MISSING` and `NULL`, including their propagation. */
 class EvaluatingCompilerUnknownValuesTest : EvaluatorTestBase() {

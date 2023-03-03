@@ -3,7 +3,7 @@ package org.partiql.lang.ast.passes
 import org.partiql.lang.ast.passes.inference.stringWithoutNullMissing
 import org.partiql.lang.errors.ProblemDetails
 import org.partiql.lang.errors.ProblemSeverity
-import org.partiql.lang.types.StaticType
+import org.partiql.types.StaticType
 
 /**
  * Variants of [SemanticProblemDetails] contain info about various problems that can be encountered through semantic

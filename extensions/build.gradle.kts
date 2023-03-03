@@ -20,6 +20,7 @@ plugins {
 
 dependencies {
     implementation(project(":lang"))
+    implementation(project(":partiql-types"))
     implementation(Deps.awsSdkBom)
     implementation(Deps.awsSdkDynamodb)
     testImplementation(Deps.mockito)

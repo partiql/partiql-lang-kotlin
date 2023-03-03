@@ -23,9 +23,9 @@ import org.partiql.lang.errors.Property.FEATURE_NAME
 import org.partiql.lang.errors.Property.LINE_NUMBER
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.mappers.ISL_META_KEY
-import org.partiql.lang.types.IntType
-import org.partiql.lang.types.ListType
-import org.partiql.lang.types.StaticType
+import org.partiql.types.IntType
+import org.partiql.types.ListType
+import org.partiql.types.StaticType
 import java.io.PrintWriter
 import java.io.StringWriter
 

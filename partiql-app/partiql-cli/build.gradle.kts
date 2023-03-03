@@ -20,6 +20,7 @@ plugins {
 
 dependencies {
     implementation(project(":lang"))
+    implementation(project(":partiql-types"))
     implementation(project(":extensions"))
     implementation(Deps.csv)
     implementation(Deps.guava)
