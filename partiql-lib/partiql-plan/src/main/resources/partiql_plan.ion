@@ -61,6 +61,23 @@ sort_spec::{
   nulls: [ FIRST, LAST ],
 }
 
+// Rex.Call Arguments
+arg::[
+  value::{
+    name: optional::string,
+    value: rex,
+  },
+  type::{
+    name: optional::string,
+    type: '.type',
+  }
+]
+
+branch::{
+  condition: rex,
+  value: rex,
+}
+
 // Operators that return binding collections
 rel::[
   // FROM <rex> [AS <string>] [AT <string>] [BY <string>]
@@ -130,6 +147,7 @@ rel::[
 ]
 
 // Operators that return any value
+// Perhaps "id" and "path" can be combined into a single item "ref"
 rex::[
   id::{
     name: string,
@@ -140,6 +158,10 @@ rex::[
   path::{
     root: rex,
     steps: list::[step],
+    type: optional::'.type'
+  },
+  lit::{
+    value: ion,
     type: optional::'.type'
   },
   unary::{
@@ -159,8 +181,13 @@ rex::[
   },
   call::{
     id: string,
-    args: list::[rex],
-    type: optional::'.type'
+    args: list::[arg],
+    type: optional::'.type',
+  },
+  switch::{
+    match: optional::rex,
+    branches: list::[branch],
+    default: optional::rex,
   },
   agg::{
     id: string,
@@ -168,10 +195,6 @@ rex::[
     modifier: [ ALL, DISTINCT ],
     type: optional::'.type'
     // filter: rex — later SQL feature, not sure if we'll support this
-  },
-  lit::{
-    value: ion,
-    type: optional::'.type'
   },
   collection::[
     array::{
@@ -193,20 +216,20 @@ rex::[
   },
   query::[
     scalar::[
-      coerce::{
-        query: '.rex.query.collection',
+      subquery::{
+        query: '.rex.query.collection', // consider changing to query.scalar.subquery
         type: optional::'.type'
       },
       pivot::{
         rel: rel,
         value: rex,
-        at: rex,
+        at: rex, // consider changing to key
         type: optional::'.type'
       },
     ],
     collection::{
       rel: rel,
-      constructor: optional::rex,
+      constructor: optional::rex, // consider further dividing this into query.collection.subquery
     },
   ],
 ]

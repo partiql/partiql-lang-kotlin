@@ -4,6 +4,8 @@ import com.amazon.ionelement.api.MetaContainer
 import com.amazon.ionelement.api.ionNull
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.types.StaticType
+import org.partiql.plan.ir.Arg
+import org.partiql.plan.ir.Branch
 import org.partiql.plan.ir.Case
 import org.partiql.plan.ir.Field
 import org.partiql.plan.ir.Rex
@@ -39,14 +41,42 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
     internal fun convert(node: PartiqlAst.Expr) = RexConverter.walkExpr(node, Ctx(node)).rex!!
 
     /**
-     * List version of hacked "accept"
+     * List version of `accept`
      */
-    internal fun convert(nodes: List<PartiqlAst.Expr>) = nodes.map { convert(it) }
+    private fun convert(nodes: List<PartiqlAst.Expr>) = nodes.map { convert(it) }
 
     /**
-     * Vararg ''
+     * Vararg version of `accept`
      */
-    internal fun convert(vararg nodes: PartiqlAst.Expr) = nodes.map { convert(it) }
+    private fun convert(vararg nodes: PartiqlAst.Expr) = nodes.map { convert(it) }
+
+    private fun arg(name: String, node: PartiqlAst.PartiqlAstNode) = when (node) {
+        is PartiqlAst.Expr -> Arg.Value(
+            name = name,
+            value = convert(node),
+        )
+        is PartiqlAst.Type -> Arg.Type(
+            name = name,
+            type = TypeConverter.convert(node)
+        )
+        else -> error("Argument must be of type PartiqlAst.Expr or PartiqlAst.Type, found ${node::class.qualifiedName}")
+    }
+
+    /**
+     * Convert a list of arguments to arg0, ...., argN
+     */
+    private fun args(nodes: List<PartiqlAst.Expr>) = args(*nodes.toTypedArray())
+
+    /**
+     * Convert arguments to arg0, ...., argN
+     */
+    private fun args(vararg nodes: PartiqlAst.PartiqlAstNode?) =
+        nodes.filterNotNull().mapIndexed { i, arg -> arg("arg$i", arg) }
+
+    /**
+     * Convert keyword pairs of arguments
+     */
+    private fun args(vararg args: Pair<String, PartiqlAst.PartiqlAstNode>) = args.map { arg(it.first, it.second) }
 
     /**
      * Helper so the visitor "body" looks like it has Rex as the return value
@@ -257,13 +287,20 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
     override fun walkExprLike(node: PartiqlAst.Expr.Like, ctx: Ctx) = visit(node) {
         when (node.escape) {
             null -> Rex.Call(
-                id = "like",
-                args = convert(node.value, node.pattern),
+                id = Constants.like,
+                args = args(
+                    "value" to node.value,
+                    "pattern" to node.pattern,
+                ),
                 type = StaticType.BOOL,
             )
             else -> Rex.Call(
-                id = "like_escape",
-                args = convert(node.value, node.pattern, node.escape!!),
+                id = Constants.likeEscape,
+                args = args(
+                    "value" to node.value,
+                    "pattern" to node.pattern,
+                    "escape" to node.escape!!,
+                ),
                 type = StaticType.BOOL,
             )
         }
@@ -271,8 +308,8 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
 
     override fun walkExprBetween(node: PartiqlAst.Expr.Between, ctx: Ctx) = visit(node) {
         Rex.Call(
-            id = "between",
-            args = convert(node.value, node.from, node.to),
+            id = Constants.between,
+            args = args("value" to node.value, "from" to node.from, "to" to node.to),
             type = StaticType.BOOL,
         )
     }
@@ -280,12 +317,15 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
     override fun walkExprInCollection(node: PartiqlAst.Expr.InCollection, ctx: Ctx) = visit(node) {
         val lhs = convert(node.operands[0])
         var rhs = convert(node.operands[1])
-        if (rhs is Rex.Query.Scalar.Coerce) {
+        if (rhs is Rex.Query.Scalar.Subquery) {
             rhs = rhs.query // unpack a scalar subquery coercion
         }
         Rex.Call(
-            id = "in_collection",
-            args = listOf(lhs, rhs),
+            id = Constants.inCollection,
+            args = listOf(
+                Arg.Value("lhs", lhs),
+                Arg.Value("rhs", rhs),
+            ),
             type = StaticType.BOOL,
         )
     }
@@ -305,21 +345,21 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
     override fun walkExprBag(node: PartiqlAst.Expr.Bag, ctx: Ctx) = visit(node) {
         Rex.Collection.Bag(
             values = convert(node.values),
-            type = null,
+            type = StaticType.BAG,
         )
     }
 
     override fun walkExprList(node: PartiqlAst.Expr.List, ctx: Ctx) = visit(node) {
         Rex.Collection.Array(
             values = convert(node.values),
-            type = null,
+            type = StaticType.LIST,
         )
     }
 
     override fun walkExprCall(node: PartiqlAst.Expr.Call, ctx: Ctx) = visit(node) {
         Rex.Call(
             id = node.funcName.text,
-            args = convert(node.args),
+            args = args(*node.args.toTypedArray()),
             type = null,
         )
     }
@@ -338,44 +378,36 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
 
     override fun walkExprIsType(node: PartiqlAst.Expr.IsType, ctx: Ctx) = visit(node) {
         Rex.Call(
-            id = "is_type",
-            args = listOf(convert(node.value)),
+            id = Constants.isType,
+            args = args("value" to node.value, "type" to node.type),
             type = StaticType.BOOL,
         )
     }
 
     override fun walkExprSimpleCase(node: PartiqlAst.Expr.SimpleCase, ctx: Ctx) = visit(node) {
-        val cond = convert(node.expr)
-        val cases = node.cases.pairs.flatMap { convert(it.first, it.second) }
-        val args = listOf(cond) + cases
-        when (val default = node.default) {
-            null -> Rex.Call(
-                id = "case",
-                args = args,
-                type = null,
-            )
-            else -> Rex.Call(
-                id = "case_default",
-                args = args + convert(default),
-                type = null,
-            )
-        }
+        Rex.Switch(
+            match = convert(node.expr),
+            branches = node.cases.pairs.map {
+                Branch(
+                    condition = convert(it.first),
+                    value = convert(it.second),
+                )
+            },
+            default = if (node.default != null) convert(node.default!!) else null
+        )
     }
 
     override fun walkExprSearchedCase(node: PartiqlAst.Expr.SearchedCase, ctx: Ctx) = visit(node) {
-        val args = node.cases.pairs.flatMap { convert(it.first, it.second) }
-        when (val default = node.default) {
-            null -> Rex.Call(
-                id = "searched_case",
-                args = args,
-                type = null,
-            )
-            else -> Rex.Call(
-                id = "searched_case_default",
-                args = args + convert(default),
-                type = null,
-            )
-        }
+        Rex.Switch(
+            match = null,
+            branches = node.cases.pairs.map {
+                Branch(
+                    condition = convert(it.first),
+                    value = convert(it.second),
+                )
+            },
+            default = if (node.default != null) convert(node.default!!) else null
+        )
     }
 
     override fun walkExprDate(node: PartiqlAst.Expr.Date, ctx: Ctx): Ctx {
@@ -387,69 +419,75 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
     }
 
     override fun walkExprBagOp(node: PartiqlAst.Expr.BagOp, ctx: Ctx) = visit(node) {
-        val prefix = when (node.quantifier) {
-            is PartiqlAst.SetQuantifier.All -> "bag"
-            is PartiqlAst.SetQuantifier.Distinct -> "set"
-        }
         // Hack for UNION / INTERSECT / EXCEPT because they are missing from the parser
-        val suffix = when (node.op) {
-            is PartiqlAst.BagOpType.Except,
-            is PartiqlAst.BagOpType.OuterExcept -> "except_outer"
-            is PartiqlAst.BagOpType.Intersect,
-            is PartiqlAst.BagOpType.OuterIntersect -> "intersect_outer"
-            is PartiqlAst.BagOpType.Union,
-            is PartiqlAst.BagOpType.OuterUnion -> "union_outer"
+        val op = when (node.quantifier) {
+            is PartiqlAst.SetQuantifier.All -> when (node.op) {
+                is PartiqlAst.BagOpType.Union,
+                is PartiqlAst.BagOpType.OuterUnion -> Constants.outerBagUnion
+                is PartiqlAst.BagOpType.Intersect,
+                is PartiqlAst.BagOpType.OuterIntersect -> Constants.outerBagIntersect
+                is PartiqlAst.BagOpType.Except,
+                is PartiqlAst.BagOpType.OuterExcept -> Constants.outerBagExcept
+            }
+            is PartiqlAst.SetQuantifier.Distinct -> when (node.op) {
+                is PartiqlAst.BagOpType.Union,
+                is PartiqlAst.BagOpType.OuterUnion -> Constants.outerSetUnion
+                is PartiqlAst.BagOpType.Intersect,
+                is PartiqlAst.BagOpType.OuterIntersect -> Constants.outerSetIntersect
+                is PartiqlAst.BagOpType.Except,
+                is PartiqlAst.BagOpType.OuterExcept -> Constants.outerSetExcept
+            }
         }
         Rex.Call(
-            id = "$prefix::$suffix",
-            args = convert(node.operands),
+            id = op,
+            args = args("lhs" to node.operands[0], "rhs" to node.operands[1]),
             type = StaticType.BAG,
         )
     }
 
     override fun walkExprCast(node: PartiqlAst.Expr.Cast, ctx: Ctx) = visit(node) {
         Rex.Call(
-            id = "cast",
-            args = listOf(convert(node.value)),
+            id = Constants.cast,
+            args = args("value" to node.value, "type" to node.asType),
             type = TypeConverter.convert(node.asType),
         )
     }
 
     override fun walkExprCanCast(node: PartiqlAst.Expr.CanCast, ctx: Ctx) = visit(node) {
         Rex.Call(
-            id = "can_cast",
-            args = listOf(convert(node.value)),
+            id = Constants.canCast,
+            args = args("value" to node.value, "type" to node.asType),
             type = StaticType.BOOL,
         )
     }
 
     override fun walkExprCanLosslessCast(node: PartiqlAst.Expr.CanLosslessCast, ctx: Ctx) = visit(node) {
         Rex.Call(
-            id = "can_lossless_cast",
-            args = listOf(convert(node.value)),
+            id = Constants.canLosslessCast,
+            args = args("value" to node.value, "type" to node.asType),
             type = StaticType.BOOL,
         )
     }
 
     override fun walkExprNullIf(node: PartiqlAst.Expr.NullIf, ctx: Ctx) = visit(node) {
         Rex.Call(
-            id = "can_lossless_cast",
-            args = convert(node.expr1, node.expr2),
+            id = Constants.nullIf,
+            args = args(node.expr1, node.expr2),
             type = StaticType.BOOL,
         )
     }
 
     override fun walkExprCoalesce(node: PartiqlAst.Expr.Coalesce, ctx: Ctx) = visit(node) {
         Rex.Call(
-            id = "coalesce",
-            args = convert(node.args),
+            id = Constants.coalesce,
+            args = args(node.args),
             type = null,
         )
     }
 
     override fun walkExprSelect(node: PartiqlAst.Expr.Select, ctx: Ctx) = visit(node) {
         when (val query = RelConverter.convert(node)) {
-            is Rex.Query.Collection -> Rex.Query.Scalar.Coerce(query, null)
+            is Rex.Query.Collection -> Rex.Query.Scalar.Subquery(query, null)
             is Rex.Query.Scalar -> query
         }
     }
@@ -457,5 +495,76 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
     private fun convertCase(case: PartiqlAst.CaseSensitivity) = when (case) {
         is PartiqlAst.CaseSensitivity.CaseInsensitive -> Case.INSENSITIVE
         is PartiqlAst.CaseSensitivity.CaseSensitive -> Case.SENSITIVE
+    }
+
+    private object Constants {
+
+        // const val unaryNot = "unary_not"
+        //
+        // const val unaryPlus = "unary_plus"
+        //
+        // const val unaryMinus = "unary_minus"
+        //
+        // const val unaryNegate = "unary_negate"
+        //
+        // const val binaryAdd = "binary_add"
+        //
+        // const val binarySub = "binary_sb"
+        //
+        // const val binaryMult = "binary_mult"
+        //
+        // const val binaryDiv = "binary_div"
+        //
+        // const val binaryMod = "binary_mod"
+        //
+        // const val binaryConcat = "binary_concat"
+        //
+        // const val binaryAnd = "binary_and"
+        //
+        // const val binaryOr = "binary_or"
+        //
+        // const val binaryEq = "binary_eq"
+        //
+        // const val binaryNeq = "binary_neq"
+        //
+        // const val binaryGt = "binary_gt"
+        //
+        // const val binaryGte = "binary_gte"
+        //
+        // const val binaryLt = "binary_lt"
+        //
+        // const val binaryLte = "binary_lte"
+
+        const val like = "like"
+
+        const val likeEscape = "like_escape"
+
+        const val between = "between"
+
+        const val inCollection = "in_collection"
+
+        const val isType = "is_type"
+
+        const val outerBagUnion = "outer_bag_union"
+
+        const val outerBagIntersect = "outer_bag_intersect"
+
+        const val outerBagExcept = "outer_bag_except"
+
+        const val outerSetUnion = "outer_set_union"
+
+        const val outerSetIntersect = "outer_set_intersect"
+
+        const val outerSetExcept = "outer_set_except"
+
+        const val cast = "cast"
+
+        const val canCast = "can_cast"
+
+        const val canLosslessCast = "can_lossless_cast"
+
+        const val nullIf = "null_if"
+
+        const val coalesce = "coalesce"
     }
 }
