@@ -15,7 +15,7 @@ jobs:
     - name: Push Wiki Changes
       uses: Andrew-Chen-Wang/github-wiki-action@v3
       env:
-        WIKI_DIR: docs/wiki
+        WIKI_DIR: docs/wiki/
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         GH_NAME: ${{ github.event.commits[0].author.username }}
         GH_MAIL: ${{ github.event.commits[0].author.email }}
