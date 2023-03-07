@@ -9,7 +9,7 @@ The following command will build and run the CLI:
 ./partiql-app/partiql-cli/partiql.sh
 
 # To build (only)
-./gradlew :partiql-app:partiql-cli:install
+./gradlew :partiql-cli:install
 
 # To Run (only)
 ./partiql-app/partiql-cli/build/install/partiql-cli/bin/partiql

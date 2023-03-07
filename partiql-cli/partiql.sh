@@ -16,5 +16,5 @@
 cli_path=$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )
 
 cd "$cli_path"
-../../gradlew :partiql-app:partiql-cli:install
+../../gradlew :partiql-cli:install
 ../partiql-cli/build/install/partiql-cli/bin/partiql "$@"
