@@ -1,7 +1,6 @@
 package org.partiql.plan.ir.builder
 
 import com.amazon.ionelement.api.IonElement
-import org.partiql.lang.types.StaticType
 import org.partiql.plan.ir.Arg
 import org.partiql.plan.ir.Binding
 import org.partiql.plan.ir.Branch
@@ -15,6 +14,13 @@ import org.partiql.plan.ir.Rel
 import org.partiql.plan.ir.Rex
 import org.partiql.plan.ir.SortSpec
 import org.partiql.plan.ir.Step
+import org.partiql.types.StaticType
+import kotlin.Any
+import kotlin.String
+import kotlin.collections.List
+import kotlin.collections.Map
+import kotlin.collections.Set
+import kotlin.jvm.JvmStatic
 
 public abstract class PlanFactory {
     public open fun partiQLPlan(version: PartiQLPlan.Version, root: Rex) = PartiQLPlan(version, root)
@@ -185,6 +191,6 @@ public abstract class PlanFactory {
         public val DEFAULT: PlanFactory = object : PlanFactory() {}
 
         @JvmStatic
-        public fun <T : PlanNode> create(block: PlanFactory.() -> T) = PlanFactory.DEFAULT.block()
+        public fun <T : PlanNode> create(block: PlanFactory.() -> T) = DEFAULT.block()
     }
 }

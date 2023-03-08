@@ -1,7 +1,6 @@
 package org.partiql.plan.ir.builder
 
 import com.amazon.ionelement.api.IonElement
-import org.partiql.lang.types.StaticType
 import org.partiql.plan.ir.Arg
 import org.partiql.plan.ir.Binding
 import org.partiql.plan.ir.Branch
@@ -14,6 +13,12 @@ import org.partiql.plan.ir.Rel
 import org.partiql.plan.ir.Rex
 import org.partiql.plan.ir.SortSpec
 import org.partiql.plan.ir.Step
+import org.partiql.types.StaticType
+import kotlin.Any
+import kotlin.String
+import kotlin.collections.MutableList
+import kotlin.collections.MutableMap
+import kotlin.collections.MutableSet
 
 public class PartiQlPlanBuilder {
     public var version: PartiQLPlan.Version? = null

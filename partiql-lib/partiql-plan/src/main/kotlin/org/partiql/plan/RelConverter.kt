@@ -4,7 +4,6 @@ import com.amazon.ionelement.api.ionInt
 import com.amazon.ionelement.api.ionString
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.eval.visitors.VisitorTransformBase
-import org.partiql.lang.types.StaticType
 import org.partiql.plan.ir.Binding
 import org.partiql.plan.ir.Case
 import org.partiql.plan.ir.Common
@@ -12,6 +11,7 @@ import org.partiql.plan.ir.Field
 import org.partiql.plan.ir.Rel
 import org.partiql.plan.ir.Rex
 import org.partiql.plan.ir.SortSpec
+import org.partiql.types.StaticType
 
 /**
  * Lexically scoped state for use in translating an individual SELECT statement.

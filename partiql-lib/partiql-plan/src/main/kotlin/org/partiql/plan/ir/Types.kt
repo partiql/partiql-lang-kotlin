@@ -1,7 +1,6 @@
 package org.partiql.plan.ir
 
 import com.amazon.ionelement.api.IonElement
-import org.partiql.lang.types.StaticType
 import org.partiql.plan.ir.builder.ArgTypeBuilder
 import org.partiql.plan.ir.builder.ArgValueBuilder
 import org.partiql.plan.ir.builder.BindingBuilder
@@ -37,6 +36,13 @@ import org.partiql.plan.ir.builder.StepKeyBuilder
 import org.partiql.plan.ir.builder.StepUnpivotBuilder
 import org.partiql.plan.ir.builder.StepWildcardBuilder
 import org.partiql.plan.ir.visitor.PlanVisitor
+import org.partiql.types.StaticType
+import kotlin.Any
+import kotlin.String
+import kotlin.collections.List
+import kotlin.collections.Map
+import kotlin.collections.Set
+import kotlin.jvm.JvmStatic
 
 public abstract class PlanNode {
     public open val children: List<PlanNode> = emptyList()
