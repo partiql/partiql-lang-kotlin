@@ -21,8 +21,8 @@ import com.amazon.ionelement.api.ionString
 import com.amazon.ionelement.api.ionStructOf
 import com.amazon.ionelement.api.toIonValue
 import org.partiql.annotations.ExperimentalPartiQLCompilerPipeline
-import org.partiql.cli.functions.QueryDDB
 import org.partiql.cli.Debug
+import org.partiql.cli.functions.QueryDDB
 import org.partiql.cli.functions.ReadFile
 import org.partiql.cli.functions.WriteFile
 import org.partiql.lang.CompilerPipeline
