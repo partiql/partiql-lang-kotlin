@@ -72,6 +72,18 @@ class MathFunctionsTest : EvaluatorTestBase() {
             ExprFunctionTestCase("floor(1.99999999999999999999)", "1"),
 
             //
+            // MOD
+            //
+            ExprFunctionTestCase("mod(1, 1)", "0"),
+            ExprFunctionTestCase("mod(10, 1)", "0"),
+            ExprFunctionTestCase("mod(17, 1)", "0"),
+            ExprFunctionTestCase("mod(-17, 4)", "-1"),
+            ExprFunctionTestCase("mod(17, -4)", "1"),
+            ExprFunctionTestCase("mod(10, 3)", "1"),
+            ExprFunctionTestCase("mod(17, 1)", "0"),
+            ExprFunctionTestCase("mod(17, 3)", "2"),
+
+            //
             // abs
             //
 

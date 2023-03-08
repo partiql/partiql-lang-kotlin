@@ -43,7 +43,7 @@ class LowerEvaluationTest : EvaluatorTestBase() {
     fun lowerInvalidArgTypeTest() = checkInvalidArgType(
         funcName = "lower",
         args = listOf(
-            Argument(1, StaticType.unionOf(StaticType.STRING, StaticType.SYMBOL), ")")
+            Argument(1, StaticType.TEXT, ")")
         )
     )
 

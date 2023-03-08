@@ -15,6 +15,12 @@ import org.partiql.lang.types.VarargFormalParameter
 import org.partiql.types.StaticType
 
 /**
+ * The name of this function is [DYNAMIC_LOOKUP_FUNCTION_NAME], which includes a unique prefix and suffix so as to
+ * avoid clashes with user-defined functions.
+ */
+internal const val DYNAMIC_LOOKUP_FUNCTION_NAME = "\$__dynamic_lookup__"
+
+/**
  * Performs dynamic variable resolution.  Query authors should never call this function directly (and indeed it is
  * named to avoid collision with the names of custom functions)--instead, the query planner injects call sites
  * to this function to perform dynamic variable resolution of undefined variables.  This provides a migration path
@@ -31,21 +37,16 @@ import org.partiql.types.StaticType
  * in the current scope must be included in the list of values to be searched.
  * TODO: when the open type system's static type inferencer is working, static type information can be used to identify
  * and remove non-struct types from call sites to this function.
- *
- * The name of this function is [DYNAMIC_LOOKUP_FUNCTION_NAME], which includes a unique prefix and suffix so as to
- * avoid clashes with user-defined functions.
  */
 class DynamicLookupExprFunction : ExprFunction {
-    override val signature: FunctionSignature
-        get() {
-            return FunctionSignature(
-                name = DYNAMIC_LOOKUP_FUNCTION_NAME,
-                // Required parameters are: variable name, case sensitivity and lookup strategy
-                requiredParameters = listOf(StaticType.SYMBOL, StaticType.SYMBOL, StaticType.SYMBOL),
-                variadicParameter = VarargFormalParameter(StaticType.ANY, 0..Int.MAX_VALUE),
-                returnType = StaticType.ANY
-            )
-        }
+
+    override val signature = FunctionSignature(
+        name = DYNAMIC_LOOKUP_FUNCTION_NAME,
+        // Required parameters are: variable name, case sensitivity and lookup strategy
+        requiredParameters = listOf(StaticType.SYMBOL, StaticType.SYMBOL, StaticType.SYMBOL),
+        variadicParameter = VarargFormalParameter(StaticType.ANY, 0..Int.MAX_VALUE),
+        returnType = StaticType.ANY
+    )
 
     override fun callWithVariadic(
         session: EvaluationSession,

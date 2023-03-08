@@ -34,7 +34,21 @@ class CharacterLengthEvaluationTest : EvaluatorTestBase() {
             ExprFunctionTestCase("character_length('ȴȵ💩💋')", "4"),
             ExprFunctionTestCase("character_length('😁😞😸😸')", "4"),
             ExprFunctionTestCase("character_length('話家身圧費谷料村能計税金')", "12"),
-            ExprFunctionTestCase("character_length('eࠫ')", "2") // This is a unicode "combining character" which is actually 2 codepoints
+            ExprFunctionTestCase("character_length('eࠫ')", "2"), // This is a unicode "combining character" which is actually 2 codepoints
+            // Same thing, different name. We shouldn't have to duplicate tests just for an alternative name
+            ExprFunctionTestCase("char_length('')", "0"),
+            ExprFunctionTestCase("char_length('a')", "1"),
+            ExprFunctionTestCase("char_length(`a`)", "1"),
+            ExprFunctionTestCase("char_length(`'a'`)", "1"),
+            ExprFunctionTestCase("char_length(`\"a\"`)", "1"),
+            ExprFunctionTestCase("char_length('ab')", "2"),
+            ExprFunctionTestCase("char_length('abcdefghijklmnopqrstuvwxyz')", "26"),
+            ExprFunctionTestCase("char_length(null)", "null"),
+            ExprFunctionTestCase("char_length(missing)", "null", "$MISSING_ANNOTATION::null"),
+            ExprFunctionTestCase("char_length('ȴȵ💩💋')", "4"),
+            ExprFunctionTestCase("char_length('😁😞😸😸')", "4"),
+            ExprFunctionTestCase("char_length('話家身圧費谷料村能計税金')", "12"),
+            ExprFunctionTestCase("char_length('eࠫ')", "2"), // This is a unicode "combining character" which is actually 2 codepoints
         )
     }
 
@@ -43,7 +57,7 @@ class CharacterLengthEvaluationTest : EvaluatorTestBase() {
     fun characterLengthInvalidArgTypeTest() = checkInvalidArgType(
         funcName = "character_length",
         args = listOf(
-            Argument(1, StaticType.unionOf(StaticType.STRING, StaticType.SYMBOL), ")")
+            Argument(1, StaticType.TEXT, ")")
         )
     )
 
@@ -51,6 +65,22 @@ class CharacterLengthEvaluationTest : EvaluatorTestBase() {
     @Test
     fun characterLengthInvalidArityTest() = checkInvalidArity(
         funcName = "character_length",
+        maxArity = 1,
+        minArity = 1
+    )
+
+    @Test
+    fun charLengthInvalidArgTypeTest() = checkInvalidArgType(
+        funcName = "char_length",
+        args = listOf(
+            Argument(1, StaticType.TEXT, ")")
+        )
+    )
+
+    // Error test cases: Invalid arity
+    @Test
+    fun charLengthInvalidArityTest() = checkInvalidArity(
+        funcName = "char_length",
         maxArity = 1,
         minArity = 1
     )

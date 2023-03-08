@@ -24,7 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Added numeric functions `abs`, `sqrt`, `exp`, `ln`, `pow`.
+- Added numeric builtins ABS, SQRT, EXP, LN, POW, MOD.
+- Added string builtins POSITION, OVERLAY, BIT_LENGTH, OCTET_LENGTH, CARDINALITY
 
 ### Changed
 - Deprecates the project level opt-in annotation `PartiQLExperimental` and split it into feature level. `ExperimentalPartiQLCompilerPipeline` and `ExperimentalWindowFunctions`.
