@@ -19,16 +19,18 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":lang"))
+    implementation(project(":partiql-lang"))
     implementation(project(":partiql-types"))
-    implementation(project(":extensions"))
     implementation(Deps.csv)
+    implementation(Deps.awsSdkBom)
+    implementation(Deps.awsSdkDynamodb)
     implementation(Deps.guava)
     implementation(Deps.jansi)
     implementation(Deps.jline)
     implementation(Deps.joda)
     implementation(Deps.picoCli)
     implementation(Deps.kotlinReflect)
+    testImplementation(Deps.mockito)
 }
 
 application {

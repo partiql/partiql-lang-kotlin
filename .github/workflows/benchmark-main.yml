@@ -44,7 +44,7 @@ jobs:
 
       - name: Run Benchmark
         run: |
-          ./gradlew :lang:jmh \
+          ./gradlew :partiql-lang:jmh \
             -Piterations=10 \
             -PwarmupIterations=5 \
             -Pfork=2 \

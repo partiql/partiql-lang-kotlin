@@ -25,7 +25,7 @@ application {
 
 dependencies {
     implementation(Deps.ionElement)
-    testImplementation(project(":lang"))
+    testImplementation(project(":partiql-lang"))
 }
 
 val tests = System.getenv()["PARTIQL_TESTS_DATA"] ?: "../partiql-tests/partiql-tests-data"

@@ -41,38 +41,20 @@ jobs:
       - name: Upload CLI coverage
         uses: codecov/codecov-action@v3
         with:
-          file: cli/build/reports/jacoco/test/jacocoTestReport.xml
+          file: partiql-cli/build/reports/jacoco/test/jacocoTestReport.xml
           flags: CLI
 
       - name: Upload LANG coverage
         uses: codecov/codecov-action@v3
         with:
-          file: lang/build/reports/jacoco/test/jacocoTestReport.xml
+          file: partiql-lang/build/reports/jacoco/test/jacocoTestReport.xml
           flags: LANG
-
-      - name: Upload PARTIQL_PTS coverage
-        uses: codecov/codecov-action@v3
-        with:
-          file: partiql-pts/build/reports/jacoco/test/jacocoTestReport.xml
-          flags: PARTIQL_PTS
-
-      - name: Upload PARTIQL_TEST_SCRIPT coverage
-        uses: codecov/codecov-action@v3
-        with:
-          file: partiql-testscript/build/reports/jacoco/test/jacocoTestReport.xml
-          flags: PARTIQL_TEST_SCRIPT
 
       - name: Upload EXAMPLES coverage
         uses: codecov/codecov-action@v3
         with:
           file: examples/build/reports/jacoco/test/jacocoTestReport.xml
           flags: EXAMPLES
-
-      - name: Upload EXTENSIONS coverage
-        uses: codecov/codecov-action@v3
-        with:
-          file: extensions/build/reports/jacoco/test/jacocoTestReport.xml
-          flags: EXTENSIONS
 
   randomized-test:
     runs-on: ubuntu-20.04

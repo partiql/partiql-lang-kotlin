@@ -56,6 +56,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 - The deprecated `IonValue` property in `ExprValue` interface is now removed.
+- Removed partiql-extensions to partiql-cli `org.partiql.cli.functions`
 
 ### Security
 
