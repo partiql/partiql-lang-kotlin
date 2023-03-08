@@ -31,14 +31,16 @@ sealed class TypeDef(
     val ref: TypeRef.Path,
 ) {
 
-    open val children: List<TypeDef> = emptyList()
+    /**
+     * Children represent type definitions nested within another, but not related algebraic-ly.
+     * That is, it's a convenience
+     */
+    abstract val children: List<TypeDef>
 
     /**
      * TypeDef.Sum represents a list of type variants
      */
-    class Sum(ref: TypeRef.Path, val variants: List<TypeDef>) : TypeDef(ref) {
-
-        override val children = variants
+    class Sum(ref: TypeRef.Path, val variants: List<TypeDef>, override val children: List<TypeDef>) : TypeDef(ref) {
 
         override fun toString() = "sum::$ref"
     }
@@ -46,9 +48,7 @@ sealed class TypeDef(
     /**
      * TypeDef.Product represents a structure of name/value pairs
      */
-    class Product(ref: TypeRef.Path, val props: List<TypeProp>) : TypeDef(ref) {
-
-        override val children: List<TypeDef> = props.filterIsInstance<TypeProp.Inline>().map { it.def }
+    class Product(ref: TypeRef.Path, val props: List<TypeProp>, override val children: List<TypeDef>) : TypeDef(ref) {
 
         override fun toString() = "product::$ref(${props.joinToString()})"
     }
@@ -60,6 +60,8 @@ sealed class TypeDef(
      */
     class Enum(ref: TypeRef.Path, val values: List<String>) : TypeDef(ref) {
 
+        override val children: List<TypeDef> = emptyList()
+
         override fun toString() = "enum::$ref::[${values.joinToString()}]"
     }
 
@@ -69,8 +71,8 @@ sealed class TypeDef(
     fun nullable(): TypeDef {
         val ref = TypeRef.Path(nullable = true, *ref.path.toTypedArray())
         return when (this) {
-            is Sum -> Sum(ref, variants)
-            is Product -> Product(ref, props)
+            is Sum -> Sum(ref, variants, children)
+            is Product -> Product(ref, props, children)
             is Enum -> Enum(ref, values)
         }
     }

@@ -18,7 +18,9 @@ package org.partiql.sprout.parser.ion
 import com.amazon.ion.IonList
 import com.amazon.ion.IonStruct
 import com.amazon.ion.IonSymbol
+import com.amazon.ion.IonType
 import com.amazon.ion.IonValue
+import com.amazon.ion.UnknownSymbolException
 import java.util.LinkedList
 import java.util.Stack
 
@@ -71,6 +73,27 @@ internal fun IonValue.isInline(): Boolean {
         }
     }
     return false
+}
+
+/**
+ * Returns true if this value is of the form
+ *   - _: [ ... ]
+ *   - _::[ ... ]
+ *
+ *  Which represent nested definitions in product and sum types respectively.
+ */
+internal fun IonValue.isContainer(): Boolean {
+    if (type != IonType.LIST) {
+        return false
+    }
+    val symbol = try {
+        // _: [ ]
+        fieldName
+    } catch (_: UnknownSymbolException) {
+        // _::[]
+        typeAnnotations[0]
+    }
+    return symbol == "_"
 }
 
 /**

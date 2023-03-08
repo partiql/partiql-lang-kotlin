@@ -91,12 +91,7 @@ class KotlinGenerator(private val options: KotlinOptions) : Generator<KotlinResu
         product = this,
         props = props.map { KotlinNodeSpec.Prop(it.name.toCamelCase(), symbols.typeNameOf(it.ref)) },
         clazz = symbols.clazz(ref),
-        children = props.filterIsInstance<TypeProp.Inline>().mapNotNull {
-            when (it.def) {
-                is TypeDef.Product, is TypeDef.Sum -> it.def.generate(symbols)
-                else -> null
-            }
-        },
+        children = children.mapNotNull { it.generate(symbols) },
         types = props.filterIsInstance<TypeProp.Inline>().mapNotNull {
             when (it.def) {
                 is TypeDef.Enum -> it.def.generate(symbols)
@@ -125,8 +120,9 @@ class KotlinGenerator(private val options: KotlinOptions) : Generator<KotlinResu
         sum = this,
         variants = variants.mapNotNull { it.generate(symbols) },
         clazz = symbols.clazz(ref),
+        children = children.mapNotNull { it.generate(symbols) }
     ).apply {
-        children.forEach { it.builder.superclass(clazz) }
+        variants.forEach { it.builder.superclass(clazz) }
     }
 
     /**

@@ -80,6 +80,7 @@ sealed class KotlinNodeSpec(
     class Sum(
         val sum: TypeDef.Sum,
         val variants: List<KotlinNodeSpec>,
+        override val children: List<KotlinNodeSpec>,
         clazz: ClassName,
     ) : KotlinNodeSpec(
         def = sum,
@@ -87,9 +88,7 @@ sealed class KotlinNodeSpec(
         builder = TypeSpec.classBuilder(clazz).addModifiers(KModifier.SEALED),
         constructor = FunSpec.constructorBuilder(),
         companion = TypeSpec.companionObjectBuilder(),
-    ) {
-        override val children: List<KotlinNodeSpec> = variants
-    }
+    )
 
     /**
      * Derived from a [TypeProp], but replaced the ref with a ClassName
