@@ -87,8 +87,6 @@ abstract class PublishPlugin : Plugin<Project> {
                 create<MavenPublication>("maven") {
                     artifactId = ext.artifactId
                     from(components["java"])
-                    artifact(tasks["sourcesJar"])
-                    artifact(tasks["javadocJar"])
                     pom {
                         packaging = "jar"
                         name.set(ext.name)
