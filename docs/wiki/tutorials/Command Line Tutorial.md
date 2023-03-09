@@ -6,16 +6,16 @@ The following command will build and run the CLI:
 
 ```shell
 # To build and run
-./partiql-app/partiql-cli/partiql.sh
+./partiql-cli/partiql.sh
 
 # To build (only)
 ./gradlew :partiql-cli:install
 
 # To Run (only)
-./partiql-app/partiql-cli/build/install/partiql-cli/bin/partiql
+./partiql-cli/build/install/partiql-cli/bin/partiql
 ```
 
-After building the entire project, distributable jars are located in the `cli/build/distributions` directory (relative to the 
+After building the entire project, distributable jars are located in the `partiql-cli/build/distributions` directory (relative to the 
 project root).
 
 Be sure to include the correct relative path to `gradlew` if you are not in the project root.
@@ -31,7 +31,7 @@ To view all available options, run the CLI with the `--help` option.
 To execute a single query, run:
 
 ```shell
-./partiql-app/partiql-cli/partiql.sh query.partiql
+./partiql-cli/partiql.sh query.partiql
 ```
 
 where `query.partiql` contains the PartiQL query to execute.
@@ -42,10 +42,10 @@ Alternatively, you may pipe input into the native command:
 
 ```shell
 # Via `echo`
-echo "SELECT * FROM [0, 1, 2]" | ./partiql-app/partiql-cli/build/install/partiql-cli/bin/partiql
+echo "SELECT * FROM [0, 1, 2]" | ./partiql-cli/build/install/partiql-cli/bin/partiql
 
 # Via `cat`
-echo ~/Desktop/query.partiql | ./partiql-app/partiql-cli/build/install/partiql-cli/bin/partiql
+echo ~/Desktop/query.partiql | ./partiql-cli/build/install/partiql-cli/bin/partiql
 ```
 
 ### Running a PartiQL Executable File (Unix)
@@ -59,7 +59,7 @@ please add `partiql` (the built executable) to your path:
 
 # Example adding gradle-built partiql command. Need to build the executable (see directions above).
 PATH_TO_PARTIQL_LANG_KOTLIN="${HOME}/partiql-lang-kotlin"
-PATH="$PATH_TO_PARTIQL_LANG_KOTLIN/partiql-app/partiql-cli/build/install/partiql-cli/bin:$PATH"
+PATH="$PATH_TO_PARTIQL_LANG_KOTLIN/partiql-cli/build/install/partiql-cli/bin:$PATH"
 export PATH
 ```
 
@@ -104,7 +104,7 @@ To start an interactive shell, execute:
 > Note that running directly with Gradle will eat arrow keys and control sequences due to the Gradle daemon.
 
 ```shell
-./partiql-app/partiql-cli/partiql.sh
+./partiql-cli/partiql.sh
 ```
 
 You will see a prompt that looks as follows:
@@ -215,7 +215,7 @@ The variables `animals` and `types` can both be bound to the execution environme
 To bind the environment file to the execution environment, start the Shell with the following command:
 
 ```shell
-$ ./partiql-app/partiql-cli/partiql.sh -e config.env
+$ ./partiql-cli/partiql.sh -e config.env
 ```
 
 Or, if you have extracted one of the compressed archives:
