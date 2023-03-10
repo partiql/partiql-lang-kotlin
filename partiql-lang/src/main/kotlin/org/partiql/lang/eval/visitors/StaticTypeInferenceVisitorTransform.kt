@@ -1469,15 +1469,10 @@ internal class StaticTypeInferenceVisitorTransform(
                 }
                 pathComponent.withStaticType(currentType)
             }
-            // When [this](https://github.com/partiql/partiql-ir-generator/pull/53) is merged the below
-            // can be simplified.
-            return PartiqlAst.build {
-                path(
-                    root = path.root,
-                    steps = newComponents,
-                    metas = super.transformMetas(node.metas)
-                ).withStaticType(currentType)
-            }
+            return path.copy(
+                steps = newComponents,
+                metas = super.transformMetas(node.metas)
+            ).withStaticType(currentType)
         }
 
         private fun inferPathComponentExprType(
