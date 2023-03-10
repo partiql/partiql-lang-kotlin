@@ -32,7 +32,7 @@ publish {
     artifactId = "partiql-isl-kotlin"
     name = "PartiQL ISL Kotlin"
     description = "An object model that allows for programmatic manipulation of Ion Schema Language schemas."
-    url = "https://github.com/partiql/partiql-lang-kotlin/tree/main/lib/partiql-isl"
+    url = "https://github.com/partiql/partiql-lang-kotlin/tree/main/lib/isl"
 }
 
 pig {
