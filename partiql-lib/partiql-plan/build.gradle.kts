@@ -5,7 +5,8 @@ plugins {
 
 dependencies {
     // only for the org.partiql.domains package
-    implementation(project(":lang"))
+    implementation(project(":partiql-lang"))
+    implementation(project(":partiql-types"))
     // pretty printing
     implementation(Deps.kotlinReflect)
 }

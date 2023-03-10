@@ -3,13 +3,13 @@ package org.partiql.plan
 import com.amazon.ionelement.api.MetaContainer
 import com.amazon.ionelement.api.ionNull
 import org.partiql.lang.domains.PartiqlAst
-import org.partiql.lang.types.StaticType
 import org.partiql.plan.ir.Arg
 import org.partiql.plan.ir.Branch
 import org.partiql.plan.ir.Case
 import org.partiql.plan.ir.Field
 import org.partiql.plan.ir.Rex
 import org.partiql.plan.ir.Step
+import org.partiql.types.StaticType
 
 /**
  * Some workarounds for transforming a PIG tree without having to create another visitor:

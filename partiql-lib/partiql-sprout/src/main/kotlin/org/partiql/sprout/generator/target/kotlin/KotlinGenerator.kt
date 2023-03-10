@@ -120,7 +120,7 @@ class KotlinGenerator(private val options: KotlinOptions) : Generator<KotlinResu
         sum = this,
         variants = variants.mapNotNull { it.generate(symbols) },
         clazz = symbols.clazz(ref),
-        children = children.mapNotNull { it.generate(symbols) }
+        otherTypes = children.mapNotNull { it.generate(symbols) }
     ).apply {
         variants.forEach { it.builder.superclass(clazz) }
     }

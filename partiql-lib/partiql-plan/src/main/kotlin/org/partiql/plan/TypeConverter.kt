@@ -2,11 +2,11 @@ package org.partiql.plan
 
 import com.amazon.ion.IonType
 import org.partiql.lang.domains.PartiqlAst
-import org.partiql.lang.types.DecimalType
-import org.partiql.lang.types.NumberConstraint
-import org.partiql.lang.types.StaticType
-import org.partiql.lang.types.StringType
-import org.partiql.lang.types.TimeType
+import org.partiql.types.DecimalType
+import org.partiql.types.NumberConstraint
+import org.partiql.types.StaticType
+import org.partiql.types.StringType
+import org.partiql.types.TimeType
 
 /**
  * Converts a [PartiqlAst.Type] to [StaticType]

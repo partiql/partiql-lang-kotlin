@@ -1,7 +1,8 @@
+@file:Suppress("unused", "UNUSED_PARAMETER")
+
 package org.partiql.plan.ir.builder
 
 import com.amazon.ionelement.api.IonElement
-import org.partiql.lang.types.StaticType
 import org.partiql.plan.ir.Arg
 import org.partiql.plan.ir.Binding
 import org.partiql.plan.ir.Branch
@@ -15,6 +16,7 @@ import org.partiql.plan.ir.Rel
 import org.partiql.plan.ir.Rex
 import org.partiql.plan.ir.SortSpec
 import org.partiql.plan.ir.Step
+import org.partiql.types.StaticType
 
 public fun <T : PlanNode> plan(
     factory: PlanFactory = PlanFactory.DEFAULT,

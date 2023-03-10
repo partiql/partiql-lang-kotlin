@@ -102,7 +102,15 @@ class KotlinSymbols private constructor(
         ref.path.joinToString("_").toPascalCase()
     }
 
-    fun def(ref: TypeRef.Path): TypeDef = defs[ref.id] ?: error("no definition found for type `$ref`")
+    // fun def(ref: TypeRef.Path): TypeDef = defs[ref.id] ?: error("no definition found for type `$ref`")
+    fun def(ref: TypeRef.Path): TypeDef {
+        val def = defs[ref.id]
+        if (def == null) {
+            error("no definition found for type `$ref`")
+        } else {
+            return def
+        }
+    }
 
     /**
      * Computes a type name for the given [TypeRef]

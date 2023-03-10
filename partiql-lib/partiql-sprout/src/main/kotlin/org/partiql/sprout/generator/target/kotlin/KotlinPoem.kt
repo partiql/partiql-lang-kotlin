@@ -23,7 +23,6 @@ abstract class KotlinPoem(val symbols: KotlinSymbols) {
     }
 
     open fun apply(node: KotlinNodeSpec.Sum) {
-        node.variants.forEach { apply(it) }
         node.children.forEach { apply(it) }
     }
 }
