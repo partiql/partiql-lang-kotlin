@@ -18,8 +18,8 @@ package org.partiql.cli
 import com.amazon.ion.system.IonSystemBuilder
 import org.partiql.cli.pico.PartiQLCommand
 import org.partiql.lang.eval.EvaluationSession
+import org.partiql.lang.planner.transforms.AstToPlan
 import org.partiql.lang.syntax.PartiQLParserBuilder
-import org.partiql.plan.Planner
 import org.partiql.plan.debug.PlanPrinter
 import picocli.CommandLine
 import java.io.PrintStream
@@ -49,7 +49,7 @@ object Debug {
         val out = PrintStream(System.out)
         val parser = PartiQLParserBuilder.standard().build()
         val ast = parser.parseAstStatement(input)
-        val plan = Planner.default.plan(ast)
+        val plan = AstToPlan.transform(ast)
         // print plan as tree
         PlanPrinter.append(out, plan)
         return "OK"

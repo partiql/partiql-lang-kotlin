@@ -1,17 +1,23 @@
-package org.partiql.plan.passes
+package org.partiql.plan.visitor
 
-import org.partiql.plan.ir.PlanNode
-import org.partiql.plan.ir.visitor.PlanBaseVisitor
+import org.partiql.plan.PlanNode
 import kotlin.reflect.full.declaredMemberProperties
 import kotlin.reflect.full.primaryConstructor
 
 /**
  * Simple plan rewriter.
  *
- * Here are some issues with this:
+ * THIS HAS ISSUES!
  * 1. We should generate this, because "reflection is slow", but also this is hacky
  * 2. This assumes there's a primary constructor where each parameter is a member property
  * 3. This will not rewrite collections of nodes
+ *
+ *  - Function Lowering
+ *  - Constant Folding
+ *  - Reduce Logical Expressions
+ *  - Remove always true filters
+ *  - Replace always false filters with empty query
+ *  - Proj/Pred push down
  */
 abstract class PlanRewriter : PlanBaseVisitor<PlanNode, Unit>() {
 
