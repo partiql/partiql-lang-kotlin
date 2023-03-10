@@ -1,4 +1,4 @@
-package org.partiql.plan
+package org.partiql.lang.planner.transforms
 
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.eval.CompileOptions
@@ -10,54 +10,40 @@ import org.partiql.lang.eval.visitors.PartiqlAstSanityValidator
 import org.partiql.lang.eval.visitors.PipelinedVisitorTransform
 import org.partiql.lang.eval.visitors.SelectListItemAliasVisitorTransform
 import org.partiql.lang.eval.visitors.SelectStarVisitorTransform
-import org.partiql.plan.ir.PartiQLPlan
-import org.partiql.plan.ir.Rex
-
-typealias Pass = (PartiQLPlan) -> PartiQLPlan
+import org.partiql.lang.planner.transforms.plan.RelConverter
+import org.partiql.lang.planner.transforms.plan.RexConverter
+import org.partiql.plan.PartiQLPlan
+import org.partiql.plan.Rex
 
 /**
- * Experimental [PartiqlAst.Statement] to PartiQL [Plan]
+ * Translate the PIG AST to an implementation of the PartiQL Plan Representation.
  */
-class Planner(private val passes: List<Pass>) {
-
-    companion object {
-
-        /**
-         * Stand-in for default impl
-         */
-        @JvmStatic
-        val default = Planner(emptyList())
-
-        /**
-         * Common place to throw exceptions with access to the AST node.
-         * Error handling pattern is undecided
-         */
-        internal fun unsupported(node: PartiqlAst.PartiqlAstNode): Nothing {
-            throw UnsupportedOperationException("node: $node")
-        }
-    }
+object AstToPlan {
 
     /**
-     * Raise an interface later
+     * Converts a PartiqlAst.Statement to a [PartiQLPlan]
      */
-    fun plan(statement: PartiqlAst.Statement): PartiQLPlan {
-        // 1. Normalize
+    fun transform(statement: PartiqlAst.Statement): PartiQLPlan {
         val ast = statement.normalize()
         if (ast !is PartiqlAst.Statement.Query) {
             unsupported(ast)
         }
-        // 2. Translate AST
-        val root = convert(ast.expr)
-        // 3. Initial plan
-        val plan = PartiQLPlan(
+        val root = transform(ast.expr)
+        return PartiQLPlan(
             version = PartiQLPlan.Version.PARTIQL_V0,
             root = root,
         )
-        // 4. Apply all passes
-        return passes.fold(plan) { p, pass -> pass.invoke(p) }
     }
 
     // --- Internal ---------------------------------------------
+
+    /**
+     * Common place to throw exceptions with access to the AST node.
+     * Error handling pattern is undecided
+     */
+    internal fun unsupported(node: PartiqlAst.PartiqlAstNode): Nothing {
+        throw UnsupportedOperationException("node: $node")
+    }
 
     /**
      * Normalizes a statement AST node. Copied from EvaluatingCompiler, and include the validation.
@@ -87,7 +73,7 @@ class Planner(private val passes: List<Pass>) {
     /**
      * Convert Partiql.Ast.Expr to a Rex/Rel tree
      */
-    private fun convert(query: PartiqlAst.Expr): Rex = when (query) {
+    private fun transform(query: PartiqlAst.Expr): Rex = when (query) {
         is PartiqlAst.Expr.Select -> {
             // <query-expression>
             val rex = RelConverter.convert(query)

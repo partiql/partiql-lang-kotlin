@@ -1,9 +1,9 @@
 package org.partiql.plan.debug
 
-import org.partiql.plan.ir.Common
-import org.partiql.plan.ir.PlanNode
-import org.partiql.plan.ir.Rel
-import org.partiql.plan.ir.visitor.PlanBaseVisitor
+import org.partiql.plan.Common
+import org.partiql.plan.PlanNode
+import org.partiql.plan.Rel
+import org.partiql.plan.visitor.PlanBaseVisitor
 import kotlin.reflect.KVisibility
 import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.full.memberProperties

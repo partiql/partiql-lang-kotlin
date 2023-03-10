@@ -32,7 +32,7 @@ import org.partiql.pig.runtime.SymbolPrimitive
  *
  * ```SELECT a + 1 AS b FROM c ORDER BY a + 1```
  */
-class OrderBySortSpecVisitorTransform : VisitorTransformBase() {
+internal class OrderBySortSpecVisitorTransform : VisitorTransformBase() {
 
     private val projectionAliases: MutableMap<String, PartiqlAst.Expr> = mutableMapOf()
 

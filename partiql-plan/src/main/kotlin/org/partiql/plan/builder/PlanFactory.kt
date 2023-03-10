@@ -1,19 +1,19 @@
-package org.partiql.plan.ir.builder
+package org.partiql.plan.builder
 
 import com.amazon.ionelement.api.IonElement
-import org.partiql.plan.ir.Arg
-import org.partiql.plan.ir.Binding
-import org.partiql.plan.ir.Branch
-import org.partiql.plan.ir.Case
-import org.partiql.plan.ir.Common
-import org.partiql.plan.ir.Field
-import org.partiql.plan.ir.PartiQLPlan
-import org.partiql.plan.ir.PlanNode
-import org.partiql.plan.ir.Property
-import org.partiql.plan.ir.Rel
-import org.partiql.plan.ir.Rex
-import org.partiql.plan.ir.SortSpec
-import org.partiql.plan.ir.Step
+import org.partiql.plan.Arg
+import org.partiql.plan.Binding
+import org.partiql.plan.Branch
+import org.partiql.plan.Case
+import org.partiql.plan.Common
+import org.partiql.plan.Field
+import org.partiql.plan.PartiQLPlan
+import org.partiql.plan.PlanNode
+import org.partiql.plan.Property
+import org.partiql.plan.Rel
+import org.partiql.plan.Rex
+import org.partiql.plan.SortSpec
+import org.partiql.plan.Step
 import org.partiql.types.StaticType
 import kotlin.Any
 import kotlin.String
@@ -191,6 +191,6 @@ public abstract class PlanFactory {
         public val DEFAULT: PlanFactory = object : PlanFactory() {}
 
         @JvmStatic
-        public fun <T : PlanNode> create(block: PlanFactory.() -> T) = PlanFactory.DEFAULT.block()
+        public fun <T : PlanNode> create(block: PlanFactory.() -> T) = DEFAULT.block()
     }
 }

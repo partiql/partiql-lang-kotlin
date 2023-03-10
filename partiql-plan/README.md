@@ -15,7 +15,7 @@ Undecided if we will even generate the internal representation, but the serializ
 # running from partiql-plan/
 $HOME/Desktop/sprout/bin/sprout generate kotlin\
  -o ./ir\
- -p org.partiql.plan.ir\
+ -p org.partiql.plan\
  -u Plan\
  -m DATA\
  --poems visitor --poems builder \

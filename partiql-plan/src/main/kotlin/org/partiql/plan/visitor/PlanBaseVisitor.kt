@@ -1,16 +1,16 @@
-package org.partiql.plan.ir.visitor
+package org.partiql.plan.visitor
 
-import org.partiql.plan.ir.Arg
-import org.partiql.plan.ir.Binding
-import org.partiql.plan.ir.Branch
-import org.partiql.plan.ir.Common
-import org.partiql.plan.ir.Field
-import org.partiql.plan.ir.PartiQLPlan
-import org.partiql.plan.ir.PlanNode
-import org.partiql.plan.ir.Rel
-import org.partiql.plan.ir.Rex
-import org.partiql.plan.ir.SortSpec
-import org.partiql.plan.ir.Step
+import org.partiql.plan.Arg
+import org.partiql.plan.Binding
+import org.partiql.plan.Branch
+import org.partiql.plan.Common
+import org.partiql.plan.Field
+import org.partiql.plan.PartiQLPlan
+import org.partiql.plan.PlanNode
+import org.partiql.plan.Rel
+import org.partiql.plan.Rex
+import org.partiql.plan.SortSpec
+import org.partiql.plan.Step
 
 public abstract class PlanBaseVisitor<R, C> : PlanVisitor<R, C> {
     public override fun visit(node: PlanNode, ctx: C): R = node.accept(this, ctx)

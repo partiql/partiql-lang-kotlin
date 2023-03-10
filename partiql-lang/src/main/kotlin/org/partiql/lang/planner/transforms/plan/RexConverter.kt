@@ -1,14 +1,15 @@
-package org.partiql.plan
+package org.partiql.lang.planner.transforms.plan
 
 import com.amazon.ionelement.api.MetaContainer
 import com.amazon.ionelement.api.ionNull
 import org.partiql.lang.domains.PartiqlAst
-import org.partiql.plan.ir.Arg
-import org.partiql.plan.ir.Branch
-import org.partiql.plan.ir.Case
-import org.partiql.plan.ir.Field
-import org.partiql.plan.ir.Rex
-import org.partiql.plan.ir.Step
+import org.partiql.lang.planner.transforms.AstToPlan
+import org.partiql.plan.Arg
+import org.partiql.plan.Branch
+import org.partiql.plan.Case
+import org.partiql.plan.Field
+import org.partiql.plan.Rex
+import org.partiql.plan.Step
 import org.partiql.types.StaticType
 
 /**
@@ -91,7 +92,7 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
      * MetaContainer isn't actually a domain node, and we don't have any context as to where the MetaContainer
      * is coming from which is why the current node is stuffed into Ctx
      */
-    override fun walkMetas(node: MetaContainer, ctx: Ctx) = Planner.unsupported(ctx.node)
+    override fun walkMetas(node: MetaContainer, ctx: Ctx) = AstToPlan.unsupported(ctx.node)
 
     override fun walkExprMissing(node: PartiqlAst.Expr.Missing, ctx: Ctx) = visit(node) {
         Rex.Lit(ionNull(), StaticType.MISSING)

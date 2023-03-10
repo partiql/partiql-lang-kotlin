@@ -1,4 +1,4 @@
-package org.partiql.plan
+package org.partiql.lang.planner.transforms.plan
 
 import com.amazon.ion.IonType
 import org.partiql.lang.domains.PartiqlAst
