@@ -15,6 +15,7 @@
 
 package org.partiql.sprout.parser.ion
 
+import com.amazon.ion.IonContainer
 import com.amazon.ion.IonList
 import com.amazon.ion.IonStruct
 import com.amazon.ion.IonValue
@@ -46,43 +47,56 @@ internal class IonSymbols private constructor(val root: Node) {
         }
     }
 
+    @Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE")
     private class Visitor : IonVisitor<Node, Node?> {
 
-        override fun visit(v: IonList, ctx: Node?): Node {
+        override fun visit(v: IonList, parent: Node?): Node {
             val id = v.id()
-            assertNonReserved(id, if (ctx != null) "child of $ctx" else "top-level type")
-            val node = Node(
+            assertNonReserved(id, if (parent != null) "child of $parent" else "top-level type")
+            var node = Node(
                 id = id,
-                parent = ctx
+                parent = parent
             )
+            // Skip this node by linking parent; add all symbols in special container syntax _::[ ... ]
+            if (id == "_") {
+                node = parent ?: error("unexpected container _ at top-level")
+            }
             if (!v.isEnum()) {
                 v.forEach { node.children.add(visit(it, node)) }
             }
             return node
         }
 
-        override fun visit(v: IonStruct, ctx: Node?): Node {
+        override fun visit(v: IonStruct, parent: Node?): Node {
             val id = v.id()
-            assertNonReserved(id, if (ctx != null) "child of $ctx" else "top-level type")
+            assertNonReserved(id, if (parent != null) "child of $parent" else "top-level type")
             val node = Node(
                 id = id,
-                parent = ctx,
+                parent = parent,
             )
-            v.filter { it.isInline() }.forEach {
-                val (symbol, nullable) = it.ref()
-                // DANGER! Mutate annotations to set the definition id as if it weren't an inline
-                it.setTypeAnnotations(symbol)
-                // Parse as any other definition
-                val child = visit(it, node)
-                // DANGER! Add back the dropped "optional" annotation
-                if (nullable) it.setTypeAnnotations("optional", symbol)
-                // Include the inline definition as a child of this node
-                node.children.add(child)
+            v.forEach { field ->
+                when {
+                    field.isContainer() -> {
+                        val children = (field as IonContainer).map { visit(it, node) }
+                        node.children.addAll(children)
+                    }
+                    field.isInline() -> {
+                        val (symbol, nullable) = field.ref()
+                        // DANGER! Mutate annotations to set the definition id as if it weren't an inline
+                        field.setTypeAnnotations(symbol)
+                        // Parse as any other definition
+                        val child = visit(field, node)
+                        // DANGER! Add back the dropped "optional" annotation
+                        if (nullable) field.setTypeAnnotations("optional", symbol)
+                        // Include the inline definition as a child of this node
+                        node.children.add(child)
+                    }
+                }
             }
             return node
         }
 
-        override fun defaultVisit(v: IonValue, ctx: Node?) = error("cannot parse value $v")
+        override fun defaultVisit(v: IonValue, parent: Node?) = error("cannot parse value $v")
     }
 
     /**

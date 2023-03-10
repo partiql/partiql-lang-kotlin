@@ -24,10 +24,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Added numeric functions `abs`, `sqrt`, `exp`, `ln`, `pow`.
+- Added numeric builtins ABS, SQRT, EXP, LN, POW, MOD.
+- Added string builtins POSITION, OVERLAY, BIT_LENGTH, OCTET_LENGTH, CARDINALITY
 
 ### Changed
 - Deprecates the project level opt-in annotation `PartiQLExperimental` and split it into feature level. `ExperimentalPartiQLCompilerPipeline` and `ExperimentalWindowFunctions`.
+- **Breaking**: Moves StaticType to `partiql-types`.
+  - All references to static types need to modify their imports accordingly. For example,
+    `org.partiql.lang.types.IntType` is now `org.partiql.types.IntType`.
+  - Please modify existing dependencies accordingly. You may need to add dependency `org.partiql:partiql-types:0.10.0`.
+  - Also, several methods within StaticType have been moved to a utility class within `partiql-lang-kotln`. See the below list:
+    1. `org.partiql.lang.types.StaticType.fromExprValueType` -> `org.partiql.lang.types.StaticTypeUtils.staticTypeFromExprValueType`
+    2. `org.partiql.lang.types.StaticType.fromExprValue` -> `org.partiql.lang.types.StaticTypeUtils.staticTypeFromExprValue`
+    3. `org.partiql.lang.types.StaticType.isInstance` -> `org.partiql.lang.types.StaticTypeUtils.isInstance`
+    4. `org.partiql.lang.types.StaticType.isComparableTo` -> `org.partiql.lang.types.StaticTypeUtils.areStaticTypesComparable`
+    5. `org.partiql.lang.types.StaticType.isSubTypeOf` -> `org.partiql.lang.types.StaticTypeUtils.isSubTypeOf`
+    5. `org.partiql.lang.types.StaticType.typeDomain` -> `org.partiql.lang.types.StaticTypeUtils.getTypeDomain`
+    6. `org.partiql.lang.types.SingleType.getRuntimeType` -> `org.partiql.lang.types.StaticTypeUtils.getRuntimeType`
+    7. `org.partiql.lang.types.StringType.StringLengthConstraint.matches` -> `org.partiql.lang.types.StaticTypeUtils.stringLengthConstraintMatches`
 
 ### Deprecated
 - `ExprValueFactory` interface marked as deprecated. Equivalent `ExprValue` construction methods are implemented in the `ExprValue` interface as static methods. 
@@ -43,14 +57,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 - The deprecated `IonValue` property in `ExprValue` interface is now removed.
+- Removed partiql-extensions to partiql-cli `org.partiql.cli.functions`
 
 ### Security
 
 ## [0.9.2] - 2023-01-20
 
 ### Added
-- Adds ability to pipe queries to the CLI
-- Adds ability to run PartiQL files as executables by adding support for shebangs
+- Adds ability to pipe queries to the CLI.
+- Adds ability to run PartiQL files as executables by adding support for shebangs.
+- Adds experimental syntax for CREATE TABLE, towards addressing 
+  [#36](https://github.com/partiql/partiql-docs/issues/36) of specifying PartiQL DDL.
 
 ### Changed
 

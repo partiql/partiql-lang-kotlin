@@ -15,6 +15,7 @@
 
 package org.partiql.sprout.parser.ion
 
+import com.amazon.ion.IonContainer
 import com.amazon.ion.IonList
 import com.amazon.ion.IonStruct
 import com.amazon.ion.IonSymbol
@@ -98,10 +99,14 @@ internal object IonTypeParser : SproutParser {
                     ref = ref,
                     values = v.map { (it as IonSymbol).stringValue() }
                 )
-                else -> TypeDef.Sum(
-                    ref = ref,
-                    variants = v.map { t -> visit(t, ctx) }
-                )
+                else -> {
+                    val (variants, children) = visitSumVariants(v, ctx)
+                    TypeDef.Sum(
+                        ref = ref,
+                        variants = variants,
+                        children = children,
+                    )
+                }
             }
             ctx.define(type)
         }
@@ -111,38 +116,70 @@ internal object IonTypeParser : SproutParser {
          */
         override fun visit(v: IonStruct, ctx: Context): TypeDef = ctx.scope(v) {
             val ref = ctx.ref()
+            val (props, children) = visitProductProps(v, ctx)
             val type = TypeDef.Product(
                 ref = ref,
-                props = v.map { property(it, ctx) }
+                props = props,
+                children = children,
             )
             ctx.define(type)
         }
 
         /**
-         * Parse a [TypeProp.Ref] or [TypeProp.Inline]
+         * Returns a pair of the product def properties and children
          */
-        private fun property(v: IonValue, ctx: Context): TypeProp {
-            val (symbol, nullable) = v.ref()
-            return when {
-                v.isInline() -> {
-                    // DANGER! Mutate annotations to set the definition id as if it weren't an inline
-                    v.setTypeAnnotations(symbol)
-                    var def = visit(v, ctx)
-                    // DANGER! Add back the dropped "optional" annotation
-                    if (nullable) {
-                        v.setTypeAnnotations("optional", symbol)
-                        def = def.nullable()
+        private fun visitProductProps(v: IonStruct, ctx: Context): Pair<List<TypeProp>, List<TypeDef>> {
+            val props = mutableListOf<TypeProp>()
+            val children = mutableListOf<TypeDef>()
+            v.forEach { field ->
+                when {
+                    field.isContainer() -> {
+                        // Add all definitions in special container field _: [ ]
+                        val kids = (field as IonContainer).map { visit(it, ctx) }
+                        children.addAll(kids)
                     }
-                    TypeProp.Inline(
-                        name = v.fieldName,
-                        def = def
-                    )
+                    field.isInline() -> {
+                        val (symbol, nullable) = field.ref()
+                        // DANGER! Mutate annotations to set the definition id as if it weren't an inline
+                        field.setTypeAnnotations(symbol)
+                        var def = visit(field, ctx)
+                        // DANGER! Add back the dropped "optional" annotation
+                        if (nullable) {
+                            field.setTypeAnnotations("optional", symbol)
+                            def = def.nullable()
+                        }
+                        children.add(def)
+                        val prop = TypeProp.Inline(field.fieldName, def)
+                        props.add(prop)
+                    }
+                    else -> {
+                        val prop = TypeProp.Ref(field.fieldName, ctx.resolve(field))
+                        props.add(prop)
+                    }
                 }
-                else -> TypeProp.Ref(
-                    name = v.fieldName,
-                    ref = ctx.resolve(v),
-                )
             }
+            return props to children
+        }
+
+        /**
+         * Returns a pair of the sum variants and children
+         */
+        private fun visitSumVariants(v: IonList, ctx: Context): Pair<List<TypeDef>, List<TypeDef>> {
+            val variants = mutableListOf<TypeDef>()
+            val children = mutableListOf<TypeDef>()
+            v.forEach { item ->
+                when {
+                    item.isContainer() -> {
+                        val kids = (item as IonContainer).map { visit(it, ctx) }
+                        children.addAll(kids)
+                    }
+                    else -> {
+                        val variant = visit(item, ctx)
+                        variants.add(variant)
+                    }
+                }
+            }
+            return variants to children
         }
 
         override fun defaultVisit(v: IonValue, ctx: Context) = error("cannot parse value $v, expect 'struct' or 'list'")

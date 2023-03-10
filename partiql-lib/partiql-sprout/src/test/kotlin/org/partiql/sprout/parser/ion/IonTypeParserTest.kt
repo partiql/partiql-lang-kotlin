@@ -150,6 +150,26 @@ internal class IonTypeParserTest {
         println(model.pretty())
     }
 
+    @Test
+    internal fun parseContainerDefinitions() {
+        val input = """
+            foo_product::{
+               a: int,
+               b: bool,
+               _: [
+                  x::{},
+                  y::{},
+               ]
+            }
+            foo_sum::[
+              x::{},
+              y::{},
+            ]
+        """.trimIndent()
+        val model = IonTypeParser.parse("test", input)
+        println(model.pretty())
+    }
+
     // This could be better
     private fun Universe.pretty() = buildString {
         appendLine("universe::[")

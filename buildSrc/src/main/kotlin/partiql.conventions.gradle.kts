@@ -49,7 +49,7 @@ java {
 
 tasks.test {
     useJUnitPlatform() // Enable JUnit5
-    jvmArgs.addAll(listOf("-Duser.language=en", "-Duser.country=US"))
+    jvmArgs!!.addAll(listOf("-Duser.language=en", "-Duser.country=US"))
     maxHeapSize = "4g"
     testLogging {
         events.add(TestLogEvent.FAILED)
@@ -85,6 +85,9 @@ sourceSets {
 }
 
 kotlin.sourceSets {
+    all {
+        languageSettings.optIn("kotlin.RequiresOptIn")
+    }
     main {
         kotlin.srcDir(generatedSrc)
     }

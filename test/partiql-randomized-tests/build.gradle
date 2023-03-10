@@ -18,8 +18,8 @@ plugins {
 }
 
 dependencies {
-    testImplementation project(':lang')
-    testImplementation project(':lang').sourceSets.test.output
+    testImplementation project(':partiql-lang')
+    testImplementation project(':partiql-lang').sourceSets.test.output
     testImplementation 'org.jetbrains.kotlin:kotlin-test-junit5'
     testImplementation 'pl.pragmatists:JUnitParams:[1.0.0,1.1.0)'
     testImplementation 'org.junit.vintage:junit-vintage-engine:5.7.0'
