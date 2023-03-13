@@ -86,11 +86,13 @@ This will build the reference interpreter and test framework, then run all unit 
 
 ## Directory Structure
 
-- `docs` source code for the GitHub Wiki
-- `partiql-grammar` contains the ANTLR files to generate the PartiQL Parser.
-- `lang` contains the source code of the library containing the interpreter.
-- `lang/jmh` contains the JMH benchmarks for PartiQL.
-- `cli` contains the source code of the command-line interface and interactive prompt. (CLI/REPL)
+- `docs` documentation and migration guides as well as source for the GitHub Wiki
+- `examples`
+- `lib` libraries not part of the partiql-lang-kotlin JAR
+- `partiql-cli` contains the source code of the command-line interface and interactive prompt. (CLI/REPL)
+- `partiql-lang` source code for the PartiQL parser and interpreter.
+- `paritql-lang/src/jmh` contains the JMH benchmarks for PartiQL.
+- `partiql-types` PartiQL type system
 
 ### Running JMH Benchmarks
 
