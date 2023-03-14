@@ -1372,8 +1372,6 @@ enum class ErrorCode(
     open fun getErrorMessage(errorContext: PropertyValueMap?): String =
         "${detailMessagePrefix()}, ${detailMessageSuffix(errorContext)}"
 
-    fun errorCategory(): String = category.toString()
-
     fun getProperties(): Set<Property> = properties
 }
 
