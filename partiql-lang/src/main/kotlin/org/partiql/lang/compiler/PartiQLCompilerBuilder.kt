@@ -19,8 +19,10 @@ import org.partiql.annotations.ExperimentalPartiQLCompilerPipeline
 import org.partiql.annotations.ExperimentalWindowFunctions
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ThunkReturnTypeAssertions
+import org.partiql.lang.eval.TypingMode
 import org.partiql.lang.eval.builtins.DynamicLookupExprFunction
 import org.partiql.lang.eval.builtins.SCALAR_BUILTINS_DEFAULT
+import org.partiql.lang.eval.builtins.definitionalBuiltins
 import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedure
 import org.partiql.lang.eval.physical.operators.AggregateOperatorFactoryDefault
 import org.partiql.lang.eval.physical.operators.FilterRelationalOperatorFactoryDefault
@@ -102,7 +104,7 @@ class PartiQLCompilerBuilder private constructor() {
                 keySelector = { it.name },
                 valueTransform = { it.typedOpParameter }
             ),
-            functions = allFunctions(),
+            functions = allFunctions(options.typingMode),
             procedures = customProcedures.associateBy(
                 keySelector = { it.signature.name },
                 valueTransform = { it }
@@ -138,9 +140,10 @@ class PartiQLCompilerBuilder private constructor() {
 
     // --- Internal ----------------------------------
 
-    private fun allFunctions(): Map<String, ExprFunction> {
+    private fun allFunctions(typingMode: TypingMode): Map<String, ExprFunction> {
+        val definitionalBuiltins = definitionalBuiltins(typingMode)
         val builtins = SCALAR_BUILTINS_DEFAULT
-        val allFunctions = builtins + customFunctions + DynamicLookupExprFunction()
+        val allFunctions = definitionalBuiltins + builtins + customFunctions + DynamicLookupExprFunction()
         return allFunctions.associateBy { it.signature.name }
     }
 
