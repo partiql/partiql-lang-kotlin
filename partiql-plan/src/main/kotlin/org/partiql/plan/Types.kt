@@ -3,6 +3,7 @@ package org.partiql.plan
 import com.amazon.ionelement.api.IonElement
 import org.partiql.plan.builder.ArgTypeBuilder
 import org.partiql.plan.builder.ArgValueBuilder
+import org.partiql.plan.builder.AttributeBuilder
 import org.partiql.plan.builder.BindingBuilder
 import org.partiql.plan.builder.BranchBuilder
 import org.partiql.plan.builder.CommonBuilder
@@ -74,16 +75,35 @@ public data class PartiQLPlan(
 }
 
 public data class Common(
-    public val schema: Map<String, Arg.Type>,
+    public val schema: List<Attribute>,
     public val properties: Set<Property>,
     public val metas: Map<String, Any>
 ) : PlanNode() {
+    public override val children: List<PlanNode> by lazy {
+        val kids = mutableListOf<PlanNode?>()
+        kids.addAll(schema)
+        kids.filterNotNull()
+    }
+
     public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
         visitor.visitCommon(this, ctx)
 
     public companion object {
         @JvmStatic
         public fun builder(): CommonBuilder = CommonBuilder()
+    }
+}
+
+public data class Attribute(
+    public val name: String,
+    public val type: StaticType
+) : PlanNode() {
+    public override fun <R, C> accept(visitor: PlanVisitor<R, C>, ctx: C): R =
+        visitor.visitAttribute(this, ctx)
+
+    public companion object {
+        @JvmStatic
+        public fun builder(): AttributeBuilder = AttributeBuilder()
     }
 }
 
@@ -135,7 +155,7 @@ public sealed class Step : PlanNode() {
 
     public data class Key(
         public val `value`: Rex,
-        public val case: Case?
+        public val case: Case
     ) : Step() {
         public override val children: List<PlanNode> by lazy {
             val kids = mutableListOf<PlanNode?>()
@@ -520,7 +540,7 @@ public sealed class Rex : PlanNode() {
 
     public data class Id(
         public val name: String,
-        public val case: Case?,
+        public val case: Case,
         public val qualifier: Qualifier,
         public val type: StaticType?
     ) : Rex() {
@@ -660,7 +680,8 @@ public sealed class Rex : PlanNode() {
     public data class Switch(
         public val match: Rex?,
         public val branches: List<Branch>,
-        public val default: Rex?
+        public val default: Rex?,
+        public val type: StaticType?
     ) : Rex() {
         public override val children: List<PlanNode> by lazy {
             val kids = mutableListOf<PlanNode?>()
@@ -826,7 +847,8 @@ public sealed class Rex : PlanNode() {
 
         public data class Collection(
             public val rel: Rel,
-            public val `constructor`: Rex?
+            public val `constructor`: Rex?,
+            public val type: StaticType?
         ) : Query() {
             public override val children: List<PlanNode> by lazy {
                 val kids = mutableListOf<PlanNode?>()

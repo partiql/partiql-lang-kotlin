@@ -2,6 +2,7 @@ package org.partiql.plan.builder
 
 import com.amazon.ionelement.api.IonElement
 import org.partiql.plan.Arg
+import org.partiql.plan.Attribute
 import org.partiql.plan.Binding
 import org.partiql.plan.Branch
 import org.partiql.plan.Case
@@ -26,16 +27,18 @@ public abstract class PlanFactory {
     public open fun partiQLPlan(version: PartiQLPlan.Version, root: Rex) = PartiQLPlan(version, root)
 
     public open fun common(
-        schema: Map<String, Arg.Type>,
+        schema: List<Attribute>,
         properties: Set<Property>,
         metas: Map<String, Any>
     ) = Common(schema, properties, metas)
+
+    public open fun attribute(name: String, type: StaticType) = Attribute(name, type)
 
     public open fun binding(name: String, `value`: Rex) = Binding(name, value)
 
     public open fun `field`(name: Rex, `value`: Rex) = Field(name, value)
 
-    public open fun stepKey(`value`: Rex, case: Case?) = Step.Key(value, case)
+    public open fun stepKey(`value`: Rex, case: Case) = Step.Key(value, case)
 
     public open fun stepWildcard() = Step.Wildcard()
 
@@ -119,7 +122,7 @@ public abstract class PlanFactory {
 
     public open fun rexId(
         name: String,
-        case: Case?,
+        case: Case,
         qualifier: Rex.Id.Qualifier,
         type: StaticType?
     ) = Rex.Id(name, case, qualifier, type)
@@ -154,8 +157,9 @@ public abstract class PlanFactory {
     public open fun rexSwitch(
         match: Rex?,
         branches: List<Branch>,
-        default: Rex?
-    ) = Rex.Switch(match, branches, default)
+        default: Rex?,
+        type: StaticType?
+    ) = Rex.Switch(match, branches, default, type)
 
     public open fun rexAgg(
         id: String,
@@ -182,15 +186,16 @@ public abstract class PlanFactory {
         type: StaticType?
     ) = Rex.Query.Scalar.Pivot(rel, value, at, type)
 
-    public open fun rexQueryCollection(rel: Rel, `constructor`: Rex?) = Rex.Query.Collection(
-        rel,
-        constructor
-    )
+    public open fun rexQueryCollection(
+        rel: Rel,
+        `constructor`: Rex?,
+        type: StaticType?
+    ) = Rex.Query.Collection(rel, constructor, type)
 
     public companion object {
         public val DEFAULT: PlanFactory = object : PlanFactory() {}
 
         @JvmStatic
-        public fun <T : PlanNode> create(block: PlanFactory.() -> T) = DEFAULT.block()
+        public fun <T : PlanNode> create(block: PlanFactory.() -> T) = PlanFactory.DEFAULT.block()
     }
 }

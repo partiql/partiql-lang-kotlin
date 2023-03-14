@@ -21,10 +21,12 @@ plugins {
 dependencies {
     implementation(project(":partiql-lang"))
     implementation(project(":partiql-plan"))
+    implementation(project(":partiql-spi"))
     implementation(project(":partiql-types"))
     implementation(Deps.csv)
     implementation(Deps.awsSdkBom)
     implementation(Deps.awsSdkDynamodb)
+    implementation(Deps.gson)
     implementation(Deps.guava)
     implementation(Deps.jansi)
     implementation(Deps.jline)

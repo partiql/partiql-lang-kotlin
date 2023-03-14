@@ -25,8 +25,9 @@ plugins {
 dependencies {
     antlr(Deps.antlr)
     api(project(":partiql-lib:partiql-isl"))
-    implementation(project(":partiql-plan"))
-    implementation(project(":partiql-types"))
+    api(project(":partiql-plan"))
+    api(project(":partiql-spi"))
+    api(project(":partiql-types"))
     api(Deps.ionElement)
     api(Deps.ionJava)
     api(Deps.pigRuntime)

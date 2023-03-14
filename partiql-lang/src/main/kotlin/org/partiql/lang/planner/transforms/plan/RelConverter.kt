@@ -22,7 +22,7 @@ internal class RelConverter {
      * As of now, the COMMON property of relation operators is under development, so just use empty for now
      */
     private val empty = Common(
-        schema = emptyMap(),
+        schema = emptyList(),
         properties = emptySet(),
         metas = emptyMap(),
     )
@@ -50,6 +50,7 @@ internal class RelConverter {
                     Rex.Query.Collection(
                         rel = rel,
                         constructor = RexConverter.convert(projection.value),
+                        type = null
                     )
                 }
                 // SELECT ... FROM
@@ -57,6 +58,7 @@ internal class RelConverter {
                     Rex.Query.Collection(
                         rel = rel,
                         constructor = null,
+                        type = null
                     )
                 }
             }
@@ -134,7 +136,10 @@ internal class RelConverter {
      */
     private fun convertScan(scan: PartiqlAst.FromSource.Scan) = Rel.Scan(
         common = empty,
-        value = RexConverter.convert(scan.expr),
+        value = when (val expr = scan.expr) {
+            is PartiqlAst.Expr.Select -> convert(expr)
+            else -> RexConverter.convert(scan.expr)
+        },
         alias = scan.asAlias?.text,
         at = scan.atAlias?.text,
         by = scan.byAlias?.text,

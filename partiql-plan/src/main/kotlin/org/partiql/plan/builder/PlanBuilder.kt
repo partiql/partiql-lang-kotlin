@@ -1,9 +1,8 @@
-@file:Suppress("unused", "UNUSED_PARAMETER")
-
 package org.partiql.plan.builder
 
 import com.amazon.ionelement.api.IonElement
 import org.partiql.plan.Arg
+import org.partiql.plan.Attribute
 import org.partiql.plan.Binding
 import org.partiql.plan.Branch
 import org.partiql.plan.Case
@@ -17,6 +16,12 @@ import org.partiql.plan.Rex
 import org.partiql.plan.SortSpec
 import org.partiql.plan.Step
 import org.partiql.types.StaticType
+import kotlin.Any
+import kotlin.String
+import kotlin.Unit
+import kotlin.collections.MutableList
+import kotlin.collections.MutableMap
+import kotlin.collections.MutableSet
 
 public fun <T : PlanNode> plan(
     factory: PlanFactory = PlanFactory.DEFAULT,
@@ -37,12 +42,22 @@ public class PlanBuilder(
     }
 
     public fun common(
-        schema: MutableMap<String, Arg.Type> = mutableMapOf(),
+        schema: MutableList<Attribute> = mutableListOf(),
         properties: MutableSet<Property> = mutableSetOf(),
         metas: MutableMap<String, Any> = mutableMapOf(),
         block: CommonBuilder.() -> Unit = {}
     ): Common {
         val builder = CommonBuilder()
+        builder.block()
+        return builder.build(factory)
+    }
+
+    public fun attribute(
+        name: String? = null,
+        type: StaticType? = null,
+        block: AttributeBuilder.() -> Unit = {}
+    ): Attribute {
+        val builder = AttributeBuilder()
         builder.block()
         return builder.build(factory)
     }
@@ -310,6 +325,7 @@ public class PlanBuilder(
         match: Rex? = null,
         branches: MutableList<Branch> = mutableListOf(),
         default: Rex? = null,
+        type: StaticType? = null,
         block: RexSwitchBuilder.() -> Unit = {}
     ): Rex.Switch {
         val builder = RexSwitchBuilder()
@@ -384,6 +400,7 @@ public class PlanBuilder(
     public fun rexQueryCollection(
         rel: Rel? = null,
         `constructor`: Rex? = null,
+        type: StaticType? = null,
         block: RexQueryCollectionBuilder.() -> Unit = {}
     ): Rex.Query.Collection {
         val builder = RexQueryCollectionBuilder()

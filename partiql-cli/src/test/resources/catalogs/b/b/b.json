@@ -1,0 +1,16 @@
+{
+  "name": "b",
+  "type": "STRUCT",
+  "attributes": [
+    {
+      "name": "b",
+      "type": "STRUCT",
+      "typeParams": ["b::INT"]
+    },
+    {
+      "name": "c",
+      "type": "INT",
+      "typeParams": []
+    }
+  ]
+}

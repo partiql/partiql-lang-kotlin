@@ -16,7 +16,9 @@
 package org.partiql.cli
 
 import com.amazon.ion.system.IonSystemBuilder
+import org.partiql.cli.pico.InferCommand
 import org.partiql.cli.pico.PartiQLCommand
+import org.partiql.cli.puglin.localdb.LocalPlugin
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.planner.transforms.AstToPlan
 import org.partiql.lang.syntax.PartiQLParserBuilder
@@ -31,6 +33,9 @@ import kotlin.system.exitProcess
 fun main(args: Array<String>) {
     val ion = IonSystemBuilder.standard().build()
     val command = CommandLine(PartiQLCommand(ion))
+    command.addSubcommand(
+        InferCommand(listOf(LocalPlugin()))
+    )
     val exitCode = command.execute(*args)
     exitProcess(exitCode)
 }

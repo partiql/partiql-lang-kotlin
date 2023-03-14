@@ -1,6 +1,7 @@
 package org.partiql.plan.visitor
 
 import org.partiql.plan.Arg
+import org.partiql.plan.Attribute
 import org.partiql.plan.Binding
 import org.partiql.plan.Branch
 import org.partiql.plan.Common
@@ -18,6 +19,8 @@ public interface PlanVisitor<R, C> {
     public fun visitPartiQLPlan(node: PartiQLPlan, ctx: C): R
 
     public fun visitCommon(node: Common, ctx: C): R
+
+    public fun visitAttribute(node: Attribute, ctx: C): R
 
     public fun visitBinding(node: Binding, ctx: C): R
 

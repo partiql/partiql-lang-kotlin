@@ -2,6 +2,7 @@ package org.partiql.plan.builder
 
 import com.amazon.ionelement.api.IonElement
 import org.partiql.plan.Arg
+import org.partiql.plan.Attribute
 import org.partiql.plan.Binding
 import org.partiql.plan.Branch
 import org.partiql.plan.Case
@@ -40,13 +41,13 @@ public class PartiQlPlanBuilder {
 }
 
 public class CommonBuilder {
-    public var schema: MutableMap<String, Arg.Type> = mutableMapOf()
+    public var schema: MutableList<Attribute> = mutableListOf()
 
     public var properties: MutableSet<Property> = mutableSetOf()
 
     public var metas: MutableMap<String, Any> = mutableMapOf()
 
-    public fun schema(schema: MutableMap<String, Arg.Type>): CommonBuilder = this.apply {
+    public fun schema(schema: MutableList<Attribute>): CommonBuilder = this.apply {
         this.schema = schema
     }
 
@@ -64,6 +65,28 @@ public class CommonBuilder {
         schema =
         schema,
         properties = properties, metas = metas
+    )
+}
+
+public class AttributeBuilder {
+    public var name: String? = null
+
+    public var type: StaticType? = null
+
+    public fun name(name: String?): AttributeBuilder = this.apply {
+        this.name = name
+    }
+
+    public fun type(type: StaticType?): AttributeBuilder = this.apply {
+        this.type = type
+    }
+
+    public fun build(): Attribute = build(PlanFactory.DEFAULT)
+
+    public fun build(factory: PlanFactory = PlanFactory.DEFAULT): Attribute = factory.attribute(
+        name =
+        name!!,
+        type = type!!
     )
 }
 
@@ -128,7 +151,7 @@ public class StepKeyBuilder {
     public fun build(factory: PlanFactory = PlanFactory.DEFAULT): Step.Key = factory.stepKey(
         value =
         value!!,
-        case = case
+        case = case!!
     )
 }
 
@@ -572,7 +595,7 @@ public class RexIdBuilder {
     public fun build(factory: PlanFactory = PlanFactory.DEFAULT): Rex.Id = factory.rexId(
         name =
         name!!,
-        case = case, qualifier = qualifier!!, type = type
+        case = case!!, qualifier = qualifier!!, type = type
     )
 }
 
@@ -723,6 +746,8 @@ public class RexSwitchBuilder {
 
     public var default: Rex? = null
 
+    public var type: StaticType? = null
+
     public fun match(match: Rex?): RexSwitchBuilder = this.apply {
         this.match = match
     }
@@ -735,12 +760,16 @@ public class RexSwitchBuilder {
         this.default = default
     }
 
+    public fun type(type: StaticType?): RexSwitchBuilder = this.apply {
+        this.type = type
+    }
+
     public fun build(): Rex.Switch = build(PlanFactory.DEFAULT)
 
     public fun build(factory: PlanFactory = PlanFactory.DEFAULT): Rex.Switch = factory.rexSwitch(
         match =
         match,
-        branches = branches, default = default
+        branches = branches, default = default, type = type
     )
 }
 
@@ -892,6 +921,8 @@ public class RexQueryCollectionBuilder {
 
     public var `constructor`: Rex? = null
 
+    public var type: StaticType? = null
+
     public fun rel(rel: Rel?): RexQueryCollectionBuilder = this.apply {
         this.rel = rel
     }
@@ -900,8 +931,12 @@ public class RexQueryCollectionBuilder {
         this.`constructor` = `constructor`
     }
 
+    public fun type(type: StaticType?): RexQueryCollectionBuilder = this.apply {
+        this.type = type
+    }
+
     public fun build(): Rex.Query.Collection = build(PlanFactory.DEFAULT)
 
     public fun build(factory: PlanFactory = PlanFactory.DEFAULT): Rex.Query.Collection =
-        factory.rexQueryCollection(rel = rel!!, constructor = constructor)
+        factory.rexQueryCollection(rel = rel!!, constructor = constructor, type = type)
 }
