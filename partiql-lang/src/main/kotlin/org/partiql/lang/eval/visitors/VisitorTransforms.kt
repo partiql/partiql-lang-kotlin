@@ -20,7 +20,9 @@ fun basicVisitorTransforms() = PipelinedVisitorTransform(
     //   - the synthetic from source aliases added by [FromSourceAliasVisitorTransform]
     //   - The synthetic group by item aliases added by [GroupByItemAliasVisitorTransform]
     GroupByPathExpressionVisitorTransform(),
-    SelectStarVisitorTransform()
+    SelectStarVisitorTransform(),
+
+    SubqueryCoercionVisitorTransform(),
 )
 
 /** A stateless visitor transform that returns the input. */

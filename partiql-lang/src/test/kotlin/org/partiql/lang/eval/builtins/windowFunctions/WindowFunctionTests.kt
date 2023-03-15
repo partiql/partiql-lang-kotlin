@@ -134,12 +134,12 @@ class WindowFunctionTests : EvaluatorTestBase() {
                     FROM stock_price as sp
                 """,
                 expectedResult = """<<
-                    {'_1': <<{'previous_price': NULL}>>},
-                    {'_1': <<{'previous_price': NULL}>>},
-                    {'_1': <<{'previous_price': NULL}>>},
-                    {'_1': <<{'previous_price': NULL}>>},
-                    {'_1': <<{'previous_price': NULL}>>},
-                    {'_1': <<{'previous_price': NULL}>>}
+                    {'_1': NULL},
+                    {'_1': NULL},
+                    {'_1': NULL},
+                    {'_1': NULL},
+                    {'_1': NULL},
+                    {'_1': NULL}
                 >>"""
             ),
 
@@ -153,12 +153,12 @@ class WindowFunctionTests : EvaluatorTestBase() {
                     FROM stock_price as sp
                 """,
                 expectedResult = """<<
-                    {'previous_price': NULL, '_2': <<{'Inner_lag': NULL}>>},
-                    {'previous_price': 113.00, '_2': <<{'Inner_lag': NULL}>>},
-                    {'previous_price': 115.88, '_2': <<{'Inner_lag': NULL}>>},
-                    {'previous_price': NULL, '_2': <<{'Inner_lag': NULL}>>},
-                    {'previous_price': 96.15, '_2': <<{'Inner_lag': NULL}>>},
-                    {'previous_price': 99.30, '_2': <<{'Inner_lag': NULL}>>}
+                    {'previous_price': NULL, '_2': NULL},
+                    {'previous_price': 113.00, '_2': NULL},
+                    {'previous_price': 115.88, '_2': NULL},
+                    {'previous_price': NULL, '_2': NULL},
+                    {'previous_price': 96.15, '_2': NULL},
+                    {'previous_price': 99.30, '_2': NULL}
                 >>"""
             ),
 
@@ -308,12 +308,12 @@ class WindowFunctionTests : EvaluatorTestBase() {
                     FROM stock_price as sp
                 """,
                 expectedResult = """<<
-                    {'_1': <<{'next_price': NULL}>>},
-                    {'_1': <<{'next_price': NULL}>>},
-                    {'_1': <<{'next_price': NULL}>>},
-                    {'_1': <<{'next_price': NULL}>>},
-                    {'_1': <<{'next_price': NULL}>>},
-                    {'_1': <<{'next_price': NULL}>>}
+                    {'_1': NULL},
+                    {'_1': NULL},
+                    {'_1': NULL},
+                    {'_1': NULL},
+                    {'_1': NULL},
+                    {'_1': NULL}
                 >>"""
             ),
 
@@ -327,12 +327,12 @@ class WindowFunctionTests : EvaluatorTestBase() {
                     FROM stock_price as sp
                 """,
                 expectedResult = """<<
-                    {'next_price': 115.88, '_2': <<{'Inner_lead': NULL}>>},
-                    {'next_price': 121.09, '_2': <<{'Inner_lead': NULL}>>},
-                    {'next_price': NULL, '_2': <<{'Inner_lead': NULL}>>},
-                    {'next_price': 99.30, '_2': <<{'Inner_lead': NULL}>>},
-                    {'next_price': 101.04, '_2': <<{'Inner_lead': NULL}>>},
-                    {'next_price': NULL, '_2': <<{'Inner_lead': NULL}>>}
+                    {'next_price': 115.88, '_2': NULL},
+                    {'next_price': 121.09, '_2': NULL},
+                    {'next_price': NULL, '_2': NULL},
+                    {'next_price': 99.30, '_2': NULL},
+                    {'next_price': 101.04, '_2': NULL},
+                    {'next_price': NULL, '_2': NULL}
                 >>"""
             ),
 

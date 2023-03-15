@@ -1209,7 +1209,7 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
             FROM widgets_a AS a
             GROUP BY a.categoryId
             """,
-            "<< { 'categoryId': 1, 'from_widgets_b': <<{ 'name': 'Thingy' }>> }>>"
+            "<< { 'categoryId': 1, 'from_widgets_b': 'Thingy' }>>"
         ) +
             createGroupByTestCases(
                 """
@@ -1223,7 +1223,7 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
             FROM widgets_a AS a
             GROUP BY a.categoryId
             """,
-                "<< { 'categoryId': 1, 'from_widgets_b': <<{ 'name': 'Thingy' }>> }>>"
+                "<< { 'categoryId': 1, 'from_widgets_b': 'Thingy' }>>"
             )
 
     @Test

@@ -29,6 +29,7 @@ import org.partiql.lang.eval.visitors.PartiqlAstSanityValidator
 import org.partiql.lang.eval.visitors.PipelinedVisitorTransform
 import org.partiql.lang.eval.visitors.SelectListItemAliasVisitorTransform
 import org.partiql.lang.eval.visitors.SelectStarVisitorTransform
+import org.partiql.lang.eval.visitors.SubqueryCoercionVisitorTransform
 import org.partiql.lang.planner.transforms.AstToLogicalVisitorTransform
 import org.partiql.lang.planner.transforms.LogicalResolvedToDefaultPhysicalVisitorTransform
 import org.partiql.lang.planner.transforms.LogicalToLogicalResolvedVisitorTransform
@@ -126,7 +127,8 @@ internal class PartiQLPlannerDefault(
             FromSourceAliasVisitorTransform(),
             OrderBySortSpecVisitorTransform(),
             AggregationVisitorTransform(),
-            SelectStarVisitorTransform()
+            SelectStarVisitorTransform(),
+            SubqueryCoercionVisitorTransform(),
         )
         return transform.transformStatement(this)
     }
