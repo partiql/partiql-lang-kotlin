@@ -21,6 +21,7 @@ include(
     "partiql-types",
     "partiql-lib:partiql-isl",
     "partiql-lib:partiql-sprout",
+    "partiql-tools:partiql-lakeformation",
     "test:partiql-tests-runner",
     "test:partiql-randomized-tests",
     "examples",
