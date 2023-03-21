@@ -105,7 +105,7 @@ class RowFilterValidator(val parser: Parser) {
                         is Rex.Lit -> Unit
                         else -> throw LakeFormationQuerySemanticException("Lake Formation Row Filter, expect a Literal at From value, received $from")
                     }
-                    when (val to= getValueFromArg(toArg)) {
+                    when (val to = getValueFromArg(toArg)) {
                         is Rex.Lit -> Unit
                         else -> throw LakeFormationQuerySemanticException("Lake Formation Row Filter, expect a Literal at To value, received $to")
                     }
@@ -129,7 +129,7 @@ class RowFilterValidator(val parser: Parser) {
                     if (escapeArg != null) {
                         val escape = getValueFromArg(escapeArg)
                         if (escape is Rex.Lit) {
-                            if (escape.type !is StringType){
+                            if (escape.type !is StringType) {
                                 throw LakeFormationQuerySemanticException("Lake Formation Row Filter, expect a string as escape, received $escape")
                             }
                         } else {
@@ -159,7 +159,7 @@ class RowFilterValidator(val parser: Parser) {
             }
         }
 
-        private fun checkLhsIsId(lhs : Arg, op : String){
+        private fun checkLhsIsId(lhs: Arg, op: String) {
             when (val lhsValue = getValueFromArg(lhs)) {
                 is Rex.Id -> Unit
                 else -> throw LakeFormationQuerySemanticException("Lake Formation Row Filter, expect a Identifier at lhs of $op comparator, received $lhsValue")
