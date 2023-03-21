@@ -24,6 +24,7 @@ import org.partiql.types.IntType
 import org.partiql.types.ListType
 import org.partiql.types.MissingType
 import org.partiql.types.NullType
+import org.partiql.types.SchemaType
 import org.partiql.types.SexpType
 import org.partiql.types.SingleType
 import org.partiql.types.StaticType
@@ -114,6 +115,7 @@ public object StaticTypeUtils {
         is SymbolType -> ExprValueType.SYMBOL
         is TimeType -> ExprValueType.TIME
         is TimestampType -> ExprValueType.TIMESTAMP
+        is SchemaType -> ExprValueType.BAG
     }
 
     /**
