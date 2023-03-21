@@ -1,5 +1,6 @@
 plugins {
     id(Plugins.conventions)
+    id(Plugins.publish)
 }
 
 dependencies {

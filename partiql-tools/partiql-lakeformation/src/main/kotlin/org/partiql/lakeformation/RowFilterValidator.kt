@@ -13,6 +13,9 @@ import org.partiql.plan.visitor.PlanBaseVisitor
 import org.partiql.types.StringType
 import java.util.regex.Pattern
 
+/**
+ * Validate a row filter expression using Plan
+ */
 class RowFilterValidator(val parser: Parser) {
 
     // Lake Formation restriction.
@@ -20,23 +23,23 @@ class RowFilterValidator(val parser: Parser) {
     private val ROW_FILTER_EXPRESSION_MAX_LENGTH = 2047
     private val ROW_FILTER_EXPRESSION_PATTERN: Pattern = Pattern.compile("^[^\\s].*[^\\s;]$")
 
-    fun validate(whereClause: String) {
-        validatePredicateSyntax(whereClause)
-        validateRowFilterExpression(whereClause)
+    fun validate(rowFilterExpression: String) {
+        validatePredicateSyntax(rowFilterExpression)
+        validateRowFilterExpression(rowFilterExpression)
     }
 
     private fun validatePredicateSyntax(rowFilterExpression: String) {
-        val plan = Planner.plan(query = rowFilterExpression)
+        val plan = Planner.plan(query = rowFilterExpression, parser)
         plan.accept(LakeFormationSyntaxValidation, Unit)
     }
 
     private fun validateRowFilterExpression(rowFilterExpression: String) {
         if (rowFilterExpression.length > ROW_FILTER_EXPRESSION_MAX_LENGTH) {
-            error(
+            throw LakeFormationQueryUnsupportedException(
                 "Row filter expression length must be less than or equal to $ROW_FILTER_EXPRESSION_MAX_LENGTH"
             )
         } else if (!ROW_FILTER_EXPRESSION_PATTERN.matcher(rowFilterExpression).matches()) {
-            error(
+            throw LakeFormationQueryUnsupportedException(
                 "Row filter expression must match $ROW_FILTER_EXPRESSION_PATTERN"
             )
         }
@@ -56,7 +59,7 @@ class RowFilterValidator(val parser: Parser) {
                 is Rex.Agg, is Rex.Collection.Array, is Rex.Collection.Bag,
                 is Rex.Id, is Rex.Lit, is Rex.Path, is Rex.Query.Collection,
                 is Rex.Query.Scalar.Pivot, is Rex.Query.Scalar.Subquery,
-                is Rex.Switch, is Rex.Tuple -> throw LakeFormationQueryUnsupportedException("$node not supported by Lake Formation")
+                is Rex.Switch, is Rex.Tuple -> throw LakeFormationQueryUnsupportedException("Operation not supported by Lake Formation, received $node")
             }
         }
 
@@ -64,7 +67,7 @@ class RowFilterValidator(val parser: Parser) {
             when (node.op) {
                 Rex.Binary.Op.PLUS, Rex.Binary.Op.MINUS,
                 Rex.Binary.Op.TIMES, Rex.Binary.Op.DIV,
-                Rex.Binary.Op.MODULO, Rex.Binary.Op.CONCAT -> error("${node.op.name} not supported")
+                Rex.Binary.Op.MODULO, Rex.Binary.Op.CONCAT -> throw LakeFormationQueryUnsupportedException("Operation not supported by Lake Formation, received $node")
                 // treat left part and right part as separate PartiQL Plan to test
                 Rex.Binary.Op.AND, Rex.Binary.Op.OR -> {
                     // Left hand side expression + right hand side expression
@@ -80,12 +83,11 @@ class RowFilterValidator(val parser: Parser) {
                 Rex.Binary.Op.LT, Rex.Binary.Op.LTE -> {
                     when (node.lhs) {
                         is Rex.Id -> Unit
-                        else -> throw LakeFormationQuerySemanticException("simple expression left side not column name")
+                        else -> throw LakeFormationQuerySemanticException("Lake Formation Row Filter, expect a Identifier at lhs of basic comparator, received ${node.lhs}")
                     }
                     when (node.rhs) {
                         is Rex.Lit -> Unit
-                        is Rex.Collection.Array -> throw LakeFormationQuerySemanticException("comparison with list not allowed now")
-                        else -> throw LakeFormationQuerySemanticException("simple expression left side not literal")
+                        else -> throw LakeFormationQuerySemanticException("Lake Formation Row Filter, expect a Literal at rhs of basic comparator, received ${node.rhs}")
                     }
                 }
             }
@@ -95,75 +97,72 @@ class RowFilterValidator(val parser: Parser) {
             when (node.id) {
                 "between" -> {
                     val args = node.args
-                    val lhs = args.getOrNull(0) ?: throw LakeFormationQuerySemanticException("no column name provided for operator between")
-                    val rhsFrom = args.getOrNull(1) ?: throw LakeFormationQuerySemanticException("between operator does not have from value")
-                    val rhsTo = args.getOrNull(1) ?: throw LakeFormationQuerySemanticException("between operator does not have from value")
-                    when (getValueFromArg(lhs)) {
-                        is Rex.Id -> Unit
-                        else -> throw LakeFormationQuerySemanticException("simple expression left side not column name")
-                    }
-                    when (getValueFromArg(rhsFrom)) {
+                    val lhsArg = args.getOrNull(0) ?: throw LakeFormationQuerySemanticException("no column name provided for operator between")
+                    val fromArg = args.getOrNull(1) ?: throw LakeFormationQuerySemanticException("between operator does not have from value")
+                    val toArg = args.getOrNull(1) ?: throw LakeFormationQuerySemanticException("between operator does not have from value")
+                    checkLhsIsId(lhsArg, node.id)
+                    when (val from = getValueFromArg(fromArg)) {
                         is Rex.Lit -> Unit
-                        else -> throw LakeFormationQuerySemanticException("between operation From value not literal")
+                        else -> throw LakeFormationQuerySemanticException("Lake Formation Row Filter, expect a Literal at From value, received $from")
                     }
-                    when (getValueFromArg(rhsTo)) {
+                    when (val to= getValueFromArg(toArg)) {
                         is Rex.Lit -> Unit
-                        else -> throw LakeFormationQuerySemanticException("between operation From value not literal")
+                        else -> throw LakeFormationQuerySemanticException("Lake Formation Row Filter, expect a Literal at To value, received $to")
                     }
                 }
 
                 "like" -> {
                     val args = node.args
-                    val lhs = args.getOrNull(0) ?: throw LakeFormationQuerySemanticException("no column name provided for operator like")
-                    val rhsPattern = args.getOrNull(1) ?: throw LakeFormationQuerySemanticException("like operator does not have pattern value")
-                    val rhsEscape = args.getOrNull(1)
-                    when (getValueFromArg(lhs)) {
-                        is Rex.Id -> Unit
-                        else -> throw LakeFormationQuerySemanticException("simple expression left side not column name")
-                    }
-                    when (val rhsPatternValue = getValueFromArg(rhsPattern)) {
+                    val lhsArg = args.getOrNull(0) ?: throw LakeFormationQuerySemanticException("no column name provided for operator like")
+                    val patternArg = args.getOrNull(1) ?: throw LakeFormationQuerySemanticException("like operator does not have pattern value")
+                    val escapeArg = args.getOrNull(1)
+                    checkLhsIsId(lhsArg, node.id)
+                    when (val pattern = getValueFromArg(patternArg)) {
                         is Rex.Lit -> {
-                            if (rhsPatternValue.type !is StringType) {
-                                throw LakeFormationQuerySemanticException("pattern not a string")
+                            if (pattern.type !is StringType) {
+                                throw LakeFormationQuerySemanticException("Lake Formation Row Filter, expect a String as pattern, received $pattern")
                             }
                         }
-
-                        else -> throw LakeFormationQuerySemanticException("between operation From value not literal")
+                        else -> throw LakeFormationQuerySemanticException("Lake Formation Row Filter, expect a Literal as pattern, received $pattern")
                     }
-                    if (rhsEscape == null) {
-                        Unit
-                    } else {
-                        if (getValueFromArg(rhsPattern) is Rex.Lit) {
-                            if ((getValueFromArg(rhsPattern) as Rex.Lit).type is StringType) {
-                                Unit
+
+                    if (escapeArg != null) {
+                        val escape = getValueFromArg(escapeArg)
+                        if (escape is Rex.Lit) {
+                            if (escape.type !is StringType){
+                                throw LakeFormationQuerySemanticException("Lake Formation Row Filter, expect a string as escape, received $escape")
                             }
                         } else {
-                            throw LakeFormationQuerySemanticException("not a lit")
+                            throw LakeFormationQuerySemanticException("Lake Formation Row Filter, expect a Literal as escape, received $escape")
                         }
                     }
                 }
-                // <column_name> in <column value>
+
                 "in_collection" -> {
                     val args = node.args
-                    val lhs = args.getOrNull(0) ?: throw LakeFormationQuerySemanticException("no column name provided for operator in")
-                    val rhs = args.getOrNull(1) ?: throw LakeFormationQuerySemanticException("no column value provided for operator in")
-                    when (getValueFromArg(lhs)) {
-                        is Rex.Id -> Unit
-                        else -> throw LakeFormationQuerySemanticException("simple expression left side not column name")
-                    }
-                    when (val rhsValue = getValueFromArg(rhs)) {
+                    val lhsArg = args.getOrNull(0) ?: throw LakeFormationQuerySemanticException("no column name provided for operator in")
+                    val rhsArg = args.getOrNull(1) ?: throw LakeFormationQuerySemanticException("no column value provided for operator in")
+                    checkLhsIsId(lhsArg, node.id)
+                    when (val rhs = getValueFromArg(rhsArg)) {
                         is Rex.Collection.Array -> {
-                            if (rhsValue.values.any { it !is Rex.Lit }) {
-                                throw LakeFormationQuerySemanticException("array contains non-literal value")
+                            if (rhs.values.any { it !is Rex.Lit }) {
+                                throw LakeFormationQuerySemanticException("Lake Formation Row Filter, in operator rhs should be an array contains all literal value. Received $rhs")
                             }
                         }
-                        else -> throw LakeFormationQuerySemanticException("in operation rhs not array")
+                        else -> throw LakeFormationQuerySemanticException("Lake Formation Row Filter, in operator rhs should be an array. Received $rhs")
                     }
                 }
 
                 else -> {
-                    throw LakeFormationQueryUnsupportedException("function ${node.id} is not supported")
+                    throw LakeFormationQuerySemanticException("Lake Formation Row Filter, ${node.id} is not supported")
                 }
+            }
+        }
+
+        private fun checkLhsIsId(lhs : Arg, op : String){
+            when (val lhsValue = getValueFromArg(lhs)) {
+                is Rex.Id -> Unit
+                else -> throw LakeFormationQuerySemanticException("Lake Formation Row Filter, expect a Identifier at lhs of $op comparator, received $lhsValue")
             }
         }
 

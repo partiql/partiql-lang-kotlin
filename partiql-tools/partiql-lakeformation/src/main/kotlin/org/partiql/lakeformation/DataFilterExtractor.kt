@@ -64,8 +64,8 @@ object DataFilterExtractor {
     private fun extractProjectItems(projectItems: Collection<PartiqlAst.ProjectItem>): ColumnFilter =
         ColumnFilter.includeColumnsFilter(projectItems.map(::getColumnName))
 
-    // Assuming a generalized "lakeformationSyntaxValidation" will permit a from source similar to Andes's from source
-    // but with arbitrary path steps.
+    // Permitting arbitrary path depth here
+    // It is required for the end user to map the created [Table] to the LakeFormation API.
     private fun extractSourceTable(fromSource: PartiqlAst.FromSource): Table {
         return when (fromSource) {
             is PartiqlAst.FromSource.Scan -> {
@@ -94,7 +94,7 @@ object DataFilterExtractor {
         return when (step) {
             is PartiqlAst.PathStep.PathExpr ->
                 extractLit(step.index)?.stringValueOrNull
-                    ?: throw LakeFormationQueryUnsupportedException("Invalid path step, expect an literal but received ${step.index}")
+                    ?: throw LakeFormationQueryUnsupportedException("Invalid path step, expect a literal but received ${step.index}")
 
             is PartiqlAst.PathStep.PathUnpivot -> throw LakeFormationQueryUnsupportedException("Path Unpivot is not supported in Lake Formation")
             is PartiqlAst.PathStep.PathWildcard -> throw LakeFormationQueryUnsupportedException("Path Wildcard is not supported in Lake Formation")
@@ -104,7 +104,7 @@ object DataFilterExtractor {
     private fun getColumnName(item: PartiqlAst.ProjectItem): String {
         return when (item) {
             is PartiqlAst.ProjectItem.ProjectExpr -> toColumnName(item)
-            is PartiqlAst.ProjectItem.ProjectAll -> throw LakeFormationQueryUnsupportedException("Unsupported Projection Item in Lake Formation")
+            is PartiqlAst.ProjectItem.ProjectAll -> throw LakeFormationQueryUnsupportedException("ProjectAll (.*) is not supported in Lake Formation")
         }
     }
 
