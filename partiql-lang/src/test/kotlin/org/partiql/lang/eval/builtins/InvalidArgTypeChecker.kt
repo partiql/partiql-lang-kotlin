@@ -19,6 +19,7 @@ import org.partiql.types.IntType
 import org.partiql.types.ListType
 import org.partiql.types.MissingType
 import org.partiql.types.NullType
+import org.partiql.types.SchemaType
 import org.partiql.types.SexpType
 import org.partiql.types.SingleType
 import org.partiql.types.StaticType
@@ -58,6 +59,7 @@ private fun SingleType.getExample() = when (this) {
     is StructType -> "{}"
     is BagType -> "<<>>"
     is MissingType,
+    is SchemaType -> "schema{}"
     is NullType -> throw Exception("NULL or MISSING should be the problem of permissive mode, not type checking.")
 }
 
