@@ -1670,7 +1670,8 @@ internal class EvaluatingCompiler(
         return nestCompilationContext(ExpressionContext.NORMAL, emptySet()) {
             val fromSourceThunks = compileFromSources(selectExpr.from)
             val letSourceThunks = selectExpr.fromLet?.let { compileLetSources(it) }
-            val sourceThunks = compileQueryWithoutProjection(selectExpr, fromSourceThunks, letSourceThunks)
+            val compiledWhere = selectExpr.where?.let { compileAstExpr(it) }
+            val sourceThunks = compileFromLetWhere(fromSourceThunks, letSourceThunks, compiledWhere)
 
             val orderByThunk = selectExpr.order?.let { compileOrderByExpression(selectExpr.order.sortSpecs) }
             val orderByLocationMeta = selectExpr.order?.metas?.sourceLocation
@@ -2319,17 +2320,16 @@ internal class EvaluatingCompiler(
         }
 
     /**
-     * Compiles the clauses of the SELECT or PIVOT into a thunk that does not generate
-     * the final projection.
+     * Compiles FROM, LET, and WHERE clauses of a SELECT or PIVOT into a thunk that generates
+     * their cumulative binding tuples.
      */
-    private fun compileQueryWithoutProjection(
-        ast: PartiqlAst.Expr.Select,
+    private fun compileFromLetWhere(
         compiledSources: List<CompiledFromSource>,
-        compiledLetSources: List<CompiledLetSource>?
+        compiledLetSources: List<CompiledLetSource>?,
+        whereThunk: ThunkEnv?
     ): (Environment) -> Sequence<FromProduction> {
 
         val localsBinder = compiledSources.map { it.alias }.localsBinder(ExprValue.missingValue)
-        val whereThunk = ast.where?.let { compileAstExpr(it) }
 
         return { rootEnv ->
             val fromEnv = rootEnv.flipToGlobalsFirst()
