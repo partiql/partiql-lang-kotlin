@@ -2,7 +2,8 @@ package org.partiql.lang.eval.visitors
 
 import org.partiql.lang.domains.PartiqlAst
 
-/**
+/** AST Normalization Passes.
+ *
  * Returns a [PartiqlAst.VisitorTransform] requiring no external state for the basic functionality of compiling
  * PartiQL queries.
  *

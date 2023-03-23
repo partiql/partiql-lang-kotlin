@@ -6,8 +6,11 @@ import org.partiql.lang.domains.PartiqlAst
  *  prescribed in SQL for scalar-expecting contexts and as outlined in Chapter 9 of the PartiQL specification.
  *  The coercion is done by wrapping each eligible SELECT in a call to the COLL_TO_SCALAR built-in.
  *
- *  The implementation is somewhat clever, dealing with the problem that not every SELECT needs to be coerced,
- *  but only a SELECT subquery in an appropriate context, while its coercion details are context-dependent.
+ *  The coercion task is context-dependent, in the sense that not every SELECT needs to be coerced,
+ *  but only a SELECT subquery in an appropriate context, while its coercion specifics depend on the context as well.
+ *  The implementation deals with this by using the visitor to find possible _contexts_ of possible SELECT subqueries
+ *  (rather than the subqueries themselves) and then inspecting each context to find the subquery
+ *  and coerce it, if eligible. (In this problem, a "context" is an AST node that can contain an eligible subquery.)
  */
 class SubqueryCoercionVisitorTransform : VisitorTransformBase() {
 
@@ -53,32 +56,10 @@ class SubqueryCoercionVisitorTransform : VisitorTransformBase() {
 
             is PartiqlAst.Expr.InCollection -> toSingleInInCollection(n)
 
-            // TODO Revisit the following expression forms, where this implementation does not coerce most potential SELECT subqueries,
-            // being at odds with the literal letter of the Ch 9 of the PartiQL specification.
-            // Some of these are clear-cut cases, others need to be considered and decided upon.
-            is PartiqlAst.Expr.IsType -> n
-            is PartiqlAst.Expr.SimpleCase -> n
-            is PartiqlAst.Expr.SearchedCase -> n
-            is PartiqlAst.Expr.Struct -> n
-            is PartiqlAst.Expr.Bag -> n
-            is PartiqlAst.Expr.List -> n
-            is PartiqlAst.Expr.Sexp -> n
             is PartiqlAst.Expr.Date -> n
             is PartiqlAst.Expr.LitTime -> n
-            is PartiqlAst.Expr.BagOp -> n
 
             is PartiqlAst.Expr.GraphMatch -> n.copy(expr = coerceToSingle(n.expr))
-
-            // ... continuing the expressions with so far un-coerced subqueries
-            is PartiqlAst.Expr.Path -> n
-            is PartiqlAst.Expr.Call -> n
-            is PartiqlAst.Expr.CallAgg -> n
-            is PartiqlAst.Expr.CallWindow -> n
-            is PartiqlAst.Expr.Cast -> n
-            is PartiqlAst.Expr.CanCast -> n
-            is PartiqlAst.Expr.CanLosslessCast -> n
-            is PartiqlAst.Expr.NullIf -> n
-            is PartiqlAst.Expr.Coalesce -> n
 
             is PartiqlAst.Expr.Select ->
                 n.copy(
@@ -93,6 +74,32 @@ class SubqueryCoercionVisitorTransform : VisitorTransformBase() {
                     limit = n.limit?.let { coerceToSingle(it) },
                     offset = n.offset?.let { coerceToSingle(it) }
                 )
+
+            // TODO Revisit the following expression forms re coercing or not, see  https://github.com/partiql/partiql-spec/issues/42.
+            // The above expression forms make coercion decisions according to what is specified in Ch 9 of the PartiQL specification
+            // and they include all cases explicitly mentioned there.
+            // The cases below, upon literal reading of Ch 9, should fall into it blanket "always coerce" category.
+            // In some of these, it seems clear that the coercion should not happen: say BagOp (UNION, INTERSECT),
+            // or PartiQL-specific Bag, List.  Others, in particular case expressions and function calls, need a careful look.
+            // In either case, these need to be addressed in the specification more explicitly.
+            is PartiqlAst.Expr.IsType -> n
+            is PartiqlAst.Expr.SimpleCase -> n
+            is PartiqlAst.Expr.SearchedCase -> n
+            is PartiqlAst.Expr.Struct -> n
+            is PartiqlAst.Expr.Bag -> n
+            is PartiqlAst.Expr.List -> n
+            is PartiqlAst.Expr.Sexp -> n
+            is PartiqlAst.Expr.BagOp -> n
+
+            is PartiqlAst.Expr.Path -> n
+            is PartiqlAst.Expr.Call -> n
+            is PartiqlAst.Expr.CallAgg -> n
+            is PartiqlAst.Expr.CallWindow -> n
+            is PartiqlAst.Expr.Cast -> n
+            is PartiqlAst.Expr.CanCast -> n
+            is PartiqlAst.Expr.CanLosslessCast -> n
+            is PartiqlAst.Expr.NullIf -> n
+            is PartiqlAst.Expr.Coalesce -> n
         }
     }
 

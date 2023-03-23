@@ -62,12 +62,12 @@ class SubqueryCoercionVisitorTransformTests : VisitorTransformTestBase() {
                 original = """
                     SELECT x.b
                     FROM << {'a': 1, 'b': 10}, {'a': 3, 'b': 30} >>  AS x
-                    where (SELECT max(n) = x.a FROM [1,2,3] AS n) 
+                    WHERE (SELECT max(n) = x.a FROM [1,2,3] AS n) 
                 """.trimIndent(),
                 expected = """
                     SELECT x.b
                     FROM << {'a': 1, 'b': 10}, {'a': 3, 'b': 30} >>  AS x
-                    where coll_to_scalar(SELECT max(n) = x.a FROM [1,2,3] AS n) 
+                    WHERE coll_to_scalar(SELECT max(n) = x.a FROM [1,2,3] AS n) 
                 """.trimIndent()
             ),
             TransformTestCase(
@@ -81,7 +81,7 @@ class SubqueryCoercionVisitorTransformTests : VisitorTransformTestBase() {
                      SELECT x.b, 
                             (SELECT y.c
                              FROM << {'a': 1, 'c': 100}, {'a': 3, 'c': 300} >> AS y
-                             where y.a = x.a ) AS c2
+                             WHERE y.a = x.a ) AS c2
                      FROM << {'a': 1, 'b': 10}, {'a': 3, 'b': 30} >>  AS x
                 """.trimIndent(),
                 expected = """
@@ -89,7 +89,7 @@ class SubqueryCoercionVisitorTransformTests : VisitorTransformTestBase() {
                            coll_to_scalar(
                             SELECT y.c
                             FROM << {'a': 1, 'c': 100}, {'a': 3, 'c': 300} >> AS y
-                            where y.a = x.a ) AS c2
+                            WHERE y.a = x.a ) AS c2
                     FROM << {'a': 1, 'b': 10}, {'a': 3, 'b': 30} >>  AS x
                 """.trimIndent()
             ),
@@ -99,13 +99,13 @@ class SubqueryCoercionVisitorTransformTests : VisitorTransformTestBase() {
                     SELECT n2.n1, m2.m
                     FROM (SELECT n1 FROM <<1,2,3>> AS n1) AS n2,
                          (SELECT min(m1) AS m FROM [4,5] AS m1) AS m2
-                    where 2 * n2.n1 = m2.m
+                    WHERE 2 * n2.n1 = m2.m
                 """.trimIndent(),
                 expected = """
                      SELECT n2.n1, m2.m
                      FROM (SELECT n1 FROM <<1,2,3>> AS n1) AS n2,
                           (SELECT min(m1) AS m FROM [4,5] AS m1) AS m2
-                     where 2 * n2.n1 = m2.m
+                     WHERE 2 * n2.n1 = m2.m
                 """.trimIndent()
             ),
         )
