@@ -210,7 +210,7 @@ class UnsupportedTypeCheckException(message: String) : RuntimeException(message)
  * Represents collection types i.e list, bag and sexp.
  */
 sealed class CollectionType : SingleType() {
-    abstract val elementType : StaticType
+    abstract val elementType: StaticType
 }
 
 // Single types from ExprValueType.
@@ -460,7 +460,7 @@ data class StructType(
     val fields: Map<String, StaticType> = mapOf(),
     val contentClosed: Boolean = false,
     val primaryKeyFields: List<String> = listOf(),
-    val constraints: Set<TupleSchemaConstraint> = setOf(),
+    val constraints: Set<TupleConstraint> = setOf(),
     override val metas: Map<String, Any> = mapOf(),
 ) : SingleType() {
     override fun flatten(): StaticType = this
@@ -472,8 +472,8 @@ data class StructType(
         val entries = fields.entries
         val firstSeveral = entries.toList().take(3).joinToString { "${it.key}: ${it.value}" }
         return when {
-            entries.size <= 3 -> "struct($firstSeveral)"
-            else -> "struct($firstSeveral, ... and ${entries.size - 3} other field(s))"
+            entries.size <= 3 -> "struct($firstSeveral, $constraints)"
+            else -> "struct($firstSeveral, ... and ${entries.size - 3} other field(s), $constraints)"
         }
     }
 }
@@ -542,11 +542,17 @@ sealed class NumberConstraint {
     }
 }
 
-sealed class TupleSchemaConstraint {
-    data class UniqueAttrs(val value: Boolean) : TupleSchemaConstraint()
-    data class ClosedSchema(val value: Boolean) : TupleSchemaConstraint()
-    data class PrimaryKey(val attrs: Set<String>) : TupleSchemaConstraint()
-    data class PartitionKey(val attrs: Set<String>) : TupleSchemaConstraint()
+
+/**
+ * Represents Tuple constraints this is still; experimental
+ * and subject to change upon finalization of the following RFC:
+ * - https://github.com/partiql/partiql-docs/issues/37
+ */
+sealed class TupleConstraint {
+    data class UniqueAttrs(val value: Boolean) : TupleConstraint()
+    data class Open(val value: Boolean) : TupleConstraint()
+    data class PrimaryKey(val attrs: Set<String>) : TupleConstraint()
+    data class PartitionKey(val attrs: Set<String>) : TupleConstraint()
 }
 
 internal fun StaticType.isNullOrMissing(): Boolean = (this is NullType || this is MissingType)
