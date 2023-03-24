@@ -444,6 +444,12 @@ data class StructType(
     val fields: Map<String, StaticType> = mapOf(),
     val contentClosed: Boolean = false,
     val primaryKeyFields: List<String> = listOf(),
+    // `TupleConstraint` already has `Open` and `PrimaryKey` constraints which overlap w/
+    // `contentClosed` and `primaryKeyFields`. As we have plans to define PartiQL types in more details
+    // it's foreseeable to have an overhaul of our types in future and have a new definition of this type
+    // as `Tuple`. See: https://github.com/partiql/partiql-spec/issues/49
+    // TODO remove `contentClosed` and `primaryKeyFields` if after finalizing our type specification we're
+    // still going with `StructType`.
     val constraints: Set<TupleConstraint> = setOf(),
     override val metas: Map<String, Any> = mapOf(),
 ) : SingleType() {
@@ -525,7 +531,8 @@ sealed class NumberConstraint {
 
 /**
  * Represents Tuple constraints this is still; experimental
- * and subject to change upon finalization of the following RFC:
+ * and subject to change upon finalization of the following:
+ * - https://github.com/partiql/partiql-spec/issues/49
  * - https://github.com/partiql/partiql-docs/issues/37
  */
 sealed class TupleConstraint {
