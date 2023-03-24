@@ -173,9 +173,7 @@ sealed class StaticType {
  */
 // TODO: Remove `NULL` from here. This affects inference as operations (especially NAry) can produce
 //  `NULL` or `MISSING` depending on a null propagation or an incorrect argument.
-data class AnyType(
-    override val metas: Map<String, Any> = mapOf()
-) : StaticType() {
+data class AnyType(override val metas: Map<String, Any> = mapOf()) : StaticType() {
     /**
      * Converts this into an [AnyOfType] representation. This method is helpful in inference when
      * it wants to iterate over all possible types of an expression.
@@ -220,9 +218,7 @@ sealed class CollectionType : SingleType() {
  *
  * This is not a singleton since there may be more that one representation of a Null type (each with different metas)
  */
-data class NullType(
-    override val metas: Map<String, Any> = mapOf(),
-) : SingleType() {
+data class NullType(override val metas: Map<String, Any> = mapOf()) : SingleType() {
     override val allTypes: List<StaticType>
         get() = listOf(this)
 
@@ -244,9 +240,7 @@ object MissingType : SingleType() {
     override fun toString(): String = "missing"
 }
 
-data class BoolType(
-    override val metas: Map<String, Any> = mapOf(),
-) : SingleType() {
+data class BoolType(override val metas: Map<String, Any> = mapOf()) : SingleType() {
     override val allTypes: List<StaticType>
         get() = listOf(this)
 
@@ -255,7 +249,7 @@ data class BoolType(
 
 data class IntType(
     val rangeConstraint: IntRangeConstraint = IntRangeConstraint.UNCONSTRAINED,
-    override val metas: Map<String, Any> = mapOf(),
+    override val metas: Map<String, Any> = mapOf()
 ) : SingleType() {
 
     enum class IntRangeConstraint(val numBytes: Int, val validRange: LongRange) {
@@ -285,9 +279,7 @@ data class IntType(
         }
 }
 
-data class FloatType(
-    override val metas: Map<String, Any> = mapOf(),
-) : SingleType() {
+data class FloatType(override val metas: Map<String, Any> = mapOf()) : SingleType() {
     override val allTypes: List<StaticType>
         get() = listOf(this)
 
@@ -296,7 +288,7 @@ data class FloatType(
 
 data class DecimalType(
     val precisionScaleConstraint: PrecisionScaleConstraint = PrecisionScaleConstraint.Unconstrained,
-    override val metas: Map<String, Any> = mapOf(),
+    override val metas: Map<String, Any> = mapOf()
 ) : SingleType() {
 
     sealed class PrecisionScaleConstraint {
@@ -344,7 +336,7 @@ data class DateType(
 data class TimeType(
     val precision: Int? = null,
     val withTimeZone: Boolean = false,
-    override val metas: Map<String, Any> = mapOf(),
+    override val metas: Map<String, Any> = mapOf()
 ) : SingleType() {
     override val allTypes: List<StaticType>
         get() = listOf(this)
@@ -355,18 +347,14 @@ data class TimeType(
     }
 }
 
-data class TimestampType(
-    override val metas: Map<String, Any> = mapOf(),
-) : SingleType() {
+data class TimestampType(override val metas: Map<String, Any> = mapOf()) : SingleType() {
     override val allTypes: List<StaticType>
         get() = listOf(this)
 
     override fun toString(): String = "timestamp"
 }
 
-data class SymbolType(
-    override val metas: Map<String, Any> = mapOf(),
-) : SingleType() {
+data class SymbolType(override val metas: Map<String, Any> = mapOf()) : SingleType() {
     override val allTypes: List<StaticType>
         get() = listOf(this)
 
@@ -375,7 +363,7 @@ data class SymbolType(
 
 data class StringType(
     val lengthConstraint: StringLengthConstraint = StringLengthConstraint.Unconstrained,
-    override val metas: Map<String, Any> = mapOf(),
+    override val metas: Map<String, Any> = mapOf()
 ) : SingleType() {
 
     sealed class StringLengthConstraint {
@@ -391,9 +379,7 @@ data class StringType(
     constructor(numberConstraint: NumberConstraint) : this(StringLengthConstraint.Constrained(numberConstraint))
 }
 
-data class BlobType(
-    override val metas: Map<String, Any> = mapOf(),
-) : SingleType() {
+data class BlobType(override val metas: Map<String, Any> = mapOf()) : SingleType() {
 
     override val allTypes: List<StaticType>
         get() = listOf(this)
@@ -401,9 +387,7 @@ data class BlobType(
     override fun toString(): String = "blob"
 }
 
-data class ClobType(
-    override val metas: Map<String, Any> = mapOf(),
-) : SingleType() {
+data class ClobType(override val metas: Map<String, Any> = mapOf()) : SingleType() {
     override val allTypes: List<StaticType>
         get() = listOf(this)
 
@@ -415,7 +399,7 @@ data class ClobType(
  */
 data class ListType(
     override val elementType: StaticType = ANY,
-    override val metas: Map<String, Any> = mapOf(),
+    override val metas: Map<String, Any> = mapOf()
 ) : CollectionType() {
 
     override fun flatten(): StaticType = this
@@ -431,7 +415,7 @@ data class ListType(
  */
 data class SexpType(
     override val elementType: StaticType = ANY,
-    override val metas: Map<String, Any> = mapOf(),
+    override val metas: Map<String, Any> = mapOf()
 ) : CollectionType() {
     override fun flatten(): StaticType = this
 
@@ -446,7 +430,7 @@ data class SexpType(
  */
 data class BagType(
     override val elementType: StaticType = ANY,
-    override val metas: Map<String, Any> = mapOf(),
+    override val metas: Map<String, Any> = mapOf()
 ) : CollectionType() {
     override fun flatten(): StaticType = this
 
@@ -481,10 +465,7 @@ data class StructType(
 /**
  * Represents a [StaticType] that's defined by the union of multiple [StaticType]s.
  */
-data class AnyOfType(
-    val types: Set<StaticType>,
-    override val metas: Map<String, Any> = mapOf(),
-) : StaticType() {
+data class AnyOfType(val types: Set<StaticType>, override val metas: Map<String, Any> = mapOf()) : StaticType() {
     /**
      * Flattens a union type by traversing the types and recursively bubbling up the underlying union types.
      *
