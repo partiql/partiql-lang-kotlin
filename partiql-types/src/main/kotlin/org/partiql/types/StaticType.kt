@@ -58,7 +58,6 @@ sealed class StaticType {
         @JvmField val SEXP: SexpType = SexpType()
         @JvmField val STRUCT: StructType = StructType()
         @JvmField val BAG: BagType = BagType()
-        @JvmField val SCHEMA: SchemaType = SchemaType()
 
         /** All the StaticTypes, except for `ANY`. */
         @JvmStatic
@@ -83,7 +82,6 @@ sealed class StaticType {
             SEXP,
             STRUCT,
             BAG,
-            SCHEMA,
         )
     }
 
@@ -137,7 +135,6 @@ sealed class StaticType {
             is AnyOfType -> copy(metas = metas)
             is DateType -> copy(metas = metas)
             is TimeType -> copy(metas = metas)
-            is SchemaType -> copy(metas = metas)
         }
 
     /**
@@ -176,7 +173,9 @@ sealed class StaticType {
  */
 // TODO: Remove `NULL` from here. This affects inference as operations (especially NAry) can produce
 //  `NULL` or `MISSING` depending on a null propagation or an incorrect argument.
-data class AnyType(override val metas: Map<String, Any> = mapOf()) : StaticType() {
+data class AnyType(
+    override val metas: Map<String, Any> = mapOf()
+) : StaticType() {
     /**
      * Converts this into an [AnyOfType] representation. This method is helpful in inference when
      * it wants to iterate over all possible types of an expression.
@@ -211,8 +210,7 @@ class UnsupportedTypeCheckException(message: String) : RuntimeException(message)
  * Represents collection types i.e list, bag and sexp.
  */
 sealed class CollectionType : SingleType() {
-    abstract val elementType: StaticType
-    abstract val constraints: Set<CollectionSchemaConstraint>
+    abstract val elementType : StaticType
 }
 
 // Single types from ExprValueType.
@@ -418,7 +416,6 @@ data class ClobType(
 data class ListType(
     override val elementType: StaticType = ANY,
     override val metas: Map<String, Any> = mapOf(),
-    override val constraints: Set<CollectionSchemaConstraint> = setOf()
 ) : CollectionType() {
 
     override fun flatten(): StaticType = this
@@ -435,7 +432,6 @@ data class ListType(
 data class SexpType(
     override val elementType: StaticType = ANY,
     override val metas: Map<String, Any> = mapOf(),
-    override val constraints: Set<CollectionSchemaConstraint> = setOf(),
 ) : CollectionType() {
     override fun flatten(): StaticType = this
 
@@ -451,7 +447,6 @@ data class SexpType(
 data class BagType(
     override val elementType: StaticType = ANY,
     override val metas: Map<String, Any> = mapOf(),
-    override val constraints: Set<CollectionSchemaConstraint> = setOf()
 ) : CollectionType() {
     override fun flatten(): StaticType = this
 
@@ -461,23 +456,11 @@ data class BagType(
     override fun toString(): String = "bag($elementType)"
 }
 
-data class SchemaType(
-    override val elementType: StaticType = ANY,
-    override val metas: Map<String, Any> = mapOf(),
-    override val constraints: Set<CollectionSchemaConstraint> = setOf()
-) : CollectionType() {
-    override fun flatten(): StaticType = this
-
-    override val allTypes: List<StaticType>
-        get() = listOf(this)
-
-    override fun toString(): String = "schmea($elementType)"
-}
-
 data class StructType(
     val fields: Map<String, StaticType> = mapOf(),
     val contentClosed: Boolean = false,
     val primaryKeyFields: List<String> = listOf(),
+    val constraints: Set<TupleSchemaConstraint> = setOf(),
     override val metas: Map<String, Any> = mapOf(),
 ) : SingleType() {
     override fun flatten(): StaticType = this
@@ -560,17 +543,10 @@ sealed class NumberConstraint {
 }
 
 sealed class TupleSchemaConstraint {
-    data class DuplicateAttr(val value: Boolean) : TupleSchemaConstraint()
-    data class OpenSchema(val value: Boolean) : TupleSchemaConstraint()
+    data class UniqueAttrs(val value: Boolean) : TupleSchemaConstraint()
+    data class ClosedSchema(val value: Boolean) : TupleSchemaConstraint()
     data class PrimaryKey(val attrs: Set<String>) : TupleSchemaConstraint()
     data class PartitionKey(val attrs: Set<String>) : TupleSchemaConstraint()
-    data class Unique(val attrs: List<String>) : TupleSchemaConstraint()
-    data class NotNull(val attrs: List<String>) : TupleSchemaConstraint()
-    data class NotMissing(val attrs: List<String>) : TupleSchemaConstraint()
-}
-
-sealed class CollectionSchemaConstraint {
-    // TODO define Collection constraints once the spec work is done
 }
 
 internal fun StaticType.isNullOrMissing(): Boolean = (this is NullType || this is MissingType)
