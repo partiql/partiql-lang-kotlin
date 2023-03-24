@@ -523,7 +523,6 @@ sealed class NumberConstraint {
     }
 }
 
-
 /**
  * Represents Tuple constraints this is still; experimental
  * and subject to change upon finalization of the following RFC:

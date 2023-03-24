@@ -6,7 +6,7 @@ import kotlin.test.assertEquals
 class SchemaTypeTest {
     // Just an innocent test to show the usage
     @Test
-    fun tooStringTest() {
+    fun toStringTest() {
         val schema: SchemaType = SchemaType(
             StructType(
                 fields = mapOf(
@@ -20,6 +20,6 @@ class SchemaTypeTest {
             )
         )
 
-        assertEquals(schema.toString(), "bag(struct(a: string, [ClosedSchema(value=true), PrimaryKey(attrs=[a])]))")
+        assertEquals(schema.toString(), "bag(struct(a: string, [Open(value=false), PrimaryKey(attrs=[a])]))")
     }
 }
