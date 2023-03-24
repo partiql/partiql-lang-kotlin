@@ -2359,18 +2359,16 @@ internal class EvaluatingCompiler(
                         return Pair(nextBindEnv, value)
                     }
 
-                    var iter = source.thunk(bindEnv(fromEnv))
+                    var pairSeq = source.thunk(bindEnv(fromEnv))
                         .rangeOver()
                         .asSequence()
                         .map { correlatedBind(it) }
-                        .iterator()
 
                     val filter = source.filter
                     if (filter != null) {
                         // evaluate the ON-clause (before calculating the outer join NULL)
                         // TODO add facet for ExprValue to directly evaluate theta-joins
-                        iter = iter
-                            .asSequence()
+                        pairSeq = pairSeq
                             .filter { (bindEnv: (Environment) -> Environment, _) ->
                                 // make sure we operate with lexical scoping
                                 val filterEnv = bindEnv(rootEnv).flipToLocals()
@@ -2381,17 +2379,14 @@ internal class EvaluatingCompiler(
                                     filterResult.booleanValue()
                                 }
                             }
-                            .iterator()
                     }
 
-                    if (!iter.hasNext()) {
-                        iter = when (source.joinExpansion) {
-                            JoinExpansion.OUTER -> listOf(correlatedBind(ExprValue.nullValue)).iterator()
-                            JoinExpansion.INNER -> iter
-                        }
+                    pairSeq = when (source.joinExpansion) {
+                        JoinExpansion.INNER -> pairSeq
+                        JoinExpansion.OUTER -> pairSeq.ifEmpty { sequenceOf(correlatedBind(ExprValue.nullValue)) }
                     }
 
-                    iter
+                    pairSeq.iterator()
                 }
                 .asSequence()
                 .map { joinedValues ->
