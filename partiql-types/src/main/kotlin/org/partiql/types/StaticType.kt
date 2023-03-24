@@ -324,9 +324,7 @@ data class DecimalType(
     override fun toString(): String = "decimal"
 }
 
-data class DateType(
-    override val metas: Map<String, Any> = mapOf(),
-) : SingleType() {
+data class DateType(override val metas: Map<String, Any> = mapOf()) : SingleType() {
     override val allTypes: List<StaticType>
         get() = listOf(this)
 
@@ -380,7 +378,6 @@ data class StringType(
 }
 
 data class BlobType(override val metas: Map<String, Any> = mapOf()) : SingleType() {
-
     override val allTypes: List<StaticType>
         get() = listOf(this)
 
@@ -401,7 +398,6 @@ data class ListType(
     override val elementType: StaticType = ANY,
     override val metas: Map<String, Any> = mapOf()
 ) : CollectionType() {
-
     override fun flatten(): StaticType = this
 
     override val allTypes: List<StaticType>
