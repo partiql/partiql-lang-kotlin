@@ -5,16 +5,16 @@ import org.partiql.lang.domains.PartiqlAst
 /** Coerce each SQL-style SELECT subquery to single value, if it occurs in a context that expects a single value -- as
  *  prescribed in SQL for scalar-expecting contexts and as outlined in Chapter 9 of the PartiQL specification.
  *  The coercion is done by wrapping each eligible SELECT in a call to the COLL_TO_SCALAR built-in.
- *
- *  The coercion task is context-dependent, in the sense that not every SELECT needs to be coerced,
- *  but only a SELECT subquery in an appropriate context, while its coercion specifics depend on the context as well.
- *  The implementation deals with this by using the visitor to find possible _contexts_ of possible SELECT subqueries
- *  (rather than the subqueries themselves) and then inspecting each context to find the subquery
+ *  The coercion is context-dependent, in the sense that not every SELECT is coerced,
+ *  but only a SELECT subquery in an appropriate context, while its coercion specifics depend on the context as well. */
+/*
+ *  The implementation deals with context-dependency by using the visitor to find possible _contexts_ of possible SELECT
+ *  subqueries (rather than the subqueries themselves) and then inspecting each context to find the subquery
  *  and coerce it, if eligible. (In this problem, a "context" is an AST node that can contain an eligible subquery.)
  */
 class SubqueryCoercionVisitorTransform : VisitorTransformBase() {
 
-    /** When an Expr E is reached during the visitor's traversal,
+    /*  When an Expr E is reached during the visitor's traversal,
      * - First, perform the visitor's transformation recursively on E's components.
      *   This will coerce eligible SELECTs deep in each E's subexpression,
      *   but won't coerce any E's direct subexpression itself, even if it is a SELECT.

@@ -28,7 +28,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added string builtins POSITION, OVERLAY, BIT_LENGTH, OCTET_LENGTH, CARDINALITY.
 - **Breaking** Added coercion of SQL-style subquery to a single value, as defined in SQL for 
   subqueries occurring in a single-value context and outlined in Chapter 9 of the PartiQL specification. 
-  This is backward incompatible with the prior behavior, but brings it in conformance with the specification.
+  This is backward incompatible with the prior behavior (which left the computed collection as is), 
+  but brings it in conformance with the specification.
 
 ### Changed
 - Deprecates the project level opt-in annotation `PartiQLExperimental` and split it into feature level. `ExperimentalPartiQLCompilerPipeline` and `ExperimentalWindowFunctions`.
