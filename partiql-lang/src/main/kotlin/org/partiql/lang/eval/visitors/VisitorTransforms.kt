@@ -2,7 +2,8 @@ package org.partiql.lang.eval.visitors
 
 import org.partiql.lang.domains.PartiqlAst
 
-/**
+/** AST Normalization Passes.
+ *
  * Returns a [PartiqlAst.VisitorTransform] requiring no external state for the basic functionality of compiling
  * PartiQL queries.
  *
@@ -20,7 +21,9 @@ fun basicVisitorTransforms() = PipelinedVisitorTransform(
     //   - the synthetic from source aliases added by [FromSourceAliasVisitorTransform]
     //   - The synthetic group by item aliases added by [GroupByItemAliasVisitorTransform]
     GroupByPathExpressionVisitorTransform(),
-    SelectStarVisitorTransform()
+    SelectStarVisitorTransform(),
+
+    SubqueryCoercionVisitorTransform(),
 )
 
 /** A stateless visitor transform that returns the input. */

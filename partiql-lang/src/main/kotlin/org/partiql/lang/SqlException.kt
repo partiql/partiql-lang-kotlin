@@ -100,7 +100,7 @@ open class SqlException(
     }
 
     private fun errorCategory(errorCode: ErrorCode?): String =
-        errorCode?.errorCategory() ?: UNKNOWN
+        errorCode?.category?.message ?: UNKNOWN
 
     override fun toString(): String =
         when (this.message.isNotBlank()) {

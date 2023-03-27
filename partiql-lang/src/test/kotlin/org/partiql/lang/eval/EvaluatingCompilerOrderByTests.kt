@@ -289,23 +289,43 @@ class EvaluatingCompilerOrderByTests : EvaluatorTestBase() {
             ),
             // Empty Projection item (ordered) -- Output (unordered)
             EvaluatorTestCase(
-                "SELECT (SELECT * FROM <<>> ORDER BY true) AS ordered FROM <<0>>",
+                "SELECT ([]) AS ordered FROM <<0>>",
                 "<< { 'ordered': [] } >>"
             ),
             // Empty Projection item (unordered) -- Output (ordered)
             EvaluatorTestCase(
-                "SELECT (SELECT * FROM <<>>) AS ordered FROM <<0>> ORDER BY true",
+                "SELECT (<<>>) AS ordered FROM <<0>> ORDER BY true",
                 "[ { 'ordered': <<>> } ]"
             ),
             // Empty Projection item (ordered) -- Output (ordered)
             EvaluatorTestCase(
-                "SELECT (SELECT * FROM <<>> ORDER BY true) AS ordered FROM <<0>> ORDER BY true",
+                "SELECT ([]) AS ordered FROM <<0>> ORDER BY true",
                 "[ { 'ordered': [] } ]"
             ),
             // Empty Projection item (unordered) -- Output (unordered)
             EvaluatorTestCase(
-                "SELECT (SELECT * FROM <<>>) AS ordered FROM <<0>>",
+                "SELECT (<<>>) AS ordered FROM <<0>>",
                 "<< { 'ordered': <<>> } >>"
+            ),
+            // Subquery projection item (ordered) -- Output (unordered)
+            EvaluatorTestCase(
+                "SELECT (SELECT * FROM <<1>> ORDER BY true) AS ordered FROM <<0>>",
+                "<< { 'ordered': 1 } >>"
+            ),
+            // Subquery projection item (unordered) -- Output (ordered)
+            EvaluatorTestCase(
+                "SELECT (SELECT * FROM <<1>>) AS ordered FROM <<0>> ORDER BY true",
+                "[ { 'ordered': 1 } ]"
+            ),
+            // Subquery projection item (ordered) -- Output (ordered)
+            EvaluatorTestCase(
+                "SELECT (SELECT * FROM <<1>> ORDER BY true) AS ordered FROM <<0>> ORDER BY true",
+                "[ { 'ordered': 1 } ]"
+            ),
+            // Subquery projection item (unordered) -- Output (unordered)
+            EvaluatorTestCase(
+                "SELECT (SELECT * FROM <<1>>) AS ordered FROM <<0>>",
+                "<< { 'ordered': 1 } >>"
             ),
         )
     }
@@ -331,7 +351,7 @@ class EvaluatingCompilerOrderByTests : EvaluatorTestBase() {
                     FROM products_sparse
                     GROUP BY supplierId_nulls
                     ORDER BY
-                        (SELECT supplierId_nulls FROM << 0, 1 >>)
+                        (SELECT supplierId_nulls FROM << 1 >>)
                     DESC NULLS FIRST
                 """,
                 "[{'supplierId_nulls': NULL}, {'supplierId_nulls': 11}, {'supplierId_nulls': 10}]"
@@ -343,7 +363,7 @@ class EvaluatingCompilerOrderByTests : EvaluatorTestBase() {
                     FROM products_sparse
                     GROUP BY supplierId_nulls
                     ORDER BY
-                        (SELECT supplierId_nulls FROM << 0, 1 >>)
+                        (SELECT supplierId_nulls FROM << 1 >>)
                     ASC NULLS FIRST
                 """,
                 "[{'supplierId_nulls': NULL}, {'supplierId_nulls': 10}, {'supplierId_nulls': 11}]"
@@ -358,7 +378,7 @@ class EvaluatingCompilerOrderByTests : EvaluatorTestBase() {
                     FROM products_sparse
                     GROUP BY supplierId_nulls
                     ORDER BY
-                        (SELECT 1 FROM products_sparse GROUP BY supplierId_nulls ORDER BY supplierId_nulls ASC NULLS FIRST)
+                        (SELECT VALUE { '_1': 1 } FROM products_sparse GROUP BY supplierId_nulls ORDER BY supplierId_nulls ASC NULLS FIRST)
                     DESC NULLS FIRST
                 """,
                 "[{'supplierId_nulls': NULL}, {'supplierId_nulls': 10}, {'supplierId_nulls': 11}]"

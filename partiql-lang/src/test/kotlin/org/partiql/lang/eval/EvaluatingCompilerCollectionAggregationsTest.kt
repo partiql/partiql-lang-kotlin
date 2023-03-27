@@ -200,9 +200,10 @@ internal class EvaluatingCompilerCollectionAggregationsTest : EvaluatorTestBase(
                         COLL_SUM('all', k) AS coll_sum_a,
                         SUM(t.b) AS sum_b,
                         (
-                            SELECT COLL_AVG('all', k2) AS coll_avg_inner_k, AVG(t.b) AS avg_inner_b
+                            SELECT VALUE { 'coll_avg_inner_k': COLL_AVG('all', k2), 
+                                           'avg_inner_b': COLL_AVG('all', SELECT VALUE x.t.b FROM g AS x) }
                             FROM table_06 AS t
-                            GROUP BY t.a AS k2
+                            GROUP BY t.a AS k2 GROUP AS g
                             ORDER BY COLL_AVG('all', k2)
                         ) AS coll_sum_inner
                     FROM table_05 AS t

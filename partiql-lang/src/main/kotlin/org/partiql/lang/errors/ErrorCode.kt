@@ -1218,6 +1218,13 @@ enum class ErrorCode(
         ErrorBehaviorInPermissiveMode.RETURN_MISSING
     ),
 
+    EVALUATOR_NON_SINGLETON_COLLECTION(
+        ErrorCategory.EVALUATOR,
+        LOCATION,
+        "Expected collection cannot be coerced to a single value",
+        ErrorBehaviorInPermissiveMode.RETURN_MISSING
+    ),
+
     SEMANTIC_NON_TEXT_STRUCT_FIELD_KEY(
         ErrorCategory.SEMANTIC,
         LOCATION + setOf(Property.ACTUAL_TYPE),
@@ -1371,8 +1378,6 @@ enum class ErrorCode(
      */
     open fun getErrorMessage(errorContext: PropertyValueMap?): String =
         "${detailMessagePrefix()}, ${detailMessageSuffix(errorContext)}"
-
-    fun errorCategory(): String = category.toString()
 
     fun getProperties(): Set<Property> = properties
 }
