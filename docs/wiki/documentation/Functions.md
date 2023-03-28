@@ -253,12 +253,14 @@ Counts the number of characters in the specified string, where 'character' is de
 Signature
 : `CHAR_LENGTH: String -> Integer`
 
-  `CHARACTER_LENGTH: String -> Integer`
-
 Header
 : `CHAR_LENGTH(str)`
 
-  `CHARACTER_LENGTH(str)`
+Signature
+:   `CHARACTER_LENGTH: String -> Integer`
+
+Header
+:  `CHARACTER_LENGTH(str)`
 
 Purpose
 : Given a `String` value `str` return the number of characters (code points) in `str`.
@@ -583,17 +585,21 @@ MAKE_TIME(21, 02, 28., null)             -- null
 MAKE_TIME(21, 02, 28., missing)          -- null
 ```
 
-### SIZE / CARDINALITY
+### SIZE, CARDINALITY
 
 Given any container data type (i.e., list, structure or bag) return the number of elements in the container. 
 
 Signature
-- `SIZE: Container -> Integer`
-- `CARDINALITY: Container -> Integer`
+: `SIZE: Container -> Integer`
 
 Header
-- `SIZE(c)`
-- `CARDINALITY(c)`
+: `SIZE(c)`
+
+Signature
+: `CARDINALITY: Container -> Integer`
+
+Header
+: `CARDINALITY(c)`
 
 Purpose 
 : Given a container, `c`, return the number of elements in the container. 
@@ -1205,48 +1211,6 @@ pow(`nan`, 1) = `nan`
 pow(1, `+inf`) = `nan`
 ```
 
-<!--
-This is the template for writing documentations for an PartiQL built-in function. 
-
-There are 5 parts to a function's documentation 
-
-1. One sentence statement -- much like the first sentence of a Java method's Javadoc
-1. Signature -- the type signature of the function should use data types already defined on define a local data type using a WHERE clause 
-1. Header -- function with formal parameters only that we will use in the next step 
-1. Purpose -- english explanation of what the function does referring to formal argument names from Header. State any pre- and post-conditions as well as any exceptions to default behaviour e.g., propagation of unknowns `null` and `missing` 
-1. Examples -- examples and their expected results. Make sure the examples cover the preceding explanations and **always** include examples for uncommon behaviour 
-
-Here is an example for the imaginary function `add` 
-
-### ADD
-
-Given 1 or more values return ther sum 
-
-Signature
-: `ADD: PosInt PosInt -> PosInt`
-
-where `PosInt` is a positive `Integer`
-
-Header
-: `ADD(v1, v2 ... vn)`
-
-Purpose
-: Given 1 or more values `v1 .. vn` return their sum. The summation proceeds from left-to-right. If any of the values passed is **not** a `PosInt` the 
-function returns the current sum up to that point. 
-  
-Examples
-: 
-
-```sql  
-ADD(1)         -- 1 (wrap extra explanations with parens)
-ADD(1,2)       -- 3
-ADD(1,2,"a",3) -- 3
-ADD()          -- 0
-ADD("a")       -- 0
-```
-
--->
-
 ### BIT_LENGTH
 
 Returns the number of bits in the input string.
@@ -1291,8 +1255,10 @@ Signature
 : `POSITION: String, String —> Int`
 
 Header
-- `POSITION(str1 IN str2)`
-- `POSITION(str1, str2)`
+: `POSITION(str1 IN str2)`
+
+Header
+: `POSITION(str1, str2)`
 
 Examples
 : 
@@ -1318,12 +1284,16 @@ the substring is zero, nothing is removed from the original string and the strin
 function is the result of inserting the replacement string into the original string at the starting position.
 
 Signature
-- `OVERLAY: String, String, Int —> String`
-- `OVERLAY: String, String, Int, Int —> String`
+: `OVERLAY: String, String, Int —> String`
 
 Header
-- `OVERLAY(str1 PLACING str2 FROM pos)`
-- `OVERLAY(str1 PLACING str2 FROM pos FOR for)`
+: `OVERLAY(str1 PLACING str2 FROM pos)`
+
+Signature
+: `OVERLAY: String, String, Int, Int —> String`
+
+Header
+: `OVERLAY(str1 PLACING str2 FROM pos FOR for)`
 
 Examples
 : 
@@ -1342,3 +1312,46 @@ overlay('hello' placing 'XX' from 100 for 100)  -- "helloXX
 overlay('hello' placing 'XX' from 2 for 1)      -- "hXXllo
 overlay('hello' placing 'XX' from 2 for 3)      -- "hXXo
 ```
+
+<!--
+This is the template for writing documentations for an PartiQL built-in function. 
+
+There are 5 parts to a function's documentation 
+
+1. One sentence statement -- much like the first sentence of a Java method's Javadoc
+1. Signature -- the type signature of the function should use data types already defined on define a local data type using a WHERE clause 
+1. Header -- function with formal parameters only that we will use in the next step 
+1. Purpose -- english explanation of what the function does referring to formal argument names from Header. State any pre- and post-conditions as well as any exceptions to default behaviour e.g., propagation of unknowns `null` and `missing` 
+1. Examples -- examples and their expected results. Make sure the examples cover the preceding explanations and **always** include examples for uncommon behaviour 
+
+Here is an example for the imaginary function `add` 
+
+### ADD
+
+Given 1 or more values return ther sum 
+
+Signature
+: `ADD: PosInt PosInt -> PosInt`
+
+where `PosInt` is a positive `Integer`
+
+Header
+: `ADD(v1, v2 ... vn)`
+
+Purpose
+: Given 1 or more values `v1 .. vn` return their sum. The summation proceeds from left-to-right. If any of the values passed is **not** a `PosInt` the 
+function returns the current sum up to that point. 
+  
+Examples
+: 
+
+```sql  
+ADD(1)         -- 1 (wrap extra explanations with parens)
+ADD(1,2)       -- 3
+ADD(1,2,"a",3) -- 3
+ADD()          -- 0
+ADD("a")       -- 0
+```
+
+-->
+
