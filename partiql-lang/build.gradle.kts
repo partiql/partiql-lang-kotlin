@@ -34,7 +34,10 @@ dependencies {
     implementation(Deps.antlrRuntime)
     implementation(Deps.csv)
     implementation(Deps.kotlinReflect)
+
+    testImplementation(project(":partiql-spi", "test"))
     testImplementation(Deps.assertj)
+    testImplementation(Deps.gson)
     testImplementation(Deps.junit4)
     testImplementation(Deps.junit4Params)
     testImplementation(Deps.junitVintage) // Enables JUnit4

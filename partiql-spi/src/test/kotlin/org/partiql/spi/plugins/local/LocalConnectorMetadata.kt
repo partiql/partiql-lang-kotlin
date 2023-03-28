@@ -12,7 +12,7 @@
  *  language governing permissions and limitations under the License.
  */
 
-package org.partiql.cli.puglin.localdb
+package org.partiql.spi.plugins.local
 
 import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
@@ -34,7 +34,7 @@ class LocalConnectorMetadata(val name: String, private val root: Path) : Connect
 
     override fun getObjectHandle(
         session: ConnectorSession,
-        path: BindingPath,
+        path: BindingPath
     ): ConnectorObjectHandle? {
         val resolvedObject = resolveObject(root, path.steps) ?: return null
         return ConnectorObjectHandle(

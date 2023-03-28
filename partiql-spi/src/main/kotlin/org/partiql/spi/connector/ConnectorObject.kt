@@ -15,6 +15,9 @@
 package org.partiql.spi.connector
 
 /**
- * An object's representation within a Catalog.
+ * An object's representation within a Catalog. This is used by plugin implementers to store logic in relation to the
+ * [ConnectorMetadata]. An example implementation of [ConnectorObject] could represent an object of a Catalog that holds
+ * the serialized [org.partiql.spi.sources.ValueDescriptor.TableDescriptor], so that the [ConnectorMetadata] may be able
+ * to grab the descriptor using [ConnectorMetadata.getObjectDescriptor].
  */
 interface ConnectorObject

@@ -12,11 +12,22 @@
  *  language governing permissions and limitations under the License.
  */
 
-package org.partiql.cli.puglin.localdb
+package org.partiql.spi.plugins.local
 
-import org.partiql.spi.Plugin
-import org.partiql.spi.connector.Connector
+import com.google.gson.Gson
+import com.google.gson.stream.JsonReader
 
-class LocalPlugin : Plugin {
-    override fun getConnectorFactories(): List<Connector.Factory> = listOf(LocalConnector.Factory())
+class LocalSchema(
+    public val name: String,
+    public val type: LocalObjectType,
+    public val attributes: List<LocalColumnSchema>
+) {
+    companion object {
+        @JvmStatic
+        fun fromJson(json: String): LocalSchema {
+            val reader = json.reader()
+            val jsonReader = JsonReader(reader)
+            return Gson().fromJson(jsonReader, LocalSchema::class.java)
+        }
+    }
 }

@@ -1,34 +1,20 @@
-/*
- * Copyright Amazon.com, Inc. or its affiliates.  All rights reserved.
- *
- *  Licensed under the Apache License, Version 2.0 (the "License").
- *  You may not use this file except in compliance with the License.
- *  A copy of the License is located at:
- *
- *       http://aws.amazon.com/apache2.0/
- *
- *  or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
- *  language governing permissions and limitations under the License.
- */
-
-package org.partiql.cli.pico
+package org.partiql.lang.planner.transforms
 
 import com.amazon.ionelement.api.field
 import com.amazon.ionelement.api.ionString
 import com.amazon.ionelement.api.ionStructOf
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.ArgumentsProvider
 import org.junit.jupiter.params.provider.ArgumentsSource
-import org.partiql.cli.pico.InferCommandTest.TestCase.ErrorTestCase
-import org.partiql.cli.pico.InferCommandTest.TestCase.SuccessTestCase
-import org.partiql.cli.puglin.localdb.LocalPlugin
-import org.partiql.lang.planner.transforms.PlannerSession
+import org.partiql.lang.errors.ProblemCollector
+import org.partiql.lang.planner.transforms.PartiQLSchemaInferencerTests.TestCase.ErrorTestCase
+import org.partiql.lang.planner.transforms.PartiQLSchemaInferencerTests.TestCase.SuccessTestCase
+import org.partiql.spi.plugins.local.LocalPlugin
 import org.partiql.spi.sources.ColumnMetadata
 import org.partiql.spi.sources.ValueDescriptor
-import org.partiql.spi.sources.ValueDescriptor.TableDescriptor
 import org.partiql.types.AnyOfType
 import org.partiql.types.AnyType
 import org.partiql.types.BagType
@@ -52,17 +38,25 @@ import org.partiql.types.TimestampType
 import java.net.URL
 import java.time.Instant
 import java.util.stream.Stream
-import kotlin.test.Ignore
 
-class InferCommandTest {
+class PartiQLSchemaInferencerTests {
+
+    private val plugins = listOf(LocalPlugin())
+
+    @Test
+    public fun test() {
+        val session = PlannerSession("1", "test")
+        val ctx = PartiQLSchemaInferencer.Context(session, plugins, ProblemCollector())
+        PartiQLSchemaInferencer.infer("1", ctx)
+    }
 
     private val userId = "TEST_USER"
-    private val command = InferCommand(listOf(LocalPlugin()))
     private val catalogMap = listOf("aws", "b").associate { catalogName ->
-        val catalogUrl: URL = InferCommandTest::class.java.classLoader.getResource("catalogs/$catalogName") ?: error("Couldn't be found")
+        val catalogUrl: URL =
+            PartiQLSchemaInferencerTests::class.java.classLoader.getResource("catalogs/$catalogName") ?: error("Couldn't be found")
         catalogName to ionStructOf(
             field("connector_name", ionString("localdb")),
-            field("localdb_root", ionString(catalogUrl.path)),
+            field("localdb_root", ionString(catalogUrl.path))
         )
     }
 
@@ -72,15 +66,18 @@ class InferCommandTest {
         const val CATALOG_B = "b"
         private val TYPE_AWS_DDB_PETS_ID = ValueDescriptor.TypeDescriptor(StaticType.INT)
         private val TYPE_AWS_DDB_PETS_BREED = ValueDescriptor.TypeDescriptor(StaticType.STRING)
-        val TABLE_AWS_DDB_PETS = TableDescriptor(
+        val TABLE_AWS_DDB_PETS = ValueDescriptor.TableDescriptor(
             name = DEFAULT_TABLE_NAME,
-            attributes = listOf(ColumnMetadata("id", TYPE_AWS_DDB_PETS_ID.type), ColumnMetadata("breed", TYPE_AWS_DDB_PETS_BREED.type))
+            attributes = listOf(
+                ColumnMetadata("id", TYPE_AWS_DDB_PETS_ID.type),
+                ColumnMetadata("breed", TYPE_AWS_DDB_PETS_BREED.type)
+            )
         )
-        val TABLE_AWS_DDB_B = TableDescriptor(
+        val TABLE_AWS_DDB_B = ValueDescriptor.TableDescriptor(
             name = DEFAULT_TABLE_NAME,
             attributes = listOf(ColumnMetadata("identifier", StaticType.STRING))
         )
-        val TABLE_AWS_B_B = TableDescriptor(
+        val TABLE_AWS_B_B = ValueDescriptor.TableDescriptor(
             name = DEFAULT_TABLE_NAME,
             attributes = listOf(ColumnMetadata("identifier", StaticType.INT))
         )
@@ -96,13 +93,16 @@ class InferCommandTest {
                 )
             )
         )
+
         // TODO: Need to throw errors on bad references
-        val TABLE_ERROR = TableDescriptor(DEFAULT_TABLE_NAME, attributes = listOf(ColumnMetadata("_1", StaticType.ANY)))
+        val TABLE_ERROR = ValueDescriptor.TableDescriptor(
+            DEFAULT_TABLE_NAME,
+            attributes = listOf(ColumnMetadata("_1", StaticType.ANY))
+        )
     }
 
     // TODO: Currently, SELECT a.a, a FROM <<{'a': 1}>> AS a isn't working, and it's causing issues. To remediate,
     //  we need to add the input binding tuple to the PROJ operator's schema. This causes SELECT * FROM anything to fail.
-    @Ignore
     @ParameterizedTest
     @ArgumentsSource(TestProvider::class)
     fun test(tc: TestCase): Unit = when (tc) {
@@ -115,18 +115,48 @@ class InferCommandTest {
                 catalogMap,
                 Instant.now()
             )
-            val result = command.infer(tc.query, session)
-            assert(descriptorEquals(tc.expected, result))
+            val ctx = PartiQLSchemaInferencer.Context(session, plugins, ProblemCollector())
+            val result = PartiQLSchemaInferencer.infer(tc.query, ctx)
+            println(tc.name)
+            println("${tc.name} Expected: ${tc.expected}")
+            println("${tc.name} Actual: $result")
+            assert(descriptorEquals(tc.expected, result)) {
+                println("Expected: ${tc.expected}")
+                println("Actual: $result")
+            }
         }
         is ErrorTestCase -> {
-            val session = PlannerSession(tc.query.hashCode().toString(), userId, tc.catalog, tc.catalogPath, catalogMap, Instant.now())
+            val session = PlannerSession(
+                tc.query.hashCode().toString(),
+                userId,
+                tc.catalog,
+                tc.catalogPath,
+                catalogMap,
+                Instant.now()
+            )
             // TODO: Need to pass in an ErrorHandler and assert the error thrown
-            val result = command.infer(tc.query, session)
+            val ctx = PartiQLSchemaInferencer.Context(session, plugins, ProblemCollector())
+            val result = PartiQLSchemaInferencer.infer(tc.query, ctx)
+            println(tc.name)
+            println("${tc.name} Expected: $TABLE_ERROR")
+            println("${tc.name} Actual: $result")
             assert(descriptorEquals(TABLE_ERROR, result)) {
                 println("Expected: $TABLE_ERROR")
                 println("Actual: $result")
             }
         }
+    }
+
+    @Test
+    fun singleTest() {
+        val tc = SuccessTestCase(
+            name = "Single Test",
+            catalog = CATALOG_AWS,
+            catalogPath = listOf("ddb"),
+            query = "SELECT * FROM pets",
+            expected = TABLE_AWS_DDB_PETS
+        )
+        test(tc)
     }
 
     sealed class TestCase() {
@@ -154,6 +184,7 @@ class InferCommandTest {
         override fun provideArguments(context: ExtensionContext?): Stream<out Arguments> {
             return parameters.map { Arguments.of(it) }.stream()
         }
+
         private val parameters = listOf(
             ErrorTestCase(
                 name = "Test #1",
@@ -304,7 +335,7 @@ class InferCommandTest {
                 catalog = CATALOG_B,
                 query = "b.b.b.b.b",
                 expected = TYPE_B_B_B_B_B
-            ),
+            )
         )
     }
 
@@ -313,8 +344,8 @@ class InferCommandTest {
             is ValueDescriptor.TypeDescriptor -> expected.type.isEqualTo(actual.type)
             else -> false
         }
-        is TableDescriptor -> when (actual) {
-            is TableDescriptor -> expected == actual
+        is ValueDescriptor.TableDescriptor -> when (actual) {
+            is ValueDescriptor.TableDescriptor -> expected == actual
             else -> false
         }
     }

@@ -50,7 +50,7 @@ internal class MetadataInference(
 
     override fun getObjectHandle(session: PlannerSession, catalog: BindingName, path: BindingPath): ObjectHandle? {
         val connectorSession = session.toConnectorSession()
-        val metadataInfo = getMetadata(session.toConnectorSession(), catalog)
+        val metadataInfo = getMetadata(session.toConnectorSession(), catalog) ?: return null
         return metadataInfo.metadata.getObjectHandle(connectorSession, path)?.let {
             ObjectHandle(
                 connectorHandle = it,
@@ -61,13 +61,13 @@ internal class MetadataInference(
 
     override fun getObjectDescriptor(session: PlannerSession, handle: ObjectHandle): ValueDescriptor {
         val connectorSession = session.toConnectorSession()
-        val metadata = getMetadata(session.toConnectorSession(), BindingName(handle.catalogName, BindingCase.SENSITIVE)).metadata
+        val metadata = getMetadata(session.toConnectorSession(), BindingName(handle.catalogName, BindingCase.SENSITIVE))!!.metadata
         return metadata.getObjectDescriptor(connectorSession, handle.connectorHandle)!!
     }
 
-    private fun getMetadata(connectorSession: ConnectorSession, catalogName: BindingName): MetadataInformation {
-        val catalogKey = catalogMap.keys.firstOrNull { catalogName.isEquivalentTo(it) } ?: error("Unknown catalog: $catalogName")
-        val connector = connectorMap[catalogKey] ?: error("Could not load catalog: $catalogKey")
+    private fun getMetadata(connectorSession: ConnectorSession, catalogName: BindingName): MetadataInformation? {
+        val catalogKey = catalogMap.keys.firstOrNull { catalogName.isEquivalentTo(it) } ?: return null
+        val connector = connectorMap[catalogKey] ?: return null
         return MetadataInformation(catalogKey, connector.getMetadata(session = connectorSession))
     }
 

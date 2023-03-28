@@ -14,12 +14,15 @@
 
 package org.partiql.lang.planner.transforms
 
+import org.partiql.lang.SqlException
 import org.partiql.lang.ast.SourceLocationMeta
-import org.partiql.lang.ast.passes.SemanticException
 import org.partiql.lang.domains.PartiqlAst
+import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Problem
 import org.partiql.lang.errors.ProblemHandler
-import org.partiql.lang.errors.ProblemThrower
+import org.partiql.lang.errors.ProblemSeverity
+import org.partiql.lang.errors.Property
+import org.partiql.lang.errors.PropertyValueMap
 import org.partiql.lang.planner.PlanningProblemDetails
 import org.partiql.lang.planner.transforms.impl.MetadataInference
 import org.partiql.lang.planner.transforms.impl.PlannerContext
@@ -28,6 +31,7 @@ import org.partiql.lang.planner.transforms.plan.PlanUtils
 import org.partiql.lang.planner.transforms.plan.RelConverter
 import org.partiql.lang.planner.transforms.plan.RexConverter
 import org.partiql.lang.syntax.PartiQLParserBuilder
+import org.partiql.lang.util.propertyValueMapOf
 import org.partiql.plan.Rex
 import org.partiql.spi.Plugin
 import org.partiql.spi.sources.ColumnMetadata
@@ -45,7 +49,7 @@ public object PartiQLSchemaInferencer {
      * Infers a query's schema.
      */
     @JvmStatic
-    @Throws(SemanticException::class)
+    @Throws(InferenceException::class)
     public fun infer(
         query: String,
         ctx: Context
@@ -54,8 +58,8 @@ public object PartiQLSchemaInferencer {
             inferInternal(query, ctx)
         } catch (t: Throwable) {
             throw when (t) {
-                is SemanticException -> t
-                else -> SemanticException(
+                is InferenceException -> t
+                else -> InferenceException(
                     err = Problem(
                         SourceLocationMeta(0, 0),
                         PlanningProblemDetails.CompileError("Unhandled exception occurred.")
@@ -72,9 +76,29 @@ public object PartiQLSchemaInferencer {
     public class Context(
         public val session: PlannerSession,
         plugins: List<Plugin>,
-        public val problemHandler: ProblemHandler = ProblemThrower(),
+        public val problemHandler: ProblemHandler = ProblemThrower()
     ) {
         internal val plannerContext = PlannerContext(MetadataInference(plugins, session.catalogConfig))
+    }
+
+    public class InferenceException(
+        message: String = "",
+        errorCode: ErrorCode,
+        errorContext: PropertyValueMap,
+        cause: Throwable? = null
+    ) : SqlException(message, errorCode, errorContext, cause) {
+
+        constructor(err: Problem, cause: Throwable? = null) :
+            this(
+                message = "",
+                errorCode = ErrorCode.SEMANTIC_PROBLEM,
+                errorContext = propertyValueMapOf(
+                    Property.LINE_NUMBER to err.sourceLocation.lineNum,
+                    Property.COLUMN_NUMBER to err.sourceLocation.charOffset,
+                    Property.MESSAGE to err.details.message
+                ),
+                cause = cause
+            )
     }
 
     //
@@ -82,6 +106,14 @@ public object PartiQLSchemaInferencer {
     // INTERNAL
     //
     //
+
+    internal class ProblemThrower : ProblemHandler {
+        override fun handleProblem(problem: Problem) {
+            if (problem.details.severity == ProblemSeverity.ERROR) {
+                throw InferenceException(problem)
+            }
+        }
+    }
 
     private const val DEFAULT_TABLE_NAME = "UNSPECIFIED"
 

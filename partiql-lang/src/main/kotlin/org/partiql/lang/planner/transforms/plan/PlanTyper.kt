@@ -121,13 +121,22 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
 
     override fun visitRel(node: Rel, ctx: Context): Rel = super.visitRel(node, ctx) as Rel
 
-    // TODO: This isn't ideal. Ideally, project * will just remove itself from the tree.
     override fun visitRelProject(node: Rel.Project, ctx: Context): PlanNode {
         val input = visitRel(node.input, ctx)
-        val schema = when (node.bindings.getOrNull(0)?.name == "*") {
-            true -> input.getSchema()
-            false -> node.bindings.map { binding ->
-                Attribute(binding.name, inferType(binding.value, input, ctx))
+        val schema = node.bindings.flatMap { binding ->
+            val type = inferType(binding.value, input, ctx)
+            // TODO: We need to resolve this hack of using "*" as the name for project all.
+            when (binding.name == "*") {
+                true -> {
+                    when (type) {
+                        is StructType -> type.fields.map { entry -> Attribute(entry.key, entry.value) }
+                        else -> {
+                            // TODO: Bindings need to maintain their aliases. The binding.name below is wrong.
+                            listOf(Attribute(binding.name, type))
+                        }
+                    }
+                }
+                false -> listOf(Attribute(binding.name, type))
             }
         }
         return node.copy(
@@ -138,10 +147,7 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
         )
     }
 
-    // TODO: Fix nested attribute.
-    //  As an example: SELECT a, a.a FROM << { 'a': 1 } >> AS a.
-    //  Also need to account for: SELECT * FROM << { 'a': 1 } >> AS a.
-    override fun visitRelScan(node: Rel.Scan, ctx: Context): PlanNode {
+    override fun visitRelScan(node: Rel.Scan, ctx: Context): Rel {
         val value = visitRex(
             node.value,
             Context(
@@ -165,7 +171,7 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
             is Rex.Query.Collection -> when (value.constructor) {
                 null -> value.rel
                 else -> {
-                    val schema = listOf(Attribute(asSymbolicName, sourceType)) + convertStaticTypeToSchema(sourceType)
+                    val schema = listOf(Attribute(asSymbolicName, sourceType))
                     node.copy(
                         value = value,
                         common = node.common.copy(
@@ -175,7 +181,7 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
                 }
             }
             else -> {
-                val schema = listOf(Attribute(asSymbolicName, sourceType)) + convertStaticTypeToSchema(sourceType)
+                val schema = listOf(Attribute(asSymbolicName, sourceType))
                 node.copy(
                     value = value,
                     common = node.common.copy(
@@ -951,7 +957,7 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
 
     private fun computeReturnTypeForNAry(
         argsStaticType: List<StaticType>,
-        binaryOpInferencer: (SingleType, SingleType) -> SingleType,
+        binaryOpInferencer: (SingleType, SingleType) -> SingleType
     ): StaticType =
         argsStaticType.reduce { leftStaticType, rightStaticType ->
             val leftSingleTypes = leftStaticType.allTypes.map { it as SingleType }

@@ -21,10 +21,25 @@ plugins {
 dependencies {
     implementation(project(":partiql-types"))
     implementation(Deps.ionElement)
+    testImplementation(Deps.gson)
 }
 
 publish {
     artifactId = "partiql-spi"
     name = "PartiQL SPI"
     description = "Pluggable interfaces to allow for custom logic within the PartiQL library."
+}
+
+configurations {
+    create("test")
+}
+
+tasks.register<Jar>("testArchive") {
+    archiveBaseName.set("${project.name}-test")
+    from(project.the<SourceSetContainer>()["test"].output)
+    from(project.the<SourceSetContainer>()["test"].allSource)
+}
+
+artifacts {
+    add("test", tasks["testArchive"])
 }

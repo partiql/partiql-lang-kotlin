@@ -26,7 +26,6 @@ dependencies {
     implementation(Deps.csv)
     implementation(Deps.awsSdkBom)
     implementation(Deps.awsSdkDynamodb)
-    implementation(Deps.gson)
     implementation(Deps.guava)
     implementation(Deps.jansi)
     implementation(Deps.jline)
@@ -34,6 +33,7 @@ dependencies {
     implementation(Deps.picoCli)
     implementation(Deps.kotlinReflect)
     testImplementation(Deps.mockito)
+    testImplementation(project(":partiql-spi", "test"))
 }
 
 application {

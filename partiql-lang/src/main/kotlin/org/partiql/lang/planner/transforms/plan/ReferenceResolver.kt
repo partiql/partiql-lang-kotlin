@@ -22,6 +22,7 @@ import org.partiql.spi.connector.ConnectorObjectPath
 import org.partiql.spi.sources.ValueDescriptor
 import org.partiql.spi.sources.ValueDescriptor.TypeDescriptor
 import org.partiql.types.StaticType
+import org.partiql.types.StructType
 
 internal object ReferenceResolver {
 
@@ -64,6 +65,19 @@ internal object ReferenceResolver {
         if (path.steps.isEmpty()) { return null }
         val root: StaticType = input.firstOrNull {
             path.steps[0].isEquivalentTo(it.name)
+        }?.type ?: input.firstOrNull {
+            when (val struct = it.type) {
+                is StructType -> {
+                    val found = struct.fields.entries.firstOrNull { entry ->
+                        path.steps[0].isEquivalentTo(entry.key)
+                    }
+                    when (found) {
+                        null -> false
+                        else -> return ResolvedDescriptor(found.value)
+                    }
+                }
+                else -> false
+            }
         }?.type ?: return null
         return ResolvedDescriptor(root)
     }

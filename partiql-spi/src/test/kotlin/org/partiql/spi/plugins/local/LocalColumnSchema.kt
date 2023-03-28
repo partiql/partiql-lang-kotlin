@@ -12,22 +12,10 @@
  *  language governing permissions and limitations under the License.
  */
 
-package org.partiql.cli.puglin.localdb
+package org.partiql.spi.plugins.local
 
-import com.google.gson.Gson
-import com.google.gson.stream.JsonReader
-
-class LocalSchema(
+class LocalColumnSchema(
     public val name: String,
-    public val type: LocalObjectType,
-    public val attributes: List<LocalColumnSchema>
-) {
-    companion object {
-        @JvmStatic
-        fun fromJson(json: String): LocalSchema {
-            val reader = json.reader()
-            val jsonReader = JsonReader(reader)
-            return Gson().fromJson<LocalSchema>(jsonReader, LocalSchema::class.java)
-        }
-    }
-}
+    public val type: String,
+    public val typeParams: List<String>
+)
