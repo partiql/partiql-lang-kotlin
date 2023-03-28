@@ -114,7 +114,7 @@ internal class RelConverter {
     private fun convertJoin(join: PartiqlAst.FromSource.Join): Rel {
         val lhs = convertFrom(join.left)
         val rhs = convertFrom(join.right)
-        val condition = if (join.predicate != null) RexConverter.convert(join.predicate!!) else null
+        val condition = if (join.predicate != null) RexConverter.convert(join.predicate) else null
         return Rel.Join(
             common = empty,
             lhs = lhs,
@@ -195,7 +195,7 @@ internal class RelConverter {
         if (groupBy != null) {
             // GROUP AS is implemented as an aggregation function
             if (groupBy.groupAsAlias != null) {
-                calls.add(convertGroupAs(groupBy.groupAsAlias!!.text, sel.from))
+                calls.add(convertGroupAs(groupBy.groupAsAlias.text, sel.from))
             }
             groups = groupBy.keyList.keys.map { convertGroupByKey(it) }
             strategy = when (groupBy.strategy) {
@@ -343,14 +343,14 @@ internal class RelConverter {
             if (asAlias == null) {
                 error("not normalized, scan is missing an alias")
             }
-            listOf(asAlias!!.text)
+            listOf(asAlias.text)
         }
         is PartiqlAst.FromSource.Join -> left.bindings() + right.bindings()
         is PartiqlAst.FromSource.Unpivot -> {
             if (asAlias == null) {
                 error("not normalized, scan is missing an alias")
             }
-            listOf(asAlias!!.text)
+            listOf(asAlias.text)
         }
     }
 
@@ -415,7 +415,7 @@ internal class RelConverter {
         override fun transformExprSelect_having(node: PartiqlAst.Expr.Select): PartiqlAst.Expr? =
             when (node.having) {
                 null -> null
-                else -> transformExpr(node.having!!)
+                else -> transformExpr(node.having)
             }
 
         override fun transformSortSpec_expr(node: PartiqlAst.SortSpec) = transformExpr(node.expr)

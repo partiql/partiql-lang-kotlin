@@ -300,7 +300,7 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
                 args = args(
                     "value" to node.value,
                     "pattern" to node.pattern,
-                    "escape" to node.escape!!,
+                    "escape" to node.escape,
                 ),
                 type = StaticType.BOOL,
             )
@@ -394,7 +394,7 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
                     value = convert(it.second),
                 )
             },
-            default = if (node.default != null) convert(node.default!!) else null
+            default = if (node.default != null) convert(node.default) else null
         )
     }
 
@@ -407,7 +407,7 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
                     value = convert(it.second),
                 )
             },
-            default = if (node.default != null) convert(node.default!!) else null
+            default = if (node.default != null) convert(node.default) else null
         )
     }
 

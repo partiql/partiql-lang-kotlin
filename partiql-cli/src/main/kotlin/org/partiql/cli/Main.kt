@@ -43,6 +43,7 @@ fun main(args: Array<String>) {
  */
 object Debug {
 
+    @Suppress("UNUSED_PARAMETER")
     @Throws(Exception::class)
     fun action(input: String, session: EvaluationSession): String {
         // IMPLEMENT DEBUG BEHAVIOR HERE
