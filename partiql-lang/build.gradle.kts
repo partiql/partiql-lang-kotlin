@@ -26,6 +26,7 @@ dependencies {
     antlr(Deps.antlr)
     api(project(":lib:isl"))
     implementation(project(":partiql-types"))
+    implementation(project(":partiql-plan"))
     api(Deps.ionElement)
     api(Deps.ionJava)
     api(Deps.pigRuntime)
