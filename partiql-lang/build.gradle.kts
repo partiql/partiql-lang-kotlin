@@ -22,14 +22,21 @@ plugins {
     id(Plugins.publish)
 }
 
+val libs: Configuration by configurations.creating
+
+configurations {
+    api.get().extendsFrom(libs)
+}
+
 dependencies {
     antlr(Deps.antlr)
     api(project(":lib:isl"))
-    implementation(project(":partiql-types"))
-    implementation(project(":partiql-plan"))
     api(Deps.ionElement)
     api(Deps.ionJava)
     api(Deps.pigRuntime)
+    // libs are included in partiql-lang-kotlin JAR
+    libs(project(":partiql-types"))
+    libs(project(":partiql-plan"))
     implementation(Deps.antlrRuntime)
     implementation(Deps.csv)
     implementation(Deps.kotlinReflect)
@@ -91,4 +98,14 @@ tasks.processResources {
         include("partiql.ion")
         into("org/partiql/type-domains/")
     }
+}
+
+tasks.jar {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    // adds all `libs(project(...))` to the partiql-lang-kotlin jar
+    from(
+        libs.dependencies.filterIsInstance<ProjectDependency>().map {
+            it.dependencyProject.sourceSets.main.get().output.classesDirs
+        }
+    )
 }

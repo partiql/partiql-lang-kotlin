@@ -11,7 +11,7 @@ The data structures in `org.partiql.plan` can be used via the latest [partiql-la
 
 For example,
 
-```{kotlin}
+```kotlin
 val parser = PartiQLParserBuilder.standard().build()
 val ast = parser.parseAstStatement(input)
 val plan = AstToPlan.transform(ast)
