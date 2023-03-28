@@ -17,9 +17,6 @@ class Universe(
         fun List<TypeDef>.applyToAll() {
             forEach {
                 action(it)
-                if (it is TypeDef.Sum) {
-                    it.variants.applyToAll()
-                }
                 it.children.applyToAll()
             }
         }
