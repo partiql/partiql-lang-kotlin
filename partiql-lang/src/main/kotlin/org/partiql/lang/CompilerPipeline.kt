@@ -24,6 +24,7 @@ import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.Expression
 import org.partiql.lang.eval.ThunkReturnTypeAssertions
 import org.partiql.lang.eval.builtins.SCALAR_BUILTINS_DEFAULT
+import org.partiql.lang.eval.builtins.definitionalBuiltins
 import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedure
 import org.partiql.lang.eval.visitors.PipelinedVisitorTransform
 import org.partiql.lang.eval.visitors.StaticTypeInferenceVisitorTransform
@@ -250,13 +251,16 @@ interface CompilerPipeline {
                 }
             }
 
+            val definitionalBuiltins = definitionalBuiltins(compileOptionsToUse.typingMode).associateBy {
+                it.signature.name
+            }
             val builtinFunctions = SCALAR_BUILTINS_DEFAULT.associateBy {
                 it.signature.name
             }
 
             // customFunctions must be on the right side of + here to ensure that they overwrite any
             // built-in functions with the same name.
-            val allFunctions = builtinFunctions + customFunctions
+            val allFunctions = definitionalBuiltins + builtinFunctions + customFunctions
 
             return CompilerPipelineImpl(
                 ion = ion,

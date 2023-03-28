@@ -19,7 +19,11 @@ jobs:
         with:
           distribution: 'corretto'
           java-version: 17
-          cache: gradle
+      # Fix gradle version to what's used in gradle-wrapper
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
+        with:
+          gradle-version: 7.5.1
       # Run the conformance tests and save to an Ion file.
       - name: gradle test of the conformance tests (can fail) and save to Ion file
         continue-on-error: true
@@ -57,7 +61,11 @@ jobs:
         with:
           distribution: 'corretto'
           java-version: 17
-          cache: gradle
+      # Fix gradle version to what's used in gradle-wrapper
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
+        with:
+          gradle-version: 7.5.1
       - name: Download `conformance_test_results.ion` from target branch
         uses: dawidd6/action-download-artifact@v2
         id: download-report

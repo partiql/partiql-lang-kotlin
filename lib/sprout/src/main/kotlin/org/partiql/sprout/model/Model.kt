@@ -30,20 +30,24 @@ class Universe(
 /**
  * Definition of some type
  */
-sealed class TypeDef(
-    val ref: TypeRef.Path,
-) {
+sealed class TypeDef(val ref: TypeRef.Path) {
 
     /**
-     * Children represent type definitions nested within another, but not related algebraic-ly.
-     * That is, it's a convenience
+     * All types defined within this node
      */
     abstract val children: List<TypeDef>
 
     /**
+     * Types defined within this node which are not related to this node "algebraically" such as inline definitions
+     */
+    abstract val types: List<TypeDef>
+
+    /**
      * TypeDef.Sum represents a list of type variants
      */
-    class Sum(ref: TypeRef.Path, val variants: List<TypeDef>, override val children: List<TypeDef>) : TypeDef(ref) {
+    class Sum(ref: TypeRef.Path, val variants: List<TypeDef>, override val types: List<TypeDef>) : TypeDef(ref) {
+
+        override val children: List<TypeDef> = variants + types
 
         override fun toString() = "sum::$ref"
     }
@@ -51,7 +55,9 @@ sealed class TypeDef(
     /**
      * TypeDef.Product represents a structure of name/value pairs
      */
-    class Product(ref: TypeRef.Path, val props: List<TypeProp>, override val children: List<TypeDef>) : TypeDef(ref) {
+    class Product(ref: TypeRef.Path, val props: List<TypeProp>, override val types: List<TypeDef>) : TypeDef(ref) {
+
+        override val children: List<TypeDef> = props.filterIsInstance<TypeProp.Inline>().map { it.def } + types
 
         override fun toString() = "product::$ref(${props.joinToString()})"
     }
@@ -62,6 +68,8 @@ sealed class TypeDef(
      * Enums routinely required special treatment.. :upside_down_face:
      */
     class Enum(ref: TypeRef.Path, val values: List<String>) : TypeDef(ref) {
+
+        override val types: List<TypeDef> = emptyList()
 
         override val children: List<TypeDef> = emptyList()
 

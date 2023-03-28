@@ -90,14 +90,9 @@ class KotlinGenerator(private val options: KotlinOptions) : Generator<KotlinResu
     private fun TypeDef.Product.generate(symbols: KotlinSymbols) = KotlinNodeSpec.Product(
         product = this,
         props = props.map { KotlinNodeSpec.Prop(it.name.toCamelCase(), symbols.typeNameOf(it.ref)) },
+        nodes = children.mapNotNull { it.generate(symbols) },
         clazz = symbols.clazz(ref),
-        children = children.mapNotNull { it.generate(symbols) },
-        types = props.filterIsInstance<TypeProp.Inline>().mapNotNull {
-            when (it.def) {
-                is TypeDef.Enum -> it.def.generate(symbols)
-                else -> null
-            }
-        }
+        ext = (props.enumProps(symbols) + types.enums(symbols)).toMutableList(),
     ).apply {
         props.forEach {
             val para = ParameterSpec.builder(it.name, it.type).build()
@@ -110,7 +105,7 @@ class KotlinGenerator(private val options: KotlinOptions) : Generator<KotlinResu
             KotlinNodeOptions.Modifier.DATA -> if (props.isNotEmpty()) builder.addModifiers(KModifier.DATA)
             KotlinNodeOptions.Modifier.OPEN -> builder.addModifiers(KModifier.OPEN)
         }
-        children.forEach { it.builder.superclass(symbols.base) }
+        nodes.forEach { it.builder.superclass(symbols.base) }
     }
 
     /**
@@ -119,10 +114,12 @@ class KotlinGenerator(private val options: KotlinOptions) : Generator<KotlinResu
     private fun TypeDef.Sum.generate(symbols: KotlinSymbols) = KotlinNodeSpec.Sum(
         sum = this,
         variants = variants.mapNotNull { it.generate(symbols) },
+        nodes = types.mapNotNull { it.generate(symbols) },
         clazz = symbols.clazz(ref),
-        otherTypes = children.mapNotNull { it.generate(symbols) }
+        ext = types.enums(symbols).toMutableList(),
     ).apply {
         variants.forEach { it.builder.superclass(clazz) }
+        nodes.forEach { it.builder.superclass(symbols.base) }
     }
 
     /**
@@ -131,4 +128,15 @@ class KotlinGenerator(private val options: KotlinOptions) : Generator<KotlinResu
     private fun TypeDef.Enum.generate(symbols: KotlinSymbols) = TypeSpec.enumBuilder(symbols.clazz(ref))
         .apply { values.forEach { addEnumConstant(it) } }
         .build()
+
+    private fun List<TypeProp>.enumProps(symbols: KotlinSymbols) = filterIsInstance<TypeProp.Inline>().mapNotNull {
+        when (it.def) {
+            is TypeDef.Enum -> it.def.generate(symbols)
+            else -> null
+        }
+    }
+
+    private fun List<TypeDef>.enums(symbols: KotlinSymbols) = filterIsInstance<TypeDef.Enum>().map {
+        it.generate(symbols)
+    }
 }

@@ -29,6 +29,7 @@ import org.partiql.lang.eval.visitors.PartiqlAstSanityValidator
 import org.partiql.lang.eval.visitors.PipelinedVisitorTransform
 import org.partiql.lang.eval.visitors.SelectListItemAliasVisitorTransform
 import org.partiql.lang.eval.visitors.SelectStarVisitorTransform
+import org.partiql.lang.eval.visitors.SubqueryCoercionVisitorTransform
 import org.partiql.lang.planner.transforms.AstToLogicalVisitorTransform
 import org.partiql.lang.planner.transforms.LogicalResolvedToDefaultPhysicalVisitorTransform
 import org.partiql.lang.planner.transforms.LogicalToLogicalResolvedVisitorTransform
@@ -115,9 +116,6 @@ internal class PartiQLPlannerDefault(
 
     /**
      * AST Normalization Passes
-     *  1. Synthesizes unspecified `SELECT <expr> AS ...` aliases
-     *  2. Synthesizes unspecified `FROM <expr> AS ...` aliases
-     *  3. Changes `SELECT * FROM a, b` to SELECT a.*, b.* FROM a, b`
      */
     @Suppress("UNUSED_PARAMETER") // future work?
     private fun PartiqlAst.Statement.normalize(problems: ProblemCollector): PartiqlAst.Statement {
@@ -126,7 +124,8 @@ internal class PartiQLPlannerDefault(
             FromSourceAliasVisitorTransform(),
             OrderBySortSpecVisitorTransform(),
             AggregationVisitorTransform(),
-            SelectStarVisitorTransform()
+            SelectStarVisitorTransform(),
+            SubqueryCoercionVisitorTransform(),
         )
         return transform.transformStatement(this)
     }

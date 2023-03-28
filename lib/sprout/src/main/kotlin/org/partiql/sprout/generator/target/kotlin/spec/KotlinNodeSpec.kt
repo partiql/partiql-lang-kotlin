@@ -30,7 +30,7 @@ import org.partiql.sprout.model.TypeDef
  * @property builder        Type builder
  * @property constructor    Implementation constructor
  * @property companion      A place for static methods on nodes
- * @property types          Non-node types defined within this node
+ * @property nodes          Node types defined within this node
  */
 sealed class KotlinNodeSpec(
     val def: TypeDef,
@@ -38,17 +38,25 @@ sealed class KotlinNodeSpec(
     val builder: TypeSpec.Builder,
     val constructor: FunSpec.Builder,
     val companion: TypeSpec.Builder,
-    val types: MutableList<TypeSpec> = mutableListOf(),
+    val ext: MutableList<TypeSpec> = mutableListOf(),
 ) {
 
-    open val children: List<KotlinNodeSpec> = emptyList()
+    /**
+     * Nodes defined within this node, but don't inherit from this class
+     */
+    abstract val nodes: List<KotlinNodeSpec>
+
+    /**
+     * All types defined within this node
+     */
+    abstract val children: List<KotlinNodeSpec>
 
     /**
      * Returns the built Pair<Base, Impl>
      */
     open fun build(): TypeSpec = with(builder) {
         primaryConstructor(constructor.build())
-        types.forEach { addType(it) }
+        ext.forEach { addType(it) }
         children.forEach { addType(it.build()) }
         if (companion.propertySpecs.isNotEmpty() || companion.funSpecs.isNotEmpty()) {
             addType(companion.build())
@@ -62,17 +70,19 @@ sealed class KotlinNodeSpec(
     class Product(
         val product: TypeDef.Product,
         val props: List<Prop>,
-        override val children: List<KotlinNodeSpec>,
+        override val nodes: List<KotlinNodeSpec>,
         clazz: ClassName,
-        types: List<TypeSpec> = emptyList(),
+        ext: MutableList<TypeSpec> = mutableListOf(),
     ) : KotlinNodeSpec(
         def = product,
         clazz = clazz,
         builder = TypeSpec.classBuilder(clazz),
         constructor = FunSpec.constructorBuilder(),
         companion = TypeSpec.companionObjectBuilder(),
-        types = types.toMutableList()
-    )
+        ext = ext,
+    ) {
+        override val children: List<KotlinNodeSpec> = nodes
+    }
 
     /**
      * Wraps a [TypeDef.Sum] with a codegen builders
@@ -80,16 +90,18 @@ sealed class KotlinNodeSpec(
     class Sum(
         val sum: TypeDef.Sum,
         val variants: List<KotlinNodeSpec>,
-        private val otherTypes: List<KotlinNodeSpec>,
+        override val nodes: List<KotlinNodeSpec>,
         clazz: ClassName,
+        ext: MutableList<TypeSpec> = mutableListOf(),
     ) : KotlinNodeSpec(
         def = sum,
         clazz = clazz,
         builder = TypeSpec.classBuilder(clazz).addModifiers(KModifier.SEALED),
         constructor = FunSpec.constructorBuilder(),
         companion = TypeSpec.companionObjectBuilder(),
+        ext = ext,
     ) {
-        override val children: List<KotlinNodeSpec> = variants + otherTypes
+        override val children: List<KotlinNodeSpec> = variants + nodes
     }
 
     /**

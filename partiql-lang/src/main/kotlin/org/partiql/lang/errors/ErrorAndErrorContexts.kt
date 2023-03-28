@@ -30,8 +30,6 @@ enum class ErrorCategory(val message: String) {
     PARSER("Parser Error"),
     SEMANTIC("Semantic Error"),
     EVALUATOR("Evaluator Error");
-
-    override fun toString() = message
 }
 
 /** Each possible value that can be reported as part of an error has a

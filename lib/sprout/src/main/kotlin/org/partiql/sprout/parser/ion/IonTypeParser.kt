@@ -100,12 +100,8 @@ internal object IonTypeParser : SproutParser {
                     values = v.map { (it as IonSymbol).stringValue() }
                 )
                 else -> {
-                    val (variants, children) = visitSumVariants(v, ctx)
-                    TypeDef.Sum(
-                        ref = ref,
-                        variants = variants,
-                        children = children,
-                    )
+                    val (variants, types) = visitSumVariants(v, ctx)
+                    TypeDef.Sum(ref, variants, types)
                 }
             }
             ctx.define(type)
@@ -116,12 +112,8 @@ internal object IonTypeParser : SproutParser {
          */
         override fun visit(v: IonStruct, ctx: Context): TypeDef = ctx.scope(v) {
             val ref = ctx.ref()
-            val (props, children) = visitProductProps(v, ctx)
-            val type = TypeDef.Product(
-                ref = ref,
-                props = props,
-                children = children,
-            )
+            val (props, types) = visitProductProps(v, ctx)
+            val type = TypeDef.Product(ref, props, types)
             ctx.define(type)
         }
 
@@ -130,13 +122,13 @@ internal object IonTypeParser : SproutParser {
          */
         private fun visitProductProps(v: IonStruct, ctx: Context): Pair<List<TypeProp>, List<TypeDef>> {
             val props = mutableListOf<TypeProp>()
-            val children = mutableListOf<TypeDef>()
+            val types = mutableListOf<TypeDef>()
             v.forEach { field ->
                 when {
                     field.isContainer() -> {
                         // Add all definitions in special container field _: [ ]
-                        val kids = (field as IonContainer).map { visit(it, ctx) }
-                        children.addAll(kids)
+                        val subtypes = (field as IonContainer).map { visit(it, ctx) }
+                        types.addAll(subtypes)
                     }
                     field.isInline() -> {
                         val (symbol, nullable) = field.ref()
@@ -148,7 +140,6 @@ internal object IonTypeParser : SproutParser {
                             field.setTypeAnnotations("optional", symbol)
                             def = def.nullable()
                         }
-                        children.add(def)
                         val prop = TypeProp.Inline(field.fieldName, def)
                         props.add(prop)
                     }
@@ -158,7 +149,7 @@ internal object IonTypeParser : SproutParser {
                     }
                 }
             }
-            return props to children
+            return props to types
         }
 
         /**
@@ -166,12 +157,13 @@ internal object IonTypeParser : SproutParser {
          */
         private fun visitSumVariants(v: IonList, ctx: Context): Pair<List<TypeDef>, List<TypeDef>> {
             val variants = mutableListOf<TypeDef>()
-            val children = mutableListOf<TypeDef>()
+            val types = mutableListOf<TypeDef>()
             v.forEach { item ->
                 when {
                     item.isContainer() -> {
-                        val kids = (item as IonContainer).map { visit(it, ctx) }
-                        children.addAll(kids)
+                        // Add all definitions in special container entry _::[ ]
+                        val subtypes = (item as IonContainer).map { visit(it, ctx) }
+                        types.addAll(subtypes)
                     }
                     else -> {
                         val variant = visit(item, ctx)
@@ -179,7 +171,7 @@ internal object IonTypeParser : SproutParser {
                     }
                 }
             }
-            return variants to children
+            return variants to types
         }
 
         override fun defaultVisit(v: IonValue, ctx: Context) = error("cannot parse value $v, expect 'struct' or 'list'")

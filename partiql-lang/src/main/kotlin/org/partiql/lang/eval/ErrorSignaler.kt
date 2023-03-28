@@ -54,7 +54,7 @@ internal class ErrorDetails(
 internal fun TypingMode.createErrorSignaler() =
     when (this) {
         TypingMode.LEGACY -> LegacyErrorSignaler()
-        TypingMode.PERMISSIVE -> PermissiveErrorSignaler(ExprValue.missingValue)
+        TypingMode.PERMISSIVE -> PermissiveErrorSignaler()
     }
 
 /** Defines legacy error signaling. */
@@ -65,13 +65,13 @@ private class LegacyErrorSignaler : ErrorSignaler {
 }
 
 /** Defines permissive error signaling. */
-private class PermissiveErrorSignaler(private val theMissingValue: ExprValue) : ErrorSignaler {
+private class PermissiveErrorSignaler() : ErrorSignaler {
 
-    /** Ignores [createErrorDetails] and simply returns [theMissingValue]. */
+    /** Ignores [createErrorDetails] and simply returns MISSING. */
     override fun error(errorCode: ErrorCode, createErrorDetails: () -> ErrorDetails): ExprValue =
         when (errorCode.errorBehaviorInPermissiveMode) {
             ErrorBehaviorInPermissiveMode.THROW_EXCEPTION -> throwEE(errorCode, createErrorDetails)
-            ErrorBehaviorInPermissiveMode.RETURN_MISSING -> theMissingValue
+            ErrorBehaviorInPermissiveMode.RETURN_MISSING -> ExprValue.missingValue
         }
 }
 
