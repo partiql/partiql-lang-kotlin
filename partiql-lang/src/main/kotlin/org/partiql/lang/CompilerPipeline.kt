@@ -139,13 +139,10 @@ interface CompilerPipeline {
         @JvmStatic
         fun builder(): Builder = Builder()
 
+        @Deprecated("[ExprValueFactory] is deprecated", replaceWith = ReplaceWith("builder(ion: IonSystem): Builder = builder(ion)"))
+        @Suppress("DEPRECATION")
         /** Fluent style builder.  If calling from Kotlin instead use the [build] method. */
         @JvmStatic
-        @Deprecated(
-            "This builder is deprecated. Use the one without the ExprValueFactory argument.",
-            ReplaceWith("build()")
-        )
-        @Suppress("DEPRECATION") // Deprecation of ExprValueFactory.
         fun builder(valueFactory: org.partiql.lang.eval.ExprValueFactory): Builder = Builder(valueFactory)
 
         /** Returns an implementation of [CompilerPipeline] with all properties set to their defaults. */

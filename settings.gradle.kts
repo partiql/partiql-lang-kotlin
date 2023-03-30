@@ -17,6 +17,7 @@ rootProject.name = "partiql"
 include(
     "partiql-cli",
     "partiql-lang",
+    "partiql-plan",
     "partiql-types",
     "lib:isl",
     "lib:sprout",
