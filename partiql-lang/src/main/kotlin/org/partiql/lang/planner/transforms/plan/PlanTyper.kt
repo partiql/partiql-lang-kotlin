@@ -125,15 +125,14 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
         val input = visitRel(node.input, ctx)
         val schema = node.bindings.flatMap { binding ->
             val type = inferType(binding.value, input, ctx)
-            // TODO: We need to resolve this hack of using "*" as the name for project all.
-            when (binding.name == "*") {
+            when (binding.value.isProjectAll()) {
                 true -> {
-                    when (type) {
-                        is StructType -> type.fields.map { entry -> Attribute(entry.key, entry.value) }
-                        else -> {
-                            // TODO: Bindings need to maintain their aliases. The binding.name below is wrong.
+                    when (val structType = type as? StructType) {
+                        null -> {
+                            handleIncompatibleDataTypeForExprError(StaticType.STRUCT, type, ctx)
                             listOf(Attribute(binding.name, type))
                         }
+                        else -> structType.fields.map { entry -> Attribute(entry.key, entry.value) }
                     }
                 }
                 false -> listOf(Attribute(binding.name, type))
@@ -145,6 +144,16 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
                 schema = schema
             )
         )
+    }
+
+    private fun Rex.isProjectAll(): Boolean {
+        return when (this) {
+            is Rex.Path -> {
+                val step = this.steps.lastOrNull() ?: return false
+                step is Step.Wildcard
+            }
+            else -> false
+        }
     }
 
     override fun visitRelScan(node: Rel.Scan, ctx: Context): Rel {
@@ -270,7 +279,8 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
                     val type = inferPathComponentExprType(currentType, pathComponent, ctx)
                     type
                 }
-                is Step.Unpivot, is Step.Wildcard -> error("Not implemented yet")
+                is Step.Wildcard -> currentType
+                is Step.Unpivot -> error("Not implemented yet")
             }
         }
         return node.copy(
@@ -771,6 +781,7 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
         is Rex -> this.grabType()
         is Arg.Value -> this.value.grabType()
         is Arg.Type -> this.type
+        is Step.Key -> this.value.grabType()
         else -> error("Unable to grab static type of $this")
     }
 
@@ -1406,17 +1417,6 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
                 ctx.problemHandler
             )
         )
-    }
-
-    private fun convertStaticTypeToSchema(type: StaticType): List<Attribute> {
-        return when (type) {
-            is StructType -> type.fields.map { field ->
-                Attribute(field.key, field.value)
-            }
-            else -> return listOf(
-                Attribute("_1", type)
-            )
-        }
     }
 
     private fun handleExpressionAlwaysReturnsNullOrMissingError(ctx: Context) {

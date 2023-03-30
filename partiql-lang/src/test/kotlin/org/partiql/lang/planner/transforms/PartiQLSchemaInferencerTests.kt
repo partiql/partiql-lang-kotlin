@@ -3,12 +3,12 @@ package org.partiql.lang.planner.transforms
 import com.amazon.ionelement.api.field
 import com.amazon.ionelement.api.ionString
 import com.amazon.ionelement.api.ionStructOf
-import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.ArgumentsProvider
 import org.junit.jupiter.params.provider.ArgumentsSource
+import org.partiql.lang.errors.Problem
 import org.partiql.lang.errors.ProblemCollector
 import org.partiql.lang.planner.transforms.PartiQLSchemaInferencerTests.TestCase.ErrorTestCase
 import org.partiql.lang.planner.transforms.PartiQLSchemaInferencerTests.TestCase.SuccessTestCase
@@ -38,29 +38,22 @@ import org.partiql.types.TimestampType
 import java.net.URL
 import java.time.Instant
 import java.util.stream.Stream
+import kotlin.test.assertEquals
 
 class PartiQLSchemaInferencerTests {
 
-    private val plugins = listOf(LocalPlugin())
-
-    @Test
-    public fun test() {
-        val session = PlannerSession("1", "test")
-        val ctx = PartiQLSchemaInferencer.Context(session, plugins, ProblemCollector())
-        PartiQLSchemaInferencer.infer("1", ctx)
-    }
-
-    private val userId = "TEST_USER"
-    private val catalogMap = listOf("aws", "b").associate { catalogName ->
-        val catalogUrl: URL =
-            PartiQLSchemaInferencerTests::class.java.classLoader.getResource("catalogs/$catalogName") ?: error("Couldn't be found")
-        catalogName to ionStructOf(
-            field("connector_name", ionString("localdb")),
-            field("localdb_root", ionString(catalogUrl.path))
-        )
-    }
-
     companion object {
+        private val PLUGINS = listOf(LocalPlugin())
+
+        private const val USER_ID = "TEST_USER"
+        private val CATALOG_MAP = listOf("aws", "b").associateWith { catalogName ->
+            val catalogUrl: URL =
+                PartiQLSchemaInferencerTests::class.java.classLoader.getResource("catalogs/$catalogName") ?: error("Couldn't be found")
+            ionStructOf(
+                field("connector_name", ionString("localdb")),
+                field("localdb_root", ionString(catalogUrl.path))
+            )
+        }
         private const val DEFAULT_TABLE_NAME = "UNSPECIFIED"
         const val CATALOG_AWS = "aws"
         const val CATALOG_B = "b"
@@ -93,73 +86,13 @@ class PartiQLSchemaInferencerTests {
                 )
             )
         )
-
-        // TODO: Need to throw errors on bad references
-        val TABLE_ERROR = ValueDescriptor.TableDescriptor(
-            DEFAULT_TABLE_NAME,
-            attributes = listOf(ColumnMetadata("_1", StaticType.ANY))
-        )
     }
 
-    // TODO: Currently, SELECT a.a, a FROM <<{'a': 1}>> AS a isn't working, and it's causing issues. To remediate,
-    //  we need to add the input binding tuple to the PROJ operator's schema. This causes SELECT * FROM anything to fail.
     @ParameterizedTest
     @ArgumentsSource(TestProvider::class)
-    fun test(tc: TestCase): Unit = when (tc) {
-        is SuccessTestCase -> {
-            val session = PlannerSession(
-                tc.query.hashCode().toString(),
-                userId,
-                tc.catalog,
-                tc.catalogPath,
-                catalogMap,
-                Instant.now()
-            )
-            val ctx = PartiQLSchemaInferencer.Context(session, plugins, ProblemCollector())
-            val result = PartiQLSchemaInferencer.infer(tc.query, ctx)
-            println(tc.name)
-            println("${tc.name} Expected: ${tc.expected}")
-            println("${tc.name} Actual: $result")
-            assert(descriptorEquals(tc.expected, result)) {
-                println("Expected: ${tc.expected}")
-                println("Actual: $result")
-            }
-        }
-        is ErrorTestCase -> {
-            val session = PlannerSession(
-                tc.query.hashCode().toString(),
-                userId,
-                tc.catalog,
-                tc.catalogPath,
-                catalogMap,
-                Instant.now()
-            )
-            // TODO: Need to pass in an ErrorHandler and assert the error thrown
-            val ctx = PartiQLSchemaInferencer.Context(session, plugins, ProblemCollector())
-            val result = PartiQLSchemaInferencer.infer(tc.query, ctx)
-            println(tc.name)
-            println("${tc.name} Expected: $TABLE_ERROR")
-            println("${tc.name} Actual: $result")
-            assert(descriptorEquals(TABLE_ERROR, result)) {
-                println("Expected: $TABLE_ERROR")
-                println("Actual: $result")
-            }
-        }
-    }
+    fun test(tc: TestCase) = runTest(tc)
 
-    @Test
-    fun singleTest() {
-        val tc = SuccessTestCase(
-            name = "Single Test",
-            catalog = CATALOG_AWS,
-            catalogPath = listOf("ddb"),
-            query = "SELECT * FROM pets",
-            expected = TABLE_AWS_DDB_PETS
-        )
-        test(tc)
-    }
-
-    sealed class TestCase() {
+    sealed class TestCase {
         class SuccessTestCase(
             val name: String,
             val query: String,
@@ -174,7 +107,10 @@ class PartiQLSchemaInferencerTests {
             val name: String,
             val query: String,
             val catalog: String? = null,
-            val catalogPath: List<String> = emptyList()
+            val catalogPath: List<String> = emptyList(),
+            val note: String? = null,
+            val expected: ValueDescriptor? = null,
+            val expectedProblems: List<Problem>? = null
         ) : TestCase() {
             override fun toString(): String = "$name : $query"
         }
@@ -187,19 +123,34 @@ class PartiQLSchemaInferencerTests {
 
         private val parameters = listOf(
             ErrorTestCase(
-                name = "Test #1",
-                query = "SELECT * FROM pets"
+                name = "Pets should not be accessible #1",
+                query = "SELECT * FROM pets",
+                expected = ValueDescriptor.TableDescriptor(
+                    DEFAULT_TABLE_NAME,
+                    attributes = listOf(ColumnMetadata("pets", StaticType.ANY))
+                )
             ),
             ErrorTestCase(
-                name = "Test #2",
+                name = "Pets should not be accessible #2",
                 catalog = CATALOG_AWS,
-                query = "SELECT * FROM pets"
+                query = "SELECT * FROM pets",
+                expected = ValueDescriptor.TableDescriptor(
+                    DEFAULT_TABLE_NAME,
+                    attributes = listOf(ColumnMetadata("pets", StaticType.ANY))
+                )
             ),
             SuccessTestCase(
-                name = "Test #3",
+                name = "Project all explicitly",
                 catalog = CATALOG_AWS,
                 catalogPath = listOf("ddb"),
                 query = "SELECT * FROM pets",
+                expected = TABLE_AWS_DDB_PETS
+            ),
+            SuccessTestCase(
+                name = "Project all implicitly",
+                catalog = CATALOG_AWS,
+                catalogPath = listOf("ddb"),
+                query = "SELECT id, breed FROM pets",
                 expected = TABLE_AWS_DDB_PETS
             ),
             SuccessTestCase(
@@ -225,7 +176,11 @@ class PartiQLSchemaInferencerTests {
             ),
             ErrorTestCase(
                 name = "Test #7",
-                query = "SELECT * FROM ddb.pets"
+                query = "SELECT * FROM ddb.pets",
+                expected = ValueDescriptor.TableDescriptor(
+                    DEFAULT_TABLE_NAME,
+                    attributes = listOf(ColumnMetadata("pets", StaticType.ANY))
+                )
             ),
             SuccessTestCase(
                 name = "Test #8",
@@ -347,6 +302,55 @@ class PartiQLSchemaInferencerTests {
         is ValueDescriptor.TableDescriptor -> when (actual) {
             is ValueDescriptor.TableDescriptor -> expected == actual
             else -> false
+        }
+    }
+
+    private fun runTest(tc: TestCase) = when (tc) {
+        is SuccessTestCase -> runTest(tc)
+        is ErrorTestCase -> runTest(tc)
+    }
+
+    private fun runTest(tc: SuccessTestCase) {
+        val session = PlannerSession(
+            tc.query.hashCode().toString(),
+            USER_ID,
+            tc.catalog,
+            tc.catalogPath,
+            CATALOG_MAP,
+            Instant.now()
+        )
+        val ctx = PartiQLSchemaInferencer.Context(session, PLUGINS, ProblemCollector())
+        val result = PartiQLSchemaInferencer.infer(tc.query, ctx)
+        assert(descriptorEquals(tc.expected, result)) {
+            buildString {
+                appendLine("Expected: ${tc.expected}")
+                appendLine("Actual: $result")
+            }
+        }
+    }
+
+    private fun runTest(tc: ErrorTestCase) {
+        val session = PlannerSession(
+            tc.query.hashCode().toString(),
+            USER_ID,
+            tc.catalog,
+            tc.catalogPath,
+            CATALOG_MAP,
+            Instant.now()
+        )
+        val collector = ProblemCollector()
+        val ctx = PartiQLSchemaInferencer.Context(session, PLUGINS, collector)
+        val result = PartiQLSchemaInferencer.infer(tc.query, ctx)
+        if (tc.expected != null) {
+            assert(descriptorEquals(tc.expected, result)) {
+                buildString {
+                    appendLine("Expected: ${tc.expected}")
+                    appendLine("Actual: $result")
+                }
+            }
+        }
+        if (tc.expectedProblems != null) {
+            assertEquals(tc.expectedProblems, collector.problems)
         }
     }
 

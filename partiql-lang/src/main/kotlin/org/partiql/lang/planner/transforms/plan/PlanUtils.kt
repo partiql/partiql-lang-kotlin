@@ -16,6 +16,8 @@ package org.partiql.lang.planner.transforms.plan
 
 import org.partiql.plan.Attribute
 import org.partiql.plan.Rel
+import org.partiql.plan.Rex
+import org.partiql.types.StaticType
 
 internal object PlanUtils {
     internal fun getSchema(input: Rel): List<Attribute> = when (input) {
@@ -28,5 +30,22 @@ internal object PlanUtils {
         is Rel.Scan -> input.common.schema
         is Rel.Sort -> input.common.schema
         is Rel.Unpivot -> input.common.schema
+    }
+
+    internal fun Rex.addType(type: StaticType): Rex = when (this) {
+        is Rex.Agg -> this.copy(type = type)
+        is Rex.Binary -> this.copy(type = type)
+        is Rex.Call -> this.copy(type = type)
+        is Rex.Collection.Array -> this.copy(type = type)
+        is Rex.Collection.Bag -> this.copy(type = type)
+        is Rex.Id -> this.copy(type = type)
+        is Rex.Lit -> this.copy(type = type)
+        is Rex.Path -> this.copy(type = type)
+        is Rex.Query.Collection -> this.copy(type = type)
+        is Rex.Query.Scalar.Pivot -> this.copy(type = type)
+        is Rex.Query.Scalar.Subquery -> this.copy(type = type)
+        is Rex.Switch -> this.copy(type = type)
+        is Rex.Tuple -> this.copy(type = type)
+        is Rex.Unary -> this.copy(type = type)
     }
 }

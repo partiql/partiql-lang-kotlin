@@ -49,7 +49,7 @@ public object PartiQLSchemaInferencer {
      * Infers a query's schema.
      */
     @JvmStatic
-    @Throws(InferenceException::class)
+    @Throws(SqlException::class)
     public fun infer(
         query: String,
         ctx: Context
@@ -58,7 +58,7 @@ public object PartiQLSchemaInferencer {
             inferInternal(query, ctx)
         } catch (t: Throwable) {
             throw when (t) {
-                is InferenceException -> t
+                is SqlException -> t
                 else -> InferenceException(
                     err = Problem(
                         SourceLocationMeta(0, 0),
@@ -91,7 +91,7 @@ public object PartiQLSchemaInferencer {
         constructor(err: Problem, cause: Throwable? = null) :
             this(
                 message = "",
-                errorCode = ErrorCode.SEMANTIC_PROBLEM,
+                errorCode = ErrorCode.INTERNAL_ERROR,
                 errorContext = propertyValueMapOf(
                     Property.LINE_NUMBER to err.sourceLocation.lineNum,
                     Property.COLUMN_NUMBER to err.sourceLocation.charOffset,

@@ -24,7 +24,7 @@ internal class RelConverter {
     private val empty = Common(
         schema = emptyList(),
         properties = emptySet(),
-        metas = emptyMap(),
+        metas = emptyMap()
     )
 
     companion object {
@@ -42,7 +42,7 @@ internal class RelConverter {
                         rel = rel,
                         value = RexConverter.convert(projection.value),
                         at = RexConverter.convert(projection.key),
-                        type = null,
+                        type = null
                     )
                 }
                 // SELECT VALUE ... FROM
@@ -116,7 +116,7 @@ internal class RelConverter {
     private fun convertJoin(join: PartiqlAst.FromSource.Join): Rel {
         val lhs = convertFrom(join.left)
         val rhs = convertFrom(join.right)
-        val condition = if (join.predicate != null) RexConverter.convert(join.predicate!!) else null
+        val condition = if (join.predicate != null) RexConverter.convert(join.predicate) else null
         return Rel.Join(
             common = empty,
             lhs = lhs,
@@ -142,7 +142,7 @@ internal class RelConverter {
         },
         alias = scan.asAlias?.text,
         at = scan.atAlias?.text,
-        by = scan.byAlias?.text,
+        by = scan.byAlias?.text
     )
 
     /**
@@ -153,7 +153,7 @@ internal class RelConverter {
         value = RexConverter.convert(scan.expr),
         alias = scan.asAlias?.text,
         at = scan.atAlias?.text,
-        by = scan.byAlias?.text,
+        by = scan.byAlias?.text
     )
 
     /**
@@ -164,7 +164,7 @@ internal class RelConverter {
         else -> Rel.Filter(
             common = empty,
             input = input,
-            condition = RexConverter.convert(expr),
+            condition = RexConverter.convert(expr)
         )
     }
 
@@ -180,7 +180,6 @@ internal class RelConverter {
         select: PartiqlAst.Expr.Select,
         groupBy: PartiqlAst.GroupBy?
     ): Pair<PartiqlAst.Expr.Select, Rel> {
-
         // Rewrite and extract all aggregations in the SELECT clause
         val (sel, aggregations) = AggregationTransform.apply(select)
 
@@ -200,7 +199,7 @@ internal class RelConverter {
         if (groupBy != null) {
             // GROUP AS is implemented as an aggregation function
             if (groupBy.groupAsAlias != null) {
-                calls.add(convertGroupAs(groupBy.groupAsAlias!!.text, sel.from))
+                calls.add(convertGroupAs(groupBy.groupAsAlias.text, sel.from))
             }
             groups = groupBy.keyList.keys.map { convertGroupByKey(it) }
             strategy = when (groupBy.strategy) {
@@ -214,7 +213,7 @@ internal class RelConverter {
             input = input,
             calls = calls,
             groups = groups,
-            strategy = strategy,
+            strategy = strategy
         )
 
         return Pair(sel, rel)
@@ -225,7 +224,7 @@ internal class RelConverter {
      */
     private fun convertGroupByKey(groupKey: PartiqlAst.GroupKey) = binding(
         name = groupKey.asAlias?.text ?: error("not normalized, group key $groupKey missing unique name"),
-        expr = groupKey.expr,
+        expr = groupKey.expr
     )
 
     /**
@@ -326,7 +325,7 @@ internal class RelConverter {
         val fields = from.bindings().map { n ->
             Field(
                 name = Rex.Lit(ionString(n), StaticType.STRING),
-                value = Rex.Id(n, Case.SENSITIVE, Rex.Id.Qualifier.UNQUALIFIED, type = StaticType.STRUCT),
+                value = Rex.Id(n, Case.SENSITIVE, Rex.Id.Qualifier.UNQUALIFIED, type = StaticType.STRUCT)
             )
         }
         return Binding(
@@ -335,7 +334,7 @@ internal class RelConverter {
                 id = "group_as",
                 args = listOf(Rex.Tuple(fields, StaticType.STRUCT)),
                 modifier = Rex.Agg.Modifier.ALL,
-                type = StaticType.STRUCT,
+                type = StaticType.STRUCT
             )
         )
     }
@@ -348,14 +347,14 @@ internal class RelConverter {
             if (asAlias == null) {
                 error("not normalized, scan is missing an alias")
             }
-            listOf(asAlias!!.text)
+            listOf(asAlias.text)
         }
         is PartiqlAst.FromSource.Join -> left.bindings() + right.bindings()
         is PartiqlAst.FromSource.Unpivot -> {
             if (asAlias == null) {
                 error("not normalized, scan is missing an alias")
             }
-            listOf(asAlias!!.text)
+            listOf(asAlias.text)
         }
     }
 
@@ -367,10 +366,23 @@ internal class RelConverter {
      */
     private fun List<PartiqlAst.ProjectItem>.bindings() = map {
         when (it) {
-            is PartiqlAst.ProjectItem.ProjectAll -> binding("*", it.expr)
+            is PartiqlAst.ProjectItem.ProjectAll -> {
+                val path = PartiqlAst.Expr.Path(it.expr, listOf(PartiqlAst.PathStep.PathWildcard()))
+                val bindingName = when (val expr = it.expr) {
+                    is PartiqlAst.Expr.Id -> expr.name.text
+                    is PartiqlAst.Expr.Lit -> {
+                        when (expr.value.type.isText) {
+                            true -> expr.value.stringValue
+                            false -> nextBindingName()
+                        }
+                    }
+                    else -> nextBindingName()
+                }
+                binding(bindingName, path)
+            }
             is PartiqlAst.ProjectItem.ProjectExpr -> binding(
                 name = it.asAlias?.text ?: error("not normalized"),
-                expr = it.expr,
+                expr = it.expr
             )
         }
     }
@@ -420,7 +432,7 @@ internal class RelConverter {
         override fun transformExprSelect_having(node: PartiqlAst.Expr.Select): PartiqlAst.Expr? =
             when (node.having) {
                 null -> null
-                else -> transformExpr(node.having!!)
+                else -> transformExpr(node.having)
             }
 
         override fun transformSortSpec_expr(node: PartiqlAst.SortSpec) = transformExpr(node.expr)
