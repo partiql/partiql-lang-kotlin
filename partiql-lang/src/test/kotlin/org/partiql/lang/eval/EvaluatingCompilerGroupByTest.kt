@@ -859,6 +859,54 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
 
     @Test
     @Parameters
+    fun booleanAggregationTest(tc: EvaluatorTestCase) =
+        runTest(tc, session)
+
+    fun parametersForBooleanAggregationTest() = listOf(
+        EvaluatorTestCase(
+            groupName = "EVERY on a list of expressions",
+            query = "EVERY([ 1 < 5, true, NULL IS NULL])",
+            expectedResult = "true"
+        ),
+        EvaluatorTestCase(
+            groupName = "CALL_EVERY on a bag with NULLs",
+            query = "COLL_EVERY('all', << NULL, 2<3, MISSING, false >>)",
+            expectedResult = "false"
+        ),
+        EvaluatorTestCase(
+            groupName = "EVERY in GROUP BY",
+            query = """
+                SELECT x.a, EVERY(x.b < 15) AS e
+                FROM << {'a': 1, 'b': 10}, {'a': 1, 'b': 11}, {'a': 2, 'b': 20}, {'a': 3} >> AS x 
+                GROUP BY x.a 
+            """.trimIndent(),
+            expectedResult = """
+                <<
+                  { 'a': 1, 'e': true },
+                  { 'a': 2, 'e': false },
+                  { 'a': 3, 'e': NULL }
+                >>
+            """.trimIndent()
+        ),
+        EvaluatorTestCase(
+            groupName = "EVERY with DISTINCT in GROUP BY",
+            query = """
+                SELECT x.a, EVERY(DISTINCT x.b < 15) AS e
+                FROM [ {'a': 1, 'b': 10}, {'a': 1, 'b': 11}, {'a': 2, 'b': 20}, {'a': 3} ] AS x 
+                GROUP BY x.a 
+            """.trimIndent(),
+            expectedResult = """
+                <<
+                  { 'a': 1, 'e': true },
+                  { 'a': 2, 'e': false },
+                  { 'a': 3, 'e': NULL }
+                >>                
+            """.trimIndent()
+        ),
+    )
+
+    @Test
+    @Parameters
     fun groupByAggregatesTest(tc: EvaluatorTestCase) =
         runTest(tc, session)
 

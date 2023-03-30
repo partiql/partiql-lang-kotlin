@@ -18,7 +18,9 @@ import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.ExprAggregator
 import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.NaturalExprValueComparators
+import org.partiql.lang.eval.booleanValue
 import org.partiql.lang.eval.createUniqueExprValueFilter
 import org.partiql.lang.eval.errNoContext
 import org.partiql.lang.eval.isUnknown
@@ -44,6 +46,7 @@ internal sealed class Accumulator(
                 "count" -> AccumulatorCount(filter)
                 "sum" -> AccumulatorSum(filter)
                 "group_as" -> AccumulatorGroupAs(filter)
+                "every" -> AccumulatorEvery(filter)
                 else -> throw IllegalArgumentException("Unsupported aggregation function: $funcName")
             }
         }
@@ -132,6 +135,19 @@ internal class AccumulatorCount(
     override fun compute(): ExprValue = count.exprValue()
 }
 
+internal class AccumulatorEvery(
+    internal override val filter: (ExprValue) -> Boolean
+) : Accumulator(filter = filter) {
+
+    private var res: ExprValue? = null
+    override fun nextValue(value: ExprValue) {
+        checkIsBooleanType("EVERY", value)
+        res = res?.let { ExprValue.newBoolean(it.booleanValue() && value.booleanValue()) } ?: value
+    }
+
+    override fun compute(): ExprValue = res ?: ExprValue.nullValue
+}
+
 internal class AccumulatorGroupAs(
     internal override val filter: (ExprValue) -> Boolean
 ) : Accumulator(filter = filter) {
@@ -157,6 +173,16 @@ internal fun checkIsNumberType(funcName: String, value: ExprValue) {
     if (!value.type.isNumber) {
         errNoContext(
             message = "Aggregate function $funcName expects arguments of NUMBER type but the following value was provided: $value, with type of ${value.type}",
+            errorCode = ErrorCode.EVALUATOR_INVALID_ARGUMENTS_FOR_AGG_FUNCTION,
+            internal = false
+        )
+    }
+}
+
+internal fun checkIsBooleanType(funcName: String, value: ExprValue) {
+    if (value.type != ExprValueType.BOOL) {
+        errNoContext(
+            message = "Aggregate function $funcName expects arguments of BOOL type but the following value was provided: $value, with type of ${value.type}",
             errorCode = ErrorCode.EVALUATOR_INVALID_ARGUMENTS_FOR_AGG_FUNCTION,
             internal = false
         )

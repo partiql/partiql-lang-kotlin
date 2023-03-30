@@ -92,3 +92,22 @@ SUM(<< 1, 2, `3.0e0` >>)   -- 6.0e0
 SUM(<< 1, 2, 3, '1' >>)    -- !! ERROR !!
 SUM(<< MISSING >>)         -- NULL
 ```
+
+## EVERY
+
+Description
+: Returns true iff all items in the collection (excluding `NULL` and `MISSING`) are true. 
+Requires all items to be booleans or undefined (`NULL` and `MISSING`). 
+Returns `NULL` on an empty collection.
+
+Examples
+:
+
+```sql
+EVERY(<< true, false, true >>)         -- false
+EVERY([ 1 < 5, true, NULL IS NULL])    -- true
+EVERY(<< NULL, 2<3, MISSING, true >>)  -- true
+EVERY([NULL, MISSING])                 -- NULL
+EVERY(<< >>)                           -- NULL
+EVERY(<< true, 5, true >>)             -- !! ERROR !!
+```
