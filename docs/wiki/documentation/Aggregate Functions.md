@@ -7,15 +7,15 @@ Unless otherwise specified, aggregate functions will skip `NULL` and `MISSING`.
 ## AVG
 
 Description
-: Given a collection of numeric type values, evaluates the arithmetic mean of the input expression values.
+: Given a collection of numeric type values, compute their arithmetic mean.
 
-Signatures
+Signature
 : `AVG(collection<NUMERIC | NULL | MISSING>) -> DECIMAL or NULL`
 
-Example
+Examples
 : 
 
-```SQL
+```sql
 AVG(<< 1, 2, 3 >>)          -- 2 `decimal(1, 0)`
 AVG(<< MISSING >>)          -- NULL
 AVG(<< 1, 2, 3, MISSING >>) -- 2
@@ -24,14 +24,16 @@ AVG(<< 1, 2, 3, MISSING >>) -- 2
 ## COUNT
 
 Description
-: Given a collection of variable in any date type, calculate the number of value in the collection.
+: Given a collection of values of any data type, calculate how many there are in the collection.
 Note: `COUNT(expr)` will skip the null and missing value, but COUNT(*) will not.
 
-Signatures
+Signature
 : `COUNT(*) -> INT8`
+
+Signature
 : `COUNT(any) -> INT8`
 
-Example
+Examples
 : 
 
 ```sql
@@ -50,17 +52,19 @@ SELECT COUNT(*) FROM <<MISSING, 1, 2>> AS a; -- << { '_1': 3 } >>
 ## MIN/MAX
 
 Description
-: Given a collection of variables in any date type, find the minimum/maximum value in the collection.
+: Given a collection of values of any data type, find the minimum/maximum value in the collection.
 : In general: Boolean < Number < Timestamp < Text < Blob/Clob < List < Struct < Bag, as usually, `NULL` and `MISSING` are ignored by the comparator.
 
 Signature
 : `MIN(any) -> any`
+
+Signature
 : `MAX(any) -> any`
 
-Example
+Examples
 : 
 
-```SQL
+```sql
 MIN(<< 1, 2, 3 >>)            -- 1
 MIN(<< '1', 2, 3 >>)          -- 2
 MIN(<< '1', 2, 3, MISSING >>) -- 2
@@ -73,15 +77,15 @@ MAX(<< '1', 2, 3, MISSING >>) -- '1'
 ## SUM
 
 Description
-: Given a collection of numeric type values, evaluates the sum of the input expression values.
+: Given a collection of numeric type values, compute their sum.
 
 Signature
-: `SUM(collection<NUMERIC | MISSING | NULL>) -> NUMERIC OR NULL`
+: `SUM(collection<NUMERIC | MISSING | NULL>) -> NUMERIC or NULL`
 
-Example
+Examples
 : 
 
-```SQL
+```sql
 SUM(<< 1, 2, 3 >>)         -- 6
 SUM(<< 1, 2,`3.0d0` >>)    -- 6.0
 SUM(<< 1, 2, `3.0e0` >>)   -- 6.0e0
