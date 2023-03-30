@@ -15,11 +15,11 @@ class SchemaTypeTest {
                 constraints =
                 setOf(
                     TupleConstraint.Open(false),
-                    TupleConstraint.PrimaryKey(setOf("a")),
+                    TupleConstraint.UniqueAttrs(false),
                 )
             )
         )
 
-        assertEquals(schema.toString(), "bag(struct(a: string, [Open(value=false), PrimaryKey(attrs=[a])]))")
+        assertEquals(schema.toString(), "bag(struct(a: string, [Open(value=false), UniqueAttrs(value=false)]))")
     }
 }
