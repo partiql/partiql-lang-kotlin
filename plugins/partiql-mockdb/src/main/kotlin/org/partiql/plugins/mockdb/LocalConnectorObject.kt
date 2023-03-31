@@ -34,10 +34,6 @@ internal class LocalConnectorObject(
 
     public fun getDescriptor(): ValueDescriptor = descriptor
 
-    init {
-        println(descriptor)
-    }
-
     //
     //
     // HELPERS

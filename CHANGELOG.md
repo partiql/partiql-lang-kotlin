@@ -32,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   but brings it in conformance with the specification.
 - Added `partiql-plan` package which contains experimental PartiQL Plan data structures.
 - Initializes SPI Framework under `partiql-spi`.
+- Introduces the PartiQLSchemaInferencer and PlannerSession
 
 ### Changed
 - Deprecates the project level opt-in annotation `PartiQLExperimental` and split it into feature level. `ExperimentalPartiQLCompilerPipeline` and `ExperimentalWindowFunctions`.

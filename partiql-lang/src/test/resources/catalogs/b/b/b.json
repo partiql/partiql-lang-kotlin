@@ -1,0 +1,22 @@
+{
+  "name": "b",
+  "type": "STRUCT",
+  "attributes": [
+    {
+      "name": "b",
+      "type": "STRUCT",
+      "attributes": [
+        {
+          "name": "b",
+          "type": "INT",
+          "attributes": []
+        }
+      ]
+    },
+    {
+      "name": "c",
+      "type": "INT",
+      "attributes": []
+    }
+  ]
+}

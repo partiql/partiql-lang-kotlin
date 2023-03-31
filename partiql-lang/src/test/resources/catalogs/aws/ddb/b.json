@@ -1,0 +1,11 @@
+{
+  "name": "b",
+  "type": "TABLE",
+  "attributes": [
+    {
+      "name": "identifier",
+      "type": "STRING",
+      "attributes": []
+    }
+  ]
+}
