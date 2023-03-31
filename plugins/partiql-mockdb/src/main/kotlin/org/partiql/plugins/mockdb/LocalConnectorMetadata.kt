@@ -12,7 +12,7 @@
  *  language governing permissions and limitations under the License.
  */
 
-package org.partiql.spi.plugins.local
+package org.partiql.plugins.mockdb
 
 import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
@@ -39,7 +39,7 @@ class LocalConnectorMetadata(val name: String, private val root: Path) : Connect
         val resolvedObject = resolveObject(root, path.steps) ?: return null
         return ConnectorObjectHandle(
             absolutePath = ConnectorObjectPath(resolvedObject.names),
-            value = LocalConnectorObject(resolvedObject.sdl)
+            value = LocalConnectorObject(resolvedObject.json)
         )
     }
 
@@ -51,7 +51,7 @@ class LocalConnectorMetadata(val name: String, private val root: Path) : Connect
 
     private class NamespaceMetadata(
         val names: List<String>,
-        val sdl: String
+        val json: String
     )
 
     private fun resolveObject(root: Path, names: List<BindingName>): NamespaceMetadata? {
@@ -74,7 +74,7 @@ class LocalConnectorMetadata(val name: String, private val root: Path) : Connect
         val tableDefString = String(Files.readAllBytes(tableDef))
         return NamespaceMetadata(
             names = fileNames + listOf(filename),
-            sdl = tableDefString
+            json = tableDefString
         )
     }
 

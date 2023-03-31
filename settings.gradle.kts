@@ -20,6 +20,7 @@ include(
     "partiql-plan",
     "partiql-spi",
     "partiql-types",
+    "plugins:partiql-mockdb",
     "lib:isl",
     "lib:sprout",
     "test:partiql-tests-runner",

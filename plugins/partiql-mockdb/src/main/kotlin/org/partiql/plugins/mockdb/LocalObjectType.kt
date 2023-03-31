@@ -12,7 +12,7 @@
  *  language governing permissions and limitations under the License.
  */
 
-package org.partiql.spi.plugins.local
+package org.partiql.plugins.mockdb
 
 enum class LocalObjectType {
     INT,

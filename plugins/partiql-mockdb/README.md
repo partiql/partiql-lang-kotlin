@@ -1,7 +1,6 @@
-# LocalDB
+# MockDB (LocalDB)
 
-This is a mock DB that represents a lightweight database that is defined by JSON files. It is
-an extremely simple database.
+This is a mock DB that represents a lightweight database that is defined by JSON files. It is used for testing purposes.
 
 ## Configuration
 

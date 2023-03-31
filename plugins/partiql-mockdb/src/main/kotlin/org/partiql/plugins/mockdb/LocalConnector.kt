@@ -12,7 +12,7 @@
  *  language governing permissions and limitations under the License.
  */
 
-package org.partiql.spi.plugins.local
+package org.partiql.plugins.mockdb
 
 import com.amazon.ionelement.api.StructElement
 import org.partiql.spi.connector.Connector
@@ -23,8 +23,13 @@ import java.nio.file.Paths
 
 class LocalConnector(private val catalogName: String, private val config: StructElement) : Connector {
 
+    companion object {
+        const val CONNECTOR_NAME = "localdb"
+        const val ROOT_KEY = "localdb_root"
+    }
+
     private val default: Path = Paths.get(System.getProperty("user.home")).resolve(".partiql/localdb")
-    private val root = config.getOptional("localdb_root")?.stringValueOrNull?.let {
+    private val root = config.getOptional(ROOT_KEY)?.stringValueOrNull?.let {
         Paths.get(it)
     } ?: default
     private val metadata = LocalConnectorMetadata(catalogName, root)
@@ -33,7 +38,7 @@ class LocalConnector(private val catalogName: String, private val config: Struct
 
     class Factory : Connector.Factory {
 
-        override fun getName(): String = "localdb"
+        override fun getName(): String = CONNECTOR_NAME
 
         override fun create(catalogName: String, config: StructElement): Connector = LocalConnector(catalogName, config)
     }

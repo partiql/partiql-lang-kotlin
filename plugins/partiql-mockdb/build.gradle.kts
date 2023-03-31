@@ -15,16 +15,10 @@
 
 plugins {
     id(Plugins.conventions)
-    id(Plugins.publish)
 }
 
 dependencies {
-    api(Deps.ionElement)
+    implementation(project(":partiql-spi"))
     implementation(project(":partiql-types"))
-}
-
-publish {
-    artifactId = "partiql-spi"
-    name = "PartiQL SPI"
-    description = "Pluggable interfaces to allow for custom logic within the PartiQL library."
+    implementation(Deps.gson)
 }

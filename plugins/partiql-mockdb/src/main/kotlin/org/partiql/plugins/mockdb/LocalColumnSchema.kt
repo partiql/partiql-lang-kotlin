@@ -12,11 +12,10 @@
  *  language governing permissions and limitations under the License.
  */
 
-package org.partiql.spi.plugins.local
+package org.partiql.plugins.mockdb
 
-import org.partiql.spi.Plugin
-import org.partiql.spi.connector.Connector
-
-class LocalPlugin : Plugin {
-    override fun getConnectorFactories(): List<Connector.Factory> = listOf(LocalConnector.Factory())
-}
+class LocalColumnSchema(
+    public val name: String,
+    public val type: String,
+    public val typeParams: List<String>
+)
