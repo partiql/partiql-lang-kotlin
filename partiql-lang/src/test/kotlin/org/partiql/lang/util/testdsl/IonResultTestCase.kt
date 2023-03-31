@@ -64,7 +64,7 @@ data class IonResultTestCase(
 
     fun toStatementTestCase(): StatementTestCase =
         assertDoesNotThrow("IonResultTestCase ${toString()} should not throw when parsing") {
-            StatementTestCase(name, PartiQLParser(ION).parseAstStatement(sqlUnderTest))
+            StatementTestCase(name, PartiQLParser().parseAstStatement(sqlUnderTest))
         }
 }
 

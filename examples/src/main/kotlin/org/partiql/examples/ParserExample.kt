@@ -1,6 +1,5 @@
 package org.partiql.examples
 
-import com.amazon.ion.system.IonSystemBuilder
 import com.amazon.ion.system.IonTextWriterBuilder
 import org.partiql.examples.util.Example
 import org.partiql.lang.domains.PartiqlAst
@@ -15,11 +14,8 @@ class ParserExample(out: PrintStream) : Example(out) {
 
     /** Demonstrates query parsing and SerDe.  */
     override fun run() {
-        // / A standard instance of [IonSystem], which is required by [SqlParser].
-        val ion = IonSystemBuilder.standard().build()
-
         // An instance of [Parser].
-        val parser: Parser = PartiQLParserBuilder().ionSystem(ion).build()
+        val parser: Parser = PartiQLParserBuilder().build()
 
         // A query in string format
         val query = "SELECT exampleField FROM exampleTable WHERE anotherField > 10"

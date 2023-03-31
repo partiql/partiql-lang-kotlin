@@ -1,13 +1,12 @@
 package org.partiql.lang.prettyprint
 
-import com.amazon.ion.system.IonSystemBuilder
 import org.junit.Assert
 import org.junit.Test
 import org.partiql.lang.syntax.PartiQLParser
 
 class QueryPrettyPrinterTest {
     private val prettyPrinter = QueryPrettyPrinter()
-    private val sqlParser = PartiQLParser(IonSystemBuilder.standard().build())
+    private val sqlParser = PartiQLParser()
 
     private fun checkPrettyPrintQuery(query: String, expected: String) {
         // In triples quotes, a tab consists of 4 whitespaces. We need to transform them into a tab.

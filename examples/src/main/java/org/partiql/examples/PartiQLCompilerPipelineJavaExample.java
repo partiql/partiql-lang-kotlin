@@ -65,7 +65,7 @@ public class PartiQLCompilerPipelineJavaExample extends Example {
                 .projectionIteration(ProjectionIterationBehavior.UNFILTERED)
                 .build();
 
-        final Parser parser = PartiQLParserBuilder.standard().ionSystem(ion).build();
+        final Parser parser = PartiQLParserBuilder.standard().build();
 
         @OptIn(markerClass = ExperimentalPartiQLCompilerPipeline.class)
         final PartiQLPlanner planner = PartiQLPlannerBuilder.standard().globalVariableResolver(globalVariableResolver).build();
