@@ -25,6 +25,7 @@ import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.bigDecimalValue
+import org.partiql.lang.eval.builtins.internal.ExprFunctionMeasure
 import org.partiql.lang.eval.builtins.internal.TimestampParser
 import org.partiql.lang.eval.builtins.internal.adjustPrecisionTo
 import org.partiql.lang.eval.builtins.internal.toOffsetDateTime
@@ -66,7 +67,8 @@ internal val SCALAR_BUILTINS_EXT = listOf(
     ExprFunctionSize,
     ExprFunctionFromUnix,
     ExprFunctionUnixTimestamp,
-    ExprFunctionToString
+    ExprFunctionToString,
+    ExprFunctionLength,
 )
 
 /**
@@ -496,4 +498,14 @@ internal object ExprFunctionToString : ExprFunction {
             internal = false
         )
     }
+}
+
+/**
+ * Counts the number of characters in the specified string, where 'character' is defined as a single unicode code point.
+ *
+ * Same as CHARACTER_LENGTH, CHAR_LENGTH
+ */
+internal object ExprFunctionLength : ExprFunctionMeasure("length", StaticType.TEXT) {
+
+    override fun call(value: ExprValue): Int = characterLength(value)
 }

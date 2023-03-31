@@ -361,27 +361,21 @@ internal object ExprFunctionBitLength : ExprFunctionMeasure("bit_length", BITSTR
 /**
  * Counts the number of characters in the specified string, where 'character' is defined as a single unicode code point.
  *
- * Same as CHARACTER_LENGTH
+ * Same as CHARACTER_LENGTH, LENGTH
  */
 internal object ExprFunctionCharLength : ExprFunctionMeasure("char_length", StaticType.TEXT) {
 
-    override fun call(value: ExprValue): Int {
-        val str = value.stringValue()
-        return str.codePointCount(0, str.length)
-    }
+    override fun call(value: ExprValue): Int = characterLength(value)
 }
 
 /**
  * Counts the number of characters in the specified string, where 'character' is defined as a single unicode code point.
  *
- * Same as CHAR_LENGTH
+ * Same as CHAR_LENGTH, LENGTH
  */
 internal object ExprFunctionCharacterLength : ExprFunctionMeasure("character_length", StaticType.TEXT) {
 
-    override fun call(value: ExprValue): Int {
-        val str = value.stringValue()
-        return str.codePointCount(0, str.length)
-    }
+    override fun call(value: ExprValue): Int = characterLength(value)
 }
 
 /**
