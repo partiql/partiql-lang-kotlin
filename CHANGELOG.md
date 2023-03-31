@@ -60,6 +60,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CLI no longer terminates on user errors in submitted PartiQL (when printing out the AST with !!)
   and no longer prints out stack traces upon user errors. 
 
+- Constrained Decimal matching logic.
+
 ### Removed
 - The deprecated `IonValue` property in `ExprValue` interface is now removed.
 - Removed partiql-extensions to partiql-cli `org.partiql.cli.functions`

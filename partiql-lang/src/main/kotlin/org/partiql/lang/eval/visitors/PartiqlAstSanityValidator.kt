@@ -68,6 +68,14 @@ class PartiqlAstSanityValidator : PartiqlAst.Visitor() {
 
     private fun validateDecimalOrNumericType(scale: LongPrimitive?, precision: LongPrimitive?, metas: MetaContainer) {
         if (scale != null && precision != null && compileOptions.typedOpBehavior == TypedOpBehavior.HONOR_PARAMETERS) {
+            if (precision.value <= 0L) {
+                err(
+                    "Precision ${precision.value} should be a positive integer",
+                    errorCode = ErrorCode.SEMANTIC_INVALID_DECIMAL_ARGUMENTS,
+                    errorContext = errorContextFrom(metas),
+                    internal = false
+                )
+            }
             if (scale.value !in 0..precision.value) {
                 err(
                     "Scale ${scale.value} should be between 0 and precision ${precision.value}",
