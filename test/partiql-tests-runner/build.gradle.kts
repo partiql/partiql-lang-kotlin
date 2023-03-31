@@ -16,13 +16,19 @@
 plugins {
     id(Plugins.conventions)
     id(Plugins.library)
+    application
+}
+
+application {
+    mainClass.set("org.partiql.runner.ConformanceComparisonKt")
 }
 
 dependencies {
-    testImplementation(project(":lang"))
+    implementation(Deps.ionElement)
+    testImplementation(project(":partiql-lang"))
 }
 
-val tests = "../partiql-tests/partiql-tests-data"
+val tests = System.getenv()["PARTIQL_TESTS_DATA"] ?: "../partiql-tests/partiql-tests-data"
 
 object Env {
     const val PARTIQL_EVAL = "PARTIQL_EVAL_TESTS_DATA"
@@ -33,4 +39,8 @@ tasks.test {
     useJUnitPlatform()
     environment(Env.PARTIQL_EVAL, file("$tests/eval/").absolutePath)
     environment(Env.PARTIQL_EQUIV, file("$tests/eval-equiv/").absolutePath)
+
+    if (!project.hasProperty("conformanceReport")) {
+        exclude("org/partiql/runner/TestRunner\$ConformanceTestsReportRunner.class")
+    }
 }

@@ -6,7 +6,7 @@ import junitparams.Parameters
 import junitparams.naming.TestCaseName
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.partiql.lang.eval.builtins.TimestampTemporalAccessor
+import org.partiql.lang.eval.builtins.timestamp.TimestampTemporalAccessor
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.OffsetDateTime
