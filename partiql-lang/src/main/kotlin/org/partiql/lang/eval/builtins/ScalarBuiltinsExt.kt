@@ -69,6 +69,7 @@ internal val SCALAR_BUILTINS_EXT = listOf(
     ExprFunctionUnixTimestamp,
     ExprFunctionToString,
     ExprFunctionLength,
+    ExprFunctionTextReplace,
 )
 
 /**
@@ -508,4 +509,21 @@ internal object ExprFunctionToString : ExprFunction {
 internal object ExprFunctionLength : ExprFunctionMeasure("length", StaticType.TEXT) {
 
     override fun call(value: ExprValue): Int = characterLength(value)
+}
+
+/** text_replace(string, from, to) -- in [string], replaces each occurrence of [from] with [to].
+ */
+internal object ExprFunctionTextReplace : ExprFunction {
+    override val signature = FunctionSignature(
+        name = "text_replace",
+        requiredParameters = listOf(StaticType.TEXT, StaticType.TEXT, StaticType.TEXT),
+        returnType = StaticType.TEXT,
+    )
+
+    override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
+        val string = required[0].stringValue()
+        val from = required[1].stringValue()
+        val to = required[2].stringValue()
+        return ExprValue.newString(string.replace(from, to))
+    }
 }

@@ -1319,6 +1319,29 @@ overlay('hello' placing 'XX' from 2 for 1)      -- "hXXllo
 overlay('hello' placing 'XX' from 2 for 3)      -- "hXXo
 ```
 
+### TEXT_REPLACE
+
+In `string`, replaces all occurrences of substring `from` with another string `to`. 
+
+Signature
+: `TEXT_REPLACE: String, String, String -> String`
+
+Header
+: `TEXT_REPLACE(string, from, to)`
+
+Examples
+:
+
+```sql
+text_replace('abcdefabcdef', 'cd', 'XX')       -- 'abXXefabXXef'
+text_replace('abcdefabcdef', 'xyz', 'XX')      -- 'abcdefabcdef'
+text_replace('abcdefabcdef', 'defab', '')      -- 'abccdef'
+text_replace('abcabcabcdef', 'abcabc', 'XXX')  -- 'XXXabcdef'
+text_replace('abcabcabcdef', '', 'X')          -- 'XaXbXcXaXbXcXaXbXcXdXeXfX'
+text_replace('', 'abc', 'XX')                  -- ''
+text_replace('', '', 'XX')                     -- 'XX'
+```
+
 <!--
 This is the template for writing documentations for an PartiQL built-in function. 
 
