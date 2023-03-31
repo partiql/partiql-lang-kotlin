@@ -47,6 +47,8 @@ internal sealed class Accumulator(
                 "sum" -> AccumulatorSum(filter)
                 "group_as" -> AccumulatorGroupAs(filter)
                 "every" -> AccumulatorEvery(filter)
+                "any" -> AccumulatorAnySome(filter)
+                "some" -> AccumulatorAnySome(filter)
                 else -> throw IllegalArgumentException("Unsupported aggregation function: $funcName")
             }
         }
@@ -143,6 +145,19 @@ internal class AccumulatorEvery(
     override fun nextValue(value: ExprValue) {
         checkIsBooleanType("EVERY", value)
         res = res?.let { ExprValue.newBoolean(it.booleanValue() && value.booleanValue()) } ?: value
+    }
+
+    override fun compute(): ExprValue = res ?: ExprValue.nullValue
+}
+
+internal class AccumulatorAnySome(
+    internal override val filter: (ExprValue) -> Boolean
+) : Accumulator(filter = filter) {
+
+    private var res: ExprValue? = null
+    override fun nextValue(value: ExprValue) {
+        checkIsBooleanType("ANY/SOME", value)
+        res = res?.let { ExprValue.newBoolean(it.booleanValue() || value.booleanValue()) } ?: value
     }
 
     override fun compute(): ExprValue = res ?: ExprValue.nullValue

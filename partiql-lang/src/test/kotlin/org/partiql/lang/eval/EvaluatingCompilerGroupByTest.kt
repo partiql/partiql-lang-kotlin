@@ -863,6 +863,7 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
         runTest(tc, session)
 
     fun parametersForBooleanAggregationTest() = listOf(
+        // EVERY
         EvaluatorTestCase(
             groupName = "EVERY on a list of expressions",
             query = "EVERY([ 1 < 5, true, NULL IS NULL])",
@@ -893,6 +894,48 @@ class EvaluatingCompilerGroupByTest : EvaluatorTestBase() {
             query = """
                 SELECT x.a, EVERY(DISTINCT x.b < 15) AS e
                 FROM [ {'a': 1, 'b': 10}, {'a': 1, 'b': 11}, {'a': 2, 'b': 20}, {'a': 3} ] AS x 
+                GROUP BY x.a 
+            """.trimIndent(),
+            expectedResult = """
+                <<
+                  { 'a': 1, 'e': true },
+                  { 'a': 2, 'e': false },
+                  { 'a': 3, 'e': NULL }
+                >>                
+            """.trimIndent()
+        ),
+
+        // ANY / SOME
+        EvaluatorTestCase(
+            groupName = "ANY on a list of expressions",
+            query = "ANY([ 1 < 5, false, 5 IS NULL ])",
+            expectedResult = "true"
+        ),
+        EvaluatorTestCase(
+            groupName = "CALL_ANY on a bag with NULLs",
+            query = "COLL_ANY('all', << NULL, 2<3, MISSING, false >>)",
+            expectedResult = "true"
+        ),
+        EvaluatorTestCase(
+            groupName = "ANY in GROUP BY",
+            query = """
+                SELECT x.a, ANY(x.b < 15) AS e
+                FROM << {'a': 1, 'b': 10}, {'a': 1, 'b': 17}, {'a': 2, 'b': 20}, {'a': 3} >> AS x 
+                GROUP BY x.a            
+            """.trimIndent(),
+            expectedResult = """
+                <<
+                  { 'a': 1, 'e': true },
+                  { 'a': 2, 'e': false },
+                  { 'a': 3, 'e': NULL }
+                >>
+            """.trimIndent()
+        ),
+        EvaluatorTestCase(
+            groupName = "SOME with DISTINCT in GROUP BY",
+            query = """
+                SELECT x.a, SOME(DISTINCT x.b < 15) AS e
+                FROM [ {'a': 1, 'b': 10}, {'a': 1, 'b': 17}, {'a': 2, 'b': 20}, {'a': 3} ] AS x 
                 GROUP BY x.a 
             """.trimIndent(),
             expectedResult = """

@@ -257,6 +257,10 @@ internal class EvaluatingCompiler(
                 checkIsBooleanType("EVERY", nextItem)
                 accumulated?.let { ExprValue.newBoolean(it.booleanValue() && nextItem.booleanValue()) } ?: nextItem
             }
+            val anySomeAccFunc: (ExprValue?, ExprValue) -> ExprValue = { accumulated, nextItem ->
+                checkIsBooleanType("ANY/SOME", nextItem)
+                accumulated?.let { ExprValue.newBoolean(it.booleanValue() || nextItem.booleanValue()) } ?: nextItem
+            }
             val allFilter: (ExprValue) -> Boolean = { _ -> true }
             // each distinct ExprAggregator must get its own createUniqueExprValueFilter()
             mapOf(
@@ -306,6 +310,22 @@ internal class EvaluatingCompiler(
 
                 Pair("every", PartiqlAst.SetQuantifier.Distinct()) to ExprAggregatorFactory.over {
                     Accumulator(null, everyAccFunc, createUniqueExprValueFilter())
+                },
+
+                Pair("any", PartiqlAst.SetQuantifier.All()) to ExprAggregatorFactory.over {
+                    Accumulator(null, anySomeAccFunc, allFilter)
+                },
+
+                Pair("any", PartiqlAst.SetQuantifier.Distinct()) to ExprAggregatorFactory.over {
+                    Accumulator(null, anySomeAccFunc, createUniqueExprValueFilter())
+                },
+
+                Pair("some", PartiqlAst.SetQuantifier.All()) to ExprAggregatorFactory.over {
+                    Accumulator(null, anySomeAccFunc, allFilter)
+                },
+
+                Pair("some", PartiqlAst.SetQuantifier.Distinct()) to ExprAggregatorFactory.over {
+                    Accumulator(null, anySomeAccFunc, createUniqueExprValueFilter())
                 },
             )
         }

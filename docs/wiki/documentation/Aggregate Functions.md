@@ -100,6 +100,9 @@ Description
 Requires all items to be booleans or undefined (`NULL` and `MISSING`). 
 Returns `NULL` on an empty collection.
 
+Signature
+: `EVERY(collection<BOOL | MISSING | NULL>) -> BOOL or NULL`
+
 Examples
 :
 
@@ -110,4 +113,29 @@ EVERY(<< NULL, 2<3, MISSING, true >>)  -- true
 EVERY([NULL, MISSING])                 -- NULL
 EVERY(<< >>)                           -- NULL
 EVERY(<< true, 5, true >>)             -- !! ERROR !!
+```
+
+## ANY, SOME
+
+Description
+: Returns true iff at least one item in the collection (excluding `NULL` and `MISSING`) is true.
+Requires all items to be booleans or undefined (`NULL` and `MISSING`).
+Returns `NULL` on an empty collection.
+
+Signature
+: `ANY(collection<BOOL | MISSING | NULL>) -> BOOL or NULL`
+
+Signature
+: `SOME(collection<BOOL | MISSING | NULL>) -> BOOL or NULL`
+
+Examples
+:
+
+```sql
+ANY (<< false, true, false >>)         -- true
+SOME([ 1 < 5, false, 5 IS NULL])       -- true
+ANY (<< NULL, 2<3, MISSING, false >>)  -- true
+SOME([NULL, MISSING])                  -- NULL
+ANY (<< >>)                            -- NULL
+SOME(<< true, 5, true >>)              -- !! ERROR !!
 ```
