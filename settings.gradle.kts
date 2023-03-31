@@ -18,6 +18,7 @@ include(
     "partiql-cli",
     "partiql-lang",
     "partiql-plan",
+    "partiql-spi",
     "partiql-types",
     "lib:isl",
     "lib:sprout",
