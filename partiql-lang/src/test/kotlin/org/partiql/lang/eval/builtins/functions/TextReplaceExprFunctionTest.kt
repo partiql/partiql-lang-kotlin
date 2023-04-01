@@ -21,6 +21,12 @@ class TextReplaceExprFunctionTest : EvaluatorTestBase() {
             ExprFunctionTestCase("text_replace('abcabcabcdef', '', 'X')", "\"XaXbXcXaXbXcXaXbXcXdXeXfX\""),
             ExprFunctionTestCase("text_replace('', 'abc', 'XX')", "\"\""),
             ExprFunctionTestCase("text_replace('', '', 'XX')", "\"XX\""),
+            ExprFunctionTestCase("text_replace('abcdefabcdef', 'def', '😁😞')", "\"abc😁😞abc😁😞\""),
+            ExprFunctionTestCase("text_replace('abc😁😞abc😁😞', '😁😞', 'def')", "\"abcdefabcdef\""),
+            ExprFunctionTestCase("text_replace('abcdefabcdef', 'def', 'd😁😞')", "\"abcd😁😞abcd😁😞\""),
+            ExprFunctionTestCase("text_replace('abcdefabcdef', 'def', 'deࠫf')", "\"abcdeࠫfabcdeࠫf\""),
+            ExprFunctionTestCase("text_replace('abcdeࠫfabcdeࠫf', 'def', 'XX')", "\"abcdeࠫfabcdeࠫf\""),
+            ExprFunctionTestCase("text_replace('abcdeࠫfabcdeࠫf', 'deࠫf', 'XX')", "\"abcXXabcXX\""),
         )
     }
 }
