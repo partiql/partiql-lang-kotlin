@@ -361,7 +361,7 @@ internal object ExprFunctionBitLength : ExprFunctionMeasure("bit_length", BITSTR
 /**
  * Counts the number of characters in the specified string, where 'character' is defined as a single unicode code point.
  *
- * Same as CHARACTER_LENGTH, LENGTH
+ * Same as CHARACTER_LENGTH
  */
 internal object ExprFunctionCharLength : ExprFunctionMeasure("char_length", StaticType.TEXT) {
 
@@ -371,7 +371,7 @@ internal object ExprFunctionCharLength : ExprFunctionMeasure("char_length", Stat
 /**
  * Counts the number of characters in the specified string, where 'character' is defined as a single unicode code point.
  *
- * Same as CHAR_LENGTH, LENGTH
+ * Same as CHAR_LENGTH
  */
 internal object ExprFunctionCharacterLength : ExprFunctionMeasure("character_length", StaticType.TEXT) {
 

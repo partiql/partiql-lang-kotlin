@@ -243,18 +243,11 @@ CAST([1,[2],3]    AS bag) -- <<1,[2],3>> (REPL does not display << >> and commas
 CAST(<<'a', 'b'>> AS bag) -- <<'a', 'b'>> (REPL does not display << >> and commas)
 ```
 
-### LENGTH, CHAR_LENGTH, CHARACTER_LENGTH
+### CHAR_LENGTH, CHARACTER_LENGTH
 
 Counts the number of characters in the specified string, where 'character' is defined as a single unicode code point.
 
-*Note:* `LENGTH`, `CHAR_LENGTH` and `CHARACTER_LENGTH` are synonyms. 
-
-
-Signature
-: `LENGTH: String -> Integer`
-
-Header
-: `LENGTH(str)`
+*Note:* `CHAR_LENGTH` and `CHARACTER_LENGTH` are synonyms.
 
 Signature
 : `CHAR_LENGTH: String -> Integer`

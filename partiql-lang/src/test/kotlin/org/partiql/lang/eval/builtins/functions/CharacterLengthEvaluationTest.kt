@@ -49,10 +49,6 @@ class CharacterLengthEvaluationTest : EvaluatorTestBase() {
             ExprFunctionTestCase("char_length('😁😞😸😸')", "4"),
             ExprFunctionTestCase("char_length('話家身圧費谷料村能計税金')", "12"),
             ExprFunctionTestCase("char_length('eࠫ')", "2"), // This is a unicode "combining character" which is actually 2 codepoints
-            // Just a few tests for a smoke check, since we have already tested the same function above.
-            ExprFunctionTestCase("length('')", "0"),
-            ExprFunctionTestCase("length('hello')", "5"),
-            ExprFunctionTestCase("length('eࠫ')", "2"), // This is a unicode "combining character" which is actually 2 codepoints
         )
     }
 
