@@ -25,6 +25,11 @@ import org.partiql.types.NumberConstraint
 import org.partiql.types.StringType
 import org.partiql.types.StructType
 
+/**
+ * This mock implementation of [ConnectorObject] is used to parse the [schema] into a [ValueDescriptor]. Currently,
+ * this implementation allows for Tables, Structs, Ints, Decimals, and Booleans. When [LocalConnectorMetadata] requests
+ * for the object's [ValueDescriptor], it returns the parsed descriptor.
+ */
 internal class LocalConnectorObject(
     private val schema: String
 ) : ConnectorObject {
@@ -33,10 +38,6 @@ internal class LocalConnectorObject(
     private val descriptor = jsonSchema.getDescriptor()
 
     public fun getDescriptor(): ValueDescriptor = descriptor
-
-    init {
-        println(descriptor)
-    }
 
     //
     //

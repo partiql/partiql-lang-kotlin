@@ -23,7 +23,8 @@ import org.partiql.spi.sources.ValueDescriptor
 public interface ConnectorMetadata {
 
     /**
-     * Returns the descriptor of an object.
+     * Returns the descriptor of an object. If the handle is unable to produce a [ValueDescriptor], implementers should
+     * return null.
      */
     public fun getObjectDescriptor(session: ConnectorSession, handle: ConnectorObjectHandle): ValueDescriptor?
 
@@ -36,7 +37,10 @@ public interface ConnectorMetadata {
      * As another example, consider an object within a Namespace that may be a Struct with nested attributes. A user could
      * call [getObjectHandle] with the [path] of "a"."b"."c"."Object"."x". In the Namespace, only object "Object" exists.
      * Therefore, this method will return a [ConnectorObjectHandle] with the "Object" representation and the matching
-     * path: "a"."b"."c"."Object"
+     * path: "a"."b"."c"."Object". The returned [ConnectorObjectHandle.absolutePath] must be correct for correct
+     * evaluation.
+     *
+     * If the [path] does not correspond to an existing [ConnectorObject], implementers should return null.
      */
     public fun getObjectHandle(session: ConnectorSession, path: BindingPath): ConnectorObjectHandle?
 }
