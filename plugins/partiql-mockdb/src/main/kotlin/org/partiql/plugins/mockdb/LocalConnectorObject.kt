@@ -24,6 +24,7 @@ import org.partiql.types.IntType
 import org.partiql.types.NumberConstraint
 import org.partiql.types.StringType
 import org.partiql.types.StructType
+import org.partiql.types.TupleConstraint
 
 internal class LocalConnectorObject(
     private val schema: String
@@ -101,7 +102,8 @@ internal class LocalConnectorObject(
             fields = this.attributes.associate {
                 it.getName() to it.getValueDesc().type
             },
-            contentClosed = true
+            contentClosed = true,
+            constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true)),
         )
     )
 
