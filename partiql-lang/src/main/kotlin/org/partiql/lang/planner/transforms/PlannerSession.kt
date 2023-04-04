@@ -18,6 +18,16 @@ import com.amazon.ionelement.api.StructElement
 import org.partiql.spi.connector.ConnectorSession
 import java.time.Instant
 
+/**
+ * Contains session information for the purposes of planning.
+ *
+ * @param queryId a unique identifier for a query. This will be passed to [ConnectorSession] during planning.
+ * @param userId a unique identifier for a user. This will be passed to [ConnectorSession] during planning.
+ * @param currentCatalog the current catalog of the session
+ * @param currentDirectory the current "namespace" within the Catalog. This will aid in building
+ * [org.partiql.spi.connector.ConnectorObjectPath]'s for unresolved variables.
+ * @param instant the instant evaluation begins
+ */
 public class PlannerSession(
     public val queryId: String,
     public val userId: String,
@@ -26,7 +36,7 @@ public class PlannerSession(
     public val catalogConfig: Map<String, StructElement> = emptyMap(),
     public val instant: Instant = Instant.now()
 ) {
-    public fun toConnectorSession(): ConnectorSession = object : ConnectorSession {
+    internal fun toConnectorSession(): ConnectorSession = object : ConnectorSession {
         override fun getQueryId(): String = queryId
         override fun getUserId(): String = userId
     }

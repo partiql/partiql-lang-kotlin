@@ -8,6 +8,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.ArgumentsProvider
 import org.junit.jupiter.params.provider.ArgumentsSource
+import org.partiql.annotations.ExperimentalPartiQLSchemaInferencer
 import org.partiql.lang.ast.UNKNOWN_SOURCE_LOCATION
 import org.partiql.lang.ast.passes.SemanticProblemDetails
 import org.partiql.lang.errors.Problem
@@ -20,7 +21,9 @@ import org.partiql.spi.sources.ColumnMetadata
 import org.partiql.spi.sources.ValueDescriptor
 import org.partiql.types.AnyOfType
 import org.partiql.types.AnyType
+import org.partiql.types.BagType
 import org.partiql.types.BoolType
+import org.partiql.types.ListType
 import org.partiql.types.StaticType
 import org.partiql.types.StaticType.Companion.unionOf
 import org.partiql.types.StructType
@@ -592,6 +595,94 @@ class PartiQLSchemaInferencerTests {
                     listOf(ColumnMetadata("upper_breed", StaticType.STRING))
                 )
             ),
+            SuccessTestCase(
+                name = "Non-tuples",
+                query = "SELECT a FROM << [ 1, 1.0 ] >> AS a",
+                expected = ValueDescriptor.TableDescriptor(
+                    DEFAULT_TABLE_NAME,
+                    listOf(ColumnMetadata("a", ListType(unionOf(StaticType.INT, StaticType.DECIMAL))))
+                )
+            ),
+            SuccessTestCase(
+                name = "Non-tuples in SELECT VALUE",
+                query = "SELECT VALUE a FROM << [ 1, 1.0 ] >> AS a",
+                expected = ValueDescriptor.TypeDescriptor(
+                    BagType(ListType(unionOf(StaticType.INT, StaticType.DECIMAL)))
+                )
+            ),
+            SuccessTestCase(
+                name = "SELECT VALUE",
+                query = "SELECT VALUE [1, 1.0] FROM <<>>",
+                expected = ValueDescriptor.TypeDescriptor(
+                    BagType(ListType(unionOf(StaticType.INT, StaticType.DECIMAL)))
+                )
+            ),
+            SuccessTestCase(
+                name = "UNPIVOT",
+                query = "SELECT VALUE v FROM UNPIVOT { 'a': 2 } AS v AT attr WHERE attr = 'a'",
+                expected = ValueDescriptor.TypeDescriptor(
+                    BagType(StaticType.INT)
+                )
+            ),
+            SuccessTestCase(
+                name = "CROSS JOIN",
+                query = "SELECT * FROM <<{ 'a': 1 }>> AS t1, <<{ 'b': 2.0 }>> AS t2",
+                expected = ValueDescriptor.TableDescriptor(
+                    DEFAULT_TABLE_NAME,
+                    listOf(
+                        ColumnMetadata("a", StaticType.INT),
+                        ColumnMetadata("b", StaticType.DECIMAL),
+                    )
+                )
+            ),
+            SuccessTestCase(
+                name = "LEFT JOIN",
+                query = "SELECT * FROM <<{ 'a': 1 }>> AS t1 LEFT JOIN <<{ 'b': 2.0 }>> AS t2 ON TRUE",
+                expected = ValueDescriptor.TableDescriptor(
+                    DEFAULT_TABLE_NAME,
+                    listOf(
+                        ColumnMetadata("a", StaticType.INT),
+                        ColumnMetadata("b", StaticType.DECIMAL),
+                    )
+                )
+            ),
+            SuccessTestCase(
+                name = "LEFT JOIN",
+                query = "SELECT b, a FROM <<{ 'a': 1 }>> AS t1 LEFT JOIN <<{ 'b': 2.0 }>> AS t2 ON TRUE",
+                expected = ValueDescriptor.TableDescriptor(
+                    DEFAULT_TABLE_NAME,
+                    listOf(
+                        ColumnMetadata("b", StaticType.DECIMAL),
+                        ColumnMetadata("a", StaticType.INT),
+                    )
+                )
+            ),
+            SuccessTestCase(
+                name = "AGGREGATE over INTS",
+                query = "SELECT a, COUNT(*) AS c, SUM(a) AS s, MIN(b) AS m FROM << {'a': 1, 'b': 2} >> GROUP BY a",
+                expected = ValueDescriptor.TableDescriptor(
+                    DEFAULT_TABLE_NAME,
+                    listOf(
+                        ColumnMetadata("a", StaticType.INT),
+                        ColumnMetadata("c", StaticType.INT),
+                        ColumnMetadata("s", StaticType.INT),
+                        ColumnMetadata("m", StaticType.INT),
+                    )
+                )
+            ),
+            SuccessTestCase(
+                name = "AGGREGATE over DECIMALS",
+                query = "SELECT a, COUNT(*) AS c, SUM(a) AS s, MIN(b) AS m FROM << {'a': 1.0, 'b': 2.0}, {'a': 1.0, 'b': 2.0} >> GROUP BY a",
+                expected = ValueDescriptor.TableDescriptor(
+                    DEFAULT_TABLE_NAME,
+                    listOf(
+                        ColumnMetadata("a", StaticType.DECIMAL),
+                        ColumnMetadata("c", StaticType.INT),
+                        ColumnMetadata("s", StaticType.DECIMAL),
+                        ColumnMetadata("m", StaticType.DECIMAL),
+                    )
+                )
+            ),
         )
 
         private fun assertProblemExists(problem: () -> Problem) = ProblemHandler { problems, ignoreSourceLocation ->
@@ -607,6 +698,7 @@ class PartiQLSchemaInferencerTests {
         is ErrorTestCase -> runTest(tc)
     }
 
+    @OptIn(ExperimentalPartiQLSchemaInferencer::class)
     private fun runTest(tc: SuccessTestCase) {
         val session = PlannerSession(
             tc.query.hashCode().toString(),
@@ -631,6 +723,7 @@ class PartiQLSchemaInferencerTests {
         }
     }
 
+    @OptIn(ExperimentalPartiQLSchemaInferencer::class)
     private fun runTest(tc: ErrorTestCase) {
         val session = PlannerSession(
             tc.query.hashCode().toString(),

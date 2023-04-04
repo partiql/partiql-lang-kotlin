@@ -28,6 +28,7 @@ import org.partiql.lang.eval.builtins.SCALAR_BUILTINS_DEFAULT
 import org.partiql.lang.planner.PlanningProblemDetails
 import org.partiql.lang.planner.transforms.PlannerSession
 import org.partiql.lang.planner.transforms.impl.Metadata
+import org.partiql.lang.planner.transforms.plan.PlanUtils.addType
 import org.partiql.lang.types.FunctionSignature
 import org.partiql.lang.types.StaticTypeUtils
 import org.partiql.lang.types.TypedOpParameter
@@ -35,6 +36,7 @@ import org.partiql.lang.types.UnknownArguments
 import org.partiql.lang.util.cartesianProduct
 import org.partiql.plan.Arg
 import org.partiql.plan.Attribute
+import org.partiql.plan.Binding
 import org.partiql.plan.Case
 import org.partiql.plan.PlanNode
 import org.partiql.plan.Property
@@ -120,7 +122,88 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
     //
     //
 
+    override fun visitRelBag(node: Rel.Bag, ctx: Context): PlanNode {
+        TODO("BAG OPERATORS are not supported by the PartiQLSchemaInferencer yet.")
+    }
+
     override fun visitRel(node: Rel, ctx: Context): Rel = super.visitRel(node, ctx) as Rel
+
+    override fun visitRelJoin(node: Rel.Join, ctx: Context): Rel.Join {
+        val lhs = visitRel(node.lhs, ctx)
+        val rhs = visitRel(node.rhs, ctx)
+        val newJoin = node.copy(
+            common = node.common.copy(
+                schema = lhs.getSchema() + rhs.getSchema(),
+            )
+        )
+        val predicateType = when (val condition = node.condition) {
+            null -> StaticType.BOOL
+            else -> {
+                val predicate = typeRex(condition, node, ctx)
+                // verify `JOIN` predicate is bool. If it's unknown, gives a null or missing error. If it could
+                // never be a bool, gives an incompatible data type for expression error
+                assertType(expected = StaticType.BOOL, actual = predicate.grabType() ?: handleMissingType(ctx), ctx)
+
+                // continuation type (even in the case of an error) is [StaticType.BOOL]
+                StaticType.BOOL
+            }
+        }
+        return newJoin.copy(
+            condition = node.condition?.addType(predicateType)
+        )
+    }
+
+    override fun visitRelUnpivot(node: Rel.Unpivot, ctx: Context): Rel.Unpivot {
+        val from = node
+
+        val asSymbolicName = node.alias
+            ?: error("Unpivot alias is null.  This wouldn't be the case if FromSourceAliasVisitorTransform was executed first.")
+
+        val value = typeRex(from.value, ctx.input, ctx)
+
+        val fromExprType = value.grabType() ?: handleMissingType(ctx)
+
+        val valueType = getUnpivotValueType(fromExprType)
+        val schema = mutableListOf(Attribute(asSymbolicName, valueType))
+
+        from.at?.let {
+            val valueHasMissing = StaticTypeUtils.getTypeDomain(valueType).contains(ExprValueType.MISSING)
+            val valueOnlyHasMissing = valueHasMissing && StaticTypeUtils.getTypeDomain(valueType).size == 1
+            when {
+                valueOnlyHasMissing -> {
+                    schema.add(Attribute(it, StaticType.MISSING))
+                }
+                valueHasMissing -> {
+                    schema.add(Attribute(it, StaticType.STRING.asOptional()))
+                }
+                else -> {
+                    schema.add(Attribute(it, StaticType.STRING))
+                }
+            }
+        }
+
+        node.by?.let { TODO("BY variable's inference is not implemented yet.") }
+
+        return from.copy(
+            common = from.common.copy(
+                schema = schema
+            ),
+            value = value
+        )
+    }
+
+    override fun visitRelAggregate(node: Rel.Aggregate, ctx: Context): PlanNode {
+        val input = visitRel(node.input, ctx)
+        val calls = node.calls.map { Binding(it.name, typeRex(it.value, input, ctx)) }
+        val groups = node.groups.map { Binding(it.name, typeRex(it.value, input, ctx)) }
+        return node.copy(
+            calls = calls,
+            groups = groups,
+            common = node.common.copy(
+                schema = groups.toAttributes(ctx) + calls.toAttributes(ctx)
+            )
+        )
+    }
 
     override fun visitRelProject(node: Rel.Project, ctx: Context): PlanNode {
         val input = visitRel(node.input, ctx)
@@ -240,6 +323,104 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
     //
     //
 
+    override fun visitRexQueryScalarPivot(node: Rex.Query.Scalar.Pivot, ctx: Context): PlanNode {
+        // TODO: This is to match the StaticTypeInferenceVisitorTransform logic, but needs to be changed
+        return node.copy(
+            type = StaticType.STRUCT
+        )
+    }
+
+    override fun visitRexQueryScalarSubquery(node: Rex.Query.Scalar.Subquery, ctx: Context): PlanNode {
+        val query = typeRex(node.query, ctx.input, ctx) as Rex.Query.Collection
+        when (val queryType = query.grabType() ?: handleMissingType(ctx)) {
+            is CollectionType -> queryType.elementType
+            else -> error("Query collection subqueries should always return a CollectionType.")
+        }
+        return node.copy(
+            query = query
+        )
+    }
+
+    override fun visitRex(node: Rex, ctx: Context): PlanNode = super.visitRex(node, ctx)
+
+    override fun visitRexAgg(node: Rex.Agg, ctx: Context): PlanNode {
+        val funcName = node.id
+        val args = node.args.map { typeRex(it, ctx.input, ctx) }
+        // unwrap the type if this is a collectionType
+        val argType = when (val type = args[0].grabType() ?: handleMissingType(ctx)) {
+            is CollectionType -> type.elementType
+            else -> type
+        }
+        return node.copy(
+            type = computeReturnTypeForAggFunc(funcName, argType, ctx),
+            args = args
+        )
+    }
+
+    private fun computeReturnTypeForAggFunc(funcName: String, elementType: StaticType, ctx: Context): StaticType {
+        val elementTypes = elementType.allTypes
+
+        fun List<StaticType>.convertMissingToNull() = toMutableSet().apply {
+            if (contains(StaticType.MISSING)) {
+                remove(StaticType.MISSING)
+                add(StaticType.NULL)
+            }
+        }
+
+        fun StaticType.isUnknownOrNumeric() = isUnknown() || isNumeric()
+
+        return when (funcName) {
+            "count" -> StaticType.INT
+            // In case that any element is MISSING or there is no element, we should return NULL
+            "max", "min" -> StaticType.unionOf(elementTypes.convertMissingToNull())
+            "sum" -> when {
+                elementTypes.none { it.isUnknownOrNumeric() } -> {
+                    handleInvalidInputTypeForAggFun(funcName, elementType, StaticType.unionOf(StaticType.NULL_OR_MISSING, StaticType.NUMERIC).flatten(), ctx)
+                    StaticType.unionOf(StaticType.NULL, StaticType.NUMERIC)
+                }
+                // If any single type is mismatched, We should add MISSING to the result types set to indicate there is a chance of data mismatch error
+                elementTypes.any { !it.isUnknownOrNumeric() } -> StaticType.unionOf(
+                    elementTypes.filter { it.isUnknownOrNumeric() }.toMutableSet().apply { add(StaticType.MISSING) }
+                )
+                // In case that any element is MISSING or there is no element, we should return NULL
+                else -> StaticType.unionOf(elementTypes.convertMissingToNull())
+            }
+            // "avg" returns DECIMAL or NULL
+            "avg" -> when {
+                elementTypes.none { it.isUnknownOrNumeric() } -> {
+                    handleInvalidInputTypeForAggFun(funcName, elementType, StaticType.unionOf(StaticType.NULL_OR_MISSING, StaticType.NUMERIC).flatten(), ctx)
+                    StaticType.unionOf(StaticType.NULL, StaticType.DECIMAL)
+                }
+                else -> StaticType.unionOf(
+                    mutableSetOf<SingleType>().apply {
+                        if (elementTypes.any { it.isUnknown() }) { add(StaticType.NULL) }
+                        if (elementTypes.any { it.isNumeric() }) { add(StaticType.DECIMAL) }
+                        // If any single type is mismatched, We should add MISSING to the result types set to indicate there is a chance of data mismatch error
+                        if (elementTypes.any { !it.isUnknownOrNumeric() }) { add(StaticType.MISSING) }
+                    }
+                )
+            }
+            else -> error("Internal Error: Unsupported aggregate function. This probably indicates a parser bug.")
+        }.flatten()
+    }
+
+    private fun handleInvalidInputTypeForAggFun(funcName: String, actualType: StaticType, expectedType: StaticType, ctx: Context) {
+        ctx.problemHandler.handleProblem(
+            Problem(
+                sourceLocation = UNKNOWN_SOURCE_LOCATION,
+                details = SemanticProblemDetails.InvalidArgumentTypeForFunction(
+                    functionName = funcName,
+                    expectedType = expectedType,
+                    actualType = actualType
+                )
+            )
+        )
+    }
+
+    override fun visitRexQueryScalar(node: Rex.Query.Scalar, ctx: Context): PlanNode = super.visitRexQueryScalar(node, ctx)
+
+    override fun visitRexQuery(node: Rex.Query, ctx: Context): PlanNode = super.visitRexQuery(node, ctx)
+
     override fun visitRexQueryCollection(node: Rex.Query.Collection, ctx: Context): PlanNode {
         val input = visitRel(node.rel, ctx)
         return when (val constructor = node.constructor) {
@@ -339,6 +520,8 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
         val exprValueType = ExprValueType.fromIonType(node.value.type.toIonType())
         return node.copy(type = StaticTypeUtils.staticTypeFromExprValueType(exprValueType))
     }
+
+    override fun visitRexCollection(node: Rex.Collection, ctx: Context): PlanNode = super.visitRexCollection(node, ctx)
 
     override fun visitRexCollectionArray(node: Rex.Collection.Array, ctx: Context): PlanNode {
         val typedValues = node.values.map { visitRex(it, ctx) as Rex }
@@ -779,6 +962,7 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
         is Arg.Value -> this.value.grabType()
         is Arg.Type -> this.type
         is Step.Key -> this.value.grabType()
+        is Binding -> this.value.grabType()
         else -> error("Unable to grab static type of $this")
     }
 
@@ -876,6 +1060,8 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
         node.name,
         rexCaseToBindingCase(node.case)
     )
+
+    private fun List<Binding>.toAttributes(ctx: Context) = this.map { Attribute(it.name, it.grabType() ?: handleMissingType(ctx)) }
 
     private fun inferConcatOp(leftType: SingleType, rightType: SingleType): SingleType {
         fun checkUnconstrainedText(type: SingleType) = type is SymbolType || type is StringType && type.lengthConstraint is StringType.StringLengthConstraint.Unconstrained
@@ -1053,6 +1239,20 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
         when (this) {
             is AnyOfType -> AnyOfType(this.types.filter { !it.isNullOrMissing() }.toSet()).flatten()
             else -> this
+        }
+
+    private fun getUnpivotValueType(fromSourceType: StaticType): StaticType =
+        when (fromSourceType) {
+            is StructType -> if (fromSourceType.contentClosed) {
+                AnyOfType(fromSourceType.fields.values.toSet()).flatten()
+            } else {
+                // Content is open, so value can be of any type
+                StaticType.ANY
+            }
+            is AnyType -> StaticType.ANY
+            is AnyOfType -> AnyOfType(fromSourceType.types.map { getUnpivotValueType(it) }.toSet())
+            // All the other types coerce into a struct of themselves with synthetic key names
+            else -> fromSourceType
         }
 
     /**

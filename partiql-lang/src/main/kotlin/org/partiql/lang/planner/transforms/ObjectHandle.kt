@@ -16,6 +16,12 @@ package org.partiql.lang.planner.transforms
 
 import org.partiql.spi.connector.ConnectorObjectHandle
 
+/**
+ * Represents a [ConnectorObjectHandle], but also adds information relevant to the associated Catalog.
+ *
+ * This way, the [ConnectorObjectHandle] can be returned by a [org.partiql.spi.connector.Connector] without the Connector
+ * knowing which Catalog it is mapped to internally.
+ */
 internal class ObjectHandle(
     val connectorHandle: ConnectorObjectHandle,
     val catalogName: String

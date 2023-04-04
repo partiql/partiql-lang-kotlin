@@ -14,8 +14,9 @@
 
 package org.partiql.lang.planner.transforms
 
+import org.partiql.annotations.ExperimentalPartiQLSchemaInferencer
 import org.partiql.lang.SqlException
-import org.partiql.lang.ast.SourceLocationMeta
+import org.partiql.lang.ast.UNKNOWN_SOURCE_LOCATION
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Problem
@@ -27,8 +28,6 @@ import org.partiql.lang.planner.PlanningProblemDetails
 import org.partiql.lang.planner.transforms.impl.Metadata
 import org.partiql.lang.planner.transforms.plan.PlanTyper
 import org.partiql.lang.planner.transforms.plan.PlanUtils
-import org.partiql.lang.planner.transforms.plan.RelConverter
-import org.partiql.lang.planner.transforms.plan.RexConverter
 import org.partiql.lang.syntax.PartiQLParserBuilder
 import org.partiql.lang.util.propertyValueMapOf
 import org.partiql.plan.Rex
@@ -36,19 +35,40 @@ import org.partiql.spi.Plugin
 import org.partiql.spi.sources.ColumnMetadata
 import org.partiql.spi.sources.ValueDescriptor
 import org.partiql.spi.sources.ValueDescriptor.TableDescriptor
-import org.partiql.types.StaticType
 import kotlin.jvm.Throws
 
 /**
- * Infers the output schema of a query.
+ * Vends functions, such as [infer], to infer the output [ValueDescriptor] of a PartiQL query.
  */
+@ExperimentalPartiQLSchemaInferencer
 public object PartiQLSchemaInferencer {
 
     /**
      * Infers a query's schema.
+     *
+     * As an example, consider the following query:
+     * ```partiql
+     * SELECT a FROM t
+     * ```
+     *
+     * The inferred [ValueDescriptor] of the above query will resemble a [ValueDescriptor.TableDescriptor] with a
+     * single [ColumnMetadata] named "a".
+     *
+     * Consider another valid PartiQL query:
+     * ```partiql
+     * 1 + 1
+     * ```
+     *
+     * In the above example, the inferred [ValueDescriptor] will resemble a [ValueDescriptor.TypeDescriptor] that represents
+     * the type: [org.partiql.types.IntType].
+     *
+     * @param query the PartiQL statement to infer
+     * @param ctx relevant metadata for inference
+     * @return the description of the output data. The return type of [ValueDescriptor] is subject to change.
+     * @throws SqlException always throws a [SqlException].
      */
     @JvmStatic
-    @Throws(SqlException::class)
+    @Throws(InferenceException::class)
     public fun infer(
         query: String,
         ctx: Context
@@ -57,10 +77,15 @@ public object PartiQLSchemaInferencer {
             inferInternal(query, ctx)
         } catch (t: Throwable) {
             throw when (t) {
-                is SqlException -> t
+                is SqlException -> InferenceException(
+                    t.message,
+                    t.errorCode,
+                    t.errorContext,
+                    t.cause
+                )
                 else -> InferenceException(
                     err = Problem(
-                        SourceLocationMeta(0, 0),
+                        UNKNOWN_SOURCE_LOCATION,
                         PlanningProblemDetails.CompileError("Unhandled exception occurred.")
                     ),
                     cause = t
@@ -118,22 +143,13 @@ public object PartiQLSchemaInferencer {
 
     private fun inferInternal(query: String, ctx: Context): ValueDescriptor {
         val parser = PartiQLParserBuilder.standard().build()
-        val ast = parser.parseAstStatement(query)
-        val normalizedAst = ast.normalize()
-        return inferUsingLogicalPlan(normalizedAst, ctx)
-    }
+        val ast = parser.parseAstStatement(query) as? PartiqlAst.Statement.Query
+            ?: TODO("The PartiQLSchemaInferencer only supports inference on SFW queries at the moment.")
 
-    /**
-     * Infers using the logical plan.
-     */
-    private fun inferUsingLogicalPlan(normalizedAst: PartiqlAst.Statement, ctx: Context): ValueDescriptor {
-        val query = normalizedAst as PartiqlAst.Statement.Query
-        val plan = when (val expr = query.expr) {
-            is PartiqlAst.Expr.Select -> RelConverter.convert(expr)
-            else -> RexConverter.convert(expr)
-        }
+        // Transform to Plan
+        val plan = AstToPlan.transform(ast)
         val typedPlan = PlanTyper.type(
-            plan,
+            plan.root,
             PlanTyper.Context(
                 input = null,
                 session = ctx.session,
@@ -143,6 +159,8 @@ public object PartiQLSchemaInferencer {
                 problemHandler = ctx.problemHandler
             )
         )
+
+        // Convert Logical Plan to Value Descriptor
         return convertSchema(typedPlan)
     }
 
@@ -169,6 +187,6 @@ public object PartiQLSchemaInferencer {
         is Rex.Query.Scalar.Pivot -> ValueDescriptor.TypeDescriptor(rex.type!!)
         is Rex.Tuple -> ValueDescriptor.TypeDescriptor(rex.type!!)
         is Rex.Unary -> ValueDescriptor.TypeDescriptor(rex.type!!)
-        is Rex.Switch -> ValueDescriptor.TypeDescriptor(StaticType.ANY) // TODO: Switch
+        is Rex.Switch -> ValueDescriptor.TypeDescriptor(rex.type!!)
     }
 }
