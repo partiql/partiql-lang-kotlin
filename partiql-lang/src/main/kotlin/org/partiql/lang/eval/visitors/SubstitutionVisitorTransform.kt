@@ -14,7 +14,6 @@
 
 package org.partiql.lang.eval.visitors
 
-import com.amazon.ionelement.api.MetaContainer
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.extractSourceLocation
@@ -25,7 +24,7 @@ import org.partiql.lang.domains.extractSourceLocation
  * [target] will be replaced with [replacement].  If the original node has an instance of [SourceLocationMeta], that is
  * copied to the replacement as well.
  *
- * [target] should have its metas stripped as metas will effect the results of the equivalence check.
+ * [target] should have its metas stripped as metas will affect the results of the equivalence check.
  */
 data class SubstitutionPair(val target: PartiqlAst.Expr, val replacement: PartiqlAst.Expr)
 
@@ -43,24 +42,7 @@ open class SubstitutionVisitorTransform(protected val substitutions: Map<Partiql
      * If [node] has a [SourceLocationMeta], the replacement is cloned and the [SourceLocationMeta] is copied to the
      * clone.
      */
-    override fun transformExpr(node: PartiqlAst.Expr): PartiqlAst.Expr {
-        val matchingSubstitution = substitutions[node]
-
-        return matchingSubstitution?.let { ms ->
-            node.extractSourceLocation().let {
-                sl ->
-                MetaVisitorTransform(sl).transformExpr(ms.replacement)
-            }
-        } ?: super.transformExpr(node)
-    }
-
-    /**
-     * Class creates a copy of [PartiqlAst.Expr], but uses [newMetas] as the metas.
-     *
-     * After .copy() and copying metas is added to PIG (https://github.com/partiql/partiql-ir-generator/pull/53) change
-     * this and its usages to use .copy().
-     */
-    inner class MetaVisitorTransform(private val newMetas: MetaContainer) : VisitorTransformBase() {
-        override fun transformMetas(metas: MetaContainer): MetaContainer = newMetas
-    }
+    override fun transformExpr(node: PartiqlAst.Expr): PartiqlAst.Expr =
+        substitutions[node]?.replacement?.copy(metas = node.extractSourceLocation())
+            ?: super.transformExpr(node)
 }
