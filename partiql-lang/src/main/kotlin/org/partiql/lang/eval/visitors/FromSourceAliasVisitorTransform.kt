@@ -17,6 +17,8 @@ import org.partiql.pig.runtime.SymbolPrimitive
 class FromSourceAliasVisitorTransform : VisitorTransformBase() {
     // When this visitor reaches a top-level FromSource, it transforms it with a fresh instance
     // of the helper visitor below.
+    // (A FromSource is top-level if it does not occur inside another FromSource, which is possible because
+    // FromSource is recursive, to accommodate complex joins in the AST.)
     // Currently, there are two places where a top-level FromSource can occur: in a SELECT and in a DML statement.
 
     override fun transformExprSelect_from(node: PartiqlAst.Expr.Select): PartiqlAst.FromSource {
@@ -29,7 +31,8 @@ class FromSourceAliasVisitorTransform : VisitorTransformBase() {
         return newFrom?.let { InnerFromSourceAliasVisitorTransform().transformFromSource(it) }
     }
 
-    /** The helper visitor is responsible for traversing one top-level FromSource and creating aliases in it.
+    /** The helper visitor is responsible for traversing the recursive structure of one top-level FromSource
+     *  and creating aliases in it.
      *  Only the [transformFromSource] method is intended to be useful as an entry point.
      *  The visitor is stateful, maintaining a counter for synthetic aliases,
      *  so a separate instance is needed for each top level FromSource.
