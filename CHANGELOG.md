@@ -47,7 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     5. `org.partiql.lang.types.StaticType.typeDomain` -> `org.partiql.lang.types.StaticTypeUtils.getTypeDomain`
     6. `org.partiql.lang.types.SingleType.getRuntimeType` -> `org.partiql.lang.types.StaticTypeUtils.getRuntimeType`
     7. `org.partiql.lang.types.StringType.StringLengthConstraint.matches` -> `org.partiql.lang.types.StaticTypeUtils.stringLengthConstraintMatches`
-- **Breaking**: Removes deprecated `ionSystem()` function from PartiQLParserBuilder
+- **Breaking**: Removes deprecated `ionSystem()` function from PartiQLCompilerBuilder and PartiQLParserBuilder
 
 ### Deprecated
 - `ExprValueFactory` interface marked as deprecated. Equivalent `ExprValue` construction methods are implemented in the `ExprValue` interface as static methods. 
