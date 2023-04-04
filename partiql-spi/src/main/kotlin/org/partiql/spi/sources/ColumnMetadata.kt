@@ -16,6 +16,9 @@ package org.partiql.spi.sources
 
 import org.partiql.types.StaticType
 
+/**
+ * Represents a Column within a [ValueDescriptor.TableDescriptor].
+ */
 public data class ColumnMetadata(
     public val name: String,
     public val type: StaticType

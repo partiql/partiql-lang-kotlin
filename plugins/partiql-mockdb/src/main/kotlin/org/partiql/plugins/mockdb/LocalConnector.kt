@@ -21,6 +21,18 @@ import org.partiql.spi.connector.ConnectorSession
 import java.nio.file.Path
 import java.nio.file.Paths
 
+/**
+ * A mock implementation of [Connector] that provides access to data in a specified [root] [Path]. To configure the root,
+ * please specify the corresponding value of [ROOT_KEY] in the [config].
+ *
+ * For example, to specify the root of the filesystem, your [config] might look like:
+ * ```ion
+ * {
+ *     "connector_name": "localdb",
+ *     "localdb_root": "/Users/me/some/root/directory"
+ * }
+ * ```
+ */
 class LocalConnector(private val catalogName: String, private val config: StructElement) : Connector {
 
     companion object {

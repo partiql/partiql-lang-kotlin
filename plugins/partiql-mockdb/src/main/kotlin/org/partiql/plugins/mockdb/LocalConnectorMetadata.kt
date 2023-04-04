@@ -25,6 +25,10 @@ import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.streams.toList
 
+/**
+ * This mock implementation of [ConnectorMetadata] searches for JSON files from its [root] to
+ * resolve requests for any [BindingPath].
+ */
 class LocalConnectorMetadata(val name: String, private val root: Path) : ConnectorMetadata {
 
     override fun getObjectDescriptor(session: ConnectorSession, handle: ConnectorObjectHandle): ValueDescriptor {

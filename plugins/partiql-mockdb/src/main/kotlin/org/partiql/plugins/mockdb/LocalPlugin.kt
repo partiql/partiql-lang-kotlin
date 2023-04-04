@@ -17,6 +17,10 @@ package org.partiql.plugins.mockdb
 import org.partiql.spi.Plugin
 import org.partiql.spi.connector.Connector
 
+/**
+ * A mock implementation of [Plugin] to showcase how to retrieve [org.partiql.spi.sources.ValueDescriptor]'s from
+ * a customer-defined JSON schema object. It uses the filesystem and a user-configured "root" to search for JSON files.
+ */
 class LocalPlugin : Plugin {
     override fun getConnectorFactories(): List<Connector.Factory> = listOf(LocalConnector.Factory())
 }
