@@ -142,7 +142,7 @@ fun ExprValue.stringValue(): String =
     scalar.stringValue() ?: errNoContext("Expected string: $this", errorCode = ErrorCode.EVALUATOR_UNEXPECTED_VALUE_TYPE, internal = false)
 
 fun ExprValue.bytesValue(): ByteArray =
-    scalar.bytesValue() ?: errNoContext("Expected boolean: $this", errorCode = ErrorCode.EVALUATOR_UNEXPECTED_VALUE_TYPE, internal = false)
+    scalar.bytesValue() ?: errNoContext("Expected byte array: $this", errorCode = ErrorCode.EVALUATOR_UNEXPECTED_VALUE_TYPE, internal = false)
 
 internal fun ExprValue.dateTimePartValue(): DateTimePart =
     try {

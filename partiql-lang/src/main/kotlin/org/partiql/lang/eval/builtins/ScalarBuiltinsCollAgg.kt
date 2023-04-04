@@ -19,8 +19,10 @@ import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.createUniqueExprValueFilter
 import org.partiql.lang.eval.physical.operators.Accumulator
+import org.partiql.lang.eval.physical.operators.AccumulatorAnySome
 import org.partiql.lang.eval.physical.operators.AccumulatorAvg
 import org.partiql.lang.eval.physical.operators.AccumulatorCount
+import org.partiql.lang.eval.physical.operators.AccumulatorEvery
 import org.partiql.lang.eval.physical.operators.AccumulatorMax
 import org.partiql.lang.eval.physical.operators.AccumulatorMin
 import org.partiql.lang.eval.physical.operators.AccumulatorSum
@@ -37,7 +39,10 @@ internal val SCALAR_BUILTINS_COLL_AGG = listOf(
     ExprFunctionCollMin,
     ExprFunctionCollAvg,
     ExprFunctionCollSum,
-    ExprFunctionCollCount
+    ExprFunctionCollCount,
+    ExprFunctionCollEvery,
+    ExprFunctionCollAny,
+    ExprFunctionCollSome,
 )
 
 /**
@@ -125,4 +130,19 @@ internal object ExprFunctionCollSum : CollectionAggregationFunction(
 internal object ExprFunctionCollCount : CollectionAggregationFunction(
     name = "count",
     accumulator = ::AccumulatorCount
+)
+
+internal object ExprFunctionCollEvery : CollectionAggregationFunction(
+    name = "every",
+    accumulator = ::AccumulatorEvery
+)
+
+internal object ExprFunctionCollAny : CollectionAggregationFunction(
+    name = "any",
+    accumulator = ::AccumulatorAnySome
+)
+
+internal object ExprFunctionCollSome : CollectionAggregationFunction(
+    name = "some",
+    accumulator = ::AccumulatorAnySome
 )

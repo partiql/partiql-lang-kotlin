@@ -218,6 +218,16 @@ internal class EvaluatingCompiler(
                 }
             }
 
+            fun checkIsBooleanType(funcName: String, value: ExprValue) {
+                if (value.type != ExprValueType.BOOL) {
+                    errNoContext(
+                        message = "Aggregate function $funcName expects arguments of BOOL type but the following value was provided: $value, with type of ${value.type}",
+                        errorCode = ErrorCode.EVALUATOR_INVALID_ARGUMENTS_FOR_AGG_FUNCTION,
+                        internal = false
+                    )
+                }
+            }
+
             val countAccFunc: (ExprValue?, ExprValue) -> ExprValue = { accumulated, _ -> (accumulated!!.longValue() + 1L).exprValue() }
             val sumAccFunc: (ExprValue?, ExprValue) -> ExprValue = { accumulated, nextItem ->
                 checkIsNumberType("SUM", nextItem)
@@ -242,6 +252,14 @@ internal class EvaluatingCompiler(
                         sum?.let { (it / bigDecimalOf(count)).exprValue() }
                             ?: ExprValue.nullValue
                 }
+            }
+            val everyAccFunc: (ExprValue?, ExprValue) -> ExprValue = { accumulated, nextItem ->
+                checkIsBooleanType("EVERY", nextItem)
+                accumulated?.let { ExprValue.newBoolean(it.booleanValue() && nextItem.booleanValue()) } ?: nextItem
+            }
+            val anySomeAccFunc: (ExprValue?, ExprValue) -> ExprValue = { accumulated, nextItem ->
+                checkIsBooleanType("ANY/SOME", nextItem)
+                accumulated?.let { ExprValue.newBoolean(it.booleanValue() || nextItem.booleanValue()) } ?: nextItem
             }
             val allFilter: (ExprValue) -> Boolean = { _ -> true }
             // each distinct ExprAggregator must get its own createUniqueExprValueFilter()
@@ -284,7 +302,31 @@ internal class EvaluatingCompiler(
 
                 Pair("min", PartiqlAst.SetQuantifier.Distinct()) to ExprAggregatorFactory.over {
                     Accumulator(null, minAccFunc, createUniqueExprValueFilter())
-                }
+                },
+
+                Pair("every", PartiqlAst.SetQuantifier.All()) to ExprAggregatorFactory.over {
+                    Accumulator(null, everyAccFunc, allFilter)
+                },
+
+                Pair("every", PartiqlAst.SetQuantifier.Distinct()) to ExprAggregatorFactory.over {
+                    Accumulator(null, everyAccFunc, createUniqueExprValueFilter())
+                },
+
+                Pair("any", PartiqlAst.SetQuantifier.All()) to ExprAggregatorFactory.over {
+                    Accumulator(null, anySomeAccFunc, allFilter)
+                },
+
+                Pair("any", PartiqlAst.SetQuantifier.Distinct()) to ExprAggregatorFactory.over {
+                    Accumulator(null, anySomeAccFunc, createUniqueExprValueFilter())
+                },
+
+                Pair("some", PartiqlAst.SetQuantifier.All()) to ExprAggregatorFactory.over {
+                    Accumulator(null, anySomeAccFunc, allFilter)
+                },
+
+                Pair("some", PartiqlAst.SetQuantifier.Distinct()) to ExprAggregatorFactory.over {
+                    Accumulator(null, anySomeAccFunc, createUniqueExprValueFilter())
+                },
             )
         }
 
@@ -2207,7 +2249,7 @@ internal class EvaluatingCompiler(
         val key = funcName.toLowerCase() to setQuantifier
 
         return builtinAggregates[key] ?: err(
-            "No such function: $funcName",
+            "No such built-in aggregate function: $funcName",
             ErrorCode.EVALUATOR_NO_SUCH_FUNCTION,
             errorContextFrom(metas).also { it[Property.FUNCTION_NAME] = funcName },
             internal = false
