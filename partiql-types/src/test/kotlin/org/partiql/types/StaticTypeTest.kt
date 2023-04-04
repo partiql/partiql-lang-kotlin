@@ -6,7 +6,7 @@ import kotlin.test.assertEquals
 
 class StaticTypeTest {
     @Test
-    fun bagWithConstraintInitTest() {
+    fun collectionWithConstraintInitTest() {
         val struct = StructType(
             fields = mapOf(
                 "a" to StaticType.STRING,
@@ -39,10 +39,12 @@ class StaticTypeTest {
         types.forEach {
             assertEquals(it.elementType.toString(), "struct(a: string, [Open(value=false), UniqueAttrs(value=false)])")
         }
-    }
 
-    @Test
-    fun bagWithErroneousConstraintInitTest() {
+        assertEquals(
+            BagType(elementType = StaticType.INT, metas = mapOf(), constraints = setOf()).toString(),
+            "bag(int)"
+        )
+
         assertThrows<UnsupportedTypeConstraint> {
             BagType(
                 StaticType.INT,

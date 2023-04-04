@@ -32,7 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   but brings it in conformance with the specification.
 - Added `partiql-plan` package which contains experimental PartiQL Plan data structures.
 - Initializes SPI Framework under `partiql-spi`.
-- Model experimental `Schema` with constraints.
+- Models experimental `Schema` with constraints.
   With this change, we're introducing `Tuple` and `Collection` constraints to be able to model the shape of data as 
   constraints.
 
