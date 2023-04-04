@@ -545,7 +545,7 @@ sealed class NumberConstraint {
 }
 
 /**
- * Represents Tuple constraints this is still; experimental
+ * Represents Tuple constraints; this is still experimental.
  * and subject to change upon finalization of the following:
  * - https://github.com/partiql/partiql-spec/issues/49
  * - https://github.com/partiql/partiql-docs/issues/37
@@ -555,10 +555,13 @@ sealed class TupleConstraint {
     data class Open(val value: Boolean) : TupleConstraint()
 }
 
+/**
+ * An Interface for constraints that are only applicable to collection of tuples, e.g. `PrimaryKey`.
+ */
 interface TupleCollectionConstraint
 
 /**
- * Represents Tuple constraints this is still; experimental
+ * Represents Collection constraints; this is still experimental.
  * and subject to change upon finalization of the following:
  * - https://github.com/partiql/partiql-spec/issues/49
  * - https://github.com/partiql/partiql-docs/issues/37

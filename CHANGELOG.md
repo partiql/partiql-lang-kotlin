@@ -32,7 +32,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   but brings it in conformance with the specification.
 - Added `partiql-plan` package which contains experimental PartiQL Plan data structures.
 - Initializes SPI Framework under `partiql-spi`.
-- Added an experimental `SchemaType` and `Tuple` constraint.
+- Model experimental `Schema` with constraints.
+  With this change, we're introducing `Tuple` and `Collection` constraints to be able to model the shape of data as 
+  constraints.
 
 ### Changed
 - Deprecates the project level opt-in annotation `PartiQLExperimental` and split it into feature level. `ExperimentalPartiQLCompilerPipeline` and `ExperimentalWindowFunctions`.
