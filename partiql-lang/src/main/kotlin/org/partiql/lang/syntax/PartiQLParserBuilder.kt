@@ -14,8 +14,6 @@
 
 package org.partiql.lang.syntax
 
-import com.amazon.ion.IonSystem
-import com.amazon.ion.system.IonSystemBuilder
 import org.partiql.lang.types.CustomType
 
 /**
@@ -26,32 +24,25 @@ import org.partiql.lang.types.CustomType
  * ```
  * val parser = PartiQLParserBuilder.standard().build()
  * val parser = PartiQLParserBuilder.standard().customTypes(types).build()
- * val parser = PartiQLParserBuilder().ionSystem(ion).customTypes().build()
  * ```
  */
 class PartiQLParserBuilder {
 
     companion object {
-        private val DEFAULT_ION = IonSystemBuilder.standard().build()
 
         @JvmStatic
         fun standard(): PartiQLParserBuilder {
-            return PartiQLParserBuilder().ionSystem(DEFAULT_ION)
+            return PartiQLParserBuilder()
         }
     }
 
-    private var ion: IonSystem = DEFAULT_ION
     private var customTypes: List<CustomType> = emptyList()
-
-    fun ionSystem(ion: IonSystem): PartiQLParserBuilder = this.apply {
-        this.ion = ion
-    }
 
     fun customTypes(types: List<CustomType>): PartiQLParserBuilder = this.apply {
         this.customTypes = types
     }
 
     fun build(): Parser {
-        return PartiQLParser(this.ion, this.customTypes)
+        return PartiQLParser(this.customTypes)
     }
 }

@@ -1,6 +1,5 @@
 package org.partiql.examples
 
-import com.amazon.ion.system.IonSystemBuilder
 import org.partiql.examples.util.Example
 import org.partiql.lang.errors.Property
 import org.partiql.lang.syntax.Parser
@@ -9,15 +8,12 @@ import org.partiql.lang.syntax.PartiQLParserBuilder
 import java.io.PrintStream
 
 /**
- * Demonstrates the use of [Parser], [AstSerializer] and [AstDeserializer].
+ * Demonstrates the use of [Parser].
  */
 class ParserErrorExample(out: PrintStream) : Example(out) {
 
-    /** A standard instance of [IonSystem], which is required by [Parser].  */
-    internal var ion = IonSystemBuilder.standard().build()
-
     /** An instance of [Parser].  */
-    private var parser: Parser = PartiQLParserBuilder().ionSystem(ion).build()
+    private var parser: Parser = PartiQLParserBuilder().build()
 
     /** Demonstrates handling of syntax errors.  */
     override fun run() = try {

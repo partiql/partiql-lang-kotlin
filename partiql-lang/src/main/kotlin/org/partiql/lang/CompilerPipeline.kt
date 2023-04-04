@@ -264,7 +264,7 @@ interface CompilerPipeline {
 
             return CompilerPipelineImpl(
                 ion = ion,
-                parser = parser ?: PartiQLParserBuilder().ionSystem(ion).customTypes(customDataTypes).build(),
+                parser = parser ?: PartiQLParserBuilder().customTypes(customDataTypes).build(),
                 compileOptions = compileOptionsToUse,
                 functions = allFunctions,
                 customDataTypes = customDataTypes,

@@ -1,6 +1,5 @@
 package org.partiql.lang.prettyprint
 
-import com.amazon.ion.system.IonSystemBuilder
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.syntax.PartiQLParserBuilder
 import org.partiql.pig.runtime.SymbolPrimitive
@@ -37,9 +36,7 @@ class ASTPrettyPrinter {
      * @return formatted string corresponding to the input AST.
      */
     fun prettyPrintAST(query: String): String {
-        val ion = IonSystemBuilder.standard().build()
-        val ast = PartiQLParserBuilder().ionSystem(ion).build().parseAstStatement(query)
-
+        val ast = PartiQLParserBuilder().build().parseAstStatement(query)
         return prettyPrintAST(ast)
     }
 

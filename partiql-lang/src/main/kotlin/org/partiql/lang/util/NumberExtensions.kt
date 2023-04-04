@@ -126,6 +126,11 @@ internal fun Number.exprValue(): ExprValue = when (this) {
     )
 }
 
+operator fun Decimal.unaryMinus(): Decimal = when {
+    isZero() -> Decimal.negativeZero(this.scale())
+    else -> Decimal.valueOf(negate())
+}
+
 operator fun Number.unaryMinus(): Number {
     return when (this) {
         // - LONG.MIN_VALUE will result in LONG.MIN_VALUE in JVM because LONG is a signed two's-complement integers
@@ -259,20 +264,23 @@ operator fun Number.compareTo(other: Number): Int {
     }
 }
 
-val Number.isNaN get() = when (this) {
-    is Double -> isNaN()
-    else -> false
-}
+val Number.isNaN
+    get() = when (this) {
+        is Double -> isNaN()
+        else -> false
+    }
 
-val Number.isNegInf get() = when (this) {
-    is Double -> isInfinite() && this < 0
-    else -> false
-}
+val Number.isNegInf
+    get() = when (this) {
+        is Double -> isInfinite() && this < 0
+        else -> false
+    }
 
-val Number.isPosInf get() = when (this) {
-    is Double -> isInfinite() && this > 0
-    else -> false
-}
+val Number.isPosInf
+    get() = when (this) {
+        is Double -> isInfinite() && this > 0
+        else -> false
+    }
 
 /**
  * Returns the given BigDecimal with precision equals to mathContext.precision.

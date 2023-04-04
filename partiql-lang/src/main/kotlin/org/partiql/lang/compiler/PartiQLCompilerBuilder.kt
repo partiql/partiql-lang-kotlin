@@ -14,7 +14,6 @@
 
 package org.partiql.lang.compiler
 
-import com.amazon.ion.IonSystem
 import org.partiql.annotations.ExperimentalPartiQLCompilerPipeline
 import org.partiql.annotations.ExperimentalWindowFunctions
 import org.partiql.lang.eval.ExprFunction
@@ -111,11 +110,6 @@ class PartiQLCompilerBuilder private constructor() {
             ),
             operatorFactories = allOperatorFactories()
         )
-    }
-
-    @Deprecated("An IonSystem is no longer needed to construct a PartiQLCompiler. Do not use this setter.")
-    @Suppress("UNUSED_PARAMETER")
-    fun ionSystem(ion: IonSystem): PartiQLCompilerBuilder = this.apply {
     }
 
     fun options(options: EvaluatorOptions) = this.apply {

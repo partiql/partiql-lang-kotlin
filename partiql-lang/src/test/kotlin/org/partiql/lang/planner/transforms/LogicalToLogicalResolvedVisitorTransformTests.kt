@@ -1,6 +1,5 @@
 package org.partiql.lang.planner.transforms
 
-import com.amazon.ion.system.IonSystemBuilder
 import com.amazon.ionelement.api.ionSymbol
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.assertDoesNotThrow
@@ -106,8 +105,7 @@ class LogicalToLogicalResolvedVisitorTransformTests {
         }.toTypedArray()
     )
 
-    private val ion = IonSystemBuilder.standard().build()
-    private val parser = PartiQLParser(ion)
+    private val parser = PartiQLParser()
 
     private fun runTestCase(tc: TestCase) {
         val problemHandler = ProblemCollector()

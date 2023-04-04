@@ -78,7 +78,7 @@ internal sealed class AbstractPipeline(open val options: PipelineOptions) {
                 WriteFile(ion),
                 QueryDDB(ion)
             )
-            val parser = PartiQLParserBuilder().ionSystem(ion).build()
+            val parser = PartiQLParserBuilder().build()
             return PipelineOptions(
                 pipeline,
                 ion,

@@ -14,25 +14,25 @@
 
 package org.partiql.lang.syntax
 
-import com.amazon.ion.IntegerSize
-import com.amazon.ion.IonException
-import com.amazon.ion.IonInt
-import com.amazon.ion.IonSystem
-import com.amazon.ion.IonValue
+import com.amazon.ion.Decimal
 import com.amazon.ionelement.api.DecimalElement
 import com.amazon.ionelement.api.FloatElement
 import com.amazon.ionelement.api.IntElement
+import com.amazon.ionelement.api.IntElementSize
+import com.amazon.ionelement.api.IonElement
+import com.amazon.ionelement.api.IonElementException
 import com.amazon.ionelement.api.MetaContainer
 import com.amazon.ionelement.api.StringElement
 import com.amazon.ionelement.api.SymbolElement
 import com.amazon.ionelement.api.emptyMetaContainer
 import com.amazon.ionelement.api.ionBool
+import com.amazon.ionelement.api.ionDecimal
+import com.amazon.ionelement.api.ionFloat
 import com.amazon.ionelement.api.ionInt
 import com.amazon.ionelement.api.ionNull
 import com.amazon.ionelement.api.ionString
 import com.amazon.ionelement.api.ionSymbol
-import com.amazon.ionelement.api.toIonElement
-import com.amazon.ionelement.api.toIonValue
+import com.amazon.ionelement.api.loadSingleElement
 import org.antlr.v4.runtime.ParserRuleContext
 import org.antlr.v4.runtime.Token
 import org.antlr.v4.runtime.tree.ErrorNode
@@ -61,8 +61,6 @@ import org.partiql.lang.util.bigDecimalOf
 import org.partiql.lang.util.checkThreadInterrupted
 import org.partiql.lang.util.error
 import org.partiql.lang.util.getPrecisionFromTimeString
-import org.partiql.lang.util.ionValue
-import org.partiql.lang.util.numberValue
 import org.partiql.lang.util.unaryMinus
 import org.partiql.pig.runtime.SymbolPrimitive
 import java.lang.IllegalArgumentException
@@ -79,7 +77,7 @@ import kotlin.reflect.cast
  * Extends ANTLR's generated [PartiQLBaseVisitor] to visit an ANTLR ParseTree and convert it into a PartiQL AST. This
  * class uses the [PartiqlAst.PartiqlAstNode] to represent all nodes within the new AST.
  */
-internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomType> = listOf(), private val parameterIndexes: Map<Int, Int> = mapOf()) :
+internal class PartiQLVisitor(val customTypes: List<CustomType> = listOf(), private val parameterIndexes: Map<Int, Int> = mapOf()) :
     PartiQLBaseVisitor<PartiqlAst.PartiqlAstNode>() {
 
     private val customKeywords = customTypes.map { it.name.toLowerCase() }
@@ -1102,7 +1100,7 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
         if (!DATE_TIME_PART_KEYWORDS.contains(ctx.dt.text.toLowerCase())) {
             throw ctx.dt.err("Expected one of: $DATE_TIME_PART_KEYWORDS", ErrorCode.PARSE_EXPECTED_DATE_TIME_PART)
         }
-        val datetimePart = lit(ion.newSymbol(ctx.dt.text).toIonElement())
+        val datetimePart = lit(ionSymbol(ctx.dt.text))
         val secondaryArgs = visitOrEmpty(ctx.expr(), PartiqlAst.Expr::class)
         val args = listOf(datetimePart) + secondaryArgs
         val metas = ctx.func.getSourceMetaContainer()
@@ -1140,7 +1138,7 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
         if (!DATE_TIME_PART_KEYWORDS.contains(ctx.IDENTIFIER().text.toLowerCase())) {
             throw ctx.IDENTIFIER().err("Expected one of: $DATE_TIME_PART_KEYWORDS", ErrorCode.PARSE_EXPECTED_DATE_TIME_PART)
         }
-        val datetimePart = lit(ion.newSymbol(ctx.IDENTIFIER().text).toIonElement())
+        val datetimePart = lit(ionSymbol(ctx.IDENTIFIER().text))
         val timeExpr = visit(ctx.rhs, PartiqlAst.Expr::class)
         val args = listOf(datetimePart, timeExpr)
         val metas = ctx.EXTRACT().getSourceMetaContainer()
@@ -1250,7 +1248,7 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
 
     override fun visitLiteralDecimal(ctx: PartiQLParser.LiteralDecimalContext) = PartiqlAst.build {
         val decimal = try {
-            ion.newDecimal(bigDecimalOf(ctx.LITERAL_DECIMAL().text)).toIonElement()
+            ionDecimal(Decimal.valueOf(bigDecimalOf(ctx.LITERAL_DECIMAL().text)))
         } catch (e: NumberFormatException) {
             val errorContext = PropertyValueMap()
             errorContext[Property.TOKEN_STRING] = ctx.LITERAL_DECIMAL().text
@@ -1285,8 +1283,8 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
 
     override fun visitLiteralIon(ctx: PartiQLParser.LiteralIonContext) = PartiqlAst.build {
         val ionValue = try {
-            ion.singleValue(ctx.ION_CLOSURE().getStringValue()).toIonElement()
-        } catch (e: IonException) {
+            loadSingleElement(ctx.ION_CLOSURE().getStringValue())
+        } catch (e: IonElementException) {
             throw ParserException("Unable to parse Ion value.", ErrorCode.PARSE_UNEXPECTED_TOKEN, cause = e)
         }
         lit(
@@ -1300,7 +1298,7 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
     }
 
     override fun visitLiteralInteger(ctx: PartiQLParser.LiteralIntegerContext): PartiqlAst.Expr.Lit = PartiqlAst.build {
-        lit(ion.newInt(BigInteger(ctx.LITERAL_INTEGER().text, 10)).toIonElement(), ctx.LITERAL_INTEGER().getSourceMetaContainer())
+        lit(parseToIntElement(ctx.LITERAL_INTEGER().text), ctx.LITERAL_INTEGER().getSourceMetaContainer())
     }
 
     override fun visitLiteralDate(ctx: PartiQLParser.LiteralDateContext) = PartiqlAst.build {
@@ -1383,33 +1381,33 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
     }
 
     override fun visitTypeVarChar(ctx: PartiQLParser.TypeVarCharContext) = PartiqlAst.build {
-        val arg0 = if (ctx.arg0 != null) ion.newInt(BigInteger(ctx.arg0.text, 10)) else null
+        val arg0 = if (ctx.arg0 != null) parseToIntElement(ctx.arg0.text) else null
         val metas = ctx.CHARACTER().getSourceMetaContainer()
-        assertIntegerValue(ctx.arg0, arg0)
-        characterVaryingType(arg0?.longValue(), metas)
+        assertIntegerElement(ctx.arg0, arg0)
+        characterVaryingType(arg0?.longValue, metas)
     }
 
     override fun visitTypeArgSingle(ctx: PartiQLParser.TypeArgSingleContext) = PartiqlAst.build {
-        val arg0 = if (ctx.arg0 != null) ion.newInt(BigInteger(ctx.arg0.text, 10)) else null
-        assertIntegerValue(ctx.arg0, arg0)
+        val arg0 = if (ctx.arg0 != null) parseToIntElement(ctx.arg0.text) else null
+        assertIntegerElement(ctx.arg0, arg0)
         val metas = ctx.datatype.getSourceMetaContainer()
         when (ctx.datatype.type) {
-            PartiQLParser.FLOAT -> floatType(arg0?.longValue(), metas)
-            PartiQLParser.CHAR, PartiQLParser.CHARACTER -> characterType(arg0?.longValue(), metas)
-            PartiQLParser.VARCHAR -> characterVaryingType(arg0?.longValue(), metas)
+            PartiQLParser.FLOAT -> floatType(arg0?.longValue, metas)
+            PartiQLParser.CHAR, PartiQLParser.CHARACTER -> characterType(arg0?.longValue, metas)
+            PartiQLParser.VARCHAR -> characterVaryingType(arg0?.longValue, metas)
             else -> throw ParserException("Unknown datatype", ErrorCode.PARSE_UNEXPECTED_TOKEN, PropertyValueMap())
         }
     }
 
     override fun visitTypeArgDouble(ctx: PartiQLParser.TypeArgDoubleContext) = PartiqlAst.build {
-        val arg0 = if (ctx.arg0 != null) ion.newInt(BigInteger(ctx.arg0.text, 10)) else null
-        val arg1 = if (ctx.arg1 != null) ion.newInt(BigInteger(ctx.arg1.text, 10)) else null
-        assertIntegerValue(ctx.arg0, arg0)
-        assertIntegerValue(ctx.arg1, arg1)
+        val arg0 = if (ctx.arg0 != null) parseToIntElement(ctx.arg0.text) else null
+        val arg1 = if (ctx.arg1 != null) parseToIntElement(ctx.arg1.text) else null
+        assertIntegerElement(ctx.arg0, arg0)
+        assertIntegerElement(ctx.arg1, arg1)
         val metas = ctx.datatype.getSourceMetaContainer()
         when (ctx.datatype.type) {
-            PartiQLParser.DECIMAL, PartiQLParser.DEC -> decimalType(arg0?.longValue(), arg1?.longValue(), metas)
-            PartiQLParser.NUMERIC -> numericType(arg0?.longValue(), arg1?.longValue(), metas)
+            PartiQLParser.DECIMAL, PartiQLParser.DEC -> decimalType(arg0?.longValue, arg1?.longValue, metas)
+            PartiQLParser.NUMERIC -> numericType(arg0?.longValue, arg1?.longValue, metas)
             else -> throw ParserException("Unknown datatype", ErrorCode.PARSE_UNEXPECTED_TOKEN, PropertyValueMap())
         }
     }
@@ -1534,11 +1532,17 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
                 when {
                     arg !is PartiqlAst.Expr.Lit -> neg(arg, metas)
                     arg.value is IntElement -> {
-                        val newInt = try { -arg.value.longValue } catch (e: Error) { arg.value.bigIntegerValue * BigInteger.valueOf(-1L) }
-                        arg.copy(value = ion.newInt(newInt).toIonElement())
+                        val intValue = when (arg.value.integerSize) {
+                            IntElementSize.LONG -> ionInt(-arg.value.longValue)
+                            IntElementSize.BIG_INTEGER -> when (arg.value.bigIntegerValue) {
+                                Long.MAX_VALUE.toBigInteger() + (1L).toBigInteger() -> ionInt(Long.MIN_VALUE)
+                                else -> ionInt(arg.value.bigIntegerValue * BigInteger.valueOf(-1L))
+                            }
+                        }
+                        arg.copy(value = intValue.asAnyElement())
                     }
-                    arg.value is FloatElement -> arg.copy(value = (-(arg.value.toIonValue(ion).numberValue())).ionValue(ion).toIonElement())
-                    arg.value is DecimalElement -> arg.copy(value = (-(arg.value.toIonValue(ion).numberValue())).ionValue(ion).toIonElement())
+                    arg.value is FloatElement -> arg.copy(value = ionFloat(-(arg.value.doubleValue)).asAnyElement())
+                    arg.value is DecimalElement -> arg.copy(value = ionDecimal(-(arg.value.decimalValue)).asAnyElement())
                     else -> neg(arg, metas)
                 }
             }
@@ -1790,12 +1794,19 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
         }
     }
 
-    private fun assertIntegerValue(token: Token?, ionValue: IonValue?) {
-        if (ionValue == null)
+    private fun parseToIntElement(text: String): IntElement =
+        try {
+            ionInt(text.toLong())
+        } catch (e: NumberFormatException) {
+            ionInt(text.toBigInteger())
+        }
+
+    private fun assertIntegerElement(token: Token?, value: IonElement?) {
+        if (value == null)
             return
-        if (ionValue !is IonInt)
+        if (value !is IntElement)
             throw token.err("Expected an integer value.", ErrorCode.PARSE_MALFORMED_PARSE_TREE)
-        if (ionValue.integerSize == IntegerSize.LONG || ionValue.integerSize == IntegerSize.BIG_INTEGER)
+        if (value.integerSize == IntElementSize.BIG_INTEGER || value.longValue > Int.MAX_VALUE || value.longValue < Int.MIN_VALUE)
             throw token.err("Type parameter exceeded maximum value", ErrorCode.PARSE_TYPE_PARAMETER_EXCEEDED_MAXIMUM_VALUE)
     }
 
@@ -1809,6 +1820,6 @@ internal class PartiQLVisitor(val ion: IonSystem, val customTypes: List<CustomTy
         }
     }
 
-    private fun TerminalNode?.err(msg: String, code: ErrorCode, ctx: PropertyValueMap = PropertyValueMap(), cause: Throwable? = null) = this.error(msg, code, ctx, cause, ion)
-    private fun Token?.err(msg: String, code: ErrorCode, ctx: PropertyValueMap = PropertyValueMap(), cause: Throwable? = null) = this.error(msg, code, ctx, cause, ion)
+    private fun TerminalNode?.err(msg: String, code: ErrorCode, ctx: PropertyValueMap = PropertyValueMap(), cause: Throwable? = null) = this.error(msg, code, ctx, cause)
+    private fun Token?.err(msg: String, code: ErrorCode, ctx: PropertyValueMap = PropertyValueMap(), cause: Throwable? = null) = this.error(msg, code, ctx, cause)
 }

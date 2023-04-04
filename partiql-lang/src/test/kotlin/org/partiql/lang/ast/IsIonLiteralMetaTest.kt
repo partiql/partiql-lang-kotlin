@@ -14,7 +14,6 @@ package org.partiql.lang.ast
  *  language governing permissions and limitations under the License.
  */
 
-import com.amazon.ion.system.IonSystemBuilder
 import org.junit.Assert
 import org.junit.Test
 import org.partiql.lang.syntax.PartiQLParser
@@ -23,8 +22,7 @@ class IsIonLiteralMetaTest {
 
     @Test
     fun testIonLiteralMetaPreserved() {
-        val ion = IonSystemBuilder.standard().build()
-        val ionLiteral = PartiQLParser(ion).parseAstStatement("`1.0`")
+        val ionLiteral = PartiQLParser().parseAstStatement("`1.0`")
         Assert.assertTrue(ionLiteral.metas.hasMeta(IsIonLiteralMeta.TAG))
     }
 }
