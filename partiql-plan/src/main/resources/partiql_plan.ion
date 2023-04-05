@@ -16,7 +16,7 @@ parti_q_l_plan::{
 
 // Grouping of common fields without implications of interfaces or inheritance
 common::{
-  schema: list::[attribute],
+  type_env: list::[attribute],
   properties: set::[property],
   metas: map::[string,any],
 }

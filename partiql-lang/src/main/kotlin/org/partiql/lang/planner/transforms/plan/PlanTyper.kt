@@ -75,7 +75,7 @@ import org.partiql.types.SymbolType
 internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
 
     /**
-     * Given a [Rex], types the logical plan by adding the output schema to each relational operator.
+     * Given a [Rex], types the logical plan by adding the output Type Environment to each relational operator.
      *
      * Along with typing, this also validates expressions for typing issues.
      */
@@ -95,7 +95,7 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
         internal val tolerance: MinimumTolerance = MinimumTolerance.FULL,
         internal val problemHandler: ProblemHandler
     ) {
-        internal val inputSchema = input?.let { PlanUtils.getSchema(it) } ?: emptyList()
+        internal val inputTypeEnv = input?.let { PlanUtils.getTypeEnv(it) } ?: emptyList()
         internal val allFunctions = SCALAR_BUILTINS_DEFAULT.associate { it.signature.name to it.signature } + customFunctionSignatures.associateBy { it.name }
     }
 
@@ -123,7 +123,7 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
     //
 
     override fun visitRelBag(node: Rel.Bag, ctx: Context): PlanNode {
-        TODO("BAG OPERATORS are not supported by the PartiQLSchemaInferencer yet.")
+        TODO("BAG OPERATORS are not supported by the PartiQLTypeEnvInferencer yet.")
     }
 
     override fun visitRel(node: Rel, ctx: Context): Rel = super.visitRel(node, ctx) as Rel
@@ -133,7 +133,7 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
         val rhs = typeRel(node.rhs, lhs, ctx)
         val newJoin = node.copy(
             common = node.common.copy(
-                schema = lhs.getSchema() + rhs.getSchema(),
+                typeEnv = lhs.getTypeEnv() + rhs.getTypeEnv(),
             )
         )
         val predicateType = when (val condition = node.condition) {
@@ -164,20 +164,20 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
         val fromExprType = value.grabType() ?: handleMissingType(ctx)
 
         val valueType = getUnpivotValueType(fromExprType)
-        val schema = mutableListOf(Attribute(asSymbolicName, valueType))
+        val typeEnv = mutableListOf(Attribute(asSymbolicName, valueType))
 
         from.at?.let {
             val valueHasMissing = StaticTypeUtils.getTypeDomain(valueType).contains(ExprValueType.MISSING)
             val valueOnlyHasMissing = valueHasMissing && StaticTypeUtils.getTypeDomain(valueType).size == 1
             when {
                 valueOnlyHasMissing -> {
-                    schema.add(Attribute(it, StaticType.MISSING))
+                    typeEnv.add(Attribute(it, StaticType.MISSING))
                 }
                 valueHasMissing -> {
-                    schema.add(Attribute(it, StaticType.STRING.asOptional()))
+                    typeEnv.add(Attribute(it, StaticType.STRING.asOptional()))
                 }
                 else -> {
-                    schema.add(Attribute(it, StaticType.STRING))
+                    typeEnv.add(Attribute(it, StaticType.STRING))
                 }
             }
         }
@@ -186,7 +186,7 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
 
         return from.copy(
             common = from.common.copy(
-                schema = schema
+                typeEnv = typeEnv
             ),
             value = value
         )
@@ -200,7 +200,7 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
             calls = calls,
             groups = groups,
             common = node.common.copy(
-                schema = groups.toAttributes(ctx) + calls.toAttributes(ctx)
+                typeEnv = groups.toAttributes(ctx) + calls.toAttributes(ctx)
             )
         )
     }
@@ -211,7 +211,7 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
         if (distinct.size != node.bindings.size) {
             handleDuplicateAliasesError(ctx)
         }
-        val schema = node.bindings.flatMap { binding ->
+        val typeEnv = node.bindings.flatMap { binding ->
             val type = inferType(binding.value, input, ctx)
             when (binding.value.isProjectAll()) {
                 true -> {
@@ -229,7 +229,7 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
         return node.copy(
             input = input,
             common = node.common.copy(
-                schema = schema
+                typeEnv = typeEnv
             )
         )
     }
@@ -258,21 +258,21 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
             is Rex.Query.Collection -> when (value.constructor) {
                 null -> value.rel
                 else -> {
-                    val schema = listOf(Attribute(asSymbolicName, sourceType))
+                    val typeEnv = listOf(Attribute(asSymbolicName, sourceType))
                     node.copy(
                         value = value,
                         common = node.common.copy(
-                            schema = schema
+                            typeEnv = typeEnv
                         )
                     )
                 }
             }
             else -> {
-                val schema = listOf(Attribute(asSymbolicName, sourceType))
+                val typeEnv = listOf(Attribute(asSymbolicName, sourceType))
                 node.copy(
                     value = value,
                     common = node.common.copy(
-                        schema = schema
+                        typeEnv = typeEnv
                     )
                 )
             }
@@ -287,7 +287,7 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
             condition = condition,
             input = input,
             common = node.common.copy(
-                schema = input.getSchema(),
+                typeEnv = input.getTypeEnv(),
                 properties = input.getProperties()
             )
         )
@@ -298,7 +298,7 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
         return node.copy(
             input = input,
             common = node.common.copy(
-                schema = input.getSchema(),
+                typeEnv = input.getTypeEnv(),
                 properties = setOf(Property.ORDERED)
             )
         )
@@ -313,7 +313,7 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
         return node.copy(
             input = input,
             common = node.common.copy(
-                schema = input.getSchema(),
+                typeEnv = input.getTypeEnv(),
                 properties = input.getProperties()
             ),
             limit = limit,
@@ -951,7 +951,7 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
             else -> fromSourceType
         }
 
-    private fun Rel.getSchema() = this.getCommon().schema
+    private fun Rel.getTypeEnv() = PlanUtils.getTypeEnv(this)
 
     private fun Rel.getProperties() = this.getCommon().properties
 
@@ -1546,11 +1546,11 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
         }
         return when (scopingOrder) {
             ScopingOrder.GLOBALS_THEN_LEXICAL -> ReferenceResolver.resolveGlobalBind(path, ctx)
-                ?: ReferenceResolver.resolveLocalBind(path, ctx.inputSchema)
+                ?: ReferenceResolver.resolveLocalBind(path, ctx.inputTypeEnv)
                 ?: handleUnresolvedDescriptor(path.steps.last(), ctx) {
                     ReferenceResolver.ResolvedDescriptor(TypeDescriptor(StaticType.ANY))
                 }
-            ScopingOrder.LEXICAL_THEN_GLOBALS -> ReferenceResolver.resolveLocalBind(path, ctx.inputSchema)
+            ScopingOrder.LEXICAL_THEN_GLOBALS -> ReferenceResolver.resolveLocalBind(path, ctx.inputTypeEnv)
                 ?: ReferenceResolver.resolveGlobalBind(path, ctx)
                 ?: handleUnresolvedDescriptor(path.steps.last(), ctx) {
                     ReferenceResolver.ResolvedDescriptor(TypeDescriptor(StaticType.ANY))
