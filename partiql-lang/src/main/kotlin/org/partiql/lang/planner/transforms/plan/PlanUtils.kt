@@ -20,16 +20,16 @@ import org.partiql.plan.Rex
 import org.partiql.types.StaticType
 
 internal object PlanUtils {
-    internal fun getSchema(input: Rel): List<Attribute> = when (input) {
-        is Rel.Project -> input.common.schema
-        is Rel.Aggregate -> input.common.schema
-        is Rel.Bag -> input.common.schema
-        is Rel.Fetch -> input.common.schema
-        is Rel.Filter -> input.common.schema
-        is Rel.Join -> input.common.schema
-        is Rel.Scan -> input.common.schema
-        is Rel.Sort -> input.common.schema
-        is Rel.Unpivot -> input.common.schema
+    internal fun getTypeEnv(input: Rel): List<Attribute> = when (input) {
+        is Rel.Project -> input.common.typeEnv
+        is Rel.Aggregate -> input.common.typeEnv
+        is Rel.Bag -> input.common.typeEnv
+        is Rel.Fetch -> input.common.typeEnv
+        is Rel.Filter -> input.common.typeEnv
+        is Rel.Join -> input.common.typeEnv
+        is Rel.Scan -> input.common.typeEnv
+        is Rel.Sort -> input.common.typeEnv
+        is Rel.Unpivot -> input.common.typeEnv
     }
 
     internal fun Rex.addType(type: StaticType): Rex = when (this) {

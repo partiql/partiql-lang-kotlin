@@ -175,7 +175,7 @@ public object PartiQLSchemaInferencer {
         is Rex.Path -> ValueDescriptor.TypeDescriptor(rex.type!!)
         is Rex.Query.Collection -> when (rex.constructor) {
             null -> {
-                val attrs = PlanUtils.getSchema(rex.rel).map { attr -> ColumnMetadata(attr.name, attr.type) }
+                val attrs = PlanUtils.getTypeEnv(rex.rel).map { attr -> ColumnMetadata(attr.name, attr.type) }
                 TableDescriptor(
                     name = DEFAULT_TABLE_NAME,
                     attributes = attrs
