@@ -34,7 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Initializes SPI Framework under `partiql-spi`.
 - Introduces the PartiQLSchemaInferencer and PlannerSession
   - The PlannerSession describes the current session and is used by the PartiQLSchemaInferencer.
-  - The PartiQLSchemaInferencer provides a function, `infer`, to aid in inferring the output ValueDescriptor of a
+  - The PartiQLSchemaInferencer provides a function, `infer`, to aid in inferring the output `Schema` of a
   PartiQL Query. See the KDoc for more information and examples.
 
 ### Changed
