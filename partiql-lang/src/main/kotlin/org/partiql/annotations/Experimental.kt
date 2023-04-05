@@ -24,3 +24,6 @@ annotation class ExperimentalPartiQLCompilerPipeline
 // TODO: Remove from experimental once https://github.com/partiql/partiql-docs/issues/31 is resolved and a RFC is approved
 @RequiresOptIn(message = "Window Function is experimental. It may be changed in the future without notice.", level = RequiresOptIn.Level.ERROR)
 annotation class ExperimentalWindowFunctions
+
+@RequiresOptIn(message = "PartiQLSchemaInferencer is experimental. It may be changed in the future without notice.", level = RequiresOptIn.Level.ERROR)
+annotation class ExperimentalPartiQLSchemaInferencer

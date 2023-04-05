@@ -19,11 +19,11 @@ import kotlin.reflect.full.primaryConstructor
  *  - Replace always false filters with empty query
  *  - Proj/Pred push down
  */
-abstract class PlanRewriter : PlanBaseVisitor<PlanNode, Unit>() {
+abstract class PlanRewriter<T> : PlanBaseVisitor<PlanNode, T>() {
 
-    override fun defaultReturn(node: PlanNode, ctx: Unit) = node
+    override fun defaultReturn(node: PlanNode, ctx: T) = node
 
-    override fun defaultVisit(node: PlanNode, ctx: Unit): PlanNode {
+    override fun defaultVisit(node: PlanNode, ctx: T): PlanNode {
         var hadChange = false
         // constructor params
         val constructor = node::class.primaryConstructor!!
@@ -33,7 +33,7 @@ abstract class PlanRewriter : PlanBaseVisitor<PlanNode, Unit>() {
             val prop = props.find { prop -> prop.name == para.name } ?: return@mapNotNull null
             var arg: Any? = prop.get(node)
             if (arg is PlanNode) {
-                val child = arg.accept(this, Unit)
+                val child = arg.accept(this, ctx)
                 if (child != arg) {
                     arg = child
                     hadChange = true
