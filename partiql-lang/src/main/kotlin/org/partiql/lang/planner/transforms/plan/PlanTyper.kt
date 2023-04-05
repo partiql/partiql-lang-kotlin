@@ -130,7 +130,7 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
 
     override fun visitRelJoin(node: Rel.Join, ctx: Context): Rel.Join {
         val lhs = visitRel(node.lhs, ctx)
-        val rhs = visitRel(node.rhs, ctx)
+        val rhs = typeRel(node.rhs, lhs, ctx)
         val newJoin = node.copy(
             common = node.common.copy(
                 schema = lhs.getSchema() + rhs.getSchema(),
@@ -159,7 +159,7 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
         val asSymbolicName = node.alias
             ?: error("Unpivot alias is null.  This wouldn't be the case if FromSourceAliasVisitorTransform was executed first.")
 
-        val value = typeRex(from.value, ctx.input, ctx)
+        val value = visitRex(from.value, ctx) as Rex
 
         val fromExprType = value.grabType() ?: handleMissingType(ctx)
 
@@ -207,6 +207,10 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
 
     override fun visitRelProject(node: Rel.Project, ctx: Context): PlanNode {
         val input = visitRel(node.input, ctx)
+        val distinct = node.bindings.map { it.name }.distinct()
+        if (distinct.size != node.bindings.size) {
+            handleDuplicateAliasesError(ctx)
+        }
         val schema = node.bindings.flatMap { binding ->
             val type = inferType(binding.value, input, ctx)
             when (binding.value.isProjectAll()) {
@@ -234,7 +238,7 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
         val value = visitRex(
             node.value,
             Context(
-                null,
+                ctx.input,
                 ctx.session,
                 ctx.metadata,
                 ScopingOrder.GLOBALS_THEN_LEXICAL,
@@ -331,7 +335,7 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
     }
 
     override fun visitRexQueryScalarSubquery(node: Rex.Query.Scalar.Subquery, ctx: Context): PlanNode {
-        val query = typeRex(node.query, ctx.input, ctx) as Rex.Query.Collection
+        val query = visitRex(node.query, ctx) as Rex.Query.Collection
         when (val queryType = query.grabType() ?: handleMissingType(ctx)) {
             is CollectionType -> queryType.elementType
             else -> error("Query collection subqueries should always return a CollectionType.")
@@ -345,7 +349,7 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
 
     override fun visitRexAgg(node: Rex.Agg, ctx: Context): PlanNode {
         val funcName = node.id
-        val args = node.args.map { typeRex(it, ctx.input, ctx) }
+        val args = node.args.map { visitRex(it, ctx) as Rex }
         // unwrap the type if this is a collectionType
         val argType = when (val type = args[0].grabType() ?: handleMissingType(ctx)) {
             is CollectionType -> type.elementType
@@ -516,10 +520,8 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
         return node.copy(type = type)
     }
 
-    override fun visitRexLit(node: Rex.Lit, ctx: Context): Rex.Lit {
-        val exprValueType = ExprValueType.fromIonType(node.value.type.toIonType())
-        return node.copy(type = StaticTypeUtils.staticTypeFromExprValueType(exprValueType))
-    }
+    // This type comes from RexConverter
+    override fun visitRexLit(node: Rex.Lit, ctx: Context): Rex.Lit = node
 
     override fun visitRexCollection(node: Rex.Collection, ctx: Context): PlanNode = super.visitRexCollection(node, ctx)
 
@@ -590,7 +592,8 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
         val valueTypes = branches.map { it.value }.map { it.grabType() ?: handleMissingType(ctx) }
 
         // keep all the `THEN` expr types even if the comparison doesn't succeed
-        val type = inferCaseWhenBranches(valueTypes, node.default?.grabType())
+        val default = node.default?.let { visitRex(it, ctx) }
+        val type = inferCaseWhenBranches(valueTypes, default?.grabType())
         return node.copy(
             match = match,
             branches = branches,
@@ -638,6 +641,12 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
         }
 
         return node.copy(type = StructType(structFields.toMap(), contentClosed = closedContent), fields = fields)
+    }
+
+    override fun visitArgValue(node: Arg.Value, ctx: Context): PlanNode {
+        return node.copy(
+            value = visitRex(node.value, ctx) as Rex
+        )
     }
 
     //
@@ -709,7 +718,7 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
         val sourceType = node.args[0].grabType() ?: handleMissingType(ctx)
         val targetType = node.args[1].grabType() ?: handleMissingType(ctx)
         val targetTypeParam = targetType.toTypedOpParameter()
-        val castOutputType = sourceType.cast(targetTypeParam.staticType).let {
+        val castOutputType = sourceType.cast(targetType).let {
             if (targetTypeParam.validationThunk == null) {
                 // There is no additional validation for this parameter, return this type as-is
                 it
@@ -731,7 +740,8 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
         var allMissing = true
         val outputTypes = mutableSetOf<StaticType>()
 
-        for (arg in node.args) {
+        val args = node.args.map { visitArg(it, ctx) }
+        for (arg in args) {
             val staticType = arg.grabType() ?: handleMissingType(ctx)
             val staticTypes = staticType.allTypes
             outputTypes += staticTypes
@@ -1632,6 +1642,21 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
         )
     }
 
+    private fun typeRel(rel: Rel, input: Rel?, ctx: Context): Rel {
+        return visitRel(
+            rel,
+            Context(
+                input,
+                ctx.session,
+                ctx.metadata,
+                ctx.scopingOrder,
+                ctx.customFunctionSignatures,
+                ctx.tolerance,
+                ctx.problemHandler
+            )
+        )
+    }
+
     private fun handleExpressionAlwaysReturnsNullOrMissingError(ctx: Context) {
         ctx.problemHandler.handleProblem(
             Problem(
@@ -1731,5 +1756,14 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
             )
         )
         return StaticType.ANY
+    }
+
+    private fun handleDuplicateAliasesError(ctx: Context) {
+        ctx.problemHandler.handleProblem(
+            Problem(
+                sourceLocation = UNKNOWN_SOURCE_LOCATION,
+                details = SemanticProblemDetails.DuplicateAliasesInSelectListItem
+            )
+        )
     }
 }
