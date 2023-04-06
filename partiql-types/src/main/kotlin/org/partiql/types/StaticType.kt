@@ -209,7 +209,6 @@ class UnsupportedTypeCheckException(message: String) : RuntimeException(message)
  */
 sealed class CollectionType : SingleType() {
     abstract val elementType: StaticType
-    abstract val constraints: Set<CollectionConstraint>
 
     internal fun validateCollectionConstraints(elementType: StaticType, constraints: Set<CollectionConstraint>) {
         if (elementType !is StructType && constraints.any { it is TupleCollectionConstraint }) {
