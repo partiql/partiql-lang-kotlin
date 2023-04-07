@@ -1729,7 +1729,7 @@ internal class EvaluatingCompiler(
             /** Store all the visited FROM source aliases in the accumulator */
             override fun visitFromSourceScan(node: PartiqlAst.FromSource.Scan, accumulator: Set<String>): Set<String> {
                 val aliases = listOfNotNull(node.asAlias?.text, node.atAlias?.text, node.byAlias?.text)
-                return accumulator + aliases.toSet()
+                return accumulator + aliases
             }
 
             override fun visitLetBinding(node: PartiqlAst.LetBinding, accumulator: Set<String>): Set<String> {
@@ -1994,7 +1994,7 @@ internal class EvaluatingCompiler(
                         val asThunk = compileAstExpr(asExpr)
                         val atThunk = compileAstExpr(atExpr)
                         thunkFactory.thunkEnv(metas) { env ->
-                            val sourceValue = rowsWithOffsetAndLimit(sourceThunks(env).asSequence(), env)
+                            val sourceValue = rowsWithOffsetAndLimit(sourceThunks(env), env)
                             val seq = sourceValue
                                 .map { (_, env) -> Pair(asThunk(env), atThunk(env)) }
                                 .filter { (name, _) -> name.type.isText }
@@ -2017,7 +2017,7 @@ internal class EvaluatingCompiler(
                                 }
                                 else -> {
                                     val projectionElements =
-                                        compileSelectListToProjectionElements(project)
+                                        compileSelectListToProjectionElements(items)
 
                                     val ordering = if (items.none { it is PartiqlAst.ProjectItem.ProjectAll })
                                         StructOrdering.ORDERED
@@ -2033,28 +2033,27 @@ internal class EvaluatingCompiler(
                                                     columns.add(eval.namedValue(element.name))
                                                 }
                                                 is MultipleProjectionElement -> {
-                                                    for (projThunk in element.thunks) {
-                                                        val value = projThunk(env)
-                                                        if (value.type == ExprValueType.MISSING) continue
+                                                    val projThunk = element.thunk
+                                                    val value = projThunk(env)
+                                                    if (value.type == ExprValueType.MISSING) continue
 
-                                                        val children = value.asSequence()
-                                                        if (!children.any() || value.type.isSequence) {
-                                                            val name = syntheticColumnName(columns.size).exprValue()
-                                                            columns.add(value.namedValue(name))
-                                                        } else {
-                                                            val valuesToProject =
-                                                                when (compileOptions.projectionIteration) {
-                                                                    ProjectionIterationBehavior.FILTER_MISSING -> {
-                                                                        value.filter { it.type != ExprValueType.MISSING }
-                                                                    }
-                                                                    ProjectionIterationBehavior.UNFILTERED -> value
+                                                    val children = value.asSequence()
+                                                    if (children.none() || value.type.isSequence) {
+                                                        val name = syntheticColumnName(columns.size).exprValue()
+                                                        columns.add(value.namedValue(name))
+                                                    } else {
+                                                        val valuesToProject =
+                                                            when (compileOptions.projectionIteration) {
+                                                                ProjectionIterationBehavior.FILTER_MISSING -> {
+                                                                    value.filter { it.type != ExprValueType.MISSING }
                                                                 }
-                                                            for (childValue in valuesToProject) {
-                                                                val namedFacet = childValue.asFacet(Named::class.java)
-                                                                val name = namedFacet?.name
-                                                                    ?: syntheticColumnName(columns.size).exprValue()
-                                                                columns.add(childValue.namedValue(name))
+                                                                ProjectionIterationBehavior.UNFILTERED -> value
                                                             }
+                                                        for (childValue in valuesToProject) {
+                                                            val namedFacet = childValue.asFacet(Named::class.java)
+                                                            val name = namedFacet?.name
+                                                                ?: syntheticColumnName(columns.size).exprValue()
+                                                            columns.add(childValue.namedValue(name))
                                                         }
                                                     }
                                                 }
@@ -2509,9 +2508,9 @@ internal class EvaluatingCompiler(
     }
 
     private fun compileSelectListToProjectionElements(
-        selectList: PartiqlAst.Projection.ProjectList
+        projectItems: List<PartiqlAst.ProjectItem>
     ): List<ProjectionElement> =
-        selectList.projectItems.mapIndexed { idx, it ->
+        projectItems.mapIndexed { idx, it ->
             when (it) {
                 is PartiqlAst.ProjectItem.ProjectExpr -> {
                     val alias = it.asAlias?.text ?: it.expr.extractColumnAlias(idx)
@@ -2519,7 +2518,7 @@ internal class EvaluatingCompiler(
                     SingleProjectionElement(ExprValue.newString(alias), thunk)
                 }
                 is PartiqlAst.ProjectItem.ProjectAll -> {
-                    MultipleProjectionElement(listOf(compileAstExpr(it.expr)))
+                    MultipleProjectionElement(compileAstExpr(it.expr))
                 }
             }
         }
@@ -3088,21 +3087,19 @@ private sealed class ProjectionElement
 
 /**
  * Represents a single compiled expression to be projected into the final result.
- * Given `SELECT a + b as value FROM foo`:
- * - `name` is "value"
- * - `thunk` is compiled expression, i.e. `a + b`
+ * Given `SELECT a + b as x FROM foo`:
+ * - [name] is `x`
+ * - [thunk] is compiled `a + b`
  */
 private class SingleProjectionElement(val name: ExprValue, val thunk: ThunkEnv) : ProjectionElement()
 
 /**
- * Represents a wildcard ((path_project_all) node) expression to be projected into the final result.
- * This covers two cases.  For `SELECT foo.* FROM foo`, `exprThunks` contains a single compiled expression
- * `foo`.
- *
- * For `SELECT * FROM foo, bar, bat`, `exprThunks` would contain a compiled expression for each of `foo`, `bar` and
- * `bat`.
+ * Represents a wildcard projection into the final result.
+ * For `SELECT x.* FROM foo as x`, [thunk] contains the compiled expression for 'x'.
+ * Note that this does not cover `SELECT * FROM ...`, because it is assumed to have been translated
+ * into `SELECT x.*, y.*, z.* FROM ... `.
  */
-private class MultipleProjectionElement(val thunks: List<ThunkEnv>) : ProjectionElement()
+private class MultipleProjectionElement(val thunk: ThunkEnv) : ProjectionElement()
 
 internal val MetaContainer.sourceLocationMeta get() = this[SourceLocationMeta.TAG] as? SourceLocationMeta
 
