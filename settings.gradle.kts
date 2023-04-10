@@ -15,6 +15,7 @@
 rootProject.name = "partiql"
 
 include(
+    "partiql-ast",
     "partiql-cli",
     "partiql-lang",
     "partiql-plan",
