@@ -17,12 +17,9 @@ import org.partiql.lang.planner.PlanningProblemDetails
 import org.partiql.lang.planner.transforms.PartiQLSchemaInferencerTests.TestCase.ErrorTestCase
 import org.partiql.lang.planner.transforms.PartiQLSchemaInferencerTests.TestCase.SuccessTestCase
 import org.partiql.plugins.mockdb.LocalPlugin
-import org.partiql.spi.sources.ColumnMetadata
-import org.partiql.spi.sources.ValueDescriptor
 import org.partiql.types.AnyOfType
 import org.partiql.types.AnyType
 import org.partiql.types.BagType
-import org.partiql.types.BoolType
 import org.partiql.types.ListType
 import org.partiql.types.StaticType
 import org.partiql.types.StaticType.Companion.unionOf
@@ -40,50 +37,54 @@ class PartiQLSchemaInferencerTests {
         private const val USER_ID = "TEST_USER"
         private val CATALOG_MAP = listOf("aws", "b", "db").associateWith { catalogName ->
             val catalogUrl: URL =
-                PartiQLSchemaInferencerTests::class.java.classLoader.getResource("catalogs/$catalogName") ?: error("Couldn't be found")
+                PartiQLSchemaInferencerTests::class.java.classLoader.getResource("catalogs/$catalogName")
+                    ?: error("Couldn't be found")
             ionStructOf(
                 field("connector_name", ionString("localdb")),
                 field("localdb_root", ionString(catalogUrl.path))
             )
         }
-        private const val DEFAULT_TABLE_NAME = "UNSPECIFIED"
         const val CATALOG_AWS = "aws"
         const val CATALOG_B = "b"
         const val CATALOG_DB = "db"
-        val TYPE_BOOL = ValueDescriptor.TypeDescriptor(BoolType())
         val DB_SCHEMA_MARKETS = listOf("markets")
-        private val TYPE_AWS_DDB_PETS_ID = ValueDescriptor.TypeDescriptor(StaticType.INT)
-        private val TYPE_AWS_DDB_PETS_BREED = ValueDescriptor.TypeDescriptor(StaticType.STRING)
-        val TABLE_AWS_DDB_PETS = ValueDescriptor.TableDescriptor(
-            name = DEFAULT_TABLE_NAME,
-            attributes = listOf(
-                ColumnMetadata("id", TYPE_AWS_DDB_PETS_ID.type),
-                ColumnMetadata("breed", TYPE_AWS_DDB_PETS_BREED.type)
-            )
-        )
-        val TABLE_AWS_DDB_B = ValueDescriptor.TableDescriptor(
-            name = DEFAULT_TABLE_NAME,
-            attributes = listOf(ColumnMetadata("identifier", StaticType.STRING))
-        )
-        val TABLE_AWS_B_B = ValueDescriptor.TableDescriptor(
-            name = DEFAULT_TABLE_NAME,
-            attributes = listOf(ColumnMetadata("identifier", StaticType.INT))
-        )
-        val TYPE_B_B_B_B_B = ValueDescriptor.TypeDescriptor(StaticType.INT)
-        private val TYPE_B_B_B_B = ValueDescriptor.TypeDescriptor(
-            StructType(mapOf("b" to TYPE_B_B_B_B_B.type), contentClosed = true)
-        )
-        val TYPE_B_B_B_C = ValueDescriptor.TypeDescriptor(StaticType.INT)
-        val TYPE_B_B_C = ValueDescriptor.TypeDescriptor(StaticType.INT)
-        val TYPE_B_B_B = ValueDescriptor.TypeDescriptor(
-            StructType(
+
+        val TYPE_BOOL = StaticType.BOOL
+        private val TYPE_AWS_DDB_PETS_ID = StaticType.INT
+        private val TYPE_AWS_DDB_PETS_BREED = StaticType.STRING
+        val TABLE_AWS_DDB_PETS = BagType(
+            elementType = StructType(
                 fields = mapOf(
-                    "b" to TYPE_B_B_B_B.type,
-                    "c" to TYPE_B_B_B_C.type
+                    "id" to TYPE_AWS_DDB_PETS_ID,
+                    "breed" to TYPE_AWS_DDB_PETS_BREED
                 ),
                 contentClosed = true
             )
         )
+        val TABLE_AWS_DDB_B = BagType(
+            StructType(
+                fields = mapOf("identifier" to StaticType.STRING),
+                contentClosed = true
+            )
+        )
+        val TABLE_AWS_B_B = BagType(
+            StructType(
+                fields = mapOf("identifier" to StaticType.INT),
+                contentClosed = true
+            )
+        )
+        val TYPE_B_B_B_B_B = StaticType.INT
+        private val TYPE_B_B_B_B = StructType(mapOf("b" to TYPE_B_B_B_B_B), contentClosed = true)
+        val TYPE_B_B_B_C = StaticType.INT
+        val TYPE_B_B_C = StaticType.INT
+        val TYPE_B_B_B =
+            StructType(
+                fields = mapOf(
+                    "b" to TYPE_B_B_B_B,
+                    "c" to TYPE_B_B_B_C
+                ),
+                contentClosed = true
+            )
     }
 
     @ParameterizedTest
@@ -96,7 +97,7 @@ class PartiQLSchemaInferencerTests {
             val query: String,
             val catalog: String? = null,
             val catalogPath: List<String> = emptyList(),
-            val expected: ValueDescriptor
+            val expected: StaticType
         ) : TestCase() {
             override fun toString(): String = "$name : $query"
         }
@@ -107,7 +108,7 @@ class PartiQLSchemaInferencerTests {
             val catalog: String? = null,
             val catalogPath: List<String> = emptyList(),
             val note: String? = null,
-            val expected: ValueDescriptor? = null,
+            val expected: StaticType? = null,
             val problemHandler: ProblemHandler? = null
         ) : TestCase() {
             override fun toString(): String = "$name : $query"
@@ -123,9 +124,11 @@ class PartiQLSchemaInferencerTests {
             ErrorTestCase(
                 name = "Pets should not be accessible #1",
                 query = "SELECT * FROM pets",
-                expected = ValueDescriptor.TableDescriptor(
-                    DEFAULT_TABLE_NAME,
-                    attributes = listOf(ColumnMetadata("pets", StaticType.ANY))
+                expected = BagType(
+                    StructType(
+                        fields = mapOf("pets" to StaticType.ANY),
+                        contentClosed = true
+                    )
                 ),
                 problemHandler = assertProblemExists {
                     Problem(
@@ -138,9 +141,11 @@ class PartiQLSchemaInferencerTests {
                 name = "Pets should not be accessible #2",
                 catalog = CATALOG_AWS,
                 query = "SELECT * FROM pets",
-                expected = ValueDescriptor.TableDescriptor(
-                    DEFAULT_TABLE_NAME,
-                    attributes = listOf(ColumnMetadata("pets", StaticType.ANY))
+                expected = BagType(
+                    StructType(
+                        fields = mapOf("pets" to StaticType.ANY),
+                        contentClosed = true
+                    )
                 ),
                 problemHandler = assertProblemExists {
                     Problem(
@@ -187,9 +192,11 @@ class PartiQLSchemaInferencerTests {
             ErrorTestCase(
                 name = "Test #7",
                 query = "SELECT * FROM ddb.pets",
-                expected = ValueDescriptor.TableDescriptor(
-                    DEFAULT_TABLE_NAME,
-                    attributes = listOf(ColumnMetadata("pets", StaticType.ANY))
+                expected = BagType(
+                    StructType(
+                        fields = mapOf("pets" to StaticType.ANY),
+                        contentClosed = true
+                    )
                 ),
                 problemHandler = assertProblemExists {
                     Problem(
@@ -365,7 +372,10 @@ class PartiQLSchemaInferencerTests {
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_SOURCE_LOCATION,
-                        SemanticProblemDetails.IncompatibleDatatypesForOp(listOf(StaticType.INT, StaticType.STRING), "IN")
+                        SemanticProblemDetails.IncompatibleDatatypesForOp(
+                            listOf(StaticType.INT, StaticType.STRING),
+                            "IN"
+                        )
                     )
                 }
             ),
@@ -385,7 +395,14 @@ class PartiQLSchemaInferencerTests {
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_SOURCE_LOCATION,
-                        SemanticProblemDetails.IncompatibleDatatypesForOp(listOf(StaticType.INT, StaticType.INT, StaticType.STRING), "between")
+                        SemanticProblemDetails.IncompatibleDatatypesForOp(
+                            listOf(
+                                StaticType.INT,
+                                StaticType.INT,
+                                StaticType.STRING
+                            ),
+                            "between"
+                        )
                     )
                 }
             ),
@@ -401,11 +418,14 @@ class PartiQLSchemaInferencerTests {
                 catalog = CATALOG_DB,
                 catalogPath = DB_SCHEMA_MARKETS,
                 query = "order_info.ship_option LIKE 3",
-                expected = ValueDescriptor.TypeDescriptor(StaticType.MISSING),
+                expected = StaticType.MISSING,
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_SOURCE_LOCATION,
-                        SemanticProblemDetails.IncompatibleDatatypesForOp(listOf(StaticType.STRING, StaticType.INT), "LIKE")
+                        SemanticProblemDetails.IncompatibleDatatypesForOp(
+                            listOf(StaticType.STRING, StaticType.INT),
+                            "LIKE"
+                        )
                     )
                 }
             ),
@@ -453,7 +473,10 @@ class PartiQLSchemaInferencerTests {
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_SOURCE_LOCATION,
-                        SemanticProblemDetails.IncompatibleDatatypesForOp(listOf(StaticType.INT, StaticType.STRING), "EQ")
+                        SemanticProblemDetails.IncompatibleDatatypesForOp(
+                            listOf(StaticType.INT, StaticType.STRING),
+                            "EQ"
+                        )
                     )
                 }
             ),
@@ -462,7 +485,13 @@ class PartiQLSchemaInferencerTests {
                 catalog = CATALOG_DB,
                 catalogPath = DB_SCHEMA_MARKETS,
                 query = "non_existing_column = 1",
-                expected = ValueDescriptor.TypeDescriptor(AnyOfType(setOf(StaticType.MISSING, StaticType.NULL, StaticType.BOOL))),
+                expected = AnyOfType(
+                    setOf(
+                        StaticType.MISSING,
+                        StaticType.NULL,
+                        StaticType.BOOL
+                    )
+                ),
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_SOURCE_LOCATION,
@@ -475,11 +504,14 @@ class PartiQLSchemaInferencerTests {
                 catalog = CATALOG_DB,
                 catalogPath = DB_SCHEMA_MARKETS,
                 query = "order_info.customer_id = 1 AND 1",
-                expected = ValueDescriptor.TypeDescriptor(StaticType.MISSING),
+                expected = StaticType.MISSING,
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_SOURCE_LOCATION,
-                        SemanticProblemDetails.IncompatibleDatatypesForOp(listOf(StaticType.BOOL, StaticType.INT), "AND")
+                        SemanticProblemDetails.IncompatibleDatatypesForOp(
+                            listOf(StaticType.BOOL, StaticType.INT),
+                            "AND"
+                        )
                     )
                 }
             ),
@@ -488,11 +520,14 @@ class PartiQLSchemaInferencerTests {
                 catalog = CATALOG_DB,
                 catalogPath = DB_SCHEMA_MARKETS,
                 query = "1 AND order_info.customer_id = 1",
-                expected = ValueDescriptor.TypeDescriptor(StaticType.MISSING),
+                expected = StaticType.MISSING,
                 problemHandler = assertProblemExists {
                     Problem(
                         UNKNOWN_SOURCE_LOCATION,
-                        SemanticProblemDetails.IncompatibleDatatypesForOp(listOf(StaticType.INT, StaticType.BOOL), "AND")
+                        SemanticProblemDetails.IncompatibleDatatypesForOp(
+                            listOf(StaticType.INT, StaticType.BOOL),
+                            "AND"
+                        )
                     )
                 }
             ),
@@ -501,10 +536,10 @@ class PartiQLSchemaInferencerTests {
                 catalog = CATALOG_DB,
                 catalogPath = DB_SCHEMA_MARKETS,
                 query = "SELECT unknown_col FROM orders WHERE customer_id = 1",
-                expected = ValueDescriptor.TableDescriptor(
-                    DEFAULT_TABLE_NAME,
-                    listOf(
-                        ColumnMetadata("unknown_col", AnyType())
+                expected = BagType(
+                    StructType(
+                        fields = mapOf("unknown_col" to AnyType()),
+                        contentClosed = true
                     )
                 ),
                 problemHandler = assertProblemExists {
@@ -580,9 +615,11 @@ class PartiQLSchemaInferencerTests {
                 catalog = CATALOG_AWS,
                 catalogPath = listOf("ddb"),
                 query = "SELECT CAST(breed AS INT) AS cast_breed FROM pets",
-                expected = ValueDescriptor.TableDescriptor(
-                    DEFAULT_TABLE_NAME,
-                    listOf(ColumnMetadata("cast_breed", unionOf(StaticType.INT, StaticType.MISSING)))
+                expected = BagType(
+                    StructType(
+                        fields = mapOf("cast_breed" to unionOf(StaticType.INT, StaticType.MISSING)),
+                        contentClosed = true
+                    )
                 )
             ),
             SuccessTestCase(
@@ -590,96 +627,108 @@ class PartiQLSchemaInferencerTests {
                 catalog = CATALOG_AWS,
                 catalogPath = listOf("ddb"),
                 query = "SELECT UPPER(breed) AS upper_breed FROM pets",
-                expected = ValueDescriptor.TableDescriptor(
-                    DEFAULT_TABLE_NAME,
-                    listOf(ColumnMetadata("upper_breed", StaticType.STRING))
+                expected = BagType(
+                    StructType(
+                        fields = mapOf("upper_breed" to StaticType.STRING),
+                        contentClosed = true
+                    )
                 )
             ),
             SuccessTestCase(
                 name = "Non-tuples",
                 query = "SELECT a FROM << [ 1, 1.0 ] >> AS a",
-                expected = ValueDescriptor.TableDescriptor(
-                    DEFAULT_TABLE_NAME,
-                    listOf(ColumnMetadata("a", ListType(unionOf(StaticType.INT, StaticType.DECIMAL))))
+                expected = BagType(
+                    StructType(
+                        fields = mapOf("a" to ListType(unionOf(StaticType.INT, StaticType.DECIMAL))),
+                        contentClosed = true
+                    )
                 )
             ),
             SuccessTestCase(
                 name = "Non-tuples in SELECT VALUE",
                 query = "SELECT VALUE a FROM << [ 1, 1.0 ] >> AS a",
-                expected = ValueDescriptor.TypeDescriptor(
-                    BagType(ListType(unionOf(StaticType.INT, StaticType.DECIMAL)))
-                )
+                expected =
+                BagType(ListType(unionOf(StaticType.INT, StaticType.DECIMAL)))
             ),
             SuccessTestCase(
                 name = "SELECT VALUE",
                 query = "SELECT VALUE [1, 1.0] FROM <<>>",
-                expected = ValueDescriptor.TypeDescriptor(
-                    BagType(ListType(unionOf(StaticType.INT, StaticType.DECIMAL)))
-                )
+                expected =
+                BagType(ListType(unionOf(StaticType.INT, StaticType.DECIMAL)))
             ),
             SuccessTestCase(
                 name = "UNPIVOT",
                 query = "SELECT VALUE v FROM UNPIVOT { 'a': 2 } AS v AT attr WHERE attr = 'a'",
-                expected = ValueDescriptor.TypeDescriptor(
-                    BagType(StaticType.INT)
-                )
+                expected =
+                BagType(StaticType.INT)
+
             ),
             SuccessTestCase(
                 name = "CROSS JOIN",
                 query = "SELECT * FROM <<{ 'a': 1 }>> AS t1, <<{ 'b': 2.0 }>> AS t2",
-                expected = ValueDescriptor.TableDescriptor(
-                    DEFAULT_TABLE_NAME,
-                    listOf(
-                        ColumnMetadata("a", StaticType.INT),
-                        ColumnMetadata("b", StaticType.DECIMAL),
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "a" to StaticType.INT,
+                            "b" to StaticType.DECIMAL,
+                        ),
+                        contentClosed = true
                     )
                 )
             ),
             SuccessTestCase(
                 name = "LEFT JOIN",
                 query = "SELECT * FROM <<{ 'a': 1 }>> AS t1 LEFT JOIN <<{ 'b': 2.0 }>> AS t2 ON TRUE",
-                expected = ValueDescriptor.TableDescriptor(
-                    DEFAULT_TABLE_NAME,
-                    listOf(
-                        ColumnMetadata("a", StaticType.INT),
-                        ColumnMetadata("b", StaticType.DECIMAL),
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "a" to StaticType.INT,
+                            "b" to StaticType.DECIMAL,
+                        ),
+                        contentClosed = true
                     )
                 )
             ),
             SuccessTestCase(
                 name = "LEFT JOIN",
                 query = "SELECT b, a FROM <<{ 'a': 1 }>> AS t1 LEFT JOIN <<{ 'b': 2.0 }>> AS t2 ON TRUE",
-                expected = ValueDescriptor.TableDescriptor(
-                    DEFAULT_TABLE_NAME,
-                    listOf(
-                        ColumnMetadata("b", StaticType.DECIMAL),
-                        ColumnMetadata("a", StaticType.INT),
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "b" to StaticType.DECIMAL,
+                            "a" to StaticType.INT,
+                        ),
+                        contentClosed = true
                     )
                 )
             ),
             SuccessTestCase(
                 name = "AGGREGATE over INTS",
                 query = "SELECT a, COUNT(*) AS c, SUM(a) AS s, MIN(b) AS m FROM << {'a': 1, 'b': 2} >> GROUP BY a",
-                expected = ValueDescriptor.TableDescriptor(
-                    DEFAULT_TABLE_NAME,
-                    listOf(
-                        ColumnMetadata("a", StaticType.INT),
-                        ColumnMetadata("c", StaticType.INT),
-                        ColumnMetadata("s", StaticType.INT),
-                        ColumnMetadata("m", StaticType.INT),
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "a" to StaticType.INT,
+                            "c" to StaticType.INT,
+                            "s" to StaticType.INT,
+                            "m" to StaticType.INT,
+                        ),
+                        contentClosed = true
                     )
                 )
             ),
             SuccessTestCase(
                 name = "AGGREGATE over DECIMALS",
                 query = "SELECT a, COUNT(*) AS c, SUM(a) AS s, MIN(b) AS m FROM << {'a': 1.0, 'b': 2.0}, {'a': 1.0, 'b': 2.0} >> GROUP BY a",
-                expected = ValueDescriptor.TableDescriptor(
-                    DEFAULT_TABLE_NAME,
-                    listOf(
-                        ColumnMetadata("a", StaticType.DECIMAL),
-                        ColumnMetadata("c", StaticType.INT),
-                        ColumnMetadata("s", StaticType.DECIMAL),
-                        ColumnMetadata("m", StaticType.DECIMAL),
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "a" to StaticType.DECIMAL,
+                            "c" to StaticType.INT,
+                            "s" to StaticType.DECIMAL,
+                            "m" to StaticType.DECIMAL,
+                        ),
+                        contentClosed = true
                     )
                 )
             ),

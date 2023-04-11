@@ -6,8 +6,7 @@ import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
 import org.partiql.spi.connector.ConnectorObjectPath
 import org.partiql.spi.connector.ConnectorSession
-import org.partiql.spi.sources.ColumnMetadata
-import org.partiql.spi.sources.ValueDescriptor
+import org.partiql.types.BagType
 import org.partiql.types.IntType
 import org.partiql.types.StaticType
 import org.partiql.types.StructType
@@ -16,7 +15,8 @@ import kotlin.test.assertEquals
 
 class LocalConnectorMetadataTests {
 
-    private val catalogUrl = LocalConnectorMetadataTests::class.java.classLoader.getResource("catalogs/fs") ?: error("Couldn't be found")
+    private val catalogUrl =
+        LocalConnectorMetadataTests::class.java.classLoader.getResource("catalogs/fs") ?: error("Couldn't be found")
     private val catalogName = "fs"
     private val session = object : ConnectorSession {
         override fun getQueryId(): String = "mock_query_id"
@@ -34,21 +34,23 @@ class LocalConnectorMetadataTests {
                 BindingName("records", BindingCase.INSENSITIVE),
             )
         )
-        val expected = ValueDescriptor.TableDescriptor(
-            "records",
-            listOf(
-                ColumnMetadata("id", StaticType.INT),
-                ColumnMetadata("path", StaticType.STRING)
+        val expected = BagType(
+            StructType(
+                fields = mapOf(
+                    "id" to StaticType.INT,
+                    "path" to StaticType.STRING
+                ),
+                contentClosed = true
             )
         )
 
         // Act
         val handle = metadata.getObjectHandle(session, requested)!!
-        val descriptor = metadata.getObjectDescriptor(session, handle)
+        val descriptor = metadata.getObjectType(session, handle)
 
         // Assert
         assert(requested.isEquivalentTo(handle.absolutePath))
-        assert(expected.isEquivalentTo(descriptor))
+        assertEquals(expected, descriptor)
     }
 
     @Test
@@ -62,7 +64,7 @@ class LocalConnectorMetadataTests {
             )
         )
         val expectedPath = ConnectorObjectPath(listOf("data", "struct"))
-        val expected = ValueDescriptor.TypeDescriptor(
+        val expected =
             StructType(
                 contentClosed = true,
                 fields = mapOf(
@@ -75,15 +77,14 @@ class LocalConnectorMetadataTests {
                     )
                 )
             )
-        )
 
         // Act
         val handle = metadata.getObjectHandle(session, requested)!!
-        val descriptor = metadata.getObjectDescriptor(session, handle)
+        val descriptor = metadata.getObjectType(session, handle)
 
         // Assert
         assert(expectedPath == handle.absolutePath)
-        assert(expected.isEquivalentTo(descriptor))
+        assert(expected == descriptor)
     }
 
     @Test
@@ -141,29 +142,5 @@ class LocalConnectorMetadataTests {
             }
         }
         return true
-    }
-
-    private fun ValueDescriptor.isEquivalentTo(other: ValueDescriptor): Boolean {
-        return when (this) {
-            is ValueDescriptor.TypeDescriptor -> this == other
-            is ValueDescriptor.TableDescriptor -> when (other) {
-                is ValueDescriptor.TypeDescriptor -> false
-                is ValueDescriptor.TableDescriptor -> {
-                    if (this.attributes.size != other.attributes.size) {
-                        return false
-                    }
-                    this.attributes.forEachIndexed { index, attr ->
-                        val otherAttr = other.attributes[index]
-                        if (attr.name != otherAttr.name) {
-                            return false
-                        }
-                        if (attr.type != otherAttr.type) {
-                            return false
-                        }
-                    }
-                    true
-                }
-            }
-        }
     }
 }
