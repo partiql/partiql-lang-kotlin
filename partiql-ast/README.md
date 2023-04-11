@@ -8,8 +8,8 @@ This package contains data structures for the PartiQL Kotlin abstract syntax tre
 
 ```shell
 # running from the package root
-./lib/sprout/install/sprout/bin/sprout generate kotlin\
-     -o ./ir\
+./lib/sprout/build/install/sprout/bin/sprout generate kotlin\
+     -o ./ast\
      -p org.partiql.ast\
      -u Ast\
      -m DATA\
