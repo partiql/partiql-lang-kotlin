@@ -15,7 +15,7 @@
 package org.partiql.spi.connector
 
 import org.partiql.spi.BindingPath
-import org.partiql.spi.sources.ValueDescriptor
+import org.partiql.types.StaticType
 
 /**
  * Aids in retrieving relevant Catalog metadata for the purpose of planning and execution.
@@ -23,10 +23,10 @@ import org.partiql.spi.sources.ValueDescriptor
 public interface ConnectorMetadata {
 
     /**
-     * Returns the descriptor of an object. If the handle is unable to produce a [ValueDescriptor], implementers should
+     * Returns the descriptor of an object. If the handle is unable to produce a [StaticType], implementers should
      * return null.
      */
-    public fun getObjectDescriptor(session: ConnectorSession, handle: ConnectorObjectHandle): ValueDescriptor?
+    public fun getObjectType(session: ConnectorSession, handle: ConnectorObjectHandle): StaticType?
 
     /**
      * Given a [BindingPath], returns a [ConnectorObjectHandle] that corresponds to the longest-available requested path.

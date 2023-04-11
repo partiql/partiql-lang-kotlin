@@ -29,6 +29,7 @@ import org.partiql.lang.planner.PlanningProblemDetails
 import org.partiql.lang.planner.transforms.PlannerSession
 import org.partiql.lang.planner.transforms.impl.Metadata
 import org.partiql.lang.planner.transforms.plan.PlanUtils.addType
+import org.partiql.lang.planner.transforms.plan.PlanUtils.grabType
 import org.partiql.lang.types.FunctionSignature
 import org.partiql.lang.types.StaticTypeUtils
 import org.partiql.lang.types.TypedOpParameter
@@ -47,9 +48,6 @@ import org.partiql.plan.visitor.PlanRewriter
 import org.partiql.spi.BindingCase
 import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
-import org.partiql.spi.sources.ValueDescriptor
-import org.partiql.spi.sources.ValueDescriptor.TableDescriptor
-import org.partiql.spi.sources.ValueDescriptor.TypeDescriptor
 import org.partiql.types.AnyOfType
 import org.partiql.types.AnyType
 import org.partiql.types.BagType
@@ -427,18 +425,28 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
 
     override fun visitRexQueryCollection(node: Rex.Query.Collection, ctx: Context): PlanNode {
         val input = visitRel(node.rel, ctx)
+        val typeConstructor = when (input.getProperties().contains(Property.ORDERED)) {
+            true -> { type: StaticType -> ListType(type) }
+            false -> { type: StaticType -> BagType(type) }
+        }
         return when (val constructor = node.constructor) {
             null -> {
-                node.copy(rel = input)
+                node.copy(
+                    rel = input,
+                    type = typeConstructor.invoke(
+                        StructType(
+                            fields = input.getTypeEnv().associate { attribute ->
+                                attribute.name to attribute.type
+                            },
+                            contentClosed = true
+                        )
+                    )
+                )
             }
             else -> {
-                val typedConstructor = typeRex(constructor, input, ctx)
-                val type = when (input.getProperties().contains(Property.ORDERED)) {
-                    true -> ListType(typedConstructor.grabType() ?: handleMissingType(ctx))
-                    false -> BagType(typedConstructor.grabType() ?: handleMissingType(ctx))
-                }
+                val constructorType = typeRex(constructor, input, ctx).grabType() ?: handleMissingType(ctx)
                 return node.copy(
-                    type = type
+                    type = typeConstructor.invoke(constructorType)
                 )
             }
         }
@@ -454,7 +462,7 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
             true -> emptyList()
             false -> node.steps.subList(remainingFirstIndex, node.steps.size)
         }
-        var currentType = pathAndType.descriptor.toStaticType()
+        var currentType = pathAndType.type
         remaining.forEach { pathComponent ->
             currentType = when (pathComponent) {
                 is Step.Key -> {
@@ -472,7 +480,7 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
 
     override fun visitRexId(node: Rex.Id, ctx: Context): Rex.Id {
         val bindingPath = BindingPath(listOf(rexIdToBindingName(node)))
-        return node.copy(type = findBind(bindingPath, node.qualifier, ctx).descriptor.toStaticType())
+        return node.copy(type = findBind(bindingPath, node.qualifier, ctx).type)
     }
 
     override fun visitRexBinary(node: Rex.Binary, ctx: Context): Rex.Binary {
@@ -967,15 +975,6 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
         is Rel.Unpivot -> this.common
     }
 
-    private fun PlanNode.grabType(): StaticType? = when (this) {
-        is Rex -> this.grabType()
-        is Arg.Value -> this.value.grabType()
-        is Arg.Type -> this.type
-        is Step.Key -> this.value.grabType()
-        is Binding -> this.value.grabType()
-        else -> error("Unable to grab static type of $this")
-    }
-
     private fun inferPathComponentExprType(
         previousComponentType: StaticType,
         currentPathComponent: Step.Key,
@@ -1048,23 +1047,6 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
             BindingCase.INSENSITIVE -> org.partiql.lang.eval.BindingCase.INSENSITIVE
         }
     )
-
-    private fun Rex.grabType(): StaticType? = when (this) {
-        is Rex.Agg -> this.type
-        is Rex.Binary -> this.type
-        is Rex.Call -> this.type
-        is Rex.Collection.Array -> this.type
-        is Rex.Collection.Bag -> this.type
-        is Rex.Id -> this.type
-        is Rex.Lit -> this.type
-        is Rex.Path -> this.type
-        is Rex.Query.Collection -> this.type
-        is Rex.Query.Scalar.Pivot -> this.type
-        is Rex.Tuple -> this.type
-        is Rex.Unary -> this.type
-        is Rex.Query.Scalar.Subquery -> this.type
-        is Rex.Switch -> this.type
-    }
 
     private fun rexIdToBindingName(node: Rex.Id): BindingName = BindingName(
         node.name,
@@ -1539,7 +1521,7 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
         Case.INSENSITIVE -> BindingCase.INSENSITIVE
     }
 
-    private fun findBind(path: BindingPath, qualifier: Rex.Id.Qualifier, ctx: Context): ReferenceResolver.ResolvedDescriptor {
+    private fun findBind(path: BindingPath, qualifier: Rex.Id.Qualifier, ctx: Context): ReferenceResolver.ResolvedType {
         val scopingOrder = when (qualifier) {
             Rex.Id.Qualifier.LOCALS_FIRST -> ScopingOrder.LEXICAL_THEN_GLOBALS
             Rex.Id.Qualifier.UNQUALIFIED -> ctx.scopingOrder
@@ -1548,12 +1530,12 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
             ScopingOrder.GLOBALS_THEN_LEXICAL -> ReferenceResolver.resolveGlobalBind(path, ctx)
                 ?: ReferenceResolver.resolveLocalBind(path, ctx.inputTypeEnv)
                 ?: handleUnresolvedDescriptor(path.steps.last(), ctx) {
-                    ReferenceResolver.ResolvedDescriptor(TypeDescriptor(StaticType.ANY))
+                    ReferenceResolver.ResolvedType(StaticType.ANY)
                 }
             ScopingOrder.LEXICAL_THEN_GLOBALS -> ReferenceResolver.resolveLocalBind(path, ctx.inputTypeEnv)
                 ?: ReferenceResolver.resolveGlobalBind(path, ctx)
                 ?: handleUnresolvedDescriptor(path.steps.last(), ctx) {
-                    ReferenceResolver.ResolvedDescriptor(TypeDescriptor(StaticType.ANY))
+                    ReferenceResolver.ResolvedType(StaticType.ANY)
                 }
         }
     }
@@ -1596,20 +1578,6 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
         }
         val firstSteps = steps.subList(0, nullPosition).filterNotNull()
         return listOf(node.root as Rex.Id) + firstSteps
-    }
-
-    internal fun ValueDescriptor.toStaticType(): StaticType = when (this) {
-        is TableDescriptor -> BagType(
-            StructType(
-                fields = this.attributes.associate {
-                    it.name to it.type
-                },
-                contentClosed = true
-            )
-        )
-        is TypeDescriptor -> {
-            this.type
-        }
     }
 
     private fun inferType(expr: Rex, input: Rel?, ctx: Context): StaticType {

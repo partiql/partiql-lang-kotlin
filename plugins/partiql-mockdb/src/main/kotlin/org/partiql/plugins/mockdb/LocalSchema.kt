@@ -23,7 +23,7 @@ import java.lang.reflect.Type
 
 /**
  * Represents the JSON-serialized [LocalConnectorObject]. This eventually gets converted into PartiQL's
- * [org.partiql.spi.sources.ValueDescriptor] for use with the [LocalConnectorMetadata].
+ * [org.partiql.types.StaticType] for use with the [LocalConnectorMetadata].
  */
 sealed class LocalSchema {
     companion object {
