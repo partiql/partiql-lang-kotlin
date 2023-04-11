@@ -22,6 +22,7 @@ import org.partiql.types.NumberConstraint
 import org.partiql.types.StaticType
 import org.partiql.types.StringType
 import org.partiql.types.StructType
+import org.partiql.types.TupleConstraint
 
 /**
  * This mock implementation of [ConnectorObject] is used to parse the [schema] into a [StaticType]. Currently,
@@ -98,7 +99,8 @@ internal class LocalConnectorObject(
             fields = this.attributes.associate {
                 it.getName() to it.getValueDesc()
             },
-            contentClosed = true
+            contentClosed = true,
+            constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true)),
         )
 
     private fun LocalSchema.TableSchema.getDesc(): StaticType {

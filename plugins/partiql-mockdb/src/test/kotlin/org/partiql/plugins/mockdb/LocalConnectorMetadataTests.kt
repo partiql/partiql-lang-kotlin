@@ -10,6 +10,7 @@ import org.partiql.types.BagType
 import org.partiql.types.IntType
 import org.partiql.types.StaticType
 import org.partiql.types.StructType
+import org.partiql.types.TupleConstraint
 import java.nio.file.Paths
 import kotlin.test.assertEquals
 
@@ -73,9 +74,11 @@ class LocalConnectorMetadataTests {
                         contentClosed = true,
                         fields = mapOf(
                             "nested_id" to IntType()
-                        )
+                        ),
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
                     )
-                )
+                ),
+                constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
             )
 
         // Act

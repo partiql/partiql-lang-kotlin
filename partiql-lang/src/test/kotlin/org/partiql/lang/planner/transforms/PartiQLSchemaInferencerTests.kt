@@ -24,6 +24,7 @@ import org.partiql.types.ListType
 import org.partiql.types.StaticType
 import org.partiql.types.StaticType.Companion.unionOf
 import org.partiql.types.StructType
+import org.partiql.types.TupleConstraint
 import java.net.URL
 import java.time.Instant
 import java.util.stream.Stream
@@ -58,23 +59,30 @@ class PartiQLSchemaInferencerTests {
                     "id" to TYPE_AWS_DDB_PETS_ID,
                     "breed" to TYPE_AWS_DDB_PETS_BREED
                 ),
-                contentClosed = true
+                contentClosed = true,
+                constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
             )
         )
         val TABLE_AWS_DDB_B = BagType(
             StructType(
                 fields = mapOf("identifier" to StaticType.STRING),
-                contentClosed = true
+                contentClosed = true,
+                constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
             )
         )
         val TABLE_AWS_B_B = BagType(
             StructType(
                 fields = mapOf("identifier" to StaticType.INT),
-                contentClosed = true
+                contentClosed = true,
+                constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
             )
         )
         val TYPE_B_B_B_B_B = StaticType.INT
-        private val TYPE_B_B_B_B = StructType(mapOf("b" to TYPE_B_B_B_B_B), contentClosed = true)
+        private val TYPE_B_B_B_B = StructType(
+            mapOf("b" to TYPE_B_B_B_B_B),
+            contentClosed = true,
+            constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+        )
         val TYPE_B_B_B_C = StaticType.INT
         val TYPE_B_B_C = StaticType.INT
         val TYPE_B_B_B =
@@ -83,7 +91,8 @@ class PartiQLSchemaInferencerTests {
                     "b" to TYPE_B_B_B_B,
                     "c" to TYPE_B_B_B_C
                 ),
-                contentClosed = true
+                contentClosed = true,
+                constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
             )
     }
 
@@ -127,7 +136,8 @@ class PartiQLSchemaInferencerTests {
                 expected = BagType(
                     StructType(
                         fields = mapOf("pets" to StaticType.ANY),
-                        contentClosed = true
+                        contentClosed = true,
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
                     )
                 ),
                 problemHandler = assertProblemExists {
@@ -144,7 +154,8 @@ class PartiQLSchemaInferencerTests {
                 expected = BagType(
                     StructType(
                         fields = mapOf("pets" to StaticType.ANY),
-                        contentClosed = true
+                        contentClosed = true,
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
                     )
                 ),
                 problemHandler = assertProblemExists {
@@ -195,7 +206,8 @@ class PartiQLSchemaInferencerTests {
                 expected = BagType(
                     StructType(
                         fields = mapOf("pets" to StaticType.ANY),
-                        contentClosed = true
+                        contentClosed = true,
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
                     )
                 ),
                 problemHandler = assertProblemExists {
@@ -539,7 +551,8 @@ class PartiQLSchemaInferencerTests {
                 expected = BagType(
                     StructType(
                         fields = mapOf("unknown_col" to AnyType()),
-                        contentClosed = true
+                        contentClosed = true,
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
                     )
                 ),
                 problemHandler = assertProblemExists {
@@ -618,7 +631,8 @@ class PartiQLSchemaInferencerTests {
                 expected = BagType(
                     StructType(
                         fields = mapOf("cast_breed" to unionOf(StaticType.INT, StaticType.MISSING)),
-                        contentClosed = true
+                        contentClosed = true,
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
                     )
                 )
             ),
@@ -630,7 +644,8 @@ class PartiQLSchemaInferencerTests {
                 expected = BagType(
                     StructType(
                         fields = mapOf("upper_breed" to StaticType.STRING),
-                        contentClosed = true
+                        contentClosed = true,
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
                     )
                 )
             ),
@@ -640,7 +655,8 @@ class PartiQLSchemaInferencerTests {
                 expected = BagType(
                     StructType(
                         fields = mapOf("a" to ListType(unionOf(StaticType.INT, StaticType.DECIMAL))),
-                        contentClosed = true
+                        contentClosed = true,
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
                     )
                 )
             ),
@@ -672,7 +688,8 @@ class PartiQLSchemaInferencerTests {
                             "a" to StaticType.INT,
                             "b" to StaticType.DECIMAL,
                         ),
-                        contentClosed = true
+                        contentClosed = true,
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
                     )
                 )
             ),
@@ -685,7 +702,8 @@ class PartiQLSchemaInferencerTests {
                             "a" to StaticType.INT,
                             "b" to StaticType.DECIMAL,
                         ),
-                        contentClosed = true
+                        contentClosed = true,
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
                     )
                 )
             ),
@@ -698,7 +716,8 @@ class PartiQLSchemaInferencerTests {
                             "b" to StaticType.DECIMAL,
                             "a" to StaticType.INT,
                         ),
-                        contentClosed = true
+                        contentClosed = true,
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
                     )
                 )
             ),
@@ -713,7 +732,8 @@ class PartiQLSchemaInferencerTests {
                             "s" to StaticType.INT,
                             "m" to StaticType.INT,
                         ),
-                        contentClosed = true
+                        contentClosed = true,
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
                     )
                 )
             ),
@@ -728,7 +748,8 @@ class PartiQLSchemaInferencerTests {
                             "s" to StaticType.DECIMAL,
                             "m" to StaticType.DECIMAL,
                         ),
-                        contentClosed = true
+                        contentClosed = true,
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
                     )
                 )
             ),

@@ -66,6 +66,7 @@ import org.partiql.types.StaticType
 import org.partiql.types.StringType
 import org.partiql.types.StructType
 import org.partiql.types.SymbolType
+import org.partiql.types.TupleConstraint
 
 /**
  * Types a given logical plan.
@@ -438,7 +439,8 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
                             fields = input.getTypeEnv().associate { attribute ->
                                 attribute.name to attribute.type
                             },
-                            contentClosed = true
+                            contentClosed = true,
+                            constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
                         )
                     )
                 )
@@ -648,7 +650,14 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
             TODO("Duplicate keys in struct is not yet handled")
         }
 
-        return node.copy(type = StructType(structFields.toMap(), contentClosed = closedContent), fields = fields)
+        return node.copy(
+            type = StructType(
+                structFields.toMap(),
+                contentClosed = closedContent,
+                constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+            ),
+            fields = fields
+        )
     }
 
     override fun visitArgValue(node: Arg.Value, ctx: Context): PlanNode {
