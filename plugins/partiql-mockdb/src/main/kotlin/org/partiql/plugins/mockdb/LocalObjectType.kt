@@ -14,6 +14,9 @@
 
 package org.partiql.plugins.mockdb
 
+/**
+ * Object Types for serialization.
+ */
 enum class LocalObjectType {
     INT,
     DECIMAL,

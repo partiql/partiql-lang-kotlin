@@ -21,6 +21,10 @@ import com.google.gson.JsonElement
 import com.google.gson.stream.JsonReader
 import java.lang.reflect.Type
 
+/**
+ * Represents the JSON-serialized [LocalConnectorObject]. This eventually gets converted into PartiQL's
+ * [org.partiql.spi.sources.ValueDescriptor] for use with the [LocalConnectorMetadata].
+ */
 sealed class LocalSchema {
     companion object {
         @JvmStatic

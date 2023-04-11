@@ -209,8 +209,9 @@ class UnsupportedTypeCheckException(message: String) : RuntimeException(message)
  */
 sealed class CollectionType : SingleType() {
     abstract val elementType: StaticType
+    abstract val constraints: Set<CollectionConstraint>
 
-    internal fun validateCollectionConstraints(elementType: StaticType, constraints: Set<CollectionConstraint>) {
+    internal fun validateCollectionConstraints() {
         if (elementType !is StructType && constraints.any { it is TupleCollectionConstraint }) {
             throw UnsupportedTypeConstraint("Only collection of tuples can have tuple constraints")
         }
@@ -412,7 +413,7 @@ data class ListType(
 ) : CollectionType() {
 
     init {
-        validateCollectionConstraints(elementType, constraints)
+        validateCollectionConstraints()
     }
     override fun flatten(): StaticType = this
 
@@ -431,7 +432,7 @@ data class SexpType(
     override val constraints: Set<CollectionConstraint> = setOf(),
 ) : CollectionType() {
     init {
-        validateCollectionConstraints(elementType, constraints)
+        validateCollectionConstraints()
     }
     override fun flatten(): StaticType = this
 
@@ -450,7 +451,7 @@ data class BagType(
     override val constraints: Set<CollectionConstraint> = setOf(),
 ) : CollectionType() {
     init {
-        this.validateCollectionConstraints(elementType, constraints)
+        this.validateCollectionConstraints()
     }
     override fun flatten(): StaticType = this
 
