@@ -463,6 +463,14 @@ data class BagType(
 
 data class StructType(
     val fields: Map<String, StaticType> = mapOf(),
+    // `TupleConstraint` already has `Open` constraint which overlaps with `contentClosed`.
+    // In addition, `primaryKeyFields` must not exist on the `StructType` as `PrimaryKey`
+    // is a property of collection of tuples. As we have plans to define PartiQL types in
+    // more details it's foreseeable to have an refactor of our types in future and have a
+    // new definition of this type as `Tuple`. See the following issue for more details:
+    // https://github.com/partiql/partiql-spec/issues/49
+    // TODO remove `contentClosed` and `primaryKeyFields` if after finalizing our type specification we're
+    // still going with `StructType`.
     val contentClosed: Boolean = false,
     val primaryKeyFields: List<String> = listOf(),
     val constraints: Set<TupleConstraint> = setOf(),
