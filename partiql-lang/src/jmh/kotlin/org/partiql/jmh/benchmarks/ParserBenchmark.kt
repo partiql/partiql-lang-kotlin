@@ -14,8 +14,6 @@
 
 package org.partiql.jmh.benchmarks
 
-import com.amazon.ion.IonSystem
-import com.amazon.ion.system.IonSystemBuilder
 import org.openjdk.jmh.annotations.Benchmark
 import org.openjdk.jmh.annotations.BenchmarkMode
 import org.openjdk.jmh.annotations.Fork
@@ -856,8 +854,7 @@ internal open class ParserBenchmark {
     @State(Scope.Thread)
     open class MyState {
 
-        private val ion: IonSystem = IonSystemBuilder.standard().build()
-        val parser = PartiQLParserBuilder().ionSystem(ion).build()
+        val parser = PartiQLParserBuilder().build()
 
         val query15OrsAndLikes = """
             SELECT * 

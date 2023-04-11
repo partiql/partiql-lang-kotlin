@@ -365,10 +365,7 @@ internal object ExprFunctionBitLength : ExprFunctionMeasure("bit_length", BITSTR
  */
 internal object ExprFunctionCharLength : ExprFunctionMeasure("char_length", StaticType.TEXT) {
 
-    override fun call(value: ExprValue): Int {
-        val str = value.stringValue()
-        return str.codePointCount(0, str.length)
-    }
+    override fun call(value: ExprValue): Int = codepointLength(value)
 }
 
 /**
@@ -378,10 +375,12 @@ internal object ExprFunctionCharLength : ExprFunctionMeasure("char_length", Stat
  */
 internal object ExprFunctionCharacterLength : ExprFunctionMeasure("character_length", StaticType.TEXT) {
 
-    override fun call(value: ExprValue): Int {
-        val str = value.stringValue()
-        return str.codePointCount(0, str.length)
-    }
+    override fun call(value: ExprValue): Int = codepointLength(value)
+}
+
+private fun codepointLength(value: ExprValue): Int {
+    val str = value.stringValue()
+    return str.codePointCount(0, str.length)
 }
 
 /**

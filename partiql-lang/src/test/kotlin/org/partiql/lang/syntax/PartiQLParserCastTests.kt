@@ -8,7 +8,6 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.CUSTOM_TEST_TYPES
 import org.partiql.lang.domains.PartiqlAst
-import org.partiql.lang.eval.CastTestBase.Companion.ion
 import org.partiql.lang.util.ArgumentsProviderBase
 
 class PartiQLParserCastTests : PartiQLParserTestBase() {
@@ -163,7 +162,7 @@ class PartiQLParserCastTests : PartiQLParserTestBase() {
 
     data class ConfiguredCastParseTest(val source: String, val expectedAst: PartiqlAst.PartiqlAstNode) {
 
-        val parser = PartiQLParserBuilder().ionSystem(ion).customTypes(CUSTOM_TEST_TYPES).build()
+        val parser = PartiQLParserBuilder().customTypes(CUSTOM_TEST_TYPES).build()
 
         fun assertCase() {
             // Convert the query to ast

@@ -1,6 +1,5 @@
 package org.partiql.lang.planner.transforms
 
-import com.amazon.ion.system.IonSystemBuilder
 import com.amazon.ionelement.api.ionBool
 import com.amazon.ionelement.api.ionInt
 import com.amazon.ionelement.api.ionString
@@ -30,8 +29,7 @@ import org.partiql.lang.util.ArgumentsProviderBase
  * heavily exercised during many other integration tests.  These should be considered "smoke tests".
  */
 class AstToLogicalVisitorTransformTests {
-    private val ion = IonSystemBuilder.standard().build()
-    internal val parser = PartiQLParser(ion)
+    internal val parser = PartiQLParser()
 
     private fun parseAndTransform(sql: String, problemHandler: ProblemHandler): PartiqlLogical.Statement {
         val parseAstStatement = parser.parseAstStatement(sql)

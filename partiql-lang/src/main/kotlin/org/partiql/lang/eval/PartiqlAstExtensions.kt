@@ -13,7 +13,7 @@ import org.partiql.lang.domains.PartiqlAst
  *
  * If [this] is a [PartiqlAst.Expr.Path], invokes [PartiqlAst.Expr.Path.extractColumnAlias] to determine the alias.
  *
- * If [this] is a [PartiqlAst.Expr.Cast], the column alias is the name of the [PartiqlAst.Expr.Cast.value] to be `CAST`.
+ * If [this] is a [PartiqlAst.Expr.Cast], the column alias is the same as would be given to the [PartiqlAst.Expr.Cast.value] to be `CAST`.
  *
  * Otherwise, returns the column index prefixed with `_`.
  */

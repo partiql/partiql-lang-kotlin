@@ -357,6 +357,13 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
         )
     }
 
+    override fun walkExprSexp(node: PartiqlAst.Expr.Sexp, accumulator: Ctx) = visit(node) {
+        Rex.Collection.Array(
+            values = convert(node.values),
+            type = StaticType.LIST,
+        )
+    }
+
     override fun walkExprCall(node: PartiqlAst.Expr.Call, ctx: Ctx) = visit(node) {
         Rex.Call(
             id = node.funcName.text,
@@ -394,7 +401,8 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
                     value = convert(it.second),
                 )
             },
-            default = if (node.default != null) convert(node.default) else null
+            default = if (node.default != null) convert(node.default) else null,
+            type = null
         )
     }
 
@@ -407,7 +415,8 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
                     value = convert(it.second),
                 )
             },
-            default = if (node.default != null) convert(node.default) else null
+            default = if (node.default != null) convert(node.default) else null,
+            type = null
         )
     }
 
@@ -498,7 +507,7 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
         is PartiqlAst.CaseSensitivity.CaseSensitive -> Case.SENSITIVE
     }
 
-    private object Constants {
+    internal object Constants {
 
         // const val unaryNot = "unary_not"
         //

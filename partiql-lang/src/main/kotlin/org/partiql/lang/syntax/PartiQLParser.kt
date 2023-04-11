@@ -14,8 +14,6 @@
 
 package org.partiql.lang.syntax
 
-import com.amazon.ion.IonSystem
-import com.amazon.ion.system.IonSystemBuilder
 import org.antlr.v4.runtime.BailErrorStrategy
 import org.antlr.v4.runtime.BaseErrorListener
 import org.antlr.v4.runtime.CharStreams
@@ -50,10 +48,7 @@ import org.partiql.lang.syntax.antlr.PartiQLTokens as GeneratedLexer
  * [GeneratedParser] to create an ANTLR [ParseTree] from the input query. Then, it uses the configured [PartiQLVisitor]
  * to convert the [ParseTree] into a [PartiqlAst.Statement].
  */
-internal class PartiQLParser(
-    private val ion: IonSystem = IonSystemBuilder.standard().build(),
-    val customTypes: List<CustomType> = listOf()
-) : Parser {
+internal class PartiQLParser(val customTypes: List<CustomType> = listOf()) : Parser {
 
     @Throws(ParserException::class, InterruptedException::class)
     override fun parseAstStatement(source: String): PartiqlAst.Statement {
@@ -98,7 +93,7 @@ internal class PartiQLParser(
         val tokenStream = createTokenStream(queryStream)
         val parser = parserInit(tokenStream)
         val tree = parser.root()
-        val visitor = PartiQLVisitor(ion, customTypes, tokenStream.parameterIndexes)
+        val visitor = PartiQLVisitor(customTypes, tokenStream.parameterIndexes)
         return visitor.visit(tree) as PartiqlAst.Statement
     }
 
@@ -144,7 +139,7 @@ internal class PartiQLParser(
         parser.reset()
         parser.interpreter.predictionMode = PredictionMode.LL
         parser.removeErrorListeners()
-        parser.addErrorListener(ParseErrorListener(ion))
+        parser.addErrorListener(ParseErrorListener())
         return parser
     }
 
@@ -172,7 +167,8 @@ internal class PartiQLParser(
     /**
      * Catches Parser errors (malformed syntax) and throws a [ParserException]
      */
-    private class ParseErrorListener(val ion: IonSystem) : BaseErrorListener() {
+    private class ParseErrorListener : BaseErrorListener() {
+
         @Throws(ParserException::class)
         override fun syntaxError(
             recognizer: Recognizer<*, *>?,
@@ -187,7 +183,7 @@ internal class PartiQLParser(
             propertyValues[Property.LINE_NUMBER] = line.toLong()
             propertyValues[Property.COLUMN_NUMBER] = charPositionInLine.toLong() + 1
             propertyValues[Property.TOKEN_DESCRIPTION] = offendingSymbol.type.getAntlrDisplayString()
-            propertyValues[Property.TOKEN_VALUE] = getIonValue(ion, offendingSymbol)
+            propertyValues[Property.TOKEN_VALUE] = getIonValue(offendingSymbol)
             throw ParserException(message = msg, errorCode = ErrorCode.PARSE_UNEXPECTED_TOKEN, errorContext = propertyValues, cause = e)
         }
     }

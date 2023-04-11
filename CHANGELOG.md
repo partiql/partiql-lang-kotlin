@@ -25,7 +25,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Added numeric builtins ABS, SQRT, EXP, LN, POW, MOD.
-- Added string builtins POSITION, OVERLAY, BIT_LENGTH, OCTET_LENGTH, CARDINALITY.
+- Added standard SQL built-in functions POSITION, OVERLAY, LENGTH, BIT_LENGTH, OCTET_LENGTH, CARDINALITY, 
+  an additional builtin TEXT_REPLACE, and standard SQL aggregations on booleans EVERY, ANY, SOME.
 - **Breaking** Added coercion of SQL-style subquery to a single value, as defined in SQL for 
   subqueries occurring in a single-value context and outlined in Chapter 9 of the PartiQL specification. 
   This is backward incompatible with the prior behavior (which left the computed collection as is), 
@@ -35,6 +36,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Models experimental `Schema` with constraints.
   With this change, we're introducing `Tuple` and `Collection` constraints to be able to model the shape of data as 
   constraints.
+- Introduces the PartiQLSchemaInferencer and PlannerSession
+  - The PlannerSession describes the current session and is used by the PartiQLSchemaInferencer.
+  - The PartiQLSchemaInferencer provides a function, `infer`, to aid in inferring the output `StaticType` of a
+  PartiQL Query. See the KDoc for more information and examples.
 
 ### Changed
 - Deprecates the project level opt-in annotation `PartiQLExperimental` and split it into feature level. `ExperimentalPartiQLCompilerPipeline` and `ExperimentalWindowFunctions`.
@@ -51,6 +56,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     5. `org.partiql.lang.types.StaticType.typeDomain` -> `org.partiql.lang.types.StaticTypeUtils.getTypeDomain`
     6. `org.partiql.lang.types.SingleType.getRuntimeType` -> `org.partiql.lang.types.StaticTypeUtils.getRuntimeType`
     7. `org.partiql.lang.types.StringType.StringLengthConstraint.matches` -> `org.partiql.lang.types.StaticTypeUtils.stringLengthConstraintMatches`
+- **Breaking**: Removes deprecated `ionSystem()` function from PartiQLCompilerBuilder and PartiQLParserBuilder
 
 ### Deprecated
 - `ExprValueFactory` interface marked as deprecated. Equivalent `ExprValue` construction methods are implemented in the `ExprValue` interface as static methods. 
@@ -69,6 +75,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 - The deprecated `IonValue` property in `ExprValue` interface is now removed.
 - Removed partiql-extensions to partiql-cli `org.partiql.cli.functions`
+- Removed IonSystem from PartiQLParserBuilder
 
 ### Security
 

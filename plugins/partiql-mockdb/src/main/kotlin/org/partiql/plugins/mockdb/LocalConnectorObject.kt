@@ -15,21 +15,19 @@
 package org.partiql.plugins.mockdb
 
 import org.partiql.spi.connector.ConnectorObject
-import org.partiql.spi.sources.ColumnMetadata
-import org.partiql.spi.sources.ValueDescriptor
-import org.partiql.spi.sources.ValueDescriptor.TableDescriptor
-import org.partiql.spi.sources.ValueDescriptor.TypeDescriptor
+import org.partiql.types.BagType
 import org.partiql.types.DecimalType
 import org.partiql.types.IntType
 import org.partiql.types.NumberConstraint
+import org.partiql.types.StaticType
 import org.partiql.types.StringType
 import org.partiql.types.StructType
 import org.partiql.types.TupleConstraint
 
 /**
- * This mock implementation of [ConnectorObject] is used to parse the [schema] into a [ValueDescriptor]. Currently,
+ * This mock implementation of [ConnectorObject] is used to parse the [schema] into a [StaticType]. Currently,
  * this implementation allows for Tables, Structs, Ints, Decimals, and Booleans. When [LocalConnectorMetadata] requests
- * for the object's [ValueDescriptor], it returns the parsed descriptor.
+ * for the object's [StaticType], it returns the parsed descriptor.
  */
 internal class LocalConnectorObject(
     private val schema: String
@@ -38,7 +36,7 @@ internal class LocalConnectorObject(
     private val jsonSchema = LocalSchema.fromJson(schema)
     private val descriptor = jsonSchema.getDescriptor()
 
-    public fun getDescriptor(): ValueDescriptor = descriptor
+    public fun getDescriptor(): StaticType = descriptor
 
     //
     //
@@ -46,12 +44,12 @@ internal class LocalConnectorObject(
     //
     //
 
-    private fun LocalSchema.getDescriptor(): ValueDescriptor = when (this) {
+    private fun LocalSchema.getDescriptor(): StaticType = when (this) {
         is LocalSchema.TableSchema -> this.getDesc()
         is LocalSchema.ValueSchema -> this.getValueDesc()
     }
 
-    private fun LocalSchema.ValueSchema.getValueDesc(): TypeDescriptor = when (this) {
+    private fun LocalSchema.ValueSchema.getValueDesc(): StaticType = when (this) {
         is LocalSchema.ValueSchema.StructSchema -> this.getDesc()
         is LocalSchema.ValueSchema.ScalarSchema -> this.getDesc()
     }
@@ -62,7 +60,7 @@ internal class LocalConnectorObject(
         is LocalSchema.ValueSchema.StructSchema -> this.name
     }
 
-    private fun LocalSchema.ValueSchema.ScalarSchema.getDesc(): TypeDescriptor = when (this.type) {
+    private fun LocalSchema.ValueSchema.ScalarSchema.getDesc(): StaticType = when (this.type) {
         LocalObjectType.INT -> {
             val constraint = when (val size = this.attributes.getOrNull(0)) {
                 null -> IntType.IntRangeConstraint.UNCONSTRAINED
@@ -73,7 +71,7 @@ internal class LocalConnectorObject(
                     else -> error("Unsupported integer size")
                 }
             }
-            TypeDescriptor(IntType(constraint))
+            IntType(constraint)
         }
         LocalObjectType.DECIMAL -> {
             val constraint = when (val prec = this.attributes.getOrNull(0)) {
@@ -83,9 +81,7 @@ internal class LocalConnectorObject(
                     DecimalType.PrecisionScaleConstraint.Constrained(precision = prec, scale)
                 }
             }
-            TypeDescriptor(
-                DecimalType(constraint)
-            )
+            DecimalType(constraint)
         }
         LocalObjectType.STRING -> {
             val constraint = when (val maxLength = this.attributes.getOrNull(0)) {
@@ -94,26 +90,27 @@ internal class LocalConnectorObject(
                     NumberConstraint.UpTo(maxLength)
                 )
             }
-            TypeDescriptor(StringType(constraint))
+            StringType(constraint)
         }
     }
 
-    private fun LocalSchema.ValueSchema.StructSchema.getDesc() = TypeDescriptor(
+    private fun LocalSchema.ValueSchema.StructSchema.getDesc() =
         StructType(
             fields = this.attributes.associate {
-                it.getName() to it.getValueDesc().type
+                it.getName() to it.getValueDesc()
             },
             contentClosed = true,
             constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true)),
         )
-    )
 
-    private fun LocalSchema.TableSchema.getDesc(): TableDescriptor {
-        return TableDescriptor(
-            this.name,
-            this.attributes.map {
-                ColumnMetadata(it.getName(), it.getValueDesc().type)
-            }
+    private fun LocalSchema.TableSchema.getDesc(): StaticType {
+        return BagType(
+            StructType(
+                fields = this.attributes.associate {
+                    it.getName() to it.getValueDesc()
+                },
+                contentClosed = true
+            )
         )
     }
 }

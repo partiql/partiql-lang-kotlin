@@ -38,11 +38,8 @@ public class ParserJavaExample extends Example {
 
     @Override
     public void run() {
-        // A standard instance of [IonSystem], which is required by [SqlParser].
-        final IonSystem ion = IonSystemBuilder.standard().build();
-
         // An instance of [SqlParser].
-        final Parser parser = new PartiQLParserBuilder().ionSystem(ion).build();
+        final Parser parser = new PartiQLParserBuilder().build();
 
         // A query in string format
         final String query = "SELECT exampleField FROM exampleTable WHERE anotherField > 10";

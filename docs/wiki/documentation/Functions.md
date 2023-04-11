@@ -247,18 +247,19 @@ CAST(<<'a', 'b'>> AS bag) -- <<'a', 'b'>> (REPL does not display << >> and comma
 
 Counts the number of characters in the specified string, where 'character' is defined as a single unicode code point.
 
-*Note:* `CHAR_LENGTH` and `CHARACTER_LENGTH` are synonyms. 
-
+*Note:* `CHAR_LENGTH` and `CHARACTER_LENGTH` are synonyms.
 
 Signature
 : `CHAR_LENGTH: String -> Integer`
 
-  `CHARACTER_LENGTH: String -> Integer`
-
 Header
 : `CHAR_LENGTH(str)`
 
-  `CHARACTER_LENGTH(str)`
+Signature
+:   `CHARACTER_LENGTH: String -> Integer`
+
+Header
+:  `CHARACTER_LENGTH(str)`
 
 Purpose
 : Given a `String` value `str` return the number of characters (code points) in `str`.
@@ -385,6 +386,7 @@ Header
 
 Purpose 
 : Given a PartiQL value `val`, if `val` is   
+
 1. a container with size > 0, `EXISTS(val)` returns `true`; 
 2. a container with size = 0, `EXISTS(val)` returns `false`; 
 3. not a container, `EXISTS(val)` throws an error.
@@ -581,17 +583,22 @@ MAKE_TIME(21, 02, missing)               -- null
 MAKE_TIME(21, 02, 28., null)             -- null
 MAKE_TIME(21, 02, 28., missing)          -- null
 ```
-### SIZE / CARDINALITY
+
+### SIZE, CARDINALITY
 
 Given any container data type (i.e., list, structure or bag) return the number of elements in the container. 
 
 Signature
-- `SIZE: Container -> Integer`
-- `CARDINALITY: Container -> Integer`
+: `SIZE: Container -> Integer`
 
 Header
-- `SIZE(c)`
-- `CARDINALITY(c)`
+: `SIZE(c)`
+
+Signature
+: `CARDINALITY: Container -> Integer`
+
+Header
+: `CARDINALITY(c)`
 
 Purpose 
 : Given a container, `c`, return the number of elements in the container. 
@@ -850,6 +857,7 @@ TRIM(BOTH FROM '       foobar         ')     -- 'foobar'
 TRIM(BOTH '😁' FROM '😁😁foobar😁😁')         -- 'foobar'
 TRIM(BOTH '12' FROM '1112211foobar22211122') -- 'foobar'
 ```
+
 ### UPPER 
 
 Given a string convert all lower case characters to upper case characters.
@@ -900,11 +908,14 @@ With no `timestamp` argument, returns the number of seconds since the last epoch
 With a `timestamp` argument, returns the number of seconds from the last epoch to the given `timestamp` 
 (possibly negative).
 
-Signature : `UNIX_TIMESTAMP: [Timestamp] -> Integer|Decimal`
+Signature 
+: `UNIX_TIMESTAMP: [Timestamp] -> Integer|Decimal`
 
-Header : `UNIX_TIMESTAMP([timestamp])`
+Header 
+: `UNIX_TIMESTAMP([timestamp])`
 
-Purpose : `UNIX_TIMESTAMP()` called without a `timestamp` argument returns the number of whole seconds since the last 
+Purpose 
+: `UNIX_TIMESTAMP()` called without a `timestamp` argument returns the number of whole seconds since the last 
 epoch ('1970-01-01 00:00:00' UTC) as an Integer using `UTCNOW`.
 
 `UNIX_TIMESTAMP()` called with a `timestamp` argument returns returns the number of seconds from the last epoch to the 
@@ -913,7 +924,9 @@ If given a `timestamp` before the last epoch, `UNIX_TIMESTAMP` will return the n
 number.
 The return value will be a Decimal if and only if the given `timestamp` has a fractional seconds part.
 
-Examples :
+Examples
+: 
+
 ```sql
 UNIX_TIMESTAMP()                            -- 1507910531 (if current time is `2017-10-13T16:02:11Z`; # of seconds since last epoch as an Integer)
 UNIX_TIMESTAMP(`2020T`)                     -- 1577836800 (seconds from 2020 to the last epoch as an Integer)
@@ -932,15 +945,20 @@ UNIX_TIMESTAMP(`1969T`)                     -- -31536000 (timestamp is before la
 
 Converts the given unix epoch into a timestamp.
 
-Signature : `FROM_UNIXTIME: Integer|Decimal -> Timestamp`
+Signature 
+: `FROM_UNIXTIME: Integer|Decimal -> Timestamp`
 
-Header : `FROM_UNIXTIME(unix_timestamp)`
+Header 
+: `FROM_UNIXTIME(unix_timestamp)`
 
-Purpose : When given a non-negative numeric value, returns a timestamp after the last epoch.
+Purpose 
+: When given a non-negative numeric value, returns a timestamp after the last epoch.
 When given a negative numeric value, returns a timestamp before the last epoch.
 The returned timestamp has fractional seconds depending on if the value is a decimal.
 
-Examples :
+Examples
+: 
+
 ```sql
 FROM_UNIXTIME(-1)           -- `1969-12-31T23:59:59-00:00`      (negative unix_timestamp; returns timestamp before last epoch)
 FROM_UNIXTIME(-0.1)         -- `1969-12-31T23:59:59.9-00:00`    (unix_timestamp is decimal so timestamp has fractional seconds)
@@ -958,9 +976,12 @@ FROM_UNIXTIME(1577836800)   -- `2020-01-01T00:00:00-00:00`      (unix_timestamp 
 
 Returns the nearest integer greater than or equal to the input.
 
-Signature : `CEIL/CEILING: Numeric -> Numeric`
+Signature 
+: `CEIL/CEILING: Numeric -> Numeric`
 
-Examples:
+Examples
+: 
+
 ```sql
 CEIL(1.1) = 2
 CEIL(-42.8) = -42
@@ -973,9 +994,12 @@ CEIL(`nan`) = `nan` -- Float
 
 Returns the nearest integer less than or equal to the input.
 
-Signature : `FLOOR: Numeric -> Numeric`
+Signature 
+: `FLOOR: Numeric -> Numeric`
 
-Examples:
+Examples
+: 
+
 ```sql
 FLOOR(1.1) = 1
 FLOOR(-42.8) = -43
@@ -985,11 +1009,13 @@ FLOOR(`nan`) = `nan` -- Float
 ```
 
 ### ABS
+
 Returns the absolute value of the given number. 
 
 Note that abs(n) will throw an EVALUATOR_INTEGER_OVERFLOW when n is both of type `INT` and n = `INT.MIN_VALUE`.
 
-Signature : `ABS: Numeric -> Numeric`
+Signature 
+: `ABS: Numeric -> Numeric`
 
 | Number Type     | Result Type |
 |-----------------|-------------|
@@ -997,6 +1023,9 @@ Signature : `ABS: Numeric -> Numeric`
 | FLOAT           | FLOAT       | 
 | DECIMAL         | DECIMAL     |
 | +inf, nan, -inf | FLOAT       |
+
+Examples
+: 
 
 ```sql
 abs(-4) = 4
@@ -1013,9 +1042,12 @@ the modulus (remainder) of the first argument divided by the second argument as 
 
 If the second argument is zero, an EVALUATOR_ARITHMETIC_EXCEPTION will be thrown.
 
-Signature : `MOD: Int, Int -> Int`
+Signature 
+: `MOD: Int, Int -> Int`
 
-Examples:
+Examples
+: 
+
 ```sql
 mod(1, 1)      -- 0
 mod(10, 1)     -- 0
@@ -1033,7 +1065,8 @@ Returns the square root of the given number.
 
 The input number is required to be non-negative.
 
-Signature : `SQRT: Numeric -> Numeric`
+Signature 
+: `SQRT: Numeric -> Numeric`
 
 | Number Type | Result Type |
 |-------------|-------------|
@@ -1042,7 +1075,9 @@ Signature : `SQRT: Numeric -> Numeric`
 | DECIMAL     | DECIMAL     |
 | +inf, nan   | FLOAT       |
 
-Examples:
+Examples
+: 
+
 ```sql
 sqrt(4) = `2e0` 
 sqrt(4.0) = 2.0000000000000000000000000000000000000 -- DECIMAL
@@ -1054,7 +1089,8 @@ sqrt(`nan`) = `nan`
 
 Returns the natural log of the given number.
 
-Signature : `LN: Numeric -> Numeric`
+Signature 
+: `LN: Numeric -> Numeric`
 
 The input number is required to be a positive number, otherwise an EVALUATOR_ARITHMETIC_EXCEPTION will be thrown.
 
@@ -1072,7 +1108,9 @@ ln(+Inf) is +Inf
 | DECIMAL     | DECIMAL     |
 | +inf, nan   | FLOAT       |
 
-Examples:
+Examples
+: 
+
 ```sql
 ln(2) = `0.6931471805599453e0`
 ln(2.0) = 0.69314718055994530941723212145817656808
@@ -1084,7 +1122,8 @@ ln(`nan`) = `nan`
 
 Returns e^x for a given x.
 
-Signature : `SQRT: Numeric -> Numeric`
+Signature 
+: `SQRT: Numeric -> Numeric`
 
 Special Case: 
 
@@ -1101,7 +1140,9 @@ exp(-Inf) is 0.0
 | DECIMAL        | DECIMAL     |
 | +inf, nan, -inf | FLOAT       |
 
-Examples:
+Examples
+: 
+
 ```sql
 exp(1) = `2.718281828459045e0`
 exp(1.0) = 2.7182818284590452353602874713526624978 -- DECIMAL
@@ -1128,7 +1169,8 @@ pow(NaN, x) is NaN for x != 0.0;
 
 pow(x, Inf) is NaN for abs(x) == 1.0
 
-Signature : `POWER: (Numeric, Numeric) -> Numeric`
+Signature 
+: `POWER: (Numeric, Numeric) -> Numeric`
 
 
 |          x Type           |          y Type           | Result Type |
@@ -1146,7 +1188,9 @@ Signature : `POWER: (Numeric, Numeric) -> Numeric`
 |          NUMERIC          | `+inf` or `-inf` or `nan` |    FLOAT    |
 
 
-Examples:
+Examples
+: 
+
 ```sql
 pow(2,2) = `4e0`
 pow(2,`2e0`) = `4e0`
@@ -1166,6 +1210,132 @@ pow(`nan`, 1) = `nan`
 pow(1, `+inf`) = `nan`
 ```
 
+### BIT_LENGTH
+
+Returns the number of bits in the input string.
+
+Signature
+: `BIT_LENGTH: String —> Int`
+
+Header
+: `BIT_LENGTH(str)`
+
+Examples
+: 
+
+```sql
+bit_length('jose') -- 32
+```
+
+### OCTET_LENGTH
+
+Returns the number of bytes in the input string.
+
+Signature
+: `OCTET_LENGTH: String —> Int`
+
+Header
+: `OCTET_LENGTH(str)`
+
+Examples
+: 
+
+```sql
+octet_length('jose') -- 4
+```
+
+### POSITION
+
+Position determines the first position (counting from 1), if any, at which one string, str1, occurs within
+another, str2. If str1 is of length zero, then it occurs at position 1 (one) for any value of str2. If str1
+does not occur in str2, then zero is returned. The declared type of a <position expression> is exact numeric
+
+Signature
+: `POSITION: String, String —> Int`
+
+Header
+: `POSITION(str1 IN str2)`
+
+Header
+: `POSITION(str1, str2)`
+
+Examples
+: 
+
+```sql
+position('foo' in 'hello')     -- 0
+position('' in 'hello')        -- 1
+position('h' in 'hello')       -- 1
+position('o' in 'hello')       -- 5
+position('ll' in 'hello')      -- 3
+position('lo' in 'hello')      -- 4
+position('hello' in 'hello')   -- 1
+position('xx' in 'xxyyxxyy')   -- 1
+position('yy' in 'xxyyxxyy')   -- 3
+```
+
+
+### OVERLAY
+
+OVERLAY modifies a string argument by replacing a given substring of the string, which is specified by a given numeric 
+starting position and a given numeric length, with another string (called the replacement string). When the length of
+the substring is zero, nothing is removed from the original string and the string returned by the
+function is the result of inserting the replacement string into the original string at the starting position.
+
+Signature
+: `OVERLAY: String, String, Int —> String`
+
+Header
+: `OVERLAY(str1 PLACING str2 FROM pos)`
+
+Signature
+: `OVERLAY: String, String, Int, Int —> String`
+
+Header
+: `OVERLAY(str1 PLACING str2 FROM pos FOR for)`
+
+Examples
+: 
+
+```sql
+overlay('hello' placing '' from 1)              -- "hello
+overlay('hello' placing '' from 2 for 3)         -- "ho
+overlay('hello' placing '' from 2 for 4)        -- "h
+overlay('hello' placing 'XX' from 1)            -- "XXllo
+overlay('hello' placing 'XX' from 1 for 3)      -- "XXlo
+overlay('hello' placing 'XX' from 1 for 1)      -- "XXello
+overlay('hello' placing 'XX' from 1 for 100)    -- "XX
+overlay('hello' placing 'XX' from 1 for 0)      -- "XXhello
+overlay('hello' placing 'XX' from 7)            -- "helloXX
+overlay('hello' placing 'XX' from 100 for 100)  -- "helloXX
+overlay('hello' placing 'XX' from 2 for 1)      -- "hXXllo
+overlay('hello' placing 'XX' from 2 for 3)      -- "hXXo
+```
+
+### TEXT_REPLACE
+
+In `string`, replaces all occurrences of substring `from` with another string `to`. 
+
+Signature
+: `TEXT_REPLACE: String, String, String -> String`
+
+Header
+: `TEXT_REPLACE(string, from, to)`
+
+Examples
+:
+
+```sql
+text_replace('abcdefabcdef', 'cd', 'XX')       -- 'abXXefabXXef'
+text_replace('abcdefabcdef', 'xyz', 'XX')      -- 'abcdefabcdef'
+text_replace('abcdefabcdef', 'defab', '')      -- 'abccdef'
+text_replace('abcabcabcdef', 'abcabc', 'XXX')  -- 'XXXabcdef'
+text_replace('abcabcabcdef', '', 'X')          -- 'XaXbXcXaXbXcXaXbXcXdXeXfX'
+text_replace('', 'abc', 'XX')                  -- ''
+text_replace('', '', 'XX')                     -- 'XX'
+```
+
+<!--
 This is the template for writing documentations for an PartiQL built-in function. 
 
 There are 5 parts to a function's documentation 
@@ -1196,6 +1366,7 @@ function returns the current sum up to that point.
   
 Examples
 : 
+
 ```sql  
 ADD(1)         -- 1 (wrap extra explanations with parens)
 ADD(1,2)       -- 3
@@ -1204,94 +1375,5 @@ ADD()          -- 0
 ADD("a")       -- 0
 ```
 
-## BIT_LENGTH
+-->
 
-Returns the number of bits in the input string.
-
-Signature
-: `BIT_LENGTH: String —> Int`
-
-Header
-: `BIT_LENGTH(str)`
-
-Examples
-:
-```sql
-bit_length('jose') -- 32
-```
-
-## OCTET_LENGTH
-
-Returns the number of bytes in the input string.
-
-Signature
-: `OCTET_LENGTH: String —> Int`
-
-Header
-: `OCTET_LENGTH(str)`
-
-Examples
-:
-```sql
-octet_length('jose') -- 4
-```
-
-## POSITION
-
-Position determines the first position (counting from 1), if any, at which one string, str1, occurs within
-another, str2. If str1 is of length zero, then it occurs at position 1 (one) for any value of str2. If str1
-does not occur in str2, then zero is returned. The declared type of a <position expression> is exact numeric
-
-Signature
-: `POSITION: String, String —> Int`
-
-Header
-- `POSITION(str1 IN str2)`
-- `POSITION(str1, str2)`
-
-Examples
-:
-```sql
-position('foo' in 'hello')     -- 0
-position('' in 'hello')        -- 1
-position('h' in 'hello')       -- 1
-position('o' in 'hello')       -- 5
-position('ll' in 'hello')      -- 3
-position('lo' in 'hello')      -- 4
-position('hello' in 'hello')   -- 1
-position('xx' in 'xxyyxxyy')   -- 1
-position('yy' in 'xxyyxxyy')   -- 3
-```
-
-
-## OVERLAY
-
-OVERLAY modifies a string argument by replacing a given substring of the string, which is specified by a given numeric 
-starting position and a given numeric length, with another string (called the replacement string). When the length of
-the substring is zero, nothing is removed from the original string and the string returned by the
-function is the result of inserting the replacement string into the original string at the starting position.
-
-Signature
-- `OVERLAY: String, String, Int —> String`
-- `OVERLAY: String, String, Int, Int —> String`
-
-Header
-- `OVERLAY(str1 PLACING str2 FROM pos)`
-- `OVERLAY(str1 PLACING str2 FROM pos FOR for)`
-
-Examples
-:
-```sql
-overlay('hello' placing '' from 1)              -- "hello
-overlay('hello' placing '' from 2 for 3)         -- "ho
-overlay('hello' placing '' from 2 for 4)        -- "h
-overlay('hello' placing 'XX' from 1)            -- "XXllo
-overlay('hello' placing 'XX' from 1 for 3)      -- "XXlo
-overlay('hello' placing 'XX' from 1 for 1)      -- "XXello
-overlay('hello' placing 'XX' from 1 for 100)    -- "XX
-overlay('hello' placing 'XX' from 1 for 0)      -- "XXhello
-overlay('hello' placing 'XX' from 7)            -- "helloXX
-overlay('hello' placing 'XX' from 100 for 100)  -- "helloXX
-overlay('hello' placing 'XX' from 2 for 1)      -- "hXXllo
-overlay('hello' placing 'XX' from 2 for 3)      -- "hXXo
-```

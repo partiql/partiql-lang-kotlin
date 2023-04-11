@@ -12,27 +12,17 @@
  *  language governing permissions and limitations under the License.
  */
 
-package org.partiql.spi.sources
+package org.partiql.lang.planner.transforms
 
-import org.partiql.types.StaticType
+import org.partiql.spi.connector.ConnectorObjectHandle
 
 /**
- * Represents the descriptor for a PartiQL Value that can be referenced in queries.
+ * Represents a [ConnectorObjectHandle], but also adds information relevant to the associated Catalog.
+ *
+ * This way, the [ConnectorObjectHandle] can be returned by a [org.partiql.spi.connector.Connector] without the Connector
+ * knowing which Catalog it is mapped to internally.
  */
-public sealed class ValueDescriptor {
-
-    /**
-     * Represents a Table Descriptor in SQL terminology.
-     */
-    public data class TableDescriptor(
-        public val name: String,
-        public val attributes: List<ColumnMetadata>
-    ) : ValueDescriptor()
-
-    /**
-     * Represents a [StaticType]
-     */
-    public data class TypeDescriptor(
-        public val type: StaticType
-    ) : ValueDescriptor()
-}
+internal class ObjectHandle(
+    val connectorHandle: ConnectorObjectHandle,
+    val catalogName: String
+)

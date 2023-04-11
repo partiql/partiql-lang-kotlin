@@ -31,6 +31,7 @@ configurations {
 dependencies {
     antlr(Deps.antlr)
     api(project(":lib:isl"))
+    api(project(":partiql-spi"))
     api(Deps.ionElement)
     api(Deps.ionJava)
     api(Deps.pigRuntime)
@@ -40,6 +41,8 @@ dependencies {
     implementation(Deps.antlrRuntime)
     implementation(Deps.csv)
     implementation(Deps.kotlinReflect)
+
+    testImplementation(project(":plugins:partiql-mockdb"))
     testImplementation(Deps.assertj)
     testImplementation(Deps.junit4)
     testImplementation(Deps.junit4Params)
