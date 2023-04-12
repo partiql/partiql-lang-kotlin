@@ -20,8 +20,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 -->
 
-
 ## [Unreleased]
+
+### Added
+
+### Changed
+
+### Deprecated
+
+### Fixed
+
+### Removed
+
+### Security
+
+## [0.9.3] - 2023-04-12
 
 ### Added
 - Added numeric builtins ABS, SQRT, EXP, LN, POW, MOD.
