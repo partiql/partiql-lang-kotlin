@@ -99,9 +99,9 @@ public interface AstVisitor<R, C> {
 
     public fun visitExprIsType(node: Expr.IsType, ctx: C): R
 
-    public fun visitExprCase(node: Expr.Case, ctx: C): R
+    public fun visitExprSwitch(node: Expr.Switch, ctx: C): R
 
-    public fun visitExprCaseBranch(node: Expr.Case.Branch, ctx: C): R
+    public fun visitExprSwitchBranch(node: Expr.Switch.Branch, ctx: C): R
 
     public fun visitExprCoalesce(node: Expr.Coalesce, ctx: C): R
 

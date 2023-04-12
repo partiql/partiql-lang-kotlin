@@ -2,6 +2,7 @@ package org.partiql.ast.builder
 
 import com.amazon.ionelement.api.IonElement
 import org.partiql.ast.AstNode
+import org.partiql.ast.Case
 import org.partiql.ast.Expr
 import org.partiql.ast.From
 import org.partiql.ast.GraphMatch
@@ -174,7 +175,7 @@ public class AstBuilder(
 
     public fun exprIdentifier(
         name: String? = null,
-        case: Expr.Case? = null,
+        case: Case? = null,
         scope: Expr.Identifier.Scope? = null,
         block: ExprIdentifierBuilder.() -> Unit = {}
     ): Expr.Identifier {
@@ -358,23 +359,23 @@ public class AstBuilder(
         return builder.build(factory)
     }
 
-    public fun exprCase(
+    public fun exprSwitch(
         expr: Expr? = null,
-        branches: MutableList<Expr.Case.Branch> = mutableListOf(),
+        branches: MutableList<Expr.Switch.Branch> = mutableListOf(),
         default: Expr? = null,
-        block: ExprCaseBuilder.() -> Unit = {}
-    ): Expr.Case {
-        val builder = ExprCaseBuilder()
+        block: ExprSwitchBuilder.() -> Unit = {}
+    ): Expr.Switch {
+        val builder = ExprSwitchBuilder()
         builder.block()
         return builder.build(factory)
     }
 
-    public fun exprCaseBranch(
+    public fun exprSwitchBranch(
         condition: Expr? = null,
         expr: Expr? = null,
-        block: ExprCaseBranchBuilder.() -> Unit = {}
-    ): Expr.Case.Branch {
-        val builder = ExprCaseBranchBuilder()
+        block: ExprSwitchBranchBuilder.() -> Unit = {}
+    ): Expr.Switch.Branch {
+        val builder = ExprSwitchBranchBuilder()
         builder.block()
         return builder.build(factory)
     }

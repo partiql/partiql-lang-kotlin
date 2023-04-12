@@ -13,6 +13,6 @@ This package contains data structures for the PartiQL Kotlin abstract syntax tre
      -p org.partiql.ast\
      -u Ast\
      -m DATA\
-     --poems visitor --poems builder \
+     --poems visitor --poems builder --poems metas\
      ./partiql-ast/src/main/resources/partiql_ast.ion
 ```

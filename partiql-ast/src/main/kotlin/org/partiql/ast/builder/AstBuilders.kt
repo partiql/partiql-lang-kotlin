@@ -1,6 +1,7 @@
 package org.partiql.ast.builder
 
 import com.amazon.ionelement.api.IonElement
+import org.partiql.ast.Case
 import org.partiql.ast.Expr
 import org.partiql.ast.From
 import org.partiql.ast.GraphMatch
@@ -322,7 +323,7 @@ public class ExprLitBuilder {
 public class ExprIdentifierBuilder {
     public var name: String? = null
 
-    public var case: Expr.Case? = null
+    public var case: Case? = null
 
     public var scope: Expr.Identifier.Scope? = null
 
@@ -330,7 +331,7 @@ public class ExprIdentifierBuilder {
         this.name = name
     }
 
-    public fun case(case: Expr.Case?): ExprIdentifierBuilder = this.apply {
+    public fun case(case: Case?): ExprIdentifierBuilder = this.apply {
         this.case = case
     }
 
@@ -728,51 +729,51 @@ public class ExprIsTypeBuilder {
     )
 }
 
-public class ExprCaseBuilder {
+public class ExprSwitchBuilder {
     public var expr: Expr? = null
 
-    public var branches: MutableList<Expr.Case.Branch> = mutableListOf()
+    public var branches: MutableList<Expr.Switch.Branch> = mutableListOf()
 
     public var default: Expr? = null
 
-    public fun expr(expr: Expr?): ExprCaseBuilder = this.apply {
+    public fun expr(expr: Expr?): ExprSwitchBuilder = this.apply {
         this.expr = expr
     }
 
-    public fun branches(branches: MutableList<Expr.Case.Branch>): ExprCaseBuilder = this.apply {
+    public fun branches(branches: MutableList<Expr.Switch.Branch>): ExprSwitchBuilder = this.apply {
         this.branches = branches
     }
 
-    public fun default(default: Expr?): ExprCaseBuilder = this.apply {
+    public fun default(default: Expr?): ExprSwitchBuilder = this.apply {
         this.default = default
     }
 
-    public fun build(): Expr.Case = build(AstFactory.DEFAULT)
+    public fun build(): Expr.Switch = build(AstFactory.DEFAULT)
 
-    public fun build(factory: AstFactory = AstFactory.DEFAULT): Expr.Case = factory.exprCase(
+    public fun build(factory: AstFactory = AstFactory.DEFAULT): Expr.Switch = factory.exprSwitch(
         expr =
         expr,
         branches = branches, default = default
     )
 }
 
-public class ExprCaseBranchBuilder {
+public class ExprSwitchBranchBuilder {
     public var condition: Expr? = null
 
     public var expr: Expr? = null
 
-    public fun condition(condition: Expr?): ExprCaseBranchBuilder = this.apply {
+    public fun condition(condition: Expr?): ExprSwitchBranchBuilder = this.apply {
         this.condition = condition
     }
 
-    public fun expr(expr: Expr?): ExprCaseBranchBuilder = this.apply {
+    public fun expr(expr: Expr?): ExprSwitchBranchBuilder = this.apply {
         this.expr = expr
     }
 
-    public fun build(): Expr.Case.Branch = build(AstFactory.DEFAULT)
+    public fun build(): Expr.Switch.Branch = build(AstFactory.DEFAULT)
 
-    public fun build(factory: AstFactory = AstFactory.DEFAULT): Expr.Case.Branch =
-        factory.exprCaseBranch(condition = condition!!, expr = expr!!)
+    public fun build(factory: AstFactory = AstFactory.DEFAULT): Expr.Switch.Branch =
+        factory.exprSwitchBranch(condition = condition!!, expr = expr!!)
 }
 
 public class ExprCoalesceBuilder {

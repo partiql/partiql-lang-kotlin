@@ -2,6 +2,7 @@ package org.partiql.ast.builder
 
 import com.amazon.ionelement.api.IonElement
 import org.partiql.ast.AstNode
+import org.partiql.ast.Case
 import org.partiql.ast.Expr
 import org.partiql.ast.From
 import org.partiql.ast.GraphMatch
@@ -84,7 +85,7 @@ public abstract class AstFactory {
 
     public open fun exprIdentifier(
         name: String,
-        case: Expr.Case,
+        case: Case,
         scope: Expr.Identifier.Scope
     ) = Expr.Identifier(name, case, scope)
 
@@ -152,13 +153,16 @@ public abstract class AstFactory {
 
     public open fun exprIsType(`value`: Expr, type: Expr.Collection.Type) = Expr.IsType(value, type)
 
-    public open fun exprCase(
+    public open fun exprSwitch(
         expr: Expr?,
-        branches: List<Expr.Case.Branch>,
+        branches: List<Expr.Switch.Branch>,
         default: Expr?
-    ) = Expr.Case(expr, branches, default)
+    ) = Expr.Switch(expr, branches, default)
 
-    public open fun exprCaseBranch(condition: Expr, expr: Expr) = Expr.Case.Branch(condition, expr)
+    public open fun exprSwitchBranch(condition: Expr, expr: Expr) = Expr.Switch.Branch(
+        condition,
+        expr
+    )
 
     public open fun exprCoalesce(args: List<Expr>) = Expr.Coalesce(args)
 

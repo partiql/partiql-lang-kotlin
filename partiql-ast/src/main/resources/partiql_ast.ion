@@ -242,7 +242,7 @@ expr::[
   },
 
   // The simple and searched `case` switch SQL special form F261-01, F261-02
-  case::{
+  switch::{
     expr:     optional::expr,
     branches: list::[branch],
     default:  optional::expr,

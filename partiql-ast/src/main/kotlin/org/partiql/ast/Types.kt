@@ -7,8 +7,6 @@ import org.partiql.ast.builder.ExprBinaryBuilder
 import org.partiql.ast.builder.ExprCallBuilder
 import org.partiql.ast.builder.ExprCanCastBuilder
 import org.partiql.ast.builder.ExprCanLosslessCastBuilder
-import org.partiql.ast.builder.ExprCaseBranchBuilder
-import org.partiql.ast.builder.ExprCaseBuilder
 import org.partiql.ast.builder.ExprCastBuilder
 import org.partiql.ast.builder.ExprCoalesceBuilder
 import org.partiql.ast.builder.ExprCollectionBuilder
@@ -28,6 +26,8 @@ import org.partiql.ast.builder.ExprPathStepKeyBuilder
 import org.partiql.ast.builder.ExprPathStepUnpivotBuilder
 import org.partiql.ast.builder.ExprPathStepWildcardBuilder
 import org.partiql.ast.builder.ExprSfwBuilder
+import org.partiql.ast.builder.ExprSwitchBranchBuilder
+import org.partiql.ast.builder.ExprSwitchBuilder
 import org.partiql.ast.builder.ExprTimeBuilder
 import org.partiql.ast.builder.ExprTupleBuilder
 import org.partiql.ast.builder.ExprTupleFieldBuilder
@@ -86,15 +86,19 @@ import org.partiql.ast.builder.TableDefinitionColumnConstraintCheckBuilder
 import org.partiql.ast.builder.TableDefinitionColumnConstraintNotNullBuilder
 import org.partiql.ast.builder.TableDefinitionColumnConstraintNullableBuilder
 import org.partiql.ast.visitor.AstVisitor
+import kotlin.Any
 import kotlin.Boolean
 import kotlin.Int
 import kotlin.Long
 import kotlin.String
 import kotlin.collections.List
+import kotlin.collections.MutableMap
 import kotlin.jvm.JvmStatic
 
 public abstract class AstNode {
     public open val children: List<AstNode> = emptyList()
+
+    public val metadata: MutableMap<String, Any> = mutableMapOf()
 
     public abstract fun <R, C> accept(visitor: AstVisitor<R, C>, ctx: C): R
 }
@@ -432,7 +436,7 @@ public sealed class Expr : AstNode() {
         is Between -> visitor.visitExprBetween(this, ctx)
         is InCollection -> visitor.visitExprInCollection(this, ctx)
         is IsType -> visitor.visitExprIsType(this, ctx)
-        is Case -> visitor.visitExprCase(this, ctx)
+        is Switch -> visitor.visitExprSwitch(this, ctx)
         is Coalesce -> visitor.visitExprCoalesce(this, ctx)
         is NullIf -> visitor.visitExprNullIf(this, ctx)
         is Cast -> visitor.visitExprCast(this, ctx)
@@ -471,12 +475,6 @@ public sealed class Expr : AstNode() {
         public val case: Case,
         public val scope: Scope
     ) : Expr() {
-        public override val children: List<AstNode> by lazy {
-            val kids = mutableListOf<AstNode?>()
-            kids.add(case)
-            kids.filterNotNull()
-        }
-
         public override fun <R, C> accept(visitor: AstVisitor<R, C>, ctx: C): R =
             visitor.visitExprIdentifier(this, ctx)
 
@@ -847,7 +845,7 @@ public sealed class Expr : AstNode() {
         }
     }
 
-    public data class Case(
+    public data class Switch(
         public val expr: Expr?,
         public val branches: List<Branch>,
         public val default: Expr?
@@ -861,7 +859,7 @@ public sealed class Expr : AstNode() {
         }
 
         public override fun <R, C> accept(visitor: AstVisitor<R, C>, ctx: C): R =
-            visitor.visitExprCase(this, ctx)
+            visitor.visitExprSwitch(this, ctx)
 
         public data class Branch(
             public val condition: Expr,
@@ -875,17 +873,17 @@ public sealed class Expr : AstNode() {
             }
 
             public override fun <R, C> accept(visitor: AstVisitor<R, C>, ctx: C): R =
-                visitor.visitExprCaseBranch(this, ctx)
+                visitor.visitExprSwitchBranch(this, ctx)
 
             public companion object {
                 @JvmStatic
-                public fun builder(): ExprCaseBranchBuilder = ExprCaseBranchBuilder()
+                public fun builder(): ExprSwitchBranchBuilder = ExprSwitchBranchBuilder()
             }
         }
 
         public companion object {
             @JvmStatic
-            public fun builder(): ExprCaseBuilder = ExprCaseBuilder()
+            public fun builder(): ExprSwitchBuilder = ExprSwitchBuilder()
         }
     }
 

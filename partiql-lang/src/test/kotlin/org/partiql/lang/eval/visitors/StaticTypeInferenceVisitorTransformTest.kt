@@ -7597,7 +7597,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
 
         private val customTypedOpParameters = mapOf(
             "es_integer" to TypedOpParameter(IntType(IntType.IntRangeConstraint.LONG)),
-            "es_float" to TypedOpParameter(StaticType.FLOAT) {
+            "es_float" to TypedOpParameter(FLOAT) {
                 // For the sake of this test, lets say ES_FLOAT only allows values in range (-100, 100)
                 it.numberValue() < 100L && it.numberValue() > -100L
             }

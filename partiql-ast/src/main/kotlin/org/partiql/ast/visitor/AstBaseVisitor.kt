@@ -112,7 +112,7 @@ public abstract class AstBaseVisitor<R, C> : AstVisitor<R, C> {
         is Expr.Between -> visitExprBetween(node, ctx)
         is Expr.InCollection -> visitExprInCollection(node, ctx)
         is Expr.IsType -> visitExprIsType(node, ctx)
-        is Expr.Case -> visitExprCase(node, ctx)
+        is Expr.Switch -> visitExprSwitch(node, ctx)
         is Expr.Coalesce -> visitExprCoalesce(node, ctx)
         is Expr.NullIf -> visitExprNullIf(node, ctx)
         is Expr.Cast -> visitExprCast(node, ctx)
@@ -189,12 +189,10 @@ public abstract class AstBaseVisitor<R, C> : AstVisitor<R, C> {
 
     public override fun visitExprIsType(node: Expr.IsType, ctx: C): R = defaultVisit(node, ctx)
 
-    public override fun visitExprCase(node: Expr.Case, ctx: C): R = defaultVisit(node, ctx)
+    public override fun visitExprSwitch(node: Expr.Switch, ctx: C): R = defaultVisit(node, ctx)
 
-    public override fun visitExprCaseBranch(node: Expr.Case.Branch, ctx: C): R = defaultVisit(
-        node,
-        ctx
-    )
+    public override fun visitExprSwitchBranch(node: Expr.Switch.Branch, ctx: C): R =
+        defaultVisit(node, ctx)
 
     public override fun visitExprCoalesce(node: Expr.Coalesce, ctx: C): R = defaultVisit(node, ctx)
 
