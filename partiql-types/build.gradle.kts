@@ -15,8 +15,15 @@
 
 plugins {
     id(Plugins.conventions)
+    id(Plugins.publish)
 }
 
 dependencies {
     implementation(Deps.ionElement)
+}
+
+publish {
+    artifactId = "partiql-types"
+    name = "PartiQL Types"
+    description = "The core PartiQL types."
 }
