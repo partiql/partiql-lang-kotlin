@@ -1,6 +1,6 @@
 imports::{
   kotlin: [
-    ion::'com.amazon.ionelement.api.IonElement',
+    ion::'com.amazon.ionelement.api.AnyElement',
     type::'org.partiql.types.StaticType',
   ],
 }
@@ -292,7 +292,7 @@ expr::[
   },
 
   // The PartiQL `sfw` query expression
-  sfw::{
+  s_f_w::{
     select:   select,
     from:     from,
     let:      optional::let,
@@ -321,11 +321,14 @@ expr::[
 // PartiQL SELECT Clause Variants — https://partiql.org/dql/select.html
 select::[
 
-  // SELECT *
-  star::{},
+  // SELECT [ALL|DISTINCT] *
+  star::{
+    quantifier: set_quantifier,
+  },
 
-  // SELECT <select-list>
+  // SELECT [ALL|DISTINCT] <select-list>
   project::{
+    quantifier: set_quantifier,
     items: list::[item],
     _: [
       item::[
@@ -341,8 +344,9 @@ select::[
     key:    expr,
   },
 
-  // SELECT VALUE <expr>
+  // SELECT [ALL|DISTINCT] VALUE <expr>
   value::{
+    quantifier: set_quantifier,
     constructor: expr,
   },
 ]
@@ -368,7 +372,15 @@ from::[
   },
 ]
 
-let::{}
+let::{
+  bindings: list::[binding],
+  _: [
+    binding::{
+      expr:     expr,
+      as_alias: string,
+    },
+  ],
+}
 
 // GROUP BY Clause — https://partiql.org/dql/group_by.html
 group_by::{
@@ -378,7 +390,7 @@ group_by::{
   _: [
     key::{
       expr:     expr,
-      as_alias: string,
+      as_alias: optional::string,
     },
   ],
 }
@@ -448,7 +460,7 @@ graph_match::{
     // Graph Edge Quantifier (e.g., the `{2,5}` in `MATCH (x)->{2,5}(y)`)
     quantifier::{
       lower: long,
-      upper: optional::int,
+      upper: optional::long,
     },
 
     // Path Selector
