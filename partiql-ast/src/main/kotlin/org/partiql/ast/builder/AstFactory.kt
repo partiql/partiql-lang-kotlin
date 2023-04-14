@@ -1,6 +1,12 @@
 package org.partiql.ast.builder
 
 import com.amazon.ionelement.api.IonElement
+import kotlin.Boolean
+import kotlin.Int
+import kotlin.Long
+import kotlin.String
+import kotlin.collections.List
+import kotlin.jvm.JvmStatic
 import org.partiql.ast.AstNode
 import org.partiql.ast.Case
 import org.partiql.ast.Expr
@@ -16,331 +22,439 @@ import org.partiql.ast.Select
 import org.partiql.ast.SetQuantifier
 import org.partiql.ast.Statement
 import org.partiql.ast.TableDefinition
-import kotlin.Boolean
-import kotlin.Int
-import kotlin.Long
-import kotlin.String
-import kotlin.collections.List
-import kotlin.jvm.JvmStatic
+import org.partiql.types.StaticType
 
 public abstract class AstFactory {
-    public open fun statementQuery(expr: Expr) = Statement.Query(expr)
-
-    public open fun statementDmlInsert(
-        target: Expr,
-        values: Expr,
-        onConflict: OnConflict.Action
-    ) = Statement.Dml.Insert(target, values, onConflict)
-
-    public open fun statementDmlInsertValue(
-        target: Expr,
-        `value`: Expr,
-        atAlias: Expr,
-        index: Expr?,
-        onConflict: OnConflict
-    ) = Statement.Dml.InsertValue(target, value, atAlias, index, onConflict)
-
-    public open fun statementDmlSet(assignments: List<Statement.Dml.Set.Assignment>) =
-        Statement.Dml.Set(assignments)
-
-    public open fun statementDmlSetAssignment(target: Expr.Path, `value`: Expr) =
-        Statement.Dml.Set.Assignment(target, value)
-
-    public open fun statementDmlRemove(target: Expr.Path) = Statement.Dml.Remove(target)
-
-    public open fun statementDmlDelete(
-        from: From,
-        `where`: Expr?,
-        returning: Returning
-    ) = Statement.Dml.Delete(from, where, returning)
-
-    public open fun statementDdlCreateTable(name: String, definition: TableDefinition?) =
-        Statement.Ddl.CreateTable(name, definition)
-
-    public open fun statementDdlCreateIndex(name: String, fields: List<Expr>) =
-        Statement.Ddl.CreateIndex(name, fields)
-
-    public open fun statementDdlDropTable(identifier: Expr.Identifier) =
-        Statement.Ddl.DropTable(identifier)
-
-    public open fun statementDdlDropIndex(table: Expr.Identifier, keys: Expr.Identifier) =
-        Statement.Ddl.DropIndex(table, keys)
-
-    public open fun statementExec(procedure: String, args: List<Expr>) = Statement.Exec(
-        procedure,
-        args
-    )
-
-    public open fun statementExplain(target: Statement.Explain.Target) = Statement.Explain(target)
-
-    public open fun statementExplainTargetDomain(
-        statement: Statement,
-        type: String?,
-        format: String?
-    ) = Statement.Explain.Target.Domain(statement, type, format)
-
-    public open fun exprMissing() = Expr.Missing()
-
-    public open fun exprLit(`value`: IonElement) = Expr.Lit(value)
-
-    public open fun exprIdentifier(
-        name: String,
-        case: Case,
-        scope: Expr.Identifier.Scope
-    ) = Expr.Identifier(name, case, scope)
-
-    public open fun exprPath(root: Expr, steps: List<Expr.Path.Step>) = Expr.Path(root, steps)
-
-    public open fun exprPathStepKey(`value`: Expr) = Expr.Path.Step.Key(value)
-
-    public open fun exprPathStepWildcard() = Expr.Path.Step.Wildcard()
-
-    public open fun exprPathStepUnpivot() = Expr.Path.Step.Unpivot()
-
-    public open fun exprCall(function: String, args: List<Expr>) = Expr.Call(function, args)
-
-    public open fun exprAgg(
-        function: String,
-        args: List<Expr>,
-        quantifier: SetQuantifier
-    ) = Expr.Agg(function, args, quantifier)
-
-    public open fun exprParameter(index: Int) = Expr.Parameter(index)
-
-    public open fun exprUnary(op: Expr.Unary.Op, expr: Expr) = Expr.Unary(op, expr)
-
-    public open fun exprBinary(
-        op: Expr.Binary.Op,
-        lhs: Expr,
-        rhs: Expr
-    ) = Expr.Binary(op, lhs, rhs)
-
-    public open fun exprCollection(type: Expr.Collection.Type, values: List<Expr>) =
-        Expr.Collection(type, values)
-
-    public open fun exprTuple(fields: List<Expr.Tuple.Field>) = Expr.Tuple(fields)
-
-    public open fun exprTupleField(name: Expr, `value`: Expr) = Expr.Tuple.Field(name, value)
-
-    public open fun exprDate(
-        year: Long,
-        month: Long,
-        day: Long
-    ) = Expr.Date(year, month, day)
-
-    public open fun exprTime(
-        hour: Long,
-        minute: Long,
-        second: Long,
-        nano: Long,
-        precision: Long,
-        tzOffsetMinutes: Long?
-    ) = Expr.Time(hour, minute, second, nano, precision, tzOffsetMinutes)
-
-    public open fun exprLike(
-        `value`: Expr,
-        pattern: Expr,
-        escape: Expr?
-    ) = Expr.Like(value, pattern, escape)
-
-    public open fun exprBetween(
-        `value`: Expr,
-        from: Expr,
-        to: Expr
-    ) = Expr.Between(value, from, to)
-
-    public open fun exprInCollection(lhs: Expr, rhs: Expr) = Expr.InCollection(lhs, rhs)
-
-    public open fun exprIsType(`value`: Expr, type: Expr.Collection.Type) = Expr.IsType(value, type)
-
-    public open fun exprSwitch(
-        expr: Expr?,
-        branches: List<Expr.Switch.Branch>,
-        default: Expr?
-    ) = Expr.Switch(expr, branches, default)
-
-    public open fun exprSwitchBranch(condition: Expr, expr: Expr) = Expr.Switch.Branch(
-        condition,
-        expr
-    )
-
-    public open fun exprCoalesce(args: List<Expr>) = Expr.Coalesce(args)
-
-    public open fun exprNullIf(expr1: Expr, expr2: Expr) = Expr.NullIf(expr1, expr2)
-
-    public open fun exprCast(`value`: Expr, asType: Expr.Collection.Type) = Expr.Cast(value, asType)
-
-    public open fun exprCanCast(`value`: Expr, asType: Expr.Collection.Type) = Expr.CanCast(
-        value,
-        asType
-    )
-
-    public open fun exprCanLosslessCast(`value`: Expr, asType: Expr.Collection.Type) =
-        Expr.CanLosslessCast(value, asType)
-
-    public open fun exprOuterBagOp(
-        op: Expr.OuterBagOp.Op,
-        quantifier: SetQuantifier,
-        lhs: Expr,
-        rhs: Expr
-    ) = Expr.OuterBagOp(op, quantifier, lhs, rhs)
-
-    public open fun exprSfw(
-        select: Select,
-        from: From,
-        let: Let?,
-        `where`: Expr?,
-        groupBy: GroupBy?,
-        having: Expr?,
-        orderBy: OrderBy?,
-        limit: Expr?,
-        offset: Expr?
-    ) = Expr.Sfw(select, from, let, where, groupBy, having, orderBy, limit, offset)
-
-    public open fun exprMatch(expr: Expr, pattern: GraphMatch) = Expr.Match(expr, pattern)
-
-    public open fun exprWindow(
-        function: String,
-        over: Over,
-        args: List<Expr>
-    ) = Expr.Window(function, over, args)
-
-    public open fun selectStar() = Select.Star()
-
-    public open fun selectProject(items: List<Select.Project.Item>) = Select.Project(items)
-
-    public open fun selectProjectItemAll(expr: Expr) = Select.Project.Item.All(expr)
-
-    public open fun selectProjectItemVar(expr: Expr, asAlias: String?) = Select.Project.Item.Var(
-        expr,
-        asAlias
-    )
-
-    public open fun selectPivot(`value`: Expr, key: Expr) = Select.Pivot(value, key)
-
-    public open fun selectValue(`constructor`: Expr) = Select.Value(constructor)
-
-    public open fun fromCollection(
-        expr: Expr,
-        unpivot: Boolean?,
-        asAlias: String?,
-        atAlias: String?,
-        byAlias: String?
-    ) = From.Collection(expr, unpivot, asAlias, atAlias, byAlias)
-
-    public open fun fromJoin(
-        type: From.Join.Type,
-        condition: Expr?,
-        lhs: From,
-        rhs: From
-    ) = From.Join(type, condition, lhs, rhs)
-
-    public open fun let() = Let()
-
-    public open fun groupBy(
-        strategy: GroupBy.Strategy,
-        keys: List<GroupBy.Key>,
-        asAlias: String?
-    ) = GroupBy(strategy, keys, asAlias)
-
-    public open fun groupByKey(expr: Expr, asAlias: String) = GroupBy.Key(expr, asAlias)
-
-    public open fun orderBy(sorts: List<OrderBy.Sort>) = OrderBy(sorts)
-
-    public open fun orderBySort(
-        expr: Expr,
-        dir: OrderBy.Sort.Dir,
-        nulls: OrderBy.Sort.Nulls
-    ) = OrderBy.Sort(expr, dir, nulls)
-
-    public open fun graphMatch(patterns: List<GraphMatch.Pattern>, selector: GraphMatch.Selector?) =
-        GraphMatch(patterns, selector)
-
-    public open fun graphMatchPattern(
-        restrictor: GraphMatch.Restrictor?,
-        prefilter: Expr?,
-        variable: String?,
-        quantifier: GraphMatch.Quantifier?,
-        parts: List<GraphMatch.Pattern.Part>
-    ) = GraphMatch.Pattern(restrictor, prefilter, variable, quantifier, parts)
-
-    public open fun graphMatchPatternPartNode(
-        prefilter: Expr?,
-        variable: String?,
-        label: List<String>
-    ) = GraphMatch.Pattern.Part.Node(prefilter, variable, label)
-
-    public open fun graphMatchPatternPartEdge(
-        direction: GraphMatch.Direction,
-        quantifier: GraphMatch.Quantifier?,
-        prefilter: Expr?,
-        variable: String?,
-        label: List<String>
-    ) = GraphMatch.Pattern.Part.Edge(direction, quantifier, prefilter, variable, label)
-
-    public open fun graphMatchQuantifier(lower: Long, upper: Int?) = GraphMatch.Quantifier(
-        lower,
-        upper
-    )
-
-    public open fun graphMatchSelectorAnyShortest() = GraphMatch.Selector.AnyShortest()
-
-    public open fun graphMatchSelectorAllShortest() = GraphMatch.Selector.AllShortest()
-
-    public open fun graphMatchSelectorAny() = GraphMatch.Selector.Any()
-
-    public open fun graphMatchSelectorAnyK(k: Long) = GraphMatch.Selector.AnyK(k)
-
-    public open fun graphMatchSelectorShortestK(k: Long) = GraphMatch.Selector.ShortestK(k)
-
-    public open fun graphMatchSelectorShortestKGroup(k: Long) = GraphMatch.Selector.ShortestKGroup(k)
-
-    public open fun over(partitions: List<Expr>, sorts: List<OrderBy.Sort>) = Over(partitions, sorts)
-
-    public open fun onConflict(expr: Expr, action: OnConflict.Action) = OnConflict(expr, action)
-
-    public open fun onConflictActionDoReplace(`value`: OnConflict.Value) =
-        OnConflict.Action.DoReplace(value)
-
-    public open fun onConflictActionDoUpdate(`value`: OnConflict.Value) =
-        OnConflict.Action.DoUpdate(value)
-
-    public open fun onConflictActionDoNothing() = OnConflict.Action.DoNothing()
-
-    public open fun returning(columns: List<Returning.Column>) = Returning(columns)
-
-    public open fun returningColumn(
-        status: Returning.Column.Status,
-        age: Returning.Column.Age,
-        `value`: Returning.Column.Value
-    ) = Returning.Column(status, age, value)
-
-    public open fun returningColumnValueWildcard() = Returning.Column.Value.Wildcard()
-
-    public open fun returningColumnValueExpression(expr: Expr) =
-        Returning.Column.Value.Expression(expr)
-
-    public open fun tableDefinition(columns: List<TableDefinition.Column>) = TableDefinition(columns)
-
-    public open fun tableDefinitionColumn(
-        name: String,
-        type: Expr.Collection.Type,
-        constraints: List<TableDefinition.Column.Constraint>
-    ) = TableDefinition.Column(name, type, constraints)
-
-    public open fun tableDefinitionColumnConstraintNullable() =
-        TableDefinition.Column.Constraint.Nullable()
-
-    public open fun tableDefinitionColumnConstraintNotNull() =
-        TableDefinition.Column.Constraint.NotNull()
-
-    public open fun tableDefinitionColumnConstraintCheck(expr: Expr) =
-        TableDefinition.Column.Constraint.Check(expr)
-
-    public companion object {
-        public val DEFAULT: AstFactory = object : AstFactory() {}
-
-        @JvmStatic
-        public fun <T : AstNode> create(block: AstFactory.() -> T) = AstFactory.DEFAULT.block()
-    }
+  public open fun statementQuery(id: Int, expr: Expr) = Statement.Query(id, expr)
+
+  public open fun statementDMLInsert(
+    id: Int,
+    target: Expr,
+    values: Expr,
+    onConflict: OnConflict.Action
+  ) = Statement.DML.Insert(id, target, values, onConflict)
+
+  public open fun statementDMLInsertValue(
+    id: Int,
+    target: Expr,
+    `value`: Expr,
+    atAlias: Expr,
+    index: Expr?,
+    onConflict: OnConflict
+  ) = Statement.DML.InsertValue(id, target, value, atAlias, index, onConflict)
+
+  public open fun statementDMLSet(id: Int, assignments: List<Statement.DML.Set.Assignment>) =
+      Statement.DML.Set(id, assignments)
+
+  public open fun statementDMLSetAssignment(
+    id: Int,
+    target: Expr.Path,
+    `value`: Expr
+  ) = Statement.DML.Set.Assignment(id, target, value)
+
+  public open fun statementDMLRemove(id: Int, target: Expr.Path) = Statement.DML.Remove(id, target)
+
+  public open fun statementDMLDelete(
+    id: Int,
+    from: From,
+    `where`: Expr?,
+    returning: Returning
+  ) = Statement.DML.Delete(id, from, where, returning)
+
+  public open fun statementDDLCreateTable(
+    id: Int,
+    name: String,
+    definition: TableDefinition?
+  ) = Statement.DDL.CreateTable(id, name, definition)
+
+  public open fun statementDDLCreateIndex(
+    id: Int,
+    name: String,
+    fields: List<Expr>
+  ) = Statement.DDL.CreateIndex(id, name, fields)
+
+  public open fun statementDDLDropTable(id: Int, identifier: Expr.Identifier) =
+      Statement.DDL.DropTable(id, identifier)
+
+  public open fun statementDDLDropIndex(
+    id: Int,
+    table: Expr.Identifier,
+    keys: Expr.Identifier
+  ) = Statement.DDL.DropIndex(id, table, keys)
+
+  public open fun statementExec(
+    id: Int,
+    procedure: String,
+    args: List<Expr>
+  ) = Statement.Exec(id, procedure, args)
+
+  public open fun statementExplain(id: Int, target: Statement.Explain.Target) =
+      Statement.Explain(id, target)
+
+  public open fun statementExplainTargetDomain(
+    id: Int,
+    statement: Statement,
+    type: String?,
+    format: String?
+  ) = Statement.Explain.Target.Domain(id, statement, type, format)
+
+  public open fun exprMissing(id: Int) = Expr.Missing(id)
+
+  public open fun exprLit(id: Int, `value`: IonElement) = Expr.Lit(id, value)
+
+  public open fun exprIdentifier(
+    id: Int,
+    name: String,
+    case: Case,
+    scope: Expr.Identifier.Scope
+  ) = Expr.Identifier(id, name, case, scope)
+
+  public open fun exprPath(
+    id: Int,
+    root: Expr,
+    steps: List<Expr.Path.Step>
+  ) = Expr.Path(id, root, steps)
+
+  public open fun exprPathStepKey(id: Int, `value`: Expr) = Expr.Path.Step.Key(id, value)
+
+  public open fun exprPathStepWildcard(id: Int) = Expr.Path.Step.Wildcard(id)
+
+  public open fun exprPathStepUnpivot(id: Int) = Expr.Path.Step.Unpivot(id)
+
+  public open fun exprCall(
+    id: Int,
+    function: String,
+    args: List<Expr>
+  ) = Expr.Call(id, function, args)
+
+  public open fun exprAgg(
+    id: Int,
+    function: String,
+    args: List<Expr>,
+    quantifier: SetQuantifier
+  ) = Expr.Agg(id, function, args, quantifier)
+
+  public open fun exprParameter(id: Int, index: Int) = Expr.Parameter(id, index)
+
+  public open fun exprUnary(
+    id: Int,
+    op: Expr.Unary.Op,
+    expr: Expr
+  ) = Expr.Unary(id, op, expr)
+
+  public open fun exprBinary(
+    id: Int,
+    op: Expr.Binary.Op,
+    lhs: Expr,
+    rhs: Expr
+  ) = Expr.Binary(id, op, lhs, rhs)
+
+  public open fun exprCollection(
+    id: Int,
+    type: Expr.Collection.Type,
+    values: List<Expr>
+  ) = Expr.Collection(id, type, values)
+
+  public open fun exprTuple(id: Int, fields: List<Expr.Tuple.Field>) = Expr.Tuple(id, fields)
+
+  public open fun exprTupleField(
+    id: Int,
+    name: Expr,
+    `value`: Expr
+  ) = Expr.Tuple.Field(id, name, value)
+
+  public open fun exprDate(
+    id: Int,
+    year: Long,
+    month: Long,
+    day: Long
+  ) = Expr.Date(id, year, month, day)
+
+  public open fun exprTime(
+    id: Int,
+    hour: Long,
+    minute: Long,
+    second: Long,
+    nano: Long,
+    precision: Long,
+    tzOffsetMinutes: Long?
+  ) = Expr.Time(id, hour, minute, second, nano, precision, tzOffsetMinutes)
+
+  public open fun exprLike(
+    id: Int,
+    `value`: Expr,
+    pattern: Expr,
+    escape: Expr?
+  ) = Expr.Like(id, value, pattern, escape)
+
+  public open fun exprBetween(
+    id: Int,
+    `value`: Expr,
+    from: Expr,
+    to: Expr
+  ) = Expr.Between(id, value, from, to)
+
+  public open fun exprInCollection(
+    id: Int,
+    lhs: Expr,
+    rhs: Expr
+  ) = Expr.InCollection(id, lhs, rhs)
+
+  public open fun exprIsType(
+    id: Int,
+    `value`: Expr,
+    type: StaticType
+  ) = Expr.IsType(id, value, type)
+
+  public open fun exprSwitch(
+    id: Int,
+    expr: Expr?,
+    branches: List<Expr.Switch.Branch>,
+    default: Expr?
+  ) = Expr.Switch(id, expr, branches, default)
+
+  public open fun exprSwitchBranch(
+    id: Int,
+    condition: Expr,
+    expr: Expr
+  ) = Expr.Switch.Branch(id, condition, expr)
+
+  public open fun exprCoalesce(id: Int, args: List<Expr>) = Expr.Coalesce(id, args)
+
+  public open fun exprNullIf(
+    id: Int,
+    expr1: Expr,
+    expr2: Expr
+  ) = Expr.NullIf(id, expr1, expr2)
+
+  public open fun exprCast(
+    id: Int,
+    `value`: Expr,
+    asType: StaticType
+  ) = Expr.Cast(id, value, asType)
+
+  public open fun exprCanCast(
+    id: Int,
+    `value`: Expr,
+    asType: StaticType
+  ) = Expr.CanCast(id, value, asType)
+
+  public open fun exprCanLosslessCast(
+    id: Int,
+    `value`: Expr,
+    asType: StaticType
+  ) = Expr.CanLosslessCast(id, value, asType)
+
+  public open fun exprOuterBagOp(
+    id: Int,
+    op: Expr.OuterBagOp.Op,
+    quantifier: SetQuantifier,
+    lhs: Expr,
+    rhs: Expr
+  ) = Expr.OuterBagOp(id, op, quantifier, lhs, rhs)
+
+  public open fun exprSfw(
+    id: Int,
+    select: Select,
+    from: From,
+    let: Let?,
+    `where`: Expr?,
+    groupBy: GroupBy?,
+    having: Expr?,
+    orderBy: OrderBy?,
+    limit: Expr?,
+    offset: Expr?
+  ) = Expr.Sfw(id, select, from, let, where, groupBy, having, orderBy, limit, offset)
+
+  public open fun exprMatch(
+    id: Int,
+    expr: Expr,
+    pattern: GraphMatch
+  ) = Expr.Match(id, expr, pattern)
+
+  public open fun exprWindow(
+    id: Int,
+    function: String,
+    over: Over,
+    args: List<Expr>
+  ) = Expr.Window(id, function, over, args)
+
+  public open fun selectStar(id: Int) = Select.Star(id)
+
+  public open fun selectProject(id: Int, items: List<Select.Project.Item>) = Select.Project(id,
+      items)
+
+  public open fun selectProjectItemAll(id: Int, expr: Expr) = Select.Project.Item.All(id, expr)
+
+  public open fun selectProjectItemVar(
+    id: Int,
+    expr: Expr,
+    asAlias: String?
+  ) = Select.Project.Item.Var(id, expr, asAlias)
+
+  public open fun selectPivot(
+    id: Int,
+    `value`: Expr,
+    key: Expr
+  ) = Select.Pivot(id, value, key)
+
+  public open fun selectValue(id: Int, `constructor`: Expr) = Select.Value(id, constructor)
+
+  public open fun fromCollection(
+    id: Int,
+    expr: Expr,
+    unpivot: Boolean?,
+    asAlias: String?,
+    atAlias: String?,
+    byAlias: String?
+  ) = From.Collection(id, expr, unpivot, asAlias, atAlias, byAlias)
+
+  public open fun fromJoin(
+    id: Int,
+    type: From.Join.Type,
+    condition: Expr?,
+    lhs: From,
+    rhs: From
+  ) = From.Join(id, type, condition, lhs, rhs)
+
+  public open fun let(id: Int) = Let(id)
+
+  public open fun groupBy(
+    id: Int,
+    strategy: GroupBy.Strategy,
+    keys: List<GroupBy.Key>,
+    asAlias: String?
+  ) = GroupBy(id, strategy, keys, asAlias)
+
+  public open fun groupByKey(
+    id: Int,
+    expr: Expr,
+    asAlias: String
+  ) = GroupBy.Key(id, expr, asAlias)
+
+  public open fun orderBy(id: Int, sorts: List<OrderBy.Sort>) = OrderBy(id, sorts)
+
+  public open fun orderBySort(
+    id: Int,
+    expr: Expr,
+    dir: OrderBy.Sort.Dir,
+    nulls: OrderBy.Sort.Nulls
+  ) = OrderBy.Sort(id, expr, dir, nulls)
+
+  public open fun graphMatch(
+    id: Int,
+    patterns: List<GraphMatch.Pattern>,
+    selector: GraphMatch.Selector?
+  ) = GraphMatch(id, patterns, selector)
+
+  public open fun graphMatchPattern(
+    id: Int,
+    restrictor: GraphMatch.Restrictor?,
+    prefilter: Expr?,
+    variable: String?,
+    quantifier: GraphMatch.Quantifier?,
+    parts: List<GraphMatch.Pattern.Part>
+  ) = GraphMatch.Pattern(id, restrictor, prefilter, variable, quantifier, parts)
+
+  public open fun graphMatchPatternPartNode(
+    id: Int,
+    prefilter: Expr?,
+    variable: String?,
+    label: List<String>
+  ) = GraphMatch.Pattern.Part.Node(id, prefilter, variable, label)
+
+  public open fun graphMatchPatternPartEdge(
+    id: Int,
+    direction: GraphMatch.Direction,
+    quantifier: GraphMatch.Quantifier?,
+    prefilter: Expr?,
+    variable: String?,
+    label: List<String>
+  ) = GraphMatch.Pattern.Part.Edge(id, direction, quantifier, prefilter, variable, label)
+
+  public open fun graphMatchQuantifier(
+    id: Int,
+    lower: Long,
+    upper: Int?
+  ) = GraphMatch.Quantifier(id, lower, upper)
+
+  public open fun graphMatchSelectorAnyShortest(id: Int) = GraphMatch.Selector.AnyShortest(id)
+
+  public open fun graphMatchSelectorAllShortest(id: Int) = GraphMatch.Selector.AllShortest(id)
+
+  public open fun graphMatchSelectorAny(id: Int) = GraphMatch.Selector.Any(id)
+
+  public open fun graphMatchSelectorAnyK(id: Int, k: Long) = GraphMatch.Selector.AnyK(id, k)
+
+  public open fun graphMatchSelectorShortestK(id: Int, k: Long) = GraphMatch.Selector.ShortestK(id,
+      k)
+
+  public open fun graphMatchSelectorShortestKGroup(id: Int, k: Long) =
+      GraphMatch.Selector.ShortestKGroup(id, k)
+
+  public open fun over(
+    id: Int,
+    partitions: List<Expr>,
+    sorts: List<OrderBy.Sort>
+  ) = Over(id, partitions, sorts)
+
+  public open fun onConflict(
+    id: Int,
+    expr: Expr,
+    action: OnConflict.Action
+  ) = OnConflict(id, expr, action)
+
+  public open fun onConflictActionDoReplace(id: Int, `value`: OnConflict.Value) =
+      OnConflict.Action.DoReplace(id, value)
+
+  public open fun onConflictActionDoUpdate(id: Int, `value`: OnConflict.Value) =
+      OnConflict.Action.DoUpdate(id, value)
+
+  public open fun onConflictActionDoNothing(id: Int) = OnConflict.Action.DoNothing(id)
+
+  public open fun returning(id: Int, columns: List<Returning.Column>) = Returning(id, columns)
+
+  public open fun returningColumn(
+    id: Int,
+    status: Returning.Column.Status,
+    age: Returning.Column.Age,
+    `value`: Returning.Column.Value
+  ) = Returning.Column(id, status, age, value)
+
+  public open fun returningColumnValueWildcard(id: Int) = Returning.Column.Value.Wildcard(id)
+
+  public open fun returningColumnValueExpression(id: Int, expr: Expr) =
+      Returning.Column.Value.Expression(id, expr)
+
+  public open fun tableDefinition(id: Int, columns: List<TableDefinition.Column>) =
+      TableDefinition(id, columns)
+
+  public open fun tableDefinitionColumn(
+    id: Int,
+    name: String,
+    type: StaticType,
+    constraints: List<TableDefinition.Column.Constraint>
+  ) = TableDefinition.Column(id, name, type, constraints)
+
+  public open fun tableDefinitionColumnConstraint(
+    id: Int,
+    name: String?,
+    body: TableDefinition.Column.Constraint.Body
+  ) = TableDefinition.Column.Constraint(id, name, body)
+
+  public open fun tableDefinitionColumnConstraintBodyNullable(id: Int) =
+      TableDefinition.Column.Constraint.Body.Nullable(id)
+
+  public open fun tableDefinitionColumnConstraintBodyNotNull(id: Int) =
+      TableDefinition.Column.Constraint.Body.NotNull(id)
+
+  public open fun tableDefinitionColumnConstraintBodyCheck(id: Int, expr: Expr) =
+      TableDefinition.Column.Constraint.Body.Check(id, expr)
+
+  public companion object {
+    public val DEFAULT: AstFactory = object : AstFactory() {}
+
+    @JvmStatic
+    public fun <T : AstNode> create(block: AstFactory.() -> T) = AstFactory.DEFAULT.block()
+  }
 }

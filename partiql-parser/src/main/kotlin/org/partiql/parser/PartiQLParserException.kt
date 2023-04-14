@@ -1,6 +1,6 @@
 package org.partiql.parser
 
-class PartiQLParseException(
+class PartiQLParserException(
     override val message: String = "",
     override val cause: Throwable? = null,
     val context: Map<String, Any> = emptyMap(),
@@ -9,14 +9,20 @@ class PartiQLParseException(
     companion object {
 
         internal fun wrap(cause: Throwable) = when (cause) {
-            is PartiQLParseException -> cause
-            is StackOverflowError -> PartiQLParseException(
+            is PartiQLParserException -> cause
+            is StackOverflowError -> PartiQLParserException(
                 message = "Input query too large. This error typically occurs when there are several nested " +
                     "expressions/predicates and can usually be fixed by simplifying expressions.",
                 cause = cause,
             )
             is InterruptedException -> cause
-            else -> PartiQLParseException("Unhandled exception.", cause)
+            else -> PartiQLParserException("Unhandled exception.", cause)
         }
     }
 }
+
+class PartiQLLexerException(
+    override val message: String = "",
+    override val cause: Throwable? = null,
+    val context: Map<String, Any> = emptyMap(),
+) : Exception()

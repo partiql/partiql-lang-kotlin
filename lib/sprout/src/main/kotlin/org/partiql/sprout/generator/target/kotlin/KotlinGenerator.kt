@@ -7,6 +7,7 @@ import com.squareup.kotlinpoet.TypeSpec
 import net.pearx.kasechange.toCamelCase
 import org.partiql.sprout.generator.Generator
 import org.partiql.sprout.generator.target.kotlin.poems.KotlinBuilderPoem
+import org.partiql.sprout.generator.target.kotlin.poems.KotlinIdentifierPoem
 import org.partiql.sprout.generator.target.kotlin.poems.KotlinJacksonPoem
 import org.partiql.sprout.generator.target.kotlin.poems.KotlinListenerPoem
 import org.partiql.sprout.generator.target.kotlin.poems.KotlinMetasPoem
@@ -37,19 +38,30 @@ class KotlinGenerator(private val options: KotlinOptions) : Generator<KotlinResu
                 "listener" -> KotlinListenerPoem(symbols)
                 "metas" -> KotlinMetasPoem(symbols)
                 "jackson" -> KotlinJacksonPoem(symbols)
+                "identifier" -> KotlinIdentifierPoem(symbols)
                 else -> error("unknown poem $it, expected: visitor, builder, listener, metas, jackson")
             }
         }
+
+        // --- Apply poems which may rewrite type definitions
+        @Suppress("NAME_SHADOWING")
+        val universe = poems.fold(universe) { u, p -> p.redefine(u) }
 
         // --- Generate skeleton
         val spec = KotlinUniverseSpec(
             universe = universe,
             nodes = universe.nodes(symbols),
-            base = TypeSpec.classBuilder(symbols.base).addModifiers(KModifier.ABSTRACT),
+            base = TypeSpec.classBuilder(symbols.base)
+                .apply {
+                    symbols.baseProps.forEach {
+                        addProperty(PropertySpec.builder(it.name, it.type).addModifiers(KModifier.ABSTRACT).build())
+                    }
+                }
+                .addModifiers(KModifier.ABSTRACT),
             types = universe.types(symbols)
         )
         val specs = with(spec) {
-            // Apply each poem
+            // Apply each poem for code generation
             poems.forEach { it.apply(this) }
             // Finalize each spec/builder
             build(options.packageRoot).map { KotlinFileSpec(it) }
@@ -95,10 +107,13 @@ class KotlinGenerator(private val options: KotlinOptions) : Generator<KotlinResu
         ext = (props.enumProps(symbols) + types.enums(symbols)).toMutableList(),
     ).apply {
         props.forEach {
-            val para = ParameterSpec.builder(it.name, it.type).build()
-            val prop = PropertySpec.builder(it.name, it.type).initializer(it.name).build()
-            builder.addProperty(prop)
-            constructor.addParameter(para)
+            val para = ParameterSpec.builder(it.name, it.type)
+            val prop = PropertySpec.builder(it.name, it.type).initializer(it.name)
+            if (symbols.baseProps.contains(it)) {
+               prop.addModifiers(KModifier.OVERRIDE)
+            }
+            builder.addProperty(prop.build())
+            constructor.addParameter(para.build())
         }
         when (options.node.modifier) {
             KotlinNodeOptions.Modifier.FINAL -> {}

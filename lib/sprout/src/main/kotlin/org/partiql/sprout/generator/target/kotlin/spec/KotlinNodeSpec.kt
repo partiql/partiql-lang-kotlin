@@ -107,7 +107,7 @@ sealed class KotlinNodeSpec(
     /**
      * Derived from a [TypeProp], but replaced the ref with a ClassName
      */
-    class Prop(
+    data class Prop(
         val name: String,
         val type: TypeName
     )

@@ -18,6 +18,7 @@ import com.squareup.kotlinpoet.STRING
 import com.squareup.kotlinpoet.TypeName
 import net.pearx.kasechange.toCamelCase
 import net.pearx.kasechange.toPascalCase
+import org.partiql.sprout.generator.target.kotlin.spec.KotlinNodeSpec
 import org.partiql.sprout.model.ScalarType
 import org.partiql.sprout.model.TypeDef
 import org.partiql.sprout.model.TypeRef
@@ -50,6 +51,11 @@ class KotlinSymbols private constructor(
      * Base node for the Universe
      */
     val base: ClassName = ClassName(rootPackage, "${rootId}Node")
+
+    /**
+     * Base node properties inherited by all other nodes
+     */
+    val baseProps: MutableList<KotlinNodeSpec.Prop> = mutableListOf()
 
     /**
      * Memoize converting a TypeRef.Path to a camel case identifier to be used as method/function names
