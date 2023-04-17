@@ -32,6 +32,7 @@ import com.amazon.ionelement.api.ionString
 import com.amazon.ionelement.api.ionSymbol
 import com.amazon.ionelement.api.loadSingleElement
 import com.ibm.icu.text.CurrencyMetaInfo.CurrencyFilter.all
+import com.sun.tools.jdeprscan.scan.Scan
 import org.antlr.v4.runtime.BailErrorStrategy
 import org.antlr.v4.runtime.BaseErrorListener
 import org.antlr.v4.runtime.CharStreams
@@ -621,15 +622,18 @@ internal class PartiQLParserDefault : PartiQLParser {
         //     doUpdate(value)
         // }
         //
-        // override fun visitPathSimple(ctx: GeneratedParser.PathSimpleContext) = translate(ctx) {
-        //     val root = visitSymbolPrimitive(ctx.symbolPrimitive())
-        //     if (ctx.pathSimpleSteps().isEmpty()) return@build root
-        //     val steps = visitOrEmpty(ctx.pathSimpleSteps(), PathStep::class)
-        //     path(root, steps, root.metas)
-        // }
-        //
+        override fun visitPathSimple(ctx: GeneratedParser.PathSimpleContext) = translate(ctx) {
+            val root = visitSymbolPrimitive(ctx.symbolPrimitive()) as Expr
+            var steps = emptyList<Expr.Path.Step>()
+            if (ctx.pathSimpleSteps().isNotEmpty())  {
+                steps = visitOrEmpty(ctx.pathSimpleSteps(), Expr.Path.Step::class)
+            }
+            Expr.Path(id(), root, steps)
+        }
+
         // override fun visitPathSimpleLiteral(ctx: GeneratedParser.PathSimpleLiteralContext) = translate(ctx) {
-        //     pathExpr(visit(ctx.literal()) as Expr, caseSensitive())
+        //     // pathExpr(visit(ctx.literal()) as Expr, caseSensitive())
+        //     Expr.Path(id(), )
         // }
         //
         // override fun visitPathSimpleSymbol(ctx: GeneratedParser.PathSimpleSymbolContext) = translate(ctx) {
@@ -638,7 +642,7 @@ internal class PartiQLParserDefault : PartiQLParser {
         //
         // override fun visitPathSimpleDotSymbol(ctx: GeneratedParser.PathSimpleDotSymbolContext) =
         //     getSymbolPathExpr(ctx.symbolPrimitive())
-        //
+
         // override fun visitSetCommand(ctx: GeneratedParser.SetCommandContext) = translate(ctx) {
         //     val assignments = visitOrEmpty(ctx.setAssignment(), DmlOp.Set::class)
         //     val newSets = assignments.map { assignment -> assignment.copy(metas = ctx.SET().getSourceMetaContainer()) }
@@ -1031,104 +1035,80 @@ internal class PartiQLParserDefault : PartiQLParser {
             From.Collection(id(), expr, false, asAlias, atAlias, byAlias)
         }
 
-        // override fun visitTableBaseRefMatch(ctx: GeneratedParser.TableBaseRefMatchContext) = translate(ctx) {
-        //     val expr = visit(ctx.source, Expr::class)
-        //     val (asAlias, atAlias, byAlias) = visitNullableItems(
-        //         listOf(ctx.asIdent(), ctx.atIdent(), ctx.byIdent()),
-        //         Expr.Id::class
-        //     )
-        //     scan_(
-        //         expr,
-        //         asAlias = asAlias.toPigSymbolPrimitive(),
-        //         byAlias = byAlias.toPigSymbolPrimitive(),
-        //         atAlias = atAlias.toPigSymbolPrimitive(),
-        //         metas = expr.metas
-        //     )
-        // }
-        //
-        // override fun visitFromClauseSimpleExplicit(ctx: GeneratedParser.FromClauseSimpleExplicitContext) = translate(ctx) {
-        //     val expr = visitPathSimple(ctx.pathSimple())
-        //     val (asAlias, atAlias, byAlias) = visitNullableItems(
-        //         listOf(ctx.asIdent(), ctx.atIdent(), ctx.byIdent()),
-        //         Expr.Id::class
-        //     )
-        //     scan_(
-        //         expr,
-        //         asAlias = asAlias.toPigSymbolPrimitive(),
-        //         byAlias = byAlias.toPigSymbolPrimitive(),
-        //         atAlias = atAlias.toPigSymbolPrimitive(),
-        //         metas = expr.metas
-        //     )
-        // }
-        //
-        // override fun visitTableUnpivot(ctx: GeneratedParser.TableUnpivotContext) = translate(ctx) {
-        //     val expr = visitExpr(ctx.expr())
-        //     val metas = ctx.UNPIVOT().getSourceMetaContainer()
-        //     val (asAlias, atAlias, byAlias) = visitNullableItems(
-        //         listOf(ctx.asIdent(), ctx.atIdent(), ctx.byIdent()),
-        //         Expr.Id::class
-        //     )
-        //     unpivot_(
-        //         expr,
-        //         asAlias = asAlias.toPigSymbolPrimitive(),
-        //         atAlias = atAlias.toPigSymbolPrimitive(),
-        //         byAlias = byAlias.toPigSymbolPrimitive(),
-        //         metas
-        //     )
-        // }
-        //
-        // override fun visitTableCrossJoin(ctx: GeneratedParser.TableCrossJoinContext) = translate(ctx) {
-        //     val lhs = visit(ctx.lhs, FromSource::class)
-        //     val joinType = visitJoinType(ctx.joinType())
-        //     val rhs = visit(ctx.rhs, FromSource::class)
-        //     val metas = metaContainerOf(IsImplictJoinMeta.instance) + joinType.metas
-        //     join(joinType, lhs, rhs, metas = metas)
-        // }
-        //
-        // override fun visitTableQualifiedJoin(ctx: GeneratedParser.TableQualifiedJoinContext) = translate(ctx) {
-        //     val lhs = visit(ctx.lhs, FromSource::class)
-        //     val joinType = visitJoinType(ctx.joinType())
-        //     val rhs = visit(ctx.rhs, FromSource::class)
-        //     val condition = visitOrNull(ctx.joinSpec(), Expr::class)
-        //     join(joinType, lhs, rhs, condition, metas = joinType.metas)
-        // }
-        //
-        // override fun visitTableBaseRefSymbol(ctx: GeneratedParser.TableBaseRefSymbolContext) = translate(ctx) {
-        //     val expr = visit(ctx.source, Expr::class)
-        //     val name = visitOrNull(ctx.symbolPrimitive(), Expr.Id::class)
-        //     scan_(expr, name.toPigSymbolPrimitive(), metas = expr.metas)
-        // }
-        //
-        // override fun visitFromClauseSimpleImplicit(ctx: GeneratedParser.FromClauseSimpleImplicitContext) = translate(ctx) {
-        //     val path = visitPathSimple(ctx.pathSimple())
-        //     val name = visitOrNull(ctx.symbolPrimitive(), Expr.Id::class)?.name
-        //     scan_(path, name, metas = path.metas)
-        // }
-        //
-        // override fun visitTableWrapped(ctx: GeneratedParser.TableWrappedContext): AstNode = visit(ctx.tableReference())
-        //
-        // override fun visitJoinSpec(ctx: GeneratedParser.JoinSpecContext) = visitExpr(ctx.expr())
-        //
-        // override fun visitJoinType(ctx: GeneratedParser.JoinTypeContext?) = translate(ctx) {
-        //     if (ctx == null) return@build inner()
-        //     val metas = ctx.mod.getSourceMetaContainer()
-        //     when (ctx.mod.type) {
-        //         GeneratedParser.LEFT -> left(metas)
-        //         GeneratedParser.RIGHT -> right(metas)
-        //         GeneratedParser.INNER -> inner(metas)
-        //         GeneratedParser.FULL -> full(metas)
-        //         GeneratedParser.OUTER -> full(metas)
-        //         else -> inner(metas)
-        //     }
-        // }
-        //
-        // override fun visitJoinRhsTableJoined(ctx: GeneratedParser.JoinRhsTableJoinedContext) =
-        //     visit(ctx.tableReference(), FromSource::class)
-        //
-        // /**
-        //  * SIMPLE EXPRESSIONS
-        //  */
-        //
+        override fun visitTableBaseRefMatch(ctx: GeneratedParser.TableBaseRefMatchContext) = translate(ctx) {
+            val expr = visit(ctx.source, Expr::class)
+            val asAlias = ctx.asIdent()?.let { visitRawSymbol(it.symbolPrimitive()) }
+            val atAlias = ctx.atIdent()?.let { visitRawSymbol(it.symbolPrimitive()) }
+            val byAlias = ctx.byIdent()?.let { visitRawSymbol(it.symbolPrimitive()) }
+            From.Collection(id(), expr, false, asAlias, atAlias, byAlias)
+        }
+
+        override fun visitFromClauseSimpleExplicit(ctx: GeneratedParser.FromClauseSimpleExplicitContext) = translate(ctx) {
+            val expr = visitPathSimple(ctx.pathSimple()) as Expr
+            val asAlias = ctx.asIdent()?.let { visitRawSymbol(it.symbolPrimitive()) }
+            val atAlias = ctx.atIdent()?.let { visitRawSymbol(it.symbolPrimitive()) }
+            val byAlias = ctx.byIdent()?.let { visitRawSymbol(it.symbolPrimitive()) }
+            From.Collection(id(), expr, false, asAlias, atAlias, byAlias)
+        }
+
+        override fun visitTableUnpivot(ctx: GeneratedParser.TableUnpivotContext) = translate(ctx) {
+            val expr = visit(ctx.expr(), Expr::class)
+            val asAlias = ctx.asIdent()?.let { visitRawSymbol(it.symbolPrimitive()) }
+            val atAlias = ctx.atIdent()?.let { visitRawSymbol(it.symbolPrimitive()) }
+            val byAlias = ctx.byIdent()?.let { visitRawSymbol(it.symbolPrimitive()) }
+            From.Collection(id(), expr, true, asAlias, atAlias, byAlias)
+        }
+
+        override fun visitTableCrossJoin(ctx: GeneratedParser.TableCrossJoinContext) = translate(ctx) {
+            val type = convertJoinType(ctx.joinType())
+            val lhs = visit(ctx.lhs, From::class)
+            val rhs = visit(ctx.rhs, From::class)
+            From.Join(id(), type, null, lhs, rhs)
+
+        }
+
+        private fun convertJoinType(ctx: GeneratedParser.JoinTypeContext?): From.Join.Type {
+            if (ctx == null) return From.Join.Type.INNER
+            return when (ctx.mod.type) {
+                GeneratedParser.LEFT -> From.Join.Type.LEFT
+                GeneratedParser.RIGHT -> From.Join.Type.RIGHT
+                GeneratedParser.INNER -> From.Join.Type.INNER
+                GeneratedParser.FULL -> From.Join.Type.FULL
+                GeneratedParser.OUTER -> From.Join.Type.FULL
+                else -> From.Join.Type.INNER
+            }
+        }
+
+        override fun visitTableQualifiedJoin(ctx: GeneratedParser.TableQualifiedJoinContext) = translate(ctx) {
+            val type = convertJoinType(ctx.joinType())
+            val condition = visitOrNull(ctx.joinSpec(), Expr::class)
+            val lhs = visit(ctx.lhs, From::class)
+            val rhs = visit(ctx.rhs, From::class)
+            From.Join(id(), type, condition, lhs, rhs)
+        }
+
+        override fun visitTableBaseRefSymbol(ctx: GeneratedParser.TableBaseRefSymbolContext) = translate(ctx) {
+            val expr = visit(ctx.source, Expr::class)
+            val asAlias = visitRawSymbol(ctx.symbolPrimitive())
+            From.Collection(id(), expr, false, asAlias, null, null)
+        }
+
+        override fun visitFromClauseSimpleImplicit(ctx: GeneratedParser.FromClauseSimpleImplicitContext) = translate(ctx) {
+            val expr = visitPathSimple(ctx.pathSimple()) as Expr
+            val asAlias = visitRawSymbol(ctx.symbolPrimitive())
+            From.Collection(id(), expr, false, asAlias, null, null)
+        }
+
+        override fun visitTableWrapped(ctx: GeneratedParser.TableWrappedContext): AstNode = visit(ctx.tableReference())
+
+        override fun visitJoinSpec(ctx: GeneratedParser.JoinSpecContext) = visitExpr(ctx.expr())
+
+        override fun visitJoinRhsTableJoined(ctx: GeneratedParser.JoinRhsTableJoinedContext) = visit(ctx.tableReference(), From::class)
+
+        /**
+         * SIMPLE EXPRESSIONS
+         */
+
         // override fun visitOr(ctx: GeneratedParser.OrContext) =
         //     visitBinaryOperation(ctx.lhs, ctx.rhs, ctx.OR().symbol, null)
         //
