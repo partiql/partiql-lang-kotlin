@@ -1,6 +1,6 @@
 package org.partiql.ast.builder
 
-import com.amazon.ionelement.api.AnyElement
+import com.amazon.ionelement.api.IonElement
 import org.partiql.ast.AstNode
 import org.partiql.ast.Case
 import org.partiql.ast.Expr
@@ -16,6 +16,7 @@ import org.partiql.ast.Select
 import org.partiql.ast.SetQuantifier
 import org.partiql.ast.Statement
 import org.partiql.ast.TableDefinition
+import org.partiql.ast.Type
 import org.partiql.types.StaticType
 import kotlin.Boolean
 import kotlin.Int
@@ -98,9 +99,11 @@ public abstract class AstFactory {
         format: String?
     ) = Statement.Explain.Target.Domain(id, statement, type, format)
 
+    public open fun type(id: Int, type: StaticType) = Type(id, type)
+
     public open fun exprMissing(id: Int) = Expr.Missing(id)
 
-    public open fun exprLit(id: Int, `value`: AnyElement) = Expr.Lit(id, value)
+    public open fun exprLit(id: Int, `value`: IonElement) = Expr.Lit(id, value)
 
     public open fun exprIdentifier(
         id: Int,
@@ -203,7 +206,7 @@ public abstract class AstFactory {
     public open fun exprIsType(
         id: Int,
         `value`: Expr,
-        type: StaticType
+        type: Type
     ) = Expr.IsType(id, value, type)
 
     public open fun exprSwitch(
@@ -223,26 +226,26 @@ public abstract class AstFactory {
 
     public open fun exprNullIf(
         id: Int,
-        expr1: Expr,
-        expr2: Expr
-    ) = Expr.NullIf(id, expr1, expr2)
+        expr0: Expr,
+        expr1: Expr
+    ) = Expr.NullIf(id, expr0, expr1)
 
     public open fun exprCast(
         id: Int,
         `value`: Expr,
-        asType: StaticType
+        asType: Type
     ) = Expr.Cast(id, value, asType)
 
     public open fun exprCanCast(
         id: Int,
         `value`: Expr,
-        asType: StaticType
+        asType: Type
     ) = Expr.CanCast(id, value, asType)
 
     public open fun exprCanLosslessCast(
         id: Int,
         `value`: Expr,
-        asType: StaticType
+        asType: Type
     ) = Expr.CanLosslessCast(id, value, asType)
 
     public open fun exprOuterBagOp(
@@ -447,7 +450,7 @@ public abstract class AstFactory {
     public open fun tableDefinitionColumn(
         id: Int,
         name: String,
-        type: StaticType,
+        type: Type,
         constraints: List<TableDefinition.Column.Constraint>
     ) = TableDefinition.Column(id, name, type, constraints)
 

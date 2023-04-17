@@ -13,6 +13,7 @@ import org.partiql.ast.Returning
 import org.partiql.ast.Select
 import org.partiql.ast.Statement
 import org.partiql.ast.TableDefinition
+import org.partiql.ast.Type
 
 public interface AstVisitor<R, C> {
     public fun visit(node: AstNode, ctx: C): R
@@ -52,6 +53,8 @@ public interface AstVisitor<R, C> {
     public fun visitStatementExplainTarget(node: Statement.Explain.Target, ctx: C): R
 
     public fun visitStatementExplainTargetDomain(node: Statement.Explain.Target.Domain, ctx: C): R
+
+    public fun visitType(node: Type, ctx: C): R
 
     public fun visitExpr(node: Expr, ctx: C): R
 

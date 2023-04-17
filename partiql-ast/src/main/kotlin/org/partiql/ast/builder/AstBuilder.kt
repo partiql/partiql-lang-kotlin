@@ -1,6 +1,6 @@
 package org.partiql.ast.builder
 
-import com.amazon.ionelement.api.AnyElement
+import com.amazon.ionelement.api.IonElement
 import org.partiql.ast.AstNode
 import org.partiql.ast.Case
 import org.partiql.ast.Expr
@@ -16,6 +16,7 @@ import org.partiql.ast.Select
 import org.partiql.ast.SetQuantifier
 import org.partiql.ast.Statement
 import org.partiql.ast.TableDefinition
+import org.partiql.ast.Type
 import org.partiql.types.StaticType
 
 public fun <T : AstNode> ast(factory: AstFactory = AstFactory.DEFAULT, block: AstBuilder.() -> T) =
@@ -179,6 +180,16 @@ public class AstBuilder(
         return builder.build(factory)
     }
 
+    public fun type(
+        id: Int? = null,
+        type: StaticType? = null,
+        block: TypeBuilder.() -> Unit = {}
+    ): Type {
+        val builder = TypeBuilder()
+        builder.block()
+        return builder.build(factory)
+    }
+
     public fun exprMissing(id: Int? = null, block: ExprMissingBuilder.() -> Unit = {}): Expr.Missing {
         val builder = ExprMissingBuilder()
         builder.block()
@@ -187,7 +198,7 @@ public class AstBuilder(
 
     public fun exprLit(
         id: Int? = null,
-        `value`: AnyElement? = null,
+        `value`: IonElement? = null,
         block: ExprLitBuilder.() -> Unit = {}
     ): Expr.Lit {
         val builder = ExprLitBuilder()
@@ -399,7 +410,7 @@ public class AstBuilder(
     public fun exprIsType(
         id: Int? = null,
         `value`: Expr? = null,
-        type: StaticType? = null,
+        type: Type? = null,
         block: ExprIsTypeBuilder.() -> Unit = {}
     ): Expr.IsType {
         val builder = ExprIsTypeBuilder()
@@ -442,8 +453,8 @@ public class AstBuilder(
 
     public fun exprNullIf(
         id: Int? = null,
+        expr0: Expr? = null,
         expr1: Expr? = null,
-        expr2: Expr? = null,
         block: ExprNullIfBuilder.() -> Unit = {}
     ): Expr.NullIf {
         val builder = ExprNullIfBuilder()
@@ -454,7 +465,7 @@ public class AstBuilder(
     public fun exprCast(
         id: Int? = null,
         `value`: Expr? = null,
-        asType: StaticType? = null,
+        asType: Type? = null,
         block: ExprCastBuilder.() -> Unit = {}
     ): Expr.Cast {
         val builder = ExprCastBuilder()
@@ -465,7 +476,7 @@ public class AstBuilder(
     public fun exprCanCast(
         id: Int? = null,
         `value`: Expr? = null,
-        asType: StaticType? = null,
+        asType: Type? = null,
         block: ExprCanCastBuilder.() -> Unit = {}
     ): Expr.CanCast {
         val builder = ExprCanCastBuilder()
@@ -476,7 +487,7 @@ public class AstBuilder(
     public fun exprCanLosslessCast(
         id: Int? = null,
         `value`: Expr? = null,
-        asType: StaticType? = null,
+        asType: Type? = null,
         block: ExprCanLosslessCastBuilder.() -> Unit = {}
     ): Expr.CanLosslessCast {
         val builder = ExprCanLosslessCastBuilder()
@@ -919,7 +930,7 @@ public class AstBuilder(
     public fun tableDefinitionColumn(
         id: Int? = null,
         name: String? = null,
-        type: StaticType? = null,
+        type: Type? = null,
         constraints: MutableList<TableDefinition.Column.Constraint> = mutableListOf(),
         block: TableDefinitionColumnBuilder.() -> Unit = {}
     ): TableDefinition.Column {

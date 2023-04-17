@@ -13,6 +13,7 @@ import org.partiql.ast.Returning
 import org.partiql.ast.Select
 import org.partiql.ast.Statement
 import org.partiql.ast.TableDefinition
+import org.partiql.ast.Type
 
 public abstract class AstBaseVisitor<R, C> : AstVisitor<R, C> {
     public override fun visit(node: AstNode, ctx: C): R = node.accept(this, ctx)
@@ -93,6 +94,8 @@ public abstract class AstBaseVisitor<R, C> : AstVisitor<R, C> {
         node: Statement.Explain.Target.Domain,
         ctx: C
     ): R = defaultVisit(node, ctx)
+
+    public override fun visitType(node: Type, ctx: C): R = defaultVisit(node, ctx)
 
     public override fun visitExpr(node: Expr, ctx: C): R = when (node) {
         is Expr.Missing -> visitExprMissing(node, ctx)

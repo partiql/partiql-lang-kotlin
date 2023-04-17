@@ -1,6 +1,6 @@
 package org.partiql.ast
 
-import com.amazon.ionelement.api.AnyElement
+import com.amazon.ionelement.api.IonElement
 import org.partiql.ast.builder.ExprAggBuilder
 import org.partiql.ast.builder.ExprBetweenBuilder
 import org.partiql.ast.builder.ExprBinaryBuilder
@@ -87,6 +87,7 @@ import org.partiql.ast.builder.TableDefinitionColumnConstraintBodyCheckBuilder
 import org.partiql.ast.builder.TableDefinitionColumnConstraintBodyNotNullBuilder
 import org.partiql.ast.builder.TableDefinitionColumnConstraintBodyNullableBuilder
 import org.partiql.ast.builder.TableDefinitionColumnConstraintBuilder
+import org.partiql.ast.builder.TypeBuilder
 import org.partiql.ast.visitor.AstVisitor
 import org.partiql.types.StaticType
 import kotlin.Boolean
@@ -432,6 +433,21 @@ public sealed class Statement : AstNode() {
     }
 }
 
+public data class Type(
+    public override val id: Int,
+    public val type: StaticType
+) : AstNode() {
+    public override fun <R, C> accept(visitor: AstVisitor<R, C>, ctx: C): R = visitor.visitType(
+        this,
+        ctx
+    )
+
+    public companion object {
+        @JvmStatic
+        public fun builder(): TypeBuilder = TypeBuilder()
+    }
+}
+
 public sealed class Expr : AstNode() {
     public override fun <R, C> accept(visitor: AstVisitor<R, C>, ctx: C): R = when (this) {
         is Missing -> visitor.visitExprMissing(this, ctx)
@@ -477,7 +493,7 @@ public sealed class Expr : AstNode() {
 
     public data class Lit(
         public override val id: Int,
-        public val `value`: AnyElement
+        public val `value`: IonElement
     ) : Expr() {
         public override fun <R, C> accept(visitor: AstVisitor<R, C>, ctx: C): R =
             visitor.visitExprLit(this, ctx)
@@ -716,6 +732,8 @@ public sealed class Expr : AstNode() {
         public enum class Type {
             BAG,
             ARRAY,
+            LIST,
+            SEXP,
         }
 
         public companion object {
@@ -867,11 +885,12 @@ public sealed class Expr : AstNode() {
     public data class IsType(
         public override val id: Int,
         public val `value`: Expr,
-        public val type: StaticType
+        public val type: Type
     ) : Expr() {
         public override val children: List<AstNode> by lazy {
             val kids = mutableListOf<AstNode?>()
             kids.add(value)
+            kids.add(type)
             kids.filterNotNull()
         }
 
@@ -949,13 +968,13 @@ public sealed class Expr : AstNode() {
 
     public data class NullIf(
         public override val id: Int,
-        public val expr1: Expr,
-        public val expr2: Expr
+        public val expr0: Expr,
+        public val expr1: Expr
     ) : Expr() {
         public override val children: List<AstNode> by lazy {
             val kids = mutableListOf<AstNode?>()
+            kids.add(expr0)
             kids.add(expr1)
-            kids.add(expr2)
             kids.filterNotNull()
         }
 
@@ -971,11 +990,12 @@ public sealed class Expr : AstNode() {
     public data class Cast(
         public override val id: Int,
         public val `value`: Expr,
-        public val asType: StaticType
+        public val asType: Type
     ) : Expr() {
         public override val children: List<AstNode> by lazy {
             val kids = mutableListOf<AstNode?>()
             kids.add(value)
+            kids.add(asType)
             kids.filterNotNull()
         }
 
@@ -991,11 +1011,12 @@ public sealed class Expr : AstNode() {
     public data class CanCast(
         public override val id: Int,
         public val `value`: Expr,
-        public val asType: StaticType
+        public val asType: Type
     ) : Expr() {
         public override val children: List<AstNode> by lazy {
             val kids = mutableListOf<AstNode?>()
             kids.add(value)
+            kids.add(asType)
             kids.filterNotNull()
         }
 
@@ -1011,11 +1032,12 @@ public sealed class Expr : AstNode() {
     public data class CanLosslessCast(
         public override val id: Int,
         public val `value`: Expr,
-        public val asType: StaticType
+        public val asType: Type
     ) : Expr() {
         public override val children: List<AstNode> by lazy {
             val kids = mutableListOf<AstNode?>()
             kids.add(value)
+            kids.add(asType)
             kids.filterNotNull()
         }
 
@@ -1883,11 +1905,12 @@ public data class TableDefinition(
     public data class Column(
         public override val id: Int,
         public val name: String,
-        public val type: StaticType,
+        public val type: Type,
         public val constraints: List<Constraint>
     ) : AstNode() {
         public override val children: List<AstNode> by lazy {
             val kids = mutableListOf<AstNode?>()
+            kids.add(type)
             kids.addAll(constraints)
             kids.filterNotNull()
         }

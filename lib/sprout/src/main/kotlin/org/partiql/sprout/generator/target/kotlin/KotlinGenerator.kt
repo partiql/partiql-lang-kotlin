@@ -110,7 +110,7 @@ class KotlinGenerator(private val options: KotlinOptions) : Generator<KotlinResu
             val para = ParameterSpec.builder(it.name, it.type)
             val prop = PropertySpec.builder(it.name, it.type).initializer(it.name)
             if (symbols.baseProps.contains(it)) {
-               prop.addModifiers(KModifier.OVERRIDE)
+                prop.addModifiers(KModifier.OVERRIDE)
             }
             builder.addProperty(prop.build())
             constructor.addParameter(para.build())

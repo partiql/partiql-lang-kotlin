@@ -1,6 +1,6 @@
 package org.partiql.ast.builder
 
-import com.amazon.ionelement.api.AnyElement
+import com.amazon.ionelement.api.IonElement
 import org.partiql.ast.Case
 import org.partiql.ast.Expr
 import org.partiql.ast.From
@@ -15,6 +15,7 @@ import org.partiql.ast.Select
 import org.partiql.ast.SetQuantifier
 import org.partiql.ast.Statement
 import org.partiql.ast.TableDefinition
+import org.partiql.ast.Type
 import org.partiql.types.StaticType
 import kotlin.Boolean
 import kotlin.Int
@@ -392,6 +393,28 @@ public class StatementExplainTargetDomainBuilder {
         )
 }
 
+public class TypeBuilder {
+    public var id: Int? = null
+
+    public var type: StaticType? = null
+
+    public fun id(id: Int?): TypeBuilder = this.apply {
+        this.id = id
+    }
+
+    public fun type(type: StaticType?): TypeBuilder = this.apply {
+        this.type = type
+    }
+
+    public fun build(): Type = build(AstFactory.DEFAULT)
+
+    public fun build(factory: AstFactory = AstFactory.DEFAULT): Type = factory.type(
+        id = id!!,
+        type =
+        type!!
+    )
+}
+
 public class ExprMissingBuilder {
     public var id: Int? = null
 
@@ -410,13 +433,13 @@ public class ExprMissingBuilder {
 public class ExprLitBuilder {
     public var id: Int? = null
 
-    public var `value`: AnyElement? = null
+    public var `value`: IonElement? = null
 
     public fun id(id: Int?): ExprLitBuilder = this.apply {
         this.id = id
     }
 
-    public fun `value`(`value`: AnyElement?): ExprLitBuilder = this.apply {
+    public fun `value`(`value`: IonElement?): ExprLitBuilder = this.apply {
         this.`value` = `value`
     }
 
@@ -933,7 +956,7 @@ public class ExprIsTypeBuilder {
 
     public var `value`: Expr? = null
 
-    public var type: StaticType? = null
+    public var type: Type? = null
 
     public fun id(id: Int?): ExprIsTypeBuilder = this.apply {
         this.id = id
@@ -943,7 +966,7 @@ public class ExprIsTypeBuilder {
         this.`value` = `value`
     }
 
-    public fun type(type: StaticType?): ExprIsTypeBuilder = this.apply {
+    public fun type(type: Type?): ExprIsTypeBuilder = this.apply {
         this.type = type
     }
 
@@ -1037,20 +1060,20 @@ public class ExprCoalesceBuilder {
 public class ExprNullIfBuilder {
     public var id: Int? = null
 
-    public var expr1: Expr? = null
+    public var expr0: Expr? = null
 
-    public var expr2: Expr? = null
+    public var expr1: Expr? = null
 
     public fun id(id: Int?): ExprNullIfBuilder = this.apply {
         this.id = id
     }
 
-    public fun expr1(expr1: Expr?): ExprNullIfBuilder = this.apply {
-        this.expr1 = expr1
+    public fun expr0(expr0: Expr?): ExprNullIfBuilder = this.apply {
+        this.expr0 = expr0
     }
 
-    public fun expr2(expr2: Expr?): ExprNullIfBuilder = this.apply {
-        this.expr2 = expr2
+    public fun expr1(expr1: Expr?): ExprNullIfBuilder = this.apply {
+        this.expr1 = expr1
     }
 
     public fun build(): Expr.NullIf = build(AstFactory.DEFAULT)
@@ -1058,7 +1081,7 @@ public class ExprNullIfBuilder {
     public fun build(factory: AstFactory = AstFactory.DEFAULT): Expr.NullIf = factory.exprNullIf(
         id =
         id!!,
-        expr1 = expr1!!, expr2 = expr2!!
+        expr0 = expr0!!, expr1 = expr1!!
     )
 }
 
@@ -1067,7 +1090,7 @@ public class ExprCastBuilder {
 
     public var `value`: Expr? = null
 
-    public var asType: StaticType? = null
+    public var asType: Type? = null
 
     public fun id(id: Int?): ExprCastBuilder = this.apply {
         this.id = id
@@ -1077,7 +1100,7 @@ public class ExprCastBuilder {
         this.`value` = `value`
     }
 
-    public fun asType(asType: StaticType?): ExprCastBuilder = this.apply {
+    public fun asType(asType: Type?): ExprCastBuilder = this.apply {
         this.asType = asType
     }
 
@@ -1095,7 +1118,7 @@ public class ExprCanCastBuilder {
 
     public var `value`: Expr? = null
 
-    public var asType: StaticType? = null
+    public var asType: Type? = null
 
     public fun id(id: Int?): ExprCanCastBuilder = this.apply {
         this.id = id
@@ -1105,7 +1128,7 @@ public class ExprCanCastBuilder {
         this.`value` = `value`
     }
 
-    public fun asType(asType: StaticType?): ExprCanCastBuilder = this.apply {
+    public fun asType(asType: Type?): ExprCanCastBuilder = this.apply {
         this.asType = asType
     }
 
@@ -1123,7 +1146,7 @@ public class ExprCanLosslessCastBuilder {
 
     public var `value`: Expr? = null
 
-    public var asType: StaticType? = null
+    public var asType: Type? = null
 
     public fun id(id: Int?): ExprCanLosslessCastBuilder = this.apply {
         this.id = id
@@ -1133,7 +1156,7 @@ public class ExprCanLosslessCastBuilder {
         this.`value` = `value`
     }
 
-    public fun asType(asType: StaticType?): ExprCanLosslessCastBuilder = this.apply {
+    public fun asType(asType: Type?): ExprCanLosslessCastBuilder = this.apply {
         this.asType = asType
     }
 
@@ -2216,7 +2239,7 @@ public class TableDefinitionColumnBuilder {
 
     public var name: String? = null
 
-    public var type: StaticType? = null
+    public var type: Type? = null
 
     public var constraints: MutableList<TableDefinition.Column.Constraint> = mutableListOf()
 
@@ -2228,7 +2251,7 @@ public class TableDefinitionColumnBuilder {
         this.name = name
     }
 
-    public fun type(type: StaticType?): TableDefinitionColumnBuilder = this.apply {
+    public fun type(type: Type?): TableDefinitionColumnBuilder = this.apply {
         this.type = type
     }
 

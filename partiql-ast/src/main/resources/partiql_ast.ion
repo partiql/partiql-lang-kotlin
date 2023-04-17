@@ -1,11 +1,10 @@
 imports::{
   kotlin: [
-    ion::'com.amazon.ionelement.api.AnyElement',
-    type::'org.partiql.types.StaticType',
+    ion::'com.amazon.ionelement.api.IonElement',
+    static_type::'org.partiql.types.StaticType',
   ],
 }
 
-//
 statement::[
 
   // PartiQL Expressions
@@ -104,6 +103,10 @@ statement::[
   },
 ]
 
+type::{
+  type: static_type,
+}
+
 // [ ALL | DISTINCT ]
 set_quantifier::[
   ALL,
@@ -183,7 +186,7 @@ expr::[
 
   // Collection Constructors
   collection::{
-    type:   [ BAG, ARRAY ],
+    type:   [ BAG, ARRAY, LIST, SEXP ], // syntax `<< >>`, `[ ]`, `[VALUES|LIST] ( )`, `SEXP ( )`
     values: list::[expr],
   },
 
@@ -261,8 +264,8 @@ expr::[
 
   // The `nullif` SQL special form F261-03
   null_if::{
+    expr0: expr,
     expr1: expr,
-    expr2: expr,
   },
 
   // The `cast` SQL special form F201
