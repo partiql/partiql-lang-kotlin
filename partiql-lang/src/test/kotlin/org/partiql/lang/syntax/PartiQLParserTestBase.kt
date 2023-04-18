@@ -53,15 +53,8 @@ abstract class PartiQLParserTestBase : TestBase() {
         DEFAULT(object : Parser {
             val p = DefaultParserBuilder.standard().build()
             override fun parseAstStatement(source: String): PartiqlAst.Statement {
-                try {
-                    val ast = p.parse(source)
-                    return AstToPigTranslator.translate(ast.root, ast.locations) as PartiqlAst.Statement
-                } catch (ex: PartiQLParserException) {
-                    val context = PropertyValueMap()
-                    context[Property.LINE_NUMBER] = (ex.context["line_no"] ?: -1L) as Long
-                    context[Property.COLUMN_NUMBER] = (ex.context["column_no"] ?: -1L) as Long
-                    throw ParserException(ex.message, ErrorCode.PARSE_INVALID_QUERY, context, ex)
-                }
+                val ast = p.parse(source)
+                return AstToPigTranslator.translate(ast.root) as PartiqlAst.Statement
             }
         }),
     }

@@ -1,5 +1,6 @@
 package org.partiql.lang.ast
 
+<<<<<<< HEAD
 import com.amazon.ionelement.api.DecimalElement
 import com.amazon.ionelement.api.FloatElement
 import com.amazon.ionelement.api.IntElement
@@ -7,11 +8,14 @@ import com.amazon.ionelement.api.IntElementSize
 import com.amazon.ionelement.api.ionDecimal
 import com.amazon.ionelement.api.ionFloat
 import com.amazon.ionelement.api.ionInt
+=======
+>>>>>>> f4175c5e (Initial Ast to PIG Ast conversion)
 import com.amazon.ionelement.api.ionSymbol
 import org.partiql.ast.AstNode
 import org.partiql.ast.Case
 import org.partiql.ast.Expr
 import org.partiql.ast.From
+<<<<<<< HEAD
 import org.partiql.ast.GraphMatch
 import org.partiql.ast.GroupBy
 import org.partiql.ast.Let
@@ -31,6 +35,18 @@ import org.partiql.lang.util.unaryMinus
 import org.partiql.parser.PartiQLParser
 import org.partiql.types.MissingType.metas
 import java.math.BigInteger
+=======
+import org.partiql.ast.GroupBy
+import org.partiql.ast.Let
+import org.partiql.ast.OrderBy
+import org.partiql.ast.Select
+import org.partiql.ast.SetQuantifier
+import org.partiql.ast.Statement
+import org.partiql.ast.Type
+import org.partiql.ast.visitor.AstBaseVisitor
+import org.partiql.lang.domains.PartiqlAst
+import org.partiql.parser.PartiQLParser
+>>>>>>> f4175c5e (Initial Ast to PIG Ast conversion)
 import kotlin.reflect.KClass
 import kotlin.reflect.cast
 
@@ -48,8 +64,12 @@ object AstToPigTranslator {
      * Translates an [AstNode] tree to the legacy PIG AST
      */
     fun translate(ast: AstNode, locations: PartiQLParser.SourceLocations? = null): PartiqlAst.PartiqlAstNode {
+<<<<<<< HEAD
         val translator = Translator(locations)
         val node = ast.accept(translator, Ctx())
+=======
+        val node = ast.accept(Visitor, Ctx(locations))
+>>>>>>> f4175c5e (Initial Ast to PIG Ast conversion)
         return node
     }
 
@@ -60,14 +80,21 @@ object AstToPigTranslator {
         "trim_whitespace_both" to { args -> "trim" to listOf("both", args[0]) },
         "trim_whitespace_leading" to { args -> "trim" to listOf("leading", args[0]) },
         "trim_whitespace_trailing" to { args -> "trim" to listOf("trailing", args[0]) },
+<<<<<<< HEAD
         "trim_chars_both" to { args -> "trim" to listOf("both", args[0], args[1]) },
         "trim_chars_leading" to { args -> "trim" to listOf("leading", args[0], args[1]) },
         "trim_chars_trailing" to { args -> "trim" to listOf("trailing", args[0], args[1]) },
+=======
+        "trim_chars_both" to { args -> "trim" to listOf(args[0], "both", args[1]) },
+        "trim_chars_leading" to { args -> "trim" to listOf(args[0], "leading", args[1]) },
+        "trim_chars_trailing" to { args -> "trim" to listOf(args[0], "trailing", args[1]) },
+>>>>>>> f4175c5e (Initial Ast to PIG Ast conversion)
     )
 
     /**
      * Visitor method arguments
      */
+<<<<<<< HEAD
     private class Ctx
 
     private class Translator(val locations: PartiQLParser.SourceLocations?) :
@@ -84,12 +111,28 @@ object AstToPigTranslator {
         ): T {
             val piggy = factory.block()
             val location = when (val l = locations?.get(node.id)) {
+=======
+    private class Ctx(val locations: PartiQLParser.SourceLocations?)
+
+    private object Visitor : AstBaseVisitor<PartiqlAst.PartiqlAstNode, Ctx>() {
+
+        private val factory = PartiqlAst.BUILDER()
+
+        private inline fun <T : PartiqlAst.PartiqlAstNode> translate(
+            node: AstNode,
+            ctx: Ctx,
+            block: PartiqlAst.Builder.() -> T,
+        ): T {
+            val piggy = factory.block()
+            val location = when (val l = ctx.locations?.get(node.id)) {
+>>>>>>> f4175c5e (Initial Ast to PIG Ast conversion)
                 null -> UNKNOWN_SOURCE_LOCATION
                 else -> SourceLocationMeta(l.line.toLong(), l.offset.toLong(), l.length.toLong())
             }
             @Suppress("UNCHECKED_CAST") return piggy.withMeta(SourceLocationMeta.TAG, location) as T
         }
 
+<<<<<<< HEAD
         /**
          * Builds a PIG node only if it's not synthetic
          */
@@ -107,10 +150,16 @@ object AstToPigTranslator {
         override fun visitStatement(node: Statement, ctx: Ctx) = super.visitStatement(node, ctx) as PartiqlAst.Statement
 
         override fun visitStatementQuery(node: Statement.Query, ctx: Ctx) = translate(node) {
+=======
+        override fun visitExpr(node: Expr, ctx: Ctx) = super.visitExpr(node, ctx) as PartiqlAst.Expr
+
+        override fun visitStatementQuery(node: Statement.Query, ctx: Ctx) = translate(node, ctx) {
+>>>>>>> f4175c5e (Initial Ast to PIG Ast conversion)
             val expr = visitExpr(node.expr, ctx)
             query(expr)
         }
 
+<<<<<<< HEAD
         override fun visitStatementDMLInsert(node: Statement.DML.Insert, ctx: Ctx) = translate(node) {
             val target = translateSimplePath(node.target.table, ctx)
             val v = node.value
@@ -463,6 +512,9 @@ object AstToPigTranslator {
         }
 
         override fun visitType(node: Type, ctx: Ctx) = translate(node) {
+=======
+        override fun visitType(node: Type, ctx: Ctx) = translate(node, ctx) {
+>>>>>>> f4175c5e (Initial Ast to PIG Ast conversion)
             // parameters are only integers for now
             val parameters = node.parameters.map { it.asAnyElement().longValue }
             when (node.identifier) {
@@ -503,6 +555,7 @@ object AstToPigTranslator {
                     }
                 }
                 "tuple" -> structType()
+<<<<<<< HEAD
                 "string" -> stringType()
                 else -> customType(node.identifier.toLowerCase())
             }
@@ -518,6 +571,25 @@ object AstToPigTranslator {
 
         override fun visitExprIdentifier(node: Expr.Identifier, ctx: Ctx) = translate(node) {
             val case = translate(node.case)
+=======
+                else -> throw IllegalArgumentException("Type ${node.identifier} does not exist in the PIG AST")
+            }
+        }
+
+        override fun visitExprMissing(node: Expr.Missing, ctx: Ctx) = translate(node, ctx) {
+            missing()
+        }
+
+        override fun visitExprLit(node: Expr.Lit, ctx: Ctx) = translate(node, ctx) {
+            lit(node.value)
+        }
+
+        override fun visitExprIdentifier(node: Expr.Identifier, ctx: Ctx) = translate(node, ctx) {
+            val case = when (node.case) {
+                Case.SENSITIVE -> caseSensitive()
+                Case.INSENSITIVE -> caseInsensitive()
+            }
+>>>>>>> f4175c5e (Initial Ast to PIG Ast conversion)
             val qualifier = when (node.scope) {
                 Expr.Identifier.Scope.UNQUALIFIED -> unqualified()
                 Expr.Identifier.Scope.LOCALS_FIRST -> localsFirst()
@@ -525,7 +597,11 @@ object AstToPigTranslator {
             id(node.name, case, qualifier)
         }
 
+<<<<<<< HEAD
         override fun visitExprPath(node: Expr.Path, ctx: Ctx) = translate(node) {
+=======
+        override fun visitExprPath(node: Expr.Path, ctx: Ctx) = translate(node, ctx) {
+>>>>>>> f4175c5e (Initial Ast to PIG Ast conversion)
             val root = visitExpr(node.root, ctx)
             val steps = translate(node.steps, ctx, PartiqlAst.PathStep::class)
             path(root, steps)
@@ -534,7 +610,11 @@ object AstToPigTranslator {
         override fun visitExprPathStep(node: Expr.Path.Step, ctx: Ctx) =
             super.visitExprPathStep(node, ctx) as PartiqlAst.PathStep
 
+<<<<<<< HEAD
         override fun visitExprPathStepIndex(node: Expr.Path.Step.Index, ctx: Ctx) = translate(node) {
+=======
+        override fun visitExprPathStepIndex(node: Expr.Path.Step.Index, ctx: Ctx) = translate(node, ctx) {
+>>>>>>> f4175c5e (Initial Ast to PIG Ast conversion)
             val key = visitExpr(node.key, ctx)
             val case = when (node.case) {
                 Case.SENSITIVE -> caseSensitive()
@@ -544,6 +624,7 @@ object AstToPigTranslator {
         }
 
         override fun visitExprPathStepWildcard(node: Expr.Path.Step.Wildcard, ctx: Ctx) =
+<<<<<<< HEAD
             translate(node) {
                 pathWildcard()
             }
@@ -555,10 +636,24 @@ object AstToPigTranslator {
         override fun visitExprCall(node: Expr.Call, ctx: Ctx) = translate(node) {
             val funcName = node.function
             var args = translate(node.args, ctx, PartiqlAst.Expr::class)
+=======
+            translate(node, ctx) {
+                pathWildcard()
+            }
+
+        override fun visitExprPathStepUnpivot(node: Expr.Path.Step.Unpivot, ctx: Ctx) = translate(node, ctx) {
+            pathUnpivot()
+        }
+
+        override fun visitExprCall(node: Expr.Call, ctx: Ctx) = translate(node, ctx) {
+            val funcName = node.function
+            val args = translate(node.args, ctx, PartiqlAst.Expr::class)
+>>>>>>> f4175c5e (Initial Ast to PIG Ast conversion)
             when (val form = specialCalls[funcName]) {
                 null -> call(funcName, args)
                 else -> {
                     val rewriter = form(args)
+<<<<<<< HEAD
                     args = rewriter.second.mapIndexedNotNull { i, a ->
                         optional(node, i + 1) {
                             when (a) {
@@ -566,6 +661,13 @@ object AstToPigTranslator {
                                 is String -> lit(ionSymbol(a))
                                 else -> throw IllegalArgumentException("argument must be an expression or symbol")
                             }
+=======
+                    val args = rewriter.second.map {
+                        when (it) {
+                            is PartiqlAst.Expr -> it
+                            is String -> lit(ionSymbol(it))
+                            else -> throw IllegalArgumentException("")
+>>>>>>> f4175c5e (Initial Ast to PIG Ast conversion)
                         }
                     }
                     call(rewriter.first, args)
@@ -573,13 +675,18 @@ object AstToPigTranslator {
             }
         }
 
+<<<<<<< HEAD
         override fun visitExprAgg(node: Expr.Agg, ctx: Ctx) = translate(node) {
+=======
+        override fun visitExprAgg(node: Expr.Agg, ctx: Ctx) = translate(node, ctx) {
+>>>>>>> f4175c5e (Initial Ast to PIG Ast conversion)
             val setq = translate(node.quantifier)
             val funcName = node.function
             val arg = visitExpr(node.args[0], ctx) // PIG callAgg only has one arg
             callAgg(setq, funcName, arg)
         }
 
+<<<<<<< HEAD
         override fun visitExprParameter(node: Expr.Parameter, ctx: Ctx) = translate(node) {
             parameter(node.index.toLong())
         }
@@ -620,6 +727,22 @@ object AstToPigTranslator {
         }
 
         override fun visitExprBinary(node: Expr.Binary, ctx: Ctx) = translate(node) {
+=======
+        override fun visitExprParameter(node: Expr.Parameter, ctx: Ctx) = translate(node, ctx) {
+            parameter(node.index.toLong())
+        }
+
+        override fun visitExprUnary(node: Expr.Unary, ctx: Ctx) = translate(node, ctx) {
+            val expr = visitExpr(node.expr, ctx)
+            when (node.op) {
+                Expr.Unary.Op.NOT -> not(expr)
+                Expr.Unary.Op.POS -> pos(expr)
+                Expr.Unary.Op.NEG -> neg(expr)
+            }
+        }
+
+        override fun visitExprBinary(node: Expr.Binary, ctx: Ctx) = translate(node, ctx) {
+>>>>>>> f4175c5e (Initial Ast to PIG Ast conversion)
             val lhs = visitExpr(node.lhs, ctx)
             val rhs = visitExpr(node.rhs, ctx)
             val operands = listOf(lhs, rhs)
@@ -641,7 +764,11 @@ object AstToPigTranslator {
             }
         }
 
+<<<<<<< HEAD
         override fun visitExprCollection(node: Expr.Collection, ctx: Ctx) = translate(node) {
+=======
+        override fun visitExprCollection(node: Expr.Collection, ctx: Ctx) = translate(node, ctx) {
+>>>>>>> f4175c5e (Initial Ast to PIG Ast conversion)
             val values = translate(node.values, ctx, PartiqlAst.Expr::class)
             when (node.type) {
                 Expr.Collection.Type.BAG -> bag(values)
@@ -651,28 +778,46 @@ object AstToPigTranslator {
             }
         }
 
+<<<<<<< HEAD
         override fun visitExprTuple(node: Expr.Tuple, ctx: Ctx) = translate(node) {
+=======
+        override fun visitExprTuple(node: Expr.Tuple, ctx: Ctx) = translate(node, ctx) {
+>>>>>>> f4175c5e (Initial Ast to PIG Ast conversion)
             val fields = translate(node.fields, ctx, PartiqlAst.ExprPair::class)
             struct(fields)
         }
 
+<<<<<<< HEAD
         override fun visitExprTupleField(node: Expr.Tuple.Field, ctx: Ctx) = translate(node) {
+=======
+        override fun visitExprTupleField(node: Expr.Tuple.Field, ctx: Ctx) = translate(node, ctx) {
+>>>>>>> f4175c5e (Initial Ast to PIG Ast conversion)
             val first = visitExpr(node.name, ctx)
             val second = visitExpr(node.value, ctx)
             exprPair(first, second)
         }
 
+<<<<<<< HEAD
         override fun visitExprDate(node: Expr.Date, ctx: Ctx) = translate(node) {
             date(node.year, node.month, node.day)
         }
 
         override fun visitExprTime(node: Expr.Time, ctx: Ctx) = translate(node) {
             val value = timeValue(
+=======
+        override fun visitExprDate(node: Expr.Date, ctx: Ctx) = translate(node, ctx) {
+            date(node.year, node.month, node.day)
+        }
+
+        override fun visitExprTime(node: Expr.Time, ctx: Ctx) = translate(node, ctx) {
+            timeValue(
+>>>>>>> f4175c5e (Initial Ast to PIG Ast conversion)
                 node.hour,
                 node.minute,
                 node.second,
                 node.nano,
                 node.precision,
+<<<<<<< HEAD
                 node.withTz,
                 node.tzOffsetMinutes,
             )
@@ -680,33 +825,57 @@ object AstToPigTranslator {
         }
 
         override fun visitExprLike(node: Expr.Like, ctx: Ctx) = translate(node) {
+=======
+                node.tzOffsetMinutes != null,
+                node.tzOffsetMinutes
+            )
+        }
+
+        override fun visitExprLike(node: Expr.Like, ctx: Ctx) = translate(node, ctx) {
+>>>>>>> f4175c5e (Initial Ast to PIG Ast conversion)
             val value = visitExpr(node.value, ctx)
             val pattern = visitExpr(node.pattern, ctx)
             val escape = node.escape?.let { visitExpr(it, ctx) }
             like(value, pattern, escape)
         }
 
+<<<<<<< HEAD
         override fun visitExprBetween(node: Expr.Between, ctx: Ctx) = translate(node) {
+=======
+        override fun visitExprBetween(node: Expr.Between, ctx: Ctx) = translate(node, ctx) {
+>>>>>>> f4175c5e (Initial Ast to PIG Ast conversion)
             val value = visitExpr(node.value, ctx)
             val from = visitExpr(node.from, ctx)
             val to = visitExpr(node.to, ctx)
             between(value, from, to)
         }
 
+<<<<<<< HEAD
         override fun visitExprInCollection(node: Expr.InCollection, ctx: Ctx) = translate(node) {
+=======
+        override fun visitExprInCollection(node: Expr.InCollection, ctx: Ctx) = translate(node, ctx) {
+>>>>>>> f4175c5e (Initial Ast to PIG Ast conversion)
             val lhs = visitExpr(node.lhs, ctx)
             val rhs = visitExpr(node.rhs, ctx)
             val operands = listOf(lhs, rhs)
             inCollection(operands)
         }
 
+<<<<<<< HEAD
         override fun visitExprIsType(node: Expr.IsType, ctx: Ctx) = translate(node) {
+=======
+        override fun visitExprIsType(node: Expr.IsType, ctx: Ctx) = translate(node, ctx) {
+>>>>>>> f4175c5e (Initial Ast to PIG Ast conversion)
             val value = visitExpr(node.value, ctx)
             val type = visitType(node.type, ctx)
             isType(value, type)
         }
 
+<<<<<<< HEAD
         override fun visitExprSwitch(node: Expr.Switch, ctx: Ctx) = translate(node) {
+=======
+        override fun visitExprSwitch(node: Expr.Switch, ctx: Ctx) = translate(node, ctx) {
+>>>>>>> f4175c5e (Initial Ast to PIG Ast conversion)
             val pairs = exprPairList(translate(node.branches, ctx, PartiqlAst.ExprPair::class))
             val default = node.default?.let { visitExpr(it, ctx) }
             when (node.expr) {
@@ -715,42 +884,70 @@ object AstToPigTranslator {
             }
         }
 
+<<<<<<< HEAD
         override fun visitExprSwitchBranch(node: Expr.Switch.Branch, ctx: Ctx) = translate(node) {
+=======
+        override fun visitExprSwitchBranch(node: Expr.Switch.Branch, ctx: Ctx) = translate(node, ctx) {
+>>>>>>> f4175c5e (Initial Ast to PIG Ast conversion)
             val first = visitExpr(node.condition, ctx)
             val second = visitExpr(node.expr, ctx)
             exprPair(first, second)
         }
 
+<<<<<<< HEAD
         override fun visitExprCoalesce(node: Expr.Coalesce, ctx: Ctx) = translate(node) {
+=======
+        override fun visitExprCoalesce(node: Expr.Coalesce, ctx: Ctx) = translate(node, ctx) {
+>>>>>>> f4175c5e (Initial Ast to PIG Ast conversion)
             val args = translate(node.args, ctx, PartiqlAst.Expr::class)
             coalesce(args)
         }
 
+<<<<<<< HEAD
         override fun visitExprNullIf(node: Expr.NullIf, ctx: Ctx) = translate(node) {
+=======
+        override fun visitExprNullIf(node: Expr.NullIf, ctx: Ctx) = translate(node, ctx) {
+>>>>>>> f4175c5e (Initial Ast to PIG Ast conversion)
             val expr1 = visitExpr(node.expr0, ctx)
             val expr2 = visitExpr(node.expr1, ctx)
             nullIf(expr1, expr2)
         }
 
+<<<<<<< HEAD
         override fun visitExprCast(node: Expr.Cast, ctx: Ctx) = translate(node) {
+=======
+        override fun visitExprCast(node: Expr.Cast, ctx: Ctx) = translate(node, ctx) {
+>>>>>>> f4175c5e (Initial Ast to PIG Ast conversion)
             val value = visitExpr(node.value, ctx)
             val asType = visitType(node.asType, ctx)
             cast(value, asType)
         }
 
+<<<<<<< HEAD
         override fun visitExprCanCast(node: Expr.CanCast, ctx: Ctx) = translate(node) {
+=======
+        override fun visitExprCanCast(node: Expr.CanCast, ctx: Ctx) = translate(node, ctx) {
+>>>>>>> f4175c5e (Initial Ast to PIG Ast conversion)
             val value = visitExpr(node.value, ctx)
             val asType = visitType(node.asType, ctx)
             canCast(value, asType)
         }
 
+<<<<<<< HEAD
         override fun visitExprCanLosslessCast(node: Expr.CanLosslessCast, ctx: Ctx) = translate(node) {
+=======
+        override fun visitExprCanLosslessCast(node: Expr.CanLosslessCast, ctx: Ctx) = translate(node, ctx) {
+>>>>>>> f4175c5e (Initial Ast to PIG Ast conversion)
             val value = visitExpr(node.value, ctx)
             val asType = visitType(node.asType, ctx)
             canLosslessCast(value, asType)
         }
 
+<<<<<<< HEAD
         override fun visitExprSet(node: Expr.Set, ctx: Ctx) = translate(node) {
+=======
+        override fun visitExprSet(node: Expr.Set, ctx: Ctx) = translate(node, ctx) {
+>>>>>>> f4175c5e (Initial Ast to PIG Ast conversion)
             val quantifier = translate(node.quantifier)
             val op = when (node.op) {
                 Expr.Set.Op.UNION -> if (node.outer) outerUnion() else union()
@@ -763,6 +960,7 @@ object AstToPigTranslator {
             bagOp(op, quantifier, operands)
         }
 
+<<<<<<< HEAD
         override fun visitExprSFW(node: Expr.SFW, ctx: Ctx) = translate(node) {
             var setq = optional(node.select, 1) {
                 when (val s = node.select) {
@@ -773,6 +971,16 @@ object AstToPigTranslator {
                 }
             }
             // PIG AST always drops the ALL even if the query text specifies
+=======
+        override fun visitExprSFW(node: Expr.SFW, ctx: Ctx) = translate(node, ctx) {
+            var setq = when (val s = node.select) {
+                is Select.Pivot -> null
+                is Select.Project -> translate(s.quantifier)
+                is Select.Star -> null
+                is Select.Value -> translate(s.quantifier)
+            }
+            // PIG AST omits setq if ALL
+>>>>>>> f4175c5e (Initial Ast to PIG Ast conversion)
             if (setq is PartiqlAst.SetQuantifier.All) {
                 setq = null
             }
@@ -788,6 +996,7 @@ object AstToPigTranslator {
             select(setq, project, from, fromLet, where, groupBy, having, orderBy, limit, offset)
         }
 
+<<<<<<< HEAD
         override fun visitExprMatch(node: Expr.Match, ctx: Ctx) = translate(node) {
             val expr = visitExpr(node.expr, ctx)
             val pattern = visitGraphMatch(node.pattern, ctx)
@@ -805,44 +1014,80 @@ object AstToPigTranslator {
             val partitionBy = windowPartitionList(translate(node.partitions, ctx, PartiqlAst.Expr::class))
             val orderBy = windowSortSpecList(translate(node.sorts, ctx, PartiqlAst.SortSpec::class))
             over(partitionBy, orderBy)
+=======
+        override fun visitExprMatch(node: Expr.Match, ctx: Ctx) = translate(node, ctx) {
+            TODO("GPML Translation not implemented")
+        }
+
+        override fun visitExprWindow(node: Expr.Window, ctx: Ctx) = translate(node, ctx) {
+            TODO("WINDOW Translation not implemented")
+>>>>>>> f4175c5e (Initial Ast to PIG Ast conversion)
         }
 
         override fun visitSelect(node: Select, ctx: Ctx) = super.visitSelect(node, ctx) as PartiqlAst.Projection
 
+<<<<<<< HEAD
         override fun visitSelectStar(node: Select.Star, ctx: Ctx) = translate(node) {
             projectStar()
         }
 
         override fun visitSelectProject(node: Select.Project, ctx: Ctx) = translate(node) {
+=======
+        override fun visitSelectStar(node: Select.Star, ctx: Ctx) = translate(node, ctx) {
+            projectStar()
+        }
+
+        override fun visitSelectProject(node: Select.Project, ctx: Ctx) = translate(node, ctx) {
+>>>>>>> f4175c5e (Initial Ast to PIG Ast conversion)
             val items = translate(node.items, ctx, PartiqlAst.ProjectItem::class)
             projectList(items)
         }
 
+<<<<<<< HEAD
         override fun visitSelectProjectItemAll(node: Select.Project.Item.All, ctx: Ctx) = translate(node) {
+=======
+        override fun visitSelectProjectItemAll(node: Select.Project.Item.All, ctx: Ctx) = translate(node, ctx) {
+>>>>>>> f4175c5e (Initial Ast to PIG Ast conversion)
             val expr = visitExpr(node.expr, ctx)
             projectAll(expr)
         }
 
+<<<<<<< HEAD
         override fun visitSelectProjectItemVar(node: Select.Project.Item.Var, ctx: Ctx) = translate(node) {
+=======
+        override fun visitSelectProjectItemVar(node: Select.Project.Item.Var, ctx: Ctx) = translate(node, ctx) {
+>>>>>>> f4175c5e (Initial Ast to PIG Ast conversion)
             val expr = visitExpr(node.expr, ctx)
             val asAlias = node.asAlias
             projectExpr(expr, asAlias)
         }
 
+<<<<<<< HEAD
         override fun visitSelectPivot(node: Select.Pivot, ctx: Ctx) = translate(node) {
+=======
+        override fun visitSelectPivot(node: Select.Pivot, ctx: Ctx) = translate(node, ctx) {
+>>>>>>> f4175c5e (Initial Ast to PIG Ast conversion)
             val value = visitExpr(node.value, ctx)
             val key = visitExpr(node.key, ctx)
             projectPivot(value, key)
         }
 
+<<<<<<< HEAD
         override fun visitSelectValue(node: Select.Value, ctx: Ctx) = translate(node) {
+=======
+        override fun visitSelectValue(node: Select.Value, ctx: Ctx) = translate(node, ctx) {
+>>>>>>> f4175c5e (Initial Ast to PIG Ast conversion)
             val value = visitExpr(node.constructor, ctx)
             projectValue(value)
         }
 
         override fun visitFrom(node: From, ctx: Ctx) = super.visitFrom(node, ctx) as PartiqlAst.FromSource
 
+<<<<<<< HEAD
         override fun visitFromCollection(node: From.Collection, ctx: Ctx) = translate(node) {
+=======
+        override fun visitFromCollection(node: From.Collection, ctx: Ctx) = translate(node, ctx) {
+>>>>>>> f4175c5e (Initial Ast to PIG Ast conversion)
             val expr = visitExpr(node.expr, ctx)
             val asAlias = node.asAlias
             val atAlias = node.atAlias
@@ -853,7 +1098,11 @@ object AstToPigTranslator {
             }
         }
 
+<<<<<<< HEAD
         override fun visitFromJoin(node: From.Join, ctx: Ctx) = translate(node) {
+=======
+        override fun visitFromJoin(node: From.Join, ctx: Ctx) = translate(node, ctx) {
+>>>>>>> f4175c5e (Initial Ast to PIG Ast conversion)
             val type = when (node.type) {
                 From.Join.Type.INNER -> inner()
                 From.Join.Type.LEFT -> left()
@@ -866,18 +1115,30 @@ object AstToPigTranslator {
             join(type, left, right, predicate)
         }
 
+<<<<<<< HEAD
         override fun visitLet(node: Let, ctx: Ctx) = translate(node) {
+=======
+        override fun visitLet(node: Let, ctx: Ctx) = translate(node, ctx) {
+>>>>>>> f4175c5e (Initial Ast to PIG Ast conversion)
             val bindings = translate(node.bindings, ctx, PartiqlAst.LetBinding::class)
             let(bindings)
         }
 
+<<<<<<< HEAD
         override fun visitLetBinding(node: Let.Binding, ctx: Ctx) = translate(node) {
+=======
+        override fun visitLetBinding(node: Let.Binding, ctx: Ctx) = translate(node, ctx) {
+>>>>>>> f4175c5e (Initial Ast to PIG Ast conversion)
             val expr = visitExpr(node.expr, ctx)
             val name = node.asAlias
             letBinding(expr, name)
         }
 
+<<<<<<< HEAD
         override fun visitGroupBy(node: GroupBy, ctx: Ctx) = translate(node) {
+=======
+        override fun visitGroupBy(node: GroupBy, ctx: Ctx) = translate(node, ctx) {
+>>>>>>> f4175c5e (Initial Ast to PIG Ast conversion)
             val strategy = when (node.strategy) {
                 GroupBy.Strategy.FULL -> groupFull()
                 GroupBy.Strategy.PARTIAL -> groupPartial()
@@ -887,17 +1148,26 @@ object AstToPigTranslator {
             groupBy(strategy, keyList, groupAsAlias)
         }
 
+<<<<<<< HEAD
         override fun visitGroupByKey(node: GroupBy.Key, ctx: Ctx) = translate(node) {
+=======
+        override fun visitGroupByKey(node: GroupBy.Key, ctx: Ctx) = translate(node, ctx) {
+>>>>>>> f4175c5e (Initial Ast to PIG Ast conversion)
             val expr = visitExpr(node.expr, ctx)
             val asAlias = node.asAlias
             groupKey(expr, asAlias)
         }
 
+<<<<<<< HEAD
         override fun visitOrderBy(node: OrderBy, ctx: Ctx) = translate(node) {
+=======
+        override fun visitOrderBy(node: OrderBy, ctx: Ctx) = translate(node, ctx) {
+>>>>>>> f4175c5e (Initial Ast to PIG Ast conversion)
             val sortSpecs = translate(node.sorts, ctx, PartiqlAst.SortSpec::class)
             orderBy(sortSpecs)
         }
 
+<<<<<<< HEAD
         override fun visitOrderBySort(node: OrderBy.Sort, ctx: Ctx) = translate(node) {
             val expr = visitExpr(node.expr, ctx)
             val orderingSpec = optional(node, 2) {
@@ -911,10 +1181,22 @@ object AstToPigTranslator {
                     OrderBy.Sort.Nulls.FIRST -> nullsFirst()
                     OrderBy.Sort.Nulls.LAST -> nullsLast()
                 }
+=======
+        override fun visitOrderBySort(node: OrderBy.Sort, ctx: Ctx) = translate(node, ctx) {
+            val expr = visitExpr(node.expr, ctx)
+            val orderingSpec = when (node.dir) {
+                OrderBy.Sort.Dir.ASC -> asc()
+                OrderBy.Sort.Dir.DESC -> desc()
+            }
+            val nullsSpec = when (node.nulls) {
+                OrderBy.Sort.Nulls.FIRST -> nullsFirst()
+                OrderBy.Sort.Nulls.LAST -> nullsLast()
+>>>>>>> f4175c5e (Initial Ast to PIG Ast conversion)
             }
             sortSpec(expr, orderingSpec, nullsSpec)
         }
 
+<<<<<<< HEAD
         override fun visitGraphMatch(node: GraphMatch, ctx: Ctx) = translate(node) {
             val selector = node.selector?.let { visitGraphMatchSelector(it, ctx) }
             val patterns = translate(node.patterns, ctx, PartiqlAst.GraphMatchPattern::class)
@@ -1018,6 +1300,13 @@ object AstToPigTranslator {
         override fun defaultReturn(node: AstNode, ctx: Ctx) = throw IllegalArgumentException("Translation not supported for ${node.javaClass}")
 
         // ---- HELPERS
+=======
+        override fun defaultReturn(node: AstNode, ctx: Ctx) = translate(node, ctx) {
+            TODO("Not yet implemented")
+        }
+
+        // -----
+>>>>>>> f4175c5e (Initial Ast to PIG Ast conversion)
 
         private fun <T : PartiqlAst.PartiqlAstNode> translate(
             nodes: List<AstNode>,
@@ -1031,6 +1320,7 @@ object AstToPigTranslator {
             SetQuantifier.ALL -> PartiqlAst.SetQuantifier.All()
             SetQuantifier.DISTINCT -> PartiqlAst.SetQuantifier.Distinct()
         }
+<<<<<<< HEAD
 
         private fun translate(case: Case) = when (case) {
             Case.SENSITIVE -> PartiqlAst.CaseSensitivity.CaseSensitive()
@@ -1042,5 +1332,7 @@ object AstToPigTranslator {
             val ex = visitExpr(expr, ctx)
             return if (ex is PartiqlAst.Expr.Path && ex.steps.isEmpty()) ex.root else ex
         }
+=======
+>>>>>>> f4175c5e (Initial Ast to PIG Ast conversion)
     }
 }
