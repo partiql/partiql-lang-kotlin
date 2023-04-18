@@ -36,7 +36,9 @@ dependencies {
     api(Deps.ionJava)
     api(Deps.pigRuntime)
     // libs are included in partiql-lang-kotlin JAR
+    libs(project(":partiql-ast"))
     libs(project(":partiql-types"))
+    libs(project(":partiql-parser"))
     libs(project(":partiql-plan"))
     implementation(Deps.antlrRuntime)
     implementation(Deps.csv)

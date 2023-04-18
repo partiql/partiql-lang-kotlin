@@ -59,12 +59,6 @@ import org.partiql.parser.PartiQLParserDefault.Visitor
 import org.partiql.parser.antlr.PartiQLBaseVisitor
 import org.partiql.parser.antlr.PartiQLParser.ColumnDeclarationContext
 import org.partiql.parser.antlr.PartiQLParser.RootContext
-import org.partiql.types.DecimalType
-import org.partiql.types.FloatType
-import org.partiql.types.NumberConstraint
-import org.partiql.types.StaticType
-import org.partiql.types.StringType
-import org.partiql.types.TimeType
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.MathContext
@@ -279,7 +273,7 @@ internal class PartiQLParserDefault : PartiQLParser {
         /**
          * Each visit attaches source locations from the given parse tree node; inline because gotta go fast.
          */
-        inline fun translate(ctx: ParserRuleContext, translate: (factory: AstFactory) -> AstNode): AstNode {
+        inline fun <T : AstNode> translate(ctx: ParserRuleContext, translate: (factory: AstFactory) -> T): T {
             val node = translate(factory)
             if (ctx.start != null) {
                 locations[node.id] = PartiQLParser.SourceLocation(
@@ -301,7 +295,7 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitQueryDml(ctx: GeneratedParser.QueryDmlContext): AstNode = visit(ctx.dml())
 
-        override fun visitRoot(ctx: GeneratedParser.RootContext) = translate(ctx) {
+        override fun visitRoot(ctx: RootContext) = translate(ctx) {
             when (ctx.EXPLAIN()) {
                 null -> visit(ctx.statement()) as Statement
                 else -> {
@@ -374,42 +368,41 @@ internal class PartiQLParserDefault : PartiQLParser {
         override fun visitQueryDdl(ctx: GeneratedParser.QueryDdlContext): AstNode = visitDdl(ctx.ddl())
 
         override fun visitDropTable(ctx: GeneratedParser.DropTableContext) = translate(ctx) {
-            val table = visitSymbolPrimitive(ctx.tableName().symbolPrimitive()) as Expr.Identifier
+            val table = visitSymbolPrimitive(ctx.tableName().symbolPrimitive())
             Statement.DDL.DropTable(id(), table)
         }
 
         override fun visitDropIndex(ctx: GeneratedParser.DropIndexContext) = translate(ctx) {
-            val table = visitSymbolPrimitive(ctx.target) as Expr.Identifier
-            val keys = visitSymbolPrimitive(ctx.on) as Expr.Identifier
+            val table = visitSymbolPrimitive(ctx.target)
+            val keys = visitSymbolPrimitive(ctx.on)
             Statement.DDL.DropIndex(id(), table, keys)
         }
 
         override fun visitCreateTable(ctx: GeneratedParser.CreateTableContext) = translate(ctx) {
             val identifier = convertRawSymbol(ctx.tableName().symbolPrimitive())
-            val definition = ctx.tableDef()?.let { visitTableDef(it) as TableDefinition }
+            val definition = ctx.tableDef()?.let { visitTableDef(it) }
             Statement.DDL.CreateTable(id(), identifier, definition)
         }
 
         override fun visitCreateIndex(ctx: GeneratedParser.CreateIndexContext) = translate(ctx) {
             val identifier = convertRawSymbol(ctx.symbolPrimitive())
-            val fields = ctx.pathSimple().map { path -> visitPathSimple(path) as Expr }
+            val fields = ctx.pathSimple().map { path -> visitPathSimple(path) }
             Statement.DDL.CreateIndex(id(), identifier, fields)
         }
 
         override fun visitTableDef(ctx: GeneratedParser.TableDefContext) = translate(ctx) {
             // Column Definitions are the only thing we currently allow as table definition parts
             val columns = ctx.tableDefPart().filterIsInstance<ColumnDeclarationContext>().map {
-                visitColumnDeclaration(it) as TableDefinition.Column
+                visitColumnDeclaration(it)
             }
             TableDefinition(id(), columns)
         }
 
-        override fun visitColumnDeclaration(ctx: GeneratedParser.ColumnDeclarationContext) = translate(ctx) {
+        override fun visitColumnDeclaration(ctx: ColumnDeclarationContext) = translate(ctx) {
             val name = convertRawSymbol(ctx.columnName().symbolPrimitive())
-            // val type = visit(ctx.type(), Type::class)
-            val type = Type(id(), StaticType.ANY)
+            val type = Type(id(), "any", emptyList())
             val constraints = ctx.columnConstraint().map {
-                visitColumnConstraint(it) as TableDefinition.Column.Constraint
+                visitColumnConstraint(it)
             }
             TableDefinition.Column(id(), name, type, constraints)
         }
@@ -633,17 +626,19 @@ internal class PartiQLParserDefault : PartiQLParser {
             Expr.Path(id(), root, steps)
         }
 
-        // override fun visitPathSimpleLiteral(ctx: GeneratedParser.PathSimpleLiteralContext) = translate(ctx) {
-        //     // pathExpr(visit(ctx.literal()) as Expr, caseSensitive())
-        //     Expr.Path(id(), )
-        // }
-        //
-        // override fun visitPathSimpleSymbol(ctx: GeneratedParser.PathSimpleSymbolContext) = translate(ctx) {
-        //     pathExpr(visitSymbolPrimitive(ctx.symbolPrimitive()), caseSensitive())
-        // }
-        //
-        // override fun visitPathSimpleDotSymbol(ctx: GeneratedParser.PathSimpleDotSymbolContext) =
-        //     getSymbolPathExpr(ctx.symbolPrimitive())
+        override fun visitPathSimpleLiteral(ctx: GeneratedParser.PathSimpleLiteralContext) = translate(ctx) {
+            val key = visit(ctx.key) as Expr
+            Expr.Path.Step.Index(id(), key, Case.SENSITIVE)
+        }
+
+        override fun visitPathSimpleSymbol(ctx: GeneratedParser.PathSimpleSymbolContext) = translate(ctx) {
+            val (symbol, case) = convertRawSymbolCased(ctx.symbolPrimitive())
+            Expr.Path.Step.Index(id(), Expr.Lit(id(), ionString(symbol)), case)
+        }
+
+        override fun visitPathSimpleDotSymbol(ctx: GeneratedParser.PathSimpleDotSymbolContext) = translate(ctx) {
+            TODO("Visti PathSimpleDotSymbol")
+        }
 
         // override fun visitSetCommand(ctx: GeneratedParser.SetCommandContext) = translate(ctx) {
         //     val assignments = visitOrEmpty(ctx.setAssignment(), DmlOp.Set::class)
@@ -674,11 +669,11 @@ internal class PartiQLParserDefault : PartiQLParser {
         override fun visitSfwQuery(ctx: GeneratedParser.SfwQueryContext) = translate(ctx) {
             val select = visit(ctx.select) as Select
             val from = visitFromClause(ctx.from)
-            val let = ctx.let?.let { visitLetClause(it) as Let }
+            val let = ctx.let?.let { visitLetClause(it) }
             val where = visitOrNull(ctx.where, Expr::class)
-            val groupBy = ctx.group?.let { visitGroupClause(it) as GroupBy }
+            val groupBy = ctx.group?.let { visitGroupClause(it) }
             val having = visitOrNull(ctx.having, Expr::class)
-            val orderBy = ctx.order?.let { visitOrderByClause(it) as OrderBy }
+            val orderBy = ctx.order?.let { visitOrderByClause(it) }
             val limit = visitOrNull(ctx.limit, Expr::class)
             val offset = visitOrNull(ctx.offset, Expr::class)
             Expr.SFW(id(), select, from, let, where, groupBy, having, orderBy, limit, offset)
@@ -715,7 +710,7 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitProjectionItem(ctx: GeneratedParser.ProjectionItemContext) = translate(ctx) {
             val expr = visitExpr(ctx.expr())
-            val alias = convertRawSymbol(ctx.symbolPrimitive())
+            val alias = ctx.symbolPrimitive()?.let { convertRawSymbol(it) }
             if (expr is Expr.Path) {
                 convertPathToProjectionItem(ctx, expr, alias)
             } else {
@@ -827,36 +822,27 @@ internal class PartiQLParserDefault : PartiQLParser {
          */
 
         override fun visitIntersect(ctx: GeneratedParser.IntersectContext) = translate(ctx) {
+            val quantifier = if (ctx.ALL() != null) SetQuantifier.ALL else SetQuantifier.DISTINCT
+            val outer = ctx.OUTER() != null
             val lhs = visit(ctx.lhs, Expr::class)
             val rhs = visit(ctx.rhs, Expr::class)
-            val quantifier = if (ctx.ALL() != null) SetQuantifier.ALL else SetQuantifier.DISTINCT
-            if (ctx.OUTER() == null) {
-                // consider adjusting the grammar to make this an impossibility
-                throw error(ctx, "INTERSECT is currently not supported, only OUTER INTERSECT")
-            }
-            Expr.OuterBagOp(id(), Expr.OuterBagOp.Op.INTERSECT, quantifier, lhs, rhs)
+            Expr.Set(id(), Expr.Set.Op.INTERSECT, quantifier, outer, lhs, rhs)
         }
 
         override fun visitExcept(ctx: GeneratedParser.ExceptContext) = translate(ctx) {
+            val quantifier = if (ctx.ALL() != null) SetQuantifier.ALL else SetQuantifier.DISTINCT
+            val outer = ctx.OUTER() != null
             val lhs = visit(ctx.lhs, Expr::class)
             val rhs = visit(ctx.rhs, Expr::class)
-            val quantifier = if (ctx.ALL() != null) SetQuantifier.ALL else SetQuantifier.DISTINCT
-            if (ctx.OUTER() == null) {
-                // consider adjusting the grammar to make this an impossibility
-                throw error(ctx, "EXCEPT is currently not supported, only OUTER EXCEPT")
-            }
-            Expr.OuterBagOp(id(), Expr.OuterBagOp.Op.EXCEPT, quantifier, lhs, rhs)
+            Expr.Set(id(), Expr.Set.Op.EXCEPT, quantifier, outer, lhs, rhs)
         }
 
         override fun visitUnion(ctx: GeneratedParser.UnionContext) = translate(ctx) {
+            val quantifier = if (ctx.ALL() != null) SetQuantifier.ALL else SetQuantifier.DISTINCT
+            val outer = ctx.OUTER() != null
             val lhs = visit(ctx.lhs, Expr::class)
             val rhs = visit(ctx.rhs, Expr::class)
-            val quantifier = if (ctx.ALL() != null) SetQuantifier.ALL else SetQuantifier.DISTINCT
-            if (ctx.OUTER() == null) {
-                // consider adjusting the grammar to make this an impossibility
-                throw error(ctx, "UNION is currently not supported, only OUTER UNION")
-            }
-            Expr.OuterBagOp(id(), Expr.OuterBagOp.Op.UNION, quantifier, lhs, rhs)
+            Expr.Set(id(), Expr.Set.Op.UNION, quantifier, outer, lhs, rhs)
         }
 
         /**
@@ -866,13 +852,13 @@ internal class PartiQLParserDefault : PartiQLParser {
          */
 
         override fun visitGpmlPattern(ctx: GeneratedParser.GpmlPatternContext) = translate(ctx) {
-            val pattern = visitMatchPattern(ctx.matchPattern()) as GraphMatch.Pattern
+            val pattern = visitMatchPattern(ctx.matchPattern())
             val selector = visitOrNull(ctx.matchSelector(), GraphMatch.Selector::class)
             GraphMatch(id(), listOf(pattern), selector)
         }
 
         override fun visitGpmlPatternList(ctx: GeneratedParser.GpmlPatternListContext) = translate(ctx) {
-            val patterns = ctx.matchPattern().map { pattern -> visitMatchPattern(pattern) as GraphMatch.Pattern }
+            val patterns = ctx.matchPattern().map { pattern -> visitMatchPattern(pattern) }
             val selector = visitOrNull(ctx.matchSelector(), GraphMatch.Selector::class)
             GraphMatch(id(), patterns, selector)
         }
@@ -924,7 +910,7 @@ internal class PartiQLParserDefault : PartiQLParser {
             val restrictor = visitRestrictor(ctx.restrictor)
             val variable = visitOrNull(ctx.variable, Expr.Identifier::class)?.name
             val prefilter = ctx.where?.let { visitExpr(it.expr()) }
-            val quantifier = ctx.quantifier?.let { visitPatternQuantifier(it) as GraphMatch.Quantifier }
+            val quantifier = ctx.quantifier?.let { visitPatternQuantifier(it) }
             val parts = visitOrEmpty(ctx.graphPart(), GraphMatch.Pattern.Part::class)
             GraphMatch.Pattern(id(), restrictor, prefilter, variable, quantifier, parts)
         }
@@ -950,37 +936,37 @@ internal class PartiQLParserDefault : PartiQLParser {
         }
 
         override fun visitEdgeSpecLeft(ctx: GeneratedParser.EdgeSpecLeftContext): AstNode {
-            val edge = visitEdgeSpec(ctx.edgeSpec()) as GraphMatch.Pattern.Part.Edge
+            val edge = visitEdgeSpec(ctx.edgeSpec())
             return edge.copy(direction = GraphMatch.Direction.LEFT)
         }
 
         override fun visitEdgeSpecRight(ctx: GeneratedParser.EdgeSpecRightContext): AstNode {
-            val edge = visitEdgeSpec(ctx.edgeSpec()) as GraphMatch.Pattern.Part.Edge
+            val edge = visitEdgeSpec(ctx.edgeSpec())
             return edge.copy(direction = GraphMatch.Direction.RIGHT)
         }
 
         override fun visitEdgeSpecBidirectional(ctx: GeneratedParser.EdgeSpecBidirectionalContext): AstNode {
-            val edge = visitEdgeSpec(ctx.edgeSpec()) as GraphMatch.Pattern.Part.Edge
+            val edge = visitEdgeSpec(ctx.edgeSpec())
             return edge.copy(direction = GraphMatch.Direction.LEFT_OR_RIGHT)
         }
 
         override fun visitEdgeSpecUndirectedBidirectional(ctx: GeneratedParser.EdgeSpecUndirectedBidirectionalContext): AstNode {
-            val edge = visitEdgeSpec(ctx.edgeSpec()) as GraphMatch.Pattern.Part.Edge
+            val edge = visitEdgeSpec(ctx.edgeSpec())
             return edge.copy(direction = GraphMatch.Direction.LEFT_UNDIRECTED_OR_RIGHT)
         }
 
         override fun visitEdgeSpecUndirected(ctx: GeneratedParser.EdgeSpecUndirectedContext): AstNode {
-            val edge = visitEdgeSpec(ctx.edgeSpec()) as GraphMatch.Pattern.Part.Edge
+            val edge = visitEdgeSpec(ctx.edgeSpec())
             return edge.copy(direction = GraphMatch.Direction.UNDIRECTED)
         }
 
         override fun visitEdgeSpecUndirectedLeft(ctx: GeneratedParser.EdgeSpecUndirectedLeftContext): AstNode {
-            val edge = visitEdgeSpec(ctx.edgeSpec()) as GraphMatch.Pattern.Part.Edge
+            val edge = visitEdgeSpec(ctx.edgeSpec())
             return edge.copy(direction = GraphMatch.Direction.LEFT_OR_UNDIRECTED)
         }
 
         override fun visitEdgeSpecUndirectedRight(ctx: GeneratedParser.EdgeSpecUndirectedRightContext): AstNode {
-            val edge = visitEdgeSpec(ctx.edgeSpec()) as GraphMatch.Pattern.Part.Edge
+            val edge = visitEdgeSpec(ctx.edgeSpec())
             return edge.copy(direction = GraphMatch.Direction.UNDIRECTED_OR_RIGHT)
         }
 
@@ -1266,18 +1252,19 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitExprPrimaryPath(ctx: GeneratedParser.ExprPrimaryPathContext) = translate(ctx) {
             val base = visit(ctx.exprPrimary(), Expr::class)
-            val steps = ctx.pathStep().map { step -> visit(step) as Expr.Path.Step }
+            val steps = ctx.pathStep().map { visit(it) as Expr.Path.Step }
             Expr.Path(id(), base, steps)
         }
 
         override fun visitPathStepIndexExpr(ctx: GeneratedParser.PathStepIndexExprContext) = translate(ctx) {
-            val expr = visit(ctx.key, Expr::class)
-            Expr.Path.Step.Key(id(), expr)
+            val key = visit(ctx.key, Expr::class)
+            val case = Case.SENSITIVE
+            Expr.Path.Step.Index(id(), key, case)
         }
 
         override fun visitPathStepDotExpr(ctx: GeneratedParser.PathStepDotExprContext) = translate(ctx) {
-            val symbol = convertRawSymbol(ctx.symbolPrimitive())
-            Expr.Path(id(), Expr.Lit(id(), ionString(symbol)), emptyList())
+            val (symbol, case) = convertRawSymbolCased(ctx.symbolPrimitive())
+            Expr.Path.Step.Index(id(), Expr.Lit(id(), ionString(symbol)), case)
         }
 
         override fun visitPathStepIndexAll(ctx: GeneratedParser.PathStepIndexAllContext) = translate(ctx) {
@@ -1305,13 +1292,13 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitExprGraphMatchMany(ctx: GeneratedParser.ExprGraphMatchManyContext) = translate(ctx) {
             val graph = visit(ctx.exprPrimary()) as Expr
-            val pattern = visitGpmlPatternList(ctx.gpmlPatternList()) as GraphMatch
+            val pattern = visitGpmlPatternList(ctx.gpmlPatternList())
             Expr.Match(id(), graph, pattern)
         }
 
         override fun visitExprGraphMatchOne(ctx: GeneratedParser.ExprGraphMatchOneContext) = translate(ctx) {
             val graph = visit(ctx.exprPrimary()) as Expr
-            val pattern = visitGpmlPattern(ctx.gpmlPattern()) as GraphMatch
+            val pattern = visitGpmlPattern(ctx.gpmlPattern())
             Expr.Match(id(), graph, pattern)
         }
 
@@ -1422,8 +1409,8 @@ internal class PartiQLParserDefault : PartiQLParser {
             val mod = ctx.mod?.text?.toLowerCase() ?: "both"
             if (mod !in setOf("both", "leading", "trailing")) throw error(ctx.mod, "Invalid trim function modifier")
             val (function, args) = when (ctx.sub) {
-                null -> "trim_chars_$mod" to listOf(visitExpr(ctx.sub), visitExpr(ctx.target))
-                else -> "trim_whitespace_$mod" to listOf(visitExpr(ctx.target))
+                null -> "trim_whitespace_$mod" to listOf(visitExpr(ctx.target))
+                else -> "trim_chars_$mod" to listOf(visitExpr(ctx.sub), visitExpr(ctx.target))
             }
             Expr.Call(id(), function, args)
         }
@@ -1442,7 +1429,7 @@ internal class PartiQLParserDefault : PartiQLParser {
         override fun visitLagLeadFunction(ctx: GeneratedParser.LagLeadFunctionContext) = translate(ctx) {
             val function = ctx.func.text.toLowerCase()
             val args = visitOrEmpty(ctx.expr(), Expr::class)
-            val over = visitOver(ctx.over()) as Over
+            val over = visitOver(ctx.over())
             if (over.sorts.isEmpty()) {
                 // LAG and LEAD will require a Window ORDER BY
                 throw error(ctx, "Window ORDER BY is required")
@@ -1559,77 +1546,66 @@ internal class PartiQLParserDefault : PartiQLParser {
          */
 
         override fun visitTypeAtomic(ctx: GeneratedParser.TypeAtomicContext) = translate(ctx) {
-            val staticType = when (ctx.datatype.type) {
-                GeneratedParser.NULL -> StaticType.NULL
-                GeneratedParser.BOOL -> StaticType.BOOL
-                GeneratedParser.BOOLEAN -> StaticType.BOOL
-                GeneratedParser.SMALLINT -> StaticType.INT2
-                GeneratedParser.INT2 -> StaticType.INT2
-                GeneratedParser.INTEGER2 -> StaticType.INT2
-                GeneratedParser.INT -> StaticType.INT
-                GeneratedParser.INTEGER -> StaticType.INT
-                GeneratedParser.INT4 -> StaticType.INT4
-                GeneratedParser.INTEGER4 -> StaticType.INT4
-                GeneratedParser.INT8 -> StaticType.INT8
-                GeneratedParser.INTEGER8 -> StaticType.INT8
-                GeneratedParser.BIGINT -> StaticType.INT8
-                GeneratedParser.REAL -> StaticType.DECIMAL // TODO StaticType REAL?
-                GeneratedParser.DOUBLE -> StaticType.FLOAT
-                GeneratedParser.TIMESTAMP -> StaticType.TIMESTAMP
-                GeneratedParser.CHAR -> StringType(
-                    StringType.StringLengthConstraint.Constrained(
-                        NumberConstraint.Equals(
-                            1
-                        )
-                    )
-                )
-                GeneratedParser.CHARACTER -> StringType(
-                    StringType.StringLengthConstraint.Constrained(
-                        NumberConstraint.Equals(
-                            1
-                        )
-                    )
-                )
-                GeneratedParser.MISSING -> StaticType.MISSING
-                GeneratedParser.STRING -> StaticType.STRING
-                GeneratedParser.SYMBOL -> StaticType.SYMBOL
-                GeneratedParser.BLOB -> StaticType.BLOB
-                GeneratedParser.CLOB -> StaticType.CLOB
-                GeneratedParser.DATE -> StaticType.DATE
-                GeneratedParser.STRUCT -> StaticType.STRUCT
-                GeneratedParser.TUPLE -> StaticType.STRUCT
-                GeneratedParser.LIST -> StaticType.LIST
-                GeneratedParser.BAG -> StaticType.BAG
-                GeneratedParser.SEXP -> StaticType.SEXP
-                GeneratedParser.ANY -> StaticType.ANY
+            val type = when (ctx.datatype.type) {
+                GeneratedParser.NULL -> "null"
+                GeneratedParser.MISSING -> "missing"
+                GeneratedParser.BOOL,
+                GeneratedParser.BOOLEAN -> "bool"
+                GeneratedParser.SMALLINT,
+                GeneratedParser.INT2,
+                GeneratedParser.INTEGER2 -> "int16"
+                GeneratedParser.INT4,
+                GeneratedParser.INTEGER4 -> "int32"
+                GeneratedParser.BIGINT,
+                GeneratedParser.INT8,
+                GeneratedParser.INTEGER8 -> "int64"
+                GeneratedParser.INT,
+                GeneratedParser.INTEGER -> "int"
+                GeneratedParser.FLOAT -> "float32"
+                GeneratedParser.DOUBLE -> "float64"
+                GeneratedParser.REAL,
+                GeneratedParser.DECIMAL -> "decimal"
+                GeneratedParser.TIMESTAMP -> "timestamp"
+                GeneratedParser.CHAR,
+                GeneratedParser.CHARACTER -> "character"
+                GeneratedParser.NUMERIC -> "numeric"
+                GeneratedParser.SYMBOL,
+                GeneratedParser.STRING -> "string"
+                GeneratedParser.BLOB,
+                GeneratedParser.CLOB -> "blob"
+                GeneratedParser.DATE -> "date"
+                GeneratedParser.STRUCT,
+                GeneratedParser.TUPLE -> "tuple"
+                GeneratedParser.LIST -> "list"
+                GeneratedParser.BAG -> "bag"
+                GeneratedParser.SEXP -> "sexp"
+                GeneratedParser.ANY -> "any"
                 else -> throw error(ctx, "Unsupported type.")
             }
-            Type(id(), staticType)
+            Type(id(), type, emptyList())
         }
 
         override fun visitTypeVarChar(ctx: GeneratedParser.TypeVarCharContext) = translate(ctx) {
-            val arg0 = if (ctx.arg0 != null) parseToIntElement(ctx.arg0.text) else null
-            assertIntegerElement(ctx.arg0, arg0)
-            val constraint = when (arg0) {
-                null -> StringType.StringLengthConstraint.Unconstrained
-                else -> StringType.StringLengthConstraint.Constrained(NumberConstraint.UpTo(arg0.longValue.toInt()))
+            val args = if (ctx.arg0 != null) {
+                val arg0 = parseToIntElement(ctx.arg0.text)
+                assertIntegerElement(ctx.arg0, arg0)
+                listOf(arg0)
+            } else {
+                emptyList()
             }
-            val staticType = StringType(constraint)
-            Type(id(), staticType)
+            Type(id(), "varchar", args)
         }
 
         override fun visitTypeArgSingle(ctx: GeneratedParser.TypeArgSingleContext) = translate(ctx) {
             val arg0 = if (ctx.arg0 != null) parseToIntElement(ctx.arg0.text) else null
-            val one = StringType.StringLengthConstraint.Constrained(NumberConstraint.Equals(1))
             assertIntegerElement(ctx.arg0, arg0)
-            val constraint = arg0?.let { StringType.StringLengthConstraint.Constrained(NumberConstraint.Equals(arg0.longValue.toInt())) }
-            val staticType = when (ctx.datatype.type) {
-                GeneratedParser.FLOAT -> FloatType() // TODO float constraints?
-                GeneratedParser.CHAR, GeneratedParser.CHARACTER -> StringType(constraint ?: one)
-                GeneratedParser.VARCHAR -> StringType(constraint ?: StringType.StringLengthConstraint.Unconstrained)
-                else -> throw error(ctx.datatype, "Unknown datatype")
+            val type = when (ctx.datatype.type) {
+                GeneratedParser.FLOAT -> "float32"
+                GeneratedParser.CHAR, GeneratedParser.CHARACTER -> "character"
+                GeneratedParser.VARCHAR -> "varchar"
+                else -> throw error(ctx.datatype, "Invalid datatype")
             }
-            Type(id(), staticType)
+            Type(id(), type, listOfNotNull(arg0))
         }
 
         override fun visitTypeArgDouble(ctx: GeneratedParser.TypeArgDoubleContext) = translate(ctx) {
@@ -1637,29 +1613,22 @@ internal class PartiQLParserDefault : PartiQLParser {
             val arg1 = if (ctx.arg1 != null) parseToIntElement(ctx.arg1.text) else null
             assertIntegerElement(ctx.arg0, arg0)
             assertIntegerElement(ctx.arg1, arg1)
-            val precision = arg0?.longValue?.toInt()
-            val scale = arg1?.longValue?.toInt() ?: 0
-            val constraint = when (precision) {
-                null -> DecimalType.PrecisionScaleConstraint.Unconstrained
-                else -> DecimalType.PrecisionScaleConstraint.Constrained(precision, scale)
+            val type = when (ctx.datatype.type) {
+                GeneratedParser.DECIMAL,
+                GeneratedParser.DEC -> "decimal"
+                GeneratedParser.NUMERIC -> "numeric"
+                else -> throw error(ctx.datatype, "Invalid datatype")
             }
-            val staticType = when (ctx.datatype.type) {
-                GeneratedParser.DECIMAL, GeneratedParser.DEC, GeneratedParser.NUMERIC -> {
-                    // differentiate numeric?
-                    DecimalType(constraint)
-                }
-                else -> throw error(ctx.datatype, "Unknown datatype")
-            }
-            Type(id(), staticType)
+            Type(id(), type, listOfNotNull(arg0, arg1))
         }
 
         override fun visitTypeTimeZone(ctx: GeneratedParser.TypeTimeZoneContext) = translate(ctx) {
-            val precision = if (ctx.precision != null) ctx.precision.text.toInteger().toInt() else null
-            if (precision != null && (precision < 0 || 9 < precision)) {
-                throw error(ctx.precision, "Unsupported time precision")
+            val precision = ctx.precision?.let {
+                val p = ctx.precision.text.toInteger().toLong()
+                if (p < 0 || 9 < p) throw error(ctx.precision, "Unsupported time precision")
+                ionInt(p)
             }
-            val staticType = TimeType(precision, ctx.WITH() != null)
-            Type(id(), staticType)
+            Type(id(), "time", listOfNotNull(precision))
         }
 
         private fun <T : AstNode> visitOrEmpty(ctx: List<ParserRuleContext>?, clazz: KClass<T>): List<T> = when {
@@ -1687,6 +1656,16 @@ internal class PartiQLParserDefault : PartiQLParser {
             GeneratedParser.IDENTIFIER -> ctx.IDENTIFIER().getStringValue()
             else -> throw PartiQLParserException("Invalid symbol reference.")
         }
+
+        /**
+         * Visiting a symbol to get a string with case
+         */
+        private fun convertRawSymbolCased(ctx: GeneratedParser.SymbolPrimitiveContext): Pair<String, Case> =
+            when (ctx.ident.type) {
+                GeneratedParser.IDENTIFIER_QUOTED -> ctx.IDENTIFIER_QUOTED().getStringValue() to Case.SENSITIVE
+                GeneratedParser.IDENTIFIER -> ctx.IDENTIFIER().getStringValue() to Case.INSENSITIVE
+                else -> throw PartiQLParserException("Invalid symbol reference.")
+            }
 
         /**
          * Visit a string expression and pull the value out
@@ -1888,8 +1867,8 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         private fun String.toInteger() = BigInteger(this, 10)
 
-        private fun assertIntegerElement(token: Token, value: IonElement?) {
-            if (value == null)
+        private fun assertIntegerElement(token: Token?, value: IonElement?) {
+            if (value == null || token == null)
                 return
             if (value !is IntElement)
                 throw error(token, "Expected an integer value.")

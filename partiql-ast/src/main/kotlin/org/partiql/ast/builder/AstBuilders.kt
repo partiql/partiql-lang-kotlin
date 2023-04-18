@@ -2,10 +2,12 @@ package org.partiql.ast.builder
 
 import com.amazon.ionelement.api.IonElement
 import org.partiql.ast.Case
+import org.partiql.ast.Except
 import org.partiql.ast.Expr
 import org.partiql.ast.From
 import org.partiql.ast.GraphMatch
 import org.partiql.ast.GroupBy
+import org.partiql.ast.Intersect
 import org.partiql.ast.Let
 import org.partiql.ast.OnConflict
 import org.partiql.ast.OrderBy
@@ -16,7 +18,7 @@ import org.partiql.ast.SetQuantifier
 import org.partiql.ast.Statement
 import org.partiql.ast.TableDefinition
 import org.partiql.ast.Type
-import org.partiql.types.StaticType
+import org.partiql.ast.Union
 import kotlin.Boolean
 import kotlin.Int
 import kotlin.Long
@@ -396,22 +398,27 @@ public class StatementExplainTargetDomainBuilder {
 public class TypeBuilder {
     public var id: Int? = null
 
-    public var type: StaticType? = null
+    public var identifier: String? = null
+
+    public var parameters: MutableList<IonElement> = mutableListOf()
 
     public fun id(id: Int?): TypeBuilder = this.apply {
         this.id = id
     }
 
-    public fun type(type: StaticType?): TypeBuilder = this.apply {
-        this.type = type
+    public fun identifier(identifier: String?): TypeBuilder = this.apply {
+        this.identifier = identifier
+    }
+
+    public fun parameters(parameters: MutableList<IonElement>): TypeBuilder = this.apply {
+        this.parameters = parameters
     }
 
     public fun build(): Type = build(AstFactory.DEFAULT)
 
     public fun build(factory: AstFactory = AstFactory.DEFAULT): Type = factory.type(
         id = id!!,
-        type =
-        type!!
+        identifier = identifier!!, parameters = parameters
     )
 }
 
@@ -510,23 +517,29 @@ public class ExprPathBuilder {
     )
 }
 
-public class ExprPathStepKeyBuilder {
+public class ExprPathStepIndexBuilder {
     public var id: Int? = null
 
-    public var `value`: Expr? = null
+    public var key: Expr? = null
 
-    public fun id(id: Int?): ExprPathStepKeyBuilder = this.apply {
+    public var case: Case? = null
+
+    public fun id(id: Int?): ExprPathStepIndexBuilder = this.apply {
         this.id = id
     }
 
-    public fun `value`(`value`: Expr?): ExprPathStepKeyBuilder = this.apply {
-        this.`value` = `value`
+    public fun key(key: Expr?): ExprPathStepIndexBuilder = this.apply {
+        this.key = key
     }
 
-    public fun build(): Expr.Path.Step.Key = build(AstFactory.DEFAULT)
+    public fun case(case: Case?): ExprPathStepIndexBuilder = this.apply {
+        this.case = case
+    }
 
-    public fun build(factory: AstFactory = AstFactory.DEFAULT): Expr.Path.Step.Key =
-        factory.exprPathStepKey(id = id!!, value = value!!)
+    public fun build(): Expr.Path.Step.Index = build(AstFactory.DEFAULT)
+
+    public fun build(factory: AstFactory = AstFactory.DEFAULT): Expr.Path.Step.Index =
+        factory.exprPathStepIndex(id = id!!, key = key!!, case = case!!)
 }
 
 public class ExprPathStepWildcardBuilder {
@@ -1166,45 +1179,49 @@ public class ExprCanLosslessCastBuilder {
         factory.exprCanLosslessCast(id = id!!, value = value!!, asType = asType!!)
 }
 
-public class ExprOuterBagOpBuilder {
+public class ExprSetBuilder {
     public var id: Int? = null
 
-    public var op: Expr.OuterBagOp.Op? = null
+    public var op: Expr.Set.Op? = null
 
     public var quantifier: SetQuantifier? = null
+
+    public var outer: Boolean? = null
 
     public var lhs: Expr? = null
 
     public var rhs: Expr? = null
 
-    public fun id(id: Int?): ExprOuterBagOpBuilder = this.apply {
+    public fun id(id: Int?): ExprSetBuilder = this.apply {
         this.id = id
     }
 
-    public fun op(op: Expr.OuterBagOp.Op?): ExprOuterBagOpBuilder = this.apply {
+    public fun op(op: Expr.Set.Op?): ExprSetBuilder = this.apply {
         this.op = op
     }
 
-    public fun quantifier(quantifier: SetQuantifier?): ExprOuterBagOpBuilder = this.apply {
+    public fun quantifier(quantifier: SetQuantifier?): ExprSetBuilder = this.apply {
         this.quantifier = quantifier
     }
 
-    public fun lhs(lhs: Expr?): ExprOuterBagOpBuilder = this.apply {
+    public fun outer(outer: Boolean?): ExprSetBuilder = this.apply {
+        this.outer = outer
+    }
+
+    public fun lhs(lhs: Expr?): ExprSetBuilder = this.apply {
         this.lhs = lhs
     }
 
-    public fun rhs(rhs: Expr?): ExprOuterBagOpBuilder = this.apply {
+    public fun rhs(rhs: Expr?): ExprSetBuilder = this.apply {
         this.rhs = rhs
     }
 
-    public fun build(): Expr.OuterBagOp = build(AstFactory.DEFAULT)
+    public fun build(): Expr.Set = build(AstFactory.DEFAULT)
 
-    public fun build(factory: AstFactory = AstFactory.DEFAULT): Expr.OuterBagOp =
-        factory.exprOuterBagOp(
-            id = id!!, op = op!!, quantifier = quantifier!!, lhs = lhs!!,
-            rhs =
-            rhs!!
-        )
+    public fun build(factory: AstFactory = AstFactory.DEFAULT): Expr.Set = factory.exprSet(
+        id = id!!,
+        op = op!!, quantifier = quantifier!!, outer = outer!!, lhs = lhs!!, rhs = rhs!!
+    )
 }
 
 public class ExprSfwBuilder {
@@ -1739,6 +1756,106 @@ public class OrderBySortBuilder {
         id =
         id!!,
         expr = expr!!, dir = dir!!, nulls = nulls!!
+    )
+}
+
+public class UnionBuilder {
+    public var id: Int? = null
+
+    public var quantifier: SetQuantifier? = null
+
+    public var lhs: Expr.SFW? = null
+
+    public var rhs: Expr.SFW? = null
+
+    public fun id(id: Int?): UnionBuilder = this.apply {
+        this.id = id
+    }
+
+    public fun quantifier(quantifier: SetQuantifier?): UnionBuilder = this.apply {
+        this.quantifier = quantifier
+    }
+
+    public fun lhs(lhs: Expr.SFW?): UnionBuilder = this.apply {
+        this.lhs = lhs
+    }
+
+    public fun rhs(rhs: Expr.SFW?): UnionBuilder = this.apply {
+        this.rhs = rhs
+    }
+
+    public fun build(): Union = build(AstFactory.DEFAULT)
+
+    public fun build(factory: AstFactory = AstFactory.DEFAULT): Union = factory.union(
+        id = id!!,
+        quantifier = quantifier!!, lhs = lhs!!, rhs = rhs!!
+    )
+}
+
+public class IntersectBuilder {
+    public var id: Int? = null
+
+    public var quantifier: SetQuantifier? = null
+
+    public var lhs: Expr.SFW? = null
+
+    public var rhs: Expr.SFW? = null
+
+    public fun id(id: Int?): IntersectBuilder = this.apply {
+        this.id = id
+    }
+
+    public fun quantifier(quantifier: SetQuantifier?): IntersectBuilder = this.apply {
+        this.quantifier = quantifier
+    }
+
+    public fun lhs(lhs: Expr.SFW?): IntersectBuilder = this.apply {
+        this.lhs = lhs
+    }
+
+    public fun rhs(rhs: Expr.SFW?): IntersectBuilder = this.apply {
+        this.rhs = rhs
+    }
+
+    public fun build(): Intersect = build(AstFactory.DEFAULT)
+
+    public fun build(factory: AstFactory = AstFactory.DEFAULT): Intersect = factory.intersect(
+        id =
+        id!!,
+        quantifier = quantifier!!, lhs = lhs!!, rhs = rhs!!
+    )
+}
+
+public class ExceptBuilder {
+    public var id: Int? = null
+
+    public var quantifier: SetQuantifier? = null
+
+    public var lhs: Expr.SFW? = null
+
+    public var rhs: Expr.SFW? = null
+
+    public fun id(id: Int?): ExceptBuilder = this.apply {
+        this.id = id
+    }
+
+    public fun quantifier(quantifier: SetQuantifier?): ExceptBuilder = this.apply {
+        this.quantifier = quantifier
+    }
+
+    public fun lhs(lhs: Expr.SFW?): ExceptBuilder = this.apply {
+        this.lhs = lhs
+    }
+
+    public fun rhs(rhs: Expr.SFW?): ExceptBuilder = this.apply {
+        this.rhs = rhs
+    }
+
+    public fun build(): Except = build(AstFactory.DEFAULT)
+
+    public fun build(factory: AstFactory = AstFactory.DEFAULT): Except = factory.except(
+        id = id!!,
+        quantifier = quantifier!!, lhs = lhs!!, rhs = rhs!!
     )
 }
 

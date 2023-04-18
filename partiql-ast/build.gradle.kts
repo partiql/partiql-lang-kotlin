@@ -20,7 +20,6 @@ plugins {
 
 dependencies {
     api(Deps.ionElement)
-    implementation(project(":partiql-types"))
 }
 
 publish {

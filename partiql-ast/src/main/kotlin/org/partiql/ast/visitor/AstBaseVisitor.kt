@@ -1,10 +1,12 @@
 package org.partiql.ast.visitor
 
 import org.partiql.ast.AstNode
+import org.partiql.ast.Except
 import org.partiql.ast.Expr
 import org.partiql.ast.From
 import org.partiql.ast.GraphMatch
 import org.partiql.ast.GroupBy
+import org.partiql.ast.Intersect
 import org.partiql.ast.Let
 import org.partiql.ast.OnConflict
 import org.partiql.ast.OrderBy
@@ -14,6 +16,7 @@ import org.partiql.ast.Select
 import org.partiql.ast.Statement
 import org.partiql.ast.TableDefinition
 import org.partiql.ast.Type
+import org.partiql.ast.Union
 
 public abstract class AstBaseVisitor<R, C> : AstVisitor<R, C> {
     public override fun visit(node: AstNode, ctx: C): R = node.accept(this, ctx)
@@ -121,7 +124,7 @@ public abstract class AstBaseVisitor<R, C> : AstVisitor<R, C> {
         is Expr.Cast -> visitExprCast(node, ctx)
         is Expr.CanCast -> visitExprCanCast(node, ctx)
         is Expr.CanLosslessCast -> visitExprCanLosslessCast(node, ctx)
-        is Expr.OuterBagOp -> visitExprOuterBagOp(node, ctx)
+        is Expr.Set -> visitExprSet(node, ctx)
         is Expr.SFW -> visitExprSFW(node, ctx)
         is Expr.Match -> visitExprMatch(node, ctx)
         is Expr.Window -> visitExprWindow(node, ctx)
@@ -139,15 +142,13 @@ public abstract class AstBaseVisitor<R, C> : AstVisitor<R, C> {
     public override fun visitExprPath(node: Expr.Path, ctx: C): R = defaultVisit(node, ctx)
 
     public override fun visitExprPathStep(node: Expr.Path.Step, ctx: C): R = when (node) {
-        is Expr.Path.Step.Key -> visitExprPathStepKey(node, ctx)
+        is Expr.Path.Step.Index -> visitExprPathStepIndex(node, ctx)
         is Expr.Path.Step.Wildcard -> visitExprPathStepWildcard(node, ctx)
         is Expr.Path.Step.Unpivot -> visitExprPathStepUnpivot(node, ctx)
     }
 
-    public override fun visitExprPathStepKey(node: Expr.Path.Step.Key, ctx: C): R = defaultVisit(
-        node,
-        ctx
-    )
+    public override fun visitExprPathStepIndex(node: Expr.Path.Step.Index, ctx: C): R =
+        defaultVisit(node, ctx)
 
     public override fun visitExprPathStepWildcard(node: Expr.Path.Step.Wildcard, ctx: C): R =
         defaultVisit(node, ctx)
@@ -208,10 +209,7 @@ public abstract class AstBaseVisitor<R, C> : AstVisitor<R, C> {
     public override fun visitExprCanLosslessCast(node: Expr.CanLosslessCast, ctx: C): R =
         defaultVisit(node, ctx)
 
-    public override fun visitExprOuterBagOp(node: Expr.OuterBagOp, ctx: C): R = defaultVisit(
-        node,
-        ctx
-    )
+    public override fun visitExprSet(node: Expr.Set, ctx: C): R = defaultVisit(node, ctx)
 
     public override fun visitExprSFW(node: Expr.SFW, ctx: C): R = defaultVisit(node, ctx)
 
@@ -268,6 +266,12 @@ public abstract class AstBaseVisitor<R, C> : AstVisitor<R, C> {
     public override fun visitOrderBy(node: OrderBy, ctx: C): R = defaultVisit(node, ctx)
 
     public override fun visitOrderBySort(node: OrderBy.Sort, ctx: C): R = defaultVisit(node, ctx)
+
+    public override fun visitUnion(node: Union, ctx: C): R = defaultVisit(node, ctx)
+
+    public override fun visitIntersect(node: Intersect, ctx: C): R = defaultVisit(node, ctx)
+
+    public override fun visitExcept(node: Except, ctx: C): R = defaultVisit(node, ctx)
 
     public override fun visitGraphMatch(node: GraphMatch, ctx: C): R = defaultVisit(node, ctx)
 

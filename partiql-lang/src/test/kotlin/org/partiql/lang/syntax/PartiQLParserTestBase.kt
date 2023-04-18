@@ -12,8 +12,6 @@
  *  language governing permissions and limitations under the License.
  */
 
-@file:Suppress("DEPRECATION") // Don't need warnings about ExprNode deprecation.
-
 package org.partiql.lang.syntax
 
 import com.amazon.ion.IonSexp
@@ -23,6 +21,7 @@ import com.amazon.ionelement.api.toIonElement
 import com.amazon.ionelement.api.toIonValue
 import org.partiql.lang.CUSTOM_TEST_TYPES
 import org.partiql.lang.TestBase
+import org.partiql.lang.ast.AstToPigTranslator
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
@@ -31,10 +30,32 @@ import org.partiql.lang.util.asIonSexp
 import org.partiql.lang.util.checkErrorAndErrorContext
 import org.partiql.lang.util.softAssert
 import org.partiql.pig.runtime.toIonElement
+import org.partiql.parser.PartiQLParserBuilder as DefaultParserBuilder
 
 abstract class PartiQLParserTestBase : TestBase() {
 
     val parser = PartiQLParserBuilder().customTypes(CUSTOM_TEST_TYPES).build()
+
+    companion object {
+
+        private val DEFAULT_TARGETS = setOf(Target.LEGACY, Target.DEFAULT)
+    }
+
+    enum class Target(val parser: Parser) {
+        // org.partiql.lang.syntax.PartiQLParser : (String) -> PartiqlAst.Statement
+        LEGACY(object : Parser {
+            val parser = PartiQLParserBuilder().customTypes(CUSTOM_TEST_TYPES).build()
+            override fun parseAstStatement(source: String) = parser.parseAstStatement(source)
+        }),
+        // org.partiql.parser.PartiQLParser : (String) -> PartiQLParser.Result
+        DEFAULT(object : Parser {
+            val p = DefaultParserBuilder.standard().build()
+            override fun parseAstStatement(source: String): PartiqlAst.Statement {
+                val ast = p.parse(source)
+                return AstToPigTranslator.translate(ast.root) as PartiqlAst.Statement
+            }
+        }),
+    }
 
     protected fun parse(source: String): PartiqlAst.Statement = parser.parseAstStatement(source)
 
@@ -45,9 +66,11 @@ abstract class PartiQLParserTestBase : TestBase() {
     ) {
         if (!expectedValue.equals(actualValue)) {
             fail(
-                "Expected and actual values do not match: $message\n" +
-                    "Expected:\n${SexpAstPrettyPrinter.format(expectedValue)}\n" +
-                    "Actual:\n${SexpAstPrettyPrinter.format(actualValue)}"
+                "Expected and actual values do not match: $message\n" + "Expected:\n${
+                SexpAstPrettyPrinter.format(
+                    expectedValue
+                )
+                }\n" + "Actual:\n${SexpAstPrettyPrinter.format(actualValue)}"
             )
         }
     }
@@ -60,17 +83,17 @@ abstract class PartiQLParserTestBase : TestBase() {
     protected fun assertExpression(
         source: String,
         expectedPigAst: String,
+        targets: Set<Target> = DEFAULT_TARGETS,
     ) {
-        val actualStatement = parser.parseAstStatement(source)
-        val expectedIonSexp = loadIonSexp(expectedPigAst)
-
-        // Check equals for actual value and expected value in IonSexp format
-        checkEqualInIonSexp(actualStatement, expectedIonSexp, source)
-
-        val expectedElement = expectedIonSexp.toIonElement().asSexp()
-
-        // Perform checks for Pig AST. See the comments inside the function to see what checks are performed.
-        pigDomainAssert(actualStatement, expectedElement)
+        targets.forEach {
+            val actualStatement = it.parser.parseAstStatement(source)
+            val expectedIonSexp = loadIonSexp(expectedPigAst)
+            // Check equals for actual value and expected value in IonSexp format
+            checkEqualInIonSexp(actualStatement, expectedIonSexp, source)
+            val expectedElement = expectedIonSexp.toIonElement().asSexp()
+            // Perform checks for Pig AST. See the comments inside the function to see what checks are performed.
+            pigDomainAssert(actualStatement, expectedElement)
+        }
     }
 
     /**
@@ -95,9 +118,7 @@ abstract class PartiQLParserTestBase : TestBase() {
     private fun unwrapQuery(statement: PartiqlAst.Statement): SexpElement {
         return when (statement) {
             is PartiqlAst.Statement.Query -> statement.expr.toIonElement()
-            is PartiqlAst.Statement.Dml,
-            is PartiqlAst.Statement.Ddl,
-            is PartiqlAst.Statement.Exec -> statement.toIonElement()
+            is PartiqlAst.Statement.Dml, is PartiqlAst.Statement.Ddl, is PartiqlAst.Statement.Exec -> statement.toIonElement()
             is PartiqlAst.Statement.Explain -> statement.toIonElement()
         }
     }

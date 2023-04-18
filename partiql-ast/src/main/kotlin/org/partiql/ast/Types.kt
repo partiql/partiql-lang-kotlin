@@ -1,6 +1,7 @@
 package org.partiql.ast
 
 import com.amazon.ionelement.api.IonElement
+import org.partiql.ast.builder.ExceptBuilder
 import org.partiql.ast.builder.ExprAggBuilder
 import org.partiql.ast.builder.ExprBetweenBuilder
 import org.partiql.ast.builder.ExprBinaryBuilder
@@ -19,12 +20,12 @@ import org.partiql.ast.builder.ExprLitBuilder
 import org.partiql.ast.builder.ExprMatchBuilder
 import org.partiql.ast.builder.ExprMissingBuilder
 import org.partiql.ast.builder.ExprNullIfBuilder
-import org.partiql.ast.builder.ExprOuterBagOpBuilder
 import org.partiql.ast.builder.ExprParameterBuilder
 import org.partiql.ast.builder.ExprPathBuilder
-import org.partiql.ast.builder.ExprPathStepKeyBuilder
+import org.partiql.ast.builder.ExprPathStepIndexBuilder
 import org.partiql.ast.builder.ExprPathStepUnpivotBuilder
 import org.partiql.ast.builder.ExprPathStepWildcardBuilder
+import org.partiql.ast.builder.ExprSetBuilder
 import org.partiql.ast.builder.ExprSfwBuilder
 import org.partiql.ast.builder.ExprSwitchBranchBuilder
 import org.partiql.ast.builder.ExprSwitchBuilder
@@ -48,6 +49,7 @@ import org.partiql.ast.builder.GraphMatchSelectorShortestKBuilder
 import org.partiql.ast.builder.GraphMatchSelectorShortestKGroupBuilder
 import org.partiql.ast.builder.GroupByBuilder
 import org.partiql.ast.builder.GroupByKeyBuilder
+import org.partiql.ast.builder.IntersectBuilder
 import org.partiql.ast.builder.LetBindingBuilder
 import org.partiql.ast.builder.LetBuilder
 import org.partiql.ast.builder.OnConflictActionDoNothingBuilder
@@ -88,14 +90,8 @@ import org.partiql.ast.builder.TableDefinitionColumnConstraintBodyNotNullBuilder
 import org.partiql.ast.builder.TableDefinitionColumnConstraintBodyNullableBuilder
 import org.partiql.ast.builder.TableDefinitionColumnConstraintBuilder
 import org.partiql.ast.builder.TypeBuilder
+import org.partiql.ast.builder.UnionBuilder
 import org.partiql.ast.visitor.AstVisitor
-import org.partiql.types.StaticType
-import kotlin.Boolean
-import kotlin.Int
-import kotlin.Long
-import kotlin.String
-import kotlin.collections.List
-import kotlin.jvm.JvmStatic
 
 public abstract class AstNode {
     public abstract val id: Int
@@ -435,7 +431,8 @@ public sealed class Statement : AstNode() {
 
 public data class Type(
     public override val id: Int,
-    public val type: StaticType
+    public val identifier: String,
+    public val parameters: List<IonElement>
 ) : AstNode() {
     public override fun <R, C> accept(visitor: AstVisitor<R, C>, ctx: C): R = visitor.visitType(
         this,
@@ -473,7 +470,7 @@ public sealed class Expr : AstNode() {
         is Cast -> visitor.visitExprCast(this, ctx)
         is CanCast -> visitor.visitExprCanCast(this, ctx)
         is CanLosslessCast -> visitor.visitExprCanLosslessCast(this, ctx)
-        is OuterBagOp -> visitor.visitExprOuterBagOp(this, ctx)
+        is Set -> visitor.visitExprSet(this, ctx)
         is SFW -> visitor.visitExprSFW(this, ctx)
         is Match -> visitor.visitExprMatch(this, ctx)
         is Window -> visitor.visitExprWindow(this, ctx)
@@ -541,27 +538,28 @@ public sealed class Expr : AstNode() {
 
         public sealed class Step : AstNode() {
             public override fun <R, C> accept(visitor: AstVisitor<R, C>, ctx: C): R = when (this) {
-                is Key -> visitor.visitExprPathStepKey(this, ctx)
+                is Index -> visitor.visitExprPathStepIndex(this, ctx)
                 is Wildcard -> visitor.visitExprPathStepWildcard(this, ctx)
                 is Unpivot -> visitor.visitExprPathStepUnpivot(this, ctx)
             }
 
-            public data class Key(
+            public data class Index(
                 public override val id: Int,
-                public val `value`: Expr
+                public val key: Expr,
+                public val case: Case
             ) : Step() {
                 public override val children: List<AstNode> by lazy {
                     val kids = mutableListOf<AstNode?>()
-                    kids.add(value)
+                    kids.add(key)
                     kids.filterNotNull()
                 }
 
                 public override fun <R, C> accept(visitor: AstVisitor<R, C>, ctx: C): R =
-                    visitor.visitExprPathStepKey(this, ctx)
+                    visitor.visitExprPathStepIndex(this, ctx)
 
                 public companion object {
                     @JvmStatic
-                    public fun builder(): ExprPathStepKeyBuilder = ExprPathStepKeyBuilder()
+                    public fun builder(): ExprPathStepIndexBuilder = ExprPathStepIndexBuilder()
                 }
             }
 
@@ -1050,10 +1048,11 @@ public sealed class Expr : AstNode() {
         }
     }
 
-    public data class OuterBagOp(
+    public data class Set(
         public override val id: Int,
         public val op: Op,
         public val quantifier: SetQuantifier,
+        public val outer: Boolean,
         public val lhs: Expr,
         public val rhs: Expr
     ) : Expr() {
@@ -1065,7 +1064,7 @@ public sealed class Expr : AstNode() {
         }
 
         public override fun <R, C> accept(visitor: AstVisitor<R, C>, ctx: C): R =
-            visitor.visitExprOuterBagOp(this, ctx)
+            visitor.visitExprSet(this, ctx)
 
         public enum class Op {
             UNION,
@@ -1075,7 +1074,7 @@ public sealed class Expr : AstNode() {
 
         public companion object {
             @JvmStatic
-            public fun builder(): ExprOuterBagOpBuilder = ExprOuterBagOpBuilder()
+            public fun builder(): ExprSetBuilder = ExprSetBuilder()
         }
     }
 
@@ -1482,6 +1481,74 @@ public data class OrderBy(
     public companion object {
         @JvmStatic
         public fun builder(): OrderByBuilder = OrderByBuilder()
+    }
+}
+
+public data class Union(
+    public override val id: Int,
+    public val quantifier: SetQuantifier,
+    public val lhs: Expr.SFW,
+    public val rhs: Expr.SFW
+) : AstNode() {
+    public override val children: List<AstNode> by lazy {
+        val kids = mutableListOf<AstNode?>()
+        kids.add(lhs)
+        kids.add(rhs)
+        kids.filterNotNull()
+    }
+
+    public override fun <R, C> accept(visitor: AstVisitor<R, C>, ctx: C): R = visitor.visitUnion(
+        this,
+        ctx
+    )
+
+    public companion object {
+        @JvmStatic
+        public fun builder(): UnionBuilder = UnionBuilder()
+    }
+}
+
+public data class Intersect(
+    public override val id: Int,
+    public val quantifier: SetQuantifier,
+    public val lhs: Expr.SFW,
+    public val rhs: Expr.SFW
+) : AstNode() {
+    public override val children: List<AstNode> by lazy {
+        val kids = mutableListOf<AstNode?>()
+        kids.add(lhs)
+        kids.add(rhs)
+        kids.filterNotNull()
+    }
+
+    public override fun <R, C> accept(visitor: AstVisitor<R, C>, ctx: C): R =
+        visitor.visitIntersect(this, ctx)
+
+    public companion object {
+        @JvmStatic
+        public fun builder(): IntersectBuilder = IntersectBuilder()
+    }
+}
+
+public data class Except(
+    public override val id: Int,
+    public val quantifier: SetQuantifier,
+    public val lhs: Expr.SFW,
+    public val rhs: Expr.SFW
+) : AstNode() {
+    public override val children: List<AstNode> by lazy {
+        val kids = mutableListOf<AstNode?>()
+        kids.add(lhs)
+        kids.add(rhs)
+        kids.filterNotNull()
+    }
+
+    public override fun <R, C> accept(visitor: AstVisitor<R, C>, ctx: C): R =
+        visitor.visitExcept(this, ctx)
+
+    public companion object {
+        @JvmStatic
+        public fun builder(): ExceptBuilder = ExceptBuilder()
     }
 }
 

@@ -1,7 +1,6 @@
 imports::{
   kotlin: [
     ion::'com.amazon.ionelement.api.IonElement',
-    static_type::'org.partiql.types.StaticType',
   ],
 }
 
@@ -104,7 +103,8 @@ statement::[
 ]
 
 type::{
-  type: static_type,
+  identifier: string,
+  parameters: list::[ion], // not recursive
 }
 
 // [ ALL | DISTINCT ]
@@ -142,7 +142,7 @@ expr::[
     steps: list::[step],
     _: [
       step::[
-        key::{ value: expr },
+        index::{ key: expr, case: case },
         wildcard::{},
         unpivot::{},
       ],
@@ -286,10 +286,11 @@ expr::[
     as_type:  '.type',
   },
 
-  // The `outer [union|intersect|except]` PartiQL special Form
-  outer_bag_op::{
+  // The [INNER|OUTER] [UNION|INTERSECT|EXCEPT] PartiQL multiset special forms
+  set::{
     op:         [ UNION, INTERSECT, EXCEPT ],
     quantifier: set_quantifier,
+    outer:      bool,
     lhs:        expr,
     rhs:        expr,
   },
@@ -408,6 +409,27 @@ order_by::{
       nulls:  [ FIRST, LAST ],
     }
   ],
+}
+
+// TODO add SQL UNION to parser
+union::{
+  quantifier: set_quantifier,
+  lhs:        '.expr.s_f_w',
+  rhs:        '.expr.s_f_w',
+}
+
+// TODO add SQL INTERSECT to parser
+intersect::{
+  quantifier: set_quantifier,
+  lhs:        '.expr.s_f_w',
+  rhs:        '.expr.s_f_w',
+}
+
+// TODO add SQL EXCEPT to parser
+except::{
+  quantifier: set_quantifier,
+  lhs:        '.expr.s_f_w',
+  rhs:        '.expr.s_f_w',
 }
 
 // Graph Match Nodes — https://partiql.org/gpml/graph_query.html

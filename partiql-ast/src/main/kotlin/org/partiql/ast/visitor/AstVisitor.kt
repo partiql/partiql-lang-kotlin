@@ -1,10 +1,12 @@
 package org.partiql.ast.visitor
 
 import org.partiql.ast.AstNode
+import org.partiql.ast.Except
 import org.partiql.ast.Expr
 import org.partiql.ast.From
 import org.partiql.ast.GraphMatch
 import org.partiql.ast.GroupBy
+import org.partiql.ast.Intersect
 import org.partiql.ast.Let
 import org.partiql.ast.OnConflict
 import org.partiql.ast.OrderBy
@@ -14,6 +16,7 @@ import org.partiql.ast.Select
 import org.partiql.ast.Statement
 import org.partiql.ast.TableDefinition
 import org.partiql.ast.Type
+import org.partiql.ast.Union
 
 public interface AstVisitor<R, C> {
     public fun visit(node: AstNode, ctx: C): R
@@ -68,7 +71,7 @@ public interface AstVisitor<R, C> {
 
     public fun visitExprPathStep(node: Expr.Path.Step, ctx: C): R
 
-    public fun visitExprPathStepKey(node: Expr.Path.Step.Key, ctx: C): R
+    public fun visitExprPathStepIndex(node: Expr.Path.Step.Index, ctx: C): R
 
     public fun visitExprPathStepWildcard(node: Expr.Path.Step.Wildcard, ctx: C): R
 
@@ -116,7 +119,7 @@ public interface AstVisitor<R, C> {
 
     public fun visitExprCanLosslessCast(node: Expr.CanLosslessCast, ctx: C): R
 
-    public fun visitExprOuterBagOp(node: Expr.OuterBagOp, ctx: C): R
+    public fun visitExprSet(node: Expr.Set, ctx: C): R
 
     public fun visitExprSFW(node: Expr.SFW, ctx: C): R
 
@@ -157,6 +160,12 @@ public interface AstVisitor<R, C> {
     public fun visitOrderBy(node: OrderBy, ctx: C): R
 
     public fun visitOrderBySort(node: OrderBy.Sort, ctx: C): R
+
+    public fun visitUnion(node: Union, ctx: C): R
+
+    public fun visitIntersect(node: Intersect, ctx: C): R
+
+    public fun visitExcept(node: Except, ctx: C): R
 
     public fun visitGraphMatch(node: GraphMatch, ctx: C): R
 

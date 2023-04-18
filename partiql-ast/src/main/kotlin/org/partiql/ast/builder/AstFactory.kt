@@ -3,10 +3,12 @@ package org.partiql.ast.builder
 import com.amazon.ionelement.api.IonElement
 import org.partiql.ast.AstNode
 import org.partiql.ast.Case
+import org.partiql.ast.Except
 import org.partiql.ast.Expr
 import org.partiql.ast.From
 import org.partiql.ast.GraphMatch
 import org.partiql.ast.GroupBy
+import org.partiql.ast.Intersect
 import org.partiql.ast.Let
 import org.partiql.ast.OnConflict
 import org.partiql.ast.OrderBy
@@ -17,7 +19,7 @@ import org.partiql.ast.SetQuantifier
 import org.partiql.ast.Statement
 import org.partiql.ast.TableDefinition
 import org.partiql.ast.Type
-import org.partiql.types.StaticType
+import org.partiql.ast.Union
 import kotlin.Boolean
 import kotlin.Int
 import kotlin.Long
@@ -99,7 +101,11 @@ public abstract class AstFactory {
         format: String?
     ) = Statement.Explain.Target.Domain(id, statement, type, format)
 
-    public open fun type(id: Int, type: StaticType) = Type(id, type)
+    public open fun type(
+        id: Int,
+        identifier: String,
+        parameters: List<IonElement>
+    ) = Type(id, identifier, parameters)
 
     public open fun exprMissing(id: Int) = Expr.Missing(id)
 
@@ -118,7 +124,11 @@ public abstract class AstFactory {
         steps: List<Expr.Path.Step>
     ) = Expr.Path(id, root, steps)
 
-    public open fun exprPathStepKey(id: Int, `value`: Expr) = Expr.Path.Step.Key(id, value)
+    public open fun exprPathStepIndex(
+        id: Int,
+        key: Expr,
+        case: Case
+    ) = Expr.Path.Step.Index(id, key, case)
 
     public open fun exprPathStepWildcard(id: Int) = Expr.Path.Step.Wildcard(id)
 
@@ -248,13 +258,14 @@ public abstract class AstFactory {
         asType: Type
     ) = Expr.CanLosslessCast(id, value, asType)
 
-    public open fun exprOuterBagOp(
+    public open fun exprSet(
         id: Int,
-        op: Expr.OuterBagOp.Op,
+        op: Expr.Set.Op,
         quantifier: SetQuantifier,
+        outer: Boolean,
         lhs: Expr,
         rhs: Expr
-    ) = Expr.OuterBagOp(id, op, quantifier, lhs, rhs)
+    ) = Expr.Set(id, op, quantifier, outer, lhs, rhs)
 
     public open fun exprSFW(
         id: Int,
@@ -356,6 +367,27 @@ public abstract class AstFactory {
         dir: OrderBy.Sort.Dir,
         nulls: OrderBy.Sort.Nulls
     ) = OrderBy.Sort(id, expr, dir, nulls)
+
+    public open fun union(
+        id: Int,
+        quantifier: SetQuantifier,
+        lhs: Expr.SFW,
+        rhs: Expr.SFW
+    ) = Union(id, quantifier, lhs, rhs)
+
+    public open fun intersect(
+        id: Int,
+        quantifier: SetQuantifier,
+        lhs: Expr.SFW,
+        rhs: Expr.SFW
+    ) = Intersect(id, quantifier, lhs, rhs)
+
+    public open fun except(
+        id: Int,
+        quantifier: SetQuantifier,
+        lhs: Expr.SFW,
+        rhs: Expr.SFW
+    ) = Except(id, quantifier, lhs, rhs)
 
     public open fun graphMatch(
         id: Int,

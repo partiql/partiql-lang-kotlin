@@ -14,10 +14,8 @@
 
 package org.partiql.parser
 
-import org.partiql.lang.types.CustomType
-
 /**
- * A builder class to instantiate a [Parser].
+ * A builder class to instantiate a [PartiQLParser].
  *
  * Example usages:
  *
@@ -36,13 +34,7 @@ class PartiQLParserBuilder {
         }
     }
 
-    private var customTypes: List<CustomType> = emptyList()
-
-    fun customTypes(types: List<CustomType>): PartiQLParserBuilder = this.apply {
-        this.customTypes = types
-    }
-
-    fun build(): Parser {
-        return PartiQLParserDefault(this.customTypes)
+    fun build(): PartiQLParser {
+        return PartiQLParserDefault()
     }
 }

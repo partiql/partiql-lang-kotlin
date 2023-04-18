@@ -3,10 +3,12 @@ package org.partiql.ast.builder
 import com.amazon.ionelement.api.IonElement
 import org.partiql.ast.AstNode
 import org.partiql.ast.Case
+import org.partiql.ast.Except
 import org.partiql.ast.Expr
 import org.partiql.ast.From
 import org.partiql.ast.GraphMatch
 import org.partiql.ast.GroupBy
+import org.partiql.ast.Intersect
 import org.partiql.ast.Let
 import org.partiql.ast.OnConflict
 import org.partiql.ast.OrderBy
@@ -17,7 +19,7 @@ import org.partiql.ast.SetQuantifier
 import org.partiql.ast.Statement
 import org.partiql.ast.TableDefinition
 import org.partiql.ast.Type
-import org.partiql.types.StaticType
+import org.partiql.ast.Union
 
 public fun <T : AstNode> ast(factory: AstFactory = AstFactory.DEFAULT, block: AstBuilder.() -> T) =
     AstBuilder(factory).block()
@@ -182,7 +184,8 @@ public class AstBuilder(
 
     public fun type(
         id: Int? = null,
-        type: StaticType? = null,
+        identifier: String? = null,
+        parameters: MutableList<IonElement> = mutableListOf(),
         block: TypeBuilder.() -> Unit = {}
     ): Type {
         val builder = TypeBuilder()
@@ -229,12 +232,13 @@ public class AstBuilder(
         return builder.build(factory)
     }
 
-    public fun exprPathStepKey(
+    public fun exprPathStepIndex(
         id: Int? = null,
-        `value`: Expr? = null,
-        block: ExprPathStepKeyBuilder.() -> Unit = {}
-    ): Expr.Path.Step.Key {
-        val builder = ExprPathStepKeyBuilder()
+        key: Expr? = null,
+        case: Case? = null,
+        block: ExprPathStepIndexBuilder.() -> Unit = {}
+    ): Expr.Path.Step.Index {
+        val builder = ExprPathStepIndexBuilder()
         builder.block()
         return builder.build(factory)
     }
@@ -495,15 +499,16 @@ public class AstBuilder(
         return builder.build(factory)
     }
 
-    public fun exprOuterBagOp(
+    public fun exprSet(
         id: Int? = null,
-        op: Expr.OuterBagOp.Op? = null,
+        op: Expr.Set.Op? = null,
         quantifier: SetQuantifier? = null,
+        outer: Boolean? = null,
         lhs: Expr? = null,
         rhs: Expr? = null,
-        block: ExprOuterBagOpBuilder.() -> Unit = {}
-    ): Expr.OuterBagOp {
-        val builder = ExprOuterBagOpBuilder()
+        block: ExprSetBuilder.() -> Unit = {}
+    ): Expr.Set {
+        val builder = ExprSetBuilder()
         builder.block()
         return builder.build(factory)
     }
@@ -702,6 +707,42 @@ public class AstBuilder(
         block: OrderBySortBuilder.() -> Unit = {}
     ): OrderBy.Sort {
         val builder = OrderBySortBuilder()
+        builder.block()
+        return builder.build(factory)
+    }
+
+    public fun union(
+        id: Int? = null,
+        quantifier: SetQuantifier? = null,
+        lhs: Expr.SFW? = null,
+        rhs: Expr.SFW? = null,
+        block: UnionBuilder.() -> Unit = {}
+    ): Union {
+        val builder = UnionBuilder()
+        builder.block()
+        return builder.build(factory)
+    }
+
+    public fun intersect(
+        id: Int? = null,
+        quantifier: SetQuantifier? = null,
+        lhs: Expr.SFW? = null,
+        rhs: Expr.SFW? = null,
+        block: IntersectBuilder.() -> Unit = {}
+    ): Intersect {
+        val builder = IntersectBuilder()
+        builder.block()
+        return builder.build(factory)
+    }
+
+    public fun except(
+        id: Int? = null,
+        quantifier: SetQuantifier? = null,
+        lhs: Expr.SFW? = null,
+        rhs: Expr.SFW? = null,
+        block: ExceptBuilder.() -> Unit = {}
+    ): Except {
+        val builder = ExceptBuilder()
         builder.block()
         return builder.build(factory)
     }
