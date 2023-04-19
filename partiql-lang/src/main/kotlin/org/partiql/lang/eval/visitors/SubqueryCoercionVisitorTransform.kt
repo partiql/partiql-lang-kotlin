@@ -30,6 +30,7 @@ class SubqueryCoercionVisitorTransform : VisitorTransformBase() {
             is PartiqlAst.Expr.Lit -> n
             is PartiqlAst.Expr.Id -> n
             is PartiqlAst.Expr.Parameter -> n
+            is PartiqlAst.Expr.CurrentUser -> n
 
             is PartiqlAst.Expr.Not -> n.copy(expr = coerceToSingle(n.expr))
             is PartiqlAst.Expr.Pos -> n.copy(expr = coerceToSingle(n.expr))

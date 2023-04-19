@@ -99,6 +99,10 @@ internal class PartiQLVisitor(val customTypes: List<CustomType> = listOf(), priv
 
     override fun visitQueryDml(ctx: PartiQLParser.QueryDmlContext): PartiqlAst.PartiqlAstNode = visit(ctx.dml())
 
+    override fun visitExprTermCurrentUser(ctx: PartiQLParser.ExprTermCurrentUserContext): PartiqlAst.Expr.CurrentUser {
+        return PartiqlAst.Expr.CurrentUser(metas = ctx.CURRENT_USER().getSourceMetaContainer())
+    }
+
     override fun visitRoot(ctx: PartiQLParser.RootContext) = when (ctx.EXPLAIN()) {
         null -> visit(ctx.statement()) as PartiqlAst.Statement
         else -> PartiqlAst.build {

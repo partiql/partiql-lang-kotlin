@@ -11,6 +11,7 @@ import org.partiql.lang.domains.metaContainerOf
 import org.partiql.lang.errors.Problem
 import org.partiql.lang.errors.ProblemHandler
 import org.partiql.lang.eval.builtins.CollectionAggregationFunction
+import org.partiql.lang.eval.builtins.ExprFunctionCurrentUser
 import org.partiql.lang.eval.physical.sourceLocationMetaOrUnknown
 import org.partiql.lang.eval.visitors.VisitorTransformBase
 import org.partiql.lang.planner.PlanningProblemDetails
@@ -79,6 +80,13 @@ internal class AstToLogicalVisitorTransform(
             is PartiqlAst.SetQuantifier.Distinct -> call("filter_distinct", expr)
             else -> expr
         }
+    }
+
+    override fun transformExprCurrentUser(node: PartiqlAst.Expr.CurrentUser): PartiqlLogical.Expr = PartiqlLogical.build {
+        call(
+            funcName = ExprFunctionCurrentUser.NAME,
+            args = emptyList()
+        )
     }
 
     // This transformation is used for top-level expression transformations and for the SFW clauses prior to the

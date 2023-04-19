@@ -76,6 +76,9 @@ may then be further optimized by selecting better implementations of each operat
 
         // The expressions that can result in values.
         (sum expr
+            // SQL's CURRENT_USER Keyword
+            (current_user)
+
             // The literal missing value.
             (missing)
 
@@ -606,7 +609,10 @@ may then be further optimized by selecting better implementations of each operat
             // Remove the call_window node from the `expr` sum type, because the call_window contains two parts:
             // Window specification and window function, we want to define a stand alone operator for this
             (exclude select struct call_window)
-              
+
+            // Remove System Functions
+            (exclude current_user)
+
             // CallAgg's such as SUM, MIN, MAX, etc. either become calls to built-in-functions (example: call COLL_SUM)
             // or aggregate functions within the logical aggregate operator.
             (exclude call_agg)

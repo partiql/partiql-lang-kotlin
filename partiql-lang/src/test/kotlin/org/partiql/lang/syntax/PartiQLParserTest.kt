@@ -920,6 +920,36 @@ class PartiQLParserTest : PartiQLParserTestBase() {
         "(parameter 1)"
     )
 
+    @Test
+    fun currentUserUpperCase() = assertExpression(
+        "CURRENT_USER",
+        "(current_user)"
+    )
+
+    @Test
+    fun currentUserMixedCase() = assertExpression(
+        "CURRENT_user",
+        "(current_user)"
+    )
+
+    @Test
+    fun currentUserLowerCase() = assertExpression(
+        "current_user",
+        "(current_user)"
+    )
+
+    @Test
+    fun currentUserEquals() = assertExpression(
+        "1 = current_user",
+        "(eq (lit 1) (current_user))"
+    )
+
+    @Test
+    fun currentUserEqualsConcat() = assertExpression(
+        "'username' || current_user",
+        "(concat (lit \"username\") (current_user))"
+    )
+
     // ****************************************
     // SELECT
     // ****************************************

@@ -451,6 +451,14 @@ internal class EvaluatingCompiler(
             // bag operators
             is PartiqlAst.Expr.BagOp -> compileBagOp(expr, metas)
 
+            // System Functions
+            is PartiqlAst.Expr.CurrentUser -> err(
+                message = "CURRENT_USER should have been replaced with a function call during normalization.",
+                errorCode = ErrorCode.EVALUATOR_GENERIC_EXCEPTION,
+                errorContext = errorContextFrom(metas),
+                internal = false
+            )
+
             is PartiqlAst.Expr.GraphMatch -> TODO("Compilation of GraphMatch expression")
             is PartiqlAst.Expr.CallWindow -> TODO("Evaluating Compiler doesn't support window function")
         }

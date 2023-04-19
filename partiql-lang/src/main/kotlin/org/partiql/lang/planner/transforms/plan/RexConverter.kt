@@ -3,6 +3,7 @@ package org.partiql.lang.planner.transforms.plan
 import com.amazon.ionelement.api.MetaContainer
 import com.amazon.ionelement.api.ionNull
 import org.partiql.lang.domains.PartiqlAst
+import org.partiql.lang.eval.builtins.ExprFunctionCurrentUser
 import org.partiql.lang.planner.transforms.AstToPlan
 import org.partiql.plan.Arg
 import org.partiql.plan.Branch
@@ -103,6 +104,14 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
         Rex.Lit(
             value = node.value,
             type = TypeConverter.convert(ionType)
+        )
+    }
+
+    override fun walkExprCurrentUser(node: PartiqlAst.Expr.CurrentUser, accumulator: Ctx) = visit(node) {
+        Rex.Call(
+            id = ExprFunctionCurrentUser.NAME,
+            args = emptyList(),
+            type = null
         )
     }
 
