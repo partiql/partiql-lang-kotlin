@@ -47,7 +47,7 @@ public class StatementQueryBuilder {
 public class StatementDmlInsertBuilder {
     public var id: Int? = null
 
-    public var target: Expr? = null
+    public var target: Statement.DML.Target? = null
 
     public var values: Expr? = null
 
@@ -57,7 +57,7 @@ public class StatementDmlInsertBuilder {
         this.id = id
     }
 
-    public fun target(target: Expr?): StatementDmlInsertBuilder = this.apply {
+    public fun target(target: Statement.DML.Target?): StatementDmlInsertBuilder = this.apply {
         this.target = target
     }
 
@@ -82,7 +82,7 @@ public class StatementDmlInsertBuilder {
 public class StatementDmlInsertValueBuilder {
     public var id: Int? = null
 
-    public var target: Expr? = null
+    public var target: Statement.DML.Target? = null
 
     public var `value`: Expr? = null
 
@@ -96,7 +96,7 @@ public class StatementDmlInsertValueBuilder {
         this.id = id
     }
 
-    public fun target(target: Expr?): StatementDmlInsertValueBuilder = this.apply {
+    public fun target(target: Statement.DML.Target?): StatementDmlInsertValueBuilder = this.apply {
         this.target = target
     }
 
@@ -127,49 +127,55 @@ public class StatementDmlInsertValueBuilder {
         )
 }
 
-public class StatementDmlSetBuilder {
+public class StatementDmlUpdateBuilder {
     public var id: Int? = null
 
-    public var assignments: MutableList<Statement.DML.Set.Assignment> = mutableListOf()
+    public var target: Statement.DML.Target? = null
 
-    public fun id(id: Int?): StatementDmlSetBuilder = this.apply {
+    public var assignments: MutableList<Statement.DML.Update.Assignment> = mutableListOf()
+
+    public fun id(id: Int?): StatementDmlUpdateBuilder = this.apply {
         this.id = id
     }
 
-    public fun assignments(assignments: MutableList<Statement.DML.Set.Assignment>):
-        StatementDmlSetBuilder = this.apply {
+    public fun target(target: Statement.DML.Target?): StatementDmlUpdateBuilder = this.apply {
+        this.target = target
+    }
+
+    public fun assignments(assignments: MutableList<Statement.DML.Update.Assignment>):
+        StatementDmlUpdateBuilder = this.apply {
         this.assignments = assignments
     }
 
-    public fun build(): Statement.DML.Set = build(AstFactory.DEFAULT)
+    public fun build(): Statement.DML.Update = build(AstFactory.DEFAULT)
 
-    public fun build(factory: AstFactory = AstFactory.DEFAULT): Statement.DML.Set =
-        factory.statementDMLSet(id = id!!, assignments = assignments)
+    public fun build(factory: AstFactory = AstFactory.DEFAULT): Statement.DML.Update =
+        factory.statementDMLUpdate(id = id!!, target = target!!, assignments = assignments)
 }
 
-public class StatementDmlSetAssignmentBuilder {
+public class StatementDmlUpdateAssignmentBuilder {
     public var id: Int? = null
 
     public var target: Expr.Path? = null
 
     public var `value`: Expr? = null
 
-    public fun id(id: Int?): StatementDmlSetAssignmentBuilder = this.apply {
+    public fun id(id: Int?): StatementDmlUpdateAssignmentBuilder = this.apply {
         this.id = id
     }
 
-    public fun target(target: Expr.Path?): StatementDmlSetAssignmentBuilder = this.apply {
+    public fun target(target: Expr.Path?): StatementDmlUpdateAssignmentBuilder = this.apply {
         this.target = target
     }
 
-    public fun `value`(`value`: Expr?): StatementDmlSetAssignmentBuilder = this.apply {
+    public fun `value`(`value`: Expr?): StatementDmlUpdateAssignmentBuilder = this.apply {
         this.`value` = `value`
     }
 
-    public fun build(): Statement.DML.Set.Assignment = build(AstFactory.DEFAULT)
+    public fun build(): Statement.DML.Update.Assignment = build(AstFactory.DEFAULT)
 
-    public fun build(factory: AstFactory = AstFactory.DEFAULT): Statement.DML.Set.Assignment =
-        factory.statementDMLSetAssignment(id = id!!, target = target!!, value = value!!)
+    public fun build(factory: AstFactory = AstFactory.DEFAULT): Statement.DML.Update.Assignment =
+        factory.statementDMLUpdateAssignment(id = id!!, target = target!!, value = value!!)
 }
 
 public class StatementDmlRemoveBuilder {
@@ -194,7 +200,7 @@ public class StatementDmlRemoveBuilder {
 public class StatementDmlDeleteBuilder {
     public var id: Int? = null
 
-    public var from: From? = null
+    public var from: Statement.DML.Target? = null
 
     public var `where`: Expr? = null
 
@@ -204,7 +210,7 @@ public class StatementDmlDeleteBuilder {
         this.id = id
     }
 
-    public fun from(from: From?): StatementDmlDeleteBuilder = this.apply {
+    public fun from(from: Statement.DML.Target?): StatementDmlDeleteBuilder = this.apply {
         this.from = from
     }
 
@@ -219,7 +225,124 @@ public class StatementDmlDeleteBuilder {
     public fun build(): Statement.DML.Delete = build(AstFactory.DEFAULT)
 
     public fun build(factory: AstFactory = AstFactory.DEFAULT): Statement.DML.Delete =
-        factory.statementDMLDelete(id = id!!, from = from!!, where = where, returning = returning!!)
+        factory.statementDMLDelete(id = id!!, from = from!!, where = where, returning = returning)
+}
+
+public class StatementDmlBatchBuilder {
+    public var id: Int? = null
+
+    public var from: Statement.DML.Target? = null
+
+    public var ops: MutableList<Statement.DML.Batch.Op> = mutableListOf()
+
+    public var `where`: Expr? = null
+
+    public var returning: Returning? = null
+
+    public fun id(id: Int?): StatementDmlBatchBuilder = this.apply {
+        this.id = id
+    }
+
+    public fun from(from: Statement.DML.Target?): StatementDmlBatchBuilder = this.apply {
+        this.from = from
+    }
+
+    public fun ops(ops: MutableList<Statement.DML.Batch.Op>): StatementDmlBatchBuilder = this.apply {
+        this.ops = ops
+    }
+
+    public fun `where`(`where`: Expr?): StatementDmlBatchBuilder = this.apply {
+        this.`where` = `where`
+    }
+
+    public fun returning(returning: Returning?): StatementDmlBatchBuilder = this.apply {
+        this.returning = returning
+    }
+
+    public fun build(): Statement.DML.Batch = build(AstFactory.DEFAULT)
+
+    public fun build(factory: AstFactory = AstFactory.DEFAULT): Statement.DML.Batch =
+        factory.statementDMLBatch(
+            id = id!!, from = from!!, ops = ops, where = where,
+            returning =
+            returning
+        )
+}
+
+public class StatementDmlBatchOpSetBuilder {
+    public var id: Int? = null
+
+    public var target: Expr.Path? = null
+
+    public var `value`: Expr? = null
+
+    public fun id(id: Int?): StatementDmlBatchOpSetBuilder = this.apply {
+        this.id = id
+    }
+
+    public fun target(target: Expr.Path?): StatementDmlBatchOpSetBuilder = this.apply {
+        this.target = target
+    }
+
+    public fun `value`(`value`: Expr?): StatementDmlBatchOpSetBuilder = this.apply {
+        this.`value` = `value`
+    }
+
+    public fun build(): Statement.DML.Batch.Op.Set = build(AstFactory.DEFAULT)
+
+    public fun build(factory: AstFactory = AstFactory.DEFAULT): Statement.DML.Batch.Op.Set =
+        factory.statementDMLBatchOpSet(id = id!!, target = target!!, value = value!!)
+}
+
+public class StatementDmlBatchOpRemoveBuilder {
+    public var id: Int? = null
+
+    public var target: Statement.DML.Target? = null
+
+    public fun id(id: Int?): StatementDmlBatchOpRemoveBuilder = this.apply {
+        this.id = id
+    }
+
+    public fun target(target: Statement.DML.Target?): StatementDmlBatchOpRemoveBuilder = this.apply {
+        this.target = target
+    }
+
+    public fun build(): Statement.DML.Batch.Op.Remove = build(AstFactory.DEFAULT)
+
+    public fun build(factory: AstFactory = AstFactory.DEFAULT): Statement.DML.Batch.Op.Remove =
+        factory.statementDMLBatchOpRemove(id = id!!, target = target!!)
+}
+
+public class StatementDmlBatchOpDeleteBuilder {
+    public var id: Int? = null
+
+    public fun id(id: Int?): StatementDmlBatchOpDeleteBuilder = this.apply {
+        this.id = id
+    }
+
+    public fun build(): Statement.DML.Batch.Op.Delete = build(AstFactory.DEFAULT)
+
+    public fun build(factory: AstFactory = AstFactory.DEFAULT): Statement.DML.Batch.Op.Delete =
+        factory.statementDMLBatchOpDelete(id = id!!)
+}
+
+public class StatementDmlTargetBuilder {
+    public var id: Int? = null
+
+    public var table: MutableList<String> = mutableListOf()
+
+    public fun id(id: Int?): StatementDmlTargetBuilder = this.apply {
+        this.id = id
+    }
+
+    public fun table(table: MutableList<String>): StatementDmlTargetBuilder = this.apply {
+        this.table = table
+    }
+
+    public fun build(): Statement.DML.Target = build(AstFactory.DEFAULT)
+
+    public fun build(factory: AstFactory = AstFactory.DEFAULT): Statement.DML.Target =
+        factory.statementDMLTarget(id = id!!, table = table)
 }
 
 public class StatementDdlCreateTableBuilder {
@@ -2170,7 +2293,7 @@ public class OverBuilder {
 public class OnConflictBuilder {
     public var id: Int? = null
 
-    public var expr: Expr? = null
+    public var target: OnConflict.Target? = null
 
     public var action: OnConflict.Action? = null
 
@@ -2178,8 +2301,8 @@ public class OnConflictBuilder {
         this.id = id
     }
 
-    public fun expr(expr: Expr?): OnConflictBuilder = this.apply {
-        this.expr = expr
+    public fun target(target: OnConflict.Target?): OnConflictBuilder = this.apply {
+        this.target = target
     }
 
     public fun action(action: OnConflict.Action?): OnConflictBuilder = this.apply {
@@ -2191,8 +2314,65 @@ public class OnConflictBuilder {
     public fun build(factory: AstFactory = AstFactory.DEFAULT): OnConflict = factory.onConflict(
         id =
         id!!,
-        expr = expr!!, action = action!!
+        target = target!!, action = action!!
     )
+}
+
+public class OnConflictTargetConditionBuilder {
+    public var id: Int? = null
+
+    public var condition: Expr? = null
+
+    public fun id(id: Int?): OnConflictTargetConditionBuilder = this.apply {
+        this.id = id
+    }
+
+    public fun condition(condition: Expr?): OnConflictTargetConditionBuilder = this.apply {
+        this.condition = condition
+    }
+
+    public fun build(): OnConflict.Target.Condition = build(AstFactory.DEFAULT)
+
+    public fun build(factory: AstFactory = AstFactory.DEFAULT): OnConflict.Target.Condition =
+        factory.onConflictTargetCondition(id = id!!, condition = condition!!)
+}
+
+public class OnConflictTargetSymbolsBuilder {
+    public var id: Int? = null
+
+    public var symbols: MutableList<String> = mutableListOf()
+
+    public fun id(id: Int?): OnConflictTargetSymbolsBuilder = this.apply {
+        this.id = id
+    }
+
+    public fun symbols(symbols: MutableList<String>): OnConflictTargetSymbolsBuilder = this.apply {
+        this.symbols = symbols
+    }
+
+    public fun build(): OnConflict.Target.Symbols = build(AstFactory.DEFAULT)
+
+    public fun build(factory: AstFactory = AstFactory.DEFAULT): OnConflict.Target.Symbols =
+        factory.onConflictTargetSymbols(id = id!!, symbols = symbols)
+}
+
+public class OnConflictTargetConstraintBuilder {
+    public var id: Int? = null
+
+    public var constraint: String? = null
+
+    public fun id(id: Int?): OnConflictTargetConstraintBuilder = this.apply {
+        this.id = id
+    }
+
+    public fun constraint(constraint: String?): OnConflictTargetConstraintBuilder = this.apply {
+        this.constraint = constraint
+    }
+
+    public fun build(): OnConflict.Target.Constraint = build(AstFactory.DEFAULT)
+
+    public fun build(factory: AstFactory = AstFactory.DEFAULT): OnConflict.Target.Constraint =
+        factory.onConflictTargetConstraint(id = id!!, constraint = constraint!!)
 }
 
 public class OnConflictActionDoReplaceBuilder {

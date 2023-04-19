@@ -17,22 +17,23 @@ statement::[
     // `INSERT INTO <target> <value> ON CONFLICT <conflict action>
     // https://github.com/partiql/partiql-docs/blob/main/RFCs/0011-partiql-insert.md
     insert::{
-      target:       expr,
+      target:       target,
       values:       expr,
       on_conflict: '.on_conflict.action',
     },
 
-    // `INSERT INTO <expr> VALUE <expr> [AT <expr>]` [ON CONFLICT WHERE <expr> DO NOTHING]`
+    // `INSERT INTO <target> VALUE <expr> [AT <expr>]` [ON CONFLICT WHERE <expr> DO NOTHING]`
     insert_value::{
-      target:       expr,
+      target:       target,
       value:        expr,
       at_alias:     expr,
       index:        optional::expr,
       on_conflict:  on_conflict,
     },
 
-    // `UPDATE <target table> SET <set clause list> WHERE CURRENT OF <cursor name>`
-    set::{
+    // `UPDATE <target> SET <set clause list> WHERE <expr>`
+    update::{
+      target:      target,
       assignments: list::[assignment],
       _: [
         assignment::{
@@ -47,14 +48,39 @@ statement::[
       target: '.expr.path',
     },
 
-    // `DELETE FROM <target table> WHERE CURRENT OF <cursor name>` RETURNING ...
+    // `DELETE FROM <target table> WHERE <expr> RETURNING ...`
     delete::{
-      from:       from,
+      from:       target,
       where:      optional::expr,
-      returning:  returning,
+      returning:  optional::returning,
     },
 
-    // TODO add multi-operation DML statement
+    // `[UPDATE|FROM] <target> <dml base op>+ WHERE <expr> RETURNING <returning>`
+    batch::{
+      from:       target,
+      ops:        list::[op],
+      where:      optional::expr,
+      returning:  optional::returning,
+      _: [
+        op::[
+          set::{
+            target: '.expr.path',
+            value:  expr,
+          },
+          remove::{
+            target: target,
+          },
+          delete::{},
+        ],
+      ],
+    },
+
+    // <target table> ::= [ONLY] <table name>
+    _::[
+      target::{
+        table: list::[string],
+      },
+    ],
   ],
 
   // Data Definition Language
@@ -507,8 +533,13 @@ over::{
 }
 
 // `ON CONFLICT WHERE <expr> <conflict_action>`
+// `ON CONFLICT <conflict target> <conflict_action>`
 on_conflict::{
-  expr:   expr,
+  target: [
+    condition::{ condition: expr },
+    symbols::{ symbols: list::[string] },
+    constraint::{ constraint: string },
+  ],
   action: [
     do_replace::{ value: value },
     do_update::{ value: value },

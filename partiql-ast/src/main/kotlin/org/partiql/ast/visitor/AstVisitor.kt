@@ -31,13 +31,25 @@ public interface AstVisitor<R, C> {
 
     public fun visitStatementDMLInsertValue(node: Statement.DML.InsertValue, ctx: C): R
 
-    public fun visitStatementDMLSet(node: Statement.DML.Set, ctx: C): R
+    public fun visitStatementDMLUpdate(node: Statement.DML.Update, ctx: C): R
 
-    public fun visitStatementDMLSetAssignment(node: Statement.DML.Set.Assignment, ctx: C): R
+    public fun visitStatementDMLUpdateAssignment(node: Statement.DML.Update.Assignment, ctx: C): R
 
     public fun visitStatementDMLRemove(node: Statement.DML.Remove, ctx: C): R
 
     public fun visitStatementDMLDelete(node: Statement.DML.Delete, ctx: C): R
+
+    public fun visitStatementDMLBatch(node: Statement.DML.Batch, ctx: C): R
+
+    public fun visitStatementDMLBatchOp(node: Statement.DML.Batch.Op, ctx: C): R
+
+    public fun visitStatementDMLBatchOpSet(node: Statement.DML.Batch.Op.Set, ctx: C): R
+
+    public fun visitStatementDMLBatchOpRemove(node: Statement.DML.Batch.Op.Remove, ctx: C): R
+
+    public fun visitStatementDMLBatchOpDelete(node: Statement.DML.Batch.Op.Delete, ctx: C): R
+
+    public fun visitStatementDMLTarget(node: Statement.DML.Target, ctx: C): R
 
     public fun visitStatementDDL(node: Statement.DDL, ctx: C): R
 
@@ -199,6 +211,14 @@ public interface AstVisitor<R, C> {
     public fun visitOver(node: Over, ctx: C): R
 
     public fun visitOnConflict(node: OnConflict, ctx: C): R
+
+    public fun visitOnConflictTarget(node: OnConflict.Target, ctx: C): R
+
+    public fun visitOnConflictTargetCondition(node: OnConflict.Target.Condition, ctx: C): R
+
+    public fun visitOnConflictTargetSymbols(node: OnConflict.Target.Symbols, ctx: C): R
+
+    public fun visitOnConflictTargetConstraint(node: OnConflict.Target.Constraint, ctx: C): R
 
     public fun visitOnConflictAction(node: OnConflict.Action, ctx: C): R
 

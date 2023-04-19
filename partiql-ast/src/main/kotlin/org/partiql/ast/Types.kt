@@ -56,6 +56,9 @@ import org.partiql.ast.builder.OnConflictActionDoNothingBuilder
 import org.partiql.ast.builder.OnConflictActionDoReplaceBuilder
 import org.partiql.ast.builder.OnConflictActionDoUpdateBuilder
 import org.partiql.ast.builder.OnConflictBuilder
+import org.partiql.ast.builder.OnConflictTargetConditionBuilder
+import org.partiql.ast.builder.OnConflictTargetConstraintBuilder
+import org.partiql.ast.builder.OnConflictTargetSymbolsBuilder
 import org.partiql.ast.builder.OrderByBuilder
 import org.partiql.ast.builder.OrderBySortBuilder
 import org.partiql.ast.builder.OverBuilder
@@ -73,12 +76,17 @@ import org.partiql.ast.builder.StatementDdlCreateIndexBuilder
 import org.partiql.ast.builder.StatementDdlCreateTableBuilder
 import org.partiql.ast.builder.StatementDdlDropIndexBuilder
 import org.partiql.ast.builder.StatementDdlDropTableBuilder
+import org.partiql.ast.builder.StatementDmlBatchBuilder
+import org.partiql.ast.builder.StatementDmlBatchOpDeleteBuilder
+import org.partiql.ast.builder.StatementDmlBatchOpRemoveBuilder
+import org.partiql.ast.builder.StatementDmlBatchOpSetBuilder
 import org.partiql.ast.builder.StatementDmlDeleteBuilder
 import org.partiql.ast.builder.StatementDmlInsertBuilder
 import org.partiql.ast.builder.StatementDmlInsertValueBuilder
 import org.partiql.ast.builder.StatementDmlRemoveBuilder
-import org.partiql.ast.builder.StatementDmlSetAssignmentBuilder
-import org.partiql.ast.builder.StatementDmlSetBuilder
+import org.partiql.ast.builder.StatementDmlTargetBuilder
+import org.partiql.ast.builder.StatementDmlUpdateAssignmentBuilder
+import org.partiql.ast.builder.StatementDmlUpdateBuilder
 import org.partiql.ast.builder.StatementExecBuilder
 import org.partiql.ast.builder.StatementExplainBuilder
 import org.partiql.ast.builder.StatementExplainTargetDomainBuilder
@@ -92,6 +100,12 @@ import org.partiql.ast.builder.TableDefinitionColumnConstraintBuilder
 import org.partiql.ast.builder.TypeBuilder
 import org.partiql.ast.builder.UnionBuilder
 import org.partiql.ast.visitor.AstVisitor
+import kotlin.Boolean
+import kotlin.Int
+import kotlin.Long
+import kotlin.String
+import kotlin.collections.List
+import kotlin.jvm.JvmStatic
 
 public abstract class AstNode {
     public abstract val id: Int
@@ -133,14 +147,15 @@ public sealed class Statement : AstNode() {
         public override fun <R, C> accept(visitor: AstVisitor<R, C>, ctx: C): R = when (this) {
             is Insert -> visitor.visitStatementDMLInsert(this, ctx)
             is InsertValue -> visitor.visitStatementDMLInsertValue(this, ctx)
-            is Set -> visitor.visitStatementDMLSet(this, ctx)
+            is Update -> visitor.visitStatementDMLUpdate(this, ctx)
             is Remove -> visitor.visitStatementDMLRemove(this, ctx)
             is Delete -> visitor.visitStatementDMLDelete(this, ctx)
+            is Batch -> visitor.visitStatementDMLBatch(this, ctx)
         }
 
         public data class Insert(
             public override val id: Int,
-            public val target: Expr,
+            public val target: Target,
             public val values: Expr,
             public val onConflict: OnConflict.Action
         ) : DML() {
@@ -163,7 +178,7 @@ public sealed class Statement : AstNode() {
 
         public data class InsertValue(
             public override val id: Int,
-            public val target: Expr,
+            public val target: Target,
             public val `value`: Expr,
             public val atAlias: Expr,
             public val index: Expr?,
@@ -188,18 +203,20 @@ public sealed class Statement : AstNode() {
             }
         }
 
-        public data class Set(
+        public data class Update(
             public override val id: Int,
+            public val target: Target,
             public val assignments: List<Assignment>
         ) : DML() {
             public override val children: List<AstNode> by lazy {
                 val kids = mutableListOf<AstNode?>()
+                kids.add(target)
                 kids.addAll(assignments)
                 kids.filterNotNull()
             }
 
             public override fun <R, C> accept(visitor: AstVisitor<R, C>, ctx: C): R =
-                visitor.visitStatementDMLSet(this, ctx)
+                visitor.visitStatementDMLUpdate(this, ctx)
 
             public data class Assignment(
                 public override val id: Int,
@@ -214,18 +231,18 @@ public sealed class Statement : AstNode() {
                 }
 
                 public override fun <R, C> accept(visitor: AstVisitor<R, C>, ctx: C): R =
-                    visitor.visitStatementDMLSetAssignment(this, ctx)
+                    visitor.visitStatementDMLUpdateAssignment(this, ctx)
 
                 public companion object {
                     @JvmStatic
-                    public fun builder(): StatementDmlSetAssignmentBuilder =
-                        StatementDmlSetAssignmentBuilder()
+                    public fun builder(): StatementDmlUpdateAssignmentBuilder =
+                        StatementDmlUpdateAssignmentBuilder()
                 }
             }
 
             public companion object {
                 @JvmStatic
-                public fun builder(): StatementDmlSetBuilder = StatementDmlSetBuilder()
+                public fun builder(): StatementDmlUpdateBuilder = StatementDmlUpdateBuilder()
             }
         }
 
@@ -250,9 +267,9 @@ public sealed class Statement : AstNode() {
 
         public data class Delete(
             public override val id: Int,
-            public val from: From,
+            public val from: Target,
             public val `where`: Expr?,
-            public val returning: Returning
+            public val returning: Returning?
         ) : DML() {
             public override val children: List<AstNode> by lazy {
                 val kids = mutableListOf<AstNode?>()
@@ -268,6 +285,106 @@ public sealed class Statement : AstNode() {
             public companion object {
                 @JvmStatic
                 public fun builder(): StatementDmlDeleteBuilder = StatementDmlDeleteBuilder()
+            }
+        }
+
+        public data class Batch(
+            public override val id: Int,
+            public val from: Target,
+            public val ops: List<Op>,
+            public val `where`: Expr?,
+            public val returning: Returning?
+        ) : DML() {
+            public override val children: List<AstNode> by lazy {
+                val kids = mutableListOf<AstNode?>()
+                kids.add(from)
+                kids.addAll(ops)
+                kids.add(where)
+                kids.add(returning)
+                kids.filterNotNull()
+            }
+
+            public override fun <R, C> accept(visitor: AstVisitor<R, C>, ctx: C): R =
+                visitor.visitStatementDMLBatch(this, ctx)
+
+            public sealed class Op : AstNode() {
+                public override fun <R, C> accept(visitor: AstVisitor<R, C>, ctx: C): R = when (this) {
+                    is Set -> visitor.visitStatementDMLBatchOpSet(this, ctx)
+                    is Remove -> visitor.visitStatementDMLBatchOpRemove(this, ctx)
+                    is Delete -> visitor.visitStatementDMLBatchOpDelete(this, ctx)
+                }
+
+                public data class Set(
+                    public override val id: Int,
+                    public val target: Expr.Path,
+                    public val `value`: Expr
+                ) : Op() {
+                    public override val children: List<AstNode> by lazy {
+                        val kids = mutableListOf<AstNode?>()
+                        kids.add(target)
+                        kids.add(value)
+                        kids.filterNotNull()
+                    }
+
+                    public override fun <R, C> accept(visitor: AstVisitor<R, C>, ctx: C): R =
+                        visitor.visitStatementDMLBatchOpSet(this, ctx)
+
+                    public companion object {
+                        @JvmStatic
+                        public fun builder(): StatementDmlBatchOpSetBuilder = StatementDmlBatchOpSetBuilder()
+                    }
+                }
+
+                public data class Remove(
+                    public override val id: Int,
+                    public val target: Target
+                ) : Op() {
+                    public override val children: List<AstNode> by lazy {
+                        val kids = mutableListOf<AstNode?>()
+                        kids.add(target)
+                        kids.filterNotNull()
+                    }
+
+                    public override fun <R, C> accept(visitor: AstVisitor<R, C>, ctx: C): R =
+                        visitor.visitStatementDMLBatchOpRemove(this, ctx)
+
+                    public companion object {
+                        @JvmStatic
+                        public fun builder(): StatementDmlBatchOpRemoveBuilder =
+                            StatementDmlBatchOpRemoveBuilder()
+                    }
+                }
+
+                public data class Delete(
+                    public override val id: Int
+                ) : Op() {
+                    public override fun <R, C> accept(visitor: AstVisitor<R, C>, ctx: C): R =
+                        visitor.visitStatementDMLBatchOpDelete(this, ctx)
+
+                    public companion object {
+                        @JvmStatic
+                        public fun builder(): StatementDmlBatchOpDeleteBuilder =
+                            StatementDmlBatchOpDeleteBuilder()
+                    }
+                }
+            }
+
+            public companion object {
+                @JvmStatic
+                public fun builder(): StatementDmlBatchBuilder = StatementDmlBatchBuilder()
+            }
+        }
+
+        public data class Target(
+            public override val id: Int,
+            public val table: List<String>
+        ) : AstNode() {
+            public override fun <R, C> accept(visitor: AstVisitor<R, C>, ctx: C): R =
+                visitor.visitStatementDMLTarget(this, ctx)
+
+            public companion object {
+                @JvmStatic
+                public fun builder(): StatementDmlTargetBuilder = StatementDmlTargetBuilder()
             }
         }
     }
@@ -1797,12 +1914,12 @@ public data class Over(
 
 public data class OnConflict(
     public override val id: Int,
-    public val expr: Expr,
+    public val target: Target,
     public val action: Action
 ) : AstNode() {
     public override val children: List<AstNode> by lazy {
         val kids = mutableListOf<AstNode?>()
-        kids.add(expr)
+        kids.add(target)
         kids.add(action)
         kids.filterNotNull()
     }
@@ -1812,6 +1929,60 @@ public data class OnConflict(
 
     public enum class Value {
         EXCLUDED,
+    }
+
+    public sealed class Target : AstNode() {
+        public override fun <R, C> accept(visitor: AstVisitor<R, C>, ctx: C): R = when (this) {
+            is Condition -> visitor.visitOnConflictTargetCondition(this, ctx)
+            is Symbols -> visitor.visitOnConflictTargetSymbols(this, ctx)
+            is Constraint -> visitor.visitOnConflictTargetConstraint(this, ctx)
+        }
+
+        public data class Condition(
+            public override val id: Int,
+            public val condition: Expr
+        ) : Target() {
+            public override val children: List<AstNode> by lazy {
+                val kids = mutableListOf<AstNode?>()
+                kids.add(condition)
+                kids.filterNotNull()
+            }
+
+            public override fun <R, C> accept(visitor: AstVisitor<R, C>, ctx: C): R =
+                visitor.visitOnConflictTargetCondition(this, ctx)
+
+            public companion object {
+                @JvmStatic
+                public fun builder(): OnConflictTargetConditionBuilder = OnConflictTargetConditionBuilder()
+            }
+        }
+
+        public data class Symbols(
+            public override val id: Int,
+            public val symbols: List<String>
+        ) : Target() {
+            public override fun <R, C> accept(visitor: AstVisitor<R, C>, ctx: C): R =
+                visitor.visitOnConflictTargetSymbols(this, ctx)
+
+            public companion object {
+                @JvmStatic
+                public fun builder(): OnConflictTargetSymbolsBuilder = OnConflictTargetSymbolsBuilder()
+            }
+        }
+
+        public data class Constraint(
+            public override val id: Int,
+            public val constraint: String
+        ) : Target() {
+            public override fun <R, C> accept(visitor: AstVisitor<R, C>, ctx: C): R =
+                visitor.visitOnConflictTargetConstraint(this, ctx)
+
+            public companion object {
+                @JvmStatic
+                public fun builder(): OnConflictTargetConstraintBuilder =
+                    OnConflictTargetConstraintBuilder()
+            }
+        }
     }
 
     public sealed class Action : AstNode() {

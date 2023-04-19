@@ -39,7 +39,7 @@ public class AstBuilder(
 
     public fun statementDMLInsert(
         id: Int? = null,
-        target: Expr? = null,
+        target: Statement.DML.Target? = null,
         values: Expr? = null,
         onConflict: OnConflict.Action? = null,
         block: StatementDmlInsertBuilder.() -> Unit = {}
@@ -51,7 +51,7 @@ public class AstBuilder(
 
     public fun statementDMLInsertValue(
         id: Int? = null,
-        target: Expr? = null,
+        target: Statement.DML.Target? = null,
         `value`: Expr? = null,
         atAlias: Expr? = null,
         index: Expr? = null,
@@ -63,23 +63,24 @@ public class AstBuilder(
         return builder.build(factory)
     }
 
-    public fun statementDMLSet(
+    public fun statementDMLUpdate(
         id: Int? = null,
-        assignments: MutableList<Statement.DML.Set.Assignment> = mutableListOf(),
-        block: StatementDmlSetBuilder.() -> Unit = {}
-    ): Statement.DML.Set {
-        val builder = StatementDmlSetBuilder()
+        target: Statement.DML.Target? = null,
+        assignments: MutableList<Statement.DML.Update.Assignment> = mutableListOf(),
+        block: StatementDmlUpdateBuilder.() -> Unit = {}
+    ): Statement.DML.Update {
+        val builder = StatementDmlUpdateBuilder()
         builder.block()
         return builder.build(factory)
     }
 
-    public fun statementDMLSetAssignment(
+    public fun statementDMLUpdateAssignment(
         id: Int? = null,
         target: Expr.Path? = null,
         `value`: Expr? = null,
-        block: StatementDmlSetAssignmentBuilder.() -> Unit = {}
-    ): Statement.DML.Set.Assignment {
-        val builder = StatementDmlSetAssignmentBuilder()
+        block: StatementDmlUpdateAssignmentBuilder.() -> Unit = {}
+    ): Statement.DML.Update.Assignment {
+        val builder = StatementDmlUpdateAssignmentBuilder()
         builder.block()
         return builder.build(factory)
     }
@@ -96,12 +97,65 @@ public class AstBuilder(
 
     public fun statementDMLDelete(
         id: Int? = null,
-        from: From? = null,
+        from: Statement.DML.Target? = null,
         `where`: Expr? = null,
         returning: Returning? = null,
         block: StatementDmlDeleteBuilder.() -> Unit = {}
     ): Statement.DML.Delete {
         val builder = StatementDmlDeleteBuilder()
+        builder.block()
+        return builder.build(factory)
+    }
+
+    public fun statementDMLBatch(
+        id: Int? = null,
+        from: Statement.DML.Target? = null,
+        ops: MutableList<Statement.DML.Batch.Op> = mutableListOf(),
+        `where`: Expr? = null,
+        returning: Returning? = null,
+        block: StatementDmlBatchBuilder.() -> Unit = {}
+    ): Statement.DML.Batch {
+        val builder = StatementDmlBatchBuilder()
+        builder.block()
+        return builder.build(factory)
+    }
+
+    public fun statementDMLBatchOpSet(
+        id: Int? = null,
+        target: Expr.Path? = null,
+        `value`: Expr? = null,
+        block: StatementDmlBatchOpSetBuilder.() -> Unit = {}
+    ): Statement.DML.Batch.Op.Set {
+        val builder = StatementDmlBatchOpSetBuilder()
+        builder.block()
+        return builder.build(factory)
+    }
+
+    public fun statementDMLBatchOpRemove(
+        id: Int? = null,
+        target: Statement.DML.Target? = null,
+        block: StatementDmlBatchOpRemoveBuilder.() -> Unit = {}
+    ): Statement.DML.Batch.Op.Remove {
+        val builder = StatementDmlBatchOpRemoveBuilder()
+        builder.block()
+        return builder.build(factory)
+    }
+
+    public fun statementDMLBatchOpDelete(
+        id: Int? = null,
+        block: StatementDmlBatchOpDeleteBuilder.() -> Unit = {}
+    ): Statement.DML.Batch.Op.Delete {
+        val builder = StatementDmlBatchOpDeleteBuilder()
+        builder.block()
+        return builder.build(factory)
+    }
+
+    public fun statementDMLTarget(
+        id: Int? = null,
+        table: MutableList<String> = mutableListOf(),
+        block: StatementDmlTargetBuilder.() -> Unit = {}
+    ): Statement.DML.Target {
+        val builder = StatementDmlTargetBuilder()
         builder.block()
         return builder.build(factory)
     }
@@ -879,11 +933,41 @@ public class AstBuilder(
 
     public fun onConflict(
         id: Int? = null,
-        expr: Expr? = null,
+        target: OnConflict.Target? = null,
         action: OnConflict.Action? = null,
         block: OnConflictBuilder.() -> Unit = {}
     ): OnConflict {
         val builder = OnConflictBuilder()
+        builder.block()
+        return builder.build(factory)
+    }
+
+    public fun onConflictTargetCondition(
+        id: Int? = null,
+        condition: Expr? = null,
+        block: OnConflictTargetConditionBuilder.() -> Unit = {}
+    ): OnConflict.Target.Condition {
+        val builder = OnConflictTargetConditionBuilder()
+        builder.block()
+        return builder.build(factory)
+    }
+
+    public fun onConflictTargetSymbols(
+        id: Int? = null,
+        symbols: MutableList<String> = mutableListOf(),
+        block: OnConflictTargetSymbolsBuilder.() -> Unit = {}
+    ): OnConflict.Target.Symbols {
+        val builder = OnConflictTargetSymbolsBuilder()
+        builder.block()
+        return builder.build(factory)
+    }
+
+    public fun onConflictTargetConstraint(
+        id: Int? = null,
+        constraint: String? = null,
+        block: OnConflictTargetConstraintBuilder.() -> Unit = {}
+    ): OnConflict.Target.Constraint {
+        val builder = OnConflictTargetConstraintBuilder()
         builder.block()
         return builder.build(factory)
     }

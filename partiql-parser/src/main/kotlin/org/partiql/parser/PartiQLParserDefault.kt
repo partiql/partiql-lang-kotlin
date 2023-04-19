@@ -47,8 +47,10 @@ import org.partiql.ast.From
 import org.partiql.ast.GraphMatch
 import org.partiql.ast.GroupBy
 import org.partiql.ast.Let
+import org.partiql.ast.OnConflict
 import org.partiql.ast.OrderBy
 import org.partiql.ast.Over
+import org.partiql.ast.Returning
 import org.partiql.ast.Select
 import org.partiql.ast.SetQuantifier
 import org.partiql.ast.Statement
@@ -441,53 +443,45 @@ internal class PartiQLParserDefault : PartiQLParser {
          *
          */
 
-        // override fun visitDmlBaseWrapper(ctx: GeneratedParser.DmlBaseWrapperContext) = translate(ctx) {
-        //     val sourceContext = when {
-        //         ctx.updateClause() != null -> ctx.updateClause()
-        //         ctx.fromClause() != null -> ctx.fromClause()
-        //         else -> throw PartiQLParserException(
-        //             "Unable to deduce from source in DML",
-        //             ErrorCode.PARSE_INVALID_QUERY
-        //         )
-        //     }
-        //     val from = visitOrNull(sourceContext, FromSource::class)
-        //     val where = visitOrNull(ctx.whereClause(), Expr::class)
-        //     val returning = visitOrNull(ctx.returningClause(), ReturningExpr::class)
-        //     val operations = ctx.dmlBaseCommand().map { command -> getCommandList(visit(command)) }.flatten()
-        //     dml(dmlOpList(operations, operations[0].metas), from, where, returning, metas = operations[0].metas)
-        // }
-        //
-        // override fun visitDmlBase(ctx: GeneratedParser.DmlBaseContext) = translate(ctx) {
-        //     val commands = getCommandList(visit(ctx.dmlBaseCommand()))
-        //     dml(dmlOpList(commands, commands[0].metas), metas = commands[0].metas)
-        // }
-        //
-        // private fun getCommandList(command: AstNode): List<DmlOp> {
-        //     return when (command) {
-        //         is DmlOpList -> command.ops
-        //         is DmlOp -> listOf(command)
-        //         else -> throw PartiQLParserException("Unable to grab DML operation.", ErrorCode.PARSE_INVALID_QUERY)
-        //     }
-        // }
-        //
-        // override fun visitRemoveCommand(ctx: GeneratedParser.RemoveCommandContext) = translate(ctx) {
-        //     val target = visitPathSimple(ctx.pathSimple())
-        //     remove(target, ctx.REMOVE().getSourceMetaContainer())
-        // }
-        //
-        // override fun visitDeleteCommand(ctx: GeneratedParser.DeleteCommandContext) = translate(ctx) {
-        //     val from = visit(ctx.fromClauseSimple(), FromSource::class)
-        //     val where = visitOrNull(ctx.whereClause(), Expr::class)
-        //     val returning = visitOrNull(ctx.returningClause(), ReturningExpr::class)
-        //     dml(
-        //         dmlOpList(delete(ctx.DELETE().getSourceMetaContainer()), metas = ctx.DELETE().getSourceMetaContainer()),
-        //         from,
-        //         where,
-        //         returning,
-        //         ctx.DELETE().getSourceMetaContainer()
-        //     )
-        // }
-        //
+        override fun visitDmlBaseWrapper(ctx: GeneratedParser.DmlBaseWrapperContext) = translate(ctx) {
+            val source = when {
+                // UPDATE <target>
+                ctx.updateClause() != null -> {
+                }
+                // FROM <target>
+                ctx.fromClause() != null -> {
+                } // FROM <table>
+                else -> throw error(ctx, "DML ")
+            }
+            // val from = visitOrNull(sourceContext, From::class)
+            // val where = visitOrNull(ctx.whereClause(), Expr::class)
+            // val returning = visitOrNull(ctx.returningClause(), Returning::class)
+            // val operations = ctx.dmlBaseCommand().map { command -> getCommandList(visit(command)) }.flatten()
+            // Statement.DML.Batch()
+            TODO()
+        }
+
+        override fun visitDmlDelete(ctx: GeneratedParser.DmlDeleteContext) = super.visit(ctx) as Statement.DML.Delete
+
+        override fun visitDmlInsertReturning(ctx: GeneratedParser.DmlInsertReturningContext) = translate(ctx) {
+            TODO()
+        }
+
+        override fun visitDmlBase(ctx: GeneratedParser.DmlBaseContext) = super.visitDmlBase(ctx) as Statement.DML
+
+        override fun visitRemoveCommand(ctx: GeneratedParser.RemoveCommandContext) = translate(ctx) {
+            val target = visitPathSimple(ctx.pathSimple())
+            Statement.DML.Remove(id(), target)
+        }
+
+        override fun visitDeleteCommand(ctx: GeneratedParser.DeleteCommandContext) = translate(ctx) {
+            val from = visit(ctx.fromClauseSimple(), From::class)
+            val where = visitOrNull(ctx.whereClause(), Expr::class)
+            val returning = visitOrNull(ctx.returningClause(), Returning::class)
+            // Statement.DML.Delete(id(), from, where, returning)
+            TODO()
+        }
+
         // override fun visitInsertLegacy(ctx: GeneratedParser.InsertLegacyContext) = translate(ctx) {
         //     val metas = ctx.INSERT().getSourceMetaContainer()
         //     val target = visitPathSimple(ctx.pathSimple())
@@ -580,43 +574,50 @@ internal class PartiQLParserDefault : PartiQLParser {
         //     returningElem(getReturningMapping(ctx.status, ctx.age), column)
         // }
         //
-        // override fun visitOnConflict(ctx: GeneratedParser.OnConflictContext) = translate(ctx) {
-        //     visit(ctx.conflictAction(), ConflictAction::class)
-        // }
-        //
-        // override fun visitOnConflictLegacy(ctx: GeneratedParser.OnConflictLegacyContext) = translate(ctx) {
-        //     onConflict(
-        //         expr = visitExpr(ctx.expr()),
-        //         conflictAction = doNothing(),
-        //         metas = ctx.ON().getSourceMetaContainer()
-        //     )
-        // }
-        //
-        // override fun visitConflictAction(ctx: GeneratedParser.ConflictActionContext) = translate(ctx) {
-        //     when {
-        //         ctx.NOTHING() != null -> doNothing()
-        //         ctx.REPLACE() != null -> visitDoReplace(ctx.doReplace())
-        //         ctx.UPDATE() != null -> visitDoUpdate(ctx.doUpdate())
-        //         else -> TODO("ON CONFLICT only supports `DO REPLACE` and `DO NOTHING` actions at the moment.")
-        //     }
-        // }
-        //
-        // override fun visitDoReplace(ctx: GeneratedParser.DoReplaceContext) = translate(ctx) {
-        //     val value = when {
-        //         ctx.EXCLUDED() != null -> excluded()
-        //         else -> TODO("DO REPLACE doesn't support values other than `EXCLUDED` yet.")
-        //     }
-        //     doReplace(value)
-        // }
-        //
-        // override fun visitDoUpdate(ctx: GeneratedParser.DoUpdateContext) = translate(ctx) {
-        //     val value = when {
-        //         ctx.EXCLUDED() != null -> excluded()
-        //         else -> TODO("DO UPDATE doesn't support values other than `EXCLUDED` yet.")
-        //     }
-        //     doUpdate(value)
-        // }
-        //
+        override fun visitOnConflict(ctx: GeneratedParser.OnConflictContext) = translate(ctx) {
+            val target = visitConflictTarget(ctx.conflictTarget())
+            val action = visitConflictAction(ctx.conflictAction())
+            OnConflict(id(), target, action)
+        }
+
+        override fun visitOnConflictLegacy(ctx: GeneratedParser.OnConflictLegacyContext) = translate(ctx) {
+            val target = OnConflict.Target.Condition(id(), visitExpr(ctx.expr()))
+            val action = OnConflict.Action.DoNothing(id())
+            OnConflict(id(), target, action)
+        }
+
+        override fun visitConflictTarget(ctx: GeneratedParser.ConflictTargetContext) = translate(ctx) {
+            if (ctx.constraintName() != null) {
+                OnConflict.Target.Constraint(id(), convertRawSymbol(ctx.constraintName().symbolPrimitive()))
+            } else {
+                val symbols = ctx.symbolPrimitive().map { convertRawSymbol(it) }
+                OnConflict.Target.Symbols(id(), symbols)
+            }
+        }
+
+        override fun visitConflictAction(ctx: GeneratedParser.ConflictActionContext) = when {
+            ctx.NOTHING() != null -> translate(ctx) { OnConflict.Action.DoNothing(id()) }
+            ctx.REPLACE() != null -> visitDoReplace(ctx.doReplace())
+            ctx.UPDATE() != null -> visitDoUpdate(ctx.doUpdate())
+            else -> throw error(ctx, "ON CONFLICT only supports `DO REPLACE` and `DO NOTHING` actions at the moment.")
+        }
+
+        override fun visitDoReplace(ctx: GeneratedParser.DoReplaceContext) = translate(ctx) {
+            val value = when {
+                ctx.EXCLUDED() != null -> OnConflict.Value.EXCLUDED
+                else -> throw error(ctx, "DO REPLACE doesn't support values other than `EXCLUDED` yet.")
+            }
+            OnConflict.Action.DoReplace(id(), value)
+        }
+
+        override fun visitDoUpdate(ctx: GeneratedParser.DoUpdateContext) = translate(ctx) {
+            val value = when {
+                ctx.EXCLUDED() != null -> OnConflict.Value.EXCLUDED
+                else -> throw error(ctx, "DO UPDATE doesn't support values other than `EXCLUDED` yet.")
+            }
+            OnConflict.Action.DoUpdate(id(), value)
+        }
+
         override fun visitPathSimple(ctx: GeneratedParser.PathSimpleContext) = translate(ctx) {
             val root = visitSymbolPrimitive(ctx.symbolPrimitive()) as Expr
             var steps = emptyList<Expr.Path.Step>()
@@ -637,21 +638,25 @@ internal class PartiQLParserDefault : PartiQLParser {
         }
 
         override fun visitPathSimpleDotSymbol(ctx: GeneratedParser.PathSimpleDotSymbolContext) = translate(ctx) {
-            TODO("Visti PathSimpleDotSymbol")
+            val (symbol, case) = convertRawSymbolCased(ctx.symbolPrimitive())
+            Expr.Path.Step.Index(id(), Expr.Lit(id(), ionString(symbol)), case)
         }
 
-        // override fun visitSetCommand(ctx: GeneratedParser.SetCommandContext) = translate(ctx) {
-        //     val assignments = visitOrEmpty(ctx.setAssignment(), DmlOp.Set::class)
-        //     val newSets = assignments.map { assignment -> assignment.copy(metas = ctx.SET().getSourceMetaContainer()) }
-        //     dmlOpList(newSets, ctx.SET().getSourceMetaContainer())
-        // }
-        //
-        // override fun visitSetAssignment(ctx: GeneratedParser.SetAssignmentContext) = translate(ctx) {
-        //     set(assignment(visitPathSimple(ctx.pathSimple()), visitExpr(ctx.expr())))
-        // }
-        //
-        // override fun visitUpdateClause(ctx: GeneratedParser.UpdateClauseContext) =
-        //     visit(ctx.tableBaseReference(), FromSource::class)
+        /**
+         * Current grammar models a SET with no UPDATE target as valid DML command.
+         * We put a blank target, because we'll have to unpack this.
+         */
+        override fun visitSetCommand(ctx: GeneratedParser.SetCommandContext) = translate(ctx) {
+            val target = Statement.DML.Target(id(), emptyList())
+            val assignments = visitOrEmpty(ctx.setAssignment(), Statement.DML.Update.Assignment::class)
+            Statement.DML.Update(id(), target, assignments)
+        }
+
+        override fun visitSetAssignment(ctx: GeneratedParser.SetAssignmentContext) = translate(ctx) {
+            val target = visitPathSimple(ctx.pathSimple())
+            val value = visitExpr(ctx.expr())
+            Statement.DML.Update.Assignment(id(), target, value)
+        }
 
         /**
          *

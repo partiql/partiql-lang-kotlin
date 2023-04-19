@@ -37,9 +37,10 @@ public abstract class AstBaseVisitor<R, C> : AstVisitor<R, C> {
     public override fun visitStatementDML(node: Statement.DML, ctx: C): R = when (node) {
         is Statement.DML.Insert -> visitStatementDMLInsert(node, ctx)
         is Statement.DML.InsertValue -> visitStatementDMLInsertValue(node, ctx)
-        is Statement.DML.Set -> visitStatementDMLSet(node, ctx)
+        is Statement.DML.Update -> visitStatementDMLUpdate(node, ctx)
         is Statement.DML.Remove -> visitStatementDMLRemove(node, ctx)
         is Statement.DML.Delete -> visitStatementDMLDelete(node, ctx)
+        is Statement.DML.Batch -> visitStatementDMLBatch(node, ctx)
     }
 
     public override fun visitStatementDMLInsert(node: Statement.DML.Insert, ctx: C): R =
@@ -48,18 +49,40 @@ public abstract class AstBaseVisitor<R, C> : AstVisitor<R, C> {
     public override fun visitStatementDMLInsertValue(node: Statement.DML.InsertValue, ctx: C): R =
         defaultVisit(node, ctx)
 
-    public override fun visitStatementDMLSet(node: Statement.DML.Set, ctx: C): R = defaultVisit(
-        node,
-        ctx
-    )
-
-    public override fun visitStatementDMLSetAssignment(node: Statement.DML.Set.Assignment, ctx: C): R =
+    public override fun visitStatementDMLUpdate(node: Statement.DML.Update, ctx: C): R =
         defaultVisit(node, ctx)
+
+    public override fun visitStatementDMLUpdateAssignment(
+        node: Statement.DML.Update.Assignment,
+        ctx: C
+    ): R = defaultVisit(node, ctx)
 
     public override fun visitStatementDMLRemove(node: Statement.DML.Remove, ctx: C): R =
         defaultVisit(node, ctx)
 
     public override fun visitStatementDMLDelete(node: Statement.DML.Delete, ctx: C): R =
+        defaultVisit(node, ctx)
+
+    public override fun visitStatementDMLBatch(node: Statement.DML.Batch, ctx: C): R =
+        defaultVisit(node, ctx)
+
+    public override fun visitStatementDMLBatchOp(node: Statement.DML.Batch.Op, ctx: C): R = when
+    (node) {
+        is Statement.DML.Batch.Op.Set -> visitStatementDMLBatchOpSet(node, ctx)
+        is Statement.DML.Batch.Op.Remove -> visitStatementDMLBatchOpRemove(node, ctx)
+        is Statement.DML.Batch.Op.Delete -> visitStatementDMLBatchOpDelete(node, ctx)
+    }
+
+    public override fun visitStatementDMLBatchOpSet(node: Statement.DML.Batch.Op.Set, ctx: C): R =
+        defaultVisit(node, ctx)
+
+    public override fun visitStatementDMLBatchOpRemove(node: Statement.DML.Batch.Op.Remove, ctx: C): R =
+        defaultVisit(node, ctx)
+
+    public override fun visitStatementDMLBatchOpDelete(node: Statement.DML.Batch.Op.Delete, ctx: C): R =
+        defaultVisit(node, ctx)
+
+    public override fun visitStatementDMLTarget(node: Statement.DML.Target, ctx: C): R =
         defaultVisit(node, ctx)
 
     public override fun visitStatementDDL(node: Statement.DDL, ctx: C): R = when (node) {
@@ -328,6 +351,21 @@ public abstract class AstBaseVisitor<R, C> : AstVisitor<R, C> {
     public override fun visitOver(node: Over, ctx: C): R = defaultVisit(node, ctx)
 
     public override fun visitOnConflict(node: OnConflict, ctx: C): R = defaultVisit(node, ctx)
+
+    public override fun visitOnConflictTarget(node: OnConflict.Target, ctx: C): R = when (node) {
+        is OnConflict.Target.Condition -> visitOnConflictTargetCondition(node, ctx)
+        is OnConflict.Target.Symbols -> visitOnConflictTargetSymbols(node, ctx)
+        is OnConflict.Target.Constraint -> visitOnConflictTargetConstraint(node, ctx)
+    }
+
+    public override fun visitOnConflictTargetCondition(node: OnConflict.Target.Condition, ctx: C): R =
+        defaultVisit(node, ctx)
+
+    public override fun visitOnConflictTargetSymbols(node: OnConflict.Target.Symbols, ctx: C): R =
+        defaultVisit(node, ctx)
+
+    public override fun visitOnConflictTargetConstraint(node: OnConflict.Target.Constraint, ctx: C): R =
+        defaultVisit(node, ctx)
 
     public override fun visitOnConflictAction(node: OnConflict.Action, ctx: C): R = when (node) {
         is OnConflict.Action.DoReplace -> visitOnConflictActionDoReplace(node, ctx)
