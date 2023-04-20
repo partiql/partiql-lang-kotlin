@@ -9,6 +9,7 @@ import org.partiql.lang.util.ArgumentsProviderBase
 
 class PartiqlAstExtensionsTests : EvaluatorTestBase() {
     private val parser = PartiQLParser()
+    private val desugarer = VisitorTransformMode.DEFAULT.createVisitorTransform()
 
     data class StartingSourceLocationTestCase(val query: String, val expectedSourceLocationMeta: SourceLocationMeta)
 
@@ -41,5 +42,34 @@ class PartiqlAstExtensionsTests : EvaluatorTestBase() {
 
         val actualSourceLocationMeta = queryExpr.getStartingSourceLocationMeta()
         assertEquals(tc.expectedSourceLocationMeta, actualSourceLocationMeta)
+    }
+
+    data class VarsTestCase(val expr: String, val expected: Set<String>)
+
+    // Testing PartiqlAst.Expr.boundVariables()
+    @ParameterizedTest
+    @ArgumentsSource(BoundVariablesTestCases::class)
+    fun testBoundVariables(tc: VarsTestCase) {
+        val statement = parser.parseAstStatement(tc.expr)
+        val desugared = desugarer.transformStatement(statement)
+        val queryExpr = (desugared as PartiqlAst.Statement.Query).expr as PartiqlAst.Expr.Select
+        val actual = queryExpr.boundVariables()
+        assertEquals(tc.expected, actual)
+    }
+
+    class BoundVariablesTestCases : ArgumentsProviderBase() {
+        override fun getParameters(): List<VarsTestCase> = listOf(
+            VarsTestCase("SELECT x AS y FROM [1,2,3] AS x", setOf("x")),
+            VarsTestCase("SELECT x AS y FROM [1,2,3]", setOf("_1")), // setOf() without desugaring
+            VarsTestCase("SELECT x AS y FROM [1,2,3] AS x AT i", setOf("x", "i")),
+            VarsTestCase("SELECT x AS y FROM t AS x", setOf("x")),
+            VarsTestCase("SELECT x AS y FROM t", setOf("t")), // setOf() without desugaring
+
+            VarsTestCase("SELECT x  AS y FROM t1 AS x1, t2 x2 LET x1 + x2 AS z where a = b", setOf("x1", "x2", "z")),
+            VarsTestCase("SELECT x  AS y FROM t1 AS x1, t2 x2 LET x1 + x2 AS y where a = b", setOf("x1", "x2", "y")),
+
+            VarsTestCase("SELECT x FROM t AS x where x.a = (SELECT max(n) FROM x AS z)", setOf("x")),
+            VarsTestCase("SELECT DISTINCT t.a, COUNT(t.b) AS c FROM Tbl t GROUP BY t.a", setOf("t")),
+        )
     }
 }

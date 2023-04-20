@@ -65,3 +65,30 @@ internal fun PartiqlAst.Expr.getStartingSourceLocationMeta(): SourceLocationMeta
     }
     return visitorFold.walkExpr(this, SourceLocationMeta(Long.MAX_VALUE, Long.MAX_VALUE, Long.MAX_VALUE))
 }
+
+/** Collect variables bound in the FROM and LET clauses of a SELECT query. */
+internal fun PartiqlAst.Expr.Select.boundVariables(): Set<String> {
+    val selectExpr = this
+
+    // Get all the FROM source aliases and LET bindings for binding error checks
+    val fold = object : PartiqlAst.VisitorFold<Set<String>>() {
+        /** Store all the visited FROM source aliases in the accumulator */
+        override fun visitFromSourceScan(node: PartiqlAst.FromSource.Scan, accumulator: Set<String>): Set<String> {
+            val aliases = listOfNotNull(node.asAlias?.text, node.atAlias?.text, node.byAlias?.text)
+            return accumulator + aliases
+        }
+
+        override fun visitLetBinding(node: PartiqlAst.LetBinding, accumulator: Set<String>): Set<String> {
+            val aliases = listOfNotNull(node.name.text)
+            return accumulator + aliases
+        }
+
+        /** Prevents visitor from recursing into nested select statements */
+        override fun walkExprSelect(node: PartiqlAst.Expr.Select, accumulator: Set<String>): Set<String> {
+            return accumulator
+        }
+    }
+
+    return fold.walkFromSource(selectExpr.from, emptySet())
+        .union(selectExpr.fromLet?.let { fold.walkLet(selectExpr.fromLet, emptySet()) } ?: emptySet())
+}

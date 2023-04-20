@@ -1723,28 +1723,7 @@ internal class EvaluatingCompiler(
     }
 
     private fun compileSelect(selectExpr: PartiqlAst.Expr.Select, metas: MetaContainer): ThunkEnv {
-
-        // Get all the FROM source aliases and LET bindings for binding error checks
-        val fold = object : PartiqlAst.VisitorFold<Set<String>>() {
-            /** Store all the visited FROM source aliases in the accumulator */
-            override fun visitFromSourceScan(node: PartiqlAst.FromSource.Scan, accumulator: Set<String>): Set<String> {
-                val aliases = listOfNotNull(node.asAlias?.text, node.atAlias?.text, node.byAlias?.text)
-                return accumulator + aliases
-            }
-
-            override fun visitLetBinding(node: PartiqlAst.LetBinding, accumulator: Set<String>): Set<String> {
-                val aliases = listOfNotNull(node.name.text)
-                return accumulator + aliases
-            }
-
-            /** Prevents visitor from recursing into nested select statements */
-            override fun walkExprSelect(node: PartiqlAst.Expr.Select, accumulator: Set<String>): Set<String> {
-                return accumulator
-            }
-        }
-
-        val allFromSourceAliases = fold.walkFromSource(selectExpr.from, emptySet())
-            .union(selectExpr.fromLet?.let { fold.walkLet(selectExpr.fromLet, emptySet()) } ?: emptySet())
+        val boundVariables = selectExpr.boundVariables()
 
         return nestCompilationContext(ExpressionContext.NORMAL, emptySet()) {
             val fromSourceThunks = compileFromSources(selectExpr.from)
@@ -1976,7 +1955,7 @@ internal class EvaluatingCompiler(
 
             when (val project = selectExpr.project) {
                 is PartiqlAst.Projection.ProjectValue -> {
-                    nestCompilationContext(ExpressionContext.NORMAL, allFromSourceAliases) {
+                    nestCompilationContext(ExpressionContext.NORMAL, boundVariables) {
                         val valueThunk = compileAstExpr(project.value)
                         getQueryThunk(
                             thunkFactory.thunkEnvValueList(project.metas) { env, _ ->
@@ -1990,7 +1969,7 @@ internal class EvaluatingCompiler(
                 is PartiqlAst.Projection.ProjectPivot -> {
                     val asExpr = project.value
                     val atExpr = project.key
-                    nestCompilationContext(ExpressionContext.NORMAL, allFromSourceAliases) {
+                    nestCompilationContext(ExpressionContext.NORMAL, boundVariables) {
                         val asThunk = compileAstExpr(asExpr)
                         val atThunk = compileAstExpr(atExpr)
                         thunkFactory.thunkEnv(metas) { env ->
@@ -2005,7 +1984,7 @@ internal class EvaluatingCompiler(
                 }
                 is PartiqlAst.Projection.ProjectList -> {
                     val items = project.projectItems
-                    nestCompilationContext(ExpressionContext.SELECT_LIST, allFromSourceAliases) {
+                    nestCompilationContext(ExpressionContext.SELECT_LIST, boundVariables) {
                         val projectionThunk: ThunkEnvValue<List<ExprValue>> =
                             when {
                                 items.filterIsInstance<PartiqlAst.Projection.ProjectStar>().any() -> {
