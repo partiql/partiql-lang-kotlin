@@ -38,16 +38,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.9.4] - 2023-04-20
 
 ### Added
-- Adds ability to pipe queries to the CLI
-- Adds ability to run PartiQL files as executables by adding support for shebangs
 
 ### Changed
 
 ### Deprecated
 
 ### Fixed
-- Fixes list/bag ExprValue creation in plan evaluator
-- Fixes gradle build issues.
 
 ### Removed
 - Revert changes in 0.9.3 (the previous version) as they include breaking changes 
