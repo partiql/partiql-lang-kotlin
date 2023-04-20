@@ -77,8 +77,6 @@ import kotlin.reflect.cast
 import org.partiql.parser.antlr.PartiQLParser as GeneratedParser
 import org.partiql.parser.antlr.PartiQLTokens as GeneratedLexer
 
-private typealias SourceLocations = MutableMap<Int, PartiQLParser.SourceLocation>
-
 /**
  * ANTLR Based Implementation of PartiQLParser
  * [GeneratedParser] to create an ANTLR [ParseTree] from the input query. Then, it uses the configured [Visitor]
@@ -243,7 +241,7 @@ internal class PartiQLParserDefault : PartiQLParser {
      * Translate an ANTLR ParseTree to a PartiQL AST.
      */
     private class Visitor(
-        private val locations: SourceLocations,
+        private val locations: PartiQLParser.SourceLocations.Mutable,
         private val parameters: Map<Int, Int> = mapOf(),
     ) : PartiQLBaseVisitor<AstNode>() {
 
@@ -251,7 +249,7 @@ internal class PartiQLParserDefault : PartiQLParser {
         private val factory = AstFactory.DEFAULT
 
         private val id: () -> Int = run {
-            var i = 0
+            var i = 1
             { i++ }
         }
 
@@ -261,13 +259,13 @@ internal class PartiQLParserDefault : PartiQLParser {
              * Expose an (internal) friendly entry point into the traversal; mostly for keeping mutable state contained.
              */
             fun translate(source: String, tokens: CountingTokenStream, tree: RootContext): PartiQLParser.Result {
-                val locations = mutableMapOf<Int, PartiQLParser.SourceLocation>()
+                val locations = PartiQLParser.SourceLocations.Mutable()
                 val visitor = Visitor(locations, tokens.parameterIndexes)
                 val root = visitor.visit(tree)
                 return PartiQLParser.Result(
                     source = source,
                     root = root,
-                    locations = PartiQLParser.SourceLocations(source, locations),
+                    locations = locations.toMap(),
                 )
             }
         }
@@ -275,7 +273,7 @@ internal class PartiQLParserDefault : PartiQLParser {
         /**
          * Each visit attaches source locations from the given parse tree node; inline because gotta go fast.
          */
-        inline fun <T : AstNode> translate(ctx: ParserRuleContext, translate: (factory: AstFactory) -> T): T {
+        private inline fun <T : AstNode> translate(ctx: ParserRuleContext, translate: (factory: AstFactory) -> T): T {
             val node = translate(factory)
             if (ctx.start != null) {
                 locations[node.id] = PartiQLParser.SourceLocation(
@@ -468,7 +466,7 @@ internal class PartiQLParserDefault : PartiQLParser {
             Statement.DML.Batch(id(), from, ops, where, returning)
         }
 
-        override fun visitDmlDelete(ctx: GeneratedParser.DmlDeleteContext) = super.visit(ctx) as Statement.DML.Delete
+        override fun visitDmlDelete(ctx: GeneratedParser.DmlDeleteContext) = super.visitDeleteCommand(ctx.deleteCommand()) as Statement.DML.Delete
 
         override fun visitDmlInsertReturning(ctx: GeneratedParser.DmlInsertReturningContext) =
             super.visit(ctx.insertCommandReturning()) as Statement.DML.InsertValue
@@ -491,7 +489,7 @@ internal class PartiQLParserDefault : PartiQLParser {
                 is From.Join -> throw error(ctx.fromClauseSimple(), "Expected table identifier")
             }
             val where = visitOrNull(ctx.whereClause(), Expr::class)
-            val returning = visitOrNull(ctx.returningClause(), Returning::class)
+            val returning = ctx.returningClause()?.let { visitReturningClause(it) }
             Statement.DML.Delete(id(), target, where, returning)
         }
 
@@ -618,10 +616,7 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitPathSimple(ctx: GeneratedParser.PathSimpleContext) = translate(ctx) {
             val root = visitSymbolPrimitive(ctx.symbolPrimitive()) as Expr
-            var steps = emptyList<Expr.Path.Step>()
-            if (ctx.pathSimpleSteps().isNotEmpty()) {
-                steps = visitOrEmpty(ctx.pathSimpleSteps(), Expr.Path.Step::class)
-            }
+            val steps = visitOrEmpty(ctx.pathSimpleSteps(), Expr.Path.Step::class)
             Expr.Path(id(), root, steps)
         }
 
@@ -773,14 +768,22 @@ internal class PartiQLParserDefault : PartiQLParser {
         }
 
         override fun visitOrderSortSpec(ctx: GeneratedParser.OrderSortSpecContext) = translate(ctx) {
+            val id = id()
             val expr = visit(ctx.expr(), Expr::class)
             val dir = when {
-                ctx.dir == null || ctx.dir.type == GeneratedParser.ASC -> OrderBy.Sort.Dir.ASC
-                ctx.dir.type != GeneratedParser.DESC -> OrderBy.Sort.Dir.DESC
-                else -> throw error(ctx.dir, "Invalid query syntax")
+                ctx.dir == null -> {
+                    // inserting default ASC value
+                    locations.markSynthetic(id, 2)
+                    OrderBy.Sort.Dir.ASC
+                }
+                ctx.dir.type == GeneratedParser.ASC -> OrderBy.Sort.Dir.ASC
+                ctx.dir.type == GeneratedParser.DESC -> OrderBy.Sort.Dir.DESC
+                else -> throw error(ctx.dir, "Invalid ORDER BY direction; expected ASC or DESC")
             }
             val nulls = when {
                 ctx.nulls == null -> {
+                    // inserting default null sort
+                    locations.markSynthetic(id, 3)
                     if (dir == OrderBy.Sort.Dir.DESC) {
                         OrderBy.Sort.Nulls.FIRST
                     } else {
@@ -789,9 +792,9 @@ internal class PartiQLParserDefault : PartiQLParser {
                 }
                 ctx.nulls.type == GeneratedParser.FIRST -> OrderBy.Sort.Nulls.FIRST
                 ctx.nulls.type == GeneratedParser.LAST -> OrderBy.Sort.Nulls.LAST
-                else -> throw error(ctx.nulls, "Invalid query syntax")
+                else -> throw error(ctx.nulls, "Invalid ORDER null ordering; expected FIRST or LAST")
             }
-            OrderBy.Sort(id(), expr, dir, nulls)
+            OrderBy.Sort(id, expr, dir, nulls)
         }
 
         /**
@@ -1409,13 +1412,23 @@ internal class PartiQLParserDefault : PartiQLParser {
         }
 
         override fun visitTrimFunction(ctx: GeneratedParser.TrimFunctionContext) = translate(ctx) {
-            val mod = ctx.mod?.text?.toLowerCase() ?: "both"
-            if (mod !in setOf("both", "leading", "trailing")) throw error(ctx.mod, "Invalid trim function modifier")
+            val id = id()
+            val mod = when (ctx.mod) {
+                null -> {
+                    locations.markSynthetic(id, 1)
+                   "both"
+                }
+                else -> {
+                    val m = ctx.mod.text.toLowerCase()
+                    if (m !in setOf("both", "leading", "trailing")) throw error(ctx.mod, "Invalid trim function modifier")
+                    m
+                }
+            }
             val (function, args) = when (ctx.sub) {
                 null -> "trim_whitespace_$mod" to listOf(visitExpr(ctx.target))
                 else -> "trim_chars_$mod" to listOf(visitExpr(ctx.sub), visitExpr(ctx.target))
             }
-            Expr.Call(id(), function, args)
+            Expr.Call(id, function, args)
         }
 
         override fun visitAggregateBase(ctx: GeneratedParser.AggregateBaseContext) = translate(ctx) {

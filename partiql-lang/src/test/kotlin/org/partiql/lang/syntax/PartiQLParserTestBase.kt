@@ -25,10 +25,12 @@ import org.partiql.lang.ast.AstToPigTranslator
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
+import org.partiql.lang.errors.PropertyValueMap
 import org.partiql.lang.util.SexpAstPrettyPrinter
 import org.partiql.lang.util.asIonSexp
 import org.partiql.lang.util.checkErrorAndErrorContext
 import org.partiql.lang.util.softAssert
+import org.partiql.parser.PartiQLParserException
 import org.partiql.pig.runtime.toIonElement
 import org.partiql.parser.PartiQLParserBuilder as DefaultParserBuilder
 
@@ -51,8 +53,14 @@ abstract class PartiQLParserTestBase : TestBase() {
         DEFAULT(object : Parser {
             val p = DefaultParserBuilder.standard().build()
             override fun parseAstStatement(source: String): PartiqlAst.Statement {
-                val ast = p.parse(source)
-                return AstToPigTranslator.translate(ast.root) as PartiqlAst.Statement
+                try {
+                    val ast = p.parse(source)
+                    return AstToPigTranslator.translate(ast.root, ast.locations) as PartiqlAst.Statement
+                } catch (ex: PartiQLParserException) {
+                    val context = PropertyValueMap()
+                    context[Property.TOKEN_DESCRIPTION] = ex.context["token_description"].toString()
+                    throw ParserException(ex.message, ErrorCode.PARSE_INVALID_QUERY, context, ex)
+                }
             }
         }),
     }
