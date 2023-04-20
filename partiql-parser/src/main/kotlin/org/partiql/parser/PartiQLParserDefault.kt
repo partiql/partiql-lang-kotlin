@@ -373,19 +373,21 @@ internal class PartiQLParserDefault : PartiQLParser {
         }
 
         override fun visitDropIndex(ctx: GeneratedParser.DropIndexContext) = translate(ctx) {
-            val table = visitSymbolPrimitive(ctx.target)
-            val keys = visitSymbolPrimitive(ctx.on)
+            val table = visitSymbolPrimitive(ctx.on)
+            val keys = visitSymbolPrimitive(ctx.target)
             Statement.DDL.DropIndex(id(), table, keys)
         }
 
         override fun visitCreateTable(ctx: GeneratedParser.CreateTableContext) = translate(ctx) {
-            val identifier = convertRawSymbol(ctx.tableName().symbolPrimitive())
+            val (name, case) = symbolCased(ctx.tableName().symbolPrimitive())
+            val identifier = Expr.Identifier(id(), name, case, Expr.Identifier.Scope.UNQUALIFIED)
             val definition = ctx.tableDef()?.let { visitTableDef(it) }
             Statement.DDL.CreateTable(id(), identifier, definition)
         }
 
         override fun visitCreateIndex(ctx: GeneratedParser.CreateIndexContext) = translate(ctx) {
-            val identifier = convertRawSymbol(ctx.symbolPrimitive())
+            val (name, case) = symbolCased(ctx.symbolPrimitive())
+            val identifier = Expr.Identifier(id(), name, case, Expr.Identifier.Scope.UNQUALIFIED)
             val fields = ctx.pathSimple().map { path -> visitPathSimple(path) }
             Statement.DDL.CreateIndex(id(), identifier, fields)
         }
@@ -399,8 +401,8 @@ internal class PartiQLParserDefault : PartiQLParser {
         }
 
         override fun visitColumnDeclaration(ctx: ColumnDeclarationContext) = translate(ctx) {
-            val name = convertRawSymbol(ctx.columnName().symbolPrimitive())
-            val type = Type(id(), "any", emptyList())
+            val name = symbol(ctx.columnName().symbolPrimitive())
+            val type = visit(ctx.type()) as Type
             val constraints = ctx.columnConstraint().map {
                 visitColumnConstraint(it)
             }
@@ -408,7 +410,7 @@ internal class PartiQLParserDefault : PartiQLParser {
         }
 
         override fun visitColumnConstraint(ctx: GeneratedParser.ColumnConstraintContext) = translate(ctx) {
-            val identifier = ctx.columnConstraintName()?.let { convertRawSymbol(it.symbolPrimitive()) }
+            val identifier = ctx.columnConstraintName()?.let { symbol(it.symbolPrimitive()) }
             val body = visit(ctx.columnConstraintDef()) as TableDefinition.Column.Constraint.Body
             TableDefinition.Column.Constraint(id(), identifier, body)
         }
@@ -430,7 +432,7 @@ internal class PartiQLParserDefault : PartiQLParser {
         override fun visitQueryExec(ctx: GeneratedParser.QueryExecContext) = visitExecCommand(ctx.execCommand())
 
         override fun visitExecCommand(ctx: GeneratedParser.ExecCommandContext) = translate(ctx) {
-            val procedure = convertStringExprOrErr(ctx.name)
+            val procedure = stringOrErr(ctx.name)
             val args = visitOrEmpty(ctx.args, Expr::class)
             it.statementExec(id(), procedure, args)
         }
@@ -458,6 +460,14 @@ internal class PartiQLParserDefault : PartiQLParser {
                     is Statement.DML.Update -> Statement.DML.Batch.Op.Set(op.id, op.assignments)
                     is Statement.DML.Remove -> Statement.DML.Batch.Op.Remove(op.id, op.target)
                     is Statement.DML.Delete -> Statement.DML.Batch.Op.Delete(op.id)
+                    is Statement.DML.Insert -> Statement.DML.Batch.Op.Insert(op.id, op.target, op.value, op.onConflict)
+                    is Statement.DML.InsertValue -> Statement.DML.Batch.Op.InsertValue(
+                        op.id,
+                        op.target,
+                        op.value,
+                        op.index,
+                        op.onConflict
+                    )
                     else -> throw error(ctx, "Invalid DML operator in batch update")
                 }
             }
@@ -466,7 +476,7 @@ internal class PartiQLParserDefault : PartiQLParser {
             Statement.DML.Batch(id(), from, ops, where, returning)
         }
 
-        override fun visitDmlDelete(ctx: GeneratedParser.DmlDeleteContext) = super.visitDeleteCommand(ctx.deleteCommand()) as Statement.DML.Delete
+        override fun visitDmlDelete(ctx: GeneratedParser.DmlDeleteContext) = visitDeleteCommand(ctx.deleteCommand())
 
         override fun visitDmlInsertReturning(ctx: GeneratedParser.DmlInsertReturningContext) =
             super.visit(ctx.insertCommandReturning()) as Statement.DML.InsertValue
@@ -484,13 +494,9 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitDeleteCommand(ctx: GeneratedParser.DeleteCommandContext) = translate(ctx) {
             val from = visit(ctx.fromClauseSimple(), From::class)
-            val target = when (from) {
-                is From.Collection -> Statement.DML.Target(id(), from.expr)
-                is From.Join -> throw error(ctx.fromClauseSimple(), "Expected table identifier")
-            }
             val where = visitOrNull(ctx.whereClause(), Expr::class)
             val returning = ctx.returningClause()?.let { visitReturningClause(it) }
-            Statement.DML.Delete(id(), target, where, returning)
+            Statement.DML.Delete(id(), from, where, returning)
         }
 
         override fun visitInsertLegacy(ctx: GeneratedParser.InsertLegacyContext) = translate(ctx) {
@@ -541,7 +547,7 @@ internal class PartiQLParserDefault : PartiQLParser {
             val value = visitExpr(ctx.value)
             val index = visitOrNull(ctx.pos, Expr::class)
             val onConflict = ctx.onConflictClause()?.let { visitOnConflictClause(it) }
-            val returning = visitReturningClause(ctx.returningClause())
+            val returning = ctx.returningClause()?.let { visitReturningClause(it) }
             Statement.DML.InsertValue(id(), target, value, index, onConflict, returning)
         }
 
@@ -571,7 +577,7 @@ internal class PartiQLParserDefault : PartiQLParser {
         private fun visitOnConflictClause(ctx: GeneratedParser.OnConflictClauseContext) = ctx.accept(this) as OnConflict
 
         override fun visitOnConflict(ctx: GeneratedParser.OnConflictContext) = translate(ctx) {
-            val target = visitConflictTarget(ctx.conflictTarget())
+            val target = ctx.conflictTarget()?.let { visitConflictTarget(it) }
             val action = visitConflictAction(ctx.conflictAction())
             OnConflict(id(), target, action)
         }
@@ -584,9 +590,9 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitConflictTarget(ctx: GeneratedParser.ConflictTargetContext) = translate(ctx) {
             if (ctx.constraintName() != null) {
-                OnConflict.Target.Constraint(id(), convertRawSymbol(ctx.constraintName().symbolPrimitive()))
+                OnConflict.Target.Constraint(id(), symbol(ctx.constraintName().symbolPrimitive()))
             } else {
-                val symbols = ctx.symbolPrimitive().map { convertRawSymbol(it) }
+                val symbols = ctx.symbolPrimitive().map { symbol(it) }
                 OnConflict.Target.Symbols(id(), symbols)
             }
         }
@@ -626,12 +632,12 @@ internal class PartiQLParserDefault : PartiQLParser {
         }
 
         override fun visitPathSimpleSymbol(ctx: GeneratedParser.PathSimpleSymbolContext) = translate(ctx) {
-            val (symbol, case) = convertRawSymbolCased(ctx.symbolPrimitive())
+            val (symbol, case) = symbolCased(ctx.symbolPrimitive())
             Expr.Path.Step.Index(id(), Expr.Lit(id(), ionString(symbol)), case)
         }
 
         override fun visitPathSimpleDotSymbol(ctx: GeneratedParser.PathSimpleDotSymbolContext) = translate(ctx) {
-            val (symbol, case) = convertRawSymbolCased(ctx.symbolPrimitive())
+            val (symbol, case) = symbolCased(ctx.symbolPrimitive())
             Expr.Path.Step.Index(id(), Expr.Lit(id(), ionString(symbol)), case)
         }
 
@@ -641,6 +647,7 @@ internal class PartiQLParserDefault : PartiQLParser {
          */
         override fun visitSetCommand(ctx: GeneratedParser.SetCommandContext) = translate(ctx) {
             val target = Statement.DML.Target(id(), Expr.Missing(id()))
+            locations.markSynthetic(target.id)
             val assignments = visitOrEmpty(ctx.setAssignment(), Statement.DML.Update.Assignment::class)
             Statement.DML.Update(id(), target, assignments)
         }
@@ -684,31 +691,34 @@ internal class PartiQLParserDefault : PartiQLParser {
          */
 
         override fun visitSelectAll(ctx: GeneratedParser.SelectAllContext) = translate(ctx) {
-            val quantifier = convertSetQuantifier(ctx.setQuantifierStrategy())
-            Select.Star(id(), quantifier)
+            val id = id()
+            val quantifier = convertSetQuantifier(id, ctx.setQuantifierStrategy())
+            Select.Star(id, quantifier)
         }
 
         override fun visitSelectItems(ctx: GeneratedParser.SelectItemsContext) = translate(ctx) {
-            val quantifier = convertSetQuantifier(ctx.setQuantifierStrategy())
+            val id = id()
+            val quantifier = convertSetQuantifier(id, ctx.setQuantifierStrategy())
             val items = visitOrEmpty(ctx.projectionItems().projectionItem(), Select.Project.Item::class)
-            Select.Project(id(), quantifier, items)
+            Select.Project(id, quantifier, items)
         }
 
         override fun visitSelectPivot(ctx: GeneratedParser.SelectPivotContext) = translate(ctx) {
-            val value = visitExpr(ctx.pivot)
-            val key = visitExpr(ctx.at)
+            val value = visitExpr(ctx.at)
+            val key = visitExpr(ctx.pivot)
             Select.Pivot(id(), value, key)
         }
 
         override fun visitSelectValue(ctx: GeneratedParser.SelectValueContext) = translate(ctx) {
-            val quantifier = convertSetQuantifier(ctx.setQuantifierStrategy())
+            val id = id()
+            val quantifier = convertSetQuantifier(id, ctx.setQuantifierStrategy())
             val constructor = visitExpr(ctx.expr())
-            Select.Value(id(), quantifier, constructor)
+            Select.Value(id, quantifier, constructor)
         }
 
         override fun visitProjectionItem(ctx: GeneratedParser.ProjectionItemContext) = translate(ctx) {
             val expr = visitExpr(ctx.expr())
-            val alias = ctx.symbolPrimitive()?.let { convertRawSymbol(it) }
+            val alias = ctx.symbolPrimitive()?.let { symbol(it) }
             if (expr is Expr.Path) {
                 convertPathToProjectionItem(ctx, expr, alias)
             } else {
@@ -752,7 +762,7 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitLetBinding(ctx: GeneratedParser.LetBindingContext) = translate(ctx) {
             val expr = visit(ctx.expr(), Expr::class)
-            val alias = convertRawSymbol(ctx.symbolPrimitive())
+            val alias = symbol(ctx.symbolPrimitive())
             Let.Binding(id(), expr, alias)
         }
 
@@ -806,7 +816,7 @@ internal class PartiQLParserDefault : PartiQLParser {
         override fun visitGroupClause(ctx: GeneratedParser.GroupClauseContext) = translate(ctx) {
             val strategy = if (ctx.PARTIAL() != null) GroupBy.Strategy.PARTIAL else GroupBy.Strategy.FULL
             val keys = visitOrEmpty(ctx.groupKey(), GroupBy.Key::class)
-            val alias = ctx.groupAlias()?.let { convertRawSymbol(ctx.groupAlias().symbolPrimitive()) }
+            val alias = ctx.groupAlias()?.let { symbol(ctx.groupAlias().symbolPrimitive()) }
             GroupBy(id(), strategy, keys, alias)
         }
 
@@ -817,7 +827,7 @@ internal class PartiQLParserDefault : PartiQLParser {
          */
         override fun visitGroupKey(ctx: GeneratedParser.GroupKeyContext) = translate(ctx) {
             val expr = visit(ctx.key, Expr::class)
-            val alias = ctx.symbolPrimitive()?.let { convertRawSymbol(it) }
+            val alias = ctx.symbolPrimitive()?.let { symbol(it) }
             GroupBy.Key(id(), expr, alias)
         }
 
@@ -1023,34 +1033,34 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitTableBaseRefClauses(ctx: GeneratedParser.TableBaseRefClausesContext) = translate(ctx) {
             val expr = visit(ctx.source, Expr::class)
-            val asAlias = ctx.asIdent()?.let { convertRawSymbol(it.symbolPrimitive()) }
-            val atAlias = ctx.atIdent()?.let { convertRawSymbol(it.symbolPrimitive()) }
-            val byAlias = ctx.byIdent()?.let { convertRawSymbol(it.symbolPrimitive()) }
+            val asAlias = ctx.asIdent()?.let { symbol(it.symbolPrimitive()) }
+            val atAlias = ctx.atIdent()?.let { symbol(it.symbolPrimitive()) }
+            val byAlias = ctx.byIdent()?.let { symbol(it.symbolPrimitive()) }
             From.Collection(id(), expr, false, asAlias, atAlias, byAlias)
         }
 
         override fun visitTableBaseRefMatch(ctx: GeneratedParser.TableBaseRefMatchContext) = translate(ctx) {
             val expr = visit(ctx.source, Expr::class)
-            val asAlias = ctx.asIdent()?.let { convertRawSymbol(it.symbolPrimitive()) }
-            val atAlias = ctx.atIdent()?.let { convertRawSymbol(it.symbolPrimitive()) }
-            val byAlias = ctx.byIdent()?.let { convertRawSymbol(it.symbolPrimitive()) }
+            val asAlias = ctx.asIdent()?.let { symbol(it.symbolPrimitive()) }
+            val atAlias = ctx.atIdent()?.let { symbol(it.symbolPrimitive()) }
+            val byAlias = ctx.byIdent()?.let { symbol(it.symbolPrimitive()) }
             From.Collection(id(), expr, false, asAlias, atAlias, byAlias)
         }
 
         override fun visitFromClauseSimpleExplicit(ctx: GeneratedParser.FromClauseSimpleExplicitContext) =
             translate(ctx) {
                 val expr = visitPathSimple(ctx.pathSimple()) as Expr
-                val asAlias = ctx.asIdent()?.let { convertRawSymbol(it.symbolPrimitive()) }
-                val atAlias = ctx.atIdent()?.let { convertRawSymbol(it.symbolPrimitive()) }
-                val byAlias = ctx.byIdent()?.let { convertRawSymbol(it.symbolPrimitive()) }
+                val asAlias = ctx.asIdent()?.let { symbol(it.symbolPrimitive()) }
+                val atAlias = ctx.atIdent()?.let { symbol(it.symbolPrimitive()) }
+                val byAlias = ctx.byIdent()?.let { symbol(it.symbolPrimitive()) }
                 From.Collection(id(), expr, false, asAlias, atAlias, byAlias)
             }
 
         override fun visitTableUnpivot(ctx: GeneratedParser.TableUnpivotContext) = translate(ctx) {
             val expr = visit(ctx.expr(), Expr::class)
-            val asAlias = ctx.asIdent()?.let { convertRawSymbol(it.symbolPrimitive()) }
-            val atAlias = ctx.atIdent()?.let { convertRawSymbol(it.symbolPrimitive()) }
-            val byAlias = ctx.byIdent()?.let { convertRawSymbol(it.symbolPrimitive()) }
+            val asAlias = ctx.asIdent()?.let { symbol(it.symbolPrimitive()) }
+            val atAlias = ctx.atIdent()?.let { symbol(it.symbolPrimitive()) }
+            val byAlias = ctx.byIdent()?.let { symbol(it.symbolPrimitive()) }
             From.Collection(id(), expr, true, asAlias, atAlias, byAlias)
         }
 
@@ -1083,14 +1093,14 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitTableBaseRefSymbol(ctx: GeneratedParser.TableBaseRefSymbolContext) = translate(ctx) {
             val expr = visit(ctx.source, Expr::class)
-            val asAlias = convertRawSymbol(ctx.symbolPrimitive())
+            val asAlias = symbol(ctx.symbolPrimitive())
             From.Collection(id(), expr, false, asAlias, null, null)
         }
 
         override fun visitFromClauseSimpleImplicit(ctx: GeneratedParser.FromClauseSimpleImplicitContext) =
             translate(ctx) {
                 val expr = visitPathSimple(ctx.pathSimple()) as Expr
-                val asAlias = convertRawSymbol(ctx.symbolPrimitive())
+                val asAlias = symbol(ctx.symbolPrimitive())
                 From.Collection(id(), expr, false, asAlias, null, null)
             }
 
@@ -1183,7 +1193,7 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitPredicateIn(ctx: GeneratedParser.PredicateInContext) = translate(ctx) {
             val lhs = visit(ctx.lhs, Expr::class)
-            val rhs = visitExpr(ctx.expr()).let {
+            val rhs = visit(ctx.rhs, Expr::class).let {
                 // Wrap rhs in an array unless it's a query or already a collection
                 if (it is Expr.SFW || it is Expr.Collection) {
                     it
@@ -1269,7 +1279,7 @@ internal class PartiQLParserDefault : PartiQLParser {
         }
 
         override fun visitPathStepDotExpr(ctx: GeneratedParser.PathStepDotExprContext) = translate(ctx) {
-            val (symbol, case) = convertRawSymbolCased(ctx.symbolPrimitive())
+            val (symbol, case) = symbolCased(ctx.symbolPrimitive())
             Expr.Path.Step.Index(id(), Expr.Lit(id(), ionString(symbol)), case)
         }
 
@@ -1283,7 +1293,7 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitValues(ctx: GeneratedParser.ValuesContext) = translate(ctx) {
             val rows = visitOrEmpty(ctx.valueRow(), Expr.Collection::class)
-            Expr.Collection(id(), Expr.Collection.Type.LIST, rows)
+            Expr.Collection(id(), Expr.Collection.Type.BAG, rows)
         }
 
         override fun visitValueRow(ctx: GeneratedParser.ValueRowContext) = translate(ctx) {
@@ -1416,11 +1426,14 @@ internal class PartiQLParserDefault : PartiQLParser {
             val mod = when (ctx.mod) {
                 null -> {
                     locations.markSynthetic(id, 1)
-                   "both"
+                    "both"
                 }
                 else -> {
                     val m = ctx.mod.text.toLowerCase()
-                    if (m !in setOf("both", "leading", "trailing")) throw error(ctx.mod, "Invalid trim function modifier")
+                    if (m !in setOf("both", "leading", "trailing")) throw error(
+                        ctx.mod,
+                        "Invalid trim function modifier"
+                    )
                     m
                 }
             }
@@ -1432,10 +1445,11 @@ internal class PartiQLParserDefault : PartiQLParser {
         }
 
         override fun visitAggregateBase(ctx: GeneratedParser.AggregateBaseContext) = translate(ctx) {
+            val id = id()
             val function = ctx.func.text.toLowerCase()
             val args = listOf(visitExpr(ctx.expr()))
-            val quantifier = convertSetQuantifier(ctx.setQuantifierStrategy())
-            Expr.Agg(id(), function, args, quantifier)
+            val quantifier = convertSetQuantifier(id, ctx.setQuantifierStrategy())
+            Expr.Agg(id, function, args, quantifier)
         }
 
         /**
@@ -1596,7 +1610,7 @@ internal class PartiQLParserDefault : PartiQLParser {
                 GeneratedParser.BAG -> "bag"
                 GeneratedParser.SEXP -> "sexp"
                 GeneratedParser.ANY -> "any"
-                else -> throw error(ctx, "Unsupported type.")
+                else -> throw error(ctx, "Unknown atomic type.")
             }
             Type(id(), type, emptyList())
         }
@@ -1647,6 +1661,11 @@ internal class PartiQLParserDefault : PartiQLParser {
             Type(id(), "time", listOfNotNull(precision))
         }
 
+        override fun visitTypeCustom(ctx: GeneratedParser.TypeCustomContext) = translate(ctx) {
+            val symbol = symbol(ctx.symbolPrimitive())
+            Type(id(), symbol, emptyList())
+        }
+
         private fun <T : AstNode> visitOrEmpty(ctx: List<ParserRuleContext>?, clazz: KClass<T>): List<T> = when {
             ctx.isNullOrEmpty() -> emptyList()
             else -> ctx.map { clazz.cast(visit(it)) }
@@ -1667,7 +1686,7 @@ internal class PartiQLParserDefault : PartiQLParser {
         /**
          * Visiting a symbol to get a string, skip the wrapping, unwrapping, and location tracking.
          */
-        private fun convertRawSymbol(ctx: GeneratedParser.SymbolPrimitiveContext) = when (ctx.ident.type) {
+        private fun symbol(ctx: GeneratedParser.SymbolPrimitiveContext) = when (ctx.ident.type) {
             GeneratedParser.IDENTIFIER_QUOTED -> ctx.IDENTIFIER_QUOTED().getStringValue()
             GeneratedParser.IDENTIFIER -> ctx.IDENTIFIER().getStringValue()
             else -> throw PartiQLParserException("Invalid symbol reference.")
@@ -1676,7 +1695,7 @@ internal class PartiQLParserDefault : PartiQLParser {
         /**
          * Visiting a symbol to get a string with case
          */
-        private fun convertRawSymbolCased(ctx: GeneratedParser.SymbolPrimitiveContext): Pair<String, Case> =
+        private fun symbolCased(ctx: GeneratedParser.SymbolPrimitiveContext): Pair<String, Case> =
             when (ctx.ident.type) {
                 GeneratedParser.IDENTIFIER_QUOTED -> ctx.IDENTIFIER_QUOTED().getStringValue() to Case.SENSITIVE
                 GeneratedParser.IDENTIFIER -> ctx.IDENTIFIER().getStringValue() to Case.INSENSITIVE
@@ -1686,9 +1705,9 @@ internal class PartiQLParserDefault : PartiQLParser {
         /**
          * Visit a string expression and pull the value out
          */
-        private fun convertStringExprOrErr(ctx: GeneratedParser.ExprContext): String =
+        private fun stringOrErr(ctx: GeneratedParser.ExprContext): String =
             when (val expr = visitExpr(ctx)) {
-                is Expr.Identifier -> expr.name.toLowerCase()
+                is Expr.Identifier -> expr.name
                 is Expr.Lit -> expr.value.asAnyElement().stringValueOrNull ?: throw error(
                     ctx,
                     "Unable to pass the string value"
@@ -1699,12 +1718,18 @@ internal class PartiQLParserDefault : PartiQLParser {
         /**
          * Convert to Set Quantifier enum
          */
-        private fun convertSetQuantifier(ctx: GeneratedParser.SetQuantifierStrategyContext?): SetQuantifier {
-            return if (ctx?.DISTINCT() != null) {
-                SetQuantifier.DISTINCT
-            } else {
+        private fun convertSetQuantifier(parent: Int, ctx: GeneratedParser.SetQuantifierStrategyContext?) = when {
+            ctx == null -> {
+                // Always offset 1
+                // SELECT [ALL|DISTINCT]
+                // UNION|INTERSECT|EXCEPT [ALL|DISTINCT]
+                // AGGREGATE([ALL|DISTINCT] ...)
+                locations.markSynthetic(parent, 1)
                 SetQuantifier.ALL
             }
+            ctx.ALL() != null -> SetQuantifier.ALL
+            ctx.DISTINCT() != null -> SetQuantifier.DISTINCT
+            else -> throw error(ctx, "Expected set quantifier ALL or DISTINCT")
         }
 
         /**

@@ -119,7 +119,7 @@ public class AstBuilder(
 
     public fun statementDMLDelete(
         id: Int? = null,
-        from: Statement.DML.Target? = null,
+        from: From? = null,
         `where`: Expr? = null,
         returning: Returning? = null,
         block: StatementDmlDeleteBuilder.() -> Unit = {}
@@ -138,6 +138,31 @@ public class AstBuilder(
         block: StatementDmlBatchBuilder.() -> Unit = {}
     ): Statement.DML.Batch {
         val builder = StatementDmlBatchBuilder()
+        builder.block()
+        return builder.build(factory)
+    }
+
+    public fun statementDMLBatchOpInsert(
+        id: Int? = null,
+        target: Statement.DML.Target? = null,
+        `value`: Expr? = null,
+        onConflict: OnConflict? = null,
+        block: StatementDmlBatchOpInsertBuilder.() -> Unit = {}
+    ): Statement.DML.Batch.Op.Insert {
+        val builder = StatementDmlBatchOpInsertBuilder()
+        builder.block()
+        return builder.build(factory)
+    }
+
+    public fun statementDMLBatchOpInsertValue(
+        id: Int? = null,
+        target: Statement.DML.Target? = null,
+        `value`: Expr? = null,
+        index: Expr? = null,
+        onConflict: OnConflict? = null,
+        block: StatementDmlBatchOpInsertValueBuilder.() -> Unit = {}
+    ): Statement.DML.Batch.Op.InsertValue {
+        val builder = StatementDmlBatchOpInsertValueBuilder()
         builder.block()
         return builder.build(factory)
     }
@@ -183,7 +208,7 @@ public class AstBuilder(
 
     public fun statementDDLCreateTable(
         id: Int? = null,
-        name: String? = null,
+        name: Expr.Identifier? = null,
         definition: TableDefinition? = null,
         block: StatementDdlCreateTableBuilder.() -> Unit = {}
     ): Statement.DDL.CreateTable {
@@ -194,7 +219,7 @@ public class AstBuilder(
 
     public fun statementDDLCreateIndex(
         id: Int? = null,
-        name: String? = null,
+        name: Expr.Identifier? = null,
         fields: MutableList<Expr> = mutableListOf(),
         block: StatementDdlCreateIndexBuilder.() -> Unit = {}
     ): Statement.DDL.CreateIndex {
@@ -963,6 +988,35 @@ public class AstBuilder(
         return builder.build(factory)
     }
 
+    public fun onConflictActionDoReplace(
+        id: Int? = null,
+        `value`: OnConflict.Value? = null,
+        block: OnConflictActionDoReplaceBuilder.() -> Unit = {}
+    ): OnConflict.Action.DoReplace {
+        val builder = OnConflictActionDoReplaceBuilder()
+        builder.block()
+        return builder.build(factory)
+    }
+
+    public fun onConflictActionDoUpdate(
+        id: Int? = null,
+        `value`: OnConflict.Value? = null,
+        block: OnConflictActionDoUpdateBuilder.() -> Unit = {}
+    ): OnConflict.Action.DoUpdate {
+        val builder = OnConflictActionDoUpdateBuilder()
+        builder.block()
+        return builder.build(factory)
+    }
+
+    public fun onConflictActionDoNothing(
+        id: Int? = null,
+        block: OnConflictActionDoNothingBuilder.() -> Unit = {}
+    ): OnConflict.Action.DoNothing {
+        val builder = OnConflictActionDoNothingBuilder()
+        builder.block()
+        return builder.build(factory)
+    }
+
     public fun onConflictTargetCondition(
         id: Int? = null,
         condition: Expr? = null,
@@ -989,35 +1043,6 @@ public class AstBuilder(
         block: OnConflictTargetConstraintBuilder.() -> Unit = {}
     ): OnConflict.Target.Constraint {
         val builder = OnConflictTargetConstraintBuilder()
-        builder.block()
-        return builder.build(factory)
-    }
-
-    public fun onConflictActionDoReplace(
-        id: Int? = null,
-        `value`: OnConflict.Value? = null,
-        block: OnConflictActionDoReplaceBuilder.() -> Unit = {}
-    ): OnConflict.Action.DoReplace {
-        val builder = OnConflictActionDoReplaceBuilder()
-        builder.block()
-        return builder.build(factory)
-    }
-
-    public fun onConflictActionDoUpdate(
-        id: Int? = null,
-        `value`: OnConflict.Value? = null,
-        block: OnConflictActionDoUpdateBuilder.() -> Unit = {}
-    ): OnConflict.Action.DoUpdate {
-        val builder = OnConflictActionDoUpdateBuilder()
-        builder.block()
-        return builder.build(factory)
-    }
-
-    public fun onConflictActionDoNothing(
-        id: Int? = null,
-        block: OnConflictActionDoNothingBuilder.() -> Unit = {}
-    ): OnConflict.Action.DoNothing {
-        val builder = OnConflictActionDoNothingBuilder()
         builder.block()
         return builder.build(factory)
     }

@@ -62,7 +62,7 @@ statement::[
 
     // `DELETE FROM <target table> WHERE <expr> RETURNING ...`
     delete::{
-      from:       target,
+      from:       from,
       where:      optional::expr,
       returning:  optional::returning,
     },
@@ -76,6 +76,17 @@ statement::[
       returning:  optional::returning,
       _: [
         op::[
+          insert::{
+            target:       target,
+            value:        expr,
+            on_conflict:  optional::on_conflict,
+          },
+          insert_value::{
+            target:       target,
+            value:        expr,
+            index:        optional::expr,
+            on_conflict:  optional::on_conflict,
+          },
           set::{
             assignments: list::[assignment],
           },
@@ -101,13 +112,13 @@ statement::[
 
     // `CREATE TABLE <symbol> ( <table_def> )?`
     create_table::{
-      name:       string,
+      name:       '.expr.identifier',
       definition: optional::table_definition,
     },
 
     // `CREATE INDEX ON <symbol> (<expr> [, <expr>]...)`
     create_index::{
-      name:       string,
+      name:       '.expr.identifier',
       fields:     list::[expr],
     },
 
@@ -546,13 +557,9 @@ over::{
 }
 
 // `ON CONFLICT WHERE <expr> <conflict_action>`
-// `ON CONFLICT <conflict target> <conflict_action>`
+// `ON CONFLICT [<target>] <conflict_action>`
 on_conflict::{
-  target: [
-    condition::{ condition: expr },
-    symbols::{ symbols: list::[string] },
-    constraint::{ constraint: string },
-  ],
+  target: optional::target,
   action: [
     do_replace::{ value: value },
     do_update::{ value: value },
@@ -560,6 +567,11 @@ on_conflict::{
   ],
   _: [
     value::[ EXCLUDED ],
+    target::[
+      condition::{ condition: expr },
+      symbols::{ symbols: list::[string] },
+      constraint::{ constraint: string },
+    ],
   ],
 }
 

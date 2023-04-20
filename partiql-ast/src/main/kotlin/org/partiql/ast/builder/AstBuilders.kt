@@ -248,7 +248,7 @@ public class StatementDmlRemoveBuilder {
 public class StatementDmlDeleteBuilder {
     public var id: Int? = null
 
-    public var from: Statement.DML.Target? = null
+    public var from: From? = null
 
     public var `where`: Expr? = null
 
@@ -258,7 +258,7 @@ public class StatementDmlDeleteBuilder {
         this.id = id
     }
 
-    public fun from(from: Statement.DML.Target?): StatementDmlDeleteBuilder = this.apply {
+    public fun from(from: From?): StatementDmlDeleteBuilder = this.apply {
         this.from = from
     }
 
@@ -314,6 +314,85 @@ public class StatementDmlBatchBuilder {
             id = id!!, from = from!!, ops = ops, where = where,
             returning =
             returning
+        )
+}
+
+public class StatementDmlBatchOpInsertBuilder {
+    public var id: Int? = null
+
+    public var target: Statement.DML.Target? = null
+
+    public var `value`: Expr? = null
+
+    public var onConflict: OnConflict? = null
+
+    public fun id(id: Int?): StatementDmlBatchOpInsertBuilder = this.apply {
+        this.id = id
+    }
+
+    public fun target(target: Statement.DML.Target?): StatementDmlBatchOpInsertBuilder = this.apply {
+        this.target = target
+    }
+
+    public fun `value`(`value`: Expr?): StatementDmlBatchOpInsertBuilder = this.apply {
+        this.`value` = `value`
+    }
+
+    public fun onConflict(onConflict: OnConflict?): StatementDmlBatchOpInsertBuilder = this.apply {
+        this.onConflict = onConflict
+    }
+
+    public fun build(): Statement.DML.Batch.Op.Insert = build(AstFactory.DEFAULT)
+
+    public fun build(factory: AstFactory = AstFactory.DEFAULT): Statement.DML.Batch.Op.Insert =
+        factory.statementDMLBatchOpInsert(
+            id = id!!, target = target!!, value = value!!,
+            onConflict =
+            onConflict
+        )
+}
+
+public class StatementDmlBatchOpInsertValueBuilder {
+    public var id: Int? = null
+
+    public var target: Statement.DML.Target? = null
+
+    public var `value`: Expr? = null
+
+    public var index: Expr? = null
+
+    public var onConflict: OnConflict? = null
+
+    public fun id(id: Int?): StatementDmlBatchOpInsertValueBuilder = this.apply {
+        this.id = id
+    }
+
+    public fun target(target: Statement.DML.Target?): StatementDmlBatchOpInsertValueBuilder =
+        this.apply {
+            this.target = target
+        }
+
+    public fun `value`(`value`: Expr?): StatementDmlBatchOpInsertValueBuilder = this.apply {
+        this.`value` = `value`
+    }
+
+    public fun index(index: Expr?): StatementDmlBatchOpInsertValueBuilder = this.apply {
+        this.index = index
+    }
+
+    public fun onConflict(onConflict: OnConflict?): StatementDmlBatchOpInsertValueBuilder =
+        this.apply {
+            this.onConflict = onConflict
+        }
+
+    public fun build(): Statement.DML.Batch.Op.InsertValue = build(AstFactory.DEFAULT)
+
+    public fun build(factory: AstFactory = AstFactory.DEFAULT): Statement.DML.Batch.Op.InsertValue =
+        factory.statementDMLBatchOpInsertValue(
+            id = id!!, target = target!!, value = value!!,
+            index =
+            index,
+            onConflict = onConflict
         )
 }
 
@@ -391,7 +470,7 @@ public class StatementDmlTargetBuilder {
 public class StatementDdlCreateTableBuilder {
     public var id: Int? = null
 
-    public var name: String? = null
+    public var name: Expr.Identifier? = null
 
     public var definition: TableDefinition? = null
 
@@ -399,7 +478,7 @@ public class StatementDdlCreateTableBuilder {
         this.id = id
     }
 
-    public fun name(name: String?): StatementDdlCreateTableBuilder = this.apply {
+    public fun name(name: Expr.Identifier?): StatementDdlCreateTableBuilder = this.apply {
         this.name = name
     }
 
@@ -416,7 +495,7 @@ public class StatementDdlCreateTableBuilder {
 public class StatementDdlCreateIndexBuilder {
     public var id: Int? = null
 
-    public var name: String? = null
+    public var name: Expr.Identifier? = null
 
     public var fields: MutableList<Expr> = mutableListOf()
 
@@ -424,7 +503,7 @@ public class StatementDdlCreateIndexBuilder {
         this.id = id
     }
 
-    public fun name(name: String?): StatementDdlCreateIndexBuilder = this.apply {
+    public fun name(name: Expr.Identifier?): StatementDdlCreateIndexBuilder = this.apply {
         this.name = name
     }
 
@@ -2357,8 +2436,59 @@ public class OnConflictBuilder {
     public fun build(factory: AstFactory = AstFactory.DEFAULT): OnConflict = factory.onConflict(
         id =
         id!!,
-        target = target!!, action = action!!
+        target = target, action = action!!
     )
+}
+
+public class OnConflictActionDoReplaceBuilder {
+    public var id: Int? = null
+
+    public var `value`: OnConflict.Value? = null
+
+    public fun id(id: Int?): OnConflictActionDoReplaceBuilder = this.apply {
+        this.id = id
+    }
+
+    public fun `value`(`value`: OnConflict.Value?): OnConflictActionDoReplaceBuilder = this.apply {
+        this.`value` = `value`
+    }
+
+    public fun build(): OnConflict.Action.DoReplace = build(AstFactory.DEFAULT)
+
+    public fun build(factory: AstFactory = AstFactory.DEFAULT): OnConflict.Action.DoReplace =
+        factory.onConflictActionDoReplace(id = id!!, value = value!!)
+}
+
+public class OnConflictActionDoUpdateBuilder {
+    public var id: Int? = null
+
+    public var `value`: OnConflict.Value? = null
+
+    public fun id(id: Int?): OnConflictActionDoUpdateBuilder = this.apply {
+        this.id = id
+    }
+
+    public fun `value`(`value`: OnConflict.Value?): OnConflictActionDoUpdateBuilder = this.apply {
+        this.`value` = `value`
+    }
+
+    public fun build(): OnConflict.Action.DoUpdate = build(AstFactory.DEFAULT)
+
+    public fun build(factory: AstFactory = AstFactory.DEFAULT): OnConflict.Action.DoUpdate =
+        factory.onConflictActionDoUpdate(id = id!!, value = value!!)
+}
+
+public class OnConflictActionDoNothingBuilder {
+    public var id: Int? = null
+
+    public fun id(id: Int?): OnConflictActionDoNothingBuilder = this.apply {
+        this.id = id
+    }
+
+    public fun build(): OnConflict.Action.DoNothing = build(AstFactory.DEFAULT)
+
+    public fun build(factory: AstFactory = AstFactory.DEFAULT): OnConflict.Action.DoNothing =
+        factory.onConflictActionDoNothing(id = id!!)
 }
 
 public class OnConflictTargetConditionBuilder {
@@ -2416,57 +2546,6 @@ public class OnConflictTargetConstraintBuilder {
 
     public fun build(factory: AstFactory = AstFactory.DEFAULT): OnConflict.Target.Constraint =
         factory.onConflictTargetConstraint(id = id!!, constraint = constraint!!)
-}
-
-public class OnConflictActionDoReplaceBuilder {
-    public var id: Int? = null
-
-    public var `value`: OnConflict.Value? = null
-
-    public fun id(id: Int?): OnConflictActionDoReplaceBuilder = this.apply {
-        this.id = id
-    }
-
-    public fun `value`(`value`: OnConflict.Value?): OnConflictActionDoReplaceBuilder = this.apply {
-        this.`value` = `value`
-    }
-
-    public fun build(): OnConflict.Action.DoReplace = build(AstFactory.DEFAULT)
-
-    public fun build(factory: AstFactory = AstFactory.DEFAULT): OnConflict.Action.DoReplace =
-        factory.onConflictActionDoReplace(id = id!!, value = value!!)
-}
-
-public class OnConflictActionDoUpdateBuilder {
-    public var id: Int? = null
-
-    public var `value`: OnConflict.Value? = null
-
-    public fun id(id: Int?): OnConflictActionDoUpdateBuilder = this.apply {
-        this.id = id
-    }
-
-    public fun `value`(`value`: OnConflict.Value?): OnConflictActionDoUpdateBuilder = this.apply {
-        this.`value` = `value`
-    }
-
-    public fun build(): OnConflict.Action.DoUpdate = build(AstFactory.DEFAULT)
-
-    public fun build(factory: AstFactory = AstFactory.DEFAULT): OnConflict.Action.DoUpdate =
-        factory.onConflictActionDoUpdate(id = id!!, value = value!!)
-}
-
-public class OnConflictActionDoNothingBuilder {
-    public var id: Int? = null
-
-    public fun id(id: Int?): OnConflictActionDoNothingBuilder = this.apply {
-        this.id = id
-    }
-
-    public fun build(): OnConflict.Action.DoNothing = build(AstFactory.DEFAULT)
-
-    public fun build(factory: AstFactory = AstFactory.DEFAULT): OnConflict.Action.DoNothing =
-        factory.onConflictActionDoNothing(id = id!!)
 }
 
 public class ReturningBuilder {

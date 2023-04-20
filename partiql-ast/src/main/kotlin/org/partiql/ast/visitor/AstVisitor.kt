@@ -47,6 +47,11 @@ public interface AstVisitor<R, C> {
 
     public fun visitStatementDMLBatchOp(node: Statement.DML.Batch.Op, ctx: C): R
 
+    public fun visitStatementDMLBatchOpInsert(node: Statement.DML.Batch.Op.Insert, ctx: C): R
+
+    public fun visitStatementDMLBatchOpInsertValue(node: Statement.DML.Batch.Op.InsertValue, ctx: C):
+        R
+
     public fun visitStatementDMLBatchOpSet(node: Statement.DML.Batch.Op.Set, ctx: C): R
 
     public fun visitStatementDMLBatchOpRemove(node: Statement.DML.Batch.Op.Remove, ctx: C): R
@@ -216,14 +221,6 @@ public interface AstVisitor<R, C> {
 
     public fun visitOnConflict(node: OnConflict, ctx: C): R
 
-    public fun visitOnConflictTarget(node: OnConflict.Target, ctx: C): R
-
-    public fun visitOnConflictTargetCondition(node: OnConflict.Target.Condition, ctx: C): R
-
-    public fun visitOnConflictTargetSymbols(node: OnConflict.Target.Symbols, ctx: C): R
-
-    public fun visitOnConflictTargetConstraint(node: OnConflict.Target.Constraint, ctx: C): R
-
     public fun visitOnConflictAction(node: OnConflict.Action, ctx: C): R
 
     public fun visitOnConflictActionDoReplace(node: OnConflict.Action.DoReplace, ctx: C): R
@@ -231,6 +228,14 @@ public interface AstVisitor<R, C> {
     public fun visitOnConflictActionDoUpdate(node: OnConflict.Action.DoUpdate, ctx: C): R
 
     public fun visitOnConflictActionDoNothing(node: OnConflict.Action.DoNothing, ctx: C): R
+
+    public fun visitOnConflictTarget(node: OnConflict.Target, ctx: C): R
+
+    public fun visitOnConflictTargetCondition(node: OnConflict.Target.Condition, ctx: C): R
+
+    public fun visitOnConflictTargetSymbols(node: OnConflict.Target.Symbols, ctx: C): R
+
+    public fun visitOnConflictTargetConstraint(node: OnConflict.Target.Constraint, ctx: C): R
 
     public fun visitReturning(node: Returning, ctx: C): R
 

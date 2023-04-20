@@ -76,10 +76,20 @@ public abstract class AstBaseVisitor<R, C> : AstVisitor<R, C> {
 
     public override fun visitStatementDMLBatchOp(node: Statement.DML.Batch.Op, ctx: C): R = when
     (node) {
+        is Statement.DML.Batch.Op.Insert -> visitStatementDMLBatchOpInsert(node, ctx)
+        is Statement.DML.Batch.Op.InsertValue -> visitStatementDMLBatchOpInsertValue(node, ctx)
         is Statement.DML.Batch.Op.Set -> visitStatementDMLBatchOpSet(node, ctx)
         is Statement.DML.Batch.Op.Remove -> visitStatementDMLBatchOpRemove(node, ctx)
         is Statement.DML.Batch.Op.Delete -> visitStatementDMLBatchOpDelete(node, ctx)
     }
+
+    public override fun visitStatementDMLBatchOpInsert(node: Statement.DML.Batch.Op.Insert, ctx: C): R =
+        defaultVisit(node, ctx)
+
+    public override fun visitStatementDMLBatchOpInsertValue(
+        node: Statement.DML.Batch.Op.InsertValue,
+        ctx: C
+    ): R = defaultVisit(node, ctx)
 
     public override fun visitStatementDMLBatchOpSet(node: Statement.DML.Batch.Op.Set, ctx: C): R =
         defaultVisit(node, ctx)
@@ -360,21 +370,6 @@ public abstract class AstBaseVisitor<R, C> : AstVisitor<R, C> {
 
     public override fun visitOnConflict(node: OnConflict, ctx: C): R = defaultVisit(node, ctx)
 
-    public override fun visitOnConflictTarget(node: OnConflict.Target, ctx: C): R = when (node) {
-        is OnConflict.Target.Condition -> visitOnConflictTargetCondition(node, ctx)
-        is OnConflict.Target.Symbols -> visitOnConflictTargetSymbols(node, ctx)
-        is OnConflict.Target.Constraint -> visitOnConflictTargetConstraint(node, ctx)
-    }
-
-    public override fun visitOnConflictTargetCondition(node: OnConflict.Target.Condition, ctx: C): R =
-        defaultVisit(node, ctx)
-
-    public override fun visitOnConflictTargetSymbols(node: OnConflict.Target.Symbols, ctx: C): R =
-        defaultVisit(node, ctx)
-
-    public override fun visitOnConflictTargetConstraint(node: OnConflict.Target.Constraint, ctx: C): R =
-        defaultVisit(node, ctx)
-
     public override fun visitOnConflictAction(node: OnConflict.Action, ctx: C): R = when (node) {
         is OnConflict.Action.DoReplace -> visitOnConflictActionDoReplace(node, ctx)
         is OnConflict.Action.DoUpdate -> visitOnConflictActionDoUpdate(node, ctx)
@@ -388,6 +383,21 @@ public abstract class AstBaseVisitor<R, C> : AstVisitor<R, C> {
         defaultVisit(node, ctx)
 
     public override fun visitOnConflictActionDoNothing(node: OnConflict.Action.DoNothing, ctx: C): R =
+        defaultVisit(node, ctx)
+
+    public override fun visitOnConflictTarget(node: OnConflict.Target, ctx: C): R = when (node) {
+        is OnConflict.Target.Condition -> visitOnConflictTargetCondition(node, ctx)
+        is OnConflict.Target.Symbols -> visitOnConflictTargetSymbols(node, ctx)
+        is OnConflict.Target.Constraint -> visitOnConflictTargetConstraint(node, ctx)
+    }
+
+    public override fun visitOnConflictTargetCondition(node: OnConflict.Target.Condition, ctx: C): R =
+        defaultVisit(node, ctx)
+
+    public override fun visitOnConflictTargetSymbols(node: OnConflict.Target.Symbols, ctx: C): R =
+        defaultVisit(node, ctx)
+
+    public override fun visitOnConflictTargetConstraint(node: OnConflict.Target.Constraint, ctx: C): R =
         defaultVisit(node, ctx)
 
     public override fun visitReturning(node: Returning, ctx: C): R = defaultVisit(node, ctx)

@@ -78,6 +78,8 @@ import org.partiql.ast.builder.StatementDdlDropIndexBuilder
 import org.partiql.ast.builder.StatementDdlDropTableBuilder
 import org.partiql.ast.builder.StatementDmlBatchBuilder
 import org.partiql.ast.builder.StatementDmlBatchOpDeleteBuilder
+import org.partiql.ast.builder.StatementDmlBatchOpInsertBuilder
+import org.partiql.ast.builder.StatementDmlBatchOpInsertValueBuilder
 import org.partiql.ast.builder.StatementDmlBatchOpRemoveBuilder
 import org.partiql.ast.builder.StatementDmlBatchOpSetBuilder
 import org.partiql.ast.builder.StatementDmlDeleteBuilder
@@ -313,7 +315,7 @@ public sealed class Statement : AstNode() {
 
         public data class Delete(
             public override val id: Int,
-            public val from: Target,
+            public val from: From,
             public val `where`: Expr?,
             public val returning: Returning?
         ) : DML() {
@@ -355,9 +357,61 @@ public sealed class Statement : AstNode() {
 
             public sealed class Op : AstNode() {
                 public override fun <R, C> accept(visitor: AstVisitor<R, C>, ctx: C): R = when (this) {
+                    is Insert -> visitor.visitStatementDMLBatchOpInsert(this, ctx)
+                    is InsertValue -> visitor.visitStatementDMLBatchOpInsertValue(this, ctx)
                     is Set -> visitor.visitStatementDMLBatchOpSet(this, ctx)
                     is Remove -> visitor.visitStatementDMLBatchOpRemove(this, ctx)
                     is Delete -> visitor.visitStatementDMLBatchOpDelete(this, ctx)
+                }
+
+                public data class Insert(
+                    public override val id: Int,
+                    public val target: Target,
+                    public val `value`: Expr,
+                    public val onConflict: OnConflict?
+                ) : Op() {
+                    public override val children: List<AstNode> by lazy {
+                        val kids = mutableListOf<AstNode?>()
+                        kids.add(target)
+                        kids.add(value)
+                        kids.add(onConflict)
+                        kids.filterNotNull()
+                    }
+
+                    public override fun <R, C> accept(visitor: AstVisitor<R, C>, ctx: C): R =
+                        visitor.visitStatementDMLBatchOpInsert(this, ctx)
+
+                    public companion object {
+                        @JvmStatic
+                        public fun builder(): StatementDmlBatchOpInsertBuilder =
+                            StatementDmlBatchOpInsertBuilder()
+                    }
+                }
+
+                public data class InsertValue(
+                    public override val id: Int,
+                    public val target: Target,
+                    public val `value`: Expr,
+                    public val index: Expr?,
+                    public val onConflict: OnConflict?
+                ) : Op() {
+                    public override val children: List<AstNode> by lazy {
+                        val kids = mutableListOf<AstNode?>()
+                        kids.add(target)
+                        kids.add(value)
+                        kids.add(index)
+                        kids.add(onConflict)
+                        kids.filterNotNull()
+                    }
+
+                    public override fun <R, C> accept(visitor: AstVisitor<R, C>, ctx: C): R =
+                        visitor.visitStatementDMLBatchOpInsertValue(this, ctx)
+
+                    public companion object {
+                        @JvmStatic
+                        public fun builder(): StatementDmlBatchOpInsertValueBuilder =
+                            StatementDmlBatchOpInsertValueBuilder()
+                    }
                 }
 
                 public data class Set(
@@ -449,11 +503,12 @@ public sealed class Statement : AstNode() {
 
         public data class CreateTable(
             public override val id: Int,
-            public val name: String,
+            public val name: Expr.Identifier,
             public val definition: TableDefinition?
         ) : DDL() {
             public override val children: List<AstNode> by lazy {
                 val kids = mutableListOf<AstNode?>()
+                kids.add(name)
                 kids.add(definition)
                 kids.filterNotNull()
             }
@@ -469,11 +524,12 @@ public sealed class Statement : AstNode() {
 
         public data class CreateIndex(
             public override val id: Int,
-            public val name: String,
+            public val name: Expr.Identifier,
             public val fields: List<Expr>
         ) : DDL() {
             public override val children: List<AstNode> by lazy {
                 val kids = mutableListOf<AstNode?>()
+                kids.add(name)
                 kids.addAll(fields)
                 kids.filterNotNull()
             }
@@ -1964,7 +2020,7 @@ public data class Over(
 
 public data class OnConflict(
     public override val id: Int,
-    public val target: Target,
+    public val target: Target?,
     public val action: Action
 ) : AstNode() {
     public override val children: List<AstNode> by lazy {
@@ -1979,6 +2035,52 @@ public data class OnConflict(
 
     public enum class Value {
         EXCLUDED,
+    }
+
+    public sealed class Action : AstNode() {
+        public override fun <R, C> accept(visitor: AstVisitor<R, C>, ctx: C): R = when (this) {
+            is DoReplace -> visitor.visitOnConflictActionDoReplace(this, ctx)
+            is DoUpdate -> visitor.visitOnConflictActionDoUpdate(this, ctx)
+            is DoNothing -> visitor.visitOnConflictActionDoNothing(this, ctx)
+        }
+
+        public data class DoReplace(
+            public override val id: Int,
+            public val `value`: Value
+        ) : Action() {
+            public override fun <R, C> accept(visitor: AstVisitor<R, C>, ctx: C): R =
+                visitor.visitOnConflictActionDoReplace(this, ctx)
+
+            public companion object {
+                @JvmStatic
+                public fun builder(): OnConflictActionDoReplaceBuilder = OnConflictActionDoReplaceBuilder()
+            }
+        }
+
+        public data class DoUpdate(
+            public override val id: Int,
+            public val `value`: Value
+        ) : Action() {
+            public override fun <R, C> accept(visitor: AstVisitor<R, C>, ctx: C): R =
+                visitor.visitOnConflictActionDoUpdate(this, ctx)
+
+            public companion object {
+                @JvmStatic
+                public fun builder(): OnConflictActionDoUpdateBuilder = OnConflictActionDoUpdateBuilder()
+            }
+        }
+
+        public data class DoNothing(
+            public override val id: Int
+        ) : Action() {
+            public override fun <R, C> accept(visitor: AstVisitor<R, C>, ctx: C): R =
+                visitor.visitOnConflictActionDoNothing(this, ctx)
+
+            public companion object {
+                @JvmStatic
+                public fun builder(): OnConflictActionDoNothingBuilder = OnConflictActionDoNothingBuilder()
+            }
+        }
     }
 
     public sealed class Target : AstNode() {
@@ -2031,52 +2133,6 @@ public data class OnConflict(
                 @JvmStatic
                 public fun builder(): OnConflictTargetConstraintBuilder =
                     OnConflictTargetConstraintBuilder()
-            }
-        }
-    }
-
-    public sealed class Action : AstNode() {
-        public override fun <R, C> accept(visitor: AstVisitor<R, C>, ctx: C): R = when (this) {
-            is DoReplace -> visitor.visitOnConflictActionDoReplace(this, ctx)
-            is DoUpdate -> visitor.visitOnConflictActionDoUpdate(this, ctx)
-            is DoNothing -> visitor.visitOnConflictActionDoNothing(this, ctx)
-        }
-
-        public data class DoReplace(
-            public override val id: Int,
-            public val `value`: Value
-        ) : Action() {
-            public override fun <R, C> accept(visitor: AstVisitor<R, C>, ctx: C): R =
-                visitor.visitOnConflictActionDoReplace(this, ctx)
-
-            public companion object {
-                @JvmStatic
-                public fun builder(): OnConflictActionDoReplaceBuilder = OnConflictActionDoReplaceBuilder()
-            }
-        }
-
-        public data class DoUpdate(
-            public override val id: Int,
-            public val `value`: Value
-        ) : Action() {
-            public override fun <R, C> accept(visitor: AstVisitor<R, C>, ctx: C): R =
-                visitor.visitOnConflictActionDoUpdate(this, ctx)
-
-            public companion object {
-                @JvmStatic
-                public fun builder(): OnConflictActionDoUpdateBuilder = OnConflictActionDoUpdateBuilder()
-            }
-        }
-
-        public data class DoNothing(
-            public override val id: Int
-        ) : Action() {
-            public override fun <R, C> accept(visitor: AstVisitor<R, C>, ctx: C): R =
-                visitor.visitOnConflictActionDoNothing(this, ctx)
-
-            public companion object {
-                @JvmStatic
-                public fun builder(): OnConflictActionDoNothingBuilder = OnConflictActionDoNothingBuilder()
             }
         }
     }

@@ -74,7 +74,7 @@ public abstract class AstFactory {
 
     public open fun statementDMLDelete(
         id: Int,
-        from: Statement.DML.Target,
+        from: From,
         `where`: Expr?,
         returning: Returning?
     ) = Statement.DML.Delete(id, from, where, returning)
@@ -86,6 +86,21 @@ public abstract class AstFactory {
         `where`: Expr?,
         returning: Returning?
     ) = Statement.DML.Batch(id, from, ops, where, returning)
+
+    public open fun statementDMLBatchOpInsert(
+        id: Int,
+        target: Statement.DML.Target,
+        `value`: Expr,
+        onConflict: OnConflict?
+    ) = Statement.DML.Batch.Op.Insert(id, target, value, onConflict)
+
+    public open fun statementDMLBatchOpInsertValue(
+        id: Int,
+        target: Statement.DML.Target,
+        `value`: Expr,
+        index: Expr?,
+        onConflict: OnConflict?
+    ) = Statement.DML.Batch.Op.InsertValue(id, target, value, index, onConflict)
 
     public open fun statementDMLBatchOpSet(
         id: Int,
@@ -104,13 +119,13 @@ public abstract class AstFactory {
 
     public open fun statementDDLCreateTable(
         id: Int,
-        name: String,
+        name: Expr.Identifier,
         definition: TableDefinition?
     ) = Statement.DDL.CreateTable(id, name, definition)
 
     public open fun statementDDLCreateIndex(
         id: Int,
-        name: String,
+        name: Expr.Identifier,
         fields: List<Expr>
     ) = Statement.DDL.CreateIndex(id, name, fields)
 
@@ -488,9 +503,17 @@ public abstract class AstFactory {
 
     public open fun onConflict(
         id: Int,
-        target: OnConflict.Target,
+        target: OnConflict.Target?,
         action: OnConflict.Action
     ) = OnConflict(id, target, action)
+
+    public open fun onConflictActionDoReplace(id: Int, `value`: OnConflict.Value) =
+        OnConflict.Action.DoReplace(id, value)
+
+    public open fun onConflictActionDoUpdate(id: Int, `value`: OnConflict.Value) =
+        OnConflict.Action.DoUpdate(id, value)
+
+    public open fun onConflictActionDoNothing(id: Int) = OnConflict.Action.DoNothing(id)
 
     public open fun onConflictTargetCondition(id: Int, condition: Expr) =
         OnConflict.Target.Condition(id, condition)
@@ -500,14 +523,6 @@ public abstract class AstFactory {
 
     public open fun onConflictTargetConstraint(id: Int, constraint: String) =
         OnConflict.Target.Constraint(id, constraint)
-
-    public open fun onConflictActionDoReplace(id: Int, `value`: OnConflict.Value) =
-        OnConflict.Action.DoReplace(id, value)
-
-    public open fun onConflictActionDoUpdate(id: Int, `value`: OnConflict.Value) =
-        OnConflict.Action.DoUpdate(id, value)
-
-    public open fun onConflictActionDoNothing(id: Int) = OnConflict.Action.DoNothing(id)
 
     public open fun returning(id: Int, columns: List<Returning.Column>) = Returning(id, columns)
 

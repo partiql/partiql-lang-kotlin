@@ -58,7 +58,8 @@ abstract class PartiQLParserTestBase : TestBase() {
                     return AstToPigTranslator.translate(ast.root, ast.locations) as PartiqlAst.Statement
                 } catch (ex: PartiQLParserException) {
                     val context = PropertyValueMap()
-                    context[Property.TOKEN_DESCRIPTION] = ex.context["token_description"].toString()
+                    context[Property.LINE_NUMBER] = (ex.context["line_no"] ?: -1L) as Long
+                    context[Property.COLUMN_NUMBER] = (ex.context["column_no"] ?: -1L) as Long
                     throw ParserException(ex.message, ErrorCode.PARSE_INVALID_QUERY, context, ex)
                 }
             }

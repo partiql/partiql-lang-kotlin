@@ -1,5 +1,12 @@
 package org.partiql.lang.ast
 
+import com.amazon.ionelement.api.DecimalElement
+import com.amazon.ionelement.api.FloatElement
+import com.amazon.ionelement.api.IntElement
+import com.amazon.ionelement.api.IntElementSize
+import com.amazon.ionelement.api.ionDecimal
+import com.amazon.ionelement.api.ionFloat
+import com.amazon.ionelement.api.ionInt
 import com.amazon.ionelement.api.ionSymbol
 import org.partiql.ast.AstNode
 import org.partiql.ast.Case
@@ -13,10 +20,15 @@ import org.partiql.ast.Returning
 import org.partiql.ast.Select
 import org.partiql.ast.SetQuantifier
 import org.partiql.ast.Statement
+import org.partiql.ast.TableDefinition
 import org.partiql.ast.Type
 import org.partiql.ast.visitor.AstBaseVisitor
 import org.partiql.lang.domains.PartiqlAst
+import org.partiql.lang.domains.metaContainerOf
+import org.partiql.lang.util.unaryMinus
 import org.partiql.parser.PartiQLParser
+import org.partiql.types.MissingType.metas
+import java.math.BigInteger
 import kotlin.reflect.KClass
 import kotlin.reflect.cast
 
@@ -95,8 +107,13 @@ object AstToPigTranslator {
         }
 
         override fun visitStatementDMLInsert(node: Statement.DML.Insert, ctx: Ctx) = translate(node) {
-            val target = visitExpr(node.target.table, ctx)
-            val values = visitExpr(node.value, ctx)
+            val target = translateSimplePath(node.target.table, ctx)
+            val v = node.value
+            var values = visitExpr(v, ctx)
+            // PIG uses the IsValues meta on a bag to distinguish a VALUES list. Translate to bag
+            if (values is PartiqlAst.Expr.List && v is Expr.Collection && v.type == Expr.Collection.Type.LIST) {
+                values = bag(values.values, metaContainerOf(IsValuesExprMeta.instance))
+            }
             val conflictAction = node.onConflict?.let { visitOnConflictAction(it.action, ctx) }
             val op = insert(target, values, conflictAction)
             dml(dmlOpList(op), null, null, null)
@@ -106,16 +123,17 @@ object AstToPigTranslator {
             node: Statement.DML.InsertValue,
             ctx: Ctx
         ) = translate(node) {
-            val target = visitExpr(node.target.table, ctx)
+            val target = translateSimplePath(node.target.table, ctx)
             val values = visitExpr(node.value, ctx)
             val index = node.index?.let { visitExpr(it, ctx) }
             val onConflict = node.onConflict?.let { visitOnConflict(it, ctx) }
             val op = insertValue(target, values, index, onConflict)
-            dml(dmlOpList(op), null, null, null)
+            val returning = node.returning?.let { visitReturning(it, ctx) }
+            dml(dmlOpList(op), null, null, returning)
         }
 
         override fun visitStatementDMLUpsert(node: Statement.DML.Upsert, ctx: Ctx) = translate(node) {
-            val target = visitExpr(node.target, ctx)
+            val target = translateSimplePath(node.target, ctx)
             val values = visitExpr(node.value, ctx)
             val conflictAction = doUpdate(excluded())
             // UPSERT overloads legacy INSERT
@@ -124,16 +142,18 @@ object AstToPigTranslator {
         }
 
         override fun visitStatementDMLReplace(node: Statement.DML.Replace, ctx: Ctx) = translate(node) {
-            val target = visitExpr(node.target, ctx)
+            val target = translateSimplePath(node.target, ctx)
             val values = visitExpr(node.value, ctx)
-            val conflictAction = doUpdate(excluded())
+            val conflictAction = doReplace(excluded())
             // REPLACE overloads legacy INSERT
             val op = insert(target, values, conflictAction)
             dml(dmlOpList(op), null, null, null)
         }
 
         override fun visitStatementDMLUpdate(node: Statement.DML.Update, ctx: Ctx) = translate(node) {
-            val from = visitStatementDMLTarget(node.target, ctx)
+            // Current PartiQL.g4 grammar models a SET with no UPDATE target as valid DML command.
+            // We don't want the target to be nullable in the AST because it's not in the SQL grammar.
+            val from = optional(node.target) { visitStatementDMLTarget(node.target, ctx) }
             // UPDATE becomes multiple sets
             val operations = node.assignments.map {
                 val assignment = visitStatementDMLUpdateAssignment(it, ctx)
@@ -146,21 +166,25 @@ object AstToPigTranslator {
             node: Statement.DML.Update.Assignment,
             ctx: Ctx
         ) = translate(node) {
-            val path = visitExprPath(node.target, ctx)
-            // PIG models target as Expr, unpack the path if it's only one node
-            val target = if (path.steps.isEmpty()) path.root else path
+            val target = translateSimplePath(node.target, ctx)
             val value = visitExpr(node.value, ctx)
             assignment(target, value)
         }
 
         override fun visitStatementDMLRemove(node: Statement.DML.Remove, ctx: Ctx) = translate(node) {
-            val target = visitExpr(node.target.root, ctx)
+            val target = translateSimplePath(node.target, ctx)
             val op = remove(target)
             dml(dmlOpList(op), null, null, null)
         }
 
         override fun visitStatementDMLDelete(node: Statement.DML.Delete, ctx: Ctx) = translate(node) {
-            val from = visitStatementDMLTarget(node.from, ctx)
+            val from = when (val f = node.from) {
+                is From.Collection -> {
+                    val expr = translateSimplePath(f.expr, ctx)
+                    scan(expr, f.asAlias, f.atAlias, f.byAlias)
+                }
+                is From.Join -> visitFrom(f, ctx)
+            }
             val where = node.where?.let { visitExpr(it, ctx) }
             val returning = node.returning?.let { visitReturning(it, ctx) }
             val op = delete()
@@ -168,51 +192,92 @@ object AstToPigTranslator {
         }
 
         override fun visitStatementDMLBatch(node: Statement.DML.Batch, ctx: Ctx) = translate(node) {
-            val from = visitFrom(node.from, ctx)
-            val ops = translate(node.ops, ctx, PartiqlAst.DmlOp::class)
+            val from = when (val f = node.from) {
+                is From.Collection -> {
+                    val expr = translateSimplePath(f.expr, ctx)
+                    scan(expr, f.asAlias, f.atAlias, f.byAlias)
+                }
+                is From.Join -> visitFrom(f, ctx)
+            }
+            val ops = translate(node.ops, ctx, PartiqlAst.DmlOpList::class).flatMap { it.ops }
             val where = node.where?.let { visitExpr(it, ctx) }
             val returning = node.returning?.let { visitReturning(it, ctx) }
             dml(dmlOpList(ops), from, where, returning)
         }
 
         override fun visitStatementDMLBatchOp(node: Statement.DML.Batch.Op, ctx: Ctx) =
-            super.visitStatementDMLBatchOp(node, ctx) as PartiqlAst.DmlOp
+            super.visitStatementDMLBatchOp(node, ctx) as PartiqlAst.DmlOpList
 
         override fun visitStatementDMLBatchOpSet(
             node: Statement.DML.Batch.Op.Set,
             ctx: Ctx
         ) = translate(node) {
-            if (node.assignments.size != 1) {
-                throw IllegalArgumentException("dml_op.set must have only one assignment")
+            val ops = node.assignments.map {
+                val assignment = visitStatementDMLUpdateAssignment(it, ctx)
+                set(assignment)
             }
-            val assignment = visitStatementDMLUpdateAssignment(node.assignments[0], ctx)
-            set(assignment)
+            dmlOpList(ops)
         }
 
         override fun visitStatementDMLBatchOpRemove(
             node: Statement.DML.Batch.Op.Remove,
             ctx: Ctx
         ) = translate(node) {
-            val target = visitExprPath(node.target, ctx)
-            remove(target)
+            val target = translateSimplePath(node.target, ctx)
+            dmlOpList(remove(target))
         }
 
         override fun visitStatementDMLBatchOpDelete(
             node: Statement.DML.Batch.Op.Delete,
             ctx: Ctx
         ) = translate(node) {
-            delete()
+            dmlOpList(delete())
+        }
+
+        override fun visitStatementDMLBatchOpInsert(
+            node: Statement.DML.Batch.Op.Insert,
+            ctx: Ctx
+        ) = translate(node) {
+            val target = translateSimplePath(node.target.table, ctx)
+            val v = node.value
+            var values = visitExpr(v, ctx)
+            // PIG uses the IsValues meta on a bag to distinguish a VALUES list. Translate to bag
+            if (values is PartiqlAst.Expr.List && v is Expr.Collection && v.type == Expr.Collection.Type.LIST) {
+                values = bag(values.values, metaContainerOf(IsValuesExprMeta.instance))
+            }
+            val conflictAction = node.onConflict?.let { visitOnConflictAction(it.action, ctx) }
+            dmlOpList(insert(target, values, conflictAction))
+        }
+
+        override fun visitStatementDMLBatchOpInsertValue(
+            node: Statement.DML.Batch.Op.InsertValue,
+            ctx: Ctx
+        ) = translate(node) {
+            val target = translateSimplePath(node.target.table, ctx)
+            val values = visitExpr(node.value, ctx)
+            val index = node.index?.let { visitExpr(it, ctx) }
+            val onConflict = node.onConflict?.let { visitOnConflict(it, ctx) }
+            dmlOpList(insertValue(target, values, index, onConflict))
         }
 
         override fun visitStatementDMLTarget(node: Statement.DML.Target, ctx: Ctx) = translate(node) {
             // PIG models a target as a FROM source
-            val expr = visitExpr(node.table, ctx)
+            val expr = translateSimplePath(node.table, ctx)
             scan(expr, null, null, null)
         }
 
         override fun visitOnConflict(node: OnConflict, ctx: Ctx) = translate(node) {
-            val expr = visitOnConflictTarget(node.target, ctx)
             val action = visitOnConflictAction(node.action, ctx)
+            if (node.target == null) {
+                // Legacy PartiQLVisitor doesn't respect the return type for the OnConflict rule
+                // - visitOnConflictLegacy returns an OnConflict node
+                // - visitOnConflict returns an OnConflict.Action
+                // Essentially, the on_conflict target appears in the grammar but not the PIG model
+                // Which means you technically can't use the #OnConflict alternative in certain contexts.
+                // We generally shouldn't have parser rule alternatives which are not variants of the same type.
+                throw IllegalArgumentException("PIG OnConflict (#OnConflictLegacy grammar rule) requires an expression")
+            }
+            val expr = visitOnConflictTarget(node.target!!, ctx)
             onConflict(expr, action)
         }
 
@@ -309,6 +374,74 @@ object AstToPigTranslator {
             exec(procedureName, args)
         }
 
+        override fun visitStatementDDL(node: Statement.DDL, ctx: Ctx) = super.visit(node, ctx) as PartiqlAst.Statement.Ddl
+
+        override fun visitStatementDDLCreateTable(
+            node: Statement.DDL.CreateTable,
+            ctx: Ctx
+        ) = translate(node) {
+            val tableName = node.name.name
+            val def = node.definition?.let { visitTableDefinition(it, ctx) }
+            ddl(createTable(tableName, def))
+        }
+
+        override fun visitStatementDDLCreateIndex(
+            node: Statement.DDL.CreateIndex,
+            ctx: Ctx
+        ) = translate(node) {
+            val indexName = with(node.name) { identifier(name, translate(case)) }
+            val fields = node.fields.map {
+                val expr = visitExpr(it, ctx)
+                // PIG AST requires unpacking path simple
+                if (expr is PartiqlAst.Expr.Path && expr.steps.isEmpty()) {
+                    expr.root
+                } else {
+                    expr
+                }
+            }
+            ddl(createIndex(indexName, fields))
+        }
+
+        override fun visitStatementDDLDropTable(node: Statement.DDL.DropTable, ctx: Ctx) = translate(node) {
+            val name = node.identifier.name
+            val case = translate(node.identifier.case)
+            val tableName = identifier(name, case)
+            ddl(dropTable(tableName))
+        }
+
+        override fun visitStatementDDLDropIndex(node: Statement.DDL.DropIndex, ctx: Ctx) = translate(node) {
+            val table = with(node.table) { identifier(name, translate(case)) }
+            val keys = with(node.keys) { identifier(name, translate(case)) }
+            ddl(dropIndex(table, keys))
+        }
+
+        override fun visitTableDefinition(node: TableDefinition, ctx: Ctx) = translate(node) {
+            val parts = translate(node.columns, ctx, PartiqlAst.TableDefPart::class)
+            tableDef(parts)
+        }
+
+        override fun visitTableDefinitionColumn(node: TableDefinition.Column, ctx: Ctx) = translate(node) {
+            val name = node.name
+            val type = visitType(node.type, ctx)
+            val constraints = translate(node.constraints, ctx, PartiqlAst.ColumnConstraint::class)
+            columnDeclaration(name, type, constraints)
+        }
+
+        override fun visitTableDefinitionColumnConstraint(
+            node: TableDefinition.Column.Constraint,
+            ctx: Ctx
+        ) = translate(node) {
+            val name = node.name
+            val def = when (node.body) {
+                is TableDefinition.Column.Constraint.Body.Check -> {
+                    throw IllegalArgumentException("PIG AST does not support CHECK (<expr>) constraint")
+                }
+                is TableDefinition.Column.Constraint.Body.NotNull -> columnNotnull()
+                is TableDefinition.Column.Constraint.Body.Nullable -> columnNull()
+            }
+            columnConstraint(name, def)
+        }
+
         override fun visitType(node: Type, ctx: Ctx) = translate(node) {
             // parameters are only integers for now
             val parameters = node.parameters.map { it.asAnyElement().longValue }
@@ -350,7 +483,8 @@ object AstToPigTranslator {
                     }
                 }
                 "tuple" -> structType()
-                else -> throw IllegalArgumentException("Type ${node.identifier} does not exist in the PIG AST")
+                "string" -> stringType()
+                else -> customType(node.identifier.toLowerCase())
             }
         }
 
@@ -363,10 +497,7 @@ object AstToPigTranslator {
         }
 
         override fun visitExprIdentifier(node: Expr.Identifier, ctx: Ctx) = translate(node) {
-            val case = when (node.case) {
-                Case.SENSITIVE -> caseSensitive()
-                Case.INSENSITIVE -> caseInsensitive()
-            }
+            val case = translate(node.case)
             val qualifier = when (node.scope) {
                 Expr.Identifier.Scope.UNQUALIFIED -> unqualified()
                 Expr.Identifier.Scope.LOCALS_FIRST -> localsFirst()
@@ -434,11 +565,37 @@ object AstToPigTranslator {
         }
 
         override fun visitExprUnary(node: Expr.Unary, ctx: Ctx) = translate(node) {
-            val expr = visitExpr(node.expr, ctx)
+            val arg = visitExpr(node.expr, ctx)
+            // Legacy PartiQLVisitor unwraps applies the unary op to literals
             when (node.op) {
-                Expr.Unary.Op.NOT -> not(expr)
-                Expr.Unary.Op.POS -> pos(expr)
-                Expr.Unary.Op.NEG -> neg(expr)
+                Expr.Unary.Op.NOT -> not(arg)
+                Expr.Unary.Op.POS -> {
+                    when {
+                        arg !is PartiqlAst.Expr.Lit -> pos(arg)
+                        arg.value is IntElement -> arg
+                        arg.value is FloatElement -> arg
+                        arg.value is DecimalElement -> arg
+                        else -> pos(arg)
+                    }
+                }
+                Expr.Unary.Op.NEG -> {
+                    when {
+                        arg !is PartiqlAst.Expr.Lit -> neg(arg, metas)
+                        arg.value is IntElement -> {
+                            val intValue = when (arg.value.integerSize) {
+                                IntElementSize.LONG -> ionInt(-arg.value.longValue)
+                                IntElementSize.BIG_INTEGER -> when (arg.value.bigIntegerValue) {
+                                    Long.MAX_VALUE.toBigInteger() + (1L).toBigInteger() -> ionInt(Long.MIN_VALUE)
+                                    else -> ionInt(arg.value.bigIntegerValue * BigInteger.valueOf(-1L))
+                                }
+                            }
+                            arg.copy(value = intValue.asAnyElement())
+                        }
+                        arg.value is FloatElement -> arg.copy(value = ionFloat(-(arg.value.doubleValue)).asAnyElement())
+                        arg.value is DecimalElement -> arg.copy(value = ionDecimal(-(arg.value.decimalValue)).asAnyElement())
+                        else -> neg(arg)
+                    }
+                }
             }
         }
 
@@ -586,13 +743,15 @@ object AstToPigTranslator {
         }
 
         override fun visitExprSFW(node: Expr.SFW, ctx: Ctx) = translate(node) {
-            var setq = when (val s = node.select) {
-                is Select.Pivot -> null
-                is Select.Project -> translate(s.quantifier)
-                is Select.Star -> null
-                is Select.Value -> translate(s.quantifier)
+            var setq = optional(node.select, 1) {
+                when (val s = node.select) {
+                    is Select.Pivot -> all()
+                    is Select.Project -> translate(s.quantifier)
+                    is Select.Star -> translate(s.quantifier)
+                    is Select.Value -> translate(s.quantifier)
+                }
             }
-            // PIG AST omits setq if ALL
+            // PIG AST always drops the ALL even if the query text specifies
             if (setq is PartiqlAst.SetQuantifier.All) {
                 setq = null
             }
@@ -741,6 +900,17 @@ object AstToPigTranslator {
         private fun translate(quantifier: SetQuantifier) = when (quantifier) {
             SetQuantifier.ALL -> PartiqlAst.SetQuantifier.All()
             SetQuantifier.DISTINCT -> PartiqlAst.SetQuantifier.Distinct()
+        }
+
+        private fun translate(case: Case) = when (case) {
+            Case.SENSITIVE -> PartiqlAst.CaseSensitivity.CaseSensitive()
+            Case.INSENSITIVE -> PartiqlAst.CaseSensitivity.CaseInsensitive()
+        }
+
+        // PIG models target as Expr, unpack the path if it's only one node
+        private fun translateSimplePath(expr: Expr, ctx: Ctx): PartiqlAst.Expr {
+            val ex = visitExpr(expr, ctx)
+            return if (ex is PartiqlAst.Expr.Path && ex.steps.isEmpty()) ex.root else ex
         }
     }
 }
