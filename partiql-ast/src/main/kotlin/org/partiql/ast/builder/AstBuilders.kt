@@ -49,9 +49,9 @@ public class StatementDmlInsertBuilder {
 
     public var target: Statement.DML.Target? = null
 
-    public var values: Expr? = null
+    public var `value`: Expr? = null
 
-    public var onConflict: OnConflict.Action? = null
+    public var onConflict: OnConflict? = null
 
     public fun id(id: Int?): StatementDmlInsertBuilder = this.apply {
         this.id = id
@@ -61,11 +61,11 @@ public class StatementDmlInsertBuilder {
         this.target = target
     }
 
-    public fun values(values: Expr?): StatementDmlInsertBuilder = this.apply {
-        this.values = values
+    public fun `value`(`value`: Expr?): StatementDmlInsertBuilder = this.apply {
+        this.`value` = `value`
     }
 
-    public fun onConflict(onConflict: OnConflict.Action?): StatementDmlInsertBuilder = this.apply {
+    public fun onConflict(onConflict: OnConflict?): StatementDmlInsertBuilder = this.apply {
         this.onConflict = onConflict
     }
 
@@ -73,9 +73,9 @@ public class StatementDmlInsertBuilder {
 
     public fun build(factory: AstFactory = AstFactory.DEFAULT): Statement.DML.Insert =
         factory.statementDMLInsert(
-            id = id!!, target = target!!, values = values!!,
+            id = id!!, target = target!!, value = value!!,
             onConflict =
-            onConflict!!
+            onConflict
         )
 }
 
@@ -86,11 +86,11 @@ public class StatementDmlInsertValueBuilder {
 
     public var `value`: Expr? = null
 
-    public var atAlias: Expr? = null
-
     public var index: Expr? = null
 
     public var onConflict: OnConflict? = null
+
+    public var returning: Returning? = null
 
     public fun id(id: Int?): StatementDmlInsertValueBuilder = this.apply {
         this.id = id
@@ -104,10 +104,6 @@ public class StatementDmlInsertValueBuilder {
         this.`value` = `value`
     }
 
-    public fun atAlias(atAlias: Expr?): StatementDmlInsertValueBuilder = this.apply {
-        this.atAlias = atAlias
-    }
-
     public fun index(index: Expr?): StatementDmlInsertValueBuilder = this.apply {
         this.index = index
     }
@@ -116,15 +112,67 @@ public class StatementDmlInsertValueBuilder {
         this.onConflict = onConflict
     }
 
+    public fun returning(returning: Returning?): StatementDmlInsertValueBuilder = this.apply {
+        this.returning = returning
+    }
+
     public fun build(): Statement.DML.InsertValue = build(AstFactory.DEFAULT)
 
     public fun build(factory: AstFactory = AstFactory.DEFAULT): Statement.DML.InsertValue =
         factory.statementDMLInsertValue(
-            id = id!!, target = target!!, value = value!!,
-            atAlias =
-            atAlias!!,
-            index = index, onConflict = onConflict!!
+            id = id!!, target = target!!, value = value!!, index = index,
+            onConflict = onConflict, returning = returning
         )
+}
+
+public class StatementDmlUpsertBuilder {
+    public var id: Int? = null
+
+    public var target: Expr.Identifier? = null
+
+    public var `value`: Expr? = null
+
+    public fun id(id: Int?): StatementDmlUpsertBuilder = this.apply {
+        this.id = id
+    }
+
+    public fun target(target: Expr.Identifier?): StatementDmlUpsertBuilder = this.apply {
+        this.target = target
+    }
+
+    public fun `value`(`value`: Expr?): StatementDmlUpsertBuilder = this.apply {
+        this.`value` = `value`
+    }
+
+    public fun build(): Statement.DML.Upsert = build(AstFactory.DEFAULT)
+
+    public fun build(factory: AstFactory = AstFactory.DEFAULT): Statement.DML.Upsert =
+        factory.statementDMLUpsert(id = id!!, target = target!!, value = value!!)
+}
+
+public class StatementDmlReplaceBuilder {
+    public var id: Int? = null
+
+    public var target: Expr.Identifier? = null
+
+    public var `value`: Expr? = null
+
+    public fun id(id: Int?): StatementDmlReplaceBuilder = this.apply {
+        this.id = id
+    }
+
+    public fun target(target: Expr.Identifier?): StatementDmlReplaceBuilder = this.apply {
+        this.target = target
+    }
+
+    public fun `value`(`value`: Expr?): StatementDmlReplaceBuilder = this.apply {
+        this.`value` = `value`
+    }
+
+    public fun build(): Statement.DML.Replace = build(AstFactory.DEFAULT)
+
+    public fun build(factory: AstFactory = AstFactory.DEFAULT): Statement.DML.Replace =
+        factory.statementDMLReplace(id = id!!, target = target!!, value = value!!)
 }
 
 public class StatementDmlUpdateBuilder {
@@ -231,7 +279,7 @@ public class StatementDmlDeleteBuilder {
 public class StatementDmlBatchBuilder {
     public var id: Int? = null
 
-    public var from: Statement.DML.Target? = null
+    public var from: From? = null
 
     public var ops: MutableList<Statement.DML.Batch.Op> = mutableListOf()
 
@@ -243,7 +291,7 @@ public class StatementDmlBatchBuilder {
         this.id = id
     }
 
-    public fun from(from: Statement.DML.Target?): StatementDmlBatchBuilder = this.apply {
+    public fun from(from: From?): StatementDmlBatchBuilder = this.apply {
         this.from = from
     }
 
@@ -272,38 +320,33 @@ public class StatementDmlBatchBuilder {
 public class StatementDmlBatchOpSetBuilder {
     public var id: Int? = null
 
-    public var target: Expr.Path? = null
-
-    public var `value`: Expr? = null
+    public var assignments: MutableList<Statement.DML.Update.Assignment> = mutableListOf()
 
     public fun id(id: Int?): StatementDmlBatchOpSetBuilder = this.apply {
         this.id = id
     }
 
-    public fun target(target: Expr.Path?): StatementDmlBatchOpSetBuilder = this.apply {
-        this.target = target
-    }
-
-    public fun `value`(`value`: Expr?): StatementDmlBatchOpSetBuilder = this.apply {
-        this.`value` = `value`
+    public fun assignments(assignments: MutableList<Statement.DML.Update.Assignment>):
+        StatementDmlBatchOpSetBuilder = this.apply {
+        this.assignments = assignments
     }
 
     public fun build(): Statement.DML.Batch.Op.Set = build(AstFactory.DEFAULT)
 
     public fun build(factory: AstFactory = AstFactory.DEFAULT): Statement.DML.Batch.Op.Set =
-        factory.statementDMLBatchOpSet(id = id!!, target = target!!, value = value!!)
+        factory.statementDMLBatchOpSet(id = id!!, assignments = assignments)
 }
 
 public class StatementDmlBatchOpRemoveBuilder {
     public var id: Int? = null
 
-    public var target: Statement.DML.Target? = null
+    public var target: Expr.Path? = null
 
     public fun id(id: Int?): StatementDmlBatchOpRemoveBuilder = this.apply {
         this.id = id
     }
 
-    public fun target(target: Statement.DML.Target?): StatementDmlBatchOpRemoveBuilder = this.apply {
+    public fun target(target: Expr.Path?): StatementDmlBatchOpRemoveBuilder = this.apply {
         this.target = target
     }
 
@@ -329,20 +372,20 @@ public class StatementDmlBatchOpDeleteBuilder {
 public class StatementDmlTargetBuilder {
     public var id: Int? = null
 
-    public var table: MutableList<String> = mutableListOf()
+    public var table: Expr? = null
 
     public fun id(id: Int?): StatementDmlTargetBuilder = this.apply {
         this.id = id
     }
 
-    public fun table(table: MutableList<String>): StatementDmlTargetBuilder = this.apply {
+    public fun table(table: Expr?): StatementDmlTargetBuilder = this.apply {
         this.table = table
     }
 
     public fun build(): Statement.DML.Target = build(AstFactory.DEFAULT)
 
     public fun build(factory: AstFactory = AstFactory.DEFAULT): Statement.DML.Target =
-        factory.statementDMLTarget(id = id!!, table = table)
+        factory.statementDMLTarget(id = id!!, table = table!!)
 }
 
 public class StatementDdlCreateTableBuilder {

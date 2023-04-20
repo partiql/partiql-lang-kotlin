@@ -33,18 +33,30 @@ public abstract class AstFactory {
     public open fun statementDMLInsert(
         id: Int,
         target: Statement.DML.Target,
-        values: Expr,
-        onConflict: OnConflict.Action
-    ) = Statement.DML.Insert(id, target, values, onConflict)
+        `value`: Expr,
+        onConflict: OnConflict?
+    ) = Statement.DML.Insert(id, target, value, onConflict)
 
     public open fun statementDMLInsertValue(
         id: Int,
         target: Statement.DML.Target,
         `value`: Expr,
-        atAlias: Expr,
         index: Expr?,
-        onConflict: OnConflict
-    ) = Statement.DML.InsertValue(id, target, value, atAlias, index, onConflict)
+        onConflict: OnConflict?,
+        returning: Returning?
+    ) = Statement.DML.InsertValue(id, target, value, index, onConflict, returning)
+
+    public open fun statementDMLUpsert(
+        id: Int,
+        target: Expr.Identifier,
+        `value`: Expr
+    ) = Statement.DML.Upsert(id, target, value)
+
+    public open fun statementDMLReplace(
+        id: Int,
+        target: Expr.Identifier,
+        `value`: Expr
+    ) = Statement.DML.Replace(id, target, value)
 
     public open fun statementDMLUpdate(
         id: Int,
@@ -69,7 +81,7 @@ public abstract class AstFactory {
 
     public open fun statementDMLBatch(
         id: Int,
-        from: Statement.DML.Target,
+        from: From,
         ops: List<Statement.DML.Batch.Op>,
         `where`: Expr?,
         returning: Returning?
@@ -77,16 +89,18 @@ public abstract class AstFactory {
 
     public open fun statementDMLBatchOpSet(
         id: Int,
-        target: Expr.Path,
-        `value`: Expr
-    ) = Statement.DML.Batch.Op.Set(id, target, value)
+        assignments: List<Statement.DML.Update.Assignment>
+    ) = Statement.DML.Batch.Op.Set(
+        id,
+        assignments
+    )
 
-    public open fun statementDMLBatchOpRemove(id: Int, target: Statement.DML.Target) =
+    public open fun statementDMLBatchOpRemove(id: Int, target: Expr.Path) =
         Statement.DML.Batch.Op.Remove(id, target)
 
     public open fun statementDMLBatchOpDelete(id: Int) = Statement.DML.Batch.Op.Delete(id)
 
-    public open fun statementDMLTarget(id: Int, table: List<String>) = Statement.DML.Target(id, table)
+    public open fun statementDMLTarget(id: Int, table: Expr) = Statement.DML.Target(id, table)
 
     public open fun statementDDLCreateTable(
         id: Int,

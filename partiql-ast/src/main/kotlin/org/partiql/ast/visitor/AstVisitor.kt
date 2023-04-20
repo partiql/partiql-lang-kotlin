@@ -31,6 +31,10 @@ public interface AstVisitor<R, C> {
 
     public fun visitStatementDMLInsertValue(node: Statement.DML.InsertValue, ctx: C): R
 
+    public fun visitStatementDMLUpsert(node: Statement.DML.Upsert, ctx: C): R
+
+    public fun visitStatementDMLReplace(node: Statement.DML.Replace, ctx: C): R
+
     public fun visitStatementDMLUpdate(node: Statement.DML.Update, ctx: C): R
 
     public fun visitStatementDMLUpdateAssignment(node: Statement.DML.Update.Assignment, ctx: C): R

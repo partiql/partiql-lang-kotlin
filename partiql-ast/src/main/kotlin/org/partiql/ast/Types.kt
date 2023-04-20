@@ -84,9 +84,11 @@ import org.partiql.ast.builder.StatementDmlDeleteBuilder
 import org.partiql.ast.builder.StatementDmlInsertBuilder
 import org.partiql.ast.builder.StatementDmlInsertValueBuilder
 import org.partiql.ast.builder.StatementDmlRemoveBuilder
+import org.partiql.ast.builder.StatementDmlReplaceBuilder
 import org.partiql.ast.builder.StatementDmlTargetBuilder
 import org.partiql.ast.builder.StatementDmlUpdateAssignmentBuilder
 import org.partiql.ast.builder.StatementDmlUpdateBuilder
+import org.partiql.ast.builder.StatementDmlUpsertBuilder
 import org.partiql.ast.builder.StatementExecBuilder
 import org.partiql.ast.builder.StatementExplainBuilder
 import org.partiql.ast.builder.StatementExplainTargetDomainBuilder
@@ -147,6 +149,8 @@ public sealed class Statement : AstNode() {
         public override fun <R, C> accept(visitor: AstVisitor<R, C>, ctx: C): R = when (this) {
             is Insert -> visitor.visitStatementDMLInsert(this, ctx)
             is InsertValue -> visitor.visitStatementDMLInsertValue(this, ctx)
+            is Upsert -> visitor.visitStatementDMLUpsert(this, ctx)
+            is Replace -> visitor.visitStatementDMLReplace(this, ctx)
             is Update -> visitor.visitStatementDMLUpdate(this, ctx)
             is Remove -> visitor.visitStatementDMLRemove(this, ctx)
             is Delete -> visitor.visitStatementDMLDelete(this, ctx)
@@ -156,13 +160,13 @@ public sealed class Statement : AstNode() {
         public data class Insert(
             public override val id: Int,
             public val target: Target,
-            public val values: Expr,
-            public val onConflict: OnConflict.Action
+            public val `value`: Expr,
+            public val onConflict: OnConflict?
         ) : DML() {
             public override val children: List<AstNode> by lazy {
                 val kids = mutableListOf<AstNode?>()
                 kids.add(target)
-                kids.add(values)
+                kids.add(value)
                 kids.add(onConflict)
                 kids.filterNotNull()
             }
@@ -180,17 +184,17 @@ public sealed class Statement : AstNode() {
             public override val id: Int,
             public val target: Target,
             public val `value`: Expr,
-            public val atAlias: Expr,
             public val index: Expr?,
-            public val onConflict: OnConflict
+            public val onConflict: OnConflict?,
+            public val returning: Returning?
         ) : DML() {
             public override val children: List<AstNode> by lazy {
                 val kids = mutableListOf<AstNode?>()
                 kids.add(target)
                 kids.add(value)
-                kids.add(atAlias)
                 kids.add(index)
                 kids.add(onConflict)
+                kids.add(returning)
                 kids.filterNotNull()
             }
 
@@ -200,6 +204,48 @@ public sealed class Statement : AstNode() {
             public companion object {
                 @JvmStatic
                 public fun builder(): StatementDmlInsertValueBuilder = StatementDmlInsertValueBuilder()
+            }
+        }
+
+        public data class Upsert(
+            public override val id: Int,
+            public val target: Expr.Identifier,
+            public val `value`: Expr
+        ) : DML() {
+            public override val children: List<AstNode> by lazy {
+                val kids = mutableListOf<AstNode?>()
+                kids.add(target)
+                kids.add(value)
+                kids.filterNotNull()
+            }
+
+            public override fun <R, C> accept(visitor: AstVisitor<R, C>, ctx: C): R =
+                visitor.visitStatementDMLUpsert(this, ctx)
+
+            public companion object {
+                @JvmStatic
+                public fun builder(): StatementDmlUpsertBuilder = StatementDmlUpsertBuilder()
+            }
+        }
+
+        public data class Replace(
+            public override val id: Int,
+            public val target: Expr.Identifier,
+            public val `value`: Expr
+        ) : DML() {
+            public override val children: List<AstNode> by lazy {
+                val kids = mutableListOf<AstNode?>()
+                kids.add(target)
+                kids.add(value)
+                kids.filterNotNull()
+            }
+
+            public override fun <R, C> accept(visitor: AstVisitor<R, C>, ctx: C): R =
+                visitor.visitStatementDMLReplace(this, ctx)
+
+            public companion object {
+                @JvmStatic
+                public fun builder(): StatementDmlReplaceBuilder = StatementDmlReplaceBuilder()
             }
         }
 
@@ -290,7 +336,7 @@ public sealed class Statement : AstNode() {
 
         public data class Batch(
             public override val id: Int,
-            public val from: Target,
+            public val from: From,
             public val ops: List<Op>,
             public val `where`: Expr?,
             public val returning: Returning?
@@ -316,13 +362,11 @@ public sealed class Statement : AstNode() {
 
                 public data class Set(
                     public override val id: Int,
-                    public val target: Expr.Path,
-                    public val `value`: Expr
+                    public val assignments: List<Update.Assignment>
                 ) : Op() {
                     public override val children: List<AstNode> by lazy {
                         val kids = mutableListOf<AstNode?>()
-                        kids.add(target)
-                        kids.add(value)
+                        kids.addAll(assignments)
                         kids.filterNotNull()
                     }
 
@@ -337,7 +381,7 @@ public sealed class Statement : AstNode() {
 
                 public data class Remove(
                     public override val id: Int,
-                    public val target: Target
+                    public val target: Expr.Path
                 ) : Op() {
                     public override val children: List<AstNode> by lazy {
                         val kids = mutableListOf<AstNode?>()
@@ -377,8 +421,14 @@ public sealed class Statement : AstNode() {
 
         public data class Target(
             public override val id: Int,
-            public val table: List<String>
+            public val table: Expr
         ) : AstNode() {
+            public override val children: List<AstNode> by lazy {
+                val kids = mutableListOf<AstNode?>()
+                kids.add(table)
+                kids.filterNotNull()
+            }
+
             public override fun <R, C> accept(visitor: AstVisitor<R, C>, ctx: C): R =
                 visitor.visitStatementDMLTarget(this, ctx)
 

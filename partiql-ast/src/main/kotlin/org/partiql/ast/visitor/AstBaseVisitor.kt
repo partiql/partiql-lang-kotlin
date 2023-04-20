@@ -37,6 +37,8 @@ public abstract class AstBaseVisitor<R, C> : AstVisitor<R, C> {
     public override fun visitStatementDML(node: Statement.DML, ctx: C): R = when (node) {
         is Statement.DML.Insert -> visitStatementDMLInsert(node, ctx)
         is Statement.DML.InsertValue -> visitStatementDMLInsertValue(node, ctx)
+        is Statement.DML.Upsert -> visitStatementDMLUpsert(node, ctx)
+        is Statement.DML.Replace -> visitStatementDMLReplace(node, ctx)
         is Statement.DML.Update -> visitStatementDMLUpdate(node, ctx)
         is Statement.DML.Remove -> visitStatementDMLRemove(node, ctx)
         is Statement.DML.Delete -> visitStatementDMLDelete(node, ctx)
@@ -47,6 +49,12 @@ public abstract class AstBaseVisitor<R, C> : AstVisitor<R, C> {
         defaultVisit(node, ctx)
 
     public override fun visitStatementDMLInsertValue(node: Statement.DML.InsertValue, ctx: C): R =
+        defaultVisit(node, ctx)
+
+    public override fun visitStatementDMLUpsert(node: Statement.DML.Upsert, ctx: C): R =
+        defaultVisit(node, ctx)
+
+    public override fun visitStatementDMLReplace(node: Statement.DML.Replace, ctx: C): R =
         defaultVisit(node, ctx)
 
     public override fun visitStatementDMLUpdate(node: Statement.DML.Update, ctx: C): R =

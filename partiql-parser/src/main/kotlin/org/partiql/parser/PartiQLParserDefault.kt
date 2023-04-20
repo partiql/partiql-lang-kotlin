@@ -443,31 +443,41 @@ internal class PartiQLParserDefault : PartiQLParser {
          *
          */
 
+        /**
+         * The PartiQL grammars allows for multiple DML commands in one UPDATE statement.
+         * This function unwraps DML commands to the more limited DML.Batch.Op commands.
+         */
         override fun visitDmlBaseWrapper(ctx: GeneratedParser.DmlBaseWrapperContext) = translate(ctx) {
-            val source = when {
-                // UPDATE <target>
-                ctx.updateClause() != null -> {
-                }
-                // FROM <target>
-                ctx.fromClause() != null -> {
-                } // FROM <table>
-                else -> throw error(ctx, "DML ")
+            val table = when {
+                ctx.updateClause() != null -> ctx.updateClause().tableBaseReference()
+                ctx.fromClause() != null -> ctx.fromClause().tableReference()
+                else -> throw error(ctx, "Expected UPDATE <table> or FROM <table>")
             }
-            // val from = visitOrNull(sourceContext, From::class)
-            // val where = visitOrNull(ctx.whereClause(), Expr::class)
-            // val returning = visitOrNull(ctx.returningClause(), Returning::class)
-            // val operations = ctx.dmlBaseCommand().map { command -> getCommandList(visit(command)) }.flatten()
-            // Statement.DML.Batch()
-            TODO()
+            val from = visit(table, From::class)
+            val ops = ctx.dmlBaseCommand().map {
+                val op = visitDmlBaseCommand(it)
+                when (op) {
+                    is Statement.DML.Update -> Statement.DML.Batch.Op.Set(op.id, op.assignments)
+                    is Statement.DML.Remove -> Statement.DML.Batch.Op.Remove(op.id, op.target)
+                    is Statement.DML.Delete -> Statement.DML.Batch.Op.Delete(op.id)
+                    else -> throw error(ctx, "Invalid DML operator in batch update")
+                }
+            }
+            val where = ctx.whereClause()?.let { visitExpr(it.expr()) }
+            val returning = ctx.returningClause()?.let { visitReturningClause(it) }
+            Statement.DML.Batch(id(), from, ops, where, returning)
         }
 
         override fun visitDmlDelete(ctx: GeneratedParser.DmlDeleteContext) = super.visit(ctx) as Statement.DML.Delete
 
-        override fun visitDmlInsertReturning(ctx: GeneratedParser.DmlInsertReturningContext) = translate(ctx) {
-            TODO()
-        }
+        override fun visitDmlInsertReturning(ctx: GeneratedParser.DmlInsertReturningContext) =
+            super.visit(ctx.insertCommandReturning()) as Statement.DML.InsertValue
 
-        override fun visitDmlBase(ctx: GeneratedParser.DmlBaseContext) = super.visitDmlBase(ctx) as Statement.DML
+        override fun visitDmlBase(ctx: GeneratedParser.DmlBaseContext) =
+            super.visitDmlBaseCommand(ctx.dmlBaseCommand()) as Statement.DML
+
+        override fun visitDmlBaseCommand(ctx: GeneratedParser.DmlBaseCommandContext) =
+            super.visitDmlBaseCommand(ctx) as Statement.DML
 
         override fun visitRemoveCommand(ctx: GeneratedParser.RemoveCommandContext) = translate(ctx) {
             val target = visitPathSimple(ctx.pathSimple())
@@ -476,104 +486,92 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitDeleteCommand(ctx: GeneratedParser.DeleteCommandContext) = translate(ctx) {
             val from = visit(ctx.fromClauseSimple(), From::class)
+            val target = when (from) {
+                is From.Collection -> Statement.DML.Target(id(), from.expr)
+                is From.Join -> throw error(ctx.fromClauseSimple(), "Expected table identifier")
+            }
             val where = visitOrNull(ctx.whereClause(), Expr::class)
             val returning = visitOrNull(ctx.returningClause(), Returning::class)
-            // Statement.DML.Delete(id(), from, where, returning)
-            TODO()
+            Statement.DML.Delete(id(), target, where, returning)
         }
 
-        // override fun visitInsertLegacy(ctx: GeneratedParser.InsertLegacyContext) = translate(ctx) {
-        //     val metas = ctx.INSERT().getSourceMetaContainer()
-        //     val target = visitPathSimple(ctx.pathSimple())
-        //     val index = visitOrNull(ctx.pos, Expr::class)
-        //     val onConflict = visitOrNull(ctx.onConflictClause(), OnConflict::class)
-        //     insertValue(target, visit(ctx.value, Expr::class), index, onConflict, metas)
-        // }
-        //
-        // override fun visitInsert(ctx: GeneratedParser.InsertContext) = translate(ctx) {
-        //     val metas = ctx.INSERT().getSourceMetaContainer()
-        //     val asIdent = ctx.asIdent()
-        //     // Based on the RFC, if alias exists the table must be hidden behind the alias, see:
-        //     // https://github.com/partiql/partiql-docs/blob/main/RFCs/0011-partiql-insert.md#41-insert-parameters
-        //     val target = if (asIdent != null) visitAsIdent(asIdent) else visitSymbolPrimitive(ctx.symbolPrimitive())
-        //     val conflictAction = visitOrNull(ctx.onConflictClause(), ConflictAction::class)
-        //     insert(target, visit(ctx.value, Expr::class), conflictAction, metas)
-        // }
-        //
-        // // TODO move from experimental; pending: https://github.com/partiql/partiql-docs/issues/27
-        // override fun visitReplaceCommand(ctx: GeneratedParser.ReplaceCommandContext) = translate(ctx) {
-        //     val asIdent = ctx.asIdent()
-        //     // Based on the RFC, if alias exists the table must be hidden behind the alias, see:
-        //     // https://github.com/partiql/partiql-docs/blob/main/RFCs/0011-partiql-insert.md#41-insert-parameters
-        //     val target = if (asIdent != null) visitAsIdent(asIdent) else visitSymbolPrimitive(ctx.symbolPrimitive())
-        //     insert(
-        //         target = target,
-        //         values = visit(ctx.value, Expr::class),
-        //         conflictAction = doReplace(excluded()),
-        //         metas = ctx.REPLACE().getSourceMetaContainer()
-        //     )
-        // }
-        //
-        // // Based on https://github.com/partiql/partiql-docs/blob/main/RFCs/0011-partiql-insert.md
-        // override fun visitUpsertCommand(ctx: GeneratedParser.UpsertCommandContext) = translate(ctx) {
-        //     val asIdent = ctx.asIdent()
-        //     // Based on the RFC, if alias exists the table must be hidden behind the alias, see:
-        //     // https://github.com/partiql/partiql-docs/blob/main/RFCs/0011-partiql-insert.md#41-insert-parameters
-        //     val target = if (asIdent != null) visitAsIdent(asIdent) else visitSymbolPrimitive(ctx.symbolPrimitive())
-        //     insert(
-        //         target = target,
-        //         values = visit(ctx.value, Expr::class),
-        //         conflictAction = doUpdate(excluded()),
-        //         metas = ctx.UPSERT().getSourceMetaContainer()
-        //     )
-        // }
-        //
-        // // Based on https://github.com/partiql/partiql-docs/blob/main/RFCs/0011-partiql-insert.md
-        // override fun visitInsertCommandReturning(ctx: GeneratedParser.InsertCommandReturningContext) = translate(ctx) {
-        //     val metas = ctx.INSERT().getSourceMetaContainer()
-        //     val target = visitPathSimple(ctx.pathSimple())
-        //     val index = visitOrNull(ctx.pos, Expr::class)
-        //     val onConflictLegacy = visitOrNull(ctx.onConflictClause(), OnConflict::class)
-        //     val returning = visitOrNull(ctx.returningClause(), ReturningExpr::class)
-        //     dml(
-        //         dmlOpList(
-        //             insertValue(
-        //                 target,
-        //                 visit(ctx.value, Expr::class),
-        //                 index = index,
-        //                 onConflict = onConflictLegacy,
-        //                 ctx.INSERT().getSourceMetaContainer()
-        //             ),
-        //             metas = metas
-        //         ),
-        //         returning = returning,
-        //         metas = metas
-        //     )
-        // }
-        //
-        // override fun visitReturningClause(ctx: GeneratedParser.ReturningClauseContext) = translate(ctx) {
-        //     val elements = visitOrEmpty(ctx.returningColumn(), ReturningElem::class)
-        //     returningExpr(elements, ctx.RETURNING().getSourceMetaContainer())
-        // }
-        //
-        // private fun getReturningMapping(status: Token, age: Token) = translate(ctx) {
-        //     when {
-        //         status.type == GeneratedParser.MODIFIED && age.type == GeneratedParser.NEW -> modifiedNew()
-        //         status.type == GeneratedParser.MODIFIED && age.type == GeneratedParser.OLD -> modifiedOld()
-        //         status.type == GeneratedParser.ALL && age.type == GeneratedParser.NEW -> allNew()
-        //         status.type == GeneratedParser.ALL && age.type == GeneratedParser.OLD -> allOld()
-        //         else -> throw status.err("Unable to get return mapping.", ErrorCode.PARSE_UNEXPECTED_TOKEN)
-        //     }
-        // }
-        //
-        // override fun visitReturningColumn(ctx: GeneratedParser.ReturningColumnContext) = translate(ctx) {
-        //     val column = when (ctx.ASTERISK()) {
-        //         null -> returningColumn(visitExpr(ctx.expr()))
-        //         else -> returningWildcard()
-        //     }
-        //     returningElem(getReturningMapping(ctx.status, ctx.age), column)
-        // }
-        //
+        override fun visitInsertLegacy(ctx: GeneratedParser.InsertLegacyContext) = translate(ctx) {
+            val target = Statement.DML.Target(id(), visitPathSimple(ctx.pathSimple()))
+            val value = visitExpr(ctx.value)
+            val index = visitOrNull(ctx.pos, Expr::class)
+            val onConflict = ctx.onConflictClause()?.let { visitOnConflictClause(it) }
+            Statement.DML.InsertValue(id(), target, value, index, onConflict, null)
+        }
+
+        override fun visitInsert(ctx: GeneratedParser.InsertContext) = translate(ctx) {
+            val asIdent =
+                if (ctx.asIdent() != null) visitAsIdent(ctx.asIdent()) else visitSymbolPrimitive(ctx.symbolPrimitive())
+            val target = Statement.DML.Target(id(), asIdent)
+            val value = visitExpr(ctx.value)
+            val onConflict = ctx.onConflictClause()?.let { visitOnConflictClause(it) }
+            Statement.DML.Insert(id(), target, value, onConflict)
+        }
+
+        /**
+         * TODO move from experimental; pending: https://github.com/partiql/partiql-docs/issues/27
+         * Based on the RFC, if alias exists the table must be hidden behind the alias, see:
+         * https://github.com/partiql/partiql-docs/blob/main/RFCs/0011-partiql-insert.md#41-insert-parameters
+         */
+        override fun visitReplaceCommand(ctx: GeneratedParser.ReplaceCommandContext) = translate(ctx) {
+            val target =
+                if (ctx.asIdent() != null) visitAsIdent(ctx.asIdent()) else visitSymbolPrimitive(ctx.symbolPrimitive())
+            val value = visitExpr(ctx.value)
+            Statement.DML.Replace(id(), target, value)
+        }
+
+        /**
+         * Based on https://github.com/partiql/partiql-docs/blob/main/RFCs/0011-partiql-insert.md
+         * Based on the RFC, if alias exists the table must be hidden behind the alias, see:
+         */
+        override fun visitUpsertCommand(ctx: GeneratedParser.UpsertCommandContext) = translate(ctx) {
+            val target =
+                if (ctx.asIdent() != null) visitAsIdent(ctx.asIdent()) else visitSymbolPrimitive(ctx.symbolPrimitive())
+            val value = visitExpr(ctx.value)
+            Statement.DML.Upsert(id(), target, value)
+        }
+
+        /**
+         * Based on https://github.com/partiql/partiql-docs/blob/main/RFCs/0011-partiql-insert.md
+         */
+        override fun visitInsertCommandReturning(ctx: GeneratedParser.InsertCommandReturningContext) = translate(ctx) {
+            val target = Statement.DML.Target(id(), visitPathSimple(ctx.pathSimple()))
+            val value = visitExpr(ctx.value)
+            val index = visitOrNull(ctx.pos, Expr::class)
+            val onConflict = ctx.onConflictClause()?.let { visitOnConflictClause(it) }
+            val returning = visitReturningClause(ctx.returningClause())
+            Statement.DML.InsertValue(id(), target, value, index, onConflict, returning)
+        }
+
+        override fun visitReturningClause(ctx: GeneratedParser.ReturningClauseContext) = translate(ctx) {
+            val columns = visitOrEmpty(ctx.returningColumn(), Returning.Column::class)
+            Returning(id(), columns)
+        }
+
+        override fun visitReturningColumn(ctx: GeneratedParser.ReturningColumnContext) = translate(ctx) {
+            val status = when (ctx.status.type) {
+                GeneratedParser.MODIFIED -> Returning.Column.Status.MODIFIED
+                GeneratedParser.ALL -> Returning.Column.Status.ALL
+                else -> throw error(ctx.status, "Expected MODIFIED or ALL")
+            }
+            val age = when (ctx.age.type) {
+                GeneratedParser.OLD -> Returning.Column.Age.OLD
+                GeneratedParser.NEW -> Returning.Column.Age.NEW
+                else -> throw error(ctx.status, "Expected OLD or NEW")
+            }
+            val value = when (ctx.ASTERISK()) {
+                null -> Returning.Column.Value.Expression(id(), visitExpr(ctx.expr()))
+                else -> Returning.Column.Value.Wildcard(id())
+            }
+            Returning.Column(id(), status, age, value)
+        }
+
+        private fun visitOnConflictClause(ctx: GeneratedParser.OnConflictClauseContext) = ctx.accept(this) as OnConflict
+
         override fun visitOnConflict(ctx: GeneratedParser.OnConflictContext) = translate(ctx) {
             val target = visitConflictTarget(ctx.conflictTarget())
             val action = visitConflictAction(ctx.conflictAction())
@@ -647,7 +645,7 @@ internal class PartiQLParserDefault : PartiQLParser {
          * We put a blank target, because we'll have to unpack this.
          */
         override fun visitSetCommand(ctx: GeneratedParser.SetCommandContext) = translate(ctx) {
-            val target = Statement.DML.Target(id(), emptyList())
+            val target = Statement.DML.Target(id(), Expr.Missing(id()))
             val assignments = visitOrEmpty(ctx.setAssignment(), Statement.DML.Update.Assignment::class)
             Statement.DML.Update(id(), target, assignments)
         }

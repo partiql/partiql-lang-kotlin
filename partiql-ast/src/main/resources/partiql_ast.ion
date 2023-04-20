@@ -14,21 +14,33 @@ statement::[
   // Data Manipulation Language
   d_m_l::[
 
-    // `INSERT INTO <target> <value> ON CONFLICT <conflict action>
+    // `INSERT INTO <target> [AS <alias>] ON CONFLICT <conflict action>
     // https://github.com/partiql/partiql-docs/blob/main/RFCs/0011-partiql-insert.md
     insert::{
       target:       target,
-      values:       expr,
-      on_conflict: '.on_conflict.action',
+      value:        expr,
+      on_conflict:  optional::on_conflict,
     },
 
     // `INSERT INTO <target> VALUE <expr> [AT <expr>]` [ON CONFLICT WHERE <expr> DO NOTHING]`
     insert_value::{
       target:       target,
       value:        expr,
-      at_alias:     expr,
       index:        optional::expr,
-      on_conflict:  on_conflict,
+      on_conflict:  optional::on_conflict,
+      returning:    optional::returning,
+    },
+
+    // UPSERT INTO <target> [<alias>] <expr>
+    upsert::{
+      target: '.expr.identifier',
+      value:  expr,
+    },
+
+    // REPLACE INTO <target> [<alias>] value=expr;
+    replace::{
+      target: '.expr.identifier',
+      value:  expr,
     },
 
     // `UPDATE <target> SET <set clause list> WHERE <expr>`
@@ -55,20 +67,20 @@ statement::[
       returning:  optional::returning,
     },
 
+    // TODO what is the target here?
     // `[UPDATE|FROM] <target> <dml base op>+ WHERE <expr> RETURNING <returning>`
     batch::{
-      from:       target,
+      from:       from,
       ops:        list::[op],
       where:      optional::expr,
       returning:  optional::returning,
       _: [
         op::[
           set::{
-            target: '.expr.path',
-            value:  expr,
+            assignments: list::[assignment],
           },
           remove::{
-            target: target,
+            target: '.expr.path',
           },
           delete::{},
         ],
@@ -78,7 +90,8 @@ statement::[
     // <target table> ::= [ONLY] <table name>
     _::[
       target::{
-        table: list::[string],
+        // temporary, change to path
+        table: expr,
       },
     ],
   ],

@@ -40,8 +40,8 @@ public class AstBuilder(
     public fun statementDMLInsert(
         id: Int? = null,
         target: Statement.DML.Target? = null,
-        values: Expr? = null,
-        onConflict: OnConflict.Action? = null,
+        `value`: Expr? = null,
+        onConflict: OnConflict? = null,
         block: StatementDmlInsertBuilder.() -> Unit = {}
     ): Statement.DML.Insert {
         val builder = StatementDmlInsertBuilder()
@@ -53,12 +53,34 @@ public class AstBuilder(
         id: Int? = null,
         target: Statement.DML.Target? = null,
         `value`: Expr? = null,
-        atAlias: Expr? = null,
         index: Expr? = null,
         onConflict: OnConflict? = null,
+        returning: Returning? = null,
         block: StatementDmlInsertValueBuilder.() -> Unit = {}
     ): Statement.DML.InsertValue {
         val builder = StatementDmlInsertValueBuilder()
+        builder.block()
+        return builder.build(factory)
+    }
+
+    public fun statementDMLUpsert(
+        id: Int? = null,
+        target: Expr.Identifier? = null,
+        `value`: Expr? = null,
+        block: StatementDmlUpsertBuilder.() -> Unit = {}
+    ): Statement.DML.Upsert {
+        val builder = StatementDmlUpsertBuilder()
+        builder.block()
+        return builder.build(factory)
+    }
+
+    public fun statementDMLReplace(
+        id: Int? = null,
+        target: Expr.Identifier? = null,
+        `value`: Expr? = null,
+        block: StatementDmlReplaceBuilder.() -> Unit = {}
+    ): Statement.DML.Replace {
+        val builder = StatementDmlReplaceBuilder()
         builder.block()
         return builder.build(factory)
     }
@@ -109,7 +131,7 @@ public class AstBuilder(
 
     public fun statementDMLBatch(
         id: Int? = null,
-        from: Statement.DML.Target? = null,
+        from: From? = null,
         ops: MutableList<Statement.DML.Batch.Op> = mutableListOf(),
         `where`: Expr? = null,
         returning: Returning? = null,
@@ -122,8 +144,7 @@ public class AstBuilder(
 
     public fun statementDMLBatchOpSet(
         id: Int? = null,
-        target: Expr.Path? = null,
-        `value`: Expr? = null,
+        assignments: MutableList<Statement.DML.Update.Assignment> = mutableListOf(),
         block: StatementDmlBatchOpSetBuilder.() -> Unit = {}
     ): Statement.DML.Batch.Op.Set {
         val builder = StatementDmlBatchOpSetBuilder()
@@ -133,7 +154,7 @@ public class AstBuilder(
 
     public fun statementDMLBatchOpRemove(
         id: Int? = null,
-        target: Statement.DML.Target? = null,
+        target: Expr.Path? = null,
         block: StatementDmlBatchOpRemoveBuilder.() -> Unit = {}
     ): Statement.DML.Batch.Op.Remove {
         val builder = StatementDmlBatchOpRemoveBuilder()
@@ -152,7 +173,7 @@ public class AstBuilder(
 
     public fun statementDMLTarget(
         id: Int? = null,
-        table: MutableList<String> = mutableListOf(),
+        table: Expr? = null,
         block: StatementDmlTargetBuilder.() -> Unit = {}
     ): Statement.DML.Target {
         val builder = StatementDmlTargetBuilder()
