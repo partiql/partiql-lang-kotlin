@@ -17,7 +17,6 @@ package org.partiql.lang.planner.transforms
 import org.partiql.annotations.ExperimentalPartiQLSchemaInferencer
 import org.partiql.lang.SqlException
 import org.partiql.lang.ast.UNKNOWN_SOURCE_LOCATION
-import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Problem
 import org.partiql.lang.errors.ProblemHandler
@@ -27,18 +26,15 @@ import org.partiql.lang.errors.PropertyValueMap
 import org.partiql.lang.planner.PlanningProblemDetails
 import org.partiql.lang.planner.transforms.impl.Metadata
 import org.partiql.lang.planner.transforms.plan.PlanTyper
-import org.partiql.lang.planner.transforms.plan.PlanUtils
+import org.partiql.lang.planner.transforms.plan.PlanUtils.grabType
 import org.partiql.lang.syntax.PartiQLParserBuilder
 import org.partiql.lang.util.propertyValueMapOf
-import org.partiql.plan.Rex
 import org.partiql.spi.Plugin
-import org.partiql.spi.sources.ColumnMetadata
-import org.partiql.spi.sources.ValueDescriptor
-import org.partiql.spi.sources.ValueDescriptor.TableDescriptor
+import org.partiql.types.StaticType
 import kotlin.jvm.Throws
 
 /**
- * Vends functions, such as [infer], to infer the output [ValueDescriptor] of a PartiQL query.
+ * Vends functions, such as [infer], to infer the output [StaticType] of a PartiQL query.
  */
 @ExperimentalPartiQLSchemaInferencer
 public object PartiQLSchemaInferencer {
@@ -51,20 +47,19 @@ public object PartiQLSchemaInferencer {
      * SELECT a FROM t
      * ```
      *
-     * The inferred [ValueDescriptor] of the above query will resemble a [ValueDescriptor.TableDescriptor] with a
-     * single [ColumnMetadata] named "a".
+     * The inferred [StaticType] of the above query will resemble a [StaticType.BAG] with an element type [StaticType.STRUCT] with a
+     * single field named "a".
      *
      * Consider another valid PartiQL query:
      * ```partiql
      * 1 + 1
      * ```
      *
-     * In the above example, the inferred [ValueDescriptor] will resemble a [ValueDescriptor.TypeDescriptor] that represents
-     * the type: [org.partiql.types.IntType].
+     * In the above example, the inferred [StaticType] will resemble a [StaticType.INT].
      *
      * @param query the PartiQL statement to infer
      * @param ctx relevant metadata for inference
-     * @return the description of the output data. The return type of [ValueDescriptor] is subject to change.
+     * @return the type of the output data.
      * @throws SqlException always throws a [SqlException].
      */
     @JvmStatic
@@ -72,7 +67,7 @@ public object PartiQLSchemaInferencer {
     public fun infer(
         query: String,
         ctx: Context
-    ): ValueDescriptor {
+    ): StaticType {
         return try {
             inferInternal(query, ctx)
         } catch (t: Throwable) {
@@ -139,12 +134,9 @@ public object PartiQLSchemaInferencer {
         }
     }
 
-    private const val DEFAULT_TABLE_NAME = "UNSPECIFIED"
-
-    private fun inferInternal(query: String, ctx: Context): ValueDescriptor {
+    private fun inferInternal(query: String, ctx: Context): StaticType {
         val parser = PartiQLParserBuilder.standard().build()
-        val ast = parser.parseAstStatement(query) as? PartiqlAst.Statement.Query
-            ?: TODO("The PartiQLSchemaInferencer only supports inference on SFW queries at the moment.")
+        val ast = parser.parseAstStatement(query)
 
         // Transform to Plan
         val plan = AstToPlan.transform(ast)
@@ -160,33 +152,12 @@ public object PartiQLSchemaInferencer {
             )
         )
 
-        // Convert Logical Plan to Value Descriptor
-        return convertSchema(typedPlan)
-    }
-
-    private fun convertSchema(rex: Rex): ValueDescriptor = when (rex) {
-        is Rex.Agg -> ValueDescriptor.TypeDescriptor(rex.type!!)
-        is Rex.Binary -> ValueDescriptor.TypeDescriptor(rex.type!!)
-        is Rex.Call -> ValueDescriptor.TypeDescriptor(rex.type!!)
-        is Rex.Collection.Array -> ValueDescriptor.TypeDescriptor(rex.type!!)
-        is Rex.Collection.Bag -> ValueDescriptor.TypeDescriptor(rex.type!!)
-        is Rex.Id -> ValueDescriptor.TypeDescriptor(rex.type!!)
-        is Rex.Lit -> ValueDescriptor.TypeDescriptor(rex.type!!)
-        is Rex.Path -> ValueDescriptor.TypeDescriptor(rex.type!!)
-        is Rex.Query.Collection -> when (rex.constructor) {
-            null -> {
-                val attrs = PlanUtils.getTypeEnv(rex.rel).map { attr -> ColumnMetadata(attr.name, attr.type) }
-                TableDescriptor(
-                    name = DEFAULT_TABLE_NAME,
-                    attributes = attrs
-                )
-            }
-            else -> ValueDescriptor.TypeDescriptor(rex.type!!)
-        }
-        is Rex.Query.Scalar.Subquery -> ValueDescriptor.TypeDescriptor(rex.type!!)
-        is Rex.Query.Scalar.Pivot -> ValueDescriptor.TypeDescriptor(rex.type!!)
-        is Rex.Tuple -> ValueDescriptor.TypeDescriptor(rex.type!!)
-        is Rex.Unary -> ValueDescriptor.TypeDescriptor(rex.type!!)
-        is Rex.Switch -> ValueDescriptor.TypeDescriptor(rex.type!!)
+        // Convert Logical Plan to Static Type
+        return typedPlan.grabType() ?: throw InferenceException(
+            Problem(
+                UNKNOWN_SOURCE_LOCATION,
+                PlanningProblemDetails.CompileError("Unable to infer the output type of plan.")
+            )
+        )
     }
 }

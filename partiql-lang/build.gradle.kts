@@ -32,12 +32,12 @@ dependencies {
     antlr(Deps.antlr)
     api(project(":lib:isl"))
     api(project(":partiql-spi"))
+    api(project(":partiql-types"))
     api(Deps.ionElement)
     api(Deps.ionJava)
     api(Deps.pigRuntime)
     // libs are included in partiql-lang-kotlin JAR
     libs(project(":partiql-ast"))
-    libs(project(":partiql-types"))
     libs(project(":partiql-parser"))
     libs(project(":partiql-plan"))
     implementation(Deps.antlrRuntime)

@@ -24,7 +24,7 @@ import org.partiql.spi.Plugin
 import org.partiql.spi.connector.ConnectorMetadata
 import org.partiql.spi.connector.ConnectorSession
 import org.partiql.spi.connector.Constants
-import org.partiql.spi.sources.ValueDescriptor
+import org.partiql.types.StaticType
 
 /**
  * Acts to consolidate multiple [org.partiql.spi.connector.ConnectorMetadata]'s.
@@ -54,10 +54,10 @@ internal class Metadata(
         }
     }
 
-    public fun getObjectDescriptor(session: PlannerSession, handle: ObjectHandle): ValueDescriptor {
+    public fun getObjectDescriptor(session: PlannerSession, handle: ObjectHandle): StaticType {
         val connectorSession = session.toConnectorSession()
         val metadata = getMetadata(session.toConnectorSession(), BindingName(handle.catalogName, BindingCase.SENSITIVE))!!.metadata
-        return metadata.getObjectDescriptor(connectorSession, handle.connectorHandle)!!
+        return metadata.getObjectType(connectorSession, handle.connectorHandle)!!
     }
 
     private fun getMetadata(connectorSession: ConnectorSession, catalogName: BindingName): MetadataInformation? {

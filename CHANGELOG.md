@@ -24,6 +24,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+
+### Changed
+
+### Deprecated
+
+### Fixed
+
+### Removed
+
+### Security
+
+## [0.9.3] - 2023-04-12
+
+### Added
 - Added numeric builtins ABS, SQRT, EXP, LN, POW, MOD.
 - Added standard SQL built-in functions POSITION, OVERLAY, LENGTH, BIT_LENGTH, OCTET_LENGTH, CARDINALITY, 
   an additional builtin TEXT_REPLACE, and standard SQL aggregations on booleans EVERY, ANY, SOME.
@@ -33,9 +47,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   but brings it in conformance with the specification.
 - Added `partiql-plan` package which contains experimental PartiQL Plan data structures.
 - Initializes SPI Framework under `partiql-spi`.
+- Models experimental `Schema` with constraints.
+  With this change, we're introducing `Tuple` and `Collection` constraints to be able to model the shape of data as 
+  constraints.
 - Introduces the PartiQLSchemaInferencer and PlannerSession
   - The PlannerSession describes the current session and is used by the PartiQLSchemaInferencer.
-  - The PartiQLSchemaInferencer provides a function, `infer`, to aid in inferring the output `Schema` of a
+  - The PartiQLSchemaInferencer provides a function, `infer`, to aid in inferring the output `StaticType` of a
   PartiQL Query. See the KDoc for more information and examples.
 
 ### Changed

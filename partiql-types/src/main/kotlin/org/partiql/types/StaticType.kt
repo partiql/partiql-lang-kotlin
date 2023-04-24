@@ -81,7 +81,7 @@ sealed class StaticType {
             LIST,
             SEXP,
             STRUCT,
-            BAG
+            BAG,
         )
     }
 
@@ -209,7 +209,19 @@ class UnsupportedTypeCheckException(message: String) : RuntimeException(message)
  */
 sealed class CollectionType : SingleType() {
     abstract val elementType: StaticType
+    abstract val constraints: Set<CollectionConstraint>
+
+    internal fun validateCollectionConstraints() {
+        if (elementType !is StructType && constraints.any { it is TupleCollectionConstraint }) {
+            throw UnsupportedTypeConstraint("Only collection of tuples can have tuple constraints")
+        }
+    }
 }
+
+/**
+ * Exception thrown when a [StaticType] is initialized with an unsupported type constraint.
+ */
+class UnsupportedTypeConstraint(message: String) : Exception(message)
 
 // Single types from ExprValueType.
 
@@ -396,8 +408,13 @@ data class ClobType(override val metas: Map<String, Any> = mapOf()) : SingleType
  */
 data class ListType(
     override val elementType: StaticType = ANY,
-    override val metas: Map<String, Any> = mapOf()
+    override val metas: Map<String, Any> = mapOf(),
+    override val constraints: Set<CollectionConstraint> = setOf()
 ) : CollectionType() {
+
+    init {
+        validateCollectionConstraints()
+    }
     override fun flatten(): StaticType = this
 
     override val allTypes: List<StaticType>
@@ -411,8 +428,12 @@ data class ListType(
  */
 data class SexpType(
     override val elementType: StaticType = ANY,
-    override val metas: Map<String, Any> = mapOf()
+    override val metas: Map<String, Any> = mapOf(),
+    override val constraints: Set<CollectionConstraint> = setOf(),
 ) : CollectionType() {
+    init {
+        validateCollectionConstraints()
+    }
     override fun flatten(): StaticType = this
 
     override val allTypes: List<StaticType>
@@ -426,8 +447,12 @@ data class SexpType(
  */
 data class BagType(
     override val elementType: StaticType = ANY,
-    override val metas: Map<String, Any> = mapOf()
+    override val metas: Map<String, Any> = mapOf(),
+    override val constraints: Set<CollectionConstraint> = setOf(),
 ) : CollectionType() {
+    init {
+        this.validateCollectionConstraints()
+    }
     override fun flatten(): StaticType = this
 
     override val allTypes: List<StaticType>
@@ -438,9 +463,18 @@ data class BagType(
 
 data class StructType(
     val fields: Map<String, StaticType> = mapOf(),
+    // `TupleConstraint` already has `Open` constraint which overlaps with `contentClosed`.
+    // In addition, `primaryKeyFields` must not exist on the `StructType` as `PrimaryKey`
+    // is a property of collection of tuples. As we have plans to define PartiQL types in
+    // more details it's foreseeable to have an refactor of our types in future and have a
+    // new definition of this type as `Tuple`. See the following issue for more details:
+    // https://github.com/partiql/partiql-spec/issues/49
+    // TODO remove `contentClosed` and `primaryKeyFields` if after finalizing our type specification we're
+    // still going with `StructType`.
     val contentClosed: Boolean = false,
     val primaryKeyFields: List<String> = listOf(),
-    override val metas: Map<String, Any> = mapOf()
+    val constraints: Set<TupleConstraint> = setOf(),
+    override val metas: Map<String, Any> = mapOf(),
 ) : SingleType() {
     override fun flatten(): StaticType = this
 
@@ -451,8 +485,8 @@ data class StructType(
         val entries = fields.entries
         val firstSeveral = entries.toList().take(3).joinToString { "${it.key}: ${it.value}" }
         return when {
-            entries.size <= 3 -> "struct($firstSeveral)"
-            else -> "struct($firstSeveral, ... and ${entries.size - 3} other field(s))"
+            entries.size <= 3 -> "struct($firstSeveral, $constraints)"
+            else -> "struct($firstSeveral, ... and ${entries.size - 3} other field(s), $constraints)"
         }
     }
 }
@@ -516,6 +550,33 @@ sealed class NumberConstraint {
     data class UpTo(override val value: Int) : NumberConstraint() {
         override fun matches(num: Int): Boolean = value >= num
     }
+}
+
+/**
+ * Represents Tuple constraints; this is still experimental.
+ * and subject to change upon finalization of the following:
+ * - https://github.com/partiql/partiql-spec/issues/49
+ * - https://github.com/partiql/partiql-docs/issues/37
+ */
+sealed class TupleConstraint {
+    data class UniqueAttrs(val value: Boolean) : TupleConstraint()
+    data class Open(val value: Boolean) : TupleConstraint()
+}
+
+/**
+ * An Interface for constraints that are only applicable to collection of tuples, e.g. `PrimaryKey`.
+ */
+interface TupleCollectionConstraint
+
+/**
+ * Represents Collection constraints; this is still experimental.
+ * and subject to change upon finalization of the following:
+ * - https://github.com/partiql/partiql-spec/issues/49
+ * - https://github.com/partiql/partiql-docs/issues/37
+ */
+sealed class CollectionConstraint {
+    data class PrimaryKey(val keys: Set<String>) : TupleCollectionConstraint, CollectionConstraint()
+    data class PartitionKey(val keys: Set<String>) : TupleCollectionConstraint, CollectionConstraint()
 }
 
 internal fun StaticType.isNullOrMissing(): Boolean = (this is NullType || this is MissingType)

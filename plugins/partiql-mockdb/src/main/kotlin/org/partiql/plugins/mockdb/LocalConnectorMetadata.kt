@@ -20,7 +20,7 @@ import org.partiql.spi.connector.ConnectorMetadata
 import org.partiql.spi.connector.ConnectorObjectHandle
 import org.partiql.spi.connector.ConnectorObjectPath
 import org.partiql.spi.connector.ConnectorSession
-import org.partiql.spi.sources.ValueDescriptor
+import org.partiql.types.StaticType
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.streams.toList
@@ -31,7 +31,7 @@ import kotlin.streams.toList
  */
 class LocalConnectorMetadata(val name: String, private val root: Path) : ConnectorMetadata {
 
-    override fun getObjectDescriptor(session: ConnectorSession, handle: ConnectorObjectHandle): ValueDescriptor {
+    override fun getObjectType(session: ConnectorSession, handle: ConnectorObjectHandle): StaticType {
         val jsonHandle = handle.value as LocalConnectorObject
         return jsonHandle.getDescriptor()
     }

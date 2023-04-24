@@ -19,19 +19,15 @@ import org.partiql.spi.BindingCase
 import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
 import org.partiql.spi.connector.ConnectorObjectPath
-import org.partiql.spi.sources.ValueDescriptor
-import org.partiql.spi.sources.ValueDescriptor.TypeDescriptor
 import org.partiql.types.StaticType
 import org.partiql.types.StructType
 
 internal object ReferenceResolver {
 
-    internal class ResolvedDescriptor(
-        val descriptor: ValueDescriptor,
+    internal class ResolvedType(
+        val type: StaticType,
         val levelsMatched: Int = 1
-    ) {
-        constructor(type: StaticType, levelsMatched: Int = 1) : this(TypeDescriptor(type), levelsMatched)
-    }
+    )
 
     /**
      * Logic is as follows:
@@ -43,7 +39,7 @@ internal object ReferenceResolver {
      * TODO: Add global bindings
      * TODO: Replace paths with global variable references if found
      */
-    internal fun resolveGlobalBind(path: BindingPath, ctx: PlanTyper.Context): ResolvedDescriptor? {
+    internal fun resolveGlobalBind(path: BindingPath, ctx: PlanTyper.Context): ResolvedType? {
         val currentCatalog = ctx.session.currentCatalog?.let { BindingName(it, BindingCase.SENSITIVE) }
         val currentCatalogPath = BindingPath(ctx.session.currentDirectory.map { BindingName(it, BindingCase.SENSITIVE) })
         val absoluteCatalogPath = BindingPath(currentCatalogPath.steps + path.steps)
@@ -61,7 +57,7 @@ internal object ReferenceResolver {
         }
     }
 
-    internal fun resolveLocalBind(path: BindingPath, input: List<Attribute>): ResolvedDescriptor? {
+    internal fun resolveLocalBind(path: BindingPath, input: List<Attribute>): ResolvedType? {
         if (path.steps.isEmpty()) { return null }
         val root: StaticType = input.firstOrNull {
             path.steps[0].isEquivalentTo(it.name)
@@ -73,13 +69,13 @@ internal object ReferenceResolver {
                     }
                     when (found) {
                         null -> false
-                        else -> return ResolvedDescriptor(found.value)
+                        else -> return ResolvedType(found.value)
                     }
                 }
                 else -> false
             }
         }?.type ?: return null
-        return ResolvedDescriptor(root)
+        return ResolvedType(root)
     }
 
     //
@@ -88,12 +84,12 @@ internal object ReferenceResolver {
     //
     //
 
-    private fun getDescriptor(ctx: PlanTyper.Context, catalog: BindingName?, originalPath: BindingPath, catalogPath: BindingPath): ResolvedDescriptor? {
+    private fun getDescriptor(ctx: PlanTyper.Context, catalog: BindingName?, originalPath: BindingPath, catalogPath: BindingPath): ResolvedType? {
         return catalog?.let { cat ->
             ctx.metadata.getObjectHandle(ctx.session, cat, catalogPath)?.let { handle ->
                 ctx.metadata.getObjectDescriptor(ctx.session, handle).let {
                     val matched = calculateMatched(originalPath, catalogPath, handle.connectorHandle.absolutePath)
-                    ResolvedDescriptor(it, levelsMatched = matched)
+                    ResolvedType(it, levelsMatched = matched)
                 }
             }
         }
