@@ -265,6 +265,7 @@ expr::[
     second:             long,
     nano:               long,
     precision:          long,
+    with_tz:            bool,
     tz_offset_minutes:  optional::long,
   },
 
@@ -510,6 +511,10 @@ graph_match::{
             variable:   optional::string,     // The optional element variable of the edge match, e.g.: `t` in `MATCH −[t]−>`
             label:      list::[string],       // The optional label(s) to match for the edge. e.g.: `Target` in `MATCH −[t:Target]−>`
           },
+          // A sub-pattern
+          pattern::{
+            pattern: '.graph_match.pattern'
+          }
         ],
       ],
     },

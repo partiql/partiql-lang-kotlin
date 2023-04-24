@@ -12,10 +12,12 @@ import org.partiql.ast.AstNode
 import org.partiql.ast.Case
 import org.partiql.ast.Expr
 import org.partiql.ast.From
+import org.partiql.ast.GraphMatch
 import org.partiql.ast.GroupBy
 import org.partiql.ast.Let
 import org.partiql.ast.OnConflict
 import org.partiql.ast.OrderBy
+import org.partiql.ast.Over
 import org.partiql.ast.Returning
 import org.partiql.ast.Select
 import org.partiql.ast.SetQuantifier
@@ -68,7 +70,8 @@ object AstToPigTranslator {
      */
     private class Ctx
 
-    private class Translator(val locations: PartiQLParser.SourceLocations?) : AstBaseVisitor<PartiqlAst.PartiqlAstNode, Ctx>() {
+    private class Translator(val locations: PartiQLParser.SourceLocations?) :
+        AstBaseVisitor<PartiqlAst.PartiqlAstNode, Ctx>() {
 
         private val factory = PartiqlAst.BUILDER()
 
@@ -100,6 +103,8 @@ object AstToPigTranslator {
         }
 
         override fun visitExpr(node: Expr, ctx: Ctx) = super.visitExpr(node, ctx) as PartiqlAst.Expr
+
+        override fun visitStatement(node: Statement, ctx: Ctx) = super.visitStatement(node, ctx) as PartiqlAst.Statement
 
         override fun visitStatementQuery(node: Statement.Query, ctx: Ctx) = translate(node) {
             val expr = visitExpr(node.expr, ctx)
@@ -374,7 +379,22 @@ object AstToPigTranslator {
             exec(procedureName, args)
         }
 
-        override fun visitStatementDDL(node: Statement.DDL, ctx: Ctx) = super.visit(node, ctx) as PartiqlAst.Statement.Ddl
+        override fun visitStatementExplain(node: Statement.Explain, ctx: Ctx) = translate(node) {
+            val target = visitStatementExplainTarget(node.target, ctx)
+            explain(target)
+        }
+
+        override fun visitStatementExplainTarget(node: Statement.Explain.Target, ctx: Ctx) = super.visitStatementExplainTarget(node, ctx) as PartiqlAst.ExplainTarget
+
+        override fun visitStatementExplainTargetDomain(node: Statement.Explain.Target.Domain, ctx: Ctx) = translate(node) {
+            val statement = visitStatement(node.statement, ctx)
+            val type = node.type
+            val format = node.format
+            domain(statement, type, format)
+        }
+
+        override fun visitStatementDDL(node: Statement.DDL, ctx: Ctx) =
+            super.visit(node, ctx) as PartiqlAst.Statement.Ddl
 
         override fun visitStatementDDLCreateTable(
             node: Statement.DDL.CreateTable,
@@ -647,15 +667,16 @@ object AstToPigTranslator {
         }
 
         override fun visitExprTime(node: Expr.Time, ctx: Ctx) = translate(node) {
-            timeValue(
+            val value = timeValue(
                 node.hour,
                 node.minute,
                 node.second,
                 node.nano,
                 node.precision,
-                node.tzOffsetMinutes != null,
-                node.tzOffsetMinutes
+                node.withTz,
+                node.tzOffsetMinutes,
             )
+            litTime(value)
         }
 
         override fun visitExprLike(node: Expr.Like, ctx: Ctx) = translate(node) {
@@ -768,11 +789,22 @@ object AstToPigTranslator {
         }
 
         override fun visitExprMatch(node: Expr.Match, ctx: Ctx) = translate(node) {
-            TODO("GPML Translation not implemented")
+            val expr = visitExpr(node.expr, ctx)
+            val pattern = visitGraphMatch(node.pattern, ctx)
+            graphMatch(expr, pattern)
         }
 
         override fun visitExprWindow(node: Expr.Window, ctx: Ctx) = translate(node) {
-            TODO("WINDOW Translation not implemented")
+            val funcName = node.function
+            val over = visitOver(node.over, ctx)
+            val args = translate(node.args, ctx, PartiqlAst.Expr::class)
+            callWindow(funcName, over, args)
+        }
+
+        override fun visitOver(node: Over, ctx: Ctx) = translate(node) {
+            val partitionBy = windowPartitionList(translate(node.partitions, ctx, PartiqlAst.Expr::class))
+            val orderBy = windowSortSpecList(translate(node.sorts, ctx, PartiqlAst.SortSpec::class))
+            over(partitionBy, orderBy)
         }
 
         override fun visitSelect(node: Select, ctx: Ctx) = super.visitSelect(node, ctx) as PartiqlAst.Projection
@@ -883,11 +915,109 @@ object AstToPigTranslator {
             sortSpec(expr, orderingSpec, nullsSpec)
         }
 
-        override fun defaultReturn(node: AstNode, ctx: Ctx) = translate(node) {
-            TODO("Not yet implemented")
+        override fun visitGraphMatch(node: GraphMatch, ctx: Ctx) = translate(node) {
+            val selector = node.selector?.let { visitGraphMatchSelector(it, ctx) }
+            val patterns = translate(node.patterns, ctx, PartiqlAst.GraphMatchPattern::class)
+            gpmlPattern(selector, patterns)
         }
 
-        // -----
+        override fun visitGraphMatchPattern(node: GraphMatch.Pattern, ctx: Ctx) = translate(node) {
+            val restrictor = when (node.restrictor) {
+                GraphMatch.Restrictor.TRAIL -> restrictorTrail()
+                GraphMatch.Restrictor.ACYCLIC -> restrictorAcyclic()
+                GraphMatch.Restrictor.SIMPLE -> restrictorSimple()
+                null -> null
+            }
+            val prefilter = node.prefilter?.let { visitExpr(it, ctx) }
+            val variable = node.variable
+            val quantifier = node.quantifier?.let { visitGraphMatchQuantifier(it, ctx) }
+            val parts = translate(node.parts, ctx, PartiqlAst.GraphMatchPatternPart::class)
+            graphMatchPattern(restrictor, prefilter, variable, quantifier, parts)
+        }
+
+        override fun visitGraphMatchPatternPart(node: GraphMatch.Pattern.Part, ctx: Ctx) =
+            super.visitGraphMatchPatternPart(node, ctx) as PartiqlAst.GraphMatchPatternPart
+
+        override fun visitGraphMatchPatternPartNode(node: GraphMatch.Pattern.Part.Node, ctx: Ctx) = translate(node) {
+            val prefilter = node.prefilter?.let { visitExpr(it, ctx) }
+            val variable = node.variable
+            val label = node.label
+            node(prefilter, variable, label)
+        }
+
+        override fun visitGraphMatchPatternPartEdge(node: GraphMatch.Pattern.Part.Edge, ctx: Ctx) = translate(node) {
+            val direction = when (node.direction) {
+                GraphMatch.Direction.LEFT -> edgeLeft()
+                GraphMatch.Direction.UNDIRECTED -> edgeUndirected()
+                GraphMatch.Direction.RIGHT -> edgeRight()
+                GraphMatch.Direction.LEFT_OR_UNDIRECTED -> edgeLeftOrUndirected()
+                GraphMatch.Direction.UNDIRECTED_OR_RIGHT -> edgeUndirectedOrRight()
+                GraphMatch.Direction.LEFT_OR_RIGHT -> edgeLeftOrRight()
+                GraphMatch.Direction.LEFT_UNDIRECTED_OR_RIGHT -> edgeLeftOrUndirectedOrRight()
+            }
+            val quantifier = node.quantifier?.let { visitGraphMatchQuantifier(it, ctx) }
+            val prefilter = node.prefilter?.let { visitExpr(it, ctx) }
+            val variable = node.variable
+            val label = node.label
+            edge(direction, quantifier, prefilter, variable, label)
+        }
+
+        override fun visitGraphMatchPatternPartPattern(node: GraphMatch.Pattern.Part.Pattern, ctx: Ctx) =
+            translate(node) {
+                pattern(visitGraphMatchPattern(node.pattern, ctx))
+            }
+
+        override fun visitGraphMatchQuantifier(node: GraphMatch.Quantifier, ctx: Ctx) = translate(node) {
+            val lower = node.lower
+            val upper = node.upper
+            graphMatchQuantifier(lower, upper)
+        }
+
+        override fun visitGraphMatchSelector(node: GraphMatch.Selector, ctx: Ctx) =
+            super.visitGraphMatchSelector(node, ctx) as PartiqlAst.GraphMatchSelector
+
+        override fun visitGraphMatchSelectorAnyShortest(
+            node: GraphMatch.Selector.AnyShortest,
+            ctx: Ctx
+        ) = translate(node) {
+            selectorAnyShortest()
+        }
+
+        override fun visitGraphMatchSelectorAllShortest(
+            node: GraphMatch.Selector.AllShortest,
+            ctx: Ctx
+        ) = translate(node) {
+            selectorAllShortest()
+        }
+
+        override fun visitGraphMatchSelectorAny(node: GraphMatch.Selector.Any, ctx: Ctx) = translate(node) {
+            selectorAny()
+        }
+
+        override fun visitGraphMatchSelectorAnyK(node: GraphMatch.Selector.AnyK, ctx: Ctx) = translate(node) {
+            val k = node.k
+            selectorAnyK(k)
+        }
+
+        override fun visitGraphMatchSelectorShortestK(
+            node: GraphMatch.Selector.ShortestK,
+            ctx: Ctx
+        ) = translate(node) {
+            val k = node.k
+            selectorShortestK(k)
+        }
+
+        override fun visitGraphMatchSelectorShortestKGroup(
+            node: GraphMatch.Selector.ShortestKGroup,
+            ctx: Ctx
+        ) = translate(node) {
+            val k = node.k
+            selectorShortestKGroup(k)
+        }
+
+        override fun defaultReturn(node: AstNode, ctx: Ctx) = throw IllegalArgumentException("Translation not supported for ${node.javaClass}")
+
+        // ---- HELPERS
 
         private fun <T : PartiqlAst.PartiqlAstNode> translate(
             nodes: List<AstNode>,

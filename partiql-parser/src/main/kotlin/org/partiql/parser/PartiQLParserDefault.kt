@@ -898,7 +898,7 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitSelectorBasic(ctx: GeneratedParser.SelectorBasicContext) = translate(ctx) {
             when (ctx.mod.type) {
-                GeneratedParser.ANY -> GraphMatch.Selector.Any(id())
+                GeneratedParser.ANY -> GraphMatch.Selector.AnyShortest(id())
                 GeneratedParser.ALL -> GraphMatch.Selector.AllShortest(id())
                 else -> throw error(ctx, "Unsupported match selector.")
             }
@@ -995,6 +995,14 @@ internal class PartiQLParserDefault : PartiQLParser {
             ctx.MINUS() != null && ctx.ANGLE_RIGHT() != null -> GraphMatch.Direction.RIGHT
             ctx.MINUS() != null -> GraphMatch.Direction.LEFT_UNDIRECTED_OR_RIGHT
             else -> throw error(ctx, "Unsupported edge type")
+        }
+
+        override fun visitGraphPart(ctx: GeneratedParser.GraphPartContext): GraphMatch.Pattern.Part {
+            val part = super.visitGraphPart(ctx)
+            if (part is GraphMatch.Pattern) {
+                return translate(ctx) { GraphMatch.Pattern.Part.Pattern(id(), part) }
+            }
+            return part as GraphMatch.Pattern.Part
         }
 
         override fun visitPatternQuantifier(ctx: GeneratedParser.PatternQuantifierContext) = translate(ctx) {
@@ -1555,8 +1563,8 @@ internal class PartiQLParserDefault : PartiQLParser {
         override fun visitLiteralTime(ctx: GeneratedParser.LiteralTimeContext) = translate(ctx) {
             val (timeString, precision) = getTimeStringAndPrecision(ctx.LITERAL_STRING(), ctx.LITERAL_INTEGER())
             when (ctx.WITH()) {
-                null -> convertLocalTime(timeString, false, precision, ctx.LITERAL_STRING(), ctx.TIME(0))
-                else -> convertOffsetTime(timeString, precision, ctx.LITERAL_STRING(), ctx.TIME(0))
+                null -> convertLocalTime(timeString, false, precision, ctx.LITERAL_STRING())
+                else -> convertOffsetTime(timeString, precision, ctx.LITERAL_STRING())
             }
         }
 
@@ -1761,12 +1769,7 @@ internal class PartiQLParserDefault : PartiQLParser {
         /**
          * Parses a [timeString] using [OffsetTime] and converts to a [Expr.Time]. Fall back to [convertLocalTime].
          */
-        private fun convertOffsetTime(
-            timeString: String,
-            precision: Long,
-            stringNode: TerminalNode,
-            timeNode: TerminalNode,
-        ): Expr.Time = try {
+        private fun convertOffsetTime(timeString: String, precision: Long, stringNode: TerminalNode): Expr.Time = try {
             val time: OffsetTime = OffsetTime.parse(timeString)
             Expr.Time(
                 id = id(),
@@ -1775,10 +1778,11 @@ internal class PartiQLParserDefault : PartiQLParser {
                 second = time.second.toLong(),
                 nano = time.nano.toLong(),
                 precision = precision,
+                withTz = true,
                 tzOffsetMinutes = (time.offset.totalSeconds / 60).toLong(),
             )
         } catch (e: DateTimeParseException) {
-            convertLocalTime(timeString, true, precision, stringNode, timeNode)
+            convertLocalTime(timeString, true, precision, stringNode)
         }
 
         /**
@@ -1789,7 +1793,6 @@ internal class PartiQLParserDefault : PartiQLParser {
             withTimeZone: Boolean,
             precision: Long,
             stringNode: TerminalNode,
-            timeNode: TerminalNode,
         ): Expr.Time {
             val time: LocalTime
             val formatter = when (withTimeZone) {
@@ -1808,7 +1811,8 @@ internal class PartiQLParserDefault : PartiQLParser {
                 second = time.second.toLong(),
                 nano = time.nano.toLong(),
                 precision = precision,
-                tzOffsetMinutes = 0,
+                withTz = withTimeZone,
+                tzOffsetMinutes = null,
             )
         }
 
