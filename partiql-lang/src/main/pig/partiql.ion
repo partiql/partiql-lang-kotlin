@@ -76,8 +76,8 @@ may then be further optimized by selecting better implementations of each operat
 
         // The expressions that can result in values.
         (sum expr
-            // SQL's CURRENT_USER Keyword
-            (current_user)
+            // SQL Session Keywords (CURRENT_USER, CURRENT_ROLE, etc.)
+            (session_attribute value::symbol)
 
             // The literal missing value.
             (missing)
@@ -610,8 +610,8 @@ may then be further optimized by selecting better implementations of each operat
             // Window specification and window function, we want to define a stand alone operator for this
             (exclude select struct call_window)
 
-            // Remove System Functions
-            (exclude current_user)
+            // Remove Session Attributes (should be replaced by system function calls)
+            (exclude session_attribute)
 
             // CallAgg's such as SUM, MIN, MAX, etc. either become calls to built-in-functions (example: call COLL_SUM)
             // or aggregate functions within the logical aggregate operator.

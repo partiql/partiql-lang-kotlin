@@ -12,7 +12,7 @@ class SystemFunctionsVisitorTransformTests : VisitorTransformTestBase() {
     fun test(tc: TransformTestCase) = runTestForIdempotentTransform(tc, SystemFunctionsVisitorTransform)
 
     class ArgsProvider : ArgumentsProviderBase() {
-        private val currentUserFunction = "${ExprFunctionCurrentUser.NAME}()"
+        private val currentUserFunction = "${ExprFunctionCurrentUser.FUNCTION_NAME}()"
         override fun getParameters(): List<Any> = listOf(
             // singular variable references
             TransformTestCase(

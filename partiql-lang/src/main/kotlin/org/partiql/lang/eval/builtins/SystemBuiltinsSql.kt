@@ -12,15 +12,17 @@ internal val SYSTEM_BUILTINS_SQL = listOf<ExprFunction>(
 )
 
 internal object ExprFunctionCurrentUser : ExprFunction {
-    internal const val NAME: String = "\$__current_user"
+    internal const val FUNCTION_NAME: String = "\$__current_user"
+
     override val signature: FunctionSignature = FunctionSignature(
-        name = NAME,
+        name = FUNCTION_NAME,
         requiredParameters = emptyList(),
         returnType = StaticType.unionOf(StaticType.STRING, StaticType.NULL)
     )
 
-    override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue = when (session.currentUser) {
+    override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue = when (val user = session.context[EvaluationSession.Constants.CURRENT_USER_KEY]) {
+        is String -> ExprValue.newString(user)
         null -> ExprValue.newNull(IonType.STRING)
-        else -> ExprValue.newString(session.currentUser)
+        else -> ExprValue.newNull(IonType.STRING)
     }
 }

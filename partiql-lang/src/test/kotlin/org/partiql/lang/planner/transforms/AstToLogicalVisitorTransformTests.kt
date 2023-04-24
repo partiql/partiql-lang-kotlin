@@ -281,7 +281,7 @@ class AstToLogicalVisitorTransformTests {
                 PartiqlLogical.build {
                     query(
                         call(
-                            ExprFunctionCurrentUser.NAME,
+                            ExprFunctionCurrentUser.FUNCTION_NAME,
                             emptyList()
                         )
                     )
@@ -297,7 +297,7 @@ class AstToLogicalVisitorTransformTests {
                         concat(
                             listOf(
                                 call(
-                                    ExprFunctionCurrentUser.NAME,
+                                    ExprFunctionCurrentUser.FUNCTION_NAME,
                                     emptyList()
                                 ),
                                 lit(

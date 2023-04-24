@@ -31,8 +31,7 @@ class EvaluationSession private constructor(
     val globals: Bindings<ExprValue>,
     val parameters: List<ExprValue>,
     val context: Map<String, Any>,
-    val now: Timestamp,
-    val currentUser: String?
+    val now: Timestamp
 ) {
 
     companion object {
@@ -52,6 +51,10 @@ class EvaluationSession private constructor(
          */
         @JvmStatic
         fun standard() = builder().build()
+    }
+
+    public object Constants {
+        public const val CURRENT_USER_KEY = "CURRENT_USER"
     }
 
     class Builder {
@@ -78,7 +81,7 @@ class EvaluationSession private constructor(
 
         private var user: String? = null
         fun user(value: String): Builder {
-            user = value
+            contextVariables[Constants.CURRENT_USER_KEY] = value
             return this
         }
 
@@ -92,8 +95,7 @@ class EvaluationSession private constructor(
             now = now ?: Timestamp.nowZ(),
             parameters = parameters,
             context = contextVariables,
-            globals = globals,
-            currentUser = user
+            globals = globals
         )
     }
 }

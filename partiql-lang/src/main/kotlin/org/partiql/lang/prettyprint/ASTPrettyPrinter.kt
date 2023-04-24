@@ -570,9 +570,10 @@ class ASTPrettyPrinter {
                     if (node.offset == null) it else (it.plusElement(toRecursionTree(node.offset, "offset")))
                 }
             )
-            is PartiqlAst.Expr.CurrentUser -> RecursionTree(
-                astType = "CurrentUser",
-                attrOfParent = attrOfParent
+            is PartiqlAst.Expr.SessionAttribute -> RecursionTree(
+                astType = "SessionAttribute",
+                attrOfParent = attrOfParent,
+                children = listOf(toRecursionTree(node.value, "value"))
             )
             is PartiqlAst.Expr.GraphMatch -> TODO("Unsupported GraphMatch AST node")
             is PartiqlAst.Expr.CallWindow -> TODO("PrettyPrinter doesn't support Window Function yet.")

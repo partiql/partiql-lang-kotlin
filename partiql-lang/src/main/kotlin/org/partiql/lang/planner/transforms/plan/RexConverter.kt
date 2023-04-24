@@ -107,9 +107,9 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
         )
     }
 
-    override fun walkExprCurrentUser(node: PartiqlAst.Expr.CurrentUser, accumulator: Ctx) = visit(node) {
+    override fun walkExprSessionAttribute(node: PartiqlAst.Expr.SessionAttribute, accumulator: Ctx) = visit(node) {
         Rex.Call(
-            id = ExprFunctionCurrentUser.NAME,
+            id = ExprFunctionCurrentUser.FUNCTION_NAME,
             args = emptyList(),
             type = null
         )

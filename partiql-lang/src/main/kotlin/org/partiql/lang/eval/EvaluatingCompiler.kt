@@ -452,8 +452,8 @@ internal class EvaluatingCompiler(
             is PartiqlAst.Expr.BagOp -> compileBagOp(expr, metas)
 
             // System Functions
-            is PartiqlAst.Expr.CurrentUser -> err(
-                message = "CURRENT_USER should have been replaced with a function call during normalization.",
+            is PartiqlAst.Expr.SessionAttribute -> err(
+                message = "Session attribute (${expr.value}) should have been replaced with a system function call during normalization.",
                 errorCode = ErrorCode.EVALUATOR_GENERIC_EXCEPTION,
                 errorContext = errorContextFrom(metas),
                 internal = false

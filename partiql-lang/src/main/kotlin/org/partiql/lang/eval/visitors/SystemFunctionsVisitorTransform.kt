@@ -1,7 +1,10 @@
 package org.partiql.lang.eval.visitors
 
 import org.partiql.lang.domains.PartiqlAst
+import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.builtins.ExprFunctionCurrentUser
+import org.partiql.lang.eval.err
+import org.partiql.lang.eval.errorContextFrom
 
 /**
  * Replaces all system function nodes with their appropriate function call.
@@ -10,9 +13,18 @@ import org.partiql.lang.eval.builtins.ExprFunctionCurrentUser
  * - CURRENT_USER
  */
 internal object SystemFunctionsVisitorTransform : VisitorTransformBase() {
-    override fun transformExprCurrentUser(node: PartiqlAst.Expr.CurrentUser): PartiqlAst.Expr = PartiqlAst.build {
+    override fun transformExprSessionAttribute(node: PartiqlAst.Expr.SessionAttribute): PartiqlAst.Expr = PartiqlAst.build {
+        val functionName = when (node.value.text.toUpperCase()) {
+            "CURRENT_USER" -> ExprFunctionCurrentUser.FUNCTION_NAME
+            else -> err(
+                "Unsupported session attribute: ${node.value.text}",
+                errorCode = ErrorCode.SEMANTIC_PROBLEM,
+                errorContext = errorContextFrom(node.metas),
+                internal = false
+            )
+        }
         call(
-            funcName = ExprFunctionCurrentUser.NAME,
+            funcName = functionName,
             args = emptyList()
         )
     }
