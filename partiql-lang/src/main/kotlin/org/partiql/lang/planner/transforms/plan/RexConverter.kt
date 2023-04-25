@@ -3,7 +3,11 @@ package org.partiql.lang.planner.transforms.plan
 import com.amazon.ionelement.api.MetaContainer
 import com.amazon.ionelement.api.ionNull
 import org.partiql.lang.domains.PartiqlAst
+import org.partiql.lang.errors.ErrorCode
+import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.builtins.ExprFunctionCurrentUser
+import org.partiql.lang.eval.err
+import org.partiql.lang.eval.errorContextFrom
 import org.partiql.lang.planner.transforms.AstToPlan
 import org.partiql.plan.Arg
 import org.partiql.plan.Branch
@@ -108,8 +112,17 @@ internal object RexConverter : PartiqlAst.VisitorFold<RexConverter.Ctx>() {
     }
 
     override fun walkExprSessionAttribute(node: PartiqlAst.Expr.SessionAttribute, accumulator: Ctx) = visit(node) {
+        val functionName = when (node.value.text.toUpperCase()) {
+            EvaluationSession.Constants.CURRENT_USER_KEY -> ExprFunctionCurrentUser.FUNCTION_NAME
+            else -> err(
+                "Unsupported session attribute: ${node.value.text}",
+                errorCode = ErrorCode.SEMANTIC_PROBLEM,
+                errorContext = errorContextFrom(node.metas),
+                internal = false
+            )
+        }
         Rex.Call(
-            id = ExprFunctionCurrentUser.FUNCTION_NAME,
+            id = functionName,
             args = emptyList(),
             type = null
         )
