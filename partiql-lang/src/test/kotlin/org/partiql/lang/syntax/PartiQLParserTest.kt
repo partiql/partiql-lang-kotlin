@@ -1720,6 +1720,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                 (dml_op_list
                     (insert
                         (id foo (case_insensitive) (unqualified))
+                        null
                         (bag
                             (list
                                 (lit 1)
@@ -1818,6 +1819,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                 (dml_op_list
                     (insert
                         (id foo (case_insensitive) (unqualified))
+                        null
                         (select
                             (project
                                 (project_list
@@ -1897,6 +1899,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                 (dml_op_list
                     (insert
                         (id foo (case_insensitive) (unqualified))
+                        null
                         (bag
                             (list
                                 (lit 1)
@@ -2171,6 +2174,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                 (dml_op_list
                     (insert
                         (id foo (case_insensitive) (unqualified))
+                        null
                         (select
                             (project
                                 (project_list
@@ -2196,6 +2200,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                 (dml_op_list
                     (insert
                         (id foo (case_insensitive) (unqualified))
+                        null
                         (bag
                             (list
                                 (lit 1)
@@ -2216,7 +2221,8 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                 (operations
                     (dml_op_list
                         (insert
-                            (id f (case_insensitive) (unqualified))
+                            (id foo (case_insensitive) (unqualified))
+                            f
                             (bag
                                 (struct
                                     (expr_pair
@@ -2239,6 +2245,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                     (dml_op_list
                         (insert
                             (id foo (case_insensitive) (unqualified))
+                            null
                             (select
                                 (project
                                     (project_list
@@ -2276,6 +2283,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                 (dml_op_list
                     (insert
                         (id foo (case_insensitive) (unqualified))
+                        null
                         (bag
                             (list
                                 (lit 1)
@@ -2296,7 +2304,8 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                 (operations
                     (dml_op_list
                         (insert
-                            (id f (case_insensitive) (unqualified))
+                            (id foo (case_insensitive) (unqualified))
+                            f
                             (bag
                                 (struct
                                     (expr_pair
@@ -2319,6 +2328,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                     (dml_op_list
                         (insert
                             (id foo (case_insensitive) (unqualified))
+                            null
                             (select
                                 (project
                                     (project_list
@@ -2356,6 +2366,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                     (dml_op_list
                         (insert
                             (id foo (case_insensitive) (unqualified))
+                            null
                             (bag
                                 (struct
                                     (expr_pair
@@ -2376,7 +2387,8 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                 (operations
                     (dml_op_list
                         (insert
-                            (id f (case_insensitive) (unqualified))
+                            (id foo (case_insensitive) (unqualified))
+                            f
                             (bag
                                 (struct
                                     (expr_pair
@@ -2398,6 +2410,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                     (dml_op_list
                         (insert
                             (id foo (case_insensitive) (unqualified))
+                            null
                             (select
                                 (project
                                     (project_list
@@ -2434,6 +2447,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                     (dml_op_list
                         (insert
                             (id foo (case_insensitive) (unqualified))
+                            null
                             (bag
                                 (struct
                                     (expr_pair
@@ -2455,7 +2469,8 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                 (operations
                     (dml_op_list
                         (insert
-                            (id f (case_insensitive) (unqualified))
+                            (id foo (case_insensitive) (unqualified))
+                            f
                             (bag
                                 (struct
                                     (expr_pair
@@ -2478,6 +2493,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                     (dml_op_list
                         (insert
                             (id foo (case_insensitive) (unqualified))
+                            null
                             (bag
                                 (struct
                                     (expr_pair
@@ -2499,7 +2515,8 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                 (operations
                     (dml_op_list
                         (insert
-                            (id f (case_insensitive) (unqualified))
+                            (id foo (case_insensitive) (unqualified))
+                            f
                             (bag
                                 (struct
                                     (expr_pair
@@ -2522,6 +2539,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                     (dml_op_list
                         (insert
                             (id foo (case_insensitive) (unqualified))
+                            null
                             (select
                                 (project
                                     (project_list
@@ -2559,6 +2577,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                 (dml_op_list
                     (insert
                         (id foo (case_insensitive) (unqualified))
+                        null
                         (select
                             (project
                                 (project_list
@@ -3129,6 +3148,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                 (dml_op_list
                     (insert
                         (id k (case_insensitive) (unqualified))
+                        null
                         (bag
                             (lit 1))
                         null)))
@@ -3154,6 +3174,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                 (dml_op_list
                     (insert
                         (id k (case_insensitive) (unqualified))
+                        null
                         (bag
                             (lit 1))
                         null)))

@@ -280,23 +280,19 @@ internal class PartiQLVisitor(val customTypes: List<CustomType> = listOf(), priv
     }
 
     override fun visitInsert(ctx: PartiQLParser.InsertContext) = PartiqlAst.build {
-        val metas = ctx.INSERT().getSourceMetaContainer()
-        val asIdent = ctx.asIdent()
-        // Based on the RFC, if alias exists the table must be hidden behind the alias, see:
-        // https://github.com/partiql/partiql-docs/blob/main/RFCs/0011-partiql-insert.md#41-insert-parameters
-        val target = if (asIdent != null) visitAsIdent(asIdent) else visitSymbolPrimitive(ctx.symbolPrimitive())
-        val conflictAction = visitOrNull(ctx.onConflictClause(), PartiqlAst.ConflictAction::class)
-        insert(target, visit(ctx.value, PartiqlAst.Expr::class), conflictAction, metas)
+        insert(
+            target = visitSymbolPrimitive(ctx.symbolPrimitive()),
+            asAlias = visitOrNull(ctx.asIdent(), PartiqlAst.Expr.Id::class)?.name?.text,
+            values = visit(ctx.value, PartiqlAst.Expr::class),
+            conflictAction = visitOrNull(ctx.onConflictClause(), PartiqlAst.ConflictAction::class),
+            metas = ctx.INSERT().getSourceMetaContainer()
+        )
     }
 
-    // TODO move from experimental; pending: https://github.com/partiql/partiql-docs/issues/27
     override fun visitReplaceCommand(ctx: PartiQLParser.ReplaceCommandContext) = PartiqlAst.build {
-        val asIdent = ctx.asIdent()
-        // Based on the RFC, if alias exists the table must be hidden behind the alias, see:
-        // https://github.com/partiql/partiql-docs/blob/main/RFCs/0011-partiql-insert.md#41-insert-parameters
-        val target = if (asIdent != null) visitAsIdent(asIdent) else visitSymbolPrimitive(ctx.symbolPrimitive())
         insert(
-            target = target,
+            target = visitSymbolPrimitive(ctx.symbolPrimitive()),
+            asAlias = visitOrNull(ctx.asIdent(), PartiqlAst.Expr.Id::class)?.name?.text,
             values = visit(ctx.value, PartiqlAst.Expr::class),
             conflictAction = doReplace(excluded()),
             metas = ctx.REPLACE().getSourceMetaContainer()
@@ -305,12 +301,9 @@ internal class PartiQLVisitor(val customTypes: List<CustomType> = listOf(), priv
 
     // Based on https://github.com/partiql/partiql-docs/blob/main/RFCs/0011-partiql-insert.md
     override fun visitUpsertCommand(ctx: PartiQLParser.UpsertCommandContext) = PartiqlAst.build {
-        val asIdent = ctx.asIdent()
-        // Based on the RFC, if alias exists the table must be hidden behind the alias, see:
-        // https://github.com/partiql/partiql-docs/blob/main/RFCs/0011-partiql-insert.md#41-insert-parameters
-        val target = if (asIdent != null) visitAsIdent(asIdent) else visitSymbolPrimitive(ctx.symbolPrimitive())
         insert(
-            target = target,
+            target = visitSymbolPrimitive(ctx.symbolPrimitive()),
+            asAlias = visitOrNull(ctx.asIdent(), PartiqlAst.Expr.Id::class)?.name?.text,
             values = visit(ctx.value, PartiqlAst.Expr::class),
             conflictAction = doUpdate(excluded()),
             metas = ctx.UPSERT().getSourceMetaContainer()

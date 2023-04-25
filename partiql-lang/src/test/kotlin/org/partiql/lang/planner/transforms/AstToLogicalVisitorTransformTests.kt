@@ -740,7 +740,7 @@ class AstToLogicalVisitorTransformTests {
                 PartiqlLogical.build {
                     PartiqlLogical.build {
                         dml(
-                            identifier("f", caseInsensitive()),
+                            identifier("foo", caseInsensitive()),
                             dmlReplace(),
                             bag(
                                 struct(
@@ -770,7 +770,7 @@ class AstToLogicalVisitorTransformTests {
                 PartiqlLogical.build {
                     PartiqlLogical.build {
                         dml(
-                            identifier("f", caseInsensitive()),
+                            identifier("foo", caseInsensitive()),
                             dmlUpdate(),
                             bag(
                                 struct(
@@ -787,7 +787,7 @@ class AstToLogicalVisitorTransformTests {
                 PartiqlLogical.build {
                     PartiqlLogical.build {
                         dml(
-                            identifier("f", caseInsensitive()),
+                            identifier("foo", caseInsensitive()),
                             dmlReplace(),
                             bag(
                                 struct(
@@ -804,7 +804,7 @@ class AstToLogicalVisitorTransformTests {
                 PartiqlLogical.build {
                     PartiqlLogical.build {
                         dml(
-                            identifier("f", caseInsensitive()),
+                            identifier("foo", caseInsensitive()),
                             dmlUpdate(),
                             bindingsToValues(
                                 struct(structFields(id("x", caseInsensitive(), unqualified()))),

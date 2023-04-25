@@ -27,9 +27,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Breaking**: Adds a new property `asAlias` to the `insert` AST node.
+
 ### Deprecated
 
 ### Fixed
+
+- Parsing INSERT statements with aliases no longer loses the original table name. Closes #1043.
 
 ### Removed
 
