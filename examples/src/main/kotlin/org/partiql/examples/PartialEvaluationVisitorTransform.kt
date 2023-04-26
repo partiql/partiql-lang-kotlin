@@ -8,6 +8,7 @@ import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.eval.CompileOptions
 import org.partiql.lang.eval.EvaluationSession
+import org.partiql.lang.eval.GlobalsCheck
 import org.partiql.lang.eval.toIonValue
 import java.io.PrintStream
 
@@ -55,8 +56,8 @@ import java.io.PrintStream
  * [EvaluatingCompiler].
  */
 private class PartialEvaluationVisitorTransform(val ion: IonSystem, val compileOptions: CompileOptions) : PartiqlAst.VisitorTransform() {
-    private val pipeline = CompilerPipeline.build { compileOptions(compileOptions) }
     private val session = EvaluationSession.standard()
+    private val pipeline = CompilerPipeline.build(GlobalsCheck.of(session)) { compileOptions(compileOptions) }
 
     override fun transformExprPlus(node: PartiqlAst.Expr.Plus): PartiqlAst.Expr {
         val ops = node.operands
@@ -83,7 +84,7 @@ class PartialEvaluationVisitorTransformExample(out: PrintStream) : Example(out) 
     private val ion = IonSystemBuilder.standard().build()
 
     override fun run() {
-        val pipeline = CompilerPipeline.build {
+        val pipeline = CompilerPipeline.build(GlobalsCheck.empty) {
             addPreprocessingStep { originalAst, stepContext ->
                 val visitorTransformer = PartialEvaluationVisitorTransform(ion, stepContext.compileOptions)
 

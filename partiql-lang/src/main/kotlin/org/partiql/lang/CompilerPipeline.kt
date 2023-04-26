@@ -22,6 +22,7 @@ import org.partiql.lang.eval.CompileOptions
 import org.partiql.lang.eval.EvaluatingCompiler
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.Expression
+import org.partiql.lang.eval.GlobalsCheck
 import org.partiql.lang.eval.ThunkReturnTypeAssertions
 import org.partiql.lang.eval.builtins.SCALAR_BUILTINS_DEFAULT
 import org.partiql.lang.eval.builtins.definitionalBuiltins
@@ -124,7 +125,10 @@ interface CompilerPipeline {
 
     companion object {
         /** Kotlin style builder for [CompilerPipeline].  If calling from Java instead use [builder]. */
-        fun build(block: Builder.() -> Unit) = Builder().apply(block).build()
+        fun build(
+            globalsNowRequired: GlobalsCheck,
+            block: Builder.() -> Unit
+        ) = Builder(globalsNowRequired).apply(block).build()
 
         /** Kotlin style builder for [CompilerPipeline].  If calling from Java instead use [builder]. */
         @Deprecated(
@@ -132,22 +136,29 @@ interface CompilerPipeline {
             ReplaceWith("build(block)")
         )
         @Suppress("DEPRECATION") // Deprecation of ExprValueFactory.
-        fun build(valueFactory: org.partiql.lang.eval.ExprValueFactory, block: Builder.() -> Unit) =
-            Builder(valueFactory).apply(block).build()
+        fun build(
+            valueFactory: org.partiql.lang.eval.ExprValueFactory,
+            globalsNowRequired: GlobalsCheck,
+            block: Builder.() -> Unit
+        ) =
+            Builder(valueFactory, globalsNowRequired).apply(block).build()
 
         /** Fluent style builder.  If calling from Kotlin instead use the [build] method. */
         @JvmStatic
-        fun builder(): Builder = Builder()
+        fun builder(globalsNowRequired: GlobalsCheck): Builder = Builder(globalsNowRequired)
 
         @Deprecated("[ExprValueFactory] is deprecated", replaceWith = ReplaceWith("builder(ion: IonSystem): Builder = builder(ion)"))
         @Suppress("DEPRECATION")
         /** Fluent style builder.  If calling from Kotlin instead use the [build] method. */
         @JvmStatic
-        fun builder(valueFactory: org.partiql.lang.eval.ExprValueFactory): Builder = Builder(valueFactory)
+        fun builder(
+            valueFactory: org.partiql.lang.eval.ExprValueFactory,
+            globalsNowRequired: GlobalsCheck
+        ): Builder = Builder(valueFactory, globalsNowRequired)
 
         /** Returns an implementation of [CompilerPipeline] with all properties set to their defaults. */
         @JvmStatic
-        fun standard(): CompilerPipeline = builder().build()
+        fun standard(globalsNowRequired: GlobalsCheck): CompilerPipeline = builder(globalsNowRequired).build()
 
         /** Returns an implementation of [CompilerPipeline] with all properties set to their defaults. */
         @JvmStatic
@@ -156,7 +167,10 @@ interface CompilerPipeline {
             ReplaceWith("standard()")
         )
         @Suppress("DEPRECATION") // Deprecation of ExprValueFactory.
-        fun standard(valueFactory: org.partiql.lang.eval.ExprValueFactory): CompilerPipeline = builder(valueFactory).build()
+        fun standard(
+            valueFactory: org.partiql.lang.eval.ExprValueFactory,
+            globalsNowRequired: GlobalsCheck
+        ): CompilerPipeline = builder(valueFactory, globalsNowRequired).build()
     }
 
     /**
@@ -164,14 +178,17 @@ interface CompilerPipeline {
      * [CompilerPipeline] is NOT thread safe and should NOT be used to compile queries concurrently. If used in a
      * multithreaded application, use one instance of [CompilerPipeline] per thread.
      */
-    class Builder() {
+    class Builder(globalsNowRequired: GlobalsCheck) {
 
         @Deprecated(
             "This constructor is deprecated. Please use constructor `Builder()` instead.",
             replaceWith = ReplaceWith("Builder()")
         )
         @Suppress("DEPRECATION") // Deprecation of ExprValueFactory.
-        constructor(valueFactory: org.partiql.lang.eval.ExprValueFactory) : this() {
+        constructor(
+            valueFactory: org.partiql.lang.eval.ExprValueFactory,
+            globalsNowRequired: GlobalsCheck
+        ) : this(globalsNowRequired) {
             this.valueFactory = valueFactory
         }
 
@@ -182,6 +199,7 @@ interface CompilerPipeline {
 
         private var parser: Parser? = null
         private var compileOptions: CompileOptions? = null
+        private var globals: GlobalsCheck = globalsNowRequired
         private val customFunctions: MutableMap<String, ExprFunction> = HashMap()
         private var customDataTypes: List<CustomType> = listOf()
         private val customProcedures: MutableMap<String, StoredProcedure> = HashMap()
@@ -266,6 +284,7 @@ interface CompilerPipeline {
                 ion = ion,
                 parser = parser ?: PartiQLParserBuilder().customTypes(customDataTypes).build(),
                 compileOptions = compileOptionsToUse,
+                globals = globals,
                 functions = allFunctions,
                 customDataTypes = customDataTypes,
                 procedures = customProcedures,
@@ -280,6 +299,7 @@ internal class CompilerPipelineImpl(
     private val ion: IonSystem,
     private val parser: Parser,
     override val compileOptions: CompileOptions,
+    globals: GlobalsCheck,
     override val functions: Map<String, ExprFunction>,
     override val customDataTypes: List<CustomType>,
     override val procedures: Map<String, StoredProcedure>,
@@ -301,17 +321,19 @@ internal class CompilerPipelineImpl(
         ion: IonSystem,
         parser: Parser,
         compileOptions: CompileOptions,
+        globals: GlobalsCheck,
         functions: Map<String, ExprFunction>,
         customDataTypes: List<CustomType>,
         procedures: Map<String, StoredProcedure>,
         preProcessingSteps: List<ProcessingStep>,
         globalTypeBindings: Bindings<StaticType>?
-    ) : this(ion, parser, compileOptions, functions, customDataTypes, procedures, preProcessingSteps, globalTypeBindings) {
+    ) : this(ion, parser, compileOptions, globals, functions, customDataTypes, procedures, preProcessingSteps, globalTypeBindings) {
         @Suppress("DEPRECATION")
         this.valueFactory = valueFactory
     }
 
     private val compiler = EvaluatingCompiler(
+        globals,
         functions,
         customDataTypes.map { customType ->
             (customType.aliases + customType.name).map { alias ->

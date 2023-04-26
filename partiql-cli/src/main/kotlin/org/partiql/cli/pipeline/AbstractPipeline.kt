@@ -32,6 +32,7 @@ import org.partiql.lang.eval.CompileOptions
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.eval.GlobalsCheck
 import org.partiql.lang.eval.PartiQLResult
 import org.partiql.lang.eval.ProjectionIterationBehavior
 import org.partiql.lang.eval.ThunkOptions
@@ -53,16 +54,19 @@ internal sealed class AbstractPipeline(open val options: PipelineOptions) {
     abstract fun compile(input: String, session: EvaluationSession): PartiQLResult
 
     companion object {
-        internal fun create(options: PipelineOptions): AbstractPipeline = when (options.pipeline) {
-            PipelineType.STANDARD -> PipelineStandard(options)
+        internal fun create(
+            options: PipelineOptions,
+            globals: GlobalsCheck
+        ): AbstractPipeline = when (options.pipeline) {
+            PipelineType.STANDARD -> PipelineStandard(options, globals)
             PipelineType.EXPERIMENTAL -> PipelineExperimental(options)
             PipelineType.DEBUG -> PipelineDebug(options)
         }
         internal fun convertExprValue(value: ExprValue): PartiQLResult {
             return PartiQLResult.Value(value)
         }
-        internal fun standard(): AbstractPipeline {
-            return create(PipelineOptions())
+        internal fun standard(globals: GlobalsCheck): AbstractPipeline {
+            return create(PipelineOptions(), globals)
         }
 
         internal fun createPipelineOptions(
@@ -131,7 +135,10 @@ internal sealed class AbstractPipeline(open val options: PipelineOptions) {
     /**
      * Wraps the EvaluatingCompiler
      */
-    internal class PipelineStandard(options: PipelineOptions) : AbstractPipeline(options) {
+    internal class PipelineStandard(
+        options: PipelineOptions,
+        globals: GlobalsCheck
+    ) : AbstractPipeline(options) {
 
         private val compileOptions = CompileOptions.build {
             typedOpBehavior(options.typedOpBehavior)
@@ -140,7 +147,7 @@ internal sealed class AbstractPipeline(open val options: PipelineOptions) {
             typingMode(options.typingMode)
         }
 
-        private val compilerPipeline = CompilerPipeline.build {
+        private val compilerPipeline = CompilerPipeline.build(globals) {
             options.functions.forEach { function ->
                 addFunction(function)
             }

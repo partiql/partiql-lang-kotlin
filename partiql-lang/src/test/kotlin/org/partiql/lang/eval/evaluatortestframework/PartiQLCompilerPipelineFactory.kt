@@ -5,6 +5,7 @@ import org.partiql.lang.compiler.PartiQLCompilerBuilder
 import org.partiql.lang.compiler.PartiQLCompilerPipeline
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.eval.GlobalsCheck
 import org.partiql.lang.eval.PartiQLResult
 import org.partiql.lang.eval.TypingMode
 import org.partiql.lang.eval.UndefinedVariableBehavior
@@ -34,7 +35,7 @@ internal class PartiQLCompilerPipelineFactory() : PipelineFactory {
     ): AbstractPipeline {
 
         // Construct a legacy CompilerPipeline
-        val legacyPipeline = evaluatorTestDefinition.createCompilerPipeline(forcePermissiveMode)
+        val legacyPipeline = evaluatorTestDefinition.createCompilerPipeline(forcePermissiveMode, GlobalsCheck.of(session))
         val co = legacyPipeline.compileOptions
 
         assertNotEquals(

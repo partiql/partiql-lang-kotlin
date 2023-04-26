@@ -24,6 +24,7 @@ import org.partiql.cli.utils.EmptyInputStream
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.eval.GlobalsCheck
 import org.partiql.lang.eval.PartiQLResult
 import org.partiql.lang.eval.delegate
 import org.partiql.lang.eval.toIonValue
@@ -38,7 +39,7 @@ internal class Cli(
     private val inputFormat: PartiQLCommand.InputFormat,
     private val output: OutputStream,
     private val outputFormat: PartiQLCommand.OutputFormat,
-    private val compilerPipeline: AbstractPipeline,
+    private val pipelineConstructor: (GlobalsCheck) -> AbstractPipeline = { gc -> AbstractPipeline.standard(gc) },
     private val globals: Bindings<ExprValue>,
     private val query: String,
     private val wrapIon: Boolean
@@ -82,13 +83,11 @@ internal class Cli(
                     "--wrap-ion flag. Use --help for more information."
                 throw IllegalStateException(message)
             }
-            val result = compilerPipeline.compile(
-                query,
-                EvaluationSession.build {
-                    globals(bindings)
-                    user(currentUser)
-                }
-            )
+            val session = EvaluationSession.build {
+                globals(bindings)
+                user(currentUser)
+            }
+            val result = pipelineConstructor(GlobalsCheck.of(session)).compile(query, session)
             outputResult(result)
         }
     }
@@ -98,32 +97,29 @@ internal class Cli(
             val inputIonValue = ion.iterate(reader).asSequence().map { ExprValue.of(it) }
             val inputExprValue = ExprValue.newBag(inputIonValue)
             val bindings = getBindingsFromIonValue(inputExprValue)
-            val result = compilerPipeline.compile(
-                query,
-                EvaluationSession.build {
-                    globals(bindings)
-                    user(currentUser)
-                }
-            )
+            val session = EvaluationSession.build {
+                globals(bindings)
+                user(currentUser)
+            }
+            val result = pipelineConstructor(GlobalsCheck.of(session)).compile(query, session)
             outputResult(result)
         }
     }
 
     private fun runWithPartiQLInput() {
-        val inputEnvironment = compilerPipeline.compile(
+        val initsession = EvaluationSession.build {
+            user(currentUser)
+        }
+        val inputEnvironment = pipelineConstructor(GlobalsCheck.of(initsession)).compile(
             input.readBytes().toString(Charsets.UTF_8),
-            EvaluationSession.build {
-                user(currentUser)
-            }
+            initsession
         ) as PartiQLResult.Value
         val bindings = getBindingsFromIonValue(inputEnvironment.value)
-        val result = compilerPipeline.compile(
-            query,
-            EvaluationSession.build {
-                globals(bindings)
-                user(currentUser)
-            }
-        )
+        val session = EvaluationSession.build {
+            globals(bindings)
+            user(currentUser)
+        }
+        val result = pipelineConstructor(GlobalsCheck.of(session)).compile(query, session)
         outputResult(result)
     }
 

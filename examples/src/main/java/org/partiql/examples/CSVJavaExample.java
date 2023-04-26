@@ -3,13 +3,7 @@ package org.partiql.examples;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.examples.util.Example;
 import org.partiql.lang.CompilerPipeline;
-import org.partiql.lang.eval.BaseExprValue;
-import org.partiql.lang.eval.Bindings;
-import org.partiql.lang.eval.EvaluationSession;
-import org.partiql.lang.eval.ExprValue;
-import org.partiql.lang.eval.ExprValueExtensionsKt;
-import org.partiql.lang.eval.ExprValueType;
-import org.partiql.lang.eval.Expression;
+import org.partiql.lang.eval.*;
 
 import java.io.PrintStream;
 import java.util.Arrays;
@@ -84,16 +78,6 @@ public class CSVJavaExample extends Example {
 
         print("CSV Data:", CSV);
 
-        // CompilerPipeline is the main entry point for the PartiQL lib giving you access to the compiler
-        // and value factories
-        final CompilerPipeline pipeline = CompilerPipeline.standard();
-
-        final String query = "SELECT * FROM myCsvDocument csv WHERE CAST(csv._1 AS INT) < 30";
-        print("PartiQL query:", query);
-
-        // Compiles the query, the resulting expression can be re-used to query multiple data sets
-        final Expression selectAndFilter = pipeline.compile(query);
-
         final EvaluationSession session = EvaluationSession.builder()
                 .globals(
                         Bindings.<ExprValue>lazyBindingsBuilder().addBinding("myCsvDocument", () -> {
@@ -103,6 +87,16 @@ public class CSVJavaExample extends Example {
                             return ExprValue.newList(csvValues);
                         }).build()
                 ).build();
+
+        // CompilerPipeline is the main entry point for the PartiQL lib giving you access to the compiler
+        // and value factories
+        final CompilerPipeline pipeline = CompilerPipeline.standard(GlobalsCheck.Companion.of(session));
+
+        final String query = "SELECT * FROM myCsvDocument csv WHERE CAST(csv._1 AS INT) < 30";
+        print("PartiQL query:", query);
+
+        // Compiles the query, the resulting expression can be re-used to query multiple data sets
+        final Expression selectAndFilter = pipeline.compile(query);
 
         final ExprValue selectAndFilterResult = selectAndFilter.eval(session);
         print("PartiQL query result:", selectAndFilterResult);

@@ -35,7 +35,9 @@ import org.partiql.lang.SqlException
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.eval.GlobalsCheck
 import org.partiql.lang.eval.PartiQLResult
+import org.partiql.lang.eval.TypingMode
 import org.partiql.lang.eval.delegate
 import org.partiql.lang.syntax.PartiQLParserBuilder
 import org.partiql.lang.util.ConfigurableExprValueFormatter
@@ -93,7 +95,9 @@ private val EXIT_DELAY: Duration = Duration(3000)
  */
 internal class Shell(
     private val output: OutputStream,
-    private val compiler: AbstractPipeline,
+    private val typingMode: TypingMode,
+    private val pipelineType: AbstractPipeline.PipelineType,
+    private val compilerConstructor: (GlobalsCheck) -> AbstractPipeline,
     private val initialGlobal: Bindings<ExprValue>,
     private val config: ShellConfiguration = ShellConfiguration()
 ) {
@@ -149,9 +153,9 @@ internal class Shell(
             .build()
 
         out.info(WELCOME_MSG)
-        out.info("Typing mode: ${compiler.options.typingMode.name}")
+        out.info("Typing mode: ${typingMode.name}")
         out.info("Using version: ${retrievePartiQLVersionAndHash()}")
-        if (compiler is AbstractPipeline.PipelineDebug) {
+        if (pipelineType == AbstractPipeline.PipelineType.DEBUG) {
             out.println("\n\n")
             out.success(DEBUG_MSG)
             out.println("\n\n")
@@ -202,13 +206,11 @@ internal class Shell(
                                 previousResult
                             }
                         }.delegate(globals.bindings)
-                        val result = compiler.compile(
-                            arg,
-                            EvaluationSession.build {
-                                globals(locals)
-                                user(currentUser)
-                            }
-                        ) as PartiQLResult.Value
+                        val session = EvaluationSession.build {
+                            globals(locals)
+                            user(currentUser)
+                        }
+                        val result = compilerConstructor(GlobalsCheck.of(session)).compile(arg, session) as PartiQLResult.Value
                         globals.add(result.value.bindings)
                         result
                     }
@@ -240,13 +242,11 @@ internal class Shell(
                 val locals = Bindings.buildLazyBindings<ExprValue> {
                     addBinding("_") { previousResult }
                 }.delegate(globals.bindings)
-                compiler.compile(
-                    line,
-                    EvaluationSession.build {
-                        globals(locals)
-                        user(currentUser)
-                    }
-                )
+                val session = EvaluationSession.build {
+                    globals(locals)
+                    user(currentUser)
+                }
+                compilerConstructor(GlobalsCheck.of(session)).compile(line, session)
             }
         }
     }

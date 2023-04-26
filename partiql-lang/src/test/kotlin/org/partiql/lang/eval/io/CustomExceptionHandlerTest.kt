@@ -6,6 +6,7 @@ import org.partiql.lang.eval.CompileOptions
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.eval.GlobalsCheck
 import org.partiql.lang.eval.ThunkOptions
 import org.partiql.lang.types.FunctionSignature
 import org.partiql.types.StaticType
@@ -25,7 +26,8 @@ class CustomExceptionHandlerTest {
     fun verifyCustomExceptionHandler() {
         var customHandlerWasInvoked = false
 
-        val compilerPipeline = CompilerPipeline.build {
+        val session = EvaluationSession.standard()
+        val compilerPipeline = CompilerPipeline.build(GlobalsCheck.of(session)) {
             addFunction(AlwaysThrowsFunc())
             compileOptions(
                 CompileOptions.build {
@@ -44,7 +46,7 @@ class CustomExceptionHandlerTest {
         val expression = compilerPipeline.compile("alwaysthrows()")
 
         try {
-            expression.eval(EvaluationSession.standard())
+            expression.eval(session)
         } catch (e: IllegalStateException) {
             assertTrue(customHandlerWasInvoked, "Custom handler must be invoked")
         }
@@ -54,7 +56,8 @@ class CustomExceptionHandlerTest {
     fun verifyCustomExceptionHandlerForJavaBuilder() {
         var customHandlerWasInvoked = false
 
-        val compilerPipeline = CompilerPipeline.builder()
+        val session = EvaluationSession.standard()
+        val compilerPipeline = CompilerPipeline.builder(GlobalsCheck.of(session))
             .addFunction(AlwaysThrowsFunc())
             .compileOptions(
                 CompileOptions.builder()
@@ -73,7 +76,7 @@ class CustomExceptionHandlerTest {
         val expression = compilerPipeline.compile("alwaysthrows()")
 
         try {
-            expression.eval(EvaluationSession.standard())
+            expression.eval(session)
         } catch (e: IllegalStateException) {
             assertTrue(customHandlerWasInvoked, "Custom handler must be invoked")
         }

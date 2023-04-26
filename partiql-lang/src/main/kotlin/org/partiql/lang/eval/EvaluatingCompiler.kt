@@ -122,6 +122,7 @@ private typealias ThunkEnvValue<T> = ThunkValue<Environment, T>
  * @param compileOptions Various options that effect how the source code is compiled.
  */
 internal class EvaluatingCompiler(
+    private val globals: GlobalsCheck,
     private val functions: Map<String, ExprFunction>,
     private val customTypedOpParameters: Map<String, TypedOpParameter>,
     private val procedures: Map<String, StoredProcedure>,

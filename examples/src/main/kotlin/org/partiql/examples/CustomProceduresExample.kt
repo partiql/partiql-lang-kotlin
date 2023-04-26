@@ -13,6 +13,7 @@ import org.partiql.lang.eval.EvaluationException
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
+import org.partiql.lang.eval.GlobalsCheck
 import org.partiql.lang.eval.StructOrdering
 import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedure
 import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedureSignature
@@ -92,14 +93,6 @@ class CustomProceduresExample(out: PrintStream) : Example(out) {
     private val ion = IonSystemBuilder.standard().build()
 
     override fun run() {
-        /**
-         * To make custom stored procedures available to the PartiQL query being executed, they must be passed to
-         * [CompilerPipeline.Builder.addProcedure].
-         */
-        val pipeline = CompilerPipeline.build {
-            addProcedure(CalculateCrewMoonWeight())
-        }
-
         // Here, we initialize the crews to be stored in our global session bindings
         val initialCrews = Bindings.ofMap(
             mapOf(
@@ -126,6 +119,14 @@ class CustomProceduresExample(out: PrintStream) : Example(out) {
         out.println("Initial global session bindings:")
         print("Crew 1:", "${session.globals[crew1BindingName]}")
         print("Crew 2:", "${session.globals[crew2BindingName]}")
+
+        /**
+         * To make custom stored procedures available to the PartiQL query being executed, they must be passed to
+         * [CompilerPipeline.Builder.addProcedure].
+         */
+        val pipeline = CompilerPipeline.build(GlobalsCheck.of(session)) {
+            addProcedure(CalculateCrewMoonWeight())
+        }
 
         // We call our custom stored procedure using PartiQL's `EXEC` clause. Here we call our stored procedure
         // 'calculate_crew_moon_weight' with the arg 'crew1', which outputs the calculated moon weights

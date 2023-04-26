@@ -6,19 +6,14 @@ import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.eval.GlobalsCheck
 import java.io.PrintStream
 
 /** Demonstrates how to supply a global variable whose value is lazily materialized. */
 class EvaluationWithLazyBindings(out: PrintStream) : Example(out) {
     val ion = IonSystemBuilder.standard().build()
-    val pipeline = CompilerPipeline.standard()
 
     override fun run() {
-        // Compile a simple SELECT query
-        val query = "SELECT p.name AS kitten_id FROM pets AS p WHERE age >= 4"
-        print("PartiQL query:", query)
-        val e = pipeline.compile(query)
-
         // The global bindings
         val ionText = """[ { name: "Nibbler", age: 2 }, { name: "Hobbes", age: 6 } ]"""
         val globalVariables = Bindings.buildLazyBindings<ExprValue> {
@@ -31,10 +26,17 @@ class EvaluationWithLazyBindings(out: PrintStream) : Example(out) {
                 )
             }
         }
-        print("global variables:", "pets => $ionText")
 
         // Create session containing [globalVariables].
         val session = EvaluationSession.build { globals(globalVariables) }
+
+        // Compile a simple SELECT query
+        val pipeline = CompilerPipeline.standard(GlobalsCheck.of(session))
+        val query = "SELECT p.name AS kitten_id FROM pets AS p WHERE age >= 4"
+        print("PartiQL query:", query)
+        val e = pipeline.compile(query)
+
+        print("global variables:", "pets => $ionText")
 
         // Evaluate the query using the session.
         val result = e.eval(session)

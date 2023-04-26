@@ -9,6 +9,7 @@ import org.partiql.cli.query.Cli
 import org.partiql.cli.utils.EmptyInputStream
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.eval.GlobalsCheck
 import java.io.ByteArrayOutputStream
 import java.io.OutputStream
 
@@ -23,7 +24,7 @@ internal fun makeCliAndGetResult(
     outputFormat: PartiQLCommand.OutputFormat = PartiQLCommand.OutputFormat.ION_TEXT,
     output: OutputStream = ByteArrayOutputStream(),
     ion: IonSystem = IonSystemBuilder.standard().build(),
-    pipeline: AbstractPipeline = AbstractPipeline.standard(),
+    pipelineConstructor: (GlobalsCheck) -> AbstractPipeline = { gc -> AbstractPipeline.standard(gc) },
     wrapIon: Boolean = false
 ): String {
     val cli = Cli(
@@ -32,7 +33,7 @@ internal fun makeCliAndGetResult(
         inputFormat,
         output,
         outputFormat,
-        pipeline,
+        pipelineConstructor,
         bindings,
         query,
         wrapIon

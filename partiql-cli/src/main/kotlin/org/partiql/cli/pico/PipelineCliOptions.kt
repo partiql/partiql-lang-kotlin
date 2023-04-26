@@ -18,6 +18,7 @@ import org.partiql.cli.pipeline.AbstractPipeline
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.eval.GlobalsCheck
 import org.partiql.lang.eval.PartiQLResult
 import org.partiql.lang.eval.ProjectionIterationBehavior
 import org.partiql.lang.eval.TypedOpBehavior
@@ -26,7 +27,7 @@ import org.partiql.lang.eval.UndefinedVariableBehavior
 import picocli.CommandLine
 import java.io.File
 
-internal class PipelineOptions {
+internal class PipelineCliOptions {
 
     @CommandLine.Option(
         names = ["-p", "--pipeline"],
@@ -70,7 +71,7 @@ internal class PipelineOptions {
     )
     var undefinedVarBehavior: UndefinedVariableBehavior = UndefinedVariableBehavior.ERROR
 
-    internal val pipeline: AbstractPipeline
+    internal val pipelineConstructor: (GlobalsCheck) -> AbstractPipeline
         get() {
             val options = AbstractPipeline.createPipelineOptions(
                 pipelineType,
@@ -79,14 +80,15 @@ internal class PipelineOptions {
                 undefinedVarBehavior,
                 typingMode
             )
-            return AbstractPipeline.create(options)
+            return { gc: GlobalsCheck -> AbstractPipeline.create(options, gc) }
         }
 
     internal val environment: Bindings<ExprValue>
         get() {
             if (environmentFile == null) return Bindings.empty()
             val configSource = environmentFile!!.readText(charset("UTF-8"))
-            val config = pipeline.compile(configSource, EvaluationSession.standard()) as PartiQLResult.Value
+            val session = EvaluationSession.standard()
+            val config = pipelineConstructor(GlobalsCheck.of(session)).compile(configSource, session) as PartiQLResult.Value
             return config.value.bindings
         }
 }

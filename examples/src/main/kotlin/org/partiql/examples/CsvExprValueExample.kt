@@ -7,6 +7,7 @@ import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
+import org.partiql.lang.eval.GlobalsCheck
 import org.partiql.lang.eval.namedValue
 import java.io.PrintStream
 
@@ -49,12 +50,11 @@ private class CsvRowExprValue(private val rowString: String) : BaseExprValue() {
 
 class CsvExprValueExample(out: PrintStream) : Example(out) {
 
-    private val pipeline = CompilerPipeline.standard()
-
     private val EXAMPLE_CSV_FILE_CONTENTS = "Cat,Nibbler,F\nCat,Hobbes,M\nDog,Fido,M"
 
     /** Evaluates the specified [query], using a standard [session] if none was specified. */
     private fun eval(query: String, session: EvaluationSession = EvaluationSession.standard()): ExprValue {
+        val pipeline = CompilerPipeline.standard(GlobalsCheck.of(session))
         val e = pipeline.compile(query)
         return e.eval(session)
     }

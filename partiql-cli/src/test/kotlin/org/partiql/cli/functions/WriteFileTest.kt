@@ -25,6 +25,7 @@ import org.partiql.cli.pipeline.AbstractPipeline
 import org.partiql.lang.eval.BAG_ANNOTATION
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.eval.GlobalsCheck
 import org.partiql.lang.eval.toIonValue
 import java.io.ByteArrayOutputStream
 import java.io.OutputStream
@@ -37,11 +38,14 @@ class WriteFileTest {
     private val ion = IonSystemBuilder.standard().build()
     private val function = WriteFile(ion)
     private val session = EvaluationSession.standard()
-    private val pipeline = AbstractPipeline.create(
-        AbstractPipeline.PipelineOptions(
-            functions = listOf(WriteFile(ion))
+    private val pipelineConstructor = { gc: GlobalsCheck ->
+        AbstractPipeline.create(
+            AbstractPipeline.PipelineOptions(
+                functions = listOf(WriteFile(ion))
+            ),
+            gc
         )
-    )
+    }
 
     private fun String.exprValue() = ExprValue.of(ion.singleValue(this))
 
@@ -105,7 +109,7 @@ class WriteFileTest {
 
         // Act
         val cliResponse =
-            makeCliAndGetResult(query = query, input = input, output = outputStream, pipeline = pipeline)
+            makeCliAndGetResult(query = query, input = input, output = outputStream, pipelineConstructor = pipelineConstructor)
 
         // Assert
         assertAsIon(TRUE_STRING, cliResponse)
@@ -122,7 +126,7 @@ class WriteFileTest {
 
         // Act
         val cliResponse =
-            makeCliAndGetResult(query = query, input = input, output = outputStream, pipeline = pipeline)
+            makeCliAndGetResult(query = query, input = input, output = outputStream, pipelineConstructor = pipelineConstructor)
 
         // Assert
         assertAsIon(TRUE_STRING, cliResponse)
@@ -139,7 +143,7 @@ class WriteFileTest {
 
         // Act
         val cliResponse =
-            makeCliAndGetResult(query = query, input = input, output = outputStream, pipeline = pipeline)
+            makeCliAndGetResult(query = query, input = input, output = outputStream, pipelineConstructor = pipelineConstructor)
 
         // Assert
         assertAsIon(TRUE_STRING, cliResponse)
@@ -156,7 +160,7 @@ class WriteFileTest {
 
         // Act
         val cliResponse =
-            makeCliAndGetResult(query = query, input = input, output = outputStream, pipeline = pipeline)
+            makeCliAndGetResult(query = query, input = input, output = outputStream, pipelineConstructor = pipelineConstructor)
 
         // Assert
         assertAsIon(TRUE_STRING, cliResponse)
@@ -173,7 +177,7 @@ class WriteFileTest {
 
         // Act
         val cliResponse =
-            makeCliAndGetResult(query = query, input = input, output = outputStream, pipeline = pipeline)
+            makeCliAndGetResult(query = query, input = input, output = outputStream, pipelineConstructor = pipelineConstructor)
 
         // Assert
         assertAsIon(TRUE_STRING, cliResponse)
@@ -190,7 +194,7 @@ class WriteFileTest {
 
         // Act
         val cliResponse =
-            makeCliAndGetResult(query = query, input = input, output = outputStream, pipeline = pipeline)
+            makeCliAndGetResult(query = query, input = input, output = outputStream, pipelineConstructor = pipelineConstructor)
 
         // Assert
         assertAsIon(TRUE_STRING, cliResponse)

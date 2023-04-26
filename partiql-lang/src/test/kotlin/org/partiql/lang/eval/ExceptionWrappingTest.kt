@@ -31,11 +31,13 @@ class ExceptionWrappingTest {
             get() = FunctionSignature("wrap_exception", listOf(), returnType = StaticType.ANY)
     }
 
+    private val session = EvaluationSession.standard()
+
     /**
      * To make custom functions available to the PartiQL being executed, they must be passed to
      * [CompilerPipeline.Builder.addFunction].
      */
-    private val pipeline = CompilerPipeline.build {
+    private val pipeline = CompilerPipeline.build(GlobalsCheck.of(session)) {
         addFunction(throwIllegalStateExceptionExprFunction)
         addFunction(throwSemanticExceptionExprFunction)
 
@@ -57,7 +59,7 @@ class ExceptionWrappingTest {
     /** Evaluates the given [query] with as standard [EvaluationSession]. */
     private fun eval(query: String): ExprValue {
         val e = pipeline.compile(query)
-        return e.eval(EvaluationSession.standard())
+        return e.eval(session)
     }
 
     @Test

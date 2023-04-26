@@ -4,6 +4,7 @@ import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.eval.CompileOptions
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.eval.GlobalsCheck
 import org.partiql.lang.eval.TypingMode
 
 internal class CompilerPipelineFactory : PipelineFactory {
@@ -18,7 +19,7 @@ internal class CompilerPipelineFactory : PipelineFactory {
         session: EvaluationSession,
         forcePermissiveMode: Boolean
     ): AbstractPipeline {
-        val concretePipeline = evaluatorTestDefinition.createCompilerPipeline(forcePermissiveMode)
+        val concretePipeline = evaluatorTestDefinition.createCompilerPipeline(forcePermissiveMode, GlobalsCheck.of(session))
 
         return object : AbstractPipeline {
             override val typingMode: TypingMode
@@ -30,7 +31,10 @@ internal class CompilerPipelineFactory : PipelineFactory {
     }
 }
 
-internal fun EvaluatorTestDefinition.createCompilerPipeline(forcePermissiveMode: Boolean): CompilerPipeline {
+internal fun EvaluatorTestDefinition.createCompilerPipeline(
+    forcePermissiveMode: Boolean,
+    globals: GlobalsCheck
+): CompilerPipeline {
 
     val compileOptions = CompileOptions.build(compileOptionsBuilderBlock).let { co ->
         if (forcePermissiveMode) {
@@ -42,7 +46,7 @@ internal fun EvaluatorTestDefinition.createCompilerPipeline(forcePermissiveMode:
         }
     }
 
-    val concretePipeline = CompilerPipeline.build {
+    val concretePipeline = CompilerPipeline.build(globals) {
         compileOptions(compileOptions)
         this@createCompilerPipeline.compilerPipelineBuilderBlock(this)
     }

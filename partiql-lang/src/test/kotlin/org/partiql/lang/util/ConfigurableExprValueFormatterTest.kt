@@ -7,6 +7,7 @@ import org.junit.runner.RunWith
 import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.eval.GlobalsCheck
 import org.partiql.lang.syntax.PartiQLParser
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -15,12 +16,13 @@ import kotlin.test.assertTrue
 class ConfigurableExprValueFormatterTest {
 
     private val parser = PartiQLParser()
-    private val compiler = CompilerPipeline.builder().sqlParser(parser).build()
+    val session = EvaluationSession.standard()
+    private val compiler = CompilerPipeline.builder(GlobalsCheck.of(session)).sqlParser(parser).build()
 
     private val pretty = ConfigurableExprValueFormatter.pretty
     private val standard = ConfigurableExprValueFormatter.standard
 
-    private fun evalQuery(q: String) = compiler.compile(q).eval(EvaluationSession.standard())
+    private fun evalQuery(q: String) = compiler.compile(q).eval(session)
 
     private fun format(v: ExprValue, formatter: ConfigurableExprValueFormatter): String {
         val sb = StringBuilder()

@@ -5,13 +5,14 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.eval.EvaluationSession
+import org.partiql.lang.eval.GlobalsCheck
 import org.partiql.lang.util.ArgumentsProviderBase
 
 class ExprValueStrictEqualsTest {
     data class EqTest(val q1: String, val q2: String, val equals: Boolean)
 
-    val pipeline = CompilerPipeline.builder().build()
     val session = EvaluationSession.standard()
+    val pipeline = CompilerPipeline.builder(GlobalsCheck.of(session)).build()
 
     @ParameterizedTest
     @ArgumentsSource(StrictEqualCases::class)

@@ -24,6 +24,7 @@ import org.partiql.cli.pico.PartiQLCommand
 import org.partiql.cli.pipeline.AbstractPipeline
 import org.partiql.lang.eval.BAG_ANNOTATION
 import org.partiql.lang.eval.EvaluationException
+import org.partiql.lang.eval.GlobalsCheck
 import org.partiql.lang.eval.MISSING_ANNOTATION
 import org.partiql.lang.eval.ProjectionIterationBehavior
 import org.partiql.lang.eval.TypedOpBehavior
@@ -221,9 +222,11 @@ class CliTest {
 
     @Test
     fun runQueryInPermissiveMode() {
-        val pipeline = AbstractPipeline.create(AbstractPipeline.PipelineOptions(typingMode = TypingMode.PERMISSIVE))
+        val pipeline = { gc: GlobalsCheck ->
+            AbstractPipeline.create(AbstractPipeline.PipelineOptions(typingMode = TypingMode.PERMISSIVE), gc)
+        }
         val query = "1 + 'foo'"
-        val actual = makeCliAndGetResult(query, pipeline = pipeline)
+        val actual = makeCliAndGetResult(query, pipelineConstructor = pipeline)
 
         assertAsIon("$MISSING_ANNOTATION::null", actual)
     }
@@ -231,66 +234,98 @@ class CliTest {
     @Test
     fun runWithTypedOpBehaviorLegacy() {
         @Suppress("DEPRECATION") // TypedOpBehavior.LEGACY is deprecated.
-        val pipeline = AbstractPipeline.create(AbstractPipeline.PipelineOptions(typedOpBehavior = TypedOpBehavior.LEGACY))
+        val pipeline = { gc: GlobalsCheck ->
+            AbstractPipeline.create(AbstractPipeline.PipelineOptions(typedOpBehavior = TypedOpBehavior.LEGACY), gc)
+        }
         val query = "CAST('abcde' as VARCHAR(3));"
-        val actual = makeCliAndGetResult(query, pipeline = pipeline)
+        val actual = makeCliAndGetResult(query, pipelineConstructor = pipeline)
 
         assertAsIon("\"abcde\"", actual)
     }
 
     @Test
     fun runWithTypedOpBehaviorHonorParameters() {
-        val pipeline = AbstractPipeline.create(AbstractPipeline.PipelineOptions(typedOpBehavior = TypedOpBehavior.HONOR_PARAMETERS))
+        val pipeline = { gc: GlobalsCheck ->
+            AbstractPipeline.create(
+                AbstractPipeline.PipelineOptions(typedOpBehavior = TypedOpBehavior.HONOR_PARAMETERS),
+                gc
+            )
+        }
         val query = "CAST('abcde' as VARCHAR(3));"
-        val actual = makeCliAndGetResult(query, pipeline = pipeline)
+        val actual = makeCliAndGetResult(query, pipelineConstructor = pipeline)
 
         assertAsIon("\"abc\"", actual)
     }
 
     @Test
     fun runWithProjectionIterationFilterMissingFailure() {
-        val pipeline = AbstractPipeline.create(AbstractPipeline.PipelineOptions(projectionIterationBehavior = ProjectionIterationBehavior.FILTER_MISSING))
+        val pipeline = { gc: GlobalsCheck ->
+            AbstractPipeline.create(
+                AbstractPipeline.PipelineOptions(projectionIterationBehavior = ProjectionIterationBehavior.FILTER_MISSING),
+                gc
+            )
+        }
         val input = "<<{'a': null, 'b': missing, 'c': 1}>>"
         val query = "SELECT a, b, c FROM input_data"
         assertThrows<EvaluationException> {
-            makeCliAndGetResult(query, input, pipeline = pipeline, inputFormat = PartiQLCommand.InputFormat.PARTIQL)
+            makeCliAndGetResult(query, input, pipelineConstructor = pipeline, inputFormat = PartiQLCommand.InputFormat.PARTIQL)
         }
     }
 
-    @Test()
+    @Test
     fun runWithProjectionIterationFilterMissingSuccess() {
-        val pipeline = AbstractPipeline.create(AbstractPipeline.PipelineOptions(projectionIterationBehavior = ProjectionIterationBehavior.FILTER_MISSING))
+        val pipeline = { gc: GlobalsCheck ->
+            AbstractPipeline.create(
+                AbstractPipeline.PipelineOptions(projectionIterationBehavior = ProjectionIterationBehavior.FILTER_MISSING),
+                gc
+            )
+        }
         val input = "<<{'a': null, 'b': missing, 'c': 1}>>"
         val query = "SELECT * FROM input_data"
-        val actual = makeCliAndGetResult(query, input, pipeline = pipeline, inputFormat = PartiQLCommand.InputFormat.PARTIQL)
+        val actual = makeCliAndGetResult(query, input, pipelineConstructor = pipeline, inputFormat = PartiQLCommand.InputFormat.PARTIQL)
         assertAsIon("$BAG_ANNOTATION::[{a:null,c:1}]", actual)
     }
 
     @Test
     fun runWithProjectionIterationUnfiltered() {
-        val pipeline = AbstractPipeline.create(AbstractPipeline.PipelineOptions(projectionIterationBehavior = ProjectionIterationBehavior.UNFILTERED))
+        val pipeline = { gc: GlobalsCheck ->
+            AbstractPipeline.create(
+                AbstractPipeline.PipelineOptions(projectionIterationBehavior = ProjectionIterationBehavior.UNFILTERED),
+                gc
+            )
+        }
         val input = "<<{'a': null, 'b': missing, 'c': 1}>>"
         val query = "SELECT a, b, c FROM input_data"
-        val actual = makeCliAndGetResult(query, input, pipeline = pipeline, inputFormat = PartiQLCommand.InputFormat.PARTIQL)
+        val actual = makeCliAndGetResult(query, input, pipelineConstructor = pipeline, inputFormat = PartiQLCommand.InputFormat.PARTIQL)
         assertAsIon("$BAG_ANNOTATION::[{a:null,c:1}]", actual)
     }
 
     @Test
     fun runWithUndefinedVariableError() {
-        val pipeline = AbstractPipeline.create(AbstractPipeline.PipelineOptions(undefinedVariableBehavior = UndefinedVariableBehavior.ERROR))
+        val pipeline = { gc: GlobalsCheck ->
+            AbstractPipeline.create(
+                AbstractPipeline.PipelineOptions(undefinedVariableBehavior = UndefinedVariableBehavior.ERROR),
+                gc
+            )
+        }
         val input = "<<{'a': 1}>>"
         val query = "SELECT * FROM undefined_variable"
         assertThrows<EvaluationException> {
-            makeCliAndGetResult(query, input, pipeline = pipeline, inputFormat = PartiQLCommand.InputFormat.PARTIQL)
+            makeCliAndGetResult(query, input, pipelineConstructor = pipeline, inputFormat = PartiQLCommand.InputFormat.PARTIQL)
         }
     }
 
     @Test
     fun runWithUndefinedVariableMissing() {
-        val pipeline = AbstractPipeline.create(AbstractPipeline.PipelineOptions(undefinedVariableBehavior = UndefinedVariableBehavior.MISSING))
+        val pipeline = { gc: GlobalsCheck ->
+            AbstractPipeline.create(
+                AbstractPipeline.PipelineOptions(undefinedVariableBehavior = UndefinedVariableBehavior.MISSING),
+                gc
+            )
+        }
         val input = "<<{'a': 1}>>"
         val query = "SELECT * FROM undefined_variable"
-        val actual = makeCliAndGetResult(query, input, pipeline = pipeline, inputFormat = PartiQLCommand.InputFormat.PARTIQL)
+        val actual = makeCliAndGetResult(query, input, pipelineConstructor = pipeline, inputFormat = PartiQLCommand.InputFormat.PARTIQL)
         assertAsIon("$BAG_ANNOTATION::[{}]", actual)
     }
 

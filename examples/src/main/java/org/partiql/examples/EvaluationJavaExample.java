@@ -20,10 +20,7 @@ import kotlin.Unit;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.examples.util.Example;
 import org.partiql.lang.CompilerPipeline;
-import org.partiql.lang.eval.Bindings;
-import org.partiql.lang.eval.EvaluationSession;
-import org.partiql.lang.eval.ExprValue;
-import org.partiql.lang.eval.Expression;
+import org.partiql.lang.eval.*;
 
 import java.io.PrintStream;
 import java.util.Map;
@@ -42,14 +39,6 @@ public class EvaluationJavaExample extends Example {
     @Override
     public void run() {
 
-        // An instance of [CompilerPipeline].
-        final CompilerPipeline pipeline = CompilerPipeline.standard();
-
-        // Compiles a simple expression containing a reference to a global variable.
-        final String query = "'Hello, ' || user_name";
-        print("PartiQL query:", query);
-        final Expression e = pipeline.compile(query);
-
         // This is the value of the global variable.
         final String userName = "Homer Simpson";
         final ExprValue usernameValue = ExprValue.newString(userName);
@@ -58,13 +47,22 @@ public class EvaluationJavaExample extends Example {
         // bindings with previously materialized values.
         final Map<String, ExprValue> globals = singletonMap("user_name", usernameValue);
         final Bindings<ExprValue> globalVariables = Bindings.ofMap(globals);
-        print("global variables:", globals);
 
         // Include globalVariables when building the EvaluationSession.
         final EvaluationSession session = EvaluationSession.Companion.build((builder) -> {
             builder.globals(globalVariables);
             return Unit.INSTANCE;
         });
+
+        // An instance of [CompilerPipeline].
+        final CompilerPipeline pipeline = CompilerPipeline.standard(GlobalsCheck.Companion.of(session));
+
+        // Compiles a simple expression containing a reference to a global variable.
+        final String query = "'Hello, ' || user_name";
+        print("PartiQL query:", query);
+        final Expression e = pipeline.compile(query);
+
+        print("global variables:", globals);
 
         // Evaluate the compiled expression with the session containing the global variables.
         final ExprValue result = e.eval(session);

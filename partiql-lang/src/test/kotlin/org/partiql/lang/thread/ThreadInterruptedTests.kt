@@ -17,6 +17,7 @@ import org.partiql.lang.CompilerPipelineImpl
 import org.partiql.lang.StepContext
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.eval.CompileOptions
+import org.partiql.lang.eval.GlobalsCheck
 import org.partiql.lang.eval.visitors.VisitorTransformBase
 import org.partiql.lang.syntax.PartiQLParser
 import org.partiql.lang.syntax.antlr.PartiQLTokens
@@ -121,7 +122,7 @@ class ThreadInterruptedTests {
         val numSteps = 10000000
         var accumulator = 0L
 
-        val pipeline = CompilerPipeline.build {
+        val pipeline = CompilerPipeline.build(GlobalsCheck.empty) {
             repeat(numSteps) {
                 addPreprocessingStep { expr, _ ->
                     // Burn some CPU so we don't get thru all the pipeline steps before the interrupt.

@@ -28,11 +28,7 @@ import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.examples.util.Example;
 import org.partiql.lang.CompilerPipeline;
-import org.partiql.lang.eval.Bindings;
-import org.partiql.lang.eval.EvaluationSession;
-import org.partiql.lang.eval.ExprValue;
-import org.partiql.lang.eval.ExprValueExtensionsKt;
-import org.partiql.lang.eval.Expression;
+import org.partiql.lang.eval.*;
 
 import java.io.IOException;
 import java.io.PrintStream;
@@ -65,14 +61,6 @@ public class S3JavaExample extends Example {
         // Initializes the ion system used by PartiQL
         final IonSystem ion = IonSystemBuilder.standard().build();
 
-        // CompilerPipeline is the main entry point for the PartiQL lib giving you access to the compiler
-        // and value factories
-        final CompilerPipeline pipeline = CompilerPipeline.standard();
-
-        // Compiles the query, the resulting expression can be re-used to query multiple data sets
-        final Expression selectAndFilter = pipeline.compile(
-                "SELECT doc.name, doc.address FROM myS3Document doc WHERE doc.age < 30");
-
         try (
                 final S3Object s3Object = s3.getObject(bucket_name, key_name);
                 final S3ObjectInputStream s3InputStream = s3Object.getObjectContent();
@@ -100,6 +88,14 @@ public class S3JavaExample extends Example {
                                     .build()
                     )
                     .build();
+
+            // CompilerPipeline is the main entry point for the PartiQL lib giving you access to the compiler
+            // and value factories
+            final CompilerPipeline pipeline = CompilerPipeline.standard(GlobalsCheck.Companion.of(session));
+
+            // Compiles the query, the resulting expression can be re-used to query multiple data sets
+            final Expression selectAndFilter = pipeline.compile(
+                    "SELECT doc.name, doc.address FROM myS3Document doc WHERE doc.age < 30");
 
             // Executes the query in the session that's encapsulating the JSON data
             final ExprValue selectAndFilterResult = selectAndFilter.eval(session);

@@ -28,6 +28,7 @@ import org.partiql.lang.SqlException
 import org.partiql.lang.eval.CompileOptions
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.eval.GlobalsCheck
 import org.partiql.lang.eval.TypingMode
 import org.partiql.lang.eval.toIonValue
 import java.io.File
@@ -380,9 +381,9 @@ class TestRunner {
     }
 
     private fun runEvalTestCase(evalTC: EvalTestCase, expectedFailedTests: List<Pair<String, CompileOptions>>) {
-        val compilerPipeline = CompilerPipeline.builder().compileOptions(evalTC.compileOptions).build()
         val globals = ExprValue.of(evalTC.env).bindings
         val session = EvaluationSession.build { globals(globals) }
+        val compilerPipeline = CompilerPipeline.builder(GlobalsCheck.of(session)).compileOptions(evalTC.compileOptions).build()
         try {
             val expression = compilerPipeline.compile(evalTC.statement)
             val actualResult = expression.eval(session)
@@ -414,9 +415,9 @@ class TestRunner {
     }
 
     private fun runEvalEquivTestCase(evalEquivTestCase: EvalEquivTestCase, expectedFailedTests: List<Pair<String, CompileOptions>>) {
-        val compilerPipeline = CompilerPipeline.builder().compileOptions(evalEquivTestCase.compileOptions).build()
         val globals = ExprValue.of(evalEquivTestCase.env).bindings
         val session = EvaluationSession.build { globals(globals) }
+        val compilerPipeline = CompilerPipeline.builder(GlobalsCheck.of(session)).compileOptions(evalEquivTestCase.compileOptions).build()
         val statements = evalEquivTestCase.statements
 
         statements.forEach { statement ->

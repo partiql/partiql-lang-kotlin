@@ -8,6 +8,7 @@ import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
+import org.partiql.lang.eval.GlobalsCheck
 import org.partiql.lang.eval.StructOrdering
 import org.partiql.lang.eval.namedValue
 import org.partiql.lang.types.FunctionSignature
@@ -100,19 +101,20 @@ class FibListExprFunc : ExprFunction {
  * the two custom functions: [FibScalarExprFunc] and [FibListExprFunc] are implemented.
  */
 class CustomFunctionsExample(out: PrintStream) : Example(out) {
-    /**
-     * To make custom functions available to the PartiQL being executed, they must be passed to
-     * [CompilerPipeline.Builder.addFunction].
-     */
-    val pipeline = CompilerPipeline.build {
-        addFunction(FibScalarExprFunc())
-        addFunction(FibListExprFunc())
-    }
 
     /** Evaluates the given [query] with as standard [EvaluationSession]. */
     private fun eval(query: String): ExprValue {
+        val session = EvaluationSession.standard()
+        /**
+         * To make custom functions available to the PartiQL being executed, they must be passed to
+         * [CompilerPipeline.Builder.addFunction].
+         */
+        val pipeline = CompilerPipeline.build(GlobalsCheck.of(session)) {
+            addFunction(FibScalarExprFunc())
+            addFunction(FibListExprFunc())
+        }
         val e = pipeline.compile(query)
-        return e.eval(EvaluationSession.standard())
+        return e.eval(session)
     }
 
     override fun run() {

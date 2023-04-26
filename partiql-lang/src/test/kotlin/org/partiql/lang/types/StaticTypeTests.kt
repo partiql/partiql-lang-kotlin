@@ -7,6 +7,7 @@ import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.eval.GlobalsCheck
 import org.partiql.lang.types.StaticTypeUtils.isInstance
 import org.partiql.lang.util.ArgumentsProviderBase
 import org.partiql.types.AnyOfType
@@ -80,8 +81,10 @@ class StaticTypeTests {
         val expectedIsInstanceResult: Boolean
     )
 
-    fun eval(sql: String): ExprValue =
-        CompilerPipeline.standard().compile(sql).eval(EvaluationSession.standard())
+    fun eval(sql: String): ExprValue {
+        val session = EvaluationSession.standard()
+        return CompilerPipeline.standard(GlobalsCheck.of(session)).compile(sql).eval(session)
+    }
 
     @ParameterizedTest
     @ArgumentsSource(ScalarIsInstanceArguments::class)

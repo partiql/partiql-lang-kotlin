@@ -3,15 +3,16 @@ package org.partiql.examples
 import org.partiql.examples.util.Example
 import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.eval.EvaluationSession
+import org.partiql.lang.eval.GlobalsCheck
 import java.io.PrintStream
 
 /** Demonstrates how to compile and evaluate a simple expression. */
 class SimpleExpressionEvaluation(out: PrintStream) : Example(out) {
-    val pipeline = CompilerPipeline.standard()
 
     override fun run() {
         // An EvaluationSession holds context needed for evaluation of the compiled query.
         val session = EvaluationSession.standard()
+        val pipeline = CompilerPipeline.standard(GlobalsCheck.of(session))
 
         // Compiles a simple expression.  This only needs to be performed once per query.
         val query = "1 + 1"
