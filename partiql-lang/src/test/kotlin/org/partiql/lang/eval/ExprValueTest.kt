@@ -502,4 +502,12 @@ class ExprValueTest {
         // Assert
         assertEquals(expected, exprValue.timeValue())
     }
+
+    @Test
+    fun testIonDatagram() {
+        val ionDatagram = ion.newDatagram()
+        ionDatagram.addAll(listOf(ion.singleValue("1"), ion.singleValue("2"), ion.singleValue("3")))
+        val ionDatagramAsExprValue = ExprValue.of(ionDatagram)
+        assertBagValues(ionDatagramAsExprValue)
+    }
 }
