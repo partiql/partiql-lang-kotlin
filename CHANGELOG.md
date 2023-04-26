@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Adds back ability to convert an `IonDatagram` to an `ExprValue` using `of(value: IonValue): ExprValue` and `newFromIonValue(value: IonValue): ExprValue`
 
 ### Changed
 
