@@ -17,6 +17,7 @@ package org.partiql.lang.eval
 import com.amazon.ion.IonBlob
 import com.amazon.ion.IonBool
 import com.amazon.ion.IonClob
+import com.amazon.ion.IonDatagram
 import com.amazon.ion.IonDecimal
 import com.amazon.ion.IonFloat
 import com.amazon.ion.IonInt
@@ -397,6 +398,7 @@ interface ExprValue : Iterable<ExprValue>, Faceted {
                 value is IonList -> newList(value.map { of(it) }) // LIST
                 value is IonSexp -> newSexp(value.map { of(it) }) // SEXP
                 value is IonStruct -> IonStructExprValue(value) // STRUCT
+                value is IonDatagram -> newBag(value.map { of(it) }) // DATAGRAM represented as BAG ExprValue
                 else -> error("Unrecognized IonValue to transform to ExprValue: $value")
             }
         }
