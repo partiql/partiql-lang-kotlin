@@ -16,7 +16,6 @@ fun basicVisitorTransforms() = PipelinedVisitorTransform(
     GroupByItemAliasVisitorTransform(),
     AggregateSupportVisitorTransform(),
     OrderBySortSpecVisitorTransform(),
-    SystemFunctionsVisitorTransform,
 
     // [GroupByPathExpressionVisitorTransform] and [SelectStarVisitorTransform] require:
     //   - the synthetic from source aliases added by [FromSourceAliasVisitorTransform]

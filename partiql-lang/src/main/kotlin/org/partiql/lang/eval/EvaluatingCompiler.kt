@@ -15,6 +15,7 @@
 package org.partiql.lang.eval
 
 import com.amazon.ion.IonString
+import com.amazon.ion.IonType
 import com.amazon.ion.IonValue
 import com.amazon.ion.Timestamp
 import com.amazon.ion.system.IonSystemBuilder
@@ -451,13 +452,8 @@ internal class EvaluatingCompiler(
             // bag operators
             is PartiqlAst.Expr.BagOp -> compileBagOp(expr, metas)
 
-            // System Functions
-            is PartiqlAst.Expr.SessionAttribute -> err(
-                message = "Session attribute (${expr.value}) should have been replaced with a system function call during normalization.",
-                errorCode = ErrorCode.EVALUATOR_GENERIC_EXCEPTION,
-                errorContext = errorContextFrom(metas),
-                internal = false
-            )
+            // Session Attributes
+            is PartiqlAst.Expr.SessionAttribute -> compileSessionAttribute(expr, metas)
 
             is PartiqlAst.Expr.GraphMatch -> TODO("Compilation of GraphMatch expression")
             is PartiqlAst.Expr.CallWindow -> TODO("Evaluating Compiler doesn't support window function")
@@ -1571,6 +1567,39 @@ internal class EvaluatingCompiler(
                         keyType != null && keyType.isText
                     }
                 createStructExprValue(seq, StructOrdering.ORDERED)
+            }
+        }
+    }
+
+    /**
+     * Compiles a Session Attribute. Currently supports CURRENT_USER.
+     */
+    private fun compileSessionAttribute(attr: PartiqlAst.Expr.SessionAttribute, metas: MetaContainer): ThunkEnv {
+        return when (attr.value.text.toLowerCase()) {
+            "current_user" -> compileCurrentUser(metas)
+            else -> err(
+                message = "${attr.value.text} is not a valid session attribute.",
+                errorCode = ErrorCode.EVALUATOR_UNEXPECTED_VALUE,
+                errorContext = errorContextFrom(metas),
+                internal = false
+            )
+        }
+    }
+
+    /**
+     * Looks up CURRENT_USER within Session's Context
+     */
+    private fun compileCurrentUser(metas: MetaContainer): ThunkEnv {
+        return thunkFactory.thunkEnv(metas) { env ->
+            when (val user = env.session.context[EvaluationSession.Constants.CURRENT_USER_KEY]) {
+                null -> ExprValue.newNull(IonType.STRING)
+                is String -> ExprValue.newString(user)
+                else -> err(
+                    message = "CURRENT_USER must be either a STRING or NULL.",
+                    errorCode = ErrorCode.EVALUATOR_UNEXPECTED_VALUE,
+                    errorContext = errorContextFrom(metas),
+                    internal = false
+                )
             }
         }
     }
