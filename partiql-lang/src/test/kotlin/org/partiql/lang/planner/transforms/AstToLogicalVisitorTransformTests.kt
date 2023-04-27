@@ -274,9 +274,6 @@ class AstToLogicalVisitorTransformTests {
 
         override fun getParameters() = listOf(
             TestCase(
-                // Note:
-                // `SELECT * FROM bar AS b` is rewritten to `SELECT b.* FROM bar as b` by [SelectStarVisitorTransform].
-                // Therefore, there is no need to support `SELECT *` in `AstToLogicalVisitorTransform`.
                 "CURRENT_USER",
                 PartiqlLogical.build {
                     query(
@@ -288,9 +285,6 @@ class AstToLogicalVisitorTransformTests {
                 }
             ),
             TestCase(
-                // Note:
-                // `SELECT * FROM bar AS b` is rewritten to `SELECT b.* FROM bar as b` by [SelectStarVisitorTransform].
-                // Therefore, there is no need to support `SELECT *` in `AstToLogicalVisitorTransform`.
                 "CURRENT_USER || 'hello'",
                 PartiqlLogical.build {
                     query(
