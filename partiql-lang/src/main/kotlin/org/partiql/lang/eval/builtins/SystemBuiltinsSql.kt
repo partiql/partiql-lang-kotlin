@@ -24,14 +24,16 @@ internal object ExprFunctionCurrentUser : ExprFunction {
         returnType = StaticType.unionOf(StaticType.STRING, StaticType.NULL)
     )
 
-    override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue = when (val user = session.context[EvaluationSession.Constants.CURRENT_USER_KEY]) {
-        is String -> ExprValue.newString(user)
-        null -> ExprValue.newNull(IonType.STRING)
-        else -> err(
-            message = "CURRENT_USER must be either a STRING or NULL.",
-            errorCode = ErrorCode.EVALUATOR_UNEXPECTED_VALUE,
-            errorContext = errorContextFrom(emptyMetaContainer()),
-            internal = false
-        )
+    override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
+        return when (val user = session.context[EvaluationSession.Constants.CURRENT_USER_KEY]) {
+            is String -> ExprValue.newString(user)
+            null -> ExprValue.newNull(IonType.STRING)
+            else -> err(
+                message = "CURRENT_USER must be either a STRING or NULL.",
+                errorCode = ErrorCode.EVALUATOR_UNEXPECTED_VALUE,
+                errorContext = errorContextFrom(emptyMetaContainer()),
+                internal = false
+            )
+        }
     }
 }
