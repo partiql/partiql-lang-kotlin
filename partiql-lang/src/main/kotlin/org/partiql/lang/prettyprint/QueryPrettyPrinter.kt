@@ -273,7 +273,7 @@ class QueryPrettyPrinter {
      * into a Case or Select clause. -1 represents no formatting, which transforms the sub-query as a line string
      */
     private fun writeAstNode(node: PartiqlAst.Expr, sb: StringBuilder, level: Int) {
-        when (node) {
+        return when (node) {
             is PartiqlAst.Expr.Missing -> writeAstNode(node, sb)
             is PartiqlAst.Expr.Lit -> writeAstNode(node, sb)
             is PartiqlAst.Expr.LitTime -> writeAstNode(node, sb)
@@ -326,7 +326,14 @@ class QueryPrettyPrinter {
                 }
                 writeNAryOperator(name, node.operands, sb, level)
             }
+            is PartiqlAst.Expr.CallWindow -> TODO()
+            is PartiqlAst.Expr.GraphMatch -> TODO()
+            is PartiqlAst.Expr.SessionAttribute -> writeSessionAttribute(node, sb)
         }
+    }
+
+    private fun writeSessionAttribute(node: PartiqlAst.Expr.SessionAttribute, sb: StringBuilder) {
+        sb.append(node.value.text)
     }
 
     /**

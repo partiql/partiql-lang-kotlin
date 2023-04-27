@@ -16,12 +16,14 @@ import org.partiql.lang.errors.ProblemCollector
 import org.partiql.lang.planner.PlanningProblemDetails
 import org.partiql.lang.planner.transforms.PartiQLSchemaInferencerTests.TestCase.ErrorTestCase
 import org.partiql.lang.planner.transforms.PartiQLSchemaInferencerTests.TestCase.SuccessTestCase
+import org.partiql.plan.Rex
 import org.partiql.plugins.mockdb.LocalPlugin
 import org.partiql.types.AnyOfType
 import org.partiql.types.AnyType
 import org.partiql.types.BagType
 import org.partiql.types.ListType
 import org.partiql.types.StaticType
+import org.partiql.types.StaticType.Companion.STRING
 import org.partiql.types.StaticType.Companion.unionOf
 import org.partiql.types.StructType
 import org.partiql.types.TupleConstraint
@@ -752,6 +754,55 @@ class PartiQLSchemaInferencerTests {
                         constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
                     )
                 )
+            ),
+            SuccessTestCase(
+                name = "Current User",
+                query = "CURRENT_USER",
+                expected = unionOf(STRING, StaticType.NULL)
+            ),
+            SuccessTestCase(
+                name = "Current User Concat",
+                query = "CURRENT_USER || 'hello'",
+                expected = unionOf(STRING, StaticType.NULL)
+            ),
+            SuccessTestCase(
+                name = "Current User Concat in WHERE",
+                query = "SELECT VALUE a FROM [ 0 ] AS a WHERE CURRENT_USER = 'hello'",
+                expected = BagType(StaticType.INT)
+            ),
+            ErrorTestCase(
+                name = "Current User Concat in WHERE",
+                query = "SELECT VALUE a FROM [ 0 ] AS a WHERE CURRENT_USER = 5",
+                expected = BagType(StaticType.INT),
+                problemHandler = assertProblemExists {
+                    Problem(
+                        UNKNOWN_SOURCE_LOCATION,
+                        SemanticProblemDetails.IncompatibleDatatypesForOp(
+                            listOf(
+                                unionOf(StaticType.STRING, StaticType.NULL),
+                                StaticType.INT,
+                            ),
+                            Rex.Binary.Op.EQ.name
+                        )
+                    )
+                }
+            ),
+            ErrorTestCase(
+                name = "Current User (String) PLUS String",
+                query = "CURRENT_USER + 'hello'",
+                expected = unionOf(StaticType.MISSING, StaticType.NULL),
+                problemHandler = assertProblemExists {
+                    Problem(
+                        UNKNOWN_SOURCE_LOCATION,
+                        SemanticProblemDetails.IncompatibleDatatypesForOp(
+                            listOf(
+                                unionOf(StaticType.STRING, StaticType.NULL),
+                                StaticType.STRING,
+                            ),
+                            Rex.Binary.Op.PLUS.name
+                        )
+                    )
+                }
             ),
         )
 

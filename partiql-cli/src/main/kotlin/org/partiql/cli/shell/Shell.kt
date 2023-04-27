@@ -101,6 +101,7 @@ internal class Shell(
     private val globals = ShellGlobalBinding().add(initialGlobal)
     private var previousResult = ExprValue.nullValue
     private val out = PrintStream(output)
+    private val currentUser = System.getProperty("user.name")
 
     fun start() {
         val exiting = AtomicBoolean()
@@ -201,7 +202,13 @@ internal class Shell(
                                 previousResult
                             }
                         }.delegate(globals.bindings)
-                        val result = compiler.compile(arg, EvaluationSession.build { globals(locals) }) as PartiQLResult.Value
+                        val result = compiler.compile(
+                            arg,
+                            EvaluationSession.build {
+                                globals(locals)
+                                user(currentUser)
+                            }
+                        ) as PartiQLResult.Value
                         globals.add(result.value.bindings)
                         result
                     }
@@ -233,7 +240,13 @@ internal class Shell(
                 val locals = Bindings.buildLazyBindings<ExprValue> {
                     addBinding("_") { previousResult }
                 }.delegate(globals.bindings)
-                compiler.compile(line, EvaluationSession.build { globals(locals) })
+                compiler.compile(
+                    line,
+                    EvaluationSession.build {
+                        globals(locals)
+                        user(currentUser)
+                    }
+                )
             }
         }
     }

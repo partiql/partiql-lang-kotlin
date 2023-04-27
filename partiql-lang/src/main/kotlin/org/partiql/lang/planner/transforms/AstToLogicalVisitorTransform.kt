@@ -8,9 +8,14 @@ import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.PartiqlAstToPartiqlLogicalVisitorTransform
 import org.partiql.lang.domains.PartiqlLogical
 import org.partiql.lang.domains.metaContainerOf
+import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Problem
 import org.partiql.lang.errors.ProblemHandler
+import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.builtins.CollectionAggregationFunction
+import org.partiql.lang.eval.builtins.ExprFunctionCurrentUser
+import org.partiql.lang.eval.err
+import org.partiql.lang.eval.errorContextFrom
 import org.partiql.lang.eval.physical.sourceLocationMetaOrUnknown
 import org.partiql.lang.eval.visitors.VisitorTransformBase
 import org.partiql.lang.planner.PlanningProblemDetails
@@ -79,6 +84,22 @@ internal class AstToLogicalVisitorTransform(
             is PartiqlAst.SetQuantifier.Distinct -> call("filter_distinct", expr)
             else -> expr
         }
+    }
+
+    override fun transformExprSessionAttribute(node: PartiqlAst.Expr.SessionAttribute): PartiqlLogical.Expr.Call = PartiqlLogical.build {
+        val functionName = when (node.value.text.toUpperCase()) {
+            EvaluationSession.Constants.CURRENT_USER_KEY -> ExprFunctionCurrentUser.FUNCTION_NAME
+            else -> err(
+                "Unsupported session attribute: ${node.value.text}",
+                errorCode = ErrorCode.SEMANTIC_PROBLEM,
+                errorContext = errorContextFrom(node.metas),
+                internal = false
+            )
+        }
+        call(
+            funcName = functionName,
+            args = emptyList()
+        )
     }
 
     // This transformation is used for top-level expression transformations and for the SFW clauses prior to the
