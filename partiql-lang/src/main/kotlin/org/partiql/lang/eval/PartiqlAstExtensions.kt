@@ -92,3 +92,87 @@ internal fun PartiqlAst.Expr.Select.boundVariables(): Set<String> {
     return fold.walkFromSource(selectExpr.from, emptySet())
         .union(selectExpr.fromLet?.let { fold.walkLet(selectExpr.fromLet, emptySet()) } ?: emptySet())
 }
+
+/** Free variables in an expression.
+ *  A variable (a PartiqlAst.Expr.Id) is free, unless it is in the scope of a same-named alias introduced
+ *  in FROM, LET, or GROUP BY clauses. */
+internal fun PartiqlAst.Expr.freeVariables(): Set<String> {
+    val visitorFold = object : PartiqlAst.VisitorFold<Set<String>>() {
+        // The normal mode of operation is walk through the most AST nodes just carrying the accumulator set along.
+
+        // When a variable reference (a PartiqlAst.Expr.Id) is encountered, add it to the accumulator.
+        override fun walkExprId(node: PartiqlAst.Expr.Id, accumulator: Set<String>): Set<String> {
+            return accumulator + node.name.text
+        }
+
+        // The invariant of each walkExprXxx(node: Xxx, accumulator) call
+        // is to add all *free* variables of `node` expression to `accumulator`.
+        // The default implementations work for all expressions except SELECT.
+
+        // Processing the SELECT involves taking care that variable occurrences bound by FROM, LET, and GROUP BY clauses
+        // do not end up in the result, if they are in the scope of those bindings.
+        override fun walkExprSelect(node: PartiqlAst.Expr.Select, accumulator: Set<String>): Set<String> {
+            var current = emptySet<String>()
+
+            // SELECT clauses are processed in the reverse of evaluation order, since that's how variable scoping extends.
+
+            // Note: in `SELECT e AS x ...`, free variables of `e` get into the result,
+            // but `x` *does not*, due to `x` being a 'symbol', not an 'id' in the AST.
+            // (For reference, 'x' *should not* count as either free or bound because it is not a variable,
+            // it is a spec to create an attribute in a struct.)
+            current += walkProjection(node.project, emptySet())
+
+            node.limit?.let { current += walkExpr(it, emptySet()) }
+            node.offset?.let { current += walkExpr(it, emptySet()) }
+
+            node.order?.let { current += walkOrderBy(it, emptySet()) }
+
+            node.having?.let { current += walkExpr(it, emptySet()) }
+
+            node.group?.let {
+                val freeInGroup = walkGroupBy(it, emptySet())
+                val boundByGroup =
+                    (it.groupAsAlias?.let { setOf(it.text) } ?: emptySet()) +
+                        it.keyList.keys.flatMap { it.asAlias?.let { setOf(it.text) } ?: emptySet() }
+                current = (current - boundByGroup) + freeInGroup
+            }
+
+            node.where?.let { current += walkExpr(it, emptySet()) }
+
+            node.fromLet?.let {
+                current = addFreeOfLets(it.letBindings, current)
+            }
+
+            current = addFreeOfFrom(node.from, current)
+
+            return accumulator + current
+        }
+
+        // Accounts for situations when an earlier binder is referenced in a later FROM item, such as t in 2nd item in
+        //   FROM Tbl as t, t as x
+        // Such a reference should not be counted as free.
+        private fun addFreeOfFrom(n: PartiqlAst.FromSource, accum: Set<String>): Set<String> =
+            when (n) {
+                is PartiqlAst.FromSource.Join -> {
+                    val acc = addFreeOfFrom(n.right, accum)
+                    addFreeOfFrom(n.left, acc)
+                }
+                is PartiqlAst.FromSource.Scan -> {
+                    val binders = setOfNotNull(n.asAlias?.text, n.atAlias?.text, n.byAlias?.text)
+                    (accum - binders) + walkExpr(n.expr, emptySet())
+                }
+                is PartiqlAst.FromSource.Unpivot -> {
+                    val binders = setOfNotNull(n.asAlias?.text, n.atAlias?.text, n.byAlias?.text)
+                    (accum - binders) + walkExpr(n.expr, emptySet())
+                }
+            }
+
+        // Similarly to FROM, accounts for, e.g.,  LET expr as x, 2*x+1 as z   -- 2nd x is not free.
+        private fun addFreeOfLets(ns: List<PartiqlAst.LetBinding>, accum: Set<String>): Set<String> =
+            ns.foldRight(accum) { n, acc ->
+                (acc - n.name.text) + walkExpr(n.expr, emptySet())
+            }
+    }
+
+    return visitorFold.walkExpr(this, emptySet())
+}

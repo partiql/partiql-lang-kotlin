@@ -72,4 +72,47 @@ class PartiqlAstExtensionsTests : EvaluatorTestBase() {
             VarsTestCase("SELECT DISTINCT t.a, COUNT(t.b) AS c FROM Tbl t GROUP BY t.a", setOf("t")),
         )
     }
+
+    // Testing PartiqlAst.Expr.freeVariables()
+
+    @ParameterizedTest
+    @ArgumentsSource(FreeVariablesTestCases::class)
+    fun testFreeVariables(tc: VarsTestCase) {
+        val statement = parser.parseAstStatement(tc.expr)
+        val queryExpr = (statement as PartiqlAst.Statement.Query).expr
+        val actual = queryExpr.freeVariables()
+        assertEquals(tc.expected, actual)
+    }
+
+    class FreeVariablesTestCases : ArgumentsProviderBase() {
+        override fun getParameters(): List<VarsTestCase> = listOf(
+            VarsTestCase("x", setOf("x")),
+            VarsTestCase("x + y", setOf("x", "y")),
+            VarsTestCase("SELECT x AS y FROM [1,2,3] AS x", setOf()),
+            VarsTestCase("SELECT x AS y FROM t AS x", setOf("t")),
+            VarsTestCase("SELECT x   AS y FROM t AS x where a = b", setOf("t", "a", "b")),
+            VarsTestCase("SELECT x.g AS y FROM t AS x where a = b.f", setOf("t", "a", "b")),
+            VarsTestCase("SELECT t.g AS y FROM t      where a = b.f", setOf("t", "a", "b")),
+            VarsTestCase("SELECT   g AS y FROM t      where a = b.f", setOf("g", "t", "a", "b")),
+
+            VarsTestCase("SELECT x        FROM t AS x where a = b", setOf("t", "a", "b")),
+            VarsTestCase("SELECT x.g      FROM t AS x where a = b.f", setOf("t", "a", "b")),
+            VarsTestCase("SELECT t.g      FROM t      where a = b.f", setOf("t", "a", "b")),
+            VarsTestCase("SELECT   g      FROM t      where a = b.f", setOf("g", "t", "a", "b")),
+
+            VarsTestCase("SELECT x FROM t AS x where x.a = (SELECT max(n) FROM x)", setOf("t", "n")),
+            VarsTestCase("SELECT DISTINCT t.a, COUNT(t.b) AS c FROM Tbl t GROUP BY t.a", setOf("Tbl")),
+            VarsTestCase("SELECT DISTINCT t.a, COUNT(t.b) AS c FROM Tbl t GROUP BY t.a AS z HAVING z = a", setOf("Tbl", "a")),
+
+            VarsTestCase("SELECT t.a as x, t.b as y, s as z  FROM Tbl as t at i", setOf("Tbl", "s")),
+            VarsTestCase("SELECT t, x FROM Tbl t, t as x", setOf("Tbl")),
+
+            VarsTestCase("SELECT s, t, x*x, y as z FROM Tbl as t LET t.a + t.b as x, t.a-z as y", setOf("Tbl", "s", "z")),
+            VarsTestCase("SELECT 5                 FROM Tbl as t LET t.a + t.b as x, t.a-z as y", setOf("Tbl", "z")),
+            VarsTestCase("SELECT s, t, x*x, y as z FROM Tbl as t LET t.a + t.b as x, 2*x   as y", setOf("Tbl", "s")),
+
+            VarsTestCase("        SELECT t, x, y, z FROM t as x, Foo as y", setOf("t", "Foo", "z")),
+            VarsTestCase("SELECT (SELECT t, x, y, z FROM t as x, Foo as y) as s FROM Tbl as t", setOf("Tbl", "Foo", "z")),
+        )
+    }
 }
