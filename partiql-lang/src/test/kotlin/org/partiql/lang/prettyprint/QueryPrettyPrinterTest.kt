@@ -897,4 +897,31 @@ class QueryPrettyPrinterTest {
             "EXEC foo 'bar0', 1, 2, [3], SELECT a FROM b", "EXEC foo 'bar0', 1, 2, [ 3 ], (SELECT a FROM b)"
         )
     }
+
+    @Test
+    fun checkCurrentUser() {
+        checkPrettyPrintQuery(
+            query = "CURRENT_USER",
+            expected = "CURRENT_USER"
+        )
+    }
+
+    @Test
+    fun checkCurrentUserMixedCase() {
+        checkPrettyPrintQuery(
+            query = "CURRENT_user",
+            expected = "CURRENT_user"
+        )
+    }
+
+    @Test
+    fun checkCurrentEmbedded() {
+        checkPrettyPrintQuery(
+            query = "SELECT * FROM [ CURRENT_user ]",
+            expected = """
+                SELECT *
+                FROM [ CURRENT_user ]
+            """.trimIndent()
+        )
+    }
 }

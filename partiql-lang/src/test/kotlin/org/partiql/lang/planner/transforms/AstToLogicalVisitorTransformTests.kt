@@ -19,6 +19,7 @@ import org.partiql.lang.errors.Problem
 import org.partiql.lang.errors.ProblemCollector
 import org.partiql.lang.errors.ProblemHandler
 import org.partiql.lang.errors.ProblemSeverity
+import org.partiql.lang.eval.builtins.ExprFunctionCurrentUser
 import org.partiql.lang.planner.PlanningProblemDetails
 import org.partiql.lang.planner.unimplementedProblem
 import org.partiql.lang.syntax.PartiQLParser
@@ -272,6 +273,35 @@ class AstToLogicalVisitorTransformTests {
         }
 
         override fun getParameters() = listOf(
+            TestCase(
+                "CURRENT_USER",
+                PartiqlLogical.build {
+                    query(
+                        call(
+                            ExprFunctionCurrentUser.FUNCTION_NAME,
+                            emptyList()
+                        )
+                    )
+                }
+            ),
+            TestCase(
+                "CURRENT_USER || 'hello'",
+                PartiqlLogical.build {
+                    query(
+                        concat(
+                            listOf(
+                                call(
+                                    ExprFunctionCurrentUser.FUNCTION_NAME,
+                                    emptyList()
+                                ),
+                                lit(
+                                    ionString("hello")
+                                )
+                            )
+                        )
+                    )
+                }
+            ),
             TestCase(
                 // Note:
                 // `SELECT * FROM bar AS b` is rewritten to `SELECT b.* FROM bar as b` by [SelectStarVisitorTransform].

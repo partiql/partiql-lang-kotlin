@@ -43,6 +43,8 @@ internal class Cli(
     private val query: String,
     private val wrapIon: Boolean
 ) {
+    private val currentUser = System.getProperty("user.name")
+
     init {
         if (wrapIon && inputFormat != PartiQLCommand.InputFormat.ION) {
             throw IllegalArgumentException("Specifying --wrap-ion requires that the input format be ${PartiQLCommand.InputFormat.ION}.")
@@ -80,7 +82,13 @@ internal class Cli(
                     "--wrap-ion flag. Use --help for more information."
                 throw IllegalStateException(message)
             }
-            val result = compilerPipeline.compile(query, EvaluationSession.build { globals(bindings) })
+            val result = compilerPipeline.compile(
+                query,
+                EvaluationSession.build {
+                    globals(bindings)
+                    user(currentUser)
+                }
+            )
             outputResult(result)
         }
     }
@@ -90,7 +98,13 @@ internal class Cli(
             val inputIonValue = ion.iterate(reader).asSequence().map { ExprValue.of(it) }
             val inputExprValue = ExprValue.newBag(inputIonValue)
             val bindings = getBindingsFromIonValue(inputExprValue)
-            val result = compilerPipeline.compile(query, EvaluationSession.build { globals(bindings) })
+            val result = compilerPipeline.compile(
+                query,
+                EvaluationSession.build {
+                    globals(bindings)
+                    user(currentUser)
+                }
+            )
             outputResult(result)
         }
     }
@@ -98,10 +112,18 @@ internal class Cli(
     private fun runWithPartiQLInput() {
         val inputEnvironment = compilerPipeline.compile(
             input.readBytes().toString(Charsets.UTF_8),
-            EvaluationSession.standard()
+            EvaluationSession.build {
+                user(currentUser)
+            }
         ) as PartiQLResult.Value
         val bindings = getBindingsFromIonValue(inputEnvironment.value)
-        val result = compilerPipeline.compile(query, EvaluationSession.build { globals(bindings) })
+        val result = compilerPipeline.compile(
+            query,
+            EvaluationSession.build {
+                globals(bindings)
+                user(currentUser)
+            }
+        )
         outputResult(result)
     }
 
