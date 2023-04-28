@@ -708,3 +708,16 @@ internal class PermissiveThunkFactory<TEnv>(
             thunkOptions.handleExceptionForLegacyMode(e, sourceLocation)
         }
 }
+
+/** Return a thunk that computes only on the first invocation and returns
+ *  the same computed result on any subsequent invocation, even if supplied with a different environment.
+ *  Warning: Naturally, this should only be used when it is known that [thunk] does not depend on
+ *  the changing parts of environments in which it can be evaluated.
+ */
+internal fun <TEnv> headstrongThunk(thunk: Thunk<TEnv>): Thunk<TEnv> {
+    var result: ExprValue? = null
+    return { env ->
+        if (result == null) result = thunk(env)
+        result!!
+    }
+}

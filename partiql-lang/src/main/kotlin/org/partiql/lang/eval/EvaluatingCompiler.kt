@@ -165,6 +165,9 @@ internal class EvaluatingCompiler(
         }
     }
 
+    private fun currentlyBoundVariables(): Set<String> =
+        compilationContextStack.fold(emptySet<String>(), { set, ctx -> set.union(ctx.fromSourceNames) })
+
     private fun Boolean.exprValue(): ExprValue = ExprValue.newBoolean(this)
     private fun String.exprValue(): ExprValue = ExprValue.newString(this)
 
@@ -1724,7 +1727,9 @@ internal class EvaluatingCompiler(
     }
 
     private fun compileSelect(selectExpr: PartiqlAst.Expr.Select, metas: MetaContainer): ThunkEnv {
+        val outerVariables = currentlyBoundVariables()
         val boundVariables = selectExpr.boundVariables()
+        val hasGrouping = selectExpr.group != null
 
         return nestCompilationContext(ExpressionContext.NORMAL, emptySet()) {
             val fromSourceThunks = compileFromSources(selectExpr.from)
@@ -1997,7 +2002,7 @@ internal class EvaluatingCompiler(
                                 }
                                 else -> {
                                     val projectionElements =
-                                        compileSelectListToProjectionElements(items)
+                                        compileSelectListToProjectionElements(items, hasGrouping, outerVariables.union(boundVariables))
 
                                     val ordering = if (items.none { it is PartiqlAst.ProjectItem.ProjectAll })
                                         StructOrdering.ORDERED
@@ -2488,20 +2493,61 @@ internal class EvaluatingCompiler(
     }
 
     private fun compileSelectListToProjectionElements(
-        projectItems: List<PartiqlAst.ProjectItem>
+        projectItems: List<PartiqlAst.ProjectItem>,
+        underGrouping: Boolean,
+        iterationVars: Set<String>
     ): List<ProjectionElement> =
         projectItems.mapIndexed { idx, it ->
             when (it) {
                 is PartiqlAst.ProjectItem.ProjectExpr -> {
                     val alias = it.asAlias?.text ?: it.expr.extractColumnAlias(idx)
-                    val thunk = compileAstExpr(it.expr)
+                    val thunk = compileProjectItemSource(it.expr, underGrouping, iterationVars)
                     SingleProjectionElement(ExprValue.newString(alias), thunk)
                 }
                 is PartiqlAst.ProjectItem.ProjectAll -> {
-                    MultipleProjectionElement(compileAstExpr(it.expr))
+                    val thunk = compileProjectItemSource(it.expr, underGrouping, iterationVars)
+                    MultipleProjectionElement(thunk)
                 }
             }
         }
+
+    /** Compile the expression of the item and, if possible, optimize to avoid re-computation at run time,
+     *  if it is known to be redundant. */
+    private fun compileProjectItemSource(
+        itemSource: PartiqlAst.Expr,
+        underGrouping: Boolean,
+        iterationVars: Set<String>
+    ): ThunkEnv {
+        // Free variables in this SELECT item.
+        val freeVars = itemSource.freeVariables()
+
+        // Determine whether the item is stable, i.e. it should compute the same result on each environment
+        // that can be given to it for evaluating in.
+
+        // When there is grouping, any item is considered unstable, regardless of variables involved.
+        // (E.g., count(*), count(1) yield different results when iterating over groups.)
+        // Otherwise, an item is considered stable only if
+        //  - the item does not use any iteration variables (defined as those bound in this query or
+        //      in a containing query) and
+        //  - the variables that the item does use are all globally defined.
+        // (For reference, a free variable x in the item that is neither an iteration variable nor global
+        //  has to be assumed to be searched as a field name among structs bound to variables in the environment,
+        //  making the item unstable.)
+        val isStable =
+            !underGrouping &&
+                freeVars.intersect(iterationVars).isEmpty() &&
+                freeVars.all { globals.isDefined(BindingName(it, BindingCase.INSENSITIVE)) }
+        val thunk = compileAstExpr(itemSource)
+
+        // An iteration-stable item can be optimized.
+        return if (isStable) {
+            // println("Headstrong optimization applied to SELECT item $itemSource")
+            headstrongThunk(thunk)
+        } else {
+            // println("Optimization NOT applied to item $itemSource")
+            thunk
+        }
+    }
 
     private fun compilePath(expr: PartiqlAst.Expr.Path, metas: MetaContainer): ThunkEnv {
         val rootThunk = compileAstExpr(expr.root)
