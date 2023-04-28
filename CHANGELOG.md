@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Adds support for SQL's CURRENT_USER in the AST, EvaluatingCompiler, experimental planner implementation, and Schema Inferencer.
   - Adds the AST node `session_attribute`.
   - Adds the function `EvaluationSession.Builder::user()` to add the CURRENT_USER to the EvaluationSession
+- Adds an optimization that avoids repeated re-computation of a SELECT list item that depends only on global variables.
 
 ### Changed
 
