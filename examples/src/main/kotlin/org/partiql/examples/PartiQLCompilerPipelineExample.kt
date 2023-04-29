@@ -60,12 +60,9 @@ class PartiQLCompilerPipelineExample(out: PrintStream) : Example(out) {
 
     @OptIn(ExperimentalPartiQLCompilerPipeline::class)
     private val partiQLCompilerPipeline = PartiQLCompilerPipeline.build {
-        parser
-            .ionSystem(myIonSystem)
         planner
             .globalVariableResolver(globalVariableResolver)
         compiler
-            .ionSystem(myIonSystem)
             .options(evaluatorOptions)
     }
 

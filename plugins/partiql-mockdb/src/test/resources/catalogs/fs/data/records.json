@@ -1,0 +1,16 @@
+{
+  "name": "records",
+  "type": "TABLE",
+  "attributes": [
+    {
+      "name": "id",
+      "type": "INT",
+      "attributes": []
+    },
+    {
+      "name": "path",
+      "type": "STRING",
+      "attributes": []
+    }
+  ]
+}

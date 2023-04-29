@@ -24,26 +24,86 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Added numeric functions `abs`, `sqrt`, `exp`, `ln`, `pow`.
+- Adds back ability to convert an `IonDatagram` to an `ExprValue` using `of(value: IonValue): ExprValue` and `newFromIonValue(value: IonValue): ExprValue`
+- Adds support for SQL's CURRENT_USER in the AST, EvaluatingCompiler, experimental planner implementation, and Schema Inferencer.
+  - Adds the AST node `session_attribute`.
+  - Adds the function `EvaluationSession.Builder::user()` to add the CURRENT_USER to the EvaluationSession
+
+### Changed
+
+### Deprecated
+
+### Fixed
+
+### Removed
+
+### Security
+
+## [0.9.3] - 2023-04-12
+
+### Added
+- Added numeric builtins ABS, SQRT, EXP, LN, POW, MOD.
+- Added standard SQL built-in functions POSITION, OVERLAY, LENGTH, BIT_LENGTH, OCTET_LENGTH, CARDINALITY, 
+  an additional builtin TEXT_REPLACE, and standard SQL aggregations on booleans EVERY, ANY, SOME.
+- **Breaking** Added coercion of SQL-style subquery to a single value, as defined in SQL for 
+  subqueries occurring in a single-value context and outlined in Chapter 9 of the PartiQL specification. 
+  This is backward incompatible with the prior behavior (which left the computed collection as is), 
+  but brings it in conformance with the specification.
+- Added `partiql-plan` package which contains experimental PartiQL Plan data structures.
+- Initializes SPI Framework under `partiql-spi`.
+- Models experimental `Schema` with constraints.
+  With this change, we're introducing `Tuple` and `Collection` constraints to be able to model the shape of data as 
+  constraints.
+- Introduces the PartiQLSchemaInferencer and PlannerSession
+  - The PlannerSession describes the current session and is used by the PartiQLSchemaInferencer.
+  - The PartiQLSchemaInferencer provides a function, `infer`, to aid in inferring the output `StaticType` of a
+  PartiQL Query. See the KDoc for more information and examples.
 
 ### Changed
 - Deprecates the project level opt-in annotation `PartiQLExperimental` and split it into feature level. `ExperimentalPartiQLCompilerPipeline` and `ExperimentalWindowFunctions`.
+- **Breaking**: Moves StaticType to `partiql-types`.
+  - All references to static types need to modify their imports accordingly. For example,
+    `org.partiql.lang.types.IntType` is now `org.partiql.types.IntType`.
+  - Please modify existing dependencies accordingly. You may need to add dependency `org.partiql:partiql-types:0.10.0`.
+  - Also, several methods within StaticType have been moved to a utility class within `partiql-lang-kotln`. See the below list:
+    1. `org.partiql.lang.types.StaticType.fromExprValueType` -> `org.partiql.lang.types.StaticTypeUtils.staticTypeFromExprValueType`
+    2. `org.partiql.lang.types.StaticType.fromExprValue` -> `org.partiql.lang.types.StaticTypeUtils.staticTypeFromExprValue`
+    3. `org.partiql.lang.types.StaticType.isInstance` -> `org.partiql.lang.types.StaticTypeUtils.isInstance`
+    4. `org.partiql.lang.types.StaticType.isComparableTo` -> `org.partiql.lang.types.StaticTypeUtils.areStaticTypesComparable`
+    5. `org.partiql.lang.types.StaticType.isSubTypeOf` -> `org.partiql.lang.types.StaticTypeUtils.isSubTypeOf`
+    5. `org.partiql.lang.types.StaticType.typeDomain` -> `org.partiql.lang.types.StaticTypeUtils.getTypeDomain`
+    6. `org.partiql.lang.types.SingleType.getRuntimeType` -> `org.partiql.lang.types.StaticTypeUtils.getRuntimeType`
+    7. `org.partiql.lang.types.StringType.StringLengthConstraint.matches` -> `org.partiql.lang.types.StaticTypeUtils.stringLengthConstraintMatches`
+- **Breaking**: Removes deprecated `ionSystem()` function from PartiQLCompilerBuilder and PartiQLParserBuilder
 
 ### Deprecated
 - `ExprValueFactory` interface marked as deprecated. Equivalent `ExprValue` construction methods are implemented in the `ExprValue` interface as static methods. 
 
 ### Fixed
+- Javadoc jar now contains dokka docs (was broken by gradle commit from 0.9.0)
+
+- ANTLR (PartiQL.g4, PartiQLTokens.g4) and PIG (org/partiql/type-domains/partiql.ion) sources 
+  are back to being distributed with the jar.
+
+- CLI no longer terminates on user errors in submitted PartiQL (when printing out the AST with !!)
+  and no longer prints out stack traces upon user errors. 
+
+- Constrained Decimal matching logic.
 
 ### Removed
 - The deprecated `IonValue` property in `ExprValue` interface is now removed.
+- Removed partiql-extensions to partiql-cli `org.partiql.cli.functions`
+- Removed IonSystem from PartiQLParserBuilder
 
 ### Security
 
 ## [0.9.2] - 2023-01-20
 
 ### Added
-- Adds ability to pipe queries to the CLI
-- Adds ability to run PartiQL files as executables by adding support for shebangs
+- Adds ability to pipe queries to the CLI.
+- Adds ability to run PartiQL files as executables by adding support for shebangs.
+- Adds experimental syntax for CREATE TABLE, towards addressing 
+  [#36](https://github.com/partiql/partiql-docs/issues/36) of specifying PartiQL DDL.
 
 ### Changed
 

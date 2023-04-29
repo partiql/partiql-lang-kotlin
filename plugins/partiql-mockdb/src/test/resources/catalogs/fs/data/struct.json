@@ -1,0 +1,22 @@
+{
+  "name": "struct",
+  "type": "STRUCT",
+  "attributes": [
+    {
+      "name": "id",
+      "type": "INT",
+      "attributes": []
+    },
+    {
+      "name": "nested",
+      "type": "STRUCT",
+      "attributes": [
+        {
+          "name": "nested_id",
+          "type": "INT",
+          "attributes": []
+        }
+      ]
+    }
+  ]
+}
