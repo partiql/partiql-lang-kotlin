@@ -12,7 +12,7 @@ import org.partiql.types.ClobType
 import org.partiql.types.DateType
 import org.partiql.types.DecimalType
 import org.partiql.types.FloatType
-import org.partiql.lang.types.GraphType
+import org.partiql.types.GraphType
 import org.partiql.types.IntType
 import org.partiql.types.ListType
 import org.partiql.types.MissingType

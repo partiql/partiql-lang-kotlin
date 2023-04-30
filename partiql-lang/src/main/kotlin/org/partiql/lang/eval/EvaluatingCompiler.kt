@@ -53,8 +53,6 @@ import org.partiql.lang.graph.MatchSpec
 import org.partiql.lang.graph.NodeSpec
 import org.partiql.lang.graph.Stride
 import org.partiql.lang.graph.StrideSpec
-import org.partiql.lang.types.AnyOfType
-import org.partiql.lang.types.AnyType
 import org.partiql.lang.types.FunctionSignature
 import org.partiql.lang.types.StaticTypeUtils.getRuntimeType
 import org.partiql.lang.types.StaticTypeUtils.getTypeDomain

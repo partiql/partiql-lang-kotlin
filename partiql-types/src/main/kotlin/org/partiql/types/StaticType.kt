@@ -498,9 +498,6 @@ data class GraphType(
     override val metas: Map<String, Any> = mapOf()
 ) : SingleType() {
 
-    override val runtimeType: ExprValueType
-        get() = ExprValueType.GRAPH
-
     override val allTypes: List<StaticType>
         get() = listOf(this)
 

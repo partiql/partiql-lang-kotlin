@@ -359,15 +359,15 @@ interface ExprValue : Iterable<ExprValue>, Faceted {
         @JvmStatic
         val emptyStruct: ExprValue = StructExprValue(StructOrdering.UNORDERED, sequenceOf())
 
+        @JvmStatic
+        fun newGraph(graph: Graph): ExprValue =
+            GraphExprValue(graph)
+
         /**
          * Creates a new [ExprValue] instance from the next value available from the specified [IonReader].
          *
          * Implementations should not close the [IonReader].
          */
-        @JvmStatic
-        fun newGraph(graph: Graph): ExprValue =
-            GraphExprValue(graph)
-
         @JvmStatic
         fun newFromIonReader(ion: IonSystem, reader: IonReader): ExprValue =
             of(ion.newValue(reader))

@@ -20,6 +20,7 @@ import org.partiql.types.CollectionType
 import org.partiql.types.DateType
 import org.partiql.types.DecimalType
 import org.partiql.types.FloatType
+import org.partiql.types.GraphType
 import org.partiql.types.IntType
 import org.partiql.types.ListType
 import org.partiql.types.MissingType
@@ -114,6 +115,7 @@ public object StaticTypeUtils {
         is SymbolType -> ExprValueType.SYMBOL
         is TimeType -> ExprValueType.TIME
         is TimestampType -> ExprValueType.TIMESTAMP
+        is GraphType -> ExprValueType.GRAPH
     }
 
     /**
