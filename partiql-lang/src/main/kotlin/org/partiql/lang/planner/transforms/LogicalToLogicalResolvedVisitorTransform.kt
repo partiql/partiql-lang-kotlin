@@ -378,6 +378,24 @@ internal data class LogicalToLogicalResolvedVisitorTransform(
         }
     }
 
+    override fun transformDmlOperationDmlInsert(node: PartiqlLogical.DmlOperation.DmlInsert): PartiqlLogicalResolved.DmlOperation {
+        return withInputScope(this.inputScope.concatenate(node.targetAlias)) {
+            super.transformDmlOperationDmlInsert(node)
+        }
+    }
+
+    override fun transformDmlOperationDmlReplace(node: PartiqlLogical.DmlOperation.DmlReplace): PartiqlLogicalResolved.DmlOperation {
+        return withInputScope(this.inputScope.concatenate(node.targetAlias)) {
+            super.transformDmlOperationDmlReplace(node)
+        }
+    }
+
+    override fun transformDmlOperationDmlUpdate(node: PartiqlLogical.DmlOperation.DmlUpdate): PartiqlLogicalResolved.DmlOperation {
+        return withInputScope(this.inputScope.concatenate(node.targetAlias)) {
+            super.transformDmlOperationDmlUpdate(node)
+        }
+    }
+
     /**
      * Returns a list of variables accessible from the current scope which contain variables that may contain
      * an unqualified variable, in the order that they should be searched.

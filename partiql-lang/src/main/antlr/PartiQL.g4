@@ -197,7 +197,7 @@ conflictAction
    [ WHERE <condition> ]
 */
 doReplace
-    : EXCLUDED;
+    : EXCLUDED ( WHERE condition=expr )?;
     // :TODO add the rest of the grammar
 
 /*
@@ -207,7 +207,7 @@ doReplace
    [ WHERE <condition> ]
 */
 doUpdate
-    : EXCLUDED;
+    : EXCLUDED ( WHERE condition=expr )?;
     // :TODO add the rest of the grammar
 
 updateClause

@@ -71,6 +71,12 @@ internal const val DML_COMMAND_FIELD_ACTION = "action"
 internal const val DML_COMMAND_FIELD_TARGET_UNIQUE_ID = "target_unique_id"
 internal const val DML_COMMAND_FIELD_ROWS = "rows"
 
+// Refers to the condition of conflict actions such as `INSERT .. ON CONFLICT DO REPLACE EXCLUDED WHERE <condition>`
+internal const val DML_CONFLICT_ACTION_CONDITION = "conflict_condition"
+
+// Refers to the index of the target's alias within the state registers
+internal const val DML_COMMAND_FIELD_TARGET_ALIAS_INDEX = "target_alias_index"
+
 private operator fun Bindings<ExprValue>.get(fieldName: String): ExprValue? =
     this[BindingName(fieldName, BindingCase.SENSITIVE)]
 

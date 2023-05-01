@@ -7,7 +7,9 @@ import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.errors.ProblemHandler
 import org.partiql.lang.planner.DML_COMMAND_FIELD_ACTION
 import org.partiql.lang.planner.DML_COMMAND_FIELD_ROWS
+import org.partiql.lang.planner.DML_COMMAND_FIELD_TARGET_ALIAS_INDEX
 import org.partiql.lang.planner.DML_COMMAND_FIELD_TARGET_UNIQUE_ID
+import org.partiql.lang.planner.DML_CONFLICT_ACTION_CONDITION
 import org.partiql.lang.planner.DmlAction
 
 /**
@@ -25,6 +27,14 @@ internal fun PartiqlPhysical.Builder.structField(name: String, value: String) =
 
 internal fun PartiqlPhysical.Builder.structField(name: String, value: PartiqlPhysical.Expr) =
     structField(lit(ionSymbol(name)), value)
+
+internal fun structField(name: String, value: PartiqlPhysical.Expr) =
+    PartiqlPhysical.StructPart.StructField(PartiqlPhysical.Expr.Lit(ionSymbol(name).asAnyElement()), value)
+
+internal fun structField(name: String, value: String) = PartiqlPhysical.StructPart.StructField(
+    PartiqlPhysical.Expr.Lit(ionSymbol(name).asAnyElement()),
+    PartiqlPhysical.Expr.Lit(ionSymbol(value).asAnyElement())
+)
 
 internal class LogicalResolvedToDefaultPhysicalVisitorTransform(
     val problemHandler: ProblemHandler
@@ -173,14 +183,39 @@ internal class LogicalResolvedToDefaultPhysicalVisitorTransform(
                 TODO("DmlUpdate physical transform is not supported yet")
         }.name.toLowerCase()
 
+        val condition = when (val op = node.operation) {
+            is PartiqlLogicalResolved.DmlOperation.DmlInsert -> null
+            is PartiqlLogicalResolved.DmlOperation.DmlDelete -> null
+            is PartiqlLogicalResolved.DmlOperation.DmlReplace -> op.condition?.let { transformExpr(it) }
+            is PartiqlLogicalResolved.DmlOperation.DmlUpdate -> op.condition?.let { transformExpr(it) }
+        }
+
+        val alias = when (val op = node.operation) {
+            is PartiqlLogicalResolved.DmlOperation.DmlInsert -> PartiqlPhysical.Expr.Lit(
+                op.targetAlias.index.toIonElement().asAnyElement()
+            )
+            is PartiqlLogicalResolved.DmlOperation.DmlDelete -> null
+            is PartiqlLogicalResolved.DmlOperation.DmlReplace -> PartiqlPhysical.Expr.Lit(
+                op.targetAlias.index.toIonElement().asAnyElement()
+            )
+            is PartiqlLogicalResolved.DmlOperation.DmlUpdate -> PartiqlPhysical.Expr.Lit(
+                op.targetAlias.index.toIonElement().asAnyElement()
+            )
+        }
+
+        val fields = mutableListOf(
+            structField(DML_COMMAND_FIELD_ACTION, action),
+            structField(DML_COMMAND_FIELD_TARGET_UNIQUE_ID, PartiqlPhysical.Expr.Lit(node.uniqueId.toIonElement().asAnyElement())),
+            structField(DML_COMMAND_FIELD_ROWS, transformExpr(node.rows)),
+        )
+
+        // Adds optional fields
+        alias?.let { fields.add(structField(DML_COMMAND_FIELD_TARGET_ALIAS_INDEX, alias)) }
+        condition?.let { fields.add(structField(DML_CONFLICT_ACTION_CONDITION, condition)) }
+
         return PartiqlPhysical.build {
             dmlQuery(
-                expr = struct(
-                    structField(DML_COMMAND_FIELD_ACTION, action),
-                    structField(DML_COMMAND_FIELD_TARGET_UNIQUE_ID, lit(node.uniqueId.toIonElement())),
-                    structField(DML_COMMAND_FIELD_ROWS, transformExpr(node.rows)),
-                    metas = node.metas
-                ),
+                expr = struct(parts = fields, metas = node.metas),
                 metas = node.metas
             )
         }
