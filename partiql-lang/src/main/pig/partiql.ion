@@ -903,15 +903,6 @@ may then be further optimized by selecting better implementations of each operat
             (product impl name::symbol static_args::(* ion 0))
         )
 
-        // drop DML stuff added in partiql_logical (these should be rewritten into queries).
-        (exclude dml_operation)
-        (with statement
-            (exclude dml)
-            (include
-                // Include the dml_query variant, so that we know how to interpret the results of the query.
-                (dml_query expr::expr))
-        )
-
         // Every variant of bexpr changes by adding an `impl` element in the physical algebra, so let's replace it
         // entirely.
         (exclude bexpr)

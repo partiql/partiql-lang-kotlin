@@ -11,11 +11,6 @@ import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.domains.PartiqlLogicalResolved
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.errors.ProblemCollector
-import org.partiql.lang.planner.DML_COMMAND_FIELD_ACTION
-import org.partiql.lang.planner.DML_COMMAND_FIELD_ROWS
-import org.partiql.lang.planner.DML_COMMAND_FIELD_TARGET_ALIAS_INDEX
-import org.partiql.lang.planner.DML_COMMAND_FIELD_TARGET_UNIQUE_ID
-import org.partiql.lang.planner.DML_CONFLICT_ACTION_CONDITION
 import org.partiql.lang.util.ArgumentsProviderBase
 import kotlin.test.fail
 
@@ -240,13 +235,10 @@ class LogicalResolvedToDefaultPartiQLPhysicalVisitorTransformTestsPass {
                     )
                 },
                 PartiqlPhysical.build {
-                    dmlQuery(
-                        struct(
-                            structField(DML_COMMAND_FIELD_ACTION, "insert"),
-                            structField(DML_COMMAND_FIELD_TARGET_UNIQUE_ID, lit(ionSymbol("foo"))),
-                            structField(DML_COMMAND_FIELD_ROWS, bag(lit(ionInt(1)))),
-                            structField(DML_COMMAND_FIELD_TARGET_ALIAS_INDEX, lit(ionInt(0)))
-                        )
+                    dml(
+                        uniqueId = "foo",
+                        operation = dmlInsert(varDecl(0)),
+                        rows = bag(lit(ionInt(1)))
                     )
                 }
             ),
@@ -263,22 +255,12 @@ class LogicalResolvedToDefaultPartiQLPhysicalVisitorTransformTestsPass {
                     )
                 },
                 PartiqlPhysical.build {
-                    dmlQuery(
-                        struct(
-                            structField(DML_COMMAND_FIELD_ACTION, "insert"),
-                            structField(DML_COMMAND_FIELD_TARGET_UNIQUE_ID, lit(ionSymbol("foo"))),
-                            structField(
-                                DML_COMMAND_FIELD_ROWS,
-                                bindingsToValues(
-                                    struct(structFields(localId(0))),
-                                    scan(
-                                        i = DEFAULT_IMPL,
-                                        expr = lit(ionInt(1)),
-                                        asDecl = varDecl(0)
-                                    )
-                                )
-                            ),
-                            structField(DML_COMMAND_FIELD_TARGET_ALIAS_INDEX, lit(ionInt(0)))
+                    dml(
+                        uniqueId = "foo",
+                        operation = dmlInsert(varDecl(0)),
+                        rows = bindingsToValues(
+                            struct(structFields(localId(0))),
+                            scan(DEFAULT_IMPL, lit(ionInt(1)), varDecl(0))
                         )
                     )
                 }
@@ -296,22 +278,12 @@ class LogicalResolvedToDefaultPartiQLPhysicalVisitorTransformTestsPass {
                     )
                 },
                 PartiqlPhysical.build {
-                    dmlQuery(
-                        struct(
-                            structField(DML_COMMAND_FIELD_ACTION, "replace"),
-                            structField(DML_COMMAND_FIELD_TARGET_UNIQUE_ID, lit(ionSymbol("foo"))),
-                            structField(
-                                DML_COMMAND_FIELD_ROWS,
-                                bindingsToValues(
-                                    struct(structFields(localId(0))),
-                                    scan(
-                                        i = DEFAULT_IMPL,
-                                        expr = lit(ionInt(1)),
-                                        asDecl = varDecl(0)
-                                    )
-                                )
-                            ),
-                            structField(DML_COMMAND_FIELD_TARGET_ALIAS_INDEX, lit(ionInt(0)))
+                    dml(
+                        uniqueId = "foo",
+                        operation = dmlReplace(varDecl(0)),
+                        rows = bindingsToValues(
+                            struct(structFields(localId(0))),
+                            scan(DEFAULT_IMPL, lit(ionInt(1)), varDecl(0))
                         )
                     )
                 }
@@ -340,34 +312,23 @@ class LogicalResolvedToDefaultPartiQLPhysicalVisitorTransformTestsPass {
                     )
                 },
                 PartiqlPhysical.build {
-                    dmlQuery(
-                        struct(
-                            structField(DML_COMMAND_FIELD_ACTION, "replace"),
-                            structField(DML_COMMAND_FIELD_TARGET_UNIQUE_ID, lit(ionSymbol("foo"))),
-                            structField(
-                                DML_COMMAND_FIELD_ROWS,
-                                bindingsToValues(
-                                    struct(structFields(localId(0))),
-                                    scan(
-                                        i = DEFAULT_IMPL,
-                                        expr = lit(ionInt(1)),
-                                        asDecl = varDecl(0)
-                                    )
-                                )
-                            ),
-                            structField(DML_COMMAND_FIELD_TARGET_ALIAS_INDEX, lit(ionInt(0))),
-                            structField(
-                                DML_CONFLICT_ACTION_CONDITION,
-                                gt(
-                                    listOf(
-                                        path(
-                                            localId(0),
-                                            listOf(pathExpr(lit(ionString("id")), caseInsensitive()))
-                                        ),
-                                        lit(ionInt(1))
-                                    )
+                    dml(
+                        uniqueId = "foo",
+                        operation = dmlReplace(
+                            targetAlias = varDecl(0),
+                            condition = gt(
+                                listOf(
+                                    path(
+                                        localId(0),
+                                        listOf(pathExpr(lit(ionString("id")), caseInsensitive()))
+                                    ),
+                                    lit(ionInt(1))
                                 )
                             )
+                        ),
+                        rows = bindingsToValues(
+                            struct(structFields(localId(0))),
+                            scan(DEFAULT_IMPL, lit(ionInt(1)), varDecl(0))
                         )
                     )
                 }
@@ -385,21 +346,12 @@ class LogicalResolvedToDefaultPartiQLPhysicalVisitorTransformTestsPass {
                     )
                 },
                 PartiqlPhysical.build {
-                    dmlQuery(
-                        struct(
-                            structField(DML_COMMAND_FIELD_ACTION, "delete"),
-                            structField(DML_COMMAND_FIELD_TARGET_UNIQUE_ID, lit(ionSymbol("foo"))),
-                            structField(
-                                DML_COMMAND_FIELD_ROWS,
-                                bindingsToValues(
-                                    localId(0),
-                                    scan(
-                                        i = DEFAULT_IMPL,
-                                        expr = globalId("y"),
-                                        asDecl = varDecl(0)
-                                    )
-                                )
-                            )
+                    dml(
+                        uniqueId = "foo",
+                        operation = dmlDelete(),
+                        rows = bindingsToValues(
+                            localId(0),
+                            scan(DEFAULT_IMPL, globalId("y"), varDecl(0))
                         )
                     )
                 }
@@ -421,25 +373,16 @@ class LogicalResolvedToDefaultPartiQLPhysicalVisitorTransformTestsPass {
                     )
                 },
                 PartiqlPhysical.build {
-                    dmlQuery(
-                        struct(
-                            structField(DML_COMMAND_FIELD_ACTION, "delete"),
-                            structField(DML_COMMAND_FIELD_TARGET_UNIQUE_ID, lit(ionSymbol("y"))),
-                            structField(
-                                DML_COMMAND_FIELD_ROWS,
-                                bindingsToValues(
-                                    localId(0),
-                                    // this logical plan is same as previous but includes this filter
-                                    filter(
-                                        i = DEFAULT_IMPL,
-                                        eq(lit(ionInt(1)), lit(ionInt(1))),
-                                        scan(
-                                            i = DEFAULT_IMPL,
-                                            expr = globalId("y"),
-                                            asDecl = varDecl(0)
-                                        )
-                                    )
-                                )
+                    dml(
+                        uniqueId = "y",
+                        operation = dmlDelete(),
+                        rows = bindingsToValues(
+                            localId(0),
+                            // this logical plan is same as previous but includes this filter
+                            filter(
+                                DEFAULT_IMPL,
+                                eq(lit(ionInt(1)), lit(ionInt(1))),
+                                scan(DEFAULT_IMPL, globalId("y"), varDecl(0))
                             )
                         )
                     )

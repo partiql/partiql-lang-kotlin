@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Adds the AST node `session_attribute`.
   - Adds the function `EvaluationSession.Builder::user()` to add the CURRENT_USER to the EvaluationSession
 - Adds support for parsing and planning of `INSERT INTO .. AS <alias> ... ON CONFLICT DO [UPDATE|REPLACE] EXCLUDED WHERE <expr>`
+- Adds the `statement.dml` and `dml_operation` node to the experimental PartiQL Physical Plan.
 
 ### Changed
 
@@ -46,6 +47,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Parsing INSERT statements with aliases no longer loses the original table name. Closes #1043.
 
 ### Removed
+
+- **Breaking**: Removes node `statement.dml_query` from the experimental PartiQL Physical Plan. Please see the added
+  `statement.dml` and `dml_operation` nodes.
 
 ### Security
 
