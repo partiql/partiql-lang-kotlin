@@ -1,0 +1,54 @@
+// The running example in the paper
+// Alin Deutsch et al., Graph Pattern Matching in GQL and SQL/PGQ.
+// SIGMOD'22: Proceedings of the 2022 International Conference on Management of Data, June 2022, pp. 2246–2258.
+// https://doi.org/10.1145/3514221.3526057,   https://arxiv.org/pdf/2112.06217.pdf
+
+graph::{
+  nodes: [
+    { id: a1, labels: ["Account"], payload: {owner: "Scott", isBlocked: no} },
+    { id: a2, labels: ["Account"], payload: {owner: "Aretha", isBlocked: no} },
+    { id: a3, labels: ["Account"], payload: {owner: "Mike", isBlocked: no} },
+    { id: a4, labels: ["Account"], payload: {owner: "Jay", isBlocked: yes} },
+    { id: a5, labels: ["Account"], payload: {owner: "Charles", isBlocked: no} },
+    { id: a6, labels: ["Account"], payload: {owner: "Dave", isBlocked: no} },
+
+    { id: c1, labels: ["Country"], payload: {name: "Zembla"} },
+    { id: c2, labels: ["City", "Country"], payload: {name: "Ankh-Morpork"} },
+
+    { id: ip1, labels: ["IP"], payload: {number: "123.111", isBlocked: no} },
+    { id: ip2, labels: ["IP"], payload: {number: "123.222", isBlocked: no} },
+
+    { id: p1, labels: ["Phone"], payload: {number: "111", isBlocked: no}  },
+    { id: p2, labels: ["Phone"], payload: {number: "222", isBlocked: no}  },
+    { id: p3, labels: ["Phone"], payload: {number: "333", isBlocked: no}  },
+    { id: p4, labels: ["Phone"], payload: {number: "444", isBlocked: no}  },
+  ],
+
+  edges: [
+    { id: li1, labels: ["isLocatedIn"], ends: dir::[a1, c1] },
+    { id: li2, labels: ["isLocatedIn"], ends: dir::[a2, c2] },
+    { id: li3, labels: ["isLocatedIn"], ends: dir::[a3, c1] },
+    { id: li4, labels: ["isLocatedIn"], ends: dir::[a4, c2] },
+    { id: li5, labels: ["isLocatedIn"], ends: dir::[a5, c1] },
+
+    { id: sip1, labels: ["signInWithIP"], ends: undir::(a1 ip1) },
+    { id: sip2, labels: ["signInWithIP"], ends: undir::(ip2 a5) },
+
+    { id: hp1, labels: ["hasPhone"], ends: undir::(p1 a1) },
+    { id: hp2, labels: ["hasPhone"], ends: undir::(p2 a2) },
+    { id: hp3, labels: ["hasPhone"], ends: undir::(a3 p2) },
+    { id: hp4, labels: ["hasPhone"], ends: undir::(a4 p3) },
+    { id: hp5, labels: ["hasPhone"], ends: undir::(p1 a5) },
+    { id: hp6, labels: ["hasPhone"], ends: undir::(p4 a6) },
+
+    { id: t1, labels: ["Transfer"], ends: dir::[a1, a3], payload: {date: 2020-01-01, amount: 8_000_000.00}  },
+    { id: t2, labels: ["Transfer"], ends: dir::[a3, a2], payload: {date: 2020-02-01, amount: 10_000_000.00}  },
+    { id: t3, labels: ["Transfer"], ends: dir::[a2, a4], payload: {date: 2020-03-01, amount: 10_000_000.00}  },
+    { id: t4, labels: ["Transfer"], ends: dir::[a4, a6], payload: {date: 2020-04-01, amount: 10_000_000.00}  },
+    { id: t5, labels: ["Transfer"], ends: dir::[a6, a3], payload: {date: 2020-06-01, amount: 10_000_000.00}  },
+    { id: t6, labels: ["Transfer"], ends: dir::[a6, a5], payload: {date: 2020-07-01, amount: 4_000_000.00}  },
+    { id: t7, labels: ["Transfer"], ends: dir::[a3, a5], payload: {date: 2020-08-01, amount: 6_000_000.00}  },
+    { id: t8, labels: ["Transfer"], ends: dir::[a5, a1], payload: {date: 2020-09-01, amount: 9_000_000.00}  },
+
+  ]
+}
