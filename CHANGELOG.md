@@ -28,14 +28,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Adds support for SQL's CURRENT_USER in the AST, EvaluatingCompiler, experimental planner implementation, and Schema Inferencer.
   - Adds the AST node `session_attribute`.
   - Adds the function `EvaluationSession.Builder::user()` to add the CURRENT_USER to the EvaluationSession
+- Adds support for parsing and planning of `INSERT INTO .. AS <alias> ... ON CONFLICT DO [UPDATE|REPLACE] EXCLUDED WHERE <expr>`
+- Adds the `statement.dml` and `dml_operation` node to the experimental PartiQL Physical Plan.
 
 ### Changed
+
+- **Breaking**: Adds a new property `as_alias` to the `insert` AST node.
+- **Breaking**: Adds new property `condition` to the AST nodes of `do_replace` and `do_update`
+- **Breaking**: Adds `target_alias` property to the `dml_insert`, `dml_replace`, and `dml_update` nodes within the
+  Logical and Logical Resolved plans
+- **Breaking**: Adds `condition` property to the `dml_replace` and `dml_update` nodes within the
+  Logical and Logical Resolved plans
 
 ### Deprecated
 
 ### Fixed
 
+- Parsing INSERT statements with aliases no longer loses the original table name. Closes #1043.
+
 ### Removed
+
+- **Breaking**: Removes node `statement.dml_query` from the experimental PartiQL Physical Plan. Please see the added
+  `statement.dml` and `dml_operation` nodes.
 
 ### Security
 

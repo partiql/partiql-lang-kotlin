@@ -21,10 +21,15 @@ import com.amazon.ionelement.api.ionString
 import com.amazon.ionelement.api.loadSingleElement
 import org.junit.Ignore
 import org.junit.Test
+import org.partiql.lang.ION
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.ast.sourceLocation
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.id
+import org.partiql.lang.errors.ErrorCode
+import org.partiql.lang.errors.Property
+import org.partiql.lang.syntax.antlr.PartiQLParser
+import org.partiql.lang.util.getAntlrDisplayString
 import kotlin.concurrent.thread
 
 /**
@@ -1745,6 +1750,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                 (dml_op_list
                     (insert
                         (id foo (case_insensitive) (unqualified))
+                        null
                         (bag
                             (list
                                 (lit 1)
@@ -1843,6 +1849,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                 (dml_op_list
                     (insert
                         (id foo (case_insensitive) (unqualified))
+                        null
                         (select
                             (project
                                 (project_list
@@ -1922,6 +1929,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                 (dml_op_list
                     (insert
                         (id foo (case_insensitive) (unqualified))
+                        null
                         (bag
                             (list
                                 (lit 1)
@@ -2196,6 +2204,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                 (dml_op_list
                     (insert
                         (id foo (case_insensitive) (unqualified))
+                        null
                         (select
                             (project
                                 (project_list
@@ -2221,6 +2230,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                 (dml_op_list
                     (insert
                         (id foo (case_insensitive) (unqualified))
+                        null
                         (bag
                             (list
                                 (lit 1)
@@ -2229,7 +2239,40 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                                 (lit 3)
                                 (lit 4)))
                         (do_replace
-                            (excluded))))))
+                            (excluded)
+                            null
+                        )))))
+        """
+    )
+
+    @Test
+    fun insertWithOnConflictReplaceExcludedWithLiteralValueAndCondition() = assertExpression(
+        source = "INSERT into foo VALUES (1, 2), (3, 4) ON CONFLICT DO REPLACE EXCLUDED WHERE foo.id > 2",
+        expectedPigAst = """
+        (dml
+            (operations
+                (dml_op_list
+                    (insert
+                        (id foo (case_insensitive) (unqualified))
+                        null
+                        (bag
+                            (list
+                                (lit 1)
+                                (lit 2))
+                            (list
+                                (lit 3)
+                                (lit 4)))
+                        (do_replace
+                            (excluded)
+                            (gt
+                                (path
+                                    (id foo (case_insensitive) (unqualified))
+                                    (path_expr
+                                        (lit "id")
+                                        (case_insensitive)))
+                                (lit 2)
+                            )
+                        )))))
         """
     )
 
@@ -2241,7 +2284,8 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                 (operations
                     (dml_op_list
                         (insert
-                            (id f (case_insensitive) (unqualified))
+                            (id foo (case_insensitive) (unqualified))
+                            f
                             (bag
                                 (struct
                                     (expr_pair
@@ -2251,7 +2295,41 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                                         (lit "name")
                                         (lit "bob"))))
                             (do_replace
-                                (excluded))))))
+                                (excluded)
+                                null
+                            )))))
+        """
+    )
+
+    @Test
+    fun insertWithOnConflictReplaceExcludedWithLiteralValueWithAliasAndCondition() = assertExpression(
+        source = "INSERT into foo AS f <<{'id': 1, 'name':'bob'}>> ON CONFLICT DO REPLACE EXCLUDED WHERE f.id > 2",
+        expectedPigAst = """
+            (dml
+                (operations
+                    (dml_op_list
+                        (insert
+                            (id foo (case_insensitive) (unqualified))
+                            f
+                            (bag
+                                (struct
+                                    (expr_pair
+                                        (lit "id")
+                                        (lit 1))
+                                    (expr_pair
+                                        (lit "name")
+                                        (lit "bob"))))
+                            (do_replace
+                                (excluded)
+                            (gt
+                                (path
+                                    (id f (case_insensitive) (unqualified))
+                                    (path_expr
+                                        (lit "id")
+                                        (case_insensitive)))
+                                (lit 2)
+                            )
+                            )))))
         """
     )
 
@@ -2264,6 +2342,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                     (dml_op_list
                         (insert
                             (id foo (case_insensitive) (unqualified))
+                            null
                             (select
                                 (project
                                     (project_list
@@ -2288,7 +2367,9 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                                         null
                                         null)))
                             (do_replace
-                                (excluded))))))
+                                (excluded)
+                                null
+                            )))))
         """
     )
 
@@ -2301,6 +2382,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                 (dml_op_list
                     (insert
                         (id foo (case_insensitive) (unqualified))
+                        null
                         (bag
                             (list
                                 (lit 1)
@@ -2309,7 +2391,40 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                                 (lit 3)
                                 (lit 4)))
                         (do_update
-                            (excluded))))))
+                            (excluded)
+                            null
+                        )))))
+        """
+    )
+
+    @Test
+    fun insertWithOnConflictUpdateExcludedWithLiteralValueAndCondition() = assertExpression(
+        source = "INSERT into foo VALUES (1, 2), (3, 4) ON CONFLICT DO UPDATE EXCLUDED WHERE foo.id > 2",
+        expectedPigAst = """
+        (dml
+            (operations
+                (dml_op_list
+                    (insert
+                        (id foo (case_insensitive) (unqualified))
+                        null
+                        (bag
+                            (list
+                                (lit 1)
+                                (lit 2))
+                            (list
+                                (lit 3)
+                                (lit 4)))
+                        (do_update
+                            (excluded)
+                            (gt
+                                (path
+                                    (id foo (case_insensitive) (unqualified))
+                                    (path_expr
+                                        (lit "id")
+                                        (case_insensitive)))
+                                (lit 2)
+                            )
+                        )))))
         """
     )
 
@@ -2321,7 +2436,8 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                 (operations
                     (dml_op_list
                         (insert
-                            (id f (case_insensitive) (unqualified))
+                            (id foo (case_insensitive) (unqualified))
+                            f
                             (bag
                                 (struct
                                     (expr_pair
@@ -2331,7 +2447,41 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                                         (lit "name")
                                         (lit "bob"))))
                             (do_update
-                                (excluded))))))
+                                (excluded)
+                                null
+                            )))))
+        """
+    )
+
+    @Test
+    fun insertWithOnConflictUpdateExcludedWithLiteralValueWithAliasAndCondition() = assertExpression(
+        source = "INSERT into foo AS f <<{'id': 1, 'name':'bob'}>> ON CONFLICT DO UPDATE EXCLUDED WHERE f.id > 2",
+        expectedPigAst = """
+            (dml
+                (operations
+                    (dml_op_list
+                        (insert
+                            (id foo (case_insensitive) (unqualified))
+                            f
+                            (bag
+                                (struct
+                                    (expr_pair
+                                        (lit "id")
+                                        (lit 1))
+                                    (expr_pair
+                                        (lit "name")
+                                        (lit "bob"))))
+                            (do_update
+                                (excluded)
+                            (gt
+                                (path
+                                    (id f (case_insensitive) (unqualified))
+                                    (path_expr
+                                        (lit "id")
+                                        (case_insensitive)))
+                                (lit 2)
+                            )
+                            )))))
         """
     )
 
@@ -2344,6 +2494,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                     (dml_op_list
                         (insert
                             (id foo (case_insensitive) (unqualified))
+                            null
                             (select
                                 (project
                                     (project_list
@@ -2368,7 +2519,9 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                                         null
                                         null)))
                             (do_update
-                                (excluded))))))
+                                (excluded)
+                                null
+                            )))))
         """
     )
 
@@ -2381,6 +2534,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                     (dml_op_list
                         (insert
                             (id foo (case_insensitive) (unqualified))
+                            null
                             (bag
                                 (struct
                                     (expr_pair
@@ -2394,6 +2548,18 @@ class PartiQLParserTest : PartiQLParserTestBase() {
     )
 
     @Test
+    fun attemptConditionWithInsertDoNothing() = checkInputThrowingParserException(
+        "INSERT into foo <<{'id': 1, 'name':'bob'}>> ON CONFLICT DO NOTHING WHERE foo.id > 2",
+        ErrorCode.PARSE_UNEXPECTED_TOKEN,
+        expectErrorContextValues = mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 68L,
+            Property.TOKEN_DESCRIPTION to PartiQLParser.WHERE.getAntlrDisplayString(),
+            Property.TOKEN_VALUE to ION.newSymbol("where")
+        )
+    )
+
+    @Test
     fun insertWithOnConflictDoNothingWithLiteralValueWithAlias() = assertExpression(
         source = "INSERT into foo AS f <<{'id': 1, 'name':'bob'}>> ON CONFLICT DO NOTHING",
         expectedPigAst = """
@@ -2401,7 +2567,8 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                 (operations
                     (dml_op_list
                         (insert
-                            (id f (case_insensitive) (unqualified))
+                            (id foo (case_insensitive) (unqualified))
+                            f
                             (bag
                                 (struct
                                     (expr_pair
@@ -2423,6 +2590,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                     (dml_op_list
                         (insert
                             (id foo (case_insensitive) (unqualified))
+                            null
                             (select
                                 (project
                                     (project_list
@@ -2459,6 +2627,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                     (dml_op_list
                         (insert
                             (id foo (case_insensitive) (unqualified))
+                            null
                             (bag
                                 (struct
                                     (expr_pair
@@ -2468,7 +2637,9 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                                         (lit "name")
                                         (lit "bob"))))
                             (do_replace
-                                (excluded))))))
+                                (excluded)
+                                null
+                            )))))
         """
     )
 
@@ -2480,7 +2651,8 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                 (operations
                     (dml_op_list
                         (insert
-                            (id f (case_insensitive) (unqualified))
+                            (id foo (case_insensitive) (unqualified))
+                            f
                             (bag
                                 (struct
                                     (expr_pair
@@ -2490,7 +2662,9 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                                         (lit "name")
                                         (lit "bob"))))
                             (do_replace
-                                (excluded))))))
+                                (excluded)
+                                null
+                            )))))
         """
     )
 
@@ -2503,6 +2677,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                     (dml_op_list
                         (insert
                             (id foo (case_insensitive) (unqualified))
+                            null
                             (bag
                                 (struct
                                     (expr_pair
@@ -2512,7 +2687,9 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                                         (lit "name")
                                         (lit "bob"))))
                             (do_update
-                                (excluded))))))
+                                (excluded)
+                                null
+                            )))))
         """
     )
 
@@ -2524,7 +2701,8 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                 (operations
                     (dml_op_list
                         (insert
-                            (id f (case_insensitive) (unqualified))
+                            (id foo (case_insensitive) (unqualified))
+                            f
                             (bag
                                 (struct
                                     (expr_pair
@@ -2534,7 +2712,9 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                                         (lit "name")
                                         (lit "bob"))))
                             (do_update
-                                (excluded))))))
+                                (excluded)
+                            null
+                            )))))
         """
     )
 
@@ -2547,6 +2727,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                     (dml_op_list
                         (insert
                             (id foo (case_insensitive) (unqualified))
+                            null
                             (select
                                 (project
                                     (project_list
@@ -2571,7 +2752,9 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                                         null
                                         null)))
                             (do_replace
-                                (excluded))))))
+                                (excluded)
+                                null
+                            )))))
         """
     )
 
@@ -2584,6 +2767,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                 (dml_op_list
                     (insert
                         (id foo (case_insensitive) (unqualified))
+                        null
                         (select
                             (project
                                 (project_list
@@ -2608,7 +2792,10 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                                     null
                                     null)))
                         (do_update
-                            (excluded))))))
+                            (excluded)
+                            null
+                        )
+                        ))))
         """
     )
 
@@ -3154,6 +3341,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                 (dml_op_list
                     (insert
                         (id k (case_insensitive) (unqualified))
+                        null
                         (bag
                             (lit 1))
                         null)))
@@ -3179,6 +3367,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                 (dml_op_list
                     (insert
                         (id k (case_insensitive) (unqualified))
+                        null
                         (bag
                             (lit 1))
                         null)))
