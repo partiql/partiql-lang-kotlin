@@ -24,7 +24,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Adds a file format for external graphs, defined as a schema in ISL (Ion Schema Language).
+- Adds back ability to convert an `IonDatagram` to an `ExprValue` using `of(value: IonValue): ExprValue` and `newFromIonValue(value: IonValue): ExprValue`
+- Adds support for SQL's CURRENT_USER in the AST, EvaluatingCompiler, experimental planner implementation, and Schema Inferencer.
+  - Adds the AST node `session_attribute`.
+  - Adds the function `EvaluationSession.Builder::user()` to add the CURRENT_USER to the EvaluationSession
+- Adds a file format for external graphs, defined as a schema in ISL (Ion Schema Language), 
+  as well as an in-memory graph data model and a reader for loading external graphs into it.
 
 ### Changed
 
