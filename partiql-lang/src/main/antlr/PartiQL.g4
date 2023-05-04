@@ -161,6 +161,8 @@ removeCommand
 insertCommandReturning
     : INSERT INTO pathSimple VALUE value=expr ( AT pos=expr )? onConflictClause? returningClause?;
 
+// TODO: Update grammar to disallow the mixing and matching of `insert`, `insertLegacy`, `onConflict`, and `onConflictLegacy`
+//  See https://github.com/partiql/partiql-lang-kotlin/issues/1063 for more details.
 insertCommand
     : INSERT INTO pathSimple VALUE value=expr ( AT pos=expr )? onConflictClause?  # InsertLegacy
     // See the Grammar at https://github.com/partiql/partiql-docs/blob/main/RFCs/0011-partiql-insert.md#2-proposed-grammar-and-semantics
@@ -197,7 +199,7 @@ conflictAction
    [ WHERE <condition> ]
 */
 doReplace
-    : EXCLUDED;
+    : EXCLUDED ( WHERE condition=expr )?;
     // :TODO add the rest of the grammar
 
 /*
@@ -207,7 +209,7 @@ doReplace
    [ WHERE <condition> ]
 */
 doUpdate
-    : EXCLUDED;
+    : EXCLUDED ( WHERE condition=expr )?;
     // :TODO add the rest of the grammar
 
 updateClause

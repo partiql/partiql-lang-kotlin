@@ -363,46 +363,34 @@ internal class AstToLogicalVisitorTransform(
                     }
                 }
 
-                when (val conflictAction = dmlOp.conflictAction) {
-                    null -> {
-                        PartiqlLogical.build {
-                            dml(
-                                target = dmlOp.target.toDmlTargetId(),
-                                operation = dmlInsert(),
-                                rows = transformExpr(dmlOp.values),
-                                metas = node.metas
-                            )
-                        }
+                val target = dmlOp.target.toDmlTargetId()
+                val alias = dmlOp.asAlias?.let {
+                    PartiqlLogical.VarDecl(it)
+                } ?: PartiqlLogical.VarDecl(target.name)
+
+                val operation = when (val conflictAction = dmlOp.conflictAction) {
+                    null -> PartiqlLogical.DmlOperation.DmlInsert(targetAlias = alias)
+                    is PartiqlAst.ConflictAction.DoReplace -> when (conflictAction.value) {
+                        is PartiqlAst.OnConflictValue.Excluded -> PartiqlLogical.DmlOperation.DmlReplace(
+                            targetAlias = alias,
+                            condition = conflictAction.condition?.let { transformExpr(conflictAction.condition) }
+                        )
                     }
-                    is PartiqlAst.ConflictAction.DoReplace -> {
-                        when (conflictAction.value) {
-                            PartiqlAst.OnConflictValue.Excluded() -> PartiqlLogical.build {
-                                dml(
-                                    target = dmlOp.target.toDmlTargetId(),
-                                    operation = dmlReplace(),
-                                    rows = transformExpr(dmlOp.values),
-                                    metas = node.metas
-                                )
-                            } else -> TODO("Only `DO REPLACE EXCLUDED` is supported in logical plan at the moment.")
-                        }
+                    is PartiqlAst.ConflictAction.DoUpdate -> when (conflictAction.value) {
+                        is PartiqlAst.OnConflictValue.Excluded -> PartiqlLogical.DmlOperation.DmlUpdate(
+                            targetAlias = alias,
+                            condition = conflictAction.condition?.let { transformExpr(conflictAction.condition) }
+                        )
                     }
-                    is PartiqlAst.ConflictAction.DoUpdate -> {
-                        when (conflictAction.value) {
-                            PartiqlAst.OnConflictValue.Excluded() -> PartiqlLogical.build {
-                                dml(
-                                    target = dmlOp.target.toDmlTargetId(),
-                                    operation = dmlUpdate(),
-                                    rows = transformExpr(dmlOp.values),
-                                    metas = node.metas
-                                )
-                            }
-                            else -> TODO("Only `DO UPDATE EXCLUDED` is supported in logical plan at the moment.")
-                        }
-                    }
-                    is PartiqlAst.ConflictAction.DoNothing -> TODO(
-                        "`ON CONFLICT DO NOTHING` is not supported in logical plan yet."
-                    )
+                    is PartiqlAst.ConflictAction.DoNothing -> TODO("`ON CONFLICT DO NOTHING` is not supported in logical plan yet.")
                 }
+
+                PartiqlLogical.Statement.Dml(
+                    target = target,
+                    operation = operation,
+                    rows = transformExpr(dmlOp.values),
+                    metas = node.metas
+                )
             }
             // INSERT single row with VALUE is disallowed. (This variation of INSERT might be removed in a future
             // release of PartiQL.)

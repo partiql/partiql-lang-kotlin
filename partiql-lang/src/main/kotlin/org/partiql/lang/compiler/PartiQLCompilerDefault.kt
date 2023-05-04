@@ -20,12 +20,8 @@ import org.partiql.lang.domains.PartiqlLogical
 import org.partiql.lang.domains.PartiqlLogicalResolved
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.errors.PartiQLException
-import org.partiql.lang.eval.BindingCase
-import org.partiql.lang.eval.BindingName
-import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.eval.Expression
 import org.partiql.lang.eval.PartiQLResult
 import org.partiql.lang.eval.PartiQLStatement
 import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedure
@@ -35,10 +31,6 @@ import org.partiql.lang.eval.physical.PhysicalPlanCompilerImpl
 import org.partiql.lang.eval.physical.PhysicalPlanThunk
 import org.partiql.lang.eval.physical.operators.RelationalOperatorFactory
 import org.partiql.lang.eval.physical.operators.RelationalOperatorFactoryKey
-import org.partiql.lang.planner.DML_COMMAND_FIELD_ACTION
-import org.partiql.lang.planner.DML_COMMAND_FIELD_ROWS
-import org.partiql.lang.planner.DML_COMMAND_FIELD_TARGET_UNIQUE_ID
-import org.partiql.lang.planner.DmlAction
 import org.partiql.lang.planner.EvaluatorOptions
 import org.partiql.lang.planner.PartiQLPlanner
 import org.partiql.lang.types.TypedOpParameter
@@ -71,18 +63,20 @@ internal class PartiQLCompilerDefault(
     }
 
     override fun compile(statement: PartiqlPhysical.Plan): PartiQLStatement {
-        val expression = exprConverter.compile(statement)
         return when (statement.stmt) {
-            is PartiqlPhysical.Statement.DmlQuery -> PartiQLStatement { expression.eval(it).toDML() }
+            is PartiqlPhysical.Statement.Dml -> compileDml(statement.stmt, statement.locals.size)
             is PartiqlPhysical.Statement.Exec,
-            is PartiqlPhysical.Statement.Query -> PartiQLStatement { expression.eval(it).toValue() }
+            is PartiqlPhysical.Statement.Query -> {
+                val expression = exprConverter.compile(statement)
+                PartiQLStatement { expression.eval(it).toValue() }
+            }
             is PartiqlPhysical.Statement.Explain -> throw PartiQLException("Unable to compile EXPLAIN without details.")
         }
     }
 
     override fun compile(statement: PartiqlPhysical.Plan, details: PartiQLPlanner.PlanningDetails): PartiQLStatement {
         return when (statement.stmt) {
-            is PartiqlPhysical.Statement.DmlQuery,
+            is PartiqlPhysical.Statement.Dml -> compileDml(statement.stmt, statement.locals.size)
             is PartiqlPhysical.Statement.Exec,
             is PartiqlPhysical.Statement.Query -> compile(statement)
             is PartiqlPhysical.Statement.Explain -> PartiQLStatement { compileExplain(statement.stmt, details) }
@@ -98,6 +92,18 @@ internal class PartiQLCompilerDefault(
         LOGICAL_RESOLVED,
         PHYSICAL,
         PHYSICAL_TRANSFORMED
+    }
+
+    private fun compileDml(dml: PartiqlPhysical.Statement.Dml, localsSize: Int): PartiQLStatement {
+        val rows = exprConverter.compile(dml.rows, localsSize)
+        return PartiQLStatement { session ->
+            when (dml.operation) {
+                is PartiqlPhysical.DmlOperation.DmlReplace -> PartiQLResult.Replace(dml.uniqueId.text, rows.eval(session))
+                is PartiqlPhysical.DmlOperation.DmlInsert -> PartiQLResult.Insert(dml.uniqueId.text, rows.eval(session))
+                is PartiqlPhysical.DmlOperation.DmlDelete -> PartiQLResult.Delete(dml.uniqueId.text, rows.eval(session))
+                is PartiqlPhysical.DmlOperation.DmlUpdate -> TODO("DML Update compilation not supported yet.")
+            }
+        }
     }
 
     private fun compileExplain(statement: PartiqlPhysical.Statement.Explain, details: PartiQLPlanner.PlanningDetails): PartiQLResult.Explain.Domain {
@@ -152,44 +158,5 @@ internal class PartiQLCompilerDefault(
         }
     }
 
-    /**
-     * The physical expr converter is EvaluatingCompiler with s/Ast/Physical and `bindingsToValues -> Thunk`
-     *   so it returns the [Expression] rather than a [PartiQLStatement]. This method parses a DML Command from the result.
-     *
-     * {
-     *     'action': <action>,
-     *     'target_unique_id': <unique_id>
-     *     'rows': <rows>
-     * }
-     *
-     * Later refactors will rework the Compiler to use [PartiQLStatement], but this is an acceptable workaround for now.
-     */
-    private fun ExprValue.toDML(): PartiQLResult {
-        val action = bindings string DML_COMMAND_FIELD_ACTION
-        val target = bindings string DML_COMMAND_FIELD_TARGET_UNIQUE_ID
-        val rows = bindings seq DML_COMMAND_FIELD_ROWS
-        return when (DmlAction.safeValueOf(action)) {
-            DmlAction.INSERT -> PartiQLResult.Insert(target, rows)
-            DmlAction.DELETE -> PartiQLResult.Delete(target, rows)
-            DmlAction.REPLACE -> PartiQLResult.Replace(target, rows)
-            null -> error("Unknown DML Action `$action`")
-        }
-    }
-
     private fun ExprValue.toValue(): PartiQLResult = PartiQLResult.Value(this)
-
-    private infix fun Bindings<ExprValue>.string(field: String): String {
-        return this[BindingName(field, BindingCase.SENSITIVE)]?.scalar?.stringValue() ?: missing(field)
-    }
-
-    private infix fun Bindings<ExprValue>.seq(field: String): Iterable<ExprValue> {
-        val v = this[BindingName(field, BindingCase.SENSITIVE)] ?: missing(field)
-        if (!v.type.isSequence) {
-            error("DML command struct '$DML_COMMAND_FIELD_ROWS' field must be a bag or list")
-        }
-        return v.asIterable()
-    }
-
-    private fun missing(field: String): Nothing =
-        error("Field `$field` missing from DML command struct or has incorrect Ion type")
 }
