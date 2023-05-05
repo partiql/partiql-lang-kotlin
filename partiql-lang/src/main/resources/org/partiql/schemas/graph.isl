@@ -18,7 +18,7 @@ $ion_schema_2_0
 */
 
 type::{
-    name: graph,  // ExternalGraphValidationTests breaks when this is named Graph ... no idea
+    name: Graph,
     annotations: closed::[graph],
     type: struct,
     fields: closed::{
