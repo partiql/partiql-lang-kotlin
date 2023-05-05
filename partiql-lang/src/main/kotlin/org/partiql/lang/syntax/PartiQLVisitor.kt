@@ -279,20 +279,20 @@ internal class PartiQLVisitor(val customTypes: List<CustomType> = listOf(), priv
         dml(dmlOpList(delete(ctx.DELETE().getSourceMetaContainer()), metas = ctx.DELETE().getSourceMetaContainer()), from, where, returning, ctx.DELETE().getSourceMetaContainer())
     }
 
-    override fun visitInsertLegacy(ctx: PartiQLParser.InsertLegacyContext) = PartiqlAst.build {
+    override fun visitInsertStatementLegacy(ctx: PartiQLParser.InsertStatementLegacyContext) = PartiqlAst.build {
         val metas = ctx.INSERT().getSourceMetaContainer()
         val target = visitPathSimple(ctx.pathSimple())
         val index = visitOrNull(ctx.pos, PartiqlAst.Expr::class)
-        val onConflict = visitOrNull(ctx.onConflictClause(), PartiqlAst.OnConflict::class)
+        val onConflict = ctx.onConflictLegacy()?.let { visitOnConflictLegacy(it) }
         insertValue(target, visit(ctx.value, PartiqlAst.Expr::class), index, onConflict, metas)
     }
 
-    override fun visitInsert(ctx: PartiQLParser.InsertContext) = PartiqlAst.build {
+    override fun visitInsertStatement(ctx: PartiQLParser.InsertStatementContext) = PartiqlAst.build {
         insert(
             target = visitSymbolPrimitive(ctx.symbolPrimitive()),
             asAlias = visitOrNull(ctx.asIdent(), PartiqlAst.Expr.Id::class)?.name?.text,
             values = visit(ctx.value, PartiqlAst.Expr::class),
-            conflictAction = visitOrNull(ctx.onConflictClause(), PartiqlAst.ConflictAction::class),
+            conflictAction = ctx.onConflict()?.let { visitOnConflict(it) },
             metas = ctx.INSERT().getSourceMetaContainer()
         )
     }
@@ -323,7 +323,7 @@ internal class PartiQLVisitor(val customTypes: List<CustomType> = listOf(), priv
         val metas = ctx.INSERT().getSourceMetaContainer()
         val target = visitPathSimple(ctx.pathSimple())
         val index = visitOrNull(ctx.pos, PartiqlAst.Expr::class)
-        val onConflictLegacy = visitOrNull(ctx.onConflictClause(), PartiqlAst.OnConflict::class)
+        val onConflictLegacy = ctx.onConflictLegacy()?.let { visitOnConflictLegacy(it) }
         val returning = visitOrNull(ctx.returningClause(), PartiqlAst.ReturningExpr::class)
         dml(
             dmlOpList(

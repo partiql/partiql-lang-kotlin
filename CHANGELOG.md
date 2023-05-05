@@ -45,6 +45,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Parsing INSERT statements with aliases no longer loses the original table name. Closes #1043.
+- Parsing INSERT statements with the legacy ON CONFLICT clause is no longer valid. Similarly, parsing the legacy INSERT
+  statement with the up-to-date ON CONFLICT clause is no longer valid. Closes #1063.
 
 ### Removed
 

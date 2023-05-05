@@ -2565,6 +2565,30 @@ class PartiQLParserTest : PartiQLParserTestBase() {
     )
 
     @Test
+    fun mixAndMatchInsertWithLegacy() = checkInputThrowingParserException(
+        "INSERT INTO foo <<{'id': 1, 'name':'bob'}>> ON CONFLICT WHERE TRUE DO NOTHING",
+        ErrorCode.PARSE_UNEXPECTED_TOKEN,
+        expectErrorContextValues = mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 57L,
+            Property.TOKEN_DESCRIPTION to PartiQLParser.WHERE.getAntlrDisplayString(),
+            Property.TOKEN_VALUE to ION.newSymbol("where")
+        )
+    )
+
+    @Test
+    fun mixAndMatchInsertLegacyWithCurrent() = checkInputThrowingParserException(
+        "INSERT INTO foo VALUE {'id': 1, 'name':'bob'} ON CONFLICT DO UPDATE EXCLUDED",
+        ErrorCode.PARSE_UNEXPECTED_TOKEN,
+        expectErrorContextValues = mapOf(
+            Property.LINE_NUMBER to 1L,
+            Property.COLUMN_NUMBER to 59L,
+            Property.TOKEN_DESCRIPTION to PartiQLParser.DO.getAntlrDisplayString(),
+            Property.TOKEN_VALUE to ION.newSymbol("do")
+        )
+    )
+
+    @Test
     fun insertWithOnConflictDoNothingWithLiteralValueWithAlias() = assertExpression(
         source = "INSERT into foo AS f <<{'id': 1, 'name':'bob'}>> ON CONFLICT DO NOTHING",
         expectedPigAst = """
