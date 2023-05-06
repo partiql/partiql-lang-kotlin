@@ -2,7 +2,7 @@ package org.partiql.lang.graph
 
 import org.partiql.lang.eval.ExprValue
 
-typealias Labels = Set<String>
+internal typealias Labels = Set<String>
 
 /** A straightforward implementation of in-memory graphs. */
 internal class SimpleGraph(

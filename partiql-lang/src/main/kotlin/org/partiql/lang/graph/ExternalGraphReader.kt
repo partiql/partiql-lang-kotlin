@@ -63,7 +63,7 @@ object ExternalGraphReader {
      * It is assumed that the input Ion value has been validated w.r.t. graph ISL,
      * so that defensive error checks are not needed.
      */
-    internal fun readGraph(graphIon: IonValue): SimpleGraph {
+    private fun readGraph(graphIon: IonValue): SimpleGraph {
         val g = graphIon as IonStruct
         val nds = g.get("nodes") as IonList
         val eds = g.get("edges") as IonList
@@ -75,7 +75,7 @@ object ExternalGraphReader {
     /* Returns a map from node IDs in the source graph to newly-built in-memory nodes.
     *  This map is used later to recognize node IDs used in edge definitions.
     */
-    internal fun readNodes(nodesList: IonList): Map<String, SimpleGraph.Node> {
+    private fun readNodes(nodesList: IonList): Map<String, SimpleGraph.Node> {
         val pairs = nodesList.toList().map { readNode(it as IonStruct) }
         val duplicates = pairs.map { it.first }.groupBy { it }.filterValues { it.size > 1 }.keys
         if (duplicates.isNotEmpty()) throw GraphReadException(
@@ -84,14 +84,14 @@ object ExternalGraphReader {
         return pairs.toMap()
     }
 
-    internal fun readNode(node: IonStruct): Pair<String, SimpleGraph.Node> {
+    private fun readNode(node: IonStruct): Pair<String, SimpleGraph.Node> {
         val (id, labels, payload) = readCommon(node)
         return Pair(id, SimpleGraph.Node(labels, payload))
     }
 
     /*  Can be called on an IonStruct for either a graph node or an edge,
      *  to extract their components that are structured identically: id, labels, payload.  */
-    internal fun readCommon(node: IonStruct): Triple<String, Set<String>, ExprValue> {
+    private fun readCommon(node: IonStruct): Triple<String, Set<String>, ExprValue> {
         val id = (node.get("id")!! as IonSymbol).symbolValue().assumeText()
         val lbs = node.get("labels")
         val labels =
@@ -103,7 +103,7 @@ object ExternalGraphReader {
     }
 
     /* EdgeReader class is a scoping trick, to avoid threading the [allNodes] argument through the remaining functions. */
-    internal class EdgeReader(val allNodes: Map<String, SimpleGraph.Node>) {
+    private class EdgeReader(val allNodes: Map<String, SimpleGraph.Node>) {
 
         internal fun readEdges(edgesList: IonList): Pair<List<EdgeTriple<SimpleGraph.EdgeDirected>>, List<EdgeTriple<SimpleGraph.EdgeUndir>>> {
             val dirs = mutableListOf<EdgeTriple<SimpleGraph.EdgeDirected>>()
@@ -136,7 +136,7 @@ object ExternalGraphReader {
         internal fun endNode(seq: IonSequence, idx: Int): SimpleGraph.Node {
             val id = (seq.get(idx) as IonSymbol).symbolValue().assumeText()
             return allNodes.getOrElse(id) {
-                throw GraphReadException("Node id $id is used in an edge, but it was not introduced at a node")
+                throw GraphReadException("Node id $id is used in an edge, but it was not defined as a node")
             }
         }
     }
