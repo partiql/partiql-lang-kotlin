@@ -73,34 +73,34 @@ class ExternalGraphValidationTests {
             Valid(
                 "Edge with a label",
                 """{ nodes: [{id: n1}, {id: n2}], 
-                    |edges: [ {id: e1, labels: ["go"], ends: dir::[n1, n2]} ] }""".trimMargin()
+                    |edges: [ {id: e1, labels: ["go"], ends: (n1 -> n2)} ] }""".trimMargin()
             ),
             Valid(
                 "Edge with multiple labels",
                 """{ nodes: [{id: n1}, {id: n2}], 
-                    |edges: [ {id: e1, labels: ["go", "went", "gone"], ends: [n1, n2]} ] }""".trimMargin()
+                    |edges: [ {id: e1, labels: ["go", "went", "gone"], ends: (n1 --> n2)} ] }""".trimMargin()
             ),
             Valid(
                 "Undirected edge with no labels",
                 """{ nodes: [{id: n1}, {id: n2}], 
-                    |edges: [ {id: e1, labels: [], ends: undir::(n1  n2)} ] }""".trimMargin()
+                    |edges: [ {id: e1, labels: [], ends: (n1 -- n2)} ] }""".trimMargin()
             ),
             Valid(
                 "Undirected edge with properties",
                 """{ nodes: [{id: n1}, {id: n2}], 
-                    |edges: [ {id: e1, ends: (n1 n2),
+                    |edges: [ {id: e1, ends: (n1 --- n2),
                     |          payload: {length: 23, thickness: 3} }] }""".trimMargin()
             ),
             Valid(
                 "Edges from a node to itself",
                 """{ nodes: [{id: n1}, {id: n2}], 
-                    |edges: [ {id: e1, ends: (n1 n1)},
-                    |         {id: e2, ends: [n2, n2]}, ] }""".trimMargin()
+                    |edges: [ {id: e1, ends: (n1 -- n1)},
+                    |         {id: e2, ends: (n2 <-- n2)}, ] }""".trimMargin()
             ),
             Invalid(
                 "Edge without id",
                 """{ nodes: [{id: n1}, {id: n2}], 
-                    |edges: [ {labels: ["a"], ends: dir::[n1, n2]} ] }""".trimMargin()
+                    |edges: [ {labels: ["a"], ends: (n2 <- n1)} ] }""".trimMargin()
             ),
             Invalid(
                 "Edge without ends",
@@ -112,45 +112,45 @@ class ExternalGraphValidationTests {
                 "2-node 3-edge graph",
                 """{ 
                 |nodes: [ {id: n1}, {id: n2} ], 
-                |edges: [ {id: e1, ends: [n1, n2]}, 
-                |         {id: e2, ends: [n2, n1]}, 
-                |         {id: e3, ends: (n1 n2)} ] }""".trimMargin()
+                |edges: [ {id: e1, ends: (n1 -> n2)}, 
+                |         {id: e2, ends: (n1 <- n2)}, 
+                |         {id: e3, ends: (n1 -- n2)} ] }""".trimMargin()
             ),
             Valid(
                 "With some annotations",
                 """graph::{ 
                 |nodes: [ {id: node::n1}, {id: n2} ], 
-                |edges: [ {id: e1, ends: dir::[n1, node::n2]}, 
-                |         {id: edge::e2, ends: [node::n2, node::n1]}, 
-                |         {id: e3, ends: undir::(n1 n2)} ] }""".trimMargin()
+                |edges: [ {id: e1, ends: (n1 -> node::n2)}, 
+                |         {id: edge::e2, ends: (node::n2 -> node::n1)}, 
+                |         {id: e3, ends: (n1 -- n2)} ] }""".trimMargin()
             ),
             Invalid(
                 "With wrong annotations",
                 """GRAPH::{ 
                 |nodes: [ {id: n1}, {id: edge::n2} ], 
-                |edges: [ {id: e1, ends: dir::[n1, NODE::n2]}, 
-                |         {id: e2, ends: undir::[n2, n1]}, 
-                |         {id: node::e3, ends: dir::(n1 n2)} ] }""".trimMargin()
+                |edges: [ {id: e1, ends: (n1 ---> NODE::n2)}, 
+                |         {id: e2, ends: (n2 ---> n1)}, 
+                |         {id: node::e3, ends: (n1 -- n2)} ] }""".trimMargin()
             ),
 
             Valid(
                 "Repeated identifiers across nodes and edges",
                 """{ 
-                |nodes: [ {id: x}, {id: y} ], edges: [ {id:x, ends: [x, y]} ] }""".trimMargin()
+                |nodes: [ {id: x}, {id: y} ], edges: [ {id:x, ends: (x -> y)} ] }""".trimMargin()
             ),
 
             // The following examples are valid per ISL, but should be rejected by a processor.
             Valid(
                 "Edge between non-existent nodes",
                 """{ 
-                |nodes: [ {id: n1}, {id: n2} ], edges: [ {id:e1, ends: [z1, z2]} ] }""".trimMargin()
+                |nodes: [ {id: n1}, {id: n2} ], edges: [ {id:e1, ends: (z1 -> z2)} ] }""".trimMargin()
             ),
             Valid(
                 "Repeated identifiers within nodes or edges",
                 """{ 
                 |nodes: [ {id: n1}, {id: n1} ], 
-                |edges: [ {id:e1, ends: [n1, n1]},
-                |         {id:e1, ends: (n1 n1)} ] }""".trimMargin()
+                |edges: [ {id:e1, ends: (n1 -> n1)},
+                |         {id:e1, ends: (n1 -- n1)} ] }""".trimMargin()
             ),
 
         )
