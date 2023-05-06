@@ -9,8 +9,8 @@ graph::{
   ],
 
   edges: [
-    { id: e1, labels: ["x"], ends: [n2, n1] },
-    { id: e2, labels: ["y"], ends: dir::[n1, n3] },
-    { id: e3, labels: ["y"], ends: [n2, n3] }
+    { id: e1, labels: ["x"], ends: (n2 -> n1) },
+    { id: e2, labels: ["y"], ends: (n1 -> n3) },
+    { id: e3, labels: ["y"], ends: (n2 -> n3) }
   ]
 }

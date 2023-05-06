@@ -18,7 +18,7 @@ $ion_schema_2_0
 */
 
 type::{
-    name: graph,  // ExternalGraphValidationTests breaks when this is named Graph ... no idea
+    name: Graph,
     annotations: closed::[graph],
     type: struct,
     fields: closed::{
@@ -52,16 +52,26 @@ type::{
 
 type::{
     name: DirectedPair,
-    type: list,
-    ordered_elements: [ NodeId, NodeId ],
-    annotations: closed::[dir]
+    type: sexp,
+    ordered_elements: [ NodeId, DirectedMarker, NodeId ]
+}
+
+type::{
+    name: DirectedMarker,
+    type: symbol,
+    valid_values: [ '->', '-->', '<-', '<--' ]
 }
 
 type::{
     name: UndirectedPair,
     type: sexp,
-    ordered_elements: [ NodeId, NodeId ],
-    annotations: closed::[undir]
+    ordered_elements: [ NodeId, UndirectedMarker, NodeId ]
+}
+
+type::{
+    name: UndirectedMarker,
+    type: symbol,
+    valid_values: [ '--', '---' ]
 }
 
 type::{ name: NodeId, type: symbol, annotations: closed::[node] }

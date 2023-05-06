@@ -24,10 +24,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Adds back ability to convert an `IonDatagram` to an `ExprValue` using `of(value: IonValue): ExprValue` and `newFromIonValue(value: IonValue): ExprValue`
-- Adds support for SQL's CURRENT_USER in the AST, EvaluatingCompiler, experimental planner implementation, and Schema Inferencer.
-  - Adds the AST node `session_attribute`.
-  - Adds the function `EvaluationSession.Builder::user()` to add the CURRENT_USER to the EvaluationSession
 - Adds a file format for external graphs, defined as a schema in ISL (Ion Schema Language), 
   as well as an in-memory graph data model and a reader for loading external graphs into it.
 
@@ -41,27 +37,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
-## [0.9.3] - 2023-04-12
+## [0.10.0] - 2023-05-05
 
 ### Added
 - Added numeric builtins ABS, SQRT, EXP, LN, POW, MOD.
-- Added standard SQL built-in functions POSITION, OVERLAY, LENGTH, BIT_LENGTH, OCTET_LENGTH, CARDINALITY, 
+- Added standard SQL built-in functions POSITION, OVERLAY, LENGTH, BIT_LENGTH, OCTET_LENGTH, CARDINALITY,
   an additional builtin TEXT_REPLACE, and standard SQL aggregations on booleans EVERY, ANY, SOME.
-- **Breaking** Added coercion of SQL-style subquery to a single value, as defined in SQL for 
-  subqueries occurring in a single-value context and outlined in Chapter 9 of the PartiQL specification. 
-  This is backward incompatible with the prior behavior (which left the computed collection as is), 
+- **Breaking** Added coercion of SQL-style subquery to a single value, as defined in SQL for
+  subqueries occurring in a single-value context and outlined in Chapter 9 of the PartiQL specification.
+  This is backward incompatible with the prior behavior (which left the computed collection as is),
   but brings it in conformance with the specification.
 - Added `partiql-plan` package which contains experimental PartiQL Plan data structures.
 - Initializes SPI Framework under `partiql-spi`.
 - Models experimental `Schema` with constraints.
-  With this change, we're introducing `Tuple` and `Collection` constraints to be able to model the shape of data as 
+  With this change, we're introducing `Tuple` and `Collection` constraints to be able to model the shape of data as
   constraints.
 - Introduces the PartiQLSchemaInferencer and PlannerSession
   - The PlannerSession describes the current session and is used by the PartiQLSchemaInferencer.
   - The PartiQLSchemaInferencer provides a function, `infer`, to aid in inferring the output `StaticType` of a
-  PartiQL Query. See the KDoc for more information and examples.
+    PartiQL Query. See the KDoc for more information and examples.
+- Adds back ability to convert an `IonDatagram` to an `ExprValue` using `of(value: IonValue): ExprValue` and `newFromIonValue(value: IonValue): ExprValue`
+- Adds support for SQL's CURRENT_USER in the AST, EvaluatingCompiler, experimental planner implementation, and Schema Inferencer.
+  - Adds the AST node `session_attribute`.
+  - Adds the function `EvaluationSession.Builder::user()` to add the CURRENT_USER to the EvaluationSession
+- Adds support for parsing and planning of `INSERT INTO .. AS <alias> ... ON CONFLICT DO [UPDATE|REPLACE] EXCLUDED WHERE <expr>`
+- Adds the `statement.dml` and `dml_operation` node to the experimental PartiQL Physical Plan.
 
 ### Changed
+
 - Deprecates the project level opt-in annotation `PartiQLExperimental` and split it into feature level. `ExperimentalPartiQLCompilerPipeline` and `ExperimentalWindowFunctions`.
 - **Breaking**: Moves StaticType to `partiql-types`.
   - All references to static types need to modify their imports accordingly. For example,
@@ -77,27 +80,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     6. `org.partiql.lang.types.SingleType.getRuntimeType` -> `org.partiql.lang.types.StaticTypeUtils.getRuntimeType`
     7. `org.partiql.lang.types.StringType.StringLengthConstraint.matches` -> `org.partiql.lang.types.StaticTypeUtils.stringLengthConstraintMatches`
 - **Breaking**: Removes deprecated `ionSystem()` function from PartiQLCompilerBuilder and PartiQLParserBuilder
+- **Breaking**: Adds a new property `as_alias` to the `insert` AST node.
+- **Breaking**: Adds new property `condition` to the AST nodes of `do_replace` and `do_update`
+- **Breaking**: Adds `target_alias` property to the `dml_insert`, `dml_replace`, and `dml_update` nodes within the
+  Logical and Logical Resolved plans
+- **Breaking**: Adds `condition` property to the `dml_replace` and `dml_update` nodes within the
+  Logical and Logical Resolved plans
 
 ### Deprecated
-- `ExprValueFactory` interface marked as deprecated. Equivalent `ExprValue` construction methods are implemented in the `ExprValue` interface as static methods. 
+
+- `ExprValueFactory` interface marked as deprecated. Equivalent `ExprValue` construction methods are implemented in the `ExprValue` interface as static methods.
 
 ### Fixed
+
 - Javadoc jar now contains dokka docs (was broken by gradle commit from 0.9.0)
-
-- ANTLR (PartiQL.g4, PartiQLTokens.g4) and PIG (org/partiql/type-domains/partiql.ion) sources 
+- ANTLR (PartiQL.g4, PartiQLTokens.g4) and PIG (org/partiql/type-domains/partiql.ion) sources
   are back to being distributed with the jar.
-
 - CLI no longer terminates on user errors in submitted PartiQL (when printing out the AST with !!)
-  and no longer prints out stack traces upon user errors. 
-
+  and no longer prints out stack traces upon user errors.
 - Constrained Decimal matching logic.
+- Parsing INSERT statements with aliases no longer loses the original table name. Closes #1043.
+- Parsing INSERT statements with the legacy ON CONFLICT clause is no longer valid. Similarly, parsing the legacy INSERT
+  statement with the up-to-date ON CONFLICT clause is no longer valid. Closes #1063.
 
 ### Removed
+
 - The deprecated `IonValue` property in `ExprValue` interface is now removed.
 - Removed partiql-extensions to partiql-cli `org.partiql.cli.functions`
 - Removed IonSystem from PartiQLParserBuilder
+- **Breaking**: Removes node `statement.dml_query` from the experimental PartiQL Physical Plan. Please see the added
+  `statement.dml` and `dml_operation` nodes.
 
 ### Security
+
+## [0.9.4] - 2023-04-20
+
+This version reverts many accidental breaking changes introduced in v0.9.3. Its contents are equivalent to v0.9.2.
+
+## [0.9.3] - 2023-04-12
+
+This version accidentally released multiple breaking changes and is not recommended. Please use v0.9.4 to avoid
+breaking changes if migrating from v0.9.2. The breaking changes accidentally introduced in v0.9.3 can be found in v0.10.0.
 
 ## [0.9.2] - 2023-01-20
 

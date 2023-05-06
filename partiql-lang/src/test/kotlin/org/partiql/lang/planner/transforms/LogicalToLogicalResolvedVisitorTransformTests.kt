@@ -862,4 +862,60 @@ class LogicalToLogicalResolvedVisitorTransformTests {
             ),
         )
     }
+
+    @ParameterizedTest
+    @ArgumentsSource(DmlStatements::class)
+    fun `dml statements`(tc: TestCase) = runTestCase(tc)
+    class DmlStatements : ArgumentsProviderBase() {
+        override fun getParameters() = listOf(
+            TestCase(
+                "INSERT INTO foo << {'a': 1} >> ON CONFLICT DO REPLACE EXCLUDED WHERE foo.id > 2",
+                Expectation.Success(
+                    ResolvedId(1, 70) { localId(0) },
+                ).withLocals(localVariable("foo", 0))
+            ),
+            TestCase(
+                "INSERT INTO foo AS f << {'a': 1} >> ON CONFLICT DO REPLACE EXCLUDED WHERE f.id > 2",
+                Expectation.Success(
+                    ResolvedId(1, 75) { localId(0) },
+                ).withLocals(localVariable("f", 0))
+            ),
+            TestCase(
+                "INSERT INTO foo AS f << {'a': 1} >> ON CONFLICT DO REPLACE EXCLUDED WHERE foo.id > 2",
+                Expectation.Success(
+                    ResolvedId(1, 75) { globalId("fake_uid_for_foo") },
+                ).withLocals(localVariable("f", 0))
+            ),
+            TestCase(
+                "INSERT INTO foo << {'a': 1} >> ON CONFLICT DO REPLACE EXCLUDED WHERE f.id > 2",
+                Expectation.Problems(
+                    problem(1, 70, PlanningProblemDetails.UndefinedVariable("f", false))
+                )
+            ),
+            TestCase(
+                "INSERT INTO foo << {'a': 1} >> ON CONFLICT DO UPDATE EXCLUDED WHERE foo.id > 2",
+                Expectation.Success(
+                    ResolvedId(1, 69) { localId(0) },
+                ).withLocals(localVariable("foo", 0))
+            ),
+            TestCase(
+                "INSERT INTO foo AS f << {'a': 1} >> ON CONFLICT DO UPDATE EXCLUDED WHERE f.id > 2",
+                Expectation.Success(
+                    ResolvedId(1, 74) { localId(0) },
+                ).withLocals(localVariable("f", 0))
+            ),
+            TestCase(
+                "INSERT INTO foo << {'a': 1} >> ON CONFLICT DO UPDATE EXCLUDED WHERE f.id > 2",
+                Expectation.Problems(
+                    problem(1, 69, PlanningProblemDetails.UndefinedVariable("f", false))
+                )
+            ),
+            TestCase(
+                "INSERT INTO foo AS f << {'a': 1} >> ON CONFLICT DO UPDATE EXCLUDED WHERE foo.id > 2",
+                Expectation.Success(
+                    ResolvedId(1, 74) { globalId("fake_uid_for_foo") },
+                ).withLocals(localVariable("f", 0))
+            ),
+        )
+    }
 }

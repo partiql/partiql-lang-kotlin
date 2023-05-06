@@ -20,21 +20,28 @@ class GraphReadException(message: String) : RuntimeException(message)
 
 internal typealias EdgeTriple<E> = Triple<SimpleGraph.Node, E, SimpleGraph.Node>
 
+/** A validator for external graphs represented in Ion in accordance with the graph.isl schema.
+ */
 object ExternalGraphReader {
+
+    // Constants for the graph schema and names used inside it.
+    private const val islSchemaFile = "graph.isl"
+    private const val islGraph = "Graph"
 
     private val ion: IonSystem = IonSystemBuilder.standard().build()
     private val iss = IonSchemaSystemBuilder.standard()
         .addAuthority(getResourceAuthority(ion))
         .withIonSystem(ion)
         .build()
-    private val graphSchema: Schema = iss.loadSchema("graph.isl")
-    private val graphType = graphSchema.getType("graph")!!
+    private val graphSchema: Schema = iss.loadSchema(islSchemaFile)
+    private val graphType = graphSchema.getType(islGraph)
+        ?: error("Definition for type $islGraph not found in ISL schema $islSchemaFile")
 
     /** Validates an IonValue to be a graph according to the graph.isl ISL schema. */
     fun validate(graphIon: IonValue) {
         val violations = graphType.validate(graphIon)
         if (!violations.isValid())
-            throw GraphValidationException("Ion data did not validate as a graph.isl graph: \n$violations")
+            throw GraphValidationException("Ion data did not validate as a graph: \n$violations")
     }
 
     fun validate(graphStr: String) {
