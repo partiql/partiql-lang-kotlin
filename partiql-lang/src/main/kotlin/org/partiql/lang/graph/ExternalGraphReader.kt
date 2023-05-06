@@ -128,14 +128,16 @@ object ExternalGraphReader {
 
         internal fun readEdge(edge: IonStruct): EdgeTriple<SimpleGraph.Edge> {
             val (id, labels, payload) = readCommon(edge)
-            val ends = edge.get("ends")!! as IonSequence
+            val ends = edge.get("ends")!! as IonSexp
             val n1 = endNode(ends, 0)
-            val n2 = endNode(ends, 1)
-            return when (ends) {
-                is IonList -> Triple(n1, SimpleGraph.EdgeDirected(labels, payload), n2)
-                is IonSexp -> Triple(n1, SimpleGraph.EdgeUndir(labels, payload), n2)
+            val marker = (ends.get(1) as IonSymbol).symbolValue().assumeText()
+            val n2 = endNode(ends, 2)
+            return when (marker) {
+                "--", "---" -> Triple(n1, SimpleGraph.EdgeUndir(labels, payload), n2)
+                "->", "-->" -> Triple(n1, SimpleGraph.EdgeDirected(labels, payload), n2)
+                "<-", "<--" -> Triple(n2, SimpleGraph.EdgeDirected(labels, payload), n1) // flip
                 else -> throw GraphReadException(
-                    "BUG: At edge $id, the entry at 'ends' field should have been validated as either IonList or IonSexp, but got: $ends"
+                    "BUG: At edge $id, directionality marker not recognized: $marker"
                 )
             }
         }

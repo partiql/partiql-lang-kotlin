@@ -10,7 +10,7 @@ import org.partiql.lang.eval.longValue
 
 class ExternalGraphReaderTests {
 
-    private val classloader = ExternalGraphValidationTests::class.java.classLoader
+    private val classloader = ExternalGraphReaderTests::class.java.classLoader
     private fun readResource(resourcePath: String): String {
         val url = classloader.getResource(resourcePath)
             ?: error("Resource path not found: $resourcePath")
@@ -70,7 +70,7 @@ class ExternalGraphReaderTests {
 
     @Test
     fun dontUndefinedNodes() {
-        val src = """{ nodes: [ {id: n1}, {id: n2} ], edges: [ {id:e1, ends: [z1, z2]} ] }"""
+        val src = """{ nodes: [ {id: n1}, {id: n2} ], edges: [ {id:e1, ends: (z1 -> z2)} ] }"""
         assertThrows<GraphReadException> { ExternalGraphReader.read(src) }
     }
 
@@ -83,8 +83,8 @@ class ExternalGraphReaderTests {
     @Test
     fun readTwoAndTwo() {
         val src = """{ nodes: [ {id: n1}, {id: n2}], 
-                    |  edges: [ {id: e1, ends: undir::(n1  n2)},
-                    |           {id: e2, ends:   dir::[n1, n2]}, ] }""".trimMargin()
+                    |  edges: [ {id: e1, ends: (n1 -- n2)},
+                    |           {id: e2, ends: (n1 -> n2)}, ] }""".trimMargin()
         val g = ExternalGraphReader.read(src)
         assertEquals(2, g.nodes.size)
         assertEquals(1, g.directed.size)
@@ -101,8 +101,8 @@ class ExternalGraphReaderTests {
         val src = """
             { nodes: [ {id: n1, labels: ["a"]}, {id: n2, labels: ["b"]},
                        {id: m1, labels: ["a"]}, {id: m2, labels: ["b"]}, ],
-              edges: [ {id: e1, labels: ["a"], ends: [n1, m1] },  
-                       {id: e2, labels: ["b"], ends: (n2  m2) }, ] }
+              edges: [ {id: e1, labels: ["a"], ends: (n1 --> m1) },  
+                       {id: e2, labels: ["b"], ends: (n2 --- m2) }, ] }
         """.trimIndent()
         val g = ExternalGraphReader.read(src)
         assertEquals(4, g.nodes.size)
@@ -117,8 +117,15 @@ class ExternalGraphReaderTests {
         assertEquals(bNodes, undirNodes)
     }
 
+    fun readRfc0025Example() {
+        val graphStr = readResource("graphs/rfc0025-example.ion")
+        val g = ExternalGraphReader.read(graphStr)
+        assertEquals(3, g.nodes.size)
+        assertEquals(0, g.undir.size)
+        assertEquals(3, g.directed.size)
+    }
     @Test
-    fun readGpmlPaperGraph() {
+    fun readGpmlPaperExample() {
         val graphStr = readResource("graphs/gpml-paper-example.ion")
         val g = ExternalGraphReader.read(graphStr)
         assertEquals(14, g.nodes.size)
