@@ -648,7 +648,7 @@ may then be further optimized by selecting better implementations of each operat
                 //
                 // TODO:  in the future, when the legacy AST compiler has been removed and the AST is no longer
                 // part of the public API, we should consider moving this definition to the partiql_ast domain.
-                (struct parts::(* struct_part 1))
+                (struct parts::(* struct_part 0))
 
                 // The PIVOT clause produces a single tuple whose attributes are the key and value expression evaluated
                 //   for all input tuples. The tuple is a value, not a bindings expr, hence why this isn't an operator.
