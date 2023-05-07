@@ -58,6 +58,7 @@ sealed class StaticType {
         @JvmField val SEXP: SexpType = SexpType()
         @JvmField val STRUCT: StructType = StructType()
         @JvmField val BAG: BagType = BagType()
+        @JvmField val GRAPH: GraphType = GraphType()
 
         /** All the StaticTypes, except for `ANY`. */
         @JvmStatic
@@ -82,6 +83,7 @@ sealed class StaticType {
             SEXP,
             STRUCT,
             BAG,
+            GRAPH
         )
     }
 
@@ -135,6 +137,7 @@ sealed class StaticType {
             is AnyOfType -> copy(metas = metas)
             is DateType -> copy(metas = metas)
             is TimeType -> copy(metas = metas)
+            is GraphType -> copy(metas = metas)
         }
 
     /**
@@ -489,6 +492,16 @@ data class StructType(
             else -> "struct($firstSeveral, ... and ${entries.size - 3} other field(s), $constraints)"
         }
     }
+}
+
+data class GraphType(
+    override val metas: Map<String, Any> = mapOf()
+) : SingleType() {
+
+    override val allTypes: List<StaticType>
+        get() = listOf(this)
+
+    override fun toString(): String = "graph"
 }
 
 /**

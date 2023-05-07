@@ -12,6 +12,7 @@ import org.partiql.types.ClobType
 import org.partiql.types.DateType
 import org.partiql.types.DecimalType
 import org.partiql.types.FloatType
+import org.partiql.types.GraphType
 import org.partiql.types.IntType
 import org.partiql.types.ListType
 import org.partiql.types.MissingType
@@ -519,6 +520,7 @@ private fun StaticType.visit(accumulator: TypeDefMap): TypeDefMap {
 /**
  * Convenience method to get the name of an ISL core type corresponding to given StaticType
  * Note that "missing" and "bag" are not valid ISL 1.0 core types but are added here for completeness
+ * Ditto for the "graph" type.
  */
 fun StaticType.getBaseTypeName(): String = when (this) {
     is IntType -> "int"
@@ -537,6 +539,7 @@ fun StaticType.getBaseTypeName(): String = when (this) {
     is BlobType -> "blob"
     is ClobType -> "clob"
     is StructType -> "struct"
+    is GraphType -> "graph"
     is AnyOfType -> {
         when (val flattenedType = flatten()) {
             is AnyOfType -> {

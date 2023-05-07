@@ -75,6 +75,10 @@ class ConfigurableExprValueFormatter(private val config: Configuration) : ExprVa
                     out.append("'$fieldName': ")
                     recursivePrettyPrint(v)
                 }
+                ExprValueType.GRAPH -> {
+                    val g = (value as org.partiql.lang.eval.ExprValue.Companion.GraphExprValue).graph
+                    out.append("graph{$g}")
+                }
             }
         }
 

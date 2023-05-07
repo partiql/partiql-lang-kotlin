@@ -101,6 +101,13 @@ private object ExprValueStrictComparator : Comparator<ExprValue> {
                 v1.sortedWith(namedValueComparator).iterator(),
                 v2.sortedWith(namedValueComparator).iterator()
             )
+            // TODO: something better to compare graphs?
+            // For now, graphs would be equal only when they are the same object by reference
+            ExprValueType.GRAPH -> {
+                val g1 = (v1 as ExprValue.Companion.GraphExprValue).graph
+                val g2 = (v2 as ExprValue.Companion.GraphExprValue).graph
+                g1.hashCode().compareTo(g2.hashCode())
+            }
         }
     }
 
