@@ -45,33 +45,15 @@ type::{
     fields: closed::{
         id: { type: EdgeId, occurs: required },
         labels: { type: list, element: string},
-        ends: { one_of: [DirectedPair, UndirectedPair], occurs: required },
+        ends: { type: sexp, ordered_elements: [ NodeId, DirectionMarker, NodeId ], occurs: required },
         payload: { type: EdgePayload, occurs: optional }
     }
 }
 
 type::{
-    name: DirectedPair,
-    type: sexp,
-    ordered_elements: [ NodeId, DirectedMarker, NodeId ]
-}
-
-type::{
-    name: DirectedMarker,
+    name: DirectionMarker,
     type: symbol,
-    valid_values: [ '->', '-->', '<-', '<--' ]
-}
-
-type::{
-    name: UndirectedPair,
-    type: sexp,
-    ordered_elements: [ NodeId, UndirectedMarker, NodeId ]
-}
-
-type::{
-    name: UndirectedMarker,
-    type: symbol,
-    valid_values: [ '--', '---' ]
+    valid_values: [ '--', '->', '<-' ]
 }
 
 type::{ name: NodeId, type: symbol, annotations: closed::[node] }

@@ -78,7 +78,7 @@ class ExternalGraphValidationTests {
             Valid(
                 "Edge with multiple labels",
                 """{ nodes: [{id: n1}, {id: n2}], 
-                    |edges: [ {id: e1, labels: ["go", "went", "gone"], ends: (n1 --> n2)} ] }""".trimMargin()
+                    |edges: [ {id: e1, labels: ["go", "went", "gone"], ends: (n1 -> n2)} ] }""".trimMargin()
             ),
             Valid(
                 "Undirected edge with no labels",
@@ -88,14 +88,14 @@ class ExternalGraphValidationTests {
             Valid(
                 "Undirected edge with properties",
                 """{ nodes: [{id: n1}, {id: n2}], 
-                    |edges: [ {id: e1, ends: (n1 --- n2),
+                    |edges: [ {id: e1, ends: (n1 -- n2),
                     |          payload: {length: 23, thickness: 3} }] }""".trimMargin()
             ),
             Valid(
                 "Edges from a node to itself",
                 """{ nodes: [{id: n1}, {id: n2}], 
                     |edges: [ {id: e1, ends: (n1 -- n1)},
-                    |         {id: e2, ends: (n2 <-- n2)}, ] }""".trimMargin()
+                    |         {id: e2, ends: (n2 <- n2)}, ] }""".trimMargin()
             ),
             Invalid(
                 "Edge without id",
@@ -128,8 +128,8 @@ class ExternalGraphValidationTests {
                 "With wrong annotations",
                 """GRAPH::{ 
                 |nodes: [ {id: n1}, {id: edge::n2} ], 
-                |edges: [ {id: e1, ends: (n1 ---> NODE::n2)}, 
-                |         {id: e2, ends: (n2 ---> n1)}, 
+                |edges: [ {id: e1, ends: (n1 -> NODE::n2)}, 
+                |         {id: e2, ends: (n2 -> n1)}, 
                 |         {id: node::e3, ends: (n1 -- n2)} ] }""".trimMargin()
             ),
 
