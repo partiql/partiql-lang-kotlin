@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Adds a file format for external graphs, defined as a schema in ISL (Ion Schema Language).
 
 ### Changed
 
