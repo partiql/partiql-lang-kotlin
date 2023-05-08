@@ -101,8 +101,8 @@ class ExternalGraphReaderTests {
         val src = """
             { nodes: [ {id: n1, labels: ["a"]}, {id: n2, labels: ["b"]},
                        {id: m1, labels: ["a"]}, {id: m2, labels: ["b"]}, ],
-              edges: [ {id: e1, labels: ["a"], ends: (n1 --> m1) },  
-                       {id: e2, labels: ["b"], ends: (n2 --- m2) }, ] }
+              edges: [ {id: e1, labels: ["a"], ends: (n1 -> m1) },  
+                       {id: e2, labels: ["b"], ends: (n2 -- m2) }, ] }
         """.trimIndent()
         val g = ExternalGraphReader.read(src)
         assertEquals(4, g.nodes.size)

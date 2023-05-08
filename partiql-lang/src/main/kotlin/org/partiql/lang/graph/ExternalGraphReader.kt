@@ -133,9 +133,9 @@ object ExternalGraphReader {
             val marker = (ends.get(1) as IonSymbol).symbolValue().assumeText()
             val n2 = endNode(ends, 2)
             return when (marker) {
-                "--", "---" -> Triple(n1, SimpleGraph.EdgeUndir(labels, payload), n2)
-                "->", "-->" -> Triple(n1, SimpleGraph.EdgeDirected(labels, payload), n2)
-                "<-", "<--" -> Triple(n2, SimpleGraph.EdgeDirected(labels, payload), n1) // flip
+                "--" -> Triple(n1, SimpleGraph.EdgeUndir(labels, payload), n2)
+                "->" -> Triple(n1, SimpleGraph.EdgeDirected(labels, payload), n2)
+                "<-" -> Triple(n2, SimpleGraph.EdgeDirected(labels, payload), n1) // flip
                 else -> throw GraphReadException(
                     "BUG: At edge $id, directionality marker not recognized: $marker"
                 )
