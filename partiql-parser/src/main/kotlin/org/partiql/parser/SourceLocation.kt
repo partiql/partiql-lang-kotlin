@@ -14,22 +14,13 @@
 
 package org.partiql.parser
 
-import org.partiql.ast.AstNode
+data class SourceLocation(val line: Int, val offset: Int, val length: Int) {
 
-/**
- * PartiQL Parser interface.
- */
-interface PartiQLParser {
+    companion object {
 
-    @Throws(PartiQLSyntaxException::class, InterruptedException::class)
-    fun parse(source: String): Result
-
-    /**
-     * PartiQL Parser Result
-     */
-    data class Result(
-        val source: String,
-        val root: AstNode,
-        val locations: SourceLocations,
-    )
+        /**
+         * This is a flag for backwards compatibility when converting to the legacy AST.
+         */
+        val UNKNOWN = SourceLocation(-1, -1, -1)
+    }
 }

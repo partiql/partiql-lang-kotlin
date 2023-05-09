@@ -14,7 +14,7 @@ statement::[
   // Data Manipulation Language
   d_m_l::[
 
-    // `INSERT INTO <target> [AS <alias>] ON CONFLICT <conflict action>
+    // `INSERT INTO <target> [AS <alias>] ON CONFLICT <conflict clause>
     // https://github.com/partiql/partiql-docs/blob/main/RFCs/0011-partiql-insert.md
     insert::{
       target:       target,
@@ -260,13 +260,13 @@ expr::[
 
   // Time Literal
   time::{
-    hour:               long,
-    minute:             long,
-    second:             long,
-    nano:               long,
-    precision:          long,
+    hour:               int,
+    minute:             int,
+    second:             int,
+    nano:               int,
+    precision:          int,
     with_tz:            bool,
-    tz_offset_minutes:  optional::long,
+    tz_offset_minutes:  optional::int,
   },
 
   // The `like` SQL special form

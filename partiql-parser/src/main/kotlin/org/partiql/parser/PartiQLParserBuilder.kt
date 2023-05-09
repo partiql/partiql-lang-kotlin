@@ -16,13 +16,6 @@ package org.partiql.parser
 
 /**
  * A builder class to instantiate a [PartiQLParser].
- *
- * Example usages:
- *
- * ```
- * val parser = PartiQLParserBuilder.standard().build()
- * val parser = PartiQLParserBuilder.standard().customTypes(types).build()
- * ```
  */
 class PartiQLParserBuilder {
 
