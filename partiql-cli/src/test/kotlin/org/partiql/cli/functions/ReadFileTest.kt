@@ -80,6 +80,15 @@ class ReadFileTest {
         assertEquals(expectedValues, value.toIonValue(ion).cloneAndRemoveAnnotations())
     }
 
+    @Test
+    fun testError() {
+        val path = getResourcePath("data.ion")
+        val args = listOf("\"$path\"").map { it.exprValue() }
+        assertThrows<IllegalStateException> {
+            function.callWithOptional(session, args, "{type:\"ion\"}".exprValue())
+        }
+    }
+
     @ParameterizedTest
     @ArgumentsSource(SuccessTestProvider::class)
     fun test(tc: SuccessTestProvider.TestCase) {
@@ -90,15 +99,6 @@ class ReadFileTest {
             else -> function.callWithOptional(session, args, tc.additionalOptions.exprValue())
         }
         assertValues(tc.expected, actual)
-    }
-
-    @Test
-    fun testError() {
-        val path = getResourcePath("data.ion")
-        val args = listOf("\"$path\"").map { it.exprValue() }
-        assertThrows<IllegalStateException> {
-            function.callWithOptional(session, args, "{type:\"ion\"}".exprValue())
-        }
     }
 
     class SuccessTestProvider : ArgumentsProvider {
