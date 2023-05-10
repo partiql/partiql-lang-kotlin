@@ -1671,8 +1671,9 @@ internal class EvaluatingCompiler(
         val graphExpr = compileAstExpr(node.expr)
         val pattern = GpmlTranslator.translateGpmlPattern(node.gpmlPattern)
         return thunkFactory.thunkEnv(metas) { env ->
-            val graph = when (val g = graphExpr(env)) {
-                is ExprValue.Companion.GraphExprValue -> g.graph
+            val g = graphExpr(env)
+            val graph = when (g.type) {
+                ExprValueType.GRAPH -> g.graphValue
                 else -> error("A graph value required, but got: $g") // TODO something better than error()
             }
             val matchResult = GraphEngine.evaluate(graph, pattern)
