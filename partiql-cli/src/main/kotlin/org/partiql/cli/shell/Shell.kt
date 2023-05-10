@@ -37,6 +37,7 @@ import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.PartiQLResult
 import org.partiql.lang.eval.delegate
+import org.partiql.lang.eval.namedValue
 import org.partiql.lang.graph.ExternalGraphException
 import org.partiql.lang.graph.ExternalGraphReader
 import org.partiql.lang.syntax.PartiQLParserBuilder
@@ -276,7 +277,7 @@ internal class Shell(
             val file = File(filename)
             file.readText()
         } catch (ex: Exception) {
-            out.error("Could not read text from file '$filename'${ex.message.let { ":\n$it"} ?: "."}")
+            out.error("Could not read text from file '$filename'${ex.message?.let { ":\n$it"} ?: "."}")
             null
         }
 
@@ -302,7 +303,8 @@ internal class Shell(
     private fun bringGraph(name: String, graphIonText: String) {
         try {
             val graph = ExprValue.newGraph(ExternalGraphReader.read(graphIonText))
-            globals.add(Bindings.ofMap(mapOf(name to graph)))
+            val namedGraph = graph.namedValue(ExprValue.newString(name))
+            globals.add(Bindings.ofMap(mapOf(name to namedGraph)))
             out.info("""Bound identifier "$name" to a graph. """)
         } catch (ex: ExternalGraphException) {
             out.error(ex.message)

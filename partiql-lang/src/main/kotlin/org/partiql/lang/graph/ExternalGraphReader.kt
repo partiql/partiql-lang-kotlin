@@ -63,11 +63,11 @@ object ExternalGraphReader {
         return readGraph(graphIon)
     }
     fun read(graphStr: String): SimpleGraph {
-        var graphIon: IonValue? = null
+        val graphIon: IonValue?
         try {
             graphIon = ion.singleValue(graphStr)
         } catch (ex: RuntimeException) {
-            throw GraphIonException("Error while reading Ion for the graph${ex.message.let { ":\n$it"} ?: "."}")
+            throw GraphIonException("Error while reading Ion for the graph${ex.message?.let { ":\n$it"} ?: "."}")
         }
         validate(graphIon!!)
         return readGraph(graphIon)

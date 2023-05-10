@@ -28,4 +28,8 @@ class SimpleGraph(
         override val labels: Labels,
         override val payload: ExprValue
     ) : Edge(), Graph.EdgeUndir
+
+    companion object {
+        val empty: Graph = SimpleGraph(emptyList(), emptyList(), emptyList())
+    }
 }

@@ -75,6 +75,8 @@ interface ExprValue : Iterable<ExprValue>, Faceted {
      */
     override operator fun iterator(): Iterator<ExprValue>
 
+    val graphValue: Graph
+
     companion object {
         // Constructor classes
         private class NullExprValue(val ionType: IonType = IonType.NULL) : BaseExprValue() {
@@ -177,12 +179,9 @@ interface ExprValue : Iterable<ExprValue>, Faceted {
             override fun iterator() = values.mapIndexed { i, v -> v.namedValue(newInt(i)) }.iterator()
         }
 
-        // VG-note: GraphExprValue is not a private class, because I'd like to highlight
-        // hesitation to introduce ExprValue.graphValue() method.
-        // In general, I am yet to figure out why ExprValue.xxxValue() methods are a good idea,
-        // as opposed to exposing the subclasses of ExprValue.
-        class GraphExprValue(val graph: Graph) : BaseExprValue() {
+        private class GraphExprValue(graph: Graph) : BaseExprValue() {
             override val type = ExprValueType.GRAPH
+            override val graphValue: Graph = graph
         }
 
         // Memoized values for optimization
