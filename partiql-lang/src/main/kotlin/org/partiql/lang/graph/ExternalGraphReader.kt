@@ -15,8 +15,10 @@ import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.partiqlisl.getResourceAuthority
 import java.io.File
 
-class GraphValidationException(message: String) : RuntimeException(message)
-class GraphReadException(message: String) : RuntimeException(message)
+abstract class ExternalGraphException(override val message: String) : RuntimeException(message)
+class GraphIonException(message: String) : ExternalGraphException(message)
+class GraphValidationException(message: String) : ExternalGraphException(message)
+class GraphReadException(message: String) : ExternalGraphException(message)
 
 internal typealias EdgeTriple<E> = Triple<SimpleGraph.Node, E, SimpleGraph.Node>
 
@@ -56,13 +58,18 @@ object ExternalGraphReader {
 
     /** Given an IonValue, validates that it is a graph in accordance with graph.isl schema
      *  and loads it into memory as a SimpleGraph. */
-    internal fun read(graphIon: IonValue): SimpleGraph {
+    fun read(graphIon: IonValue): SimpleGraph {
         validate(graphIon)
         return readGraph(graphIon)
     }
-    internal fun read(graphStr: String): SimpleGraph {
-        val graphIon = ion.singleValue(graphStr)
-        validate(graphIon)
+    fun read(graphStr: String): SimpleGraph {
+        var graphIon: IonValue? = null
+        try {
+            graphIon = ion.singleValue(graphStr)
+        } catch (ex: RuntimeException) {
+            throw GraphIonException("Error while reading Ion for the graph${ex.message.let { ":\n$it"} ?: "."}")
+        }
+        validate(graphIon!!)
         return readGraph(graphIon)
     }
 

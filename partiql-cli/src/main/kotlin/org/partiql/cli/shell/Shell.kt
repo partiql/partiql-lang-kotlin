@@ -37,10 +37,13 @@ import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.PartiQLResult
 import org.partiql.lang.eval.delegate
+import org.partiql.lang.graph.ExternalGraphException
+import org.partiql.lang.graph.ExternalGraphReader
 import org.partiql.lang.syntax.PartiQLParserBuilder
 import org.partiql.lang.util.ConfigurableExprValueFormatter
 import org.partiql.lang.util.ExprValueFormatter
 import java.io.Closeable
+import java.io.File
 import java.io.OutputStream
 import java.io.PrintStream
 import java.nio.file.Path
@@ -71,13 +74,15 @@ private const val DEBUG_MSG = """
 """
 
 private const val HELP = """
-!add_to_global_env  Adds to the global environment key/value pairs of the supplied struct
-!global_env         Displays the current global environment
-!list_commands      Prints this message
-!help               Prints this message
-!history            Prints command history
-!exit               Exits the shell
-!clear              Clears the screen
+!list_commands        Prints this message
+!help                 Prints this message
+!add_to_global_env    Adds to the global environment key/value pairs of the supplied struct
+!global_env           Displays the current global environment
+!add_graph            Adds to the global environment a name and a graph supplied as Ion
+!add_graph_from_file  Adds to the global environment a name and a graph from an Ion file
+!history              Prints command history
+!exit                 Exits the shell
+!clear                Clears the screen
 """
 
 private val SUCCESS: AttributedStyle = AttributedStyle.DEFAULT.foreground(AttributedStyle.GREEN)
@@ -200,6 +205,19 @@ internal class Shell(
                     }
                     continue
                 }
+                "!add_graph" -> {
+                    val input = requireInput(line, command) ?: continue
+                    val (name, graphStr) = requireTokenAndMore(input, command) ?: continue
+                    bringGraph(name, graphStr)
+                    continue
+                }
+                "!add_graph_from_file" -> {
+                    val input = requireInput(line, command) ?: continue
+                    val (name, filename) = requireTokenAndMore(input, command) ?: continue
+                    val graphStr = readTextFile(filename) ?: continue
+                    bringGraph(name, graphStr)
+                    continue
+                }
                 "!global_env" -> {
                     executeAndPrint { AbstractPipeline.convertExprValue(globals.asExprValue()) }
                     continue
@@ -241,6 +259,27 @@ internal class Shell(
         return input
     }
 
+    private fun requireTokenAndMore(input: String, detectedCommand: String): Pair<String, String>? {
+        val trimmed = input.trim()
+        val n = trimmed.indexOf(' ')
+        if (n == -1) {
+            out.error("Command $detectedCommand, after token $trimmed, requires more input.")
+            return null
+        }
+        val token = trimmed.substring(0, n)
+        val rest = trimmed.substring(n).trim()
+        return Pair(token, rest)
+    }
+
+    private fun readTextFile(filename: String): String? =
+        try {
+            val file = File(filename)
+            file.readText()
+        } catch (ex: Exception) {
+            out.error("Could not read text from file '$filename'${ex.message.let { ":\n$it"} ?: "."}")
+            null
+        }
+
     /** Prepare bindings to use for the next evaluation. */
     private fun refreshBindings(): Bindings<ExprValue> {
         return Bindings.buildLazyBindings<ExprValue> {
@@ -259,6 +298,16 @@ internal class Shell(
                 user(currentUser)
             }
         )
+
+    private fun bringGraph(name: String, graphIonText: String) {
+        try {
+            val graph = ExprValue.newGraph(ExternalGraphReader.read(graphIonText))
+            globals.add(Bindings.ofMap(mapOf(name to graph)))
+            out.info("""Bound identifier "$name" to a graph. """)
+        } catch (ex: ExternalGraphException) {
+            out.error(ex.message)
+        }
+    }
 
     private fun executeAndPrint(func: () -> PartiQLResult) {
         val result: PartiQLResult? = try {
