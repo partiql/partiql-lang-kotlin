@@ -185,30 +185,16 @@ internal class Shell(
             val command = when (val end: Int = CharMatcher.`is`(';').or(CharMatcher.whitespace()).indexIn(line)) {
                 -1 -> ""
                 else -> line.substring(0, end)
-            }
-            when (command.toLowerCase(Locale.ENGLISH).trim()) {
+            }.toLowerCase(Locale.ENGLISH).trim()
+            when (command) {
                 "!exit" -> return
                 "!add_to_global_env" -> {
                     // Consider PicoCLI + Jline, but it doesn't easily place nice with commands + raw SQL
                     // https://github.com/partiql/partiql-lang-kotlin/issues/63
-                    val arg = line.trim().removePrefix(command).trim()
-                    if (arg.isEmpty() || arg.isBlank()) {
-                        out.error("!add_to_global_env requires 1 parameter")
-                        continue
-                    }
+                    val arg = requireInput(line, command) ?: continue
                     executeAndPrint {
-                        val locals = Bindings.buildLazyBindings<ExprValue> {
-                            addBinding("_") {
-                                previousResult
-                            }
-                        }.delegate(globals.bindings)
-                        val result = compiler.compile(
-                            arg,
-                            EvaluationSession.build {
-                                globals(locals)
-                                user(currentUser)
-                            }
-                        ) as PartiQLResult.Value
+                        val locals = refreshBindings()
+                        val result = evaluatePartiQL(arg, locals) as PartiQLResult.Value
                         globals.add(result.value.bindings)
                         result
                     }
@@ -237,19 +223,42 @@ internal class Shell(
 
             // Execute PartiQL
             executeAndPrint {
-                val locals = Bindings.buildLazyBindings<ExprValue> {
-                    addBinding("_") { previousResult }
-                }.delegate(globals.bindings)
-                compiler.compile(
-                    line,
-                    EvaluationSession.build {
-                        globals(locals)
-                        user(currentUser)
-                    }
-                )
+                val locals = refreshBindings()
+                evaluatePartiQL(line, locals)
             }
         }
     }
+
+    /** After a command [detectedCommand] has been detected to start the user input,
+     * analyze the entire [wholeLine] user input again, expecting to find more input after the command.
+     * Returns the extra input or null if none present.  */
+    private fun requireInput(wholeLine: String, detectedCommand: String): String? {
+        val input = wholeLine.trim().removePrefix(detectedCommand).trim()
+        if (input.isEmpty() || input.isBlank()) {
+            out.error("Command $detectedCommand requires input.")
+            return null
+        }
+        return input
+    }
+
+    /** Prepare bindings to use for the next evaluation. */
+    private fun refreshBindings(): Bindings<ExprValue> {
+        return Bindings.buildLazyBindings<ExprValue> {
+            addBinding("_") {
+                previousResult
+            }
+        }.delegate(globals.bindings)
+    }
+
+    /** Evaluate a textual PartiQL query [textPartiQL] in the context of given [bindings]. */
+    private fun evaluatePartiQL(textPartiQL: String, bindings: Bindings<ExprValue>): PartiQLResult =
+        compiler.compile(
+            textPartiQL,
+            EvaluationSession.build {
+                globals(bindings)
+                user(currentUser)
+            }
+        )
 
     private fun executeAndPrint(func: () -> PartiQLResult) {
         val result: PartiQLResult? = try {
