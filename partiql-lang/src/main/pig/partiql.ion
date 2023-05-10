@@ -149,7 +149,7 @@ may then be further optimized by selecting better implementations of each operat
 
             // Other expression types
             (path root::expr steps::(* path_step 1))
-            (call func_name::symbol args::(* expr 1))
+            (call func_name::symbol args::(* expr 0))
             (call_agg setq::set_quantifier func_name::symbol arg::expr)
             // TODO: In the feature, when we allow use of aggregation function as window function, we need to consider incorporate in setq
             (call_window func_name::symbol over::over args::(* expr 1))
