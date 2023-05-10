@@ -61,7 +61,12 @@ private fun SingleType.getExample() = when (this) {
     is GraphType -> "graph{}" // TODO: something better after we have concrete syntax for graphs
     is MissingType,
     is NullType -> throw Exception("NULL or MISSING should be the problem of permissive mode, not type checking.")
+    is GraphType -> throw Exception("Without concrete graph syntax, can't have an example for a graph.")
 }
+
+// Types that can give an example in the above getExample function.
+private val EXAMPLAR_TYPES =
+    StaticType.ALL_TYPES.filter { it != StaticType.NULL && it != StaticType.MISSING && it != StaticType.GRAPH }
 
 private fun StaticType.getOneExample() = (allTypes.first() as SingleType).getExample()
 
@@ -87,7 +92,7 @@ class InvalidArgTypeChecker : EvaluatorTestBase() {
         // In each argument position, for each SingleType, we first check if it is an invalid argument type.
         // If it is, we put the example of it in the current argument position and compose the query, then catch the error,
         expectedTypes.forEachIndexed { index, expectedType ->
-            StaticType.ALL_TYPES.filter { it != StaticType.NULL && it != StaticType.MISSING }.forEach { singleType ->
+            EXAMPLAR_TYPES.forEach { singleType ->
                 if (!isSubTypeOf(singleType, expectedType)) {
                     curArgTypeExamples[index] = singleType.getExample()
                     val query = composeQuery("$funcName$syntaxSuffix", delimiters, curArgTypeExamples, size)

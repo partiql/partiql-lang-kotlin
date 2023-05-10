@@ -404,7 +404,7 @@ may then be further optimized by selecting better implementations of each operat
         (sum dml_op
             // See the following RFC for more details:
             // https://github.com/partiql/partiql-docs/blob/main/RFCs/0011-partiql-insert.md
-            (insert target::expr values::expr conflict_action::(? conflict_action))
+            (insert target::expr as_alias::(? symbol) values::expr conflict_action::(? conflict_action))
 
             // `INSERT INTO <expr> VALUE <expr> [AT <expr>]` [ON CONFLICT WHERE <expr> DO NOTHING]`
             (insert_value target::expr value::expr index::(? expr) on_conflict::(? on_conflict))
@@ -424,8 +424,8 @@ may then be further optimized by selecting better implementations of each operat
 
         // `CONFLICT_ACTION <action>`
         (sum conflict_action
-            (do_replace value::on_conflict_value)
-            (do_update value::on_conflict_value)
+            (do_replace value::on_conflict_value condition::(? expr))
+            (do_update value::on_conflict_value condition::(? expr))
             (do_nothing))
 
         (sum on_conflict_value
@@ -764,10 +764,10 @@ may then be further optimized by selecting better implementations of each operat
         (include
             // Indicates kind of DML operation.
             (sum dml_operation
-                (dml_insert)
+                (dml_insert target_alias::var_decl)
                 (dml_delete)
-                (dml_replace)
-                (dml_update)
+                (dml_replace target_alias::var_decl condition::(? expr))
+                (dml_update target_alias::var_decl condition::(? expr))
             )
         )
 
@@ -901,15 +901,6 @@ may then be further optimized by selecting better implementations of each operat
             // implementation.  These values are made available to the implementation at compile-time and evaluation
             // time.
             (product impl name::symbol static_args::(* ion 0))
-        )
-
-        // drop DML stuff added in partiql_logical (these should be rewritten into queries).
-        (exclude dml_operation)
-        (with statement
-            (exclude dml)
-            (include
-                // Include the dml_query variant, so that we know how to interpret the results of the query.
-                (dml_query expr::expr))
         )
 
         // Every variant of bexpr changes by adding an `impl` element in the physical algebra, so let's replace it

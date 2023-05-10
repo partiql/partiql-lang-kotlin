@@ -123,7 +123,8 @@ dml
     ;
 
 dmlBaseCommand
-    : insertCommand
+    : insertStatement
+    | insertStatementLegacy
     | setCommand
     | replaceCommand
     | removeCommand
@@ -159,17 +160,23 @@ removeCommand
 //  We essentially use the returning clause, because we currently support this with the SqlParser.
 //  See https://github.com/partiql/partiql-lang-kotlin/issues/708
 insertCommandReturning
-    : INSERT INTO pathSimple VALUE value=expr ( AT pos=expr )? onConflictClause? returningClause?;
+    : INSERT INTO pathSimple VALUE value=expr ( AT pos=expr )? onConflictLegacy? returningClause?;
 
-insertCommand
-    : INSERT INTO pathSimple VALUE value=expr ( AT pos=expr )? onConflictClause?  # InsertLegacy
-    // See the Grammar at https://github.com/partiql/partiql-docs/blob/main/RFCs/0011-partiql-insert.md#2-proposed-grammar-and-semantics
-    | INSERT INTO symbolPrimitive asIdent? value=expr onConflictClause?           # Insert
+// See the Grammar at https://github.com/partiql/partiql-docs/blob/main/RFCs/0011-partiql-insert.md#2-proposed-grammar-and-semantics
+insertStatement
+    : INSERT INTO symbolPrimitive asIdent? value=expr onConflict?
     ;
 
-onConflictClause
-    : ON CONFLICT WHERE expr DO NOTHING                                           # OnConflictLegacy
-    | ON CONFLICT conflictTarget? conflictAction                                  # OnConflict
+onConflict
+    : ON CONFLICT conflictTarget? conflictAction
+    ;
+
+insertStatementLegacy
+    : INSERT INTO pathSimple VALUE value=expr ( AT pos=expr )? onConflictLegacy?
+    ;
+
+onConflictLegacy
+    : ON CONFLICT WHERE expr DO NOTHING
     ;
 
 /**
@@ -197,7 +204,7 @@ conflictAction
    [ WHERE <condition> ]
 */
 doReplace
-    : EXCLUDED;
+    : EXCLUDED ( WHERE condition=expr )?;
     // :TODO add the rest of the grammar
 
 /*
@@ -207,7 +214,7 @@ doReplace
    [ WHERE <condition> ]
 */
 doUpdate
-    : EXCLUDED;
+    : EXCLUDED ( WHERE condition=expr )?;
     // :TODO add the rest of the grammar
 
 updateClause

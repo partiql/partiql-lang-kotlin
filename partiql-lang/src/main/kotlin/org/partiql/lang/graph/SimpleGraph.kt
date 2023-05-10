@@ -2,30 +2,36 @@ package org.partiql.lang.graph
 
 import org.partiql.lang.eval.ExprValue
 
-typealias Labels = Set<String>
+internal typealias Labels = Set<String>
 
 /** A straightforward implementation of in-memory graphs. */
-internal class SimpleGraph(
-    private val nodes: List<Node>,
-    private val directed: List<Triple<Node, EdgeDirected, Node>>,
-    private val undir: List<Triple<Node, EdgeUndir, Node>> // order of Nodes in the Triple "doesn't matter"
+class SimpleGraph(
+    val nodes: List<Node>,
+    val directed: List<Triple<Node, EdgeDirected, Node>>,
+    val undir: List<Triple<Node, EdgeUndir, Node>> // order of Nodes in the Triple "doesn't matter"
 ) : Graph {
 
     // Intentionally, not a data class -- want to use pointer equality
-    internal class Node(
+    class Node(
         override val labels: Labels,
         override val payload: ExprValue
     ) : Graph.Node
 
-    internal class EdgeDirected(
-        override val labels: Labels,
-        override val payload: ExprValue
-    ) : Graph.EdgeDirected
+    abstract class Edge : Graph.Edge
 
-    internal class EdgeUndir(
+    class EdgeDirected(
         override val labels: Labels,
         override val payload: ExprValue
-    ) : Graph.EdgeUndir
+    ) : Edge(), Graph.EdgeDirected
+
+    class EdgeUndir(
+        override val labels: Labels,
+        override val payload: ExprValue
+    ) : Edge(), Graph.EdgeUndir
+
+    companion object {
+        val empty: Graph = SimpleGraph(emptyList(), emptyList(), emptyList())
+    }
 
     private fun labelsMatchSpec(labels: Set<String>, spec: LabelSpec): Boolean =
         when (spec) {

@@ -83,6 +83,7 @@ sealed class StaticType {
             SEXP,
             STRUCT,
             BAG,
+            GRAPH
         )
     }
 
@@ -493,7 +494,6 @@ data class StructType(
     }
 }
 
-// TODO: Consider parameterizing by the type of node/edge payload, by making it a subclass of CollectionType.
 data class GraphType(
     override val metas: Map<String, Any> = mapOf()
 ) : SingleType() {
