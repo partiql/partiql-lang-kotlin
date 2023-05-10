@@ -26,6 +26,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Adds a file format for external graphs, defined as a schema in ISL (Ion Schema Language), 
   as well as an in-memory graph data model and a reader for loading external graphs into it.
+- Introduces CLI shell commands `!add_graph` and `!add_graph_from_file` for bringing 
+  externally-defined graphs into the evaluation environment. 
 
 ### Changed
 
