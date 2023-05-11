@@ -361,22 +361,11 @@ internal class EvaluatingCompiler(
 
         return object : Expression {
             override fun eval(session: EvaluationSession): ExprValue {
-                val Gs = org.partiql.lang.graph.SampleGraphs
-                val augmented_HACK = Bindings.buildLazyBindings<ExprValue> {
-                    addBinding("g1") { ExprValue.newGraph(Gs.g1) }
-                    addBinding("g1L") { ExprValue.newGraph(Gs.g1L) }
-                    addBinding("g2") { ExprValue.newGraph(Gs.g2) }
-                    addBinding("g3") { ExprValue.newGraph(Gs.g3) }
-                }.delegate(session.globals)
 
                 val env = Environment(
                     session = session,
-/*
                     locals = session.globals,
                     current = session.globals
-*/
-                    locals = augmented_HACK,
-                    current = augmented_HACK
                 )
 
                 return thunk(env)
