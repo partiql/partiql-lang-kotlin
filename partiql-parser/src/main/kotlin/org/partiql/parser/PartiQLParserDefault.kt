@@ -45,10 +45,12 @@ import org.partiql.ast.Expr
 import org.partiql.ast.From
 import org.partiql.ast.GraphMatch
 import org.partiql.ast.GroupBy
+import org.partiql.ast.Identifier
 import org.partiql.ast.Let
 import org.partiql.ast.OnConflict
 import org.partiql.ast.OrderBy
 import org.partiql.ast.Over
+import org.partiql.ast.Path
 import org.partiql.ast.Returning
 import org.partiql.ast.Select
 import org.partiql.ast.SetQuantifier
@@ -300,17 +302,6 @@ internal class PartiQLParserDefault : PartiQLParser {
 
             internal enum class DateTimePart {
                 YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, TIMEZONE_HOUR, TIMEZONE_MINUTE;
-                //
-                // companion object {
-                //
-                //     val tokens = DateTimePart.values().map { it.toString().toLowerCase() }.toSet()
-                //
-                //     fun safeValueOf(value: String): DateTimePart? = try {
-                //         DateTimePart.valueOf(value.toUpperCase().trim())
-                //     } catch (_: IllegalArgumentException) {
-                //         null
-                //     }
-                // }
             }
 
             internal val DATE_PATTERN_REGEX = Regex("\\d\\d\\d\\d-\\d\\d-\\d\\d")
@@ -391,17 +382,15 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitSymbolPrimitive(ctx: GeneratedParser.SymbolPrimitiveContext) = translate(ctx) {
             when (ctx.ident.type) {
-                GeneratedParser.IDENTIFIER_QUOTED -> Expr.Identifier(
+                GeneratedParser.IDENTIFIER_QUOTED -> Identifier(
                     id(),
                     ctx.IDENTIFIER_QUOTED().getStringValue(),
-                    Case.SENSITIVE,
-                    Expr.Identifier.Scope.UNQUALIFIED,
+                    Identifier.CaseSensitivity.SENSITIVE,
                 )
-                GeneratedParser.IDENTIFIER -> Expr.Identifier(
+                GeneratedParser.IDENTIFIER -> Identifier(
                     id(),
-                    ctx.IDENTIFIER().getStringValue(),
-                    Case.INSENSITIVE,
-                    Expr.Identifier.Scope.UNQUALIFIED,
+                    ctx.IDENTIFIER_QUOTED().getStringValue(),
+                    Identifier.CaseSensitivity.INSENSITIVE,
                 )
                 else -> throw PartiQLParserException("Invalid symbol reference.")
             }
@@ -421,23 +410,23 @@ internal class PartiQLParserDefault : PartiQLParser {
         }
 
         override fun visitDropIndex(ctx: GeneratedParser.DropIndexContext) = translate(ctx) {
-            val table = visitSymbolPrimitive(ctx.on)
-            val keys = visitSymbolPrimitive(ctx.target)
-            Statement.DDL.DropIndex(id(), table, keys)
+            val table = visitSymbolPrimitive(ctx.table.symbolPrimitive())
+            val target = visitSymbolPrimitive(ctx.target)
+            Statement.DDL.DropIndex(id(), table, target)
         }
 
         override fun visitCreateTable(ctx: GeneratedParser.CreateTableContext) = translate(ctx) {
             val (name, case) = symbolCased(ctx.tableName().symbolPrimitive())
-            val identifier = Expr.Identifier(id(), name, case, Expr.Identifier.Scope.UNQUALIFIED)
+            val identifier = Identifier(id(), name, case)
             val definition = ctx.tableDef()?.let { visitTableDef(it) }
             Statement.DDL.CreateTable(id(), identifier, definition)
         }
 
         override fun visitCreateIndex(ctx: GeneratedParser.CreateIndexContext) = translate(ctx) {
-            val (name, case) = symbolCased(ctx.symbolPrimitive())
-            val identifier = Expr.Identifier(id(), name, case, Expr.Identifier.Scope.UNQUALIFIED)
+            val name = visitOrNull<Identifier>(ctx.symbolPrimitive())
+            val table = visitSymbolPrimitive(ctx.tableName().symbolPrimitive())
             val fields = ctx.pathSimple().map { path -> visitPathSimple(path) }
-            Statement.DDL.CreateIndex(id(), identifier, fields)
+            Statement.DDL.CreateIndex(id(), name, table, fields)
         }
 
         override fun visitTableDef(ctx: GeneratedParser.TableDefContext) = translate(ctx) {
@@ -560,7 +549,7 @@ internal class PartiQLParserDefault : PartiQLParser {
                 null -> visitSymbolPrimitive(ctx.symbolPrimitive())
                 else -> visitAsIdent(ctx.asIdent())
             }
-            val target = Statement.DML.Target(id(), asIdent)
+            val target = visitPathSimple(ctx.)
             val value = visitExpr(ctx.value)
             val onConflict = ctx.onConflictClause()?.let { visitOnConflictClause(it) }
             Statement.DML.Insert(id(), target, value, onConflict)
@@ -675,24 +664,24 @@ internal class PartiQLParserDefault : PartiQLParser {
         }
 
         override fun visitPathSimple(ctx: GeneratedParser.PathSimpleContext) = translate(ctx) {
-            val root = visitSymbolPrimitive(ctx.symbolPrimitive()) as Expr
-            val steps = visitOrEmpty<Expr.Path.Step>(ctx.pathSimpleSteps())
-            Expr.Path(id(), root, steps)
+            val root = visitSymbolPrimitive(ctx.symbolPrimitive())
+            val steps = visitOrEmpty<Path.Step>(ctx.pathSimpleSteps())
+            Path(id(), root, steps)
         }
 
         override fun visitPathSimpleLiteral(ctx: GeneratedParser.PathSimpleLiteralContext) = translate(ctx) {
-            val key = visit(ctx.key) as Expr
-            Expr.Path.Step.Index(id(), key, Case.SENSITIVE)
+            val value = visit(ctx.LITERAL_INTEGER()) as Expr
+            Path.Step.Literal(id(), value)
         }
 
         override fun visitPathSimpleSymbol(ctx: GeneratedParser.PathSimpleSymbolContext) = translate(ctx) {
-            val (symbol, case) = symbolCased(ctx.symbolPrimitive())
-            Expr.Path.Step.Index(id(), Expr.Lit(id(), ionString(symbol)), case)
+            val identifier = visitSymbolPrimitive(ctx.symbolPrimitive())
+            Path.Step.Symbol(id(), identifier)
         }
 
         override fun visitPathSimpleDotSymbol(ctx: GeneratedParser.PathSimpleDotSymbolContext) = translate(ctx) {
-            val (symbol, case) = symbolCased(ctx.symbolPrimitive())
-            Expr.Path.Step.Index(id(), Expr.Lit(id(), ionString(symbol)), case)
+            val identifier = visitSymbolPrimitive(ctx.symbolPrimitive())
+            Path.Step.Symbol(id(), identifier)
         }
 
         /**

@@ -17,14 +17,14 @@ statement::[
     // `INSERT INTO <target> [AS <alias>] ON CONFLICT <conflict clause>
     // https://github.com/partiql/partiql-docs/blob/main/RFCs/0011-partiql-insert.md
     insert::{
-      target:       target,
+      target:       path,
       value:        expr,
       on_conflict:  optional::on_conflict,
     },
 
     // `INSERT INTO <target> VALUE <expr> [AT <expr>]` [ON CONFLICT WHERE <expr> DO NOTHING]`
     insert_value::{
-      target:       target,
+      target:       path,
       value:        expr,
       index:        optional::expr,
       on_conflict:  optional::on_conflict,
@@ -33,23 +33,23 @@ statement::[
 
     // UPSERT INTO <target> [<alias>] <expr>
     upsert::{
-      target: '.expr.identifier',
+      target: identifier,
       value:  expr,
     },
 
     // REPLACE INTO <target> [<alias>] value=expr;
     replace::{
-      target: '.expr.identifier',
+      target: identifier,
       value:  expr,
     },
 
     // `UPDATE <target> SET <set clause list> WHERE <expr>`
     update::{
-      target:      target,
+      target:      path,
       assignments: list::[assignment],
       _: [
         assignment::{
-          target: '.expr.path',
+          target: path,
           value:  expr,
         },
       ],
@@ -57,7 +57,7 @@ statement::[
 
     // `REMOVE <path>`
     remove::{
-      target: '.expr.path',
+      target: path,
     },
 
     // `DELETE FROM <target table> WHERE <expr> RETURNING ...`
@@ -77,12 +77,12 @@ statement::[
       _: [
         op::[
           insert::{
-            target:       target,
+            target:       path,
             value:        expr,
             on_conflict:  optional::on_conflict,
           },
           insert_value::{
-            target:       target,
+            target:       path,
             value:        expr,
             index:        optional::expr,
             on_conflict:  optional::on_conflict,
@@ -91,20 +91,12 @@ statement::[
             assignments: list::[assignment],
           },
           remove::{
-            target: '.expr.path',
+            target: path,
           },
           delete::{},
         ],
       ],
     },
-
-    // <target table> ::= [ONLY] <table name>
-    _::[
-      target::{
-        // temporary, change to path
-        table: expr,
-      },
-    ],
   ],
 
   // Data Definition Language
@@ -112,25 +104,27 @@ statement::[
 
     // `CREATE TABLE <symbol> ( <table_def> )?`
     create_table::{
-      name:       '.expr.identifier',
+      name:       identifier,
       definition: optional::table_definition,
     },
 
-    // `CREATE INDEX ON <symbol> (<expr> [, <expr>]...)`
+    // `CREATE INDEX [<symbol>] ON <symbol> (<expr> [, <expr>]...)`
     create_index::{
-      name:       '.expr.identifier',
-      fields:     list::[expr],
+      name:   optional::identifier,
+      table:  identifier,
+      fields: list::[path],
     },
 
     // `DROP TABLE <identifier>`
     drop_table::{
-      identifier: '.expr.identifier',
+      table: identifier,
     },
 
     // DROP INDEX <identifier> ON <identifier>
+    //            └─ index  ─┘    └─ table  ─┘
     drop_index::{
-      table:  '.expr.identifier',
-      keys:   '.expr.identifier',
+      index:  identifier,
+      table:  identifier,
     },
   ],
 
@@ -157,15 +151,41 @@ type::{
   parameters: list::[ion], // not recursive
 }
 
+// Identifier Symbols
+//---------------------------------------
+// identifier ::=  <symbol>
+//              | "<symbol>"
+//              ;
+identifier::{
+  symbol:           string,
+  case_sensitivity: [
+    SENSITIVE,
+    INSENSITIVE,
+  ],
+}
+
+// Literal Paths
+//---------------------------------------
+// path ::= <symbol> step+
+//        ;
+// step ::= '.' <symbol>
+//        | '[' (<symbol>|<integer>) ']'
+//        ;
+path::{
+  root: identifier,
+  steps: list::[step],
+  _: [
+    step::[
+      index::{ value: int },
+      symbol::{ identifier: identifier },
+    ],
+  ],
+}
+
 // [ ALL | DISTINCT ]
 set_quantifier::[
   ALL,
   DISTINCT,
-]
-
-case::[
-  SENSITIVE,
-  INSENSITIVE,
 ]
 
 // PartiQL Expression
@@ -175,24 +195,23 @@ expr::[
   missing::{},
 
   // Literal value
-  lit::{
+  literal::{
     value: ion,
   },
 
   // A variable reference
-  identifier::{
-    name:   string,
-    case:   case,
-    scope:  [ UNQUALIFIED, LOCALS_FIRST ],
+  var::{
+    identifier: identifier,
+    scope:      [ UNQUALIFIED, LOCALS_FIRST ],
   },
 
-  // Path Expression
+  // Expression Paths
   path::{
-    root: expr,
-    steps: list::[step],
+    root:   expr,
+    steps:  list::[step],
     _: [
       step::[
-        index::{ key: expr, case: case },
+        index::{ key: expr },
         wildcard::{},
         unpivot::{},
       ],
@@ -207,9 +226,9 @@ expr::[
 
   // Aggregate Function Call
   agg::{
-    function:   string,
-    args:       list::[expr],
-    quantifier: set_quantifier,
+    function: string,
+    args:     list::[expr],
+    setq:     set_quantifier,
   },
 
   // A parameter `?`
@@ -289,14 +308,14 @@ expr::[
     rhs: expr,
   },
 
-  // The `is` SQL special form
+  // The `is` PartiQL special form
   is_type::{
     value:  expr,
     type:   '.type',
   },
 
   // The simple and searched `case` switch SQL special form F261-01, F261-02
-  switch::{
+  case::{
     expr:     optional::expr,
     branches: list::[branch],
     default:  optional::expr,
@@ -315,8 +334,8 @@ expr::[
 
   // The `nullif` SQL special form F261-03
   null_if::{
-    expr0: expr,
-    expr1: expr,
+    value:    expr,
+    nullifer: expr,
   },
 
   // The `cast` SQL special form F201
@@ -337,23 +356,25 @@ expr::[
     as_type:  '.type',
   },
 
-  // The [INNER|OUTER] [UNION|INTERSECT|EXCEPT] PartiQL multiset special forms
-  set::{
-    op:         [ UNION, INTERSECT, EXCEPT ],
-    quantifier: set_quantifier,
-    outer:      bool,
-    lhs:        expr,
-    rhs:        expr,
+  // The `<expr> OUTER (UNION|INTERSECT|EXCEPT) [ALL|DISTINCT] <expr>` PartiQL multiset special forms
+  outer_set_op::{
+    type: '.set_op',
+    lhs:  expr,
+    rhs:  expr,
   },
 
-  // The PartiQL `sfw` query expression
+  // The PartiQL `sfw` query expression, think SQL <query specification>
   s_f_w::{
-    select:   select,
+    select:   select,              // oneof SELECT / SELECT VALUE / PIVOT
     from:     from,
     let:      optional::let,
     where:    optional::expr,
     group_by: optional::group_by,
     having:   optional::expr,
+    set_op:   optional::{
+      type:    '.set_op',
+      operand: '.expr.s_f_w',
+    },
     order_by: optional::order_by,
     limit:    optional::expr,
     offset:   optional::expr,
@@ -366,10 +387,14 @@ expr::[
   },
 
   // WINDOW
+  // OVER ([PARTITION BY <expr> [, <expr>]... ] [ORDER BY <sort_spec> [, <sort_spec>]... ])
   window::{
     function: string,
-    over:     over,
     args:     list::[expr],
+    over: {
+      partitions: list::[expr],
+      sorts:      list::[sort],
+    },
   },
 ]
 
@@ -378,17 +403,17 @@ select::[
 
   // SELECT [ALL|DISTINCT] *
   star::{
-    quantifier: set_quantifier,
+    setq: optional::set_quantifier,
   },
 
   // SELECT [ALL|DISTINCT] <select-list>
   project::{
-    quantifier: set_quantifier,
-    items: list::[item],
+    setq:   optional::set_quantifier,
+    items:  list::[item],
     _: [
       item::[
-        all::{ expr: expr },                            // <expr>.*
-        var::{ expr: expr, as_alias: optional::string } // <expr> [as <identifier>]
+        all::{ expr: expr },                                    // <expr>.*
+        expression::{ expr: expr, as_alias: optional::string }  // <expr> [as <identifier>]
       ],
     ],
   },
@@ -401,8 +426,8 @@ select::[
 
   // SELECT [ALL|DISTINCT] VALUE <expr>
   value::{
-    quantifier: set_quantifier,
-    constructor: expr,
+    setq:         optional::set_quantifier,
+    constructor:  expr,
   },
 ]
 
@@ -410,9 +435,9 @@ select::[
 from::[
 
   // FROM [UNPIVOT] <expr> [AS <identifier>] [AT <identifier>] [BY <identifier>]
-  collection::{
+  value::{
     expr:     expr,
-    unpivot:  optional::bool,
+    type:     [ SCAN, UNPIVOT ],
     as_alias: optional::string,
     at_alias: optional::string,
     by_alias: optional::string,
@@ -453,34 +478,19 @@ group_by::{
 // ORDER BY Clause — https://partiql.org/dql/order_by.html
 order_by::{
   sorts: list::[sort],
-  _: [
-    sort::{
-      expr:   expr,
-      dir:    [ ASC, DESC ],
-      nulls:  [ FIRST, LAST ],
-    }
-  ],
 }
 
-// TODO add SQL UNION to parser
-union::{
-  quantifier: set_quantifier,
-  lhs:        '.expr.s_f_w',
-  rhs:        '.expr.s_f_w',
+// <expr> [ASC|DESC] [NULLS FIRST | NULLS LAST]
+sort::{
+  expr:   expr,
+  dir:    optional::[ ASC, DESC ],
+  nulls:  optional::[ FIRST, LAST ],
 }
 
-// TODO add SQL INTERSECT to parser
-intersect::{
-  quantifier: set_quantifier,
-  lhs:        '.expr.s_f_w',
-  rhs:        '.expr.s_f_w',
-}
-
-// TODO add SQL EXCEPT to parser
-except::{
-  quantifier: set_quantifier,
-  lhs:        '.expr.s_f_w',
-  rhs:        '.expr.s_f_w',
+// (UNION|INTERSECT|EXCEPT) [ALL|DISTINCT]
+set_op::{
+  setq: optional::set_quantifier,
+  type: [ UNION, INTERSECT, EXCEPT ],
 }
 
 // Graph Match Nodes — https://partiql.org/gpml/graph_query.html
@@ -514,7 +524,7 @@ graph_match::{
           // A sub-pattern
           pattern::{
             pattern: '.graph_match.pattern'
-          }
+          },
         ],
       ],
     },
@@ -555,12 +565,6 @@ graph_match::{
   ],
 }
 
-// OVER ([PARTITION BY <expr> [, <expr>]... ] [ORDER BY <sort_spec> [, <sort_spec>]... ])
-over::{
-  partitions: list::[expr],
-  sorts:      list::['.order_by.sort'],
-}
-
 // `ON CONFLICT WHERE <expr> <conflict_action>`
 // `ON CONFLICT [<target>] <conflict_action>`
 on_conflict::{
@@ -599,7 +603,6 @@ returning::{
 
 // `<column_name> <type> <column_constraint>*`
 // `( CONSTRAINT <column_constraint_name> )?  <column_constraint_def>`
-
 table_definition::{
   columns: list::[column],
   _: [

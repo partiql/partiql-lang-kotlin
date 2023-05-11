@@ -82,13 +82,13 @@ ddl
     ;
 
 createCommand
-    : CREATE TABLE tableName ( PAREN_LEFT tableDef PAREN_RIGHT )?                               # CreateTable
-    | CREATE INDEX ON symbolPrimitive PAREN_LEFT pathSimple ( COMMA pathSimple )* PAREN_RIGHT   # CreateIndex
+    : CREATE TABLE tableName ( PAREN_LEFT tableDef PAREN_RIGHT )?                                              # CreateTable
+    | CREATE INDEX name=symbolPrimitive? ON tableName PAREN_LEFT pathSimple ( COMMA pathSimple )* PAREN_RIGHT  # CreateIndex
     ;
 
 dropCommand
-    : DROP TABLE target=tableName                               # DropTable
-    | DROP INDEX target=symbolPrimitive ON on=symbolPrimitive   # DropIndex
+    : DROP TABLE target=tableName                            # DropTable
+    | DROP INDEX target=symbolPrimitive ON table=tableName   # DropIndex
     ;
 
 tableDef
@@ -134,7 +134,7 @@ pathSimple
     : symbolPrimitive pathSimpleSteps*;
 
 pathSimpleSteps
-    : BRACKET_LEFT key=literal BRACKET_RIGHT             # PathSimpleLiteral
+    : BRACKET_LEFT key=LITERAL_INTEGER BRACKET_RIGHT             # PathSimpleLiteral
     | BRACKET_LEFT key=symbolPrimitive BRACKET_RIGHT     # PathSimpleSymbol
     | PERIOD key=symbolPrimitive                         # PathSimpleDotSymbol
     ;
@@ -161,10 +161,9 @@ removeCommand
 insertCommandReturning
     : INSERT INTO pathSimple VALUE value=expr ( AT pos=expr )? onConflictClause? returningClause?;
 
+// See the Grammar at https://github.com/partiql/partiql-docs/blob/main/RFCs/0011-partiql-insert.md#2-proposed-grammar-and-semantics
 insertCommand
-    : INSERT INTO pathSimple VALUE value=expr ( AT pos=expr )? onConflictClause?  # InsertLegacy
-    // See the Grammar at https://github.com/partiql/partiql-docs/blob/main/RFCs/0011-partiql-insert.md#2-proposed-grammar-and-semantics
-    | INSERT INTO symbolPrimitive asIdent? value=expr onConflictClause?           # Insert
+    : INSERT INTO symbolPrimitive asIdent? value=expr onConflictClause?
     ;
 
 onConflictClause
@@ -480,9 +479,9 @@ expr
     ;
 
 exprBagOp
-    : lhs=exprBagOp OUTER? EXCEPT (DISTINCT|ALL)? rhs=exprSelect           # Except
-    | lhs=exprBagOp OUTER? UNION (DISTINCT|ALL)? rhs=exprSelect            # Union
-    | lhs=exprBagOp OUTER? INTERSECT (DISTINCT|ALL)? rhs=exprSelect        # Intersect
+    : lhs=exprBagOp OUTER EXCEPT (DISTINCT|ALL)? rhs=exprSelect           # Except
+    | lhs=exprBagOp OUTER UNION (DISTINCT|ALL)? rhs=exprSelect            # Union
+    | lhs=exprBagOp OUTER INTERSECT (DISTINCT|ALL)? rhs=exprSelect        # Intersect
     | exprSelect                                                           # QueryBase
     ;
 
