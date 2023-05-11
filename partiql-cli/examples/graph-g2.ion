@@ -1,0 +1,5 @@
+//    n1 ---[e12]--> n2
+
+{ nodes: [ {id: n1, labels: ["a"], payload: 1},
+           {id: n2, labels: ["b"], payload: 2} ],
+  edges: [ {id: e12, labels: ["e"], payload: 1.2, ends: (n1 -> n2) } ] }

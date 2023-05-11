@@ -47,6 +47,10 @@ data class Stride(val elems: List<Graph.Elem>)
  */
 data class StrideSpec(val elems: List<ElemSpec>)
 
+/** The result of matching a [StrideSpec] in a graph.
+ *  Each [Stride] in [result] is one valid match for [spec].
+ *  Keeping [spec] within the result is for maintaining the association between
+ *  [Variable]s and graph elements in [result] that the variables matched. */
 data class StrideResult(val spec: StrideSpec, val result: List<Stride>)
 
 /** Translation of a graph match pattern -- a collection of path patterns --

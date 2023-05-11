@@ -6,8 +6,9 @@ object GraphEngine {
 
     /** Compute any [StepSpec] (an elementary node-edge-node path, in any direction),
      *  by combining the scan methods from [Graph].
-     *  This method, in itself, is sufficient as a "window" in a graph -- for the rest
-     *  of the pattern match implementation.
+     *  TODO: Consider making this method as *the* API of Graph,
+     *  as it is, by itself, tirned out to be sufficient, so far as a "window" in a graph
+     *  for the needs of this engine's implementation.
      */
     fun Graph.getMatchingSteps(spec: StepSpec): List<Triple<Graph.Node, Graph.Edge, Graph.Node>> {
         val (dirSpec, tripleSpec) = spec

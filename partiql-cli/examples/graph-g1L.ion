@@ -1,0 +1,6 @@
+// single-node self-loop graph:     --> n1 --[e11]--
+//                                 |---------------|
+
+{ nodes: [ {id: n1, labels: ["a"], payload: 1} ],
+  edges: [ {id: e11, labels: ["e"], payload: 1.1, ends: (n1 -> n1) } ] }
+
