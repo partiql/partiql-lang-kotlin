@@ -17,18 +17,22 @@ package org.partiql.cli.functions
 import com.amazon.ion.IonType
 import com.amazon.ion.IonValue
 import com.amazon.ion.system.IonSystemBuilder
-import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.api.extension.ExtensionContext
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.ArgumentsProvider
+import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.eval.BAG_ANNOTATION
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.MISSING_ANNOTATION
 import org.partiql.lang.eval.toIonValue
 import org.partiql.lang.util.asSequence
-import java.io.File
+import java.lang.IllegalStateException
+import java.util.stream.Stream
 
 class ReadFileTest {
     private val ion = IonSystemBuilder.standard().build()
@@ -36,21 +40,11 @@ class ReadFileTest {
     private val session = EvaluationSession.standard()
 
     private fun String.exprValue() = ExprValue.of(ion.singleValue(this))
-    private fun writeFile(path: String, content: String) = File(dirPath(path)).writeText(content)
 
     companion object {
-        fun dirPath(fname: String = "") = "tst-resources/$fname"
-
-        @BeforeAll
-        @JvmStatic
-        fun setUp() {
-            File(dirPath()).mkdir()
-        }
-
-        @AfterAll
-        @JvmStatic
-        fun tearDown() {
-            File(dirPath()).deleteRecursively()
+        private fun getResourcePath(name: String): String {
+            val url = ReadFileTest::class.java.classLoader.getResource("read_file_tests/$name")
+            return url!!.path
         }
     }
 
@@ -87,240 +81,132 @@ class ReadFileTest {
     }
 
     @Test
-    fun readIonAsDefault() {
-        writeFile("data.ion", "[1, 2]")
-
-        val args = listOf("\"${dirPath("data.ion")}\"").map { it.exprValue() }
-        val actual = function.callWithRequired(session, args)
-        val expected = "[1, 2]"
-
-        assertValues(expected, actual)
-    }
-
-    @Test
-    fun readIon() {
-        writeFile("data.ion", "[1, 2]")
-
-        val args = listOf("\"${dirPath("data.ion")}\"").map { it.exprValue() }
-        val additionalOptions = "{type:\"ion\"}".exprValue()
-        val actual = function.callWithOptional(session, args, additionalOptions)
-        val expected = "[1, 2]"
-
-        assertValues(expected, actual)
-    }
-
-    @Test
-    fun readBadIon() {
-        writeFile("data.ion", "1 2")
-
-        val args = listOf("\"${dirPath("data.ion")}\"").map { it.exprValue() }
-        val additionalOptions = "{type:\"ion\"}".exprValue()
+    fun testError() {
+        val path = getResourcePath("data.ion")
+        val args = listOf("\"$path\"").map { it.exprValue() }
         assertThrows<IllegalStateException> {
-            function.callWithOptional(session, args, additionalOptions)
+            function.callWithOptional(session, args, "{type:\"ion\"}".exprValue())
         }
     }
 
-    @Test
-    fun readCsv() {
-        writeFile("data.csv", "1,2")
-
-        val args = listOf("\"${dirPath("data.csv")}\"").map { it.exprValue() }
-        val additionalOptions = "{type:\"csv\"}".exprValue()
-        val actual = function.callWithOptional(session, args, additionalOptions)
-        val expected = "[{_1:\"1\",_2:\"2\"}]"
-
-        assertValues(expected, actual)
+    @ParameterizedTest
+    @ArgumentsSource(SuccessTestProvider::class)
+    fun test(tc: SuccessTestProvider.TestCase) {
+        val path = getResourcePath(tc.filename)
+        val args = listOf("\"$path\"").map { it.exprValue() }
+        val actual = when (tc.additionalOptions) {
+            null -> function.callWithRequired(session, args)
+            else -> function.callWithOptional(session, args, tc.additionalOptions.exprValue())
+        }
+        assertValues(tc.expected, actual)
     }
 
-    @Test
-    fun readCsvWithIonSymbolAsInput() {
-        writeFile("data_with_ion_symbol_as_input.csv", "1,2")
+    class SuccessTestProvider : ArgumentsProvider {
+        data class TestCase(
+            val filename: String,
+            val expected: String,
+            val additionalOptions: String? = null
+        )
 
-        val args = listOf("\"${dirPath("data_with_ion_symbol_as_input.csv")}\"").map { it.exprValue() }
-        val additionalOptions = "{type:csv}".exprValue()
-        val actual = function.callWithOptional(session, args, additionalOptions)
-        val expected = "[{_1:\"1\",_2:\"2\"}]"
+        override fun provideArguments(context: ExtensionContext?): Stream<out Arguments> {
+            return tests.map { Arguments.of(it) }.stream()
+        }
 
-        assertValues(expected, actual)
-    }
-
-    @Test
-    fun readCsvWithDoubleQuotesEscape() {
-        writeFile("data_with_double_quotes_escape.csv", "\"1,2\",2")
-
-        val args = listOf("\"${dirPath("data_with_double_quotes_escape.csv")}\"").map { it.exprValue() }
-        val additionalOptions = "{type:\"csv\"}".exprValue()
-        val actual = function.callWithOptional(session, args, additionalOptions)
-        val expected = "[{_1:\"1,2\",_2:\"2\"}]"
-
-        assertValues(expected, actual)
-    }
-
-    @Test
-    fun readCsvWithEmptyLines() {
-        writeFile("data_with_double_quotes_escape.csv", "1,2\n\n3\n\n")
-
-        val args = listOf("\"${dirPath("data_with_double_quotes_escape.csv")}\"").map { it.exprValue() }
-        val additionalOptions = "{type:\"csv\"}".exprValue()
-        val actual = function.callWithOptional(session, args, additionalOptions)
-        val expected = "[{_1:\"1\",_2:\"2\"},{_1:\"3\"}]"
-
-        assertValues(expected, actual)
-    }
-
-    @Test
-    fun readCsvWithHeaderLine() {
-        writeFile("data_with_header_line.csv", "col1,col2\n1,2")
-
-        val args = listOf("\"${dirPath("data_with_header_line.csv")}\"").map { it.exprValue() }
-        val additionalOptions = "{type:\"csv\", header:true}".exprValue()
-        val actual = function.callWithOptional(session, args, additionalOptions)
-        val expected = "[{col1:\"1\",col2:\"2\"}]"
-
-        assertValues(expected, actual)
-    }
-
-    @Test
-    fun readTsv() {
-        writeFile("data.tsv", "1\t2")
-
-        val args = listOf("\"${dirPath("data.tsv")}\"").map { it.exprValue() }
-        val additionalOptions = "{type:\"tsv\"}".exprValue()
-        val actual = function.callWithOptional(session, args, additionalOptions)
-        val expected = "[{_1:\"1\",_2:\"2\"}]"
-
-        assertValues(expected, actual)
-    }
-
-    @Test
-    fun readTsvWithHeaderLine() {
-        writeFile("data_with_header_line.tsv", "col1\tcol2\n1\t2")
-
-        val args = listOf("\"${dirPath("data_with_header_line.tsv")}\"").map { it.exprValue() }
-        val additionalOptions = "{type:\"tsv\", header:true}".exprValue()
-        val actual = function.callWithOptional(session, args, additionalOptions)
-        val expected = "[{col1:\"1\",col2:\"2\"}]"
-
-        assertValues(expected, actual)
-    }
-
-    @Test
-    fun readExcelCsvFile() {
-        writeFile("simple_excel.csv", "title,category,price\nharry potter,book,7.99")
-
-        val args = listOf("\"${dirPath("simple_excel.csv")}\"").map { it.exprValue() }
-        val additionalOptions = "{type:\"excel_csv\", header:true}".exprValue()
-        val actual = function.callWithOptional(session, args, additionalOptions)
-        val expected = "[{title:\"harry potter\",category:\"book\",price:\"7.99\"}]"
-
-        assertValues(expected, actual)
-    }
-
-    @Test
-    fun readPostgreSQLCsvFile() {
-        writeFile("simple_postgresql.csv", "id,name,balance\n1,B\"\"ob,10000.00")
-
-        val args = listOf("\"${dirPath("simple_postgresql.csv")}\"").map { it.exprValue() }
-        val additionalOptions = "{type:\"postgresql_csv\", header:true}".exprValue()
-        val actual = function.callWithOptional(session, args, additionalOptions)
-        val expected = "[{id:\"1\",name:\"B\\\"ob\",balance:\"10000.00\"}]"
-
-        assertValues(expected, actual)
-    }
-
-    @Test
-    fun readPostgreSQLTextFile() {
-        writeFile("simple_postgresql.txt", "id\tname\tbalance\n1\tBob\t10000.00")
-
-        val args = listOf("\"${dirPath("simple_postgresql.txt")}\"").map { it.exprValue() }
-        val additionalOptions = "{type:\"postgresql_text\", header:true}".exprValue()
-        val actual = function.callWithOptional(session, args, additionalOptions)
-        val expected = "[{id:\"1\",name:\"Bob\",balance:\"10000.00\"}]"
-
-        assertValues(expected, actual)
-    }
-
-    @Test
-    fun readMySQLCsvFile() {
-        writeFile("simple_mysql.csv", "id\tname\tbalance\n1\tB\"ob\t10000.00")
-
-        val args = listOf("\"${dirPath("simple_mysql.csv")}\"").map { it.exprValue() }
-        val additionalOptions = "{type:\"mysql_csv\", header:true}".exprValue()
-        val actual = function.callWithOptional(session, args, additionalOptions)
-        val expected = "[{id:\"1\",name:\"B\\\"ob\",balance:\"10000.00\"}]"
-
-        assertValues(expected, actual)
-    }
-
-    @Test
-    fun readCustomizedCsvFile1() { // delimiter
-        writeFile("customized.csv", "id name balance\n1 Bob 10000.00")
-
-        val args = listOf("\"${dirPath("customized.csv")}\"").map { it.exprValue() }
-        val additionalOptions = "{type:\"customized\", header:true, delimiter:' '}".exprValue()
-        val actual = function.callWithOptional(session, args, additionalOptions)
-        val expected = "[{id:\"1\",name:\"Bob\",balance:\"10000.00\"}]"
-
-        assertValues(expected, actual)
-    }
-
-    @Test
-    fun readCustomizedCsvFile2() { // ignore_empty_line
-        writeFile("customized.csv", "id,name,balance\n\n1,Bob,10000.00")
-
-        val args = listOf("\"${dirPath("customized.csv")}\"").map { it.exprValue() }
-        val additionalOptions = "{type:\"customized\", header:true, ignore_empty_line: false}".exprValue()
-        val actual = function.callWithOptional(session, args, additionalOptions)
-        val expected = "[{id:\"\"},{id:\"1\",name:\"Bob\",balance:\"10000.00\"}]"
-
-        assertValues(expected, actual)
-    }
-
-    @Test
-    fun readCustomizedCsvFile3() { // trim and ignore_surrounding_space
-        writeFile("customized.csv", "id,name,balance\n 1 , Bob , 10000.00 ")
-
-        val args = listOf("\"${dirPath("customized.csv")}\"").map { it.exprValue() }
-        val additionalOptions = "{type:\"customized\", header:true, ignore_surrounding_space:false, trim:false}".exprValue()
-        val actual = function.callWithOptional(session, args, additionalOptions)
-        val expected = "[{id:\" 1 \",name:\" Bob \",balance:\" 10000.00 \"}]"
-
-        assertValues(expected, actual)
-    }
-
-    @Test
-    fun readCustomizedCsvFile4() { // line_breaker
-        writeFile("customized.csv", "id,name,balance\r\n1,Bob,10000.00")
-
-        val args = listOf("\"${dirPath("customized.csv")}\"").map { it.exprValue() }
-        val additionalOptions = "{type:\"customized\", header:true, line_breaker:'\\\r\\\n'}".exprValue()
-        val actual = function.callWithOptional(session, args, additionalOptions)
-        val expected = "[{id:\"1\",name:\"Bob\",balance:\"10000.00\"}]"
-
-        assertValues(expected, actual)
-    }
-
-    @Test
-    fun readCustomizedCsvFile5() { // escape
-        writeFile("customized.csv", "id,name,balance\n\"/\"1\",Bob,10000.00")
-
-        val args = listOf("\"${dirPath("customized.csv")}\"").map { it.exprValue() }
-        val additionalOptions = "{type:\"customized\", header:true, escape:'/'}".exprValue()
-        val actual = function.callWithOptional(session, args, additionalOptions)
-        val expected = "[{id:\"\\\"1\",name:\"Bob\",balance:\"10000.00\"}]"
-
-        assertValues(expected, actual)
-    }
-
-    @Test
-    fun readCustomizedCsvFile6() { // quote
-        writeFile("customized.csv", "id,name,balance\n'1,',Bob,10000.00")
-
-        val args = listOf("\"${dirPath("customized.csv")}\"").map { it.exprValue() }
-        val additionalOptions = "{type:\"customized\", header:true, quote:\"'\"}".exprValue()
-        val actual = function.callWithOptional(session, args, additionalOptions)
-        val expected = "[{id:\"1,\",name:\"Bob\",balance:\"10000.00\"}]"
-
-        assertValues(expected, actual)
+        private val tests = listOf(
+            TestCase(
+                filename = "data_list.ion",
+                expected = "[1, 2]"
+            ),
+            TestCase(
+                filename = "data_list.ion",
+                expected = "[1, 2]",
+                additionalOptions = "{type:\"ion\"}"
+            ),
+            TestCase(
+                filename = "data.csv",
+                expected = "[{_1:\"1\",_2:\"2\"}]",
+                additionalOptions = "{type:\"csv\"}"
+            ),
+            TestCase(
+                filename = "data_with_ion_symbol_as_input.csv",
+                expected = "[{_1:\"1\",_2:\"2\"}]",
+                additionalOptions = "{type:csv}"
+            ),
+            TestCase(
+                filename = "data_with_double_quotes_escape.csv",
+                expected = "[{_1:\"1,2\",_2:\"2\"}]",
+                additionalOptions = "{type:\"csv\"}"
+            ),
+            TestCase(
+                filename = "csv_with_empty_lines.csv",
+                expected = "[{_1:\"1\",_2:\"2\"},{_1:\"3\"}]",
+                additionalOptions = "{type:\"csv\"}"
+            ),
+            TestCase(
+                filename = "data_with_header_line.csv",
+                expected = "[{col1:\"1\",col2:\"2\"}]",
+                additionalOptions = "{type:\"csv\", header:true}"
+            ),
+            TestCase(
+                filename = "data.tsv",
+                expected = "[{_1:\"1\",_2:\"2\"}]",
+                additionalOptions = "{type:\"tsv\"}"
+            ),
+            TestCase(
+                filename = "data_with_header_line.tsv",
+                expected = "[{col1:\"1\",col2:\"2\"}]",
+                additionalOptions = "{type:\"tsv\", header:true}"
+            ),
+            TestCase(
+                filename = "simple_excel.csv",
+                expected = "[{title:\"harry potter\",category:\"book\",price:\"7.99\"}]",
+                additionalOptions = "{type:\"excel_csv\", header:true}"
+            ),
+            TestCase(
+                filename = "simple_postgresql.csv",
+                expected = "[{id:\"1\",name:\"B\\\"ob\",balance:\"10000.00\"}]",
+                additionalOptions = "{type:\"postgresql_csv\", header:true}"
+            ),
+            TestCase(
+                filename = "simple_postgresql.txt",
+                expected = "[{id:\"1\",name:\"Bob\",balance:\"10000.00\"}]",
+                additionalOptions = "{type:\"postgresql_text\", header:true}"
+            ),
+            TestCase(
+                filename = "simple_mysql.csv",
+                expected = "[{id:\"1\",name:\"B\\\"ob\",balance:\"10000.00\"}]",
+                additionalOptions = "{type:\"mysql_csv\", header:true}"
+            ),
+            TestCase(
+                filename = "customized.csv",
+                expected = "[{id:\"1\",name:\"Bob\",balance:\"10000.00\"}]",
+                additionalOptions = "{type:\"customized\", header:true, delimiter:' '}"
+            ),
+            TestCase(
+                filename = "customized_ignore_empty.csv",
+                expected = "[{id:\"\"},{id:\"1\",name:\"Bob\",balance:\"10000.00\"}]",
+                additionalOptions = "{type:\"customized\", header:true, ignore_empty_line: false}"
+            ),
+            TestCase(
+                filename = "customized_ignore_surrounding.csv",
+                expected = "[{id:\" 1 \",name:\" Bob \",balance:\" 10000.00 \"}]",
+                additionalOptions = "{type:\"customized\", header:true, ignore_surrounding_space:false, trim:false}"
+            ),
+            TestCase(
+                filename = "customized_line_breaker.csv",
+                expected = "[{id:\"1\",name:\"Bob\",balance:\"10000.00\"}]",
+                additionalOptions = "{type:\"customized\", header:true, line_breaker:'\\\r\\\n'}"
+            ),
+            TestCase(
+                filename = "customized_escape.csv",
+                expected = "[{id:\"\\\"1\",name:\"Bob\",balance:\"10000.00\"}]",
+                additionalOptions = "{type:\"customized\", header:true, escape:'/'}"
+            ),
+            TestCase(
+                filename = "customized_quote.csv",
+                expected = "[{id:\"1,\",name:\"Bob\",balance:\"10000.00\"}]",
+                additionalOptions = "{type:\"customized\", header:true, quote:\"'\"}"
+            )
+        )
     }
 }
