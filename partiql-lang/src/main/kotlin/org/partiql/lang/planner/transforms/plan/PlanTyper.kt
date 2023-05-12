@@ -138,7 +138,7 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
         val predicateType = when (val condition = node.condition) {
             null -> StaticType.BOOL
             else -> {
-                val predicate = typeRex(condition, node, ctx)
+                val predicate = typeRex(condition, newJoin, ctx)
                 // verify `JOIN` predicate is bool. If it's unknown, gives a null or missing error. If it could
                 // never be a bool, gives an incompatible data type for expression error
                 assertType(expected = StaticType.BOOL, actual = predicate.grabType() ?: handleMissingType(ctx), ctx)
@@ -206,10 +206,6 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
 
     override fun visitRelProject(node: Rel.Project, ctx: Context): PlanNode {
         val input = visitRel(node.input, ctx)
-        val distinct = node.bindings.map { it.name }.distinct()
-        if (distinct.size != node.bindings.size) {
-            handleDuplicateAliasesError(ctx)
-        }
         val typeEnv = node.bindings.flatMap { binding ->
             val type = inferType(binding.value, input, ctx)
             when (binding.value.isProjectAll()) {

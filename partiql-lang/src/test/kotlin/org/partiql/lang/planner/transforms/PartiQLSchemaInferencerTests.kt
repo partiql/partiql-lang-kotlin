@@ -724,6 +724,79 @@ class PartiQLSchemaInferencerTests {
                 )
             ),
             SuccessTestCase(
+                name = "LEFT JOIN",
+                query = "SELECT t1.a, t2.a FROM <<{ 'a': 1 }>> AS t1 LEFT JOIN <<{ 'a': 2.0 }>> AS t2 ON t1.a = t2.a",
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "a" to StaticType.INT,
+                            "a" to StaticType.DECIMAL,
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                    )
+                )
+            ),
+            SuccessTestCase(
+                name = "LEFT JOIN ALL",
+                query = "SELECT * FROM <<{ 'a': 1 }>> AS t1 LEFT JOIN <<{ 'a': 2.0 }>> AS t2 ON t1.a = t2.a",
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "a" to StaticType.INT,
+                            "a" to StaticType.DECIMAL,
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                    )
+                )
+            ),
+            SuccessTestCase(
+                name = "LEFT JOIN ALL",
+                query = """
+                    SELECT *
+                    FROM
+                            <<{ 'a': 1 }>> AS t1
+                        LEFT JOIN
+                            <<{ 'a': 2.0 }>> AS t2
+                        ON t1.a = t2.a
+                        LEFT JOIN
+                            <<{ 'a': 'hello, world' }>> AS t3
+                        ON t3.a = 'hello'
+                """,
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "a" to StaticType.INT,
+                            "a" to StaticType.DECIMAL,
+                            "a" to StaticType.STRING,
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                    )
+                )
+            ),
+            ErrorTestCase(
+                name = "LEFT JOIN Ambiguous Reference in ON",
+                query = "SELECT * FROM <<{ 'a': 1 }>> AS t1 LEFT JOIN <<{ 'a': 2.0 }>> AS t2 ON a = 3",
+                expected = BagType(
+                    StructType(
+                        fields = mapOf(
+                            "a" to StaticType.INT,
+                            "a" to StaticType.DECIMAL,
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                    )
+                ),
+                problemHandler = assertProblemExists {
+                    Problem(
+                        UNKNOWN_SOURCE_LOCATION,
+                        PlanningProblemDetails.UndefinedVariable("a", false)
+                    )
+                }
+            ),
+            SuccessTestCase(
                 name = "AGGREGATE over INTS",
                 query = "SELECT a, COUNT(*) AS c, SUM(a) AS s, MIN(b) AS m FROM << {'a': 1, 'b': 2} >> GROUP BY a",
                 expected = BagType(
@@ -858,7 +931,7 @@ class PartiQLSchemaInferencerTests {
         val ctx = PartiQLSchemaInferencer.Context(session, PLUGINS, collector)
         val result = PartiQLSchemaInferencer.infer(tc.query, ctx)
         assert(collector.problems.isNotEmpty()) {
-            collector.problems.toString()
+            "Expected to find problems, but none were found."
         }
         if (tc.expected != null) {
             assert(tc.expected == result) {

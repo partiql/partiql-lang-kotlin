@@ -46,7 +46,12 @@ internal object ReferenceResolver {
         return when (path.steps.size) {
             0 -> null
             1 -> getDescriptor(ctx, currentCatalog, path, absoluteCatalogPath)
-            2 -> getDescriptor(ctx, currentCatalog, path, path) ?: getDescriptor(ctx, currentCatalog, path, absoluteCatalogPath)
+            2 -> getDescriptor(ctx, currentCatalog, path, path) ?: getDescriptor(
+                ctx,
+                currentCatalog,
+                path,
+                absoluteCatalogPath
+            )
             else -> {
                 val inferredCatalog = path.steps[0]
                 val newPath = BindingPath(path.steps.subList(1, path.steps.size))
@@ -58,23 +63,22 @@ internal object ReferenceResolver {
     }
 
     internal fun resolveLocalBind(path: BindingPath, input: List<Attribute>): ResolvedType? {
-        if (path.steps.isEmpty()) { return null }
+        if (path.steps.isEmpty()) {
+            return null
+        }
         val root: StaticType = input.firstOrNull {
             path.steps[0].isEquivalentTo(it.name)
-        }?.type ?: input.firstOrNull {
-            when (val struct = it.type) {
-                is StructType -> {
-                    val found = struct.fields.entries.firstOrNull { entry ->
-                        path.steps[0].isEquivalentTo(entry.key)
-                    }
-                    when (found) {
-                        null -> false
-                        else -> return ResolvedType(found.value)
-                    }
-                }
-                else -> false
+        }?.type ?: run {
+            val items = input.map { it.type }.filterIsInstance<StructType>().mapNotNull {
+                it.fields.entries.firstOrNull { entry ->
+                    path.steps[0].isEquivalentTo(entry.key)
+                }?.value
             }
-        }?.type ?: return null
+            when (items.size) {
+                1 -> items.first()
+                else -> null
+            }
+        } ?: return null
         return ResolvedType(root)
     }
 
@@ -84,7 +88,12 @@ internal object ReferenceResolver {
     //
     //
 
-    private fun getDescriptor(ctx: PlanTyper.Context, catalog: BindingName?, originalPath: BindingPath, catalogPath: BindingPath): ResolvedType? {
+    private fun getDescriptor(
+        ctx: PlanTyper.Context,
+        catalog: BindingName?,
+        originalPath: BindingPath,
+        catalogPath: BindingPath
+    ): ResolvedType? {
         return catalog?.let { cat ->
             ctx.metadata.getObjectHandle(ctx.session, cat, catalogPath)?.let { handle ->
                 ctx.metadata.getObjectDescriptor(ctx.session, handle).let {
@@ -102,7 +111,11 @@ internal object ReferenceResolver {
      * 3. Matched = RelativePath - (Input CatalogPath - Output CatalogPath)
      * 4. Matched = RelativePath + Output CatalogPath - Input CatalogPath
      */
-    private fun calculateMatched(originalPath: BindingPath, inputCatalogPath: BindingPath, outputCatalogPath: ConnectorObjectPath): Int {
+    private fun calculateMatched(
+        originalPath: BindingPath,
+        inputCatalogPath: BindingPath,
+        outputCatalogPath: ConnectorObjectPath
+    ): Int {
         return originalPath.steps.size + outputCatalogPath.steps.size - inputCatalogPath.steps.size
     }
 }
