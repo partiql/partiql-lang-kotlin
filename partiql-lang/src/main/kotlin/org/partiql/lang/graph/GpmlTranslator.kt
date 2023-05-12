@@ -19,7 +19,7 @@ object GpmlTranslator {
 
     fun translatePathPat(path: PartiqlAst.GraphMatchPattern): List<ElemSpec> {
         if (path.prefilter != null || path.quantifier != null || path.restrictor != null || path.variable != null)
-            TODO("Not yet supported in evaluating a GPML path pattern: prefiletrs, quantifiers, restrictors, binder variables.")
+            TODO("Not yet supported in evaluating a GPML path pattern: prefilters, quantifiers, restrictors, binder variables.")
         return path.parts.flatMap { translatePartPat(it) }
     }
 
@@ -75,7 +75,6 @@ object GpmlTranslator {
      *  TODO: Deal with adjacent [NodeSpec]s -- by "unification" or prohibit.
      */
     fun patchElemList(elems: List<ElemSpec>): List<ElemSpec> {
-        // println("Before patching: ${elems}")
         val fillerNode = NodeSpec(null, LabelSpec.Whatever)
         val patched = mutableListOf<ElemSpec>()
         var expectNode = true
@@ -93,7 +92,6 @@ object GpmlTranslator {
             }
         }
         if (expectNode) patched.add(fillerNode)
-        // println("After  patching: ${patched}")
         return patched.toList()
     }
 }

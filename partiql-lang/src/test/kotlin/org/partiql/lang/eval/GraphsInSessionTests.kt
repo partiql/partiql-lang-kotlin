@@ -115,9 +115,9 @@ class GraphsInSessionTests : EvaluatorTestBase() {
             "aG3" to ExprValue.newGraph(ApiSampleGraphs.g3),
 
             "tG1" to graphOfText(TextSampleGraphs.g1),
-            "tG1L" to graphOfText(TextSampleGraphs.g1),
-            "tG2" to graphOfText(TextSampleGraphs.g1),
-            "tG3" to graphOfText(TextSampleGraphs.g1),
+            "tG1L" to graphOfText(TextSampleGraphs.g1L),
+            "tG2" to graphOfText(TextSampleGraphs.g2),
+            "tG3" to graphOfText(TextSampleGraphs.g3),
 
             "rfc" to graphOfResource("graphs/rfc0025-example.ion")
         )
