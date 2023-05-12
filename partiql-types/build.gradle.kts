@@ -20,6 +20,7 @@ plugins {
 
 dependencies {
     implementation(Deps.ionElement)
+    implementation(Deps.kotlinxCollections)
 }
 
 publish {
