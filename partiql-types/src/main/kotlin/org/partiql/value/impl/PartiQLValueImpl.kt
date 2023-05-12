@@ -55,6 +55,7 @@ import java.time.LocalTime
 import java.time.ZoneOffset
 import java.util.BitSet
 
+@OptIn(PartiQLValueExperimental::class)
 @Suppress("FunctionName")
 internal inline fun <reified T : PartiQLValue> T._withAnnotations(annotations: Annotations): T =
     when {
@@ -62,6 +63,7 @@ internal inline fun <reified T : PartiQLValue> T._withAnnotations(annotations: A
         else -> copy(annotations = this.annotations + annotations) as T
     }
 
+@OptIn(PartiQLValueExperimental::class)
 @Suppress("FunctionName")
 internal inline fun <reified T : PartiQLValue> T._withoutAnnotations(): T =
     when {
@@ -284,6 +286,7 @@ internal data class BlobValueImpl(
     }
 
     override fun hashCode() = value.contentHashCode()
+
     override fun copy(annotations: Annotations) = BlobValueImpl(value, annotations.toPersistentList())
 
     override fun withAnnotations(annotations: Annotations): BlobValue = _withAnnotations(annotations)
