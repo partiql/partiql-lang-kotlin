@@ -305,6 +305,24 @@ enum class NaturalExprValueComparators(private val order: Order, private val nul
             }
         ) { return it }
 
+        // Graph
+        //  TODO: what should be "PartiQL equality" for graphs? https://github.com/partiql/partiql-spec/issues/55
+        // Short of implementing a graph isomorphism check here (expensive in general!),
+        // it is hard to see what another principled solution can be.
+        // For now, graphs will be equal only when they are the same object by reference.
+        // This should be sufficient for the current purposes.
+        // Fortunately, we do not yet have means to construct graphs in the language,
+        // so it is only externally-loaded graphs that can bump into each other here.
+        // It is fairly reasonable to posit that those should be considered distinct.
+        // (Just make sure not to load the same graph twice, when that matters.)
+        ifCompared(
+            handle(lType == ExprValueType.GRAPH, rType == ExprValueType.GRAPH) {
+                val g1 = left.graphValue
+                val g2 = right.graphValue
+                g1.hashCode().compareTo(g2.hashCode())
+            }
+        ) { return it }
+
         if (nullOrder == NullOrder.LAST) {
             ifCompared(handle(lType.isUnknown, rType.isUnknown) { EQUAL }) { return it }
         }

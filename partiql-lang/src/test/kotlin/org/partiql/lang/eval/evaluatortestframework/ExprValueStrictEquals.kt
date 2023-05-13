@@ -101,8 +101,8 @@ private object ExprValueStrictComparator : Comparator<ExprValue> {
                 v1.sortedWith(namedValueComparator).iterator(),
                 v2.sortedWith(namedValueComparator).iterator()
             )
-            // TODO: something better to compare graphs?
-            // For now, graphs would be equal only when they are the same object by reference
+            // TODO: what should be equality for graphs? https://github.com/partiql/partiql-spec/issues/55
+            // Also, see the comment for graph case in [exprEquals] - in [NaturalExprValueComparators.compareInternal]
             ExprValueType.GRAPH -> {
                 val g1 = v1.graphValue
                 val g2 = v2.graphValue
