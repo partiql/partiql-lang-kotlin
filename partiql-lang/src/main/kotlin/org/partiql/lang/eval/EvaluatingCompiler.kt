@@ -1656,14 +1656,28 @@ internal class EvaluatingCompiler(
     private fun compileGraphMatch(node: PartiqlAst.Expr.GraphMatch, metas: MetaContainer): ThunkEnv {
         val graphExpr = compileAstExpr(node.expr)
         val pattern = GpmlTranslator.translateGpmlPattern(node.gpmlPattern)
+        val nonGraphOutcome =
+            when (compileOptions.typingMode) {
+                TypingMode.LEGACY -> { g: ExprValue ->
+                    err(
+                        message = "Lhs of MATCH must be a graph, but got: $g.",
+                        errorCode = ErrorCode.EVALUATOR_UNEXPECTED_VALUE_TYPE,
+                        errorContext = errorContextFrom(metas),
+                        internal = false
+                    )
+                }
+                TypingMode.PERMISSIVE -> { _ -> ExprValue.missingValue }
+            }
         return thunkFactory.thunkEnv(metas) { env ->
             val g = graphExpr(env)
-            val graph = when (g.type) {
-                ExprValueType.GRAPH -> g.graphValue
-                else -> error("A graph value required, but got: $g") // TODO something better than error()
+            when (g.type) {
+                ExprValueType.GRAPH -> {
+                    val graph = g.graphValue
+                    val matchResult = GraphEngine.evaluate(graph, pattern)
+                    ExprValue.newBag(matchResult2Table(matchResult))
+                }
+                else -> nonGraphOutcome(g)
             }
-            val matchResult = GraphEngine.evaluate(graph, pattern)
-            ExprValue.newBag(matchResult2Table(matchResult))
         }
     }
 

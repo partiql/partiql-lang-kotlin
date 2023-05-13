@@ -1,12 +1,18 @@
 package org.partiql.lang.eval
 
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
+import org.partiql.lang.errors.ErrorCode
+import org.partiql.lang.eval.evaluatortestframework.EvaluatorErrorTestCase
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestCase
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestTarget
 import org.partiql.lang.util.ArgumentsProviderBase
 
 class EvaluatingCompilerGraphMatchTests : EvaluatorTestBase() {
+
+    // So far, graphs are only supported in COMPILER_PIPELINE
+    private val currentPipeline = EvaluatorTestTarget.COMPILER_PIPELINE
 
     private val session = sessionOf(
         graphs = mapOf(
@@ -29,7 +35,7 @@ class EvaluatingCompilerGraphMatchTests : EvaluatorTestBase() {
             EvaluatorTestCase(
                 query = query,
                 expectedResult = result,
-                targetPipeline = EvaluatorTestTarget.COMPILER_PIPELINE
+                targetPipeline = currentPipeline
             ),
             session
         )
@@ -62,6 +68,19 @@ class EvaluatingCompilerGraphMatchTests : EvaluatorTestBase() {
                           {'x': 2, 'z1': 2.3, 'y1': 3, 'z2': 2.3, 'y2': 2} >>""",
             "(g3aba MATCH (x1)-[z1]->(x2)-[z2]->(x3) )" to
                 "<< { 'x1': 1, 'z1': 1.2, 'x2': 2, 'z2': 2.3, 'x3': 3} >>",
+        )
+    }
+
+    @Test
+    fun testMatchNonGraph() {
+        runEvaluatorErrorTestCase(
+            EvaluatorErrorTestCase(
+                query = "(42 MATCH (x) -> (y))",
+                expectedErrorCode = ErrorCode.EVALUATOR_UNEXPECTED_VALUE_TYPE,
+                expectedPermissiveModeResult = "MISSING",
+                targetPipeline = currentPipeline
+            ),
+            session
         )
     }
 }
