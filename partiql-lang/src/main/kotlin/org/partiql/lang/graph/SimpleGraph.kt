@@ -42,11 +42,11 @@ class SimpleGraph(
     private fun Graph.Elem.matches(labelSpec: LabelSpec): Boolean =
         labelsMatchSpec(this.labels, labelSpec)
 
-    override fun getNodes(spec: LabelSpec): List<Node> {
+    override fun scanNodes(spec: LabelSpec): List<Node> {
         return nodes.filter { it.matches(spec) }
     }
 
-    override fun getDirectedStraight(spec: Triple<LabelSpec, LabelSpec, LabelSpec>): List<Triple<Node, EdgeDirected, Node>> {
+    override fun scanDirectedStraight(spec: Triple<LabelSpec, LabelSpec, LabelSpec>): List<Triple<Node, EdgeDirected, Node>> {
         val (srcSpec, edgeSpec, dstSpec) = spec
         return directed.filter {
             val (src, edge, dst) = it
@@ -54,7 +54,7 @@ class SimpleGraph(
         }
     }
 
-    override fun getDirectedFlipped(spec: Triple<LabelSpec, LabelSpec, LabelSpec>): List<Triple<Node, EdgeDirected, Node>> {
+    override fun scanDirectedFlipped(spec: Triple<LabelSpec, LabelSpec, LabelSpec>): List<Triple<Node, EdgeDirected, Node>> {
         val (srcSpec, edgeSpec, dstSpec) = spec
         return directed.asSequence().filter {
             val (dst, edge, src) = it // data triple flipped, for filtering
@@ -80,9 +80,9 @@ class SimpleGraph(
         return selected.toList()
     }
 
-    override fun getDirectedBlunt(spec: Triple<LabelSpec, LabelSpec, LabelSpec>): List<Triple<Node, EdgeDirected, Node>> =
+    override fun scanDirectedBlunt(spec: Triple<LabelSpec, LabelSpec, LabelSpec>): List<Triple<Node, EdgeDirected, Node>> =
         getBlunt(directed, spec)
 
-    override fun getUndir(spec: Triple<LabelSpec, LabelSpec, LabelSpec>): List<Triple<Node, EdgeUndir, Node>> =
+    override fun scanUndir(spec: Triple<LabelSpec, LabelSpec, LabelSpec>): List<Triple<Node, EdgeUndir, Node>> =
         getBlunt(undir, spec)
 }

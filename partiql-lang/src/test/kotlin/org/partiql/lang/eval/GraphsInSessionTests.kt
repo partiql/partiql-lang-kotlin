@@ -119,7 +119,8 @@ class GraphsInSessionTests : EvaluatorTestBase() {
             "tG2" to graphOfText(TextSampleGraphs.g2),
             "tG3" to graphOfText(TextSampleGraphs.g3),
 
-            "rfc" to graphOfResource("graphs/rfc0025-example.ion")
+            "rfc" to graphOfResource("graphs/rfc0025-example.ion"),
+            "paper" to graphOfResource("graphs/gpml-paper-example.ion")
         )
     )
 
@@ -140,7 +141,7 @@ class GraphsInSessionTests : EvaluatorTestBase() {
             listOf(
                 "aG1", "aG1L", "aG2", "aG3",
                 "tG1", "tG1L", "tG2", "tG3",
-                "rfc"
+                "rfc", "paper"
             )
     }
 }

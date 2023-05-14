@@ -13,10 +13,10 @@ object GraphEngine {
     fun Graph.getMatchingSteps(spec: StepSpec): List<Triple<Graph.Node, Graph.Edge, Graph.Node>> {
         val (dirSpec, tripleSpec) = spec
         val result =
-            (if (dirSpec.wantUndir) this.getUndir(tripleSpec) else emptyList()) +
-                (if (dirSpec.wantLeft && dirSpec.wantRight) this.getDirectedBlunt(tripleSpec) else emptyList()) +
-                (if (!dirSpec.wantLeft && dirSpec.wantRight) this.getDirectedStraight(tripleSpec) else emptyList()) +
-                (if (dirSpec.wantLeft && !dirSpec.wantRight) this.getDirectedFlipped(tripleSpec) else emptyList())
+            (if (dirSpec.wantUndir) this.scanUndir(tripleSpec) else emptyList()) +
+                (if (dirSpec.wantLeft && dirSpec.wantRight) this.scanDirectedBlunt(tripleSpec) else emptyList()) +
+                (if (!dirSpec.wantLeft && dirSpec.wantRight) this.scanDirectedStraight(tripleSpec) else emptyList()) +
+                (if (dirSpec.wantLeft && !dirSpec.wantRight) this.scanDirectedFlipped(tripleSpec) else emptyList())
         return result
     }
 
@@ -41,10 +41,10 @@ object GraphEngine {
     private fun evaluateNodeStride(graph: Graph, stride: StrideSpec): StrideResult {
         check(stride.elems.size == 1)
         return when (val node = stride.elems[0]) {
-            is EdgeSpec -> { check(false); /*dummy*/ StrideResult(stride, emptyList()) }
+            is EdgeSpec -> error("Bug: evaluateNodeStride should not be called on an EdgeSpec")
             is NodeSpec -> StrideResult(
                 stride,
-                graph.getNodes(node.label).map { Stride(listOf(it)) }
+                graph.scanNodes(node.label).map { Stride(listOf(it)) }
             )
         }
     }
@@ -54,6 +54,8 @@ object GraphEngine {
      *
      *  At the moment, this just takes one straightforward order.
      *  Conceivably, this can become something more sophisticated.
+     *  Would it be more appropriate to do this planing during GPML translation
+     *  (in case there is more information available there for guiding the planning?)
      */
     private fun planStride(stride: StrideSpec): StrideTree {
         check(stride.elems.size >= 3)
@@ -67,7 +69,7 @@ object GraphEngine {
 
         fun planRightLeaning(elems: List<ElemSpec>): StrideTree =
             when (elems.size) {
-                0, 1, 2 -> { check(false); /*dummy*/ StrideLeaf(StrideSpec(emptyList())) }
+                0, 1, 2 -> error("Bug: planRightLeaning should not be called on a spec shorter than 3 ")
                 3 -> leafFrom3(elems)
                 else -> StrideJoin( // Note: 2nd node (3rd element) participates in both sides of the join
                     leafFrom3(elems),

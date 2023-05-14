@@ -31,35 +31,35 @@ interface Graph {
     interface EdgeUndir : Edge
 
     /** Get all the nodes conforming to a label specification. */
-    fun getNodes(spec: LabelSpec): List<Node>
+    fun scanNodes(spec: LabelSpec): List<Node>
 
     /** Get undirected edges (and their adjacent nodes) whose labels satisfy the given specifications.
      *  Spec Triple(x, _, y) can be used to compute both patterns (x)~(y) and (y)~(x).
      *  An undirected edge a---b is matched twice, returning x=a, y=b and x=b, y=a.
      */
-    fun getUndir(spec: Triple<LabelSpec, LabelSpec, LabelSpec>): List<Triple<Node, EdgeUndir, Node>>
+    fun scanUndir(spec: Triple<LabelSpec, LabelSpec, LabelSpec>): List<Triple<Node, EdgeUndir, Node>>
 
     /** Get directed edges (and their adjacent nodes) whose labels satisfy the given specifications,
      *  when the requested direction *agrees* with the one at which an edge is defined.
      *  Edge a --> b matches spec Triple(a, _, b),  aka a `--)` b  or b `(--` a,
      *  and gets returned as Triple(a, _ , b). */
-    fun getDirectedStraight(spec: Triple<LabelSpec, LabelSpec, LabelSpec>): List<Triple<Node, EdgeDirected, Node>>
+    fun scanDirectedStraight(spec: Triple<LabelSpec, LabelSpec, LabelSpec>): List<Triple<Node, EdgeDirected, Node>>
 
     /** Get directed edges (and their adjacent nodes) whose labels satisfy the given specifications,
      *  when the requested direction is *opposite* to the one at which an edge is defined.
      *  Edge a --> b matches spec Triple(b, _, a),  aka b `--)` a  or a `(--` b,
      *  and gets returned as Triple(b, _ , a).  */
-    fun getDirectedFlipped(spec: Triple<LabelSpec, LabelSpec, LabelSpec>): List<Triple<Node, EdgeDirected, Node>>
+    fun scanDirectedFlipped(spec: Triple<LabelSpec, LabelSpec, LabelSpec>): List<Triple<Node, EdgeDirected, Node>>
 
     /** Get directed edges without regard for the direction at which they point.
      *  Spec Triple(x, _, y) can be used to compute both patterns (x)<->(y) and (y)<->(x).
      *  A directed edge a --> b is matched twice, returning x=a, y=b and x=b, y=a.
      *
      *  The result of this method can be obtained by combining results of
-     *  [getDirectedStraight] and [getDirectedFlipped],
-     *  but [getDirectedBlunt] is meant to be implemented with one pass over the data.
+     *  [scanDirectedStraight] and [scanDirectedFlipped],
+     *  but [scanDirectedBlunt] is meant to be implemented with one pass over the data.
      */
-    fun getDirectedBlunt(spec: Triple<LabelSpec, LabelSpec, LabelSpec>): List<Triple<Node, EdgeDirected, Node>>
+    fun scanDirectedBlunt(spec: Triple<LabelSpec, LabelSpec, LabelSpec>): List<Triple<Node, EdgeDirected, Node>>
 }
 
 /** Label specifications for selecting graph elements (nodes or edges)

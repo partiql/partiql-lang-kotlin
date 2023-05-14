@@ -4,7 +4,7 @@ import org.partiql.lang.domains.PartiqlAst
 import org.partiql.pig.runtime.SymbolPrimitive
 
 /** Translate an AST graph pattern into a "plan spec" to be executed by the graph engine.
- *  Currently, the only non-trivial aspect is making sure (in [patchElemList]) that node and edge elements alternate.
+ *  Currently, the only non-trivial aspect is making sure (in [normalizeElemList]) that node and edge elements alternate.
  *  This (as well as the plan specs) is expected to become more sophisticated
  *  as more graph pattern features are supported (esp. quantifiers and alternation).
  */
@@ -14,7 +14,7 @@ object GpmlTranslator {
     fun translateGpmlPattern(gpml: PartiqlAst.GpmlPattern): MatchSpec {
 
         if (gpml.selector != null) TODO("Evaluation of GPML selectors is not yet supported")
-        return MatchSpec(gpml.patterns.map { StrideSpec(patchElemList(translatePathPat(it))) })
+        return MatchSpec(gpml.patterns.map { StrideSpec(normalizeElemList(translatePathPat(it))) })
     }
 
     fun translatePathPat(path: PartiqlAst.GraphMatchPattern): List<ElemSpec> {
@@ -74,24 +74,24 @@ object GpmlTranslator {
      *  by inserting a [NodeSpec] between adjacent [EdgeSpec]s.
      *  TODO: Deal with adjacent [NodeSpec]s -- by "unification" or prohibit.
      */
-    fun patchElemList(elems: List<ElemSpec>): List<ElemSpec> {
+    fun normalizeElemList(elems: List<ElemSpec>): List<ElemSpec> {
         val fillerNode = NodeSpec(null, LabelSpec.Whatever)
-        val patched = mutableListOf<ElemSpec>()
+        val normalized = mutableListOf<ElemSpec>()
         var expectNode = true
         for (x in elems) {
             if (expectNode) {
                 when (x) {
-                    is NodeSpec -> { patched.add(x); expectNode = false }
-                    is EdgeSpec -> { patched.add(fillerNode); patched.add(x) }
+                    is NodeSpec -> { normalized.add(x); expectNode = false }
+                    is EdgeSpec -> { normalized.add(fillerNode); normalized.add(x) }
                 }
             } else { // expectNode == false
                 when (x) {
                     is NodeSpec -> TODO("Deal with adjacent nodes in a pattern.  Unify? Prohibit?")
-                    is EdgeSpec -> { patched.add(x); expectNode = true }
+                    is EdgeSpec -> { normalized.add(x); expectNode = true }
                 }
             }
         }
-        if (expectNode) patched.add(fillerNode)
-        return patched.toList()
+        if (expectNode) normalized.add(fillerNode)
+        return normalized.toList()
     }
 }
