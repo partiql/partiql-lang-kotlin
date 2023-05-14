@@ -31,7 +31,9 @@ object GraphEngine {
         if (stride.elems.size == 1) return evaluateNodeStride(graph, stride)
 
         val plan = planStride(stride)
-        check(stride == restoreStrideSpec(plan))
+        check(stride == restoreStrideSpec(plan)) {
+            "Bad stride plan, not equivalent to the original stride."
+        }
         return evaluatePlan(graph, plan)
     }
 
@@ -98,14 +100,21 @@ object GraphEngine {
             is StrideLeaf -> {
                 val step = plan.stride.elems
                 check(step.size == 3, { "A leaf stride in a StrideTree plan must have exactly 3 elements" })
-                val lft = step[0] as NodeSpec // TODO: check these casts are ok
+                val lft = step[0] as NodeSpec
                 val edg = step[1] as EdgeSpec
                 val rgt = step[2] as NodeSpec
                 val stepSpec = StepSpec(edg.dir, Triple(lft.label, edg.label, rgt.label))
                 val triples = graph.getMatchingSteps(stepSpec)
+                // if the same variable is used in the step's [NodeSpec]s, it should bind to the same node:
+                val bindCheck: (Triple<Graph.Node, Graph.Edge, Graph.Node>) -> Boolean =
+                    if (lft.binder != null && rgt.binder != null && lft.binder == rgt.binder) {
+                        triple ->
+                        triple.first == triple.third
+                    } else { triple -> true }
+                val prunedTriples = triples.filter { bindCheck(it) }
                 StrideResult(
                     plan.stride,
-                    triples.map { Stride(listOf(it.first, it.second, it.third)) }
+                    prunedTriples.map { Stride(listOf(it.first, it.second, it.third)) }
                 )
             }
 
@@ -124,12 +133,12 @@ object GraphEngine {
         check(leftSpec.last() == rightSpec.first())
         check(rightSpec.first() is NodeSpec)
         val joinedSpec = leftSpec + rightSpec.tail
+        val joinCondition = stridesJoinable(left.spec, right.spec)
 
         val joined = mutableListOf<Stride>()
         for (lft in left.result) {
             for (rgt in right.result) {
-                /** Relies on [Graph.Elem]s having proper equality */
-                if (lft.elems.last() == rgt.elems.first()) {
+                if (joinCondition(lft, rgt)) {
                     joined.add(Stride(lft.elems + rgt.elems.tail))
                 }
             }
@@ -140,13 +149,46 @@ object GraphEngine {
         )
     }
 
+    /** Given two [StrideSpec]s for adjacent strides,
+     * formulate a predicate for checking whether two adjacent strides are joinable.
+     * They are joinable if
+     *  - The last element of the left stride is the same as the first element of the right one.
+     *  - For each common binding variable, the two strides hold the same element.
+     *  This assumes that each of the two strides has been properly joined before,
+     *  in that if a variable occurs in the stride multiple times, it already binds to the same element in the stride.
+     */
+    fun stridesJoinable(leftSpec: StrideSpec, rightSpec: StrideSpec): (Stride, Stride) -> Boolean {
+        // Find variables that are common between the left and right stride specs and record their indexes.
+        // Note: even though a variable x can be repeated multiple times within a stride spec,
+        // we only need to note its first occurrence in each -- because of the above assumption.
+        val joinVars = mutableMapOf<Variable, Pair<Int, Int>>()
+        for ((lftIdx, lftEltSpec) in leftSpec.elems.withIndex()) {
+            lftEltSpec.binder?.let { lftVar ->
+                if (! joinVars.keys.contains(lftVar)) {
+                    val rgtIdx = rightSpec.elems.indexOfFirst { rgtElem -> rgtElem.binder?.let { it == lftVar } ?: false }
+                    if (rgtIdx != -1)
+                        joinVars[lftVar] = lftIdx to rgtIdx
+                }
+            }
+        }
+        // The index pairs are points where strides being joined must have the same elements.
+        val joinPoints: List<Pair<Int, Int>> = joinVars.values +
+            Pair(leftSpec.elems.lastIndex, 0) // always join on last left and first right - adjacency
+
+        // Now can formulate an index-based join condition on strides:
+        return { leftStride: Stride, rightStride: Stride ->
+            /** Relies on [Graph.Elem]s having proper, pointer-based, equality */
+            joinPoints.all { (lft, rgt) -> leftStride.elems[lft] == rightStride.elems[rgt] }
+        }
+    }
+
     /** Joins results of stride matches on distinct path patterns of a graph pattern.
      *  In general, this is a cartesian product, but it is whittled down by the requirement
      *  that a given binder variable binds to the same graph element in each individual answer.
      */
     fun joinStridesOnBinders(strides: List<StrideResult>): MatchResult {
         return when (strides.size) {
-            0 -> { check(false); return /*dummy*/ MatchResult(emptyList(), emptyList()) }
+            0 -> { error("Bug: should not call joinStridesOnBinders on a zero-length list of stride results.") }
             1 -> {
                 val (spec, res) = strides[0]
                 MatchResult(

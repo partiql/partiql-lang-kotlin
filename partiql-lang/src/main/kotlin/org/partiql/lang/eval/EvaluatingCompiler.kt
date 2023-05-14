@@ -1698,13 +1698,18 @@ internal class EvaluatingCompiler(
         val m = mutableMapOf<String, Graph.Elem>()
         for ((s, e) in elemSpecs zip elems) {
             check((s is NodeSpec && e is Graph.Node) || (s is EdgeSpec && e is Graph.Edge))
-            // Populate the map for each binder variable in the spec,
-            // while checking that if a variable is met more than once, it is bound to the same element.
-            // Note: only singleton variables are currently supported. (No group variables yet.)
+            // Populate the map for each binder variable in the spec:
             if (s.binder != null) {
                 val v = s.binder!!
                 if (m.containsKey(v)) {
-                    check(m[v] == e)
+                    val d = m[v]!!
+                    // This should not happen if the joins were done properly:
+                    // a multiply-occurring variable should bind to the same element at each occurrence.
+                    // (Note: only singleton variables are currently supported; no group variables yet.)
+                    if (d != e) error(
+                        """Bug: For variable $v in a strides match, encountered a binding to $e[${e.payload}],
+                            | but $v's previous occurrence was bound to $d[${d.payload}] """.trimMargin()
+                    )
                 } else {
                     m.put(v, e)
                 }
