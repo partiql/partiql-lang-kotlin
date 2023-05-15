@@ -14,6 +14,6 @@
 
 package org.partiql.spi
 
-data class BindingPath(
+public data class BindingPath(
     val steps: List<BindingName>
 )

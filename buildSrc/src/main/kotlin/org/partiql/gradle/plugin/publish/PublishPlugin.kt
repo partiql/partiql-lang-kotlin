@@ -24,6 +24,7 @@ import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.api.publish.maven.plugins.MavenPublishPlugin
 import org.gradle.api.publish.maven.tasks.PublishToMavenRepository
 import org.gradle.jvm.tasks.Jar
+import org.gradle.kotlin.dsl.KotlinClosure0
 import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.get
 import org.gradle.kotlin.dsl.getByName
@@ -32,6 +33,8 @@ import org.gradle.plugins.signing.SigningExtension
 import org.gradle.plugins.signing.SigningPlugin
 import org.jetbrains.dokka.gradle.DokkaPlugin
 import org.jetbrains.dokka.gradle.DokkaTask
+import org.jetbrains.kotlin.gradle.dsl.ExplicitApiMode
+import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 import java.io.File
 
 /**
@@ -40,6 +43,7 @@ import java.io.File
  * - Signing
  * - SourcesJar
  * - Dokka + JavadocJar
+ * - Kotlin Explicit API Mode
  */
 abstract class PublishPlugin : Plugin<Project> {
 
@@ -48,6 +52,7 @@ abstract class PublishPlugin : Plugin<Project> {
         pluginManager.apply(MavenPublishPlugin::class.java)
         pluginManager.apply(SigningPlugin::class.java)
         pluginManager.apply(DokkaPlugin::class.java)
+        extensions.getByType(KotlinJvmProjectExtension::class.java).explicitApi = ExplicitApiMode.Strict
         val ext = extensions.create("publish", PublishExtension::class.java)
         target.afterEvaluate { publish(ext) }
     }
