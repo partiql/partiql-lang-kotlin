@@ -10,17 +10,13 @@ package org.partiql.lang.graph
  *  "compiling" them to graph scans.
  */
 enum class DirSpec(val wantLeft: Boolean, val wantUndir: Boolean, val wantRight: Boolean) {
-    // Attempting to be close to the GPML notation, for mnemonics.
-    // However characters <, > are not supported in identifiers, so it is `--)` instead of `->`, etc.
-    // The mnemonics attempt might be futile: currently these are only referred to
-    // in EvaluatingCompiler.GpmlTranslator.translateDirection, but IntelliJ can't jump to that usage from here!
-    `(--`(true, false, false),
-    `~~~`(false, true, false),
-    `--)`(false, false, true),
-    `(~~`(true, true, false),
-    `~~)`(false, true, true),
-    `(-)`(true, false, true),
-    `---`(true, true, true), // You'd think this one be denoted `(~)` / `<~>`
+    DirL__(true, false, false), // <--
+    Dir_U_(false, true, false), // ~~~
+    Dir__R(false, false, true), // -->
+    DirLU_(true, true, false), // <~~
+    Dir_UR(false, true, true), // ~~>
+    DirL_R(true, false, true), // <->
+    DirLUR(true, true, true), // ---  (why isn't it `<~>` ?!)
 }
 
 /** A step in a graph is a triple of adjacent node, edge, node.

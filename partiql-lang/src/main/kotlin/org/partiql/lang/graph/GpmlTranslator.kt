@@ -61,13 +61,13 @@ object GpmlTranslator {
 
     fun translateDirection(dir: PartiqlAst.GraphMatchDirection): DirSpec =
         when (dir) {
-            is PartiqlAst.GraphMatchDirection.EdgeLeft -> DirSpec.`(--`
-            is PartiqlAst.GraphMatchDirection.EdgeUndirected -> DirSpec.`~~~`
-            is PartiqlAst.GraphMatchDirection.EdgeRight -> DirSpec.`--)`
-            is PartiqlAst.GraphMatchDirection.EdgeLeftOrUndirected -> DirSpec.`(~~`
-            is PartiqlAst.GraphMatchDirection.EdgeUndirectedOrRight -> DirSpec.`~~)`
-            is PartiqlAst.GraphMatchDirection.EdgeLeftOrRight -> DirSpec.`(-)`
-            is PartiqlAst.GraphMatchDirection.EdgeLeftOrUndirectedOrRight -> DirSpec.`---`
+            is PartiqlAst.GraphMatchDirection.EdgeLeft -> DirSpec.DirL__
+            is PartiqlAst.GraphMatchDirection.EdgeUndirected -> DirSpec.Dir_U_
+            is PartiqlAst.GraphMatchDirection.EdgeRight -> DirSpec.Dir__R
+            is PartiqlAst.GraphMatchDirection.EdgeLeftOrUndirected -> DirSpec.DirLU_
+            is PartiqlAst.GraphMatchDirection.EdgeUndirectedOrRight -> DirSpec.Dir_UR
+            is PartiqlAst.GraphMatchDirection.EdgeLeftOrRight -> DirSpec.DirL_R
+            is PartiqlAst.GraphMatchDirection.EdgeLeftOrUndirectedOrRight -> DirSpec.DirLUR
         }
 
     /** Make sure there is proper alternation of NodeSpec and EdgeSpec entries,
