@@ -61,6 +61,7 @@ private fun ExprValueType.typeAliases(): List<String> = when (this) {
     ExprValueType.SEXP -> listOf("sexp")
     ExprValueType.STRUCT -> listOf("struct", "tuple")
     ExprValueType.BAG -> listOf("bag")
+    ExprValueType.GRAPH -> emptyList() // TODO?: Concrete syntax for graph types?
 }
 
 abstract class CastTestBase : EvaluatorTestBase() {

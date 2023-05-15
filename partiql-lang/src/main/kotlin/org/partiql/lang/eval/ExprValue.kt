@@ -36,6 +36,7 @@ import com.amazon.ion.facet.Faceted
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.time.NANOS_PER_SECOND
 import org.partiql.lang.eval.time.Time
+import org.partiql.lang.graph.Graph
 import org.partiql.lang.util.bytesValue
 import org.partiql.lang.util.propertyValueMapOf
 import java.math.BigDecimal
@@ -73,6 +74,8 @@ interface ExprValue : Iterable<ExprValue>, Faceted {
      * If this value has no children, then it should return the empty iterator.
      */
     override operator fun iterator(): Iterator<ExprValue>
+
+    val graphValue: Graph
 
     companion object {
         // Constructor classes
@@ -174,6 +177,11 @@ interface ExprValue : Iterable<ExprValue>, Faceted {
             override val type = ExprValueType.SEXP
             override val ordinalBindings by lazy { OrdinalBindings.ofList(toList()) }
             override fun iterator() = values.mapIndexed { i, v -> v.namedValue(newInt(i)) }.iterator()
+        }
+
+        private class GraphExprValue(graph: Graph) : BaseExprValue() {
+            override val type = ExprValueType.GRAPH
+            override val graphValue: Graph = graph
         }
 
         // Memoized values for optimization
@@ -350,6 +358,10 @@ interface ExprValue : Iterable<ExprValue>, Faceted {
         /** A possibly memoized, immutable [ExprValue] representing an empty struct. */
         @JvmStatic
         val emptyStruct: ExprValue = StructExprValue(StructOrdering.UNORDERED, sequenceOf())
+
+        @JvmStatic
+        fun newGraph(graph: Graph): ExprValue =
+            GraphExprValue(graph)
 
         /**
          * Creates a new [ExprValue] instance from the next value available from the specified [IonReader].

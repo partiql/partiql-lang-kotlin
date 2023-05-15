@@ -779,6 +779,7 @@ fun ExprValue.toIonValue(ion: IonSystem): IonValue =
                 it.toIonValue(ion).clone()
         }
         ExprValueType.STRUCT -> toIonStruct(ion)
+        ExprValueType.GRAPH -> TODO("Ion representation for graph values, maybe?")
     }
 
 private fun ExprValue.toIonStruct(ion: IonSystem): IonStruct {

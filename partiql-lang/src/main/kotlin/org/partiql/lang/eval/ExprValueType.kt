@@ -50,7 +50,8 @@ enum class ExprValueType(
     LIST(isSequence = true, isRangedFrom = true),
     SEXP(isSequence = true),
     STRUCT,
-    BAG(isSequence = true, isRangedFrom = true);
+    BAG(isSequence = true, isRangedFrom = true),
+    GRAPH;
 
     @Deprecated("Please use isUnknown instead", ReplaceWith("isUnknown"))
     fun isNull() = isUnknown
