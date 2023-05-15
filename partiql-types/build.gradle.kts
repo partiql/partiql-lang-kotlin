@@ -22,11 +22,6 @@ dependencies {
     implementation(Deps.ionElement)
 }
 
-// TODO: Make this STRICT. See https://github.com/partiql/partiql-lang-kotlin/issues/1078
-kotlin {
-    explicitApi = null
-}
-
 publish {
     artifactId = "partiql-types"
     name = "PartiQL Types"
