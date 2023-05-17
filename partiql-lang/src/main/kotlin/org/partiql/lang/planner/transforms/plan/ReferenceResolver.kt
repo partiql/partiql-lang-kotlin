@@ -46,12 +46,7 @@ internal object ReferenceResolver {
         return when (path.steps.size) {
             0 -> null
             1 -> getDescriptor(ctx, currentCatalog, path, absoluteCatalogPath)
-            2 -> getDescriptor(ctx, currentCatalog, path, path) ?: getDescriptor(
-                ctx,
-                currentCatalog,
-                path,
-                absoluteCatalogPath
-            )
+            2 -> getDescriptor(ctx, currentCatalog, path, path) ?: getDescriptor(ctx, currentCatalog, path, absoluteCatalogPath)
             else -> {
                 val inferredCatalog = path.steps[0]
                 val newPath = BindingPath(path.steps.subList(1, path.steps.size))
@@ -62,22 +57,24 @@ internal object ReferenceResolver {
         }
     }
 
+    /**
+     * Logic is as follows:
+     * 1. Look through [input] to find the root of the [path]. If found, return. Else, go to step 2.
+     * 2. Look through [input] and grab all [StructType]s. Then, grab the fields of each Struct corresponding to the
+     *  root of [path]. If multiple fields found, merge the output type. If no structs contain a matching field, return null.
+     */
     internal fun resolveLocalBind(path: BindingPath, input: List<Attribute>): ResolvedType? {
-        if (path.steps.isEmpty()) {
-            return null
-        }
+        if (path.steps.isEmpty()) { return null }
         val root: StaticType = input.firstOrNull {
             path.steps[0].isEquivalentTo(it.name)
         }?.type ?: run {
-            val items = input.map { it.type }.filterIsInstance<StructType>().mapNotNull {
-                it.fields.entries.firstOrNull { entry ->
-                    path.steps[0].isEquivalentTo(entry.key)
-                }?.value
-            }
-            when (items.size) {
-                1 -> items.first()
-                else -> null
-            }
+            input.map { it.type }.filterIsInstance<StructType>().mapNotNull { struct ->
+                struct.fields.mapNotNull { entry ->
+                    entry.value.takeIf { path.steps[0].isEquivalentTo(entry.key) }
+                }.let { valueTypes ->
+                    StaticType.unionOf(valueTypes.toSet()).flatten().takeIf { valueTypes.isNotEmpty() }
+                }
+            }.firstOrNull()
         } ?: return null
         return ResolvedType(root)
     }
@@ -88,12 +85,7 @@ internal object ReferenceResolver {
     //
     //
 
-    private fun getDescriptor(
-        ctx: PlanTyper.Context,
-        catalog: BindingName?,
-        originalPath: BindingPath,
-        catalogPath: BindingPath
-    ): ResolvedType? {
+    private fun getDescriptor(ctx: PlanTyper.Context, catalog: BindingName?, originalPath: BindingPath, catalogPath: BindingPath): ResolvedType? {
         return catalog?.let { cat ->
             ctx.metadata.getObjectHandle(ctx.session, cat, catalogPath)?.let { handle ->
                 ctx.metadata.getObjectDescriptor(ctx.session, handle).let {
@@ -111,11 +103,7 @@ internal object ReferenceResolver {
      * 3. Matched = RelativePath - (Input CatalogPath - Output CatalogPath)
      * 4. Matched = RelativePath + Output CatalogPath - Input CatalogPath
      */
-    private fun calculateMatched(
-        originalPath: BindingPath,
-        inputCatalogPath: BindingPath,
-        outputCatalogPath: ConnectorObjectPath
-    ): Int {
+    private fun calculateMatched(originalPath: BindingPath, inputCatalogPath: BindingPath, outputCatalogPath: ConnectorObjectPath): Int {
         return originalPath.steps.size + outputCatalogPath.steps.size - inputCatalogPath.steps.size
     }
 }

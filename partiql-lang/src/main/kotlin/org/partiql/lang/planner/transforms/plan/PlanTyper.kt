@@ -432,8 +432,8 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
                     rel = input,
                     type = typeConstructor.invoke(
                         StructType(
-                            fields = input.getTypeEnv().associate { attribute ->
-                                attribute.name to attribute.type
+                            fields = input.getTypeEnv().map { attribute ->
+                                StructType.Field(attribute.name, attribute.type)
                             },
                             contentClosed = true,
                             constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
@@ -615,7 +615,7 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
             )
         }
 
-        val structFields = mutableListOf<Pair<String, StaticType>>()
+        val structFields = mutableListOf<StructType.Field>()
         var closedContent = true
         fields.forEach { field ->
             when (val name = field.name) {
@@ -624,7 +624,7 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
                     if (name.value is TextElement) {
                         val value = name.value as TextElement
                         val type = field.value.grabType() ?: handleMissingType(ctx)
-                        structFields.add(value.textValue to type)
+                        structFields.add(StructType.Field(value.textValue, type))
                     }
                 else -> {
                     // A field with a non-literal key name is not included.
@@ -638,19 +638,15 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
         }
 
         val hasDuplicateKeys = structFields
-            .groupingBy { it.first }
+            .groupingBy { it.key }
             .eachCount()
             .any { it.value > 1 }
 
-        if (hasDuplicateKeys) {
-            TODO("Duplicate keys in struct is not yet handled")
-        }
-
         return node.copy(
             type = StructType(
-                structFields.toMap(),
+                structFields,
                 contentClosed = closedContent,
-                constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                constraints = setOf(TupleConstraint.Open(closedContent.not()), TupleConstraint.UniqueAttrs(hasDuplicateKeys.not()))
             ),
             fields = fields
         )
@@ -987,7 +983,14 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
     ): StaticType =
         when (previousComponentType) {
             is AnyType -> StaticType.ANY
-            is StructType -> inferStructLookupType(currentPathComponent, previousComponentType.fields, previousComponentType.contentClosed)
+            is StructType -> inferStructLookupType(
+                currentPathComponent,
+                previousComponentType.fields.groupBy { it.key }.mapValues {
+                    val list = it.value.map { field -> field.value }
+                    StaticType.unionOf(*list.toTypedArray())
+                },
+                previousComponentType.contentClosed
+            ).flatten()
             is ListType,
             is SexpType -> {
                 val previous = previousComponentType as CollectionType // help Kotlin's type inference to be more specific
@@ -1241,7 +1244,7 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
     private fun getUnpivotValueType(fromSourceType: StaticType): StaticType =
         when (fromSourceType) {
             is StructType -> if (fromSourceType.contentClosed) {
-                AnyOfType(fromSourceType.fields.values.toSet()).flatten()
+                AnyOfType(fromSourceType.fields.map { it.value }.toSet()).flatten()
             } else {
                 // Content is open, so value can be of any type
                 StaticType.ANY

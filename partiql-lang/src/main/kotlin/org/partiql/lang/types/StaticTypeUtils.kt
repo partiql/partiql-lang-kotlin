@@ -254,8 +254,17 @@ public object StaticTypeUtils {
                     }
                 }
 
+                // Consolidates fields to check that the ExprValue sufficiently conforms to the StaticType
+                //  defined in the consolidated field
+                val consolidatedFields = fields.groupBy({ it.key }) { it.value }.map {
+                    StructType.Field(
+                        it.key,
+                        StaticType.unionOf(it.value.toSet()).flatten()
+                    )
+                }
+
                 // now go thru each of the [fields] and remove those that are valid
-                fields.forEach { (fieldName, fieldType) ->
+                consolidatedFields.forEach { (fieldName, fieldType) ->
                     val fieldValues = scratchPad.remove(fieldName)
 
                     // Field was *not* present

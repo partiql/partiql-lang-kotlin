@@ -465,7 +465,7 @@ data class BagType(
 }
 
 data class StructType(
-    val fields: Map<String, StaticType> = mapOf(),
+    val fields: List<Field> = listOf(),
     // `TupleConstraint` already has `Open` constraint which overlaps with `contentClosed`.
     // In addition, `primaryKeyFields` must not exist on the `StructType` as `PrimaryKey`
     // is a property of collection of tuples. As we have plans to define PartiQL types in
@@ -479,17 +479,42 @@ data class StructType(
     val constraints: Set<TupleConstraint> = setOf(),
     override val metas: Map<String, Any> = mapOf(),
 ) : SingleType() {
+
+    public constructor(
+        fields: Map<String, StaticType>,
+        contentClosed: Boolean = false,
+        primaryKeyFields: List<String> = listOf(),
+        constraints: Set<TupleConstraint> = setOf(),
+        metas: Map<String, Any> = mapOf(),
+    ) : this(
+        fields.map { Field(it.key, it.value) },
+        contentClosed,
+        primaryKeyFields,
+        constraints,
+        metas
+    )
+
+    /**
+     * The key-value pair of a StructType, where the key represents the name of the field and the value represents
+     * its [StaticType]. Note: multiple [Field]s within a [StructType] may contain the same [key]. Therefore, when referencing
+     * a field of a [StructType], it is important to gather all fields of the same [key]. To determine the [StaticType]
+     * of a reference to a field, it is important to gather all possible fields and their types and merge them using [AnyOfType].
+     */
+    data class Field(
+        val key: String,
+        val value: StaticType
+    )
+
     override fun flatten(): StaticType = this
 
     override val allTypes: List<StaticType>
         get() = listOf(this)
 
     override fun toString(): String {
-        val entries = fields.entries
-        val firstSeveral = entries.toList().take(3).joinToString { "${it.key}: ${it.value}" }
+        val firstSeveral = fields.take(3).joinToString { "${it.key}: ${it.value}" }
         return when {
-            entries.size <= 3 -> "struct($firstSeveral, $constraints)"
-            else -> "struct($firstSeveral, ... and ${entries.size - 3} other field(s), $constraints)"
+            fields.size <= 3 -> "struct($firstSeveral, $constraints)"
+            else -> "struct($firstSeveral, ... and ${fields.size - 3} other field(s), $constraints)"
         }
     }
 }

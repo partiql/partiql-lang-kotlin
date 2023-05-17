@@ -23,6 +23,7 @@ import org.partiql.types.AnyType
 import org.partiql.types.BagType
 import org.partiql.types.ListType
 import org.partiql.types.StaticType
+import org.partiql.types.StaticType.Companion.INT
 import org.partiql.types.StaticType.Companion.STRING
 import org.partiql.types.StaticType.Companion.unionOf
 import org.partiql.types.StructType
@@ -714,9 +715,9 @@ class PartiQLSchemaInferencerTests {
                 query = "SELECT b, a FROM <<{ 'a': 1 }>> AS t1 LEFT JOIN <<{ 'b': 2.0 }>> AS t2 ON TRUE",
                 expected = BagType(
                     StructType(
-                        fields = mapOf(
-                            "b" to StaticType.DECIMAL,
-                            "a" to StaticType.INT,
+                        fields = listOf(
+                            StructType.Field("b", StaticType.DECIMAL),
+                            StructType.Field("a", StaticType.INT),
                         ),
                         contentClosed = true,
                         constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
@@ -728,9 +729,9 @@ class PartiQLSchemaInferencerTests {
                 query = "SELECT t1.a, t2.a FROM <<{ 'a': 1 }>> AS t1 LEFT JOIN <<{ 'a': 2.0 }>> AS t2 ON t1.a = t2.a",
                 expected = BagType(
                     StructType(
-                        fields = mapOf(
-                            "a" to StaticType.INT,
-                            "a" to StaticType.DECIMAL,
+                        fields = listOf(
+                            StructType.Field("a", StaticType.INT),
+                            StructType.Field("a", StaticType.DECIMAL),
                         ),
                         contentClosed = true,
                         constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
@@ -742,9 +743,9 @@ class PartiQLSchemaInferencerTests {
                 query = "SELECT * FROM <<{ 'a': 1 }>> AS t1 LEFT JOIN <<{ 'a': 2.0 }>> AS t2 ON t1.a = t2.a",
                 expected = BagType(
                     StructType(
-                        fields = mapOf(
-                            "a" to StaticType.INT,
-                            "a" to StaticType.DECIMAL,
+                        fields = listOf(
+                            StructType.Field("a", StaticType.INT),
+                            StructType.Field("a", StaticType.DECIMAL),
                         ),
                         contentClosed = true,
                         constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
@@ -766,10 +767,10 @@ class PartiQLSchemaInferencerTests {
                 """,
                 expected = BagType(
                     StructType(
-                        fields = mapOf(
-                            "a" to StaticType.INT,
-                            "a" to StaticType.DECIMAL,
-                            "a" to StaticType.STRING,
+                        fields = listOf(
+                            StructType.Field("a", StaticType.INT),
+                            StructType.Field("a", StaticType.DECIMAL),
+                            StructType.Field("a", StaticType.STRING),
                         ),
                         contentClosed = true,
                         constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
@@ -781,9 +782,93 @@ class PartiQLSchemaInferencerTests {
                 query = "SELECT * FROM <<{ 'a': 1 }>> AS t1 LEFT JOIN <<{ 'a': 2.0 }>> AS t2 ON a = 3",
                 expected = BagType(
                     StructType(
-                        fields = mapOf(
-                            "a" to StaticType.INT,
-                            "a" to StaticType.DECIMAL,
+                        fields = listOf(
+                            StructType.Field("a", StaticType.INT),
+                            StructType.Field("a", StaticType.DECIMAL),
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                    )
+                ),
+                problemHandler = assertProblemExists {
+                    Problem(
+                        UNKNOWN_SOURCE_LOCATION,
+                        PlanningProblemDetails.UndefinedVariable("a", false)
+                    )
+                }
+            ),
+            SuccessTestCase(
+                name = "Duplicate fields in struct",
+                query = """
+                    SELECT t.a AS a
+                    FROM <<
+                        { 'a': 1, 'a': 'hello' }
+                    >> AS t
+                """,
+                expected = BagType(
+                    StructType(
+                        fields = listOf(
+                            StructType.Field("a", unionOf(INT, STRING))
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                    )
+                )
+            ),
+            SuccessTestCase(
+                name = "Duplicate fields in bindings",
+                query = """
+                    SELECT a AS a
+                    FROM <<
+                        { 'a': 1, 'a': 'hello' }
+                    >> AS t
+                """,
+                expected = BagType(
+                    StructType(
+                        fields = listOf(
+                            StructType.Field("a", unionOf(INT, STRING))
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                    )
+                )
+            ),
+            ErrorTestCase(
+                name = "Ambiguous reference to bindings environment",
+                query = """
+                    SELECT t.a
+                    FROM <<
+                        { 'a': 1, 'a': 'hello' }
+                    >> AS t, << 0 >> AS t
+                """,
+                expected = BagType(
+                    StructType(
+                        fields = listOf(
+                            StructType.Field("a", StaticType.ANY),
+                        ),
+                        contentClosed = true,
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                    )
+                ),
+                problemHandler = assertProblemExists {
+                    Problem(
+                        UNKNOWN_SOURCE_LOCATION,
+                        PlanningProblemDetails.UndefinedVariable("a", false)
+                    )
+                }
+            ),
+            ErrorTestCase(
+                name = "Ambiguous reference in struct of bindings environment",
+                query = """
+                    SELECT a
+                    FROM <<
+                        { 'a': 1, 'a': 'hello' }
+                    >> AS t, << { 'a': 2.0 } >> AS t
+                """,
+                expected = BagType(
+                    StructType(
+                        fields = listOf(
+                            StructType.Field("a", StaticType.ANY),
                         ),
                         contentClosed = true,
                         constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
