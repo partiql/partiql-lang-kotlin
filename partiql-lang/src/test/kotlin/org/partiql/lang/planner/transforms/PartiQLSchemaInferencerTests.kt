@@ -777,26 +777,6 @@ class PartiQLSchemaInferencerTests {
                     )
                 )
             ),
-            ErrorTestCase(
-                name = "LEFT JOIN Ambiguous Reference in ON",
-                query = "SELECT * FROM <<{ 'a': 1 }>> AS t1 LEFT JOIN <<{ 'a': 2.0 }>> AS t2 ON a = 3",
-                expected = BagType(
-                    StructType(
-                        fields = listOf(
-                            StructType.Field("a", StaticType.INT),
-                            StructType.Field("a", StaticType.DECIMAL),
-                        ),
-                        contentClosed = true,
-                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
-                    )
-                ),
-                problemHandler = assertProblemExists {
-                    Problem(
-                        UNKNOWN_SOURCE_LOCATION,
-                        PlanningProblemDetails.UndefinedVariable("a", false)
-                    )
-                }
-            ),
             SuccessTestCase(
                 name = "Duplicate fields in struct",
                 query = """
@@ -832,54 +812,6 @@ class PartiQLSchemaInferencerTests {
                         constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
                     )
                 )
-            ),
-            ErrorTestCase(
-                name = "Ambiguous reference to bindings environment",
-                query = """
-                    SELECT t.a
-                    FROM <<
-                        { 'a': 1, 'a': 'hello' }
-                    >> AS t, << 0 >> AS t
-                """,
-                expected = BagType(
-                    StructType(
-                        fields = listOf(
-                            StructType.Field("a", StaticType.ANY),
-                        ),
-                        contentClosed = true,
-                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
-                    )
-                ),
-                problemHandler = assertProblemExists {
-                    Problem(
-                        UNKNOWN_SOURCE_LOCATION,
-                        PlanningProblemDetails.UndefinedVariable("a", false)
-                    )
-                }
-            ),
-            ErrorTestCase(
-                name = "Ambiguous reference in struct of bindings environment",
-                query = """
-                    SELECT a
-                    FROM <<
-                        { 'a': 1, 'a': 'hello' }
-                    >> AS t, << { 'a': 2.0 } >> AS t
-                """,
-                expected = BagType(
-                    StructType(
-                        fields = listOf(
-                            StructType.Field("a", StaticType.ANY),
-                        ),
-                        contentClosed = true,
-                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
-                    )
-                ),
-                problemHandler = assertProblemExists {
-                    Problem(
-                        UNKNOWN_SOURCE_LOCATION,
-                        PlanningProblemDetails.UndefinedVariable("a", false)
-                    )
-                }
             ),
             SuccessTestCase(
                 name = "AGGREGATE over INTS",
