@@ -100,8 +100,7 @@ internal class LocalConnectorObject(
                 StructType.Field(it.getName(), it.getValueDesc())
             },
             contentClosed = true,
-            isOrdered = true,
-            constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true)),
+            constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.IsOrdered),
         )
 
     private fun LocalSchema.TableSchema.getDesc(): StaticType {
@@ -111,7 +110,7 @@ internal class LocalConnectorObject(
                     StructType.Field(it.getName(), it.getValueDesc())
                 },
                 contentClosed = true,
-                isOrdered = true,
+                constraints = setOf(TupleConstraint.IsOrdered),
             )
         )
     }

@@ -469,7 +469,6 @@ data class BagType(
  *
  * @param fields the key-value pairs of the struct
  * @param contentClosed when true, denotes that no other attributes may be present
- * @param isOrdered when true, denotes that the fields are ordered.
  * @param primaryKeyFields fields designated as primary keys
  * @param constraints set of constraints applied to the Struct
  * @param metas meta-data
@@ -485,7 +484,6 @@ data class StructType(
     // TODO remove `contentClosed` and `primaryKeyFields` if after finalizing our type specification we're
     // still going with `StructType`.
     val contentClosed: Boolean = false,
-    val isOrdered: Boolean = false,
     val primaryKeyFields: List<String> = listOf(),
     val constraints: Set<TupleConstraint> = setOf(),
     override val metas: Map<String, Any> = mapOf(),
@@ -494,14 +492,12 @@ data class StructType(
     public constructor(
         fields: Map<String, StaticType>,
         contentClosed: Boolean = false,
-        isOrdered: Boolean = false,
         primaryKeyFields: List<String> = listOf(),
         constraints: Set<TupleConstraint> = setOf(),
         metas: Map<String, Any> = mapOf(),
     ) : this(
         fields.map { Field(it.key, it.value) },
         contentClosed,
-        isOrdered,
         primaryKeyFields,
         constraints,
         metas
@@ -509,9 +505,12 @@ data class StructType(
 
     /**
      * The key-value pair of a StructType, where the key represents the name of the field and the value represents
-     * its [StaticType]. Note: multiple [Field]s within a [StructType] may contain the same [key]. Therefore, when referencing
-     * a field of a [StructType], it is important to gather all fields of the same [key]. To determine the [StaticType]
-     * of a reference to a field, it is important to gather all possible fields and their types and merge them using [AnyOfType].
+     * its [StaticType]. Note: multiple [Field]s within a [StructType] may contain the same [key], and therefore,
+     * multiple same-named keys may refer to distinct [StaticType]s. To determine the [StaticType]
+     * of a reference to a field, especially in the case of duplicates, it depends on the ordering of the [StructType]
+     * (denoted by the presence of [TupleConstraint.IsOrdered] in the [StructType.constraints]).
+     * - If ORDERED: the PartiQL specification says to grab the first encountered matching field.
+     * - If UNORDERED: it is implementation-defined. However, gather all possible types, merge them using [AnyOfType].
      */
     data class Field(
         val key: String,
@@ -612,6 +611,12 @@ sealed class NumberConstraint {
 sealed class TupleConstraint {
     data class UniqueAttrs(val value: Boolean) : TupleConstraint()
     data class Open(val value: Boolean) : TupleConstraint()
+
+    /**
+     * The presence of the [IsOrdered] on a [StructType] represents that the [StructType] is ORDERED. The absence of
+     * this constrain represents the opposite -- AKA that the [StructType] is UNORDERED
+     */
+    object IsOrdered : TupleConstraint()
 }
 
 /**

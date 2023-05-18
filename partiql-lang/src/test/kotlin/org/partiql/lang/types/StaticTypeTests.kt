@@ -31,6 +31,7 @@ import org.partiql.types.StaticType.Companion.STRING
 import org.partiql.types.StaticType.Companion.SYMBOL
 import org.partiql.types.StaticType.Companion.TIMESTAMP
 import org.partiql.types.StructType
+import org.partiql.types.TupleConstraint
 import java.math.BigInteger
 
 /**
@@ -214,7 +215,7 @@ class StaticTypeTests {
                                 StructType.Field("bar", staticType),
                             ),
                             contentClosed = true,
-                            isOrdered = true
+                            constraints = setOf(TupleConstraint.IsOrdered),
                         )
                         listOf(
                             listOf(

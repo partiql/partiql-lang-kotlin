@@ -435,8 +435,7 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
                                 StructType.Field(attribute.name, attribute.type)
                             },
                             contentClosed = true,
-                            isOrdered = true,
-                            constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                            constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.IsOrdered)
                         )
                     )
                 )

@@ -34,6 +34,7 @@ import org.partiql.types.StructType
 import org.partiql.types.SymbolType
 import org.partiql.types.TimeType
 import org.partiql.types.TimestampType
+import org.partiql.types.TupleConstraint
 import org.partiql.types.UnsupportedTypeCheckException
 import java.math.BigDecimal
 
@@ -243,9 +244,9 @@ public object StaticTypeUtils {
     private fun StructType.isInstanceOf(value: ExprValue) = when {
         value.type != ExprValueType.STRUCT -> false
         fields.isEmpty() && !contentClosed -> true
-        this.isOrdered && value.asFacet(OrderedBindNames::class.java) == null -> false
+        this.constraints.contains(TupleConstraint.IsOrdered) && value.asFacet(OrderedBindNames::class.java) == null -> false
         else -> {
-            when (this.isOrdered) {
+            when (this.constraints.contains(TupleConstraint.IsOrdered)) {
                 false -> {
                     // build a multi-map of fields in the struct.
                     val scratchPad = HashMap<String, MutableList<ExprValue>>().also { map ->

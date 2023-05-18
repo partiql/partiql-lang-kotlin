@@ -35,7 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     externally-defined graphs into the evaluation environment. 
   - Evaluation of straight-path patterns with simple label matching and 
     all directed/undirected edge patterns.
-- Adds new attribute, `isOrdered`, to StructType. See the KDoc for more information.
+- Adds new `TupleConstraint` variant, `IsOrdered`, to represent ordering in `StructType`. See the KDoc for more information.
 
 ### Changed
 

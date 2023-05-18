@@ -42,7 +42,7 @@ class LocalConnectorMetadataTests {
                     "path" to StaticType.STRING
                 ),
                 contentClosed = true,
-                isOrdered = true
+                constraints = setOf(TupleConstraint.IsOrdered)
             )
         )
 
@@ -69,19 +69,17 @@ class LocalConnectorMetadataTests {
         val expected =
             StructType(
                 contentClosed = true,
-                isOrdered = true,
                 fields = mapOf(
                     "id" to IntType(),
                     "nested" to StructType(
                         contentClosed = true,
-                        isOrdered = true,
                         fields = mapOf(
                             "nested_id" to IntType()
                         ),
-                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.IsOrdered)
                     )
                 ),
-                constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.IsOrdered)
             )
 
         // Act

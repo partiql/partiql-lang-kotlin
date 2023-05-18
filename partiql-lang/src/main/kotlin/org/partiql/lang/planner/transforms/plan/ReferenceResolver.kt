@@ -21,6 +21,7 @@ import org.partiql.spi.BindingPath
 import org.partiql.spi.connector.ConnectorObjectPath
 import org.partiql.types.StaticType
 import org.partiql.types.StructType
+import org.partiql.types.TupleConstraint
 
 internal object ReferenceResolver {
 
@@ -88,7 +89,7 @@ internal object ReferenceResolver {
     internal fun inferStructLookup(
         struct: StructType,
         key: BindingName,
-    ): StaticType? = when (struct.isOrdered) {
+    ): StaticType? = when (struct.constraints.contains(TupleConstraint.IsOrdered)) {
         true -> struct.fields.firstOrNull { entry ->
             key.isEquivalentTo(entry.key)
         }?.value
