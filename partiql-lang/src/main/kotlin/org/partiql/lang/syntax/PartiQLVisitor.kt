@@ -169,8 +169,16 @@ internal class PartiQLVisitor(val customTypes: List<CustomType> = listOf(), priv
     }
 
     override fun visitDropTable(ctx: PartiQLParser.DropTableContext) = PartiqlAst.build {
-        val id = visitSymbolPrimitive(ctx.tableName().symbolPrimitive())
-        dropTable(id.toIdentifier(), ctx.DROP().getSourceMetaContainer())
+        val allSteps = ctx.tableName().symbolPrimitive().map {
+            visitSymbolPrimitive(it).toIdentifier()
+        }
+        val name = allSteps.last()
+        val prefix = PartiqlAst.build {
+            tableNamePrefix(
+                allSteps.dropLast(1)
+            )
+        }
+        dropTable(prefix, name, ctx.DROP().getSourceMetaContainer())
     }
 
     override fun visitDropIndex(ctx: PartiQLParser.DropIndexContext) = PartiqlAst.build {
@@ -180,9 +188,21 @@ internal class PartiQLVisitor(val customTypes: List<CustomType> = listOf(), priv
     }
 
     override fun visitCreateTable(ctx: PartiQLParser.CreateTableContext) = PartiqlAst.build {
-        val name = visitSymbolPrimitive(ctx.tableName().symbolPrimitive()).name
+        val allSteps = ctx.tableName().symbolPrimitive().map {
+            visitSymbolPrimitive(it)
+        }
+        val name = allSteps.last().name
+        val prefix = PartiqlAst.build {
+            tableNamePrefix(
+                allSteps
+                    .dropLast(1)
+                    .map {
+                        it.toIdentifier()
+                    }
+            )
+        }
         val def = ctx.tableDef()?.let { visitTableDef(it) }
-        createTable_(name, def, ctx.CREATE().getSourceMetaContainer())
+        createTable_(prefix, name, def, ctx.CREATE().getSourceMetaContainer())
     }
 
     override fun visitCreateIndex(ctx: PartiQLParser.CreateIndexContext) = PartiqlAst.build {
@@ -200,7 +220,8 @@ internal class PartiQLVisitor(val customTypes: List<CustomType> = listOf(), priv
         val name = visitSymbolPrimitive(ctx.columnName().symbolPrimitive()).name.text
         val type = visit(ctx.type(), PartiqlAst.Type::class)
         val constrs = ctx.columnConstraint().map { visitColumnConstraint(it) }
-        columnDeclaration(name, type, constrs)
+        val default = ctx.defaultClause()?.let { visit(it.defaultOption, PartiqlAst.Expr::class) }
+        columnDeclaration(name, type, default, constrs)
     }
 
     override fun visitColumnConstraint(ctx: PartiQLParser.ColumnConstraintContext) = PartiqlAst.build {
@@ -215,6 +236,13 @@ internal class PartiQLVisitor(val customTypes: List<CustomType> = listOf(), priv
 
     override fun visitColConstrNull(ctx: PartiQLParser.ColConstrNullContext) = PartiqlAst.build {
         columnNull()
+    }
+
+    override fun visitColConstrCheck(ctx: PartiQLParser.ColConstrCheckContext) = PartiqlAst.build {
+        // TODO: In theory, the only limitation we should impose to serachCondition is it should be evalutated to boolean.
+        //  It is best to be done in the planning stage.
+        val searchCondition = visitExpr(ctx.expr())
+        columnCheck(searchCondition, ctx.CHECK().getSourceMetaContainer())
     }
 
     /**

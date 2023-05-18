@@ -37,7 +37,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     all directed/undirected edge patterns.
 
 ### Changed
-
+  - `DDL` now supports variable length namespace. 
+  - `CREATE TABLE` now supports `CHECK` constraint and `Default`  clause when declaring attributes. 
 ### Deprecated
 
 ### Fixed

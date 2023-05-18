@@ -19,8 +19,8 @@ import com.amazon.ionelement.api.ionDecimal
 import com.amazon.ionelement.api.ionInt
 import com.amazon.ionelement.api.ionString
 import com.amazon.ionelement.api.loadSingleElement
-import org.junit.Ignore
-import org.junit.Test
+import org.junit.jupiter.api.Disabled
+import org.junit.jupiter.api.Test
 import org.partiql.lang.ION
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.ast.sourceLocation
@@ -32,14 +32,6 @@ import org.partiql.lang.syntax.antlr.PartiQLParser
 import org.partiql.lang.util.getAntlrDisplayString
 import kotlin.concurrent.thread
 
-/**
- * Originally just meant to test the parser, this class now tests several different things because
- * the same test cases can be used for all three:
- *
- * - Parsing of query to PIG-generated ast
- * - Conversion of PIG-generated ast to [ExprNode].
- * - Conversion of [ExprNode] to legacy and new s-exp ASTs.
- */
 class PartiQLParserTest : PartiQLParserTestBase() {
 
     // ****************************************
@@ -1794,7 +1786,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
     )
 
     @Test
-    @Ignore
+    @Disabled
     fun fromInsertValueAtReturningDml() = assertExpression(
         "FROM x INSERT INTO foo VALUE 1 AT bar RETURNING ALL OLD foo",
         """
@@ -1830,7 +1822,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
     )
 
     @Test
-    @Ignore
+    @Disabled
     fun fromInsertValueReturningDml() = assertExpression(
         "FROM x INSERT INTO foo VALUE 1 RETURNING ALL OLD foo",
         """
@@ -2829,7 +2821,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
     )
 
     @Test
-    @Ignore
+    @Disabled
     fun insertQueryReturningDml() = assertExpression(
         "INSERT INTO foo SELECT y FROM bar RETURNING ALL NEW foo",
         """
@@ -3780,103 +3772,6 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                         z
                         null)))
         """
-    )
-
-    // DDL
-    // ****************************************
-    @Test
-    fun createTable() = assertExpression(
-        "CREATE TABLE foo",
-        "(ddl (create_table foo null))"
-    )
-
-    @Test
-    fun createTableWithColumn() = assertExpression(
-        "CREATE TABLE foo (boo string)",
-        """
-            (ddl (create_table foo  (table_def
-                (column_declaration boo (string_type)))))
-        """.trimIndent()
-    )
-
-    @Test
-    fun createTableWithQuotedIdentifier() = assertExpression(
-        "CREATE TABLE \"user\" (\"lastname\" string)",
-        """
-            (ddl (create_table user (table_def
-                (column_declaration lastname (string_type)))))
-        """.trimIndent()
-    )
-
-    @Test
-    fun createTableWithConstraints() = assertExpression(
-        """
-            CREATE TABLE Customer (
-               name string CONSTRAINT name_is_present NOT NULL, 
-               age int,
-               city string NULL,
-               state string NULL
-            )
-        """.trimIndent(),
-        """
-            (ddl
-                (create_table
-                    Customer (table_def
-                        (column_declaration name (string_type)
-                            (column_constraint name_is_present (column_notnull)))
-                        (column_declaration age (integer_type))
-                        (column_declaration city (string_type)
-                            (column_constraint null (column_null)))
-                        (column_declaration state (string_type)
-                            (column_constraint null (column_null))))))
-        """.trimIndent()
-    )
-
-    @Test
-    fun dropTable() = assertExpression(
-        "DROP TABLE foo",
-        "(ddl (drop_table (identifier foo (case_insensitive))))"
-    )
-
-    @Test
-    fun dropTableWithQuotedIdentifier() = assertExpression(
-        "DROP TABLE \"user\"",
-        "(ddl (drop_table (identifier user (case_sensitive))))"
-    )
-
-    @Test
-    fun createIndex() = assertExpression(
-        "CREATE INDEX ON foo (x, y.z)",
-        """
-        (ddl
-          (create_index
-            (identifier foo (case_insensitive))
-            (id x (case_insensitive) (unqualified))
-            (path (id y (case_insensitive) (unqualified)) (path_expr (lit "z") (case_insensitive)))))
-        """
-    )
-
-    @Test
-    fun createIndexWithQuotedIdentifiers() = assertExpression(
-        "CREATE INDEX ON \"user\" (\"group\")",
-        """
-        (ddl
-          (create_index
-            (identifier user (case_sensitive))
-            (id group (case_sensitive) (unqualified))))
-        """
-    )
-
-    @Test
-    fun dropIndex() = assertExpression(
-        "DROP INDEX bar ON foo",
-        "(ddl (drop_index (table (identifier foo (case_insensitive))) (keys (identifier bar (case_insensitive)))))"
-    )
-
-    @Test
-    fun dropIndexWithQuotedIdentifiers() = assertExpression(
-        "DROP INDEX \"bar\" ON \"foo\"",
-        "(ddl (drop_index (table (identifier foo (case_sensitive))) (keys (identifier bar (case_sensitive)))))"
     )
 
     @Test

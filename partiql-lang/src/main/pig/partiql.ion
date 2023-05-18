@@ -434,10 +434,18 @@ may then be further optimized by selecting better implementations of each operat
         // A data definition operation.
         (sum ddl_op
             // `CREATE TABLE <symbol> ( <table_def> )?`
-            (create_table table_name::symbol def::(? table_def))
+            // We support variable length namespace
+            // For example, in SQL, we can have
+            // 1) CREATE TABLE <catalog name>.<schema name>.<table name> ...
+            // 2) CREATE TABLE <schema name>.<table name> ...
+            // 3) CREATE TABLE <table name>
+            // however, CREATE TABLe statement in the above assumes the existences of all path steps other than the table
+            // For example, in case 1, the catalog name needs to be a existing catalog and the schema name needs to be a existing schema.
+            // which means all the "steps" in create table statement, except for the last one, should be identifer (i.e., case sensitivity matters)
+            (create_table table_name_prefix::table_name_prefix table_name::symbol def::(? table_def))
 
             // `DROP TABLE <identifier>`
-            (drop_table table_name::identifier)
+            (drop_table table_name_prefix::table_name_prefix table_name::identifier)
 
             // `CREATE INDEX ON <identifier> (<expr> [, <expr>]...)`
             // TODO: add optional table name
@@ -451,17 +459,20 @@ may then be further optimized by selecting better implementations of each operat
 
         (product table_def parts::(* table_def_part 1))
 
+        (product table_name_prefix steps::(* identifier 0))
+
         (sum table_def_part
-            // `<column_name> <type> <column_constraint>*`
-            (column_declaration name::symbol type::type constraints::(* column_constraint 0)))
+            // `<column_name> <type> <column_constraint>* <default_clause>`
+            (column_declaration name::symbol type::type default::(? expr) constraints::(* column_constraint 0)))
 
         // `( CONSTRAINT <column_constraint_name> )?  <column_constraint_def>`
         (product column_constraint name::(? symbol) def::column_constraint_def)
 
-        //  `NULL | NOT NULL | CHECK ( <expr> )`
+        //  `NULL | NOT NULL | CHECK ( <serach_condition> )`
         (sum column_constraint_def
             (column_notnull)
-            (column_null))
+            (column_null)
+            (column_check search_condition::expr))
 
         // `RETURNING (<returning_elem> [, <returning_elem>]...)`
         (product returning_expr elems::(* returning_elem 1))
