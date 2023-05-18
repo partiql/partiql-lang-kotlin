@@ -70,8 +70,8 @@ execCommand
  * Experimental, towards #36 https://github.com/partiql/partiql-docs/issues/36
  * Currently, this is a small subset of SQL DDL that is likely to make sense for PartiQL as well.
  */
-
-tableName : symbolPrimitive;
+// We support variable length namespace
+tableName : symbolPrimitive ( PERIOD symbolPrimitive )*;
 tableConstraintName : symbolPrimitive;
 columnName : symbolPrimitive;
 columnConstraintName : symbolPrimitive;
@@ -96,7 +96,7 @@ tableDef
     ;
 
 tableDefPart
-    : columnName type columnConstraint*                             # ColumnDeclaration
+    : columnName type ( defaultClause )? columnConstraint*                            # ColumnDeclaration
     ;
 
 columnConstraint
@@ -104,8 +104,13 @@ columnConstraint
     ;
 
 columnConstraintDef
-    : NOT NULL                                  # ColConstrNotNull
-    | NULL                                      # ColConstrNull
+    : NOT NULL                                     # ColConstrNotNull
+    | NULL                                         # ColConstrNull
+    | CHECK PAREN_LEFT expr PAREN_RIGHT            # ColConstrCheck
+    ;
+
+defaultClause
+    : DEFAULT defaultOption=expr
     ;
 
 /**
