@@ -22,7 +22,6 @@ import org.partiql.lang.ast.passes.SemanticProblemDetails
 import org.partiql.lang.ast.passes.inference.cast
 import org.partiql.lang.errors.Problem
 import org.partiql.lang.errors.ProblemHandler
-import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.builtins.SCALAR_BUILTINS_DEFAULT
 import org.partiql.lang.planner.PlanningProblemDetails
@@ -436,6 +435,7 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
                                 StructType.Field(attribute.name, attribute.type)
                             },
                             contentClosed = true,
+                            isOrdered = true,
                             constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
                         )
                     )
@@ -985,11 +985,7 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
             is AnyType -> StaticType.ANY
             is StructType -> inferStructLookupType(
                 currentPathComponent,
-                previousComponentType.fields.groupBy { it.key }.mapValues {
-                    val list = it.value.map { field -> field.value }
-                    StaticType.unionOf(*list.toTypedArray())
-                },
-                previousComponentType.contentClosed
+                previousComponentType
             ).flatten()
             is ListType,
             is SexpType -> {
@@ -1020,24 +1016,17 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
 
     private fun inferStructLookupType(
         currentPathComponent: Step.Key,
-        structFields: Map<String, StaticType>,
-        contentClosed: Boolean
+        struct: StructType
     ): StaticType =
         when (val key = currentPathComponent.value) {
             is Rex.Lit -> {
                 if (key.value is StringElement) {
-                    val bindings = Bindings.ofMap(structFields)
-                    val caseSensitivity = currentPathComponent.case
-                    val lookupName = BindingName(
-                        key.value.asAnyElement().stringValue,
-                        rexCaseToBindingCase(caseSensitivity)
-                    )
-                    val lookupBindingName = rexBindingNameToLangBindingName(lookupName)
-                    bindings[lookupBindingName] ?: if (contentClosed) {
-                        StaticType.MISSING
-                    } else {
-                        StaticType.ANY
-                    }
+                    val case = rexCaseToBindingCase(currentPathComponent.case)
+                    ReferenceResolver.inferStructLookup(struct, BindingName(key.value.asAnyElement().stringValue, case))
+                        ?: when (struct.contentClosed) {
+                            true -> StaticType.MISSING
+                            false -> StaticType.ANY
+                        }
                 } else {
                     // Should this branch result in an error?
                     StaticType.MISSING

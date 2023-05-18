@@ -35,6 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     externally-defined graphs into the evaluation environment. 
   - Evaluation of straight-path patterns with simple label matching and 
     all directed/undirected edge patterns.
+- Adds new attribute, `isOrdered`, to StructType. See the KDoc for more information.
 
 ### Changed
 
@@ -46,7 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Fixes the ability for JOIN predicates to access the FROM source aliases and columns.
+- Fixes the ability for JOIN predicates to access the FROM source aliases and corresponding attributes.
 
 ### Removed
 

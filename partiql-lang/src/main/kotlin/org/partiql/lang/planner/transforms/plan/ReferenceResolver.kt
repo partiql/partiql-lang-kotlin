@@ -61,7 +61,9 @@ internal object ReferenceResolver {
      * Logic is as follows:
      * 1. Look through [input] to find the root of the [path]. If found, return. Else, go to step 2.
      * 2. Look through [input] and grab all [StructType]s. Then, grab the fields of each Struct corresponding to the
-     *  root of [path]. If multiple fields found, merge the output type. If no structs contain a matching field, return null.
+     *  root of [path].
+     *  - If the Struct if ordered, grab the first matching field.
+     *  - If unordered and if multiple fields found, merge the output type. If no structs contain a matching field, return null.
      */
     internal fun resolveLocalBind(path: BindingPath, input: List<Attribute>): ResolvedType? {
         if (path.steps.isEmpty()) { return null }
@@ -69,14 +71,32 @@ internal object ReferenceResolver {
             path.steps[0].isEquivalentTo(it.name)
         }?.type ?: run {
             input.map { it.type }.filterIsInstance<StructType>().mapNotNull { struct ->
-                struct.fields.mapNotNull { entry ->
-                    entry.value.takeIf { path.steps[0].isEquivalentTo(entry.key) }
-                }.let { valueTypes ->
-                    StaticType.unionOf(valueTypes.toSet()).flatten().takeIf { valueTypes.isNotEmpty() }
+                inferStructLookup(struct, path.steps[0])
+            }.let { potentialTypes ->
+                when (potentialTypes.size) {
+                    1 -> potentialTypes.first()
+                    else -> null
                 }
-            }.firstOrNull()
+            }
         } ?: return null
         return ResolvedType(root)
+    }
+
+    /**
+     * Searches for the [key] in the [struct]. If not found, return null
+     */
+    internal fun inferStructLookup(
+        struct: StructType,
+        key: BindingName,
+    ): StaticType? = when (struct.isOrdered) {
+        true -> struct.fields.firstOrNull { entry ->
+            key.isEquivalentTo(entry.key)
+        }?.value
+        false -> struct.fields.mapNotNull { entry ->
+            entry.value.takeIf { key.isEquivalentTo(entry.key) }
+        }.let { valueTypes ->
+            StaticType.unionOf(valueTypes.toSet()).flatten().takeIf { valueTypes.isNotEmpty() }
+        }
     }
 
     //

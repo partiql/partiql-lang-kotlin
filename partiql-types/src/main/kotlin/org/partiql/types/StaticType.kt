@@ -464,6 +464,16 @@ data class BagType(
     override fun toString(): String = "bag($elementType)"
 }
 
+/**
+ * Describes a PartiQL Struct.
+ *
+ * @param fields the key-value pairs of the struct
+ * @param contentClosed when true, denotes that no other attributes may be present
+ * @param isOrdered when true, denotes that the fields are ordered.
+ * @param primaryKeyFields fields designated as primary keys
+ * @param constraints set of constraints applied to the Struct
+ * @param metas meta-data
+ */
 data class StructType(
     val fields: List<Field> = listOf(),
     // `TupleConstraint` already has `Open` constraint which overlaps with `contentClosed`.
@@ -475,6 +485,7 @@ data class StructType(
     // TODO remove `contentClosed` and `primaryKeyFields` if after finalizing our type specification we're
     // still going with `StructType`.
     val contentClosed: Boolean = false,
+    val isOrdered: Boolean = false,
     val primaryKeyFields: List<String> = listOf(),
     val constraints: Set<TupleConstraint> = setOf(),
     override val metas: Map<String, Any> = mapOf(),
@@ -483,12 +494,14 @@ data class StructType(
     public constructor(
         fields: Map<String, StaticType>,
         contentClosed: Boolean = false,
+        isOrdered: Boolean = false,
         primaryKeyFields: List<String> = listOf(),
         constraints: Set<TupleConstraint> = setOf(),
         metas: Map<String, Any> = mapOf(),
     ) : this(
         fields.map { Field(it.key, it.value) },
         contentClosed,
+        isOrdered,
         primaryKeyFields,
         constraints,
         metas

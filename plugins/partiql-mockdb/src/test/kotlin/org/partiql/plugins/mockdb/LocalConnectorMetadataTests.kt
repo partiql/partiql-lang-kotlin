@@ -41,7 +41,8 @@ class LocalConnectorMetadataTests {
                     "id" to StaticType.INT,
                     "path" to StaticType.STRING
                 ),
-                contentClosed = true
+                contentClosed = true,
+                isOrdered = true
             )
         )
 
@@ -68,10 +69,12 @@ class LocalConnectorMetadataTests {
         val expected =
             StructType(
                 contentClosed = true,
+                isOrdered = true,
                 fields = mapOf(
                     "id" to IntType(),
                     "nested" to StructType(
                         contentClosed = true,
+                        isOrdered = true,
                         fields = mapOf(
                             "nested_id" to IntType()
                         ),

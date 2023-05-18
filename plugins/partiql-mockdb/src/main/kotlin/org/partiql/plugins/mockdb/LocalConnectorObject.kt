@@ -100,6 +100,7 @@ internal class LocalConnectorObject(
                 StructType.Field(it.getName(), it.getValueDesc())
             },
             contentClosed = true,
+            isOrdered = true,
             constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true)),
         )
 
@@ -109,7 +110,8 @@ internal class LocalConnectorObject(
                 fields = this.attributes.map {
                     StructType.Field(it.getName(), it.getValueDesc())
                 },
-                contentClosed = true
+                contentClosed = true,
+                isOrdered = true,
             )
         )
     }
