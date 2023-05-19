@@ -1240,7 +1240,7 @@ internal class EvaluatingCompiler(
         if (typedOpParameter.staticType is AnyType) {
             return thunkFactory.thunkEnv(metas) { ExprValue.newBoolean(true) }
         }
-        if (compileOptions.typedOpBehavior == TypedOpBehavior.HONOR_PARAMETERS && expr.type is PartiqlAst.Type.FloatType && expr.type.precision != null) {
+        if (compileOptions.typedOpBehavior == TypedOpBehavior.HONOR_PARAMETERS && expr.type is PartiqlAst.Type.FloatType && (expr.type as PartiqlAst.Type.FloatType).precision != null) {
             err(
                 "FLOAT precision parameter is unsupported",
                 ErrorCode.SEMANTIC_FLOAT_PRECISION_UNSUPPORTED,
@@ -1472,9 +1472,9 @@ internal class EvaluatingCompiler(
     private fun compileSimpleCase(expr: PartiqlAst.Expr.SimpleCase, metas: MetaContainer): ThunkEnv {
         val valueThunk = compileAstExpr(expr.expr)
         val branchThunks = expr.cases.pairs.map { Pair(compileAstExpr(it.first), compileAstExpr(it.second)) }
-        val elseThunk = when (expr.default) {
+        val elseThunk = when (val default = expr.default) {
             null -> thunkFactory.thunkEnv(metas) { ExprValue.nullValue }
-            else -> compileAstExpr(expr.default)
+            else -> compileAstExpr(default)
         }
 
         return thunkFactory.thunkEnv(metas) thunk@{ env ->
@@ -1504,9 +1504,9 @@ internal class EvaluatingCompiler(
 
     private fun compileSearchedCase(expr: PartiqlAst.Expr.SearchedCase, metas: MetaContainer): ThunkEnv {
         val branchThunks = expr.cases.pairs.map { compileAstExpr(it.first) to compileAstExpr(it.second) }
-        val elseThunk = when (expr.default) {
+        val elseThunk = when (val default = expr.default) {
             null -> thunkFactory.thunkEnv(metas) { ExprValue.nullValue }
-            else -> compileAstExpr(expr.default)
+            else -> compileAstExpr(default)
         }
 
         return when (compileOptions.typingMode) {
@@ -1822,14 +1822,14 @@ internal class EvaluatingCompiler(
         }
 
         val allFromSourceAliases = fold.walkFromSource(selectExpr.from, emptySet())
-            .union(selectExpr.fromLet?.let { fold.walkLet(selectExpr.fromLet, emptySet()) } ?: emptySet())
+            .union(selectExpr.fromLet?.let { fold.walkLet(it, emptySet()) } ?: emptySet())
 
         return nestCompilationContext(ExpressionContext.NORMAL, emptySet()) {
             val fromSourceThunks = compileFromSources(selectExpr.from)
             val letSourceThunks = selectExpr.fromLet?.let { compileLetSources(it) }
             val sourceThunks = compileQueryWithoutProjection(selectExpr, fromSourceThunks, letSourceThunks)
 
-            val orderByThunk = selectExpr.order?.let { compileOrderByExpression(selectExpr.order.sortSpecs) }
+            val orderByThunk = selectExpr.order?.let { compileOrderByExpression(it.sortSpecs) }
             val orderByLocationMeta = selectExpr.order?.metas?.sourceLocation
 
             val offsetThunk = selectExpr.offset?.let { compileAstExpr(it) }

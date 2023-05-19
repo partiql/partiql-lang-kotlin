@@ -27,6 +27,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Moves PartiqlAst, PartiqlLogical, PartiqlLogicalResolved, and PartiqlPhysical (along with the transforms)
+  to a new project, `partiql-ast`. These are still imported into `partiql-lang` with the `api` annotation. Therefore,
+  no action is required to consume the migrated classes. However, this now gives consumers of the AST, Experimental Plans,
+  Visitors, and VisitorTransforms the option of importing them directly using: `org.partiql:partiql-ast:${VERSION}`.
+
 ### Deprecated
 
 ### Fixed

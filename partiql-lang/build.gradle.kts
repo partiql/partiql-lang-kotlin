@@ -18,7 +18,6 @@ plugins {
     id(Plugins.conventions)
     id(Plugins.jmh) version Versions.jmh
     id(Plugins.library)
-    id(Plugins.pig)
     id(Plugins.publish)
 }
 
@@ -36,11 +35,11 @@ kotlin {
 dependencies {
     antlr(Deps.antlr)
     api(project(":lib:isl"))
+    api(project(":partiql-ast"))
     api(project(":partiql-spi"))
     api(project(":partiql-types"))
     api(Deps.ionElement)
     api(Deps.ionJava)
-    api(Deps.pigRuntime)
     // libs are included in partiql-lang-kotlin JAR
     libs(project(":partiql-plan"))
     implementation(Deps.antlrRuntime)
@@ -59,10 +58,6 @@ publish {
     artifactId = "partiql-lang-kotlin"
     name = "PartiQL Lang Kotlin"
     description = "An implementation of PartiQL for the JVM written in Kotlin."
-}
-
-pig {
-    namespace = "org.partiql.lang.domains"
 }
 
 tasks.generateGrammarSource {
@@ -94,17 +89,9 @@ tasks.findByName("sourcesJar")?.apply {
     dependsOn(tasks.generateGrammarSource)
 }
 
-tasks.dokkaHtml.configure {
-    dependsOn(tasks.withType(org.partiql.pig.gradle.PigTask::class))
-}
-
 tasks.processResources {
     from("src/main/antlr") {
         include("**/*.g4")
-    }
-    from("src/main/pig") {
-        include("partiql.ion")
-        into("org/partiql/type-domains/")
     }
 }
 

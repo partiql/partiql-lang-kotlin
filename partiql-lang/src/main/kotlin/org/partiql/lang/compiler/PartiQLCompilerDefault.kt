@@ -63,8 +63,8 @@ internal class PartiQLCompilerDefault(
     }
 
     override fun compile(statement: PartiqlPhysical.Plan): PartiQLStatement {
-        return when (statement.stmt) {
-            is PartiqlPhysical.Statement.Dml -> compileDml(statement.stmt, statement.locals.size)
+        return when (val stmt = statement.stmt) {
+            is PartiqlPhysical.Statement.Dml -> compileDml(stmt, statement.locals.size)
             is PartiqlPhysical.Statement.Exec,
             is PartiqlPhysical.Statement.Query -> {
                 val expression = exprConverter.compile(statement)
@@ -75,11 +75,11 @@ internal class PartiQLCompilerDefault(
     }
 
     override fun compile(statement: PartiqlPhysical.Plan, details: PartiQLPlanner.PlanningDetails): PartiQLStatement {
-        return when (statement.stmt) {
-            is PartiqlPhysical.Statement.Dml -> compileDml(statement.stmt, statement.locals.size)
+        return when (val stmt = statement.stmt) {
+            is PartiqlPhysical.Statement.Dml -> compileDml(stmt, statement.locals.size)
             is PartiqlPhysical.Statement.Exec,
             is PartiqlPhysical.Statement.Query -> compile(statement)
-            is PartiqlPhysical.Statement.Explain -> PartiQLStatement { compileExplain(statement.stmt, details) }
+            is PartiqlPhysical.Statement.Explain -> PartiQLStatement { compileExplain(stmt, details) }
         }
     }
 
@@ -107,8 +107,8 @@ internal class PartiQLCompilerDefault(
     }
 
     private fun compileExplain(statement: PartiqlPhysical.Statement.Explain, details: PartiQLPlanner.PlanningDetails): PartiQLResult.Explain.Domain {
-        return when (statement.target) {
-            is PartiqlPhysical.ExplainTarget.Domain -> compileExplainDomain(statement.target, details)
+        return when (val target = statement.target) {
+            is PartiqlPhysical.ExplainTarget.Domain -> compileExplainDomain(target, details)
         }
     }
 

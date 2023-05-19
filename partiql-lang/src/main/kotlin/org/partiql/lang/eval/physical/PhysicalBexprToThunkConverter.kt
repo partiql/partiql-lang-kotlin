@@ -157,10 +157,10 @@ internal class PhysicalBexprToThunkConverter(
         // recurse into children
         val leftBindingsExpr = this.convert(node.left)
         val rightBindingdExpr = this.convert(node.right)
-        val predicateValueExpr = node.predicate?.let {
-            exprConverter.convert(it)
-                .takeIf { !node.predicate.isLitTrue() }
-                ?.toValueExpr(it.metas.sourceLocationMeta)
+        val predicateValueExpr = node.predicate?.let { predicate ->
+            exprConverter.convert(predicate)
+                .takeIf { !predicate.isLitTrue() }
+                ?.toValueExpr(predicate.metas.sourceLocationMeta)
         }
 
         // locate operator factory
