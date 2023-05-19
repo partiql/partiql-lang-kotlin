@@ -6,6 +6,7 @@ import org.partiql.lang.ast.passes.inference.isText
 import org.partiql.lang.ast.passes.inference.isUnknown
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
+import org.partiql.lang.eval.OrderedBindNames
 import org.partiql.lang.eval.name
 import org.partiql.lang.eval.numberValue
 import org.partiql.lang.eval.stringValue
@@ -33,6 +34,7 @@ import org.partiql.types.StructType
 import org.partiql.types.SymbolType
 import org.partiql.types.TimeType
 import org.partiql.types.TimestampType
+import org.partiql.types.TupleConstraint
 import org.partiql.types.UnsupportedTypeCheckException
 import java.math.BigDecimal
 
@@ -240,48 +242,73 @@ public object StaticTypeUtils {
      * [StructType].  We do not even have the ability to model that with Ion/Ion Schema anyway.
      */
     private fun StructType.isInstanceOf(value: ExprValue) = when {
-        fields.isEmpty() && !contentClosed -> value.type == ExprValueType.STRUCT
+        value.type != ExprValueType.STRUCT -> false
+        fields.isEmpty() && !contentClosed -> true
+        this.constraints.contains(TupleConstraint.Ordered) && value.asFacet(OrderedBindNames::class.java) == null -> false
         else -> {
-            if (value.type != ExprValueType.STRUCT) {
-                false
-            } else {
-                // build a multi-map of fields in the struct.
-                val scratchPad = HashMap<String, MutableList<ExprValue>>().also { map ->
-                    value.forEach { v ->
-                        // return false early if the struct key is not a string or symbol.
-                        val structKey = v.name.takeIf { it?.type?.isText ?: false } ?: return false
-                        map.getOrPut(structKey.stringValue()) { ArrayList() }.add(v)
-                    }
-                }
-
-                // now go thru each of the [fields] and remove those that are valid
-                fields.forEach { (fieldName, fieldType) ->
-                    val fieldValues = scratchPad.remove(fieldName)
-
-                    // Field was *not* present
-                    if (fieldValues == null) {
-                        // if field was required, the struct is not an instance of this [StructType]
-                        if (!fieldType.isOptional()) {
-                            return false
+            when (this.constraints.contains(TupleConstraint.Ordered)) {
+                false -> {
+                    // build a multi-map of fields in the struct.
+                    val scratchPad = HashMap<String, MutableList<ExprValue>>().also { map ->
+                        value.forEach { v ->
+                            // return false early if the struct key is not a string or symbol.
+                            val structKey = v.name.takeIf { it?.type?.isText ?: false } ?: return false
+                            map.getOrPut(structKey.stringValue()) { ArrayList() }.add(v)
                         }
-                        // else there is no violation, keep checking other fields
+                    }
+
+                    // Consolidates fields to check that the ExprValue sufficiently conforms to the StaticType
+                    //  defined in the consolidated field
+                    val consolidatedFields = fields.groupBy({ it.key }) { it.value }.map {
+                        StructType.Field(
+                            it.key,
+                            StaticType.unionOf(it.value.toSet()).flatten()
+                        )
+                    }
+
+                    // now go thru each of the [fields] and remove those that are valid
+                    consolidatedFields.forEach { (fieldName, fieldType) ->
+                        val fieldValues = scratchPad.remove(fieldName)
+
+                        // Field was *not* present
+                        if (fieldValues == null) {
+                            // if field was required, the struct is not an instance of this [StructType]
+                            if (!fieldType.isOptional()) {
+                                return false
+                            }
+                            // else there is no violation, keep checking other fields
+                        } else {
+                            // in the case of multiple fields with the same name, all values must match
+                            if (!fieldValues.all { isInstance(it, fieldType) }) {
+                                return false
+                            }
+                            // else there is no violation, keep checking other fields
+                        }
+                    }
+
+                    // if we reach this point, we didn't find any fields that do not comply with their final types.
+
+                    // If no fields remain [value] is an instance of this [StaticType]
+                    if (scratchPad.none()) {
+                        true
                     } else {
-                        // in the case of multiple fields with the same name, all values must match
-                        if (!fieldValues.all { isInstance(it, fieldType) }) {
-                            return false
-                        }
-                        // else there is no violation, keep checking other fields
+                        // There are some fields left over, so we only need to check if we are closedContent or not.
+                        !contentClosed
                     }
                 }
-
-                // if we reach this point, we didn't find any fields that do not comply with their final types.
-
-                // If no fields remain [value] is an instance of this [StaticType]
-                if (scratchPad.none()) {
+                true -> {
+                    value.asFacet(OrderedBindNames::class.java)?.orderedNames.let { orderedNames ->
+                        if (orderedNames == null) { return false }
+                        val fieldNames = this.fields.map { it.key }
+                        if (fieldNames != orderedNames) { return false }
+                    }
+                    this.fields.forEachIndexed { index, field ->
+                        val attrValue = value.ordinalBindings[index] ?: return false
+                        if (isInstance(attrValue, field.value).not()) {
+                            return false
+                        }
+                    }
                     true
-                } else {
-                    // There are some fields left over, so we only need to check if we are closedContent or not.
-                    !contentClosed
                 }
             }
         }

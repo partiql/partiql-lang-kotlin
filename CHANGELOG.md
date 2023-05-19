@@ -35,12 +35,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     externally-defined graphs into the evaluation environment. 
   - Evaluation of straight-path patterns with simple label matching and 
     all directed/undirected edge patterns.
+- Adds new `TupleConstraint` variant, `Ordered`, to represent ordering in `StructType`. See the KDoc for more information.
 
 ### Changed
+
+- **Breaking**: The `fields` attribute of `org.partiql.types.StructType` is no longer a `Map<String, StaticType>`. It is
+  now a `List<org.partiql.types.StructType.Field>`, where `Field` contains a `key (String)` and `value (StaticType)`. This
+  is to allow duplicates within the `StructType`.
 
 ### Deprecated
 
 ### Fixed
+
+- Fixes the ability for JOIN predicates to access the FROM source aliases and corresponding attributes.
 
 ### Removed
 

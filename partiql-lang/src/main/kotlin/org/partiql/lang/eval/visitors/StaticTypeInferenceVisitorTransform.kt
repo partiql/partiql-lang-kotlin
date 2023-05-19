@@ -1288,7 +1288,7 @@ internal class StaticTypeInferenceVisitorTransform(
 
         override fun transformExprStruct(node: PartiqlAst.Expr.Struct): PartiqlAst.Expr {
             val struct = super.transformExprStruct(node) as PartiqlAst.Expr.Struct
-            val structFields = mutableListOf<Pair<String, StaticType>>()
+            val structFields = mutableListOf<StructType.Field>()
             var closedContent = true
             struct.fields.forEach { expr ->
                 val nameExpr = expr.first
@@ -1297,7 +1297,7 @@ internal class StaticTypeInferenceVisitorTransform(
                     is PartiqlAst.Expr.Lit ->
                         // A field is only included in the StructType if its key is a text literal
                         if (nameExpr.value is TextElement) {
-                            structFields.add(nameExpr.value.textValue to valueExpr.getStaticType())
+                            structFields.add(StructType.Field(nameExpr.value.textValue, valueExpr.getStaticType()))
                         }
                     else -> {
                         // A field with a non-literal key name is not included.
@@ -1310,7 +1310,7 @@ internal class StaticTypeInferenceVisitorTransform(
             }
 
             val hasDuplicateKeys = structFields
-                .groupingBy { it.first }
+                .groupingBy { it.key }
                 .eachCount()
                 .any { it.value > 1 }
 
@@ -1318,7 +1318,7 @@ internal class StaticTypeInferenceVisitorTransform(
                 TODO("Duplicate keys in struct is not yet handled")
             }
 
-            return struct.withStaticType(StructType(structFields.toMap(), contentClosed = closedContent))
+            return struct.withStaticType(StructType(structFields, contentClosed = closedContent))
         }
 
         private fun getElementTypeForFromSource(fromSourceType: StaticType): StaticType =
@@ -1413,7 +1413,7 @@ internal class StaticTypeInferenceVisitorTransform(
         private fun getUnpivotValueType(fromSourceType: StaticType): StaticType =
             when (fromSourceType) {
                 is StructType -> if (fromSourceType.contentClosed) {
-                    AnyOfType(fromSourceType.fields.values.toSet()).flatten()
+                    AnyOfType(fromSourceType.fields.map { it.value }.toSet()).flatten()
                 } else {
                     // Content is open, so value can be of any type
                     StaticType.ANY
@@ -1481,7 +1481,7 @@ internal class StaticTypeInferenceVisitorTransform(
         ): StaticType =
             when (previousComponentType) {
                 is AnyType -> StaticType.ANY
-                is StructType -> inferStructLookupType(currentPathComponent, previousComponentType.fields, previousComponentType.contentClosed)
+                is StructType -> inferStructLookupType(currentPathComponent, previousComponentType.fields.associate { it.key to it.value }, previousComponentType.contentClosed)
                 is ListType,
                 is SexpType -> {
                     val previous = previousComponentType as CollectionType // help Kotlin's type inference to be more specific
@@ -1566,24 +1566,24 @@ internal class StaticTypeInferenceVisitorTransform(
                             ?: TODO("Expected Struct type for PartiqlAst.ProjectItem.ProjectAll expr")
                         exprType.contentClosed
                     }
-                    val projectionFields = mutableMapOf<String, StaticType>()
+                    val projectionFields = mutableListOf<StructType.Field>()
                     for (item in newProjection.projectItems) {
                         when (item) {
                             is PartiqlAst.ProjectItem.ProjectExpr -> {
                                 val projectionAsName = item.asAlias?.text
                                     ?: error("No alias found for projection")
-                                if (projectionFields.containsKey(projectionAsName)) {
+                                if (projectionFields.find { it.key == projectionAsName } != null) {
                                     // Duplicate select-list-item aliases are not allowed.
                                     // Keeps the static type of the first alias
                                     handleDuplicateAliasesError(item.expr.metas.getSourceLocation())
                                 } else {
-                                    projectionFields[projectionAsName] = item.expr.getStaticType()
+                                    projectionFields.add(StructType.Field(projectionAsName, item.expr.getStaticType()))
                                 }
                             }
                             is PartiqlAst.ProjectItem.ProjectAll -> {
                                 val exprType = item.expr.getStaticType() as? StructType
                                     ?: TODO("Expected Struct type for PartiqlAst.ProjectItem.ProjectAll expr")
-                                projectionFields.putAll(exprType.fields)
+                                projectionFields.addAll(exprType.fields)
                             }
                         }
                     }
