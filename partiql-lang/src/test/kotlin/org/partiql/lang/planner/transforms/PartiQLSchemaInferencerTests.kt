@@ -63,28 +63,28 @@ class PartiQLSchemaInferencerTests {
                     "breed" to TYPE_AWS_DDB_PETS_BREED
                 ),
                 contentClosed = true,
-                constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.IsOrdered)
+                constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
             )
         )
         val TABLE_AWS_DDB_B = BagType(
             StructType(
                 fields = mapOf("identifier" to StaticType.STRING),
                 contentClosed = true,
-                constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.IsOrdered)
+                constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
             )
         )
         val TABLE_AWS_B_B = BagType(
             StructType(
                 fields = mapOf("identifier" to StaticType.INT),
                 contentClosed = true,
-                constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.IsOrdered)
+                constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
             )
         )
         val TYPE_B_B_B_B_B = StaticType.INT
         private val TYPE_B_B_B_B = StructType(
             mapOf("b" to TYPE_B_B_B_B_B),
             contentClosed = true,
-            constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.IsOrdered)
+            constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
         )
         val TYPE_B_B_B_C = StaticType.INT
         val TYPE_B_B_C = StaticType.INT
@@ -95,7 +95,7 @@ class PartiQLSchemaInferencerTests {
                     "c" to TYPE_B_B_B_C
                 ),
                 contentClosed = true,
-                constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.IsOrdered)
+                constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
             )
     }
 
@@ -140,7 +140,7 @@ class PartiQLSchemaInferencerTests {
                     StructType(
                         fields = mapOf("pets" to StaticType.ANY),
                         contentClosed = true,
-                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.IsOrdered)
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
                     )
                 ),
                 problemHandler = assertProblemExists {
@@ -158,7 +158,7 @@ class PartiQLSchemaInferencerTests {
                     StructType(
                         fields = mapOf("pets" to StaticType.ANY),
                         contentClosed = true,
-                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.IsOrdered)
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
                     )
                 ),
                 problemHandler = assertProblemExists {
@@ -210,7 +210,7 @@ class PartiQLSchemaInferencerTests {
                     StructType(
                         fields = mapOf("pets" to StaticType.ANY),
                         contentClosed = true,
-                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.IsOrdered)
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
                     )
                 ),
                 problemHandler = assertProblemExists {
@@ -555,7 +555,7 @@ class PartiQLSchemaInferencerTests {
                     StructType(
                         fields = mapOf("unknown_col" to AnyType()),
                         contentClosed = true,
-                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.IsOrdered)
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
                     )
                 ),
                 problemHandler = assertProblemExists {
@@ -635,7 +635,7 @@ class PartiQLSchemaInferencerTests {
                     StructType(
                         fields = mapOf("cast_breed" to unionOf(StaticType.INT, StaticType.MISSING)),
                         contentClosed = true,
-                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.IsOrdered)
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
                     )
                 )
             ),
@@ -648,7 +648,7 @@ class PartiQLSchemaInferencerTests {
                     StructType(
                         fields = mapOf("upper_breed" to StaticType.STRING),
                         contentClosed = true,
-                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.IsOrdered)
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
                     )
                 )
             ),
@@ -659,7 +659,7 @@ class PartiQLSchemaInferencerTests {
                     StructType(
                         fields = mapOf("a" to ListType(unionOf(StaticType.INT, StaticType.DECIMAL))),
                         contentClosed = true,
-                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.IsOrdered)
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
                     )
                 )
             ),
@@ -692,7 +692,7 @@ class PartiQLSchemaInferencerTests {
                             "b" to StaticType.DECIMAL,
                         ),
                         contentClosed = true,
-                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.IsOrdered)
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
                     )
                 )
             ),
@@ -706,7 +706,7 @@ class PartiQLSchemaInferencerTests {
                             "b" to StaticType.DECIMAL,
                         ),
                         contentClosed = true,
-                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.IsOrdered)
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
                     )
                 )
             ),
@@ -720,7 +720,7 @@ class PartiQLSchemaInferencerTests {
                             StructType.Field("a", StaticType.INT),
                         ),
                         contentClosed = true,
-                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.IsOrdered)
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
                     )
                 )
             ),
@@ -734,7 +734,7 @@ class PartiQLSchemaInferencerTests {
                             StructType.Field("a", StaticType.DECIMAL),
                         ),
                         contentClosed = true,
-                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.IsOrdered)
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
                     )
                 )
             ),
@@ -748,7 +748,7 @@ class PartiQLSchemaInferencerTests {
                             StructType.Field("a", StaticType.DECIMAL),
                         ),
                         contentClosed = true,
-                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.IsOrdered)
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
                     )
                 )
             ),
@@ -773,7 +773,7 @@ class PartiQLSchemaInferencerTests {
                             StructType.Field("a", StaticType.STRING),
                         ),
                         contentClosed = true,
-                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.IsOrdered)
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
                     )
                 )
             ),
@@ -791,7 +791,7 @@ class PartiQLSchemaInferencerTests {
                             StructType.Field("a", unionOf(INT, STRING))
                         ),
                         contentClosed = true,
-                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.IsOrdered)
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
                     )
                 )
             ),
@@ -807,7 +807,7 @@ class PartiQLSchemaInferencerTests {
                             StructType.Field("e", INT)
                         ),
                         contentClosed = true,
-                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.IsOrdered)
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
                     )
                 )
             ),
@@ -821,7 +821,7 @@ class PartiQLSchemaInferencerTests {
                             StructType.Field("a", StaticType.DECIMAL),
                         ),
                         contentClosed = true,
-                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.IsOrdered)
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
                     )
                 ),
                 problemHandler = assertProblemExists {
@@ -845,7 +845,7 @@ class PartiQLSchemaInferencerTests {
                             StructType.Field("a", unionOf(INT, STRING))
                         ),
                         contentClosed = true,
-                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.IsOrdered)
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
                     )
                 )
             ),
@@ -861,7 +861,7 @@ class PartiQLSchemaInferencerTests {
                             "m" to StaticType.INT,
                         ),
                         contentClosed = true,
-                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.IsOrdered)
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
                     )
                 )
             ),
@@ -877,7 +877,7 @@ class PartiQLSchemaInferencerTests {
                             "m" to StaticType.DECIMAL,
                         ),
                         contentClosed = true,
-                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.IsOrdered)
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
                     )
                 )
             ),

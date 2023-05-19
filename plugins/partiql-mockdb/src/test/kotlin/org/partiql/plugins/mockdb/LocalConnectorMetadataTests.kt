@@ -42,7 +42,7 @@ class LocalConnectorMetadataTests {
                     "path" to StaticType.STRING
                 ),
                 contentClosed = true,
-                constraints = setOf(TupleConstraint.IsOrdered)
+                constraints = setOf(TupleConstraint.Ordered)
             )
         )
 
@@ -76,10 +76,10 @@ class LocalConnectorMetadataTests {
                         fields = mapOf(
                             "nested_id" to IntType()
                         ),
-                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.IsOrdered)
+                        constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
                     )
                 ),
-                constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.IsOrdered)
+                constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
             )
 
         // Act

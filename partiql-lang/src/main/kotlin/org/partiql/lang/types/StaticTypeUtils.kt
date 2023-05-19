@@ -244,9 +244,9 @@ public object StaticTypeUtils {
     private fun StructType.isInstanceOf(value: ExprValue) = when {
         value.type != ExprValueType.STRUCT -> false
         fields.isEmpty() && !contentClosed -> true
-        this.constraints.contains(TupleConstraint.IsOrdered) && value.asFacet(OrderedBindNames::class.java) == null -> false
+        this.constraints.contains(TupleConstraint.Ordered) && value.asFacet(OrderedBindNames::class.java) == null -> false
         else -> {
-            when (this.constraints.contains(TupleConstraint.IsOrdered)) {
+            when (this.constraints.contains(TupleConstraint.Ordered)) {
                 false -> {
                     // build a multi-map of fields in the struct.
                     val scratchPad = HashMap<String, MutableList<ExprValue>>().also { map ->

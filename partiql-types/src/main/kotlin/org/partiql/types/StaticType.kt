@@ -508,7 +508,7 @@ data class StructType(
      * its [StaticType]. Note: multiple [Field]s within a [StructType] may contain the same [key], and therefore,
      * multiple same-named keys may refer to distinct [StaticType]s. To determine the [StaticType]
      * of a reference to a field, especially in the case of duplicates, it depends on the ordering of the [StructType]
-     * (denoted by the presence of [TupleConstraint.IsOrdered] in the [StructType.constraints]).
+     * (denoted by the presence of [TupleConstraint.Ordered] in the [StructType.constraints]).
      * - If ORDERED: the PartiQL specification says to grab the first encountered matching field.
      * - If UNORDERED: it is implementation-defined. However, gather all possible types, merge them using [AnyOfType].
      */
@@ -613,10 +613,10 @@ sealed class TupleConstraint {
     data class Open(val value: Boolean) : TupleConstraint()
 
     /**
-     * The presence of the [IsOrdered] on a [StructType] represents that the [StructType] is ORDERED. The absence of
+     * The presence of the [Ordered] on a [StructType] represents that the [StructType] is ORDERED. The absence of
      * this constrain represents the opposite -- AKA that the [StructType] is UNORDERED
      */
-    object IsOrdered : TupleConstraint()
+    object Ordered : TupleConstraint()
 }
 
 /**

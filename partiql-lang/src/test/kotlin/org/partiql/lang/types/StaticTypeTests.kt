@@ -215,7 +215,7 @@ class StaticTypeTests {
                                 StructType.Field("bar", staticType),
                             ),
                             contentClosed = true,
-                            constraints = setOf(TupleConstraint.IsOrdered),
+                            constraints = setOf(TupleConstraint.Ordered),
                         )
                         listOf(
                             listOf(

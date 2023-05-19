@@ -89,7 +89,7 @@ internal object ReferenceResolver {
     internal fun inferStructLookup(
         struct: StructType,
         key: BindingName,
-    ): StaticType? = when (struct.constraints.contains(TupleConstraint.IsOrdered)) {
+    ): StaticType? = when (struct.constraints.contains(TupleConstraint.Ordered)) {
         true -> struct.fields.firstOrNull { entry ->
             key.isEquivalentTo(entry.key)
         }?.value
