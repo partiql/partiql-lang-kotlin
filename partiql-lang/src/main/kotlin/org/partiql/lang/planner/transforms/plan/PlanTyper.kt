@@ -22,7 +22,6 @@ import org.partiql.lang.ast.passes.SemanticProblemDetails
 import org.partiql.lang.ast.passes.inference.cast
 import org.partiql.lang.errors.Problem
 import org.partiql.lang.errors.ProblemHandler
-import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.builtins.SCALAR_BUILTINS_DEFAULT
 import org.partiql.lang.planner.PlanningProblemDetails
@@ -138,7 +137,7 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
         val predicateType = when (val condition = node.condition) {
             null -> StaticType.BOOL
             else -> {
-                val predicate = typeRex(condition, node, ctx)
+                val predicate = typeRex(condition, newJoin, ctx)
                 // verify `JOIN` predicate is bool. If it's unknown, gives a null or missing error. If it could
                 // never be a bool, gives an incompatible data type for expression error
                 assertType(expected = StaticType.BOOL, actual = predicate.grabType() ?: handleMissingType(ctx), ctx)
@@ -206,10 +205,6 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
 
     override fun visitRelProject(node: Rel.Project, ctx: Context): PlanNode {
         val input = visitRel(node.input, ctx)
-        val distinct = node.bindings.map { it.name }.distinct()
-        if (distinct.size != node.bindings.size) {
-            handleDuplicateAliasesError(ctx)
-        }
         val typeEnv = node.bindings.flatMap { binding ->
             val type = inferType(binding.value, input, ctx)
             when (binding.value.isProjectAll()) {
@@ -436,11 +431,11 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
                     rel = input,
                     type = typeConstructor.invoke(
                         StructType(
-                            fields = input.getTypeEnv().associate { attribute ->
-                                attribute.name to attribute.type
+                            fields = input.getTypeEnv().map { attribute ->
+                                StructType.Field(attribute.name, attribute.type)
                             },
                             contentClosed = true,
-                            constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                            constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered)
                         )
                     )
                 )
@@ -619,7 +614,7 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
             )
         }
 
-        val structFields = mutableListOf<Pair<String, StaticType>>()
+        val structFields = mutableListOf<StructType.Field>()
         var closedContent = true
         fields.forEach { field ->
             when (val name = field.name) {
@@ -628,7 +623,7 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
                     if (name.value is TextElement) {
                         val value = name.value as TextElement
                         val type = field.value.grabType() ?: handleMissingType(ctx)
-                        structFields.add(value.textValue to type)
+                        structFields.add(StructType.Field(value.textValue, type))
                     }
                 else -> {
                     // A field with a non-literal key name is not included.
@@ -642,19 +637,15 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
         }
 
         val hasDuplicateKeys = structFields
-            .groupingBy { it.first }
+            .groupingBy { it.key }
             .eachCount()
             .any { it.value > 1 }
 
-        if (hasDuplicateKeys) {
-            TODO("Duplicate keys in struct is not yet handled")
-        }
-
         return node.copy(
             type = StructType(
-                structFields.toMap(),
+                structFields,
                 contentClosed = closedContent,
-                constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true))
+                constraints = setOf(TupleConstraint.Open(closedContent.not()), TupleConstraint.UniqueAttrs(hasDuplicateKeys.not()))
             ),
             fields = fields
         )
@@ -991,7 +982,10 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
     ): StaticType =
         when (previousComponentType) {
             is AnyType -> StaticType.ANY
-            is StructType -> inferStructLookupType(currentPathComponent, previousComponentType.fields, previousComponentType.contentClosed)
+            is StructType -> inferStructLookupType(
+                currentPathComponent,
+                previousComponentType
+            ).flatten()
             is ListType,
             is SexpType -> {
                 val previous = previousComponentType as CollectionType // help Kotlin's type inference to be more specific
@@ -1021,24 +1015,17 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
 
     private fun inferStructLookupType(
         currentPathComponent: Step.Key,
-        structFields: Map<String, StaticType>,
-        contentClosed: Boolean
+        struct: StructType
     ): StaticType =
         when (val key = currentPathComponent.value) {
             is Rex.Lit -> {
                 if (key.value is StringElement) {
-                    val bindings = Bindings.ofMap(structFields)
-                    val caseSensitivity = currentPathComponent.case
-                    val lookupName = BindingName(
-                        key.value.asAnyElement().stringValue,
-                        rexCaseToBindingCase(caseSensitivity)
-                    )
-                    val lookupBindingName = rexBindingNameToLangBindingName(lookupName)
-                    bindings[lookupBindingName] ?: if (contentClosed) {
-                        StaticType.MISSING
-                    } else {
-                        StaticType.ANY
-                    }
+                    val case = rexCaseToBindingCase(currentPathComponent.case)
+                    ReferenceResolver.inferStructLookup(struct, BindingName(key.value.asAnyElement().stringValue, case))
+                        ?: when (struct.contentClosed) {
+                            true -> StaticType.MISSING
+                            false -> StaticType.ANY
+                        }
                 } else {
                     // Should this branch result in an error?
                     StaticType.MISSING
@@ -1245,7 +1232,7 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
     private fun getUnpivotValueType(fromSourceType: StaticType): StaticType =
         when (fromSourceType) {
             is StructType -> if (fromSourceType.contentClosed) {
-                AnyOfType(fromSourceType.fields.values.toSet()).flatten()
+                AnyOfType(fromSourceType.fields.map { it.value }.toSet()).flatten()
             } else {
                 // Content is open, so value can be of any type
                 StaticType.ANY

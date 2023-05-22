@@ -15,5 +15,5 @@
 package org.partiql.spi.connector
 
 public object Constants {
-    public const val CONFIG_KEY_CONNECTOR_NAME = "connector_name"
+    public const val CONFIG_KEY_CONNECTOR_NAME: String = "connector_name"
 }

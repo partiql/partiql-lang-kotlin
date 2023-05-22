@@ -10,15 +10,15 @@ import java.math.RoundingMode
 /**
  * Represents static types available in the language and ways to extends them to create new types.
  */
-sealed class StaticType {
-    companion object {
+public sealed class StaticType {
+    public companion object {
 
         /**
          * varargs variant, folds [types] into a [Set]
          * The usage of LinkedHashSet is to preserve the order of `types` to ensure behavior is consistent in our tests
          */
         @JvmStatic
-        fun unionOf(vararg types: StaticType, metas: Map<String, Any> = mapOf()) =
+        public fun unionOf(vararg types: StaticType, metas: Map<String, Any> = mapOf()): StaticType =
             unionOf(types.toSet(), metas)
 
         /**
@@ -29,40 +29,40 @@ sealed class StaticType {
          * @return [StaticType] representing the union of [types]
          */
         @JvmStatic
-        fun unionOf(types: Set<StaticType>, metas: Map<String, Any> = mapOf()): StaticType = AnyOfType(types, metas)
+        public fun unionOf(types: Set<StaticType>, metas: Map<String, Any> = mapOf()): StaticType = AnyOfType(types, metas)
 
         // TODO consider making these into an enumeration...
 
         // Convenient enums to create a bare bones instance of StaticType
-        @JvmField val MISSING: MissingType = MissingType
-        @JvmField val NULL: NullType = NullType()
-        @JvmField val ANY: AnyType = AnyType()
-        @JvmField val NULL_OR_MISSING: StaticType = unionOf(NULL, MISSING)
-        @JvmField val BOOL: BoolType = BoolType()
-        @JvmField val INT2: IntType = IntType(IntType.IntRangeConstraint.SHORT)
-        @JvmField val INT4: IntType = IntType(IntType.IntRangeConstraint.INT4)
-        @JvmField val INT8: IntType = IntType(IntType.IntRangeConstraint.LONG)
-        @JvmField val INT: IntType = IntType(IntType.IntRangeConstraint.UNCONSTRAINED)
-        @JvmField val FLOAT: FloatType = FloatType()
-        @JvmField val DECIMAL: DecimalType = DecimalType()
-        @JvmField val NUMERIC: StaticType = unionOf(INT2, INT4, INT8, INT, FLOAT, DECIMAL)
-        @JvmField val DATE: DateType = DateType()
-        @JvmField val TIME: TimeType = TimeType()
-        @JvmField val TIMESTAMP: TimestampType = TimestampType()
-        @JvmField val SYMBOL: SymbolType = SymbolType()
-        @JvmField val STRING: StringType = StringType()
-        @JvmField val TEXT: StaticType = unionOf(SYMBOL, STRING)
-        @JvmField val CLOB: ClobType = ClobType()
-        @JvmField val BLOB: BlobType = BlobType()
-        @JvmField val LIST: ListType = ListType()
-        @JvmField val SEXP: SexpType = SexpType()
-        @JvmField val STRUCT: StructType = StructType()
-        @JvmField val BAG: BagType = BagType()
-        @JvmField val GRAPH: GraphType = GraphType()
+        @JvmField public val MISSING: MissingType = MissingType
+        @JvmField public val NULL: NullType = NullType()
+        @JvmField public val ANY: AnyType = AnyType()
+        @JvmField public val NULL_OR_MISSING: StaticType = unionOf(NULL, MISSING)
+        @JvmField public val BOOL: BoolType = BoolType()
+        @JvmField public val INT2: IntType = IntType(IntType.IntRangeConstraint.SHORT)
+        @JvmField public val INT4: IntType = IntType(IntType.IntRangeConstraint.INT4)
+        @JvmField public val INT8: IntType = IntType(IntType.IntRangeConstraint.LONG)
+        @JvmField public val INT: IntType = IntType(IntType.IntRangeConstraint.UNCONSTRAINED)
+        @JvmField public val FLOAT: FloatType = FloatType()
+        @JvmField public val DECIMAL: DecimalType = DecimalType()
+        @JvmField public val NUMERIC: StaticType = unionOf(INT2, INT4, INT8, INT, FLOAT, DECIMAL)
+        @JvmField public val DATE: DateType = DateType()
+        @JvmField public val TIME: TimeType = TimeType()
+        @JvmField public val TIMESTAMP: TimestampType = TimestampType()
+        @JvmField public val SYMBOL: SymbolType = SymbolType()
+        @JvmField public val STRING: StringType = StringType()
+        @JvmField public val TEXT: StaticType = unionOf(SYMBOL, STRING)
+        @JvmField public val CLOB: ClobType = ClobType()
+        @JvmField public val BLOB: BlobType = BlobType()
+        @JvmField public val LIST: ListType = ListType()
+        @JvmField public val SEXP: SexpType = SexpType()
+        @JvmField public val STRUCT: StructType = StructType()
+        @JvmField public val BAG: BagType = BagType()
+        @JvmField public val GRAPH: GraphType = GraphType()
 
         /** All the StaticTypes, except for `ANY`. */
         @JvmStatic
-        val ALL_TYPES = listOf(
+        public val ALL_TYPES: List<SingleType> = listOf(
             MISSING,
             NULL,
             BOOL,
@@ -92,7 +92,7 @@ sealed class StaticType {
      *
      *  If it already nullable, returns the original type.
      */
-    fun asNullable() =
+    public fun asNullable(): StaticType =
         when {
             this.isNullable() -> this
             else -> unionOf(this, NULL).flatten()
@@ -103,20 +103,20 @@ sealed class StaticType {
      *
      *  If it already optional, returns the original type.
      */
-    fun asOptional() =
+    public fun asOptional(): StaticType =
         when {
             this.isOptional() -> this
             else -> unionOf(this, MISSING).flatten()
         }
 
-    abstract val metas: Map<String, Any>
+    public abstract val metas: Map<String, Any>
 
     /**
      * Convenience method to copy over StaticType to a new instance with given `metas`
      * MissingType is a singleton and there can only be one representation for it
      * i.e. you cannot have two instances of MissingType with different metas.
      */
-    fun withMetas(metas: Map<String, Any>): StaticType =
+    public fun withMetas(metas: Map<String, Any>): StaticType =
         when (this) {
             is AnyType -> copy(metas = metas)
             is ListType -> copy(metas = metas)
@@ -143,7 +143,7 @@ sealed class StaticType {
     /**
      * Type is nullable if it is of Null type or is an AnyOfType that contains a Null type
      */
-    fun isNullable(): Boolean =
+    public fun isNullable(): Boolean =
         when (this) {
             is AnyOfType -> types.any { it.isNullable() }
             is AnyType, is NullType -> true
@@ -153,7 +153,7 @@ sealed class StaticType {
     /**
      * Type is optional if it is Any, or Missing, or an AnyOfType that contains Any or Missing type
      */
-    internal fun isOptional(): Boolean =
+    private fun isOptional(): Boolean =
         when (this) {
             is AnyType, MissingType -> true // Any includes Missing type
             is AnyOfType -> types.any { it.isOptional() }
@@ -168,7 +168,7 @@ sealed class StaticType {
      */
     public abstract val allTypes: List<StaticType>
 
-    abstract fun flatten(): StaticType
+    public abstract fun flatten(): StaticType
 }
 
 /**
@@ -176,12 +176,12 @@ sealed class StaticType {
  */
 // TODO: Remove `NULL` from here. This affects inference as operations (especially NAry) can produce
 //  `NULL` or `MISSING` depending on a null propagation or an incorrect argument.
-data class AnyType(override val metas: Map<String, Any> = mapOf()) : StaticType() {
+public data class AnyType(override val metas: Map<String, Any> = mapOf()) : StaticType() {
     /**
      * Converts this into an [AnyOfType] representation. This method is helpful in inference when
      * it wants to iterate over all possible types of an expression.
      */
-    fun toAnyOfType() = AnyOfType(ALL_TYPES.toSet())
+    public fun toAnyOfType(): AnyOfType = AnyOfType(ALL_TYPES.toSet())
 
     override fun flatten(): StaticType = this
 
@@ -192,27 +192,27 @@ data class AnyType(override val metas: Map<String, Any> = mapOf()) : StaticType(
 }
 
 /**
- * Represents a [StaticType] that is type of a single [ExprValueType].
+ * Represents a [StaticType] that is type of a single [StaticType].
  */
-sealed class SingleType : StaticType() {
+public sealed class SingleType : StaticType() {
     override fun flatten(): StaticType = this
 }
 
 /**
- * Exception thrown when [StaticType.isInstance] cannot perform a type check because of a temporarily unimplemented
- * code path.
+ * Exception thrown when [StaticTypeUtils.isInstance](https://javadoc.io/doc/org.partiql/partiql-lang-kotlin/latest/partiql-lang/org.partiql.lang.types/-static-type-utils/is-instance.html)
+ * cannot perform a type check because of a temporarily unimplemented code path.
  *
  * This exception type needs to exist so that the callers can catch it explicitly and disambiguate from the more
  * generic [NotImplementedError].
  */
-class UnsupportedTypeCheckException(message: String) : RuntimeException(message)
+public class UnsupportedTypeCheckException(message: String) : RuntimeException(message)
 
 /**
  * Represents collection types i.e list, bag and sexp.
  */
-sealed class CollectionType : SingleType() {
-    abstract val elementType: StaticType
-    abstract val constraints: Set<CollectionConstraint>
+public sealed class CollectionType : SingleType() {
+    public abstract val elementType: StaticType
+    public abstract val constraints: Set<CollectionConstraint>
 
     internal fun validateCollectionConstraints() {
         if (elementType !is StructType && constraints.any { it is TupleCollectionConstraint }) {
@@ -224,7 +224,7 @@ sealed class CollectionType : SingleType() {
 /**
  * Exception thrown when a [StaticType] is initialized with an unsupported type constraint.
  */
-class UnsupportedTypeConstraint(message: String) : Exception(message)
+public class UnsupportedTypeConstraint(message: String) : Exception(message)
 
 // Single types from ExprValueType.
 
@@ -233,7 +233,7 @@ class UnsupportedTypeConstraint(message: String) : Exception(message)
  *
  * This is not a singleton since there may be more that one representation of a Null type (each with different metas)
  */
-data class NullType(override val metas: Map<String, Any> = mapOf()) : SingleType() {
+public data class NullType(override val metas: Map<String, Any> = mapOf()) : SingleType() {
     override val allTypes: List<StaticType>
         get() = listOf(this)
 
@@ -246,7 +246,7 @@ data class NullType(override val metas: Map<String, Any> = mapOf()) : SingleType
  * This is a singleton unlike the rest of the types as there cannot be
  * more that one representations of a missing type.
  */
-object MissingType : SingleType() {
+public object MissingType : SingleType() {
     override val metas: Map<String, Any> = mapOf()
 
     override val allTypes: List<StaticType>
@@ -255,19 +255,19 @@ object MissingType : SingleType() {
     override fun toString(): String = "missing"
 }
 
-data class BoolType(override val metas: Map<String, Any> = mapOf()) : SingleType() {
+public data class BoolType(override val metas: Map<String, Any> = mapOf()) : SingleType() {
     override val allTypes: List<StaticType>
         get() = listOf(this)
 
     override fun toString(): String = "bool"
 }
 
-data class IntType(
+public data class IntType(
     val rangeConstraint: IntRangeConstraint = IntRangeConstraint.UNCONSTRAINED,
     override val metas: Map<String, Any> = mapOf()
 ) : SingleType() {
 
-    enum class IntRangeConstraint(val numBytes: Int, val validRange: LongRange) {
+    public enum class IntRangeConstraint(public val numBytes: Int, public val validRange: LongRange) {
         /** SQL's SMALLINT (2 Bytes) */
         SHORT(2, Short.MIN_VALUE.toLong()..Short.MAX_VALUE.toLong()),
 
@@ -294,27 +294,27 @@ data class IntType(
         }
 }
 
-data class FloatType(override val metas: Map<String, Any> = mapOf()) : SingleType() {
+public data class FloatType(override val metas: Map<String, Any> = mapOf()) : SingleType() {
     override val allTypes: List<StaticType>
         get() = listOf(this)
 
     override fun toString(): String = "float"
 }
 
-data class DecimalType(
+public data class DecimalType(
     val precisionScaleConstraint: PrecisionScaleConstraint = PrecisionScaleConstraint.Unconstrained,
     override val metas: Map<String, Any> = mapOf()
 ) : SingleType() {
 
-    sealed class PrecisionScaleConstraint {
-        abstract fun matches(d: BigDecimal): Boolean
+    public sealed class PrecisionScaleConstraint {
+        public abstract fun matches(d: BigDecimal): Boolean
 
         // TODO: Do we need unconstrained precision and scale? What's our limit?
-        object Unconstrained : PrecisionScaleConstraint() {
+        public object Unconstrained : PrecisionScaleConstraint() {
             override fun matches(d: BigDecimal): Boolean = true
         }
 
-        data class Constrained(val precision: Int, val scale: Int = 0) : PrecisionScaleConstraint() {
+        public data class Constrained(val precision: Int, val scale: Int = 0) : PrecisionScaleConstraint() {
             override fun matches(d: BigDecimal): Boolean {
                 // check scale
                 val decimalPoint = if (d.scale() >= 0) d.scale() else 0
@@ -339,14 +339,14 @@ data class DecimalType(
     override fun toString(): String = "decimal"
 }
 
-data class DateType(override val metas: Map<String, Any> = mapOf()) : SingleType() {
+public data class DateType(override val metas: Map<String, Any> = mapOf()) : SingleType() {
     override val allTypes: List<StaticType>
         get() = listOf(this)
 
     override fun toString(): String = "date"
 }
 
-data class TimeType(
+public data class TimeType(
     val precision: Int? = null,
     val withTimeZone: Boolean = false,
     override val metas: Map<String, Any> = mapOf()
@@ -360,28 +360,28 @@ data class TimeType(
     }
 }
 
-data class TimestampType(override val metas: Map<String, Any> = mapOf()) : SingleType() {
+public data class TimestampType(override val metas: Map<String, Any> = mapOf()) : SingleType() {
     override val allTypes: List<StaticType>
         get() = listOf(this)
 
     override fun toString(): String = "timestamp"
 }
 
-data class SymbolType(override val metas: Map<String, Any> = mapOf()) : SingleType() {
+public data class SymbolType(override val metas: Map<String, Any> = mapOf()) : SingleType() {
     override val allTypes: List<StaticType>
         get() = listOf(this)
 
     override fun toString(): String = "symbol"
 }
 
-data class StringType(
+public data class StringType(
     val lengthConstraint: StringLengthConstraint = StringLengthConstraint.Unconstrained,
     override val metas: Map<String, Any> = mapOf()
 ) : SingleType() {
 
-    sealed class StringLengthConstraint {
-        object Unconstrained : StringLengthConstraint()
-        data class Constrained(val length: NumberConstraint) : StringLengthConstraint()
+    public sealed class StringLengthConstraint {
+        public object Unconstrained : StringLengthConstraint()
+        public data class Constrained(val length: NumberConstraint) : StringLengthConstraint()
     }
 
     override val allTypes: List<StaticType>
@@ -389,17 +389,17 @@ data class StringType(
 
     override fun toString(): String = "string"
 
-    constructor(numberConstraint: NumberConstraint) : this(StringLengthConstraint.Constrained(numberConstraint))
+    public constructor(numberConstraint: NumberConstraint) : this(StringLengthConstraint.Constrained(numberConstraint))
 }
 
-data class BlobType(override val metas: Map<String, Any> = mapOf()) : SingleType() {
+public data class BlobType(override val metas: Map<String, Any> = mapOf()) : SingleType() {
     override val allTypes: List<StaticType>
         get() = listOf(this)
 
     override fun toString(): String = "blob"
 }
 
-data class ClobType(override val metas: Map<String, Any> = mapOf()) : SingleType() {
+public data class ClobType(override val metas: Map<String, Any> = mapOf()) : SingleType() {
     override val allTypes: List<StaticType>
         get() = listOf(this)
 
@@ -409,7 +409,7 @@ data class ClobType(override val metas: Map<String, Any> = mapOf()) : SingleType
 /**
  * @param [elementType] type of element within the list.
  */
-data class ListType(
+public data class ListType(
     override val elementType: StaticType = ANY,
     override val metas: Map<String, Any> = mapOf(),
     override val constraints: Set<CollectionConstraint> = setOf()
@@ -429,7 +429,7 @@ data class ListType(
 /**
  * @param [elementType] type of element within the s-exp.
  */
-data class SexpType(
+public data class SexpType(
     override val elementType: StaticType = ANY,
     override val metas: Map<String, Any> = mapOf(),
     override val constraints: Set<CollectionConstraint> = setOf(),
@@ -448,7 +448,7 @@ data class SexpType(
 /**
  * @param [elementType] type of element within the bag.
  */
-data class BagType(
+public data class BagType(
     override val elementType: StaticType = ANY,
     override val metas: Map<String, Any> = mapOf(),
     override val constraints: Set<CollectionConstraint> = setOf(),
@@ -464,8 +464,17 @@ data class BagType(
     override fun toString(): String = "bag($elementType)"
 }
 
-data class StructType(
-    val fields: Map<String, StaticType> = mapOf(),
+/**
+ * Describes a PartiQL Struct.
+ *
+ * @param fields the key-value pairs of the struct
+ * @param contentClosed when true, denotes that no other attributes may be present
+ * @param primaryKeyFields fields designated as primary keys
+ * @param constraints set of constraints applied to the Struct
+ * @param metas meta-data
+ */
+public data class StructType(
+    val fields: List<Field> = listOf(),
     // `TupleConstraint` already has `Open` constraint which overlaps with `contentClosed`.
     // In addition, `primaryKeyFields` must not exist on the `StructType` as `PrimaryKey`
     // is a property of collection of tuples. As we have plans to define PartiQL types in
@@ -479,22 +488,50 @@ data class StructType(
     val constraints: Set<TupleConstraint> = setOf(),
     override val metas: Map<String, Any> = mapOf(),
 ) : SingleType() {
+
+    public constructor(
+        fields: Map<String, StaticType>,
+        contentClosed: Boolean = false,
+        primaryKeyFields: List<String> = listOf(),
+        constraints: Set<TupleConstraint> = setOf(),
+        metas: Map<String, Any> = mapOf(),
+    ) : this(
+        fields.map { Field(it.key, it.value) },
+        contentClosed,
+        primaryKeyFields,
+        constraints,
+        metas
+    )
+
+    /**
+     * The key-value pair of a StructType, where the key represents the name of the field and the value represents
+     * its [StaticType]. Note: multiple [Field]s within a [StructType] may contain the same [key], and therefore,
+     * multiple same-named keys may refer to distinct [StaticType]s. To determine the [StaticType]
+     * of a reference to a field, especially in the case of duplicates, it depends on the ordering of the [StructType]
+     * (denoted by the presence of [TupleConstraint.Ordered] in the [StructType.constraints]).
+     * - If ORDERED: the PartiQL specification says to grab the first encountered matching field.
+     * - If UNORDERED: it is implementation-defined. However, gather all possible types, merge them using [AnyOfType].
+     */
+    public data class Field(
+        val key: String,
+        val value: StaticType
+    )
+
     override fun flatten(): StaticType = this
 
     override val allTypes: List<StaticType>
         get() = listOf(this)
 
     override fun toString(): String {
-        val entries = fields.entries
-        val firstSeveral = entries.toList().take(3).joinToString { "${it.key}: ${it.value}" }
+        val firstSeveral = fields.take(3).joinToString { "${it.key}: ${it.value}" }
         return when {
-            entries.size <= 3 -> "struct($firstSeveral, $constraints)"
-            else -> "struct($firstSeveral, ... and ${entries.size - 3} other field(s), $constraints)"
+            fields.size <= 3 -> "struct($firstSeveral, $constraints)"
+            else -> "struct($firstSeveral, ... and ${fields.size - 3} other field(s), $constraints)"
         }
     }
 }
 
-data class GraphType(
+public data class GraphType(
     override val metas: Map<String, Any> = mapOf()
 ) : SingleType() {
 
@@ -507,7 +544,7 @@ data class GraphType(
 /**
  * Represents a [StaticType] that's defined by the union of multiple [StaticType]s.
  */
-data class AnyOfType(val types: Set<StaticType>, override val metas: Map<String, Any> = mapOf()) : StaticType() {
+public data class AnyOfType(val types: Set<StaticType>, override val metas: Map<String, Any> = mapOf()) : StaticType() {
     /**
      * Flattens a union type by traversing the types and recursively bubbling up the underlying union types.
      *
@@ -549,18 +586,18 @@ data class AnyOfType(val types: Set<StaticType>, override val metas: Map<String,
         get() = this.types.map { it.flatten() }
 }
 
-sealed class NumberConstraint {
+public sealed class NumberConstraint {
 
     /** Returns true of [num] matches the constraint. */
-    abstract fun matches(num: Int): Boolean
+    public abstract fun matches(num: Int): Boolean
 
-    abstract val value: Int
+    public abstract val value: Int
 
-    data class Equals(override val value: Int) : NumberConstraint() {
+    public data class Equals(override val value: Int) : NumberConstraint() {
         override fun matches(num: Int): Boolean = value == num
     }
 
-    data class UpTo(override val value: Int) : NumberConstraint() {
+    public data class UpTo(override val value: Int) : NumberConstraint() {
         override fun matches(num: Int): Boolean = value >= num
     }
 }
@@ -571,15 +608,21 @@ sealed class NumberConstraint {
  * - https://github.com/partiql/partiql-spec/issues/49
  * - https://github.com/partiql/partiql-docs/issues/37
  */
-sealed class TupleConstraint {
-    data class UniqueAttrs(val value: Boolean) : TupleConstraint()
-    data class Open(val value: Boolean) : TupleConstraint()
+public sealed class TupleConstraint {
+    public data class UniqueAttrs(val value: Boolean) : TupleConstraint()
+    public data class Open(val value: Boolean) : TupleConstraint()
+
+    /**
+     * The presence of the [Ordered] on a [StructType] represents that the [StructType] is ORDERED. The absence of
+     * this constrain represents the opposite -- AKA that the [StructType] is UNORDERED
+     */
+    public object Ordered : TupleConstraint()
 }
 
 /**
  * An Interface for constraints that are only applicable to collection of tuples, e.g. `PrimaryKey`.
  */
-interface TupleCollectionConstraint
+public interface TupleCollectionConstraint
 
 /**
  * Represents Collection constraints; this is still experimental.
@@ -587,13 +630,12 @@ interface TupleCollectionConstraint
  * - https://github.com/partiql/partiql-spec/issues/49
  * - https://github.com/partiql/partiql-docs/issues/37
  */
-sealed class CollectionConstraint {
-    data class PrimaryKey(val keys: Set<String>) : TupleCollectionConstraint, CollectionConstraint()
-    data class PartitionKey(val keys: Set<String>) : TupleCollectionConstraint, CollectionConstraint()
+public sealed class CollectionConstraint {
+    public data class PrimaryKey(val keys: Set<String>) : TupleCollectionConstraint, CollectionConstraint()
+    public data class PartitionKey(val keys: Set<String>) : TupleCollectionConstraint, CollectionConstraint()
 }
 
 internal fun StaticType.isNullOrMissing(): Boolean = (this is NullType || this is MissingType)
 internal fun StaticType.isNumeric(): Boolean = (this is IntType || this is FloatType || this is DecimalType)
 internal fun StaticType.isText(): Boolean = (this is SymbolType || this is StringType)
-internal fun StaticType.isLob(): Boolean = (this is BlobType || this is ClobType)
 internal fun StaticType.isUnknown(): Boolean = (this.isNullOrMissing() || this == StaticType.NULL_OR_MISSING)

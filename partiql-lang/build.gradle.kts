@@ -28,6 +28,11 @@ configurations {
     api.get().extendsFrom(libs)
 }
 
+// Disabled for partiql-lang project.
+kotlin {
+    explicitApi = null
+}
+
 dependencies {
     antlr(Deps.antlr)
     api(project(":lib:isl"))
