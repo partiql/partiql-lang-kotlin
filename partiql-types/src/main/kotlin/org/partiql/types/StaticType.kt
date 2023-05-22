@@ -512,7 +512,7 @@ public data class StructType(
      * - If ORDERED: the PartiQL specification says to grab the first encountered matching field.
      * - If UNORDERED: it is implementation-defined. However, gather all possible types, merge them using [AnyOfType].
      */
-    data class Field(
+    public data class Field(
         val key: String,
         val value: StaticType
     )
