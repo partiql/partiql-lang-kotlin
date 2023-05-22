@@ -24,16 +24,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Adds a file format for external graphs, defined as a schema in ISL (Ion Schema Language), 
-  as well as an in-memory graph data model and a reader for loading external graphs into it.
-- Introduces CLI shell commands `!add_graph` and `!add_graph_from_file` for bringing 
-  externally-defined graphs into the evaluation environment. 
+
+- Adds an initial implementation of GPML (Graph Pattern Matching Language), following 
+  PartiQL [RFC-0025](https://github.com/partiql/partiql-docs/blob/main/RFCs/0025-graph-data-model.md) 
+  and [RFC-0033](https://github.com/partiql/partiql-docs/blob/main/RFCs/0033-graph-query.md).
+  This initial implementation includes:
+  - A file format for external graphs, defined as a schema in ISL (Ion Schema Language), 
+    as well as an in-memory graph data model and a reader for loading external graphs into it.
+  - CLI shell commands `!add_graph` and `!add_graph_from_file` for bringing 
+    externally-defined graphs into the evaluation environment. 
+  - Evaluation of straight-path patterns with simple label matching and 
+    all directed/undirected edge patterns.
+- Adds new `TupleConstraint` variant, `Ordered`, to represent ordering in `StructType`. See the KDoc for more information.
 
 ### Changed
+
+- **Breaking**: The `fields` attribute of `org.partiql.types.StructType` is no longer a `Map<String, StaticType>`. It is
+  now a `List<org.partiql.types.StructType.Field>`, where `Field` contains a `key (String)` and `value (StaticType)`. This
+  is to allow duplicates within the `StructType`.
 
 ### Deprecated
 
 ### Fixed
+
+- Fixes the ability for JOIN predicates to access the FROM source aliases and corresponding attributes.
 
 ### Removed
 

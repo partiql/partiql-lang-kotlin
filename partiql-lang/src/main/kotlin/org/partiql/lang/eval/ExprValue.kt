@@ -41,7 +41,6 @@ import org.partiql.lang.util.bytesValue
 import org.partiql.lang.util.propertyValueMapOf
 import java.math.BigDecimal
 import java.time.LocalDate
-
 /**
  * Representation of a value within the context of an [Expression].
  */

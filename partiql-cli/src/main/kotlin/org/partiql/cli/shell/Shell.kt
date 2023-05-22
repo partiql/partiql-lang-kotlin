@@ -33,6 +33,7 @@ import org.partiql.cli.format.ExplainFormatter
 import org.partiql.cli.pipeline.AbstractPipeline
 import org.partiql.lang.SqlException
 import org.partiql.lang.eval.Bindings
+import org.partiql.lang.eval.EvaluationException
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.PartiQLResult
@@ -318,6 +319,9 @@ internal class Shell(
             out.error(ex.generateMessage())
             out.error(ex.message)
             null // signals that there was an error
+        } catch (ex: NotImplementedError) {
+            out.error(ex.message ?: "kotlin.NotImplementedError was raised")
+            null // signals that there was an error
         }
         printPartiQLResult(result)
     }
@@ -328,7 +332,13 @@ internal class Shell(
                 out.error("ERROR!")
             }
             is PartiQLResult.Value -> {
-                printExprValue(ConfigurableExprValueFormatter.pretty, result.value)
+                try {
+                    printExprValue(ConfigurableExprValueFormatter.pretty, result.value)
+                } catch (ex: EvaluationException) { // should not need to do this here; see https://github.com/partiql/partiql-lang-kotlin/issues/1002
+                    out.error(ex.generateMessage())
+                    out.error(ex.message)
+                    return
+                }
                 out.success("OK!")
             }
             is PartiQLResult.Explain.Domain -> {

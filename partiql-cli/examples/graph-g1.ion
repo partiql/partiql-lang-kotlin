@@ -1,0 +1,4 @@
+// single-node no-edges graph:   n1
+
+{ nodes: [ {id: n1, labels: ["a"], payload: 1} ],
+  edges: [] }

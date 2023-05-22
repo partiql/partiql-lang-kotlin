@@ -32,4 +32,57 @@ class SimpleGraph(
     companion object {
         val empty: Graph = SimpleGraph(emptyList(), emptyList(), emptyList())
     }
+
+    private fun labelsMatchSpec(labels: Set<String>, spec: LabelSpec): Boolean =
+        when (spec) {
+            LabelSpec.Whatever -> true
+            is LabelSpec.OneOf -> labels.contains(spec.name)
+        }
+
+    private fun Graph.Elem.matches(labelSpec: LabelSpec): Boolean =
+        labelsMatchSpec(this.labels, labelSpec)
+
+    override fun scanNodes(spec: LabelSpec): List<Node> {
+        return nodes.filter { it.matches(spec) }
+    }
+
+    override fun scanDirectedStraight(spec: Triple<LabelSpec, LabelSpec, LabelSpec>): List<Triple<Node, EdgeDirected, Node>> {
+        val (srcSpec, edgeSpec, dstSpec) = spec
+        return directed.filter {
+            val (src, edge, dst) = it
+            src.matches(srcSpec) && edge.matches(edgeSpec) && dst.matches(dstSpec)
+        }
+    }
+
+    override fun scanDirectedFlipped(spec: Triple<LabelSpec, LabelSpec, LabelSpec>): List<Triple<Node, EdgeDirected, Node>> {
+        val (srcSpec, edgeSpec, dstSpec) = spec
+        return directed.asSequence().filter {
+            val (dst, edge, src) = it // data triple flipped, for filtering
+            src.matches(srcSpec) && edge.matches(edgeSpec) && dst.matches(dstSpec)
+        }.map { Triple(it.third, it.second, it.first) }.toList() // flipped agan, for the result
+    }
+
+    private fun <E : Graph.Edge> getBlunt(
+        triples: List<Triple<Node, E, Node>>,
+        spec: Triple<LabelSpec, LabelSpec, LabelSpec>
+    ): List<Triple<Node, E, Node>> {
+        val (srcSpec, edgeSpec, dstSpec) = spec
+        val selected = mutableListOf<Triple<Node, E, Node>>()
+        for (t in triples) {
+            val (src, edge, dst) = t
+            if (edge.matches(edgeSpec)) {
+                if (src.matches(srcSpec) && dst.matches(dstSpec))
+                    selected.add(t)
+                if ((src.matches(dstSpec) && dst.matches(srcSpec)))
+                    selected.add(Triple(dst, edge, src))
+            }
+        }
+        return selected.toList()
+    }
+
+    override fun scanDirectedBlunt(spec: Triple<LabelSpec, LabelSpec, LabelSpec>): List<Triple<Node, EdgeDirected, Node>> =
+        getBlunt(directed, spec)
+
+    override fun scanUndir(spec: Triple<LabelSpec, LabelSpec, LabelSpec>): List<Triple<Node, EdgeUndir, Node>> =
+        getBlunt(undir, spec)
 }
