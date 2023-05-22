@@ -1,7 +1,7 @@
 package org.partiql.lang.prettyprint
 
-import org.junit.Assert
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
 
 class ASTPrettyPrinterTest {
     private val prettyPrinter = ASTPrettyPrinter()
@@ -9,7 +9,7 @@ class ASTPrettyPrinterTest {
     private fun checkPrettyPrintAst(query: String, expected: String) {
         // In triples quotes, a tab consists of 4 whitespaces. We need to transform them into a tab.
         val newExpected = expected.replace("    ", "\t")
-        Assert.assertEquals(newExpected, prettyPrinter.prettyPrintAST(query))
+        assertEquals(newExpected, prettyPrinter.prettyPrintAST(query))
     }
 
     // ********
@@ -64,6 +64,74 @@ class ASTPrettyPrinterTest {
                 Ddl
                     op: CreateTable
                         tableName: Symbol foo
+            """.trimIndent()
+        )
+    }
+
+    @Test
+    fun createTableWithVariableLengthNamespace() {
+        checkPrettyPrintAst(
+            "CREATE TABLE foo.bar",
+            """
+                Ddl
+                    op: CreateTable
+                        tableNamePrefix1: Identifier foo (case_insensitive)
+                        tableName: Symbol bar
+            """.trimIndent()
+        )
+    }
+
+    @Test
+    fun createTableWithTableDefs() {
+        checkPrettyPrintAst(
+            """
+                create table Customer (
+                   name string)
+            """.trimIndent(),
+            """
+                Ddl
+                    op: CreateTable
+                        tableName: Symbol Customer
+                        TableDef
+                            tableDefPart1: ColumnDeclaration
+                                columnName: Symbol name
+                                columnType: (string_type)
+            """.trimIndent()
+        )
+    }
+
+    @Test
+    fun createTableWithConstraintAndDefault() {
+        checkPrettyPrintAst(
+            """
+                create table Customer (
+                   name string NOT NULL,
+                   age int CONSTRAINT positive_age_constraint CHECK (age > 0),
+                   address string DEFAULT 'N/A' NOT NULL 
+                   )
+            """.trimIndent(),
+            """
+                Ddl
+                    op: CreateTable
+                        tableName: Symbol Customer
+                        TableDef
+                            tableDefPart1: ColumnDeclaration
+                                columnName: Symbol name
+                                columnType: (string_type)
+                                columnConstraint1: NotNullConstraint
+                            tableDefPart2: ColumnDeclaration
+                                columnName: Symbol age
+                                columnType: (integer_type)
+                                columnConstraint1: CheckConstraint
+                                    constraintName: Symbol positive_age_constraint
+                                    searchCondition: >
+                                        Id age (case_insensitive) (unqualified)
+                                        Lit 0
+                            tableDefPart3: ColumnDeclaration
+                                columnName: Symbol address
+                                columnType: (string_type)
+                                columnDefault: Lit "N/A"
+                                columnConstraint1: NotNullConstraint
             """.trimIndent()
         )
     }

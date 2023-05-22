@@ -7,7 +7,7 @@ class PartiQLParserDDLTests : PartiQLParserTestBase() {
     @Test
     fun createTable() = assertExpression(
         "CREATE TABLE foo",
-        "(ddl (create_table (table_name_prefix) foo null))"
+        "(ddl (create_table null foo null))"
     )
 
     @Test
@@ -32,7 +32,7 @@ class PartiQLParserDDLTests : PartiQLParserTestBase() {
     fun createTableWithColumn() = assertExpression(
         "CREATE TABLE foo (boo string)",
         """
-            (ddl (create_table (table_name_prefix) foo  (table_def
+            (ddl (create_table null foo  (table_def
                 (column_declaration boo (string_type) null))))
         """.trimIndent()
     )
@@ -41,7 +41,7 @@ class PartiQLParserDDLTests : PartiQLParserTestBase() {
     fun createTableWithQuotedIdentifier() = assertExpression(
         "CREATE TABLE \"user\" (\"lastname\" string)",
         """
-            (ddl (create_table (table_name_prefix) user (table_def
+            (ddl (create_table null user (table_def
                 (column_declaration lastname (string_type) null))))
         """.trimIndent()
     )
@@ -59,7 +59,7 @@ class PartiQLParserDDLTests : PartiQLParserTestBase() {
         """
             (ddl
                 (create_table
-                    (table_name_prefix)
+                    null
                     Customer (table_def
                         (column_declaration name (string_type)
                             null 
@@ -87,7 +87,7 @@ class PartiQLParserDDLTests : PartiQLParserTestBase() {
         """
             (ddl
                 (create_table
-                    (table_name_prefix)
+                    null
                     Customer (table_def
                         (column_declaration name (string_type)
                             null
@@ -126,7 +126,7 @@ class PartiQLParserDDLTests : PartiQLParserTestBase() {
         """
             (ddl
                 (create_table
-                    (table_name_prefix)
+                    null
                     Customer (table_def
                         (column_declaration name (string_type)
                             null
@@ -178,7 +178,7 @@ class PartiQLParserDDLTests : PartiQLParserTestBase() {
         """
             (ddl
                 (create_table
-                    (table_name_prefix)
+                    null
                     Customer (table_def
                         (column_declaration name (string_type)
                             null
@@ -213,7 +213,7 @@ class PartiQLParserDDLTests : PartiQLParserTestBase() {
         """
             (ddl
                 (create_table
-                    (table_name_prefix)
+                    null
                     Customer (table_def
                         (column_declaration name (string_type)
                             null
@@ -235,13 +235,13 @@ class PartiQLParserDDLTests : PartiQLParserTestBase() {
     @Test
     fun dropTable() = assertExpression(
         "DROP TABLE foo",
-        "(ddl (drop_table (table_name_prefix) (identifier foo (case_insensitive))))"
+        "(ddl (drop_table null (identifier foo (case_insensitive))))"
     )
 
     @Test
     fun dropTableWithQuotedIdentifier() = assertExpression(
         "DROP TABLE \"user\"",
-        "(ddl (drop_table (table_name_prefix) (identifier user (case_sensitive))))"
+        "(ddl (drop_table null (identifier user (case_sensitive))))"
     )
 
     @Test

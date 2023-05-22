@@ -106,9 +106,18 @@ class ASTPrettyPrinter {
             is PartiqlAst.DdlOp.CreateTable -> RecursionTree(
                 astType = "CreateTable",
                 attrOfParent = attrOfParent,
-                children = listOf(
-                    toRecursionTree(node.tableName, "tableName")
-                )
+                children =
+                listOf<RecursionTree>()
+                    .let {
+                        if (node.tableNamePrefix == null) it else
+                            it.plus(
+                                node.tableNamePrefix.steps.mapIndexed { index, identifier ->
+                                    toRecursionTree(identifier, "tableNamePrefix${index + 1}")
+                                }
+                            )
+                    }
+                    .let { it.plusElement(toRecursionTree(node.tableName, "tableName")) }
+                    .let { if (node.def == null) it else it.plus(toRecursionTree(node.def)) }
             )
             is PartiqlAst.DdlOp.DropIndex -> RecursionTree(
                 astType = "DropIndex",
@@ -125,6 +134,62 @@ class ASTPrettyPrinter {
                     toRecursionTree(node.tableName, "tableName")
                 )
             )
+        }
+
+    private fun toRecursionTree(node: PartiqlAst.TableDef, attrOfParent: String? = null): RecursionTree =
+        RecursionTree(
+            astType = "TableDef",
+            attrOfParent = attrOfParent,
+            children = node.parts.mapIndexed { index, tableDefPart ->
+                toRecursionTree(tableDefPart, "tableDefPart${index + 1}")
+            }
+        )
+
+    private fun toRecursionTree(node: PartiqlAst.TableDefPart, attrOfParent: String? = null): RecursionTree =
+        when (node) {
+            is PartiqlAst.TableDefPart.ColumnDeclaration -> {
+                RecursionTree(
+                    astType = "ColumnDeclaration",
+                    attrOfParent = attrOfParent,
+                    children = listOf(
+                        toRecursionTree(node.name, "columnName"),
+                        RecursionTree(
+                            astType = node.type.toString(),
+                            attrOfParent = "columnType"
+                        ),
+                    ).let { if (node.default == null) it else it.plusElement(toRecursionTree(node.default, "columnDefault")) }
+                        .let { it.plus(node.constraints.mapIndexed { index, constraint -> toRecursionTree(constraint, "columnConstraint${index + 1}") }) }
+                )
+            }
+        }
+
+    private fun toRecursionTree(node: PartiqlAst.ColumnConstraint, attrOfParent: String? = null): RecursionTree =
+        when (val def = node.def) {
+            is PartiqlAst.ColumnConstraintDef.ColumnCheck -> {
+                RecursionTree(
+                    astType = "CheckConstraint",
+                    attrOfParent = attrOfParent,
+                    children = listOf<RecursionTree>()
+                        .let { if (node.name == null) it else listOf(toRecursionTree(node.name, "constraintName")) }
+                        .let { it.plusElement(toRecursionTree(def.searchCondition, "searchCondition")) }
+                )
+            }
+            is PartiqlAst.ColumnConstraintDef.ColumnNotnull -> {
+                RecursionTree(
+                    astType = "NotNullConstraint",
+                    attrOfParent = attrOfParent,
+                    children = listOf<RecursionTree>()
+                        .let { if (node.name == null) it else listOf(toRecursionTree(node.name, "constraintName")) }
+                )
+            }
+            is PartiqlAst.ColumnConstraintDef.ColumnNull -> {
+                RecursionTree(
+                    astType = "NullConstraint",
+                    attrOfParent = attrOfParent,
+                    children = listOf<RecursionTree>()
+                        .let { if (node.name == null) it else listOf(toRecursionTree(node.name, "constraintName")) }
+                )
+            }
         }
 
     private fun toRecursionTree(node: PartiqlAst.Identifier, attrOfParent: String? = null): RecursionTree =

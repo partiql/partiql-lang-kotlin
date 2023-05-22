@@ -1,7 +1,7 @@
 package org.partiql.lang.prettyprint
 
-import org.junit.Assert
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
 import org.partiql.lang.syntax.PartiQLParser
 
 class QueryPrettyPrinterTest {
@@ -11,9 +11,9 @@ class QueryPrettyPrinterTest {
     private fun checkPrettyPrintQuery(query: String, expected: String) {
         // In triples quotes, a tab consists of 4 whitespaces. We need to transform them into a tab.
         val newExpected = expected.replace("    ", "\t")
-        Assert.assertEquals(newExpected, prettyPrinter.prettyPrintQuery(query))
+        assertEquals(newExpected, prettyPrinter.prettyPrintQuery(query))
         // New sting and old string should be the same when transformed into PIG AST
-        Assert.assertEquals(sqlParser.parseAstStatement(query), sqlParser.parseAstStatement(newExpected))
+        assertEquals(sqlParser.parseAstStatement(query), sqlParser.parseAstStatement(newExpected))
     }
 
     // ********
@@ -37,6 +37,13 @@ class QueryPrettyPrinterTest {
     }
 
     @Test
+    fun createTableWithVariableNamespace() {
+        checkPrettyPrintQuery(
+            "CREATE TABLE foo.bar", "CREATE TABLE foo.bar"
+        )
+    }
+
+    @Test
     fun createTableWithColumn() {
         checkPrettyPrintQuery(
             "CREATE TABLE foo (boo string)",
@@ -54,14 +61,35 @@ class QueryPrettyPrinterTest {
             """
                 create table Customer (
                    name string CONSTRAINT name_is_present NOT NULL, 
-                   age int, 
+                   age int CHECK (age > 0), 
                    city string null,
                    state string NULL)
             """.trimIndent(),
             """
                 CREATE TABLE Customer (
                     name STRING CONSTRAINT name_is_present NOT NULL,
-                    age INT,
+                    age INT CHECK (age > 0),
+                    city STRING NULL,
+                    state STRING NULL
+                )
+            """.trimIndent()
+        )
+    }
+
+    @Test
+    fun createTableWithDefaultClause() {
+        checkPrettyPrintQuery(
+            """
+                create table Customer (
+                   name string CONSTRAINT name_is_present NOT NULL, 
+                   age int DEFAULT 18 CHECK (age > 0), 
+                   city string null,
+                   state string NULL)
+            """.trimIndent(),
+            """
+                CREATE TABLE Customer (
+                    name STRING CONSTRAINT name_is_present NOT NULL,
+                    age INT DEFAULT 18 CHECK (age > 0),
                     city STRING NULL,
                     state STRING NULL
                 )

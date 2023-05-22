@@ -442,10 +442,10 @@ may then be further optimized by selecting better implementations of each operat
             // however, CREATE TABLe statement in the above assumes the existences of all path steps other than the table
             // For example, in case 1, the catalog name needs to be a existing catalog and the schema name needs to be a existing schema.
             // which means all the "steps" in create table statement, except for the last one, should be identifer (i.e., case sensitivity matters)
-            (create_table table_name_prefix::table_name_prefix table_name::symbol def::(? table_def))
+            (create_table table_name_prefix::(? table_name_prefix) table_name::symbol def::(? table_def))
 
             // `DROP TABLE <identifier>`
-            (drop_table table_name_prefix::table_name_prefix table_name::identifier)
+            (drop_table table_name_prefix::(? table_name_prefix) table_name::identifier)
 
             // `CREATE INDEX ON <identifier> (<expr> [, <expr>]...)`
             // TODO: add optional table name

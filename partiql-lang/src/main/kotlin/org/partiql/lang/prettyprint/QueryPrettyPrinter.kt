@@ -117,7 +117,14 @@ class QueryPrettyPrinter {
     }
 
     private fun writeAstNode(node: PartiqlAst.DdlOp.CreateTable, sb: StringBuilder) {
-        sb.append("CREATE TABLE ${node.tableName.text}")
+        sb.append("CREATE TABLE ")
+        node.tableNamePrefix?.let { prefix ->
+            prefix.steps.forEach {
+                writeAstNode(it, sb)
+                sb.append(".")
+            }
+        }
+        sb.append(node.tableName.text)
         node.def?.let {
             var separator = "\n\t"
             sb.append(" (")
@@ -135,12 +142,21 @@ class QueryPrettyPrinter {
     private fun writeAstNode(node: PartiqlAst.TableDefPart.ColumnDeclaration, sb: StringBuilder) {
         sb.append("${node.name.text} ")
         writeType(node.type, sb)
+        node.default?.let {
+            sb.append(" DEFAULT ")
+            writeAstNode(it, sb, 0)
+        }
         for (c in node.constraints) {
             sb.append(" ")
             c.name?.let { sb.append("CONSTRAINT ${it.text} ") }
-            when (c.def) {
+            when (val constrDef = c.def) {
                 is PartiqlAst.ColumnConstraintDef.ColumnNull -> sb.append("NULL")
                 is PartiqlAst.ColumnConstraintDef.ColumnNotnull -> sb.append("NOT NULL")
+                is PartiqlAst.ColumnConstraintDef.ColumnCheck -> {
+                    sb.append("CHECK (")
+                    writeAstNode(constrDef.searchCondition, sb, 0)
+                    sb.append(")")
+                }
             }
         }
     }
