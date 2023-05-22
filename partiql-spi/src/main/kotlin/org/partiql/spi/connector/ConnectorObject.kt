@@ -20,4 +20,4 @@ package org.partiql.spi.connector
  * the serialized [org.partiql.types.StaticType], so that the [ConnectorMetadata] may be able
  * to grab the descriptor using [ConnectorMetadata.getObjectType].
  */
-interface ConnectorObject
+public interface ConnectorObject

@@ -28,6 +28,11 @@ dependencies {
     api(Deps.pigRuntime)
 }
 
+// Disabled for ISL project
+kotlin {
+    explicitApi = null
+}
+
 publish {
     artifactId = "partiql-isl-kotlin"
     name = "PartiQL ISL Kotlin"
