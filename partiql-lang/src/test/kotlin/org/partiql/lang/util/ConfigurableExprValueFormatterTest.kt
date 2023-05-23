@@ -7,14 +7,14 @@ import org.junit.runner.RunWith
 import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.syntax.PartiQLParser
+import org.partiql.lang.syntax.impl.PartiQLPigParser
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 @RunWith(JUnitParamsRunner::class)
 class ConfigurableExprValueFormatterTest {
 
-    private val parser = PartiQLParser()
+    private val parser = PartiQLPigParser()
     private val compiler = CompilerPipeline.builder().sqlParser(parser).build()
 
     private val pretty = ConfigurableExprValueFormatter.pretty

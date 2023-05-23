@@ -3,7 +3,6 @@ package org.partiql.lang.util.testdsl
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
 import org.partiql.lang.CompilerPipeline
-import org.partiql.lang.ION
 import org.partiql.lang.eval.CompileOptions
 import org.partiql.lang.eval.EVALUATOR_TEST_SUITE
 import org.partiql.lang.eval.EvaluationSession
@@ -15,7 +14,7 @@ import org.partiql.lang.eval.evaluatortestframework.ExpectedResultFormat
 import org.partiql.lang.eval.evaluatortestframework.PartiQLCompilerPipelineFactory
 import org.partiql.lang.eval.evaluatortestframework.PipelineEvaluatorTestAdapter
 import org.partiql.lang.mockdb.MockDb
-import org.partiql.lang.syntax.PartiQLParser
+import org.partiql.lang.syntax.impl.PartiQLPigParser
 
 /** Defines a test case for query evaluation. */
 data class IonResultTestCase(
@@ -64,7 +63,7 @@ data class IonResultTestCase(
 
     fun toStatementTestCase(): StatementTestCase =
         assertDoesNotThrow("IonResultTestCase ${toString()} should not throw when parsing") {
-            StatementTestCase(name, PartiQLParser().parseAstStatement(sqlUnderTest))
+            StatementTestCase(name, PartiQLPigParser().parseAstStatement(sqlUnderTest))
         }
 }
 

@@ -14,6 +14,7 @@
 
 package org.partiql.lang.syntax
 
+import org.partiql.lang.syntax.impl.PartiQLPigParser
 import org.partiql.lang.types.CustomType
 
 /**
@@ -43,6 +44,6 @@ class PartiQLParserBuilder {
     }
 
     fun build(): Parser {
-        return PartiQLParser(this.customTypes)
+        return PartiQLPigParser(this.customTypes)
     }
 }

@@ -12,7 +12,7 @@
  * language governing permissions and limitations under the License.
  */
 
-package org.partiql.lang.syntax
+package org.partiql.lang.syntax.impl
 
 import org.antlr.v4.runtime.BailErrorStrategy
 import org.antlr.v4.runtime.BaseErrorListener
@@ -32,6 +32,11 @@ import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.errors.PropertyValueMap
+import org.partiql.lang.syntax.LexerException
+import org.partiql.lang.syntax.Parser
+import org.partiql.lang.syntax.ParserException
+import org.partiql.lang.syntax.antlr.PartiQLParser
+import org.partiql.lang.syntax.antlr.PartiQLTokens
 import org.partiql.lang.types.CustomType
 import org.partiql.lang.util.checkThreadInterrupted
 import org.partiql.lang.util.getAntlrDisplayString
@@ -40,15 +45,13 @@ import java.io.InputStream
 import java.nio.channels.ClosedByInterruptException
 import java.nio.charset.StandardCharsets
 import kotlin.jvm.Throws
-import org.partiql.lang.syntax.antlr.PartiQLParser as GeneratedParser
-import org.partiql.lang.syntax.antlr.PartiQLTokens as GeneratedLexer
 
 /**
  * Extends [Parser] to provide a mechanism to parse an input query string. It internally uses ANTLR's generated parser,
- * [GeneratedParser] to create an ANTLR [ParseTree] from the input query. Then, it uses the configured [PartiQLVisitor]
+ * [PartiQLParser] to create an ANTLR [ParseTree] from the input query. Then, it uses the configured [PartiQLPigVisitor]
  * to convert the [ParseTree] into a [PartiqlAst.Statement].
  */
-internal class PartiQLParser(val customTypes: List<CustomType> = listOf()) : Parser {
+internal class PartiQLPigParser(val customTypes: List<CustomType> = listOf()) : Parser {
 
     @Throws(ParserException::class, InterruptedException::class)
     override fun parseAstStatement(source: String): PartiqlAst.Statement {
@@ -75,7 +78,7 @@ internal class PartiQLParser(val customTypes: List<CustomType> = listOf()) : Par
     }
 
     /**
-     * To reduce latency costs, the [PartiQLParser] attempts to use [PredictionMode.SLL] and falls back to
+     * To reduce latency costs, the [PartiQLPigParser] attempts to use [PredictionMode.SLL] and falls back to
      * [PredictionMode.LL] if a [ParseCancellationException] is thrown by the [BailErrorStrategy]. See [createParserSLL]
      * and [createParserLL] for more information.
      */
@@ -93,7 +96,7 @@ internal class PartiQLParser(val customTypes: List<CustomType> = listOf()) : Par
         val tokenStream = createTokenStream(queryStream)
         val parser = parserInit(tokenStream)
         val tree = parser.root()
-        val visitor = PartiQLVisitor(customTypes, tokenStream.parameterIndexes)
+        val visitor = PartiQLPigVisitor(customTypes, tokenStream.parameterIndexes)
         return visitor.visit(tree) as PartiqlAst.Statement
     }
 
@@ -106,15 +109,15 @@ internal class PartiQLParser(val customTypes: List<CustomType> = listOf()) : Par
             throw InterruptedException()
         }
         val handler = TokenizeErrorListener()
-        val lexer = GeneratedLexer(inputStream)
+        val lexer = PartiQLTokens(inputStream)
         lexer.removeErrorListeners()
         lexer.addErrorListener(handler)
         return CountingTokenStream(lexer)
     }
 
     /**
-     * Creates a [GeneratedParser] that uses [PredictionMode.SLL] and the [BailErrorStrategy]. The [GeneratedParser],
-     * upon seeing a syntax error, will throw a [ParseCancellationException] due to the [GeneratedParser.getErrorHandler]
+     * Creates a [PartiQLParser] that uses [PredictionMode.SLL] and the [BailErrorStrategy]. The [PartiQLParser],
+     * upon seeing a syntax error, will throw a [ParseCancellationException] due to the [PartiQLParser.getErrorHandler]
      * being a [BailErrorStrategy]. The purpose of this is to throw syntax errors as quickly as possible once encountered.
      * As noted by the [PredictionMode.SLL] documentation, to guarantee results, it is useful to follow-up a failed parse
      * by parsing with [PredictionMode.LL] -- see [createParserLL] for more information.
@@ -130,7 +133,7 @@ internal class PartiQLParser(val customTypes: List<CustomType> = listOf()) : Par
     }
 
     /**
-     * Creates a [GeneratedParser] that uses [PredictionMode.LL]. This method is capable of parsing all valid inputs
+     * Creates a [PartiQLParser] that uses [PredictionMode.LL]. This method is capable of parsing all valid inputs
      * for a grammar, but is slower than [PredictionMode.SLL]. Upon seeing a syntax error, this parser throws a
      * [ParserException].
      */
@@ -189,9 +192,9 @@ internal class PartiQLParser(val customTypes: List<CustomType> = listOf()) : Par
     }
 
     /**
-     * A wrapped [GeneratedParser] to allow thread interruption during parse.
+     * A wrapped [PartiQLParser] to allow thread interruption during parse.
      */
-    internal class InterruptibleParser(input: TokenStream) : GeneratedParser(input) {
+    internal class InterruptibleParser(input: TokenStream) : PartiQLParser(input) {
         override fun enterRule(localctx: ParserRuleContext?, state: Int, ruleIndex: Int) {
             checkThreadInterrupted()
             super.enterRule(localctx, state, ruleIndex)
@@ -200,8 +203,8 @@ internal class PartiQLParser(val customTypes: List<CustomType> = listOf()) : Par
 
     /**
      * This token stream creates [parameterIndexes], which is a map, where the keys represent the
-     * indexes of all [GeneratedLexer.QUESTION_MARK]'s and the values represent their relative index amongst all other
-     * [GeneratedLexer.QUESTION_MARK]'s.
+     * indexes of all [PartiQLTokens.QUESTION_MARK]'s and the values represent their relative index amongst all other
+     * [PartiQLTokens.QUESTION_MARK]'s.
      */
     internal open class CountingTokenStream(tokenSource: TokenSource) : CommonTokenStream(tokenSource) {
         // TODO: Research use-case of parameters and implementation -- see https://github.com/partiql/partiql-docs/issues/23
@@ -210,7 +213,7 @@ internal class PartiQLParser(val customTypes: List<CustomType> = listOf()) : Par
         override fun LT(k: Int): Token? {
             val token = super.LT(k)
             token?.let {
-                if (it.type == GeneratedLexer.QUESTION_MARK && parameterIndexes.containsKey(token.tokenIndex).not()) {
+                if (it.type == PartiQLTokens.QUESTION_MARK && parameterIndexes.containsKey(token.tokenIndex).not()) {
                     parameterIndexes[token.tokenIndex] = ++parametersFound
                 }
             }

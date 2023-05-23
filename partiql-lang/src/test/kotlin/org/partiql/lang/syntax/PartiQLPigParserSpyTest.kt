@@ -24,14 +24,15 @@ import org.junit.Assert.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.partiql.lang.domains.PartiqlAst
+import org.partiql.lang.syntax.impl.PartiQLPigParser
 
 /**
- * This test class is used for spying the [PartiQLParser].
+ * This test class is used for spying the [PartiQLPigParser].
  */
-internal class PartiQLParserSpyTest {
+internal class PartiQLPigParserSpyTest {
 
     val ion: IonSystem = IonSystemBuilder.standard().build()
-    val parser = spyk<PartiQLParser>()
+    val parser = spyk<PartiQLPigParser>()
 
     /**
      * Shows that the PartiQLParser can parse different queries sequentially.

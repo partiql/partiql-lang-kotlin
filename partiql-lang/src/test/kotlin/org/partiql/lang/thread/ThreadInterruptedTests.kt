@@ -1,4 +1,3 @@
-
 package org.partiql.lang.thread
 
 import com.amazon.ionelement.api.ionInt
@@ -18,8 +17,8 @@ import org.partiql.lang.StepContext
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.eval.CompileOptions
 import org.partiql.lang.eval.visitors.VisitorTransformBase
-import org.partiql.lang.syntax.PartiQLParser
 import org.partiql.lang.syntax.antlr.PartiQLTokens
+import org.partiql.lang.syntax.impl.PartiQLPigParser
 import java.io.InputStream
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.concurrent.thread
@@ -58,7 +57,11 @@ class ThreadInterruptedTests {
             plus(FakeList(n, variableA))
         }
 
-    private fun testThreadInterrupt(interruptAfter: Long = INTERRUPT_AFTER_MS, interruptWait: Long = WAIT_FOR_THREAD_TERMINATION_MS, block: () -> Unit) {
+    private fun testThreadInterrupt(
+        interruptAfter: Long = INTERRUPT_AFTER_MS,
+        interruptWait: Long = WAIT_FOR_THREAD_TERMINATION_MS,
+        block: () -> Unit
+    ) {
         val wasInterrupted = AtomicBoolean(false)
         val t = thread(start = false) {
             try {
@@ -77,7 +80,7 @@ class ThreadInterruptedTests {
 
     @Test
     fun parserPartiQL() {
-        val parser = spyk<PartiQLParser>()
+        val parser = spyk<PartiQLPigParser>()
         val query = "hello world"
         every {
             parser.createTokenStream(any())
@@ -87,7 +90,7 @@ class ThreadInterruptedTests {
 
     @Test
     fun parserPartiQLUsingSLL() {
-        val parser = PartiQLParser()
+        val parser = PartiQLPigParser()
         val tokenStream = EndlessTokenStream(PartiQLTokens(CharStreams.fromStream(InputStream.nullInputStream())))
         val sllParser = parser.createParserSLL(tokenStream)
         testThreadInterrupt(2) { sllParser.run { statement() } }
@@ -95,7 +98,7 @@ class ThreadInterruptedTests {
 
     @Test
     fun parserPartiQLUsingLL() {
-        val parser = PartiQLParser()
+        val parser = PartiQLPigParser()
         val tokenStream = EndlessTokenStream(PartiQLTokens(CharStreams.fromStream(InputStream.nullInputStream())))
         val llParser = parser.createParserLL(tokenStream)
         testThreadInterrupt(2) { llParser.run { statement() } }
@@ -103,7 +106,7 @@ class ThreadInterruptedTests {
 
     @Test
     fun parserPartiQLTokenStream() {
-        val parser = PartiQLParser()
+        val parser = PartiQLPigParser()
         val endlessStream = EndlessInputStream()
         testThreadInterrupt { parser.run { createTokenStream(endlessStream) } }
     }
@@ -154,7 +157,7 @@ class ThreadInterruptedTests {
         }
     }
 
-    private class EndlessTokenStream(source: TokenSource) : PartiQLParser.CountingTokenStream(source) {
+    private class EndlessTokenStream(source: TokenSource) : PartiQLPigParser.CountingTokenStream(source) {
         override fun size(): Int = Int.MAX_VALUE
         override fun LT(k: Int): Token {
             return CommonToken(PartiQLTokens.PLUS)

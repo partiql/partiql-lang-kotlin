@@ -22,7 +22,7 @@ import org.partiql.lang.errors.ProblemSeverity
 import org.partiql.lang.eval.builtins.ExprFunctionCurrentUser
 import org.partiql.lang.planner.PlanningProblemDetails
 import org.partiql.lang.planner.unimplementedProblem
-import org.partiql.lang.syntax.PartiQLParser
+import org.partiql.lang.syntax.impl.PartiQLPigParser
 import org.partiql.lang.util.ArgumentsProviderBase
 
 /**
@@ -30,7 +30,7 @@ import org.partiql.lang.util.ArgumentsProviderBase
  * heavily exercised during many other integration tests.  These should be considered "smoke tests".
  */
 class AstToLogicalVisitorTransformTests {
-    internal val parser = PartiQLParser()
+    internal val parser = PartiQLPigParser()
 
     private fun parseAndTransform(sql: String, problemHandler: ProblemHandler): PartiqlLogical.Statement {
         val parseAstStatement = parser.parseAstStatement(sql)
