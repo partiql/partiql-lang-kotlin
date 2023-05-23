@@ -456,6 +456,7 @@ class TestRunner {
      * succeed with the expected result. Ensures that tests included in the failing list fail.
      *
      * These tests are included in the normal test/building.
+     * Update May 2023: Now excluded from the normal build, because fail lists are out of date.
      */
     class DefaultConformanceTestRunner {
         // Tests the eval tests with the Kotlin implementation

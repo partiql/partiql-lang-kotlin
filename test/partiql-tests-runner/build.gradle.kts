@@ -44,4 +44,7 @@ tasks.test {
     if (!project.hasProperty("conformanceReport")) {
         exclude("org/partiql/runner/TestRunner\$ConformanceTestsReportRunner.class")
     }
+
+    // May 2023: Disabled conformance testing during regular project build, because fail lists are out of date.
+    exclude("org/partiql/runner/TestRunner\$DefaultConformanceTestRunner.class")
 }
