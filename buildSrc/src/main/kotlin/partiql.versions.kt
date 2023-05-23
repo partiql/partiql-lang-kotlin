@@ -41,7 +41,7 @@ object Versions {
     const val picoCli = "4.7.0"
     const val kasechange = "1.3.0"
     const val ktlint = "10.2.1"
-    const val pig = "0.6.1"
+    const val pig = "0.6.2"
 
     // Testing
     const val assertj = "3.11.0"

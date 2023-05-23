@@ -1,5 +1,6 @@
 package org.partiql.sprout.generator.target.kotlin.poems
 
+import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
@@ -40,6 +41,12 @@ class KotlinBuilderPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
     // Java style builders, used by the DSL
     private val buildersName = "${symbols.rootId}Builders"
     private val buildersFile = FileSpec.builder(builderPackageName, buildersName)
+
+    // @file:Suppress("UNUSED_PARAMETER")
+    private val suppressUnused = AnnotationSpec.builder(Suppress::class)
+        .useSiteTarget(AnnotationSpec.UseSiteTarget.FILE)
+        .addMember("%S", "UNUSED_PARAMETER")
+        .build()
 
     // Top-Level DSL holder, so that was close on the factory
     private val dslName = "${symbols.rootId}Builder"
@@ -102,6 +109,7 @@ class KotlinBuilderPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
                     buildersFile.build(),
                     // DSL
                     FileSpec.builder(builderPackageName, dslName)
+                        .addAnnotation(suppressUnused)
                         .addFunction(dslFunc)
                         .addType(dslSpec.build())
                         .build(),
