@@ -96,7 +96,7 @@ class QueryPrettyPrinterTest {
     @Test
     fun insertValue() {
         checkPrettyPrintQuery(
-            "INSERT INTO foo VALUE (1, 2)", "INSERT INTO foo VALUE [ 1, 2 ]"
+            "INSERT INTO foo VALUE (1, 2)", "INSERT INTO foo VALUE ( 1, 2 )"
         )
     }
 
