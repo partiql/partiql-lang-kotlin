@@ -457,7 +457,7 @@ class TestRunner {
      *
      * These tests are included in the normal test/building.
      * Update May 2023: Now excluded from the normal build, because the fail lists are out of date.
-     * TODO: Come up with a low-burden method of maintaining fail / exclusion lists. 
+     * TODO: Come up with a low-burden method of maintaining fail / exclusion lists.
      */
     class DefaultConformanceTestRunner {
         // Tests the eval tests with the Kotlin implementation
