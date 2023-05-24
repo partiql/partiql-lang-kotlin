@@ -1,5 +1,6 @@
 package org.partiql.lang.prettyprint
 
+import org.partiql.lang.ast.IsListParenthesizedMeta
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.syntax.PartiQLParserBuilder
 import org.partiql.pig.runtime.toIonElement
@@ -435,7 +436,11 @@ class QueryPrettyPrinter {
 
     @Suppress("UNUSED_PARAMETER")
     private fun writeAstNode(node: PartiqlAst.Expr.List, sb: StringBuilder, level: Int) {
-        sb.append("[ ")
+        val (open, close) = when (node.metas.containsKey(IsListParenthesizedMeta.tag)) {
+            true -> "( " to " )"
+            else -> "[ " to " ]"
+        }
+        sb.append(open)
         node.values.forEach {
             // Print anything as one line inside a list
             writeAstNodeCheckSubQuery(it, sb, -1)
@@ -444,7 +449,7 @@ class QueryPrettyPrinter {
         if (node.values.isNotEmpty()) {
             sb.removeLast(2)
         }
-        sb.append(" ]")
+        sb.append(close)
     }
 
     @Suppress("UNUSED_PARAMETER")
