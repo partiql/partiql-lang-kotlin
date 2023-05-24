@@ -14,7 +14,6 @@
  */
 
 plugins {
-    id(Plugins.antlr)
     id(Plugins.conventions)
     id(Plugins.jmh) version Versions.jmh
     id(Plugins.library)
@@ -33,14 +32,14 @@ kotlin {
 }
 
 dependencies {
-    antlr(Deps.antlr)
     api(project(":lib:isl"))
     api(project(":partiql-ast"))
     api(project(":partiql-spi"))
     api(project(":partiql-types"))
     api(Deps.ionElement)
     api(Deps.ionJava)
-    // libs are included in partiql-lang-kotlin JAR
+    // libs are included in partiql-lang-kotlin JAR, but are not published independently yet.
+    libs(project(":partiql-parser"))
     libs(project(":partiql-plan"))
     implementation(Deps.antlrRuntime)
     implementation(Deps.csv)
@@ -60,14 +59,6 @@ publish {
     description = "An implementation of PartiQL for the JVM written in Kotlin."
 }
 
-tasks.generateGrammarSource {
-    val antlrPackage = "org.partiql.lang.syntax.antlr"
-    val antlrSources = "$buildDir/generated-src/${antlrPackage.replace('.', '/')}"
-    maxHeapSize = "64m"
-    arguments = listOf("-visitor", "-long-messages", "-package", antlrPackage)
-    outputDirectory = File(antlrSources)
-}
-
 jmh {
     resultFormat = properties["resultFormat"] as String? ?: "json"
     resultsFile = project.file(properties["resultsFile"] as String? ?: "$buildDir/reports/jmh/results.json")
@@ -77,21 +68,14 @@ jmh {
     properties["fork"]?.let { it -> fork = Integer.parseInt(it as String) }
 }
 
-tasks.javadoc {
-    exclude("**/antlr/**")
-}
-
-tasks.compileKotlin {
-    dependsOn(tasks.generateGrammarSource)
-}
-
-tasks.findByName("sourcesJar")?.apply {
-    dependsOn(tasks.generateGrammarSource)
-}
-
 tasks.processResources {
-    from("src/main/antlr") {
+    // include .g4 in partiql-lang-kotlin JAR for backwards compatibility
+    from("$rootDir/partiql-parser/src/main/antlr") {
         include("**/*.g4")
+    }
+    // include partiql.ion in partiql-lang-kotlin JAR for backwards compatibility
+    from("$rootDir/partiql-ast/src/main/pig") {
+        include("partiql.ion")
     }
 }
 

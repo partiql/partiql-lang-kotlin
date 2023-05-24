@@ -26,7 +26,6 @@ import org.partiql.lang.util.propertyValueMapOf
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.time.LocalDate
-import kotlin.collections.asSequence
 
 @Deprecated("Please use static constructor methods defined in [ExprValue] instead")
 /**

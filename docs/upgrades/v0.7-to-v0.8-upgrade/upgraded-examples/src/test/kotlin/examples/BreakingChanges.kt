@@ -13,7 +13,7 @@ import org.partiql.lang.eval.ExprValueFactory
 import org.partiql.lang.planner.PlannerPassResult
 import org.partiql.lang.syntax.Parser
 import org.partiql.lang.syntax.PartiQLParserBuilder
-import org.partiql.lang.syntax.antlr.PartiQLTokens
+import org.partiql.parser.antlr.PartiQLTokens
 import org.partiql.lang.types.CustomType
 import java.nio.charset.StandardCharsets
 import kotlin.test.Test

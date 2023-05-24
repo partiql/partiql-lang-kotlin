@@ -56,8 +56,6 @@ import org.partiql.lang.eval.time.MAX_PRECISION_FOR_TIME
 import org.partiql.lang.syntax.DATE_TIME_PART_KEYWORDS
 import org.partiql.lang.syntax.ParserException
 import org.partiql.lang.syntax.TRIM_SPECIFICATION_KEYWORDS
-import org.partiql.lang.syntax.antlr.PartiQLBaseVisitor
-import org.partiql.lang.syntax.antlr.PartiQLParser
 import org.partiql.lang.types.CustomType
 import org.partiql.lang.util.DATE_PATTERN_REGEX
 import org.partiql.lang.util.bigDecimalOf
@@ -65,8 +63,9 @@ import org.partiql.lang.util.checkThreadInterrupted
 import org.partiql.lang.util.error
 import org.partiql.lang.util.getPrecisionFromTimeString
 import org.partiql.lang.util.unaryMinus
+import org.partiql.parser.antlr.PartiQLBaseVisitor
+import org.partiql.parser.antlr.PartiQLParser
 import org.partiql.pig.runtime.SymbolPrimitive
-import java.lang.IllegalArgumentException
 import java.math.BigInteger
 import java.time.LocalDate
 import java.time.LocalTime

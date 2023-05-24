@@ -1,6 +1,7 @@
 package org.partiql.lang.graph
 
 import org.partiql.lang.domains.PartiqlAst
+import org.partiql.lang.graph.GpmlTranslator.normalizeElemList
 import org.partiql.pig.runtime.SymbolPrimitive
 
 /** Translate an AST graph pattern into a "plan spec" to be executed by the graph engine.

@@ -14,6 +14,7 @@ import org.partiql.lang.ast.passes.SemanticProblemDetails
 import org.partiql.lang.errors.Problem
 import org.partiql.lang.errors.ProblemCollector
 import org.partiql.lang.planner.PlanningProblemDetails
+import org.partiql.lang.planner.transforms.PartiQLSchemaInferencerTests.ProblemHandler
 import org.partiql.lang.planner.transforms.PartiQLSchemaInferencerTests.TestCase.ErrorTestCase
 import org.partiql.lang.planner.transforms.PartiQLSchemaInferencerTests.TestCase.SuccessTestCase
 import org.partiql.plan.Rex

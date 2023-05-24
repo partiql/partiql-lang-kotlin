@@ -30,9 +30,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Moves PartiqlAst, PartiqlLogical, PartiqlLogicalResolved, and PartiqlPhysical (along with the transforms)
   to a new project, `partiql-ast`. These are still imported into `partiql-lang` with the `api` annotation. Therefore,
   no action is required to consume the migrated classes. However, this now gives consumers of the AST, Experimental Plans,
-  Visitors, and VisitorTransforms the option of importing them directly using: `org.partiql:partiql-ast:${VERSION}`.
-- Moves internal class org.partiql.lang.syntax.PartiQLParser to
-org.partiql.lang.syntax.impl.PartiQLPigParser as we refactor for explicit API.
+  Visitors, and VisitorTransforms the option of importing them directly using: `org.partiql:partiql-ast:${VERSION}`. 
+  The file `partiql.ion` is still published in the `partiql-lang-kotlin` JAR.
+- Moves internal class org.partiql.lang.syntax.PartiQLParser to org.partiql.lang.syntax.impl.PartiQLPigParser as we refactor for explicit API.
+- Moves ANTLR grammar to `partiql-parser` package. The files `PartiQL.g4` and `PartiQLTokens.g4` are still published in the `partiql-lang-kotlin` JAR.
 
 ### Deprecated
 

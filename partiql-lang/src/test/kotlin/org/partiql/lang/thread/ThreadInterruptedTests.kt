@@ -17,8 +17,8 @@ import org.partiql.lang.StepContext
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.eval.CompileOptions
 import org.partiql.lang.eval.visitors.VisitorTransformBase
-import org.partiql.lang.syntax.antlr.PartiQLTokens
 import org.partiql.lang.syntax.impl.PartiQLPigParser
+import org.partiql.parser.antlr.PartiQLTokens
 import java.io.InputStream
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.concurrent.thread

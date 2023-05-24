@@ -35,16 +35,15 @@ import org.partiql.lang.errors.PropertyValueMap
 import org.partiql.lang.syntax.LexerException
 import org.partiql.lang.syntax.Parser
 import org.partiql.lang.syntax.ParserException
-import org.partiql.lang.syntax.antlr.PartiQLParser
-import org.partiql.lang.syntax.antlr.PartiQLTokens
 import org.partiql.lang.types.CustomType
 import org.partiql.lang.util.checkThreadInterrupted
 import org.partiql.lang.util.getAntlrDisplayString
 import org.partiql.lang.util.getIonValue
+import org.partiql.parser.antlr.PartiQLParser
+import org.partiql.parser.antlr.PartiQLTokens
 import java.io.InputStream
 import java.nio.channels.ClosedByInterruptException
 import java.nio.charset.StandardCharsets
-import kotlin.jvm.Throws
 
 /**
  * Extends [Parser] to provide a mechanism to parse an input query string. It internally uses ANTLR's generated parser,

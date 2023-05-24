@@ -4,10 +4,8 @@ import org.partiql.lang.ast.IsListParenthesizedMeta
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.syntax.PartiQLParserBuilder
 import org.partiql.pig.runtime.toIonElement
-import java.lang.StringBuilder
 import java.time.LocalDate
 import java.time.LocalTime
-import kotlin.IllegalStateException
 import kotlin.math.abs
 
 /**

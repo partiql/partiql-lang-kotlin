@@ -18,6 +18,7 @@ include(
     "partiql-ast",
     "partiql-cli",
     "partiql-lang",
+    "partiql-parser",
     "partiql-plan",
     "partiql-spi",
     "partiql-types",
