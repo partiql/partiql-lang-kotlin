@@ -20,11 +20,11 @@ PARTIQL_TESTS_DATA=/path/to/partiql-tests/data \
 ```
 The report is written into file `test/partiql-tests-runner/conformance_test_results.ion`.
 
-## Run Conformance Tests in IntelliJ
+## Run Conformance Tests in UI
 
 The above project property `-PconformanceReport` is checked in `test/partiql-tests-runner/build.gradle.kts`,
-to prevent the conformance test suite from executing during a normal project-build test run. 
-Unfortunately, this also disables running `ConformanceTestsReportRunner` via IntelliJ UI for unit tests. 
+to exclude the conformance test suite from executing during a normal project-build test run. 
+Unfortunately, this also disables running `ConformanceTestsReportRunner` in a UI runner. 
 To make that possible locally, temporarily comment out the check in `test/partiql-tests-runner/build.gradle.kts`.
 
 ## Compare Conformance Reports locally

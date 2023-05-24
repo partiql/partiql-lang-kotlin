@@ -40,7 +40,7 @@ tasks.test {
     environment(Env.PARTIQL_EVAL, file("$tests/eval/").absolutePath)
     environment(Env.PARTIQL_EQUIV, file("$tests/eval-equiv/").absolutePath)
 
-    // To make it possible to run ConformanceTestsReportRunner in IntelliJ unit test UI, comment out this check:
+    // To make it possible to run ConformanceTestsReportRunner in unit test UI runner, comment out this check:
     if (!project.hasProperty("conformanceReport")) {
         exclude("org/partiql/runner/TestRunner\$ConformanceTestsReportRunner.class")
     }
