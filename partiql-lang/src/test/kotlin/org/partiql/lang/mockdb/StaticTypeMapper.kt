@@ -1,10 +1,8 @@
-package org.partiql.lang.mappers
+package org.partiql.lang.mockdb
 
 import com.amazon.ionelement.api.AnyElement
 import org.partiql.ionschema.model.IonSchemaModel
 import org.partiql.ionschema.model.toIsl
-import org.partiql.lang.eval.ExprValueType
-import org.partiql.lang.types.StaticTypeUtils.getTypeDomain
 import org.partiql.lang.util.toIntExact
 import org.partiql.types.AnyOfType
 import org.partiql.types.AnyType
@@ -18,20 +16,6 @@ import org.partiql.types.StaticType
 import org.partiql.types.StringType
 import org.partiql.types.StructType
 import kotlin.reflect.KClass
-
-internal typealias TypeDefMap = Map<String, IonSchemaModel.TypeDefinition>
-
-// FIXME: Duplicated from StaticType because of - https://github.com/partiql/partiql-lang-kotlin/issues/515
-internal fun isOptional(type: StaticType) = getTypeDomain(type).contains(ExprValueType.MISSING)
-internal fun isNullable(type: StaticType) = getTypeDomain(type).contains(ExprValueType.NULL)
-internal fun asOptional(type: StaticType) = when {
-    isOptional(type) -> type
-    else -> StaticType.unionOf(type, StaticType.MISSING).flatten()
-}
-internal fun asNullable(type: StaticType) = when {
-    isNullable(type) -> type
-    else -> StaticType.unionOf(type, StaticType.NULL).flatten()
-}
 
 /**
  * This class is responsible for mapping Ion Schema type definition(s) to PartiQL StaticType(s)
@@ -94,7 +78,9 @@ class StaticTypeMapper(schema: IonSchemaModel.Schema) {
         // Get core ISL type
         val coreType = when (typeConstraint) {
             is IonSchemaModel.Constraint.TypeConstraint -> typeConstraint.type.toStaticType(currentTopLevelTypeName)
-            is IonSchemaModel.Constraint.AnyOf -> return AnyOfType(typeConstraint.types.map { it.toStaticType(currentTopLevelTypeName) }.toSet(), metas)
+            is IonSchemaModel.Constraint.AnyOf -> return AnyOfType(
+                typeConstraint.types.map { it.toStaticType(currentTopLevelTypeName) }.toSet(), metas
+            )
             else -> error("This block should be unreachable")
         }
 
@@ -106,7 +92,11 @@ class StaticTypeMapper(schema: IonSchemaModel.Schema) {
             is ListType -> ListType(getElement(currentTopLevelTypeName), metas)
             is SexpType -> SexpType(getElement(currentTopLevelTypeName), metas)
             is BagType -> BagType(getElement(currentTopLevelTypeName), metas)
-            is StructType -> StructType(getFields(currentTopLevelTypeName), contentClosed = isClosedContent(), metas = metas)
+            is StructType -> StructType(
+                getFields(currentTopLevelTypeName),
+                contentClosed = isClosedContent(),
+                metas = metas
+            )
             else -> coreType.withMetas(metas)
         }
     }
