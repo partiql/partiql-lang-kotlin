@@ -2560,7 +2560,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
             Property.LINE_NUMBER to 1L,
             Property.COLUMN_NUMBER to 68L,
             Property.TOKEN_DESCRIPTION to PartiQLParser.WHERE.getAntlrDisplayString(),
-            Property.TOKEN_VALUE to ION.newSymbol("where")
+            Property.TOKEN_VALUE to ION.newSymbol("WHERE")
         )
     )
 
@@ -2572,7 +2572,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
             Property.LINE_NUMBER to 1L,
             Property.COLUMN_NUMBER to 57L,
             Property.TOKEN_DESCRIPTION to PartiQLParser.WHERE.getAntlrDisplayString(),
-            Property.TOKEN_VALUE to ION.newSymbol("where")
+            Property.TOKEN_VALUE to ION.newSymbol("WHERE")
         )
     )
 
@@ -2584,7 +2584,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
             Property.LINE_NUMBER to 1L,
             Property.COLUMN_NUMBER to 59L,
             Property.TOKEN_DESCRIPTION to PartiQLParser.DO.getAntlrDisplayString(),
-            Property.TOKEN_VALUE to ION.newSymbol("do")
+            Property.TOKEN_VALUE to ION.newSymbol("DO")
         )
     )
 

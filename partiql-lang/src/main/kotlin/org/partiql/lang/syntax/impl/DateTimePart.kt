@@ -12,15 +12,18 @@
  *  language governing permissions and limitations under the License.
  */
 
-package org.partiql.lang.syntax
+package org.partiql.lang.syntax.impl
 
-import org.partiql.lang.domains.PartiqlAst
+internal enum class DateTimePart {
+    YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, TIMEZONE_HOUR, TIMEZONE_MINUTE;
 
-/**
- * Parses a PartiQL Statement into an AST.
- *
- * Implementations must be thread-safe.
- */
-interface Parser {
-    fun parseAstStatement(source: String): PartiqlAst.Statement
+    companion object {
+        fun safeValueOf(value: String): DateTimePart? = try {
+            valueOf(value.toUpperCase().trim())
+        } catch (_: IllegalArgumentException) {
+            null
+        }
+
+        internal val KEYWORDS: Set<String> = values().map { it.toString().toLowerCase() }.toSet()
+    }
 }
