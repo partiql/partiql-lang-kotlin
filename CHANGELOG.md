@@ -38,6 +38,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+- **Breaking**: Removes `org.partiql.lang.mappers.StaticTypeMapper`
+- **Breaking**: Removes `org.partiql.lang.mappers.IonSchemaMapper`
+- **Breaking**: Removes `org.partiql.lang.mappers.TypeNotFoundException`
+- **Breaking**: Removes `org.partiql.lang.mappers.getBaseTypeName()`
+
 ### Security
 
 
