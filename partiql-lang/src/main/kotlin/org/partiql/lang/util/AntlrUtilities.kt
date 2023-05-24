@@ -36,7 +36,7 @@ import org.partiql.lang.syntax.KEYWORDS
 import org.partiql.lang.syntax.MULTI_LEXEME_TOKEN_MAP
 import org.partiql.lang.syntax.ParserException
 import org.partiql.lang.syntax.TYPE_ALIASES
-import org.partiql.lang.syntax.antlr.PartiQLParser
+import org.partiql.parser.antlr.PartiQLParser
 import java.math.BigInteger
 
 // workaround until ErrorAndErrorContexts no longer uses IonSystem

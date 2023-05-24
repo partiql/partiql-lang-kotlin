@@ -27,6 +27,8 @@ import org.partiql.lang.eval.builtins.SCALAR_BUILTINS_DEFAULT
 import org.partiql.lang.planner.PlanningProblemDetails
 import org.partiql.lang.planner.transforms.PlannerSession
 import org.partiql.lang.planner.transforms.impl.Metadata
+import org.partiql.lang.planner.transforms.plan.PlanTyper.MinimumTolerance.FULL
+import org.partiql.lang.planner.transforms.plan.PlanTyper.MinimumTolerance.PARTIAL
 import org.partiql.lang.planner.transforms.plan.PlanUtils.addType
 import org.partiql.lang.planner.transforms.plan.PlanUtils.grabType
 import org.partiql.lang.types.FunctionSignature

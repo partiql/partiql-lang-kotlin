@@ -28,8 +28,8 @@ import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.id
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
-import org.partiql.lang.syntax.antlr.PartiQLParser
 import org.partiql.lang.util.getAntlrDisplayString
+import org.partiql.parser.antlr.PartiQLParser
 import kotlin.concurrent.thread
 
 /**

@@ -4,11 +4,12 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.domains.PartiqlAst
-import org.partiql.lang.syntax.PartiQLParser
+import org.partiql.lang.syntax.PartiQLParserBuilder
 import org.partiql.lang.util.ArgumentsProviderBase
 
 class PartiqlAstExtensionsTests : EvaluatorTestBase() {
-    private val parser = PartiQLParser()
+
+    private val parser = PartiQLParserBuilder.standard().build()
 
     data class StartingSourceLocationTestCase(val query: String, val expectedSourceLocationMeta: SourceLocationMeta)
 

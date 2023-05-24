@@ -2,7 +2,6 @@ package org.partiql.sprout.generator.target.kotlin
 
 import org.partiql.sprout.parser.SproutParser
 import picocli.CommandLine
-import picocli.CommandLine.Command
 import java.io.BufferedReader
 import java.io.File
 import java.io.FileInputStream

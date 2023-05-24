@@ -12,7 +12,7 @@
  * language governing permissions and limitations under the License.
  */
 
-package org.partiql.lang.syntax
+package org.partiql.lang.syntax.impl
 
 import com.amazon.ion.Decimal
 import com.amazon.ionelement.api.DecimalElement
@@ -53,8 +53,9 @@ import org.partiql.lang.errors.Property
 import org.partiql.lang.errors.PropertyValueMap
 import org.partiql.lang.eval.EvaluationException
 import org.partiql.lang.eval.time.MAX_PRECISION_FOR_TIME
-import org.partiql.lang.syntax.antlr.PartiQLBaseVisitor
-import org.partiql.lang.syntax.antlr.PartiQLParser
+import org.partiql.lang.syntax.DATE_TIME_PART_KEYWORDS
+import org.partiql.lang.syntax.ParserException
+import org.partiql.lang.syntax.TRIM_SPECIFICATION_KEYWORDS
 import org.partiql.lang.types.CustomType
 import org.partiql.lang.util.DATE_PATTERN_REGEX
 import org.partiql.lang.util.bigDecimalOf
@@ -62,8 +63,9 @@ import org.partiql.lang.util.checkThreadInterrupted
 import org.partiql.lang.util.error
 import org.partiql.lang.util.getPrecisionFromTimeString
 import org.partiql.lang.util.unaryMinus
+import org.partiql.parser.antlr.PartiQLBaseVisitor
+import org.partiql.parser.antlr.PartiQLParser
 import org.partiql.pig.runtime.SymbolPrimitive
-import java.lang.IllegalArgumentException
 import java.math.BigInteger
 import java.time.LocalDate
 import java.time.LocalTime
@@ -77,7 +79,7 @@ import kotlin.reflect.cast
  * Extends ANTLR's generated [PartiQLBaseVisitor] to visit an ANTLR ParseTree and convert it into a PartiQL AST. This
  * class uses the [PartiqlAst.PartiqlAstNode] to represent all nodes within the new AST.
  */
-internal class PartiQLVisitor(val customTypes: List<CustomType> = listOf(), private val parameterIndexes: Map<Int, Int> = mapOf()) :
+internal class PartiQLPigVisitor(val customTypes: List<CustomType> = listOf(), private val parameterIndexes: Map<Int, Int> = mapOf()) :
     PartiQLBaseVisitor<PartiqlAst.PartiqlAstNode>() {
 
     private val customKeywords = customTypes.map { it.name.toLowerCase() }

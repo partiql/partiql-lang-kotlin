@@ -16,7 +16,7 @@ import org.partiql.lang.eval.sourceLocationMeta
 import org.partiql.lang.planner.PlanningProblemDetails
 import org.partiql.lang.planner.createFakeGlobalsResolver
 import org.partiql.lang.planner.problem
-import org.partiql.lang.syntax.PartiQLParser
+import org.partiql.lang.syntax.PartiQLParserBuilder
 import org.partiql.lang.util.ArgumentsProviderBase
 import org.partiql.lang.util.toIntExact
 
@@ -105,7 +105,7 @@ class LogicalToLogicalResolvedVisitorTransformTests {
         }.toTypedArray()
     )
 
-    private val parser = PartiQLParser()
+    private val parser = PartiQLParserBuilder.standard().build()
 
     private fun runTestCase(tc: TestCase) {
         val problemHandler = ProblemCollector()

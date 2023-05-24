@@ -16,13 +16,14 @@ package org.partiql.lang.ast
 
 import org.junit.Assert
 import org.junit.Test
-import org.partiql.lang.syntax.PartiQLParser
+import org.partiql.lang.syntax.PartiQLParserBuilder
 
 class IsIonLiteralMetaTest {
 
     @Test
     fun testIonLiteralMetaPreserved() {
-        val ionLiteral = PartiQLParser().parseAstStatement("`1.0`")
+        val parser = PartiQLParserBuilder.standard().build()
+        val ionLiteral = parser.parseAstStatement("`1.0`")
         Assert.assertTrue(ionLiteral.metas.hasMeta(IsIonLiteralMeta.TAG))
     }
 }

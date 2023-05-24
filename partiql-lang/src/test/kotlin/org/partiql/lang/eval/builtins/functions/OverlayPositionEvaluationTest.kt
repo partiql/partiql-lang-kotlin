@@ -3,7 +3,6 @@ package org.partiql.lang.eval.builtins.functions
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
-import org.partiql.lang.eval.CastTestBase.Companion.runEvaluatorTestCase
 import org.partiql.lang.eval.EvaluatorTestBase
 import org.partiql.lang.eval.builtins.Argument
 import org.partiql.lang.eval.builtins.ExprFunctionTestCase
