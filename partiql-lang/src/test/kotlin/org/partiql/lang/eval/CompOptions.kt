@@ -39,6 +39,13 @@ enum class CompOptions(
         }
     ),
 
+    TYPED_OP_BEHAVIOR_LEGACY(
+        {
+            @Suppress("DEPRECATION") // TypedOpBehavior.LEGACY is deprecated.
+            typedOpBehavior(TypedOpBehavior.LEGACY)
+        }
+    ),
+
     PERMISSIVE(
         {
             this.typingMode(TypingMode.PERMISSIVE)

@@ -30,3 +30,38 @@ fun <T> Bindings<T>.delegate(fallback: Bindings<T>): Bindings<T> =
             return binding ?: fallback[bindingName]
         }
     }
+
+/**
+ * Wraps a binding with a set of names that should not be resolved to anything.
+ *
+ * @receiver The [Bindings] to delegate over.
+ * @param names, the deny listed names
+ */
+@Deprecated(
+    message = "To be replaced with functionally equivalent denyList method.",
+    replaceWith = ReplaceWith("denyList", "org.partiql.lang.eval.denyList"),
+    level = DeprecationLevel.WARNING
+)
+fun <T> Bindings<T>.blacklist(vararg names: String) = this.denyList(*names)
+
+/**
+ * Wraps a binding with a set of names that should not be resolved to anything.
+ *
+ * @receiver The [Bindings] to delegate over.
+ * @param names, the deny listed names
+ */
+fun <T> Bindings<T>.denyList(vararg names: String) = object : Bindings<T> {
+    val denyListed = names.toSet()
+    val loweredDenyListed = names.map { it.toLowerCase() }.toSet()
+
+    override fun get(bindingName: BindingName): T? {
+        val isDenyListed = when (bindingName.bindingCase) {
+            BindingCase.SENSITIVE -> denyListed.contains(bindingName.name)
+            BindingCase.INSENSITIVE -> loweredDenyListed.contains(bindingName.loweredName)
+        }
+        return when {
+            isDenyListed -> null
+            else -> this[bindingName]
+        }
+    }
+}

@@ -961,7 +961,22 @@ internal class PhysicalPlanCompilerImpl(
         typedOpParameter: TypedOpParameter,
         metas: MetaContainer
     ): (ExprValue) -> Boolean {
+        val exprValueType = getRuntimeType(staticType)
+
+        // The "simple" type match function only looks at the [ExprValueType] of the [ExprValue]
+        // and invokes the custom [validationThunk] if one exists.
+        val simpleTypeMatchFunc = { expValue: ExprValue ->
+            val isTypeMatch = when (exprValueType) {
+                // MISSING IS NULL and NULL IS MISSING
+                ExprValueType.NULL -> expValue.type.isUnknown
+                else -> expValue.type == exprValueType
+            }
+            (isTypeMatch && typedOpParameter.validationThunk?.let { it(expValue) } != false)
+        }
+
+        @Suppress("DEPRECATION") // TypedOpBehavior.LEGACY is deprecated.
         return when (evaluatorOptions.typedOpBehavior) {
+            TypedOpBehavior.LEGACY -> simpleTypeMatchFunc
             TypedOpBehavior.HONOR_PARAMETERS -> { expValue: ExprValue ->
                 staticType.allTypes.any {
                     val matchesStaticType = try {
