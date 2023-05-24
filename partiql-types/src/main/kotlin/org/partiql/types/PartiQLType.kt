@@ -17,7 +17,7 @@ package org.partiql.types
 /**
  * PartiQL Type Names
  */
-enum class PartiQLType {
+public enum class PartiQLType {
     NULL,
     MISSING,
     BOOL,
@@ -41,5 +41,6 @@ enum class PartiQLType {
     INTERVAL,
     BAG,
     ARRAY,
-    TUPLE,
+    SEXP,
+    STRUCT,
 }
