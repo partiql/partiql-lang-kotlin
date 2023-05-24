@@ -14,7 +14,7 @@ import org.partiql.lang.eval.evaluatortestframework.ExpectedResultFormat
 import org.partiql.lang.eval.evaluatortestframework.PartiQLCompilerPipelineFactory
 import org.partiql.lang.eval.evaluatortestframework.PipelineEvaluatorTestAdapter
 import org.partiql.lang.mockdb.MockDb
-import org.partiql.lang.syntax.impl.PartiQLPigParser
+import org.partiql.lang.syntax.PartiQLParserBuilder
 
 /** Defines a test case for query evaluation. */
 data class IonResultTestCase(
@@ -63,7 +63,8 @@ data class IonResultTestCase(
 
     fun toStatementTestCase(): StatementTestCase =
         assertDoesNotThrow("IonResultTestCase ${toString()} should not throw when parsing") {
-            StatementTestCase(name, PartiQLPigParser().parseAstStatement(sqlUnderTest))
+            val parser = PartiQLParserBuilder.standard().build()
+            StatementTestCase(name, parser.parseAstStatement(sqlUnderTest))
         }
 }
 

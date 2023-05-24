@@ -2,7 +2,7 @@ package org.partiql.lang.syntax
 
 import org.junit.Test
 
-class SqlParserWindowTests : PartiQLParserTestBase() {
+class PartiQLParserWindowTests : PartiQLParserTestBase() {
     // TODO: In the future when we support custom-defined window frame, we will need to change this
     @Test
     fun lagWithInlinePartitionBYOrderBy() = assertExpression(

@@ -12,7 +12,7 @@
  * language governing permissions and limitations under the License.
  */
 
-package org.partiql.lang.syntax
+package org.partiql.lang.syntax.impl
 
 import com.amazon.ion.IonSystem
 import com.amazon.ion.system.IonSystemBuilder
@@ -20,11 +20,11 @@ import io.mockk.every
 import io.mockk.spyk
 import io.mockk.verify
 import org.antlr.v4.runtime.misc.ParseCancellationException
-import org.junit.Assert.assertEquals
+import org.junit.Assert
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.partiql.lang.domains.PartiqlAst
-import org.partiql.lang.syntax.impl.PartiQLPigParser
+import org.partiql.lang.syntax.ParserException
 
 /**
  * This test class is used for spying the [PartiQLPigParser].
@@ -53,7 +53,7 @@ internal class PartiQLPigParserSpyTest {
         val query00 = "SELECT a1 FROM t1"
         val ast00 = parser.parseAstStatement(query00)
         val ast01 = parser.parseAstStatement(query00)
-        assertEquals(ast00, ast01)
+        Assert.assertEquals(ast00, ast01)
     }
 
     /**
@@ -64,7 +64,7 @@ internal class PartiQLPigParserSpyTest {
         val query00 = "SELECT a1 FROM t1"
         val ast00 = parser.parseQuery(query00) { parser.createParserSLL(it) }
         val ast01 = parser.parseQuery(query00) { parser.createParserLL(it) }
-        assertEquals(ast00, ast01)
+        Assert.assertEquals(ast00, ast01)
     }
 
     /**
@@ -92,7 +92,7 @@ internal class PartiQLPigParserSpyTest {
         // Assert
         verify(exactly = 1) { parser.createParserSLL(any()) }
         verify(exactly = 0) { parser.createParserLL(any()) }
-        assertEquals(
+        Assert.assertEquals(
             ast,
             PartiqlAst.build {
                 query(
@@ -128,7 +128,7 @@ internal class PartiQLPigParserSpyTest {
         // Assert
         verify(exactly = 1) { parser.createParserSLL(any()) }
         verify(exactly = 1) { parser.createParserLL(any()) }
-        assertEquals(
+        Assert.assertEquals(
             ast,
             PartiqlAst.build {
                 query(
