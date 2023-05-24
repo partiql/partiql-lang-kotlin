@@ -55,7 +55,6 @@ import java.time.LocalTime
 import java.time.ZoneOffset
 import java.util.BitSet
 
-@OptIn(PartiQLValueExperimental::class)
 @Suppress("FunctionName")
 internal inline fun <reified T : PartiQLValue> T._withAnnotations(annotations: Annotations): T =
     when {
