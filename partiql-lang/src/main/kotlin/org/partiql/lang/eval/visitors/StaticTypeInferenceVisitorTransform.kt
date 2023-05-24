@@ -1513,13 +1513,13 @@ internal class StaticTypeInferenceVisitorTransform(
             structFields: Map<String, StaticType>,
             contentClosed: Boolean
         ): StaticType =
-            when (currentPathComponent.index) {
+            when (val index = currentPathComponent.index) {
                 is PartiqlAst.Expr.Lit -> {
-                    if (currentPathComponent.index.value is StringElement) {
+                    if (index.value is StringElement) {
                         val bindings = Bindings.ofMap(structFields)
                         val caseSensitivity = currentPathComponent.case
                         val lookupName = BindingName(
-                            currentPathComponent.index.value.stringValue,
+                            index.value.stringValue,
                             caseSensitivity.toBindingCase()
                         )
                         bindings[lookupName] ?: if (contentClosed) {

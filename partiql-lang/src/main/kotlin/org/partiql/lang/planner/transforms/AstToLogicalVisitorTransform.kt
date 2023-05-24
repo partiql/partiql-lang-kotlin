@@ -4,6 +4,7 @@ import com.amazon.ionelement.api.emptyMetaContainer
 import com.amazon.ionelement.api.ionString
 import com.amazon.ionelement.api.ionSymbol
 import org.partiql.lang.ast.IsOrderedMeta
+import org.partiql.lang.ast.UNKNOWN_SOURCE_LOCATION
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.PartiqlAstToPartiqlLogicalVisitorTransform
 import org.partiql.lang.domains.PartiqlLogical
@@ -175,7 +176,7 @@ internal class AstToLogicalVisitorTransform(
                     name = node.asAlias?.text ?: errAstNotNormalized(
                         "The group key should have encountered a unique name. This is typically added by the GroupByItemAliasVisitorTransform."
                     ),
-                    metas = node.asAlias.metas
+                    metas = node.asAlias!!.metas
                 )
             )
         }
@@ -353,7 +354,7 @@ internal class AstToLogicalVisitorTransform(
                 // VALUES constructor.  Since parser uses the same nodes for the alternate syntactic representations
                 // `<< [ ... ] ... >>` and `BAG(LIST(...), ...)` those get blocked too.  This is probably just as well.
                 if (dmlOp.values is PartiqlAst.Expr.Bag) {
-                    dmlOp.values.values.firstOrNull { it is PartiqlAst.Expr.List }?.let {
+                    (dmlOp.values as PartiqlAst.Expr.Bag).values.firstOrNull { it is PartiqlAst.Expr.List }?.let {
                         problemHandler.handleProblem(
                             Problem(
                                 node.metas.sourceLocationMetaOrUnknown,
@@ -373,13 +374,13 @@ internal class AstToLogicalVisitorTransform(
                     is PartiqlAst.ConflictAction.DoReplace -> when (conflictAction.value) {
                         is PartiqlAst.OnConflictValue.Excluded -> PartiqlLogical.DmlOperation.DmlReplace(
                             targetAlias = alias,
-                            condition = conflictAction.condition?.let { transformExpr(conflictAction.condition) }
+                            condition = conflictAction.condition?.let { transformExpr(it) }
                         )
                     }
                     is PartiqlAst.ConflictAction.DoUpdate -> when (conflictAction.value) {
                         is PartiqlAst.OnConflictValue.Excluded -> PartiqlLogical.DmlOperation.DmlUpdate(
                             targetAlias = alias,
-                            condition = conflictAction.condition?.let { transformExpr(conflictAction.condition) }
+                            condition = conflictAction.condition?.let { transformExpr(it) }
                         )
                     }
                     is PartiqlAst.ConflictAction.DoNothing -> TODO("`ON CONFLICT DO NOTHING` is not supported in logical plan yet.")
@@ -409,9 +410,9 @@ internal class AstToLogicalVisitorTransform(
                     // never actually create an AST for a DELETE statement without a FROM clause.
                     error("Malformed AST: DELETE without FROM (this should never happen)")
                 } else {
-                    when (node.from) {
+                    when (val from = node.from) {
                         is PartiqlAst.FromSource.Scan -> {
-                            val rowsSource = node.from.toBexpr(this, problemHandler) as PartiqlLogical.Bexpr.Scan
+                            val rowsSource = from.toBexpr(this, problemHandler) as PartiqlLogical.Bexpr.Scan
                             val predicate = node.where?.let { transformExpr(it) }
                             val rows = if (predicate == null) {
                                 rowsSource
@@ -421,7 +422,7 @@ internal class AstToLogicalVisitorTransform(
 
                             PartiqlLogical.build {
                                 dml(
-                                    target = node.from.expr.toDmlTargetId(),
+                                    target = from.expr.toDmlTargetId(),
                                     operation = dmlDelete(),
                                     // This query returns entire rows which are to be deleted, which is unfortunate
                                     // unavoidable without knowledge of schema. PartiQL embedders may apply a
@@ -438,7 +439,7 @@ internal class AstToLogicalVisitorTransform(
                         else -> {
                             problemHandler.handleProblem(
                                 Problem(
-                                    node.from.metas.sourceLocationMetaOrUnknown,
+                                    from?.metas?.sourceLocationMetaOrUnknown ?: UNKNOWN_SOURCE_LOCATION,
                                     PlanningProblemDetails.InvalidDmlTarget
                                 )
                             )

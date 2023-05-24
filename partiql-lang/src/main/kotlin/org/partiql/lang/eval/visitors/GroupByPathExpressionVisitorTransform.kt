@@ -139,7 +139,7 @@ class GroupByPathExpressionVisitorTransform(
                     groupKey.expr,
                     PartiqlAst.build {
                         id(
-                            name = groupKey.asAlias.text,
+                            name = groupKey.asAlias!!.text,
                             case = caseSensitive(),
                             qualifier = unqualified(),
                             metas = groupKey.expr.metas + metaContainerOf(UniqueNameMeta.TAG to uniqueIdentifierMeta)

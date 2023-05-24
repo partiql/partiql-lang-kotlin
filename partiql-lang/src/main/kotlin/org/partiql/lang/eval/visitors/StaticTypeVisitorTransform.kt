@@ -334,13 +334,12 @@ class StaticTypeVisitorTransform(
             when (node.root) {
                 is PartiqlAst.Expr.Id -> super.transformExprPath(node).let {
                     it as PartiqlAst.Expr.Path
-                    when (it.root) {
+                    when (val root = it.root) {
                         // we started with a variable, that got turned into a path, normalize it
                         // SELECT x.y FROM tbl AS t --> SELECT ("t".x).y FROM tbl AS t --> SELECT "t".x.y FROM tbl AS t
                         is PartiqlAst.Expr.Path -> {
-                            val childPath = it.root
                             PartiqlAst.build {
-                                path(childPath.root, childPath.steps + it.steps, it.metas)
+                                path(root.root, root.steps + it.steps, it.metas)
                             }
                         }
 

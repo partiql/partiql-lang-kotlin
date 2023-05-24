@@ -1008,7 +1008,7 @@ internal class PhysicalPlanCompilerImpl(
         if (typedOpParameter.staticType is AnyType) {
             return thunkFactory.thunkEnv(metas) { ExprValue.newBoolean(true) }
         }
-        if (evaluatorOptions.typedOpBehavior == TypedOpBehavior.HONOR_PARAMETERS && expr.type is PartiqlPhysical.Type.FloatType && expr.type.precision != null) {
+        if (evaluatorOptions.typedOpBehavior == TypedOpBehavior.HONOR_PARAMETERS && expr.type is PartiqlPhysical.Type.FloatType && (expr.type as PartiqlPhysical.Type.FloatType).precision != null) {
             err(
                 "FLOAT precision parameter is unsupported",
                 ErrorCode.SEMANTIC_FLOAT_PRECISION_UNSUPPORTED,
@@ -1240,9 +1240,9 @@ internal class PhysicalPlanCompilerImpl(
     private fun compileSimpleCase(expr: PartiqlPhysical.Expr.SimpleCase, metas: MetaContainer): PhysicalPlanThunk {
         val valueThunk = compileAstExpr(expr.expr)
         val branchThunks = expr.cases.pairs.map { Pair(compileAstExpr(it.first), compileAstExpr(it.second)) }
-        val elseThunk = when (expr.default) {
+        val elseThunk = when (val default = expr.default) {
             null -> thunkFactory.thunkEnv(metas) { ExprValue.nullValue }
-            else -> compileAstExpr(expr.default)
+            else -> compileAstExpr(default)
         }
 
         return thunkFactory.thunkEnv(metas) thunk@{ env ->
@@ -1272,9 +1272,9 @@ internal class PhysicalPlanCompilerImpl(
 
     private fun compileSearchedCase(expr: PartiqlPhysical.Expr.SearchedCase, metas: MetaContainer): PhysicalPlanThunk {
         val branchThunks = expr.cases.pairs.map { compileAstExpr(it.first) to compileAstExpr(it.second) }
-        val elseThunk = when (expr.default) {
+        val elseThunk = when (val default = expr.default) {
             null -> thunkFactory.thunkEnv(metas) { ExprValue.nullValue }
-            else -> compileAstExpr(expr.default)
+            else -> compileAstExpr(default)
         }
 
         return when (evaluatorOptions.typingMode) {

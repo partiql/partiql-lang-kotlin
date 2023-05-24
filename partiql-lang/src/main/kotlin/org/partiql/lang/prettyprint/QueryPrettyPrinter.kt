@@ -83,17 +83,17 @@ class QueryPrettyPrinter {
     // * Ddl *
     // *******
     private fun writeAstNode(node: PartiqlAst.Statement.Ddl, sb: StringBuilder) {
-        when (node.op) {
-            is PartiqlAst.DdlOp.CreateTable -> writeAstNode(node.op, sb)
+        when (val op = node.op) {
+            is PartiqlAst.DdlOp.CreateTable -> writeAstNode(op, sb)
             is PartiqlAst.DdlOp.DropTable -> {
                 sb.append("DROP TABLE ")
-                writeAstNode(node.op.tableName, sb)
+                writeAstNode(op.tableName, sb)
             }
             is PartiqlAst.DdlOp.CreateIndex -> {
                 sb.append("CREATE INDEX ON ")
-                writeAstNode(node.op.indexName, sb)
+                writeAstNode(op.indexName, sb)
                 sb.append(" (")
-                node.op.fields.forEach {
+                op.fields.forEach {
                     // Assume fields in CREATE INDEX clause are not SELECT or CASE
                     writeAstNode(it, sb, 0)
                     sb.append(", ")
@@ -102,9 +102,9 @@ class QueryPrettyPrinter {
             }
             is PartiqlAst.DdlOp.DropIndex -> {
                 sb.append("DROP INDEX ")
-                writeAstNode(node.op.keys, sb)
+                writeAstNode(op.keys, sb)
                 sb.append(" ON ")
-                writeAstNode(node.op.table, sb)
+                writeAstNode(op.table, sb)
             }
         }
     }
@@ -254,9 +254,9 @@ class QueryPrettyPrinter {
                 is PartiqlAst.ReturningMapping.AllNew -> sb.append("ALL NEW ")
                 is PartiqlAst.ReturningMapping.AllOld -> sb.append("ALL OLD ")
             }
-            when (it.column) {
+            when (val column = it.column) {
                 is PartiqlAst.ColumnComponent.ReturningWildcard -> sb.append('*')
-                is PartiqlAst.ColumnComponent.ReturningColumn -> writeAstNode(it.column.expr, sb, 0)
+                is PartiqlAst.ColumnComponent.ReturningColumn -> writeAstNode(column.expr, sb, 0)
             }
             sb.append(", ")
         }
@@ -521,9 +521,9 @@ class QueryPrettyPrinter {
                         sb.append(']')
                     }
                     // Case for a.b
-                    is PartiqlAst.CaseSensitivity.CaseInsensitive -> when (it.index) {
+                    is PartiqlAst.CaseSensitivity.CaseInsensitive -> when (val index = it.index) {
                         is PartiqlAst.Expr.Lit -> {
-                            val value = it.index.value.stringValue // It must be a string according to behavior of Lexer
+                            val value = index.value.stringValue // It must be a string according to behavior of Lexer
                             sb.append(".$value")
                         }
                         else -> throw IllegalArgumentException("PathExpr's attribute 'index' must be PartiqlAst.Expr.Lit when case sensitivity is insensitive")
@@ -804,7 +804,7 @@ class QueryPrettyPrinter {
         writeAstNodeCheckOp(node.pattern, sb, level)
         node.escape?.let {
             sb.append(" ESCAPE ")
-            writeAstNodeCheckOp(node.escape, sb, level)
+            writeAstNodeCheckOp(it, sb, level)
         }
     }
 
