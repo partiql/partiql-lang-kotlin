@@ -21,102 +21,101 @@ import java.time.Instant
 import java.util.BitSet
 import java.util.Date
 
-interface PartiQLValue {
+public interface PartiQLValue {
 
     public val type: PartiQLType
 
-    object NULL : PartiQLValue {
+    public object NULL : PartiQLValue {
 
         override val type: PartiQLType = PartiQLType.NULL
     }
 
-    object MISSING : PartiQLValue {
+    public object MISSING : PartiQLValue {
 
-        override val type: PartiQLType = PartiQLType.NULL
+        override val type: PartiQLType = PartiQLType.MISSING
     }
 }
 
-interface ScalarValue<T> : PartiQLValue {
+public interface ScalarValue<T> : PartiQLValue {
 
     public val value: T
 }
 
-interface CollectionValue<T : PartiQLValue> : PartiQLValue, Collection<T> {
+public interface CollectionValue<T : PartiQLValue> : PartiQLValue, Collection<T> {
 
     public override val size: Int
 
     public val values: Collection<T>
 }
 
-abstract class BoolValue : ScalarValue<Boolean> {
+public abstract class BoolValue : ScalarValue<Boolean> {
 
     override val type: PartiQLType = PartiQLType.BOOL
 }
 
-sealed class NumericValue<T : Number> : ScalarValue<T> {
+public sealed class NumericValue<T : Number> : ScalarValue<T> {
 
-    val int: Int
+    public val int: Int
         get() = value.toInt()
 
-    val long: Long
+    public val long: Long
         get() = value.toLong()
 
-    val float: Double
-        get() = value.toDouble()
-
-    val double: Float
+    public val float: Float
         get() = value.toFloat()
+
+    public val double: Double
+        get() = value.toDouble()
 
     override fun toString(): String = value.toString()
 }
 
-abstract class Int8Value : NumericValue<Byte>() {
+public abstract class Int8Value : NumericValue<Byte>() {
 
     override val type: PartiQLType = PartiQLType.INT8
 }
 
-abstract class Int16Value : NumericValue<Short>() {
+public abstract class Int16Value : NumericValue<Short>() {
 
     override val type: PartiQLType = PartiQLType.INT16
 }
 
-abstract class Int32Value : NumericValue<Int>() {
+public abstract class Int32Value : NumericValue<Int>() {
 
     override val type: PartiQLType = PartiQLType.INT32
 }
 
-abstract class Int64Value : NumericValue<Long>() {
+public abstract class Int64Value : NumericValue<Long>() {
 
     override val type: PartiQLType = PartiQLType.INT64
 }
 
-abstract class IntValue : NumericValue<BigInteger>() {
+public abstract class IntValue : NumericValue<BigInteger>() {
 
     override val type: PartiQLType = PartiQLType.INT
 }
 
-abstract class DecimalValue : NumericValue<BigDecimal>() {
+public abstract class DecimalValue : NumericValue<BigDecimal>() {
 
     override val type: PartiQLType = PartiQLType.DECIMAL
 }
 
-abstract class Float32Value : ScalarValue<Float> {
+public abstract class Float32Value : ScalarValue<Float> {
 
     override val type: PartiQLType = PartiQLType.FLOAT32
 }
 
-abstract class Float64Value : ScalarValue<Double> {
+public abstract class Float64Value : ScalarValue<Double> {
 
     override val type: PartiQLType = PartiQLType.FLOAT64
 }
 
-sealed class TextValue<T> : ScalarValue<T> {
+public sealed class TextValue<T> : ScalarValue<T> {
 
-    abstract val string: String
-
+    public abstract val string: String
 }
 
-abstract class CharValue : TextValue<Char>() {
+public abstract class CharValue : TextValue<Char>() {
 
     override val type: PartiQLType = PartiQLType.CHAR
 
@@ -124,7 +123,7 @@ abstract class CharValue : TextValue<Char>() {
         get() = type.toString()
 }
 
-abstract class StringValue : TextValue<String>() {
+public abstract class StringValue : TextValue<String>() {
 
     override val type: PartiQLType = PartiQLType.STRING
 
@@ -132,69 +131,75 @@ abstract class StringValue : TextValue<String>() {
         get() = value
 }
 
-abstract class BitValue : ScalarValue<Boolean> {
+public abstract class BitValue : ScalarValue<Boolean> {
 
     override val type: PartiQLType = PartiQLType.BIT
 }
 
-abstract class BinaryValue : ScalarValue<BitSet> {
+public abstract class BinaryValue : ScalarValue<BitSet> {
 
     override val type: PartiQLType = PartiQLType.BINARY
 }
 
-abstract class ByteValue : ScalarValue<Byte> {
+public abstract class ByteValue : ScalarValue<Byte> {
 
     override val type: PartiQLType = PartiQLType.BYTE
 }
 
-abstract class BlobValue : ScalarValue<ByteArray> {
+public abstract class BlobValue : ScalarValue<ByteArray> {
 
     override val type: PartiQLType = PartiQLType.BLOB
 }
 
-abstract class DateValue : ScalarValue<Date> {
+public abstract class DateValue : ScalarValue<Date> {
 
     override val type: PartiQLType = PartiQLType.DATE
 }
 
-abstract class TimeValue : ScalarValue<Long> {
+public abstract class TimeValue : ScalarValue<Long> {
 
     override val type: PartiQLType = PartiQLType.TIME
 }
 
-abstract class TimestampValue : ScalarValue<Instant> {
+public abstract class TimestampValue : ScalarValue<Instant> {
 
     override val type: PartiQLType = PartiQLType.TIMESTAMP
 }
 
-abstract class IntervalValue : ScalarValue<Long> {
+public abstract class IntervalValue : ScalarValue<Long> {
 
     override val type: PartiQLType = PartiQLType.INTERVAL
 }
 
-abstract class BagValue<T : PartiQLValue> : CollectionValue<T> {
+public abstract class BagValue<T : PartiQLValue> : CollectionValue<T> {
 
     override val type: PartiQLType = PartiQLType.BAG
 }
 
-abstract class ArrayValue<T : PartiQLValue> : CollectionValue<T> {
+public abstract class ArrayValue<T : PartiQLValue> : CollectionValue<T> {
 
     override val type: PartiQLType = PartiQLType.ARRAY
 }
 
-abstract class TupleValue<T : PartiQLValue> : PartiQLValue, Collection<Pair<String, T>> {
+public abstract class SexpValue<T : PartiQLValue> : CollectionValue<T> {
 
-    abstract val fields: List<Pair<String, T>>
+    override val type: PartiQLType = PartiQLType.SEXP
+}
 
-    override val type: PartiQLType = PartiQLType.TUPLE
+public abstract class StructValue<T : PartiQLValue> : PartiQLValue, Collection<Pair<String, T>> {
+
+    public abstract val fields: List<Pair<String, T>>
+
+    override val type: PartiQLType = PartiQLType.STRUCT
 }
 
 /**
  * Any view over a PartiQLValue
  */
-abstract class AnyValue : PartiQLValue {
+public abstract class AnyValue : PartiQLValue {
 
-    abstract val value: PartiQLValue
+    public abstract val value: PartiQLValue
 
-    override val type: PartiQLType = value.type
+    override val type: PartiQLType
+        get() = value.type
 }
