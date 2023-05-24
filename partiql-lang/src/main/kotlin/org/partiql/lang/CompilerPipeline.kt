@@ -54,20 +54,7 @@ data class StepContext(
      * Only includes the custom stored procedures added while the [CompilerPipeline] was being built.
      */
     val procedures: @JvmSuppressWildcards Map<String, StoredProcedure>
-) {
-    @Deprecated(
-        "This [StepContext] constructor is deprecated.  Use the constructor without the [ExprValueFactory] argument.",
-        replaceWith = ReplaceWith("StepContext(compileOptions, functions, procedures)")
-    )
-    @Suppress("DEPRECATION", "UNUSED_PARAMETER")
-    constructor(
-        /** The instance of [ExprValueFactory] that is used by the pipeline. */
-        valueFactory: org.partiql.lang.eval.ExprValueFactory,
-        compileOptions: CompileOptions,
-        functions: @JvmSuppressWildcards Map<String, ExprFunction>,
-        procedures: @JvmSuppressWildcards Map<String, StoredProcedure>
-    ) : this(compileOptions, functions, procedures)
-}
+)
 
 /**
  * [ProcessingStep] functions accept an [PartiqlAst.Statement] and [StepContext] as an arguments and processes them in some
@@ -84,10 +71,6 @@ typealias ProcessingStep = (PartiqlAst.Statement, StepContext) -> PartiqlAst.Sta
  * per thread.
  */
 interface CompilerPipeline {
-    @Deprecated("[ExprValueFactory] is deprecated")
-    @Suppress("DEPRECATION")
-    val valueFactory: org.partiql.lang.eval.ExprValueFactory
-
     /** The compilation options. */
     val compileOptions: CompileOptions
 
@@ -126,37 +109,13 @@ interface CompilerPipeline {
         /** Kotlin style builder for [CompilerPipeline].  If calling from Java instead use [builder]. */
         fun build(block: Builder.() -> Unit) = Builder().apply(block).build()
 
-        /** Kotlin style builder for [CompilerPipeline].  If calling from Java instead use [builder]. */
-        @Deprecated(
-            "This builder is deprecated. Use the one without the ExprValueFactory argument.",
-            ReplaceWith("build(block)")
-        )
-        @Suppress("DEPRECATION") // Deprecation of ExprValueFactory.
-        fun build(valueFactory: org.partiql.lang.eval.ExprValueFactory, block: Builder.() -> Unit) =
-            Builder(valueFactory).apply(block).build()
-
         /** Fluent style builder.  If calling from Kotlin instead use the [build] method. */
         @JvmStatic
         fun builder(): Builder = Builder()
 
-        @Deprecated("[ExprValueFactory] is deprecated", replaceWith = ReplaceWith("builder(ion: IonSystem): Builder = builder(ion)"))
-        @Suppress("DEPRECATION")
-        /** Fluent style builder.  If calling from Kotlin instead use the [build] method. */
-        @JvmStatic
-        fun builder(valueFactory: org.partiql.lang.eval.ExprValueFactory): Builder = Builder(valueFactory)
-
         /** Returns an implementation of [CompilerPipeline] with all properties set to their defaults. */
         @JvmStatic
         fun standard(): CompilerPipeline = builder().build()
-
-        /** Returns an implementation of [CompilerPipeline] with all properties set to their defaults. */
-        @JvmStatic
-        @Deprecated(
-            "This method is deprecated. Use the one without the ExprValueFactory argument.",
-            ReplaceWith("standard()")
-        )
-        @Suppress("DEPRECATION") // Deprecation of ExprValueFactory.
-        fun standard(valueFactory: org.partiql.lang.eval.ExprValueFactory): CompilerPipeline = builder(valueFactory).build()
     }
 
     /**
@@ -166,20 +125,8 @@ interface CompilerPipeline {
      */
     class Builder() {
 
-        @Deprecated(
-            "This constructor is deprecated. Please use constructor `Builder()` instead.",
-            replaceWith = ReplaceWith("Builder()")
-        )
-        @Suppress("DEPRECATION") // Deprecation of ExprValueFactory.
-        constructor(valueFactory: org.partiql.lang.eval.ExprValueFactory) : this() {
-            this.valueFactory = valueFactory
-        }
-
         // TODO: remove this once we migrate from `IonValue` to `IonElement`.
         private val ion = IonSystemBuilder.standard().build()
-        @Suppress("DEPRECATION") // Deprecation of ExprValueFactory.
-        private var valueFactory: org.partiql.lang.eval.ExprValueFactory = org.partiql.lang.eval.ExprValueFactory.standard(ion)
-
         private var parser: Parser? = null
         private var compileOptions: CompileOptions? = null
         private val customFunctions: MutableMap<String, ExprFunction> = HashMap()
@@ -286,31 +233,6 @@ internal class CompilerPipelineImpl(
     private val preProcessingSteps: List<ProcessingStep>,
     override val globalTypeBindings: Bindings<StaticType>?
 ) : CompilerPipeline {
-
-    @Deprecated("[ExprValueFactory] is deprecated")
-    @Suppress("DEPRECATION") // Deprecation of ExprValueFactory.
-    override var valueFactory: org.partiql.lang.eval.ExprValueFactory =
-        org.partiql.lang.eval.ExprValueFactory.standard(IonSystemBuilder.standard().build())
-    @Deprecated(
-        "This [CompilerPipelineImpl] constructor is deprecated. Use the constructor without the [ExprValueFactory] argument.",
-        replaceWith = ReplaceWith("CompilerPipelineImpl(ion, parser, compileOptions, functions, customDataTypes, procedures, preProcessingSteps, globalTypeBindings)")
-    )
-    private constructor (
-        @Suppress("DEPRECATION") // Deprecation of ExprValueFactory.
-        valueFactory: org.partiql.lang.eval.ExprValueFactory,
-        ion: IonSystem,
-        parser: Parser,
-        compileOptions: CompileOptions,
-        functions: Map<String, ExprFunction>,
-        customDataTypes: List<CustomType>,
-        procedures: Map<String, StoredProcedure>,
-        preProcessingSteps: List<ProcessingStep>,
-        globalTypeBindings: Bindings<StaticType>?
-    ) : this(ion, parser, compileOptions, functions, customDataTypes, procedures, preProcessingSteps, globalTypeBindings) {
-        @Suppress("DEPRECATION")
-        this.valueFactory = valueFactory
-    }
-
     private val compiler = EvaluatingCompiler(
         functions,
         customDataTypes.map { customType ->

@@ -9,9 +9,6 @@ import org.partiql.lang.util.ArgumentsProviderBase
  * Constructs 8 test cases for the specified cast expression, replacing "{TYPE}" in [sql] with
  * `CHAR`, `VARCHAR` or `CHARACTER VARYING`.
  *
- * In [TypedOpBehavior.LEGACY] mode, any `IS CHAR(n)` or `IS VARCHAR(n)` returns true for any left-hand value
- * that is an `ExprValueType.STRING`, so only one expected result is needed for both ([expectedLegacyResult]).
- *
  * In [TypedOpBehavior.HONOR_PARAMETERS] mode, `IS CHAR(n)` or `IS VARCHAR(n)` inspect the length of the
  * left-hand value according to different rules.  The expected results are stored in [expectedIsCharHonorParamsSql]
  * and [expectedIsVarcharHonorParamsSql].
@@ -26,26 +23,6 @@ private fun isStringTypeTestCase(
     expectedIsVarcharHonorParamsSql: String = expectedLegacyResult
 ) =
     listOf(
-        EvaluatorTestCase(
-            sql.replace("{TYPE}", "CHAR"),
-            expectedLegacyResult,
-            compileOptionsBuilderBlock = CompOptions.TYPED_OP_BEHAVIOR_LEGACY.optionsBlock
-        ),
-        EvaluatorTestCase(
-            sql.replace("{TYPE}", "CHARACTER"),
-            expectedLegacyResult,
-            compileOptionsBuilderBlock = CompOptions.TYPED_OP_BEHAVIOR_LEGACY.optionsBlock
-        ),
-        EvaluatorTestCase(
-            sql.replace("{TYPE}", "VARCHAR"),
-            expectedLegacyResult,
-            compileOptionsBuilderBlock = CompOptions.TYPED_OP_BEHAVIOR_LEGACY.optionsBlock
-        ),
-        EvaluatorTestCase(
-            sql.replace("{TYPE}", "CHARACTER VARYING"),
-            expectedLegacyResult,
-            compileOptionsBuilderBlock = CompOptions.TYPED_OP_BEHAVIOR_LEGACY.optionsBlock
-        ),
         EvaluatorTestCase(
             sql.replace("{TYPE}", "CHAR"),
             expectedIsCharHonorParamsSql,
@@ -101,16 +78,6 @@ private fun isDecimalTypeTestCase(
     listOf(
         EvaluatorTestCase(
             sql.replace("{TYPE}", "DECIMAL"),
-            expectedLegacyResult,
-            compileOptionsBuilderBlock = CompOptions.TYPED_OP_BEHAVIOR_LEGACY.optionsBlock
-        ),
-        EvaluatorTestCase(
-            sql.replace("{TYPE}", "NUMERIC"),
-            expectedLegacyResult,
-            compileOptionsBuilderBlock = CompOptions.TYPED_OP_BEHAVIOR_LEGACY.optionsBlock
-        ),
-        EvaluatorTestCase(
-            sql.replace("{TYPE}", "DECIMAL"),
             expectedIsDecimalHonorParamsResult,
             compileOptionsBuilderBlock = CompOptions.STANDARD.optionsBlock
         ),
@@ -129,11 +96,6 @@ private fun isIntDecimalTypeTestCase(
     expectedLegacyResult: String,
     expectedHonorParamsResult: String = expectedLegacyResult
 ) = listOf(
-    EvaluatorTestCase(
-        sql,
-        expectedLegacyResult,
-        compileOptionsBuilderBlock = CompOptions.TYPED_OP_BEHAVIOR_LEGACY.optionsBlock
-    ),
     EvaluatorTestCase(
         sql,
         expectedHonorParamsResult,

@@ -53,9 +53,6 @@ enum class ExprValueType(
     BAG(isSequence = true, isRangedFrom = true),
     GRAPH;
 
-    @Deprecated("Please use isUnknown instead", ReplaceWith("isUnknown"))
-    fun isNull() = isUnknown
-
     /** Whether or not the given type is in the same type grouping as another. */
     fun isDirectlyComparableTo(other: ExprValueType): Boolean =
         (this == other) ||
