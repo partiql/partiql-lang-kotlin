@@ -1269,13 +1269,6 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
         )
     }
 
-    group("floatN") {
-        // These test cases ensure we ignore the type parameter of FLOAT in [TypedOpBehavior.LEGACY] mode.
-        test("castAsFloat1", "CAST(1.234 AS FLOAT(1))", "1.234e0", compileOptionsBuilderBlock = CompOptions.TYPED_OP_BEHAVIOR_LEGACY.optionsBlock)
-        test("canCastAsFloat1", "CAN_CAST(1.234 AS FLOAT(1))", "true", compileOptionsBuilderBlock = CompOptions.TYPED_OP_BEHAVIOR_LEGACY.optionsBlock)
-        test("isFloat1", "`1.234e0` IS FLOAT(1)", "true", compileOptionsBuilderBlock = CompOptions.TYPED_OP_BEHAVIOR_LEGACY.optionsBlock)
-    }
-
     group("pathUnpivotMissing") {
         test(
             "unpivotMissing",
@@ -1484,15 +1477,6 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
             FROM numbers as v
             """,
             "$BAG_ANNOTATION::[-1, -2.0, -3e0, -4, -5d0]"
-        )
-        test(
-            "function call with mixed StaticType",
-            """
-            SELECT VALUE CAST(v/2 AS INT)
-            FROM numbers as v
-            """,
-            "$BAG_ANNOTATION::[0, 1, 1, 2, 2]",
-            compileOptionsBuilderBlock = CompOptions.TYPED_OP_BEHAVIOR_LEGACY.optionsBlock
         )
         test(
             "arithmetic with null/missing",
