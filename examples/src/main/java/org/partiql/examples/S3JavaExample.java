@@ -28,7 +28,11 @@ import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.examples.util.Example;
 import org.partiql.lang.CompilerPipeline;
-import org.partiql.lang.eval.*;
+import org.partiql.lang.eval.Bindings;
+import org.partiql.lang.eval.EvaluationSession;
+import org.partiql.lang.eval.ExprValue;
+import org.partiql.lang.eval.ExprValueExtensionsKt;
+import org.partiql.lang.eval.Expression;
 
 import java.io.IOException;
 import java.io.PrintStream;
