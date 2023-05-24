@@ -96,7 +96,7 @@ class QueryPrettyPrinterTest {
     @Test
     fun insertValue() {
         checkPrettyPrintQuery(
-            "INSERT INTO foo VALUE (1, 2)", "INSERT INTO foo VALUE [ 1, 2 ]"
+            "INSERT INTO foo VALUE (1, 2)", "INSERT INTO foo VALUE ( 1, 2 )"
         )
     }
 
@@ -454,8 +454,13 @@ class QueryPrettyPrinterTest {
     }
 
     @Test
-    fun inCollection() {
+    fun inCollectionBrackets() {
         checkPrettyPrintQuery("1 IN [1, 2, 3]", "1 IN [ 1, 2, 3 ]")
+    }
+
+    @Test
+    fun inCollectionParens() {
+        checkPrettyPrintQuery("1 IN (1, 2, 3)", "1 IN ( 1, 2, 3 )")
     }
 
     @Test
