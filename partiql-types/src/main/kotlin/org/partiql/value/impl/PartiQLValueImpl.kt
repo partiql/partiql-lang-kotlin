@@ -16,6 +16,8 @@ package org.partiql.value.impl
 
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.collections.immutable.toPersistentList
+import org.partiql.value.Annotations
 import org.partiql.value.ArrayValue
 import org.partiql.value.BagValue
 import org.partiql.value.BinaryValue
@@ -38,22 +40,63 @@ import org.partiql.value.PartiQLValue
 import org.partiql.value.StringValue
 import org.partiql.value.TimeValue
 import org.partiql.value.TimestampValue
-import org.partiql.value.TupleValue
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.time.Instant
 import java.util.BitSet
 import java.util.Date
 
-internal data class BoolValueImpl(override val value: Boolean) : BoolValue()
+internal inline fun <reified T : PartiQLValue> T._withAnnotations(annotations: Annotations): T =
+    when {
+        annotations.isEmpty() -> this
+        else -> copy(annotations = this.annotations + annotations) as T
+    }
 
-internal data class Int8ValueImpl(override val value: Byte) : Int8Value()
+internal inline fun <reified T : PartiQLValue> T._withoutAnnotations(): T =
+    when {
+        this.annotations.isNotEmpty() -> copy(annotations = emptyList()) as T
+        else -> this
+    }
 
-internal data class Int16ValueImpl(override val value: Short) : Int16Value()
+internal data class BoolValueImpl(
+    override val value: Boolean,
+    override val annotations: PersistentList<String>,
+) : BoolValue() {
 
-internal data class Int32ValueImpl(override val value: Int) : Int32Value()
+    override fun copy(annotations: Annotations) = BoolValueImpl(value, annotations.toPersistentList())
 
-internal data class Int64ValueImpl(override val value: Long) : Int64Value()
+    override fun withAnnotations(annotations: Annotations): BoolValue = _withAnnotations(annotations)
+
+    override fun withoutAnnotations(): BoolValue = _withoutAnnotations()
+}
+
+internal data class Int8ValueImpl(
+    override val value: Byte,
+    override val annotations: PersistentList<String>,
+) : Int8Value() {
+
+}
+
+internal data class Int16ValueImpl(
+    override val value: Short,
+    override val annotations: PersistentList<String>,
+) : Int16Value() {
+
+}
+
+internal data class Int32ValueImpl(
+    override val value: Int,
+    override val annotations: PersistentList<String>,
+) : Int32Value() {
+
+}
+
+internal data class Int64ValueImpl(
+    override val value: Long,
+    override val annotations: PersistentList<String>,
+    ) : Int64Value() {
+
+    }
 
 internal data class IntValueImpl(override val value: BigInteger) : IntValue()
 
