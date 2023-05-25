@@ -75,7 +75,7 @@ public interface CollectionValue<T : PartiQLValue> : PartiQLValue, Collection<T>
 
     public override val size: Int
 
-    public val values: Collection<T>
+    public val elements: Collection<T>
 
     override fun copy(annotations: Annotations): CollectionValue<T>
 
@@ -242,17 +242,6 @@ public abstract class StringValue : TextValue<String>() {
     abstract override fun withAnnotations(annotations: Annotations): StringValue
 
     abstract override fun withoutAnnotations(): StringValue
-}
-
-public abstract class BitValue : ScalarValue<Boolean> {
-
-    override val type: PartiQLType = PartiQLType.BIT
-
-    abstract override fun copy(annotations: Annotations): BitValue
-
-    abstract override fun withAnnotations(annotations: Annotations): BitValue
-
-    abstract override fun withoutAnnotations(): BitValue
 }
 
 public abstract class BinaryValue : ScalarValue<BitSet> {
