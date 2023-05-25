@@ -62,7 +62,6 @@ internal inline fun <reified T : PartiQLValue> T._withAnnotations(annotations: A
         else -> copy(annotations = this.annotations + annotations) as T
     }
 
-@OptIn(PartiQLValueExperimental::class)
 @Suppress("FunctionName")
 internal inline fun <reified T : PartiQLValue> T._withoutAnnotations(): T =
     when {
