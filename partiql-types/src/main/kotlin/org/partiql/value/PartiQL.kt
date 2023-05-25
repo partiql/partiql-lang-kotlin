@@ -17,6 +17,7 @@
 
 package org.partiql.value
 
+import com.amazon.ion.Decimal
 import kotlinx.collections.immutable.toPersistentList
 import org.partiql.value.impl.BagValueImpl
 import org.partiql.value.impl.BinaryValueImpl
