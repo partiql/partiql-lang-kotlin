@@ -28,8 +28,7 @@ import org.partiql.lang.errors.Property
 import org.partiql.lang.errors.PropertyValueMap
 import org.partiql.lang.eval.time.NANOS_PER_SECOND
 import org.partiql.lang.eval.time.Time
-import org.partiql.lang.syntax.DATE_TIME_PART_KEYWORDS
-import org.partiql.lang.syntax.DateTimePart
+import org.partiql.lang.syntax.impl.DateTimePart
 import org.partiql.lang.types.StaticTypeUtils.getRuntimeType
 import org.partiql.lang.util.ConfigurableExprValueFormatter
 import org.partiql.lang.util.bigDecimalOf
@@ -150,7 +149,7 @@ internal fun ExprValue.dateTimePartValue(): DateTimePart =
     } catch (e: IllegalArgumentException) {
         throw EvaluationException(
             cause = e,
-            message = "invalid datetime part, valid values: [${DATE_TIME_PART_KEYWORDS.joinToString()}]",
+            message = "invalid datetime part, valid values: [${DateTimePart.values().joinToString()}]",
             errorCode = ErrorCode.EVALUATOR_INVALID_ARGUMENTS_FOR_DATE_PART,
             internal = false
         )
