@@ -149,7 +149,7 @@ internal fun ExprValue.dateTimePartValue(): DateTimePart =
     } catch (e: IllegalArgumentException) {
         throw EvaluationException(
             cause = e,
-            message = "invalid datetime part, valid values: [${DateTimePart.KEYWORDS.joinToString()}]",
+            message = "invalid datetime part, valid values: [${DateTimePart.values().joinToString()}]",
             errorCode = ErrorCode.EVALUATOR_INVALID_ARGUMENTS_FOR_DATE_PART,
             internal = false
         )

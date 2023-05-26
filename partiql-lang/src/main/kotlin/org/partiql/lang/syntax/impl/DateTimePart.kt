@@ -23,7 +23,5 @@ internal enum class DateTimePart {
         } catch (_: IllegalArgumentException) {
             null
         }
-
-        internal val KEYWORDS: Set<String> = values().map { it.toString().toLowerCase() }.toSet()
     }
 }

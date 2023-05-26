@@ -112,7 +112,7 @@ enum class ErrorCode(
     PARSE_EXPECTED_DATE_TIME_PART(
         ErrorCategory.PARSER,
         LOC_TOKEN,
-        "expected one of: [${DateTimePart.KEYWORDS.joinToString()}]"
+        "expected one of: [${DateTimePart.values().joinToString()}]"
     ),
 
     PARSE_FAILED_STACK_OVERFLOW(

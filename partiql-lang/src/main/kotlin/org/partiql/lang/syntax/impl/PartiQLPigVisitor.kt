@@ -1104,8 +1104,8 @@ internal class PartiQLPigVisitor(val customTypes: List<CustomType> = listOf(), p
     }
 
     override fun visitDateFunction(ctx: PartiQLParser.DateFunctionContext) = PartiqlAst.build {
-        if (!DateTimePart.KEYWORDS.contains(ctx.dt.text.toLowerCase())) {
-            throw ctx.dt.err("Expected one of: ${DateTimePart.KEYWORDS}", ErrorCode.PARSE_EXPECTED_DATE_TIME_PART)
+        if (DateTimePart.safeValueOf(ctx.dt.text) == null) {
+            throw ctx.dt.err("Expected one of: ${DateTimePart.values()}", ErrorCode.PARSE_EXPECTED_DATE_TIME_PART)
         }
         val datetimePart = lit(ionSymbol(ctx.dt.text))
         val secondaryArgs = visitOrEmpty(ctx.expr(), PartiqlAst.Expr::class)
@@ -1142,8 +1142,8 @@ internal class PartiQLPigVisitor(val customTypes: List<CustomType> = listOf(), p
     }
 
     override fun visitExtract(ctx: PartiQLParser.ExtractContext) = PartiqlAst.build {
-        if (!DateTimePart.KEYWORDS.contains(ctx.IDENTIFIER().text.toLowerCase())) {
-            throw ctx.IDENTIFIER().err("Expected one of: ${DateTimePart.KEYWORDS}", ErrorCode.PARSE_EXPECTED_DATE_TIME_PART)
+        if (DateTimePart.safeValueOf(ctx.IDENTIFIER().text) == null) {
+            throw ctx.IDENTIFIER().err("Expected one of: ${DateTimePart.values()}", ErrorCode.PARSE_EXPECTED_DATE_TIME_PART)
         }
         val datetimePart = lit(ionSymbol(ctx.IDENTIFIER().text))
         val timeExpr = visit(ctx.rhs, PartiqlAst.Expr::class)
