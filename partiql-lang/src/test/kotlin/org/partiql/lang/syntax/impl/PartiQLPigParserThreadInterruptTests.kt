@@ -1,5 +1,18 @@
+/*
+ * Copyright Amazon.com, Inc. or its affiliates.  All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at:
+ *
+ *      http://aws.amazon.com/apache2.0/
+ *
+ * or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
+ * language governing permissions and limitations under the License.
+ */
 
-package org.partiql.lang.thread
+package org.partiql.lang.syntax.impl
 
 import com.amazon.ionelement.api.ionInt
 import io.mockk.every
@@ -18,17 +31,16 @@ import org.partiql.lang.StepContext
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.eval.CompileOptions
 import org.partiql.lang.eval.visitors.VisitorTransformBase
-import org.partiql.lang.syntax.PartiQLParser
-import org.partiql.lang.syntax.antlr.PartiQLTokens
+import org.partiql.parser.antlr.PartiQLTokens
 import java.io.InputStream
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.concurrent.thread
 
-/** How long (in miilis) to wait after starting a thread to set the interrupted flag. */
-const val INTERRUPT_AFTER_MS: Long = 100
+/** How long (in millis) to wait after starting a thread to set the interrupted flag. */
+private const val INTERRUPT_AFTER_MS: Long = 100
 
 /** How long (in millis) to wait for a thread to terminate after setting the interrupted flag. */
-const val WAIT_FOR_THREAD_TERMINATION_MS: Long = 1000
+private const val WAIT_FOR_THREAD_TERMINATION_MS: Long = 1000
 
 /**
  * At various locations in this codebase we check the state of [Thread.interrupted] and throw an
@@ -40,7 +52,7 @@ const val WAIT_FOR_THREAD_TERMINATION_MS: Long = 1000
  */
 // Enforce execution of tests in same thread as we need the execution to be deterministic for interruption behavior.
 @Execution(ExecutionMode.SAME_THREAD)
-class ThreadInterruptedTests {
+class PartiQLPigParserThreadInterruptTests {
     private val bigPartiqlAst = makeBigPartiqlAstExpr(10000000)
 
     /**
@@ -58,7 +70,11 @@ class ThreadInterruptedTests {
             plus(FakeList(n, variableA))
         }
 
-    private fun testThreadInterrupt(interruptAfter: Long = INTERRUPT_AFTER_MS, interruptWait: Long = WAIT_FOR_THREAD_TERMINATION_MS, block: () -> Unit) {
+    private fun testThreadInterrupt(
+        interruptAfter: Long = INTERRUPT_AFTER_MS,
+        interruptWait: Long = WAIT_FOR_THREAD_TERMINATION_MS,
+        block: () -> Unit
+    ) {
         val wasInterrupted = AtomicBoolean(false)
         val t = thread(start = false) {
             try {
@@ -77,7 +93,7 @@ class ThreadInterruptedTests {
 
     @Test
     fun parserPartiQL() {
-        val parser = spyk<PartiQLParser>()
+        val parser = spyk<PartiQLPigParser>()
         val query = "hello world"
         every {
             parser.createTokenStream(any())
@@ -87,7 +103,7 @@ class ThreadInterruptedTests {
 
     @Test
     fun parserPartiQLUsingSLL() {
-        val parser = PartiQLParser()
+        val parser = PartiQLPigParser()
         val tokenStream = EndlessTokenStream(PartiQLTokens(CharStreams.fromStream(InputStream.nullInputStream())))
         val sllParser = parser.createParserSLL(tokenStream)
         testThreadInterrupt(2) { sllParser.run { statement() } }
@@ -95,7 +111,7 @@ class ThreadInterruptedTests {
 
     @Test
     fun parserPartiQLUsingLL() {
-        val parser = PartiQLParser()
+        val parser = PartiQLPigParser()
         val tokenStream = EndlessTokenStream(PartiQLTokens(CharStreams.fromStream(InputStream.nullInputStream())))
         val llParser = parser.createParserLL(tokenStream)
         testThreadInterrupt(2) { llParser.run { statement() } }
@@ -103,7 +119,7 @@ class ThreadInterruptedTests {
 
     @Test
     fun parserPartiQLTokenStream() {
-        val parser = PartiQLParser()
+        val parser = PartiQLPigParser()
         val endlessStream = EndlessInputStream()
         testThreadInterrupt { parser.run { createTokenStream(endlessStream) } }
     }
@@ -154,7 +170,7 @@ class ThreadInterruptedTests {
         }
     }
 
-    private class EndlessTokenStream(source: TokenSource) : PartiQLParser.CountingTokenStream(source) {
+    private class EndlessTokenStream(source: TokenSource) : PartiQLPigParser.CountingTokenStream(source) {
         override fun size(): Int = Int.MAX_VALUE
         override fun LT(k: Int): Token {
             return CommonToken(PartiQLTokens.PLUS)

@@ -24,7 +24,6 @@ import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.api.publish.maven.plugins.MavenPublishPlugin
 import org.gradle.api.publish.maven.tasks.PublishToMavenRepository
 import org.gradle.jvm.tasks.Jar
-import org.gradle.kotlin.dsl.KotlinClosure0
 import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.get
 import org.gradle.kotlin.dsl.getByName

@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Amazon.com, Inc. or its affiliates.  All rights reserved.
+ * Copyright Amazon.com, Inc. or its affiliates.  All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -12,7 +12,7 @@
  * language governing permissions and limitations under the License.
  */
 
-package org.partiql.lang.syntax
+package org.partiql.lang.syntax.impl
 
 import com.amazon.ion.Decimal
 import com.amazon.ionelement.api.DecimalElement
@@ -53,8 +53,7 @@ import org.partiql.lang.errors.Property
 import org.partiql.lang.errors.PropertyValueMap
 import org.partiql.lang.eval.EvaluationException
 import org.partiql.lang.eval.time.MAX_PRECISION_FOR_TIME
-import org.partiql.lang.syntax.antlr.PartiQLBaseVisitor
-import org.partiql.lang.syntax.antlr.PartiQLParser
+import org.partiql.lang.syntax.ParserException
 import org.partiql.lang.types.CustomType
 import org.partiql.lang.util.DATE_PATTERN_REGEX
 import org.partiql.lang.util.bigDecimalOf
@@ -62,8 +61,9 @@ import org.partiql.lang.util.checkThreadInterrupted
 import org.partiql.lang.util.error
 import org.partiql.lang.util.getPrecisionFromTimeString
 import org.partiql.lang.util.unaryMinus
+import org.partiql.parser.antlr.PartiQLBaseVisitor
+import org.partiql.parser.antlr.PartiQLParser
 import org.partiql.pig.runtime.SymbolPrimitive
-import java.lang.IllegalArgumentException
 import java.math.BigInteger
 import java.time.LocalDate
 import java.time.LocalTime
@@ -77,8 +77,12 @@ import kotlin.reflect.cast
  * Extends ANTLR's generated [PartiQLBaseVisitor] to visit an ANTLR ParseTree and convert it into a PartiQL AST. This
  * class uses the [PartiqlAst.PartiqlAstNode] to represent all nodes within the new AST.
  */
-internal class PartiQLVisitor(val customTypes: List<CustomType> = listOf(), private val parameterIndexes: Map<Int, Int> = mapOf()) :
+internal class PartiQLPigVisitor(val customTypes: List<CustomType> = listOf(), private val parameterIndexes: Map<Int, Int> = mapOf()) :
     PartiQLBaseVisitor<PartiqlAst.PartiqlAstNode>() {
+
+    companion object {
+        internal val TRIM_SPECIFICATION_KEYWORDS = setOf("both", "leading", "trailing")
+    }
 
     private val customKeywords = customTypes.map { it.name.toLowerCase() }
 
@@ -1100,8 +1104,8 @@ internal class PartiQLVisitor(val customTypes: List<CustomType> = listOf(), priv
     }
 
     override fun visitDateFunction(ctx: PartiQLParser.DateFunctionContext) = PartiqlAst.build {
-        if (!DATE_TIME_PART_KEYWORDS.contains(ctx.dt.text.toLowerCase())) {
-            throw ctx.dt.err("Expected one of: $DATE_TIME_PART_KEYWORDS", ErrorCode.PARSE_EXPECTED_DATE_TIME_PART)
+        if (DateTimePart.safeValueOf(ctx.dt.text) == null) {
+            throw ctx.dt.err("Expected one of: ${DateTimePart.values()}", ErrorCode.PARSE_EXPECTED_DATE_TIME_PART)
         }
         val datetimePart = lit(ionSymbol(ctx.dt.text))
         val secondaryArgs = visitOrEmpty(ctx.expr(), PartiqlAst.Expr::class)
@@ -1138,8 +1142,8 @@ internal class PartiQLVisitor(val customTypes: List<CustomType> = listOf(), priv
     }
 
     override fun visitExtract(ctx: PartiQLParser.ExtractContext) = PartiqlAst.build {
-        if (!DATE_TIME_PART_KEYWORDS.contains(ctx.IDENTIFIER().text.toLowerCase())) {
-            throw ctx.IDENTIFIER().err("Expected one of: $DATE_TIME_PART_KEYWORDS", ErrorCode.PARSE_EXPECTED_DATE_TIME_PART)
+        if (DateTimePart.safeValueOf(ctx.IDENTIFIER().text) == null) {
+            throw ctx.IDENTIFIER().err("Expected one of: ${DateTimePart.values()}", ErrorCode.PARSE_EXPECTED_DATE_TIME_PART)
         }
         val datetimePart = lit(ionSymbol(ctx.IDENTIFIER().text))
         val timeExpr = visit(ctx.rhs, PartiqlAst.Expr::class)

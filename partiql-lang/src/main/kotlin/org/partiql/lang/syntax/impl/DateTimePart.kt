@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Amazon.com, Inc. or its affiliates.  All rights reserved.
+ * Copyright Amazon.com, Inc. or its affiliates.  All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  *  You may not use this file except in compliance with the License.
@@ -12,13 +12,16 @@
  *  language governing permissions and limitations under the License.
  */
 
-package org.partiql.lang.syntax
+package org.partiql.lang.syntax.impl
 
-/** Simple source line/column value. */
-@Deprecated(
-    message = "This class is subject to removal.",
-    level = DeprecationLevel.WARNING
-) // To be removed before 1.0
-data class SourcePosition(val line: Long, val column: Long) {
-    override fun toString(): String = "line $line, column $column"
+internal enum class DateTimePart {
+    YEAR, MONTH, DAY, HOUR, MINUTE, SECOND, TIMEZONE_HOUR, TIMEZONE_MINUTE;
+
+    companion object {
+        fun safeValueOf(value: String): DateTimePart? = try {
+            valueOf(value.toUpperCase().trim())
+        } catch (_: IllegalArgumentException) {
+            null
+        }
+    }
 }

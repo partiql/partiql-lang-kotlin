@@ -21,7 +21,6 @@ import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.errors.PropertyValueMap
 import org.partiql.lang.types.FunctionSignature
-import org.partiql.lang.util.err
 import org.partiql.lang.util.propertyValueMapOf
 import org.partiql.lang.util.to
 
@@ -116,13 +115,6 @@ fun fillErrorContext(errorContext: PropertyValueMap, location: SourceLocationMet
     if (location != null) {
         errorContext[Property.LINE_NUMBER] = location.lineNum
         errorContext[Property.COLUMN_NUMBER] = location.charOffset
-    }
-}
-
-fun fillErrorContext(errorContext: PropertyValueMap, metaContainer: MetaContainer) {
-    val location = metaContainer[SourceLocationMeta.TAG] as? SourceLocationMeta
-    if (location != null) {
-        fillErrorContext(errorContext, location)
     }
 }
 

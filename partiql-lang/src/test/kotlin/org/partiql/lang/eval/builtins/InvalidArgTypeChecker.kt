@@ -28,7 +28,6 @@ import org.partiql.types.StructType
 import org.partiql.types.SymbolType
 import org.partiql.types.TimeType
 import org.partiql.types.TimestampType
-import java.lang.StringBuilder
 
 /**
  * This class is used to represent each argument in ExprFunctions for argument type checking.

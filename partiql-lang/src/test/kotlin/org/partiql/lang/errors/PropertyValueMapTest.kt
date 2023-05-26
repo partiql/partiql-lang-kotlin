@@ -27,7 +27,6 @@ class PropertyValueMapTest : TestBase() {
     @Before
     fun setUp() {
         onlyColumnValueMap[Property.COLUMN_NUMBER] = 11L
-        oneOfEachType[Property.KEYWORD] = "test"
         oneOfEachType[Property.EXPECTED_ARITY_MAX] = 1
         oneOfEachType[Property.TOKEN_VALUE] = ion.newEmptyList()
         oneOfEachType[Property.COLUMN_NUMBER] = 11L
@@ -43,7 +42,6 @@ class PropertyValueMapTest : TestBase() {
 
     @Test fun getValues() {
         assertEquals(11L, oneOfEachType[Property.COLUMN_NUMBER]?.longValue())
-        assertEquals("test", oneOfEachType[Property.KEYWORD]?.stringValue())
         assertEquals(1, oneOfEachType[Property.EXPECTED_ARITY_MAX]?.integerValue())
         assertEquals(11L, oneOfEachType[Property.COLUMN_NUMBER]?.longValue())
     }

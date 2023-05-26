@@ -31,7 +31,6 @@ import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.MISSING_ANNOTATION
 import org.partiql.lang.eval.toIonValue
 import org.partiql.lang.util.asSequence
-import java.lang.IllegalStateException
 import java.util.stream.Stream
 
 class ReadFileTest {

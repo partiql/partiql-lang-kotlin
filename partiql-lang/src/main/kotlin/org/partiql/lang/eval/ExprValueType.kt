@@ -15,9 +15,6 @@
 package org.partiql.lang.eval
 
 import com.amazon.ion.IonType
-import org.partiql.lang.domains.PartiqlAst
-import org.partiql.lang.errors.ErrorCode
-import org.partiql.lang.syntax.CORE_TYPE_NAME_ARITY_MAP
 
 /**
  * The core types of [ExprValue] that exist within the type system of the evaluator.
@@ -53,9 +50,6 @@ enum class ExprValueType(
     BAG(isSequence = true, isRangedFrom = true),
     GRAPH;
 
-    @Deprecated("Please use isUnknown instead", ReplaceWith("isUnknown"))
-    fun isNull() = isUnknown
-
     /** Whether or not the given type is in the same type grouping as another. */
     fun isDirectlyComparableTo(other: ExprValueType): Boolean =
         (this == other) ||
@@ -75,73 +69,5 @@ enum class ExprValueType(
 
         /** Maps an [IonType] to an [ExprValueType]. */
         fun fromIonType(ionType: IonType): ExprValueType = ION_TYPE_MAP[ionType]!!
-
-        private val LEX_TYPE_MAP = mapOf(
-            *CORE_TYPE_NAME_ARITY_MAP.keys.map {
-                val type = try {
-                    ExprValueType.valueOf(it.toUpperCase())
-                } catch (e: IllegalArgumentException) {
-                    // no direct type mapping
-                    when (it) {
-                        "boolean" -> BOOL
-                        "smallint", "integer", "integer4",
-                        "integer8" -> INT
-                        "real", "double_precision" -> FLOAT
-                        "numeric" -> DECIMAL
-                        "character", "character_varying" -> STRING
-                        "tuple" -> STRUCT
-                        else -> throw IllegalStateException("No ExprValueType handler for $it")
-                    }
-                }
-
-                Pair(it, type)
-            }.toTypedArray()
-        )
-
-        fun fromTypeName(name: String): ExprValueType = LEX_TYPE_MAP[name]
-            ?: throw EvaluationException(
-                "No such value type for $name",
-                ErrorCode.LEXER_INVALID_NAME,
-                internal = true
-            )
-
-        fun fromSqlDataType(sqlDataType: PartiqlAst.Type) = fromSqlDataTypeOrNull(sqlDataType)
-            ?: throw EvaluationException(
-                "No such ExprValueType for ${sqlDataType.javaClass.name}",
-                ErrorCode.SEMANTIC_UNION_TYPE_INVALID,
-                internal = true
-            )
-
-        fun fromSqlDataTypeOrNull(sqlDataType: PartiqlAst.Type) = when (sqlDataType) {
-            is PartiqlAst.Type.BooleanType -> BOOL
-            is PartiqlAst.Type.MissingType -> MISSING
-            is PartiqlAst.Type.NullType -> NULL
-            is PartiqlAst.Type.SmallintType -> INT
-            is PartiqlAst.Type.Integer4Type -> INT
-            is PartiqlAst.Type.Integer8Type -> INT
-            is PartiqlAst.Type.IntegerType -> INT
-            is PartiqlAst.Type.FloatType -> FLOAT
-            is PartiqlAst.Type.RealType -> FLOAT
-            is PartiqlAst.Type.DoublePrecisionType -> FLOAT
-            is PartiqlAst.Type.DecimalType -> DECIMAL
-            is PartiqlAst.Type.NumericType -> DECIMAL
-            is PartiqlAst.Type.TimestampType -> TIMESTAMP
-            is PartiqlAst.Type.CharacterType -> STRING
-            is PartiqlAst.Type.CharacterVaryingType -> STRING
-            is PartiqlAst.Type.StringType -> STRING
-            is PartiqlAst.Type.SymbolType -> SYMBOL
-            is PartiqlAst.Type.ClobType -> CLOB
-            is PartiqlAst.Type.BlobType -> BLOB
-            is PartiqlAst.Type.StructType -> STRUCT
-            is PartiqlAst.Type.TupleType -> STRUCT
-            is PartiqlAst.Type.ListType -> LIST
-            is PartiqlAst.Type.SexpType -> SEXP
-            is PartiqlAst.Type.BagType -> BAG
-            is PartiqlAst.Type.AnyType -> null
-            is PartiqlAst.Type.DateType -> DATE
-            is PartiqlAst.Type.TimeType,
-            is PartiqlAst.Type.TimeWithTimeZoneType -> TIME
-            is PartiqlAst.Type.CustomType -> null
-        }
     }
 }

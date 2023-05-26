@@ -37,7 +37,7 @@ import org.partiql.lang.eval.time.NANOS_PER_SECOND
 import org.partiql.lang.eval.time.Time
 import org.partiql.lang.eval.timestampValue
 import org.partiql.lang.eval.unnamedValue
-import org.partiql.lang.syntax.DateTimePart
+import org.partiql.lang.syntax.impl.DateTimePart
 import org.partiql.lang.types.FunctionSignature
 import org.partiql.lang.types.UnknownArguments
 import org.partiql.lang.util.propertyValueMapOf
