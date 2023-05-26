@@ -47,7 +47,7 @@ data class StrideSpec(val elems: List<ElemSpec>)
  *  Each [Stride] in [result] is one valid match for [spec].
  *  Keeping [spec] within the result is for maintaining the association between
  *  [Variable]s and graph elements in [result] that the variables matched. */
-data class StrideResult(val spec: StrideSpec, val result: List<Stride>)
+data class StrideResult(val spec: StrideSpec, val result: Set<Stride>)
 
 /** Translation of a graph match pattern -- a collection of path patterns --
  *  into a "plan" for [GraphEngine]. */

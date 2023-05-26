@@ -165,11 +165,10 @@ class EvaluatingCompilerGraphMatchTests : EvaluatorTestBase() {
             "(N1D1 MATCH (x1)-[y1]->(x2)-[y2]->(x3) )" to "<< {'x1':1, 'y1':1.1, 'x2':1, 'y2':1.1, 'x3':1} >>",
 
             "(N1U1 MATCH (x))" to "<< {'x':1} >>",
-//  Results are not yet correct: need the deduplication of Section 6.5
-//            "(N1U1 MATCH ~[y]~ )" to "<< {'y':1.1} >>",
-//            "(N1U1 MATCH (x)~[y]~(z) )" to "<< {'x':1, 'y':1.1, 'z':1} >>",
-//            "(N1U1 MATCH (x)~[y]~(x) )" to "<< {'x':1, 'y':1.1} >>",
-//            "(N1U1 MATCH (x1)~[y1]~(x2)~[y2]~(x3) )" to "<< {'x1':1, 'y1':1.1, 'x2':1, 'y2':1.1, 'x3':1} >>",
+            "(N1U1 MATCH ~[y]~ )" to "<< {'y':1.1} >>",
+            "(N1U1 MATCH (x)~[y]~(z) )" to "<< {'x':1, 'y':1.1, 'z':1} >>",
+            "(N1U1 MATCH (x)~[y]~(x) )" to "<< {'x':1, 'y':1.1} >>",
+            "(N1U1 MATCH (x1)~[y1]~(x2)~[y2]~(x3) )" to "<< {'x1':1, 'y1':1.1, 'x2':1, 'y2':1.1, 'x3':1} >>",
 
             "(N1D2 MATCH (x))" to "<< {'x':1} >>",
             "(N1D2 MATCH -[y]-> )" to "<< {'y':1.1}, {'y':11.11} >>",
@@ -197,9 +196,8 @@ class EvaluatingCompilerGraphMatchTests : EvaluatorTestBase() {
                 """<< {'x1':1, 'y1':1.2, 'x2':2, 'y2':1.2, 'x3':1},
                     | {'x1':2, 'y1':1.2, 'x2':1, 'y2':1.2, 'x3':2} >>""".trimMargin(),
 
-            // Two tests for N2U1 need the deduplication pass of Section 6.5
             "(N2U1 MATCH (x))" to "<< {'x':1}, {'x':2} >>",
-            // "(N2U1 MATCH ~[y]~ )" to "<< {'y':1.2} >>",
+            "(N2U1 MATCH ~[y]~ )" to "<< {'y':1.2}, {'y':1.2} >>", // duplicated! -- erasure of the next test
             "(N2U1 MATCH (x)~[y]~(z) )" to "<< {'x':1, 'y':1.2, 'z':2}, {'x':2, 'y':1.2, 'z':1} >>",
             "(N2U1 MATCH (x)~[y]~(x) )" to "<< >>",
             "(N2U1 MATCH (x1)~[y1]~(x2)~[y2]~(x3) )" to
@@ -271,7 +269,7 @@ class EvaluatingCompilerGraphMatchTests : EvaluatorTestBase() {
                         | {'x1':2, 'y1':2.1, 'x2':1, 'y2':2.1, 'x3':2} >>""".trimMargin(),
 
             "(N2U2 MATCH (x))" to "<< {'x':1}, {'x':2} >>",
-            // "(N2U2 MATCH ~[y]~ )" to "<< {'y':1.2}, {'y':2.1} >>",  // needs deduplication of Section 6.5
+            "(N2U2 MATCH ~[y]~ )" to "<< {'y':1.2}, {'y':2.1}, {'y':1.2}, {'y':2.1} >>", // duplicated, being an erasure of the next test
             "(N2U2 MATCH (x)~[y]~(z) )" to
                 """<< {'x':1, 'y':1.2, 'z':2}, {'x':2, 'y':2.1, 'z':1}, 
                     | {'x':2, 'y':1.2, 'z':1}, {'x':1, 'y':2.1, 'z':2} >>""".trimMargin(),
