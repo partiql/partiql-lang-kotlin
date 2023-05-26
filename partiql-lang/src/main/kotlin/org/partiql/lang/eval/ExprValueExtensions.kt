@@ -73,6 +73,7 @@ const val MISSING_ANNOTATION = "\$missing"
 const val BAG_ANNOTATION = "\$bag"
 const val DATE_ANNOTATION = "\$date"
 const val TIME_ANNOTATION = "\$time"
+const val GRAPH_ANNOTATION = "\$graph"
 
 /**
  * Wraps the given [ExprValue] with a delegate that provides the [OrderedBindNames] facet.

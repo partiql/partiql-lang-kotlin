@@ -36,6 +36,7 @@ import com.amazon.ion.facet.Faceted
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.time.NANOS_PER_SECOND
 import org.partiql.lang.eval.time.Time
+import org.partiql.lang.graph.ExternalGraphReader
 import org.partiql.lang.graph.Graph
 import org.partiql.lang.util.bytesValue
 import org.partiql.lang.util.propertyValueMapOf
@@ -386,12 +387,12 @@ interface ExprValue : Iterable<ExprValue>, Faceted {
                 value is IonInt -> newInt(value.longValue()) // INT
                 value is IonFloat -> newFloat(value.doubleValue()) // FLOAT
                 value is IonDecimal -> newDecimal(value.decimalValue()) // DECIMAL
-                value is IonTimestamp && value.hasTypeAnnotation(DATE_ANNOTATION) -> {
+                value is IonTimestamp && value.hasTypeAnnotation(DATE_ANNOTATION) -> { // DATE
                     val timestampValue = value.timestampValue()
                     newDate(timestampValue.year, timestampValue.month, timestampValue.day)
-                } // DATE
+                }
                 value is IonTimestamp -> newTimestamp(value.timestampValue()) // TIMESTAMP
-                value is IonStruct && value.hasTypeAnnotation(TIME_ANNOTATION) -> {
+                value is IonStruct && value.hasTypeAnnotation(TIME_ANNOTATION) -> { // TIME
                     val hourValue = (value["hour"] as IonInt).intValue()
                     val minuteValue = (value["minute"] as IonInt).intValue()
                     val secondInDecimal = (value["second"] as IonDecimal).decimalValue()
@@ -400,7 +401,9 @@ interface ExprValue : Iterable<ExprValue>, Faceted {
                     val timeZoneHourValue = (value["timezone_hour"] as IonInt).intValue()
                     val timeZoneMinuteValue = (value["timezone_minute"] as IonInt).intValue()
                     newTime(Time.of(hourValue, minuteValue, secondValue, nanoValue, secondInDecimal.scale(), timeZoneHourValue * 60 + timeZoneMinuteValue))
-                } // TIME
+                }
+                value is IonStruct && value.hasTypeAnnotation(GRAPH_ANNOTATION) -> // GRAPH
+                    newGraph(ExternalGraphReader.read(value))
                 value is IonSymbol -> newSymbol(value.stringValue()) // SYMBOL
                 value is IonString -> newString(value.stringValue()) // STRING
                 value is IonClob -> newClob(value.bytesValue()) // CLOB
