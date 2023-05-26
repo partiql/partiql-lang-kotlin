@@ -24,6 +24,12 @@ dependencies {
     api(Deps.ionElement)
 }
 
+publish {
+    artifactId = "partiql-ast"
+    name = "PartiQL AST"
+    description = "PartiQL's Abstract Syntax Tree"
+}
+
 pig {
     namespace = "org.partiql.lang.domains"
 }
@@ -45,8 +51,22 @@ kotlin {
     explicitApi = null
 }
 
-publish {
-    artifactId = "partiql-ast"
-    name = "PartiQL AST"
-    description = "PartiQL's Abstract Syntax Tree"
+val generate = tasks.register<Exec>("generate") {
+    dependsOn(":lib:sprout:install")
+    workingDir(projectDir)
+    commandLine(
+        "../lib/sprout/build/install/sprout/bin/sprout", "generate", "kotlin",
+        "-o", "$buildDir/generated-src",
+        "-p", "org.partiql.ast",
+        "-u", "Ast",
+        "-m", "DATA",
+        "--poems", "visitor",
+        // "--poems", "identifier",
+        "--poems", "builder",
+        "./src/main/resources/partiql_ast.ion"
+    )
+}
+
+tasks.compileKotlin {
+    dependsOn(generate)
 }
