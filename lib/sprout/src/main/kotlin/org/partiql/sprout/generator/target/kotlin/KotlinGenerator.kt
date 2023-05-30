@@ -11,7 +11,10 @@ import org.partiql.sprout.generator.Generator
 import org.partiql.sprout.generator.target.kotlin.poems.KotlinBuilderPoem
 import org.partiql.sprout.generator.target.kotlin.poems.KotlinJacksonPoem
 import org.partiql.sprout.generator.target.kotlin.poems.KotlinListenerPoem
+<<<<<<< HEAD
 import org.partiql.sprout.generator.target.kotlin.poems.KotlinUtilsPoem
+=======
+>>>>>>> 5d6eed49 (Generates internal impl IR classes)
 import org.partiql.sprout.generator.target.kotlin.poems.KotlinVisitorPoem
 import org.partiql.sprout.generator.target.kotlin.spec.KotlinFileSpec
 import org.partiql.sprout.generator.target.kotlin.spec.KotlinNodeSpec
