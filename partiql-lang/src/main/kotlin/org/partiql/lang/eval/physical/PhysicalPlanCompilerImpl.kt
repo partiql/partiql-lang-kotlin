@@ -229,6 +229,7 @@ internal class PhysicalPlanCompilerImpl(
             is PartiqlPhysical.Expr.Parameter -> compileParameter(expr, metas)
             is PartiqlPhysical.Expr.Date -> compileDate(expr, metas)
             is PartiqlPhysical.Expr.LitTime -> compileLitTime(expr, metas)
+            is PartiqlPhysical.Expr.Timestamp -> TODO("not yet supported")
 
             // arithmetic operations
             is PartiqlPhysical.Expr.Plus -> compilePlus(expr, metas)

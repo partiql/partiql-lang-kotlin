@@ -277,6 +277,7 @@ class QueryPrettyPrinter {
             is PartiqlAst.Expr.Missing -> writeAstNode(node, sb)
             is PartiqlAst.Expr.Lit -> writeAstNode(node, sb)
             is PartiqlAst.Expr.LitTime -> writeAstNode(node, sb)
+            is PartiqlAst.Expr.Timestamp -> writeAstNode(node, sb)
             is PartiqlAst.Expr.Date -> writeAstNode(node, sb)
             is PartiqlAst.Expr.Id -> writeAstNode(node, sb)
             is PartiqlAst.Expr.Bag -> writeAstNode(node, sb, level)
@@ -402,6 +403,13 @@ class QueryPrettyPrinter {
         when (withTimeZone.value) {
             true -> sb.append("TIME ($precision) WITH TIME ZONE '$localTime$tzTime'")
             false -> sb.append("TIME ($precision) '$localTime'")
+        }
+    }
+
+    private fun writeAstNode(node: PartiqlAst.Expr.Timestamp, sb: StringBuilder) {
+        when (node.value.ionTimestamp.timestampValue.localOffset) {
+            null -> sb.append("TIMESTAMP (${node.value.precision}) '${node.value.ionTimestamp.timestampValue}'")
+            else -> sb.append("TIMESTAMP WITH TIME ZONE (${node.value.precision}) '${node.value.ionTimestamp.timestampValue}'")
         }
     }
 

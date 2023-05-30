@@ -453,6 +453,12 @@ enum class ErrorCode(
         "expected time string to be of the format HH:MM:SS[.dddd...][+|-HH:MM]"
     ),
 
+    PARSE_INVALID_TIMESTAMP_STRING(
+        ErrorCategory.PARSER,
+        LOC_TOKEN,
+        "expected timestamp string to be of the format YYYY-MM-DD HH:MM:SS[.dddd...][+|-HH:MM]"
+    ),
+
     @Deprecated("This ErrorCode is subject to removal.") // To be removed before 1.0
     @Suppress("UNUSED")
     PARSE_EMPTY_SELECT(

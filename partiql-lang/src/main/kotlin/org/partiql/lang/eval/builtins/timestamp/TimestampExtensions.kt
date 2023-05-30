@@ -1,4 +1,4 @@
-package org.partiql.lang.eval.builtins.internal
+package org.partiql.lang.eval.builtins.timestamp
 
 import com.amazon.ion.Timestamp
 import org.partiql.lang.errors.ErrorCode

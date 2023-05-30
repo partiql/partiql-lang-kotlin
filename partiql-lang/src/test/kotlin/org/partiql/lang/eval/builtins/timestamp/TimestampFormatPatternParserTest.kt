@@ -110,7 +110,7 @@ internal class TimestampFormatPatternParserTest {
 
     @Test
     fun mostPreciseField() {
-        // NOTE: we can't parameterize this unless we want to expose TimestampParser.FormatPatternPrecision as public.
+        // NOTE: we can't parameterize this unless we want to expose IonTimestampParser.FormatPatternPrecision as public.
         softAssert {
             for ((pattern, expectedResult, expectedHas2DigitYear) in parametersForExaminePatternTest) {
                 val result = FormatPattern.fromString(pattern)

@@ -59,6 +59,7 @@ class SubqueryCoercionVisitorTransform : VisitorTransformBase() {
 
             is PartiqlAst.Expr.Date -> n
             is PartiqlAst.Expr.LitTime -> n
+            is PartiqlAst.Expr.Timestamp -> n
 
             is PartiqlAst.Expr.GraphMatch -> n.copy(expr = coerceToSingle(n.expr))
 
@@ -101,6 +102,7 @@ class SubqueryCoercionVisitorTransform : VisitorTransformBase() {
             is PartiqlAst.Expr.CanLosslessCast -> n
             is PartiqlAst.Expr.NullIf -> n
             is PartiqlAst.Expr.Coalesce -> n
+            is PartiqlAst.Expr.Interval -> n
         }
     }
 

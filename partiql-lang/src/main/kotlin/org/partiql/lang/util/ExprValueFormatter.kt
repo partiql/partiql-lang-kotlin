@@ -7,6 +7,7 @@ import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.dateValue
 import org.partiql.lang.eval.name
 import org.partiql.lang.eval.timeValue
+import org.partiql.lang.eval.timestampValue
 import org.partiql.lang.eval.toIonValue
 import java.math.BigDecimal
 
@@ -63,9 +64,14 @@ class ConfigurableExprValueFormatter(private val config: Configuration) : ExprVa
                     val prefix = if (time.offsetTime == null) "TIME" else "TIME WITH TIME ZONE"
                     out.append("$prefix '$time'")
                 }
+                ExprValueType.TIMESTAMP -> {
+                    val timestamp = value.timestampValue()
+                    val prefix = if (timestamp.localOffset == null) "TIMESTAMP" else "TIMESTAMP WITH TIME ZONE"
+                    out.append("$prefix '$timestamp'")
+                }
 
                 // fallback to an Ion literal for all types that don't have a native PartiQL representation
-                ExprValueType.FLOAT, ExprValueType.TIMESTAMP, ExprValueType.SYMBOL,
+                ExprValueType.FLOAT, ExprValueType.SYMBOL,
                 ExprValueType.CLOB, ExprValueType.BLOB, ExprValueType.SEXP -> prettyPrintIonLiteral(value)
 
                 ExprValueType.LIST -> prettyPrintContainer(value, "[", "]")

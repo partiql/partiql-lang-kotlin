@@ -8,7 +8,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.EvaluationException
-import org.partiql.lang.eval.builtins.internal.TimestampParser
+import org.partiql.lang.eval.builtins.timestamp.TimestampParser
 import java.lang.reflect.Type
 import java.time.format.DateTimeParseException
 import kotlin.test.assertEquals
@@ -423,7 +423,7 @@ class TimestampParserTest {
         // Note: exception message differs in JDK versions later than 1.8
         // "Text '1969 07 20 20 01 -2400' could not be parsed: Zone offset not in valid range: -18:00 to +18:00"),
 
-        // Offset not ending on a minute boundary (error condition detected by TimestampParser)
+        // Offset not ending on a minute boundary (error condition detected by IonTimestampParser)
         ParseFailureTestCase(
             "yyyy M d H m xxxxx",
             "1969 07 20 20 01 +01:00:01",

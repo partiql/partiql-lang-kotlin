@@ -20,6 +20,14 @@ import kotlin.math.absoluteValue
 class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
 
     @Test
+    fun testTimestampLiteral() {
+        runEvaluatorTestCase(
+            query = "TIMESTAMP '2000-01-02 11:12:13'",
+            expectedResult = "'2000-01-02 11:12:13'"
+        )
+    }
+
+    @Test
     fun testDateLiteral() {
         runEvaluatorTestCase(
             query = "DATE '2000-01-02'",

@@ -27,8 +27,8 @@ import org.partiql.lang.eval.builtins.internal.codepointOverlay
 import org.partiql.lang.eval.builtins.internal.codepointPosition
 import org.partiql.lang.eval.builtins.internal.codepointTrailingTrim
 import org.partiql.lang.eval.builtins.internal.codepointTrim
-import org.partiql.lang.eval.builtins.internal.extractedValue
 import org.partiql.lang.eval.builtins.internal.transformIntType
+import org.partiql.lang.eval.builtins.timestamp.extractedValue
 import org.partiql.lang.eval.bytesValue
 import org.partiql.lang.eval.dateTimePartValue
 import org.partiql.lang.eval.dateValue

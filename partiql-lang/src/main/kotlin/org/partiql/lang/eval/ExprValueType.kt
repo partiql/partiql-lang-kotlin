@@ -125,7 +125,8 @@ enum class ExprValueType(
             is PartiqlAst.Type.DoublePrecisionType -> FLOAT
             is PartiqlAst.Type.DecimalType -> DECIMAL
             is PartiqlAst.Type.NumericType -> DECIMAL
-            is PartiqlAst.Type.TimestampType -> TIMESTAMP
+            is PartiqlAst.Type.TimestampType,
+            is PartiqlAst.Type.TimestampWithTimeZoneType -> TIMESTAMP
             is PartiqlAst.Type.CharacterType -> STRING
             is PartiqlAst.Type.CharacterVaryingType -> STRING
             is PartiqlAst.Type.StringType -> STRING

@@ -319,6 +319,11 @@ class ASTPrettyPrinter {
                     ", 'tzminute': " + node.value.tzMinutes.toString(),
                 attrOfParent = attrOfParent,
             )
+            is PartiqlAst.Expr.Timestamp -> RecursionTree(
+                astType = "Timestamp",
+                value = node.value.ionTimestamp.timestampValue.toString(),
+                attrOfParent = attrOfParent,
+            )
             is PartiqlAst.Expr.Not -> RecursionTree(
                 astType = "Not",
                 attrOfParent = attrOfParent,

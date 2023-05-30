@@ -1,11 +1,9 @@
-package org.partiql.lang.eval.builtins.internal
+package org.partiql.lang.eval.builtins.timestamp
 
 import com.amazon.ion.Timestamp
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.eval.EvaluationException
-import org.partiql.lang.eval.builtins.timestamp.FormatPattern
-import org.partiql.lang.eval.builtins.timestamp.TimestampField
 import org.partiql.lang.eval.errNoContext
 import org.partiql.lang.util.propertyValueMapOf
 import java.math.BigDecimal
@@ -27,7 +25,7 @@ import java.time.temporal.TemporalAccessor
  *    recognize this and there's no reliable workaround that we've yet been able to determine.  Unfortunately, this
  *    means that unknown offsets specified are parsed as if they were explicitly UTC (i.e. "+00:00" or "Z").
  *  - DateTimeFormatter is capable of parsing UTC offsets to the precision of seconds, but Ion Timestamp's precision
- *    for offsets is 1 minute.  [TimestampParser] currently handles this by throwing an exception when an attempt
+ *    for offsets is 1 minute.  [IonTimestampParser] currently handles this by throwing an exception when an attempt
  *    is made to parse a timestamp with an offset that does does not land on a minute boundary.
  *  - Ion Java's Timestamp allows specification of offsets up to +/- 24h, while an exception is thrown by
  *    DateTimeFormatter for any attempt to parse an offset greater than +/- 18h.  The Ion specification does not seem

@@ -140,6 +140,8 @@ may then be further optimized by selecting better implementations of each operat
             // Constructors for DateTime types
             (date year::int month::int day::int)
             (lit_time value::time_value)
+            (timestamp value::timestamp_value)
+            (interval value::interval_value)
 
             // Bag operators
             (bag_op op::bag_op_type quantifier::set_quantifier operands::(* expr 2))
@@ -177,6 +179,20 @@ may then be further optimized by selecting better implementations of each operat
 
         // Time
         (product time_value hour::int minute::int second::int nano::int precision::int with_time_zone::bool tz_minutes::(? int))
+
+        // Timestamp
+        // We use a ion_timestamp directly here because we don't have a better way to support unlimited second fraction.
+        // TODO : Check if we have a better way to model this
+        (product timestamp_value precision::int ion_timestamp::ion)
+
+        // Interval
+        // According to the SQL spec, there are two kinds of interval, Year-month interval and day-time interval
+        (sum interval_value
+             // year month interval
+             (year_month_interval year::int month::int)
+             // date time interval
+             (date_time_interval day::int hour::int minute::int second::int millis::int)
+        )
 
         // A "step" within a path expression; that is the components of the expression following the root.
         (sum path_step
@@ -535,9 +551,6 @@ may then be further optimized by selecting better implementations of each operat
             // `NUMERIC[(<int> [, int])]`.  Elements are precision then scale.
             (numeric_type precision::(? int) scale::(? int))
 
-            // `TIMESTAMP`
-            (timestamp_type)
-
             // `CHAR(<int>)`
             (character_type length::(? int))
 
@@ -552,9 +565,11 @@ may then be further optimized by selecting better implementations of each operat
             (clob_type)
             (date_type)
 
-            // TIME : timezoneSpecified is 1 if time zone is specified else 0
+            // TIME / Timestamp : timezoneSpecified is 1 if time zone is specified else 0
             //        precision is defaulted to the length of the mantissa of the second's value if the precision is not specified.
             // Note: This logic is implemented in SqlParser.
+            (timestamp_type precision::(? int))
+            (timestamp_with_time_zone_type precision::(? int))
             (time_type precision::(? int))
             (time_with_time_zone_type precision::(? int))
 

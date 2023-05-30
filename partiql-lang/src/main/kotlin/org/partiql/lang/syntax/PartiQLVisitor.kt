@@ -32,6 +32,7 @@ import com.amazon.ionelement.api.ionInt
 import com.amazon.ionelement.api.ionNull
 import com.amazon.ionelement.api.ionString
 import com.amazon.ionelement.api.ionSymbol
+import com.amazon.ionelement.api.ionTimestamp
 import com.amazon.ionelement.api.loadSingleElement
 import org.antlr.v4.runtime.ParserRuleContext
 import org.antlr.v4.runtime.Token
@@ -57,12 +58,15 @@ import org.partiql.lang.syntax.antlr.PartiQLBaseVisitor
 import org.partiql.lang.syntax.antlr.PartiQLParser
 import org.partiql.lang.types.CustomType
 import org.partiql.lang.util.DATE_PATTERN_REGEX
+import org.partiql.lang.util.DateTimeUtil
+// import org.partiql.lang.util.DateTimeUtil
 import org.partiql.lang.util.bigDecimalOf
 import org.partiql.lang.util.checkThreadInterrupted
 import org.partiql.lang.util.error
 import org.partiql.lang.util.getPrecisionFromTimeString
 import org.partiql.lang.util.unaryMinus
 import org.partiql.pig.runtime.SymbolPrimitive
+import org.partiql.pig.runtime.toIonElement
 import java.lang.IllegalArgumentException
 import java.math.BigInteger
 import java.time.LocalDate
@@ -1306,18 +1310,15 @@ internal class PartiQLVisitor(val customTypes: List<CustomType> = listOf(), priv
 
     override fun visitLiteralDate(ctx: PartiQLParser.LiteralDateContext) = PartiqlAst.build {
         val dateString = ctx.LITERAL_STRING().getStringValue()
+        val (year, month, day) = try {
+            getYearMonthDateFromISOString(dateString)
+        } catch (e: ParserException) {
+            throw ctx.LITERAL_STRING().err(e)
+        }
         if (DATE_PATTERN_REGEX.matches(dateString).not()) {
             throw ctx.LITERAL_STRING().err("Expected DATE string to be of the format yyyy-MM-dd", ErrorCode.PARSE_INVALID_DATE_STRING)
         }
-        try {
-            LocalDate.parse(dateString, DateTimeFormatter.ISO_LOCAL_DATE)
-            val (year, month, day) = dateString.split("-")
-            date(year.toLong(), month.toLong(), day.toLong(), ctx.DATE().getSourceMetaContainer())
-        } catch (e: DateTimeParseException) {
-            throw ctx.LITERAL_STRING().err(e.localizedMessage, ErrorCode.PARSE_INVALID_DATE_STRING, cause = e)
-        } catch (e: IndexOutOfBoundsException) {
-            throw ctx.LITERAL_STRING().err(e.localizedMessage, ErrorCode.PARSE_INVALID_DATE_STRING, cause = e)
-        }
+        date(year, month, day, ctx.DATE().getSourceMetaContainer())
     }
 
     override fun visitLiteralTime(ctx: PartiQLParser.LiteralTimeContext) = PartiqlAst.build {
@@ -1325,6 +1326,14 @@ internal class PartiQLVisitor(val customTypes: List<CustomType> = listOf(), priv
         when (ctx.WITH()) {
             null -> getLocalTime(timeString, false, precision, ctx.LITERAL_STRING(), ctx.TIME(0))
             else -> getOffsetTime(timeString, precision, ctx.LITERAL_STRING(), ctx.TIME(0))
+        }
+    }
+
+    override fun visitLiteralTimestamp(ctx: PartiQLParser.LiteralTimestampContext) = PartiqlAst.build {
+        val (timestamp, precision) = getTimestampStringAndPrecision(ctx.LITERAL_STRING(), ctx.LITERAL_INTEGER())
+        when (ctx.WITH()) {
+            null -> getLocalTimestamp(timestamp, false, precision, ctx.LITERAL_STRING(), ctx.TIMESTAMP())
+            else -> getOffsetTimestamp(timestamp, precision, ctx.LITERAL_STRING(), ctx.TIMESTAMP())
         }
     }
 
@@ -1364,7 +1373,6 @@ internal class PartiQLVisitor(val customTypes: List<CustomType> = listOf(), priv
             PartiQLParser.BIGINT -> integer8Type(metas)
             PartiQLParser.REAL -> realType(metas)
             PartiQLParser.DOUBLE -> doublePrecisionType(metas)
-            PartiQLParser.TIMESTAMP -> timestampType(metas)
             PartiQLParser.CHAR -> characterType(metas = metas)
             PartiQLParser.CHARACTER -> characterType(metas = metas)
             PartiQLParser.MISSING -> missingType(metas)
@@ -1420,8 +1428,12 @@ internal class PartiQLVisitor(val customTypes: List<CustomType> = listOf(), priv
         if (precision != null && (precision < 0 || precision > MAX_PRECISION_FOR_TIME)) {
             throw ctx.precision.err("Unsupported precision", ErrorCode.PARSE_INVALID_PRECISION_FOR_TIME)
         }
-        if (ctx.WITH() == null) return@build timeType(precision)
-        timeWithTimeZoneType(precision)
+        val hasTimeZone = (ctx.WITH() != null)
+        when (ctx.datatype.type) {
+            PartiQLParser.TIME -> if (hasTimeZone) timeWithTimeZoneType(precision) else timeType(precision)
+            PartiQLParser.TIMESTAMP -> if (hasTimeZone) timestampWithTimeZoneType(precision) else timestampType(precision)
+            else -> throw ParserException("Unknown datatype", ErrorCode.PARSE_UNEXPECTED_TOKEN, PropertyValueMap())
+        }
     }
 
     override fun visitTypeCustom(ctx: PartiQLParser.TypeCustomContext) = PartiqlAst.build {
@@ -1651,6 +1663,72 @@ internal class PartiQLVisitor(val customTypes: List<CustomType> = listOf(), priv
         )
     }
 
+    private fun getTimestampStringAndPrecision(stringNode: TerminalNode, integerNode: TerminalNode?): Pair<String, Long> {
+        val timestampString = stringNode.getStringValue()
+        val precision = when (integerNode) {
+            null -> try {
+                getPrecisionFromTimeString(timestampString).toLong()
+            } catch (e: EvaluationException) {
+                throw stringNode.err(
+                    "Unable to parse precision.", ErrorCode.PARSE_INVALID_TIME_STRING,
+                    cause = e
+                )
+            }
+            else -> integerNode.text.toInteger().toLong()
+        }
+        if (precision < 0) {
+            throw integerNode.err("Precision out of bounds", ErrorCode.PARSE_INVALID_PRECISION_FOR_TIME)
+        }
+        return timestampString to precision
+    }
+
+    private fun getOffsetTimestamp(timestampString: String, precision: Long, stringNode: TerminalNode, timestampNode: TerminalNode) = PartiqlAst.build {
+        try {
+            val parsed = DateTimeUtil.Timestamp.parseTimestampWithTimeZone(timestampString, precision.toInt())
+            timestamp(
+                timestampValue(
+                    precision,
+                    ionTimestamp(parsed.ionTimestamp).toIonElement()
+                )
+            )
+        } catch (e: DateTimeParseException) {
+            getLocalTimestamp(timestampString, true, precision, stringNode, timestampNode)
+        }
+    }
+
+    private fun getLocalTimestamp(timestampString: String, withTimeZone: Boolean, precision: Long, stringNode: TerminalNode, timestampNode: TerminalNode) = PartiqlAst.build {
+        val parsed = when (withTimeZone) {
+            false -> {
+                DateTimeUtil.Timestamp.parseTimestamp(timestampString, precision.toInt())
+            }
+            else -> {
+                DateTimeUtil.Timestamp.parseTimestampWithTimeZone(timestampString, precision.toInt())
+            }
+        }
+        timestamp(
+            timestampValue(
+                precision,
+                ionTimestamp(parsed.ionTimestamp).toIonElement()
+            ),
+            timestampNode.getSourceMetaContainer()
+        )
+    }
+
+    private fun getYearMonthDateFromISOString(dateString: String): Triple<Long, Long, Long> {
+        if (DATE_PATTERN_REGEX.matches(dateString).not()) {
+            throw ParserException("Expected DATE string to be of the format yyyy-MM-dd", ErrorCode.PARSE_INVALID_DATE_STRING)
+        }
+        try {
+            LocalDate.parse(dateString, DateTimeFormatter.ISO_LOCAL_DATE)
+            val (year, month, day) = dateString.split("-")
+            return Triple(year.toLong(), month.toLong(), day.toLong())
+        } catch (e: DateTimeParseException) {
+            throw ParserException(e.localizedMessage, ErrorCode.PARSE_INVALID_DATE_STRING, cause = e)
+        } catch (e: IndexOutOfBoundsException) {
+            throw ParserException(e.localizedMessage, ErrorCode.PARSE_INVALID_DATE_STRING, cause = e)
+        }
+    }
+
     private fun convertSymbolPrimitive(sym: PartiQLParser.SymbolPrimitiveContext?): SymbolPrimitive? = when (sym) {
         null -> null
         else -> SymbolPrimitive(sym.getString(), sym.getSourceMetaContainer())
@@ -1825,4 +1903,5 @@ internal class PartiQLVisitor(val customTypes: List<CustomType> = listOf(), priv
 
     private fun TerminalNode?.err(msg: String, code: ErrorCode, ctx: PropertyValueMap = PropertyValueMap(), cause: Throwable? = null) = this.error(msg, code, ctx, cause)
     private fun Token?.err(msg: String, code: ErrorCode, ctx: PropertyValueMap = PropertyValueMap(), cause: Throwable? = null) = this.error(msg, code, ctx, cause)
+    private fun TerminalNode?.err(e: ParserException) = this.error(e.message, e.errorCode, e.errorContext, e.cause)
 }

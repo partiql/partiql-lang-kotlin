@@ -25,10 +25,10 @@ import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.bigDecimalValue
-import org.partiql.lang.eval.builtins.internal.TimestampParser
-import org.partiql.lang.eval.builtins.internal.adjustPrecisionTo
-import org.partiql.lang.eval.builtins.internal.toOffsetDateTime
+import org.partiql.lang.eval.builtins.timestamp.TimestampParser
 import org.partiql.lang.eval.builtins.timestamp.TimestampTemporalAccessor
+import org.partiql.lang.eval.builtins.timestamp.adjustPrecisionTo
+import org.partiql.lang.eval.builtins.timestamp.toOffsetDateTime
 import org.partiql.lang.eval.err
 import org.partiql.lang.eval.errNoContext
 import org.partiql.lang.eval.intValue

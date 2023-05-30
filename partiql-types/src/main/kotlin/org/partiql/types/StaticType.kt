@@ -360,11 +360,18 @@ public data class TimeType(
     }
 }
 
-public data class TimestampType(override val metas: Map<String, Any> = mapOf()) : SingleType() {
+public data class TimestampType(
+    val precision: Int? = null,
+    val withTimeZone: Boolean = false,
+    override val metas: Map<String, Any> = mapOf()
+) : SingleType() {
     override val allTypes: List<StaticType>
         get() = listOf(this)
 
-    override fun toString(): String = "timestamp"
+    override fun toString(): String = when (withTimeZone) {
+        true -> "time with time zone"
+        false -> "time"
+    }
 }
 
 public data class SymbolType(override val metas: Map<String, Any> = mapOf()) : SingleType() {

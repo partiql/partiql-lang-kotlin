@@ -411,6 +411,7 @@ internal class EvaluatingCompiler(
             is PartiqlAst.Expr.Parameter -> compileParameter(expr, metas)
             is PartiqlAst.Expr.Date -> compileDate(expr, metas)
             is PartiqlAst.Expr.LitTime -> compileLitTime(expr, metas)
+            is PartiqlAst.Expr.Timestamp -> compileTimestamp(expr, metas)
 
             // arithmetic operations
             is PartiqlAst.Expr.Plus -> compilePlus(expr, metas)
@@ -3044,6 +3045,13 @@ internal class EvaluatingCompiler(
                     expr.value.precision.value.toInt(),
                     if (expr.value.withTimeZone.value && expr.value.tzMinutes == null) compileOptions.defaultTimezoneOffset.totalMinutes else expr.value.tzMinutes?.value?.toInt()
                 )
+            )
+        }
+
+    private fun compileTimestamp(expr: PartiqlAst.Expr.Timestamp, metas: Map<String, Any>): ThunkEnv =
+        thunkFactory.thunkEnv(metas) {
+            ExprValue.newTimestamp(
+                expr.value.ionTimestamp.timestampValue
             )
         }
 
