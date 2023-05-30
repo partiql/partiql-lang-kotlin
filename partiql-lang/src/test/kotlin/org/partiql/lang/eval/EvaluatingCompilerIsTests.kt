@@ -460,6 +460,20 @@ class EvaluatingCompilerIsTests : EvaluatorTestBase() {
                 expectedIsDecimalHonorParamsResult = "TRUE"
             ),
 
+            // Equal Precision and scale
+            isDecimalTypeTestCase(
+                sql = "0.001 is DECIMAL(3,3)",
+                expectedLegacyResult = "TRUE",
+                expectedIsDecimalHonorParamsResult = "TRUE"
+            ),
+
+            // Equal Precision and scale
+            isDecimalTypeTestCase(
+                sql = "1.000 is DECIMAL(4,3)",
+                expectedLegacyResult = "TRUE",
+                expectedIsDecimalHonorParamsResult = "TRUE"
+            ),
+
             // less precision and scale
             isDecimalTypeTestCase(
                 sql = "123.456 IS DECIMAL(2, 2)",

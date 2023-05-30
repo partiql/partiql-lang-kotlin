@@ -9,8 +9,16 @@ import org.partiql.examples.util.Example;
 import org.partiql.lang.compiler.PartiQLCompiler;
 import org.partiql.lang.compiler.PartiQLCompilerBuilder;
 import org.partiql.lang.compiler.PartiQLCompilerPipeline;
-import org.partiql.lang.eval.*;
-import org.partiql.lang.planner.*;
+import org.partiql.lang.eval.Bindings;
+import org.partiql.lang.eval.EvaluationSession;
+import org.partiql.lang.eval.ExprValue;
+import org.partiql.lang.eval.PartiQLResult;
+import org.partiql.lang.eval.ProjectionIterationBehavior;
+import org.partiql.lang.planner.EvaluatorOptions;
+import org.partiql.lang.planner.GlobalResolutionResult;
+import org.partiql.lang.planner.GlobalVariableResolver;
+import org.partiql.lang.planner.PartiQLPlanner;
+import org.partiql.lang.planner.PartiQLPlannerBuilder;
 import org.partiql.lang.syntax.Parser;
 import org.partiql.lang.syntax.PartiQLParserBuilder;
 
@@ -65,7 +73,7 @@ public class PartiQLCompilerPipelineJavaExample extends Example {
                 .projectionIteration(ProjectionIterationBehavior.UNFILTERED)
                 .build();
 
-        final Parser parser = PartiQLParserBuilder.standard().ionSystem(ion).build();
+        final Parser parser = PartiQLParserBuilder.standard().build();
 
         @OptIn(markerClass = ExperimentalPartiQLCompilerPipeline.class)
         final PartiQLPlanner planner = PartiQLPlannerBuilder.standard().globalVariableResolver(globalVariableResolver).build();

@@ -22,30 +22,16 @@ import org.partiql.lang.domains.metaContainerOf
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.errNoContext
 
+/** Desugars `SELECT *` by, for example,
+ *  transforming  `SELECT * FROM A as x, B as y at i`
+ *            to  `SELECT x.*, y.*, i FROM A as x, B as y at i`
+ *  and transforming `SELECT * FROM ... GROUP BY E as x, D as y GROUP as g`
+ *                to `SELECT x, y, g FROM ... GROUP BY E as x, D as y GROUP as g`
+ *
+ *  Requires that [FromSourceAliasVisitorTransform] and [GroupByItemAliasVisitorTransform]
+ *  have already been applied.
+ */
 class SelectStarVisitorTransform : VisitorTransformBase() {
-
-    /**
-     * Copies all parts of [PartiqlAst.Expr.Select] except [newProjection] for [PartiqlAst.Projection].
-     */
-    private fun copyProjectionToSelect(node: PartiqlAst.Expr.Select, newProjection: PartiqlAst.Projection): PartiqlAst.Expr {
-        // Once https://github.com/partiql/partiql-ir-generator/issues/52, adding the .copy function is released,
-        // we can remove this code and call .copy instead
-        return PartiqlAst.build {
-            select(
-                setq = node.setq,
-                project = newProjection,
-                from = node.from,
-                fromLet = node.fromLet,
-                where = node.where,
-                group = node.group,
-                having = node.having,
-                order = node.order,
-                limit = node.limit,
-                offset = node.offset,
-                metas = node.metas
-            )
-        }
-    }
 
     override fun transformExprSelect(node: PartiqlAst.Expr.Select): PartiqlAst.Expr {
         val transformedExpr = super.transformExprSelect(node) as PartiqlAst.Expr.Select
@@ -54,8 +40,8 @@ class SelectStarVisitorTransform : VisitorTransformBase() {
 
         // Check if SELECT * is being used.
         if (projection is PartiqlAst.Projection.ProjectStar) {
-            when (transformedExpr.group) { // No group by
-                null -> {
+            when (transformedExpr.group) {
+                null -> { // No group by
                     val fromSourceAliases = extractAliases(transformedExpr.from)
 
                     val newProjection =
@@ -70,10 +56,10 @@ class SelectStarVisitorTransform : VisitorTransformBase() {
                                 transformedExpr.metas
                             )
                         }
-                    return copyProjectionToSelect(transformedExpr, newProjection)
+                    return transformedExpr.copy(project = newProjection)
                 }
                 else -> { // With group by
-                    val selectListItemsFromGroupBy = transformedExpr.group.keyList.keys.map {
+                    val selectListItemsFromGroupBy = transformedExpr.group!!.keyList.keys.map {
                         val asName = it.asAlias
                             ?: errNoContext(
                                 "GroupByItem has no AS-alias--GroupByItemAliasVisitorTransform must be executed before SelectStarVisitorTransform",
@@ -90,7 +76,7 @@ class SelectStarVisitorTransform : VisitorTransformBase() {
                         createProjectExpr(uniqueNameMeta.uniqueName, asName.text, metas)
                     }
 
-                    val groupNameItem = transformedExpr.group.groupAsAlias.let {
+                    val groupNameItem = transformedExpr.group!!.groupAsAlias.let {
                         if (it != null) {
                             val metas = it.metas + metaContainerOf(IsGroupAttributeReferenceMeta.instance)
                             listOf(createProjectExpr(it.text, metas = metas))
@@ -99,7 +85,7 @@ class SelectStarVisitorTransform : VisitorTransformBase() {
 
                     val newProjection = PartiqlAst.build { projectList(selectListItemsFromGroupBy + groupNameItem, metas = transformMetas(projection.metas)) }
 
-                    return copyProjectionToSelect(transformedExpr, newProjection)
+                    return transformedExpr.copy(project = newProjection)
                 }
             }
         }

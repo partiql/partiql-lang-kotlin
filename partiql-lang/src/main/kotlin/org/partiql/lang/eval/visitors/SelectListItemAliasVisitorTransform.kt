@@ -14,8 +14,9 @@ import org.partiql.pig.runtime.SymbolPrimitive
  *  SELECT
  *      foo,
  *      b.bat,
- *      baz + 1
- * FROM bar AS b
+ *      baz + 1,
+ *      zoo.*
+ *  FROM bar AS b
  * ```
  *
  * Into:
@@ -24,8 +25,9 @@ import org.partiql.pig.runtime.SymbolPrimitive
  *  SELECT
  *      foo AS foo,
  *      b.bat AS bat,
- *      baz + 1 AS _3
- * FROM bar AS b
+ *      baz + 1 AS _3,
+ *      zoo.*
+ *  FROM bar AS b
  * ```
  *
  * If provided with a query with all of the select list aliases are already specified, an exact clone is returned.

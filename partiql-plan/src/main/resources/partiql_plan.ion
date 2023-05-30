@@ -1,0 +1,242 @@
+// Experimental plan representation
+
+imports::{
+  kotlin: [
+    any::'kotlin.Any',
+    ion::'com.amazon.ionelement.api.IonElement',
+    static_type::'org.partiql.types.StaticType',
+  ],
+}
+
+// Top-Level structure for a PartiQL Plan
+parti_q_l_plan::{
+  version: [ PARTIQL_V0 ],
+  root: rex,
+}
+
+// Grouping of common fields without implications of interfaces or inheritance
+common::{
+  type_env: list::[attribute],
+  properties: set::[property],
+  metas: map::[string,any],
+}
+
+attribute::{
+  name: string,
+  type: static_type
+}
+
+// Relation properties
+property::[
+  ORDERED,
+]
+
+// Representation of `<rex> AS <name>` in projections
+binding::{
+  name: string,
+  value: rex,
+}
+
+// Representation of `a_i : e_i` where a and e are expressions
+field::{
+  name: rex,
+  value: rex,
+}
+
+// Identifier case rules
+case::[
+  SENSITIVE,
+  INSENSITIVE,
+]
+
+// Define in `_` once supported
+step::[
+  key::{
+    value: rex,
+    case: case,
+  },
+  wildcard::{},
+  unpivot::{},
+]
+
+// Define in `_` once supported
+sort_spec::{
+  value: rex,
+  dir: [ ASC, DESC ],
+  nulls: [ FIRST, LAST ],
+}
+
+// Rex.Call Arguments
+arg::[
+  value::{
+    name: optional::string,
+    value: rex,
+  },
+  type::{
+    name: optional::string,
+    type: static_type,
+  }
+]
+
+branch::{
+  condition: rex,
+  value: rex,
+}
+
+// Operators that return binding collections
+rel::[
+  // FROM <rex> [AS <string>] [AT <string>] [BY <string>]
+  scan::{
+    common: common,
+    value: rex,
+    alias: optional::string,
+    at: optional::string,
+    by: optional::string,
+  },
+  // UNPIVOT <rex> [AS <string>] [AT <string>] [BY <string>]
+  unpivot::{
+    common: common,
+    value: rex,
+    alias: optional::string,
+    at: optional::string,
+    by: optional::string,
+  },
+  // WHERE, HAVING
+  filter::{
+    common: common,
+    input: rel,
+    condition: rex,
+  },
+  // ORDER BY
+  sort::{
+    common: common,
+    input: rel,
+    specs: list::[sort_spec],
+  },
+  // UNION, INTERSECT, EXCEPT
+  bag::{
+    common: common,
+    lhs: rel,
+    rhs: rel,
+    op: [ UNION, INTERSECT, EXCEPT ],
+  },
+  // LIMIT, OFFSET, FETCH
+  fetch::{
+    common: common,
+    input: rel,
+    limit: rex,
+    offset: rex,
+  },
+  // SELECT
+  project::{
+    common: common,
+    input: rel,
+    bindings: list::[binding],
+  },
+  // FROM x, y / FROM x JOIN y
+  join::{
+    common: common,
+    lhs: rel,
+    rhs: rel,
+    condition: optional::rex,
+    type: [ INNER, LEFT, RIGHT, FULL ],
+  },
+  // SELECT <aggregate calls> [GROUP BY <groups>]
+  aggregate::{
+    common: common,
+    input: rel,
+    calls: list::[binding],
+    groups: list::[binding],
+    strategy: [ FULL, PARTIAL ],
+  },
+]
+
+// Operators that return any value
+// Perhaps "id" and "path" can be combined into a single item "ref"
+rex::[
+  id::{
+    name: string,
+    case: case,
+    qualifier: [ UNQUALIFIED, LOCALS_FIRST ],
+    type: optional::static_type
+  },
+  path::{
+    root: rex,
+    steps: list::[step],
+    type: optional::static_type
+  },
+  lit::{
+    value: ion,
+    type: optional::static_type
+  },
+  unary::{
+    value: rex,
+    op: [ NOT, POS, NEG, ],
+    type: optional::static_type
+  },
+  binary::{
+    lhs: rex,
+    rhs: rex,
+    op: [
+      PLUS, MINUS, TIMES, DIV, MODULO, CONCAT,
+      AND, OR,
+      EQ, NEQ, GTE, GT, LT, LTE,
+    ],
+    type: optional::static_type
+  },
+  call::{
+    id: string,
+    args: list::[arg],
+    type: optional::static_type,
+  },
+  switch::{
+    match: optional::rex,
+    branches: list::[branch],
+    default: optional::rex,
+    type: optional::static_type,
+  },
+  agg::{
+    id: string,
+    args: list::[rex],
+    modifier: [ ALL, DISTINCT ],
+    type: optional::static_type
+    // filter: rex — later SQL feature, not sure if we'll support this
+  },
+  collection::[
+    array::{
+      values: list::[rex],
+      type: optional::static_type,
+    },
+    bag::{
+      values: list::[rex],
+      type: optional::static_type,
+    },
+  ],
+  // - If binding.name is '*' and binding.rex is a struct, the fields of binding.rex are merged to this struct
+  // - If binding.name is '*' and binding.rex is not a struct, the field _n will be add to this struct where n
+  //   is the ordinal of the field in the final merged struct.
+  // - Else, add the pair (binding.name, binding.rex) to the final merged struct.
+  tuple::{
+    fields: list::[field],
+    type: optional::static_type
+  },
+  query::[
+    scalar::[
+      subquery::{
+        query: '.rex.query.collection', // consider changing to query.scalar.subquery
+        type: optional::static_type
+      },
+      pivot::{
+        rel: rel,
+        value: rex,
+        at: rex, // consider changing to key
+        type: optional::static_type
+      },
+    ],
+    collection::{
+      rel: rel,
+      constructor: optional::rex, // consider further dividing this into query.collection.subquery
+      type: optional::static_type
+    },
+  ],
+]

@@ -1,7 +1,6 @@
 package org.partiql.lang.eval.evaluatortestframework
 
 import org.partiql.annotations.ExperimentalPartiQLCompilerPipeline
-import org.partiql.lang.ION
 import org.partiql.lang.compiler.PartiQLCompilerBuilder
 import org.partiql.lang.compiler.PartiQLCompilerPipeline
 import org.partiql.lang.eval.EvaluationSession
@@ -74,7 +73,7 @@ internal class PartiQLCompilerPipelineFactory() : PipelineFactory {
         )
 
         val pipeline = PartiQLCompilerPipeline(
-            parser = PartiQLParserBuilder().ionSystem(ION).customTypes(legacyPipeline.customDataTypes).build(),
+            parser = PartiQLParserBuilder().customTypes(legacyPipeline.customDataTypes).build(),
             planner = PartiQLPlannerBuilder.standard()
                 .options(plannerOptions)
                 .globalVariableResolver(globalVariableResolver)

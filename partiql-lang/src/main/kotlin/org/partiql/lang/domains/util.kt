@@ -1,6 +1,5 @@
 package org.partiql.lang.domains
 
-import com.amazon.ionelement.api.IonElement
 import com.amazon.ionelement.api.MetaContainer
 import com.amazon.ionelement.api.emptyMetaContainer
 import com.amazon.ionelement.api.metaContainerOf
@@ -22,11 +21,6 @@ fun PartiqlLogical.Builder.id(name: String) =
 // TODO:  once https://github.com/partiql/partiql-ir-generator/issues/6 has been completed, we can delete this.
 fun PartiqlLogical.Builder.pathExpr(exp: PartiqlLogical.Expr) =
     pathExpr(exp, caseInsensitive())
-
-// Workaround for a bug in PIG that is fixed in its next release:
-// https://github.com/partiql/partiql-ir-generator/issues/41
-fun List<IonElement>.asAnyElement() =
-    this.map { it.asAnyElement() }
 
 val MetaContainer.staticType: StaticTypeMeta? get() = this[StaticTypeMeta.TAG] as StaticTypeMeta?
 

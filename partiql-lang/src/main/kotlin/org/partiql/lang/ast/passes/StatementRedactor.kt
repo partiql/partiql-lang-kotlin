@@ -1,6 +1,5 @@
 package org.partiql.lang.ast.passes
 
-import com.amazon.ion.system.IonSystemBuilder
 import com.amazon.ionelement.api.StringElement
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.ast.sourceLocation
@@ -19,8 +18,7 @@ import org.partiql.lang.syntax.PartiQLParserBuilder
  */
 typealias UserDefinedFunctionRedactionLambda = (List<PartiqlAst.Expr>) -> List<PartiqlAst.Expr>
 
-private val ion = IonSystemBuilder.standard().build()
-private val parser = PartiQLParserBuilder().ionSystem(ion).build()
+private val parser = PartiQLParserBuilder().build()
 private const val maskPattern = "***(Redacted)"
 
 const val INVALID_NUM_ARGS = "Invalid number of args in node"
@@ -155,15 +153,15 @@ private class StatementRedactionVisitor(
     }
 
     override fun visitDmlOpInsertValue(node: PartiqlAst.DmlOp.InsertValue) {
-        when (node.value) {
-            is PartiqlAst.Expr.Struct -> redactStructInInsertValueOp(node.value)
+        when (val value = node.value) {
+            is PartiqlAst.Expr.Struct -> redactStructInInsertValueOp(value)
             else -> redactExpr(node.value)
         }
     }
 
     override fun visitDmlOpInsert(node: PartiqlAst.DmlOp.Insert) {
-        when (node.values) {
-            is PartiqlAst.Expr.Bag -> redactBagInInserOpValues(node.values)
+        when (val values = node.values) {
+            is PartiqlAst.Expr.Bag -> redactBagInInserOpValues(values)
             else -> redactExpr(node.values)
         }
     }
@@ -265,7 +263,7 @@ private class StatementRedactionVisitor(
     private fun redactStruct(struct: PartiqlAst.Expr.Struct) {
         struct.fields.map {
             if (it.first is PartiqlAst.Expr.Lit) {
-                redactLiteral(it.first)
+                redactLiteral(it.first as PartiqlAst.Expr.Lit)
             }
             redactExpr(it.second)
         }

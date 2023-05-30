@@ -14,7 +14,6 @@
 
 package org.partiql.jmh.benchmarks
 
-import com.amazon.ion.system.IonSystemBuilder
 import org.openjdk.jmh.annotations.Benchmark
 import org.openjdk.jmh.annotations.BenchmarkMode
 import org.openjdk.jmh.annotations.Fork
@@ -52,8 +51,7 @@ open class MultipleLikeBenchmark {
 
     @State(Scope.Thread)
     open class MyState {
-        val ion = IonSystemBuilder.standard().build()
-        val parser = PartiQLParserBuilder().ionSystem(ion).build()
+        val parser = PartiQLParserBuilder().build()
         val pipeline = CompilerPipeline.standard()
 
         val name1 = listOf(

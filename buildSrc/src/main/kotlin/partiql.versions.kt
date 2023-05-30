@@ -17,15 +17,17 @@
 // https://docs.gradle.org/current/userguide/platforms.html
 
 object Versions {
-    //---Language
+    // Language
     const val kotlin = "1.5.31"
     const val kotlinTarget = "1.4"
     const val javaTarget = "1.8"
-    //---Dependencies
+
+    // Dependencies
     const val antlr = "4.10.1"
     const val awsSdk = "1.12.344"
     const val csv = "1.8"
     const val dotlin = "1.0.2"
+    const val gson = "2.10.1"
     const val guava = "31.1-jre"
     const val ionBuilder = "1.0.0"
     const val ionElement = "1.0.0"
@@ -39,8 +41,9 @@ object Versions {
     const val picoCli = "4.7.0"
     const val kasechange = "1.3.0"
     const val ktlint = "10.2.1"
-    const val pig = "0.6.1"
-    //---Testing
+    const val pig = "0.6.2"
+
+    // Testing
     const val assertj = "3.11.0"
     const val jacoco = "0.8.8"
     const val junit5 = "5.7.0"
@@ -51,53 +54,57 @@ object Versions {
 }
 
 object Deps {
-    //---Language
-    val kotlin = "org.jetbrains.kotlin:kotlin-stdlib-jdk8:${Versions.kotlin}"
-    val kotlinReflect = "org.jetbrains.kotlin:kotlin-reflect:${Versions.kotlin}"
-    //---Dependencies
-    val antlr = "org.antlr:antlr4:${Versions.antlr}"
-    val antlrRuntime = "org.antlr:antlr4-runtime:${Versions.antlr}"
-    val awsSdkBom = "com.amazonaws:aws-java-sdk-bom:${Versions.awsSdk}"
-    val awsSdkDynamodb = "com.amazonaws:aws-java-sdk-dynamodb:${Versions.awsSdk}"
-    val awsSdkS3 = "com.amazonaws:aws-java-sdk-s3:${Versions.awsSdk}"
-    val csv = "org.apache.commons:commons-csv:${Versions.csv}"
-    val dotlin = "io.github.rchowell:dotlin:${Versions.dotlin}"
-    val guava = "com.google.guava:guava:${Versions.guava}"
-    val ionJava = "com.amazon.ion:ion-java:${Versions.ionJava}"
-    val ionElement = "com.amazon.ion:ion-element:${Versions.ionElement}"
-    val ionBuilder = "com.amazon.ion:ion-kotlin-builder:${Versions.ionBuilder}"
-    val ionSchema = "com.amazon.ion:ion-schema-kotlin:${Versions.ionSchema}"
-    val jansi = "org.fusesource.jansi:jansi:${Versions.jansi}"
-    val jline = "org.jline:jline:${Versions.jline}"
-    val joda = "joda-time:joda-time:${Versions.joda}"
-    val kasechange = "net.pearx.kasechange:kasechange:${Versions.kasechange}"
-    val kotlinPoet = "com.squareup:kotlinpoet:${Versions.kotlinPoet}"
-    val picoCli = "info.picocli:picocli:${Versions.picoCli}"
-    val pig = "org.partiql:partiql-ir-generator:${Versions.pig}"
-    val pigRuntime = "org.partiql:partiql-ir-generator-runtime:${Versions.pig}"
-    //---Testing
-    val assertj = "org.assertj:assertj-core:${Versions.assertj}"
-    val junit4 = "junit:junit:${Versions.junit4}"
-    val junit4Params = "pl.pragmatists:JUnitParams:${Versions.junit4Params}"
-    val junitParams = "org.junit.jupiter:junit-jupiter-params:${Versions.junit5}"
-    val junitVintage = "org.junit.vintage:junit-vintage-engine:${Versions.junit5}"
-    val kotlinTest = "org.jetbrains.kotlin:kotlin-test:${Versions.kotlin}"
-    val kotlinTestJunit = "org.jetbrains.kotlin:kotlin-test-junit5:${Versions.kotlin}"
-    val mockito = "org.mockito:mockito-junit-jupiter:${Versions.mockito}"
-    val mockk = "io.mockk:mockk:${Versions.mockk}"
+    // Language
+    const val kotlin = "org.jetbrains.kotlin:kotlin-stdlib-jdk8:${Versions.kotlin}"
+    const val kotlinReflect = "org.jetbrains.kotlin:kotlin-reflect:${Versions.kotlin}"
+
+    // Dependencies
+    const val antlr = "org.antlr:antlr4:${Versions.antlr}"
+    const val antlrRuntime = "org.antlr:antlr4-runtime:${Versions.antlr}"
+    const val awsSdkBom = "com.amazonaws:aws-java-sdk-bom:${Versions.awsSdk}"
+    const val awsSdkDynamodb = "com.amazonaws:aws-java-sdk-dynamodb:${Versions.awsSdk}"
+    const val awsSdkS3 = "com.amazonaws:aws-java-sdk-s3:${Versions.awsSdk}"
+    const val csv = "org.apache.commons:commons-csv:${Versions.csv}"
+    const val dotlin = "io.github.rchowell:dotlin:${Versions.dotlin}"
+    const val gson = "com.google.code.gson:gson:${Versions.gson}"
+    const val guava = "com.google.guava:guava:${Versions.guava}"
+    const val ionJava = "com.amazon.ion:ion-java:${Versions.ionJava}"
+    const val ionElement = "com.amazon.ion:ion-element:${Versions.ionElement}"
+    const val ionBuilder = "com.amazon.ion:ion-kotlin-builder:${Versions.ionBuilder}"
+    const val ionSchema = "com.amazon.ion:ion-schema-kotlin:${Versions.ionSchema}"
+    const val jansi = "org.fusesource.jansi:jansi:${Versions.jansi}"
+    const val jline = "org.jline:jline:${Versions.jline}"
+    const val joda = "joda-time:joda-time:${Versions.joda}"
+    const val kasechange = "net.pearx.kasechange:kasechange:${Versions.kasechange}"
+    const val kotlinPoet = "com.squareup:kotlinpoet:${Versions.kotlinPoet}"
+    const val picoCli = "info.picocli:picocli:${Versions.picoCli}"
+    const val pig = "org.partiql:partiql-ir-generator:${Versions.pig}"
+    const val pigRuntime = "org.partiql:partiql-ir-generator-runtime:${Versions.pig}"
+
+    // Testing
+    const val assertj = "org.assertj:assertj-core:${Versions.assertj}"
+    const val junit4 = "junit:junit:${Versions.junit4}"
+    const val junit4Params = "pl.pragmatists:JUnitParams:${Versions.junit4Params}"
+    const val junitParams = "org.junit.jupiter:junit-jupiter-params:${Versions.junit5}"
+    const val junitVintage = "org.junit.vintage:junit-vintage-engine:${Versions.junit5}"
+    const val kotlinTest = "org.jetbrains.kotlin:kotlin-test:${Versions.kotlin}"
+    const val kotlinTestJunit = "org.jetbrains.kotlin:kotlin-test-junit5:${Versions.kotlin}"
+    const val mockito = "org.mockito:mockito-junit-jupiter:${Versions.mockito}"
+    const val mockk = "io.mockk:mockk:${Versions.mockk}"
 }
 
 object Plugins {
-    //---PartiQL
-    val conventions = "partiql.conventions"
-    val pig = "org.partiql.pig.pig-gradle-plugin"
-    val publish = "org.partiql.gradle.plugin.publish"
-    //---3P
-    val antlr = "org.gradle.antlr"
-    val application = "org.gradle.application"
-    val detekt = "io.gitlab.arturbosch.detekt"
-    val dokka = "org.jetbrains.dokka"
-    val jmh = "me.champeau.gradle.jmh"
-    val ktlint = "org.jlleitschuh.gradle.ktlint"
-    val library = "org.gradle.java-library"
+    // PartiQL
+    const val conventions = "partiql.conventions"
+    const val pig = "org.partiql.pig.pig-gradle-plugin"
+    const val publish = "org.partiql.gradle.plugin.publish"
+
+    // 3P
+    const val antlr = "org.gradle.antlr"
+    const val application = "org.gradle.application"
+    const val detekt = "io.gitlab.arturbosch.detekt"
+    const val dokka = "org.jetbrains.dokka"
+    const val jmh = "me.champeau.gradle.jmh"
+    const val ktlint = "org.jlleitschuh.gradle.ktlint"
+    const val library = "org.gradle.java-library"
 }

@@ -162,8 +162,8 @@ snippet of how it works:
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
 import org.jline.utils.AttributedStringBuilder
-import org.partiql.lang.syntax.antlr.PartiQLParser
-import org.partiql.lang.syntax.antlr.PartiQLTokens
+import org.partiql.parser.antlr.PartiQLParser
+import org.partiql.parser.antlr.PartiQLTokens
 
 fun highlight() {
     // Build Token Colors (Last Token is EOF)

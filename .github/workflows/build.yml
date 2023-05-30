@@ -35,6 +35,7 @@ jobs:
       - name: Test and Report
         env:
           DOKKA: false
+          GRADLE_OPTS: -Dorg.gradle.jvmargs="-XX:MaxMetaspaceSize=1g"
         run: ./gradlew build jacocoTestReport
 
       # Upload coverage for CLI, LANG, PTS, TEST_SCRIPT, and EXAMPLES

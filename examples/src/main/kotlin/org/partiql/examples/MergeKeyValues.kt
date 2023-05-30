@@ -11,8 +11,6 @@ import org.partiql.lang.eval.namedValue
 import org.partiql.lang.eval.stringValue
 import org.partiql.lang.types.FunctionSignature
 import org.partiql.types.StaticType
-import java.lang.Exception
-import kotlin.collections.HashMap
 
 abstract class MergeKeysBaseExprFunction : ExprFunction
 

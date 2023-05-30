@@ -1,12 +1,14 @@
 package org.partiql.lang.types
 
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.eval.StructExprValue
+import org.partiql.lang.eval.StructOrdering
+import org.partiql.lang.eval.namedValue
 import org.partiql.lang.types.StaticTypeUtils.isInstance
 import org.partiql.lang.util.ArgumentsProviderBase
 import org.partiql.types.AnyOfType
@@ -29,6 +31,7 @@ import org.partiql.types.StaticType.Companion.STRING
 import org.partiql.types.StaticType.Companion.SYMBOL
 import org.partiql.types.StaticType.Companion.TIMESTAMP
 import org.partiql.types.StructType
+import org.partiql.types.TupleConstraint
 import java.math.BigInteger
 
 /**
@@ -72,28 +75,29 @@ class StaticTypeTests {
             // BLOB
             InputTypes("`{{ SGVsbG8sIHdvcmxkIQ== }}`", listOf(BLOB))
         )
+
+        fun eval(sql: String): ExprValue =
+            CompilerPipeline.standard().compile(sql).eval(EvaluationSession.standard())
     }
 
     data class TestCase(
-        val sqlValue: String,
+        val exprValue: ExprValue,
         val staticType: StaticType,
         val expectedIsInstanceResult: Boolean
-    )
-
-    fun eval(sql: String): ExprValue =
-        CompilerPipeline.standard().compile(sql).eval(EvaluationSession.standard())
+    ) {
+        constructor(
+            sqlValue: String,
+            staticType: StaticType,
+            expectedIsInstanceResult: Boolean
+        ) : this(eval(sqlValue), staticType, expectedIsInstanceResult)
+    }
 
     @ParameterizedTest
     @ArgumentsSource(ScalarIsInstanceArguments::class)
     fun scalarIsInstanceArgumentsTest(tc: TestCase) {
-
-        val exprValue = assertDoesNotThrow("Evaluating the value under test should not throw") {
-            eval(tc.sqlValue)
-        }
-
         assertEquals(
-            tc.expectedIsInstanceResult, isInstance(exprValue, tc.staticType),
-            "The result of StaticType.isInstance() should match the expected value for type ${tc.staticType} and \"${tc.sqlValue}\""
+            tc.expectedIsInstanceResult, isInstance(tc.exprValue, tc.staticType),
+            "The result of StaticType.isInstance() should match the expected value for type ${tc.staticType} and \"${tc.exprValue}\""
         )
     }
 
@@ -110,14 +114,9 @@ class StaticTypeTests {
     @ParameterizedTest
     @ArgumentsSource(SequenceIsInstanceArguments::class)
     fun sequenceIsInstanceArgumentsTest(tc: TestCase) {
-
-        val exprValue = assertDoesNotThrow("Evaluating the value under test should not throw") {
-            eval(tc.sqlValue)
-        }
-
         assertEquals(
-            tc.expectedIsInstanceResult, isInstance(exprValue, tc.staticType),
-            "The result of StaticType.isInstance() should match the expected value for type ${tc.staticType} and \"${tc.sqlValue}\""
+            tc.expectedIsInstanceResult, isInstance(tc.exprValue, tc.staticType),
+            "The result of StaticType.isInstance() should match the expected value for type ${tc.staticType} and \"${tc.exprValue}\""
         )
     }
 
@@ -194,14 +193,9 @@ class StaticTypeTests {
     @ParameterizedTest
     @ArgumentsSource(StructIsInstanceArguments::class)
     fun structIsInstanceTest(tc: TestCase) {
-
-        val exprValue = assertDoesNotThrow("Evaluating the value under test should not throw") {
-            eval(tc.sqlValue)
-        }
-
         assertEquals(
-            tc.expectedIsInstanceResult, isInstance(exprValue, tc.staticType),
-            "The result of StaticType.isInstance() should match the expected value for type ${tc.staticType} and \"${tc.sqlValue}\""
+            tc.expectedIsInstanceResult, isInstance(tc.exprValue, tc.staticType),
+            "The result of StaticType.isInstance() should match the expected value for type ${tc.staticType} and \"${tc.exprValue}\""
         )
     }
 
@@ -215,6 +209,14 @@ class StaticTypeTests {
                         val closedContentStructType = StructType(mapOf("foo" to staticType), contentClosed = true)
                         val openContentStructType = StructType(mapOf("foo" to staticType), contentClosed = false)
                         val closedContentWithOptionalField = StructType(mapOf("foo" to AnyOfType(setOf(MISSING, staticType))), contentClosed = true)
+                        val orderedStructType = StructType(
+                            listOf(
+                                StructType.Field("foo", AnyOfType(setOf(MISSING, staticType))),
+                                StructType.Field("bar", staticType),
+                            ),
+                            contentClosed = true,
+                            constraints = setOf(TupleConstraint.Ordered),
+                        )
                         listOf(
                             listOf(
                                 // closed content with matching field
@@ -285,7 +287,56 @@ class StaticTypeTests {
                                     sqlValue = "{'foo': ${scalarInput1.sqlValue}, 'foo': ${scalarInput1.sqlValue} }",
                                     staticType = closedContentStructType,
                                     expectedIsInstanceResult = scalarInput1.expectedTypes.contains(staticType)
-                                )
+                                ),
+
+                                // duplicate struct fields with values of the same type (but value is ordered, while type is unordered)
+                                TestCase(
+                                    exprValue = StructExprValue(
+                                        StructOrdering.ORDERED,
+                                        sequence {
+                                            yield(eval(scalarInput1.sqlValue).namedValue(ExprValue.newString("foo")))
+                                            yield(eval(scalarInput1.sqlValue).namedValue(ExprValue.newString("foo")))
+                                        }
+                                    ),
+                                    staticType = closedContentStructType,
+                                    expectedIsInstanceResult = scalarInput1.expectedTypes.contains(staticType)
+                                ),
+                                // Both present
+                                TestCase(
+                                    exprValue = StructExprValue(
+                                        StructOrdering.ORDERED,
+                                        sequence {
+                                            yield(eval(scalarInput1.sqlValue).namedValue(ExprValue.newString("foo")))
+                                            yield(eval(scalarInput1.sqlValue).namedValue(ExprValue.newString("bar")))
+                                        }
+                                    ),
+                                    staticType = orderedStructType,
+                                    expectedIsInstanceResult = scalarInput1.expectedTypes.contains(staticType)
+                                ),
+                                // One missing
+                                TestCase(
+                                    exprValue = StructExprValue(
+                                        StructOrdering.ORDERED,
+                                        sequence {
+                                            yield(ExprValue.missingValue.namedValue(ExprValue.newString("foo")))
+                                            yield(eval(scalarInput1.sqlValue).namedValue(ExprValue.newString("bar")))
+                                        }
+                                    ),
+                                    staticType = orderedStructType,
+                                    expectedIsInstanceResult = scalarInput1.expectedTypes.contains(staticType)
+                                ),
+                                // Unordered StructExprValue always fails
+                                TestCase(
+                                    exprValue = StructExprValue(
+                                        StructOrdering.UNORDERED,
+                                        sequence {
+                                            yield(ExprValue.missingValue.namedValue(ExprValue.newString("foo")))
+                                            yield(eval(scalarInput1.sqlValue).namedValue(ExprValue.newString("bar")))
+                                        }
+                                    ),
+                                    staticType = orderedStructType,
+                                    expectedIsInstanceResult = false
+                                ),
                             ),
                             // Duplicate struct fields with values of different types.
                             // We generate one test case for every scalar value with every other scalar value and

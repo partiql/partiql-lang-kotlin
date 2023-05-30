@@ -20,9 +20,9 @@ import org.partiql.lang.ION
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
-import org.partiql.lang.syntax.antlr.PartiQLParser
 import org.partiql.lang.util.ArgumentsProviderBase
 import org.partiql.lang.util.getAntlrDisplayString
+import org.partiql.parser.antlr.PartiQLParser
 
 class PartiQLParserExplainTest : PartiQLParserTestBase() {
 

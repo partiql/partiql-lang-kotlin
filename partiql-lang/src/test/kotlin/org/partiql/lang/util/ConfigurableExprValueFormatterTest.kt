@@ -1,6 +1,5 @@
 package org.partiql.lang.util
 
-import com.amazon.ion.system.IonSystemBuilder
 import junitparams.JUnitParamsRunner
 import junitparams.Parameters
 import org.junit.Test
@@ -8,15 +7,14 @@ import org.junit.runner.RunWith
 import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.syntax.PartiQLParser
+import org.partiql.lang.syntax.PartiQLParserBuilder
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 @RunWith(JUnitParamsRunner::class)
 class ConfigurableExprValueFormatterTest {
 
-    private val ion = IonSystemBuilder.standard().build()
-    private val parser = PartiQLParser(ion)
+    private val parser = PartiQLParserBuilder.standard().build()
     private val compiler = CompilerPipeline.builder().sqlParser(parser).build()
 
     private val pretty = ConfigurableExprValueFormatter.pretty

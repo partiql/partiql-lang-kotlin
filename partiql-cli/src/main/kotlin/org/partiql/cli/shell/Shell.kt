@@ -33,14 +33,19 @@ import org.partiql.cli.format.ExplainFormatter
 import org.partiql.cli.pipeline.AbstractPipeline
 import org.partiql.lang.SqlException
 import org.partiql.lang.eval.Bindings
+import org.partiql.lang.eval.EvaluationException
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.PartiQLResult
 import org.partiql.lang.eval.delegate
+import org.partiql.lang.eval.namedValue
+import org.partiql.lang.graph.ExternalGraphException
+import org.partiql.lang.graph.ExternalGraphReader
 import org.partiql.lang.syntax.PartiQLParserBuilder
 import org.partiql.lang.util.ConfigurableExprValueFormatter
 import org.partiql.lang.util.ExprValueFormatter
 import java.io.Closeable
+import java.io.File
 import java.io.OutputStream
 import java.io.PrintStream
 import java.nio.file.Path
@@ -57,15 +62,29 @@ private const val PROMPT_2 = "   | "
 private const val BAR_1 = "===' "
 private const val BAR_2 = "--- "
 private const val WELCOME_MSG = "Welcome to the PartiQL shell!"
+private const val DEBUG_MSG = """    
+■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+
+    ██████╗ ███████╗██████╗ ██╗   ██╗ ██████╗ 
+    ██╔══██╗██╔════╝██╔══██╗██║   ██║██╔════╝ 
+    ██║  ██║█████╗  ██████╔╝██║   ██║██║  ███╗
+    ██║  ██║██╔══╝  ██╔══██╗██║   ██║██║   ██║
+    ██████╔╝███████╗██████╔╝╚██████╔╝╚██████╔╝
+    ╚═════╝ ╚══════╝╚═════╝  ╚═════╝  ╚═════╝ 
+    
+■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+"""
 
 private const val HELP = """
-!add_to_global_env  Adds to the global environment key/value pairs of the supplied struct
-!global_env         Displays the current global environment
-!list_commands      Prints this message
-!help               Prints this message
-!history            Prints command history
-!exit               Exits the shell
-!clear              Clears the screen
+!list_commands        Prints this message
+!help                 Prints this message
+!add_to_global_env    Adds to the global environment key/value pairs of the supplied struct
+!global_env           Displays the current global environment
+!add_graph            Adds to the global environment a name and a graph supplied as Ion
+!add_graph_from_file  Adds to the global environment a name and a graph from an Ion file
+!history              Prints command history
+!exit                 Exits the shell
+!clear                Clears the screen
 """
 
 private val SUCCESS: AttributedStyle = AttributedStyle.DEFAULT.foreground(AttributedStyle.GREEN)
@@ -89,6 +108,7 @@ internal class Shell(
     private val globals = ShellGlobalBinding().add(initialGlobal)
     private var previousResult = ExprValue.nullValue
     private val out = PrintStream(output)
+    private val currentUser = System.getProperty("user.name")
 
     fun start() {
         val exiting = AtomicBoolean()
@@ -138,6 +158,11 @@ internal class Shell(
         out.info(WELCOME_MSG)
         out.info("Typing mode: ${compiler.options.typingMode.name}")
         out.info("Using version: ${retrievePartiQLVersionAndHash()}")
+        if (compiler is AbstractPipeline.PipelineDebug) {
+            out.println("\n\n")
+            out.success(DEBUG_MSG)
+            out.println("\n\n")
+        }
 
         while (!exiting.get()) {
             val line: String = try {
@@ -167,27 +192,32 @@ internal class Shell(
             val command = when (val end: Int = CharMatcher.`is`(';').or(CharMatcher.whitespace()).indexIn(line)) {
                 -1 -> ""
                 else -> line.substring(0, end)
-            }
-            when (command.toLowerCase(Locale.ENGLISH).trim()) {
+            }.toLowerCase(Locale.ENGLISH).trim()
+            when (command) {
                 "!exit" -> return
                 "!add_to_global_env" -> {
                     // Consider PicoCLI + Jline, but it doesn't easily place nice with commands + raw SQL
                     // https://github.com/partiql/partiql-lang-kotlin/issues/63
-                    val arg = line.trim().removePrefix(command).trim()
-                    if (arg.isEmpty() || arg.isBlank()) {
-                        out.error("!add_to_global_env requires 1 parameter")
-                        continue
-                    }
+                    val arg = requireInput(line, command) ?: continue
                     executeAndPrint {
-                        val locals = Bindings.buildLazyBindings<ExprValue> {
-                            addBinding("_") {
-                                previousResult
-                            }
-                        }.delegate(globals.bindings)
-                        val result = compiler.compile(arg, EvaluationSession.build { globals(locals) }) as PartiQLResult.Value
+                        val locals = refreshBindings()
+                        val result = evaluatePartiQL(arg, locals) as PartiQLResult.Value
                         globals.add(result.value.bindings)
                         result
                     }
+                    continue
+                }
+                "!add_graph" -> {
+                    val input = requireInput(line, command) ?: continue
+                    val (name, graphStr) = requireTokenAndMore(input, command) ?: continue
+                    bringGraph(name, graphStr)
+                    continue
+                }
+                "!add_graph_from_file" -> {
+                    val input = requireInput(line, command) ?: continue
+                    val (name, filename) = requireTokenAndMore(input, command) ?: continue
+                    val graphStr = readTextFile(filename) ?: continue
+                    bringGraph(name, graphStr)
                     continue
                 }
                 "!global_env" -> {
@@ -213,11 +243,72 @@ internal class Shell(
 
             // Execute PartiQL
             executeAndPrint {
-                val locals = Bindings.buildLazyBindings<ExprValue> {
-                    addBinding("_") { previousResult }
-                }.delegate(globals.bindings)
-                compiler.compile(line, EvaluationSession.build { globals(locals) })
+                val locals = refreshBindings()
+                evaluatePartiQL(line, locals)
             }
+        }
+    }
+
+    /** After a command [detectedCommand] has been detected to start the user input,
+     * analyze the entire [wholeLine] user input again, expecting to find more input after the command.
+     * Returns the extra input or null if none present.  */
+    private fun requireInput(wholeLine: String, detectedCommand: String): String? {
+        val input = wholeLine.trim().removePrefix(detectedCommand).trim()
+        if (input.isEmpty() || input.isBlank()) {
+            out.error("Command $detectedCommand requires input.")
+            return null
+        }
+        return input
+    }
+
+    private fun requireTokenAndMore(input: String, detectedCommand: String): Pair<String, String>? {
+        val trimmed = input.trim()
+        val n = trimmed.indexOf(' ')
+        if (n == -1) {
+            out.error("Command $detectedCommand, after token $trimmed, requires more input.")
+            return null
+        }
+        val token = trimmed.substring(0, n)
+        val rest = trimmed.substring(n).trim()
+        return Pair(token, rest)
+    }
+
+    private fun readTextFile(filename: String): String? =
+        try {
+            val file = File(filename)
+            file.readText()
+        } catch (ex: Exception) {
+            out.error("Could not read text from file '$filename'${ex.message?.let { ":\n$it"} ?: "."}")
+            null
+        }
+
+    /** Prepare bindings to use for the next evaluation. */
+    private fun refreshBindings(): Bindings<ExprValue> {
+        return Bindings.buildLazyBindings<ExprValue> {
+            addBinding("_") {
+                previousResult
+            }
+        }.delegate(globals.bindings)
+    }
+
+    /** Evaluate a textual PartiQL query [textPartiQL] in the context of given [bindings]. */
+    private fun evaluatePartiQL(textPartiQL: String, bindings: Bindings<ExprValue>): PartiQLResult =
+        compiler.compile(
+            textPartiQL,
+            EvaluationSession.build {
+                globals(bindings)
+                user(currentUser)
+            }
+        )
+
+    private fun bringGraph(name: String, graphIonText: String) {
+        try {
+            val graph = ExprValue.newGraph(ExternalGraphReader.read(graphIonText))
+            val namedGraph = graph.namedValue(ExprValue.newString(name))
+            globals.add(Bindings.ofMap(mapOf(name to namedGraph)))
+            out.info("""Bound identifier "$name" to a graph. """)
+        } catch (ex: ExternalGraphException) {
+            out.error(ex.message)
         }
     }
 
@@ -227,6 +318,9 @@ internal class Shell(
         } catch (ex: SqlException) {
             out.error(ex.generateMessage())
             out.error(ex.message)
+            null // signals that there was an error
+        } catch (ex: NotImplementedError) {
+            out.error(ex.message ?: "kotlin.NotImplementedError was raised")
             null // signals that there was an error
         }
         printPartiQLResult(result)
@@ -238,7 +332,13 @@ internal class Shell(
                 out.error("ERROR!")
             }
             is PartiQLResult.Value -> {
-                printExprValue(ConfigurableExprValueFormatter.pretty, result.value)
+                try {
+                    printExprValue(ConfigurableExprValueFormatter.pretty, result.value)
+                } catch (ex: EvaluationException) { // should not need to do this here; see https://github.com/partiql/partiql-lang-kotlin/issues/1002
+                    out.error(ex.generateMessage())
+                    out.error(ex.message)
+                    return
+                }
                 out.success("OK!")
             }
             is PartiQLResult.Explain.Domain -> {

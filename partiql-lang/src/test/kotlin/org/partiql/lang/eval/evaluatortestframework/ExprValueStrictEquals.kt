@@ -101,6 +101,13 @@ private object ExprValueStrictComparator : Comparator<ExprValue> {
                 v1.sortedWith(namedValueComparator).iterator(),
                 v2.sortedWith(namedValueComparator).iterator()
             )
+            // TODO: what should be equality for graphs? https://github.com/partiql/partiql-spec/issues/55
+            // Also, see the comment for graph case in [exprEquals] - in [NaturalExprValueComparators.compareInternal]
+            ExprValueType.GRAPH -> {
+                val g1 = v1.graphValue
+                val g2 = v2.graphValue
+                g1.hashCode().compareTo(g2.hashCode())
+            }
         }
     }
 

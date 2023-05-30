@@ -15,6 +15,7 @@
 package org.partiql.lang.eval
 
 import com.amazon.ion.IonString
+import com.amazon.ion.IonType
 import com.amazon.ion.IonValue
 import com.amazon.ion.Timestamp
 import com.amazon.ion.system.IonSystemBuilder
@@ -42,6 +43,13 @@ import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedure
 import org.partiql.lang.eval.like.parsePattern
 import org.partiql.lang.eval.time.Time
 import org.partiql.lang.eval.visitors.PartiqlAstSanityValidator
+import org.partiql.lang.graph.EdgeSpec
+import org.partiql.lang.graph.GpmlTranslator
+import org.partiql.lang.graph.Graph
+import org.partiql.lang.graph.GraphEngine
+import org.partiql.lang.graph.NodeSpec
+import org.partiql.lang.graph.Stride
+import org.partiql.lang.graph.StrideSpec
 import org.partiql.lang.types.FunctionSignature
 import org.partiql.lang.types.StaticTypeUtils.getRuntimeType
 import org.partiql.lang.types.StaticTypeUtils.getTypeDomain
@@ -218,6 +226,16 @@ internal class EvaluatingCompiler(
                 }
             }
 
+            fun checkIsBooleanType(funcName: String, value: ExprValue) {
+                if (value.type != ExprValueType.BOOL) {
+                    errNoContext(
+                        message = "Aggregate function $funcName expects arguments of BOOL type but the following value was provided: $value, with type of ${value.type}",
+                        errorCode = ErrorCode.EVALUATOR_INVALID_ARGUMENTS_FOR_AGG_FUNCTION,
+                        internal = false
+                    )
+                }
+            }
+
             val countAccFunc: (ExprValue?, ExprValue) -> ExprValue = { accumulated, _ -> (accumulated!!.longValue() + 1L).exprValue() }
             val sumAccFunc: (ExprValue?, ExprValue) -> ExprValue = { accumulated, nextItem ->
                 checkIsNumberType("SUM", nextItem)
@@ -242,6 +260,14 @@ internal class EvaluatingCompiler(
                         sum?.let { (it / bigDecimalOf(count)).exprValue() }
                             ?: ExprValue.nullValue
                 }
+            }
+            val everyAccFunc: (ExprValue?, ExprValue) -> ExprValue = { accumulated, nextItem ->
+                checkIsBooleanType("EVERY", nextItem)
+                accumulated?.let { ExprValue.newBoolean(it.booleanValue() && nextItem.booleanValue()) } ?: nextItem
+            }
+            val anySomeAccFunc: (ExprValue?, ExprValue) -> ExprValue = { accumulated, nextItem ->
+                checkIsBooleanType("ANY/SOME", nextItem)
+                accumulated?.let { ExprValue.newBoolean(it.booleanValue() || nextItem.booleanValue()) } ?: nextItem
             }
             val allFilter: (ExprValue) -> Boolean = { _ -> true }
             // each distinct ExprAggregator must get its own createUniqueExprValueFilter()
@@ -284,7 +310,31 @@ internal class EvaluatingCompiler(
 
                 Pair("min", PartiqlAst.SetQuantifier.Distinct()) to ExprAggregatorFactory.over {
                     Accumulator(null, minAccFunc, createUniqueExprValueFilter())
-                }
+                },
+
+                Pair("every", PartiqlAst.SetQuantifier.All()) to ExprAggregatorFactory.over {
+                    Accumulator(null, everyAccFunc, allFilter)
+                },
+
+                Pair("every", PartiqlAst.SetQuantifier.Distinct()) to ExprAggregatorFactory.over {
+                    Accumulator(null, everyAccFunc, createUniqueExprValueFilter())
+                },
+
+                Pair("any", PartiqlAst.SetQuantifier.All()) to ExprAggregatorFactory.over {
+                    Accumulator(null, anySomeAccFunc, allFilter)
+                },
+
+                Pair("any", PartiqlAst.SetQuantifier.Distinct()) to ExprAggregatorFactory.over {
+                    Accumulator(null, anySomeAccFunc, createUniqueExprValueFilter())
+                },
+
+                Pair("some", PartiqlAst.SetQuantifier.All()) to ExprAggregatorFactory.over {
+                    Accumulator(null, anySomeAccFunc, allFilter)
+                },
+
+                Pair("some", PartiqlAst.SetQuantifier.Distinct()) to ExprAggregatorFactory.over {
+                    Accumulator(null, anySomeAccFunc, createUniqueExprValueFilter())
+                },
             )
         }
 
@@ -409,7 +459,10 @@ internal class EvaluatingCompiler(
             // bag operators
             is PartiqlAst.Expr.BagOp -> compileBagOp(expr, metas)
 
-            is PartiqlAst.Expr.GraphMatch -> TODO("Compilation of GraphMatch expression")
+            // Session Attributes
+            is PartiqlAst.Expr.SessionAttribute -> compileSessionAttribute(expr, metas)
+
+            is PartiqlAst.Expr.GraphMatch -> compileGraphMatch(expr, metas)
             is PartiqlAst.Expr.CallWindow -> TODO("Evaluating Compiler doesn't support window function")
         }
     }
@@ -1187,7 +1240,7 @@ internal class EvaluatingCompiler(
         if (typedOpParameter.staticType is AnyType) {
             return thunkFactory.thunkEnv(metas) { ExprValue.newBoolean(true) }
         }
-        if (compileOptions.typedOpBehavior == TypedOpBehavior.HONOR_PARAMETERS && expr.type is PartiqlAst.Type.FloatType && expr.type.precision != null) {
+        if (compileOptions.typedOpBehavior == TypedOpBehavior.HONOR_PARAMETERS && expr.type is PartiqlAst.Type.FloatType && (expr.type as PartiqlAst.Type.FloatType).precision != null) {
             err(
                 "FLOAT precision parameter is unsupported",
                 ErrorCode.SEMANTIC_FLOAT_PRECISION_UNSUPPORTED,
@@ -1419,9 +1472,9 @@ internal class EvaluatingCompiler(
     private fun compileSimpleCase(expr: PartiqlAst.Expr.SimpleCase, metas: MetaContainer): ThunkEnv {
         val valueThunk = compileAstExpr(expr.expr)
         val branchThunks = expr.cases.pairs.map { Pair(compileAstExpr(it.first), compileAstExpr(it.second)) }
-        val elseThunk = when (expr.default) {
+        val elseThunk = when (val default = expr.default) {
             null -> thunkFactory.thunkEnv(metas) { ExprValue.nullValue }
-            else -> compileAstExpr(expr.default)
+            else -> compileAstExpr(default)
         }
 
         return thunkFactory.thunkEnv(metas) thunk@{ env ->
@@ -1451,9 +1504,9 @@ internal class EvaluatingCompiler(
 
     private fun compileSearchedCase(expr: PartiqlAst.Expr.SearchedCase, metas: MetaContainer): ThunkEnv {
         val branchThunks = expr.cases.pairs.map { compileAstExpr(it.first) to compileAstExpr(it.second) }
-        val elseThunk = when (expr.default) {
+        val elseThunk = when (val default = expr.default) {
             null -> thunkFactory.thunkEnv(metas) { ExprValue.nullValue }
-            else -> compileAstExpr(expr.default)
+            else -> compileAstExpr(default)
         }
 
         return when (compileOptions.typingMode) {
@@ -1525,6 +1578,39 @@ internal class EvaluatingCompiler(
         }
     }
 
+    /**
+     * Compiles a Session Attribute. Currently supports CURRENT_USER.
+     */
+    private fun compileSessionAttribute(attr: PartiqlAst.Expr.SessionAttribute, metas: MetaContainer): ThunkEnv {
+        return when (attr.value.text.toLowerCase()) {
+            "current_user" -> compileCurrentUser(metas)
+            else -> err(
+                message = "${attr.value.text} is not a valid session attribute.",
+                errorCode = ErrorCode.EVALUATOR_UNEXPECTED_VALUE,
+                errorContext = errorContextFrom(metas),
+                internal = false
+            )
+        }
+    }
+
+    /**
+     * Looks up CURRENT_USER within Session's Context
+     */
+    private fun compileCurrentUser(metas: MetaContainer): ThunkEnv {
+        return thunkFactory.thunkEnv(metas) { env ->
+            when (val user = env.session.context[EvaluationSession.Constants.CURRENT_USER_KEY]) {
+                null -> ExprValue.newNull(IonType.STRING)
+                is String -> ExprValue.newString(user)
+                else -> err(
+                    message = "CURRENT_USER must be either a STRING or NULL.",
+                    errorCode = ErrorCode.EVALUATOR_UNEXPECTED_VALUE,
+                    errorContext = errorContextFrom(metas),
+                    internal = false
+                )
+            }
+        }
+    }
+
     private fun compileSeq(seqType: ExprValueType, itemExprs: List<PartiqlAst.Expr>, metas: MetaContainer): ThunkEnv {
         require(seqType.isSequence) { "seqType must be a sequence!" }
 
@@ -1566,6 +1652,77 @@ internal class EvaluatingCompiler(
             ExprValue.newBag(result)
         }
     }
+
+    private fun compileGraphMatch(node: PartiqlAst.Expr.GraphMatch, metas: MetaContainer): ThunkEnv {
+        val graphExpr = compileAstExpr(node.expr)
+        val pattern = GpmlTranslator.translateGpmlPattern(node.gpmlPattern)
+        val nonGraphOutcome =
+            when (compileOptions.typingMode) {
+                TypingMode.LEGACY -> { g: ExprValue ->
+                    err(
+                        message = "Lhs of MATCH must be a graph, but got: $g.",
+                        errorCode = ErrorCode.EVALUATOR_UNEXPECTED_VALUE_TYPE,
+                        errorContext = errorContextFrom(metas),
+                        internal = false
+                    )
+                }
+                TypingMode.PERMISSIVE -> { _ -> ExprValue.missingValue }
+            }
+        return thunkFactory.thunkEnv(metas) { env ->
+            val g = graphExpr(env)
+            when (g.type) {
+                ExprValueType.GRAPH -> {
+                    val graph = g.graphValue
+                    val matchResult = GraphEngine.evaluate(graph, pattern)
+                    ExprValue.newBag(matchResult2Table(matchResult))
+                }
+                else -> nonGraphOutcome(g)
+            }
+        }
+    }
+
+    /** Given the result of a graph pattern match, read off payloads at bound pattern variables
+     *  for further consumption in PartiQL, as a table, i.e. a collection of PartiQL structs.
+     */
+    private fun matchResult2Table(result: org.partiql.lang.graph.MatchResult): Sequence<ExprValue> =
+        result.result.asSequence().map { map2struct(strides2map(result.specs, it)) }
+
+    /** Given a single match result, produces a map that associates each binder variable
+     * with its matched graph element.
+     */
+    private fun strides2map(specs: List<StrideSpec>, strides: List<Stride>): Map<String, Graph.Elem> {
+        check(specs.size == strides.size)
+        val elemSpecs = specs.flatMap { it.elems }
+        val elems = strides.flatMap { it.elems }
+        check(elemSpecs.size == elems.size)
+        val m = mutableMapOf<String, Graph.Elem>()
+        for ((s, e) in elemSpecs zip elems) {
+            check((s is NodeSpec && e is Graph.Node) || (s is EdgeSpec && e is Graph.Edge))
+            // Populate the map for each binder variable in the spec:
+            if (s.binder != null) {
+                val v = s.binder!!
+                if (m.containsKey(v)) {
+                    val d = m[v]!!
+                    // This should not happen if the joins were done properly:
+                    // a multiply-occurring variable should bind to the same element at each occurrence.
+                    // (Note: only singleton variables are currently supported; no group variables yet.)
+                    if (d != e) error(
+                        """Bug: For variable $v in a strides match, encountered a binding to $e[${e.payload}],
+                            | but $v's previous occurrence was bound to $d[${d.payload}] """.trimMargin()
+                    )
+                } else {
+                    m.put(v, e)
+                }
+            }
+        }
+        return m.toMap()
+    }
+
+    private fun map2struct(m: Map<String, Graph.Elem>): ExprValue =
+        ExprValue.newStruct(
+            m.entries.map { it.value.payload.namedValue(ExprValue.newSymbol(it.key)) },
+            StructOrdering.UNORDERED
+        )
 
     private fun evalLimit(limitThunk: ThunkEnv, env: Environment, limitLocationMeta: SourceLocationMeta?): Long {
         val limitExprValue = limitThunk(env)
@@ -1665,7 +1822,7 @@ internal class EvaluatingCompiler(
         }
 
         val allFromSourceAliases = fold.walkFromSource(selectExpr.from, emptySet())
-            .union(selectExpr.fromLet?.let { fold.walkLet(selectExpr.fromLet, emptySet()) } ?: emptySet())
+            .union(selectExpr.fromLet?.let { fold.walkLet(it, emptySet()) } ?: emptySet())
 
         return nestCompilationContext(ExpressionContext.NORMAL, emptySet()) {
             val fromSourceThunks = compileFromSources(selectExpr.from)
@@ -1673,7 +1830,7 @@ internal class EvaluatingCompiler(
             val compiledWhere = selectExpr.where?.let { compileAstExpr(it) }
             val sourceThunks = compileFromLetWhere(fromSourceThunks, letSourceThunks, compiledWhere)
 
-            val orderByThunk = selectExpr.order?.let { compileOrderByExpression(selectExpr.order.sortSpecs) }
+            val orderByThunk = selectExpr.order?.let { compileOrderByExpression(it.sortSpecs) }
             val orderByLocationMeta = selectExpr.order?.metas?.sourceLocation
 
             val offsetThunk = selectExpr.offset?.let { compileAstExpr(it) }
@@ -2208,7 +2365,7 @@ internal class EvaluatingCompiler(
         val key = funcName.toLowerCase() to setQuantifier
 
         return builtinAggregates[key] ?: err(
-            "No such function: $funcName",
+            "No such built-in aggregate function: $funcName",
             ErrorCode.EVALUATOR_NO_SUCH_FUNCTION,
             errorContextFrom(metas).also { it[Property.FUNCTION_NAME] = funcName },
             internal = false

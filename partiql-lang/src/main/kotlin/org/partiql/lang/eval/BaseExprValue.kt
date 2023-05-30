@@ -14,6 +14,8 @@
 
 package org.partiql.lang.eval
 
+import org.partiql.lang.graph.Graph
+import org.partiql.lang.graph.SimpleGraph
 import org.partiql.lang.util.downcast
 
 /**
@@ -30,6 +32,9 @@ abstract class BaseExprValue : ExprValue {
         get() = OrdinalBindings.EMPTY
 
     override fun iterator(): Iterator<ExprValue> = emptyList<ExprValue>().iterator()
+
+    override val graphValue: Graph
+        get() = SimpleGraph.empty
 
     final override fun <T : Any?> asFacet(type: Class<T>?): T? =
         downcast(type) ?: provideFacet(type)

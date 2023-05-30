@@ -37,7 +37,7 @@ import org.partiql.lang.eval.time.NANOS_PER_SECOND
 import org.partiql.lang.eval.time.Time
 import org.partiql.lang.eval.timestampValue
 import org.partiql.lang.eval.unnamedValue
-import org.partiql.lang.syntax.DateTimePart
+import org.partiql.lang.syntax.impl.DateTimePart
 import org.partiql.lang.types.FunctionSignature
 import org.partiql.lang.types.UnknownArguments
 import org.partiql.lang.util.propertyValueMapOf
@@ -66,7 +66,8 @@ internal val SCALAR_BUILTINS_EXT = listOf(
     ExprFunctionSize,
     ExprFunctionFromUnix,
     ExprFunctionUnixTimestamp,
-    ExprFunctionToString
+    ExprFunctionToString,
+    ExprFunctionTextReplace,
 )
 
 /**
@@ -495,5 +496,22 @@ internal object ExprFunctionToString : ExprFunction {
             cause,
             internal = false
         )
+    }
+}
+
+/** text_replace(string, from, to) -- in [string], replaces each occurrence of [from] with [to].
+ */
+internal object ExprFunctionTextReplace : ExprFunction {
+    override val signature = FunctionSignature(
+        name = "text_replace",
+        requiredParameters = listOf(StaticType.TEXT, StaticType.TEXT, StaticType.TEXT),
+        returnType = StaticType.TEXT,
+    )
+
+    override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
+        val string = required[0].stringValue()
+        val from = required[1].stringValue()
+        val to = required[2].stringValue()
+        return ExprValue.newString(string.replace(from, to))
     }
 }

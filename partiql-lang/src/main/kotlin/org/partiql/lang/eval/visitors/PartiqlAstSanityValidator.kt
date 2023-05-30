@@ -44,11 +44,11 @@ import org.partiql.pig.runtime.LongPrimitive
  * - A visitor transform pass (internal or external)
  *
  */
-internal class PartiqlAstSanityValidator : PartiqlAst.Visitor() {
+class PartiqlAstSanityValidator : PartiqlAst.Visitor() {
 
     private var compileOptions = CompileOptions.standard()
 
-    internal fun validate(statement: PartiqlAst.Statement, compileOptions: CompileOptions = CompileOptions.standard()) {
+    fun validate(statement: PartiqlAst.Statement, compileOptions: CompileOptions = CompileOptions.standard()) {
         this.compileOptions = compileOptions
         this.walkStatement(statement)
     }
@@ -68,6 +68,14 @@ internal class PartiqlAstSanityValidator : PartiqlAst.Visitor() {
 
     private fun validateDecimalOrNumericType(scale: LongPrimitive?, precision: LongPrimitive?, metas: MetaContainer) {
         if (scale != null && precision != null && compileOptions.typedOpBehavior == TypedOpBehavior.HONOR_PARAMETERS) {
+            if (precision.value <= 0L) {
+                err(
+                    "Precision ${precision.value} should be a positive integer",
+                    errorCode = ErrorCode.SEMANTIC_INVALID_DECIMAL_ARGUMENTS,
+                    errorContext = errorContextFrom(metas),
+                    internal = false
+                )
+            }
             if (scale.value !in 0..precision.value) {
                 err(
                     "Scale ${scale.value} should be between 0 and precision ${precision.value}",
@@ -146,9 +154,9 @@ internal class PartiqlAstSanityValidator : PartiqlAst.Visitor() {
 
     override fun visitExprStruct(node: PartiqlAst.Expr.Struct) {
         node.fields.forEach { field ->
-            if (field.first is PartiqlAst.Expr.Missing || (field.first is PartiqlAst.Expr.Lit && field.first.value !is TextElement)) {
-                val type = when (field.first) {
-                    is PartiqlAst.Expr.Lit -> field.first.value.type.toString()
+            if (field.first is PartiqlAst.Expr.Missing || (field.first is PartiqlAst.Expr.Lit && (field.first as PartiqlAst.Expr.Lit).value !is TextElement)) {
+                val type = when (val first = field.first) {
+                    is PartiqlAst.Expr.Lit -> first.value.type.toString()
                     else -> "MISSING"
                 }
                 throw SemanticException(

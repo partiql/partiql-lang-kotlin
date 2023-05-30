@@ -14,24 +14,38 @@
  */
 
 plugins {
-    id(Plugins.antlr)
     id(Plugins.conventions)
     id(Plugins.jmh) version Versions.jmh
     id(Plugins.library)
-    id(Plugins.pig)
     id(Plugins.publish)
 }
 
+val libs: Configuration by configurations.creating
+
+configurations {
+    api.get().extendsFrom(libs)
+}
+
+// Disabled for partiql-lang project.
+kotlin {
+    explicitApi = null
+}
+
 dependencies {
-    antlr(Deps.antlr)
     api(project(":lib:isl"))
-    implementation(project(":partiql-types"))
+    api(project(":partiql-ast"))
+    api(project(":partiql-spi"))
+    api(project(":partiql-types"))
     api(Deps.ionElement)
     api(Deps.ionJava)
-    api(Deps.pigRuntime)
+    // libs are included in partiql-lang-kotlin JAR, but are not published independently yet.
+    libs(project(":partiql-parser"))
+    libs(project(":partiql-plan"))
     implementation(Deps.antlrRuntime)
     implementation(Deps.csv)
     implementation(Deps.kotlinReflect)
+
+    testImplementation(project(":plugins:partiql-mockdb"))
     testImplementation(Deps.assertj)
     testImplementation(Deps.junit4)
     testImplementation(Deps.junit4Params)
@@ -45,18 +59,6 @@ publish {
     description = "An implementation of PartiQL for the JVM written in Kotlin."
 }
 
-pig {
-    namespace = "org.partiql.lang.domains"
-}
-
-tasks.generateGrammarSource {
-    val antlrPackage = "org.partiql.lang.syntax.antlr"
-    val antlrSources = "$buildDir/generated-src/${antlrPackage.replace('.', '/')}"
-    maxHeapSize = "64m"
-    arguments = listOf("-visitor", "-long-messages", "-package", antlrPackage)
-    outputDirectory = File(antlrSources)
-}
-
 jmh {
     resultFormat = properties["resultFormat"] as String? ?: "json"
     resultsFile = project.file(properties["resultsFile"] as String? ?: "$buildDir/reports/jmh/results.json")
@@ -66,28 +68,23 @@ jmh {
     properties["fork"]?.let { it -> fork = Integer.parseInt(it as String) }
 }
 
-tasks.javadoc {
-    exclude("**/antlr/**")
-}
-
-tasks.compileKotlin {
-    dependsOn(tasks.generateGrammarSource)
-}
-
-tasks.findByName("sourcesJar")?.apply {
-    dependsOn(tasks.generateGrammarSource)
-}
-
-tasks.dokkaHtml.configure {
-    dependsOn(tasks.withType(org.partiql.pig.gradle.PigTask::class))
-}
-
 tasks.processResources {
-    from("src/main/antlr") {
+    // include .g4 in partiql-lang-kotlin JAR for backwards compatibility
+    from("$rootDir/partiql-parser/src/main/antlr") {
         include("**/*.g4")
     }
-    from("src/main/pig") {
+    // include partiql.ion in partiql-lang-kotlin JAR for backwards compatibility
+    from("$rootDir/partiql-ast/src/main/pig") {
         include("partiql.ion")
-        into("org/partiql/type-domains/")
     }
+}
+
+tasks.jar {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    // adds all `libs(project(...))` to the partiql-lang-kotlin jar
+    from(
+        libs.dependencies.filterIsInstance<ProjectDependency>().map {
+            it.dependencyProject.sourceSets.main.get().output.classesDirs
+        }
+    )
 }

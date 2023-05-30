@@ -48,7 +48,7 @@ internal class OrderBySortSpecVisitorTransform : VisitorTransformBase() {
      */
     override fun transformProjectItemProjectExpr_asAlias(node: PartiqlAst.ProjectItem.ProjectExpr): SymbolPrimitive? {
         val transformedAlias = super.transformProjectItemProjectExpr_asAlias(node)
-        if (node.asAlias != null) { projectionAliases[node.asAlias.text] = node.expr }
+        if (node.asAlias != null) { projectionAliases[node.asAlias!!.text] = node.expr }
         return transformedAlias
     }
 

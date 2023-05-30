@@ -19,7 +19,6 @@ import org.partiql.examples.PreventJoinVisitorExample
 import org.partiql.examples.S3JavaExample
 import org.partiql.examples.SimpleExpressionEvaluation
 import java.io.PrintStream
-import java.lang.RuntimeException
 
 private val examples = mapOf(
     // Java Examples

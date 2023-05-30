@@ -53,6 +53,10 @@ class EvaluationSession private constructor(
         fun standard() = builder().build()
     }
 
+    public object Constants {
+        public const val CURRENT_USER_KEY = "CURRENT_USER"
+    }
+
     class Builder {
         private fun Timestamp.toUtc() = this.withLocalOffset(0)!!
 
@@ -72,6 +76,12 @@ class EvaluationSession private constructor(
         private var parameters: List<ExprValue> = listOf()
         fun parameters(value: List<ExprValue>): Builder {
             parameters = value
+            return this
+        }
+
+        private var user: String? = null
+        fun user(value: String): Builder {
+            contextVariables[Constants.CURRENT_USER_KEY] = value
             return this
         }
 

@@ -1,6 +1,5 @@
 package org.partiql.lang.planner.transforms
 
-import com.amazon.ion.system.IonSystemBuilder
 import com.amazon.ionelement.api.ionBool
 import com.amazon.ionelement.api.ionInt
 import com.amazon.ionelement.api.ionString
@@ -20,9 +19,10 @@ import org.partiql.lang.errors.Problem
 import org.partiql.lang.errors.ProblemCollector
 import org.partiql.lang.errors.ProblemHandler
 import org.partiql.lang.errors.ProblemSeverity
+import org.partiql.lang.eval.builtins.ExprFunctionCurrentUser
 import org.partiql.lang.planner.PlanningProblemDetails
 import org.partiql.lang.planner.unimplementedProblem
-import org.partiql.lang.syntax.PartiQLParser
+import org.partiql.lang.syntax.PartiQLParserBuilder
 import org.partiql.lang.util.ArgumentsProviderBase
 
 /**
@@ -30,8 +30,7 @@ import org.partiql.lang.util.ArgumentsProviderBase
  * heavily exercised during many other integration tests.  These should be considered "smoke tests".
  */
 class AstToLogicalVisitorTransformTests {
-    private val ion = IonSystemBuilder.standard().build()
-    internal val parser = PartiQLParser(ion)
+    internal val parser = PartiQLParserBuilder.standard().build()
 
     private fun parseAndTransform(sql: String, problemHandler: ProblemHandler): PartiqlLogical.Statement {
         val parseAstStatement = parser.parseAstStatement(sql)
@@ -274,6 +273,35 @@ class AstToLogicalVisitorTransformTests {
         }
 
         override fun getParameters() = listOf(
+            TestCase(
+                "CURRENT_USER",
+                PartiqlLogical.build {
+                    query(
+                        call(
+                            ExprFunctionCurrentUser.FUNCTION_NAME,
+                            emptyList()
+                        )
+                    )
+                }
+            ),
+            TestCase(
+                "CURRENT_USER || 'hello'",
+                PartiqlLogical.build {
+                    query(
+                        concat(
+                            listOf(
+                                call(
+                                    ExprFunctionCurrentUser.FUNCTION_NAME,
+                                    emptyList()
+                                ),
+                                lit(
+                                    ionString("hello")
+                                )
+                            )
+                        )
+                    )
+                }
+            ),
             TestCase(
                 // Note:
                 // `SELECT * FROM bar AS b` is rewritten to `SELECT b.* FROM bar as b` by [SelectStarVisitorTransform].
@@ -705,7 +733,7 @@ class AstToLogicalVisitorTransformTests {
                 PartiqlLogical.build {
                     dml(
                         identifier("foo", caseInsensitive()),
-                        dmlInsert(),
+                        dmlInsert(varDecl("foo")),
                         bag(lit(ionInt(1)))
                     )
                 }
@@ -716,7 +744,7 @@ class AstToLogicalVisitorTransformTests {
                 PartiqlLogical.build {
                     dml(
                         identifier("foo", caseInsensitive()),
-                        dmlInsert(),
+                        dmlInsert(varDecl("foo")),
                         bindingsToValues(
                             struct(structFields(id("x", caseInsensitive(), unqualified()))),
                             scan(lit(ionInt(1)), varDecl("x"))
@@ -729,7 +757,31 @@ class AstToLogicalVisitorTransformTests {
                 PartiqlLogical.build {
                     dml(
                         identifier("foo", caseInsensitive()),
-                        dmlReplace(),
+                        dmlReplace(varDecl("foo")),
+                        bindingsToValues(
+                            struct(structFields(id("x", caseInsensitive(), unqualified()))),
+                            scan(lit(ionInt(1)), varDecl("x"))
+                        )
+                    )
+                }
+            ),
+            TestCase(
+                "INSERT INTO foo SELECT x.* FROM 1 AS x ON CONFLICT DO REPLACE EXCLUDED WHERE foo.id > 2",
+                PartiqlLogical.build {
+                    dml(
+                        identifier("foo", caseInsensitive()),
+                        dmlReplace(
+                            targetAlias = varDecl("foo"),
+                            condition = gt(
+                                listOf(
+                                    path(
+                                        id("foo", caseInsensitive(), unqualified()),
+                                        listOf(pathExpr(lit(ionString("id")), caseInsensitive()))
+                                    ),
+                                    lit(ionInt(2))
+                                )
+                            )
+                        ),
                         bindingsToValues(
                             struct(structFields(id("x", caseInsensitive(), unqualified()))),
                             scan(lit(ionInt(1)), varDecl("x"))
@@ -742,8 +794,36 @@ class AstToLogicalVisitorTransformTests {
                 PartiqlLogical.build {
                     PartiqlLogical.build {
                         dml(
-                            identifier("f", caseInsensitive()),
-                            dmlReplace(),
+                            identifier("foo", caseInsensitive()),
+                            dmlReplace(varDecl("f")),
+                            bag(
+                                struct(
+                                    structField(lit(ionString("id")), lit(ionInt(1))),
+                                    structField(lit(ionString("name")), lit(ionString("bob")))
+                                )
+                            )
+                        )
+                    }
+                }
+            ),
+            TestCase(
+                "INSERT INTO foo AS f <<{'id': 1, 'name':'bob'}>> ON CONFLICT DO REPLACE EXCLUDED WHERE f.id > 2",
+                PartiqlLogical.build {
+                    PartiqlLogical.build {
+                        dml(
+                            identifier("foo", caseInsensitive()),
+                            dmlReplace(
+                                varDecl("f"),
+                                condition = gt(
+                                    listOf(
+                                        path(
+                                            id("f", caseInsensitive(), unqualified()),
+                                            listOf(pathExpr(lit(ionString("id")), caseInsensitive()))
+                                        ),
+                                        lit(ionInt(2))
+                                    )
+                                )
+                            ),
                             bag(
                                 struct(
                                     structField(lit(ionString("id")), lit(ionInt(1))),
@@ -759,7 +839,7 @@ class AstToLogicalVisitorTransformTests {
                 PartiqlLogical.build {
                     dml(
                         identifier("foo", caseInsensitive()),
-                        dmlUpdate(),
+                        dmlUpdate(varDecl("foo")),
                         bindingsToValues(
                             struct(structFields(id("x", caseInsensitive(), unqualified()))),
                             scan(lit(ionInt(1)), varDecl("x"))
@@ -772,8 +852,36 @@ class AstToLogicalVisitorTransformTests {
                 PartiqlLogical.build {
                     PartiqlLogical.build {
                         dml(
-                            identifier("f", caseInsensitive()),
-                            dmlUpdate(),
+                            identifier("foo", caseInsensitive()),
+                            dmlUpdate(varDecl("f")),
+                            bag(
+                                struct(
+                                    structField(lit(ionString("id")), lit(ionInt(1))),
+                                    structField(lit(ionString("name")), lit(ionString("bob")))
+                                )
+                            )
+                        )
+                    }
+                }
+            ),
+            TestCase(
+                "INSERT INTO foo AS f <<{'id': 1, 'name':'bob'}>> ON CONFLICT DO UPDATE EXCLUDED WHERE f.id > 2",
+                PartiqlLogical.build {
+                    PartiqlLogical.build {
+                        dml(
+                            identifier("foo", caseInsensitive()),
+                            dmlUpdate(
+                                varDecl("f"),
+                                condition = gt(
+                                    listOf(
+                                        path(
+                                            id("f", caseInsensitive(), unqualified()),
+                                            listOf(pathExpr(lit(ionString("id")), caseInsensitive()))
+                                        ),
+                                        lit(ionInt(2))
+                                    )
+                                )
+                            ),
                             bag(
                                 struct(
                                     structField(lit(ionString("id")), lit(ionInt(1))),
@@ -789,8 +897,8 @@ class AstToLogicalVisitorTransformTests {
                 PartiqlLogical.build {
                     PartiqlLogical.build {
                         dml(
-                            identifier("f", caseInsensitive()),
-                            dmlReplace(),
+                            identifier("foo", caseInsensitive()),
+                            dmlReplace(varDecl("f")),
                             bag(
                                 struct(
                                     structField(lit(ionString("id")), lit(ionInt(1))),
@@ -806,8 +914,8 @@ class AstToLogicalVisitorTransformTests {
                 PartiqlLogical.build {
                     PartiqlLogical.build {
                         dml(
-                            identifier("f", caseInsensitive()),
-                            dmlUpdate(),
+                            identifier("foo", caseInsensitive()),
+                            dmlUpdate(varDecl("f")),
                             bindingsToValues(
                                 struct(structFields(id("x", caseInsensitive(), unqualified()))),
                                 scan(lit(ionInt(1)), varDecl("x"))

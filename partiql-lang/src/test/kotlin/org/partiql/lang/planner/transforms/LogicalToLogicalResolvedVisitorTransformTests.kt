@@ -1,6 +1,5 @@
 package org.partiql.lang.planner.transforms
 
-import com.amazon.ion.system.IonSystemBuilder
 import com.amazon.ionelement.api.ionSymbol
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.assertDoesNotThrow
@@ -17,7 +16,7 @@ import org.partiql.lang.eval.sourceLocationMeta
 import org.partiql.lang.planner.PlanningProblemDetails
 import org.partiql.lang.planner.createFakeGlobalsResolver
 import org.partiql.lang.planner.problem
-import org.partiql.lang.syntax.PartiQLParser
+import org.partiql.lang.syntax.PartiQLParserBuilder
 import org.partiql.lang.util.ArgumentsProviderBase
 import org.partiql.lang.util.toIntExact
 
@@ -106,8 +105,7 @@ class LogicalToLogicalResolvedVisitorTransformTests {
         }.toTypedArray()
     )
 
-    private val ion = IonSystemBuilder.standard().build()
-    private val parser = PartiQLParser(ion)
+    private val parser = PartiQLParserBuilder.standard().build()
 
     private fun runTestCase(tc: TestCase) {
         val problemHandler = ProblemCollector()
@@ -861,6 +859,62 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                     localVariable("\$__partiql_window_function_0", 1),
                     localVariable("\$__partiql_window_function_1", 2)
                 )
+            ),
+        )
+    }
+
+    @ParameterizedTest
+    @ArgumentsSource(DmlStatements::class)
+    fun `dml statements`(tc: TestCase) = runTestCase(tc)
+    class DmlStatements : ArgumentsProviderBase() {
+        override fun getParameters() = listOf(
+            TestCase(
+                "INSERT INTO foo << {'a': 1} >> ON CONFLICT DO REPLACE EXCLUDED WHERE foo.id > 2",
+                Expectation.Success(
+                    ResolvedId(1, 70) { localId(0) },
+                ).withLocals(localVariable("foo", 0))
+            ),
+            TestCase(
+                "INSERT INTO foo AS f << {'a': 1} >> ON CONFLICT DO REPLACE EXCLUDED WHERE f.id > 2",
+                Expectation.Success(
+                    ResolvedId(1, 75) { localId(0) },
+                ).withLocals(localVariable("f", 0))
+            ),
+            TestCase(
+                "INSERT INTO foo AS f << {'a': 1} >> ON CONFLICT DO REPLACE EXCLUDED WHERE foo.id > 2",
+                Expectation.Success(
+                    ResolvedId(1, 75) { globalId("fake_uid_for_foo") },
+                ).withLocals(localVariable("f", 0))
+            ),
+            TestCase(
+                "INSERT INTO foo << {'a': 1} >> ON CONFLICT DO REPLACE EXCLUDED WHERE f.id > 2",
+                Expectation.Problems(
+                    problem(1, 70, PlanningProblemDetails.UndefinedVariable("f", false))
+                )
+            ),
+            TestCase(
+                "INSERT INTO foo << {'a': 1} >> ON CONFLICT DO UPDATE EXCLUDED WHERE foo.id > 2",
+                Expectation.Success(
+                    ResolvedId(1, 69) { localId(0) },
+                ).withLocals(localVariable("foo", 0))
+            ),
+            TestCase(
+                "INSERT INTO foo AS f << {'a': 1} >> ON CONFLICT DO UPDATE EXCLUDED WHERE f.id > 2",
+                Expectation.Success(
+                    ResolvedId(1, 74) { localId(0) },
+                ).withLocals(localVariable("f", 0))
+            ),
+            TestCase(
+                "INSERT INTO foo << {'a': 1} >> ON CONFLICT DO UPDATE EXCLUDED WHERE f.id > 2",
+                Expectation.Problems(
+                    problem(1, 69, PlanningProblemDetails.UndefinedVariable("f", false))
+                )
+            ),
+            TestCase(
+                "INSERT INTO foo AS f << {'a': 1} >> ON CONFLICT DO UPDATE EXCLUDED WHERE foo.id > 2",
+                Expectation.Success(
+                    ResolvedId(1, 74) { globalId("fake_uid_for_foo") },
+                ).withLocals(localVariable("f", 0))
             ),
         )
     }

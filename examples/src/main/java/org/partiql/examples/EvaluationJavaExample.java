@@ -14,8 +14,6 @@
 
 package org.partiql.examples;
 
-import com.amazon.ion.IonSystem;
-import com.amazon.ion.system.IonSystemBuilder;
 import kotlin.Unit;
 import org.jetbrains.annotations.NotNull;
 import org.partiql.examples.util.Example;

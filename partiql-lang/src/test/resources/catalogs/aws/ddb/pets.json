@@ -1,0 +1,16 @@
+{
+  "name": "pets",
+  "type": "TABLE",
+  "attributes": [
+    {
+      "name": "id",
+      "type": "INT",
+      "attributes": []
+    },
+    {
+      "name": "breed",
+      "type": "STRING",
+      "attributes": []
+    }
+  ]
+}

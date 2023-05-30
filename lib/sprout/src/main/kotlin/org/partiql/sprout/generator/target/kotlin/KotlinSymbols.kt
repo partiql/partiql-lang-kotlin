@@ -102,7 +102,15 @@ class KotlinSymbols private constructor(
         ref.path.joinToString("_").toPascalCase()
     }
 
-    fun def(ref: TypeRef.Path): TypeDef = defs[ref.id] ?: error("no definition found for type `$ref`")
+    // fun def(ref: TypeRef.Path): TypeDef = defs[ref.id] ?: error("no definition found for type `$ref`")
+    fun def(ref: TypeRef.Path): TypeDef {
+        val def = defs[ref.id]
+        if (def == null) {
+            error("no definition found for type `$ref`")
+        } else {
+            return def
+        }
+    }
 
     /**
      * Computes a type name for the given [TypeRef]
@@ -181,6 +189,8 @@ class KotlinSymbols private constructor(
     private fun import(symbol: String): ClassName {
         if (!universe.imports.containsKey("kotlin")) {
             error("Missing `kotlin` target from imports")
+        } else if (!universe.imports["kotlin"]!!.containsKey(symbol)) {
+            error("Missing `kotlin` target for `$symbol` in imports")
         }
         val path = universe.imports["kotlin"]!![symbol]!!
         val i = path.lastIndexOf(".")
