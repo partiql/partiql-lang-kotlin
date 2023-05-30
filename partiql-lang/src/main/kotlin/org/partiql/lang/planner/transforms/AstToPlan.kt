@@ -13,6 +13,7 @@ import org.partiql.lang.eval.visitors.SelectStarVisitorTransform
 import org.partiql.lang.planner.transforms.plan.RelConverter
 import org.partiql.lang.planner.transforms.plan.RexConverter
 import org.partiql.plan.PartiQLPlan
+import org.partiql.plan.Plan
 import org.partiql.plan.Rex
 
 /**
@@ -29,7 +30,7 @@ object AstToPlan {
             unsupported(ast)
         }
         val root = transform(ast.expr)
-        return PartiQLPlan(
+        return Plan.partiQLPlan(
             version = PartiQLPlan.Version.PARTIQL_V0,
             root = root,
         )

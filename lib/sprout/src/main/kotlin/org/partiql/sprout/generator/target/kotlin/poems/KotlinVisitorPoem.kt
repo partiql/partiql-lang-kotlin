@@ -81,7 +81,7 @@ class KotlinVisitorPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
     override fun apply(node: KotlinNodeSpec.Product) {
         val kids = node.kids()
         if (kids != null) {
-            node.builder.addProperty(
+            node.impl.addProperty(
                 children.toBuilder()
                     .addModifiers(KModifier.OVERRIDE)
                     .delegate(
@@ -94,7 +94,7 @@ class KotlinVisitorPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
                     .build()
             )
         }
-        node.builder.addFunction(
+        node.impl.addFunction(
             accept.toBuilder()
                 .addModifiers(KModifier.OVERRIDE)
                 .addStatement("return visitor.%L(this, ctx)", node.product.ref.visitMethodName())

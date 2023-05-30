@@ -26,9 +26,8 @@ import org.partiql.sprout.model.TypeDef
  * Wraps a [TypeDef] with KotlinPoet builders
  *
  * @property def            TypeDef
- * @property clazz          Type ClassName
- * @property builder        Type builder
- * @property constructor    Implementation constructor
+ * @property clazz          Interface ClassName
+ * @property builder        Interface builder
  * @property companion      A place for static methods on nodes
  * @property nodes          Node types defined within this node
  */
@@ -36,7 +35,6 @@ sealed class KotlinNodeSpec(
     val def: TypeDef,
     val clazz: ClassName,
     val builder: TypeSpec.Builder,
-    val constructor: FunSpec.Builder,
     val companion: TypeSpec.Builder,
     val ext: MutableList<TypeSpec> = mutableListOf(),
 ) {
@@ -52,10 +50,9 @@ sealed class KotlinNodeSpec(
     abstract val children: List<KotlinNodeSpec>
 
     /**
-     * Returns the built Pair<Base, Impl>
+     * Returns the built interface
      */
     open fun build(): TypeSpec = with(builder) {
-        primaryConstructor(constructor.build())
         ext.forEach { addType(it) }
         children.forEach { addType(it.build()) }
         if (companion.propertySpecs.isNotEmpty() || companion.funSpecs.isNotEmpty()) {
@@ -65,27 +62,38 @@ sealed class KotlinNodeSpec(
     }
 
     /**
-     * Wraps a [TypeDef.Product] with codegen builders
+     * Wraps a [TypeDef.Product] with codegen builders.
+     *
+     * - Builder represents the Interface
+     * - Impl represents the implementation within `impl`
      */
     class Product(
         val product: TypeDef.Product,
         val props: List<Prop>,
+        val implClazz: ClassName,
+        val impl: TypeSpec.Builder,
         override val nodes: List<KotlinNodeSpec>,
         clazz: ClassName,
         ext: MutableList<TypeSpec> = mutableListOf(),
     ) : KotlinNodeSpec(
         def = product,
         clazz = clazz,
-        builder = TypeSpec.classBuilder(clazz),
-        constructor = FunSpec.constructorBuilder(),
+        builder = TypeSpec.classBuilder(clazz).addModifiers(KModifier.ABSTRACT),
         companion = TypeSpec.companionObjectBuilder(),
         ext = ext,
     ) {
+        val constructor = FunSpec.constructorBuilder()
+
         override val children: List<KotlinNodeSpec> = nodes
+
+        fun buildImpl(): TypeSpec {
+            impl.primaryConstructor(constructor.build())
+            return impl.build()
+        }
     }
 
     /**
-     * Wraps a [TypeDef.Sum] with a codegen builders
+     * Wraps a [TypeDef.Sum] with codegen builders
      */
     class Sum(
         val sum: TypeDef.Sum,
@@ -97,7 +105,6 @@ sealed class KotlinNodeSpec(
         def = sum,
         clazz = clazz,
         builder = TypeSpec.classBuilder(clazz).addModifiers(KModifier.SEALED),
-        constructor = FunSpec.constructorBuilder(),
         companion = TypeSpec.companionObjectBuilder(),
         ext = ext,
     ) {

@@ -38,6 +38,9 @@ class KotlinBuilderPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
         .defaultValue("%T.DEFAULT", factoryClass)
         .build()
 
+    // Assume there's a <DOMAIN>.kt file in the package root containing the default builder
+    private val factoryDefault = ClassName(symbols.rootPackage, symbols.rootId)
+
     // Java style builders, used by the DSL
     private val buildersName = "${symbols.rootId}Builders"
     private val buildersFile = FileSpec.builder(builderPackageName, buildersName)
@@ -123,9 +126,10 @@ class KotlinBuilderPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
         factory.addFunction(
             FunSpec.builder(symbols.camel(node.product.ref))
                 .addModifiers(KModifier.OPEN)
+                .returns(node.clazz)
                 .apply {
                     node.props.forEach { addParameter(it.name, it.type) }
-                    addStatement("return %T(${node.props.joinToString { it.name }})", node.clazz)
+                    addStatement("return %T(${node.props.joinToString { it.name }})", node.implClazz)
                 }
                 .build()
         )
@@ -235,7 +239,7 @@ class KotlinBuilderPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
     private fun factoryCompanion() = TypeSpec.companionObjectBuilder()
         .addProperty(
             PropertySpec.builder("DEFAULT", factoryClass)
-                .initializer("object : %T() {}", factoryClass)
+                .initializer("%T", factoryDefault)
                 .build()
         )
         .addFunction(factoryFunc)
