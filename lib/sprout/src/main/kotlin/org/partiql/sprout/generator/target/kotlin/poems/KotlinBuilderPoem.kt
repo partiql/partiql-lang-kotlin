@@ -32,18 +32,22 @@ class KotlinBuilderPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
 
     // Default unique id provider
     // open val id: () -> Int = run { ... }
-    private val idProviderType = LambdaTypeName.get(returnType = Int::class.asTypeName())
-    private val idProvider = PropertySpec.builder("_id", idProviderType)
-        .addModifiers(KModifier.PRIVATE)
-        .initializer("run { var i = 1; { i++ } }")
-        .build()
+    private val idProviderType = LambdaTypeName.get(returnType = String::class.asTypeName())
+    private val idProvider = PropertySpec.builder("_id", idProviderType).build()
 
     // Abstract factory which can be used by DSL blocks
     private val factoryName = "${symbols.rootId}Factory"
     private val factoryClass = ClassName(builderPackageName, factoryName)
-    private val factory = TypeSpec.classBuilder(factoryClass)
-        .addModifiers(KModifier.ABSTRACT)
+    private val factory = TypeSpec.interfaceBuilder(factoryClass)
         .addProperty(idProvider)
+
+    private val baseFactoryName = "${symbols.rootId}FactoryImpl"
+    private val baseFactoryClass = ClassName(builderPackageName, baseFactoryName)
+    private val baseFactory = TypeSpec.classBuilder(baseFactoryClass)
+        .addSuperinterface(factoryClass)
+        .addModifiers(KModifier.ABSTRACT)
+        .addProperty(idProvider.toBuilder().addModifiers(KModifier.ABSTRACT, KModifier.OVERRIDE).build())
+
     private val factoryParamDefault = ParameterSpec.builder("factory", factoryClass)
         .defaultValue("%T.DEFAULT", factoryClass)
         .build()
@@ -114,9 +118,13 @@ class KotlinBuilderPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
             KotlinPackageSpec(
                 name = builderPackageName,
                 files = mutableListOf(
-                    // Factory
+                    // Factory Interface
                     FileSpec.builder(builderPackageName, factoryName)
                         .addType(factory.addType(factoryCompanion()).build())
+                        .build(),
+                    // Factory Base
+                    FileSpec.builder(builderPackageName, baseFactoryName)
+                        .addType(baseFactory.build())
                         .build(),
                     // Java Builders
                     buildersFile.build(),
@@ -132,15 +140,24 @@ class KotlinBuilderPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
     }
 
     override fun apply(node: KotlinNodeSpec.Product) {
-        // Simple `create` functions
-        factory.addFunction(
-            FunSpec.builder(symbols.camel(node.product.ref))
-                .addModifiers(KModifier.OPEN)
+        val function = FunSpec.builder(symbols.camel(node.product.ref))
+            .apply {
+                node.props.forEach {
+                    addParameter(it.name, it.type)
+                }
+            }
+            .returns(node.clazz)
+            .build()
+        // interface
+        factory.addFunction(function.toBuilder().addModifiers(KModifier.ABSTRACT).build())
+        // impl
+        baseFactory.addFunction(
+            function.toBuilder()
+                .addModifiers(KModifier.OVERRIDE)
                 .returns(node.clazz)
                 .apply {
                     val args = listOf("_id()") + node.props.map {
                         // add as function parameter
-                        addParameter(it.name, it.type)
                         it.name
                     }
                     // Inject identifier `node(id(), props...)`

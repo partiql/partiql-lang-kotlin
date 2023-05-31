@@ -57,12 +57,12 @@ class KotlinSymbols private constructor(
     /**
      * Id Property for interfaces and classes
      */
-    val idProp = PropertySpec.builder("_id", Int::class).addModifiers(KModifier.OVERRIDE).initializer("_id").build()
+    val idProp = PropertySpec.builder("_id", String::class).addModifiers(KModifier.OVERRIDE).initializer("_id").build()
 
     /**
      * Id Parameter for internal constructors
      */
-    val idPara = ParameterSpec.builder("_id", Int::class).addModifiers(KModifier.OVERRIDE).build()
+    val idPara = ParameterSpec.builder("_id", String::class).addModifiers(KModifier.OVERRIDE).build()
 
     /**
      * Memoize converting a TypeRef.Path to a camel case identifier to be used as method/function names

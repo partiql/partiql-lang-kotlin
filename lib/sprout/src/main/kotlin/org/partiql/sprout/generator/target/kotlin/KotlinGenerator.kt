@@ -50,7 +50,7 @@ class KotlinGenerator(private val options: KotlinOptions) : Generator<KotlinResu
         )
         val specs = with(spec) {
             // Add identifiers
-            base.addProperty(PropertySpec.builder("_id", Int::class).addModifiers(KModifier.ABSTRACT).build())
+            base.addProperty(PropertySpec.builder("_id", String::class).addModifiers(KModifier.ABSTRACT).build())
             // Apply each poem
             poems.forEach { it.apply(this) }
             // Finalize each spec/builder
