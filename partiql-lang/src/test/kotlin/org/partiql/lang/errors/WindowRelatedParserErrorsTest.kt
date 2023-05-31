@@ -2,8 +2,8 @@ package org.partiql.lang.errors
 
 import org.junit.Test
 import org.partiql.lang.syntax.PartiQLParserTestBase
-import org.partiql.lang.syntax.antlr.PartiQLParser
 import org.partiql.lang.util.getAntlrDisplayString
+import org.partiql.parser.antlr.PartiQLParser
 
 // TODO: move this to [ParserErrorsTest] once https://github.com/partiql/partiql-docs/issues/31 is resolved and a RFC is approved
 

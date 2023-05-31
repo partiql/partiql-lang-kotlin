@@ -15,7 +15,6 @@ import org.partiql.lang.eval.MISSING_ANNOTATION
 import org.partiql.lang.eval.TIME_ANNOTATION
 import org.partiql.lang.partiqlisl.ResourceAuthority
 import org.partiql.lang.util.ArgumentsProviderBase
-import java.lang.AssertionError
 import java.math.BigInteger
 
 private const val typeName = "SchemaInferencerFromExample"

@@ -28,8 +28,7 @@ import org.partiql.lang.errors.Property
 import org.partiql.lang.errors.PropertyValueMap
 import org.partiql.lang.eval.time.NANOS_PER_SECOND
 import org.partiql.lang.eval.time.Time
-import org.partiql.lang.syntax.DATE_TIME_PART_KEYWORDS
-import org.partiql.lang.syntax.DateTimePart
+import org.partiql.lang.syntax.impl.DateTimePart
 import org.partiql.lang.types.StaticTypeUtils.getRuntimeType
 import org.partiql.lang.util.ConfigurableExprValueFormatter
 import org.partiql.lang.util.bigDecimalOf
@@ -74,6 +73,7 @@ const val MISSING_ANNOTATION = "\$missing"
 const val BAG_ANNOTATION = "\$bag"
 const val DATE_ANNOTATION = "\$date"
 const val TIME_ANNOTATION = "\$time"
+const val GRAPH_ANNOTATION = "\$graph"
 
 /**
  * Wraps the given [ExprValue] with a delegate that provides the [OrderedBindNames] facet.
@@ -150,7 +150,7 @@ internal fun ExprValue.dateTimePartValue(): DateTimePart =
     } catch (e: IllegalArgumentException) {
         throw EvaluationException(
             cause = e,
-            message = "invalid datetime part, valid values: [${DATE_TIME_PART_KEYWORDS.joinToString()}]",
+            message = "invalid datetime part, valid values: [${DateTimePart.values().joinToString()}]",
             errorCode = ErrorCode.EVALUATOR_INVALID_ARGUMENTS_FOR_DATE_PART,
             internal = false
         )
@@ -779,6 +779,7 @@ fun ExprValue.toIonValue(ion: IonSystem): IonValue =
                 it.toIonValue(ion).clone()
         }
         ExprValueType.STRUCT -> toIonStruct(ion)
+        ExprValueType.GRAPH -> TODO("Ion representation for graph values, maybe?")
     }
 
 private fun ExprValue.toIonStruct(ion: IonSystem): IonStruct {

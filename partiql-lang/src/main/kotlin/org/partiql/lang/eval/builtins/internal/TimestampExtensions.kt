@@ -5,7 +5,7 @@ import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.errNoContext
 import org.partiql.lang.eval.time.SECONDS_PER_MINUTE
 import org.partiql.lang.eval.time.Time
-import org.partiql.lang.syntax.DateTimePart
+import org.partiql.lang.syntax.impl.DateTimePart
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.OffsetDateTime

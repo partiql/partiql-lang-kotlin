@@ -14,9 +14,7 @@
 
 package org.partiql.examples;
 
-import com.amazon.ion.IonSystem;
 import com.amazon.ion.IonWriter;
-import com.amazon.ion.system.IonSystemBuilder;
 import com.amazon.ion.system.IonTextWriterBuilder;
 import com.amazon.ionelement.api.SexpElement;
 import org.jetbrains.annotations.NotNull;

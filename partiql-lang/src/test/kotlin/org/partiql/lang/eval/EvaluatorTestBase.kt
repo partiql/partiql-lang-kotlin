@@ -32,8 +32,10 @@ import org.partiql.lang.eval.evaluatortestframework.MultipleTestAdapter
 import org.partiql.lang.eval.evaluatortestframework.PartiQLCompilerPipelineFactory
 import org.partiql.lang.eval.evaluatortestframework.PipelineEvaluatorTestAdapter
 import org.partiql.lang.eval.evaluatortestframework.VisitorTransformBaseTestAdapter
+import org.partiql.lang.graph.ExternalGraphReader
 import org.partiql.lang.util.asSequence
 import org.partiql.lang.util.newFromIonText
+import java.io.File
 
 /**
  * [EvaluatorTestBase] contains testing infrastructure needed by all test classes that need to evaluate a query.
@@ -47,9 +49,42 @@ abstract class EvaluatorTestBase : TestBase() {
         )
     )
 
-    protected fun Map<String, String>.toSession() = EvaluationSession.build {
-        globals(Bindings.ofMap(this@toSession.mapValues { newFromIonText(it.value) }))
+    private val classloader = EvaluatorTestBase::class.java.classLoader
+    private fun readResource(resourcePath: String): String {
+        val url = classloader.getResource(resourcePath)
+            ?: error("Resource path not found: $resourcePath")
+        return url.readText()
     }
+
+    protected fun graphOfText(text: String): ExprValue =
+        ExprValue.newGraph(ExternalGraphReader.read(text))
+
+    protected fun graphOfResource(resource: String): ExprValue =
+        graphOfText(readResource(resource))
+
+    protected fun graphOfFile(file: String): ExprValue =
+        graphOfText(File(file).readText())
+
+    /** The basic method that can be used in tests to construct a session with value bindings. */
+    protected fun sessionOf(bindMap: Map<String, ExprValue>) = EvaluationSession.build {
+        globals(Bindings.ofMap(bindMap))
+    }
+
+    /** A convenience, for a session with bindings to both regular values and graphs,
+     *  given by their textual Ion. */
+    protected fun sessionOf(
+        regulars: Map<String, String> = emptyMap(),
+        graphs: Map<String, String> = emptyMap()
+    ): EvaluationSession {
+        val combined =
+            regulars.mapValues { newFromIonText(it.value) } +
+                graphs.mapValues { graphOfText(it.value) }
+        return sessionOf(combined)
+    }
+
+    /** A convenience, for a session with bindings only to regular, non-graph, values. */
+    protected fun Map<String, String>.toSession() =
+        sessionOf(regulars = this@toSession)
 
     /**
      * Constructor style override of [runEvaluatorTestCase].  Constructs an [EvaluatorTestCase]

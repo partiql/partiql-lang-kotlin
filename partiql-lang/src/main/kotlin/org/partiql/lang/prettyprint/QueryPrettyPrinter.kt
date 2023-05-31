@@ -1,12 +1,11 @@
 package org.partiql.lang.prettyprint
 
+import org.partiql.lang.ast.IsListParenthesizedMeta
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.syntax.PartiQLParserBuilder
 import org.partiql.pig.runtime.toIonElement
-import java.lang.StringBuilder
 import java.time.LocalDate
 import java.time.LocalTime
-import kotlin.IllegalStateException
 import kotlin.math.abs
 
 /**
@@ -83,17 +82,17 @@ class QueryPrettyPrinter {
     // * Ddl *
     // *******
     private fun writeAstNode(node: PartiqlAst.Statement.Ddl, sb: StringBuilder) {
-        when (node.op) {
-            is PartiqlAst.DdlOp.CreateTable -> writeAstNode(node.op, sb)
+        when (val op = node.op) {
+            is PartiqlAst.DdlOp.CreateTable -> writeAstNode(op, sb)
             is PartiqlAst.DdlOp.DropTable -> {
                 sb.append("DROP TABLE ")
-                writeAstNode(node.op.tableName, sb)
+                writeAstNode(op.tableName, sb)
             }
             is PartiqlAst.DdlOp.CreateIndex -> {
                 sb.append("CREATE INDEX ON ")
-                writeAstNode(node.op.indexName, sb)
+                writeAstNode(op.indexName, sb)
                 sb.append(" (")
-                node.op.fields.forEach {
+                op.fields.forEach {
                     // Assume fields in CREATE INDEX clause are not SELECT or CASE
                     writeAstNode(it, sb, 0)
                     sb.append(", ")
@@ -102,9 +101,9 @@ class QueryPrettyPrinter {
             }
             is PartiqlAst.DdlOp.DropIndex -> {
                 sb.append("DROP INDEX ")
-                writeAstNode(node.op.keys, sb)
+                writeAstNode(op.keys, sb)
                 sb.append(" ON ")
-                writeAstNode(node.op.table, sb)
+                writeAstNode(op.table, sb)
             }
         }
     }
@@ -254,9 +253,9 @@ class QueryPrettyPrinter {
                 is PartiqlAst.ReturningMapping.AllNew -> sb.append("ALL NEW ")
                 is PartiqlAst.ReturningMapping.AllOld -> sb.append("ALL OLD ")
             }
-            when (it.column) {
+            when (val column = it.column) {
                 is PartiqlAst.ColumnComponent.ReturningWildcard -> sb.append('*')
-                is PartiqlAst.ColumnComponent.ReturningColumn -> writeAstNode(it.column.expr, sb, 0)
+                is PartiqlAst.ColumnComponent.ReturningColumn -> writeAstNode(column.expr, sb, 0)
             }
             sb.append(", ")
         }
@@ -435,7 +434,11 @@ class QueryPrettyPrinter {
 
     @Suppress("UNUSED_PARAMETER")
     private fun writeAstNode(node: PartiqlAst.Expr.List, sb: StringBuilder, level: Int) {
-        sb.append("[ ")
+        val (open, close) = when (node.metas.containsKey(IsListParenthesizedMeta.tag)) {
+            true -> "( " to " )"
+            else -> "[ " to " ]"
+        }
+        sb.append(open)
         node.values.forEach {
             // Print anything as one line inside a list
             writeAstNodeCheckSubQuery(it, sb, -1)
@@ -444,7 +447,7 @@ class QueryPrettyPrinter {
         if (node.values.isNotEmpty()) {
             sb.removeLast(2)
         }
-        sb.append(" ]")
+        sb.append(close)
     }
 
     @Suppress("UNUSED_PARAMETER")
@@ -521,9 +524,9 @@ class QueryPrettyPrinter {
                         sb.append(']')
                     }
                     // Case for a.b
-                    is PartiqlAst.CaseSensitivity.CaseInsensitive -> when (it.index) {
+                    is PartiqlAst.CaseSensitivity.CaseInsensitive -> when (val index = it.index) {
                         is PartiqlAst.Expr.Lit -> {
-                            val value = it.index.value.stringValue // It must be a string according to behavior of Lexer
+                            val value = index.value.stringValue // It must be a string according to behavior of Lexer
                             sb.append(".$value")
                         }
                         else -> throw IllegalArgumentException("PathExpr's attribute 'index' must be PartiqlAst.Expr.Lit when case sensitivity is insensitive")
@@ -804,7 +807,7 @@ class QueryPrettyPrinter {
         writeAstNodeCheckOp(node.pattern, sb, level)
         node.escape?.let {
             sb.append(" ESCAPE ")
-            writeAstNodeCheckOp(node.escape, sb, level)
+            writeAstNodeCheckOp(it, sb, level)
         }
     }
 

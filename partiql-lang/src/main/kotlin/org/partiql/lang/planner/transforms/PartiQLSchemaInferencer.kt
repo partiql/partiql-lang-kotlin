@@ -24,6 +24,7 @@ import org.partiql.lang.errors.ProblemSeverity
 import org.partiql.lang.errors.Property
 import org.partiql.lang.errors.PropertyValueMap
 import org.partiql.lang.planner.PlanningProblemDetails
+import org.partiql.lang.planner.transforms.PartiQLSchemaInferencer.infer
 import org.partiql.lang.planner.transforms.impl.Metadata
 import org.partiql.lang.planner.transforms.plan.PlanTyper
 import org.partiql.lang.planner.transforms.plan.PlanUtils.grabType
@@ -31,7 +32,6 @@ import org.partiql.lang.syntax.PartiQLParserBuilder
 import org.partiql.lang.util.propertyValueMapOf
 import org.partiql.spi.Plugin
 import org.partiql.types.StaticType
-import kotlin.jvm.Throws
 
 /**
  * Vends functions, such as [infer], to infer the output [StaticType] of a PartiQL query.

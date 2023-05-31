@@ -19,7 +19,6 @@ package org.partiql.lang.util
 import com.amazon.ion.IonValue
 import org.partiql.lang.errors.Property
 import org.partiql.lang.errors.PropertyValueMap
-import org.partiql.lang.syntax.TokenType
 
 /**
  * Helper function to reduce the syntactical overhead of creating a [PropertyValueMap].
@@ -32,7 +31,6 @@ fun propertyValueMapOf(vararg properties: Pair<Property, Any>): PropertyValueMap
             is Int -> pvm[it.first] = it.second as Int
             is Long -> pvm[it.first] = it.second as Long
             is String -> pvm[it.first] = it.second as String
-            is TokenType -> pvm[it.first] = it.second as TokenType
             is IonValue -> pvm[it.first] = it.second as IonValue
             is Enum<*> -> pvm[it.first] = it.second.toString()
             else -> throw IllegalArgumentException("Cannot convert ${it.second.javaClass.name} to PropertyValue")

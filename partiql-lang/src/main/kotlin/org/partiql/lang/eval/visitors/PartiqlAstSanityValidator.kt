@@ -154,9 +154,9 @@ class PartiqlAstSanityValidator : PartiqlAst.Visitor() {
 
     override fun visitExprStruct(node: PartiqlAst.Expr.Struct) {
         node.fields.forEach { field ->
-            if (field.first is PartiqlAst.Expr.Missing || (field.first is PartiqlAst.Expr.Lit && field.first.value !is TextElement)) {
-                val type = when (field.first) {
-                    is PartiqlAst.Expr.Lit -> field.first.value.type.toString()
+            if (field.first is PartiqlAst.Expr.Missing || (field.first is PartiqlAst.Expr.Lit && (field.first as PartiqlAst.Expr.Lit).value !is TextElement)) {
+                val type = when (val first = field.first) {
+                    is PartiqlAst.Expr.Lit -> first.value.type.toString()
                     else -> "MISSING"
                 }
                 throw SemanticException(

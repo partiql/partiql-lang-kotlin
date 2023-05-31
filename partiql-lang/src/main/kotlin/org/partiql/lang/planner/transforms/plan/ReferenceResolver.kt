@@ -21,6 +21,7 @@ import org.partiql.spi.BindingPath
 import org.partiql.spi.connector.ConnectorObjectPath
 import org.partiql.types.StaticType
 import org.partiql.types.StructType
+import org.partiql.types.TupleConstraint
 
 internal object ReferenceResolver {
 
@@ -57,25 +58,46 @@ internal object ReferenceResolver {
         }
     }
 
+    /**
+     * Logic is as follows:
+     * 1. Look through [input] to find the root of the [path]. If found, return. Else, go to step 2.
+     * 2. Look through [input] and grab all [StructType]s. Then, grab the fields of each Struct corresponding to the
+     *  root of [path].
+     *  - If the Struct if ordered, grab the first matching field.
+     *  - If unordered and if multiple fields found, merge the output type. If no structs contain a matching field, return null.
+     */
     internal fun resolveLocalBind(path: BindingPath, input: List<Attribute>): ResolvedType? {
         if (path.steps.isEmpty()) { return null }
         val root: StaticType = input.firstOrNull {
             path.steps[0].isEquivalentTo(it.name)
-        }?.type ?: input.firstOrNull {
-            when (val struct = it.type) {
-                is StructType -> {
-                    val found = struct.fields.entries.firstOrNull { entry ->
-                        path.steps[0].isEquivalentTo(entry.key)
-                    }
-                    when (found) {
-                        null -> false
-                        else -> return ResolvedType(found.value)
-                    }
+        }?.type ?: run {
+            input.map { it.type }.filterIsInstance<StructType>().mapNotNull { struct ->
+                inferStructLookup(struct, path.steps[0])
+            }.let { potentialTypes ->
+                when (potentialTypes.size) {
+                    1 -> potentialTypes.first()
+                    else -> null
                 }
-                else -> false
             }
-        }?.type ?: return null
+        } ?: return null
         return ResolvedType(root)
+    }
+
+    /**
+     * Searches for the [key] in the [struct]. If not found, return null
+     */
+    internal fun inferStructLookup(
+        struct: StructType,
+        key: BindingName,
+    ): StaticType? = when (struct.constraints.contains(TupleConstraint.Ordered)) {
+        true -> struct.fields.firstOrNull { entry ->
+            key.isEquivalentTo(entry.key)
+        }?.value
+        false -> struct.fields.mapNotNull { entry ->
+            entry.value.takeIf { key.isEquivalentTo(entry.key) }
+        }.let { valueTypes ->
+            StaticType.unionOf(valueTypes.toSet()).flatten().takeIf { valueTypes.isNotEmpty() }
+        }
     }
 
     //

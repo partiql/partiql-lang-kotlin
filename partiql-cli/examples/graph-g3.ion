@@ -1,0 +1,13 @@
+// a    triangle:     n2 ~~[e23]~~  n3
+//                     \            /
+//                     [e21]       [e31]
+//                        \       /
+//                         v     v
+//                           n1
+
+{ nodes: [ {id: n1, labels: ["a"], payload: 1},
+           {id: n2, labels: ["b"], payload: 2},
+           {id: n3, labels: ["a", "b"], payload: 3} ],
+  edges: [ {id: e21, labels: ["d"], payload: 2.1, ends: (n2 -> n1) },
+           {id: e31, labels: ["e"], payload: 3.1, ends: (n3 -> n1) },
+           {id: e23, labels: ["e"], payload: 2.3, ends: (n2 -- n3) } ] }
