@@ -6,13 +6,16 @@ import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.DOUBLE
 import com.squareup.kotlinpoet.FLOAT
 import com.squareup.kotlinpoet.INT
+import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.LIST
 import com.squareup.kotlinpoet.LONG
 import com.squareup.kotlinpoet.MAP
 import com.squareup.kotlinpoet.MUTABLE_LIST
 import com.squareup.kotlinpoet.MUTABLE_MAP
 import com.squareup.kotlinpoet.MUTABLE_SET
+import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
+import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.SET
 import com.squareup.kotlinpoet.STRING
 import com.squareup.kotlinpoet.TypeName
@@ -50,6 +53,16 @@ class KotlinSymbols private constructor(
      * Base node for the Universe
      */
     val base: ClassName = ClassName(rootPackage, "${rootId}Node")
+
+    /**
+     * Id Property for interfaces and classes
+     */
+    val idProp = PropertySpec.builder("_id", Int::class).addModifiers(KModifier.OVERRIDE).initializer("_id").build()
+
+    /**
+     * Id Parameter for internal constructors
+     */
+    val idPara = ParameterSpec.builder("_id", Int::class).addModifiers(KModifier.OVERRIDE).build()
 
     /**
      * Memoize converting a TypeRef.Path to a camel case identifier to be used as method/function names

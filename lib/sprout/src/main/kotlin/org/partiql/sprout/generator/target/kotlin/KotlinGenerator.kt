@@ -49,6 +49,8 @@ class KotlinGenerator(private val options: KotlinOptions) : Generator<KotlinResu
             types = universe.types(symbols)
         )
         val specs = with(spec) {
+            // Add identifiers
+            base.addProperty(PropertySpec.builder("_id", Int::class).addModifiers(KModifier.ABSTRACT).build())
             // Apply each poem
             poems.forEach { it.apply(this) }
             // Finalize each spec/builder
@@ -101,6 +103,9 @@ class KotlinGenerator(private val options: KotlinOptions) : Generator<KotlinResu
             clazz = symbols.clazz(ref),
             ext = (props.enumProps(symbols) + types.enums(symbols)).toMutableList(),
         ).apply {
+            // Add id to impl
+            impl.addProperty(symbols.idProp)
+            constructor.addParameter(symbols.idPara)
             props.forEach {
                 val para = ParameterSpec.builder(it.name, it.type).build()
                 val prop = PropertySpec.builder(it.name, it.type).build()
@@ -111,7 +116,6 @@ class KotlinGenerator(private val options: KotlinOptions) : Generator<KotlinResu
             // impls are open
             impl.superclass(clazz)
             nodes.forEach { it.builder.superclass(symbols.base) }
-
             this.addDataClassMethods()
         }
     }
@@ -158,17 +162,17 @@ class KotlinGenerator(private val options: KotlinOptions) : Generator<KotlinResu
         //         .addParameter(ParameterSpec.builder("other", Any::class.asTypeName().copy(nullable = true)).build())
         //         .build()
         // )
+        val args = listOf("_id") + props.map { it.name }
         val copy = FunSpec.builder("copy").addModifiers(KModifier.ABSTRACT).returns(clazz)
         val copyImpl = FunSpec.builder("copy")
             .addModifiers(KModifier.OVERRIDE)
             .returns(clazz)
-            .addStatement("return %T(${props.joinToString { it.name }})", implClazz)
+            .addStatement("return %T(${args.joinToString()})", implClazz)
         props.forEach {
             val para = ParameterSpec.builder(it.name, it.type).build()
             copy.addParameter(para.toBuilder().defaultValue("this.${it.name}").build())
             copyImpl.addParameter(para)
         }
-
         builder.addFunction(copy.build())
         impl.addFunction(copyImpl.build())
     }

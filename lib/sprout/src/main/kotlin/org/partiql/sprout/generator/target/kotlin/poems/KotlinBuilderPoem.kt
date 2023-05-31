@@ -30,10 +30,20 @@ class KotlinBuilderPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
 
     private val builderPackageName = "${symbols.rootPackage}.builder"
 
+    // Default unique id provider
+    // open val id: () -> Int = run { ... }
+    private val idProviderType = LambdaTypeName.get(returnType = Int::class.asTypeName())
+    private val idProvider = PropertySpec.builder("_id", idProviderType)
+        .addModifiers(KModifier.PRIVATE)
+        .initializer("run { var i = 1; { i++ } }")
+        .build()
+
     // Abstract factory which can be used by DSL blocks
     private val factoryName = "${symbols.rootId}Factory"
     private val factoryClass = ClassName(builderPackageName, factoryName)
-    private val factory = TypeSpec.classBuilder(factoryClass).addModifiers(KModifier.ABSTRACT)
+    private val factory = TypeSpec.classBuilder(factoryClass)
+        .addModifiers(KModifier.ABSTRACT)
+        .addProperty(idProvider)
     private val factoryParamDefault = ParameterSpec.builder("factory", factoryClass)
         .defaultValue("%T.DEFAULT", factoryClass)
         .build()
@@ -128,8 +138,13 @@ class KotlinBuilderPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
                 .addModifiers(KModifier.OPEN)
                 .returns(node.clazz)
                 .apply {
-                    node.props.forEach { addParameter(it.name, it.type) }
-                    addStatement("return %T(${node.props.joinToString { it.name }})", node.implClazz)
+                    val args = listOf("_id()") + node.props.map {
+                        // add as function parameter
+                        addParameter(it.name, it.type)
+                        it.name
+                    }
+                    // Inject identifier `node(id(), props...)`
+                    addStatement("return %T(${args.joinToString()})", node.implClazz)
                 }
                 .build()
         )
