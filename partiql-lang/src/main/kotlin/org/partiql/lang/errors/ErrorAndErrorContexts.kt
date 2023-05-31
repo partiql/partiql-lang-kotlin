@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Amazon.com, Inc. or its affiliates.  All rights reserved.
+ * Copyright Amazon.com, Inc. or its affiliates.  All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  *  You may not use this file except in compliance with the License.
@@ -12,12 +12,9 @@
  *  language governing permissions and limitations under the License.
  */
 
-@file:Suppress("DEPRECATION")
-
 package org.partiql.lang.errors
 
 import com.amazon.ion.IonValue
-import org.partiql.lang.syntax.TokenType
 import java.util.EnumMap
 
 internal const val UNKNOWN: String = "<UNKNOWN>"
@@ -49,19 +46,7 @@ enum class Property(val propertyName: String, val propertyType: PropertyType) {
     TOKEN_STRING("token_string", PropertyType.STRING_CLASS),
     CAST_TO("cast_to", PropertyType.STRING_CLASS),
     CAST_FROM("cast_from", PropertyType.STRING_CLASS),
-    KEYWORD("keyword", PropertyType.STRING_CLASS),
-
-    @Deprecated(
-        message = "TOKEN_TYPE is subject to removal.",
-        replaceWith = ReplaceWith("TOKEN_DESCRIPTION"),
-        level = DeprecationLevel.WARNING
-    ) // To be removed before 1.0
-    TOKEN_TYPE("token_type", PropertyType.TOKEN_CLASS),
-
     TOKEN_DESCRIPTION("token_description", PropertyType.STRING_CLASS),
-    EXPECTED_TOKEN_TYPE("expected_token_type", PropertyType.TOKEN_CLASS),
-    EXPECTED_TOKEN_TYPE_1_OF_2("expected_token_type_1_of_2", PropertyType.TOKEN_CLASS),
-    EXPECTED_TOKEN_TYPE_2_OF_2("expected_token_type_2_of_2", PropertyType.TOKEN_CLASS),
     TOKEN_VALUE("token_value", PropertyType.ION_VALUE_CLASS),
     EXPECTED_ARITY_MIN("arity_min", PropertyType.INTEGER_CLASS),
     EXPECTED_ARITY_MAX("arity_max", PropertyType.INTEGER_CLASS),
@@ -70,7 +55,6 @@ enum class Property(val propertyName: String, val propertyType: PropertyType) {
     BOUND_PARAMETER_COUNT("bound_parameter_count", PropertyType.INTEGER_CLASS),
     TIMESTAMP_FORMAT_PATTERN("timestamp_format_pattern", PropertyType.STRING_CLASS),
     TIMESTAMP_FORMAT_PATTERN_FIELDS("timestamp_format_pattern_fields", PropertyType.STRING_CLASS),
-    TIMESTAMP_STRING("timestamp_string", PropertyType.STRING_CLASS),
     BINDING_NAME("binding_name", PropertyType.STRING_CLASS),
     BINDING_NAME_MATCHES("binding_name_matches", PropertyType.STRING_CLASS),
     LIKE_VALUE("value_to_match", PropertyType.STRING_CLASS),
@@ -78,7 +62,6 @@ enum class Property(val propertyName: String, val propertyType: PropertyType) {
     LIKE_ESCAPE("escape_char", PropertyType.STRING_CLASS),
     FUNCTION_NAME("function_name", PropertyType.STRING_CLASS),
     ARGUMENT_POSITION("argument_position", PropertyType.INTEGER_CLASS),
-    NARY_OP("nary_op", PropertyType.STRING_CLASS),
     PROCEDURE_NAME("procedure_name", PropertyType.STRING_CLASS),
     EXPECTED_ARGUMENT_TYPES("expected_types", PropertyType.STRING_CLASS),
     ACTUAL_ARGUMENT_TYPES("actual_types", PropertyType.STRING_CLASS),
@@ -98,7 +81,7 @@ enum class Property(val propertyName: String, val propertyType: PropertyType) {
 abstract class PropertyValue(val type: PropertyType) {
     open fun stringValue(): String = throw IllegalArgumentException("Property value is of type $type and not String")
     open fun longValue(): Long = throw IllegalArgumentException("Property value is of type $type and not Long")
-    open fun tokenTypeValue(): TokenType = throw IllegalArgumentException("Property value is of type $type and not TokenType")
+    open fun tokenTypeValue(): String = throw IllegalArgumentException("Property value is of type $type and not String")
     open fun integerValue(): Int = throw IllegalArgumentException("Property value is of type $type and not Integer")
     open fun ionValue(): IonValue = throw IllegalArgumentException("Property value is of type $type and not IonValue")
 
@@ -140,7 +123,7 @@ enum class PropertyType(private val type: Class<*>) {
     LONG_CLASS(Long::class.javaObjectType),
     STRING_CLASS(String::class.javaObjectType),
     INTEGER_CLASS(Int::class.javaObjectType),
-    TOKEN_CLASS(TokenType::class.javaObjectType),
+    TOKEN_CLASS(String::class.javaObjectType),
     ION_VALUE_CLASS(IonValue::class.javaObjectType);
 
     fun getType() = type
@@ -163,7 +146,7 @@ enum class PropertyType(private val type: Class<*>) {
 class PropertyValueMap(private val map: EnumMap<Property, PropertyValue> = EnumMap(Property::class.java)) {
 
     /**
-     * Given a [Property]  retrieve the value mapped to [p] in this map.
+     * Given a [Property] retrieve the value mapped to [key] in this map.
      *
      *
      * @param key to be retrieved from the map
@@ -241,21 +224,6 @@ class PropertyValueMap(private val map: EnumMap<Property, PropertyValue> = EnumM
     }
 
     /**
-     * Given a `key` and a [TokenType] value, insert the key-value pair into the [PropertyValueMap].
-     *
-     * @param key to be added into the [PropertyValueMap]
-     * @param tokenTypeValue [TokenType] value to be associated with `key` in the [PropertyValueMap]
-     *
-     * @throws [IllegalArgumentException] if the [Property] used as `key` requires values of type **other than** [TokenType]
-     */
-    operator fun set(key: Property, tokenTypeValue: TokenType) {
-        val o = object : PropertyValue(PropertyType.TOKEN_CLASS) {
-            override fun tokenTypeValue(): TokenType = tokenTypeValue
-        }
-        verifyTypeAndSet(key, PropertyType.TOKEN_CLASS, tokenTypeValue, o)
-    }
-
-    /**
      * Predicate to check if [property] is already in this [PropertyValueMap]
      *
      * @param property to check for membership in this [PropertyValueMap]
@@ -263,6 +231,7 @@ class PropertyValueMap(private val map: EnumMap<Property, PropertyValue> = EnumM
      */
     fun hasProperty(property: Property) = map.containsKey(property)
 
+    @Suppress("UNUSED")
     fun getProperties() = this.map.keys
 
     /** Creates a human readable representation of this [PropertyValueMap].  For debugging only. */

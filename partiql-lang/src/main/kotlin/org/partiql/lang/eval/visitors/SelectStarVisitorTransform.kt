@@ -59,7 +59,7 @@ class SelectStarVisitorTransform : VisitorTransformBase() {
                     return transformedExpr.copy(project = newProjection)
                 }
                 else -> { // With group by
-                    val selectListItemsFromGroupBy = transformedExpr.group.keyList.keys.map {
+                    val selectListItemsFromGroupBy = transformedExpr.group!!.keyList.keys.map {
                         val asName = it.asAlias
                             ?: errNoContext(
                                 "GroupByItem has no AS-alias--GroupByItemAliasVisitorTransform must be executed before SelectStarVisitorTransform",
@@ -76,7 +76,7 @@ class SelectStarVisitorTransform : VisitorTransformBase() {
                         createProjectExpr(uniqueNameMeta.uniqueName, asName.text, metas)
                     }
 
-                    val groupNameItem = transformedExpr.group.groupAsAlias.let {
+                    val groupNameItem = transformedExpr.group!!.groupAsAlias.let {
                         if (it != null) {
                             val metas = it.metas + metaContainerOf(IsGroupAttributeReferenceMeta.instance)
                             listOf(createProjectExpr(it.text, metas = metas))

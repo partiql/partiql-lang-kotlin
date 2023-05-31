@@ -64,10 +64,10 @@ class PartiqlLogicalValidator(private val typedOpBehavior: TypedOpBehavior) : Pa
             when (part) {
                 is PartiqlLogical.StructPart.StructField -> {
                     if (part.fieldName is PartiqlLogical.Expr.Missing ||
-                        (part.fieldName is PartiqlLogical.Expr.Lit && part.fieldName.value !is TextElement)
+                        (part.fieldName is PartiqlLogical.Expr.Lit && (part.fieldName as PartiqlLogical.Expr.Lit).value !is TextElement)
                     ) {
-                        val type = when (part.fieldName) {
-                            is PartiqlLogical.Expr.Lit -> part.fieldName.value.type.toString()
+                        val type = when (val fieldName = part.fieldName) {
+                            is PartiqlLogical.Expr.Lit -> fieldName.value.type.toString()
                             else -> "MISSING"
                         }
                         throw SemanticException(

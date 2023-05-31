@@ -96,9 +96,9 @@ internal object TypeConverter : PartiqlAst.VisitorFold<StaticType>() {
         )
     )
 
-    override fun walkTypeCharacterVaryingType(node: PartiqlAst.Type.CharacterVaryingType, _ignore: StaticType) = when (node.length) {
+    override fun walkTypeCharacterVaryingType(node: PartiqlAst.Type.CharacterVaryingType, _ignore: StaticType) = when (val length = node.length) {
         null -> StringType(StringType.StringLengthConstraint.Unconstrained)
-        else -> StringType(StringType.StringLengthConstraint.Constrained(NumberConstraint.UpTo(node.length.value.toInt())))
+        else -> StringType(StringType.StringLengthConstraint.Constrained(NumberConstraint.UpTo(length.value.toInt())))
     }
 
     override fun walkTypeMissingType(node: PartiqlAst.Type.MissingType, _ignore: StaticType) = StaticType.MISSING

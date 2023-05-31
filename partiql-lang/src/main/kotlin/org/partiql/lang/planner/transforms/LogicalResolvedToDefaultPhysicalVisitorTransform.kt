@@ -5,10 +5,6 @@ import org.partiql.lang.domains.PartiqlLogicalResolved
 import org.partiql.lang.domains.PartiqlLogicalResolvedToPartiqlPhysicalVisitorTransform
 import org.partiql.lang.domains.PartiqlPhysical
 import org.partiql.lang.errors.ProblemHandler
-import org.partiql.lang.planner.DML_COMMAND_FIELD_ACTION
-import org.partiql.lang.planner.DML_COMMAND_FIELD_ROWS
-import org.partiql.lang.planner.DML_COMMAND_FIELD_TARGET_UNIQUE_ID
-import org.partiql.lang.planner.DmlAction
 
 /**
  * Transforms an instance of [PartiqlLogicalResolved.Statement] to [PartiqlPhysical.Statement],
@@ -25,6 +21,14 @@ internal fun PartiqlPhysical.Builder.structField(name: String, value: String) =
 
 internal fun PartiqlPhysical.Builder.structField(name: String, value: PartiqlPhysical.Expr) =
     structField(lit(ionSymbol(name)), value)
+
+internal fun structField(name: String, value: PartiqlPhysical.Expr) =
+    PartiqlPhysical.StructPart.StructField(PartiqlPhysical.Expr.Lit(ionSymbol(name).asAnyElement()), value)
+
+internal fun structField(name: String, value: String) = PartiqlPhysical.StructPart.StructField(
+    PartiqlPhysical.Expr.Lit(ionSymbol(name).asAnyElement()),
+    PartiqlPhysical.Expr.Lit(ionSymbol(value).asAnyElement())
+)
 
 internal class LogicalResolvedToDefaultPhysicalVisitorTransform(
     val problemHandler: ProblemHandler
@@ -159,28 +163,6 @@ internal class LogicalResolvedToDefaultPhysicalVisitorTransform(
                 i = DEFAULT_IMPL,
                 source = thiz.transformBexpr(node.source),
                 bindings = node.bindings.map { transformLetBinding(it) },
-                metas = node.metas
-            )
-        }
-    }
-
-    override fun transformStatementDml(node: PartiqlLogicalResolved.Statement.Dml): PartiqlPhysical.Statement {
-        val action = when (node.operation) {
-            is PartiqlLogicalResolved.DmlOperation.DmlInsert -> DmlAction.INSERT
-            is PartiqlLogicalResolved.DmlOperation.DmlDelete -> DmlAction.DELETE
-            is PartiqlLogicalResolved.DmlOperation.DmlReplace -> DmlAction.REPLACE
-            is PartiqlLogicalResolved.DmlOperation.DmlUpdate ->
-                TODO("DmlUpdate physical transform is not supported yet")
-        }.name.toLowerCase()
-
-        return PartiqlPhysical.build {
-            dmlQuery(
-                expr = struct(
-                    structField(DML_COMMAND_FIELD_ACTION, action),
-                    structField(DML_COMMAND_FIELD_TARGET_UNIQUE_ID, lit(node.uniqueId.toIonElement())),
-                    structField(DML_COMMAND_FIELD_ROWS, transformExpr(node.rows)),
-                    metas = node.metas
-                ),
                 metas = node.metas
             )
         }

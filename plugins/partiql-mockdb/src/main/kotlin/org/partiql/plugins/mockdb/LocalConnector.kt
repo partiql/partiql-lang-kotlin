@@ -15,6 +15,7 @@
 package org.partiql.plugins.mockdb
 
 import com.amazon.ionelement.api.StructElement
+import org.partiql.plugins.mockdb.LocalConnector.Companion.ROOT_KEY
 import org.partiql.spi.connector.Connector
 import org.partiql.spi.connector.ConnectorMetadata
 import org.partiql.spi.connector.ConnectorSession

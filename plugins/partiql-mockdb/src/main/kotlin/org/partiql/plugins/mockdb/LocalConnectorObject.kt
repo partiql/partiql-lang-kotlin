@@ -96,20 +96,21 @@ internal class LocalConnectorObject(
 
     private fun LocalSchema.ValueSchema.StructSchema.getDesc() =
         StructType(
-            fields = this.attributes.associate {
-                it.getName() to it.getValueDesc()
+            fields = this.attributes.map {
+                StructType.Field(it.getName(), it.getValueDesc())
             },
             contentClosed = true,
-            constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true)),
+            constraints = setOf(TupleConstraint.Open(false), TupleConstraint.UniqueAttrs(true), TupleConstraint.Ordered),
         )
 
     private fun LocalSchema.TableSchema.getDesc(): StaticType {
         return BagType(
             StructType(
-                fields = this.attributes.associate {
-                    it.getName() to it.getValueDesc()
+                fields = this.attributes.map {
+                    StructType.Field(it.getName(), it.getValueDesc())
                 },
-                contentClosed = true
+                contentClosed = true,
+                constraints = setOf(TupleConstraint.Ordered),
             )
         )
     }

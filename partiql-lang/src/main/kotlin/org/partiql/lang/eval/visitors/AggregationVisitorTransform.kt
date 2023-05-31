@@ -113,9 +113,9 @@ internal class AggregationVisitorTransform(
         }
 
         // Add Unique Aliases to Keys and Create GroupKeyInformation
-        val groupAsAlias = node.group.groupAsAlias?.text
+        val groupAsAlias = node.group!!.groupAsAlias?.text
         val transformedKeys = mutableListOf<PartiqlAst.GroupKey>()
-        val groupKeyInformation = node.group.keyList.keys.mapIndexed { index, key ->
+        val groupKeyInformation = node.group!!.keyList.keys.mapIndexed { index, key ->
             val publicAlias = key.asAlias?.text ?: key.expr.extractColumnAlias(index)
             val uniqueAlias = uniqueAlias(this.contextStack.size, index)
             val represents = key.expr
@@ -131,10 +131,10 @@ internal class AggregationVisitorTransform(
         contextStack.add(ctx)
         return PartiqlAst.build {
             groupBy(
-                strategy = transformGroupBy_strategy(node.group),
+                strategy = transformGroupBy_strategy(node.group!!),
                 keyList = groupKeyList(transformedKeys),
                 groupAsAlias = groupAsAlias,
-                metas = node.group.metas
+                metas = node.group!!.metas
             )
         }
     }

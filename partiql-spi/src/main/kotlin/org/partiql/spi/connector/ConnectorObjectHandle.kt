@@ -17,7 +17,7 @@ package org.partiql.spi.connector
 /**
  * Holds a PartiQL Value's representation within a Catalog and its location within the Catalog.
  */
-class ConnectorObjectHandle(
-    val absolutePath: ConnectorObjectPath,
-    val value: ConnectorObject
+public class ConnectorObjectHandle(
+    public val absolutePath: ConnectorObjectPath,
+    public val value: ConnectorObject
 )

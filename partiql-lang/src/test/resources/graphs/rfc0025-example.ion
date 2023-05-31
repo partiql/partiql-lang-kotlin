@@ -1,0 +1,16 @@
+// This is the graph that appears as an example in PartiQL RFC-0025
+// https://github.com/partiql/partiql-docs/blob/main/RFCs/0025-graph-data-model.md
+
+graph::{
+  nodes: [
+    { id: n1, labels: ["a"] },
+    { id: n2, labels: ["a"] },
+    { id: n3, labels: ["b"] }
+  ],
+
+  edges: [
+    { id: e1, labels: ["x"], ends: (n2 -> n1) },
+    { id: e2, labels: ["y"], ends: (n1 -> n3) },
+    { id: e3, labels: ["y"], ends: (n2 -> n3) }
+  ]
+}

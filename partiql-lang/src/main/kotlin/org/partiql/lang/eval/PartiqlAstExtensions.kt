@@ -90,7 +90,7 @@ internal fun PartiqlAst.Expr.Select.boundVariables(): Set<String> {
     }
 
     return fold.walkFromSource(selectExpr.from, emptySet())
-        .union(selectExpr.fromLet?.let { fold.walkLet(selectExpr.fromLet, emptySet()) } ?: emptySet())
+        .union(selectExpr.fromLet?.let { fold.walkLet(it, emptySet()) } ?: emptySet())
 }
 
 /** Free variables in an expression.

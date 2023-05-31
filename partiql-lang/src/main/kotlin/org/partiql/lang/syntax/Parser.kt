@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Amazon.com, Inc. or its affiliates.  All rights reserved.
+ * Copyright Amazon.com, Inc. or its affiliates.  All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  *  You may not use this file except in compliance with the License.
@@ -14,11 +14,10 @@
 
 package org.partiql.lang.syntax
 
-import com.amazon.ion.IonSexp
 import org.partiql.lang.domains.PartiqlAst
 
 /**
- * Parses a list of [Token] into an [IonSexp] based AST.
+ * Parses a PartiQL Statement into an AST.
  *
  * Implementations must be thread-safe.
  */

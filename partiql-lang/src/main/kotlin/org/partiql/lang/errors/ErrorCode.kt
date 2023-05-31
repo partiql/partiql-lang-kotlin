@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Amazon.com, Inc. or its affiliates.  All rights reserved.
+ * Copyright Amazon.com, Inc. or its affiliates.  All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  *  You may not use this file except in compliance with the License.
@@ -12,23 +12,16 @@
  *  language governing permissions and limitations under the License.
  */
 
-@file:Suppress("DEPRECATION")
-
 package org.partiql.lang.errors
 
 import org.partiql.lang.eval.ExprValueType
-import org.partiql.lang.syntax.DATE_TIME_PART_KEYWORDS
-import org.partiql.lang.syntax.TokenType
+import org.partiql.lang.syntax.impl.DateTimePart
 
 /** Property Set constants used in [ErrorCode] */
 private val LOCATION = setOf(Property.LINE_NUMBER, Property.COLUMN_NUMBER)
 private val TOKEN_INFO = setOf(Property.TOKEN_DESCRIPTION, Property.TOKEN_VALUE)
 private val LOC_TOKEN = LOCATION + (TOKEN_INFO)
 private val LOC_TOKEN_STR = LOCATION + (setOf(Property.TOKEN_STRING))
-
-/** Helper function to reduce syntactical overhead of accessing property values as strings. */
-private fun PropertyValueMap.getAsString(key: Property, defaultValue: String) =
-    this[key]?.toString() ?: defaultValue
 
 enum class ErrorBehaviorInPermissiveMode {
     THROW_EXCEPTION, RETURN_MISSING
@@ -76,38 +69,10 @@ enum class ErrorCode(
             getTokenString(errorContext)
     },
 
-    LEXER_INVALID_NAME(
-        ErrorCategory.LEXER,
-        LOC_TOKEN_STR,
-        "invalid name"
-    ),
-
-    @Deprecated("This ErrorCode is subject to removal.") // To be removed before 1.0
-    @Suppress("UNUSED")
-    LEXER_INVALID_OPERATOR(
-        ErrorCategory.LEXER,
-        LOC_TOKEN_STR,
-        "invalid operator at"
-    ) {
-        override fun detailMessageSuffix(errorContext: PropertyValueMap?): String =
-            getTokenString(errorContext)
-    },
-
     LEXER_INVALID_LITERAL(
         ErrorCategory.LEXER,
         LOC_TOKEN_STR,
         "invalid literal at"
-    ) {
-        override fun detailMessageSuffix(errorContext: PropertyValueMap?): String =
-            getTokenString(errorContext)
-    },
-
-    @Deprecated("This ErrorCode is subject to removal.") // To be removed before 1.0
-    @Suppress("UNUSED")
-    LEXER_INVALID_ION_LITERAL(
-        ErrorCategory.LEXER,
-        LOC_TOKEN_STR,
-        "invalid ion literal at"
     ) {
         override fun detailMessageSuffix(errorContext: PropertyValueMap?): String =
             getTokenString(errorContext)
@@ -129,42 +94,6 @@ enum class ErrorCode(
         "Internal error - malformed parse tree detected"
     ),
 
-    @Deprecated("This ErrorCode is subject to removal.") // To be removed before 1.0
-    @Suppress("UNUSED")
-    PARSE_EXPECTED_KEYWORD(
-        ErrorCategory.PARSER,
-        LOC_TOKEN + setOf(Property.KEYWORD),
-        "expected keyword"
-    ) {
-        override fun detailMessageSuffix(errorContext: PropertyValueMap?): String =
-            getKeyword(errorContext)
-    },
-
-    @Deprecated("This ErrorCode is subject to removal.") // To be removed before 1.0
-    @Suppress("UNUSED")
-    PARSE_EXPECTED_TOKEN_TYPE(
-        ErrorCategory.PARSER,
-        LOC_TOKEN + setOf(Property.EXPECTED_TOKEN_TYPE),
-        "expected token of type"
-    ) {
-        override fun detailMessageSuffix(errorContext: PropertyValueMap?): String =
-            errorContext?.get(Property.EXPECTED_TOKEN_TYPE)?.tokenTypeValue()?.toString() ?: UNKNOWN +
-                "found ${getTokenDescription(errorContext)}"
-    },
-
-    @Deprecated("This ErrorCode is subject to removal.") // To be removed before 1.0
-    @Suppress("UNUSED")
-    PARSE_EXPECTED_2_TOKEN_TYPES(
-        ErrorCategory.PARSER,
-        LOC_TOKEN + setOf(Property.EXPECTED_TOKEN_TYPE_1_OF_2, Property.EXPECTED_TOKEN_TYPE_2_OF_2),
-        "unexpected token"
-    ) {
-        override fun detailMessageSuffix(errorContext: PropertyValueMap?): String =
-            "expected ${errorContext?.getAsString(Property.EXPECTED_TOKEN_TYPE_1_OF_2, UNKNOWN)}" +
-                " or ${errorContext?.getAsString(Property.EXPECTED_TOKEN_TYPE_2_OF_2, UNKNOWN)}" +
-                " but found ${getTokenDescription(errorContext)}"
-    },
-
     PARSE_EXPECTED_NUMBER(
         ErrorCategory.PARSER,
         LOC_TOKEN,
@@ -174,112 +103,16 @@ enum class ErrorCode(
             getTokenValue(errorContext)
     },
 
-    @Deprecated("This ErrorCode is subject to removal.") // To be removed before 1.0
-    @Suppress("UNUSED")
-    PARSE_EXPECTED_TYPE_NAME(
-        ErrorCategory.PARSER,
-        LOC_TOKEN,
-        "expected type name, found"
-    ),
-
-    @Deprecated("This ErrorCode is subject to removal.") // To be removed before 1.0
-    @Suppress("UNUSED")
-    PARSE_EXPECTED_WHEN_CLAUSE(
-        ErrorCategory.PARSER,
-        LOC_TOKEN,
-        "expected WHEN clause in CASE"
-    ),
-
-    @Deprecated("This ErrorCode is subject to removal.") // To be removed before 1.0
-    @Suppress("UNUSED")
-    PARSE_EXPECTED_WHERE_CLAUSE(
-        ErrorCategory.PARSER,
-        LOC_TOKEN,
-        "expected WHERE clause"
-    ),
-
-    @Deprecated("This ErrorCode is subject to removal.") // To be removed before 1.0
-    @Suppress("UNUSED")
-    PARSE_EXPECTED_CONFLICT_ACTION(
-        ErrorCategory.PARSER,
-        LOC_TOKEN,
-        "expected <conflict action>"
-    ),
-
-    @Deprecated("This ErrorCode is subject to removal.") // To be removed before 1.0
-    @Suppress("UNUSED")
-    PARSE_EXPECTED_RETURNING_CLAUSE(
-        ErrorCategory.PARSER,
-        LOC_TOKEN,
-        "expected <returning mapping>"
-    ),
-
-    @Deprecated("This ErrorCode is subject to removal.") // To be removed before 1.0
-    @Suppress("UNUSED")
-    PARSE_UNSUPPORTED_RETURNING_CLAUSE_SYNTAX(
-        ErrorCategory.PARSER,
-        LOC_TOKEN,
-        "unsupported syntax in RETURNING clause"
-    ),
-
-    @Deprecated("This ErrorCode is subject to removal.") // To be removed before 1.0
-    @Suppress("UNUSED")
-    PARSE_UNSUPPORTED_TOKEN(
-        ErrorCategory.PARSER,
-        LOC_TOKEN,
-        "Unexpected token"
-    ),
-
     PARSE_UNSUPPORTED_LITERALS_GROUPBY(
         ErrorCategory.PARSER,
         LOC_TOKEN,
         "unsupported literal in GROUP BY"
     ),
 
-    @Deprecated("This ErrorCode is subject to removal.") // To be removed before 1.0
-    @Suppress("UNUSED")
-    PARSE_EXPECTED_MEMBER(
-        ErrorCategory.PARSER,
-        LOC_TOKEN,
-        "expected MEMBER node"
-    ),
-
     PARSE_EXPECTED_DATE_TIME_PART(
         ErrorCategory.PARSER,
         LOC_TOKEN,
-        "expected one of: [${DATE_TIME_PART_KEYWORDS.joinToString()}]"
-    ),
-
-    @Deprecated("This ErrorCode is subject to removal.") // To be removed before 1.0
-    @Suppress("UNUSED")
-    PARSE_UNSUPPORTED_SELECT(
-        ErrorCategory.PARSER,
-        LOC_TOKEN,
-        "unsupported use of SELECT"
-    ),
-
-    @Deprecated("This ErrorCode is subject to removal.") // To be removed before 1.0
-    @Suppress("UNUSED")
-    PARSE_UNSUPPORTED_CASE(
-        ErrorCategory.PARSER,
-        LOC_TOKEN,
-        "unsupported use of CASE"
-    ),
-
-    @Deprecated("This ErrorCode is subject to removal.") // To be removed before 1.0
-    @Suppress("UNUSED")
-    PARSE_UNSUPPORTED_CASE_CLAUSE(
-        ErrorCategory.PARSER,
-        LOC_TOKEN,
-        "Unsupported use of CASE statement"
-    ),
-
-    @Deprecated("This ErrorCode is subject to removal.") // To be removed before 1.0
-    @Suppress("UNUSED")
-    PARSE_UNSUPPORTED_ALIAS(
-        ErrorCategory.PARSER,
-        LOC_TOKEN,
-        "unsupported syntax for alias, `at` and `as` are supported"
+        "expected one of: [${DateTimePart.values().joinToString()}]"
     ),
 
     PARSE_FAILED_STACK_OVERFLOW(
@@ -292,147 +125,16 @@ enum class ErrorCode(
         }
     },
 
-    @Deprecated("This ErrorCode is subject to removal.") // To be removed before 1.0
-    @Suppress("UNUSED")
-    PARSE_UNSUPPORTED_SYNTAX(
-        ErrorCategory.PARSER,
-        LOC_TOKEN,
-        "unsupported Syntax"
-    ),
-
-    @Deprecated("This ErrorCode is subject to removal.") // To be removed before 1.0
-    @Suppress("UNUSED")
-    PARSE_UNKNOWN_OPERATOR(
-        ErrorCategory.PARSER,
-        LOC_TOKEN,
-        "unsupported operator"
-    ),
-
-    @Deprecated("This ErrorCode is subject to removal.") // To be removed before 1.0
-    @Suppress("UNUSED")
-    PARSE_INVALID_PATH_COMPONENT(
-        ErrorCategory.PARSER,
-        LOC_TOKEN + setOf(Property.TOKEN_TYPE, Property.TOKEN_VALUE),
-        "invalid Path component"
-    ) {
-        override fun getErrorMessage(errorContext: PropertyValueMap?): String {
-            return "Invalid path component, expecting either an ${TokenType.IDENTIFIER} or ${TokenType.STAR}, " +
-                "got: ${errorContext?.get(Property.TOKEN_TYPE) ?: UNKNOWN} " +
-                "with value: ${errorContext?.get(Property.TOKEN_VALUE) ?: UNKNOWN}"
-        }
-    },
-
-    @Deprecated("This ErrorCode is subject to removal.") // To be removed before 1.0
-    @Suppress("UNUSED")
-    PARSE_MISSING_IDENT_AFTER_AT(
-        ErrorCategory.PARSER,
-        LOC_TOKEN,
-        "identifier expected after `@` symbol"
-    ),
-
-    @Deprecated("This ErrorCode is subject to removal.") // To be removed before 1.0
-    @Suppress("UNUSED")
-    PARSE_UNEXPECTED_OPERATOR(
-        ErrorCategory.PARSER,
-        LOC_TOKEN,
-        "unexpected operator"
-    ),
-
-    @Deprecated("This ErrorCode is subject to removal.") // To be removed before 1.0
-    @Suppress("UNUSED")
-    PARSE_UNEXPECTED_TERM(
-        ErrorCategory.PARSER,
-        LOC_TOKEN,
-        "unexpected term found"
-    ),
-
     PARSE_UNEXPECTED_TOKEN(
         ErrorCategory.PARSER,
         LOC_TOKEN,
         "unexpected token found"
     ),
 
-    @Deprecated("This ErrorCode is subject to removal.") // To be removed before 1.0
-    @Suppress("UNUSED")
-    PARSE_UNEXPECTED_KEYWORD(
-        ErrorCategory.PARSER,
-        LOC_TOKEN,
-        "unexpected keyword found"
-    ),
-
-    @Deprecated("This ErrorCode is subject to removal.") // To be removed before 1.0
-    @Suppress("UNUSED")
-    PARSE_EXPECTED_EXPRESSION(
-        ErrorCategory.PARSER,
-        LOC_TOKEN,
-        "expected expression"
-    ),
-
-    @Deprecated("This ErrorCode is subject to removal.") // To be removed before 1.0
-    @Suppress("UNUSED")
-    PARSE_EXPECTED_LEFT_PAREN_AFTER_CAST(
-        ErrorCategory.PARSER,
-        LOC_TOKEN,
-        "expected left parenthesis after CAST"
-    ),
-
-    @Deprecated("This ErrorCode is subject to removal.") // To be removed before 1.0
-    @Suppress("UNUSED")
-    PARSE_EXPECTED_LEFT_PAREN_VALUE_CONSTRUCTOR(
-        ErrorCategory.PARSER,
-        LOC_TOKEN,
-        "expected left parenthesis"
-    ),
-
-    @Deprecated("This ErrorCode is subject to removal.") // To be removed before 1.0
-    @Suppress("UNUSED")
-    PARSE_EXPECTED_LEFT_PAREN_BUILTIN_FUNCTION_CALL(
-        ErrorCategory.PARSER,
-        LOC_TOKEN,
-        "expected left parenthesis"
-    ),
-
-    @Deprecated("This ErrorCode is subject to removal.") // To be removed before 1.0
-    @Suppress("UNUSED")
-    PARSE_EXPECTED_RIGHT_PAREN_BUILTIN_FUNCTION_CALL(
-        ErrorCategory.PARSER,
-        LOC_TOKEN,
-        "expected right parenthesis"
-    ),
-
-    @Deprecated("This ErrorCode is subject to removal.") // To be removed before 1.0
-    @Suppress("UNUSED")
-    PARSE_EXPECTED_ARGUMENT_DELIMITER(
-        ErrorCategory.PARSER,
-        LOC_TOKEN,
-        "expected argument delimiter"
-    ),
-
-    @Deprecated("This ErrorCode is subject to removal.") // To be removed before 1.0
-    @Suppress("UNUSED")
-    PARSE_CAST_ARITY(
-        ErrorCategory.PARSER,
-        LOC_TOKEN + setOf(Property.CAST_TO, Property.EXPECTED_ARITY_MIN, Property.EXPECTED_ARITY_MAX),
-        ""
-    ) {
-        override fun getErrorMessage(errorContext: PropertyValueMap?): String =
-            "Cast to type ${errorContext?.get(Property.CAST_TO)?.stringValue() ?: UNKNOWN} has incorrect arity." +
-                "Correct arity is ${errorContext?.get(Property.EXPECTED_ARITY_MIN)?.integerValue() ?: UNKNOWN}.." +
-                "${errorContext?.get(Property.EXPECTED_ARITY_MAX)?.integerValue() ?: UNKNOWN}"
-    },
-
     PARSE_TYPE_PARAMETER_EXCEEDED_MAXIMUM_VALUE(
         ErrorCategory.PARSER,
         LOC_TOKEN,
         "Type parameter has exceeded the maximum allowed value of ${Int.MAX_VALUE}"
-    ),
-
-    @Deprecated("This ErrorCode is subject to removal.") // To be removed before 1.0
-    @Suppress("UNUSED")
-    PARSE_INVALID_TYPE_PARAM(
-        ErrorCategory.PARSER,
-        LOC_TOKEN,
-        "invalid value used for type parameter"
     ),
 
     PARSE_INVALID_PRECISION_FOR_TIME(
@@ -451,199 +153,6 @@ enum class ErrorCode(
         ErrorCategory.PARSER,
         LOC_TOKEN,
         "expected time string to be of the format HH:MM:SS[.dddd...][+|-HH:MM]"
-    ),
-
-    @Deprecated("This ErrorCode is subject to removal.") // To be removed before 1.0
-    @Suppress("UNUSED")
-    PARSE_EMPTY_SELECT(
-        ErrorCategory.PARSER,
-        LOC_TOKEN,
-        "found empty SELECT list"
-    ),
-
-    @Deprecated("This ErrorCode is subject to removal.") // To be removed before 1.0
-    @Suppress("UNUSED")
-    PARSE_SELECT_MISSING_FROM(
-        ErrorCategory.PARSER,
-        LOC_TOKEN,
-        "missing FROM after SELECT list"
-    ),
-
-    @Deprecated("This ErrorCode is subject to removal.") // To be removed before 1.0
-    @Suppress("UNUSED")
-    PARSE_MISSING_OPERATION(
-        ErrorCategory.PARSER,
-        LOC_TOKEN,
-        "expected DML or SELECT operation after FROM"
-    ),
-
-    @Deprecated("This ErrorCode is subject to removal.") // To be removed before 1.0
-    @Suppress("UNUSED")
-    PARSE_MISSING_SET_ASSIGNMENT(
-        ErrorCategory.PARSER,
-        LOC_TOKEN,
-        "expected assignment for SET"
-    ),
-
-    @Deprecated("This ErrorCode is subject to removal.") // To be removed before 1.0
-    @Suppress("UNUSED")
-    PARSE_EXPECTED_IDENT_FOR_GROUP_NAME(
-        ErrorCategory.PARSER,
-        LOC_TOKEN,
-        "expected identifier for GROUP name"
-    ),
-
-    @Deprecated("This ErrorCode is subject to removal.") // To be removed before 1.0
-    @Suppress("UNUSED")
-    PARSE_EXPECTED_IDENT_FOR_ALIAS(
-        ErrorCategory.PARSER,
-        LOC_TOKEN,
-        "expected identifier for alias"
-    ),
-
-    @Deprecated("This ErrorCode is subject to removal.") // To be removed before 1.0
-    @Suppress("UNUSED")
-    PARSE_EXPECTED_KEYWORD_FOR_MATCH(
-        ErrorCategory.PARSER,
-        LOC_TOKEN,
-        "expected keyword for match"
-    ),
-
-    @Deprecated("This ErrorCode is subject to removal.") // To be removed before 1.0
-    @Suppress("UNUSED")
-    PARSE_EXPECTED_IDENT_FOR_MATCH(
-        ErrorCategory.PARSER,
-        LOC_TOKEN,
-        "expected identifier for match"
-    ),
-
-    @Deprecated("This ErrorCode is subject to removal.") // To be removed before 1.0
-    @Suppress("UNUSED")
-    PARSE_EXPECTED_LEFT_PAREN_FOR_MATCH_NODE(
-        ErrorCategory.PARSER,
-        LOC_TOKEN,
-        "expected left parenthesis for match node"
-    ),
-
-    @Deprecated("This ErrorCode is subject to removal.") // To be removed before 1.0
-    @Suppress("UNUSED")
-    PARSE_EXPECTED_RIGHT_PAREN_FOR_MATCH_NODE(
-        ErrorCategory.PARSER,
-        LOC_TOKEN,
-        "expected right parenthesis for match node"
-    ),
-
-    @Deprecated("This ErrorCode is subject to removal.") // To be removed before 1.0
-    @Suppress("UNUSED")
-    PARSE_EXPECTED_LEFT_BRACKET_FOR_MATCH_EDGE(
-        ErrorCategory.PARSER,
-        LOC_TOKEN,
-        "expected left bracket for match edge"
-    ),
-
-    @Deprecated("This ErrorCode is subject to removal.") // To be removed before 1.0
-    @Suppress("UNUSED")
-    PARSE_EXPECTED_RIGHT_BRACKET_FOR_MATCH_EDGE(
-        ErrorCategory.PARSER,
-        LOC_TOKEN,
-        "expected right bracket for match edge"
-    ),
-
-    @Deprecated("This ErrorCode is subject to removal.") // To be removed before 1.0
-    @Suppress("UNUSED")
-    PARSE_EXPECTED_PARENTHESIZED_PATTERN(
-        ErrorCategory.PARSER,
-        LOC_TOKEN,
-        "expected appropriate closing punctuation for parenthesized pattern"
-    ),
-
-    @Deprecated("This ErrorCode is subject to removal.") // To be removed before 1.0
-    @Suppress("UNUSED")
-    PARSE_EXPECTED_EDGE_PATTERN_MATCH_EDGE(
-        ErrorCategory.PARSER,
-        LOC_TOKEN,
-        "expected edge pattern for match edge"
-    ),
-
-    @Deprecated("This ErrorCode is subject to removal.") // To be removed before 1.0
-    @Suppress("UNUSED")
-    PARSE_EXPECTED_EQUALS_FOR_MATCH_PATH_VARIABLE(
-        ErrorCategory.PARSER,
-        LOC_TOKEN,
-        "expected equals for match path variable"
-    ),
-
-    @Deprecated("This ErrorCode is subject to removal.") // To be removed before 1.0
-    @Suppress("UNUSED")
-    PARSE_EXPECTED_AS_FOR_LET(
-        ErrorCategory.PARSER,
-        LOC_TOKEN,
-        "expected AS for LET clause"
-    ),
-
-    @Deprecated("This ErrorCode is subject to removal.") // To be removed before 1.0
-    @Suppress("UNUSED")
-    PARSE_UNSUPPORTED_CALL_WITH_STAR(
-        ErrorCategory.PARSER,
-        LOC_TOKEN,
-        "function call, other than COUNT, with (*) as parameter is not supported"
-    ),
-
-    @Deprecated("This ErrorCode is subject to removal.") // To be removed before 1.0
-    @Suppress("UNUSED")
-    PARSE_NON_UNARY_AGREGATE_FUNCTION_CALL(
-        ErrorCategory.PARSER,
-        LOC_TOKEN,
-        "Aggregate function calls take 1 argument only"
-    ),
-
-    @Deprecated("This ErrorCode is subject to removal.") // To be removed before 1.0
-    @Suppress("UNUSED")
-    PARSE_NO_STORED_PROCEDURE_PROVIDED(
-        ErrorCategory.PARSER,
-        LOC_TOKEN,
-        "No stored procedure provided"
-    ),
-
-    @Deprecated("This ErrorCode is subject to removal.") // To be removed before 1.0
-    @Suppress("UNUSED")
-    PARSE_MALFORMED_JOIN(
-        ErrorCategory.PARSER,
-        LOC_TOKEN,
-        "malformed use of FROM with JOIN"
-    ),
-
-    @Deprecated("This ErrorCode is subject to removal.") // To be removed before 1.0
-    @Suppress("UNUSED")
-    PARSE_EXPECTED_IDENT_FOR_AT(
-        ErrorCategory.PARSER,
-        LOC_TOKEN,
-        "expected identifier for AT name"
-    ),
-
-    @Deprecated("This ErrorCode is subject to removal.") // To be removed before 1.0
-    @Suppress("UNUSED")
-    PARSE_INVALID_CONTEXT_FOR_WILDCARD_IN_SELECT_LIST(
-        ErrorCategory.PARSER,
-        LOC_TOKEN,
-        "Invalid use of * in select list"
-    ),
-
-    // SQB = SQuare Bracket
-    @Deprecated("This ErrorCode is subject to removal.") // To be removed before 1.0
-    @Suppress("UNUSED")
-    PARSE_CANNOT_MIX_SQB_AND_WILDCARD_IN_SELECT_LIST(
-        ErrorCategory.PARSER,
-        LOC_TOKEN,
-        "Cannot mix [] and * in the same expression in a select list"
-    ),
-
-    @Deprecated("This ErrorCode is subject to removal.") // To be removed before 1.0
-    @Suppress("UNUSED")
-    PARSE_ASTERISK_IS_NOT_ALONE_IN_SELECT_LIST(
-        ErrorCategory.PARSER,
-        LOCATION,
-        "Other expressions may not be present in the select list when '*' is used without dot notation."
     ),
 
     PARSE_INVALID_TRIM_SPEC(
@@ -777,28 +286,6 @@ enum class ErrorCode(
         override fun getErrorMessage(errorContext: PropertyValueMap?): String = ""
     },
 
-    @Deprecated("This ErrorCode is subject to removal.") // To be removed before 1.0
-    @Suppress("UNUSED")
-    SEMANTIC_DUPLICATE_ALIASES_IN_SELECT_LIST_ITEM(
-        ErrorCategory.SEMANTIC,
-        LOCATION,
-        ""
-    ) {
-        override fun getErrorMessage(errorContext: PropertyValueMap?): String =
-            "Duplicate projection field encountered in SelectListItem expression"
-    },
-
-    @Deprecated("This ErrorCode is subject to removal.") // To be removed before 1.0
-    @Suppress("UNUSED")
-    SEMANTIC_NO_SUCH_FUNCTION(
-        ErrorCategory.SEMANTIC,
-        LOCATION + setOf(Property.FUNCTION_NAME),
-        ""
-    ) {
-        override fun getErrorMessage(errorContext: PropertyValueMap?): String =
-            "No such function: ${errorContext?.get(Property.FUNCTION_NAME)?.stringValue() ?: UNKNOWN} "
-    },
-
     EVALUATOR_NO_SUCH_PROCEDURE(
         ErrorCategory.EVALUATOR,
         LOCATION + setOf(Property.PROCEDURE_NAME),
@@ -841,19 +328,6 @@ enum class ErrorCode(
             "Invalid argument type for ${errorContext?.get(Property.FUNCTION_NAME) ?: UNKNOWN} " +
                 "argument number ${errorContext?.get(Property.ARGUMENT_POSITION) ?: UNKNOWN}, " +
                 "expected: [${errorContext?.get(Property.EXPECTED_ARGUMENT_TYPES) ?: UNKNOWN}] " +
-                "got: ${errorContext?.get(Property.ACTUAL_ARGUMENT_TYPES) ?: UNKNOWN}"
-    },
-
-    @Deprecated("This ErrorCode is subject to removal.") // To be removed before 1.0
-    @Suppress("UNUSED")
-    SEMANTIC_INCORRECT_ARGUMENT_TYPES_TO_FUNC_CALL(
-        ErrorCategory.SEMANTIC,
-        LOCATION + setOf(Property.EXPECTED_ARGUMENT_TYPES, Property.ACTUAL_ARGUMENT_TYPES, Property.FUNCTION_NAME),
-        "Incorrect type of arguments to function call"
-    ) {
-        override fun getErrorMessage(errorContext: PropertyValueMap?): String =
-            "Invalid argument types for ${errorContext?.get(Property.FUNCTION_NAME) ?: UNKNOWN}, " +
-                "expected: ${errorContext?.get(Property.EXPECTED_ARGUMENT_TYPES) ?: UNKNOWN} " +
                 "got: ${errorContext?.get(Property.ACTUAL_ARGUMENT_TYPES) ?: UNKNOWN}"
     },
 
@@ -908,11 +382,10 @@ enum class ErrorCode(
     ),
 
     /**
-     * This is a generic error thrown whenever Java's [DateTimeFormatter] throws an exception when attempting to
+     * This is a generic error thrown whenever Java's [java.time.format.DateTimeFormatter] throws an exception when attempting to
      * parse a timestamp.  Ideally, this doesn't happen and the invalidity is detected by
      * [org.partiql.lang.eval.builtins.timestamp.FormatPattern] instead.  This needs to stick around until we
-     * replace [DateTimeFormatter].
-     * TODO:  remove this after replacing [DateTimeFormatter].
+     * replace [java.time.format.DateTimeFormatter].
      */
     EVALUATOR_INVALID_TIMESTAMP_FORMAT_PATTERN(
         ErrorCategory.EVALUATOR,
@@ -920,6 +393,7 @@ enum class ErrorCode(
         "",
         ErrorBehaviorInPermissiveMode.RETURN_MISSING
     ) {
+        // TODO: Remove this enum after replacing [java.time.format.DateTimeFormatter].
         override fun getErrorMessage(errorContext: PropertyValueMap?): String =
             "Invalid timestamp format pattern: '${errorContext?.get(Property.TIMESTAMP_FORMAT_PATTERN)}'."
     },
@@ -1211,13 +685,6 @@ enum class ErrorCode(
             "Value was not an instance of the expected static type: ${errorContext.getProperty(Property.EXPECTED_STATIC_TYPE)}"
     },
 
-    EVALUATOR_NON_TEXT_STRUCT_KEY(
-        ErrorCategory.EVALUATOR,
-        LOCATION,
-        "STRUCT key must be text",
-        ErrorBehaviorInPermissiveMode.RETURN_MISSING
-    ),
-
     EVALUATOR_NON_SINGLETON_COLLECTION(
         ErrorCategory.EVALUATOR,
         LOCATION,
@@ -1270,22 +737,6 @@ enum class ErrorCode(
             "A variable named '${errorContext.getProperty(Property.BINDING_NAME)}' was already defined in this scope"
     },
 
-    /**
-     * Indicates incorrectness surrounding arity of [NAry] and [DataType] nodes.
-     */
-    @Deprecated("This ErrorCode is subject to removal.")
-    @Suppress("UNUSED")
-    SEMANTIC_INCORRECT_NODE_ARITY(
-        ErrorCategory.SEMANTIC,
-        LOCATION + setOf(Property.EXPECTED_ARITY_MAX, Property.EXPECTED_ARITY_MIN, Property.ACTUAL_ARITY, Property.FUNCTION_NAME),
-        "Incorrect number of arguments for node"
-    ) {
-        override fun getErrorMessage(errorContext: PropertyValueMap?): String =
-            "Incorrect number of arguments supplied to `${errorContext.getProperty(Property.FUNCTION_NAME)}`. " +
-                "Min = ${errorContext.getProperty(Property.EXPECTED_ARITY_MIN)}, max = ${errorContext.getProperty(Property.EXPECTED_ARITY_MAX)} " +
-                "Actual = ${errorContext.getProperty(Property.ACTUAL_ARITY)}"
-    },
-
     SEMANTIC_INVALID_DECIMAL_ARGUMENTS(
         ErrorCategory.SEMANTIC,
         LOCATION,
@@ -1296,12 +747,6 @@ enum class ErrorCode(
         ErrorCategory.EVALUATOR,
         LOCATION,
         "HAVING cannot be used without GROUP BY or GROUP ALL"
-    ),
-
-    SEMANTIC_ASTERISK_USED_WITH_OTHER_ITEMS(
-        ErrorCategory.EVALUATOR,
-        LOCATION,
-        "`*` may not be used with other items in a select list"
     ),
 
     SEMANTIC_MISSING_AS_NAME(
@@ -1356,9 +801,6 @@ enum class ErrorCode(
 
     protected fun getTokenDescription(errorContext: PropertyValueMap?): String =
         errorContext?.get(Property.TOKEN_DESCRIPTION)?.toString() ?: UNKNOWN
-
-    protected fun getKeyword(errorContext: PropertyValueMap?): String =
-        errorContext?.get(Property.KEYWORD)?.stringValue() ?: UNKNOWN
 
     protected fun getTokenDescriptionAndTokenValue(errorContext: PropertyValueMap?): String =
         getTokenDescription(errorContext) + " : " + getTokenValue(errorContext)

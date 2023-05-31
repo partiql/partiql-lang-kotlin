@@ -2,18 +2,18 @@ package org.partiql.lang.prettyprint
 
 import org.junit.Assert
 import org.junit.Test
-import org.partiql.lang.syntax.PartiQLParser
+import org.partiql.lang.syntax.PartiQLParserBuilder
 
 class QueryPrettyPrinterTest {
     private val prettyPrinter = QueryPrettyPrinter()
-    private val sqlParser = PartiQLParser()
+    private val parser = PartiQLParserBuilder.standard().build()
 
     private fun checkPrettyPrintQuery(query: String, expected: String) {
         // In triples quotes, a tab consists of 4 whitespaces. We need to transform them into a tab.
         val newExpected = expected.replace("    ", "\t")
         Assert.assertEquals(newExpected, prettyPrinter.prettyPrintQuery(query))
         // New sting and old string should be the same when transformed into PIG AST
-        Assert.assertEquals(sqlParser.parseAstStatement(query), sqlParser.parseAstStatement(newExpected))
+        Assert.assertEquals(parser.parseAstStatement(query), parser.parseAstStatement(newExpected))
     }
 
     // ********
@@ -96,7 +96,7 @@ class QueryPrettyPrinterTest {
     @Test
     fun insertValue() {
         checkPrettyPrintQuery(
-            "INSERT INTO foo VALUE (1, 2)", "INSERT INTO foo VALUE [ 1, 2 ]"
+            "INSERT INTO foo VALUE (1, 2)", "INSERT INTO foo VALUE ( 1, 2 )"
         )
     }
 
@@ -454,8 +454,13 @@ class QueryPrettyPrinterTest {
     }
 
     @Test
-    fun inCollection() {
+    fun inCollectionBrackets() {
         checkPrettyPrintQuery("1 IN [1, 2, 3]", "1 IN [ 1, 2, 3 ]")
+    }
+
+    @Test
+    fun inCollectionParens() {
+        checkPrettyPrintQuery("1 IN (1, 2, 3)", "1 IN ( 1, 2, 3 )")
     }
 
     @Test

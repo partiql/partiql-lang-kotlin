@@ -26,6 +26,13 @@ import java.time.Instant
  * @param currentCatalog the current catalog of the session
  * @param currentDirectory the current "namespace" within the Catalog. This will aid in building
  * [org.partiql.spi.connector.ConnectorObjectPath]'s for unresolved variables.
+ * @param catalogConfig a map where each key represents a catalog's name, and each value represents the configuration
+ *  ([StructElement]) for the corresponding [org.partiql.spi.connector.Connector]. The [StructElement] has a single mandatory
+ *  key-value pair, with the key being [org.partiql.spi.connector.Constants.CONFIG_KEY_CONNECTOR_NAME] and the value
+ *  being the [com.amazon.ionelement.api.StringElement] representing the name of the corresponding [org.partiql.spi.connector.Connector].
+ *  The [StructElement] *may* include other key-value pairs that are required/optional by the [org.partiql.spi.connector.Connector].
+ *  This [StructElement] will be passed to [org.partiql.spi.connector.Connector.Factory.create] to create the
+ *  [org.partiql.spi.connector.Connector].
  * @param instant the instant evaluation begins
  */
 public class PlannerSession(

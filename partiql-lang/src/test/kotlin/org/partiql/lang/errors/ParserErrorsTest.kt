@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Amazon.com, Inc. or its affiliates.  All rights reserved.
+ * Copyright Amazon.com, Inc. or its affiliates.  All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  *  You may not use this file except in compliance with the License.
@@ -12,15 +12,13 @@
  *  language governing permissions and limitations under the License.
  */
 
-@file:Suppress("DEPRECATION")
-
 package org.partiql.lang.errors
 
 import com.amazon.ion.Timestamp
 import org.junit.Test
 import org.partiql.lang.syntax.PartiQLParserTestBase
-import org.partiql.lang.syntax.antlr.PartiQLParser
 import org.partiql.lang.util.getAntlrDisplayString
+import org.partiql.parser.antlr.PartiQLParser
 
 class ParserErrorsTest : PartiQLParserTestBase() {
 
@@ -103,7 +101,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 36L,
                 Property.TOKEN_DESCRIPTION to PartiQLParser.AS.getAntlrDisplayString(),
-                Property.TOKEN_VALUE to ion.newSymbol("as")
+                Property.TOKEN_VALUE to ion.newSymbol("AS")
             )
         )
     }
@@ -117,7 +115,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 8L,
                 Property.TOKEN_DESCRIPTION to PartiQLParser.FROM.getAntlrDisplayString(),
-                Property.TOKEN_VALUE to ion.newSymbol("from")
+                Property.TOKEN_VALUE to ion.newSymbol("FROM")
             )
         )
     }
@@ -131,7 +129,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 30L,
                 Property.TOKEN_DESCRIPTION to PartiQLParser.FROM.getAntlrDisplayString(),
-                Property.TOKEN_VALUE to ion.newSymbol("from")
+                Property.TOKEN_VALUE to ion.newSymbol("FROM")
             )
         )
     }
@@ -145,7 +143,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 11L,
                 Property.TOKEN_DESCRIPTION to PartiQLParser.UPDATE.getAntlrDisplayString(),
-                Property.TOKEN_VALUE to ion.newSymbol("update")
+                Property.TOKEN_VALUE to ion.newSymbol("UPDATE")
             )
         )
     }
@@ -299,7 +297,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 11L,
                 Property.TOKEN_DESCRIPTION to PartiQLParser.ELSE.getAntlrDisplayString(),
-                Property.TOKEN_VALUE to ion.newSymbol("else")
+                Property.TOKEN_VALUE to ion.newSymbol("ELSE")
             )
         )
     }
@@ -313,7 +311,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 23L,
                 Property.TOKEN_DESCRIPTION to PartiQLParser.WHERE.getAntlrDisplayString(),
-                Property.TOKEN_VALUE to ion.newSymbol("where")
+                Property.TOKEN_VALUE to ion.newSymbol("WHERE")
             )
         )
     }
@@ -901,7 +899,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 11L,
                 Property.TOKEN_DESCRIPTION to PartiQLParser.SELECT.getAntlrDisplayString(),
-                Property.TOKEN_VALUE to ion.newSymbol("select")
+                Property.TOKEN_VALUE to ion.newSymbol("SELECT")
             ),
         )
     }
@@ -915,7 +913,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 6L,
                 Property.TOKEN_DESCRIPTION to PartiQLParser.END.getAntlrDisplayString(),
-                Property.TOKEN_VALUE to ion.newSymbol("end")
+                Property.TOKEN_VALUE to ion.newSymbol("END")
             ),
         )
     }
@@ -929,7 +927,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 6L,
                 Property.TOKEN_DESCRIPTION to PartiQLParser.ELSE.getAntlrDisplayString(),
-                Property.TOKEN_VALUE to ion.newSymbol("else")
+                Property.TOKEN_VALUE to ion.newSymbol("ELSE")
             ),
         )
     }
@@ -943,7 +941,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 11L,
                 Property.TOKEN_DESCRIPTION to PartiQLParser.ELSE.getAntlrDisplayString(),
-                Property.TOKEN_VALUE to ion.newSymbol("else")
+                Property.TOKEN_VALUE to ion.newSymbol("ELSE")
             ),
         )
     }
@@ -1015,7 +1013,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 18L,
                 Property.TOKEN_DESCRIPTION to PartiQLParser.ORDER.getAntlrDisplayString(),
-                Property.TOKEN_VALUE to ion.newSymbol("order")
+                Property.TOKEN_VALUE to ion.newSymbol("ORDER")
             )
         )
     }
@@ -1029,7 +1027,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 18L,
                 Property.TOKEN_DESCRIPTION to PartiQLParser.ORDER.getAntlrDisplayString(),
-                Property.TOKEN_VALUE to ion.newSymbol("order")
+                Property.TOKEN_VALUE to ion.newSymbol("ORDER")
             )
         )
     }
@@ -1043,7 +1041,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 18L,
                 Property.TOKEN_DESCRIPTION to PartiQLParser.ORDER.getAntlrDisplayString(),
-                Property.TOKEN_VALUE to ion.newSymbol("order")
+                Property.TOKEN_VALUE to ion.newSymbol("ORDER")
             )
         )
     }
@@ -1085,7 +1083,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 18L,
                 Property.TOKEN_DESCRIPTION to PartiQLParser.ORDER.getAntlrDisplayString(),
-                Property.TOKEN_VALUE to ion.newSymbol("order")
+                Property.TOKEN_VALUE to ion.newSymbol("ORDER")
             )
         )
     }
@@ -1099,7 +1097,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 18L,
                 Property.TOKEN_DESCRIPTION to PartiQLParser.ORDER.getAntlrDisplayString(),
-                Property.TOKEN_VALUE to ion.newSymbol("order")
+                Property.TOKEN_VALUE to ion.newSymbol("ORDER")
             )
         )
     }
@@ -1127,7 +1125,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 18L,
                 Property.TOKEN_DESCRIPTION to PartiQLParser.ORDER.getAntlrDisplayString(),
-                Property.TOKEN_VALUE to ion.newSymbol("order")
+                Property.TOKEN_VALUE to ion.newSymbol("ORDER")
             )
         )
     }
@@ -1155,7 +1153,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 33L,
                 Property.TOKEN_DESCRIPTION to PartiQLParser.FIRST.getAntlrDisplayString(),
-                Property.TOKEN_VALUE to ion.newSymbol("first")
+                Property.TOKEN_VALUE to ion.newSymbol("FIRST")
             )
         )
     }
@@ -1169,7 +1167,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 33L,
                 Property.TOKEN_DESCRIPTION to PartiQLParser.LAST.getAntlrDisplayString(),
-                Property.TOKEN_VALUE to ion.newSymbol("last")
+                Property.TOKEN_VALUE to ion.newSymbol("LAST")
             )
         )
     }
@@ -1197,7 +1195,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 35L,
                 Property.TOKEN_DESCRIPTION to PartiQLParser.SELECT.getAntlrDisplayString(),
-                Property.TOKEN_VALUE to ion.newSymbol("select")
+                Property.TOKEN_VALUE to ion.newSymbol("SELECT")
             )
         )
     }
@@ -1211,7 +1209,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 41L,
                 Property.TOKEN_DESCRIPTION to PartiQLParser.SELECT.getAntlrDisplayString(),
-                Property.TOKEN_VALUE to ion.newSymbol("select")
+                Property.TOKEN_VALUE to ion.newSymbol("SELECT")
             )
         )
     }
@@ -1225,7 +1223,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 27L,
                 Property.TOKEN_DESCRIPTION to PartiQLParser.LIMIT.getAntlrDisplayString(),
-                Property.TOKEN_VALUE to ion.newSymbol("limit")
+                Property.TOKEN_VALUE to ion.newSymbol("LIMIT")
             )
         )
     }
@@ -1239,7 +1237,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 36L,
                 Property.TOKEN_DESCRIPTION to PartiQLParser.ORDER.getAntlrDisplayString(),
-                Property.TOKEN_VALUE to ion.newSymbol("order")
+                Property.TOKEN_VALUE to ion.newSymbol("ORDER")
             )
         )
     }
@@ -1253,7 +1251,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 36L,
                 Property.TOKEN_DESCRIPTION to PartiQLParser.ORDER.getAntlrDisplayString(),
-                Property.TOKEN_VALUE to ion.newSymbol("order")
+                Property.TOKEN_VALUE to ion.newSymbol("ORDER")
             )
         )
     }
@@ -1309,7 +1307,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 25L,
                 Property.TOKEN_DESCRIPTION to PartiQLParser.CONFLICT.getAntlrDisplayString(),
-                Property.TOKEN_VALUE to ion.newSymbol("conflict")
+                Property.TOKEN_VALUE to ion.newSymbol("CONFLICT")
             )
         )
     }
@@ -1323,7 +1321,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 37L,
                 Property.TOKEN_DESCRIPTION to PartiQLParser.WHEN.getAntlrDisplayString(),
-                Property.TOKEN_VALUE to ion.newSymbol("when")
+                Property.TOKEN_VALUE to ion.newSymbol("WHEN")
             ),
         )
     }
@@ -1337,7 +1335,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 43L,
                 Property.TOKEN_DESCRIPTION to PartiQLParser.DO.getAntlrDisplayString(),
-                Property.TOKEN_VALUE to ion.newSymbol("do")
+                Property.TOKEN_VALUE to ion.newSymbol("DO")
             ),
         )
     }
@@ -1393,7 +1391,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 32L,
                 Property.TOKEN_DESCRIPTION to PartiQLParser.CONFLICT.getAntlrDisplayString(),
-                Property.TOKEN_VALUE to ion.newSymbol("conflict")
+                Property.TOKEN_VALUE to ion.newSymbol("CONFLICT")
             )
         )
     }
@@ -1407,7 +1405,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 44L,
                 Property.TOKEN_DESCRIPTION to PartiQLParser.WHEN.getAntlrDisplayString(),
-                Property.TOKEN_VALUE to ion.newSymbol("when")
+                Property.TOKEN_VALUE to ion.newSymbol("WHEN")
             ),
         )
     }
@@ -1421,7 +1419,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 50L,
                 Property.TOKEN_DESCRIPTION to PartiQLParser.DO.getAntlrDisplayString(),
-                Property.TOKEN_VALUE to ion.newSymbol("do")
+                Property.TOKEN_VALUE to ion.newSymbol("DO")
             ),
         )
     }
@@ -1493,7 +1491,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 23L,
                 Property.TOKEN_DESCRIPTION to PartiQLParser.WHERE.getAntlrDisplayString(),
-                Property.TOKEN_VALUE to ion.newSymbol("where")
+                Property.TOKEN_VALUE to ion.newSymbol("WHERE")
             ),
         )
     }
@@ -1535,7 +1533,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 23L,
                 Property.TOKEN_DESCRIPTION to PartiQLParser.WHERE.getAntlrDisplayString(),
-                Property.TOKEN_VALUE to ion.newSymbol("where")
+                Property.TOKEN_VALUE to ion.newSymbol("WHERE")
             ),
         )
     }
@@ -1549,7 +1547,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 36L,
                 Property.TOKEN_DESCRIPTION to PartiQLParser.ESCAPE.getAntlrDisplayString(),
-                Property.TOKEN_VALUE to ion.newSymbol("escape")
+                Property.TOKEN_VALUE to ion.newSymbol("ESCAPE")
             ),
         )
     }
@@ -1636,7 +1634,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 36L,
                 Property.TOKEN_DESCRIPTION to PartiQLParser.AS.getAntlrDisplayString(),
-                Property.TOKEN_VALUE to ion.newSymbol("as")
+                Property.TOKEN_VALUE to ion.newSymbol("AS")
             )
         )
     }
@@ -1650,7 +1648,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 9L,
                 Property.TOKEN_DESCRIPTION to PartiQLParser.FROM.getAntlrDisplayString(),
-                Property.TOKEN_VALUE to ion.newSymbol("from")
+                Property.TOKEN_VALUE to ion.newSymbol("FROM")
             ),
 
         )
@@ -1903,7 +1901,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 21L,
                 Property.TOKEN_DESCRIPTION to PartiQLParser.SELECT.getAntlrDisplayString(),
-                Property.TOKEN_VALUE to ion.newSymbol("select")
+                Property.TOKEN_VALUE to ion.newSymbol("SELECT")
             )
         )
     }
@@ -2112,7 +2110,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 8L,
                 Property.TOKEN_DESCRIPTION to PartiQLParser.DELETE.getAntlrDisplayString(),
-                Property.TOKEN_VALUE to ion.newSymbol("delete")
+                Property.TOKEN_VALUE to ion.newSymbol("DELETE")
             ),
 
         )
@@ -2127,7 +2125,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 8L,
                 Property.TOKEN_DESCRIPTION to PartiQLParser.UPDATE.getAntlrDisplayString(),
-                Property.TOKEN_VALUE to ion.newSymbol("update")
+                Property.TOKEN_VALUE to ion.newSymbol("UPDATE")
             ),
 
         )
@@ -2217,7 +2215,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 21L,
                 Property.TOKEN_DESCRIPTION to PartiQLParser.SET.getAntlrDisplayString(),
-                Property.TOKEN_VALUE to ion.newSymbol("set")
+                Property.TOKEN_VALUE to ion.newSymbol("SET")
             ),
 
         )
@@ -2232,7 +2230,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 21L,
                 Property.TOKEN_DESCRIPTION to PartiQLParser.REMOVE.getAntlrDisplayString(),
-                Property.TOKEN_VALUE to ion.newSymbol("remove")
+                Property.TOKEN_VALUE to ion.newSymbol("REMOVE")
             ),
 
         )
@@ -2247,7 +2245,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 21L,
                 Property.TOKEN_DESCRIPTION to PartiQLParser.INSERT.getAntlrDisplayString(),
-                Property.TOKEN_VALUE to ion.newSymbol("insert")
+                Property.TOKEN_VALUE to ion.newSymbol("INSERT")
             ),
 
         )
@@ -2262,7 +2260,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 21L,
                 Property.TOKEN_DESCRIPTION to PartiQLParser.DELETE.getAntlrDisplayString(),
-                Property.TOKEN_VALUE to ion.newSymbol("delete")
+                Property.TOKEN_VALUE to ion.newSymbol("DELETE")
             ),
 
         )
@@ -2277,7 +2275,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 21L,
                 Property.TOKEN_DESCRIPTION to PartiQLParser.EXEC.getAntlrDisplayString(),
-                Property.TOKEN_VALUE to ion.newSymbol("exec")
+                Property.TOKEN_VALUE to ion.newSymbol("EXEC")
             ),
 
         )
@@ -2292,7 +2290,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 21L,
                 Property.TOKEN_DESCRIPTION to PartiQLParser.CREATE.getAntlrDisplayString(),
-                Property.TOKEN_VALUE to ion.newSymbol("create")
+                Property.TOKEN_VALUE to ion.newSymbol("CREATE")
             ),
 
         )
@@ -2307,7 +2305,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 21L,
                 Property.TOKEN_DESCRIPTION to PartiQLParser.DROP.getAntlrDisplayString(),
-                Property.TOKEN_VALUE to ion.newSymbol("drop")
+                Property.TOKEN_VALUE to ion.newSymbol("DROP")
             ),
 
         )
@@ -2322,7 +2320,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 21L,
                 Property.TOKEN_DESCRIPTION to PartiQLParser.CREATE.getAntlrDisplayString(),
-                Property.TOKEN_VALUE to ion.newSymbol("create")
+                Property.TOKEN_VALUE to ion.newSymbol("CREATE")
             ),
 
         )
@@ -2337,7 +2335,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 8L,
                 Property.TOKEN_DESCRIPTION to PartiQLParser.REMOVE.getAntlrDisplayString(),
-                Property.TOKEN_VALUE to ion.newSymbol("remove")
+                Property.TOKEN_VALUE to ion.newSymbol("REMOVE")
             ),
 
         )
@@ -2352,7 +2350,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 23L,
                 Property.TOKEN_DESCRIPTION to PartiQLParser.INSERT.getAntlrDisplayString(),
-                Property.TOKEN_VALUE to ion.newSymbol("insert")
+                Property.TOKEN_VALUE to ion.newSymbol("INSERT")
             ),
 
         )
@@ -2367,7 +2365,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 8L,
                 Property.TOKEN_DESCRIPTION to PartiQLParser.REMOVE.getAntlrDisplayString(),
-                Property.TOKEN_VALUE to ion.newSymbol("remove")
+                Property.TOKEN_VALUE to ion.newSymbol("REMOVE")
             ),
         )
     }
@@ -2381,7 +2379,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 15L,
                 Property.TOKEN_DESCRIPTION to PartiQLParser.REMOVE.getAntlrDisplayString(),
-                Property.TOKEN_VALUE to ion.newSymbol("remove")
+                Property.TOKEN_VALUE to ion.newSymbol("REMOVE")
             ),
 
         )
@@ -2396,7 +2394,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 21L,
                 Property.TOKEN_DESCRIPTION to PartiQLParser.DROP.getAntlrDisplayString(),
-                Property.TOKEN_VALUE to ion.newSymbol("drop")
+                Property.TOKEN_VALUE to ion.newSymbol("DROP")
             ),
 
         )
@@ -2426,7 +2424,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 25L,
                 Property.TOKEN_DESCRIPTION to PartiQLParser.MODIFIED.getAntlrDisplayString(),
-                Property.TOKEN_VALUE to ion.newSymbol("modified")
+                Property.TOKEN_VALUE to ion.newSymbol("MODIFIED")
             ),
         )
     }
@@ -2556,7 +2554,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
             Property.LINE_NUMBER to 1L,
             Property.COLUMN_NUMBER to 14L,
             Property.TOKEN_DESCRIPTION to PartiQLParser.SELECT.getAntlrDisplayString(),
-            Property.TOKEN_VALUE to ion.newSymbol("select")
+            Property.TOKEN_VALUE to ion.newSymbol("SELECT")
         )
     )
 
@@ -2568,7 +2566,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
             Property.LINE_NUMBER to 1L,
             Property.COLUMN_NUMBER to 8L,
             Property.TOKEN_DESCRIPTION to PartiQLParser.VIEW.getAntlrDisplayString(),
-            Property.TOKEN_VALUE to ion.newSymbol("view")
+            Property.TOKEN_VALUE to ion.newSymbol("VIEW")
         )
     )
 
@@ -2604,7 +2602,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
             Property.LINE_NUMBER to 1L,
             Property.COLUMN_NUMBER to 14L,
             Property.TOKEN_DESCRIPTION to PartiQLParser.CREATE.getAntlrDisplayString(),
-            Property.TOKEN_VALUE to ion.newSymbol("create")
+            Property.TOKEN_VALUE to ion.newSymbol("CREATE")
         )
     )
 
@@ -2640,7 +2638,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
             Property.LINE_NUMBER to 1L,
             Property.COLUMN_NUMBER to 47L,
             Property.TOKEN_DESCRIPTION to PartiQLParser.NOT.getAntlrDisplayString(),
-            Property.TOKEN_VALUE to ion.newSymbol("not")
+            Property.TOKEN_VALUE to ion.newSymbol("NOT")
         )
     )
 
@@ -2669,7 +2667,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
             Property.LINE_NUMBER to 1L,
             Property.COLUMN_NUMBER to 29L,
             Property.TOKEN_DESCRIPTION to PartiQLParser.NOT.getAntlrDisplayString(),
-            Property.TOKEN_VALUE to ion.newSymbol("not")
+            Property.TOKEN_VALUE to ion.newSymbol("NOT")
         )
     )
 
@@ -2810,7 +2808,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
             Property.LINE_NUMBER to 1L,
             Property.COLUMN_NUMBER to 12L,
             Property.TOKEN_DESCRIPTION to PartiQLParser.ON.getAntlrDisplayString(),
-            Property.TOKEN_VALUE to ion.newSymbol("on")
+            Property.TOKEN_VALUE to ion.newSymbol("ON")
         )
     )
 
@@ -2882,7 +2880,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
             Property.LINE_NUMBER to 1L,
             Property.COLUMN_NUMBER to 31L,
             Property.TOKEN_DESCRIPTION to PartiQLParser.AT.getAntlrDisplayString(),
-            Property.TOKEN_VALUE to ion.newSymbol("at")
+            Property.TOKEN_VALUE to ion.newSymbol("AT")
         )
     )
 
@@ -2895,7 +2893,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 1L,
                 Property.TOKEN_DESCRIPTION to PartiQLParser.VALUE.getAntlrDisplayString(),
-                Property.TOKEN_VALUE to ion.newSymbol("value")
+                Property.TOKEN_VALUE to ion.newSymbol("VALUE")
             ),
 
         )
@@ -2909,7 +2907,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
             Property.LINE_NUMBER to 1L,
             Property.COLUMN_NUMBER to 40L,
             Property.TOKEN_DESCRIPTION to PartiQLParser.ON.getAntlrDisplayString(),
-            Property.TOKEN_VALUE to ion.newSymbol("on")
+            Property.TOKEN_VALUE to ion.newSymbol("ON")
         )
     )
 
@@ -2921,7 +2919,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
             Property.LINE_NUMBER to 1L,
             Property.COLUMN_NUMBER to 39L,
             Property.TOKEN_DESCRIPTION to PartiQLParser.ON.getAntlrDisplayString(),
-            Property.TOKEN_VALUE to ion.newSymbol("on")
+            Property.TOKEN_VALUE to ion.newSymbol("ON")
         )
     )
 
@@ -2933,7 +2931,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
             Property.LINE_NUMBER to 1L,
             Property.COLUMN_NUMBER to 40L,
             Property.TOKEN_DESCRIPTION to PartiQLParser.ON.getAntlrDisplayString(),
-            Property.TOKEN_VALUE to ion.newSymbol("on")
+            Property.TOKEN_VALUE to ion.newSymbol("ON")
         )
     )
 
@@ -3069,7 +3067,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 6L,
                 Property.TOKEN_DESCRIPTION to PartiQLParser.EXEC.getAntlrDisplayString(),
-                Property.TOKEN_VALUE to ion.newSymbol("exec")
+                Property.TOKEN_VALUE to ion.newSymbol("EXEC")
             ),
 
         )
@@ -3084,7 +3082,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 10L,
                 Property.TOKEN_DESCRIPTION to PartiQLParser.EXEC.getAntlrDisplayString(),
-                Property.TOKEN_VALUE to ion.newSymbol("exec")
+                Property.TOKEN_VALUE to ion.newSymbol("EXEC")
             ),
 
         )
