@@ -11,6 +11,7 @@ import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.TypeVariableName
 import com.squareup.kotlinpoet.asTypeName
+import com.squareup.kotlinpoet.buildCodeBlock
 import net.pearx.kasechange.toCamelCase
 import net.pearx.kasechange.toPascalCase
 import org.partiql.sprout.generator.target.kotlin.KotlinPoem
@@ -30,8 +31,6 @@ class KotlinBuilderPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
 
     private val builderPackageName = "${symbols.rootPackage}.builder"
 
-    // Default unique id provider
-    // open val id: () -> Int = run { ... }
     private val idProviderType = LambdaTypeName.get(returnType = String::class.asTypeName())
     private val idProvider = PropertySpec.builder("_id", idProviderType).build()
 
@@ -46,7 +45,14 @@ class KotlinBuilderPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
     private val baseFactory = TypeSpec.classBuilder(baseFactoryClass)
         .addSuperinterface(factoryClass)
         .addModifiers(KModifier.ABSTRACT)
-        .addProperty(idProvider.toBuilder().addModifiers(KModifier.ABSTRACT, KModifier.OVERRIDE).build())
+        .addProperty(
+            idProvider.toBuilder()
+                .addModifiers(KModifier.OVERRIDE)
+                .initializer("{ %P }", buildCodeBlock {
+                    add("${symbols.rootId}-\${%T.nextLong().toString(16)}", ClassName("kotlin.random", "Random"))
+                })
+                .build()
+        )
 
     private val factoryParamDefault = ParameterSpec.builder("factory", factoryClass)
         .defaultValue("%T.DEFAULT", factoryClass)
@@ -182,16 +188,18 @@ class KotlinBuilderPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
         // Java Builder, empty constructor
         val builderName = symbols.camel(product.ref)
         val builderType = ClassName(builderPackageName, "${builderName.toPascalCase()}Builder")
+        val builderConstructor = FunSpec.constructorBuilder()
         val builder = TypeSpec.classBuilder(builderType)
 
         // DSL Function
         val funcDsl = FunSpec.builder(builderName).returns(clazz)
-        funcDsl.addStatement("val builder = %T()", builderType)
+        funcDsl.addStatement("val builder = %T(${ props.joinToString { it.name }})", builderType)
 
         // Java builder `build(factory: Factory = DEFAULT): T`
         val funcBuild = FunSpec.builder("build").addParameter(factoryParamDefault).returns(clazz)
         val args = mutableListOf<String>()
 
+        // Add builder function to node interface
         companion.addFunction(
             FunSpec.builder("builder")
                 .addAnnotation(Annotations.jvmStatic)
@@ -213,11 +221,16 @@ class KotlinBuilderPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
                     "null"
                 }
             }
-            // t: T = default
+
             val para = ParameterSpec.builder(name, type).build()
-            funcDsl.addParameter(para.toBuilder().defaultValue(default).build())
+
+            // t: T = default
+            val paraDefault = para.toBuilder().defaultValue(default).build()
+            funcDsl.addParameter(paraDefault)
+            builderConstructor.addParameter(paraDefault)
+
             // public var t: T
-            val prop = PropertySpec.builder(name, type).initializer(default).mutable().build()
+            val prop = PropertySpec.builder(name, type).initializer(name).mutable().build()
             builder.addProperty(prop)
 
             // Fluent builder method, only setters for now, can add collection manipulation later
@@ -260,6 +273,7 @@ class KotlinBuilderPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
                 .build()
         )
         builder.addFunction(funcBuild.build())
+        builder.primaryConstructor(builderConstructor.build())
 
         // Finalize DSL function
         funcDsl.addStatement("builder.block()")
