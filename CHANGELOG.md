@@ -41,17 +41,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 - **Breaking**: Removes deprecated `org.partiql.annotations.PartiQLExperimental`
-- **Breaking**: Removes deprecated constructor for `org.partiql.lang.CompilerPipeline`
-- **Breaking**: Removes deprecated `valueFactory`, `build`, `builder`, `standard` in `org.partiql.lang.CompilerPipeline`
-- **Breaking**: Removes deprecated constructor in `org.partiql.lang.CompilerPipeline`
-- **Breaking**: Removes deprecated `ofIonStruct()` from `org.partiql.lang.eval.Bindings`
 - **Breaking**: Removes deprecated/unused `blacklist()` and `denyList()` from `org.partiql.lang.eval`
 - **Breaking**: Removes deprecated enum `LEGACY` in `org.partiql.lang.eval.CompileOptions`
-- **Breaking**: Removes deprecated `org.partiql.lang.eval.ExprValueFactory`
-- **Breaking**: Removes deprecated `isNull()` in `org.partiql.lang.eval.ExprValueType`
-- **Breaking**: Removes deprecated `convert()` in `org.partiql.lang.eval.io.DelimitedValues.ConversionMode`
-- **Breaking**: Removes deprecated `exprValue()` from `org.partiql.lang.eval.io.DelimitedValues`
-- **Breaking**: Removes deprecated constructor for `org.partiql.lang.eval.physical.EvaluatorState`
+- **Breaking**: Removes deprecated `org.partiql.lang.eval.ExprValueFactory`, as well as all methods that had its instance
+  among arguments. The counterparts of these methods without an ExprValueFactory are still available. The affected methods
+  include: `ofIonStruct()` in `org.partiql.lang.eval.Bindings`, a constructor of `org.partiql.lang.CompilerPipeline`,
+  `convert()` in `org.partiql.lang.eval.io.DelimitedValues.ConversionMode`, `exprValue()` from
+  `org.partiql.lang.eval.io.DelimitedValues`, a constructor for `org.partiql.lang.eval.physical.EvaluatorState`, and
+  `valueFactory`, `build`, `builder`, `standard` in `org.partiql.lang.CompilerPipeline`
 - **Breaking**: Removes deprecated `org.partiql.lang.eval.visitors.GroupKeyReferencesVisitorTransform`
 
 - **Breaking**: Removes unused/deprecated enums `KEYWORD`, `TOKEN_TYPE`, `EXPECTED_TOKEN_TYPE`, `EXPECTED_TOKEN_TYPE_1_OF_2`,
