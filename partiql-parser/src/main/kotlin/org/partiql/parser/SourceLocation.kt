@@ -14,7 +14,6 @@
 
 package org.partiql.parser
 
-
 public data class SourceLocation(val line: Int, val offset: Int, val length: Int) {
 
     companion object {

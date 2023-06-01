@@ -259,8 +259,8 @@ expr::[
     values: list::[expr],
   },
 
-  // Tuple Constructor
-  tuple::{
+  // Struct Constructor
+  struct::{
     fields: list::[field],
     _: [
       field::{

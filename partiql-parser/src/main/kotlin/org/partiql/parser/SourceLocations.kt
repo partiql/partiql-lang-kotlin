@@ -19,30 +19,30 @@ package org.partiql.parser
  * Delegate once we are on Kotlin 1.7
  */
 public class SourceLocations private constructor(
-    private val delegate: Map<Int, SourceLocation>
-) : Map<Int, SourceLocation> {
+    private val delegate: Map<String, SourceLocation>
+) : Map<String, SourceLocation> {
 
-    override val entries: Set<Map.Entry<Int, SourceLocation>> = delegate.entries
+    override val entries: Set<Map.Entry<String, SourceLocation>> = delegate.entries
 
-    override val keys: Set<Int> = delegate.keys
+    override val keys: Set<String> = delegate.keys
 
     override val size: Int = delegate.size
 
     override val values: Collection<SourceLocation> = delegate.values
 
-    override fun containsKey(key: Int): Boolean = delegate.containsKey(key)
+    override fun containsKey(key: String): Boolean = delegate.containsKey(key)
 
     override fun containsValue(value: SourceLocation): Boolean = delegate.containsValue(value)
 
-    override fun get(key: Int): SourceLocation? = delegate[key]
+    override fun get(key: String): SourceLocation? = delegate[key]
 
     override fun isEmpty(): Boolean = delegate.isEmpty()
 
     internal class Mutable {
 
-        private val delegate = mutableMapOf<Int, SourceLocation>()
+        private val delegate = mutableMapOf<String, SourceLocation>()
 
-        operator fun set(id: Int, value: SourceLocation) = delegate.put(id, value)
+        operator fun set(id: String, value: SourceLocation) = delegate.put(id, value)
 
         fun toMap() = SourceLocations(delegate)
     }
