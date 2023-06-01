@@ -48,10 +48,13 @@ class KotlinBuilderPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
         .addProperty(
             idProvider.toBuilder()
                 .addModifiers(KModifier.OVERRIDE)
-                .initializer("{ %P }", buildCodeBlock {
-                    // universe-${"%08x".format(Random.nextInt())}
-                    add("${symbols.rootId}-\${%S.format(%T.nextInt())}", "%08x", ClassName("kotlin.random", "Random"))
-                })
+                .initializer(
+                    "{ %P }",
+                    buildCodeBlock {
+                        // universe-${"%08x".format(Random.nextInt())}
+                        add("${symbols.rootId}-\${%S.format(%T.nextInt())}", "%08x", ClassName("kotlin.random", "Random"))
+                    }
+                )
                 .build()
         )
 
