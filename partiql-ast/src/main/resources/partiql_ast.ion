@@ -14,36 +14,35 @@ statement::[
   // Data Manipulation Language
   d_m_l::[
 
-    // `INSERT INTO <target> [AS <alias>] ON CONFLICT <conflict clause>
-    // https://github.com/partiql/partiql-docs/blob/main/RFCs/0011-partiql-insert.md
+    // INSERT INTO <target> [AS <alias>] <values> [<on conflict>]
     insert::{
-      target:       path,
-      value:        expr,
+      target:       identifier,
+      values:       expr,
+      alias:        optional::identifier,
       on_conflict:  optional::on_conflict,
     },
 
-    // `INSERT INTO <target> VALUE <expr> [AT <expr>]` [ON CONFLICT WHERE <expr> DO NOTHING]`
-    insert_value::{
-      target:       path,
-      value:        expr,
-      index:        optional::expr,
-      on_conflict:  optional::on_conflict,
-      returning:    optional::returning,
+    // INSERT INTO <path> VALUE <expr> [AT <expr>] [<on conflict legacy>]
+    insert_legacy::{
+      target:             path,
+      value:              expr,
+      index:              optional::expr,
+      conflict_condition: optional::expr,
     },
 
-    // UPSERT INTO <target> [<alias>] <expr>
+    // UPSERT INTO <target> [<alias>] <values>
     upsert::{
       target: identifier,
-      value:  expr,
+      values: expr,
     },
 
-    // REPLACE INTO <target> [<alias>] value=expr;
+    // REPLACE INTO <target> [<alias>] <values>
     replace::{
       target: identifier,
-      value:  expr,
+      values: expr,
     },
 
-    // `UPDATE <target> SET <set clause list> WHERE <expr>`
+    // UPDATE <target> SET <set clause list> WHERE <expr>
     update::{
       target:      path,
       assignments: list::[assignment],
@@ -55,37 +54,37 @@ statement::[
       ],
     },
 
-    // `REMOVE <path>`
+    // REMOVE <path>
     remove::{
       target: path,
     },
 
-    // `DELETE FROM <target table> WHERE <expr> RETURNING ...`
+    // DELETE [FROM] <path> [ WHERE <expr> ] RETURNING ...
     delete::{
-      from:       from,
+      from:       path,
       where:      optional::expr,
       returning:  optional::returning,
     },
 
-    // TODO what is the target here?
-    // `[UPDATE|FROM] <target> <dml base op>+ WHERE <expr> RETURNING <returning>`
-    batch::{
-      from:       from,
+    // [UPDATE|FROM] <target> <dml base op>+ WHERE <expr> RETURNING <returning>
+    batch_legacy::{
+      target:     from,
       ops:        list::[op],
       where:      optional::expr,
       returning:  optional::returning,
       _: [
         op::[
           insert::{
-            target:       path,
-            value:        expr,
+            target:       identifier,
+            values:       expr,
+            alias:        optional::identifier,
             on_conflict:  optional::on_conflict,
           },
-          insert_value::{
-            target:       path,
-            value:        expr,
-            index:        optional::expr,
-            on_conflict:  optional::on_conflict,
+          insert_legacy::{
+            target:             path,
+            value:              expr,
+            index:              optional::expr,
+            conflict_condition: optional::expr,
           },
           set::{
             assignments: list::[assignment],
@@ -102,29 +101,28 @@ statement::[
   // Data Definition Language
   d_d_l::[
 
-    // `CREATE TABLE <symbol> ( <table_def> )?`
+    // CREATE TABLE <identifier> [<table_def>]
     create_table::{
       name:       identifier,
       definition: optional::table_definition,
     },
 
-    // `CREATE INDEX [<symbol>] ON <symbol> (<expr> [, <expr>]...)`
+    // CREATE INDEX [<identifier>] ON <identifier> (<path> [, <path>]...)
     create_index::{
       name:   optional::identifier,
       table:  identifier,
       fields: list::[path],
     },
 
-    // `DROP TABLE <identifier>`
+    // DROP TABLE <identifier>
     drop_table::{
       table: identifier,
     },
 
     // DROP INDEX <identifier> ON <identifier>
-    //            └─ index  ─┘    └─ table  ─┘
     drop_index::{
-      index:  identifier,
-      table:  identifier,
+      index:  identifier, // <identifier>[0]
+      table:  identifier, // <identifier>[1]
     },
   ],
 
@@ -151,33 +149,46 @@ type::{
   parameters: list::[ion], // not recursive
 }
 
-// Identifier Symbols
-//---------------------------------------
-// identifier ::=  <symbol>
-//              | "<symbol>"
-//              ;
-identifier::{
-  symbol:           string,
-  case_sensitivity: [
-    SENSITIVE,
-    INSENSITIVE,
+// Identifiers and Qualified Identifiers
+//----------------------------------------------
+// <identifier > ::= <id symbol> | <id path>
+//
+// <id symbol> ::=  <symbol>    // case-insensitive
+//               | "<symbol>"   // case-sensitive
+//
+// <id qualified> ::= <id symbol> ('.' <id symbol>)+;
+//
+identifier::[
+  symbol::{
+    symbol:           string,
+    case_sensitivity: case_sensitivity,
+  },
+  qualified::{
+    root:   symbol,
+    steps:  list::[symbol],
+  },
+  _::[
+    case_sensitivity::[
+      SENSITIVE,
+      INSENSITIVE,
+    ],
   ],
-}
+]
 
-// Literal Paths
-//---------------------------------------
-// path ::= <symbol> step+
-//        ;
-// step ::= '.' <symbol>
-//        | '[' (<symbol>|<integer>) ']'
-//        ;
+// Path Literals
+//  - Much like qualified identifier but allowing bracket notation '[' <int> | <string> ']'
+//  - Not a variant of `identifier`, as path literals are not explicit in the specification.
 path::{
-  root: identifier,
-  steps: list::[step],
+  root:   '.identifier.symbol',
+  steps:  list::[step],
   _: [
     step::[
-      index::{ value: int },
-      symbol::{ identifier: identifier },
+      symbol::{
+        symbol: '.identifier.symbol',
+      },
+      index::{
+        index: int,
+      },
     ],
   ],
 }
@@ -199,10 +210,13 @@ expr::[
     value: ion,
   },
 
-  // A variable reference
+  // A variable reference,
   var::{
     identifier: identifier,
-    scope:      [ UNQUALIFIED, LOCALS_FIRST ],
+    scope: [
+      UNQUALIFIED, //  x.y.z
+      LOCAL,       // @x.y.z
+    ],
   },
 
   // Expression Paths
@@ -583,8 +597,6 @@ on_conflict::{
     ],
   ],
 }
-
-// TODO consider `path` corresponding to parser rule pathSimple rather than expr.path
 
 // RETURNING returningColumn ( COMMA returningColumn )*
 returning::{
