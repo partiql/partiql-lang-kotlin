@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Amazon.com, Inc. or its affiliates.  All rights reserved.
+ * Copyright Amazon.com, Inc. or its affiliates.  All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  *  You may not use this file except in compliance with the License.
@@ -50,11 +50,6 @@ object DelimitedValues {
     enum class ConversionMode {
         /** Attempt to parse each value as a scalar, and fall back to string. */
         AUTO {
-            @Deprecated("[ExprValueFactory] is deprecated.", replaceWith = ReplaceWith("convert(raw)"))
-            @Suppress("DEPRECATION") // Deprecation of ExprValueFactory.
-            override fun convert(valueFactory: org.partiql.lang.eval.ExprValueFactory, raw: String): ExprValue =
-                convert(raw)
-
             override fun convert(raw: String): ExprValue = try {
                 val ion = IonSystemBuilder.standard().build()
                 when (val converted = ion.singleValue(raw)) {
@@ -69,33 +64,11 @@ object DelimitedValues {
         },
         /** Each field is a string. */
         NONE {
-            @Deprecated("[ExprValueFactory] is deprecated.", replaceWith = ReplaceWith("convert(raw)"))
-            @Suppress("DEPRECATION") // Deprecation of ExprValueFactory.
-            override fun convert(valueFactory: org.partiql.lang.eval.ExprValueFactory, raw: String): ExprValue =
-                convert(raw)
-
             override fun convert(raw: String): ExprValue = ExprValue.newString(raw)
         };
 
-        @Deprecated("[ExprValueFactory] is deprecated.", replaceWith = ReplaceWith("convert(raw)"))
-        @Suppress("DEPRECATION") // Deprecation of ExprValueFactory.
-        abstract fun convert(valueFactory: org.partiql.lang.eval.ExprValueFactory, raw: String): ExprValue
-
         abstract fun convert(raw: String): ExprValue
     }
-
-    @JvmStatic
-    @Deprecated(
-        "Deprecated, because of the deprecated [ExprValueFactory] argument.",
-        replaceWith = ReplaceWith("exprValue(input, csvFormat, conversionMode)")
-    )
-    fun exprValue(
-        @Suppress("DEPRECATION", "UNUSED_PARAMETER")
-        valueFactory: org.partiql.lang.eval.ExprValueFactory,
-        input: Reader,
-        csvFormat: CSVFormat,
-        conversionMode: ConversionMode
-    ): ExprValue = exprValue(input, csvFormat, conversionMode)
 
     /**
      * Lazily loads a stream of values from a [Reader] into a sequence backed [ExprValue].

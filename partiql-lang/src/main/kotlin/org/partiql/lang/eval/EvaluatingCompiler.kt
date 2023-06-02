@@ -1193,22 +1193,7 @@ internal class EvaluatingCompiler(
         typedOpParameter: TypedOpParameter,
         metas: MetaContainer
     ): (ExprValue) -> Boolean {
-        val exprValueType = getRuntimeType(staticType)
-
-        // The "simple" type match function only looks at the [ExprValueType] of the [ExprValue]
-        // and invokes the custom [validationThunk] if one exists.
-        val simpleTypeMatchFunc = { expValue: ExprValue ->
-            val isTypeMatch = when (exprValueType) {
-                // MISSING IS NULL and NULL IS MISSING
-                ExprValueType.NULL -> expValue.type.isUnknown
-                else -> expValue.type == exprValueType
-            }
-            (isTypeMatch && typedOpParameter.validationThunk?.let { it(expValue) } != false)
-        }
-
-        @Suppress("DEPRECATION") // TypedOpBehavior.LEGACY is deprecated.
         return when (compileOptions.typedOpBehavior) {
-            TypedOpBehavior.LEGACY -> simpleTypeMatchFunc
             TypedOpBehavior.HONOR_PARAMETERS -> { expValue: ExprValue ->
                 staticType.allTypes.any {
                     val matchesStaticType = try {
@@ -1806,7 +1791,8 @@ internal class EvaluatingCompiler(
         return nestCompilationContext(ExpressionContext.NORMAL, emptySet()) {
             val fromSourceThunks = compileFromSources(selectExpr.from)
             val letSourceThunks = selectExpr.fromLet?.let { compileLetSources(it) }
-            val sourceThunks = compileQueryWithoutProjection(selectExpr, fromSourceThunks, letSourceThunks)
+            val compiledWhere = selectExpr.where?.let { compileAstExpr(it) }
+            val sourceThunks = compileFromLetWhere(fromSourceThunks, letSourceThunks, compiledWhere)
 
             val orderByThunk = selectExpr.order?.let { compileOrderByExpression(it.sortSpecs) }
             val orderByLocationMeta = selectExpr.order?.metas?.sourceLocation
@@ -2349,6 +2335,9 @@ internal class EvaluatingCompiler(
         )
     }
 
+    /** Compile the data sources in the join of the FROM clause and convert the join's tree structure into a list. */
+    // TODO: Process tree-structured joins correctly -- see https://github.com/partiql/partiql-lang-kotlin/issues/1019
+    // (In general, a tree-structured join is not semantically equivalent to a list-structured join produced here.)
     private fun compileFromSources(
         fromSource: PartiqlAst.FromSource,
         sources: MutableList<CompiledFromSource> = ArrayList(),
@@ -2453,80 +2442,84 @@ internal class EvaluatingCompiler(
             CompiledLetSource(name = it.name.text, thunk = compileAstExpr(it.expr))
         }
 
+    private fun Environment.extend(alias: Alias, value: ExprValue): Environment =
+        this.nest(
+            Bindings.buildLazyBindings {
+                addBinding(alias.asName) { value }
+                if (alias.atName != null)
+                    addBinding(alias.atName) {
+                        value.name ?: ExprValue.missingValue
+                    }
+                if (alias.byName != null)
+                    addBinding(alias.byName) {
+                        value.address ?: ExprValue.missingValue
+                    }
+            },
+            Environment.CurrentMode.GLOBALS_THEN_LOCALS
+        )
+
     /**
-     * Compiles the clauses of the SELECT or PIVOT into a thunk that does not generate
-     * the final projection.
+     * Compiles FROM, LET, and WHERE clauses of a SELECT or PIVOT into a thunk that generates
+     * their cumulative binding tuples.
      */
-    private fun compileQueryWithoutProjection(
-        ast: PartiqlAst.Expr.Select,
+    private fun compileFromLetWhere(
         compiledSources: List<CompiledFromSource>,
-        compiledLetSources: List<CompiledLetSource>?
+        compiledLetSources: List<CompiledLetSource>?,
+        whereThunk: ThunkEnv?
     ): (Environment) -> Sequence<FromProduction> {
 
         val localsBinder = compiledSources.map { it.alias }.localsBinder(ExprValue.missingValue)
-        val whereThunk = ast.where?.let { compileAstExpr(it) }
 
         return { rootEnv ->
             val fromEnv = rootEnv.flipToGlobalsFirst()
             // compute the join over the data sources
             var seq = compiledSources
-                .foldLeftProduct({ env: Environment -> env }) { bindEnv: (Environment) -> Environment, source: CompiledFromSource ->
+                .foldLeftProduct({ env: Environment -> env }) { currEnvT: (Environment) -> Environment, currSource: CompiledFromSource ->
+                    // [currSource] - the next FROM currSource to add to the join
+                    // [currEnvT] - the environment add-on that previous sources of the join have constructed
+                    //                and that can be used for evaluating this [currSource] (if it depends on the previous sources)
+
+                    // Given a [value] drawn from the current [currSource], construct the next environment add-on,
+                    // to use later with the next source, as well as with the ON condition when joining the current [currSource].
+                    // It is constructed by adding bindings for [value] to the current add-on [currEnvT].
                     fun correlatedBind(value: ExprValue): Pair<(Environment) -> Environment, ExprValue> {
                         // add the correlated binding environment thunk
-                        val alias = source.alias
-                        val nextBindEnv = { env: Environment ->
-                            val childEnv = bindEnv(env)
-                            childEnv.nest(
-                                Bindings.buildLazyBindings {
-                                    addBinding(alias.asName) { value }
-                                    if (alias.atName != null)
-                                        addBinding(alias.atName) {
-                                            value.name ?: ExprValue.missingValue
-                                        }
-                                    if (alias.byName != null)
-                                        addBinding(alias.byName) {
-                                            value.address ?: ExprValue.missingValue
-                                        }
-                                },
-                                Environment.CurrentMode.GLOBALS_THEN_LOCALS
-                            )
+                        val nextEnvT = { env: Environment ->
+                            val childEnv = currEnvT(env)
+                            childEnv.extend(currSource.alias, value)
                         }
-                        return Pair(nextBindEnv, value)
+                        return Pair(nextEnvT, value)
                     }
 
-                    var iter = source.thunk(bindEnv(fromEnv))
+                    val sourceComputed = currSource.thunk(currEnvT(fromEnv))
+                    var pairSeq = sourceComputed
                         .rangeOver()
                         .asSequence()
                         .map { correlatedBind(it) }
-                        .iterator()
 
-                    val filter = source.filter
-                    if (filter != null) {
+                    val joinON = currSource.filter
+                    if (joinON != null) {
                         // evaluate the ON-clause (before calculating the outer join NULL)
                         // TODO add facet for ExprValue to directly evaluate theta-joins
-                        iter = iter
-                            .asSequence()
-                            .filter { (bindEnv: (Environment) -> Environment, _) ->
+                        pairSeq = pairSeq
+                            .filter { (nextEnvT: (Environment) -> Environment, _) ->
                                 // make sure we operate with lexical scoping
-                                val filterEnv = bindEnv(rootEnv).flipToLocals()
-                                val filterResult = filter(filterEnv)
-                                if (filterResult.isUnknown()) {
+                                val currEnv = nextEnvT(rootEnv).flipToLocals()
+                                val joinONresult = joinON(currEnv)
+                                if (joinONresult.isUnknown()) {
                                     false
                                 } else {
-                                    filterResult.booleanValue()
+                                    joinONresult.booleanValue()
                                 }
                             }
-                            .iterator()
                     }
 
-                    if (!iter.hasNext()) {
-                        iter = when (source.joinExpansion) {
-                            JoinExpansion.OUTER -> listOf(correlatedBind(ExprValue.nullValue)).iterator()
-                            JoinExpansion.INNER -> iter
-                        }
+                    pairSeq = when (currSource.joinExpansion) {
+                        JoinExpansion.INNER -> pairSeq
+                        JoinExpansion.OUTER -> pairSeq.ifEmpty { sequenceOf(correlatedBind(ExprValue.nullValue)) }
                     }
 
-                    iter
+                    pairSeq.iterator()
                 }
                 .asSequence()
                 .map { joinedValues ->

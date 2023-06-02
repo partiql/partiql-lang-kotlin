@@ -40,29 +40,6 @@ class EvaluatorState(
      */
     internal val registers: Array<ExprValue>
 ) {
-    @Deprecated(
-        "Please use constructor `EvaluatorState(session: EvaluationSession, registers: Array<ExprValue>)` instead",
-        replaceWith = ReplaceWith("EvaluatorState(session, registers)")
-    )
-    @Suppress("DEPRECATION", "UNUSED_PARAMETER") // Deprecation of ExprValueFactory.
-    constructor(
-        /** The current [EvaluationSession]. */
-        session: EvaluationSession,
-
-        /** The current [ExprValueFactory], provided here as a convenience. */
-        valueFactory: org.partiql.lang.eval.ExprValueFactory,
-
-        /**
-         * An array of registers containing [ExprValue]s needed during query execution.  Generally, there is
-         * one register per local variable.  This is an array (and not a [List]) because its semantics match exactly what
-         * we need: fixed length with mutable elements.
-         *
-         * This state should not be modified by customer provided operator implementations except through instances
-         * of [SetVariableFunc] that were provided by this library, thus it is marked as `internal`.
-         */
-        registers: Array<ExprValue>
-    ) : this(session, registers)
-
     internal fun load(registers: Array<ExprValue>) = registers.forEachIndexed { index, exprValue ->
         this.registers[index] = exprValue
     }
