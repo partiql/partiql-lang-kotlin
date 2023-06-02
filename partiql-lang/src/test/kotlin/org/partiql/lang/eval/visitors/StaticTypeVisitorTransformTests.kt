@@ -5,11 +5,9 @@
 package org.partiql.lang.eval.visitors
 
 import com.amazon.ionelement.api.emptyMetaContainer
-import com.amazon.ionelement.api.ionBool
 import com.amazon.ionelement.api.toIonElement
 import junitparams.Parameters
 import org.junit.Test
-import org.partiql.ionschema.model.IonSchemaModel
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.ast.StaticTypeMeta
 import org.partiql.lang.ast.passes.SemanticException
@@ -22,8 +20,6 @@ import org.partiql.lang.errors.Property.COLUMN_NUMBER
 import org.partiql.lang.errors.Property.FEATURE_NAME
 import org.partiql.lang.errors.Property.LINE_NUMBER
 import org.partiql.lang.eval.Bindings
-import org.partiql.lang.mappers.ISL_META_KEY
-import org.partiql.types.IntType
 import org.partiql.types.ListType
 import org.partiql.types.StaticType
 import java.io.PrintWriter
@@ -1079,35 +1075,4 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
 //        val actualExpr = AstDeserializerBuilder(ion).build().deserialize(sexpAst, AstVersion.V2)
 //        assertEquals(expectedExpr, actualExpr)
 //    }
-
-    @Test
-    fun `ensure StaticTypeMeta can be serialized when StaticType does not have ISL but has nested StaticType that already contains ISL`() {
-        val expectedExpr = PartiqlAst.build {
-            id(
-                name = "foo",
-                case = partiqlAstCaseInSensitive,
-                qualifier = partiqlAstUnqualified
-            ).withMeta(
-                "staticType",
-                StaticTypeMeta(
-                    ListType(
-                        IntType(
-                            metas = mapOf(
-                                ISL_META_KEY to listOf(
-                                    IonSchemaModel.build {
-                                        typeDefinition("bar", constraintList(typeConstraint(namedType("int", ionBool(false)))))
-                                    }
-                                )
-                            )
-                        )
-                    )
-                )
-            )
-        }
-
-        // note: we do not test v0 here because it's not able to store metas other than [SourceLocationMeta]
-        val sexpAst = expectedExpr.toIonElement()
-        val actualExpr = PartiqlAst.transform(sexpAst)
-        assertEquals(expectedExpr, actualExpr)
-    }
 }

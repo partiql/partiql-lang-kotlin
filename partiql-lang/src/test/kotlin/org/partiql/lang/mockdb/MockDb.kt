@@ -6,7 +6,6 @@ import org.partiql.lang.ION
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.mappers.StaticTypeMapper
 import org.partiql.lang.schemadiscovery.NormalizeDecimalPrecisionsToUpToRange
 import org.partiql.lang.schemadiscovery.SchemaInferencerFromExampleImpl
 import org.partiql.types.StaticType
