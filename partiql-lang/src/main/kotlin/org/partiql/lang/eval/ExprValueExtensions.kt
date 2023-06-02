@@ -320,10 +320,7 @@ fun ExprValue.cast(
                 castFailedErr("Can't convert Infinity or NaN to INT.", internal = false)
             }
 
-            @Suppress("DEPRECATION") // TypedOpBehavior.LEGACY is deprecated.
             val rangeForType = when (typedOpBehavior) {
-                // Legacy behavior doesn't honor SMALLINT, INT4 constraints
-                TypedOpBehavior.LEGACY -> LongRange(Long.MIN_VALUE, Long.MAX_VALUE)
                 TypedOpBehavior.HONOR_PARAMETERS ->
                     when (type.rangeConstraint) {
                         // There is not CAST syntax to that can execute this branch today.
@@ -345,16 +342,7 @@ fun ExprValue.cast(
             // Else, rounding is done through https://en.wikipedia.org/wiki/Rounding#Round_half_to_even
             // We don't convert the result to Long within the when block here
             //  because the rounded values can still be out of range for Kotlin's Long.
-            @Suppress("DEPRECATION") // TypedOpBehavior.LEGACY is deprecated.
             val result = when (typedOpBehavior) {
-                TypedOpBehavior.LEGACY -> when (this) {
-                    // BigDecimal.toLong inflates the internal BigInteger to the scale before converting it to a long.
-                    // For example to convert 1e-6000 it needs to create a BigInteger with value equal to
-                    // `unscaledNumber^(10^abs(scale))` to them drop it and return 0L. The BigInteger creation is very
-                    // expensive and completely wasted. The division to integral skips all that.
-                    is BigDecimal -> this.divideToIntegralValue(BigDecimal.ONE)
-                    else -> this
-                }
                 TypedOpBehavior.HONOR_PARAMETERS -> when (this) {
                     is BigDecimal -> this.setScale(0, RoundingMode.HALF_EVEN)
                     // [kotlin.math.round] rounds towards the closes even number on tie
@@ -378,9 +366,7 @@ fun ExprValue.cast(
                 castFailedErr("Can't convert Infinity or NaN to DECIMAL.", internal = false)
             }
 
-            @Suppress("DEPRECATION") // TypedOpBehavior.LEGACY is deprecated.
             when (typedOpBehavior) {
-                TypedOpBehavior.LEGACY -> ExprValue.newDecimal(this.coerce(BigDecimal::class.java))
                 TypedOpBehavior.HONOR_PARAMETERS ->
                     when (val constraint = type.precisionScaleConstraint) {
                         DecimalType.PrecisionScaleConstraint.Unconstrained -> ExprValue.newDecimal(this.coerce(BigDecimal::class.java))
@@ -401,10 +387,8 @@ fun ExprValue.cast(
         else -> castFailedErr("Invalid type for numeric conversion: $type (this code should be unreachable)", internal = true)
     }
 
-    @Suppress("DEPRECATION") // TypedOpBehavior.LEGACY is deprecated.
     fun String.exprValue(type: SingleType) = when (type) {
         is StringType -> when (typedOpBehavior) {
-            TypedOpBehavior.LEGACY -> ExprValue.newString(this)
             TypedOpBehavior.HONOR_PARAMETERS -> when (val constraint = type.lengthConstraint) {
                 StringType.StringLengthConstraint.Unconstrained -> ExprValue.newString(this)
                 is StringType.StringLengthConstraint.Constrained -> {

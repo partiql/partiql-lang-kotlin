@@ -8,7 +8,6 @@ import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.evaluatortestframework.ExpectedResultFormat
 import org.partiql.lang.util.getOffsetHHmm
 import org.partiql.lang.util.honorTypedOpParameters
-import org.partiql.lang.util.legacyCastBehavior
 import org.partiql.lang.util.legacyTypingMode
 import org.partiql.lang.util.permissiveTypingMode
 import java.time.ZoneOffset
@@ -956,169 +955,6 @@ abstract class CastTestBase : EvaluatorTestBase() {
                 ).types(ExprValueType.BAG.typeAliases())
             ).flatten()
 
-        val deviatingLegacyTestCases = listOf(
-            listOf(
-                // booleans
-                case("TRUE AND FALSE", "\"false\"", CastQuality.LOSSLESS),
-                case("`true`", "\"true\"", CastQuality.LOSSLESS),
-                // numbers
-                case("5", "\"5\"", CastQuality.LOSSLESS),
-                case("`0e0`", "\"0.0\"", CastQuality.LOSSLESS),
-                case("1.1", "\"1.1\"", CastQuality.LOSSLESS),
-                case("-20.1", "\"-20.1\"", CastQuality.LOSSLESS),
-                // inf, -inf, nan
-                case("`+inf`", "\"Infinity\"", CastQuality.LOSSLESS),
-                case("`-inf`", "\"-Infinity\"", CastQuality.LOSSLESS),
-                case("`nan`", "\"NaN\"", CastQuality.LOSSLESS),
-                // timestamp
-                case("`2007-10-10T`", "\"2007-10-10\"", CastQuality.LOSSLESS),
-                // text
-                case("'hello'", "\"hello\"", CastQuality.LOSSLESS),
-                case("'-20'", "\"-20\"", CastQuality.LOSSLESS),
-                case("""`"1000"`""", "\"1000\"", CastQuality.LOSSLESS),
-                case("""`'2e100'`""", "\"2e100\"", CastQuality.LOSSLESS),
-                case("""`'2d100'`""", "\"2d100\"", CastQuality.LOSSLESS),
-                // lob
-                case("""`{{""}}`""", ErrorCode.EVALUATOR_INVALID_CAST),
-                case("""`{{"0"}}`""", ErrorCode.EVALUATOR_INVALID_CAST),
-                case("""`{{"1.0"}}`""", ErrorCode.EVALUATOR_INVALID_CAST),
-                case("""`{{"2e10"}}`""", ErrorCode.EVALUATOR_INVALID_CAST),
-                case("`{{}}`", ErrorCode.EVALUATOR_INVALID_CAST),
-                case("`{{MA==}}`", ErrorCode.EVALUATOR_INVALID_CAST), // 0
-                case("`{{MS4w}}`", ErrorCode.EVALUATOR_INVALID_CAST), // 1.0
-                case("`{{MmUxMA==}}`", ErrorCode.EVALUATOR_INVALID_CAST), // 2e10
-                // list
-                case("`[]`", ErrorCode.EVALUATOR_INVALID_CAST),
-                case("['hello']", ErrorCode.EVALUATOR_INVALID_CAST),
-                case("`[-2d0, 0d0]`", ErrorCode.EVALUATOR_INVALID_CAST),
-                // sexp
-                case("`()`", ErrorCode.EVALUATOR_INVALID_CAST),
-                case("`(1d0)`", ErrorCode.EVALUATOR_INVALID_CAST),
-                case("`(0d0)`", ErrorCode.EVALUATOR_INVALID_CAST),
-                // struct
-                case("`{}`", ErrorCode.EVALUATOR_INVALID_CAST),
-                case("{}", ErrorCode.EVALUATOR_INVALID_CAST),
-                case("`{a:12d0}`", ErrorCode.EVALUATOR_INVALID_CAST),
-                case("{'b':`-4d0`}", ErrorCode.EVALUATOR_INVALID_CAST),
-                // bag
-                case("<<>>", ErrorCode.EVALUATOR_INVALID_CAST),
-                case("<<`14d0`>>", ErrorCode.EVALUATOR_INVALID_CAST),
-                case("<<'a', <<'hello'>>>>", ErrorCode.EVALUATOR_INVALID_CAST),
-                case("<<`20d0`>>", ErrorCode.EVALUATOR_INVALID_CAST)
-            ).types(listOf("CHAR", "CHARACTER")),
-            // rounding tests
-            listOf(
-                case("1.9", "1", CastQuality.LOSSY),
-                case("-20.9", "-20", CastQuality.LOSSY),
-                case("1.5", "1", CastQuality.LOSSY),
-                case("2.5", "2", CastQuality.LOSSY)
-            ).types(ExprValueType.INT.typeAliases()),
-            // SMALLINT tests
-            listOf(
-                // over range
-                case("32768", "32768", CastQuality.LOSSLESS),
-                case("-32769", "-32769", CastQuality.LOSSLESS),
-                // within range, rounded
-                case("1.5", "1", CastQuality.LOSSY),
-                // borderline
-                case("32767.3", "32767", CastQuality.LOSSY),
-                case("32767.5", "32767", CastQuality.LOSSY),
-                case("32767.8", "32767", CastQuality.LOSSY),
-                case("-32768.3", "-32768", CastQuality.LOSSY),
-                case("-32768.5", "-32768", CastQuality.LOSSY),
-                case("-32768.9", "-32768", CastQuality.LOSSY),
-            ).types(listOf("SMALLINT", "INT2", "INTEGER2")),
-            // INT4 tests
-            listOf(
-                // over range
-                case("2147483647", "2147483647", CastQuality.LOSSLESS),
-                case("-2147483648", "-2147483648", CastQuality.LOSSLESS),
-                // within range, rounded
-                case("1.5", "1", CastQuality.LOSSY),
-                // borderline
-                case("2147483647.3", "2147483647", CastQuality.LOSSY),
-                case("2147483647.5", "2147483647", CastQuality.LOSSY),
-                case("2147483647.8", "2147483647", CastQuality.LOSSY),
-                case("-2147483648.3", "-2147483648", CastQuality.LOSSY),
-                case("-2147483648.5", "-2147483648", CastQuality.LOSSY),
-                case("-2147483648.9", "-2147483648", CastQuality.LOSSY),
-            ).types(listOf("INT4", "INTEGER4")),
-            // LONG tests
-            listOf(
-                case("9223372036854775807", "9223372036854775807", CastQuality.LOSSLESS),
-                case("9223372036854775807.3", "9223372036854775807", CastQuality.LOSSY),
-                case("9223372036854775807.5", "9223372036854775807", CastQuality.LOSSY),
-                case("9223372036854775807.8", "9223372036854775807", CastQuality.LOSSY),
-                case("9223372036854775808", ErrorCode.SEMANTIC_LITERAL_INT_OVERFLOW),
-                // A very large decimal
-                case("1e2147483609", ErrorCode.EVALUATOR_INTEGER_OVERFLOW)
-            ).types(listOf("INT", "INTEGER", "INTEGER8", "INT8", "BIGINT")),
-            // DECIMAL(3) ; LEGACY mode does not respect DECIMAL's precison or scale
-            listOf(
-                case("12", "12.", CastQuality.LOSSLESS),
-                case("123", "123.", CastQuality.LOSSLESS),
-                case("1234", "1234.", CastQuality.LOSSLESS),
-                case("123.45", "123.45", CastQuality.LOSSLESS),
-                case("'12'", "12.", CastQuality.LOSSLESS),
-                case("'123'", "123.", CastQuality.LOSSLESS),
-                case("'1234'", "1234.", CastQuality.LOSSLESS),
-                case("'123.45'", "123.45", CastQuality.LOSSLESS)
-            ).types(ExprValueType.DECIMAL.typeAliases().map { "$it(3)" }),
-            // DECIMAL(5,2) ; LEGACY mode does not respect DECIMAL's precison or scale
-            listOf(
-                case("12", "12.", CastQuality.LOSSLESS),
-                case("123", "123.", CastQuality.LOSSLESS),
-                case("1234", "1234.", CastQuality.LOSSLESS),
-                case("123.45", "123.45", CastQuality.LOSSLESS),
-                case("123.459", "123.459", CastQuality.LOSSLESS),
-                case("'12'", "12.", CastQuality.LOSSLESS),
-                case("'123'", "123.", CastQuality.LOSSLESS),
-                case("'1234'", "1234.", CastQuality.LOSSLESS),
-                case("'123.45'", "123.45", CastQuality.LOSSLESS),
-                case("'123.459'", "123.459", CastQuality.LOSSLESS)
-            ).types(ExprValueType.DECIMAL.typeAliases().map { "$it(5, 2)" }),
-            // DECIMAL(4,4) ; LEGACY mode does not respect DECIMAL's precison or scale; precision = scale is valid here
-            listOf(
-                case("0.1", "1d-1", CastQuality.LOSSLESS),
-                case("0.1234", "0.1234", CastQuality.LOSSLESS),
-                case("0.12345", "0.12345", CastQuality.LOSSLESS)
-            ).types(ExprValueType.DECIMAL.typeAliases().map { "$it(4,4)" }),
-            // DECIMAL(2, 4) ; LEGACY mode does not respect DECIMAL's precison or scale; precision < scale is valid in legacy mode
-            listOf(
-                case("1", "1d0", CastQuality.LOSSLESS)
-            ).types(ExprValueType.DECIMAL.typeAliases().map { "$it(2,4)" }),
-            // VARCHAR(4) legacy mode doesn't care about params
-            listOf(
-                // from string types
-                case("'a'", "\"a\"", CastQuality.LOSSLESS),
-                case("'abcde'", "\"abcde\"", CastQuality.LOSSLESS),
-                case("'💩💩💩💩💩'", "\"💩💩💩💩💩\"", CastQuality.LOSSLESS), // legacy behavior does not truncate.
-                // from non-string types
-                case("TRUE AND FALSE", "\"false\"", CastQuality.LOSSLESS),
-                case("`true`", "\"true\"", CastQuality.LOSSLESS),
-                case("5", "\"5\"", CastQuality.LOSSLESS),
-                case("`0e0`", "\"0.0\"", CastQuality.LOSSLESS),
-                case("1.1", "\"1.1\"", CastQuality.LOSSLESS),
-                case("-20.1", "\"-20.1\"", CastQuality.LOSSLESS)
-            ).types(listOf("VARCHAR(4)", "CHARACTER VARYING(4)")),
-            listOf(
-                // from string types
-                case("'a'", "\"a\"", CastQuality.LOSSLESS),
-                case("'a    '", "\"a    \"", CastQuality.LOSSLESS),
-                case("'a\t\t'", "\"a\t\t\"", CastQuality.LOSSLESS),
-                case("'abcde'", "\"abcde\"", CastQuality.LOSSLESS),
-                case("'💩💩💩💩💩'", "\"💩💩💩💩💩\"", CastQuality.LOSSLESS), // legacy behavior does not truncate.
-                // from non-string types
-                case("TRUE AND FALSE", "\"false\"", CastQuality.LOSSLESS),
-                case("`true`", "\"true\"", CastQuality.LOSSLESS),
-                // numbers
-                case("5", "\"5\"", CastQuality.LOSSLESS),
-                case("`0e0`", "\"0.0\"", CastQuality.LOSSLESS),
-                case("1.1", "\"1.1\"", CastQuality.LOSSLESS),
-                case("-20.1", "\"-20.1\"", CastQuality.LOSSLESS)
-            ).types(listOf("CHAR(4)", "CHARACTER(4)"))
-        ).flatten()
-
         val deviatingParamsTestCases = listOf(
             // CHAR without params, equaivalent to CHAR(1)
             listOf(
@@ -1302,7 +1138,7 @@ abstract class CastTestBase : EvaluatorTestBase() {
                 case("`nan`", "nan", CastQuality.LOSSLESS)
             ).types(ExprValueType.FLOAT.typeAliases()),
             // cast([`+inf` | `-inf` | `nan`] as STRING) returns "Infinity", "-Infinity", and "NaN" respectively.
-            // for casting behavor with parametered char, character, see [deviatingParamsTestCases] and [deviatingLegacyTestCases]
+            // for casting behavor with parametered char, character, see [deviatingParamsTestCases]
             listOf(
                 case("`+inf`", "\"Infinity\"", CastQuality.LOSSLESS),
                 case("`-inf`", "\"-Infinity\"", CastQuality.LOSSLESS),
@@ -1444,11 +1280,9 @@ abstract class CastTestBase : EvaluatorTestBase() {
         )
 
         val castBehaviors: Map<String, (CompileOptions.Builder) -> Unit> = mapOf(
-            "LEGACY_CAST" to { cob -> cob.legacyCastBehavior() },
             "HONOR_PARAM_CAST" to { cob -> cob.honorTypedOpParameters() }
         )
 
-        private val legacyCastTestCases = (commonTestCases + deviatingLegacyTestCases + infinityOrNanTestCases)
         private val honorParamCastTestCases = (commonTestCases + deviatingParamsTestCases + infinityOrNanTestCases)
 
         fun List<CastCase>.toPermissive(): List<CastCase> = map { case ->
@@ -1464,33 +1298,19 @@ abstract class CastTestBase : EvaluatorTestBase() {
             }
         }
 
-        private val castPermissiveConfiguredTestCases = (
-            legacyCastTestCases.toPermissive().map { case ->
-                ConfiguredCastCase(case, "LEGACY_CAST, PERMISSIVE_TYPING_MODE") {
-                    legacyCastBehavior()
-                    permissiveTypingMode()
-                }
-            } + honorParamCastTestCases.toPermissive().map { case ->
-                ConfiguredCastCase(case, "HONOR_PARAM_CAST, PERMISSIVE_TYPING_MODE") {
-                    honorTypedOpParameters()
-                    permissiveTypingMode()
-                }
+        private val castPermissiveConfiguredTestCases = honorParamCastTestCases.toPermissive().map { case ->
+            ConfiguredCastCase(case, "HONOR_PARAM_CAST, PERMISSIVE_TYPING_MODE") {
+                honorTypedOpParameters()
+                permissiveTypingMode()
             }
-            )
+        }
 
-        private val castLegacyConfiguredTestCases = (
-            legacyCastTestCases.map { case ->
-                ConfiguredCastCase(case, "LEGACY_CAST, LEGACY_ERROR_MODE") {
-                    legacyCastBehavior()
-                    legacyTypingMode()
-                }
-            } + honorParamCastTestCases.map { case ->
-                ConfiguredCastCase(case, "HONOR_PARAM_CAST, LEGACY_ERROR_MODE") {
-                    honorTypedOpParameters()
-                    legacyTypingMode()
-                }
+        private val castLegacyConfiguredTestCases = honorParamCastTestCases.map { case ->
+            ConfiguredCastCase(case, "HONOR_PARAM_CAST, LEGACY_ERROR_MODE") {
+                honorTypedOpParameters()
+                legacyTypingMode()
             }
-            )
+        }
 
         private val castDefaultTimezoneOffsetConfiguration =
             // Configuring default timezone offset through CompileOptions
@@ -1565,41 +1385,23 @@ abstract class CastTestBase : EvaluatorTestBase() {
             )
         }
 
-        private val canCastConfiguredTestCases = (
-            legacyCastTestCases.flatMap { case ->
-                typingModes.map { (typingModeName, typingModeConfig) ->
-                    ConfiguredCastCase(case.toCanCast(), "LEGACY_CAST, $typingModeName") {
-                        legacyCastBehavior()
-                        typingModeConfig(this)
-                    }
-                }
-            } + honorParamCastTestCases.flatMap { case ->
-                typingModes.map { (typingModeName, typingModeConfig) ->
-                    ConfiguredCastCase(case.toCanCast(), "HONOR_PARAM_CAST, $typingModeName") {
-                        honorTypedOpParameters()
-                        typingModeConfig(this)
-                    }
+        private val canCastConfiguredTestCases = honorParamCastTestCases.flatMap { case ->
+            typingModes.map { (typingModeName, typingModeConfig) ->
+                ConfiguredCastCase(case.toCanCast(), "HONOR_PARAM_CAST, $typingModeName") {
+                    honorTypedOpParameters()
+                    typingModeConfig(this)
                 }
             }
-            )
+        }
 
-        private val canLosslessCastConfiguredTestCases = (
-            legacyCastTestCases.flatMap { case ->
-                typingModes.map { (typingModeName, typingModeConfig) ->
-                    ConfiguredCastCase(case.toCanLosslessCast(), "LEGACY_CAST, $typingModeName") {
-                        legacyCastBehavior()
-                        typingModeConfig(this)
-                    }
-                }
-            } + honorParamCastTestCases.flatMap { case ->
-                typingModes.map { (typingModeName, typingModeConfig) ->
-                    ConfiguredCastCase(case.toCanLosslessCast(), "HONOR_PARAM_CAST, $typingModeName") {
-                        honorTypedOpParameters()
-                        typingModeConfig(this)
-                    }
+        private val canLosslessCastConfiguredTestCases = honorParamCastTestCases.flatMap { case ->
+            typingModes.map { (typingModeName, typingModeConfig) ->
+                ConfiguredCastCase(case.toCanLosslessCast(), "HONOR_PARAM_CAST, $typingModeName") {
+                    honorTypedOpParameters()
+                    typingModeConfig(this)
                 }
             }
-            )
+        }
 
         internal val allConfiguredTestCases =
             castConfiguredTestCases +

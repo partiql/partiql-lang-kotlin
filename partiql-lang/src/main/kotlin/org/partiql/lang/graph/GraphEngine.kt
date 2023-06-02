@@ -44,7 +44,8 @@ object GraphEngine {
             is EdgeSpec -> error("Bug: evaluateNodeStride should not be called on an EdgeSpec")
             is NodeSpec -> StrideResult(
                 stride,
-                graph.scanNodes(node.label).map { Stride(listOf(it)) }
+                // toSet contributes to the deduplication step of Section 6.5 in the GPML paper
+                graph.scanNodes(node.label).toSet().map { Stride(listOf(it)) }.toSet()
             )
         }
     }
@@ -112,11 +113,12 @@ object GraphEngine {
                     if (lft.binder != null && rgt.binder != null && lft.binder == rgt.binder) {
                         triple ->
                         triple.first == triple.third
-                    } else { triple -> true }
+                    } else { _ -> true }
                 val prunedTriples = triples.filter { bindCheck(it) }
                 StrideResult(
                     plan.stride,
-                    prunedTriples.map { Stride(listOf(it.first, it.second, it.third)) }
+                    // toSet contributes to the deduplication step of Section 6.5 in the GPML paper
+                    prunedTriples.toSet().map { Stride(listOf(it.first, it.second, it.third)) }.toSet()
                 )
             }
 
@@ -137,7 +139,7 @@ object GraphEngine {
         val joinedSpec = leftSpec + rightSpec.tail
         val joinCondition = stridesJoinable(left.spec, right.spec)
 
-        val joined = mutableListOf<Stride>()
+        val joined = mutableSetOf<Stride>()
         for (lft in left.result) {
             for (rgt in right.result) {
                 if (joinCondition(lft, rgt)) {
@@ -147,7 +149,7 @@ object GraphEngine {
         }
         return StrideResult(
             StrideSpec(joinedSpec),
-            joined.toList()
+            joined.toSet()
         )
     }
 

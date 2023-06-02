@@ -1,4 +1,4 @@
-package org.partiql.lang.mappers
+package org.partiql.lang.mockdb
 
 /**
  * General exception class for ISL and StaticType mappers.
