@@ -34,12 +34,14 @@ statement::[
     upsert::{
       target: identifier,
       values: expr,
+      alias:  optional::identifier,
     },
 
-    // REPLACE INTO <target> [<alias>] <values>
+    // REPLACE INTO <target> [AS <alias>] <values>
     replace::{
       target: identifier,
       values: expr,
+      alias:  optional::identifier,
     },
 
     // UPDATE <target> SET <set clause list> WHERE <expr>
@@ -109,7 +111,7 @@ statement::[
 
     // CREATE INDEX [<identifier>] ON <identifier> (<path> [, <path>]...)
     create_index::{
-      name:   optional::identifier,
+      index:  optional::identifier,
       table:  identifier,
       fields: list::[path],
     },
@@ -202,20 +204,23 @@ set_quantifier::[
 // PartiQL Expression
 expr::[
 
-  // The MISSING value
-  missing::{},
+  // The MISSING Value
+  missing_value::{},
 
-  // Literal value
+  // The NULL Value
+  null_value::{},
+
+  // Literal Value
   literal::{
     value: ion,
   },
 
-  // A variable reference,
+  // Variable Reference
   var::{
     identifier: identifier,
     scope: [
-      UNQUALIFIED, //  x.y.z
-      LOCAL,       // @x.y.z
+      DEFAULT,  //  x.y.z
+      LOCAL,    // @x.y.z
     ],
   },
 
@@ -232,20 +237,20 @@ expr::[
     ],
   },
 
-  // Scalar Function Call — for now, `function` is just a single identifier
+  // Scalar Function Call
   call::{
-    function: string,
+    function: identifier,
     args:     list::[expr],
   },
 
   // Aggregate Function Call
   agg::{
-    function: string,
+    function: identifier,
     args:     list::[expr],
-    setq:     set_quantifier,
+    setq:     optional::set_quantifier,
   },
 
-  // A parameter `?`
+  // Parameter `?`
   parameter::{
     index: int,
   },
@@ -261,15 +266,31 @@ expr::[
     op: [
       PLUS, MINUS, TIMES, DIVIDE, MODULO, CONCAT,
       AND, OR,
-      EQ, NE, GT, GTE, LT, LTE
+      EQ, NE, GT, GTE, LT, LTE,
     ],
     lhs: expr,
     rhs: expr,
   },
 
+  // VALUES <row> (',' <row>)*
+  values::{
+    rows: list::[row],
+    _:[
+      row::{
+        items: list::[expr],
+      },
+    ],
+  },
+
   // Collection Constructors
   collection::{
-    type:   [ BAG, ARRAY, LIST, SEXP ], // syntax `<< >>`, `[ ]`, `[VALUES|LIST] ( )`, `SEXP ( )`
+    type: [
+      BAG,    // << ... >>
+      ARRAY,  // [  ...  ]
+      VALUES, // (  ...  )
+      LIST,   // LIST ( ... )
+      SEXP,   // SEXP ( ... )
+     ],
     values: list::[expr],
   },
 
@@ -302,30 +323,34 @@ expr::[
     tz_offset_minutes:  optional::int,
   },
 
-  // The `like` SQL special form
+  // SQL special form `[NOT] LIKE`
   like::{
     value:    expr,
     pattern:  expr,
     escape:   optional::expr,
+    not:      optional::bool,
   },
 
-  // The `between` SQL special form
+  // SQL special form `[NOT] BETWEEN`
   between::{
     value:  expr,
     from:   expr,
     to:     expr,
+    not:    optional::bool,
   },
 
-  // The `in` SQL special form
+  // SQL special form `[NOT] IN`
   in_collection::{
     lhs: expr,
     rhs: expr,
+    not: optional::bool,
   },
 
-  // The `is` PartiQL special form
+  // PartiQL special form `IS [NOT]`
   is_type::{
     value:  expr,
     type:   '.type',
+    not:    optional::bool,
   },
 
   // The simple and searched `case` switch SQL special form F261-01, F261-02
@@ -341,43 +366,91 @@ expr::[
     ],
   },
 
-  // The `coalesce` SQL special form F261-04
+  // SQL special form F261-04 `COALESCE`
   coalesce::{
     args: list::[expr],
   },
 
-  // The `nullif` SQL special form F261-03
+  // SQL special form F261-03 `NULLIF`
   null_if::{
-    value:    expr,
-    nullifer: expr,
+    value:      expr,
+    nullifier:  expr,
   },
 
-  // The `cast` SQL special form F201
+  // SQL special form E021-06 `SUBSTRING ( <expr> [FROM <expr>] [FOR <expr>] )`
+  substring::{
+    value:  expr,           // <expr>[0]
+    start:  optional::expr, // <expr>[1]
+    length: optional::expr, // <expr>[2]
+  },
+
+  // SQL special form E021-11 `POSITION ( <expr> IN <expr> )`
+  position::{
+    lhs: expr,
+    rhs: expr,
+  },
+
+  // SQL special form E021-09 `TRIM ( [LEADING|TRAILING|BOTH] [<expr> FROM] <expr> )`
+  trim::{
+    value:  expr,                                  // <expr>[0]
+    chars:  optional::expr,                        // <expr>[1]
+    spec:   optional::[ LEADING, TRAILING, BOTH ], // <trim specification>
+  },
+
+  // SQL special form `OVERLAY ( <expr> PLACING <expr> FROM <expr> [FOR <expr>] )`
+  overlay::{
+    value:    expr,             // <expr>[0]
+    overlay:  expr,             // <expr>[1]
+    start:    expr,             // <expr>[2]
+    length:   optional::expr,   // <expr>[3]
+  },
+
+  // SQL special form `EXTRACT ( <extract field> FROM <extract source> )`
+  extract::{
+    field:  datetime_field,
+    source: expr,
+  },
+
+  // SQL special form F201 `CAST`
   cast::{
     value:    expr,
     as_type:  '.type',
   },
 
-  // The `can_cast` PartiQL special form
+  // PartiQL special form `CAN_CAST`
   can_cast::{
     value:    expr,
     as_type:  '.type',
   },
 
-  // The `can_lossless_cast` PartiQL special form
+  // PartiQL special form `CAN_LOSSLESS_CAST`
   can_lossless_cast::{
     value:    expr,
     as_type:  '.type',
   },
 
-  // The `<expr> OUTER (UNION|INTERSECT|EXCEPT) [ALL|DISTINCT] <expr>` PartiQL multiset special forms
+  // PartiQL special form `DATE_ADD ( <datetime field> , <expr> , <expr>)`
+  date_add::{
+    field:  datetime_field,
+    lhs:    expr,
+    rhs:    expr,
+  },
+
+  // PartiQL special form `DATE_DIFF ( <datetime field> , <expr> , <expr>)`
+  date_diff::{
+    field:  datetime_field,
+    lhs:    expr,
+    rhs:    expr,
+  },
+
+  // PartiQL special form `OUTER (UNION|INTERSECT|EXCEPT) [ALL|DISTINCT]`
   outer_set_op::{
     type: '.set_op',
     lhs:  expr,
     rhs:  expr,
   },
 
-  // The PartiQL `sfw` query expression, think SQL <query specification>
+  // The PartiQL `<sfw>` query expression, think SQL `<query specification>`
   s_f_w::{
     select:   select,              // oneof SELECT / SELECT VALUE / PIVOT
     from:     from,
@@ -400,14 +473,16 @@ expr::[
     pattern:  graph_match,
   },
 
-  // WINDOW
-  // OVER ([PARTITION BY <expr> [, <expr>]... ] [ORDER BY <sort_spec> [, <sort_spec>]... ])
+  // [LAG|LEAD] ( <expr> [ <expr> [ <expr> ] ] )
+  //    OVER ([PARTITION BY <expr> [, <expr>]... ] [ORDER BY <sort_spec> [, <sort_spec>]... ])
   window::{
-    function: string,
-    args:     list::[expr],
+    function:   [ LAG, LEAD ],
+    expression: expr,           // <expr>[0]
+    offset:     optional::expr, // <expr>[1]
+    default:    optional::expr, // <expr>[2]
     over: {
-      partitions: list::[expr],
-      sorts:      list::[sort],
+      partitions: optional::list::[expr],
+      sorts:      optional::list::[sort],
     },
   },
 ]
@@ -422,8 +497,8 @@ select::[
 
   // SELECT [ALL|DISTINCT] <select-list>
   project::{
-    setq:   optional::set_quantifier,
     items:  list::[item],
+    setq:   optional::set_quantifier,
     _: [
       item::[
         all::{ expr: expr },                                    // <expr>.*
@@ -440,8 +515,8 @@ select::[
 
   // SELECT [ALL|DISTINCT] VALUE <expr>
   value::{
-    setq:         optional::set_quantifier,
     constructor:  expr,
+    setq:         optional::set_quantifier,
   },
 ]
 
@@ -459,10 +534,10 @@ from::[
 
   // <from> JOIN [INNER|LEFT|RIGHT|FULL] <from> [ON <expr>]
   join::{
-    type:       [ INNER, LEFT, RIGHT, FULL ],
-    condition:  optional::expr,
     lhs:        from,
     rhs:        from,
+    type:       optional::[ INNER, LEFT, RIGHT, FULL ],
+    condition:  optional::expr,
   },
 ]
 
@@ -503,8 +578,8 @@ sort::{
 
 // (UNION|INTERSECT|EXCEPT) [ALL|DISTINCT]
 set_op::{
-  setq: optional::set_quantifier,
   type: [ UNION, INTERSECT, EXCEPT ],
+  setq: optional::set_quantifier,
 }
 
 // Graph Match Nodes — https://partiql.org/gpml/graph_query.html
@@ -637,3 +712,15 @@ table_definition::{
     },
   ],
 }
+
+// SQL-99 Table 11
+datetime_field::[
+  YEAR,             // 0001-9999
+  MONTH,            // 01-12
+  DAY,              // 01-31
+  HOUR,             // 00-23
+  MINUTE,           // 00-59
+  SECOND,           // 00-61.9(N)
+  TIMEZONE_HOUR,    // -12-13
+  TIMEZONE_MINUTE,  // -59-59
+]

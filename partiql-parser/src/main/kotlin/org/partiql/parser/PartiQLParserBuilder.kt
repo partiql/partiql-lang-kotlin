@@ -14,6 +14,8 @@
 
 package org.partiql.parser
 
+import org.partiql.parser.impl.PartiQLParserDefault
+
 /**
  * A builder class to instantiate a [PartiQLParser].
  */
@@ -28,7 +30,6 @@ public class PartiQLParserBuilder {
     }
 
     public fun build(): PartiQLParser {
-        TODO()
-        // return PartiQLParserDefault()
+        return PartiQLParserDefault()
     }
 }
