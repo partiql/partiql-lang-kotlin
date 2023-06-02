@@ -701,10 +701,10 @@ class QueryPrettyPrinter {
                     val sqLevel = getSubQueryLevel(level)
                     val separator = getSeparator(sqLevel)
                     val join = when (from.type) {
-                        is PartiqlAst.JoinType.Inner -> "JOIN"
-                        is PartiqlAst.JoinType.Left -> "LEFT CROSS JOIN"
-                        is PartiqlAst.JoinType.Right -> "RIGHT CROSS JOIN"
-                        is PartiqlAst.JoinType.Full -> "FULL CROSS JOIN"
+                        is PartiqlAst.JoinType.Inner -> "INNER JOIN"
+                        is PartiqlAst.JoinType.Left -> "LEFT OUTER JOIN"
+                        is PartiqlAst.JoinType.Right -> "RIGHT OUTER JOIN"
+                        is PartiqlAst.JoinType.Full -> "FULL OUTER JOIN"
                     }
                     writeFromSource(from.left, sb, level)
                     sb.append("$separator$join ")

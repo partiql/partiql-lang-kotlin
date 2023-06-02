@@ -662,7 +662,7 @@ class QueryPrettyPrinterTest {
             """
                 SELECT *
                 FROM a
-                    JOIN b ON c
+                    INNER JOIN b ON c
                     LET 1 AS d
             """.trimIndent()
         )
