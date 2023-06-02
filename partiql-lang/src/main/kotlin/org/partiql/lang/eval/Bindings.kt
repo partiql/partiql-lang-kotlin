@@ -135,17 +135,6 @@ interface Bindings<T> {
          * Returns an instance of [Bindings<T>] that is backed by an [IonStruct].
          */
         @JvmStatic
-        @Deprecated(
-            "This mehod is deprecated.  Use the variant without the ExprValueFactory argument.",
-            ReplaceWith("ofIonStruct(struct)")
-        )
-        @Suppress("DEPRECATION", "UNUSED_PARAMETER") // Deprecation of ExprValueFactory.
-        fun ofIonStruct(struct: IonStruct, valueFactory: ExprValueFactory): Bindings<ExprValue> = ofIonStruct(struct)
-
-        /**
-         * Returns an instance of [Bindings<T>] that is backed by an [IonStruct].
-         */
-        @JvmStatic
         fun ofIonStruct(struct: IonStruct): Bindings<ExprValue> = IonStructBindings(struct)
     }
 
