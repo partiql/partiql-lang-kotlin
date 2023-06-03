@@ -107,12 +107,34 @@ class PartiqlAstExtensionsTests : EvaluatorTestBase() {
             VarsTestCase("SELECT t.a as x, t.b as y, s as z  FROM Tbl as t at i", setOf("Tbl", "s")),
             VarsTestCase("SELECT t, x FROM Tbl t, t as x", setOf("Tbl")),
 
+            VarsTestCase("SELECT a FROM Tbl LET t AS t", setOf("a", "Tbl", "t")),
+            VarsTestCase("SELECT a FROM t AS t LET t AS t", setOf("a", "t")),
+
             VarsTestCase("SELECT s, t, x*x, y as z FROM Tbl as t LET t.a + t.b as x, t.a-z as y", setOf("Tbl", "s", "z")),
             VarsTestCase("SELECT 5                 FROM Tbl as t LET t.a + t.b as x, t.a-z as y", setOf("Tbl", "z")),
             VarsTestCase("SELECT s, t, x*x, y as z FROM Tbl as t LET t.a + t.b as x, 2*x   as y", setOf("Tbl", "s")),
 
             VarsTestCase("        SELECT t, x, y, z FROM t as x, Foo as y", setOf("t", "Foo", "z")),
             VarsTestCase("SELECT (SELECT t, x, y, z FROM t as x, Foo as y) as s FROM Tbl as t", setOf("Tbl", "Foo", "z")),
+
+            VarsTestCase("SELECT x FROM (SELECT t, x, y, z FROM t as x, Foo as y) AS t", setOf("Foo", "x", "t", "z")),
+            VarsTestCase("SELECT x, t FROM (SELECT t, x, y, z FROM t as x, Foo as y) AS t", setOf("Foo", "x", "t", "z")),
+            VarsTestCase("SELECT x, t FROM (SELECT t, x, y, z FROM t as x, Foo as y) AS u", setOf("Foo", "x", "t", "z")),
+            VarsTestCase("SELECT x, u FROM (SELECT t, x, y, z FROM t as x, Foo as y) AS u", setOf("Foo", "x", "t", "z")),
+            VarsTestCase("SELECT x, u FROM (SELECT    x, y, z FROM t as x, Foo as y) AS u", setOf("Foo", "x", "t", "z")),
+
+            VarsTestCase(
+                "SELECT x, y FROM L AS x JOIN R AS y ON x.a + y.b = z.c",
+                setOf("L", "R", "z")
+            ),
+            VarsTestCase(
+                "SELECT x, y FROM (L AS x JOIN R AS y ON x.a + y.b = z.c) JOIN T AS u ON x.a + y.b = u.d",
+                setOf("L", "R", "T", "z")
+            ),
+            VarsTestCase(
+                "SELECT x, y FROM (L AS x JOIN R AS y ON x.a + y.b = z.c + u) JOIN T AS u ON x.a + y.b = u.d",
+                setOf("L", "R", "T", "z", "u")
+            ),
         )
     }
 }

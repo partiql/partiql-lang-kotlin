@@ -154,7 +154,8 @@ internal fun PartiqlAst.Expr.freeVariables(): Set<String> {
         private fun addFreeOfFrom(n: PartiqlAst.FromSource, accum: Set<String>): Set<String> =
             when (n) {
                 is PartiqlAst.FromSource.Join -> {
-                    val acc = addFreeOfFrom(n.right, accum)
+                    val condVars = n.predicate?.let { walkExpr(it, emptySet()) } ?: emptySet()
+                    val acc = addFreeOfFrom(n.right, accum + condVars)
                     addFreeOfFrom(n.left, acc)
                 }
                 is PartiqlAst.FromSource.Scan -> {
