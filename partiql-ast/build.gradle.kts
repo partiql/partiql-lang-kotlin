@@ -22,6 +22,7 @@ plugins {
 dependencies {
     api(Deps.pigRuntime)
     api(Deps.ionElement)
+    implementation(project(":partiql-types"))
 }
 
 publish {
