@@ -34,9 +34,17 @@ import org.partiql.pig.runtime.toIonElement
 
 abstract class PartiQLParserTestBase : TestBase() {
 
-    val parser = PartiQLParserBuilder().customTypes(CUSTOM_TEST_TYPES).build()
+    public val targets = arrayOf(ParserTarget.DEFAULT)
 
-    protected fun parse(source: String): PartiqlAst.Statement = parser.parseAstStatement(source)
+    // Use in test functions to execute the test for each target
+    public inline fun forEachTarget(block: ParserTarget.() -> Unit) = targets.forEach { it.block() }
+
+    enum class ParserTarget(val parser: Parser) {
+        DEFAULT(PartiQLParserBuilder().customTypes(CUSTOM_TEST_TYPES).build()),
+        EXPERIMENTAL(PartiQLParserBuilder.experimental().customTypes(CUSTOM_TEST_TYPES).build()),
+    }
+
+    // protected fun parse(source: String): PartiqlAst.Statement = parser.parseAstStatement(source)
 
     private fun assertSexpEquals(
         expectedValue: IonValue,
@@ -60,17 +68,20 @@ abstract class PartiQLParserTestBase : TestBase() {
     protected fun assertExpression(
         source: String,
         expectedPigAst: String,
+        targets: Array<ParserTarget> = this.targets,
     ) {
-        val actualStatement = parser.parseAstStatement(source)
-        val expectedIonSexp = loadIonSexp(expectedPigAst)
+        targets.forEach { target ->
+            val actualStatement = target.parser.parseAstStatement(source)
+            val expectedIonSexp = loadIonSexp(expectedPigAst)
 
-        // Check equals for actual value and expected value in IonSexp format
-        checkEqualInIonSexp(actualStatement, expectedIonSexp, source)
+            // Check equals for actual value and expected value in IonSexp format
+            checkEqualInIonSexp(actualStatement, expectedIonSexp, source)
 
-        val expectedElement = expectedIonSexp.toIonElement().asSexp()
+            val expectedElement = expectedIonSexp.toIonElement().asSexp()
 
-        // Perform checks for Pig AST. See the comments inside the function to see what checks are performed.
-        pigDomainAssert(actualStatement, expectedElement)
+            // Perform checks for Pig AST. See the comments inside the function to see what checks are performed.
+            pigDomainAssert(actualStatement, expectedElement)
+        }
     }
 
     /**
@@ -141,16 +152,19 @@ abstract class PartiQLParserTestBase : TestBase() {
     protected fun checkInputThrowingParserException(
         input: String,
         errorCode: ErrorCode,
-        expectErrorContextValues: Map<Property, Any>
+        expectErrorContextValues: Map<Property, Any>,
+        targets: Array<ParserTarget> = arrayOf(ParserTarget.DEFAULT),
     ) {
-        softAssert {
-            try {
-                parser.parseAstStatement(input)
-                fail("Expected ParserException but there was no Exception")
-            } catch (pex: ParserException) {
-                checkErrorAndErrorContext(errorCode, pex, expectErrorContextValues)
-            } catch (ex: Exception) {
-                fail("Expected ParserException but a different exception was thrown \n\t  $ex")
+        targets.forEach { target ->
+            softAssert {
+                try {
+                    target.parser.parseAstStatement(input)
+                    fail("Expected ParserException but there was no Exception")
+                } catch (pex: ParserException) {
+                    checkErrorAndErrorContext(errorCode, pex, expectErrorContextValues)
+                } catch (ex: Exception) {
+                    fail("Expected ParserException but a different exception was thrown \n\t  $ex")
+                }
             }
         }
     }

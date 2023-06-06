@@ -165,7 +165,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
     @MethodSource("parametersForAggFunctionTests")
     fun aggFunctionTests(tc: TestCase) = runTest(tc)
 
-    private fun runTest(tc: TestCase) {
+    private fun runTest(tc: TestCase) = forEachTarget {
         val globalBindings = Bindings.ofMap(tc.globals)
         val ion = IonSystemBuilder.standard().build()
         val inferencer = StaticTypeInferencer(
@@ -176,7 +176,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
 
         val defaultVisitorTransforms = basicVisitorTransforms()
         val staticTypeVisitorTransform = StaticTypeVisitorTransform(ion, globalBindings)
-        val originalStatement = parse(tc.originalSql).let {
+        val originalStatement = parser.parseAstStatement(tc.originalSql).let {
             // We always pass the query under test through all of the basic VisitorTransforms primarily because we need
             // FromSourceAliasVisitorTransform to execute first but also to help ensure the queries we're testing
             // make sense when they're all run.
