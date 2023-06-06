@@ -4,16 +4,28 @@ package org.partiql.ast.helpers
 
 import com.amazon.ionelement.api.MetaContainer
 import com.amazon.ionelement.api.emptyMetaContainer
+import com.amazon.ionelement.api.ionInt
 import com.amazon.ionelement.api.ionNull
 import com.amazon.ionelement.api.ionSymbol
 import com.amazon.ionelement.api.metaContainerOf
 import org.partiql.ast.AstNode
 import org.partiql.ast.DatetimeField
 import org.partiql.ast.Expr
+import org.partiql.ast.From
+import org.partiql.ast.GraphMatch
+import org.partiql.ast.GroupBy
 import org.partiql.ast.Identifier
+import org.partiql.ast.Let
+import org.partiql.ast.OnConflict
+import org.partiql.ast.OrderBy
+import org.partiql.ast.Path
+import org.partiql.ast.Returning
+import org.partiql.ast.Select
 import org.partiql.ast.SetOp
 import org.partiql.ast.SetQuantifier
+import org.partiql.ast.Sort
 import org.partiql.ast.Statement
+import org.partiql.ast.TableDefinition
 import org.partiql.ast.Type
 import org.partiql.ast.visitor.AstBaseVisitor
 import org.partiql.lang.ast.IsListParenthesizedMeta
@@ -49,6 +61,8 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
         throw IllegalArgumentException("$fromClass cannot be translated to $toClass")
     }
 
+    override fun defaultVisit(node: AstNode, ctx: Ctx) = defaultReturn(node, ctx)
+
     /**
      * Attach Metas if-any
      */
@@ -67,10 +81,171 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
         query(expr, metas)
     }
 
+    override fun visitStatementExec(node: Statement.Exec, ctx: Ctx) = translate(node) { metas ->
+        val procedureName = node.procedure
+        val args = node.args.translate<PartiqlAst.Expr>(ctx)
+        exec(procedureName, args, metas)
+    }
+
+    override fun visitStatementExplain(node: Statement.Explain, ctx: Ctx) = translate(node) { metas ->
+        val target = visitStatementExplainTarget(node.target, ctx)
+        explain(target, metas)
+    }
+
+    override fun visitStatementExplainTarget(node: Statement.Explain.Target, ctx: Ctx) =
+        super.visitStatementExplainTarget(node, ctx) as PartiqlAst.ExplainTarget
+
+    override fun visitStatementExplainTargetDomain(node: Statement.Explain.Target.Domain, ctx: Ctx) =
+        translate(node) { metas ->
+            val statement = visitStatement(node.statement, ctx)
+            val type = node.type
+            val format = node.format
+            domain(statement, type, format, metas)
+        }
+
+    override fun visitStatementDDL(node: Statement.DDL, ctx: Ctx) = super.visit(node, ctx) as PartiqlAst.Statement.Ddl
+
+    override fun visitStatementDDLCreateTable(
+        node: Statement.DDL.CreateTable,
+        ctx: Ctx
+    ) = translate(node) { metas ->
+        if (node.name !is Identifier.Symbol) {
+            error("The legacy AST does not support qualified identifiers as table names")
+        }
+        val tableName = (node.name as Identifier.Symbol).symbol
+        val def = node.definition?.let { visitTableDefinition(it, ctx) }
+        ddl(createTable(tableName, def), metas)
+    }
+
+    override fun visitStatementDDLCreateIndex(
+        node: Statement.DDL.CreateIndex,
+        ctx: Ctx
+    ) = translate(node) { metas ->
+        if (node.index != null) {
+            error("The legacy AST does not support index names")
+        }
+        if (node.table !is Identifier.Symbol) {
+            error("The legacy AST does not support qualified identifiers as table names")
+        }
+        val tableName = visitIdentifierSymbol((node.table as Identifier.Symbol), ctx)
+        val fields = node.fields.map { visitPath(it, ctx) }
+        ddl(createIndex(tableName, fields), metas)
+    }
+
+    override fun visitStatementDDLDropTable(node: Statement.DDL.DropTable, ctx: Ctx) = translate(node) { metas ->
+        if (node.table !is Identifier.Symbol) {
+            error("The legacy AST does not support qualified identifiers as table names")
+        }
+        // !! Legacy AST "index_name" mix up !!
+        val tableName = visitIdentifierSymbol((node.table as Identifier.Symbol), ctx)
+        ddl(dropTable(tableName), metas)
+    }
+
+    override fun visitStatementDDLDropIndex(node: Statement.DDL.DropIndex, ctx: Ctx) = translate(node) { metas ->
+        if (node.index !is Identifier.Symbol) {
+            error("The legacy AST does not support qualified identifiers as index names")
+        }
+        if (node.table !is Identifier.Symbol) {
+            error("The legacy AST does not support qualified identifiers as table names")
+        }
+        // !! Legacy AST "table" mix up !!
+        val index = visitIdentifierSymbol(node.index as Identifier.Symbol, ctx)
+        // !! Legacy AST "keys" mix up !!
+        val table = visitIdentifierSymbol(node.table as Identifier.Symbol, ctx)
+        ddl(dropIndex(index, table), metas)
+    }
+
+    override fun visitTableDefinition(node: TableDefinition, ctx: Ctx) = translate(node) { metas ->
+        val parts = node.columns.translate<PartiqlAst.TableDefPart>(ctx)
+        tableDef(parts, metas)
+    }
+
+    override fun visitTableDefinitionColumn(node: TableDefinition.Column, ctx: Ctx) = translate(node) { metas ->
+        val name = node.name
+        val type = visitType(node.type, ctx)
+        val constraints = node.constraints.translate<PartiqlAst.ColumnConstraint>(ctx)
+        columnDeclaration(name, type, constraints)
+    }
+
+    override fun visitTableDefinitionColumnConstraint(
+        node: TableDefinition.Column.Constraint,
+        ctx: Ctx
+    ) = translate(node) { metas ->
+        val name = node.name
+        val def = when (node.body) {
+            is TableDefinition.Column.Constraint.Body.Check -> {
+                throw IllegalArgumentException("PIG AST does not support CHECK (<expr>) constraint")
+            }
+            is TableDefinition.Column.Constraint.Body.NotNull -> columnNotnull()
+            is TableDefinition.Column.Constraint.Body.Nullable -> columnNull()
+        }
+        columnConstraint(name, def, metas)
+    }
+
+    /**
+     * IDENTIFIERS / PATHS - Always expressions in legacy AST
+     */
+
+    override fun visitIdentifier(node: Identifier, ctx: Ctx) = when (node) {
+        is Identifier.Qualified -> visitIdentifierQualified(node, ctx)
+        is Identifier.Symbol -> visitIdentifierSymbolAsExpr(node, ctx)
+    }
+
+    override fun visitIdentifierSymbol(node: Identifier.Symbol, ctx: Ctx) = translate(node) { metas ->
+        val name = node.symbol
+        val case = node.caseSensitivity.toLegacyCaseSensitivity()
+        // !! NOT AN EXPRESSION!!
+        identifier(name, case, metas)
+    }
+
+    fun visitIdentifierSymbolAsExpr(node: Identifier.Symbol, ctx: Ctx) = translate(node) { metas ->
+        val name = node.symbol
+        val case = node.caseSensitivity.toLegacyCaseSensitivity()
+        val scope = unqualified()
+        // !! ID EXPRESSION!!
+        id(name, case, scope, metas)
+    }
+
+    override fun visitIdentifierQualified(node: Identifier.Qualified, ctx: Ctx) = translate(node) { metas ->
+        // !! Legacy AST represents qualified identifiers as Expr.Path !!
+        val root = visitIdentifierSymbolAsExpr(node.root, ctx)
+        val steps = node.steps.map {
+            // Legacy AST wraps id twice and always uses CaseSensitive
+            val expr = visitIdentifierSymbolAsExpr(it, ctx)
+            pathExpr(expr, caseSensitive())
+        }
+        path(root, steps, metas)
+    }
+
+    override fun visitPath(node: Path, ctx: Ctx) = translate(node) { metas ->
+        val root = visitIdentifierSymbolAsExpr(node.root, ctx)
+        val steps = node.steps.translate<PartiqlAst.PathStep>(ctx)
+        path(root, steps, metas)
+    }
+
+    override fun visitPathStep(node: Path.Step, ctx: Ctx) = super.visitPathStep(node, ctx) as PartiqlAst.PathStep
+
+    override fun visitPathStepSymbol(node: Path.Step.Symbol, ctx: Ctx) = translate(node) { metas ->
+        val index = visitIdentifierSymbolAsExpr(node.symbol, ctx)
+        val case = caseSensitive()
+        pathExpr(index, case, metas)
+    }
+
+    override fun visitPathStepIndex(node: Path.Step.Index, ctx: Ctx) = translate(node) { metas ->
+        val index = lit(ionInt(node.index.toLong()))
+        val case = caseSensitive() // ???
+        pathExpr(index, case, metas)
+    }
+
+    /**
+     * EXPRESSIONS
+     */
+
     override fun visitExpr(node: Expr, ctx: Ctx): PartiqlAst.Expr = super.visitExpr(node, ctx) as PartiqlAst.Expr
 
     override fun visitExprMissingValue(node: Expr.MissingValue, ctx: Ctx) = translate(node) { metas ->
-        lit(ionNull().withAnnotations("\$missing"), metas)
+        // lit(ionNull().withAnnotations("\$missing"), metas)
+        missing(metas)
     }
 
     override fun visitExprNullValue(node: Expr.NullValue, ctx: Ctx) = translate(node) { metas ->
@@ -378,25 +553,532 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
         bagOp(op, setq, operands, metas)
     }
 
-    override fun visitExprSFW(node: Expr.SFW, ctx: Ctx) = translate(node) { metas ->
-        TODO()
-    }
-
-    override fun visitExprSFWSetOp(node: Expr.SFW.SetOp, ctx: Ctx) = translate(node) { metas ->
-        TODO()
-    }
-
     override fun visitExprMatch(node: Expr.Match, ctx: Ctx) = translate(node) { metas ->
-        TODO()
+        val expr = visitExpr(node.expr, ctx)
+        val match = visitGraphMatch(node.pattern, ctx)
+        graphMatch(expr, match, metas)
     }
 
     override fun visitExprWindow(node: Expr.Window, ctx: Ctx) = translate(node) { metas ->
-        TODO()
+        val funcName = node.function.name.toLowerCase()
+        val over = visitExprWindowOver(node.over, ctx)
+        val args = listOfNotNull(node.expression, node.offset, node.default).translate<PartiqlAst.Expr>(ctx)
+        callWindow(funcName, over, args, metas)
     }
 
     override fun visitExprWindowOver(node: Expr.Window.Over, ctx: Ctx) = translate(node) { metas ->
-        TODO()
+        val partitionBy = node.partitions?.let {
+            val partitions = it.translate<PartiqlAst.Expr>(ctx)
+            windowPartitionList(partitions)
+        }
+        val orderBy = node.sorts?.let {
+            val sorts = it.translate<PartiqlAst.SortSpec>(ctx)
+            windowSortSpecList(sorts)
+        }
+        over(partitionBy, orderBy, metas)
     }
+
+    /**
+     * SELECT-FROM-WHERE
+     */
+
+    override fun visitExprSFW(node: Expr.SFW, ctx: Ctx) = translate(node) { metas ->
+        val setq = when (val s = node.select) {
+            is Select.Pivot -> null
+            is Select.Project -> s.setq?.toLegacySetQuantifier()
+            is Select.Star -> null
+            is Select.Value -> s.setq?.toLegacySetQuantifier()
+        }
+        val project = visitSelect(node.select, ctx)
+        val from = visitFrom(node.from, ctx)
+        val fromLet = node.let?.let { visitLet(it, ctx) }
+        val where = node.where?.let { visitExpr(it, ctx) }
+        val groupBy = node.groupBy?.let { visitGroupBy(it, ctx) }
+        val having = node.having?.let { visitExpr(it, ctx) }
+        val orderBy = node.orderBy?.let { visitOrderBy(it, ctx) }
+        val limit = node.limit?.let { visitExpr(it, ctx) }
+        val offset = node.offset?.let { visitExpr(it, ctx) }
+        select(setq, project, from, fromLet, where, groupBy, having, orderBy, limit, offset, metas)
+    }
+
+    /**
+     * UNSUPPORTED in legacy AST
+     */
+    override fun visitExprSFWSetOp(node: Expr.SFW.SetOp, ctx: Ctx) = defaultVisit(node, ctx)
+
+    override fun visitSelect(node: Select, ctx: Ctx) = super.visitSelect(node, ctx) as PartiqlAst.Projection
+
+    override fun visitSelectStar(node: Select.Star, ctx: Ctx) = translate(node) { metas ->
+        projectStar(metas)
+    }
+
+    override fun visitSelectProject(node: Select.Project, ctx: Ctx) = translate(node) { metas ->
+        val items = node.items.translate<PartiqlAst.ProjectItem>(ctx)
+        projectList(items, metas)
+    }
+
+    override fun visitSelectProjectItem(node: Select.Project.Item, ctx: Ctx) =
+        super.visitSelectProjectItem(node, ctx) as PartiqlAst.ProjectItem
+
+    override fun visitSelectProjectItemAll(node: Select.Project.Item.All, ctx: Ctx) = translate(node) { metas ->
+        val expr = visitExpr(node.expr, ctx)
+        projectAll(expr, metas)
+    }
+
+    override fun visitSelectProjectItemExpression(node: Select.Project.Item.Expression, ctx: Ctx) =
+        translate(node) { metas ->
+            val expr = visitExpr(node.expr, ctx)
+            val alias = node.asAlias
+            projectExpr(expr, alias, metas)
+        }
+
+    override fun visitSelectPivot(node: Select.Pivot, ctx: Ctx) = translate(node) { metas ->
+        val value = visitExpr(node.value, ctx)
+        val key = visitExpr(node.key, ctx)
+        projectPivot(value, key, metas)
+    }
+
+    override fun visitSelectValue(node: Select.Value, ctx: Ctx) = translate(node) { metas ->
+        val value = visitExpr(node.constructor, ctx)
+        projectValue(value, metas)
+    }
+
+    override fun visitFrom(node: From, ctx: Ctx) = super.visitFrom(node, ctx) as PartiqlAst.FromSource
+    override fun visitFromValue(node: From.Value, ctx: Ctx) = translate(node) { metas ->
+        val expr = visitExpr(node.expr, ctx)
+        val asAlias = node.asAlias
+        val atAlias = node.atAlias
+        val byAlias = node.byAlias
+        when (node.type) {
+            From.Value.Type.SCAN -> scan(expr, asAlias, atAlias, byAlias, metas)
+            From.Value.Type.UNPIVOT -> unpivot(expr, asAlias, atAlias, byAlias, metas)
+        }
+    }
+
+    override fun visitFromJoin(node: From.Join, ctx: Ctx) = translate(node) { metas ->
+        val type = when (node.type) {
+            From.Join.Type.INNER -> inner()
+            From.Join.Type.LEFT -> left()
+            From.Join.Type.RIGHT -> right()
+            From.Join.Type.FULL -> full()
+            null -> inner()
+        }
+        val lhs = visitFrom(node.lhs, ctx)
+        val rhs = visitFrom(node.rhs, ctx)
+        val condition = visitOrNull<PartiqlAst.Expr>(node.condition, ctx)
+        join(type, lhs, rhs, condition, metas)
+    }
+
+    override fun visitLet(node: Let, ctx: Ctx) = translate(node) { metas ->
+        val bindings = node.bindings.translate<PartiqlAst.LetBinding>(ctx)
+        let(bindings, metas)
+    }
+
+    override fun visitLetBinding(node: Let.Binding, ctx: Ctx) = translate(node) { metas ->
+        val expr = visitExpr(node.expr, ctx)
+        val name = node.asAlias
+        letBinding(expr, name, metas)
+    }
+
+    override fun visitGroupBy(node: GroupBy, ctx: Ctx) = translate(node) { metas ->
+        val strategy = when (node.strategy) {
+            GroupBy.Strategy.FULL -> groupFull()
+            GroupBy.Strategy.PARTIAL -> groupPartial()
+        }
+        val keyList = groupKeyList(node.keys.translate<PartiqlAst.GroupKey>(ctx))
+        val groupAsAlias = node.asAlias
+        groupBy(strategy, keyList, groupAsAlias, metas)
+    }
+
+    override fun visitGroupByKey(node: GroupBy.Key, ctx: Ctx) = translate(node) { metas ->
+        val expr = visitExpr(node.expr, ctx)
+        val asAlias = node.asAlias
+        groupKey(expr, asAlias, metas)
+    }
+
+    override fun visitOrderBy(node: OrderBy, ctx: Ctx) = translate(node) { metas ->
+        val sortSpecs = node.sorts.translate<PartiqlAst.SortSpec>(ctx)
+        orderBy(sortSpecs, metas)
+    }
+
+    override fun visitSort(node: Sort, ctx: Ctx) = translate(node) { metas ->
+        val expr = visitExpr(node.expr, ctx)
+        val orderingSpec = when (node.dir) {
+            Sort.Dir.ASC -> asc()
+            Sort.Dir.DESC -> desc()
+            null -> null
+        }
+        val nullsSpec = when (node.nulls) {
+            Sort.Nulls.FIRST -> nullsFirst()
+            Sort.Nulls.LAST -> nullsLast()
+            null -> null
+        }
+        sortSpec(expr, orderingSpec, nullsSpec, metas)
+    }
+
+    /**
+     * UNSUPPORTED in legacy AST
+     */
+    override fun visitSetOp(node: SetOp, ctx: Ctx) = defaultVisit(node, ctx)
+
+    /**
+     * GPML
+     */
+
+    override fun visitGraphMatch(node: GraphMatch, ctx: Ctx) = translate(node) { metas ->
+        val selector = node.selector?.let { visitGraphMatchSelector(it, ctx) }
+        val patterns = node.patterns.translate<PartiqlAst.GraphMatchPattern>(ctx)
+        gpmlPattern(selector, patterns, metas)
+    }
+
+    override fun visitGraphMatchPattern(node: GraphMatch.Pattern, ctx: Ctx) = translate(node) { metas ->
+        val restrictor = when (node.restrictor) {
+            GraphMatch.Restrictor.TRAIL -> restrictorTrail()
+            GraphMatch.Restrictor.ACYCLIC -> restrictorAcyclic()
+            GraphMatch.Restrictor.SIMPLE -> restrictorSimple()
+            null -> null
+        }
+        val prefilter = node.prefilter?.let { visitExpr(it, ctx) }
+        val variable = node.variable
+        val quantifier = node.quantifier?.let { visitGraphMatchQuantifier(it, ctx) }
+        val parts = node.parts.translate<PartiqlAst.GraphMatchPatternPart>(ctx)
+        graphMatchPattern(restrictor, prefilter, variable, quantifier, parts, metas)
+    }
+
+    override fun visitGraphMatchPatternPart(node: GraphMatch.Pattern.Part, ctx: Ctx) =
+        super.visitGraphMatchPatternPart(node, ctx) as PartiqlAst.GraphMatchPatternPart
+
+    override fun visitGraphMatchPatternPartNode(node: GraphMatch.Pattern.Part.Node, ctx: Ctx) =
+        translate(node) { metas ->
+            val prefilter = node.prefilter?.let { visitExpr(it, ctx) }
+            val variable = node.variable
+            val label = node.label
+            node(prefilter, variable, label, metas)
+        }
+
+    override fun visitGraphMatchPatternPartEdge(node: GraphMatch.Pattern.Part.Edge, ctx: Ctx) =
+        translate(node) { metas ->
+            val direction = when (node.direction) {
+                GraphMatch.Direction.LEFT -> edgeLeft()
+                GraphMatch.Direction.UNDIRECTED -> edgeUndirected()
+                GraphMatch.Direction.RIGHT -> edgeRight()
+                GraphMatch.Direction.LEFT_OR_UNDIRECTED -> edgeLeftOrUndirected()
+                GraphMatch.Direction.UNDIRECTED_OR_RIGHT -> edgeUndirectedOrRight()
+                GraphMatch.Direction.LEFT_OR_RIGHT -> edgeLeftOrRight()
+                GraphMatch.Direction.LEFT_UNDIRECTED_OR_RIGHT -> edgeLeftOrUndirectedOrRight()
+            }
+            val quantifier = node.quantifier?.let { visitGraphMatchQuantifier(it, ctx) }
+            val prefilter = node.prefilter?.let { visitExpr(it, ctx) }
+            val variable = node.variable
+            val label = node.label
+            edge(direction, quantifier, prefilter, variable, label, metas)
+        }
+
+    override fun visitGraphMatchPatternPartPattern(node: GraphMatch.Pattern.Part.Pattern, ctx: Ctx) =
+        translate(node) { metas ->
+            pattern(visitGraphMatchPattern(node.pattern, ctx), metas)
+        }
+
+    override fun visitGraphMatchQuantifier(node: GraphMatch.Quantifier, ctx: Ctx) = translate(node) { metas ->
+        val lower = node.lower
+        val upper = node.upper
+        graphMatchQuantifier(lower, upper, metas)
+    }
+
+    override fun visitGraphMatchSelector(node: GraphMatch.Selector, ctx: Ctx) =
+        super.visitGraphMatchSelector(node, ctx) as PartiqlAst.GraphMatchSelector
+
+    override fun visitGraphMatchSelectorAnyShortest(node: GraphMatch.Selector.AnyShortest, ctx: Ctx) =
+        translate(node) { metas ->
+            selectorAnyShortest(metas)
+        }
+
+    override fun visitGraphMatchSelectorAllShortest(node: GraphMatch.Selector.AllShortest, ctx: Ctx) =
+        translate(node) { metas ->
+            selectorAllShortest(metas)
+        }
+
+    override fun visitGraphMatchSelectorAny(node: GraphMatch.Selector.Any, ctx: Ctx) = translate(node) { metas ->
+        selectorAny(metas)
+    }
+
+    override fun visitGraphMatchSelectorAnyK(node: GraphMatch.Selector.AnyK, ctx: Ctx) = translate(node) { metas ->
+        val k = node.k
+        selectorAnyK(k, metas)
+    }
+
+    override fun visitGraphMatchSelectorShortestK(
+        node: GraphMatch.Selector.ShortestK,
+        ctx: Ctx
+    ) = translate(node) { metas ->
+        val k = node.k
+        selectorShortestK(k, metas)
+    }
+
+    override fun visitGraphMatchSelectorShortestKGroup(
+        node: GraphMatch.Selector.ShortestKGroup,
+        ctx: Ctx
+    ) = translate(node) {
+        val k = node.k
+        selectorShortestKGroup(k)
+    }
+
+    /**
+     * DML
+     */
+
+    override fun visitStatementDML(node: Statement.DML, ctx: Ctx) = super.visitStatementDML(node, ctx) as PartiqlAst.Statement
+
+    override fun visitStatementDMLInsert(node: Statement.DML.Insert, ctx: Ctx) = translate(node) { metas ->
+        val target = visitIdentifier(node.target, ctx)
+        val asAlias = node.asAlias
+        val values = visitExpr(node.values, ctx)
+        val conflictAction = node.onConflict?.let { visitOnConflictAction(it.action, ctx) }
+        val op = insert(target, asAlias, values, conflictAction)
+        dml(dmlOpList(op), null, null, null, metas)
+    }
+
+    override fun visitStatementDMLInsertLegacy(
+        node: Statement.DML.InsertLegacy,
+        ctx: Ctx
+    ) = translate(node) { metas ->
+        val target = visitPath(node.target, ctx)
+        val values = visitExpr(node.value, ctx)
+        val index = node.index?.let { visitExpr(it, ctx) }
+        val onConflict = node.conflictCondition?.let {
+            val condition = visitExpr(it, ctx)
+            onConflict(condition, doNothing())
+        }
+        val op = insertValue(target, values, index, onConflict)
+        dml(dmlOpList(op), null, null, null, metas)
+    }
+
+    override fun visitStatementDMLUpsert(node: Statement.DML.Upsert, ctx: Ctx) = translate(node) { metas ->
+        val target = visitIdentifier(node.target, ctx)
+        val asAlias = node.asAlias
+        val values = visitExpr(node.values, ctx)
+        val conflictAction = doUpdate(excluded())
+        // UPSERT overloads legacy INSERT
+        val op = insert(target, asAlias, values, conflictAction)
+        dml(dmlOpList(op), null, null, null, metas)
+    }
+
+    override fun visitStatementDMLReplace(node: Statement.DML.Replace, ctx: Ctx) = translate(node) { metas ->
+        val target = visitIdentifier(node.target, ctx)
+        val asAlias = node.asAlias
+        val values = visitExpr(node.values, ctx)
+        val conflictAction = doReplace(excluded())
+        // REPLACE overloads legacy INSERT
+        val op = insert(target, asAlias, values, conflictAction)
+        dml(dmlOpList(op), null, null, null, metas)
+    }
+
+    override fun visitStatementDMLUpdate(node: Statement.DML.Update, ctx: Ctx) = translate(node) { metas ->
+        // Current PartiQL.g4 grammar models a SET with no UPDATE target as valid DML command.
+        // We don't want the target to be nullable in the AST because it's not in the SQL grammar.
+        val target = visitPath(node.target, ctx)
+        val from = scan(target)
+        // UPDATE becomes multiple sets
+        val operations = node.assignments.map {
+            val assignment = visitStatementDMLUpdateAssignment(it, ctx)
+            set(assignment)
+        }
+        dml(dmlOpList(operations), from, null, null, metas)
+    }
+
+    override fun visitStatementDMLUpdateAssignment(
+        node: Statement.DML.Update.Assignment,
+        ctx: Ctx
+    ) = translate(node) { metas ->
+        val target = visitPath(node.target, ctx)
+        val value = visitExpr(node.value, ctx)
+        assignment(target, value, metas)
+    }
+
+    override fun visitStatementDMLRemove(node: Statement.DML.Remove, ctx: Ctx) = translate(node) { metas ->
+        val target = visitPath(node.target, ctx)
+        val op = remove(target)
+        dml(dmlOpList(op), null, null, null, metas)
+    }
+
+    override fun visitStatementDMLDelete(node: Statement.DML.Delete, ctx: Ctx) = translate(node) { metas ->
+        val target = visitPath(node.from, ctx)
+        val from = scan(target)
+        val where = node.where?.let { visitExpr(it, ctx) }
+        val returning = node.returning?.let { visitReturning(it, ctx) }
+        val op = delete()
+        dml(dmlOpList(op), from, where, returning, metas)
+    }
+
+    override fun visitStatementDMLBatchLegacy(node: Statement.DML.BatchLegacy, ctx: Ctx) = translate(node) { metas ->
+        val from = visitFrom(node.target, ctx)
+        val ops = node.ops.translate<PartiqlAst.DmlOpList>(ctx).flatMap { it.ops }
+        val where = node.where?.let { visitExpr(it, ctx) }
+        val returning = node.returning?.let { visitReturning(it, ctx) }
+        dml(dmlOpList(ops), from, where, returning, metas)
+    }
+
+    override fun visitStatementDMLBatchLegacyOp(node: Statement.DML.BatchLegacy.Op, ctx: Ctx) =
+        super.visitStatementDMLBatchLegacyOp(node, ctx) as PartiqlAst.DmlOpList
+
+    override fun visitStatementDMLBatchLegacyOpSet(
+        node: Statement.DML.BatchLegacy.Op.Set,
+        ctx: Ctx
+    ) = translate(node) { metas ->
+        val ops = node.assignments.map {
+            val assignment = visitStatementDMLUpdateAssignment(it, ctx)
+            set(assignment)
+        }
+        dmlOpList(ops, metas)
+    }
+
+    override fun visitStatementDMLBatchLegacyOpRemove(
+        node: Statement.DML.BatchLegacy.Op.Remove,
+        ctx: Ctx
+    ) = translate(node) { metas ->
+        val target = visitPath(node.target, ctx)
+        val ops = listOf(remove(target))
+        dmlOpList(ops, metas)
+    }
+
+    override fun visitStatementDMLBatchLegacyOpDelete(
+        node: Statement.DML.BatchLegacy.Op.Delete,
+        ctx: Ctx
+    ) = translate(node) { metas ->
+        val ops = listOf(delete())
+        dmlOpList(ops, metas)
+    }
+
+    override fun visitStatementDMLBatchLegacyOpInsert(
+        node: Statement.DML.BatchLegacy.Op.Insert,
+        ctx: Ctx
+    ) = translate(node) { metas ->
+        val target = visitIdentifier(node.target, ctx)
+        val asAlias = node.asAlias
+        val values = visitExpr(node.values, ctx)
+        val conflictAction = node.onConflict?.let { visitOnConflictAction(it.action, ctx) }
+        dmlOpList(insert(target, asAlias, values, conflictAction, metas))
+    }
+
+    override fun visitStatementDMLBatchLegacyOpInsertLegacy(
+        node: Statement.DML.BatchLegacy.Op.InsertLegacy,
+        ctx: Ctx
+    ) = translate(node) {
+        val target = visitPath(node.target, ctx)
+        val values = visitExpr(node.value, ctx)
+        val index = node.index?.let { visitExpr(it, ctx) }
+        val onConflict = node.conflictCondition?.let {
+            val condition = visitExpr(it, ctx)
+            onConflict(condition, doNothing())
+        }
+        dmlOpList(insertValue(target, values, index, onConflict))
+    }
+
+    override fun visitOnConflict(node: OnConflict, ctx: Ctx) = translate(node) { metas ->
+        val action = visitOnConflictAction(node.action, ctx)
+        if (node.target == null) {
+            // Legacy PartiQLVisitor doesn't respect the return type for the OnConflict rule
+            // - visitOnConflictLegacy returns an OnConflict node
+            // - visitOnConflict returns an OnConflict.Action
+            // Essentially, the on_conflict target appears in the grammar but not the PIG model
+            // Which means you technically can't use the #OnConflict alternative in certain contexts.
+            // We generally shouldn't have parser rule alternatives which are not variants of the same type.
+            throw IllegalArgumentException("PIG OnConflict (#OnConflictLegacy grammar rule) requires an expression")
+        }
+        val expr = visitOnConflictTarget(node.target!!, ctx)
+        onConflict(expr, action, metas)
+    }
+
+    override fun visitOnConflictTarget(node: OnConflict.Target, ctx: Ctx) =
+        super.visitOnConflictTarget(node, ctx) as PartiqlAst.Expr
+
+    override fun visitOnConflictTargetCondition(
+        node: OnConflict.Target.Condition,
+        ctx: Ctx
+    ) = translate(node) {
+        visitExpr(node.condition, ctx)
+    }
+
+    override fun visitOnConflictTargetSymbols(
+        node: OnConflict.Target.Symbols,
+        ctx: Ctx
+    ) = translate(node) { metas ->
+        list(node.symbols.map { lit(ionSymbol(it)) }, metas)
+    }
+
+    override fun visitOnConflictTargetConstraint(
+        node: OnConflict.Target.Constraint,
+        ctx: Ctx
+    ) = translate(node) { metas ->
+        lit(ionSymbol(node.constraint), metas)
+    }
+
+    override fun visitOnConflictAction(node: OnConflict.Action, ctx: Ctx) =
+        super.visitOnConflictAction(node, ctx) as PartiqlAst.ConflictAction
+
+    override fun visitOnConflictActionDoReplace(
+        node: OnConflict.Action.DoReplace,
+        ctx: Ctx
+    ) = translate(node) { metas ->
+        doReplace(excluded(), null, metas)
+    }
+
+    override fun visitOnConflictActionDoUpdate(
+        node: OnConflict.Action.DoUpdate,
+        ctx: Ctx
+    ) = translate(node) { metas ->
+        doUpdate(excluded(), null, metas)
+    }
+
+    override fun visitOnConflictActionDoNothing(
+        node: OnConflict.Action.DoNothing,
+        ctx: Ctx
+    ) = translate(node) { metas ->
+        doNothing(metas)
+    }
+
+    override fun visitReturning(node: Returning, ctx: Ctx) = translate(node) { metas ->
+        val elems = node.columns.translate<PartiqlAst.ReturningElem>(ctx)
+        returningExpr(elems, metas)
+    }
+
+    override fun visitReturningColumn(node: Returning.Column, ctx: Ctx) = translate(node) {
+        // a fine example of `when` is `if`, not pattern matching
+        val mapping = when (node.status) {
+            Returning.Column.Status.MODIFIED -> when (node.age) {
+                Returning.Column.Age.OLD -> modifiedOld()
+                Returning.Column.Age.NEW -> modifiedNew()
+            }
+            Returning.Column.Status.ALL -> when (node.age) {
+                Returning.Column.Age.OLD -> allOld()
+                Returning.Column.Age.NEW -> allNew()
+            }
+        }
+        val column = visitReturningColumnValue(node.value, ctx)
+        returningElem(mapping, column)
+    }
+
+    override fun visitReturningColumnValue(node: Returning.Column.Value, ctx: Ctx) =
+        super.visitReturningColumnValue(node, ctx) as PartiqlAst.ColumnComponent
+
+    override fun visitReturningColumnValueWildcard(
+        node: Returning.Column.Value.Wildcard,
+        ctx: Ctx
+    ) = translate(node) {
+        returningWildcard()
+    }
+
+    override fun visitReturningColumnValueExpression(
+        node: Returning.Column.Value.Expression,
+        ctx: Ctx
+    ) = translate(node) {
+        val expr = visitExpr(node.expr, ctx)
+        returningColumn(expr)
+    }
+
+    /**
+     * TYPE
+     */
 
     override fun visitType(node: Type, ctx: Ctx) = translate(node) { metas ->
         val parameters = node.parameters.map { it.asAnyElement().longValue }
@@ -442,6 +1124,10 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
             else -> customType(node.identifier.toLowerCase(), metas)
         }
     }
+
+    /**
+     * HELPERS
+     */
 
     private inline fun <reified S : PartiqlAst.PartiqlAstNode> List<AstNode>.translate(ctx: Ctx): List<S> =
         this.map { visit(it, ctx) as S }

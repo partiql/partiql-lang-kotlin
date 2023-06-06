@@ -16,8 +16,11 @@ import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.ast.Ast
 import org.partiql.ast.AstNode
 import org.partiql.ast.Expr
+import org.partiql.ast.From
+import org.partiql.ast.GroupBy
 import org.partiql.ast.Identifier
 import org.partiql.ast.SetQuantifier
+import org.partiql.ast.Sort
 import org.partiql.ast.builder.AstBuilder
 import org.partiql.ast.builder.AstFactory
 import org.partiql.ast.builder.ast
@@ -30,16 +33,20 @@ import kotlin.test.assertFails
  *
  * The `null` expression value is used extensively because we are testing single node structural translations.
  * We don't want convoluted tests with deep trees. More complex tests are covered in end-to-end translation.
+ *
+ * Similarly, PartiqlAst.Identifier and Identifier nodes are avoided when their meaning doesn't matter.
+ * Scan of a string "table" is semantically different than the identifier with name 'table', but structurally
+ * it doesn't matter for testing where an arbitrary expression is used. Keep the tree shallow.
  */
 class ToLegacyAstTest {
 
     @ParameterizedTest
-    @MethodSource("ionLiterals")
+    @MethodSource("literals")
     @Execution(ExecutionMode.CONCURRENT)
     fun testIonLiterals(case: Case) = case.assert()
 
     @ParameterizedTest
-    @MethodSource("vars")
+    @MethodSource("identifiers")
     @Execution(ExecutionMode.CONCURRENT)
     fun testVars(case: Case) = case.assert()
 
@@ -74,6 +81,11 @@ class ToLegacyAstTest {
     @Execution(ExecutionMode.CONCURRENT)
     fun testSpecialForms(case: Case) = case.assert()
 
+    @ParameterizedTest
+    @MethodSource("sfw")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun testSfw(case: Case) = case.assert()
+
     companion object {
 
         private fun expect(expected: String, block: AstBuilder.() -> AstNode): Case {
@@ -91,11 +103,11 @@ class ToLegacyAstTest {
         private fun id(name: String) = Ast.identifierSymbol(name, Identifier.CaseSensitivity.INSENSITIVE)
 
         @JvmStatic
-        fun ionLiterals() = listOf(
+        fun literals() = listOf(
             expect("(lit null)") {
                 exprNullValue()
             },
-            expect("(lit \$missing::null)") {
+            expect("(missing)") {
                 exprMissingValue()
             },
             expect("(lit true)") {
@@ -113,7 +125,7 @@ class ToLegacyAstTest {
         )
 
         @JvmStatic
-        fun vars() = listOf(
+        fun identifiers() = listOf(
             expect("(id 'a' (case_sensitive) (unqualified))") {
                 exprVar {
                     identifier = identifierSymbol("a", Identifier.CaseSensitivity.SENSITIVE)
@@ -138,6 +150,10 @@ class ToLegacyAstTest {
                     scope = Expr.Var.Scope.LOCAL
                 }
             },
+            expect("(identifier 'a' (case_insensitive))") {
+                identifierSymbol("a", Identifier.CaseSensitivity.INSENSITIVE)
+            },
+            //
             fail("Cannot translate qualified identifiers in variable references") {
                 exprVar {
                     identifier = identifierQualified {
@@ -398,6 +414,180 @@ class ToLegacyAstTest {
             // TODO can_lossless_cast
             // TODO date_add
             // TODO date_diff
+        )
+
+        @JvmStatic
+        fun sfw() = listOf(
+            // PROJECT Variants
+            expect("(project_star)") {
+                selectStar()
+            },
+            expect(
+                """
+                (project_list
+                    (project_all (id 'a' (case_sensitive) (unqualified)))
+                    (project_expr (lit 1) 'x')
+                )
+             """
+            ) {
+                selectProject {
+                    items += selectProjectItemAll {
+                        expr = exprVar(identifierSymbol("a", Identifier.CaseSensitivity.SENSITIVE), Expr.Var.Scope.DEFAULT)
+                    }
+                    items += selectProjectItemExpression {
+                        expr = exprLiteral(ionInt(1))
+                        asAlias = "x"
+                    }
+                }
+            },
+            expect("(project_pivot (lit 1) (lit 2))") {
+                selectPivot {
+                    value = exprLiteral(ionInt(1))
+                    key = exprLiteral(ionInt(2))
+                }
+            },
+            expect("(project_value (lit null))") {
+                selectValue {
+                    constructor = exprNullValue()
+                }
+            },
+            // FROM_SOURCE Variants
+            expect("(scan (lit null) null null null)") {
+                fromValue {
+                    expr = exprNullValue()
+                    type = From.Value.Type.SCAN
+                }
+            },
+            expect("(scan (lit null) 'a' 'b' 'c')") {
+                fromValue {
+                    expr = exprNullValue()
+                    type = From.Value.Type.SCAN
+                    asAlias = "a"
+                    atAlias = "b"
+                    byAlias = "c"
+                }
+            },
+            expect("(unpivot (lit null) null null null)") {
+                fromValue {
+                    expr = exprNullValue()
+                    type = From.Value.Type.UNPIVOT
+                }
+            },
+            expect("(unpivot (lit null) 'a' 'b' 'c')") {
+                fromValue {
+                    expr = exprNullValue()
+                    type = From.Value.Type.UNPIVOT
+                    asAlias = "a"
+                    atAlias = "b"
+                    byAlias = "c"
+                }
+            },
+            expect(
+                """
+                (join (inner)
+                    (scan (lit "lhs") null null null)
+                    (scan (lit "rhs") null null null)
+                    null
+                )
+            """
+            ) {
+                fromJoin {
+                    type = From.Join.Type.INNER
+                    lhs = fromValue {
+                        expr = exprLiteral(ionString("lhs"))
+                        type = From.Value.Type.SCAN
+                    }
+                    rhs = fromValue {
+                        expr = exprLiteral(ionString("rhs"))
+                        type = From.Value.Type.SCAN
+                    }
+                }
+            },
+            expect(
+                """
+                (join (inner)
+                    (scan (lit "lhs") null null null)
+                    (scan (lit "rhs") null null null)
+                    (lit true)
+                )
+            """
+            ) {
+                fromJoin {
+                    // DEFAULT
+                    // type = From.Join.Type.INNER
+                    lhs = fromValue {
+                        expr = exprLiteral(ionString("lhs"))
+                        type = From.Value.Type.SCAN
+                    }
+                    rhs = fromValue {
+                        expr = exprLiteral(ionString("rhs"))
+                        type = From.Value.Type.SCAN
+                    }
+                    condition = exprLiteral(ionBool(true))
+                }
+            },
+            expect("(let (let_binding (lit null) 'x'))") {
+                let {
+                    bindings += letBinding {
+                        expr = exprNullValue()
+                        asAlias = "x"
+                    }
+                }
+            },
+            expect(
+                """
+               (group_by (group_full)
+                    (group_key_list
+                        (group_key (lit "a") null)
+                        (group_key (lit "b") 'x')
+                    )
+                    null
+               )
+            """
+            ) {
+                groupBy {
+                    strategy = GroupBy.Strategy.FULL
+                    keys += groupByKey(exprLiteral(ionString("a")), null)
+                    keys += groupByKey(exprLiteral(ionString("b")), "x")
+                }
+            },
+            expect(
+                """
+               (group_by (group_partial)
+                    (group_key_list
+                        (group_key (lit "a") null)
+                        (group_key (lit "b") 'x')
+                    )
+                    'as'
+               )
+            """
+            ) {
+                groupBy {
+                    strategy = GroupBy.Strategy.PARTIAL
+                    keys += groupByKey(exprLiteral(ionString("a")), null)
+                    keys += groupByKey(exprLiteral(ionString("b")), "x")
+                    asAlias = "as"
+                }
+            },
+            expect(
+                """
+               (order_by
+                    (sort_spec (lit "a") null null)
+                    (sort_spec (lit "b") (asc) (nulls_first))
+                    (sort_spec (lit "c") (asc) (nulls_last))
+                    (sort_spec (lit "d") (desc) (nulls_first))
+                    (sort_spec (lit "e") (desc) (nulls_last))
+               )
+            """
+            ) {
+                orderBy {
+                    sorts += sort(exprLiteral(ionString("a")))
+                    sorts += sort(exprLiteral(ionString("b")), Sort.Dir.ASC, Sort.Nulls.FIRST)
+                    sorts += sort(exprLiteral(ionString("c")), Sort.Dir.ASC, Sort.Nulls.LAST)
+                    sorts += sort(exprLiteral(ionString("d")), Sort.Dir.DESC, Sort.Nulls.FIRST)
+                    sorts += sort(exprLiteral(ionString("e")), Sort.Dir.DESC, Sort.Nulls.LAST)
+                }
+            },
         )
     }
 

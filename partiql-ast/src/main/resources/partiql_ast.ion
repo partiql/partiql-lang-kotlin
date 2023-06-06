@@ -18,7 +18,7 @@ statement::[
     insert::{
       target:       identifier,
       values:       expr,
-      alias:        optional::identifier,
+      as_alias:     optional::string,
       on_conflict:  optional::on_conflict,
     },
 
@@ -32,16 +32,16 @@ statement::[
 
     // UPSERT INTO <target> [<alias>] <values>
     upsert::{
-      target: identifier,
-      values: expr,
-      alias:  optional::identifier,
+      target:   identifier,
+      values:   expr,
+      as_alias: optional::string,
     },
 
     // REPLACE INTO <target> [AS <alias>] <values>
     replace::{
-      target: identifier,
-      values: expr,
-      alias:  optional::identifier,
+      target:   identifier,
+      values:   expr,
+      as_alias: optional::string,
     },
 
     // UPDATE <target> SET <set clause list> WHERE <expr>
@@ -79,7 +79,7 @@ statement::[
           insert::{
             target:       identifier,
             values:       expr,
-            alias:        optional::identifier,
+            as_alias:     optional::string,
             on_conflict:  optional::on_conflict,
           },
           insert_legacy::{

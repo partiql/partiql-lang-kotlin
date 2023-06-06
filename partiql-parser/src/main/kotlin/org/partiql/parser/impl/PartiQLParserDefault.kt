@@ -499,7 +499,7 @@ internal class PartiQLParserDefault : PartiQLParser {
                     is Statement.DML.Remove -> statementDMLBatchLegacyOpRemove(op.target)
                     is Statement.DML.Delete -> statementDMLBatchLegacyOpDelete()
                     is Statement.DML.Insert -> statementDMLBatchLegacyOpInsert(
-                        op.target, op.values, op.alias, op.onConflict
+                        op.target, op.values, op.asAlias, op.onConflict
                     )
                     is Statement.DML.InsertLegacy -> statementDMLBatchLegacyOpInsertLegacy(
                         op.target, op.value, op.index, op.conflictCondition
@@ -562,23 +562,23 @@ internal class PartiQLParserDefault : PartiQLParser {
         override fun visitInsertStatement(ctx: GeneratedParser.InsertStatementContext) = translate(ctx) {
             val target = visitSymbolPrimitive(ctx.symbolPrimitive())
             val values = visitExpr(ctx.value)
-            val alias = visitAsIdent(ctx.asIdent())
+            val asAlias = visitOrNull<Identifier.Symbol>(ctx.asIdent())?.symbol
             val onConflict = ctx.onConflict()?.let { visitOnConflictClause(it) }
-            statementDMLInsert(target, values, alias, onConflict)
+            statementDMLInsert(target, values, asAlias, onConflict)
         }
 
         override fun visitReplaceCommand(ctx: GeneratedParser.ReplaceCommandContext) = translate(ctx) {
             val target = visitSymbolPrimitive(ctx.symbolPrimitive())
             val values = visitExpr(ctx.value)
-            val alias = visitAsIdent(ctx.asIdent())
-            statementDMLReplace(target, values, alias)
+            val asAlias = visitOrNull<Identifier.Symbol>(ctx.asIdent())?.symbol
+            statementDMLReplace(target, values, asAlias)
         }
 
         override fun visitUpsertCommand(ctx: GeneratedParser.UpsertCommandContext) = translate(ctx) {
             val target = visitSymbolPrimitive(ctx.symbolPrimitive())
             val values = visitExpr(ctx.value)
-            val alias = visitAsIdent(ctx.asIdent())
-            statementDMLUpsert(target, values, alias)
+            val asAlias = visitOrNull<Identifier.Symbol>(ctx.asIdent())?.symbol
+            statementDMLUpsert(target, values, asAlias)
         }
 
         override fun visitReturningClause(ctx: GeneratedParser.ReturningClauseContext) = translate(ctx) {
