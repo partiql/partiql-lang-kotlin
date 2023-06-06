@@ -79,7 +79,8 @@ class PartiqlAstExtensionsTests : EvaluatorTestBase() {
     @ArgumentsSource(FreeVariablesTestCases::class)
     fun testFreeVariables(tc: VarsTestCase) {
         val statement = parser.parseAstStatement(tc.expr)
-        val queryExpr = (statement as PartiqlAst.Statement.Query).expr
+        val desugared = desugarer.transformStatement(statement)
+        val queryExpr = (desugared as PartiqlAst.Statement.Query).expr
         val actual = queryExpr.freeVariables()
         assertEquals(tc.expected, actual)
     }
@@ -103,6 +104,10 @@ class PartiqlAstExtensionsTests : EvaluatorTestBase() {
             VarsTestCase("SELECT x FROM t AS x where x.a = (SELECT max(n) FROM x)", setOf("t", "n")),
             VarsTestCase("SELECT DISTINCT t.a, COUNT(t.b) AS c FROM Tbl t GROUP BY t.a", setOf("Tbl")),
             VarsTestCase("SELECT DISTINCT t.a, COUNT(t.b) AS c FROM Tbl t GROUP BY t.a AS z HAVING z = a", setOf("Tbl", "a")),
+            VarsTestCase("SELECT DISTINCT z,   COUNT(t.b) AS c FROM Tbl t GROUP BY t.a AS z HAVING z = a", setOf("Tbl", "a")),
+
+            VarsTestCase("SELECT g,  z  FROM Tbl t GROUP BY t.a AS z GROUP AS g", setOf("Tbl")),
+            VarsTestCase("SELECT gg, zz FROM Tbl t GROUP BY t.a AS z GROUP AS g", setOf("Tbl", "gg", "zz")),
 
             VarsTestCase("SELECT t.a as x, t.b as y, s as z  FROM Tbl as t at i", setOf("Tbl", "s")),
             VarsTestCase("SELECT t, x FROM Tbl t, t as x", setOf("Tbl")),
@@ -135,6 +140,11 @@ class PartiqlAstExtensionsTests : EvaluatorTestBase() {
                 "SELECT x, y FROM (L AS x JOIN R AS y ON x.a + y.b = z.c + u) JOIN T AS u ON x.a + y.b = u.d",
                 setOf("L", "R", "T", "z", "u")
             ),
+
+            VarsTestCase("SELECT t.x + 1 AS y FROM Tbl t ORDER BY y", setOf("Tbl")),
+            VarsTestCase("SELECT t.x + 1      FROM Tbl t ORDER BY y", setOf("Tbl", "y")),
+            VarsTestCase("SELECT x + 1 AS y FROM Tbl t ORDER BY y", setOf("Tbl", "x")),
+            VarsTestCase("SELECT x + 1      FROM Tbl t ORDER BY y", setOf("Tbl", "x", "y")),
         )
     }
 }

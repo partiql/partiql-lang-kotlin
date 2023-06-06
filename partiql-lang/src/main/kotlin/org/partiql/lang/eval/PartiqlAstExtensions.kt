@@ -66,7 +66,9 @@ internal fun PartiqlAst.Expr.getStartingSourceLocationMeta(): SourceLocationMeta
     return visitorFold.walkExpr(this, SourceLocationMeta(Long.MAX_VALUE, Long.MAX_VALUE, Long.MAX_VALUE))
 }
 
-/** Collect variables bound in the FROM and LET clauses of a SELECT query. */
+/** Collect variables bound in the FROM and LET clauses of a SELECT query.
+ *  Assumes that the expression has been normalized/desugared with [VisitorTransforms.basicVisitorTransforms].
+ */
 internal fun PartiqlAst.Expr.Select.boundVariables(): Set<String> {
     val selectExpr = this
 
@@ -95,7 +97,9 @@ internal fun PartiqlAst.Expr.Select.boundVariables(): Set<String> {
 
 /** Free variables in an expression.
  *  A variable (a PartiqlAst.Expr.Id) is free, unless it is in the scope of a same-named alias introduced
- *  in FROM, LET, or GROUP BY clauses. */
+ *  in FROM, LET, or GROUP BY clauses.
+ *  Assumes that the expression has been normalized/desugared with [VisitorTransforms.basicVisitorTransforms].
+ */
 internal fun PartiqlAst.Expr.freeVariables(): Set<String> {
     val visitorFold = object : PartiqlAst.VisitorFold<Set<String>>() {
         // The normal mode of operation is walk through the most AST nodes just carrying the accumulator set along.

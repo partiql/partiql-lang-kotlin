@@ -3147,7 +3147,7 @@ private class SingleProjectionElement(val name: ExprValue, val thunk: ThunkEnv) 
  * Represents a wildcard projection into the final result.
  * For `SELECT x.* FROM foo as x`, [thunk] contains the compiled expression for 'x'.
  * Note that this does not cover `SELECT * FROM ...`, because it is assumed to have been translated
- * into `SELECT x.*, y.*, z.* FROM ... `.
+ * into `SELECT x.*, y.*, z.* FROM ... `, in [SelectStarVisitorTransform].
  */
 private class MultipleProjectionElement(val thunk: ThunkEnv) : ProjectionElement()
 
