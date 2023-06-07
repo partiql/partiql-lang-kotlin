@@ -61,17 +61,22 @@ statement::[
       target: path,
     },
 
-    // DELETE [FROM] <path> [ WHERE <expr> ] RETURNING ...
+    // DELETE [FROM [AS <symbol>] [AT <symbol>] [BY <symbol>]] <path> [ WHERE <expr> ] RETURNING ...
     delete::{
-      from:       path,
+      target: {
+        path:     path,
+        as_alias: optional::string,
+        at_alias: optional::string,
+        by_alias: optional::string,
+      },
       where:      optional::expr,
       returning:  optional::returning,
     },
 
     // [UPDATE|FROM] <target> <dml base op>+ WHERE <expr> RETURNING <returning>
     batch_legacy::{
-      target:     from,
       ops:        list::[op],
+      target:     optional::from,
       where:      optional::expr,
       returning:  optional::returning,
       _: [
@@ -224,12 +229,20 @@ expr::[
     ],
   },
 
+  // SQL Session Keywords (CURRENT_USER, CURRENT_ROLE, etc.)
+  session_attribute::{
+    attribute: [
+      CURRENT_USER,
+    ],
+  },
+
   // Expression Paths
   path::{
     root:   expr,
     steps:  list::[step],
     _: [
       step::[
+        symbol::{ symbol: '.identifier.symbol' },
         index::{ key: expr },
         wildcard::{},
         unpivot::{},
@@ -443,11 +456,12 @@ expr::[
     rhs:    expr,
   },
 
-  // PartiQL special form `OUTER (UNION|INTERSECT|EXCEPT) [ALL|DISTINCT]`
-  outer_set_op::{
-    type: '.set_op',
-    lhs:  expr,
-    rhs:  expr,
+  // PartiQL special form `[OUTER] (UNION|INTERSECT|EXCEPT) [ALL|DISTINCT]`
+  bag_op::{
+    type:   '.set_op',
+    lhs:    expr,
+    rhs:    expr,
+    outer:  optional::bool,
   },
 
   // The PartiQL `<sfw>` query expression, think SQL `<query specification>`
@@ -654,23 +668,38 @@ graph_match::{
   ],
 }
 
-// `ON CONFLICT WHERE <expr> <conflict_action>`
-// `ON CONFLICT [<target>] <conflict_action>`
+// LEGACY `ON CONFLICT WHERE <expr> <conflict_action>`
+//        `ON CONFLICT [<target>] <conflict_action>`
 on_conflict::{
   target: optional::target,
-  action: [
-    do_replace::{ value: value },
-    do_update::{ value: value },
-    do_nothing::{},
-  ],
+  action: action,
+
   _: [
-    value::[ EXCLUDED ],
+    // <conflict target> ::= ( <index target> [, <index target>]... )
+    //                     | ( { <primary key> | <composite primary key> } )
+    //                     | ON CONSTRAINT <constraint name>
     target::[
-      condition::{ condition: expr },
-      symbols::{ symbols: list::[string] },
-      constraint::{ constraint: string },
+      symbols::{
+        symbols: list::[identifier],
+      },
+      constraint::{
+        constraint: identifier,
+      },
     ],
-  ],
+
+    // <conflict action> ::= DO NOTHING
+    //                     | DO UPDATE <do update>
+    //                     | DO REPLACE <do replace>
+    action::[
+      do_nothing::{},
+      do_replace::{
+        condition: optional::expr,
+      },
+      do_update::{
+        condition: optional::expr,
+      },
+    ],
+  ]
 }
 
 // RETURNING returningColumn ( COMMA returningColumn )*

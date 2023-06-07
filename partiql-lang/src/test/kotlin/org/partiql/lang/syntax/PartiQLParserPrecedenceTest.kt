@@ -22,6 +22,8 @@ import org.partiql.lang.domains.PartiqlAst
 
 class PartiQLParserPrecedenceTest : PartiQLParserTestBase() {
 
+    override val targets: Array<ParserTarget> = arrayOf(ParserTarget.DEFAULT, ParserTarget.EXPERIMENTAL)
+
     @Test
     @Parameters
     @TestCaseName("{0}")

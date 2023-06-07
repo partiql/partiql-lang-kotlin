@@ -14,7 +14,25 @@
 
 package org.partiql.parser
 
-public data class SourceLocation(val line: Int, val offset: Int, val length: Int) {
+/**
+ * SourceLocation represents the span of a given grammar rule; which corresponds to an AST subtree.
+ *
+ * TODO Fix Source Location Tests https://github.com/partiql/partiql-lang-kotlin/issues/1114
+ * Unfortunately several mistakes were made that are hard to undo altogether. The legacy parser incorrectly
+ * used the first token length rather than rule span for source location length. Then we have asserted on these
+ * incorrect SourceLocations in many unit tests unrelated to SourceLocations.
+ *
+ * @property line
+ * @property offset
+ * @property length
+ * @property lengthLegacy
+ */
+public data class SourceLocation(
+    val line: Int,
+    val offset: Int,
+    val length: Int,
+    val lengthLegacy: Int = 0,
+) {
 
     companion object {
 

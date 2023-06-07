@@ -6,6 +6,8 @@ import org.partiql.lang.domains.PartiqlAst
 
 internal class PartiQLParserMetaTests : PartiQLParserTestBase() {
 
+    override val targets: Array<ParserTarget> = arrayOf(ParserTarget.DEFAULT, ParserTarget.EXPERIMENTAL)
+
     @Test
     fun listParenthesized(): Unit = forEachTarget {
         val query = "(0, 1, 2)"

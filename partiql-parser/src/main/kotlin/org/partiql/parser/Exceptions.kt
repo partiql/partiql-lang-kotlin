@@ -20,13 +20,11 @@ package org.partiql.parser
  * @property message
  * @property cause
  * @property location
- * @property context
  */
 public open class PartiQLSyntaxException(
     override val message: String,
     override val cause: Throwable? = null,
     val location: SourceLocation = SourceLocation.UNKNOWN,
-    val context: Map<String, Any> = emptyMap(),
 ) : Exception() {
 
     companion object {
@@ -55,31 +53,31 @@ public open class PartiQLSyntaxException(
  * @param message
  * @param cause
  * @param location
- * @param context
  */
 public class PartiQLLexerException(
     val token: String,
+    val tokenType: String,
     message: String = "",
     cause: Throwable? = null,
     location: SourceLocation = SourceLocation.UNKNOWN,
-    context: Map<String, Any> = emptyMap(),
-) : PartiQLSyntaxException(message, cause, location, context)
+) : PartiQLSyntaxException(message, cause, location)
 
 /**
  * PartiQLParser Exception upon parsing.
  *
- * @property rule — Debug parser rule where the Exception occurred
+ * @property rule   Debug rule where the Exception occurred
+ * @property token  Debug token where the Exception occurred
  * @constructor
  *
  * @param message
  * @param cause
  * @param location
- * @param context
  */
 public class PartiQLParserException(
     val rule: String,
+    val token: String,
+    val tokenType: String,
     message: String = "",
     cause: Throwable? = null,
     location: SourceLocation = SourceLocation.UNKNOWN,
-    context: Map<String, Any> = emptyMap(),
-) : PartiQLSyntaxException(message, cause, location, context)
+) : PartiQLSyntaxException(message, cause, location)

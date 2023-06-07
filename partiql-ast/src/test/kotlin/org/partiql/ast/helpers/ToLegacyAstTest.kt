@@ -233,7 +233,7 @@ class ToLegacyAstTest {
 
         @JvmStatic
         fun paths() = listOf(
-            expect("(path (lit null) (path_expr (lit null) (case_insensitive)))") {
+            expect("(path (lit null) (path_expr (lit null) (case_sensitive)))") {
                 exprPath {
                     root = exprNullValue()
                     steps += exprPathStepIndex(exprNullValue())

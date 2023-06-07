@@ -37,6 +37,8 @@ import kotlin.concurrent.thread
  */
 class PartiQLParserTest : PartiQLParserTestBase() {
 
+    override val targets: Array<ParserTarget> = arrayOf(ParserTarget.DEFAULT, ParserTarget.EXPERIMENTAL)
+
     // ****************************************
     // literals
     // ****************************************
@@ -937,13 +939,13 @@ class PartiQLParserTest : PartiQLParserTestBase() {
     @Test
     fun currentUserUpperCase() = assertExpression(
         "CURRENT_USER",
-        "(session_attribute CURRENT_USER)"
+        "(session_attribute current_user)"
     )
 
     @Test
     fun currentUserMixedCase() = assertExpression(
         "CURRENT_user",
-        "(session_attribute CURRENT_user)"
+        "(session_attribute current_user)"
     )
 
     @Test
@@ -4520,61 +4522,57 @@ class PartiQLParserTest : PartiQLParserTestBase() {
     }
 
     @Test
-    fun manyNestedNotPerformanceRegressionTest() {
-        targets.forEach { target ->
-            val startTime = System.currentTimeMillis()
-            val t = thread {
-                target.parser.parseAstStatement(
-                    """
-                    not not not not not not not not not not not not not not not not not not not not not not not not 
-                    not not not not not not not not not not not not not not not not not not not not not not not not 
-                    not not not not not not not not not not not not not not not not not not not not not not not not 
-                    not not not not not not not not not not not not not not not not not not not not not not not not 
-                    not not not not not not not not not not not not not not not not not not not not not not not not 
-                    not not not not not not not not not not not not not not not not not not not not not not not not 
-                    not not not not not not not not not not not not not not not not not not not not not not not not 
-                    not not not not not not not not not not not not not not not not not not not not not not not not 
-                    not not not not not not not not not not not not not not not not not not not not not not not not 
-                    not not not not not not not not not not not not not not not not not not not not not not not not 
-                    not not not not not not not not not not not not not not not not not not not not not not not not 
-                    not not not not not not not not not not not not not not not not not not not not not not not not 
-                    not not not not not not not not not not not not not not not not not not not not not not not not 
-                    not not not not not not not not not not not not not not not not not not not not not not not not false
-                    """
-                )
-            }
-            val maxParseTime: Long = 5000
-            t.join(maxParseTime)
-            t.interrupt()
-
-            assertTrue(
-                "parsing many nested unary nots should take less than $maxParseTime",
-                System.currentTimeMillis() - startTime < maxParseTime
+    fun manyNestedNotPerformanceRegressionTest(): Unit = forEachTarget {
+        val startTime = System.currentTimeMillis()
+        val t = thread {
+            parser.parseAstStatement(
+                """
+                not not not not not not not not not not not not not not not not not not not not not not not not 
+                not not not not not not not not not not not not not not not not not not not not not not not not 
+                not not not not not not not not not not not not not not not not not not not not not not not not 
+                not not not not not not not not not not not not not not not not not not not not not not not not 
+                not not not not not not not not not not not not not not not not not not not not not not not not 
+                not not not not not not not not not not not not not not not not not not not not not not not not 
+                not not not not not not not not not not not not not not not not not not not not not not not not 
+                not not not not not not not not not not not not not not not not not not not not not not not not 
+                not not not not not not not not not not not not not not not not not not not not not not not not 
+                not not not not not not not not not not not not not not not not not not not not not not not not 
+                not not not not not not not not not not not not not not not not not not not not not not not not 
+                not not not not not not not not not not not not not not not not not not not not not not not not 
+                not not not not not not not not not not not not not not not not not not not not not not not not 
+                not not not not not not not not not not not not not not not not not not not not not not not not false
+                """
             )
         }
+        val maxParseTime: Long = 5000
+        t.join(maxParseTime)
+        t.interrupt()
+
+        assertTrue(
+            "parsing many nested unary nots should take less than $maxParseTime",
+            System.currentTimeMillis() - startTime < maxParseTime
+        )
     }
 
     @Test
-    fun testOrderByMetas() {
-        targets.forEach { target ->
-            // Arrange
-            val query = "SELECT * FROM << { 'x': 2 } >> ORDER BY x"
-            val expected = SourceLocationMeta(1, 32, 5)
+    fun testOrderByMetas(): Unit = forEachTarget {
+        // Arrange
+        val query = "SELECT * FROM << { 'x': 2 } >> ORDER BY x"
+        val expected = SourceLocationMeta(1, 32, 5)
 
-            // Act
-            val stmt = target.parser.parseAstStatement(query)
+        // Act
+        val stmt = parser.parseAstStatement(query)
 
-            // Gather Metas and Assert
-            val expr = when (stmt) {
-                is PartiqlAst.Statement.Query -> stmt.expr
-                else -> throw AssertionError("Expected a PartiqlAst.Statement.Query")
-            }
-            val orderExpr = when (expr) {
-                is PartiqlAst.Expr.Select -> expr.order
-                else -> throw AssertionError("Expected query to be a SELECT expression")
-            }
-            val metas = orderExpr?.metas ?: throw AssertionError("Expected ORDER BY clause to have metas")
-            assertEquals(expected, metas.sourceLocation)
+        // Gather Metas and Assert
+        val expr = when (stmt) {
+            is PartiqlAst.Statement.Query -> stmt.expr
+            else -> throw AssertionError("Expected a PartiqlAst.Statement.Query")
         }
+        val orderExpr = when (expr) {
+            is PartiqlAst.Expr.Select -> expr.order
+            else -> throw AssertionError("Expected query to be a SELECT expression")
+        }
+        val metas = orderExpr?.metas ?: throw AssertionError("Expected ORDER BY clause to have metas")
+        assertEquals(expected, metas.sourceLocation)
     }
 }
