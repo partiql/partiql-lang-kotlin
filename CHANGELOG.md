@@ -25,6 +25,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Adds support for using EXCLUDED within DML ON-CONFLICT-ACTION conditions. Closes #1111.
+
 ### Changed
 
 - Moves PartiqlAst, PartiqlLogical, PartiqlLogicalResolved, and PartiqlPhysical (along with the transforms)
@@ -34,6 +36,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   The file `partiql.ion` is still published in the `partiql-lang-kotlin` JAR.
 - Moves internal class org.partiql.lang.syntax.PartiQLParser to org.partiql.lang.syntax.impl.PartiQLPigParser as we refactor for explicit API.
 - Moves ANTLR grammar to `partiql-parser` package. The files `PartiQL.g4` and `PartiQLTokens.g4` are still published in the `partiql-lang-kotlin` JAR.
+- **Breaking**: Adds new property, `rowAlias`, to experimental `PartiqlLogical.DmlOperation.DmlUpdate`,
+  `PartiqlLogical.DmlOperation.DmlReplace`, `PartiqlLogicalResolved.DmlOperation.DmlUpdate`,
+  `PartiqlLogicalResolved.DmlOperation.DmlReplace`, `PartiqlPhysical.DmlOperation.DmlUpdate`, and
+  `PartiqlPhysical.DmlOperation.DmlReplace`.
 
 ### Deprecated
 

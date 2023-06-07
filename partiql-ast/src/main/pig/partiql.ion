@@ -766,8 +766,12 @@ may then be further optimized by selecting better implementations of each operat
             (sum dml_operation
                 (dml_insert target_alias::var_decl)
                 (dml_delete)
-                (dml_replace target_alias::var_decl condition::(? expr))
-                (dml_update target_alias::var_decl condition::(? expr))
+
+                // row_alias is made optional since dml_replace is currently shared by REPLACE & INSERT ... ON CONFLICT DO REPLACE ...
+                (dml_replace target_alias::var_decl condition::(? expr) row_alias::(? var_decl))
+
+                // row_alias is made optional since dml_update is currently shared by UPSERT & INSERT ... ON CONFLICT DO UPDATE ...
+                (dml_update target_alias::var_decl condition::(? expr) row_alias::(? var_decl))
             )
         )
 

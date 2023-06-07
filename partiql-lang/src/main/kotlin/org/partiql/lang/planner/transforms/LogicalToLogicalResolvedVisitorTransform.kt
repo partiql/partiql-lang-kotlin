@@ -385,13 +385,17 @@ internal data class LogicalToLogicalResolvedVisitorTransform(
     }
 
     override fun transformDmlOperationDmlReplace(node: PartiqlLogical.DmlOperation.DmlReplace): PartiqlLogicalResolved.DmlOperation {
-        return withInputScope(this.inputScope.concatenate(node.targetAlias)) {
+        val scopeWithTarget = this.inputScope.concatenate(node.targetAlias)
+        val inputScope = node.rowAlias?.let { scopeWithTarget.concatenate(it) } ?: scopeWithTarget
+        return withInputScope(inputScope) {
             super.transformDmlOperationDmlReplace(node)
         }
     }
 
     override fun transformDmlOperationDmlUpdate(node: PartiqlLogical.DmlOperation.DmlUpdate): PartiqlLogicalResolved.DmlOperation {
-        return withInputScope(this.inputScope.concatenate(node.targetAlias)) {
+        val scopeWithTarget = this.inputScope.concatenate(node.targetAlias)
+        val inputScope = node.rowAlias?.let { scopeWithTarget.concatenate(it) } ?: scopeWithTarget
+        return withInputScope(inputScope) {
             super.transformDmlOperationDmlUpdate(node)
         }
     }

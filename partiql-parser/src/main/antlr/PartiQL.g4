@@ -695,7 +695,13 @@ parameter
     : QUESTION_MARK;
 
 varRefExpr
-    : qualifier=AT_SIGN? ident=(IDENTIFIER|IDENTIFIER_QUOTED);
+    : qualifier=AT_SIGN? ident=(IDENTIFIER|IDENTIFIER_QUOTED)   # VariableIdentifier
+    | qualifier=AT_SIGN? key=nonReservedKeywords                # VariableKeyword
+    ;
+
+nonReservedKeywords
+    : EXCLUDED
+    ;
 
 /**
  *

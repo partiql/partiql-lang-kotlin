@@ -45,6 +45,10 @@ internal class AstToLogicalVisitorTransform(
     val problemHandler: ProblemHandler
 ) : PartiqlAstToPartiqlLogicalVisitorTransform() {
 
+    internal companion object {
+        internal const val EXCLUDED: String = "EXCLUDED"
+    }
+
     override fun transformExprSelect(node: PartiqlAst.Expr.Select): PartiqlLogical.Expr = PartiqlLogical.build {
         var algebra: PartiqlLogical.Bexpr = node.from.toBexpr(this@AstToLogicalVisitorTransform, problemHandler)
 
@@ -374,13 +378,15 @@ internal class AstToLogicalVisitorTransform(
                     is PartiqlAst.ConflictAction.DoReplace -> when (conflictAction.value) {
                         is PartiqlAst.OnConflictValue.Excluded -> PartiqlLogical.DmlOperation.DmlReplace(
                             targetAlias = alias,
-                            condition = conflictAction.condition?.let { transformExpr(it) }
+                            condition = conflictAction.condition?.let { transformExpr(it) },
+                            rowAlias = conflictAction.condition?.let { PartiqlLogical.VarDecl(SymbolPrimitive(EXCLUDED, emptyMetaContainer())) }
                         )
                     }
                     is PartiqlAst.ConflictAction.DoUpdate -> when (conflictAction.value) {
                         is PartiqlAst.OnConflictValue.Excluded -> PartiqlLogical.DmlOperation.DmlUpdate(
                             targetAlias = alias,
-                            condition = conflictAction.condition?.let { transformExpr(it) }
+                            condition = conflictAction.condition?.let { transformExpr(it) },
+                            rowAlias = conflictAction.condition?.let { PartiqlLogical.VarDecl(SymbolPrimitive(EXCLUDED, emptyMetaContainer())) }
                         )
                     }
                     is PartiqlAst.ConflictAction.DoNothing -> TODO("`ON CONFLICT DO NOTHING` is not supported in logical plan yet.")
