@@ -19,8 +19,9 @@
 object Versions {
     // Language
     const val kotlin = "1.6.20"
-    const val kotlinTarget = "1.4"
-    const val javaTarget = "1.8"
+    const val kotlinLanguage = "1.6"
+    const val kotlinApi = "1.6"
+    const val jvmTarget = "1.8"
 
     // Dependencies
     const val antlr = "4.10.1"
@@ -29,7 +30,6 @@ object Versions {
     const val dotlin = "1.0.2"
     const val gson = "2.10.1"
     const val guava = "31.1-jre"
-    const val ionBuilder = "1.0.0"
     const val ionElement = "1.0.0"
     const val ionJava = "1.9.0"
     const val ionSchema = "1.2.1"
@@ -70,7 +70,6 @@ object Deps {
     const val guava = "com.google.guava:guava:${Versions.guava}"
     const val ionJava = "com.amazon.ion:ion-java:${Versions.ionJava}"
     const val ionElement = "com.amazon.ion:ion-element:${Versions.ionElement}"
-    const val ionBuilder = "com.amazon.ion:ion-kotlin-builder:${Versions.ionBuilder}"
     const val ionSchema = "com.amazon.ion:ion-schema-kotlin:${Versions.ionSchema}"
     const val jansi = "org.fusesource.jansi:jansi:${Versions.jansi}"
     const val jline = "org.jline:jline:${Versions.jline}"

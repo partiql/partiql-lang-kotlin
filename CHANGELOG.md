@@ -27,7 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Updates Kotlin from 1.5.+ to 1.6; compile target remains 1.4
+- Updates Kotlin target from 1.4 (DEPRECATED) to 1.6
 - Moves PartiqlAst, PartiqlLogical, PartiqlLogicalResolved, and PartiqlPhysical (along with the transforms)
   to a new project, `partiql-ast`. These are still imported into `partiql-lang` with the `api` annotation. Therefore,
   no action is required to consume the migrated classes. However, this now gives consumers of the AST, Experimental Plans,
