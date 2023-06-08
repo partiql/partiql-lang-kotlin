@@ -100,18 +100,32 @@ internal fun PartiqlAst.Expr.Select.boundVariables(): Set<String> {
 internal fun PartiqlAst.Expr.Id.toBindingName(): BindingName =
     BindingName(this.name.text, this.case.toBindingCase())
 
+/** Given a set of variable references (as [BingingName]s),
+ *  retain only those that are not captured by the given [binder],
+ *  while taking case sensitivity into account. */
+internal operator fun Set<BindingName>.minus(binder: String): Set<BindingName> {
+    return this.filter { bn -> !bn.isEquivalentTo(binder) }.toSet()
+}
+
+/** Given a set of variable references (as [BingingName]s),
+ *  retain only those that are not captured by given [binders],
+ *  while taking case sensitivity into account. */
+internal operator fun Set<BindingName>.minus(binders: Set<String>): Set<BindingName> {
+    return this.filter { bn -> !binders.any { bn.isEquivalentTo(it) } }.toSet()
+}
+
 /** Free variables in an expression.
  *  A variable (a PartiqlAst.Expr.Id) is free, unless it is in the scope of a same-named alias introduced
  *  in FROM, LET, or GROUP BY clauses.
  *  Assumes that the expression has been normalized/desugared with [VisitorTransforms.basicVisitorTransforms].
  */
-internal fun PartiqlAst.Expr.freeVariables(): Set<String> {
-    val visitorFold = object : PartiqlAst.VisitorFold<Set<String>>() {
+internal fun PartiqlAst.Expr.freeVariables(): Set<BindingName> {
+    val visitorFold = object : PartiqlAst.VisitorFold<Set<BindingName>>() {
         // The normal mode of operation is walk through the most AST nodes just carrying the accumulator set along.
 
         // When a variable reference (a PartiqlAst.Expr.Id) is encountered, add it to the accumulator.
-        override fun walkExprId(node: PartiqlAst.Expr.Id, accumulator: Set<String>): Set<String> {
-            return accumulator + node.name.text
+        override fun walkExprId(node: PartiqlAst.Expr.Id, accumulator: Set<BindingName>): Set<BindingName> {
+            return accumulator + node.toBindingName()
         }
 
         // The invariant of each walkExprXxx(node: Xxx, accumulator) call
@@ -120,8 +134,8 @@ internal fun PartiqlAst.Expr.freeVariables(): Set<String> {
 
         // Processing the SELECT involves taking care that variable occurrences bound by FROM, LET, and GROUP BY clauses
         // do not end up in the result, if they are in the scope of those bindings.
-        override fun walkExprSelect(node: PartiqlAst.Expr.Select, accumulator: Set<String>): Set<String> {
-            var current = emptySet<String>()
+        override fun walkExprSelect(node: PartiqlAst.Expr.Select, accumulator: Set<BindingName>): Set<BindingName> {
+            var current = emptySet<BindingName>()
 
             // SELECT clauses are processed in the reverse of evaluation order, since that's how variable scoping extends.
 
@@ -160,7 +174,7 @@ internal fun PartiqlAst.Expr.freeVariables(): Set<String> {
         // Accounts for situations when an earlier binder is referenced in a later FROM item, such as t in 2nd item in
         //   FROM Tbl as t, t as x
         // Such a reference should not be counted as free.
-        private fun addFreeOfFrom(n: PartiqlAst.FromSource, accum: Set<String>): Set<String> =
+        private fun addFreeOfFrom(n: PartiqlAst.FromSource, accum: Set<BindingName>): Set<BindingName> =
             when (n) {
                 is PartiqlAst.FromSource.Join -> {
                     val condVars = n.predicate?.let { walkExpr(it, emptySet()) } ?: emptySet()
@@ -178,7 +192,7 @@ internal fun PartiqlAst.Expr.freeVariables(): Set<String> {
             }
 
         // Similarly to FROM, accounts for, e.g.,  LET expr as x, 2*x+1 as z   -- 2nd x is not free.
-        private fun addFreeOfLets(ns: List<PartiqlAst.LetBinding>, accum: Set<String>): Set<String> =
+        private fun addFreeOfLets(ns: List<PartiqlAst.LetBinding>, accum: Set<BindingName>): Set<BindingName> =
             ns.foldRight(accum) { n, acc ->
                 (acc - n.name.text) + walkExpr(n.expr, emptySet())
             }

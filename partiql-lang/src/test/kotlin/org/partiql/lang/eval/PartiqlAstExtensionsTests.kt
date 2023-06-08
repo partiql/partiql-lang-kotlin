@@ -75,6 +75,8 @@ class PartiqlAstExtensionsTests : EvaluatorTestBase() {
 
     // Testing PartiqlAst.Expr.freeVariables()
 
+    // These tests only use case-insensitive identifiers, in order to keep the look of the tests simple
+    // and focus on freeVariables specifics.
     @ParameterizedTest
     @ArgumentsSource(FreeVariablesTestCases::class)
     fun testFreeVariables(tc: VarsTestCase) {
@@ -82,7 +84,8 @@ class PartiqlAstExtensionsTests : EvaluatorTestBase() {
         val desugared = desugarer.transformStatement(statement)
         val queryExpr = (desugared as PartiqlAst.Statement.Query).expr
         val actual = queryExpr.freeVariables()
-        assertEquals(tc.expected, actual)
+        val expectedBNs = tc.expected.map { BindingName(it, BindingCase.INSENSITIVE) }.toSet()
+        assertEquals(expectedBNs, actual)
     }
 
     class FreeVariablesTestCases : ArgumentsProviderBase() {
@@ -107,6 +110,8 @@ class PartiqlAstExtensionsTests : EvaluatorTestBase() {
             VarsTestCase("SELECT DISTINCT z,   COUNT(t.b) AS c FROM Tbl t GROUP BY t.a AS z HAVING z = a", setOf("Tbl", "a")),
 
             VarsTestCase("SELECT g,  z  FROM Tbl t GROUP BY t.a AS z GROUP AS g", setOf("Tbl")),
+            VarsTestCase("SELECT g,  z  FROM Tbl t GROUP BY t.a AS z GROUP AS G", setOf("Tbl")),
+            VarsTestCase("SELECT G,  z  FROM Tbl t GROUP BY t.a AS z GROUP AS g", setOf("Tbl")),
             VarsTestCase("SELECT gg, zz FROM Tbl t GROUP BY t.a AS z GROUP AS g", setOf("Tbl", "gg", "zz")),
 
             VarsTestCase("SELECT t.a as x, t.b as y, s as z  FROM Tbl as t at i", setOf("Tbl", "s")),
@@ -145,6 +150,45 @@ class PartiqlAstExtensionsTests : EvaluatorTestBase() {
             VarsTestCase("SELECT t.x + 1      FROM Tbl t ORDER BY y", setOf("Tbl", "y")),
             VarsTestCase("SELECT x + 1 AS y FROM Tbl t ORDER BY y", setOf("Tbl", "x")),
             VarsTestCase("SELECT x + 1      FROM Tbl t ORDER BY y", setOf("Tbl", "x", "y")),
+        )
+    }
+    data class BNsTestCase(val expr: String, val expected: Set<BindingName>)
+
+    // These tests explore case-sensitivity during freeVariables computation.
+    @ParameterizedTest
+    @ArgumentsSource(BNsFreeVariablesTestCases::class)
+    fun testBNsFreeVariables(tc: BNsTestCase) {
+        val statement = parser.parseAstStatement(tc.expr)
+        val desugared = desugarer.transformStatement(statement)
+        val queryExpr = (desugared as PartiqlAst.Statement.Query).expr
+        val actual = queryExpr.freeVariables()
+        assertEquals(tc.expected, actual)
+    }
+
+    class BNsFreeVariablesTestCases : ArgumentsProviderBase() {
+        fun i(name: String): BindingName = BindingName(name, BindingCase.INSENSITIVE)
+        fun s(name: String): BindingName = BindingName(name, BindingCase.SENSITIVE)
+        override fun getParameters(): List<BNsTestCase> = listOf(
+            BNsTestCase(""" x """, setOf(i("x"))),
+            BNsTestCase(""" "x" """, setOf(s("x"))),
+
+            BNsTestCase("""SELECT t, z, g  FROM Tbl t GROUP BY t.a AS z GROUP AS g""", setOf(i("Tbl"))),
+            BNsTestCase("""SELECT t, z, g  FROM Tbl T GROUP BY t.a AS Z GROUP AS G""", setOf(i("Tbl"))),
+            BNsTestCase("""SELECT T, Z, G  FROM Tbl t GROUP BY t.a AS z GROUP AS g""", setOf(i("Tbl"))),
+
+            BNsTestCase("""SELECT "z", "g", "t"  FROM Tbl t GROUP BY t.a AS z GROUP AS g""", setOf(i("Tbl"))),
+            BNsTestCase("""SELECT "z", "g", "t"  FROM Tbl T GROUP BY t.a AS Z GROUP AS G""", setOf(i("Tbl"), s("g"), s("z"), s("t"))),
+            BNsTestCase("""SELECT "Z", "G", "T"  FROM Tbl t GROUP BY t.a AS z GROUP AS g""", setOf(i("Tbl"), s("G"), s("Z"), s("T"))),
+
+            // When identifiers at the binding sites are quoted, the results are the same as before,
+            // since the AST currently discards quotation-status/case-sensitivity information, at binding sites:
+            BNsTestCase("""SELECT t, z, g  FROM Tbl "t" GROUP BY "t".a AS "z" GROUP AS "g" """, setOf(i("Tbl"))),
+            BNsTestCase("""SELECT t, z, g  FROM Tbl "T" GROUP BY "T".a AS "Z" GROUP AS "G" """, setOf(i("Tbl"))),
+            BNsTestCase("""SELECT T, Z, G  FROM Tbl "t" GROUP BY "t".a AS "z" GROUP AS "g" """, setOf(i("Tbl"))),
+
+            BNsTestCase("""SELECT "z", "g", "t"  FROM Tbl "t" GROUP BY "t".a AS "z" GROUP AS "g" """, setOf(i("Tbl"))),
+            BNsTestCase("""SELECT "z", "g", "t"  FROM Tbl "T" GROUP BY "T".a AS "Z" GROUP AS "G" """, setOf(i("Tbl"), s("g"), s("z"), s("t"))),
+            BNsTestCase("""SELECT "Z", "G", "T"  FROM Tbl "t" GROUP BY "t".a AS "z" GROUP AS "g" """, setOf(i("Tbl"), s("G"), s("Z"), s("T"))),
         )
     }
 }
