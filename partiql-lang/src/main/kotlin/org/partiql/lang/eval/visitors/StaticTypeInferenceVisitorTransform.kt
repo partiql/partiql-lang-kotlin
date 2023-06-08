@@ -33,6 +33,7 @@ import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.builtins.SCALAR_BUILTINS_DEFAULT
 import org.partiql.lang.eval.delegate
 import org.partiql.lang.eval.getStartingSourceLocationMeta
+import org.partiql.lang.eval.toBindingName
 import org.partiql.lang.types.FunctionSignature
 import org.partiql.lang.types.StaticTypeUtils.areStaticTypesComparable
 import org.partiql.lang.types.StaticTypeUtils.getTypeDomain
@@ -266,7 +267,7 @@ internal class StaticTypeInferenceVisitorTransform(
         }
 
         override fun transformExprId(node: PartiqlAst.Expr.Id): PartiqlAst.Expr {
-            val bindingName = BindingName(node.name.text, node.case.toBindingCase())
+            val bindingName = node.toBindingName()
 
             val foundType = findBind(bindingName, node.qualifier) ?: error(
                 "No such variable named ${node.name.text}. " +

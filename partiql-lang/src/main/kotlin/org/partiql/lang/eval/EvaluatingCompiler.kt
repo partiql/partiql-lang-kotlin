@@ -1094,7 +1094,7 @@ internal class EvaluatingCompiler(
 
         return when (uniqueNameMeta) {
             null -> {
-                val bindingName = BindingName(expr.name.text, expr.case.toBindingCase())
+                val bindingName = expr.toBindingName()
                 val evalVariableReference = when (compileOptions.undefinedVariable) {
                     UndefinedVariableBehavior.ERROR ->
                         thunkFactory.thunkEnv(metas) { env ->

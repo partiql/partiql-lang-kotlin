@@ -13,13 +13,13 @@ import org.partiql.lang.ast.passes.SemanticException
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.addSourceLocation
 import org.partiql.lang.domains.extractSourceLocation
-import org.partiql.lang.domains.toBindingCase
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.eval.BindingCase
 import org.partiql.lang.eval.BindingName
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.delegate
+import org.partiql.lang.eval.toBindingName
 import org.partiql.lang.util.propertyValueMapOf
 import org.partiql.types.StaticType
 
@@ -264,7 +264,7 @@ class StaticTypeVisitorTransform(
          * [StaticTypeVisitorTransform] support what's happening here.
          */
         override fun transformExprId(node: PartiqlAst.Expr.Id): PartiqlAst.Expr {
-            val bindingName = BindingName(node.name.text, node.case.toBindingCase())
+            val bindingName = node.toBindingName()
 
             val found = findBind(bindingName, node.qualifier)
 

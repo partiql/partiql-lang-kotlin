@@ -5,6 +5,7 @@ import com.amazon.ionelement.api.TextElement
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.ast.sourceLocation
 import org.partiql.lang.domains.PartiqlAst
+import org.partiql.lang.domains.toBindingCase
 
 /**
  * Determines an appropriate column name for the given [PartiqlAst.Expr].
@@ -94,6 +95,10 @@ internal fun PartiqlAst.Expr.Select.boundVariables(): Set<String> {
     return fold.walkFromSource(selectExpr.from, emptySet())
         .union(selectExpr.fromLet?.let { fold.walkLet(it, emptySet()) } ?: emptySet())
 }
+
+/** Get the [BindingName] that is equivalent to this reference identifier (including case-sensitivity). */
+internal fun PartiqlAst.Expr.Id.toBindingName(): BindingName =
+    BindingName(this.name.text, this.case.toBindingCase())
 
 /** Free variables in an expression.
  *  A variable (a PartiqlAst.Expr.Id) is free, unless it is in the scope of a same-named alias introduced

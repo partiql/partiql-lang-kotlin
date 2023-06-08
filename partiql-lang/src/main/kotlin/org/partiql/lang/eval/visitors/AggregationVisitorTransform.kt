@@ -19,15 +19,14 @@ import org.partiql.lang.ast.UNKNOWN_SOURCE_LOCATION
 import org.partiql.lang.ast.passes.SemanticException
 import org.partiql.lang.ast.passes.SemanticProblemDetails
 import org.partiql.lang.domains.PartiqlAst
-import org.partiql.lang.domains.toBindingCase
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Problem
 import org.partiql.lang.errors.Property
-import org.partiql.lang.eval.BindingName
 import org.partiql.lang.eval.EvaluationException
 import org.partiql.lang.eval.errorContextFrom
 import org.partiql.lang.eval.extractColumnAlias
 import org.partiql.lang.eval.sourceLocationMeta
+import org.partiql.lang.eval.toBindingName
 
 /**
  * This VisitorTransform:
@@ -319,7 +318,7 @@ internal class AggregationVisitorTransform(
          * Gets replacement ID (the alias of the Group Key or Group Alias (ID))
          */
         private fun getReplacementInNormalContext(node: PartiqlAst.Expr.Id, ctx: VisitorContext): PartiqlAst.Expr.Id? {
-            val bindingName = BindingName(node.name.text, node.case.toBindingCase())
+            val bindingName = node.toBindingName()
             val replacementKey = ctx.groupKeys.firstOrNull { key ->
                 bindingName.isEquivalentTo(key.publicAlias)
             }?.let { key -> PartiqlAst.build { id(key.uniqueAlias, caseSensitive(), node.qualifier) } }
@@ -335,7 +334,7 @@ internal class AggregationVisitorTransform(
          * Gets replacement Expr (what the Group Key represents, or the Group As Alias)
          */
         private fun getReplacementInAggregationContext(node: PartiqlAst.Expr.Id, ctx: VisitorContext): PartiqlAst.Expr? {
-            val bindingName = BindingName(node.name.text, node.case.toBindingCase())
+            val bindingName = node.toBindingName()
             val replacementExpression = ctx.groupKeys.firstOrNull { key ->
                 bindingName.isEquivalentTo(key.publicAlias)
             }?.represents
