@@ -18,7 +18,7 @@
 
 object Versions {
     // Language
-    const val kotlin = "1.5.31"
+    const val kotlin = "1.6.20"
     const val kotlinTarget = "1.4"
     const val javaTarget = "1.8"
 
