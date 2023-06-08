@@ -43,8 +43,8 @@ dependencies {
 }
 
 java {
-    sourceCompatibility = JavaVersion.toVersion(Versions.javaTarget)
-    targetCompatibility = JavaVersion.toVersion(Versions.javaTarget)
+    sourceCompatibility = JavaVersion.toVersion(Versions.jvmTarget)
+    targetCompatibility = JavaVersion.toVersion(Versions.jvmTarget)
 }
 
 tasks.test {
@@ -60,15 +60,15 @@ tasks.test {
 }
 
 tasks.compileKotlin {
-    kotlinOptions.jvmTarget = Versions.javaTarget
-    kotlinOptions.apiVersion = Versions.kotlinTarget
-    kotlinOptions.languageVersion = Versions.kotlinTarget
+    kotlinOptions.jvmTarget = Versions.jvmTarget
+    kotlinOptions.apiVersion = Versions.kotlinApi
+    kotlinOptions.languageVersion = Versions.kotlinLanguage
 }
 
 tasks.compileTestKotlin {
-    kotlinOptions.jvmTarget = Versions.javaTarget
-    kotlinOptions.apiVersion = Versions.kotlinTarget
-    kotlinOptions.languageVersion = Versions.kotlinTarget
+    kotlinOptions.jvmTarget = Versions.jvmTarget
+    kotlinOptions.apiVersion = Versions.kotlinApi
+    kotlinOptions.languageVersion = Versions.kotlinLanguage
 }
 
 configure<KtlintExtension> {
