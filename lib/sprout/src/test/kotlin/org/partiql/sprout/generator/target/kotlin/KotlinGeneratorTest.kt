@@ -12,7 +12,7 @@ internal class KotlinGeneratorTest {
         val generator = KotlinGenerator(
             options = KotlinOptions(
                 packageRoot = "org.partiql.sprout.test.generated",
-                poems = listOf("visitor", "builder"),
+                poems = listOf("visitor", "builder", "util"),
             )
         )
         val universe = parser.parse("sprout_test", input)

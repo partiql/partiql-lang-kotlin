@@ -78,7 +78,7 @@ sealed class KotlinNodeSpec(
     ) : KotlinNodeSpec(
         def = product,
         clazz = clazz,
-        builder = TypeSpec.classBuilder(clazz).addModifiers(KModifier.ABSTRACT),
+        builder = TypeSpec.interfaceBuilder(clazz),
         companion = TypeSpec.companionObjectBuilder(),
         ext = ext,
     ) {
@@ -104,7 +104,7 @@ sealed class KotlinNodeSpec(
     ) : KotlinNodeSpec(
         def = sum,
         clazz = clazz,
-        builder = TypeSpec.classBuilder(clazz).addModifiers(KModifier.SEALED),
+        builder = TypeSpec.interfaceBuilder(clazz).addModifiers(KModifier.SEALED),
         companion = TypeSpec.companionObjectBuilder(),
         ext = ext,
     ) {

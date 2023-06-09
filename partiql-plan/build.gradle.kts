@@ -37,6 +37,7 @@ val generate = tasks.register<Exec>("generate") {
         "-u", "Plan",
         "--poems", "visitor",
         "--poems", "builder",
+        "--poems", "util",
         "./src/main/resources/partiql_plan.ion"
     )
 }

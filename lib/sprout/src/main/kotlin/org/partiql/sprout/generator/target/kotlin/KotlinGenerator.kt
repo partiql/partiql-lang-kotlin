@@ -11,6 +11,7 @@ import org.partiql.sprout.generator.Generator
 import org.partiql.sprout.generator.target.kotlin.poems.KotlinBuilderPoem
 import org.partiql.sprout.generator.target.kotlin.poems.KotlinJacksonPoem
 import org.partiql.sprout.generator.target.kotlin.poems.KotlinListenerPoem
+import org.partiql.sprout.generator.target.kotlin.poems.KotlinUtilsPoem
 import org.partiql.sprout.generator.target.kotlin.poems.KotlinVisitorPoem
 import org.partiql.sprout.generator.target.kotlin.spec.KotlinFileSpec
 import org.partiql.sprout.generator.target.kotlin.spec.KotlinNodeSpec
@@ -37,7 +38,8 @@ class KotlinGenerator(private val options: KotlinOptions) : Generator<KotlinResu
                 "builder" -> KotlinBuilderPoem(symbols)
                 "listener" -> KotlinListenerPoem(symbols)
                 "jackson" -> KotlinJacksonPoem(symbols)
-                else -> error("unknown poem $it, expected: visitor, builder, listener, jackson")
+                "util" -> KotlinUtilsPoem(symbols)
+                else -> error("unknown poem $it, expected: visitor, builder, listener, jackson, util")
             }
         }
 
@@ -45,7 +47,7 @@ class KotlinGenerator(private val options: KotlinOptions) : Generator<KotlinResu
         val spec = KotlinUniverseSpec(
             universe = universe,
             nodes = universe.nodes(symbols),
-            base = TypeSpec.classBuilder(symbols.base).addModifiers(KModifier.ABSTRACT),
+            base = TypeSpec.interfaceBuilder(symbols.base),
             types = universe.types(symbols)
         )
         val specs = with(spec) {
@@ -66,7 +68,7 @@ class KotlinGenerator(private val options: KotlinOptions) : Generator<KotlinResu
      */
     private fun Universe.nodes(symbols: KotlinSymbols): List<KotlinNodeSpec> =
         types.mapNotNull { it.generate(symbols) }.map {
-            it.builder.superclass(symbols.base)
+            it.builder.addSuperinterface(symbols.base)
             it
         }
 
@@ -114,8 +116,8 @@ class KotlinGenerator(private val options: KotlinOptions) : Generator<KotlinResu
                 constructor.addParameter(para)
             }
             // impls are open
-            impl.superclass(clazz)
-            nodes.forEach { it.builder.superclass(symbols.base) }
+            impl.addSuperinterface(clazz)
+            nodes.forEach { it.builder.addSuperinterface(symbols.base) }
             this.addDataClassMethods()
         }
     }
@@ -130,8 +132,8 @@ class KotlinGenerator(private val options: KotlinOptions) : Generator<KotlinResu
         clazz = symbols.clazz(ref),
         ext = types.enums(symbols).toMutableList(),
     ).apply {
-        variants.forEach { it.builder.superclass(clazz) }
-        nodes.forEach { it.builder.superclass(symbols.base) }
+        variants.forEach { it.builder.addSuperinterface(clazz) }
+        nodes.forEach { it.builder.addSuperinterface(symbols.base) }
     }
 
     /**

@@ -45,7 +45,7 @@ import org.partiql.plan.Property
 import org.partiql.plan.Rel
 import org.partiql.plan.Rex
 import org.partiql.plan.Step
-import org.partiql.plan.visitor.PlanRewriter
+import org.partiql.plan.util.PlanRewriter
 import org.partiql.spi.BindingCase
 import org.partiql.spi.BindingName
 import org.partiql.spi.BindingPath
