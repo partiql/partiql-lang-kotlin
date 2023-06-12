@@ -17,6 +17,9 @@ errors for users that are using our public APIs or the entities that have `publi
   - < If YES, which ones and why? >
   - < In addition, please also mention any other alternatives you've considered and the reason they've been discarded >
 
+- Do your changes comply with the [Contributing Guidelines](https://github.com/partiql/partiql-lang-kotlin/blob/main/CONTRIBUTING.md)
+  and [Code Style Guidelines](https://github.com/partiql/partiql-lang-kotlin/blob/main/CODE_STYLE.md)? **[YES/NO]**
+
 ## License Information
 
 By submitting this pull request, I confirm that my contribution is made under the terms of the Apache 2.0 license.

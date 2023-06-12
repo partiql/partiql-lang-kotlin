@@ -37,6 +37,10 @@ To send us a pull request, please:
 5. Send us a pull request, answering any default questions in the pull request interface.
    1. Ensure you add the details on the change to the [CHANGELOG.md](CHANGELOG.md) file under `Unreleased` section.
       If your change is a breaking change, label your change with `[breaking-change]` as prefix in `CHANGELOG.md`.
+   2. Feel free to add your GitHub username to the [CHANGELOG.md](CHANGELOG.md) under the `Contributors` section. This
+   will add your name to the
+      [contributor list](https://docs.github.com/en/repositories/releasing-projects-on-github/managing-releases-in-a-repository)
+      in the next GitHub release.
 6. Pay attention to any automated CI failures reported in the pull request, and stay involved in the conversation.
 
 GitHub provides additional document on [forking a repository](https://help.github.com/articles/fork-a-repo/) and 
@@ -48,6 +52,9 @@ Looking at the existing issues is a great way to find something to contribute on
 As our projects, by default, use the default GitHub issue labels (enhancement/bug/duplicate/help wanted/invalid/question/wontfix), 
 looking at any ['help wanted'](https://github.com/partiql/partiql-lang-kotlin/labels/help%20wanted) issues is a great place to start. 
 
+## Code Style Guidelines
+Patches must comply with the [code style guidelines](./CODE_STYLE.md). Some older parts of the codebase do not follow
+these guidelines. If you are modifying such code, it is generally best to clean it up to comply with the current guidelines.
 
 ## Code of Conduct
 This project has adopted the [Amazon Open Source Code of Conduct](https://aws.github.io/code-of-conduct). 

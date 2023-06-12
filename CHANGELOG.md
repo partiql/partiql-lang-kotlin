@@ -18,6 +18,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 ### Security
+
+### Contributors
+Thank you to all who have contributed!
+- @<your-username>
+
 -->
 
 
@@ -94,6 +99,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+### Contributors
+Thank you to all who have contributed!
+- @johnedquinn
+- @RCHowell
+- @vgapeyev
 
 ## [0.11.0] - 2023-05-22
 
