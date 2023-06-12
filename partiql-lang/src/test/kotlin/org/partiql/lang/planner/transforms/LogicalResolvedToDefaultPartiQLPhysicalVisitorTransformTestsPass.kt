@@ -270,7 +270,7 @@ class LogicalResolvedToDefaultPartiQLPhysicalVisitorTransformTestsPass {
                 PartiqlLogicalResolved.build {
                     dml(
                         uniqueId = "foo",
-                        operation = dmlReplace(varDecl(0)),
+                        operation = dmlReplace(varDecl(0), rowAlias = varDecl(1)),
                         rows = bindingsToValues(
                             struct(structFields(localId(0))),
                             scan(lit(ionInt(1)), varDecl(0))
@@ -280,7 +280,7 @@ class LogicalResolvedToDefaultPartiQLPhysicalVisitorTransformTestsPass {
                 PartiqlPhysical.build {
                     dml(
                         uniqueId = "foo",
-                        operation = dmlReplace(varDecl(0)),
+                        operation = dmlReplace(varDecl(0), rowAlias = varDecl(1)),
                         rows = bindingsToValues(
                             struct(structFields(localId(0))),
                             scan(DEFAULT_IMPL, lit(ionInt(1)), varDecl(0))
@@ -303,7 +303,8 @@ class LogicalResolvedToDefaultPartiQLPhysicalVisitorTransformTestsPass {
                                     ),
                                     lit(ionInt(1))
                                 )
-                            )
+                            ),
+                            rowAlias = varDecl(1)
                         ),
                         rows = bindingsToValues(
                             struct(structFields(localId(0))),
@@ -324,7 +325,8 @@ class LogicalResolvedToDefaultPartiQLPhysicalVisitorTransformTestsPass {
                                     ),
                                     lit(ionInt(1))
                                 )
-                            )
+                            ),
+                            rowAlias = varDecl(1)
                         ),
                         rows = bindingsToValues(
                             struct(structFields(localId(0))),

@@ -180,6 +180,18 @@ class PartiQLParserTest : PartiQLParserTestBase() {
         "(id kumo (case_sensitive) (unqualified))"
     )
 
+    @Test
+    fun nonReservedKeyword() = assertExpression(
+        "excluded",
+        "(id excluded (case_insensitive) (unqualified))"
+    )
+
+    @Test
+    fun nonReservedKeywordQualified() = assertExpression(
+        "@excluded",
+        "(id excluded (case_insensitive) (locals_first))"
+    )
+
     // ****************************************
     // call
     // ****************************************
@@ -2282,6 +2294,37 @@ class PartiQLParserTest : PartiQLParserTestBase() {
     )
 
     @Test
+    fun insertWithOnConflictReplaceExcludedWithExcludedInCondition() = assertExpression(
+        source = "INSERT into foo VALUES (1, 2), (3, 4) ON CONFLICT DO REPLACE EXCLUDED WHERE excluded.id > 2",
+        expectedPigAst = """
+        (dml
+            (operations
+                (dml_op_list
+                    (insert
+                        (id foo (case_insensitive) (unqualified))
+                        null
+                        (bag
+                            (list
+                                (lit 1)
+                                (lit 2))
+                            (list
+                                (lit 3)
+                                (lit 4)))
+                        (do_replace
+                            (excluded)
+                            (gt
+                                (path
+                                    (id excluded (case_insensitive) (unqualified))
+                                    (path_expr
+                                        (lit "id")
+                                        (case_insensitive)))
+                                (lit 2)
+                            )
+                        )))))
+        """
+    )
+
+    @Test
     fun insertWithOnConflictReplaceExcludedWithLiteralValueWithAlias() = assertExpression(
         source = "INSERT into foo AS f <<{'id': 1, 'name':'bob'}>> ON CONFLICT DO REPLACE EXCLUDED",
         expectedPigAst = """
@@ -2329,6 +2372,38 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                             (gt
                                 (path
                                     (id f (case_insensitive) (unqualified))
+                                    (path_expr
+                                        (lit "id")
+                                        (case_insensitive)))
+                                (lit 2)
+                            )
+                            )))))
+        """
+    )
+
+    @Test
+    fun insertWithOnConflictReplaceExcludedWithAliasAndExcludedInCondition() = assertExpression(
+        source = "INSERT into foo AS f <<{'id': 1, 'name':'bob'}>> ON CONFLICT DO REPLACE EXCLUDED WHERE excluded.id > 2",
+        expectedPigAst = """
+            (dml
+                (operations
+                    (dml_op_list
+                        (insert
+                            (id foo (case_insensitive) (unqualified))
+                            f
+                            (bag
+                                (struct
+                                    (expr_pair
+                                        (lit "id")
+                                        (lit 1))
+                                    (expr_pair
+                                        (lit "name")
+                                        (lit "bob"))))
+                            (do_replace
+                                (excluded)
+                            (gt
+                                (path
+                                    (id excluded (case_insensitive) (unqualified))
                                     (path_expr
                                         (lit "id")
                                         (case_insensitive)))
@@ -2434,6 +2509,37 @@ class PartiQLParserTest : PartiQLParserTestBase() {
     )
 
     @Test
+    fun insertWithOnConflictUpdateExcludedWithExcludedCondition() = assertExpression(
+        source = "INSERT into foo VALUES (1, 2), (3, 4) ON CONFLICT DO UPDATE EXCLUDED WHERE excluded.id > 2",
+        expectedPigAst = """
+        (dml
+            (operations
+                (dml_op_list
+                    (insert
+                        (id foo (case_insensitive) (unqualified))
+                        null
+                        (bag
+                            (list
+                                (lit 1)
+                                (lit 2))
+                            (list
+                                (lit 3)
+                                (lit 4)))
+                        (do_update
+                            (excluded)
+                            (gt
+                                (path
+                                    (id excluded (case_insensitive) (unqualified))
+                                    (path_expr
+                                        (lit "id")
+                                        (case_insensitive)))
+                                (lit 2)
+                            )
+                        )))))
+        """
+    )
+
+    @Test
     fun insertWithOnConflictUpdateExcludedWithLiteralValueWithAlias() = assertExpression(
         source = "INSERT into foo AS f <<{'id': 1, 'name':'bob'}>> ON CONFLICT DO UPDATE EXCLUDED",
         expectedPigAst = """
@@ -2481,6 +2587,38 @@ class PartiQLParserTest : PartiQLParserTestBase() {
                             (gt
                                 (path
                                     (id f (case_insensitive) (unqualified))
+                                    (path_expr
+                                        (lit "id")
+                                        (case_insensitive)))
+                                (lit 2)
+                            )
+                            )))))
+        """
+    )
+
+    @Test
+    fun insertWithOnConflictUpdateExcludedWithAliasAndExcludedCondition() = assertExpression(
+        source = "INSERT into foo AS f <<{'id': 1, 'name':'bob'}>> ON CONFLICT DO UPDATE EXCLUDED WHERE excluded.id > 2",
+        expectedPigAst = """
+            (dml
+                (operations
+                    (dml_op_list
+                        (insert
+                            (id foo (case_insensitive) (unqualified))
+                            f
+                            (bag
+                                (struct
+                                    (expr_pair
+                                        (lit "id")
+                                        (lit 1))
+                                    (expr_pair
+                                        (lit "name")
+                                        (lit "bob"))))
+                            (do_update
+                                (excluded)
+                            (gt
+                                (path
+                                    (id excluded (case_insensitive) (unqualified))
                                     (path_expr
                                         (lit "id")
                                         (case_insensitive)))

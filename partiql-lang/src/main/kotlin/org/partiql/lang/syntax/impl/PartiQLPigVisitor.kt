@@ -965,11 +965,18 @@ internal class PartiQLPigVisitor(val customTypes: List<CustomType> = listOf(), p
 
     override fun visitExprTermWrappedQuery(ctx: PartiQLParser.ExprTermWrappedQueryContext) = visit(ctx.expr(), PartiqlAst.Expr::class)
 
-    override fun visitVarRefExpr(ctx: PartiQLParser.VarRefExprContext): PartiqlAst.PartiqlAstNode = PartiqlAst.build {
+    override fun visitVariableIdentifier(ctx: PartiQLParser.VariableIdentifierContext): PartiqlAst.PartiqlAstNode = PartiqlAst.build {
         val metas = ctx.ident.getSourceMetaContainer()
         val qualifier = if (ctx.qualifier == null) unqualified() else localsFirst()
         val sensitivity = if (ctx.ident.type == PartiQLParser.IDENTIFIER) caseInsensitive() else caseSensitive()
         id(ctx.ident.getStringValue(), sensitivity, qualifier, metas)
+    }
+
+    override fun visitVariableKeyword(ctx: PartiQLParser.VariableKeywordContext): PartiqlAst.PartiqlAstNode = PartiqlAst.build {
+        val keyword = ctx.nonReservedKeywords().start.text
+        val metas = ctx.start.getSourceMetaContainer()
+        val qualifier = ctx.qualifier?.let { localsFirst() } ?: unqualified()
+        id(keyword, caseInsensitive(), qualifier, metas)
     }
 
     override fun visitParameter(ctx: PartiQLParser.ParameterContext) = PartiqlAst.build {
