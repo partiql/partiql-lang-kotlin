@@ -23,6 +23,7 @@ include(
     "partiql-spi",
     "partiql-types",
     "plugins:partiql-mockdb",
+    "plugins:partiql-bananna",
     "lib:isl",
     "lib:sprout",
     "test:partiql-tests-runner",
