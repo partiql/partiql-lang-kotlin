@@ -836,6 +836,41 @@ class AstToLogicalVisitorTransformTests {
                     }
                 }
             ),
+
+            // A collection of values
+            TestCase(
+                "INSERT INTO foo AS f <<{'id': 1, 'name':'bob'}, {'id': 2, 'name':'alice'}>> ON CONFLICT DO REPLACE EXCLUDED WHERE f.id > 2",
+                PartiqlLogical.build {
+                    PartiqlLogical.build {
+                        dml(
+                            identifier("foo", caseInsensitive()),
+                            dmlReplace(
+                                varDecl("f"),
+                                condition = gt(
+                                    listOf(
+                                        path(
+                                            id("f", caseInsensitive(), unqualified()),
+                                            listOf(pathExpr(lit(ionString("id")), caseInsensitive()))
+                                        ),
+                                        lit(ionInt(2))
+                                    )
+                                ),
+                                rowAlias = varDecl(AstToLogicalVisitorTransform.EXCLUDED)
+                            ),
+                            bag(
+                                struct(
+                                    structField(lit(ionString("id")), lit(ionInt(1))),
+                                    structField(lit(ionString("name")), lit(ionString("bob")))
+                                ),
+                                struct(
+                                    structField(lit(ionString("id")), lit(ionInt(2))),
+                                    structField(lit(ionString("name")), lit(ionString("alice")))
+                                )
+                            )
+                        )
+                    }
+                }
+            ),
             // Testing using excluded non-reserved keyword in condition
             TestCase(
                 "INSERT INTO foo AS f <<{'id': 1, 'name':'bob'}>> ON CONFLICT DO REPLACE EXCLUDED WHERE excluded.id > 2",

@@ -767,10 +767,24 @@ may then be further optimized by selecting better implementations of each operat
                 (dml_insert target_alias::var_decl)
                 (dml_delete)
 
-                // row_alias is made optional since dml_replace is currently shared by REPLACE & INSERT ... ON CONFLICT DO REPLACE ...
+                // Represents the REPLACE statement as well as INSERT ... ON CONFLICT DO REPLACE ...
+                // [target-alias]: represents the alias for the table name. See the following syntactical example:
+                //  `INSERT INTO Table1 AS <alias> << { 'id': 1, 'name': 'Arash' } >> ON CONFLICT DO REPLACE ...`
+                // [condition]: represents the condition by which a row should be replaced. See the following syntactical example:
+                //  `INSERT INTO x << {'id': 1, 'name': 'John'}} >> ON CONFLICT DO REPLACE EXCLUDED WHERE <condition>`
+                // [row_alias]: represents the alias given to the rows meant to be inserted/replaced. It is made optional
+                //  since dml_replace is currently shared by REPLACE (which does not allow the aliasing of rows) and
+                //  INSERT ... ON CONFLICT DO REPLACE ... (which aliases the rows as "EXCLUDED" for use within the [condition]).
                 (dml_replace target_alias::var_decl condition::(? expr) row_alias::(? var_decl))
 
-                // row_alias is made optional since dml_update is currently shared by UPSERT & INSERT ... ON CONFLICT DO UPDATE ...
+                // Represents the UPSERT statement as well as INSERT ... ON CONFLICT DO UPDATE ...
+                // [target-alias]: represents the alias for the table name. See the following syntactical example:
+                //  `INSERT INTO Table1 AS <alias> << { 'id': 1, 'name': 'Arash' } >> ON CONFLICT DO UPDATE ...`
+                // [condition]: represents the condition by which a row should be replaced. See the following syntactical example:
+                //  `INSERT INTO x << {'id': 1, 'name': 'John'}} >> ON CONFLICT DO UPDATE EXCLUDED WHERE <condition>`
+                // [row_alias]: represents the alias given to the rows meant to be inserted/updated. It is made optional
+                //  since dml_update is currently shared by UPSERT (which does not allow the aliasing of rows) and
+                //  INSERT ... ON CONFLICT DO UPDATE ... (which aliases the rows as "EXCLUDED" for use within the [condition]).
                 (dml_update target_alias::var_decl condition::(? expr) row_alias::(? var_decl))
             )
         )
