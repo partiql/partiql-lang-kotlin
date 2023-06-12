@@ -36,6 +36,7 @@ import org.partiql.lang.eval.errIntOverflow
 import org.partiql.lang.eval.errNoContext
 import org.partiql.lang.eval.intValue
 import org.partiql.lang.eval.isUnknown
+import org.partiql.lang.eval.numberValue
 import org.partiql.lang.eval.stringValue
 import org.partiql.lang.eval.timeValue
 import org.partiql.lang.eval.timestampValue
@@ -84,7 +85,9 @@ internal val SCALAR_BUILTINS_SQL = listOf(
     ExprFunctionPosition,
     ExprFunctionOverlay,
     ExprFunctionExtract,
-    ExprFunctionCardinality
+    ExprFunctionCardinality,
+    ExprFunctionPower,
+    ExprFunctionPower2
 )
 
 /**
@@ -347,6 +350,37 @@ internal object ExprFunctionUpper : ExprFunction {
         val str = required[0].stringValue()
         val result = str.toUpperCase()
         return ExprValue.newString(result)
+    }
+}
+
+internal object ExprFunctionPower : ExprFunction {
+
+    override val signature = FunctionSignature(
+        name = "query_power",
+        requiredParameters = listOf(StaticType.INT, StaticType.INT),
+        returnType = StaticType.INT
+    )
+
+    override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
+        val base = required[0].numberValue()
+        val exponent = required[1].numberValue()
+        val result = Math.pow(base.toDouble(), exponent.toDouble()).toInt()
+        return ExprValue.newInt(result)
+    }
+}
+
+internal object ExprFunctionPower2 : ExprFunction {
+
+    override val signature = FunctionSignature(
+        name = "query_power",
+        requiredParameters = listOf(StaticType.INT),
+        returnType = StaticType.INT
+    )
+
+    override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
+        val base = required[0].numberValue()
+        val result = Math.pow(base.toDouble(), 2.0).toInt()
+        return ExprValue.newInt(result)
     }
 }
 

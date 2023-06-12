@@ -169,6 +169,27 @@ public sealed class StaticType {
     public abstract val allTypes: List<StaticType>
 
     public abstract fun flatten(): StaticType
+
+    public fun isSubTypeOf(superType: StaticType): Boolean {
+        return when (this) {
+            is AnyType -> superType is AnyType
+            is MissingType -> superType is MissingType
+            is BoolType -> superType is BoolType
+            is IntType -> superType is IntType
+            is FloatType -> superType is FloatType
+            is DecimalType -> superType is DecimalType
+            is SymbolType -> superType is SymbolType
+            is StringType -> superType is StringType
+            is BlobType -> superType is BlobType
+            is ClobType -> superType is ClobType
+            is StructType -> superType is StructType
+            is AnyOfType -> superType is AnyOfType
+            is DateType -> superType is DateType
+            is TimeType -> superType is TimeType
+            is GraphType -> superType is GraphType
+            else -> false
+        }
+    }
 }
 
 /**

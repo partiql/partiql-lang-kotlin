@@ -30,6 +30,7 @@ import org.partiql.lang.CompilerPipelineImpl
 import org.partiql.lang.StepContext
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.eval.CompileOptions
+import org.partiql.lang.eval.impl.FunctionManager
 import org.partiql.lang.eval.visitors.VisitorTransformBase
 import org.partiql.parser.antlr.PartiQLTokens
 import java.io.InputStream
@@ -149,7 +150,7 @@ class PartiQLPigParserThreadInterruptTests {
         } as CompilerPipelineImpl
 
         val expr = PartiqlAst.build { query(lit((ionInt(42)))) }
-        val context = StepContext(CompileOptions.standard(), emptyMap(), emptyMap())
+        val context = StepContext(CompileOptions.standard(), FunctionManager(emptyList()), emptyMap())
 
         testThreadInterrupt {
             pipeline.executePreProcessingSteps(expr, context)
