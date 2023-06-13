@@ -15,7 +15,8 @@ import org.partiql.lang.util.stringValueOrNull
  * generated schema. The passed [schemaIds] will also be used for the generated
  * [IonSchemaModel.SchemaStatement.HeaderStatement]'s [IonSchemaModel.ImportList].
  */
-class SchemaInferencerFromExampleImpl(val typeName: String, iss: IonSchemaSystem, val schemaIds: List<String>) : SchemaInferencerFromExample {
+class SchemaInferencerFromExampleImpl(val typeName: String, iss: IonSchemaSystem, val schemaIds: List<String>) :
+    SchemaInferencerFromExample {
     private val importedTypes = schemaIds.loadImportedTypes(iss)
     private val sequenceTypes = importedTypes.loadSequenceTypes()
     private val islAnyConstraints = IonSchemaModel.build { constraintList() }
