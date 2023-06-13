@@ -1,5 +1,6 @@
 package org.partiql.sprout.generator.target.kotlin.poems
 
+import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FileSpec
@@ -33,6 +34,12 @@ import org.partiql.sprout.model.TypeRef
 class KotlinUtilsPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
 
     override val id: String = "util"
+
+    // @file:Suppress("UNUSED_PARAMETER")
+    private val suppressUnused = AnnotationSpec.builder(Suppress::class)
+        .useSiteTarget(AnnotationSpec.UseSiteTarget.FILE)
+        .addMember("%S", "UNUSED_PARAMETER")
+        .build()
 
     // Not taking a dep on builder or visitor poems, as this is temporary
     private val factoryClass = ClassName("${symbols.rootPackage}.builder", "${symbols.rootId}Factory")
@@ -83,7 +90,10 @@ class KotlinUtilsPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
                 }
             }
             .build()
-        val rewriterFile = FileSpec.builder(rewriterPackageName, rewriterName).addType(rewriter).build()
+        val rewriterFile = FileSpec.builder(rewriterPackageName, rewriterName)
+            .addAnnotation(suppressUnused)
+            .addType(rewriter)
+            .build()
         universe.packages.add(
             KotlinPackageSpec(
                 name = "util",
@@ -130,7 +140,7 @@ class KotlinUtilsPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
                             // Collections
                             val method = (ref.type as TypeRef.Path).visitMethodName()
                             when (ref.nullable) {
-                                true -> addStatement("val $name = $child?.let { _visitListNull(it, ctx, ::$method)")
+                                true -> addStatement("val $name = $child?.let { _visitListNull(it, ctx, ::$method) }")
                                 false -> addStatement("val $name = _visitList($child, ctx, ::$method)")
                             }
                         }
@@ -138,7 +148,7 @@ class KotlinUtilsPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
                             // Collections
                             val method = (ref.type as TypeRef.Path).visitMethodName()
                             when (ref.nullable) {
-                                true -> addStatement("val $name = $child?.let { _visitSetNull(it, ctx, ::$method)")
+                                true -> addStatement("val $name = $child?.let { _visitSetNull(it, ctx, ::$method) }")
                                 false -> addStatement("val $name = _visitSet($child, ctx, ::$method)")
                             }
                         }
