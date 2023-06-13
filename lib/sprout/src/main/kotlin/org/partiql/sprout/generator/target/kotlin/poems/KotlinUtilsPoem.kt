@@ -1,9 +1,6 @@
 package org.partiql.sprout.generator.target.kotlin.poems
 
-<<<<<<< HEAD
 import com.squareup.kotlinpoet.AnnotationSpec
-=======
->>>>>>> 6c649a05 (Generates a tree rewriter)
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FileSpec
@@ -38,15 +35,12 @@ class KotlinUtilsPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
 
     override val id: String = "util"
 
-<<<<<<< HEAD
     // @file:Suppress("UNUSED_PARAMETER")
     private val suppressUnused = AnnotationSpec.builder(Suppress::class)
         .useSiteTarget(AnnotationSpec.UseSiteTarget.FILE)
         .addMember("%S", "UNUSED_PARAMETER")
         .build()
 
-=======
->>>>>>> 6c649a05 (Generates a tree rewriter)
     // Not taking a dep on builder or visitor poems, as this is temporary
     private val factoryClass = ClassName("${symbols.rootPackage}.builder", "${symbols.rootId}Factory")
     private val visitorBaseClass = ClassName("${symbols.rootPackage}.visitor", "${symbols.rootId}BaseVisitor")
@@ -96,14 +90,10 @@ class KotlinUtilsPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
                 }
             }
             .build()
-<<<<<<< HEAD
         val rewriterFile = FileSpec.builder(rewriterPackageName, rewriterName)
             .addAnnotation(suppressUnused)
             .addType(rewriter)
             .build()
-=======
-        val rewriterFile = FileSpec.builder(rewriterPackageName, rewriterName).addType(rewriter).build()
->>>>>>> 6c649a05 (Generates a tree rewriter)
         universe.packages.add(
             KotlinPackageSpec(
                 name = "util",
