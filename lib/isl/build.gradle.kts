@@ -18,7 +18,6 @@ plugins {
     id(Plugins.dokka)
     id(Plugins.library)
     id(Plugins.pig)
-    id(Plugins.publish)
 }
 
 dependencies {
