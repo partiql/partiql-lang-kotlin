@@ -108,6 +108,8 @@ Thank you to all who have contributed!
   `NormalizeDecimalPrecisionsToUpToRange`, and `IonExampleParser`.
 - **Breaking**: Removes unused package `org.partiql.lang.partiqlisl` which includes unused classes/methods: `ResourceAuthority`,
   `getResourceAuthority()`, and `loadPartiqlIsl()`.
+- **Breaking**: Plan nodes cannot be directly instantiated. To instantiate, use the `Plan` (DEFAULT) factory.
+- **Breaking**: PlanRewriter has been moved from `org.partiql.plan.visitor.PlanRewriter` to `org.partiql.plan.util.PlanRewriter`
 
 ### Security
 

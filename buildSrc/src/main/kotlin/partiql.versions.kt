@@ -37,7 +37,7 @@ object Versions {
     const val jline = "3.21.0"
     const val jmh = "0.5.3"
     const val joda = "2.12.1"
-    const val kotlinPoet = "1.8.0"
+    const val kotlinPoet = "1.11.0"
     const val picoCli = "4.7.0"
     const val kasechange = "1.3.0"
     const val ktlint = "10.2.1"
