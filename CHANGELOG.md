@@ -106,6 +106,8 @@ Thank you to all who have contributed!
 - **Breaking**: Removes unused package `org.partiql.lang.schemadiscovery` which included unused classes of:
   `SchemaInferencerFromExample`, `SchemaInferencerFromExampleImpl`, `TypeConstraint`, `NormalizeNullableVisitorTransform`,
   `NormalizeDecimalPrecisionsToUpToRange`, and `IonExampleParser`.
+- **Breaking**: Removes unused package `org.partiql.lang.partiqlisl` which includes unused classes/methods: `ResourceAuthority`,
+  `getResourceAuthority()`, and `loadPartiqlIsl()`.
 
 ### Security
 
