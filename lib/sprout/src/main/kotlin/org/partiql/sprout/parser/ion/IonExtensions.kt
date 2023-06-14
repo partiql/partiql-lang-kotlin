@@ -86,12 +86,15 @@ internal fun IonValue.isContainer(): Boolean {
     if (type != IonType.LIST) {
         return false
     }
-    val symbol = try {
+    var symbol = try {
         // _: [ ]
         fieldName
     } catch (_: UnknownSymbolException) {
+        null
+    }
+    if (symbol == null && typeAnnotations.isNotEmpty()) {
         // _::[]
-        typeAnnotations[0]
+        symbol = typeAnnotations[0]
     }
     return symbol == "_"
 }

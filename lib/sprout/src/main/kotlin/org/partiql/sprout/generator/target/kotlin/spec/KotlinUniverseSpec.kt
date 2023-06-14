@@ -53,20 +53,32 @@ class KotlinUniverseSpec(
      */
     fun build(root: String): List<FileSpec> {
         val files = mutableListOf<FileSpec>()
-        val nodes = nodes.map { it.build() }
+        val specs = nodes.map { it.build() }
 
         // <root>/Types.kt
         files += with(FileSpec.builder(root, "Types")) {
             addType(base.build())
-            nodes.forEach { addType(it) }
+            specs.forEach { addType(it) }
             types.forEach { addType(it) }
             build()
         }
 
         // <root>/<ext>.kt
         files += this.files
+
         // <root>/<package>/...
         files += packages.flatMap { it.files }
+
+        // <root>/impl/Types.kt
+        files += with(FileSpec.builder("$root.impl", "Types")) {
+            forEachNode {
+                if (it is KotlinNodeSpec.Product) {
+                    addType(it.buildImpl())
+                }
+            }
+            build()
+        }
+
         return files
     }
 

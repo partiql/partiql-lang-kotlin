@@ -46,13 +46,6 @@ class KotlinCommand : Callable<Int> {
     )
     var poems: List<String> = emptyList()
 
-    @CommandLine.Option(
-        names = ["-m", "--modifier"],
-        description = ["Generated node class modifier. Options \${COMPLETION-CANDIDATES}"],
-        defaultValue = "DATA"
-    )
-    lateinit var modifier: KotlinNodeOptions.Modifier
-
     override fun call(): Int {
         val input = BufferedReader(FileInputStream(file).reader()).readText()
         val parser = SproutParser.default()
@@ -60,9 +53,6 @@ class KotlinCommand : Callable<Int> {
         val options = KotlinOptions(
             packageRoot = packageRoot,
             poems = poems,
-            node = KotlinNodeOptions(
-                modifier = modifier,
-            ),
         )
         val generator = KotlinGenerator(options)
         val result = generator.generate(universe)

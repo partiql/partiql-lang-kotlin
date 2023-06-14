@@ -102,6 +102,8 @@ Thank you to all who have contributed!
 - **Breaking**: Removes deprecated `org.partiql.lang.syntax.SourceSpan`
 - **Breaking**: Removes deprecated `org.partiql.lang.syntax.Token`
 - **Breaking**: Removes deprecated `org.partiql.lang.syntax.TokenType`
+- **Breaking**: Plan nodes cannot be directly instantiated. To instantiate, use the `Plan` (DEFAULT) factory.
+- **Breaking**: PlanRewriter has been moved from `org.partiql.plan.visitor.PlanRewriter` to `org.partiql.plan.util.PlanRewriter`
 
 ### Security
 

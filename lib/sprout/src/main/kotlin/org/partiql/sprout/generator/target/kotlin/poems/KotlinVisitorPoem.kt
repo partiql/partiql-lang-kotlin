@@ -57,8 +57,7 @@ class KotlinVisitorPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
     override fun apply(universe: KotlinUniverseSpec) {
         universe.base.addProperty(
             children.toBuilder()
-                .addModifiers(KModifier.OPEN)
-                .initializer("emptyList()")
+                .addModifiers(KModifier.ABSTRACT)
                 .build()
         )
         universe.base.addFunction(
@@ -81,7 +80,7 @@ class KotlinVisitorPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
     override fun apply(node: KotlinNodeSpec.Product) {
         val kids = node.kids()
         if (kids != null) {
-            node.builder.addProperty(
+            node.impl.addProperty(
                 children.toBuilder()
                     .addModifiers(KModifier.OVERRIDE)
                     .delegate(
@@ -93,8 +92,15 @@ class KotlinVisitorPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
                     )
                     .build()
             )
+        } else {
+            node.impl.addProperty(
+                children.toBuilder()
+                    .addModifiers(KModifier.OVERRIDE)
+                    .initializer("emptyList()")
+                    .build()
+            )
         }
-        node.builder.addFunction(
+        node.impl.addFunction(
             accept.toBuilder()
                 .addModifiers(KModifier.OVERRIDE)
                 .addStatement("return visitor.%L(this, ctx)", node.product.ref.visitMethodName())
@@ -136,11 +142,20 @@ class KotlinVisitorPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
                 product.props.forEachIndexed { i, prop ->
                     val kid = prop.ref
                     val name = props[i].name
-                    when {
-                        isNode(kid) -> addStatement("kids.add($name)")
-                        (kid is TypeRef.List && isNode(kid.type)) -> addStatement("kids.addAll($name)")
-                        (kid is TypeRef.Set && isNode(kid.type)) -> addStatement("kids.addAll($name)")
-                        else -> n -= 1
+                    val action: String? = when {
+                        isNode(kid) -> "add"
+                        (kid is TypeRef.List && isNode(kid.type)) -> "addAll"
+                        (kid is TypeRef.Set && isNode(kid.type)) -> "addAll"
+                        else -> {
+                            n -= 1
+                            null
+                        }
+                    }
+                    if (action != null) {
+                        when (kid.nullable) {
+                            true -> addStatement("$name?.let { kids.$action(it) }")
+                            false -> addStatement("kids.$action($name)")
+                        }
                     }
                 }
             }
