@@ -1173,50 +1173,104 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
      * TYPE
      */
 
-    override fun visitType(node: Type, ctx: Ctx) = translate(node) { metas ->
-        val parameters = node.parameters.map { it.asAnyElement().longValue }
-        when (node.identifier) {
-            "null" -> nullType(metas)
-            "missing" -> missingType(metas)
-            "any" -> anyType(metas)
-            "blob" -> blobType(metas)
-            "bool" -> booleanType(metas)
-            "bag" -> bagType(metas)
-            "array" -> listType(metas)
-            "sexp" -> sexpType(metas)
-            "date" -> dateType(metas)
-            "time" -> timeType(null, metas)
-            "timestamp" -> timestampType(metas)
-            "numeric" -> {
-                when (parameters.size) {
-                    0 -> numericType(null, null, metas)
-                    1 -> numericType(parameters[0], null, metas)
-                    2 -> numericType(parameters[0], parameters[1], metas)
-                    else -> throw IllegalArgumentException("Too many parameters for numeric type")
-                }
-            }
-            "decimal" -> {
-                when (parameters.size) {
-                    0 -> decimalType(null, null, metas)
-                    1 -> decimalType(parameters[0], null, metas)
-                    2 -> decimalType(parameters[0], parameters[1], metas)
-                    else -> throw IllegalArgumentException("Too many parameters for decimal type")
-                }
-            }
-            "float" -> floatType(null, metas)
-            "int" -> integerType(metas)
-            "varchar" -> {
-                if (parameters.isNotEmpty()) {
-                    characterVaryingType(parameters[0], metas)
-                } else {
-                    characterVaryingType(null, metas)
-                }
-            }
-            "tuple" -> structType(metas)
-            "string" -> stringType(metas)
-            else -> customType(node.identifier.toLowerCase(), metas)
-        }
+    override fun visitType(node: Type, ctx: Ctx) = super.visitType(node, ctx) as PartiqlAst.Type
+
+    override fun visitTypeNullType(node: Type.NullType, ctx: Ctx) = translate(node) { metas -> nullType(metas) }
+
+    override fun visitTypeMissing(node: Type.Missing, ctx: Ctx) = translate(node) { metas -> missingType(metas) }
+
+    override fun visitTypeBool(node: Type.Bool, ctx: Ctx) = translate(node) { metas -> booleanType(metas) }
+
+    override fun visitTypeTinyint(node: Type.Tinyint, ctx: Ctx) =
+        throw IllegalArgumentException("TINYINT type not supported")
+
+    override fun visitTypeSmallint(node: Type.Smallint, ctx: Ctx) = translate(node) { metas -> smallintType(metas) }
+
+    override fun visitTypeInt2(node: Type.Int2, ctx: Ctx) = translate(node) { metas -> smallintType(metas) }
+
+    override fun visitTypeInt4(node: Type.Int4, ctx: Ctx) = translate(node) { metas -> integer4Type(metas) }
+
+    override fun visitTypeBigint(node: Type.Bigint, ctx: Ctx) = translate(node) { metas -> integer8Type(metas) }
+
+    override fun visitTypeInt8(node: Type.Int8, ctx: Ctx) = translate(node) { metas -> integer8Type(metas) }
+
+    override fun visitTypeInt(node: Type.Int, ctx: Ctx) = translate(node) { metas -> integerType(metas) }
+
+    override fun visitTypeReal(node: Type.Real, ctx: Ctx) = translate(node) { metas -> realType(metas) }
+
+    override fun visitTypeFloat32(node: Type.Float32, ctx: Ctx) = translate(node) { metas -> floatType(null, metas) }
+
+    override fun visitTypeFloat64(node: Type.Float64, ctx: Ctx) =
+        translate(node) { metas -> doublePrecisionType(metas) }
+
+    override fun visitTypeDecimal(node: Type.Decimal, ctx: Ctx) = translate(node) { metas ->
+        decimalType(
+            precision = node.precision?.toLong(),
+            scale = node.scale?.toLong(),
+            metas = metas,
+        )
     }
+
+    override fun visitTypeNumeric(node: Type.Numeric, ctx: Ctx) = translate(node) { metas ->
+        numericType(
+            precision = node.precision?.toLong(),
+            scale = node.scale?.toLong(),
+            metas = metas,
+        )
+    }
+
+    override fun visitTypeChar(node: Type.Char, ctx: Ctx) =
+        translate(node) { metas -> characterType(node.length?.toLong(), metas) }
+
+    override fun visitTypeVarchar(node: Type.Varchar, ctx: Ctx) =
+        translate(node) { metas -> characterVaryingType(node.length?.toLong(), metas) }
+
+    override fun visitTypeString(node: Type.String, ctx: Ctx) = translate(node) { metas -> stringType(metas) }
+
+    override fun visitTypeSymbol(node: Type.Symbol, ctx: Ctx) = translate(node) { metas -> symbolType(metas) }
+
+    override fun visitTypeBit(node: Type.Bit, ctx: Ctx) = throw IllegalArgumentException("BIT type not supported")
+
+    override fun visitTypeBitVarying(node: Type.BitVarying, ctx: Ctx) =
+        throw IllegalArgumentException("BIT VARYING type not supported")
+
+    override fun visitTypeByteString(node: Type.ByteString, ctx: Ctx) =
+        throw IllegalArgumentException("BYTESTRING type not supported")
+
+    override fun visitTypeBlob(node: Type.Blob, ctx: Ctx) = translate(node) { metas -> blobType(metas) }
+
+    override fun visitTypeClob(node: Type.Clob, ctx: Ctx) = translate(node) { metas -> clobType(metas) }
+
+    override fun visitTypeDate(node: Type.Date, ctx: Ctx) = translate(node) { metas -> dateType(metas) }
+
+    override fun visitTypeTime(node: Type.Time, ctx: Ctx) =
+        translate(node) { metas -> timeType(node.precision?.toLong(), metas) }
+
+    override fun visitTypeTimeWithTz(node: Type.TimeWithTz, ctx: Ctx) =
+        translate(node) { metas -> timeWithTimeZoneType(node.precision?.toLong(), metas) }
+
+    override fun visitTypeTimestamp(node: Type.Timestamp, ctx: Ctx) = translate(node) { metas -> timestampType(metas) }
+
+    override fun visitTypeTimestampWithTz(node: Type.TimestampWithTz, ctx: Ctx) =
+        throw IllegalArgumentException("TIMESTAMP [WITH TIMEZONE] type not supported")
+
+    override fun visitTypeInterval(node: Type.Interval, ctx: Ctx) =
+        throw IllegalArgumentException("INTERVAL type not supported")
+
+    override fun visitTypeBag(node: Type.Bag, ctx: Ctx) = translate(node) { metas -> bagType(metas) }
+
+    override fun visitTypeList(node: Type.List, ctx: Ctx) = translate(node) { metas -> listType(metas) }
+
+    override fun visitTypeSexp(node: Type.Sexp, ctx: Ctx) = translate(node) { metas -> sexpType(metas) }
+
+    override fun visitTypeTuple(node: Type.Tuple, ctx: Ctx) = translate(node) { metas -> tupleType(metas) }
+
+    override fun visitTypeStruct(node: Type.Struct, ctx: Ctx) = translate(node) { metas -> structType(metas) }
+
+    override fun visitTypeAny(node: Type.Any, ctx: Ctx) = translate(node) { metas -> anyType(metas) }
+
+    override fun visitTypeCustom(node: Type.Custom, ctx: Ctx) =
+        translate(node) { metas -> customType(node.name.lowercase(), metas) }
 
     /**
      * HELPERS

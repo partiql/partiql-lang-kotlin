@@ -363,7 +363,7 @@ internal class PartiQLParserDefault : PartiQLParser {
                     var format: String? = null
                     ctx.explainOption().forEach { option ->
                         val parameter = try {
-                            ExplainParameters.valueOf(option.param.text.toUpperCase())
+                            ExplainParameters.valueOf(option.param.text.uppercase())
                         } catch (ex: java.lang.IllegalArgumentException) {
                             throw error(option.param, "Unknown EXPLAIN parameter.", ex)
                         }
@@ -956,7 +956,7 @@ internal class PartiQLParserDefault : PartiQLParser {
         override fun visitMatchPattern(ctx: GeneratedParser.MatchPatternContext) = translate(ctx) {
             val parts = visitOrEmpty<GraphMatch.Pattern.Part>(ctx.graphPart())
             val restrictor = ctx.restrictor?.let {
-                when (ctx.restrictor.text.toLowerCase()) {
+                when (ctx.restrictor.text.lowercase()) {
                     "trail" -> GraphMatch.Restrictor.TRAIL
                     "acyclic" -> GraphMatch.Restrictor.ACYCLIC
                     "simple" -> GraphMatch.Restrictor.SIMPLE
@@ -1097,7 +1097,7 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         private fun visitRestrictor(ctx: GeneratedParser.PatternRestrictorContext?): GraphMatch.Restrictor? {
             if (ctx == null) return null
-            return when (ctx.restrictor.text.toLowerCase()) {
+            return when (ctx.restrictor.text.lowercase()) {
                 "trail" -> GraphMatch.Restrictor.TRAIL
                 "acyclic" -> GraphMatch.Restrictor.ACYCLIC
                 "simple" -> GraphMatch.Restrictor.SIMPLE
@@ -1331,12 +1331,22 @@ internal class PartiQLParserDefault : PartiQLParser {
         override fun visitExprTermWrappedQuery(ctx: GeneratedParser.ExprTermWrappedQueryContext): AstNode =
             visit(ctx.expr())
 
-        override fun visitVarRefExpr(ctx: GeneratedParser.VarRefExprContext) = translate(ctx) {
+        override fun visitVariableIdentifier(ctx: GeneratedParser.VariableIdentifierContext) = translate(ctx) {
             val symbol = ctx.ident.getStringValue()
             val case = when (ctx.ident.type) {
                 GeneratedParser.IDENTIFIER -> Identifier.CaseSensitivity.INSENSITIVE
                 else -> Identifier.CaseSensitivity.SENSITIVE
             }
+            val scope = when (ctx.qualifier) {
+                null -> Expr.Var.Scope.DEFAULT
+                else -> Expr.Var.Scope.LOCAL
+            }
+            exprVar(identifierSymbol(symbol, case), scope)
+        }
+
+        override fun visitVariableKeyword(ctx: GeneratedParser.VariableKeywordContext) = translate(ctx) {
+            val symbol = ctx.key.text
+            val case = Identifier.CaseSensitivity.INSENSITIVE
             val scope = when (ctx.qualifier) {
                 null -> Expr.Var.Scope.DEFAULT
                 else -> Expr.Var.Scope.LOCAL
@@ -1482,7 +1492,7 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitDateFunction(ctx: GeneratedParser.DateFunctionContext) = translate(ctx) {
             val field = try {
-                DatetimeField.valueOf(ctx.dt.text.toUpperCase())
+                DatetimeField.valueOf(ctx.dt.text.uppercase())
             } catch (ex: IllegalArgumentException) {
                 throw error(ctx.dt, "Expected one of: ${DatetimeField.values().joinToString()}", ex)
             }
@@ -1559,7 +1569,7 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitExtract(ctx: GeneratedParser.ExtractContext) = translate(ctx) {
             val field = try {
-                DatetimeField.valueOf(ctx.IDENTIFIER().text.toUpperCase())
+                DatetimeField.valueOf(ctx.IDENTIFIER().text.uppercase())
             } catch (ex: IllegalArgumentException) {
                 throw error(ctx.IDENTIFIER().symbol, "Expected one of: ${DatetimeField.values().joinToString()}", ex)
             }
@@ -1570,7 +1580,7 @@ internal class PartiQLParserDefault : PartiQLParser {
         override fun visitTrimFunction(ctx: GeneratedParser.TrimFunctionContext) = translate(ctx) {
             val spec = ctx.mod?.let {
                 try {
-                    Expr.Trim.Spec.valueOf(it.text.toUpperCase())
+                    Expr.Trim.Spec.valueOf(it.text.uppercase())
                 } catch (ex: IllegalArgumentException) {
                     throw error(it, "Expected on of: ${Expr.Trim.Spec.values().joinToString()}", ex)
                 }
@@ -1719,91 +1729,83 @@ internal class PartiQLParserDefault : PartiQLParser {
          */
 
         override fun visitTypeAtomic(ctx: GeneratedParser.TypeAtomicContext) = translate(ctx) {
-            val type = when (ctx.datatype.type) {
-                GeneratedParser.NULL -> "null"
-                GeneratedParser.MISSING -> "missing"
-                GeneratedParser.BOOL, GeneratedParser.BOOLEAN -> "bool"
-                GeneratedParser.SMALLINT, GeneratedParser.INT2, GeneratedParser.INTEGER2 -> "int16"
-                GeneratedParser.INT4, GeneratedParser.INTEGER4 -> "int32"
-                GeneratedParser.BIGINT, GeneratedParser.INT8, GeneratedParser.INTEGER8 -> "int64"
-                GeneratedParser.INT, GeneratedParser.INTEGER -> "int"
-                GeneratedParser.FLOAT -> "float32"
-                GeneratedParser.DOUBLE -> "float64"
-                GeneratedParser.REAL, GeneratedParser.DECIMAL -> "decimal"
-                GeneratedParser.TIMESTAMP -> "timestamp"
-                GeneratedParser.CHAR, GeneratedParser.CHARACTER -> "character"
-                GeneratedParser.NUMERIC -> "numeric"
-                GeneratedParser.SYMBOL, GeneratedParser.STRING -> "string"
-                GeneratedParser.BLOB, GeneratedParser.CLOB -> "blob"
-                GeneratedParser.DATE -> "date"
-                GeneratedParser.STRUCT, GeneratedParser.TUPLE -> "tuple"
-                GeneratedParser.LIST -> "list"
-                GeneratedParser.BAG -> "bag"
-                GeneratedParser.SEXP -> "sexp"
-                GeneratedParser.ANY -> "any"
+            when (ctx.datatype.type) {
+                GeneratedParser.NULL -> typeNullType()
+                GeneratedParser.BOOL, GeneratedParser.BOOLEAN -> typeBool()
+                GeneratedParser.SMALLINT, GeneratedParser.INT2, GeneratedParser.INTEGER2 -> typeInt2()
+                GeneratedParser.INT4, GeneratedParser.INTEGER4 -> typeInt4()
+                GeneratedParser.BIGINT, GeneratedParser.INT8, GeneratedParser.INTEGER8 -> typeInt8()
+                GeneratedParser.INT, GeneratedParser.INTEGER -> typeInt()
+                GeneratedParser.FLOAT -> typeFloat32()
+                GeneratedParser.DOUBLE -> typeFloat64()
+                GeneratedParser.REAL -> typeReal()
+                GeneratedParser.TIMESTAMP -> typeTimestamp(null)
+                GeneratedParser.CHAR, GeneratedParser.CHARACTER -> typeChar(null)
+                GeneratedParser.MISSING -> typeMissing()
+                GeneratedParser.STRING -> typeString(null)
+                GeneratedParser.SYMBOL -> typeSymbol()
+                // TODO https://github.com/partiql/partiql-lang-kotlin/issues/1125
+                GeneratedParser.BLOB -> typeBlob(null)
+                GeneratedParser.CLOB -> typeClob(null)
+                GeneratedParser.DATE -> typeDate()
+                GeneratedParser.STRUCT -> typeStruct()
+                GeneratedParser.TUPLE -> typeTuple()
+                GeneratedParser.LIST -> typeList()
+                GeneratedParser.SEXP -> typeSexp()
+                GeneratedParser.BAG -> typeBag()
+                GeneratedParser.ANY -> typeAny()
                 else -> throw error(ctx, "Unknown atomic type.")
             }
-            type(type, emptyList())
         }
 
         override fun visitTypeVarChar(ctx: GeneratedParser.TypeVarCharContext) = translate(ctx) {
-            val args = if (ctx.arg0 != null) {
-                val arg0 = ctx.arg0.text.toIntElement()
-                assertIntegerElement(ctx.arg0, arg0)
-                listOf(arg0)
-            } else {
-                emptyList()
-            }
-            type("varchar", args)
+            val n = ctx.arg0?.text?.toInt()
+            typeVarchar(n)
         }
 
         override fun visitTypeArgSingle(ctx: GeneratedParser.TypeArgSingleContext) = translate(ctx) {
-            val arg0 = if (ctx.arg0 != null) ctx.arg0.text.toIntElement() else null
-            assertIntegerElement(ctx.arg0, arg0)
-            val type = when (ctx.datatype.type) {
-                GeneratedParser.FLOAT -> "float32"
-                GeneratedParser.CHAR, GeneratedParser.CHARACTER -> "character"
-                GeneratedParser.VARCHAR -> "varchar"
+            val n = ctx.arg0?.text?.toInt()
+            when (ctx.datatype.type) {
+                GeneratedParser.FLOAT -> when (n) {
+                    32 -> typeFloat32()
+                    64 -> typeFloat64()
+                    else -> throw error(ctx.datatype, "Invalid FLOAT precision. Expected 32 or 64")
+                }
+                GeneratedParser.CHAR, GeneratedParser.CHARACTER -> typeChar(n)
+                GeneratedParser.VARCHAR -> typeVarchar(n)
                 else -> throw error(ctx.datatype, "Invalid datatype")
             }
-            type(type, listOfNotNull(arg0))
         }
 
         override fun visitTypeArgDouble(ctx: GeneratedParser.TypeArgDoubleContext) = translate(ctx) {
-            val arg0 = if (ctx.arg0 != null) ctx.arg0.text.toIntElement() else null
-            val arg1 = if (ctx.arg1 != null) ctx.arg1.text.toIntElement() else null
-            assertIntegerElement(ctx.arg0, arg0)
-            assertIntegerElement(ctx.arg1, arg1)
-            val type = when (ctx.datatype.type) {
-                GeneratedParser.DECIMAL, GeneratedParser.DEC -> "decimal"
-                GeneratedParser.NUMERIC -> "numeric"
+            val arg0 = ctx.arg0?.text?.toInt()
+            val arg1 = ctx.arg1?.text?.toInt()
+            when (ctx.datatype.type) {
+                GeneratedParser.DECIMAL, GeneratedParser.DEC -> typeDecimal(arg0, arg1)
+                GeneratedParser.NUMERIC -> typeNumeric(arg0, arg1)
                 else -> throw error(ctx.datatype, "Invalid datatype")
             }
-            type(type, listOfNotNull(arg0, arg1))
         }
 
         override fun visitTypeTimeZone(ctx: GeneratedParser.TypeTimeZoneContext) = translate(ctx) {
             val precision = ctx.precision?.let {
-                val p = ctx.precision.text.toBigInteger().toLong()
+                val p = ctx.precision.text.toInt()
                 if (p < 0 || 9 < p) throw error(ctx.precision, "Unsupported time precision")
-                ionInt(p)
+                p
             }
-            type("time", listOfNotNull(precision))
+            when (ctx.ZONE()) {
+                null -> typeTime(precision)
+                else -> typeTimeWithTz(precision)
+            }
         }
 
         override fun visitTypeCustom(ctx: GeneratedParser.TypeCustomContext) = translate(ctx) {
-            val symbol = symbol(ctx.symbolPrimitive())
-            type(symbol, emptyList())
+            typeCustom(ctx.text.uppercase())
         }
 
         private inline fun <reified T : AstNode> visitOrEmpty(ctx: List<ParserRuleContext>?): List<T> = when {
             ctx.isNullOrEmpty() -> emptyList()
             else -> ctx.map { visit(it) as T }
-        }
-
-        private inline fun <reified T : AstNode> visitNullableItems(ctx: List<ParserRuleContext>?): List<T?> = when {
-            ctx.isNullOrEmpty() -> emptyList()
-            else -> ctx.map { visitOrNull<T>(it) }
         }
 
         private inline fun <reified T : AstNode> visitOrNull(ctx: ParserRuleContext?): T? = ctx?.let { visit(it) as T }

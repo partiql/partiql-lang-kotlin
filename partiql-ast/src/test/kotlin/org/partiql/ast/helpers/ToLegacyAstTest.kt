@@ -25,7 +25,6 @@ import org.partiql.ast.builder.AstBuilder
 import org.partiql.ast.builder.AstFactory
 import org.partiql.ast.builder.ast
 import org.partiql.lang.domains.PartiqlAst
-import kotlin.test.Ignore
 import kotlin.test.assertFails
 
 /**
@@ -70,7 +69,6 @@ class ToLegacyAstTest {
     @Execution(ExecutionMode.CONCURRENT)
     fun testCollections(case: Case) = case.assert()
 
-    @Ignore
     @ParameterizedTest
     @MethodSource("types")
     @Execution(ExecutionMode.CONCURRENT)
@@ -292,35 +290,48 @@ class ToLegacyAstTest {
 
         @JvmStatic
         fun types() = listOf(
-            expect("(null_type)") { TODO() },
-            expect("(boolean_type)") { TODO() },
-            expect("(smallint_type)") { TODO() },
-            expect("(integer4_type)") { TODO() },
-            expect("(integer8_type)") { TODO() },
-            expect("(integer_type)") { TODO() },
-            expect("(float_type precision::(? int))") { TODO() },
-            expect("(real_type)") { TODO() },
-            expect("(double_precision_type)") { TODO() },
-            expect("(decimal_type precision::(? int) scale::(? int))") { TODO() },
-            expect("(numeric_type precision::(? int) scale::(? int))") { TODO() },
-            expect("(timestamp_type)") { TODO() },
-            expect("(character_type length::(? int))") { TODO() },
-            expect("(character_varying_type length::(? int))") { TODO() },
-            expect("(missing_type)") { TODO() },
-            expect("(string_type)") { TODO() },
-            expect("(symbol_type)") { TODO() },
-            expect("(blob_type)") { TODO() },
-            expect("(clob_type)") { TODO() },
-            expect("(date_type)") { TODO() },
-            expect("(time_type precision::(? int))") { TODO() },
-            expect("(time_with_time_zone_type precision::(? int))") { TODO() },
-            expect("(struct_type)") { TODO() },
-            expect("(tuple_type)") { TODO() },
-            expect("(list_type)") { TODO() },
-            expect("(sexp_type)") { TODO() },
-            expect("(bag_type)") { TODO() },
-            expect("(any_type)") { TODO() },
-            expect("(custom_type name::symbol)") { TODO() },
+            // SQL
+            expect("(null_type)") { typeNullType() },
+            expect("(boolean_type)") { typeBool() },
+            expect("(smallint_type)") { typeSmallint() },
+            expect("(integer_type)") { typeInt() },
+            expect("(real_type)") { typeReal() },
+            expect("(float_type null)") { typeFloat32() },
+            expect("(double_precision_type)") { typeFloat64() },
+            expect("(decimal_type null null)") { typeDecimal() },
+            expect("(decimal_type 2 null)") { typeDecimal(2) },
+            expect("(decimal_type 2 1)") { typeDecimal(2, 1) },
+            expect("(numeric_type null null)") { typeNumeric() },
+            expect("(numeric_type 2 null)") { typeNumeric(2) },
+            expect("(numeric_type 2 1)") { typeNumeric(2, 1) },
+            expect("(timestamp_type)") { typeTimestamp() },
+            expect("(character_type null)") { typeChar() },
+            expect("(character_type 1)") { typeChar(1) },
+            expect("(character_varying_type null)") { typeVarchar() },
+            expect("(character_varying_type 1)") { typeVarchar(1) },
+            expect("(blob_type)") { typeBlob() },
+            expect("(clob_type)") { typeClob() },
+            expect("(date_type)") { typeDate() },
+            expect("(time_type null)") { typeTime() },
+            expect("(time_type 1)") { typeTime(1) },
+            expect("(time_with_time_zone_type null)") { typeTimeWithTz() },
+            expect("(time_with_time_zone_type 1)") { typeTimeWithTz(1) },
+            // PartiQL
+            expect("(missing_type)") { typeMissing() },
+            expect("(string_type)") { typeString() },
+            expect("(symbol_type)") { typeSymbol() },
+            expect("(struct_type)") { typeStruct() },
+            expect("(tuple_type)") { typeTuple() },
+            expect("(list_type)") { typeList() },
+            expect("(sexp_type)") { typeSexp() },
+            expect("(bag_type)") { typeBag() },
+            expect("(any_type)") { typeAny() },
+            // Other (??)
+            expect("(integer4_type)") { typeInt4() },
+            expect("(integer8_type)") { typeInt8() },
+            expect("(custom_type dog)") { typeCustom("dog") }
+            // LEGACY AST does not have TIMESTAMP or INTERVAL
+            // LEGACY AST does not have parameterized blob/clob
         )
 
         @JvmStatic
@@ -377,13 +388,13 @@ class ToLegacyAstTest {
             expect("(is_type (lit 'a') (any_type))") {
                 exprIsType {
                     value = exprLiteral(ionSymbol(("a")))
-                    type = type("any")
+                    type = typeAny()
                 }
             },
             expect("(not (is_type (lit 'a') (any_type)))") {
                 exprIsType {
                     value = exprLiteral(ionSymbol(("a")))
-                    type = type("any")
+                    type = typeAny()
                     not = true
                 }
             },
@@ -432,7 +443,8 @@ class ToLegacyAstTest {
             ) {
                 selectProject {
                     items += selectProjectItemAll {
-                        expr = exprVar(identifierSymbol("a", Identifier.CaseSensitivity.SENSITIVE), Expr.Var.Scope.DEFAULT)
+                        expr =
+                            exprVar(identifierSymbol("a", Identifier.CaseSensitivity.SENSITIVE), Expr.Var.Scope.DEFAULT)
                     }
                     items += selectProjectItemExpression {
                         expr = exprLiteral(ionInt(1))

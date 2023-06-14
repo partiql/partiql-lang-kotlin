@@ -151,10 +151,55 @@ statement::[
   },
 ]
 
-type::{
-  identifier: string,
-  parameters: list::[ion], // not recursive
-}
+// PartiQL Type AST nodes
+//
+// Several of these are the same "type", but have various syntax rules we wish to capture.
+//
+type::[
+  null_type::{},                                               // NULL
+  missing::{},                                                 // MISSING
+  bool::{},                                                    // BOOL
+  tinyint::{},                                                 // TINYINT
+  smallint::{},                                                // SMALLINT
+  int2::{},                                                    // INT2 | INTEGER2
+  int4::{},                                                    // INT4 | INTEGER4
+  bigint::{},                                                  // BIGINT
+  int8::{},                                                    // INT8
+  int::{},                                                     // INTEGER
+  real::{},                                                    // REAL
+  float32::{},                                                 // FLOAT
+  float64::{},                                                 // DOUBLE PRECISION
+  decimal::{                                                   // DECIMAL [([<int> [,<int>])]
+    precision:  optional::int,
+    scale:      optional::int,
+  },
+  numeric::{                                                   // NUMERIC [([<int> [,<int>])]
+    precision:  optional::int,
+    scale:      optional::int,
+  },
+  char::{ length: optional::int },                             // CHARACTER [(<int>)] | CHAR [(<int>)]
+  varchar::{ length: optional::int },                          // CHARACTER VARYING [(<int>)] | VARCHAR [(<int>)]
+  string::{ length: optional::int },                           // STRING
+  symbol::{},                                                  // SYMBOL
+  bit::{ length: optional::int },                              // BIT [(<int>)]
+  bit_varying::{ length: optional::int },                      // BIT_VARYING [(<int>)]
+  byte_string::{ length: optional::int },                      // BYTE [(<int>)]
+  blob::{ length: optional::int },                             // BLOB [(<int>)]
+  clob::{ length: optional::int },                             // CLOB [(<int>)]
+  date::{},                                                    // DATE
+  time::{ precision: optional::int },                          // TIME [(<int>)] [WITHOUT TIMEZONE]
+  time_with_tz::{ precision: optional::int },                  // TIME [(<int>)] WITH TIMEZONE
+  timestamp::{ precision: optional::int },                     // TIMESTAMP [(<int>)] [WITHOUT TIMEZONE]
+  timestamp_with_tz::{ precision: optional::int },             // TIMESTAMP [(<int>)] WITH TIMEZONE
+  interval::{ precision: optional::int },                      // INTERVAL
+  bag::{},                                                     // BAG
+  list::{},                                                    // LIST
+  sexp::{},                                                    // SEXP
+  tuple::{},                                                   // TUPLE
+  struct::{},                                                  // STRUCT
+  any::{},                                                     // ANY
+  custom::{ name: string },                                    // <symbol>
+]
 
 // Identifiers and Qualified Identifiers
 //----------------------------------------------
