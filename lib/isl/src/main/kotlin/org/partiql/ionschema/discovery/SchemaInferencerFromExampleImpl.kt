@@ -1,13 +1,14 @@
-package org.partiql.lang.schemadiscovery
+package org.partiql.ionschema.discovery
 
 import com.amazon.ion.IonReader
 import com.amazon.ion.IonSequence
 import com.amazon.ion.IonStruct
+import com.amazon.ion.IonText
+import com.amazon.ion.IonValue
 import com.amazon.ion.system.IonSystemBuilder
 import com.amazon.ionschema.IonSchemaSystem
 import com.amazon.ionschema.Type
 import org.partiql.ionschema.model.IonSchemaModel
-import org.partiql.lang.util.stringValueOrNull
 
 /**
  * Implementation for [SchemaInferencerFromExample]. Requires a [typeName] for the generated schema's top level type
@@ -113,5 +114,10 @@ class SchemaInferencerFromExampleImpl(val typeName: String, iss: IonSchemaSystem
             }
             acc
         }
+    }
+
+    private fun IonValue.stringValueOrNull(): String? = when (this) {
+        is IonText -> stringValue()
+        else -> null
     }
 }

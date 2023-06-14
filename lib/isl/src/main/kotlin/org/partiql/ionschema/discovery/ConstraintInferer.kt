@@ -1,4 +1,4 @@
-package org.partiql.lang.schemadiscovery
+package org.partiql.ionschema.discovery
 
 import com.amazon.ion.IonBlob
 import com.amazon.ion.IonBool

@@ -2,12 +2,12 @@ package org.partiql.lang.mockdb
 
 import com.amazon.ion.IonValue
 import com.amazon.ionschema.IonSchemaSystem
+import org.partiql.ionschema.discovery.NormalizeDecimalPrecisionsToUpToRange
+import org.partiql.ionschema.discovery.SchemaInferencerFromExampleImpl
 import org.partiql.lang.ION
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.schemadiscovery.NormalizeDecimalPrecisionsToUpToRange
-import org.partiql.lang.schemadiscovery.SchemaInferencerFromExampleImpl
 import org.partiql.types.StaticType
 
 /**
