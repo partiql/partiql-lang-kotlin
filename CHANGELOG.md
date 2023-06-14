@@ -26,7 +26,7 @@ Thank you to all who have contributed!
 -->
 
 
-## [Unreleased]
+## [0.12.0] - 2023-06-14
 
 ### Added
 
