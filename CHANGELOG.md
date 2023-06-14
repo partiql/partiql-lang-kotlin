@@ -102,7 +102,7 @@ Thank you to all who have contributed!
 - **Breaking**: Removes deprecated `org.partiql.lang.syntax.SourceSpan`
 - **Breaking**: Removes deprecated `org.partiql.lang.syntax.Token`
 - **Breaking**: Removes deprecated `org.partiql.lang.syntax.TokenType`
-- **Breaking**: Stops publishing PartiQL ISL to Maven Central.
+- **Breaking**: Stops publishing PartiQL ISL to Maven Central. The last published version is https://central.sonatype.com/artifact/org.partiql/partiql-isl-kotlin/0.11.0
 - **Breaking**: Removes unused package `org.partiql.lang.schemadiscovery` which included unused classes of:
   `SchemaInferencerFromExample`, `SchemaInferencerFromExampleImpl`, `TypeConstraint`, `NormalizeNullableVisitorTransform`,
   `NormalizeDecimalPrecisionsToUpToRange`, and `IonExampleParser`.
