@@ -9,7 +9,7 @@ import org.partiql.lang.eval.DATE_ANNOTATION
 import org.partiql.lang.eval.MISSING_ANNOTATION
 import org.partiql.lang.eval.TIME_ANNOTATION
 
-class PartiQLISLSchemaTests {
+class ResourceAuthorityTests {
 
     private val ION = IonSystemBuilder.standard().build()
     private val ISS = IonSchemaSystemBuilder.standard().addAuthority(ResourceAuthority.getResourceAuthority(ION)).build()
