@@ -1,4 +1,4 @@
-package org.partiql.lang.partiqlisl
+package org.partiql.ionschema.discovery
 
 import com.amazon.ion.IonSystem
 import com.amazon.ion.IonValue
@@ -37,7 +37,3 @@ class ResourceAuthority(
         }
     }
 }
-
-fun getResourceAuthority(ion: IonSystem) = ResourceAuthority("org/partiql/schemas", ResourceAuthority::class.java.getClassLoader(), ion)
-
-fun loadPartiqlIsl(iss: IonSchemaSystem) = iss.loadSchema("partiql.isl")

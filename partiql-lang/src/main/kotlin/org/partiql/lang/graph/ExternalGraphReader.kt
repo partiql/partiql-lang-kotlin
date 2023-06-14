@@ -12,7 +12,7 @@ import com.amazon.ion.system.IonSystemBuilder
 import com.amazon.ionschema.IonSchemaSystemBuilder
 import com.amazon.ionschema.Schema
 import org.partiql.lang.eval.ExprValue
-import org.partiql.lang.partiqlisl.getResourceAuthority
+import org.partiql.lang.util.impl.ResourceAuthority
 import java.io.File
 
 abstract class ExternalGraphException(override val message: String) : RuntimeException(message)
@@ -32,7 +32,7 @@ object ExternalGraphReader {
 
     private val ion: IonSystem = IonSystemBuilder.standard().build()
     private val iss = IonSchemaSystemBuilder.standard()
-        .addAuthority(getResourceAuthority(ion))
+        .addAuthority(ResourceAuthority.getResourceAuthority(ion))
         .withIonSystem(ion)
         .build()
     private val graphSchema: Schema = iss.loadSchema(islSchemaFile)

@@ -1,4 +1,4 @@
-package org.partiql.lang.schemadiscovery
+package org.partiql.ionschema.discovery
 
 import com.amazon.ion.system.IonReaderBuilder
 import com.amazon.ion.system.IonSystemBuilder
@@ -8,13 +8,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.ionschema.model.toIsl
 import org.partiql.ionschema.parser.parseSchema
-import org.partiql.lang.TestBase
-import org.partiql.lang.eval.BAG_ANNOTATION
-import org.partiql.lang.eval.DATE_ANNOTATION
-import org.partiql.lang.eval.MISSING_ANNOTATION
-import org.partiql.lang.eval.TIME_ANNOTATION
-import org.partiql.lang.partiqlisl.ResourceAuthority
-import org.partiql.lang.util.ArgumentsProviderBase
+import org.partiql.ionschema.util.ArgumentsProviderBase
 import java.math.BigInteger
 
 private const val typeName = "SchemaInferencerFromExample"
@@ -31,8 +25,13 @@ private val islFooter = """
     schema_footer::{ }
 """.trimIndent()
 
+const val MISSING_ANNOTATION = "\$missing"
+const val BAG_ANNOTATION = "\$bag"
+const val DATE_ANNOTATION = "\$date"
+const val TIME_ANNOTATION = "\$time"
+
 private val ion = IonSystemBuilder.standard().build()
-private val resourceAuthority = ResourceAuthority("org/partiql/schemas", ClassLoader.getSystemClassLoader(), ion)
+private val resourceAuthority = ResourceAuthority("org/partiql/ionschemas", ClassLoader.getSystemClassLoader(), ion)
 private val iss = IonSchemaSystemBuilder.standard().addAuthority(resourceAuthority).build()
 
 private val inferencer: SchemaInferencerFromExample = SchemaInferencerFromExampleImpl(typeName, iss, listOf(schemaId))
@@ -97,7 +96,7 @@ private fun assertCorrectISL(
     }
 }
 
-class SchemaInferencerFromExampleTests : TestBase() {
+class SchemaInferencerFromExampleTests {
 
     class SchemaDiscoveryTests : ArgumentsProviderBase() {
         private val structOneTwoIon = """{ one: 1, two: 2 }"""

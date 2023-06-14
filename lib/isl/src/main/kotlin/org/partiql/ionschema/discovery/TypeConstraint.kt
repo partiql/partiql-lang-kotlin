@@ -1,4 +1,4 @@
-package org.partiql.lang.schemadiscovery
+package org.partiql.ionschema.discovery
 
 import org.partiql.ionschema.model.IonSchemaModel
 

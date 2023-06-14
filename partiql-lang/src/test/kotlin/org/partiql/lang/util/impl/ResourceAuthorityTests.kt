@@ -1,4 +1,4 @@
-package org.partiql.lang.partiqlisl
+package org.partiql.lang.util.impl
 
 import com.amazon.ion.system.IonSystemBuilder
 import com.amazon.ionschema.IonSchemaSystemBuilder
@@ -9,11 +9,11 @@ import org.partiql.lang.eval.DATE_ANNOTATION
 import org.partiql.lang.eval.MISSING_ANNOTATION
 import org.partiql.lang.eval.TIME_ANNOTATION
 
-class PartiQLISLSchemaTests {
+class ResourceAuthorityTests {
 
     private val ION = IonSystemBuilder.standard().build()
-    private val ISS = IonSchemaSystemBuilder.standard().addAuthority(getResourceAuthority(ION)).build()
-    private val schema = loadPartiqlIsl(ISS)
+    private val ISS = IonSchemaSystemBuilder.standard().addAuthority(ResourceAuthority.getResourceAuthority(ION)).build()
+    private val schema = ISS.loadSchema("partiql.isl")
 
     @Test
     fun missingTypeTest() {

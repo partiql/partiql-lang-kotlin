@@ -1,4 +1,7 @@
-## PartiQL ISL Kotlin
+## PartiQL ISL Kotlin (Testing Utility)
+
+**NOTE**: PartiQL ISL is no longer published to Maven. The generated classes should only be used for
+internal testing.
 
 PartiQL ISL Kotlin provides an in-memory [Ion Schema Language](https://amzn.github.io/ion-schema/docs/spec.html) (ISL) object
 model. The open-source Kotlin implementation of ISL, [ion-schema-kotlin](https://github.com/amzn/ion-schema-kotlin) allows
