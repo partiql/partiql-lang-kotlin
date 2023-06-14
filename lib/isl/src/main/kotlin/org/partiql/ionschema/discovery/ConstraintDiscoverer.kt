@@ -29,54 +29,9 @@ internal const val MAX_INT8 = Long.MAX_VALUE
 internal val INT2_RANGE = BigInteger.valueOf(MIN_INT2)..BigInteger.valueOf(MAX_INT2)
 internal val INT4_RANGE = BigInteger.valueOf(MIN_INT4)..BigInteger.valueOf(MAX_INT4)
 internal val INT8_RANGE = BigInteger.valueOf(MIN_INT8)..BigInteger.valueOf(MAX_INT8)
-internal val INT2_RANGE_CONSTRAINT = IonSchemaModel.build {
-    validValues(
-        rangeOfValidValues(
-            numRange(
-                numberRange(
-                    inclusive(
-                        ionInt(
-                            MIN_INT2
-                        )
-                    ),
-                    inclusive(ionInt(MAX_INT2))
-                )
-            )
-        )
-    )
-}
-internal val INT4_RANGE_CONSTRAINT = IonSchemaModel.build {
-    validValues(
-        rangeOfValidValues(
-            numRange(
-                numberRange(
-                    inclusive(
-                        ionInt(
-                            MIN_INT4
-                        )
-                    ),
-                    inclusive(ionInt(MAX_INT4))
-                )
-            )
-        )
-    )
-}
-internal val INT8_RANGE_CONSTRAINT = IonSchemaModel.build {
-    validValues(
-        rangeOfValidValues(
-            numRange(
-                numberRange(
-                    inclusive(
-                        ionInt(
-                            MIN_INT8
-                        )
-                    ),
-                    inclusive(ionInt(MAX_INT8))
-                )
-            )
-        )
-    )
-}
+internal val INT2_RANGE_CONSTRAINT = IonSchemaModel.build { validValues(rangeOfValidValues(numRange(numberRange(inclusive(ionInt(MIN_INT2)), inclusive(ionInt(MAX_INT2)))))) }
+internal val INT4_RANGE_CONSTRAINT = IonSchemaModel.build { validValues(rangeOfValidValues(numRange(numberRange(inclusive(ionInt(MIN_INT4)), inclusive(ionInt(MAX_INT4)))))) }
+internal val INT8_RANGE_CONSTRAINT = IonSchemaModel.build { validValues(rangeOfValidValues(numRange(numberRange(inclusive(ionInt(MIN_INT8)), inclusive(ionInt(MAX_INT8)))))) }
 
 /**
  * Defines how additional constraints are to be discovered. This is intended to be called by a [ConstraintInferer] for
