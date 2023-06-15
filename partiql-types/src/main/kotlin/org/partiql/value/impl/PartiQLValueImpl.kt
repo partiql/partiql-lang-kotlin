@@ -18,13 +18,13 @@ import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toPersistentList
 import org.partiql.value.Annotations
-import org.partiql.value.ArrayValue
 import org.partiql.value.BagValue
 import org.partiql.value.BinaryValue
 import org.partiql.value.BlobValue
 import org.partiql.value.BoolValue
 import org.partiql.value.ByteValue
 import org.partiql.value.CharValue
+import org.partiql.value.ClobValue
 import org.partiql.value.DateValue
 import org.partiql.value.DecimalValue
 import org.partiql.value.Float32Value
@@ -35,10 +35,15 @@ import org.partiql.value.Int64Value
 import org.partiql.value.Int8Value
 import org.partiql.value.IntValue
 import org.partiql.value.IntervalValue
+import org.partiql.value.ListValue
+import org.partiql.value.MissingValue
+import org.partiql.value.NullValue
 import org.partiql.value.PartiQLValue
+import org.partiql.value.PartiQLValueVisitor
 import org.partiql.value.SexpValue
 import org.partiql.value.StringValue
 import org.partiql.value.StructValue
+import org.partiql.value.SymbolValue
 import org.partiql.value.TimeValue
 import org.partiql.value.TimestampValue
 import java.math.BigDecimal
@@ -61,6 +66,32 @@ internal inline fun <reified T : PartiQLValue> T._withoutAnnotations(): T =
         else -> this
     }
 
+internal data class NullValueImpl(
+    override val annotations: PersistentList<String>,
+) : NullValue() {
+
+    override fun copy(annotations: Annotations) = NullValueImpl(annotations.toPersistentList())
+
+    override fun withAnnotations(annotations: Annotations): NullValue = _withAnnotations(annotations)
+
+    override fun withoutAnnotations(): NullValue = _withoutAnnotations()
+
+    override fun <R, C> accept(visitor: PartiQLValueVisitor<R, C>, ctx: C): R = visitor.visitNull(this, ctx)
+}
+
+internal data class MissingValueImpl(
+    override val annotations: PersistentList<String>,
+) : MissingValue() {
+
+    override fun copy(annotations: Annotations) = MissingValueImpl(annotations.toPersistentList())
+
+    override fun withAnnotations(annotations: Annotations): MissingValue = _withAnnotations(annotations)
+
+    override fun withoutAnnotations(): MissingValue = _withoutAnnotations()
+
+    override fun <R, C> accept(visitor: PartiQLValueVisitor<R, C>, ctx: C): R = visitor.visitMissing(this, ctx)
+}
+
 internal data class BoolValueImpl(
     override val value: Boolean,
     override val annotations: PersistentList<String>,
@@ -71,6 +102,8 @@ internal data class BoolValueImpl(
     override fun withAnnotations(annotations: Annotations): BoolValue = _withAnnotations(annotations)
 
     override fun withoutAnnotations(): BoolValue = _withoutAnnotations()
+
+    override fun <R, C> accept(visitor: PartiQLValueVisitor<R, C>, ctx: C): R = visitor.visitBool(this, ctx)
 }
 
 internal data class Int8ValueImpl(
@@ -83,6 +116,7 @@ internal data class Int8ValueImpl(
     override fun withAnnotations(annotations: Annotations): Int8Value = _withAnnotations(annotations)
 
     override fun withoutAnnotations(): Int8Value = _withoutAnnotations()
+    override fun <R, C> accept(visitor: PartiQLValueVisitor<R, C>, ctx: C): R = visitor.visitInt8(this, ctx)
 }
 
 internal data class Int16ValueImpl(
@@ -95,6 +129,8 @@ internal data class Int16ValueImpl(
     override fun withAnnotations(annotations: Annotations): Int16Value = _withAnnotations(annotations)
 
     override fun withoutAnnotations(): Int16Value = _withoutAnnotations()
+
+    override fun <R, C> accept(visitor: PartiQLValueVisitor<R, C>, ctx: C): R = visitor.visitInt16(this, ctx)
 }
 
 internal data class Int32ValueImpl(
@@ -107,6 +143,8 @@ internal data class Int32ValueImpl(
     override fun withAnnotations(annotations: Annotations): Int32Value = _withAnnotations(annotations)
 
     override fun withoutAnnotations(): Int32Value = _withoutAnnotations()
+
+    override fun <R, C> accept(visitor: PartiQLValueVisitor<R, C>, ctx: C): R = visitor.visitInt32(this, ctx)
 }
 
 internal data class Int64ValueImpl(
@@ -118,6 +156,8 @@ internal data class Int64ValueImpl(
     override fun withAnnotations(annotations: Annotations): Int64Value = _withAnnotations(annotations)
 
     override fun withoutAnnotations(): Int64Value = _withoutAnnotations()
+
+    override fun <R, C> accept(visitor: PartiQLValueVisitor<R, C>, ctx: C): R = visitor.visitInt64(this, ctx)
 }
 
 internal data class IntValueImpl(
@@ -130,6 +170,8 @@ internal data class IntValueImpl(
     override fun withAnnotations(annotations: Annotations): IntValue = _withAnnotations(annotations)
 
     override fun withoutAnnotations(): IntValue = _withoutAnnotations()
+
+    override fun <R, C> accept(visitor: PartiQLValueVisitor<R, C>, ctx: C): R = visitor.visitInt(this, ctx)
 }
 
 internal data class DecimalValueImpl(
@@ -142,6 +184,8 @@ internal data class DecimalValueImpl(
     override fun withAnnotations(annotations: Annotations): DecimalValue = _withAnnotations(annotations)
 
     override fun withoutAnnotations(): DecimalValue = _withoutAnnotations()
+
+    override fun <R, C> accept(visitor: PartiQLValueVisitor<R, C>, ctx: C): R = visitor.visitDecimal(this, ctx)
 }
 
 internal data class Float32ValueImpl(
@@ -154,6 +198,8 @@ internal data class Float32ValueImpl(
     override fun withAnnotations(annotations: Annotations): Float32Value = _withAnnotations(annotations)
 
     override fun withoutAnnotations(): Float32Value = _withoutAnnotations()
+
+    override fun <R, C> accept(visitor: PartiQLValueVisitor<R, C>, ctx: C): R = visitor.visitFloat32(this, ctx)
 }
 
 internal data class Float64ValueImpl(
@@ -165,17 +211,22 @@ internal data class Float64ValueImpl(
     override fun withAnnotations(annotations: Annotations): Float64Value = _withAnnotations(annotations)
 
     override fun withoutAnnotations(): Float64Value = _withoutAnnotations()
+
+    override fun <R, C> accept(visitor: PartiQLValueVisitor<R, C>, ctx: C): R = visitor.visitFloat64(this, ctx)
 }
 
 internal data class CharValueImpl(
     override val value: Char,
     override val annotations: PersistentList<String>,
 ) : CharValue() {
+
     override fun copy(annotations: Annotations) = CharValueImpl(value, annotations.toPersistentList())
 
     override fun withAnnotations(annotations: Annotations): CharValue = _withAnnotations(annotations)
 
     override fun withoutAnnotations(): CharValue = _withoutAnnotations()
+
+    override fun <R, C> accept(visitor: PartiQLValueVisitor<R, C>, ctx: C): R = visitor.visitChar(this, ctx)
 }
 
 internal data class StringValueImpl(
@@ -187,6 +238,34 @@ internal data class StringValueImpl(
     override fun withAnnotations(annotations: Annotations): StringValue = _withAnnotations(annotations)
 
     override fun withoutAnnotations(): StringValue = _withoutAnnotations()
+
+    override fun <R, C> accept(visitor: PartiQLValueVisitor<R, C>, ctx: C): R = visitor.visitString(this, ctx)
+}
+
+internal data class SymbolValueImpl(
+    override val value: String,
+    override val annotations: PersistentList<String>,
+) : SymbolValue() {
+    override fun copy(annotations: Annotations) = SymbolValueImpl(value, annotations.toPersistentList())
+
+    override fun withAnnotations(annotations: Annotations): SymbolValue = _withAnnotations(annotations)
+
+    override fun withoutAnnotations(): SymbolValue = _withoutAnnotations()
+
+    override fun <R, C> accept(visitor: PartiQLValueVisitor<R, C>, ctx: C): R = visitor.visitSymbol(this, ctx)
+}
+
+internal data class ClobValueImpl(
+    override val value: String,
+    override val annotations: PersistentList<String>,
+) : ClobValue() {
+    override fun copy(annotations: Annotations) = ClobValueImpl(value, annotations.toPersistentList())
+
+    override fun withAnnotations(annotations: Annotations): ClobValue = _withAnnotations(annotations)
+
+    override fun withoutAnnotations(): ClobValue = _withoutAnnotations()
+
+    override fun <R, C> accept(visitor: PartiQLValueVisitor<R, C>, ctx: C): R = visitor.visitClob(this, ctx)
 }
 
 internal data class BinaryValueImpl(
@@ -198,6 +277,8 @@ internal data class BinaryValueImpl(
     override fun withAnnotations(annotations: Annotations): BinaryValue = _withAnnotations(annotations)
 
     override fun withoutAnnotations(): BinaryValue = _withoutAnnotations()
+
+    override fun <R, C> accept(visitor: PartiQLValueVisitor<R, C>, ctx: C): R = visitor.visitBinary(this, ctx)
 }
 
 internal data class ByteValueImpl(
@@ -209,6 +290,8 @@ internal data class ByteValueImpl(
     override fun withAnnotations(annotations: Annotations): ByteValue = _withAnnotations(annotations)
 
     override fun withoutAnnotations(): ByteValue = _withoutAnnotations()
+
+    override fun <R, C> accept(visitor: PartiQLValueVisitor<R, C>, ctx: C): R = visitor.visitByte(this, ctx)
 }
 
 internal data class BlobValueImpl(
@@ -229,6 +312,8 @@ internal data class BlobValueImpl(
     override fun withAnnotations(annotations: Annotations): BlobValue = _withAnnotations(annotations)
 
     override fun withoutAnnotations(): BlobValue = _withoutAnnotations()
+
+    override fun <R, C> accept(visitor: PartiQLValueVisitor<R, C>, ctx: C): R = visitor.visitBlob(this, ctx)
 }
 
 internal data class DateValueImpl(
@@ -240,6 +325,8 @@ internal data class DateValueImpl(
     override fun withAnnotations(annotations: Annotations): DateValue = _withAnnotations(annotations)
 
     override fun withoutAnnotations(): DateValue = _withoutAnnotations()
+
+    override fun <R, C> accept(visitor: PartiQLValueVisitor<R, C>, ctx: C): R = visitor.visitDate(this, ctx)
 }
 
 internal data class TimeValueImpl(
@@ -251,6 +338,8 @@ internal data class TimeValueImpl(
     override fun withAnnotations(annotations: Annotations): TimeValue = _withAnnotations(annotations)
 
     override fun withoutAnnotations(): TimeValue = _withoutAnnotations()
+
+    override fun <R, C> accept(visitor: PartiQLValueVisitor<R, C>, ctx: C): R = visitor.visitTime(this, ctx)
 }
 
 internal data class TimestampValueImpl(
@@ -262,6 +351,8 @@ internal data class TimestampValueImpl(
     override fun withAnnotations(annotations: Annotations): TimestampValue = _withAnnotations(annotations)
 
     override fun withoutAnnotations(): TimestampValue = _withoutAnnotations()
+
+    override fun <R, C> accept(visitor: PartiQLValueVisitor<R, C>, ctx: C): R = visitor.visitTimestamp(this, ctx)
 }
 
 internal data class IntervalValueImpl(
@@ -273,6 +364,8 @@ internal data class IntervalValueImpl(
     override fun withAnnotations(annotations: Annotations): IntervalValue = _withAnnotations(annotations)
 
     override fun withoutAnnotations(): IntervalValue = _withoutAnnotations()
+
+    override fun <R, C> accept(visitor: PartiQLValueVisitor<R, C>, ctx: C): R = visitor.visitInterval(this, ctx)
 }
 
 internal data class BagValueImpl<T : PartiQLValue>(
@@ -297,12 +390,14 @@ internal data class BagValueImpl<T : PartiQLValue>(
     override fun withAnnotations(annotations: Annotations): BagValue<T> = _withAnnotations(annotations)
 
     override fun withoutAnnotations(): BagValue<T> = _withoutAnnotations()
+
+    override fun <R, C> accept(visitor: PartiQLValueVisitor<R, C>, ctx: C): R = visitor.visitBag(this, ctx)
 }
 
-internal data class ArrayValueImpl<T : PartiQLValue>(
+internal data class ListValueImpl<T : PartiQLValue>(
     private val delegate: PersistentList<T>,
     override val annotations: PersistentList<String>,
-) : ArrayValue<T>() {
+) : ListValue<T>() {
 
     override fun contains(element: T) = delegate.contains(element)
 
@@ -316,11 +411,13 @@ internal data class ArrayValueImpl<T : PartiQLValue>(
 
     override val elements = delegate.toImmutableList()
 
-    override fun copy(annotations: Annotations) = ArrayValueImpl(delegate, annotations.toPersistentList())
+    override fun copy(annotations: Annotations) = ListValueImpl(delegate, annotations.toPersistentList())
 
-    override fun withAnnotations(annotations: Annotations): ArrayValue<T> = _withAnnotations(annotations)
+    override fun withAnnotations(annotations: Annotations): ListValue<T> = _withAnnotations(annotations)
 
-    override fun withoutAnnotations(): ArrayValue<T> = _withoutAnnotations()
+    override fun withoutAnnotations(): ListValue<T> = _withoutAnnotations()
+
+    override fun <R, C> accept(visitor: PartiQLValueVisitor<R, C>, ctx: C): R = visitor.visitList(this, ctx)
 }
 
 internal data class SexpValueImpl<T : PartiQLValue>(
@@ -345,15 +442,10 @@ internal data class SexpValueImpl<T : PartiQLValue>(
     override fun withAnnotations(annotations: Annotations): SexpValue<T> = _withAnnotations(annotations)
 
     override fun withoutAnnotations(): SexpValue<T> = _withoutAnnotations()
+
+    override fun <R, C> accept(visitor: PartiQLValueVisitor<R, C>, ctx: C): R = visitor.visitSexp(this, ctx)
 }
 
-/**
- * Map
- *
- * @param T
- * @property values
- * @property annotations
- */
 internal data class StructValueImpl<T : PartiQLValue>(
     private val values: PersistentList<Pair<String, T>>,
     override val annotations: PersistentList<String>,
@@ -376,4 +468,6 @@ internal data class StructValueImpl<T : PartiQLValue>(
     override fun withAnnotations(annotations: Annotations): StructValue<T> = _withAnnotations(annotations)
 
     override fun withoutAnnotations(): StructValue<T> = _withoutAnnotations()
+
+    override fun <R, C> accept(visitor: PartiQLValueVisitor<R, C>, ctx: C): R = visitor.visitStruct(this, ctx)
 }

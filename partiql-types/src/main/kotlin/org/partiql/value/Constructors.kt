@@ -16,15 +16,14 @@
 
 package org.partiql.value
 
-import com.amazon.ion.Decimal
 import kotlinx.collections.immutable.toPersistentList
-import org.partiql.value.impl.ArrayValueImpl
 import org.partiql.value.impl.BagValueImpl
 import org.partiql.value.impl.BinaryValueImpl
 import org.partiql.value.impl.BlobValueImpl
 import org.partiql.value.impl.BoolValueImpl
 import org.partiql.value.impl.ByteValueImpl
 import org.partiql.value.impl.CharValueImpl
+import org.partiql.value.impl.ClobValueImpl
 import org.partiql.value.impl.DateValueImpl
 import org.partiql.value.impl.DecimalValueImpl
 import org.partiql.value.impl.Float32ValueImpl
@@ -35,15 +34,42 @@ import org.partiql.value.impl.Int64ValueImpl
 import org.partiql.value.impl.Int8ValueImpl
 import org.partiql.value.impl.IntValueImpl
 import org.partiql.value.impl.IntervalValueImpl
+import org.partiql.value.impl.ListValueImpl
+import org.partiql.value.impl.MissingValueImpl
+import org.partiql.value.impl.NullValueImpl
 import org.partiql.value.impl.SexpValueImpl
 import org.partiql.value.impl.StringValueImpl
 import org.partiql.value.impl.StructValueImpl
+import org.partiql.value.impl.SymbolValueImpl
 import org.partiql.value.impl.TimeValueImpl
 import org.partiql.value.impl.TimestampValueImpl
+import java.math.BigDecimal
 import java.math.BigInteger
 import java.time.Instant
 import java.util.BitSet
 import java.util.Date
+
+/**
+ * TODO
+ *
+ * @param annotations
+ * @return
+ */
+@JvmOverloads
+public fun nullValue(
+    annotations: Annotations = emptyList(),
+): NullValue = NullValueImpl(annotations.toPersistentList())
+
+/**
+ * TODO
+ *
+ * @param annotations
+ * @return
+ */
+@JvmOverloads
+public fun missingValue(
+    annotations: Annotations = emptyList(),
+): MissingValue = MissingValueImpl(annotations.toPersistentList())
 
 /**
  * TODO
@@ -66,7 +92,7 @@ public fun boolValue(
  * @return
  */
 @JvmOverloads
-public fun Int8Value(
+public fun int8Value(
     value: Byte,
     annotations: Annotations = emptyList(),
 ): Int8Value = Int8ValueImpl(value, annotations.toPersistentList())
@@ -79,7 +105,7 @@ public fun Int8Value(
  * @return
  */
 @JvmOverloads
-public fun Int16Value(
+public fun int16Value(
     value: Short,
     annotations: Annotations = emptyList(),
 ): Int16Value = Int16ValueImpl(value, annotations.toPersistentList())
@@ -92,7 +118,7 @@ public fun Int16Value(
  * @return
  */
 @JvmOverloads
-public fun Int32Value(
+public fun int32Value(
     value: Int,
     annotations: Annotations = emptyList(),
 ): Int32Value = Int32ValueImpl(value, annotations.toPersistentList())
@@ -105,7 +131,7 @@ public fun Int32Value(
  * @return
  */
 @JvmOverloads
-public fun Int64Value(
+public fun int64Value(
     value: Long,
     annotations: Annotations = emptyList(),
 ): Int64Value = Int64ValueImpl(value, annotations.toPersistentList())
@@ -118,7 +144,7 @@ public fun Int64Value(
  * @return
  */
 @JvmOverloads
-public fun IntValue(
+public fun intValue(
     value: BigInteger,
     annotations: Annotations = emptyList(),
 ): IntValue = IntValueImpl(value, annotations.toPersistentList())
@@ -131,8 +157,8 @@ public fun IntValue(
  * @return
  */
 @JvmOverloads
-public fun DecimalValue(
-    value: Decimal,
+public fun decimalValue(
+    value: BigDecimal,
     annotations: Annotations = emptyList(),
 ): DecimalValue = DecimalValueImpl(value, annotations.toPersistentList())
 
@@ -144,7 +170,7 @@ public fun DecimalValue(
  * @return
  */
 @JvmOverloads
-public fun Float32Value(
+public fun float32Value(
     value: Float,
     annotations: Annotations = emptyList(),
 ): Float32Value = Float32ValueImpl(value, annotations.toPersistentList())
@@ -157,7 +183,7 @@ public fun Float32Value(
  * @return
  */
 @JvmOverloads
-public fun Float64Value(
+public fun float64Value(
     value: Double,
     annotations: Annotations = emptyList(),
 ): Float64Value = Float64ValueImpl(value, annotations.toPersistentList())
@@ -170,7 +196,7 @@ public fun Float64Value(
  * @return
  */
 @JvmOverloads
-public fun CharValue(
+public fun charValue(
     value: Char,
     annotations: Annotations = emptyList(),
 ): CharValue = CharValueImpl(value, annotations.toPersistentList())
@@ -183,7 +209,7 @@ public fun CharValue(
  * @return
  */
 @JvmOverloads
-public fun StringValue(
+public fun stringValue(
     value: String,
     annotations: Annotations = emptyList(),
 ): StringValue = StringValueImpl(value, annotations.toPersistentList())
@@ -196,7 +222,33 @@ public fun StringValue(
  * @return
  */
 @JvmOverloads
-public fun BinaryValue(
+public fun symbolValue(
+    value: String,
+    annotations: Annotations = emptyList(),
+): SymbolValue = SymbolValueImpl(value, annotations.toPersistentList())
+
+/**
+ * TODO
+ *
+ * @param value
+ * @param annotations
+ * @return
+ */
+@JvmOverloads
+public fun clobValue(
+    value: String,
+    annotations: Annotations = emptyList(),
+): ClobValue = ClobValueImpl(value, annotations.toPersistentList())
+
+/**
+ * TODO
+ *
+ * @param value
+ * @param annotations
+ * @return
+ */
+@JvmOverloads
+public fun binaryValue(
     value: BitSet,
     annotations: Annotations = emptyList(),
 ): BinaryValue = BinaryValueImpl(value, annotations.toPersistentList())
@@ -209,7 +261,7 @@ public fun BinaryValue(
  * @return
  */
 @JvmOverloads
-public fun ByteValue(
+public fun byteValue(
     value: Byte,
     annotations: Annotations = emptyList(),
 ): ByteValue = ByteValueImpl(value, annotations.toPersistentList())
@@ -222,7 +274,7 @@ public fun ByteValue(
  * @return
  */
 @JvmOverloads
-public fun BlobValue(
+public fun blobValue(
     value: ByteArray,
     annotations: Annotations = emptyList(),
 ): BlobValue = BlobValueImpl(value, annotations.toPersistentList())
@@ -235,7 +287,7 @@ public fun BlobValue(
  * @return
  */
 @JvmOverloads
-public fun DateValue(
+public fun dateValue(
     value: Date,
     annotations: Annotations = emptyList(),
 ): DateValue = DateValueImpl(value, annotations.toPersistentList())
@@ -248,7 +300,7 @@ public fun DateValue(
  * @return
  */
 @JvmOverloads
-public fun TimeValue(
+public fun timeValue(
     value: Long,
     annotations: Annotations = emptyList(),
 ): TimeValue = TimeValueImpl(value, annotations.toPersistentList())
@@ -261,7 +313,7 @@ public fun TimeValue(
  * @return
  */
 @JvmOverloads
-public fun TimestampValue(
+public fun timestampValue(
     value: Instant,
     annotations: Annotations = emptyList(),
 ): TimestampValue = TimestampValueImpl(value, annotations.toPersistentList())
@@ -274,7 +326,7 @@ public fun TimestampValue(
  * @return
  */
 @JvmOverloads
-public fun IntervalValue(
+public fun intervalValue(
     value: Long,
     annotations: Annotations = emptyList(),
 ): IntervalValue = IntervalValueImpl(value, annotations.toPersistentList())
@@ -288,7 +340,7 @@ public fun IntervalValue(
  * @return
  */
 @JvmOverloads
-public fun <T : PartiQLValue> BagValue(
+public fun <T : PartiQLValue> bagValue(
     elements: List<T>,
     annotations: Annotations = emptyList(),
 ): BagValue<T> = BagValueImpl(elements.toPersistentList(), annotations.toPersistentList())
@@ -302,10 +354,10 @@ public fun <T : PartiQLValue> BagValue(
  * @return
  */
 @JvmOverloads
-public fun <T : PartiQLValue> ArrayValue(
+public fun <T : PartiQLValue> listValue(
     elements: List<T>,
     annotations: Annotations = emptyList(),
-): ArrayValue<T> = ArrayValueImpl(elements.toPersistentList(), annotations.toPersistentList())
+): ListValue<T> = ListValueImpl(elements.toPersistentList(), annotations.toPersistentList())
 
 /**
  * TODO
@@ -316,7 +368,7 @@ public fun <T : PartiQLValue> ArrayValue(
  * @return
  */
 @JvmOverloads
-public fun <T : PartiQLValue> SexpValue(
+public fun <T : PartiQLValue> sexpValue(
     elements: List<T>,
     annotations: Annotations = emptyList(),
 ): SexpValue<T> = SexpValueImpl(elements.toPersistentList(), annotations.toPersistentList())
@@ -330,7 +382,7 @@ public fun <T : PartiQLValue> SexpValue(
  * @return
  */
 @JvmOverloads
-public fun <T : PartiQLValue> StructValue(
+public fun <T : PartiQLValue> structValue(
     fields: List<Pair<String, T>>,
     annotations: Annotations = emptyList(),
 ): StructValue<T> = StructValueImpl(fields.toPersistentList(), annotations.toPersistentList())

@@ -17,7 +17,7 @@ package org.partiql.types
 /**
  * PartiQL Type Names
  */
-public enum class PartiQLType {
+public enum class PartiQLValueType {
     NULL,
     MISSING,
     BOOL,
@@ -31,16 +31,18 @@ public enum class PartiQLType {
     FLOAT64,
     CHAR,
     STRING,
+    SYMBOL,
     BIT,
     BINARY,
     BYTE,
     BLOB,
+    CLOB,
     DATE,
     TIME,
     TIMESTAMP,
     INTERVAL,
     BAG,
-    ARRAY,
+    LIST,
     SEXP,
     STRUCT,
 }
