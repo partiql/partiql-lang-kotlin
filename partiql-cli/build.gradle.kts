@@ -32,10 +32,6 @@ dependencies {
     implementation(Deps.picoCli)
     implementation(Deps.kotlinReflect)
     testImplementation(Deps.mockito)
-    testImplementation("org.junit.jupiter:junit-jupiter:5.7.1") // Update this line
-    testImplementation("io.kotest:kotest-runner-junit5:4.6.0") // Update this line
-    testImplementation("io.kotest:kotest-assertions-core:4.6.0")
-    testImplementation(project(mapOf("path" to ":plugins:partiql-bananna"))) // Update this line
 }
 
 application {
@@ -64,9 +60,8 @@ tasks.register<GradleBuild>("install") {
     tasks = listOf("assembleDist", "distZip", "installDist")
 }
 
-// TODO: Once we upgrade kotlin version to 1.6+, we need to change the compile option to -opt-in
 // Version 1.7+ removes the requirement for such compiler option.
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
     kotlinOptions
-        .freeCompilerArgs += "-Xopt-in=kotlin.RequiresOptIn"
+        .freeCompilerArgs += "-opt-in=kotlin.RequiresOptIn"
 }
