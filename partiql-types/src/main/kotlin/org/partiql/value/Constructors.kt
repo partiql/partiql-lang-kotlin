@@ -45,9 +45,10 @@ import org.partiql.value.impl.TimeValueImpl
 import org.partiql.value.impl.TimestampValueImpl
 import java.math.BigDecimal
 import java.math.BigInteger
-import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
 import java.util.BitSet
-import java.util.Date
 
 /**
  * TODO
@@ -236,7 +237,7 @@ public fun symbolValue(
  */
 @JvmOverloads
 public fun clobValue(
-    value: String,
+    value: ByteArray,
     annotations: Annotations = emptyList(),
 ): ClobValue = ClobValueImpl(value, annotations.toPersistentList())
 
@@ -288,7 +289,7 @@ public fun blobValue(
  */
 @JvmOverloads
 public fun dateValue(
-    value: Date,
+    value: LocalDate,
     annotations: Annotations = emptyList(),
 ): DateValue = DateValueImpl(value, annotations.toPersistentList())
 
@@ -301,7 +302,7 @@ public fun dateValue(
  */
 @JvmOverloads
 public fun timeValue(
-    value: Long,
+    value: LocalTime,
     annotations: Annotations = emptyList(),
 ): TimeValue = TimeValueImpl(value, annotations.toPersistentList())
 
@@ -314,7 +315,7 @@ public fun timeValue(
  */
 @JvmOverloads
 public fun timestampValue(
-    value: Instant,
+    value: LocalDateTime,
     annotations: Annotations = emptyList(),
 ): TimestampValue = TimestampValueImpl(value, annotations.toPersistentList())
 
