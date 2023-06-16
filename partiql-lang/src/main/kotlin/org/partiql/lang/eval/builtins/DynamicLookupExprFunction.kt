@@ -11,7 +11,6 @@ import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.physical.throwUndefinedVariableException
 import org.partiql.lang.eval.stringValue
 import org.partiql.lang.types.FunctionSignature
-import org.partiql.lang.types.VarargFormalParameter
 import org.partiql.types.StaticType
 
 /**
@@ -42,19 +41,17 @@ class DynamicLookupExprFunction : ExprFunction {
 
     override val signature = FunctionSignature(
         name = DYNAMIC_LOOKUP_FUNCTION_NAME,
-        // Required parameters are: variable name, case sensitivity and lookup strategy
-        requiredParameters = listOf(StaticType.SYMBOL, StaticType.SYMBOL, StaticType.SYMBOL),
-        variadicParameter = VarargFormalParameter(StaticType.ANY, 0..Int.MAX_VALUE),
+        // Required parameters are: variable name, case sensitivity, lookup strategy and variadic list.
+        requiredParameters = listOf(StaticType.SYMBOL, StaticType.SYMBOL, StaticType.SYMBOL, StaticType.LIST),
         returnType = StaticType.ANY
     )
 
-    override fun callWithVariadic(
+    override fun callWithRequired(
         session: EvaluationSession,
-        required: List<ExprValue>,
-        variadic: List<ExprValue>
+        required: List<ExprValue>
     ): ExprValue {
+        val variadic = required[3].toList()
         val variableName = required[0].stringValue()
-
         val caseSensitivity = when (val caseSensitivityParameterValue = required[1].stringValue()) {
             "case_sensitive" -> BindingCase.SENSITIVE
             "case_insensitive" -> BindingCase.INSENSITIVE
@@ -104,4 +101,14 @@ class DynamicLookupExprFunction : ExprFunction {
                     null
             }
         }.firstOrNull { it != null }
+}
+
+class DynamicLookupExprFunction2 : ExprFunction {
+
+    override val signature = FunctionSignature(
+        name = DYNAMIC_LOOKUP_FUNCTION_NAME,
+        // Required parameters are: variable name, case sensitivity and lookup strategy
+        requiredParameters = listOf(StaticType.SYMBOL, StaticType.SYMBOL, StaticType.SYMBOL),
+        returnType = StaticType.ANY
+    )
 }

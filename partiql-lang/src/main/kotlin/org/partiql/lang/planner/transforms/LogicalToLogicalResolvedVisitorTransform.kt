@@ -579,7 +579,8 @@ internal data class LogicalToLogicalResolvedVisitorTransform(
                     lit(name.toIonElement()),
                     lit(ionSymbol(caseSensitivityString)),
                     lit(ionSymbol(variableLookupStrategy)),
-                ) + search,
+                    list(search)
+                ),
                 metas = this@asDynamicLookupCallsite.metas
             )
         }

@@ -29,10 +29,12 @@ import org.partiql.lang.errors.ProblemThrower
 import org.partiql.lang.eval.BindingCase
 import org.partiql.lang.eval.BindingName
 import org.partiql.lang.eval.Bindings
+import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.builtins.SCALAR_BUILTINS_DEFAULT
 import org.partiql.lang.eval.delegate
 import org.partiql.lang.eval.getStartingSourceLocationMeta
+import org.partiql.lang.eval.impl.FunctionManager
 import org.partiql.lang.types.FunctionSignature
 import org.partiql.lang.types.StaticTypeUtils.areStaticTypesComparable
 import org.partiql.lang.types.StaticTypeUtils.getTypeDomain
@@ -76,7 +78,8 @@ import org.partiql.types.SymbolType
  */
 internal class StaticTypeInferenceVisitorTransform(
     globalBindings: Bindings<StaticType>,
-    customFunctionSignatures: List<FunctionSignature>,
+//    customFunctionSignatures: List<FunctionSignature>,
+    val customFunction: List<ExprFunction>,
     private val customTypedOpParameters: Map<String, TypedOpParameter>,
     private val problemHandler: ProblemHandler = ProblemThrower()
 ) : PartiqlAst.VisitorTransform() {
@@ -94,8 +97,9 @@ internal class StaticTypeInferenceVisitorTransform(
     }
 
     /** The built-in functions + the custom functions. */
-    private val allFunctions: Map<String, FunctionSignature> =
-        SCALAR_BUILTINS_DEFAULT.associate { it.signature.name to it.signature } + customFunctionSignatures.associateBy { it.name }
+//    private val allFunctions: Map<String, FunctionSignature> =
+//        SCALAR_BUILTINS_DEFAULT.associate { it.signature.name to it.signature } + customFunctionSignatures.associateBy { it.name }
+    private val allFunctions: List<ExprFunction> = SCALAR_BUILTINS_DEFAULT + customFunction
 
     /**
      * @param parentEnv the enclosing bindings
@@ -799,18 +803,47 @@ internal class StaticTypeInferenceVisitorTransform(
         override fun transformExprCall(node: PartiqlAst.Expr.Call): PartiqlAst.Expr {
             val processedNode = super.transformExprCall(node) as PartiqlAst.Expr.Call
 
-            val funcExpr = processedNode.funcName
-            val functionArguments = processedNode.args
-
-            val functionName = funcExpr.text
-
-            val signature = allFunctions[functionName]
-            if (signature == null) {
-                handleNoSuchFunctionError(functionName, processedNode.metas.getSourceLocation())
+            val arguments = processedNode.args
+            val functionName = processedNode.funcName.text
+            val arity = arguments.size
+            val location = processedNode.metas.getSourceLocation()
+            val functionManager = FunctionManager(allFunctions)
+            var functions = functionManager.functionMap[functionName]
+            if (functions == null) {
+                handleNoSuchFunctionError(functionName, location)
                 return processedNode.withStaticType(StaticType.ANY)
             }
+            val funcsMatchingArity = functions.filter { it.signature.arity.contains(arity) }
+            if (funcsMatchingArity.isEmpty()) {
+                handleIncorrectNumberOfArgumentsToFunctionCallError(functionName, getMinMaxArities(functions).first..getMinMaxArities(functions).second, arity, location)
+            } else {
+                functions = funcsMatchingArity
+            }
 
-            return processedNode.withStaticType(computeReturnTypeForFunctionCall(signature, functionArguments, processedNode.metas))
+            for (func in functions) {
+                return processedNode.withStaticType(
+                    when (func.signature.unknownArguments) {
+                        UnknownArguments.PROPAGATE -> returnTypeForPropagatingFunction(func.signature, arguments)
+                        UnknownArguments.PASS_THRU -> returnTypeForPassThruFunction(func.signature, arguments)
+                    }
+                )
+            }
+
+            return processedNode
+        }
+
+        fun getMinMaxArities(funcs: List<ExprFunction>): Pair<Int, Int> {
+            var minArity = Int.MAX_VALUE
+            var maxArity = Int.MIN_VALUE
+
+            funcs.forEach { func ->
+                val currentArityMin = func.signature.arity.first
+                val currentArityMax = func.signature.arity.last
+                if (currentArityMin < minArity) minArity = currentArityMin
+                if (currentArityMax > maxArity) maxArity = currentArityMax
+            }
+
+            return Pair(minArity, maxArity)
         }
 
         // Call agg : "count", "avg", "max", "min", "sum"
@@ -887,21 +920,6 @@ internal class StaticTypeInferenceVisitorTransform(
         }
 
         /**
-         * Computes the return type of the function call based on the [FunctionSignature.unknownArguments]
-         */
-        private fun computeReturnTypeForFunctionCall(signature: FunctionSignature, arguments: List<PartiqlAst.Expr>, functionMetas: MetaContainer): StaticType {
-            // Check for all the possible invalid number of argument cases. Throws an error if invalid number of arguments found.
-            if (!signature.arity.contains(arguments.size)) {
-                handleIncorrectNumberOfArgumentsToFunctionCallError(signature.name, signature.arity, arguments.size, functionMetas.getSourceLocation())
-            }
-
-            return when (signature.unknownArguments) {
-                UnknownArguments.PROPAGATE -> returnTypeForPropagatingFunction(signature, arguments)
-                UnknownArguments.PASS_THRU -> returnTypeForPassThruFunction(signature, arguments)
-            }
-        }
-
-        /**
          * Computes return type for functions with [FunctionSignature.unknownArguments] as [UnknownArguments.PASS_THRU]
          */
         private fun returnTypeForPassThruFunction(signature: FunctionSignature, arguments: List<PartiqlAst.Expr>): StaticType {
@@ -949,22 +967,7 @@ internal class StaticTypeInferenceVisitorTransform(
          */
         private fun returnTypeForPropagatingFunction(signature: FunctionSignature, arguments: List<PartiqlAst.Expr>): StaticType {
             val requiredArgs = arguments.zip(signature.requiredParameters)
-            val restOfArgs = arguments.drop(signature.requiredParameters.size)
-
-            // all args including optional/variadic
-            val allArgs = requiredArgs.let { reqArgs ->
-                if (restOfArgs.isNotEmpty()) {
-                    when {
-                        signature.optionalParameter != null -> reqArgs + listOf(Pair(restOfArgs.first(), signature.optionalParameter))
-                        signature.variadicParameter != null -> reqArgs + restOfArgs.map {
-                            Pair(it, signature.variadicParameter.type)
-                        }
-                        else -> reqArgs
-                    }
-                } else {
-                    reqArgs
-                }
-            }
+            val allArgs = requiredArgs
 
             return if (functionHasValidArgTypes(signature.name, allArgs)) {
                 val finalReturnTypes = signature.returnType.allTypes + allArgs.flatMap { (actualExpr, expectedType) ->
@@ -1002,30 +1005,7 @@ internal class StaticTypeInferenceVisitorTransform(
                 .all { (actual, expected) ->
                     getTypeDomain(actual.getStaticType()).intersect(getTypeDomain(expected)).isNotEmpty()
                 }
-
-            val optionalArgumentMatches = when (signature.optionalParameter) {
-                null -> true
-                else ->
-                    arguments
-                        .getOrNull(signature.requiredParameters.size)
-                        ?.getStaticType()?.let { getTypeDomain(it) }
-                        ?.intersect(getTypeDomain(signature.optionalParameter))
-                        ?.isNotEmpty()
-                        ?: true
-            }
-
-            val variadicArgumentsMatch = when (signature.variadicParameter) {
-                null -> true
-                else ->
-                    arguments
-                        .drop(signature.requiredParameters.size)
-                        .all { arg ->
-                            val argType = arg.getStaticType()
-                            getTypeDomain(argType).intersect(getTypeDomain(signature.variadicParameter.type)).isNotEmpty()
-                        }
-            }
-
-            return requiredArgumentsMatch && optionalArgumentMatches && variadicArgumentsMatch
+            return requiredArgumentsMatch
         }
 
         /**
@@ -1056,34 +1036,7 @@ internal class StaticTypeInferenceVisitorTransform(
                     val st = actual.getStaticType()
                     isSubType(st, expected)
                 }
-
-            val optionalArgumentMatches = when (signature.optionalParameter) {
-                null -> true
-                else -> {
-                    val st = arguments
-                        .getOrNull(signature.requiredParameters.size)
-                        ?.getStaticType()
-                    when (st) {
-                        null -> true
-                        else -> isSubType(st, signature.optionalParameter)
-                    }
-                }
-            }
-
-            val variadicArgumentsMatch = when (signature.variadicParameter) {
-                null -> true
-                else ->
-                    arguments
-                        // We make an assumption here that either the optional or the variadic arguments are passed to the function.
-                        // This "drop" may not hold true if both, optional and variadic arguments, are allowed at the same time.
-                        .drop(signature.requiredParameters.size)
-                        .all { arg ->
-                            val st = arg.getStaticType()
-                            isSubType(st, signature.variadicParameter.type)
-                        }
-            }
-
-            return requiredArgumentsMatch && optionalArgumentMatches && variadicArgumentsMatch
+            return requiredArgumentsMatch
         }
 
         override fun transformExprLit(node: PartiqlAst.Expr.Lit): PartiqlAst.Expr {
