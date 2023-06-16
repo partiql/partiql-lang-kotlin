@@ -21,6 +21,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.util.BitSet
+import java.util.TimeZone
 
 internal typealias Annotations = List<String>
 
@@ -319,6 +320,12 @@ public abstract class TimeValue : ScalarValue<LocalTime> {
 
     override val type: PartiQLValueType = PartiQLValueType.TIME
 
+    // TEMPORARY
+    public abstract val timeZone: TimeZone?
+
+    // TEMPORARY
+    public abstract val precision: Int
+
     abstract override fun copy(annotations: Annotations): TimeValue
 
     abstract override fun withAnnotations(annotations: Annotations): TimeValue
@@ -329,6 +336,12 @@ public abstract class TimeValue : ScalarValue<LocalTime> {
 public abstract class TimestampValue : ScalarValue<LocalDateTime> {
 
     override val type: PartiQLValueType = PartiQLValueType.TIMESTAMP
+
+    // TEMPORARY
+    public abstract val timeZone: TimeZone?
+
+    // TEMPORARY
+    public abstract val precision: Int
 
     abstract override fun copy(annotations: Annotations): TimestampValue
 

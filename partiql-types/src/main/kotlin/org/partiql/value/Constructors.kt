@@ -49,6 +49,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.util.BitSet
+import java.util.TimeZone
 
 /**
  * TODO
@@ -303,8 +304,10 @@ public fun dateValue(
 @JvmOverloads
 public fun timeValue(
     value: LocalTime,
+    precision: Int = 0,
+    timeZone: TimeZone? = null,
     annotations: Annotations = emptyList(),
-): TimeValue = TimeValueImpl(value, annotations.toPersistentList())
+): TimeValue = TimeValueImpl(value, precision, timeZone, annotations.toPersistentList())
 
 /**
  * TODO
@@ -316,8 +319,10 @@ public fun timeValue(
 @JvmOverloads
 public fun timestampValue(
     value: LocalDateTime,
+    precision: Int = 0,
+    timeZone: TimeZone? = null,
     annotations: Annotations = emptyList(),
-): TimestampValue = TimestampValueImpl(value, annotations.toPersistentList())
+): TimestampValue = TimestampValueImpl(value, precision, timeZone, annotations.toPersistentList())
 
 /**
  * TODO

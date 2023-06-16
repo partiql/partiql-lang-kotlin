@@ -52,6 +52,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.util.BitSet
+import java.util.TimeZone
 
 @Suppress("FunctionName")
 internal inline fun <reified T : PartiQLValue> T._withAnnotations(annotations: Annotations): T =
@@ -332,9 +333,11 @@ internal data class DateValueImpl(
 
 internal data class TimeValueImpl(
     override val value: LocalTime,
+    override val precision: Int,
+    override val timeZone: TimeZone?,
     override val annotations: PersistentList<String>,
 ) : TimeValue() {
-    override fun copy(annotations: Annotations) = TimeValueImpl(value, annotations.toPersistentList())
+    override fun copy(annotations: Annotations) = TimeValueImpl(value, precision, timeZone, annotations.toPersistentList())
 
     override fun withAnnotations(annotations: Annotations): TimeValue = _withAnnotations(annotations)
 
@@ -345,9 +348,11 @@ internal data class TimeValueImpl(
 
 internal data class TimestampValueImpl(
     override val value: LocalDateTime,
+    override val precision: Int,
+    override val timeZone: TimeZone?,
     override val annotations: PersistentList<String>,
 ) : TimestampValue() {
-    override fun copy(annotations: Annotations) = TimestampValueImpl(value, annotations.toPersistentList())
+    override fun copy(annotations: Annotations) = TimestampValueImpl(value, precision, timeZone, annotations.toPersistentList())
 
     override fun withAnnotations(annotations: Annotations): TimestampValue = _withAnnotations(annotations)
 
