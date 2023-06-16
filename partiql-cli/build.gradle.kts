@@ -32,10 +32,6 @@ dependencies {
     implementation(Deps.picoCli)
     implementation(Deps.kotlinReflect)
     testImplementation(Deps.mockito)
-    testImplementation("org.junit.jupiter:junit-jupiter:5.7.1") // Update this line
-    testImplementation("io.kotest:kotest-runner-junit5:4.6.0") // Update this line
-    testImplementation("io.kotest:kotest-assertions-core:4.6.0")
-    testImplementation(project(mapOf("path" to ":plugins:partiql-bananna"))) // Update this line
 }
 
 application {

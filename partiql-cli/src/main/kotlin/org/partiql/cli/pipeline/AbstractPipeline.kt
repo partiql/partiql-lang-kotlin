@@ -14,10 +14,6 @@
 
 package org.partiql.cli.pipeline
 
-import QueryPower
-import QueryPower1
-import QueryPretty
-import QueryStringfy
 import com.amazon.ion.IonSystem
 import com.amazon.ion.system.IonSystemBuilder
 import com.amazon.ionelement.api.ionInt
@@ -27,7 +23,6 @@ import com.amazon.ionelement.api.toIonValue
 import org.partiql.annotations.ExperimentalPartiQLCompilerPipeline
 import org.partiql.cli.Debug
 import org.partiql.cli.functions.QueryDDB
-import org.partiql.cli.functions.QueryRand
 import org.partiql.cli.functions.ReadFile
 import org.partiql.cli.functions.WriteFile
 import org.partiql.lang.CompilerPipeline
@@ -42,13 +37,13 @@ import org.partiql.lang.eval.ProjectionIterationBehavior
 import org.partiql.lang.eval.ThunkOptions
 import org.partiql.lang.eval.TypedOpBehavior
 import org.partiql.lang.eval.TypingMode
+import org.partiql.lang.eval.UndefinedVariableBehavior
 import org.partiql.lang.planner.GlobalResolutionResult
 import org.partiql.lang.planner.GlobalVariableResolver
 import org.partiql.lang.planner.PartiQLPlannerBuilder
 import org.partiql.lang.syntax.Parser
 import org.partiql.lang.syntax.PartiQLParserBuilder
 import java.time.ZoneOffset
-import org.partiql.lang.eval.UndefinedVariableBehavior as UndefinedVariableBehavior1
 
 /**
  * A means by which we can run both the EvaluatingCompiler and PartiQLCompilerPipeline
@@ -74,19 +69,14 @@ internal sealed class AbstractPipeline(open val options: PipelineOptions) {
             pipeline: PipelineType,
             typedOpBehavior: TypedOpBehavior,
             projectionIteration: ProjectionIterationBehavior,
-            undefinedVariable: UndefinedVariableBehavior1,
+            undefinedVariable: UndefinedVariableBehavior,
             permissiveMode: TypingMode
         ): PipelineOptions {
             val ion = IonSystemBuilder.standard().build()
             val functions: List<ExprFunction> = listOf(
                 ReadFile(ion),
                 WriteFile(ion),
-                QueryDDB(ion),
-                QueryPower(ion),
-                QueryPower1(ion),
-                QueryStringfy(ion),
-                QueryRand(ion),
-                QueryPretty(ion)
+                QueryDDB(ion)
             )
             val parser = PartiQLParserBuilder().build()
             return PipelineOptions(
@@ -108,7 +98,7 @@ internal sealed class AbstractPipeline(open val options: PipelineOptions) {
         val parser: Parser = PartiQLParserBuilder.standard().build(),
         val typedOpBehavior: TypedOpBehavior = TypedOpBehavior.HONOR_PARAMETERS,
         val projectionIterationBehavior: ProjectionIterationBehavior = ProjectionIterationBehavior.FILTER_MISSING,
-        val undefinedVariableBehavior: UndefinedVariableBehavior1 = UndefinedVariableBehavior1.ERROR,
+        val undefinedVariableBehavior: UndefinedVariableBehavior = UndefinedVariableBehavior.ERROR,
         val typingMode: TypingMode = TypingMode.LEGACY,
         val functions: List<ExprFunction> = emptyList()
     )
