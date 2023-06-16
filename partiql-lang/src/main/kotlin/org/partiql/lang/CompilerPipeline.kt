@@ -26,7 +26,6 @@ import org.partiql.lang.eval.ThunkReturnTypeAssertions
 import org.partiql.lang.eval.builtins.SCALAR_BUILTINS_DEFAULT
 import org.partiql.lang.eval.builtins.definitionalBuiltins
 import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedure
-import org.partiql.lang.eval.impl.FunctionManager
 import org.partiql.lang.eval.visitors.PipelinedVisitorTransform
 import org.partiql.lang.eval.visitors.StaticTypeInferenceVisitorTransform
 import org.partiql.lang.eval.visitors.StaticTypeVisitorTransform
@@ -48,7 +47,6 @@ data class StepContext(
      * Includes built-in functions as well as custom functions added while the [CompilerPipeline]
      * was being built.
      */
-//    val functions: @JvmSuppressWildcards Map<String, ExprFunction>,
     val functions: List<ExprFunction>,
 
     /**
@@ -81,8 +79,6 @@ interface CompilerPipeline {
      * Includes built-in functions as well as custom functions added while the [CompilerPipeline]
      * was being built.
      */
-//    val functions: @JvmSuppressWildcards Map<String, ExprFunction>
-//    val functionManager: FunctionManager
     val functions: List<ExprFunction>
 
     /**
@@ -138,7 +134,6 @@ interface CompilerPipeline {
         private val customProcedures: MutableMap<String, StoredProcedure> = HashMap()
         private val preProcessingSteps: MutableList<ProcessingStep> = ArrayList()
         private var globalTypeBindings: Bindings<StaticType>? = null
-        private var functionManager: FunctionManager? = null
 
         /**
          * Specifies the [Parser] to be used to turn an PartiQL query into an instance of [PartiqlAst].
@@ -210,14 +205,13 @@ interface CompilerPipeline {
 
             // customFunctions must be on the right side of + here to ensure that they overwrite any
             // built-in functions with the same name.
-//            val allFunctions = definitionalBuiltins + builtinFunctions + customFunctions
-            val fm = definitionalBuiltins + builtinFunctions + customFunctions.values.toList()
+            val allFunctions = definitionalBuiltins + builtinFunctions + customFunctions.values.toList()
 
             return CompilerPipelineImpl(
                 ion = ion,
                 parser = parser ?: PartiQLParserBuilder().customTypes(customDataTypes).build(),
                 compileOptions = compileOptionsToUse,
-                functions = fm,
+                functions = allFunctions,
                 customDataTypes = customDataTypes,
                 procedures = customProcedures,
                 preProcessingSteps = preProcessingSteps,
@@ -231,8 +225,6 @@ internal class CompilerPipelineImpl(
     private val ion: IonSystem,
     private val parser: Parser,
     override val compileOptions: CompileOptions,
-//    override val functions: Map<String, ExprFunction>,
-//    override val functionManager: FunctionManager,
     override val functions: List<ExprFunction>,
     override val customDataTypes: List<CustomType>,
     override val procedures: Map<String, StoredProcedure>,
