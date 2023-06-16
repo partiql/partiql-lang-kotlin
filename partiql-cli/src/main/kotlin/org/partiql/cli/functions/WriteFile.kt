@@ -36,7 +36,6 @@ internal class WriteFile(private val ion: IonSystem) : ExprFunction {
     override val signature = FunctionSignature(
         name = "write_file",
         requiredParameters = listOf(StaticType.STRING, StaticType.ANY),
-        optionalParameter = StaticType.STRUCT,
         returnType = StaticType.BOOL
     )
 
@@ -78,9 +77,41 @@ internal class WriteFile(private val ion: IonSystem) : ExprFunction {
             ExprValue.newBoolean(false)
         }
     }
+}
 
-    override fun callWithOptional(session: EvaluationSession, required: List<ExprValue>, opt: ExprValue): ExprValue {
+internal class WriteFile2(private val ion: IonSystem) : ExprFunction {
+    override val signature = FunctionSignature(
+        name = "write_file",
+        requiredParameters = listOf(StaticType.STRING, StaticType.ANY, StaticType.STRUCT),
+        returnType = StaticType.BOOL
+    )
+
+    private val PRETTY_ION_WRITER: (ExprValue, OutputStream, Bindings<ExprValue>) -> Unit = { results, out, _ ->
+        IonTextWriterBuilder.pretty().build(out).use { w ->
+            results.toIonValue(ion).writeTo(w)
+        }
+    }
+
+    private fun delimitedWriteHandler(delimiter: Char): (ExprValue, OutputStream, Bindings<ExprValue>) -> Unit = { results, out, bindings ->
+        val encoding = bindings[BindingName("encoding", BindingCase.SENSITIVE)]?.stringValue() ?: "UTF-8"
+        val writeHeader = bindings[BindingName("header", BindingCase.SENSITIVE)]?.booleanValue() ?: false
+        val nl = bindings[BindingName("nl", BindingCase.SENSITIVE)]?.stringValue() ?: "\n"
+
+        val writer = OutputStreamWriter(out, encoding)
+        writer.use {
+            DelimitedValues.writeTo(ion, writer, results, delimiter, nl, writeHeader)
+        }
+    }
+
+    private val writeHandlers = mapOf(
+        "tsv" to delimitedWriteHandler('\t'),
+        "csv" to delimitedWriteHandler(','),
+        "ion" to PRETTY_ION_WRITER
+    )
+
+    override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
         val fileName = required[0].stringValue()
+        val opt = required[2]
         val fileType = opt.bindings[BindingName("type", BindingCase.SENSITIVE)]?.stringValue() ?: "ion"
         val results = required[1]
         val handler = writeHandlers[fileType] ?: throw IllegalArgumentException("Unknown file type: $fileType")

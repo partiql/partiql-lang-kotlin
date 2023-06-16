@@ -47,7 +47,6 @@ class QueryDDB(private val ion: IonSystem) : ExprFunction {
     override val signature = FunctionSignature(
         name = "query_ddb",
         requiredParameters = listOf(StaticType.STRING),
-        optionalParameter = StaticType.NULL_OR_MISSING,
         returnType = StaticType.LIST
     )
 

@@ -36,6 +36,7 @@ class WriteFileTest {
 
     private val ion = IonSystemBuilder.standard().build()
     private val function = WriteFile(ion)
+    private val function2 = WriteFile2(ion)
     private val session = EvaluationSession.standard()
     private val pipeline = AbstractPipeline.create(
         AbstractPipeline.PipelineOptions(
@@ -88,7 +89,7 @@ class WriteFileTest {
         val filePath = createRandomTmpFilePath()
         val args = listOf("\"$filePath\"", "[1, 2]").map { it.exprValue() }
         val additionalOptions = """{type: "ion"}""".exprValue()
-        function.callWithOptional(session, args, additionalOptions).toIonValue(ion)
+        function2.callWithRequired(session, args + listOf(additionalOptions)).toIonValue(ion)
 
         val expected = "[1, 2]"
 

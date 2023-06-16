@@ -36,6 +36,7 @@ import java.util.stream.Stream
 class ReadFileTest {
     private val ion = IonSystemBuilder.standard().build()
     private val function = ReadFile(ion)
+    private val function2 = ReadFile2(ion)
     private val session = EvaluationSession.standard()
 
     private fun String.exprValue() = ExprValue.of(ion.singleValue(this))
@@ -84,7 +85,7 @@ class ReadFileTest {
         val path = getResourcePath("data.ion")
         val args = listOf("\"$path\"").map { it.exprValue() }
         assertThrows<IllegalStateException> {
-            function.callWithOptional(session, args, "{type:\"ion\"}".exprValue())
+            function2.callWithRequired(session, args + listOf("{type:\"ion\"}".exprValue()))
         }
     }
 
@@ -95,7 +96,7 @@ class ReadFileTest {
         val args = listOf("\"$path\"").map { it.exprValue() }
         val actual = when (tc.additionalOptions) {
             null -> function.callWithRequired(session, args)
-            else -> function.callWithOptional(session, args, tc.additionalOptions.exprValue())
+            else -> function2.callWithRequired(session, args + listOf(tc.additionalOptions.exprValue()))
         }
         assertValues(tc.expected, actual)
     }

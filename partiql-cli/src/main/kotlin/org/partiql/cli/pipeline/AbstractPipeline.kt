@@ -24,7 +24,9 @@ import org.partiql.annotations.ExperimentalPartiQLCompilerPipeline
 import org.partiql.cli.Debug
 import org.partiql.cli.functions.QueryDDB
 import org.partiql.cli.functions.ReadFile
+import org.partiql.cli.functions.ReadFile2
 import org.partiql.cli.functions.WriteFile
+import org.partiql.cli.functions.WriteFile2
 import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.compiler.PartiQLCompilerBuilder
 import org.partiql.lang.compiler.PartiQLCompilerPipeline
@@ -75,7 +77,9 @@ internal sealed class AbstractPipeline(open val options: PipelineOptions) {
             val ion = IonSystemBuilder.standard().build()
             val functions: List<ExprFunction> = listOf(
                 ReadFile(ion),
+                ReadFile2(ion),
                 WriteFile(ion),
+                WriteFile2(ion),
                 QueryDDB(ion)
             )
             val parser = PartiQLParserBuilder().build()
