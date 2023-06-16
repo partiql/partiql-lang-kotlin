@@ -48,9 +48,10 @@ import org.partiql.value.TimeValue
 import org.partiql.value.TimestampValue
 import java.math.BigDecimal
 import java.math.BigInteger
-import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
 import java.util.BitSet
-import java.util.Date
 
 @Suppress("FunctionName")
 internal inline fun <reified T : PartiQLValue> T._withAnnotations(annotations: Annotations): T =
@@ -256,7 +257,7 @@ internal data class SymbolValueImpl(
 }
 
 internal data class ClobValueImpl(
-    override val value: String,
+    override val value: ByteArray,
     override val annotations: PersistentList<String>,
 ) : ClobValue() {
     override fun copy(annotations: Annotations) = ClobValueImpl(value, annotations.toPersistentList())
@@ -317,7 +318,7 @@ internal data class BlobValueImpl(
 }
 
 internal data class DateValueImpl(
-    override val value: Date,
+    override val value: LocalDate,
     override val annotations: PersistentList<String>,
 ) : DateValue() {
     override fun copy(annotations: Annotations) = DateValueImpl(value, annotations.toPersistentList())
@@ -330,7 +331,7 @@ internal data class DateValueImpl(
 }
 
 internal data class TimeValueImpl(
-    override val value: Long,
+    override val value: LocalTime,
     override val annotations: PersistentList<String>,
 ) : TimeValue() {
     override fun copy(annotations: Annotations) = TimeValueImpl(value, annotations.toPersistentList())
@@ -343,7 +344,7 @@ internal data class TimeValueImpl(
 }
 
 internal data class TimestampValueImpl(
-    override val value: Instant,
+    override val value: LocalDateTime,
     override val annotations: PersistentList<String>,
 ) : TimestampValue() {
     override fun copy(annotations: Annotations) = TimestampValueImpl(value, annotations.toPersistentList())

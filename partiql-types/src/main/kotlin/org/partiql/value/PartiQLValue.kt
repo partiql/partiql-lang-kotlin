@@ -17,9 +17,10 @@ package org.partiql.value
 import org.partiql.types.PartiQLValueType
 import java.math.BigDecimal
 import java.math.BigInteger
-import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
 import java.util.BitSet
-import java.util.Date
 
 internal typealias Annotations = List<String>
 
@@ -256,12 +257,12 @@ public abstract class SymbolValue : TextValue<String>() {
     abstract override fun withoutAnnotations(): SymbolValue
 }
 
-public abstract class ClobValue : TextValue<String>() {
+public abstract class ClobValue : TextValue<ByteArray>() {
 
     override val type: PartiQLValueType = PartiQLValueType.CLOB
 
     override val string: String
-        get() = value
+        get() = value.toString(Charsets.UTF_8)
 
     abstract override fun copy(annotations: Annotations): ClobValue
 
@@ -303,7 +304,7 @@ public abstract class BlobValue : ScalarValue<ByteArray> {
     abstract override fun withoutAnnotations(): BlobValue
 }
 
-public abstract class DateValue : ScalarValue<Date> {
+public abstract class DateValue : ScalarValue<LocalDate> {
 
     override val type: PartiQLValueType = PartiQLValueType.DATE
 
@@ -314,7 +315,7 @@ public abstract class DateValue : ScalarValue<Date> {
     abstract override fun withoutAnnotations(): DateValue
 }
 
-public abstract class TimeValue : ScalarValue<Long> {
+public abstract class TimeValue : ScalarValue<LocalTime> {
 
     override val type: PartiQLValueType = PartiQLValueType.TIME
 
@@ -325,7 +326,7 @@ public abstract class TimeValue : ScalarValue<Long> {
     abstract override fun withoutAnnotations(): TimeValue
 }
 
-public abstract class TimestampValue : ScalarValue<Instant> {
+public abstract class TimestampValue : ScalarValue<LocalDateTime> {
 
     override val type: PartiQLValueType = PartiQLValueType.TIMESTAMP
 
