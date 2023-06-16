@@ -21,6 +21,8 @@ class QueryPowerTest : EvaluatorTestBase() {
         override fun getParameters(): List<Any> = listOf(
             ExprFunctionTestCase("query_power(2)", "4"),
             ExprFunctionTestCase("query_power(2,3)", "8"),
+            ExprFunctionTestCase("query_power(2,true)", "32"),
+            ExprFunctionTestCase("query_power(2,false)", "16"),
         )
     }
 }

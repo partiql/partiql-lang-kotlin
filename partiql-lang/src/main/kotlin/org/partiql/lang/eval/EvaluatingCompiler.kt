@@ -127,8 +127,7 @@ private typealias ThunkEnvValue<T> = ThunkValue<Environment, T>
  * @param compileOptions Various options that effect how the source code is compiled.
  */
 internal class EvaluatingCompiler(
-//    private val functions: Map<String, ExprFunction>,
-    val functionManager: FunctionManager,
+    private val functions: List<ExprFunction>,
     private val customTypedOpParameters: Map<String, TypedOpParameter>,
     private val procedures: Map<String, StoredProcedure>,
     private val compileOptions: CompileOptions = CompileOptions.standard()
@@ -988,150 +987,55 @@ internal class EvaluatingCompiler(
     }
 
     private fun compileCall(expr: PartiqlAst.Expr.Call, metas: MetaContainer): ThunkEnv {
-//        val funcArgThunks = compileAstExprs(expr.args)
-//        val func = functions[expr.funcName.text] ?: err(
-//            "No such function: ${expr.funcName.text}",
-//            ErrorCode.EVALUATOR_NO_SUCH_FUNCTION,
-//            errorContextFrom(metas).also {
-//                it[Property.FUNCTION_NAME] = expr.funcName.text
-//            },
-//            internal = false
-//        )
-//
-//        val func = functionManager.get(expr.funcName.text) ?: err(
-//            "No such function: ${expr.funcName.text}",
-//            ErrorCode.EVALUATOR_NO_SUCH_FUNCTION,
-//            errorContextFrom(metas).also {
-//                it[Property.FUNCTION_NAME] = expr.funcName.text
-//            },
-//            internal = false
-//        )
-//
-// //         Check arity
-//        if (funcArgThunks.size !in func.signature.arity) {
-//            val errorContext = errorContextFrom(metas).also {
-//                it[Property.FUNCTION_NAME] = func.signature.name
-//                it[Property.EXPECTED_ARITY_MIN] = func.signature.arity.first
-//                it[Property.EXPECTED_ARITY_MAX] = func.signature.arity.last
-//                it[Property.ACTUAL_ARITY] = funcArgThunks.size
-//            }
-//
-//            val message = when {
-//                func.signature.arity.first == 1 && func.signature.arity.last == 1 ->
-//                    "${func.signature.name} takes a single argument, received: ${funcArgThunks.size}"
-//                func.signature.arity.first == func.signature.arity.last ->
-//                    "${func.signature.name} takes exactly ${func.signature.arity.first} arguments, received: ${funcArgThunks.size}"
-//                else ->
-//                    "${func.signature.name} takes between ${func.signature.arity.first} and " +
-//                        "${func.signature.arity.last} arguments, received: ${funcArgThunks.size}"
-//            }
-//
-//            err(
-//                message,
-//                ErrorCode.EVALUATOR_INCORRECT_NUMBER_OF_ARGUMENTS_TO_FUNC_CALL,
-//                errorContext,
-//                internal = false
-//            )
-//        }
-//
-//        fun checkArgumentTypes(signature: FunctionSignature, args: List<ExprValue>): Arguments {
-//            fun checkArgumentType(formalStaticType: StaticType, actualArg: ExprValue, position: Int) {
-//                val formalExprValueTypeDomain = getTypeDomain(formalStaticType)
-//
-//                val actualExprValueType = actualArg.type
-//                val actualStaticType = staticTypeFromExprValue(actualArg)
-//
-//                if (!isSubTypeOf(actualStaticType, formalStaticType)) {
-//                    errInvalidArgumentType(
-//                        signature = signature,
-//                        position = position,
-//                        expectedTypes = formalExprValueTypeDomain.toList(),
-//                        actualType = actualExprValueType
-//                    )
-//                }
-//            }
-//
-//            val required = args.take(signature.requiredParameters.size)
-//            val rest = args.drop(signature.requiredParameters.size)
-//
-//            signature.requiredParameters.zip(required).forEachIndexed { idx, (expected, actual) ->
-//                checkArgumentType(expected, actual, idx + 1)
-//            }
-//
-//            return if (signature.optionalParameter != null && rest.isNotEmpty()) {
-//                val opt = rest.last()
-//                checkArgumentType(signature.optionalParameter, opt, required.size + 1)
-//                RequiredWithOptional(required, opt)
-//            } else if (signature.variadicParameter != null) {
-//                rest.forEachIndexed { idx, arg ->
-//                    checkArgumentType(signature.variadicParameter.type, arg, required.size + 1 + idx)
-//                }
-//                RequiredWithVariadic(required, rest)
-//            } else {
-//                RequiredArgs(required)
-//            }
-//        }
-//
-//        val computeThunk = when (func.signature.unknownArguments) {
-//            UnknownArguments.PROPAGATE -> thunkFactory.thunkEnvOperands(metas, funcArgThunks) { env, values ->
-//                val checkedArgs = checkArgumentTypes(func.signature, values)
-//                func.call(env.session, checkedArgs)
-//            }
-//            UnknownArguments.PASS_THRU -> thunkFactory.thukEnv(metas) { env ->
-//                val funcArgValues = funcArgThunks.map { it(env) }
-//                val checkedArgs = checkArgumentTypes(func.signature, funcArgValues)
-//                func.call(env.session, checkedArgs)
-//            }
-//        }
-
-//        val funcArgThunks = compileAstExprs(expr.args)
-//        return thunkFactory.thunkEnv(metas) { env ->
-//            val argTypes = funcArgThunks.map { it(env) }
-//            val (func, checkedArgs) = functionManager.get(
-//                name = expr.funcName.text,
-//                arity = funcArgThunks.size,
-//                args = argTypes,
-//                metas = metas
-//            )
-//
-//            // Invoke the correct function call
-//            if (func != null && checkedArgs != null) {
-//                val computeThunk = when (func.signature.unknownArguments) {
-//                    UnknownArguments.PROPAGATE -> thunkFactory.thunkEnvOperands(metas, funcArgThunks) { env2, values ->
-//                        val (func2, checkedArgs2) = functionManager.get(expr.funcName.text, funcArgThunks.size, values, metas)
-//                        if (func2 != null && checkedArgs2 != null) {
-//                            func2.call(env2.session, checkedArgs2)
-//                        } else {
-//                            func.call(env.session, checkedArgs)
-//                        }
-//                    }
-//                    UnknownArguments.PASS_THRU -> thunkFactory.thunkEnv(metas) { env ->
-//                        func.call(env.session, checkedArgs)
-//                    }
-//                }
-//                checkIntegerOverflow(computeThunk, metas)(env)
-//            } else {
-//                throw IllegalStateException("Failed to call function because func or checkedArgs was null")
-//            }
-//        }
         val funcArgThunks = compileAstExprs(expr.args)
+        val arity = funcArgThunks.size
+        val name = expr.funcName.text
+        val functionManager = FunctionManager(functions)
         return thunkFactory.thunkEnv(metas) { env ->
             val argTypes = funcArgThunks.map { it(env) }
-            val (func, checkedArgs) = functionManager.get(
-                name = expr.funcName.text,
-                arity = funcArgThunks.size,
+            val (func, error, arityPair) = functionManager.get(
+                name = name,
+                arity = arity,
                 args = argTypes,
-                metas = metas
             )
-            if (func != null && checkedArgs != null) {
+
+            // check error
+            if (error != null) {
+                if (error == "name check fails") {
+                    err(
+                        "No such function: $name",
+                        ErrorCode.EVALUATOR_NO_SUCH_FUNCTION,
+                        errorContextFrom(metas).also {
+                            it[Property.FUNCTION_NAME] = name
+                        },
+                        internal = false
+                    )
+                } else if (error == "arity check fails") {
+                    val (minArity, maxArity) = arityPair
+                    val errorContext = errorContextFrom(metas).also {
+                        it[Property.FUNCTION_NAME] = name
+                        it[Property.EXPECTED_ARITY_MIN] = minArity
+                        it[Property.EXPECTED_ARITY_MAX] = maxArity
+                        it[Property.ACTUAL_ARITY] = arity
+                    }
+                    err(
+                        "No function found with matching arity: $name",
+                        ErrorCode.EVALUATOR_INCORRECT_NUMBER_OF_ARGUMENTS_TO_FUNC_CALL,
+                        errorContext,
+                        internal = false
+                    )
+                }
+            }
+            if (func != null) {
                 val computeThunk = when (func.signature.unknownArguments) {
                     UnknownArguments.PROPAGATE -> thunkFactory.thunkEnvOperands(metas, funcArgThunks) { env1, values ->
-                        val checkedArgs = functionManager.checkArgumentTypes(func.signature, values)
-                        func.call(env1.session, checkedArgs)
+                        functionManager.checkArgumentTypes(func.signature, values)
+                        func.call(env1.session, argTypes)
                     }
 
-                    UnknownArguments.PASS_THRU -> thunkFactory.thunkEnv(metas) { env ->
-                        func.call(env.session, checkedArgs)
+                    UnknownArguments.PASS_THRU -> thunkFactory.thunkEnv(metas) { env2 ->
+                        functionManager.checkArgumentTypes(func.signature, argTypes)
+                        func.call(env2.session, argTypes)
                     }
                 }
                 checkIntegerOverflow(computeThunk, metas)(env)

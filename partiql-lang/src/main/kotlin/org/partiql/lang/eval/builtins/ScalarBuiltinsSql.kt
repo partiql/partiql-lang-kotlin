@@ -19,6 +19,7 @@ import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
+import org.partiql.lang.eval.booleanValue
 import org.partiql.lang.eval.builtins.internal.ExprFunctionBinaryNumeric
 import org.partiql.lang.eval.builtins.internal.ExprFunctionMeasure
 import org.partiql.lang.eval.builtins.internal.ExprFunctionUnaryNumeric
@@ -41,7 +42,6 @@ import org.partiql.lang.eval.stringValue
 import org.partiql.lang.eval.timeValue
 import org.partiql.lang.eval.timestampValue
 import org.partiql.lang.types.FunctionSignature
-import org.partiql.lang.types.VarargFormalParameter
 import org.partiql.lang.util.bigDecimalOf
 import org.partiql.lang.util.coerceNumbers
 import org.partiql.lang.util.compareTo
@@ -81,13 +81,18 @@ internal val SCALAR_BUILTINS_SQL = listOf(
     ExprFunctionCharacterLength,
     ExprFunctionOctetLength,
     ExprFunctionSubstring,
+    ExprFunctionSubstring2,
     ExprFunctionTrim,
+    ExprFunctionTrim2,
+    ExprFunctionTrim3,
     ExprFunctionPosition,
     ExprFunctionOverlay,
+    ExprFunctionOverlay2,
     ExprFunctionExtract,
     ExprFunctionCardinality,
     ExprFunctionPower,
-    ExprFunctionPower2
+    ExprFunctionPower2,
+    ExprFunctionPower3
 )
 
 /**
@@ -353,6 +358,9 @@ internal object ExprFunctionUpper : ExprFunction {
     }
 }
 
+/**
+ * This function is to test overloading.
+ */
 internal object ExprFunctionPower : ExprFunction {
 
     override val signature = FunctionSignature(
@@ -380,6 +388,27 @@ internal object ExprFunctionPower2 : ExprFunction {
     override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
         val base = required[0].numberValue()
         val result = Math.pow(base.toDouble(), 2.0).toInt()
+        return ExprValue.newInt(result)
+    }
+}
+
+internal object ExprFunctionPower3 : ExprFunction {
+
+    override val signature = FunctionSignature(
+        name = "query_power",
+        requiredParameters = listOf(StaticType.INT, StaticType.BOOL),
+        returnType = StaticType.INT
+    )
+
+    override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
+        val base = required[0].numberValue()
+        val square = required[1].booleanValue()
+        var result = 0
+        if (square) {
+            result = Math.pow(base.toDouble(), 5.0).toInt()
+        } else {
+            result = Math.pow(base.toDouble(), 4.0).toInt()
+        }
         return ExprValue.newInt(result)
     }
 }
@@ -505,6 +534,7 @@ internal object ExprFunctionOctetLength : ExprFunctionMeasure("octet_length", BI
  *              L1 = E1 - S1
  *              return java's substring(C, S1, E1)
  */
+
 internal object ExprFunctionSubstring : ExprFunction {
 
     /**
@@ -513,7 +543,6 @@ internal object ExprFunctionSubstring : ExprFunction {
     override val signature = FunctionSignature(
         name = "substring",
         requiredParameters = listOf(StaticType.STRING, StaticType.INT),
-        optionalParameter = StaticType.INT,
         returnType = StaticType.STRING
     )
 
@@ -530,8 +559,46 @@ internal object ExprFunctionSubstring : ExprFunction {
         return substring(target, startPosition)
     }
 
-    override fun callWithOptional(session: EvaluationSession, required: List<ExprValue>, opt: ExprValue): ExprValue {
-        val quantity = opt.intValue()
+    private fun substring(target: String, startPosition: Int, quantity: Int? = null): ExprValue {
+        val codePointCount = target.codePointCount(0, target.length)
+        if (startPosition > codePointCount) {
+            return ExprValue.newString("")
+        }
+
+        // startPosition starts at 1
+        // calculate this before adjusting start position to account for negative startPosition
+        val endPosition = when (quantity) {
+            null -> codePointCount
+            else -> Integer.min(codePointCount, startPosition + quantity - 1)
+        }
+
+        // Clamp start indexes to values that make sense for java substring
+        val adjustedStartPosition = Integer.max(0, startPosition - 1)
+
+        if (endPosition < adjustedStartPosition) {
+            return ExprValue.newString("")
+        }
+
+        val byteIndexStart = target.offsetByCodePoints(0, adjustedStartPosition)
+        val byteIndexEnd = target.offsetByCodePoints(0, endPosition)
+
+        return ExprValue.newString(target.substring(byteIndexStart, byteIndexEnd))
+    }
+}
+
+internal object ExprFunctionSubstring2 : ExprFunction {
+
+    /**
+     * TODO implement substring pattern (STRING, STRING, INT) -> STRING, requires sql regex pattern parsing
+     */
+    override val signature = FunctionSignature(
+        name = "substring",
+        requiredParameters = listOf(StaticType.STRING, StaticType.INT, StaticType.INT),
+        returnType = StaticType.STRING
+    )
+
+    override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
+        val quantity = required.last().intValue()
         if (quantity < 0) {
             errNoContext(
                 message = "Argument 3 of substring has to be greater than 0.",
@@ -577,7 +644,6 @@ internal object ExprFunctionSubstring : ExprFunction {
         return ExprValue.newString(target.substring(byteIndexStart, byteIndexEnd))
     }
 }
-
 /**
  * From section 6.7 of SQL 92 spec:
  * ```
@@ -612,7 +678,6 @@ internal object ExprFunctionTrim : ExprFunction {
     override val signature = FunctionSignature(
         name = "trim",
         requiredParameters = listOf(StaticType.TEXT),
-        variadicParameter = VarargFormalParameter(StaticType.STRING, 0..2),
         returnType = StaticType.STRING
     )
 
@@ -621,21 +686,22 @@ internal object ExprFunctionTrim : ExprFunction {
         return ExprValue.newString(result)
     }
 
-    override fun callWithVariadic(
+    private fun trim1Arg(sourceString: ExprValue): String = codepointTrim(sourceString.stringValue())
+}
+
+internal object ExprFunctionTrim2 : ExprFunction {
+
+    override val signature = FunctionSignature(
+        name = "trim",
+        requiredParameters = listOf(StaticType.TEXT, StaticType.STRING),
+        returnType = StaticType.STRING
+    )
+
+    override fun callWithRequired(
         session: EvaluationSession,
         required: List<ExprValue>,
-        variadic: List<ExprValue>
     ): ExprValue {
-        val result = when (variadic.size) {
-            0 -> trim1Arg(required[0])
-            1 -> trim2Arg(required[0], variadic[0])
-            2 -> trim3Arg(required[0], variadic[0], variadic[1])
-            else -> errNoContext(
-                message = "invalid trim arguments, should be unreachable",
-                errorCode = ErrorCode.INTERNAL_ERROR,
-                internal = true
-            )
-        }
+        val result = trim2Arg(required[0], required[1])
         return ExprValue.newString(result)
     }
 
@@ -650,8 +716,6 @@ internal object ExprFunctionTrim : ExprFunction {
             "trailing" -> ::codepointTrailingTrim
             else -> null
         }
-
-    private fun trim1Arg(sourceString: ExprValue): String = codepointTrim(sourceString.stringValue())
 
     private fun trim2Arg(specificationOrToRemove: ExprValue, sourceString: ExprValue): String {
         // Type signature checking should have handled this
@@ -669,6 +733,35 @@ internal object ExprFunctionTrim : ExprFunction {
             else -> trimFn.invoke(arg1, null)
         }
     }
+}
+
+internal object ExprFunctionTrim3 : ExprFunction {
+
+    override val signature = FunctionSignature(
+        name = "trim",
+        requiredParameters = listOf(StaticType.TEXT, StaticType.STRING, StaticType.STRING),
+        returnType = StaticType.STRING
+    )
+
+    override fun callWithRequired(
+        session: EvaluationSession,
+        required: List<ExprValue>,
+    ): ExprValue {
+        val result = trim3Arg(required[0], required[1], required[2])
+        return ExprValue.newString(result)
+    }
+
+    /**
+     * Small optimization to eliminate the TrimSpecification enum, still temporary since we'll add function lowering.
+     * Return the behavior on switch rather than switch to get an enum then switch again on the enum for behavior.
+     */
+    private fun getTrimFnOrNull(trimSpecification: String): ((String, String?) -> String)? =
+        when (trimSpecification.toLowerCase().trim()) {
+            "both" -> ::codepointTrim
+            "leading" -> ::codepointLeadingTrim
+            "trailing" -> ::codepointTrailingTrim
+            else -> null
+        }
 
     private fun trim3Arg(specification: ExprValue, toRemove: ExprValue, sourceString: ExprValue): String {
         val arg0 = specification.stringValue()
@@ -742,7 +835,6 @@ internal object ExprFunctionOverlay : ExprFunction {
     override val signature = FunctionSignature(
         name = "overlay",
         requiredParameters = listOf(StaticType.TEXT, StaticType.TEXT, StaticType.INT),
-        optionalParameter = StaticType.INT,
         returnType = StaticType.STRING
     )
 
@@ -750,8 +842,33 @@ internal object ExprFunctionOverlay : ExprFunction {
         return overlay(required[0], required[1], required[2])
     }
 
-    override fun callWithOptional(session: EvaluationSession, required: List<ExprValue>, opt: ExprValue): ExprValue {
-        return overlay(required[0], required[1], required[2], opt)
+    private fun overlay(arg0: ExprValue, arg1: ExprValue, arg2: ExprValue, arg3: ExprValue? = null): ExprValue {
+        val position = arg2.intValue()
+        if (position < 1) {
+            errNoContext(
+                message = "invalid position '$position', must be at least 1",
+                errorCode = ErrorCode.EVALUATOR_INVALID_ARGUMENTS_FOR_TRIM,
+                internal = false
+            )
+        }
+        val source = arg0.stringValue()
+        val overlay = arg1.stringValue()
+        val length = arg3?.intValue() ?: overlay.length
+        val result = codepointOverlay(source, overlay, position, length)
+        return ExprValue.newString(result)
+    }
+}
+
+internal object ExprFunctionOverlay2 : ExprFunction {
+
+    override val signature = FunctionSignature(
+        name = "overlay",
+        requiredParameters = listOf(StaticType.TEXT, StaticType.TEXT, StaticType.INT, StaticType.INT),
+        returnType = StaticType.STRING
+    )
+
+    override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
+        return overlay(required[0], required[1], required[2], required[3])
     }
 
     private fun overlay(arg0: ExprValue, arg1: ExprValue, arg2: ExprValue, arg3: ExprValue? = null): ExprValue {

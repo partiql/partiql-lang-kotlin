@@ -32,7 +32,6 @@ import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.errors.PropertyValueMap
 import org.partiql.lang.eval.AnyOfCastTable
-import org.partiql.lang.eval.Arguments
 import org.partiql.lang.eval.BaseExprValue
 import org.partiql.lang.eval.BindingCase
 import org.partiql.lang.eval.BindingName
@@ -48,9 +47,6 @@ import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.Expression
 import org.partiql.lang.eval.Named
 import org.partiql.lang.eval.ProjectionIterationBehavior
-import org.partiql.lang.eval.RequiredArgs
-import org.partiql.lang.eval.RequiredWithOptional
-import org.partiql.lang.eval.RequiredWithVariadic
 import org.partiql.lang.eval.StructOrdering
 import org.partiql.lang.eval.ThunkValue
 import org.partiql.lang.eval.TypedOpBehavior
@@ -64,11 +60,11 @@ import org.partiql.lang.eval.createErrorSignaler
 import org.partiql.lang.eval.createThunkFactory
 import org.partiql.lang.eval.distinct
 import org.partiql.lang.eval.err
-import org.partiql.lang.eval.errInvalidArgumentType
 import org.partiql.lang.eval.errorContextFrom
 import org.partiql.lang.eval.errorIf
 import org.partiql.lang.eval.exprEquals
 import org.partiql.lang.eval.fillErrorContext
+import org.partiql.lang.eval.impl.FunctionManager
 import org.partiql.lang.eval.isNotUnknown
 import org.partiql.lang.eval.isUnknown
 import org.partiql.lang.eval.like.parsePattern
@@ -83,11 +79,8 @@ import org.partiql.lang.eval.time.Time
 import org.partiql.lang.eval.timestampValue
 import org.partiql.lang.eval.unnamedValue
 import org.partiql.lang.planner.EvaluatorOptions
-import org.partiql.lang.types.FunctionSignature
 import org.partiql.lang.types.StaticTypeUtils.getRuntimeType
-import org.partiql.lang.types.StaticTypeUtils.getTypeDomain
 import org.partiql.lang.types.StaticTypeUtils.isInstance
-import org.partiql.lang.types.StaticTypeUtils.isSubTypeOf
 import org.partiql.lang.types.StaticTypeUtils.staticTypeFromExprValue
 import org.partiql.lang.types.TypedOpParameter
 import org.partiql.lang.types.UnknownArguments
@@ -114,7 +107,6 @@ import org.partiql.types.UnsupportedTypeCheckException
 import java.util.LinkedList
 import java.util.TreeSet
 import java.util.regex.Pattern
-
 /**
  * A basic "compiler" that converts an instance of [PartiqlPhysical.Expr] to an [Expression].
  *
@@ -136,7 +128,7 @@ import java.util.regex.Pattern
  * [1]: https://www.complang.tuwien.ac.at/anton/lvas/sem06w/fest.pdf
  */
 internal class PhysicalPlanCompilerImpl(
-    private val functions: Map<String, ExprFunction>,
+    private val functions: List<ExprFunction>,
     private val customTypedOpParameters: Map<String, TypedOpParameter>,
     private val procedures: Map<String, StoredProcedure>,
     private val evaluatorOptions: EvaluatorOptions = EvaluatorOptions.standard(),
@@ -815,93 +807,61 @@ internal class PhysicalPlanCompilerImpl(
 
     private fun compileCall(expr: PartiqlPhysical.Expr.Call, metas: MetaContainer): PhysicalPlanThunk {
         val funcArgThunks = compileAstExprs(expr.args)
-        val func = functions[expr.funcName.text] ?: err(
-            "No such function: ${expr.funcName.text}",
-            ErrorCode.EVALUATOR_NO_SUCH_FUNCTION,
-            errorContextFrom(metas).also {
-                it[Property.FUNCTION_NAME] = expr.funcName.text
-            },
-            internal = false
-        )
-
-        // Check arity
-        if (funcArgThunks.size !in func.signature.arity) {
-            val errorContext = errorContextFrom(metas).also {
-                it[Property.FUNCTION_NAME] = func.signature.name
-                it[Property.EXPECTED_ARITY_MIN] = func.signature.arity.first
-                it[Property.EXPECTED_ARITY_MAX] = func.signature.arity.last
-                it[Property.ACTUAL_ARITY] = funcArgThunks.size
-            }
-
-            val message = when {
-                func.signature.arity.first == 1 && func.signature.arity.last == 1 ->
-                    "${func.signature.name} takes a single argument, received: ${funcArgThunks.size}"
-                func.signature.arity.first == func.signature.arity.last ->
-                    "${func.signature.name} takes exactly ${func.signature.arity.first} arguments, received: ${funcArgThunks.size}"
-                else ->
-                    "${func.signature.name} takes between ${func.signature.arity.first} and " +
-                        "${func.signature.arity.last} arguments, received: ${funcArgThunks.size}"
-            }
-
-            throw EvaluationException(
-                message,
-                ErrorCode.EVALUATOR_INCORRECT_NUMBER_OF_ARGUMENTS_TO_FUNC_CALL,
-                errorContext,
-                internal = false
+        val arity = funcArgThunks.size
+        val name = expr.funcName.text
+        val functionManager = FunctionManager(functions)
+        return thunkFactory.thunkEnv(metas) { env ->
+            val argTypes = funcArgThunks.map { it(env) }
+            val (func, error, arityPair) = functionManager.get(
+                name = name,
+                arity = arity,
+                args = argTypes,
             )
-        }
 
-        fun checkArgumentTypes(signature: FunctionSignature, args: List<ExprValue>): Arguments {
-            fun checkArgumentType(formalStaticType: StaticType, actualArg: ExprValue, position: Int) {
-                val formalExprValueTypeDomain = getTypeDomain(formalStaticType)
-
-                val actualExprValueType = actualArg.type
-                val actualStaticType = staticTypeFromExprValue(actualArg)
-
-                if (!isSubTypeOf(actualStaticType, formalStaticType)) {
-                    errInvalidArgumentType(
-                        signature = signature,
-                        position = position,
-                        expectedTypes = formalExprValueTypeDomain.toList(),
-                        actualType = actualExprValueType
+            // check error
+            if (error != null) {
+                if (error == "name check fails") {
+                    err(
+                        "No such function: $name",
+                        ErrorCode.EVALUATOR_NO_SUCH_FUNCTION,
+                        errorContextFrom(metas).also {
+                            it[Property.FUNCTION_NAME] = name
+                        },
+                        internal = false
+                    )
+                } else if (error == "arity check fails") {
+                    val (minArity, maxArity) = arityPair
+                    val errorContext = errorContextFrom(metas).also {
+                        it[Property.FUNCTION_NAME] = name
+                        it[Property.EXPECTED_ARITY_MIN] = minArity
+                        it[Property.EXPECTED_ARITY_MAX] = maxArity
+                        it[Property.ACTUAL_ARITY] = arity
+                    }
+                    err(
+                        "No function found with matching arity: $name",
+                        ErrorCode.EVALUATOR_INCORRECT_NUMBER_OF_ARGUMENTS_TO_FUNC_CALL,
+                        errorContext,
+                        internal = false
                     )
                 }
             }
+            if (func != null) {
+                val computeThunk = when (func.signature.unknownArguments) {
+                    UnknownArguments.PROPAGATE -> thunkFactory.thunkEnvOperands(metas, funcArgThunks) { env1, values ->
+                        functionManager.checkArgumentTypes(func.signature, values)
+                        func.call(env1.session, argTypes)
+                    }
 
-            val required = args.take(signature.requiredParameters.size)
-            val rest = args.drop(signature.requiredParameters.size)
-
-            signature.requiredParameters.zip(required).forEachIndexed { idx, (expected, actual) ->
-                checkArgumentType(expected, actual, idx + 1)
-            }
-
-            return if (signature.optionalParameter != null && rest.isNotEmpty()) {
-                val opt = rest.last()
-                checkArgumentType(signature.optionalParameter, opt, required.size + 1)
-                RequiredWithOptional(required, opt)
-            } else if (signature.variadicParameter != null) {
-                rest.forEachIndexed { idx, arg ->
-                    checkArgumentType(signature.variadicParameter.type, arg, required.size + 1 + idx)
+                    UnknownArguments.PASS_THRU -> thunkFactory.thunkEnv(metas) { env ->
+                        functionManager.checkArgumentTypes(func.signature, argTypes)
+                        func.call(env.session, argTypes)
+                    }
                 }
-                RequiredWithVariadic(required, rest)
+                checkIntegerOverflow(computeThunk, metas)(env)
             } else {
-                RequiredArgs(required)
+                throw IllegalStateException("Failed to call function because checkedArgs was null")
             }
         }
-
-        val computeThunk = when (func.signature.unknownArguments) {
-            UnknownArguments.PROPAGATE -> thunkFactory.thunkEnvOperands(metas, funcArgThunks) { env, values ->
-                val checkedArgs = checkArgumentTypes(func.signature, values)
-                func.call(env.session, checkedArgs)
-            }
-            UnknownArguments.PASS_THRU -> thunkFactory.thunkEnv(metas) { env ->
-                val funcArgValues = funcArgThunks.map { it(env) }
-                val checkedArgs = checkArgumentTypes(func.signature, funcArgValues)
-                func.call(env.session, checkedArgs)
-            }
-        }
-
-        return checkIntegerOverflow(computeThunk, metas)
     }
 
     private fun compileLit(expr: PartiqlPhysical.Expr.Lit, metas: MetaContainer): PhysicalPlanThunk {

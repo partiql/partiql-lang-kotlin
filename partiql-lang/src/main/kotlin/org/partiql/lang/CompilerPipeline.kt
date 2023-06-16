@@ -49,7 +49,7 @@ data class StepContext(
      * was being built.
      */
 //    val functions: @JvmSuppressWildcards Map<String, ExprFunction>,
-    val functionManager: FunctionManager,
+    val functions: List<ExprFunction>,
 
     /**
      * Returns a list of all stored procedures which are available for execution.
@@ -82,7 +82,8 @@ interface CompilerPipeline {
      * was being built.
      */
 //    val functions: @JvmSuppressWildcards Map<String, ExprFunction>
-    val functionManager: FunctionManager
+//    val functionManager: FunctionManager
+    val functions: List<ExprFunction>
 
     /**
      * Returns list of custom data types that are available in typed operators (i.e CAST/IS).
@@ -167,7 +168,7 @@ interface CompilerPipeline {
          */
         fun addFunction(function: ExprFunction): Builder = this.apply { customFunctions[function.signature.name] = function }
 
-        private fun functionManager(fm: FunctionManager): Builder = this.apply { functionManager = fm }
+//        private fun functions(fm: FunctionManager): Builder = this.apply { functionManager = fm }
 
         /**
          * Add custom types to CAST/IS operators to.
@@ -210,13 +211,13 @@ interface CompilerPipeline {
             // customFunctions must be on the right side of + here to ensure that they overwrite any
             // built-in functions with the same name.
 //            val allFunctions = definitionalBuiltins + builtinFunctions + customFunctions
-            val fm = functionManager ?: FunctionManager(functions = definitionalBuiltins + builtinFunctions + customFunctions.values.toList())
+            val fm = definitionalBuiltins + builtinFunctions + customFunctions.values.toList()
 
             return CompilerPipelineImpl(
                 ion = ion,
                 parser = parser ?: PartiQLParserBuilder().customTypes(customDataTypes).build(),
                 compileOptions = compileOptionsToUse,
-                functionManager = fm,
+                functions = fm,
                 customDataTypes = customDataTypes,
                 procedures = customProcedures,
                 preProcessingSteps = preProcessingSteps,
@@ -231,7 +232,8 @@ internal class CompilerPipelineImpl(
     private val parser: Parser,
     override val compileOptions: CompileOptions,
 //    override val functions: Map<String, ExprFunction>,
-    override val functionManager: FunctionManager,
+//    override val functionManager: FunctionManager,
+    override val functions: List<ExprFunction>,
     override val customDataTypes: List<CustomType>,
     override val procedures: Map<String, StoredProcedure>,
     private val preProcessingSteps: List<ProcessingStep>,
@@ -239,7 +241,7 @@ internal class CompilerPipelineImpl(
 ) : CompilerPipeline {
 
     private val compiler = EvaluatingCompiler(
-        functionManager,
+        functions,
         customDataTypes.map { customType ->
             (customType.aliases + customType.name).map { alias ->
                 Pair(alias.toLowerCase(), customType.typedOpParameter)
@@ -252,7 +254,7 @@ internal class CompilerPipelineImpl(
     override fun compile(query: String): Expression = compile(parser.parseAstStatement(query))
 
     override fun compile(query: PartiqlAst.Statement): Expression {
-        val context = StepContext(compileOptions, functionManager, procedures)
+        val context = StepContext(compileOptions, functions, procedures)
 
         val preProcessedQuery = executePreProcessingSteps(query, context)
 
@@ -267,7 +269,7 @@ internal class CompilerPipelineImpl(
                             StaticTypeVisitorTransform(ion, globalTypeBindings),
                             StaticTypeInferenceVisitorTransform(
                                 globalBindings = globalTypeBindings,
-                                customFunctionSignatures = functionManager.getAllFunctions().map { it.signature },
+                                customFunction = functions,
                                 customTypedOpParameters = customDataTypes.map { customType ->
                                     (customType.aliases + customType.name).map { alias ->
                                         Pair(alias.toLowerCase(), customType.typedOpParameter)
