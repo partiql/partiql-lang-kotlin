@@ -21,6 +21,7 @@ plugins {
 dependencies {
     antlr(Deps.antlr)
     implementation(project(":partiql-ast"))
+    implementation(project(":partiql-types"))
     implementation(Deps.ionElement)
     implementation(Deps.antlrRuntime)
 }

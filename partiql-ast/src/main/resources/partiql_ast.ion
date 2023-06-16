@@ -1,6 +1,7 @@
 imports::{
   kotlin: [
     ion::'com.amazon.ionelement.api.IonElement',
+    value::'org.partiql.value.PartiQLValue',
   ],
 }
 
@@ -254,15 +255,14 @@ set_quantifier::[
 // PartiQL Expression
 expr::[
 
-  // The MISSING Value
-  missing_value::{},
-
-  // The NULL Value
-  null_value::{},
-
-  // Literal Value
+  // PartiQL Literal Value
   literal::{
-    value: ion,
+    value: '.value',
+  },
+
+  // Ion Literal Value, ie `<ion>`
+  ion::{
+    value: '.ion',
   },
 
   // Variable Reference
@@ -361,24 +361,6 @@ expr::[
         value:  expr,
       },
     ],
-  },
-
-  // Date Literal
-  date::{
-    year:   long,
-    month:  long,
-    day:    long,
-  },
-
-  // Time Literal
-  time::{
-    hour:               int,
-    minute:             int,
-    second:             int,
-    nano:               int,
-    precision:          int,
-    with_tz:            bool,
-    tz_offset_minutes:  optional::int,
   },
 
   // SQL special form `[NOT] LIKE`

@@ -4,7 +4,9 @@ import com.amazon.ion.Decimal
 import com.amazon.ionelement.api.MetaContainer
 import com.amazon.ionelement.api.ionBool
 import com.amazon.ionelement.api.ionDecimal
+import com.amazon.ionelement.api.ionFloat
 import com.amazon.ionelement.api.ionInt
+import com.amazon.ionelement.api.ionNull
 import com.amazon.ionelement.api.ionString
 import com.amazon.ionelement.api.ionSymbol
 import com.amazon.ionelement.api.loadSingleElement
@@ -25,6 +27,23 @@ import org.partiql.ast.builder.AstBuilder
 import org.partiql.ast.builder.AstFactory
 import org.partiql.ast.builder.ast
 import org.partiql.lang.domains.PartiqlAst
+import org.partiql.value.blobValue
+import org.partiql.value.boolValue
+import org.partiql.value.clobValue
+import org.partiql.value.decimalValue
+import org.partiql.value.float32Value
+import org.partiql.value.float64Value
+import org.partiql.value.int16Value
+import org.partiql.value.int32Value
+import org.partiql.value.int64Value
+import org.partiql.value.int8Value
+import org.partiql.value.intValue
+import org.partiql.value.missingValue
+import org.partiql.value.nullValue
+import org.partiql.value.stringValue
+import org.partiql.value.symbolValue
+import java.math.BigDecimal
+import java.math.BigInteger
 import kotlin.test.assertFails
 
 /**
@@ -42,7 +61,12 @@ class ToLegacyAstTest {
     @ParameterizedTest
     @MethodSource("literals")
     @Execution(ExecutionMode.CONCURRENT)
-    fun testIonLiterals(case: Case) = case.assert()
+    fun testLiterals(case: Case) = case.assert()
+
+    @ParameterizedTest
+    @MethodSource("ion")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun testIon(case: Case) = case.assert()
 
     @ParameterizedTest
     @MethodSource("identifiers")
@@ -97,29 +121,85 @@ class ToLegacyAstTest {
             return Case.Fail(i, message)
         }
 
+        private val NULL = Ast.exprLiteral(nullValue())
+
         // Shortcut to construct a "legacy-compatible" simple identifier
         private fun id(name: String) = Ast.identifierSymbol(name, Identifier.CaseSensitivity.INSENSITIVE)
 
         @JvmStatic
         fun literals() = listOf(
             expect("(lit null)") {
-                exprNullValue()
+                exprLiteral(nullValue())
             },
             expect("(missing)") {
-                exprMissingValue()
+                exprLiteral(missingValue())
             },
             expect("(lit true)") {
-                exprLiteral(ionBool(true))
-            },
-            expect("""(lit "hello")""") {
-                exprLiteral(ionString("hello"))
+                exprLiteral(boolValue(true))
             },
             expect("(lit 1)") {
-                exprLiteral(ionInt(1L))
+                exprLiteral(int8Value(1))
             },
-            expect("(lit 1.2)") {
-                exprLiteral(ionDecimal(Decimal.valueOf(1.2)))
+            expect("(lit 2)") {
+                exprLiteral(int16Value(2))
             },
+            expect("(lit 3)") {
+                exprLiteral(int32Value(3))
+            },
+            expect("(lit 4)") {
+                exprLiteral(int64Value(4))
+            },
+            expect("(lit 5)") {
+                exprLiteral(intValue(BigInteger.valueOf(5)))
+            },
+            expect("(lit 1.1e0)") {
+                exprLiteral(float32Value(1.1f))
+            },
+            expect("(lit 1.2e0)") {
+                exprLiteral(float64Value(1.2))
+            },
+            expect("(lit 1.3)") {
+                exprLiteral(decimalValue(BigDecimal.valueOf(1.3)))
+            },
+            expect("""(lit "hello")""") {
+                exprLiteral(stringValue("hello"))
+            },
+            expect("""(lit 'hello')""") {
+                exprLiteral(symbolValue("hello"))
+            },
+            expect("""(lit {{ '''Hello'''    '''World''' }})""") {
+                exprLiteral(clobValue("HelloWorld".toByteArray()))
+            },
+            expect("""(lit {{ VG8gaW5maW5pdHkuLi4gYW5kIGJleW9uZCE= }})""") {
+                exprLiteral(blobValue("To infinity... and beyond!".toByteArray()))
+            },
+            // TODO detailed tests just for _DateTime_ types
+        )
+
+        @JvmStatic
+        fun ion() = listOf(
+            expect("(lit null)") {
+                exprIon(ionNull())
+            },
+            expect("(lit true)") {
+                exprIon(ionBool(true))
+            },
+            expect("(lit 1)") {
+                exprIon(ionInt(1))
+            },
+            expect("(lit 1.2e0)") {
+                exprIon(ionFloat(1.2))
+            },
+            expect("(lit 1.3)") {
+                exprIon(ionDecimal(Decimal.valueOf(1.3)))
+            },
+            expect("""(lit "hello")""") {
+                exprIon(ionString("hello"))
+            },
+            expect("""(lit 'hello')""") {
+                exprIon(ionSymbol("hello"))
+            },
+            // TODO detailed tests just for _DateTime_ types
         )
 
         @JvmStatic
@@ -168,33 +248,33 @@ class ToLegacyAstTest {
             expect("(call 'a' (lit null))") {
                 exprCall {
                     function = id("a")
-                    args += exprNullValue()
+                    args += NULL
                 }
             },
             expect("(call_agg (all) 'a' (lit null))") {
                 exprAgg {
                     function = id("a")
-                    args += exprNullValue()
+                    args += NULL
                 }
             },
             expect("(call_agg (all) 'a' (lit null))") {
                 exprAgg {
                     setq = SetQuantifier.ALL
                     function = id("a")
-                    args += exprNullValue()
+                    args += NULL
                 }
             },
             expect("(call_agg (distinct) 'a' (lit null))") {
                 exprAgg {
                     setq = SetQuantifier.DISTINCT
                     function = id("a")
-                    args += exprNullValue()
+                    args += NULL
                 }
             },
             fail("Cannot translate `call_agg` with more than one argument") {
                 exprAgg {
                     function = id("a")
-                    args += listOf(exprNullValue(), exprNullValue())
+                    args += listOf(NULL, NULL)
                 }
             },
         )
@@ -204,27 +284,27 @@ class ToLegacyAstTest {
             expect("(not (lit null))") {
                 exprUnary {
                     op = Expr.Unary.Op.NOT
-                    expr = exprNullValue()
+                    expr = NULL
                 }
             },
             expect("(pos (lit null))") {
                 exprUnary {
                     op = Expr.Unary.Op.POS
-                    expr = exprNullValue()
+                    expr = NULL
                 }
             },
             expect("(neg (lit null))") {
                 exprUnary {
                     op = Expr.Unary.Op.NEG
-                    expr = exprNullValue()
+                    expr = NULL
                 }
             },
             // we don't really need to test _all_ binary operators
             expect("(plus (lit null) (lit null))") {
                 exprBinary {
                     op = Expr.Binary.Op.PLUS
-                    lhs = exprNullValue()
-                    rhs = exprNullValue()
+                    lhs = NULL
+                    rhs = NULL
                 }
             },
         )
@@ -233,19 +313,19 @@ class ToLegacyAstTest {
         fun paths() = listOf(
             expect("(path (lit null) (path_expr (lit null) (case_sensitive)))") {
                 exprPath {
-                    root = exprNullValue()
-                    steps += exprPathStepIndex(exprNullValue())
+                    root = NULL
+                    steps += exprPathStepIndex(NULL)
                 }
             },
             expect("(path (lit null) (path_wildcard))") {
                 exprPath {
-                    root = exprNullValue()
+                    root = NULL
                     steps += exprPathStepWildcard()
                 }
             },
             expect("(path (lit null) (path_unpivot))") {
                 exprPath {
-                    root = exprNullValue()
+                    root = NULL
                     steps += exprPathStepUnpivot()
                 }
             },
@@ -255,34 +335,34 @@ class ToLegacyAstTest {
         fun collections() = listOf(
             expect("(bag (lit null))") {
                 exprCollection(Expr.Collection.Type.BAG) {
-                    values += exprNullValue()
+                    values += NULL
                 }
             },
             expect("(list (lit null))") {
                 exprCollection(Expr.Collection.Type.ARRAY) {
-                    values += exprNullValue()
+                    values += NULL
                 }
             },
             expect("(list (lit null))") {
                 exprCollection(Expr.Collection.Type.VALUES) {
-                    values += exprNullValue()
+                    values += NULL
                 }
             },
             expect("(list (lit null))") {
                 exprCollection(Expr.Collection.Type.LIST) {
-                    values += exprNullValue()
+                    values += NULL
                 }
             },
             expect("(sexp (lit null))") {
                 exprCollection(Expr.Collection.Type.SEXP) {
-                    values += exprNullValue()
+                    values += NULL
                 }
             },
             expect("(struct (expr_pair (lit null) (lit null)))") {
                 exprStruct {
                     fields += exprStructField {
-                        name = exprNullValue()
-                        value = exprNullValue()
+                        name = NULL
+                        value = NULL
                     }
                 }
             },
@@ -338,62 +418,62 @@ class ToLegacyAstTest {
         fun specialForms() = listOf(
             expect("(like (lit 'a') (lit 'b') null)") {
                 exprLike {
-                    value = exprLiteral(ionSymbol("a"))
-                    pattern = exprLiteral(ionSymbol("b"))
+                    value = exprLiteral(symbolValue("a"))
+                    pattern = exprLiteral(symbolValue("b"))
                 }
             },
             expect("(like (lit 'a') (lit 'b') (lit 'c'))") {
                 exprLike {
-                    value = exprLiteral(ionSymbol("a"))
-                    pattern = exprLiteral(ionSymbol("b"))
-                    escape = exprLiteral(ionSymbol("c"))
+                    value = exprLiteral(symbolValue("a"))
+                    pattern = exprLiteral(symbolValue("b"))
+                    escape = exprLiteral(symbolValue("c"))
                 }
             },
             expect("(not (like (lit 'a') (lit 'b') (lit 'c')))") {
                 exprLike {
-                    value = exprLiteral(ionSymbol("a"))
-                    pattern = exprLiteral(ionSymbol("b"))
-                    escape = exprLiteral(ionSymbol("c"))
+                    value = exprLiteral(symbolValue("a"))
+                    pattern = exprLiteral(symbolValue("b"))
+                    escape = exprLiteral(symbolValue("c"))
                     not = true
                 }
             },
             expect("(between (lit 'a') (lit 'b') (lit 'c'))") {
                 exprBetween {
-                    value = exprLiteral(ionSymbol("a"))
-                    from = exprLiteral(ionSymbol("b"))
-                    to = exprLiteral(ionSymbol("c"))
+                    value = exprLiteral(symbolValue("a"))
+                    from = exprLiteral(symbolValue("b"))
+                    to = exprLiteral(symbolValue("c"))
                 }
             },
             expect("(not (between (lit 'a') (lit 'b') (lit 'c')))") {
                 exprBetween {
-                    value = exprLiteral(ionSymbol("a"))
-                    from = exprLiteral(ionSymbol("b"))
-                    to = exprLiteral(ionSymbol("c"))
+                    value = exprLiteral(symbolValue("a"))
+                    from = exprLiteral(symbolValue("b"))
+                    to = exprLiteral(symbolValue("c"))
                     not = true
                 }
             },
             expect("(in_collection (lit 'a') (lit 'b'))") {
                 exprInCollection {
-                    lhs = exprLiteral(ionSymbol("a"))
-                    rhs = exprLiteral(ionSymbol("b"))
+                    lhs = exprLiteral(symbolValue("a"))
+                    rhs = exprLiteral(symbolValue("b"))
                 }
             },
             expect("(not (in_collection (lit 'a') (lit 'b')))") {
                 exprInCollection {
-                    lhs = exprLiteral(ionSymbol("a"))
-                    rhs = exprLiteral(ionSymbol("b"))
+                    lhs = exprLiteral(symbolValue("a"))
+                    rhs = exprLiteral(symbolValue("b"))
                     not = true
                 }
             },
             expect("(is_type (lit 'a') (any_type))") {
                 exprIsType {
-                    value = exprLiteral(ionSymbol(("a")))
+                    value = exprLiteral(symbolValue(("a")))
                     type = typeAny()
                 }
             },
             expect("(not (is_type (lit 'a') (any_type)))") {
                 exprIsType {
-                    value = exprLiteral(ionSymbol(("a")))
+                    value = exprLiteral(symbolValue(("a")))
                     type = typeAny()
                     not = true
                 }
@@ -405,17 +485,17 @@ class ToLegacyAstTest {
             // TODO position
             expect("""(call 'trim' (lit "xyz"))""") {
                 exprTrim {
-                    value = exprLiteral(ionString("xyz"))
+                    value = exprLiteral(stringValue("xyz"))
                 }
             },
             expect("""(call 'trim' (lit "xyz"))""") {
                 exprTrim {
-                    value = exprLiteral(ionString("xyz"))
+                    value = exprLiteral(stringValue("xyz"))
                 }
             },
             expect("""(call 'trim' (lit "xyz"))""") {
                 exprTrim {
-                    value = exprLiteral(ionString("xyz"))
+                    value = exprLiteral(stringValue("xyz"))
                 }
             },
             // TODO overlay
@@ -447,32 +527,32 @@ class ToLegacyAstTest {
                             exprVar(identifierSymbol("a", Identifier.CaseSensitivity.SENSITIVE), Expr.Var.Scope.DEFAULT)
                     }
                     items += selectProjectItemExpression {
-                        expr = exprLiteral(ionInt(1))
+                        expr = exprLiteral(int32Value(1))
                         asAlias = "x"
                     }
                 }
             },
             expect("(project_pivot (lit 1) (lit 2))") {
                 selectPivot {
-                    value = exprLiteral(ionInt(1))
-                    key = exprLiteral(ionInt(2))
+                    value = exprLiteral(int32Value(1))
+                    key = exprLiteral(int32Value(2))
                 }
             },
             expect("(project_value (lit null))") {
                 selectValue {
-                    constructor = exprNullValue()
+                    constructor = NULL
                 }
             },
             // FROM_SOURCE Variants
             expect("(scan (lit null) null null null)") {
                 fromValue {
-                    expr = exprNullValue()
+                    expr = NULL
                     type = From.Value.Type.SCAN
                 }
             },
             expect("(scan (lit null) 'a' 'b' 'c')") {
                 fromValue {
-                    expr = exprNullValue()
+                    expr = NULL
                     type = From.Value.Type.SCAN
                     asAlias = "a"
                     atAlias = "b"
@@ -481,13 +561,13 @@ class ToLegacyAstTest {
             },
             expect("(unpivot (lit null) null null null)") {
                 fromValue {
-                    expr = exprNullValue()
+                    expr = NULL
                     type = From.Value.Type.UNPIVOT
                 }
             },
             expect("(unpivot (lit null) 'a' 'b' 'c')") {
                 fromValue {
-                    expr = exprNullValue()
+                    expr = NULL
                     type = From.Value.Type.UNPIVOT
                     asAlias = "a"
                     atAlias = "b"
@@ -506,11 +586,11 @@ class ToLegacyAstTest {
                 fromJoin {
                     type = From.Join.Type.INNER
                     lhs = fromValue {
-                        expr = exprLiteral(ionString("lhs"))
+                        expr = exprLiteral(stringValue("lhs"))
                         type = From.Value.Type.SCAN
                     }
                     rhs = fromValue {
-                        expr = exprLiteral(ionString("rhs"))
+                        expr = exprLiteral(stringValue("rhs"))
                         type = From.Value.Type.SCAN
                     }
                 }
@@ -528,20 +608,20 @@ class ToLegacyAstTest {
                     // DEFAULT
                     // type = From.Join.Type.INNER
                     lhs = fromValue {
-                        expr = exprLiteral(ionString("lhs"))
+                        expr = exprLiteral(stringValue("lhs"))
                         type = From.Value.Type.SCAN
                     }
                     rhs = fromValue {
-                        expr = exprLiteral(ionString("rhs"))
+                        expr = exprLiteral(stringValue("rhs"))
                         type = From.Value.Type.SCAN
                     }
-                    condition = exprLiteral(ionBool(true))
+                    condition = exprLiteral(boolValue(true))
                 }
             },
             expect("(let (let_binding (lit null) 'x'))") {
                 let {
                     bindings += letBinding {
-                        expr = exprNullValue()
+                        expr = NULL
                         asAlias = "x"
                     }
                 }
@@ -559,8 +639,8 @@ class ToLegacyAstTest {
             ) {
                 groupBy {
                     strategy = GroupBy.Strategy.FULL
-                    keys += groupByKey(exprLiteral(ionString("a")), null)
-                    keys += groupByKey(exprLiteral(ionString("b")), "x")
+                    keys += groupByKey(exprLiteral(stringValue("a")), null)
+                    keys += groupByKey(exprLiteral(stringValue("b")), "x")
                 }
             },
             expect(
@@ -576,8 +656,8 @@ class ToLegacyAstTest {
             ) {
                 groupBy {
                     strategy = GroupBy.Strategy.PARTIAL
-                    keys += groupByKey(exprLiteral(ionString("a")), null)
-                    keys += groupByKey(exprLiteral(ionString("b")), "x")
+                    keys += groupByKey(exprLiteral(stringValue("a")), null)
+                    keys += groupByKey(exprLiteral(stringValue("b")), "x")
                     asAlias = "as"
                 }
             },
@@ -593,11 +673,11 @@ class ToLegacyAstTest {
             """
             ) {
                 orderBy {
-                    sorts += sort(exprLiteral(ionString("a")))
-                    sorts += sort(exprLiteral(ionString("b")), Sort.Dir.ASC, Sort.Nulls.FIRST)
-                    sorts += sort(exprLiteral(ionString("c")), Sort.Dir.ASC, Sort.Nulls.LAST)
-                    sorts += sort(exprLiteral(ionString("d")), Sort.Dir.DESC, Sort.Nulls.FIRST)
-                    sorts += sort(exprLiteral(ionString("e")), Sort.Dir.DESC, Sort.Nulls.LAST)
+                    sorts += sort(exprLiteral(stringValue("a")))
+                    sorts += sort(exprLiteral(stringValue("b")), Sort.Dir.ASC, Sort.Nulls.FIRST)
+                    sorts += sort(exprLiteral(stringValue("c")), Sort.Dir.ASC, Sort.Nulls.LAST)
+                    sorts += sort(exprLiteral(stringValue("d")), Sort.Dir.DESC, Sort.Nulls.FIRST)
+                    sorts += sort(exprLiteral(stringValue("e")), Sort.Dir.DESC, Sort.Nulls.LAST)
                 }
             },
         )

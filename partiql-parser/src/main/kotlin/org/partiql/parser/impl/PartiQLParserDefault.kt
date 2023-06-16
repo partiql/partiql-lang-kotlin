@@ -14,16 +14,11 @@
 
 package org.partiql.parser.impl
 
-import com.amazon.ion.Decimal
 import com.amazon.ionelement.api.IntElement
 import com.amazon.ionelement.api.IntElementSize
 import com.amazon.ionelement.api.IonElement
 import com.amazon.ionelement.api.IonElementException
 import com.amazon.ionelement.api.StringElement
-import com.amazon.ionelement.api.ionBool
-import com.amazon.ionelement.api.ionDecimal
-import com.amazon.ionelement.api.ionInt
-import com.amazon.ionelement.api.ionString
 import com.amazon.ionelement.api.loadSingleElement
 import org.antlr.v4.runtime.BailErrorStrategy
 import org.antlr.v4.runtime.BaseErrorListener
@@ -65,6 +60,15 @@ import org.partiql.parser.PartiQLSyntaxException
 import org.partiql.parser.SourceLocation
 import org.partiql.parser.SourceLocations
 import org.partiql.parser.antlr.PartiQLBaseVisitor
+import org.partiql.value.boolValue
+import org.partiql.value.dateValue
+import org.partiql.value.decimalValue
+import org.partiql.value.int64Value
+import org.partiql.value.intValue
+import org.partiql.value.missingValue
+import org.partiql.value.nullValue
+import org.partiql.value.stringValue
+import org.partiql.value.timeValue
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.MathContext
@@ -73,7 +77,6 @@ import java.nio.channels.ClosedByInterruptException
 import java.nio.charset.StandardCharsets
 import java.time.LocalDate
 import java.time.LocalTime
-import java.time.OffsetTime
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 import org.partiql.parser.antlr.PartiQLParser as GeneratedParser
@@ -1355,8 +1358,10 @@ internal class PartiQLParserDefault : PartiQLParser {
         }
 
         override fun visitParameter(ctx: GeneratedParser.ParameterContext) = translate(ctx) {
-            val index = parameters[ctx.QUESTION_MARK().symbol.tokenIndex]
-                ?: throw error(ctx, "Unable to find index of parameter.")
+            val index = parameters[ctx.QUESTION_MARK().symbol.tokenIndex] ?: throw error(
+                ctx,
+                "Unable to find index of parameter."
+            )
             exprParameter(index)
         }
 
@@ -1640,12 +1645,11 @@ internal class PartiQLParserDefault : PartiQLParser {
         override fun visitLiteralDecimal(ctx: GeneratedParser.LiteralDecimalContext) = translate(ctx) {
             val decimal = try {
                 val v = ctx.LITERAL_DECIMAL().text.trim()
-                val d = BigDecimal(v, MathContext(38, RoundingMode.HALF_EVEN))
-                ionDecimal(Decimal.valueOf(d))
+                BigDecimal(v, MathContext(38, RoundingMode.HALF_EVEN))
             } catch (e: NumberFormatException) {
                 throw error(ctx, "Invalid decimal literal", e)
             }
-            exprLiteral(decimal)
+            exprLiteral(decimalValue(decimal))
         }
 
         override fun visitArray(ctx: GeneratedParser.ArrayContext) = translate(ctx) {
@@ -1654,19 +1658,19 @@ internal class PartiQLParserDefault : PartiQLParser {
         }
 
         override fun visitLiteralNull(ctx: GeneratedParser.LiteralNullContext) = translate(ctx) {
-            exprNullValue()
+            exprLiteral(nullValue())
         }
 
         override fun visitLiteralMissing(ctx: GeneratedParser.LiteralMissingContext) = translate(ctx) {
-            exprMissingValue()
+            exprLiteral(missingValue())
         }
 
         override fun visitLiteralTrue(ctx: GeneratedParser.LiteralTrueContext) = translate(ctx) {
-            exprLiteral(ionBool(true))
+            exprLiteral(boolValue(true))
         }
 
         override fun visitLiteralFalse(ctx: GeneratedParser.LiteralFalseContext) = translate(ctx) {
-            exprLiteral(ionBool(false))
+            exprLiteral(boolValue(false))
         }
 
         override fun visitLiteralIon(ctx: GeneratedParser.LiteralIonContext) = translate(ctx) {
@@ -1675,17 +1679,22 @@ internal class PartiQLParserDefault : PartiQLParser {
             } catch (e: IonElementException) {
                 throw error(ctx, "Unable to parse Ion value.", e)
             }
-            exprLiteral(value)
+            exprIon(value)
         }
 
         override fun visitLiteralString(ctx: GeneratedParser.LiteralStringContext) = translate(ctx) {
-            val value = ionString(ctx.LITERAL_STRING().getStringValue())
-            exprLiteral(value)
+            val value = ctx.LITERAL_STRING().getStringValue()
+            exprLiteral(stringValue(value))
         }
 
         override fun visitLiteralInteger(ctx: GeneratedParser.LiteralIntegerContext) = translate(ctx) {
-            val value = ctx.LITERAL_INTEGER().text.toIntElement()
-            exprLiteral(value)
+            val n = ctx.LITERAL_INTEGER().text.toInt()
+            val v = try {
+                int64Value(n.toLong())
+            } catch (_: java.lang.NumberFormatException) {
+                intValue(n.toBigInteger())
+            }
+            exprLiteral(v)
         }
 
         override fun visitLiteralDate(ctx: GeneratedParser.LiteralDateContext) = translate(ctx) {
@@ -1694,23 +1703,28 @@ internal class PartiQLParserDefault : PartiQLParser {
             if (DATE_PATTERN_REGEX.matches(dateString).not()) {
                 throw error(pattern, "Expected DATE string to be of the format yyyy-MM-dd")
             }
-            try {
+            val value = try {
                 LocalDate.parse(dateString, DateTimeFormatter.ISO_LOCAL_DATE)
-                val (year, month, day) = dateString.split("-")
-                exprDate(year.toLong(), month.toLong(), day.toLong())
             } catch (e: DateTimeParseException) {
                 throw error(pattern, e.localizedMessage, e)
             } catch (e: IndexOutOfBoundsException) {
                 throw error(pattern, e.localizedMessage, e)
             }
+            exprLiteral(dateValue(value))
         }
 
         override fun visitLiteralTime(ctx: GeneratedParser.LiteralTimeContext) = translate(ctx) {
             val (timeString, precision) = getTimeStringAndPrecision(ctx.LITERAL_STRING(), ctx.LITERAL_INTEGER())
-            when (ctx.WITH()) {
-                null -> convertLocalTime(timeString, false, precision, ctx.LITERAL_STRING())
-                else -> convertOffsetTime(timeString, precision, ctx.LITERAL_STRING())
+            val formatter = when (ctx.WITH() != null) {
+                false -> DateTimeFormatter.ISO_TIME
+                else -> DateTimeFormatter.ISO_LOCAL_TIME
             }
+            val value = try {
+                LocalTime.parse(timeString, formatter)
+            } catch (e: DateTimeParseException) {
+                throw error(ctx.LITERAL_STRING().symbol, "Unable to parse time", e)
+            }
+            exprLiteral(timeValue(value))
         }
 
         override fun visitTuple(ctx: GeneratedParser.TupleContext) = translate(ctx) {
@@ -1822,18 +1836,6 @@ internal class PartiQLParserDefault : PartiQLParser {
         }
 
         /**
-         * Visiting a symbol to get a string with case
-         */
-        private fun symbolCased(ctx: GeneratedParser.SymbolPrimitiveContext): Pair<String, Identifier.CaseSensitivity> =
-            when (ctx.ident.type) {
-                GeneratedParser.IDENTIFIER_QUOTED -> ctx.IDENTIFIER_QUOTED()
-                    .getStringValue() to Identifier.CaseSensitivity.SENSITIVE
-                GeneratedParser.IDENTIFIER -> ctx.IDENTIFIER()
-                    .getStringValue() to Identifier.CaseSensitivity.INSENSITIVE
-                else -> throw error(ctx, "Invalid symbol reference.")
-            }
-
-        /**
          * Convert [ALL|DISTINCT] to SetQuantifier Enum
          */
         private fun convertSetQuantifier(ctx: GeneratedParser.SetQuantifierStrategyContext?): SetQuantifier? = when {
@@ -1867,54 +1869,6 @@ internal class PartiQLParserDefault : PartiQLParser {
                 }
             }
             return timeString to precision
-        }
-
-        /**
-         * Parses a [timeString] using [OffsetTime] and converts to a [Expr.Time]. Fall back to [convertLocalTime].
-         */
-        private fun convertOffsetTime(timeString: String, precision: Int, stringNode: TerminalNode): Expr.Time = try {
-            val time: OffsetTime = OffsetTime.parse(timeString)
-            factory.exprTime(
-                hour = time.hour,
-                minute = time.minute,
-                second = time.second,
-                nano = time.nano,
-                precision = precision,
-                withTz = true,
-                tzOffsetMinutes = time.offset.totalSeconds / 60,
-            )
-        } catch (e: DateTimeParseException) {
-            convertLocalTime(timeString, true, precision, stringNode)
-        }
-
-        /**
-         * Parses a [timeString] using [LocalTime] and converts to a [Expr.LitTime]
-         */
-        private fun convertLocalTime(
-            timeString: String,
-            withTimeZone: Boolean,
-            precision: Int,
-            stringNode: TerminalNode,
-        ): Expr.Time {
-            val time: LocalTime
-            val formatter = when (withTimeZone) {
-                false -> DateTimeFormatter.ISO_TIME
-                else -> DateTimeFormatter.ISO_LOCAL_TIME
-            }
-            try {
-                time = LocalTime.parse(timeString, formatter)
-            } catch (e: DateTimeParseException) {
-                throw error(stringNode.symbol, "Unable to parse time", e)
-            }
-            return factory.exprTime(
-                hour = time.hour,
-                minute = time.minute,
-                second = time.second,
-                nano = time.nano,
-                precision = precision,
-                withTz = withTimeZone,
-                tzOffsetMinutes = null,
-            )
         }
 
         private fun getPrecisionFromTimeString(timeString: String): Int {
@@ -1996,14 +1950,10 @@ internal class PartiQLParserDefault : PartiQLParser {
             else -> throw error(this, "Unsupported token for grabbing string value.")
         }
 
-        private fun String.toIdentifier(): Identifier.Symbol =
-            factory.identifierSymbol(this, Identifier.CaseSensitivity.INSENSITIVE)
-
-        private fun String.toIntElement(): IntElement = try {
-            ionInt(this.toLong())
-        } catch (e: NumberFormatException) {
-            ionInt(this.toBigInteger())
-        }
+        private fun String.toIdentifier(): Identifier.Symbol = factory.identifierSymbol(
+            symbol = this,
+            caseSensitivity = Identifier.CaseSensitivity.INSENSITIVE,
+        )
 
         private fun String.toBigInteger() = BigInteger(this, 10)
 
@@ -2011,8 +1961,7 @@ internal class PartiQLParserDefault : PartiQLParser {
             if (value == null || token == null) return
             if (value !is IntElement) throw error(token, "Expected an integer value.")
             if (value.integerSize == IntElementSize.BIG_INTEGER || value.longValue > Int.MAX_VALUE || value.longValue < Int.MIN_VALUE) throw error(
-                token,
-                "Type parameter exceeded maximum value"
+                token, "Type parameter exceeded maximum value"
             )
         }
 

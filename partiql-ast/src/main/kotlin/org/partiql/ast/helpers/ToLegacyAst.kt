@@ -12,7 +12,6 @@ import com.amazon.ionelement.api.emptyMetaContainer
 import com.amazon.ionelement.api.ionDecimal
 import com.amazon.ionelement.api.ionFloat
 import com.amazon.ionelement.api.ionInt
-import com.amazon.ionelement.api.ionNull
 import com.amazon.ionelement.api.ionString
 import com.amazon.ionelement.api.ionSymbol
 import com.amazon.ionelement.api.metaContainerOf
@@ -40,7 +39,13 @@ import org.partiql.lang.ast.IsListParenthesizedMeta
 import org.partiql.lang.ast.IsValuesExprMeta
 import org.partiql.lang.ast.Meta
 import org.partiql.lang.domains.PartiqlAst
+import org.partiql.value.DateValue
+import org.partiql.value.MissingValue
+import org.partiql.value.TimeValue
+import org.partiql.value.TimestampValue
 import java.math.BigInteger
+import java.time.temporal.ChronoField
+import java.time.temporal.TemporalField
 
 /**
  * Translates an [AstNode] tree to the legacy PIG AST.
@@ -253,16 +258,19 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
 
     override fun visitExpr(node: Expr, ctx: Ctx): PartiqlAst.Expr = super.visitExpr(node, ctx) as PartiqlAst.Expr
 
-    override fun visitExprMissingValue(node: Expr.MissingValue, ctx: Ctx) = translate(node) { metas ->
-        // lit(ionNull().withAnnotations("\$missing"), metas)
-        missing(metas)
-    }
-
-    override fun visitExprNullValue(node: Expr.NullValue, ctx: Ctx) = translate(node) { metas ->
-        lit(ionNull(), metas)
-    }
-
     override fun visitExprLiteral(node: Expr.Literal, ctx: Ctx) = translate(node) { metas ->
+        when (val v = node.value) {
+            is MissingValue -> missing(metas)
+            is DateValue -> v.toLegacyAst(metas)
+            is TimeValue -> v.toLegacyAst(metas)
+            else -> {
+                val ion = v.accept(ToIon, Unit) // v.toIon()
+                lit(ion, metas)
+            }
+        }
+    }
+
+    override fun visitExprIon(node: Expr.Ion, ctx: Ctx) = translate(node) { metas ->
         lit(node.value, metas)
     }
 
@@ -281,7 +289,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
         if (node.function is Identifier.Qualified) {
             error("Qualified identifiers are not allowed in legacy AST `call` function identifiers")
         }
-        val funcName = (node.function as Identifier.Symbol).symbol.toLowerCase()
+        val funcName = (node.function as Identifier.Symbol).symbol.lowercase()
         val args = node.args.translate<PartiqlAst.Expr>(ctx)
         call(funcName, args, metas)
     }
@@ -300,7 +308,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
             error("Qualified identifiers are not allowed in legacy AST `call_agg` function identifiers")
         }
         // Legacy parser/ast always inserts ALL quantifier
-        val funcName = (node.function as Identifier.Symbol).symbol.toLowerCase()
+        val funcName = (node.function as Identifier.Symbol).symbol.lowercase()
         val arg = visitExpr(node.args[0], ctx)
         callAgg(setq, funcName, arg, metas)
     }
@@ -439,23 +447,6 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
         exprPair(first, second, metas)
     }
 
-    override fun visitExprDate(node: Expr.Date, ctx: Ctx) = translate(node) { metas ->
-        date(node.year, node.month, node.day, metas)
-    }
-
-    override fun visitExprTime(node: Expr.Time, ctx: Ctx) = translate(node) { metas ->
-        val value = timeValue(
-            node.hour.toLong(),
-            node.minute.toLong(),
-            node.second.toLong(),
-            node.nano.toLong(),
-            node.precision.toLong(),
-            node.withTz,
-            node.tzOffsetMinutes?.toLong(),
-        )
-        litTime(value, metas)
-    }
-
     override fun visitExprLike(node: Expr.Like, ctx: Ctx) = translate(node) { metas ->
         val value = visitExpr(node.value, ctx)
         val pattern = visitExpr(node.pattern, ctx)
@@ -544,7 +535,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
     override fun visitExprTrim(node: Expr.Trim, ctx: Ctx) = translate(node) { metas ->
         val operands = mutableListOf<PartiqlAst.Expr>()
         // Legacy AST requires adding the spec as an argument
-        val spec = node.spec?.toString()?.toLowerCase()
+        val spec = node.spec?.toString()?.lowercase()
         val chars = node.chars?.let { visitExpr(it, ctx) }
         val value = visitExpr(node.value, ctx)
         if (spec != null) operands.add(lit(ionSymbol(spec)))
@@ -630,7 +621,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
     }
 
     override fun visitExprWindow(node: Expr.Window, ctx: Ctx) = translate(node) { metas ->
-        val funcName = node.function.name.toLowerCase()
+        val funcName = node.function.name.lowercase()
         val over = visitExprWindowOver(node.over, ctx)
         val args = listOfNotNull(node.expression, node.offset, node.default).translate<PartiqlAst.Expr>(ctx)
         callWindow(funcName, over, args, metas)
@@ -649,7 +640,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
     }
 
     override fun visitExprSessionAttribute(node: Expr.SessionAttribute, ctx: Ctx) = translate(node) { metas ->
-        sessionAttribute(node.attribute.name.toLowerCase(), metas)
+        sessionAttribute(node.attribute.name.lowercase(), metas)
     }
 
     /**
@@ -1298,7 +1289,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
     }
 
     private fun DatetimeField.toLegacyDatetimePart(): PartiqlAst.Expr.Lit {
-        val symbol = this.toString().toLowerCase()
+        val symbol = this.toString().lowercase()
         return pig.lit(ionSymbol(symbol))
     }
 
@@ -1309,4 +1300,28 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
     }
 
     private fun metaContainerOf(vararg metas: Meta): MetaContainer = metaContainerOf(metas.map { Pair(it.tag, it) })
+
+    // Time Value is not an Expr.Lit in the legacy AST; needs special treatment.
+    private fun TimeValue.toLegacyAst(metas: MetaContainer): PartiqlAst.Expr.LitTime {
+        val time = pig.timeValue(
+            hour = this.value.getLong(ChronoField.HOUR_OF_DAY),
+            minute = this.value.getLong(ChronoField.MINUTE_OF_HOUR),
+            second = this.value.getLong(ChronoField.SECOND_OF_MINUTE),
+            nano = this.value.getLong(ChronoField.NANO_OF_SECOND),
+            precision = 0L,
+            withTimeZone = false,
+            tzMinutes = null,
+        )
+        return pig.litTime(time, metas)
+    }
+
+    // Date Value is not an Expr.Lit in the legacy AST; needs special treatment.
+    private fun DateValue.toLegacyAst(metas: MetaContainer): PartiqlAst.Expr.Date {
+        return pig.date(
+            year = this.value.getLong(ChronoField.YEAR),
+            month = this.value.getLong(ChronoField.MONTH_OF_YEAR),
+            day = this.value.getLong(ChronoField.DAY_OF_MONTH),
+            metas = metas,
+        )
+    }
 }
