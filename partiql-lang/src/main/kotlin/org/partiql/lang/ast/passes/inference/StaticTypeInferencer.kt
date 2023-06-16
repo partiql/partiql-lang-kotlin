@@ -19,13 +19,12 @@ import org.partiql.types.StaticType
  *
  * @param globalBindings The global bindings to the static environment.  This is a data catalog purely from a lookup
  * perspective.
- * @param customFunctionSignatures Custom user-defined function signatures that can be called by the query.
+ * @param customFunction Custom user-defined functions that can be called by the query.
  * @param customTypedOpParameters Mapping of custom type name to [TypedOpParameter] to be used for typed operators
  * (i.e CAST/IS) inference.
  */
 class StaticTypeInferencer(
     private val globalBindings: Bindings<StaticType>,
-//    private val customFunctionSignatures: List<FunctionSignature>,
     private val customFunction: List<ExprFunction>,
     private val customTypedOpParameters: Map<String, TypedOpParameter>,
 ) {

@@ -1176,27 +1176,6 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
      */
     private fun returnTypeForPropagatingFunction(signature: FunctionSignature, arguments: List<StaticType>, ctx: Context): StaticType {
         val requiredArgs = arguments.zip(signature.requiredParameters)
-        val restOfArgs = arguments.drop(signature.requiredParameters.size)
-
-        // all args including optional/variadic
-//        val allArgs = requiredArgs.let { reqArgs ->
-//            if (restOfArgs.isNotEmpty()) {
-//                when {
-//                    signature.optionalParameter != null -> reqArgs + listOf(
-//                        Pair(
-//                            restOfArgs.first(),
-//                            signature.optionalParameter
-//                        )
-//                    )
-//                    signature.variadicParameter != null -> reqArgs + restOfArgs.map {
-//                        Pair(it, signature.variadicParameter.type)
-//                    }
-//                    else -> reqArgs
-//                }
-//            } else {
-//                reqArgs
-//            }
-//        }
         val allArgs = requiredArgs
 
         return if (functionHasValidArgTypes(signature.name, allArgs, ctx)) {
@@ -1316,32 +1295,6 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
                 isSubType(actual, expected)
             }
         return requiredArgumentsMatch
-//        val optionalArgumentMatches = when (signature.optionalParameter) {
-//            null -> true
-//            else -> {
-//                val st = arguments
-//                    .getOrNull(signature.requiredParameters.size)
-//                when (st) {
-//                    null -> true
-//                    else -> isSubType(st, signature.optionalParameter)
-//                }
-//            }
-//        }
-//
-//        val variadicArgumentsMatch = when (signature.variadicParameter) {
-//            null -> true
-//            else ->
-//                arguments
-//                    // We make an assumption here that either the optional or the variadic arguments are passed to the function.
-//                    // This "drop" may not hold true if both, optional and variadic arguments, are allowed at the same time.
-//                    .drop(signature.requiredParameters.size)
-//                    .all { arg ->
-//                        val st = arg
-//                        isSubType(st, signature.variadicParameter.type)
-//                    }
-//        }
-//
-//        return requiredArgumentsMatch && optionalArgumentMatches && variadicArgumentsMatch
     }
 
     private fun Rex.isProjectAll(): Boolean {
@@ -1369,30 +1322,6 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
                 StaticTypeUtils.getTypeDomain(actual).intersect(StaticTypeUtils.getTypeDomain(expected)).isNotEmpty()
             }
         return requiredArgumentsMatch
-//        val optionalArgumentMatches = when (signature.optionalParameter) {
-//            null -> true
-//            else ->
-//                arguments
-//                    .getOrNull(signature.requiredParameters.size)
-//                    ?.let { StaticTypeUtils.getTypeDomain(it) }
-//                    ?.intersect(StaticTypeUtils.getTypeDomain(signature.optionalParameter))
-//                    ?.isNotEmpty()
-//                    ?: true
-//        }
-//
-//        val variadicArgumentsMatch = when (signature.variadicParameter) {
-//            null -> true
-//            else ->
-//                arguments
-//                    .drop(signature.requiredParameters.size)
-//                    .all { arg ->
-//                        val argType = arg
-//                        StaticTypeUtils.getTypeDomain(argType)
-//                            .intersect(StaticTypeUtils.getTypeDomain(signature.variadicParameter.type)).isNotEmpty()
-//                    }
-//        }
-//
-//        return requiredArgumentsMatch && optionalArgumentMatches && variadicArgumentsMatch
     }
 
     private fun inferEqNeOp(lhs: SingleType, rhs: SingleType): SingleType = when {
