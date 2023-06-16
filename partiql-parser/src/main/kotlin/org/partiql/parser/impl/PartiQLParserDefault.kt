@@ -18,7 +18,6 @@ import com.amazon.ionelement.api.IntElement
 import com.amazon.ionelement.api.IntElementSize
 import com.amazon.ionelement.api.IonElement
 import com.amazon.ionelement.api.IonElementException
-import com.amazon.ionelement.api.StringElement
 import com.amazon.ionelement.api.loadSingleElement
 import org.antlr.v4.runtime.BailErrorStrategy
 import org.antlr.v4.runtime.BaseErrorListener
@@ -60,6 +59,8 @@ import org.partiql.parser.PartiQLSyntaxException
 import org.partiql.parser.SourceLocation
 import org.partiql.parser.SourceLocations
 import org.partiql.parser.antlr.PartiQLBaseVisitor
+import org.partiql.value.NumericValue
+import org.partiql.value.StringValue
 import org.partiql.value.boolValue
 import org.partiql.value.dateValue
 import org.partiql.value.decimalValue
@@ -77,6 +78,7 @@ import java.nio.channels.ClosedByInterruptException
 import java.nio.charset.StandardCharsets
 import java.time.LocalDate
 import java.time.LocalTime
+import java.time.OffsetTime
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 import org.partiql.parser.antlr.PartiQLParser as GeneratedParser
@@ -700,13 +702,13 @@ internal class PartiQLParserDefault : PartiQLParser {
                 throw error(ctx, "Expected a path element literal")
             }
             when (val i = v.value) {
-                is IntElement -> pathStepIndex(i.longValue.toInt())
-                is StringElement -> pathStepSymbol(
+                is NumericValue<*> -> pathStepIndex(i.int)
+                is StringValue -> pathStepSymbol(
                     identifierSymbol(
-                        i.textValue, Identifier.CaseSensitivity.SENSITIVE
+                        i.value, Identifier.CaseSensitivity.SENSITIVE
                     )
                 )
-                else -> throw error(ctx, "Expected an integer or string literal, [<int>|<string>]")
+                else -> throw error(ctx, "Expected an integer or string literal, found literal ${i.type}")
             }
         }
 
@@ -1714,17 +1716,27 @@ internal class PartiQLParserDefault : PartiQLParser {
         }
 
         override fun visitLiteralTime(ctx: GeneratedParser.LiteralTimeContext) = translate(ctx) {
-            val (timeString, precision) = getTimeStringAndPrecision(ctx.LITERAL_STRING(), ctx.LITERAL_INTEGER())
-            val formatter = when (ctx.WITH() != null) {
-                false -> DateTimeFormatter.ISO_TIME
-                else -> DateTimeFormatter.ISO_LOCAL_TIME
-            }
-            val value = try {
-                LocalTime.parse(timeString, formatter)
+            val (time, precision) = getTimeStringAndPrecision(ctx.LITERAL_STRING(), ctx.LITERAL_INTEGER())
+            val (value, offset, withZone) = try {
+                when {
+                    ctx.WITH() != null -> try {
+                        // TIME WITH TIMEZONE
+                        val t = OffsetTime.parse(time, DateTimeFormatter.ISO_OFFSET_TIME)
+                        Triple(t.toLocalTime(), t.offset, true)
+                    } catch (_: DateTimeParseException) {
+                        // SQL-99 p.26
+                        // > For the convenience of users, whenever a datetime value with time zone is to be implicitly derived
+                        // > from one without (for example, in a simple assignment operation), SQL assumes the value without
+                        // > time zone to be local, subtracts the default SQL-session time zone displacement from it to give UTC,
+                        // > and associates that time zone displacement with the result.
+                        Triple(LocalTime.parse(time, DateTimeFormatter.ISO_LOCAL_TIME), null, true)
+                    }
+                    else -> Triple(LocalTime.parse(time, DateTimeFormatter.ISO_TIME), null, false)
+                }
             } catch (e: DateTimeParseException) {
-                throw error(ctx.LITERAL_STRING().symbol, "Unable to parse time", e)
+                throw error(ctx.LITERAL_STRING().symbol, "Unable to parse time $time", e)
             }
-            exprLiteral(timeValue(value))
+            exprLiteral(timeValue(value, precision, offset, withZone))
         }
 
         override fun visitTuple(ctx: GeneratedParser.TupleContext) = translate(ctx) {

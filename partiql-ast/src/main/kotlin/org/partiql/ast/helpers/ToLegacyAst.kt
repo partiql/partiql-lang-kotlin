@@ -42,10 +42,8 @@ import org.partiql.lang.domains.PartiqlAst
 import org.partiql.value.DateValue
 import org.partiql.value.MissingValue
 import org.partiql.value.TimeValue
-import org.partiql.value.TimestampValue
 import java.math.BigInteger
 import java.time.temporal.ChronoField
-import java.time.temporal.TemporalField
 
 /**
  * Translates an [AstNode] tree to the legacy PIG AST.
@@ -1308,9 +1306,9 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
             minute = this.value.getLong(ChronoField.MINUTE_OF_HOUR),
             second = this.value.getLong(ChronoField.SECOND_OF_MINUTE),
             nano = this.value.getLong(ChronoField.NANO_OF_SECOND),
-            precision = 0L,
-            withTimeZone = false,
-            tzMinutes = null,
+            precision = this.precision.toLong(),
+            withTimeZone = this.withZone,
+            tzMinutes = this.offset?.let { (it.totalSeconds / 60).toLong() },
         )
         return pig.litTime(time, metas)
     }
