@@ -69,32 +69,6 @@ internal inline fun <reified T : PartiQLValue> T._withoutAnnotations(): T =
         else -> this
     }
 
-internal data class NullValueImpl(
-    override val annotations: PersistentList<String>,
-) : NullValue() {
-
-    override fun copy(annotations: Annotations) = NullValueImpl(annotations.toPersistentList())
-
-    override fun withAnnotations(annotations: Annotations): NullValue = _withAnnotations(annotations)
-
-    override fun withoutAnnotations(): NullValue = _withoutAnnotations()
-
-    override fun <R, C> accept(visitor: PartiQLValueVisitor<R, C>, ctx: C): R = visitor.visitNull(this, ctx)
-}
-
-internal data class MissingValueImpl(
-    override val annotations: PersistentList<String>,
-) : MissingValue() {
-
-    override fun copy(annotations: Annotations) = MissingValueImpl(annotations.toPersistentList())
-
-    override fun withAnnotations(annotations: Annotations): MissingValue = _withAnnotations(annotations)
-
-    override fun withoutAnnotations(): MissingValue = _withoutAnnotations()
-
-    override fun <R, C> accept(visitor: PartiQLValueVisitor<R, C>, ctx: C): R = visitor.visitMissing(this, ctx)
-}
-
 internal data class BoolValueImpl(
     override val value: Boolean,
     override val annotations: PersistentList<String>,

@@ -79,28 +79,6 @@ import java.util.BitSet
 /**
  * BOOL type value.
  *
- * @param annotations
- * @return
- */
-@JvmOverloads
-public fun nullValue(
-    annotations: Annotations = emptyList(),
-): NullValue = NullValueImpl(annotations.toPersistentList())
-
-/**
- * TODO
- *
- * @param annotations
- * @return
- */
-@JvmOverloads
-public fun missingValue(
-    annotations: Annotations = emptyList(),
-): MissingValue = MissingValueImpl(annotations.toPersistentList())
-
-/**
- * TODO
- *
  * @param value
  * @param annotations
  * @return
