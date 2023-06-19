@@ -1028,14 +1028,14 @@ internal class EvaluatingCompiler(
             }
             if (func != null) {
                 val computeThunk = when (func.signature.unknownArguments) {
-                    UnknownArguments.PROPAGATE -> thunkFactory.thunkEnvOperands(metas, funcArgThunks) { env1, values ->
-                        functionManager.checkArgumentTypes(func.signature, values)
-                        func.call(env1.session, argTypes)
+                    UnknownArguments.PROPAGATE -> thunkFactory.thunkEnvOperands(metas, funcArgThunks) { env, values ->
+                        val funcArgValues = funcArgThunks.map { it(env) }
+//                        functionManager.checkArgumentTypes(func.signature, values)
+                        func.call(env.session, funcArgValues)
                     }
-
-                    UnknownArguments.PASS_THRU -> thunkFactory.thunkEnv(metas) { env2 ->
-                        functionManager.checkArgumentTypes(func.signature, argTypes)
-                        func.call(env2.session, argTypes)
+                    UnknownArguments.PASS_THRU -> thunkFactory.thunkEnv(metas) { env ->
+//                        functionManager.checkArgumentTypes(func.signature, argTypes)
+                        func.call(env.session, argTypes)
                     }
                 }
                 checkIntegerOverflow(computeThunk, metas)(env)

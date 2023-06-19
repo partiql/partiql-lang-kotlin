@@ -92,7 +92,8 @@ internal val SCALAR_BUILTINS_SQL = listOf(
     ExprFunctionCardinality,
     ExprFunctionPower,
     ExprFunctionPower2,
-    ExprFunctionPower3
+    ExprFunctionPower3,
+    ExprFunctionPower4
 )
 
 /**
@@ -411,6 +412,15 @@ internal object ExprFunctionPower3 : ExprFunction {
         }
         return ExprValue.newInt(result)
     }
+}
+
+internal object ExprFunctionPower4 : ExprFunction {
+
+    override val signature = FunctionSignature(
+        name = "query_power",
+        requiredParameters = listOf(StaticType.INT, StaticType.INT, StaticType.INT),
+        returnType = StaticType.INT
+    )
 }
 
 /**

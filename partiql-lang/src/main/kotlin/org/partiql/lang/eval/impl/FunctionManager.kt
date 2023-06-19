@@ -53,27 +53,27 @@ internal class FunctionManager(
     /**
      * Check argument types by requiredArgs, OptionalArgs and VariadicArgs
      */
-    internal fun checkArgumentTypes(signature: FunctionSignature, args: List<ExprValue>) {
-        fun checkArgumentType(formalStaticType: StaticType, actualArg: ExprValue, position: Int) {
-            val formalExprValueTypeDomain = StaticTypeUtils.getTypeDomain(formalStaticType)
-
-            val actualExprValueType = actualArg.type
-            val actualStaticType = StaticTypeUtils.staticTypeFromExprValue(actualArg)
-
-            if (!StaticTypeUtils.isSubTypeOf(actualStaticType, formalStaticType)) {
-                errInvalidArgumentType(
-                    signature = signature,
-                    position = position,
-                    expectedTypes = formalExprValueTypeDomain.toList(),
-                    actualType = actualExprValueType
-                )
-            }
-        }
-
-        signature.requiredParameters.zip(args).forEachIndexed { idx, (expected, actual) ->
-            checkArgumentType(expected, actual, idx + 1)
-        }
-    }
+//    internal fun checkArgumentTypes(signature: FunctionSignature, args: List<ExprValue>) {
+//        fun checkArgumentType(formalStaticType: StaticType, actualArg: ExprValue, position: Int) {
+//            val formalExprValueTypeDomain = StaticTypeUtils.getTypeDomain(formalStaticType)
+//
+//            val actualExprValueType = actualArg.type
+//            val actualStaticType = StaticTypeUtils.staticTypeFromExprValue(actualArg)
+//
+//            if (!StaticTypeUtils.isSubTypeOf(actualStaticType, formalStaticType)) {
+//                errInvalidArgumentType(
+//                    signature = signature,
+//                    position = position,
+//                    expectedTypes = formalExprValueTypeDomain.toList(),
+//                    actualType = actualExprValueType
+//                )
+//            }
+//        }
+//
+//        signature.requiredParameters.zip(args).forEachIndexed { idx, (expected, actual) ->
+//            checkArgumentType(expected, actual, idx + 1)
+//        }
+//    }
 
     /**
      * Check argument types(ExprValue) by requiredArgs, OptionalArgs and VariadicArgs. This function will pass all arg values including MISSING or NULL values.
@@ -117,6 +117,4 @@ internal class FunctionManager(
 
         return Pair(minArity, maxArity)
     }
-
-    internal fun getAllFunctions(): List<ExprFunction> = functions
 }
