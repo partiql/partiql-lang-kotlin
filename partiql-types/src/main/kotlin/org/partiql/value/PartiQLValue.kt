@@ -20,8 +20,8 @@ import java.math.BigInteger
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
+import java.time.ZoneOffset
 import java.util.BitSet
-import java.util.TimeZone
 
 internal typealias Annotations = List<String>
 
@@ -38,17 +38,6 @@ public sealed interface PartiQLValue {
     public fun withoutAnnotations(): PartiQLValue
 
     public fun <R, C> accept(visitor: PartiQLValueVisitor<R, C>, ctx: C): R
-}
-
-public abstract class NullValue : PartiQLValue {
-
-    override val type: PartiQLValueType = PartiQLValueType.NULL
-
-    abstract override fun copy(annotations: Annotations): NullValue
-
-    abstract override fun withAnnotations(annotations: Annotations): NullValue
-
-    abstract override fun withoutAnnotations(): NullValue
 }
 
 public abstract class MissingValue : PartiQLValue {
@@ -187,6 +176,7 @@ public abstract class DecimalValue : NumericValue<BigDecimal>() {
 public abstract class Float32Value : ScalarValue<Float> {
 
     override val type: PartiQLValueType = PartiQLValueType.FLOAT32
+
     abstract override fun copy(annotations: Annotations): Float32Value
 
     abstract override fun withAnnotations(annotations: Annotations): Float32Value
@@ -321,10 +311,13 @@ public abstract class TimeValue : ScalarValue<LocalTime> {
     override val type: PartiQLValueType = PartiQLValueType.TIME
 
     // TEMPORARY
-    public abstract val timeZone: TimeZone?
+    public abstract val precision: Int
 
     // TEMPORARY
-    public abstract val precision: Int
+    public abstract val offset: ZoneOffset?
+
+    // TEMPORARY
+    public abstract val withZone: Boolean
 
     abstract override fun copy(annotations: Annotations): TimeValue
 
@@ -338,10 +331,13 @@ public abstract class TimestampValue : ScalarValue<LocalDateTime> {
     override val type: PartiQLValueType = PartiQLValueType.TIMESTAMP
 
     // TEMPORARY
-    public abstract val timeZone: TimeZone?
+    public abstract val precision: Int
 
     // TEMPORARY
-    public abstract val precision: Int
+    public abstract val offset: ZoneOffset?
+
+    // TEMPORARY
+    public abstract val withZone: Boolean
 
     abstract override fun copy(annotations: Annotations): TimestampValue
 
@@ -405,21 +401,4 @@ public abstract class StructValue<T : PartiQLValue> : PartiQLValue, Collection<P
     abstract override fun withAnnotations(annotations: Annotations): StructValue<T>
 
     abstract override fun withoutAnnotations(): StructValue<T>
-}
-
-/**
- * Any view over a PartiQLValue
- */
-public abstract class AnyValue : PartiQLValue {
-
-    public abstract val value: PartiQLValue
-
-    override val type: PartiQLValueType
-        get() = value.type
-
-    abstract override fun copy(annotations: Annotations): AnyValue
-
-    abstract override fun withAnnotations(annotations: Annotations): AnyValue
-
-    abstract override fun withoutAnnotations(): AnyValue
 }

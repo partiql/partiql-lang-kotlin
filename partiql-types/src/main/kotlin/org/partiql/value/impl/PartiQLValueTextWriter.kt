@@ -1,6 +1,5 @@
 package org.partiql.value.impl
 
-import org.partiql.value.AnyValue
 import org.partiql.value.BagValue
 import org.partiql.value.BoolValue
 import org.partiql.value.CharValue
@@ -16,6 +15,22 @@ import org.partiql.value.IntValue
 import org.partiql.value.ListValue
 import org.partiql.value.MissingValue
 import org.partiql.value.NullValue
+import org.partiql.value.NullableBagValue
+import org.partiql.value.NullableBoolValue
+import org.partiql.value.NullableCharValue
+import org.partiql.value.NullableDecimalValue
+import org.partiql.value.NullableFloat32Value
+import org.partiql.value.NullableFloat64Value
+import org.partiql.value.NullableInt16Value
+import org.partiql.value.NullableInt32Value
+import org.partiql.value.NullableInt64Value
+import org.partiql.value.NullableInt8Value
+import org.partiql.value.NullableIntValue
+import org.partiql.value.NullableListValue
+import org.partiql.value.NullableSexpValue
+import org.partiql.value.NullableStringValue
+import org.partiql.value.NullableStructValue
+import org.partiql.value.NullableSymbolValue
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueBaseVisitor
 import org.partiql.value.PartiQLValueWriter
@@ -23,6 +38,22 @@ import org.partiql.value.SexpValue
 import org.partiql.value.StringValue
 import org.partiql.value.StructValue
 import org.partiql.value.SymbolValue
+import org.partiql.value.bagValue
+import org.partiql.value.boolValue
+import org.partiql.value.charValue
+import org.partiql.value.decimalValue
+import org.partiql.value.float32Value
+import org.partiql.value.float64Value
+import org.partiql.value.int16Value
+import org.partiql.value.int32Value
+import org.partiql.value.int64Value
+import org.partiql.value.int8Value
+import org.partiql.value.intValue
+import org.partiql.value.listValue
+import org.partiql.value.sexpValue
+import org.partiql.value.stringValue
+import org.partiql.value.structValue
+import org.partiql.value.symbolValue
 import java.io.PrintStream
 
 /**
@@ -192,6 +223,84 @@ internal class PartiQLValueTextWriter(
             append("}")
         }
 
-        override fun visitAny(v: AnyValue, format: Format?) = v.toString(format) { "any" }
+        override fun visitNullableBool(v: NullableBoolValue, ctx: Format?) = when (v.value) {
+            null -> "null"
+            else -> visitBool(boolValue(v.value!!, v.annotations), ctx)
+        }
+
+        override fun visitNullableInt8(v: NullableInt8Value, ctx: Format?) = when (v.value) {
+            null -> "null"
+            else -> visitInt8(int8Value(v.value!!, v.annotations), ctx)
+        }
+
+        override fun visitNullableInt16(v: NullableInt16Value, ctx: Format?) = when (v.value) {
+            null -> "null"
+            else -> visitInt16(int16Value(v.value!!, v.annotations), ctx)
+        }
+
+        override fun visitNullableInt32(v: NullableInt32Value, ctx: Format?) = when (v.value) {
+            null -> "null"
+            else -> visitInt32(int32Value(v.value!!, v.annotations), ctx)
+        }
+
+        override fun visitNullableInt64(v: NullableInt64Value, ctx: Format?) = when (v.value) {
+            null -> "null"
+            else -> visitInt64(int64Value(v.value!!, v.annotations), ctx)
+        }
+
+        override fun visitNullableInt(v: NullableIntValue, ctx: Format?) = when (v.value) {
+            null -> "null"
+            else -> visitInt(intValue(v.value!!, v.annotations), ctx)
+        }
+
+        override fun visitNullableDecimal(v: NullableDecimalValue, ctx: Format?) = when (v.value) {
+            null -> "null"
+            else -> visitDecimal(decimalValue(v.value!!, v.annotations), ctx)
+        }
+
+        override fun visitNullableFloat32(v: NullableFloat32Value, ctx: Format?) = when (v.value) {
+            null -> "null"
+            else -> visitFloat32(float32Value(v.value!!, v.annotations), ctx)
+        }
+
+        override fun visitNullableFloat64(v: NullableFloat64Value, ctx: Format?) = when (v.value) {
+            null -> "null"
+            else -> visitFloat64(float64Value(v.value!!, v.annotations), ctx)
+        }
+
+        override fun visitNullableChar(v: NullableCharValue, ctx: Format?) = when (v.value) {
+            null -> "null"
+            else -> visitChar(charValue(v.value!!, v.annotations), ctx)
+        }
+
+        override fun visitNullableString(v: NullableStringValue, ctx: Format?) = when (v.value) {
+            null -> "null"
+            else -> visitString(stringValue(v.value!!, v.annotations), ctx)
+        }
+
+        override fun visitNullableSymbol(v: NullableSymbolValue, ctx: Format?) = when (v.value) {
+            null -> "null"
+            else -> visitSymbol(symbolValue(v.value!!, v.annotations), ctx)
+        }
+
+        override fun visitNullableBag(v: NullableBagValue<*>, ctx: Format?) = when (v.elements) {
+            null -> "null"
+            else -> visitBag(bagValue(v.elements!!.toList(), v.annotations), ctx)
+        }
+
+        override fun visitNullableList(v: NullableListValue<*>, ctx: Format?) = when (v.elements) {
+            null -> "null"
+            else -> visitList(listValue(v.elements!!.toList(), v.annotations), ctx)
+        }
+
+        override fun visitNullableSexp(v: NullableSexpValue<*>, ctx: Format?) = when (v.elements) {
+            null -> "null"
+            else -> visitSexp(sexpValue(v.elements!!.toList(), v.annotations), ctx)
+        }
+
+        override fun visitNullableStruct(v: NullableStructValue<*>, ctx: Format?) = when (v.fields) {
+            null -> "null"
+            else -> visitStruct(structValue(v.fields!!.toList(), v.annotations), ctx)
+        }
     }
 }

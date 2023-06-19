@@ -36,8 +36,6 @@ import org.partiql.value.Int8Value
 import org.partiql.value.IntValue
 import org.partiql.value.IntervalValue
 import org.partiql.value.ListValue
-import org.partiql.value.MissingValue
-import org.partiql.value.NullValue
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueVisitor
 import org.partiql.value.SexpValue
@@ -51,8 +49,8 @@ import java.math.BigInteger
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
+import java.time.ZoneOffset
 import java.util.BitSet
-import java.util.TimeZone
 
 @Suppress("FunctionName")
 internal inline fun <reified T : PartiQLValue> T._withAnnotations(annotations: Annotations): T =
@@ -67,32 +65,6 @@ internal inline fun <reified T : PartiQLValue> T._withoutAnnotations(): T =
         this.annotations.isNotEmpty() -> copy(annotations = emptyList()) as T
         else -> this
     }
-
-internal data class NullValueImpl(
-    override val annotations: PersistentList<String>,
-) : NullValue() {
-
-    override fun copy(annotations: Annotations) = NullValueImpl(annotations.toPersistentList())
-
-    override fun withAnnotations(annotations: Annotations): NullValue = _withAnnotations(annotations)
-
-    override fun withoutAnnotations(): NullValue = _withoutAnnotations()
-
-    override fun <R, C> accept(visitor: PartiQLValueVisitor<R, C>, ctx: C): R = visitor.visitNull(this, ctx)
-}
-
-internal data class MissingValueImpl(
-    override val annotations: PersistentList<String>,
-) : MissingValue() {
-
-    override fun copy(annotations: Annotations) = MissingValueImpl(annotations.toPersistentList())
-
-    override fun withAnnotations(annotations: Annotations): MissingValue = _withAnnotations(annotations)
-
-    override fun withoutAnnotations(): MissingValue = _withoutAnnotations()
-
-    override fun <R, C> accept(visitor: PartiQLValueVisitor<R, C>, ctx: C): R = visitor.visitMissing(this, ctx)
-}
 
 internal data class BoolValueImpl(
     override val value: Boolean,
@@ -334,10 +306,11 @@ internal data class DateValueImpl(
 internal data class TimeValueImpl(
     override val value: LocalTime,
     override val precision: Int,
-    override val timeZone: TimeZone?,
+    override val offset: ZoneOffset?,
+    override val withZone: Boolean,
     override val annotations: PersistentList<String>,
 ) : TimeValue() {
-    override fun copy(annotations: Annotations) = TimeValueImpl(value, precision, timeZone, annotations.toPersistentList())
+    override fun copy(annotations: Annotations) = TimeValueImpl(value, precision, offset, withZone, annotations.toPersistentList())
 
     override fun withAnnotations(annotations: Annotations): TimeValue = _withAnnotations(annotations)
 
@@ -349,10 +322,11 @@ internal data class TimeValueImpl(
 internal data class TimestampValueImpl(
     override val value: LocalDateTime,
     override val precision: Int,
-    override val timeZone: TimeZone?,
+    override val offset: ZoneOffset?,
+    override val withZone: Boolean,
     override val annotations: PersistentList<String>,
 ) : TimestampValue() {
-    override fun copy(annotations: Annotations) = TimestampValueImpl(value, precision, timeZone, annotations.toPersistentList())
+    override fun copy(annotations: Annotations) = TimestampValueImpl(value, precision, offset, withZone, annotations.toPersistentList())
 
     override fun withAnnotations(annotations: Annotations): TimestampValue = _withAnnotations(annotations)
 

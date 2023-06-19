@@ -6,7 +6,6 @@ import org.junit.jupiter.api.parallel.ExecutionMode
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import org.partiql.value.Annotations
-import org.partiql.value.AnyValue
 import org.partiql.value.PartiQLValue
 import org.partiql.value.bagValue
 import org.partiql.value.boolValue
@@ -22,6 +21,18 @@ import org.partiql.value.intValue
 import org.partiql.value.listValue
 import org.partiql.value.missingValue
 import org.partiql.value.nullValue
+import org.partiql.value.nullableBoolValue
+import org.partiql.value.nullableCharValue
+import org.partiql.value.nullableDecimalValue
+import org.partiql.value.nullableFloat32Value
+import org.partiql.value.nullableFloat64Value
+import org.partiql.value.nullableInt16Value
+import org.partiql.value.nullableInt32Value
+import org.partiql.value.nullableInt64Value
+import org.partiql.value.nullableInt8Value
+import org.partiql.value.nullableIntValue
+import org.partiql.value.nullableStringValue
+import org.partiql.value.nullableSymbolValue
 import org.partiql.value.sexpValue
 import org.partiql.value.stringValue
 import org.partiql.value.structValue
@@ -35,8 +46,6 @@ import java.math.BigInteger
  * Basic text writing test.
  *
  * TODOs
- *  - Annotation tests
- *  - Nested collections
  *  - Dates and times
  *  - String/Symbol escapes
  */
@@ -46,6 +55,11 @@ class PartiQLValueTextWriterTest {
     @MethodSource("scalars")
     @Execution(ExecutionMode.CONCURRENT)
     fun testScalars(case: Case) = case.assert()
+
+    @ParameterizedTest
+    @MethodSource("nulls")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun testNulls(case: Case) = case.assert()
 
     @ParameterizedTest
     @MethodSource("collections")
@@ -178,6 +192,142 @@ class PartiQLValueTextWriterTest {
         )
 
         @JvmStatic
+        fun nulls() = listOf(
+            case(
+                value = nullValue(),
+                expected = "null",
+            ),
+            case(
+                value = missingValue(),
+                expected = "missing",
+            ),
+            case(
+                value = nullableBoolValue(true),
+                expected = "true",
+            ),
+            case(
+                value = nullableBoolValue(false),
+                expected = "false",
+            ),
+            case(
+                value = nullableBoolValue(null),
+                expected = "null",
+            ),
+            case(
+                value = nullableInt8Value(1),
+                expected = "1",
+            ),
+            case(
+                value = nullableInt8Value(null),
+                expected = "null",
+            ),
+            case(
+                value = nullableInt16Value(1),
+                expected = "1",
+            ),
+            case(
+                value = nullableInt16Value(null),
+                expected = "null",
+            ),
+            case(
+                value = nullableInt32Value(1),
+                expected = "1",
+            ),
+            case(
+                value = nullableInt32Value(null),
+                expected = "null",
+            ),
+            case(
+                value = nullableInt64Value(1),
+                expected = "1",
+            ),
+            case(
+                value = nullableInt64Value(null),
+                expected = "null",
+            ),
+            case(
+                value = nullableIntValue(BigInteger.valueOf(1)),
+                expected = "1",
+            ),
+            case(
+                value = nullableIntValue(null),
+                expected = "null",
+            ),
+            case(
+                value = nullableDecimalValue(BigDecimal("123.456")),
+                expected = "123.456",
+            ),
+            case(
+                value = nullableDecimalValue(null),
+                expected = "null",
+            ),
+            case(
+                value = nullableFloat32Value(123.0f),
+                expected = "123.0",
+            ),
+            case(
+                value = nullableFloat32Value(null),
+                expected = "null",
+            ),
+            case(
+                value = nullableFloat64Value(123.0),
+                expected = "123.0",
+            ),
+            case(
+                value = nullableFloat64Value(null),
+                expected = "null",
+            ),
+            case(
+                value = nullableCharValue('C'),
+                expected = "'C'",
+            ),
+            case(
+                value = nullableCharValue(null),
+                expected = "null",
+            ),
+            case(
+                value = nullableStringValue("word"),
+                expected = "'word'",
+            ),
+            case(
+                value = nullableStringValue(null),
+                expected = "null",
+            ),
+            case(
+                value = nullableStringValue("word\nword"),
+                expected = "'word\nword'",
+            ),
+            case(
+                value = nullableStringValue(null),
+                expected = "null",
+            ),
+            case(
+                value = nullableSymbolValue("x"),
+                expected = "x",
+            ),
+            case(
+                value = nullableSymbolValue(null),
+                expected = "null",
+            ),
+            case(
+                value = nullableSymbolValue("f.x"),
+                expected = "f.x",
+            ),
+            case(
+                value = nullableSymbolValue(null),
+                expected = "null",
+            ),
+            // TODO CLOB
+            // TODO BINARY
+            // TODO BYTE
+            // TODO BLOB
+            // TODO DATE
+            // TODO TIME
+            // TODO TIMESTAMP
+            // TODO INTERVAL
+        )
+
+        @JvmStatic
         fun collections() = listOf(
             case(
                 value = bagValue(emptyList()),
@@ -226,7 +376,7 @@ class PartiQLValueTextWriterTest {
         @JvmStatic
         fun struct() = listOf(
             case(
-                value = structValue<AnyValue>(emptyList()),
+                value = structValue<PartiQLValue>(emptyList()),
                 expected = "{}",
             ),
             case(
@@ -295,7 +445,7 @@ class PartiQLValueTextWriterTest {
         @JvmStatic
         fun structFormatted() = listOf(
             formatted(
-                value = structValue<AnyValue>(emptyList()),
+                value = structValue<PartiQLValue>(emptyList()),
                 expected = "{}",
             ),
             formatted(
@@ -409,9 +559,9 @@ class PartiQLValueTextWriterTest {
             formatted(
                 value = structValue(
                     listOf(
-                        "bag" to bagValue<AnyValue>(emptyList()),
-                        "list" to listValue<AnyValue>(emptyList()),
-                        "sexp" to sexpValue<AnyValue>(emptyList()),
+                        "bag" to bagValue<PartiQLValue>(emptyList()),
+                        "list" to listValue<PartiQLValue>(emptyList()),
+                        "sexp" to sexpValue<PartiQLValue>(emptyList()),
                     )
                 ),
                 expected = """
@@ -425,9 +575,9 @@ class PartiQLValueTextWriterTest {
             formatted(
                 value = bagValue(
                     listOf(
-                        listValue<AnyValue>(emptyList()),
-                        sexpValue<AnyValue>(emptyList()),
-                        structValue<AnyValue>(emptyList()),
+                        listValue<PartiQLValue>(emptyList()),
+                        sexpValue<PartiQLValue>(emptyList()),
+                        structValue<PartiQLValue>(emptyList()),
                     )
                 ),
                 expected = """
