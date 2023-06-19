@@ -37,6 +37,30 @@ import org.partiql.value.impl.IntervalValueImpl
 import org.partiql.value.impl.ListValueImpl
 import org.partiql.value.impl.MissingValueImpl
 import org.partiql.value.impl.NullValueImpl
+import org.partiql.value.impl.NullableBagValueImpl
+import org.partiql.value.impl.NullableBinaryValueImpl
+import org.partiql.value.impl.NullableBlobValueImpl
+import org.partiql.value.impl.NullableBoolValueImpl
+import org.partiql.value.impl.NullableByteValueImpl
+import org.partiql.value.impl.NullableCharValueImpl
+import org.partiql.value.impl.NullableClobValueImpl
+import org.partiql.value.impl.NullableDateValueImpl
+import org.partiql.value.impl.NullableDecimalValueImpl
+import org.partiql.value.impl.NullableFloat32ValueImpl
+import org.partiql.value.impl.NullableFloat64ValueImpl
+import org.partiql.value.impl.NullableInt16ValueImpl
+import org.partiql.value.impl.NullableInt32ValueImpl
+import org.partiql.value.impl.NullableInt64ValueImpl
+import org.partiql.value.impl.NullableInt8ValueImpl
+import org.partiql.value.impl.NullableIntValueImpl
+import org.partiql.value.impl.NullableIntervalValueImpl
+import org.partiql.value.impl.NullableListValueImpl
+import org.partiql.value.impl.NullableSexpValueImpl
+import org.partiql.value.impl.NullableStringValueImpl
+import org.partiql.value.impl.NullableStructValueImpl
+import org.partiql.value.impl.NullableSymbolValueImpl
+import org.partiql.value.impl.NullableTimeValueImpl
+import org.partiql.value.impl.NullableTimestampValueImpl
 import org.partiql.value.impl.SexpValueImpl
 import org.partiql.value.impl.StringValueImpl
 import org.partiql.value.impl.StructValueImpl
@@ -48,30 +72,8 @@ import java.math.BigInteger
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
+import java.time.ZoneOffset
 import java.util.BitSet
-import java.util.TimeZone
-
-/**
- * TODO
- *
- * @param annotations
- * @return
- */
-@JvmOverloads
-public fun nullValue(
-    annotations: Annotations = emptyList(),
-): NullValue = NullValueImpl(annotations.toPersistentList())
-
-/**
- * TODO
- *
- * @param annotations
- * @return
- */
-@JvmOverloads
-public fun missingValue(
-    annotations: Annotations = emptyList(),
-): MissingValue = MissingValueImpl(annotations.toPersistentList())
 
 /**
  * TODO
@@ -305,9 +307,10 @@ public fun dateValue(
 public fun timeValue(
     value: LocalTime,
     precision: Int = 0,
-    timeZone: TimeZone? = null,
+    offset: ZoneOffset? = null,
+    withZone: Boolean = false,
     annotations: Annotations = emptyList(),
-): TimeValue = TimeValueImpl(value, precision, timeZone, annotations.toPersistentList())
+): TimeValue = TimeValueImpl(value, precision, offset, withZone, annotations.toPersistentList())
 
 /**
  * TODO
@@ -320,9 +323,10 @@ public fun timeValue(
 public fun timestampValue(
     value: LocalDateTime,
     precision: Int = 0,
-    timeZone: TimeZone? = null,
+    offset: ZoneOffset? = null,
+    withZone: Boolean = false,
     annotations: Annotations = emptyList(),
-): TimestampValue = TimestampValueImpl(value, precision, timeZone, annotations.toPersistentList())
+): TimestampValue = TimestampValueImpl(value, precision, offset, withZone, annotations.toPersistentList())
 
 /**
  * TODO
@@ -392,3 +396,374 @@ public fun <T : PartiQLValue> structValue(
     fields: List<Pair<String, T>>,
     annotations: Annotations = emptyList(),
 ): StructValue<T> = StructValueImpl(fields.toPersistentList(), annotations.toPersistentList())
+
+//
+// NULLABLE VALUE CONSTRUCTORS
+//
+
+/**
+ * TODO
+ *
+ * @param annotations
+ * @return
+ */
+@JvmOverloads
+public fun nullValue(
+    annotations: Annotations = emptyList(),
+): NullValue = NullValueImpl(annotations.toPersistentList())
+
+/**
+ * TODO
+ *
+ * @param annotations
+ * @return
+ */
+@JvmOverloads
+public fun missingValue(
+    annotations: Annotations = emptyList(),
+): MissingValue = MissingValueImpl(annotations.toPersistentList())
+
+/**
+ * TODO
+ *
+ * @param value
+ * @param annotations
+ * @return
+ */
+@JvmOverloads
+public fun nullableBoolValue(
+    value: Boolean? = null,
+    annotations: Annotations = emptyList(),
+): NullableBoolValue = NullableBoolValueImpl(value, annotations.toPersistentList())
+
+/**
+ * TODO
+ *
+ * @param value
+ * @param annotations
+ * @return
+ */
+@JvmOverloads
+public fun nullableInt8Value(
+    value: Byte? = null,
+    annotations: Annotations = emptyList(),
+): NullableInt8Value = NullableInt8ValueImpl(value, annotations.toPersistentList())
+
+/**
+ * TODO
+ *
+ * @param value
+ * @param annotations
+ * @return
+ */
+@JvmOverloads
+public fun nullableInt16Value(
+    value: Short? = null,
+    annotations: Annotations = emptyList(),
+): NullableInt16Value = NullableInt16ValueImpl(value, annotations.toPersistentList())
+
+/**
+ * TODO
+ *
+ * @param value
+ * @param annotations
+ * @return
+ */
+@JvmOverloads
+public fun nullableInt32Value(
+    value: Int? = null,
+    annotations: Annotations = emptyList(),
+): NullableInt32Value = NullableInt32ValueImpl(value, annotations.toPersistentList())
+
+/**
+ * TODO
+ *
+ * @param value
+ * @param annotations
+ * @return
+ */
+@JvmOverloads
+public fun nullableInt64Value(
+    value: Long? = null,
+    annotations: Annotations = emptyList(),
+): NullableInt64Value = NullableInt64ValueImpl(value, annotations.toPersistentList())
+
+/**
+ * TODO
+ *
+ * @param value
+ * @param annotations
+ * @return
+ */
+@JvmOverloads
+public fun nullableIntValue(
+    value: BigInteger? = null,
+    annotations: Annotations = emptyList(),
+): NullableIntValue = NullableIntValueImpl(value, annotations.toPersistentList())
+
+/**
+ * TODO
+ *
+ * @param value
+ * @param annotations
+ * @return
+ */
+@JvmOverloads
+public fun nullableDecimalValue(
+    value: BigDecimal? = null,
+    annotations: Annotations = emptyList(),
+): NullableDecimalValue = NullableDecimalValueImpl(value, annotations.toPersistentList())
+
+/**
+ * TODO
+ *
+ * @param value
+ * @param annotations
+ * @return
+ */
+@JvmOverloads
+public fun nullableFloat32Value(
+    value: Float? = null,
+    annotations: Annotations = emptyList(),
+): NullableFloat32Value = NullableFloat32ValueImpl(value, annotations.toPersistentList())
+
+/**
+ * TODO
+ *
+ * @param value
+ * @param annotations
+ * @return
+ */
+@JvmOverloads
+public fun nullableFloat64Value(
+    value: Double? = null,
+    annotations: Annotations = emptyList(),
+): NullableFloat64Value = NullableFloat64ValueImpl(value, annotations.toPersistentList())
+
+/**
+ * TODO
+ *
+ * @param value
+ * @param annotations
+ * @return
+ */
+@JvmOverloads
+public fun nullableCharValue(
+    value: Char? = null,
+    annotations: Annotations = emptyList(),
+): NullableCharValue = NullableCharValueImpl(value, annotations.toPersistentList())
+
+/**
+ * TODO
+ *
+ * @param value
+ * @param annotations
+ * @return
+ */
+@JvmOverloads
+public fun nullableStringValue(
+    value: String? = null,
+    annotations: Annotations = emptyList(),
+): NullableStringValue = NullableStringValueImpl(value, annotations.toPersistentList())
+
+/**
+ * TODO
+ *
+ * @param value
+ * @param annotations
+ * @return
+ */
+@JvmOverloads
+public fun nullableSymbolValue(
+    value: String? = null,
+    annotations: Annotations = emptyList(),
+): NullableSymbolValue = NullableSymbolValueImpl(value, annotations.toPersistentList())
+
+/**
+ * TODO
+ *
+ * @param value
+ * @param annotations
+ * @return
+ */
+@JvmOverloads
+public fun nullableClobValue(
+    value: ByteArray? = null,
+    annotations: Annotations = emptyList(),
+): NullableClobValue = NullableClobValueImpl(value, annotations.toPersistentList())
+
+/**
+ * TODO
+ *
+ * @param value
+ * @param annotations
+ * @return
+ */
+@JvmOverloads
+public fun nullableBinaryValue(
+    value: BitSet? = null,
+    annotations: Annotations = emptyList(),
+): NullableBinaryValue = NullableBinaryValueImpl(value, annotations.toPersistentList())
+
+/**
+ * TODO
+ *
+ * @param value
+ * @param annotations
+ * @return
+ */
+@JvmOverloads
+public fun nullableByteValue(
+    value: Byte? = null,
+    annotations: Annotations = emptyList(),
+): NullableByteValue = NullableByteValueImpl(value, annotations.toPersistentList())
+
+/**
+ * TODO
+ *
+ * @param value
+ * @param annotations
+ * @return
+ */
+@JvmOverloads
+public fun nullableBlobValue(
+    value: ByteArray? = null,
+    annotations: Annotations = emptyList(),
+): NullableBlobValue = NullableBlobValueImpl(value, annotations.toPersistentList())
+
+/**
+ * TODO
+ *
+ * @param value
+ * @param annotations
+ * @return
+ */
+@JvmOverloads
+public fun nullableDateValue(
+    value: LocalDate? = null,
+    annotations: Annotations = emptyList(),
+): NullableDateValue = NullableDateValueImpl(value, annotations.toPersistentList())
+
+/**
+ * TODO
+ *
+ * @param value
+ * @param annotations
+ * @return
+ */
+@JvmOverloads
+public fun nullableTimeValue(
+    annotations: Annotations = emptyList(),
+): NullableTimeValue = NullableTimeValueImpl(null, 0, null, false, annotations.toPersistentList())
+
+/**
+ * TODO
+ *
+ * @param value
+ * @param annotations
+ * @return
+ */
+@JvmOverloads
+public fun nullableTimeValue(
+    value: LocalTime,
+    precision: Int = 0,
+    offset: ZoneOffset? = null,
+    withZone: Boolean = false,
+    annotations: Annotations = emptyList(),
+): NullableTimeValue = NullableTimeValueImpl(value, precision, offset, withZone, annotations.toPersistentList())
+
+/**
+ * TODO
+ *
+ * @param annotations
+ * @return
+ */
+@JvmOverloads
+public fun nullableTimestampValue(
+    annotations: Annotations = emptyList(),
+): NullableTimestampValue = NullableTimestampValueImpl(null, 0, null, false, annotations.toPersistentList())
+
+/**
+ * TODO
+ *
+ * @param value
+ * @param annotations
+ * @return
+ */
+@JvmOverloads
+public fun nullableTimestampValue(
+    value: LocalDateTime,
+    precision: Int = 0,
+    offset: ZoneOffset? = null,
+    withZone: Boolean = false,
+    annotations: Annotations = emptyList(),
+): NullableTimestampValue = NullableTimestampValueImpl(value, precision, offset, withZone, annotations.toPersistentList())
+
+/**
+ * TODO
+ *
+ * @param value
+ * @param annotations
+ * @return
+ */
+@JvmOverloads
+public fun nullableIntervalValue(
+    value: Long? = null,
+    annotations: Annotations = emptyList(),
+): NullableIntervalValue = NullableIntervalValueImpl(value, annotations.toPersistentList())
+
+/**
+ * TODO
+ *
+ * @param T
+ * @param elements
+ * @param annotations
+ * @return
+ */
+@JvmOverloads
+public fun <T : PartiQLValue> nullableBagValue(
+    elements: List<T>? = null,
+    annotations: Annotations = emptyList(),
+): NullableBagValue<T> = NullableBagValueImpl(elements?.toPersistentList(), annotations.toPersistentList())
+
+/**
+ * TODO
+ *
+ * @param T
+ * @param elements
+ * @param annotations
+ * @return
+ */
+@JvmOverloads
+public fun <T : PartiQLValue> nullableListValue(
+    elements: List<T>? = null,
+    annotations: Annotations = emptyList(),
+): NullableListValue<T> = NullableListValueImpl(elements?.toPersistentList(), annotations.toPersistentList())
+
+/**
+ * TODO
+ *
+ * @param T
+ * @param elements
+ * @param annotations
+ * @return
+ */
+@JvmOverloads
+public fun <T : PartiQLValue> nullableSexpValue(
+    elements: List<T>? = null,
+    annotations: Annotations = emptyList(),
+): NullableSexpValue<T> = NullableSexpValueImpl(elements?.toPersistentList(), annotations.toPersistentList())
+
+/**
+ * TODO
+ *
+ * @param T
+ * @param fields
+ * @param annotations
+ * @return
+ */
+@JvmOverloads
+public fun <T : PartiQLValue> nullableStructValue(
+    fields: List<Pair<String, T>>? = null,
+    annotations: Annotations = emptyList(),
+): NullableStructValue<T> = NullableStructValueImpl(fields?.toPersistentList(), annotations.toPersistentList())

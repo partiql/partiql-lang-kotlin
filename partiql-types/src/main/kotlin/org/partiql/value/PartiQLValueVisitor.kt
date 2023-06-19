@@ -4,10 +4,6 @@ public interface PartiQLValueVisitor<R, C> {
 
     public fun visit(v: PartiQLValue, ctx: C): R
 
-    public fun visitNull(v: NullValue, ctx: C): R
-
-    public fun visitMissing(v: MissingValue, ctx: C): R
-
     public fun visitScalar(v: ScalarValue<*>, ctx: C): R
 
     public fun visitCollection(v: CollectionValue<*>, ctx: C): R
@@ -64,7 +60,65 @@ public interface PartiQLValueVisitor<R, C> {
 
     public fun visitStruct(v: StructValue<*>, ctx: C): R
 
-    public fun visitAny(v: AnyValue, ctx: C): R
+    public fun visitNull(v: NullValue, ctx: C): R
+
+    public fun visitMissing(v: MissingValue, ctx: C): R
+
+    public fun visitNullableScalar(v: NullableScalarValue<*>, ctx: C): R
+
+    public fun visitNullableCollection(v: NullableCollectionValue<*>, ctx: C): R
+
+    public fun visitNullableBool(v: NullableBoolValue, ctx: C): R
+
+    public fun visitNullableNumeric(v: NullableNumericValue<*>, ctx: C): R
+
+    public fun visitNullableInt8(v: NullableInt8Value, ctx: C): R
+
+    public fun visitNullableInt16(v: NullableInt16Value, ctx: C): R
+
+    public fun visitNullableInt32(v: NullableInt32Value, ctx: C): R
+
+    public fun visitNullableInt64(v: NullableInt64Value, ctx: C): R
+
+    public fun visitNullableInt(v: NullableIntValue, ctx: C): R
+
+    public fun visitNullableDecimal(v: NullableDecimalValue, ctx: C): R
+
+    public fun visitNullableFloat32(v: NullableFloat32Value, ctx: C): R
+
+    public fun visitNullableFloat64(v: NullableFloat64Value, ctx: C): R
+
+    public fun visitNullableText(v: NullableTextValue<*>, ctx: C): R
+
+    public fun visitNullableChar(v: NullableCharValue, ctx: C): R
+
+    public fun visitNullableString(v: NullableStringValue, ctx: C): R
+
+    public fun visitNullableSymbol(v: NullableSymbolValue, ctx: C): R
+
+    public fun visitNullableClob(v: NullableClobValue, ctx: C): R
+
+    public fun visitNullableBinary(v: NullableBinaryValue, ctx: C): R
+
+    public fun visitNullableByte(v: NullableByteValue, ctx: C): R
+
+    public fun visitNullableBlob(v: NullableBlobValue, ctx: C): R
+
+    public fun visitNullableDate(v: NullableDateValue, ctx: C): R
+
+    public fun visitNullableTime(v: NullableTimeValue, ctx: C): R
+
+    public fun visitNullableTimestamp(v: NullableTimestampValue, ctx: C): R
+
+    public fun visitNullableInterval(v: NullableIntervalValue, ctx: C): R
+
+    public fun visitNullableBag(v: NullableBagValue<*>, ctx: C): R
+
+    public fun visitNullableList(v: NullableListValue<*>, ctx: C): R
+
+    public fun visitNullableSexp(v: NullableSexpValue<*>, ctx: C): R
+
+    public fun visitNullableStruct(v: NullableStructValue<*>, ctx: C): R
 }
 
 public abstract class PartiQLValueBaseVisitor<R, C> : PartiQLValueVisitor<R, C> {
@@ -77,6 +131,12 @@ public abstract class PartiQLValueBaseVisitor<R, C> : PartiQLValueVisitor<R, C> 
             is StructValue<*> -> {
                 v.fields.forEach { it.second.accept(this, ctx) }
             }
+            is NullableCollectionValue<*> -> {
+                v.elements?.forEach { it.accept(this, ctx) }
+            }
+            is NullableStructValue<*> -> {
+                v.fields?.forEach { it.second.accept(this, ctx) }
+            }
             else -> {}
         }
         return defaultReturn(v, ctx)
@@ -85,10 +145,6 @@ public abstract class PartiQLValueBaseVisitor<R, C> : PartiQLValueVisitor<R, C> 
     public abstract fun defaultReturn(v: PartiQLValue, ctx: C): R
 
     override fun visit(v: PartiQLValue, ctx: C): R = v.accept(this, ctx)
-
-    override fun visitNull(v: NullValue, ctx: C): R = defaultVisit(v, ctx)
-
-    override fun visitMissing(v: MissingValue, ctx: C): R = defaultVisit(v, ctx)
 
     override fun visitScalar(v: ScalarValue<*>, ctx: C): R = when (v) {
         is BinaryValue -> visitBinary(v, ctx)
@@ -183,5 +239,100 @@ public abstract class PartiQLValueBaseVisitor<R, C> : PartiQLValueVisitor<R, C> 
 
     override fun visitStruct(v: StructValue<*>, ctx: C): R = defaultVisit(v, ctx)
 
-    override fun visitAny(v: AnyValue, ctx: C): R = v.value.accept(this, ctx)
+    override fun visitNull(v: NullValue, ctx: C): R = defaultVisit(v, ctx)
+
+    override fun visitMissing(v: MissingValue, ctx: C): R = defaultVisit(v, ctx)
+
+    override fun visitNullableScalar(v: NullableScalarValue<*>, ctx: C): R = when (v) {
+        is NullableBinaryValue -> visitNullableBinary(v, ctx)
+        is NullableBlobValue -> visitNullableBlob(v, ctx)
+        is NullableBoolValue -> visitNullableBool(v, ctx)
+        is NullableByteValue -> visitNullableByte(v, ctx)
+        is NullableDateValue -> visitNullableDate(v, ctx)
+        is NullableFloat32Value -> visitNullableFloat32(v, ctx)
+        is NullableFloat64Value -> visitNullableFloat64(v, ctx)
+        is NullableIntervalValue -> visitNullableInterval(v, ctx)
+        is NullableDecimalValue -> visitNullableDecimal(v, ctx)
+        is NullableInt16Value -> visitNullableInt16(v, ctx)
+        is NullableInt32Value -> visitNullableInt32(v, ctx)
+        is NullableInt64Value -> visitNullableInt64(v, ctx)
+        is NullableInt8Value -> visitNullableInt8(v, ctx)
+        is NullableIntValue -> visitNullableInt(v, ctx)
+        is NullableCharValue -> visitNullableChar(v, ctx)
+        is NullableClobValue -> visitNullableClob(v, ctx)
+        is NullableStringValue -> visitNullableString(v, ctx)
+        is NullableSymbolValue -> visitNullableSymbol(v, ctx)
+        is NullableTimeValue -> visitNullableTime(v, ctx)
+        is NullableTimestampValue -> visitNullableTimestamp(v, ctx)
+    }
+
+    override fun visitNullableCollection(v: NullableCollectionValue<*>, ctx: C): R = when (v) {
+        is NullableBagValue -> visitNullableBag(v, ctx)
+        is NullableListValue -> visitNullableList(v, ctx)
+        is NullableSexpValue -> visitNullableSexp(v, ctx)
+    }
+
+    override fun visitNullableBool(v: NullableBoolValue, ctx: C): R = defaultVisit(v, ctx)
+
+    override fun visitNullableNumeric(v: NullableNumericValue<*>, ctx: C): R = when (v) {
+        is NullableDecimalValue -> visitNullableDecimal(v, ctx)
+        is NullableInt16Value -> visitNullableInt16(v, ctx)
+        is NullableInt32Value -> visitNullableInt32(v, ctx)
+        is NullableInt64Value -> visitNullableInt64(v, ctx)
+        is NullableInt8Value -> visitNullableInt8(v, ctx)
+        is NullableIntValue -> visitNullableInt(v, ctx)
+    }
+
+    override fun visitNullableInt8(v: NullableInt8Value, ctx: C): R = defaultVisit(v, ctx)
+
+    override fun visitNullableInt16(v: NullableInt16Value, ctx: C): R = defaultVisit(v, ctx)
+
+    override fun visitNullableInt32(v: NullableInt32Value, ctx: C): R = defaultVisit(v, ctx)
+
+    override fun visitNullableInt64(v: NullableInt64Value, ctx: C): R = defaultVisit(v, ctx)
+
+    override fun visitNullableInt(v: NullableIntValue, ctx: C): R = defaultVisit(v, ctx)
+
+    override fun visitNullableDecimal(v: NullableDecimalValue, ctx: C): R = defaultVisit(v, ctx)
+
+    override fun visitNullableFloat32(v: NullableFloat32Value, ctx: C): R = defaultVisit(v, ctx)
+
+    override fun visitNullableFloat64(v: NullableFloat64Value, ctx: C): R = defaultVisit(v, ctx)
+
+    override fun visitNullableText(v: NullableTextValue<*>, ctx: C): R = when (v) {
+        is NullableCharValue -> visitNullableChar(v, ctx)
+        is NullableClobValue -> visitNullableClob(v, ctx)
+        is NullableStringValue -> visitNullableString(v, ctx)
+        is NullableSymbolValue -> visitNullableSymbol(v, ctx)
+    }
+
+    override fun visitNullableChar(v: NullableCharValue, ctx: C): R = defaultVisit(v, ctx)
+
+    override fun visitNullableString(v: NullableStringValue, ctx: C): R = defaultVisit(v, ctx)
+
+    override fun visitNullableSymbol(v: NullableSymbolValue, ctx: C): R = defaultVisit(v, ctx)
+
+    override fun visitNullableClob(v: NullableClobValue, ctx: C): R = defaultVisit(v, ctx)
+
+    override fun visitNullableBinary(v: NullableBinaryValue, ctx: C): R = defaultVisit(v, ctx)
+
+    override fun visitNullableByte(v: NullableByteValue, ctx: C): R = defaultVisit(v, ctx)
+
+    override fun visitNullableBlob(v: NullableBlobValue, ctx: C): R = defaultVisit(v, ctx)
+
+    override fun visitNullableDate(v: NullableDateValue, ctx: C): R = defaultVisit(v, ctx)
+
+    override fun visitNullableTime(v: NullableTimeValue, ctx: C): R = defaultVisit(v, ctx)
+
+    override fun visitNullableTimestamp(v: NullableTimestampValue, ctx: C): R = defaultVisit(v, ctx)
+
+    override fun visitNullableInterval(v: NullableIntervalValue, ctx: C): R = defaultVisit(v, ctx)
+
+    override fun visitNullableBag(v: NullableBagValue<*>, ctx: C): R = defaultVisit(v, ctx)
+
+    override fun visitNullableList(v: NullableListValue<*>, ctx: C): R = defaultVisit(v, ctx)
+
+    override fun visitNullableSexp(v: NullableSexpValue<*>, ctx: C): R = defaultVisit(v, ctx)
+
+    override fun visitNullableStruct(v: NullableStructValue<*>, ctx: C): R = defaultVisit(v, ctx)
 }
