@@ -1037,7 +1037,7 @@ internal class EvaluatingCompiler(
                 }
                 checkIntegerOverflow(computeThunk, metas)(env)
             } else {
-                throw IllegalStateException("Failed to call function because checkedArgs was null")
+                throw IllegalStateException("Failed to call function because type check fails")
             }
         }
     }

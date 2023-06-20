@@ -847,19 +847,16 @@ internal class PhysicalPlanCompilerImpl(
             }
             if (func != null) {
                 val computeThunk = when (func.signature.unknownArguments) {
-                    UnknownArguments.PROPAGATE -> thunkFactory.thunkEnvOperands(metas, funcArgThunks) { env1, values ->
-//                        functionManager.checkArgumentTypes(func.signature, values)
-                        func.call(env1.session, argTypes)
+                    UnknownArguments.PROPAGATE -> thunkFactory.thunkEnvOperands(metas, funcArgThunks) { env, values ->
+                        func.call(env.session, argTypes)
                     }
-
                     UnknownArguments.PASS_THRU -> thunkFactory.thunkEnv(metas) { env ->
-//                        functionManager.checkArgumentTypes(func.signature, argTypes)
                         func.call(env.session, argTypes)
                     }
                 }
                 checkIntegerOverflow(computeThunk, metas)(env)
             } else {
-                throw IllegalStateException("Failed to call function because checkedArgs was null")
+                throw IllegalStateException("Failed to call function because type check fails")
             }
         }
     }

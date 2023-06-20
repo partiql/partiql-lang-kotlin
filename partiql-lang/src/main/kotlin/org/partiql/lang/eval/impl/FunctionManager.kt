@@ -42,12 +42,7 @@ internal class FunctionManager(
                 errorList.add(e)
             }
         }
-
-        if (errorList.isNotEmpty()) {
-            // Throw the all errors in the list
-            throw errorList.first()
-        }
-        return ResultFormat(null, "type check fails", Pair(0, 0))
+        throw errorList.first()
     }
 
     /**
