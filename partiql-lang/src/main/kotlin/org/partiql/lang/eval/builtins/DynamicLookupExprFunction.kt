@@ -102,13 +102,3 @@ class DynamicLookupExprFunction : ExprFunction {
             }
         }.firstOrNull { it != null }
 }
-
-class DynamicLookupExprFunction2 : ExprFunction {
-
-    override val signature = FunctionSignature(
-        name = DYNAMIC_LOOKUP_FUNCTION_NAME,
-        // Required parameters are: variable name, case sensitivity and lookup strategy
-        requiredParameters = listOf(StaticType.SYMBOL, StaticType.SYMBOL, StaticType.SYMBOL),
-        returnType = StaticType.ANY
-    )
-}

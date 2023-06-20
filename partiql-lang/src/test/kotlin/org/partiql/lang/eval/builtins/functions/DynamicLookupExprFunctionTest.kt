@@ -137,9 +137,9 @@ class DynamicLookupExprFunctionTest : EvaluatorTestBase() {
 
     class InvalidArgCases : ArgumentsProviderBase() {
         override fun getParameters(): List<Any> = listOf(
-            InvalidArgTestCase("\"$DYNAMIC_LOOKUP_FUNCTION_NAME\"(1, `case_insensitive`, `locals_then_globals`)", 1, "INT"),
-            InvalidArgTestCase("\"$DYNAMIC_LOOKUP_FUNCTION_NAME\"(`foo`, 1, `locals_then_globals`)", 2, "INT"),
-            InvalidArgTestCase("\"$DYNAMIC_LOOKUP_FUNCTION_NAME\"(`foo`, `case_insensitive`, 1)", 3, "INT")
+            InvalidArgTestCase("\"$DYNAMIC_LOOKUP_FUNCTION_NAME\"(1, `case_insensitive`, `locals_then_globals`, [])", 1, "INT"),
+            InvalidArgTestCase("\"$DYNAMIC_LOOKUP_FUNCTION_NAME\"(`foo`, 1, `locals_then_globals`, [])", 2, "INT"),
+            InvalidArgTestCase("\"$DYNAMIC_LOOKUP_FUNCTION_NAME\"(`foo`, `case_insensitive`, 1, [])", 3, "INT")
         )
     }
 

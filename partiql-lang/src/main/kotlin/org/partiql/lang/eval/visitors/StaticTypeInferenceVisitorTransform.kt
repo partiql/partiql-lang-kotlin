@@ -78,8 +78,7 @@ import org.partiql.types.SymbolType
  */
 internal class StaticTypeInferenceVisitorTransform(
     globalBindings: Bindings<StaticType>,
-//    customFunctionSignatures: List<FunctionSignature>,
-    val customFunction: List<ExprFunction>,
+    val customFunctions: List<ExprFunction>,
     private val customTypedOpParameters: Map<String, TypedOpParameter>,
     private val problemHandler: ProblemHandler = ProblemThrower()
 ) : PartiqlAst.VisitorTransform() {
@@ -97,9 +96,7 @@ internal class StaticTypeInferenceVisitorTransform(
     }
 
     /** The built-in functions + the custom functions. */
-//    private val allFunctions: Map<String, FunctionSignature> =
-//        SCALAR_BUILTINS_DEFAULT.associate { it.signature.name to it.signature } + customFunctionSignatures.associateBy { it.name }
-    private val allFunctions: List<ExprFunction> = SCALAR_BUILTINS_DEFAULT + customFunction
+    private val allFunctions: List<ExprFunction> = SCALAR_BUILTINS_DEFAULT + customFunctions
 
     /**
      * @param parentEnv the enclosing bindings

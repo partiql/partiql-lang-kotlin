@@ -28,7 +28,6 @@ private fun PartiqlLogicalResolved.Builder.dynamicLookup(
     name: String,
     case: BindingCase,
     globalsFirst: Boolean = false,
-//    searchTargets: PartiqlLogicalResolved.Expr,
     searchTargets: List<PartiqlLogicalResolved.Expr> = emptyList()
 ) = call(
     DYNAMIC_LOOKUP_FUNCTION_NAME,

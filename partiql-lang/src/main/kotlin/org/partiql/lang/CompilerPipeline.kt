@@ -129,7 +129,7 @@ interface CompilerPipeline {
         private val ion = IonSystemBuilder.standard().build()
         private var parser: Parser? = null
         private var compileOptions: CompileOptions? = null
-        private val customFunctions: MutableMap<String, ExprFunction> = HashMap()
+        private val customFunctions: MutableList<ExprFunction> = ArrayList()
         private var customDataTypes: List<CustomType> = listOf()
         private val customProcedures: MutableMap<String, StoredProcedure> = HashMap()
         private val preProcessingSteps: MutableList<ProcessingStep> = ArrayList()
@@ -161,9 +161,7 @@ interface CompilerPipeline {
          *
          * Functions added here will replace any built-in function with the same name.
          */
-        fun addFunction(function: ExprFunction): Builder = this.apply { customFunctions[function.signature.name] = function }
-
-//        private fun functions(fm: FunctionManager): Builder = this.apply { functionManager = fm }
+        fun addFunction(function: ExprFunction): Builder = this.apply { customFunctions.add(function) }
 
         /**
          * Add custom types to CAST/IS operators to.
@@ -205,7 +203,7 @@ interface CompilerPipeline {
 
             // customFunctions must be on the right side of + here to ensure that they overwrite any
             // built-in functions with the same name.
-            val allFunctions = definitionalBuiltins + builtinFunctions + customFunctions.values.toList()
+            val allFunctions = definitionalBuiltins + builtinFunctions + customFunctions
 
             return CompilerPipelineImpl(
                 ion = ion,
@@ -261,7 +259,7 @@ internal class CompilerPipelineImpl(
                             StaticTypeVisitorTransform(ion, globalTypeBindings),
                             StaticTypeInferenceVisitorTransform(
                                 globalBindings = globalTypeBindings,
-                                customFunction = functions,
+                                customFunctions = functions,
                                 customTypedOpParameters = customDataTypes.map { customType ->
                                     (customType.aliases + customType.name).map { alias ->
                                         Pair(alias.toLowerCase(), customType.typedOpParameter)

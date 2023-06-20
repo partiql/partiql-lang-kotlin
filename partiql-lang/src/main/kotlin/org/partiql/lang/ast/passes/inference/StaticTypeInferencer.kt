@@ -25,7 +25,7 @@ import org.partiql.types.StaticType
  */
 class StaticTypeInferencer(
     private val globalBindings: Bindings<StaticType>,
-    private val customFunction: List<ExprFunction>,
+    private val customFunctions: List<ExprFunction>,
     private val customTypedOpParameters: Map<String, TypedOpParameter>,
 ) {
     /**
@@ -42,7 +42,7 @@ class StaticTypeInferencer(
      */
     fun inferStaticType(node: PartiqlAst.Statement): InferenceResult {
         val problemCollector = ProblemCollector()
-        val inferencer = StaticTypeInferenceVisitorTransform(globalBindings, customFunction, customTypedOpParameters, problemCollector)
+        val inferencer = StaticTypeInferenceVisitorTransform(globalBindings, customFunctions, customTypedOpParameters, problemCollector)
         val transformedPartiqlAst = inferencer.transformStatement(node)
         val inferredStaticType = when (transformedPartiqlAst) {
             is PartiqlAst.Statement.Query ->

@@ -31,16 +31,15 @@ import java.io.OutputStream
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.UUID
-
 class WriteFileTest {
 
     private val ion = IonSystemBuilder.standard().build()
-    private val function = WriteFile(ion)
-    private val function2 = WriteFile2(ion)
+    private val function = WriteFile_1(ion)
+    private val function2 = WriteFile_2(ion)
     private val session = EvaluationSession.standard()
     private val pipeline = AbstractPipeline.create(
         AbstractPipeline.PipelineOptions(
-            functions = listOf(WriteFile(ion))
+            functions = listOf(WriteFile_1(ion))
         )
     )
 

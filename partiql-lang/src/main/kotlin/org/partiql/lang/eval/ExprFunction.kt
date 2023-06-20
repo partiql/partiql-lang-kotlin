@@ -42,7 +42,6 @@ interface ExprFunction {
      * @param session The current [EvaluationSession].
      * @param required The required arguments.
      */
-
     fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
         errNoContext("Invalid implementation for ${signature.name}#call", ErrorCode.INTERNAL_ERROR, true)
     }

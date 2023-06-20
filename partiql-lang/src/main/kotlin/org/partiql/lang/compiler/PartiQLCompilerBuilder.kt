@@ -20,7 +20,6 @@ import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ThunkReturnTypeAssertions
 import org.partiql.lang.eval.TypingMode
 import org.partiql.lang.eval.builtins.DynamicLookupExprFunction
-import org.partiql.lang.eval.builtins.DynamicLookupExprFunction2
 import org.partiql.lang.eval.builtins.SCALAR_BUILTINS_DEFAULT
 import org.partiql.lang.eval.builtins.definitionalBuiltins
 import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedure
@@ -138,7 +137,7 @@ class PartiQLCompilerBuilder private constructor() {
     private fun allFunctions(typingMode: TypingMode): List<ExprFunction> {
         val definitionalBuiltins = definitionalBuiltins(typingMode)
         val builtins = SCALAR_BUILTINS_DEFAULT
-        val allFunctions = definitionalBuiltins + builtins + customFunctions + DynamicLookupExprFunction() + DynamicLookupExprFunction2()
+        val allFunctions = definitionalBuiltins + builtins + customFunctions + DynamicLookupExprFunction()
         return allFunctions
     }
 

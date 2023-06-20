@@ -169,7 +169,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
         val ion = IonSystemBuilder.standard().build()
         val inferencer = StaticTypeInferencer(
             globalBindings = globalBindings,
-            customFunction = tc.customFunction,
+            customFunctions = tc.customFunctions,
             customTypedOpParameters = customTypedOpParameters
         )
 
@@ -7190,9 +7190,8 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
             ),
             TestCase(
                 "custom function",
-//                "format('test %d %s', 1, 'a')",
                 "format('test %d %s', [1, 'a'])",
-                customFunction = listOf(formatFunc),
+                customFunctions = listOf(formatFunc),
                 handler = expectQueryOutputType(StaticType.STRING)
             ),
             TestCase(
@@ -7607,7 +7606,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
             val name: String,
             val originalSql: String,
             val globals: Map<String, StaticType> = mapOf(),
-            val customFunction: List<ExprFunction> = listOf(),
+            val customFunctions: List<ExprFunction> = listOf(),
             val handler: (ResolveTestResult) -> Unit
         ) {
             override fun toString(): String = this.name
@@ -7624,7 +7623,6 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
             override val signature = FunctionSignature(
                 name = "format",
                 requiredParameters = listOf(StaticType.STRING, StaticType.LIST),
-//                variadicParameter = VarargFormalParameter(StaticType.ANY, 0),
                 returnType = StaticType.STRING
             )
         }

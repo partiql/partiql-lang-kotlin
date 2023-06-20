@@ -32,13 +32,7 @@ import java.io.FileOutputStream
 import java.io.OutputStream
 import java.io.OutputStreamWriter
 
-internal class WriteFile(private val ion: IonSystem) : ExprFunction {
-    override val signature = FunctionSignature(
-        name = "write_file",
-        requiredParameters = listOf(StaticType.STRING, StaticType.ANY),
-        returnType = StaticType.BOOL
-    )
-
+internal abstract class WriteFile(protected val ion: IonSystem) : ExprFunction {
     private val PRETTY_ION_WRITER: (ExprValue, OutputStream, Bindings<ExprValue>) -> Unit = { results, out, _ ->
         IonTextWriterBuilder.pretty().build(out).use { w ->
             results.toIonValue(ion).writeTo(w)
@@ -56,10 +50,18 @@ internal class WriteFile(private val ion: IonSystem) : ExprFunction {
         }
     }
 
-    private val writeHandlers = mapOf(
+    protected val writeHandlers = mapOf(
         "tsv" to delimitedWriteHandler('\t'),
         "csv" to delimitedWriteHandler(','),
         "ion" to PRETTY_ION_WRITER
+    )
+}
+
+internal class WriteFile_1(ion: IonSystem) : WriteFile(ion) {
+    override val signature = FunctionSignature(
+        name = "write_file",
+        requiredParameters = listOf(StaticType.STRING, StaticType.ANY),
+        returnType = StaticType.BOOL
     )
 
     override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
@@ -79,34 +81,11 @@ internal class WriteFile(private val ion: IonSystem) : ExprFunction {
     }
 }
 
-internal class WriteFile2(private val ion: IonSystem) : ExprFunction {
+internal class WriteFile_2(ion: IonSystem) : WriteFile(ion) {
     override val signature = FunctionSignature(
         name = "write_file",
         requiredParameters = listOf(StaticType.STRING, StaticType.ANY, StaticType.STRUCT),
         returnType = StaticType.BOOL
-    )
-
-    private val PRETTY_ION_WRITER: (ExprValue, OutputStream, Bindings<ExprValue>) -> Unit = { results, out, _ ->
-        IonTextWriterBuilder.pretty().build(out).use { w ->
-            results.toIonValue(ion).writeTo(w)
-        }
-    }
-
-    private fun delimitedWriteHandler(delimiter: Char): (ExprValue, OutputStream, Bindings<ExprValue>) -> Unit = { results, out, bindings ->
-        val encoding = bindings[BindingName("encoding", BindingCase.SENSITIVE)]?.stringValue() ?: "UTF-8"
-        val writeHeader = bindings[BindingName("header", BindingCase.SENSITIVE)]?.booleanValue() ?: false
-        val nl = bindings[BindingName("nl", BindingCase.SENSITIVE)]?.stringValue() ?: "\n"
-
-        val writer = OutputStreamWriter(out, encoding)
-        writer.use {
-            DelimitedValues.writeTo(ion, writer, results, delimiter, nl, writeHeader)
-        }
-    }
-
-    private val writeHandlers = mapOf(
-        "tsv" to delimitedWriteHandler('\t'),
-        "csv" to delimitedWriteHandler(','),
-        "ion" to PRETTY_ION_WRITER
     )
 
     override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {

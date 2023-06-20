@@ -7,8 +7,6 @@ import org.partiql.lang.types.FunctionSignature
 import org.partiql.lang.types.StaticTypeUtils
 import org.partiql.types.StaticType
 
-data class ResultFormat(val function: ExprFunction?, val errorMessage: String?, val arity: Pair<Int, Int>)
-
 /**
  * Replaces the map of functions to achieve function overloading.
  * Supports getting all functions and getting the function map by name
@@ -17,6 +15,7 @@ internal class FunctionManager(
     val functions: List<ExprFunction>
 ) {
     val functionMap: Map<String, List<ExprFunction>> = functions.groupBy { it.signature.name }
+    data class ResultFormat(val function: ExprFunction?, val errorMessage: String?, val arity: Pair<Int, Int>)
 
     /**
      * Get function from the list by name, arity, and argumentTypes(ExprValue)
@@ -44,31 +43,6 @@ internal class FunctionManager(
         }
         throw errorList.first()
     }
-
-    /**
-     * Check argument types by requiredArgs, OptionalArgs and VariadicArgs
-     */
-//    internal fun checkArgumentTypes(signature: FunctionSignature, args: List<ExprValue>) {
-//        fun checkArgumentType(formalStaticType: StaticType, actualArg: ExprValue, position: Int) {
-//            val formalExprValueTypeDomain = StaticTypeUtils.getTypeDomain(formalStaticType)
-//
-//            val actualExprValueType = actualArg.type
-//            val actualStaticType = StaticTypeUtils.staticTypeFromExprValue(actualArg)
-//
-//            if (!StaticTypeUtils.isSubTypeOf(actualStaticType, formalStaticType)) {
-//                errInvalidArgumentType(
-//                    signature = signature,
-//                    position = position,
-//                    expectedTypes = formalExprValueTypeDomain.toList(),
-//                    actualType = actualExprValueType
-//                )
-//            }
-//        }
-//
-//        signature.requiredParameters.zip(args).forEachIndexed { idx, (expected, actual) ->
-//            checkArgumentType(expected, actual, idx + 1)
-//        }
-//    }
 
     /**
      * Check argument types(ExprValue) by requiredArgs, OptionalArgs and VariadicArgs. This function will pass all arg values including MISSING or NULL values.
