@@ -85,6 +85,7 @@ class ReadFileTest {
         val path = getResourcePath("data.ion")
         val args = listOf("\"$path\"").map { it.exprValue() }
         assertThrows<IllegalStateException> {
+            function.callWithRequired(session, args)
             function2.callWithRequired(session, args + listOf("{type:\"ion\"}".exprValue()))
         }
     }

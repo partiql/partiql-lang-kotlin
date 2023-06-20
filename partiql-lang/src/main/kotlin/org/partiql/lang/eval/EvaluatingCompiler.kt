@@ -1029,12 +1029,9 @@ internal class EvaluatingCompiler(
             if (func != null) {
                 val computeThunk = when (func.signature.unknownArguments) {
                     UnknownArguments.PROPAGATE -> thunkFactory.thunkEnvOperands(metas, funcArgThunks) { env, values ->
-                        val funcArgValues = funcArgThunks.map { it(env) }
-//                        functionManager.checkArgumentTypes(func.signature, values)
-                        func.call(env.session, funcArgValues)
+                        func.call(env.session, argTypes)
                     }
                     UnknownArguments.PASS_THRU -> thunkFactory.thunkEnv(metas) { env ->
-//                        functionManager.checkArgumentTypes(func.signature, argTypes)
                         func.call(env.session, argTypes)
                     }
                 }

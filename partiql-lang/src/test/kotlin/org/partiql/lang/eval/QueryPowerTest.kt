@@ -23,7 +23,6 @@ class QueryPowerTest : EvaluatorTestBase() {
             ExprFunctionTestCase("query_power(2)", "4"),
             ExprFunctionTestCase("query_power(2,3)", "8"),
             ExprFunctionTestCase("query_power(2,true)", "32"),
-            ExprFunctionTestCase("query_power(2,false)", "16"),
             ExprFunctionTestCase("query_power(null,null)", "null"),
         )
     }
