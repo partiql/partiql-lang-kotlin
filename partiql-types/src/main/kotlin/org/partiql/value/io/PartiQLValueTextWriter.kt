@@ -1,4 +1,18 @@
-package org.partiql.value.impl
+/*
+ * Copyright Amazon.com, Inc. or its affiliates.  All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at:
+ *
+ *      http://aws.amazon.com/apache2.0/
+ *
+ * or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
+ * language governing permissions and limitations under the License.
+ */
+
+package org.partiql.value.io
 
 import org.partiql.value.BagValue
 import org.partiql.value.BoolValue
@@ -32,8 +46,7 @@ import org.partiql.value.NullableStringValue
 import org.partiql.value.NullableStructValue
 import org.partiql.value.NullableSymbolValue
 import org.partiql.value.PartiQLValue
-import org.partiql.value.PartiQLValueBaseVisitor
-import org.partiql.value.PartiQLValueWriter
+import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.SexpValue
 import org.partiql.value.StringValue
 import org.partiql.value.StructValue
@@ -54,6 +67,7 @@ import org.partiql.value.sexpValue
 import org.partiql.value.stringValue
 import org.partiql.value.structValue
 import org.partiql.value.symbolValue
+import org.partiql.value.util.PartiQLValueBaseVisitor
 import java.io.PrintStream
 
 /**
@@ -63,24 +77,22 @@ import java.io.PrintStream
  * @property formatted  Print with newlines and indents
  * @property indent     Indent prefix, default is 2-spaces
  */
+@PartiQLValueExperimental
 internal class PartiQLValueTextWriter(
     private val out: PrintStream,
     private val formatted: Boolean = true,
     private val indent: String = "  ",
 ) : PartiQLValueWriter {
 
-    override fun writeValue(value: PartiQLValue) {
+    override fun append(value: PartiQLValue): PartiQLValueWriter {
         val format = if (formatted) Format(indent) else null
         val v = value.accept(ToString, format) // value.toString(format)
         out.append(v)
+        return this
     }
 
-    override fun writeValues(values: Iterator<PartiQLValue>) {
-        val format = if (formatted) Format(indent) else null
-        values.forEach {
-            val v = it.accept(ToString, format) // value.toString(format)
-            out.appendLine(v)
-        }
+    override fun close() {
+        out.close()
     }
 
     /**

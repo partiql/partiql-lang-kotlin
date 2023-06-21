@@ -1,5 +1,7 @@
+@file:OptIn(PartiQLValueExperimental::class)
+
 /*
- * Copyright 2022 Amazon.com, Inc. or its affiliates.  All rights reserved.
+ * Copyright Amazon.com, Inc. or its affiliates.  All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -37,13 +39,14 @@ import org.partiql.value.IntValue
 import org.partiql.value.IntervalValue
 import org.partiql.value.ListValue
 import org.partiql.value.PartiQLValue
-import org.partiql.value.PartiQLValueVisitor
+import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.SexpValue
 import org.partiql.value.StringValue
 import org.partiql.value.StructValue
 import org.partiql.value.SymbolValue
 import org.partiql.value.TimeValue
 import org.partiql.value.TimestampValue
+import org.partiql.value.util.PartiQLValueVisitor
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.time.LocalDate

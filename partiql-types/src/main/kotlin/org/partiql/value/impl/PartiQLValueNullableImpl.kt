@@ -1,5 +1,7 @@
+@file:OptIn(PartiQLValueExperimental::class)
+
 /*
- * Copyright 2022 Amazon.com, Inc. or its affiliates.  All rights reserved.
+ * Copyright Amazon.com, Inc. or its affiliates.  All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -45,7 +47,8 @@ import org.partiql.value.NullableSymbolValue
 import org.partiql.value.NullableTimeValue
 import org.partiql.value.NullableTimestampValue
 import org.partiql.value.PartiQLValue
-import org.partiql.value.PartiQLValueVisitor
+import org.partiql.value.PartiQLValueExperimental
+import org.partiql.value.util.PartiQLValueVisitor
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.time.LocalDate
