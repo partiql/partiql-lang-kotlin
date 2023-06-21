@@ -34,6 +34,17 @@ Thank you to all who have contributed!
 
 ### Changed
 
+<<<<<<< HEAD
+=======
+- Standardizes `org/partiql/cli/functions/QueryDDB` and other built-in functions by the new `ExprFunction` format.
+- Replaces function map parameter with a function list in `org/partiql/lang/CompilerPipeline`and `org/partiql/lang/ast/passes/inference/StaticTypeInferencer`
+  and `org/partiql/lang/compiler/PartiQLCompilerDefault` and other `partiql-lang` classes.
+- Passes `functionManager` into `org/partiql/lang/eval/EvaluatingCompiler`.
+- Redefines `org/partiql/lang/types/FunctionSignature` by removing `optionalParameter` and `variadicParameter`.
+- **Breaking**: Redefines `org/partiql/lang/eval/ExprFunction` by removing `Arguments` class and only invoking `callWithRequired` function when the `ExprFunction` is called.
+- **Breaking**: Redefines `org/partiql/lang/eval/builtins/DynamicLookupExprFunction` by merging `variadicParameter` into `requiredParameters` as a `StaticType.LIST` and renaming `callWithVariadic` function to `callWithRequired`.
+
+>>>>>>> 1faacfc9 (Add changes into CHANGELOG.md)
 ### Deprecated
 
 ### Fixed
@@ -45,7 +56,7 @@ Thank you to all who have contributed!
 ### Contributors
 Thank you to all who have contributed!
 - @howero
-- @<your-username>
+- @yuxiaotang
 
 ## [0.12.0] - 2023-06-14
 
