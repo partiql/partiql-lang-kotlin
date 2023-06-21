@@ -29,6 +29,8 @@ Thank you to all who have contributed!
 ## [Unreleased]
 
 ### Added
+- Adds `org.partiql.value` (experimental) package for reading/writing PartiQL
+  values
 
 ### Changed
 
@@ -42,6 +44,7 @@ Thank you to all who have contributed!
 
 ### Contributors
 Thank you to all who have contributed!
+- @howero
 - @<your-username>
 
 ## [0.12.0] - 2023-06-14
