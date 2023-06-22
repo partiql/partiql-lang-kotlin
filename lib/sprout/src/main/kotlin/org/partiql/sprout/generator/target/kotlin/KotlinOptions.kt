@@ -8,4 +8,5 @@ package org.partiql.sprout.generator.target.kotlin
 class KotlinOptions(
     val packageRoot: String,
     val poems: List<String>,
+    val optIns: List<String> = emptyList(),
 )
