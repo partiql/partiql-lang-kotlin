@@ -47,7 +47,7 @@ Thank you to all who have contributed!
 ### Contributors
 Thank you to all who have contributed!
 - @howero
-- @yliuuu
+- @yliuuuu
 
 ## [0.12.0] - 2023-06-14
 
