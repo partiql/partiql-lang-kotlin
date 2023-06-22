@@ -20,13 +20,13 @@ public sealed class TimeZone {
              * Notice if the time zone is a negative offset, then both [tzHour] and [tzMinute] needs to be negative.
              */
             public fun of(tzHour: Int, tzMinute: Int): UtcOffset {
-                if (abs(tzHour) > MAX_TIME_ZONE_HOURS) throw DateTimeException("TimeZone hour field", "should be less than 24")
-                if (abs(tzHour) > MAX_TIME_ZONE_MINUTES) throw DateTimeException("Timezone minute fields", "Should be less than 60")
+                if (abs(tzHour) > MAX_TIME_ZONE_HOURS) throw DateTimeException("Except Timezone Hour to be less than 24, but received $tzHour")
+                if (abs(tzHour) > MAX_TIME_ZONE_MINUTES) throw DateTimeException("Except Timezone Minute to be less than 60, but received $tzMinute")
                 return UtcOffset(tzHour * 60 + tzMinute)
             }
 
             public fun of(totalOffsetMinutes: Int): UtcOffset {
-                if (abs(totalOffsetMinutes) > MAX_TOTAL_OFFSET_MINUTES) throw DateTimeException("TimeZone hour field", "should be less than 24")
+                if (abs(totalOffsetMinutes) > MAX_TOTAL_OFFSET_MINUTES) throw DateTimeException("Expect total offset Minutes to be less than or equal to $MAX_TOTAL_OFFSET_MINUTES, but received $totalOffsetMinutes")
                 return UtcOffset(totalOffsetMinutes)
             }
         }

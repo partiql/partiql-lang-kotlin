@@ -24,6 +24,5 @@ internal const val MAX_TIME_ZONE_MINUTES: Int = 59
 internal const val MAX_TOTAL_OFFSET_MINUTES: Int = MAX_TIME_ZONE_HOURS * 60 + MAX_TIME_ZONE_MINUTES
 
 public class DateTimeException(
-    public val type: String,
-    public val error: String
+    public override val message: String
 ) : Throwable()

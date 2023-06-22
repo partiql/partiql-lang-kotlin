@@ -65,6 +65,7 @@ import org.partiql.lang.util.unaryMinus
 import org.partiql.parser.antlr.PartiQLBaseVisitor
 import org.partiql.parser.antlr.PartiQLParser
 import org.partiql.pig.runtime.SymbolPrimitive
+import org.partiql.value.datetime.DateTimeException
 import org.partiql.value.datetime.TimeZone
 import java.math.BigInteger
 import java.time.LocalDate
@@ -1839,7 +1840,7 @@ internal class PartiQLPigVisitor(
             else -> integerNode.text.toInteger().toLong()
         }
         if (precision < 0) {
-            throw integerNode.err("Precision out of bounds", ErrorCode.PARSE_INVALID_PRECISION_FOR_TIME)
+            throw integerNode.err("Precision out of bounds", ErrorCode.PARSE_INVALID_PRECISION_FOR_TIMESTAMP)
         }
         return timestampString to precision
     }
@@ -1853,7 +1854,12 @@ internal class PartiQLPigVisitor(
         stringNode: TerminalNode,
         timestampNode: TerminalNode
     ) = PartiqlAst.build {
-        val timestamp = DateTimeUtils.parseTimestamp(timestampString)
+        val timestamp =
+            try {
+                DateTimeUtils.parseTimestamp(timestampString)
+            } catch (e: DateTimeException) {
+                throw stringNode.err("Invalid Date Time Literal", ErrorCode.PARSE_INVALID_DATETIME_STRING)
+            }
         val (tzSign, tzHour, tzMinute) = getTimeZoneField(timestamp.timeZone)
         timestamp(
             timestampValue(

@@ -15,11 +15,11 @@ public data class Date private constructor(
 
     public companion object {
         public fun of(year: Int, month: Int, day: Int): Date {
-            if (year < 1 || year > 9999) throw DateTimeException("DATE", "Expect Year Field to be between 1 to 9999, but received $year")
+            if (year < 1 || year > 9999) throw DateTimeException("Expect Year Field to be between 1 to 9999, but received $year")
             try {
                 LocalDate.of(year, month, day)
             } catch (e: java.time.DateTimeException) {
-                throw DateTimeException("Date", e.localizedMessage)
+                throw DateTimeException(e.localizedMessage)
             }
             return Date(year, month, day)
         }
