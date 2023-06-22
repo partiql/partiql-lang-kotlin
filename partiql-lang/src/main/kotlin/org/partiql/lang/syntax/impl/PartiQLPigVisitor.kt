@@ -1492,7 +1492,6 @@ internal class PartiQLPigVisitor(
             PartiQLParser.BIGINT -> integer8Type(metas)
             PartiQLParser.REAL -> realType(metas)
             PartiQLParser.DOUBLE -> doublePrecisionType(metas)
-            PartiQLParser.TIMESTAMP -> timestampType(metas)
             PartiQLParser.CHAR -> characterType(metas = metas)
             PartiQLParser.CHARACTER -> characterType(metas = metas)
             PartiQLParser.MISSING -> missingType(metas)
@@ -1548,8 +1547,12 @@ internal class PartiQLPigVisitor(
         if (precision != null && (precision < 0 || precision > MAX_PRECISION_FOR_TIME)) {
             throw ctx.precision.err("Unsupported precision", ErrorCode.PARSE_INVALID_PRECISION_FOR_TIME)
         }
-        if (ctx.WITH() == null) return@build timeType(precision)
-        timeWithTimeZoneType(precision)
+        val hasTimeZone = ctx.WITH() != null
+        when (ctx.datatype.type) {
+            PartiQLParser.TIME -> if (hasTimeZone) timeWithTimeZoneType(precision) else timeType(precision)
+            PartiQLParser.TIMESTAMP -> if (hasTimeZone) timestampWithTimeZoneType(precision) else timestampType(precision)
+            else -> throw ParserException("Unknown datatype", ErrorCode.PARSE_UNEXPECTED_TOKEN, PropertyValueMap())
+        }
     }
 
     override fun visitTypeCustom(ctx: PartiQLParser.TypeCustomContext) = PartiqlAst.build {

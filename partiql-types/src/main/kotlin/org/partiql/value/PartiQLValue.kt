@@ -15,13 +15,12 @@
 package org.partiql.value
 
 import org.partiql.types.PartiQLValueType
+import org.partiql.value.datetime.Date
+import org.partiql.value.datetime.Time
+import org.partiql.value.datetime.Timestamp
 import org.partiql.value.util.PartiQLValueVisitor
 import java.math.BigDecimal
 import java.math.BigInteger
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.LocalTime
-import java.time.ZoneOffset
 import java.util.BitSet
 
 internal typealias Annotations = List<String>
@@ -325,7 +324,7 @@ public abstract class BlobValue : ScalarValue<ByteArray> {
 }
 
 @PartiQLValueExperimental
-public abstract class DateValue : ScalarValue<LocalDate> {
+public abstract class DateValue : ScalarValue<Date> {
 
     override val type: PartiQLValueType = PartiQLValueType.DATE
 
@@ -337,18 +336,9 @@ public abstract class DateValue : ScalarValue<LocalDate> {
 }
 
 @PartiQLValueExperimental
-public abstract class TimeValue : ScalarValue<LocalTime> {
+public abstract class TimeValue : ScalarValue<Time> {
 
     override val type: PartiQLValueType = PartiQLValueType.TIME
-
-    // TEMPORARY
-    public abstract val precision: Int
-
-    // TEMPORARY
-    public abstract val offset: ZoneOffset?
-
-    // TEMPORARY
-    public abstract val withZone: Boolean
 
     abstract override fun copy(annotations: Annotations): TimeValue
 
@@ -358,18 +348,9 @@ public abstract class TimeValue : ScalarValue<LocalTime> {
 }
 
 @PartiQLValueExperimental
-public abstract class TimestampValue : ScalarValue<LocalDateTime> {
+public abstract class TimestampValue : ScalarValue<Timestamp> {
 
     override val type: PartiQLValueType = PartiQLValueType.TIMESTAMP
-
-    // TEMPORARY
-    public abstract val precision: Int
-
-    // TEMPORARY
-    public abstract val offset: ZoneOffset?
-
-    // TEMPORARY
-    public abstract val withZone: Boolean
 
     abstract override fun copy(annotations: Annotations): TimestampValue
 
@@ -717,7 +698,7 @@ public abstract class NullableBlobValue : NullableScalarValue<ByteArray> {
 }
 
 @PartiQLValueExperimental
-public abstract class NullableDateValue : NullableScalarValue<LocalDate> {
+public abstract class NullableDateValue : NullableScalarValue<Date> {
 
     override val type: PartiQLValueType = PartiQLValueType.NULLABLE_DATE
 
@@ -729,18 +710,9 @@ public abstract class NullableDateValue : NullableScalarValue<LocalDate> {
 }
 
 @PartiQLValueExperimental
-public abstract class NullableTimeValue : NullableScalarValue<LocalTime> {
+public abstract class NullableTimeValue : NullableScalarValue<Time> {
 
     override val type: PartiQLValueType = PartiQLValueType.NULLABLE_TIME
-
-    // TEMPORARY
-    public abstract val precision: Int
-
-    // TEMPORARY
-    public abstract val offset: ZoneOffset?
-
-    // TEMPORARY
-    public abstract val withZone: Boolean
 
     abstract override fun copy(annotations: Annotations): NullableTimeValue
 
@@ -750,18 +722,9 @@ public abstract class NullableTimeValue : NullableScalarValue<LocalTime> {
 }
 
 @PartiQLValueExperimental
-public abstract class NullableTimestampValue : NullableScalarValue<LocalDateTime> {
+public abstract class NullableTimestampValue : NullableScalarValue<Timestamp> {
 
     override val type: PartiQLValueType = PartiQLValueType.NULLABLE_TIMESTAMP
-
-    // TEMPORARY
-    public abstract val precision: Int
-
-    // TEMPORARY
-    public abstract val offset: ZoneOffset?
-
-    // TEMPORARY
-    public abstract val withZone: Boolean
 
     abstract override fun copy(annotations: Annotations): NullableTimestampValue
 

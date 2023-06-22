@@ -540,9 +540,6 @@ may then be further optimized by selecting better implementations of each operat
             // `NUMERIC[(<int> [, int])]`.  Elements are precision then scale.
             (numeric_type precision::(? int) scale::(? int))
 
-            // `TIMESTAMP`
-            (timestamp_type)
-
             // `CHAR(<int>)`
             (character_type length::(? int))
 
@@ -562,6 +559,8 @@ may then be further optimized by selecting better implementations of each operat
             // Note: This logic is implemented in SqlParser.
             (time_type precision::(? int))
             (time_with_time_zone_type precision::(? int))
+            (timestamp_type precision::(? int))
+            (timestamp_with_time_zone_type precision::(? int))
 
             (struct_type)
             (tuple_type)

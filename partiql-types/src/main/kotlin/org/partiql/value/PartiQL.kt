@@ -18,6 +18,9 @@
 package org.partiql.value
 
 import kotlinx.collections.immutable.toPersistentList
+import org.partiql.value.datetime.Date
+import org.partiql.value.datetime.Time
+import org.partiql.value.datetime.Timestamp
 import org.partiql.value.impl.BagValueImpl
 import org.partiql.value.impl.BinaryValueImpl
 import org.partiql.value.impl.BlobValueImpl
@@ -70,10 +73,6 @@ import org.partiql.value.impl.TimeValueImpl
 import org.partiql.value.impl.TimestampValueImpl
 import java.math.BigDecimal
 import java.math.BigInteger
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.LocalTime
-import java.time.ZoneOffset
 import java.util.BitSet
 
 /**
@@ -310,7 +309,7 @@ public fun blobValue(
 @JvmOverloads
 @PartiQLValueExperimental
 public fun dateValue(
-    value: LocalDate,
+    value: Date,
     annotations: Annotations = emptyList(),
 ): DateValue = DateValueImpl(value, annotations.toPersistentList())
 
@@ -324,12 +323,9 @@ public fun dateValue(
 @JvmOverloads
 @PartiQLValueExperimental
 public fun timeValue(
-    value: LocalTime,
-    precision: Int = 0,
-    offset: ZoneOffset? = null,
-    withZone: Boolean = false,
+    value: Time,
     annotations: Annotations = emptyList(),
-): TimeValue = TimeValueImpl(value, precision, offset, withZone, annotations.toPersistentList())
+): TimeValue = TimeValueImpl(value, annotations.toPersistentList())
 
 /**
  * TIMESTAMP type value.
@@ -341,12 +337,9 @@ public fun timeValue(
 @JvmOverloads
 @PartiQLValueExperimental
 public fun timestampValue(
-    value: LocalDateTime,
-    precision: Int = 0,
-    offset: ZoneOffset? = null,
-    withZone: Boolean = false,
+    value: Timestamp,
     annotations: Annotations = emptyList(),
-): TimestampValue = TimestampValueImpl(value, precision, offset, withZone, annotations.toPersistentList())
+): TimestampValue = TimestampValueImpl(value, annotations.toPersistentList())
 
 /**
  * INTERVAL type value.
@@ -680,7 +673,7 @@ public fun nullableBlobValue(
 @JvmOverloads
 @PartiQLValueExperimental
 public fun nullableDateValue(
-    value: LocalDate? = null,
+    value: Date? = null,
     annotations: Annotations = emptyList(),
 ): NullableDateValue = NullableDateValueImpl(value, annotations.toPersistentList())
 
@@ -695,7 +688,7 @@ public fun nullableDateValue(
 @PartiQLValueExperimental
 public fun nullableTimeValue(
     annotations: Annotations = emptyList(),
-): NullableTimeValue = NullableTimeValueImpl(null, 0, null, false, annotations.toPersistentList())
+): NullableTimeValue = NullableTimeValueImpl(null, annotations.toPersistentList())
 
 /**
  * UNION(NULL, TIME) type value.
@@ -707,12 +700,9 @@ public fun nullableTimeValue(
 @JvmOverloads
 @PartiQLValueExperimental
 public fun nullableTimeValue(
-    value: LocalTime,
-    precision: Int = 0,
-    offset: ZoneOffset? = null,
-    withZone: Boolean = false,
+    value: Time,
     annotations: Annotations = emptyList(),
-): NullableTimeValue = NullableTimeValueImpl(value, precision, offset, withZone, annotations.toPersistentList())
+): NullableTimeValue = NullableTimeValueImpl(value, annotations.toPersistentList())
 
 /**
  * UNION(NULL, TIMESTAMP) type value.
@@ -724,7 +714,7 @@ public fun nullableTimeValue(
 @PartiQLValueExperimental
 public fun nullableTimestampValue(
     annotations: Annotations = emptyList(),
-): NullableTimestampValue = NullableTimestampValueImpl(null, 0, null, false, annotations.toPersistentList())
+): NullableTimestampValue = NullableTimestampValueImpl(null, annotations.toPersistentList())
 
 /**
  * UNION(NULL, TIMESTAMP) type value.
@@ -736,13 +726,10 @@ public fun nullableTimestampValue(
 @JvmOverloads
 @PartiQLValueExperimental
 public fun nullableTimestampValue(
-    value: LocalDateTime,
-    precision: Int = 0,
-    offset: ZoneOffset? = null,
-    withZone: Boolean = false,
+    value: Timestamp,
     annotations: Annotations = emptyList(),
 ): NullableTimestampValue =
-    NullableTimestampValueImpl(value, precision, offset, withZone, annotations.toPersistentList())
+    NullableTimestampValueImpl(value, annotations.toPersistentList())
 
 /**
  * UNION(NULL, TIMESTAMP) type value.

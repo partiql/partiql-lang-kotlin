@@ -3,6 +3,9 @@ package org.partiql.value.datetime
 import java.math.BigDecimal
 import com.amazon.ion.Timestamp as TimestampIon
 
+/**
+ * This class is used to model both Timestamp Without Time Zone type and Timestamp With Time Zone Type.
+ */
 public data class Timestamp(
     val year: Int,
     val month: Int,

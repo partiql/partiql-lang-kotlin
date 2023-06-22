@@ -793,9 +793,7 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
         }
 
         private fun createErrorCaseForTime(source: String, errorCode: ErrorCode, errorContext: Map<Property, Any>) = ErrorTimeTestCase(source, errorCode, errorContext)
-
     }
-
 
     private fun runDateTimeTest(tc: DateTimeTestCase) = if (!tc.skipTest) {
         assertExpression(tc.source, expectedPigBuilder = tc.block)
@@ -814,8 +812,6 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
     @ParameterizedTest
     @MethodSource("parameterForTimestampLiteralTests")
     fun timestampLiteralTests(tc: DateTimeTestCase) = runDateTimeTest(tc)
-
-
 
     private fun runErrorTimeTestCase(tc: ErrorTimeTestCase) {
         if (!tc.skipTest) {

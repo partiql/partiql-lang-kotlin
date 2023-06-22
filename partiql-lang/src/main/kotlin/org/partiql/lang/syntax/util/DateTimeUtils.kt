@@ -12,13 +12,13 @@ import java.util.regex.Matcher
 import java.util.regex.Pattern
 
 internal object DateTimeUtils {
-    val DATE_PATTERN = Pattern.compile("(?<year>\\d{4,})-(?<month>\\d{2,})-(?<day>\\d{2,})")
-    val TIME_PATTERN = Pattern.compile("(?<hour>\\d{2,}):(?<minute>\\d{2,}):(?<second>\\d{2,})(?:\\.(?<fraction>\\d+))?\\s*(?<timezone>([+-]\\d\\d:\\d\\d)|(?<utc>[Zz]))?")
-    val SQL_TIMESTAMP_DATE_TIME_DELIMITER = "\\s+".toRegex()
-    val RFC8889_TIMESTAMP_DATE_TIME_DELIMITER = "[Tt]".toRegex()
-    val TIMESTAMP_PATTERN = "(?<date>$DATE_PATTERN)($SQL_TIMESTAMP_DATE_TIME_DELIMITER|$RFC8889_TIMESTAMP_DATE_TIME_DELIMITER)(?<time>$TIME_PATTERN)".toRegex().toPattern()
+    private val DATE_PATTERN: Pattern = Pattern.compile("(?<year>\\d{4,})-(?<month>\\d{2,})-(?<day>\\d{2,})")
+    private val TIME_PATTERN: Pattern = Pattern.compile("(?<hour>\\d{2,}):(?<minute>\\d{2,}):(?<second>\\d{2,})(?:\\.(?<fraction>\\d+))?\\s*(?<timezone>([+-]\\d\\d:\\d\\d)|(?<utc>[Zz]))?")
+    private val SQL_TIMESTAMP_DATE_TIME_DELIMITER = "\\s+".toRegex()
+    private val RFC8889_TIMESTAMP_DATE_TIME_DELIMITER = "[Tt]".toRegex()
+    private val TIMESTAMP_PATTERN = "(?<date>$DATE_PATTERN)($SQL_TIMESTAMP_DATE_TIME_DELIMITER|$RFC8889_TIMESTAMP_DATE_TIME_DELIMITER)(?<time>$TIME_PATTERN)".toRegex().toPattern()
 
-    fun parseDateLiteral(dateString: String): Date {
+    internal fun parseDateLiteral(dateString: String): Date {
         val matcher: Matcher = DATE_PATTERN.matcher(dateString)
         if (!matcher.matches()) throw DateTimeException(
             "DATE",
@@ -36,7 +36,7 @@ internal object DateTimeUtils {
         return Date.of(year, month, day)
     }
 
-    fun parseTimeLiteral(timeString: String): Time {
+    internal fun parseTimeLiteral(timeString: String): Time {
         val matcher: Matcher = TIME_PATTERN.matcher(timeString)
         if (!matcher.matches()) throw DateTimeException(
             "TIME",
