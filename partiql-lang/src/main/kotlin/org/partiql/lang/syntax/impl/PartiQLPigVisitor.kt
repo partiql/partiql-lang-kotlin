@@ -1452,8 +1452,8 @@ internal class PartiQLPigVisitor(
     override fun visitLiteralTimestamp(ctx: PartiQLParser.LiteralTimestampContext): PartiqlAst.PartiqlAstNode {
         val (timestamp, precision) = getTimestampStringAndPrecision(ctx.LITERAL_STRING(), ctx.LITERAL_INTEGER())
         return when (ctx.WITH()) {
-            null -> getTimestampDynamic(timestamp, precision, ctx.LITERAL_STRING(), ctx.TIMESTAMP())
-            else -> getTimestampWithTimezone(timestamp, precision, ctx.LITERAL_STRING(), ctx.TIMESTAMP())
+            null -> getTimestampDynamic(timestamp, precision, ctx.LITERAL_STRING())
+            else -> getTimestampWithTimezone(timestamp, precision, ctx.LITERAL_STRING())
         }
     }
 
@@ -1551,7 +1551,10 @@ internal class PartiQLPigVisitor(
         val hasTimeZone = ctx.WITH() != null
         when (ctx.datatype.type) {
             PartiQLParser.TIME -> if (hasTimeZone) timeWithTimeZoneType(precision) else timeType(precision)
-            PartiQLParser.TIMESTAMP -> if (hasTimeZone) timestampWithTimeZoneType(precision) else timestampType(precision)
+            PartiQLParser.TIMESTAMP -> if (hasTimeZone) timestampWithTimeZoneType(precision) else timestampType(
+                precision
+            )
+
             else -> throw ParserException("Unknown datatype", ErrorCode.PARSE_UNEXPECTED_TOKEN, PropertyValueMap())
         }
     }
@@ -1851,14 +1854,13 @@ internal class PartiQLPigVisitor(
     private fun getTimestampDynamic(
         timestampString: String,
         precision: Long?,
-        stringNode: TerminalNode,
-        timestampNode: TerminalNode
+        node: TerminalNode
     ) = PartiqlAst.build {
         val timestamp =
             try {
                 DateTimeUtils.parseTimestamp(timestampString)
             } catch (e: DateTimeException) {
-                throw stringNode.err("Invalid Date Time Literal", ErrorCode.PARSE_INVALID_DATETIME_STRING)
+                throw node.err("Invalid Date Time Literal", ErrorCode.PARSE_INVALID_DATETIME_STRING, cause = e)
             }
         val (tzSign, tzHour, tzMinute) = getTimeZoneField(timestamp.timeZone)
         timestamp(
@@ -1873,11 +1875,18 @@ internal class PartiQLPigVisitor(
     private fun getTimestampWithTimezone(
         timestampString: String,
         precision: Long?,
-        stringNode: TerminalNode,
-        timestampNode: TerminalNode
+        node: TerminalNode
     ) = PartiqlAst.build {
-        val timestamp = DateTimeUtils.parseTimestamp(timestampString)
-        if (timestamp.timeZone == null) throw Error("no time zone")
+        val timestamp = try {
+            DateTimeUtils.parseTimestamp(timestampString)
+        } catch (e: DateTimeException) {
+            throw node.err("Invalid Date Time Literal", ErrorCode.PARSE_INVALID_DATETIME_STRING, cause = e)
+        }
+        if (timestamp.timeZone == null)
+            throw node.err(
+                "Invalid Date Time Literal, expect Time Zone for Type Timestamp With Time Zone",
+                ErrorCode.PARSE_INVALID_DATETIME_STRING
+            )
         val (tzSign, tzHour, tzMinute) = getTimeZoneField(timestamp.timeZone)
         timestamp(
             timestampValue(

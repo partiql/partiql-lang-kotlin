@@ -21,8 +21,7 @@ internal object DateTimeUtils {
     internal fun parseDateLiteral(dateString: String): Date {
         val matcher: Matcher = DATE_PATTERN.matcher(dateString)
         if (!matcher.matches()) throw DateTimeException(
-            "DATE",
-            "Date Format should be in YYYY-MM-DD, received $dateString"
+            "Expected Date Format to be in YYYY-MM-DD, received $dateString"
         )
         val year = matcher.group("year").toInt()
         val month = matcher.group("month").toInt()
@@ -31,7 +30,7 @@ internal object DateTimeUtils {
         try {
             LocalDate.of(year, month, day)
         } catch (e: java.time.DateTimeException) {
-            throw DateTimeException("Date", e.localizedMessage)
+            throw DateTimeException(e.localizedMessage)
         }
         return Date.of(year, month, day)
     }
@@ -39,8 +38,7 @@ internal object DateTimeUtils {
     internal fun parseTimeLiteral(timeString: String): Time {
         val matcher: Matcher = TIME_PATTERN.matcher(timeString)
         if (!matcher.matches()) throw DateTimeException(
-            "TIME",
-            "TIME Format should be in HH-mm-ss.ddd+[+|-]hh:mm, received $timeString"
+            "Expect TIME Format to be in HH-mm-ss.ddd+[+|-][hh:mm|z], received $timeString"
         )
         try {
             val hour = ChronoField.HOUR_OF_DAY.checkValidValue(matcher.group("hour").toLong()).toInt()
@@ -56,19 +54,18 @@ internal object DateTimeUtils {
             }
             return Time.of(hour, minute, second, null, null)
         } catch (e: java.time.DateTimeException) {
-            throw DateTimeException("TIME", e.localizedMessage)
+            throw DateTimeException(e.localizedMessage)
         } catch (e: IllegalStateException) {
-            throw DateTimeException("TIME", e.localizedMessage)
+            throw DateTimeException(e.localizedMessage)
         } catch (e: IllegalArgumentException) {
-            throw DateTimeException("TIME", e.localizedMessage)
+            throw DateTimeException(e.localizedMessage)
         }
     }
 
     fun parseTimestamp(timestampString: String): Timestamp {
         val matcher: Matcher = TIMESTAMP_PATTERN.matcher(timestampString)
         if (!matcher.matches()) throw DateTimeException(
-            "TIMESTAMP",
-            "TIMESTAMP Format should be in YYYY-MM-DD, received $timestampString"
+            "Expected TIMESTAMP Format should be in YYYY-MM-DD[\\s|T]hh:mm:ss.ddd+[hh:mm|z], received $timestampString"
         )
         val date = parseDateLiteral(matcher.group("date"))
         val time = parseTimeLiteral(matcher.group("time"))
