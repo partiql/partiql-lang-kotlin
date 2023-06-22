@@ -48,6 +48,7 @@ Thank you to all who have contributed!
 Thank you to all who have contributed!
 - @howero
 - @yliuuuu
+- @<your-username>
 
 ## [0.12.0] - 2023-06-14
 
