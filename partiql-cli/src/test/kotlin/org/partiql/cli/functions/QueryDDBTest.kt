@@ -36,12 +36,12 @@ class QueryDDBTest {
     private val ion = IonSystemBuilder.standard().build()
     private val session = EvaluationSession.standard()
     private val client: AmazonDynamoDBClient = Mockito.mock(AmazonDynamoDBClient::class.java)
-    private lateinit var function: QueryDDB
+    private lateinit var function: QueryDDB_1
 
     @BeforeEach
     fun setUp() {
         MockitoAnnotations.openMocks(this)
-        this.function = QueryDDB(ion, client)
+        this.function = QueryDDB_1(ion, client)
     }
 
     @Test

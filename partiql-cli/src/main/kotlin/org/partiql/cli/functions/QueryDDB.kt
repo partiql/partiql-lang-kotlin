@@ -36,9 +36,21 @@ import org.partiql.types.StaticType
  * overrides. Reference the CLI.md file within this repository for more information.
  * Example CLI usage: query_ddb('SELECT <attribute> FROM <table> WHERE <key> = <value>');
  */
-class QueryDDB(private val ion: IonSystem) : ExprFunction {
 
-    private lateinit var client: AmazonDynamoDB
+internal abstract class QueryDDB(protected val ion: IonSystem) : ExprFunction {
+
+    protected lateinit var client: AmazonDynamoDB
+
+    /**
+     * Setter to initialize the lateinit client
+     */
+    protected fun initializeClient() {
+        if (!this::client.isInitialized) {
+            this.client = AmazonDynamoDBClientBuilder.defaultClient()
+        }
+    }
+}
+internal class QueryDDB_1(ion: IonSystem) : QueryDDB(ion) {
 
     constructor(ion: IonSystem, client: AmazonDynamoDB) : this(ion) {
         this.client = client
@@ -72,13 +84,15 @@ class QueryDDB(private val ion: IonSystem) : ExprFunction {
             ExprValue.newList(ionValues)
         }
     }
+}
 
-    /**
-     * Setter to initialize the lateinit client
-     */
-    private fun initializeClient() {
-        if (!this::client.isInitialized) {
-            this.client = AmazonDynamoDBClientBuilder.defaultClient()
-        }
+internal class QueryDDB_2(ion: IonSystem) : QueryDDB(ion) {
+    constructor(ion: IonSystem, client: AmazonDynamoDB) : this(ion) {
+        this.client = client
     }
+    override val signature = FunctionSignature(
+        name = "query_ddb",
+        requiredParameters = listOf(StaticType.STRING, StaticType.STRUCT),
+        returnType = StaticType.LIST
+    )
 }
