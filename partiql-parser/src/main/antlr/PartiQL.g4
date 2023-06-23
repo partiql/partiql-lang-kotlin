@@ -380,7 +380,7 @@ patternRestrictor    // Should be TRAIL / ACYCLIC / SIMPLE
     : restrictor=IDENTIFIER;
 
 node
-    : PAREN_LEFT symbolPrimitive? patternPartLabel? whereClause? PAREN_RIGHT;
+    : PAREN_LEFT symbolPrimitive? ( COLON labelSpec )? whereClause? PAREN_RIGHT;
 
 edge
     : edgeWSpec quantifier=patternQuantifier?    # EdgeWithSpec
@@ -408,10 +408,28 @@ edgeWSpec
     ;
 
 edgeSpec
-    : BRACKET_LEFT symbolPrimitive? patternPartLabel? whereClause? BRACKET_RIGHT;
+    : BRACKET_LEFT symbolPrimitive? ( COLON labelSpec )? whereClause? BRACKET_RIGHT;
 
-patternPartLabel
-    : COLON symbolPrimitive;
+labelSpec
+    : labelSpec VERTBAR labelTerm        # LabelSpecOr
+    | labelTerm                          # LabelSpecTerm
+    ;
+
+labelTerm
+    : labelTerm AMPERSAND labelFactor    # LabelTermAnd
+    | labelFactor                        # LabelTermFactor
+    ;
+
+labelFactor
+    : BANG labelPrimary                  # LabelFactorNot
+    | labelPrimary                       # LabelFactorPrimary
+    ;
+
+labelPrimary
+    : symbolPrimitive                    # LabelPrimaryName
+    | PERCENT                            # LabelPrimaryWild
+    | PAREN_LEFT labelSpec PAREN_RIGHT   # LabelPrimaryParen
+    ;
 
 edgeAbbrev
     : TILDE

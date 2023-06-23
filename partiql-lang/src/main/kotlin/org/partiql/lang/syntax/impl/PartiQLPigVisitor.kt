@@ -700,7 +700,36 @@ internal class PartiQLPigVisitor(val customTypes: List<CustomType> = listOf(), p
         }
     }
 
-    override fun visitPatternPartLabel(ctx: PartiQLParser.PatternPartLabelContext) = visitSymbolPrimitive(ctx.symbolPrimitive())
+    override fun visitLabelSpecOr(ctx: PartiQLParser.LabelSpecOrContext): PartiqlAst.GraphLabelSpec =
+        PartiqlAst.build {
+            val lhs = visit(ctx.labelSpec()) as PartiqlAst.GraphLabelSpec
+            val rhs = visit(ctx.labelTerm()) as PartiqlAst.GraphLabelSpec
+            graphLabelDisj(lhs, rhs, ctx.VERTBAR().getSourceMetaContainer())
+        }
+
+    override fun visitLabelTermAnd(ctx: PartiQLParser.LabelTermAndContext): PartiqlAst.GraphLabelSpec =
+        PartiqlAst.build {
+            val lhs = visit(ctx.labelTerm()) as PartiqlAst.GraphLabelSpec
+            val rhs = visit(ctx.labelFactor()) as PartiqlAst.GraphLabelSpec
+            graphLabelConj(lhs, rhs, ctx.AMPERSAND().getSourceMetaContainer())
+        }
+
+    override fun visitLabelFactorNot(ctx: PartiQLParser.LabelFactorNotContext) = PartiqlAst.build {
+        val arg = visit(ctx.labelPrimary()) as PartiqlAst.GraphLabelSpec
+        graphLabelNegation(arg, ctx.BANG().getSourceMetaContainer())
+    }
+
+    override fun visitLabelPrimaryName(ctx: PartiQLParser.LabelPrimaryNameContext) = PartiqlAst.build {
+        val x = visitSymbolPrimitive(ctx.symbolPrimitive())
+        graphLabelName_(x.name, x.metas)
+    }
+
+    override fun visitLabelPrimaryWild(ctx: PartiQLParser.LabelPrimaryWildContext) = PartiqlAst.build {
+        graphLabelWildcard(ctx.PERCENT().getSourceMetaContainer())
+    }
+
+    override fun visitLabelPrimaryParen(ctx: PartiQLParser.LabelPrimaryParenContext) =
+        visit(ctx.labelSpec()) as PartiqlAst.GraphLabelSpec
 
     override fun visitPattern(ctx: PartiQLParser.PatternContext) = PartiqlAst.build {
         val restrictor = visitOrNull(ctx.restrictor, PartiqlAst.GraphMatchRestrictor::class)
@@ -729,8 +758,10 @@ internal class PartiQLPigVisitor(val customTypes: List<CustomType> = listOf(), p
         val placeholderDirection = edgeRight()
         val variable = visitOrNull(ctx.symbolPrimitive(), PartiqlAst.Expr.Id::class)?.name
         val prefilter = visitOrNull(ctx.whereClause(), PartiqlAst.Expr::class)
-        val label = visitOrNull(ctx.patternPartLabel(), PartiqlAst.Expr.Id::class)?.name
-        edge_(direction = placeholderDirection, variable = variable, prefilter = prefilter, label = listOfNotNull(label))
+        // val label = visitOrNull(ctx.patternPartLabel(), PartiqlAst.Expr.Id::class)?.name
+        // TODO? PR on visitOrNull considered harmful.  Do this instead?:
+        val lab = ctx.labelSpec()?.let { visit(it) as PartiqlAst.GraphLabelSpec }
+        edge_(direction = placeholderDirection, variable = variable, prefilter = prefilter, label = lab)
     }
 
     override fun visitEdgeSpecLeft(ctx: PartiQLParser.EdgeSpecLeftContext) = PartiqlAst.build {
@@ -793,8 +824,9 @@ internal class PartiQLPigVisitor(val customTypes: List<CustomType> = listOf(), p
     override fun visitNode(ctx: PartiQLParser.NodeContext) = PartiqlAst.build {
         val variable = visitOrNull(ctx.symbolPrimitive(), PartiqlAst.Expr.Id::class)?.name
         val prefilter = visitOrNull(ctx.whereClause(), PartiqlAst.Expr::class)
-        val label = visitOrNull(ctx.patternPartLabel(), PartiqlAst.Expr.Id::class)?.name
-        node_(variable = variable, prefilter = prefilter, label = listOfNotNull(label))
+        // val label = visitOrNull(ctx.patternPartLabel(), PartiqlAst.Expr.Id::class)?.name
+        val lab = ctx.labelSpec()?.let { visit(it) as PartiqlAst.GraphLabelSpec }
+        node_(variable = variable, prefilter = prefilter, label = lab)
     }
 
     override fun visitPatternRestrictor(ctx: PartiQLParser.PatternRestrictorContext) = PartiqlAst.build {
