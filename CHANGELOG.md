@@ -31,25 +31,20 @@ Thank you to all who have contributed!
 ### Added
 - Adds `org.partiql.value` (experimental) package for reading/writing PartiQL
   values
-
 - Adds function overloading to the `CompilerPipeline` and experimental `PartiQLCompilerPipeline`.
 
 ### Changed
-
-<<<<<<< HEAD
-=======
 - Standardizes `org/partiql/cli/functions/QueryDDB` and other built-in functions by the new `ExprFunction` format.
 - **Breaking**: Redefines `org/partiql/lang/eval/ExprFunctionkt.call()` method by only invoking `callWithRequired` function.
 - **Breaking**: Redefines `org/partiql/lang/eval/builtins/DynamicLookupExprFunction` by merging `variadicParameter` into `requiredParameters` as a `StaticType.LIST` and renaming `callWithVariadic` function to `callWithRequired`.
 - **Breaking**: Modifies `functions` property of `CompilerPipeline`, `StaticTypeInferencer` and  `StepContext` to be a `List` and not a `Map`.
 
->>>>>>> 1faacfc9 (Add changes into CHANGELOG.md)
 ### Deprecated
 
 ### Fixed
 
 ### Removed
-- **Breaking**: Removes `optionalParameter` and `variadicParameter` from`org.partiql.lang.types.FunctionSignature`. To continue support for evaluation of `optionalParameters`, please create another same-named function. To continue support for evaluation of `variadicParameter`, please use a `StaticType.LIST` to hold all previously variadic parameters. 
+- **Breaking**: Removes `optionalParameter` and `variadicParameter` from`org.partiql.lang.types.FunctionSignature`. To continue support for evaluation of `optionalParameters`, please create another same-named function. To continue support for evaluation of `variadicParameter`, please use a `StaticType.LIST` to hold all previously variadic parameters.
   As this changes coincides with the addition of function overloading, only `callWithRequired` will be invoked upon execution of an `ExprFunction`.
 - **Breaking**: Removes unused class `Arguments` from `org.partiql.lang.eval.ExprFunction`.
 - **Breaking**: Removes unused parameter `args: Arguments` from `org.partiql.lang.eval.ExprFunctionkt.call()` method.
