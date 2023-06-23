@@ -50,8 +50,8 @@ internal abstract class QueryDDB(protected val ion: IonSystem) : ExprFunction {
         }
     }
 }
-internal class QueryDDB_1(ion: IonSystem) : QueryDDB(ion) {
 
+internal class QueryDDB_1(ion: IonSystem) : QueryDDB(ion) {
     constructor(ion: IonSystem, client: AmazonDynamoDB) : this(ion) {
         this.client = client
     }
