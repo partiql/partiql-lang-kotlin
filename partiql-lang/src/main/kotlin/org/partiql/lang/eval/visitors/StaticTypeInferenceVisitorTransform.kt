@@ -97,6 +97,7 @@ internal class StaticTypeInferenceVisitorTransform(
 
     /** The built-in functions + the custom functions. */
     private val allFunctions: List<ExprFunction> = SCALAR_BUILTINS_DEFAULT + customFunctions
+    private val functionManager = FunctionManager(allFunctions)
 
     /**
      * @param parentEnv the enclosing bindings
@@ -804,7 +805,6 @@ internal class StaticTypeInferenceVisitorTransform(
             val functionName = processedNode.funcName.text
             val arity = arguments.size
             val location = processedNode.metas.getSourceLocation()
-            val functionManager = FunctionManager(allFunctions)
             var functions = functionManager.functionMap[functionName]
             if (functions == null) {
                 handleNoSuchFunctionError(functionName, location)

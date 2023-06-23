@@ -32,6 +32,7 @@ import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.errors.PropertyValueMap
 import org.partiql.lang.eval.AnyOfCastTable
+import org.partiql.lang.eval.ArityMismatchException
 import org.partiql.lang.eval.BaseExprValue
 import org.partiql.lang.eval.BindingCase
 import org.partiql.lang.eval.BindingName
@@ -45,6 +46,7 @@ import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueBagOp
 import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.Expression
+import org.partiql.lang.eval.FunctionNotFoundException
 import org.partiql.lang.eval.Named
 import org.partiql.lang.eval.ProjectionIterationBehavior
 import org.partiql.lang.eval.StructOrdering
@@ -139,6 +141,8 @@ internal class PhysicalPlanCompilerImpl(
 
     private val errorSignaler = evaluatorOptions.typingMode.createErrorSignaler()
     private val thunkFactory = evaluatorOptions.typingMode.createThunkFactory<EvaluatorState>(evaluatorOptions.thunkOptions)
+
+    private val functionManager = FunctionManager(functions)
 
     private fun Boolean.exprValue(): ExprValue = ExprValue.newBoolean(this)
     private fun String.exprValue(): ExprValue = ExprValue.newString(this)
@@ -809,54 +813,43 @@ internal class PhysicalPlanCompilerImpl(
         val funcArgThunks = compileAstExprs(expr.args)
         val arity = funcArgThunks.size
         val name = expr.funcName.text
-        val functionManager = FunctionManager(functions)
         return thunkFactory.thunkEnv(metas) { env ->
-            val argTypes = funcArgThunks.map { it(env) }
-            val (func, error, arityPair) = functionManager.get(
-                name = name,
-                arity = arity,
-                args = argTypes,
-            )
-
-            // check error
-            if (error != null) {
-                if (error == "name check fails") {
-                    err(
-                        "No such function: $name",
-                        ErrorCode.EVALUATOR_NO_SUCH_FUNCTION,
-                        errorContextFrom(metas).also {
-                            it[Property.FUNCTION_NAME] = name
-                        },
-                        internal = false
-                    )
-                } else if (error == "arity check fails") {
-                    val (minArity, maxArity) = arityPair
-                    val errorContext = errorContextFrom(metas).also {
-                        it[Property.FUNCTION_NAME] = name
-                        it[Property.EXPECTED_ARITY_MIN] = minArity
-                        it[Property.EXPECTED_ARITY_MAX] = maxArity
-                        it[Property.ACTUAL_ARITY] = arity
-                    }
-                    err(
-                        "No function found with matching arity: $name",
-                        ErrorCode.EVALUATOR_INCORRECT_NUMBER_OF_ARGUMENTS_TO_FUNC_CALL,
-                        errorContext,
-                        internal = false
-                    )
-                }
-            }
-            if (func != null) {
+            val args = funcArgThunks.map { thunk -> thunk(env) }
+            val argTypes = args.map { staticTypeFromExprValue(it) }
+            try {
+                val func = functionManager.get(name = name, arity = arity, args = argTypes,)
                 val computeThunk = when (func.signature.unknownArguments) {
                     UnknownArguments.PROPAGATE -> thunkFactory.thunkEnvOperands(metas, funcArgThunks) { env, values ->
-                        func.call(env.session, argTypes)
+                        func.call(env.session, args)
                     }
                     UnknownArguments.PASS_THRU -> thunkFactory.thunkEnv(metas) { env ->
-                        func.call(env.session, argTypes)
+                        func.call(env.session, args)
                     }
                 }
                 checkIntegerOverflow(computeThunk, metas)(env)
-            } else {
-                throw IllegalStateException("Failed to call function because type check fails")
+            } catch (e: FunctionNotFoundException) {
+                err(
+                    "No such function: $name",
+                    ErrorCode.EVALUATOR_NO_SUCH_FUNCTION,
+                    errorContextFrom(metas).also {
+                        it[Property.FUNCTION_NAME] = name
+                    },
+                    internal = false
+                )
+            } catch (e: ArityMismatchException) {
+                val (minArity, maxArity) = e.arity
+                val errorContext = errorContextFrom(metas).also {
+                    it[Property.FUNCTION_NAME] = name
+                    it[Property.EXPECTED_ARITY_MIN] = minArity
+                    it[Property.EXPECTED_ARITY_MAX] = maxArity
+                    it[Property.ACTUAL_ARITY] = arity
+                }
+                err(
+                    "No function found with matching arity: $name",
+                    ErrorCode.EVALUATOR_INCORRECT_NUMBER_OF_ARGUMENTS_TO_FUNC_CALL,
+                    errorContext,
+                    internal = false
+                )
             }
         }
     }

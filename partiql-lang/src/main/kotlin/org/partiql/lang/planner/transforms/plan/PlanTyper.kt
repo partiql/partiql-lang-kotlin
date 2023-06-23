@@ -22,8 +22,10 @@ import org.partiql.lang.ast.passes.SemanticProblemDetails
 import org.partiql.lang.ast.passes.inference.cast
 import org.partiql.lang.errors.Problem
 import org.partiql.lang.errors.ProblemHandler
+import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.builtins.SCALAR_BUILTINS_DEFAULT
+import org.partiql.lang.eval.impl.FunctionManager
 import org.partiql.lang.planner.PlanningProblemDetails
 import org.partiql.lang.planner.transforms.PlannerSession
 import org.partiql.lang.planner.transforms.impl.Metadata
@@ -91,12 +93,13 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
         internal val session: PlannerSession,
         internal val metadata: Metadata,
         internal val scopingOrder: ScopingOrder,
-        internal val customFunctionSignatures: List<FunctionSignature>,
+        internal val customFunctions: List<ExprFunction>,
         internal val tolerance: MinimumTolerance = MinimumTolerance.FULL,
         internal val problemHandler: ProblemHandler
     ) {
         internal val inputTypeEnv = input?.let { PlanUtils.getTypeEnv(it) } ?: emptyList()
-        internal val allFunctions = SCALAR_BUILTINS_DEFAULT.associate { it.signature.name to it.signature } + customFunctionSignatures.associateBy { it.name }
+        internal val allFunctions = SCALAR_BUILTINS_DEFAULT + customFunctions
+        internal val functionManager = FunctionManager(allFunctions)
     }
 
     /**
@@ -238,7 +241,7 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
                 ctx.session,
                 ctx.metadata,
                 ScopingOrder.GLOBALS_THEN_LEXICAL,
-                ctx.customFunctionSignatures,
+                ctx.customFunctions,
                 ctx.tolerance,
                 ctx.problemHandler
             )
@@ -548,13 +551,42 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
         val processedNode = processRexCall(node, ctx)
         visitRexCallManual(processedNode, ctx)?.let { return it }
         val funcName = node.id
-        val signature = ctx.allFunctions[funcName]
-        if (signature == null) {
+        val functions = ctx.functionManager.functionMap[funcName]
+        val arguments = processedNode.args.getTypes(ctx)
+
+        if (functions == null) {
             handleNoSuchFunctionError(ctx, funcName)
             return node.copy(type = StaticType.ANY)
         }
-        val type = node.type ?: computeReturnTypeForFunctionCall(signature, processedNode.args.getTypes(ctx), ctx)
+
+        var type = node.type
+        val funcsMatchingArity = functions.filter { it.signature.arity.contains(arguments.size) }
+        if (funcsMatchingArity.isEmpty()) {
+            handleIncorrectNumberOfArgumentsToFunctionCallError(funcName, getMinMaxArities(functions).first..getMinMaxArities(functions).second, arguments.size, ctx)
+        } else {
+            for (func in funcsMatchingArity) {
+                type = if (type != null) type
+                else when (func.signature.unknownArguments) {
+                    UnknownArguments.PROPAGATE -> returnTypeForPropagatingFunction(func.signature, arguments, ctx)
+                    UnknownArguments.PASS_THRU -> returnTypeForPassThruFunction(func.signature, arguments)
+                }
+            }
+        }
         return processedNode.copy(type = type)
+    }
+
+    fun getMinMaxArities(funcs: List<ExprFunction>): Pair<Int, Int> {
+        var minArity = Int.MAX_VALUE
+        var maxArity = Int.MIN_VALUE
+
+        funcs.forEach { func ->
+            val currentArityMin = func.signature.arity.first
+            val currentArityMax = func.signature.arity.last
+            if (currentArityMin < minArity) minArity = currentArityMin
+            if (currentArityMax > maxArity) maxArity = currentArityMax
+        }
+
+        return Pair(minArity, maxArity)
     }
 
     override fun visitRexSwitch(node: Rex.Switch, ctx: Context): PlanNode {
@@ -1157,21 +1189,6 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
         }
 
     /**
-     * Computes the return type of the function call based on the [FunctionSignature.unknownArguments]
-     */
-    private fun computeReturnTypeForFunctionCall(signature: FunctionSignature, arguments: List<StaticType>, ctx: Context): StaticType {
-        // Check for all the possible invalid number of argument cases. Throws an error if invalid number of arguments found.
-        if (!signature.arity.contains(arguments.size)) {
-            handleIncorrectNumberOfArgumentsToFunctionCallError(signature.name, signature.arity, arguments.size, ctx)
-        }
-
-        return when (signature.unknownArguments) {
-            UnknownArguments.PROPAGATE -> returnTypeForPropagatingFunction(signature, arguments, ctx)
-            UnknownArguments.PASS_THRU -> returnTypeForPassThruFunction(signature, arguments)
-        }
-    }
-
-    /**
      * Computes return type for functions with [FunctionSignature.unknownArguments] as [UnknownArguments.PROPAGATE]
      */
     private fun returnTypeForPropagatingFunction(signature: FunctionSignature, arguments: List<StaticType>, ctx: Context): StaticType {
@@ -1516,7 +1533,7 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
                 ctx.session,
                 ctx.metadata,
                 ScopingOrder.LEXICAL_THEN_GLOBALS,
-                ctx.customFunctionSignatures,
+                ctx.customFunctions,
                 ctx.tolerance,
                 ctx.problemHandler
             )
@@ -1531,7 +1548,7 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
                 ctx.session,
                 ctx.metadata,
                 ctx.scopingOrder,
-                ctx.customFunctionSignatures,
+                ctx.customFunctions,
                 ctx.tolerance,
                 ctx.problemHandler
             )
@@ -1546,7 +1563,7 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
                 ctx.session,
                 ctx.metadata,
                 ctx.scopingOrder,
-                ctx.customFunctionSignatures,
+                ctx.customFunctions,
                 ctx.tolerance,
                 ctx.problemHandler
             )

@@ -32,17 +32,16 @@ Thank you to all who have contributed!
 - Adds `org.partiql.value` (experimental) package for reading/writing PartiQL
   values
 
+- Adds function overloading to the `CompilerPipeline` and experimental `PartiQLCompilerPipeline`.
+
 ### Changed
 
 <<<<<<< HEAD
 =======
 - Standardizes `org/partiql/cli/functions/QueryDDB` and other built-in functions by the new `ExprFunction` format.
-- Replaces function map parameter with a function list in `org/partiql/lang/CompilerPipeline`and `org/partiql/lang/ast/passes/inference/StaticTypeInferencer`
-  and `org/partiql/lang/compiler/PartiQLCompilerDefault` and other `partiql-lang` classes.
-- Passes `functionManager` into `org/partiql/lang/eval/EvaluatingCompiler`.
-- Redefines `org/partiql/lang/types/FunctionSignature` by removing `optionalParameter` and `variadicParameter`.
-- **Breaking**: Redefines `org/partiql/lang/eval/ExprFunction` by removing `Arguments` class and only invoking `callWithRequired` function when the `ExprFunction` is called.
+- **Breaking**: Redefines `org/partiql/lang/eval/ExprFunctionkt.call()` method by only invoking `callWithRequired` function.
 - **Breaking**: Redefines `org/partiql/lang/eval/builtins/DynamicLookupExprFunction` by merging `variadicParameter` into `requiredParameters` as a `StaticType.LIST` and renaming `callWithVariadic` function to `callWithRequired`.
+- **Breaking**: Modifies `functions` property of `CompilerPipeline`, `StaticTypeInferencer` and  `StepContext` to be a `List` and not a `Map`.
 
 >>>>>>> 1faacfc9 (Add changes into CHANGELOG.md)
 ### Deprecated
@@ -50,6 +49,10 @@ Thank you to all who have contributed!
 ### Fixed
 
 ### Removed
+- **Breaking**: Removes `optionalParameter` and `variadicParameter` from`org.partiql.lang.types.FunctionSignature`. To continue support for evaluation of `optionalParameters`, please create another same-named function. To continue support for evaluation of `variadicParameter`, please use a `StaticType.LIST` to hold all previously variadic parameters. 
+  As this changes coincides with the addition of function overloading, only `callWithRequired` will be invoked upon execution of an `ExprFunction`.
+- **Breaking**: Removes unused class `Arguments` from `org.partiql.lang.eval.ExprFunction`.
+- **Breaking**: Removes unused parameter `args: Arguments` from `org.partiql.lang.eval.ExprFunctionkt.call()` method.
 
 ### Security
 
