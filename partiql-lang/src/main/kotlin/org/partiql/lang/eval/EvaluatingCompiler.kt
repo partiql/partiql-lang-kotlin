@@ -995,7 +995,7 @@ internal class EvaluatingCompiler(
             val args = funcArgThunks.map { thunk -> thunk(env) }
             val argTypes = args.map { staticTypeFromExprValue(it) }
             try {
-                val func = functionManager.get(name = name, arity = arity, args = argTypes,)
+                val func = functionManager.get(name = name, arity = arity, args = argTypes)
                 val computeThunk = when (func.signature.unknownArguments) {
                     UnknownArguments.PROPAGATE -> thunkFactory.thunkEnvOperands(metas, funcArgThunks) { env, values ->
                         func.call(env.session, args)

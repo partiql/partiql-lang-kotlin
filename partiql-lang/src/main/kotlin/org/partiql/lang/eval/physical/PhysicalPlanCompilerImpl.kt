@@ -109,6 +109,7 @@ import org.partiql.types.UnsupportedTypeCheckException
 import java.util.LinkedList
 import java.util.TreeSet
 import java.util.regex.Pattern
+
 /**
  * A basic "compiler" that converts an instance of [PartiqlPhysical.Expr] to an [Expression].
  *
@@ -817,7 +818,7 @@ internal class PhysicalPlanCompilerImpl(
             val args = funcArgThunks.map { thunk -> thunk(env) }
             val argTypes = args.map { staticTypeFromExprValue(it) }
             try {
-                val func = functionManager.get(name = name, arity = arity, args = argTypes,)
+                val func = functionManager.get(name = name, arity = arity, args = argTypes)
                 val computeThunk = when (func.signature.unknownArguments) {
                     UnknownArguments.PROPAGATE -> thunkFactory.thunkEnvOperands(metas, funcArgThunks) { env, values ->
                         func.call(env.session, args)

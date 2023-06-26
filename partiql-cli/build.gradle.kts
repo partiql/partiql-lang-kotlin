@@ -63,5 +63,5 @@ tasks.register<GradleBuild>("install") {
 // Version 1.7+ removes the requirement for such compiler option.
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
     kotlinOptions
-        .freeCompilerArgs += "-Xopt-in=kotlin.RequiresOptIn"
+        .freeCompilerArgs += "-opt-in=kotlin.RequiresOptIn"
 }

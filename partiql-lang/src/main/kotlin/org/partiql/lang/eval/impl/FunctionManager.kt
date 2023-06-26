@@ -20,6 +20,7 @@ internal class FunctionManager(
     /**
      * Get function from the list by name, arity, and argumentTypes(ExprValue)
      */
+    @Throws(FunctionNotFoundException::class, ArityMismatchException::class)
     internal fun get(name: String, arity: Int, args: List<StaticType>): ExprFunction {
         val funcs = functionMap[name] ?: throw FunctionNotFoundException("Name check fails")
 
@@ -48,6 +49,7 @@ internal class FunctionManager(
             val formalExprValueTypeDomain = StaticTypeUtils.getTypeDomain(formalStaticType)
 
             if (actualStaticType == StaticType.NULL || actualStaticType == StaticType.MISSING) {
+                // Skip if NULL/MISSING
             } else if (!StaticTypeUtils.isSubTypeOf(actualStaticType, formalStaticType)) {
                 errInvalidArgumentType(
                     signature = signature,
@@ -67,15 +69,8 @@ internal class FunctionManager(
      * Get minArity and maxArity by looping candidate functions filtered by function name.
      */
     internal fun getMinMaxArities(funcs: List<ExprFunction>): Pair<Int, Int> {
-        var minArity = Int.MAX_VALUE
-        var maxArity = Int.MIN_VALUE
-
-        funcs.forEach { func ->
-            val currentArityMin = func.signature.arity.first
-            val currentArityMax = func.signature.arity.last
-            if (currentArityMin < minArity) minArity = currentArityMin
-            if (currentArityMax > maxArity) maxArity = currentArityMax
-        }
+        val minArity = funcs.map { it.signature.arity.first }.minOrNull() ?: Int.MAX_VALUE
+        val maxArity = funcs.map { it.signature.arity.last }.maxOrNull() ?: Int.MIN_VALUE
 
         return Pair(minArity, maxArity)
     }

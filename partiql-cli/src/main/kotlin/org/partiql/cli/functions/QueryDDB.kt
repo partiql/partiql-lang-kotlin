@@ -37,21 +37,10 @@ import org.partiql.types.StaticType
  * Example CLI usage: query_ddb('SELECT <attribute> FROM <table> WHERE <key> = <value>');
  */
 
-internal abstract class QueryDDB(protected val ion: IonSystem) : ExprFunction {
+class QueryDDB(private val ion: IonSystem) : ExprFunction {
 
-    protected lateinit var client: AmazonDynamoDB
+    private lateinit var client: AmazonDynamoDB
 
-    /**
-     * Setter to initialize the lateinit client
-     */
-    protected fun initializeClient() {
-        if (!this::client.isInitialized) {
-            this.client = AmazonDynamoDBClientBuilder.defaultClient()
-        }
-    }
-}
-
-internal class QueryDDB_1(ion: IonSystem) : QueryDDB(ion) {
     constructor(ion: IonSystem, client: AmazonDynamoDB) : this(ion) {
         this.client = client
     }
@@ -84,15 +73,13 @@ internal class QueryDDB_1(ion: IonSystem) : QueryDDB(ion) {
             ExprValue.newList(ionValues)
         }
     }
-}
 
-internal class QueryDDB_2(ion: IonSystem) : QueryDDB(ion) {
-    constructor(ion: IonSystem, client: AmazonDynamoDB) : this(ion) {
-        this.client = client
+    /**
+     * Setter to initialize the lateinit client
+     */
+    private fun initializeClient() {
+        if (!this::client.isInitialized) {
+            this.client = AmazonDynamoDBClientBuilder.defaultClient()
+        }
     }
-    override val signature = FunctionSignature(
-        name = "query_ddb",
-        requiredParameters = listOf(StaticType.STRING, StaticType.STRUCT),
-        returnType = StaticType.LIST
-    )
 }

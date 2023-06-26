@@ -559,32 +559,27 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
             return node.copy(type = StaticType.ANY)
         }
 
-        var type = node.type
+        var types: MutableSet<StaticType> = mutableSetOf()
         val funcsMatchingArity = functions.filter { it.signature.arity.contains(arguments.size) }
         if (funcsMatchingArity.isEmpty()) {
             handleIncorrectNumberOfArgumentsToFunctionCallError(funcName, getMinMaxArities(functions).first..getMinMaxArities(functions).second, arguments.size, ctx)
         } else {
+            if (node.type != null) {
+                return processedNode.copy(type = node.type)
+            }
             for (func in funcsMatchingArity) {
-                type = if (type != null) type
-                else when (func.signature.unknownArguments) {
-                    UnknownArguments.PROPAGATE -> returnTypeForPropagatingFunction(func.signature, arguments, ctx)
-                    UnknownArguments.PASS_THRU -> returnTypeForPassThruFunction(func.signature, arguments)
+                when (func.signature.unknownArguments) {
+                    UnknownArguments.PROPAGATE -> types.add(returnTypeForPropagatingFunction(func.signature, arguments, ctx))
+                    UnknownArguments.PASS_THRU -> types.add(returnTypeForPassThruFunction(func.signature, arguments))
                 }
             }
         }
-        return processedNode.copy(type = type)
+        return processedNode.copy(type = StaticType.unionOf(types).flatten())
     }
 
     fun getMinMaxArities(funcs: List<ExprFunction>): Pair<Int, Int> {
-        var minArity = Int.MAX_VALUE
-        var maxArity = Int.MIN_VALUE
-
-        funcs.forEach { func ->
-            val currentArityMin = func.signature.arity.first
-            val currentArityMax = func.signature.arity.last
-            if (currentArityMin < minArity) minArity = currentArityMin
-            if (currentArityMax > maxArity) maxArity = currentArityMax
-        }
+        val minArity = funcs.map { it.signature.arity.first }.minOrNull() ?: Int.MAX_VALUE
+        val maxArity = funcs.map { it.signature.arity.last }.maxOrNull() ?: Int.MIN_VALUE
 
         return Pair(minArity, maxArity)
     }
