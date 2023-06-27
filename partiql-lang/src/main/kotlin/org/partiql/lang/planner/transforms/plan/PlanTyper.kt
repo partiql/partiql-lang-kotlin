@@ -553,7 +553,6 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
         val funcName = node.id
         val functions = ctx.functionManager.functionMap[funcName]
         val arguments = processedNode.args.getTypes(ctx)
-
         if (functions == null) {
             handleNoSuchFunctionError(ctx, funcName)
             return node.copy(type = StaticType.ANY)
@@ -574,10 +573,11 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
                 }
             }
         }
+
         return processedNode.copy(type = StaticType.unionOf(types).flatten())
     }
 
-    fun getMinMaxArities(funcs: List<ExprFunction>): Pair<Int, Int> {
+    private fun getMinMaxArities(funcs: List<ExprFunction>): Pair<Int, Int> {
         val minArity = funcs.map { it.signature.arity.first }.minOrNull() ?: Int.MAX_VALUE
         val maxArity = funcs.map { it.signature.arity.last }.maxOrNull() ?: Int.MIN_VALUE
 
