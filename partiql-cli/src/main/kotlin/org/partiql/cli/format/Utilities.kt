@@ -18,5 +18,5 @@ import org.partiql.pig.runtime.DomainNode
 import kotlin.reflect.full.memberProperties
 
 internal fun DomainNode.properties() = this.javaClass.kotlin.memberProperties.filter { property ->
-    property.name.toLowerCase() != "metas" && property.name.toLowerCase() != "myhashcode"
+    property.name.lowercase() != "metas" && property.name.lowercase() != "myhashcode"
 }

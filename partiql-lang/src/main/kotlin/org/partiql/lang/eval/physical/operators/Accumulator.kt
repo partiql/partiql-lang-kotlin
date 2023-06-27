@@ -39,7 +39,7 @@ internal sealed class Accumulator(
                 is PartiqlPhysical.SetQuantifier.Distinct -> createUniqueExprValueFilter()
                 is PartiqlPhysical.SetQuantifier.All -> { _: ExprValue -> true }
             }
-            return when (funcName.trim().toLowerCase()) {
+            return when (funcName.trim().lowercase()) {
                 "min" -> AccumulatorMin(filter)
                 "max" -> AccumulatorMax(filter)
                 "avg" -> AccumulatorAvg(filter)

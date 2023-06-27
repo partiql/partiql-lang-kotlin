@@ -248,7 +248,7 @@ internal object IonTypeParser : SproutParser {
             // 2. Attempt as scalar
             try {
                 return TypeRef.Scalar(
-                    type = ScalarType.valueOf(symbol.toUpperCase()),
+                    type = ScalarType.valueOf(symbol.uppercase()),
                     nullable = nullable,
                 )
             } catch (_: IllegalArgumentException) {
@@ -274,7 +274,7 @@ internal object IonTypeParser : SproutParser {
          */
         private fun resolve(v: IonList): TypeRef {
             val (symbol, nullable) = v.ref()
-            return when (symbol.toLowerCase()) {
+            return when (symbol.lowercase()) {
                 "list" -> {
                     assert(v.size == 1) { "list must have exactly one type" }
                     val t = resolve(v[0])
