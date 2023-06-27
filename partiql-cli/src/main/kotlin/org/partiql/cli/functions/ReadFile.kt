@@ -90,7 +90,7 @@ internal abstract class ReadFile(protected val ion: IonSystem) : ExprFunction {
     )
 
     private fun conversionModeFor(name: String) =
-        ConversionMode.values().find { it.name.toLowerCase() == name }
+        ConversionMode.values().find { it.name.lowercase() == name }
             ?: throw IllegalArgumentException("Unknown conversion: $name")
 }
 
