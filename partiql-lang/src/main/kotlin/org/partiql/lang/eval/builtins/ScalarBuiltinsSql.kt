@@ -315,7 +315,7 @@ internal object ExprFunctionLn : ExprFunctionUnaryNumeric("ln") {
  * Given a string convert all upper case characters to lower case characters.
  *
  * Any non-upper cased characters remain unchanged. This operation does rely on the locale specified by the runtime
- * configuration. This implementation uses Java's String.toLowerCase().
+ * configuration. This implementation uses Java's String.lowercase().
  */
 internal object ExprFunctionLower : ExprFunction {
 
@@ -327,7 +327,7 @@ internal object ExprFunctionLower : ExprFunction {
 
     override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
         val str = required[0].stringValue()
-        val result = str.toLowerCase()
+        val result = str.lowercase()
         return ExprValue.newString(result)
     }
 }
@@ -336,7 +336,7 @@ internal object ExprFunctionLower : ExprFunction {
  * Given a string convert all lower case characters to upper case characters.
  *
  * Any non-lower cases characters remain unchanged. This operation does rely on the locale specified by the runtime
- * configuration. The implementation uses Java's String.toLowerCase().
+ * configuration. The implementation uses Java's String.lowercase().
  */
 internal object ExprFunctionUpper : ExprFunction {
 
@@ -597,7 +597,7 @@ internal abstract class ExprFunctionTrim : ExprFunction {
      * Return the behavior on switch rather than switch to get an enum then switch again on the enum for behavior.
      */
     private fun getTrimFnOrNull(trimSpecification: String): ((String, String?) -> String)? =
-        when (trimSpecification.toLowerCase().trim()) {
+        when (trimSpecification.lowercase().trim()) {
             "both" -> ::codepointTrim
             "leading" -> ::codepointLeadingTrim
             "trailing" -> ::codepointTrailingTrim

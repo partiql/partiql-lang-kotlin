@@ -113,7 +113,7 @@ internal class AstToLogicalVisitorTransform(
         call(
             "${CollectionAggregationFunction.PREFIX}${node.funcName.text}",
             listOf(
-                lit(ionString(node.setq.javaClass.simpleName.toLowerCase())),
+                lit(ionString(node.setq.javaClass.simpleName.lowercase())),
                 transformExpr(node.arg)
             )
         )

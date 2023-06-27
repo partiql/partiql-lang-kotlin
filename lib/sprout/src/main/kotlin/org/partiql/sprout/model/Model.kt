@@ -105,7 +105,7 @@ sealed class TypeRef(
         val type: ScalarType,
         nullable: Boolean = false,
     ) : TypeRef(
-        id = type.toString().toLowerCase(),
+        id = type.toString().lowercase(),
         nullable = nullable,
     )
 
