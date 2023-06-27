@@ -19,13 +19,13 @@ import com.amazon.ion.system.IonSystemBuilder
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.CompileOptions
-import org.partiql.lang.eval.EvaluatingCompiler
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.Expression
 import org.partiql.lang.eval.ThunkReturnTypeAssertions
 import org.partiql.lang.eval.builtins.SCALAR_BUILTINS_DEFAULT
 import org.partiql.lang.eval.builtins.definitionalBuiltins
 import org.partiql.lang.eval.builtins.storedprocedure.StoredProcedure
+import org.partiql.lang.eval.impl.CoverageCompiler
 import org.partiql.lang.eval.visitors.PipelinedVisitorTransform
 import org.partiql.lang.eval.visitors.StaticTypeInferenceVisitorTransform
 import org.partiql.lang.eval.visitors.StaticTypeVisitorTransform
@@ -233,7 +233,7 @@ internal class CompilerPipelineImpl(
     private val preProcessingSteps: List<ProcessingStep>,
     override val globalTypeBindings: Bindings<StaticType>?
 ) : CompilerPipeline {
-    private val compiler = EvaluatingCompiler(
+    private val compiler = CoverageCompiler(
         functions,
         customDataTypes.map { customType ->
             (customType.aliases + customType.name).map { alias ->

@@ -77,6 +77,8 @@ interface ExprValue : Iterable<ExprValue>, Faceted {
 
     val graphValue: Graph
 
+    var statistics: Statistics
+
     companion object {
         // Constructor classes
         private class NullExprValue(val ionType: IonType = IonType.NULL) : BaseExprValue() {

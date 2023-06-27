@@ -1,0 +1,8 @@
+// An example of a logged probe
+
+{
+  id: 'EvaluatingCompiler$compileGt::0',
+  decision: true,
+  logged: true,
+  
+}

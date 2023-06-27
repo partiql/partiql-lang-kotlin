@@ -95,7 +95,7 @@ import java.util.regex.Pattern
  *
  * This name was chosen because it is a thunk that accepts an instance of `Environment`.
  */
-private typealias ThunkEnv = Thunk<Environment>
+internal typealias ThunkEnv = Thunk<Environment>
 
 /**
  * A thunk taking a single [T] argument and the current environment.
@@ -128,7 +128,7 @@ private typealias ThunkEnvValue<T> = ThunkValue<Environment, T>
  * @param functions A map of functions keyed by function name that will be available during compilation.
  * @param compileOptions Various options that effect how the source code is compiled.
  */
-internal class EvaluatingCompiler(
+internal open class EvaluatingCompiler(
     private val functions: Map<String, ExprFunction>,
     private val customTypedOpParameters: Map<String, TypedOpParameter>,
     private val procedures: Map<String, StoredProcedure>,
@@ -345,7 +345,7 @@ internal class EvaluatingCompiler(
      * and throws [InterruptedException] if [Thread.interrupted] it has been set in the
      * hope that long-running compilations may be aborted by the caller.
      */
-    fun compile(originalAst: PartiqlAst.Statement): Expression {
+    open fun compile(originalAst: PartiqlAst.Statement): Expression {
         val visitorTransform = compileOptions.visitorTransformMode.createVisitorTransform()
         val transformedAst = visitorTransform.transformStatement(originalAst)
         val partiqlAstSanityValidator = PartiqlAstSanityValidator()
@@ -395,7 +395,7 @@ internal class EvaluatingCompiler(
         }
     }
 
-    private fun compileAstExpr(expr: PartiqlAst.Expr): ThunkEnv {
+    internal open fun compileAstExpr(expr: PartiqlAst.Expr): ThunkEnv {
         val metas = expr.metas
 
         return when (expr) {
@@ -710,7 +710,7 @@ internal class EvaluatingCompiler(
         return checkIntegerOverflow(computeThunk, metas)
     }
 
-    private fun compileEq(expr: PartiqlAst.Expr.Eq, metas: MetaContainer): ThunkEnv {
+    internal open fun compileEq(expr: PartiqlAst.Expr.Eq, metas: MetaContainer): ThunkEnv {
         val argThunks = compileAstExprs(expr.operands)
 
         return thunkFactory.thunkAndMap(metas, argThunks) { lValue, rValue ->
@@ -718,7 +718,7 @@ internal class EvaluatingCompiler(
         }
     }
 
-    private fun compileNe(expr: PartiqlAst.Expr.Ne, metas: MetaContainer): ThunkEnv {
+    internal open fun compileNe(expr: PartiqlAst.Expr.Ne, metas: MetaContainer): ThunkEnv {
         val argThunks = compileAstExprs(expr.operands)
 
         return thunkFactory.thunkFold(metas, argThunks) { lValue, rValue ->
@@ -726,31 +726,31 @@ internal class EvaluatingCompiler(
         }
     }
 
-    private fun compileLt(expr: PartiqlAst.Expr.Lt, metas: MetaContainer): ThunkEnv {
+    internal open fun compileLt(expr: PartiqlAst.Expr.Lt, metas: MetaContainer): ThunkEnv {
         val argThunks = compileAstExprs(expr.operands)
 
         return thunkFactory.thunkAndMap(metas, argThunks) { lValue, rValue -> lValue < rValue }
     }
 
-    private fun compileLte(expr: PartiqlAst.Expr.Lte, metas: MetaContainer): ThunkEnv {
+    internal open fun compileLte(expr: PartiqlAst.Expr.Lte, metas: MetaContainer): ThunkEnv {
         val argThunks = compileAstExprs(expr.operands)
 
         return thunkFactory.thunkAndMap(metas, argThunks) { lValue, rValue -> lValue <= rValue }
     }
 
-    private fun compileGt(expr: PartiqlAst.Expr.Gt, metas: MetaContainer): ThunkEnv {
+    internal open fun compileGt(expr: PartiqlAst.Expr.Gt, metas: MetaContainer): ThunkEnv {
         val argThunks = compileAstExprs(expr.operands)
 
         return thunkFactory.thunkAndMap(metas, argThunks) { lValue, rValue -> lValue > rValue }
     }
 
-    private fun compileGte(expr: PartiqlAst.Expr.Gte, metas: MetaContainer): ThunkEnv {
+    internal open fun compileGte(expr: PartiqlAst.Expr.Gte, metas: MetaContainer): ThunkEnv {
         val argThunks = compileAstExprs(expr.operands)
 
         return thunkFactory.thunkAndMap(metas, argThunks) { lValue, rValue -> lValue >= rValue }
     }
 
-    private fun compileBetween(expr: PartiqlAst.Expr.Between, metas: MetaContainer): ThunkEnv {
+    internal open fun compileBetween(expr: PartiqlAst.Expr.Between, metas: MetaContainer): ThunkEnv {
         val valueThunk = compileAstExpr(expr.value)
         val fromThunk = compileAstExpr(expr.from)
         val toThunk = compileAstExpr(expr.to)
@@ -776,7 +776,7 @@ internal class EvaluatingCompiler(
      * `IN` is varies from the `OR` operator in that this behavior holds true when other types of expressions are
      * used on the right side of `IN` such as sub-queries and variables whose value is that of a list or bag.
      */
-    private fun compileIn(expr: PartiqlAst.Expr.InCollection, metas: MetaContainer): ThunkEnv {
+    internal open fun compileIn(expr: PartiqlAst.Expr.InCollection, metas: MetaContainer): ThunkEnv {
         val args = expr.operands
         val leftThunk = compileAstExpr(args[0])
         val rightOp = args[1]
@@ -863,7 +863,7 @@ internal class EvaluatingCompiler(
         }
     }
 
-    private fun compileNot(expr: PartiqlAst.Expr.Not, metas: MetaContainer): ThunkEnv {
+    internal open fun compileNot(expr: PartiqlAst.Expr.Not, metas: MetaContainer): ThunkEnv {
         val argThunk = compileAstExpr(expr.expr)
 
         return thunkFactory.thunkEnvOperands(metas, argThunk) { _, value ->
@@ -871,7 +871,7 @@ internal class EvaluatingCompiler(
         }
     }
 
-    private fun compileAnd(expr: PartiqlAst.Expr.And, metas: MetaContainer): ThunkEnv {
+    internal open fun compileAnd(expr: PartiqlAst.Expr.And, metas: MetaContainer): ThunkEnv {
         val argThunks = compileAstExprs(expr.operands)
 
         // can't use the null propagation supplied by [ThunkFactory.thunkEnv] here because AND short-circuits on
@@ -916,7 +916,7 @@ internal class EvaluatingCompiler(
         }
     }
 
-    private fun compileOr(expr: PartiqlAst.Expr.Or, metas: MetaContainer): ThunkEnv {
+    internal open fun compileOr(expr: PartiqlAst.Expr.Or, metas: MetaContainer): ThunkEnv {
         val argThunks = compileAstExprs(expr.operands)
 
         // can't use the null propagation supplied by [ThunkFactory.thunkEnv] here because OR short-circuits on
@@ -989,7 +989,7 @@ internal class EvaluatingCompiler(
         }
     }
 
-    private fun compileCall(expr: PartiqlAst.Expr.Call, metas: MetaContainer): ThunkEnv {
+    internal open fun compileCall(expr: PartiqlAst.Expr.Call, metas: MetaContainer): ThunkEnv {
         val funcArgThunks = compileAstExprs(expr.args)
         val func = functions[expr.funcName.text] ?: err(
             "No such function: ${expr.funcName.text}",
@@ -1080,7 +1080,7 @@ internal class EvaluatingCompiler(
         return checkIntegerOverflow(computeThunk, metas)
     }
 
-    private fun compileLit(expr: PartiqlAst.Expr.Lit, metas: MetaContainer): ThunkEnv {
+    internal open fun compileLit(expr: PartiqlAst.Expr.Lit, metas: MetaContainer): ThunkEnv {
         val value = ExprValue.of(expr.value.toIonValue(ion))
 
         return thunkFactory.thunkEnv(metas) { value }
@@ -1089,7 +1089,7 @@ internal class EvaluatingCompiler(
     private fun compileMissing(metas: MetaContainer): ThunkEnv =
         thunkFactory.thunkEnv(metas) { ExprValue.missingValue }
 
-    private fun compileId(expr: PartiqlAst.Expr.Id, metas: MetaContainer): ThunkEnv {
+    internal open fun compileId(expr: PartiqlAst.Expr.Id, metas: MetaContainer): ThunkEnv {
         val uniqueNameMeta = metas[UniqueNameMeta.TAG] as? UniqueNameMeta
         val fromSourceNames = currentCompilationContext.fromSourceNames
 
@@ -1220,7 +1220,7 @@ internal class EvaluatingCompiler(
         }
     }
 
-    private fun compileIs(expr: PartiqlAst.Expr.IsType, metas: MetaContainer): ThunkEnv {
+    internal open fun compileIs(expr: PartiqlAst.Expr.IsType, metas: MetaContainer): ThunkEnv {
         val expThunk = compileAstExpr(expr.value)
         val typedOpParameter = expr.type.toTypedOpParameter()
         if (typedOpParameter.staticType is AnyType) {
@@ -1350,7 +1350,7 @@ internal class EvaluatingCompiler(
     private fun compileCast(expr: PartiqlAst.Expr.Cast, metas: MetaContainer): ThunkEnv =
         thunkFactory.thunkEnv(metas, compileCastHelper(expr.value, expr.asType, metas))
 
-    private fun compileCanCast(expr: PartiqlAst.Expr.CanCast, metas: MetaContainer): ThunkEnv {
+    internal open fun compileCanCast(expr: PartiqlAst.Expr.CanCast, metas: MetaContainer): ThunkEnv {
         val typedOpParameter = expr.asType.toTypedOpParameter()
         if (typedOpParameter.staticType is AnyType) {
             return thunkFactory.thunkEnv(metas) { ExprValue.newBoolean(true) }
@@ -1385,7 +1385,7 @@ internal class EvaluatingCompiler(
         }
     }
 
-    private fun compileCanLosslessCast(expr: PartiqlAst.Expr.CanLosslessCast, metas: MetaContainer): ThunkEnv {
+    internal open fun compileCanLosslessCast(expr: PartiqlAst.Expr.CanLosslessCast, metas: MetaContainer): ThunkEnv {
         val typedOpParameter = expr.asType.toTypedOpParameter()
         if (typedOpParameter.staticType is AnyType) {
             return thunkFactory.thunkEnv(metas) { ExprValue.newBoolean(true) }

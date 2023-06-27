@@ -39,6 +39,8 @@ abstract class BaseExprValue : ExprValue {
     final override fun <T : Any?> asFacet(type: Class<T>?): T? =
         downcast(type) ?: provideFacet(type)
 
+    override var statistics: Statistics = Statistics(0, emptyMap(), emptyMap())
+
     /**
      * Provides a fall-back for providing facets if a sub-class doesn't inherit the facet interface
      * or class.
