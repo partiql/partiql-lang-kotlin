@@ -20,7 +20,6 @@ import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.numberValue
 import org.partiql.lang.types.FunctionSignature
 import org.partiql.lang.types.TypedOpParameter
-import org.partiql.lang.types.VarargFormalParameter
 import org.partiql.lang.util.cartesianProduct
 import org.partiql.lang.util.compareTo
 import org.partiql.lang.util.countMatchingSubstrings
@@ -170,7 +169,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
         val ion = IonSystemBuilder.standard().build()
         val inferencer = StaticTypeInferencer(
             globalBindings = globalBindings,
-            customFunctionSignatures = tc.customFunctionSignatures,
+            customFunctions = tc.customFunctions,
             customTypedOpParameters = customTypedOpParameters
         )
 
@@ -302,7 +301,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
             name: String,
             originalSql: String,
             globals: Map<String, StaticType> = mapOf(),
-            customFunctionSignatures: List<FunctionSignature> = listOf(),
+            customFunctions: List<ExprFunction> = listOf(),
             handler: (ResolveTestResult) -> Unit
         ) =
             crossExpand(originalSql, opType.operators)
@@ -311,7 +310,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
                         "$it : $name ",
                         it,
                         globals,
-                        customFunctionSignatures,
+                        customFunctions,
                         handler
                     )
                 }
@@ -7191,8 +7190,8 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
             ),
             TestCase(
                 "custom function",
-                "format('test %d %s', 1, 'a')",
-                customFunctionSignatures = listOf(formatFunc.signature),
+                "format('test %d %s', [1, 'a'])",
+                customFunctions = listOf(formatFunc),
                 handler = expectQueryOutputType(StaticType.STRING)
             ),
             TestCase(
@@ -7607,7 +7606,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
             val name: String,
             val originalSql: String,
             val globals: Map<String, StaticType> = mapOf(),
-            val customFunctionSignatures: List<FunctionSignature> = listOf(),
+            val customFunctions: List<ExprFunction> = listOf(),
             val handler: (ResolveTestResult) -> Unit
         ) {
             override fun toString(): String = this.name
@@ -7623,8 +7622,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
 
             override val signature = FunctionSignature(
                 name = "format",
-                requiredParameters = listOf(StaticType.STRING),
-                variadicParameter = VarargFormalParameter(StaticType.ANY, 0),
+                requiredParameters = listOf(StaticType.STRING, StaticType.LIST),
                 returnType = StaticType.STRING
             )
         }

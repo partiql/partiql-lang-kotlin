@@ -28,30 +28,30 @@ private fun PartiqlLogicalResolved.Builder.dynamicLookup(
     name: String,
     case: BindingCase,
     globalsFirst: Boolean = false,
-    vararg searchTargets: PartiqlLogicalResolved.Expr
-) =
-    call(
-        DYNAMIC_LOOKUP_FUNCTION_NAME,
-        listOf(
-            lit(ionSymbol(name)),
-            lit(
-                ionSymbol(
-                    when (case) {
-                        BindingCase.SENSITIVE -> "case_sensitive"
-                        BindingCase.INSENSITIVE -> "case_insensitive"
-                    }
-                )
-            ),
-            lit(
-                ionSymbol(
-                    when {
-                        globalsFirst -> "globals_then_locals"
-                        else -> "locals_then_globals"
-                    }
-                )
+    searchTargets: List<PartiqlLogicalResolved.Expr> = emptyList()
+) = call(
+    DYNAMIC_LOOKUP_FUNCTION_NAME,
+    listOf(
+        lit(ionSymbol(name)),
+        lit(
+            ionSymbol(
+                when (case) {
+                    BindingCase.SENSITIVE -> "case_sensitive"
+                    BindingCase.INSENSITIVE -> "case_insensitive"
+                }
             )
-        ) + searchTargets
+        ),
+        lit(
+            ionSymbol(
+                when {
+                    globalsFirst -> "globals_then_locals"
+                    else -> "locals_then_globals"
+                }
+            )
+        ),
+        list(searchTargets)
     )
+)
 
 class LogicalToLogicalResolvedVisitorTransformTests {
     data class TestCase(
@@ -668,16 +668,21 @@ class LogicalToLogicalResolvedVisitorTransformTests {
             TestCase(
                 "SELECT undefined1 AS u FROM 1 AS f WHERE undefined2", // 1 from source
                 Expectation.Success(
-                    ResolvedId(1, 8) { dynamicLookup("undefined1", BindingCase.INSENSITIVE, globalsFirst = false, localId(0)) },
-                    ResolvedId(1, 42) { dynamicLookup("undefined2", BindingCase.INSENSITIVE, globalsFirst = false, localId(0)) }
+                    ResolvedId(1, 8) {
+                        dynamicLookup(
+                            "undefined1", BindingCase.INSENSITIVE, globalsFirst = false,
+                            listOf(localId(0))
+                        )
+                    },
+                    ResolvedId(1, 42) { dynamicLookup("undefined2", BindingCase.INSENSITIVE, globalsFirst = false, listOf(localId(0))) }
                 ).withLocals(localVariable("f", 0)),
                 allowUndefinedVariables = true
             ),
             TestCase(
                 sql = "SELECT undefined1 AS u FROM 1 AS a, 2 AS b WHERE undefined2", // 2 from sources
                 Expectation.Success(
-                    ResolvedId(1, 8) { dynamicLookup("undefined1", BindingCase.INSENSITIVE, globalsFirst = false, localId(1), localId(0)) },
-                    ResolvedId(1, 50) { dynamicLookup("undefined2", BindingCase.INSENSITIVE, globalsFirst = false, localId(1), localId(0)) }
+                    ResolvedId(1, 8) { dynamicLookup("undefined1", BindingCase.INSENSITIVE, globalsFirst = false, listOf(localId(1), localId(0))) },
+                    ResolvedId(1, 50) { dynamicLookup("undefined2", BindingCase.INSENSITIVE, globalsFirst = false, listOf(localId(1), localId(0))) }
                 ).withLocals(localVariable("a", 0), localVariable("b", 1)),
                 allowUndefinedVariables = true
             ),
@@ -685,10 +690,10 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                 sql = "SELECT undefined1 AS u FROM 1 AS f, 1 AS b, 1 AS t WHERE undefined2", // 3 from sources
                 Expectation.Success(
                     ResolvedId(1, 8) {
-                        dynamicLookup("undefined1", BindingCase.INSENSITIVE, globalsFirst = false, localId(2), localId(1), localId(0))
+                        dynamicLookup("undefined1", BindingCase.INSENSITIVE, globalsFirst = false, listOf(localId(2), localId(1), localId(0)))
                     },
                     ResolvedId(1, 58) {
-                        dynamicLookup("undefined2", BindingCase.INSENSITIVE, globalsFirst = false, localId(2), localId(1), localId(0))
+                        dynamicLookup("undefined2", BindingCase.INSENSITIVE, globalsFirst = false, listOf(localId(2), localId(1), localId(0)))
                     }
                 ).withLocals(localVariable("f", 0), localVariable("b", 1), localVariable("t", 2)),
                 allowUndefinedVariables = true
@@ -698,16 +703,16 @@ class LogicalToLogicalResolvedVisitorTransformTests {
             TestCase(
                 "SELECT undefined1 AS u FROM 1 AS f ORDER BY undefined2", // 1 from source
                 Expectation.Success(
-                    ResolvedId(1, 8) { dynamicLookup("undefined1", BindingCase.INSENSITIVE, globalsFirst = false, localId(0)) },
-                    ResolvedId(1, 45) { dynamicLookup("undefined2", BindingCase.INSENSITIVE, globalsFirst = false, localId(0)) }
+                    ResolvedId(1, 8) { dynamicLookup("undefined1", BindingCase.INSENSITIVE, globalsFirst = false, listOf(localId(0))) },
+                    ResolvedId(1, 45) { dynamicLookup("undefined2", BindingCase.INSENSITIVE, globalsFirst = false, listOf(localId(0))) }
                 ).withLocals(localVariable("f", 0)),
                 allowUndefinedVariables = true
             ),
             TestCase(
                 sql = "SELECT undefined1 AS u FROM 1 AS a, 2 AS b ORDER BY undefined2", // 2 from sources
                 Expectation.Success(
-                    ResolvedId(1, 8) { dynamicLookup("undefined1", BindingCase.INSENSITIVE, globalsFirst = false, localId(1), localId(0)) },
-                    ResolvedId(1, 53) { dynamicLookup("undefined2", BindingCase.INSENSITIVE, globalsFirst = false, localId(1), localId(0)) }
+                    ResolvedId(1, 8) { dynamicLookup("undefined1", BindingCase.INSENSITIVE, globalsFirst = false, listOf(localId(1), localId(0))) },
+                    ResolvedId(1, 53) { dynamicLookup("undefined2", BindingCase.INSENSITIVE, globalsFirst = false, listOf(localId(1), localId(0))) }
                 ).withLocals(localVariable("a", 0), localVariable("b", 1)),
                 allowUndefinedVariables = true
             ),
@@ -715,10 +720,10 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                 sql = "SELECT undefined1 AS u FROM 1 AS f, 1 AS b, 1 AS t ORDER BY undefined2", // 3 from sources
                 Expectation.Success(
                     ResolvedId(1, 8) {
-                        dynamicLookup("undefined1", BindingCase.INSENSITIVE, globalsFirst = false, localId(2), localId(1), localId(0))
+                        dynamicLookup("undefined1", BindingCase.INSENSITIVE, globalsFirst = false, listOf(localId(2), localId(1), localId(0)))
                     },
                     ResolvedId(1, 61) {
-                        dynamicLookup("undefined2", BindingCase.INSENSITIVE, globalsFirst = false, localId(2), localId(1), localId(0))
+                        dynamicLookup("undefined2", BindingCase.INSENSITIVE, globalsFirst = false, listOf(localId(2), localId(1), localId(0)))
                     }
                 ).withLocals(localVariable("f", 0), localVariable("b", 1), localVariable("t", 2)),
                 allowUndefinedVariables = true
@@ -750,7 +755,7 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                 "SELECT 1 AS x FROM undefined_table AS f, @asdf AS f2",
                 Expectation.Success(
                     ResolvedId(1, 20) { dynamicLookup("undefined_table", BindingCase.INSENSITIVE, globalsFirst = true) },
-                    ResolvedId(1, 43) { dynamicLookup("asdf", BindingCase.INSENSITIVE, globalsFirst = false, localId(0)) }
+                    ResolvedId(1, 43) { dynamicLookup("asdf", BindingCase.INSENSITIVE, globalsFirst = false, listOf(localId(0))) }
                 ).withLocals(
                     localVariable("f", 0),
                     localVariable("f2", 1)
@@ -783,7 +788,7 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                     // The variables reference in the inner query
                     ResolvedId(1, 38) { localId(0) },
                     // Note that `b` from the outer query is not accessible inside the query so we fall back on dynamic lookup
-                    ResolvedId(1, 43) { dynamicLookup("b", BindingCase.INSENSITIVE, globalsFirst = false, localId(1), localId(0)) }
+                    ResolvedId(1, 43) { dynamicLookup("b", BindingCase.INSENSITIVE, globalsFirst = false, listOf(localId(1), localId(0))) }
                 ).withLocals(localVariable("a", 0), localVariable("x", 1), localVariable("b", 2)),
                 allowUndefinedVariables = true
             ),
@@ -794,7 +799,7 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                 Expectation.Success(
                     ResolvedId(1, 8) { localId(0) },
                     ResolvedId(1, 13) { localId(1) },
-                    ResolvedId(1, 30) { dynamicLookup("undefined", BindingCase.INSENSITIVE, globalsFirst = true, localId(0)) }
+                    ResolvedId(1, 30) { dynamicLookup("undefined", BindingCase.INSENSITIVE, globalsFirst = true, listOf(localId(0))) }
                 ).withLocals(localVariable("f", 0), localVariable("u", 1)),
                 allowUndefinedVariables = true
             ),

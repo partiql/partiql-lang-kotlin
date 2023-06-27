@@ -33,17 +33,22 @@ import java.io.FileInputStream
 import java.io.InputStream
 import java.io.InputStreamReader
 
-internal class ReadFile(private val ion: IonSystem) : ExprFunction {
-    override val signature = FunctionSignature(
-        name = "read_file",
-        requiredParameters = listOf(StaticType.STRING),
-        optionalParameter = StaticType.STRUCT,
-        returnType = StaticType.BAG
-    )
+internal abstract class ReadFile(protected val ion: IonSystem) : ExprFunction {
 
-    private fun conversionModeFor(name: String) =
-        ConversionMode.values().find { it.name.lowercase() == name }
-            ?: throw IllegalArgumentException("Unknown conversion: $name")
+    private fun ionReadHandler(): (InputStream, Bindings<ExprValue>) -> ExprValue = { input, _ ->
+        IonReaderBuilder.standard().build(input).use { reader ->
+            val value = when (reader.next()) {
+                null -> ExprValue.missingValue
+                else -> ExprValue.newFromIonReader(ion, reader)
+            }
+            if (reader.next() != null) {
+                val message = "As of v0.7.0, PartiQL requires that Ion files contain only a single Ion value for " +
+                    "processing. Please consider wrapping multiple values in a list."
+                throw IllegalStateException(message)
+            }
+            value
+        }
+    }
 
     private fun fileReadHandler(csvFormat: CSVFormat): (InputStream, Bindings<ExprValue>) -> ExprValue = { input, bindings ->
         val encoding = bindings[BindingName("encoding", BindingCase.SENSITIVE)]?.stringValue() ?: "UTF-8"
@@ -73,22 +78,7 @@ internal class ReadFile(private val ion: IonSystem) : ExprFunction {
         ExprValue.newBag(seq)
     }
 
-    private fun ionReadHandler(): (InputStream, Bindings<ExprValue>) -> ExprValue = { input, _ ->
-        IonReaderBuilder.standard().build(input).use { reader ->
-            val value = when (reader.next()) {
-                null -> ExprValue.missingValue
-                else -> ExprValue.newFromIonReader(ion, reader)
-            }
-            if (reader.next() != null) {
-                val message = "As of v0.7.0, PartiQL requires that Ion files contain only a single Ion value for " +
-                    "processing. Please consider wrapping multiple values in a list."
-                throw IllegalStateException(message)
-            }
-            value
-        }
-    }
-
-    private val readHandlers = mapOf(
+    protected val readHandlers = mapOf(
         "ion" to ionReadHandler(),
         "csv" to fileReadHandler(CSVFormat.DEFAULT),
         "tsv" to fileReadHandler(CSVFormat.DEFAULT.withDelimiter('\t')),
@@ -97,6 +87,18 @@ internal class ReadFile(private val ion: IonSystem) : ExprFunction {
         "postgresql_csv" to fileReadHandler(CSVFormat.POSTGRESQL_CSV),
         "postgresql_text" to fileReadHandler(CSVFormat.POSTGRESQL_TEXT),
         "customized" to fileReadHandler(CSVFormat.DEFAULT)
+    )
+
+    private fun conversionModeFor(name: String) =
+        ConversionMode.values().find { it.name.lowercase() == name }
+            ?: throw IllegalArgumentException("Unknown conversion: $name")
+}
+
+internal class ReadFile_1(ion: IonSystem) : ReadFile(ion) {
+    override val signature = FunctionSignature(
+        name = "read_file",
+        requiredParameters = listOf(StaticType.STRING),
+        returnType = StaticType.BAG
     )
 
     override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
@@ -108,14 +110,22 @@ internal class ReadFile(private val ion: IonSystem) : ExprFunction {
         val fileInput = FileInputStream(fileName)
         return handler(fileInput, Bindings.empty())
     }
+}
 
-    override fun callWithOptional(session: EvaluationSession, required: List<ExprValue>, opt: ExprValue): ExprValue {
+internal class ReadFile_2(ion: IonSystem) : ReadFile(ion) {
+    override val signature = FunctionSignature(
+        name = "read_file",
+        requiredParameters = listOf(StaticType.STRING, StaticType.STRUCT),
+        returnType = StaticType.BAG
+    )
+
+    override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
         val fileName = required[0].stringValue()
-        val fileType = opt.bindings[BindingName("type", BindingCase.SENSITIVE)]?.stringValue() ?: "ion"
+        val fileType = required[1].bindings[BindingName("type", BindingCase.SENSITIVE)]?.stringValue() ?: "ion"
         val handler = readHandlers[fileType] ?: throw IllegalArgumentException("Unknown file type: $fileType")
         // TODO we should take care to clean up this `FileInputStream` properly
         //  https://github.com/partiql/partiql-lang-kotlin/issues/518
         val fileInput = FileInputStream(fileName)
-        return handler(fileInput, opt.bindings)
+        return handler(fileInput, required[1].bindings)
     }
 }

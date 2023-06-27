@@ -21,8 +21,11 @@ import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.errors.PropertyValueMap
 import org.partiql.lang.types.FunctionSignature
+import org.partiql.lang.types.StaticTypeUtils
 import org.partiql.lang.util.propertyValueMapOf
 import org.partiql.lang.util.to
+import org.partiql.types.SingleType
+import org.partiql.types.StaticType
 
 /** Error for evaluation problems. */
 open class EvaluationException(
@@ -72,16 +75,21 @@ internal fun errInvalidArgumentType(
     signature: FunctionSignature,
     position: Int,
     expectedTypes: List<ExprValueType>,
-    actualType: ExprValueType
+    actualType: StaticType
 ): Nothing {
 
     val expectedTypeMsg = expectedArgTypeErrorMsg(expectedTypes)
+
+    val actual = when (actualType) {
+        is SingleType -> StaticTypeUtils.getRuntimeType(actualType).toString()
+        else -> actualType.toString()
+    }
 
     val errorContext = propertyValueMapOf(
         Property.FUNCTION_NAME to signature.name,
         Property.EXPECTED_ARGUMENT_TYPES to expectedTypeMsg,
         Property.ARGUMENT_POSITION to position,
-        Property.ACTUAL_ARGUMENT_TYPES to actualType.toString()
+        Property.ACTUAL_ARGUMENT_TYPES to actual
     )
 
     err(
@@ -133,3 +141,9 @@ fun errorContextFrom(metaContainer: MetaContainer?): PropertyValueMap {
         PropertyValueMap()
     }
 }
+
+/** Throw a function not found error when function name matching fails */
+internal class FunctionNotFoundException(message: String) : Exception(message)
+
+/** Throw an arity mismatch error when function arity matching fails */
+internal class ArityMismatchException(message: String, val arity: Pair<Int, Int>) : Exception(message)

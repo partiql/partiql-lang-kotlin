@@ -888,6 +888,11 @@ class PartiQLSchemaInferencerTests {
                 expected = unionOf(STRING, StaticType.NULL)
             ),
             SuccessTestCase(
+                name = "Trim",
+                query = "trim(' ')",
+                expected = StaticType.STRING
+            ),
+            SuccessTestCase(
                 name = "Current User Concat",
                 query = "CURRENT_USER || 'hello'",
                 expected = unionOf(STRING, StaticType.NULL)
@@ -896,6 +901,36 @@ class PartiQLSchemaInferencerTests {
                 name = "Current User Concat in WHERE",
                 query = "SELECT VALUE a FROM [ 0 ] AS a WHERE CURRENT_USER = 'hello'",
                 expected = BagType(StaticType.INT)
+            ),
+            SuccessTestCase(
+                name = "TRIM_2",
+                query = "trim(' ' FROM ' Hello, World! ')",
+                expected = StaticType.STRING
+            ),
+            SuccessTestCase(
+                name = "TRIM_1",
+                query = "trim(' Hello, World! ')",
+                expected = StaticType.STRING
+            ),
+            SuccessTestCase(
+                name = "TRIM_3",
+                query = "trim(LEADING ' ' FROM ' Hello, World! ')",
+                expected = StaticType.STRING
+            ),
+            ErrorTestCase(
+                name = "TRIM_2_error",
+                query = "trim(2 FROM ' Hello, World! ')",
+                expected = StaticType.STRING,
+                problemHandler = assertProblemExists {
+                    Problem(
+                        UNKNOWN_SOURCE_LOCATION,
+                        SemanticProblemDetails.InvalidArgumentTypeForFunction(
+                            "trim",
+                            unionOf(StaticType.STRING, StaticType.SYMBOL),
+                            StaticType.INT,
+                        )
+                    )
+                }
             ),
             ErrorTestCase(
                 name = "Current User Concat in WHERE",
