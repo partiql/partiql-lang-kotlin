@@ -61,11 +61,14 @@ internal val SCALAR_BUILTINS_EXT = listOf(
     ExprFunctionDateAdd,
     ExprFunctionDateDiff,
     ExprFunctionMakeDate,
-    ExprFunctionMakeTime,
-    ExprFunctionToTimestamp,
+    ExprFunctionMakeTime_1,
+    ExprFunctionMakeTime_2,
+    ExprFunctionToTimestamp_1,
+    ExprFunctionToTimestamp_2,
     ExprFunctionSize,
     ExprFunctionFromUnix,
-    ExprFunctionUnixTimestamp,
+    ExprFunctionUnixTimestamp_1,
+    ExprFunctionUnixTimestamp_2,
     ExprFunctionToString,
     ExprFunctionTextReplace,
 )
@@ -276,28 +279,12 @@ internal object ExprFunctionMakeDate : ExprFunction {
  * Creates a TIME ExprValue from the time fields hour, minute, second and optional timezone_minutes.
  * Takes hour, minute and optional timezone_minutes as integers, second as decimal and propagates NULL if any of these arguments is unknown (i.e. NULL or MISSING)
  *
- * make_time(<hour_value>, <minute_value>, <second_value>, <optional_timezone_minutes>?)
+ * make_time(<hour_value>, <minute_value>, <second_value>)
+ * make_time(<hour_value>, <minute_value>, <second_value>, <optional_timezone_minutes>)
  */
-internal object ExprFunctionMakeTime : ExprFunction {
 
-    override val signature = FunctionSignature(
-        name = "make_time",
-        requiredParameters = listOf(StaticType.INT, StaticType.INT, StaticType.DECIMAL),
-        optionalParameter = StaticType.INT,
-        returnType = StaticType.TIME
-    )
-
-    override fun callWithOptional(session: EvaluationSession, required: List<ExprValue>, opt: ExprValue): ExprValue {
-        val (hour, min, sec) = required
-        return makeTime(hour.intValue(), min.intValue(), sec.bigDecimalValue(), opt.intValue())
-    }
-
-    override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
-        val (hour, min, sec) = required
-        return makeTime(hour.intValue(), min.intValue(), sec.bigDecimalValue(), null)
-    }
-
-    private fun makeTime(
+internal abstract class ExprFunctionMakeTime : ExprFunction {
+    protected fun makeTime(
         hour: Int,
         minute: Int,
         second: BigDecimal,
@@ -325,15 +312,42 @@ internal object ExprFunctionMakeTime : ExprFunction {
     }
 }
 
+internal object ExprFunctionMakeTime_1 : ExprFunctionMakeTime() {
+    override val signature = FunctionSignature(
+        name = "make_time",
+        requiredParameters = listOf(StaticType.INT, StaticType.INT, StaticType.DECIMAL),
+        returnType = StaticType.TIME
+    )
+
+    override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
+        val (hour, min, sec) = required
+        return makeTime(hour.intValue(), min.intValue(), sec.bigDecimalValue(), null)
+    }
+}
+
+internal object ExprFunctionMakeTime_2 : ExprFunctionMakeTime() {
+    override val signature = FunctionSignature(
+        name = "make_time",
+        requiredParameters = listOf(StaticType.INT, StaticType.INT, StaticType.DECIMAL, StaticType.INT),
+        returnType = StaticType.TIME
+    )
+
+    override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
+        val (hour, min, sec, opt) = required
+        return makeTime(hour.intValue(), min.intValue(), sec.bigDecimalValue(), opt.intValue())
+    }
+}
+
 /**
  * PartiQL function to convert a formatted string into an Ion Timestamp.
  */
-internal object ExprFunctionToTimestamp : ExprFunction {
+internal abstract class ExprFunctionToTimestamp : ExprFunction
+
+internal object ExprFunctionToTimestamp_1 : ExprFunctionToTimestamp() {
 
     override val signature = FunctionSignature(
         name = "to_timestamp",
         requiredParameters = listOf(StaticType.STRING),
-        optionalParameter = StaticType.STRING,
         returnType = StaticType.TIMESTAMP
     )
 
@@ -351,9 +365,17 @@ internal object ExprFunctionToTimestamp : ExprFunction {
         }
         return ExprValue.newTimestamp(ts)
     }
+}
 
-    override fun callWithOptional(session: EvaluationSession, required: List<ExprValue>, opt: ExprValue): ExprValue {
-        val ts = TimestampParser.parseTimestamp(required[0].stringValue(), opt.stringValue())
+internal object ExprFunctionToTimestamp_2 : ExprFunctionToTimestamp() {
+
+    override val signature = FunctionSignature(
+        name = "to_timestamp",
+        requiredParameters = listOf(StaticType.STRING, StaticType.STRING),
+        returnType = StaticType.TIMESTAMP
+    )
+    override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
+        val ts = TimestampParser.parseTimestamp(required[0].stringValue(), required[1].stringValue())
         return ExprValue.newTimestamp(ts)
     }
 }
@@ -426,24 +448,34 @@ internal object ExprFunctionFromUnix : ExprFunction {
  *
  * The valid range of argument values is the range of PartiQL's `TIMESTAMP` value.
  */
-internal object ExprFunctionUnixTimestamp : ExprFunction {
+internal abstract class ExprFunctionUnixTimestamp : ExprFunction {
+    private val millisPerSecond = BigDecimal(1000)
+    protected fun epoch(timestamp: Timestamp): BigDecimal = timestamp.decimalMillis.divide(millisPerSecond)
+}
+
+internal object ExprFunctionUnixTimestamp_1 : ExprFunctionUnixTimestamp() {
 
     override val signature = FunctionSignature(
         name = "unix_timestamp",
         requiredParameters = listOf(),
-        optionalParameter = StaticType.TIMESTAMP,
         returnType = unionOf(StaticType.INT, StaticType.DECIMAL)
     )
-
-    private val millisPerSecond = BigDecimal(1000)
-    private fun epoch(timestamp: Timestamp): BigDecimal = timestamp.decimalMillis.divide(millisPerSecond)
 
     override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
         return ExprValue.newInt(epoch(session.now).toLong())
     }
+}
 
-    override fun callWithOptional(session: EvaluationSession, required: List<ExprValue>, opt: ExprValue): ExprValue {
-        val timestamp = opt.timestampValue()
+internal object ExprFunctionUnixTimestamp_2 : ExprFunctionUnixTimestamp() {
+
+    override val signature = FunctionSignature(
+        name = "unix_timestamp",
+        requiredParameters = listOf(StaticType.TIMESTAMP),
+        returnType = unionOf(StaticType.INT, StaticType.DECIMAL)
+    )
+
+    override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
+        val timestamp = required[0].timestampValue()
         val epochTime = epoch(timestamp)
         return if (timestamp.decimalSecond.scale() == 0) {
             ExprValue.newInt(epochTime.toLong())

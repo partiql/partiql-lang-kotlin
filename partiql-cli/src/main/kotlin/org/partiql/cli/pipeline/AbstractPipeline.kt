@@ -23,8 +23,10 @@ import com.amazon.ionelement.api.toIonValue
 import org.partiql.annotations.ExperimentalPartiQLCompilerPipeline
 import org.partiql.cli.Debug
 import org.partiql.cli.functions.QueryDDB
-import org.partiql.cli.functions.ReadFile
-import org.partiql.cli.functions.WriteFile
+import org.partiql.cli.functions.ReadFile_1
+import org.partiql.cli.functions.ReadFile_2
+import org.partiql.cli.functions.WriteFile_1
+import org.partiql.cli.functions.WriteFile_2
 import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.compiler.PartiQLCompilerBuilder
 import org.partiql.lang.compiler.PartiQLCompilerPipeline
@@ -74,8 +76,10 @@ internal sealed class AbstractPipeline(open val options: PipelineOptions) {
         ): PipelineOptions {
             val ion = IonSystemBuilder.standard().build()
             val functions: List<ExprFunction> = listOf(
-                ReadFile(ion),
-                WriteFile(ion),
+                ReadFile_1(ion),
+                ReadFile_2(ion),
+                WriteFile_1(ion),
+                WriteFile_2(ion),
                 QueryDDB(ion)
             )
             val parser = PartiQLParserBuilder().build()
