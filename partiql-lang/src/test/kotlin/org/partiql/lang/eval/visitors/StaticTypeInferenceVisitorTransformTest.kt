@@ -301,7 +301,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
             name: String,
             originalSql: String,
             globals: Map<String, StaticType> = mapOf(),
-            customFunction: List<ExprFunction> = listOf(),
+            customFunctions: List<ExprFunction> = listOf(),
             handler: (ResolveTestResult) -> Unit
         ) =
             crossExpand(originalSql, opType.operators)
@@ -310,7 +310,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
                         "$it : $name ",
                         it,
                         globals,
-                        customFunction,
+                        customFunctions,
                         handler
                     )
                 }
