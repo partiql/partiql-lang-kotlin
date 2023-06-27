@@ -15,20 +15,47 @@ class FunctionManagerTest : EvaluatorTestBase() {
     private val functionManager = FunctionManager(functions)
 
     @Test
-    fun functionManagerPassTests() {
-        val function_1 = functionManager.get("trim", 1, listOf(StaticType.TEXT))
-        val function_2 = functionManager.get("trim", 2, listOf(StaticType.TEXT, StaticType.STRING))
-        val function_3 = functionManager.get("trim", 3, listOf(StaticType.TEXT, StaticType.STRING, StaticType.STRING))
+    fun functionManagerPassTests1() {
+        val function = functionManager.get("trim", 1, listOf(StaticType.TEXT))
 
-        assertEquals(function_1.signature.name, "trim")
-        assertEquals(function_1.signature.arity, 1..1)
-        assertEquals(function_1.signature.requiredParameters, listOf(StaticType.TEXT))
-        assertEquals(function_2.signature.name, "trim")
-        assertEquals(function_2.signature.arity, 2..2)
-        assertEquals(function_2.signature.requiredParameters, listOf(StaticType.TEXT, StaticType.STRING))
-        assertEquals(function_3.signature.name, "trim")
-        assertEquals(function_3.signature.arity, 3..3)
-        assertEquals(function_3.signature.requiredParameters, listOf(StaticType.TEXT, StaticType.STRING, StaticType.STRING))
+        assertEquals(function.signature.name, "trim")
+        assertEquals(function.signature.arity, 1..1)
+        assertEquals(function.signature.requiredParameters, listOf(StaticType.TEXT))
+    }
+
+    @Test
+    fun functionManagerPassTests2() {
+        val function = functionManager.get("trim", 2, listOf(StaticType.TEXT, StaticType.STRING))
+        assertEquals(function.signature.name, "trim")
+        assertEquals(function.signature.arity, 2..2)
+        assertEquals(function.signature.requiredParameters, listOf(StaticType.TEXT, StaticType.STRING))
+    }
+
+    @Test
+    fun functionManagerPassTests3() {
+        val function = functionManager.get("trim", 3, listOf(StaticType.TEXT, StaticType.STRING, StaticType.STRING))
+
+        assertEquals(function.signature.name, "trim")
+        assertEquals(function.signature.arity, 3..3)
+        assertEquals(function.signature.requiredParameters, listOf(StaticType.TEXT, StaticType.STRING, StaticType.STRING))
+    }
+
+    @Test
+    fun functionManagerPassTests4() {
+        val function = functionManager.get("trim", 1, listOf(StaticType.STRING))
+
+        assertEquals(function.signature.name, "trim")
+        assertEquals(function.signature.arity, 1..1)
+        assertEquals(function.signature.requiredParameters, listOf(StaticType.TEXT))
+    }
+
+    @Test
+    fun functionManagerPassTests5() {
+        val function = functionManager.get("trim", 2, listOf(StaticType.NULL, StaticType.NULL))
+
+        assertEquals(function.signature.name, "trim")
+        assertEquals(function.signature.arity, 2..2)
+        assertEquals(function.signature.requiredParameters, listOf(StaticType.TEXT, StaticType.STRING))
     }
 
     @Test
