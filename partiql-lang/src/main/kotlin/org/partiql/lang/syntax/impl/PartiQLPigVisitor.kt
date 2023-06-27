@@ -91,12 +91,12 @@ internal class PartiQLPigVisitor(
         internal val TRIM_SPECIFICATION_KEYWORDS = setOf("both", "leading", "trailing")
     }
 
-    private val customKeywords = customTypes.map { it.name.toLowerCase() }
+    private val customKeywords = customTypes.map { it.name.lowercase() }
 
     private val customTypeAliases =
         customTypes.map { customType ->
             customType.aliases.map { alias ->
-                Pair(alias.toLowerCase(), customType.name.toLowerCase())
+                Pair(alias.lowercase(), customType.name.lowercase())
             }
         }.flatten().toMap()
 
@@ -251,7 +251,7 @@ internal class PartiQLPigVisitor(
         val name = visitExpr(ctx.name).getStringValue(ctx.name.getStart())
         val args = visitOrEmpty(ctx.args, PartiqlAst.Expr::class)
         exec_(
-            SymbolPrimitive(name.toLowerCase(), emptyMetaContainer()),
+            SymbolPrimitive(name.lowercase(), emptyMetaContainer()),
             args,
             ctx.name.getStart().getSourceMetaContainer()
         )
@@ -853,7 +853,7 @@ internal class PartiQLPigVisitor(
 
     override fun visitPatternRestrictor(ctx: PartiQLParser.PatternRestrictorContext) = PartiqlAst.build {
         val metas = ctx.restrictor.getSourceMetaContainer()
-        when (ctx.restrictor.text.toLowerCase()) {
+        when (ctx.restrictor.text.lowercase()) {
             "trail" -> restrictorTrail(metas)
             "acyclic" -> restrictorAcyclic(metas)
             "simple" -> restrictorSimple(metas)
@@ -1198,14 +1198,14 @@ internal class PartiQLPigVisitor(
     }
 
     override fun visitFunctionCallIdent(ctx: PartiQLParser.FunctionCallIdentContext) = PartiqlAst.build {
-        val name = ctx.name.getString().toLowerCase()
+        val name = ctx.name.getString().lowercase()
         val args = visitOrEmpty(ctx.expr(), PartiqlAst.Expr::class)
         val metas = ctx.name.getSourceMetaContainer()
         call(name, args = args, metas = metas)
     }
 
     override fun visitFunctionCallReserved(ctx: PartiQLParser.FunctionCallReservedContext) = PartiqlAst.build {
-        val name = ctx.name.text.toLowerCase()
+        val name = ctx.name.text.lowercase()
         val args = visitOrEmpty(ctx.expr(), PartiqlAst.Expr::class)
         val metas = ctx.name.getSourceMetaContainer()
         call(name, args = args, metas = metas)
@@ -1219,31 +1219,31 @@ internal class PartiQLPigVisitor(
         val secondaryArgs = visitOrEmpty(ctx.expr(), PartiqlAst.Expr::class)
         val args = listOf(datetimePart) + secondaryArgs
         val metas = ctx.func.getSourceMetaContainer()
-        call(ctx.func.text.toLowerCase(), args, metas)
+        call(ctx.func.text.lowercase(), args, metas)
     }
 
     override fun visitSubstring(ctx: PartiQLParser.SubstringContext) = PartiqlAst.build {
         val args = visitOrEmpty(ctx.expr(), PartiqlAst.Expr::class)
         val metas = ctx.SUBSTRING().getSourceMetaContainer()
-        call(ctx.SUBSTRING().text.toLowerCase(), args, metas)
+        call(ctx.SUBSTRING().text.lowercase(), args, metas)
     }
 
     override fun visitPosition(ctx: PartiQLParser.PositionContext) = PartiqlAst.build {
         val args = visitOrEmpty(ctx.expr(), PartiqlAst.Expr::class)
         val metas = ctx.POSITION().getSourceMetaContainer()
-        call(ctx.POSITION().text.toLowerCase(), args, metas)
+        call(ctx.POSITION().text.lowercase(), args, metas)
     }
 
     override fun visitOverlay(ctx: PartiQLParser.OverlayContext) = PartiqlAst.build {
         val args = visitOrEmpty(ctx.expr(), PartiqlAst.Expr::class)
         val metas = ctx.OVERLAY().getSourceMetaContainer()
-        call(ctx.OVERLAY().text.toLowerCase(), args, metas)
+        call(ctx.OVERLAY().text.lowercase(), args, metas)
     }
 
     override fun visitCountAll(ctx: PartiQLParser.CountAllContext) = PartiqlAst.build {
         callAgg(
             all(),
-            ctx.func.text.toLowerCase(),
+            ctx.func.text.lowercase(),
             lit(ionInt(1)),
             ctx.COUNT().getSourceMetaContainer() + metaContainerOf(IsCountStarMeta.instance)
         )
@@ -1258,7 +1258,7 @@ internal class PartiQLPigVisitor(
         val timeExpr = visit(ctx.rhs, PartiqlAst.Expr::class)
         val args = listOf(datetimePart, timeExpr)
         val metas = ctx.EXTRACT().getSourceMetaContainer()
-        call(ctx.EXTRACT().text.toLowerCase(), args, metas)
+        call(ctx.EXTRACT().text.lowercase(), args, metas)
     }
 
     /**
@@ -1268,7 +1268,7 @@ internal class PartiQLPigVisitor(
      * null, we need to make the substring equal to the <spec> (and make <spec> null).
      */
     override fun visitTrimFunction(ctx: PartiQLParser.TrimFunctionContext) = PartiqlAst.build {
-        val possibleModText = if (ctx.mod != null) ctx.mod.text.toLowerCase() else null
+        val possibleModText = if (ctx.mod != null) ctx.mod.text.lowercase() else null
         val isTrimSpec = TRIM_SPECIFICATION_KEYWORDS.contains(possibleModText)
         val (modifier, substring) = when {
             // if <spec> is not null and <substring> is null
@@ -1303,14 +1303,14 @@ internal class PartiQLPigVisitor(
         val target = visitExpr(ctx.target)
         val args = listOfNotNull(modifier, substring, target)
         val metas = ctx.func.getSourceMetaContainer()
-        call(ctx.func.text.toLowerCase(), args, metas)
+        call(ctx.func.text.lowercase(), args, metas)
     }
 
     override fun visitAggregateBase(ctx: PartiQLParser.AggregateBaseContext) = PartiqlAst.build {
         val strategy = getStrategy(ctx.setQuantifierStrategy(), default = all())
         val arg = visitExpr(ctx.expr())
         val metas = ctx.func.getSourceMetaContainer()
-        callAgg(strategy, ctx.func.text.toLowerCase(), arg, metas)
+        callAgg(strategy, ctx.func.text.lowercase(), arg, metas)
     }
 
     /**
@@ -1326,7 +1326,7 @@ internal class PartiQLPigVisitor(
         // LAG and LEAD will require a Window ORDER BY
         if (over.orderBy == null) {
             val errorContext = PropertyValueMap()
-            errorContext[Property.TOKEN_STRING] = ctx.func.text.toLowerCase()
+            errorContext[Property.TOKEN_STRING] = ctx.func.text.lowercase()
             throw ctx.func.err(
                 "${ctx.func.text} requires Window ORDER BY",
                 ErrorCode.PARSE_EXPECTED_WINDOW_ORDER_BY,
@@ -1334,7 +1334,7 @@ internal class PartiQLPigVisitor(
             )
         }
         val metas = ctx.func.getSourceMetaContainer()
-        callWindow(ctx.func.text.toLowerCase(), over, args, metas)
+        callWindow(ctx.func.text.lowercase(), over, args, metas)
     }
 
     override fun visitOver(ctx: PartiQLParser.OverContext) = PartiqlAst.build {
@@ -1561,7 +1561,7 @@ internal class PartiQLPigVisitor(
 
     override fun visitTypeCustom(ctx: PartiQLParser.TypeCustomContext) = PartiqlAst.build {
         val metas = ctx.symbolPrimitive().getSourceMetaContainer()
-        val customName: String = when (val name = ctx.symbolPrimitive().getString().toLowerCase()) {
+        val customName: String = when (val name = ctx.symbolPrimitive().getString().lowercase()) {
             in customKeywords -> name
             in customTypeAliases.keys -> customTypeAliases.getOrDefault(name, name)
             else -> throw ParserException("Invalid custom type name: $name", ErrorCode.PARSE_INVALID_QUERY)
@@ -1731,11 +1731,11 @@ internal class PartiQLPigVisitor(
     }
 
     private fun PartiqlAst.Expr.getStringValue(token: Token? = null): String = when (this) {
-        is PartiqlAst.Expr.Id -> this.name.text.toLowerCase()
+        is PartiqlAst.Expr.Id -> this.name.text.lowercase()
         is PartiqlAst.Expr.Lit -> {
             when (this.value) {
-                is SymbolElement -> this.value.symbolValue.toLowerCase()
-                is StringElement -> this.value.stringValue.toLowerCase()
+                is SymbolElement -> this.value.symbolValue.lowercase()
+                is StringElement -> this.value.stringValue.lowercase()
                 else ->
                     this.value.stringValueOrNull ?: throw token.err(
                         "Unable to pass the string value",

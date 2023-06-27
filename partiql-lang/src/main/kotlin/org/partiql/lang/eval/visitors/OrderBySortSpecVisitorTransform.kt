@@ -72,7 +72,7 @@ internal class OrderBySortSpecVisitorTransform : VisitorTransformBase() {
             val transformedExpr = super.transformExprId(node)
             return when (node.case) {
                 is PartiqlAst.CaseSensitivity.CaseSensitive -> aliases[node.name.text] ?: transformedExpr
-                else -> aliases[node.name.text.toLowerCase()] ?: aliases[node.name.text.toUpperCase()] ?: transformedExpr
+                else -> aliases[node.name.text.lowercase()] ?: aliases[node.name.text.toUpperCase()] ?: transformedExpr
             }
         }
     }

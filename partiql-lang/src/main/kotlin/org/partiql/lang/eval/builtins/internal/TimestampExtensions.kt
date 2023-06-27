@@ -53,7 +53,7 @@ internal fun Timestamp.adjustPrecisionTo(dateTimePart: DateTimePart): Timestamp 
             this.year, this.month, this.day, this.hour, this.minute, this.localOffset
         )
         else -> errNoContext(
-            "invalid datetime part for date_add: ${dateTimePart.toString().toLowerCase()}",
+            "invalid datetime part for date_add: ${dateTimePart.toString().lowercase()}",
             errorCode = ErrorCode.EVALUATOR_INVALID_ARGUMENTS_FOR_DATE_PART,
             internal = false
         )
@@ -89,7 +89,7 @@ internal fun LocalDate.extractedValue(dateTimePart: DateTimePart): BigDecimal {
         DateTimePart.DAY -> dayOfMonth
         DateTimePart.TIMEZONE_HOUR,
         DateTimePart.TIMEZONE_MINUTE -> errNoContext(
-            "Timestamp unit ${dateTimePart.name.toLowerCase()} not supported for DATE type",
+            "Timestamp unit ${dateTimePart.name.lowercase()} not supported for DATE type",
             ErrorCode.EVALUATOR_INVALID_ARGUMENTS_FOR_FUNC_CALL,
             internal = false
         )
@@ -103,17 +103,17 @@ internal fun Time.extractedValue(dateTimePart: DateTimePart): BigDecimal {
         DateTimePart.MINUTE -> localTime.minute.toBigDecimal()
         DateTimePart.SECOND -> secondsWithFractionalPart
         DateTimePart.TIMEZONE_HOUR -> timezoneHour?.toBigDecimal() ?: errNoContext(
-            "Time unit ${dateTimePart.name.toLowerCase()} not supported for TIME type without TIME ZONE",
+            "Time unit ${dateTimePart.name.lowercase()} not supported for TIME type without TIME ZONE",
             ErrorCode.EVALUATOR_INVALID_ARGUMENTS_FOR_FUNC_CALL,
             internal = false
         )
         DateTimePart.TIMEZONE_MINUTE -> timezoneMinute?.toBigDecimal() ?: errNoContext(
-            "Time unit ${dateTimePart.name.toLowerCase()} not supported for TIME type without TIME ZONE",
+            "Time unit ${dateTimePart.name.lowercase()} not supported for TIME type without TIME ZONE",
             ErrorCode.EVALUATOR_INVALID_ARGUMENTS_FOR_FUNC_CALL,
             internal = false
         )
         DateTimePart.YEAR, DateTimePart.MONTH, DateTimePart.DAY -> errNoContext(
-            "Time unit ${dateTimePart.name.toLowerCase()} not supported for TIME type.",
+            "Time unit ${dateTimePart.name.lowercase()} not supported for TIME type.",
             ErrorCode.EVALUATOR_INVALID_ARGUMENTS_FOR_FUNC_CALL,
             internal = false
         )
