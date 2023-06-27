@@ -24,32 +24,39 @@ public data class Time private constructor(
             hour: Int,
             minute: Int,
             second: BigDecimal,
-            timeZone: TimeZone?,
-            precision: Int?
+            timeZone: TimeZone? = null,
+            precision: Int? = null
         ): Time {
             try {
-                val hour = ChronoField.HOUR_OF_DAY.checkValidValue(hour.toLong()).toInt()
-                val minute = ChronoField.MINUTE_OF_HOUR.checkValidValue(minute.toLong()).toInt()
+                ChronoField.HOUR_OF_DAY.checkValidValue(hour.toLong())
+                ChronoField.MINUTE_OF_HOUR.checkValidValue(minute.toLong())
                 // round down the second to check
-                val wholeSecond = ChronoField.SECOND_OF_MINUTE.checkValidValue(second.setScale(0, RoundingMode.DOWN).toLong())
+                ChronoField.SECOND_OF_MINUTE.checkValidValue(second.setScale(0, RoundingMode.DOWN).toLong())
                 val arbitraryTime = Time(hour, minute, second, timeZone, null)
-                if (precision == null) {
-                    return arbitraryTime
-                }
+                if (precision == null) { return arbitraryTime }
                 return arbitraryTime.toPrecision(precision)
             } catch (e: java.time.DateTimeException) {
-                throw DateTimeException(e.localizedMessage)
-            } catch (e: IllegalStateException) {
-                throw DateTimeException(e.localizedMessage)
-            } catch (e: IllegalArgumentException) {
-                throw DateTimeException(e.localizedMessage)
+                throw DateTimeFormatException(e.localizedMessage, e)
             }
         }
     }
 
+    /**
+     * Counting the time escaped from midnight 00:00:00 in seconds ( fraction included)
+     */
+    val elapsedSecond: BigDecimal by lazy {
+        BigDecimal.valueOf(this.hour * SECONDS_IN_HOUR + this.minute * SECONDS_IN_MINUTE).plus(this.second)
+    }
+
     private fun toPrecision(precision: Int) =
         when {
-            second.scale() == precision -> this
+            second.scale() == precision -> this.copy(
+                hour = hour,
+                minute = minute,
+                second = second,
+                timeZone = timeZone,
+                precision = precision
+            )
             second.scale() < precision -> paddingToPrecision(precision)
             else -> roundToPrecision(precision)
         }

@@ -19,10 +19,24 @@ internal const val MILLIS_IN_HOUR = 60 * MILLIS_IN_MINUTE
 internal const val MILLIS_IN_DAY = 24 * MILLIS_IN_HOUR
 internal const val SECONDS_IN_MINUTE = 60L
 internal const val SECONDS_IN_HOUR = 60 * SECONDS_IN_MINUTE
+internal const val SECONDS_IN_DAY = 24 * SECONDS_IN_HOUR
 internal const val MAX_TIME_ZONE_HOURS: Int = 23
 internal const val MAX_TIME_ZONE_MINUTES: Int = 59
 internal const val MAX_TOTAL_OFFSET_MINUTES: Int = MAX_TIME_ZONE_HOURS * 60 + MAX_TIME_ZONE_MINUTES
 
-public class DateTimeException(
-    public override val message: String
-) : Throwable()
+public open class DateTimeException(
+    public override val message: String? = null,
+    public override val cause: Throwable? = null
+) : RuntimeException()
+
+public class DateTimeFormatException(
+    public override val message: String? = null,
+    public override val cause: Throwable? = null
+) : DateTimeException(message, cause)
+
+public class DateTimeComparisonException(
+    public val timestamp1: Timestamp,
+    public val timestamp2: Timestamp,
+    public val reason: String? = null,
+    public override val cause: Throwable? = null,
+) : DateTimeException("Can not compare $timestamp1 with $timestamp2. $reason", cause)
