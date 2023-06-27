@@ -17,6 +17,7 @@ package org.partiql.lang.eval
 import com.amazon.ion.Timestamp
 import org.partiql.lang.eval.time.Time
 import java.time.LocalDate
+import org.partiql.value.datetime.Timestamp as PartiQLTimestamp
 
 /**
  * Represents a scalar view over an [ExprValue].
@@ -43,7 +44,14 @@ interface Scalar {
      * Returns this value as a [Timestamp] or `null` if not applicable.
      * This operation is only applicable for [ExprValueType.TIMESTAMP]
      */
+    @Deprecated("Retrieve Ion timestamp Value is deprecated, please use partiqlTimestampValue()", ReplaceWith("partiQLTimestampValue()"))
     fun timestampValue(): Timestamp? = null
+
+    /**
+     * Returns this value as a [PartiQLTimestamp] or `null` if not applicable.
+     * This operation is only applicable for [ExprValueType.TIMESTAMP]
+     */
+    fun partiQLTimestampValue(): PartiQLTimestamp? = null
 
     /**
      * Returns this value as a [LocalDate] or `null` if not applicable.

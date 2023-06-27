@@ -114,6 +114,7 @@ class ExprValueTest {
                 assertNull(tc.value.scalar.stringValue())
                 assertNull(tc.value.scalar.bytesValue())
                 assertNull(tc.value.scalar.timestampValue())
+                assertNull(tc.value.scalar.partiQLTimestampValue())
             }
             ExprValueType.INT -> {
                 assertNull(tc.value.scalar.booleanValue())
@@ -121,6 +122,7 @@ class ExprValueTest {
                 assertNull(tc.value.scalar.stringValue())
                 assertNull(tc.value.scalar.bytesValue())
                 assertNull(tc.value.scalar.timestampValue())
+                assertNull(tc.value.scalar.partiQLTimestampValue())
             }
             ExprValueType.FLOAT -> {
                 assertNull(tc.value.scalar.booleanValue())
@@ -128,6 +130,7 @@ class ExprValueTest {
                 assertNull(tc.value.scalar.stringValue())
                 assertNull(tc.value.scalar.bytesValue())
                 assertNull(tc.value.scalar.timestampValue())
+                assertNull(tc.value.scalar.partiQLTimestampValue())
             }
             ExprValueType.DECIMAL -> {
                 assertNull(tc.value.scalar.booleanValue())
@@ -135,6 +138,7 @@ class ExprValueTest {
                 assertNull(tc.value.scalar.stringValue())
                 assertNull(tc.value.scalar.bytesValue())
                 assertNull(tc.value.scalar.timestampValue())
+                assertNull(tc.value.scalar.partiQLTimestampValue())
             }
             ExprValueType.TIMESTAMP -> {
                 assertNull(tc.value.scalar.booleanValue())
@@ -142,6 +146,7 @@ class ExprValueTest {
                 assertNull(tc.value.scalar.stringValue())
                 assertNull(tc.value.scalar.bytesValue())
                 assertEquals(expectedValue, tc.value.scalar.timestampValue())
+                assertNull(tc.value.scalar.partiQLTimestampValue())
             }
             ExprValueType.SYMBOL -> {
                 assertNull(tc.value.scalar.booleanValue())
@@ -149,6 +154,7 @@ class ExprValueTest {
                 assertEquals(expectedValue, tc.value.scalar.stringValue())
                 assertNull(tc.value.scalar.bytesValue())
                 assertNull(tc.value.scalar.timestampValue())
+                assertNull(tc.value.scalar.partiQLTimestampValue())
             }
             ExprValueType.STRING -> {
                 assertNull(tc.value.scalar.booleanValue())
@@ -156,6 +162,7 @@ class ExprValueTest {
                 assertEquals(expectedValue, tc.value.scalar.stringValue())
                 assertNull(tc.value.scalar.bytesValue())
                 assertNull(tc.value.scalar.timestampValue())
+                assertNull(tc.value.scalar.partiQLTimestampValue())
             }
             ExprValueType.CLOB -> {
                 assertNull(tc.value.scalar.booleanValue())
@@ -163,6 +170,7 @@ class ExprValueTest {
                 assertNull(tc.value.scalar.stringValue())
                 assertEquals(expectedValue, tc.value.scalar.bytesValue())
                 assertNull(tc.value.scalar.timestampValue())
+                assertNull(tc.value.scalar.partiQLTimestampValue())
             }
             ExprValueType.BLOB -> {
                 assertNull(tc.value.scalar.booleanValue())
@@ -170,6 +178,7 @@ class ExprValueTest {
                 assertNull(tc.value.scalar.stringValue())
                 assertEquals(expectedValue, tc.value.scalar.bytesValue())
                 assertNull(tc.value.scalar.timestampValue())
+                assertNull(tc.value.scalar.partiQLTimestampValue())
             }
             ExprValueType.DATE -> {
                 assertNull(tc.value.scalar.booleanValue())
@@ -177,6 +186,7 @@ class ExprValueTest {
                 assertNull(tc.value.scalar.stringValue())
                 assertNull(tc.value.scalar.bytesValue())
                 assertNull(tc.value.scalar.timestampValue())
+                assertNull(tc.value.scalar.partiQLTimestampValue())
                 assertEquals(expectedValue, tc.value.dateValue())
             }
             ExprValueType.TIME -> {
@@ -185,6 +195,7 @@ class ExprValueTest {
                 assertNull(tc.value.scalar.stringValue())
                 assertNull(tc.value.scalar.bytesValue())
                 assertNull(tc.value.scalar.timestampValue())
+                assertNull(tc.value.scalar.partiQLTimestampValue())
                 assertEquals(expectedValue, tc.value.timeValue())
             }
             else -> fail("Unexpected ExprValueType: ${tc.expectedType}")

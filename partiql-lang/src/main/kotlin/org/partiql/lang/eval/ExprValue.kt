@@ -42,6 +42,7 @@ import org.partiql.lang.util.bytesValue
 import org.partiql.lang.util.propertyValueMapOf
 import java.math.BigDecimal
 import java.time.LocalDate
+import org.partiql.value.datetime.Timestamp as PartiQLTimestamp
 /**
  * Representation of a value within the context of an [Expression].
  */
@@ -141,9 +142,10 @@ interface ExprValue : Iterable<ExprValue>, Faceted {
             override fun dateValue(): LocalDate = value
         }
 
-        private class TimestampExprValue(val value: Timestamp) : ScalarExprValue() {
+        private class TimestampExprValue(val value: PartiQLTimestamp) : ScalarExprValue() {
             override val type: ExprValueType = ExprValueType.TIMESTAMP
-            override fun timestampValue(): Timestamp = value
+            override fun partiQLTimestampValue(): PartiQLTimestamp = value
+            override fun timestampValue(): Timestamp = value.ionRaw!!
         }
 
         private class TimeExprValue(val value: Time) : ScalarExprValue() {
@@ -279,8 +281,20 @@ interface ExprValue : Iterable<ExprValue>, Faceted {
             DateExprValue(LocalDate.parse(value))
 
         /** Returns a PartiQL `TIMESTAMP` [ExprValue] instance representing the specified [Timestamp]. */
+        @Deprecated(
+            "construction timestamp using IonTimestamp is deprecated, please use PartiQL Timestamp",
+            ReplaceWith(
+                "TimestampExprValue(value)",
+                "org.partiql.lang.eval.ExprValue.Companion.TimestampExprValue"
+            )
+        )
         @JvmStatic
         fun newTimestamp(value: Timestamp): ExprValue =
+            TimestampExprValue(PartiQLTimestamp.of(value))
+
+        /** Returns a PartiQL `TIMESTAMP` [ExprValue] instance representing the specified [PartiQLTimestamp]. */
+        @JvmStatic
+        fun newTimestamp(value: PartiQLTimestamp): ExprValue =
             TimestampExprValue(value)
 
         /** Returns a PartiQL `TIME` [ExprValue] instance representing the specified [Time]. */
