@@ -135,9 +135,12 @@ fun ExprValue.dateValue(): LocalDate =
 fun ExprValue.timeValue(): Time =
     scalar.timeValue() ?: errNoContext("Expected time: $this", errorCode = ErrorCode.EVALUATOR_UNEXPECTED_VALUE_TYPE, internal = false)
 
+@Deprecated("ExprValue.timestampValue is deprecated", replaceWith = ReplaceWith("partiQLTimestampValue()"))
 fun ExprValue.timestampValue(): Timestamp =
     scalar.timestampValue() ?: errNoContext("Expected timestamp: $this", errorCode = ErrorCode.EVALUATOR_UNEXPECTED_VALUE_TYPE, internal = false)
 
+fun ExprValue.partiQLTimestampValue(): org.partiql.value.datetime.Timestamp =
+    scalar.partiQLTimestampValue() ?: errNoContext("Expected timestamp: $this", errorCode = ErrorCode.EVALUATOR_UNEXPECTED_VALUE_TYPE, internal = false)
 fun ExprValue.stringValue(): String =
     scalar.stringValue() ?: errNoContext("Expected string: $this", errorCode = ErrorCode.EVALUATOR_UNEXPECTED_VALUE_TYPE, internal = false)
 
