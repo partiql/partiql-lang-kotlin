@@ -437,7 +437,7 @@ fun ExprValue.cast(
                         numberValue().compareTo(0L) == 0 -> ExprValue.newBoolean(false)
                         else -> ExprValue.newBoolean(true)
                     }
-                    type.isText -> return when (stringValue().toLowerCase()) {
+                    type.isText -> return when (stringValue().lowercase()) {
                         "true" -> ExprValue.newBoolean(true)
                         "false" -> ExprValue.newBoolean(false)
                         else -> castFailedErr("can't convert string value to BOOL", internal = false)
@@ -639,7 +639,7 @@ fun ExprValue.cast(
 private fun String.normalizeForCastToInt(): String {
     fun Char.isSign() = this == '-' || this == '+'
     fun Char.isHexOrBase2Marker(): Boolean {
-        val c = this.toLowerCase()
+        val c = this.lowercaseChar()
 
         return c == 'x' || c == 'b'
     }

@@ -1568,7 +1568,7 @@ internal class EvaluatingCompiler(
      * Compiles a Session Attribute. Currently supports CURRENT_USER.
      */
     private fun compileSessionAttribute(attr: PartiqlAst.Expr.SessionAttribute, metas: MetaContainer): ThunkEnv {
-        return when (attr.value.text.toLowerCase()) {
+        return when (attr.value.text.lowercase()) {
             "current_user" -> compileCurrentUser(metas)
             else -> err(
                 message = "${attr.value.text} is not a valid session attribute.",
@@ -2300,7 +2300,7 @@ internal class EvaluatingCompiler(
             )
         }
 
-        val aggFactory = getAggregatorFactory(expr.funcName.text.toLowerCase(), expr.setq, metas)
+        val aggFactory = getAggregatorFactory(expr.funcName.text.lowercase(), expr.setq, metas)
 
         val argThunk = nestCompilationContext(ExpressionContext.AGG_ARG, emptySet()) {
             compileAstExpr(expr.arg)
@@ -2348,7 +2348,7 @@ internal class EvaluatingCompiler(
         setQuantifier: PartiqlAst.SetQuantifier,
         metas: MetaContainer
     ): ExprAggregatorFactory {
-        val key = funcName.toLowerCase() to setQuantifier
+        val key = funcName.lowercase() to setQuantifier
 
         return builtinAggregates[key] ?: err(
             "No such built-in aggregate function: $funcName",

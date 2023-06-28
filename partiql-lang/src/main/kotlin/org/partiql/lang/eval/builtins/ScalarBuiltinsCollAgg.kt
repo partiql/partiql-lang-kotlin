@@ -100,7 +100,7 @@ internal sealed class CollectionAggregationFunction(
         return acc.compute()
     }
 
-    private fun ExprValue.asQuantifierFilter() = when (stringValue().toLowerCase().trim()) {
+    private fun ExprValue.asQuantifierFilter() = when (stringValue().lowercase().trim()) {
         "all" -> { _: ExprValue -> true }
         "distinct" -> createUniqueExprValueFilter()
         else -> throw IllegalArgumentException("Unrecognized set quantifier: $this")

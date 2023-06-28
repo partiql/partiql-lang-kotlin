@@ -954,14 +954,14 @@ enum class DotArrowType {
     OBOX,
     HALFOPEN;
 
-    override fun toString(): String = super.toString().toLowerCase()
+    override fun toString(): String = super.toString().lowercase()
 }
 
 enum class DotDirType {
     FORWARD,
     NONE;
 
-    override fun toString(): String = super.toString().toLowerCase()
+    override fun toString(): String = super.toString().lowercase()
 }
 
 enum class DotPortPos {
@@ -978,7 +978,7 @@ enum class DotPortPos {
 
     override fun toString(): String = when (this) {
         DEF -> "_"
-        else -> super.toString().toLowerCase()
+        else -> super.toString().lowercase()
     }
 }
 
@@ -990,7 +990,7 @@ enum class DotEdgeStyle {
     BOLD,
     TAPERED;
 
-    override fun toString(): String = super.toString().toLowerCase()
+    override fun toString(): String = super.toString().lowercase()
 }
 
 enum class DotNodeStyle {
@@ -1005,7 +1005,7 @@ enum class DotNodeStyle {
     DIAGONALS,
     ROUNDED;
 
-    override fun toString(): String = super.toString().toLowerCase()
+    override fun toString(): String = super.toString().lowercase()
 }
 
 class DotRect(
@@ -1022,7 +1022,7 @@ enum class DotClusterMode {
     GLOBAL,
     NONE;
 
-    override fun toString(): String = super.toString().toLowerCase()
+    override fun toString(): String = super.toString().lowercase()
 }
 
 enum class DotOutputMode {
@@ -1030,7 +1030,7 @@ enum class DotOutputMode {
     NODESFIRST,
     EDGESFIRST;
 
-    override fun toString(): String = super.toString().toLowerCase()
+    override fun toString(): String = super.toString().lowercase()
 }
 
 enum class DotPageDir {
@@ -1049,7 +1049,7 @@ enum class DotQuadType {
     FAST,
     NONE;
 
-    override fun toString(): String = super.toString().toLowerCase()
+    override fun toString(): String = super.toString().lowercase()
 }
 
 enum class DotRankDir {
@@ -1068,7 +1068,7 @@ enum class DotSmoothType {
     SPRING,
     TRIANGLE;
 
-    override fun toString(): String = super.toString().toLowerCase()
+    override fun toString(): String = super.toString().lowercase()
 }
 
 enum class DotNodeShape {
@@ -1134,7 +1134,7 @@ enum class DotNodeShape {
     RECORD,
     MRECORD;
 
-    override fun toString(): String = super.toString().toLowerCase()
+    override fun toString(): String = super.toString().lowercase()
 }
 
 enum class DotSubgraphStyle {
@@ -1142,5 +1142,5 @@ enum class DotSubgraphStyle {
     STRIPED,
     ROUNDED;
 
-    override fun toString(): String = super.toString().toLowerCase()
+    override fun toString(): String = super.toString().lowercase()
 }

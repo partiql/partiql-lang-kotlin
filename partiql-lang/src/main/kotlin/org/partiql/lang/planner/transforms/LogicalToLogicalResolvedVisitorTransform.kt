@@ -479,7 +479,7 @@ internal data class LogicalToLogicalResolvedVisitorTransform(
     private fun checkForDuplicateVariables(varDecls: List<PartiqlLogical.VarDecl>) {
         val usedVariableNames = hashSetOf<String>()
         varDecls.forEach { varDecl ->
-            val loweredVariableName = varDecl.name.text.toLowerCase()
+            val loweredVariableName = varDecl.name.text.lowercase()
             if (usedVariableNames.contains(loweredVariableName)) {
                 this.problemHandler.handleProblem(
                     Problem(
@@ -575,7 +575,7 @@ internal data class LogicalToLogicalResolvedVisitorTransform(
                 is PartiqlLogical.ScopeQualifier.LocalsFirst -> VariableLookupStrategy.LOCALS_THEN_GLOBALS
                 is PartiqlLogical.ScopeQualifier.Unqualified -> VariableLookupStrategy.GLOBALS_THEN_LOCALS
             }
-        }.toString().toLowerCase()
+        }.toString().lowercase()
         return PartiqlLogicalResolved.build {
             call(
                 funcName = DYNAMIC_LOOKUP_FUNCTION_NAME,

@@ -33,7 +33,7 @@ internal fun IonSexp.mixIdentifierCase(): IonSexp {
         val mixedCase = stringValue()!!.foldIndexed("") { index, acc, c ->
             acc + when (index % 2 == 0) {
                 true -> c.toUpperCase()
-                false -> c.toLowerCase()
+                false -> c.lowercase()
             }
         }
 
