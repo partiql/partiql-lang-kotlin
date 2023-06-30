@@ -10,7 +10,8 @@ import java.time.temporal.ChronoField
  * Informally, a data value of Time Without Time Zone represents a particular orientation of a clock
  * which will represent different instances of "time" based on the timezone.
  * a data value of Time With Time Zone represents an orientation of a clock attached with timezone offset.
- *
+ * TODO : Consider change this to interface and split into "nano precision Time" and "high precision time"
+ *  Big Decimal implementation is slow, and arguably useless.
  */
 public data class Time private constructor(
     val hour: Int,
@@ -33,16 +34,29 @@ public data class Time private constructor(
                 // round down the second to check
                 ChronoField.SECOND_OF_MINUTE.checkValidValue(second.setScale(0, RoundingMode.DOWN).toLong())
                 val arbitraryTime = Time(hour, minute, second, timeZone, null)
-                if (precision == null) { return arbitraryTime }
+                if (precision == null) {
+                    return arbitraryTime
+                }
                 return arbitraryTime.toPrecision(precision)
             } catch (e: java.time.DateTimeException) {
                 throw DateTimeFormatException(e.localizedMessage, e)
             }
         }
+
+        public fun forSeconds(second: BigDecimal, timeZone: TimeZone?, precision: Int? = null): Time {
+            val wholeSecond = second.longValueExact()
+            val fraction = second.minus(BigDecimal.valueOf(wholeSecond))
+            var total = wholeSecond
+            val hour = total / SECONDS_IN_HOUR
+            total -= hour * SECONDS_IN_HOUR
+            val minute = total / SECONDS_IN_MINUTE
+            total -= minute * SECONDS_IN_MINUTE
+            return of(hour.toInt(), minute.toInt(), fraction.plus(BigDecimal.valueOf(total)), timeZone, precision)
+        }
     }
 
     /**
-     * Counting the time escaped from midnight 00:00:00 in seconds ( fraction included)
+     * Counting the time escaped from midnight 00:00:00 in seconds (fraction included)
      */
     val elapsedSecond: BigDecimal by lazy {
         BigDecimal.valueOf(this.hour * SECONDS_IN_HOUR + this.minute * SECONDS_IN_MINUTE).plus(this.second)
@@ -57,6 +71,7 @@ public data class Time private constructor(
                 timeZone = timeZone,
                 precision = precision
             )
+
             second.scale() < precision -> paddingToPrecision(precision)
             else -> roundToPrecision(precision)
         }
@@ -92,4 +107,34 @@ public data class Time private constructor(
 
         return Time(newHours, newMinutes, rounded, this.timeZone, precision)
     }
+
+    public fun atTimeZone(timeZone: TimeZone): Time = when (this.timeZone) {
+        TimeZone.UnknownTimeZone -> {
+            when (timeZone) {
+                TimeZone.UnknownTimeZone -> this
+                is TimeZone.UtcOffset -> this.copy(timeZone = TimeZone.UtcOffset.of(0)).atTimeZone(timeZone)
+            }
+        }
+
+        is TimeZone.UtcOffset -> {
+            val utc = this.plusMinutes(-this.timeZone.totalOffsetMinutes.toLong())
+            when (timeZone) {
+                TimeZone.UnknownTimeZone -> utc.copy(timeZone = timeZone)
+                is TimeZone.UtcOffset -> utc.plusMinutes(timeZone.totalOffsetMinutes.toLong()).copy(timeZone = timeZone)
+            }
+        }
+
+        null -> TODO("ERROR OUT")
+    }
+
+    public fun plusHour(hours: Long): Time =
+        forSeconds(this.elapsedSecond.plus(BigDecimal.valueOf(hours * SECONDS_IN_HOUR)), timeZone, precision)
+
+    public fun plusMinutes(minutes: Long): Time =
+        forSeconds(this.elapsedSecond.plus(BigDecimal.valueOf(minutes * SECONDS_IN_MINUTE)), timeZone, precision)
+
+    public fun plusSecond(seconds: Long): Time =
+        forSeconds(this.elapsedSecond.plus(BigDecimal.valueOf(seconds)), timeZone, precision)
+
+    public fun plusSecond(seconds: BigDecimal): Time = forSeconds(this.elapsedSecond.plus(seconds), timeZone, precision)
 }

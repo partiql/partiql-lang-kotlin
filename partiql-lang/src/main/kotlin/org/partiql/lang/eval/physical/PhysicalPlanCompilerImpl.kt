@@ -111,6 +111,7 @@ import org.partiql.types.IntType
 import org.partiql.types.SingleType
 import org.partiql.types.StaticType
 import org.partiql.types.UnsupportedTypeCheckException
+import org.partiql.value.datetime.TimeZone
 import java.util.LinkedList
 import java.util.TreeSet
 import java.util.regex.Pattern
@@ -229,6 +230,7 @@ internal class PhysicalPlanCompilerImpl(
             is PartiqlPhysical.Expr.Parameter -> compileParameter(expr, metas)
             is PartiqlPhysical.Expr.Date -> compileDate(expr, metas)
             is PartiqlPhysical.Expr.LitTime -> compileLitTime(expr, metas)
+            is PartiqlPhysical.Expr.Timestamp -> compileTimestamp(expr, metas)
 
             // arithmetic operations
             is PartiqlPhysical.Expr.Plus -> compilePlus(expr, metas)
@@ -279,7 +281,6 @@ internal class PhysicalPlanCompilerImpl(
             is PartiqlPhysical.Expr.BindingsToValues -> compileBindingsToValues(expr)
             is PartiqlPhysical.Expr.Pivot -> compilePivot(expr, metas)
             is PartiqlPhysical.Expr.GraphMatch -> TODO("Physical compilation of GraphMatch expression")
-            is PartiqlPhysical.Expr.Timestamp -> TODO()
         }
     }
 
@@ -1818,6 +1819,31 @@ internal class PhysicalPlanCompilerImpl(
                     expr.value.nano.value.toInt(),
                     expr.value.precision.value.toInt(),
                     if (expr.value.withTimeZone.value && expr.value.tzMinutes == null) evaluatorOptions.defaultTimezoneOffset.totalMinutes else expr.value.tzMinutes?.value?.toInt()
+                )
+            )
+        }
+
+    private fun compileTimestamp(expr: PartiqlPhysical.Expr.Timestamp, metas: MetaContainer): PhysicalPlanThunk =
+        thunkFactory.thunkEnv(metas) {
+            ExprValue.newTimestamp(
+                org.partiql.value.datetime.Timestamp.of(
+                    expr.value.year.value.toInt(),
+                    expr.value.month.value.toInt(),
+                    expr.value.day.value.toInt(),
+                    expr.value.hour.value.toInt(),
+                    expr.value.minute.value.toInt(),
+                    expr.value.second.decimalValue,
+                    if (expr.value.tzSign != null) {
+                        val totalMinute = expr.value.tzMinutes!!.value + expr.value.tzHour!!.value * 60
+                        if (totalMinute == 0L && expr.value.tzSign!!.text == "-") {
+                            TimeZone.UnknownTimeZone
+                        } else {
+                            TimeZone.UtcOffset.of(totalMinute.toInt())
+                        }
+                    } else {
+                        null
+                    },
+                    expr.value.precision?.value?.toInt()
                 )
             )
         }

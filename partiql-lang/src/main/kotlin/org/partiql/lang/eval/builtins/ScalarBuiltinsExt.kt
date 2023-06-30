@@ -23,17 +23,19 @@ import org.partiql.lang.eval.EvaluationException
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValue
+import org.partiql.lang.eval.ExprValue.Companion.newTimestamp
 import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.bigDecimalValue
 import org.partiql.lang.eval.builtins.internal.TimestampParser
-import org.partiql.lang.eval.builtins.internal.adjustPrecisionTo
-import org.partiql.lang.eval.builtins.internal.toOffsetDateTime
 import org.partiql.lang.eval.builtins.timestamp.TimestampTemporalAccessor
 import org.partiql.lang.eval.err
 import org.partiql.lang.eval.errNoContext
 import org.partiql.lang.eval.intValue
+import org.partiql.lang.eval.partiQLTimestampValue
 import org.partiql.lang.eval.stringValue
 import org.partiql.lang.eval.time.NANOS_PER_SECOND
+import org.partiql.lang.eval.time.SECONDS_PER_HOUR
+import org.partiql.lang.eval.time.SECONDS_PER_MINUTE
 import org.partiql.lang.eval.time.Time
 import org.partiql.lang.eval.timestampValue
 import org.partiql.lang.eval.unnamedValue
@@ -44,8 +46,8 @@ import org.partiql.lang.util.propertyValueMapOf
 import org.partiql.types.StaticType
 import org.partiql.types.StaticType.Companion.unionOf
 import java.math.BigDecimal
+import java.math.RoundingMode
 import java.time.DateTimeException
-import java.time.Duration
 import java.time.Period
 import java.time.format.DateTimeFormatter
 import java.time.temporal.UnsupportedTemporalTypeException
@@ -158,16 +160,16 @@ internal object ExprFunctionDateAdd : ExprFunction {
         val arg0 = required[0].stringValue()
         val part = DateTimePart.safeValueOf(arg0)
         val quantity = required[1].intValue()
-        val timestamp = required[2].timestampValue()
+        val timestamp = required[2].partiQLTimestampValue()
         // TODO add a function lowering pass
         return try {
             val result = when (part) {
-                DateTimePart.YEAR -> timestamp.adjustPrecisionTo(part).addYear(quantity)
-                DateTimePart.MONTH -> timestamp.adjustPrecisionTo(part).addMonth(quantity)
-                DateTimePart.DAY -> timestamp.adjustPrecisionTo(part).addDay(quantity)
-                DateTimePart.HOUR -> timestamp.adjustPrecisionTo(part).addHour(quantity)
-                DateTimePart.MINUTE -> timestamp.adjustPrecisionTo(part).addMinute(quantity)
-                DateTimePart.SECOND -> timestamp.adjustPrecisionTo(part).addSecond(quantity)
+                DateTimePart.YEAR -> timestamp.plusYear(quantity.toLong())
+                DateTimePart.MONTH -> timestamp.plusMonth(quantity.toLong())
+                DateTimePart.DAY -> timestamp.plusDays(quantity.toLong())
+                DateTimePart.HOUR -> timestamp.plusHours(quantity.toLong())
+                DateTimePart.MINUTE -> timestamp.plusMinutes(quantity.toLong())
+                DateTimePart.SECOND -> timestamp.plusSeconds(quantity.toLong())
                 else -> errNoContext(
                     "invalid datetime part for date_add: $arg0",
                     errorCode = ErrorCode.EVALUATOR_INVALID_ARGUMENTS_FOR_DATE_PART,
@@ -202,29 +204,27 @@ internal object ExprFunctionDateDiff : ExprFunction {
     override val signature = FunctionSignature(
         name = "date_diff",
         requiredParameters = listOf(StaticType.SYMBOL, StaticType.TIMESTAMP, StaticType.TIMESTAMP),
-        returnType = StaticType.INT
+        returnType = unionOf(StaticType.INT, StaticType.DECIMAL)
     )
 
     override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
         val arg0 = required[0].stringValue()
         val part = DateTimePart.safeValueOf(arg0)
-        val l = required[1].timestampValue().toOffsetDateTime()
-        val r = required[2].timestampValue().toOffsetDateTime()
-        // TODO add a function lowering pass
-        val result = when (part) {
-            DateTimePart.YEAR -> Period.between(l.toLocalDate(), r.toLocalDate()).years
-            DateTimePart.MONTH -> Period.between(l.toLocalDate(), r.toLocalDate()).toTotalMonths()
-            DateTimePart.DAY -> Duration.between(l, r).toDays()
-            DateTimePart.HOUR -> Duration.between(l, r).toHours()
-            DateTimePart.MINUTE -> Duration.between(l, r).toMinutes()
-            DateTimePart.SECOND -> Duration.between(l, r).toMillis() / 1_000
+        val l = required[1].partiQLTimestampValue().atTimeZone(org.partiql.value.datetime.TimeZone.UtcOffset.of(0))
+        val r = required[2].partiQLTimestampValue().atTimeZone(org.partiql.value.datetime.TimeZone.UtcOffset.of(0))
+        return when (part) {
+            DateTimePart.YEAR -> Period.between(l.date.localDate, r.date.localDate).years.let { ExprValue.newInt(it) }
+            DateTimePart.MONTH -> Period.between(l.date.localDate, r.date.localDate).toTotalMonths().let { ExprValue.newInt(it) }
+            DateTimePart.DAY -> (r.epochSecond.minus(l.epochSecond).setScale(0, RoundingMode.DOWN).intValueExact() / (SECONDS_PER_HOUR * 24L)).let { ExprValue.newInt(it) }
+            DateTimePart.HOUR -> (r.epochSecond.minus(l.epochSecond).setScale(0, RoundingMode.DOWN).intValueExact() / SECONDS_PER_HOUR.toLong()).let { ExprValue.newInt(it) }
+            DateTimePart.MINUTE -> (r.epochSecond.minus(l.epochSecond).setScale(0, RoundingMode.DOWN).intValueExact() / SECONDS_PER_MINUTE.toLong()).let { ExprValue.newInt(it) }
+            DateTimePart.SECOND -> (r.epochSecond.minus(l.epochSecond)).let { ExprValue.newDecimal(it) }
             else -> errNoContext(
                 "invalid datetime part for date_diff: $arg0",
                 errorCode = ErrorCode.EVALUATOR_INVALID_ARGUMENTS_FOR_DATE_PART,
                 internal = false
             )
         }
-        return ExprValue.newInt(result.toLong())
     }
 }
 
@@ -349,12 +349,12 @@ internal object ExprFunctionToTimestamp : ExprFunction {
                 internal = false
             )
         }
-        return ExprValue.newTimestamp(ts)
+        return ExprValue.newTimestamp(org.partiql.value.datetime.Timestamp.forIonTimestamp(ts))
     }
 
     override fun callWithOptional(session: EvaluationSession, required: List<ExprValue>, opt: ExprValue): ExprValue {
         val ts = TimestampParser.parseTimestamp(required[0].stringValue(), opt.stringValue())
-        return ExprValue.newTimestamp(ts)
+        return ExprValue.newTimestamp(org.partiql.value.datetime.Timestamp.forIonTimestamp(ts))
     }
 }
 
@@ -406,7 +406,7 @@ internal object ExprFunctionFromUnix : ExprFunction {
         val unixTimestamp = required[0].bigDecimalValue()
         val numMillis = unixTimestamp.times(millisPerSecond).stripTrailingZeros()
         val timestamp = Timestamp.forMillis(numMillis, null)
-        return ExprValue.newTimestamp(timestamp)
+        return newTimestamp(org.partiql.value.datetime.Timestamp.forIonTimestamp(timestamp))
     }
 }
 

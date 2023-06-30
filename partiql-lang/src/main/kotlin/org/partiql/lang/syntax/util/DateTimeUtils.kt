@@ -69,7 +69,7 @@ internal object DateTimeUtils {
         )
         val date = parseDateLiteral(matcher.group("date"))
         val time = parseTimeLiteral(matcher.group("time"))
-        return Timestamp.of(date, time)
+        return Timestamp.forDateTime(date, time)
     }
 
     private fun getTimeZoneComponent(timezone: String): TimeZone {

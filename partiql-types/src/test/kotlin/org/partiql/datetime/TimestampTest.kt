@@ -107,7 +107,7 @@ class TimestampTest {
                 Actual epoch in Millis   : ${actualTimestamp.epochMillis}
             """.trimIndent()
         }
-        val timestampFromIon = Timestamp.of(tc.expectedIonEquivalent)
+        val timestampFromIon = Timestamp.forIonTimestamp(tc.expectedIonEquivalent)
         // ion Timestamp all arbitrary position
         val expectedTimestampInArbitraryPrecision =
             tc.expectedTimestamp.copy(precision = null)
@@ -151,7 +151,7 @@ class TimestampTest {
                 Actual epoch in Millis   : ${actualTimestamp.epochMillis}
             """.trimIndent()
         }
-        val timestampFromIon = Timestamp.of(tc.expectedIonEquivalent)
+        val timestampFromIon = Timestamp.forIonTimestamp(tc.expectedIonEquivalent)
         // ion Timestamp all arbitrary position
         val expectedTimestampInArbitraryPrecision = tc.expectedTimestamp.copy(precision = null)
         assert(timestampFromIon == expectedTimestampInArbitraryPrecision) {
@@ -206,7 +206,7 @@ class TimestampTest {
             SuccessCaseWithKnownTimeZone(
                 "Unix Zero",
                 1970, 1, 1, 0, 0, BigDecimal.ZERO, 0, 0, null,
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1970, 1, 1),
                     Time.of(0, 0, BigDecimal.ZERO, TimeZone.UtcOffset.of(0))
                 ),
@@ -215,7 +215,7 @@ class TimestampTest {
             SuccessCaseWithKnownTimeZone(
                 "Unix Zero with fraction second",
                 1970, 1, 1, 0, 0, BigDecimal.valueOf(0, 3), 0, 0, null,
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1970, 1, 1),
                     Time.of(0, 0, BigDecimal.valueOf(0, 3), TimeZone.UtcOffset.of(0))
                 ),
@@ -224,7 +224,7 @@ class TimestampTest {
             SuccessCaseWithKnownTimeZone(
                 "Unix zero with precision",
                 1970, 1, 1, 0, 0, BigDecimal.ZERO, 0, 0, 0,
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1970, 1, 1),
                     Time.of(0, 0, BigDecimal.ZERO, TimeZone.UtcOffset.of(0), 0)
                 ),
@@ -233,7 +233,7 @@ class TimestampTest {
             SuccessCaseWithKnownTimeZone(
                 "Rounding - truncate",
                 1970, 1, 1, 0, 0, BigDecimal.valueOf(0, 3), 0, 0, 0,
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1970, 1, 1),
                     Time.of(0, 0, BigDecimal.valueOf(0, 0), TimeZone.UtcOffset.of(0), 0)
                 ),
@@ -242,7 +242,7 @@ class TimestampTest {
             SuccessCaseWithKnownTimeZone(
                 "Rounding - up",
                 1970, 1, 1, 0, 0, BigDecimal.valueOf(999999, 5), 0, 0, 0,
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1970, 1, 1),
                     Time.of(0, 0, BigDecimal.valueOf(10, 0), TimeZone.UtcOffset.of(0), 0)
                 ),
@@ -251,7 +251,7 @@ class TimestampTest {
             SuccessCaseWithKnownTimeZone(
                 "Rounding - carry to minute",
                 1970, 1, 1, 0, 0, BigDecimal.valueOf(599, 1), 0, 0, 0,
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1970, 1, 1),
                     Time.of(0, 1, BigDecimal.valueOf(0, 0), TimeZone.UtcOffset.of(0), 0)
                 ),
@@ -260,7 +260,7 @@ class TimestampTest {
             SuccessCaseWithKnownTimeZone(
                 "Rounding - carry to hour",
                 1970, 1, 1, 0, 59, BigDecimal.valueOf(599, 1), 0, 0, 0,
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1970, 1, 1),
                     Time.of(1, 0, BigDecimal.valueOf(0, 0), TimeZone.UtcOffset.of(0), 0)
                 ),
@@ -269,7 +269,7 @@ class TimestampTest {
             SuccessCaseWithKnownTimeZone(
                 "Rounding - carry to day",
                 1970, 1, 1, 23, 59, BigDecimal.valueOf(599, 1), 0, 0, 0,
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1970, 1, 2),
                     Time.of(0, 0, BigDecimal.valueOf(0, 0), TimeZone.UtcOffset.of(0), 0)
                 ),
@@ -278,7 +278,7 @@ class TimestampTest {
             SuccessCaseWithKnownTimeZone(
                 "Rounding - carry to month",
                 1970, 1, 31, 23, 59, BigDecimal.valueOf(599, 1), 0, 0, 0,
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1970, 2, 1),
                     Time.of(0, 0, BigDecimal.valueOf(0, 0), TimeZone.UtcOffset.of(0), 0)
                 ),
@@ -287,7 +287,7 @@ class TimestampTest {
             SuccessCaseWithKnownTimeZone(
                 "Rounding - carry to year",
                 1970, 12, 31, 23, 59, BigDecimal.valueOf(599, 1), 0, 0, 0,
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1971, 1, 1),
                     Time.of(0, 0, BigDecimal.valueOf(0, 0), TimeZone.UtcOffset.of(0), 0)
                 ),
@@ -296,7 +296,7 @@ class TimestampTest {
             SuccessCaseWithKnownTimeZone(
                 "Rounding - padding zeros",
                 1970, 1, 1, 0, 0, BigDecimal.valueOf(1, 0), 0, 0, 5,
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1970, 1, 1),
                     Time.of(0, 0, BigDecimal.valueOf(100000, 5), TimeZone.UtcOffset.of(0), 5)
                 ),
@@ -306,7 +306,7 @@ class TimestampTest {
             SuccessCaseWithKnownTimeZone(
                 "Large precision",
                 1970, 1, 1, 0, 0, BigDecimal.valueOf(0, 20), 0, 0, 20,
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1970, 1, 1),
                     Time.of(0, 0, BigDecimal.valueOf(0, 20), TimeZone.UtcOffset.of(0), 20)
                 ),
@@ -327,7 +327,7 @@ class TimestampTest {
             SuccessCaseWithKnownTimeZone(
                 "Negative epoch",
                 1901, 1, 1, 0, 0, BigDecimal.valueOf(0, 3), 0, 0, 0,
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1901, 1, 1),
                     Time.of(0, 0, BigDecimal.valueOf(0, 0), TimeZone.UtcOffset.of(0), 0)
                 ),
@@ -336,7 +336,7 @@ class TimestampTest {
             SuccessCaseWithKnownTimeZone(
                 "With time zone hour",
                 1970, 1, 1, 0, 0, BigDecimal.valueOf(0, 3), -7, 0, 3,
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1970, 1, 1),
                     Time.of(0, 0, BigDecimal.valueOf(0, 3), TimeZone.UtcOffset.of(-7, 0), 3)
                 ),
@@ -345,7 +345,7 @@ class TimestampTest {
             SuccessCaseWithKnownTimeZone(
                 "With time zone large hour",
                 1970, 1, 1, 0, 0, BigDecimal.valueOf(0, 3), -23, 0, 0,
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1970, 1, 1),
                     Time.of(0, 0, BigDecimal.valueOf(0, 3), TimeZone.UtcOffset.of(-23, 0), 0)
                 ),
@@ -354,7 +354,7 @@ class TimestampTest {
             SuccessCaseWithKnownTimeZone(
                 "With time zone minute",
                 1970, 1, 1, 0, 0, BigDecimal.valueOf(0, 3), -23, -59, 0,
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1970, 1, 1),
                     Time.of(0, 0, BigDecimal.valueOf(0, 3), TimeZone.UtcOffset.of(-23, -59), 0)
                 ),
@@ -366,7 +366,7 @@ class TimestampTest {
             SuccessCaseWithUnknownTimeZone(
                 "Unix zero with unknown time zone",
                 1970, 1, 1, 0, 0, BigDecimal.ZERO, null,
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1970, 1, 1),
                     Time.of(0, 0, BigDecimal.ZERO, TimeZone.UnknownTimeZone)
                 ),
@@ -375,7 +375,7 @@ class TimestampTest {
             SuccessCaseWithUnknownTimeZone(
                 "Unix zero with unknown time zone - with fraction",
                 1970, 1, 1, 0, 0, BigDecimal.valueOf(0, 3), null,
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1970, 1, 1),
                     Time.of(0, 0, BigDecimal.valueOf(0, 3), TimeZone.UnknownTimeZone)
                 ),
@@ -384,7 +384,7 @@ class TimestampTest {
             SuccessCaseWithUnknownTimeZone(
                 "Unix zero with unknown time zone with precision ",
                 1970, 1, 1, 0, 0, BigDecimal.ZERO, 0,
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1970, 1, 1),
                     Time.of(0, 0, BigDecimal.ZERO, TimeZone.UnknownTimeZone, 0)
                 ),
@@ -393,7 +393,7 @@ class TimestampTest {
             SuccessCaseWithUnknownTimeZone(
                 "Rounding - truncate",
                 1970, 1, 1, 0, 0, BigDecimal.valueOf(0, 3), 0,
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1970, 1, 1),
                     Time.of(0, 0, BigDecimal.valueOf(0, 0), TimeZone.UnknownTimeZone, 0)
                 ),
@@ -402,7 +402,7 @@ class TimestampTest {
             SuccessCaseWithUnknownTimeZone(
                 "Rounding - up",
                 1970, 1, 1, 0, 0, BigDecimal.valueOf(999999, 5), 0,
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1970, 1, 1),
                     Time.of(0, 0, BigDecimal.valueOf(10, 0), TimeZone.UnknownTimeZone, 0)
                 ),
@@ -411,7 +411,7 @@ class TimestampTest {
             SuccessCaseWithUnknownTimeZone(
                 "Rounding - carry to minute",
                 1970, 1, 1, 0, 0, BigDecimal.valueOf(599, 1), 0,
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1970, 1, 1),
                     Time.of(0, 1, BigDecimal.valueOf(0, 0), TimeZone.UnknownTimeZone, 0)
                 ),
@@ -420,7 +420,7 @@ class TimestampTest {
             SuccessCaseWithUnknownTimeZone(
                 "Rounding - carry to hour",
                 1970, 1, 1, 0, 59, BigDecimal.valueOf(599, 1), 0,
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1970, 1, 1),
                     Time.of(1, 0, BigDecimal.valueOf(0, 0), TimeZone.UnknownTimeZone, 0)
                 ),
@@ -429,7 +429,7 @@ class TimestampTest {
             SuccessCaseWithUnknownTimeZone(
                 "Rounding - rounding carry to day",
                 1970, 1, 1, 23, 59, BigDecimal.valueOf(599, 1), 0,
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1970, 1, 2),
                     Time.of(0, 0, BigDecimal.valueOf(0, 0), TimeZone.UnknownTimeZone, 0)
                 ),
@@ -438,7 +438,7 @@ class TimestampTest {
             SuccessCaseWithUnknownTimeZone(
                 "Rounding - rounding carry to month",
                 1970, 1, 31, 23, 59, BigDecimal.valueOf(599, 1), 0,
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1970, 2, 1),
                     Time.of(0, 0, BigDecimal.valueOf(0, 0), TimeZone.UnknownTimeZone, 0)
                 ),
@@ -447,7 +447,7 @@ class TimestampTest {
             SuccessCaseWithUnknownTimeZone(
                 "Rounding - rounding carry to year",
                 1970, 12, 31, 23, 59, BigDecimal.valueOf(599, 1), 0,
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1971, 1, 1),
                     Time.of(0, 0, BigDecimal.valueOf(0, 0), TimeZone.UnknownTimeZone, 0)
                 ),
@@ -456,7 +456,7 @@ class TimestampTest {
             SuccessCaseWithUnknownTimeZone(
                 "Large precision",
                 1970, 1, 1, 0, 0, BigDecimal.valueOf(0, 20), 20,
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1970, 1, 1),
                     Time.of(0, 0, BigDecimal.valueOf(0, 20), TimeZone.UnknownTimeZone, 20)
                 ),
@@ -477,7 +477,7 @@ class TimestampTest {
             SuccessCaseWithUnknownTimeZone(
                 "Negative epoch",
                 1901, 1, 1, 0, 0, BigDecimal.valueOf(0, 3), 0,
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1901, 1, 1),
                     Time.of(0, 0, BigDecimal.valueOf(0, 0), TimeZone.UnknownTimeZone, 0)
                 ),
@@ -487,7 +487,7 @@ class TimestampTest {
             SuccessCaseWithUnknownTimeZone(
                 "Padding zero",
                 1970, 1, 1, 0, 0, BigDecimal.valueOf(1, 0), 5,
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1970, 1, 1),
                     Time.of(0, 0, BigDecimal.valueOf(100000, 5), TimeZone.UnknownTimeZone, 5)
                 ),
@@ -499,7 +499,7 @@ class TimestampTest {
             SuccessCaseWithNoTimeZone(
                 "Unix zero",
                 1970, 1, 1, 0, 0, BigDecimal.ZERO, null,
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1970, 1, 1),
                     Time.of(0, 0, BigDecimal.ZERO, null)
                 ),
@@ -507,7 +507,7 @@ class TimestampTest {
             SuccessCaseWithNoTimeZone(
                 "Unix zero - with fraction",
                 1970, 1, 1, 0, 0, BigDecimal.valueOf(0, 3), null,
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1970, 1, 1),
                     Time.of(0, 0, BigDecimal.valueOf(0, 3), null)
                 ),
@@ -515,7 +515,7 @@ class TimestampTest {
             SuccessCaseWithNoTimeZone(
                 "Unix zero with precision",
                 1970, 1, 1, 0, 0, BigDecimal.ZERO, 0,
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1970, 1, 1),
                     Time.of(0, 0, BigDecimal.ZERO, null, 0)
                 ),
@@ -523,7 +523,7 @@ class TimestampTest {
             SuccessCaseWithNoTimeZone(
                 "Rounding - truncate",
                 1970, 1, 1, 0, 0, BigDecimal.valueOf(0, 3), 0,
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1970, 1, 1),
                     Time.of(0, 0, BigDecimal.valueOf(0, 0), null, 0)
                 ),
@@ -531,7 +531,7 @@ class TimestampTest {
             SuccessCaseWithNoTimeZone(
                 "Rounding - up",
                 1970, 1, 1, 0, 0, BigDecimal.valueOf(999999, 5), 0,
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1970, 1, 1),
                     Time.of(0, 0, BigDecimal.valueOf(10, 0), null, 0)
                 ),
@@ -539,7 +539,7 @@ class TimestampTest {
             SuccessCaseWithNoTimeZone(
                 "Rounding - carry to minute",
                 1970, 1, 1, 0, 0, BigDecimal.valueOf(599, 1), 0,
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1970, 1, 1),
                     Time.of(0, 1, BigDecimal.valueOf(0, 0), null, 0)
                 ),
@@ -547,7 +547,7 @@ class TimestampTest {
             SuccessCaseWithNoTimeZone(
                 "Rounding - carry to hour",
                 1970, 1, 1, 0, 59, BigDecimal.valueOf(599, 1), 0,
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1970, 1, 1),
                     Time.of(1, 0, BigDecimal.valueOf(0, 0), null, 0)
                 ),
@@ -555,7 +555,7 @@ class TimestampTest {
             SuccessCaseWithNoTimeZone(
                 "Rounding - carry to day",
                 1970, 1, 1, 23, 59, BigDecimal.valueOf(599, 1), 0,
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1970, 1, 2),
                     Time.of(0, 0, BigDecimal.valueOf(0, 0), null, 0)
                 ),
@@ -563,7 +563,7 @@ class TimestampTest {
             SuccessCaseWithNoTimeZone(
                 "Rounding - carry to month",
                 1970, 1, 31, 23, 59, BigDecimal.valueOf(599, 1), 0,
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1970, 2, 1),
                     Time.of(0, 0, BigDecimal.valueOf(0, 0), null, 0)
                 ),
@@ -571,7 +571,7 @@ class TimestampTest {
             SuccessCaseWithNoTimeZone(
                 "Rounding - carry to year",
                 1970, 12, 31, 23, 59, BigDecimal.valueOf(599, 1), 0,
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1971, 1, 1),
                     Time.of(0, 0, BigDecimal.valueOf(0, 0), null, 0)
                 ),
@@ -579,7 +579,7 @@ class TimestampTest {
             SuccessCaseWithNoTimeZone(
                 "Large precision",
                 1970, 1, 1, 0, 0, BigDecimal.valueOf(0, 20), 20,
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1970, 1, 1),
                     Time.of(0, 0, BigDecimal.valueOf(0, 20), null, 20)
                 ),
@@ -598,7 +598,7 @@ class TimestampTest {
             SuccessCaseWithNoTimeZone(
                 "Negative epoch",
                 1901, 1, 1, 0, 0, BigDecimal.valueOf(0, 3), 0,
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1901, 1, 1),
                     Time.of(0, 0, BigDecimal.valueOf(0, 0), null, 0)
                 ),
@@ -606,7 +606,7 @@ class TimestampTest {
             SuccessCaseWithNoTimeZone(
                 "Padding zeros",
                 1970, 1, 1, 0, 0, BigDecimal.valueOf(1, 0), 5,
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1970, 1, 1),
                     Time.of(0, 0, BigDecimal.valueOf(100000, 5), null, 5)
                 ),
@@ -617,11 +617,11 @@ class TimestampTest {
             // No Timezone
             // equals
             EqualsAndCompareToTest(
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1234, 5, 6),
                     Time.of(7, 8, BigDecimal.valueOf(9L), null, null)
                 ),
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1234, 5, 6),
                     Time.of(7, 8, BigDecimal.valueOf(9L), null, null)
                 ),
@@ -630,11 +630,11 @@ class TimestampTest {
             ),
             // different fraction
             EqualsAndCompareToTest(
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1234, 5, 6),
                     Time.of(7, 8, BigDecimal.valueOf(9L), null, null)
                 ),
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1234, 5, 6),
                     Time.of(7, 8, BigDecimal.valueOf(90L, 1), null, null)
                 ),
@@ -643,11 +643,11 @@ class TimestampTest {
             ),
             // different precision
             EqualsAndCompareToTest(
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1234, 5, 6),
                     Time.of(7, 8, BigDecimal.valueOf(9L), null, null)
                 ),
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1234, 5, 6),
                     Time.of(7, 8, BigDecimal.valueOf(9L), null, 10)
                 ),
@@ -656,11 +656,11 @@ class TimestampTest {
             ),
             // larger
             EqualsAndCompareToTest(
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1234, 5, 6),
                     Time.of(7, 8, BigDecimal.valueOf(9L), null, null)
                 ),
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1234, 5, 6),
                     Time.of(5, 8, BigDecimal.valueOf(9L), null, null)
                 ),
@@ -669,11 +669,11 @@ class TimestampTest {
             ),
             // Less
             EqualsAndCompareToTest(
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1234, 5, 6),
                     Time.of(7, 8, BigDecimal.valueOf(9L), null, null)
                 ),
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1234, 5, 6),
                     Time.of(10, 8, BigDecimal.valueOf(9L), null, null)
                 ),
@@ -683,11 +683,11 @@ class TimestampTest {
 
             // Known / Unknown time zone
             EqualsAndCompareToTest(
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1234, 5, 6),
                     Time.of(7, 8, BigDecimal.valueOf(9L), TimeZone.UtcOffset.of(0), null)
                 ),
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1234, 5, 6),
                     Time.of(7, 8, BigDecimal.valueOf(9L), TimeZone.UtcOffset.of(0), null)
                 ),
@@ -695,11 +695,11 @@ class TimestampTest {
                 EQUALS
             ),
             EqualsAndCompareToTest(
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1234, 5, 6),
                     Time.of(7, 8, BigDecimal.valueOf(9L), TimeZone.UnknownTimeZone, null)
                 ),
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1234, 5, 6),
                     Time.of(7, 8, BigDecimal.valueOf(9L), TimeZone.UnknownTimeZone, null)
                 ),
@@ -707,11 +707,11 @@ class TimestampTest {
                 EQUALS
             ),
             EqualsAndCompareToTest(
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1234, 5, 6),
                     Time.of(7, 8, BigDecimal.valueOf(9L), TimeZone.UtcOffset.of(0), null)
                 ),
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1234, 5, 6),
                     Time.of(7, 8, BigDecimal.valueOf(9L), TimeZone.UnknownTimeZone, null)
                 ),
@@ -720,11 +720,11 @@ class TimestampTest {
             ),
             // fraction precision
             EqualsAndCompareToTest(
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1234, 5, 6),
                     Time.of(7, 8, BigDecimal.valueOf(9L), TimeZone.UtcOffset.of(0), null)
                 ),
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1234, 5, 6),
                     Time.of(7, 8, BigDecimal.valueOf(90L, 1), TimeZone.UtcOffset.of(0), null)
                 ),
@@ -732,11 +732,11 @@ class TimestampTest {
                 EQUALS
             ),
             EqualsAndCompareToTest(
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1234, 5, 6),
                     Time.of(7, 8, BigDecimal.valueOf(9L), TimeZone.UnknownTimeZone, null)
                 ),
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1234, 5, 6),
                     Time.of(7, 8, BigDecimal.valueOf(90L, 1), TimeZone.UnknownTimeZone, null)
                 ),
@@ -744,11 +744,11 @@ class TimestampTest {
                 EQUALS
             ),
             EqualsAndCompareToTest(
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1234, 5, 6),
                     Time.of(7, 8, BigDecimal.valueOf(9L), TimeZone.UtcOffset.of(0), null)
                 ),
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1234, 5, 6),
                     Time.of(7, 8, BigDecimal.valueOf(9L), TimeZone.UnknownTimeZone, null)
                 ),
@@ -757,11 +757,11 @@ class TimestampTest {
             ),
             // precision
             EqualsAndCompareToTest(
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1234, 5, 6),
                     Time.of(7, 8, BigDecimal.valueOf(9L), TimeZone.UtcOffset.of(0), null)
                 ),
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1234, 5, 6),
                     Time.of(7, 8, BigDecimal.valueOf(9L), TimeZone.UtcOffset.of(0), 1)
                 ),
@@ -769,11 +769,11 @@ class TimestampTest {
                 EQUALS
             ),
             EqualsAndCompareToTest(
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1234, 5, 6),
                     Time.of(7, 8, BigDecimal.valueOf(9L), TimeZone.UnknownTimeZone, null)
                 ),
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1234, 5, 6),
                     Time.of(7, 8, BigDecimal.valueOf(9L), TimeZone.UnknownTimeZone, 1)
                 ),
@@ -781,11 +781,11 @@ class TimestampTest {
                 EQUALS
             ),
             EqualsAndCompareToTest(
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1234, 5, 6),
                     Time.of(7, 8, BigDecimal.valueOf(9L), TimeZone.UtcOffset.of(0), null)
                 ),
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1234, 5, 6),
                     Time.of(7, 8, BigDecimal.valueOf(9L), TimeZone.UnknownTimeZone, 1)
                 ),
@@ -794,11 +794,11 @@ class TimestampTest {
             ),
             // Time Zone Hour
             EqualsAndCompareToTest(
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1234, 5, 6),
                     Time.of(7, 8, BigDecimal.valueOf(9L), TimeZone.UtcOffset.of(0), null)
                 ),
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1234, 5, 6),
                     Time.of(8, 8, BigDecimal.valueOf(9L), TimeZone.UtcOffset.of(1, 0), null)
                 ),
@@ -806,11 +806,11 @@ class TimestampTest {
                 EQUALS
             ),
             EqualsAndCompareToTest(
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1234, 5, 6),
                     Time.of(7, 8, BigDecimal.valueOf(9L), TimeZone.UnknownTimeZone, null)
                 ),
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1234, 5, 6),
                     Time.of(8, 8, BigDecimal.valueOf(9L), TimeZone.UtcOffset.of(1, 0), null)
                 ),
@@ -819,11 +819,11 @@ class TimestampTest {
             ),
             // Time zone hour minute
             EqualsAndCompareToTest(
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1234, 5, 6),
                     Time.of(7, 8, BigDecimal.valueOf(9L), TimeZone.UtcOffset.of(0), null)
                 ),
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1234, 5, 6),
                     Time.of(8, 38, BigDecimal.valueOf(9L), TimeZone.UtcOffset.of(1, 30), null)
                 ),
@@ -831,11 +831,11 @@ class TimestampTest {
                 EQUALS
             ),
             EqualsAndCompareToTest(
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1234, 5, 6),
                     Time.of(7, 8, BigDecimal.valueOf(9L), TimeZone.UnknownTimeZone, null)
                 ),
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1234, 5, 6),
                     Time.of(8, 38, BigDecimal.valueOf(9L), TimeZone.UtcOffset.of(1, 30), null)
                 ),
@@ -845,11 +845,11 @@ class TimestampTest {
 
             // larger
             EqualsAndCompareToTest(
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1234, 5, 6),
                     Time.of(7, 8, BigDecimal.valueOf(9L), TimeZone.UtcOffset.of(0), null)
                 ),
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1234, 5, 6),
                     Time.of(5, 38, BigDecimal.valueOf(9L), TimeZone.UtcOffset.of(0), null)
                 ),
@@ -857,11 +857,11 @@ class TimestampTest {
                 MORE
             ),
             EqualsAndCompareToTest(
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1234, 5, 6),
                     Time.of(7, 8, BigDecimal.valueOf(9L), TimeZone.UnknownTimeZone, null)
                 ),
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1234, 5, 6),
                     Time.of(5, 38, BigDecimal.valueOf(9L), TimeZone.UnknownTimeZone, null)
                 ),
@@ -869,11 +869,11 @@ class TimestampTest {
                 MORE
             ),
             EqualsAndCompareToTest(
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1234, 5, 6),
                     Time.of(7, 8, BigDecimal.valueOf(9L), TimeZone.UtcOffset.of(0), null)
                 ),
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1234, 5, 6),
                     Time.of(5, 38, BigDecimal.valueOf(9L), TimeZone.UnknownTimeZone, null)
                 ),
@@ -882,11 +882,11 @@ class TimestampTest {
             ),
             // less
             EqualsAndCompareToTest(
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1234, 5, 6),
                     Time.of(5, 38, BigDecimal.valueOf(9L), TimeZone.UtcOffset.of(0), null)
                 ),
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1234, 5, 6),
                     Time.of(7, 8, BigDecimal.valueOf(9L), TimeZone.UtcOffset.of(0), null)
                 ),
@@ -894,11 +894,11 @@ class TimestampTest {
                 LESS
             ),
             EqualsAndCompareToTest(
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1234, 5, 6),
                     Time.of(5, 38, BigDecimal.valueOf(9L), TimeZone.UnknownTimeZone, null)
                 ),
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1234, 5, 6),
                     Time.of(7, 8, BigDecimal.valueOf(9L), TimeZone.UnknownTimeZone, null)
                 ),
@@ -906,11 +906,11 @@ class TimestampTest {
                 LESS
             ),
             EqualsAndCompareToTest(
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1234, 5, 6),
                     Time.of(5, 38, BigDecimal.valueOf(9L), TimeZone.UnknownTimeZone, null)
                 ),
-                Timestamp.of(
+                Timestamp.forDateTime(
                     Date.of(1234, 5, 6),
                     Time.of(7, 8, BigDecimal.valueOf(9L), TimeZone.UtcOffset.of(0), null)
                 ),

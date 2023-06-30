@@ -1,7 +1,10 @@
 package org.partiql.value.datetime
 
+import org.partiql.value.datetime.Timestamp.Companion.equals
 import java.math.BigDecimal
+import java.math.RoundingMode
 import java.time.LocalDate
+import java.time.ZoneOffset
 import com.amazon.ion.Timestamp as TimestampIon
 
 /**
@@ -23,25 +26,8 @@ public data class Timestamp(
 ) {
     public companion object {
         /**
-         * The intention of this API is to create a Timestamp using a Date and a Time component.
-         * It is assumed that the time component has already been rounded,
-         * meaning this API will not be responsible, if the rounding requires carrying in to day field.
-         *
-         * For example: the result of
-         * Timestamp.of(Date.of(2023, 06, 01), Time.of(23, 59, 59.9, TimeZone.of(0,0), 0)
-         * will result in
-         * 2023-06-01T00:00:00+00:00
-         *
-         * If the desired result is `2023-06-02T00:00:00+00:00`, use [of]
+         * Return a Timestamp constructed based on the field values.
          */
-        @JvmStatic
-        public fun of(date: Date, time: Time): Timestamp =
-            Timestamp(
-                date.year, date.month, date.day,
-                time.hour, time.minute, time.second,
-                time.timeZone, time.precision
-            )
-
         public fun of(
             year: Int,
             month: Int,
@@ -57,15 +43,40 @@ public data class Timestamp(
             val roundedTime = Time.of(hour, minute, second, timeZone, precision)
             // if the rounding result and the original result differs in more than 1 second, then we need to carry to date
             return when ((arbitraryTime.elapsedSecond - roundedTime.elapsedSecond).abs() > BigDecimal.ONE) {
-                true -> of(date.plusDays(1L), roundedTime)
+                true -> forDateTime(date.plusDays(1L), roundedTime)
                 false -> {
-                    of(date, roundedTime)
+                    forDateTime(date, roundedTime)
                 }
             }
         }
 
+        /**
+         * The intention of this API is to create a Timestamp using a Date and a Time component.
+         * It is assumed that the time component has already been rounded,
+         * meaning this API will not be responsible, if the rounding requires carrying in to day field.
+         *
+         * For example: the result of
+         * Timestamp.of(Date.of(2023, 06, 01), Time.of(23, 59, 59.9, TimeZone.of(0,0), 0)
+         * will result in
+         * 2023-06-01T00:00:00+00:00
+         *
+         * If the desired result is `2023-06-02T00:00:00+00:00`, use [of]
+         */
         @JvmStatic
-        public fun of(ionTs: TimestampIon): Timestamp {
+        public fun forDateTime(date: Date, time: Time): Timestamp =
+            Timestamp(
+                date.year, date.month, date.day,
+                time.hour, time.minute, time.second,
+                time.timeZone, time.precision
+            )
+
+        /**
+         * Returns a Timestamp based on the Ion Value.
+         * Notice that the result timestamp is always a timestamp with time zone. (Unknown Timezone or UTC offset).
+         * The precision for the resulting Timestamp is always arbitrary.
+         */
+        @JvmStatic
+        public fun forIonTimestamp(ionTs: TimestampIon): Timestamp {
             val timestamp = when (ionTs.localOffset) {
                 null ->
                     Timestamp(
@@ -87,6 +98,36 @@ public data class Timestamp(
                 it.ionRaw = ionTs
                 it
             }
+        }
+
+        /**
+         * Returns a timestamp based on epoch second.
+         *
+         * The resulting timestamp is always a timestamp with timezone,
+         * this is because epoch second by definition refers to a point in time.
+         * and timestamp without time zone does not refer to a point forEpochSecond time.
+         */
+        @JvmStatic
+        public fun forEpochSecond(
+            seconds: BigDecimal,
+            timeZone: TimeZone = TimeZone.UnknownTimeZone,
+            precision: Int? = null
+        ): Timestamp {
+            val offsetDateTime = java.time.Instant.ofEpochSecond(seconds.setScale(0, RoundingMode.DOWN).longValueExact()).atOffset(ZoneOffset.UTC)
+            val year = offsetDateTime.year
+            val month = offsetDateTime.monthValue
+            val day = offsetDateTime.dayOfMonth
+            val hour = offsetDateTime.hour
+            val minute = offsetDateTime.minute
+            val wholeSecond = offsetDateTime.second
+            val fractionSecond = seconds.minus(BigDecimal.valueOf(seconds.setScale(0, RoundingMode.DOWN).longValueExact()))
+            return of(
+                year, month, day,
+                hour, minute,
+                fractionSecond.add(BigDecimal.valueOf(wholeSecond.toLong())),
+                timeZone,
+                precision
+            )
         }
     }
 
@@ -140,6 +181,10 @@ public data class Timestamp(
         epochSecond.movePointRight(3)
     }
 
+    val date: Date by lazy { Date.of(year, month, day) }
+
+    val time: Time by lazy { Time.of(hour, minute, second, timeZone, precision) }
+
     /**
      * For backward compatibility issue, we track the original Ion Input
      */
@@ -187,6 +232,93 @@ public data class Timestamp(
      */
     public fun compareTo(other: Timestamp): Int = DateTimeComparator.compareTimestamp(this, other)
 
+    //
+    // Operation
+    //
+    /**
+     * Returns the same instant,
+     * but the data time fields in the instant will be different as the time zone is different.
+     */
+    public fun atTimeZone(timeZone: TimeZone): Timestamp {
+        return when (this.timeZone) {
+            TimeZone.UnknownTimeZone -> this.copy(timeZone = timeZone)
+            is TimeZone.UtcOffset -> {
+                when (timeZone) {
+                    TimeZone.UnknownTimeZone -> this.atTimeZone(TimeZone.UtcOffset.of(0)).copy(timeZone = timeZone)
+                    is TimeZone.UtcOffset -> {
+                        var _minute = this.minute - this.timeZone.tzMinute + timeZone.tzMinute
+                        var _hour = this.hour - this.timeZone.tzHour + this.timeZone.tzHour
+                        var hourOffset = _minute / 60
+                        _minute %= 60
+                        if (_minute < 0) {
+                            _minute += 60
+                            hourOffset -= 1
+                        }
+                        _hour += hourOffset
+                        var dayOffset = _hour / 24
+                        _hour %= 24
+                        if (_hour < 0) {
+                            _hour += 24
+                            dayOffset -= 1
+                        }
+                        forDateTime(
+                            Date.of(this.year, this.month, this.day).plusDays(dayOffset.toLong()),
+                            Time.of(_hour, _minute, this.second, timeZone, this.precision)
+                        )
+                    }
+                }
+            }
+
+            null -> TODO()
+        }
+    }
+    public fun plusYear(years: Long): Timestamp = forDateTime(this.date.plusYear(years), this.time)
+    public fun plusMonth(months: Long): Timestamp = forDateTime(this.date.plusMonths(months), this.time)
+    public fun plusDays(days: Long): Timestamp = forDateTime(this.date.plusDays(days), this.time)
+    public fun plusHours(hours: Long): Timestamp =
+        when (this.timeZone) {
+            // Timestamp without time zone, we handle it by "assume the time zone is UTC
+            null -> {
+                val ts = this.copy(timeZone = TimeZone.UtcOffset.of(0))
+                ts.plusHours(hours).copy(timeZone = null)
+            }
+
+            TimeZone.UnknownTimeZone, is TimeZone.UtcOffset ->
+                forEpochSecond(this.epochSecond.plus(BigDecimal.valueOf(hours * SECONDS_IN_HOUR)), timeZone, precision)
+        }
+    public fun plusMinutes(minutes: Long): Timestamp =
+        when (this.timeZone) {
+            // Timestamp without time zone, we handle it by "assume the time zone is UTC
+            null -> {
+                val ts = this.copy(timeZone = TimeZone.UtcOffset.of(0))
+                ts.plusMinutes(minutes).copy(timeZone = null)
+            }
+
+            TimeZone.UnknownTimeZone, is TimeZone.UtcOffset ->
+                forEpochSecond(this.epochSecond.plus(BigDecimal.valueOf(minutes * SECONDS_IN_MINUTE)), timeZone, precision)
+        }
+    public fun plusSeconds(seconds: Long): Timestamp =
+        when (this.timeZone) {
+            // Timestamp without time zone, we handle it by "assume the time zone is UTC
+            null -> {
+                val ts = this.copy(timeZone = TimeZone.UtcOffset.of(0))
+                ts.plusSeconds(seconds).copy(timeZone = null)
+            }
+
+            TimeZone.UnknownTimeZone, is TimeZone.UtcOffset ->
+                forEpochSecond(this.epochSecond.plus(BigDecimal.valueOf(seconds)), timeZone, precision)
+        }
+    public fun plusSeconds(seconds: BigDecimal): Timestamp =
+        when (this.timeZone) {
+            // Timestamp without time zone, we handle it by "assume the time zone is UTC
+            null -> {
+                val ts = this.copy(timeZone = TimeZone.UtcOffset.of(0))
+                ts.plusSeconds(seconds).copy(timeZone = null)
+            }
+
+            TimeZone.UnknownTimeZone, is TimeZone.UtcOffset ->
+                forEpochSecond(this.epochSecond.plus(seconds), timeZone, precision)
+        }
     private fun getUTCEpoch(totalOffsetMinutes: Int): BigDecimal {
         val epochDay = LocalDate.of(year, month, day).toEpochDay()
         val excludedSecond = epochDay * SECONDS_IN_DAY + hour * SECONDS_IN_HOUR + minute * SECONDS_IN_MINUTE

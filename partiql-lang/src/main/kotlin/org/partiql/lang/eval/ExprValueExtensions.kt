@@ -14,6 +14,7 @@
 
 package org.partiql.lang.eval
 
+import com.amazon.ion.Decimal
 import com.amazon.ion.IntegerSize
 import com.amazon.ion.IonInt
 import com.amazon.ion.IonStruct
@@ -22,10 +23,18 @@ import com.amazon.ion.IonType
 import com.amazon.ion.IonValue
 import com.amazon.ion.Timestamp
 import com.amazon.ion.system.IonSystemBuilder
+import com.amazon.ionelement.api.emptyIonSexp
+import com.amazon.ionelement.api.emptyIonStruct
+import com.amazon.ionelement.api.field
+import com.amazon.ionelement.api.ionDecimal
+import com.amazon.ionelement.api.ionInt
+import com.amazon.ionelement.api.ionStructOf
+import com.amazon.ionelement.api.toIonValue
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.errors.PropertyValueMap
+import org.partiql.lang.eval.ExprValue.Companion.newStruct
 import org.partiql.lang.eval.time.NANOS_PER_SECOND
 import org.partiql.lang.eval.time.Time
 import org.partiql.lang.syntax.impl.DateTimePart
@@ -35,6 +44,7 @@ import org.partiql.lang.util.bigDecimalOf
 import org.partiql.lang.util.coerce
 import org.partiql.lang.util.compareTo
 import org.partiql.lang.util.downcast
+import org.partiql.lang.util.getIonElement
 import org.partiql.lang.util.getPrecisionFromTimeString
 import org.partiql.lang.util.isNaN
 import org.partiql.lang.util.isNegInf
@@ -57,6 +67,7 @@ import org.partiql.types.StringType
 import org.partiql.types.SymbolType
 import org.partiql.types.TimeType
 import org.partiql.types.TimestampType
+import org.partiql.value.datetime.TimeZone
 import java.math.BigDecimal
 import java.math.MathContext
 import java.math.RoundingMode
@@ -74,6 +85,7 @@ const val BAG_ANNOTATION = "\$bag"
 const val DATE_ANNOTATION = "\$date"
 const val TIME_ANNOTATION = "\$time"
 const val GRAPH_ANNOTATION = "\$graph"
+const val TIMESTAMP_WITHOUT_TIMEZONE_ANNOTATION = "\$timestamp_without_timezone"
 
 /**
  * Wraps the given [ExprValue] with a delegate that provides the [OrderedBindNames] facet.
@@ -739,7 +751,7 @@ fun ExprValue.toIonValue(ion: IonSystem): IonValue =
                 addTypeAnnotation(DATE_ANNOTATION)
             }
         }
-        ExprValueType.TIMESTAMP -> ion.newTimestamp(timestampValue())
+        ExprValueType.TIMESTAMP -> partiQLTimestampValue().toIonValue(ion)
         ExprValueType.TIME -> timeValue().toIonValue(ion)
         ExprValueType.SYMBOL -> ion.newSymbol(stringValue())
         ExprValueType.STRING -> ion.newString(stringValue())
@@ -780,3 +792,19 @@ private fun ExprValue.toIonStruct(ion: IonSystem): IonStruct {
         }
     }
 }
+
+private fun org.partiql.value.datetime.Timestamp.toIonValue(ion: IonSystem) =
+    when(this.timeZone) {
+        TimeZone.UnknownTimeZone, is TimeZone.UtcOffset -> ion.newTimestamp(this.ionTimestampValue)
+        null -> {
+            val ts = this@toIonValue
+            ionStructOf(
+                field("year", ionInt(ts.year.toLong())),
+                field("month", ionInt(ts.month.toLong())),
+                field("day", ionInt(ts.day.toLong())),
+                field("hour", ionInt(ts.hour.toLong())),
+                field("minute", ionInt(ts.minute.toLong())),
+                field("second", ionDecimal(Decimal.valueOf(ts.second)))
+            ).toIonValue(ion)
+        }
+    }

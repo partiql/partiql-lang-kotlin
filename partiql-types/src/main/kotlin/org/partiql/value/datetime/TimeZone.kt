@@ -13,6 +13,13 @@ public sealed class TimeZone {
      * between Coordinated Universal Time (UTC) and local time, at a particular place.
      */
     public data class UtcOffset private constructor(val totalOffsetMinutes: Int) : TimeZone() {
+        val tzHour: Int by lazy {
+            this.totalOffsetMinutes / 60
+        }
+
+        val tzMinute: Int by lazy {
+            this.totalOffsetMinutes - this.tzHour * 60
+        }
         public companion object {
 
             /**

@@ -34,6 +34,7 @@ import com.amazon.ion.IonValue
 import com.amazon.ion.Timestamp
 import com.amazon.ion.facet.Faceted
 import org.partiql.lang.errors.ErrorCode
+import org.partiql.lang.eval.ExprValue.Companion.newTimestamp
 import org.partiql.lang.eval.time.NANOS_PER_SECOND
 import org.partiql.lang.eval.time.Time
 import org.partiql.lang.graph.ExternalGraphReader
@@ -284,13 +285,13 @@ interface ExprValue : Iterable<ExprValue>, Faceted {
         @Deprecated(
             "construction timestamp using IonTimestamp is deprecated, please use PartiQL Timestamp",
             ReplaceWith(
-                "TimestampExprValue(value)",
-                "org.partiql.lang.eval.ExprValue.Companion.TimestampExprValue"
-            )
+                "newTimestamp(Timestamp.forIonTimestamp(value))",
+                "org.partiql.value.datetime.Timestamp"
+            ),
         )
         @JvmStatic
         fun newTimestamp(value: Timestamp): ExprValue =
-            TimestampExprValue(PartiQLTimestamp.of(value))
+            TimestampExprValue(PartiQLTimestamp.forIonTimestamp(value))
 
         /** Returns a PartiQL `TIMESTAMP` [ExprValue] instance representing the specified [PartiQLTimestamp]. */
         @JvmStatic
@@ -405,7 +406,7 @@ interface ExprValue : Iterable<ExprValue>, Faceted {
                     val timestampValue = value.timestampValue()
                     newDate(timestampValue.year, timestampValue.month, timestampValue.day)
                 }
-                value is IonTimestamp -> newTimestamp(value.timestampValue()) // TIMESTAMP
+                value is IonTimestamp -> newTimestamp(org.partiql.value.datetime.Timestamp.forIonTimestamp(value.timestampValue())) // TIMESTAMP
                 value is IonStruct && value.hasTypeAnnotation(TIME_ANNOTATION) -> { // TIME
                     val hourValue = (value["hour"] as IonInt).intValue()
                     val minuteValue = (value["minute"] as IonInt).intValue()
@@ -415,6 +416,20 @@ interface ExprValue : Iterable<ExprValue>, Faceted {
                     val timeZoneHourValue = (value["timezone_hour"] as IonInt).intValue()
                     val timeZoneMinuteValue = (value["timezone_minute"] as IonInt).intValue()
                     newTime(Time.of(hourValue, minuteValue, secondValue, nanoValue, secondInDecimal.scale(), timeZoneHourValue * 60 + timeZoneMinuteValue))
+                }
+                value is IonStruct && value.hasTypeAnnotation(TIMESTAMP_WITHOUT_TIMEZONE_ANNOTATION) -> {
+                    val year = (value["year"] as IonInt).intValue()
+                    val month = (value["month"] as IonInt).intValue()
+                    val day = (value["day"] as IonInt).intValue()
+                    val hour = (value["hour"] as IonInt).intValue()
+                    val minute = (value["minute"] as IonInt).intValue()
+                    val second = (value["second"] as IonDecimal).decimalValue()
+                    newTimestamp(
+                        org.partiql.value.datetime.Timestamp.of(
+                            year, month, day,
+                            hour, minute, second, null, null,
+                        )
+                    )
                 }
                 value is IonStruct && value.hasTypeAnnotation(GRAPH_ANNOTATION) -> // GRAPH
                     newGraph(ExternalGraphReader.read(value))

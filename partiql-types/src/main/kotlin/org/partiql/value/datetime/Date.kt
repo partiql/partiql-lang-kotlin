@@ -24,13 +24,26 @@ public data class Date private constructor(
             return Date(year, month, day)
         }
     }
-
-    private val localDate: LocalDate by lazy {
+    public val localDate: LocalDate by lazy {
         LocalDate.of(year, month, day)
     }
-
-    public fun plusDays(daysToAdd: Long): Date {
-        val newDate = this.localDate.plusDays(daysToAdd)
-        return of(newDate.year, newDate.monthValue, newDate.dayOfMonth)
+    public val epochDays: Long by lazy {
+        this.localDate.toEpochDay()
     }
+    // Operation
+    public fun plusDays(days: Long): Date =
+        this.localDate.plusDays(days)
+            .let { newDate ->
+                of(newDate.year, newDate.monthValue, newDate.dayOfMonth)
+            }
+    public fun plusMonths(months: Long): Date =
+        this.localDate.plusMonths(months)
+            .let { newDate ->
+                of(newDate.year, newDate.monthValue, newDate.dayOfMonth)
+            }
+    public fun plusYear(years: Long): Date =
+        this.localDate.plusYears(years)
+            .let { newDate ->
+                of(newDate.year, newDate.monthValue, newDate.dayOfMonth)
+            }
 }
