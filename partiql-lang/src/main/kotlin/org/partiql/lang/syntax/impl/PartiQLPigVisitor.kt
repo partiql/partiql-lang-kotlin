@@ -758,8 +758,6 @@ internal class PartiQLPigVisitor(val customTypes: List<CustomType> = listOf(), p
         val placeholderDirection = edgeRight()
         val variable = visitOrNull(ctx.symbolPrimitive(), PartiqlAst.Expr.Id::class)?.name
         val prefilter = visitOrNull(ctx.whereClause(), PartiqlAst.Expr::class)
-        // val label = visitOrNull(ctx.patternPartLabel(), PartiqlAst.Expr.Id::class)?.name
-        // TODO? PR on visitOrNull considered harmful.  Do this instead?:
         val lab = ctx.labelSpec()?.let { visit(it) as PartiqlAst.GraphLabelSpec }
         edge_(direction = placeholderDirection, variable = variable, prefilter = prefilter, label = lab)
     }
@@ -824,7 +822,6 @@ internal class PartiQLPigVisitor(val customTypes: List<CustomType> = listOf(), p
     override fun visitNode(ctx: PartiQLParser.NodeContext) = PartiqlAst.build {
         val variable = visitOrNull(ctx.symbolPrimitive(), PartiqlAst.Expr.Id::class)?.name
         val prefilter = visitOrNull(ctx.whereClause(), PartiqlAst.Expr::class)
-        // val label = visitOrNull(ctx.patternPartLabel(), PartiqlAst.Expr.Id::class)?.name
         val lab = ctx.labelSpec()?.let { visit(it) as PartiqlAst.GraphLabelSpec }
         node_(variable = variable, prefilter = prefilter, label = lab)
     }
