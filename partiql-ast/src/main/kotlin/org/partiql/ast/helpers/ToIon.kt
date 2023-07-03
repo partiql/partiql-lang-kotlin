@@ -106,7 +106,7 @@ internal object ToIon : PartiQLValueBaseVisitor<IonElement, Unit>() {
     override fun visitStruct(v: StructValue<*>, ctx: Unit): IonElement {
         val fields = v.fields.map {
             val key = it.first
-            val value= it.second.accept(this, ctx)
+            val value = it.second.accept(this, ctx)
             field(key, value)
         }
         return ionStructOf(fields, v.annotations)
