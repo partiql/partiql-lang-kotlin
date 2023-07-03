@@ -29,6 +29,7 @@ import org.partiql.value.NullableBoolValue
 import org.partiql.value.NullableByteValue
 import org.partiql.value.NullableCharValue
 import org.partiql.value.NullableClobValue
+import org.partiql.value.NullableCollectionValue
 import org.partiql.value.NullableDateValue
 import org.partiql.value.NullableDecimalValue
 import org.partiql.value.NullableFloat32Value
