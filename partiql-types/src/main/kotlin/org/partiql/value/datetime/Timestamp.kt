@@ -73,6 +73,19 @@ public data class Timestamp(
                 time.timeZone, time.precision
             )
 
+        /**
+         * Construct a timestamp value using date time field and a given precision.
+         *
+         * @param year Year field
+         * @param month Month field
+         * @param day Day field
+         * @param hour Hour field
+         * @param second Second field, include fraction second
+         * @param timeZone TimeZone field, see [TimeZone], null value indicates a timestamp without timezone value.
+         * @param precision If value is null, the timestamp has arbitrary precision.
+         *                  If the value is non-null, the timestamp has a fixed precision.
+         *                  (precision means number of digits in fraction second.)
+         */
         @JvmStatic
         public fun of(
             year: Int,
