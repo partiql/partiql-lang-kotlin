@@ -23,8 +23,6 @@ import com.amazon.ion.IonType
 import com.amazon.ion.IonValue
 import com.amazon.ion.Timestamp
 import com.amazon.ion.system.IonSystemBuilder
-import com.amazon.ionelement.api.emptyIonSexp
-import com.amazon.ionelement.api.emptyIonStruct
 import com.amazon.ionelement.api.field
 import com.amazon.ionelement.api.ionDecimal
 import com.amazon.ionelement.api.ionInt
@@ -34,7 +32,6 @@ import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.errors.PropertyValueMap
-import org.partiql.lang.eval.ExprValue.Companion.newStruct
 import org.partiql.lang.eval.time.NANOS_PER_SECOND
 import org.partiql.lang.eval.time.Time
 import org.partiql.lang.syntax.impl.DateTimePart
@@ -44,7 +41,6 @@ import org.partiql.lang.util.bigDecimalOf
 import org.partiql.lang.util.coerce
 import org.partiql.lang.util.compareTo
 import org.partiql.lang.util.downcast
-import org.partiql.lang.util.getIonElement
 import org.partiql.lang.util.getPrecisionFromTimeString
 import org.partiql.lang.util.isNaN
 import org.partiql.lang.util.isNegInf
@@ -794,7 +790,7 @@ private fun ExprValue.toIonStruct(ion: IonSystem): IonStruct {
 }
 
 private fun org.partiql.value.datetime.Timestamp.toIonValue(ion: IonSystem) =
-    when(this.timeZone) {
+    when (this.timeZone) {
         TimeZone.UnknownTimeZone, is TimeZone.UtcOffset -> ion.newTimestamp(this.ionTimestampValue)
         null -> {
             val ts = this@toIonValue

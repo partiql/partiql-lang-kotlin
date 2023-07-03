@@ -5,6 +5,7 @@ import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.LocalDate
 import java.time.ZoneOffset
+import kotlin.math.absoluteValue
 import com.amazon.ion.Timestamp as TimestampIon
 
 /**
@@ -319,6 +320,17 @@ public data class Timestamp(
             TimeZone.UnknownTimeZone, is TimeZone.UtcOffset ->
                 forEpochSecond(this.epochSecond.plus(seconds), timeZone, precision)
         }
+
+    public fun toStringSQL(): String = "${this.year}-${this.month}-${this.day} ${this.hour}:${this.minute}:${this.second}".let {
+        when(val timeZone = this.timeZone) {
+            null -> it
+            TimeZone.UnknownTimeZone -> "$it-00:00"
+            is TimeZone.UtcOffset -> {
+                if (timeZone.tzHour >= 0 ) "$it+${timeZone.tzHour}:${timeZone.tzMinute}"
+                else "$it${timeZone.tzHour}:${timeZone.tzMinute.absoluteValue}"
+            }
+        }
+    }
     private fun getUTCEpoch(totalOffsetMinutes: Int): BigDecimal {
         val epochDay = LocalDate.of(year, month, day).toEpochDay()
         val excludedSecond = epochDay * SECONDS_IN_DAY + hour * SECONDS_IN_HOUR + minute * SECONDS_IN_MINUTE

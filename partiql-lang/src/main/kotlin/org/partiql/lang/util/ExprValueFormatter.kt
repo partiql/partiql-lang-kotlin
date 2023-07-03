@@ -6,8 +6,10 @@ import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.dateValue
 import org.partiql.lang.eval.name
+import org.partiql.lang.eval.partiQLTimestampValue
 import org.partiql.lang.eval.timeValue
 import org.partiql.lang.eval.toIonValue
+import org.partiql.value.datetime.TimeZone
 import java.math.BigDecimal
 
 private const val MISSING_STRING = "MISSING"
@@ -63,9 +65,13 @@ class ConfigurableExprValueFormatter(private val config: Configuration) : ExprVa
                     val prefix = if (time.offsetTime == null) "TIME" else "TIME WITH TIME ZONE"
                     out.append("$prefix '$time'")
                 }
+                ExprValueType.TIMESTAMP -> {
+                    val timestamp = value.partiQLTimestampValue()
+                    out.append("TIMESTAMP '${timestamp.toStringSQL()}'")
+                }
 
                 // fallback to an Ion literal for all types that don't have a native PartiQL representation
-                ExprValueType.FLOAT, ExprValueType.TIMESTAMP, ExprValueType.SYMBOL,
+                ExprValueType.FLOAT, ExprValueType.SYMBOL,
                 ExprValueType.CLOB, ExprValueType.BLOB, ExprValueType.SEXP -> prettyPrintIonLiteral(value)
 
                 ExprValueType.LIST -> prettyPrintContainer(value, "[", "]")
