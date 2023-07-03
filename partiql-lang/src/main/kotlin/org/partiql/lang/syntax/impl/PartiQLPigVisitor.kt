@@ -73,7 +73,6 @@ import java.time.LocalTime
 import java.time.OffsetTime
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
-import kotlin.math.abs
 import kotlin.reflect.KClass
 import kotlin.reflect.cast
 
@@ -1862,12 +1861,12 @@ internal class PartiQLPigVisitor(
             } catch (e: DateTimeException) {
                 throw node.err("Invalid Date Time Literal", ErrorCode.PARSE_INVALID_DATETIME_STRING, cause = e)
             }
-        val (tzSign, tzHour, tzMinute) = getTimeZoneField(timestamp.timeZone)
+        val timeZone = timestamp.timeZone?.let { getTimeZone(it) }
         timestamp(
             timestampValue(
                 timestamp.year.toLong(), timestamp.month.toLong(), timestamp.day.toLong(),
                 timestamp.hour.toLong(), timestamp.minute.toLong(), ionDecimal(Decimal.valueOf(timestamp.second)),
-                tzSign, tzHour, tzMinute, precision
+                timeZone, precision
             )
         )
     }
@@ -1887,32 +1886,22 @@ internal class PartiQLPigVisitor(
                 "Invalid Date Time Literal, expect Time Zone for Type Timestamp With Time Zone",
                 ErrorCode.PARSE_INVALID_DATETIME_STRING
             )
-        val (tzSign, tzHour, tzMinute) = getTimeZoneField(timestamp.timeZone)
+        val timeZone = timestamp.timeZone?.let { getTimeZone(it) }
         timestamp(
             timestampValue(
                 timestamp.year.toLong(), timestamp.month.toLong(), timestamp.day.toLong(),
                 timestamp.hour.toLong(), timestamp.minute.toLong(), ionDecimal(Decimal.valueOf(timestamp.second)),
-                tzSign, tzHour, tzMinute, precision
+                timeZone, precision
             )
         )
     }
 
-    private fun getTimeZoneField(timeZone: TimeZone?) =
+    private fun getTimeZone(timeZone: TimeZone) = PartiqlAst.build {
         when (timeZone) {
-            TimeZone.UnknownTimeZone -> Triple("-", 0L, 0L)
-            is TimeZone.UtcOffset -> {
-                val positiveOffsetMinutes = abs(timeZone.totalOffsetMinutes)
-                val tzHour = positiveOffsetMinutes / 60
-                val tzMinutes = positiveOffsetMinutes - tzHour * 60
-                if (timeZone.totalOffsetMinutes >= 0) {
-                    Triple("+", tzHour.toLong(), tzMinutes.toLong())
-                } else {
-                    Triple("-", tzHour.toLong(), tzMinutes.toLong())
-                }
-            }
-
-            null -> Triple(null, null, null)
+            TimeZone.UnknownTimeZone -> unknownTimezone()
+            is TimeZone.UtcOffset -> utcOffset(timeZone.totalOffsetMinutes.toLong())
         }
+    }
 
     private fun convertSymbolPrimitive(sym: PartiQLParser.SymbolPrimitiveContext?): SymbolPrimitive? = when (sym) {
         null -> null

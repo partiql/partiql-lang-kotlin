@@ -206,8 +206,7 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
                     timestampValue(
                         2023, 1, 2,
                         3, 4, ionDecimal(Decimal.valueOf("5.")).asAnyElement(),
-                        null, null, null,
-                        null,
+                        null, null
                     )
                 )
             },
@@ -216,8 +215,7 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
                     timestampValue(
                         2023, 1, 2,
                         3, 4, ionDecimal(Decimal.valueOf("5.678")).asAnyElement(),
-                        null, null, null,
-                        null,
+                        null, null
                     )
                 )
             },
@@ -226,8 +224,7 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
                     timestampValue(
                         2023, 1, 2,
                         3, 4, ionDecimal(Decimal.valueOf("5.678901234567890")).asAnyElement(),
-                        null, null, null,
-                        null,
+                        null, null
                     )
                 )
             },
@@ -236,8 +233,7 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
                     timestampValue(
                         2023, 1, 2,
                         3, 4, ionDecimal(Decimal.valueOf("5.678901234567890")).asAnyElement(),
-                        null, null, null,
-                        1,
+                        null, 1
                     )
                 )
             },
@@ -247,8 +243,7 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
                     timestampValue(
                         2023, 1, 2,
                         3, 4, ionDecimal(Decimal.valueOf("5.")).asAnyElement(),
-                        "+", 6, 7,
-                        null,
+                        utcOffset(367L), null
                     )
                 )
             },
@@ -257,8 +252,7 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
                     timestampValue(
                         2023, 1, 2,
                         3, 4, ionDecimal(Decimal.valueOf("5.")).asAnyElement(),
-                        "-", 6, 7,
-                        null,
+                        utcOffset(-367L), null
                     )
                 )
             },
@@ -267,8 +261,7 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
                     timestampValue(
                         2023, 1, 2,
                         3, 4, ionDecimal(Decimal.valueOf("5.")).asAnyElement(),
-                        "-", 0, 0,
-                        null,
+                        unknownTimezone(), null,
                     )
                 )
             },
@@ -278,8 +271,7 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
                     timestampValue(
                         2023, 1, 2,
                         3, 4, ionDecimal(Decimal.valueOf("5.")).asAnyElement(),
-                        "-", 0, 0,
-                        null,
+                        unknownTimezone(), null
                     )
                 )
             },
@@ -289,8 +281,7 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
                     timestampValue(
                         2023, 1, 2,
                         3, 4, ionDecimal(Decimal.valueOf("5.")).asAnyElement(),
-                        "-", 0, 0,
-                        null,
+                        unknownTimezone(), null
                     )
                 )
             },
@@ -300,8 +291,7 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
                     timestampValue(
                         2023, 1, 2,
                         3, 4, ionDecimal(Decimal.valueOf("5.")).asAnyElement(),
-                        "-", 0, 0,
-                        null,
+                        unknownTimezone(), null
                     )
                 )
             },
@@ -311,8 +301,7 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
                     timestampValue(
                         2023, 1, 2,
                         3, 4, ionDecimal(Decimal.valueOf("5.")).asAnyElement(),
-                        "+", 0, 0,
-                        null,
+                        utcOffset(0L), null
                     )
                 )
             },
@@ -322,8 +311,7 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
                     timestampValue(
                         2023, 1, 2,
                         3, 4, ionDecimal(Decimal.valueOf("5.")).asAnyElement(),
-                        "+", 0, 0,
-                        null,
+                        utcOffset(0L), null
                     )
                 )
             },
@@ -332,8 +320,7 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
                     timestampValue(
                         2023, 1, 2,
                         3, 4, ionDecimal(Decimal.valueOf("5.")).asAnyElement(),
-                        "+", 0, 0,
-                        null,
+                        utcOffset(0L), null
                     )
                 )
             },
@@ -342,8 +329,7 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
                     timestampValue(
                         2023, 1, 2,
                         3, 4, ionDecimal(Decimal.valueOf("5.")).asAnyElement(),
-                        "+", 0, 0,
-                        null,
+                        utcOffset(0L), null
                     )
                 )
             },
@@ -352,8 +338,7 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
                     timestampValue(
                         2023, 1, 2,
                         3, 4, ionDecimal(Decimal.valueOf("5.")).asAnyElement(),
-                        "+", 0, 0,
-                        null,
+                        utcOffset(0L), null
                     )
                 )
             },

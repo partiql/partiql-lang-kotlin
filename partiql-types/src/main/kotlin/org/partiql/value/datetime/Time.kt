@@ -1,9 +1,29 @@
+/*
+ * Copyright Amazon.com, Inc. or its affiliates.  All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at:
+ *
+ *      http://aws.amazon.com/apache2.0/
+ *
+ * or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
+ * language governing permissions and limitations under the License.
+ */
+
 package org.partiql.value.datetime
 
+import org.partiql.value.datetime.DateTimeUtil.SECONDS_IN_HOUR
+import org.partiql.value.datetime.DateTimeUtil.SECONDS_IN_MINUTE
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.temporal.ChronoField
+import kotlin.jvm.Throws
 
+// TODO: Further break this down to tow implementation, one with nanosecond and below precision
+//  and the other with nano-second and above precision, including arbitrary precision
+//  The big decimal implementation is too slow and arguably for ion-compatibly reason only.
 /**
  * This class is used to model both Time Without Time Zone type and Time With Time Zone Type.
  *
@@ -20,6 +40,8 @@ public data class Time private constructor(
     val precision: Int?
 ) {
     public companion object {
+        @JvmStatic
+        @Throws(DateTimeException::class)
         public fun of(
             hour: Int,
             minute: Int,
@@ -36,7 +58,7 @@ public data class Time private constructor(
                 if (precision == null) { return arbitraryTime }
                 return arbitraryTime.toPrecision(precision)
             } catch (e: java.time.DateTimeException) {
-                throw DateTimeFormatException(e.localizedMessage, e)
+                throw DateTimeException(e.localizedMessage, e)
             }
         }
     }
@@ -71,9 +93,7 @@ public data class Time private constructor(
         )
 
     private fun roundToPrecision(precision: Int): Time {
-        val elapsedSeconds: BigDecimal =
-            BigDecimal.valueOf(hour * SECONDS_IN_HOUR).add(BigDecimal.valueOf(minute * SECONDS_IN_MINUTE)).add(second)
-        var rounded = elapsedSeconds.setScale(precision, RoundingMode.HALF_UP)
+        var rounded = this.elapsedSecond.setScale(precision, RoundingMode.HALF_UP)
         var newHours = 0
         var newMinutes = 0
         val secondsInHour = BigDecimal.valueOf(SECONDS_IN_HOUR)
