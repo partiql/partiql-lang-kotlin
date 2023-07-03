@@ -278,8 +278,8 @@ internal class PartiQLPigVisitor(val customTypes: List<CustomType> = listOf(), p
 
     override fun visitDeleteCommand(ctx: PartiQLParser.DeleteCommandContext) = PartiqlAst.build {
         val from = visit(ctx.fromClauseSimple(), PartiqlAst.FromSource::class)
-        val where = visitOrNull(ctx.whereClause(), PartiqlAst.Expr::class)
-        val returning = visitOrNull(ctx.returningClause(), PartiqlAst.ReturningExpr::class)
+        val where = ctx.whereClause()?.let { visitWhereClause(it) }
+        val returning = ctx.returningClause()?.let { visitReturningClause(it) }
         dml(dmlOpList(delete(ctx.DELETE().getSourceMetaContainer()), metas = ctx.DELETE().getSourceMetaContainer()), from, where, returning, ctx.DELETE().getSourceMetaContainer())
     }
 
@@ -510,7 +510,7 @@ internal class PartiQLPigVisitor(val customTypes: List<CustomType> = listOf(), p
 
     override fun visitExpr(ctx: PartiQLParser.ExprContext): PartiqlAst.Expr {
         checkThreadInterrupted()
-        return visit(ctx.exprBagOp(), PartiqlAst.Expr::class)
+        return visit(ctx.exprBagOp()) as PartiqlAst.Expr
     }
 
     override fun visitOffsetByClause(ctx: PartiQLParser.OffsetByClauseContext) = visit(ctx.arg, PartiqlAst.Expr::class)
@@ -813,7 +813,8 @@ internal class PartiQLPigVisitor(val customTypes: List<CustomType> = listOf(), p
      *
      */
 
-    override fun visitFromClause(ctx: PartiQLParser.FromClauseContext) = visit(ctx.tableReference(), PartiqlAst.FromSource::class)
+    override fun visitFromClause(ctx: PartiQLParser.FromClauseContext) =
+        visit(ctx.tableReference()) as PartiqlAst.FromSource
 
     override fun visitTableBaseRefClauses(ctx: PartiQLParser.TableBaseRefClausesContext) = PartiqlAst.build {
         val expr = visit(ctx.source, PartiqlAst.Expr::class)
@@ -841,7 +842,7 @@ internal class PartiQLPigVisitor(val customTypes: List<CustomType> = listOf(), p
     }
 
     override fun visitTableCrossJoin(ctx: PartiQLParser.TableCrossJoinContext) = PartiqlAst.build {
-        val lhs = visit(ctx.lhs, PartiqlAst.FromSource::class)
+        val lhs = visit(ctx.lhs) as PartiqlAst.FromSource
         val joinType = visitJoinType(ctx.joinType())
         val rhs = visit(ctx.rhs, PartiqlAst.FromSource::class)
         val metas = metaContainerOf(IsImplictJoinMeta.instance) + joinType.metas
@@ -963,7 +964,8 @@ internal class PartiQLPigVisitor(val customTypes: List<CustomType> = listOf(), p
      *
      */
 
-    override fun visitExprTermWrappedQuery(ctx: PartiQLParser.ExprTermWrappedQueryContext) = visit(ctx.expr(), PartiqlAst.Expr::class)
+    override fun visitExprTermWrappedQuery(ctx: PartiQLParser.ExprTermWrappedQueryContext) =
+        visitExpr(ctx.expr())
 
     override fun visitVariableIdentifier(ctx: PartiQLParser.VariableIdentifierContext): PartiqlAst.PartiqlAstNode = PartiqlAst.build {
         val metas = ctx.ident.getSourceMetaContainer()
@@ -1067,7 +1069,7 @@ internal class PartiQLPigVisitor(val customTypes: List<CustomType> = listOf(), p
         val pairs = ctx.whens.indices.map { i ->
             exprPair(visitExpr(ctx.whens[i]), visitExpr(ctx.thens[i]))
         }
-        val elseExpr = visitOrNull(ctx.else_, PartiqlAst.Expr::class)
+        val elseExpr = ctx.else_?.let { visitExpr(it) }
         val caseMeta = ctx.CASE().getSourceMetaContainer()
         when (ctx.case_) {
             null -> searchedCase(exprPairList(pairs), elseExpr, metas = caseMeta)
@@ -1479,11 +1481,13 @@ internal class PartiQLPigVisitor(val customTypes: List<CustomType> = listOf(), p
         else -> ctx.map { visitOrNull(it, clazz) }
     }
 
+    // TODO: Inspect `visitOrNull` call sites and replace with direct `visitXxx` calls or 'as' casts, as appropriate.
     private fun <T : PartiqlAst.PartiqlAstNode> visitOrNull(ctx: ParserRuleContext?, clazz: KClass<T>): T? = when (ctx) {
         null -> null
         else -> clazz.cast(visit(ctx))
     }
 
+    // TODO: Inspect `visit` call sites and replace with 'as' casts.
     private fun <T : PartiqlAst.PartiqlAstNode> visit(ctx: ParserRuleContext, clazz: KClass<T>): T = clazz.cast(visit(ctx))
 
     private fun TerminalNode?.getSourceMetaContainer(): MetaContainer {
