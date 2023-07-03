@@ -100,14 +100,14 @@ abstract class VisitorTransformTestBase : PartiQLParserTestBase() {
         assertEquals("The expected AST must match the transformed AST", tc.expected, actualStatement)
     }
 
-    protected fun runErrorTest(tc: TransformErrorTestCase, transform: PartiqlAst.VisitorTransform) {
+    protected fun runErrorTest(tc: TransformErrorTestCase, transform: PartiqlAst.VisitorTransform): Unit = forEachTarget {
 
         val ex = assertThrowsSqlException(
             EvaluatorTestFailureReason.EXPECTED_SQL_EXCEPTION_BUT_THERE_WAS_NONE,
             { tc.testDetails() }
         ) {
             val ast = org.junit.jupiter.api.assertDoesNotThrow("Parsing Original SQL") {
-                this.parser.parseAstStatement(tc.query)
+                parser.parseAstStatement(tc.query)
             }
             transform.transformStatement(ast)
         }

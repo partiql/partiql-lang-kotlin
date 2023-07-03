@@ -22,6 +22,8 @@ import org.partiql.lang.domains.PartiqlAst
 
 class PartiQLParserPrecedenceTest : PartiQLParserTestBase() {
 
+    override val targets: Array<ParserTarget> = arrayOf(ParserTarget.DEFAULT, ParserTarget.EXPERIMENTAL)
+
     @Test
     @Parameters
     @TestCaseName("{0}")
@@ -1083,18 +1085,22 @@ class PartiQLParserPrecedenceTest : PartiQLParserTestBase() {
     )
 
     private fun runTest(pair: Pair<String, String>) {
-        val (source, expectedAst) = pair
+        targets.forEach { target ->
+            val (source, expectedAst) = pair
 
-        val expectedExpr = PartiqlAst.transform(ion.singleValue(expectedAst).toIonElement()) as PartiqlAst.Expr
-        val expectedStatement = PartiqlAst.build { query(expectedExpr) }
+            val expectedExpr = PartiqlAst.transform(ion.singleValue(expectedAst).toIonElement()) as PartiqlAst.Expr
+            val expectedStatement = PartiqlAst.build { query(expectedExpr) }
 
-        val actualStatement = parser.parseAstStatement(source)
-        assertEquals(expectedStatement, actualStatement)
+            val actualStatement = target.parser.parseAstStatement(source)
+            assertEquals(expectedStatement, actualStatement)
+        }
     }
 
     private fun assertFailure(case: String) {
-        assertThrows(ParserException::class.java) {
-            parser.parseAstStatement(case)
+        targets.forEach { target ->
+            assertThrows(ParserException::class.java) {
+                target.parser.parseAstStatement(case)
+            }
         }
     }
 }

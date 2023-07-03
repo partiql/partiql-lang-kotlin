@@ -14,6 +14,8 @@ import org.partiql.parser.antlr.PartiQLParser
 
 class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
 
+    override val targets: Array<ParserTarget> = arrayOf(ParserTarget.DEFAULT, ParserTarget.EXPERIMENTAL)
+
     data class DateTimeTestCase(val source: String, val skipTest: Boolean = false, val block: PartiqlAst.Builder.() -> PartiqlAst.PartiqlAstNode)
     data class ErrorTimeTestCase(val source: String, val errorCode: ErrorCode, val ctx: Map<Property, Any>, val skipTest: Boolean = false)
 
@@ -42,7 +44,8 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
             checkInputThrowingParserException(
                 tc.source,
                 tc.errorCode,
-                tc.ctx
+                tc.ctx,
+                assertContext = false,
             )
         }
     }

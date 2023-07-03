@@ -1,0 +1,782 @@
+imports::{
+  kotlin: [
+    ion::'com.amazon.ionelement.api.IonElement',
+    value::'org.partiql.value.PartiQLValue',
+  ],
+}
+
+statement::[
+
+  // PartiQL Expressions
+  query::{
+    expr: expr,
+  },
+
+  // Data Manipulation Language
+  d_m_l::[
+
+    // INSERT INTO <target> [AS <alias>] <values> [<on conflict>]
+    insert::{
+      target:       identifier,
+      values:       expr,
+      as_alias:     optional::string,
+      on_conflict:  optional::on_conflict,
+    },
+
+    // INSERT INTO <path> VALUE <expr> [AT <expr>] [<on conflict legacy>]
+    insert_legacy::{
+      target:             path,
+      value:              expr,
+      index:              optional::expr,
+      conflict_condition: optional::expr,
+    },
+
+    // UPSERT INTO <target> [<alias>] <values>
+    upsert::{
+      target:   identifier,
+      values:   expr,
+      as_alias: optional::string,
+    },
+
+    // REPLACE INTO <target> [AS <alias>] <values>
+    replace::{
+      target:   identifier,
+      values:   expr,
+      as_alias: optional::string,
+    },
+
+    // UPDATE <target> SET <set clause list> WHERE <expr>
+    update::{
+      target:      path,
+      assignments: list::[assignment],
+      _: [
+        assignment::{
+          target: path,
+          value:  expr,
+        },
+      ],
+    },
+
+    // REMOVE <path>
+    remove::{
+      target: path,
+    },
+
+    // DELETE [FROM [AS <symbol>] [AT <symbol>] [BY <symbol>]] <path> [ WHERE <expr> ] RETURNING ...
+    delete::{
+      target: {
+        path:     path,
+        as_alias: optional::string,
+        at_alias: optional::string,
+        by_alias: optional::string,
+      },
+      where:      optional::expr,
+      returning:  optional::returning,
+    },
+
+    // [UPDATE|FROM] <target> <dml base op>+ WHERE <expr> RETURNING <returning>
+    batch_legacy::{
+      ops:        list::[op],
+      target:     optional::from,
+      where:      optional::expr,
+      returning:  optional::returning,
+      _: [
+        op::[
+          insert::{
+            target:       identifier,
+            values:       expr,
+            as_alias:     optional::string,
+            on_conflict:  optional::on_conflict,
+          },
+          insert_legacy::{
+            target:             path,
+            value:              expr,
+            index:              optional::expr,
+            conflict_condition: optional::expr,
+          },
+          set::{
+            assignments: list::[assignment],
+          },
+          remove::{
+            target: path,
+          },
+          delete::{},
+        ],
+      ],
+    },
+  ],
+
+  // Data Definition Language
+  d_d_l::[
+
+    // CREATE TABLE <identifier> [<table_def>]
+    create_table::{
+      name:       identifier,
+      definition: optional::table_definition,
+    },
+
+    // CREATE INDEX [<identifier>] ON <identifier> (<path> [, <path>]...)
+    create_index::{
+      index:  optional::identifier,
+      table:  identifier,
+      fields: list::[path],
+    },
+
+    // DROP TABLE <identifier>
+    drop_table::{
+      table: identifier,
+    },
+
+    // DROP INDEX <identifier> ON <identifier>
+    drop_index::{
+      index:  identifier, // <identifier>[0]
+      table:  identifier, // <identifier>[1]
+    },
+  ],
+
+  // EXEC <symbol> [<expr>.*]
+  exec::{
+    procedure: string,
+    args: list::[expr],
+  },
+
+  // EXPLAIN
+  explain::{
+    target: [
+      domain::{
+        statement:  statement,
+        type:       optional::string,
+        format:     optional::string,
+      },
+    ],
+  },
+]
+
+// PartiQL Type AST nodes
+//
+// Several of these are the same "type", but have various syntax rules we wish to capture.
+//
+type::[
+  null_type::{},                                               // NULL
+  missing::{},                                                 // MISSING
+  bool::{},                                                    // BOOL
+  tinyint::{},                                                 // TINYINT
+  smallint::{},                                                // SMALLINT
+  int2::{},                                                    // INT2 | INTEGER2
+  int4::{},                                                    // INT4 | INTEGER4
+  bigint::{},                                                  // BIGINT
+  int8::{},                                                    // INT8
+  int::{},                                                     // INTEGER
+  real::{},                                                    // REAL
+  float32::{},                                                 // FLOAT
+  float64::{},                                                 // DOUBLE PRECISION
+  decimal::{                                                   // DECIMAL [([<int> [,<int>])]
+    precision:  optional::int,
+    scale:      optional::int,
+  },
+  numeric::{                                                   // NUMERIC [([<int> [,<int>])]
+    precision:  optional::int,
+    scale:      optional::int,
+  },
+  char::{ length: optional::int },                             // CHARACTER [(<int>)] | CHAR [(<int>)]
+  varchar::{ length: optional::int },                          // CHARACTER VARYING [(<int>)] | VARCHAR [(<int>)]
+  string::{ length: optional::int },                           // STRING
+  symbol::{},                                                  // SYMBOL
+  bit::{ length: optional::int },                              // BIT [(<int>)]
+  bit_varying::{ length: optional::int },                      // BIT_VARYING [(<int>)]
+  byte_string::{ length: optional::int },                      // BYTE [(<int>)]
+  blob::{ length: optional::int },                             // BLOB [(<int>)]
+  clob::{ length: optional::int },                             // CLOB [(<int>)]
+  date::{},                                                    // DATE
+  time::{ precision: optional::int },                          // TIME [(<int>)] [WITHOUT TIMEZONE]
+  time_with_tz::{ precision: optional::int },                  // TIME [(<int>)] WITH TIMEZONE
+  timestamp::{ precision: optional::int },                     // TIMESTAMP [(<int>)] [WITHOUT TIMEZONE]
+  timestamp_with_tz::{ precision: optional::int },             // TIMESTAMP [(<int>)] WITH TIMEZONE
+  interval::{ precision: optional::int },                      // INTERVAL
+  bag::{},                                                     // BAG
+  list::{},                                                    // LIST
+  sexp::{},                                                    // SEXP
+  tuple::{},                                                   // TUPLE
+  struct::{},                                                  // STRUCT
+  any::{},                                                     // ANY
+  custom::{ name: string },                                    // <symbol>
+]
+
+// Identifiers and Qualified Identifiers
+//----------------------------------------------
+// <identifier > ::= <id symbol> | <id path>
+//
+// <id symbol> ::=  <symbol>    // case-insensitive
+//               | "<symbol>"   // case-sensitive
+//
+// <id qualified> ::= <id symbol> ('.' <id symbol>)+;
+//
+identifier::[
+  symbol::{
+    symbol:           string,
+    case_sensitivity: case_sensitivity,
+  },
+  qualified::{
+    root:   symbol,
+    steps:  list::[symbol],
+  },
+  _::[
+    case_sensitivity::[
+      SENSITIVE,
+      INSENSITIVE,
+    ],
+  ],
+]
+
+// Path Literals
+//  - Much like qualified identifier but allowing bracket notation '[' <int> | <string> ']'
+//  - Not a variant of `identifier`, as path literals are not explicit in the specification.
+path::{
+  root:   '.identifier.symbol',
+  steps:  list::[step],
+  _: [
+    step::[
+      symbol::{
+        symbol: '.identifier.symbol',
+      },
+      index::{
+        index: int,
+      },
+    ],
+  ],
+}
+
+// [ ALL | DISTINCT ]
+set_quantifier::[
+  ALL,
+  DISTINCT,
+]
+
+// PartiQL Expression
+expr::[
+
+  // PartiQL Literal Value
+  literal::{
+    value: '.value',
+  },
+
+  // Ion Literal Value, ie `<ion>`
+  ion::{
+    value: '.ion',
+  },
+
+  // Variable Reference
+  var::{
+    identifier: identifier,
+    scope: [
+      DEFAULT,  //  x.y.z
+      LOCAL,    // @x.y.z
+    ],
+  },
+
+  // SQL Session Keywords (CURRENT_USER, CURRENT_ROLE, etc.)
+  session_attribute::{
+    attribute: [
+      CURRENT_USER,
+    ],
+  },
+
+  // Expression Paths
+  path::{
+    root:   expr,
+    steps:  list::[step],
+    _: [
+      step::[
+        symbol::{ symbol: '.identifier.symbol' },
+        index::{ key: expr },
+        wildcard::{},
+        unpivot::{},
+      ],
+    ],
+  },
+
+  // Scalar Function Call
+  call::{
+    function: identifier,
+    args:     list::[expr],
+  },
+
+  // Aggregate Function Call
+  agg::{
+    function: identifier,
+    args:     list::[expr],
+    setq:     optional::set_quantifier,
+  },
+
+  // Parameter `?`
+  parameter::{
+    index: int,
+  },
+
+  // Unary Operators
+  unary::{
+    op:   [ NOT, POS, NEG ],
+    expr: expr,
+  },
+
+  // Binary Operators
+  binary::{
+    op: [
+      PLUS, MINUS, TIMES, DIVIDE, MODULO, CONCAT,
+      AND, OR,
+      EQ, NE, GT, GTE, LT, LTE,
+    ],
+    lhs: expr,
+    rhs: expr,
+  },
+
+  // VALUES <row> (',' <row>)*
+  values::{
+    rows: list::[row],
+    _:[
+      row::{
+        items: list::[expr],
+      },
+    ],
+  },
+
+  // Collection Constructors
+  collection::{
+    type: [
+      BAG,    // << ... >>
+      ARRAY,  // [  ...  ]
+      VALUES, // (  ...  )
+      LIST,   // LIST ( ... )
+      SEXP,   // SEXP ( ... )
+     ],
+    values: list::[expr],
+  },
+
+  // Struct Constructor
+  struct::{
+    fields: list::[field],
+    _: [
+      field::{
+        name:   expr,
+        value:  expr,
+      },
+    ],
+  },
+
+  // SQL special form `[NOT] LIKE`
+  like::{
+    value:    expr,
+    pattern:  expr,
+    escape:   optional::expr,
+    not:      optional::bool,
+  },
+
+  // SQL special form `[NOT] BETWEEN`
+  between::{
+    value:  expr,
+    from:   expr,
+    to:     expr,
+    not:    optional::bool,
+  },
+
+  // SQL special form `[NOT] IN`
+  in_collection::{
+    lhs: expr,
+    rhs: expr,
+    not: optional::bool,
+  },
+
+  // PartiQL special form `IS [NOT]`
+  is_type::{
+    value:  expr,
+    type:   '.type',
+    not:    optional::bool,
+  },
+
+  // The simple and searched `case` switch SQL special form F261-01, F261-02
+  case::{
+    expr:     optional::expr,
+    branches: list::[branch],
+    default:  optional::expr,
+    _: [
+      branch::{
+        condition:  expr,
+        expr:       expr,
+      },
+    ],
+  },
+
+  // SQL special form F261-04 `COALESCE`
+  coalesce::{
+    args: list::[expr],
+  },
+
+  // SQL special form F261-03 `NULLIF`
+  null_if::{
+    value:      expr,
+    nullifier:  expr,
+  },
+
+  // SQL special form E021-06 `SUBSTRING ( <expr> [FROM <expr>] [FOR <expr>] )`
+  substring::{
+    value:  expr,           // <expr>[0]
+    start:  optional::expr, // <expr>[1]
+    length: optional::expr, // <expr>[2]
+  },
+
+  // SQL special form E021-11 `POSITION ( <expr> IN <expr> )`
+  position::{
+    lhs: expr,
+    rhs: expr,
+  },
+
+  // SQL special form E021-09 `TRIM ( [LEADING|TRAILING|BOTH] [<expr> FROM] <expr> )`
+  trim::{
+    value:  expr,                                  // <expr>[0]
+    chars:  optional::expr,                        // <expr>[1]
+    spec:   optional::[ LEADING, TRAILING, BOTH ], // <trim specification>
+  },
+
+  // SQL special form `OVERLAY ( <expr> PLACING <expr> FROM <expr> [FOR <expr>] )`
+  overlay::{
+    value:    expr,             // <expr>[0]
+    overlay:  expr,             // <expr>[1]
+    start:    expr,             // <expr>[2]
+    length:   optional::expr,   // <expr>[3]
+  },
+
+  // SQL special form `EXTRACT ( <extract field> FROM <extract source> )`
+  extract::{
+    field:  datetime_field,
+    source: expr,
+  },
+
+  // SQL special form F201 `CAST`
+  cast::{
+    value:    expr,
+    as_type:  '.type',
+  },
+
+  // PartiQL special form `CAN_CAST`
+  can_cast::{
+    value:    expr,
+    as_type:  '.type',
+  },
+
+  // PartiQL special form `CAN_LOSSLESS_CAST`
+  can_lossless_cast::{
+    value:    expr,
+    as_type:  '.type',
+  },
+
+  // PartiQL special form `DATE_ADD ( <datetime field> , <expr> , <expr>)`
+  date_add::{
+    field:  datetime_field,
+    lhs:    expr,
+    rhs:    expr,
+  },
+
+  // PartiQL special form `DATE_DIFF ( <datetime field> , <expr> , <expr>)`
+  date_diff::{
+    field:  datetime_field,
+    lhs:    expr,
+    rhs:    expr,
+  },
+
+  // PartiQL special form `[OUTER] (UNION|INTERSECT|EXCEPT) [ALL|DISTINCT]`
+  bag_op::{
+    type:   '.set_op',
+    lhs:    expr,
+    rhs:    expr,
+    outer:  optional::bool,
+  },
+
+  // The PartiQL `<sfw>` query expression, think SQL `<query specification>`
+  s_f_w::{
+    select:   select,              // oneof SELECT / SELECT VALUE / PIVOT
+    from:     from,
+    let:      optional::let,
+    where:    optional::expr,
+    group_by: optional::group_by,
+    having:   optional::expr,
+    set_op:   optional::{
+      type:    '.set_op',
+      operand: '.expr.s_f_w',
+    },
+    order_by: optional::order_by,
+    limit:    optional::expr,
+    offset:   optional::expr,
+  },
+
+  // GPML ( <expr> MATCH <pattern> )
+  match::{
+    expr:     expr,
+    pattern:  graph_match,
+  },
+
+  // [LAG|LEAD] ( <expr> [ <expr> [ <expr> ] ] )
+  //    OVER ([PARTITION BY <expr> [, <expr>]... ] [ORDER BY <sort_spec> [, <sort_spec>]... ])
+  window::{
+    function:   [ LAG, LEAD ],
+    expression: expr,           // <expr>[0]
+    offset:     optional::expr, // <expr>[1]
+    default:    optional::expr, // <expr>[2]
+    over: {
+      partitions: optional::list::[expr],
+      sorts:      optional::list::[sort],
+    },
+  },
+]
+
+// PartiQL SELECT Clause Variants — https://partiql.org/dql/select.html
+select::[
+
+  // SELECT [ALL|DISTINCT] *
+  star::{
+    setq: optional::set_quantifier,
+  },
+
+  // SELECT [ALL|DISTINCT] <select-list>
+  project::{
+    items:  list::[item],
+    setq:   optional::set_quantifier,
+    _: [
+      item::[
+        all::{ expr: expr },                                    // <expr>.*
+        expression::{ expr: expr, as_alias: optional::string }  // <expr> [as <identifier>]
+      ],
+    ],
+  },
+
+  // PIVOT <expr> AT <expr>
+  pivot::{
+    value:  expr,
+    key:    expr,
+  },
+
+  // SELECT [ALL|DISTINCT] VALUE <expr>
+  value::{
+    constructor:  expr,
+    setq:         optional::set_quantifier,
+  },
+]
+
+// PartiQL FROM Clause Variants — https://partiql.org/dql/from.html
+from::[
+
+  // FROM [UNPIVOT] <expr> [AS <identifier>] [AT <identifier>] [BY <identifier>]
+  value::{
+    expr:     expr,
+    type:     [ SCAN, UNPIVOT ],
+    as_alias: optional::string,
+    at_alias: optional::string,
+    by_alias: optional::string,
+  },
+
+  // <from> JOIN [INNER|LEFT|RIGHT|FULL] <from> [ON <expr>]
+  join::{
+    lhs:        from,
+    rhs:        from,
+    type:       optional::[ INNER, LEFT, RIGHT, FULL ],
+    condition:  optional::expr,
+  },
+]
+
+let::{
+  bindings: list::[binding],
+  _: [
+    binding::{
+      expr:     expr,
+      as_alias: string,
+    },
+  ],
+}
+
+// GROUP BY Clause — https://partiql.org/dql/group_by.html
+group_by::{
+  strategy: [ FULL, PARTIAL ],
+  keys:     list::[key],
+  as_alias: optional::string,
+  _: [
+    key::{
+      expr:     expr,
+      as_alias: optional::string,
+    },
+  ],
+}
+
+// ORDER BY Clause — https://partiql.org/dql/order_by.html
+order_by::{
+  sorts: list::[sort],
+}
+
+// <expr> [ASC|DESC] [NULLS FIRST | NULLS LAST]
+sort::{
+  expr:   expr,
+  dir:    optional::[ ASC, DESC ],
+  nulls:  optional::[ FIRST, LAST ],
+}
+
+// (UNION|INTERSECT|EXCEPT) [ALL|DISTINCT]
+set_op::{
+  type: [ UNION, INTERSECT, EXCEPT ],
+  setq: optional::set_quantifier,
+}
+
+// Graph Match Nodes — https://partiql.org/gpml/graph_query.html
+graph_match::{
+  patterns: list::[pattern],
+  selector: optional::selector,
+
+  _: [
+    pattern::{
+      restrictor: optional::restrictor,
+      prefilter:  optional::expr,       // An optional pattern pre-filter, e.g.: `WHERE a.name=b.name` in `MATCH [(a)->(b) WHERE a.name=b.name]`
+      variable:   optional::string,     // The optional element variable of the pattern, e.g.: `p` in `MATCH p = (a) −[t]−> (b)`
+      quantifier: optional::quantifier, // An optional quantifier for the entire pattern match, e.g. `{2,5}` in `MATCH (a:Account)−[:Transfer]−>{2,5}(b:Account)`
+      parts:      list::[part],         // The ordered pattern parts
+      _: [
+        part::[
+          // A single node in a graph pattern
+          node::{
+            prefilter:  optional::expr,    // An optional node pre-filter, e.g.: `WHERE c.name='Alarm'` in `MATCH (c WHERE c.name='Alarm')`
+            variable:   optional::string,  // The optional element variable of the node match, e.g.: `x` in `MATCH (x)`
+            label:      list::[string],    // The optional label(s) to match for the node, e.g.: `Entity` in `MATCH (x:Entity)`
+          },
+          // A single edge in a graph pattern
+          edge::{
+            direction:  direction,            // Edge Direction
+            quantifier: optional::quantifier, // An optional quantifier for the entire pattern match, e.g. `{2,5}` in `MATCH (a:Account)−[:Transfer]−>{2,5}(b:Account)`
+            prefilter:  optional::expr,       // An optional edge pre-filter, e.g.: `WHERE t.capacity>100` in `MATCH −[t:hasSupply WHERE t.capacity>100]−>`
+            variable:   optional::string,     // The optional element variable of the edge match, e.g.: `t` in `MATCH −[t]−>`
+            label:      list::[string],       // The optional label(s) to match for the edge. e.g.: `Target` in `MATCH −[t:Target]−>`
+          },
+          // A sub-pattern
+          pattern::{
+            pattern: '.graph_match.pattern'
+          },
+        ],
+      ],
+    },
+
+    // Edge Direction           // | Orientation               | Edge pattern | Abbreviation |
+    direction::[                // |---------------------------+--------------+--------------|
+      LEFT,                     // | Pointing left             | <−[ spec ]−  | <−           |
+      UNDIRECTED,               // | Undirected                | ~[ spec ]~   | ~            |
+      RIGHT,                    // | Pointing right            | −[ spec ]−>  | −>           |
+      LEFT_OR_UNDIRECTED,       // | Left or undirected        | <~[ spec ]~  | <~           |
+      UNDIRECTED_OR_RIGHT,      // | Undirected or right       | ~[ spec ]~>  | ~>           |
+      LEFT_OR_RIGHT,            // | Left or right             | <−[ spec ]−> | <−>          |
+      LEFT_UNDIRECTED_OR_RIGHT, // | Left, undirected or right | −[ spec ]−   | −            |
+    ],                          // Fig. 5 — https://arxiv.org/abs/2112.06217
+
+    // Path Restrictor        // | Keyword        | Description
+    restrictor::[             // |----------------+--------------
+      TRAIL,                  // | TRAIL          | No repeated edges.
+      ACYCLIC,                // | ACYCLIC        | No repeated nodes.
+      SIMPLE,                 // | SIMPLE         | No repeated nodes, except that the ﬁrst and last nodes may be the same.
+    ],                        // Fig. 7 — https://arxiv.org/abs/2112.06217
+
+    // Graph Edge Quantifier (e.g., the `{2,5}` in `MATCH (x)->{2,5}(y)`)
+    quantifier::{
+      lower: long,
+      upper: optional::long,
+    },
+
+    // Path Selector
+    selector::[
+      any_shortest::{},               // ANY SHORTEST
+      all_shortest::{},               // ALL SHORTEST
+      any::{},                        // ANY
+      any_k::{ k: long },             // ANY k
+      shortest_k::{ k: long },        // SHORTEST k
+      shortest_k_group::{ k: long },  // SHORTEST k GROUP
+    ],                                // Fig. 8 — https://arxiv.org/abs/2112.06217
+  ],
+}
+
+// LEGACY `ON CONFLICT WHERE <expr> <conflict_action>`
+//        `ON CONFLICT [<target>] <conflict_action>`
+on_conflict::{
+  target: optional::target,
+  action: action,
+
+  _: [
+    // <conflict target> ::= ( <index target> [, <index target>]... )
+    //                     | ( { <primary key> | <composite primary key> } )
+    //                     | ON CONSTRAINT <constraint name>
+    target::[
+      symbols::{
+        symbols: list::[identifier],
+      },
+      constraint::{
+        constraint: identifier,
+      },
+    ],
+
+    // <conflict action> ::= DO NOTHING
+    //                     | DO UPDATE <do update>
+    //                     | DO REPLACE <do replace>
+    action::[
+      do_nothing::{},
+      do_replace::{
+        condition: optional::expr,
+      },
+      do_update::{
+        condition: optional::expr,
+      },
+    ],
+  ]
+}
+
+// RETURNING returningColumn ( COMMA returningColumn )*
+returning::{
+  columns: list::[column],
+  _: [
+    column::{
+      status: [ MODIFIED, ALL ],
+      age:    [ OLD, NEW ],
+      value:  [
+        wildcard::{},
+        expression::{ expr: expr }
+      ],
+    },
+  ],
+}
+
+// `<column_name> <type> <column_constraint>*`
+// `( CONSTRAINT <column_constraint_name> )?  <column_constraint_def>`
+table_definition::{
+  columns: list::[column],
+  _: [
+    column::{
+      name:        string,
+      type:        '.type',
+      constraints: list::[constraint],
+      _: [
+        // TODO improve modeling language to avoid these wrapped unions
+        // Also, prefer not to nest more than twice
+        constraint::{
+          name: optional::string,
+          body: [
+            nullable::{},
+            not_null::{},
+            check::{ expr: expr },
+          ],
+        },
+      ],
+    },
+  ],
+}
+
+// SQL-99 Table 11
+datetime_field::[
+  YEAR,             // 0001-9999
+  MONTH,            // 01-12
+  DAY,              // 01-31
+  HOUR,             // 00-23
+  MINUTE,           // 00-59
+  SECOND,           // 00-61.9(N)
+  TIMEZONE_HOUR,    // -12-13
+  TIMEZONE_MINUTE,  // -59-59
+]
