@@ -1,15 +1,32 @@
 package org.partiql.value.datetime
 
+import org.partiql.value.datetime.DateTimeUtil.SECONDS_IN_DAY
+import org.partiql.value.datetime.DateTimeUtil.SECONDS_IN_HOUR
+import org.partiql.value.datetime.DateTimeUtil.SECONDS_IN_MINUTE
 import java.math.BigDecimal
 import java.time.LocalDate
+import kotlin.jvm.Throws
 import com.amazon.ion.Timestamp as TimestampIon
 
+// TODO: Further break this down to tow implementation, one with nanosecond and below precision
+//  and the other with nano-second and above precision, including arbitrary precision
+//  The big decimal implementation is too slow and arguably for ion-compatibly reason only.
 /**
  * This class is used to model both Timestamp Without Time Zone type and Timestamp With Time Zone Type.
  *
  * Two timestamp values are equal if and only if all the fields (including precision) are the same.
  *
  * Use [compareTo] if the goal is to check equivalence (refer to the same point in time).
+ *
+ * @param year Year field
+ * @param month Month field
+ * @param day Day field
+ * @param hour Hour field
+ * @param second Second field, include fraction second
+ * @param timeZone TimeZone field, see [TimeZone], null value indicates a timestamp without timezone value.
+ * @param precision If value is null, the timestamp has arbitrary precision.
+ *                  If the value is non-null, the timestamp has a fixed precision.
+ *                  (precision means number of digits in fraction second.)
  */
 public data class Timestamp(
     val year: Int,
@@ -20,7 +37,7 @@ public data class Timestamp(
     val second: BigDecimal,
     val timeZone: TimeZone?,
     val precision: Int?
-) {
+) : Comparable<Timestamp> {
     public companion object {
         /**
          * The intention of this API is to create a Timestamp using a Date and a Time component.
@@ -42,6 +59,7 @@ public data class Timestamp(
                 time.timeZone, time.precision
             )
 
+        @JvmStatic
         public fun of(
             year: Int,
             month: Int,
@@ -64,6 +82,14 @@ public data class Timestamp(
             }
         }
 
+        /**
+         * Construct a PartiQL timestamp based on an Ion Timestamp.
+         * The created timestamp always has [TimeZone] and arbitrary precision.
+         * Notice that Ion Value allows for "lower precision", year, month, etc.
+         * For example, `2023T` is a valid ion timestamp with year precision.
+         * This method always returns a "full timestamp expression", i.e., 2023-01-01T00:00:00.
+         * At the moment there is no intention on preserving this.
+         */
         @JvmStatic
         public fun of(ionTs: TimestampIon): Timestamp {
             val timestamp = when (ionTs.localOffset) {
@@ -95,6 +121,7 @@ public data class Timestamp(
      * [ionTimestampValue] takes care of the precision,
      * the ion representation will have exact precision of the backing partiQL value.
      */
+    @get:Throws(DateTimeException::class)
     val ionTimestampValue: TimestampIon by lazy {
         when (val timeZone = this.timeZone) {
             null -> throw DateTimeException("Timestamp without Time Zone has no corresponding Ion Value")
@@ -128,6 +155,7 @@ public data class Timestamp(
      * This method will return the same result for all Timestamp values representing
      * the same point in time, regardless of the local offset.
      */
+    @get:Throws(DateTimeException::class)
     val epochSecond: BigDecimal by lazy {
         when (val timeZone = this.timeZone) {
             null -> throw DateTimeException("Timestamp without time zone has no Epoch Second attribute.")
@@ -185,7 +213,18 @@ public data class Timestamp(
      * ```
      *
      */
-    public fun compareTo(other: Timestamp): Int = DateTimeComparator.compareTimestamp(this, other)
+    @Throws(DateTimeException::class)
+    public override fun compareTo(other: Timestamp): Int = when {
+        this.timeZone != null && other.timeZone != null -> this.epochSecond.compareTo(other.epochSecond)
+        // for timestamp without time zones, assume UTC and compare
+        this.timeZone == null && other.timeZone == null -> {
+            this.copy(timeZone = TimeZone.UtcOffset.of(0))
+                .compareTo(other.copy(timeZone = TimeZone.UtcOffset.of(0)))
+        }
+        else -> throw DateTimeException(
+            "Can not compare between timestamp with time zone and timestamp without time zone"
+        )
+    }
 
     private fun getUTCEpoch(totalOffsetMinutes: Int): BigDecimal {
         val epochDay = LocalDate.of(year, month, day).toEpochDay()
