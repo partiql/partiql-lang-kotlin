@@ -76,6 +76,45 @@ import kotlin.reflect.cast
 /**
  * Extends ANTLR's generated [PartiQLBaseVisitor] to visit an ANTLR ParseTree and convert it into a PartiQL AST. This
  * class uses the [PartiqlAst.PartiqlAstNode] to represent all nodes within the new AST.
+ *
+ * When the grammar in PartiQL.g4 is extended with a new rule, one needs to override corresponding visitor methods
+ * in this class, in order to extend the transformation from an ANTLR parse tree into a [PartqlAst] tree.
+ * (Trivial implementations of these methods are generated into [PartiQLBaseVisitor].)
+ *
+ * For a rule of the form
+ * ```
+ * Aaa
+ *   :  B1 ... Bn ;
+ * ```
+ * it generates the `visitAaa(ctx: PartiQLParser.AaaContext ctx)` method,
+ * while for a rule of the form
+ * ```
+ * Aaa
+ *   : B1 ... Bn    # A1
+ *   | C1 ... Cm    # A2
+ *   ;
+ * ```
+ * it generates methods `visitA1(ctx: PartiQLParser.A1Context ctx)` and `visitA2(ctx: PartiQLParser.A2Context ctx)`,
+ * but not `visitAaa`.
+ * The context objects `ctx` provide access to the terminals and non-terminals (`Bi`, `Cj`) necessary for
+ * implementing the methods suitably.
+ *
+ * Conversely, when implementing the visitor for another rule that *references* `Aaa`,
+ *  - The visitor for a rule of the 1st form can be recursively invoked as `visitAaa(ctx.Aaa)`,
+ *    which usually returns an AST node of the desired type.
+ *  - For the rule of the 2nd form, as there is no `visitAaa`, one has to invoke `AbstractParseTreeVisitor.visit()`
+ *    and then cast the result to the expected AST type, doing something like
+ *    ```
+ *         visit(ctx.Aaa) as PartiqlAst.Aaa
+ *    ```
+ *    This delegates to `accept()` which, at run time, invokes the appropriate visitor (`visitA1` or `visitA2`).
+ *    However, any static guarantee is lost (in principle, `accept` can dispatch to any visitor of any rule
+ *    in the grammar), hence the need for the cast.
+ *
+ * Note: A rule of an intermediate form between the above two is allowed: when there are multiple alternative clauses,
+ * but no labels on the clauses. In this case, it generates `visitAaa` whose context object `ctx` provides access
+ * to the combined set of non-terminals of the rule's clauses -- which are then visible at nullable types.
+ * There could be clever ways of exploiting this, to avoid the dispatch via `visit()`.
  */
 internal class PartiQLPigVisitor(val customTypes: List<CustomType> = listOf(), private val parameterIndexes: Map<Int, Int> = mapOf()) :
     PartiQLBaseVisitor<PartiqlAst.PartiqlAstNode>() {
