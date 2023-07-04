@@ -20,6 +20,7 @@ import com.amazon.ionelement.api.ionSexpOf
 import com.amazon.ionelement.api.ionString
 import com.amazon.ionelement.api.ionStructOf
 import com.amazon.ionelement.api.ionSymbol
+import com.amazon.ionelement.api.ionTimestamp
 import org.partiql.value.BagValue
 import org.partiql.value.BinaryValue
 import org.partiql.value.BlobValue
@@ -48,7 +49,6 @@ import org.partiql.value.NullableBoolValue
 import org.partiql.value.NullableByteValue
 import org.partiql.value.NullableCharValue
 import org.partiql.value.NullableClobValue
-import org.partiql.value.NullableCollectionValue
 import org.partiql.value.NullableDateValue
 import org.partiql.value.NullableDecimalValue
 import org.partiql.value.NullableFloat32Value
@@ -76,7 +76,6 @@ import org.partiql.value.StructValue
 import org.partiql.value.SymbolValue
 import org.partiql.value.TimeValue
 import org.partiql.value.TimestampValue
-import org.partiql.value.bagValue
 import org.partiql.value.binaryValue
 import org.partiql.value.blobValue
 import org.partiql.value.boolValue
@@ -94,12 +93,10 @@ import org.partiql.value.int64Value
 import org.partiql.value.int8Value
 import org.partiql.value.intValue
 import org.partiql.value.io.PartiQLValueIonWriter.ToIon.toIon
-import org.partiql.value.listValue
-import org.partiql.value.sexpValue
 import org.partiql.value.stringValue
-import org.partiql.value.structValue
 import org.partiql.value.symbolValue
 import org.partiql.value.timeValue
+import org.partiql.value.timestampValue
 import org.partiql.value.util.PartiQLValueBaseVisitor
 import java.io.OutputStream
 
@@ -113,6 +110,8 @@ internal class PartiQLValueIonWriter(
         const val BAG_ANNOTATION = "\$bag"
         const val DATE_ANNOTATION = "\$date"
         const val TIME_ANNOTATION = "\$time"
+        // PartiQL's timestamp without time zone does not fit in ion generic timestamp
+        const val TIMESTAMP_ANNOTATION = "\$timestamp"
         const val GRAPH_ANNOTATION = "\$graph"
     }
 
@@ -144,12 +143,6 @@ internal class PartiQLValueIonWriter(
 
         private inline fun CollectionValue<*>.toIon(block: CollectionValue<*>.(elements: List<IonElement>) -> IonElement): IonElement {
             val elements = this.elements.map { it.accept(ToIon, Unit) }
-            val e = this.block(elements)
-            return e.withAnnotations(this.annotations)
-        }
-
-        private inline fun <T> NullableCollectionValue<*>.toIon(block: NullableCollectionValue<*>.(elements: List<IonElement>) -> IonElement): IonElement {
-            val elements = this.elements?.map { it.accept(ToIon, Unit) } ?: emptyList()
             val e = this.block(elements)
             return e.withAnnotations(this.annotations)
         }
@@ -288,7 +281,7 @@ internal class PartiQLValueIonWriter(
                 field("month", ionInt(date.month.toLong())),
                 field("day", ionInt(date.day.toLong()))
             )
-        }
+        }.withAnnotations(DATE_ANNOTATION)
 
         override fun visitNullableDate(v: NullableDateValue, ctx: Unit) = when (v.value) {
             null -> v.toIon { ionNull(ElementType.STRUCT) }
@@ -298,22 +291,54 @@ internal class PartiQLValueIonWriter(
         override fun visitTime(v: TimeValue, ctx: Unit): IonElement =
             v.toIon {
                 when (val timeZone = v.value.timeZone) {
-                    TimeZone.UnknownTimeZone -> TODO()
-                    is TimeZone.UtcOffset -> TODO()
-                    null -> TODO()
+                    TimeZone.UnknownTimeZone ->
+                        ionStructOf(
+                            field("hour", ionInt(v.value.hour.toLong())),
+                            field("minute", ionInt(v.value.minute.toLong())),
+                            field("second", ionDecimal(Decimal.valueOf(v.value.second))),
+                            field("offset", ionNull(ElementType.INT)),
+                        )
+                    is TimeZone.UtcOffset ->
+                        ionStructOf(
+                            field("hour", ionInt(v.value.hour.toLong())),
+                            field("minute", ionInt(v.value.minute.toLong())),
+                            field("second", ionDecimal(Decimal.valueOf(v.value.second))),
+                            field("offset", ionInt(timeZone.totalOffsetMinutes.toLong()))
+                        )
+                    null ->
+                        ionStructOf(
+                            field("hour", ionInt(v.value.hour.toLong())),
+                            field("minute", ionInt(v.value.minute.toLong())),
+                            field("second", ionDecimal(Decimal.valueOf(v.value.second)))
+                        )
                 }
-            }
+            }.withAnnotations(TIME_ANNOTATION)
 
         override fun visitNullableTime(v: NullableTimeValue, ctx: Unit) = when (v.value) {
-            null -> v.toIon { ionNull(ElementType.STRUCT) }
+            null -> v.toIon { ionNull(ElementType.STRUCT) }.withAnnotations(TIME_ANNOTATION)
             else -> visitTime(timeValue(v.value!!, v.annotations), ctx)
         }
 
         override fun visitTimestamp(v: TimestampValue, ctx: Unit): IonElement =
-            TODO("If this is a time with time zone, go with ionTimestamp, if not then \$timestamp::{year:yyyy, month:mm, day: dd, hour: hh, minute: mm, second: ss.dddd...}?")
+            when (v.value.timeZone) {
+                TimeZone.UnknownTimeZone, is TimeZone.UtcOffset -> v.toIon { ionTimestamp(v.value.ionTimestampValue) }
+                null -> v.toIon {
+                    ionStructOf(
+                        field("year", ionInt(v.value.year.toLong())),
+                        field("month", ionInt(v.value.month.toLong())),
+                        field("day", ionInt(v.value.day.toLong())),
+                        field("hour", ionInt(v.value.hour.toLong())),
+                        field("minute", ionInt(v.value.minute.toLong())),
+                        field("second", ionDecimal(Decimal.valueOf(v.value.second)))
+                    )
+                }.withAnnotations(TIMESTAMP_ANNOTATION)
+            }
 
-        override fun visitNullableTimestamp(v: NullableTimestampValue, ctx: Unit) = v.toIon {
-            TODO()
+        override fun visitNullableTimestamp(v: NullableTimestampValue, ctx: Unit) = when (v.value) {
+            // TODO: we actually don't know if this is a timestamp with timezone or timestamp without timezone
+            //  Should we care?
+            null -> v.toIon { ionNull(ElementType.TIMESTAMP) }
+            else -> visitTimestamp(timestampValue(v.value!!, v.annotations), ctx)
         }
 
         override fun visitInterval(v: IntervalValue, ctx: Unit): IonElement = TODO("Not Yet supported")
@@ -323,24 +348,24 @@ internal class PartiQLValueIonWriter(
         override fun visitBag(v: BagValue<*>, ctx: Unit): IonElement =
             v.toIon { elements -> ionListOf(elements) }.withAnnotations(BAG_ANNOTATION)
 
-        override fun visitNullableBag(v: NullableBagValue<*>, ctx: Unit) = when (v.elements) {
-            null -> v.toIon<PartiQLValue> { ionNull(ElementType.LIST) }.withAnnotations(BAG_ANNOTATION)
-            else -> visitBag(bagValue(v.elements!!.toList(), v.annotations), ctx)
+        override fun visitNullableBag(v: NullableBagValue<*>, ctx: Unit) = when (v.isNull()) {
+            true -> ionNull(ElementType.LIST).withAnnotations(v.annotations).withAnnotations(BAG_ANNOTATION)
+            false -> visitBag(v.promote(), ctx)
         }
 
         override fun visitList(v: ListValue<*>, ctx: Unit): IonElement = v.toIon { elements -> ionListOf(elements) }
 
-        override fun visitNullableList(v: NullableListValue<*>, ctx: Unit) = when (v.elements) {
-            null -> v.toIon<PartiQLValue> { ionNull(ElementType.LIST) }
-            else -> visitList(listValue(v.elements!!.toList(), v.annotations), ctx)
+        override fun visitNullableList(v: NullableListValue<*>, ctx: Unit) = when (v.isNull()) {
+            true -> ionNull(ElementType.LIST).withAnnotations(v.annotations)
+            false -> visitList(v.promote(), ctx)
         }
 
         override fun visitSexp(v: SexpValue<*>, ctx: Unit): IonElement = v.toIon { elements -> ionSexpOf(elements) }
 
         override fun visitNullableSexp(v: NullableSexpValue<*>, ctx: Unit) =
-            when (v.elements) {
-                null -> v.toIon<PartiQLValue> { ionNull(ElementType.SEXP) }
-                else -> visitSexp(sexpValue(v.elements!!.toList(), v.annotations), ctx)
+            when (v.isNull()) {
+                true -> ionNull(ElementType.SEXP).withAnnotations(v.annotations)
+                false -> visitSexp(v.promote(), ctx)
             }
 
         override fun visitStruct(v: StructValue<*>, ctx: Unit): IonElement {
@@ -352,9 +377,9 @@ internal class PartiQLValueIonWriter(
             return ionStructOf(fields, v.annotations)
         }
 
-        override fun visitNullableStruct(v: NullableStructValue<*>, ctx: Unit): IonElement = when (v.fields) {
-            null -> ionNull(ElementType.STRUCT, v.annotations)
-            else -> visitStruct(structValue(v.fields!!, v.annotations), ctx)
+        override fun visitNullableStruct(v: NullableStructValue<*>, ctx: Unit): IonElement = when (v.isNull()) {
+            true -> ionNull(ElementType.STRUCT, v.annotations)
+            false -> visitStruct(v.promote(), ctx)
         }
     }
 }

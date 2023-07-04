@@ -1,19 +1,26 @@
-package org.partiql.value.impl
+package org.partiql.value.io
 
 import com.amazon.ion.IonReader
 import com.amazon.ion.IonType
 import com.amazon.ion.system.IonReaderBuilder
+import org.partiql.types.PartiQLValueType
+import org.partiql.value.DecimalValue
+import org.partiql.value.IntValue
+import org.partiql.value.NullableIntValue
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.bagValue
 import org.partiql.value.blobValue
 import org.partiql.value.boolValue
 import org.partiql.value.clobValue
+import org.partiql.value.dateValue
+import org.partiql.value.datetime.Date
+import org.partiql.value.datetime.Time
+import org.partiql.value.datetime.TimeZone
 import org.partiql.value.datetime.Timestamp
 import org.partiql.value.decimalValue
 import org.partiql.value.float64Value
 import org.partiql.value.intValue
-import org.partiql.value.io.PartiQLValueReader
 import org.partiql.value.listValue
 import org.partiql.value.missingValue
 import org.partiql.value.nullValue
@@ -36,9 +43,11 @@ import org.partiql.value.sexpValue
 import org.partiql.value.stringValue
 import org.partiql.value.structValue
 import org.partiql.value.symbolValue
+import org.partiql.value.timeValue
 import org.partiql.value.timestampValue
 import java.io.IOException
 import java.io.InputStream
+import java.math.BigDecimal
 
 /**
  * Make an arbitrary call on partiql value read
@@ -60,13 +69,14 @@ internal class PartiQLValueIonReader(
         BAG_ANNOTATION("\$bag"),
         DATE_ANNOTATION("\$date"),
         TIME_ANNOTATION("\$time"),
+        TIMESTAMP_ANNOTATION("\$timestamp"),
         GRAPH_ANNOTATION("\$graph")
     }
 
     @Throws(IOException::class)
     override fun read(): PartiQLValue {
         val value = if (ionReader.next() != null) {
-            fromIonGeneric(ionReader)
+            fromIon(ionReader)
         } else {
             throw IOException("End of File.")
         }
@@ -166,7 +176,7 @@ internal class PartiQLValueIonReader(
                 reader.stepIn()
                 val elements = mutableListOf<PartiQLValue>().also { elements ->
                     reader.loadEachValue {
-                        elements.add(fromIonGeneric(reader))
+                        elements.add(fromIon(reader))
                     }
                 }
                 reader.stepOut()
@@ -178,7 +188,7 @@ internal class PartiQLValueIonReader(
                 reader.stepIn()
                 val elements = mutableListOf<PartiQLValue>().also { elements ->
                     reader.loadEachValue {
-                        elements.add(fromIonGeneric(reader))
+                        elements.add(fromIon(reader))
                     }
                 }
                 reader.stepOut()
@@ -190,7 +200,7 @@ internal class PartiQLValueIonReader(
                 reader.stepIn()
                 val elements = mutableListOf<Pair<String, PartiQLValue>>().also { elements ->
                     reader.loadEachValue {
-                        val element = reader.fieldName to fromIonGeneric(reader)
+                        val element = reader.fieldName to fromIon(reader)
                         elements.add(element)
                     }
                 }
@@ -212,9 +222,10 @@ internal class PartiQLValueIonReader(
             IonType.NULL -> {
                 when (lastAnnotation) {
                     PARTIQL_ANNOTATION.MISSING_ANNOTATION -> missingValue(annotations.dropLast(1))
-                    PARTIQL_ANNOTATION.BAG_ANNOTATION -> nullableBagValue<PartiQLValue>(emptyList(), annotations.dropLast(1))
+                    PARTIQL_ANNOTATION.BAG_ANNOTATION -> nullableBagValue<PartiQLValue>(null, annotations.dropLast(1))
                     PARTIQL_ANNOTATION.DATE_ANNOTATION -> nullableDateValue(null, annotations.dropLast(1))
                     PARTIQL_ANNOTATION.TIME_ANNOTATION -> nullableTimeValue(null, annotations.dropLast(1))
+                    PARTIQL_ANNOTATION.TIMESTAMP_ANNOTATION -> nullableTimestampValue(null, annotations.dropLast(1))
                     PARTIQL_ANNOTATION.GRAPH_ANNOTATION -> TODO("Graph not yet implemented")
                     null -> nullValue(annotations)
                 }
@@ -226,6 +237,7 @@ internal class PartiQLValueIonReader(
                     PARTIQL_ANNOTATION.BAG_ANNOTATION -> throw IllegalArgumentException("BAG_ANNOTATION with Bool Value")
                     PARTIQL_ANNOTATION.DATE_ANNOTATION -> throw IllegalArgumentException("DATE_ANNOTATION with Bool Value")
                     PARTIQL_ANNOTATION.TIME_ANNOTATION -> throw IllegalArgumentException("TIME_ANNOTATION with Bool Value")
+                    PARTIQL_ANNOTATION.TIMESTAMP_ANNOTATION -> throw IllegalArgumentException("TIMESTAMP_ANNOTATION with Bool Value")
                     PARTIQL_ANNOTATION.GRAPH_ANNOTATION -> throw IllegalArgumentException("GRAPH_ANNOTATION with Bool Value")
                     null -> {
                         if (reader.isNullValue) {
@@ -243,6 +255,7 @@ internal class PartiQLValueIonReader(
                     PARTIQL_ANNOTATION.BAG_ANNOTATION -> throw IllegalArgumentException("BAG_ANNOTATION with Int Value")
                     PARTIQL_ANNOTATION.DATE_ANNOTATION -> throw IllegalArgumentException("DATE_ANNOTATION with Int Value")
                     PARTIQL_ANNOTATION.TIME_ANNOTATION -> throw IllegalArgumentException("TIME_ANNOTATION with Int Value")
+                    PARTIQL_ANNOTATION.TIMESTAMP_ANNOTATION -> throw IllegalArgumentException("TIMESTAMP_ANNOTATION with Int Value")
                     PARTIQL_ANNOTATION.GRAPH_ANNOTATION -> throw IllegalArgumentException("GRAPH_ANNOTATION with Int Value")
                     null -> {
                         if (reader.isNullValue) {
@@ -260,6 +273,7 @@ internal class PartiQLValueIonReader(
                     PARTIQL_ANNOTATION.BAG_ANNOTATION -> throw IllegalArgumentException("BAG_ANNOTATION with Float Value")
                     PARTIQL_ANNOTATION.DATE_ANNOTATION -> throw IllegalArgumentException("DATE_ANNOTATION with Float Value")
                     PARTIQL_ANNOTATION.TIME_ANNOTATION -> throw IllegalArgumentException("TIME_ANNOTATION with Float Value")
+                    PARTIQL_ANNOTATION.TIMESTAMP_ANNOTATION -> throw IllegalArgumentException("TIMESTAMP_ANNOTATION with Float Value")
                     PARTIQL_ANNOTATION.GRAPH_ANNOTATION -> throw IllegalArgumentException("GRAPH_ANNOTATION with Float Value")
                     null -> {
                         if (reader.isNullValue) {
@@ -277,6 +291,7 @@ internal class PartiQLValueIonReader(
                     PARTIQL_ANNOTATION.BAG_ANNOTATION -> throw IllegalArgumentException("BAG_ANNOTATION with Decimal Value")
                     PARTIQL_ANNOTATION.DATE_ANNOTATION -> throw IllegalArgumentException("DATE_ANNOTATION with Decimal Value")
                     PARTIQL_ANNOTATION.TIME_ANNOTATION -> throw IllegalArgumentException("TIME_ANNOTATION with Decimal Value")
+                    PARTIQL_ANNOTATION.TIMESTAMP_ANNOTATION -> throw IllegalArgumentException("TIMESTAMP_ANNOTATION with Decimal Value")
                     PARTIQL_ANNOTATION.GRAPH_ANNOTATION -> throw IllegalArgumentException("GRAPH_ANNOTATION with Decimal Value")
                     null -> {
                         if (reader.isNullValue) {
@@ -294,6 +309,7 @@ internal class PartiQLValueIonReader(
                     PARTIQL_ANNOTATION.BAG_ANNOTATION -> throw IllegalArgumentException("BAG_ANNOTATION with Timestamp Value")
                     PARTIQL_ANNOTATION.DATE_ANNOTATION -> throw IllegalArgumentException("DATE_ANNOTATION with Timestamp Value")
                     PARTIQL_ANNOTATION.TIME_ANNOTATION -> throw IllegalArgumentException("TIME_ANNOTATION with Timestamp Value")
+                    PARTIQL_ANNOTATION.TIMESTAMP_ANNOTATION -> throw IllegalArgumentException("TIMESTAMP_ANNOTATION with Timestamp Value, we except Timestamp annotation to be used with Ion Struct")
                     PARTIQL_ANNOTATION.GRAPH_ANNOTATION -> throw IllegalArgumentException("GRAPH_ANNOTATION with Timestamp Value")
                     null -> {
                         if (reader.isNullValue) {
@@ -311,6 +327,7 @@ internal class PartiQLValueIonReader(
                     PARTIQL_ANNOTATION.BAG_ANNOTATION -> throw IllegalArgumentException("BAG_ANNOTATION with Symbol Value")
                     PARTIQL_ANNOTATION.DATE_ANNOTATION -> throw IllegalArgumentException("DATE_ANNOTATION with Symbol Value")
                     PARTIQL_ANNOTATION.TIME_ANNOTATION -> throw IllegalArgumentException("TIME_ANNOTATION with Symbol Value")
+                    PARTIQL_ANNOTATION.TIMESTAMP_ANNOTATION -> throw IllegalArgumentException("TIMESTAMP_ANNOTATION with Symbol Value")
                     PARTIQL_ANNOTATION.GRAPH_ANNOTATION -> throw IllegalArgumentException("GRAPH_ANNOTATION with Symbol Value")
                     null -> {
                         if (reader.isNullValue) {
@@ -328,6 +345,7 @@ internal class PartiQLValueIonReader(
                     PARTIQL_ANNOTATION.BAG_ANNOTATION -> throw IllegalArgumentException("BAG_ANNOTATION with String Value")
                     PARTIQL_ANNOTATION.DATE_ANNOTATION -> throw IllegalArgumentException("DATE_ANNOTATION with String Value")
                     PARTIQL_ANNOTATION.TIME_ANNOTATION -> throw IllegalArgumentException("TIME_ANNOTATION with String Value")
+                    PARTIQL_ANNOTATION.TIMESTAMP_ANNOTATION -> throw IllegalArgumentException("TIMESTAMP_ANNOTATION with String Value")
                     PARTIQL_ANNOTATION.GRAPH_ANNOTATION -> throw IllegalArgumentException("GRAPH_ANNOTATION with String Value")
                     null -> {
                         if (reader.isNullValue) {
@@ -345,6 +363,7 @@ internal class PartiQLValueIonReader(
                     PARTIQL_ANNOTATION.BAG_ANNOTATION -> throw IllegalArgumentException("BAG_ANNOTATION with Clob Value")
                     PARTIQL_ANNOTATION.DATE_ANNOTATION -> throw IllegalArgumentException("DATE_ANNOTATION with Clob Value")
                     PARTIQL_ANNOTATION.TIME_ANNOTATION -> throw IllegalArgumentException("TIME_ANNOTATION with Clob Value")
+                    PARTIQL_ANNOTATION.TIMESTAMP_ANNOTATION -> throw IllegalArgumentException("TIMESTAMP_ANNOTATION with Clob Value")
                     PARTIQL_ANNOTATION.GRAPH_ANNOTATION -> throw IllegalArgumentException("GRAPH_ANNOTATION with Clob Value")
                     null -> {
                         if (reader.isNullValue) {
@@ -362,6 +381,7 @@ internal class PartiQLValueIonReader(
                     PARTIQL_ANNOTATION.BAG_ANNOTATION -> throw IllegalArgumentException("BAG_ANNOTATION with Blob Value")
                     PARTIQL_ANNOTATION.DATE_ANNOTATION -> throw IllegalArgumentException("DATE_ANNOTATION with Blob Value")
                     PARTIQL_ANNOTATION.TIME_ANNOTATION -> throw IllegalArgumentException("TIME_ANNOTATION with Blob Value")
+                    PARTIQL_ANNOTATION.TIMESTAMP_ANNOTATION -> throw IllegalArgumentException("TIMESTAMP_ANNOTATION with Blob Value")
                     PARTIQL_ANNOTATION.GRAPH_ANNOTATION -> throw IllegalArgumentException("GRAPH_ANNOTATION with Blob Value")
                     null -> {
                         if (reader.isNullValue) {
@@ -378,29 +398,30 @@ internal class PartiQLValueIonReader(
                     PARTIQL_ANNOTATION.MISSING_ANNOTATION -> throw IllegalArgumentException("MISSING_ANNOTATION with List Value")
                     PARTIQL_ANNOTATION.BAG_ANNOTATION -> {
                         if (reader.isNullValue) {
-                            nullableBagValue(emptyList(), annotations.dropLast(1))
+                            nullableBagValue<PartiQLValue>(null, annotations.dropLast(1))
                         } else {
                             reader.stepIn()
                             val elements = mutableListOf<PartiQLValue>().also { elements ->
                                 reader.loadEachValue {
-                                    elements.add(fromIonGeneric(reader))
+                                    elements.add(fromIon(reader))
                                 }
                             }
                             reader.stepOut()
-                            bagValue(elements.toList(), annotations)
+                            bagValue(elements.toList(), annotations.dropLast(1))
                         }
                     }
                     PARTIQL_ANNOTATION.DATE_ANNOTATION -> throw IllegalArgumentException("DATE_ANNOTATION with List Value")
                     PARTIQL_ANNOTATION.TIME_ANNOTATION -> throw IllegalArgumentException("TIME_ANNOTATION with List Value")
+                    PARTIQL_ANNOTATION.TIMESTAMP_ANNOTATION -> throw IllegalArgumentException("TIMESTAMP_ANNOTATION with List Value")
                     PARTIQL_ANNOTATION.GRAPH_ANNOTATION -> TODO("Not yet implemented")
                     null -> {
                         if (reader.isNullValue) {
-                            nullableListValue(emptyList(), annotations)
+                            nullableListValue<PartiQLValue>(null, annotations)
                         } else {
                             reader.stepIn()
                             val elements = mutableListOf<PartiQLValue>().also { elements ->
                                 reader.loadEachValue {
-                                    elements.add(fromIonGeneric(reader))
+                                    elements.add(fromIon(reader))
                                 }
                             }
                             reader.stepOut()
@@ -416,15 +437,16 @@ internal class PartiQLValueIonReader(
                     PARTIQL_ANNOTATION.BAG_ANNOTATION -> throw IllegalArgumentException("BAG_ANNOTATION with Sexp Value")
                     PARTIQL_ANNOTATION.DATE_ANNOTATION -> throw IllegalArgumentException("DATE_ANNOTATION with Sexp Value")
                     PARTIQL_ANNOTATION.TIME_ANNOTATION -> throw IllegalArgumentException("TIME_ANNOTATION with Sexp Value")
+                    PARTIQL_ANNOTATION.TIMESTAMP_ANNOTATION -> throw IllegalArgumentException("TIMESTAMP_ANNOTATION with Sexp Value")
                     PARTIQL_ANNOTATION.GRAPH_ANNOTATION -> TODO("Not yet implemented")
                     null -> {
                         if (reader.isNullValue) {
-                            nullableSexpValue(emptyList(), annotations)
+                            nullableSexpValue<PartiQLValue>(null, annotations)
                         } else {
                             reader.stepIn()
                             val elements = mutableListOf<PartiQLValue>().also { elements ->
                                 reader.loadEachValue {
-                                    elements.add(fromIonGeneric(reader))
+                                    elements.add(fromIon(reader))
                                 }
                             }
                             reader.stepOut()
@@ -436,19 +458,89 @@ internal class PartiQLValueIonReader(
 
             IonType.STRUCT -> {
                 when (lastAnnotation) {
-                    PARTIQL_ANNOTATION.MISSING_ANNOTATION -> throw IllegalArgumentException("MISSING_ANNOTATION with Blob Value")
-                    PARTIQL_ANNOTATION.BAG_ANNOTATION -> throw IllegalArgumentException("BAG_ANNOTATION with Blob Value")
-                    PARTIQL_ANNOTATION.DATE_ANNOTATION -> throw IllegalArgumentException("DATE_ANNOTATION with Blob Value")
-                    PARTIQL_ANNOTATION.TIME_ANNOTATION -> throw IllegalArgumentException("TIME_ANNOTATION with Blob Value")
+                    PARTIQL_ANNOTATION.MISSING_ANNOTATION -> throw IllegalArgumentException("MISSING_ANNOTATION with Struct Value")
+                    PARTIQL_ANNOTATION.BAG_ANNOTATION -> throw IllegalArgumentException("BAG_ANNOTATION with Struct Value")
+                    PARTIQL_ANNOTATION.DATE_ANNOTATION -> {
+                        if (reader.isNullValue) {
+                            nullableDateValue(null, annotations.dropLast(1))
+                        } else {
+                            reader.stepIn()
+                            val map = mutableMapOf<String, Any?>()
+                            checkRequiredFieldNameAndPut(reader, map, "year", PartiQLValueType.INT)
+                            checkRequiredFieldNameAndPut(reader, map, "month", PartiQLValueType.INT)
+                            checkRequiredFieldNameAndPut(reader, map, "day", PartiQLValueType.INT)
+                            if (reader.next() != null) {
+                                throw IllegalArgumentException("excess field in struct")
+                            }
+                            reader.stepOut()
+                            dateValue(Date.of(map["year"] as Int, map["month"] as Int, map["day"] as Int), annotations.dropLast(1))
+                        }
+                    }
+                    PARTIQL_ANNOTATION.TIME_ANNOTATION -> {
+                        if (reader.isNullValue){
+                            nullableTimeValue(null, annotations.dropLast(1))
+                        } else {
+                            reader.stepIn()
+                            val map = mutableMapOf<String, Any?>()
+                            checkRequiredFieldNameAndPut(reader, map, "hour", PartiQLValueType.INT)
+                            checkRequiredFieldNameAndPut(reader, map, "minute", PartiQLValueType.INT)
+                            checkRequiredFieldNameAndPut(reader, map, "second", PartiQLValueType.DECIMAL)
+                            checkOptionalFieldNameAndPut(reader, map, "offset", PartiQLValueType.NULLABLE_INT)
+                            // check remaining
+                            if (reader.next() != null) {
+                                throw IllegalArgumentException("excess field in struct")
+                            }
+                            reader.stepOut()
+                            val offset = if (!map.containsKey("offset")) {
+                                null
+                            } else if (map["offset"] == null) {
+                                TimeZone.UnknownTimeZone
+                            } else {
+                                TimeZone.UtcOffset.of(map["offset"] as Int)
+                            }
+                            timeValue(
+                                Time.of(
+                                    map["hour"] as Int, map["minute"] as Int, map["second"] as BigDecimal,
+                                    offset
+                                ),
+                                annotations.dropLast(1)
+                            )
+                        }
+                    }
+                    PARTIQL_ANNOTATION.TIMESTAMP_ANNOTATION -> {
+                        if (reader.isNullValue) {
+                            nullableTimestampValue(null, annotations.dropLast(1))
+                        } else {
+                            reader.stepIn()
+                            val map = mutableMapOf<String, Any?>()
+                            // check fields
+                            checkRequiredFieldNameAndPut(reader, map, "year", PartiQLValueType.INT)
+                            checkRequiredFieldNameAndPut(reader, map, "month", PartiQLValueType.INT)
+                            checkRequiredFieldNameAndPut(reader, map, "day", PartiQLValueType.INT)
+                            checkRequiredFieldNameAndPut(reader, map, "hour", PartiQLValueType.INT)
+                            checkRequiredFieldNameAndPut(reader, map, "minute", PartiQLValueType.INT)
+                            checkRequiredFieldNameAndPut(reader, map, "second", PartiQLValueType.DECIMAL)
+                            // check remaining
+                            if (reader.next() != null) {
+                                throw IllegalArgumentException("excess field in struct")
+                            }
+                            reader.stepOut()
+                            timestampValue(Timestamp.of(
+                                map["year"] as Int, map["month"] as Int, map["day"] as Int,
+                                map["hour"] as Int, map["minute"] as Int, map["second"] as BigDecimal,
+                                null
+                            ), annotations.dropLast(1))
+                        }
+                    }
                     PARTIQL_ANNOTATION.GRAPH_ANNOTATION -> TODO("Not yet implemented")
                     null -> {
                         if (reader.isNullValue) {
-                            nullableStructValue(emptyList(), annotations)
+                            nullableStructValue<PartiQLValue>(null, annotations)
                         } else {
                             reader.stepIn()
                             val elements = mutableListOf<Pair<String, PartiQLValue>>().also { elements ->
                                 reader.loadEachValue {
-                                    val element = reader.fieldName to fromIonGeneric(reader)
+                                    val element = reader.fieldName to fromIon(reader)
                                     elements.add(element)
                                 }
                             }
@@ -470,17 +562,43 @@ internal class PartiQLValueIonReader(
     }
 
     private fun getPartiQLReservedAnnotation(partiqlAnnotation: List<String>) =
-        partiqlAnnotation.lastOrNull()?.let { PARTIQL_ANNOTATION.valueOf(it) }
+        partiqlAnnotation.lastOrNull()?.let { lastAnnotation ->
+            PARTIQL_ANNOTATION.values().find { it.annotation == lastAnnotation }
+        }
 
-    private fun checkMissing(partiqlAnnotation: List<String>) =
-        if (getPartiQLReservedAnnotation(partiqlAnnotation) == PARTIQL_ANNOTATION.MISSING_ANNOTATION)
-            missingValue(partiqlAnnotation.dropLast(1))
-        else null
+    private fun checkRequiredFieldNameAndPut(reader: IonReader, destination: MutableMap<String, Any?>, expectedField: String, expectedType: PartiQLValueType){
+        if (reader.next() == null) {
+            throw IllegalArgumentException("missing $expectedField field")
+        }
+        if (reader.fieldName == expectedField) {
+            checkAndPut(reader, destination, expectedField, expectedType)
+        }
+    }
 
-    private fun noReservedAnnotationOrThrow(partiqlAnnotation: List<String>, message: String) {
-        val reservedAnnotation = getPartiQLReservedAnnotation(partiqlAnnotation)
-        if (reservedAnnotation != null) {
-            throw IllegalArgumentException(message)
+    private fun checkOptionalFieldNameAndPut(reader: IonReader, destination: MutableMap<String, Any?>, expectedField: String, expectedType: PartiQLValueType) {
+        if (reader.next() != null) {
+            checkAndPut(reader, destination, expectedField, expectedType)
+        }
+    }
+
+    private fun checkAndPut(reader: IonReader, destination: MutableMap<String, Any?>, expectedField: String, expectedType: PartiQLValueType) {
+        if (reader.fieldName == expectedField) {
+            val k = reader.fieldName
+            val v = fromIon(reader)
+            when(expectedType) {
+                PartiQLValueType.INT -> destination[k] = (v as IntValue).value.intValueExact()
+                PartiQLValueType.DECIMAL -> destination[k] = (v as DecimalValue).value
+                PartiQLValueType.NULLABLE_INT -> {
+                    when (v.type) {
+                        PartiQLValueType.INT -> destination[k] = (v as IntValue).value.intValueExact()
+                        PartiQLValueType.NULLABLE_INT -> destination[k] = (v as NullableIntValue).value?.intValueExact()
+                        else -> throw IllegalArgumentException("expect $expectedField to have type of INT or NULL")
+                    }
+                }
+                else -> throw IllegalArgumentException("$expectedField should be either INT OR DECIMAL" )
+            }
+        } else {
+            throw IllegalArgumentException("expect $expectedField, but received ${reader.fieldName}")
         }
     }
 }

@@ -17,21 +17,43 @@ import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.bagValue
 import org.partiql.value.boolValue
 import org.partiql.value.charValue
+import org.partiql.value.dateValue
+import org.partiql.value.datetime.Date
+import org.partiql.value.datetime.Time
+import org.partiql.value.datetime.TimeZone
+import org.partiql.value.datetime.Timestamp
 import org.partiql.value.decimalValue
 import org.partiql.value.float32Value
 import org.partiql.value.float64Value
-import org.partiql.value.impl.PartiQLValueIonReaderBuilder
 import org.partiql.value.int16Value
 import org.partiql.value.int32Value
 import org.partiql.value.int64Value
 import org.partiql.value.int8Value
 import org.partiql.value.intValue
 import org.partiql.value.listValue
+import org.partiql.value.missingValue
+import org.partiql.value.nullValue
 import org.partiql.value.nullableBagValue
+import org.partiql.value.nullableBlobValue
+import org.partiql.value.nullableBoolValue
+import org.partiql.value.nullableClobValue
+import org.partiql.value.nullableDateValue
+import org.partiql.value.nullableDecimalValue
+import org.partiql.value.nullableFloat64Value
+import org.partiql.value.nullableIntValue
+import org.partiql.value.nullableListValue
+import org.partiql.value.nullableSexpValue
+import org.partiql.value.nullableStringValue
+import org.partiql.value.nullableStructValue
+import org.partiql.value.nullableSymbolValue
+import org.partiql.value.nullableTimeValue
+import org.partiql.value.nullableTimestampValue
 import org.partiql.value.sexpValue
 import org.partiql.value.stringValue
 import org.partiql.value.structValue
 import org.partiql.value.symbolValue
+import org.partiql.value.timeValue
+import org.partiql.value.timestampValue
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.PrintStream
@@ -67,51 +89,105 @@ class PartiQLValueIonSerdeTest {
 
         private val annotations: Annotations = listOf("x", "y")
 
-        private fun oneWayTrip(partiQLValueBefore: PartiQLValue, ionValue: IonValue, partiQLValueAfter: PartiQLValue) = Case.OneWayTrip(partiQLValueBefore, ionValue, partiQLValueAfter)
+        private fun oneWayTrip(partiQLValueBefore: PartiQLValue, ionValue: IonValue, partiQLValueAfter: PartiQLValue) =
+            Case.OneWayTrip(partiQLValueBefore, ionValue, partiQLValueAfter)
 
         private fun roundTrip(partiQLValue: PartiQLValue, ionValue: IonValue) = Case.RoundTrip(partiQLValue, ionValue)
 
         @JvmStatic
         fun nulls() = listOf(
             // absent value
-//            roundTrip(
-//                nullValue(),
-//                ION.newNull()
-//            ),
-//            roundTrip(
-//                missingValue(),
-//                ION.newNull().apply { addTypeAnnotation("\$missing") }
-//            ),
-            // when(reader.type){
-            //                IonType.NULL -> TODO()
-            //                IonType.BOOL -> TODO()
-            //                IonType.INT -> TODO()
-            //                IonType.FLOAT -> TODO()
-            //                IonType.DECIMAL -> TODO()
-            //                IonType.TIMESTAMP -> TODO()
-            //                IonType.SYMBOL -> TODO()
-            //                IonType.STRING -> TODO()
-            //                IonType.CLOB -> TODO()
-            //                IonType.BLOB -> TODO()
-            //                IonType.LIST -> TODO()
-            //                IonType.SEXP -> TODO()
-            //                IonType.STRUCT -> TODO()
-            //                IonType.DATAGRAM -> TODO()
-            //            }
+            roundTrip(
+                nullValue(),
+                ION.newNull()
+            ),
+            roundTrip(
+                missingValue(),
+                ION.newNull().apply { addTypeAnnotation("\$missing") }
+            ),
             // bool.null
-//            roundTrip(
-//                nullableBoolValue(),
-//                ION.newBool(null)
-//            ),
-//            roundTrip(
-//                nullableIntValue(),
-//                ION.newInt(null)
-//            ),
+            roundTrip(
+                nullableBoolValue(),
+                ION.newNullBool()
+            ),
+            // int.null
+            roundTrip(
+                nullableIntValue(),
+                ION.newNullInt()
+            ),
+            // float.null
+            roundTrip(
+                nullableFloat64Value(),
+                ION.newNullFloat()
+            ),
+            // Decimal.null
+            roundTrip(
+                nullableDecimalValue(),
+                ION.newNullDecimal()
+            ),
+            // timestamp.null
+            roundTrip(
+                nullableTimestampValue(),
+                ION.newNullTimestamp()
+            ),
+            // symbol.null
+            roundTrip(
+                nullableSymbolValue(),
+                ION.newNullSymbol()
+            ),
+            // string.null
+            roundTrip(
+                nullableStringValue(),
+                ION.newNullString()
+            ),
+            // Clob.null
+            roundTrip(
+                nullableClobValue(),
+                ION.newNullClob(),
+            ),
+            // blob.null
+            roundTrip(
+                nullableBlobValue(),
+                ION.newNullBlob()
+            ),
+            // list.null
+            roundTrip(
+                nullableListValue<PartiQLValue>(),
+                ION.newNullList()
+            ),
+            // Sexp.null
+            roundTrip(
+                nullableSexpValue<PartiQLValue>(),
+                ION.newNullSexp()
+            ),
+            // struct.null
+            roundTrip(
+                nullableStructValue<PartiQLValue>(),
+                ION.newNullStruct()
+            ),
+            // $bag::list.null
             roundTrip(
                 nullableBagValue<PartiQLValue>(),
-                ION.newNullList()
-            )
+                ION.newNullList().apply {
+                    addTypeAnnotation("\$bag")
+                }
+            ),
+            // $date::struct.null
+            roundTrip(
+                nullableDateValue(),
+                ION.newNullStruct().apply {
+                    addTypeAnnotation("\$date")
+                }
+            ),
+            // $time::struct.null
+            roundTrip(
+                nullableTimeValue(),
+                ION.newNullStruct().apply {
+                    addTypeAnnotation("\$time")
+                }
+            ),
         )
+
         @JvmStatic
         fun scalars() = listOf(
             roundTrip(
@@ -193,13 +269,98 @@ class PartiQLValueIonSerdeTest {
                 symbolValue("f.x"),
                 ION.newSymbol("f.x"),
             ),
+            roundTrip(
+                dateValue(Date.of(2023, 6, 1)),
+                ION.newEmptyStruct().apply {
+                    add("year", ION.newInt(2023L))
+                    add("month", ION.newInt(6L))
+                    add("day", ION.newInt(1L))
+                    addTypeAnnotation("\$date")
+                }
+            ),
+            // time without time zone
+            roundTrip(
+                timeValue(Time.of(0, 0, BigDecimal.valueOf(0, 2))),
+                ION.newEmptyStruct().apply {
+                    add("hour", ION.newInt(0L))
+                    add("minute", ION.newInt(0L))
+                    add("second", ION.newDecimal(BigDecimal.valueOf(0, 2)))
+                    addTypeAnnotation("\$time")
+                }
+            ),
+            // time with unknown time zone
+            roundTrip(
+                timeValue(Time.of(0, 0, BigDecimal.valueOf(0, 2), TimeZone.UnknownTimeZone)),
+                ION.newEmptyStruct().apply {
+                    add("hour", ION.newInt(0L))
+                    add("minute", ION.newInt(0L))
+                    add("second", ION.newDecimal(BigDecimal.valueOf(0, 2)))
+                    add("offset", ION.newNullInt())
+                    addTypeAnnotation("\$time")
+                }
+            ),
+            // time with time zone
+            roundTrip(
+                timeValue(Time.of(0, 0, BigDecimal.valueOf(0, 2), TimeZone.UtcOffset.of(10))),
+                ION.newEmptyStruct().apply {
+                    add("hour", ION.newInt(0L))
+                    add("minute", ION.newInt(0L))
+                    add("second", ION.newDecimal(BigDecimal.valueOf(0, 2)))
+                    add("offset", ION.newInt(10L))
+                    addTypeAnnotation("\$time")
+                }
+            ),
+            roundTrip(
+                timeValue(Time.of(0, 0, BigDecimal.valueOf(0, 2), TimeZone.UtcOffset.of(-100))),
+                ION.newEmptyStruct().apply {
+                    add("hour", ION.newInt(0L))
+                    add("minute", ION.newInt(0L))
+                    add("second", ION.newDecimal(BigDecimal.valueOf(0, 2)))
+                    add("offset", ION.newInt(-100L))
+                    addTypeAnnotation("\$time")
+                }
+            ),
+            roundTrip(
+                timestampValue(Timestamp.of(
+                    Date.of(2023, 6, 1),
+                    Time.of(0, 0, BigDecimal.valueOf(0, 2), null)
+                )),
+                ION.newEmptyStruct().apply {
+                    add("year", ION.newInt(2023L))
+                    add("month", ION.newInt(6L))
+                    add("day", ION.newInt(1L))
+                    add("hour", ION.newInt(0L))
+                    add("minute", ION.newInt(0L))
+                    add("second", ION.newDecimal(BigDecimal.valueOf(0, 2)))
+                    addTypeAnnotation("\$timestamp")
+                }
+            ),
+            roundTrip(
+                timestampValue(Timestamp.of(
+                    Date.of(2023, 6, 1),
+                    Time.of(0, 0, BigDecimal.valueOf(0, 2), TimeZone.UnknownTimeZone)
+                )),
+                ION.newTimestamp(com.amazon.ion.Timestamp.forSecond(2023,6,1,0,0,BigDecimal.valueOf(0, 2), null))
+            ),
+            roundTrip(
+                timestampValue(Timestamp.of(
+                    Date.of(2023, 6, 1),
+                    Time.of(0, 0, BigDecimal.valueOf(0, 2), TimeZone.UtcOffset.of(10))
+                )),
+                ION.newTimestamp(com.amazon.ion.Timestamp.forSecond(2023,6,1,0,0,BigDecimal.valueOf(0, 2), 10))
+            ),
+            roundTrip(
+                timestampValue(Timestamp.of(
+                    Date.of(2023, 6, 1),
+                    Time.of(0, 0, BigDecimal.valueOf(0, 2), TimeZone.UtcOffset.of(-100))
+                )),
+                ION.newTimestamp(com.amazon.ion.Timestamp.forSecond(2023,6,1,0,0,BigDecimal.valueOf(0, 2), -100))
+            )
+
             // TODO CLOB
             // TODO BINARY
             // TODO BYTE
             // TODO BLOB
-            // TODO DATE
-            // TODO TIME
-            // TODO TIMESTAMP
             // TODO INTERVAL
         )
 
@@ -298,7 +459,7 @@ class PartiQLValueIonSerdeTest {
         fun nestedCollections(): List<Case> = TODO()
 
         @JvmStatic
-        fun annotations(): List<Case> = scalars().map { toAnnotated(it) } + collections().map { toAnnotated(it) }
+        fun annotations(): List<Case> = scalars().map { toAnnotated(it) } + collections().map { toAnnotated(it) } + nulls().map { toAnnotated(it) }
 
         private fun toAnnotated(case: Case): Case =
             when (case) {
@@ -307,7 +468,8 @@ class PartiQLValueIonSerdeTest {
                     val ionValueAnnotation = case.ionValueForPartiQL.typeAnnotations.toList()
                     val partiQLValueAfterAnnotation = case.partiQLValueAfter.annotations
                     Case.OneWayTrip(
-                        case.partiQLValueBefore.withoutAnnotations().withAnnotations(annotations + partiQLValueBeforeAnnotation),
+                        case.partiQLValueBefore.withoutAnnotations()
+                            .withAnnotations(annotations + partiQLValueBeforeAnnotation),
                         case.ionValueForPartiQL.toIonElement()
                             .withoutAnnotations()
                             .withAnnotations(annotations + ionValueAnnotation)
@@ -317,11 +479,13 @@ class PartiQLValueIonSerdeTest {
                             .withAnnotations(annotations + partiQLValueAfterAnnotation)
                     )
                 }
+
                 is Case.RoundTrip -> {
                     val partiQLValueBeforeAnnotation = case.partiQLValueBefore.annotations
                     val ionValueAnnotation = case.ionValue.typeAnnotations.toList()
                     Case.RoundTrip(
-                        case.partiQLValueBefore.withoutAnnotations().withAnnotations(annotations + partiQLValueBeforeAnnotation),
+                        case.partiQLValueBefore.withoutAnnotations()
+                            .withAnnotations(annotations + partiQLValueBeforeAnnotation),
                         case.ionValue.toIonElement()
                             .withoutAnnotations()
                             .withAnnotations(annotations + ionValueAnnotation)
@@ -338,6 +502,7 @@ class PartiQLValueIonSerdeTest {
             val ionValueForPartiQL: IonValue,
             val partiQLValueAfter: PartiQLValue,
         ) : Case()
+
         data class RoundTrip(
             val partiQLValueBefore: PartiQLValue,
             val ionValue: IonValue,
@@ -357,8 +522,9 @@ class PartiQLValueIonSerdeTest {
             //    -- No further divergent should appear.
             is Case.OneWayTrip -> {
                 assertToIon(tc.partiQLValueBefore, tc.ionValueForPartiQL)
-                assertRoundTrip(tc.partiQLValueAfter!!, tc.ionValueForPartiQL)
+                assertRoundTrip(tc.partiQLValueAfter, tc.ionValueForPartiQL)
             }
+
             is Case.RoundTrip -> {
                 assertRoundTrip(tc.partiQLValueBefore, tc.ionValue)
             }
@@ -381,7 +547,7 @@ class PartiQLValueIonSerdeTest {
         } catch (e: AssertionError) {
             val message = """
                         From Ion To PartiQL Failed: 
-                        original ion Value: $pValue,
+                        original ion Value: $iValue,
                         ${e.message}
             """.trimIndent()
             throw AssertionError(message)
