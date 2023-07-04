@@ -9,7 +9,6 @@ import org.partiql.lang.eval.name
 import org.partiql.lang.eval.partiQLTimestampValue
 import org.partiql.lang.eval.timeValue
 import org.partiql.lang.eval.toIonValue
-import org.partiql.value.datetime.TimeZone
 import java.math.BigDecimal
 
 private const val MISSING_STRING = "MISSING"

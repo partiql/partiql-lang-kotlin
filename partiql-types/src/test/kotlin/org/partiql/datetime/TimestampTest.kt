@@ -184,14 +184,6 @@ class TimestampTest {
     }
 
     private fun testFailedTestCases(tc: FailedTest) {
-//        try {
-//            tc.statement.invoke()
-//            fail("Expect ${tc.expectedException} but no Exception received")
-//        } catch (e : Exception) {
-//            if (!tc.expectedException::class.java.isInstance(e)) {
-//                fail("Expect ${tc.expectedException} but received ${e::class.java}")
-//            }
-//        }
         assertThrows<DateTimeException> {
             tc.statement()
         }

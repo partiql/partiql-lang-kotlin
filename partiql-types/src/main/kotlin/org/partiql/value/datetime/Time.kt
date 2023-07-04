@@ -1,17 +1,35 @@
+/*
+ * Copyright Amazon.com, Inc. or its affiliates.  All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at:
+ *
+ *      http://aws.amazon.com/apache2.0/
+ *
+ * or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
+ * language governing permissions and limitations under the License.
+ */
+
 package org.partiql.value.datetime
 
+import org.partiql.value.datetime.DateTimeUtil.SECONDS_IN_HOUR
+import org.partiql.value.datetime.DateTimeUtil.SECONDS_IN_MINUTE
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.temporal.ChronoField
+import kotlin.jvm.Throws
 
+// TODO: Further break this down to tow implementation, one with nanosecond and below precision
+//  and the other with nano-second and above precision, including arbitrary precision
+//  The big decimal implementation is too slow and arguably for ion-compatibly reason only.
 /**
  * This class is used to model both Time Without Time Zone type and Time With Time Zone Type.
  *
  * Informally, a data value of Time Without Time Zone represents a particular orientation of a clock
  * which will represent different instances of "time" based on the timezone.
  * a data value of Time With Time Zone represents an orientation of a clock attached with timezone offset.
- * TODO : Consider change this to interface and split into "nano precision Time" and "high precision time"
- *  Big Decimal implementation is slow, and arguably useless.
  */
 public data class Time private constructor(
     val hour: Int,
@@ -21,6 +39,8 @@ public data class Time private constructor(
     val precision: Int?
 ) {
     public companion object {
+        @JvmStatic
+        @Throws(DateTimeException::class)
         public fun of(
             hour: Int,
             minute: Int,
@@ -34,12 +54,10 @@ public data class Time private constructor(
                 // round down the second to check
                 ChronoField.SECOND_OF_MINUTE.checkValidValue(second.setScale(0, RoundingMode.DOWN).toLong())
                 val arbitraryTime = Time(hour, minute, second, timeZone, null)
-                if (precision == null) {
-                    return arbitraryTime
-                }
+                if (precision == null) { return arbitraryTime }
                 return arbitraryTime.toPrecision(precision)
             } catch (e: java.time.DateTimeException) {
-                throw DateTimeFormatException(e.localizedMessage, e)
+                throw DateTimeException(e.localizedMessage, e)
             }
         }
 
@@ -56,7 +74,7 @@ public data class Time private constructor(
     }
 
     /**
-     * Counting the time escaped from midnight 00:00:00 in seconds (fraction included)
+     * Counting the time escaped from midnight 00:00:00 in seconds ( fraction included)
      */
     val elapsedSecond: BigDecimal by lazy {
         BigDecimal.valueOf(this.hour * SECONDS_IN_HOUR + this.minute * SECONDS_IN_MINUTE).plus(this.second)
@@ -71,7 +89,6 @@ public data class Time private constructor(
                 timeZone = timeZone,
                 precision = precision
             )
-
             second.scale() < precision -> paddingToPrecision(precision)
             else -> roundToPrecision(precision)
         }
@@ -86,9 +103,7 @@ public data class Time private constructor(
         )
 
     private fun roundToPrecision(precision: Int): Time {
-        val elapsedSeconds: BigDecimal =
-            BigDecimal.valueOf(hour * SECONDS_IN_HOUR).add(BigDecimal.valueOf(minute * SECONDS_IN_MINUTE)).add(second)
-        var rounded = elapsedSeconds.setScale(precision, RoundingMode.HALF_UP)
+        var rounded = this.elapsedSecond.setScale(precision, RoundingMode.HALF_UP)
         var newHours = 0
         var newMinutes = 0
         val secondsInHour = BigDecimal.valueOf(SECONDS_IN_HOUR)

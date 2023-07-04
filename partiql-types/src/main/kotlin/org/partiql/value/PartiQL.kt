@@ -687,38 +687,13 @@ public fun nullableDateValue(
 @JvmOverloads
 @PartiQLValueExperimental
 public fun nullableTimeValue(
-    annotations: Annotations = emptyList(),
-): NullableTimeValue = NullableTimeValueImpl(null, annotations.toPersistentList())
-
-/**
- * UNION(NULL, TIME) type value.
- *
- * @param value
- * @param annotations
- * @return
- */
-@JvmOverloads
-@PartiQLValueExperimental
-public fun nullableTimeValue(
-    value: Time,
+    value: Time? = null,
     annotations: Annotations = emptyList(),
 ): NullableTimeValue = NullableTimeValueImpl(value, annotations.toPersistentList())
 
 /**
  * UNION(NULL, TIMESTAMP) type value.
  *
- * @param annotations
- * @return
- */
-@JvmOverloads
-@PartiQLValueExperimental
-public fun nullableTimestampValue(
-    annotations: Annotations = emptyList(),
-): NullableTimestampValue = NullableTimestampValueImpl(null, annotations.toPersistentList())
-
-/**
- * UNION(NULL, TIMESTAMP) type value.
- *
  * @param value
  * @param annotations
  * @return
@@ -726,13 +701,13 @@ public fun nullableTimestampValue(
 @JvmOverloads
 @PartiQLValueExperimental
 public fun nullableTimestampValue(
-    value: Timestamp,
+    value: Timestamp? = null,
     annotations: Annotations = emptyList(),
 ): NullableTimestampValue =
     NullableTimestampValueImpl(value, annotations.toPersistentList())
 
 /**
- * UNION(NULL, TIMESTAMP) type value.
+ * UNION(NULL, INTERVAL) type value.
  *
  * @param value
  * @param annotations

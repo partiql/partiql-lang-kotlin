@@ -6,8 +6,6 @@ import org.partiql.value.datetime.Time
 import org.partiql.value.datetime.TimeZone
 import org.partiql.value.datetime.Timestamp
 import java.math.BigDecimal
-import java.time.LocalDate
-import java.time.temporal.ChronoField
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 
@@ -26,12 +24,6 @@ internal object DateTimeUtils {
         val year = matcher.group("year").toInt()
         val month = matcher.group("month").toInt()
         val day = matcher.group("day").toInt()
-        // Validate the date using Local date, so we don't have to write custom validation logic
-        try {
-            LocalDate.of(year, month, day)
-        } catch (e: java.time.DateTimeException) {
-            throw DateTimeException(e.localizedMessage)
-        }
         return Date.of(year, month, day)
     }
 
@@ -41,9 +33,9 @@ internal object DateTimeUtils {
             "Expect TIME Format to be in HH-mm-ss.ddd+[+|-][hh:mm|z], received $timeString"
         )
         try {
-            val hour = ChronoField.HOUR_OF_DAY.checkValidValue(matcher.group("hour").toLong()).toInt()
-            val minute = ChronoField.MINUTE_OF_HOUR.checkValidValue(matcher.group("minute").toLong()).toInt()
-            val wholeSecond = ChronoField.SECOND_OF_MINUTE.checkValidValue(matcher.group("second").toLong())
+            val hour = matcher.group("hour").toInt()
+            val minute = matcher.group("minute").toInt()
+            val wholeSecond = matcher.group("second").toLong()
             val fractionPart = matcher.group("fraction")?.let { BigDecimal(".$it") } ?: BigDecimal.ZERO
             val second = BigDecimal.valueOf(wholeSecond).add(fractionPart)
             val timeZoneString = matcher.group("timezone") ?: null
@@ -53,8 +45,6 @@ internal object DateTimeUtils {
                 return Time.of(hour, minute, second, timeZone, null)
             }
             return Time.of(hour, minute, second, null, null)
-        } catch (e: java.time.DateTimeException) {
-            throw DateTimeException(e.localizedMessage)
         } catch (e: IllegalStateException) {
             throw DateTimeException(e.localizedMessage)
         } catch (e: IllegalArgumentException) {
