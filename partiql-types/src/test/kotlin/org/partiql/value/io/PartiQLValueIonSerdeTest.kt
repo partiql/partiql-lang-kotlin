@@ -321,10 +321,12 @@ class PartiQLValueIonSerdeTest {
                 }
             ),
             roundTrip(
-                timestampValue(Timestamp.of(
-                    Date.of(2023, 6, 1),
-                    Time.of(0, 0, BigDecimal.valueOf(0, 2), null)
-                )),
+                timestampValue(
+                    Timestamp.of(
+                        Date.of(2023, 6, 1),
+                        Time.of(0, 0, BigDecimal.valueOf(0, 2), null)
+                    )
+                ),
                 ION.newEmptyStruct().apply {
                     add("year", ION.newInt(2023L))
                     add("month", ION.newInt(6L))
@@ -336,25 +338,31 @@ class PartiQLValueIonSerdeTest {
                 }
             ),
             roundTrip(
-                timestampValue(Timestamp.of(
-                    Date.of(2023, 6, 1),
-                    Time.of(0, 0, BigDecimal.valueOf(0, 2), TimeZone.UnknownTimeZone)
-                )),
-                ION.newTimestamp(com.amazon.ion.Timestamp.forSecond(2023,6,1,0,0,BigDecimal.valueOf(0, 2), null))
+                timestampValue(
+                    Timestamp.of(
+                        Date.of(2023, 6, 1),
+                        Time.of(0, 0, BigDecimal.valueOf(0, 2), TimeZone.UnknownTimeZone)
+                    )
+                ),
+                ION.newTimestamp(com.amazon.ion.Timestamp.forSecond(2023, 6, 1, 0, 0, BigDecimal.valueOf(0, 2), null))
             ),
             roundTrip(
-                timestampValue(Timestamp.of(
-                    Date.of(2023, 6, 1),
-                    Time.of(0, 0, BigDecimal.valueOf(0, 2), TimeZone.UtcOffset.of(10))
-                )),
-                ION.newTimestamp(com.amazon.ion.Timestamp.forSecond(2023,6,1,0,0,BigDecimal.valueOf(0, 2), 10))
+                timestampValue(
+                    Timestamp.of(
+                        Date.of(2023, 6, 1),
+                        Time.of(0, 0, BigDecimal.valueOf(0, 2), TimeZone.UtcOffset.of(10))
+                    )
+                ),
+                ION.newTimestamp(com.amazon.ion.Timestamp.forSecond(2023, 6, 1, 0, 0, BigDecimal.valueOf(0, 2), 10))
             ),
             roundTrip(
-                timestampValue(Timestamp.of(
-                    Date.of(2023, 6, 1),
-                    Time.of(0, 0, BigDecimal.valueOf(0, 2), TimeZone.UtcOffset.of(-100))
-                )),
-                ION.newTimestamp(com.amazon.ion.Timestamp.forSecond(2023,6,1,0,0,BigDecimal.valueOf(0, 2), -100))
+                timestampValue(
+                    Timestamp.of(
+                        Date.of(2023, 6, 1),
+                        Time.of(0, 0, BigDecimal.valueOf(0, 2), TimeZone.UtcOffset.of(-100))
+                    )
+                ),
+                ION.newTimestamp(com.amazon.ion.Timestamp.forSecond(2023, 6, 1, 0, 0, BigDecimal.valueOf(0, 2), -100))
             )
 
             // TODO CLOB

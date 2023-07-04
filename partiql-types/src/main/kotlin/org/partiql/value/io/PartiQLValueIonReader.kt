@@ -477,7 +477,7 @@ internal class PartiQLValueIonReader(
                         }
                     }
                     PARTIQL_ANNOTATION.TIME_ANNOTATION -> {
-                        if (reader.isNullValue){
+                        if (reader.isNullValue) {
                             nullableTimeValue(null, annotations.dropLast(1))
                         } else {
                             reader.stepIn()
@@ -525,11 +525,14 @@ internal class PartiQLValueIonReader(
                                 throw IllegalArgumentException("excess field in struct")
                             }
                             reader.stepOut()
-                            timestampValue(Timestamp.of(
-                                map["year"] as Int, map["month"] as Int, map["day"] as Int,
-                                map["hour"] as Int, map["minute"] as Int, map["second"] as BigDecimal,
-                                null
-                            ), annotations.dropLast(1))
+                            timestampValue(
+                                Timestamp.of(
+                                    map["year"] as Int, map["month"] as Int, map["day"] as Int,
+                                    map["hour"] as Int, map["minute"] as Int, map["second"] as BigDecimal,
+                                    null
+                                ),
+                                annotations.dropLast(1)
+                            )
                         }
                     }
                     PARTIQL_ANNOTATION.GRAPH_ANNOTATION -> TODO("Not yet implemented")
@@ -566,7 +569,7 @@ internal class PartiQLValueIonReader(
             PARTIQL_ANNOTATION.values().find { it.annotation == lastAnnotation }
         }
 
-    private fun checkRequiredFieldNameAndPut(reader: IonReader, destination: MutableMap<String, Any?>, expectedField: String, expectedType: PartiQLValueType){
+    private fun checkRequiredFieldNameAndPut(reader: IonReader, destination: MutableMap<String, Any?>, expectedField: String, expectedType: PartiQLValueType) {
         if (reader.next() == null) {
             throw IllegalArgumentException("missing $expectedField field")
         }
@@ -585,7 +588,7 @@ internal class PartiQLValueIonReader(
         if (reader.fieldName == expectedField) {
             val k = reader.fieldName
             val v = fromIon(reader)
-            when(expectedType) {
+            when (expectedType) {
                 PartiQLValueType.INT -> destination[k] = (v as IntValue).value.intValueExact()
                 PartiQLValueType.DECIMAL -> destination[k] = (v as DecimalValue).value
                 PartiQLValueType.NULLABLE_INT -> {
@@ -595,7 +598,7 @@ internal class PartiQLValueIonReader(
                         else -> throw IllegalArgumentException("expect $expectedField to have type of INT or NULL")
                     }
                 }
-                else -> throw IllegalArgumentException("$expectedField should be either INT OR DECIMAL" )
+                else -> throw IllegalArgumentException("$expectedField should be either INT OR DECIMAL")
             }
         } else {
             throw IllegalArgumentException("expect $expectedField, but received ${reader.fieldName}")

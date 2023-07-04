@@ -284,7 +284,7 @@ internal class PartiQLValueIonWriter(
         }.withAnnotations(DATE_ANNOTATION)
 
         override fun visitNullableDate(v: NullableDateValue, ctx: Unit) = when (v.value) {
-            null -> v.toIon { ionNull(ElementType.STRUCT) }
+            null -> v.toIon { ionNull(ElementType.STRUCT) }.withAnnotations(DATE_ANNOTATION)
             else -> visitDate(dateValue(v.value!!, v.annotations), ctx)
         }
 
