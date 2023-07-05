@@ -99,7 +99,7 @@ import java.util.ServiceLoader
 class ServiceLoaderUtil {
     companion object {
         @JvmStatic
-        public fun loadPlugins(): List<ExprFunction> {
+        fun loadPlugins(): List<ExprFunction> {
             val serviceLoader = ServiceLoader.load(Plugin::class.java)
             return serviceLoader
                 .flatMap { serviceLoader -> serviceLoader.getFunctions() }
