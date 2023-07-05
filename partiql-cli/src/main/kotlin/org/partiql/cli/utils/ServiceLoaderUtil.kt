@@ -123,7 +123,7 @@ class ServiceLoaderUtil {
 
                         override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
                             val partiQLArguments = required.mapIndexed { i, expr -> ExprToPartiQLValue(expr, parameters[i]) }
-                            val partiQLResult = customFunction.invoke(session.toConnectorSession(), partiQLArguments) // connections from EvaluationSession to ConnectorSession
+                            val partiQLResult = customFunction.invoke(session.toConnectorSession(), partiQLArguments)
                             return PartiQLtoExprValue(partiQLResult)
                         }
                     }

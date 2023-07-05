@@ -831,23 +831,3 @@ public abstract class NullableStructValue<T : PartiQLValue> : PartiQLValue, Coll
 
     abstract override fun withoutAnnotations(): NullableStructValue<T>
 }
-
-@PartiQLValueExperimental
-public class newString(override val value: String, override val annotations: Annotations = emptyList()) : StringValue() {
-
-    override fun copy(annotations: Annotations): StringValue {
-        return newString(value, annotations)
-    }
-
-    override fun withAnnotations(annotations: Annotations): StringValue {
-        return newString(value, annotations)
-    }
-
-    override fun withoutAnnotations(): StringValue {
-        return newString(value, emptyList())
-    }
-
-    override fun <R, C> accept(visitor: PartiQLValueVisitor<R, C>, ctx: C): R {
-        return visitor.visit(this, ctx)
-    }
-}
