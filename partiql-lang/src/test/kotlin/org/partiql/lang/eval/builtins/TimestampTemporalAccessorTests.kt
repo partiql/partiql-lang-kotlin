@@ -1,6 +1,5 @@
 package org.partiql.lang.eval.builtins
 
-import com.amazon.ion.Timestamp
 import junitparams.JUnitParamsRunner
 import junitparams.Parameters
 import junitparams.naming.TestCaseName
@@ -8,6 +7,8 @@ import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.partiql.lang.datetime.TimestampTemporalAccessor
+import org.partiql.value.datetime.Timestamp
+import java.math.BigDecimal
 import java.time.DateTimeException
 import java.time.format.DateTimeFormatter
 import java.time.temporal.UnsupportedTemporalTypeException
@@ -20,8 +21,8 @@ class TimestampTemporalAccessorTests {
     @Test
     fun timestampWithUnknownOffset() {
         // Note:  Ion spec allows representation of unknown offset with "0"
-        val timestamp = Timestamp.forSecond(1969, 7, 20, 20, 18, 36, null)
-        assertNull(timestamp.localOffset)
+        val timestamp = Timestamp.of(1969, 7, 20, 20, 18, BigDecimal.valueOf(36L), null)
+        assertNull(timestamp.timeZone)
 
         val temporalAccessor = TimestampTemporalAccessor(timestamp)
         val formatter = DateTimeFormatter.ofPattern("Z")
@@ -37,7 +38,7 @@ class TimestampTemporalAccessorTests {
     @Parameters
     @TestCaseName("handleUnsupportedFormatSymbols_{0}")
     fun handleUnsupportedFormatSymbolsTest(testCase: UnsupportedSymbolTestCase) {
-        val timestamp = Timestamp.forSecond(1969, 7, 20, 20, 18, 36, 0)
+        val timestamp = Timestamp.of(1969, 7, 20, 20, 18, BigDecimal.valueOf(36L), null)
         val temporalAccessor = TimestampTemporalAccessor(timestamp)
         val formatter = DateTimeFormatter.ofPattern(testCase.formatSymbol)
 

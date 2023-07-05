@@ -70,7 +70,7 @@ class TimestampTemporalAccessorRandomizedTests {
             val offsetDatetime = timestamp.toOffsetDateTime()
             val formattedOffsetDateTime = formatter.format(offsetDatetime)
             // Actual
-            val temporalAccessor = TimestampTemporalAccessor(timestamp)
+            val temporalAccessor = TimestampTemporalAccessor(org.partiql.value.datetime.Timestamp.forIonTimestamp(timestamp))
             val formattedTimestamp = formatter.format(temporalAccessor)
             assertEquals(formattedOffsetDateTime, formattedTimestamp)
         }

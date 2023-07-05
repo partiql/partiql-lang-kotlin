@@ -1,32 +1,39 @@
 package org.partiql.lang.eval
 
+import com.amazon.ion.Decimal
 import com.amazon.ion.IonStruct
-import org.junit.Test
+import com.amazon.ion.IonTimestamp
+import com.amazon.ion.IonValue
+import com.amazon.ionelement.api.field
+import com.amazon.ionelement.api.ionDecimal
+import com.amazon.ionelement.api.ionInt
+import com.amazon.ionelement.api.ionStructOf
+import com.amazon.ionelement.api.ionTimestamp
+import com.amazon.ionelement.api.toIonValue
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.ION
 import org.partiql.lang.errors.ErrorCode
+import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestTarget
 import org.partiql.lang.eval.evaluatortestframework.ExpectedResultFormat
+import org.partiql.lang.eval.evaluatortestframework.strictEquals
 import org.partiql.lang.eval.time.MINUTES_PER_HOUR
 import org.partiql.lang.eval.time.NANOS_PER_SECOND
 import org.partiql.lang.eval.time.SECONDS_PER_MINUTE
 import org.partiql.lang.eval.time.Time
 import org.partiql.lang.util.ArgumentsProviderBase
 import org.partiql.lang.util.getOffsetHHmm
+import org.partiql.lang.util.timestampValue
+import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.ZoneOffset
 import kotlin.math.absoluteValue
 
 class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
 
-    @Test
-    fun testDateLiteral() {
-        runEvaluatorTestCase(
-            query = "DATE '2000-01-02'",
-            expectedResult = "$DATE_ANNOTATION::2000-01-02"
-        )
-    }
-
+    // ---------------
+    // |    TIME     |
+    // ---------------
     private fun secondsWithPrecision(time: TimeForValidation) =
         ion.newDecimal(time.second.toBigDecimal() + time.nano.toBigDecimal().divide(NANOS_PER_SECOND.toBigDecimal()).setScale(time.precision, RoundingMode.HALF_UP))
 
@@ -149,6 +156,252 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
         }
     }
 
+    // ---------------
+    // |  TIMESTAMP  |
+    // ---------------
+
+    private fun assertEqualsIonTimestamp(actual: IonValue, expectedTimestamp: TimestampForValidation) {
+        // Has time zone, directly serialized to ion
+
+        if (expectedTimestamp.hasTimeZone) {
+            if (expectedTimestamp.precision != null) {
+                actual as IonTimestamp
+                assertEquals(expectedTimestamp.ionValue, actual)
+            }
+            // if the time stamp is arbitrary precision
+            // we only want to compare if the instant refers to the same point in time.
+            else {
+                val expectedTimestampValue = expectedTimestamp.ionValue.timestampValue()
+                val actualTimestampValue = actual.timestampValue()
+                // check if time zone is known
+                if (expectedTimestamp.tzHour == null && actualTimestampValue.localOffset != null) {
+                    fail("Timezone mismatch, expected UNKNOWN TIME ZONE")
+                }
+                if (expectedTimestamp.tzHour != null && actualTimestampValue.localOffset == null) {
+                    fail("Timezone mismatch, expected Known TIME ZONE")
+                }
+                if (expectedTimestampValue.compareTo(actualTimestampValue) != 0) {
+                    println("expected: $expectedTimestampValue")
+                    println("actual  : $actualTimestampValue")
+                    fail("ion Timestamp value refers to different instant")
+                }
+            }
+        } else {
+            actual as IonStruct
+            val expectedIon = expectedTimestamp.ionValue as IonStruct
+            assertEquals(expectedIon, actual)
+        }
+    }
+    data class TimestampTestCase(
+        val queryInSqlLiteral: String,
+        val queryInIonLiteral: List<String>,
+        val expected: String,
+        val expectedTime: TimestampForValidation? = null,
+        val compileOptionsBlock: CompileOptions.Builder.() -> Unit
+    )
+
+    @ParameterizedTest
+    @ArgumentsSource(ArgumentsForTimeLstampiterals::class)
+    fun testTimestamp(tc: TimestampTestCase) {
+        // run evaluatorTestCase for sql query
+        runEvaluatorTestCase(
+            query = tc.queryInSqlLiteral,
+            expectedResult = tc.expected,
+            expectedResultFormat = ExpectedResultFormat.STRICT,
+            compileOptionsBuilderBlock = tc.compileOptionsBlock,
+            // TODO : Adding support to planner Pipeline
+            target = EvaluatorTestTarget.COMPILER_PIPELINE
+        ) { actualExprValueFromSql ->
+            // ion serialization check
+            val timestampIonValue = actualExprValueFromSql.toIonValue(ION)
+            println("actualExprValueFromSql $actualExprValueFromSql")
+            assertEqualsIonTimestamp(timestampIonValue, tc.expectedTime!!)
+
+            // also, for all the equivalent ion value, the result should be the same
+            tc.queryInIonLiteral.forEach { queryInIon ->
+                runEvaluatorTestCase(
+                    query = queryInIon,
+                    expectedResult = tc.expected,
+                    expectedResultFormat = ExpectedResultFormat.STRICT,
+                    compileOptionsBuilderBlock = tc.compileOptionsBlock,
+                    target = EvaluatorTestTarget.COMPILER_PIPELINE
+                ) { actualExprValueFromIon ->
+                    actualExprValueFromSql.strictEquals(actualExprValueFromIon)
+                }
+            }
+        }
+    }
+
+    private class ArgumentsForTimeLstampiterals : ArgumentsProviderBase() {
+        private val defaultTimezoneOffset = ZoneOffset.UTC
+        private val defaultTzMinutes = defaultTimezoneOffset.totalSeconds / 60
+
+        private fun case(queryInSqlLiteral: String, queryInIonLiteral: List<String>, expected: String, expectedTimestamp: TimestampForValidation? = null) =
+            TimestampTestCase(queryInSqlLiteral, queryInIonLiteral, expected, expectedTimestamp) { }
+
+        private fun case(queryInSqlLiteral: List<String>, queryInIonLiteral: List<String>, expected: String, expectedTimestamp: TimestampForValidation? = null) =
+            queryInSqlLiteral.map {
+                TimestampTestCase(it, queryInIonLiteral, expected, expectedTimestamp) {}
+            }
+        private fun case(queryInSqlLiteral: String, queryInIonLiteral: List<String>, expected: String, expectedTimestamp: TimestampForValidation, compileOptionsBlock: CompileOptions.Builder.() -> Unit) =
+            TimestampTestCase(queryInSqlLiteral, queryInIonLiteral, expected, expectedTimestamp, compileOptionsBlock)
+
+        private fun compileOptionsBlock(hours: Int = 0, minutes: Int = 0): CompileOptions.Builder.() -> Unit = {
+            defaultTimezoneOffset(ZoneOffset.ofHoursMinutes(hours, minutes))
+        }
+
+        override fun getParameters() = listOf(
+            // TIMESTAMP WITHOUT TIME ZONE
+            // Only possible to achieve using PartiQL syntax
+            case(
+                "TIMESTAMP '2023-01-01 00:00:00.0000'", listOf(),
+                "TIMESTAMP '2023-01-01 00:00:00.0000'",
+                TimestampForValidation(2023, 1, 1, 0, 0, BigDecimal("00.0000"), null, null, null, false)
+            ),
+            // TIMESTAMP(p) WITHOUT TIME ZONE
+            //   WITH exact precision
+            case(
+                "TIMESTAMP(4) '2023-01-01 00:00:00.0000'", listOf(),
+                "TIMESTAMP(4) '2023-01-01 00:00:00.0000'",
+                TimestampForValidation(2023, 1, 1, 0, 0, BigDecimal("00.0000"), null, null, null, false)
+            ),
+            // case with more than sufficent precision
+            case(
+                "TIMESTAMP(5) '2023-01-01 00:00:00.0000'", listOf(),
+                "TIMESTAMP(5) '2023-01-01 00:00:00.00000'",
+                TimestampForValidation(2023, 1, 1, 0, 0, BigDecimal("00.00000"), null, null, null, false)
+            ),
+            // case with less than sufficent precision
+            case(
+                "TIMESTAMP(1) '2023-01-01 00:00:00.0000'", listOf(),
+                "TIMESTAMP(1) '2023-01-01 00:00:00.0'",
+                TimestampForValidation(2023, 1, 1, 0, 0, BigDecimal("00.0"), null, null, null, false)
+            ),
+            // case with less than sufficent precision, require rounding
+            case(
+                "TIMESTAMP(1) '2023-01-01 23:59:59.999'", listOf(),
+                "TIMESTAMP(1) '2023-01-02 00:00:00.0'",
+                TimestampForValidation(2023, 1, 2, 0, 0, BigDecimal("00.0"), null, null, null, false)
+            ),
+        ) +
+            // -----------------------------------------------------------------------
+            // TIMESTAMP WITH TIME ZONE
+            // PartiQL support two ways to declare a timestamp with time zone literal
+            // The SQL style "TIMESTAMP '.....{+-}HH:MM'"
+            // Or the PartiQL extension "TIMESTAMP WITH TIME ZONE '.....{+-}HH:MM'
+            // -----------------------------------------------------------------------
+
+            // TIMESTAMP WITH TIME ZONE arbitrary precision
+            // Unknown TIME ZONE
+            case(
+                listOf("TIMESTAMP '2023-01-01 00:00:00.0-00:00'", "TIMESTAMP WITH TIME ZONE '2023-01-01 00:00:00.0-00:00'"),
+                listOf("`2023T`", "`2023-01T`", "`2023-01-01T`", "`2023-01-01T00:00:00.0-00:00`"),
+                "TIMESTAMP WITH TIME ZONE '2023-01-01 00:00:00.0-00:00'",
+                TimestampForValidation(2023, 1, 1, 0, 0, BigDecimal("00.0"), null, null, null, true)
+            ) +
+            // Any pair of arbitrary precision timestamp
+            // should be considered equal if they refer to the same point in Time
+            // Meaning the second fraction precision does not matter.
+            case(
+                listOf("TIMESTAMP '2023-01-01 00:00:00.0000-00:00'", "TIMESTAMP WITH TIME ZONE '2023-01-01 00:00:00.0000-00:00'"),
+                listOf("`2023T`", "`2023-01T`", "`2023-01-01T`", "`2023-01-01T00:00:00.00-00:00`"),
+                "TIMESTAMP WITH TIME ZONE '2023-01-01 00:00:00.0-00:00'",
+                TimestampForValidation(2023, 1, 1, 0, 0, BigDecimal("00.0"), null, null, null, true)
+            ) +
+            // TIMESTAMP WITH TIME ZONE arbitrary precision
+            // KNOWN timezone
+            case(
+                listOf("TIMESTAMP '2023-01-01 00:00:00.0000+00:00'", "TIMESTAMP WITH TIME ZONE '2023-01-01 00:00:00.0000+00:00'"),
+                listOf("`2023-01-01T00:00:00.00+00:00`"),
+                "TIMESTAMP WITH TIME ZONE '2023-01-01 00:00:00.0+00:00'",
+                TimestampForValidation(2023, 1, 1, 0, 0, BigDecimal("00.0"), 0, 0, null, true)
+            ) +
+            // TIMESTAMP WITH TIME ZONE specified precision
+            // UNKNOWN TIMEZONE, no rounding needed
+            case(
+                listOf("TIMESTAMP(5) '2023-01-01 00:00:00.0000-00:00'", "TIMESTAMP(5) WITH TIME ZONE '2023-01-01 00:00:00.0000-00:00'"),
+                listOf(),
+                "TIMESTAMP(5) WITH TIME ZONE '2023-01-01 00:00:00.00000-00:00'",
+                TimestampForValidation(2023, 1, 1, 0, 0, BigDecimal("00.00000"), null, null, 5, true)
+            ) +
+            // TIMESTAMP WITH TIME ZONE arbitrary precision
+            // KNOWN timezone, no rounding needed
+            case(
+                listOf("TIMESTAMP(5) '2023-01-01 00:00:00.0000+00:00'", "TIMESTAMP(5) WITH TIME ZONE '2023-01-01 00:00:00.0000+00:00'"),
+                listOf(),
+                "TIMESTAMP(5) WITH TIME ZONE '2023-01-01 00:00:00.00000+00:00'",
+                TimestampForValidation(2023, 1, 1, 0, 0, BigDecimal("00.00000"), 0, 0, 5, true)
+            ) +
+            // TIMESTAMP WITH TIME ZONE specified precision
+            // UNKNOWN TIMEZONE, rounding needed
+            case(
+                listOf("TIMESTAMP(5) '2023-01-01 23:59:59.999999-00:00'", "TIMESTAMP(5) WITH TIME ZONE '2023-01-01 23:59:59.999999-00:00'"),
+                listOf(),
+                "TIMESTAMP(5) WITH TIME ZONE '2023-01-02 00:00:00.00000-00:00'",
+                TimestampForValidation(2023, 1, 2, 0, 0, BigDecimal("00.00000"), null, null, 5, true)
+            ) +
+            // TIMESTAMP WITH TIME ZONE arbitrary precision
+            // KNOWN timezone, rounding needed
+            case(
+                listOf("TIMESTAMP(5) '2023-01-01 23:59:59.999999+00:00'", "TIMESTAMP(5) WITH TIME ZONE '2023-01-01 23:59:59.999999+00:00'"),
+                listOf(),
+                "TIMESTAMP(5) WITH TIME ZONE '2023-01-02 00:00:00.00000+00:00'",
+                TimestampForValidation(2023, 1, 2, 0, 0, BigDecimal("00.00000"), 0, 0, 5, true)
+            )
+
+        // TODO: Decide what to do with TIMESTAMP WITH TIME ZONE '2023-01-01 00:00:00'
+    }
+
+    // Note
+    // 1) For instance that we need to represent an unknown offset, set tzHour/tzMinutes to null, and hasTimezone to true
+    // 2) For instance that has no time zone, set tzHour/TzMinutes to null and hasTimezone to false
+    // 3) If tzHour is null, then Tz Minute must be null.
+    data class TimestampForValidation(
+        val year: Int,
+        val month: Int,
+        val day: Int,
+        val hour: Int,
+        val minute: Int,
+        val second: BigDecimal,
+        val tzHour: Int?,
+        val tzMinutes: Int?,
+        val precision: Int? = null,
+        val hasTimeZone: Boolean
+    ) {
+        init {
+            if (tzHour == null && tzMinutes != null) {
+                error("Offset hour value is null, but offset minute value is not null, check test cases")
+            }
+        }
+        val ionValue = when (hasTimeZone) {
+            true -> {
+                val sb = StringBuilder()
+                sb.append("${year.toString().padStart(4, '0')}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}")
+                sb.append("T")
+                sb.append("${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}:")
+                val (secondPart, fractionPart) = second.toPlainString().split('.', limit = 2)
+                sb.append("${secondPart.padStart(2, '0')}.$fractionPart")
+                when {
+                    tzHour == null -> sb.append("-00:00")
+                    tzHour >= 0 -> sb.append("+${tzHour.toString().padStart(2, '0')}:${tzMinutes.toString().padStart(2, '0')}")
+                    else -> sb.append("${tzHour.toString().padStart(2, '0')}:${tzMinutes.toString().padStart(2, '0')}")
+                }
+                ionTimestamp(sb.toString()).toIonValue(ION)
+            }
+            false -> {
+                // OR should we do ionTimestamp with annotation?
+                ionStructOf(
+                    field("year", ionInt(year.toLong())),
+                    field("month", ionInt(month.toLong())),
+                    field("day", ionInt(day.toLong())),
+                    field("hour", ionInt(hour.toLong())),
+                    field("minute", ionInt(minute.toLong())),
+                    field("second", ionDecimal(Decimal.valueOf(second))),
+                ).withAnnotations("TIMESTAMP WITHOUT TIME ZONE").toIonValue(ION)
+            }
+        }
+    }
+
     @ParameterizedTest
     @ArgumentsSource(ArgumentsForComparison::class)
     fun testComparison(tc: ComparisonTestCase) {
@@ -157,13 +410,15 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
                 runEvaluatorErrorTestCase(
                     query = tc.query,
                     expectedErrorCode = ErrorCode.EVALUATOR_INVALID_COMPARISION,
-                    expectedPermissiveModeResult = "MISSING"
+                    expectedPermissiveModeResult = "MISSING",
+                    target = EvaluatorTestTarget.COMPILER_PIPELINE
                 )
             else -> {
                 runEvaluatorTestCase(
                     query = tc.query,
                     expectedResult = tc.expected,
-                    expectedResultFormat = ExpectedResultFormat.STRICT
+                    expectedResultFormat = ExpectedResultFormat.STRICT,
+                    target = EvaluatorTestTarget.COMPILER_PIPELINE
                 )
             }
         }
@@ -195,6 +450,16 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
             case("TIME WITH TIME ZONE '12:12:12.123+00:00' = TIME WITH TIME ZONE '12:12:12.123+00:00'", "true"),
             case("TIME WITH TIME ZONE '12:12:12.123-08:00' > TIME WITH TIME ZONE '12:12:12.123+00:00'", "true"),
             case("TIME WITH TIME ZONE '12:12:12.123-08:00' < TIME WITH TIME ZONE '12:12:12.123+00:00'", "false"),
+            case("TIMESTAMP '2012-02-29 12:12:12' = TIMESTAMP '2012-02-29 12:12:12'", "true"),
+            case("TIMESTAMP '2012-02-29 12:12:12.000' = TIMESTAMP '2012-02-29 12:12:12'", "true"),
+            case("TIMESTAMP '2012-02-29 12:12:12.000' < TIMESTAMP '2012-02-29 13:12:12'", "true"),
+            case("TIMESTAMP '2012-02-29 12:12:12.000' > TIMESTAMP '2012-02-29 11:12:12'", "true"),
+            case("TIMESTAMP(1) '2012-02-29 12:12:12.000' = TIMESTAMP '2012-02-29 12:12:12'", "true"),
+            case("TIMESTAMP(5) '2012-02-29 12:12:12.000' = TIMESTAMP '2012-02-29 12:12:12'", "true"),
+            case("TIMESTAMP(4) '2012-02-29 12:12:11.99999' = TIMESTAMP '2012-02-29 12:12:12'", "true"),
+            case("TIMESTAMP '2012-02-29 12:12:12+00:00' = TIMESTAMP WITH TIME ZONE '2012-02-29 11:12:12-01:00'", "true"),
+            case("TIMESTAMP '2012-02-29 12:12:12+00:00' = TIMESTAMP WITH TIME ZONE '2012-02-29 11:12:12-01:00'", "true"),
+            case("TIMESTAMP '2012-02-29 12:12:12+00:00' = TIMESTAMP '2012-02-29 12:12:12-00:00'", "true"),
             case("CAST('12:12:12.123' AS TIME WITH TIME ZONE) = TIME WITH TIME ZONE '12:12:12.123'", "true"),
             case("CAST(TIME WITH TIME ZONE '12:12:12.123' AS TIME) = TIME '12:12:12.123'", "true"),
             // Following are the error cases.

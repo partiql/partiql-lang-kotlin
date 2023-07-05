@@ -30,7 +30,9 @@ class TimestampParserTest {
     @TestCaseName
     fun parseTimestampTest(testCase: ParseTimestampTestCase) {
         val result = TimestampParser.parseTimestamp(testCase.timestamp, testCase.pattern)
-        assertEquals(testCase.expectedResult, result)
+        // Routing those test case to use org.partiql.value.datetime.Timestamp
+        val expected = org.partiql.value.datetime.Timestamp.forIonTimestamp(testCase.expectedResult)
+        assertEquals(expected, result)
     }
 
     // Note: for timestamp fields that may be 1 or 2 digits (i.e. hour, minute, day, month) a single
@@ -40,7 +42,7 @@ class TimestampParserTest {
     fun parametersForParseTimestampTest(): List<ParseTimestampTestCase> =
         listOf(
             // Year
-            // Single "y" symbol parses arbitary year.
+            // Single "y" symbol parses arbitrary year.
             ParseTimestampTestCase("y", "7", Timestamp.valueOf("0007T")),
             ParseTimestampTestCase("y", "0007", Timestamp.valueOf("0007T")),
             ParseTimestampTestCase("y", "2007", Timestamp.valueOf("2007T")),

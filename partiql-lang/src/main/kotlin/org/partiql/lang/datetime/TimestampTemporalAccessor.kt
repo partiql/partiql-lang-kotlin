@@ -14,9 +14,9 @@ private val MILLIS_PER_SECOND = 1_000L
 private val MILLIS_PER_SECOND_BD = BigDecimal.valueOf(MILLIS_PER_SECOND)
 private val NANOS_PER_SECOND_BD = BigDecimal.valueOf(NANOS_PER_SECOND)
 
-private val Timestamp.nanoOfSecond: Long get() = this.epochSecond.multiply(NANOS_PER_SECOND_BD).toLong() % NANOS_PER_SECOND
+private val Timestamp.nanoOfSecond: Long get() = this.second.multiply(NANOS_PER_SECOND_BD).toLong() % NANOS_PER_SECOND
 
-private val Timestamp.milliOfSecond: Long get() = this.epochSecond.multiply(MILLIS_PER_SECOND_BD).toLong() % MILLIS_PER_SECOND
+private val Timestamp.milliOfSecond: Long get() = this.second.multiply(MILLIS_PER_SECOND_BD).toLong() % MILLIS_PER_SECOND
 
 /**
  * This is a workaround to identify the timestamp has no timezone field,
@@ -24,8 +24,8 @@ private val Timestamp.milliOfSecond: Long get() = this.epochSecond.multiply(MILL
  * but the timestamp value is of type timestamp without time zone.
  * In which case we need to convert this to timestamp with timezone using session timezone.
  */
-internal class NoTimeZoneException : Exception()
-internal class TimestampTemporalAccessor(private val ts: Timestamp) : TemporalAccessor {
+internal class NoTimeZoneException(override val message: String?) : Exception()
+class TimestampTemporalAccessor(private val ts: Timestamp) : TemporalAccessor {
 
     /**
      * This method should return true to indicate whether a given TemporalField is supported.
@@ -60,7 +60,7 @@ internal class TimestampTemporalAccessor(private val ts: Timestamp) : TemporalAc
             ChronoField.OFFSET_SECONDS -> when (val timezone = this.ts.timeZone) {
                 TimeZone.UnknownTimeZone -> 0
                 is TimeZone.UtcOffset -> timezone.totalOffsetMinutes * 60L
-                null -> throw NoTimeZoneException()
+                null -> throw NoTimeZoneException("No timezone field")
             }
             else -> throw UnsupportedTemporalTypeException(
                 field.javaClass.name + "." + field.toString() + " not supported"
