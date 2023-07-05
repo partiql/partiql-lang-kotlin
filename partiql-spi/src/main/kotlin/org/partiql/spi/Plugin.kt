@@ -15,10 +15,12 @@
 package org.partiql.spi
 
 import org.partiql.spi.connector.Connector
+import org.partiql.spi.function.PartiQLFunction
 
 /**
  * A singular unit of external logic.
  */
 public interface Plugin {
     public fun getConnectorFactories(): List<Connector.Factory>
+    public fun getFunctions(): List<PartiQLFunction>
 }

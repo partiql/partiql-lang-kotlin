@@ -139,6 +139,8 @@ public abstract class PartiQLValueBaseVisitor<R, C> : PartiQLValueVisitor<R, C> 
         is Int64Value -> visitInt64(v, ctx)
         is Int8Value -> visitInt8(v, ctx)
         is IntValue -> visitInt(v, ctx)
+        is Float32Value -> visitFloat32(v, ctx)
+        is Float64Value -> visitFloat64(v, ctx)
     }
 
     override fun visitInt8(v: Int8Value, ctx: C): R = defaultVisit(v, ctx)

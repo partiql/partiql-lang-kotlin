@@ -193,7 +193,7 @@ public abstract class DecimalValue : NumericValue<BigDecimal>() {
 }
 
 @PartiQLValueExperimental
-public abstract class Float32Value : ScalarValue<Float> {
+public abstract class Float32Value : NumericValue<Float>() {
 
     override val type: PartiQLValueType = PartiQLValueType.FLOAT32
 
@@ -205,7 +205,7 @@ public abstract class Float32Value : ScalarValue<Float> {
 }
 
 @PartiQLValueExperimental
-public abstract class Float64Value : ScalarValue<Double> {
+public abstract class Float64Value : NumericValue<Double>() {
 
     override val type: PartiQLValueType = PartiQLValueType.FLOAT64
 
@@ -830,4 +830,24 @@ public abstract class NullableStructValue<T : PartiQLValue> : PartiQLValue, Coll
     abstract override fun withAnnotations(annotations: Annotations): NullableStructValue<T>
 
     abstract override fun withoutAnnotations(): NullableStructValue<T>
+}
+
+@PartiQLValueExperimental
+public class newString(override val value: String, override val annotations: Annotations = emptyList()) : StringValue() {
+
+    override fun copy(annotations: Annotations): StringValue {
+        return newString(value, annotations)
+    }
+
+    override fun withAnnotations(annotations: Annotations): StringValue {
+        return newString(value, annotations)
+    }
+
+    override fun withoutAnnotations(): StringValue {
+        return newString(value, emptyList())
+    }
+
+    override fun <R, C> accept(visitor: PartiQLValueVisitor<R, C>, ctx: C): R {
+        return visitor.visit(this, ctx)
+    }
 }
