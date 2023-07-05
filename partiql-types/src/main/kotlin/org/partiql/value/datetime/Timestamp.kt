@@ -174,6 +174,10 @@ public data class Timestamp(
                 precision
             )
         }
+
+        @JvmStatic
+        public fun nowZ(): Timestamp =
+            forEpochSecond(BigDecimal.valueOf(System.currentTimeMillis(), 3), TimeZone.UtcOffset.of(0))
     }
 
     /**
@@ -377,13 +381,29 @@ public data class Timestamp(
                 forEpochSecond(this.epochSecond.plus(seconds), timeZone, precision)
         }
 
-    public fun toStringSQL(): String = "${this.year}-${this.month}-${this.day} ${this.hour}:${this.minute}:${this.second}".let {
-        when (val timeZone = this.timeZone) {
-            null -> it
-            TimeZone.UnknownTimeZone -> "$it-00:00"
+    // Others Utils
+    public fun toStringSQL(): String {
+        val year = this.year.toString().padStart(4, '0')
+        val month = this.month.toString().padStart(2, '0')
+        val day = this.day.toString().padStart(2, '0')
+        val hour = this.hour.toString().padStart(2, '0')
+        val minute = this.minute.toString().padStart(2, '0')
+        val second = when (this.second.scale()) {
+            0 -> this.second.toPlainString().padStart(2, '0')
+            else -> {
+                val (whole, fraction) = this.second.toPlainString().split('.')
+                "${whole.padStart(2, '0')}.$fraction"
+            }
+        }
+        val withoutTz = "$year-$month-$day $hour:$minute:$second"
+        return when (val timeZone = this.timeZone) {
+            null -> withoutTz
+            TimeZone.UnknownTimeZone -> "$withoutTz-00:00"
             is TimeZone.UtcOffset -> {
-                if (timeZone.tzHour >= 0) "$it+${timeZone.tzHour}:${timeZone.tzMinute}"
-                else "$it${timeZone.tzHour}:${timeZone.tzMinute.absoluteValue}"
+                val tzHour = timeZone.tzHour.absoluteValue.toString().padStart(2, '0')
+                val tzMinute = timeZone.tzMinute.absoluteValue.toString().padStart(2, '0')
+                if (timeZone.tzHour >= 0) "$withoutTz+$tzHour:$tzMinute"
+                else "$withoutTz-$tzHour:$tzMinute"
             }
         }
     }

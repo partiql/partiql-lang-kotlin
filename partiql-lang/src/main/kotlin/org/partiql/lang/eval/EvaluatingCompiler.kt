@@ -3053,15 +3053,10 @@ internal class EvaluatingCompiler(
                     expr.value.hour.value.toInt(),
                     expr.value.minute.value.toInt(),
                     expr.value.second.decimalValue,
-                    if (expr.value.tzSign != null) {
-                        val totalMinute = expr.value.tzMinutes!!.value + expr.value.tzHour!!.value * 60
-                        if (totalMinute == 0L && expr.value.tzSign!!.text == "-") {
-                            TimeZone.UnknownTimeZone
-                        } else {
-                            TimeZone.UtcOffset.of(totalMinute.toInt())
-                        }
-                    } else {
-                        null
+                    when (val timezone = expr.value.timezone) {
+                        is PartiqlAst.Timezone.UnknownTimezone -> TimeZone.UnknownTimeZone
+                        is PartiqlAst.Timezone.UtcOffset -> TimeZone.UtcOffset.of(timezone.offsetMinutes.value.toInt())
+                        null -> null
                     },
                     expr.value.precision?.value?.toInt()
                 )

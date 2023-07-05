@@ -1,4 +1,4 @@
-package org.partiql.lang.syntax.util
+package org.partiql.lang.datetime
 
 import org.partiql.value.datetime.Date
 import org.partiql.value.datetime.DateTimeException
@@ -52,7 +52,7 @@ internal object DateTimeUtils {
         }
     }
 
-    fun parseTimestamp(timestampString: String): Timestamp {
+    internal fun parseTimestamp(timestampString: String): Timestamp {
         val matcher: Matcher = TIMESTAMP_PATTERN.matcher(timestampString)
         if (!matcher.matches()) throw DateTimeException(
             "Expected TIMESTAMP Format should be in YYYY-MM-DD[\\s|T]hh:mm:ss.ddd+[hh:mm|z], received $timestampString"
@@ -60,6 +60,9 @@ internal object DateTimeUtils {
         val date = parseDateLiteral(matcher.group("date"))
         val time = parseTimeLiteral(matcher.group("time"))
         return Timestamp.forDateTime(date, time)
+    }
+
+    internal fun parseTimestamp(timestampString: String, formatPattern: String) {
     }
 
     private fun getTimeZoneComponent(timezone: String): TimeZone {

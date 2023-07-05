@@ -46,6 +46,7 @@ import org.partiql.lang.ast.IsPathIndexMeta
 import org.partiql.lang.ast.IsValuesExprMeta
 import org.partiql.lang.ast.LegacyLogicalNotMeta
 import org.partiql.lang.ast.SourceLocationMeta
+import org.partiql.lang.datetime.DateTimeUtils
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.metaContainerOf
 import org.partiql.lang.errors.ErrorCode
@@ -54,7 +55,6 @@ import org.partiql.lang.errors.PropertyValueMap
 import org.partiql.lang.eval.EvaluationException
 import org.partiql.lang.eval.time.MAX_PRECISION_FOR_TIME
 import org.partiql.lang.syntax.ParserException
-import org.partiql.lang.syntax.util.DateTimeUtils
 import org.partiql.lang.types.CustomType
 import org.partiql.lang.util.DATE_PATTERN_REGEX
 import org.partiql.lang.util.bigDecimalOf

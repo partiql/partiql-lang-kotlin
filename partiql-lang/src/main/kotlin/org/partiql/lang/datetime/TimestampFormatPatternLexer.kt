@@ -12,7 +12,7 @@
  *  language governing permissions and limitations under the License.
  */
 
-package org.partiql.lang.eval.builtins.timestamp
+package org.partiql.lang.datetime
 
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property

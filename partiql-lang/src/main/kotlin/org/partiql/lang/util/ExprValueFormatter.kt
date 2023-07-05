@@ -23,6 +23,7 @@ interface ExprValueFormatter {
     }
 }
 
+// TODO: Add the ability to tune output date time format (ISO vs SQL)
 class ConfigurableExprValueFormatter(private val config: Configuration) : ExprValueFormatter {
     companion object {
         @JvmStatic

@@ -11,7 +11,6 @@ import org.partiql.lang.eval.builtins.checkInvalidArgType
 import org.partiql.lang.eval.builtins.toSession
 import org.partiql.lang.eval.evaluatortestframework.ExpectedResultFormat
 import org.partiql.lang.util.ArgumentsProviderBase
-import org.partiql.lang.util.propertyValueMapOf
 import org.partiql.types.StaticType
 
 class DateAddEvaluationTest : EvaluatorTestBase() {
@@ -28,7 +27,8 @@ class DateAddEvaluationTest : EvaluatorTestBase() {
         )
 
     class DateAddPassCases : ArgumentsProviderBase() {
-        override fun getParameters() = ionTestCases + partiQLTimestampWithTimeZone + partiQLTimestampWithoutTimeZone
+        override fun getParameters() =
+            ionTestCases + partiQLTimestampWithTimeZone + partiQLTimestampWithoutTimeZone + addDecimalSecondTest
 
         // All the following tests case has a ion literal for timestamp parameter in date add function
         private val ionTestCases = listOf(
@@ -397,12 +397,23 @@ class DateAddEvaluationTest : EvaluatorTestBase() {
             ExprFunctionTestCase("date_add(minute, -1, TIMESTAMP '2017-02-03T04:05:06.007')", "TIMESTAMP '2017-02-03T04:04:06.007'"),
             ExprFunctionTestCase("date_add(second, -1, TIMESTAMP '2017-02-03T04:05:06.007')", "TIMESTAMP '2017-02-03T04:05:05.007'")
         )
+
+        private val addDecimalSecondTest = listOf(
+            ExprFunctionTestCase("date_add(second, 0.000000000000001, TIMESTAMP '2017-02-03T04:05:06.007')", "TIMESTAMP '2016-02-03T04:05:06.007000000000001'"),
+            ExprFunctionTestCase("date_add(second, -0.000000000000001, TIMESTAMP '2017-02-03T04:05:06.007')", "TIMESTAMP '2017-01-03T04:05:06.006999999999999'"),
+            ExprFunctionTestCase("date_add(second, 0.000000000000001, TIMESTAMP '2017-02-03T04:05:06.007+00:00')", "TIMESTAMP '2016-02-03T04:05:06.007000000000001+00:00'"),
+            ExprFunctionTestCase("date_add(second, -0.000000000000001, TIMESTAMP '2017-02-03T04:05:06.007-00:00')", "TIMESTAMP '2017-01-03T04:05:06.006999999999999-00:00'"),
+            ExprFunctionTestCase("date_add(second, 0.000000000000001, `2017-02-03T04:05:06.007`)", "TIMESTAMP '2016-02-03T04:05:06.007000000000001-00:00'"),
+            ExprFunctionTestCase("date_add(second, -0.000000000000001, `2017-02-03T04:05:06.007`)", "TIMESTAMP '2017-01-03T04:05:06.006999999999999-00:00'"),
+        )
     }
 
     // Error test cases: Invalid arguments
+    // TODO : Error message is not asserted, may as well remove it
     data class InvalidArgTestCase(
         val query: String,
-        val message: String
+        val expectedErrorCode: ErrorCode,
+        val message: String? = null
     )
 
     @ParameterizedTest
@@ -410,8 +421,7 @@ class DateAddEvaluationTest : EvaluatorTestBase() {
     fun dateAddInvalidArgumentTests(testCase: InvalidArgTestCase) =
         runEvaluatorErrorTestCase(
             testCase.query,
-            ErrorCode.EVALUATOR_TIMESTAMP_OUT_OF_BOUNDS,
-            expectedErrorContext = propertyValueMapOf(1, 1),
+            testCase.expectedErrorCode,
             expectedPermissiveModeResult = "MISSING"
         )
 
@@ -419,19 +429,43 @@ class DateAddEvaluationTest : EvaluatorTestBase() {
         override fun getParameters(): List<Any> = listOf(
             InvalidArgTestCase(
                 "date_add(year, 10000, `2017-06-27T`)",
+                ErrorCode.EVALUATOR_TIMESTAMP_OUT_OF_BOUNDS,
                 "Year 12017 must be between 1 and 9999 inclusive"
             ),
             InvalidArgTestCase(
                 "date_add(year, -10000, `2000-06-27T`)",
+                ErrorCode.EVALUATOR_TIMESTAMP_OUT_OF_BOUNDS,
                 "Year -8001 must be between 1 and 9999 inclusive"
             ),
             InvalidArgTestCase(
                 "date_add(month, 10000*12, `2017-06-27T`)",
+                ErrorCode.EVALUATOR_TIMESTAMP_OUT_OF_BOUNDS,
                 "Year 12017 must be between 1 and 9999 inclusive"
             ),
             InvalidArgTestCase(
                 "date_add(month, -10000*12, `2000-06-27T`)",
+                ErrorCode.EVALUATOR_TIMESTAMP_OUT_OF_BOUNDS,
                 "Year -8001 must be between 1 and 9999 inclusive"
+            ),
+            InvalidArgTestCase(
+                "date_add(year, 0.1, `2017-06-27T`)",
+                ErrorCode.EVALUATOR_INCORRECT_TYPE_OF_ARGUMENTS_TO_FUNC_CALL
+            ),
+            InvalidArgTestCase(
+                "date_add(month, 0.1, `2017-06-27T`)",
+                ErrorCode.EVALUATOR_INCORRECT_TYPE_OF_ARGUMENTS_TO_FUNC_CALL
+            ),
+            InvalidArgTestCase(
+                "date_add(day, 0.1, `2017-06-27T`)",
+                ErrorCode.EVALUATOR_INCORRECT_TYPE_OF_ARGUMENTS_TO_FUNC_CALL
+            ),
+            InvalidArgTestCase(
+                "date_add(hour, 0.1, `2017-06-27T`)",
+                ErrorCode.EVALUATOR_INCORRECT_TYPE_OF_ARGUMENTS_TO_FUNC_CALL
+            ),
+            InvalidArgTestCase(
+                "date_add(minute, 0.1, `2017-06-27T`)",
+                ErrorCode.EVALUATOR_INCORRECT_TYPE_OF_ARGUMENTS_TO_FUNC_CALL,
             )
         )
     }

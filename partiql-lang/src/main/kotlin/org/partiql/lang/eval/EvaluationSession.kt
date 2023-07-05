@@ -15,6 +15,7 @@
 package org.partiql.lang.eval
 
 import com.amazon.ion.Timestamp
+import org.partiql.value.datetime.TimeZone
 
 /**
  * Evaluation Session. Holds user defined constants used during evaluation. Each value has a default value that can
@@ -31,7 +32,9 @@ class EvaluationSession private constructor(
     val globals: Bindings<ExprValue>,
     val parameters: List<ExprValue>,
     val context: Map<String, Any>,
-    val now: Timestamp
+    val now: Timestamp,
+    val nowZ: org.partiql.value.datetime.Timestamp,
+    val timeZone: TimeZone
 ) {
 
     companion object {
@@ -62,8 +65,25 @@ class EvaluationSession private constructor(
 
         // using null to postpone defaulting to when the session is created
         private var now: Timestamp? = null
+        @Deprecated(
+            message = "now is deprecated",
+            replaceWith = ReplaceWith("nowZ()")
+        )
         fun now(value: Timestamp): Builder {
             now = value.toUtc()
+            return this
+        }
+
+        private var nowZ: org.partiql.value.datetime.Timestamp? = null
+        fun nowZ(value: org.partiql.value.datetime.Timestamp): Builder {
+            nowZ = value.atTimeZone(TimeZone.UtcOffset.of(0))
+            return this
+        }
+
+        private var timeZone: TimeZone? = null
+
+        fun timeZone(value: TimeZone): Builder {
+            timeZone = value
             return this
         }
 
@@ -93,6 +113,8 @@ class EvaluationSession private constructor(
 
         fun build(): EvaluationSession = EvaluationSession(
             now = now ?: Timestamp.nowZ(),
+            nowZ = nowZ ?: org.partiql.value.datetime.Timestamp.nowZ(),
+            timeZone = timeZone ?: TimeZone.UtcOffset.of(0),
             parameters = parameters,
             context = contextVariables,
             globals = globals

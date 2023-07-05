@@ -31,8 +31,10 @@ Thank you to all who have contributed!
 ### Added
 - Adds `org.partiql.value` (experimental) package for reading/writing PartiQL
   values
-- Adds PartiQL's Timestamp Data Model. 
+- Adds PartiQL's Timestamp Data Model.
 - Adds support for Timestamp constructor call in Parser. 
+- Deprecated use of Ion Based Timestamp
+- Second Field of DateTime Type now supports fraction second in `date_add`, `date_diff`,
 
 ### Changed
 

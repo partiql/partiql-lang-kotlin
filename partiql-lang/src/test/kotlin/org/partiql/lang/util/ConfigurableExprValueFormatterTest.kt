@@ -58,7 +58,6 @@ class ConfigurableExprValueFormatterTest {
 
         // Ion Literals
         "`1e0`" to "`1e0`",
-        "`2019T`" to "`2019T`",
         "`symbol`" to "`symbol`",
         "`{{\"clob value\"}}`" to "`{{\"clob value\"}}`",
         "`{{VG8gaW5maW5pdHkuLi4gYW5kIGJleW9uZCE=}}`" to "`{{VG8gaW5maW5pdHkuLi4gYW5kIGJleW9uZCE=}}`",
@@ -67,9 +66,14 @@ class ConfigurableExprValueFormatterTest {
         // EmptyContainers
         "[]" to "[]",
         "<<>>" to "<<>>",
-//        TODO: This should succeed.
-//         Check https://github.com/partiql/partiql-lang-kotlin/issues/386.
-//        "DATE '2021-02-28'" to "DATE '2021-02-28'",
+
+        // Date time
+        "DATE '2021-02-28'" to "DATE '2021-02-28'",
+        "TIME '00:00:00.00'" to "TIME '00:00:00.00'",
+        "TIMESTAMP '2021-02-28 00:00:00'" to "TIMESTAMP '2021-02-28 00:00:00'",
+        "TIMESTAMP '2021-02-28T00:00:00'" to "TIMESTAMP '2021-02-28 00:00:00'",
+        "TIMESTAMP '2021-02-28T00:00:00Z'" to "TIMESTAMP '2021-02-28 00:00:00+00:00'",
+        "`2019T`" to "TIMESTAMP '2019-01-01-00:00:00-00:00'",
         "{}" to "{}"
     ).map { listOf(it.first, it.second) }
 

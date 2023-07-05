@@ -1,6 +1,7 @@
-package org.partiql.lang.eval.builtins.timestamp
+package org.partiql.lang.datetime
 
-import com.amazon.ion.Timestamp
+import org.partiql.value.datetime.TimeZone
+import org.partiql.value.datetime.Timestamp
 import java.math.BigDecimal
 import java.time.temporal.ChronoField
 import java.time.temporal.IsoFields
@@ -13,11 +14,18 @@ private val MILLIS_PER_SECOND = 1_000L
 private val MILLIS_PER_SECOND_BD = BigDecimal.valueOf(MILLIS_PER_SECOND)
 private val NANOS_PER_SECOND_BD = BigDecimal.valueOf(NANOS_PER_SECOND)
 
-private val Timestamp.nanoOfSecond: Long get() = this.decimalSecond.multiply(NANOS_PER_SECOND_BD).toLong() % NANOS_PER_SECOND
+private val Timestamp.nanoOfSecond: Long get() = this.epochSecond.multiply(NANOS_PER_SECOND_BD).toLong() % NANOS_PER_SECOND
 
-private val Timestamp.milliOfSecond: Long get() = this.decimalSecond.multiply(MILLIS_PER_SECOND_BD).toLong() % MILLIS_PER_SECOND
+private val Timestamp.milliOfSecond: Long get() = this.epochSecond.multiply(MILLIS_PER_SECOND_BD).toLong() % MILLIS_PER_SECOND
 
-class TimestampTemporalAccessor(val ts: Timestamp) : TemporalAccessor {
+/**
+ * This is a workaround to identify the timestamp has no timezone field,
+ * if this is thrown, it must be the formatter is trying to access the timezone field
+ * but the timestamp value is of type timestamp without time zone.
+ * In which case we need to convert this to timestamp with timezone using session timezone.
+ */
+internal class NoTimeZoneException : Exception()
+internal class TimestampTemporalAccessor(private val ts: Timestamp) : TemporalAccessor {
 
     /**
      * This method should return true to indicate whether a given TemporalField is supported.
@@ -49,7 +57,11 @@ class TimestampTemporalAccessor(val ts: Timestamp) : TemporalAccessor {
                 val hourOfAmPm = ts.hour.toLong() % 12L
                 if (hourOfAmPm == 0L) 12 else hourOfAmPm
             }
-            ChronoField.OFFSET_SECONDS -> if (ts.localOffset == null) 0 else ts.localOffset * 60L
+            ChronoField.OFFSET_SECONDS -> when (val timezone = this.ts.timeZone) {
+                TimeZone.UnknownTimeZone -> 0
+                is TimeZone.UtcOffset -> timezone.totalOffsetMinutes * 60L
+                null -> throw NoTimeZoneException()
+            }
             else -> throw UnsupportedTemporalTypeException(
                 field.javaClass.name + "." + field.toString() + " not supported"
             )

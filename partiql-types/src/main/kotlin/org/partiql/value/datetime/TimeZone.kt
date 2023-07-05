@@ -54,7 +54,7 @@ public sealed class TimeZone {
             @JvmStatic
             @Throws(DateTimeException::class)
             public fun of(totalOffsetMinutes: Int): UtcOffset {
-                if (abs(totalOffsetMinutes) > MAX_TOTAL_OFFSET_MINUTES) throw DateTimeFormatException("Expect total offset Minutes to be less than or equal to $MAX_TOTAL_OFFSET_MINUTES, but received $totalOffsetMinutes")
+                if (abs(totalOffsetMinutes) > MAX_TOTAL_OFFSET_MINUTES) throw DateTimeException("Expect total offset Minutes to be less than or equal to $MAX_TOTAL_OFFSET_MINUTES, but received $totalOffsetMinutes")
                 return UtcOffset(totalOffsetMinutes)
             }
         }

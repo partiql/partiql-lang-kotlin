@@ -12,14 +12,14 @@
  *  language governing permissions and limitations under the License.
  */
 
-package org.partiql.lang.eval.builtins.timestamp
+package org.partiql.lang.datetime
 
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.eval.EvaluationException
 import org.partiql.lang.util.propertyValueMapOf
 
-internal class TimestampFormatPatternParser {
+internal object TimestampFormatPatternParser {
 
     fun parse(formatPatternString: String): FormatPattern {
         val lexer = TimestampFormatPatternLexer()
