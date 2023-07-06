@@ -229,8 +229,8 @@ val b = Identifier.Symbol.builder()
          .caseSensitivity(Identifier.CaseSensitivity.INSENSITIVE)
          .build(myFactory) // nice!
 
-assert(b.compareTo(a)) // TRUE
-assert(a.compareTo(b)) // FALSE !! consider always using the same type of factory
+assert(b == a) // TRUE
+assert(a == b) // !! FALSE !! consider always using the same type of factory
 ----
 
 == Visitor and Rewriter
@@ -260,15 +260,20 @@ For example, let's implement a `toString(case: Case)` function on some basic nod
 
 [source,kotlin]
 ----
-// Private implementation
-object ToString :  AstBaseVisitor<String?, MutableList<String>>() {
+//
+// Usage:
+//  node.accept(ToString, Case.UPPER) // ~ node.toString(Case.UPPER)
+//
+object ToString :  AstBaseVisitor<String, Case>() {
 
-    override fun defaultVisit(node: PlanNode, ctx: MutableList<String>): String? {
-        node.children.forEach { child -> child.accept(this, ctx) } // traverse
-        defaultReturn(this, ctx)?.let { ctx.add(it) }
+    override fun defaultVisit(node: AstNode, ctx: Case) = defaultReturn(node, ctx)
+
+    override fun defaultReturn(node: AstNode, ctx: Case): String = when (ctx) {
+        Case.UPPER -> node::class.simpleName.uppercase()
+        Case.LOWER -> node::class.simpleName.lowercase()
+        Case.PASCAL -> node::class.simpleName
+        Case.SNAKE -> snakeCaseHelper(node::class.simpleName)
     }
-
-    override fun defaultReturn(node: AstNode, ctx: MutableList<String>) = node::class.simpleName
 
     // Any other overrides you want!
 }
@@ -297,7 +302,7 @@ object AstClassNameCollector  {
     // Private implementation
     private object ToString :  AstBaseVisitor<String?, MutableList<String>>() {
 
-        override fun defaultVisit(node: PlanNode, ctx: MutableList<String>): String? {
+        override fun defaultVisit(node: AstNode, ctx: MutableList<String>): String? {
             node.children.forEach { child -> child.accept(this, ctx) } // traverse
             defaultReturn(this, ctx)?.let { ctx.add(it) }
         }
