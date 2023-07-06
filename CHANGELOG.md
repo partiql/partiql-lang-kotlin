@@ -32,9 +32,15 @@ Thank you to all who have contributed!
 - Adds `org.partiql.value` (experimental) package for reading/writing PartiQL
   values
 - Adds function overloading to the `CompilerPipeline` and experimental `PartiQLCompilerPipeline`.
+- Adds `EvaluationSessionConnector` class to convert `EvaluationSession` to `ConnectorSession`.
+  - Adds `getFunctions()` to the `org.partiql.spi.Plugin` and `org.partiql.plugins.mockdb.localPlugin`.
+- Adds visitor transformations for `Float32Value` and `Float64Value` in `PartiQLValueVisitor`.
+- **Breaking**: Adds `ServiceLoaderUtil` class to load pluggable functions into CLI.
+- **Breaking**: Adds `PartiQLFunction` interface.
 
 ### Changed
 - Standardizes `org/partiql/cli/functions/QueryDDB` and other built-in functions by the new `ExprFunction` format.
+- Changes the parent class of `Float32Value` and `Float64Value` from `ScalarValue<>` to `NumericValue<>` in `PartiQLValue`.
 - **Breaking**: Redefines `org/partiql/lang/eval/ExprFunctionkt.call()` method by only invoking `callWithRequired` function.
 - **Breaking**: Redefines `org/partiql/lang/eval/builtins/DynamicLookupExprFunction` by merging `variadicParameter` into `requiredParameters` as a `StaticType.LIST`. `callWithVariadic` is now replaced by`callWithRequired`.
 - **Breaking**: Modifies `functions` property of `CompilerPipeline`, `StaticTypeInferencer` and  `StepContext` to be a `List` and not a `Map`.
