@@ -16,7 +16,7 @@ import java.io.PrintStream
  *
  * This implementation of [ExprValue] represents a single row within a comma-separated value (CSV) file.
  *
- * The first column in the row will be assigned the name `_1`, the second `_2` and so on.
+ * The first column in the row will be assigned the name `_1`, the decimalSecond `_2` and so on.
  */
 private class CsvRowExprValue(private val rowString: String) : BaseExprValue() {
 

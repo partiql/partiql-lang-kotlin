@@ -374,7 +374,7 @@ internal abstract class ThunkFactory<TEnv>(
      * Similar to [thunkFold] but intended for comparison operators, i.e. `=`, `>`, `>=`, `<`, `<=`.
      *
      * The first argument of [op] is always the value of `argThunks[n]` and
-     * the second is always `argThunks[n + 1]` where `n` is 0 to `argThunks.size - 2`.
+     * the decimalSecond is always `argThunks[n + 1]` where `n` is 0 to `argThunks.size - 2`.
      *
      * - If [op] returns false, the thunk short circuits and the result of the thunk becomes `false`.
      * - for [TypingMode.LEGACY], the first unknown operand short-circuits, returning `NULL`.

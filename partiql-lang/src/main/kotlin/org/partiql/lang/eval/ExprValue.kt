@@ -410,7 +410,7 @@ interface ExprValue : Iterable<ExprValue>, Faceted {
                 value is IonStruct && value.hasTypeAnnotation(TIME_ANNOTATION) -> { // TIME
                     val hourValue = (value["hour"] as IonInt).intValue()
                     val minuteValue = (value["minute"] as IonInt).intValue()
-                    val secondInDecimal = (value["second"] as IonDecimal).decimalValue()
+                    val secondInDecimal = (value["decimalSecond"] as IonDecimal).decimalValue()
                     val secondValue = secondInDecimal.toInt()
                     val nanoValue = secondInDecimal.remainder(BigDecimal.ONE).multiply(NANOS_PER_SECOND.toBigDecimal()).toInt()
                     val timeZoneHourValue = (value["timezone_hour"] as IonInt).intValue()
@@ -423,7 +423,7 @@ interface ExprValue : Iterable<ExprValue>, Faceted {
                     val day = (value["day"] as IonInt).intValue()
                     val hour = (value["hour"] as IonInt).intValue()
                     val minute = (value["minute"] as IonInt).intValue()
-                    val second = (value["second"] as IonDecimal).decimalValue()
+                    val second = (value["decimalSecond"] as IonDecimal).decimalValue()
                     newTimestamp(
                         org.partiql.value.datetime.Timestamp.of(
                             year, month, day,

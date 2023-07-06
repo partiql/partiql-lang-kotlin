@@ -19,7 +19,7 @@ import org.partiql.lang.eval.visitors.GroupByItemAliasVisitorTransform
 /**
  * This is a special [ExprValue] just for group keys.
  *
- * It derives from [StructExprValue] and adds a second set of bindings for the "unique name" assigned to
+ * It derives from [StructExprValue] and adds a decimalSecond set of bindings for the "unique name" assigned to
  * group by expressions.  See [GroupByItemAliasVisitorTransform] and other uses of
  * [org.partiql.lang.ast.UniqueNameMeta].
  */

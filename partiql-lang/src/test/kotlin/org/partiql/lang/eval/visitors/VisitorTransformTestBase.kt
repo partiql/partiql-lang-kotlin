@@ -69,8 +69,8 @@ abstract class VisitorTransformTestBase : PartiQLParserTestBase() {
     }
 
     /**
-     * Similar to [runTest], but executes the transform again a second time on the result of the first transform
-     * and ensures that the second result is the same as the first.  This ensures that the transform is idempotent.
+     * Similar to [runTest], but executes the transform again a decimalSecond time on the result of the first transform
+     * and ensures that the decimalSecond result is the same as the first.  This ensures that the transform is idempotent.
      */
     protected fun runTestForIdempotentTransform(tc: TransformTestCase, transform: PartiqlAst.VisitorTransform) {
 
@@ -79,10 +79,10 @@ abstract class VisitorTransformTestBase : PartiQLParserTestBase() {
         assertEquals("The expected AST must match the transformed AST", tc.expected, actualAst)
 
         // Idempotent transforms should have the same result if the result of the first pass is passed into a
-        // second pass.
+        // decimalSecond pass.
         val anotherActualAst = transform.transformStatement(actualAst)
         assertEquals(
-            "The second pass of ${transform.javaClass.name} pass should not change the AST",
+            "The decimalSecond pass of ${transform.javaClass.name} pass should not change the AST",
             actualAst,
             anotherActualAst
         )

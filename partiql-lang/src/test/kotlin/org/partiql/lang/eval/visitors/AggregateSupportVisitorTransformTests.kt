@@ -47,7 +47,7 @@ class AggregateSupportVisitorTransformTests : VisitorTransformTestBase() {
      * [PartiqlAst.Expr.CallAgg]s.
      *
      * Each of the created [PartiqlAst.Expr.CallAgg]s uses the function name provided by [callAggs]'s first argument
-     * and [AggregateRegisterIdMeta] passed as the second argument of the pair.
+     * and [AggregateRegisterIdMeta] passed as the decimalSecond argument of the pair.
      */
     private fun createCallAggMetas(callAggs: List<Pair<String, Int>>): MetaContainer =
         metaContainerOf(
@@ -263,7 +263,7 @@ class AggregateSupportVisitorTransformTests : VisitorTransformTestBase() {
 
         assertSameCallAggMetas(outerExpectedMetas, outerActualMetas)
 
-        // inner select query's second item has 2 aggregate calls
+        // inner select query's decimalSecond item has 2 aggregate calls
         val innerSelectList = (outerSelect.project as PartiqlAst.Projection.ProjectList).projectItems
         val innerSelect = (innerSelectList[1] as PartiqlAst.ProjectItem.ProjectExpr).expr as PartiqlAst.Expr.Select
         val innerActualMetas = innerSelect.metas

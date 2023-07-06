@@ -34,8 +34,8 @@ class TimestampTemporalAccessorRandomizedTests {
 
             // Note:  S and n both use ChronoField.NANO_OF_SECOND so we cannot remove support for one without
             // removing support for the other AFAIK.
-            'S', // fraction of second, in milliseconds (0-999)
-            'n', // Nano of second (0-999,999,999)
+            'S', // fraction of decimalSecond, in milliseconds (0-999)
+            'n', // Nano of decimalSecond (0-999,999,999)
 
             // Note: Same with X, x O and Z for ChronoField.OFFSET_SECONDS
             'X', // Zone offset or Z for zero: e.g. "-08", "-0830", "-08:30", "-083000", "-08:30:00" Note: the seconds portion will always be "00" because Ion-Timestamp offset is specified in minutes

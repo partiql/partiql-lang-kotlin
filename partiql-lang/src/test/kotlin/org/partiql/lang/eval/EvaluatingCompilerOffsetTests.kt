@@ -41,7 +41,7 @@ class EvaluatingCompilerOffsetTests : EvaluatorTestBase() {
                 "SELECT * FROM foo OFFSET ${Long.MAX_VALUE}",
                 "<<>>"
             ),
-            // LIMIT 1 and OFFSET 1 should return the second result
+            // LIMIT 1 and OFFSET 1 should return the decimalSecond result
             EvaluatorTestCase(
                 "SELECT * FROM foo LIMIT 1 OFFSET 1",
                 "<<{'a': 2}>>"

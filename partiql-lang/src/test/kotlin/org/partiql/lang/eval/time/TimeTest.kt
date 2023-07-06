@@ -148,7 +148,7 @@ class TimeTest {
             tz_min = 300,
             expectedErrorCode = ErrorCode.EVALUATOR_TIME_FIELD_OUT_OF_RANGE
         ),
-        // second value out of range
+        // decimalSecond value out of range
         case(
             hour = 23,
             min = 23,

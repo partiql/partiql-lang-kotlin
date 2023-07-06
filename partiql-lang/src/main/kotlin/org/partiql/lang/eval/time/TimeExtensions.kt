@@ -56,7 +56,7 @@ internal fun getPrecisionFromTimeString(timeString: String): Int {
             false
         )
     }
-    // Note that the [genericTimeRegex] has a group to extract the fractional part of the second.
+    // Note that the [genericTimeRegex] has a group to extract the fractional part of the decimalSecond.
     val fraction = matcher.group(1)?.removePrefix(".")
     return fraction?.length ?: 0
 }

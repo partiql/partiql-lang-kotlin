@@ -205,7 +205,7 @@ class TimestampTest {
                 ionTimestamp("1970-01-01T00:00:00Z").timestampValue
             ),
             SuccessCaseWithKnownTimeZone(
-                "Unix Zero with fraction second",
+                "Unix Zero with fraction decimalSecond",
                 1970, 1, 1, 0, 0, BigDecimal.valueOf(0, 3), 0, 0, null,
                 Timestamp.forDateTime(
                     Date.of(1970, 1, 1),
@@ -925,7 +925,7 @@ class TimestampTest {
             // time
             FailedTest("hour 3 digits") { Time.of(123, 1, BigDecimal.ZERO, null, null) },
             FailedTest("minute 3 digits") { Time.of(12, 111, BigDecimal.ZERO, null, null) },
-            FailedTest("whole second large than 2") { Time.of(12, 1, BigDecimal.valueOf(1000L, 1), null, null) },
+            FailedTest("whole decimalSecond large than 2") { Time.of(12, 1, BigDecimal.valueOf(1000L, 1), null, null) },
             FailedTest("Timezone hour more than 3 digits") { Time.of(12, 1, BigDecimal.ZERO, TimeZone.UtcOffset.of(100, 0), null) },
             FailedTest("Time zone minutes more than 3 digits") { Time.of(12, 1, BigDecimal.ZERO, TimeZone.UtcOffset.of(1, 100), null) },
             FailedTest("Hour more than 24") { Time.of(25, 1, BigDecimal.ZERO, null, null) },

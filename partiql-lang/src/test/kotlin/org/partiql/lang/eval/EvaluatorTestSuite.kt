@@ -1390,8 +1390,8 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
         test(
             "dateTimePartsAsVariableNames",
             """
-            SELECT VALUE [year, month, day, hour, minute, second]
-            FROM 1968 AS year, 4 AS month, 3 as day, 12 as hour, 31 as minute, 59 as second 
+            SELECT VALUE [year, month, day, hour, minute, decimalSecond]
+            FROM 1968 AS year, 4 AS month, 3 as day, 12 as hour, 31 as minute, 59 as decimalSecond 
             """,
             "$BAG_ANNOTATION::[[1968, 4, 3, 12, 31, 59]]"
         )
@@ -1400,8 +1400,8 @@ internal val EVALUATOR_TEST_SUITE: IonResultTestSuite = defineTestSuite {
         test(
             "dateTimePartsAsStructFieldNames",
             """
-            SELECT VALUE [x.year, x.month, x.day, x.hour, x.minute, x.second]
-            FROM << { 'year': 1968, 'month': 4, 'day': 3, 'hour': 12, 'minute': 31, 'second': 59 }>> AS x
+            SELECT VALUE [x.year, x.month, x.day, x.hour, x.minute, x.decimalSecond]
+            FROM << { 'year': 1968, 'month': 4, 'day': 3, 'hour': 12, 'minute': 31, 'decimalSecond': 59 }>> AS x
             """,
             "$BAG_ANNOTATION::[[1968, 4, 3, 12, 31, 59]]"
         )

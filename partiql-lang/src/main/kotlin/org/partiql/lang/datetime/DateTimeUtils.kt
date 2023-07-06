@@ -1,5 +1,6 @@
 package org.partiql.lang.datetime
 
+import org.partiql.lang.eval.ExprValue
 import org.partiql.value.datetime.Date
 import org.partiql.value.datetime.DateTimeException
 import org.partiql.value.datetime.Time
@@ -11,7 +12,7 @@ import java.util.regex.Pattern
 
 internal object DateTimeUtils {
     private val DATE_PATTERN: Pattern = Pattern.compile("(?<year>\\d{4,})-(?<month>\\d{2,})-(?<day>\\d{2,})")
-    private val TIME_PATTERN: Pattern = Pattern.compile("(?<hour>\\d{2,}):(?<minute>\\d{2,}):(?<second>\\d{2,})(?:\\.(?<fraction>\\d+))?\\s*(?<timezone>([+-]\\d\\d:\\d\\d)|(?<utc>[Zz]))?")
+    private val TIME_PATTERN: Pattern = Pattern.compile("(?<hour>\\d{2,}):(?<minute>\\d{2,}):(?<decimalSecond>\\d{2,})(?:\\.(?<fraction>\\d+))?\\s*(?<timezone>([+-]\\d\\d:\\d\\d)|(?<utc>[Zz]))?")
     private val SQL_TIMESTAMP_DATE_TIME_DELIMITER = "\\s+".toRegex()
     private val RFC8889_TIMESTAMP_DATE_TIME_DELIMITER = "[Tt]".toRegex()
     private val TIMESTAMP_PATTERN = "(?<date>$DATE_PATTERN)($SQL_TIMESTAMP_DATE_TIME_DELIMITER|$RFC8889_TIMESTAMP_DATE_TIME_DELIMITER)(?<time>$TIME_PATTERN)".toRegex().toPattern()
@@ -35,7 +36,7 @@ internal object DateTimeUtils {
         try {
             val hour = matcher.group("hour").toInt()
             val minute = matcher.group("minute").toInt()
-            val wholeSecond = matcher.group("second").toLong()
+            val wholeSecond = matcher.group("decimalSecond").toLong()
             val fractionPart = matcher.group("fraction")?.let { BigDecimal(".$it") } ?: BigDecimal.ZERO
             val second = BigDecimal.valueOf(wholeSecond).add(fractionPart)
             val timeZoneString = matcher.group("timezone") ?: null
@@ -60,9 +61,6 @@ internal object DateTimeUtils {
         val date = parseDateLiteral(matcher.group("date"))
         val time = parseTimeLiteral(matcher.group("time"))
         return Timestamp.forDateTime(date, time)
-    }
-
-    internal fun parseTimestamp(timestampString: String, formatPattern: String) {
     }
 
     private fun getTimeZoneComponent(timezone: String): TimeZone {

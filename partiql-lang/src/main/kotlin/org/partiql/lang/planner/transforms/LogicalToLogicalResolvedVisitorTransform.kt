@@ -222,7 +222,7 @@ internal data class LogicalToLogicalResolvedVisitorTransform(
                     // combined with a map... The accumulator is a Pair<List<PartiqlLogicalResolved.LetBinding>,
                     // LocalScope>.
                     // accumulator.first:  the current list of let bindings that have been transformed so far
-                    // accumulator.second:  an instance of LocalScope that includes all the variables defined up to
+                    // accumulator.decimalSecond:  an instance of LocalScope that includes all the variables defined up to
                     // this point, not including the current let binding.
                     val initial = emptyList<PartiqlLogicalResolved.LetBinding>() to thiz.inputScope
                     val (newBindings: List<PartiqlLogicalResolved.LetBinding>, _: LocalScope) =

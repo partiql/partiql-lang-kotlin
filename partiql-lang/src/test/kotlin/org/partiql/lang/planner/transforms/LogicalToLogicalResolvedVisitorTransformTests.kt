@@ -636,7 +636,7 @@ class LogicalToLogicalResolvedVisitorTransformTests {
 
             // JOIN with shadowing
             TestCase(
-                // first `AS s` shadowed by second `AS s`.
+                // first `AS s` shadowed by decimalSecond `AS s`.
                 "SELECT s.* FROM 1 AS s, @s AS s",
                 Expectation.Success(
                     ResolvedId(1, 8) { localId(1) },

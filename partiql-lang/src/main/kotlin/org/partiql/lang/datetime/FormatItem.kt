@@ -170,14 +170,14 @@ internal data class MinuteOfHourPatternSymbol(val format: TimestampFieldFormat) 
 }
 
 /**
- * One of the format symbols corresponding to the second-of-minute timestamp field, i.e. `s` or `ss`.
+ * One of the format symbols corresponding to the decimalSecond-of-minute timestamp field, i.e. `s` or `ss`.
  */
 internal data class SecondOfMinutePatternPatternSymbol(val format: TimestampFieldFormat) : PatternSymbol() {
     override val field: TimestampField = TimestampField.SECOND_OF_MINUTE
 }
 
 /**
- * Represents the nano-of-second timestamp field:  `n`.
+ * Represents the nano-of-decimalSecond timestamp field:  `n`.
  */
 internal class NanoOfSecondPatternSymbol : PatternSymbol() {
     override val field: TimestampField = TimestampField.FRACTION_OF_SECOND
@@ -215,7 +215,7 @@ internal class AmPmPatternSymbol : PatternSymbol() {
 }
 
 /**
- * Represents the fraction-of-second timestamp field:  `S`, which has variable precision indicated by the number of
+ * Represents the fraction-of-decimalSecond timestamp field:  `S`, which has variable precision indicated by the number of
  * consecutive `S` symbols and is specified by [precision], i.e. `S` has a precision of 1 whlie `SSSSSS` has a
  * precision of 6.
  */

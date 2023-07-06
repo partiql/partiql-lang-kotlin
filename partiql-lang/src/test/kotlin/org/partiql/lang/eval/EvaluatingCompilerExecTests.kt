@@ -98,7 +98,7 @@ private class TwoArgProcedure : StoredProcedure {
         if (arg2.type != ExprValueType.INT) {
             val errorContext = createWrongSProcErrorContext(arg2, "INT", signature.name)
             throw EvaluationException(
-                "invalid second argument",
+                "invalid decimalSecond argument",
                 ErrorCode.EVALUATOR_INCORRECT_TYPE_OF_ARGUMENTS_TO_PROCEDURE_CALL,
                 errorContext,
                 internal = false
@@ -246,7 +246,7 @@ class EvaluatingCompilerExecTest : EvaluatorTestBase() {
                 ),
                 compilerPipelineBuilderBlock = compilerPipelineBuilderBlock
             ),
-            // invalid second arg type
+            // invalid decimalSecond arg type
             EvaluatorErrorTestCase(
                 query = "EXEC two_arg_procedure 1, 'two'",
                 expectedErrorCode = ErrorCode.EVALUATOR_INCORRECT_TYPE_OF_ARGUMENTS_TO_PROCEDURE_CALL,

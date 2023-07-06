@@ -1865,7 +1865,7 @@ internal class PartiQLPigVisitor(
         timestamp(
             timestampValue(
                 timestamp.year.toLong(), timestamp.month.toLong(), timestamp.day.toLong(),
-                timestamp.hour.toLong(), timestamp.minute.toLong(), ionDecimal(Decimal.valueOf(timestamp.second)),
+                timestamp.hour.toLong(), timestamp.minute.toLong(), ionDecimal(Decimal.valueOf(timestamp.decimalSecond)),
                 timeZone, precision
             )
         )
@@ -1890,7 +1890,7 @@ internal class PartiQLPigVisitor(
         timestamp(
             timestampValue(
                 timestamp.year.toLong(), timestamp.month.toLong(), timestamp.day.toLong(),
-                timestamp.hour.toLong(), timestamp.minute.toLong(), ionDecimal(Decimal.valueOf(timestamp.second)),
+                timestamp.hour.toLong(), timestamp.minute.toLong(), ionDecimal(Decimal.valueOf(timestamp.decimalSecond)),
                 timeZone, precision
             )
         )

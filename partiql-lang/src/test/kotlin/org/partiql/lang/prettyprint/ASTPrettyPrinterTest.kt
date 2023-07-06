@@ -605,7 +605,7 @@ class ASTPrettyPrinterTest {
                     cases: ExprPairList
                         pair1: Pair
                             first: Lit "jack"
-                            second: Lit 1
+                            decimalSecond: Lit 1
             """.trimIndent()
         )
     }
@@ -621,7 +621,7 @@ class ASTPrettyPrinterTest {
                             first: =
                                 Id name (case_insensitive) (unqualified)
                                 Lit "jack"
-                            second: Lit 1
+                            decimalSecond: Lit 1
             """.trimIndent()
         )
     }
@@ -634,7 +634,7 @@ class ASTPrettyPrinterTest {
                 Struct
                     field1: Pair
                         first: Id a (case_insensitive) (unqualified)
-                        second: Lit 1
+                        decimalSecond: Lit 1
             """.trimIndent()
         )
     }

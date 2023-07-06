@@ -589,7 +589,7 @@ class ASTPrettyPrinter {
             attrOfParent = attrOfParent,
             children = listOf(
                 toRecursionTree(node.first, "first"),
-                toRecursionTree(node.second, "second")
+                toRecursionTree(node.second, "decimalSecond")
             )
         )
 

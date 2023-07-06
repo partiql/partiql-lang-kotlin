@@ -113,10 +113,10 @@ internal object ExprFunctionAbs : ExprFunctionUnaryNumeric("abs") {
 
 /**
  * MOD operates on two exact numeric arguments with scale 0 (zero) and returns
- * the modulus (remainder) of the first argument divided by the second argument as an exact
+ * the modulus (remainder) of the first argument divided by the decimalSecond argument as an exact
  * numeric with scale 0 (zero).
  *
- * If the second argument is zero, an EVALUATOR_ARITHMETIC_EXCEPTION will be thrown.
+ * If the decimalSecond argument is zero, an EVALUATOR_ARITHMETIC_EXCEPTION will be thrown.
  */
 internal object ExprFunctionMod : ExprFunction {
 
@@ -746,7 +746,7 @@ internal object ExprFunctionOverlay : ExprFunction {
  * * day
  * * hour
  * * minute
- * * second
+ * * decimalSecond
  * * timezone_hour
  * * timezone_minute
  *

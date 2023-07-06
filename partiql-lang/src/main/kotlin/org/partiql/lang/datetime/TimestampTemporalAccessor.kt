@@ -14,9 +14,9 @@ private val MILLIS_PER_SECOND = 1_000L
 private val MILLIS_PER_SECOND_BD = BigDecimal.valueOf(MILLIS_PER_SECOND)
 private val NANOS_PER_SECOND_BD = BigDecimal.valueOf(NANOS_PER_SECOND)
 
-private val Timestamp.nanoOfSecond: Long get() = this.second.multiply(NANOS_PER_SECOND_BD).toLong() % NANOS_PER_SECOND
+private val Timestamp.nanoOfSecond: Long get() = this.decimalSecond.multiply(NANOS_PER_SECOND_BD).toLong() % NANOS_PER_SECOND
 
-private val Timestamp.milliOfSecond: Long get() = this.second.multiply(MILLIS_PER_SECOND_BD).toLong() % MILLIS_PER_SECOND
+private val Timestamp.milliOfSecond: Long get() = this.decimalSecond.multiply(MILLIS_PER_SECOND_BD).toLong() % MILLIS_PER_SECOND
 
 /**
  * This is a workaround to identify the timestamp has no timezone field,
@@ -47,7 +47,7 @@ class TimestampTemporalAccessor(private val ts: Timestamp) : TemporalAccessor {
             ChronoField.MONTH_OF_YEAR -> ts.month.toLong()
             ChronoField.DAY_OF_MONTH -> ts.day.toLong()
             ChronoField.HOUR_OF_DAY -> ts.hour.toLong()
-            ChronoField.SECOND_OF_MINUTE -> ts.second.toLong()
+            ChronoField.SECOND_OF_MINUTE -> ts.decimalSecond.toLong()
             ChronoField.MINUTE_OF_HOUR -> ts.minute.toLong()
             ChronoField.MILLI_OF_SECOND -> ts.milliOfSecond
             ChronoField.NANO_OF_SECOND -> ts.nanoOfSecond

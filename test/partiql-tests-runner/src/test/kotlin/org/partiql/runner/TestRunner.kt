@@ -239,8 +239,8 @@ private val LANG_KOTLIN_EVAL_FAIL_LIST = listOf(
     Pair("""LIKE bad pattern type""", COERCE_EVAL_MODE_COMPILE_OPTIONS),
     Pair("""LIKE bad escape type""", COERCE_EVAL_MODE_COMPILE_OPTIONS),
     // `NULLIF(MISSING, MISSING)` should output `MISSING` rather than `NULL` https://github.com/partiql/partiql-lang-kotlin/issues/973
-    Pair("""nullif valid cases{first:"missing",second:"missing",result:missing}""", COERCE_EVAL_MODE_COMPILE_OPTIONS),
-    Pair("""nullif valid cases{first:"missing",second:"missing",result:missing}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""nullif valid cases{first:"missing",decimalSecond:"missing",result:missing}""", COERCE_EVAL_MODE_COMPILE_OPTIONS),
+    Pair("""nullif valid cases{first:"missing",decimalSecond:"missing",result:missing}""", ERROR_EVAL_MODE_COMPILE_OPTIONS),
     // `POSITION` not yet implemented
     Pair("""POSITION empty string in string""", COERCE_EVAL_MODE_COMPILE_OPTIONS),
     Pair("""POSITION empty string in string""", ERROR_EVAL_MODE_COMPILE_OPTIONS),

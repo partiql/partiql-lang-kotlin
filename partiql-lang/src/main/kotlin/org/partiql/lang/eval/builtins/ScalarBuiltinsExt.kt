@@ -148,7 +148,7 @@ internal object ExprFunctionFilterDistinct : ExprFunction {
  * * day
  * * hour
  * * minute
- * * second
+ * * decimalSecond
  */
 internal object ExprFunctionDateAdd : ExprFunction {
 
@@ -229,10 +229,10 @@ internal object ExprFunctionDateAdd : ExprFunction {
 }
 
 /**
- * Difference in datetime parts between two timestamps. If the first timestamp is later than the second the result is negative.
+ * Difference in datetime parts between two timestamps. If the first timestamp is later than the decimalSecond the result is negative.
  *
  * Syntax: `DATE_DIFF(<datetime part>, <timestamp>, <timestamp>)`
- * Where date time part is one of the following keywords: `year, month, day, hour, minute, second`
+ * Where date time part is one of the following keywords: `year, month, day, hour, minute, decimalSecond`
  *
  * Timestamps without all datetime parts are considered to be in the beginning of the missing parts to make calculation possible.
  * For example:
@@ -317,8 +317,8 @@ internal object ExprFunctionMakeDate : ExprFunction {
 }
 
 /**
- * Creates a TIME ExprValue from the time fields hour, minute, second and optional timezone_minutes.
- * Takes hour, minute and optional timezone_minutes as integers, second as decimal and propagates NULL if any of these arguments is unknown (i.e. NULL or MISSING)
+ * Creates a TIME ExprValue from the time fields hour, minute, decimalSecond and optional timezone_minutes.
+ * Takes hour, minute and optional timezone_minutes as integers, decimalSecond as decimal and propagates NULL if any of these arguments is unknown (i.e. NULL or MISSING)
  *
  * make_time(<hour_value>, <minute_value>, <second_value>, <optional_timezone_minutes>?)
  */

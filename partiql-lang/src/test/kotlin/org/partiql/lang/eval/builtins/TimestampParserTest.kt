@@ -102,9 +102,9 @@ class TimestampParserTest {
             ParseTimestampTestCase("y M d h m s a", "2007 6 5 1 2 6 am", Timestamp.valueOf("2007-06-05T01:02:06-00:00")),
 
             // Second fraction, where precision of the fraction is specified by the number of S symbols.
-            //  S   -> 1/10th of a second
-            //  SS  -> 1/100th of a second
-            //  SSS -> 1/1000th of a second (millisecond)
+            //  S   -> 1/10th of a decimalSecond
+            //  SS  -> 1/100th of a decimalSecond
+            //  SSS -> 1/1000th of a decimalSecond (millisecond)
             //  ...
             //  up to 1 nanosecond (9 'S' symbols)
             // Zero padding is required in this here because the value is intended to be on the right of a decimal point.

@@ -7,7 +7,7 @@ package org.partiql.lang.ast
  *  2. ( a, b, c )
  *
  * The existence of this meta on a [org.partiql.lang.domains.PartiqlAst.Expr.List] node indicates that the list uses
- * the second syntax above (using parenthesis).
+ * the decimalSecond syntax above (using parenthesis).
  */
 public object IsListParenthesizedMeta : Meta {
     override val tag = "\$is_list_parenthesized"

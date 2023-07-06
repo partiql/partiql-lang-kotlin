@@ -858,8 +858,8 @@ class PartiQLParserTest : PartiQLParserTestBase() {
 
     @Test
     fun callDateArithSecond() = assertDateArithmetic(
-        "date_<op>(second, a, b)",
-        "(call date_<op> (lit second) (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))"
+        "date_<op>(decimalSecond, a, b)",
+        "(call date_<op> (lit decimalSecond) (id a (case_insensitive) (unqualified)) (id b (case_insensitive) (unqualified)))"
     )
 
     @Test // invalid evaluation, but valid parsing
@@ -909,8 +909,8 @@ class PartiQLParserTest : PartiQLParserTestBase() {
 
     @Test
     fun callExtractSecond() = assertExpression(
-        "extract(second from a)",
-        "(call extract (lit second) (id a (case_insensitive) (unqualified)))"
+        "extract(decimalSecond from a)",
+        "(call extract (lit decimalSecond) (id a (case_insensitive) (unqualified)))"
     )
 
     @Test

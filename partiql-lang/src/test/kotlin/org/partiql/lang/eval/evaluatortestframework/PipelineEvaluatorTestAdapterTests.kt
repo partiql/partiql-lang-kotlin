@@ -118,7 +118,7 @@ class PipelineEvaluatorTestAdapterTests {
             astPipelineTestAdapter.runEvaluatorTestCase(
                 EvaluatorTestCase(
                     query = "TIME '12:12:01'",
-                    expectedResult = "$TIME_ANNOTATION::{hour:12,minute:12,second:1.,timezone_hour:null.int,timezone_minute:null.int}",
+                    expectedResult = "$TIME_ANNOTATION::{hour:12,minute:12,decimalSecond:1.,timezone_hour:null.int,timezone_minute:null.int}",
                     expectedResultFormat = ExpectedResultFormat.ION
                 ),
                 EvaluationSession.standard()

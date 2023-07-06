@@ -40,7 +40,7 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
     private fun assertEqualsIonTimeStruct(actual: IonStruct, expectedTime: TimeForValidation) {
         assertEquals(ion.newInt(expectedTime.hour), actual["hour"])
         assertEquals(ion.newInt(expectedTime.minute), actual["minute"])
-        assertEquals(secondsWithPrecision(expectedTime), actual["second"])
+        assertEquals(secondsWithPrecision(expectedTime), actual["decimalSecond"])
         assertEquals(ion.newInt(expectedTime.tz_minutes?.div(MINUTES_PER_HOUR)), actual["timezone_hour"])
         assertEquals(ion.newInt(expectedTime.tz_minutes?.rem(MINUTES_PER_HOUR)), actual["timezone_minute"])
     }
@@ -301,7 +301,7 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
             ) +
             // Any pair of arbitrary precision timestamp
             // should be considered equal if they refer to the same point in Time
-            // Meaning the second fraction precision does not matter.
+            // Meaning the decimalSecond fraction precision does not matter.
             case(
                 listOf("TIMESTAMP '2023-01-01 00:00:00.0000-00:00'", "TIMESTAMP WITH TIME ZONE '2023-01-01 00:00:00.0000-00:00'"),
                 listOf("`2023T`", "`2023-01T`", "`2023-01-01T`", "`2023-01-01T00:00:00.00-00:00`"),
@@ -396,7 +396,7 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
                     field("day", ionInt(day.toLong())),
                     field("hour", ionInt(hour.toLong())),
                     field("minute", ionInt(minute.toLong())),
-                    field("second", ionDecimal(Decimal.valueOf(second))),
+                    field("decimalSecond", ionDecimal(Decimal.valueOf(second))),
                 ).withAnnotations("TIMESTAMP WITHOUT TIME ZONE").toIonValue(ION)
             }
         }

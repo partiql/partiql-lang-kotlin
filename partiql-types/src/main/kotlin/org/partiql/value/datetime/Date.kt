@@ -24,9 +24,9 @@ import kotlin.jvm.Throws
  * The valid range are from 0001-01-01 to 9999-12-31
  * The [day] must be valid for the year and month, otherwise an exception will be thrown.
  */
-public data class Date private constructor(
+public data class SqlDate private constructor(
     val localDate: LocalDate
-) {
+) : Date {
     public companion object {
         /**
          * Construct a Date object using
@@ -37,36 +37,45 @@ public data class Date private constructor(
             if (year < 1 || year > 9999)
                 throw DateTimeException("Expect Year Field to be between 1 to 9999, but received $year")
             try {
-                return Date(LocalDate.of(year, month, day))
+                return SqlDate(LocalDate.of(year, month, day))
             } catch (e: java.time.DateTimeException) {
                 throw DateTimeException(e.localizedMessage, e)
             }
         }
     }
 
-    public val year: Int = localDate.year
+    public override val year: Int = localDate.year
 
-    public val month: Int = localDate.monthValue
+    public override val month: Int = localDate.monthValue
 
-    public val day: Int = localDate.dayOfMonth
+    public override val day: Int = localDate.dayOfMonth
 
     public val epochDays: Long by lazy {
         this.localDate.toEpochDay()
     }
+
+    override fun atTime(time: Time): Timestamp =
+        when(time) {
+            is TimeWithoutTimeZone -> LocalTimestampHighPrecision.forDateTime(this, time)
+            is TimeWithTimeZone -> OffsetTimestampHighPrecision.forDateTime(this, time)
+        }
+
     // Operation
-    public fun plusDays(days: Long): Date =
+    public override fun plusDays(days: Long): Date =
         this.localDate.plusDays(days)
             .let { newDate ->
                 of(newDate.year, newDate.monthValue, newDate.dayOfMonth)
             }
-    public fun plusMonths(months: Long): Date =
+    public override fun plusMonths(months: Long): Date =
         this.localDate.plusMonths(months)
             .let { newDate ->
                 of(newDate.year, newDate.monthValue, newDate.dayOfMonth)
             }
-    public fun plusYear(years: Long): Date =
+    public override fun plusYear(years: Long): Date =
         this.localDate.plusYears(years)
             .let { newDate ->
                 of(newDate.year, newDate.monthValue, newDate.dayOfMonth)
             }
+
+
 }

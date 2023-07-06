@@ -36,11 +36,11 @@ internal const val MAX_PRECISION_FOR_TIME = 9
  * @param localTime Represents the time component irrespective of the [ZoneOffset].
  * @param zoneOffset Represents the time zone of the TIME instance.
  *  If the [zoneOffset] is null, the [Time] instance has no defined time zone.
- * @param precision Represents the number of significant digits in fractional part of the second's value of the TIME instance.
- *  The fractional part of the second will be rounded to the specified precision.
+ * @param precision Represents the number of significant digits in fractional part of the decimalSecond's value of the TIME instance.
+ *  The fractional part of the decimalSecond will be rounded to the specified precision.
  *  For eg, `TIME (3) 23:46:58.1267` will be stored in this instance with [localTime] as `23:46:58.127000000` along with preserving the
  *  [precision] value as 3.
- *  Note that the [LocalTime] always stores the fractional part of the second in nanoseconds.
+ *  Note that the [LocalTime] always stores the fractional part of the decimalSecond in nanoseconds.
  *  It is up to the application developers to make use of the preserved [precision] value as need be.
  */
 data class Time private constructor(val localTime: LocalTime, val precision: Int, val zoneOffset: ZoneOffset? = null) {
@@ -62,13 +62,13 @@ data class Time private constructor(val localTime: LocalTime, val precision: Int
         private const val LESS = -1
         private const val MORE = 1
 
-        /** Returns an instance of [Time] for the given hour, minute, second, precision and tz_minutes.
+        /** Returns an instance of [Time] for the given hour, minute, decimalSecond, precision and tz_minutes.
          * @param hour  the hour of a day of 24 hours to represent, from 0 to 23
          * @param minute  the minute of hour of 60 minutes to represent, from 0 to 59
-         * @param second  the second of minute of 60 seconds to represent, from 0 to 59
-         * @param nano  the nano of second to represent, from 0 to 999,999,999.
-         * @param precision  the number of desired significant digits in the fractional part of the second's value.
-         * If the precision is less than 9, the fractional part of the second will be rounded to the precision and [nano] will store the rounded value.
+         * @param second  the decimalSecond of minute of 60 seconds to represent, from 0 to 59
+         * @param nano  the nano of decimalSecond to represent, from 0 to 999,999,999.
+         * @param precision  the number of desired significant digits in the fractional part of the decimalSecond's value.
+         * If the precision is less than 9, the fractional part of the decimalSecond will be rounded to the precision and [nano] will store the rounded value.
          * For e.g., if [nano] is 126700000 and the [precision] is 3, the [nano] will be rounded to 127000000.
          * Note that the [nano] will still store the value in nanoseconds (0's padded after the desired precision digits),
          * however the [Time] instance will preserve the [precision] thereby preserving the entire original value.
@@ -100,7 +100,7 @@ data class Time private constructor(val localTime: LocalTime, val precision: Int
                 MAX_PRECISION_FOR_TIME -> nano
                 else -> ((nano.toBigDecimal().divide(NANOS_PER_SECOND.toBigDecimal())).setScale(precision, RoundingMode.HALF_EVEN).multiply(NANOS_PER_SECOND.toBigDecimal())).toInt()
             }
-            // If the nanos are added to form up a whole second because of the specified precision, carry over the second all up to the hour
+            // If the nanos are added to form up a whole decimalSecond because of the specified precision, carry over the decimalSecond all up to the hour
             // and use the mod values of all the new fields to fit in the valid range.
             val newNano = nanoWithPrecision % NANOS_PER_SECOND
             val newSecond = second + (nanoWithPrecision / NANOS_PER_SECOND)
@@ -121,7 +121,7 @@ data class Time private constructor(val localTime: LocalTime, val precision: Int
 
         /**
          * Returns an instance of [Time] for the given localTime, precision and zoneOffset.
-         * Precision is used to round up the fractional part of the second (nano field of localTime).
+         * Precision is used to round up the fractional part of the decimalSecond (nano field of localTime).
          * The [Time] instance returned has the [LocalTime] rounded up to this precision.
          */
         @JvmStatic
@@ -155,7 +155,7 @@ data class Time private constructor(val localTime: LocalTime, val precision: Int
         get(): Int? = (zoneOffset?.totalSeconds?.div(SECONDS_PER_MINUTE))?.rem(SECONDS_PER_MINUTE)
 
     /**
-     * Returns the seconds along with the fractional part of the second's value.
+     * Returns the seconds along with the fractional part of the decimalSecond's value.
      */
     val secondsWithFractionalPart: BigDecimal
         get() = (localTime.second.toBigDecimal() + localTime.nano.toBigDecimal().divide(NANOS_PER_SECOND.toBigDecimal()))
@@ -165,7 +165,7 @@ data class Time private constructor(val localTime: LocalTime, val precision: Int
         ion.newEmptyStruct().apply {
             add("hour", ion.newInt(localTime.hour))
             add("minute", ion.newInt(localTime.minute))
-            add("second", ion.newDecimal(secondsWithFractionalPart))
+            add("decimalSecond", ion.newDecimal(secondsWithFractionalPart))
             add("timezone_hour", ion.newInt(timezoneHour))
             add("timezone_minute", ion.newInt(timezoneMinute))
             addTypeAnnotation(TIME_ANNOTATION)
