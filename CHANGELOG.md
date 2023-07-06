@@ -31,6 +31,8 @@ Thank you to all who have contributed!
 ### Added
 - Adds `org.partiql.value` (experimental) package for reading/writing PartiQL
   values
+- Adds `org.partiql.ast` package and usage documentation
+- Adds `org.partiql.parser` package and usage documentation
 
 ### Changed
 

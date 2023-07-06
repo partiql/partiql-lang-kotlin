@@ -124,7 +124,7 @@ class ToLegacyAstTest {
             return Case.Fail(i, message)
         }
 
-        private val NULL = Ast.exprLiteral(nullValue())
+        private val NULL = Ast.exprLit(nullValue())
 
         // Shortcut to construct a "legacy-compatible" simple identifier
         private fun id(name: String) = Ast.identifierSymbol(name, Identifier.CaseSensitivity.INSENSITIVE)
@@ -132,49 +132,49 @@ class ToLegacyAstTest {
         @JvmStatic
         fun literals() = listOf(
             expect("(lit null)") {
-                exprLiteral(nullValue())
+                exprLit(nullValue())
             },
             expect("(missing)") {
-                exprLiteral(missingValue())
+                exprLit(missingValue())
             },
             expect("(lit true)") {
-                exprLiteral(boolValue(true))
+                exprLit(boolValue(true))
             },
             expect("(lit 1)") {
-                exprLiteral(int8Value(1))
+                exprLit(int8Value(1))
             },
             expect("(lit 2)") {
-                exprLiteral(int16Value(2))
+                exprLit(int16Value(2))
             },
             expect("(lit 3)") {
-                exprLiteral(int32Value(3))
+                exprLit(int32Value(3))
             },
             expect("(lit 4)") {
-                exprLiteral(int64Value(4))
+                exprLit(int64Value(4))
             },
             expect("(lit 5)") {
-                exprLiteral(intValue(BigInteger.valueOf(5)))
+                exprLit(intValue(BigInteger.valueOf(5)))
             },
             expect("(lit 1.1e0)") {
-                exprLiteral(float32Value(1.1f))
+                exprLit(float32Value(1.1f))
             },
             expect("(lit 1.2e0)") {
-                exprLiteral(float64Value(1.2))
+                exprLit(float64Value(1.2))
             },
             expect("(lit 1.3)") {
-                exprLiteral(decimalValue(BigDecimal.valueOf(1.3)))
+                exprLit(decimalValue(BigDecimal.valueOf(1.3)))
             },
             expect("""(lit "hello")""") {
-                exprLiteral(stringValue("hello"))
+                exprLit(stringValue("hello"))
             },
             expect("""(lit 'hello')""") {
-                exprLiteral(symbolValue("hello"))
+                exprLit(symbolValue("hello"))
             },
             expect("""(lit {{ '''Hello'''    '''World''' }})""") {
-                exprLiteral(clobValue("HelloWorld".toByteArray()))
+                exprLit(clobValue("HelloWorld".toByteArray()))
             },
             expect("""(lit {{ VG8gaW5maW5pdHkuLi4gYW5kIGJleW9uZCE= }})""") {
-                exprLiteral(blobValue("To infinity... and beyond!".toByteArray()))
+                exprLit(blobValue("To infinity... and beyond!".toByteArray()))
             },
             // TODO detailed tests just for _DateTime_ types
         )
@@ -421,62 +421,62 @@ class ToLegacyAstTest {
         fun specialForms() = listOf(
             expect("(like (lit 'a') (lit 'b') null)") {
                 exprLike {
-                    value = exprLiteral(symbolValue("a"))
-                    pattern = exprLiteral(symbolValue("b"))
+                    value = exprLit(symbolValue("a"))
+                    pattern = exprLit(symbolValue("b"))
                 }
             },
             expect("(like (lit 'a') (lit 'b') (lit 'c'))") {
                 exprLike {
-                    value = exprLiteral(symbolValue("a"))
-                    pattern = exprLiteral(symbolValue("b"))
-                    escape = exprLiteral(symbolValue("c"))
+                    value = exprLit(symbolValue("a"))
+                    pattern = exprLit(symbolValue("b"))
+                    escape = exprLit(symbolValue("c"))
                 }
             },
             expect("(not (like (lit 'a') (lit 'b') (lit 'c')))") {
                 exprLike {
-                    value = exprLiteral(symbolValue("a"))
-                    pattern = exprLiteral(symbolValue("b"))
-                    escape = exprLiteral(symbolValue("c"))
+                    value = exprLit(symbolValue("a"))
+                    pattern = exprLit(symbolValue("b"))
+                    escape = exprLit(symbolValue("c"))
                     not = true
                 }
             },
             expect("(between (lit 'a') (lit 'b') (lit 'c'))") {
                 exprBetween {
-                    value = exprLiteral(symbolValue("a"))
-                    from = exprLiteral(symbolValue("b"))
-                    to = exprLiteral(symbolValue("c"))
+                    value = exprLit(symbolValue("a"))
+                    from = exprLit(symbolValue("b"))
+                    to = exprLit(symbolValue("c"))
                 }
             },
             expect("(not (between (lit 'a') (lit 'b') (lit 'c')))") {
                 exprBetween {
-                    value = exprLiteral(symbolValue("a"))
-                    from = exprLiteral(symbolValue("b"))
-                    to = exprLiteral(symbolValue("c"))
+                    value = exprLit(symbolValue("a"))
+                    from = exprLit(symbolValue("b"))
+                    to = exprLit(symbolValue("c"))
                     not = true
                 }
             },
             expect("(in_collection (lit 'a') (lit 'b'))") {
                 exprInCollection {
-                    lhs = exprLiteral(symbolValue("a"))
-                    rhs = exprLiteral(symbolValue("b"))
+                    lhs = exprLit(symbolValue("a"))
+                    rhs = exprLit(symbolValue("b"))
                 }
             },
             expect("(not (in_collection (lit 'a') (lit 'b')))") {
                 exprInCollection {
-                    lhs = exprLiteral(symbolValue("a"))
-                    rhs = exprLiteral(symbolValue("b"))
+                    lhs = exprLit(symbolValue("a"))
+                    rhs = exprLit(symbolValue("b"))
                     not = true
                 }
             },
             expect("(is_type (lit 'a') (any_type))") {
                 exprIsType {
-                    value = exprLiteral(symbolValue(("a")))
+                    value = exprLit(symbolValue(("a")))
                     type = typeAny()
                 }
             },
             expect("(not (is_type (lit 'a') (any_type)))") {
                 exprIsType {
-                    value = exprLiteral(symbolValue(("a")))
+                    value = exprLit(symbolValue(("a")))
                     type = typeAny()
                     not = true
                 }
@@ -488,17 +488,17 @@ class ToLegacyAstTest {
             // TODO position
             expect("""(call 'trim' (lit "xyz"))""") {
                 exprTrim {
-                    value = exprLiteral(stringValue("xyz"))
+                    value = exprLit(stringValue("xyz"))
                 }
             },
             expect("""(call 'trim' (lit "xyz"))""") {
                 exprTrim {
-                    value = exprLiteral(stringValue("xyz"))
+                    value = exprLit(stringValue("xyz"))
                 }
             },
             expect("""(call 'trim' (lit "xyz"))""") {
                 exprTrim {
-                    value = exprLiteral(stringValue("xyz"))
+                    value = exprLit(stringValue("xyz"))
                 }
             },
             // TODO overlay
@@ -530,15 +530,15 @@ class ToLegacyAstTest {
                             exprVar(identifierSymbol("a", Identifier.CaseSensitivity.SENSITIVE), Expr.Var.Scope.DEFAULT)
                     }
                     items += selectProjectItemExpression {
-                        expr = exprLiteral(int32Value(1))
+                        expr = exprLit(int32Value(1))
                         asAlias = "x"
                     }
                 }
             },
             expect("(project_pivot (lit 1) (lit 2))") {
                 selectPivot {
-                    value = exprLiteral(int32Value(1))
-                    key = exprLiteral(int32Value(2))
+                    value = exprLit(int32Value(1))
+                    key = exprLit(int32Value(2))
                 }
             },
             expect("(project_value (lit null))") {
@@ -589,11 +589,11 @@ class ToLegacyAstTest {
                 fromJoin {
                     type = From.Join.Type.INNER
                     lhs = fromValue {
-                        expr = exprLiteral(stringValue("lhs"))
+                        expr = exprLit(stringValue("lhs"))
                         type = From.Value.Type.SCAN
                     }
                     rhs = fromValue {
-                        expr = exprLiteral(stringValue("rhs"))
+                        expr = exprLit(stringValue("rhs"))
                         type = From.Value.Type.SCAN
                     }
                 }
@@ -611,14 +611,14 @@ class ToLegacyAstTest {
                     // DEFAULT
                     // type = From.Join.Type.INNER
                     lhs = fromValue {
-                        expr = exprLiteral(stringValue("lhs"))
+                        expr = exprLit(stringValue("lhs"))
                         type = From.Value.Type.SCAN
                     }
                     rhs = fromValue {
-                        expr = exprLiteral(stringValue("rhs"))
+                        expr = exprLit(stringValue("rhs"))
                         type = From.Value.Type.SCAN
                     }
-                    condition = exprLiteral(boolValue(true))
+                    condition = exprLit(boolValue(true))
                 }
             },
             expect("(let (let_binding (lit null) 'x'))") {
@@ -642,8 +642,8 @@ class ToLegacyAstTest {
             ) {
                 groupBy {
                     strategy = GroupBy.Strategy.FULL
-                    keys += groupByKey(exprLiteral(stringValue("a")), null)
-                    keys += groupByKey(exprLiteral(stringValue("b")), "x")
+                    keys += groupByKey(exprLit(stringValue("a")), null)
+                    keys += groupByKey(exprLit(stringValue("b")), "x")
                 }
             },
             expect(
@@ -659,8 +659,8 @@ class ToLegacyAstTest {
             ) {
                 groupBy {
                     strategy = GroupBy.Strategy.PARTIAL
-                    keys += groupByKey(exprLiteral(stringValue("a")), null)
-                    keys += groupByKey(exprLiteral(stringValue("b")), "x")
+                    keys += groupByKey(exprLit(stringValue("a")), null)
+                    keys += groupByKey(exprLit(stringValue("b")), "x")
                     asAlias = "as"
                 }
             },
@@ -676,11 +676,11 @@ class ToLegacyAstTest {
             """
             ) {
                 orderBy {
-                    sorts += sort(exprLiteral(stringValue("a")))
-                    sorts += sort(exprLiteral(stringValue("b")), Sort.Dir.ASC, Sort.Nulls.FIRST)
-                    sorts += sort(exprLiteral(stringValue("c")), Sort.Dir.ASC, Sort.Nulls.LAST)
-                    sorts += sort(exprLiteral(stringValue("d")), Sort.Dir.DESC, Sort.Nulls.FIRST)
-                    sorts += sort(exprLiteral(stringValue("e")), Sort.Dir.DESC, Sort.Nulls.LAST)
+                    sorts += sort(exprLit(stringValue("a")))
+                    sorts += sort(exprLit(stringValue("b")), Sort.Dir.ASC, Sort.Nulls.FIRST)
+                    sorts += sort(exprLit(stringValue("c")), Sort.Dir.ASC, Sort.Nulls.LAST)
+                    sorts += sort(exprLit(stringValue("d")), Sort.Dir.DESC, Sort.Nulls.FIRST)
+                    sorts += sort(exprLit(stringValue("e")), Sort.Dir.DESC, Sort.Nulls.LAST)
                 }
             },
         )

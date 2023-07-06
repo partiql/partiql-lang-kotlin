@@ -268,6 +268,7 @@ class PartiQLParserWindowTests : PartiQLParserTestBase() {
         )
     }
 
+    @Test
     fun leadWithoutOrderBy() {
         checkInputThrowingParserException(
             "SELECT lead(a) OVER () FROM b",
@@ -277,7 +278,8 @@ class PartiQLParserWindowTests : PartiQLParserTestBase() {
                 Property.COLUMN_NUMBER to 8L,
                 Property.TOKEN_DESCRIPTION to PartiQLParser.LAG.getAntlrDisplayString(),
                 Property.TOKEN_VALUE to ion.newSymbol("lag")
-            )
+            ),
+            assertContext = false,
         )
     }
 

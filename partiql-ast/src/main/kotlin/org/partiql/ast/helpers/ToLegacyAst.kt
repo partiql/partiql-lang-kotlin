@@ -258,7 +258,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
 
     override fun visitExpr(node: Expr, ctx: Ctx): PartiqlAst.Expr = super.visitExpr(node, ctx) as PartiqlAst.Expr
 
-    override fun visitExprLiteral(node: Expr.Literal, ctx: Ctx) = translate(node) { metas ->
+    override fun visitExprLit(node: Expr.Lit, ctx: Ctx) = translate(node) { metas ->
         when (val v = node.value) {
             is MissingValue -> missing(metas)
             is DateValue -> v.toLegacyAst(metas)
@@ -724,12 +724,19 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
         }
     }
 
+    // Legacy AST models CROSS JOIN and COMMA-syntax CROSS JOIN as FULL JOIN
+    // Legacy AST does not have OUTER variants
     override fun visitFromJoin(node: From.Join, ctx: Ctx) = translate(node) { metas ->
         val type = when (node.type) {
             From.Join.Type.INNER -> inner()
             From.Join.Type.LEFT -> left()
+            From.Join.Type.LEFT_OUTER -> left()
             From.Join.Type.RIGHT -> right()
+            From.Join.Type.RIGHT_OUTER -> right()
             From.Join.Type.FULL -> full()
+            From.Join.Type.FULL_OUTER -> full()
+            From.Join.Type.CROSS -> full()
+            From.Join.Type.COMMA -> full()
             null -> inner()
         }
         val lhs = visitFrom(node.lhs, ctx)

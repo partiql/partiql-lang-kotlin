@@ -700,7 +700,7 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitPathSimpleLiteral(ctx: GeneratedParser.PathSimpleLiteralContext) = translate(ctx) {
             val v = visit(ctx.literal())
-            if (v !is Expr.Literal) {
+            if (v !is Expr.Lit) {
                 throw error(ctx, "Expected a path element literal")
             }
             when (val i = v.value) {
@@ -789,9 +789,9 @@ internal class PartiQLParserDefault : PartiQLParser {
         }
 
         override fun visitSelectPivot(ctx: GeneratedParser.SelectPivotContext) = translate(ctx) {
-            val value = visitExpr(ctx.at)
             val key = visitExpr(ctx.pivot)
-            selectPivot(value, key)
+            val value = visitExpr(ctx.at)
+            selectPivot(key, value)
         }
 
         override fun visitSelectValue(ctx: GeneratedParser.SelectValueContext) = translate(ctx) {
@@ -1176,11 +1176,24 @@ internal class PartiQLParserDefault : PartiQLParser {
         private fun convertJoinType(ctx: GeneratedParser.JoinTypeContext?): From.Join.Type? {
             if (ctx == null) return null
             return when (ctx.mod.type) {
-                GeneratedParser.LEFT -> From.Join.Type.LEFT
-                GeneratedParser.RIGHT -> From.Join.Type.RIGHT
                 GeneratedParser.INNER -> From.Join.Type.INNER
-                GeneratedParser.FULL -> From.Join.Type.FULL
-                GeneratedParser.OUTER -> From.Join.Type.FULL
+                GeneratedParser.LEFT -> when (ctx.OUTER()) {
+                    null -> From.Join.Type.LEFT
+                    else -> From.Join.Type.LEFT_OUTER
+                }
+                GeneratedParser.RIGHT -> when (ctx.OUTER()) {
+                    null -> From.Join.Type.RIGHT
+                    else -> From.Join.Type.RIGHT_OUTER
+                }
+                GeneratedParser.FULL -> when (ctx.OUTER()) {
+                    null -> From.Join.Type.FULL
+                    else -> From.Join.Type.FULL_OUTER
+                }
+                GeneratedParser.OUTER -> {
+                    // TODO https://github.com/partiql/partiql-spec/issues/41
+                    // TODO https://github.com/partiql/partiql-lang-kotlin/issues/1013
+                    From.Join.Type.FULL_OUTER
+                }
                 else -> null
             }
         }
@@ -1653,7 +1666,7 @@ internal class PartiQLParserDefault : PartiQLParser {
             } catch (e: NumberFormatException) {
                 throw error(ctx, "Invalid decimal literal", e)
             }
-            exprLiteral(decimalValue(decimal))
+            exprLit(decimalValue(decimal))
         }
 
         override fun visitArray(ctx: GeneratedParser.ArrayContext) = translate(ctx) {
@@ -1662,19 +1675,19 @@ internal class PartiQLParserDefault : PartiQLParser {
         }
 
         override fun visitLiteralNull(ctx: GeneratedParser.LiteralNullContext) = translate(ctx) {
-            exprLiteral(nullValue())
+            exprLit(nullValue())
         }
 
         override fun visitLiteralMissing(ctx: GeneratedParser.LiteralMissingContext) = translate(ctx) {
-            exprLiteral(missingValue())
+            exprLit(missingValue())
         }
 
         override fun visitLiteralTrue(ctx: GeneratedParser.LiteralTrueContext) = translate(ctx) {
-            exprLiteral(boolValue(true))
+            exprLit(boolValue(true))
         }
 
         override fun visitLiteralFalse(ctx: GeneratedParser.LiteralFalseContext) = translate(ctx) {
-            exprLiteral(boolValue(false))
+            exprLit(boolValue(false))
         }
 
         override fun visitLiteralIon(ctx: GeneratedParser.LiteralIonContext) = translate(ctx) {
@@ -1688,7 +1701,7 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitLiteralString(ctx: GeneratedParser.LiteralStringContext) = translate(ctx) {
             val value = ctx.LITERAL_STRING().getStringValue()
-            exprLiteral(stringValue(value))
+            exprLit(stringValue(value))
         }
 
         override fun visitLiteralInteger(ctx: GeneratedParser.LiteralIntegerContext) = translate(ctx) {
@@ -1698,7 +1711,7 @@ internal class PartiQLParserDefault : PartiQLParser {
             } catch (_: java.lang.NumberFormatException) {
                 intValue(n.toBigInteger())
             }
-            exprLiteral(v)
+            exprLit(v)
         }
 
         override fun visitLiteralDate(ctx: GeneratedParser.LiteralDateContext) = translate(ctx) {
@@ -1714,7 +1727,7 @@ internal class PartiQLParserDefault : PartiQLParser {
             } catch (e: IndexOutOfBoundsException) {
                 throw error(pattern, e.localizedMessage, e)
             }
-            exprLiteral(dateValue(value))
+            exprLit(dateValue(value))
         }
 
         override fun visitLiteralTime(ctx: GeneratedParser.LiteralTimeContext) = translate(ctx) {
@@ -1738,7 +1751,7 @@ internal class PartiQLParserDefault : PartiQLParser {
             } catch (e: DateTimeParseException) {
                 throw error(ctx.LITERAL_STRING().symbol, "Unable to parse time $time", e)
             }
-            exprLiteral(timeValue(value, precision, offset, withZone))
+            exprLit(timeValue(value, precision, offset, withZone))
         }
 
         override fun visitTuple(ctx: GeneratedParser.TupleContext) = translate(ctx) {
@@ -1836,7 +1849,7 @@ internal class PartiQLParserDefault : PartiQLParser {
             else -> ctx.map { visit(it) as T }
         }
 
-        private inline fun <reified T : AstNode> visitOrNull(ctx: ParserRuleContext?): T? = ctx?.let { visit(it) as T }
+        private inline fun <reified T : AstNode> visitOrNull(ctx: ParserRuleContext?): T? = ctx?.let { it.accept(this) as T }
 
         private inline fun <reified T : AstNode> visitAs(ctx: ParserRuleContext): T = visit(ctx) as T
 

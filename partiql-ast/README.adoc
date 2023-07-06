@@ -1,0 +1,351 @@
+= PartiQL AST
+
+The PartiQL AST package contains interfaces, data classes, and utilities for manipulating a syntax tree.
+
+NOTE: If you are on an older version of PartiQL, you can convert to the old AST via `.toLegacyAst()` in `org.partiql.ast.helpers`.
+
+== Interfaces
+
+The interfaces are generated from `resources/partiql_ast.ion` (details in `lib/sprout/README`)
+
+=== Node
+
+[source,kotlin]
+----
+public interface AstNode {
+
+    // Every node gets an _id for associating any metadata
+    public val _id: String
+
+    public val children: List<AstNode>
+
+    public fun <R, C> accept(visitor: AstVisitor<R, C>, ctx: C): R
+}
+----
+
+=== Example
+
+.Example Definition
+[source,ion]
+----
+expr::[
+ // ...
+ binary::{
+   op: [
+     PLUS, MINUS, TIMES, DIVIDE, MODULO, CONCAT,
+     AND, OR,
+     EQ, NE, GT, GTE, LT, LTE,
+   ],
+   lhs: expr,
+   rhs: expr,
+ },
+ // ...
+]
+----
+
+.Generated Interface
+[source,kotlin]
+----
+// Note: `Expr:AstNode` is a sealed interface of all expr variants
+
+public interface Binary : Expr {
+    public val op: Op
+    public val lhs: Expr
+    public val rhs: Expr
+
+    public fun copy(
+      op: Op = this.op,
+      lhs: Expr = this.lhs,
+      rhs: Expr = this.rhs,
+    ): Binary
+
+    public enum class Op {
+      PLUS,
+      MINUS,
+      TIMES,
+      DIVIDE,
+      MODULO,
+      CONCAT,
+      AND,
+      OR,
+      EQ,
+      NE,
+      GT,
+      GTE,
+      LT,
+      LTE,
+    }
+}
+----
+
+== Factory, DSL, and Builders
+
+The PartiQL AST library provides several creational patterns in `org.partiql.ast.builder` such as an abstract base factory, Kotlin DSL, and Java fluent-builders.
+These patterns enable customers to extend the AST to fit their needs, while providing a base which can be decorated appropriately.
+
+=== Factory Usage
+
+The factory is how you instantiate a node. The default factory can be called directly like,
+
+[source,kotlin]
+----
+Ast.exprLit(int32Value(1))  // expr.lit
+----
+
+==== Custom Nodes
+
+Additionally, you can extend the abstract base factory and use it in builders as well as the DSL. This gives you full
+control over how your nodes are instantiated. If you are ambitious, you can implement your own versions of AST node interfaces and implement a base factory. This
+will allow you to create custom behaviors. For example, generated equals functions do not consider semantics. Perhaps
+we want to improve how we compare nodes? Here's an example that considers the case-sensitivity of identifiers.
+
+.Custom Node and Factory Example
+[source,kotlin]
+----
+public abstract class MyFactory : AstBaseFactory() {
+
+    override fun identifierSymbol(symbol: String, caseSensitivity: Identifier.CaseSensitivity): Identifier.Symbol {
+        return ComparableIdentifier(_id(), symbol, caseSensitivity)
+    }
+}
+
+class ComparableIdentifier(
+    override val _id: String,
+    override val symbol: String,
+    override val caseSensitivity: Identifier.CaseSensitivity,
+) : Identifier.Symbol {
+
+    // override copy, children
+
+    override fun equals(other: Any?): Boolean {
+        if (other == null || other !is Identifier.Symbol) return false // different type
+        if (other === this) return true // same object
+        return when (caseSensitivity) {
+            Identifier.CaseSensitivity.SENSITIVE -> this.symbol == other.symbol
+            Identifier.CaseSensitivity.INSENSITIVE -> this.symbol.lowercase() == other.symbol.lowercase()
+        }
+    }
+}
+----
+
+=== DSL Usage
+
+The DSL is useful from Kotlin and is some syntax sugar over fluent builders. Here is how its used:
+
+.Default Factory DSL Example
+[source,kotlin]
+----
+// Tree for PartiQL `VALUES (1, 2)`
+ast {
+    exprCollection(Expr.Collection.Type.VALUES) {
+        values += exprLit(int32Value(1))
+        values += exprLit(int32Value(2))
+    }
+}
+
+// Tree for `SELECT a FROM T`
+ast {
+    exprSFW {
+        select = selectProject {
+            items += selectProjectItemExpression {
+                expr = exprVar {
+                    identifier = identifierSymbol("a", Identifier.CaseSensitivity.INSENSITIVE)
+                    scope = Expr.Var.Scope.DEFAULT
+                }
+            }
+        }
+        from = fromValue {
+            expr = v(symbol)
+            type = From.Value.Type.SCAN
+        }
+    }
+}
+----
+
+.Fancier DSL Usage
+[source,kotlin]
+----
+// define some helpers
+private fun AstBuilder.select(vararg s: String) = selectProject {
+    s.forEach {
+     items += selectProjectItemExpression(v(it))
+    }
+}
+
+private fun AstBuilder.table(symbol: String) = fromValue {
+    expr = v(symbol)
+    type = From.Value.Type.SCAN
+}
+
+private fun AstBuilder.v(symbol: String) = this.exprVar {
+    identifier = id(symbol)
+    scope = Expr.Var.Scope.DEFAULT
+}
+
+
+// Tree for `SELECT x, y, z FROM T`
+
+ast {
+    exprSFW {
+        select = select("x", "y", "z")
+        from = table("T")
+    }
+}
+----
+
+.Custom Factory DSL Example
+[source,kotlin]
+----
+// This will instantiate your custom `ComparableIdentifier`. Nice!
+
+ast(myFactory) {
+    exprSFW {
+        select = select("x", "y", "z")
+        from = table("T")
+    }
+}
+----
+
+IMPORTANT: The last examples works because the DSL block closes over the factory with an AstBuilder. This means that
+the helper extensions or any DSL usage will use the provided factory!
+
+=== Builder Usage
+
+The DSL is not much more than Kotlin syntactic sugar over traditional fluent-builder classes. If you are coming from Java, these will be useful.
+Every node defines a static `builder()` function. Keeping with the previous example, let's see how we can inject our custom
+factory.
+
+[source,kotlin]
+----
+// instance of default IdentifierSymbolImpl
+val a = Identifier.Symbol.builder()
+         .symbol("HELLO")
+         .caseSensitivity(Identifier.CaseSensitivity.INSENSITIVE)
+         .build() // empty, build with default factory
+
+// instance of ComparableIdentifier
+val b = Identifier.Symbol.builder()
+         .symbol("hello")
+         .caseSensitivity(Identifier.CaseSensitivity.INSENSITIVE)
+         .build(myFactory) // nice!
+
+assert(b.compareTo(a)) // TRUE
+assert(a.compareTo(b)) // FALSE !! consider always using the same type of factory
+----
+
+== Visitor and Rewriter
+
+The PartiQL AST is a set of interfaces, so how might we extend these for our own purposes? We do not have pattern matching in Kotlin/Java, so we use the visitor pattern.
+
+The visitor pattern is effectively adding methods to each object with some compile safety. You define a behavior and use the node `accept` the behavior. The visitor provides an additional parameter `ctx: C` which is the equivalent of arguments to each method for your behavior.
+
+[source,kotlin]
+----
+public abstract class AstBaseVisitor<R, C> : AstVisitor<R, C> {
+
+    public override fun visit(node: AstNode, ctx: C): R = node.accept(this, ctx)
+
+    public open fun defaultVisit(node: AstNode, ctx: C): R {
+        for (child in node.children) {
+            child.accept(this, ctx)
+        }
+        return defaultReturn(node, ctx)
+    }
+
+    public abstract fun defaultReturn(node: AstNode, ctx: C): R
+}
+----
+
+For example, let's implement a `toString(case: Case)` function on some basic nodes.
+
+[source,kotlin]
+----
+// Private implementation
+object ToString :  AstBaseVisitor<String?, MutableList<String>>() {
+
+    override fun defaultVisit(node: PlanNode, ctx: MutableList<String>): String? {
+        node.children.forEach { child -> child.accept(this, ctx) } // traverse
+        defaultReturn(this, ctx)?.let { ctx.add(it) }
+    }
+
+    override fun defaultReturn(node: AstNode, ctx: MutableList<String>) = node::class.simpleName
+
+    // Any other overrides you want!
+}
+----
+
+
+=== Folding
+
+Folding is straightforward by using either mutable context or an immutable accumulators. The structure you fold to is
+entirely dependent on your use case, but here is a simple example with a mutable list that you can generalize. Often times you may fold to an entirely new domain — or fold to the same domain which we'll cover in the rewriter.
+
+.Example "ClassName" Collector
+[source,kotlin]
+----
+// Traverse the tree collecting all node names
+object AstClassNameCollector  {
+
+    // Public static entry for Java style consumption
+    @JvmStatic
+    fun collect(node: AstNode): List<String> {
+        val acc = mutableListOf<String>()
+        node.accept(ToString, acc) // recall, we have node.toString()
+        return acc
+    }
+
+    // Private implementation
+    private object ToString :  AstBaseVisitor<String?, MutableList<String>>() {
+
+        override fun defaultVisit(node: PlanNode, ctx: MutableList<String>): String? {
+            node.children.forEach { child -> child.accept(this, ctx) } // traverse
+            defaultReturn(this, ctx)?.let { ctx.add(it) }
+        }
+
+        override fun defaultReturn(node: AstNode, ctx: MutableList<String>) = node::class.simpleName
+
+        // Any other overrides you want!
+    }
+}
+----
+
+=== Rewriter
+
+See `org.partiql.ast.util.AstRewriter`. This class facilitates rewriting an AST; you need only override the relevant methods for your rewriter.
+
+=== Tips
+
+- Each `visit` is a function call; adding state to a visitor is akin to global variables. _Consider keeping state in the context parameter_. This is beneficial because you state is naturally scoped via the call stack.
+- Sometimes state in a visitor makes an implementation much cleaner (go for it!). Just remember that the visitor might not be re-usable or idempotent.
+- Consider using singletons/objects for stateless visitors
+- Consider making your visitors private with a single public static entry point.
+- When you make a private visitor, you can rename the ctx parameter to something relevant. Use the `Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE")` to make the linter to relax.
+- If writing and using Kotlin, consider adding an extension method to the base class. This _really_ makes it look like you've opened the classes (but really it's just a static method).
+
+=== Understanding Visitors
+
+I believe Robert Nystrom captured the misunderstanding of visitors quite well:
+
+[quote]
+____
+The Visitor pattern is the most widely misunderstood pattern in all of Design Patterns, which is really saying something when you look at the software architecture excesses of the past couple of decades.
+
+The trouble starts with terminology. The pattern isn’t about “visiting”, and the “accept” method in it doesn’t conjure up any helpful imagery either. Many think the pattern has to do with traversing trees, which isn’t the case at all. We are going to use it on a set of classes that are tree-like, but that’s a coincidence. As you’ll see, the pattern works as well on a single object.
+
+The Visitor pattern is really about approximating the functional style within an OOP language. It lets us add new columns to that table easily. We can define all of the behavior for a new operation on a set of types in one place, without having to touch the types themselves. It does this the same way we solve almost every problem in computer science: by adding a layer of indirection.
+
+-- Robert Nystrom, Crafting Interpreters
+____
+
+Additionally, see how the wiki page explicitly mentions pattern matching. Kotlin is interesting because we have something _like_ pattern matching, but the PartiQL AST library is intended for consumption from both Kotlin and Java.
+
+[quote]
+____
+A visitor pattern is a software design pattern and separates the algorithm from the object structure. Because of this separation new operations can be added to existing object structures without modifying the structures. It is one way to follow the open/closed principle in object-oriented programming and software engineering.
+
+In essence, the visitor allows adding new virtual functions to a family of classes, without modifying the classes. Instead, a visitor class is created that implements all of the appropriate specializations of the virtual function. The visitor takes the instance reference as input, and implements the goal through double dispatch.
+
+Programming languages with sum types and pattern matching obviate many of the benefits of the visitor pattern, as the visitor class is able to both easily branch on the type of the object and generate a compiler error if a new object type is defined which the visitor does not yet handle.
+
+https://en.wikipedia.org/wiki/Visitor_pattern
+____

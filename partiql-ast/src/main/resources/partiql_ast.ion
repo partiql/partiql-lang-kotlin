@@ -1,5 +1,4 @@
-imports::{
-  kotlin: [
+imports::{ kotlin: [
     ion::'com.amazon.ionelement.api.IonElement',
     value::'org.partiql.value.PartiQLValue',
   ],
@@ -256,7 +255,7 @@ set_quantifier::[
 expr::[
 
   // PartiQL Literal Value
-  literal::{
+  lit::{
     value: '.value',
   },
 
@@ -550,8 +549,8 @@ select::[
 
   // PIVOT <expr> AT <expr>
   pivot::{
-    value:  expr,
-    key:    expr,
+    key:    expr, // <expr>[0]
+    value:  expr, // <expr>[1]
   },
 
   // SELECT [ALL|DISTINCT] VALUE <expr>
@@ -573,11 +572,22 @@ from::[
     by_alias: optional::string,
   },
 
-  // <from> JOIN [INNER|LEFT|RIGHT|FULL] <from> [ON <expr>]
+  // TODO https://github.com/partiql/partiql-spec/issues/41
+  // TODO https://github.com/partiql/partiql-lang-kotlin/issues/1013
   join::{
     lhs:        from,
     rhs:        from,
-    type:       optional::[ INNER, LEFT, RIGHT, FULL ],
+    type:       optional::[
+                  INNER,
+                  LEFT,
+                  LEFT_OUTER,
+                  RIGHT,
+                  RIGHT_OUTER,
+                  FULL,
+                  FULL_OUTER,
+                  CROSS,
+                  COMMA,
+                ],
     condition:  optional::expr,
   },
 ]
