@@ -193,7 +193,7 @@ public abstract class DecimalValue : NumericValue<BigDecimal>() {
 }
 
 @PartiQLValueExperimental
-public abstract class Float32Value : NumericValue<Float>() {
+public abstract class Float32Value : ScalarValue<Float> {
 
     override val type: PartiQLValueType = PartiQLValueType.FLOAT32
 
@@ -205,7 +205,7 @@ public abstract class Float32Value : NumericValue<Float>() {
 }
 
 @PartiQLValueExperimental
-public abstract class Float64Value : NumericValue<Double>() {
+public abstract class Float64Value : ScalarValue<Double> {
 
     override val type: PartiQLValueType = PartiQLValueType.FLOAT64
 
