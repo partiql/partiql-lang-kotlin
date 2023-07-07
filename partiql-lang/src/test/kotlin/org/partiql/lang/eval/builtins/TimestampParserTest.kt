@@ -9,6 +9,7 @@ import org.junit.runner.RunWith
 import org.partiql.lang.datetime.TimestampParser
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.EvaluationException
+import org.partiql.value.datetime.DateTimeValue
 import java.lang.reflect.Type
 import java.time.format.DateTimeParseException
 import kotlin.test.assertEquals
@@ -31,7 +32,7 @@ class TimestampParserTest {
     fun parseTimestampTest(testCase: ParseTimestampTestCase) {
         val result = TimestampParser.parseTimestamp(testCase.timestamp, testCase.pattern)
         // Routing those test case to use org.partiql.value.datetime.Timestamp
-        val expected = org.partiql.value.datetime.Timestamp.forIonTimestamp(testCase.expectedResult)
+        val expected = DateTimeValue.timestamp(testCase.expectedResult)
         assertEquals(expected, result)
     }
 

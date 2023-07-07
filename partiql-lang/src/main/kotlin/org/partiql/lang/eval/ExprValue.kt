@@ -41,6 +41,9 @@ import org.partiql.lang.graph.ExternalGraphReader
 import org.partiql.lang.graph.Graph
 import org.partiql.lang.util.bytesValue
 import org.partiql.lang.util.propertyValueMapOf
+import org.partiql.value.datetime.DateTimeValue
+import org.partiql.value.datetime.TimestampWithTimeZone
+import org.partiql.value.datetime.TimestampWithoutTimeZone
 import java.math.BigDecimal
 import java.time.LocalDate
 import org.partiql.value.datetime.Timestamp as PartiQLTimestamp
@@ -146,7 +149,10 @@ interface ExprValue : Iterable<ExprValue>, Faceted {
         private class TimestampExprValue(val value: PartiQLTimestamp) : ScalarExprValue() {
             override val type: ExprValueType = ExprValueType.TIMESTAMP
             override fun partiQLTimestampValue(): PartiQLTimestamp = value
-            override fun timestampValue(): Timestamp = value.ionRaw!!
+            override fun timestampValue(): Timestamp? = when (value) {
+                is TimestampWithTimeZone -> value.ionRaw
+                is TimestampWithoutTimeZone -> null
+            }
         }
 
         private class TimeExprValue(val value: Time) : ScalarExprValue() {
@@ -291,7 +297,7 @@ interface ExprValue : Iterable<ExprValue>, Faceted {
         )
         @JvmStatic
         fun newTimestamp(value: Timestamp): ExprValue =
-            TimestampExprValue(PartiQLTimestamp.forIonTimestamp(value))
+            TimestampExprValue(DateTimeValue.timestamp(value))
 
         /** Returns a PartiQL `TIMESTAMP` [ExprValue] instance representing the specified [PartiQLTimestamp]. */
         @JvmStatic
@@ -406,7 +412,7 @@ interface ExprValue : Iterable<ExprValue>, Faceted {
                     val timestampValue = value.timestampValue()
                     newDate(timestampValue.year, timestampValue.month, timestampValue.day)
                 }
-                value is IonTimestamp -> newTimestamp(org.partiql.value.datetime.Timestamp.forIonTimestamp(value.timestampValue())) // TIMESTAMP
+                value is IonTimestamp -> newTimestamp(DateTimeValue.timestamp(value.timestampValue())) // TIMESTAMP
                 value is IonStruct && value.hasTypeAnnotation(TIME_ANNOTATION) -> { // TIME
                     val hourValue = (value["hour"] as IonInt).intValue()
                     val minuteValue = (value["minute"] as IonInt).intValue()
@@ -425,9 +431,9 @@ interface ExprValue : Iterable<ExprValue>, Faceted {
                     val minute = (value["minute"] as IonInt).intValue()
                     val second = (value["decimalSecond"] as IonDecimal).decimalValue()
                     newTimestamp(
-                        org.partiql.value.datetime.Timestamp.of(
+                        DateTimeValue.timestamp(
                             year, month, day,
-                            hour, minute, second, null, null,
+                            hour, minute, second
                         )
                     )
                 }

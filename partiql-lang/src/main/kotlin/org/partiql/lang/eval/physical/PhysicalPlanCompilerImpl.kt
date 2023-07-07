@@ -111,6 +111,7 @@ import org.partiql.types.IntType
 import org.partiql.types.SingleType
 import org.partiql.types.StaticType
 import org.partiql.types.UnsupportedTypeCheckException
+import org.partiql.value.datetime.DateTimeValue
 import org.partiql.value.datetime.TimeZone
 import java.util.LinkedList
 import java.util.TreeSet
@@ -1826,7 +1827,7 @@ internal class PhysicalPlanCompilerImpl(
     private fun compileTimestamp(expr: PartiqlPhysical.Expr.Timestamp, metas: MetaContainer): PhysicalPlanThunk =
         thunkFactory.thunkEnv(metas) {
             ExprValue.newTimestamp(
-                org.partiql.value.datetime.Timestamp.of(
+                DateTimeValue.timestamp(
                     expr.value.year.value.toInt(),
                     expr.value.month.value.toInt(),
                     expr.value.day.value.toInt(),
@@ -1838,8 +1839,10 @@ internal class PhysicalPlanCompilerImpl(
                         is PartiqlPhysical.Timezone.UtcOffset -> TimeZone.UtcOffset.of(timezone.offsetMinutes.value.toInt())
                         null -> null
                     },
-                    expr.value.precision?.value?.toInt()
-                )
+                ).let {
+                    val precision = expr.value.precision?.value?.toInt()
+                    if (precision != null) it.toPrecision(precision) else it
+                }
             )
         }
 

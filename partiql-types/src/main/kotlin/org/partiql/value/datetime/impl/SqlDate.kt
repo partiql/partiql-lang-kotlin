@@ -12,28 +12,27 @@
  * language governing permissions and limitations under the License.
  */
 
-package org.partiql.value.datetime
+package org.partiql.value.datetime.impl
 
+import org.partiql.value.datetime.Date
+import org.partiql.value.datetime.DateImpl
+import org.partiql.value.datetime.DateTimeException
+import org.partiql.value.datetime.DateTimeValue.timestamp
+import org.partiql.value.datetime.Time
+import org.partiql.value.datetime.Timestamp
 import java.time.LocalDate
 import kotlin.jvm.Throws
 
-/**
- * Date represents a calendar system, (i.e., 2023-06-01).
- * It does not include information on time or timezone, instead, it is meant to represent a specific date on calendar.
- * For example, 2022-11-25 (black friday in 2022).
- * The valid range are from 0001-01-01 to 9999-12-31
- * The [day] must be valid for the year and month, otherwise an exception will be thrown.
- */
-public data class SqlDate private constructor(
+internal data class SqlDate private constructor(
     val localDate: LocalDate
-) : Date {
-    public companion object {
+) : DateImpl() {
+    companion object {
         /**
          * Construct a Date object using
          */
         @JvmStatic
         @Throws(DateTimeException::class)
-        public fun of(year: Int, month: Int, day: Int): Date {
+        fun of(year: Int, month: Int, day: Int): Date {
             if (year < 1 || year > 9999)
                 throw DateTimeException("Expect Year Field to be between 1 to 9999, but received $year")
             try {
@@ -44,38 +43,28 @@ public data class SqlDate private constructor(
         }
     }
 
-    public override val year: Int = localDate.year
+    override val year: Int = localDate.year
 
-    public override val month: Int = localDate.monthValue
+    override val month: Int = localDate.monthValue
 
-    public override val day: Int = localDate.dayOfMonth
+    override val day: Int = localDate.dayOfMonth
 
-    public val epochDays: Long by lazy {
-        this.localDate.toEpochDay()
-    }
-
-    override fun atTime(time: Time): Timestamp =
-        when(time) {
-            is TimeWithoutTimeZone -> LocalTimestampHighPrecision.forDateTime(this, time)
-            is TimeWithTimeZone -> OffsetTimestampHighPrecision.forDateTime(this, time)
-        }
+    override fun atTime(time: Time): Timestamp = timestamp(this, time)
 
     // Operation
-    public override fun plusDays(days: Long): Date =
+    override fun plusDays(days: Long): Date =
         this.localDate.plusDays(days)
             .let { newDate ->
                 of(newDate.year, newDate.monthValue, newDate.dayOfMonth)
             }
-    public override fun plusMonths(months: Long): Date =
+    override fun plusMonths(months: Long): Date =
         this.localDate.plusMonths(months)
             .let { newDate ->
                 of(newDate.year, newDate.monthValue, newDate.dayOfMonth)
             }
-    public override fun plusYear(years: Long): Date =
+    override fun plusYear(years: Long): Date =
         this.localDate.plusYears(years)
             .let { newDate ->
                 of(newDate.year, newDate.monthValue, newDate.dayOfMonth)
             }
-
-
 }

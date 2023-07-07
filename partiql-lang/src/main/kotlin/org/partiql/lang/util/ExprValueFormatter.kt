@@ -67,7 +67,8 @@ class ConfigurableExprValueFormatter(private val config: Configuration) : ExprVa
                 }
                 ExprValueType.TIMESTAMP -> {
                     val timestamp = value.partiQLTimestampValue()
-                    out.append("TIMESTAMP '${timestamp.toStringSQL()}'")
+                    // out.append("TIMESTAMP '${timestamp.toStringSQL()}'")
+                    TODO()
                 }
 
                 // fallback to an Ion literal for all types that don't have a native PartiQL representation

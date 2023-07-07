@@ -10,7 +10,6 @@ import org.partiql.lang.eval.dateValue
 import org.partiql.lang.eval.intValue
 import org.partiql.lang.eval.name
 import org.partiql.lang.eval.numberValue
-import org.partiql.lang.eval.partiQLTimestampValue
 import org.partiql.lang.eval.stringValue
 import org.partiql.lang.eval.timeValue
 
@@ -50,7 +49,8 @@ private object ExprValueStrictComparator : Comparator<ExprValue> {
             ExprValueType.FLOAT -> v1.numberValue().toDouble().compareTo(v2.numberValue().toDouble())
             ExprValueType.DECIMAL -> v1.bigDecimalValue().compareTo(v2.bigDecimalValue())
             ExprValueType.DATE -> v1.dateValue().compareTo(v2.dateValue())
-            ExprValueType.TIMESTAMP -> v1.partiQLTimestampValue().compareTo(v2.partiQLTimestampValue())
+            ExprValueType.TIMESTAMP -> TODO()
+            // v1.partiQLTimestampValue().compareTo(v2.partiQLTimestampValue())
             ExprValueType.TIME -> {
                 val (localTime1, precision1, zoneOffset1) = v1.timeValue()
                 val (localTime2, precision2, zoneOffset2) = v2.timeValue()

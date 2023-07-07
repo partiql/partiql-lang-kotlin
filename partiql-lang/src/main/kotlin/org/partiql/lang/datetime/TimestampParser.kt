@@ -5,6 +5,7 @@ import org.partiql.lang.errors.Property
 import org.partiql.lang.eval.EvaluationException
 import org.partiql.lang.eval.errNoContext
 import org.partiql.lang.util.propertyValueMapOf
+import org.partiql.value.datetime.DateTimeValue
 import org.partiql.value.datetime.TimeZone
 import org.partiql.value.datetime.Timestamp
 import java.math.BigDecimal
@@ -103,7 +104,7 @@ internal class TimestampParser {
                     TimestampField.FRACTION_OF_SECOND -> {
                         val nanoSeconds = BigDecimal.valueOf(accessor.getLong(ChronoField.NANO_OF_SECOND))
                         val secondsFraction = nanoSeconds.scaleByPowerOfTen(-9).stripTrailingZeros()
-                        Timestamp.of(
+                        DateTimeValue.timestamp(
                             year,
                             accessor.get(ChronoField.MONTH_OF_YEAR),
                             accessor.get(ChronoField.DAY_OF_MONTH),
@@ -116,7 +117,7 @@ internal class TimestampParser {
                         )
                     }
                     TimestampField.SECOND_OF_MINUTE -> {
-                        Timestamp.of(
+                        DateTimeValue.timestamp(
                             year,
                             accessor.get(ChronoField.MONTH_OF_YEAR),
                             accessor.get(ChronoField.DAY_OF_MONTH),
@@ -127,47 +128,47 @@ internal class TimestampParser {
                         )
                     }
                     TimestampField.MINUTE_OF_HOUR -> {
-                        Timestamp.of(
+                        DateTimeValue.timestamp(
                             year,
                             accessor.get(ChronoField.MONTH_OF_YEAR),
                             accessor.get(ChronoField.DAY_OF_MONTH),
                             accessor.get(ChronoField.HOUR_OF_DAY),
                             accessor.get(ChronoField.MINUTE_OF_HOUR),
-                            BigDecimal.ZERO,
+                            0,
                             accessor.getLocalOffset()
                         )
                     }
                     TimestampField.HOUR_OF_DAY -> {
-                        Timestamp.of(
+                        DateTimeValue.timestamp(
                             year,
                             accessor.get(ChronoField.MONTH_OF_YEAR),
                             accessor.get(ChronoField.DAY_OF_MONTH),
                             accessor.get(ChronoField.HOUR_OF_DAY),
                             0,
-                            BigDecimal.ZERO, // Ion Timestamp has no HOUR precision -- default minutes to 0
+                            0, // Ion Timestamp has no HOUR precision -- default minutes to 0
                             accessor.getLocalOffset()
                         )
                     }
                     TimestampField.DAY_OF_MONTH -> {
-                        Timestamp.of(
+                        DateTimeValue.timestamp(
                             year,
                             accessor.get(ChronoField.MONTH_OF_YEAR),
                             accessor.get(ChronoField.DAY_OF_MONTH),
-                            0, 0, BigDecimal.ZERO,
+                            0, 0, 0,
                             accessor.getLocalOffset()
                         )
                     }
                     TimestampField.MONTH_OF_YEAR -> {
-                        Timestamp.of(
+                        DateTimeValue.timestamp(
                             year, accessor.get(ChronoField.MONTH_OF_YEAR), 1,
-                            0, 0, BigDecimal.ZERO,
+                            0, 0, 0,
                             accessor.getLocalOffset()
                         )
                     }
                     TimestampField.YEAR -> {
-                        Timestamp.of(
+                        DateTimeValue.timestamp(
                             year, 1, 1,
-                            0, 0, BigDecimal.ZERO,
+                            0, 0, 0,
                             accessor.getLocalOffset()
                         )
                     }

@@ -15,9 +15,7 @@
 package org.partiql.lang.eval.builtins
 
 import org.partiql.lang.datetime.DateTimeUtils.parseTimestamp
-import org.partiql.lang.datetime.FormatPattern
 import org.partiql.lang.datetime.TimestampParser
-import org.partiql.lang.datetime.TimestampTemporalAccessor
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.errors.PropertyValueMap
@@ -36,8 +34,6 @@ import org.partiql.lang.eval.longValue
 import org.partiql.lang.eval.partiQLTimestampValue
 import org.partiql.lang.eval.stringValue
 import org.partiql.lang.eval.time.NANOS_PER_SECOND
-import org.partiql.lang.eval.time.SECONDS_PER_HOUR
-import org.partiql.lang.eval.time.SECONDS_PER_MINUTE
 import org.partiql.lang.eval.time.Time
 import org.partiql.lang.eval.unnamedValue
 import org.partiql.lang.syntax.impl.DateTimePart
@@ -46,13 +42,12 @@ import org.partiql.lang.types.UnknownArguments
 import org.partiql.lang.util.propertyValueMapOf
 import org.partiql.types.StaticType
 import org.partiql.types.StaticType.Companion.unionOf
+import org.partiql.value.datetime.DateTimeValue
 import org.partiql.value.datetime.TimeZone
+import org.partiql.value.datetime.TimestampWithTimeZone
+import org.partiql.value.datetime.TimestampWithoutTimeZone
 import java.math.BigDecimal
-import java.math.RoundingMode
 import java.time.DateTimeException
-import java.time.Period
-import java.time.format.DateTimeFormatter
-import java.time.temporal.UnsupportedTemporalTypeException
 import java.util.TreeSet
 
 /**
@@ -187,7 +182,7 @@ internal object ExprFunctionDateAdd : ExprFunction {
                 }
                 DateTimePart.MONTH -> {
                     if (quantity.type == ExprValueType.INT) {
-                        timestamp.plusMonth(quantity.longValue())
+                        timestamp.plusMonths(quantity.longValue())
                     } else {
                         typeMismatchError(part.name, quantity)
                     }
@@ -254,15 +249,36 @@ internal object ExprFunctionDateDiff : ExprFunction {
     override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
         val arg0 = required[0].stringValue()
         val part = DateTimePart.safeValueOf(arg0)
-        val l = required[1].partiQLTimestampValue().atTimeZone(org.partiql.value.datetime.TimeZone.UtcOffset.of(0))
-        val r = required[2].partiQLTimestampValue().atTimeZone(org.partiql.value.datetime.TimeZone.UtcOffset.of(0))
+        val l = required[1].partiQLTimestampValue().let {
+            when (it) {
+                is TimestampWithTimeZone -> it.atTimeZone(TimeZone.UtcOffset.of(0))
+                is TimestampWithoutTimeZone -> DateTimeValue.timestamp(2000, 0, 0, 0, 0, 0, TimeZone.UnknownTimeZone)
+            }
+        }
+        val r = required[2].partiQLTimestampValue().let {
+            when (it) {
+                is TimestampWithTimeZone -> it.atTimeZone(TimeZone.UtcOffset.of(0))
+                is TimestampWithoutTimeZone -> DateTimeValue.timestamp(2000, 0, 0, 0, 0, 0, TimeZone.UnknownTimeZone)
+            }
+        }
         return when (part) {
-            DateTimePart.YEAR -> Period.between(l.date.localDate, r.date.localDate).years.let { ExprValue.newInt(it) }
-            DateTimePart.MONTH -> Period.between(l.date.localDate, r.date.localDate).toTotalMonths().let { ExprValue.newInt(it) }
-            DateTimePart.DAY -> (r.epochSecond.minus(l.epochSecond).setScale(0, RoundingMode.DOWN).intValueExact() / (SECONDS_PER_HOUR * 24L)).let { ExprValue.newInt(it) }
-            DateTimePart.HOUR -> (r.epochSecond.minus(l.epochSecond).setScale(0, RoundingMode.DOWN).intValueExact() / SECONDS_PER_HOUR.toLong()).let { ExprValue.newInt(it) }
-            DateTimePart.MINUTE -> (r.epochSecond.minus(l.epochSecond).setScale(0, RoundingMode.DOWN).intValueExact() / SECONDS_PER_MINUTE.toLong()).let { ExprValue.newInt(it) }
-            DateTimePart.SECOND -> (r.epochSecond.minus(l.epochSecond)).let { ExprValue.newDecimal(it) }
+            DateTimePart.YEAR -> // Period.between(l.date.localDate, r.date.localDate).years.let { ExprValue.newInt(it) }
+                TODO()
+            DateTimePart.MONTH -> // Period.between(l.date.localDate, r.date.localDate).toTotalMonths().let { ExprValue.newInt(it) }
+                TODO()
+            DateTimePart.DAY -> // (r.epochSecond.minus(l.epochSecond).setScale(0, RoundingMode.DOWN).intValueExact() / (SECONDS_PER_HOUR * 24L)).let { ExprValue.newInt(it) }
+                TODO()
+            DateTimePart.HOUR ->
+                // (r.epochSecond.minus(l.epochSecond).setScale(0, RoundingMode.DOWN).intValueExact() / SECONDS_PER_HOUR.toLong()).let { ExprValue.newInt(it) }
+
+                TODO()
+            DateTimePart.MINUTE ->
+                // (r.epochSecond.minus(l.epochSecond).setScale(0, RoundingMode.DOWN).intValueExact() / SECONDS_PER_MINUTE.toLong()).let { ExprValue.newInt(it) }
+
+                TODO()
+            DateTimePart.SECOND ->
+                // (r.epochSecond.minus(l.epochSecond)).let { ExprValue.newDecimal(it) }
+                TODO()
             else -> errNoContext(
                 "invalid datetime part for date_diff: $arg0",
                 errorCode = ErrorCode.EVALUATOR_INVALID_ARGUMENTS_FOR_DATE_PART,
@@ -447,9 +463,10 @@ internal object ExprFunctionFromUnix : ExprFunction {
     )
 
     override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
-        val unixTimestamp = required[0].bigDecimalValue()
-        val seconds = unixTimestamp.stripTrailingZeros()
-        return newTimestamp(org.partiql.value.datetime.Timestamp.forEpochSecond(seconds))
+//        val unixTimestamp = required[0].bigDecimalValue()
+//        val seconds = unixTimestamp.stripTrailingZeros()
+//        return newTimestamp(org.partiql.value.datetime.Timestamp.forEpochSecond(seconds))
+        TODO()
     }
 }
 
@@ -480,15 +497,17 @@ internal object ExprFunctionUnixTimestamp : ExprFunction {
         returnType = StaticType.DECIMAL
     )
     override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
-        return ExprValue.newDecimal(session.nowZ.epochSecond)
+        // return ExprValue.newDecimal(session.nowZ.epochSecond)
+        TODO()
     }
 
     override fun callWithOptional(session: EvaluationSession, required: List<ExprValue>, opt: ExprValue): ExprValue {
-        val timestamp = opt.partiQLTimestampValue().let {
-            if (it.timeZone == null) it.atTimeZone(session.timeZone) else it
-        }
-
-        return ExprValue.newDecimal(timestamp.epochSecond)
+//        val timestamp = opt.partiQLTimestampValue().let {
+//            if (it.timeZone == null) it.atTimeZone(session.timeZone) else it
+//        }
+//
+//        return ExprValue.newDecimal(timestamp.epochSecond)
+        TODO()
     }
 }
 
@@ -514,44 +533,45 @@ internal object ExprFunctionToString : ExprFunction {
     )
 
     override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
-        val pattern = required[1].stringValue()
-
-        // Check if the input pattern contains only the allowed symbols
-        val parsedPattern = FormatPattern.fromString(pattern)
-
-        // timezone manipulation
-        val timestamp = required[0].partiQLTimestampValue()
-        val modifiedTs = when (parsedPattern.hasOffset) {
-            true -> {
-                if (timestamp.timeZone == null) {
-                    timestamp.atTimeZone(session.timeZone)
-                } else {
-                    timestamp
-                }
-            }
-            false -> {
-                if (timestamp.timeZone == null) {
-                    timestamp
-                } else {
-                    timestamp.atTimeZone(TimeZone.UtcOffset.of(0))
-                }
-            }
-        }
-
-        val formatter: DateTimeFormatter = try {
-            DateTimeFormatter.ofPattern(pattern)
-        } catch (ex: IllegalArgumentException) {
-            errInvalidFormatPattern(pattern, ex)
-        }
-
-        val temporalAccessor = TimestampTemporalAccessor(modifiedTs)
-        try {
-            return ExprValue.newString(formatter.format(temporalAccessor))
-        } catch (ex: UnsupportedTemporalTypeException) {
-            errInvalidFormatPattern(pattern, ex)
-        } catch (ex: DateTimeException) {
-            errInvalidFormatPattern(pattern, ex)
-        }
+//        val pattern = required[1].stringValue()
+//
+//        // Check if the input pattern contains only the allowed symbols
+//        val parsedPattern = FormatPattern.fromString(pattern)
+//
+//        // timezone manipulation
+//        val timestamp = required[0].partiQLTimestampValue()
+//        val modifiedTs = when (parsedPattern.hasOffset) {
+//            true -> {
+//                if (timestamp.timeZone == null) {
+//                    timestamp.atTimeZone(session.timeZone)
+//                } else {
+//                    timestamp
+//                }
+//            }
+//            false -> {
+//                if (timestamp.timeZone == null) {
+//                    timestamp
+//                } else {
+//                    timestamp.atTimeZone(TimeZone.UtcOffset.of(0))
+//                }
+//            }
+//        }
+//
+//        val formatter: DateTimeFormatter = try {
+//            DateTimeFormatter.ofPattern(pattern)
+//        } catch (ex: IllegalArgumentException) {
+//            errInvalidFormatPattern(pattern, ex)
+//        }
+//
+//        val temporalAccessor = TimestampTemporalAccessor(modifiedTs)
+//        try {
+//            return ExprValue.newString(formatter.format(temporalAccessor))
+//        } catch (ex: UnsupportedTemporalTypeException) {
+//            errInvalidFormatPattern(pattern, ex)
+//        } catch (ex: DateTimeException) {
+//            errInvalidFormatPattern(pattern, ex)
+//        }
+        TODO()
     }
 
     private fun errInvalidFormatPattern(pattern: String, cause: Exception): Nothing {

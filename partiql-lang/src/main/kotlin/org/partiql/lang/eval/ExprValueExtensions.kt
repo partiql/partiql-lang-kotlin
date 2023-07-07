@@ -63,7 +63,8 @@ import org.partiql.types.StringType
 import org.partiql.types.SymbolType
 import org.partiql.types.TimeType
 import org.partiql.types.TimestampType
-import org.partiql.value.datetime.TimeZone
+import org.partiql.value.datetime.TimestampWithTimeZone
+import org.partiql.value.datetime.TimestampWithoutTimeZone
 import java.math.BigDecimal
 import java.math.MathContext
 import java.math.RoundingMode
@@ -790,9 +791,9 @@ private fun ExprValue.toIonStruct(ion: IonSystem): IonStruct {
 }
 
 private fun org.partiql.value.datetime.Timestamp.toIonValue(ion: IonSystem) =
-    when (this.timeZone) {
-        TimeZone.UnknownTimeZone, is TimeZone.UtcOffset -> ion.newTimestamp(this.ionTimestampValue)
-        null -> {
+    when (this) {
+        is TimestampWithTimeZone -> ion.newTimestamp(this.ionTimestampValue)
+        is TimestampWithoutTimeZone -> {
             val ts = this@toIonValue
             ionStructOf(
                 field("year", ionInt(ts.year.toLong())),

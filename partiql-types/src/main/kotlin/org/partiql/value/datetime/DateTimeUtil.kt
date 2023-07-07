@@ -39,9 +39,11 @@ internal object DateTimeUtil {
     internal const val MAX_TIME_ZONE_HOURS: Int = 23
     internal const val MAX_TIME_ZONE_MINUTES: Int = 59
     internal const val MAX_TOTAL_OFFSET_MINUTES: Int = MAX_TIME_ZONE_HOURS * 60 + MAX_TIME_ZONE_MINUTES
+    internal const val NANOS_IN_SECOND: Long = 1_000_000_000L
+    internal const val JAVA_MAX_OFFSET: Int = 18 * 60 // java offset valid range -18:00 to 18:00
 
     // In date time, we should only concern with BigDecimal, Int, and Long
-    internal fun Number.toBigDecimal() : BigDecimal = when (this) {
+    internal fun Number.toBigDecimal(): BigDecimal = when (this) {
         is BigDecimal -> this
         is Long -> BigDecimal.valueOf(this)
         is Int -> BigDecimal.valueOf(this.toLong())

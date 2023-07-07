@@ -15,6 +15,7 @@
 package org.partiql.lang.eval
 
 import com.amazon.ion.Timestamp
+import org.partiql.value.datetime.DateTimeValue
 import org.partiql.value.datetime.TimeZone
 
 /**
@@ -75,7 +76,7 @@ class EvaluationSession private constructor(
         }
 
         private var nowZ: org.partiql.value.datetime.Timestamp? = null
-        fun nowZ(value: org.partiql.value.datetime.Timestamp): Builder {
+        fun nowZ(value: org.partiql.value.datetime.TimestampWithTimeZone): Builder {
             nowZ = value.atTimeZone(TimeZone.UtcOffset.of(0))
             return this
         }
@@ -113,7 +114,7 @@ class EvaluationSession private constructor(
 
         fun build(): EvaluationSession = EvaluationSession(
             now = now ?: Timestamp.nowZ(),
-            nowZ = nowZ ?: org.partiql.value.datetime.Timestamp.nowZ(),
+            nowZ = nowZ ?: DateTimeValue.nowZ,
             timeZone = timeZone ?: TimeZone.UtcOffset.of(0),
             parameters = parameters,
             context = contextVariables,

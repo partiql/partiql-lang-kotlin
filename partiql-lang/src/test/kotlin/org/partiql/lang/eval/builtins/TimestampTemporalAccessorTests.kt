@@ -7,7 +7,7 @@ import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.partiql.lang.datetime.TimestampTemporalAccessor
-import org.partiql.value.datetime.Timestamp
+import org.partiql.value.datetime.DateTimeValue
 import java.math.BigDecimal
 import java.time.DateTimeException
 import java.time.format.DateTimeFormatter
@@ -21,7 +21,7 @@ class TimestampTemporalAccessorTests {
     @Test
     fun timestampWithUnknownOffset() {
         // Note:  Ion spec allows representation of unknown offset with "0"
-        val timestamp = Timestamp.of(1969, 7, 20, 20, 18, BigDecimal.valueOf(36L), null)
+        val timestamp = DateTimeValue.timestamp(1969, 7, 20, 20, 18, BigDecimal.valueOf(36L), null)
         assertNull(timestamp.timeZone)
 
         val temporalAccessor = TimestampTemporalAccessor(timestamp)
@@ -38,7 +38,7 @@ class TimestampTemporalAccessorTests {
     @Parameters
     @TestCaseName("handleUnsupportedFormatSymbols_{0}")
     fun handleUnsupportedFormatSymbolsTest(testCase: UnsupportedSymbolTestCase) {
-        val timestamp = Timestamp.of(1969, 7, 20, 20, 18, BigDecimal.valueOf(36L), null)
+        val timestamp = DateTimeValue.timestamp(1969, 7, 20, 20, 18, BigDecimal.valueOf(36L), null)
         val temporalAccessor = TimestampTemporalAccessor(timestamp)
         val formatter = DateTimeFormatter.ofPattern(testCase.formatSymbol)
 

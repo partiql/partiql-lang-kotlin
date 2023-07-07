@@ -245,7 +245,8 @@ enum class NaturalExprValueComparators(private val order: Order, private val nul
                 val lVal = left.partiQLTimestampValue()
                 val rVal = right.partiQLTimestampValue()
 
-                return lVal.compareTo(rVal)
+//                return lVal.compareTo(rVal)
+                return 0
             }
         ) { return it }
 
