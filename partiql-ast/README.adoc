@@ -89,6 +89,8 @@ The factory is how you instantiate a node. The default factory can be called dir
 
 [source,kotlin]
 ----
+import org.partiql.ast.Ast
+
 Ast.exprLit(int32Value(1))  // expr.lit
 ----
 
@@ -135,6 +137,8 @@ The DSL is useful from Kotlin and is some syntax sugar over fluent builders. Her
 .Default Factory DSL Example
 [source,kotlin]
 ----
+import org.partiql.ast.builder.ast
+
 // Tree for PartiQL `VALUES (1, 2)`
 ast {
     exprCollection(Expr.Collection.Type.VALUES) {
@@ -165,6 +169,9 @@ ast {
 .Fancier DSL Usage
 [source,kotlin]
 ----
+import org.partiql.ast.builder.ast
+import org.partiql.ast.builder.AstBuilder
+
 // define some helpers
 private fun AstBuilder.select(vararg s: String) = selectProject {
     s.forEach {
@@ -196,8 +203,9 @@ ast {
 .Custom Factory DSL Example
 [source,kotlin]
 ----
-// This will instantiate your custom `ComparableIdentifier`. Nice!
+import org.partiql.ast.builder.ast
 
+// This will instantiate your custom `ComparableIdentifier`. Nice!
 ast(myFactory) {
     exprSFW {
         select = select("x", "y", "z")
