@@ -1061,7 +1061,7 @@ class SchemaInferencerFromExampleTests {
                 examplesCombined += "{ foo: $it }"
             }
 
-            val fooType = ion.singleValue(examples.first()).type.name.toLowerCase()
+            val fooType = ion.singleValue(examples.first()).type.name.lowercase()
             var additionalConstraints = ""
             if (constraints.isNotEmpty()) {
                 constraints.map {

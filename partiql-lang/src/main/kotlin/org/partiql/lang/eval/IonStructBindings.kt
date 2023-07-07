@@ -33,7 +33,7 @@ internal class IonStructBindings(private val myStruct: IonStruct) : Bindings<Exp
     private val caseInsensitiveFieldMap by lazy {
         HashMap<String, ArrayList<IonValue>>().apply {
             for (field in myStruct) {
-                val entries = getOrPut(field.fieldName.toLowerCase()) { ArrayList(1) }
+                val entries = getOrPut(field.fieldName.lowercase()) { ArrayList(1) }
                 entries.add(field)
             }
         }
@@ -52,7 +52,7 @@ internal class IonStructBindings(private val myStruct: IonStruct) : Bindings<Exp
         caseSensitiveFieldMap[fieldName]?.let { entries -> handleMatches(entries, fieldName) }
 
     private fun caseInsensitiveLookup(fieldName: String): IonValue? =
-        caseInsensitiveFieldMap[fieldName.toLowerCase()]?.let { entries -> handleMatches(entries, fieldName) }
+        caseInsensitiveFieldMap[fieldName.lowercase()]?.let { entries -> handleMatches(entries, fieldName) }
 
     private fun handleMatches(entries: List<IonValue>, fieldName: String): IonValue? =
         when (entries.size) {

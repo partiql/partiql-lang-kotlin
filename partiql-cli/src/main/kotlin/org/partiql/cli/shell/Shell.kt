@@ -192,7 +192,7 @@ internal class Shell(
             val command = when (val end: Int = CharMatcher.`is`(';').or(CharMatcher.whitespace()).indexIn(line)) {
                 -1 -> ""
                 else -> line.substring(0, end)
-            }.toLowerCase(Locale.ENGLISH).trim()
+            }.lowercase(Locale.ENGLISH).trim()
             when (command) {
                 "!exit" -> return
                 "!add_to_global_env" -> {

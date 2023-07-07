@@ -46,7 +46,7 @@ internal class ShellHighlighter : Highlighter {
 
     override fun highlight(reader: LineReader, line: String): AttributedString {
 
-        val hasAddToGlobalEnv = line.toLowerCase().startsWith(ADD_TO_GLOBAL_ENV_STR)
+        val hasAddToGlobalEnv = line.lowercase().startsWith(ADD_TO_GLOBAL_ENV_STR)
         val input = when (hasAddToGlobalEnv) {
             true -> line.substring(ADD_TO_GLOBAL_ENV_STR.length, line.length)
             false -> line

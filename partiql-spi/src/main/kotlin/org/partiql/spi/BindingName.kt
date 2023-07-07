@@ -18,7 +18,7 @@ package org.partiql.spi
  * Encapsulates the data necessary to perform a binding lookup.
  */
 public data class BindingName(val name: String, val bindingCase: BindingCase) {
-    val loweredName: String by lazy(LazyThreadSafetyMode.PUBLICATION) { name.toLowerCase() }
+    val loweredName: String by lazy(LazyThreadSafetyMode.PUBLICATION) { name.lowercase() }
 
     /**
      * Compares [name] to [otherName] using the rules specified by [bindingCase].
