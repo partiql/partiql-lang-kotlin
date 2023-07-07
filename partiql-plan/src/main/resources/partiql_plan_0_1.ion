@@ -1,0 +1,200 @@
+imports::{
+  kotlin: [
+    static_type::'org.partiql.types.StaticType',
+    value::'org.partiql.value.PartiQLValue',
+  ],
+}
+
+parti_q_l_plan::{
+  version:    version,    // version :: (major minor)
+  types:      types,      // (types ...)
+  statement:  statement,  // (statement ...)
+}
+
+parti_q_l_header::{}
+
+version::[
+  PARTIQL_0_0,
+  PARTIQL_0_1,  // CURRENT
+]
+
+// Types
+
+types::{
+  types: list::[type],
+}
+
+type::[
+  atomic::{
+    symbol: string,
+    params: list::[value],
+  },
+  union::{
+    types: list::[type],
+  },
+]
+
+// Statements
+
+statement::[
+  query::{
+    root: rex,
+  },
+]
+
+// Identifiers
+
+identifier::[
+  symbol::{
+    symbol:           string,
+    case_sensitivity: case_sensitivity,
+  },
+  qualified::{
+    root:   symbol,
+    steps:  list::[symbol],
+  },
+  _::[
+    case_sensitivity::[
+      SENSITIVE,
+      INSENSITIVE,
+    ],
+  ],
+]
+
+// Rex
+rex::{
+  type: static_type,
+  op:[
+
+    lit::{
+      value: value,
+    },
+
+    var::[
+      resolved::{
+        ref: int,
+      },
+      unresolved::{
+        identifier: identifier,
+        scope: scope,
+      },
+      _::[
+        scope::[
+          DEFAULT,  //  x.y.z
+          LOCAL,    // @x.y.z
+        ],
+      ],
+    ],
+
+    global::{
+      ref: int,
+    },
+
+    path::{
+      root:   rex,
+      steps:  list::[step],
+      _: [
+        step::[
+          index::{ key: rex },
+          wildcard::{},
+          unpivot::{},
+        ],
+      ],
+    },
+
+    call::{
+       fn:    fn,
+       args:  list::[rex],
+    },
+
+    // cast
+    // switch
+    // tuple
+    // collections
+    // pivot
+    // select
+  ],
+}
+
+// Rel
+rel::{
+  type: list::[static_type],
+  op: [
+
+    scan::{
+      value: rex,
+    },
+
+    scan_indexed::{
+      value: rex,
+    },
+
+    distinct::{},
+
+    unpivot::{
+      key:    rex,
+      value:  rex,
+    },
+
+    filter::{
+      condition:  rex,
+    },
+
+    // sort::{
+    //   input: rel,
+    //   specs: list::[sort_spec],
+    // },
+
+    union::{},
+
+    intersect::{},
+
+    except::{},
+
+    fetch::{
+      limit:  rex,
+      offset: rex,
+    },
+
+    project::{
+      projections: list::[rex],
+    },
+
+    cross_join::{},
+
+    join::{
+      condition: [
+        theta::{ predicate: rex },
+        equal::{},
+        natural::{},
+      ],
+      type: [
+        INNER,
+        LEFT,
+        LEFT_OUTER,
+        RIGHT,
+        RIGHT_OUTER,
+        FULL,
+        FULL_OUTER,
+      ],
+    },
+
+    aggregate::{
+      strategy: [ FULL, PARTIAL ],
+      aggs:     list::[agg],
+      groups:   list::[rex],
+    },
+  ],
+}
+
+// Function Definition
+fn::{
+  id:     identifier,
+  inputs: list::[static_type],
+  output: static_type,
+}
+
+agg::{
+  fn:   fn,
+  args: list::[rex],
+}
