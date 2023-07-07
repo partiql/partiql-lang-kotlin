@@ -34,7 +34,6 @@ dependencies {
     implementation(Deps.picoCli)
     implementation(Deps.kotlinReflect)
     testImplementation(Deps.mockito)
-    testImplementation("io.mockk:mockk:1.12.0")
 }
 
 application {
