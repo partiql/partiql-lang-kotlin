@@ -103,9 +103,24 @@ class PartiQLTestExtension implements TestTemplateInvocationContextProvider {
         PartiQLTestProvider prov = instantiateArgumentsProvider(annotation.provider());
         CompilerPipeline pipeline = CompilerPipeline.standard();
         Expression expression = pipeline.compile(prov.getQuery());
+        String packageName = prov.getClass().getPackage().getName();
+        String className = prov.getClass().getName();
+        String canonicalName = prov.getClass().getCanonicalName();
+        String simpleName = prov.getClass().getSimpleName();
+        String typeName = prov.getClass().getTypeName();
+        String[] classNames = className.split("\\.");
+        String actualClassName = classNames[classNames.length - 1];
+        System.out.println("PACKAGE NAME: " + packageName);
+        System.out.println("CLASS NAME: " + className);
+        System.out.println("ACTUAL CLASS NAME: " + actualClassName);
+        System.out.println("CANONICAL NAME: " + canonicalName);
+        System.out.println("SIMPLE NAME: " + simpleName);
+        System.out.println("TYPE NAME: " + typeName);
 
         // Compute Coverage Metrics
         Map<String, String> report = new HashMap<>();
+        report.put(CoverageListener.ReportKey.PACKAGE_NAME, packageName);
+        report.put(CoverageListener.ReportKey.PROVIDER_NAME, actualClassName);
         Stream<Object[]> tests = Stream.of(prov)
                 .map(provider -> AnnotationConsumerInitializer.initialize(templateMethod, provider))
                 .flatMap(provider -> arguments(provider, extensionContext))

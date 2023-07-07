@@ -21,5 +21,5 @@ plugins {
 }
 
 dependencies {
-    testImplementation(project(":lib:coverage"))
+    testImplementation(project(":partiql-coverage"))
 }
