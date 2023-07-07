@@ -6,16 +6,16 @@ imports::{
 }
 
 parti_q_l_plan::{
-  version:    version,    // version :: (major minor)
-  types:      types,      // (types ...)
-  statement:  statement,  // (statement ...)
+  version:    parti_q_l_version,    // version :: (major minor)
+  types:      types,                // (types ...)
+  statement:  statement,            // (statement ...)
 }
 
 parti_q_l_header::{}
 
-version::[
-  PARTIQL_0_0,
-  PARTIQL_0_1,  // CURRENT
+parti_q_l_version::[
+  VERSION_0_0,
+  VERSION_0_1,  // CURRENT
 ]
 
 // Types

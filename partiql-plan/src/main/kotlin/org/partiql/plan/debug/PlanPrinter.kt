@@ -1,6 +1,5 @@
 package org.partiql.plan.debug
 
-import org.partiql.plan.Common
 import org.partiql.plan.PlanNode
 import org.partiql.plan.Rel
 import org.partiql.plan.visitor.PlanBaseVisitor
@@ -67,7 +66,7 @@ object PlanPrinter {
             }
             out.append(EOL)
             // print child nodes
-            val children = node.children.filter { it !is Common }.sortedWith(relLast)
+            val children = node.children.sortedWith(relLast)
             children.forEachIndexed { i, child ->
                 val args = Args(out, levels + !last, last = i == children.size - 1)
                 child.accept(Visitor, args)
