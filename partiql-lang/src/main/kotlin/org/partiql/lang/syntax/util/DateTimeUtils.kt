@@ -2,6 +2,7 @@ package org.partiql.lang.syntax.util
 
 import org.partiql.value.datetime.Date
 import org.partiql.value.datetime.DateTimeException
+import org.partiql.value.datetime.DateTimeValue
 import org.partiql.value.datetime.Time
 import org.partiql.value.datetime.TimeZone
 import org.partiql.value.datetime.Timestamp
@@ -24,7 +25,7 @@ internal object DateTimeUtils {
         val year = matcher.group("year").toInt()
         val month = matcher.group("month").toInt()
         val day = matcher.group("day").toInt()
-        return Date.of(year, month, day)
+        return DateTimeValue.date(year, month, day)
     }
 
     internal fun parseTimeLiteral(timeString: String): Time {
@@ -40,11 +41,11 @@ internal object DateTimeUtils {
             val second = BigDecimal.valueOf(wholeSecond).add(fractionPart)
             val timeZoneString = matcher.group("timezone") ?: null
             if (timeZoneString != null) {
-                matcher.group("utc")?.let { return Time.of(hour, minute, second, TimeZone.UtcOffset.of(0), null) }
+                matcher.group("utc")?.let { return DateTimeValue.time(hour, minute, second, TimeZone.UtcOffset.of(0)) }
                 val timeZone = getTimeZoneComponent(timeZoneString)
-                return Time.of(hour, minute, second, timeZone, null)
+                return DateTimeValue.time(hour, minute, second, timeZone)
             }
-            return Time.of(hour, minute, second, null, null)
+            return DateTimeValue.time(hour, minute, second)
         } catch (e: IllegalStateException) {
             throw DateTimeException(e.localizedMessage)
         } catch (e: IllegalArgumentException) {
@@ -59,7 +60,7 @@ internal object DateTimeUtils {
         )
         val date = parseDateLiteral(matcher.group("date"))
         val time = parseTimeLiteral(matcher.group("time"))
-        return Timestamp.of(date, time)
+        return DateTimeValue.timestamp(date, time)
     }
 
     private fun getTimeZoneComponent(timezone: String): TimeZone {
