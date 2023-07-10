@@ -10,6 +10,7 @@ import org.partiql.plan.builder.PlanFactory
 import org.partiql.planner.Env
 import org.partiql.types.StaticType
 import org.partiql.value.PartiQLValueExperimental
+import org.partiql.value.symbolValue
 
 /**
  * Converts an AST expression node to a Plan Rex node; ignoring any typing.
@@ -72,6 +73,32 @@ internal object RexConverter {
             // Rex
             val op = rexOpCall(fn, args)
             rex(type, op)
+        }
+
+        override fun visitExprPath(node: Expr.Path, ctx: Env): Rex = transform {
+            val type = StaticType.ANY
+            // Args
+            val root = visitExpr(node.root, ctx)
+            val steps = node.steps.map {
+                when (it) {
+                    is Expr.Path.Step.Index -> {
+                        val key = visitExpr(it.key, ctx)
+                        rexOpPathStepIndex(key)
+                    }
+                    is Expr.Path.Step.Symbol -> {
+                        // Treat each symbol `foo` as ["foo"]
+                        // Per resolution rules, we may be able to resolve and replace the first `n` symbols
+                        val symbol = rexOpLit(symbolValue(it.symbol.symbol))
+                        val key = rex(StaticType.SYMBOL, symbol)
+                        rexOpPathStepIndex(key)
+                    }
+                    is Expr.Path.Step.Unpivot -> rexOpPathStepUnpivot()
+                    is Expr.Path.Step.Wildcard -> rexOpPathStepWildcard()
+                }
+            }
+            // Rex
+            val op = rexOpPath(root, steps)
+            return rex(type, op)
         }
     }
 }

@@ -1,8 +1,16 @@
 package org.partiql.planner.impl
 
+import com.amazon.ionelement.api.IonElement
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.parallel.Execution
+import org.junit.jupiter.api.parallel.ExecutionMode
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
+import org.partiql.ast.AstNode
 import org.partiql.ast.Expr
 import org.partiql.ast.builder.ast
+import org.partiql.plan.PartiQLVersion
+import org.partiql.plan.ion.PartiQLPlanIonWriter
 import org.partiql.planner.Env
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.float64Value
@@ -13,7 +21,7 @@ class PartiQLPlannerDefaultTest {
 
     private val env = Env()
     private val planner = PartiQLPlannerDefault(env)
-    // private val writer = PartiQLPlanWriter.ion(PartiQLVersion.VERSION_0_1)
+    private val writer = PartiQLPlanIonWriter.get(PartiQLVersion.VERSION_0_1)
 
     @Test
     fun sanity() {
@@ -33,10 +41,9 @@ class PartiQLPlannerDefaultTest {
 
         // Default planner, no passes
         val result = planner.plan(source)
-        println(result)
 
         // Debug dump for sanity check
-        // val representation = writer.write(result.plan)
+        val representation = writer.toIon(result.plan)
 
         // Expecting to see something similar to,
         //
@@ -55,6 +62,25 @@ class PartiQLPlannerDefaultTest {
         //      )))
         //  )
         //
-        // println(representation.toString())
+        println(representation.toString())
+    }
+
+    @ParameterizedTest
+    @MethodSource("pathCases")
+    @Execution(ExecutionMode.CONCURRENT)
+    fun testPaths(case: Case) = case.assert()
+
+    companion object {
+
+        // TODO need equals/hashcode on IRs
+        @JvmStatic
+        fun pathCases() = listOf<Case>()
+    }
+
+    class Case(
+        val input: AstNode,
+        val expected: IonElement,
+    ) {
+        fun assert() {}
     }
 }
