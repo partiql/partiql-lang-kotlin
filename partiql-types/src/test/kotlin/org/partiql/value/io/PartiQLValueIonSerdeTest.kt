@@ -18,8 +18,7 @@ import org.partiql.value.bagValue
 import org.partiql.value.boolValue
 import org.partiql.value.charValue
 import org.partiql.value.dateValue
-import org.partiql.value.datetime.Date
-import org.partiql.value.datetime.Time
+import org.partiql.value.datetime.DateTimeValue
 import org.partiql.value.datetime.TimeZone
 import org.partiql.value.datetime.Timestamp
 import org.partiql.value.decimalValue
@@ -270,7 +269,7 @@ class PartiQLValueIonSerdeTest {
                 ION.newSymbol("f.x"),
             ),
             roundTrip(
-                dateValue(Date.of(2023, 6, 1)),
+                dateValue(DateTimeValue.date(2023, 6, 1)),
                 ION.newEmptyStruct().apply {
                     add("year", ION.newInt(2023L))
                     add("month", ION.newInt(6L))
@@ -280,7 +279,7 @@ class PartiQLValueIonSerdeTest {
             ),
             // time without time zone
             roundTrip(
-                timeValue(Time.of(0, 0, BigDecimal.valueOf(0, 2))),
+                timeValue(DateTimeValue.time(0, 0, BigDecimal.valueOf(0, 2))),
                 ION.newEmptyStruct().apply {
                     add("hour", ION.newInt(0L))
                     add("minute", ION.newInt(0L))
@@ -290,7 +289,7 @@ class PartiQLValueIonSerdeTest {
             ),
             // time with unknown time zone
             roundTrip(
-                timeValue(Time.of(0, 0, BigDecimal.valueOf(0, 2), TimeZone.UnknownTimeZone)),
+                timeValue(DateTimeValue.time(0, 0, BigDecimal.valueOf(0, 2), TimeZone.UnknownTimeZone)),
                 ION.newEmptyStruct().apply {
                     add("hour", ION.newInt(0L))
                     add("minute", ION.newInt(0L))
@@ -301,7 +300,7 @@ class PartiQLValueIonSerdeTest {
             ),
             // time with time zone
             roundTrip(
-                timeValue(Time.of(0, 0, BigDecimal.valueOf(0, 2), TimeZone.UtcOffset.of(10))),
+                timeValue(DateTimeValue.time(0, 0, BigDecimal.valueOf(0, 2), TimeZone.UtcOffset.of(10))),
                 ION.newEmptyStruct().apply {
                     add("hour", ION.newInt(0L))
                     add("minute", ION.newInt(0L))
@@ -311,7 +310,7 @@ class PartiQLValueIonSerdeTest {
                 }
             ),
             roundTrip(
-                timeValue(Time.of(0, 0, BigDecimal.valueOf(0, 2), TimeZone.UtcOffset.of(-100))),
+                timeValue(DateTimeValue.time(0, 0, BigDecimal.valueOf(0, 2), TimeZone.UtcOffset.of(-100))),
                 ION.newEmptyStruct().apply {
                     add("hour", ION.newInt(0L))
                     add("minute", ION.newInt(0L))
@@ -322,9 +321,9 @@ class PartiQLValueIonSerdeTest {
             ),
             roundTrip(
                 timestampValue(
-                    Timestamp.of(
-                        Date.of(2023, 6, 1),
-                        Time.of(0, 0, BigDecimal.valueOf(0, 2), null)
+                    DateTimeValue.timestamp(
+                        DateTimeValue.date(2023, 6, 1),
+                        DateTimeValue.time(0, 0, BigDecimal.valueOf(0, 2), null)
                     )
                 ),
                 ION.newEmptyStruct().apply {
@@ -339,27 +338,27 @@ class PartiQLValueIonSerdeTest {
             ),
             roundTrip(
                 timestampValue(
-                    Timestamp.of(
-                        Date.of(2023, 6, 1),
-                        Time.of(0, 0, BigDecimal.valueOf(0, 2), TimeZone.UnknownTimeZone)
+                    DateTimeValue.timestamp(
+                        DateTimeValue.date(2023, 6, 1),
+                        DateTimeValue.time(0, 0, BigDecimal.valueOf(0, 2), TimeZone.UnknownTimeZone)
                     )
                 ),
                 ION.newTimestamp(com.amazon.ion.Timestamp.forSecond(2023, 6, 1, 0, 0, BigDecimal.valueOf(0, 2), null))
             ),
             roundTrip(
                 timestampValue(
-                    Timestamp.of(
-                        Date.of(2023, 6, 1),
-                        Time.of(0, 0, BigDecimal.valueOf(0, 2), TimeZone.UtcOffset.of(10))
+                    DateTimeValue.timestamp(
+                        DateTimeValue.date(2023, 6, 1),
+                        DateTimeValue.time(0, 0, BigDecimal.valueOf(0, 2), TimeZone.UtcOffset.of(10))
                     )
                 ),
                 ION.newTimestamp(com.amazon.ion.Timestamp.forSecond(2023, 6, 1, 0, 0, BigDecimal.valueOf(0, 2), 10))
             ),
             roundTrip(
                 timestampValue(
-                    Timestamp.of(
-                        Date.of(2023, 6, 1),
-                        Time.of(0, 0, BigDecimal.valueOf(0, 2), TimeZone.UtcOffset.of(-100))
+                    DateTimeValue.timestamp(
+                        DateTimeValue.date(2023, 6, 1),
+                        DateTimeValue.time(0, 0, BigDecimal.valueOf(0, 2), TimeZone.UtcOffset.of(-100))
                     )
                 ),
                 ION.newTimestamp(com.amazon.ion.Timestamp.forSecond(2023, 6, 1, 0, 0, BigDecimal.valueOf(0, 2), -100))

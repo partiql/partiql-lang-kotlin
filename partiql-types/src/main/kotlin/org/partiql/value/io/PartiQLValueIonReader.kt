@@ -14,10 +14,8 @@ import org.partiql.value.blobValue
 import org.partiql.value.boolValue
 import org.partiql.value.clobValue
 import org.partiql.value.dateValue
-import org.partiql.value.datetime.Date
-import org.partiql.value.datetime.Time
+import org.partiql.value.datetime.DateTimeValue
 import org.partiql.value.datetime.TimeZone
-import org.partiql.value.datetime.Timestamp
 import org.partiql.value.decimalValue
 import org.partiql.value.float64Value
 import org.partiql.value.intValue
@@ -63,7 +61,6 @@ internal class PartiQLValueIonReader(
     private val ionReader: IonReader,
     private val sourceDataFormat: PartiQLValueIonReaderBuilder.SourceDataFormat
 ) : PartiQLValueReader {
-
     private enum class PARTIQL_ANNOTATION(val annotation: String) {
         MISSING_ANNOTATION("\$missing"),
         BAG_ANNOTATION("\$bag"),
@@ -135,7 +132,7 @@ internal class PartiQLValueIonReader(
                 if (reader.isNullValue) {
                     nullableTimestampValue(null, reader.typeAnnotations.toList())
                 } else {
-                    timestampValue(Timestamp.of(reader.timestampValue()), reader.typeAnnotations.toList())
+                    timestampValue(DateTimeValue.timestamp(reader.timestampValue()), reader.typeAnnotations.toList())
                 }
             }
 
@@ -315,7 +312,7 @@ internal class PartiQLValueIonReader(
                         if (reader.isNullValue) {
                             nullableTimestampValue(null, annotations)
                         } else {
-                            timestampValue(Timestamp.of(reader.timestampValue()), annotations)
+                            timestampValue(DateTimeValue.timestamp(reader.timestampValue()), annotations)
                         }
                     }
                 }
@@ -473,7 +470,7 @@ internal class PartiQLValueIonReader(
                                 throw IllegalArgumentException("excess field in struct")
                             }
                             reader.stepOut()
-                            dateValue(Date.of(map["year"] as Int, map["month"] as Int, map["day"] as Int), annotations.dropLast(1))
+                            dateValue(DateTimeValue.date(map["year"] as Int, map["month"] as Int, map["day"] as Int), annotations.dropLast(1))
                         }
                     }
                     PARTIQL_ANNOTATION.TIME_ANNOTATION -> {
@@ -499,7 +496,7 @@ internal class PartiQLValueIonReader(
                                 TimeZone.UtcOffset.of(map["offset"] as Int)
                             }
                             timeValue(
-                                Time.of(
+                                DateTimeValue.time(
                                     map["hour"] as Int, map["minute"] as Int, map["second"] as BigDecimal,
                                     offset
                                 ),
@@ -526,7 +523,7 @@ internal class PartiQLValueIonReader(
                             }
                             reader.stepOut()
                             timestampValue(
-                                Timestamp.of(
+                                DateTimeValue.timestamp(
                                     map["year"] as Int, map["month"] as Int, map["day"] as Int,
                                     map["hour"] as Int, map["minute"] as Int, map["second"] as BigDecimal,
                                     null

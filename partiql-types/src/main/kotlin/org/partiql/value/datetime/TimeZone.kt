@@ -1,3 +1,17 @@
+/*
+ * Copyright Amazon.com, Inc. or its affiliates.  All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at:
+ *
+ *      http://aws.amazon.com/apache2.0/
+ *
+ * or in the "license" file accompanying this file. This file is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
+ * language governing permissions and limitations under the License.
+ */
+
 package org.partiql.value.datetime
 
 import org.partiql.value.datetime.DateTimeUtil.MAX_TIME_ZONE_HOURS
@@ -16,6 +30,13 @@ public sealed class TimeZone {
      * between Coordinated Universal Time (UTC) and local time, at a particular place.
      */
     public data class UtcOffset private constructor(val totalOffsetMinutes: Int) : TimeZone() {
+        val tzHour: Int by lazy {
+            this.totalOffsetMinutes / 60
+        }
+
+        val tzMinute: Int by lazy {
+            this.totalOffsetMinutes - this.tzHour * 60
+        }
         public companion object {
 
             /**

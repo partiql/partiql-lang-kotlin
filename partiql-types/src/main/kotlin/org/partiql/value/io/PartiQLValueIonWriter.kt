@@ -84,6 +84,8 @@ import org.partiql.value.charValue
 import org.partiql.value.clobValue
 import org.partiql.value.dateValue
 import org.partiql.value.datetime.TimeZone
+import org.partiql.value.datetime.TimestampWithTimeZone
+import org.partiql.value.datetime.TimestampWithoutTimeZone
 import org.partiql.value.decimalValue
 import org.partiql.value.float32Value
 import org.partiql.value.float64Value
@@ -295,21 +297,21 @@ internal class PartiQLValueIonWriter(
                         ionStructOf(
                             field("hour", ionInt(v.value.hour.toLong())),
                             field("minute", ionInt(v.value.minute.toLong())),
-                            field("second", ionDecimal(Decimal.valueOf(v.value.second))),
+                            field("second", ionDecimal(Decimal.valueOf(v.value.decimalSecond))),
                             field("offset", ionNull(ElementType.INT)),
                         )
                     is TimeZone.UtcOffset ->
                         ionStructOf(
                             field("hour", ionInt(v.value.hour.toLong())),
                             field("minute", ionInt(v.value.minute.toLong())),
-                            field("second", ionDecimal(Decimal.valueOf(v.value.second))),
+                            field("second", ionDecimal(Decimal.valueOf(v.value.decimalSecond))),
                             field("offset", ionInt(timeZone.totalOffsetMinutes.toLong()))
                         )
                     null ->
                         ionStructOf(
                             field("hour", ionInt(v.value.hour.toLong())),
                             field("minute", ionInt(v.value.minute.toLong())),
-                            field("second", ionDecimal(Decimal.valueOf(v.value.second)))
+                            field("second", ionDecimal(Decimal.valueOf(v.value.decimalSecond)))
                         )
                 }
             }.withAnnotations(TIME_ANNOTATION)
@@ -320,16 +322,16 @@ internal class PartiQLValueIonWriter(
         }
 
         override fun visitTimestamp(v: TimestampValue, ctx: Unit): IonElement =
-            when (v.value.timeZone) {
-                TimeZone.UnknownTimeZone, is TimeZone.UtcOffset -> v.toIon { ionTimestamp(v.value.ionTimestampValue) }
-                null -> v.toIon {
+            when (val timestamp = v.value) {
+                is TimestampWithTimeZone -> v.toIon { ionTimestamp(timestamp.ionTimestampValue) }
+                is TimestampWithoutTimeZone -> v.toIon {
                     ionStructOf(
-                        field("year", ionInt(v.value.year.toLong())),
-                        field("month", ionInt(v.value.month.toLong())),
-                        field("day", ionInt(v.value.day.toLong())),
-                        field("hour", ionInt(v.value.hour.toLong())),
-                        field("minute", ionInt(v.value.minute.toLong())),
-                        field("second", ionDecimal(Decimal.valueOf(v.value.second)))
+                        field("year", ionInt(timestamp.year.toLong())),
+                        field("month", ionInt(timestamp.month.toLong())),
+                        field("day", ionInt(timestamp.day.toLong())),
+                        field("hour", ionInt(timestamp.hour.toLong())),
+                        field("minute", ionInt(timestamp.minute.toLong())),
+                        field("second", ionDecimal(Decimal.valueOf(timestamp.decimalSecond)))
                     )
                 }.withAnnotations(TIMESTAMP_ANNOTATION)
             }
