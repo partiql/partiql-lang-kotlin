@@ -465,11 +465,10 @@ public sealed interface NullableScalarValue<T> : PartiQLValue {
 }
 
 @PartiQLValueExperimental
-public sealed interface NullableCollectionValue<T : PartiQLValue> : PartiQLValue, Collection<T> {
+public sealed interface NullableCollectionValue<T : PartiQLValue> : PartiQLValue {
+    public fun isNull(): Boolean
 
-    public override val size: Int
-
-    public val elements: Collection<T>?
+    public fun promote(): CollectionValue<T>
 
     override fun copy(annotations: Annotations): NullableCollectionValue<T>
 
@@ -787,6 +786,8 @@ public abstract class NullableBagValue<T : PartiQLValue> : NullableCollectionVal
 
     override val type: PartiQLValueType = PartiQLValueType.NULLABLE_BAG
 
+    abstract override fun promote(): BagValue<T>
+
     abstract override fun copy(annotations: Annotations): NullableBagValue<T>
 
     abstract override fun withAnnotations(annotations: Annotations): NullableBagValue<T>
@@ -798,6 +799,8 @@ public abstract class NullableBagValue<T : PartiQLValue> : NullableCollectionVal
 public abstract class NullableListValue<T : PartiQLValue> : NullableCollectionValue<T> {
 
     override val type: PartiQLValueType = PartiQLValueType.NULLABLE_LIST
+
+    abstract override fun promote(): ListValue<T>
 
     abstract override fun copy(annotations: Annotations): NullableListValue<T>
 
@@ -811,6 +814,8 @@ public abstract class NullableSexpValue<T : PartiQLValue> : NullableCollectionVa
 
     override val type: PartiQLValueType = PartiQLValueType.NULLABLE_SEXP
 
+    abstract override fun promote(): SexpValue<T>
+
     abstract override fun copy(annotations: Annotations): NullableSexpValue<T>
 
     abstract override fun withAnnotations(annotations: Annotations): NullableSexpValue<T>
@@ -819,9 +824,10 @@ public abstract class NullableSexpValue<T : PartiQLValue> : NullableCollectionVa
 }
 
 @PartiQLValueExperimental
-public abstract class NullableStructValue<T : PartiQLValue> : PartiQLValue, Collection<Pair<String, T>> {
+public abstract class NullableStructValue<T : PartiQLValue> : PartiQLValue {
+    public abstract fun isNull(): Boolean
 
-    public abstract val fields: List<Pair<String, T>>?
+    public abstract fun promote(): StructValue<T>
 
     override val type: PartiQLValueType = PartiQLValueType.NULLABLE_STRUCT
 
