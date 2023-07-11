@@ -82,7 +82,7 @@ internal sealed class AbstractPipeline(open val options: PipelineOptions) {
                 WriteFile_1(ion),
                 WriteFile_2(ion),
                 QueryDDB(ion)
-            ) + ServiceLoaderUtil.loadPlugins()
+            ) + ServiceLoaderUtil.loadFunctions()
             val parser = PartiQLParserBuilder().build()
             return PipelineOptions(
                 pipeline,

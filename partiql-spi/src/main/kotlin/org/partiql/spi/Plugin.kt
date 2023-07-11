@@ -16,11 +16,13 @@ package org.partiql.spi
 
 import org.partiql.spi.connector.Connector
 import org.partiql.spi.function.PartiQLFunction
+import org.partiql.spi.function.PartiQLFunctionExperimental
 
 /**
  * A singular unit of external logic.
  */
 public interface Plugin {
     public fun getConnectorFactories(): List<Connector.Factory>
+    @OptIn(PartiQLFunctionExperimental::class)
     public fun getFunctions(): List<PartiQLFunction>
 }

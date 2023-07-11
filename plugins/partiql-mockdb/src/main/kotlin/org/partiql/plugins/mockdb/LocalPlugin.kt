@@ -17,6 +17,7 @@ package org.partiql.plugins.mockdb
 import org.partiql.spi.Plugin
 import org.partiql.spi.connector.Connector
 import org.partiql.spi.function.PartiQLFunction
+import org.partiql.spi.function.PartiQLFunctionExperimental
 
 /**
  * A mock implementation of [Plugin] to showcase how to retrieve [org.partiql.types.StaticType]'s from
@@ -24,7 +25,8 @@ import org.partiql.spi.function.PartiQLFunction
  */
 class LocalPlugin : Plugin {
     override fun getConnectorFactories(): List<Connector.Factory> = listOf(LocalConnector.Factory())
-    override fun getFunctions(): List<PartiQLFunction> {
-        return emptyList()
-    }
+    @PartiQLFunctionExperimental
+    override fun getFunctions(): List<PartiQLFunction> = listOf(
+        TrimLead, Pow
+    )
 }

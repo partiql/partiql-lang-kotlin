@@ -23,7 +23,6 @@ dependencies {
     implementation(project(":partiql-plan"))
     implementation(project(":partiql-types"))
     implementation(project(":partiql-spi"))
-    implementation(project(":plugins:partiql-bananna"))
     implementation(Deps.csv)
     implementation(Deps.awsSdkBom)
     implementation(Deps.awsSdkDynamodb)
@@ -34,6 +33,7 @@ dependencies {
     implementation(Deps.picoCli)
     implementation(Deps.kotlinReflect)
     testImplementation(Deps.mockito)
+    testImplementation(project(":plugins:partiql-mockdb"))
 }
 
 application {

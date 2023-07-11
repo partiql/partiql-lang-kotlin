@@ -1,22 +1,22 @@
 
-package org.partiql.plugins.bananna
+package org.partiql.plugins.mockdb
 
 import org.partiql.spi.connector.ConnectorSession
-import org.partiql.spi.function.Parameter
 import org.partiql.spi.function.PartiQLFunction
-import org.partiql.spi.function.Signature
+import org.partiql.spi.function.PartiQLFunctionExperimental
 import org.partiql.types.PartiQLValueType
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.StringValue
 import org.partiql.value.stringValue
 
-object TrimLeading : PartiQLFunction {
-    override val signature = Signature(
-        names = listOf("trim_leading"),
+@OptIn(PartiQLFunctionExperimental::class)
+object TrimLead : PartiQLFunction {
+    override val signature = PartiQLFunction.Signature(
+        names = listOf("trim_lead"),
         returns = PartiQLValueType.STRING,
         parameters = listOf(
-            Parameter.ValueParameter(name = "str", type = PartiQLValueType.STRING)
+            PartiQLFunction.Parameter.ValueParameter(name = "str", type = PartiQLValueType.STRING)
         ),
         isDeterministic = true,
         description = "Trims leading whitespace of a [str]."
