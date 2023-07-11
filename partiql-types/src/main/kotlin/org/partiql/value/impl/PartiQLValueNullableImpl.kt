@@ -48,13 +48,12 @@ import org.partiql.value.NullableTimeValue
 import org.partiql.value.NullableTimestampValue
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
+import org.partiql.value.datetime.Date
+import org.partiql.value.datetime.Time
+import org.partiql.value.datetime.Timestamp
 import org.partiql.value.util.PartiQLValueVisitor
 import java.math.BigDecimal
 import java.math.BigInteger
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.LocalTime
-import java.time.ZoneOffset
 import java.util.BitSet
 
 internal data class NullValueImpl(
@@ -334,7 +333,7 @@ internal data class NullableBlobValueImpl(
 }
 
 internal data class NullableDateValueImpl(
-    override val value: LocalDate?,
+    override val value: Date?,
     override val annotations: PersistentList<String>,
 ) : NullableDateValue() {
     override fun copy(annotations: Annotations) = NullableDateValueImpl(value, annotations.toPersistentList())
@@ -347,14 +346,11 @@ internal data class NullableDateValueImpl(
 }
 
 internal data class NullableTimeValueImpl(
-    override val value: LocalTime?,
-    override val precision: Int,
-    override val offset: ZoneOffset?,
-    override val withZone: Boolean,
+    override val value: Time?,
     override val annotations: PersistentList<String>,
 ) : NullableTimeValue() {
     override fun copy(annotations: Annotations) =
-        NullableTimeValueImpl(value, precision, offset, withZone, annotations.toPersistentList())
+        NullableTimeValueImpl(value, annotations.toPersistentList())
 
     override fun withAnnotations(annotations: Annotations): NullableTimeValue = _withAnnotations(annotations)
 
@@ -364,14 +360,11 @@ internal data class NullableTimeValueImpl(
 }
 
 internal data class NullableTimestampValueImpl(
-    override val value: LocalDateTime?,
-    override val precision: Int,
-    override val offset: ZoneOffset?,
-    override val withZone: Boolean,
+    override val value: Timestamp?,
     override val annotations: PersistentList<String>,
 ) : NullableTimestampValue() {
     override fun copy(annotations: Annotations) =
-        NullableTimestampValueImpl(value, precision, offset, withZone, annotations.toPersistentList())
+        NullableTimestampValueImpl(value, annotations.toPersistentList())
 
     override fun withAnnotations(annotations: Annotations): NullableTimestampValue = _withAnnotations(annotations)
 

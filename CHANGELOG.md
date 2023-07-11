@@ -31,6 +31,8 @@ Thank you to all who have contributed!
 ### Added
 - Adds `org.partiql.value` (experimental) package for reading/writing PartiQL
   values
+- Adds PartiQL's Timestamp Data Model. 
+- Adds support for Timestamp constructor call in Parser. 
 
 ### Changed
 
@@ -45,6 +47,7 @@ Thank you to all who have contributed!
 ### Contributors
 Thank you to all who have contributed!
 - @howero
+- @yliuuuu
 - @<your-username>
 
 ## [0.12.0] - 2023-06-14
