@@ -1,7 +1,7 @@
 package org.partiql.plan.ion
 
 import com.amazon.ionelement.api.IonElement
-import com.amazon.ionelement.api.SexpElement
+import com.amazon.ionelement.api.ionNull
 import com.amazon.ionelement.api.loadSingleElement
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
@@ -14,11 +14,15 @@ import org.partiql.plan.builder.PlanBuilder
 import org.partiql.plan.builder.PlanFactory
 import org.partiql.plan.builder.plan
 import org.partiql.plan.ion.impl.PartiQLPlanIonWriter_VERSION_0_1
-import org.partiql.types.StaticType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.symbolValue
 import kotlin.test.assertEquals
 
+/**
+ * This class specifically tests converting a Kotlin PartiQLPLan to its V_0_1 Ion representation.
+ *
+ * We explicitly do NOT test type or function resolution, as we do not want to conflate our unit tests.
+ */
 @OptIn(PartiQLValueExperimental::class)
 class PartiQLPlanIonWriterTest {
 
@@ -29,26 +33,30 @@ class PartiQLPlanIonWriterTest {
 
     companion object {
 
-        private const val type = "\$type"
+        // Use this as ($type) as it looks like a type ref with no ordinal
+        private const val type = "\$type 0"
+
+        // Use `any` anytime there is a type as we don't want to break serde on resolution changes
+        private val any = Plan.typeRef(0)
 
         @JvmStatic
         fun pathCases(): List<Case> {
             // Let `a` be resolved to (var ($type x) 0).
-            val a = Plan.rex(StaticType.ANY, Plan.rexOpVarResolved(0))
+            val a = Plan.rex(any, Plan.rexOpVarResolved(0))
             // Example cases
             return listOf(
                 // `a.b.c`
                 expect(
                     """
-                    (path ($type 0)
-                        (var ($type 0) 0) (
-                            (step (lit ($type 7) b))
-                            (step (lit ($type 7) c))
+                    (path ($type)
+                        (var ($type) 0) (
+                            (step (lit ($type) b))
+                            (step (lit ($type) c))
                     ))
                     """.trimIndent()
                 ) {
                     rex(
-                        StaticType.ANY,
+                        any,
                         rexOpPath {
                             root = a
                             steps += rexOpPathStepIndex(symbol("b"))
@@ -59,15 +67,15 @@ class PartiQLPlanIonWriterTest {
                 // `a.b[*]`
                 expect(
                     """
-                    (path ($type 0)
-                        (var ($type 0) 0) (
-                            (step (lit ($type 7) b))
+                    (path ($type)
+                        (var ($type) 0) (
+                            (step (lit ($type) b))
                             (step wildcard)
                     ))
                     """.trimIndent()
                 ) {
                     rex(
-                        StaticType.ANY,
+                        any,
                         rexOpPath {
                             root = a
                             steps += rexOpPathStepIndex(symbol("b"))
@@ -78,14 +86,14 @@ class PartiQLPlanIonWriterTest {
                 // `a.*`
                 expect(
                     """
-                    (path ($type 0)
-                        (var ($type 0) 0) (
+                    (path ($type)
+                        (var ($type) 0) (
                             (step unpivot)
                     ))
                     """.trimIndent()
                 ) {
                     rex(
-                        StaticType.ANY,
+                        any,
                         rexOpPath {
                             root = a
                             steps += rexOpPathStepUnpivot()
@@ -106,17 +114,17 @@ class PartiQLPlanIonWriterTest {
         }
 
         private fun PlanBuilder.symbol(symbol: String): Rex {
-            return rex(StaticType.SYMBOL, rexOpLit(symbolValue(symbol)))
+            return rex(any, rexOpLit(symbolValue(symbol)))
         }
     }
 
     class Case(
         val input: PlanNode,
         val expected: IonElement,
-        val type: SexpElement? = null,
+        val ctx: IonElement = ionNull(),
     ) {
         fun assert() {
-            val actual = PartiQLPlanIonWriter_VERSION_0_1.toIon(input, type)
+            val actual = PartiQLPlanIonWriter_VERSION_0_1.toIonDebug(input, ctx)
             assertEquals(expected, actual)
         }
     }

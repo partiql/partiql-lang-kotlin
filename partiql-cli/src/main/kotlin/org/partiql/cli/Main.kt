@@ -16,11 +16,15 @@
 package org.partiql.cli
 
 import com.amazon.ion.system.IonSystemBuilder
+import com.amazon.ion.system.IonTextWriterBuilder
 import org.partiql.cli.pico.PartiQLCommand
 import org.partiql.lang.eval.EvaluationSession
-import org.partiql.lang.planner.transforms.AstToPlan
-import org.partiql.lang.syntax.PartiQLParserBuilder
-import org.partiql.plan.debug.PlanPrinter
+import org.partiql.parser.PartiQLParserBuilder
+import org.partiql.plan.PartiQLVersion
+import org.partiql.plan.Statement
+import org.partiql.plan.ion.PartiQLPlanIonWriter
+import org.partiql.planner.Env
+import org.partiql.planner.impl.PartiQLPlannerDefault
 import picocli.CommandLine
 import java.io.PrintStream
 import kotlin.system.exitProcess
@@ -43,16 +47,29 @@ fun main(args: Array<String>) {
  */
 object Debug {
 
+    private val env = Env()
+    private val parser = PartiQLParserBuilder.standard().build()
+    private val planner = PartiQLPlannerDefault(env)
+    private val writer = PartiQLPlanIonWriter.get(PartiQLVersion.VERSION_0_1)
+
+    // !!
+    // IMPLEMENT DEBUG BEHAVIOR HERE
+    // !!
     @Suppress("UNUSED_PARAMETER")
     @Throws(Exception::class)
     fun action(input: String, session: EvaluationSession): String {
-        // IMPLEMENT DEBUG BEHAVIOR HERE
         val out = PrintStream(System.out)
-        val parser = PartiQLParserBuilder.standard().build()
-        val ast = parser.parseAstStatement(input)
-        val plan = AstToPlan.transform(ast)
-        // print plan as tree
-        PlanPrinter.append(out, plan)
+        val ast = parser.parse(input).root
+        if (ast !is Statement) {
+            error("Expect AST Statement, found $ast")
+        }
+        val plan = planner.plan(ast as org.partiql.ast.Statement).plan
+        val ion = writer.toIon(plan)
+        // Pretty print Ion
+        val sb = StringBuilder()
+        val formatter = IonTextWriterBuilder.pretty().build(sb)
+        ion.writeTo(formatter)
+        out.println(sb)
         return "OK"
     }
 }

@@ -20,7 +20,10 @@ plugins {
 
 dependencies {
     implementation(project(":partiql-lang"))
+    implementation(project(":partiql-ast"))
+    implementation(project(":partiql-parser"))
     implementation(project(":partiql-plan"))
+    implementation(project(":partiql-planner"))
     implementation(project(":partiql-types"))
     implementation(Deps.csv)
     implementation(Deps.awsSdkBom)

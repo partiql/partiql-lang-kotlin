@@ -1,7 +1,6 @@
 imports::{
   kotlin: [
-    static_type::'org.partiql.types.StaticType',
-    value::'org.partiql.value.PartiQLValue',
+    partiql_value::'org.partiql.value.PartiQLValue',
   ],
 }
 
@@ -27,12 +26,40 @@ types::{
 type::[
   atomic::{
     symbol: string,
-    params: list::[value],
+    params: list::[partiql_value],
   },
-  union::{
-    types: list::[type],
-  },
+  _::[
+    ref::{
+      ordinal: int, 
+    },
+  ],
 ]
+
+// Functions
+
+fn::{
+  id:       string,
+  params:   list::[param],
+  returns:  '.type.ref',
+  _: [
+    param::[
+      value::{
+        type: '.type.ref',
+      },
+      type::{
+        type: '.type.ref',
+      },
+    ],
+    ref::[
+      resolved::{
+        ordinal: int,
+      },
+      unresolved::{
+        identifier: identifier,
+      },
+    ],
+  ],
+}
 
 // Statements
 
@@ -63,11 +90,11 @@ identifier::[
 
 // Rex
 rex::{
-  type: static_type,
+  type: '.type.ref',
   op:[
 
     lit::{
-      value: value,
+      value: partiql_value,
     },
 
     var::[
@@ -103,11 +130,20 @@ rex::{
     },
 
     call::{
-       fn:    fn,
-       args:  list::[rex],
+       fn:    '.fn.ref',
+       args:  list::[arg],
+       _: [
+        arg::[
+          value::{
+            rex: rex,
+          },
+          type::{
+            type: '.type.ref',
+          },
+        ],
+      ],
     },
 
-    // cast
     // switch
     // tuple
     // collections
@@ -117,8 +153,9 @@ rex::{
 }
 
 // Rel
+
 rel::{
-  type: list::[static_type],
+  type: list::['.type.ref'],
   op: [
 
     scan::{
@@ -183,18 +220,12 @@ rel::{
       strategy: [ FULL, PARTIAL ],
       aggs:     list::[agg],
       groups:   list::[rex],
+      _: [
+        agg::{
+          fn:   fn,
+          args: list::[rex],
+        }
+      ]
     },
   ],
-}
-
-// Function Definition
-fn::{
-  id:     identifier,
-  inputs: list::[static_type],
-  output: static_type,
-}
-
-agg::{
-  fn:   fn,
-  args: list::[rex],
 }
