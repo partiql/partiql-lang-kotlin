@@ -106,7 +106,7 @@ class DateDiffEvaluationTest : EvaluatorTestBase() {
             ExprFunctionTestCase("date_diff(day, `2017-01-02T`, `2017-01-03T`)", "1"),
             ExprFunctionTestCase("date_diff(hour, `2017-01-02T`, `2017-01-03T`)", "24"),
             ExprFunctionTestCase("date_diff(minute, `2017-01-02T`, `2017-01-03T`)", "${24 * 60}"),
-            ExprFunctionTestCase("date_diff(second, `2017-01-02T`, `2017-01-03T`)", "${24 * 60 * 60}"),
+            ExprFunctionTestCase("date_diff(second, `2017-01-02T`, `2017-01-03T`)", "${24 * 60 * 60}."),
 
             ExprFunctionTestCase("date_diff(year, `2017-01-02T03:04Z`, `2017-01-02T04:04Z`)", "0"),
             ExprFunctionTestCase("date_diff(month, `2017-01-02T03:04Z`, `2017-01-02T04:04Z`)", "0"),

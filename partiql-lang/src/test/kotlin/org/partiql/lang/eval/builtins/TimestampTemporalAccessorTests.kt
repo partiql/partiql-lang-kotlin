@@ -13,16 +13,13 @@ import java.time.DateTimeException
 import java.time.format.DateTimeFormatter
 import java.time.temporal.UnsupportedTemporalTypeException
 import kotlin.test.assertEquals
-import kotlin.test.assertNull
 
 @RunWith(JUnitParamsRunner::class)
 class TimestampTemporalAccessorTests {
 
     @Test
     fun timestampWithUnknownOffset() {
-        // Note:  Ion spec allows representation of unknown offset with "0"
-        val timestamp = DateTimeValue.timestamp(1969, 7, 20, 20, 18, BigDecimal.valueOf(36L), null)
-        assertNull(timestamp.timeZone)
+        val timestamp = DateTimeValue.timestamp(1969, 7, 20, 20, 18, BigDecimal.valueOf(36L), org.partiql.value.datetime.TimeZone.UnknownTimeZone)
 
         val temporalAccessor = TimestampTemporalAccessor(timestamp)
         val formatter = DateTimeFormatter.ofPattern("Z")

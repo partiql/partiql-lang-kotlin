@@ -6004,21 +6004,23 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
                     )
                 )
             ),
-            TestCase(
-                name = "function with more than one argument - invalid arg type at 2nd arg",
-                originalSql = "date_add(year, x, `2010-01-01T`)",
-                globals = mapOf("x" to DECIMAL),
-                handler = expectSemanticProblems(
-                    expectedProblems = listOf(
-                        createInvalidArgumentTypeForFunctionError(
-                            sourceLocation = SourceLocationMeta(1L, 16L, 1L),
-                            functionName = "date_add",
-                            expectedArgType = INT,
-                            actualType = DECIMAL
-                        )
-                    )
-                )
-            ),
+            // TODO: For date_add function, we should allow unionOf(Int, decimal) type only if the field is second
+            //  Currently this is check at evaluation time, but ideally Inferencer should be able to check this.
+//            TestCase(
+//                name = "function with more than one argument - invalid arg type at 2nd arg",
+//                originalSql = "date_add(year, x, `2010-01-01T`)",
+//                globals = mapOf("x" to DECIMAL),
+//                handler = expectSemanticProblems(
+//                    expectedProblems = listOf(
+//                        createInvalidArgumentTypeForFunctionError(
+//                            sourceLocation = SourceLocationMeta(1L, 16L, 1L),
+//                            functionName = "date_add",
+//                            expectedArgType = INT,
+//                            actualType = DECIMAL
+//                        )
+//                    )
+//                )
+//            ),
             TestCase(
                 name = "function with more than one argument - null 3rd arg",
                 originalSql = "date_add(year, 5, x)",
@@ -6081,6 +6083,8 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
                     )
                 )
             ),
+            // TODO: For date_add function, we should allow unionOf(Int, decimal) type only if the field is second
+            //  Currently this is check at evaluation time, but ideally Inferencer should be able to check this.
             TestCase(
                 name = "function with more than one argument with union types and no valid case (x should have a INT type)",
                 originalSql = "date_add(year, x, y)",
@@ -6093,12 +6097,14 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
                         createInvalidArgumentTypeForFunctionError(
                             sourceLocation = SourceLocationMeta(1L, 16L, 1L),
                             functionName = "date_add",
-                            expectedArgType = INT,
+                            expectedArgType = unionOf(INT, DECIMAL),
                             actualType = unionOf(BOOL, STRING)
                         )
                     )
                 )
             ),
+            // TODO: For date_add function, we should allow unionOf(Int, decimal) type only if the field is second
+            //  Currently this is check at evaluation time, but ideally Inferencer should be able to check this.
             TestCase(
                 name = "function with more than one argument with union types, nulls and with no valid case",
                 originalSql = "date_add(year, x, y)",
@@ -6111,7 +6117,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
                         createInvalidArgumentTypeForFunctionError(
                             sourceLocation = SourceLocationMeta(1L, 16L, 1L),
                             functionName = "date_add",
-                            expectedArgType = INT,
+                            expectedArgType = unionOf(INT, DECIMAL),
                             actualType = unionOf(BOOL, STRING)
                         )
                     )

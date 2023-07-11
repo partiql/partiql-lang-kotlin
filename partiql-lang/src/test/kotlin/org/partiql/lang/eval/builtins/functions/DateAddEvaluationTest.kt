@@ -12,6 +12,7 @@ import org.partiql.lang.eval.builtins.toSession
 import org.partiql.lang.eval.evaluatortestframework.ExpectedResultFormat
 import org.partiql.lang.util.ArgumentsProviderBase
 import org.partiql.types.StaticType
+import org.partiql.types.StaticType.Companion.unionOf
 
 class DateAddEvaluationTest : EvaluatorTestBase() {
     // Pass test cases
@@ -473,12 +474,14 @@ class DateAddEvaluationTest : EvaluatorTestBase() {
     }
 
     // Error test cases: Invalid argument type
+    // TODO: For date_add function, we should allow unionOf(Int, decimal) type only if the field is second
+    //  Currently this is check at evaluation time, but ideally Inferencer should be able to check this.
     @Test
     fun dateAddInvalidArgTypeTest() = checkInvalidArgType(
         funcName = "date_add",
         syntaxSuffix = "(year,",
         args = listOf(
-            Argument(2, StaticType.INT, ","),
+            Argument(2, unionOf(StaticType.INT, StaticType.DECIMAL), ","),
             Argument(3, StaticType.TIMESTAMP, ")")
         )
     )

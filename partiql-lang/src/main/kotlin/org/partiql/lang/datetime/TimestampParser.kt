@@ -100,10 +100,18 @@ internal class TimestampParser {
             }
 
             return try {
-                when (pattern.leastSignificantField) {
+                when (val leastSignificantField = pattern.leastSignificantField) {
                     TimestampField.FRACTION_OF_SECOND -> {
                         val nanoSeconds = BigDecimal.valueOf(accessor.getLong(ChronoField.NANO_OF_SECOND))
-                        val secondsFraction = nanoSeconds.scaleByPowerOfTen(-9).stripTrailingZeros()
+                        val precision = when (val fractionPrecision = pattern.formatItems.last()) {
+                            // n -> preserved 9 digits
+                            is NanoOfSecondPatternSymbol -> 9
+                            // S -> based on length
+                            is FractionOfSecondPatternSymbol -> fractionPrecision.precision
+                            // impossible, making the compiler happy
+                            else -> 0
+                        }
+                        val secondsFraction = nanoSeconds.movePointLeft(9)
                         DateTimeValue.timestamp(
                             year,
                             accessor.get(ChronoField.MONTH_OF_YEAR),
@@ -114,7 +122,7 @@ internal class TimestampParser {
                                 secondsFraction
                             ) as BigDecimal,
                             accessor.getLocalOffset()
-                        )
+                        ).toPrecision(precision)
                     }
                     TimestampField.SECOND_OF_MINUTE -> {
                         DateTimeValue.timestamp(

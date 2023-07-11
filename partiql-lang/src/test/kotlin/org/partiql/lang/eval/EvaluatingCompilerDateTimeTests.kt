@@ -397,7 +397,7 @@ class EvaluatingCompilerDateTimeTests : EvaluatorTestBase() {
                     field("hour", ionInt(hour.toLong())),
                     field("minute", ionInt(minute.toLong())),
                     field("decimalSecond", ionDecimal(Decimal.valueOf(second))),
-                ).withAnnotations("TIMESTAMP WITHOUT TIME ZONE").toIonValue(ION)
+                ).withAnnotations(TIMESTAMP_WITHOUT_TIMEZONE_ANNOTATION).toIonValue(ION)
             }
         }
     }

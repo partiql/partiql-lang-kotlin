@@ -111,7 +111,7 @@ internal object ExprFunctionUtcNow : ExprFunction {
     )
 
     override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
-        return newTimestamp(session.now)
+        return newTimestamp(session.nowZ)
     }
 }
 
@@ -400,10 +400,10 @@ internal object ExprFunctionToTimestamp : ExprFunction {
     override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
         val ts = try {
             parseTimestamp(required[0].stringValue())
-        } catch (ex: IllegalArgumentException) {
+        } catch (ex: org.partiql.value.datetime.DateTimeException) {
             throw EvaluationException(
                 message = "Timestamp was not a valid timestamp",
-                errorCode = ErrorCode.EVALUATOR_ION_TIMESTAMP_PARSE_FAILURE,
+                errorCode = ErrorCode.EVALUATOR_TIMESTAMP_PARSE_FAILURE,
                 errorContext = PropertyValueMap(),
                 cause = ex,
                 internal = false
@@ -535,7 +535,11 @@ internal object ExprFunctionToString : ExprFunction {
         val pattern = required[1].stringValue()
 
         // Check if the input pattern contains only the allowed symbols
-        val parsedPattern = FormatPattern.fromString(pattern)
+        val parsedPattern = try {
+            FormatPattern.fromString(pattern)
+        } catch (ex: EvaluationException) {
+            errInvalidFormatPattern(pattern, ex)
+        }
 
         // timezone manipulation
         val timestamp = required[0].partiQLTimestampValue()

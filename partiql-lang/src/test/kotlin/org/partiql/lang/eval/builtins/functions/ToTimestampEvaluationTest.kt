@@ -6,7 +6,6 @@ import org.junit.jupiter.params.provider.ArgumentsSource
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.errors.Property
 import org.partiql.lang.eval.EvaluatorTestBase
-import org.partiql.lang.eval.MISSING_ANNOTATION
 import org.partiql.lang.eval.builtins.Argument
 import org.partiql.lang.eval.builtins.ExprFunctionTestCase
 import org.partiql.lang.eval.builtins.checkInvalidArgType
@@ -40,11 +39,11 @@ class ToTimestampEvaluationTest : EvaluatorTestBase() {
             ExprFunctionTestCase("to_timestamp('1969-07-20T20:18:01+08', 'yyyy-MM-dd''T''H:m:ssX')", "TIMESTAMP '1969-07-20T20:18:01+08:00'"),
             ExprFunctionTestCase(
                 "to_timestamp('1969-07-20T20:18:02+0800', 'yyyy-MM-dd''T''H:m:ssXXXX')",
-                "1969-07-20T20:18:02+08:00"
+                "TIMESTAMP '1969-07-20T20:18:02+08:00'"
             ),
             ExprFunctionTestCase(
                 "to_timestamp('1969-07-20T20:18:03+08:00', 'yyyy-MM-dd''T''H:m:ssXXXXX')",
-                "TIMESTAMP 1969-07-20T20:18:03+08:00"
+                "TIMESTAMP '1969-07-20T20:18:03+08:00'"
             ),
             ExprFunctionTestCase("to_timestamp('1969-07-20T20:18:00Z')", "TIMESTAMP '1969-07-20T20:18:00Z'"),
             ExprFunctionTestCase("to_timestamp('1969-07-20T20:18:03+08:00')", "TIMESTAMP '1969-07-20T20:18:03+08:00'"),
@@ -52,9 +51,9 @@ class ToTimestampEvaluationTest : EvaluatorTestBase() {
             ExprFunctionTestCase("to_timestamp(null, 'M-d-yyyy')", "null"),
             ExprFunctionTestCase("to_timestamp('07-20-1969', null)", "null"),
             ExprFunctionTestCase("to_timestamp(null, null)", "null"),
-            ExprFunctionTestCase("to_timestamp(missing)", "null", "$MISSING_ANNOTATION::null"),
-            ExprFunctionTestCase("to_timestamp(missing, 'M-d-yyyy')", "null", "$MISSING_ANNOTATION::null"),
-            ExprFunctionTestCase("to_timestamp('07-20-1969', missing)", "null", "$MISSING_ANNOTATION::null"),
+            ExprFunctionTestCase("to_timestamp(missing)", "null", "missing"),
+            ExprFunctionTestCase("to_timestamp(missing, 'M-d-yyyy')", "null", "missing"),
+            ExprFunctionTestCase("to_timestamp('07-20-1969', missing)", "null", "missing"),
             ExprFunctionTestCase("to_timestamp(null, null)", "null")
         )
     }
@@ -64,7 +63,7 @@ class ToTimestampEvaluationTest : EvaluatorTestBase() {
     fun to_timestamp_invalid_ion_timestamp() {
         runEvaluatorErrorTestCase(
             "to_timestamp('not a valid timestamp')",
-            ErrorCode.EVALUATOR_ION_TIMESTAMP_PARSE_FAILURE,
+            ErrorCode.EVALUATOR_TIMESTAMP_PARSE_FAILURE,
             propertyValueMapOf(
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 1L

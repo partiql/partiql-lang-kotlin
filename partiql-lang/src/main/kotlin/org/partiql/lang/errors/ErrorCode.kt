@@ -486,10 +486,10 @@ enum class ErrorCode(
                 "symbol that cannot be applied to timestamp parsing."
     },
 
-    EVALUATOR_ION_TIMESTAMP_PARSE_FAILURE(
+    EVALUATOR_TIMESTAMP_PARSE_FAILURE(
         ErrorCategory.EVALUATOR,
         LOCATION,
-        "Failed to parse Ion timestamp",
+        "Failed to parse timestamp",
         ErrorBehaviorInPermissiveMode.RETURN_MISSING
     ),
 
