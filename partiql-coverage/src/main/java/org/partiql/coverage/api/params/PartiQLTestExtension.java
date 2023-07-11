@@ -91,66 +91,63 @@ class PartiQLTestExtension implements TestTemplateInvocationContextProvider {
 
         Method templateMethod = extensionContext.getRequiredTestMethod();
         String displayName = extensionContext.getDisplayName();
-        ParameterizedTestMethodContext methodContext = getStore(extensionContext)//
-                .get(METHOD_CONTEXT_KEY, ParameterizedTestMethodContext.class);
-        int argumentMaxLength = extensionContext.getConfigurationParameter(ARGUMENT_MAX_LENGTH_KEY,
-                Integer::parseInt).orElse(512);
-        ParameterizedTestNameFormatter formatter = createNameFormatter(extensionContext, templateMethod, methodContext,
-                displayName, argumentMaxLength);
+        ParameterizedTestMethodContext methodContext = getStore(extensionContext).get(METHOD_CONTEXT_KEY, ParameterizedTestMethodContext.class);
+        int argumentMaxLength = extensionContext.getConfigurationParameter(ARGUMENT_MAX_LENGTH_KEY, Integer::parseInt).orElse(512);
+        ParameterizedTestNameFormatter formatter = createNameFormatter(extensionContext, templateMethod, methodContext, displayName, argumentMaxLength);
         AtomicLong invocationCount = new AtomicLong(0);
 
+        // Get Test/Provider Information
         PartiQLTest annotation = findAnnotation(templateMethod, PartiQLTest.class).get();
         PartiQLTestProvider prov = instantiateArgumentsProvider(annotation.provider());
+
+        // Create Pipeline and Compile
         CompilerPipeline pipeline = CompilerPipeline.standard();
         Expression expression = pipeline.compile(prov.getQuery());
+
+        // Initialize Report
+        Map<String, String> report = new HashMap<>();
+
+        // Get Provider Name
         String packageName = prov.getClass().getPackage().getName();
         String className = prov.getClass().getName();
-        String canonicalName = prov.getClass().getCanonicalName();
-        String simpleName = prov.getClass().getSimpleName();
-        String typeName = prov.getClass().getTypeName();
         String[] classNames = className.split("\\.");
         String actualClassName = classNames[classNames.length - 1];
-        System.out.println("PACKAGE NAME: " + packageName);
-        System.out.println("CLASS NAME: " + className);
-        System.out.println("ACTUAL CLASS NAME: " + actualClassName);
-        System.out.println("CANONICAL NAME: " + canonicalName);
-        System.out.println("SIMPLE NAME: " + simpleName);
-        System.out.println("TYPE NAME: " + typeName);
-
-        // Compute Coverage Metrics
-        Map<String, String> report = new HashMap<>();
         report.put(CoverageListener.ReportKey.PACKAGE_NAME, packageName);
         report.put(CoverageListener.ReportKey.PROVIDER_NAME, actualClassName);
+
+        // Get Static Coverage Statistics
+        CoverageStructure coverageStructure = expression.getCoverageStructure();
+
+        // Add Total Decision Count to Coverage Report
+        int decisionCount = coverageStructure != null ? coverageStructure.getBranchCount() : 0;
+        report.put(CoverageListener.ReportKey.DECISION_COUNT, String.valueOf(decisionCount));
+        report.put(CoverageListener.ReportKey.ORIGINAL_STATEMENT, prov.getQuery());
+
+        // Add Location Information to Report
+        Map<String, Integer> decisionLocations = coverageStructure != null ? coverageStructure.getBranchLocations() : Collections.emptyMap();
+        for (Map.Entry<String, Integer> entry : decisionLocations.entrySet()) {
+            String key = CoverageListener.ReportKey.LINE_NUMBER_OF_BRANCH_PREFIX + entry.getKey();
+            report.put(key, String.valueOf(entry.getValue()));
+        }
+
+        // Compute Coverage Metrics
         Stream<Object[]> tests = Stream.of(prov)
                 .map(provider -> AnnotationConsumerInitializer.initialize(templateMethod, provider))
                 .flatMap(provider -> arguments(provider, extensionContext))
                 .map(testCase -> {
-                    // TODO: Evaluate the Expression and retrieve a PartiQLResult containing an optional CoverageStatistics object
-                    //  Given the object, publish the report entry
-                    ExprValue value = expression.eval(testCase.getSession());
-                    Statistics stats = value.getStatistics();
-
-                    // Add Total Decision Count to Coverage Report
-                    // TODO: Add Coverage Information to the Expression. Then we can take this out of the mapping.
-                    report.put(CoverageListener.ReportKey.DECISION_COUNT, String.valueOf(stats.getDecisionCount()));
-                    report.put(CoverageListener.ReportKey.ORIGINAL_STATEMENT, prov.getQuery());
-
-                    // Add Location Information to Report
-                    // TODO: Move outside of loop once we add this to Expression
-                    for (Map.Entry<Integer, Integer> entry : stats.getLocations().entrySet()) {
-                        String key = CoverageListener.ReportKey.LINE_NUMBER_OF_BRANCH_PREFIX + entry.getKey().toString();
-                        report.put(key, String.valueOf(entry.getValue()));
-                    }
+                    PartiQLResult result = expression.evaluate(testCase.getSession());
+                    CoverageData stats = result.getCoverageData();
 
                     // Add Executed Decisions (Size) to Coverage Report
                     // NOTE: This only works because we share the same CoverageCompiler. Therefore, we override some things.
-                    for (Map.Entry<Integer, Set<Boolean>> entry : stats.getExecutedDecisions().entrySet()) {
-                        String key = CoverageListener.ReportKey.RESULT_OF_BRANCH_PREFIX + entry.getKey().toString();
-                        report.put(key, String.valueOf(entry.getValue().size()));
+                    Map<String, Integer> executedBranches = stats != null ? stats.getBranchCount() : Collections.emptyMap();
+                    for (Map.Entry<String, Integer> entry : executedBranches.entrySet()) {
+                        String key = CoverageListener.ReportKey.RESULT_OF_BRANCH_PREFIX + entry.getKey();
+                        report.put(key, String.valueOf(entry.getValue()));
                     }
 
                     // Return the Test Methods' Arguments
-                    return new Object[]{testCase, value};
+                    return new Object[]{testCase, result};
                 });
 
         // Invoke Test Methods

@@ -37,6 +37,7 @@ import org.partiql.lang.eval.BaseExprValue
 import org.partiql.lang.eval.BindingCase
 import org.partiql.lang.eval.BindingName
 import org.partiql.lang.eval.CastFunc
+import org.partiql.lang.eval.CoverageStructure
 import org.partiql.lang.eval.DEFAULT_COMPARATOR
 import org.partiql.lang.eval.ErrorDetails
 import org.partiql.lang.eval.EvaluationException
@@ -47,6 +48,7 @@ import org.partiql.lang.eval.ExprValueBagOp
 import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.Expression
 import org.partiql.lang.eval.Named
+import org.partiql.lang.eval.PartiQLResult
 import org.partiql.lang.eval.ProjectionIterationBehavior
 import org.partiql.lang.eval.RequiredArgs
 import org.partiql.lang.eval.RequiredWithOptional
@@ -162,13 +164,23 @@ internal class PhysicalPlanCompilerImpl(
         val thunk = compileAstStatement(plan.stmt)
 
         return object : Expression {
+            override val coverageStructure: CoverageStructure? = null
+
             override fun eval(session: EvaluationSession): ExprValue {
                 val env = EvaluatorState(
                     session = session,
                     registers = Array(plan.locals.size) { ExprValue.missingValue }
                 )
-
                 return thunk(env)
+            }
+
+            override fun evaluate(session: EvaluationSession): PartiQLResult {
+                val env = EvaluatorState(
+                    session = session,
+                    registers = Array(plan.locals.size) { ExprValue.missingValue }
+                )
+                val value = thunk(env)
+                return PartiQLResult.Value(value = value, coverageData = null)
             }
         }
     }
@@ -184,12 +196,23 @@ internal class PhysicalPlanCompilerImpl(
         val thunk = compileAstExpr(expr)
 
         return object : Expression {
+            override val coverageStructure: CoverageStructure? = null
+
             override fun eval(session: EvaluationSession): ExprValue {
                 val env = EvaluatorState(
                     session = session,
                     registers = Array(localsSize) { ExprValue.missingValue }
                 )
                 return thunk(env)
+            }
+
+            override fun evaluate(session: EvaluationSession): PartiQLResult {
+                val env = EvaluatorState(
+                    session = session,
+                    registers = Array(localsSize) { ExprValue.missingValue }
+                )
+                val value = thunk(env)
+                return PartiQLResult.Value(value = value, coverageData = null)
             }
         }
     }

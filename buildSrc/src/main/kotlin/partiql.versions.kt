@@ -99,7 +99,6 @@ object Plugins {
     const val conventions = "partiql.conventions"
     const val pig = "org.partiql.pig.pig-gradle-plugin"
     const val publish = "org.partiql.gradle.plugin.publish"
-    const val coverage = "org.partiql.gradle.plugin.coverage"
 
     // 3P
     const val antlr = "org.gradle.antlr"

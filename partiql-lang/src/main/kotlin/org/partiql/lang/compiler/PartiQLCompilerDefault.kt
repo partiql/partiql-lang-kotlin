@@ -98,9 +98,9 @@ internal class PartiQLCompilerDefault(
         val rows = exprConverter.compile(dml.rows, localsSize)
         return PartiQLStatement { session ->
             when (dml.operation) {
-                is PartiqlPhysical.DmlOperation.DmlReplace -> PartiQLResult.Replace(dml.uniqueId.text, rows.eval(session))
-                is PartiqlPhysical.DmlOperation.DmlInsert -> PartiQLResult.Insert(dml.uniqueId.text, rows.eval(session))
-                is PartiqlPhysical.DmlOperation.DmlDelete -> PartiQLResult.Delete(dml.uniqueId.text, rows.eval(session))
+                is PartiqlPhysical.DmlOperation.DmlReplace -> PartiQLResult.Replace(dml.uniqueId.text, rows.eval(session), null)
+                is PartiqlPhysical.DmlOperation.DmlInsert -> PartiQLResult.Insert(dml.uniqueId.text, rows.eval(session), null)
+                is PartiqlPhysical.DmlOperation.DmlDelete -> PartiQLResult.Delete(dml.uniqueId.text, rows.eval(session), null)
                 is PartiqlPhysical.DmlOperation.DmlUpdate -> TODO("DML Update compilation not supported yet.")
             }
         }
@@ -158,5 +158,5 @@ internal class PartiQLCompilerDefault(
         }
     }
 
-    private fun ExprValue.toValue(): PartiQLResult = PartiQLResult.Value(this)
+    private fun ExprValue.toValue(): PartiQLResult = PartiQLResult.Value(this, null)
 }

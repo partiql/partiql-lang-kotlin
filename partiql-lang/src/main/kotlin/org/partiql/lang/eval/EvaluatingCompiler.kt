@@ -357,15 +357,25 @@ internal open class EvaluatingCompiler(
         }
 
         return object : Expression {
-            override fun eval(session: EvaluationSession): ExprValue {
+            override val coverageStructure: CoverageStructure? = null
 
+            override fun eval(session: EvaluationSession): ExprValue {
                 val env = Environment(
                     session = session,
                     locals = session.globals,
                     current = session.globals
                 )
-
                 return thunk(env)
+            }
+
+            override fun evaluate(session: EvaluationSession): PartiQLResult {
+                val env = Environment(
+                    session = session,
+                    locals = session.globals,
+                    current = session.globals
+                )
+                val value = thunk(env)
+                return PartiQLResult.Value(value = value, coverageData = null)
             }
         }
     }

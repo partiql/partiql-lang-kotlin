@@ -19,26 +19,34 @@ import org.partiql.pig.runtime.DomainNode
 /**
  * Result of an evaluated PartiQLStatement
  */
-sealed class PartiQLResult {
+sealed class PartiQLResult(
+    val coverageData: CoverageData?
+) {
 
-    class Value(val value: ExprValue) : PartiQLResult()
+    class Value(
+        val value: ExprValue,
+        coverageData: CoverageData?
+    ) : PartiQLResult(coverageData)
 
     class Insert(
         val target: String,
-        val rows: Iterable<ExprValue>
-    ) : PartiQLResult()
+        val rows: Iterable<ExprValue>,
+        coverageData: CoverageData?
+    ) : PartiQLResult(coverageData)
 
     class Delete(
         val target: String,
-        val rows: Iterable<ExprValue>
-    ) : PartiQLResult()
+        val rows: Iterable<ExprValue>,
+        CoverageData: CoverageData?
+    ) : PartiQLResult(CoverageData)
 
     class Replace(
         val target: String,
-        val rows: Iterable<ExprValue>
-    ) : PartiQLResult()
+        val rows: Iterable<ExprValue>,
+        coverageData: CoverageData?
+    ) : PartiQLResult(coverageData)
 
-    sealed class Explain : PartiQLResult() {
+    sealed class Explain : PartiQLResult(null) {
         data class Domain(val value: DomainNode, val format: String?) : Explain()
     }
 }

@@ -38,8 +38,8 @@ internal class CoverageListener : TestExecutionListener {
         val map = entry?.keyValuePairs ?: emptyMap()
         val decisionCount = map[ReportKey.DECISION_COUNT]?.toInt() ?: 0
         val originalStatement = map[ReportKey.ORIGINAL_STATEMENT] ?: ""
-        val decisionToLineMap = mutableMapOf<Int, Int>()
-        val decisionResults = mutableMapOf<Int, Int>()
+        val decisionToLineMap = mutableMapOf<String, Int>()
+        val decisionResults = mutableMapOf<String, Int>()
         val packageName = map[ReportKey.PACKAGE_NAME]?.replace('.', '/') ?: "PQL_NO_PACKAGE_FOUND"
         val providerName = map[ReportKey.PROVIDER_NAME] ?: "PQL_NO_PROVIDER_FOUND_" + kotlin.random.Random(5).nextLong()
         var executedCount: Int = 0
@@ -49,12 +49,12 @@ internal class CoverageListener : TestExecutionListener {
                     // Do nothing for now
                 }
                 key.startsWith(ReportKey.LINE_NUMBER_OF_BRANCH_PREFIX) -> {
-                    val branchId = key.substring(ReportKey.LINE_NUMBER_OF_BRANCH_PREFIX.length).toInt()
+                    val branchId = key.substring(ReportKey.LINE_NUMBER_OF_BRANCH_PREFIX.length)
                     val lineNumber = value.toInt()
                     decisionToLineMap[branchId] = lineNumber
                 }
                 key.startsWith(ReportKey.RESULT_OF_BRANCH_PREFIX) -> {
-                    val branchId = key.substring(ReportKey.RESULT_OF_BRANCH_PREFIX.length).toInt()
+                    val branchId = key.substring(ReportKey.RESULT_OF_BRANCH_PREFIX.length)
                     val lineNumber = value.toInt()
                     decisionResults[branchId] = lineNumber
                     executedCount += value.toInt()
@@ -62,16 +62,19 @@ internal class CoverageListener : TestExecutionListener {
             }
         }
 
+        // Get Branches Hit
+        val branchesHit = decisionResults.values.filter { it > 0 }.size
+
         // Aggregate Branch Information
         val branches = decisionToLineMap.entries.map { (decisionId, lineNumber) ->
             val count = decisionResults[decisionId] ?: 0
-            Branch(decisionId.toString(), count, lineNumber)
+            Branch(decisionId, count, lineNumber)
         }
 
         // TODO
         // Aggregate Line Data
         val count = 1
-        val lineData = decisionToLineMap.values.map { lineNumber ->
+        val lineData = decisionToLineMap.values.toSet().map { lineNumber ->
             LineData(lineNumber, count)
         }
 
@@ -84,7 +87,7 @@ internal class CoverageListener : TestExecutionListener {
         val coverageEntry = getCoverageInformationEntry(
             filePath = queryPath.absolutePath,
             branchesFound = decisionCount,
-            branchesHit = decisionCount, // TODO: Fix this
+            branchesHit = branchesHit,
             linesFound = decisionToLineMap.values.maxOrNull()!!,
             linesHit = decisionToLineMap.values.maxOrNull()!!, // TODO: Fix this
             branches = branches,
@@ -104,7 +107,7 @@ internal class CoverageListener : TestExecutionListener {
     //
     //
 
-    private fun initializeOutputFile(destFile: String): OutputStream { 
+    private fun initializeOutputFile(destFile: String): OutputStream {
         val file = File(destFile)
         file.parentFile.mkdirs()
         return file.outputStream()
