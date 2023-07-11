@@ -410,7 +410,6 @@ public abstract class TimeWithoutTimeZone : Time {
     public final override fun toPrecision(precision: Int): TimeWithoutTimeZone =
         DateTimePrecisionChanger.toPrecision(precision, this) as TimeWithoutTimeZone
 
-
     public final override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other?.javaClass != javaClass) return false
@@ -491,7 +490,7 @@ public abstract class TimestampWithTimeZone : Timestamp {
      * Returns a [TimestampWithTimeZone] object, assuming the desiredZone is [timeZone]
      * The intention of this function is to get the same instant of time in the desired zone.
      */
-    public abstract fun atTimeZone(timeZone: TimeZone) : TimestampWithTimeZone
+    public abstract fun atTimeZone(timeZone: TimeZone): TimestampWithTimeZone
     public final override fun toTime(): TimeWithTimeZone =
         DateTimeValue.time(hour, minute, decimalSecond, timeZone) as TimeWithTimeZone
 

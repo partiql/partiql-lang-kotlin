@@ -34,7 +34,7 @@ class EvaluationSession private constructor(
     val parameters: List<ExprValue>,
     val context: Map<String, Any>,
     val now: Timestamp,
-    val nowZ: org.partiql.value.datetime.Timestamp,
+    val nowZ: org.partiql.value.datetime.TimestampWithTimeZone,
     val timeZone: TimeZone
 ) {
 
@@ -75,7 +75,7 @@ class EvaluationSession private constructor(
             return this
         }
 
-        private var nowZ: org.partiql.value.datetime.Timestamp? = null
+        private var nowZ: org.partiql.value.datetime.TimestampWithTimeZone? = null
         fun nowZ(value: org.partiql.value.datetime.TimestampWithTimeZone): Builder {
             nowZ = value.atTimeZone(TimeZone.UtcOffset.of(0))
             return this

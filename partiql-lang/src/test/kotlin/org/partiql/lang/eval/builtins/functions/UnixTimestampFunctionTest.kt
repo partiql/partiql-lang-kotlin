@@ -30,28 +30,28 @@ class UnixTimestampFunctionTest : EvaluatorTestBase() {
 
         override fun getParameters(): List<Any> = listOf(
             // No args
-            ExprFunctionTestCase("unix_timestamp()", "0", session = buildSessionWithNow(0, 0)), // now = 0
-            ExprFunctionTestCase("unix_timestamp()", "0", session = buildSessionWithNow(1, 0)), // now = 1ms
-            ExprFunctionTestCase("unix_timestamp()", "0", session = buildSessionWithNow(999, 0)), // now = 999ms
-            ExprFunctionTestCase("unix_timestamp()", "1", session = buildSessionWithNow(1000, 0)), // now = 1s
-            ExprFunctionTestCase("unix_timestamp()", "1", session = buildSessionWithNow(1001, 0)), // now = 1001ms
+            ExprFunctionTestCase("unix_timestamp()", "0.000", session = buildSessionWithNow(0, 0)), // now = 0
+            ExprFunctionTestCase("unix_timestamp()", "0.001", session = buildSessionWithNow(1, 0)), // now = 1ms
+            ExprFunctionTestCase("unix_timestamp()", "0.999", session = buildSessionWithNow(999, 0)), // now = 999ms
+            ExprFunctionTestCase("unix_timestamp()", "1.000", session = buildSessionWithNow(1000, 0)), // now = 1s
+            ExprFunctionTestCase("unix_timestamp()", "1.001", session = buildSessionWithNow(1001, 0)), // now = 1001ms
             // time before the last epoch
-            ExprFunctionTestCase("unix_timestamp(`1969T`)", "-31536000"),
+            ExprFunctionTestCase("unix_timestamp(`1969T`)", "-31536000."),
             ExprFunctionTestCase("unix_timestamp(`1969-12-31T23:59:59.999Z`)", "-0.001"),
             // exactly the last epoch
-            ExprFunctionTestCase("unix_timestamp(`1970T`)", "0"),
-            ExprFunctionTestCase("unix_timestamp(`1970-01-01T00:00:00.000Z`)", "0."),
+            ExprFunctionTestCase("unix_timestamp(`1970T`)", "0."),
+            ExprFunctionTestCase("unix_timestamp(`1970-01-01T00:00:00.000Z`)", "0.000"),
             // whole number unix epoch
-            ExprFunctionTestCase("unix_timestamp(`2020T`)", epoch2020),
-            ExprFunctionTestCase("unix_timestamp(`2020-01T`)", epoch2020),
-            ExprFunctionTestCase("unix_timestamp(`2020-01-01T`)", epoch2020),
-            ExprFunctionTestCase("unix_timestamp(`2020-01-01T00:00Z`)", epoch2020),
-            ExprFunctionTestCase("unix_timestamp(`2020-01-01T00:00:00Z`)", epoch2020),
+            ExprFunctionTestCase("unix_timestamp(`2020T`)", epoch2020Decimal),
+            ExprFunctionTestCase("unix_timestamp(`2020-01T`)", epoch2020Decimal),
+            ExprFunctionTestCase("unix_timestamp(`2020-01-01T`)", epoch2020Decimal),
+            ExprFunctionTestCase("unix_timestamp(`2020-01-01T00:00Z`)", epoch2020Decimal),
+            ExprFunctionTestCase("unix_timestamp(`2020-01-01T00:00:00Z`)", epoch2020Decimal),
             // decimal unix epoch
-            ExprFunctionTestCase("unix_timestamp(`2020-01-01T00:00:00.0Z`)", epoch2020Decimal),
-            ExprFunctionTestCase("unix_timestamp(`2020-01-01T00:00:00.00Z`)", epoch2020Decimal),
-            ExprFunctionTestCase("unix_timestamp(`2020-01-01T00:00:00.000Z`)", epoch2020Decimal),
-            ExprFunctionTestCase("unix_timestamp(`2020-01-01T00:00:00.100Z`)", "1577836800.1")
+            ExprFunctionTestCase("unix_timestamp(`2020-01-01T00:00:00.0Z`)", "$epoch2020.0"),
+            ExprFunctionTestCase("unix_timestamp(`2020-01-01T00:00:00.00Z`)", "$epoch2020.00"),
+            ExprFunctionTestCase("unix_timestamp(`2020-01-01T00:00:00.000Z`)", "$epoch2020.000"),
+            ExprFunctionTestCase("unix_timestamp(`2020-01-01T00:00:00.100Z`)", "1577836800.100")
         )
     }
 

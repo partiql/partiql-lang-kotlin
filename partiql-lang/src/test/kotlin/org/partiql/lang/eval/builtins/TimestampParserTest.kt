@@ -1,6 +1,5 @@
 package org.partiql.lang.eval.builtins
 
-import com.amazon.ion.Timestamp
 import junitparams.JUnitParamsRunner
 import junitparams.Parameters
 import junitparams.naming.TestCaseName
@@ -10,7 +9,10 @@ import org.partiql.lang.datetime.TimestampParser
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.EvaluationException
 import org.partiql.value.datetime.DateTimeValue
+import org.partiql.value.datetime.TimeZone
+import org.partiql.value.datetime.Timestamp
 import java.lang.reflect.Type
+import java.math.BigDecimal
 import java.time.format.DateTimeParseException
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -32,8 +34,7 @@ class TimestampParserTest {
     fun parseTimestampTest(testCase: ParseTimestampTestCase) {
         val result = TimestampParser.parseTimestamp(testCase.timestamp, testCase.pattern)
         // Routing those test case to use org.partiql.value.datetime.Timestamp
-        val expected = DateTimeValue.timestamp(testCase.expectedResult)
-        assertEquals(expected, result)
+        assertEquals(testCase.expectedResult, result)
     }
 
     // Note: for timestamp fields that may be 1 or 2 digits (i.e. hour, minute, day, month) a single
@@ -44,63 +45,63 @@ class TimestampParserTest {
         listOf(
             // Year
             // Single "y" symbol parses arbitrary year.
-            ParseTimestampTestCase("y", "7", Timestamp.valueOf("0007T")),
-            ParseTimestampTestCase("y", "0007", Timestamp.valueOf("0007T")),
-            ParseTimestampTestCase("y", "2007", Timestamp.valueOf("2007T")),
+            ParseTimestampTestCase("y", "7", DateTimeValue.timestamp(7)),
+            ParseTimestampTestCase("y", "0007", DateTimeValue.timestamp(7)),
+            ParseTimestampTestCase("y", "2007", DateTimeValue.timestamp(2007)),
             // Zero padding is required when three or four "y" symbols are used.
-            ParseTimestampTestCase("yyy", "0007", Timestamp.valueOf("0007T")),
-            ParseTimestampTestCase("yyyy", "0007", Timestamp.valueOf("0007T")),
+            ParseTimestampTestCase("yyy", "0007", DateTimeValue.timestamp(7)),
+            ParseTimestampTestCase("yyyy", "0007", DateTimeValue.timestamp(7)),
 
             // Two "y" symbols parses 2 digit year
-            ParseTimestampTestCase("yy", "00", Timestamp.valueOf("2000T")),
-            ParseTimestampTestCase("yy", "01", Timestamp.valueOf("2001T")),
-            ParseTimestampTestCase("yy", "69", Timestamp.valueOf("2069T")),
-            ParseTimestampTestCase("yy", "70", Timestamp.valueOf("1970T")),
-            ParseTimestampTestCase("yy", "71", Timestamp.valueOf("1971T")),
-            ParseTimestampTestCase("yy", "99", Timestamp.valueOf("1999T")),
+            ParseTimestampTestCase("yy", "00", DateTimeValue.timestamp(2000)),
+            ParseTimestampTestCase("yy", "01", DateTimeValue.timestamp(2001)),
+            ParseTimestampTestCase("yy", "69", DateTimeValue.timestamp(2069)),
+            ParseTimestampTestCase("yy", "70", DateTimeValue.timestamp(1970)),
+            ParseTimestampTestCase("yy", "71", DateTimeValue.timestamp(1971)),
+            ParseTimestampTestCase("yy", "99", DateTimeValue.timestamp(1999)),
 
             // Month
             // Zero padding is optional with single "M" symbol
-            ParseTimestampTestCase("y M", "2007 6", Timestamp.valueOf("2007-06T")),
-            ParseTimestampTestCase("y M", "2007 6", Timestamp.valueOf("2007-06T")),
-            ParseTimestampTestCase("y M", "2007 06", Timestamp.valueOf("2007-06T")),
+            ParseTimestampTestCase("y M", "2007 6", DateTimeValue.timestamp(2007, 6)),
+            ParseTimestampTestCase("y M", "2007 6", DateTimeValue.timestamp(2007, 6)),
+            ParseTimestampTestCase("y M", "2007 06", DateTimeValue.timestamp(2007, 6)),
             // Two "M" symbols requires zero padding
-            ParseTimestampTestCase("y MM", "2007 06", Timestamp.valueOf("2007-06T")),
+            ParseTimestampTestCase("y MM", "2007 06", DateTimeValue.timestamp(2007, 6)),
             // Three "M" symbols require three letter month abbreviation
-            ParseTimestampTestCase("y MMM", "2007 Jun", Timestamp.valueOf("2007-06T")),
-            ParseTimestampTestCase("y MMM", "2007 jun", Timestamp.valueOf("2007-06T")),
+            ParseTimestampTestCase("y MMM", "2007 Jun", DateTimeValue.timestamp(2007, 6)),
+            ParseTimestampTestCase("y MMM", "2007 jun", DateTimeValue.timestamp(2007, 6)),
             // Four "M" symbols requires full month name
-            ParseTimestampTestCase("y MMMM", "2007 june", Timestamp.valueOf("2007-06T")),
+            ParseTimestampTestCase("y MMMM", "2007 june", DateTimeValue.timestamp(2007, 6)),
 
             // Day
             // Zero padding is optional with a single "d" symbol
-            ParseTimestampTestCase("y M d", "2007 6 5", Timestamp.valueOf("2007-06-05T")),
-            ParseTimestampTestCase("y M d", "2007 6 05", Timestamp.valueOf("2007-06-05T")),
+            ParseTimestampTestCase("y M d", "2007 6 5", DateTimeValue.timestamp(2007, 6, 5)),
+            ParseTimestampTestCase("y M d", "2007 6 05", DateTimeValue.timestamp(2007, 6, 5)),
             // Two "d" symbols require zero padding
-            ParseTimestampTestCase("y M dd", "2007 6 05", Timestamp.valueOf("2007-06-05T")),
+            ParseTimestampTestCase("y M dd", "2007 6 05", DateTimeValue.timestamp(2007, 6, 5)),
 
             // Hour
-            ParseTimestampTestCase("y M d H", "2007 6 5 9", Timestamp.valueOf("2007-06-05T09:00-00:00")),
-            ParseTimestampTestCase("y M d h a", "2007 6 5 9 am", Timestamp.valueOf("2007-06-05T09:00-00:00")),
-            ParseTimestampTestCase("y M d h a", "2007 6 5 9 pm", Timestamp.valueOf("2007-06-05T21:00-00:00")),
-            ParseTimestampTestCase("y M d H", "2007 6 5 09", Timestamp.valueOf("2007-06-05T09:00-00:00")),
-            ParseTimestampTestCase("y M d HH", "2007 6 5 09", Timestamp.valueOf("2007-06-05T09:00-00:00")),
+            ParseTimestampTestCase("y M d H", "2007 6 5 9", DateTimeValue.timestamp(2007, 6, 5, 9, 0)),
+            ParseTimestampTestCase("y M d h a", "2007 6 5 9 am", DateTimeValue.timestamp(2007, 6, 5, 9, 0)),
+            ParseTimestampTestCase("y M d h a", "2007 6 5 9 pm", DateTimeValue.timestamp(2007, 6, 5, 21, 0)),
+            ParseTimestampTestCase("y M d H", "2007 6 5 09", DateTimeValue.timestamp(2007, 6, 5, 9, 0)),
+            ParseTimestampTestCase("y M d HH", "2007 6 5 09", DateTimeValue.timestamp(2007, 6, 5, 9, 0)),
 
             // Minute (same rules with 1 "m" vs "mm")
-            ParseTimestampTestCase("y M d H m", "2007 6 5 9 8", Timestamp.valueOf("2007-06-05T09:08-00:00")),
-            ParseTimestampTestCase("y M d H m", "2007 6 5 9 08", Timestamp.valueOf("2007-06-05T09:08-00:00")),
-            ParseTimestampTestCase("y M d H mm", "2007 6 5 9 08", Timestamp.valueOf("2007-06-05T09:08-00:00")),
+            ParseTimestampTestCase("y M d H m", "2007 6 5 9 8", DateTimeValue.timestamp(2007, 6, 5, 9, 8)),
+            ParseTimestampTestCase("y M d H m", "2007 6 5 9 08", DateTimeValue.timestamp(2007, 6, 5, 9, 8)),
+            ParseTimestampTestCase("y M d H mm", "2007 6 5 9 08", DateTimeValue.timestamp(2007, 6, 5, 9, 8)),
 
             // Second
-            ParseTimestampTestCase("y M d H m s", "2007 6 5 9 8 6", Timestamp.valueOf("2007-06-05T09:08:06-00:00")),
-            ParseTimestampTestCase("y M d H m s", "2007 6 5 9 8 06", Timestamp.valueOf("2007-06-05T09:08:06-00:00")),
-            ParseTimestampTestCase("y M d H m ss", "2007 6 5 9 8 06", Timestamp.valueOf("2007-06-05T09:08:06-00:00")),
+            ParseTimestampTestCase("y M d H m s", "2007 6 5 9 8 6", DateTimeValue.timestamp(2007, 6, 5, 9, 8, 6)),
+            ParseTimestampTestCase("y M d H m s", "2007 6 5 9 8 06", DateTimeValue.timestamp(2007, 6, 5, 9, 8, 6)),
+            ParseTimestampTestCase("y M d H m ss", "2007 6 5 9 8 06", DateTimeValue.timestamp(2007, 6, 5, 9, 8, 6)),
 
             // 12-hour mode
-            ParseTimestampTestCase("y M d h m s a", "2007 6 5 1 2 6 PM", Timestamp.valueOf("2007-06-05T13:02:06-00:00")),
-            ParseTimestampTestCase("y M d h m s a", "2007 6 5 1 2 6 AM", Timestamp.valueOf("2007-06-05T01:02:06-00:00")),
-            ParseTimestampTestCase("y M d h m s a", "2007 6 5 1 2 6 pm", Timestamp.valueOf("2007-06-05T13:02:06-00:00")),
-            ParseTimestampTestCase("y M d h m s a", "2007 6 5 1 2 6 am", Timestamp.valueOf("2007-06-05T01:02:06-00:00")),
+            ParseTimestampTestCase("y M d h m s a", "2007 6 5 1 2 6 PM", DateTimeValue.timestamp(2007, 6, 5, 13, 2, 6)),
+            ParseTimestampTestCase("y M d h m s a", "2007 6 5 1 2 6 AM", DateTimeValue.timestamp(2007, 6, 5, 1, 2, 6)),
+            ParseTimestampTestCase("y M d h m s a", "2007 6 5 1 2 6 pm", DateTimeValue.timestamp(2007, 6, 5, 13, 2, 6)),
+            ParseTimestampTestCase("y M d h m s a", "2007 6 5 1 2 6 am", DateTimeValue.timestamp(2007, 6, 5, 1, 2, 6)),
 
             // Second fraction, where precision of the fraction is specified by the number of S symbols.
             //  S   -> 1/10th of a decimalSecond
@@ -109,34 +110,34 @@ class TimestampParserTest {
             //  ...
             //  up to 1 nanosecond (9 'S' symbols)
             // Zero padding is required in this here because the value is intended to be on the right of a decimal point.
-            ParseTimestampTestCase("y M d H m s S", "2007 6 5 9 8 6 2", Timestamp.valueOf("2007-06-05T09:08:06.2-00:00")),
-            ParseTimestampTestCase("y M d H m s SS", "2007 6 5 9 8 6 25", Timestamp.valueOf("2007-06-05T09:08:06.25-00:00")),
-            ParseTimestampTestCase("y M d H m s SSS", "2007 6 5 9 8 6 256", Timestamp.valueOf("2007-06-05T09:08:06.256-00:00")),
-            ParseTimestampTestCase("y M d H m s SSSSSSSSS", "2007 6 5 9 8 6 123456789", Timestamp.valueOf("2007-06-05T09:08:06.123456789-00:00")),
+            ParseTimestampTestCase("y M d H m s S", "2007 6 5 9 8 6 2", DateTimeValue.timestamp(2007, 6, 5, 9, 8, BigDecimal.valueOf(62, 1))),
+            ParseTimestampTestCase("y M d H m s SS", "2007 6 5 9 8 6 25", DateTimeValue.timestamp(2007, 6, 5, 9, 8, BigDecimal.valueOf(625, 2))),
+            ParseTimestampTestCase("y M d H m s SSS", "2007 6 5 9 8 6 256", DateTimeValue.timestamp(2007, 6, 5, 9, 8, BigDecimal.valueOf(6256, 3))),
+            ParseTimestampTestCase("y M d H m s SSSSSSSSS", "2007 6 5 9 8 6 123456789", DateTimeValue.timestamp(2007, 6, 5, 9, 8, BigDecimal.valueOf(6123456789, 9))),
 
             // Nanosecond
             // Zero padding is optional
-            ParseTimestampTestCase("y M d H m s n", "2007 6 5 9 8 6 100", Timestamp.valueOf("2007-06-05T09:08:06.0000001-00:00")),
-            ParseTimestampTestCase("y M d H m s n", "2007 6 5 9 8 6 00100", Timestamp.valueOf("2007-06-05T09:08:06.0000001-00:00")),
-            ParseTimestampTestCase("y M d H m s n", "2007 6 5 9 8 6 123456789", Timestamp.valueOf("2007-06-05T09:08:06.123456789-00:00")),
+            ParseTimestampTestCase("y M d H m s n", "2007 6 5 9 8 6 100", DateTimeValue.timestamp(2007, 6, 5, 9, 8, BigDecimal.valueOf(100, 9))),
+            ParseTimestampTestCase("y M d H m s n", "2007 6 5 9 8 6 00100", DateTimeValue.timestamp(2007, 6, 5, 9, 8, BigDecimal.valueOf(100, 9))),
+            ParseTimestampTestCase("y M d H m s n", "2007 6 5 9 8 6 123456789", DateTimeValue.timestamp(2007, 6, 5, 9, 8, BigDecimal.valueOf(6123456789, 9))),
 
             // Ion timestamp precision variants
-            ParseTimestampTestCase("y'T'", "1969T", Timestamp.valueOf("1969T")),
-            ParseTimestampTestCase("y-MM'T'", "1969-07T", Timestamp.valueOf("1969-07T")),
-            ParseTimestampTestCase("y-MM-dd'T'", "1969-07-20T", Timestamp.valueOf("1969-07-20T")),
-            ParseTimestampTestCase("y-MM-dd'T'H:m", "1969-07-20T20:18", Timestamp.valueOf("1969-07-20T20:18-00:00")),
-            ParseTimestampTestCase("y-MM-dd'T'H:m:ss", "1969-07-20T20:18:13", Timestamp.valueOf("1969-07-20T20:18:13-00:00")),
-            ParseTimestampTestCase("y-MM-dd'T'H:m:ss.S", "1969-07-20T20:18:00.1", Timestamp.valueOf("1969-07-20T20:18:00.1-00:00")),
-            ParseTimestampTestCase("y-MM-dd'T'H:m:ss.SS", "1969-07-20T20:18:00.12", Timestamp.valueOf("1969-07-20T20:18:00.12-00:00")),
-            ParseTimestampTestCase("y-MM-dd'T'H:m:ss.SSS", "1969-07-20T20:18:00.123", Timestamp.valueOf("1969-07-20T20:18:00.123-00:00")),
-            ParseTimestampTestCase("y-MM-dd'T'H:m:ss.SSSS", "1969-07-20T20:18:00.1234", Timestamp.valueOf("1969-07-20T20:18:00.1234-00:00")),
-            ParseTimestampTestCase("y-MM-dd'T'H:m:ss.SSSSS", "1969-07-20T20:18:00.12345", Timestamp.valueOf("1969-07-20T20:18:00.12345-00:00")),
-            ParseTimestampTestCase("y-MM-dd'T'H:m:ss.SSSSSS", "1969-07-20T20:18:00.123456", Timestamp.valueOf("1969-07-20T20:18:00.123456-00:00")),
-            ParseTimestampTestCase("y-MM-dd'T'H:m:ss.SSSSSSS", "1969-07-20T20:18:00.1234567", Timestamp.valueOf("1969-07-20T20:18:00.1234567-00:00")),
-            ParseTimestampTestCase("y-MM-dd'T'H:m:ss.SSSSSSSS", "1969-07-20T20:18:00.12345678", Timestamp.valueOf("1969-07-20T20:18:00.12345678-00:00")),
-            ParseTimestampTestCase("y-MM-dd'T'H:m:ss.SSSSSSSSS", "1969-07-20T20:18:00.123456789", Timestamp.valueOf("1969-07-20T20:18:00.123456789-00:00")),
+            ParseTimestampTestCase("y'T'", "1969T", DateTimeValue.timestamp(1969)),
+            ParseTimestampTestCase("y-MM'T'", "1969-07T", DateTimeValue.timestamp(1969, 7)),
+            ParseTimestampTestCase("y-MM-dd'T'", "1969-07-20T", DateTimeValue.timestamp(1969, 7, 20)),
+            ParseTimestampTestCase("y-MM-dd'T'H:m", "1969-07-20T20:18", DateTimeValue.timestamp(1969, 7, 20, 20, 18)),
+            ParseTimestampTestCase("y-MM-dd'T'H:m:ss", "1969-07-20T20:18:13", DateTimeValue.timestamp(1969, 7, 20, 20, 18, 13)),
+            ParseTimestampTestCase("y-MM-dd'T'H:m:ss.S", "1969-07-20T20:18:00.1", DateTimeValue.timestamp(1969, 7, 20, 20, 18, BigDecimal.valueOf(1, 1))),
+            ParseTimestampTestCase("y-MM-dd'T'H:m:ss.SS", "1969-07-20T20:18:00.12", DateTimeValue.timestamp(1969, 7, 20, 20, 18, BigDecimal.valueOf(12, 2))),
+            ParseTimestampTestCase("y-MM-dd'T'H:m:ss.SSS", "1969-07-20T20:18:00.123", DateTimeValue.timestamp(1969, 7, 20, 20, 18, BigDecimal.valueOf(123, 3))),
+            ParseTimestampTestCase("y-MM-dd'T'H:m:ss.SSSS", "1969-07-20T20:18:00.1234", DateTimeValue.timestamp(1969, 7, 20, 20, 18, BigDecimal.valueOf(1234, 4))),
+            ParseTimestampTestCase("y-MM-dd'T'H:m:ss.SSSSS", "1969-07-20T20:18:00.12345", DateTimeValue.timestamp(1969, 7, 20, 20, 18, BigDecimal.valueOf(12345, 5))),
+            ParseTimestampTestCase("y-MM-dd'T'H:m:ss.SSSSSS", "1969-07-20T20:18:00.123456", DateTimeValue.timestamp(1969, 7, 20, 20, 18, BigDecimal.valueOf(123456, 6))),
+            ParseTimestampTestCase("y-MM-dd'T'H:m:ss.SSSSSSS", "1969-07-20T20:18:00.1234567", DateTimeValue.timestamp(1969, 7, 20, 20, 18, BigDecimal.valueOf(1234567, 7))),
+            ParseTimestampTestCase("y-MM-dd'T'H:m:ss.SSSSSSSS", "1969-07-20T20:18:00.12345678", DateTimeValue.timestamp(1969, 7, 20, 20, 18, BigDecimal.valueOf(12345678, 8))),
+            ParseTimestampTestCase("y-MM-dd'T'H:m:ss.SSSSSSSSS", "1969-07-20T20:18:00.123456789", DateTimeValue.timestamp(1969, 7, 20, 20, 18, BigDecimal.valueOf(123456789, 9))),
 
-            // Ion timestamp with explicit unknown offset.  The "-00:00" at the end of the timestamp string signifies
+            // Ion timestamp with explicit unknown offset.  The "" at the end of the timestamp string signifies
             // an unknown offset.  ("+00:00" signifies UTC/GMT.)
             // Note:  these are tests removed because there's no way I can determine to reliably handle negative zero offset
             // indicating unknown offset, even with an ugly hack.
@@ -151,61 +152,61 @@ class TimestampParserTest {
             // Note that DateTimeFormatter is unfortunately unable to recognize a negative zero offset as an unknown offset like Ion does.
 
             // Capital X allows the use of "Z" to represent zero offset from GMT.
-            ParseTimestampTestCase("y M d H m X", "1969 07 20 20 01 Z", Timestamp.valueOf("1969-07-20T20:01Z")),
-            ParseTimestampTestCase("y M d H m XX", "1969 07 20 20 01 Z", Timestamp.valueOf("1969-07-20T20:01Z")),
-            ParseTimestampTestCase("y M d H m XXX", "1969 07 20 20 01 Z", Timestamp.valueOf("1969-07-20T20:01Z")),
-            ParseTimestampTestCase("y M d H m XXXX", "1969 07 20 20 01 Z", Timestamp.valueOf("1969-07-20T20:01Z")),
-            ParseTimestampTestCase("y M d H m XXXXX", "1969 07 20 20 01 Z", Timestamp.valueOf("1969-07-20T20:01Z")),
+            ParseTimestampTestCase("y M d H m X", "1969 07 20 20 01 Z", DateTimeValue.timestamp(1969, 7, 20, 20, 1, BigDecimal.ZERO, TimeZone.UtcOffset.of(0))),
+            ParseTimestampTestCase("y M d H m XX", "1969 07 20 20 01 Z", DateTimeValue.timestamp(1969, 7, 20, 20, 1, BigDecimal.ZERO, TimeZone.UtcOffset.of(0))),
+            ParseTimestampTestCase("y M d H m XXX", "1969 07 20 20 01 Z", DateTimeValue.timestamp(1969, 7, 20, 20, 1, BigDecimal.ZERO, TimeZone.UtcOffset.of(0))),
+            ParseTimestampTestCase("y M d H m XXXX", "1969 07 20 20 01 Z", DateTimeValue.timestamp(1969, 7, 20, 20, 1, BigDecimal.ZERO, TimeZone.UtcOffset.of(0))),
+            ParseTimestampTestCase("y M d H m XXXXX", "1969 07 20 20 01 Z", DateTimeValue.timestamp(1969, 7, 20, 20, 1, BigDecimal.ZERO, TimeZone.UtcOffset.of(0))),
 
-            ParseTimestampTestCase("y M d H m X", "1969 07 20 20 01 Z", Timestamp.valueOf("1969-07-20T20:01Z")),
-            ParseTimestampTestCase("y M d H m X", "1969 07 20 20 01 +0000", Timestamp.valueOf("1969-07-20T20:01Z")),
-            ParseTimestampTestCase("y M d H m X", "1969 07 20 20 01 -0000", Timestamp.valueOf("1969-07-20T20:01Z")),
-            ParseTimestampTestCase("y M d H m X", "1969 07 20 20 01 +0500", Timestamp.valueOf("1969-07-20T20:01+05:00")),
-            ParseTimestampTestCase("y M d H m X", "1969 07 20 20 01 -0500", Timestamp.valueOf("1969-07-20T20:01-05:00")),
-            ParseTimestampTestCase("y M d H m X", "1969 07 20 20 01 +02", Timestamp.valueOf("1969-07-20T20:01+02:00")),
-            ParseTimestampTestCase("y M d H m X", "1969 07 20 20 01 -02", Timestamp.valueOf("1969-07-20T20:01-02:00")),
-            ParseTimestampTestCase("y M d H m X", "1969 07 20 20 01 +0203", Timestamp.valueOf("1969-07-20T20:01+02:03")),
-            ParseTimestampTestCase("y M d H m X", "1969 07 20 20 01 -0203", Timestamp.valueOf("1969-07-20T20:01-02:03")),
-            ParseTimestampTestCase("y M d H m XXX", "1969 07 20 20 01 +02:03", Timestamp.valueOf("1969-07-20T20:01+02:03")),
-            ParseTimestampTestCase("y M d H m XXX", "1969 07 20 20 01 -02:03", Timestamp.valueOf("1969-07-20T20:01-02:03")),
-            ParseTimestampTestCase("y M d H m XXXXX", "1969 07 20 20 01 -01:00", Timestamp.valueOf("1969-07-20T20:01-01:00")),
-            ParseTimestampTestCase("y M d H m XXXXX", "1969 07 20 20 01 +01:00", Timestamp.valueOf("1969-07-20T20:01+01:00")),
-            ParseTimestampTestCase("y M d H m XXXXX", "1969 07 20 20 01 -18:00", Timestamp.valueOf("1969-07-20T20:01-18:00")),
-            ParseTimestampTestCase("y M d H m XXXXX", "1969 07 20 20 01 +18:00", Timestamp.valueOf("1969-07-20T20:01+18:00")),
+            ParseTimestampTestCase("y M d H m X", "1969 07 20 20 01 Z", DateTimeValue.timestamp(1969, 7, 20, 20, 1, BigDecimal.ZERO, TimeZone.UtcOffset.of(0))),
+            ParseTimestampTestCase("y M d H m X", "1969 07 20 20 01 +0000", DateTimeValue.timestamp(1969, 7, 20, 20, 1, BigDecimal.ZERO, TimeZone.UtcOffset.of(0))),
+            ParseTimestampTestCase("y M d H m X", "1969 07 20 20 01 -0000", DateTimeValue.timestamp(1969, 7, 20, 20, 1, BigDecimal.ZERO, TimeZone.UtcOffset.of(0))),
+            ParseTimestampTestCase("y M d H m X", "1969 07 20 20 01 +0500", DateTimeValue.timestamp(1969, 7, 20, 20, 1, BigDecimal.ZERO, TimeZone.UtcOffset.of(5, 0))),
+            ParseTimestampTestCase("y M d H m X", "1969 07 20 20 01 -0500", DateTimeValue.timestamp(1969, 7, 20, 20, 1, BigDecimal.ZERO, TimeZone.UtcOffset.of(-5, 0))),
+            ParseTimestampTestCase("y M d H m X", "1969 07 20 20 01 +02", DateTimeValue.timestamp(1969, 7, 20, 20, 1, BigDecimal.ZERO, TimeZone.UtcOffset.of(2, 0))),
+            ParseTimestampTestCase("y M d H m X", "1969 07 20 20 01 -02", DateTimeValue.timestamp(1969, 7, 20, 20, 1, BigDecimal.ZERO, TimeZone.UtcOffset.of(-2, 0))),
+            ParseTimestampTestCase("y M d H m X", "1969 07 20 20 01 +0203", DateTimeValue.timestamp(1969, 7, 20, 20, 1, BigDecimal.ZERO, TimeZone.UtcOffset.of(2, 3))),
+            ParseTimestampTestCase("y M d H m X", "1969 07 20 20 01 -0203", DateTimeValue.timestamp(1969, 7, 20, 20, 1, BigDecimal.ZERO, TimeZone.UtcOffset.of(-2, -3))),
+            ParseTimestampTestCase("y M d H m XXX", "1969 07 20 20 01 +02:03", DateTimeValue.timestamp(1969, 7, 20, 20, 1, BigDecimal.ZERO, TimeZone.UtcOffset.of(2, 3))),
+            ParseTimestampTestCase("y M d H m XXX", "1969 07 20 20 01 -02:03", DateTimeValue.timestamp(1969, 7, 20, 20, 1, BigDecimal.ZERO, TimeZone.UtcOffset.of(-2, -3))),
+            ParseTimestampTestCase("y M d H m XXXXX", "1969 07 20 20 01 -01:00", DateTimeValue.timestamp(1969, 7, 20, 20, 1, BigDecimal.ZERO, TimeZone.UtcOffset.of(-1, 0))),
+            ParseTimestampTestCase("y M d H m XXXXX", "1969 07 20 20 01 +01:00", DateTimeValue.timestamp(1969, 7, 20, 20, 1, BigDecimal.ZERO, TimeZone.UtcOffset.of(1, 0))),
+            ParseTimestampTestCase("y M d H m XXXXX", "1969 07 20 20 01 -18:00", DateTimeValue.timestamp(1969, 7, 20, 20, 1, BigDecimal.ZERO, TimeZone.UtcOffset.of(-18, 0))),
+            ParseTimestampTestCase("y M d H m XXXXX", "1969 07 20 20 01 +18:00", DateTimeValue.timestamp(1969, 7, 20, 20, 1, BigDecimal.ZERO, TimeZone.UtcOffset.of(18, 0))),
 
-            ParseTimestampTestCase("y M d H m x", "1969 07 20 20 01 +00", Timestamp.valueOf("1969-07-20T20:01Z")),
-            ParseTimestampTestCase("y M d H m x", "1969 07 20 20 01 -00", Timestamp.valueOf("1969-07-20T20:01Z")),
-            ParseTimestampTestCase("y M d H m xx", "1969 07 20 20 01 +0000", Timestamp.valueOf("1969-07-20T20:01Z")),
-            ParseTimestampTestCase("y M d H m xx", "1969 07 20 20 01 -0000", Timestamp.valueOf("1969-07-20T20:01Z")),
-            ParseTimestampTestCase("y M d H m xxx", "1969 07 20 20 01 +00:00", Timestamp.valueOf("1969-07-20T20:01Z")),
-            ParseTimestampTestCase("y M d H m xxx", "1969 07 20 20 01 -00:00", Timestamp.valueOf("1969-07-20T20:01Z")),
+            ParseTimestampTestCase("y M d H m x", "1969 07 20 20 01 +00", DateTimeValue.timestamp(1969, 7, 20, 20, 1, BigDecimal.ZERO, TimeZone.UtcOffset.of(0))),
+            ParseTimestampTestCase("y M d H m x", "1969 07 20 20 01 -00", DateTimeValue.timestamp(1969, 7, 20, 20, 1, BigDecimal.ZERO, TimeZone.UtcOffset.of(0))),
+            ParseTimestampTestCase("y M d H m xx", "1969 07 20 20 01 +0000", DateTimeValue.timestamp(1969, 7, 20, 20, 1, BigDecimal.ZERO, TimeZone.UtcOffset.of(0))),
+            ParseTimestampTestCase("y M d H m xx", "1969 07 20 20 01 -0000", DateTimeValue.timestamp(1969, 7, 20, 20, 1, BigDecimal.ZERO, TimeZone.UtcOffset.of(0))),
+            ParseTimestampTestCase("y M d H m xxx", "1969 07 20 20 01 +00:00", DateTimeValue.timestamp(1969, 7, 20, 20, 1, BigDecimal.ZERO, TimeZone.UtcOffset.of(0))),
+            ParseTimestampTestCase("y M d H m xxx", "1969 07 20 20 01 -00:00", DateTimeValue.timestamp(1969, 7, 20, 20, 1, BigDecimal.ZERO, TimeZone.UtcOffset.of(0))),
 
             // This might be a bug in Java's DateTimeFormatter, but lowercase 'x' cannot parse "+0000" like uppercase "X" can
             // even though by all appearances, it should.
             // ParseTimestampTestCase("y M d H m x", "1969 07 20 20 01 +0000", Timestamp.valueOf("1969-07-20T20:01Z")),
-            ParseTimestampTestCase("y M d H m x", "1969 07 20 20 01 +0100", Timestamp.valueOf("1969-07-20T20:01+01:00")),
-            ParseTimestampTestCase("y M d H m x", "1969 07 20 20 01 +02", Timestamp.valueOf("1969-07-20T20:01+02:00")),
-            ParseTimestampTestCase("y M d H m x", "1969 07 20 20 01 -02", Timestamp.valueOf("1969-07-20T20:01-02:00")),
-            ParseTimestampTestCase("y M d H m x", "1969 07 20 20 01 +0203", Timestamp.valueOf("1969-07-20T20:01+02:03")),
-            ParseTimestampTestCase("y M d H m x", "1969 07 20 20 01 -0203", Timestamp.valueOf("1969-07-20T20:01-02:03")),
-            ParseTimestampTestCase("y M d H m xxx", "1969 07 20 20 01 +02:03", Timestamp.valueOf("1969-07-20T20:01+02:03")),
-            ParseTimestampTestCase("y M d H m xxx", "1969 07 20 20 01 -02:03", Timestamp.valueOf("1969-07-20T20:01-02:03")),
+            ParseTimestampTestCase("y M d H m x", "1969 07 20 20 01 +0100", DateTimeValue.timestamp(1969, 7, 20, 20, 1, BigDecimal.ZERO, TimeZone.UtcOffset.of(1, 0))),
+            ParseTimestampTestCase("y M d H m x", "1969 07 20 20 01 +02", DateTimeValue.timestamp(1969, 7, 20, 20, 1, BigDecimal.ZERO, TimeZone.UtcOffset.of(2, 0))),
+            ParseTimestampTestCase("y M d H m x", "1969 07 20 20 01 -02", DateTimeValue.timestamp(1969, 7, 20, 20, 1, BigDecimal.ZERO, TimeZone.UtcOffset.of(-2, 0))),
+            ParseTimestampTestCase("y M d H m x", "1969 07 20 20 01 +0203", DateTimeValue.timestamp(1969, 7, 20, 20, 1, BigDecimal.ZERO, TimeZone.UtcOffset.of(2, 3))),
+            ParseTimestampTestCase("y M d H m x", "1969 07 20 20 01 -0203", DateTimeValue.timestamp(1969, 7, 20, 20, 1, BigDecimal.ZERO, TimeZone.UtcOffset.of(-2, -3))),
+            ParseTimestampTestCase("y M d H m xxx", "1969 07 20 20 01 +02:03", DateTimeValue.timestamp(1969, 7, 20, 20, 1, BigDecimal.ZERO, TimeZone.UtcOffset.of(2, 3))),
+            ParseTimestampTestCase("y M d H m xxx", "1969 07 20 20 01 -02:03", DateTimeValue.timestamp(1969, 7, 20, 20, 1, BigDecimal.ZERO, TimeZone.UtcOffset.of(-2, -3))),
 
-            ParseTimestampTestCase("y M d H m xxxxx", "1969 07 20 20 01 -01:00", Timestamp.valueOf("1969-07-20T20:01-01:00")),
-            ParseTimestampTestCase("y M d H m xxxxx", "1969 07 20 20 01 +01:00", Timestamp.valueOf("1969-07-20T20:01+01:00")),
-            ParseTimestampTestCase("y M d H m xxxxx", "1969 07 20 20 01 -18:00", Timestamp.valueOf("1969-07-20T20:01-18:00")),
-            ParseTimestampTestCase("y M d H m xxxxx", "1969 07 20 20 01 +18:00", Timestamp.valueOf("1969-07-20T20:01+18:00")),
+            ParseTimestampTestCase("y M d H m xxxxx", "1969 07 20 20 01 -01:00", DateTimeValue.timestamp(1969, 7, 20, 20, 1, BigDecimal.ZERO, TimeZone.UtcOffset.of(-1, 0))),
+            ParseTimestampTestCase("y M d H m xxxxx", "1969 07 20 20 01 +01:00", DateTimeValue.timestamp(1969, 7, 20, 20, 1, BigDecimal.ZERO, TimeZone.UtcOffset.of(1, 0))),
+            ParseTimestampTestCase("y M d H m xxxxx", "1969 07 20 20 01 -18:00", DateTimeValue.timestamp(1969, 7, 20, 20, 1, BigDecimal.ZERO, TimeZone.UtcOffset.of(-18, 0))),
+            ParseTimestampTestCase("y M d H m xxxxx", "1969 07 20 20 01 +18:00", DateTimeValue.timestamp(1969, 7, 20, 20, 1, BigDecimal.ZERO, TimeZone.UtcOffset.of(18, 0))),
 
             // Date format with whitespace surrounding the string
-            ParseTimestampTestCase(" y M d ", " 2007 6 5 ", Timestamp.valueOf("2007-06-05T")),
-            ParseTimestampTestCase("'\t'y M d'\t'", "\t2007 6 5\t", Timestamp.valueOf("2007-06-05T")),
+            ParseTimestampTestCase(" y M d ", " 2007 6 5 ", DateTimeValue.timestamp(2007, 6, 5)),
+            ParseTimestampTestCase("'\t'y M d'\t'", "\t2007 6 5\t", DateTimeValue.timestamp(2007, 6, 5)),
 
             // Crazy delimiters
-            ParseTimestampTestCase("'Some'y'crazy'M'delimiter'd'here'", "Some2007crazy6delimiter5here", Timestamp.valueOf("2007-06-05T")),
-            ParseTimestampTestCase("'😸'y'😸'M'😸'd'😸'", "😸2007😸6😸5😸", Timestamp.valueOf("2007-06-05T")),
+            ParseTimestampTestCase("'Some'y'crazy'M'delimiter'd'here'", "Some2007crazy6delimiter5here", DateTimeValue.timestamp(2007, 6, 5)),
+            ParseTimestampTestCase("'😸'y'😸'M'😸'd'😸'", "😸2007😸6😸5😸", DateTimeValue.timestamp(2007, 6, 5)),
 
             // No delimiters at all
-            ParseTimestampTestCase("yyyyMMddHHmmss", "20070605040302", Timestamp.valueOf("2007-06-05T04:03:02-00:00"))
+            ParseTimestampTestCase("yyyyMMddHHmmss", "20070605040302", DateTimeValue.timestamp(2007, 6, 5, 4, 3, 2))
         )
 
     @Test
@@ -252,101 +253,101 @@ class TimestampParserTest {
         // Year outside of range (year is 0)
         ParseFailureTestCase(
             "yyyy-MM-dd",
-            "0000-01-01",
+            "0000,1,1",
             DateTimeParseException::class.java,
-            "Text '0000-01-01' could not be parsed: Invalid value for YearOfEra (valid values 1 - 999999999/1000000000): 0"
+            "Text '0000,1,1' could not be parsed: Invalid value for YearOfEra (valid values 1 - 999999999/1000000000): 0"
         ),
 
         // Month outside of range
         ParseFailureTestCase(
             "yyyy-MM-dd",
-            "2017-00-01",
+            "2017,0,1",
             DateTimeParseException::class.java,
-            "Text '2017-00-01' could not be parsed: Invalid value for MonthOfYear (valid values 1 - 12): 0"
+            "Text '2017,0,1' could not be parsed: Invalid value for MonthOfYear (valid values 1 - 12): 0"
         ),
 
         ParseFailureTestCase(
             "yyyy-MM-dd",
-            "2017-13-01",
+            "2017-13,1",
             DateTimeParseException::class.java,
-            "Text '2017-13-01' could not be parsed: Invalid value for MonthOfYear (valid values 1 - 12): 13"
+            "Text '2017-13,1' could not be parsed: Invalid value for MonthOfYear (valid values 1 - 12): 13"
         ),
 
         // Day outside of range
         ParseFailureTestCase(
             "yyyy-MM-dd",
-            "2017-01-00",
+            "2017,1,0",
             DateTimeParseException::class.java,
-            "Text '2017-01-00' could not be parsed: Invalid value for DayOfMonth (valid values 1 - 28/31): 0"
+            "Text '2017,1,0' could not be parsed: Invalid value for DayOfMonth (valid values 1 - 28/31): 0"
         ),
 
         ParseFailureTestCase(
             "yyyy-MM-dd",
-            "2017-01-32",
+            "2017,1-32",
             DateTimeParseException::class.java,
-            "Text '2017-01-32' could not be parsed: Invalid value for DayOfMonth (valid values 1 - 28/31): 32"
+            "Text '2017,1-32' could not be parsed: Invalid value for DayOfMonth (valid values 1 - 28/31): 32"
         ),
 
         // Hour outside of range (AM/PM)
-        // ParseFailureTestCase("2017-01-01 00:01 PM", "yyyy-MM-dd hh:mm a", ""), //In 12 hour mode, 0 is considered 12...
+        // ParseFailureTestCase("2017,1,1 00:01 PM", "yyyy-MM-dd hh:mm a", ""), //In 12 hour mode, 0 is considered 12...
         ParseFailureTestCase(
             "yyyy-MM-dd hh:mm a",
-            "2017-01-01 13:01 PM",
+            "2017,1,1 13,1 PM",
             DateTimeParseException::class.java,
-            "Text '2017-01-01 13:01 PM' could not be parsed: Invalid value for ClockHourOfAmPm (valid values 1 - 12): 13"
+            "Text '2017,1,1 13,1 PM' could not be parsed: Invalid value for ClockHourOfAmPm (valid values 1 - 12): 13"
         ),
 
         // Hour outside of range (24hr)
         ParseFailureTestCase(
             "yyyy-MM-dd HH:mm",
-            "2017-01-01 24:01",
+            "2017,1,1 24,1",
             DateTimeParseException::class.java,
-            "Text '2017-01-01 24:01' could not be parsed: Invalid value for HourOfDay (valid values 0 - 23): 24"
+            "Text '2017,1,1 24,1' could not be parsed: Invalid value for HourOfDay (valid values 0 - 23): 24"
         ),
 
         // Minute outside of range
         ParseFailureTestCase(
             "yyyy-MM-dd HH:mm",
-            "2017-01-01 01:60",
+            "2017,1,1 01:60",
             DateTimeParseException::class.java,
-            "Text '2017-01-01 01:60' could not be parsed: Invalid value for MinuteOfHour (valid values 0 - 59): 60"
+            "Text '2017,1,1 01:60' could not be parsed: Invalid value for MinuteOfHour (valid values 0 - 59): 60"
         ),
 
         // Second outside of range
         ParseFailureTestCase(
             "yyyy-MM-dd HH:mm:ss",
-            "2017-01-01 01:01:60",
+            "2017,1,1 01,1:60",
             DateTimeParseException::class.java,
-            "Text '2017-01-01 01:01:60' could not be parsed: Invalid value for SecondOfMinute (valid values 0 - 59): 60"
+            "Text '2017,1,1 01,1:60' could not be parsed: Invalid value for SecondOfMinute (valid values 0 - 59): 60"
         ),
 
         // Whitespace surrounding custom timestamp
         ParseFailureTestCase(
             "yyyy-MM-dd",
-            " 2017-01-01",
+            " 2017,1,1",
             DateTimeParseException::class.java,
-            "Text ' 2017-01-01' could not be parsed at index 0"
+            "Text ' 2017,1,1' could not be parsed at index 0"
         ),
 
         ParseFailureTestCase(
             "yyyy-MM-dd",
-            "2017-01-01 ",
+            "2017,1,1 ",
             DateTimeParseException::class.java,
-            "Text '2017-01-01 ' could not be parsed, unparsed text found at index 10"
+            "Text '2017,1,1 ' could not be parsed, unparsed text found at index 10"
         ),
 
         ParseFailureTestCase(
             "yyyy-MM-dd",
-            " 2017-01-01 ",
+            " 2017,1,1 ",
             DateTimeParseException::class.java,
-            "Text ' 2017-01-01 ' could not be parsed at index 0"
+            "Text ' 2017,1,1 ' could not be parsed at index 0"
         ),
 
         ParseFailureTestCase(
             "yyyy-MM-dd",
-            "2017-01-01 ",
+            "2017,1,1 ",
             DateTimeParseException::class.java,
-            "Text '2017-01-01 ' could not be parsed, unparsed text found at index 10"
+            "Text '2017,1,1 ' could not be parsed, unparsed text found at index 10"
         ),
 
         // Required zero padding not present (Zero padding required because 2 or more consecutive format symbols)
@@ -429,7 +430,7 @@ class TimestampParserTest {
         // Offset not ending on a minute boundary (error condition detected by TimestampParser)
         ParseFailureTestCase(
             "yyyy M d H m xxxxx",
-            "1969 07 20 20 01 +01:00:01",
+            "1969 07 20 20 01 +01,0,1",
             expectedErrorCode = ErrorCode.EVALUATOR_PRECISION_LOSS_WHEN_PARSING_TIMESTAMP
         ),
 

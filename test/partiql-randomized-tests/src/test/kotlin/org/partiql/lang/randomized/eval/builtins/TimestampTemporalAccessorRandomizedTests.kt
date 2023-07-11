@@ -7,6 +7,7 @@ import junitparams.naming.TestCaseName
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.partiql.lang.datetime.TimestampTemporalAccessor
+import org.partiql.value.datetime.DateTimeValue
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -70,7 +71,7 @@ class TimestampTemporalAccessorRandomizedTests {
             val offsetDatetime = timestamp.toOffsetDateTime()
             val formattedOffsetDateTime = formatter.format(offsetDatetime)
             // Actual
-            val temporalAccessor = TimestampTemporalAccessor(org.partiql.value.datetime.Timestamp.forIonTimestamp(timestamp))
+            val temporalAccessor = TimestampTemporalAccessor(DateTimeValue.timestamp(timestamp))
             val formattedTimestamp = formatter.format(temporalAccessor)
             assertEquals(formattedOffsetDateTime, formattedTimestamp)
         }

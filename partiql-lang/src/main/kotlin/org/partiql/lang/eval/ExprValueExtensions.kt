@@ -802,6 +802,6 @@ private fun org.partiql.value.datetime.Timestamp.toIonValue(ion: IonSystem) =
                 field("hour", ionInt(ts.hour.toLong())),
                 field("minute", ionInt(ts.minute.toLong())),
                 field("decimalSecond", ionDecimal(Decimal.valueOf(ts.decimalSecond)))
-            ).toIonValue(ion)
+            ).withAnnotations(TIMESTAMP_WITHOUT_TIMEZONE_ANNOTATION).toIonValue(ion)
         }
     }

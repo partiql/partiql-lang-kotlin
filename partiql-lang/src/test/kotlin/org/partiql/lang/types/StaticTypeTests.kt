@@ -68,6 +68,8 @@ class StaticTypeTests {
             InputTypes("`asymbol`", listOf(SYMBOL)),
             // TIMESTAMP
             InputTypes("`2001T`", listOf(TIMESTAMP)),
+            InputTypes("TIMESTAMP '2001-01-01 00:00:00.000'", listOf(TIMESTAMP)),
+            InputTypes("TIMESTAMP '2001-01-01T00:00:00.000Z'", listOf(TIMESTAMP)),
             // STRING
             InputTypes("'a string'", listOf(STRING)),
             // CLOB

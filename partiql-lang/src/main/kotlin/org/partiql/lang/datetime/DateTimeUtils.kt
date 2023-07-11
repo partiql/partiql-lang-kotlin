@@ -4,8 +4,6 @@ import org.partiql.value.datetime.Date
 import org.partiql.value.datetime.DateTimeException
 import org.partiql.value.datetime.DateTimeValue
 import org.partiql.value.datetime.Time
-import org.partiql.value.datetime.TimeWithTimeZone
-import org.partiql.value.datetime.TimeWithoutTimeZone
 import org.partiql.value.datetime.TimeZone
 import org.partiql.value.datetime.Timestamp
 import java.math.BigDecimal
@@ -62,10 +60,7 @@ internal object DateTimeUtils {
         )
         val date = parseDateLiteral(matcher.group("date"))
         val time = parseTimeLiteral(matcher.group("time"))
-        return when (time) {
-            is TimeWithTimeZone -> DateTimeValue.timestamp(date, time)
-            is TimeWithoutTimeZone -> DateTimeValue.timestamp(date, time)
-        }
+        return DateTimeValue.timestamp(date, time)
     }
 
     private fun getTimeZoneComponent(timezone: String): TimeZone {

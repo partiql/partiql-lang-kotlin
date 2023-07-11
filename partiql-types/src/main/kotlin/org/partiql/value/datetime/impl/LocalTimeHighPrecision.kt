@@ -4,14 +4,17 @@ import org.partiql.value.datetime.Date
 import org.partiql.value.datetime.DateTimeException
 import org.partiql.value.datetime.DateTimeUtil
 import org.partiql.value.datetime.DateTimeUtil.toBigDecimal
-import org.partiql.value.datetime.TimeWithTimeZone
 import org.partiql.value.datetime.TimeWithoutTimeZone
 import org.partiql.value.datetime.TimeZone
-import org.partiql.value.datetime.TimestampWithoutTimeZone
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.temporal.ChronoField
 
+/**
+ * This implementation handles edge cases that can not be supported by [LocalTimeLowPrecision], that is:
+ * 1. The desired precision exceeds nanosecond.
+ * 2. The desired timestamp exceeds the range of +18:00 to -18:00
+ */
 internal class LocalTimeHighPrecision private constructor(
     override val hour: Int,
     override val minute: Int,
@@ -22,15 +25,14 @@ internal class LocalTimeHighPrecision private constructor(
         fun of(
             hour: Int,
             minute: Int,
-            decimalSecond: BigDecimal,
-            elapsedSeconds: BigDecimal? = null
+            decimalSecond: BigDecimal
         ): LocalTimeHighPrecision {
             try {
                 ChronoField.HOUR_OF_DAY.checkValidValue(hour.toLong())
                 ChronoField.MINUTE_OF_HOUR.checkValidValue(minute.toLong())
                 // round down the decimalSecond to check
                 ChronoField.SECOND_OF_MINUTE.checkValidValue(decimalSecond.setScale(0, RoundingMode.DOWN).toLong())
-                return LocalTimeHighPrecision(hour, minute, decimalSecond, elapsedSeconds)
+                return LocalTimeHighPrecision(hour, minute, decimalSecond)
             } catch (e: java.time.DateTimeException) {
                 throw DateTimeException(e.localizedMessage, e)
             }
@@ -44,7 +46,7 @@ internal class LocalTimeHighPrecision private constructor(
             total -= hour * DateTimeUtil.SECONDS_IN_HOUR
             val minute = total / DateTimeUtil.SECONDS_IN_MINUTE
             total -= minute * DateTimeUtil.SECONDS_IN_MINUTE
-            return of(hour.toInt(), minute.toInt(), fraction.plus(BigDecimal.valueOf(total)), elapsedSeconds)
+            return of(hour.toInt(), minute.toInt(), fraction.plus(BigDecimal.valueOf(total))).copy(elapsedSeconds)
         }
     }
 
@@ -53,18 +55,20 @@ internal class LocalTimeHighPrecision private constructor(
             ?: (BigDecimal.valueOf(this.hour * DateTimeUtil.SECONDS_IN_HOUR + this.minute * DateTimeUtil.SECONDS_IN_MINUTE) + this.decimalSecond)
     }
 
-    override fun plusHours(hours: Long): TimeWithoutTimeZone =
+    override fun plusHours(hours: Long): LocalTimeHighPrecision =
         forSeconds(this.elapsedSecond.plus((hours * DateTimeUtil.SECONDS_IN_HOUR).toBigDecimal()))
 
-    override fun plusMinutes(minutes: Long): TimeWithoutTimeZone =
+    override fun plusMinutes(minutes: Long): LocalTimeHighPrecision =
         forSeconds(this.elapsedSecond.plus((minutes * DateTimeUtil.SECONDS_IN_MINUTE).toBigDecimal()))
 
-    override fun plusSeconds(seconds: BigDecimal): TimeWithoutTimeZone =
+    override fun plusSeconds(seconds: BigDecimal): LocalTimeHighPrecision =
         forSeconds(this.elapsedSecond.plus(seconds))
 
-    override fun atDate(date: Date): TimestampWithoutTimeZone =
-        LocalTimestampHighPrecision.forDateTime(date, this)
+    override fun atDate(date: Date): LocalTimestampHighPrecision =
+        LocalTimestampHighPrecision.forDateTime(date as SqlDate, this)
 
-    override fun withTimeZone(timeZone: TimeZone): TimeWithTimeZone =
+    override fun withTimeZone(timeZone: TimeZone): OffsetTimeHighPrecision =
         OffsetTimeHighPrecision.of(hour, minute, decimalSecond, timeZone)
+
+    fun copy(_elapsedSecond: BigDecimal? = null) = LocalTimeHighPrecision(this.hour, this.minute, this.decimalSecond, _elapsedSecond)
 }

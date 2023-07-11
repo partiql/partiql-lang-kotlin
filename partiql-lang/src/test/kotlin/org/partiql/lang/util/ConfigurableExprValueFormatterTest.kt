@@ -73,7 +73,7 @@ class ConfigurableExprValueFormatterTest {
         "TIMESTAMP '2021-02-28 00:00:00'" to "TIMESTAMP '2021-02-28 00:00:00'",
         "TIMESTAMP '2021-02-28T00:00:00'" to "TIMESTAMP '2021-02-28 00:00:00'",
         "TIMESTAMP '2021-02-28T00:00:00Z'" to "TIMESTAMP '2021-02-28 00:00:00+00:00'",
-        "`2019T`" to "TIMESTAMP '2019-01-01-00:00:00-00:00'",
+        "`2019T`" to "TIMESTAMP '2019-01-01 00:00:00-00:00'",
         "{}" to "{}"
     ).map { listOf(it.first, it.second) }
 

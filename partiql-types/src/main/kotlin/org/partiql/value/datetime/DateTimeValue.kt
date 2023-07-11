@@ -21,11 +21,11 @@ public object DateTimeValue {
     @JvmOverloads
     public fun timestamp(
         year: Int,
-        month: Int,
-        day: Int,
-        hour: Int,
-        minute: Int,
-        second: BigDecimal,
+        month: Int = 1,
+        day: Int = 1,
+        hour: Int = 0,
+        minute: Int = 0,
+        second: BigDecimal = BigDecimal.ZERO,
         timeZone: TimeZone? = null
     ): Timestamp =
         when (timeZone) {
@@ -93,6 +93,13 @@ public object DateTimeValue {
             OffsetTimestampHighPrecision.forIonTimestamp(ionTimestamp)
         }
 
+    public fun timestamp(epochSeconds: BigDecimal, timeZone: TimeZone): TimestampWithTimeZone =
+        if (epochSeconds.scale() <= 9) {
+            OffsetTimestampLowPrecision.forEpochSeconds(epochSeconds, timeZone)
+        } else {
+            OffsetTimestampHighPrecision.forEpochSeconds(epochSeconds, timeZone)
+        }
+
     @JvmOverloads
     public fun time(
         hour: Int,
@@ -119,8 +126,8 @@ public object DateTimeValue {
             }
 
             null -> {
-                if (second.scale() <= 9) LocalTimeLowPrecision.of( hour, minute, second)
-                else LocalTimeHighPrecision.of( hour, minute, second)
+                if (second.scale() <= 9) LocalTimeLowPrecision.of(hour, minute, second)
+                else LocalTimeHighPrecision.of(hour, minute, second)
             }
         }
 
@@ -139,7 +146,7 @@ public object DateTimeValue {
         minute: Int,
         second: Int,
         nano: Int,
-        timeZone: TimeZone?
+        timeZone: TimeZone? = null
     ): Time {
         val decimalSecond = second.toBigDecimal().plus(nano.toBigDecimal().movePointLeft(9))
         return time(hour, minute, decimalSecond, timeZone)

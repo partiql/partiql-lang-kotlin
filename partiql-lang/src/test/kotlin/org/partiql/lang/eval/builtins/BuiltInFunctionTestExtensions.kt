@@ -1,11 +1,11 @@
 package org.partiql.lang.eval.builtins
 
-import com.amazon.ion.Timestamp
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue
 import org.partiql.lang.eval.evaluatortestframework.EvaluatorTestTarget
 import org.partiql.lang.util.newFromIonText
+import org.partiql.value.datetime.DateTimeValue
 
 /**
  * Internal function used by ExprFunctionTest to test invalid argument type.
@@ -39,7 +39,7 @@ internal fun Map<String, String>.toSession() = EvaluationSession.build { globals
  * Internal function used by ExprFunctionTest to build EvaluationSession with now.
  */
 internal fun buildSessionWithNow(numMillis: Long, localOffset: Int) =
-    EvaluationSession.build { now(Timestamp.forMillis(numMillis, localOffset)) }
+    EvaluationSession.build { nowZ(DateTimeValue.timestamp(numMillis.toBigDecimal().movePointLeft(3), org.partiql.value.datetime.TimeZone.UtcOffset.of(localOffset))) }
 
 /**
  * Used by ExprFunctionTest to represent a test case.

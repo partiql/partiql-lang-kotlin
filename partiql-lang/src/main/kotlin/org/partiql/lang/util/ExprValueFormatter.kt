@@ -9,7 +9,11 @@ import org.partiql.lang.eval.name
 import org.partiql.lang.eval.partiQLTimestampValue
 import org.partiql.lang.eval.timeValue
 import org.partiql.lang.eval.toIonValue
+import org.partiql.value.datetime.TimeZone
+import org.partiql.value.datetime.Timestamp
 import java.math.BigDecimal
+import java.math.RoundingMode
+import kotlin.math.absoluteValue
 
 private const val MISSING_STRING = "MISSING"
 private const val NULL_STRING = "NULL"
@@ -67,8 +71,7 @@ class ConfigurableExprValueFormatter(private val config: Configuration) : ExprVa
                 }
                 ExprValueType.TIMESTAMP -> {
                     val timestamp = value.partiQLTimestampValue()
-                    // out.append("TIMESTAMP '${timestamp.toStringSQL()}'")
-                    TODO()
+                    out.append("TIMESTAMP '${timestamp.toSQLString()}'")
                 }
 
                 // fallback to an Ion literal for all types that don't have a native PartiQL representation
@@ -143,6 +146,36 @@ class ConfigurableExprValueFormatter(private val config: Configuration) : ExprVa
         private fun writeIndentation() {
             if (config.indentation.isNotEmpty()) {
                 IntRange(1, currentIndentation).forEach { _ -> out.append(config.indentation) }
+            }
+        }
+
+        private fun Timestamp.toSQLString(): String {
+            val year = this.year.toString().padStart(4, '0')
+            val month = this.month.toString().padStart(2, '0')
+            val day = this.day.toString().padStart(2, '0')
+            val hour = this.hour.toString().padStart(2, '0')
+            val minute = this.minute.toString().padStart(2, '0')
+            val secondWhole = this.decimalSecond.setScale(0, RoundingMode.DOWN)
+            val second = secondWhole.toPlainString().toString().padStart(2, '0')
+            val fractions =
+                decimalSecond.subtract(secondWhole)
+                    .let {
+                        if (it.scale() == 0 && it == BigDecimal.ZERO)
+                            "" // the edge case here is no fraction second, in which case no character should be appended
+                        else it.toPlainString().drop(1) // this is guaranteed to be 0.xxxx we need to drop the zero
+                    }
+            val timestampNoTimeZone = "$year-$month-$day $hour:$minute:$second$fractions"
+            return when (val tz = this.timeZone) {
+                TimeZone.UnknownTimeZone -> "$timestampNoTimeZone-00:00"
+                is TimeZone.UtcOffset -> {
+                    val tzHour = tz.tzHour.absoluteValue.toString().padStart(2, '0')
+                    val tzMinute = tz.tzMinute.absoluteValue.toString().padStart(2, '0')
+                    if (tz.totalOffsetMinutes < 0)
+                        "$timestampNoTimeZone-$tzHour:$tzMinute"
+                    else
+                        "$timestampNoTimeZone+$tzHour:$tzMinute"
+                }
+                null -> timestampNoTimeZone
             }
         }
     }
