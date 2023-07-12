@@ -33,8 +33,8 @@ internal data class SqlDate private constructor(
         @JvmStatic
         @Throws(DateTimeException::class)
         fun of(year: Int, month: Int, day: Int): Date {
-            if (year < 0 || year > 9999)
-                throw DateTimeException("Expect Year Field to be between 0 to 9999, but received $year")
+            if (year < 1 || year > 9999)
+                throw DateTimeException("Expect Year Field to be between 1 to 9999, but received $year")
             try {
                 return SqlDate(LocalDate.of(year, month, day))
             } catch (e: java.time.DateTimeException) {

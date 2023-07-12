@@ -264,15 +264,15 @@ public abstract class AstBaseVisitor<R, C> : AstVisitor<R, C> {
 }
 ----
 
-For example, let's implement a `toString(case: Case)` function on some basic nodes.
+For example, let's implement a `ToSimpleNameString(case: Case)` function on some basic nodes.
 
 [source,kotlin]
 ----
 //
 // Usage:
-//  node.accept(ToString, Case.UPPER)
+//  node.accept(ToSimpleNameString, Case.UPPER)
 //
-object ToString :  AstBaseVisitor<String, Case>() {
+object ToSimpleNameString :  AstBaseVisitor<String, Case>() {
 
     override fun defaultVisit(node: AstNode, ctx: Case) = defaultReturn(node, ctx)
 
@@ -303,12 +303,12 @@ object AstClassNameCollector  {
     @JvmStatic
     fun collect(node: AstNode): List<String> {
         val acc = mutableListOf<String>()
-        node.accept(ToString, acc)
+        node.accept(ToSimpleNameString, acc)
         return acc
     }
 
     // Private implementation
-    private object ToString :  AstBaseVisitor<String?, MutableList<String>>() {
+    private object ToSimpleNameString :  AstBaseVisitor<String?, MutableList<String>>() {
 
         override fun defaultVisit(node: AstNode, ctx: MutableList<String>): String? {
             node.children.forEach { child -> child.accept(this, ctx) } // traverse

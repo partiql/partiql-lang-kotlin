@@ -97,7 +97,7 @@ internal object ToIon : PartiQLValueBaseVisitor<IonElement, Unit>() {
 
     override fun visitTimestamp(v: TimestampValue, ctx: Unit) = v.toIon {
         val offset = when (val z = v.value.timeZone) {
-            TimeZone.UnknownTimeZone -> 0
+            TimeZone.UnknownTimeZone -> null
             is TimeZone.UtcOffset -> z.totalOffsetMinutes
             null -> 0
         }
