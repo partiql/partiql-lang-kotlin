@@ -92,12 +92,17 @@ import org.partiql.value.stringValue
 import org.partiql.value.structValue
 import org.partiql.value.symbolValue
 import org.partiql.value.timeValue
+import java.io.File
 import java.math.BigDecimal
 import java.math.BigInteger
+import java.net.URLClassLoader
 import java.util.ServiceLoader
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
+/**
+ * A util function to enable pluggable functions by invoking Java Service Loader.
+ */
 class ServiceLoaderUtil {
     companion object {
         private val lock = ReentrantLock()
@@ -105,11 +110,21 @@ class ServiceLoaderUtil {
         @OptIn(PartiQLFunctionExperimental::class)
         @JvmStatic
         fun loadFunctions(): List<ExprFunction> = lock.withLock {
-            val plugins = ServiceLoader.load(Plugin::class.java)
+            val pluginsDir = File(System.getProperty("user.home") + "/.partiql/Plugins")
+            val files = pluginsDir.walk().filter { it.isFile && it.extension == "jar" }.toList()
+            val plugins = if (files.isNotEmpty()) {
+                val classLoader = URLClassLoader.newInstance(files.map { it.toURI().toURL() }.toTypedArray())
+                ServiceLoader.load(Plugin::class.java, classLoader)
+            } else {
+                ServiceLoader.load(Plugin::class.java)
+            }
             return plugins
                 .flatMap { plugin -> plugin.getFunctions() }
                 .flatMap { partiqlFunc -> PartiQLtoExprFunction(partiqlFunc) }
         }
+
+        fun File.walk(): Sequence<File> =
+            sequenceOf(this) + (if (isDirectory) listFiles().orEmpty().asSequence().flatMap { it.walk() } else emptySequence())
 
         @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
         private fun PartiQLtoExprFunction(customFunction: PartiQLFunction): List<ExprFunction> {
