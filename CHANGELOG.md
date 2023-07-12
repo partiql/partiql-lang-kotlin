@@ -31,6 +31,7 @@ Thank you to all who have contributed!
 ### Added
 - Adds `org.partiql.value` (experimental) package for reading/writing PartiQL
   values
+- Adds serialization and deserialization between IonValue and `org.partiql.value`.
 - Adds PartiQL's Timestamp Data Model. 
 - Adds support for Timestamp constructor call in Parser. 
 

@@ -586,17 +586,14 @@ class TimestampTest {
                     DateTimeValue.time(0, 0, BigDecimal.valueOf(0, 20),)
                 ),
             ),
-            // negative epoch
-            // May be Ion has a bug?
-            // Expected epoch in Millis : -23225270400000,
-            // Actual epoch in Millis   : -23225875200000
-            // SuccessCaseWithNoTimeZone(
-            //    1234, 1, 1, 0,0, BigDecimal.valueOf(0,3), 0,
-            //    Timestamp.of(
-            //        DateTimeValue.date(1234, 1, 1),
-            //        DateTimeValue.time(0,0, BigDecimal.valueOf(0,0), )
-            // ),
-            // ),
+            SuccessCaseWithNoTimeZone(
+                "Negative epoch",
+                1234, 1, 1, 0, 0, BigDecimal.valueOf(0, 3), 0,
+                DateTimeValue.timestamp(
+                    DateTimeValue.date(1234, 1, 1),
+                    DateTimeValue.time(0, 0, BigDecimal.valueOf(0, 0))
+                ),
+            ),
             SuccessCaseWithNoTimeZone(
                 "Negative epoch",
                 1901, 1, 1, 0, 0, BigDecimal.valueOf(0, 3), 0,
