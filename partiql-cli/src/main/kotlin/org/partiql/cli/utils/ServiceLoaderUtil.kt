@@ -110,7 +110,7 @@ class ServiceLoaderUtil {
         @OptIn(PartiQLFunctionExperimental::class)
         @JvmStatic
         fun loadFunctions(): List<ExprFunction> = lock.withLock {
-            val pluginsDir = File(System.getProperty("user.home") + "/.partiql/Plugins")
+            val pluginsDir = File(System.getProperty("user.home") + "/.partiql/plugins")
             val files = pluginsDir.walk().filter { it.isFile && it.extension == "jar" }.toList()
             val plugins = if (files.isNotEmpty()) {
                 val classLoader = URLClassLoader.newInstance(files.map { it.toURI().toURL() }.toTypedArray())
