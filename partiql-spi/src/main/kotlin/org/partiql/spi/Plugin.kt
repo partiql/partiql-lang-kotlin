@@ -23,6 +23,10 @@ import org.partiql.spi.function.PartiQLFunctionExperimental
  */
 public interface Plugin {
     public fun getConnectorFactories(): List<Connector.Factory>
+
+    /**
+     * Represents custom built-in functions to be accessed during execution.
+     **/
     @OptIn(PartiQLFunctionExperimental::class)
     public fun getFunctions(): List<PartiQLFunction>
 }

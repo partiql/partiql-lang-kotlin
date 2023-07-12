@@ -32,7 +32,7 @@ Thank you to all who have contributed!
 - Adds `org.partiql.value` (experimental) package for reading/writing PartiQL
   values
 - Adds function overloading to the `CompilerPipeline` and experimental `PartiQLCompilerPipeline`.
-- Adds new methods and `getFunctions()` to `org.partiql.spi.Plugin`.
+- Adds new method `getFunctions()` to `org.partiql.spi.Plugin`.
 - Adds `PartiQLFunction` interface.
 
 ### Changed
