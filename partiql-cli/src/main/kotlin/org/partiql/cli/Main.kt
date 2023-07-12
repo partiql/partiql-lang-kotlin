@@ -17,11 +17,11 @@ package org.partiql.cli
 
 import com.amazon.ion.system.IonSystemBuilder
 import com.amazon.ion.system.IonTextWriterBuilder
+import org.partiql.ast.Statement
 import org.partiql.cli.pico.PartiQLCommand
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.parser.PartiQLParserBuilder
 import org.partiql.plan.PartiQLVersion
-import org.partiql.plan.Statement
 import org.partiql.plan.ion.PartiQLPlanIonWriter
 import org.partiql.planner.Env
 import org.partiql.planner.impl.PartiQLPlannerDefault
@@ -63,8 +63,8 @@ object Debug {
         if (ast !is Statement) {
             error("Expect AST Statement, found $ast")
         }
-        val plan = planner.plan(ast as org.partiql.ast.Statement).plan
-        val ion = writer.toIon(plan)
+        val plan = planner.plan(ast).plan
+        val ion = writer.toIonDebug(plan)
         // Pretty print Ion
         val sb = StringBuilder()
         val formatter = IonTextWriterBuilder.pretty().build(sb)

@@ -35,169 +35,167 @@ A PartiQL Plan file is a top-level Ion xref:https://amazon-ion.github.io/ion-doc
 [source,ion]
 ----
 (
-  partiql::(<MAJOR> <MINOR>)     // MAJOR.MINOR version int pair
+  partiql :: plan                // PartiQL Plan marker
 
-  (include ...)                  // include prelude
+  version :: (0 1)               // PartiQL Plan version
 
-  (types ...)                    // type definitions
+  (include ...)                  // Include prelude
 
-  (constants ...)                // plan constant values
+  (env ...)                      // Environment
 
-  (define ...)                   // plan node definitions
-
-  (statement ...)                // statement to execute, `main`
+  (statement ...)                // Statement to execute, `main`
 )
 ----
 
-Each Ion value (respectively) represents:
-
-* The `partiql::(MAJOR MINOR)` version pair,
-* Included header files containing types, constants, and node definitions
-** More on this later
-* A container of constant values
-* A container of node type annotations demarcated within an s-expr `(types ...)`
-* A container of labeled nodes demarcated within an s-expr `(define ...)`
-* The _statement_ s-expression
-
-Nodes represent statements, expressions (`rex`), relational operators (`rel`), and types. A node begins with a `snake_case` Ion symbol as the head element followed by parameters. This symbol uniquely identifies which node the s-expression represents and is called a _tag_.
-
-=== Example
-
-Here is an example query and plan
-
-.Basic Query
-[source,partiql]
-----
-SELECT t.a as a, t.b as b FROM T as t WHERE t.c > 0
-----
-
-.Basic Example Environment
-[source,ion]
-----
-// Ion Schema
-type::{
-  name: envirnoment,
-  type: struct,
-  fields: {
-    T: type::{
-      name: my_table,
-      type: list,
-      element: type::{
-        type: struct,
-        fields: {
-          a: int,
-          b: int
-        }
-      }
-    }
-  }
-}
-
-// Values
-// {
-//   T: [
-//     { "a": 0, "b": 1 },
-//     { "a": 2, "b": 3 },
-//   ]
+// Each Ion value (respectively) represents:
+//
+// * The `partiql::(MAJOR MINOR)` version pair,
+// * Included header files containing types, constants, and node definitions
+// ** More on this later
+// * A container of constant values
+// * A container of node type annotations demarcated within an s-expr `(types ...)`
+// * A container of labeled nodes demarcated within an s-expr `(define ...)`
+// * The _statement_ s-expression
+//
+// Nodes represent statements, expressions (`rex`), relational operators (`rel`), and types. A node begins with a `snake_case` Ion symbol as the head element followed by parameters. This symbol uniquely identifies which node the s-expression represents and is called a _tag_.
+//
+// === Example
+//
+// Here is an example query and plan
+//
+// .Basic Query
+// [source,partiql]
+// ----
+// SELECT t.a as a, t.b as b FROM T as t WHERE t.c > 0
+// ----
+//
+// .Basic Example Environment
+// [source,ion]
+// ----
+// // Ion Schema
+// type::{
+//   name: envirnoment,
+//   type: struct,
+//   fields: {
+//     T: type::{
+//       name: my_table,
+//       type: list,
+//       element: type::{
+//         type: struct,
+//         fields: {
+//           a: int,
+//           b: int
+//         }
+//       }
+//     }
+//   }
 // }
-----
+//
+// // Values
+// // {
+// //   T: [
+// //     { "a": 0, "b": 1 },
+// //     { "a": 2, "b": 3 },
+// //   ]
+// // }
+// ----
+//
+// .Basic Plan Example
+// [source,ion]
+// ----
+// (
+//   partiql :: plan
+//
+//   version :: (0 1)
+//
+//   (include
+//     (partiql '**' '*')   // Include partiql header, read as `import partiql::**::*`
+//   )
+//
+//   type::{
+//     name: envirnoment,
+//     type: struct,
+//     fields: {
+//       T: type::{
+//         name: my_table,
+//         type: list,
+//         element: type::{
+//           type: struct,
+//           fields: {
+//             a: int,
+//             b: int
+//           }
+//         }
+//       }
+//     }
+//   }
+//
+//   // global names to type definitions map
+//
+//   (env
+//     T::(array                                     // "T" is array of tuples with open schema
+//       (a ($namespace partiql::0 ($type int::5)))  // known element a, type PartiQL Int
+//       (b ($namespace partiql::0 ($type int::5)))  // known element b, type PartiQL Int
+//       |
+//       t                                           // open element container
+//     )
+//   )
+//
+//   (constants
+//     (lit ($namespace partiql::0 ($type string::13)) "T")
+//   )
+//
+//   (statement
+//     (query
+//       (select { a: ($var 0), b: ($var 1) }      // Rex: sfw, construct bag of { a: $0, b: $1 }
+//
+//         (project (($var 0) ($var 1))            // Rel: relation projection of resolved variables in registers 0 and 1
+//
+//           (filter (call ())                     // Rel: filter on call `partiql.gt(t.c, 0)`
+//
+//             (scan ($env 0))                     // Rel: scan resolved global variable "T"
+//   )))))
+//
+//   (query                            // Statement: QUERY
+//     (select ('a' 'b')               // Rex:
+//       (project ($1 $2)              // Rel: project vars 1, 2 to slots 0, 1 respectively (could be pushed into filter)
+//         (filter (call ($namespace 0 ($fn 0))                // Rel: filter on the expression labeled by gt0
+//           (scan (global case_sensitive "T"))                // Rel: "T"
+//   ))))
+// )
+// ----
 
-.Basic Plan Example
-[source,ion]
-----
-(
-  partiql :: plan
-
-  version :: (0 1)
-
-  (include
-    (partiql '**' '*')   // Include partiql header, read as `import partiql::**::*`
-  )
-
-  type::{
-    name: envirnoment,
-    type: struct,
-    fields: {
-      T: type::{
-        name: my_table,
-        type: list,
-        element: type::{
-          type: struct,
-          fields: {
-            a: int,
-            b: int
-          }
-        }
-      }
-    }
-  }
-
-  // global names to type definitions map
-
-  (env
-    T::(array                                     // "T" is array of tuples with open schema
-      (a ($namespace partiql::0 ($type int::5)))  // known element a, type PartiQL Int
-      (b ($namespace partiql::0 ($type int::5)))  // known element b, type PartiQL Int
-      |
-      t                                           // open element container
-    )
-  )
-
-  (constants
-    (lit ($namespace partiql::0 ($type string::13)) "T")
-  )
-
-  (statement
-    (query
-      (select { a: ($var 0), b: ($var 1) }      // Rex: sfw, construct bag of { a: $0, b: $1 }
-
-        (project (($var 0) ($var 1))            // Rel: relation projection of resolved variables in registers 0 and 1
-
-          (filter (call ())                     // Rel: filter on call `partiql.gt(t.c, 0)`
-
-            (scan ($env 0))                     // Rel: scan resolved global variable "T"
-  )))))
-
-  (query                            // Statement: QUERY
-    (select ('a' 'b')               // Rex:
-      (project ($1 $2)              // Rel: project vars 1, 2 to slots 0, 1 respectively (could be pushed into filter)
-        (filter (call ($namespace 0 ($fn 0))                // Rel: filter on the expression labeled by gt0
-          (scan (global case_sensitive "T"))                // Rel: "T"
-  ))))
-)
-----
-
-=== Labels and References
-
-For example,
-
-[source,ion]
-----
-(plan version::'0.0'
-
-  // Label 'gt0' assigned to `$0 > 1` call expression node
-  gt0 :: (call gt $0 (lit (int) 0))
-
-  // Label 'my_table' assigned to Ion string "X"
-  my_table :: "X"
-
-  // SELECT a FROM X WHERE a > 0
-  (query                                          // Statement: QUERY
-    (select                                       // Exp: Relation-Value Projection, No Constructor
-      (project ($0)                               // Rel: PROJECT
-        (filter $gt0                              // Rel: FILTER
-          (scan_collection (global $my_table))    // Rel: SCAN
-  ))))
-)
-----
-
-NOTE: The labels `$n` for integers n corresponds to the expression node `(var n)` — ie `$1` is equivalent to `(var 1)`
-
-Also note that labeling nodes is different than the optional annotations for positional parameters. Positional parameters have optional annotations simply for readability; those
-annotations are not labels.
+// === Labels and References
+//
+// For example,
+//
+// [source,ion]
+// ----
+// (plan version::'0.0'
+//
+//   // Label 'gt0' assigned to `$0 > 1` call expression node
+//   gt0 :: (call gt $0 (lit (int) 0))
+//
+//   // Label 'my_table' assigned to Ion string "X"
+//   my_table :: "X"
+//
+//   // SELECT a FROM X WHERE a > 0
+//   (query                                          // Statement: QUERY
+//     (select                                       // Exp: Relation-Value Projection, No Constructor
+//       (project ($0)                               // Rel: PROJECT
+//         (filter $gt0                              // Rel: FILTER
+//           (scan_collection (global $my_table))    // Rel: SCAN
+//   ))))
+// )
+// ----
+//
+// NOTE: The labels `$n` for integers n corresponds to the expression node `(var n)` — ie `$1` is equivalent to `(var 1)`
+//
+// Also note that labeling nodes is different than the optional annotations for positional parameters. Positional parameters have optional annotations simply for readability; those
+// annotations are not labels.
 
 [#types]
-== Types
+== TODO Types
 
 The plan `(type ...)` container is where types used within a plan are defined. The plan supports defining atomic, product, and union types footnote:[As presented, you cannot define an atomic type named "union" or "product".]. Here is a basic set of types which defines an integer, float, number union, and number pair.
 
@@ -328,7 +326,7 @@ This statement represents a simple PartiQL Query.
 .Form
 [source,ion]
 ----
-(query | expression)
+(query <rex>)
 ----
 
 .Parameters
@@ -336,7 +334,7 @@ This statement represents a simple PartiQL Query.
 |===
 | Type | Description
 
-| expression | The root expression node of a query.
+| rex | The root expression node of a query.
 
 |===
 
@@ -349,7 +347,7 @@ SELECT a, b FROM T
 [source,ion]
 ----
 (query
-  (select
+  (select (...)                         // TODO add schema
     (project ((var 0 any) (var 1 any))
       (scan
         (global collection "T")

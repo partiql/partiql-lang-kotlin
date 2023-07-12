@@ -8,9 +8,11 @@ import com.amazon.ionelement.api.ionNull
 import com.amazon.ionelement.api.ionSexpOf
 import com.amazon.ionelement.api.ionSymbol
 import org.partiql.plan.Fn
+import org.partiql.plan.Identifier
 import org.partiql.plan.PartiQLPlan
 import org.partiql.plan.PlanNode
 import org.partiql.plan.Rex
+import org.partiql.plan.Statement
 import org.partiql.plan.Type
 import org.partiql.plan.Types
 import org.partiql.plan.ion.IllegalPlanException
@@ -33,6 +35,14 @@ internal object PartiQLPlanIonWriter_VERSION_0_1 : PartiQLPlanIonWriter {
      */
     override fun toIon(plan: PartiQLPlan): IonElement {
         val writer = ToIon(Mode.ERR)
+        return plan.accept(writer, ionNull())
+    }
+
+    /**
+     * Writes a PartiQLPlan with debug annotations; does not throw on unresolved.
+     */
+    override fun toIonDebug(plan: PartiQLPlan): IonElement {
+        val writer = ToIon(Mode.DEBUG)
         return plan.accept(writer, ionNull())
     }
 
@@ -61,6 +71,31 @@ internal object PartiQLPlanIonWriter_VERSION_0_1 : PartiQLPlanIonWriter {
 
         override fun defaultReturn(node: PlanNode, nil: IonElement): IonElement {
             error("ToIon not implemented for node $node")
+        }
+
+        // Top-Level
+
+        override fun visitPartiQLPlan(node: PartiQLPlan, nil: IonElement): IonElement {
+            val tag = ionSymbol("plan", annotations = listOf("partiql"))
+            val version = ionSexpOf(ionInt(0), ionInt(1), annotations = listOf("version"))
+            // TODO include
+            // TODO env
+            val statement = visitStatement(node.statement, nil)
+            return ionSexpOf(tag, version, statement)
+        }
+
+        // Statements
+
+        override fun visitStatement(node: Statement, nil: IonElement): IonElement {
+            val tag = ionSymbol("statement")
+            val statement = super.visitStatement(node, nil)
+            return ionSexpOf(tag, statement)
+        }
+
+        override fun visitStatementQuery(node: Statement.Query, nil: IonElement): IonElement {
+            val tag = ionSymbol("query")
+            val rex = visitRex(node.root, nil)
+            return ionSexpOf(tag, rex)
         }
 
         // Types
@@ -113,7 +148,11 @@ internal object PartiQLPlanIonWriter_VERSION_0_1 : PartiQLPlanIonWriter {
         override fun visitFnRefUnresolved(node: Fn.Ref.Unresolved, nil: IonElement): IonElement {
             return when (mode) {
                 Mode.ERR -> throw IllegalPlanException("Plan has unresolved function $node")
-                Mode.DEBUG -> ionSexpOf(ionSymbol("\$fn"), ionSymbol("?"))
+                Mode.DEBUG -> {
+                    val tag = ionSymbol("\$fn")
+                    val id = node.identifier.sql()
+                    ionSexpOf(tag, ionSymbol("?", annotations = listOf(id)))
+                }
             }
         }
 
@@ -140,7 +179,11 @@ internal object PartiQLPlanIonWriter_VERSION_0_1 : PartiQLPlanIonWriter {
         override fun visitRexOpVarUnresolved(node: Rex.Op.Var.Unresolved, type: IonElement): IonElement {
             return when (mode) {
                 Mode.ERR -> throw IllegalPlanException("Plan has unresolved variable $node")
-                Mode.DEBUG -> ionSexpOf(ionSymbol("var"), ionSymbol("?"))
+                Mode.DEBUG -> {
+                    val tag = ionSymbol("var")
+                    val id = node.identifier.sql()
+                    ionSexpOf(tag, ionSymbol("?", annotations = listOf(id)))
+                }
             }
         }
 
@@ -196,5 +239,17 @@ internal object PartiQLPlanIonWriter_VERSION_0_1 : PartiQLPlanIonWriter {
         // Rel : ctx -> schema
 
         // TODO
+
+        // Helpers
+
+        private fun Identifier.sql(): String = when (this) {
+            is Identifier.Qualified -> steps.fold(root.sql()) { p, i -> "$p.${i.sql()}" }
+            is Identifier.Symbol -> this.sql()
+        }
+
+        private fun Identifier.Symbol.sql(): String = when (this.caseSensitivity) {
+            Identifier.CaseSensitivity.SENSITIVE -> "'$symbol\'"
+            Identifier.CaseSensitivity.INSENSITIVE -> symbol
+        }
     }
 }

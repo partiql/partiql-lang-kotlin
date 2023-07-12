@@ -13,6 +13,9 @@ public interface PartiQLPlanIonWriter {
     @Throws(PlanWriterException::class)
     public fun toIon(plan: PartiQLPlan): IonElement
 
+    @Throws(PlanWriterException::class)
+    public fun toIonDebug(plan: PartiQLPlan): IonElement
+
     public companion object {
 
         public fun get(version: PartiQLVersion): PartiQLPlanIonWriter = when (version) {

@@ -5,6 +5,17 @@
 This package contains an early implementation of the PartiQL Plan data structures. Specification work is ongoing, and
 this package should be considered experimental.
 
+== Testing
+
+You can experiment with the current implementation via the shell.
+
+[source,shell]
+----
+./gradlew :partiql-cli:install
+
+./partiql-cli/build/install/partiql-cli/bin/partiql --pipeline DEBUG
+----
+
 == Usage
 
 The data structures in `org.partiql.plan` can be used via the latest [partiql-lang-kotlin](https://central.sonatype.com/artifact/org.partiql/partiql-lang-kotlin/0.9.3) JAR and using the AstToRel translator (`org.partiql.lang.planner.transforms.AstToRel`).
