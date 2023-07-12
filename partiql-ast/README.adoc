@@ -270,7 +270,7 @@ For example, let's implement a `toString(case: Case)` function on some basic nod
 ----
 //
 // Usage:
-//  node.accept(ToString, Case.UPPER) // ~ node.toString(Case.UPPER)
+//  node.accept(ToString, Case.UPPER)
 //
 object ToString :  AstBaseVisitor<String, Case>() {
 
@@ -303,7 +303,7 @@ object AstClassNameCollector  {
     @JvmStatic
     fun collect(node: AstNode): List<String> {
         val acc = mutableListOf<String>()
-        node.accept(ToString, acc) // recall, we have node.toString()
+        node.accept(ToString, acc)
         return acc
     }
 
