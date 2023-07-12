@@ -328,6 +328,7 @@ class QueryPrettyPrinter {
             is PartiqlAst.Expr.CallWindow -> TODO()
             is PartiqlAst.Expr.GraphMatch -> TODO()
             is PartiqlAst.Expr.SessionAttribute -> writeSessionAttribute(node, sb)
+            is PartiqlAst.Expr.Timestamp -> TODO()
         }
     }
 

@@ -24,6 +24,7 @@ import org.partiql.value.intValue
 import org.partiql.value.listValue
 import org.partiql.value.missingValue
 import org.partiql.value.nullValue
+import org.partiql.value.nullableBagValue
 import org.partiql.value.nullableBoolValue
 import org.partiql.value.nullableCharValue
 import org.partiql.value.nullableDecimalValue
@@ -34,7 +35,10 @@ import org.partiql.value.nullableInt32Value
 import org.partiql.value.nullableInt64Value
 import org.partiql.value.nullableInt8Value
 import org.partiql.value.nullableIntValue
+import org.partiql.value.nullableListValue
+import org.partiql.value.nullableSexpValue
 import org.partiql.value.nullableStringValue
+import org.partiql.value.nullableStructValue
 import org.partiql.value.nullableSymbolValue
 import org.partiql.value.sexpValue
 import org.partiql.value.stringValue
@@ -374,6 +378,23 @@ class PartiQLValueTextWriterTest {
                     )
                 ),
                 expected = "(1 2 3)",
+            ),
+            // nullable collections
+            case(
+                value = nullableBagValue<PartiQLValue>(null),
+                expected = "null",
+            ),
+            case(
+                value = nullableListValue<PartiQLValue>(null),
+                expected = "null",
+            ),
+            case(
+                value = nullableSexpValue<PartiQLValue>(null),
+                expected = "null",
+            ),
+            case(
+                value = nullableStructValue<PartiQLValue>(null),
+                expected = "null",
             ),
         )
 

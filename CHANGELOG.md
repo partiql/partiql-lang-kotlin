@@ -33,6 +33,9 @@ Thank you to all who have contributed!
   values
 - Adds `org.partiql.ast` package and usage documentation
 - Adds `org.partiql.parser` package and usage documentation
+- Adds PartiQL's Timestamp Data Model. 
+- Adds support for Timestamp constructor call in Parser. 
+
 
 ### Changed
 
@@ -47,6 +50,7 @@ Thank you to all who have contributed!
 ### Contributors
 Thank you to all who have contributed!
 - @howero
+- @yliuuuu
 - @<your-username>
 
 ## [0.12.0] - 2023-06-14
