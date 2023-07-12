@@ -101,7 +101,7 @@ import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
 /**
- * A util function to enable pluggable functions by invoking Java Service Loader.
+ * A util class to load pluggable functions by invoking Java Service Loader.
  */
 class ServiceLoaderUtil {
     companion object {
