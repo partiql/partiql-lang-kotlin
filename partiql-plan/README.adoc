@@ -11,9 +11,20 @@ You can experiment with the current implementation via the shell.
 
 [source,shell]
 ----
+# Assemble distribution
 ./gradlew :partiql-cli:install
 
+# Start
 ./partiql-cli/build/install/partiql-cli/bin/partiql --pipeline DEBUG
+
+# Start with debug server
+JAVA_OPTS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=localhost:5050 ./partiql-cli/build/install/partiql-cli/bin/partiql --pipeline DEBUG
+
+# If `partiql` on path
+
+partiql --pipeline DEBUG
+
+JAVA_OPTS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=localhost:5050 partiql --pipeline DEBUG
 ----
 
 == Usage
