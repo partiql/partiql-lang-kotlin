@@ -32,6 +32,8 @@ Thank you to all who have contributed!
 - Adds `org.partiql.value` (experimental) package for reading/writing PartiQL
   values
 - Adds function overloading to the `CompilerPipeline` and experimental `PartiQLCompilerPipeline`.
+- Adds new method `getFunctions()` to `org.partiql.spi.Plugin`.
+- Adds `PartiQLFunction` interface.
 
 ### Changed
 - Standardizes `org/partiql/cli/functions/QueryDDB` and other built-in functions by the new `ExprFunction` format.
