@@ -59,11 +59,14 @@ import org.partiql.parser.PartiQLSyntaxException
 import org.partiql.parser.SourceLocation
 import org.partiql.parser.SourceLocations
 import org.partiql.parser.antlr.PartiQLBaseVisitor
+import org.partiql.parser.impl.util.DateTimeUtils
 import org.partiql.value.NumericValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.StringValue
 import org.partiql.value.boolValue
 import org.partiql.value.dateValue
+import org.partiql.value.datetime.DateTimeException
+import org.partiql.value.datetime.DateTimeValue
 import org.partiql.value.decimalValue
 import org.partiql.value.int64Value
 import org.partiql.value.intValue
@@ -71,6 +74,7 @@ import org.partiql.value.missingValue
 import org.partiql.value.nullValue
 import org.partiql.value.stringValue
 import org.partiql.value.timeValue
+import org.partiql.value.timestampValue
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.MathContext
@@ -78,8 +82,6 @@ import java.math.RoundingMode
 import java.nio.channels.ClosedByInterruptException
 import java.nio.charset.StandardCharsets
 import java.time.LocalDate
-import java.time.LocalTime
-import java.time.OffsetTime
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 import org.partiql.parser.antlr.PartiQLParser as GeneratedParser
@@ -1727,31 +1729,30 @@ internal class PartiQLParserDefault : PartiQLParser {
             } catch (e: IndexOutOfBoundsException) {
                 throw error(pattern, e.localizedMessage, e)
             }
-            exprLit(dateValue(value))
+            val date = DateTimeValue.date(value.year, value.monthValue, value.dayOfMonth)
+            exprLit(dateValue(date))
         }
 
         override fun visitLiteralTime(ctx: GeneratedParser.LiteralTimeContext) = translate(ctx) {
-            val (time, precision) = getTimeStringAndPrecision(ctx.LITERAL_STRING(), ctx.LITERAL_INTEGER())
-            val (value, offset, withZone) = try {
-                when {
-                    ctx.WITH() != null -> try {
-                        // TIME WITH TIMEZONE
-                        val t = OffsetTime.parse(time, DateTimeFormatter.ISO_OFFSET_TIME)
-                        Triple(t.toLocalTime(), t.offset, true)
-                    } catch (_: DateTimeParseException) {
-                        // SQL-99 p.26
-                        // > For the convenience of users, whenever a datetime value with time zone is to be implicitly derived
-                        // > from one without (for example, in a simple assignment operation), SQL assumes the value without
-                        // > time zone to be local, subtracts the default SQL-session time zone displacement from it to give UTC,
-                        // > and associates that time zone displacement with the result.
-                        Triple(LocalTime.parse(time, DateTimeFormatter.ISO_LOCAL_TIME), null, true)
-                    }
-                    else -> Triple(LocalTime.parse(time, DateTimeFormatter.ISO_TIME), null, false)
-                }
-            } catch (e: DateTimeParseException) {
-                throw error(ctx.LITERAL_STRING().symbol, "Unable to parse time $time", e)
+            val (timeString, precision) = getTimeStringAndPrecision(ctx.LITERAL_STRING(), ctx.LITERAL_INTEGER())
+            val time = try {
+                DateTimeUtils.parseTimeLiteral(timeString)
+            } catch (e: DateTimeException) {
+                throw error(ctx, "Invalid Date Time Literal", e)
             }
-            exprLit(timeValue(value, precision, offset, withZone))
+            val value = time.toPrecision(precision)
+            exprLit(timeValue(value))
+        }
+
+        override fun visitLiteralTimestamp(ctx: GeneratedParser.LiteralTimestampContext) = translate(ctx) {
+            val (timeString, precision) = getTimeStringAndPrecision(ctx.LITERAL_STRING(), ctx.LITERAL_INTEGER())
+            val timestamp = try {
+                DateTimeUtils.parseTimestamp(timeString)
+            } catch (e: DateTimeException) {
+                throw error(ctx, "Invalid Date Time Literal", e)
+            }
+            val value = timestamp.toPrecision(precision)
+            exprLit(timestampValue(value))
         }
 
         override fun visitTuple(ctx: GeneratedParser.TupleContext) = translate(ctx) {

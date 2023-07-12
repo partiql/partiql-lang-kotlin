@@ -43,8 +43,10 @@ import org.partiql.value.DateValue
 import org.partiql.value.MissingValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.TimeValue
+import org.partiql.value.TimestampValue
+import org.partiql.value.datetime.TimeZone
+import java.math.BigDecimal
 import java.math.BigInteger
-import java.time.temporal.ChronoField
 
 /**
  * Translates an [AstNode] tree to the legacy PIG AST.
@@ -121,7 +123,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
 
     override fun visitStatementDDLCreateTable(
         node: Statement.DDL.CreateTable,
-        ctx: Ctx
+        ctx: Ctx,
     ) = translate(node) { metas ->
         if (node.name !is Identifier.Symbol) {
             error("The legacy AST does not support qualified identifiers as table names")
@@ -133,7 +135,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
 
     override fun visitStatementDDLCreateIndex(
         node: Statement.DDL.CreateIndex,
-        ctx: Ctx
+        ctx: Ctx,
     ) = translate(node) { metas ->
         if (node.index != null) {
             error("The legacy AST does not support index names")
@@ -183,7 +185,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
 
     override fun visitTableDefinitionColumnConstraint(
         node: TableDefinition.Column.Constraint,
-        ctx: Ctx
+        ctx: Ctx,
     ) = translate(node) { metas ->
         val name = node.name
         val def = when (node.body) {
@@ -263,6 +265,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
             is MissingValue -> missing(metas)
             is DateValue -> v.toLegacyAst(metas)
             is TimeValue -> v.toLegacyAst(metas)
+            is TimestampValue -> v.toLegacyAst(metas)
             else -> {
                 val ion = v.accept(ToIon, Unit) // v.toIon()
                 lit(ion, metas)
@@ -885,7 +888,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
 
     override fun visitGraphMatchSelectorShortestK(
         node: GraphMatch.Selector.ShortestK,
-        ctx: Ctx
+        ctx: Ctx,
     ) = translate(node) { metas ->
         val k = node.k
         selectorShortestK(k, metas)
@@ -893,7 +896,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
 
     override fun visitGraphMatchSelectorShortestKGroup(
         node: GraphMatch.Selector.ShortestKGroup,
-        ctx: Ctx
+        ctx: Ctx,
     ) = translate(node) {
         val k = node.k
         selectorShortestKGroup(k)
@@ -917,7 +920,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
 
     override fun visitStatementDMLInsertLegacy(
         node: Statement.DML.InsertLegacy,
-        ctx: Ctx
+        ctx: Ctx,
     ) = translate(node) { metas ->
         val target = visitPathUnpack(node.target, ctx)
         val values = visitExpr(node.value, ctx)
@@ -965,7 +968,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
 
     override fun visitStatementDMLUpdateAssignment(
         node: Statement.DML.Update.Assignment,
-        ctx: Ctx
+        ctx: Ctx,
     ) = translate(node) { metas ->
         val target = visitPathUnpack(node.target, ctx)
         val value = visitExpr(node.value, ctx)
@@ -1007,7 +1010,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
 
     override fun visitStatementDMLBatchLegacyOpSet(
         node: Statement.DML.BatchLegacy.Op.Set,
-        ctx: Ctx
+        ctx: Ctx,
     ) = translate(node) { metas ->
         val ops = node.assignments.map {
             val assignment = visitStatementDMLUpdateAssignment(it, ctx)
@@ -1018,7 +1021,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
 
     override fun visitStatementDMLBatchLegacyOpRemove(
         node: Statement.DML.BatchLegacy.Op.Remove,
-        ctx: Ctx
+        ctx: Ctx,
     ) = translate(node) { metas ->
         val target = visitPathUnpack(node.target, ctx)
         val ops = listOf(remove(target))
@@ -1027,7 +1030,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
 
     override fun visitStatementDMLBatchLegacyOpDelete(
         node: Statement.DML.BatchLegacy.Op.Delete,
-        ctx: Ctx
+        ctx: Ctx,
     ) = translate(node) { metas ->
         val ops = listOf(delete())
         dmlOpList(ops, metas)
@@ -1035,7 +1038,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
 
     override fun visitStatementDMLBatchLegacyOpInsert(
         node: Statement.DML.BatchLegacy.Op.Insert,
-        ctx: Ctx
+        ctx: Ctx,
     ) = translate(node) { metas ->
         val target = visitIdentifier(node.target, ctx)
         val asAlias = node.asAlias
@@ -1046,7 +1049,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
 
     override fun visitStatementDMLBatchLegacyOpInsertLegacy(
         node: Statement.DML.BatchLegacy.Op.InsertLegacy,
-        ctx: Ctx
+        ctx: Ctx,
     ) = translate(node) {
         val target = visitPathUnpack(node.target, ctx)
         val values = visitExpr(node.value, ctx)
@@ -1078,7 +1081,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
 
     override fun visitOnConflictTargetSymbols(
         node: OnConflict.Target.Symbols,
-        ctx: Ctx
+        ctx: Ctx,
     ) = translate(node) { metas ->
         val symbols = node.symbols.map {
             if (it !is Identifier.Symbol) {
@@ -1091,7 +1094,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
 
     override fun visitOnConflictTargetConstraint(
         node: OnConflict.Target.Constraint,
-        ctx: Ctx
+        ctx: Ctx,
     ) = translate(node) { metas ->
         if (node.constraint !is Identifier.Symbol) {
             throw IllegalArgumentException("Legacy AST does not support qualified identifiers as a constraint name")
@@ -1105,7 +1108,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
 
     override fun visitOnConflictActionDoReplace(
         node: OnConflict.Action.DoReplace,
-        ctx: Ctx
+        ctx: Ctx,
     ) = translate(node) { metas ->
         val value = excluded()
         val condition = node.condition?.let { visitExpr(it, ctx) }
@@ -1114,7 +1117,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
 
     override fun visitOnConflictActionDoUpdate(
         node: OnConflict.Action.DoUpdate,
-        ctx: Ctx
+        ctx: Ctx,
     ) = translate(node) { metas ->
         val value = excluded()
         val condition = node.condition?.let { visitExpr(it, ctx) }
@@ -1123,7 +1126,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
 
     override fun visitOnConflictActionDoNothing(
         node: OnConflict.Action.DoNothing,
-        ctx: Ctx
+        ctx: Ctx,
     ) = translate(node) { metas ->
         doNothing(metas)
     }
@@ -1154,14 +1157,14 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
 
     override fun visitReturningColumnValueWildcard(
         node: Returning.Column.Value.Wildcard,
-        ctx: Ctx
+        ctx: Ctx,
     ) = translate(node) {
         returningWildcard()
     }
 
     override fun visitReturningColumnValueExpression(
         node: Returning.Column.Value.Expression,
-        ctx: Ctx
+        ctx: Ctx,
     ) = translate(node) {
         val expr = visitExpr(node.expr, ctx)
         returningColumn(expr)
@@ -1247,7 +1250,8 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
     override fun visitTypeTimeWithTz(node: Type.TimeWithTz, ctx: Ctx) =
         translate(node) { metas -> timeWithTimeZoneType(node.precision?.toLong(), metas) }
 
-    override fun visitTypeTimestamp(node: Type.Timestamp, ctx: Ctx) = translate(node) { metas -> timestampType(metas) }
+    override fun visitTypeTimestamp(node: Type.Timestamp, ctx: Ctx) =
+        translate(node) { metas -> timestampType(node.precision?.toLong(), metas) }
 
     override fun visitTypeTimestampWithTz(node: Type.TimestampWithTz, ctx: Ctx) =
         throw IllegalArgumentException("TIMESTAMP [WITH TIMEZONE] type not supported")
@@ -1310,25 +1314,53 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
 
     // Time Value is not an Expr.Lit in the legacy AST; needs special treatment.
     private fun TimeValue.toLegacyAst(metas: MetaContainer): PartiqlAst.Expr.LitTime {
+        val d = this.value.decimalSecond
+        val seconds = d.toLong()
+        val nano = d.subtract(BigDecimal(seconds)).scaleByPowerOfTen(9).toLong()
         val time = pig.timeValue(
-            hour = this.value.getLong(ChronoField.HOUR_OF_DAY),
-            minute = this.value.getLong(ChronoField.MINUTE_OF_HOUR),
-            second = this.value.getLong(ChronoField.SECOND_OF_MINUTE),
-            nano = this.value.getLong(ChronoField.NANO_OF_SECOND),
-            precision = this.precision.toLong(),
-            withTimeZone = this.withZone,
-            tzMinutes = this.offset?.let { (it.totalSeconds / 60).toLong() },
+            hour = this.value.hour.toLong(),
+            minute = this.value.minute.toLong(),
+            second = seconds,
+            nano = nano,
+            precision = this.value.decimalSecond.precision().toLong(),
+            withTimeZone = this.value.timeZone != null,
+            tzMinutes = this.value.timeZone?.let {
+                when (it) {
+                    is TimeZone.UtcOffset -> it.totalOffsetMinutes.toLong()
+                    else -> 0
+                }
+            },
         )
         return pig.litTime(time, metas)
+    }
+
+    // Timestamp Value is not an Expr.Lit in the legacy AST; needs special treatment.
+    private fun TimestampValue.toLegacyAst(metas: MetaContainer): PartiqlAst.Expr.Timestamp {
+        val timeZone = value.timeZone?.toLegacyAst(metas)
+        val precision = value.decimalSecond.precision().toLong()
+        return pig.timestamp(
+            pig.timestampValue(
+                value.year.toLong(), value.month.toLong(), value.day.toLong(),
+                value.hour.toLong(), value.minute.toLong(), ionDecimal(Decimal.valueOf(value.decimalSecond)),
+                timeZone, precision
+            )
+        )
     }
 
     // Date Value is not an Expr.Lit in the legacy AST; needs special treatment.
     private fun DateValue.toLegacyAst(metas: MetaContainer): PartiqlAst.Expr.Date {
         return pig.date(
-            year = this.value.getLong(ChronoField.YEAR),
-            month = this.value.getLong(ChronoField.MONTH_OF_YEAR),
-            day = this.value.getLong(ChronoField.DAY_OF_MONTH),
+            year = this.value.year.toLong(),
+            month = this.value.month.toLong(),
+            day = this.value.day.toLong(),
             metas = metas,
         )
+    }
+
+    private fun TimeZone.toLegacyAst(metas: MetaContainer): PartiqlAst.Timezone {
+        return when (this) {
+            TimeZone.UnknownTimeZone -> pig.unknownTimezone(metas)
+            is TimeZone.UtcOffset -> pig.utcOffset(totalOffsetMinutes.toLong(), metas)
+        }
     }
 }

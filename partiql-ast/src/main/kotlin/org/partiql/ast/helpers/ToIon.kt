@@ -39,10 +39,11 @@ import org.partiql.value.StringValue
 import org.partiql.value.StructValue
 import org.partiql.value.SymbolValue
 import org.partiql.value.TimestampValue
+import org.partiql.value.datetime.TimeZone
 import org.partiql.value.util.PartiQLValueBaseVisitor
 
 /**
- * PartiQL Value .toIon helper
+ * PartiQL Value .toIon helper; to be replaced by https://github.com/partiql/partiql-lang-kotlin/pull/1131/files
  *
  * TODO add `lower` mode, this just errors
  */
@@ -95,8 +96,21 @@ internal object ToIon : PartiQLValueBaseVisitor<IonElement, Unit>() {
     override fun visitBlob(v: BlobValue, ctx: Unit) = v.toIon { ionBlob(value) }
 
     override fun visitTimestamp(v: TimestampValue, ctx: Unit) = v.toIon {
-        val sql = java.sql.Timestamp.valueOf(value)
-        ionTimestamp(Timestamp.forSqlTimestampZ(sql))
+        val offset = when (val z = v.value.timeZone) {
+            TimeZone.UnknownTimeZone -> 0
+            is TimeZone.UtcOffset -> z.totalOffsetMinutes
+            null -> 0
+        }
+        val timestamp = Timestamp.forSecond(
+            v.value.year,
+            v.value.month,
+            v.value.day,
+            v.value.hour,
+            v.value.minute,
+            v.value.decimalSecond,
+            offset,
+        )
+        ionTimestamp(timestamp)
     }
 
     override fun visitList(v: ListValue<*>, ctx: Unit) = v.toIon { elements -> ionListOf(elements) }

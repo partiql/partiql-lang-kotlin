@@ -16,19 +16,24 @@ import org.partiql.parser.antlr.PartiQLParser
 
 class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
 
-    override val targets: Array<ParserTarget> = arrayOf(ParserTarget.DEFAULT, ParserTarget.EXPERIMENTAL)
+    // TODO we do not model precision within the expression node
+    // For example, TIME (0) WITH TIME ZONE '23:59:59.123456789'` will have precision 0 which means
+    // the underlying literal value does not preserve the extraneous places.
+    // We should consider preserving the AST exactly as is text.
+    // override val targets: Array<ParserTarget> = arrayOf(ParserTarget.DEFAULT, ParserTarget.EXPERIMENTAL)
+    override val targets: Array<ParserTarget> = arrayOf(ParserTarget.DEFAULT)
 
     data class DateTimeTestCase(
         val source: String,
         val skipTest: Boolean = false,
-        val block: PartiqlAst.Builder.() -> PartiqlAst.PartiqlAstNode
+        val block: PartiqlAst.Builder.() -> PartiqlAst.PartiqlAstNode,
     )
 
     data class ErrorDateTimeTestCase(
         val source: String,
         val errorCode: ErrorCode,
         val ctx: Map<Property, Any>,
-        val skipTest: Boolean = false
+        val skipTest: Boolean = false,
     )
 
     companion object {
@@ -1219,7 +1224,7 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
             col: Long,
             tokenType: Int,
             tokenValue: IonValue,
-            skipTest: Boolean = false
+            skipTest: Boolean = false,
         ): ErrorDateTimeTestCase {
             val displayTokenType = tokenType.getAntlrDisplayString()
             val ctx = mapOf(
