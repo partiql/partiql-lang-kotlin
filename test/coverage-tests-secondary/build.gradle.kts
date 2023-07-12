@@ -24,5 +24,5 @@ dependencies {
 }
 
 tasks.test {
-    systemProperty("org.partiql.coverage.config.branch-minimum", "0.10")
+    systemProperty("org.partiql.coverage.config.branch-minimum", 0.10)
 }

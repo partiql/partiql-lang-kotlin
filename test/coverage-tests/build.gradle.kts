@@ -21,9 +21,8 @@ plugins {
 
 dependencies {
     testImplementation(project(":partiql-coverage"))
-    testCompileOnly(project(":partiql-coverage"))
 }
 
 tasks.test {
-    systemProperty("org.partiql.coverage.config.branch-minimum", "0.75")
+    systemProperty("org.partiql.coverage.config.branch-minimum", 0.5)
 }

@@ -6,6 +6,7 @@ import org.junit.platform.launcher.TestIdentifier
 import org.junit.platform.launcher.TestPlan
 import java.io.File
 import java.io.OutputStream
+import java.util.Random
 
 internal class CoverageListener : TestExecutionListener {
 
@@ -130,7 +131,8 @@ internal class CoverageListener : TestExecutionListener {
         val strBuilder = StringBuilder()
 
         // Test Name
-        strBuilder.appendLine("TN:")
+        val randomTestName = Random(5).nextInt().toString() // TODO: Update this
+        strBuilder.appendLine("TN:$randomTestName")
 
         // Source File Path
         strBuilder.appendLine("SF:$filePath")

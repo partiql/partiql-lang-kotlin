@@ -1,1 +1,1 @@
-org.partiql.coverage.api.impl.ThresholdExecutor
+org.partiql.coverage.api.impl.PostProcessor

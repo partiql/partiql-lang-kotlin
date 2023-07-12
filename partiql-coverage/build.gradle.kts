@@ -17,6 +17,7 @@ plugins {
     id(Plugins.conventions)
     id(Plugins.dokka)
     id(Plugins.library)
+    id(Plugins.publish)
 }
 
 dependencies {
@@ -25,5 +26,12 @@ dependencies {
     implementation("org.junit.jupiter:junit-jupiter-params:5.9.3")
     implementation("org.junit.platform:junit-platform-launcher:1.9.3")
     implementation("org.jacoco:org.jacoco.report:0.8.10")
+    implementation("com.googlecode.jgenhtml:jgenhtml:1.5")
     implementation(kotlin("reflect"))
+}
+
+publish {
+    artifactId = "partiql-coverage"
+    name = "PartiQL Code Coverage"
+    description = "Code Coverage APIs for PartiQL Testing"
 }

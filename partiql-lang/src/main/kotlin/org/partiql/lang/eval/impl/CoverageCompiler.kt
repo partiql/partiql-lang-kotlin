@@ -62,29 +62,34 @@ internal class CoverageCompiler(
     }
 
     // TODO: Figure out how we can determine whether an ID should be a boolean.
+    //  This will likely be addressed when we move towards static resolution in the successor to the EvaluatingCompiler
     override fun compileId(expr: PartiqlAst.Expr.Id, metas: MetaContainer): ThunkEnv {
         return super.compileId(expr, metas)
     }
 
     // TODO: Figure out how we can determine whether an ID should be a boolean.
+    //  This will likely be addressed when we move towards static resolution in the successor to the EvaluatingCompiler
     override fun compileCall(expr: PartiqlAst.Expr.Call, metas: MetaContainer): ThunkEnv {
         return super.compileCall(expr, metas)
     }
 
     // NOTE: This should NOT be overridden.
-    override fun compileAnd(expr: PartiqlAst.Expr.And, metas: MetaContainer): ThunkEnv = super.compileAnd(expr, metas)
-
-    // NOTE: This should NOT be overridden.
-    override fun compileOr(expr: PartiqlAst.Expr.Or, metas: MetaContainer): ThunkEnv = super.compileOr(expr, metas)
-
-    // NOTE: This should NOT be overridden.
     override fun compileLit(expr: PartiqlAst.Expr.Lit, metas: MetaContainer): ThunkEnv = super.compileLit(expr, metas)
 
     // NOTE: This should NOT be overridden.
-    override fun compileNot(expr: PartiqlAst.Expr.Not, metas: MetaContainer): ThunkEnv = super.compileNot(expr, metas)
-
-    // NOTE: This should NOT be overridden.
     override fun compileAstExpr(expr: PartiqlAst.Expr): ThunkEnv = super.compileAstExpr(expr)
+
+    override fun compileAnd(expr: PartiqlAst.Expr.And, metas: MetaContainer): ThunkEnv = compileDecision("AND", metas) {
+        super.compileAnd(expr, metas)
+    }
+
+    override fun compileOr(expr: PartiqlAst.Expr.Or, metas: MetaContainer): ThunkEnv = compileDecision("OR", metas) {
+        super.compileOr(expr, metas)
+    }
+
+    override fun compileNot(expr: PartiqlAst.Expr.Not, metas: MetaContainer): ThunkEnv = compileDecision("NOT", metas) {
+        super.compileNot(expr, metas)
+    }
 
     override fun compileGt(expr: PartiqlAst.Expr.Gt, metas: MetaContainer): ThunkEnv = compileDecision("GT", metas) {
         super.compileGt(expr, metas)

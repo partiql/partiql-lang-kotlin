@@ -132,36 +132,8 @@ tasks.withType<JacocoReport> {
                 )
             }
         }))
-        // TODO: Figure this out.
-//        val files = classDirectories.files.map { fileTree(it) }
-//        val partiqlDir = buildDir.resolve("partiql")
-//        println("PartiQL Directory: $partiqlDir")
-//        val queryFiles = fileTree(partiqlDir)
-//        println("PartiQL Tree: $queryFiles")
-//        println("PartiQL Tree Elements: ${queryFiles.elements}")
-//        val allFiles = files + listOf(queryFiles)
-//        println("All Files: $allFiles")
-//        sourceDirectories.setFrom(
-//            files(allFiles)
-//        )
-//        sourceSets {
-//            main {
-//                files(partiqlDir)
-//            }
-//        }
-//        sourceSets(sourceSets.main.get())
-//        classDirectories.setFrom(
-//            files(allFiles)
-//        )
     }
 }
-
-// TODO: How to create custom source set
-//tasks.create<Test>("integrationTest") {
-//    description = "Runs Integration Tests"
-//    testClassesDirs = sourceSets.integrationTest.output.classesDir
-//    classpath += sourceSets.integrationTest.runtimeClasspath
-//}
 
 tasks.processResources {
     dependsOn(tasks.findByName("generateVersionAndHash"))
