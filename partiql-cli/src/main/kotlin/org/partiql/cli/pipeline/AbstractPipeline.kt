@@ -73,7 +73,8 @@ internal sealed class AbstractPipeline(open val options: PipelineOptions) {
             typedOpBehavior: TypedOpBehavior,
             projectionIteration: ProjectionIterationBehavior,
             undefinedVariable: UndefinedVariableBehavior,
-            permissiveMode: TypingMode
+            permissiveMode: TypingMode,
+            pluginPath: String
         ): PipelineOptions {
             val ion = IonSystemBuilder.standard().build()
             val functions: List<ExprFunction> = listOf(
@@ -82,7 +83,7 @@ internal sealed class AbstractPipeline(open val options: PipelineOptions) {
                 WriteFile_1(ion),
                 WriteFile_2(ion),
                 QueryDDB(ion)
-            ) + ServiceLoaderUtil.loadFunctions()
+            ) + ServiceLoaderUtil.loadFunctions(pluginPath)
             val parser = PartiQLParserBuilder().build()
             return PipelineOptions(
                 pipeline,

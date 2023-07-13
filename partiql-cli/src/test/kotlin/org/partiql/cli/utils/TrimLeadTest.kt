@@ -17,9 +17,11 @@ import org.partiql.cli.utils.ServiceLoaderUtil
  */
 class TrimLeadTest {
 
+    val pluginPath = System.getProperty("mockDbJarFile")
+
     private val pipeline = AbstractPipeline.create(
         AbstractPipeline.PipelineOptions(
-            functions = ServiceLoaderUtil.loadFunctions()
+            functions = ServiceLoaderUtil.loadFunctions(pluginPath)
         )
     )
 

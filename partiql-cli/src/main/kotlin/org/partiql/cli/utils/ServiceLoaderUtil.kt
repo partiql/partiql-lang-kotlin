@@ -109,9 +109,12 @@ class ServiceLoaderUtil {
 
         @OptIn(PartiQLFunctionExperimental::class)
         @JvmStatic
-        fun loadFunctions(): List<ExprFunction> = lock.withLock {
-            val pluginsDir = File(System.getProperty("user.home") + "/.partiql/plugins")
-            val files = pluginsDir.walk().filter { it.isFile && it.extension == "jar" }.toList()
+        fun loadFunctions(pluginPath: String): List<ExprFunction> = lock.withLock {
+            val pluginsDir = File(pluginPath)
+            val pluginFolders = pluginsDir.listFiles { file -> file.isDirectory }.orEmpty()
+            val files = pluginFolders.flatMap { folder ->
+                folder.listFiles { file -> file.isFile && file.extension == "jar" }.orEmpty().toList()
+            }
             val plugins = if (files.isNotEmpty()) {
                 val classLoader = URLClassLoader.newInstance(files.map { it.toURI().toURL() }.toTypedArray())
                 ServiceLoader.load(Plugin::class.java, classLoader)
@@ -122,9 +125,6 @@ class ServiceLoaderUtil {
                 .flatMap { plugin -> plugin.getFunctions() }
                 .flatMap { partiqlFunc -> PartiQLtoExprFunction(partiqlFunc) }
         }
-
-        fun File.walk(): Sequence<File> =
-            sequenceOf(this) + (if (isDirectory) listFiles().orEmpty().asSequence().flatMap { it.walk() } else emptySequence())
 
         @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
         private fun PartiQLtoExprFunction(customFunction: PartiQLFunction): List<ExprFunction> {

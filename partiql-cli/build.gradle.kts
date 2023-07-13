@@ -33,7 +33,6 @@ dependencies {
     implementation(Deps.picoCli)
     implementation(Deps.kotlinReflect)
     testImplementation(Deps.mockito)
-    testImplementation(project(":plugins:partiql-mockdb"))
 }
 
 application {
@@ -60,6 +59,26 @@ tasks.named<JavaExec>("run") {
 
 tasks.register<GradleBuild>("install") {
     tasks = listOf("assembleDist", "distZip", "installDist")
+}
+
+tasks.named("build").configure {
+    dependsOn("generateMockDBJAR")
+}
+
+val mockDbJarPath = "$buildDir/tmp/plugins/mockdb"
+val mockDbJarFile = "$buildDir/tmp/plugins"
+
+tasks.register<Jar>("generateMockDBJAR") {
+    dependsOn(":plugins:partiql-mockdb:build")
+    archiveBaseName.set("mockdb")
+    archiveVersion.set("0.1.0")
+    destinationDirectory.set(file(mockDbJarPath))
+    from("${rootProject.projectDir}/plugins/partiql-mockdb/build/classes/kotlin/main")
+    from("${rootProject.projectDir}/plugins/partiql-mockdb/build/resources/main")
+}
+
+tasks.withType<Test>().configureEach {
+    systemProperty("mockDbJarFile", mockDbJarFile)
 }
 
 // Version 1.7+ removes the requirement for such compiler option.

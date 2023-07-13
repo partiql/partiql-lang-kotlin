@@ -8,7 +8,8 @@ class ServiceLoaderUtilTest {
     @Test
     fun `loadPlugins loads the correct plugins`() {
 
-        val functions: List<ExprFunction> = ServiceLoaderUtil.loadFunctions()
+        val pluginPath = System.getProperty("mockDbJarFile")
+        val functions: List<ExprFunction> = ServiceLoaderUtil.loadFunctions(pluginPath)
 
         assertTrue(functions.map { it.signature.name }.contains("trim_lead"))
         assertTrue(functions.map { it.signature.name }.contains("test_power"))

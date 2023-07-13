@@ -70,6 +70,13 @@ internal class PipelineOptions {
     )
     var undefinedVarBehavior: UndefinedVariableBehavior = UndefinedVariableBehavior.ERROR
 
+    @CommandLine.Option(
+        names = ["--plugins"],
+        description = ["Directory containing plugin jar files"],
+        paramLabel = "DIR"
+    )
+    var pluginDir: String = System.getProperty("user.home") + "/.partiql/plugins"
+
     internal val pipeline: AbstractPipeline
         get() {
             val options = AbstractPipeline.createPipelineOptions(
@@ -77,7 +84,8 @@ internal class PipelineOptions {
                 typedOpBehavior,
                 projIterBehavior,
                 undefinedVarBehavior,
-                typingMode
+                typingMode,
+                pluginDir
             )
             return AbstractPipeline.create(options)
         }
