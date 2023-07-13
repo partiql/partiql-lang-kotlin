@@ -532,7 +532,7 @@ class ToLegacyAstTest {
                     }
                     items += selectProjectItemExpression {
                         expr = exprLit(int32Value(1))
-                        asAlias = "x"
+                        asAlias = id("x")
                     }
                 }
             },
@@ -558,9 +558,9 @@ class ToLegacyAstTest {
                 fromValue {
                     expr = NULL
                     type = From.Value.Type.SCAN
-                    asAlias = "a"
-                    atAlias = "b"
-                    byAlias = "c"
+                    asAlias = id("a")
+                    atAlias = id("b")
+                    byAlias = id("c")
                 }
             },
             expect("(unpivot (lit null) null null null)") {
@@ -573,9 +573,9 @@ class ToLegacyAstTest {
                 fromValue {
                     expr = NULL
                     type = From.Value.Type.UNPIVOT
-                    asAlias = "a"
-                    atAlias = "b"
-                    byAlias = "c"
+                    asAlias = id("a")
+                    atAlias = id("b")
+                    byAlias = id("c")
                 }
             },
             expect(
@@ -626,7 +626,7 @@ class ToLegacyAstTest {
                 let {
                     bindings += letBinding {
                         expr = NULL
-                        asAlias = "x"
+                        asAlias = id("x")
                     }
                 }
             },
@@ -644,7 +644,7 @@ class ToLegacyAstTest {
                 groupBy {
                     strategy = GroupBy.Strategy.FULL
                     keys += groupByKey(exprLit(stringValue("a")), null)
-                    keys += groupByKey(exprLit(stringValue("b")), "x")
+                    keys += groupByKey(exprLit(stringValue("b")), id("x"))
                 }
             },
             expect(
@@ -661,8 +661,8 @@ class ToLegacyAstTest {
                 groupBy {
                     strategy = GroupBy.Strategy.PARTIAL
                     keys += groupByKey(exprLit(stringValue("a")), null)
-                    keys += groupByKey(exprLit(stringValue("b")), "x")
-                    asAlias = "as"
+                    keys += groupByKey(exprLit(stringValue("b")), id("x"))
+                    asAlias = id("as")
                 }
             },
             expect(
