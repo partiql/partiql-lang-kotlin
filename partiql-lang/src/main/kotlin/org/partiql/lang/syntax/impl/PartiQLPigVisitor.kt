@@ -112,7 +112,7 @@ internal class PartiQLPigVisitor(
     override fun visitExprTermCurrentUser(ctx: PartiQLParser.ExprTermCurrentUserContext): PartiqlAst.Expr.SessionAttribute {
         val metas = ctx.CURRENT_USER().getSourceMetaContainer()
         return PartiqlAst.Expr.SessionAttribute(
-            value = SymbolPrimitive(ctx.CURRENT_USER().text, metas),
+            value = SymbolPrimitive(ctx.CURRENT_USER().text.toLowerCase(), metas),
             metas = metas
         )
     }
