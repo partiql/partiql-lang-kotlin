@@ -1,7 +1,12 @@
 package org.partiql.coverage.api.impl
 
-internal enum class ConfigurationParameters(val key: String, val default: Any?) {
-    BRANCH_MINIMUM("org.partiql.coverage.config.branch-minimum", null),
-    OUTPUT_HTML_DIR("org.partiql.coverage.config.html-output-dir", "build/reports/partiql/test/html"),
-    REPORT_LOCATION("org.partiql.coverage.config.report-location", "build/partiql/coverage/report/cov.info")
+/**
+ * Defines the System Properties (JUnit5) to be configured for PartiQL Code Coverage.
+ */
+internal enum class ConfigurationParameters(val key: String) {
+    BRANCH_MINIMUM("partiql.coverage.threshold.branch.min"),
+    LCOV_ENABLED("partiql.coverage.lcov.enabled"),
+    LCOV_REPORT_LOCATION("partiql.coverage.lcov.path"),
+    LCOV_HTML_ENABLED("partiql.coverage.lcov.html.enabled"),
+    LCOV_HTML_OUTPUT_DIR("partiql.coverage.lcov.html.dir")
 }

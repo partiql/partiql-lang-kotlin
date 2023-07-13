@@ -2,23 +2,21 @@ package org.partiql.coverage.api.impl
 
 import org.junit.platform.launcher.LauncherSession
 import org.junit.platform.launcher.LauncherSessionListener
-import org.junit.platform.launcher.TestExecutionListener
-import org.junit.platform.launcher.TestPlan
 
 /**
- * This class is in charge of running two things:
- * 1. The Threshold
+ * This class is in charge of:
+ * 1. Retrieving the JUnit5 Configuration Parameters relevant to PartiQL Code Coverage
+ * 2. Conditionally executing the [ThresholdExecutor].
+ * 3. Conditionally executing the [HtmlWriter].
  */
 internal class PostProcessor : LauncherSessionListener {
-    internal var customBranchMin: Double? = null
-    internal var customReportPath: String? = null
-    internal var customHtmlOutputDirectory: String? = null
+    private val configurationParameterRetriever = ConfigurationParameterRetriever()
 
     /**
      * Registers the [ConfigurationParameterRetriever].
      */
     override fun launcherSessionOpened(session: LauncherSession?) {
-        session?.launcher?.registerTestExecutionListeners(ConfigurationParameterRetriever())
+        session?.launcher?.registerTestExecutionListeners(configurationParameterRetriever)
         super.launcherSessionOpened(session)
     }
 
@@ -26,39 +24,32 @@ internal class PostProcessor : LauncherSessionListener {
      * Conditionally triggers the [ThresholdExecutor] and the [HtmlWriter].
      */
     override fun launcherSessionClosed(session: LauncherSession?) {
-        // Set Values or Grab Defaults
-        val reportPath = customReportPath ?: ConfigurationParameters.REPORT_LOCATION.default as String
-        val htmlOutputDir = customHtmlOutputDirectory ?: ConfigurationParameters.OUTPUT_HTML_DIR.default as String
-        val branchMin = customBranchMin ?: ConfigurationParameters.BRANCH_MINIMUM.default as Double?
+        // Get Configuration
+        val configParams = configurationParameterRetriever.getConfig()
+            ?: error("Configuration Parameters should have been initialized.")
+
+        // Ensure PartiQL Code Coverage is Enabled
+        if (configParams.lcovConfig == null) { return super.launcherSessionClosed(session) }
+        val reportPath = configParams.lcovConfig.reportPath
 
         // Generate HTML Report
-        HtmlWriter.write(reportPath, htmlOutputDir)
+        if (configParams.htmlConfig != null) {
+            HtmlWriter.write(
+                reportPath = reportPath,
+                htmlOutputDir = configParams.htmlConfig.outputDir
+            )
+        }
 
         // Assert Branch Coverage Threshold
-        if (branchMin != null) {
-            ThresholdExecutor.execute(customBranchMin!!, reportPath)
+        if (configParams.thresholdConfig != null) {
+            ThresholdExecutor.execute(
+                branchMin = configParams.thresholdConfig.branchMinimum,
+                reportPath = reportPath
+            )
         }
 
         super.launcherSessionClosed(session)
     }
 
-    private inner class ConfigurationParameterRetriever : TestExecutionListener {
-        override fun testPlanExecutionStarted(testPlan: TestPlan?) {
-            if (testPlan == null) { return super.testPlanExecutionStarted(testPlan) }
 
-            // Gets the Report's Path
-            val reportLocation = testPlan.configurationParameters[ConfigurationParameters.REPORT_LOCATION.key]
-            if (reportLocation.isPresent) { customReportPath = reportLocation.get() }
-
-            // Gets the Branch Coverage Minimum
-            val branchMinimum = testPlan.configurationParameters[ConfigurationParameters.BRANCH_MINIMUM.key]
-            if (branchMinimum.isPresent) { customBranchMin = branchMinimum.get().toDouble() }
-
-            // Gets the Branch Coverage Minimum
-            val outputHtmlDir = testPlan.configurationParameters[ConfigurationParameters.OUTPUT_HTML_DIR.key]
-            if (outputHtmlDir.isPresent) { customHtmlOutputDirectory = outputHtmlDir.get() }
-
-            super.testPlanExecutionStarted(testPlan)
-        }
-    }
 }

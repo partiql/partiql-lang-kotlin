@@ -11,7 +11,9 @@ import java.util.Random
 internal class CoverageListener : TestExecutionListener {
 
     private lateinit var reportStream: OutputStream
-    private var destinationFileName = "build/partiql/coverage/report/cov.info"
+    private lateinit var destinationFileName: String
+    private lateinit var reportFile: File
+    private var isLcovEnabled: Boolean = false
 
     public object ReportKey {
         public const val DECISION_COUNT: String = "\$pql-dc"
@@ -19,23 +21,31 @@ internal class CoverageListener : TestExecutionListener {
         public const val PROVIDER_NAME: String = "\$pql-prn"
         public const val ORIGINAL_STATEMENT: String = "\$pql-os"
         public const val LINE_NUMBER_OF_BRANCH_PREFIX: String = "\$pql-lfd_"
-        public const val START_COLUMN_OF_BRANCH_PREFIX: String = "\$pql-scob_"
-        public const val END_COLUMN_OF_BRANCH_PREFIX: String = "\$pql-ecob_"
         public const val RESULT_OF_BRANCH_PREFIX: String = "\$pql-rob_"
     }
 
     override fun testPlanExecutionStarted(testPlan: TestPlan?) {
-        this.destinationFileName = testPlan?.configurationParameters?.get("destfile")?.let {
-            when (it.isPresent) {
-                true -> it.get()
-                false -> destinationFileName
-            }
-        } ?: destinationFileName
+        if (testPlan == null) { return super.testPlanExecutionStarted(testPlan) }
 
-        reportStream = initializeOutputFile(destinationFileName)
+        // Get Configuration Parameters
+        val configParams = ConfigurationParameterExtractor.extract(testPlan)
+        isLcovEnabled = configParams.lcovConfig != null
+        when (isLcovEnabled) {
+            true -> {
+                destinationFileName = configParams.lcovConfig?.reportPath
+                    ?: throw Exception("LCOV Report location not set. Please set system property (${ConfigurationParameters.LCOV_REPORT_LOCATION.key})")
+                reportFile = File(destinationFileName)
+                reportStream = initializeOutputFile(reportFile)
+            }
+            false -> {
+                reportStream = OutputStream.nullOutputStream()
+            }
+        }
     }
 
     override fun reportingEntryPublished(testIdentifier: TestIdentifier?, entry: ReportEntry?) {
+        if (!isLcovEnabled) { return super.reportingEntryPublished(testIdentifier, entry) }
+
         val map = entry?.keyValuePairs ?: emptyMap()
         val decisionCount = map[ReportKey.DECISION_COUNT]?.toInt() ?: 0
         val originalStatement = map[ReportKey.ORIGINAL_STATEMENT] ?: ""
@@ -81,7 +91,7 @@ internal class CoverageListener : TestExecutionListener {
 
         // Write Query to File
         val uniqueFileName = "$providerName.pql"
-        val queryPath = File("build/partiql/coverage/source/$packageName/$uniqueFileName")
+        val queryPath = reportFile.parentFile.resolve("source").resolve(packageName).resolve(uniqueFileName)
         writePartiQLToFile(originalStatement, queryPath)
 
         // Write to Coverage Report File
@@ -108,8 +118,7 @@ internal class CoverageListener : TestExecutionListener {
     //
     //
 
-    private fun initializeOutputFile(destFile: String): OutputStream {
-        val file = File(destFile)
+    private fun initializeOutputFile(file: File): OutputStream {
         file.parentFile.mkdirs()
         return file.outputStream()
     }
