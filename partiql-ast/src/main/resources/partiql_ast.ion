@@ -18,7 +18,7 @@ statement::[
     insert::{
       target:       identifier,
       values:       expr,
-      as_alias:     optional::string,
+      as_alias:     optional::'.identifier.symbol',
       on_conflict:  optional::on_conflict,
     },
 
@@ -34,14 +34,14 @@ statement::[
     upsert::{
       target:   identifier,
       values:   expr,
-      as_alias: optional::string,
+      as_alias: optional::'.identifier.symbol',
     },
 
     // REPLACE INTO <target> [AS <alias>] <values>
     replace::{
       target:   identifier,
       values:   expr,
-      as_alias: optional::string,
+      as_alias: optional::'.identifier.symbol',
     },
 
     // UPDATE <target> SET <set clause list> WHERE <expr>
@@ -65,9 +65,9 @@ statement::[
     delete::{
       target: {
         path:     path,
-        as_alias: optional::string,
-        at_alias: optional::string,
-        by_alias: optional::string,
+        as_alias: optional::'.identifier.symbol',
+        at_alias: optional::'.identifier.symbol',
+        by_alias: optional::'.identifier.symbol',
       },
       where:      optional::expr,
       returning:  optional::returning,
@@ -84,7 +84,7 @@ statement::[
           insert::{
             target:       identifier,
             values:       expr,
-            as_alias:     optional::string,
+            as_alias:     optional::'.identifier.symbol',
             on_conflict:  optional::on_conflict,
           },
           insert_legacy::{
@@ -541,8 +541,8 @@ select::[
     setq:   optional::set_quantifier,
     _: [
       item::[
-        all::{ expr: expr },                                    // <expr>.*
-        expression::{ expr: expr, as_alias: optional::string }  // <expr> [as <identifier>]
+        all::{ expr: expr },                                                  // <expr>.*
+        expression::{ expr: expr, as_alias: optional::'.identifier.symbol' }  // <expr> [as <identifier>]
       ],
     ],
   },
@@ -567,9 +567,9 @@ from::[
   value::{
     expr:     expr,
     type:     [ SCAN, UNPIVOT ],
-    as_alias: optional::string,
-    at_alias: optional::string,
-    by_alias: optional::string,
+    as_alias: optional::'.identifier.symbol',
+    at_alias: optional::'.identifier.symbol',
+    by_alias: optional::'.identifier.symbol',
   },
 
   // TODO https://github.com/partiql/partiql-spec/issues/41
@@ -597,7 +597,7 @@ let::{
   _: [
     binding::{
       expr:     expr,
-      as_alias: string,
+      as_alias: '.identifier.symbol',
     },
   ],
 }
@@ -606,11 +606,11 @@ let::{
 group_by::{
   strategy: [ FULL, PARTIAL ],
   keys:     list::[key],
-  as_alias: optional::string,
+  as_alias: optional::'.identifier.symbol',
   _: [
     key::{
       expr:     expr,
-      as_alias: optional::string,
+      as_alias: optional::'.identifier.symbol',
     },
   ],
 }

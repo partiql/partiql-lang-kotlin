@@ -700,7 +700,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
     override fun visitSelectProjectItemExpression(node: Select.Project.Item.Expression, ctx: Ctx) =
         translate(node) { metas ->
             val expr = visitExpr(node.expr, ctx)
-            val alias = node.asAlias
+            val alias = node.asAlias?.symbol
             projectExpr(expr, alias, metas)
         }
 
@@ -718,9 +718,9 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
     override fun visitFrom(node: From, ctx: Ctx) = super.visitFrom(node, ctx) as PartiqlAst.FromSource
     override fun visitFromValue(node: From.Value, ctx: Ctx) = translate(node) { metas ->
         val expr = visitExpr(node.expr, ctx)
-        val asAlias = node.asAlias
-        val atAlias = node.atAlias
-        val byAlias = node.byAlias
+        val asAlias = node.asAlias?.symbol
+        val atAlias = node.atAlias?.symbol
+        val byAlias = node.byAlias?.symbol
         when (node.type) {
             From.Value.Type.SCAN -> scan(expr, asAlias, atAlias, byAlias, metas)
             From.Value.Type.UNPIVOT -> unpivot(expr, asAlias, atAlias, byAlias, metas)
@@ -755,7 +755,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
 
     override fun visitLetBinding(node: Let.Binding, ctx: Ctx) = translate(node) { metas ->
         val expr = visitExpr(node.expr, ctx)
-        val name = node.asAlias
+        val name = node.asAlias?.symbol
         letBinding(expr, name, metas)
     }
 
@@ -765,13 +765,13 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
             GroupBy.Strategy.PARTIAL -> groupPartial()
         }
         val keyList = groupKeyList(node.keys.translate<PartiqlAst.GroupKey>(ctx))
-        val groupAsAlias = node.asAlias
+        val groupAsAlias = node.asAlias?.symbol
         groupBy(strategy, keyList, groupAsAlias, metas)
     }
 
     override fun visitGroupByKey(node: GroupBy.Key, ctx: Ctx) = translate(node) { metas ->
         val expr = visitExpr(node.expr, ctx)
-        val asAlias = node.asAlias
+        val asAlias = node.asAlias?.symbol
         groupKey(expr, asAlias, metas)
     }
 
@@ -911,7 +911,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
 
     override fun visitStatementDMLInsert(node: Statement.DML.Insert, ctx: Ctx) = translate(node) { metas ->
         val target = visitIdentifier(node.target, ctx)
-        val asAlias = node.asAlias
+        val asAlias = node.asAlias?.symbol
         val values = visitExpr(node.values, ctx)
         val conflictAction = node.onConflict?.let { visitOnConflictAction(it.action, ctx) }
         val op = insert(target, asAlias, values, conflictAction)
@@ -935,7 +935,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
 
     override fun visitStatementDMLUpsert(node: Statement.DML.Upsert, ctx: Ctx) = translate(node) { metas ->
         val target = visitIdentifier(node.target, ctx)
-        val asAlias = node.asAlias
+        val asAlias = node.asAlias?.symbol
         val values = visitExpr(node.values, ctx)
         val conflictAction = doUpdate(excluded())
         // UPSERT overloads legacy INSERT
@@ -945,7 +945,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
 
     override fun visitStatementDMLReplace(node: Statement.DML.Replace, ctx: Ctx) = translate(node) { metas ->
         val target = visitIdentifier(node.target, ctx)
-        val asAlias = node.asAlias
+        val asAlias = node.asAlias?.symbol
         val values = visitExpr(node.values, ctx)
         val conflictAction = doReplace(excluded())
         // REPLACE overloads legacy INSERT
@@ -991,9 +991,9 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
 
     override fun visitStatementDMLDeleteTarget(node: Statement.DML.Delete.Target, ctx: Ctx) = translate(node) { metas ->
         val path = visitPathUnpack(node.path, ctx)
-        val asAlias = node.asAlias
-        val atAlias = node.atAlias
-        val byAlias = node.byAlias
+        val asAlias = node.asAlias?.symbol
+        val atAlias = node.atAlias?.symbol
+        val byAlias = node.byAlias?.symbol
         scan(path, asAlias, atAlias, byAlias, metas)
     }
 
@@ -1041,7 +1041,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
         ctx: Ctx,
     ) = translate(node) { metas ->
         val target = visitIdentifier(node.target, ctx)
-        val asAlias = node.asAlias
+        val asAlias = node.asAlias?.symbol
         val values = visitExpr(node.values, ctx)
         val conflictAction = node.onConflict?.let { visitOnConflictAction(it.action, ctx) }
         dmlOpList(insert(target, asAlias, values, conflictAction, metas))
