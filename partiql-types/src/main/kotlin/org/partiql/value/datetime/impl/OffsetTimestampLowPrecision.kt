@@ -1,7 +1,6 @@
 package org.partiql.value.datetime.impl
 
 import org.partiql.value.datetime.Date
-import org.partiql.value.datetime.DateTimeUtil.JAVA_MAX_OFFSET
 import org.partiql.value.datetime.DateTimeUtil.toBigDecimal
 import org.partiql.value.datetime.TimeZone
 import org.partiql.value.datetime.Timestamp
@@ -12,7 +11,6 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
-import kotlin.math.absoluteValue
 import kotlin.math.max
 
 /**

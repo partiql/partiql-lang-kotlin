@@ -43,7 +43,14 @@ interface Scalar {
      * Returns this value as a [Timestamp] or `null` if not applicable.
      * This operation is only applicable for [ExprValueType.TIMESTAMP]
      */
+    @Deprecated("Retrieve Ion timestamp Value is deprecated, please use partiqlTimestampValue()", ReplaceWith("partiQLTimestampValue()"))
     fun timestampValue(): Timestamp? = null
+
+    /**
+     * Returns this value as a [org.partiql.value.datetime.Timestamp] or `null` if not applicable.
+     * This operation is only applicable for [ExprValueType.TIMESTAMP]
+     */
+    fun partiQLTimestampValue(): org.partiql.value.datetime.Timestamp? = null
 
     /**
      * Returns this value as a [LocalDate] or `null` if not applicable.

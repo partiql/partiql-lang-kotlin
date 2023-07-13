@@ -40,6 +40,9 @@ import org.partiql.lang.graph.ExternalGraphReader
 import org.partiql.lang.graph.Graph
 import org.partiql.lang.util.bytesValue
 import org.partiql.lang.util.propertyValueMapOf
+import org.partiql.value.datetime.DateTimeValue
+import org.partiql.value.datetime.TimestampWithTimeZone
+import org.partiql.value.datetime.TimestampWithoutTimeZone
 import java.math.BigDecimal
 import java.time.LocalDate
 /**
@@ -141,9 +144,13 @@ interface ExprValue : Iterable<ExprValue>, Faceted {
             override fun dateValue(): LocalDate = value
         }
 
-        private class TimestampExprValue(val value: Timestamp) : ScalarExprValue() {
+        private class TimestampExprValue(val value: org.partiql.value.datetime.Timestamp) : ScalarExprValue() {
             override val type: ExprValueType = ExprValueType.TIMESTAMP
-            override fun timestampValue(): Timestamp = value
+            override fun partiQLTimestampValue(): org.partiql.value.datetime.Timestamp = value
+            override fun timestampValue(): Timestamp? = when (value) {
+                is TimestampWithTimeZone -> value.ionRaw
+                is TimestampWithoutTimeZone -> null
+            }
         }
 
         private class TimeExprValue(val value: Time) : ScalarExprValue() {
@@ -279,8 +286,20 @@ interface ExprValue : Iterable<ExprValue>, Faceted {
             DateExprValue(LocalDate.parse(value))
 
         /** Returns a PartiQL `TIMESTAMP` [ExprValue] instance representing the specified [Timestamp]. */
+        @Deprecated(
+            "construction timestamp using IonTimestamp is deprecated, please use PartiQL Timestamp",
+            ReplaceWith(
+                "newTimestamp(Timestamp.forIonTimestamp(value))",
+                "org.partiql.value.datetime.Timestamp"
+            ),
+        )
         @JvmStatic
         fun newTimestamp(value: Timestamp): ExprValue =
+            TimestampExprValue(DateTimeValue.timestamp(value))
+
+        /** Returns a PartiQL `TIMESTAMP` [ExprValue] instance representing the specified [PartiQLTimestamp]. */
+        @JvmStatic
+        fun newTimestamp(value: org.partiql.value.datetime.Timestamp): ExprValue =
             TimestampExprValue(value)
 
         /** Returns a PartiQL `TIME` [ExprValue] instance representing the specified [Time]. */

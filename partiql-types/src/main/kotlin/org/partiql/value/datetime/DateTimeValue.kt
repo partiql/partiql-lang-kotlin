@@ -123,7 +123,7 @@ public object DateTimeValue {
      * The created timestamp will always be an instance of [TimestampWithTimeZone]
      */
     public fun timestamp(ionTimestamp: com.amazon.ion.Timestamp): TimestampWithTimeZone =
-        if (ionTimestamp.localOffset != null && ionTimestamp.localOffset > JAVA_MAX_OFFSET) {
+        if (ionTimestamp.localOffset != null && ionTimestamp.localOffset.absoluteValue > JAVA_MAX_OFFSET) {
             OffsetTimestampHighPrecision.forIonTimestamp(ionTimestamp)
         } else if (ionTimestamp.decimalSecond.scale() <= 9) {
             OffsetTimestampLowPrecision.forIonTimestamp(ionTimestamp)
@@ -136,23 +136,20 @@ public object DateTimeValue {
      * The created timestamp will always be an instance of [TimestampWithTimeZone]
      */
     public fun timestamp(epochSeconds: BigDecimal, timeZone: TimeZone): TimestampWithTimeZone =
-        when(timeZone){
+        when (timeZone) {
             TimeZone.UnknownTimeZone -> {
                 if (epochSeconds.scale() <= 9) {
                     OffsetTimestampLowPrecision.forEpochSeconds(epochSeconds, timeZone)
-                }
-                else {
+                } else {
                     OffsetTimestampHighPrecision.forEpochSeconds(epochSeconds, timeZone)
                 }
             }
             is TimeZone.UtcOffset -> {
                 if (timeZone.totalOffsetMinutes > JAVA_MAX_OFFSET) {
                     OffsetTimestampHighPrecision.forEpochSeconds(epochSeconds, timeZone)
-                }
-                else if (epochSeconds.scale() <= 9) {
+                } else if (epochSeconds.scale() <= 9) {
                     OffsetTimestampLowPrecision.forEpochSeconds(epochSeconds, timeZone)
-                }
-                else {
+                } else {
                     OffsetTimestampHighPrecision.forEpochSeconds(epochSeconds, timeZone)
                 }
             }

@@ -164,7 +164,7 @@ class DelimitedValuesTest : TestBase() {
         """
         |1,2,3
         |null,2e0,3.0
-        |moo,cow,2012-10-10
+        |moo,cow,2012-10-10T00:00:00-00:00
         |4,true,null
         |null,null,null
         """.trimMargin() + "\n",

@@ -581,13 +581,13 @@ abstract class CastTestBase : EvaluatorTestBase() {
                     case("1.1", ErrorCode.EVALUATOR_INVALID_CAST),
                     case("-20.1", ErrorCode.EVALUATOR_INVALID_CAST),
                     // timestamp
-                    case("`2007-10-10T`", "2007-10-10T", CastQuality.LOSSLESS),
+                    case("`2007-10-10T`", "2007-10-10T00:00:00-00:00", CastQuality.LOSSLESS),
                     // text
                     case("'hello'", ErrorCode.EVALUATOR_CAST_FAILED),
                     case("'2016-03-01T01:12:12Z'", "2016-03-01T01:12:12Z", CastQuality.LOSSLESS),
-                    case("""`"2001-01-01"`""", "2001-01-01T", CastQuality.LOSSLESS),
-                    case("""`'2000T'`""", "2000T", CastQuality.LOSSLESS),
-                    case("""`'1999-04T'`""", "1999-04T", CastQuality.LOSSLESS),
+                    case("""`"2001-01-01"`""", "2001-01-01T00:00:00-00:00", CastQuality.LOSSLESS),
+                    case("""`'2000T'`""", "2000-01-01T00:00:00-00:00", CastQuality.LOSSLESS),
+                    case("""`'1999-04T'`""", "1999-04-01T00:00:00-00:00", CastQuality.LOSSLESS),
                     // lob
                     case("""`{{""}}`""", ErrorCode.EVALUATOR_INVALID_CAST),
                     case("`{{}}`", ErrorCode.EVALUATOR_INVALID_CAST),

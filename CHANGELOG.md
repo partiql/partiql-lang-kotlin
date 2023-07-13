@@ -32,7 +32,7 @@ Thank you to all who have contributed!
 - Adds `org.partiql.value` (experimental) package for reading/writing PartiQL
   values
 - Adds PartiQL's Timestamp Data Model. 
-- Adds support for Timestamp constructor call in Parser. 
+- Adds support for Timestamp constructor call in Parser/Compiler/Evaluator. 
 
 ### Changed
 
