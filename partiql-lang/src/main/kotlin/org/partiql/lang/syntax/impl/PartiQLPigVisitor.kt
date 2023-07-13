@@ -1544,12 +1544,15 @@ internal class PartiQLPigVisitor(
 
     override fun visitTypeTimeZone(ctx: PartiQLParser.TypeTimeZoneContext) = PartiqlAst.build {
         val precision = if (ctx.precision != null) ctx.precision.text.toInteger().toLong() else null
-        if (precision != null && (precision < 0 || precision > MAX_PRECISION_FOR_TIME)) {
-            throw ctx.precision.err("Unsupported precision", ErrorCode.PARSE_INVALID_PRECISION_FOR_TIME)
-        }
         val hasTimeZone = ctx.WITH() != null
         when (ctx.datatype.type) {
-            PartiQLParser.TIME -> if (hasTimeZone) timeWithTimeZoneType(precision) else timeType(precision)
+            PartiQLParser.TIME -> {
+                // TODO: Remove this check after migrate time to the new data model
+                if (precision != null && (precision < 0 || precision > MAX_PRECISION_FOR_TIME)) {
+                    throw ctx.precision.err("Unsupported precision", ErrorCode.PARSE_INVALID_PRECISION_FOR_TIME)
+                }
+                if (hasTimeZone) timeWithTimeZoneType(precision) else timeType(precision)
+            }
             PartiQLParser.TIMESTAMP -> if (hasTimeZone) timestampWithTimeZoneType(precision) else timestampType(
                 precision
             )

@@ -12,15 +12,11 @@ import org.partiql.lang.util.ArgumentsProviderBase
  * In [TypedOpBehavior.HONOR_PARAMETERS] mode, `IS CHAR(n)` or `IS VARCHAR(n)` inspect the length of the
  * left-hand value according to different rules.  The expected results are stored in [expectedIsCharHonorParamsSql]
  * and [expectedIsVarcharHonorParamsSql].
- *
- * When unspecified, the values of [expectedIsCharHonorParamsSql] and [expectedIsVarcharHonorParamsSql] default to
- * [expectedLegacyResult].
  */
 private fun isStringTypeTestCase(
     sql: String,
-    expectedLegacyResult: String,
-    expectedIsCharHonorParamsSql: String = expectedLegacyResult,
-    expectedIsVarcharHonorParamsSql: String = expectedLegacyResult
+    expectedIsCharHonorParamsSql: String,
+    expectedIsVarcharHonorParamsSql: String
 ) =
     listOf(
         EvaluatorTestCase(
@@ -53,14 +49,12 @@ private fun isStringTypeTestCase(
 private fun isUnicodeStringTestCase(
     strings: List<String>,
     sqlTemplate: String,
-    expectedLegacyResult: String,
-    expectedIsCharHonorParamsSql: String = expectedLegacyResult,
-    expectedIsVarcharHonorParamsSql: String = expectedLegacyResult
+    expectedIsCharHonorParamsSql: String,
+    expectedIsVarcharHonorParamsSql: String
 ) =
     strings.map {
         isStringTypeTestCase(
             sql = sqlTemplate.replace("<STRING>", it),
-            expectedLegacyResult = expectedLegacyResult,
             expectedIsCharHonorParamsSql = expectedIsCharHonorParamsSql,
             expectedIsVarcharHonorParamsSql = expectedIsVarcharHonorParamsSql
         )
@@ -72,8 +66,7 @@ private fun isUnicodeStringTestCase(
  */
 private fun isDecimalTypeTestCase(
     sql: String,
-    expectedLegacyResult: String,
-    expectedIsDecimalHonorParamsResult: String = expectedLegacyResult
+    expectedIsDecimalHonorParamsResult: String
 ) =
     listOf(
         EvaluatorTestCase(
@@ -93,8 +86,18 @@ private fun isDecimalTypeTestCase(
  */
 private fun isIntDecimalTypeTestCase(
     sql: String,
-    expectedLegacyResult: String,
-    expectedHonorParamsResult: String = expectedLegacyResult
+    expectedHonorParamsResult: String
+) = listOf(
+    EvaluatorTestCase(
+        sql,
+        expectedHonorParamsResult,
+        compileOptionsBuilderBlock = CompOptions.STANDARD.optionsBlock
+    )
+)
+
+private fun isTimestampTypeTestCase(
+    sql: String,
+    expectedHonorParamsResult: String
 ) = listOf(
     EvaluatorTestCase(
         sql,
@@ -171,35 +174,29 @@ class EvaluatingCompilerIsTests : EvaluatorTestBase() {
                 listOfNotNull(
                     isIntDecimalTypeTestCase(
                         "1 IS $typeName",
-                        expectedLegacyResult = "TRUE",
                         expectedHonorParamsResult = "TRUE"
                     ),
                     isIntDecimalTypeTestCase(
                         "-1 IS $typeName",
-                        expectedLegacyResult = "TRUE",
                         expectedHonorParamsResult = "TRUE"
                     ),
 
                     isIntDecimalTypeTestCase(
                         "$minValue IS $typeName",
-                        expectedLegacyResult = "TRUE",
                         expectedHonorParamsResult = "TRUE"
                     ),
                     isIntDecimalTypeTestCase(
                         "${minValue - 1} IS $typeName",
-                        expectedLegacyResult = "TRUE",
                         expectedHonorParamsResult = "FALSE"
                     ).takeIf { includeOufRangeTests },
 
                     isIntDecimalTypeTestCase(
                         "$maxValue IS $typeName",
-                        expectedLegacyResult = "TRUE",
                         expectedHonorParamsResult = "TRUE"
                     ),
 
                     isIntDecimalTypeTestCase(
                         "${maxValue + 1} IS $typeName",
-                        expectedLegacyResult = "TRUE",
                         expectedHonorParamsResult = "FALSE"
                     ).takeIf { includeOufRangeTests }
                 ).flatten()
@@ -219,23 +216,28 @@ class EvaluatingCompilerIsTests : EvaluatorTestBase() {
         override fun getParameters(): List<Any> = listOf(
             isStringTypeTestCase(
                 sql = "1 IS {TYPE}(1)",
-                expectedLegacyResult = "FALSE"
+                expectedIsCharHonorParamsSql = "false",
+                expectedIsVarcharHonorParamsSql = "false"
             ),
             isStringTypeTestCase(
                 sql = "1.0 IS {TYPE}(1)",
-                expectedLegacyResult = "FALSE"
+                expectedIsCharHonorParamsSql = "false",
+                expectedIsVarcharHonorParamsSql = "false"
             ),
             isStringTypeTestCase(
                 sql = "[] IS {TYPE}(1)",
-                expectedLegacyResult = "FALSE"
+                expectedIsCharHonorParamsSql = "false",
+                expectedIsVarcharHonorParamsSql = "false"
             ),
             isStringTypeTestCase(
                 sql = "{} IS {TYPE}(1)",
-                expectedLegacyResult = "FALSE"
+                expectedIsCharHonorParamsSql = "false",
+                expectedIsVarcharHonorParamsSql = "false"
             ),
             isStringTypeTestCase(
                 sql = "<<>> IS {TYPE}(1)",
-                expectedLegacyResult = "FALSE"
+                expectedIsCharHonorParamsSql = "false",
+                expectedIsVarcharHonorParamsSql = "false"
             )
         ).flatten()
     }
@@ -249,13 +251,11 @@ class EvaluatingCompilerIsTests : EvaluatorTestBase() {
         override fun getParameters(): List<Any> = listOf(
             isStringTypeTestCase(
                 sql = "'' IS {TYPE}(1)",
-                expectedLegacyResult = "TRUE",
                 expectedIsCharHonorParamsSql = "FALSE",
                 expectedIsVarcharHonorParamsSql = "TRUE"
             ),
             isStringTypeTestCase(
                 sql = "'' IS {TYPE}(100)",
-                expectedLegacyResult = "TRUE",
                 expectedIsCharHonorParamsSql = "FALSE",
                 expectedIsVarcharHonorParamsSql = "TRUE"
             )
@@ -283,66 +283,60 @@ class EvaluatingCompilerIsTests : EvaluatorTestBase() {
                 isUnicodeStringTestCase(
                     strings = listOf("a", "💩", "😁"),
                     sqlTemplate = "'<STRING>' IS {TYPE}(1)",
-                    expectedLegacyResult = "TRUE"
+                    expectedIsCharHonorParamsSql = "TRUE",
+                    expectedIsVarcharHonorParamsSql = "TRUE"
                 ),
                 isUnicodeStringTestCase(
                     strings = fourCharacterStrings,
                     sqlTemplate = "'<STRING>' IS {TYPE}(2)",
-                    expectedLegacyResult = "TRUE",
                     expectedIsCharHonorParamsSql = "FALSE",
                     expectedIsVarcharHonorParamsSql = "FALSE"
                 ),
                 isUnicodeStringTestCase(
                     strings = fourCharacterStrings,
                     sqlTemplate = "'<STRING>' IS {TYPE}(3)",
-                    expectedLegacyResult = "TRUE",
                     expectedIsCharHonorParamsSql = "FALSE",
                     expectedIsVarcharHonorParamsSql = "FALSE"
                 ),
                 isUnicodeStringTestCase(
                     strings = fourCharacterStrings,
                     sqlTemplate = "'<STRING>' IS {TYPE}(4)",
-                    expectedLegacyResult = "TRUE",
                     expectedIsCharHonorParamsSql = "TRUE",
                     expectedIsVarcharHonorParamsSql = "TRUE"
                 ),
                 isUnicodeStringTestCase(
                     strings = fourCharacterStrings,
                     sqlTemplate = "'<STRING>' IS {TYPE}(5)",
-                    expectedLegacyResult = "TRUE",
                     expectedIsCharHonorParamsSql = "FALSE",
                     expectedIsVarcharHonorParamsSql = "TRUE"
                 ),
                 isUnicodeStringTestCase(
                     strings = listOf("a", "💩"),
                     sqlTemplate = "'<STRING>' IS {TYPE}(1)",
-                    expectedLegacyResult = "TRUE"
+                    expectedIsCharHonorParamsSql = "TRUE",
+                    expectedIsVarcharHonorParamsSql = "TRUE"
                 ),
                 isUnicodeStringTestCase(
                     strings = fourCharacterStrings,
                     sqlTemplate = "'<STRING>' IS {TYPE}(2)",
-                    expectedLegacyResult = "TRUE",
                     expectedIsCharHonorParamsSql = "FALSE",
                     expectedIsVarcharHonorParamsSql = "FALSE"
                 ),
                 isUnicodeStringTestCase(
                     strings = fourCharacterStrings,
                     sqlTemplate = "'<STRING>' IS {TYPE}(3)",
-                    expectedLegacyResult = "TRUE",
                     expectedIsCharHonorParamsSql = "FALSE",
                     expectedIsVarcharHonorParamsSql = "FALSE"
                 ),
                 isUnicodeStringTestCase(
                     strings = fourCharacterStrings,
                     sqlTemplate = "'<STRING>' IS {TYPE}(4)",
-                    expectedLegacyResult = "TRUE",
                     expectedIsCharHonorParamsSql = "TRUE",
                     expectedIsVarcharHonorParamsSql = "TRUE"
                 ),
                 isUnicodeStringTestCase(
                     strings = fourCharacterStrings,
                     sqlTemplate = "'<STRING>' IS {TYPE}(5)",
-                    expectedLegacyResult = "TRUE",
                     expectedIsCharHonorParamsSql = "FALSE",
                     expectedIsVarcharHonorParamsSql = "TRUE"
                 )
@@ -359,131 +353,276 @@ class EvaluatingCompilerIsTests : EvaluatorTestBase() {
         override fun getParameters(): List<Any> = listOf(
             isDecimalTypeTestCase(
                 sql = "1 IS {TYPE}",
-                expectedLegacyResult = "FALSE"
+                expectedIsDecimalHonorParamsResult = "false"
             ),
             isDecimalTypeTestCase(
                 sql = "`1e0` IS {TYPE}",
-                expectedLegacyResult = "FALSE"
-            ), // Note:  Ion literal is a FLOAT )
+                expectedIsDecimalHonorParamsResult = "false"
+            ), // Note:  Ion literal is a FLOAT
             isDecimalTypeTestCase(
                 sql = "'foo' IS {TYPE}",
-                expectedLegacyResult = "FALSE"
+                expectedIsDecimalHonorParamsResult = "false"
             ),
             isDecimalTypeTestCase(
                 sql = "`foo` IS {TYPE}",
-                expectedLegacyResult = "FALSE"
+                expectedIsDecimalHonorParamsResult = "false"
             ),
-            isDecimalTypeTestCase("{} IS {TYPE}", "FALSE"),
+            isDecimalTypeTestCase(
+                sql = "{} IS {TYPE}",
+                expectedIsDecimalHonorParamsResult = "false"
+            ),
             isDecimalTypeTestCase(
                 sql = "[] IS {TYPE}",
-                expectedLegacyResult = "FALSE"
+                expectedIsDecimalHonorParamsResult = "false"
             ),
             isDecimalTypeTestCase(
                 sql = "<<>> IS {TYPE}",
-                expectedLegacyResult = "FALSE"
+                expectedIsDecimalHonorParamsResult = "false"
             ),
             isDecimalTypeTestCase(
                 sql = "true IS {TYPE}",
-                expectedLegacyResult = "FALSE"
+                expectedIsDecimalHonorParamsResult = "false"
             ),
             isDecimalTypeTestCase(
                 sql = "false IS {TYPE}",
-                expectedLegacyResult = "FALSE"
+                expectedIsDecimalHonorParamsResult = "false"
             ),
 
             // any scale and precision
             isDecimalTypeTestCase(
                 sql = "1.0 IS {TYPE}",
-                expectedLegacyResult = "TRUE"
+                expectedIsDecimalHonorParamsResult = "TRUE"
             ),
             isDecimalTypeTestCase(
                 sql = "1. IS {TYPE}",
-                expectedLegacyResult = "TRUE"
+                expectedIsDecimalHonorParamsResult = "TRUE"
             ),
             isDecimalTypeTestCase(
                 sql = ".1 IS {TYPE}",
-                expectedLegacyResult = "TRUE"
+                expectedIsDecimalHonorParamsResult = "TRUE"
             ),
             isDecimalTypeTestCase(
                 sql = "1234567890.0987654321 IS {TYPE}",
-                expectedLegacyResult = "TRUE"
+                expectedIsDecimalHonorParamsResult = "TRUE"
             ),
 
             // equal scale and precision
             isDecimalTypeTestCase(
                 sql = "123.456 IS {TYPE}(6, 3)",
-                expectedLegacyResult = "TRUE"
+                expectedIsDecimalHonorParamsResult = "TRUE"
             ),
 
             // greater precision and scale
             isDecimalTypeTestCase(
                 sql = "123.456 IS DECIMAL(7, 4)",
-                expectedLegacyResult = "TRUE",
                 expectedIsDecimalHonorParamsResult = "TRUE"
             ),
 
             // Equal Precision and scale
             isDecimalTypeTestCase(
                 sql = "0.001 is DECIMAL(3,3)",
-                expectedLegacyResult = "TRUE",
                 expectedIsDecimalHonorParamsResult = "TRUE"
             ),
 
             // Equal Precision and scale
             isDecimalTypeTestCase(
                 sql = "1.000 is DECIMAL(4,3)",
-                expectedLegacyResult = "TRUE",
                 expectedIsDecimalHonorParamsResult = "TRUE"
             ),
 
             // less precision and scale
             isDecimalTypeTestCase(
                 sql = "123.456 IS DECIMAL(2, 2)",
-                expectedLegacyResult = "TRUE",
                 expectedIsDecimalHonorParamsResult = "false"
             ),
 
             // less precision but equal scale
             isDecimalTypeTestCase(
                 sql = "123.456 IS {TYPE}(5, 3)",
-                expectedLegacyResult = "TRUE",
                 expectedIsDecimalHonorParamsResult = "FALSE"
             ),
 
             // greater precision but equal scale
             isDecimalTypeTestCase(
                 sql = "123.456 IS {TYPE}(7, 3)",
-                expectedLegacyResult = "TRUE"
+                expectedIsDecimalHonorParamsResult = "TRUE"
             ),
 
             // equal precision but less scale
             isDecimalTypeTestCase(
                 sql = "123.456 IS {TYPE}(6, 2)",
-                expectedLegacyResult = "TRUE",
                 expectedIsDecimalHonorParamsResult = "FALSE"
             ),
 
             // equal precision but greater scale
             isDecimalTypeTestCase(
                 sql = "123.456 IS {TYPE}(6, 4)",
-                expectedLegacyResult = "TRUE",
                 expectedIsDecimalHonorParamsResult = "FALSE"
             ),
 
-            // Leading non-significant integral coefficient should not effect the result.
+            // Leading non-significant integral coefficient should not affect the result.
             isDecimalTypeTestCase(
                 sql = "0123.456 IS {TYPE}(6, 3)",
-                expectedLegacyResult = "TRUE",
                 expectedIsDecimalHonorParamsResult = "TRUE"
             ),
 
             // All zeros.
             isDecimalTypeTestCase(
                 sql = "0.00 IS {TYPE}(4, 3)",
-                expectedLegacyResult = "TRUE",
                 expectedIsDecimalHonorParamsResult = "TRUE"
             )
 
+        ).flatten()
+    }
+
+    @ParameterizedTest
+    @ArgumentsSource(TimestampIsOperatorTestCases::class)
+    fun isTimestampTests(tc: EvaluatorTestCase) =
+        runEvaluatorTestCase(tc, EvaluationSession.standard())
+
+    class TimestampIsOperatorTestCases : ArgumentsProviderBase() {
+        override fun getParameters() = listOf(
+            // Without time zone
+            // No precision - SQL style
+            isTimestampTypeTestCase(
+                "TIMESTAMP '2023-06-01 00:00:00' is TIMESTAMP",
+                "true"
+            ),
+            isTimestampTypeTestCase(
+                "TIMESTAMP '2023-06-01 00:00:00' is TIMESTAMP WITH TIME ZONE",
+                "false"
+            ),
+            // No precision - RFC 3339
+            isTimestampTypeTestCase(
+                "TIMESTAMP '2023-06-01T00:00:00' is TIMESTAMP",
+                "true"
+            ),
+            isTimestampTypeTestCase(
+                "TIMESTAMP '2023-06-01T00:00:00' is TIMESTAMP WITH TIME ZONE",
+                "false"
+            ),
+            // Precision
+            isTimestampTypeTestCase(
+                "TIMESTAMP '2023-06-01 00:00:00.00000' is TIMESTAMP(5)",
+                "true"
+            ),
+            isTimestampTypeTestCase(
+                "TIMESTAMP '2023-06-01 00:00:00.00000' is TIMESTAMP(5) WITH TIME ZONE",
+                "false"
+            ),
+            isTimestampTypeTestCase(
+                "TIMESTAMP '2023-06-01 00:00:00.00000' is TIMESTAMP(4)",
+                "false"
+            ),
+            isTimestampTypeTestCase(
+                "TIMESTAMP '2023-06-01 00:00:00.00000' is TIMESTAMP(4) WITH TIME ZONE",
+                "false"
+            ),
+            isTimestampTypeTestCase(
+                "TIMESTAMP '2023-06-01 00:00:00.00000' is TIMESTAMP(10)",
+                "true"
+            ),
+            isTimestampTypeTestCase(
+                "TIMESTAMP '2023-06-01 00:00:00.00000' is TIMESTAMP(10) WITH TIME ZONE",
+                "false"
+            ),
+            // With known time zone
+            // No precision - SQL style
+            isTimestampTypeTestCase(
+                "TIMESTAMP '2023-06-01 00:00:00+00:00' is TIMESTAMP",
+                "false"
+            ),
+            isTimestampTypeTestCase(
+                "TIMESTAMP '2023-06-01 00:00:00+00:00' is TIMESTAMP WITH TIME ZONE",
+                "true"
+            ),
+            // No precision - RFC 3339
+            isTimestampTypeTestCase(
+                "TIMESTAMP '2023-06-01T00:00:00+00:00' is TIMESTAMP",
+                "false"
+            ),
+            isTimestampTypeTestCase(
+                "TIMESTAMP '2023-06-01T00:00:00+00:00' is TIMESTAMP WITH TIME ZONE",
+                "true"
+            ),
+            // Precision
+            isTimestampTypeTestCase(
+                "TIMESTAMP '2023-06-01 00:00:00.00000+00:00' is TIMESTAMP(5)",
+                "false"
+            ),
+            isTimestampTypeTestCase(
+                "TIMESTAMP '2023-06-01 00:00:00.00000+00:00' is TIMESTAMP(5) WITH TIME ZONE",
+                "true"
+            ),
+            isTimestampTypeTestCase(
+                "TIMESTAMP '2023-06-01 00:00:00.00000+00:00' is TIMESTAMP(4)",
+                "false"
+            ),
+            isTimestampTypeTestCase(
+                "TIMESTAMP '2023-06-01 00:00:00.00000+00:00' is TIMESTAMP(4) WITH TIME ZONE",
+                "false"
+            ),
+            isTimestampTypeTestCase(
+                "TIMESTAMP '2023-06-01 00:00:00.00000+00:00' is TIMESTAMP(10)",
+                "false"
+            ),
+            isTimestampTypeTestCase(
+                "TIMESTAMP '2023-06-01 00:00:00.00000+00:00' is TIMESTAMP(10) WITH TIME ZONE",
+                "true"
+            ),
+            // RFC/ISO special symbol T/Z
+            isTimestampTypeTestCase(
+                "TIMESTAMP '2023-06-01T00:00:00.00000Z' is TIMESTAMP(10)",
+                "false"
+            ),
+            isTimestampTypeTestCase(
+                "TIMESTAMP '2023-06-01T00:00:00.00000Z' is TIMESTAMP(10) WITH TIME ZONE",
+                "true"
+            ),
+            // With unknown time zone
+            // No precision - SQL style
+            isTimestampTypeTestCase(
+                "TIMESTAMP '2023-06-01 00:00:00-00:00' is TIMESTAMP",
+                "false"
+            ),
+            isTimestampTypeTestCase(
+                "TIMESTAMP '2023-06-01 00:00:00-00:00' is TIMESTAMP WITH TIME ZONE",
+                "true"
+            ),
+            // No precision - RFC 3339
+            isTimestampTypeTestCase(
+                "TIMESTAMP '2023-06-01T00:00:00-00:00' is TIMESTAMP",
+                "false"
+            ),
+            isTimestampTypeTestCase(
+                "TIMESTAMP '2023-06-01T00:00:00-00:00' is TIMESTAMP WITH TIME ZONE",
+                "true"
+            ),
+            // Precision
+            isTimestampTypeTestCase(
+                "TIMESTAMP '2023-06-01 00:00:00.00000-00:00' is TIMESTAMP(5)",
+                "false"
+            ),
+            isTimestampTypeTestCase(
+                "TIMESTAMP '2023-06-01 00:00:00.00000-00:00' is TIMESTAMP(5) WITH TIME ZONE",
+                "true"
+            ),
+            isTimestampTypeTestCase(
+                "TIMESTAMP '2023-06-01 00:00:00.00000-00:00' is TIMESTAMP(4)",
+                "false"
+            ),
+            isTimestampTypeTestCase(
+                "TIMESTAMP '2023-06-01 00:00:00.00000-00:00' is TIMESTAMP(4) WITH TIME ZONE",
+                "false"
+            ),
+            isTimestampTypeTestCase(
+                "TIMESTAMP '2023-06-01 00:00:00.00000-00:00' is TIMESTAMP(10)",
+                "false"
+            ),
+            isTimestampTypeTestCase(
+                "TIMESTAMP '2023-06-01 00:00:00.00000-00:00' is TIMESTAMP(10) WITH TIME ZONE",
+                "true"
+            ),
         ).flatten()
     }
 }

@@ -360,11 +360,31 @@ public data class TimeType(
     }
 }
 
-public data class TimestampType(override val metas: Map<String, Any> = mapOf()) : SingleType() {
+public data class TimestampType(
+    val precision: Int? = null,
+    val withTimeZone: Boolean = false,
+    override val metas: Map<String, Any> = mapOf()
+) : SingleType() {
     override val allTypes: List<StaticType>
         get() = listOf(this)
 
-    override fun toString(): String = "timestamp"
+    /**
+     * Timestamp is the name for timestamp without time zone type,
+     * TImestamp with time zone is the name for timestamp with time zone type.
+     * TODO: SQL spec says timestamp is a super type for both timestamp with time zone,
+     *  we should consider support Timestamp as a super type and use timestamp without time zone.
+     *  i.e :
+     *  1. TIMESTAMP '2023-06-01 00:00:00' is TIMESTAMP -- true
+     *  2. TIMESTAMP '2023-06-01 00:00:00' is TIMESTAMP WITHOUT TIME ZONE -- true
+     *  3. TIMESTAMP '2023-06-01 00:00:00' is TIMESTAMP WITH TIME ZONE -- false
+     *  4. TIMESTAMP '2023-06-01 00:00:00+00:00' is TIMESTAMP -- true
+     *  5. TIMESTAMP '2023-06-01 00:00:00+00:00' is TIMESTAMP WITHOUT TIME ZONE -- false
+     *  6. TIMESTAMP '2023-06-01 00:00:00+00:00.' is TIMESTAMP WITH TIME ZONE -- true
+     */
+    override fun toString(): String = when (withTimeZone) {
+        true -> "timestamp with time zone"
+        false -> "timestamp"
+    }
 }
 
 public data class SymbolType(override val metas: Map<String, Any> = mapOf()) : SingleType() {
