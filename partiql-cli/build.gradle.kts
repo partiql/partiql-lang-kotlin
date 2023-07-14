@@ -62,7 +62,7 @@ tasks.register<GradleBuild>("install") {
 }
 
 val testingPluginDirectory = "$buildDir/tmp/plugins"
-val mockDBPluginDirectory = "$$testingPluginDirectory/mockdb"
+val mockDBPluginDirectory = "$testingPluginDirectory/mockdb"
 
 tasks.register<Copy>("generateMockDBJAR") {
     dependsOn(":plugins:partiql-mockdb:assemble")
