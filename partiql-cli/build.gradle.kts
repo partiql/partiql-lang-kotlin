@@ -68,7 +68,7 @@ tasks.register<Copy>("generateMockDBJAR") {
     dependsOn(":plugins:partiql-mockdb:assemble")
     from("${rootProject.projectDir}/plugins/partiql-mockdb/build/libs")
     into(mockDBPluginDirectory)
-    include("partiql-mockdb-0.12.1-SNAPSHOT.jar")
+    include("partiql-mockdb-*.jar")
 }
 
 tasks.test.configure {

@@ -76,7 +76,7 @@ internal class PipelineOptions {
         description = ["Directory containing plugins"],
         paramLabel = "DIR"
     )
-    val pluginPath = Paths.get(System.getProperty("user.home")).resolve(".partiql").resolve("plugins")
+    var pluginPath = Paths.get(System.getProperty("user.home")).resolve(".partiql").resolve("plugins")
 
     internal val pipeline: AbstractPipeline
         get() {
