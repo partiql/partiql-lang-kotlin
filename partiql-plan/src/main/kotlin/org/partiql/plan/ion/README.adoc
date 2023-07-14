@@ -260,9 +260,9 @@ Additionally, you can define open-schema and closed-schema collections of type:
 )
 ----
 
-== Plan Header
+// == Plan Header
 
-== Plan Part
+// == Plan Part
 
 == Statements
 
@@ -276,31 +276,30 @@ A plan contains a single _statement_. A statement may be a query, or other datab
 | <<query-statement-node,query>>
 | Query such as a value expression or SELECT-FROM-WHERE (query) expression
 
-| insert | DML INSERT
-
-| insert_value | DML INSERT VALUE
-
-| upsert | DML UPSERT
-
-| replace | DML REPLACE
-
-| update | DML UPDATE
-
-| remove | DML REMOVE
-
-| delete | DML DELETE
-
-| create_table | DDL CREATE TABLE
-
-| create_index | DDL CREATE INDEX
+// | insert | DML INSERT
+//
+// | insert_value | DML INSERT VALUE
+//
+// | upsert | DML UPSERT
+//
+// | replace | DML REPLACE
+//
+// | update | DML UPDATE
+//
+// | remove | DML REMOVE
+//
+// | delete | DML DELETE
+//
+// | create_table | DDL CREATE TABLE
+//
+// | create_index | DDL CREATE INDEX
 
 | <<create-view-statement-node,create_view>>
 | DDL `CREATE VIEW` statement
 
-| drop_table | DDL DROP TABLE
-
-| drop_index | DLL DROP INDEX
-
+// | drop_table | DDL DROP TABLE
+//
+// | drop_index | DLL DROP INDEX
 
 2+a|
 
@@ -372,7 +371,7 @@ This statement represents `CREATE VIEW` (SQL-Statement 84) in a PartiQL Plan. It
 .Form
 [source,ion]
 ----
-(create_view name::string (columns string*) | query::rex)
+(create_view name::<string> (columns <symbol>*) query::<rex>)
 ----
 
 .Parameters
@@ -441,22 +440,25 @@ Within statements are several expression nodes. The following section defines al
 |<<call-rex-node,call>>
 | Function call
 
-|<<switch-rex-node,switch>>
-| Switch expression, ex: SQL `CASE`
-
-|<<tuple-rex-node,tuple>>
-| Tuple constructor expressions
-
-|<<bag-rex-node,bag>>
-| Bag constructor expression
-
-|<<array-rex-node,array>>
-| Array constructor expression
-
+// |<<switch-rex-node,switch>>
+// | Switch expression, ex: SQL `CASE`
+//
+// |<<tuple-rex-node,tuple>>
+// | Tuple constructor expressions
+//
+|<<struct-rex-node,struct>>
+| Struct constructor expression
+//
+// |<<array-rex-node,array>>
+// | Array constructor expression
+//
 |<<pivot-rex-node,pivot>>
-| Pivot expression to produce a tuple from a binding collection.
+| Pivot expression to produce a single tuple from a binding collection
 
-|<<query-rex-node,select>>
+|<<coll-to-scalar-node,coll_to_scalar>>
+| Scalar subquery coercion node
+
+|<<select-rex-node,select>>
 | SELECT-FROM-WHERE expression
 
 |===
@@ -476,7 +478,7 @@ Literal expressions are _PartiQL Values_ represented with Ion literals. We neces
 .Form
 [source,ion]
 ----
-(lit type::type | val::ion)
+rex.lit ::= (lit <type> <ion>)
 ----
 
 .Parameters
@@ -493,26 +495,28 @@ Literal expressions are _PartiQL Values_ represented with Ion literals. We neces
 .Examples
 [source,ion]
 ----
-(lit ($ type bool::0) false)
+// annotations are simply for readability
 
-(lit (decimal 3 2) 1.50)
+(lit ($type bool::0) false)
 
-(lit ($ type bag::17) [ "x", "y", "z" ])
+(lit ($type decimal::3) 1.50)
 
-(lit ($ type array::18) [ 0, 1, 2 ])
+(lit ($type bag::17) [ "x", "y", "z" ])
 
-(lit ($ type struct::19) {
+(lit ($type array::18) [ 0, 1, 2 ])
+
+(lit ($type struct::19) {
   "x": 0,
   "y": 1,
   "z": 2,
 })
 
-(lit (char 3) "abc")
+(lit ($type string::9) "abc")
 
-(lit missing null)
+(lit ($type missing::1) null)
+
+(lit ($type null::2) null)
 ----
-
-NOTE: I find the `<int>` type references difficult to describe by hand, but I suppose it's for ease of machine readability.
 
 ====
 
@@ -531,7 +535,7 @@ Global references are expressions which reference a global binding. That is, the
 .Form
 [source,ion]
 ----
-(global name::string type::type (case symbol))
+rex.global ::= (global <type> <int>)
 ----
 
 .Parameters
@@ -539,12 +543,9 @@ Global references are expressions which reference a global binding. That is, the
 |===
 | Type | Description
 
-| name::string | Global binding name
+| <type> | PartiQL Type
 
-| type::type | PartiQL Type
-
-| (case symbol) |
-Optional binding name case. One of `SENSITIVE` or `INSENSITIVE`
+| <int> | Global resolved reference ordinal
 
 Default `INSENSITIVE`
 
@@ -553,9 +554,7 @@ Default `INSENSITIVE`
 .Examples
 [source,ion]
 ----
-(global "MY_TABLE" (bag tuple))
-
-(global "My_Table" (case SENSITIVE))
+// TODO
 ----
 
 ====
@@ -575,7 +574,7 @@ Recall the global and variable binding environments. Variable references are exp
 .Form
 [source,ion]
 ----
-(var ordinal::int type::type)
+rex.var ::= (var <type> <int>)
 ----
 
 .Parameters
@@ -583,14 +582,10 @@ Recall the global and variable binding environments. Variable references are exp
 |===
 | Type | Description
 
-| ordinal::int
+| type | The variable's PartiQL Type.
+
+| int
 a| Ordinal in the current variable binding environment
-
-| type::type | The variable's PartiQL Type.
-
-2+a|
-
-NOTE: Do we want ordinal to be `id` (or something else `name` or `binding`) rather than `ordinal` as to not imply orderedness of the variable binding environment?
 
 |===
 
@@ -603,9 +598,9 @@ NOTE: Do we want ordinal to be `id` (or something else `name` or `binding`) rath
 .Example Nodes
 [source,ion]
 ----
-(var 0 string)        // 'hello'
+(var ($type string::9) 0)   // 'hello'
 
-(var 1 (bag float32)) // << 1.0, 1.1 >>
+(var ($type bag::11) 1)     // << 1.0, 1.1 >>
 ----
 
 ====
@@ -757,9 +752,8 @@ NOTE: I have left this out, but we should consider a bit flag for whether or not
 
 ====
 
-
-[#tuple-rex-node]
-=== `tuple`
+[#struct-rex-node]
+=== `struct`
 
 ====
 
@@ -768,12 +762,13 @@ _variant of rex_
 
 '''
 
-A tuple constructor differs from a tuple literal because expressions may be used to _construct_ the tuple value. Tuple key expressions must evaluate to a value with character string type.
+A struct constructor differs from a struct literal because expressions may be used to _construct_ the tuple value.
+Struct key expressions must evaluate to a value with a character string type.
 
 .Form
 [source,ion]
 ----
-(tuple | (key::rex val::rex)*)
+rex.tuple ::= (tuple <type> (<rex> <rex>)*)
 ----
 
 .Parameters
@@ -781,7 +776,7 @@ A tuple constructor differs from a tuple literal because expressions may be used
 |===
 | Type | Description
 
-| (key::rex val::rex)* | Zero or more key-value expression pairs as the tail
+| (<rex> <rex>)* | Zero or more key-value expression pairs
 
 |===
 
@@ -795,112 +790,107 @@ A tuple constructor differs from a tuple literal because expressions may be used
 
 [source,ion]
 ----
-(tuple ("a" (lit int 1)))
-
-(tuple
-  ("b" (lit int 2))
-  ("c" (var any "x"))
-)
+// TODO
 ----
 
 ====
-
-[#bag-rex-node]
-=== `bag`
-
-====
-
-[.text-center]
-_variant of rex_
-
-'''
-
-A Bag Constructor produces a bag value from a collection of expressions.
-
-.Form
-[source,ion]
-----
-(bag (type type) | rex*)
-----
-
-.Parameters
-[cols="1m,4",grid=rows,frame=all]
-|===
-| Type | Description
-
-| type | Optional bag element type if known
-
-| rex* | Zero or more expression elements
-
-|===
-
-.Examples
-[source,partiql]
-----
-<< { 'a': 1 }, { 'b': 2 } >>
-----
-
-[source,ion]
-----
-(bag
-  (tuple (
-    (lit string "a") (lit int 1))
-  )
-  (tuple (
-    (lit string "b") (lit int 2))
-  )
-)
-----
-
-====
-
-[#array-rex-node]
-=== `array`
-
-====
-
-[.text-center]
-_variant of rex_
-
-'''
-
-An Array Constructor produces an array value from a collection of expressions.
-
-.Form
-[source,ion]
-----
-(array (type type) | rex*)
-----
-
-.Parameters
-[cols="1m,4",grid=rows,frame=all]
-|===
-| Type | Description
-
-| type | Optional array element type if known
-
-| rex* | Zero or more expression elements
-
-|===
-
-.Examples
-[source,partiql]
-----
-[ 'a', 'b', 'c' ]
-----
-
-[source,ion]
-----
-(array
-  (lit string "a")
-  (lit string "b")
-  (lit string "c")
-)
-----
-
-====
-
-
+//
+// [#bag-rex-node]
+// === `bag`
+//
+// ====
+//
+// [.text-center]
+// _variant of rex_
+//
+// '''
+//
+// A Bag Constructor produces a bag value from a collection of expressions.
+//
+// .Form
+// [source,ion]
+// ----
+// (bag (type type) | rex*)
+// ----
+//
+// .Parameters
+// [cols="1m,4",grid=rows,frame=all]
+// |===
+// | Type | Description
+//
+// | type | Optional bag element type if known
+//
+// | rex* | Zero or more expression elements
+//
+// |===
+//
+// .Examples
+// [source,partiql]
+// ----
+// << { 'a': 1 }, { 'b': 2 } >>
+// ----
+//
+// [source,ion]
+// ----
+// (bag
+//   (tuple (
+//     (lit string "a") (lit int 1))
+//   )
+//   (tuple (
+//     (lit string "b") (lit int 2))
+//   )
+// )
+// ----
+//
+// ====
+//
+// [#array-rex-node]
+// === `array`
+//
+// ====
+//
+// [.text-center]
+// _variant of rex_
+//
+// '''
+//
+// An Array Constructor produces an array value from a collection of expressions.
+//
+// .Form
+// [source,ion]
+// ----
+// (array (type type) | rex*)
+// ----
+//
+// .Parameters
+// [cols="1m,4",grid=rows,frame=all]
+// |===
+// | Type | Description
+//
+// | type | Optional array element type if known
+//
+// | rex* | Zero or more expression elements
+//
+// |===
+//
+// .Examples
+// [source,partiql]
+// ----
+// [ 'a', 'b', 'c' ]
+// ----
+//
+// [source,ion]
+// ----
+// (array
+//   (lit string "a")
+//   (lit string "b")
+//   (lit string "c")
+// )
+// ----
+//
+// ====
+//
+//
 [#pivot-rex-node]
 === `pivot`
 
@@ -911,12 +901,12 @@ _variant of rex_
 
 '''
 
-The pivot node is an expression which produces a single tuple from a query. Each key-value pair in the output tuple is produced by evaluating the given key and value expressions for each binding tuple produced by the relational operator. For more details, see <<scalar_subquery_pivot,PIVOT Clause>>.
+The pivot expression produces a single tuple from a query. Each key-value pair in the output tuple is produced by evaluating the given key and value expressions from its relational operator.
 
 .Form
 [source,ion]
 ----
-(pivot key::rex val::rex | op::operator)
+rex.pivot ::= (pivot <type> key::<rex> val::<rex> <rel>)
 ----
 
 .Parameters
@@ -924,39 +914,63 @@ The pivot node is an expression which produces a single tuple from a query. Each
 |===
 | Type | Description
 
+| type | The pivot expressions output type
+
 | key::rex | Pivot key expression
 
 | val::rex | Pivot value expression
 
-| op::operator | Relational operator node which represents the SELECT-FROM-WHERE query.
+| rel | Relational operator node which represents the PIVOT-FROM-WHERE.
 
 |===
-
-Recall the example environment,
 
 .Example
 [source,partiql]
 ----
-PIVOT val at name FROM MY_TABLE
+PIVOT v AT k FROM ...
 
-{
-  'one': 1,
-  'two': 2,
-  'three': 3,
-  'four': 4
-}
-----
-
-[source,ion]
-----
-(pivot (var 0 string(30)) (var 1 int8)
-  (scan (global "MY_TABLE"))
+(pivot (var ($type i) k::0) (var ($type j) v::1)
+  (scan ...)
 )
 ----
 
 ====
 
-[#query-rex-node]
+[#coll-to-scalar-rex-node]
+=== `coll_to_scalar`
+
+====
+
+[.text-center]
+_variant of rex_
+
+'''
+
+The `coll_to_scalar` expression represents PartiQL's scalar subquery coercion function described here https://partiql.org/dql/subqueries.html.
+
+.Form
+[source,ion]
+----
+(coll_to_scalar <rex.select>)
+----
+
+.Parameters
+[cols="1m,2",grid=rows,frame=all]
+|===
+| Type | Description
+| rex.select | Query expression to coerce.
+
+|===
+
+.Examples
+[source,ion]
+----
+// todo
+----
+
+====
+
+[#select-rex-node]
 === `select`
 
 ====
@@ -966,88 +980,28 @@ _variant of rex_
 
 '''
 
-I have chosen the name `select` to represent a SELECT-FROM-WHERE expression (query expression) in the plan node. The symbol `query` already represents a query statement. Considering a `select` node takes a value constructor as well as projects from the relation domain (domain of binding tuples) to domain of PartiQL values, I considered naming this a `value` node. Which would somewhat align with `SELECT VALUE` .. as it's the general form for PartiQL's relation-to-value projection.
+The `select expression represents a SELECT-FROM-WHERE query expression. See https://partiql.org/dql/overview.html#_select_value for details.
+The constructor defines the value-relation projection.
 
 .Form
 [source,ion]
 ----
-(select constructor::expression | op::operator)
+(select <rex> <rel>)
 ----
 
 .Parameters
 [cols="1m,2",grid=rows,frame=all]
 |===
 | Type | Description
-
-| (constructor expression) | Optional constructor expression
-
-| operator | Relational operator node
+| rex | Constructor expression
+| rel | Relational operator node
 
 |===
 
-.Example Environment
-[source,partiql]
-----
--- ENVIRONEMNT
-
--- +-----[ MY_TABLE ]------+
--- | name       | val      |
--- |-----------------------|
--- | string(30) | int8     |
--- | NOT NULL   | NOT NULL |
--- +-----------------------+
-
-{
-  'MY_TABLE': <<
-    { 'name': 'one', 'val': 1 },
-    { 'name': 'two', 'val': 2 },
-    { 'name': 'three', 'val': 3 },
-    { 'name': 'four', 'val': 4 },
-  >>
-}
-
--- Example 1
-SELECT VALUE  { name: val } FROM "MY_TABLE" WHERE val > 2
-
--- << { 'three': 3 }, { 'four': 4 } >>
-
--- Example 2
-SELECT val as name FROM "MY_TABLE" WHERE val > 2
-
--- << { 'name': 3 }, { 'name': 4 } >>
-----
-
-.Example Query Nodes
+.Examples
 [source,ion]
 ----
-// Example 1
-(select
-  (constructor
-    (tuple
-      ((var 0 string(30)) (var 1 int8))
-    )
-  )
-  (filter
-    (call gt (var 1 int8) (lit int 2))
-    (scan (global "MY_TABLE"))
-  )
-)
-
-// Example 2
-(select
-  (constructor
-    (tuple
-      ((lit string "name") (var 0 int8))
-    )
-  )
-  (project
-    ((var 1 int8))
-    (filter
-      (call gt (var 1 int8) (lit int 2))
-      (scan (global "MY_TABLE"))
-    )
-  )
-)
+// todo
 ----
 
 ====
@@ -1064,51 +1018,62 @@ Rel nodes represent the relational expressions from the PartiQL Plan Specificati
 | <<scan-rel-node,scan>>
 | Produce a collection of bindings from a value expression
 
-| <<cross-rel-node,cross>>
-| Produce the cross product of two relation expressions
+| <<scan-indexed-rel-node,scan_indexed>>
+| Produce a collection of bindings from a value expression, with index
 
-| <<filter-rel-node,filter>>
-| Filters the input relation on a given predicate expression
+| <<unpivot-rel-node,unpivot>>
+| Produce a collection of bindings from key-value pairs of tuples
 
 | <<project-rel-node,project>>
 | Apply the projection expressions to the input binding tuples
 
-| <<sort-rel-node,sort>>
-| Sorts the given relation
-
-| <<aggregate-rel-node,aggregate>>
-| Applies the aggregate calls to the given relation
-
-| <<set-rel-nodes,union>>
-| Union of two relations
-
-| <<set-rel-nodes,intersect>>
-| Intersection of two relations
-
-| <<set-rel-nodes,except>>
-| Multiset difference
-
-| <<fetch-rel-nodes,limit>>
-| LIMIT
-
-| <<fetch-rel-nodes,offset>>
-| OFFSET
-
-| <<fetch-rel-nodes,fetch>>
-| LIMIT ... OFFSET
-
-| <<join-rel-node,join>>
-| Relation join
-
-| <<unpivot-rel-node,unpivot>>
-| PartiQL UNPIVOT Clause
-
-| <<user-defined-rel-node,op>>
-| User-defined relation operator
+// | <<cross-rel-node,cross>>
+// | Produce the cross product of two relation expressions
+//
+// | <<filter-rel-node,filter>>
+// | Filters the input relation on a given predicate expression
+//
+// | <<sort-rel-node,sort>>
+// | Sorts the given relation
+//
+// | <<aggregate-rel-node,aggregate>>
+// | Applies the aggregate calls to the given relation
+//
+// | <<set-rel-nodes,union>>
+// | Union of two relations
+//
+// | <<set-rel-nodes,intersect>>
+// | Intersection of two relations
+//
+// | <<set-rel-nodes,except>>
+// | Multiset difference
+//
+// | <<fetch-rel-nodes,limit>>
+// | LIMIT
+//
+// | <<fetch-rel-nodes,offset>>
+// | OFFSET
+//
+// | <<fetch-rel-nodes,fetch>>
+// | LIMIT ... OFFSET
+//
+// | <<join-rel-node,join>>
+// | Relation join
+//
+// | <<user-defined-rel-node,op>>
+// | User-defined relation operator
 
 |===
 
-[#value-scan-rel-node]
+Each `rel` node has a `schema` node as its first element. The `schema` node is an sexp of type references
+which describe each output tuple's schema.
+
+[source,ion]
+----
+schema ::= (<type>+)
+----
+
+[#scan-rel-node]
 === `scan`
 
 ====
@@ -1121,7 +1086,7 @@ _variant of rel_
 .Form
 [source,ion]
 ----
-(scan (index bool) | expression)
+rel.scan ::= (scan <schema> <rex>)
 ----
 
 .Parameters
@@ -1129,54 +1094,25 @@ _variant of rel_
 |===
 | Type | Description
 
-| (index bool) | If true, the `(var 0)` binding will be the collection index. This corresponds to the `AT` of a <<from-clause,PartiQL FROM Clause>>. I'm consider having the syntax `(index)` and `(index true)` being equivalent.
+| schema | Output schema of this operator.
 
-| expression | Expression may be any PartiQL expression. This enables
+| rex | Expression to scan.
 
 |===
 
-Somewhere I feel we need a mapping from values to binding tuples — ie a way to specify how named (string-value) pairs map to ordered values.
 
 .Examples
 [source,ion]
 ----
-(scan
-  (lit array [ "a", "b", "c" ])
-)
-// <<
-//   < 0: 'a' >,
-//   < 0: 'b' >,
-//   < 0: 'c' >
-// >>
-
-(scan (index true)
-  (lit array [ "a", "b", "c" ])
-)
-// <<
-//   < 0: 0, 1: 'a' >,
-//   < 0: 1, 1: 'b' >,
-//   < 0: 2, 1: 'c' >
-// >>
-
-// Somewhere we need to map named pairs to integers
-// For example, we subsitute "x"->0 "y"->1
-
-(scan ("x" "y") (lit bag [
-  { "x": 0, "y": "a" },
-  { "x": 1, "y": "b" },
-  { "x": 2, "y": "c" },
-]))
-// <<
-//   < 0: 0, 1: 'a' >,
-//   < 0: 1, 1: 'b' >,
-//   < 0: 2, 1: 'c' >
-// >>
+// TODO
 ----
 
 ====
+// END scan-rel-node
 
-[#filter-rel-node]
-=== `filter`
+// BEGIN scan-indexed-rel-node
+[#scan-indexed-rel-node]
+=== `scan_indexed`
 
 ====
 
@@ -1185,10 +1121,12 @@ _variant of rel_
 
 '''
 
+The `scan_indexed` node is much like the `scan` node, but its output tuples contain an additional index field.
+
 .Form
 [source,ion]
 ----
-(filter condition::expr | op::operator)
+rel.scan_indexed ::= (scan_indexed <schema> <rex>)
 ----
 
 .Parameters
@@ -1196,340 +1134,23 @@ _variant of rel_
 |===
 | Type | Description
 
-| condition::rex | Filter condition
+| schema | Output schema of this operator.
 
-| op::operator | Input relation operator
+| rex | Expression to scan.
 
 |===
+
 
 .Examples
 [source,ion]
 ----
-(filter (call gte (args (var 0) (var 1)))
-  (scan (lit bag [
-    { "x": 0, "y": 1 },
-    { "x": 1, "y": 1 },
-    { "x": 2, "y": 1 },
-  ]))
-)
-// <<
-//   < 0: 2, 1: 1 >,
-//   < 0: 2, 1: 1 >
-// >>
-----
-====
-
-[#cross-rel-node]
-=== `cross`
-
-====
-
-[.text-center]
-_variant of rel_
-
-'''
-
-The cross product operation combines every tuple from the left input with every tuple of the right input. See <<multi-item-from,multi-item from>>.
-
-.Form
-[source,ion]
-----
-(cross | lhs::operator rhs::operator)
-----
-
-.Parameters
-[cols="1m,4",grid=rows,frame=all]
-|===
-| Type | Description
-
-| lhs::operator | Left input relation operator
-| rhs::operator | Right input relation operator
-
-|===
-
-====
-
-[#project-rel-node]
-=== `project`
-
-====
-
-[.text-center]
-_variant of rel_
-
-'''
-
-.Form
-[source,ion]
-----
-(project (rex*) | op::operator)
-----
-
-.Parameters
-[cols="1m,4",grid=rows,frame=all]
-|===
-| Type | Description
-
-| (rex*) | Expression list of projections
-
-| op::operator | Input relation operator
-
-|===
-
-.Examples
-[source,ion]
-----
-(project ( (var 1) )
-  (scan (lit bag [
-    { "a": 10, "b": 20 },
-    { "a": 30, "b": 40 },
-  ]))
-)
-// <<
-//   < 0: 20 >,
-//   < 0: 40 >,
-// >>
+// TODO
 ----
 
 ====
+// END scan-indexed-rel-node
 
-[#sort-rel-node]
-=== `sort`
-
-====
-
-[.text-center]
-_variant of rel_
-
-'''
-
-.Form
-[source,ion]
-----
-(sort (sort_spec+) | op::operator)
-
-// sort_spec
-(expr::rex (dir symbol) (nulls symbol))
-----
-
-.Parameters
-[cols="1m,4",grid=rows,frame=all]
-|===
-| Type | Description
-
-| sort_spec | An s-expression containing an expression to sort on, optional sort direction, and optional null ordering.
-
-|===
-
-.Examples
-[source,ion]
-----
-(sort (
-   ((var 0) (dir ASC) (null DESC))
-  )
-  (scan (lit bag [
-    { "a": 10, "b": 20 },
-    { "a": 30, "b": 40 },
-  ]))
-)
-----
-
-====
-
-[#aggregate-rel-node]
-=== `aggregate`
-
-====
-
-[.text-center]
-_variant of rel_
-
-'''
-
-.Form
-[source,ion]
-----
-(aggregate calls::(agg*) groups::(rex*) | op::operator)
-
-(agg fn | (args rex*))
-
-(fn (symbol+) (type*) type) // same `fn` as a call
-----
-
-.Parameters
-[cols="1m,4",grid=rows,frame=all]
-|===
-| Type | Description
-
-| agg | An s-expression defining the aggregation function to invoke
-
-| groups::(rex*) | A list of aggregate grouping expressions
-
-| op::operator | Input relation expression to aggregate
-
-|===
-
-.Examples
-[source,ion]
-----
--- SELECT SUM(a) FROM table GROUP BY b
-
-(aggregate
-  (
-    (agg sum (args (var 0 int)))
-  )
-  (
-    (var 1 string)
-  )
-  (scan (lit bag [
-    { "a": 1, "b": "x" },
-    { "a": 2, "b": "x" },
-    { "a": 3, "b": "y" },
-    { "a": 4, "b": "y" },
-  ]))
-)
-----
-====
-
-[#set-rel-nodes]
-====
-[discrete.text-center]
-=== Set Operator Nodes
-
-[.text-center]
-_variants of operator_
-
-'''
-
-.Form
-[source,ion]
-----
-(union (all bool) | lhs::operator rhs::operator)
-
-(intersect (all bool) | lhs::operator rhs::operator)
-
-(except (all bool) | lhs::operator rhs::operator)
-----
-
-.Parameters
-[cols="1m,4",grid=rows,frame=all]
-|===
-| Type | Description
-
-| (all bool) | If specified, then use the multiset (bag) operator.
-
-|===
-
-Let _rel~L~_ and _rel~R~_ be two relation operator nodes.
-
-.Examples
-[source,ion,subs=normal]
-----
-(union rel~L~ rel~R~)           // UNION DISTINCT
-
-(intersect  rel~L~ rel~R~)      // INTERSECT DISTINCT
-
-(except rel~L~ rel~R~)          // EXCEPT DISTINCT
-
-(union (all) rel~L~ rel~R~)     // UNION ALL
-
-(intersect (all) rel~L~ rel~R~) // INTERSECT ALL
-
-(except (all) rel~L~ rel~R~)    // EXCEPT ALL
-----
-
-====
-
-[#fetch-rel-nodes]
-=== `fetch`
-
-====
-
-[.text-center]
-_variant of rel_
-
-'''
-
-.Form
-[source,ion]
-----
-(limit n:int | op::operator)
-
-(offset n:int | op::operator)
-
-(fetch (limit int) (offset int) | op:operator)
-----
-
-.Parameters
-[cols="1m,4",grid=rows,frame=all]
-|===
-| Type | Description
-
-|===
-
-Let _variant of rel_ be some relation operator node.
-
-.Examples
-[source,ion]
-----
-(limit 10 rel)
-
-(offset 1 rel) // skip first binding tuple
-
-(fetch (limit 10) (offset 1) rel) // equivalent to (limit 10 (offset 1 rel))
-----
-
-====
-
-[#join-rel-node]
-=== `join`
-
-====
-
-[.text-center]
-_variant of rel_
-
-'''
-
-.Form
-[source,ion]
-----
-(join type::symbol (on expression) | lhs::operator rhs::operator)
-----
-
-.Parameters
-[cols="1m,4",grid=rows,frame=all]
-|===
-| Type | Description
-
-| type::symbol | Join type, one of `INNER`, `LEFT`, `RIGHT`, `FULL`
-
-| (on expression) | Optional join condition expression
-
-| lhs::operator | Left side relation node
-
-| rhs::operator | Right side relation node
-
-|===
-
-Let _rel~L~_ and _rel~R~_ be two relation operator nodes.
-
-.Examples
-[source,ion,subs=normal]
-----
-(join INNER
-  rel~L~
-  rel~R~
-)
-
-(join INNER
-  (on (call eq (args (var 0 int8) (var 2 int8))))
-  rel~L~  // < 0: .., 1: .. >
-  rel~R~  // < 0: .., 1: .. >
-)
-----
-====
-
+// BEGIN unpivot-rel-node
 [#unpivot-rel-node]
 === `unpivot`
 
@@ -1543,7 +1164,7 @@ _variant of rel_
 .Form
 [source,ion]
 ----
-(unpivot (at expression) (by expression) | expression)
+(unpivot <schema> <rex>)
 ----
 
 .Parameters
@@ -1551,11 +1172,9 @@ _variant of rel_
 |===
 | Type | Description
 
-| (at expression) | Optional expression for UNPIVOT AT
+| schema | Output key-value types — (($type k) ($type v))
 
-| (by expression) | Optional expression for UNPIVOT BY
-
-| expression | Value expression to apply the unpivot operator to
+| rex | Collection to unpivot
 
 |===
 
@@ -1588,6 +1207,368 @@ FROM UNPIVOT { k~0~: v~0~ , ... , k~n~: v~n~ } AS v AT k
 // >>
 ----
 ====
+// END unpivot-rel-node
+
+[#project-rel-node]
+=== `project`
+
+====
+
+[.text-center]
+_variant of rel_
+
+'''
+
+The `project` node represents a relation-to-relation projection function.
+
+.Form
+[source,ion]
+----
+(project (<rex*>) <rel>)
+----
+
+.Parameters
+[cols="1m,4",grid=rows,frame=all]
+|===
+| Type | Description
+
+| (rex*) | Expression list of projections
+
+| op::operator | Input relation operator
+
+|===
+
+.Examples
+[source,ion]
+----
+// TODO example out-of-date
+
+(project ( (var 1) )
+  (scan (lit bag [
+    { "a": 10, "b": 20 },
+    { "a": 30, "b": 40 },
+  ]))
+)
+// <<
+//   < 0: 20 >,
+//   < 0: 40 >,
+// >>
+----
+
+====
+
+
+// [#filter-rel-node]
+// === `filter`
+//
+// ====
+//
+// [.text-center]
+// _variant of rel_
+//
+// '''
+//
+// .Form
+// [source,ion]
+// ----
+// (filter condition::expr | op::operator)
+// ----
+//
+// .Parameters
+// [cols="1m,4",grid=rows,frame=all]
+// |===
+// | Type | Description
+//
+// | condition::rex | Filter condition
+//
+// | op::operator | Input relation operator
+//
+// |===
+//
+// .Examples
+// [source,ion]
+// ----
+// (filter (call gte (args (var 0) (var 1)))
+//   (scan (lit bag [
+//     { "x": 0, "y": 1 },
+//     { "x": 1, "y": 1 },
+//     { "x": 2, "y": 1 },
+//   ]))
+// )
+// // <<
+// //   < 0: 2, 1: 1 >,
+// //   < 0: 2, 1: 1 >
+// // >>
+// ----
+// ====
+//
+// [#cross-rel-node]
+// === `cross`
+//
+// ====
+//
+// [.text-center]
+// _variant of rel_
+//
+// '''
+//
+// The cross product operation combines every tuple from the left input with every tuple of the right input. See <<multi-item-from,multi-item from>>.
+//
+// .Form
+// [source,ion]
+// ----
+// (cross | lhs::operator rhs::operator)
+// ----
+//
+// .Parameters
+// [cols="1m,4",grid=rows,frame=all]
+// |===
+// | Type | Description
+//
+// | lhs::operator | Left input relation operator
+// | rhs::operator | Right input relation operator
+//
+// |===
+//
+// ====
+//
+// [#sort-rel-node]
+// === `sort`
+//
+// ====
+//
+// [.text-center]
+// _variant of rel_
+//
+// '''
+//
+// .Form
+// [source,ion]
+// ----
+// (sort (sort_spec+) | op::operator)
+//
+// // sort_spec
+// (expr::rex (dir symbol) (nulls symbol))
+// ----
+//
+// .Parameters
+// [cols="1m,4",grid=rows,frame=all]
+// |===
+// | Type | Description
+//
+// | sort_spec | An s-expression containing an expression to sort on, optional sort direction, and optional null ordering.
+//
+// |===
+//
+// .Examples
+// [source,ion]
+// ----
+// (sort (
+//    ((var 0) (dir ASC) (null DESC))
+//   )
+//   (scan (lit bag [
+//     { "a": 10, "b": 20 },
+//     { "a": 30, "b": 40 },
+//   ]))
+// )
+// ----
+//
+// ====
+//
+// [#aggregate-rel-node]
+// === `aggregate`
+//
+// ====
+//
+// [.text-center]
+// _variant of rel_
+//
+// '''
+//
+// .Form
+// [source,ion]
+// ----
+// (aggregate calls::(agg*) groups::(rex*) | op::operator)
+//
+// (agg fn | (args rex*))
+//
+// (fn (symbol+) (type*) type) // same `fn` as a call
+// ----
+//
+// .Parameters
+// [cols="1m,4",grid=rows,frame=all]
+// |===
+// | Type | Description
+//
+// | agg | An s-expression defining the aggregation function to invoke
+//
+// | groups::(rex*) | A list of aggregate grouping expressions
+//
+// | op::operator | Input relation expression to aggregate
+//
+// |===
+//
+// .Examples
+// [source,ion]
+// ----
+// -- SELECT SUM(a) FROM table GROUP BY b
+//
+// (aggregate
+//   (
+//     (agg sum (args (var 0 int)))
+//   )
+//   (
+//     (var 1 string)
+//   )
+//   (scan (lit bag [
+//     { "a": 1, "b": "x" },
+//     { "a": 2, "b": "x" },
+//     { "a": 3, "b": "y" },
+//     { "a": 4, "b": "y" },
+//   ]))
+// )
+// ----
+// ====
+//
+// [#set-rel-nodes]
+// ====
+// [discrete.text-center]
+// === Set Operator Nodes
+//
+// [.text-center]
+// _variants of operator_
+//
+// '''
+//
+// .Form
+// [source,ion]
+// ----
+// (union (all bool) | lhs::operator rhs::operator)
+//
+// (intersect (all bool) | lhs::operator rhs::operator)
+//
+// (except (all bool) | lhs::operator rhs::operator)
+// ----
+//
+// .Parameters
+// [cols="1m,4",grid=rows,frame=all]
+// |===
+// | Type | Description
+//
+// | (all bool) | If specified, then use the multiset (bag) operator.
+//
+// |===
+//
+// Let _rel~L~_ and _rel~R~_ be two relation operator nodes.
+//
+// .Examples
+// [source,ion,subs=normal]
+// ----
+// (union rel~L~ rel~R~)           // UNION DISTINCT
+//
+// (intersect  rel~L~ rel~R~)      // INTERSECT DISTINCT
+//
+// (except rel~L~ rel~R~)          // EXCEPT DISTINCT
+//
+// (union (all) rel~L~ rel~R~)     // UNION ALL
+//
+// (intersect (all) rel~L~ rel~R~) // INTERSECT ALL
+//
+// (except (all) rel~L~ rel~R~)    // EXCEPT ALL
+// ----
+//
+// ====
+//
+// [#fetch-rel-nodes]
+// === `fetch`
+//
+// ====
+//
+// [.text-center]
+// _variant of rel_
+//
+// '''
+//
+// .Form
+// [source,ion]
+// ----
+// (limit n:int | op::operator)
+//
+// (offset n:int | op::operator)
+//
+// (fetch (limit int) (offset int) | op:operator)
+// ----
+//
+// .Parameters
+// [cols="1m,4",grid=rows,frame=all]
+// |===
+// | Type | Description
+//
+// |===
+//
+// Let _variant of rel_ be some relation operator node.
+//
+// .Examples
+// [source,ion]
+// ----
+// (limit 10 rel)
+//
+// (offset 1 rel) // skip first binding tuple
+//
+// (fetch (limit 10) (offset 1) rel) // equivalent to (limit 10 (offset 1 rel))
+// ----
+//
+// ====
+//
+// [#join-rel-node]
+// === `join`
+//
+// ====
+//
+// [.text-center]
+// _variant of rel_
+//
+// '''
+//
+// .Form
+// [source,ion]
+// ----
+// (join type::symbol (on expression) | lhs::operator rhs::operator)
+// ----
+//
+// .Parameters
+// [cols="1m,4",grid=rows,frame=all]
+// |===
+// | Type | Description
+//
+// | type::symbol | Join type, one of `INNER`, `LEFT`, `RIGHT`, `FULL`
+//
+// | (on expression) | Optional join condition expression
+//
+// | lhs::operator | Left side relation node
+//
+// | rhs::operator | Right side relation node
+//
+// |===
+//
+// Let _rel~L~_ and _rel~R~_ be two relation operator nodes.
+//
+// .Examples
+// [source,ion,subs=normal]
+// ----
+// (join INNER
+//   rel~L~
+//   rel~R~
+// )
+//
+// (join INNER
+//   (on (call eq (args (var 0 int8) (var 2 int8))))
+//   rel~L~  // < 0: .., 1: .. >
+//   rel~R~  // < 0: .., 1: .. >
+// )
+// ----
+// ====
+
 
 // [#user-defined-rel-node]
 // === `u`

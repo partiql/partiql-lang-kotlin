@@ -147,58 +147,101 @@ rex::{
     // switch
     // tuple
     // collections
-    // pivot
-    // select
+
+    struct::{
+      fields: list::[field],
+      _: [
+        field::{
+          k: rex,
+          v: rex,
+        },
+      ],
+    },
+
+    pivot::{
+      key:    rex,
+      value:  rex,
+      rel:    rel,
+    },
+
+    coll_to_scalar::{
+      subquery: {
+        select: select,
+        type:   '.type.ref' // reify `select` type
+      }
+    },
+
+    select::{
+      constructor:  rex,
+      rel:          rel,
+    },
   ],
 }
 
 // Rel
 
 rel::{
-  type: list::['.type.ref'],
+  schema: list::[binding],
+  props:  set::[prop],
   op: [
 
     scan::{
-      value: rex,
+      rex: rex,
     },
 
     scan_indexed::{
-      value: rex,
+      rex: rex,
     },
 
-    distinct::{},
-
     unpivot::{
-      key:    rex,
-      value:  rex,
+      rex:  rex,
+    },
+
+    distinct::{
+      input: rel,
     },
 
     filter::{
-      condition:  rex,
+      input:      rel,
+      predicate:  rex,
     },
 
+    // TODO
     // sort::{
     //   input: rel,
     //   specs: list::[sort_spec],
     // },
 
-    union::{},
+    union::{
+      lhs: rel,
+      rhs: rel,
+    },
 
-    intersect::{},
+    intersect::{
+      lhs: rel,
+      rhs: rel,
+    },
 
-    except::{},
+    except::{
+      lhs: rel,
+      rhs: rel,
+    },
 
     fetch::{
+      input:  rel,
       limit:  rex,
       offset: rex,
     },
 
     project::{
-      projections: list::[rex],
+      input:        rel,
+      projections:  list::[rex],
     },
 
+    // TODO
     cross_join::{},
 
+    // TODO
     join::{
       condition: [
         theta::{ predicate: rex },
@@ -216,6 +259,7 @@ rel::{
       ],
     },
 
+    // TODO
     aggregate::{
       strategy: [ FULL, PARTIAL ],
       aggs:     list::[agg],
@@ -228,4 +272,13 @@ rel::{
       ]
     },
   ],
+  _: [
+    prop::[
+      ORDERED,
+    ],
+    binding::{
+      name: '.identifier.symbol',
+      type: '.type.ref',
+    },
+  ]
 }

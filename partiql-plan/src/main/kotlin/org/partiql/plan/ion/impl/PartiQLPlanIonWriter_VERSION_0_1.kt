@@ -11,6 +11,7 @@ import org.partiql.plan.Fn
 import org.partiql.plan.Identifier
 import org.partiql.plan.PartiQLPlan
 import org.partiql.plan.PlanNode
+import org.partiql.plan.Rel
 import org.partiql.plan.Rex
 import org.partiql.plan.Statement
 import org.partiql.plan.Type
@@ -236,9 +237,70 @@ internal object PartiQLPlanIonWriter_VERSION_0_1 : PartiQLPlanIonWriter {
             return ionSexpOf(tag, type)
         }
 
+        override fun visitRexOpStruct(node: Rex.Op.Struct, type: IonElement): IonElement {
+            val tag = ionSymbol("struct")
+            val fields = ionSexpOf(node.fields.map { visitRexOpStructField(it, nil) })
+            return ionSexpOf(tag, type, fields)
+        }
+
+        override fun visitRexOpStructField(node: Rex.Op.Struct.Field, nil: IonElement): IonElement {
+            val k = visitRex(node.k, nil)
+            val v = visitRex(node.v, nil)
+            return ionSexpOf(k, v)
+        }
+
+        override fun visitRexOpSelect(node: Rex.Op.Select, type: IonElement): IonElement {
+            val tag = ionSymbol("select")
+            val constructor = visitRex(node.constructor, nil)
+            val rel = visitRel(node.rel, nil)
+            return ionSexpOf(tag, type, constructor, rel)
+        }
+
+        override fun visitRexOpPivot(node: Rex.Op.Pivot, type: IonElement): IonElement {
+            val tag = ionSymbol("pivot")
+            val k = visitRex(node.key, nil)
+            val v = visitRex(node.value, nil)
+            val rel = visitRel(node.rel, nil)
+            return ionSexpOf(tag, type, k, v, rel)
+        }
+
+        override fun visitRexOpCollToScalar(node: Rex.Op.CollToScalar, type: IonElement): IonElement {
+            val tag = ionSymbol("coll_to_scalar")
+            val subquery = visitRexOp(node.subquery.select, visitTypeRef(node.subquery.type, nil))
+            return ionSexpOf(tag, type,subquery )
+        }
+
         // Rel : ctx -> schema
 
-        // TODO
+        override fun visitRel(node: Rel, nil: IonElement): IonElement {
+            val schema = ionSexpOf(node.schema.map { visitTypeRef(it.type, nil) })
+            return visitRelOp(node.op, schema)
+        }
+
+        override fun visitRelOpScan(node: Rel.Op.Scan, schema: IonElement): IonElement {
+            val tag = ionSymbol("scan")
+            val rex = visitRex(node.rex, nil)
+            return ionSexpOf(tag, schema, rex)
+        }
+
+        override fun visitRelOpScanIndexed(node: Rel.Op.ScanIndexed, schema: IonElement): IonElement {
+            val tag = ionSymbol("scan_indexed")
+            val rex = visitRex(node.rex, nil)
+            return ionSexpOf(tag, schema, rex)
+        }
+
+        override fun visitRelOpUnpivot(node: Rel.Op.Unpivot, schema: IonElement): IonElement {
+            val tag = ionSymbol("unpivot")
+            val rex = visitRex(node.rex, nil)
+            return ionSexpOf(tag, schema, rex)
+        }
+
+        override fun visitRelOpProject(node: Rel.Op.Project, schema: IonElement): IonElement {
+            val tag = ionSymbol("project")
+            val items = ionSexpOf(node.projections.map { visitRex(it, nil) })
+            val rel = visitRel(node.input, nil)
+            return ionSexpOf(tag, schema, items, rel)
+        }
 
         // Helpers
 

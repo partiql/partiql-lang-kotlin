@@ -29,8 +29,7 @@ internal object AstToPlan {
 
         override fun visitStatementQuery(node: AstStatement.Query, env: Env) = transform {
             val rex = when (val expr = node.expr) {
-                // is Expr.SFW -> RelConverter.convert(expr)
-                is Expr.SFW -> TODO()
+                is Expr.SFW -> RelConverter.apply(expr, env)
                 else -> RexConverter.apply(expr, env)
             }
             statementQuery(rex)
@@ -44,13 +43,13 @@ internal object AstToPlan {
         is AstIdentifier.Symbol -> convert(identifier)
     }
 
-    private fun convert(identifier: AstIdentifier.Qualified): PlanIdentifier.Qualified {
+    fun convert(identifier: AstIdentifier.Qualified): PlanIdentifier.Qualified {
         val root = convert(identifier.root)
         val steps = identifier.steps.map { convert(it) }
         return Plan.identifierQualified(root, steps)
     }
 
-    private fun convert(identifier: AstIdentifier.Symbol): PlanIdentifier.Symbol {
+    fun convert(identifier: AstIdentifier.Symbol): PlanIdentifier.Symbol {
         val symbol = identifier.symbol
         val case = when (identifier.caseSensitivity) {
             AstIdentifier.CaseSensitivity.SENSITIVE -> PlanIdentifier.CaseSensitivity.SENSITIVE

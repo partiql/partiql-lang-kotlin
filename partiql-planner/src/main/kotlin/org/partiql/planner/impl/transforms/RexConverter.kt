@@ -114,5 +114,27 @@ internal object RexConverter {
             val op = rexOpCall(fn, args)
             return rex(type, op)
         }
+
+        /**
+         * This indicates we've hit a subquery in the context of an expression tree.
+         * There, coerce to scalar via COLL_TO_SCALAR: https://partiql.org/dql/subqueries.html#scalar-subquery
+         *
+         * The default behavior is to coerce, but we remove the scalar coercion in the special cases,
+         *  - RHS of comparison when LHS is an array; and visa-versa
+         *  - It is the collection expression of a FROM clause
+         *  - It is the RHS of an IN predicate
+         */
+        override fun visitExprSFW(node: Expr.SFW, env: Env): Rex = transform {
+            val query = RelConverter.apply(node, env)
+            when (val select = query.op) {
+                is Rex.Op.Select -> {
+                    // Insert the coercion
+                    val type = select.constructor.type
+                    val subquery = rexOpCollToScalarSubquery(select, query.type)
+                    rex(type, rexOpCollToScalar(subquery))
+                }
+                else -> query
+            }
+        }
     }
 }

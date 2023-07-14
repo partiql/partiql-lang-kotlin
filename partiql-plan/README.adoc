@@ -9,6 +9,9 @@ this package should be considered experimental.
 
 You can experiment with the current implementation via the shell.
 
+IMPORTANT: At the moment, I have not rewritten the AST normalization pass — so the planner will often yell at you unless
+you write a normal-form query (ie always provide aliases, no select *).
+
 [source,shell]
 ----
 # Assemble distribution
@@ -40,4 +43,37 @@ val ast = parser.parseAstStatement(input)
 val plan = AstToPlan.transform(ast)
 
 println(PlanPrinter.toString(plan))
+----
+
+== Examples
+
+NOTE: The default Ion pretty printer adds a lot of whitespace which makes the plan hard to grok. I've manually removed
+some whitespace.
+
+[source,ion]
+----
+PartiQL> SELECT t.a as a, t.b as b FROM T as t
+   |
+
+(
+    partiql :: plan
+    version :: (0 1)
+    (statement
+        (query
+            (select
+                ($type 10)
+                (struct ($type 14) (
+                    ((lit ($type 6) "a") (var ($type 0) 0))
+                    ((lit ($type 6) "b") (var ($type 0) 1))
+                ))
+                (project (($type 0) ($type 0)) (
+                        (path ($type 0) (var t::?) (
+                            (step (lit ($type 7) a))
+                        ))
+                        (path ($type 0) (var t::?) (
+                            (step (lit ($type 7) b))
+                        ))
+                    )
+                    (scan (($type 0)) (var T::?))
+)))))
 ----
