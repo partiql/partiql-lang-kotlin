@@ -49,6 +49,7 @@ public sealed class StaticType {
         @JvmField public val DATE: DateType = DateType()
         @JvmField public val TIME: TimeType = TimeType()
         @JvmField public val TIMESTAMP: TimestampType = TimestampType()
+        @JvmField public val TIMESTAMPTZ: TimestampType = TimestampType(null, true)
         @JvmField public val SYMBOL: SymbolType = SymbolType()
         @JvmField public val STRING: StringType = StringType()
         @JvmField public val TEXT: StaticType = unionOf(SYMBOL, STRING)

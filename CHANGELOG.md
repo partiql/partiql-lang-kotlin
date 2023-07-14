@@ -33,8 +33,11 @@ Thank you to all who have contributed!
   values
 - Adds PartiQL's Timestamp Data Model. 
 - Adds support for Timestamp constructor call in Parser/Compiler/Evaluator. 
+- Adds support for Timestamp With Time Zone Type and Timestamp Without Time Zone Type. 
 
 ### Changed
+- BREAKING: When converting to Ion, PartiQL Timestamp will be extended to full timestamp format, even if the value entered is an ION timestamp literal with reduced precision.
+- BREAKING: The type name "timestamp now refers to `TIMESTAMP WITHOUT TIME ZONE`, and the type name "timestamp with time zone" is used to reference `TIMESTAMP WITH TIME ZONE`.
 
 ### Deprecated
 
