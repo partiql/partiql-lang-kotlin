@@ -46,6 +46,7 @@ import org.partiql.lang.planner.GlobalVariableResolver
 import org.partiql.lang.planner.PartiQLPlannerBuilder
 import org.partiql.lang.syntax.Parser
 import org.partiql.lang.syntax.PartiQLParserBuilder
+import java.nio.file.Path
 import java.time.ZoneOffset
 
 /**
@@ -73,7 +74,8 @@ internal sealed class AbstractPipeline(open val options: PipelineOptions) {
             typedOpBehavior: TypedOpBehavior,
             projectionIteration: ProjectionIterationBehavior,
             undefinedVariable: UndefinedVariableBehavior,
-            permissiveMode: TypingMode
+            permissiveMode: TypingMode,
+            pluginPath: Path
         ): PipelineOptions {
             val ion = IonSystemBuilder.standard().build()
             val functions: List<ExprFunction> = listOf(
@@ -82,7 +84,7 @@ internal sealed class AbstractPipeline(open val options: PipelineOptions) {
                 WriteFile_1(ion),
                 WriteFile_2(ion),
                 QueryDDB(ion)
-            ) + ServiceLoaderUtil.loadFunctions()
+            ) + ServiceLoaderUtil.loadFunctions(pluginPath)
             val parser = PartiQLParserBuilder().build()
             return PipelineOptions(
                 pipeline,

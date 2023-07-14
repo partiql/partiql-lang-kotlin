@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test
 import org.partiql.cli.makeCliAndGetResult
 import org.partiql.cli.pipeline.AbstractPipeline
 import org.partiql.cli.utils.ServiceLoaderUtil
+import java.nio.file.Paths
 
 /**
  * Class `PowTest` is used to test the 'test_power' function, which calculates the base to the power of exponent.
@@ -17,9 +18,11 @@ import org.partiql.cli.utils.ServiceLoaderUtil
  */
 class PowTest {
 
+    val pluginPath = Paths.get(System.getProperty("testingPluginDirectory"))
+
     private val pipeline = AbstractPipeline.create(
         AbstractPipeline.PipelineOptions(
-            functions = ServiceLoaderUtil.loadFunctions()
+            functions = ServiceLoaderUtil.loadFunctions(pluginPath)
         )
     )
 
