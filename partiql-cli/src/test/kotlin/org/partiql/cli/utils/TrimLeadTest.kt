@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test
 import org.partiql.cli.makeCliAndGetResult
 import org.partiql.cli.pipeline.AbstractPipeline
 import org.partiql.cli.utils.ServiceLoaderUtil
+import java.nio.file.Paths
 
 /**
  * Class `TrimLeadTest` is used to test the 'trim_lead' function, which is used to trim the leading whitespace characters
@@ -17,7 +18,7 @@ import org.partiql.cli.utils.ServiceLoaderUtil
  */
 class TrimLeadTest {
 
-    val pluginPath = System.getProperty("mockDbJarFile")
+    val pluginPath = Paths.get(System.getProperty("testingPluginDirectory"))
 
     private val pipeline = AbstractPipeline.create(
         AbstractPipeline.PipelineOptions(

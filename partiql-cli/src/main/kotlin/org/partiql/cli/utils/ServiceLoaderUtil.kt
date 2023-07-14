@@ -92,10 +92,10 @@ import org.partiql.value.stringValue
 import org.partiql.value.structValue
 import org.partiql.value.symbolValue
 import org.partiql.value.timeValue
-import java.io.File
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.net.URLClassLoader
+import java.nio.file.Path
 import java.util.ServiceLoader
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
@@ -109,8 +109,8 @@ class ServiceLoaderUtil {
 
         @OptIn(PartiQLFunctionExperimental::class)
         @JvmStatic
-        fun loadFunctions(pluginPath: String): List<ExprFunction> = lock.withLock {
-            val pluginsDir = File(pluginPath)
+        fun loadFunctions(pluginPath: Path): List<ExprFunction> = lock.withLock {
+            val pluginsDir = pluginPath.toFile()
             val pluginFolders = pluginsDir.listFiles { file -> file.isDirectory }.orEmpty()
             val files = pluginFolders.flatMap { folder ->
                 folder.listFiles { file -> file.isFile && file.extension == "jar" }.orEmpty().toList()
@@ -119,7 +119,7 @@ class ServiceLoaderUtil {
                 val classLoader = URLClassLoader.newInstance(files.map { it.toURI().toURL() }.toTypedArray())
                 ServiceLoader.load(Plugin::class.java, classLoader)
             } else {
-                ServiceLoader.load(Plugin::class.java)
+                listOf()
             }
             return plugins
                 .flatMap { plugin -> plugin.getFunctions() }

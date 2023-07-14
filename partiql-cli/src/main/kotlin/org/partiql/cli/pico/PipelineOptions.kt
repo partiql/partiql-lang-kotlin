@@ -25,6 +25,7 @@ import org.partiql.lang.eval.TypingMode
 import org.partiql.lang.eval.UndefinedVariableBehavior
 import picocli.CommandLine
 import java.io.File
+import java.nio.file.Paths
 
 internal class PipelineOptions {
 
@@ -72,10 +73,10 @@ internal class PipelineOptions {
 
     @CommandLine.Option(
         names = ["--plugins"],
-        description = ["Directory containing plugin jar files"],
+        description = ["Directory containing plugins"],
         paramLabel = "DIR"
     )
-    var pluginDir: String = System.getProperty("user.home") + "/.partiql/plugins"
+    val pluginPath = Paths.get(System.getProperty("user.home")).resolve(".partiql").resolve("plugins")
 
     internal val pipeline: AbstractPipeline
         get() {
@@ -85,7 +86,7 @@ internal class PipelineOptions {
                 projIterBehavior,
                 undefinedVarBehavior,
                 typingMode,
-                pluginDir
+                pluginPath
             )
             return AbstractPipeline.create(options)
         }
