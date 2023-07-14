@@ -94,18 +94,33 @@ import org.partiql.value.symbolValue
 import org.partiql.value.timeValue
 import java.math.BigDecimal
 import java.math.BigInteger
+import java.net.URLClassLoader
+import java.nio.file.Path
 import java.util.ServiceLoader
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
+/**
+ * A util class to load pluggable functions by invoking Java Service Loader.
+ */
 class ServiceLoaderUtil {
     companion object {
         private val lock = ReentrantLock()
 
         @OptIn(PartiQLFunctionExperimental::class)
         @JvmStatic
-        fun loadFunctions(): List<ExprFunction> = lock.withLock {
-            val plugins = ServiceLoader.load(Plugin::class.java)
+        fun loadFunctions(pluginPath: Path): List<ExprFunction> = lock.withLock {
+            val pluginsDir = pluginPath.toFile()
+            val pluginFolders = pluginsDir.listFiles { file -> file.isDirectory }.orEmpty()
+            val files = pluginFolders.flatMap { folder ->
+                folder.listFiles { file -> file.isFile && file.extension == "jar" }.orEmpty().toList()
+            }
+            val plugins = if (files.isNotEmpty()) {
+                val classLoader = URLClassLoader.newInstance(files.map { it.toURI().toURL() }.toTypedArray())
+                ServiceLoader.load(Plugin::class.java, classLoader)
+            } else {
+                listOf()
+            }
             return plugins
                 .flatMap { plugin -> plugin.getFunctions() }
                 .flatMap { partiqlFunc -> PartiQLtoExprFunction(partiqlFunc) }
