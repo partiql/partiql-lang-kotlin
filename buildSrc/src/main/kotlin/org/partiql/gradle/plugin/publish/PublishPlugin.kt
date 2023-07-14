@@ -17,6 +17,7 @@ package org.partiql.gradle.plugin.publish
 
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.file.DuplicatesStrategy
 import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.publish.PublishingExtension
@@ -80,6 +81,7 @@ abstract class PublishPlugin : Plugin<Project> {
         // Add dokkaHtml output to the javadocJar
         tasks.getByName<Jar>("javadocJar") {
             onlyIf { runDokka }
+            duplicatesStrategy = DuplicatesStrategy.WARN
             dependsOn(JavaPlugin.CLASSES_TASK_NAME)
             archiveClassifier.set("javadoc")
             from(tasks.named("dokkaHtml"))

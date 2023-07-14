@@ -59,7 +59,7 @@ internal sealed class AbstractPipeline(open val options: PipelineOptions) {
             PipelineType.DEBUG -> PipelineDebug(options)
         }
         internal fun convertExprValue(value: ExprValue): PartiQLResult {
-            return PartiQLResult.Value(value)
+            return PartiQLResult.Value(value, null)
         }
         internal fun standard(): AbstractPipeline {
             return create(PipelineOptions())
@@ -124,7 +124,7 @@ internal sealed class AbstractPipeline(open val options: PipelineOptions) {
                 "message" to ionString(message),
                 "status" to ionInt(status),
             )
-            return PartiQLResult.Value(ExprValue.of(value.toIonValue(options.ion)))
+            return PartiQLResult.Value(ExprValue.of(value.toIonValue(options.ion)), null)
         }
     }
 
@@ -150,7 +150,7 @@ internal sealed class AbstractPipeline(open val options: PipelineOptions) {
 
         override fun compile(input: String, session: EvaluationSession): PartiQLResult {
             val exprValue = compilerPipeline.compile(input).eval(session)
-            return PartiQLResult.Value(exprValue)
+            return PartiQLResult.Value(exprValue, null)
         }
     }
 

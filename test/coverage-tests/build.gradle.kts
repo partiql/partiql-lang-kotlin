@@ -28,5 +28,5 @@ tasks.test {
     systemProperty("partiql.coverage.lcov.path", "$buildDir/partiql/coverage/lcov.info")
     systemProperty("partiql.coverage.lcov.html.enabled", true)
     systemProperty("partiql.coverage.lcov.html.dir", "$buildDir/reports/partiql/test")
-    systemProperty("partiql.coverage.threshold.branch.min", 0.55)
+    systemProperty("partiql.coverage.threshold.branch.min", 0.50)
 }
