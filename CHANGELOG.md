@@ -35,6 +35,7 @@ Thank you to all who have contributed!
 - Adds support for Timestamp constructor call in Parser/Compiler/Evaluator. 
 
 ### Changed
+- BREAKING: When converting to Ion, PartiQL Timestamp will be extended to full timestamp format, even if the value entered is an ION timestamp literal with reduced precision. 
 
 ### Deprecated
 
