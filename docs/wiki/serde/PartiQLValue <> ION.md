@@ -57,13 +57,13 @@ This section talks about Serialization and Deserialization between PartiQL Value
 | NULLABLE_INTERVAL  | TBD                 |                                                                                                                                                                                                                                                                                     |
 | NULLABLE_BAG       | LIST                | null -> $bag::null.list else same as BAG                                                                                                                                                                                                                                            | 
 | NULLABLE_LIST      | LIST                | null -> null.list else same as LIST                                                                                                                                                                                                                                                 | 
-| NULLABLE_SEXP      | SEXP                | null -> null.sexp else same as sexp                                                                                                                                                                                                                                                 |
+| NULLABLE_SEXP      | SEXP                | null -> null.sexp else same as SEXP                                                                                                                                                                                                                                                 |
 | NULLABLE_STRUCT    | STRUCT              | null -> null.struct else same as STRUCT                                                                                                                                                                                                                                             |
 
 
 ## Read From Ion Data
-PartiQL reserves a couple keywords that is used as ion annotation to extend ION Types. 
-To distinguish between generic ion data and PartiQL specific Ion Data, the reader has two mode: `IonGeneric` and `IonForPartiQL`. 
+PartiQL reserves some keywords which are used as Ion annotations to extend the Ion types. 
+To distinguish between generic Ion data and PartiQL data encoded as Ion, the reader has two modes: `IonGeneric` and `IonForPartiQL`. 
 
 ### Ion Generic
 If using `IonGeneric` mode: The ion value annotations are always treated as annotations on PartiQL value. 
@@ -72,7 +72,7 @@ For example:
     - `$missing::null` will be treated as nullValue(annotations = ["missing"])
 
 ### Ion For PartiQL
-If using `IonForPartiQL` mode: We examine the **last** annotation before convert to PartiQL Value. If the annotation is PartiQL reserved, we validate Semantics and the constructed PartiQL value may be different. 
+When using `IonForPartiQL` mode, the **last** annotation is checked to see if this is an encoded PartiQL value. If the annotation is a PartiQL reserved keyword, then we validate and construct the PartiQL value.
 
 For example:
 - `$missing::null` will be treated as `missingValue(annotations = [])`
