@@ -7,7 +7,7 @@ import org.partiql.plan.Identifier
 import org.partiql.plan.Plan
 import org.partiql.plan.Rex
 import org.partiql.plan.builder.PlanFactory
-import org.partiql.planner.Env
+import org.partiql.planner.impl.PartiQLPlannerEnv
 import org.partiql.types.StaticType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.symbolValue
@@ -17,26 +17,26 @@ import org.partiql.value.symbolValue
  */
 internal object RexConverter {
 
-    internal fun apply(expr: Expr, env: Env): Rex = expr.accept(ToRex, env) // expr.toRex()
+    internal fun apply(expr: Expr, env: PartiQLPlannerEnv): Rex = expr.accept(ToRex, env) // expr.toRex()
 
     @OptIn(PartiQLValueExperimental::class)
     @Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE")
-    private object ToRex : AstBaseVisitor<Rex, Env>() {
+    private object ToRex : AstBaseVisitor<Rex, PartiQLPlannerEnv>() {
 
         private val factory: PlanFactory = Plan
 
         private inline fun transform(block: PlanFactory.() -> Rex): Rex = factory.block()
 
-        override fun defaultReturn(node: AstNode, env: Env): Rex = throw IllegalArgumentException("unsupported rex $node")
+        override fun defaultReturn(node: AstNode, env: PartiQLPlannerEnv): Rex = throw IllegalArgumentException("unsupported rex $node")
 
-        override fun visitExprLit(node: Expr.Lit, env: Env) = transform {
-            val type = env.resolveType(StaticType.ANY)
+        override fun visitExprLit(node: Expr.Lit, env: PartiQLPlannerEnv) = transform {
+            val type = env.type(StaticType.ANY)
             val op = rexOpLit(node.value)
             rex(type, op)
         }
 
-        override fun visitExprVar(node: Expr.Var, env: Env) = transform {
-            val type = env.resolveType(StaticType.ANY)
+        override fun visitExprVar(node: Expr.Var, env: PartiQLPlannerEnv) = transform {
+            val type = env.type(StaticType.ANY)
             val identifier = AstToPlan.convert(node.identifier)
             val scope = when (node.scope) {
                 Expr.Var.Scope.DEFAULT -> Rex.Op.Var.Scope.DEFAULT
@@ -46,8 +46,8 @@ internal object RexConverter {
             rex(type, op)
         }
 
-        override fun visitExprUnary(node: Expr.Unary, env: Env) = transform {
-            val type = env.resolveType(StaticType.ANY)
+        override fun visitExprUnary(node: Expr.Unary, env: PartiQLPlannerEnv) = transform {
+            val type = env.type(StaticType.ANY)
             // Args
             val arg = rexOpCallArgValue(node.expr.accept(ToRex, env))
             val args = listOf(arg)
@@ -59,8 +59,8 @@ internal object RexConverter {
             rex(type, op)
         }
 
-        override fun visitExprBinary(node: Expr.Binary, env: Env) = transform {
-            val type = env.resolveType(StaticType.ANY)
+        override fun visitExprBinary(node: Expr.Binary, env: PartiQLPlannerEnv) = transform {
+            val type = env.type(StaticType.ANY)
             // Args
             val lhs = rexOpCallArgValue(node.lhs.accept(ToRex, env))
             val rhs = rexOpCallArgValue(node.rhs.accept(ToRex, env))
@@ -73,8 +73,8 @@ internal object RexConverter {
             rex(type, op)
         }
 
-        override fun visitExprPath(node: Expr.Path, env: Env): Rex = transform {
-            val type = env.resolveType(StaticType.ANY)
+        override fun visitExprPath(node: Expr.Path, env: PartiQLPlannerEnv): Rex = transform {
+            val type = env.type(StaticType.ANY)
             // Args
             val root = visitExpr(node.root, env)
             val steps = node.steps.map {
@@ -86,7 +86,7 @@ internal object RexConverter {
                     is Expr.Path.Step.Symbol -> {
                         // Treat each symbol `foo` as ["foo"]
                         // Per resolution rules, we may be able to resolve and replace the first `n` symbols
-                        val symbolType = env.resolveType(StaticType.SYMBOL)
+                        val symbolType = env.type(StaticType.SYMBOL)
                         val symbol = rexOpLit(symbolValue(it.symbol.symbol))
                         val key = rex(symbolType, symbol)
                         rexOpPathStepIndex(key)
@@ -100,8 +100,8 @@ internal object RexConverter {
             return rex(type, op)
         }
 
-        override fun visitExprCall(node: Expr.Call, env: Env) = transform {
-            val type = env.resolveType(StaticType.ANY)
+        override fun visitExprCall(node: Expr.Call, env: PartiQLPlannerEnv) = transform {
+            val type = env.type(StaticType.ANY)
             // Args
             val args = node.args.map {
                 val rex = visitExpr(it, env)
@@ -124,7 +124,7 @@ internal object RexConverter {
          *  - It is the collection expression of a FROM clause
          *  - It is the RHS of an IN predicate
          */
-        override fun visitExprSFW(node: Expr.SFW, env: Env): Rex = transform {
+        override fun visitExprSFW(node: Expr.SFW, env: PartiQLPlannerEnv): Rex = transform {
             val query = RelConverter.apply(node, env)
             when (val select = query.op) {
                 is Rex.Op.Select -> {
@@ -136,5 +136,9 @@ internal object RexConverter {
                 else -> query
             }
         }
+        
+        // Helpers
+
+        private fun PartiQLPlannerEnv.type(type: StaticType) = resolveType(AstToPlan.convert(type))
     }
 }

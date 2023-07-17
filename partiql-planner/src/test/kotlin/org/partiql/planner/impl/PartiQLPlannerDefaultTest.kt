@@ -11,7 +11,6 @@ import org.partiql.ast.Expr
 import org.partiql.ast.builder.ast
 import org.partiql.plan.PartiQLVersion
 import org.partiql.plan.ion.PartiQLPlanIonWriter
-import org.partiql.planner.Env
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.float64Value
 import org.partiql.value.int64Value
@@ -19,8 +18,7 @@ import org.partiql.value.int64Value
 @OptIn(PartiQLValueExperimental::class)
 class PartiQLPlannerDefaultTest {
 
-    private val env = Env()
-    private val planner = PartiQLPlannerDefault(env)
+    private val planner = PartiQLPlannerDefault()
     private val writer = PartiQLPlanIonWriter.get(PartiQLVersion.VERSION_0_1)
 
     @Test

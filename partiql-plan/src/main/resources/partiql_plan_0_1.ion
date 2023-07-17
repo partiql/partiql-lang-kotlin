@@ -6,11 +6,13 @@ imports::{
 
 parti_q_l_plan::{
   version:    parti_q_l_version,    // version :: (major minor)
-  types:      types,                // (types ...)
   statement:  statement,            // (statement ...)
 }
 
-parti_q_l_header::{}
+parti_q_l_header::{
+  types:     list::[type],  // (types ...)
+  functions: list::[fn],    // (fns ...)
+}
 
 parti_q_l_version::[
   VERSION_0_0,
@@ -19,18 +21,14 @@ parti_q_l_version::[
 
 // Types
 
-types::{
-  types: list::[type],
-}
-
 type::[
   atomic::{
     symbol: string,
-    params: list::[partiql_value],
   },
   _::[
     ref::{
-      ordinal: int, 
+      annotation: string,
+      ordinal:    int,
     },
   ],
 ]
@@ -52,7 +50,8 @@ fn::{
     ],
     ref::[
       resolved::{
-        ordinal: int,
+        annotation: string,
+        ordinal:    int,
       },
       unresolved::{
         identifier: identifier,

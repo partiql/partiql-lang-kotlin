@@ -13,7 +13,7 @@ import org.partiql.plan.Rex
 import org.partiql.plan.Type
 import org.partiql.plan.builder.PlanFactory
 import org.partiql.plan.builder.plan
-import org.partiql.planner.Env
+import org.partiql.planner.impl.PartiQLPlannerEnv
 import org.partiql.types.StaticType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.nullValue
@@ -31,7 +31,7 @@ internal object RelConverter {
     private val nil = plan(factory) {
         rel {
             op = relOpScan {
-                rex = rex(typeRef(0), rexOpLit(nullValue()))
+                rex = rex(typeRef("null", 0), rexOpLit(nullValue()))
             }
         }
     }
@@ -39,14 +39,14 @@ internal object RelConverter {
     /**
      * Here we convert an SFW to composed [Rel]s, then apply the appropriate relation-value projection to get a [Rex].
      */
-    internal fun apply(sfw: Expr.SFW, env: Env): Rex = with(factory) {
+    internal fun apply(sfw: Expr.SFW, env: PartiQLPlannerEnv): Rex = with(factory) {
         val rel = sfw.accept(ToRel(env), nil)
         val rex = when (val projection = sfw.select) {
             // PIVOT ... FROM
             is Select.Pivot -> {
                 val key = projection.key.toRex(env)
                 val value = projection.value.toRex(env)
-                val type = env.resolveType(StaticType.STRUCT)
+                val type = env.type(StaticType.STRUCT)
                 val op = rexOpPivot(key, value, rel)
                 rex(type, op)
             }
@@ -55,8 +55,8 @@ internal object RelConverter {
                 val constructor = projection.constructor.toRex(env)
                 val op = rexOpSelect(constructor, rel)
                 val type = when (rel.props.contains(Rel.Prop.ORDERED)) {
-                    true -> env.resolveType(StaticType.LIST)
-                    else -> env.resolveType(StaticType.BAG)
+                    true -> env.type(StaticType.LIST)
+                    else -> env.type(StaticType.BAG)
                 }
                 rex(type, op)
             }
@@ -65,8 +65,8 @@ internal object RelConverter {
                 val constructor = defaultConstructor(env, rel.schema)
                 val op = rexOpSelect(constructor, rel)
                 val type = when (rel.props.contains(Rel.Prop.ORDERED)) {
-                    true -> env.resolveType(StaticType.LIST)
-                    else -> env.resolveType(StaticType.BAG)
+                    true -> env.type(StaticType.LIST)
+                    else -> env.type(StaticType.BAG)
                 }
                 rex(type, op)
             }
@@ -77,16 +77,19 @@ internal object RelConverter {
     /**
      * Syntax sugar for converting an [Expr] tree to a [Rex] tree.
      */
-    private fun Expr.toRex(env: Env): Rex = RexConverter.apply(this, env)
+    private fun Expr.toRex(env: PartiQLPlannerEnv): Rex = RexConverter.apply(this, env)
+
+    
+    private fun PartiQLPlannerEnv.type(type: StaticType) = resolveType(AstToPlan.convert(type))
 
     /**
      * Produces the default constructor to generalize a SQL SELECT to a SELECT VALUE.
      *  - https://partiql.org/dql/select.html#sql-select
      */
     @OptIn(PartiQLValueExperimental::class)
-    private fun defaultConstructor(env: Env, schema: List<Rel.Binding>): Rex  = with(factory) {
-        val str = env.resolveType(StaticType.STRING)
-        val type = env.resolveType(StaticType.STRUCT)
+    private fun defaultConstructor(env: PartiQLPlannerEnv, schema: List<Rel.Binding>): Rex  = with(factory) {
+        val str = env.type(StaticType.STRING)
+        val type = env.type(StaticType.STRUCT)
         val fields = schema.mapIndexed { i, b ->
             val k = rex(str, rexOpLit(stringValue(b.name.symbol)))
             val v = rex(b.type, rexOpVarResolved(i))
@@ -98,7 +101,7 @@ internal object RelConverter {
 
     @Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE")
     private class ToRel(
-        private val env: Env,
+        private val env: PartiQLPlannerEnv,
     ) : AstBaseVisitor<Rel, Rel>() {
 
         // Produce a synthetic binding of the given type
@@ -174,7 +177,7 @@ internal object RelConverter {
                         else -> {
                             val index = relBinding(
                                 name = AstToPlan.convert(i),
-                                type = env.resolveType(StaticType.INT)
+                                type = env.type(StaticType.INT)
                             )
                             convertScanIndexed(rex, binding, index)
                         }
@@ -185,7 +188,7 @@ internal object RelConverter {
                         null -> error("AST not normalized, missing AT alias on UNPIVOT $node")
                         else -> relBinding(
                             name = AstToPlan.convert(at),
-                            type = env.resolveType(StaticType.STRING)
+                            type = env.type(StaticType.STRING)
                         )
                     }
                     convertUnpivot(rex, k = atAlias, v = binding)

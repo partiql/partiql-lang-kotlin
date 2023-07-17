@@ -15,7 +15,6 @@ import org.partiql.plan.Rel
 import org.partiql.plan.Rex
 import org.partiql.plan.Statement
 import org.partiql.plan.Type
-import org.partiql.plan.Types
 import org.partiql.plan.ion.IllegalPlanException
 import org.partiql.plan.ion.PartiQLPlanIonWriter
 import org.partiql.plan.visitor.PlanBaseVisitor
@@ -101,20 +100,15 @@ internal object PartiQLPlanIonWriter_VERSION_0_1 : PartiQLPlanIonWriter {
 
         // Types
 
-        override fun visitTypes(node: Types, nil: IonElement): IonElement {
-            val tag = ionSymbol("types")
-            val types = node.types.map { visitType(it, nil) }
-            return ionSexpOf(listOf(tag) + types)
-        }
-
         override fun visitTypeAtomic(node: Type.Atomic, nil: IonElement): IonElement {
             val tag = ionSymbol(node.symbol)
             return ionSexpOf(tag)
         }
 
         override fun visitTypeRef(node: Type.Ref, nil: IonElement): IonElement {
-            val tag = ionSymbol("\$type")
+            var tag = ionSymbol("\$type")
             val ref = ionInt(node.ordinal.toLong())
+            if (mode == Mode.DEBUG) tag = tag.copy(listOf(node.annotation))
             return ionSexpOf(tag, ref)
         }
 

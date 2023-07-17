@@ -23,7 +23,6 @@ import org.partiql.lang.eval.EvaluationSession
 import org.partiql.parser.PartiQLParserBuilder
 import org.partiql.plan.PartiQLVersion
 import org.partiql.plan.ion.PartiQLPlanIonWriter
-import org.partiql.planner.Env
 import org.partiql.planner.impl.PartiQLPlannerDefault
 import picocli.CommandLine
 import java.io.PrintStream
@@ -47,9 +46,8 @@ fun main(args: Array<String>) {
  */
 object Debug {
 
-    private val env = Env()
     private val parser = PartiQLParserBuilder.standard().build()
-    private val planner = PartiQLPlannerDefault(env)
+    private val planner = PartiQLPlannerDefault()
     private val writer = PartiQLPlanIonWriter.get(PartiQLVersion.VERSION_0_1)
 
     // !!
