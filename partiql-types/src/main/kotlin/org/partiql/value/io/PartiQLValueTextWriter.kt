@@ -293,22 +293,22 @@ internal class PartiQLValueTextWriter(
 
         override fun visitNullableBag(v: NullableBagValue<*>, ctx: Format?) = when (v.isNull()) {
             true -> "null"
-            else -> visitBag(v.promote(), ctx)
+            false -> visitBag(v.promote(), ctx)
         }
 
         override fun visitNullableList(v: NullableListValue<*>, ctx: Format?) = when (v.isNull()) {
             true -> "null"
-            else -> visitList(v.promote(), ctx)
+            false -> visitList(v.promote(), ctx)
         }
 
         override fun visitNullableSexp(v: NullableSexpValue<*>, ctx: Format?) = when (v.isNull()) {
             true -> "null"
-            else -> visitSexp(v.promote(), ctx)
+            false -> visitSexp(v.promote(), ctx)
         }
 
         override fun visitNullableStruct(v: NullableStructValue<*>, ctx: Format?) = when (v.isNull()) {
             true -> "null"
-            else -> visitStruct(v.promote(), ctx)
+            false -> visitStruct(v.promote(), ctx)
         }
     }
 }
