@@ -5,6 +5,9 @@ import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.id
 
 class PartiQLParserCorrelatedJoinTests : PartiQLParserTestBase() {
+
+    override val targets: Array<ParserTarget> = arrayOf(ParserTarget.DEFAULT, ParserTarget.EXPERIMENTAL)
+
     private fun PartiqlAst.Builder.callFWithS() =
         call("f", id("s", caseInsensitive(), unqualified()))
 

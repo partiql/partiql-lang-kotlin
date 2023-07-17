@@ -333,7 +333,7 @@ class QueryPrettyPrinter {
     }
 
     private fun writeSessionAttribute(node: PartiqlAst.Expr.SessionAttribute, sb: StringBuilder) {
-        sb.append(node.value.text)
+        sb.append(node.value.text.uppercase())
     }
 
     /**
