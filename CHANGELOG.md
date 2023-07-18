@@ -34,6 +34,7 @@ Thank you to all who have contributed!
 - Adds function overloading to the `CompilerPipeline` and experimental `PartiQLCompilerPipeline`.
 - Adds new method `getFunctions()` to `org.partiql.spi.Plugin`.
 - Adds `PartiQLFunction` interface.
+- Adds `FunctionSignature` and `FunctionParameter` class to `org/partiql/types/function`.
 - Adds a new flag `--plugins` to PartiQL CLI to allow users to specify the root of their plugins directory. 
   The default is `~/.partiql/plugins` . Each implementer of a plugin should place a directory under the 
   plugins root containing the JAR corresponding with their plugin implementation. 
