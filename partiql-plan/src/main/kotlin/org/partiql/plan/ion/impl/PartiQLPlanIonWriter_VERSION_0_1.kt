@@ -296,6 +296,13 @@ internal object PartiQLPlanIonWriter_VERSION_0_1 : PartiQLPlanIonWriter {
             return ionSexpOf(tag, schema, items, rel)
         }
 
+        override fun visitRelOpFilter(node: Rel.Op.Filter, schema: IonElement): IonElement {
+            val tag = ionSymbol("filter")
+            val predicate = visitRex(node.predicate, nil)
+            val rel = visitRel(node.input, nil)
+            return ionSexpOf(tag, schema, predicate, rel)
+        }
+
         // Helpers
 
         private fun Identifier.sql(): String = when (this) {

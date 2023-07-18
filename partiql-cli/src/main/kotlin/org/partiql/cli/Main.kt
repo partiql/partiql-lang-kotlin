@@ -65,7 +65,7 @@ object Debug {
         val ion = writer.toIonDebug(plan)
         // Pretty print Ion
         val sb = StringBuilder()
-        val formatter = IonTextWriterBuilder.pretty().build(sb)
+        val formatter = IonTextWriterBuilder.standard().build(sb)
         ion.writeTo(formatter)
         out.println(sb)
         return "OK"

@@ -129,7 +129,7 @@ internal object RelConverter {
         override fun visitExprSFW(node: Expr.SFW, input: Rel): Rel {
             var sel = node
             var rel = visitFrom(sel.from, nil)
-            // rel = convertWhere(rel, sel.where)
+            rel = convertWhere(rel, sel.where)
             // kotlin does not have destructuring reassignment
             // val (_sel, _rel) = convertAgg(rel, sel, sel.groupBy)
             // sel = _sel
@@ -261,20 +261,21 @@ internal object RelConverter {
         //         }
         //     )
         // }
-        //
-        //
-        // /**
-        //  * Append [Rel.Filter] only if a WHERE condition exists
-        //  */
-        // private fun convertWhere(input: Rel, expr: Expr?): Rel = when (expr) {
-        //     null -> input
-        //     else -> Plan.relFilter(
-        //         common = empty,
-        //         input = input,
-        //         condition = RexConverter.convert(expr)
-        //     )
-        // }
-        //
+
+        /**
+         * Append [Rel.Op.Filter] only if a WHERE condition exists
+         */
+        private fun convertWhere(input: Rel, expr: Expr?): Rel = transform {
+            if (expr == null) {
+                return input
+            }
+            val schema = input.schema
+            val props = input.props
+            val predicate = expr.toRex(env)
+            val op = relOpFilter(input, predicate)
+            rel(schema, props, op)
+        }
+
         // /**
         //  * Append [Rel.Aggregate] only if SELECT contains aggregate expressions.
         //  *

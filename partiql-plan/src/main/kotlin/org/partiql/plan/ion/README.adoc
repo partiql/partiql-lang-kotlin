@@ -1027,11 +1027,12 @@ Rel nodes represent the relational expressions from the PartiQL Plan Specificati
 | <<project-rel-node,project>>
 | Apply the projection expressions to the input binding tuples
 
+| <<filter-rel-node,filter>>
+| Filters the input relation on a given predicate expression
+
 // | <<cross-rel-node,cross>>
 // | Produce the cross product of two relation expressions
 //
-// | <<filter-rel-node,filter>>
-// | Filters the input relation on a given predicate expression
 //
 // | <<sort-rel-node,sort>>
 // | Sorts the given relation
@@ -1219,18 +1220,20 @@ _variant of rel_
 
 '''
 
-The `project` node represents a relation-to-relation projection function.
+The _project_ node represents a relation-to-relation projection function.
 
 .Form
 [source,ion]
 ----
-(project (<rex*>) <rel>)
+(project <schema> (<rex*>) <rel>)
 ----
 
 .Parameters
 [cols="1m,4",grid=rows,frame=all]
 |===
 | Type | Description
+
+| schema | Output projection list types
 
 | (rex*) | Expression list of projections
 
@@ -1257,51 +1260,55 @@ The `project` node represents a relation-to-relation projection function.
 
 ====
 
+[#filter-rel-node]
+=== `filter`
 
-// [#filter-rel-node]
-// === `filter`
-//
-// ====
-//
-// [.text-center]
-// _variant of rel_
-//
-// '''
-//
-// .Form
-// [source,ion]
-// ----
-// (filter condition::expr | op::operator)
-// ----
-//
-// .Parameters
-// [cols="1m,4",grid=rows,frame=all]
-// |===
-// | Type | Description
-//
-// | condition::rex | Filter condition
-//
-// | op::operator | Input relation operator
-//
-// |===
-//
-// .Examples
-// [source,ion]
-// ----
-// (filter (call gte (args (var 0) (var 1)))
-//   (scan (lit bag [
-//     { "x": 0, "y": 1 },
-//     { "x": 1, "y": 1 },
-//     { "x": 2, "y": 1 },
-//   ]))
-// )
-// // <<
-// //   < 0: 2, 1: 1 >,
-// //   < 0: 2, 1: 1 >
-// // >>
-// ----
-// ====
-//
+====
+
+[.text-center]
+_variant of rel_
+
+'''
+
+Filters the input relation on the given predicate.
+
+.Form
+[source,ion]
+----
+(filter <schema> <rex> <rel>)
+----
+
+.Parameters
+[cols="1m,4",grid=rows,frame=all]
+|===
+| Type | Description
+
+| schema | Output relation schema
+
+| rex | Filter condition
+
+| rel | Input relation to filter
+
+|===
+
+.Examples
+[source,ion]
+----
+(filter (call gte (args (var 0) (var 1)))
+  (scan (lit bag [
+    { "x": 0, "y": 1 },
+    { "x": 1, "y": 1 },
+    { "x": 2, "y": 1 },
+  ]))
+)
+// <<
+//   < 0: 2, 1: 1 >,
+//   < 0: 2, 1: 1 >
+// >>
+----
+
+====
+
 // [#cross-rel-node]
 // === `cross`
 //
