@@ -441,8 +441,8 @@ Within statements are several expression nodes. The following section defines al
 |<<call-rex-node,call>>
 | Function call
 
-// |<<switch-rex-node,switch>>
-// | Switch expression, ex: SQL `CASE`
+|<<case-rex-node,case>>
+| Case expression, ex: SQL `CASE`
 
 |<<collection-rex-node,tuple>>
 | Collection constructor expression
@@ -746,6 +746,53 @@ NOTE: I have left this out, but we should consider a bit flag for whether or not
 (fn plus 0x11 ...)
 
 // function would resolve with implicit casts
+----
+
+====
+
+[#case-rex-node]
+=== `case`
+
+====
+
+[.text-center]
+_variant of rex_
+
+'''
+
+The case expression corresponds to a SQL CASE or SEARCHED CASE.
+
+.Form
+[source,ion]
+----
+rex.case ::= (case <type> <rex> (<branch>+))
+
+branch ::= (<rex> <rex>)
+----
+
+.Parameters
+[cols="1m,2",grid=rows,frame=all]
+|===
+| Type | Description
+
+| type | The case expressions output type
+
+| rex | The CASE value to match on.
+
+| (branch+) | One or more CASE branches.
+
+| branch | `(<rex> <rex>)` condition-value pair
+
+|===
+
+.Example
+[source,partiql]
+----
+PIVOT v AT k FROM ...
+
+(pivot (var ($type i) k::0) (var ($type j) v::1)
+  (scan ...)
+)
 ----
 
 ====

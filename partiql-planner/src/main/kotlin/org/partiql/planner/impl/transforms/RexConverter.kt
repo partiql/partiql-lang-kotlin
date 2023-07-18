@@ -2,6 +2,7 @@ package org.partiql.planner.impl.transforms
 
 import org.partiql.ast.AstNode
 import org.partiql.ast.Expr
+import org.partiql.ast.Select
 import org.partiql.ast.visitor.AstBaseVisitor
 import org.partiql.plan.Identifier
 import org.partiql.plan.Plan
@@ -10,6 +11,7 @@ import org.partiql.plan.builder.PlanFactory
 import org.partiql.planner.impl.PartiQLPlannerEnv
 import org.partiql.types.StaticType
 import org.partiql.value.PartiQLValueExperimental
+import org.partiql.value.boolValue
 import org.partiql.value.symbolValue
 
 /**
@@ -27,7 +29,8 @@ internal object RexConverter {
 
         private inline fun transform(block: PlanFactory.() -> Rex): Rex = factory.block()
 
-        override fun defaultReturn(node: AstNode, env: PartiQLPlannerEnv): Rex = throw IllegalArgumentException("unsupported rex $node")
+        override fun defaultReturn(node: AstNode, env: PartiQLPlannerEnv): Rex =
+            throw IllegalArgumentException("unsupported rex $node")
 
         override fun visitExprLit(node: Expr.Lit, env: PartiQLPlannerEnv) = transform {
             val type = env.type(StaticType.ANY)
@@ -115,6 +118,26 @@ internal object RexConverter {
             rex(type, op)
         }
 
+        override fun visitExprCase(node: Expr.Case, env: PartiQLPlannerEnv) = transform {
+            val type = env.type(StaticType.ANY)
+            val rex = when (node.expr) {
+                null -> env.bool(true)       // match `true`
+                else -> visitExpr(node.expr!!, env) // match `rex
+            }
+            val branches = node.branches.map {
+                val branchCondition = visitExpr(it.condition, env)
+                val branchRex = visitExpr(it.expr, env)
+                rexOpCaseBranch(branchCondition, branchRex)
+            }.toMutableList()
+            if (node.default != null) {
+                val defaultCondition = env.bool(true)
+                val defaultRex = visitExpr(node.default!!, env)
+                branches += rexOpCaseBranch(defaultCondition, defaultRex)
+            }
+            val op = rexOpCase(rex, branches)
+            rex(type, op)
+        }
+
         override fun visitExprCollection(node: Expr.Collection, env: PartiQLPlannerEnv) = transform {
             val t = when (node.type) {
                 Expr.Collection.Type.BAG -> StaticType.BAG
@@ -143,7 +166,7 @@ internal object RexConverter {
         // TODO SPECIAL FORMS ONCE WE HAVE THE CATALOG !!
 
         /**
-         * This indicates we've hit a subquery in the context of an expression tree.
+         * This indicates we've hit a SQL `SELECT` subquery in the context of an expression tree.
          * There, coerce to scalar via COLL_TO_SCALAR: https://partiql.org/dql/subqueries.html#scalar-subquery
          *
          * The default behavior is to coerce, but we remove the scalar coercion in the special cases,
@@ -155,6 +178,10 @@ internal object RexConverter {
             val query = RelConverter.apply(node, env)
             when (val select = query.op) {
                 is Rex.Op.Select -> {
+                    if (node.select is Select.Value) {
+                        // SELECT VALUE does not implicitly coerce to a scalar
+                        return query
+                    }
                     // Insert the coercion
                     val type = select.constructor.type
                     val subquery = rexOpCollToScalarSubquery(select, query.type)
@@ -163,9 +190,15 @@ internal object RexConverter {
                 else -> query
             }
         }
-        
+
         // Helpers
 
         private fun PartiQLPlannerEnv.type(type: StaticType) = resolveType(AstToPlan.convert(type))
+
+        private fun PartiQLPlannerEnv.bool(v: Boolean): Rex {
+            val type = type(StaticType.BOOL)
+            val op = factory.rexOpLit(boolValue(v))
+            return factory.rex(type, op)
+        }
     }
 }

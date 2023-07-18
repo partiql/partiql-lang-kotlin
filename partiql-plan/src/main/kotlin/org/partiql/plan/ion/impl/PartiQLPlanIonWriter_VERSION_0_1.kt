@@ -26,7 +26,6 @@ import org.partiql.value.io.PartiQLValueIonWriter
  * PartiQLPlanIonWriter for PartiQLVersion.VERSION_0_1
  *
  * TODOs
- *  - Consider adding annotations in debug mode
  *  - Error collection / reporting
  */
 internal object PartiQLPlanIonWriter_VERSION_0_1 : PartiQLPlanIonWriter {
@@ -239,6 +238,19 @@ internal object PartiQLPlanIonWriter_VERSION_0_1 : PartiQLPlanIonWriter {
             val tag = ionSymbol("t")
             val type = visitTypeRef(node.type, nil)
             return ionSexpOf(tag, type)
+        }
+
+        override fun visitRexOpCase(node: Rex.Op.Case, type: IonElement): IonElement {
+            val tag = ionSymbol("case")
+            val rex = visitRex(node.rex, nil)
+            val branches = ionSexpOf(node.branches.map { visitRexOpCaseBranch(it, nil) })
+            return ionSexpOf(tag, type, rex, branches)
+        }
+
+        override fun visitRexOpCaseBranch(node: Rex.Op.Case.Branch, nil: IonElement): IonElement {
+            val condition = visitRex(node.condition, nil)
+            val rex = visitRex(node.rex, nil)
+            return ionSexpOf(condition, rex)
         }
 
         override fun visitRexOpCollection(node: Rex.Op.Collection, type: IonElement): IonElement {

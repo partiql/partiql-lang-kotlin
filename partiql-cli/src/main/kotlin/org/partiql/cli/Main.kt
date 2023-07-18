@@ -23,9 +23,11 @@ import org.partiql.lang.eval.EvaluationSession
 import org.partiql.parser.PartiQLParserBuilder
 import org.partiql.plan.PartiQLVersion
 import org.partiql.plan.ion.PartiQLPlanIonWriter
+import org.partiql.planner.PartiQLPlanner
 import org.partiql.planner.impl.PartiQLPlannerDefault
 import picocli.CommandLine
 import java.io.PrintStream
+import java.util.UUID
 import kotlin.system.exitProcess
 
 /**
@@ -61,7 +63,11 @@ object Debug {
         if (ast !is Statement) {
             error("Expect AST Statement, found $ast")
         }
-        val plan = planner.plan(ast).plan
+        val session = PartiQLPlanner.Session(
+            queryId = UUID.randomUUID().toString(),
+            userId = "debug",
+        )
+        val plan = planner.plan(session, ast).plan
         val ion = writer.toIonDebug(plan)
         // Pretty print Ion
         val sb = StringBuilder()

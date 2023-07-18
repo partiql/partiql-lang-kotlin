@@ -110,7 +110,7 @@ rex::{
       },
       unresolved::{
         identifier: identifier,
-        scope: scope,
+        scope:      scope,
       },
       _::[
         scope::[
@@ -151,7 +151,16 @@ rex::{
       ],
     },
 
-    // switch
+    case::{
+      rex:      rex,
+      branches: list::[branch],
+      _: [
+        branch::{
+          condition:  rex,
+          rex:        rex,
+        },
+      ],
+    },
 
     collection::{
       values: list::[rex],
