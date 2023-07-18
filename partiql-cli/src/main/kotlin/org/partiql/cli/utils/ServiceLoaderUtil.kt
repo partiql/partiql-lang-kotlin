@@ -34,6 +34,7 @@ import org.partiql.spi.function.PartiQLFunction
 import org.partiql.spi.function.PartiQLFunctionExperimental
 import org.partiql.types.PartiQLValueType
 import org.partiql.types.StaticType
+import org.partiql.types.function.FunctionParameter
 import org.partiql.value.BagValue
 import org.partiql.value.BlobValue
 import org.partiql.value.BoolValue
@@ -123,33 +124,27 @@ class ServiceLoaderUtil {
             }
             return plugins
                 .flatMap { plugin -> plugin.getFunctions() }
-                .flatMap { partiqlFunc -> PartiQLtoExprFunction(partiqlFunc) }
+                .map { partiqlFunc -> PartiQLtoExprFunction(partiqlFunc) }
         }
 
         @OptIn(PartiQLValueExperimental::class, PartiQLFunctionExperimental::class)
-        private fun PartiQLtoExprFunction(customFunction: PartiQLFunction): List<ExprFunction> {
-            val names = customFunction.signature.names
-            val parameters = customFunction.signature.parameters.filterIsInstance<PartiQLFunction.Parameter.ValueParameter>().map { it.type }
+        private fun PartiQLtoExprFunction(customFunction: PartiQLFunction): ExprFunction {
+            val name = customFunction.signature.name
+            val parameters = customFunction.signature.parameters.filterIsInstance<FunctionParameter.ValueParameter>().map { it.type }
             val returnType = customFunction.signature.returns
-            val exprFuncs = mutableListOf<ExprFunction>()
-            for (name in names) {
-                exprFuncs.add(
-                    object : ExprFunction {
-                        override val signature = FunctionSignature(
-                            name = name,
-                            requiredParameters = parameters.map { PartiQLToStaticType(it) },
-                            returnType = PartiQLToStaticType(returnType),
-                        )
-
-                        override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
-                            val partiQLArguments = required.mapIndexed { i, expr -> ExprToPartiQLValue(expr, parameters[i]) }
-                            val partiQLResult = customFunction.invoke(session.toConnectorSession(), partiQLArguments)
-                            return PartiQLtoExprValue(partiQLResult)
-                        }
-                    }
+            return object : ExprFunction {
+                override val signature = FunctionSignature(
+                    name = name,
+                    requiredParameters = parameters.map { PartiQLToStaticType(it) },
+                    returnType = PartiQLToStaticType(returnType),
                 )
+
+                override fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
+                    val partiQLArguments = required.mapIndexed { i, expr -> ExprToPartiQLValue(expr, parameters[i]) }
+                    val partiQLResult = customFunction.invoke(session.toConnectorSession(), partiQLArguments)
+                    return PartiQLtoExprValue(partiQLResult)
+                }
             }
-            return exprFuncs
         }
 
         private fun PartiQLToStaticType(partiqlType: PartiQLValueType): StaticType {
