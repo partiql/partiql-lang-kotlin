@@ -14,9 +14,9 @@ class PartiQLPlannerDefault : PartiQLPlanner {
 
     private val version = PartiQLVersion.VERSION_0_1
 
-    override fun plan(statement: AstStatement): PartiQLPlanner.Result {
+    override fun plan(session: PartiQLPlanner.Session, statement: AstStatement): PartiQLPlanner.Result {
         // 0. Initialize the environment
-        val env = PartiQLPlannerEnv()
+        val env = PartiQLPlannerEnv(session)
 
         // 1. Normalize
         val ast = AstNormalize.apply(statement)
@@ -34,6 +34,7 @@ class PartiQLPlannerDefault : PartiQLPlanner {
         return PartiQLPlanner.Result(
             plan = Plan.partiQLPlan(
                 version = version,
+                globals = env.globals(),
                 statement = root,
             )
         )

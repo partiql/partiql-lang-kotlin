@@ -8,6 +8,7 @@ import com.amazon.ionelement.api.ionNull
 import com.amazon.ionelement.api.ionSexpOf
 import com.amazon.ionelement.api.ionSymbol
 import org.partiql.plan.Fn
+import org.partiql.plan.Global
 import org.partiql.plan.Identifier
 import org.partiql.plan.PartiQLPlan
 import org.partiql.plan.PlanNode
@@ -79,9 +80,9 @@ internal object PartiQLPlanIonWriter_VERSION_0_1 : PartiQLPlanIonWriter {
             val tag = ionSymbol("plan", annotations = listOf("partiql"))
             val version = ionSexpOf(ionInt(0), ionInt(1), annotations = listOf("version"))
             // TODO include
-            // TODO env
+            val globals = ionSexpOf(node.globals.map { visitGlobal(it, nil) })
             val statement = visitStatement(node.statement, nil)
-            return ionSexpOf(tag, version, statement)
+            return ionSexpOf(tag, version, globals, statement)
         }
 
         // Statements
@@ -149,6 +150,14 @@ internal object PartiQLPlanIonWriter_VERSION_0_1 : PartiQLPlanIonWriter {
                     ionSexpOf(tag, ionSymbol("?", annotations = listOf(id)))
                 }
             }
+        }
+
+        // Globals
+
+        override fun visitGlobal(node: Global, nil: IonElement): IonElement {
+            val type = visitTypeRef(node.type, nil)
+            val identifier = visitIdentifierQualified(node.path, nil)
+            return ionSexpOf(type, identifier)
         }
 
         // Rex : ctx -> type.ref

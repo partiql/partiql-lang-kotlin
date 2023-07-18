@@ -6,12 +6,13 @@ imports::{
 
 parti_q_l_plan::{
   version:    parti_q_l_version,    // version :: (major minor)
+  globals:    list::[global],       // (globals ...)
   statement:  statement,            // (statement ...)
 }
 
 parti_q_l_header::{
-  types:     list::[type],  // (types ...)
-  functions: list::[fn],    // (fns ...)
+  types:     list::[type],    // (types ...)
+  functions: list::[fn],      // (fns ...)
 }
 
 parti_q_l_version::[
@@ -32,6 +33,13 @@ type::[
     },
   ],
 ]
+
+// Globals
+
+global::{
+  path: '.identifier.qualified',
+  type: '.type.ref',
+}
 
 // Functions
 

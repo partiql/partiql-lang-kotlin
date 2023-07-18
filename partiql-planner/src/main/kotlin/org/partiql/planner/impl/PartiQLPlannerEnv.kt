@@ -2,11 +2,13 @@ package org.partiql.planner.impl
 
 import org.partiql.ast.Identifier
 import org.partiql.plan.Fn
+import org.partiql.plan.Global
 import org.partiql.plan.PartiQLHeader
 import org.partiql.plan.Plan
 import org.partiql.plan.Rex
 import org.partiql.plan.Type
 import org.partiql.planner.Catalog
+import org.partiql.planner.PartiQLPlanner
 
 /**
  * Hardcoded PartiQL Global Catalog
@@ -15,23 +17,28 @@ import org.partiql.planner.Catalog
  * !! NEED TO BACK BY A CATALOG!!
  * !! HIGHLY SIMPLIFIED FOR BOOTSTRAPPING PURPOSES !!
  */
-internal class PartiQLPlannerEnv {
+internal class PartiQLPlannerEnv(private val session: PartiQLPlanner.Session) {
 
     private val factory = Plan
     private val catalog = Catalog.partiql()
 
-    //
-    private fun header(): PartiQLHeader = factory.partiQLHeader(
+    private val globals = mutableListOf<Global>()
+
+    // TEMPORARY
+    internal fun header(): PartiQLHeader = factory.partiQLHeader(
         types = catalog.types,
         functions = catalog.functions,
     )
+
+    // TEMPORARY
+    internal fun globals(): List<Global> = globals
 
     // TYPES
 
     /**
      * Get a Type.Ref from a StaticType
      */
-    fun resolveType(type: Type.Atomic): Type.Ref {
+    internal fun resolveType(type: Type.Atomic): Type.Ref {
         catalog.types.forEachIndexed { i, t ->
             // need .equals() if we want to include more variants
             if (t.symbol == type.symbol) {
@@ -47,7 +54,7 @@ internal class PartiQLPlannerEnv {
      * This will need to be greatly improved upon. We will need to return some kind of pair which has a list of
      * implicit casts to introduce.
      */
-    fun resolveFn(identifier: Identifier, args: List<Rex.Op.Call.Arg>): Fn.Ref {
+    internal fun resolveFn(identifier: Identifier, args: List<Rex.Op.Call.Arg>): Fn.Ref {
         when (identifier) {
             is Identifier.Qualified -> throw IllegalArgumentException("Qualified function identifiers not supported")
             is Identifier.Symbol -> {
