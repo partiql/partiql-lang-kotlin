@@ -9,6 +9,7 @@ import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.OrderedBindNames
 import org.partiql.lang.eval.name
 import org.partiql.lang.eval.numberValue
+import org.partiql.lang.eval.partiQLTimestampValue
 import org.partiql.lang.eval.stringValue
 import org.partiql.lang.eval.timeValue
 import org.partiql.types.AnyOfType
@@ -36,6 +37,8 @@ import org.partiql.types.TimeType
 import org.partiql.types.TimestampType
 import org.partiql.types.TupleConstraint
 import org.partiql.types.UnsupportedTypeCheckException
+import org.partiql.value.datetime.TimestampWithTimeZone
+import org.partiql.value.datetime.TimestampWithoutTimeZone
 import java.math.BigDecimal
 
 public object StaticTypeUtils {
@@ -87,6 +90,29 @@ public object StaticTypeUtils {
             else -> false
         }
         is StructType -> type.isInstanceOf(value)
+        // TODO : TIME
+        is TimestampType -> {
+            if (value.type != ExprValueType.TIMESTAMP) {
+                false
+            } else {
+                val timestamp = value.partiQLTimestampValue()
+                when (timestamp) {
+                    is TimestampWithTimeZone -> {
+                        type.withTimeZone
+                    }
+                    is TimestampWithoutTimeZone -> {
+                        !type.withTimeZone
+                    }
+                }.let { assertion ->
+                    when {
+                        !assertion -> false
+                        type.precision == null -> true
+                        timestamp.decimalSecond.scale() <= type.precision!! -> true
+                        else -> false
+                    }
+                }
+            }
+        }
         is SingleType -> value.type == getRuntimeType(type)
         is AnyOfType -> type.types.any { isInstance(value, it) }
     }

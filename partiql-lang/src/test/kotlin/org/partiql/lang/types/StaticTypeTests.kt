@@ -30,6 +30,7 @@ import org.partiql.types.StaticType.Companion.NULL
 import org.partiql.types.StaticType.Companion.STRING
 import org.partiql.types.StaticType.Companion.SYMBOL
 import org.partiql.types.StaticType.Companion.TIMESTAMP
+import org.partiql.types.StaticType.Companion.TIMESTAMPTZ
 import org.partiql.types.StructType
 import org.partiql.types.TupleConstraint
 import java.math.BigInteger
@@ -67,7 +68,10 @@ class StaticTypeTests {
             // DECIMAL
             InputTypes("`asymbol`", listOf(SYMBOL)),
             // TIMESTAMP
-            InputTypes("`2001T`", listOf(TIMESTAMP)),
+            InputTypes("`2001T`", listOf(TIMESTAMPTZ)),
+            InputTypes("TIMESTAMP '2023-06-01 00:00:00-00:00'", listOf(TIMESTAMPTZ)),
+            InputTypes("TIMESTAMP '2023-06-01 00:00:00+23:59'", listOf(TIMESTAMPTZ)),
+            InputTypes("TIMESTAMP '2023-06-01 00:00:00'", listOf(TIMESTAMP)),
             // STRING
             InputTypes("'a string'", listOf(STRING)),
             // CLOB

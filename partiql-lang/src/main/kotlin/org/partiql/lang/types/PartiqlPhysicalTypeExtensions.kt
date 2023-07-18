@@ -7,6 +7,7 @@ import org.partiql.types.NumberConstraint
 import org.partiql.types.StaticType
 import org.partiql.types.StringType
 import org.partiql.types.TimeType
+import org.partiql.types.TimestampType
 
 /**
  * Helper to convert [PartiqlPhysical.Type] in AST to a [TypedOpParameter].
@@ -59,7 +60,6 @@ internal fun PartiqlPhysical.Type.toTypedOpParameter(customTypedOpParameters: Ma
                 )
             )
         }
-        is PartiqlPhysical.Type.TimestampType -> TypedOpParameter(StaticType.TIMESTAMP)
         is PartiqlPhysical.Type.CharacterType -> when {
             this.length == null -> TypedOpParameter(
                 StringType(
@@ -109,6 +109,10 @@ internal fun PartiqlPhysical.Type.toTypedOpParameter(customTypedOpParameters: Ma
         is PartiqlPhysical.Type.TimeWithTimeZoneType -> TypedOpParameter(
             TimeType(this.precision?.value?.toInt(), withTimeZone = true)
         )
-
-        is PartiqlPhysical.Type.TimestampWithTimeZoneType -> TODO()
+        is PartiqlPhysical.Type.TimestampType -> TypedOpParameter(
+            TimestampType(this.precision?.value?.toInt(), withTimeZone = false)
+        )
+        is PartiqlPhysical.Type.TimestampWithTimeZoneType -> TypedOpParameter(
+            TimestampType(this.precision?.value?.toInt(), withTimeZone = true)
+        )
     }
