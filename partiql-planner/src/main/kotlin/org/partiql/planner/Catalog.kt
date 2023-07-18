@@ -21,7 +21,7 @@ public class Catalog(
         return types[ref.ordinal]
     }
 
-    fun lookup(ref: Fn.Ref.Resolved): Fn? {
+    fun lookup(ref: Fn.Ref.Resolved): Fn {
         if (ref.ordinal < 0) {
             throw IllegalArgumentException("Negative index ${ref.ordinal}")
         }

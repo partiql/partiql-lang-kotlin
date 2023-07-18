@@ -195,24 +195,25 @@ internal object PartiQLPlanIonWriter_VERSION_0_1 : PartiQLPlanIonWriter {
             return ionSexpOf(tag, type, root, ionSexpOf(steps))
         }
 
-        override fun visitRexOpPathStepIndex(node: Rex.Op.Path.Step.Index, type: IonElement): IonElement {
+        override fun visitRexOpPathStepIndex(node: Rex.Op.Path.Step.Index, nil: IonElement): IonElement {
             val tag = ionSymbol("step")
             val rex = visitRex(node.key, nil)
             return ionSexpOf(tag, rex)
         }
 
-        override fun visitRexOpPathStepWildcard(node: Rex.Op.Path.Step.Wildcard, type: IonElement): IonElement {
+        override fun visitRexOpPathStepWildcard(node: Rex.Op.Path.Step.Wildcard, nil: IonElement): IonElement {
             val tag = ionSymbol("step")
             val wildcard = ionSymbol("wildcard")
             return ionSexpOf(tag, wildcard)
         }
 
-        override fun visitRexOpPathStepUnpivot(node: Rex.Op.Path.Step.Unpivot, type: IonElement): IonElement {
+        override fun visitRexOpPathStepUnpivot(node: Rex.Op.Path.Step.Unpivot, nil: IonElement): IonElement {
             val tag = ionSymbol("step")
             val wildcard = ionSymbol("unpivot")
             return ionSexpOf(tag, wildcard)
         }
 
+        // Consider type? Well, is fn a type?
         override fun visitRexOpCall(node: Rex.Op.Call, nil: IonElement): IonElement {
             val tag = ionSymbol("call")
             val fn = visitFnRef(node.fn, nil)
@@ -229,6 +230,12 @@ internal object PartiQLPlanIonWriter_VERSION_0_1 : PartiQLPlanIonWriter {
             val tag = ionSymbol("t")
             val type = visitTypeRef(node.type, nil)
             return ionSexpOf(tag, type)
+        }
+
+        override fun visitRexOpCollection(node: Rex.Op.Collection, type: IonElement): IonElement {
+            val tag = ionSymbol("collection")
+            val values = ionSexpOf(node.values.map { visitRex(it, nil) })
+            return ionSexpOf(tag, type, values)
         }
 
         override fun visitRexOpStruct(node: Rex.Op.Struct, type: IonElement): IonElement {

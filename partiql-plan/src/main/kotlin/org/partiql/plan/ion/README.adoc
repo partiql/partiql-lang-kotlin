@@ -303,7 +303,7 @@ A plan contains a single _statement_. A statement may be a query, or other datab
 
 2+a|
 
-NOTE: This document's scope is limited to `query` and `create_view` statements, see <<document-scope>>.
+NOTE: This document's scope is limited to `query` and `create_view` statements, see scope.
 
 |===
 
@@ -360,8 +360,9 @@ SELECT a, b FROM T
 
 === `create_view`
 
+[#create-view-statement-node]
 ====
-[.text-center]
+[discrete.text-center]
 _variant of statement_
 
 '''
@@ -418,7 +419,7 @@ CREATE VIEW example AS SELECT * FROM T
 
 == Rex Nodes
 
-Within statements are several expression nodes. The following section defines all _expression_ variants. For more details, see the specification for <<value-rex-summary,PartiQL Value Expressions>>.
+Within statements are several expression nodes. The following section defines all _expression_ variants. For more details, see the specification PartiQL Value Expressions.
 
 .Rex Node Summary
 [cols="1,3a",grid=rows,frame=all]
@@ -442,20 +443,17 @@ Within statements are several expression nodes. The following section defines al
 
 // |<<switch-rex-node,switch>>
 // | Switch expression, ex: SQL `CASE`
-//
-// |<<tuple-rex-node,tuple>>
-// | Tuple constructor expressions
-//
+
+|<<collection-rex-node,tuple>>
+| Collection constructor expression
+
 |<<struct-rex-node,struct>>
 | Struct constructor expression
-//
-// |<<array-rex-node,array>>
-// | Array constructor expression
-//
+
 |<<pivot-rex-node,pivot>>
 | Pivot expression to produce a single tuple from a binding collection
 
-|<<coll-to-scalar-node,coll_to_scalar>>
+|<<coll-to-scalar-rex-node,coll_to_scalar>>
 | Scalar subquery coercion node
 
 |<<select-rex-node,select>>
@@ -794,103 +792,54 @@ rex.tuple ::= (tuple <type> (<rex> <rex>)*)
 ----
 
 ====
-//
-// [#bag-rex-node]
-// === `bag`
-//
-// ====
-//
-// [.text-center]
-// _variant of rex_
-//
-// '''
-//
-// A Bag Constructor produces a bag value from a collection of expressions.
-//
-// .Form
-// [source,ion]
-// ----
-// (bag (type type) | rex*)
-// ----
-//
-// .Parameters
-// [cols="1m,4",grid=rows,frame=all]
-// |===
-// | Type | Description
-//
-// | type | Optional bag element type if known
-//
-// | rex* | Zero or more expression elements
-//
-// |===
-//
-// .Examples
-// [source,partiql]
-// ----
-// << { 'a': 1 }, { 'b': 2 } >>
-// ----
-//
-// [source,ion]
-// ----
-// (bag
-//   (tuple (
-//     (lit string "a") (lit int 1))
-//   )
-//   (tuple (
-//     (lit string "b") (lit int 2))
-//   )
-// )
-// ----
-//
-// ====
-//
-// [#array-rex-node]
-// === `array`
-//
-// ====
-//
-// [.text-center]
-// _variant of rex_
-//
-// '''
-//
-// An Array Constructor produces an array value from a collection of expressions.
-//
-// .Form
-// [source,ion]
-// ----
-// (array (type type) | rex*)
-// ----
-//
-// .Parameters
-// [cols="1m,4",grid=rows,frame=all]
-// |===
-// | Type | Description
-//
-// | type | Optional array element type if known
-//
-// | rex* | Zero or more expression elements
-//
-// |===
-//
-// .Examples
-// [source,partiql]
-// ----
-// [ 'a', 'b', 'c' ]
-// ----
-//
-// [source,ion]
-// ----
-// (array
-//   (lit string "a")
-//   (lit string "b")
-//   (lit string "c")
-// )
-// ----
-//
-// ====
-//
-//
+
+[#collection-rex-node]
+=== `bag`
+
+====
+
+[.text-center]
+_variant of rex_
+
+'''
+
+A collection expression produces a collection value from a list of expressions.
+
+.Form
+[source,ion]
+----
+(collection <type> (<rex>*))
+----
+
+.Parameters
+[cols="1m,4",grid=rows,frame=all]
+|===
+| Type | Description
+
+| type | Expression type
+
+| rex* | Zero or more expression elements
+
+|===
+
+.Examples
+[source,partiql]
+----
+<< 1, 2, 3 >>
+
+[ 1, 2, 3 ]
+
+( 1 2 3 )
+----
+
+[source,ion]
+----
+// TODO
+----
+
+====
+
+
 [#pivot-rex-node]
 === `pivot`
 

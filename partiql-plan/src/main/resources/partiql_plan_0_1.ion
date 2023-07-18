@@ -144,8 +144,10 @@ rex::{
     },
 
     // switch
-    // tuple
-    // collections
+
+    collection::{
+      values: list::[rex],
+    },
 
     struct::{
       fields: list::[field],

@@ -97,7 +97,7 @@ internal object RexConverter {
             }
             // Rex
             val op = rexOpPath(root, steps)
-            return rex(type, op)
+            rex(type, op)
         }
 
         override fun visitExprCall(node: Expr.Call, env: PartiQLPlannerEnv) = transform {
@@ -112,8 +112,35 @@ internal object RexConverter {
             val fn = fnRefUnresolved(id)
             // Rex
             val op = rexOpCall(fn, args)
-            return rex(type, op)
+            rex(type, op)
         }
+
+        override fun visitExprCollection(node: Expr.Collection, env: PartiQLPlannerEnv) = transform {
+            val t = when (node.type) {
+                Expr.Collection.Type.BAG -> StaticType.BAG
+                Expr.Collection.Type.ARRAY -> StaticType.LIST
+                Expr.Collection.Type.VALUES -> StaticType.LIST
+                Expr.Collection.Type.LIST -> StaticType.LIST
+                Expr.Collection.Type.SEXP -> StaticType.SEXP
+            }
+            val type = env.type(t)
+            val values = node.values.map { visitExpr(it, env) }
+            val op = rexOpCollection(values)
+            rex(type, op)
+        }
+
+        override fun visitExprStruct(node: Expr.Struct, env: PartiQLPlannerEnv) = transform {
+            val type = env.type(StaticType.STRUCT)
+            val fields = node.fields.map {
+                val k = visitExpr(it.name, env)
+                val v = visitExpr(it.value, env)
+                rexOpStructField(k, v)
+            }
+            val op = rexOpStruct(fields)
+            rex(type, op)
+        }
+
+        // TODO SPECIAL FORMS ONCE WE HAVE THE CATALOG !!
 
         /**
          * This indicates we've hit a subquery in the context of an expression tree.
