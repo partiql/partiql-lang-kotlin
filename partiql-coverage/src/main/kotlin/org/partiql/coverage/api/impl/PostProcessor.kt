@@ -2,6 +2,7 @@ package org.partiql.coverage.api.impl
 
 import org.junit.platform.launcher.LauncherSession
 import org.junit.platform.launcher.LauncherSessionListener
+import org.partiql.coverage.api.MinimumThresholdException
 
 /**
  * This class is in charge of:
@@ -28,25 +29,45 @@ internal class PostProcessor : LauncherSessionListener {
         val configParams = configurationParameterRetriever.getConfig()
             ?: error("Configuration Parameters should have been initialized.")
 
-        // Ensure PartiQL Code Coverage is Enabled
-        if (configParams.lcovConfig == null) { return super.launcherSessionClosed(session) }
-        val reportPath = configParams.lcovConfig.reportPath
-
         // Generate HTML Report
-        if (configParams.htmlConfig != null) {
-            HtmlWriter.write(
-                reportPath = reportPath,
-                htmlOutputDir = configParams.htmlConfig.outputDir
-            )
+        val lcovBranchConfig = configParams.lcovBranchConfig
+        if (lcovBranchConfig != null) {
+            if (lcovBranchConfig.htmlOutputDir != null) {
+                HtmlWriter.write(
+                    reportPath = lcovBranchConfig.reportPath,
+                    htmlOutputDir = lcovBranchConfig.htmlOutputDir,
+                    title = "PartiQL Code Coverage (Branch) Report"
+                )
+            }
+
+            // Assert Branch Coverage Threshold
+            if (lcovBranchConfig.minimum != null) {
+                ThresholdExecutor.execute(
+                    minimum = lcovBranchConfig.minimum,
+                    reportPath = lcovBranchConfig.reportPath,
+                    type = MinimumThresholdException.ThresholdType.BRANCH
+                )
+            }
         }
 
-        // Assert Branch Coverage Threshold
-        if (configParams.thresholdConfig != null) {
-            ThresholdExecutor.execute(
-                branchMin = configParams.thresholdConfig.branchMinimum,
-                conditionMin = configParams.thresholdConfig.conditionMinimum,
-                reportPath = reportPath
-            )
+        val lcovConditionConfig = configParams.lcovConditionConfig
+        if (lcovConditionConfig != null) {
+            if (lcovConditionConfig.htmlOutputDir != null) {
+                HtmlWriter.write(
+                    reportPath = lcovConditionConfig.reportPath,
+                    htmlOutputDir = lcovConditionConfig.htmlOutputDir,
+                    title = "PartiQL Code Coverage (Condition) Report"
+                )
+            }
+
+            // Assert Branch Coverage Threshold
+            if (lcovConditionConfig.minimum != null) {
+                ThresholdExecutor.execute(
+                    minimum = lcovConditionConfig.minimum,
+                    reportPath = lcovConditionConfig.reportPath,
+                    type = MinimumThresholdException.ThresholdType.CONDITION
+                )
+            }
         }
 
         super.launcherSessionClosed(session)

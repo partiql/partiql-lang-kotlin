@@ -5,78 +5,55 @@ import org.junit.platform.launcher.TestPlan
 internal object ConfigurationParameterExtractor {
 
     internal class ConfigParams(
-        val lcovConfig: LcovConfig?,
-        val htmlConfig: HtmlConfig?,
-        val thresholdConfig: ThresholdConfig?
-    ) {
-        init {
-            if (lcovConfig == null) {
-                if (htmlConfig != null) {
-                    throw Exception("Cannot set PartiQL Code Coverage HTML Configurations unless LCOV is enabled.")
-                }
-                if (thresholdConfig != null) {
-                    throw Exception("Cannot set PartiQL Code Coverage Threshold Configurations unless LCOV is enabled.")
+        val lcovBranchConfig: LcovConfig?,
+        val lcovConditionConfig: LcovConfig?
+    )
+
+    internal class LcovConfig(
+        val reportPath: String,
+        val htmlOutputDir: String?,
+        val minimum: Double?
+    )
+
+    internal fun extract(testPlan: TestPlan): ConfigParams {
+        val config = ConfigParamWrapper(testPlan.configurationParameters)
+        
+        val lcovBranchConfig = config.getConfigParam(ConfigurationParameter.LCOV_BRANCH_ENABLED)?.let {
+            when (it.toBoolean()) {
+                false -> null
+                true -> {
+                    val reportPath = config.getConfigParam(ConfigurationParameter.LCOV_BRANCH_REPORT_LOCATION)
+                        ?: error("Expected to find a report path")
+                    val htmlOutputDir = config.getConfigParam(ConfigurationParameter.LCOV_BRANCH_HTML_DIR)
+                    val branchMinimum = config.getConfigParam(ConfigurationParameter.LCOV_BRANCH_MINIMUM)?.toDouble()
+                    LcovConfig(reportPath, htmlOutputDir, branchMinimum)
                 }
             }
         }
+
+        val lcovConditionConfig = config.getConfigParam(ConfigurationParameter.LCOV_CONDITION_ENABLED)?.let {
+            when (it.toBoolean()) {
+                false -> null
+                true -> {
+                    val reportPath = config.getConfigParam(ConfigurationParameter.LCOV_CONDITION_REPORT_LOCATION)
+                        ?: error("Expected to find a report path")
+                    val htmlOutputDir = config.getConfigParam(ConfigurationParameter.LCOV_CONDITION_HTML_DIR)
+                    val branchMinimum = config.getConfigParam(ConfigurationParameter.LCOV_CONDITION_MINIMUM)?.toDouble()
+                    LcovConfig(reportPath, htmlOutputDir, branchMinimum)
+                }
+            }
+        }
+
+        return ConfigParams(lcovBranchConfig, lcovConditionConfig)
     }
 
-    internal class LcovConfig(val reportPath: String)
-
-    internal class HtmlConfig(val outputDir: String)
-
-    internal class ThresholdConfig(val branchMinimum: Double?, val conditionMinimum: Double?)
-
-    internal fun extract(testPlan: TestPlan): ConfigParams {
-        var isLcovEnabled: Boolean = false
-        var reportPath: String? = null
-        var customBranchMin: Double? = null
-        var customConditionMin: Double? = null
-        var isHtmlEnabled: Boolean = false
-        var customHtmlOutputDirectory: String? = null
-
-        // Gets LCOV Enabled
-        val lcovEnabled = testPlan.configurationParameters[ConfigurationParameters.LCOV_ENABLED.key]
-        if (lcovEnabled.isPresent) { isLcovEnabled = lcovEnabled.get().toBoolean() }
-
-        // Gets the LCOV Report's Path
-        val reportLocation = testPlan.configurationParameters[ConfigurationParameters.LCOV_REPORT_LOCATION.key]
-        if (reportLocation.isPresent) { reportPath = reportLocation.get() }
-
-        // Gets the Branch Coverage Minimum
-        val branchMinimum = testPlan.configurationParameters[ConfigurationParameters.BRANCH_MINIMUM.key]
-        if (branchMinimum.isPresent) { customBranchMin = branchMinimum.get().toDouble() }
-
-        // Gets the Branch Coverage Minimum
-        val conditionMinimum = testPlan.configurationParameters[ConfigurationParameters.CONDITION_MINIMUM.key]
-        if (conditionMinimum.isPresent) { customConditionMin = conditionMinimum.get().toDouble() }
-
-        // Gets whether HTML is enabled
-        val htmlEnabled = testPlan.configurationParameters[ConfigurationParameters.LCOV_HTML_ENABLED.key]
-        if (htmlEnabled.isPresent) { isHtmlEnabled = htmlEnabled.get().toBoolean() }
-
-        // Gets the HTML Output Dir
-        val outputHtmlDir = testPlan.configurationParameters[ConfigurationParameters.LCOV_HTML_OUTPUT_DIR.key]
-        if (outputHtmlDir.isPresent) { customHtmlOutputDirectory = outputHtmlDir.get() }
-
-        // Create Configuration Object
-        val lcov = when (isLcovEnabled) {
-            true -> LcovConfig(
-                reportPath = reportPath
-                    ?: throw Exception("Expected an output PartiQL Code Coverage report path.")
-            )
-            false -> null
+    private class ConfigParamWrapper(val params: org.junit.platform.engine.ConfigurationParameters) {
+        fun getConfigParam(param: ConfigurationParameter): String? {
+            val value = this.params[param.key]
+            return when (value.isPresent) {
+                true -> value.get()
+                false -> null
+            }
         }
-        val html = when (isHtmlEnabled) {
-            true -> HtmlConfig(
-                outputDir = customHtmlOutputDirectory ?: throw Exception("Expected an output PartiQL Code Coverage HTML directory.")
-            )
-            false -> null
-        }
-        val thresholdConfig = when (customBranchMin) {
-            null -> null
-            else -> ThresholdConfig(customBranchMin, customConditionMin)
-        }
-        return ConfigParams(lcov, html, thresholdConfig)
     }
 }

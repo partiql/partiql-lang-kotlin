@@ -2,18 +2,21 @@ package org.partiql.coverage.api.impl
 
 import com.googlecode.jgenhtml.JGenHtml
 import java.nio.file.Path
+import kotlin.io.path.Path
+import kotlin.io.path.absolute
+import kotlin.io.path.absolutePathString
 
 /**
  * Writes the LCOV Report in HTML form to a directory. Internally uses JGenHtml to accomplish this.
  */
 internal object HtmlWriter {
 
-    public fun write(reportPath: String, htmlOutputDir: String) {
-        val prefixToRemove = Path.of("build", "partiql", "coverage", "source")
+    public fun write(reportPath: String, htmlOutputDir: String, title: String) {
+        val sourcePrefix = Path(reportPath).parent.resolve("source").absolutePathString()
         val args = arrayOf(
-            "--title", "PartiQL Code Coverage Report",
+            "--title", title,
             "--legend",
-            "--prefix", prefixToRemove.toAbsolutePath().toString(),
+            "--prefix", sourcePrefix,
             "--output-directory", htmlOutputDir,
             "--branch-coverage",
             "--show-details",
