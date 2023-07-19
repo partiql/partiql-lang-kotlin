@@ -1,9 +1,9 @@
 package org.partiql.planner.impl
 
+import org.partiql.ast.normalize.normalize
 import org.partiql.plan.PartiQLVersion
 import org.partiql.plan.Plan
 import org.partiql.planner.PartiQLPlanner
-import org.partiql.planner.impl.transforms.AstNormalize
 import org.partiql.planner.impl.transforms.AstToPlan
 import org.partiql.ast.Statement as AstStatement
 
@@ -19,7 +19,7 @@ class PartiQLPlannerDefault : PartiQLPlanner {
         val env = PartiQLPlannerEnv(session)
 
         // 1. Normalize
-        val ast = AstNormalize.apply(statement)
+        val ast = statement.normalize()
 
         // 2. AST to Rel/Rex
         val root = AstToPlan.apply(ast, env)

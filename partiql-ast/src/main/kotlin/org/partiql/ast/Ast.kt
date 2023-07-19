@@ -13,3 +13,11 @@ object Ast : AstBaseFactory()
 public abstract class AstBaseFactory : AstFactoryImpl() {
     // internal default overrides here
 }
+
+/**
+ * Wraps a rewriter with a default entry point.
+ */
+public interface AstPass {
+
+    public fun apply(statement: Statement): Statement
+}
