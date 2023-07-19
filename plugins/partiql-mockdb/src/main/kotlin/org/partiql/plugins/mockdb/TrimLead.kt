@@ -5,6 +5,8 @@ import org.partiql.spi.connector.ConnectorSession
 import org.partiql.spi.function.PartiQLFunction
 import org.partiql.spi.function.PartiQLFunctionExperimental
 import org.partiql.types.PartiQLValueType
+import org.partiql.types.function.FunctionParameter
+import org.partiql.types.function.FunctionSignature
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.StringValue
@@ -12,11 +14,11 @@ import org.partiql.value.stringValue
 
 @OptIn(PartiQLFunctionExperimental::class)
 object TrimLead : PartiQLFunction {
-    override val signature = PartiQLFunction.Signature(
-        names = listOf("trim_lead"),
+    override val signature = FunctionSignature(
+        name = "trim_lead",
         returns = PartiQLValueType.STRING,
         parameters = listOf(
-            PartiQLFunction.Parameter.ValueParameter(name = "str", type = PartiQLValueType.STRING)
+            FunctionParameter.ValueParameter(name = "str", type = PartiQLValueType.STRING)
         ),
         isDeterministic = true,
         description = "Trims leading whitespace of a [str]."

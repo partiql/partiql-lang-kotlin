@@ -5,6 +5,8 @@ import org.partiql.spi.connector.ConnectorSession
 import org.partiql.spi.function.PartiQLFunction
 import org.partiql.spi.function.PartiQLFunctionExperimental
 import org.partiql.types.PartiQLValueType
+import org.partiql.types.function.FunctionParameter
+import org.partiql.types.function.FunctionSignature
 import org.partiql.value.Int8Value
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
@@ -12,12 +14,12 @@ import org.partiql.value.float64Value
 
 @OptIn(PartiQLFunctionExperimental::class)
 object Pow : PartiQLFunction {
-    override val signature = PartiQLFunction.Signature(
-        names = listOf("test_power"),
+    override val signature = FunctionSignature(
+        name = "test_power",
         returns = PartiQLValueType.FLOAT64,
         parameters = listOf(
-            PartiQLFunction.Parameter.ValueParameter(name = "base", type = PartiQLValueType.INT8),
-            PartiQLFunction.Parameter.ValueParameter(name = "exponent", type = PartiQLValueType.INT8)
+            FunctionParameter.ValueParameter(name = "base", type = PartiQLValueType.INT8),
+            FunctionParameter.ValueParameter(name = "exponent", type = PartiQLValueType.INT8)
         ),
         isDeterministic = true,
         description = "Power [base] with [exponent]"
