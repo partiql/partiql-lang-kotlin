@@ -10,5 +10,6 @@ public fun Statement.normalize(): Statement {
     var ast = this
     ast = NormalizeSelectList.apply(ast)
     ast = NormalizeFromSource.apply(ast)
+    ast = NormalizeSelectStar.apply(ast)
     return ast
 }

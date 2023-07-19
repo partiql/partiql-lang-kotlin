@@ -58,7 +58,7 @@ internal object NormalizeSelectStar : AstPass {
         // t -> t.* AS _i
         private fun String.star(i: Int) = ast {
             val expr = exprPath {
-                root = exprVar(id(this@star))
+                root = exprVar(id(this@star), Expr.Var.Scope.DEFAULT)
                 steps += exprPathStepUnpivot()
             }
             val alias = expr.toBinder(i)
@@ -67,7 +67,7 @@ internal object NormalizeSelectStar : AstPass {
 
         // t -> t AS t
         private fun String.simple() = ast {
-            val expr = exprVar(id(this@simple))
+            val expr = exprVar(id(this@simple), Expr.Var.Scope.DEFAULT)
             val alias = id(this@simple)
             selectProjectItemExpression(expr, alias)
         }
