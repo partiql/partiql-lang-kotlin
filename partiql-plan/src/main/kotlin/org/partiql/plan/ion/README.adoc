@@ -4,9 +4,7 @@ DRAFT <howero@amazon.com>
 :toc-title: Page Contents
 :sectlinks:
 
-This documents defines a representation of xref:partiql_plan_specification[PartiQL Plans] as an Ion document. For plan semantics and specifcation, see xref:plan_specification[PartiQL Plan Specification]. The plan representation is guided by the following goals:
-
-include::parts.adoc[]
+This documents defines a representation of PartiQL Plans as an Ion document.
 
 == Goals
 
@@ -39,13 +37,15 @@ A PartiQL Plan file is a top-level Ion xref:https://amazon-ion.github.io/ion-doc
 
   version :: (0 1)               // PartiQL Plan version
 
-  (include ...)                  // Include prelude
+  (import ...)                   // Import
 
-  (env ...)                      // Environment
+  (globals ...)                  // Global bindings
 
   (statement ...)                // Statement to execute, `main`
 )
 ----
+
+NOTE: For version `version::(0 1)`, the import is always `(import (partiql))` which imports PartiQL builtin types and functions.
 
 // Each Ion value (respectively) represents:
 //
@@ -194,71 +194,71 @@ A PartiQL Plan file is a top-level Ion xref:https://amazon-ion.github.io/ion-doc
 // Also note that labeling nodes is different than the optional annotations for positional parameters. Positional parameters have optional annotations simply for readability; those
 // annotations are not labels.
 
-[#types]
-== TODO Types
-
-The plan `(type ...)` container is where types used within a plan are defined. The plan supports defining atomic, product, and union types footnote:[As presented, you cannot define an atomic type named "union" or "product".]. Here is a basic set of types which defines an integer, float, number union, and number pair.
-
-Additionally, you can define open-schema and closed-schema collections of type:
-* array — ordered collection
-* bag — unordered collection
-* tuple — key-value pairs
-
-.Types Example
-[source,ion]
-----
-(
-  partiql::(0 1)
-
-  // Syntax (annotations optional)
-  //
-  // def ::= ( [product|union] <symbol> <ref>+ )
-  // ref ::= <int>
-
-  (types
-    (int)                   // atomic type "int"
-    (float)                 // atomic type "float"
-    (decimal 0 0)           // atomic type "decimal" with two int parameters
-    (union number           // union type "number"
-      (
-       int::0
-       float::1
-       decimal::2
-      )
-    )
-    (product pair           // product type "pair"
-      (number::3 number::3) // operands: type 3 (number), type 3 (number)
-    )
-    (array closed 3)        // array of numbers
-  )
-)
-----
-
-.Normalized Example
-[source,ion]
-----
-(
-  partiql :: (0 1)
-
-  (type)
-
-  (define
-    gtints  :: (fn 'gt' (int int) (bool))              // `fn` definition node
-    gt0     :: (call (@ 0) (var 0) (lit (int) 0))      // `call` rex node
-  )
-
-  // INPUT      | SELECT a, b FROM T as t WHERE c > 0
-  // NORMALIZED | SELECT _0.a as a, _0.b as b FROM T as _0 WHERE _0.c > 0
-
-  (query                            // Statement: QUERY
-    (select ('a' 'b')               // Rex: sfw, construct bag of { a: $0, b: $1 }
-      (project ($1 $2)              // Rel: project vars 1, 2 to slots 0, 1 respectively (could be pushed into filter)
-        (filter $gt0                // Rel: filter on the expression labeled by gt0
-          (scan 'T' ('a' 'b' 'c')   // Rel: scan 'T', assigning c, a, b to slots 0, 1, 2 respectively
-  ))))
-
-)
-----
+// [#types]
+// == TODO Types
+//
+// The plan `(type ...)` container is where types used within a plan are defined. The plan supports defining atomic, product, and union types footnote:[As presented, you cannot define an atomic type named "union" or "product".]. Here is a basic set of types which defines an integer, float, number union, and number pair.
+//
+// Additionally, you can define open-schema and closed-schema collections of type:
+// * array — ordered collection
+// * bag — unordered collection
+// * tuple — key-value pairs
+//
+// .Types Example
+// [source,ion]
+// ----
+// (
+//   partiql::(0 1)
+//
+//   // Syntax (annotations optional)
+//   //
+//   // def ::= ( [product|union] <symbol> <ref>+ )
+//   // ref ::= <int>
+//
+//   (types
+//     (int)                   // atomic type "int"
+//     (float)                 // atomic type "float"
+//     (decimal 0 0)           // atomic type "decimal" with two int parameters
+//     (union number           // union type "number"
+//       (
+//        int::0
+//        float::1
+//        decimal::2
+//       )
+//     )
+//     (product pair           // product type "pair"
+//       (number::3 number::3) // operands: type 3 (number), type 3 (number)
+//     )
+//     (array closed 3)        // array of numbers
+//   )
+// )
+// ----
+//
+// .Normalized Example
+// [source,ion]
+// ----
+// (
+//   partiql :: (0 1)
+//
+//   (type)
+//
+//   (define
+//     gtints  :: (fn 'gt' (int int) (bool))              // `fn` definition node
+//     gt0     :: (call (@ 0) (var 0) (lit (int) 0))      // `call` rex node
+//   )
+//
+//   // INPUT      | SELECT a, b FROM T as t WHERE c > 0
+//   // NORMALIZED | SELECT _0.a as a, _0.b as b FROM T as _0 WHERE _0.c > 0
+//
+//   (query                            // Statement: QUERY
+//     (select ('a' 'b')               // Rex: sfw, construct bag of { a: $0, b: $1 }
+//       (project ($1 $2)              // Rel: project vars 1, 2 to slots 0, 1 respectively (could be pushed into filter)
+//         (filter $gt0                // Rel: filter on the expression labeled by gt0
+//           (scan 'T' ('a' 'b' 'c')   // Rel: scan 'T', assigning c, a, b to slots 0, 1, 2 respectively
+//   ))))
+//
+// )
+// ----
 
 // == Plan Header
 
@@ -345,15 +345,36 @@ SELECT a, b FROM T
 
 [source,ion]
 ----
-(query
-  (select (...)                         // TODO add schema
-    (project ((var 0 any) (var 1 any))
-      (scan
-        (global collection "T")
-      )
+(
+    partiql :: plan
+    version :: (0 1)
+
+    (import (partiql))
+
+    (globals
+        ((mycatalog myschema 'T') ($ype 0))
     )
-  )
-)
+
+    // ($type 0) is `any`
+
+    (statement
+        (query
+            (select
+                ($type 10)
+                (struct ($type 14) (
+                    ((lit ($type 6) "a") (var ($type 0) 0))
+                    ((lit ($type 6) "b") (var ($type 0) 1))
+                ))
+                (project (($type 0) ($type 0)) (
+                        (path ($type 0) (var 0) (
+                            (step (lit ($type 7) a))
+                        ))
+                        (path ($type 0) (var 0) (
+                            (step (lit ($type 7) b))
+                        ))
+                    )
+                    (scan (($type 0)) ($global 0))
+)))))
 ----
 
 ====
