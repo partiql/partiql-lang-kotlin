@@ -25,12 +25,13 @@ internal object ConfigurationParameterExtractor {
 
     internal class HtmlConfig(val outputDir: String)
 
-    internal class ThresholdConfig(val branchMinimum: Double)
+    internal class ThresholdConfig(val branchMinimum: Double?, val conditionMinimum: Double?)
 
     internal fun extract(testPlan: TestPlan): ConfigParams {
         var isLcovEnabled: Boolean = false
         var reportPath: String? = null
         var customBranchMin: Double? = null
+        var customConditionMin: Double? = null
         var isHtmlEnabled: Boolean = false
         var customHtmlOutputDirectory: String? = null
 
@@ -45,6 +46,10 @@ internal object ConfigurationParameterExtractor {
         // Gets the Branch Coverage Minimum
         val branchMinimum = testPlan.configurationParameters[ConfigurationParameters.BRANCH_MINIMUM.key]
         if (branchMinimum.isPresent) { customBranchMin = branchMinimum.get().toDouble() }
+
+        // Gets the Branch Coverage Minimum
+        val conditionMinimum = testPlan.configurationParameters[ConfigurationParameters.CONDITION_MINIMUM.key]
+        if (conditionMinimum.isPresent) { customConditionMin = conditionMinimum.get().toDouble() }
 
         // Gets whether HTML is enabled
         val htmlEnabled = testPlan.configurationParameters[ConfigurationParameters.LCOV_HTML_ENABLED.key]
@@ -70,7 +75,7 @@ internal object ConfigurationParameterExtractor {
         }
         val thresholdConfig = when (customBranchMin) {
             null -> null
-            else -> ThresholdConfig(customBranchMin!!)
+            else -> ThresholdConfig(customBranchMin, customConditionMin)
         }
         return ConfigParams(lcov, html, thresholdConfig)
     }

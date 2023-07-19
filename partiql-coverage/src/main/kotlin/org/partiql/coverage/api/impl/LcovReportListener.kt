@@ -6,23 +6,13 @@ import org.junit.platform.launcher.TestIdentifier
 import org.junit.platform.launcher.TestPlan
 import java.io.File
 import java.io.OutputStream
-import java.util.Random
 
-internal class CoverageListener : TestExecutionListener {
+internal class LcovReportListener : TestExecutionListener {
 
     private lateinit var reportStream: OutputStream
     private lateinit var destinationFileName: String
     private lateinit var reportFile: File
     private var isLcovEnabled: Boolean = false
-
-    public object ReportKey {
-        public const val DECISION_COUNT: String = "\$pql-dc"
-        public const val PACKAGE_NAME: String = "\$pql-pan"
-        public const val PROVIDER_NAME: String = "\$pql-prn"
-        public const val ORIGINAL_STATEMENT: String = "\$pql-os"
-        public const val LINE_NUMBER_OF_BRANCH_PREFIX: String = "\$pql-lfd_"
-        public const val RESULT_OF_BRANCH_PREFIX: String = "\$pql-rob_"
-    }
 
     override fun testPlanExecutionStarted(testPlan: TestPlan?) {
         if (testPlan == null) { return super.testPlanExecutionStarted(testPlan) }
@@ -47,45 +37,72 @@ internal class CoverageListener : TestExecutionListener {
         if (!isLcovEnabled) { return super.reportingEntryPublished(testIdentifier, entry) }
 
         val map = entry?.keyValuePairs ?: emptyMap()
-        val decisionCount = map[ReportKey.DECISION_COUNT]?.toInt() ?: 0
         val originalStatement = map[ReportKey.ORIGINAL_STATEMENT] ?: ""
-        val decisionToLineMap = mutableMapOf<String, Int>()
-        val decisionResults = mutableMapOf<String, Int>()
         val packageName = map[ReportKey.PACKAGE_NAME]?.replace('.', '/') ?: "PQL_NO_PACKAGE_FOUND"
         val providerName = map[ReportKey.PROVIDER_NAME] ?: "PQL_NO_PROVIDER_FOUND_" + kotlin.random.Random(5).nextLong()
+
+        // Condition Information (Boolean Expressions)
+        val conditionCount = map[ReportKey.CONDITION_COUNT]?.toInt() ?: 0
+        val conditionToLineMap = mutableMapOf<String, Int>()
+        val conditionResults = mutableMapOf<String, Int>()
+
+        // Branch Information (CASE, WHERE, HAVING)
+        val branchCount = map[ReportKey.BRANCH_COUNT]?.toInt() ?: 0
+        val branchToLineMap = mutableMapOf<String, Int>()
+        val branchResults = mutableMapOf<String, Int>()
+
         var executedCount: Int = 0
         map.forEach { (key, value) ->
             when {
-                key == ReportKey.DECISION_COUNT || key == ReportKey.ORIGINAL_STATEMENT -> {
+                key == ReportKey.CONDITION_COUNT || key == ReportKey.ORIGINAL_STATEMENT -> {
                     // Do nothing for now
                 }
                 key.startsWith(ReportKey.LINE_NUMBER_OF_BRANCH_PREFIX) -> {
                     val branchId = key.substring(ReportKey.LINE_NUMBER_OF_BRANCH_PREFIX.length)
                     val lineNumber = value.toInt()
-                    decisionToLineMap[branchId] = lineNumber
+                    branchToLineMap[branchId] = lineNumber
+                }
+                key.startsWith(ReportKey.LINE_NUMBER_OF_CONDITION_PREFIX) -> {
+                    val conditionId = key.substring(ReportKey.LINE_NUMBER_OF_CONDITION_PREFIX.length)
+                    val lineNumber = value.toInt()
+                    conditionToLineMap[conditionId] = lineNumber
+                }
+                key.startsWith(ReportKey.RESULT_OF_CONDITION_PREFIX) -> {
+                    val conditionId = key.substring(ReportKey.RESULT_OF_CONDITION_PREFIX.length)
+                    val lineNumber = value.toInt()
+                    conditionResults[conditionId] = lineNumber
+                    executedCount += value.toInt()
                 }
                 key.startsWith(ReportKey.RESULT_OF_BRANCH_PREFIX) -> {
                     val branchId = key.substring(ReportKey.RESULT_OF_BRANCH_PREFIX.length)
                     val lineNumber = value.toInt()
-                    decisionResults[branchId] = lineNumber
+                    branchResults[branchId] = lineNumber
                     executedCount += value.toInt()
                 }
             }
         }
 
-        // Get Branches Hit
-        val branchesHit = decisionResults.values.filter { it > 0 }.size
+        // Get ALL Branches Hit (including conditions)
+        val lcovBranchesHit = conditionResults.values.filter { it > 0 }.size + branchResults.values.filter { it > 0 }.size
+        val lcovBranchesFound = conditionCount + branchCount
+        
+        // Line Information
+        // TODO: Fix this
+        val lcovLinesFound = (conditionToLineMap.values + branchToLineMap.values).maxOrNull()!!
 
-        // Aggregate Branch Information
-        val branches = decisionToLineMap.entries.map { (decisionId, lineNumber) ->
-            val count = decisionResults[decisionId] ?: 0
-            Branch(decisionId, count, lineNumber)
+        // Aggregate ALL Branch Information (including conditions)
+        val lcovBranches = conditionToLineMap.entries.map { (conditionId, lineNumber) ->
+            val count = conditionResults[conditionId] ?: 0
+            Branch(conditionId, count, lineNumber)
+        } + branchToLineMap.entries.map { (branchId, lineNumber) ->
+            val count = branchResults[branchId] ?: 0
+            Branch(branchId, count, lineNumber)
         }
 
         // TODO
         // Aggregate Line Data
         val count = 1
-        val lineData = decisionToLineMap.values.toSet().map { lineNumber ->
+        val lcovLineData = (conditionToLineMap.values + branchToLineMap.values).toSet().map { lineNumber ->
             LineData(lineNumber, count)
         }
 
@@ -96,13 +113,14 @@ internal class CoverageListener : TestExecutionListener {
 
         // Write to Coverage Report File
         val coverageEntry = getCoverageInformationEntry(
+            testName = testIdentifier?.uniqueId ?: "NO_TEST_NAME",
             filePath = queryPath.absolutePath,
-            branchesFound = decisionCount,
-            branchesHit = branchesHit,
-            linesFound = decisionToLineMap.values.maxOrNull()!!,
-            linesHit = decisionToLineMap.values.maxOrNull()!!, // TODO: Fix this
-            branches = branches,
-            lineData = lineData
+            branchesFound = lcovBranchesFound,
+            branchesHit = lcovBranchesHit,
+            linesFound = lcovLinesFound,
+            linesHit = lcovLinesFound,
+            branches = lcovBranches,
+            lineData = lcovLineData
         )
         reportStream.write(coverageEntry.toByteArray())
     }
@@ -129,6 +147,7 @@ internal class CoverageListener : TestExecutionListener {
     }
 
     private fun getCoverageInformationEntry(
+        testName: String,
         filePath: String,
         branchesFound: Int,
         branchesHit: Int,
@@ -140,8 +159,7 @@ internal class CoverageListener : TestExecutionListener {
         val strBuilder = StringBuilder()
 
         // Test Name
-        val randomTestName = Random(5).nextInt().toString() // TODO: Update this
-        strBuilder.appendLine("TN:$randomTestName")
+        strBuilder.appendLine("TN:$testName")
 
         // Source File Path
         strBuilder.appendLine("SF:$filePath")

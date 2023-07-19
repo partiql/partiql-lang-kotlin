@@ -112,21 +112,32 @@ class PartiQLTestExtension implements TestTemplateInvocationContextProvider {
         String className = prov.getClass().getName();
         String[] classNames = className.split("\\.");
         String actualClassName = classNames[classNames.length - 1];
-        report.put(CoverageListener.ReportKey.PACKAGE_NAME, packageName);
-        report.put(CoverageListener.ReportKey.PROVIDER_NAME, actualClassName);
+        report.put(ReportKey.PACKAGE_NAME, packageName);
+        report.put(ReportKey.PROVIDER_NAME, actualClassName);
 
         // Get Static Coverage Statistics
         CoverageStructure coverageStructure = expression.getCoverageStructure();
 
         // Add Total Decision Count to Coverage Report
-        int decisionCount = coverageStructure != null ? coverageStructure.getBranchCount() : 0;
-        report.put(CoverageListener.ReportKey.DECISION_COUNT, String.valueOf(decisionCount));
-        report.put(CoverageListener.ReportKey.ORIGINAL_STATEMENT, prov.getQuery());
+        int branchCount = coverageStructure != null ? coverageStructure.getBranchCount() : 0;
+        report.put(ReportKey.BRANCH_COUNT, String.valueOf(branchCount));
+        int conditionCount = coverageStructure != null ? coverageStructure.getConditionCount() : 0;
+        report.put(ReportKey.CONDITION_COUNT, String.valueOf(conditionCount));
+
+        // Original Query
+        report.put(ReportKey.ORIGINAL_STATEMENT, prov.getQuery());
 
         // Add Location Information to Report
-        Map<String, Integer> decisionLocations = coverageStructure != null ? coverageStructure.getBranchLocations() : Collections.emptyMap();
-        for (Map.Entry<String, Integer> entry : decisionLocations.entrySet()) {
-            String key = CoverageListener.ReportKey.LINE_NUMBER_OF_BRANCH_PREFIX + entry.getKey();
+        Map<String, Integer> branchLocations = coverageStructure != null ? coverageStructure.getBranchLocations() : Collections.emptyMap();
+        for (Map.Entry<String, Integer> entry : branchLocations.entrySet()) {
+            String key = ReportKey.LINE_NUMBER_OF_BRANCH_PREFIX + entry.getKey();
+            report.put(key, String.valueOf(entry.getValue()));
+        }
+
+        // Add Location Information to Report
+        Map<String, Integer> conditionLocations = coverageStructure != null ? coverageStructure.getConditionLocations() : Collections.emptyMap();
+        for (Map.Entry<String, Integer> entry : conditionLocations.entrySet()) {
+            String key = ReportKey.LINE_NUMBER_OF_CONDITION_PREFIX + entry.getKey();
             report.put(key, String.valueOf(entry.getValue()));
         }
 
@@ -140,9 +151,15 @@ class PartiQLTestExtension implements TestTemplateInvocationContextProvider {
 
                     // Add Executed Decisions (Size) to Coverage Report
                     // NOTE: This only works because we share the same CoverageCompiler. Therefore, we override some things.
+                    Map<String, Integer> executedConditions = stats != null ? stats.getConditionCount() : Collections.emptyMap();
+                    for (Map.Entry<String, Integer> entry : executedConditions.entrySet()) {
+                        String key = ReportKey.RESULT_OF_CONDITION_PREFIX + entry.getKey();
+                        report.put(key, String.valueOf(entry.getValue()));
+                    }
+
                     Map<String, Integer> executedBranches = stats != null ? stats.getBranchCount() : Collections.emptyMap();
                     for (Map.Entry<String, Integer> entry : executedBranches.entrySet()) {
-                        String key = CoverageListener.ReportKey.RESULT_OF_BRANCH_PREFIX + entry.getKey();
+                        String key = ReportKey.RESULT_OF_BRANCH_PREFIX + entry.getKey();
                         report.put(key, String.valueOf(entry.getValue()));
                     }
 

@@ -24,9 +24,15 @@ dependencies {
 }
 
 tasks.test {
-    systemProperty("partiql.coverage.lcov.enabled", true)
-    systemProperty("partiql.coverage.lcov.path", "$buildDir/partiql/coverage/lcov.info")
-    systemProperty("partiql.coverage.lcov.html.enabled", true)
-    systemProperty("partiql.coverage.lcov.html.dir", "$buildDir/reports/partiql/test")
-    systemProperty("partiql.coverage.threshold.branch.min", 0.50)
+    systemProperty("partiql.coverage.lcov.branch.enabled", true)
+    systemProperty("partiql.coverage.lcov.branch.report.path", "$buildDir/partiql/coverage/condition/lcov.info")
+    systemProperty("partiql.coverage.lcov.branch.html.enabled", true)
+    systemProperty("partiql.coverage.lcov.branch.html.dir", "$buildDir/reports/partiql/branch/test")
+    systemProperty("partiql.coverage.lcov.branch.threshold.min", 0.74)
+
+    systemProperty("partiql.coverage.lcov.condition.enabled", true)
+    systemProperty("partiql.coverage.lcov.condition.report.path", "$buildDir/partiql/coverage/condition/lcov.info")
+    systemProperty("partiql.coverage.lcov.condition.html.enabled", true)
+    systemProperty("partiql.coverage.lcov.condition.html.dir", "$buildDir/reports/partiql/condition/test")
+    systemProperty("partiql.coverage.lcov.condition.threshold.min", 0.74)
 }

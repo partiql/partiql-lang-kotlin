@@ -24,5 +24,7 @@ package org.partiql.lang.eval
  */
 public data class CoverageStructure(
     val branchCount: Int = 0,
-    val branchLocations: Map<String, Int> = emptyMap()
+    val branchLocations: Map<String, Int> = emptyMap(),
+    val conditionCount: Int = 0,
+    val conditionLocations: Map<String, Int> = emptyMap()
 )

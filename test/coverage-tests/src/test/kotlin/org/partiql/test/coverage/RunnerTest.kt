@@ -114,7 +114,14 @@ class RunnerTest {
                     WHEN (t.a + t.b = 1 AND t.a < 0)
                     THEN TRUE
                     ELSE FALSE
-                END AS aLessThanTwo
+                END AS aLessThanTwo,
+                CASE (t.a)
+                    WHEN 0
+                    THEN 'isZero'
+                    WHEN 1
+                    THEN 'is1'
+                    ELSE 'UNKNOWN'
+                END AS textualRepresentation
             FROM <<
                 { 'a': globalA, 'b': globalB }
             >> AS t

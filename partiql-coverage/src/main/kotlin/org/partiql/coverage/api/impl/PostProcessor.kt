@@ -44,6 +44,7 @@ internal class PostProcessor : LauncherSessionListener {
         if (configParams.thresholdConfig != null) {
             ThresholdExecutor.execute(
                 branchMin = configParams.thresholdConfig.branchMinimum,
+                conditionMin = configParams.thresholdConfig.conditionMinimum,
                 reportPath = reportPath
             )
         }

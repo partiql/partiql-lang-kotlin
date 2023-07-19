@@ -26,10 +26,11 @@ package org.partiql.lang.eval
  * accurate [CoverageData], one must access each individual [ExprValue] of the [PartiQLResult] before accessing the
  * [CoverageData].
  *
- * @param branchCount represents the branch name (String) and the corresponding number of times it was executed.
+ * @param conditionCount represents the branch name (String) and the corresponding number of times it was executed.
  * @param lineCount represents how many times (value) a particular line number (key) was executed.
  */
 public data class CoverageData(
-    val branchCount: Map<String, Int> = emptyMap(),
-    val lineCount: Map<Int, Int> = emptyMap()
+    val conditionCount: Map<String, Int> = emptyMap(),
+    val lineCount: Map<Int, Int> = emptyMap(),
+    val branchCount: Map<String, Int> = emptyMap()
 )

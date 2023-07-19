@@ -132,13 +132,13 @@ internal open class EvaluatingCompiler(
     private val functions: Map<String, ExprFunction>,
     private val customTypedOpParameters: Map<String, TypedOpParameter>,
     private val procedures: Map<String, StoredProcedure>,
-    private val compileOptions: CompileOptions = CompileOptions.standard()
+    internal val compileOptions: CompileOptions = CompileOptions.standard()
 ) {
     // TODO: remove this once we migrate from `IonValue` to `IonElement`.
     private val ion = IonSystemBuilder.standard().build()
 
     private val errorSignaler = compileOptions.typingMode.createErrorSignaler()
-    private val thunkFactory = compileOptions.typingMode.createThunkFactory<Environment>(compileOptions.thunkOptions)
+    internal val thunkFactory = compileOptions.typingMode.createThunkFactory<Environment>(compileOptions.thunkOptions)
 
     private val compilationContextStack = Stack<CompilationContext>()
 
@@ -1465,7 +1465,7 @@ internal open class EvaluatingCompiler(
         }
     }
 
-    private fun compileSimpleCase(expr: PartiqlAst.Expr.SimpleCase, metas: MetaContainer): ThunkEnv {
+    internal open fun compileSimpleCase(expr: PartiqlAst.Expr.SimpleCase, metas: MetaContainer): ThunkEnv {
         val valueThunk = compileAstExpr(expr.expr)
         val branchThunks = expr.cases.pairs.map { Pair(compileAstExpr(it.first), compileAstExpr(it.second)) }
         val elseThunk = when (val default = expr.default) {
@@ -1498,7 +1498,7 @@ internal open class EvaluatingCompiler(
         }
     }
 
-    private fun compileSearchedCase(expr: PartiqlAst.Expr.SearchedCase, metas: MetaContainer): ThunkEnv {
+    internal open fun compileSearchedCase(expr: PartiqlAst.Expr.SearchedCase, metas: MetaContainer): ThunkEnv {
         val branchThunks = expr.cases.pairs.map { compileAstExpr(it.first) to compileAstExpr(it.second) }
         val elseThunk = when (val default = expr.default) {
             null -> thunkFactory.thunkEnv(metas) { ExprValue.nullValue }
@@ -1796,6 +1796,14 @@ internal open class EvaluatingCompiler(
         return offsetValue
     }
 
+    internal open fun compileWhere(node: PartiqlAst.Expr): ThunkEnv {
+        return compileAstExpr(node)
+    }
+
+    internal open fun compileHaving(node: PartiqlAst.Expr): ThunkEnv {
+        return compileAstExpr(node)
+    }
+
     private fun compileSelect(selectExpr: PartiqlAst.Expr.Select, metas: MetaContainer): ThunkEnv {
 
         // Get all the FROM source aliases and LET bindings for binding error checks
@@ -1823,7 +1831,7 @@ internal open class EvaluatingCompiler(
         return nestCompilationContext(ExpressionContext.NORMAL, emptySet()) {
             val fromSourceThunks = compileFromSources(selectExpr.from)
             val letSourceThunks = selectExpr.fromLet?.let { compileLetSources(it) }
-            val compiledWhere = selectExpr.where?.let { compileAstExpr(it) }
+            val compiledWhere = selectExpr.where?.let { compileWhere(it) }
             val sourceThunks = compileFromLetWhere(fromSourceThunks, letSourceThunks, compiledWhere)
 
             val orderByThunk = selectExpr.order?.let { compileOrderByExpression(it.sortSpecs) }
@@ -1977,7 +1985,7 @@ internal open class EvaluatingCompiler(
                                     )
                                 }
 
-                                val havingThunk = selectExpr.having?.let { compileAstExpr(it) }
+                                val havingThunk = selectExpr.having?.let { compileHaving(it) }
 
                                 val filterHavingAndProject: (Environment, Group) -> ExprValue? =
                                     createFilterHavingAndProjectClosure(havingThunk, selectProjectionThunk)
