@@ -37,7 +37,7 @@ class PartiQLPlanIonWriterTest {
         private const val type = "\$type 0"
 
         // Use `any` anytime there is a type as we don't want to break serde on resolution changes
-        private val any = Plan.typeRef(0)
+        private val any = Plan.typeRef("any", 0)
 
         @JvmStatic
         fun pathCases(): List<Case> {

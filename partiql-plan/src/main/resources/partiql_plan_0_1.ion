@@ -245,9 +245,13 @@ rel::{
       rhs: rel,
     },
 
-    fetch::{
+    limit::{
       input:  rel,
       limit:  rex,
+    },
+
+    offset::{
+      input:  rel,
       offset: rex,
     },
 

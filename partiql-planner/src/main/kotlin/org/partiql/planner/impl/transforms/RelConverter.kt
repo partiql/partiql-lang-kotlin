@@ -137,7 +137,8 @@ internal object RelConverter {
             // transform (possibly rewritten) sel node
             // rel = convertHaving(rel, sel.having)
             // rel = convertOrderBy(rel, sel.orderBy)
-            // rel = convertFetch(rel, sel.limit, sel.offset)
+            rel = convertLimit(rel, sel.limit)
+            rel = convertOffset(rel, sel.offset)
             // append SQL projection if present
             rel = when (val projection = sel.select) {
                 is Select.Project -> visitSelectProject(projection, rel)
@@ -349,43 +350,42 @@ internal object RelConverter {
         //         condition = RexConverter.convert(expr)
         //     )
         // }
-        //
-        // /**
-        //  * Append [Rel.Sort] only if an ORDER BY clause is present
-        //  */
-        // private fun convertOrderBy(input: Rel, orderBy: OrderBy?) = when (orderBy) {
-        //     null -> input
-        //     else -> Plan.relSort(
-        //         common = empty,
-        //         input = input,
-        //         specs = orderBy.sorts.map { convertSort(it) }
-        //     )
-        // }
-        //
-        // /**
-        //  * Append [Rel.Fetch] if there is a LIMIT or LIMIT and OFFSET.
-        //  *
-        //  * Notes:
-        //  *  - It's unclear if OFFSET without LIMIT should be allowed in PartiQL, so err for now.
-        //  */
-        // private fun convertFetch(
-        //     input: Rel,
-        //     limit: Expr?,
-        //     offset: Expr?
-        // ): Rel {
-        //     if (limit == null) {
-        //         if (offset != null) error("offset without limit")
-        //         return input
-        //     }
-        //     return Plan.relFetch(
-        //         common = empty,
-        //         input = input,
-        //         limit = RexConverter.convert(limit),
-        //         offset = RexConverter.convert(offset ?: Ast.exprLiteral(int64Value(0)))
-        //     )
+
+        /**
+         * Append [Rel.Op.Sort] only if an ORDER BY clause is present
+         */
+        // private fun convertOrderBy(input: Rel, orderBy: OrderBy?) = transform {
+        //    TODO
         // }
 
-        //
+        /**
+         * Append [Rel.Op.Limit] if there is a LIMIT
+         */
+        private fun convertLimit(input: Rel, limit: Expr?): Rel = transform {
+            if (limit == null) {
+                return@transform input
+            }
+            val schema = input.schema
+            val props = input.props
+            val rex = RexConverter.apply(limit, env)
+            val op = relOpLimit(input, rex)
+            rel(schema, props, op)
+        }
+
+        /**
+         * Append [Rel.Op.Offset] if there is an OFFSET
+         */
+        private fun convertOffset(input: Rel, offset: Expr?): Rel = transform {
+            if (offset == null) {
+                return@transform input
+            }
+            val schema = input.schema
+            val props = input.props
+            val rex = RexConverter.apply(offset, env)
+            val op = relOpOffset(input, rex)
+            rel(schema, props, op)
+        }
+
         // /**
         //  * Notes:
         //  *  - ASC NULLS LAST   (default)

@@ -18,7 +18,6 @@ package org.partiql.cli
 import com.amazon.ion.system.IonSystemBuilder
 import com.amazon.ion.system.IonTextWriterBuilder
 import org.partiql.ast.Statement
-import org.partiql.ast.normalize.normalize
 import org.partiql.cli.pico.PartiQLCommand
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.parser.PartiQLParserBuilder
@@ -64,19 +63,19 @@ object Debug {
         if (ast !is Statement) {
             error("Expect AST Statement, found $ast")
         }
-        val normalized = ast.normalize()
-        AstPrinter.append(out, normalized)
-        // val session = PartiQLPlanner.Session(
-        //     queryId = UUID.randomUUID().toString(),
-        //     userId = "debug",
-        // )
-        // val plan = planner.plan(session, ast).plan
-        // val ion = writer.toIonDebug(plan)
-        // // Pretty print Ion
-        // val sb = StringBuilder()
-        // val formatter = IonTextWriterBuilder.standard().build(sb)
-        // ion.writeTo(formatter)
-        // out.println(sb)
+        // val normalized = ast.normalize()
+        // AstPrinter.append(out, normalized)
+        val session = PartiQLPlanner.Session(
+            queryId = UUID.randomUUID().toString(),
+            userId = "debug",
+        )
+        val plan = planner.plan(session, ast).plan
+        val ion = writer.toIonDebug(plan)
+        // Pretty print Ion
+        val sb = StringBuilder()
+        val formatter = IonTextWriterBuilder.standard().build(sb)
+        ion.writeTo(formatter)
+        out.println(sb)
         return "OK"
     }
 }

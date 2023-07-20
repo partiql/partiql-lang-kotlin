@@ -78,7 +78,7 @@ internal object PartiQLPlanIonWriter_VERSION_0_1 : PartiQLPlanIonWriter {
         override fun visitPartiQLPlan(node: PartiQLPlan, nil: IonElement): IonElement {
             val tag = ionSymbol("plan", annotations = listOf("partiql"))
             val version = ionSexpOf(ionInt(0), ionInt(1), annotations = listOf("version"))
-            // TODO include
+            // TODO import
             val globals = ionSexpOf(node.globals.map { visitGlobal(it, nil) })
             val statement = visitStatement(node.statement, nil)
             return ionSexpOf(tag, version, globals, statement)
@@ -234,6 +234,7 @@ internal object PartiQLPlanIonWriter_VERSION_0_1 : PartiQLPlanIonWriter {
             val rex = visitRex(node.rex, nil)
             return ionSexpOf(tag, rex)
         }
+
         override fun visitRexOpCallArgType(node: Rex.Op.Call.Arg.Type, nil: IonElement): IonElement {
             val tag = ionSymbol("t")
             val type = visitTypeRef(node.type, nil)
@@ -289,7 +290,7 @@ internal object PartiQLPlanIonWriter_VERSION_0_1 : PartiQLPlanIonWriter {
         override fun visitRexOpCollToScalar(node: Rex.Op.CollToScalar, type: IonElement): IonElement {
             val tag = ionSymbol("coll_to_scalar")
             val subquery = visitRexOp(node.subquery.select, visitTypeRef(node.subquery.type, nil))
-            return ionSexpOf(tag, type,subquery )
+            return ionSexpOf(tag, type, subquery)
         }
 
         // Rel : ctx -> schema
@@ -320,15 +321,29 @@ internal object PartiQLPlanIonWriter_VERSION_0_1 : PartiQLPlanIonWriter {
         override fun visitRelOpProject(node: Rel.Op.Project, schema: IonElement): IonElement {
             val tag = ionSymbol("project")
             val items = ionSexpOf(node.projections.map { visitRex(it, nil) })
-            val rel = visitRel(node.input, nil)
-            return ionSexpOf(tag, schema, items, rel)
+            val input = visitRel(node.input, nil)
+            return ionSexpOf(tag, schema, items, input)
         }
 
         override fun visitRelOpFilter(node: Rel.Op.Filter, schema: IonElement): IonElement {
             val tag = ionSymbol("filter")
             val predicate = visitRex(node.predicate, nil)
-            val rel = visitRel(node.input, nil)
-            return ionSexpOf(tag, schema, predicate, rel)
+            val input = visitRel(node.input, nil)
+            return ionSexpOf(tag, schema, predicate, input)
+        }
+
+        override fun visitRelOpLimit(node: Rel.Op.Limit, schema: IonElement): IonElement {
+            val tag = ionSymbol("limit")
+            val limit = visitRex(node.limit, nil)
+            val input = visitRel(node.input, nil)
+            return ionSexpOf(tag, schema, limit, input)
+        }
+
+        override fun visitRelOpOffset(node: Rel.Op.Offset, schema: IonElement): IonElement {
+            val tag = ionSymbol("offset")
+            val offset = visitRex(node.offset, nil)
+            val input = visitRel(node.input, nil)
+            return ionSexpOf(tag, schema, offset, input)
         }
 
         // Helpers

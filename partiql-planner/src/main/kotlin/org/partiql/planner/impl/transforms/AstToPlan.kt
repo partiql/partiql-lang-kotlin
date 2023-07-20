@@ -34,6 +34,9 @@ import org.partiql.ast.Statement as AstStatement
 import org.partiql.plan.Identifier as PlanIdentifier
 import org.partiql.plan.Statement as PlanStatement
 
+/**
+ * Simple translation from AST to an unresolved algebraic IR.
+ */
 internal object AstToPlan {
 
     // statement.toPlan()

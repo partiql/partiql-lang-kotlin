@@ -6,23 +6,6 @@ DRAFT <howero@amazon.com>
 
 This documents defines a representation of PartiQL Plans as an Ion document.
 
-== Goals
-
-.Portable
-The plan language should be a valid Ion document for portability across various systems.
-
-.Versioned
-A full versioning story is out of scope, but for now we get a `MAJOR.MINOR` string. The `0.x` versions are considered experimental and there are no compatibility guarantees prior to `1.0`.
-
-.Decomposable
-A plan should be decomposable and distributed across multiple systems.
-
-.Extensible
-We need a mechanism to model custom types, expressions, and operators. These things are out of scope, but a prelude has been carved out.
-
-.Concise
-We'll use tagged s-expression with positional parameters to define nodes as it's familiar, expressive, and concise.
-
 [#partiql-plan-structure]
 == Plan File Basics
 
@@ -1065,15 +1048,10 @@ Rel nodes represent the relational expressions from the PartiQL Plan Specificati
 //
 // | <<set-rel-nodes,except>>
 // | Multiset difference
-//
-// | <<fetch-rel-nodes,limit>>
-// | LIMIT
-//
-// | <<fetch-rel-nodes,offset>>
-// | OFFSET
-//
-// | <<fetch-rel-nodes,fetch>>
-// | LIMIT ... OFFSET
+
+| <<limit-offset-rel-node,limit>>
+| LIMIT and OFFSET
+
 //
 // | <<join-rel-node,join>>
 // | Relation join
@@ -1503,46 +1481,44 @@ Filters the input relation on the given predicate.
 //
 // ====
 //
-// [#fetch-rel-nodes]
-// === `fetch`
-//
-// ====
-//
-// [.text-center]
-// _variant of rel_
-//
-// '''
-//
-// .Form
-// [source,ion]
-// ----
-// (limit n:int | op::operator)
-//
-// (offset n:int | op::operator)
-//
-// (fetch (limit int) (offset int) | op:operator)
-// ----
-//
-// .Parameters
-// [cols="1m,4",grid=rows,frame=all]
-// |===
-// | Type | Description
-//
-// |===
-//
-// Let _variant of rel_ be some relation operator node.
-//
-// .Examples
-// [source,ion]
-// ----
-// (limit 10 rel)
-//
-// (offset 1 rel) // skip first binding tuple
-//
-// (fetch (limit 10) (offset 1) rel) // equivalent to (limit 10 (offset 1 rel))
-// ----
-//
-// ====
+[#limit-offset-rel-node]
+=== `limit / offset`
+
+====
+
+[.text-center]
+_variants of rel_
+
+'''
+
+.Form
+[source,ion]
+----
+(limit <schema> <rex> <rel>)
+
+(offset <schema> <rex> <rel>)
+----
+
+.Parameters
+[cols="1m,4",grid=rows,frame=all]
+|===
+| Type | Description
+
+| schema | Output relation schema
+
+| rex | Expression to LIMIT or OFFSET by
+
+| rel | Input relation
+
+|===
+
+.Examples
+[source,ion]
+----
+// TODO examples
+----
+
+====
 //
 // [#join-rel-node]
 // === `join`
