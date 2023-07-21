@@ -31,7 +31,7 @@ object Versions {
     const val gson = "2.10.1"
     const val guava = "31.1-jre"
     const val ionElement = "1.0.0"
-    const val ionJava = "1.9.0"
+    const val ionJava = "1.10.2"
     const val ionSchema = "1.2.1"
     const val jansi = "2.4.0"
     const val jline = "3.21.0"

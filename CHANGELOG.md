@@ -40,6 +40,8 @@ Thank you to all who have contributed!
 
 ### Changed
 
+- Upgrades ion-java to 1.10.2.
+
 ### Deprecated
 
 ### Fixed
