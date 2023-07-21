@@ -64,4 +64,15 @@ internal class PartiQLPlannerEnv(private val session: PartiQLPlanner.Session) {
             }
         }
     }
+
+    internal fun resolveAggFn(identifier: Identifier, args: List<Rex.Op.Call.Arg>): Fn.Ref {
+        when (identifier) {
+            is Identifier.Qualified -> throw IllegalArgumentException("Qualified function identifiers not supported")
+            is Identifier.Symbol -> {
+                val symbol = identifier.symbol.lowercase()
+                // TODO actual function resolution
+                return Plan.fnRefResolved(symbol, 0)
+            }
+        }
+    }
 }

@@ -297,25 +297,25 @@ rel::{
       ],
     },
 
-    // TODO
-    // aggregate::{
-    //  strategy: [ FULL, PARTIAL ],
-    //  aggs:     list::[agg],
-    //  groups:   list::[rex],
-    //  _: [
-    //    agg::{
-    //      fn:   fn,
-    //      args: list::[rex],
-    //    }
-    //  ]
-    // },
+    aggregate::{
+      input:    rel,
+      strategy: [ FULL, PARTIAL ],
+      aggs:     list::[agg],
+      groups:   list::[rex],
+      _: [
+        agg::{
+          fn:   '.fn.ref',
+          args: list::['.rex.op.call.arg'],
+        },
+      ],
+    },
   ],
   _: [
     prop::[
       ORDERED,
     ],
     binding::{
-      name: '.identifier.symbol',
+      name: string,
       type: '.type.ref',
     },
   ]

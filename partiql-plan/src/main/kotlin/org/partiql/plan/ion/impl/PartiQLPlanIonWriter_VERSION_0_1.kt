@@ -79,7 +79,7 @@ internal object PartiQLPlanIonWriter_VERSION_0_1 : PartiQLPlanIonWriter {
             val tag = ionSymbol("plan", annotations = listOf("partiql"))
             val version = ionSexpOf(ionInt(0), ionInt(1), annotations = listOf("version"))
             // TODO import
-            val globals = ionSexpOf(node.globals.map { visitGlobal(it, nil) })
+            val globals = ionSexpOf(listOf(ionSymbol("global")) + node.globals.map { visitGlobal(it, nil) })
             val statement = visitStatement(node.statement, nil)
             return ionSexpOf(tag, version, globals, statement)
         }
@@ -404,6 +404,22 @@ internal object PartiQLPlanIonWriter_VERSION_0_1 : PartiQLPlanIonWriter {
             val lhs = visitRel(node.lhs, nil)
             val rhs = visitRel(node.rhs, nil)
             return ionSexpOf(tag, schema, lhs, rhs)
+        }
+
+        override fun visitRelOpAggregate(node: Rel.Op.Aggregate, schema: IonElement): IonElement {
+            val tag = ionSymbol("aggregate")
+            val strategy = ionInt(node.strategy.ordinal.toLong())
+            val aggs = ionSexpOf(node.aggs.map { visitRelOpAggregateAgg(it, nil) })
+            val groups = ionSexpOf(node.groups.map { visitRex(it, nil) })
+            val input = visitRel(node.input, nil)
+            return ionSexpOf(tag, schema, strategy, aggs, groups, input)
+        }
+
+        override fun visitRelOpAggregateAgg(node: Rel.Op.Aggregate.Agg, nil: IonElement): IonElement {
+            val tag = ionSymbol("agg")
+            val fn = visitFnRef(node.fn, nil)
+            val args = ionSexpOf(node.args.map { visitRexOpCallArg(it, nil) })
+            return ionSexpOf(tag, fn, args)
         }
 
         // Helpers

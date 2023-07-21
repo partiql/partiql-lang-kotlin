@@ -3,7 +3,6 @@ package org.partiql.planner
 import org.partiql.plan.Fn
 import org.partiql.plan.Type
 import org.partiql.plan.builder.PlanFactory
-import org.partiql.value.PartiQLValueExperimental
 
 // Simplified Catalog for plan bootstrapping
 public class Catalog(

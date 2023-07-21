@@ -3,17 +3,18 @@ package org.partiql.planner.impl.transforms
 import org.partiql.ast.AstNode
 import org.partiql.ast.Expr
 import org.partiql.ast.From
+import org.partiql.ast.GroupBy
 import org.partiql.ast.OrderBy
 import org.partiql.ast.Select
 import org.partiql.ast.SetOp
 import org.partiql.ast.Sort
+import org.partiql.ast.builder.ast
+import org.partiql.ast.util.AstRewriter
 import org.partiql.ast.visitor.AstBaseVisitor
-import org.partiql.plan.Identifier
 import org.partiql.plan.Plan
 import org.partiql.plan.PlanNode
 import org.partiql.plan.Rel
 import org.partiql.plan.Rex
-import org.partiql.plan.Type
 import org.partiql.plan.builder.PlanFactory
 import org.partiql.plan.builder.plan
 import org.partiql.planner.impl.PartiQLPlannerEnv
@@ -82,7 +83,6 @@ internal object RelConverter {
      */
     private fun Expr.toRex(env: PartiQLPlannerEnv): Rex = RexConverter.apply(this, env)
 
-    
     private fun PartiQLPlannerEnv.type(type: StaticType) = resolveType(AstToPlan.convert(type))
 
     /**
@@ -90,11 +90,11 @@ internal object RelConverter {
      *  - https://partiql.org/dql/select.html#sql-select
      */
     @OptIn(PartiQLValueExperimental::class)
-    private fun defaultConstructor(env: PartiQLPlannerEnv, schema: List<Rel.Binding>): Rex  = with(factory) {
+    private fun defaultConstructor(env: PartiQLPlannerEnv, schema: List<Rel.Binding>): Rex = with(factory) {
         val str = env.type(StaticType.STRING)
         val type = env.type(StaticType.STRUCT)
         val fields = schema.mapIndexed { i, b ->
-            val k = rex(str, rexOpLit(stringValue(b.name.symbol)))
+            val k = rex(str, rexOpLit(stringValue(b.name)))
             val v = rex(b.type, rexOpVarResolved(i))
             rexOpStructField(k, v)
         }
@@ -102,23 +102,10 @@ internal object RelConverter {
         rex(type, op)
     }
 
-    @Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE")
+    @Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE", "LocalVariableName")
     private class ToRel(
         private val env: PartiQLPlannerEnv,
     ) : AstBaseVisitor<Rel, Rel>() {
-
-        // Produce a synthetic binding of the given type
-        private val nextBinding: (Type.Ref) -> Rel.Binding = run {
-            var i = 0
-            { type ->
-                transform {
-                    relBinding(
-                        name = identifierSymbol("\$__v${i++}", Identifier.CaseSensitivity.INSENSITIVE),
-                        type = type,
-                    )
-                }
-            }
-        }
 
         private inline fun <T : PlanNode> transform(block: PlanFactory.() -> T): T = factory.block()
 
@@ -134,11 +121,11 @@ internal object RelConverter {
             var rel = visitFrom(sel.from, nil)
             rel = convertWhere(rel, sel.where)
             // kotlin does not have destructuring reassignment
-            // val (_sel, _rel) = convertAgg(rel, sel, sel.groupBy)
-            // sel = _sel
-            // rel = _rel
+            val (_sel, _rel) = convertAgg(rel, sel, sel.groupBy)
+            sel = _sel
+            rel = _rel
             // transform (possibly rewritten) sel node
-            // rel = convertHaving(rel, sel.having)
+            rel = convertHaving(rel, sel.having)
             rel = convertSetOp(rel, sel.setOp)
             rel = convertOrderBy(rel, sel.orderBy)
             rel = convertLimit(rel, sel.limit)
@@ -171,7 +158,7 @@ internal object RelConverter {
             val binding = when (val a = node.asAlias) {
                 null -> error("AST not normalized, missing AS alias on $node")
                 else -> relBinding(
-                    name = AstToPlan.convert(a),
+                    name = a.symbol,
                     type = rex.type
                 )
             }
@@ -181,7 +168,7 @@ internal object RelConverter {
                         null -> convertScan(rex, binding)
                         else -> {
                             val index = relBinding(
-                                name = AstToPlan.convert(i),
+                                name = i.symbol,
                                 type = env.type(StaticType.INT)
                             )
                             convertScanIndexed(rex, binding, index)
@@ -192,7 +179,7 @@ internal object RelConverter {
                     val atAlias = when (val at = node.atAlias) {
                         null -> error("AST not normalized, missing AT alias on UNPIVOT $node")
                         else -> relBinding(
-                            name = AstToPlan.convert(at),
+                            name = at.symbol,
                             type = env.type(StaticType.STRING)
                         )
                     }
@@ -245,15 +232,13 @@ internal object RelConverter {
         }
 
         private fun convertProjectItemAll(item: Select.Project.Item.All): Pair<Rel.Binding, Rex> {
-            val rex = RexConverter.apply(item.expr, env)
-            val binding = nextBinding(rex.type)
-            return binding to rex
+            TODO("Remove Project All in favor of project unpivot")
         }
 
         private fun convertProjectItemRex(item: Select.Project.Item.Expression): Pair<Rel.Binding, Rex> {
             val name = when (val a = item.asAlias) {
                 null -> error("AST not normalized, missing AS alias on projection item $item")
-                else -> AstToPlan.convert(a)
+                else -> a.symbol
             }
             val rex = RexConverter.apply(item.expr, env)
             val binding = factory.relBinding(name, rex.type)
@@ -293,79 +278,88 @@ internal object RelConverter {
             }
         }
 
-        // /**
-        //  * Append [Rel.Aggregate] only if SELECT contains aggregate expressions.
-        //  *
-        //  * @return Pair<Ast.Expr.SFW, Rel> is returned where
-        //  *         1. Ast.Expr.SFW has every Ast.Expr.CallAgg replaced by a synthetic Ast.Expr.Id
-        //  *         2. Rel which has the appropriate Rex.Agg calls and Rex groups
-        //  */
-        // private fun convertAgg(
-        //     input: Rel,
-        //     select: Expr.SFW,
-        //     groupBy: GroupBy?
-        // ): Pair<Expr.SFW, Rel> {
-        //     // Rewrite and extract all aggregations in the SELECT clause
-        //     val (sel, aggregations) = AggregationTransform.apply(select)
-        //
-        //     // No aggregation planning required for GROUP BY
-        //     if (aggregations.isEmpty()) {
-        //         if (groupBy != null) {
-        //             // As of now, GROUP BY with no aggregations is considered an error.
-        //             error("GROUP BY with no aggregations in SELECT clause")
-        //         }
-        //         return Pair(select, input)
-        //     }
-        //
-        //     val calls = aggregations.toMutableList()
-        //     var groups = emptyList<Binding>()
-        //     var strategy = Rel.Aggregate.Strategy.FULL
-        //
-        //     if (groupBy != null) {
-        //         // GROUP AS is implemented as an aggregation function
-        //         if (groupBy.asAlias != null) {
-        //             calls.add(convertGroupAs(groupBy.asAlias!!, sel.from))
-        //         }
-        //         groups = groupBy.keys.map { convertGroupByKey(it) }
-        //         strategy = when (groupBy.strategy) {
-        //             GroupBy.Strategy.FULL -> Rel.Aggregate.Strategy.FULL
-        //             GroupBy.Strategy.PARTIAL -> Rel.Aggregate.Strategy.PARTIAL
-        //         }
-        //     }
-        //
-        //     val rel = Plan.relAggregate(
-        //         common = empty,
-        //         input = input,
-        //         calls = calls,
-        //         groups = groups,
-        //         strategy = strategy
-        //     )
-        //
-        //     return Pair(sel, rel)
-        // }
-        //
-        // /**
-        //  * Each GROUP BY becomes a binding available in the output tuples of [Rel.Aggregate]
-        //  */
-        // private fun convertGroupByKey(groupKey: GroupBy.Key) = binding(
-        //     name = groupKey.asAlias ?: error("not normalized, group key $groupKey missing unique name"),
-        //     expr = groupKey.expr
-        // )
-        //
-        // /**
-        //  * Append [Rel.Filter] only if a HAVING condition exists
-        //  *
-        //  * Notes:
-        //  *  - This currently does not support aggregation expressions in the WHERE condition
-        //  */
-        // private fun convertHaving(input: Rel, expr: Expr?): Rel = when (expr) {
-        //     null -> input
-        //     else -> Plan.relFilter(
-        //         common = empty,
-        //         input = input,
-        //         condition = RexConverter.convert(expr)
-        //     )
-        // }
+        /**
+         * Append [Rel.Op.Aggregate] only if SELECT contains aggregate expressions.
+         *
+         * TODO Set quantifiers
+         * TODO Group As
+         *
+         * @return Pair<Ast.Expr.SFW, Rel> is returned where
+         *         1. Ast.Expr.SFW has every Ast.Expr.CallAgg replaced by a synthetic Ast.Expr.Var
+         *         2. Rel which has the appropriate Rex.Agg calls and groups
+         */
+        private fun convertAgg(input: Rel, select: Expr.SFW, groupBy: GroupBy?): Pair<Expr.SFW, Rel> {
+            // Rewrite and extract all aggregations in the SELECT clause
+            val (sel, aggregations) = AggregationTransform.apply(select)
+
+            // No aggregation planning required for GROUP BY
+            if (aggregations.isEmpty()) {
+                if (groupBy != null) {
+                    // GROUP BY with no aggregations is considered an error.
+                    error("GROUP BY with no aggregations in SELECT clause")
+                }
+                return Pair(select, input)
+            }
+
+            // Build the schema -> (aggs... groups...)
+            val schema = mutableListOf<Rel.Binding>()
+            val props = emptySet<Rel.Prop>()
+
+            // Build the rel operator
+            var strategy = Rel.Op.Aggregate.Strategy.FULL
+            val aggs = aggregations.mapIndexed { i, agg ->
+                val binding = Plan.relBinding(
+                    name = syntheticAgg(i),
+                    type = env.type(StaticType.ANY),
+                )
+                schema.add(binding)
+                val args = agg.args.map { arg ->
+                    val rex = arg.toRex(env)
+                    Plan.rexOpCallArgValue(rex)
+                }
+                val id = AstToPlan.convert(agg.function)
+                val fn = Plan.fnRefUnresolved(id)
+                Plan.relOpAggregateAgg(fn, args)
+            }
+            var groups = emptyList<Rex>()
+            if (groupBy != null) {
+                groups = groupBy.keys.map {
+                    if (it.asAlias == null) {
+                        error("not normalized, group key $it missing unique name")
+                    }
+                    val binding = Plan.relBinding(
+                        name = it.asAlias!!.symbol,
+                        type = env.type(StaticType.ANY)
+                    )
+                    schema.add(binding)
+                    it.expr.toRex(env)
+                }
+                strategy = when (groupBy.strategy) {
+                    GroupBy.Strategy.FULL -> Rel.Op.Aggregate.Strategy.FULL
+                    GroupBy.Strategy.PARTIAL -> Rel.Op.Aggregate.Strategy.PARTIAL
+                }
+            }
+            val op = Plan.relOpAggregate(input, strategy, aggs, groups)
+            val rel = Plan.rel(schema, props, op)
+            return Pair(sel, rel)
+        }
+
+        /**
+         * Append [Rel.Op.Filter] only if a HAVING condition exists
+         *
+         * Notes:
+         *  - This currently does not support aggregation expressions in the WHERE condition
+         */
+        private fun convertHaving(input: Rel, expr: Expr?): Rel = transform {
+            if (expr == null) {
+                return input
+            }
+            val schema = input.schema
+            val props = input.props
+            val predicate = expr.toRex(env)
+            val op = relOpFilter(input, predicate)
+            rel(schema, props, op)
+        }
 
         /**
          * Append SQL set operator if present
@@ -471,71 +465,32 @@ internal object RelConverter {
         //         )
         //     )
         // }
-        //
-        // /**
-        //  * Helper to get all binding names in the FROM clause
-        //  */
-        // private fun From.bindings(): List<String> = when (this) {
-        //     is From.Value -> {
-        //         if (asAlias == null) {
-        //             error("not normalized, scan is missing an alias")
-        //         }
-        //         listOf(asAlias!!)
-        //     }
-        //     is From.Join -> lhs.bindings() + rhs.bindings()
-        // }
-        //
-        //
-        // /**
-        //  * Rewrites a SFW node replacing all aggregations with a synthetic field name
-        //  *
-        //  * See AstToLogicalVisitorTransform.kt CallAggregationReplacer from org.partiql.lang.planner.transforms.
-        //  *
-        //  * ```
-        //  * SELECT g, h, SUM(t.b) AS sumB
-        //  * FROM t
-        //  * GROUP BY t.a AS g GROUP AS h
-        //  * ```
-        //  *
-        //  * into:
-        //  *
-        //  * ```
-        //  * SELECT g, h, $__v0 AS sumB
-        //  * FROM t
-        //  * GROUP BY t.a AS g GROUP AS h
-        //  * ```
-        //  *
-        //  * Where $__v0 is the binding name of SUM(t.b) in the aggregation output
-        //  *
-        //  * Inner object class to have access to current SELECT-FROM-WHERE converter state
-        //  */
-        // @Suppress("PrivatePropertyName")
-        // private val AggregationTransform = object : AstRewriter<Unit>() {
-        //
-        //     private var level = 0
-        //     private var aggregations = mutableListOf<Binding>()
-        //
-        //     fun apply(node: Expr.SFW): Pair<Expr.SFW, List<Binding>> {
-        //         level = 0
-        //         aggregations = mutableListOf()
-        //         val select = visitExprSFW(node, Unit) as Expr.SFW
-        //         return Pair(select, aggregations)
-        //     }
-        //
-        //     // only rewrite top-level SFW
-        //     override fun visitExprSFW(node: Expr.SFW, ctx: Unit): AstNode =
-        //         if (level++ == 0) super.visitExprSFW(node, ctx) else node
-        //
-        //     override fun visitExprAgg(node: Expr.Agg, ctx: Unit): AstNode {
-        //         val name = nextBindingName()
-        //         aggregations.add(binding(name, node))
-        //         return ast {
-        //             exprVar {
-        //                 identifier = identifierSymbol(name, Identifier.CaseSensitivity.INSENSITIVE)
-        //                 scope = Expr.Var.Scope.DEFAULT
-        //             }
-        //         }
-        //     }
-        // }
+
     }
+
+    /**
+     * Rewrites a SELECT node replacing (and extracting) each aggregation `i` with a synthetic field name `$agg_i`.
+     */
+    private object AggregationTransform : AstRewriter<MutableList<Expr.Agg>>() {
+
+        fun apply(node: Expr.SFW): Pair<Expr.SFW, List<Expr.Agg>> {
+            val aggs = mutableListOf<Expr.Agg>()
+            val select = super.visitExprSFW(node, aggs) as Expr.SFW
+            return Pair(select, aggs)
+        }
+
+        // only rewrite top-level SFW
+        override fun visitExprSFW(node: Expr.SFW, ctx: MutableList<Expr.Agg>): AstNode = node
+
+        override fun visitExprAgg(node: Expr.Agg, ctx: MutableList<Expr.Agg>) = ast {
+            val id = identifierSymbol {
+                symbol = syntheticAgg(ctx.size)
+                caseSensitivity = org.partiql.ast.Identifier.CaseSensitivity.INSENSITIVE
+            }
+            ctx += node
+            exprVar(id, Expr.Var.Scope.DEFAULT)
+        }
+    }
+
+    private fun syntheticAgg(i: Int) = "\$agg_$i"
 }

@@ -1110,15 +1110,12 @@ Rel nodes represent the relational expressions from the PartiQL Plan Specificati
 | <<filter-rel-node,filter>>
 | Filters the input relation on a given predicate expression
 
-// | <<cross-rel-node,cross>>
-// | Produce the cross product of two relation expressions
-
 | <<sort-rel-node,sort>>
 | Sorts the given relation
 
-// | <<aggregate-rel-node,aggregate>>
-// | Applies the aggregate calls to the given relation
-//
+| <<aggregate-rel-node,aggregate>>
+| Applies the aggregate calls to the given relation
+
 | <<set-rel-nodes,union>>
 | SQL multiset union
 
@@ -1134,9 +1131,8 @@ Rel nodes represent the relational expressions from the PartiQL Plan Specificati
 | <<fetch-rel-nodes,offset>>
 | OFFSET
 
-//
-// | <<join-rel-node,join>>
-// | Relation join
+| <<join-rel-node,join>>
+| Relation join
 //
 // | <<user-defined-rel-node,op>>
 // | User-defined relation operator
@@ -1288,7 +1284,6 @@ FROM UNPIVOT { k~0~: v~0~ , ... , k~n~: v~n~ } AS v AT k
 // END unpivot-rel-node
 
 
-
 [#project-rel-node]
 === `project`
 
@@ -1388,35 +1383,6 @@ Filters the input relation on the given predicate.
 
 ====
 
-// [#cross-rel-node]
-// === `cross`
-//
-// ====
-//
-// [.text-center]
-// _variant of rel_
-//
-// '''
-//
-// The cross product operation combines every tuple from the left input with every tuple of the right input. See <<multi-item-from,multi-item from>>.
-//
-// .Form
-// [source,ion]
-// ----
-// (cross | lhs::operator rhs::operator)
-// ----
-//
-// .Parameters
-// [cols="1m,4",grid=rows,frame=all]
-// |===
-// | Type | Description
-//
-// | lhs::operator | Left input relation operator
-// | rhs::operator | Right input relation operator
-//
-// |===
-//
-// ====
 
 [#sort-rel-node]
 === `sort`
@@ -1454,10 +1420,12 @@ sort_spec ::= (<rex> <int>)
 | int
 a| Sort order
 
-* 0 — 00 — ascending, nulls last
-* 1 — 01 — ascending, nulls first
-* 2 — 10 — descending, nulls last
-* 3 — 11 — descending, nulls first
+----
+0 ASC_NULLS_LAST      00
+1 ASC_NULLS_FIRST     01
+2 DESC_NULLS_LAST     10
+3 DESC_NULLS_FIRST    11
+----
 
 |===
 
@@ -1469,61 +1437,59 @@ a| Sort order
 
 ====
 
-// [#aggregate-rel-node]
-// === `aggregate`
-//
-// ====
-//
-// [.text-center]
-// _variant of rel_
-//
-// '''
-//
-// .Form
-// [source,ion]
-// ----
-// (aggregate calls::(agg*) groups::(rex*) | op::operator)
-//
-// (agg fn | (args rex*))
-//
-// (fn (symbol+) (type*) type) // same `fn` as a call
-// ----
-//
-// .Parameters
-// [cols="1m,4",grid=rows,frame=all]
-// |===
-// | Type | Description
-//
-// | agg | An s-expression defining the aggregation function to invoke
-//
-// | groups::(rex*) | A list of aggregate grouping expressions
-//
-// | op::operator | Input relation expression to aggregate
-//
-// |===
-//
-// .Examples
-// [source,ion]
-// ----
-// -- SELECT SUM(a) FROM table GROUP BY b
-//
-// (aggregate
-//   (
-//     (agg sum (args (var 0 int)))
-//   )
-//   (
-//     (var 1 string)
-//   )
-//   (scan (lit bag [
-//     { "a": 1, "b": "x" },
-//     { "a": 2, "b": "x" },
-//     { "a": 3, "b": "y" },
-//     { "a": 4, "b": "y" },
-//   ]))
-// )
-// ----
-// ====
-//
+[#aggregate-rel-node]
+=== `aggregate`
+
+====
+
+[.text-center]
+_variant of rel_
+
+'''
+
+.Form
+[source,ion]
+----
+(aggregate <schema> strategy::<int> (<agg>+) (<rex>*) <rel>)
+
+agg ::= (agg <fn> (<arg>*))
+
+arg ::= <arg-value> | <arg-type>
+
+arg-value ::= (v <rex>)
+
+arg-type  ::= (t <type>)
+----
+
+.Parameters
+[cols="1m,4",grid=rows,frame=all]
+|===
+| Type | Description
+
+| schema | Output relation schema
+
+| strategy::int a|
+----
+0 FULL
+1 PARTIAL
+----
+
+| (agg+) | Aggregation functions
+
+| (rex*) | Group keys
+
+| rel | Input relation
+
+|===
+
+.Examples
+[source,ion]
+----
+// TODO
+----
+
+====
+
 [#set-rel-nodes]
 ====
 [discrete.text-center]
@@ -1665,16 +1631,7 @@ Let _rel~L~_ and _rel~R~_ be two relation operator nodes.
 .Examples
 [source,ion,subs=normal]
 ----
-(join INNER
-  rel~L~
-  rel~R~
-)
-
-(join INNER
-  (on (call eq (args (var 0 int8) (var 2 int8))))
-  rel~L~  // < 0: .., 1: .. >
-  rel~R~  // < 0: .., 1: .. >
-)
+// TODO
 ----
 
 ====
