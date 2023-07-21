@@ -3,8 +3,10 @@ package org.partiql.planner.impl.transforms
 import org.partiql.ast.AstNode
 import org.partiql.ast.Expr
 import org.partiql.ast.From
+import org.partiql.ast.OrderBy
 import org.partiql.ast.Select
 import org.partiql.ast.SetOp
+import org.partiql.ast.Sort
 import org.partiql.ast.visitor.AstBaseVisitor
 import org.partiql.plan.Identifier
 import org.partiql.plan.Plan
@@ -138,7 +140,7 @@ internal object RelConverter {
             // transform (possibly rewritten) sel node
             // rel = convertHaving(rel, sel.having)
             rel = convertSetOp(rel, sel.setOp)
-            // rel = convertOrderBy(rel, sel.orderBy)
+            rel = convertOrderBy(rel, sel.orderBy)
             rel = convertLimit(rel, sel.limit)
             rel = convertOffset(rel, sel.offset)
             // append SQL projection if present
@@ -378,9 +380,29 @@ internal object RelConverter {
         /**
          * Append [Rel.Op.Sort] only if an ORDER BY clause is present
          */
-        // private fun convertOrderBy(input: Rel, orderBy: OrderBy?) = transform {
-        //    TODO
-        // }
+        private fun convertOrderBy(input: Rel, orderBy: OrderBy?) = transform {
+            if (orderBy == null) {
+                return@transform input
+            }
+            val schema = input.schema
+            val props = setOf(Rel.Prop.ORDERED)
+            val specs = orderBy.sorts.map {
+                val rex = it.expr.toRex(env)
+                val order = when (it.dir) {
+                    Sort.Dir.DESC -> when (it.nulls) {
+                        Sort.Nulls.LAST -> Rel.Op.Sort.Order.DESC_NULLS_LAST
+                        else -> Rel.Op.Sort.Order.DESC_NULLS_FIRST
+                    }
+                    else -> when (it.nulls) {
+                        Sort.Nulls.FIRST -> Rel.Op.Sort.Order.ASC_NULLS_FIRST
+                        else -> Rel.Op.Sort.Order.ASC_NULLS_LAST
+                    }
+                }
+                relOpSortSpec(rex, order)
+            }
+            val op = relOpSort(input, specs)
+            rel(schema, props, op)
+        }
 
         /**
          * Append [Rel.Op.Limit] if there is a LIMIT

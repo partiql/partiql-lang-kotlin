@@ -224,11 +224,22 @@ rel::{
       predicate:  rex,
     },
 
-    // TODO
-    // sort::{
-    //   input: rel,
-    //   specs: list::[sort_spec],
-    // },
+    sort::{
+      input: rel,
+      specs: list::[spec],
+      _: [
+        spec::{
+          rex: rex,
+          order: order,
+        },
+        order::[
+          ASC_NULLS_LAST,
+          ASC_NULLS_FIRST,
+          DESC_NULLS_LAST,
+          DESC_NULLS_FIRST,
+        ],
+      ],
+    },
 
     union::{
       lhs: rel,

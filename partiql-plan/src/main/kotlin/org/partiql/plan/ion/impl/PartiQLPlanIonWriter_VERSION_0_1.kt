@@ -332,6 +332,19 @@ internal object PartiQLPlanIonWriter_VERSION_0_1 : PartiQLPlanIonWriter {
             return ionSexpOf(tag, schema, predicate, input)
         }
 
+        override fun visitRelOpSort(node: Rel.Op.Sort, schema: IonElement): IonElement {
+            val tag = ionSymbol("sort")
+            val sorts = ionSexpOf(node.specs.map { visitRelOpSortSpec(it, nil) })
+            val input = visitRel(node.input, nil)
+            return ionSexpOf(tag, sorts, input)
+        }
+
+        override fun visitRelOpSortSpec(node: Rel.Op.Sort.Spec, nil: IonElement): IonElement {
+            val rex = visitRex(node.rex, nil)
+            val order = ionInt(node.order.ordinal.toLong())
+            return ionSexpOf(rex, order)
+        }
+
         override fun visitRelOpLimit(node: Rel.Op.Limit, schema: IonElement): IonElement {
             val tag = ionSymbol("limit")
             val limit = visitRex(node.limit, nil)

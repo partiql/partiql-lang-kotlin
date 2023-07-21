@@ -1112,11 +1112,10 @@ Rel nodes represent the relational expressions from the PartiQL Plan Specificati
 
 // | <<cross-rel-node,cross>>
 // | Produce the cross product of two relation expressions
-//
-//
-// | <<sort-rel-node,sort>>
-// | Sorts the given relation
-//
+
+| <<sort-rel-node,sort>>
+| Sorts the given relation
+
 // | <<aggregate-rel-node,aggregate>>
 // | Applies the aggregate calls to the given relation
 //
@@ -1416,50 +1415,58 @@ Filters the input relation on the given predicate.
 // |===
 //
 // ====
-//
-// [#sort-rel-node]
-// === `sort`
-//
-// ====
-//
-// [.text-center]
-// _variant of rel_
-//
-// '''
-//
-// .Form
-// [source,ion]
-// ----
-// (sort (sort_spec+) | op::operator)
-//
-// // sort_spec
-// (expr::rex (dir symbol) (nulls symbol))
-// ----
-//
-// .Parameters
-// [cols="1m,4",grid=rows,frame=all]
-// |===
-// | Type | Description
-//
-// | sort_spec | An s-expression containing an expression to sort on, optional sort direction, and optional null ordering.
-//
-// |===
-//
-// .Examples
-// [source,ion]
-// ----
-// (sort (
-//    ((var 0) (dir ASC) (null DESC))
-//   )
-//   (scan (lit bag [
-//     { "a": 10, "b": 20 },
-//     { "a": 30, "b": 40 },
-//   ]))
-// )
-// ----
-//
-// ====
-//
+
+[#sort-rel-node]
+=== `sort`
+
+====
+
+[.text-center]
+_variant of rel_
+
+'''
+
+.Form
+[source,ion]
+----
+rel.sort ::= (sort <schema> (sort_spec+) <rel>)
+
+sort_spec ::= (<rex> <int>)
+----
+
+.Parameters
+[cols="1m,4",grid=rows,frame=all]
+|===
+| Type | Description
+
+| schema | Output relation schema
+
+| sort_spec+ | One or more sort specifications
+
+| rel | Input relation
+
+2+s| sort_spec
+
+| rex | Sort key
+
+| int
+a| Sort order
+
+* 0 — 00 — ascending, nulls last
+* 1 — 01 — ascending, nulls first
+* 2 — 10 — descending, nulls last
+* 3 — 11 — descending, nulls first
+
+|===
+
+.Examples
+[source,ion]
+----
+// TODO
+----
+
+====
+
 // [#aggregate-rel-node]
 // === `aggregate`
 //
