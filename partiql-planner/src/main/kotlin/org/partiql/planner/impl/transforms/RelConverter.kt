@@ -4,6 +4,7 @@ import org.partiql.ast.AstNode
 import org.partiql.ast.Expr
 import org.partiql.ast.From
 import org.partiql.ast.Select
+import org.partiql.ast.SetOp
 import org.partiql.ast.visitor.AstBaseVisitor
 import org.partiql.plan.Identifier
 import org.partiql.plan.Plan
@@ -136,6 +137,7 @@ internal object RelConverter {
             // rel = _rel
             // transform (possibly rewritten) sel node
             // rel = convertHaving(rel, sel.having)
+            rel = convertSetOp(rel, sel.setOp)
             // rel = convertOrderBy(rel, sel.orderBy)
             rel = convertLimit(rel, sel.limit)
             rel = convertOffset(rel, sel.offset)
@@ -350,6 +352,28 @@ internal object RelConverter {
         //         condition = RexConverter.convert(expr)
         //     )
         // }
+
+        /**
+         * Append SQL set operator if present
+         *
+         * TODO combine/compare schemas
+         * TODO set quantifier
+         */
+        private fun convertSetOp(input: Rel, setOp: Expr.SFW.SetOp?): Rel = transform {
+            if (setOp == null) {
+                return@transform input
+            }
+            val schema = input.schema
+            val props = emptySet<Rel.Prop>()
+            val lhs = input
+            val rhs = visitExprSFW(setOp.operand, nil)
+            val op = when (setOp.type.type) {
+                SetOp.Type.UNION -> relOpUnion(lhs, rhs)
+                SetOp.Type.INTERSECT -> relOpIntersect(lhs, rhs)
+                SetOp.Type.EXCEPT -> relOpIntersect(lhs, rhs)
+            }
+            rel(schema, props, op)
+        }
 
         /**
          * Append [Rel.Op.Sort] only if an ORDER BY clause is present

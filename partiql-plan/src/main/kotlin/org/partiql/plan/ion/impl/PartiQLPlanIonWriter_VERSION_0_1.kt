@@ -346,6 +346,27 @@ internal object PartiQLPlanIonWriter_VERSION_0_1 : PartiQLPlanIonWriter {
             return ionSexpOf(tag, schema, offset, input)
         }
 
+        override fun visitRelOpUnion(node: Rel.Op.Union, schema: IonElement): IonElement {
+            val tag = ionSymbol("union")
+            val lhs = visitRel(node.lhs, nil)
+            val rhs = visitRel(node.rhs, nil)
+            return ionSexpOf(tag, schema, lhs, rhs)
+        }
+
+        override fun visitRelOpIntersect(node: Rel.Op.Intersect, schema: IonElement): IonElement {
+            val tag = ionSymbol("intersect")
+            val lhs = visitRel(node.lhs, nil)
+            val rhs = visitRel(node.rhs, nil)
+            return ionSexpOf(tag, schema, lhs, rhs)
+        }
+
+        override fun visitRelOpExcept(node: Rel.Op.Except, schema: IonElement): IonElement {
+            val tag = ionSymbol("except")
+            val lhs = visitRel(node.lhs, nil)
+            val rhs = visitRel(node.rhs, nil)
+            return ionSexpOf(tag, schema, lhs, rhs)
+        }
+
         // Helpers
 
         private fun Identifier.sql(): String = when (this) {

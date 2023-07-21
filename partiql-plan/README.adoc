@@ -1120,17 +1120,20 @@ Rel nodes represent the relational expressions from the PartiQL Plan Specificati
 // | <<aggregate-rel-node,aggregate>>
 // | Applies the aggregate calls to the given relation
 //
-// | <<set-rel-nodes,union>>
-// | Union of two relations
-//
-// | <<set-rel-nodes,intersect>>
-// | Intersection of two relations
-//
-// | <<set-rel-nodes,except>>
-// | Multiset difference
+| <<set-rel-nodes,union>>
+| SQL multiset union
 
-| <<limit-offset-rel-node,limit>>
-| LIMIT and OFFSET
+| <<set-rel-nodes,intersect>>
+| SQL multiset intersection
+
+| <<set-rel-nodes,except>>
+| SQL multiset difference
+
+| <<fetch-rel-nodes,limit>>
+| LIMIT
+
+| <<fetch-rel-nodes,offset>>
+| OFFSET
 
 //
 // | <<join-rel-node,join>>
@@ -1512,56 +1515,51 @@ Filters the input relation on the given predicate.
 // ----
 // ====
 //
-// [#set-rel-nodes]
-// ====
-// [discrete.text-center]
-// === Set Operator Nodes
-//
-// [.text-center]
-// _variants of operator_
-//
-// '''
-//
-// .Form
-// [source,ion]
-// ----
-// (union (all bool) | lhs::operator rhs::operator)
-//
-// (intersect (all bool) | lhs::operator rhs::operator)
-//
-// (except (all bool) | lhs::operator rhs::operator)
-// ----
-//
-// .Parameters
-// [cols="1m,4",grid=rows,frame=all]
-// |===
-// | Type | Description
-//
-// | (all bool) | If specified, then use the multiset (bag) operator.
-//
-// |===
-//
-// Let _rel~L~_ and _rel~R~_ be two relation operator nodes.
-//
-// .Examples
-// [source,ion,subs=normal]
-// ----
-// (union rel~L~ rel~R~)           // UNION DISTINCT
-//
-// (intersect  rel~L~ rel~R~)      // INTERSECT DISTINCT
-//
-// (except rel~L~ rel~R~)          // EXCEPT DISTINCT
-//
-// (union (all) rel~L~ rel~R~)     // UNION ALL
-//
-// (intersect (all) rel~L~ rel~R~) // INTERSECT ALL
-//
-// (except (all) rel~L~ rel~R~)    // EXCEPT ALL
-// ----
-//
-// ====
-//
-[#limit-offset-rel-node]
+[#set-rel-nodes]
+====
+[discrete.text-center]
+=== Set Operator Nodes
+
+[.text-center]
+_variants of operator_
+
+'''
+
+SQL multiset operators as defined in xref:https://github.com/partiql/partiql-docs/blob/main/RFCs/0007-rfc-bag-operators.md[RFC-0007].
+
+.Form
+[source,ion]
+----
+(union <schema> <rel> <rel>)
+
+(intersect <schema> <rel> <rel>)
+
+(except <schema> <rel> <rel>)
+----
+
+.Parameters
+[cols="1m,4",grid=rows,frame=all]
+|===
+| Type | Description
+
+| schema | Output relation schema
+
+| rex~0~ | Left-hand-side relation
+
+| rex~1~ | Right-hand-side relation
+
+|===
+
+
+.Examples
+[source,ion,subs=normal]
+----
+// TODO
+----
+
+====
+
+[#fetch-rel-nodes]
 === `limit / offset`
 
 ====
