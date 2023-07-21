@@ -1287,6 +1287,8 @@ FROM UNPIVOT { k~0~: v~0~ , ... , k~n~: v~n~ } AS v AT k
 ====
 // END unpivot-rel-node
 
+
+
 [#project-rel-node]
 === `project`
 
@@ -1604,55 +1606,78 @@ _variants of rel_
 ----
 
 ====
-//
-// [#join-rel-node]
-// === `join`
-//
-// ====
-//
-// [.text-center]
-// _variant of rel_
-//
-// '''
-//
-// .Form
-// [source,ion]
-// ----
-// (join type::symbol (on expression) | lhs::operator rhs::operator)
-// ----
-//
-// .Parameters
-// [cols="1m,4",grid=rows,frame=all]
-// |===
-// | Type | Description
-//
-// | type::symbol | Join type, one of `INNER`, `LEFT`, `RIGHT`, `FULL`
-//
-// | (on expression) | Optional join condition expression
-//
-// | lhs::operator | Left side relation node
-//
-// | rhs::operator | Right side relation node
-//
-// |===
-//
-// Let _rel~L~_ and _rel~R~_ be two relation operator nodes.
-//
-// .Examples
-// [source,ion,subs=normal]
-// ----
-// (join INNER
-//   rel~L~
-//   rel~R~
-// )
-//
-// (join INNER
-//   (on (call eq (args (var 0 int8) (var 2 int8))))
-//   rel~L~  // < 0: .., 1: .. >
-//   rel~R~  // < 0: .., 1: .. >
-// )
-// ----
-// ====
+
+[#join-rel-node]
+=== `join`
+
+====
+
+[.text-center]
+_variant of rel_
+
+'''
+
+.Form
+[source,ion]
+----
+rel.join ::= (join <schema> <rel.join.type> <rel> <rel>)
+
+rel.join.type ::= (cross)
+                | (equi capture::<int>)
+                | (theta capture::<int> <rex>)
+----
+
+.Parameters
+[cols="1m,3",grid=rows,frame=all]
+|===
+| Type | Description
+
+| schema | Output relation schema
+
+| type | Join Type
+
+| rel~0~ | Left-hand-side relation
+
+| rel~1~ | Right-hand-side relation
+
+2+s| Join Type
+
+| (cross)      | Cross-join
+| (equi <int>) | Equi-join
+| (theta <int> <rex>) | Theta-join, where rex is the join condition
+
+2+a|Capture
+
+----
+1 INNER
+2 LEFT
+3 LEFT_OUTER
+4 RIGHT
+5 RIGHT_OUTER
+6 FULL
+7 FULL_OUTER
+----
+
+|===
+
+Let _rel~L~_ and _rel~R~_ be two relation operator nodes.
+
+.Examples
+[source,ion,subs=normal]
+----
+(join INNER
+  rel~L~
+  rel~R~
+)
+
+(join INNER
+  (on (call eq (args (var 0 int8) (var 2 int8))))
+  rel~L~  // < 0: .., 1: .. >
+  rel~R~  // < 0: .., 1: .. >
+)
+----
+
+====
 
 
 // [#user-defined-rel-node]

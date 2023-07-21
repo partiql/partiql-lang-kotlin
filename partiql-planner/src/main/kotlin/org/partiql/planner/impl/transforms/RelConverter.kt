@@ -166,7 +166,7 @@ internal object RelConverter {
             rel(schema, props, op)
         }
 
-        override fun visitFromValue(node: From.Value, ctx: Rel) = transform {
+        override fun visitFromValue(node: From.Value, nil: Rel) = transform {
             val rex = RexConverter.apply(node.expr, env)
             val binding = when (val a = node.asAlias) {
                 null -> error("AST not normalized, missing AS alias on $node")
@@ -199,6 +199,21 @@ internal object RelConverter {
                     convertUnpivot(rex, k = atAlias, v = binding)
                 }
             }
+        }
+
+        /**
+         * Appends [Rel.Op.Join] where the left and right sides are converted FROM sources
+         *
+         * TODO compute basic schema
+         */
+        override fun visitFromJoin(node: From.Join, nil: Rel) = transform {
+            val lhs = visitFrom(node.lhs, nil)
+            val rhs = visitFrom(node.rhs, nil)
+            val schema = listOf<Rel.Binding>()
+            val props = emptySet<Rel.Prop>()
+            val type = convertJoinType(node)
+            val op = relOpJoin(lhs, rhs, type)
+            rel(schema, props, op)
         }
 
         // Helpers
@@ -245,28 +260,6 @@ internal object RelConverter {
             return binding to rex
         }
 
-        // /**
-        //  * Appends [Rel.Join] where the left and right sides are converted FROM sources
-        //  */
-        // private fun convertJoin(join: From.Join): Rel {
-        //     val lhs = convertFrom(join.lhs)
-        //     val rhs = convertFrom(join.rhs)
-        //     val condition = if (join.condition != null) RexConverter.convert(join.condition!!) else null
-        //     return Plan.relJoin(
-        //         common = empty,
-        //         lhs = lhs,
-        //         rhs = rhs,
-        //         condition = condition,
-        //         type = when (join.type) {
-        //             From.Join.Type.FULL -> Rel.Join.Type.FULL
-        //             From.Join.Type.INNER -> Rel.Join.Type.INNER
-        //             From.Join.Type.LEFT -> Rel.Join.Type.LEFT
-        //             From.Join.Type.RIGHT -> Rel.Join.Type.RIGHT
-        //             else -> Rel.Join.Type.INNER
-        //         }
-        //     )
-        // }
-
         /**
          * Append [Rel.Op.Filter] only if a WHERE condition exists
          */
@@ -279,6 +272,25 @@ internal object RelConverter {
             val predicate = expr.toRex(env)
             val op = relOpFilter(input, predicate)
             rel(schema, props, op)
+        }
+
+        private fun convertJoinType(join: From.Join): Rel.Op.Join.Type = transform {
+            val capture = when (join.type) {
+                From.Join.Type.INNER -> Rel.Op.Join.Capture.INNER
+                From.Join.Type.LEFT -> Rel.Op.Join.Capture.LEFT
+                From.Join.Type.LEFT_OUTER -> Rel.Op.Join.Capture.LEFT_OUTER
+                From.Join.Type.RIGHT -> Rel.Op.Join.Capture.RIGHT
+                From.Join.Type.RIGHT_OUTER -> Rel.Op.Join.Capture.RIGHT_OUTER
+                From.Join.Type.FULL -> Rel.Op.Join.Capture.FULL
+                From.Join.Type.FULL_OUTER -> Rel.Op.Join.Capture.FULL_OUTER
+                From.Join.Type.CROSS -> return relOpJoinTypeCross()
+                From.Join.Type.COMMA -> return relOpJoinTypeCross()
+                null -> Rel.Op.Join.Capture.INNER
+            }
+            when (join.condition) {
+                null -> relOpJoinTypeEqui(capture)
+                else -> relOpJoinTypeTheta(capture, join.condition!!.toRex(env))
+            }
         }
 
         // /**
@@ -432,28 +444,6 @@ internal object RelConverter {
             rel(schema, props, op)
         }
 
-        // /**
-        //  * Notes:
-        //  *  - ASC NULLS LAST   (default)
-        //  *  - DESC NULLS FIRST (default for DESC)
-        //  */
-        // private fun convertSort(sort: Sort): SortSpec {
-        //     val value = RexConverter.convert(sort.expr)
-        //     val dir = when (sort.dir) {
-        //         Sort.Dir.DESC -> SortSpec.Dir.DESC
-        //         else -> SortSpec.Dir.ASC
-        //     }
-        //     val nulls = when (sort.nulls) {
-        //         Sort.Nulls.FIRST -> SortSpec.Nulls.FIRST
-        //         Sort.Nulls.LAST -> SortSpec.Nulls.LAST
-        //         null -> when (dir) {
-        //             SortSpec.Dir.DESC -> SortSpec.Nulls.FIRST
-        //             SortSpec.Dir.ASC -> SortSpec.Nulls.LAST
-        //         }
-        //     }
-        //     return Plan.sortSpec(value, dir, nulls)
-        // }
-        //
         // /**
         //  * Converts a GROUP AS X clause to a binding of the form:
         //  * ```

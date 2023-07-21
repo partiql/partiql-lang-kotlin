@@ -9,10 +9,11 @@ import org.partiql.ast.helpers.toBinder
 import org.partiql.ast.util.AstRewriter
 
 /**
- * Adds an `as` alias to every select-list item following the given rules:
+ * Adds an `as` alias to every select-list item.
  *
- * See https://partiql.org/assets/PartiQL-Specification.pdf#page=28
- * See https://web.cecs.pdx.edu/~len/sql1999.pdf#page=287
+ * - [org.partiql.ast.helpers.toBinder]
+ * - https://partiql.org/assets/PartiQL-Specification.pdf#page=28
+ * - https://web.cecs.pdx.edu/~len/sql1999.pdf#page=287
  */
 internal object NormalizeSelectList : AstPass {
 
@@ -27,9 +28,9 @@ internal object NormalizeSelectList : AstPass {
             var diff = false
             val transformed = ArrayList<Select.Project.Item>(node.items.size)
             node.items.forEachIndexed { i, n ->
-                val item = visitSelectProjectItem(n, i)
+                val item = visitSelectProjectItem(n, i) as Select.Project.Item
                 if (item !== n) diff = true
-                transformed.add(n)
+                transformed.add(item)
             }
             // We don't want to create a new list unless we have to, as to not trigger further rewrites up the tree.
             if (diff) selectProject(transformed) else node
@@ -44,7 +45,7 @@ internal object NormalizeSelectList : AstPass {
                 else -> node.asAlias
             }
             if (expr != node.expr || alias != node.asAlias) {
-                node.copy(asAlias = alias)
+                selectProjectItemExpression(expr, alias)
             } else {
                 node
             }

@@ -50,9 +50,9 @@ internal object PartiQLPlanIonWriter_VERSION_0_1 : PartiQLPlanIonWriter {
      * Internal entry point for testing.
      */
     @JvmStatic
-    internal fun toIonDebug(node: PlanNode, ctx: IonElement = ionNull()): IonElement {
+    internal fun toIonDebug(node: PlanNode, nil: IonElement = ionNull()): IonElement {
         val writer = ToIon(Mode.DEBUG)
-        return node.accept(writer, ctx)
+        return node.accept(writer, nil)
     }
 
     private enum class Mode {
@@ -159,7 +159,7 @@ internal object PartiQLPlanIonWriter_VERSION_0_1 : PartiQLPlanIonWriter {
             return ionSexpOf(type, identifier)
         }
 
-        // Rex : ctx -> type.ref
+        // Rex : nil -> type.ref
 
         override fun visitRex(node: Rex, nil: IonElement): IonElement {
             val type = visitTypeRef(node.type, nil)
@@ -293,7 +293,7 @@ internal object PartiQLPlanIonWriter_VERSION_0_1 : PartiQLPlanIonWriter {
             return ionSexpOf(tag, type, subquery)
         }
 
-        // Rel : ctx -> schema
+        // Rel : nil -> schema
 
         override fun visitRel(node: Rel, nil: IonElement): IonElement {
             val schema = ionSexpOf(node.schema.map { visitTypeRef(it.type, nil) })
@@ -316,6 +316,32 @@ internal object PartiQLPlanIonWriter_VERSION_0_1 : PartiQLPlanIonWriter {
             val tag = ionSymbol("unpivot")
             val rex = visitRex(node.rex, nil)
             return ionSexpOf(tag, schema, rex)
+        }
+
+        override fun visitRelOpJoin(node: Rel.Op.Join, schema: IonElement): IonElement {
+            val tag = ionSymbol("join")
+            val type = visitRelOpJoinType(node.type, nil)
+            val lhs = visitRel(node.lhs, nil)
+            val rhs = visitRel(node.rhs, nil)
+            return ionSexpOf(tag, schema, type, lhs, rhs)
+        }
+
+        override fun visitRelOpJoinTypeCross(node: Rel.Op.Join.Type.Cross, nil: IonElement): IonElement {
+            val tag = ionSymbol("cross")
+            return ionSexpOf(tag)
+        }
+
+        override fun visitRelOpJoinTypeEqui(node: Rel.Op.Join.Type.Equi, nil: IonElement): IonElement {
+            val tag = ionSymbol("equi")
+            val capture = ionInt(node.capture.ordinal.toLong(), listOf("capture"))
+            return ionSexpOf(tag, capture)
+        }
+
+        override fun visitRelOpJoinTypeTheta(node: Rel.Op.Join.Type.Theta, nil: IonElement): IonElement {
+            val tag = ionSymbol("theta")
+            val capture = ionInt(node.capture.ordinal.toLong(), listOf("capture"))
+            val rex = visitRex(node.rex, nil)
+            return ionSexpOf(tag, capture, rex)
         }
 
         override fun visitRelOpProject(node: Rel.Op.Project, schema: IonElement): IonElement {
@@ -341,7 +367,7 @@ internal object PartiQLPlanIonWriter_VERSION_0_1 : PartiQLPlanIonWriter {
 
         override fun visitRelOpSortSpec(node: Rel.Op.Sort.Spec, nil: IonElement): IonElement {
             val rex = visitRex(node.rex, nil)
-            val order = ionInt(node.order.ordinal.toLong())
+            val order = ionInt(node.order.ordinal.toLong(), listOf("order"))
             return ionSexpOf(rex, order)
         }
 

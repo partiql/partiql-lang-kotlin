@@ -15,9 +15,11 @@
 
 package org.partiql.cli
 
+import AstPrinter
 import com.amazon.ion.system.IonSystemBuilder
 import com.amazon.ion.system.IonTextWriterBuilder
 import org.partiql.ast.Statement
+import org.partiql.ast.normalize.normalize
 import org.partiql.cli.pico.PartiQLCommand
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.parser.PartiQLParserBuilder
@@ -63,8 +65,9 @@ object Debug {
         if (ast !is Statement) {
             error("Expect AST Statement, found $ast")
         }
-        // val normalized = ast.normalize()
-        // AstPrinter.append(out, normalized)
+        AstPrinter.append(out, ast)
+        val normalized = ast.normalize()
+        AstPrinter.append(out, normalized)
         val session = PartiQLPlanner.Session(
             queryId = UUID.randomUUID().toString(),
             userId = "debug",

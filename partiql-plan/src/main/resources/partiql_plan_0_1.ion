@@ -271,39 +271,44 @@ rel::{
       projections:  list::[rex],
     },
 
-    // TODO
-    cross_join::{},
-
-    // TODO
     join::{
-      condition: [
-        theta::{ predicate: rex },
-        equal::{},
-        natural::{},
-      ],
+      lhs: rel,
+      rhs: rel,
       type: [
-        INNER,
-        LEFT,
-        LEFT_OUTER,
-        RIGHT,
-        RIGHT_OUTER,
-        FULL,
-        FULL_OUTER,
+        cross::{},
+        equi::{
+          capture: capture,
+        },
+        theta::{
+          capture: capture,
+          rex: rex,
+        },
+      ],
+      _: [
+        capture::[
+          INNER,
+          LEFT,
+          LEFT_OUTER,
+          RIGHT,
+          RIGHT_OUTER,
+          FULL,
+          FULL_OUTER,
+        ],
       ],
     },
 
     // TODO
-    aggregate::{
-      strategy: [ FULL, PARTIAL ],
-      aggs:     list::[agg],
-      groups:   list::[rex],
-      _: [
-        agg::{
-          fn:   fn,
-          args: list::[rex],
-        }
-      ]
-    },
+    // aggregate::{
+    //  strategy: [ FULL, PARTIAL ],
+    //  aggs:     list::[agg],
+    //  groups:   list::[rex],
+    //  _: [
+    //    agg::{
+    //      fn:   fn,
+    //      args: list::[rex],
+    //    }
+    //  ]
+    // },
   ],
   _: [
     prop::[
