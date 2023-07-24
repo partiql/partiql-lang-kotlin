@@ -540,10 +540,11 @@ select::[
     items:  list::[item],
     setq:   optional::set_quantifier,
     _: [
-      item::[
-        all::{ expr: expr },                                                  // <expr>.*
-        expression::{ expr: expr, as_alias: optional::'.identifier.symbol' }  // <expr> [as <identifier>]
-      ],
+      // <expr> [as <identifier>]
+      item::{
+        expr: expr,
+        as_alias: optional::'.identifier.symbol',
+      },
     ],
   },
 

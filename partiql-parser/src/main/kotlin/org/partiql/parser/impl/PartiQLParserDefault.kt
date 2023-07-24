@@ -806,10 +806,9 @@ internal class PartiQLParserDefault : PartiQLParser {
             val expr = visitExpr(ctx.expr())
             val alias = ctx.symbolPrimitive()?.let { visitSymbolPrimitive(it) }
             if (expr is Expr.Path) {
-                convertPathToProjectionItem(ctx, expr, alias)
-            } else {
-                selectProjectItemExpression(expr, alias)
+                assertPathIsValidProjectionItem(ctx, expr)
             }
+            selectProjectItem(expr, alias)
         }
 
         /**
@@ -1909,8 +1908,7 @@ internal class PartiQLParserDefault : PartiQLParser {
         }
 
         /**
-         * Converts a Path expression into a Projection Item (either ALL or EXPR). Note: A Projection Item only allows a
-         * subset of a typical Path expressions. See the following examples.
+         * A Projection Item only allows a subset of typical Path expressions. See the following examples.
          *
          * Examples of valid projections are:
          *
@@ -1931,42 +1929,29 @@ internal class PartiQLParserDefault : PartiQLParser {
          *      SELECT foo.*.bar FROM foo
          * ```
          */
-        protected fun convertPathToProjectionItem(ctx: ParserRuleContext, path: Expr.Path, alias: Identifier.Symbol?) =
-            translate(ctx) {
-                val steps = mutableListOf<Expr.Path.Step>()
-                var containsIndex = false
-                path.steps.forEachIndexed { index, step ->
-                    // Only last step can have a '.*'
-                    if (step is Expr.Path.Step.Unpivot && index != path.steps.lastIndex) {
-                        throw error(ctx, "Projection item cannot unpivot unless at end.")
-                    }
-                    // No step can have an indexed wildcard: '[*]'
-                    if (step is Expr.Path.Step.Wildcard) {
-                        throw error(ctx, "Projection item cannot index using wildcard.")
-                    }
-                    // TODO If the last step is '.*', no indexing is allowed
-                    // if (step.metas.containsKey(IsPathIndexMeta.TAG)) {
-                    //     containsIndex = true
-                    // }
-                    if (step !is Expr.Path.Step.Unpivot) {
-                        steps.add(step)
-                    }
+        protected fun assertPathIsValidProjectionItem(ctx: ParserRuleContext, path: Expr.Path) {
+            val steps = mutableListOf<Expr.Path.Step>()
+            var containsIndex = false
+            path.steps.forEachIndexed { index, step ->
+                // Only last step can have a '.*'
+                if (step is Expr.Path.Step.Unpivot && index != path.steps.lastIndex) {
+                    throw error(ctx, "Projection item cannot unpivot unless at end.")
                 }
-                if (path.steps.last() is Expr.Path.Step.Unpivot && containsIndex) {
-                    throw error(ctx, "Projection item use wildcard with any indexing.")
+                // No step can have an indexed wildcard: '[*]'
+                if (step is Expr.Path.Step.Wildcard) {
+                    throw error(ctx, "Projection item cannot index using wildcard.")
                 }
-                when {
-                    path.steps.last() is Expr.Path.Step.Unpivot && steps.isEmpty() -> {
-                        selectProjectItemAll(path.root)
-                    }
-                    path.steps.last() is Expr.Path.Step.Unpivot -> {
-                        selectProjectItemAll(factory.exprPath(path.root, steps))
-                    }
-                    else -> {
-                        selectProjectItemExpression(path, alias)
-                    }
+                if (step is Expr.Path.Step.Index) {
+                    containsIndex = true
+                }
+                if (step !is Expr.Path.Step.Unpivot) {
+                    steps.add(step)
                 }
             }
+            if (path.steps.last() is Expr.Path.Step.Unpivot && containsIndex) {
+                throw error(ctx, "Projection item use wildcard with any indexing.")
+            }
+        }
 
         private fun TerminalNode.getStringValue(): String = this.symbol.getStringValue()
 

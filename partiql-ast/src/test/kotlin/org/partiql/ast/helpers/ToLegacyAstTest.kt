@@ -526,11 +526,14 @@ class ToLegacyAstTest {
              """
             ) {
                 selectProject {
-                    items += selectProjectItemAll {
+                    items += selectProjectItem {
                         expr =
-                            exprVar(identifierSymbol("a", Identifier.CaseSensitivity.SENSITIVE), Expr.Var.Scope.DEFAULT)
+                            exprPath {
+                                root = exprVar(identifierSymbol("a", Identifier.CaseSensitivity.SENSITIVE), Expr.Var.Scope.DEFAULT)
+                                steps += exprPathStepUnpivot()
+                            }
                     }
-                    items += selectProjectItemExpression {
+                    items += selectProjectItem {
                         expr = exprLit(int32Value(1))
                         asAlias = id("x")
                     }

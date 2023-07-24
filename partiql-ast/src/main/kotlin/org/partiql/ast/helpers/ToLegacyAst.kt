@@ -689,20 +689,18 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
         projectList(items, metas)
     }
 
-    override fun visitSelectProjectItem(node: Select.Project.Item, ctx: Ctx) =
-        super.visitSelectProjectItem(node, ctx) as PartiqlAst.ProjectItem
-
-    override fun visitSelectProjectItemAll(node: Select.Project.Item.All, ctx: Ctx) = translate(node) { metas ->
+    override fun visitSelectProjectItem(node: Select.Project.Item, ctx: Ctx) = translate(node) { metas ->
         val expr = visitExpr(node.expr, ctx)
-        projectAll(expr, metas)
-    }
-
-    override fun visitSelectProjectItemExpression(node: Select.Project.Item.Expression, ctx: Ctx) =
-        translate(node) { metas ->
-            val expr = visitExpr(node.expr, ctx)
-            val alias = node.asAlias?.symbol
-            projectExpr(expr, alias, metas)
+        if (expr is PartiqlAst.Expr.Path && expr.steps.last() is PartiqlAst.PathStep.PathUnpivot) {
+            val root = when (expr.steps.size) {
+                1 -> expr.root
+                else -> path(expr.root, expr.steps.subList(0, expr.steps.size - 1)) // remove .*
+            }
+            return@translate projectAll(root, metas)
         }
+        val alias = node.asAlias?.symbol
+        projectExpr(expr, alias, metas)
+    }
 
     override fun visitSelectPivot(node: Select.Pivot, ctx: Ctx) = translate(node) { metas ->
         val value = visitExpr(node.value, ctx)
