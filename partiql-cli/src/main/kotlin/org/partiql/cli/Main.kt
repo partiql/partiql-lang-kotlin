@@ -26,7 +26,7 @@ import org.partiql.parser.PartiQLParserBuilder
 import org.partiql.plan.PartiQLVersion
 import org.partiql.plan.ion.PartiQLPlanIonWriter
 import org.partiql.planner.PartiQLPlanner
-import org.partiql.planner.impl.PartiQLPlannerDefault
+import org.partiql.planner.PartiQLPlannerDefault
 import picocli.CommandLine
 import java.io.PrintStream
 import java.util.UUID

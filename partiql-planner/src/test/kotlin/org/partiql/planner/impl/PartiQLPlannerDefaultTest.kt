@@ -11,6 +11,7 @@ import org.partiql.ast.Expr
 import org.partiql.ast.builder.ast
 import org.partiql.plan.PartiQLVersion
 import org.partiql.plan.ion.PartiQLPlanIonWriter
+import org.partiql.planner.PartiQLPlannerDefault
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.float64Value
 import org.partiql.value.int64Value

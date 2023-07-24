@@ -1,4 +1,4 @@
-package org.partiql.planner.impl.transforms
+package org.partiql.planner.transforms
 
 import org.partiql.ast.AstNode
 import org.partiql.ast.Expr
@@ -17,7 +17,7 @@ import org.partiql.plan.Rel
 import org.partiql.plan.Rex
 import org.partiql.plan.builder.PlanFactory
 import org.partiql.plan.builder.plan
-import org.partiql.planner.impl.PartiQLPlannerEnv
+import org.partiql.planner.PartiQLPlannerEnv
 import org.partiql.types.StaticType
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.nullValue

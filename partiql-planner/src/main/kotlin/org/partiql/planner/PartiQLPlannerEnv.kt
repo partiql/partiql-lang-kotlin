@@ -1,14 +1,12 @@
-package org.partiql.planner.impl
+package org.partiql.planner
 
-import org.partiql.ast.Identifier
 import org.partiql.plan.Fn
 import org.partiql.plan.Global
+import org.partiql.plan.Identifier
 import org.partiql.plan.PartiQLHeader
 import org.partiql.plan.Plan
 import org.partiql.plan.Rex
 import org.partiql.plan.Type
-import org.partiql.planner.Catalog
-import org.partiql.planner.PartiQLPlanner
 
 /**
  * Hardcoded PartiQL Global Catalog
@@ -74,5 +72,9 @@ internal class PartiQLPlannerEnv(private val session: PartiQLPlanner.Session) {
                 return Plan.fnRefResolved(symbol, 0)
             }
         }
+    }
+    internal fun resolveGlobal(identifier: Identifier): Rex.Op.Global? {
+        // TODO
+        return null
     }
 }

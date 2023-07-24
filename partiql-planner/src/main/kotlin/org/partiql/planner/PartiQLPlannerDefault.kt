@@ -1,11 +1,10 @@
-package org.partiql.planner.impl
+package org.partiql.planner
 
+import org.partiql.ast.Statement
 import org.partiql.ast.normalize.normalize
 import org.partiql.plan.PartiQLVersion
 import org.partiql.plan.Plan
-import org.partiql.planner.PartiQLPlanner
-import org.partiql.planner.impl.transforms.AstToPlan
-import org.partiql.ast.Statement as AstStatement
+import org.partiql.planner.transforms.AstToPlan
 
 /**
  * Default logical planner.
@@ -14,7 +13,7 @@ class PartiQLPlannerDefault : PartiQLPlanner {
 
     private val version = PartiQLVersion.VERSION_0_1
 
-    override fun plan(session: PartiQLPlanner.Session, statement: AstStatement): PartiQLPlanner.Result {
+    override fun plan(session: PartiQLPlanner.Session, statement: Statement): PartiQLPlanner.Result {
         // 0. Initialize the environment
         val env = PartiQLPlannerEnv(session)
 
