@@ -658,7 +658,7 @@ internal class PartiQLPigVisitor(
         val strategy = if (ctx.PARTIAL() != null) groupPartial() else groupFull()
         val keys = visitOrEmpty(ctx.groupKey(), PartiqlAst.GroupKey::class)
         val keyList = groupKeyList(keys)
-        val alias = ctx.groupAlias()?.let { visitGroupAlias(it) }.toPigSymbolPrimitive()
+        val alias = ctx.groupAlias()?.let { visitGroupAlias(it).toPigSymbolPrimitive() }
         groupBy_(strategy, keyList = keyList, groupAsAlias = alias, ctx.GROUP().getSourceMetaContainer())
     }
 
@@ -816,9 +816,9 @@ internal class PartiQLPigVisitor(
 
     override fun visitEdgeSpec(ctx: PartiQLParser.EdgeSpecContext) = PartiqlAst.build {
         val placeholderDirection = edgeRight()
-        val variable = ctx.symbolPrimitive()?.let { visitSymbolPrimitive(it) }?.name
+        val variable = ctx.symbolPrimitive()?.let { visitSymbolPrimitive(it).name }
         val prefilter = ctx.whereClause()?.let { visitWhereClause(it) }
-        val label = ctx.patternPartLabel()?.let { visitPatternPartLabel(it) }?.name
+        val label = ctx.patternPartLabel()?.let { visitPatternPartLabel(it).name }
         edge_(
             direction = placeholderDirection,
             variable = variable,
@@ -974,13 +974,13 @@ internal class PartiQLPigVisitor(
 
     override fun visitTableBaseRefSymbol(ctx: PartiQLParser.TableBaseRefSymbolContext) = PartiqlAst.build {
         val expr = visit(ctx.source) as PartiqlAst.Expr
-        val name = ctx.symbolPrimitive()?.let { visitSymbolPrimitive(it) }
-        scan_(expr, name.toPigSymbolPrimitive(), metas = expr.metas)
+        val name = ctx.symbolPrimitive()?.let { visitSymbolPrimitive(it).toPigSymbolPrimitive() }
+        scan_(expr, name, metas = expr.metas)
     }
 
     override fun visitFromClauseSimpleImplicit(ctx: PartiQLParser.FromClauseSimpleImplicitContext) = PartiqlAst.build {
         val path = visitPathSimple(ctx.pathSimple())
-        val name = ctx.symbolPrimitive()?.let { visitSymbolPrimitive(it) }?.name
+        val name = ctx.symbolPrimitive()?.let { visitSymbolPrimitive(it).name }
         scan_(path, name, metas = path.metas)
     }
 
@@ -1755,10 +1755,8 @@ internal class PartiQLPigVisitor(
         else -> throw token.err("Unable to get value", ErrorCode.PARSE_UNEXPECTED_TOKEN)
     }
 
-    private fun PartiqlAst.Expr.Id?.toPigSymbolPrimitive(): SymbolPrimitive? = when (this) {
-        null -> null
-        else -> this.name.copy(metas = this.metas)
-    }
+    private fun PartiqlAst.Expr.Id.toPigSymbolPrimitive(): SymbolPrimitive =
+        this.name.copy(metas = this.metas)
 
     private fun PartiqlAst.Expr.Id.toIdentifier(): PartiqlAst.Identifier {
         val name = this.name.text
