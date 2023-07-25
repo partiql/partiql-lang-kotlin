@@ -147,7 +147,7 @@ public object PartiQLSchemaInferencer {
                 session = ctx.session,
                 metadata = ctx.metadata,
                 scopingOrder = PlanTyper.ScopingOrder.LEXICAL_THEN_GLOBALS,
-                customFunctions = emptyList(),
+                customFunctionSignatures = emptyList(),
                 problemHandler = ctx.problemHandler
             )
         )

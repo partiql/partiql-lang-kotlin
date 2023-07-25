@@ -29,12 +29,10 @@ import org.partiql.lang.errors.ProblemThrower
 import org.partiql.lang.eval.BindingCase
 import org.partiql.lang.eval.BindingName
 import org.partiql.lang.eval.Bindings
-import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.builtins.SCALAR_BUILTINS_DEFAULT
 import org.partiql.lang.eval.delegate
 import org.partiql.lang.eval.getStartingSourceLocationMeta
-import org.partiql.lang.eval.impl.FunctionManager
 import org.partiql.lang.types.FunctionSignature
 import org.partiql.lang.types.StaticTypeUtils.areStaticTypesComparable
 import org.partiql.lang.types.StaticTypeUtils.getTypeDomain
@@ -78,7 +76,7 @@ import org.partiql.types.SymbolType
  */
 internal class StaticTypeInferenceVisitorTransform(
     globalBindings: Bindings<StaticType>,
-    customFunctions: List<ExprFunction>,
+    customFunctionSignatures: List<FunctionSignature>,
     private val customTypedOpParameters: Map<String, TypedOpParameter>,
     private val problemHandler: ProblemHandler = ProblemThrower()
 ) : PartiqlAst.VisitorTransform() {
@@ -96,8 +94,9 @@ internal class StaticTypeInferenceVisitorTransform(
     }
 
     /** The built-in functions + the custom functions. */
-    private val allFunctions: List<ExprFunction> = SCALAR_BUILTINS_DEFAULT + customFunctions
-    private val functionManager = FunctionManager(allFunctions)
+    private val allFunctions: Map<String, List<FunctionSignature>> =
+        (SCALAR_BUILTINS_DEFAULT.map { it.signature.name to it.signature } + customFunctionSignatures.map { it.name to it })
+            .groupBy({ it.first }, { it.second })
 
     /**
      * @param parentEnv the enclosing bindings
@@ -805,32 +804,32 @@ internal class StaticTypeInferenceVisitorTransform(
             val functionName = processedNode.funcName.text
             val arity = arguments.size
             val location = processedNode.metas.getSourceLocation()
-            var functions = functionManager.functionMap[functionName]
-            if (functions == null) {
+            var signatures = allFunctions[functionName]
+            if (signatures == null) {
                 handleNoSuchFunctionError(functionName, location)
                 return processedNode.withStaticType(StaticType.ANY)
             }
-            val funcsMatchingArity = functions.filter { it.signature.arity.contains(arity) }
+            val funcsMatchingArity = signatures.filter { it.arity.contains(arity) }
             if (funcsMatchingArity.isEmpty()) {
-                handleIncorrectNumberOfArgumentsToFunctionCallError(functionName, getMinMaxArities(functions).first..getMinMaxArities(functions).second, arity, location)
+                handleIncorrectNumberOfArgumentsToFunctionCallError(functionName, getMinMaxArities(signatures).first..getMinMaxArities(signatures).second, arity, location)
             } else {
-                functions = funcsMatchingArity
+                signatures = funcsMatchingArity
             }
 
             var types = mutableSetOf<StaticType>()
-            for (func in functions) {
-                when (func.signature.unknownArguments) {
-                    UnknownArguments.PROPAGATE -> types.add(returnTypeForPropagatingFunction(func.signature, arguments))
-                    UnknownArguments.PASS_THRU -> types.add(returnTypeForPassThruFunction(func.signature, arguments))
+            for (sign in signatures) {
+                when (sign.unknownArguments) {
+                    UnknownArguments.PROPAGATE -> types.add(returnTypeForPropagatingFunction(sign, arguments))
+                    UnknownArguments.PASS_THRU -> types.add(returnTypeForPassThruFunction(sign, arguments))
                 }
             }
 
             return processedNode.withStaticType(StaticType.unionOf(types).flatten())
         }
 
-        fun getMinMaxArities(funcs: List<ExprFunction>): Pair<Int, Int> {
-            val minArity = funcs.map { it.signature.arity.first }.minOrNull() ?: Int.MAX_VALUE
-            val maxArity = funcs.map { it.signature.arity.last }.maxOrNull() ?: Int.MIN_VALUE
+        fun getMinMaxArities(funcs: List<FunctionSignature>): Pair<Int, Int> {
+            val minArity = funcs.map { it.arity.first }.minOrNull() ?: Int.MAX_VALUE
+            val maxArity = funcs.map { it.arity.last }.maxOrNull() ?: Int.MIN_VALUE
 
             return Pair(minArity, maxArity)
         }

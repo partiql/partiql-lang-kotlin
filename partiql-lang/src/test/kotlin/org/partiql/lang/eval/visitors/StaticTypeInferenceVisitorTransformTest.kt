@@ -169,7 +169,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
         val ion = IonSystemBuilder.standard().build()
         val inferencer = StaticTypeInferencer(
             globalBindings = globalBindings,
-            customFunctions = tc.customFunctions,
+            customFunctionSignatures = tc.customFunctionSignatures,
             customTypedOpParameters = customTypedOpParameters
         )
 
@@ -301,7 +301,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
             name: String,
             originalSql: String,
             globals: Map<String, StaticType> = mapOf(),
-            customFunctions: List<ExprFunction> = listOf(),
+            customFunctionSignatures: List<FunctionSignature> = listOf(),
             handler: (ResolveTestResult) -> Unit
         ) =
             crossExpand(originalSql, opType.operators)
@@ -310,7 +310,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
                         "$it : $name ",
                         it,
                         globals,
-                        customFunctions,
+                        customFunctionSignatures,
                         handler
                     )
                 }
@@ -7191,7 +7191,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
             TestCase(
                 "custom function",
                 "format('test %d %s', [1, 'a'])",
-                customFunctions = listOf(formatFunc),
+                customFunctionSignatures = listOf(formatFunc.signature),
                 handler = expectQueryOutputType(StaticType.STRING)
             ),
             TestCase(
@@ -7606,7 +7606,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
             val name: String,
             val originalSql: String,
             val globals: Map<String, StaticType> = mapOf(),
-            val customFunctions: List<ExprFunction> = listOf(),
+            val customFunctionSignatures: List<FunctionSignature> = listOf(),
             val handler: (ResolveTestResult) -> Unit
         ) {
             override fun toString(): String = this.name

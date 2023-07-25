@@ -47,6 +47,11 @@ Thank you to all who have contributed!
 - **Breaking**: Modifies `functions` property of `CompilerPipeline`, `StaticTypeInferencer` and  `StepContext` to be a `List` and not a `Map`.
 
 ### Deprecated
+- Incorporates `@Deprecated` annotations with a `WARNING` level to the `CompilerPipeline` 
+  and experimental `PartiQLCompilerPipeline`, providing an alternative API for use 
+  in place of the deprecated methods. 
+- Integrates `@Deprecated` annotations with an `ERROR` level to the `ExprFunction` and 
+  `FunctionSignature`, throwing errors when the deprecated methods are invoked.
 
 ### Fixed
 

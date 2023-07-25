@@ -44,6 +44,18 @@ internal class PartiQLCompilerDefault(
     private val operatorFactories: Map<RelationalOperatorFactoryKey, RelationalOperatorFactory>
 ) : PartiQLCompiler {
 
+    @Deprecated(
+        message = "functions should be a list. Use PartiQLCompilerDefault with List<ExprFunction> instead.",
+        level = DeprecationLevel.WARNING
+    )
+    constructor(
+        evaluatorOptions: EvaluatorOptions,
+        customTypedOpParameters: Map<String, TypedOpParameter>,
+        functions: Map<String, ExprFunction>,
+        procedures: Map<String, StoredProcedure>,
+        operatorFactories: Map<RelationalOperatorFactoryKey, RelationalOperatorFactory>
+    ) : this(evaluatorOptions, customTypedOpParameters, functions.values.toList(), procedures, operatorFactories)
+
     private lateinit var exprConverter: PhysicalPlanCompilerImpl
     private val bexprConverter = PhysicalBexprToThunkConverter(
         exprConverter = object : PhysicalPlanCompiler {

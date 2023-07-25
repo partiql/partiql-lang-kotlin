@@ -132,6 +132,17 @@ internal class EvaluatingCompiler(
     private val procedures: Map<String, StoredProcedure>,
     private val compileOptions: CompileOptions = CompileOptions.standard()
 ) {
+    @Deprecated(
+        "functions should be a list. Use EvaluatingCompiler with List<ExprFunction> instead.",
+        level = DeprecationLevel.WARNING
+    )
+    constructor(
+        functions: Map<String, ExprFunction>,
+        customTypedOpParameters: Map<String, TypedOpParameter>,
+        procedures: Map<String, StoredProcedure>,
+        compileOptions: CompileOptions = CompileOptions.standard()
+    ) : this(functions.values.toList(), customTypedOpParameters, procedures, compileOptions)
+
     // TODO: remove this once we migrate from `IonValue` to `IonElement`.
     private val ion = IonSystemBuilder.standard().build()
 

@@ -19,6 +19,34 @@ class FunctionSignature(
     val returnType: StaticType,
     val unknownArguments: UnknownArguments = UnknownArguments.PROPAGATE
 ) {
+    @Deprecated("This constructor is deprecated", level = DeprecationLevel.ERROR)
+    constructor(
+        name: String,
+        requiredParameters: List<StaticType>,
+        optionalParameter: StaticType,
+        returnType: StaticType,
+        unknownArguments: UnknownArguments = UnknownArguments.PROPAGATE
+    ) : this(name, requiredParameters, returnType, unknownArguments)
+
+    @Deprecated("This constructor is deprecated", level = DeprecationLevel.ERROR)
+    constructor(
+        name: String,
+        requiredParameters: List<StaticType>,
+        variadicParameter: VarargFormalParameter,
+        returnType: StaticType,
+        unknownArguments: UnknownArguments = UnknownArguments.PROPAGATE
+    ) : this(name, requiredParameters, returnType, unknownArguments)
+
+    @Deprecated("This constructor is deprecated", level = DeprecationLevel.ERROR)
+    constructor(
+        name: String,
+        requiredParameters: List<StaticType>,
+        optionalParameter: StaticType,
+        variadicParameter: VarargFormalParameter,
+        returnType: StaticType,
+        unknownArguments: UnknownArguments = UnknownArguments.PROPAGATE
+    ) : this(name, requiredParameters, returnType, unknownArguments)
+
     val arity: IntRange = requiredParameters.size..requiredParameters.size
 }
 

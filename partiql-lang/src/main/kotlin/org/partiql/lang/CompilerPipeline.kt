@@ -230,6 +230,21 @@ internal class CompilerPipelineImpl(
     override val globalTypeBindings: Bindings<StaticType>?
 ) : CompilerPipeline {
 
+    @Deprecated(
+        "Functions should be a list.",
+        level = DeprecationLevel.WARNING
+    )
+    constructor(
+        ion: IonSystem,
+        parser: Parser,
+        compileOptions: CompileOptions,
+        functionMap: Map<String, ExprFunction>,
+        customDataTypes: List<CustomType>,
+        procedures: Map<String, StoredProcedure>,
+        preProcessingSteps: List<ProcessingStep>,
+        globalTypeBindings: Bindings<StaticType>?
+    ) : this(ion, parser, compileOptions, functionMap.values.toList(), customDataTypes, procedures, preProcessingSteps, globalTypeBindings)
+
     private val compiler = EvaluatingCompiler(
         functions,
         customDataTypes.map { customType ->
@@ -259,7 +274,7 @@ internal class CompilerPipelineImpl(
                             StaticTypeVisitorTransform(ion, globalTypeBindings),
                             StaticTypeInferenceVisitorTransform(
                                 globalBindings = globalTypeBindings,
-                                customFunctions = functions,
+                                customFunctionSignatures = functions.map { it.signature },
                                 customTypedOpParameters = customDataTypes.map { customType ->
                                     (customType.aliases + customType.name).map { alias ->
                                         Pair(alias.lowercase(), customType.typedOpParameter)

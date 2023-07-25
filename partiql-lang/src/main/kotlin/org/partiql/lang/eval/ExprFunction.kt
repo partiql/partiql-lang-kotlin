@@ -17,6 +17,9 @@ package org.partiql.lang.eval
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.types.FunctionSignature
 
+@Deprecated("This class is deprecated", level = DeprecationLevel.ERROR)
+sealed class Arguments
+
 /**
  * Represents a function that can be invoked from within an [EvaluatingCompiler]
  * compiled [Expression].
@@ -43,6 +46,18 @@ interface ExprFunction {
      * @param required The required arguments.
      */
     fun callWithRequired(session: EvaluationSession, required: List<ExprValue>): ExprValue {
+        errNoContext("Invalid implementation for ${signature.name}#call", ErrorCode.INTERNAL_ERROR, true)
+    }
+
+    @Deprecated("This function has been deprecated", level = DeprecationLevel.ERROR)
+    fun callWithOptional(session: EvaluationSession, required: List<ExprValue>, opt: ExprValue): ExprValue {
+        // Deriving ExprFunctions must implement this if they have a valid call form including required parameters and optional
+        errNoContext("Invalid implementation for ${signature.name}#call", ErrorCode.INTERNAL_ERROR, true)
+    }
+
+    @Deprecated("This function has been deprecated", level = DeprecationLevel.ERROR)
+    fun callWithVariadic(session: EvaluationSession, required: List<ExprValue>, variadic: List<ExprValue>): ExprValue {
+        // Deriving ExprFunctions must implement this if they have a valid call form including required parameters and variadic
         errNoContext("Invalid implementation for ${signature.name}#call", ErrorCode.INTERNAL_ERROR, true)
     }
 }
