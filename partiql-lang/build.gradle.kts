@@ -33,13 +33,13 @@ kotlin {
 
 dependencies {
     api(project(":partiql-ast"))
+    api(project(":partiql-parser"))
     api(project(":partiql-spi"))
     api(project(":partiql-types"))
     api(Deps.ionElement)
     api(Deps.ionJava)
     api(Deps.ionSchema)
     // libs are included in partiql-lang-kotlin JAR, but are not published independently yet.
-    libs(project(":partiql-parser"))
     libs(project(":partiql-plan"))
     implementation(Deps.antlrRuntime)
     implementation(Deps.csv)

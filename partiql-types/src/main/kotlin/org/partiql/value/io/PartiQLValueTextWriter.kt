@@ -51,7 +51,6 @@ import org.partiql.value.SexpValue
 import org.partiql.value.StringValue
 import org.partiql.value.StructValue
 import org.partiql.value.SymbolValue
-import org.partiql.value.bagValue
 import org.partiql.value.boolValue
 import org.partiql.value.charValue
 import org.partiql.value.decimalValue
@@ -62,10 +61,7 @@ import org.partiql.value.int32Value
 import org.partiql.value.int64Value
 import org.partiql.value.int8Value
 import org.partiql.value.intValue
-import org.partiql.value.listValue
-import org.partiql.value.sexpValue
 import org.partiql.value.stringValue
-import org.partiql.value.structValue
 import org.partiql.value.symbolValue
 import org.partiql.value.util.PartiQLValueBaseVisitor
 import java.io.PrintStream
@@ -295,24 +291,24 @@ internal class PartiQLValueTextWriter(
             else -> visitSymbol(symbolValue(v.value!!, v.annotations), ctx)
         }
 
-        override fun visitNullableBag(v: NullableBagValue<*>, ctx: Format?) = when (v.elements) {
-            null -> "null"
-            else -> visitBag(bagValue(v.elements!!.toList(), v.annotations), ctx)
+        override fun visitNullableBag(v: NullableBagValue<*>, ctx: Format?) = when (v.isNull()) {
+            true -> "null"
+            false -> visitBag(v.promote(), ctx)
         }
 
-        override fun visitNullableList(v: NullableListValue<*>, ctx: Format?) = when (v.elements) {
-            null -> "null"
-            else -> visitList(listValue(v.elements!!.toList(), v.annotations), ctx)
+        override fun visitNullableList(v: NullableListValue<*>, ctx: Format?) = when (v.isNull()) {
+            true -> "null"
+            false -> visitList(v.promote(), ctx)
         }
 
-        override fun visitNullableSexp(v: NullableSexpValue<*>, ctx: Format?) = when (v.elements) {
-            null -> "null"
-            else -> visitSexp(sexpValue(v.elements!!.toList(), v.annotations), ctx)
+        override fun visitNullableSexp(v: NullableSexpValue<*>, ctx: Format?) = when (v.isNull()) {
+            true -> "null"
+            false -> visitSexp(v.promote(), ctx)
         }
 
-        override fun visitNullableStruct(v: NullableStructValue<*>, ctx: Format?) = when (v.fields) {
-            null -> "null"
-            else -> visitStruct(structValue(v.fields!!.toList(), v.annotations), ctx)
+        override fun visitNullableStruct(v: NullableStructValue<*>, ctx: Format?) = when (v.isNull()) {
+            true -> "null"
+            false -> visitStruct(v.promote(), ctx)
         }
     }
 }

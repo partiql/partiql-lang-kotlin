@@ -33,14 +33,11 @@ import org.partiql.parser.antlr.PartiQLParser
 import kotlin.concurrent.thread
 
 /**
- * Originally just meant to test the parser, this class now tests several different things because
- * the same test cases can be used for all three:
- *
- * - Parsing of query to PIG-generated ast
- * - Conversion of PIG-generated ast to [ExprNode].
- * - Conversion of [ExprNode] to legacy and new s-exp ASTs.
+ * Test parsing of query to PIG-generated AST
  */
 class PartiQLParserTest : PartiQLParserTestBase() {
+
+    override val targets: Array<ParserTarget> = arrayOf(ParserTarget.DEFAULT, ParserTarget.EXPERIMENTAL)
 
     // ****************************************
     // literals
@@ -438,6 +435,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
            (path_expr (lit "b") (case_insensitive))
            (path_expr (lit "c") (case_insensitive)))""".trimMargin()
     )
+
     @Test
     fun dot_case_3_insensitive_components() = assertExpression(
         "a.b.c.d",
@@ -474,6 +472,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
         """(path (id a (case_insensitive) (unqualified))
            (path_expr (lit 5) (case_sensitive)))""".trimMargin()
     )
+
     @Test
     fun pathWith3SquareBrackets() = assertExpression(
         """a[5]['b'][(a + 3)]""",
@@ -940,13 +939,13 @@ class PartiQLParserTest : PartiQLParserTestBase() {
     @Test
     fun currentUserUpperCase() = assertExpression(
         "CURRENT_USER",
-        "(session_attribute CURRENT_USER)"
+        "(session_attribute current_user)"
     )
 
     @Test
     fun currentUserMixedCase() = assertExpression(
         "CURRENT_user",
-        "(session_attribute CURRENT_user)"
+        "(session_attribute current_user)"
     )
 
     @Test
@@ -1580,48 +1579,52 @@ class PartiQLParserTest : PartiQLParserTestBase() {
     }
 
     @Test
-    fun orderByAscWithNullsSpec() = assertExpression("SELECT x FROM tb ORDER BY rk1 asc NULLS FIRST, rk2 asc NULLS LAST") {
-        select(
-            project = projectX,
-            from = scan(id("tb")),
-            order = orderBy(
-                listOf(
-                    sortSpec(id("rk1"), asc(), nullsFirst()),
-                    sortSpec(id("rk2"), asc(), nullsLast())
+    fun orderByAscWithNullsSpec() =
+        assertExpression("SELECT x FROM tb ORDER BY rk1 asc NULLS FIRST, rk2 asc NULLS LAST") {
+            select(
+                project = projectX,
+                from = scan(id("tb")),
+                order = orderBy(
+                    listOf(
+                        sortSpec(id("rk1"), asc(), nullsFirst()),
+                        sortSpec(id("rk2"), asc(), nullsLast())
+                    )
                 )
             )
-        )
-    }
+        }
 
     @Test
-    fun orderByDescWithNullsSpec() = assertExpression("SELECT x FROM tb ORDER BY rk1 desc NULLS FIRST, rk2 desc NULLS LAST") {
-        select(
-            project = projectX,
-            from = scan(id("tb")),
-            order = orderBy(
-                listOf(
-                    sortSpec(id("rk1"), desc(), nullsFirst()),
-                    sortSpec(id("rk2"), desc(), nullsLast())
+    fun orderByDescWithNullsSpec() =
+        assertExpression("SELECT x FROM tb ORDER BY rk1 desc NULLS FIRST, rk2 desc NULLS LAST") {
+            select(
+                project = projectX,
+                from = scan(id("tb")),
+                order = orderBy(
+                    listOf(
+                        sortSpec(id("rk1"), desc(), nullsFirst()),
+                        sortSpec(id("rk2"), desc(), nullsLast())
+                    )
                 )
             )
-        )
-    }
+        }
 
     @Test
-    fun orderByWithOrderingAndNullsSpec() = assertExpression("SELECT x FROM tb ORDER BY rk1 desc NULLS FIRST, rk2 asc NULLS LAST, rk3 desc NULLS LAST, rk4 asc NULLS FIRST") {
-        select(
-            project = projectX,
-            from = scan(id("tb")),
-            order = orderBy(
-                listOf(
-                    sortSpec(id("rk1"), desc(), nullsFirst()),
-                    sortSpec(id("rk2"), asc(), nullsLast()),
-                    sortSpec(id("rk3"), desc(), nullsLast()),
-                    sortSpec(id("rk4"), asc(), nullsFirst())
+    fun orderByWithOrderingAndNullsSpec() =
+        assertExpression("SELECT x FROM tb ORDER BY rk1 desc NULLS FIRST, rk2 asc NULLS LAST, rk3 desc NULLS LAST, rk4 asc NULLS FIRST") {
+            select(
+                project = projectX,
+                from = scan(id("tb")),
+                order = orderBy(
+                    listOf(
+                        sortSpec(id("rk1"), desc(), nullsFirst()),
+                        sortSpec(id("rk2"), asc(), nullsLast()),
+                        sortSpec(id("rk3"), desc(), nullsLast()),
+                        sortSpec(id("rk4"), asc(), nullsFirst())
+                    )
                 )
             )
-        )
-    }
+        }
+
     // ****************************************
     // GROUP BY and GROUP PARTIAL BY
     // ****************************************
@@ -4308,33 +4311,38 @@ class PartiQLParserTest : PartiQLParserTestBase() {
 
     @Test
     fun rootSelectNodeHasSourceLocation() {
-        val ast = parse("select 1 from dogs")
-        assertEquals(SourceLocationMeta(1L, 1L, 6L), ast.metas.sourceLocation)
+        targets.forEach { target ->
+            val ast = target.parser.parseAstStatement("select 1 from dogs")
+            assertEquals(SourceLocationMeta(1L, 1L, 6L), ast.metas.sourceLocation)
+        }
     }
 
     @Test
     fun semicolonAtEndOfQueryHasNoEffect() {
-        val query = "SELECT * FROM <<1>>"
-        val withSemicolon = parse("$query;")
-        val withoutSemicolon = parse(query)
-
-        assertEquals(withoutSemicolon, withSemicolon)
+        targets.forEach { target ->
+            val query = "SELECT * FROM <<1>>"
+            val withSemicolon = target.parser.parseAstStatement("$query;")
+            val withoutSemicolon = target.parser.parseAstStatement(query)
+            assertEquals(withoutSemicolon, withSemicolon)
+        }
     }
 
     @Test
     fun semicolonAtEndOfLiteralHasNoEffect() {
-        val withSemicolon = parse("1;")
-        val withoutSemicolon = parse("1")
-
-        assertEquals(withoutSemicolon, withSemicolon)
+        targets.forEach { target ->
+            val withSemicolon = target.parser.parseAstStatement("1;")
+            val withoutSemicolon = target.parser.parseAstStatement("1")
+            assertEquals(withoutSemicolon, withSemicolon)
+        }
     }
 
     @Test
     fun semicolonAtEndOfExpressionHasNoEffect() {
-        val withSemicolon = parse("(1+1);")
-        val withoutSemicolon = parse("(1+1)")
-
-        assertEquals(withoutSemicolon, withSemicolon)
+        targets.forEach { target ->
+            val withSemicolon = target.parser.parseAstStatement("(1+1);")
+            val withoutSemicolon = target.parser.parseAstStatement("(1+1)")
+            assertEquals(withoutSemicolon, withSemicolon)
+        }
     }
 
     // ****************************************
@@ -4478,7 +4486,10 @@ class PartiQLParserTest : PartiQLParserTestBase() {
     fun execMultipleArg() = assertExpression(
         "EXEC foo 'bar0', `1d0`, 2, [3]"
     ) {
-        exec("foo", listOf(lit(ionString("bar0")), lit(ionDecimal(Decimal.valueOf(1))), lit(ionInt(2)), list(lit(ionInt(3)))))
+        exec(
+            "foo",
+            listOf(lit(ionString("bar0")), lit(ionDecimal(Decimal.valueOf(1))), lit(ionInt(2)), list(lit(ionInt(3))))
+        )
     }
 
     @Test
@@ -4511,10 +4522,10 @@ class PartiQLParserTest : PartiQLParserTestBase() {
     }
 
     @Test
-    fun manyNestedNotPerformanceRegressionTest() {
+    fun manyNestedNotPerformanceRegressionTest(): Unit = forEachTarget {
         val startTime = System.currentTimeMillis()
         val t = thread {
-            parse(
+            parser.parseAstStatement(
                 """
                 not not not not not not not not not not not not not not not not not not not not not not not not 
                 not not not not not not not not not not not not not not not not not not not not not not not not 
@@ -4544,7 +4555,7 @@ class PartiQLParserTest : PartiQLParserTestBase() {
     }
 
     @Test
-    fun testOrderByMetas() {
+    fun testOrderByMetas(): Unit = forEachTarget {
         // Arrange
         val query = "SELECT * FROM << { 'x': 2 } >> ORDER BY x"
         val expected = SourceLocationMeta(1, 32, 5)
