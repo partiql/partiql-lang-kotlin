@@ -73,8 +73,6 @@ import java.time.LocalTime
 import java.time.OffsetTime
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
-import kotlin.reflect.KClass
-import kotlin.reflect.cast
 
 /**
  * Extends ANTLR's generated [PartiQLBaseVisitor] to visit an ANTLR ParseTree and convert it into a PartiQL AST. This
@@ -252,7 +250,7 @@ internal class PartiQLPigVisitor(
     }
 
     override fun visitTableDef(ctx: PartiQLParser.TableDefContext) = PartiqlAst.build {
-        val parts = visitOrEmpty(ctx.tableDefPart(), PartiqlAst.TableDefPart::class)
+        val parts = ctx.tableDefPart().map { visit(it) as PartiqlAst.TableDefPart }
         tableDef(parts)
     }
 
@@ -287,7 +285,7 @@ internal class PartiQLPigVisitor(
 
     override fun visitExecCommand(ctx: PartiQLParser.ExecCommandContext) = PartiqlAst.build {
         val name = visitExpr(ctx.name).getStringValue(ctx.name.getStart())
-        val args = visitOrEmpty(ctx.args, PartiqlAst.Expr::class)
+        val args = ctx.args.map { visitExpr(it) }
         exec_(
             SymbolPrimitive(name.lowercase(), emptyMetaContainer()),
             args,
@@ -408,7 +406,7 @@ internal class PartiQLPigVisitor(
     }
 
     override fun visitReturningClause(ctx: PartiQLParser.ReturningClauseContext) = PartiqlAst.build {
-        val elements = visitOrEmpty(ctx.returningColumn(), PartiqlAst.ReturningElem::class)
+        val elements = ctx.returningColumn().map { visit(it) as PartiqlAst.ReturningElem }
         returningExpr(elements, ctx.RETURNING().getSourceMetaContainer())
     }
 
@@ -472,7 +470,7 @@ internal class PartiQLPigVisitor(
     override fun visitPathSimple(ctx: PartiQLParser.PathSimpleContext) = PartiqlAst.build {
         val root = visitSymbolPrimitive(ctx.symbolPrimitive())
         if (ctx.pathSimpleSteps().isEmpty()) return@build root
-        val steps = visitOrEmpty(ctx.pathSimpleSteps(), PartiqlAst.PathStep::class)
+        val steps = ctx.pathSimpleSteps().map { visit(it) as PartiqlAst.PathStep }
         path(root, steps, root.metas)
     }
 
@@ -488,7 +486,7 @@ internal class PartiQLPigVisitor(
         getSymbolPathExpr(ctx.symbolPrimitive())
 
     override fun visitSetCommand(ctx: PartiQLParser.SetCommandContext) = PartiqlAst.build {
-        val assignments = visitOrEmpty(ctx.setAssignment(), PartiqlAst.DmlOp.Set::class)
+        val assignments = ctx.setAssignment().map { visitSetAssignment(it) }
         val newSets = assignments.map { assignment -> assignment.copy(metas = ctx.SET().getSourceMetaContainer()) }
         dmlOpList(newSets, ctx.SET().getSourceMetaContainer())
     }
@@ -560,7 +558,10 @@ internal class PartiQLPigVisitor(
     }
 
     override fun visitSelectItems(ctx: PartiQLParser.SelectItemsContext) =
-        convertProjectionItems(ctx.projectionItems(), ctx.SELECT().getSourceMetaContainer())
+        PartiqlAst.build {
+            val projections = ctx.projectionItems().projectionItem().map { visitProjectionItem(it) }
+            projectList(projections, ctx.SELECT().getSourceMetaContainer())
+        }
 
     override fun visitSelectPivot(ctx: PartiQLParser.SelectPivotContext) = PartiqlAst.build {
         projectPivot(visitExpr(ctx.at), visitExpr(ctx.pivot))
@@ -609,7 +610,7 @@ internal class PartiQLPigVisitor(
      */
 
     override fun visitLetClause(ctx: PartiQLParser.LetClauseContext) = PartiqlAst.build {
-        val letBindings = visitOrEmpty(ctx.letBinding(), PartiqlAst.LetBinding::class)
+        val letBindings = ctx.letBinding().map { visitLetBinding(it) }
         let(letBindings)
     }
 
@@ -626,7 +627,7 @@ internal class PartiQLPigVisitor(
      */
 
     override fun visitOrderByClause(ctx: PartiQLParser.OrderByClauseContext) = PartiqlAst.build {
-        val sortSpecs = visitOrEmpty(ctx.orderSortSpec(), PartiqlAst.SortSpec::class)
+        val sortSpecs = ctx.orderSortSpec().map { visitOrderSortSpec(it) }
         val metas = ctx.ORDER().getSourceMetaContainer()
         orderBy(sortSpecs, metas)
     }
@@ -656,7 +657,7 @@ internal class PartiQLPigVisitor(
 
     override fun visitGroupClause(ctx: PartiQLParser.GroupClauseContext) = PartiqlAst.build {
         val strategy = if (ctx.PARTIAL() != null) groupPartial() else groupFull()
-        val keys = visitOrEmpty(ctx.groupKey(), PartiqlAst.GroupKey::class)
+        val keys = ctx.groupKey().map { visitGroupKey(it) }
         val keyList = groupKeyList(keys)
         val alias = ctx.groupAlias()?.let { visitGroupAlias(it).toPigSymbolPrimitive() }
         groupBy_(strategy, keyList = keyList, groupAsAlias = alias, ctx.GROUP().getSourceMetaContainer())
@@ -747,7 +748,7 @@ internal class PartiQLPigVisitor(
     }
 
     override fun visitMatchPattern(ctx: PartiQLParser.MatchPatternContext) = PartiqlAst.build {
-        val parts = visitOrEmpty(ctx.graphPart(), PartiqlAst.GraphMatchPatternPart::class)
+        val parts = ctx.graphPart().map { visit(it) as PartiqlAst.GraphMatchPatternPart }
         val restrictor = ctx.restrictor?.let { visitPatternRestrictor(it) }
         val variable = ctx.variable?.let { visitPatternPathVariable(it).name }
         graphMatchPattern_(parts = parts, restrictor = restrictor, variable = variable)
@@ -790,7 +791,7 @@ internal class PartiQLPigVisitor(
         val variable = ctx.variable?.let { visitPatternPathVariable(it).name }
         val prefilter = ctx.where?.let { visitWhereClause(it) }
         val quantifier = ctx.quantifier?.let { visitPatternQuantifier(it) }
-        val parts = visitOrEmpty(ctx.graphPart(), PartiqlAst.GraphMatchPatternPart::class)
+        val parts = ctx.graphPart().map { visit(it) as PartiqlAst.GraphMatchPatternPart }
         pattern(
             graphMatchPattern_(
                 parts = parts,
@@ -1066,14 +1067,14 @@ internal class PartiQLPigVisitor(
     }
 
     override fun visitPredicateBetween(ctx: PartiQLParser.PredicateBetweenContext) = PartiqlAst.build {
-        val args = visitOrEmpty(listOf(ctx.lhs, ctx.lower, ctx.upper), PartiqlAst.Expr::class)
+        val args = listOf(ctx.lhs, ctx.lower, ctx.upper).map { visit(it) as PartiqlAst.Expr }
         val between = between(args[0], args[1], args[2], ctx.BETWEEN().getSourceMetaContainer())
         if (ctx.NOT() == null) return@build between
         not(between, ctx.NOT().getSourceMetaContainer() + metaContainerOf(LegacyLogicalNotMeta.instance))
     }
 
     override fun visitPredicateLike(ctx: PartiQLParser.PredicateLikeContext) = PartiqlAst.build {
-        val args = visitOrEmpty(listOf(ctx.lhs, ctx.rhs), PartiqlAst.Expr::class)
+        val args = listOf(ctx.lhs, ctx.rhs).map { visit(it) as PartiqlAst.Expr }
         val escape = ctx.escape?.let { visitExpr(it) }
         val like = like(args[0], args[1], escape, ctx.LIKE().getSourceMetaContainer())
         if (ctx.NOT() == null) return@build like
@@ -1112,7 +1113,7 @@ internal class PartiQLPigVisitor(
     }
 
     override fun visitSequenceConstructor(ctx: PartiQLParser.SequenceConstructorContext) = PartiqlAst.build {
-        val expressions = visitOrEmpty(ctx.expr(), PartiqlAst.Expr::class)
+        val expressions = ctx.expr().map { visitExpr(it) }
         val metas = ctx.datatype.getSourceMetaContainer()
         when (ctx.datatype.type) {
             PartiQLParser.LIST -> list(expressions, metas)
@@ -1156,17 +1157,17 @@ internal class PartiQLPigVisitor(
     }
 
     override fun visitValues(ctx: PartiQLParser.ValuesContext) = PartiqlAst.build {
-        val rows = visitOrEmpty(ctx.valueRow(), PartiqlAst.Expr.List::class)
+        val rows = ctx.valueRow().map { visitValueRow(it) }
         bag(rows, ctx.VALUES().getSourceMetaContainer() + metaContainerOf(IsValuesExprMeta.instance))
     }
 
     override fun visitValueRow(ctx: PartiQLParser.ValueRowContext) = PartiqlAst.build {
-        val expressions = visitOrEmpty(ctx.expr(), PartiqlAst.Expr::class)
+        val expressions = ctx.expr().map { visitExpr(it) }
         list(expressions, metas = ctx.PAREN_LEFT().getSourceMetaContainer() + metaContainerOf(IsListParenthesizedMeta))
     }
 
     override fun visitValueList(ctx: PartiQLParser.ValueListContext) = PartiqlAst.build {
-        val expressions = visitOrEmpty(ctx.expr(), PartiqlAst.Expr::class)
+        val expressions = ctx.expr().map { visitExpr(it) }
         list(expressions, metas = ctx.PAREN_LEFT().getSourceMetaContainer() + metaContainerOf(IsListParenthesizedMeta))
     }
 
@@ -1184,7 +1185,7 @@ internal class PartiQLPigVisitor(
     }
 
     override fun visitCoalesce(ctx: PartiQLParser.CoalesceContext) = PartiqlAst.build {
-        val expressions = visitOrEmpty(ctx.expr(), PartiqlAst.Expr::class)
+        val expressions = ctx.expr().map { visitExpr(it) }
         val metas = ctx.COALESCE().getSourceMetaContainer()
         coalesce(expressions, metas)
     }
@@ -1224,14 +1225,14 @@ internal class PartiQLPigVisitor(
 
     override fun visitFunctionCallIdent(ctx: PartiQLParser.FunctionCallIdentContext) = PartiqlAst.build {
         val name = ctx.name.getString().lowercase()
-        val args = visitOrEmpty(ctx.expr(), PartiqlAst.Expr::class)
+        val args = ctx.expr().map { visitExpr(it) }
         val metas = ctx.name.getSourceMetaContainer()
         call(name, args = args, metas = metas)
     }
 
     override fun visitFunctionCallReserved(ctx: PartiQLParser.FunctionCallReservedContext) = PartiqlAst.build {
         val name = ctx.name.text.lowercase()
-        val args = visitOrEmpty(ctx.expr(), PartiqlAst.Expr::class)
+        val args = ctx.expr().map { visitExpr(it) }
         val metas = ctx.name.getSourceMetaContainer()
         call(name, args = args, metas = metas)
     }
@@ -1241,26 +1242,26 @@ internal class PartiQLPigVisitor(
             throw ctx.dt.err("Expected one of: ${DateTimePart.values()}", ErrorCode.PARSE_EXPECTED_DATE_TIME_PART)
         }
         val datetimePart = lit(ionSymbol(ctx.dt.text))
-        val secondaryArgs = visitOrEmpty(ctx.expr(), PartiqlAst.Expr::class)
+        val secondaryArgs = ctx.expr().map { visitExpr(it) }
         val args = listOf(datetimePart) + secondaryArgs
         val metas = ctx.func.getSourceMetaContainer()
         call(ctx.func.text.lowercase(), args, metas)
     }
 
     override fun visitSubstring(ctx: PartiQLParser.SubstringContext) = PartiqlAst.build {
-        val args = visitOrEmpty(ctx.expr(), PartiqlAst.Expr::class)
+        val args = ctx.expr().map { visitExpr(it) }
         val metas = ctx.SUBSTRING().getSourceMetaContainer()
         call(ctx.SUBSTRING().text.lowercase(), args, metas)
     }
 
     override fun visitPosition(ctx: PartiQLParser.PositionContext) = PartiqlAst.build {
-        val args = visitOrEmpty(ctx.expr(), PartiqlAst.Expr::class)
+        val args = ctx.expr().map { visitExpr(it) }
         val metas = ctx.POSITION().getSourceMetaContainer()
         call(ctx.POSITION().text.lowercase(), args, metas)
     }
 
     override fun visitOverlay(ctx: PartiQLParser.OverlayContext) = PartiqlAst.build {
-        val args = visitOrEmpty(ctx.expr(), PartiqlAst.Expr::class)
+        val args = ctx.expr().map { visitExpr(it) }
         val metas = ctx.OVERLAY().getSourceMetaContainer()
         call(ctx.OVERLAY().text.lowercase(), args, metas)
     }
@@ -1346,7 +1347,7 @@ internal class PartiQLPigVisitor(
      */
 
     override fun visitLagLeadFunction(ctx: PartiQLParser.LagLeadFunctionContext) = PartiqlAst.build {
-        val args = visitOrEmpty(ctx.expr(), PartiqlAst.Expr::class)
+        val args = ctx.expr().map { visitExpr(it) }
         val over = visitOver(ctx.over())
         // LAG and LEAD will require a Window ORDER BY
         if (over.orderBy == null) {
@@ -1372,13 +1373,13 @@ internal class PartiQLPigVisitor(
     }
 
     override fun visitWindowPartitionList(ctx: PartiQLParser.WindowPartitionListContext) = PartiqlAst.build {
-        val args = visitOrEmpty(ctx.expr(), PartiqlAst.Expr::class)
+        val args = ctx.expr().map { visitExpr(it) }
         val metas = ctx.PARTITION().getSourceMetaContainer()
         windowPartitionList(args, metas)
     }
 
     override fun visitWindowSortSpecList(ctx: PartiQLParser.WindowSortSpecListContext) = PartiqlAst.build {
-        val sortSpecList = visitOrEmpty(ctx.orderSortSpec(), PartiqlAst.SortSpec::class)
+        val sortSpecList = ctx.orderSortSpec().map { visitOrderSortSpec(it) }
         val metas = ctx.ORDER().getSourceMetaContainer()
         windowSortSpecList(sortSpecList, metas)
     }
@@ -1390,7 +1391,7 @@ internal class PartiQLPigVisitor(
      */
 
     override fun visitBag(ctx: PartiQLParser.BagContext) = PartiqlAst.build {
-        val exprList = visitOrEmpty(ctx.expr(), PartiqlAst.Expr::class)
+        val exprList = ctx.expr().map { visitExpr(it) }
         bag(exprList, ctx.ANGLE_DOUBLE_LEFT().getSourceMetaContainer())
     }
 
@@ -1410,7 +1411,7 @@ internal class PartiQLPigVisitor(
 
     override fun visitArray(ctx: PartiQLParser.ArrayContext) = PartiqlAst.build {
         val metas = ctx.BRACKET_LEFT().getSourceMetaContainer()
-        list(visitOrEmpty(ctx.expr(), PartiqlAst.Expr::class), metas)
+        list(ctx.expr().map { visitExpr(it) }, metas)
     }
 
     override fun visitLiteralNull(ctx: PartiQLParser.LiteralNullContext) = PartiqlAst.build {
@@ -1483,7 +1484,7 @@ internal class PartiQLPigVisitor(
     }
 
     override fun visitTuple(ctx: PartiQLParser.TupleContext) = PartiqlAst.build {
-        val pairs = visitOrEmpty(ctx.pair(), PartiqlAst.ExprPair::class)
+        val pairs = ctx.pair().map { visitPair(it) }
         val metas = ctx.BRACE_LEFT().getSourceMetaContainer()
         struct(pairs, metas)
     }
@@ -1635,12 +1636,6 @@ internal class PartiQLPigVisitor(
      *
      */
 
-    private fun <T : PartiqlAst.PartiqlAstNode> visitOrEmpty(ctx: List<ParserRuleContext>?, clazz: KClass<T>): List<T> =
-        when {
-            ctx.isNullOrEmpty() -> emptyList()
-            else -> ctx.map { clazz.cast(visit(it)) }
-        }
-
     private fun TerminalNode?.getSourceMetaContainer(): MetaContainer {
         if (this == null) return emptyMetaContainer()
         val metas = this.getSourceMetas()
@@ -1667,7 +1662,7 @@ internal class PartiQLPigVisitor(
         parent: ParserRuleContext? = null
     ) = PartiqlAst.build {
         if (parent != null) return@build visit(parent) as PartiqlAst.Expr
-        val args = visitOrEmpty(listOf(lhs!!, rhs!!), PartiqlAst.Expr::class)
+        val args = listOf(lhs!!, rhs!!).map { visit(it) as PartiqlAst.Expr }
         val metas = op.getSourceMetaContainer()
         when (op!!.type) {
             PartiQLParser.AND -> and(args, metas)
@@ -1914,12 +1909,6 @@ internal class PartiQLPigVisitor(
         null -> null
         else -> SymbolPrimitive(sym.getString(), sym.getSourceMetaContainer())
     }
-
-    private fun convertProjectionItems(ctx: PartiQLParser.ProjectionItemsContext, metas: MetaContainer) =
-        PartiqlAst.build {
-            val projections = visitOrEmpty(ctx.projectionItem(), PartiqlAst.ProjectItem::class)
-            projectList(projections, metas)
-        }
 
     private fun PartiQLParser.SelectClauseContext.getMetas(): MetaContainer = when (this) {
         is PartiQLParser.SelectAllContext -> this.SELECT().getSourceMetaContainer()
