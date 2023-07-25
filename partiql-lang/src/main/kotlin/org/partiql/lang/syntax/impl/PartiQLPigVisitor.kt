@@ -35,8 +35,6 @@ import com.amazon.ionelement.api.ionSymbol
 import com.amazon.ionelement.api.loadSingleElement
 import org.antlr.v4.runtime.ParserRuleContext
 import org.antlr.v4.runtime.Token
-import org.antlr.v4.runtime.tree.ErrorNode
-import org.antlr.v4.runtime.tree.RuleNode
 import org.antlr.v4.runtime.tree.TerminalNode
 import org.partiql.lang.ast.IsCountStarMeta
 import org.partiql.lang.ast.IsImplictJoinMeta
@@ -1594,41 +1592,6 @@ internal class PartiQLPigVisitor(
         }
         customType_(SymbolPrimitive(customName, metas), metas)
     }
-
-    /**
-     * NOT OVERRIDDEN
-     * Explicitly defining the override helps by showing the user (via the IDE) which methods remain to be overridden.
-     */
-
-    override fun visitTerminal(node: TerminalNode?): PartiqlAst.PartiqlAstNode = super.visitTerminal(node)
-    override fun shouldVisitNextChild(node: RuleNode?, currentResult: PartiqlAst.PartiqlAstNode?) =
-        super.shouldVisitNextChild(node, currentResult)
-
-    override fun visitErrorNode(node: ErrorNode?): PartiqlAst.PartiqlAstNode = super.visitErrorNode(node)
-    override fun visitChildren(node: RuleNode?): PartiqlAst.PartiqlAstNode = super.visitChildren(node)
-    override fun visitExprPrimaryBase(ctx: PartiQLParser.ExprPrimaryBaseContext?): PartiqlAst.PartiqlAstNode =
-        super.visitExprPrimaryBase(ctx)
-
-    override fun visitExprTermBase(ctx: PartiQLParser.ExprTermBaseContext?): PartiqlAst.PartiqlAstNode =
-        super.visitExprTermBase(ctx)
-
-    override fun visitCollection(ctx: PartiQLParser.CollectionContext?): PartiqlAst.PartiqlAstNode =
-        super.visitCollection(ctx)
-
-    override fun visitPredicateBase(ctx: PartiQLParser.PredicateBaseContext?): PartiqlAst.PartiqlAstNode =
-        super.visitPredicateBase(ctx)
-
-    override fun visitTableNonJoin(ctx: PartiQLParser.TableNonJoinContext?): PartiqlAst.PartiqlAstNode =
-        super.visitTableNonJoin(ctx)
-
-    override fun visitTableRefBase(ctx: PartiQLParser.TableRefBaseContext?): PartiqlAst.PartiqlAstNode =
-        super.visitTableRefBase(ctx)
-
-    override fun visitJoinRhsBase(ctx: PartiQLParser.JoinRhsBaseContext?): PartiqlAst.PartiqlAstNode =
-        super.visitJoinRhsBase(ctx)
-
-    override fun visitConflictTarget(ctx: PartiQLParser.ConflictTargetContext?): PartiqlAst.PartiqlAstNode =
-        super.visitConflictTarget(ctx)
 
     /**
      *
