@@ -19,7 +19,7 @@ class FunctionSignature(
     val returnType: StaticType,
     val unknownArguments: UnknownArguments = UnknownArguments.PROPAGATE
 ) {
-    @Deprecated("This constructor is deprecated", level = DeprecationLevel.ERROR)
+    @Deprecated("To continue support for evaluation of `optionalParameters`, please create another same-named function.", level = DeprecationLevel.ERROR)
     constructor(
         name: String,
         requiredParameters: List<StaticType>,
@@ -28,7 +28,7 @@ class FunctionSignature(
         unknownArguments: UnknownArguments = UnknownArguments.PROPAGATE
     ) : this(name, requiredParameters, returnType, unknownArguments)
 
-    @Deprecated("This constructor is deprecated", level = DeprecationLevel.ERROR)
+    @Deprecated("To continue support for evaluation of `variadicParameter`, please use a `StaticType.LIST` to hold all previously variadic parameters.", level = DeprecationLevel.ERROR)
     constructor(
         name: String,
         requiredParameters: List<StaticType>,
@@ -37,7 +37,7 @@ class FunctionSignature(
         unknownArguments: UnknownArguments = UnknownArguments.PROPAGATE
     ) : this(name, requiredParameters, returnType, unknownArguments)
 
-    @Deprecated("This constructor is deprecated", level = DeprecationLevel.ERROR)
+    @Deprecated("To continue support for evaluation of `optionalParameters`, please create another same-named function. To continue support for evaluation of `variadicParameter`, please use a `StaticType.LIST` to hold all previously variadic parameters.", level = DeprecationLevel.ERROR)
     constructor(
         name: String,
         requiredParameters: List<StaticType>,
