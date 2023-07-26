@@ -133,7 +133,7 @@ internal class EvaluatingCompiler(
     private val compileOptions: CompileOptions = CompileOptions.standard()
 ) {
     @Deprecated(
-        "functions should be a list. Use EvaluatingCompiler with List<ExprFunction> instead.",
+        "Functions should be a list. Use EvaluatingCompiler with List<ExprFunction> instead.",
         level = DeprecationLevel.WARNING
     )
     constructor(

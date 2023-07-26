@@ -17,7 +17,7 @@ package org.partiql.lang.eval
 import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.types.FunctionSignature
 
-@Deprecated("This class is deprecated", level = DeprecationLevel.ERROR)
+@Deprecated("As function overloading is now supported, this class is deprecated.", level = DeprecationLevel.ERROR)
 sealed class Arguments
 
 /**
@@ -49,13 +49,13 @@ interface ExprFunction {
         errNoContext("Invalid implementation for ${signature.name}#call", ErrorCode.INTERNAL_ERROR, true)
     }
 
-    @Deprecated("This function has been deprecated", level = DeprecationLevel.ERROR)
+    @Deprecated("As function overloading is now supported, please provide multiple implementations of ExprFunction and invoke callWithRequired() instead.", level = DeprecationLevel.ERROR)
     fun callWithOptional(session: EvaluationSession, required: List<ExprValue>, opt: ExprValue): ExprValue {
         // Deriving ExprFunctions must implement this if they have a valid call form including required parameters and optional
         errNoContext("Invalid implementation for ${signature.name}#call", ErrorCode.INTERNAL_ERROR, true)
     }
 
-    @Deprecated("This function has been deprecated", level = DeprecationLevel.ERROR)
+    @Deprecated("As function overloading is now supported, please use the LIST ExprValue to represent variadic parameters and invoke callWithRequired() instead.", level = DeprecationLevel.ERROR)
     fun callWithVariadic(session: EvaluationSession, required: List<ExprValue>, variadic: List<ExprValue>): ExprValue {
         // Deriving ExprFunctions must implement this if they have a valid call form including required parameters and variadic
         errNoContext("Invalid implementation for ${signature.name}#call", ErrorCode.INTERNAL_ERROR, true)
