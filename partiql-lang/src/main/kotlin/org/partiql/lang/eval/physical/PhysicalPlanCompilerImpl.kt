@@ -137,6 +137,21 @@ internal class PhysicalPlanCompilerImpl(
     private val evaluatorOptions: EvaluatorOptions = EvaluatorOptions.standard(),
     private val bexperConverter: PhysicalBexprToThunkConverter,
 ) : PhysicalPlanCompiler {
+    @Deprecated("Use constructor with List<ExprFunction> instead", level = DeprecationLevel.WARNING)
+    constructor(
+        functions: Map<String, ExprFunction>,
+        customTypedOpParameters: Map<String, TypedOpParameter>,
+        procedures: Map<String, StoredProcedure>,
+        evaluatorOptions: EvaluatorOptions = EvaluatorOptions.standard(),
+        bexperConverter: PhysicalBexprToThunkConverter
+    ) : this(
+        functions = functions.values.toList(),
+        customTypedOpParameters = customTypedOpParameters,
+        procedures = procedures,
+        evaluatorOptions = evaluatorOptions,
+        bexperConverter = bexperConverter
+    )
+
     // TODO: remove this once we migrate from `IonValue` to `IonElement`.
     private val ion = IonSystemBuilder.standard().build()
 
