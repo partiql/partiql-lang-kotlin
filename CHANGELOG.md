@@ -89,6 +89,8 @@ Thank you to all who have contributed!
 
 ## [0.12.0] - 2023-06-14
 
+## [0.12.0] - 2023-06-14
+
 ### Added
 
 - Adds support for using EXCLUDED within DML ON-CONFLICT-ACTION conditions. Closes #1111.

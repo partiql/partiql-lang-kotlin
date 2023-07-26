@@ -19,6 +19,34 @@ class FunctionSignature(
     val returnType: StaticType,
     val unknownArguments: UnknownArguments = UnknownArguments.PROPAGATE
 ) {
+    @Deprecated("To continue support for evaluation of `optionalParameters`, please create another same-named function.", level = DeprecationLevel.ERROR)
+    constructor(
+        name: String,
+        requiredParameters: List<StaticType>,
+        optionalParameter: StaticType,
+        returnType: StaticType,
+        unknownArguments: UnknownArguments = UnknownArguments.PROPAGATE
+    ) : this(name, requiredParameters, returnType, unknownArguments)
+
+    @Deprecated("To continue support for evaluation of `variadicParameter`, please use a `StaticType.LIST` to hold all previously variadic parameters.", level = DeprecationLevel.ERROR)
+    constructor(
+        name: String,
+        requiredParameters: List<StaticType>,
+        variadicParameter: VarargFormalParameter,
+        returnType: StaticType,
+        unknownArguments: UnknownArguments = UnknownArguments.PROPAGATE
+    ) : this(name, requiredParameters, returnType, unknownArguments)
+
+    @Deprecated("To continue support for evaluation of `optionalParameters`, please create another same-named function. To continue support for evaluation of `variadicParameter`, please use a `StaticType.LIST` to hold all previously variadic parameters.", level = DeprecationLevel.ERROR)
+    constructor(
+        name: String,
+        requiredParameters: List<StaticType>,
+        optionalParameter: StaticType,
+        variadicParameter: VarargFormalParameter,
+        returnType: StaticType,
+        unknownArguments: UnknownArguments = UnknownArguments.PROPAGATE
+    ) : this(name, requiredParameters, returnType, unknownArguments)
+
     val arity: IntRange = requiredParameters.size..requiredParameters.size
 }
 

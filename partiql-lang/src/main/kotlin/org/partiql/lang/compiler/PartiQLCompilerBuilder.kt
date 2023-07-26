@@ -62,6 +62,15 @@ class PartiQLCompilerBuilder private constructor() {
     private var customProcedures: List<StoredProcedure> = emptyList()
     private var customOperatorFactories: List<RelationalOperatorFactory> = emptyList()
 
+    @Deprecated(
+        message = "customFunctions should be a list. Use PartiQLCompilerBuilder with List<ExprFunction> instead.",
+        level = DeprecationLevel.WARNING
+    )
+    constructor(customFunctions: Map<String, ExprFunction>) :
+        this() {
+            this.customFunctions = customFunctions.values.toList()
+        }
+
     companion object {
 
         /**

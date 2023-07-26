@@ -22,10 +22,8 @@ import org.partiql.lang.ast.passes.SemanticProblemDetails
 import org.partiql.lang.ast.passes.inference.cast
 import org.partiql.lang.errors.Problem
 import org.partiql.lang.errors.ProblemHandler
-import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.builtins.SCALAR_BUILTINS_DEFAULT
-import org.partiql.lang.eval.impl.FunctionManager
 import org.partiql.lang.planner.PlanningProblemDetails
 import org.partiql.lang.planner.transforms.PlannerSession
 import org.partiql.lang.planner.transforms.impl.Metadata
@@ -93,13 +91,14 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
         internal val session: PlannerSession,
         internal val metadata: Metadata,
         internal val scopingOrder: ScopingOrder,
-        internal val customFunctions: List<ExprFunction>,
+        internal val customFunctionSignatures: List<FunctionSignature>,
         internal val tolerance: MinimumTolerance = MinimumTolerance.FULL,
         internal val problemHandler: ProblemHandler
     ) {
         internal val inputTypeEnv = input?.let { PlanUtils.getTypeEnv(it) } ?: emptyList()
-        internal val allFunctions = SCALAR_BUILTINS_DEFAULT + customFunctions
-        internal val functionManager = FunctionManager(allFunctions)
+        internal val allFunctions: Map<String, List<FunctionSignature>> =
+            (SCALAR_BUILTINS_DEFAULT.map { it.signature.name to it.signature } + customFunctionSignatures.map { it.name to it })
+                .groupBy({ it.first }, { it.second })
     }
 
     /**
@@ -241,7 +240,7 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
                 ctx.session,
                 ctx.metadata,
                 ScopingOrder.GLOBALS_THEN_LEXICAL,
-                ctx.customFunctions,
+                ctx.customFunctionSignatures,
                 ctx.tolerance,
                 ctx.problemHandler
             )
@@ -551,25 +550,25 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
         val processedNode = processRexCall(node, ctx)
         visitRexCallManual(processedNode, ctx)?.let { return it }
         val funcName = node.id
-        val functions = ctx.functionManager.functionMap[funcName]
+        val signatures = ctx.allFunctions[funcName]
         val arguments = processedNode.args.getTypes(ctx)
-        if (functions == null) {
+        if (signatures == null) {
             handleNoSuchFunctionError(ctx, funcName)
             return node.copy(type = StaticType.ANY)
         }
 
         var types: MutableSet<StaticType> = mutableSetOf()
-        val funcsMatchingArity = functions.filter { it.signature.arity.contains(arguments.size) }
+        val funcsMatchingArity = signatures.filter { it.arity.contains(arguments.size) }
         if (funcsMatchingArity.isEmpty()) {
-            handleIncorrectNumberOfArgumentsToFunctionCallError(funcName, getMinMaxArities(functions).first..getMinMaxArities(functions).second, arguments.size, ctx)
+            handleIncorrectNumberOfArgumentsToFunctionCallError(funcName, getMinMaxArities(signatures).first..getMinMaxArities(signatures).second, arguments.size, ctx)
         } else {
             if (node.type != null) {
                 return processedNode.copy(type = node.type)
             }
-            for (func in funcsMatchingArity) {
-                when (func.signature.unknownArguments) {
-                    UnknownArguments.PROPAGATE -> types.add(returnTypeForPropagatingFunction(func.signature, arguments, ctx))
-                    UnknownArguments.PASS_THRU -> types.add(returnTypeForPassThruFunction(func.signature, arguments))
+            for (sign in funcsMatchingArity) {
+                when (sign.unknownArguments) {
+                    UnknownArguments.PROPAGATE -> types.add(returnTypeForPropagatingFunction(sign, arguments, ctx))
+                    UnknownArguments.PASS_THRU -> types.add(returnTypeForPassThruFunction(sign, arguments))
                 }
             }
         }
@@ -577,9 +576,9 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
         return processedNode.copy(type = StaticType.unionOf(types).flatten())
     }
 
-    private fun getMinMaxArities(funcs: List<ExprFunction>): Pair<Int, Int> {
-        val minArity = funcs.map { it.signature.arity.first }.minOrNull() ?: Int.MAX_VALUE
-        val maxArity = funcs.map { it.signature.arity.last }.maxOrNull() ?: Int.MIN_VALUE
+    private fun getMinMaxArities(funcs: List<FunctionSignature>): Pair<Int, Int> {
+        val minArity = funcs.map { it.arity.first }.minOrNull() ?: Int.MAX_VALUE
+        val maxArity = funcs.map { it.arity.last }.maxOrNull() ?: Int.MIN_VALUE
 
         return Pair(minArity, maxArity)
     }
@@ -1528,7 +1527,7 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
                 ctx.session,
                 ctx.metadata,
                 ScopingOrder.LEXICAL_THEN_GLOBALS,
-                ctx.customFunctions,
+                ctx.customFunctionSignatures,
                 ctx.tolerance,
                 ctx.problemHandler
             )
@@ -1543,7 +1542,7 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
                 ctx.session,
                 ctx.metadata,
                 ctx.scopingOrder,
-                ctx.customFunctions,
+                ctx.customFunctionSignatures,
                 ctx.tolerance,
                 ctx.problemHandler
             )
@@ -1558,7 +1557,7 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
                 ctx.session,
                 ctx.metadata,
                 ctx.scopingOrder,
-                ctx.customFunctions,
+                ctx.customFunctionSignatures,
                 ctx.tolerance,
                 ctx.problemHandler
             )
