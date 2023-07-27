@@ -30,6 +30,8 @@ import org.partiql.lang.planner.transforms.plan.PlanTyper
 import org.partiql.lang.planner.transforms.plan.PlanUtils.grabType
 import org.partiql.lang.syntax.PartiQLParserBuilder
 import org.partiql.lang.util.propertyValueMapOf
+import org.partiql.plan.PartiQLPlan
+import org.partiql.plan.Plan
 import org.partiql.spi.Plugin
 import org.partiql.types.StaticType
 
@@ -118,6 +120,24 @@ public object PartiQLSchemaInferencer {
                 ),
                 cause = cause
             )
+    }
+
+    // !!! DON'T MERGE ME !!!
+    // !!! TRANSPILER HACK !!!
+    // !!! DON'T MERGE ME !!!
+    public fun type(plan: PartiQLPlan, context: Context): PartiQLPlan {
+        val root = PlanTyper.type(
+            plan.root,
+            PlanTyper.Context(
+                input = null,
+                session = context.session,
+                metadata = context.metadata,
+                scopingOrder = PlanTyper.ScopingOrder.LEXICAL_THEN_GLOBALS,
+                customFunctionSignatures = emptyList(),
+                problemHandler = context.problemHandler
+            )
+        )
+        return Plan.partiQLPlan(PartiQLPlan.Version.PARTIQL_V0, root)
     }
 
     //

@@ -290,7 +290,7 @@ internal class PartiQLParserDefault : PartiQLParser {
             ): PartiQLParser.Result {
                 val locations = SourceLocations.Mutable()
                 val visitor = Visitor(locations, tokens.parameterIndexes)
-                val root = visitor.visitAs<AstNode>(tree)
+                val root = visitor.visitAs<Statement>(tree)
                 return PartiQLParser.Result(
                     source = source,
                     root = root,
