@@ -31,10 +31,18 @@ Thank you to all who have contributed!
 ### Added
 - Adds `org.partiql.value` (experimental) package for reading/writing PartiQL
   values.
-- Parsing of label patterns in graph node and edge patterns now supports 
+- Parsing of label patterns within node and edge graph patterns now supports 
   disjunction `|`, conjunction `&`, negation `!`, and grouping.
 
 ### Changed
+
+- **Breaking** (within experimental graph features): As part of extending 
+  the language of graph label patterns: 
+  - Changed the type of the field `label` in AST nodes 
+    `org.partiql.lang.domains.PartiqlAst.GraphMatchPatternPart.{Node,Edge}`, 
+    from `SymbolPrimitive` to new `GraphLabelSpec`.
+  - Changed the names of subclasses of ` org.partiql.lang.graph.LabelSpec`, 
+    from `OneOf` to `Name`, and from `Whatever` to `Wildcard`.
 
 ### Deprecated
 
