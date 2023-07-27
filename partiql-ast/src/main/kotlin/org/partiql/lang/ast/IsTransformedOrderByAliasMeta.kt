@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Amazon.com, Inc. or its affiliates.  All rights reserved.
+ * Copyright 2019 Amazon.com, Inc. or its affiliates.  All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  *  You may not use this file except in compliance with the License.
@@ -11,17 +11,27 @@
  *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific
  *  language governing permissions and limitations under the License.
  */
+
 package org.partiql.lang.ast
 
 /**
- * Meta attached to an identifier when replacing the identifier with a reference to a group key variable declaration.
+ * A [Meta] to help the OrderBySortSpecVisitorTransform to know when the OrderBy SortSpec has already been transformed.
+ * It essentially helps to turn
+ *
+ * ```SELECT a + 1 AS b FROM c ORDER BY b```
+ *
+ * into
+ *
+ * ```SELECT a + 1 AS b FROM c ORDER BY a + 1```
+ *
+ * even when there are multiple transforms over the AST.
  */
-internal class IsGroupAttributeReferenceMeta private constructor() : Meta {
+class IsTransformedOrderByAliasMeta private constructor() : Meta {
     override val tag = TAG
 
     companion object {
-        const val TAG = "\$is_group_attr_reference"
+        const val TAG = "\$is_transformed_order_by_alias"
 
-        val instance = IsGroupAttributeReferenceMeta()
+        val instance = IsTransformedOrderByAliasMeta()
     }
 }

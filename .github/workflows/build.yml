@@ -6,11 +6,13 @@ on:
       - '**'
       - '!docs/**'
       - '!**/*.md'
+      - '!**/*.adoc'
   pull_request:
     paths:
       - '**'
       - '!docs/**'
-      - '!**.*.md'
+      - '!**/*.md'
+      - '!**/*.adoc'
 
 jobs:
   test:

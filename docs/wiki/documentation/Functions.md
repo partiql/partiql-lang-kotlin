@@ -22,7 +22,7 @@ CHAR_LENGTH(null)    -- `null`
 CHAR_LENGTH(missing) -- `null` (also returns `null`)
 ```
 
-### CAST 
+### CAST -- since v0.1.0
 
 Given a value and a target data type, attempt to coerce the value to the target data type. 
 
@@ -243,7 +243,7 @@ CAST([1,[2],3]    AS bag) -- <<1,[2],3>> (REPL does not display << >> and commas
 CAST(<<'a', 'b'>> AS bag) -- <<'a', 'b'>> (REPL does not display << >> and commas)
 ```
 
-### CHAR_LENGTH, CHARACTER_LENGTH
+### CHAR_LENGTH, CHARACTER_LENGTH -- since v0.1.0
 
 Counts the number of characters in the specified string, where 'character' is defined as a single unicode code point.
 
@@ -274,7 +274,7 @@ CHAR_LENGTH('😁😞😸😸') -- 4 (non-BMP unicode characters)
 CHAR_LENGTH('eࠫ')         -- 2 (because 'eࠫ' is two codepoints: the letter 'e' and combining character U+032B)
 ```
 
-### COALESCE
+### COALESCE -- since v0.1.0
 
 Evaluates the arguments in order and returns the first non unknown, i.e. first non-`null` or non-`missing`. This function 
 does **not** propagate `null` and `missing`.
@@ -304,7 +304,7 @@ COALESCE(null, 'string')   -- 'string'
 COALESCE(missing, 1)       -- 1
 ```
 
-### DATE_ADD
+### DATE_ADD -- since v0.1.0
 
 Given a data part, a quantity and a timestamp, returns an updated timestamp by altering datetime part by quantity
 
@@ -343,7 +343,7 @@ DATE_ADD(minute, 1, `2017-01-02T03:04:05.006Z`) -- 2017-01-02T03:05:05.006Z
 DATE_ADD(second, 1, `2017-01-02T03:04:05.006Z`) -- 2017-01-02T03:04:06.006Z
 ```
 
-### DATE_DIFF
+### DATE_DIFF -- since v0.1.0
 
 Given a datetime part and two valid timestamps returns the difference in datetime parts.
 
@@ -374,7 +374,7 @@ DATE_DIFF(day, `2010-01-01T23:00T`, `2010-01-02T01:00T`) -- 0 (need to be at lea
 ```
 
 
-### EXISTS
+### EXISTS -- since v0.1.0
 
 Given a PartiQL value returns `true` if and only if the value is a non-empty container(bag, sexp, list or struct), returns `false` otherwise. 
 
@@ -413,7 +413,7 @@ EXISTS(null)        -- error
 EXISTS(missing)     -- error
 ```
 
-### EXTRACT
+### EXTRACT -- since v0.1.0
 
 Given a datetime part and a datetime type returns then datetime's datetime part value. 
 
@@ -474,7 +474,7 @@ EXTRACT(TIMEZONE_MINUTE FROM TIME WITH TIME ZONE '23:12:59-08:30')  -- -30
 ```
 *Note* that `timezone_hour` and `timezone_minute` are **not supported** for `DATE` and `TIME` (without time zone) type. 
 
-### `FILTER_DISTINCT`
+### `FILTER_DISTINCT` -- since v0.7.0
 
 Signature
 : `FILTER_DISTINCT: Container -> Bag`
@@ -496,7 +496,7 @@ FILTER_DISTINCT(SEXP(0, 0, 1))              -- <<0, 1>>
 FILTER_DISTINCT({'a': 0, 'b': 0, 'c': 1})   -- <<0, 1>>
 ```
 
-### LOWER 
+### LOWER  -- since v0.1.0
 
 Given a string convert all upper case characters to lower case characters.
 
@@ -519,7 +519,7 @@ Examples
 LOWER('AbCdEfG!@#$') -- 'abcdefg!@#$'
 ```
 
-### MAKE_DATE
+### MAKE_DATE -- since v0.3.0
 
 Given the integer values for the year, month and day returns the associated date.
 
@@ -550,7 +550,7 @@ MAKE_DATE(missing, 02, 28)               -- null
 MAKE_DATE(2021, missing, 28)             -- null
 MAKE_DATE(2021, 02, missing)             -- null
 ```
-### MAKE_TIME
+### MAKE_TIME -- since v0.3.0
 
 Given the values for the hour (int), minute (int), second (BigDecimal) and optionally for timezone minutes (int) returns the associated time.
 
@@ -584,7 +584,7 @@ MAKE_TIME(21, 02, 28., null)             -- null
 MAKE_TIME(21, 02, 28., missing)          -- null
 ```
 
-### SIZE, CARDINALITY
+### SIZE -- since v0.1.0, CARDINALITY -- since v0.10.0
 
 Given any container data type (i.e., list, structure or bag) return the number of elements in the container. 
 
@@ -618,7 +618,7 @@ SIZE(`[{foo: 1}, {foo: 2}]`) -- 2
 SIZE(12)                     -- error
 ```
 
-### NULLIF
+### NULLIF -- since v0.1.0
 
 Given two expressions return `null` if the two expressions evaluate to the same value, else, returns the result of evaluating 
 the first expression 
@@ -653,7 +653,7 @@ NULLIF(missing, null)    -- null
 NULLIF(missing, missing) -- null
 ```
     
-### SUBSTRING
+### SUBSTRING -- since v0.1.0
 
 Given a string, a start index and optionally a length, returns the
 substring from the start index up to the end of the string, or, up to
@@ -694,7 +694,7 @@ SUBSTRING("1", -4, 0)          -- ""
 SUBSTRING("1234", 10, 10)      -- ""
 ```
     
-### TO_STRING
+### TO_STRING -- since v0.1.0
 
 Given a timestamp and a format pattern return a string representation of the timestamp in the given format. 
 
@@ -762,7 +762,7 @@ TO_STRING(`1969-07-20T20:18+08:00`, 'y-MM-dd''T''H:m:ssXXXXX')  -- "1969-07-20T2
 ```
        
     
-### TO_TIMESTAMP
+### TO_TIMESTAMP -- since v0.1.0
 
 Given a string convert it to a timestamp. This is the inverse operation of [`TO_STRING`](#to_string)
 
@@ -828,7 +828,7 @@ indicate minimum and maximum allowable values for offsets.) In practice this wil
 not abuse the offset portion of Timestamp because real-life offsets do not exceed +/- 12h.  
 
 
-### TRIM
+### TRIM -- since v0.1.0
  
 Trims leading and/or trailing characters from a String. 
 
@@ -858,7 +858,7 @@ TRIM(BOTH '😁' FROM '😁😁foobar😁😁')         -- 'foobar'
 TRIM(BOTH '12' FROM '1112211foobar22211122') -- 'foobar'
 ```
 
-### UPPER 
+### UPPER -- since v0.1.0
 
 Given a string convert all lower case characters to upper case characters.
 
@@ -881,7 +881,7 @@ Examples
 UPPER('AbCdEfG!@#$') -- 'ABCDEFG!@#$'
 ```    
 
-### UTCNOW 
+### UTCNOW -- since v0.1.0
 
 Returns the current time in UTC as a timestamp. 
 
@@ -901,7 +901,7 @@ Examples
 UTCNOW() -- 2017-10-13T16:02:11.123Z 
 ```
 
-### UNIX_TIMESTAMP
+### UNIX_TIMESTAMP -- since v0.2.6
 
 With no `timestamp` argument, returns the number of seconds since the last epoch ('1970-01-01 00:00:00' UTC).
 
@@ -941,7 +941,7 @@ UNIX_TIMESTAMP(`2020-01-01T00:00:00.100Z`)  -- 1577836800.1
 UNIX_TIMESTAMP(`1969T`)                     -- -31536000 (timestamp is before last epoch)
 ```
 
-### FROM_UNIXTIME
+### FROM_UNIXTIME -- since v0.2.6
 
 Converts the given unix epoch into a timestamp.
 
@@ -972,7 +972,7 @@ FROM_UNIXTIME(1577836800)   -- `2020-01-01T00:00:00-00:00`      (unix_timestamp 
 
 ## Math Functions
 
-### CEIL / CEILING
+### CEIL / CEILING -- since v0.7.0
 
 Returns the nearest integer greater than or equal to the input.
 
@@ -990,7 +990,7 @@ CEIL(`-inf`) = `-inf` -- Float
 CEIL(`nan`) = `nan` -- Float
 ```
 
-### FLOOR
+### FLOOR -- since v0.10.0
 
 Returns the nearest integer less than or equal to the input.
 
@@ -1008,7 +1008,7 @@ FLOOR(`-inf`) = `-inf` -- Float
 FLOOR(`nan`) = `nan` -- Float
 ```
 
-### ABS
+### ABS -- since v0.10.0
 
 Returns the absolute value of the given number. 
 
@@ -1035,7 +1035,7 @@ abs(`-inf`) = `+inf`
 abs(`nan`) = `nan`
 ```
 
-### MOD
+### MOD -- since v0.10.0
 
 MOD operates on two exact numeric arguments with scale 0 (zero) and returns
 the modulus (remainder) of the first argument divided by the second argument as an exact numeric with scale 0 (zero).
@@ -1059,7 +1059,7 @@ mod(17, 1)     -- 0
 mod(17, 3)     -- 2
 ```
 
-### SQRT
+### SQRT -- since v0.10.0
 
 Returns the square root of the given number.
 
@@ -1085,7 +1085,7 @@ sqrt(`+inf`) = `+inf`
 sqrt(`nan`) = `nan`
 ```
 
-### LN
+### LN -- since v0.10.0
 
 Returns the natural log of the given number.
 
@@ -1118,7 +1118,7 @@ ln(`+inf`) = `+inf`
 ln(`nan`) = `nan`
 ```
 
-### EXP
+### EXP -- since v0.10.0
 
 Returns e^x for a given x.
 
@@ -1151,7 +1151,7 @@ exp(`-inf`) = `0e0`
 exp(`nan`) = `nan`
 ```
 
-### POWER
+### POWER -- since v0.10.0
 
 POW(x,y) return x^y.
 
@@ -1210,7 +1210,7 @@ pow(`nan`, 1) = `nan`
 pow(1, `+inf`) = `nan`
 ```
 
-### BIT_LENGTH
+### BIT_LENGTH -- since v0.10.0
 
 Returns the number of bits in the input string.
 
@@ -1227,7 +1227,7 @@ Examples
 bit_length('jose') -- 32
 ```
 
-### OCTET_LENGTH
+### OCTET_LENGTH -- since v0.10.0
 
 Returns the number of bytes in the input string.
 
@@ -1244,7 +1244,7 @@ Examples
 octet_length('jose') -- 4
 ```
 
-### POSITION
+### POSITION -- since v0.10.0
 
 Position determines the first position (counting from 1), if any, at which one string, str1, occurs within
 another, str2. If str1 is of length zero, then it occurs at position 1 (one) for any value of str2. If str1
@@ -1275,7 +1275,7 @@ position('yy' in 'xxyyxxyy')   -- 3
 ```
 
 
-### OVERLAY
+### OVERLAY -- since v0.10.0
 
 OVERLAY modifies a string argument by replacing a given substring of the string, which is specified by a given numeric 
 starting position and a given numeric length, with another string (called the replacement string). When the length of
@@ -1312,7 +1312,7 @@ overlay('hello' placing 'XX' from 2 for 1)      -- "hXXllo
 overlay('hello' placing 'XX' from 2 for 3)      -- "hXXo
 ```
 
-### TEXT_REPLACE
+### TEXT_REPLACE -- since v0.10.0
 
 In `string`, replaces all occurrences of substring `from` with another string `to`. 
 
@@ -1338,8 +1338,9 @@ text_replace('', '', 'XX')                     -- 'XX'
 <!--
 This is the template for writing documentations for an PartiQL built-in function. 
 
-There are 5 parts to a function's documentation 
+There are 6 parts to a function's documentation 
 
+1. Function name with the first release version (exclude -SNAPSHOT)
 1. One sentence statement -- much like the first sentence of a Java method's Javadoc
 1. Signature -- the type signature of the function should use data types already defined on define a local data type using a WHERE clause 
 1. Header -- function with formal parameters only that we will use in the next step 
@@ -1348,7 +1349,7 @@ There are 5 parts to a function's documentation
 
 Here is an example for the imaginary function `add` 
 
-### ADD
+### ADD -- since vX.Y.Z
 
 Given 1 or more values return ther sum 
 
