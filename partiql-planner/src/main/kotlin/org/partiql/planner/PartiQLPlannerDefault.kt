@@ -15,7 +15,7 @@ class PartiQLPlannerDefault : PartiQLPlanner {
 
     override fun plan(session: PartiQLPlanner.Session, statement: Statement): PartiQLPlanner.Result {
         // 0. Initialize the environment
-        val env = PartiQLPlannerEnv(session)
+        val env = PartiQLPlannerContext(session)
 
         // 1. Normalize
         val ast = statement.normalize()

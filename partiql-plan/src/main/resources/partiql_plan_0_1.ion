@@ -199,8 +199,10 @@ rex::{
 // Rel
 
 rel::{
-  schema: list::[binding],
-  props:  set::[prop],
+  type: {
+    schema: list::[binding],
+    props:  set::[prop],
+  },
   op: [
 
     scan::{

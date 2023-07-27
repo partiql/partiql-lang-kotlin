@@ -5,5 +5,7 @@ import org.partiql.planner.errors.PartiQLPlannerErrorHandler
 
 interface PartiQLPlannerPass {
 
-    fun apply(plan: PartiQLPlan, errorHandler: PartiQLPlannerErrorHandler): PartiQLPlan
+    public val errorHandler: PartiQLPlannerErrorHandler
+
+    fun apply(plan: PartiQLPlan): PartiQLPlan
 }
