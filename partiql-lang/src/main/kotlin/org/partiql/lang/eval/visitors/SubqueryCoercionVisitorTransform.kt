@@ -101,7 +101,7 @@ class SubqueryCoercionVisitorTransform : VisitorTransformBase() {
             is PartiqlAst.Expr.CanLosslessCast -> n
             is PartiqlAst.Expr.NullIf -> n
             is PartiqlAst.Expr.Coalesce -> n
-            is PartiqlAst.Expr.Timestamp -> TODO()
+            is PartiqlAst.Expr.Timestamp -> n
         }
     }
 

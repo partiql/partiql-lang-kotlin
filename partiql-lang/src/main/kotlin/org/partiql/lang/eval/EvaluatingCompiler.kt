@@ -83,6 +83,8 @@ import org.partiql.types.IntType
 import org.partiql.types.SingleType
 import org.partiql.types.StaticType
 import org.partiql.types.UnsupportedTypeCheckException
+import org.partiql.value.datetime.DateTimeValue
+import org.partiql.value.datetime.TimeZone
 import java.util.LinkedList
 import java.util.Stack
 import java.util.TreeSet
@@ -411,6 +413,7 @@ internal class EvaluatingCompiler(
             is PartiqlAst.Expr.Parameter -> compileParameter(expr, metas)
             is PartiqlAst.Expr.Date -> compileDate(expr, metas)
             is PartiqlAst.Expr.LitTime -> compileLitTime(expr, metas)
+            is PartiqlAst.Expr.Timestamp -> compileTimestamp(expr, metas)
 
             // arithmetic operations
             is PartiqlAst.Expr.Plus -> compilePlus(expr, metas)
@@ -464,7 +467,6 @@ internal class EvaluatingCompiler(
 
             is PartiqlAst.Expr.GraphMatch -> compileGraphMatch(expr, metas)
             is PartiqlAst.Expr.CallWindow -> TODO("Evaluating Compiler doesn't support window function")
-            is PartiqlAst.Expr.Timestamp -> TODO()
         }
     }
 
@@ -3038,6 +3040,28 @@ internal class EvaluatingCompiler(
                     expr.value.precision.value.toInt(),
                     if (expr.value.withTimeZone.value && expr.value.tzMinutes == null) compileOptions.defaultTimezoneOffset.totalMinutes else expr.value.tzMinutes?.value?.toInt()
                 )
+            )
+        }
+
+    private fun compileTimestamp(expr: PartiqlAst.Expr.Timestamp, metas: MetaContainer): ThunkEnv =
+        thunkFactory.thunkEnv(metas) {
+            ExprValue.newTimestamp(
+                DateTimeValue.timestamp(
+                    expr.value.year.value.toInt(),
+                    expr.value.month.value.toInt(),
+                    expr.value.day.value.toInt(),
+                    expr.value.hour.value.toInt(),
+                    expr.value.minute.value.toInt(),
+                    expr.value.second.decimalValue,
+                    when (val timezone = expr.value.timezone) {
+                        is PartiqlAst.Timezone.UnknownTimezone -> TimeZone.UnknownTimeZone
+                        is PartiqlAst.Timezone.UtcOffset -> TimeZone.UtcOffset.of(timezone.offsetMinutes.value.toInt())
+                        null -> null
+                    }
+                ).let {
+                    val precision = expr.value.precision?.value?.toInt()
+                    if (precision != null) it.toPrecision(precision) else it
+                }
             )
         }
 

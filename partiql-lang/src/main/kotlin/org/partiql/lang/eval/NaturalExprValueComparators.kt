@@ -242,8 +242,8 @@ enum class NaturalExprValueComparators(private val order: Order, private val nul
         // Timestamp
         ifCompared(
             handle(lType == ExprValueType.TIMESTAMP, rType == ExprValueType.TIMESTAMP) {
-                val lVal = left.timestampValue()
-                val rVal = right.timestampValue()
+                val lVal = left.partiQLTimestampValue()
+                val rVal = right.partiQLTimestampValue()
 
                 return lVal.compareTo(rVal)
             }

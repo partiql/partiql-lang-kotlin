@@ -111,6 +111,8 @@ import org.partiql.types.IntType
 import org.partiql.types.SingleType
 import org.partiql.types.StaticType
 import org.partiql.types.UnsupportedTypeCheckException
+import org.partiql.value.datetime.DateTimeValue
+import org.partiql.value.datetime.TimeZone
 import java.util.LinkedList
 import java.util.TreeSet
 import java.util.regex.Pattern
@@ -229,6 +231,7 @@ internal class PhysicalPlanCompilerImpl(
             is PartiqlPhysical.Expr.Parameter -> compileParameter(expr, metas)
             is PartiqlPhysical.Expr.Date -> compileDate(expr, metas)
             is PartiqlPhysical.Expr.LitTime -> compileLitTime(expr, metas)
+            is PartiqlPhysical.Expr.Timestamp -> compileTimestamp(expr, metas)
 
             // arithmetic operations
             is PartiqlPhysical.Expr.Plus -> compilePlus(expr, metas)
@@ -1819,6 +1822,28 @@ internal class PhysicalPlanCompilerImpl(
                     expr.value.precision.value.toInt(),
                     if (expr.value.withTimeZone.value && expr.value.tzMinutes == null) evaluatorOptions.defaultTimezoneOffset.totalMinutes else expr.value.tzMinutes?.value?.toInt()
                 )
+            )
+        }
+
+    private fun compileTimestamp(expr: PartiqlPhysical.Expr.Timestamp, metas: MetaContainer): PhysicalPlanThunk =
+        thunkFactory.thunkEnv(metas) {
+            ExprValue.newTimestamp(
+                DateTimeValue.timestamp(
+                    expr.value.year.value.toInt(),
+                    expr.value.month.value.toInt(),
+                    expr.value.day.value.toInt(),
+                    expr.value.hour.value.toInt(),
+                    expr.value.minute.value.toInt(),
+                    expr.value.second.decimalValue,
+                    when (val timezone = expr.value.timezone) {
+                        is PartiqlPhysical.Timezone.UnknownTimezone -> TimeZone.UnknownTimeZone
+                        is PartiqlPhysical.Timezone.UtcOffset -> TimeZone.UtcOffset.of(timezone.offsetMinutes.value.toInt())
+                        null -> null
+                    },
+                ).let {
+                    val precision = expr.value.precision?.value?.toInt()
+                    if (precision != null) it.toPrecision(precision) else it
+                }
             )
         }
 

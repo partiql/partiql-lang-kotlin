@@ -35,10 +35,11 @@ Thank you to all who have contributed!
 - Adds `org.partiql.ast` package and usage documentation
 - Adds `org.partiql.parser` package and usage documentation
 - Adds PartiQL's Timestamp Data Model. 
-- Adds support for Timestamp constructor call in Parser. 
+- Adds support for Timestamp constructor call in Parser/Compiler/Evaluator. 
 
 
 ### Changed
+- BREAKING: When converting to Ion, PartiQL Timestamp will be extended to full timestamp format, even if the value entered is an ION timestamp literal with reduced precision. 
 
 - Upgrades ion-java to 1.10.2.
 

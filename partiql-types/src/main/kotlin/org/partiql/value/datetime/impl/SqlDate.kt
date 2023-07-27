@@ -14,7 +14,6 @@
 
 package org.partiql.value.datetime.impl
 
-import org.partiql.value.datetime.Date
 import org.partiql.value.datetime.DateImpl
 import org.partiql.value.datetime.DateTimeException
 import org.partiql.value.datetime.DateTimeValue.timestamp
@@ -28,11 +27,11 @@ internal data class SqlDate private constructor(
 ) : DateImpl() {
     companion object {
         /**
-         * Construct a Date object using
+         * Construct a Date object.
          */
         @JvmStatic
         @Throws(DateTimeException::class)
-        fun of(year: Int, month: Int, day: Int): Date {
+        fun of(year: Int, month: Int, day: Int): SqlDate {
             if (year < 1 || year > 9999)
                 throw DateTimeException("Expect Year Field to be between 1 to 9999, but received $year")
             try {
@@ -52,17 +51,17 @@ internal data class SqlDate private constructor(
     override fun atTime(time: Time): Timestamp = timestamp(this, time)
 
     // Operation
-    override fun plusDays(days: Long): Date =
+    override fun plusDays(days: Long): SqlDate =
         this.localDate.plusDays(days)
             .let { newDate ->
                 of(newDate.year, newDate.monthValue, newDate.dayOfMonth)
             }
-    override fun plusMonths(months: Long): Date =
+    override fun plusMonths(months: Long): SqlDate =
         this.localDate.plusMonths(months)
             .let { newDate ->
                 of(newDate.year, newDate.monthValue, newDate.dayOfMonth)
             }
-    override fun plusYear(years: Long): Date =
+    override fun plusYears(years: Long): SqlDate =
         this.localDate.plusYears(years)
             .let { newDate ->
                 of(newDate.year, newDate.monthValue, newDate.dayOfMonth)
