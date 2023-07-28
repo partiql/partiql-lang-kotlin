@@ -831,7 +831,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
         translate(node) { metas ->
             val prefilter = node.prefilter?.let { visitExpr(it, ctx) }
             val variable = node.variable
-            val label = node.label
+            val label = node.label?.let { visitGraphMatchLabel(it, ctx) }
             node(prefilter, variable, label, metas)
         }
 
@@ -849,7 +849,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
             val quantifier = node.quantifier?.let { visitGraphMatchQuantifier(it, ctx) }
             val prefilter = node.prefilter?.let { visitExpr(it, ctx) }
             val variable = node.variable
-            val label = node.label
+            val label = node.label?.let { visitGraphMatchLabel(it, ctx) }
             edge(direction, quantifier, prefilter, variable, label, metas)
         }
 
@@ -901,6 +901,39 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
         val k = node.k
         selectorShortestKGroup(k)
     }
+
+    override fun visitGraphMatchLabel(node: GraphMatch.Label, ctx: Ctx) =
+        super.visitGraphMatchLabel(node, ctx) as PartiqlAst.GraphLabelSpec
+
+    override fun visitGraphMatchLabelName(node: GraphMatch.Label.Name, ctx: Ctx) =
+        translate(node) { metas ->
+            graphLabelName(node.name, metas)
+        }
+
+    override fun visitGraphMatchLabelWildcard(node: GraphMatch.Label.Wildcard, ctx: Ctx) =
+        translate(node) { metas ->
+            graphLabelWildcard(metas)
+        }
+
+    override fun visitGraphMatchLabelNegation(node: GraphMatch.Label.Negation, ctx: Ctx) =
+        translate(node) { metas ->
+            val arg = visitGraphMatchLabel(node.arg, ctx)
+            graphLabelNegation(arg, metas)
+        }
+
+    override fun visitGraphMatchLabelConj(node: GraphMatch.Label.Conj, ctx: Ctx) =
+        translate(node) { metas ->
+            val lhs = visitGraphMatchLabel(node.lhs, ctx)
+            val rhs = visitGraphMatchLabel(node.rhs, ctx)
+            graphLabelConj(lhs, rhs, metas)
+        }
+
+    override fun visitGraphMatchLabelDisj(node: GraphMatch.Label.Disj, ctx: Ctx) =
+        translate(node) { metas ->
+            val lhs = visitGraphMatchLabel(node.lhs, ctx)
+            val rhs = visitGraphMatchLabel(node.rhs, ctx)
+            graphLabelDisj(lhs, rhs, metas)
+        }
 
     /**
      * DML

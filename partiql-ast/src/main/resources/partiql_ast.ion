@@ -651,7 +651,7 @@ graph_match::{
           node::{
             prefilter:  optional::expr,    // An optional node pre-filter, e.g.: `WHERE c.name='Alarm'` in `MATCH (c WHERE c.name='Alarm')`
             variable:   optional::string,  // The optional element variable of the node match, e.g.: `x` in `MATCH (x)`
-            label:      list::[string],    // The optional label(s) to match for the node, e.g.: `Entity` in `MATCH (x:Entity)`
+            label:      optional::label,    // The optional label(s) to match for the node, e.g.: `Entity` in `MATCH (x:Entity)`
           },
           // A single edge in a graph pattern
           edge::{
@@ -659,7 +659,7 @@ graph_match::{
             quantifier: optional::quantifier, // An optional quantifier for the entire pattern match, e.g. `{2,5}` in `MATCH (a:Account)−[:Transfer]−>{2,5}(b:Account)`
             prefilter:  optional::expr,       // An optional edge pre-filter, e.g.: `WHERE t.capacity>100` in `MATCH −[t:hasSupply WHERE t.capacity>100]−>`
             variable:   optional::string,     // The optional element variable of the edge match, e.g.: `t` in `MATCH −[t]−>`
-            label:      list::[string],       // The optional label(s) to match for the edge. e.g.: `Target` in `MATCH −[t:Target]−>`
+            label:      optional::label,      // The optional label spec to match for the edge. e.g.: `Target` in `MATCH −[t:Target]−>`
           },
           // A sub-pattern
           pattern::{
@@ -702,6 +702,15 @@ graph_match::{
       shortest_k::{ k: long },        // SHORTEST k
       shortest_k_group::{ k: long },  // SHORTEST k GROUP
     ],                                // Fig. 8 — https://arxiv.org/abs/2112.06217
+
+    // A label spec in a node pattern like `MATCH (x : <lab>)` or in an edge pattern like `MATCH −[t : <lab>]−>`
+    label::[
+      name::{ name: string },          // as in `MATCH (x:Account)` or `MATCH -[x:Transfer]->`
+      wildcard::{},                    // as in `MATCH (x: %)`
+      negation::{arg: label},          // as in `MATCH (x: !Account)`
+      conj::{lhs: label, rhs: label},  // as in `MATCH (x: City&Country)` - Monaco can do
+      disj::{lhs: label, rhs: label},  // as in `MATCH (x: City|Country)` - either Paris or Germany will do
+    ],
   ],
 }
 
