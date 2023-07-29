@@ -438,7 +438,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
             mapOf(
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 27L,
-                Property.TOKEN_DESCRIPTION to PartiQLParser.IDENTIFIER.getAntlrDisplayString(),
+                Property.TOKEN_DESCRIPTION to PartiQLParser.REGULAR_IDENTIFIER.getAntlrDisplayString(),
                 Property.TOKEN_VALUE to ion.newSymbol("b")
             )
         )
@@ -746,7 +746,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
             mapOf(
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 6L,
-                Property.TOKEN_DESCRIPTION to PartiQLParser.IDENTIFIER.getAntlrDisplayString(),
+                Property.TOKEN_DESCRIPTION to PartiQLParser.REGULAR_IDENTIFIER.getAntlrDisplayString(),
                 Property.TOKEN_VALUE to ion.newSymbol("something")
             ),
         )
@@ -1056,7 +1056,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
             mapOf(
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 31L,
-                Property.TOKEN_DESCRIPTION to PartiQLParser.IDENTIFIER.getAntlrDisplayString(),
+                Property.TOKEN_DESCRIPTION to PartiQLParser.REGULAR_IDENTIFIER.getAntlrDisplayString(),
                 Property.TOKEN_VALUE to ion.newSymbol("bar")
             )
         )
@@ -1294,7 +1294,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
             mapOf(
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 25L,
-                Property.TOKEN_DESCRIPTION to PartiQLParser.IDENTIFIER.getAntlrDisplayString(),
+                Property.TOKEN_DESCRIPTION to PartiQLParser.REGULAR_IDENTIFIER.getAntlrDisplayString(),
                 Property.TOKEN_VALUE to ion.newSymbol("ON_CONFLICT")
             )
         )
@@ -1364,7 +1364,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
             mapOf(
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 50L,
-                Property.TOKEN_DESCRIPTION to PartiQLParser.IDENTIFIER.getAntlrDisplayString(),
+                Property.TOKEN_DESCRIPTION to PartiQLParser.REGULAR_IDENTIFIER.getAntlrDisplayString(),
                 Property.TOKEN_VALUE to ion.newSymbol("SOMETHING")
             ),
         )
@@ -1378,7 +1378,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
             mapOf(
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 32L,
-                Property.TOKEN_DESCRIPTION to PartiQLParser.IDENTIFIER.getAntlrDisplayString(),
+                Property.TOKEN_DESCRIPTION to PartiQLParser.REGULAR_IDENTIFIER.getAntlrDisplayString(),
                 Property.TOKEN_VALUE to ion.newSymbol("ON_CONFLICT")
             )
         )
@@ -1448,7 +1448,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
             mapOf(
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 57L,
-                Property.TOKEN_DESCRIPTION to PartiQLParser.IDENTIFIER.getAntlrDisplayString(),
+                Property.TOKEN_DESCRIPTION to PartiQLParser.REGULAR_IDENTIFIER.getAntlrDisplayString(),
                 Property.TOKEN_VALUE to ion.newSymbol("SOMETHING")
             ),
         )
@@ -1476,7 +1476,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
             mapOf(
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 38L,
-                Property.TOKEN_DESCRIPTION to PartiQLParser.IDENTIFIER.getAntlrDisplayString(),
+                Property.TOKEN_DESCRIPTION to PartiQLParser.REGULAR_IDENTIFIER.getAntlrDisplayString(),
                 Property.TOKEN_VALUE to ion.newSymbol("ECSAPE")
             )
         )
@@ -1664,7 +1664,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
             mapOf(
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 14L,
-                Property.TOKEN_DESCRIPTION to PartiQLParser.IDENTIFIER.getAntlrDisplayString(),
+                Property.TOKEN_DESCRIPTION to PartiQLParser.REGULAR_IDENTIFIER.getAntlrDisplayString(),
                 Property.TOKEN_VALUE to ion.newSymbol("b")
             ),
 
@@ -1739,7 +1739,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
             mapOf(
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 9L,
-                Property.TOKEN_DESCRIPTION to PartiQLParser.IDENTIFIER.getAntlrDisplayString(),
+                Property.TOKEN_DESCRIPTION to PartiQLParser.REGULAR_IDENTIFIER.getAntlrDisplayString(),
                 Property.TOKEN_VALUE to ion.newSymbol("b")
             )
         )
@@ -1859,7 +1859,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
             mapOf(
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 15L,
-                Property.TOKEN_DESCRIPTION to PartiQLParser.IDENTIFIER.getAntlrDisplayString(),
+                Property.TOKEN_DESCRIPTION to PartiQLParser.REGULAR_IDENTIFIER.getAntlrDisplayString(),
                 Property.TOKEN_VALUE to ion.newSymbol("a"),
             ),
 
@@ -1874,7 +1874,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
             mapOf(
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 10L,
-                Property.TOKEN_DESCRIPTION to PartiQLParser.IDENTIFIER.getAntlrDisplayString(),
+                Property.TOKEN_DESCRIPTION to PartiQLParser.REGULAR_IDENTIFIER.getAntlrDisplayString(),
                 Property.TOKEN_VALUE to ion.newSymbol("a")
             )
         )
@@ -2140,7 +2140,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
         mapOf(
             Property.LINE_NUMBER to 1L,
             Property.COLUMN_NUMBER to 8L,
-            Property.TOKEN_DESCRIPTION to PartiQLParser.IDENTIFIER.getAntlrDisplayString(),
+            Property.TOKEN_DESCRIPTION to PartiQLParser.REGULAR_IDENTIFIER.getAntlrDisplayString(),
             Property.TOKEN_VALUE to ion.newSymbol("x")
         )
     )
@@ -2498,7 +2498,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
         mapOf(
             Property.LINE_NUMBER to 1L,
             Property.COLUMN_NUMBER to 25L,
-            Property.TOKEN_DESCRIPTION to PartiQLParser.IDENTIFIER.getAntlrDisplayString(),
+            Property.TOKEN_DESCRIPTION to PartiQLParser.REGULAR_IDENTIFIER.getAntlrDisplayString(),
             Property.TOKEN_VALUE to ion.newSymbol("RETURING")
         )
     )
@@ -2511,7 +2511,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
             mapOf(
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 35L,
-                Property.TOKEN_DESCRIPTION to PartiQLParser.IDENTIFIER.getAntlrDisplayString(),
+                Property.TOKEN_DESCRIPTION to PartiQLParser.REGULAR_IDENTIFIER.getAntlrDisplayString(),
                 Property.TOKEN_VALUE to ion.newSymbol("UPDATED")
             ),
 
@@ -2541,7 +2541,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
             mapOf(
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 50L,
-                Property.TOKEN_DESCRIPTION to PartiQLParser.IDENTIFIER.getAntlrDisplayString(),
+                Property.TOKEN_DESCRIPTION to PartiQLParser.REGULAR_IDENTIFIER.getAntlrDisplayString(),
                 Property.TOKEN_VALUE to ion.newSymbol("b")
             ),
 
@@ -2627,7 +2627,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
         mapOf(
             Property.LINE_NUMBER to 1L,
             Property.COLUMN_NUMBER to 36L,
-            Property.TOKEN_DESCRIPTION to PartiQLParser.IDENTIFIER.getAntlrDisplayString(),
+            Property.TOKEN_DESCRIPTION to PartiQLParser.REGULAR_IDENTIFIER.getAntlrDisplayString(),
             Property.TOKEN_VALUE to ion.newSymbol("name_is_present")
         )
     )
@@ -2656,7 +2656,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
         mapOf(
             Property.LINE_NUMBER to 3L,
             Property.COLUMN_NUMBER to 16L,
-            Property.TOKEN_DESCRIPTION to PartiQLParser.IDENTIFIER.getAntlrDisplayString(),
+            Property.TOKEN_DESCRIPTION to PartiQLParser.REGULAR_IDENTIFIER.getAntlrDisplayString(),
             Property.TOKEN_VALUE to ion.newSymbol("city")
         )
     )
@@ -2704,7 +2704,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
         mapOf(
             Property.LINE_NUMBER to 1L,
             Property.COLUMN_NUMBER to 14L,
-            Property.TOKEN_DESCRIPTION to PartiQLParser.IDENTIFIER.getAntlrDisplayString(),
+            Property.TOKEN_DESCRIPTION to PartiQLParser.REGULAR_IDENTIFIER.getAntlrDisplayString(),
             Property.TOKEN_VALUE to ion.newSymbol("foo_index")
         )
     )
@@ -2728,7 +2728,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
         mapOf(
             Property.LINE_NUMBER to 1L,
             Property.COLUMN_NUMBER to 21L,
-            Property.TOKEN_DESCRIPTION to PartiQLParser.IDENTIFIER.getAntlrDisplayString(),
+            Property.TOKEN_DESCRIPTION to PartiQLParser.REGULAR_IDENTIFIER.getAntlrDisplayString(),
             Property.TOKEN_VALUE to ion.newSymbol("bar")
         )
     )
@@ -2821,7 +2821,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
         mapOf(
             Property.LINE_NUMBER to 1L,
             Property.COLUMN_NUMBER to 16L,
-            Property.TOKEN_DESCRIPTION to PartiQLParser.IDENTIFIER.getAntlrDisplayString(),
+            Property.TOKEN_DESCRIPTION to PartiQLParser.REGULAR_IDENTIFIER.getAntlrDisplayString(),
             Property.TOKEN_VALUE to ion.newSymbol("foo")
         )
     )
@@ -3054,7 +3054,7 @@ class ParserErrorsTest : PartiQLParserTestBase() {
             mapOf(
                 Property.LINE_NUMBER to 1L,
                 Property.COLUMN_NUMBER to 6L,
-                Property.TOKEN_DESCRIPTION to PartiQLParser.IDENTIFIER.getAntlrDisplayString(),
+                Property.TOKEN_DESCRIPTION to PartiQLParser.REGULAR_IDENTIFIER.getAntlrDisplayString(),
                 Property.TOKEN_VALUE to ion.newSymbol("foo")
             ),
         )

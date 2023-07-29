@@ -201,14 +201,14 @@ internal class PartiQLPigVisitor(
     override fun visitSymbolPrimitive(ctx: PartiQLParser.SymbolPrimitiveContext) = PartiqlAst.build {
         val metas = ctx.ident.getSourceMetaContainer()
         when (ctx.ident.type) {
-            PartiQLParser.IDENTIFIER_QUOTED -> id(
-                ctx.IDENTIFIER_QUOTED().getStringValue(),
+            PartiQLParser.DELIMITED_IDENTIFIER -> id(
+                ctx.DELIMITED_IDENTIFIER().getStringValue(),
                 caseSensitive(),
                 unqualified(),
                 metas
             )
 
-            PartiQLParser.IDENTIFIER -> id(ctx.IDENTIFIER().getStringValue(), caseInsensitive(), unqualified(), metas)
+            PartiQLParser.REGULAR_IDENTIFIER -> id(ctx.REGULAR_IDENTIFIER().getStringValue(), caseInsensitive(), unqualified(), metas)
             else -> throw ParserException("Invalid symbol reference.", ErrorCode.PARSE_INVALID_QUERY)
         }
     }
@@ -1115,7 +1115,7 @@ internal class PartiQLPigVisitor(
         PartiqlAst.build {
             val metas = ctx.ident.getSourceMetaContainer()
             val qualifier = if (ctx.qualifier == null) unqualified() else localsFirst()
-            val sensitivity = if (ctx.ident.type == PartiQLParser.IDENTIFIER) caseInsensitive() else caseSensitive()
+            val sensitivity = if (ctx.ident.type == PartiQLParser.REGULAR_IDENTIFIER) caseInsensitive() else caseSensitive()
             id(ctx.ident.getStringValue(), sensitivity, qualifier, metas)
         }
 
@@ -1297,11 +1297,11 @@ internal class PartiQLPigVisitor(
     }
 
     override fun visitExtract(ctx: PartiQLParser.ExtractContext) = PartiqlAst.build {
-        if (DateTimePart.safeValueOf(ctx.IDENTIFIER().text) == null) {
-            throw ctx.IDENTIFIER()
+        if (DateTimePart.safeValueOf(ctx.REGULAR_IDENTIFIER().text) == null) {
+            throw ctx.REGULAR_IDENTIFIER()
                 .err("Expected one of: ${DateTimePart.values()}", ErrorCode.PARSE_EXPECTED_DATE_TIME_PART)
         }
-        val datetimePart = lit(ionSymbol(ctx.IDENTIFIER().text))
+        val datetimePart = lit(ionSymbol(ctx.REGULAR_IDENTIFIER().text))
         val timeExpr = visitExpr(ctx.rhs)
         val args = listOf(datetimePart, timeExpr)
         val metas = ctx.EXTRACT().getSourceMetaContainer()
@@ -1711,8 +1711,8 @@ internal class PartiQLPigVisitor(
         }
 
     private fun PartiQLParser.SymbolPrimitiveContext.getSourceMetaContainer() = when (this.ident.type) {
-        PartiQLParser.IDENTIFIER -> this.IDENTIFIER().getSourceMetaContainer()
-        PartiQLParser.IDENTIFIER_QUOTED -> this.IDENTIFIER_QUOTED().getSourceMetaContainer()
+        PartiQLParser.REGULAR_IDENTIFIER -> this.REGULAR_IDENTIFIER().getSourceMetaContainer()
+        PartiQLParser.DELIMITED_IDENTIFIER -> this.DELIMITED_IDENTIFIER().getSourceMetaContainer()
         else -> throw ParserException(
             "Unable to get identifier's source meta-container.",
             ErrorCode.PARSE_INVALID_QUERY
@@ -1970,8 +1970,8 @@ internal class PartiQLPigVisitor(
     private fun TerminalNode.getStringValue(): String = this.symbol.getStringValue()
 
     private fun Token.getStringValue(): String = when (this.type) {
-        PartiQLParser.IDENTIFIER -> this.text
-        PartiQLParser.IDENTIFIER_QUOTED -> this.text.removePrefix("\"").removeSuffix("\"").replace("\"\"", "\"")
+        PartiQLParser.REGULAR_IDENTIFIER -> this.text
+        PartiQLParser.DELIMITED_IDENTIFIER -> this.text.removePrefix("\"").removeSuffix("\"").replace("\"\"", "\"")
         PartiQLParser.LITERAL_STRING -> this.text.removePrefix("'").removeSuffix("'").replace("''", "'")
         PartiQLParser.ION_CLOSURE -> this.text.removePrefix("`").removeSuffix("`")
         else -> throw this.err("Unsupported token for grabbing string value.", ErrorCode.PARSE_INVALID_QUERY)
@@ -2007,22 +2007,22 @@ internal class PartiQLPigVisitor(
 
     private fun PartiQLParser.SymbolPrimitiveContext.getString(): String {
         return when {
-            this.IDENTIFIER_QUOTED() != null -> this.IDENTIFIER_QUOTED().getStringValue()
-            this.IDENTIFIER() != null -> this.IDENTIFIER().text
+            this.DELIMITED_IDENTIFIER() != null -> this.DELIMITED_IDENTIFIER().getStringValue()
+            this.REGULAR_IDENTIFIER() != null -> this.REGULAR_IDENTIFIER().text
             else -> throw ParserException("Unable to get symbol's text.", ErrorCode.PARSE_INVALID_QUERY)
         }
     }
 
     private fun getSymbolPathExpr(ctx: PartiQLParser.SymbolPrimitiveContext) = PartiqlAst.build {
         when {
-            ctx.IDENTIFIER_QUOTED() != null -> pathExpr(
-                lit(ionString(ctx.IDENTIFIER_QUOTED().getStringValue())), caseSensitive(),
-                metas = ctx.IDENTIFIER_QUOTED().getSourceMetaContainer()
+            ctx.DELIMITED_IDENTIFIER() != null -> pathExpr(
+                lit(ionString(ctx.DELIMITED_IDENTIFIER().getStringValue())), caseSensitive(),
+                metas = ctx.DELIMITED_IDENTIFIER().getSourceMetaContainer()
             )
 
-            ctx.IDENTIFIER() != null -> pathExpr(
-                lit(ionString(ctx.IDENTIFIER().text)), caseInsensitive(),
-                metas = ctx.IDENTIFIER().getSourceMetaContainer()
+            ctx.REGULAR_IDENTIFIER() != null -> pathExpr(
+                lit(ionString(ctx.REGULAR_IDENTIFIER().text)), caseInsensitive(),
+                metas = ctx.REGULAR_IDENTIFIER().getSourceMetaContainer()
             )
 
             else -> throw ParserException("Unable to get symbol's text.", ErrorCode.PARSE_INVALID_QUERY)

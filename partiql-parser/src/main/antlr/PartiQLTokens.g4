@@ -368,10 +368,10 @@ LITERAL_DECIMAL:
     | DIGIT DIGIT* ([e] [+-]? DIGIT+)?
     ;
 
-IDENTIFIER
+REGULAR_IDENTIFIER
     : [A-Z$_][A-Z0-9$_]*;
 
-IDENTIFIER_QUOTED
+DELIMITED_IDENTIFIER
     : '"' ( ('""') | ~('"') )* '"';
 
 /**

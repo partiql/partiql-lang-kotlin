@@ -134,7 +134,7 @@ class PartiQLParserExplainTest : PartiQLParserTestBase() {
                 context = mapOf(
                     Property.LINE_NUMBER to 1L,
                     Property.COLUMN_NUMBER to 10L,
-                    Property.TOKEN_DESCRIPTION to PartiQLParser.IDENTIFIER.getAntlrDisplayString(),
+                    Property.TOKEN_DESCRIPTION to PartiQLParser.REGULAR_IDENTIFIER.getAntlrDisplayString(),
                     Property.TOKEN_VALUE to ION.newSymbol("typ")
                 )
             ),
@@ -156,7 +156,7 @@ class PartiQLParserExplainTest : PartiQLParserTestBase() {
                 context = mapOf(
                     Property.LINE_NUMBER to 1L,
                     Property.COLUMN_NUMBER to 25L,
-                    Property.TOKEN_DESCRIPTION to PartiQLParser.IDENTIFIER.getAntlrDisplayString(),
+                    Property.TOKEN_DESCRIPTION to PartiQLParser.REGULAR_IDENTIFIER.getAntlrDisplayString(),
                     Property.TOKEN_VALUE to ION.newSymbol("logical")
                 )
             )

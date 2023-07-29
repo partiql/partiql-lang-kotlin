@@ -89,7 +89,7 @@ internal fun getIonElement(token: Token): IonElement {
         } catch (e: NumberFormatException) {
             throw token.error(e.localizedMessage, ErrorCode.PARSE_EXPECTED_NUMBER, cause = e)
         }
-        PartiQLParser.IDENTIFIER_QUOTED -> ionSymbol(text.trim('\"').replace("\"\"", "\""))
+        PartiQLParser.DELIMITED_IDENTIFIER -> ionSymbol(text.trim('\"').replace("\"\"", "\""))
         else -> ionSymbol(text)
     }
 }

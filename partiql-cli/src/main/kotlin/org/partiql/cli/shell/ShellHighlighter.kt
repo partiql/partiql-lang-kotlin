@@ -178,8 +178,8 @@ internal class ShellHighlighter : Highlighter {
     private fun isEOF(type: Int) = type == PartiQLTokens.EOF
 
     private fun isIdentifier(type: Int) = when (type) {
-        PartiQLTokens.IDENTIFIER,
-        PartiQLTokens.IDENTIFIER_QUOTED -> true
+        PartiQLTokens.REGULAR_IDENTIFIER,
+        PartiQLTokens.DELIMITED_IDENTIFIER -> true
         else -> false
     }
 

@@ -410,12 +410,12 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitSymbolPrimitive(ctx: GeneratedParser.SymbolPrimitiveContext) = translate(ctx) {
             when (ctx.ident.type) {
-                GeneratedParser.IDENTIFIER_QUOTED -> identifierSymbol(
-                    ctx.IDENTIFIER_QUOTED().getStringValue(),
+                GeneratedParser.DELIMITED_IDENTIFIER -> identifierSymbol(
+                    ctx.DELIMITED_IDENTIFIER().getStringValue(),
                     Identifier.CaseSensitivity.SENSITIVE,
                 )
-                GeneratedParser.IDENTIFIER -> identifierSymbol(
-                    ctx.IDENTIFIER().getStringValue(),
+                GeneratedParser.REGULAR_IDENTIFIER -> identifierSymbol(
+                    ctx.REGULAR_IDENTIFIER().getStringValue(),
                     Identifier.CaseSensitivity.INSENSITIVE,
                 )
                 else -> throw error(ctx, "Invalid symbol reference.")
@@ -1382,7 +1382,7 @@ internal class PartiQLParserDefault : PartiQLParser {
         override fun visitVariableIdentifier(ctx: GeneratedParser.VariableIdentifierContext) = translate(ctx) {
             val symbol = ctx.ident.getStringValue()
             val case = when (ctx.ident.type) {
-                GeneratedParser.IDENTIFIER -> Identifier.CaseSensitivity.INSENSITIVE
+                GeneratedParser.REGULAR_IDENTIFIER -> Identifier.CaseSensitivity.INSENSITIVE
                 else -> Identifier.CaseSensitivity.SENSITIVE
             }
             val scope = when (ctx.qualifier) {
@@ -1619,9 +1619,9 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitExtract(ctx: GeneratedParser.ExtractContext) = translate(ctx) {
             val field = try {
-                DatetimeField.valueOf(ctx.IDENTIFIER().text.uppercase())
+                DatetimeField.valueOf(ctx.REGULAR_IDENTIFIER().text.uppercase())
             } catch (ex: IllegalArgumentException) {
-                throw error(ctx.IDENTIFIER().symbol, "Expected one of: ${DatetimeField.values().joinToString()}", ex)
+                throw error(ctx.REGULAR_IDENTIFIER().symbol, "Expected one of: ${DatetimeField.values().joinToString()}", ex)
             }
             val source = visitExpr(ctx.expr())
             exprExtract(field, source)
@@ -1884,8 +1884,8 @@ internal class PartiQLParserDefault : PartiQLParser {
          * Visiting a symbol to get a string, skip the wrapping, unwrapping, and location tracking.
          */
         private fun symbolToString(ctx: GeneratedParser.SymbolPrimitiveContext) = when (ctx.ident.type) {
-            GeneratedParser.IDENTIFIER_QUOTED -> ctx.IDENTIFIER_QUOTED().getStringValue()
-            GeneratedParser.IDENTIFIER -> ctx.IDENTIFIER().getStringValue()
+            GeneratedParser.DELIMITED_IDENTIFIER -> ctx.DELIMITED_IDENTIFIER().getStringValue()
+            GeneratedParser.REGULAR_IDENTIFIER -> ctx.REGULAR_IDENTIFIER().getStringValue()
             else -> throw error(ctx, "Invalid symbol reference.")
         }
 
@@ -1997,8 +1997,8 @@ internal class PartiQLParserDefault : PartiQLParser {
         private fun TerminalNode.getStringValue(): String = this.symbol.getStringValue()
 
         private fun Token.getStringValue(): String = when (this.type) {
-            GeneratedParser.IDENTIFIER -> this.text
-            GeneratedParser.IDENTIFIER_QUOTED -> this.text.removePrefix("\"").removeSuffix("\"").replace("\"\"", "\"")
+            GeneratedParser.REGULAR_IDENTIFIER -> this.text
+            GeneratedParser.DELIMITED_IDENTIFIER -> this.text.removePrefix("\"").removeSuffix("\"").replace("\"\"", "\"")
             GeneratedParser.LITERAL_STRING -> this.text.removePrefix("'").removeSuffix("'").replace("''", "'")
             GeneratedParser.ION_CLOSURE -> this.text.removePrefix("`").removeSuffix("`")
             else -> throw error(this, "Unsupported token for grabbing string value.")

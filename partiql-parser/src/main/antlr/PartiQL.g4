@@ -28,7 +28,7 @@ statement
  */
 
 explainOption
-    : param=IDENTIFIER value=IDENTIFIER;
+    : param=REGULAR_IDENTIFIER value=REGULAR_IDENTIFIER;
 
 asIdent
     : AS symbolPrimitive;
@@ -40,7 +40,7 @@ byIdent
     : BY symbolPrimitive;
 
 symbolPrimitive
-    : ident=( IDENTIFIER | IDENTIFIER_QUOTED )
+    : ident=( REGULAR_IDENTIFIER | DELIMITED_IDENTIFIER )
     ;
 
 /**
@@ -377,7 +377,7 @@ patternPathVariable
     : symbolPrimitive EQ;
 
 patternRestrictor    // Should be TRAIL / ACYCLIC / SIMPLE
-    : restrictor=IDENTIFIER;
+    : restrictor=REGULAR_IDENTIFIER;
 
 node
     : PAREN_LEFT symbolPrimitive? ( COLON labelSpec )? whereClause? PAREN_RIGHT;
@@ -680,13 +680,13 @@ canCast
     : CAN_CAST PAREN_LEFT expr AS type PAREN_RIGHT;
 
 extract
-    : EXTRACT PAREN_LEFT IDENTIFIER FROM rhs=expr PAREN_RIGHT;
+    : EXTRACT PAREN_LEFT REGULAR_IDENTIFIER FROM rhs=expr PAREN_RIGHT;
 
 trimFunction
-    : func=TRIM PAREN_LEFT ( mod=IDENTIFIER? sub=expr? FROM )? target=expr PAREN_RIGHT;
+    : func=TRIM PAREN_LEFT ( mod=REGULAR_IDENTIFIER? sub=expr? FROM )? target=expr PAREN_RIGHT;
 
 dateFunction
-    : func=(DATE_ADD|DATE_DIFF) PAREN_LEFT dt=IDENTIFIER COMMA expr COMMA expr PAREN_RIGHT;
+    : func=(DATE_ADD|DATE_DIFF) PAREN_LEFT dt=REGULAR_IDENTIFIER COMMA expr COMMA expr PAREN_RIGHT;
 
 functionCall
     : name=( CHAR_LENGTH | CHARACTER_LENGTH | OCTET_LENGTH |
@@ -713,7 +713,7 @@ parameter
     : QUESTION_MARK;
 
 varRefExpr
-    : qualifier=AT_SIGN? ident=(IDENTIFIER|IDENTIFIER_QUOTED)   # VariableIdentifier
+    : qualifier=AT_SIGN? ident=(REGULAR_IDENTIFIER|DELIMITED_IDENTIFIER)   # VariableIdentifier
     | qualifier=AT_SIGN? key=nonReservedKeywords                # VariableKeyword
     ;
 

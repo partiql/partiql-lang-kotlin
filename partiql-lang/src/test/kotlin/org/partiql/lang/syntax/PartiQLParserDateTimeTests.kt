@@ -656,7 +656,7 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
                 errorCode = ErrorCode.PARSE_UNEXPECTED_TOKEN,
                 line = 1L,
                 col = 11L,
-                tokenType = PartiQLParser.IDENTIFIER,
+                tokenType = PartiQLParser.REGULAR_IDENTIFIER,
                 tokenValue = ION.newSymbol("TIMEZONE")
             ),
             createErrorCaseForDateTime(
@@ -664,7 +664,7 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
                 line = 1L,
                 col = 6L,
                 errorCode = ErrorCode.PARSE_UNEXPECTED_TOKEN,
-                tokenType = PartiQLParser.IDENTIFIER,
+                tokenType = PartiQLParser.REGULAR_IDENTIFIER,
                 tokenValue = ION.newSymbol("WITH_TIME_ZONE")
             ),
             createErrorCaseForDateTime(
@@ -672,7 +672,7 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
                 line = 1L,
                 col = 6L,
                 errorCode = ErrorCode.PARSE_UNEXPECTED_TOKEN,
-                tokenType = PartiQLParser.IDENTIFIER,
+                tokenType = PartiQLParser.REGULAR_IDENTIFIER,
                 tokenValue = ION.newSymbol("WITHTIMEZONE")
             ),
             // PartiQL doesn't support "WITHOUT TIME ZONE" yet. TIME '<time_string>' is in effect the same as TIME WITHOUT TIME ZONE '<time_string>'
@@ -681,7 +681,7 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
                 line = 1L,
                 col = 6L,
                 errorCode = ErrorCode.PARSE_UNEXPECTED_TOKEN,
-                tokenType = PartiQLParser.IDENTIFIER,
+                tokenType = PartiQLParser.REGULAR_IDENTIFIER,
                 tokenValue = ION.newSymbol("WITHOUT")
             ),
             createErrorCaseForDateTime(
@@ -690,7 +690,7 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
                 errorContext = mapOf(
                     Property.LINE_NUMBER to 1L,
                     Property.COLUMN_NUMBER to 16L,
-                    Property.TOKEN_DESCRIPTION to PartiQLParser.IDENTIFIER.getAntlrDisplayString(),
+                    Property.TOKEN_DESCRIPTION to PartiQLParser.REGULAR_IDENTIFIER.getAntlrDisplayString(),
                     Property.TOKEN_VALUE to ION.newSymbol("PHONE")
                 )
             ),
@@ -1070,7 +1070,7 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
                 errorCode = ErrorCode.PARSE_UNEXPECTED_TOKEN,
                 line = 1L,
                 col = 16L,
-                tokenType = PartiQLParser.IDENTIFIER,
+                tokenType = PartiQLParser.REGULAR_IDENTIFIER,
                 tokenValue = ION.newSymbol("TIMEZONE")
             ),
             createErrorCaseForDateTime(
@@ -1078,7 +1078,7 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
                 line = 1L,
                 col = 11L,
                 errorCode = ErrorCode.PARSE_UNEXPECTED_TOKEN,
-                tokenType = PartiQLParser.IDENTIFIER,
+                tokenType = PartiQLParser.REGULAR_IDENTIFIER,
                 tokenValue = ION.newSymbol("WITH_TIME_ZONE")
             ),
             createErrorCaseForDateTime(
@@ -1086,7 +1086,7 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
                 line = 1L,
                 col = 11L,
                 errorCode = ErrorCode.PARSE_UNEXPECTED_TOKEN,
-                tokenType = PartiQLParser.IDENTIFIER,
+                tokenType = PartiQLParser.REGULAR_IDENTIFIER,
                 tokenValue = ION.newSymbol("WITHTIMEZONE")
             ),
             createErrorCaseForDateTime(
@@ -1094,7 +1094,7 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
                 line = 1L,
                 col = 11L,
                 errorCode = ErrorCode.PARSE_UNEXPECTED_TOKEN,
-                tokenType = PartiQLParser.IDENTIFIER,
+                tokenType = PartiQLParser.REGULAR_IDENTIFIER,
                 tokenValue = ION.newSymbol("WITHOUT")
             ),
             createErrorCaseForDateTime(
@@ -1103,7 +1103,7 @@ class PartiQLParserDateTimeTests : PartiQLParserTestBase() {
                 errorContext = mapOf(
                     Property.LINE_NUMBER to 1L,
                     Property.COLUMN_NUMBER to 21L,
-                    Property.TOKEN_DESCRIPTION to PartiQLParser.IDENTIFIER.getAntlrDisplayString(),
+                    Property.TOKEN_DESCRIPTION to PartiQLParser.REGULAR_IDENTIFIER.getAntlrDisplayString(),
                     Property.TOKEN_VALUE to ION.newSymbol("PHONE")
                 )
             ),
