@@ -46,6 +46,12 @@ class KotlinCommand : Callable<Int> {
     )
     var poems: List<String> = emptyList()
 
+    @CommandLine.Option(
+        names = ["--opt-in"],
+        description = ["Opt-in annotations to add to generated sources"],
+    )
+    var optIns: List<String> = emptyList()
+
     override fun call(): Int {
         val input = BufferedReader(FileInputStream(file).reader()).readText()
         val parser = SproutParser.default()
@@ -53,6 +59,7 @@ class KotlinCommand : Callable<Int> {
         val options = KotlinOptions(
             packageRoot = packageRoot,
             poems = poems,
+            optIns = optIns,
         )
         val generator = KotlinGenerator(options)
         val result = generator.generate(universe)

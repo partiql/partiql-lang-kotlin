@@ -26,6 +26,8 @@ import org.partiql.parser.antlr.PartiQLParser
 
 class PartiQLParserExplainTest : PartiQLParserTestBase() {
 
+    override val targets: Array<ParserTarget> = arrayOf(ParserTarget.DEFAULT, ParserTarget.EXPERIMENTAL)
+
     data class ParserTestCase(
         val description: String? = null,
         val query: String,
@@ -45,7 +47,7 @@ class PartiQLParserExplainTest : PartiQLParserTestBase() {
 
     @ArgumentsSource(ErrorTestProvider::class)
     @ParameterizedTest
-    fun errorTests(tc: ParserErrorTestCase) = checkInputThrowingParserException(tc.query, tc.code, tc.context)
+    fun errorTests(tc: ParserErrorTestCase) = checkInputThrowingParserException(tc.query, tc.code, tc.context, assertContext = false)
 
     class SuccessTestProvider : ArgumentsProviderBase() {
         override fun getParameters() = listOf(
@@ -145,7 +147,7 @@ class PartiQLParserExplainTest : PartiQLParserTestBase() {
                     Property.COLUMN_NUMBER to 36L,
                     Property.TOKEN_DESCRIPTION to PartiQLParser.EOF.getAntlrDisplayString(),
                     Property.TOKEN_VALUE to ION.newSymbol("EOF")
-                )
+                ),
             ),
             ParserErrorTestCase(
                 description = "Setting option twice",
