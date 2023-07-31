@@ -19,7 +19,7 @@ internal enum class DateTimePart {
 
     companion object {
         fun safeValueOf(value: String): DateTimePart? = try {
-            valueOf(value.toUpperCase().trim())
+            valueOf(value)
         } catch (_: IllegalArgumentException) {
             null
         }

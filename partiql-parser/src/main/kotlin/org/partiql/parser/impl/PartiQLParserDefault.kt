@@ -408,6 +408,17 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitByIdent(ctx: GeneratedParser.ByIdentContext) = visitSymbolPrimitive(ctx.symbolPrimitive())
 
+        /** Interpret an ANTLR-parsed regular identifier as one of expected local keywords. */
+        private fun readLocalKeyword(
+            ctx: GeneratedParser.LocalKeywordContext,
+            expected: List<String>
+        ): String {
+            val terminal = ctx.REGULAR_IDENTIFIER()
+            val keyword = terminal.text.uppercase()
+            if (expected.contains(keyword))
+                return keyword
+            else throw error(ctx, "Expected one of: ${expected.joinToString(", ")}.")
+        }
         override fun visitSymbolPrimitive(ctx: GeneratedParser.SymbolPrimitiveContext) = translate(ctx) {
             when (ctx.ident.type) {
                 GeneratedParser.DELIMITED_IDENTIFIER -> identifierSymbol(
@@ -1540,12 +1551,14 @@ internal class PartiQLParserDefault : PartiQLParser {
          *
          */
 
+        private fun readDateTimeField(ctx: GeneratedParser.DateTimeFieldContext): DatetimeField {
+            val expected = DatetimeField.values().toList().map { it.toString() }
+            val keyword = readLocalKeyword(ctx.localKeyword(), expected)
+            return DatetimeField.valueOf(keyword)
+        }
+
         override fun visitDateFunction(ctx: GeneratedParser.DateFunctionContext) = translate(ctx) {
-            val field = try {
-                DatetimeField.valueOf(ctx.dt.text.uppercase())
-            } catch (ex: IllegalArgumentException) {
-                throw error(ctx.dt, "Expected one of: ${DatetimeField.values().joinToString()}", ex)
-            }
+            val field = readDateTimeField(ctx.field)
             val lhs = visitExpr(ctx.expr(0))
             val rhs = visitExpr(ctx.expr(1))
             when {
@@ -1618,11 +1631,7 @@ internal class PartiQLParserDefault : PartiQLParser {
         }
 
         override fun visitExtract(ctx: GeneratedParser.ExtractContext) = translate(ctx) {
-            val field = try {
-                DatetimeField.valueOf(ctx.REGULAR_IDENTIFIER().text.uppercase())
-            } catch (ex: IllegalArgumentException) {
-                throw error(ctx.REGULAR_IDENTIFIER().symbol, "Expected one of: ${DatetimeField.values().joinToString()}", ex)
-            }
+            val field = readDateTimeField(ctx.field)
             val source = visitExpr(ctx.expr())
             exprExtract(field, source)
         }

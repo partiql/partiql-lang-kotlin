@@ -198,6 +198,18 @@ internal class PartiQLPigVisitor(
 
     override fun visitByIdent(ctx: PartiQLParser.ByIdentContext) = visitSymbolPrimitive(ctx.symbolPrimitive())
 
+    /** Interpret an ANTLR-parsed regular identifier as one of expected local keywords. */
+    fun readLocalKeyword(
+        ctx: PartiQLParser.LocalKeywordContext,
+        expected: List<String>,
+        code: ErrorCode
+    ): String {
+        val terminal = ctx.REGULAR_IDENTIFIER()
+        val keyword = terminal.text.uppercase()
+        if (expected.contains(keyword))
+            return keyword
+        else throw terminal.err("Expected one of: ${expected.joinToString(", ")}.", code)
+    }
     override fun visitSymbolPrimitive(ctx: PartiQLParser.SymbolPrimitiveContext) = PartiqlAst.build {
         val metas = ctx.ident.getSourceMetaContainer()
         when (ctx.ident.type) {
@@ -1258,11 +1270,14 @@ internal class PartiQLPigVisitor(
         call(name, args = args, metas = metas)
     }
 
+    private fun readDateTimeField(ctx: PartiQLParser.DateTimeFieldContext): String {
+        val expected = DateTimePart.values().toList().map { it.toString() }
+        return readLocalKeyword(ctx.localKeyword(), expected, ErrorCode.PARSE_EXPECTED_DATE_TIME_PART)
+    }
+
     override fun visitDateFunction(ctx: PartiQLParser.DateFunctionContext) = PartiqlAst.build {
-        if (DateTimePart.safeValueOf(ctx.dt.text) == null) {
-            throw ctx.dt.err("Expected one of: ${DateTimePart.values()}", ErrorCode.PARSE_EXPECTED_DATE_TIME_PART)
-        }
-        val datetimePart = lit(ionSymbol(ctx.dt.text))
+        val keyword = readDateTimeField(ctx.field)
+        val datetimePart = lit(ionSymbol(keyword))
         val secondaryArgs = ctx.expr().map { visitExpr(it) }
         val args = listOf(datetimePart) + secondaryArgs
         val metas = ctx.func.getSourceMetaContainer()
@@ -1297,11 +1312,8 @@ internal class PartiQLPigVisitor(
     }
 
     override fun visitExtract(ctx: PartiQLParser.ExtractContext) = PartiqlAst.build {
-        if (DateTimePart.safeValueOf(ctx.REGULAR_IDENTIFIER().text) == null) {
-            throw ctx.REGULAR_IDENTIFIER()
-                .err("Expected one of: ${DateTimePart.values()}", ErrorCode.PARSE_EXPECTED_DATE_TIME_PART)
-        }
-        val datetimePart = lit(ionSymbol(ctx.REGULAR_IDENTIFIER().text))
+        val keyword = readDateTimeField(ctx.field)
+        val datetimePart = lit(ionSymbol(keyword))
         val timeExpr = visitExpr(ctx.rhs)
         val args = listOf(datetimePart, timeExpr)
         val metas = ctx.EXTRACT().getSourceMetaContainer()

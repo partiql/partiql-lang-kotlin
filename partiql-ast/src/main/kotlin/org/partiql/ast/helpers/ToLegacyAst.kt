@@ -1333,7 +1333,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
     }
 
     private fun DatetimeField.toLegacyDatetimePart(): PartiqlAst.Expr.Lit {
-        val symbol = this.toString().lowercase()
+        val symbol = this.toString()
         return pig.lit(ionSymbol(symbol))
     }
 
