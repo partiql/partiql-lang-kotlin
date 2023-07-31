@@ -1,6 +1,5 @@
 package org.partiql.sprout.generator.target.kotlin
 
-import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
@@ -57,20 +56,7 @@ class KotlinGenerator(private val options: KotlinOptions) : Generator<KotlinResu
             // Apply each poem
             poems.forEach { it.apply(this) }
             // Finalize each spec/builder
-            build(options.packageRoot).map {
-                if (options.optIns.isNotEmpty()) {
-                    val f = it.toBuilder()
-                    val optin = AnnotationSpec.builder(ClassName("kotlin", "OptIn"))
-                    options.optIns.forEach { o ->
-                        val i = o.lastIndexOf(".")
-                        optin.addMember("%T::class", ClassName(o.substring(0, i), o.substring(i + 1)))
-                    }
-                    f.addAnnotation(optin.build())
-                    KotlinFileSpec(f.build())
-                } else {
-                    KotlinFileSpec(it)
-                }
-            }
+            build(options.packageRoot).map { KotlinFileSpec(it) }
         }
         return KotlinResult(specs)
     }

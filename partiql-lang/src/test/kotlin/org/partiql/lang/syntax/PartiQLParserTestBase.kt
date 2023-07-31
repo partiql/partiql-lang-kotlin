@@ -34,20 +34,9 @@ import org.partiql.pig.runtime.toIonElement
 
 abstract class PartiQLParserTestBase : TestBase() {
 
-    /**
-     * We can change the parser target for an entire test suite by overriding this list.
-     */
-    open val targets = arrayOf(ParserTarget.DEFAULT)
+    val parser = PartiQLParserBuilder().customTypes(CUSTOM_TEST_TYPES).build()
 
-    /**
-     * Executes a test block for each target.
-     */
-    inline fun forEachTarget(block: ParserTarget.() -> Unit) = targets.forEach { it.block() }
-
-    enum class ParserTarget(val parser: Parser) {
-        DEFAULT(PartiQLParserBuilder().customTypes(CUSTOM_TEST_TYPES).build()),
-        EXPERIMENTAL(PartiQLParserBuilder.experimental().customTypes(CUSTOM_TEST_TYPES).build()),
-    }
+    protected fun parse(source: String): PartiqlAst.Statement = parser.parseAstStatement(source)
 
     private fun assertSexpEquals(
         expectedValue: IonValue,
@@ -71,7 +60,7 @@ abstract class PartiQLParserTestBase : TestBase() {
     protected fun assertExpression(
         source: String,
         expectedPigAst: String,
-    ): Unit = forEachTarget {
+    ) {
         val actualStatement = parser.parseAstStatement(source)
         val expectedIonSexp = loadIonSexp(expectedPigAst)
 
@@ -152,19 +141,14 @@ abstract class PartiQLParserTestBase : TestBase() {
     protected fun checkInputThrowingParserException(
         input: String,
         errorCode: ErrorCode,
-        expectErrorContextValues: Map<Property, Any>,
-        targets: Array<ParserTarget> = arrayOf(ParserTarget.DEFAULT),
-        assertContext: Boolean = true,
-    ): Unit = forEachTarget {
+        expectErrorContextValues: Map<Property, Any>
+    ) {
         softAssert {
             try {
                 parser.parseAstStatement(input)
                 fail("Expected ParserException but there was no Exception")
-            } catch (ex: ParserException) {
-                // split parser target does not use ErrorCode
-                if (assertContext && (this@forEachTarget == ParserTarget.EXPERIMENTAL)) {
-                    checkErrorAndErrorContext(errorCode, ex, expectErrorContextValues)
-                }
+            } catch (pex: ParserException) {
+                checkErrorAndErrorContext(errorCode, pex, expectErrorContextValues)
             } catch (ex: Exception) {
                 fail("Expected ParserException but a different exception was thrown \n\t  $ex")
             }

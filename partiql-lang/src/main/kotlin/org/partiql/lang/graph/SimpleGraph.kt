@@ -35,8 +35,8 @@ class SimpleGraph(
 
     private fun labelsMatchSpec(labels: Set<String>, spec: LabelSpec): Boolean =
         when (spec) {
-            LabelSpec.Wildcard -> true
-            is LabelSpec.Name -> labels.contains(spec.name)
+            LabelSpec.Whatever -> true
+            is LabelSpec.OneOf -> labels.contains(spec.name)
         }
 
     private fun Graph.Elem.matches(labelSpec: LabelSpec): Boolean =

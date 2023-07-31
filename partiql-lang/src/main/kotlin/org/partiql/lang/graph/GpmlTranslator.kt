@@ -2,6 +2,7 @@ package org.partiql.lang.graph
 
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.graph.GpmlTranslator.normalizeElemList
+import org.partiql.pig.runtime.SymbolPrimitive
 
 /** Translate an AST graph pattern into a "plan spec" to be executed by the graph engine.
  *  Currently, the only non-trivial aspect is making sure (in [normalizeElemList]) that node and edge elements alternate.
@@ -51,12 +52,11 @@ object GpmlTranslator {
         )
     }
 
-    fun translateLabels(labelSpec: PartiqlAst.GraphLabelSpec?): LabelSpec {
-        return when (labelSpec) {
-            null -> LabelSpec.Wildcard
-            is PartiqlAst.GraphLabelSpec.GraphLabelName -> LabelSpec.Name(labelSpec.name.text)
-            is PartiqlAst.GraphLabelSpec.GraphLabelWildcard -> LabelSpec.Wildcard
-            else -> TODO("Not yet supported graph label pattern: $labelSpec")
+    fun translateLabels(labels: List<SymbolPrimitive>): LabelSpec {
+        return when (labels.size) {
+            0 -> LabelSpec.Whatever
+            1 -> LabelSpec.OneOf(labels[0].text)
+            else -> TODO("Not yet supported in evaluating a GPML graph element pattern: multiple/alternating labels")
         }
     }
 
@@ -76,7 +76,7 @@ object GpmlTranslator {
      *  TODO: Deal with adjacent [NodeSpec]s -- by "unification" or prohibit.
      */
     fun normalizeElemList(elems: List<ElemSpec>): List<ElemSpec> {
-        val fillerNode = NodeSpec(null, LabelSpec.Wildcard)
+        val fillerNode = NodeSpec(null, LabelSpec.Whatever)
         val normalized = mutableListOf<ElemSpec>()
         var expectNode = true
         for (x in elems) {

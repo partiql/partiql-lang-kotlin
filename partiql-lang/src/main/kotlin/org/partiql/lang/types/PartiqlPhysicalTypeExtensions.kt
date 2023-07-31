@@ -109,6 +109,4 @@ internal fun PartiqlPhysical.Type.toTypedOpParameter(customTypedOpParameters: Ma
         is PartiqlPhysical.Type.TimeWithTimeZoneType -> TypedOpParameter(
             TimeType(this.precision?.value?.toInt(), withTimeZone = true)
         )
-
-        is PartiqlPhysical.Type.TimestampWithTimeZoneType -> TODO()
     }

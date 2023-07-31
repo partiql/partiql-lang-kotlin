@@ -474,7 +474,6 @@ internal class EvaluatingCompiler(
 
             is PartiqlAst.Expr.GraphMatch -> compileGraphMatch(expr, metas)
             is PartiqlAst.Expr.CallWindow -> TODO("Evaluating Compiler doesn't support window function")
-            is PartiqlAst.Expr.Timestamp -> TODO()
         }
     }
 

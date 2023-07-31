@@ -12,8 +12,6 @@ import org.partiql.lang.util.ArgumentsProviderBase
 
 class PartiQLParserCastTests : PartiQLParserTestBase() {
 
-    override val targets: Array<ParserTarget> = arrayOf(ParserTarget.DEFAULT, ParserTarget.EXPERIMENTAL)
-
     @ParameterizedTest
     @ArgumentsSource(ConfiguredCastArguments::class)
     fun configuredCast(configuredCastCase: ConfiguredCastParseTest) = configuredCastCase.assertCase()

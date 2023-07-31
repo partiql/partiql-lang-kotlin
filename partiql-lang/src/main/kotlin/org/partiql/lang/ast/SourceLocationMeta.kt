@@ -16,9 +16,8 @@ package org.partiql.lang.ast
 
 import com.amazon.ion.IonWriter
 import com.amazon.ionelement.api.MetaContainer
-import com.amazon.ionelement.api.ionInt
-import com.amazon.ionelement.api.ionStructOf
 import com.amazon.ionelement.api.metaOrNull
+import org.partiql.lang.util.IonWriterContext
 
 /**
  * Represents a specific location within a source file.
@@ -29,11 +28,13 @@ data class SourceLocationMeta(val lineNum: Long, val charOffset: Long, val lengt
     override val tag = TAG
 
     override fun serialize(writer: IonWriter) {
-        ionStructOf(
-            "line_num" to ionInt(lineNum),
-            "char_offset" to ionInt(charOffset),
-            "length" to ionInt(length),
-        ).writeTo(writer)
+        IonWriterContext(writer).apply {
+            struct {
+                int("line_num", lineNum)
+                int("char_offset", charOffset)
+                int("length", length)
+            }
+        }
     }
 
     override fun equals(other: Any?): Boolean {

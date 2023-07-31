@@ -43,12 +43,7 @@ class StatementRedactorTest : PartiQLParserTestBase() {
      * Return true if the parsed results of input [statement] is the same as input [ast]
      */
     private fun validateInputAstParsedFromInputStatement(statement: String, ast: PartiqlAst.Statement): Boolean {
-        targets.forEach { target ->
-            if (target.parser.parseAstStatement(statement) != ast) {
-                return false
-            }
-        }
-        return true
+        return parser.parseAstStatement(statement) == ast
     }
 
     @Test
@@ -409,23 +404,23 @@ class StatementRedactorTest : PartiQLParserTestBase() {
     )
 
     @Test
-    fun testDefaultArguments(): Unit = forEachTarget {
+    fun testDefaultArguments() {
         val originalStatement = "SELECT * FROM tb WHERE hk = 1 AND begins_with(Attr, 'foo', bar)"
         val expectedRedactedStatement = "SELECT * FROM tb WHERE hk = ***(Redacted) AND begins_with(Attr, ***(Redacted), bar)"
-        val redactedStatement1 = redact(originalStatement, parser.parseAstStatement(originalStatement))
+        val redactedStatement1 = redact(originalStatement, super.parser.parseAstStatement(originalStatement))
         assertEquals(expectedRedactedStatement, redactedStatement1)
 
-        val redactedStatement2 = redact(originalStatement, parser.parseAstStatement(originalStatement), providedSafeFieldNames = emptySet())
+        val redactedStatement2 = redact(originalStatement, super.parser.parseAstStatement(originalStatement), providedSafeFieldNames = emptySet())
         assertEquals(expectedRedactedStatement, redactedStatement2)
 
-        val redactedStatement3 = redact(originalStatement, parser.parseAstStatement(originalStatement), userDefinedFunctionRedactionConfig = emptyMap())
+        val redactedStatement3 = redact(originalStatement, super.parser.parseAstStatement(originalStatement), userDefinedFunctionRedactionConfig = emptyMap())
         assertEquals(expectedRedactedStatement, redactedStatement3)
     }
 
     @Test
-    fun testInputStatementAstMismatch() = forEachTarget {
+    fun testInputStatementAstMismatch() {
         val inputStatement = "SELECT * FROM tb WHERE nonKey = 'a'"
-        val inputAst = parser.parseAstStatement("SELECT * FROM tb WHERE hk = 1 AND nonKey = 'a'")
+        val inputAst = super.parser.parseAstStatement("SELECT * FROM tb WHERE hk = 1 AND nonKey = 'a'")
         assertFalse(validateInputAstParsedFromInputStatement(inputStatement, inputAst))
 
         try {

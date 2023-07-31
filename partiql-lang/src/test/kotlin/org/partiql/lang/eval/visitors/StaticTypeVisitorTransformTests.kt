@@ -975,7 +975,7 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
 
     private fun runSTRTest(
         tc: STRTestCase
-    ): Unit = forEachTarget {
+    ) {
         val globalBindings = Bindings.ofMap(tc.globals)
         val transformer = StaticTypeVisitorTransform(ion, globalBindings, tc.constraints)
 
@@ -983,7 +983,7 @@ class StaticTypeVisitorTransformTests : VisitorTransformTestBase() {
         // FromSourceAliasVisitorTransform to execute first but also to help ensure the queries we're testing
         // make sense when they're all run.
         val defaultTransforms = basicVisitorTransforms()
-        val originalAst = defaultTransforms.transformStatement(parser.parseAstStatement(tc.originalSql))
+        val originalAst = defaultTransforms.transformStatement(parse(tc.originalSql))
 
         val transformedAst = try {
             transformer.transformStatement(originalAst)

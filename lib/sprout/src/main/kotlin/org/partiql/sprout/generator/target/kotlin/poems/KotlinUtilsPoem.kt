@@ -39,7 +39,6 @@ class KotlinUtilsPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
     private val suppressUnused = AnnotationSpec.builder(Suppress::class)
         .useSiteTarget(AnnotationSpec.UseSiteTarget.FILE)
         .addMember("%S", "UNUSED_PARAMETER")
-        .addMember("%S", "UNUSED_VARIABLE")
         .build()
 
     // Not taking a dep on builder or visitor poems, as this is temporary
@@ -108,8 +107,8 @@ class KotlinUtilsPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
     // Node N           -> visitN(node.n, ctx) as N
     // Node N?          -> node.n?.let { visitN(it, ctx) as N }
     // Collection<N>    -> rewrite(node, ctx, ::method)
-    // Collection<N>?   -> node.n?.let { rewrite(it, ctx, ::method) }
-    // Collection<N?>?  -> node.n?.let { rewrite(it, ctx, ::method) }
+    // Collection?<N>   -> node.n?.let { rewrite(it, ctx, ::method) }
+    // Collection?<N?>  -> node.n?.let { rewrite(it, ctx, ::method) }
     // Collection<N?>   -> rewrite(node, ctx, ::method)
 
     private fun KotlinNodeSpec.Product.rewriter(): FunSpec {
@@ -140,25 +139,17 @@ class KotlinUtilsPoem(symbols: KotlinSymbols) : KotlinPoem(symbols) {
                         (ref is TypeRef.List && isNode(ref.type)) -> {
                             // Collections
                             val method = (ref.type as TypeRef.Path).visitMethodName()
-                            val helper = when (ref.type.nullable) {
-                                true -> "_visitListNull"
-                                else -> "_visitList"
-                            }
                             when (ref.nullable) {
-                                true -> addStatement("val $name = $child?.let { $helper(it, ctx, ::$method) }")
-                                false -> addStatement("val $name = $helper($child, ctx, ::$method)")
+                                true -> addStatement("val $name = $child?.let { _visitListNull(it, ctx, ::$method) }")
+                                false -> addStatement("val $name = _visitList($child, ctx, ::$method)")
                             }
                         }
                         (ref is TypeRef.Set && isNode(ref.type)) -> {
                             // Collections
                             val method = (ref.type as TypeRef.Path).visitMethodName()
-                            val helper = when (ref.type.nullable) {
-                                true -> "_visitSetNull"
-                                else -> "_visitSet"
-                            }
                             when (ref.nullable) {
-                                true -> addStatement("val $name = $child?.let { $helper(it, ctx, ::$method) }")
-                                false -> addStatement("val $name = $helper($child, ctx, ::$method)")
+                                true -> addStatement("val $name = $child?.let { _visitSetNull(it, ctx, ::$method) }")
+                                false -> addStatement("val $name = _visitSet($child, ctx, ::$method)")
                             }
                         }
                         else -> {

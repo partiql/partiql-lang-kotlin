@@ -18,9 +18,6 @@
 package org.partiql.value
 
 import kotlinx.collections.immutable.toPersistentList
-import org.partiql.value.datetime.Date
-import org.partiql.value.datetime.Time
-import org.partiql.value.datetime.Timestamp
 import org.partiql.value.impl.BagValueImpl
 import org.partiql.value.impl.BinaryValueImpl
 import org.partiql.value.impl.BlobValueImpl
@@ -73,6 +70,10 @@ import org.partiql.value.impl.TimeValueImpl
 import org.partiql.value.impl.TimestampValueImpl
 import java.math.BigDecimal
 import java.math.BigInteger
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.ZoneOffset
 import java.util.BitSet
 
 /**
@@ -309,7 +310,7 @@ public fun blobValue(
 @JvmOverloads
 @PartiQLValueExperimental
 public fun dateValue(
-    value: Date,
+    value: LocalDate,
     annotations: Annotations = emptyList(),
 ): DateValue = DateValueImpl(value, annotations.toPersistentList())
 
@@ -323,9 +324,12 @@ public fun dateValue(
 @JvmOverloads
 @PartiQLValueExperimental
 public fun timeValue(
-    value: Time,
+    value: LocalTime,
+    precision: Int = 0,
+    offset: ZoneOffset? = null,
+    withZone: Boolean = false,
     annotations: Annotations = emptyList(),
-): TimeValue = TimeValueImpl(value, annotations.toPersistentList())
+): TimeValue = TimeValueImpl(value, precision, offset, withZone, annotations.toPersistentList())
 
 /**
  * TIMESTAMP type value.
@@ -337,9 +341,12 @@ public fun timeValue(
 @JvmOverloads
 @PartiQLValueExperimental
 public fun timestampValue(
-    value: Timestamp,
+    value: LocalDateTime,
+    precision: Int = 0,
+    offset: ZoneOffset? = null,
+    withZone: Boolean = false,
     annotations: Annotations = emptyList(),
-): TimestampValue = TimestampValueImpl(value, annotations.toPersistentList())
+): TimestampValue = TimestampValueImpl(value, precision, offset, withZone, annotations.toPersistentList())
 
 /**
  * INTERVAL type value.
@@ -673,7 +680,7 @@ public fun nullableBlobValue(
 @JvmOverloads
 @PartiQLValueExperimental
 public fun nullableDateValue(
-    value: Date? = null,
+    value: LocalDate? = null,
     annotations: Annotations = emptyList(),
 ): NullableDateValue = NullableDateValueImpl(value, annotations.toPersistentList())
 
@@ -687,9 +694,37 @@ public fun nullableDateValue(
 @JvmOverloads
 @PartiQLValueExperimental
 public fun nullableTimeValue(
-    value: Time? = null,
     annotations: Annotations = emptyList(),
-): NullableTimeValue = NullableTimeValueImpl(value, annotations.toPersistentList())
+): NullableTimeValue = NullableTimeValueImpl(null, 0, null, false, annotations.toPersistentList())
+
+/**
+ * UNION(NULL, TIME) type value.
+ *
+ * @param value
+ * @param annotations
+ * @return
+ */
+@JvmOverloads
+@PartiQLValueExperimental
+public fun nullableTimeValue(
+    value: LocalTime,
+    precision: Int = 0,
+    offset: ZoneOffset? = null,
+    withZone: Boolean = false,
+    annotations: Annotations = emptyList(),
+): NullableTimeValue = NullableTimeValueImpl(value, precision, offset, withZone, annotations.toPersistentList())
+
+/**
+ * UNION(NULL, TIMESTAMP) type value.
+ *
+ * @param annotations
+ * @return
+ */
+@JvmOverloads
+@PartiQLValueExperimental
+public fun nullableTimestampValue(
+    annotations: Annotations = emptyList(),
+): NullableTimestampValue = NullableTimestampValueImpl(null, 0, null, false, annotations.toPersistentList())
 
 /**
  * UNION(NULL, TIMESTAMP) type value.
@@ -701,13 +736,16 @@ public fun nullableTimeValue(
 @JvmOverloads
 @PartiQLValueExperimental
 public fun nullableTimestampValue(
-    value: Timestamp? = null,
+    value: LocalDateTime,
+    precision: Int = 0,
+    offset: ZoneOffset? = null,
+    withZone: Boolean = false,
     annotations: Annotations = emptyList(),
 ): NullableTimestampValue =
-    NullableTimestampValueImpl(value, annotations.toPersistentList())
+    NullableTimestampValueImpl(value, precision, offset, withZone, annotations.toPersistentList())
 
 /**
- * UNION(NULL, INTERVAL) type value.
+ * UNION(NULL, TIMESTAMP) type value.
  *
  * @param value
  * @param annotations

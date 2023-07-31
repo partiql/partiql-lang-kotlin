@@ -6,30 +6,28 @@ import org.partiql.lang.domains.PartiqlAst
 
 internal class PartiQLParserMetaTests : PartiQLParserTestBase() {
 
-    override val targets: Array<ParserTarget> = arrayOf(ParserTarget.DEFAULT, ParserTarget.EXPERIMENTAL)
-
     @Test
-    fun listParenthesized(): Unit = forEachTarget {
+    fun listParenthesized() {
         val query = "(0, 1, 2)"
-        val ast = parser.parseAstStatement(query) as PartiqlAst.Statement.Query
+        val ast = parse(query) as PartiqlAst.Statement.Query
         val list = ast.expr as PartiqlAst.Expr.List
 
         assert(list.metas.containsKey(IsListParenthesizedMeta.tag))
     }
 
     @Test
-    fun listParenthesizedNot(): Unit = forEachTarget {
+    fun listParenthesizedNot() {
         val query = "[0, 1, 2]"
-        val ast = parser.parseAstStatement(query) as PartiqlAst.Statement.Query
+        val ast = parse(query) as PartiqlAst.Statement.Query
         val list = ast.expr as PartiqlAst.Expr.List
 
         assert(list.metas.containsKey(IsListParenthesizedMeta.tag).not())
     }
 
     @Test
-    fun inListParenthesized(): Unit = forEachTarget {
+    fun inListParenthesized() {
         val query = "0 IN (0, 1, 2)"
-        val ast = parser.parseAstStatement(query) as PartiqlAst.Statement.Query
+        val ast = parse(query) as PartiqlAst.Statement.Query
         val inCollection = ast.expr as PartiqlAst.Expr.InCollection
         val list = inCollection.operands[1] as PartiqlAst.Expr.List
 
@@ -37,9 +35,9 @@ internal class PartiQLParserMetaTests : PartiQLParserTestBase() {
     }
 
     @Test
-    fun inListParenthesizedNot(): Unit = forEachTarget {
+    fun inListParenthesizedNot() {
         val query = "0 IN [0, 1, 2]"
-        val ast = parser.parseAstStatement(query) as PartiqlAst.Statement.Query
+        val ast = parse(query) as PartiqlAst.Statement.Query
         val inCollection = ast.expr as PartiqlAst.Expr.InCollection
         val list = inCollection.operands[1] as PartiqlAst.Expr.List
 
@@ -47,9 +45,9 @@ internal class PartiQLParserMetaTests : PartiQLParserTestBase() {
     }
 
     @Test
-    fun inListParenthesizedSingleElement(): Unit = forEachTarget {
+    fun inListParenthesizedSingleElement() {
         val query = "0 IN (0)"
-        val ast = parser.parseAstStatement(query) as PartiqlAst.Statement.Query
+        val ast = parse(query) as PartiqlAst.Statement.Query
         val inCollection = ast.expr as PartiqlAst.Expr.InCollection
         val list = inCollection.operands[1] as PartiqlAst.Expr.List
 

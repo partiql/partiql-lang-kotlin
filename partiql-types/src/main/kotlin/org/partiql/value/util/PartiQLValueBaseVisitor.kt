@@ -87,14 +87,10 @@ public abstract class PartiQLValueBaseVisitor<R, C> : PartiQLValueVisitor<R, C> 
                 v.fields.forEach { it.second.accept(this, ctx) }
             }
             is NullableCollectionValue<*> -> {
-                if (!v.isNull()) {
-                    v.promote().elements.forEach { it.accept(this, ctx) }
-                }
+                v.elements?.forEach { it.accept(this, ctx) }
             }
             is NullableStructValue<*> -> {
-                if (!v.isNull()) {
-                    v.promote().fields.forEach { it.second.accept(this, ctx) }
-                }
+                v.fields?.forEach { it.second.accept(this, ctx) }
             }
             else -> {}
         }
