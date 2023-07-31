@@ -20,6 +20,18 @@ import org.partiql.lang.types.FunctionSignature
 @Deprecated("As function overloading is now supported, this class is deprecated.", level = DeprecationLevel.ERROR)
 sealed class Arguments
 
+@Suppress("DEPRECATION_ERROR")
+@Deprecated("As function overloading is now supported, this class is deprecated.", level = DeprecationLevel.ERROR)
+data class RequiredArgs(val required: List<ExprValue>) : Arguments()
+
+@Suppress("DEPRECATION_ERROR")
+@Deprecated("As function overloading is now supported, this class is deprecated.", level = DeprecationLevel.ERROR)
+data class RequiredWithOptional(val required: List<ExprValue>, val opt: ExprValue) : Arguments()
+
+@Suppress("DEPRECATION_ERROR")
+@Deprecated("As function overloading is now supported, this class is deprecated.", level = DeprecationLevel.ERROR)
+data class RequiredWithVariadic(val required: List<ExprValue>, val variadic: List<ExprValue>) : Arguments()
+
 /**
  * Represents a function that can be invoked from within an [EvaluatingCompiler]
  * compiled [Expression].
@@ -74,3 +86,12 @@ interface ExprFunction {
  * @param args The argument list.
  */
 fun ExprFunction.call(session: EvaluationSession, args: List<ExprValue>): ExprValue = callWithRequired(session, args)
+
+@Suppress("DEPRECATION_ERROR")
+@Deprecated("As function overloading is now supported, this class is deprecated. Please use use call(session: EvaluationSession, args: List<ExprValue>) instead", level = DeprecationLevel.ERROR)
+fun ExprFunction.call(session: EvaluationSession, args: Arguments): ExprValue =
+    when (args) {
+        is RequiredArgs -> callWithRequired(session, args.required)
+        is RequiredWithOptional -> callWithOptional(session, args.required, args.opt)
+        is RequiredWithVariadic -> callWithVariadic(session, args.required, args.variadic)
+    }

@@ -64,8 +64,10 @@ Thank you to all who have contributed!
 ### Deprecated
 - Deprecates Map<String, ExprFunction> representation of functions in the `CompilerPipeline`
   and experimental `PartiQLCompilerPipeline`. Please use List<ExprFunction> to represent functions instead.
-- **Breaking**: Deprecates `Arguments` class, `callWithOptional()` and `callWithVariadic()` methods in the `ExprFunction`
-  with a Deprecation Level of ERROR. Please invoke `callWithRequired()` instead.
+- **Breaking**: Deprecates the `Arguments`, `RequiredArgs`, `RequiredWithOptional`, and `RequiredWithVariadic` classes, 
+  along with the `callWithOptional()`, `callWithVariadic()`, and the overloaded `call()` methods in the `ExprFunction` class, 
+  marking them with a Deprecation Level of ERROR. Now, it's recommended to use 
+  `call(session: EvaluationSession, args: List<ExprValue>)` and `callWithRequired()` instead.
 - **Breaking**: Deprecates `optionalParameter` and `variadicParameter` in the `FunctionSignature` with a Deprecation
   Level of ERROR. Please use multiple implementations of ExprFunction and use the LIST ExprValue to
   represent variadic parameters instead.
@@ -86,8 +88,6 @@ Thank you to all who have contributed!
 - @yuxtang-amazon
 - @yliuuuu
 - @<your-username>
-
-## [0.12.0] - 2023-06-14
 
 ## [0.12.0] - 2023-06-14
 

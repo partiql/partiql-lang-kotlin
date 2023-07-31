@@ -47,7 +47,13 @@ data class StepContext(
      * Includes built-in functions as well as custom functions added while the [CompilerPipeline]
      * was being built.
      */
-    val functions: List<ExprFunction>,
+    val functionList: List<ExprFunction>,
+
+    @Deprecated(
+        "Functions should be a list, use 'functionList' instead.",
+        level = DeprecationLevel.WARNING
+    )
+    val functions: @JvmSuppressWildcards Map<String, ExprFunction>,
 
     /**
      * Returns a list of all stored procedures which are available for execution.
@@ -79,7 +85,13 @@ interface CompilerPipeline {
      * Includes built-in functions as well as custom functions added while the [CompilerPipeline]
      * was being built.
      */
-    val functions: List<ExprFunction>
+    val functionList: List<ExprFunction>
+
+    @Deprecated(
+        "Functions should be a list, use 'functionList' instead.",
+        level = DeprecationLevel.WARNING
+    )
+    val functions: @JvmSuppressWildcards Map<String, ExprFunction>
 
     /**
      * Returns list of custom data types that are available in typed operators (i.e CAST/IS).
@@ -209,7 +221,8 @@ interface CompilerPipeline {
                 ion = ion,
                 parser = parser ?: PartiQLParserBuilder().customTypes(customDataTypes).build(),
                 compileOptions = compileOptionsToUse,
-                functions = allFunctions,
+                functionList = allFunctions,
+                functions = allFunctions.associateBy { it.signature.name },
                 customDataTypes = customDataTypes,
                 procedures = customProcedures,
                 preProcessingSteps = preProcessingSteps,
@@ -223,7 +236,8 @@ internal class CompilerPipelineImpl(
     private val ion: IonSystem,
     private val parser: Parser,
     override val compileOptions: CompileOptions,
-    override val functions: List<ExprFunction>,
+    override val functionList: List<ExprFunction>,
+    override val functions: Map<String, ExprFunction>,
     override val customDataTypes: List<CustomType>,
     override val procedures: Map<String, StoredProcedure>,
     private val preProcessingSteps: List<ProcessingStep>,
@@ -238,15 +252,15 @@ internal class CompilerPipelineImpl(
         ion: IonSystem,
         parser: Parser,
         compileOptions: CompileOptions,
-        functionMap: Map<String, ExprFunction>,
+        functions: Map<String, ExprFunction>,
         customDataTypes: List<CustomType>,
         procedures: Map<String, StoredProcedure>,
         preProcessingSteps: List<ProcessingStep>,
         globalTypeBindings: Bindings<StaticType>?
-    ) : this(ion, parser, compileOptions, functionMap.values.toList(), customDataTypes, procedures, preProcessingSteps, globalTypeBindings)
+    ) : this(ion, parser, compileOptions, functions.values.toList(), functions, customDataTypes, procedures, preProcessingSteps, globalTypeBindings)
 
     private val compiler = EvaluatingCompiler(
-        functions,
+        functionList,
         customDataTypes.map { customType ->
             (customType.aliases + customType.name).map { alias ->
                 Pair(alias.lowercase(), customType.typedOpParameter)
@@ -259,7 +273,7 @@ internal class CompilerPipelineImpl(
     override fun compile(query: String): Expression = compile(parser.parseAstStatement(query))
 
     override fun compile(query: PartiqlAst.Statement): Expression {
-        val context = StepContext(compileOptions, functions, procedures)
+        val context = StepContext(compileOptions, functionList, functionList.associateBy { it.signature.name }, procedures)
 
         val preProcessedQuery = executePreProcessingSteps(query, context)
 
@@ -274,7 +288,7 @@ internal class CompilerPipelineImpl(
                             StaticTypeVisitorTransform(ion, globalTypeBindings),
                             StaticTypeInferenceVisitorTransform(
                                 globalBindings = globalTypeBindings,
-                                customFunctionSignatures = functions.map { it.signature },
+                                customFunctionSignatures = functionList.map { it.signature },
                                 customTypedOpParameters = customDataTypes.map { customType ->
                                     (customType.aliases + customType.name).map { alias ->
                                         Pair(alias.lowercase(), customType.typedOpParameter)

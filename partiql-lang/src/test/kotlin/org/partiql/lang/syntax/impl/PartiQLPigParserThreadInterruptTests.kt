@@ -149,7 +149,7 @@ class PartiQLPigParserThreadInterruptTests {
         } as CompilerPipelineImpl
 
         val expr = PartiqlAst.build { query(lit((ionInt(42)))) }
-        val context = StepContext(CompileOptions.standard(), emptyList(), emptyMap())
+        val context = StepContext(CompileOptions.standard(), emptyList(), emptyMap(), emptyMap())
 
         testThreadInterrupt {
             pipeline.executePreProcessingSteps(expr, context)

@@ -63,7 +63,6 @@ import org.partiql.value.NullableListValue
 import org.partiql.value.NullableSexpValue
 import org.partiql.value.NullableStringValue
 import org.partiql.value.NullableSymbolValue
-import org.partiql.value.NullableTimeValue
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
 import org.partiql.value.SexpValue
@@ -77,6 +76,9 @@ import org.partiql.value.boolValue
 import org.partiql.value.charValue
 import org.partiql.value.clobValue
 import org.partiql.value.dateValue
+import org.partiql.value.datetime.DateTimeValue.date
+import org.partiql.value.datetime.DateTimeValue.time
+import org.partiql.value.datetime.TimeZone
 import org.partiql.value.decimalValue
 import org.partiql.value.float32Value
 import org.partiql.value.float64Value
@@ -95,8 +97,10 @@ import org.partiql.value.symbolValue
 import org.partiql.value.timeValue
 import java.math.BigDecimal
 import java.math.BigInteger
+import java.math.RoundingMode
 import java.net.URLClassLoader
 import java.nio.file.Path
+import java.time.DateTimeException
 import java.util.ServiceLoader
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
@@ -252,25 +256,38 @@ class ServiceLoaderUtil {
                 PartiQLValueType.CLOB -> (partiqlValue as? ClobValue)?.value?.let { newClob(it) }
                     ?: throw PartiQLtoExprValueTypeMismatchException("CLOB", partiqlValue.type)
 
-                PartiQLValueType.DATE -> (partiqlValue as? DateValue)?.value?.let { newDate(it) }
+                PartiQLValueType.DATE -> (partiqlValue as? DateValue)?.value?.let { newDate(it.year, it.month, it.day) }
                     ?: throw PartiQLtoExprValueTypeMismatchException("DATE", partiqlValue.type)
 
-                PartiQLValueType.TIME -> {
-                    val timeValue = partiqlValue as? TimeValue
-                    timeValue?.let { tv ->
-                        val value = tv.value
-                        val precision = tv.precision
-                        val offset = tv.offset
-                        val withzone = tv.withZone
-                        if (withzone) {
-                            offset?.let {
-                                newTime(Time.of(value, precision, it))
-                            }
-                        } else {
-                            newTime(Time.of(value, precision, null))
+                PartiQLValueType.TIME -> (partiqlValue as? TimeValue)?.value?.let { partiqlTime ->
+                    val fraction = partiqlTime.decimalSecond.remainder(BigDecimal.ONE)
+                    val precision =
+                        when {
+                            fraction.scale() > 9 -> throw DateTimeException("Precision greater than nano seconds not supported")
+                            else -> fraction.scale()
                         }
-                    } ?: throw PartiQLtoExprValueTypeMismatchException("TIME", partiqlValue.type)
-                }
+
+                    val tzMinutes = when (val tz = partiqlTime.timeZone) {
+                        is TimeZone.UnknownTimeZone -> 0 // Treat unknown offset as UTC (+00:00)
+                        is TimeZone.UtcOffset -> tz.totalOffsetMinutes
+                        else -> null
+                    }
+
+                    try {
+                        newTime(
+                            Time.of(
+                                partiqlTime.hour,
+                                partiqlTime.minute,
+                                partiqlTime.decimalSecond.setScale(0, RoundingMode.DOWN).toInt(),
+                                fraction.movePointRight(9).setScale(0, RoundingMode.DOWN).toInt(),
+                                precision,
+                                tzMinutes
+                            )
+                        )
+                    } catch (e: DateTimeException) {
+                        throw e
+                    }
+                } ?: throw PartiQLtoExprValueTypeMismatchException("TIME", partiqlValue.type)
 
                 PartiQLValueType.TIMESTAMP -> TODO()
                 // TODO: Implement
@@ -363,23 +380,38 @@ class ServiceLoaderUtil {
                 PartiQLValueType.NULLABLE_CLOB -> (partiqlValue as? NullableClobValue)?.value?.let { newClob(it) }
                     ?: ExprValue.nullValue
 
-                PartiQLValueType.NULLABLE_DATE -> (partiqlValue as? NullableDateValue)?.value?.let { newDate(it) }
+                PartiQLValueType.NULLABLE_DATE -> (partiqlValue as? NullableDateValue)?.value?.let { newDate(it.year, it.month, it.day) }
                     ?: ExprValue.nullValue
 
-                PartiQLValueType.NULLABLE_TIME -> {
-                    (partiqlValue as? NullableTimeValue)?.let { tv ->
-                        tv.value?.let { value ->
-                            val precision = tv.precision
-                            val offset = tv.offset
-                            val withzone = tv.withZone
-                            if (withzone) {
-                                offset?.let { offsetValue -> newTime(Time.of(value, precision, offsetValue)) } ?: null
-                            } else {
-                                newTime(Time.of(value, precision, null))
-                            }
+                PartiQLValueType.NULLABLE_TIME -> (partiqlValue as? TimeValue)?.value?.let { partiqlTime ->
+                    val fraction = partiqlTime.decimalSecond.remainder(BigDecimal.ONE)
+                    val precision =
+                        when {
+                            fraction.scale() > 9 -> throw DateTimeException("Precision greater than nano seconds not supported")
+                            else -> fraction.scale()
                         }
-                    } ?: ExprValue.nullValue
-                }
+
+                    val tzMinutes = when (val tz = partiqlTime.timeZone) {
+                        is TimeZone.UnknownTimeZone -> 0 // Treat unknown offset as UTC (+00:00)
+                        is TimeZone.UtcOffset -> tz.totalOffsetMinutes
+                        else -> null
+                    }
+
+                    try {
+                        newTime(
+                            Time.of(
+                                partiqlTime.hour,
+                                partiqlTime.minute,
+                                partiqlTime.decimalSecond.setScale(0, RoundingMode.DOWN).toInt(),
+                                fraction.movePointRight(9).setScale(0, RoundingMode.DOWN).toInt(),
+                                precision,
+                                tzMinutes
+                            )
+                        )
+                    } catch (e: DateTimeException) {
+                        throw e
+                    }
+                } ?: ExprValue.nullValue
 
                 PartiQLValueType.NULLABLE_TIMESTAMP -> TODO()
                 // TODO: Implement
@@ -397,17 +429,17 @@ class ServiceLoaderUtil {
                 PartiQLValueType.NULLABLE_INTERVAL -> TODO() // add nullable interval conversion
 
                 PartiQLValueType.NULLABLE_BAG -> {
-                    (partiqlValue as? NullableBagValue<*>)?.elements?.map { PartiQLtoExprValue(it) }
+                    (partiqlValue as? NullableBagValue<*>)?.promote()?.elements?.map { PartiQLtoExprValue(it) }
                         ?.let { newBag(it.asSequence()) } ?: ExprValue.nullValue
                 }
 
                 PartiQLValueType.NULLABLE_LIST -> {
-                    (partiqlValue as? NullableListValue<*>)?.elements?.map { PartiQLtoExprValue(it) }
+                    (partiqlValue as? NullableListValue<*>)?.promote()?.map { PartiQLtoExprValue(it) }
                         ?.let { newList(it.asSequence()) } ?: ExprValue.nullValue
                 }
 
                 PartiQLValueType.NULLABLE_SEXP -> {
-                    (partiqlValue as? NullableSexpValue<*>)?.elements?.map { PartiQLtoExprValue(it) }
+                    (partiqlValue as? NullableSexpValue<*>)?.promote()?.map { PartiQLtoExprValue(it) }
                         ?.let { newSexp(it.asSequence()) } ?: ExprValue.nullValue
                 }
 
@@ -488,11 +520,18 @@ class ServiceLoaderUtil {
                 }
                 PartiQLValueType.DATE -> {
                     checkType(ExprValueType.DATE)
-                    dateValue(exprValue.dateValue())
+                    dateValue(
+                        date(exprValue.dateValue().year, exprValue.dateValue().monthValue, exprValue.dateValue().dayOfMonth)
+                    )
                 }
                 PartiQLValueType.TIME -> {
                     checkType(ExprValueType.TIME)
-                    timeValue(exprValue.timeValue().localTime, exprValue.timeValue().precision, exprValue.timeValue().zoneOffset, true)
+                    timeValue(
+                        time(
+                            exprValue.timeValue().localTime.hour, exprValue.timeValue().localTime.minute, exprValue.timeValue().localTime.second, exprValue.timeValue().localTime.nano,
+                            exprValue.timeValue().timezoneMinute?.let { TimeZone.UtcOffset.of(it) } ?: null
+                        )
+                    )
                 }
                 PartiQLValueType.TIMESTAMP -> TODO()
                 PartiQLValueType.INTERVAL -> TODO()
@@ -594,12 +633,17 @@ class ServiceLoaderUtil {
                 }
                 PartiQLValueType.NULLABLE_DATE -> when (exprValue.type) {
                     ExprValueType.NULL -> nullValue()
-                    ExprValueType.DATE -> dateValue(exprValue.dateValue())
+                    ExprValueType.DATE -> dateValue(date(exprValue.dateValue().year, exprValue.dateValue().monthValue, exprValue.dateValue().dayOfMonth))
                     else -> throw ExprToPartiQLValueTypeMismatchException(PartiQLValueType.NULLABLE_DATE, ExprToPartiQLValueType(exprValue))
                 }
                 PartiQLValueType.NULLABLE_TIME -> when (exprValue.type) {
                     ExprValueType.NULL -> nullValue()
-                    ExprValueType.TIME -> timeValue(exprValue.timeValue().localTime, exprValue.timeValue().precision, exprValue.timeValue().zoneOffset, true)
+                    ExprValueType.TIME -> timeValue(
+                        time(
+                            exprValue.timeValue().localTime.hour, exprValue.timeValue().localTime.minute, exprValue.timeValue().localTime.second, exprValue.timeValue().localTime.nano,
+                            exprValue.timeValue().timezoneMinute?.let { TimeZone.UtcOffset.of(it) } ?: null
+                        )
+                    )
                     else -> throw ExprToPartiQLValueTypeMismatchException(PartiQLValueType.NULLABLE_TIME, ExprToPartiQLValueType(exprValue))
                 }
                 PartiQLValueType.NULLABLE_TIMESTAMP -> TODO()
