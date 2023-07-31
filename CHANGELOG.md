@@ -31,20 +31,51 @@ Thank you to all who have contributed!
 ### Added
 - Adds `org.partiql.value` (experimental) package for reading/writing PartiQL
   values
+- Adds function overloading to the `CompilerPipeline` and experimental `PartiQLCompilerPipeline`.
+- Adds new method `getFunctions()` to `org.partiql.spi.Plugin`.
+- Adds `PartiQLFunction` interface.
+- Adds `FunctionSignature` and `FunctionParameter` class to `org/partiql/types/function`.
+- Adds a new flag `--plugins` to PartiQL CLI to allow users to specify the root of their plugins directory. 
+  The default is `~/.partiql/plugins` . Each implementer of a plugin should place a directory under the 
+  plugins root containing the JAR corresponding with their plugin implementation. 
+  Example: `~/.partiql/plugins/customPlugin/customPlugin.jar`
+- Adds serialization and deserialization between IonValue and `org.partiql.value`.
+- Adds `org.partiql.ast` package and usage documentation
+- Adds `org.partiql.parser` package and usage documentation
+- Adds PartiQL's Timestamp Data Model. 
+- Adds support for Timestamp constructor call in Parser.
 
 ### Changed
+- Standardizes `org/partiql/cli/functions/QueryDDB` and other built-in functions by the new `ExprFunction` format.
+- **Breaking**: Redefines `org/partiql/lang/eval/ExprFunctionkt.call()` method by only invoking `callWithRequired` function.
+- **Breaking**: Redefines `org/partiql/lang/eval/builtins/DynamicLookupExprFunction` by merging `variadicParameter` into `requiredParameters` as a `StaticType.LIST`. `callWithVariadic` is now replaced by `callWithRequired`.
+- **Breaking**: Modifies `functions` property of `CompilerPipeline`, `StaticTypeInferencer` and  `StepContext` to be a `List` and not a `Map`.
+- Upgrades ion-java to 1.10.2.
 
 ### Deprecated
+- Deprecates Map<String, ExprFunction> representation of functions in the `CompilerPipeline`
+  and experimental `PartiQLCompilerPipeline`. Please use List<ExprFunction> to represent functions instead.
+- **Breaking**: Deprecates `Arguments` class, `callWithOptional()` and `callWithVariadic()` methods in the `ExprFunction` 
+  with a Deprecation Level of ERROR. Please invoke `callWithRequired()` instead.
+- **Breaking**: Deprecates `optionalParameter` and `variadicParameter` in the `FunctionSignature` with a Deprecation 
+  Level of ERROR. Please use multiple implementations of ExprFunction and use the LIST ExprValue to
+  represent variadic parameters instead.
 
 ### Fixed
 
 ### Removed
+- **Breaking**: Removes `optionalParameter` and `variadicParameter` from `org.partiql.lang.types.FunctionSignature`. To continue support for evaluation of `optionalParameters`, please create another same-named function. To continue support for evaluation of `variadicParameter`, please use a `StaticType.LIST` to hold all previously variadic parameters.
+  As this changes coincides with the addition of function overloading, only `callWithRequired` will be invoked upon execution of an `ExprFunction`.
+- **Breaking**: Removes unused class `Arguments` from `org.partiql.lang.eval`.
+- **Breaking**: Removes unused parameter `args: Arguments` from `org.partiql.lang.eval.ExprFunctionkt.call()` method.
 
 ### Security
 
 ### Contributors
 Thank you to all who have contributed!
 - @howero
+- @yuxtang-amazon
+- @yliuuuu
 - @<your-username>
 
 ## [0.12.0] - 2023-06-14

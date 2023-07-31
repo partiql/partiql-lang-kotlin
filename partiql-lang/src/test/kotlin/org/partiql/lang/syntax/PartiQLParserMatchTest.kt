@@ -11,6 +11,8 @@ import kotlin.test.assertFailsWith
 
 class PartiQLParserMatchTest : PartiQLParserTestBase() {
 
+    override val targets: Array<ParserTarget> = arrayOf(ParserTarget.DEFAULT, ParserTarget.EXPERIMENTAL)
+
     @Test
     fun loneMatchExpr1path() = assertExpression(
         "(MyGraph MATCH (x))"

@@ -46,13 +46,12 @@ import org.partiql.value.StructValue
 import org.partiql.value.SymbolValue
 import org.partiql.value.TimeValue
 import org.partiql.value.TimestampValue
+import org.partiql.value.datetime.Date
+import org.partiql.value.datetime.Time
+import org.partiql.value.datetime.Timestamp
 import org.partiql.value.util.PartiQLValueVisitor
 import java.math.BigDecimal
 import java.math.BigInteger
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.LocalTime
-import java.time.ZoneOffset
 import java.util.BitSet
 
 @Suppress("FunctionName")
@@ -294,7 +293,7 @@ internal data class BlobValueImpl(
 }
 
 internal data class DateValueImpl(
-    override val value: LocalDate,
+    override val value: Date,
     override val annotations: PersistentList<String>,
 ) : DateValue() {
     override fun copy(annotations: Annotations) = DateValueImpl(value, annotations.toPersistentList())
@@ -307,13 +306,10 @@ internal data class DateValueImpl(
 }
 
 internal data class TimeValueImpl(
-    override val value: LocalTime,
-    override val precision: Int,
-    override val offset: ZoneOffset?,
-    override val withZone: Boolean,
+    override val value: Time,
     override val annotations: PersistentList<String>,
 ) : TimeValue() {
-    override fun copy(annotations: Annotations) = TimeValueImpl(value, precision, offset, withZone, annotations.toPersistentList())
+    override fun copy(annotations: Annotations) = TimeValueImpl(value, annotations.toPersistentList())
 
     override fun withAnnotations(annotations: Annotations): TimeValue = _withAnnotations(annotations)
 
@@ -323,13 +319,10 @@ internal data class TimeValueImpl(
 }
 
 internal data class TimestampValueImpl(
-    override val value: LocalDateTime,
-    override val precision: Int,
-    override val offset: ZoneOffset?,
-    override val withZone: Boolean,
+    override val value: Timestamp,
     override val annotations: PersistentList<String>,
 ) : TimestampValue() {
-    override fun copy(annotations: Annotations) = TimestampValueImpl(value, precision, offset, withZone, annotations.toPersistentList())
+    override fun copy(annotations: Annotations) = TimestampValueImpl(value, annotations.toPersistentList())
 
     override fun withAnnotations(annotations: Annotations): TimestampValue = _withAnnotations(annotations)
 

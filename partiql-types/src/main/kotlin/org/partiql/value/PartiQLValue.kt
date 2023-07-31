@@ -15,13 +15,12 @@
 package org.partiql.value
 
 import org.partiql.types.PartiQLValueType
+import org.partiql.value.datetime.Date
+import org.partiql.value.datetime.Time
+import org.partiql.value.datetime.Timestamp
 import org.partiql.value.util.PartiQLValueVisitor
 import java.math.BigDecimal
 import java.math.BigInteger
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.LocalTime
-import java.time.ZoneOffset
 import java.util.BitSet
 
 internal typealias Annotations = List<String>
@@ -193,7 +192,7 @@ public abstract class DecimalValue : NumericValue<BigDecimal>() {
 }
 
 @PartiQLValueExperimental
-public abstract class Float32Value : ScalarValue<Float> {
+public abstract class Float32Value : NumericValue<Float>() {
 
     override val type: PartiQLValueType = PartiQLValueType.FLOAT32
 
@@ -205,7 +204,7 @@ public abstract class Float32Value : ScalarValue<Float> {
 }
 
 @PartiQLValueExperimental
-public abstract class Float64Value : ScalarValue<Double> {
+public abstract class Float64Value : NumericValue<Double>() {
 
     override val type: PartiQLValueType = PartiQLValueType.FLOAT64
 
@@ -325,7 +324,7 @@ public abstract class BlobValue : ScalarValue<ByteArray> {
 }
 
 @PartiQLValueExperimental
-public abstract class DateValue : ScalarValue<LocalDate> {
+public abstract class DateValue : ScalarValue<Date> {
 
     override val type: PartiQLValueType = PartiQLValueType.DATE
 
@@ -337,18 +336,9 @@ public abstract class DateValue : ScalarValue<LocalDate> {
 }
 
 @PartiQLValueExperimental
-public abstract class TimeValue : ScalarValue<LocalTime> {
+public abstract class TimeValue : ScalarValue<Time> {
 
     override val type: PartiQLValueType = PartiQLValueType.TIME
-
-    // TEMPORARY
-    public abstract val precision: Int
-
-    // TEMPORARY
-    public abstract val offset: ZoneOffset?
-
-    // TEMPORARY
-    public abstract val withZone: Boolean
 
     abstract override fun copy(annotations: Annotations): TimeValue
 
@@ -358,18 +348,9 @@ public abstract class TimeValue : ScalarValue<LocalTime> {
 }
 
 @PartiQLValueExperimental
-public abstract class TimestampValue : ScalarValue<LocalDateTime> {
+public abstract class TimestampValue : ScalarValue<Timestamp> {
 
     override val type: PartiQLValueType = PartiQLValueType.TIMESTAMP
-
-    // TEMPORARY
-    public abstract val precision: Int
-
-    // TEMPORARY
-    public abstract val offset: ZoneOffset?
-
-    // TEMPORARY
-    public abstract val withZone: Boolean
 
     abstract override fun copy(annotations: Annotations): TimestampValue
 
@@ -465,11 +446,10 @@ public sealed interface NullableScalarValue<T> : PartiQLValue {
 }
 
 @PartiQLValueExperimental
-public sealed interface NullableCollectionValue<T : PartiQLValue> : PartiQLValue, Collection<T> {
+public sealed interface NullableCollectionValue<T : PartiQLValue> : PartiQLValue {
+    public fun isNull(): Boolean
 
-    public override val size: Int
-
-    public val elements: Collection<T>?
+    public fun promote(): CollectionValue<T>
 
     override fun copy(annotations: Annotations): NullableCollectionValue<T>
 
@@ -717,7 +697,7 @@ public abstract class NullableBlobValue : NullableScalarValue<ByteArray> {
 }
 
 @PartiQLValueExperimental
-public abstract class NullableDateValue : NullableScalarValue<LocalDate> {
+public abstract class NullableDateValue : NullableScalarValue<Date> {
 
     override val type: PartiQLValueType = PartiQLValueType.NULLABLE_DATE
 
@@ -729,18 +709,9 @@ public abstract class NullableDateValue : NullableScalarValue<LocalDate> {
 }
 
 @PartiQLValueExperimental
-public abstract class NullableTimeValue : NullableScalarValue<LocalTime> {
+public abstract class NullableTimeValue : NullableScalarValue<Time> {
 
     override val type: PartiQLValueType = PartiQLValueType.NULLABLE_TIME
-
-    // TEMPORARY
-    public abstract val precision: Int
-
-    // TEMPORARY
-    public abstract val offset: ZoneOffset?
-
-    // TEMPORARY
-    public abstract val withZone: Boolean
 
     abstract override fun copy(annotations: Annotations): NullableTimeValue
 
@@ -750,18 +721,9 @@ public abstract class NullableTimeValue : NullableScalarValue<LocalTime> {
 }
 
 @PartiQLValueExperimental
-public abstract class NullableTimestampValue : NullableScalarValue<LocalDateTime> {
+public abstract class NullableTimestampValue : NullableScalarValue<Timestamp> {
 
     override val type: PartiQLValueType = PartiQLValueType.NULLABLE_TIMESTAMP
-
-    // TEMPORARY
-    public abstract val precision: Int
-
-    // TEMPORARY
-    public abstract val offset: ZoneOffset?
-
-    // TEMPORARY
-    public abstract val withZone: Boolean
 
     abstract override fun copy(annotations: Annotations): NullableTimestampValue
 
@@ -787,6 +749,8 @@ public abstract class NullableBagValue<T : PartiQLValue> : NullableCollectionVal
 
     override val type: PartiQLValueType = PartiQLValueType.NULLABLE_BAG
 
+    abstract override fun promote(): BagValue<T>
+
     abstract override fun copy(annotations: Annotations): NullableBagValue<T>
 
     abstract override fun withAnnotations(annotations: Annotations): NullableBagValue<T>
@@ -798,6 +762,8 @@ public abstract class NullableBagValue<T : PartiQLValue> : NullableCollectionVal
 public abstract class NullableListValue<T : PartiQLValue> : NullableCollectionValue<T> {
 
     override val type: PartiQLValueType = PartiQLValueType.NULLABLE_LIST
+
+    abstract override fun promote(): ListValue<T>
 
     abstract override fun copy(annotations: Annotations): NullableListValue<T>
 
@@ -811,6 +777,8 @@ public abstract class NullableSexpValue<T : PartiQLValue> : NullableCollectionVa
 
     override val type: PartiQLValueType = PartiQLValueType.NULLABLE_SEXP
 
+    abstract override fun promote(): SexpValue<T>
+
     abstract override fun copy(annotations: Annotations): NullableSexpValue<T>
 
     abstract override fun withAnnotations(annotations: Annotations): NullableSexpValue<T>
@@ -819,9 +787,10 @@ public abstract class NullableSexpValue<T : PartiQLValue> : NullableCollectionVa
 }
 
 @PartiQLValueExperimental
-public abstract class NullableStructValue<T : PartiQLValue> : PartiQLValue, Collection<Pair<String, T>> {
+public abstract class NullableStructValue<T : PartiQLValue> : PartiQLValue {
+    public abstract fun isNull(): Boolean
 
-    public abstract val fields: List<Pair<String, T>>?
+    public abstract fun promote(): StructValue<T>
 
     override val type: PartiQLValueType = PartiQLValueType.NULLABLE_STRUCT
 

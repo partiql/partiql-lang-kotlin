@@ -62,6 +62,15 @@ class PartiQLCompilerBuilder private constructor() {
     private var customProcedures: List<StoredProcedure> = emptyList()
     private var customOperatorFactories: List<RelationalOperatorFactory> = emptyList()
 
+    @Deprecated(
+        message = "customFunctions should be a list. Use PartiQLCompilerBuilder with List<ExprFunction> instead.",
+        level = DeprecationLevel.WARNING
+    )
+    constructor(customFunctions: Map<String, ExprFunction>) :
+        this() {
+            this.customFunctions = customFunctions.values.toList()
+        }
+
     companion object {
 
         /**
@@ -134,11 +143,11 @@ class PartiQLCompilerBuilder private constructor() {
 
     // --- Internal ----------------------------------
 
-    private fun allFunctions(typingMode: TypingMode): Map<String, ExprFunction> {
+    private fun allFunctions(typingMode: TypingMode): List<ExprFunction> {
         val definitionalBuiltins = definitionalBuiltins(typingMode)
         val builtins = SCALAR_BUILTINS_DEFAULT
         val allFunctions = definitionalBuiltins + builtins + customFunctions + DynamicLookupExprFunction()
-        return allFunctions.associateBy { it.signature.name }
+        return allFunctions
     }
 
     private fun allOperatorFactories() = (DEFAULT_RELATIONAL_OPERATOR_FACTORIES + customOperatorFactories).apply {

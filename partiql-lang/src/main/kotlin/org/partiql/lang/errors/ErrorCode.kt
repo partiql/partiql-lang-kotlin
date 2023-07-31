@@ -143,6 +143,13 @@ enum class ErrorCode(
         "invalid precision used for TIME type"
     ),
 
+    // TODO: We should combine this with the above
+    PARSE_INVALID_PRECISION_FOR_TIMESTAMP(
+        ErrorCategory.PARSER,
+        LOC_TOKEN,
+        "invalid precision used for TIMESTAMP type"
+    ),
+
     PARSE_INVALID_DATE_STRING(
         ErrorCategory.PARSER,
         LOC_TOKEN,
@@ -153,6 +160,12 @@ enum class ErrorCode(
         ErrorCategory.PARSER,
         LOC_TOKEN,
         "expected time string to be of the format HH:MM:SS[.dddd...][+|-HH:MM]"
+    ),
+
+    PARSE_INVALID_DATETIME_STRING(
+        ErrorCategory.PARSER,
+        LOC_TOKEN,
+        "Invalid timestamp string"
     ),
 
     PARSE_INVALID_TRIM_SPEC(
