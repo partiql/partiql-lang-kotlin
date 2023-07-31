@@ -6537,7 +6537,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
                 handler = expectSemanticErrors(
                     expectedErrors = listOf(
                         Problem(
-                            ProblemLocation(1L, 26L),
+                            ProblemLocation(1L, 26L, 3L),
                             SemanticProblemDetails.DuplicateAliasesInSelectListItem
                         )
                     )
@@ -7029,7 +7029,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
                 handler = expectSemanticErrors(
                     expectedErrors = listOf(
                         Problem(
-                            ProblemLocation(1L, 1L),
+                            ProblemLocation(1L, 1L, 5L),
                             SemanticProblemDetails.IncorrectNumberOfArgumentsToFunctionCall(
                                 functionName = "upper",
                                 expectedArity = 1..1,
@@ -7045,7 +7045,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
                 handler = expectSemanticErrors(
                     expectedErrors = listOf(
                         Problem(
-                            ProblemLocation(1L, 1L),
+                            ProblemLocation(1L, 1L, 5L),
                             SemanticProblemDetails.IncorrectNumberOfArgumentsToFunctionCall(
                                 functionName = "upper",
                                 expectedArity = 1..1,
@@ -7075,7 +7075,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
                 handler = expectSemanticErrors(
                     expectedErrors = listOf(
                         Problem(
-                            ProblemLocation(1L, 1L),
+                            ProblemLocation(1L, 1L, 6L),
                             SemanticProblemDetails.IncorrectNumberOfArgumentsToFunctionCall(
                                 functionName = "utcnow",
                                 expectedArity = 0..0,
@@ -7180,7 +7180,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
                 handler = expectSemanticErrors(
                     expectedErrors = listOf(
                         Problem(
-                            ProblemLocation(1L, 1L),
+                            ProblemLocation(1L, 1L, 12L),
                             SemanticProblemDetails.IncorrectNumberOfArgumentsToFunctionCall(
                                 functionName = "to_timestamp",
                                 expectedArity = 1..2,
@@ -7202,7 +7202,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
                 handler = expectSemanticErrors(
                     expectedErrors = listOf(
                         Problem(
-                            ProblemLocation(1L, 1L),
+                            ProblemLocation(1L, 1L, 12L),
                             SemanticProblemDetails.NoSuchFunction(
                                 functionName = "non_existent"
                             )

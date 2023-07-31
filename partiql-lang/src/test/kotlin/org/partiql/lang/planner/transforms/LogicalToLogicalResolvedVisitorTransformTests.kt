@@ -219,6 +219,7 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                     problem(
                         1,
                         2,
+                        6,
                         PlanningProblemDetails.UndefinedVariable("foobar", caseSensitive = false)
                     )
                 )
@@ -292,6 +293,7 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                     problem(
                         1,
                         1,
+                        5,
                         PlanningProblemDetails.UndefinedVariable("FOO", caseSensitive = true)
                     )
                 )
@@ -308,6 +310,7 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                     problem(
                         1,
                         1,
+                        5,
                         PlanningProblemDetails.UndefinedVariable("foO", caseSensitive = true)
                     )
                 )
@@ -327,14 +330,14 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                 // all lowercase
                 "\"uppercase_foo\"",
                 Expectation.Problems(
-                    problem(1, 1, PlanningProblemDetails.UndefinedVariable("uppercase_foo", caseSensitive = true))
+                    problem(1, 1, 15, PlanningProblemDetails.UndefinedVariable("uppercase_foo", caseSensitive = true))
                 )
             ),
             TestCase(
                 // mixed
                 "\"UpPeRcAsE_fOo\"",
                 Expectation.Problems(
-                    problem(1, 1, PlanningProblemDetails.UndefinedVariable("UpPeRcAsE_fOo", caseSensitive = true))
+                    problem(1, 1, 15, PlanningProblemDetails.UndefinedVariable("UpPeRcAsE_fOo", caseSensitive = true))
                 )
             ),
             TestCase(
@@ -362,6 +365,7 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                     problem(
                         1,
                         2,
+                        6,
                         PlanningProblemDetails.UndefinedVariable("FOOBAR", caseSensitive = false)
                     )
                 )
@@ -437,14 +441,14 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                 // foobar is undefined (select list)
                 "SELECT foobar.* FROM [] AS foo",
                 Expectation.Problems(
-                    problem(1, 8, PlanningProblemDetails.UndefinedVariable("foobar", caseSensitive = false))
+                    problem(1, 8, 6, PlanningProblemDetails.UndefinedVariable("foobar", caseSensitive = false))
                 )
             ),
             TestCase(
                 // barbat is undefined (where clause)
                 "SELECT foo.* FROM [] AS foo WHERE barbat",
                 Expectation.Problems(
-                    problem(1, 35, PlanningProblemDetails.UndefinedVariable("barbat", caseSensitive = false))
+                    problem(1, 35, 6, PlanningProblemDetails.UndefinedVariable("barbat", caseSensitive = false))
                 )
             ),
             TestCase(
@@ -467,8 +471,8 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                 // all uppercase
                 "SELECT \"FOO\".* FROM 1 AS foo WHERE \"FOO\"",
                 Expectation.Problems(
-                    problem(1, 8, PlanningProblemDetails.UndefinedVariable("FOO", caseSensitive = true)),
-                    problem(1, 36, PlanningProblemDetails.UndefinedVariable("FOO", caseSensitive = true))
+                    problem(1, 8, 5, PlanningProblemDetails.UndefinedVariable("FOO", caseSensitive = true)),
+                    problem(1, 36, 5, PlanningProblemDetails.UndefinedVariable("FOO", caseSensitive = true))
                 )
             ),
             TestCase(
@@ -483,16 +487,16 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                 // mixed case
                 "SELECT \"FoO\".* FROM 1 AS foo WHERE \"fOo\"",
                 Expectation.Problems(
-                    problem(1, 8, PlanningProblemDetails.UndefinedVariable("FoO", caseSensitive = true)),
-                    problem(1, 36, PlanningProblemDetails.UndefinedVariable("fOo", caseSensitive = true))
+                    problem(1, 8, 5, PlanningProblemDetails.UndefinedVariable("FoO", caseSensitive = true)),
+                    problem(1, 36, 5, PlanningProblemDetails.UndefinedVariable("fOo", caseSensitive = true))
                 )
             ),
             TestCase(
                 // all uppercase
                 "SELECT \"FOO\".* FROM 1 AS foo ORDER BY \"FOO\"",
                 Expectation.Problems(
-                    problem(1, 8, PlanningProblemDetails.UndefinedVariable("FOO", caseSensitive = true)),
-                    problem(1, 39, PlanningProblemDetails.UndefinedVariable("FOO", caseSensitive = true))
+                    problem(1, 8, 5, PlanningProblemDetails.UndefinedVariable("FOO", caseSensitive = true)),
+                    problem(1, 39, 5, PlanningProblemDetails.UndefinedVariable("FOO", caseSensitive = true))
                 )
             ),
             TestCase(
@@ -507,29 +511,29 @@ class LogicalToLogicalResolvedVisitorTransformTests {
                 // mixed case
                 "SELECT \"FoO\".* FROM 1 AS foo ORDER BY \"fOo\"",
                 Expectation.Problems(
-                    problem(1, 8, PlanningProblemDetails.UndefinedVariable("FoO", caseSensitive = true)),
-                    problem(1, 39, PlanningProblemDetails.UndefinedVariable("fOo", caseSensitive = true))
+                    problem(1, 8, 5, PlanningProblemDetails.UndefinedVariable("FoO", caseSensitive = true)),
+                    problem(1, 39, 5, PlanningProblemDetails.UndefinedVariable("fOo", caseSensitive = true))
                 )
             ),
             TestCase(
                 // "foobar" is undefined (select list)
                 "SELECT \"foobar\".* FROM [] AS foo ",
                 Expectation.Problems(
-                    problem(1, 8, PlanningProblemDetails.UndefinedVariable("foobar", caseSensitive = true))
+                    problem(1, 8, 8, PlanningProblemDetails.UndefinedVariable("foobar", caseSensitive = true))
                 )
             ),
             TestCase(
                 // "barbat" is undefined (where clause)
                 "SELECT \"foo\".* FROM [] AS foo WHERE \"barbat\"",
                 Expectation.Problems(
-                    problem(1, 37, PlanningProblemDetails.UndefinedVariable("barbat", caseSensitive = true))
+                    problem(1, 37, 8, PlanningProblemDetails.UndefinedVariable("barbat", caseSensitive = true))
                 )
             ),
             TestCase(
                 // "barbat" is undefined (ORDER BY clause)
                 "SELECT \"foo\".* FROM [] AS foo ORDER BY \"barbat\"",
                 Expectation.Problems(
-                    problem(1, 40, PlanningProblemDetails.UndefinedVariable("barbat", caseSensitive = true))
+                    problem(1, 40, 8, PlanningProblemDetails.UndefinedVariable("barbat", caseSensitive = true))
                 )
             )
         )
@@ -543,41 +547,41 @@ class LogicalToLogicalResolvedVisitorTransformTests {
             // Duplicate variables with same case
             TestCase(
                 "SELECT {}.* FROM 1 AS a AT a",
-                Expectation.Problems(problem(1, 28, PlanningProblemDetails.VariablePreviouslyDefined("a"))),
+                Expectation.Problems(problem(1, 28, 1, PlanningProblemDetails.VariablePreviouslyDefined("a"))),
             ),
             TestCase(
                 "SELECT {}.* FROM 1 AS a BY a",
-                Expectation.Problems(problem(1, 28, PlanningProblemDetails.VariablePreviouslyDefined("a"))),
+                Expectation.Problems(problem(1, 28, 1, PlanningProblemDetails.VariablePreviouslyDefined("a"))),
             ),
             TestCase(
                 "SELECT {}.* FROM 1 AS notdup AT a BY a",
-                Expectation.Problems(problem(1, 38, PlanningProblemDetails.VariablePreviouslyDefined("a"))),
+                Expectation.Problems(problem(1, 38, 1, PlanningProblemDetails.VariablePreviouslyDefined("a"))),
             ),
             TestCase(
                 "SELECT {}.* FROM 1 AS a AT a BY a",
                 Expectation.Problems(
-                    problem(1, 28, PlanningProblemDetails.VariablePreviouslyDefined("a")),
-                    problem(1, 33, PlanningProblemDetails.VariablePreviouslyDefined("a"))
+                    problem(1, 28, 1, PlanningProblemDetails.VariablePreviouslyDefined("a")),
+                    problem(1, 33, 1, PlanningProblemDetails.VariablePreviouslyDefined("a"))
                 ),
             ),
             // Duplicate variables with different cases
             TestCase(
                 "SELECT {}.* FROM 1 AS a AT A",
-                Expectation.Problems(problem(1, 28, PlanningProblemDetails.VariablePreviouslyDefined("A"))),
+                Expectation.Problems(problem(1, 28, 1, PlanningProblemDetails.VariablePreviouslyDefined("A"))),
             ),
             TestCase(
                 "SELECT {}.* FROM 1 AS A BY a",
-                Expectation.Problems(problem(1, 28, PlanningProblemDetails.VariablePreviouslyDefined("a"))),
+                Expectation.Problems(problem(1, 28, 1, PlanningProblemDetails.VariablePreviouslyDefined("a"))),
             ),
             TestCase(
                 "SELECT {}.* FROM 1 AS notdup AT a BY A",
-                Expectation.Problems(problem(1, 38, PlanningProblemDetails.VariablePreviouslyDefined("A"))),
+                Expectation.Problems(problem(1, 38, 1, PlanningProblemDetails.VariablePreviouslyDefined("A"))),
             ),
             TestCase(
                 "SELECT {}.* FROM 1 AS foo AT fOo BY foO",
                 Expectation.Problems(
-                    problem(1, 30, PlanningProblemDetails.VariablePreviouslyDefined("fOo")),
-                    problem(1, 37, PlanningProblemDetails.VariablePreviouslyDefined("foO"))
+                    problem(1, 30, 3, PlanningProblemDetails.VariablePreviouslyDefined("fOo")),
+                    problem(1, 37, 3, PlanningProblemDetails.VariablePreviouslyDefined("foO"))
                 ),
             )
             // Future test cases:  duplicate variables across joins, i.e. `foo AS a, bar AS a`, etc.
@@ -817,8 +821,8 @@ class LogicalToLogicalResolvedVisitorTransformTests {
             TestCase(
                 "SELECT a as a, b as b FROM UNPIVOT {'a': 1, 'b': 2} AS v AT n",
                 Expectation.Problems(
-                    problem(1, 8, PlanningProblemDetails.UndefinedVariable("a", false)),
-                    problem(1, 16, PlanningProblemDetails.UndefinedVariable("b", false))
+                    problem(1, 8, 1, PlanningProblemDetails.UndefinedVariable("a", false)),
+                    problem(1, 16, 1, PlanningProblemDetails.UndefinedVariable("b", false))
                 ),
             )
         )
@@ -893,7 +897,7 @@ class LogicalToLogicalResolvedVisitorTransformTests {
             TestCase(
                 "INSERT INTO foo AS f << {'a': excluded} >> ON CONFLICT DO REPLACE EXCLUDED WHERE f.id > 2",
                 Expectation.Problems(
-                    problem(1, 31, PlanningProblemDetails.UndefinedVariable("excluded", false))
+                    problem(1, 31, 8, PlanningProblemDetails.UndefinedVariable("excluded", false))
                 )
             ),
             TestCase(
@@ -905,7 +909,7 @@ class LogicalToLogicalResolvedVisitorTransformTests {
             TestCase(
                 "INSERT INTO foo << {'a': 1} >> ON CONFLICT DO REPLACE EXCLUDED WHERE f.id > 2",
                 Expectation.Problems(
-                    problem(1, 70, PlanningProblemDetails.UndefinedVariable("f", false))
+                    problem(1, 70, 1, PlanningProblemDetails.UndefinedVariable("f", false))
                 )
             ),
             TestCase(
@@ -932,13 +936,13 @@ class LogicalToLogicalResolvedVisitorTransformTests {
             TestCase(
                 "INSERT INTO foo AS f << {'a': excluded} >> ON CONFLICT DO UPDATE EXCLUDED WHERE f.id > 2",
                 Expectation.Problems(
-                    problem(1, 31, PlanningProblemDetails.UndefinedVariable("excluded", false))
+                    problem(1, 31, 8, PlanningProblemDetails.UndefinedVariable("excluded", false))
                 )
             ),
             TestCase(
                 "INSERT INTO foo << {'a': 1} >> ON CONFLICT DO UPDATE EXCLUDED WHERE f.id > 2",
                 Expectation.Problems(
-                    problem(1, 69, PlanningProblemDetails.UndefinedVariable("f", false))
+                    problem(1, 69, 1, PlanningProblemDetails.UndefinedVariable("f", false))
                 )
             ),
             TestCase(
