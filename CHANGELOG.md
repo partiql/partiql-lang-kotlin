@@ -42,8 +42,10 @@ Thank you to all who have contributed!
 - Adds serialization and deserialization between IonValue and `org.partiql.value`.
 - Adds `org.partiql.ast` package and usage documentation
 - Adds `org.partiql.parser` package and usage documentation
-- Adds PartiQL's Timestamp Data Model. 
+- Adds PartiQL's Timestamp Data Model.
 - Adds support for Timestamp constructor call in Parser.
+- Parsing of label patterns within node and edge graph patterns now supports 
+  disjunction `|`, conjunction `&`, negation `!`, and grouping.
 
 ### Changed
 - Standardizes `org/partiql/cli/functions/QueryDDB` and other built-in functions by the new `ExprFunction` format.
@@ -51,6 +53,13 @@ Thank you to all who have contributed!
 - **Breaking**: Redefines `org/partiql/lang/eval/builtins/DynamicLookupExprFunction` by merging `variadicParameter` into `requiredParameters` as a `StaticType.LIST`. `callWithVariadic` is now replaced by `callWithRequired`.
 - **Breaking**: Modifies `functions` property of `CompilerPipeline`, `StaticTypeInferencer` and  `StepContext` to be a `List` and not a `Map`.
 - Upgrades ion-java to 1.10.2.
+- **Breaking** (within experimental graph features): As part of extending 
+  the language of graph label patterns: 
+  - Changed the type of the field `label` in AST nodes 
+    `org.partiql.lang.domains.PartiqlAst.GraphMatchPatternPart.{Node,Edge}`, 
+    from `SymbolPrimitive` to new `GraphLabelSpec`.
+  - Changed the names of subclasses of ` org.partiql.lang.graph.LabelSpec`, 
+    from `OneOf` to `Name`, and from `Whatever` to `Wildcard`.
 
 ### Deprecated
 - Deprecates Map<String, ExprFunction> representation of functions in the `CompilerPipeline`
