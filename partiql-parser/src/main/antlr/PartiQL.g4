@@ -380,7 +380,7 @@ patternRestrictor    // Should be TRAIL / ACYCLIC / SIMPLE
     : restrictor=IDENTIFIER;
 
 node
-    : PAREN_LEFT symbolPrimitive? patternPartLabel? whereClause? PAREN_RIGHT;
+    : PAREN_LEFT symbolPrimitive? ( COLON labelSpec )? whereClause? PAREN_RIGHT;
 
 edge
     : edgeWSpec quantifier=patternQuantifier?    # EdgeWithSpec
@@ -408,10 +408,28 @@ edgeWSpec
     ;
 
 edgeSpec
-    : BRACKET_LEFT symbolPrimitive? patternPartLabel? whereClause? BRACKET_RIGHT;
+    : BRACKET_LEFT symbolPrimitive? ( COLON labelSpec )? whereClause? BRACKET_RIGHT;
 
-patternPartLabel
-    : COLON symbolPrimitive;
+labelSpec
+    : labelSpec VERTBAR labelTerm        # LabelSpecOr
+    | labelTerm                          # LabelSpecTerm
+    ;
+
+labelTerm
+    : labelTerm AMPERSAND labelFactor    # LabelTermAnd
+    | labelFactor                        # LabelTermFactor
+    ;
+
+labelFactor
+    : BANG labelPrimary                  # LabelFactorNot
+    | labelPrimary                       # LabelFactorPrimary
+    ;
+
+labelPrimary
+    : symbolPrimitive                    # LabelPrimaryName
+    | PERCENT                            # LabelPrimaryWild
+    | PAREN_LEFT labelSpec PAREN_RIGHT   # LabelPrimaryParen
+    ;
 
 edgeAbbrev
     : TILDE
@@ -737,18 +755,19 @@ literal
     | ION_CLOSURE                                                                         # LiteralIon
     | DATE LITERAL_STRING                                                                 # LiteralDate
     | TIME ( PAREN_LEFT LITERAL_INTEGER PAREN_RIGHT )? (WITH TIME ZONE)? LITERAL_STRING   # LiteralTime
+    | TIMESTAMP ( PAREN_LEFT LITERAL_INTEGER PAREN_RIGHT )? (WITH TIME ZONE)? LITERAL_STRING   # LiteralTimestamp
     ;
 
 type
     : datatype=(
         NULL | BOOL | BOOLEAN | SMALLINT | INTEGER2 | INT2 | INTEGER | INT | INTEGER4 | INT4
-        | INTEGER8 | INT8 | BIGINT | REAL | TIMESTAMP | CHAR | CHARACTER | MISSING
+        | INTEGER8 | INT8 | BIGINT | REAL | CHAR | CHARACTER | MISSING
         | STRING | SYMBOL | BLOB | CLOB | DATE | STRUCT | TUPLE | LIST | SEXP | BAG | ANY
       )                                                                                                                # TypeAtomic
     | datatype=DOUBLE PRECISION                                                                                        # TypeAtomic
     | datatype=(CHARACTER|CHAR|FLOAT|VARCHAR) ( PAREN_LEFT arg0=LITERAL_INTEGER PAREN_RIGHT )?                         # TypeArgSingle
     | CHARACTER VARYING ( PAREN_LEFT arg0=LITERAL_INTEGER PAREN_RIGHT )?                                               # TypeVarChar
     | datatype=(DECIMAL|DEC|NUMERIC) ( PAREN_LEFT arg0=LITERAL_INTEGER ( COMMA arg1=LITERAL_INTEGER )? PAREN_RIGHT )?  # TypeArgDouble
-    | TIME ( PAREN_LEFT precision=LITERAL_INTEGER PAREN_RIGHT )? (WITH TIME ZONE)?                                     # TypeTimeZone
+    | datatype=(TIME|TIMESTAMP) ( PAREN_LEFT precision=LITERAL_INTEGER PAREN_RIGHT )? (WITH TIME ZONE)?                # TypeTimeZone
     | symbolPrimitive                                                                                                  # TypeCustom
     ;

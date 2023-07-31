@@ -17,9 +17,9 @@
 package org.partiql.value.impl
 
 import kotlinx.collections.immutable.PersistentList
-import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toPersistentList
 import org.partiql.value.Annotations
+import org.partiql.value.BagValue
 import org.partiql.value.MissingValue
 import org.partiql.value.NullValue
 import org.partiql.value.NullableBagValue
@@ -48,13 +48,12 @@ import org.partiql.value.NullableTimeValue
 import org.partiql.value.NullableTimestampValue
 import org.partiql.value.PartiQLValue
 import org.partiql.value.PartiQLValueExperimental
+import org.partiql.value.datetime.Date
+import org.partiql.value.datetime.Time
+import org.partiql.value.datetime.Timestamp
 import org.partiql.value.util.PartiQLValueVisitor
 import java.math.BigDecimal
 import java.math.BigInteger
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.LocalTime
-import java.time.ZoneOffset
 import java.util.BitSet
 
 internal data class NullValueImpl(
@@ -318,7 +317,7 @@ internal data class NullableBlobValueImpl(
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
-        other as NullableClobValueImpl
+        other as NullableBlobValueImpl
         if (value != null) {
             if (other.value == null) return false
             if (!value.contentEquals(other.value)) return false
@@ -334,7 +333,7 @@ internal data class NullableBlobValueImpl(
 }
 
 internal data class NullableDateValueImpl(
-    override val value: LocalDate?,
+    override val value: Date?,
     override val annotations: PersistentList<String>,
 ) : NullableDateValue() {
     override fun copy(annotations: Annotations) = NullableDateValueImpl(value, annotations.toPersistentList())
@@ -347,14 +346,11 @@ internal data class NullableDateValueImpl(
 }
 
 internal data class NullableTimeValueImpl(
-    override val value: LocalTime?,
-    override val precision: Int,
-    override val offset: ZoneOffset?,
-    override val withZone: Boolean,
+    override val value: Time?,
     override val annotations: PersistentList<String>,
 ) : NullableTimeValue() {
     override fun copy(annotations: Annotations) =
-        NullableTimeValueImpl(value, precision, offset, withZone, annotations.toPersistentList())
+        NullableTimeValueImpl(value, annotations.toPersistentList())
 
     override fun withAnnotations(annotations: Annotations): NullableTimeValue = _withAnnotations(annotations)
 
@@ -364,14 +360,11 @@ internal data class NullableTimeValueImpl(
 }
 
 internal data class NullableTimestampValueImpl(
-    override val value: LocalDateTime?,
-    override val precision: Int,
-    override val offset: ZoneOffset?,
-    override val withZone: Boolean,
+    override val value: Timestamp?,
     override val annotations: PersistentList<String>,
 ) : NullableTimestampValue() {
     override fun copy(annotations: Annotations) =
-        NullableTimestampValueImpl(value, precision, offset, withZone, annotations.toPersistentList())
+        NullableTimestampValueImpl(value, annotations.toPersistentList())
 
     override fun withAnnotations(annotations: Annotations): NullableTimestampValue = _withAnnotations(annotations)
 
@@ -398,18 +391,9 @@ internal data class NullableBagValueImpl<T : PartiQLValue>(
     private val delegate: PersistentList<T>?,
     override val annotations: PersistentList<String>,
 ) : NullableBagValue<T>() {
+    override fun isNull(): Boolean = delegate == null
 
-    override fun contains(element: T) = delegate!!.contains(element)
-
-    override fun containsAll(elements: Collection<T>) = delegate!!.containsAll(elements)
-
-    override fun isEmpty() = delegate!!.isEmpty()
-
-    override fun iterator() = delegate!!.iterator()
-
-    override val size = delegate!!.size
-
-    override val elements = delegate!!.toImmutableList()
+    override fun promote(): BagValue<T> = BagValueImpl(delegate!!, annotations)
 
     override fun copy(annotations: Annotations) = NullableBagValueImpl(delegate, annotations.toPersistentList())
 
@@ -424,18 +408,9 @@ internal data class NullableListValueImpl<T : PartiQLValue>(
     private val delegate: PersistentList<T>?,
     override val annotations: PersistentList<String>,
 ) : NullableListValue<T>() {
+    override fun isNull() = delegate == null
 
-    override fun contains(element: T) = delegate!!.contains(element)
-
-    override fun containsAll(elements: Collection<T>) = delegate!!.containsAll(elements)
-
-    override fun isEmpty() = delegate!!.isEmpty()
-
-    override fun iterator() = delegate!!.iterator()
-
-    override val size = delegate!!.size
-
-    override val elements = delegate!!.toImmutableList()
+    override fun promote() = ListValueImpl(delegate!!, annotations)
 
     override fun copy(annotations: Annotations) = NullableListValueImpl(delegate, annotations.toPersistentList())
 
@@ -451,17 +426,9 @@ internal data class NullableSexpValueImpl<T : PartiQLValue>(
     override val annotations: PersistentList<String>,
 ) : NullableSexpValue<T>() {
 
-    override fun contains(element: T) = delegate!!.contains(element)
+    override fun isNull(): Boolean = delegate == null
 
-    override fun containsAll(elements: Collection<T>) = delegate!!.containsAll(elements)
-
-    override fun isEmpty() = delegate!!.isEmpty()
-
-    override fun iterator() = delegate!!.iterator()
-
-    override val size = delegate!!.size
-
-    override val elements = delegate!!.toImmutableList()
+    override fun promote() = SexpValueImpl(delegate!!, annotations)
 
     override fun copy(annotations: Annotations) = NullableSexpValueImpl(delegate, annotations.toPersistentList())
 
@@ -476,18 +443,9 @@ internal data class NullableStructValueImpl<T : PartiQLValue>(
     private val values: PersistentList<Pair<String, T>>?,
     override val annotations: PersistentList<String>,
 ) : NullableStructValue<T>() {
+    override fun isNull(): Boolean = values == null
 
-    override val fields = values!!.toImmutableList()
-
-    override val size = values!!.size
-
-    override fun isEmpty() = values!!.isEmpty()
-
-    override fun iterator(): Iterator<Pair<String, T>> = values!!.iterator()
-
-    override fun containsAll(elements: Collection<Pair<String, T>>) = values!!.containsAll(elements)
-
-    override fun contains(element: Pair<String, T>) = values!!.contains(element)
+    override fun promote() = StructValueImpl(values!!, annotations)
 
     override fun copy(annotations: Annotations) = NullableStructValueImpl(values, annotations.toPersistentList())
 
