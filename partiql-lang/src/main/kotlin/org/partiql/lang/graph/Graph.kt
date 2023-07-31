@@ -66,11 +66,11 @@ interface Graph {
  *  based on labels at them.
  */
 sealed class LabelSpec {
-    /** A graph element (node or edge) matches when its label set contains [name]. */
-    data class Name(val name: String) : LabelSpec()
+    /** A graph element matches when one of its labels is [name].*/
+    data class OneOf(val name: String) : LabelSpec()
 
-    /** A graph element matches as long as it has a label. */
-    object Wildcard : LabelSpec()
+    /** A graph element always matches (even when it is not labeled at all).*/
+    object Whatever : LabelSpec()
 
     // TODO: more LabelSpec features: alternation, negation, string patterns, ...
 }

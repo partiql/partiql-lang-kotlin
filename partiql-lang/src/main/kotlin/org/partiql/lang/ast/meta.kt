@@ -16,8 +16,8 @@ package org.partiql.lang.ast
 
 import com.amazon.ion.IonWriter
 import com.amazon.ionelement.api.MetaContainer
-import com.amazon.ionelement.api.metaContainerOf
 import com.amazon.ionelement.api.plus
+import org.partiql.lang.domains.metaContainerOf
 
 /**
  * The [Meta] interface is implemented by classes that provide an object mapping view to AST meta nodes.
@@ -66,4 +66,4 @@ fun MetaContainer.find(tagName: String): Meta? = this[tagName] as Meta?
 
 fun MetaContainer.hasMeta(tagName: String) = this.containsKey(tagName)
 
-fun MetaContainer.add(meta: Meta): MetaContainer = this.plus(metaContainerOf(meta.tag to meta))
+fun MetaContainer.add(meta: Meta): MetaContainer = this.plus(metaContainerOf(meta))

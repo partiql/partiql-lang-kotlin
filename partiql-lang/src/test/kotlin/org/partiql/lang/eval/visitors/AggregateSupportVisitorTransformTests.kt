@@ -24,13 +24,9 @@ import org.partiql.lang.ast.AggregateCallSiteListMeta
 import org.partiql.lang.ast.AggregateRegisterIdMeta
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.domains.PartiqlAst
-import org.partiql.lang.syntax.PartiQLParserBuilder
 import org.partiql.lang.util.ArgumentsProviderBase
 
 class AggregateSupportVisitorTransformTests : VisitorTransformTestBase() {
-
-    private val parser = PartiQLParserBuilder.standard().build()
-
     private val transformer = AggregateSupportVisitorTransform()
 
     data class AggSupportTestCase(val query: String, val expectedCallAggs: List<Pair<String, Int>>)
@@ -41,7 +37,7 @@ class AggregateSupportVisitorTransformTests : VisitorTransformTestBase() {
      */
     private fun String.parseAndTransformQuery(): PartiqlAst.Expr.Select {
         val query = this
-        val statement = parser.parseAstStatement(query)
+        val statement = super.parser.parseAstStatement(query)
         val transformedNode = (transformer).transformStatement(statement) as PartiqlAst.Statement.Query
         return (transformedNode.expr) as PartiqlAst.Expr.Select
     }

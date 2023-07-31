@@ -328,12 +328,11 @@ class QueryPrettyPrinter {
             is PartiqlAst.Expr.CallWindow -> TODO()
             is PartiqlAst.Expr.GraphMatch -> TODO()
             is PartiqlAst.Expr.SessionAttribute -> writeSessionAttribute(node, sb)
-            is PartiqlAst.Expr.Timestamp -> TODO()
         }
     }
 
     private fun writeSessionAttribute(node: PartiqlAst.Expr.SessionAttribute, sb: StringBuilder) {
-        sb.append(node.value.text.uppercase())
+        sb.append(node.value.text)
     }
 
     /**

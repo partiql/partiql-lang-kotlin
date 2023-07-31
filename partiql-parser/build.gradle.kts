@@ -15,13 +15,12 @@
 plugins {
     id(Plugins.antlr)
     id(Plugins.conventions)
-    id(Plugins.publish)
+    // id(Plugins.publish)
 }
 
 dependencies {
     antlr(Deps.antlr)
-    api(project(":partiql-ast"))
-    api(project(":partiql-types"))
+    implementation(project(":partiql-ast"))
     implementation(Deps.ionElement)
     implementation(Deps.antlrRuntime)
 }
@@ -52,8 +51,8 @@ tasks.processResources {
     }
 }
 
-publish {
-    artifactId = "partiql-parser"
-    name = "PartiQL Parser"
-    description = "PartiQL's Parser"
-}
+// publish {
+//     artifactId = "partiql-parser"
+//     name = "PartiQL Parser"
+//     description = "PartiQL's Parser"
+// }

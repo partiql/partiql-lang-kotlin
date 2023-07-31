@@ -14,15 +14,25 @@
 
 package org.partiql.lang.ast
 
+import org.partiql.lang.eval.visitors.OrderBySortSpecVisitorTransform
+
 /**
- * A legacy meta that is no longer used.
+ * A [Meta] to help the [OrderBySortSpecVisitorTransform] to know when the OrderBy SortSpec has already been transformed. It
+ * essentially helps to turn
+ *
+ * ```SELECT a + 1 AS b FROM c ORDER BY b```
+ *
+ * into
+ *
+ * ```SELECT a + 1 AS b FROM c ORDER BY a + 1```
+ *
+ * even when there are multiple transforms over the AST.
  */
-@Deprecated("To be removed in the next minor version")
-class LegacyLogicalNotMeta private constructor() : Meta {
+class IsTransformedOrderByAliasMeta private constructor() : Meta {
     override val tag = TAG
     companion object {
-        const val TAG = "\$legacy_logical_not"
+        const val TAG = "\$is_transformed_order_by_alias"
 
-        val instance = LegacyLogicalNotMeta()
+        val instance = IsTransformedOrderByAliasMeta()
     }
 }

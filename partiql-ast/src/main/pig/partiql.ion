@@ -140,7 +140,6 @@ may then be further optimized by selecting better implementations of each operat
             // Constructors for DateTime types
             (date year::int month::int day::int)
             (lit_time value::time_value)
-            (timestamp value::timestamp_value)
 
             // Bag operators
             (bag_op op::bag_op_type quantifier::set_quantifier operands::(* expr 2))
@@ -178,19 +177,6 @@ may then be further optimized by selecting better implementations of each operat
 
         // Time
         (product time_value hour::int minute::int second::int nano::int precision::int with_time_zone::bool tz_minutes::(? int))
-
-        // Timestamp
-        (product timestamp_value year::int month::int day::int hour::int minute::int second::ion timezone::(? timezone) precision::(? int) )
-
-        (sum timezone
-             // Unknown time zone -00:00
-             (unknown_timezone)
-             // UTC offset ex: -01:30 -> tz_hour = -1, tz_minutes = -30, total offset minutes = -90
-             // tz_hour is in [-23, 23], timezone minutes is in [-59,59]
-             // we only need total offset minutes to model this property
-             (utc_offset offset_minutes::int)
-             // TODO: Timezone ID not support yet. Ex: US/Pacific
-        )
 
         // A "step" within a path expression; that is the components of the expression following the root.
         (sum path_step
@@ -271,22 +257,13 @@ may then be further optimized by selecting better implementations of each operat
              (edge_left_or_right)
              (edge_left_or_undirected_or_right))
 
-        // A label spec in a node pattern like `MATCH (x : <lab>)` or in an edge pattern like `MATCH −[t : <lab>]−>`
-        (sum graph_label_spec
-            (graph_label_name name::symbol)                   // as in `MATCH (x:Account)` or `MATCH -[x:Transfer]->`
-            (graph_label_wildcard)                            // as in `MATCH (x: %)`
-            (graph_label_negation arg::graph_label_spec)      // as in `MATCH (x: !Account)`
-            (graph_label_conj lhs::graph_label_spec rhs::graph_label_spec)   // as in `MATCH (x: City&Country)` - Monaco can do
-            (graph_label_disj lhs::graph_label_spec rhs::graph_label_spec)   // as in `MATCH (x: City|Country)` - either Paris or Germany will do
-        )
-
         // A part of a graph pattern
         (sum graph_match_pattern_part
              // A single node in a graph pattern.
              (node
                  prefilter::(? expr)   // an optional node pre-filter, e.g.: `WHERE c.name='Alarm'` in `MATCH (c WHERE c.name='Alarm')`
                  variable::(? symbol)  // the optional element variable of the node match, e.g.: `x` in `MATCH (x)`
-                 label::(? graph_label_spec))  // the optional label spec to match for the node, e.g.: `Entity` in `MATCH (x:Entity)`
+                 label::(* symbol 0))  // the optional label(s) to match for the node, e.g.: `Entity` in `MATCH (x:Entity)`
 
              // A single edge in a graph pattern.
              (edge
@@ -294,8 +271,7 @@ may then be further optimized by selecting better implementations of each operat
                  quantifier::(? graph_match_quantifier) // an optional quantifier for the entire pattern match, e.g. `{2,5}` in `MATCH (a:Account)−[:Transfer]−>{2,5}(b:Account)`
                  prefilter::(? expr)   // an optional edge pre-filter, e.g.: `WHERE t.capacity>100` in `MATCH −[t:hasSupply WHERE t.capacity>100]−>`
                  variable::(? symbol)  // the optional element variable of the edge match, e.g.: `t` in `MATCH −[t]−>`
-                 label::(? graph_label_spec))  // the optional label spec to match for the edge. e.g.: `Target` in `MATCH −[t:Target]−>`
-
+                 label::(* symbol 0))  // the optional label(s) to match for the edge. e.g.: `Target` in `MATCH −[t:Target]−>`
              // A sub-pattern.
              (pattern pattern::graph_match_pattern))
 
@@ -559,6 +535,9 @@ may then be further optimized by selecting better implementations of each operat
             // `NUMERIC[(<int> [, int])]`.  Elements are precision then scale.
             (numeric_type precision::(? int) scale::(? int))
 
+            // `TIMESTAMP`
+            (timestamp_type)
+
             // `CHAR(<int>)`
             (character_type length::(? int))
 
@@ -578,8 +557,6 @@ may then be further optimized by selecting better implementations of each operat
             // Note: This logic is implemented in SqlParser.
             (time_type precision::(? int))
             (time_with_time_zone_type precision::(? int))
-            (timestamp_type precision::(? int))
-            (timestamp_with_time_zone_type precision::(? int))
 
             (struct_type)
             (tuple_type)

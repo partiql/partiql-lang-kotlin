@@ -15,7 +15,6 @@
 package org.partiql.lang.syntax
 
 import org.partiql.lang.syntax.impl.PartiQLPigParser
-import org.partiql.lang.syntax.impl.PartiQLShimParser
 import org.partiql.lang.types.CustomType
 
 /**
@@ -30,24 +29,11 @@ import org.partiql.lang.types.CustomType
  */
 class PartiQLParserBuilder {
 
-    private var constructor: (customTypes: List<CustomType>) -> Parser = ::PartiQLPigParser
-
     companion object {
 
         @JvmStatic
         fun standard(): PartiQLParserBuilder {
             return PartiQLParserBuilder()
-        }
-
-        @JvmStatic
-        fun experimental(): PartiQLParserBuilder {
-            val builder = PartiQLParserBuilder()
-            builder.constructor = { _ ->
-                // currently don't pass custom types
-                val delegate = org.partiql.parser.PartiQLParserBuilder.standard().build()
-                PartiQLShimParser(delegate)
-            }
-            return builder
         }
     }
 
@@ -58,6 +44,6 @@ class PartiQLParserBuilder {
     }
 
     fun build(): Parser {
-        return constructor(this.customTypes)
+        return PartiQLPigParser(this.customTypes)
     }
 }

@@ -21,8 +21,6 @@
   * [Further Reading](https://github.com/partiql/partiql-lang-kotlin/wiki/Further-Reading)
 * Clauses
   * [EXPLAIN](https://github.com/partiql/partiql-lang-kotlin/wiki/Explain)
-* Serde
-  * [PartiQL Value <> ION](https://github.com/partiql/partiql-lang-kotlin/wiki/Serde)
 * Upgrade Guides
   * [Upgrade Guide General](https://github.com/partiql/partiql-lang-kotlin/wiki/upgrade-guide)
   * [CLI Versions](https://github.com/partiql/partiql-lang-kotlin/wiki/cli-versions)

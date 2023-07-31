@@ -7,9 +7,6 @@ import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.id
 
 class PartiQLParserJoinTest : PartiQLParserTestBase() {
-
-    override val targets: Array<ParserTarget> = arrayOf(ParserTarget.DEFAULT, ParserTarget.EXPERIMENTAL)
-
     private val projectX = PartiqlAst.build { projectList(projectExpr(id("x"))) }
 
     private fun PartiqlAst.Builder.selectWithOneJoin(

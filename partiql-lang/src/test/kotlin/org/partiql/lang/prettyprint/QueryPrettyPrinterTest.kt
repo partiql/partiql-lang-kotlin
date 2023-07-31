@@ -915,7 +915,7 @@ class QueryPrettyPrinterTest {
     fun checkCurrentUserMixedCase() {
         checkPrettyPrintQuery(
             query = "CURRENT_user",
-            expected = "CURRENT_USER"
+            expected = "CURRENT_user"
         )
     }
 
@@ -925,7 +925,7 @@ class QueryPrettyPrinterTest {
             query = "SELECT * FROM [ CURRENT_user ]",
             expected = """
                 SELECT *
-                FROM [ CURRENT_USER ]
+                FROM [ CURRENT_user ]
             """.trimIndent()
         )
     }
