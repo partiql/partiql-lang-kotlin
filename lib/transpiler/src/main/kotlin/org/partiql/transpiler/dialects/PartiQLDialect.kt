@@ -14,9 +14,9 @@ import org.partiql.ast.SetQuantifier
 import org.partiql.ast.Sort
 import org.partiql.ast.Statement
 import org.partiql.ast.Type
+import org.partiql.transpiler.Dialect
 import org.partiql.transpiler.block.Block
 import org.partiql.transpiler.block.concat
-import org.partiql.transpiler.Dialect
 import org.partiql.value.MissingValue
 import org.partiql.value.NullValue
 import org.partiql.value.PartiQLValueExperimental
@@ -573,7 +573,7 @@ abstract class PartiQLDialect : Dialect() {
     override fun visitSelectProjectItemExpression(node: Select.Project.Item.Expression, head: Block): Block {
         var h = head
         h = visitExpr(node.expr, h)
-        h = if (node.asAlias != null) h concat r(" AS ${node.asAlias}") else h
+        h = if (node.asAlias != null) h concat r(" AS ${node.asAlias!!.sql()}") else h
         return h
     }
 
@@ -607,9 +607,9 @@ abstract class PartiQLDialect : Dialect() {
             From.Value.Type.UNPIVOT -> h concat r("UNPIVOT ")
         }
         h = visitExpr(node.expr, h)
-        h = if (node.asAlias != null) h concat r(" AS ${node.asAlias}") else h
-        h = if (node.atAlias != null) h concat r(" AT ${node.atAlias}") else h
-        h = if (node.byAlias != null) h concat r(" BY ${node.byAlias}") else h
+        h = if (node.asAlias != null) h concat r(" AS ${node.asAlias!!.sql()}") else h
+        h = if (node.atAlias != null) h concat r(" AT ${node.atAlias!!.sql()}") else h
+        h = if (node.byAlias != null) h concat r(" BY ${node.byAlias!!.sql()}") else h
         return h
     }
 
@@ -640,7 +640,7 @@ abstract class PartiQLDialect : Dialect() {
     override fun visitLetBinding(node: Let.Binding, head: Block): Block {
         var h = head
         h = visitExpr(node.expr, h)
-        h = h concat r(" AS ${node.asAlias}")
+        h = h concat r(" AS ${node.asAlias.sql()}")
         return h
     }
 
@@ -653,14 +653,14 @@ abstract class PartiQLDialect : Dialect() {
             GroupBy.Strategy.PARTIAL -> r("GROUP PARTIAL BY ")
         }
         h = h concat list("", "") { node.keys }
-        h = if (node.asAlias != null) h concat r(" GROUP AS ${node.asAlias}") else h
+        h = if (node.asAlias != null) h concat r(" GROUP AS ${node.asAlias!!.sql()}") else h
         return h
     }
 
     override fun visitGroupByKey(node: GroupBy.Key, head: Block): Block {
         var h = head
         h = visitExpr(node.expr, h)
-        h = if (node.asAlias != null) h concat r(" AS ${node.asAlias}") else h
+        h = if (node.asAlias != null) h concat r(" AS ${node.asAlias!!.sql()}") else h
         return h
     }
 

@@ -12,5 +12,5 @@ import org.partiql.transpiler.block.Block
 abstract class Dialect : AstBaseVisitor<Block, Block>() {
 
     // No functionality, just a nicer name
-    fun write(node: AstNode, onProblem: TranspilerProblem.Handler) = node.accept(this, Block.Nil)
+    fun write(node: AstNode, onProblem: ProblemCallback) = node.accept(this, Block.Nil)
 }

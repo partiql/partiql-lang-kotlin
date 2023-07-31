@@ -25,7 +25,7 @@ class Indent(
 
     enum class Type(val char: Char) {
         TAB(Char(9)),
-        SPACE(Char(32)),;
+        SPACE(Char(32)), ;
     }
 
     override fun toString() = type.char.toString().repeat(count)

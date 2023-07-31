@@ -20,9 +20,10 @@ import org.partiql.types.SymbolType
 import org.partiql.types.TimestampType
 
 internal fun StaticType.isNullOrMissing(): Boolean = (this is NullType || this is MissingType)
-internal fun StaticType.isNumeric(): Boolean = (this is IntType || this is FloatType || this is DecimalType)
-internal fun StaticType.isText(): Boolean = (this is SymbolType || this is StringType)
-internal fun StaticType.isLob(): Boolean = (this is BlobType || this is ClobType)
+fun StaticType.isNumeric(): Boolean = (this is IntType || this is FloatType || this is DecimalType)
+fun StaticType.isText(): Boolean = (this is SymbolType || this is StringType)
+
+fun StaticType.isLob(): Boolean = (this is BlobType || this is ClobType)
 internal fun StaticType.isUnknown(): Boolean = (this.isNullOrMissing() || this == StaticType.NULL_OR_MISSING)
 
 /**

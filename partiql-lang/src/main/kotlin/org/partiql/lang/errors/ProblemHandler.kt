@@ -15,7 +15,7 @@ interface ProblemHandler {
  * inference pass that can result in multiple errors and/or warnings). This handler does not collect other exceptions
  * that may be thrown.
  */
-internal class ProblemCollector : ProblemHandler {
+class ProblemCollector : ProblemHandler {
     private val problemList = mutableListOf<Problem>()
 
     val problems: List<Problem>

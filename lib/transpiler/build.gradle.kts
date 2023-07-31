@@ -10,6 +10,7 @@ dependencies {
     implementation(project(":partiql-types"))
     // temporary
     implementation(project(":partiql-lang"))
+    testImplementation(project(":plugins:partiql-mockdb"))
 }
 
 kotlin {
