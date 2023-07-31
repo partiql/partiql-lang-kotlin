@@ -203,11 +203,12 @@ internal class PartiQLPigVisitor(
         ctx: PartiQLParser.LocalKeywordContext,
         expected: List<String>,
         code: ErrorCode
-    ): String {
+    ): Pair<String, MetaContainer> { // TODO?: Does the return type suggest introducing an AST node?
         val terminal = ctx.REGULAR_IDENTIFIER()
+        val meta = terminal.getSourceMetaContainer()
         val keyword = terminal.text.uppercase()
         if (expected.contains(keyword))
-            return keyword
+            return Pair(keyword, meta)
         else throw terminal.err("Expected one of: ${expected.joinToString(", ")}.", code)
     }
     override fun visitSymbolPrimitive(ctx: PartiQLParser.SymbolPrimitiveContext) = PartiqlAst.build {
@@ -759,7 +760,7 @@ internal class PartiQLPigVisitor(
 
     override fun visitMatchPattern(ctx: PartiQLParser.MatchPatternContext) = PartiqlAst.build {
         val parts = ctx.graphPart().map { visit(it) as PartiqlAst.GraphMatchPatternPart }
-        val restrictor = ctx.restrictor?.let { visitPatternRestrictor(it) }
+        val restrictor = ctx.restrictor?.let { visitPathRestrictor(it) }
         val variable = ctx.variable?.let { visitPatternPathVariable(it).name }
         graphMatchPattern_(parts = parts, restrictor = restrictor, variable = variable)
     }
@@ -825,7 +826,7 @@ internal class PartiQLPigVisitor(
         visit(ctx.labelSpec()) as PartiqlAst.GraphLabelSpec
 
     override fun visitPattern(ctx: PartiQLParser.PatternContext) = PartiqlAst.build {
-        val restrictor = ctx.restrictor?.let { visitPatternRestrictor(it) }
+        val restrictor = ctx.restrictor?.let { visitPathRestrictor(it) }
         val variable = ctx.variable?.let { visitPatternPathVariable(it).name }
         val prefilter = ctx.where?.let { visitWhereClause(it) }
         val quantifier = ctx.quantifier?.let { visitPatternQuantifier(it) }
@@ -926,13 +927,14 @@ internal class PartiQLPigVisitor(
         node_(variable = variable, prefilter = prefilter, label = label)
     }
 
-    override fun visitPatternRestrictor(ctx: PartiQLParser.PatternRestrictorContext) = PartiqlAst.build {
-        val metas = ctx.restrictor.getSourceMetaContainer()
-        when (ctx.restrictor.text.lowercase()) {
-            "trail" -> restrictorTrail(metas)
-            "acyclic" -> restrictorAcyclic(metas)
-            "simple" -> restrictorSimple(metas)
-            else -> throw ParserException("Unrecognized pattern restrictor", ErrorCode.PARSE_INVALID_QUERY)
+    override fun visitPathRestrictor(ctx: PartiQLParser.PathRestrictorContext) = PartiqlAst.build {
+        val expected = listOf("TRAIL", "ACYCLIC", "SIMPLE")
+        val (keyword, metas) = readLocalKeyword(ctx.localKeyword(), expected, ErrorCode.PARSE_INVALID_QUERY)
+        when (keyword) {
+            "TRAIL" -> restrictorTrail(metas)
+            "ACYCLIC" -> restrictorAcyclic(metas)
+            "SIMPLE" -> restrictorSimple(metas)
+            else -> error("Bug: should have detected this already.")
         }
     }
 
@@ -1272,7 +1274,8 @@ internal class PartiQLPigVisitor(
 
     private fun readDateTimeField(ctx: PartiQLParser.DateTimeFieldContext): String {
         val expected = DateTimePart.values().toList().map { it.toString() }
-        return readLocalKeyword(ctx.localKeyword(), expected, ErrorCode.PARSE_EXPECTED_DATE_TIME_PART)
+        val (keyword, _) = readLocalKeyword(ctx.localKeyword(), expected, ErrorCode.PARSE_EXPECTED_DATE_TIME_PART)
+        return keyword
     }
 
     override fun visitDateFunction(ctx: PartiQLParser.DateFunctionContext) = PartiqlAst.build {

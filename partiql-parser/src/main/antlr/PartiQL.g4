@@ -30,6 +30,8 @@ statement
  *
  */
 
+// A local keyword is treated as a keyword only in a limited context (such as DAY, HOUR within a call to a date-time function),
+// while being available as a regular identifier in other contexts.
 localKeyword
     : REGULAR_IDENTIFIER ;
 
@@ -362,7 +364,7 @@ gpmlPatternList
     : selector=matchSelector? matchPattern ( COMMA matchPattern )*;
 
 matchPattern
-    : restrictor=patternRestrictor? variable=patternPathVariable? graphPart*;
+    : restrictor=pathRestrictor? variable=patternPathVariable? graphPart*;
 
 graphPart
     : node
@@ -379,8 +381,8 @@ matchSelector
 patternPathVariable
     : symbolPrimitive EQ;
 
-patternRestrictor    // Should be TRAIL / ACYCLIC / SIMPLE
-    : restrictor=REGULAR_IDENTIFIER;
+// Must be one of: TRAIL / ACYCLIC / SIMPLE
+pathRestrictor : localKeyword ;
 
 node
     : PAREN_LEFT symbolPrimitive? ( COLON labelSpec )? whereClause? PAREN_RIGHT;
@@ -391,8 +393,8 @@ edge
     ;
 
 pattern
-    : PAREN_LEFT restrictor=patternRestrictor? variable=patternPathVariable? graphPart+ where=whereClause? PAREN_RIGHT quantifier=patternQuantifier?
-    | BRACKET_LEFT restrictor=patternRestrictor? variable=patternPathVariable? graphPart+ where=whereClause? BRACKET_RIGHT quantifier=patternQuantifier?
+    : PAREN_LEFT restrictor=pathRestrictor? variable=patternPathVariable? graphPart+ where=whereClause? PAREN_RIGHT quantifier=patternQuantifier?
+    | BRACKET_LEFT restrictor=pathRestrictor? variable=patternPathVariable? graphPart+ where=whereClause? BRACKET_RIGHT quantifier=patternQuantifier?
     ;
 
 patternQuantifier

@@ -975,14 +975,7 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         override fun visitMatchPattern(ctx: GeneratedParser.MatchPatternContext) = translate(ctx) {
             val parts = visitOrEmpty<GraphMatch.Pattern.Part>(ctx.graphPart())
-            val restrictor = ctx.restrictor?.let {
-                when (ctx.restrictor.text.lowercase()) {
-                    "trail" -> GraphMatch.Restrictor.TRAIL
-                    "acyclic" -> GraphMatch.Restrictor.ACYCLIC
-                    "simple" -> GraphMatch.Restrictor.SIMPLE
-                    else -> throw error(ctx.restrictor, "Unrecognized pattern restrictor")
-                }
-            }
+            val restrictor = ctx.restrictor?.let { readPathRestrictor(it) }
             val variable = visitOrNull<Identifier.Symbol>(ctx.variable)?.symbol
             graphMatchPattern(restrictor, null, variable, null, parts)
         }
@@ -1043,7 +1036,7 @@ internal class PartiQLParserDefault : PartiQLParser {
             visit(ctx.labelSpec()) as GraphMatch.Label
 
         override fun visitPattern(ctx: GeneratedParser.PatternContext) = translate(ctx) {
-            val restrictor = visitRestrictor(ctx.restrictor)
+            val restrictor = ctx.restrictor?.let { readPathRestrictor(it) }
             val variable = visitOrNull<Identifier.Symbol>(ctx.variable)?.symbol
             val prefilter = ctx.where?.let { visitExpr(it.expr()) }
             val quantifier = ctx.quantifier?.let { visitPatternQuantifier(it) }
@@ -1141,13 +1134,14 @@ internal class PartiQLParserDefault : PartiQLParser {
             graphMatchPatternPartNode(prefilter, variable, label)
         }
 
-        private fun visitRestrictor(ctx: GeneratedParser.PatternRestrictorContext?): GraphMatch.Restrictor? {
-            if (ctx == null) return null
-            return when (ctx.restrictor.text.lowercase()) {
-                "trail" -> GraphMatch.Restrictor.TRAIL
-                "acyclic" -> GraphMatch.Restrictor.ACYCLIC
-                "simple" -> GraphMatch.Restrictor.SIMPLE
-                else -> throw error(ctx, "Unrecognized pattern restrictor")
+        private fun readPathRestrictor(ctx: GeneratedParser.PathRestrictorContext): GraphMatch.Restrictor {
+            val expected = listOf("TRAIL", "ACYCLIC", "SIMPLE")
+            val keyword = readLocalKeyword(ctx.localKeyword(), expected)
+            return when (keyword) {
+                "TRAIL" -> GraphMatch.Restrictor.TRAIL
+                "ACYCLIC" -> GraphMatch.Restrictor.ACYCLIC
+                "SIMPLE" -> GraphMatch.Restrictor.SIMPLE
+                else -> throw error(ctx, "Bug: should have detected this already.")
             }
         }
 
