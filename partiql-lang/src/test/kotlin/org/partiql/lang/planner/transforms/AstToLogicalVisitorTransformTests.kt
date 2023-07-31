@@ -10,15 +10,15 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
-import org.partiql.lang.ast.SourceLocationMeta
+import org.partiql.errors.Problem
+import org.partiql.errors.ProblemHandler
+import org.partiql.errors.ProblemLocation
+import org.partiql.errors.ProblemSeverity
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.PartiqlLogical
 import org.partiql.lang.domains.id
 import org.partiql.lang.domains.pathExpr
-import org.partiql.lang.errors.Problem
 import org.partiql.lang.errors.ProblemCollector
-import org.partiql.lang.errors.ProblemHandler
-import org.partiql.lang.errors.ProblemSeverity
 import org.partiql.lang.eval.builtins.ExprFunctionCurrentUser
 import org.partiql.lang.planner.PlanningProblemDetails
 import org.partiql.lang.planner.unimplementedProblem
@@ -1126,13 +1126,13 @@ class AstToLogicalVisitorTransformTests {
             ProblemTestCase(
                 300,
                 "INSERT INTO x VALUE 1",
-                Problem(SourceLocationMeta(1, 1), PlanningProblemDetails.InsertValueDisallowed)
+                Problem(ProblemLocation(1, 1), PlanningProblemDetails.InsertValueDisallowed)
             ),
             // We need schema to support using INSERT INTO without an explicit list of fields.
             ProblemTestCase(
                 301,
                 "INSERT INTO x VALUES (1, 2, 3)",
-                Problem(SourceLocationMeta(1, 1), PlanningProblemDetails.InsertValuesDisallowed)
+                Problem(ProblemLocation(1, 1), PlanningProblemDetails.InsertValuesDisallowed)
             )
         )
     }

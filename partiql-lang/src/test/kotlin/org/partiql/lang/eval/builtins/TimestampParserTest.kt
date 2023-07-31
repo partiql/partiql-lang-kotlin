@@ -6,7 +6,7 @@ import junitparams.Parameters
 import junitparams.naming.TestCaseName
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.partiql.lang.errors.ErrorCode
+import org.partiql.errors.ErrorCode
 import org.partiql.lang.eval.EvaluationException
 import org.partiql.lang.eval.builtins.internal.TimestampParser
 import java.lang.reflect.Type

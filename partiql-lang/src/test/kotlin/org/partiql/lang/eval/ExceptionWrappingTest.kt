@@ -2,10 +2,10 @@ package org.partiql.lang.eval
 
 import org.assertj.core.api.Assertions
 import org.junit.Test
+import org.partiql.errors.ErrorCode
+import org.partiql.errors.PropertyValueMap
 import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.ast.passes.SemanticException
-import org.partiql.lang.errors.ErrorCode
-import org.partiql.lang.errors.PropertyValueMap
 import org.partiql.lang.types.FunctionSignature
 import org.partiql.types.StaticType
 

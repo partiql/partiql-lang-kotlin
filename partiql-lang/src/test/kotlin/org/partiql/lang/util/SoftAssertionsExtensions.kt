@@ -1,12 +1,12 @@
 package org.partiql.lang.util
 
 import org.assertj.core.api.SoftAssertions
+import org.partiql.errors.ErrorCode
+import org.partiql.errors.Property
+import org.partiql.errors.PropertyType
+import org.partiql.errors.PropertyValue
+import org.partiql.errors.PropertyValueMap
 import org.partiql.lang.SqlException
-import org.partiql.lang.errors.ErrorCode
-import org.partiql.lang.errors.Property
-import org.partiql.lang.errors.PropertyType
-import org.partiql.lang.errors.PropertyValue
-import org.partiql.lang.errors.PropertyValueMap
 
 /**
  * Validates [errorCode] and [expectedValues] for given exception [ex].

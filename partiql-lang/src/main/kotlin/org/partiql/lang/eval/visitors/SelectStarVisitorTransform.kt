@@ -15,11 +15,11 @@ package org.partiql.lang.eval.visitors
 
 import com.amazon.ionelement.api.MetaContainer
 import com.amazon.ionelement.api.emptyMetaContainer
+import org.partiql.errors.ErrorCode
 import org.partiql.lang.ast.IsGroupAttributeReferenceMeta
 import org.partiql.lang.ast.UniqueNameMeta
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.metaContainerOf
-import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.errNoContext
 
 /** Desugars `SELECT *` by, for example,

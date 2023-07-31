@@ -12,7 +12,7 @@
  *  language governing permissions and limitations under the License.
  */
 
-package org.partiql.lang.errors
+package org.partiql.errors
 
 import com.amazon.ion.Timestamp
 import org.junit.Test

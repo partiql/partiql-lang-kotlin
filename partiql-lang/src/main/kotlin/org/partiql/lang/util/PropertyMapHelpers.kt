@@ -17,8 +17,8 @@
 package org.partiql.lang.util
 
 import com.amazon.ion.IonValue
-import org.partiql.lang.errors.Property
-import org.partiql.lang.errors.PropertyValueMap
+import org.partiql.errors.Property
+import org.partiql.errors.PropertyValueMap
 
 /**
  * Helper function to reduce the syntactical overhead of creating a [PropertyValueMap].

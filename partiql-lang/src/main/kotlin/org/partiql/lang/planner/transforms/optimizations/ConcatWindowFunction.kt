@@ -1,7 +1,7 @@
 package org.partiql.lang.planner.transforms.optimizations
 
+import org.partiql.errors.ProblemHandler
 import org.partiql.lang.domains.PartiqlPhysical
-import org.partiql.lang.errors.ProblemHandler
 import org.partiql.lang.planner.PartiQLPhysicalPass
 
 internal fun createConcatWindowFunctionPass(): PartiQLPhysicalPass =

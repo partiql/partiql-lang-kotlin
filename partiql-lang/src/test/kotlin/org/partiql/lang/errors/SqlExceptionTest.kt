@@ -12,7 +12,7 @@
  *  language governing permissions and limitations under the License.
  */
 
-package org.partiql.lang.errors
+package org.partiql.errors
 
 import org.junit.Test
 import org.partiql.lang.SqlException

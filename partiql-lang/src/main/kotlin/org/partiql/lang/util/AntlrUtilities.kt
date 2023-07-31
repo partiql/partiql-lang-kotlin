@@ -28,9 +28,9 @@ import com.amazon.ionelement.api.loadSingleElement
 import com.amazon.ionelement.api.toIonValue
 import org.antlr.v4.runtime.Token
 import org.antlr.v4.runtime.tree.TerminalNode
-import org.partiql.lang.errors.ErrorCode
-import org.partiql.lang.errors.Property
-import org.partiql.lang.errors.PropertyValueMap
+import org.partiql.errors.ErrorCode
+import org.partiql.errors.Property
+import org.partiql.errors.PropertyValueMap
 import org.partiql.lang.syntax.ParserException
 import org.partiql.parser.antlr.PartiQLParser
 import java.math.BigInteger

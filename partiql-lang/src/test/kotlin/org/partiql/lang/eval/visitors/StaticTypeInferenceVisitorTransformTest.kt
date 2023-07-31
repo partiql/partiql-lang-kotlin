@@ -3,6 +3,9 @@ package org.partiql.lang.eval.visitors
 import com.amazon.ion.system.IonSystemBuilder
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
+import org.partiql.errors.Problem
+import org.partiql.errors.ProblemLocation
+import org.partiql.errors.ProblemSeverity
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.ast.passes.SemanticProblemDetails
 import org.partiql.lang.ast.passes.inference.StaticTypeInferencer
@@ -13,8 +16,6 @@ import org.partiql.lang.ast.passes.inference.isText
 import org.partiql.lang.ast.passes.inference.isUnknown
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.staticType
-import org.partiql.lang.errors.Problem
-import org.partiql.lang.errors.ProblemSeverity
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.ExprFunction
 import org.partiql.lang.eval.numberValue
@@ -252,31 +253,31 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
 
         private fun createReturnsNullOrMissingError(line: Long = 1, col: Long, nAryOp: String): Problem =
             Problem(
-                SourceLocationMeta(line, col, nAryOp.length.toLong()),
+                ProblemLocation(line, col, nAryOp.length.toLong()),
                 SemanticProblemDetails.ExpressionAlwaysReturnsNullOrMissing
             )
 
         private fun createReturnsNullOrMissingError(sourceLocation: SourceLocationMeta): Problem =
             Problem(
-                sourceLocation,
+                sourceLocation.toProblemLocation(),
                 SemanticProblemDetails.ExpressionAlwaysReturnsNullOrMissing
             )
 
         private fun createDataTypeMismatchError(line: Long = 1, col: Long, argTypes: List<StaticType>, nAryOp: String): Problem =
             Problem(
-                SourceLocationMeta(line, col, nAryOp.length.toLong()),
+                ProblemLocation(line, col, nAryOp.length.toLong()),
                 SemanticProblemDetails.IncompatibleDatatypesForOp(actualArgumentTypes = argTypes, nAryOp = nAryOp)
             )
 
         private fun createDataTypeMismatchError(sourceLocation: SourceLocationMeta, argTypes: List<StaticType>, nAryOp: String): Problem =
             Problem(
-                sourceLocation,
+                sourceLocation.toProblemLocation(),
                 SemanticProblemDetails.IncompatibleDatatypesForOp(actualArgumentTypes = argTypes, nAryOp = nAryOp)
             )
 
         private fun createIncompatibleTypesForExprError(sourceLocation: SourceLocationMeta, expectedType: StaticType, actualType: StaticType): Problem =
             Problem(
-                sourceLocation,
+                sourceLocation.toProblemLocation(),
                 SemanticProblemDetails.IncompatibleDataTypeForExpr(expectedType, actualType)
             )
 
@@ -287,13 +288,13 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
             actualType: StaticType
         ): Problem =
             Problem(
-                sourceLocation,
+                sourceLocation.toProblemLocation(),
                 SemanticProblemDetails.InvalidArgumentTypeForFunction(functionName, expectedArgType, actualType)
             )
 
         private fun createNullOrMissingFunctionArgumentError(sourceLocation: SourceLocationMeta, functionName: String): Problem =
             Problem(
-                sourceLocation,
+                sourceLocation.toProblemLocation(),
                 SemanticProblemDetails.NullOrMissingFunctionArgument(functionName)
             )
 
@@ -4912,7 +4913,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
                 handler = expectSemanticProblems(
                     expectedProblems = listOf(
                         Problem(
-                            SourceLocationMeta(1L, 1L, 4L),
+                            ProblemLocation(1L, 1L, 4L),
                             SemanticProblemDetails.IncorrectNumberOfArgumentsToFunctionCall(
                                 functionName = "size",
                                 expectedArity = 1..1,
@@ -4934,7 +4935,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
                 handler = expectSemanticProblems(
                     expectedProblems = listOf(
                         Problem(
-                            SourceLocationMeta(1L, 1L, 4L),
+                            ProblemLocation(1L, 1L, 4L),
                             SemanticProblemDetails.IncorrectNumberOfArgumentsToFunctionCall(
                                 functionName = "size",
                                 expectedArity = 1..1,
@@ -6536,7 +6537,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
                 handler = expectSemanticErrors(
                     expectedErrors = listOf(
                         Problem(
-                            SourceLocationMeta(1L, 26L),
+                            ProblemLocation(1L, 26L),
                             SemanticProblemDetails.DuplicateAliasesInSelectListItem
                         )
                     )
@@ -7028,7 +7029,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
                 handler = expectSemanticErrors(
                     expectedErrors = listOf(
                         Problem(
-                            SourceLocationMeta(1L, 1L),
+                            ProblemLocation(1L, 1L),
                             SemanticProblemDetails.IncorrectNumberOfArgumentsToFunctionCall(
                                 functionName = "upper",
                                 expectedArity = 1..1,
@@ -7044,7 +7045,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
                 handler = expectSemanticErrors(
                     expectedErrors = listOf(
                         Problem(
-                            SourceLocationMeta(1L, 1L),
+                            ProblemLocation(1L, 1L),
                             SemanticProblemDetails.IncorrectNumberOfArgumentsToFunctionCall(
                                 functionName = "upper",
                                 expectedArity = 1..1,
@@ -7074,7 +7075,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
                 handler = expectSemanticErrors(
                     expectedErrors = listOf(
                         Problem(
-                            SourceLocationMeta(1L, 1L),
+                            ProblemLocation(1L, 1L),
                             SemanticProblemDetails.IncorrectNumberOfArgumentsToFunctionCall(
                                 functionName = "utcnow",
                                 expectedArity = 0..0,
@@ -7179,7 +7180,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
                 handler = expectSemanticErrors(
                     expectedErrors = listOf(
                         Problem(
-                            SourceLocationMeta(1L, 1L),
+                            ProblemLocation(1L, 1L),
                             SemanticProblemDetails.IncorrectNumberOfArgumentsToFunctionCall(
                                 functionName = "to_timestamp",
                                 expectedArity = 1..2,
@@ -7201,7 +7202,7 @@ class StaticTypeInferenceVisitorTransformTest : VisitorTransformTestBase() {
                 handler = expectSemanticErrors(
                     expectedErrors = listOf(
                         Problem(
-                            SourceLocationMeta(1L, 1L),
+                            ProblemLocation(1L, 1L),
                             SemanticProblemDetails.NoSuchFunction(
                                 functionName = "non_existent"
                             )

@@ -2,7 +2,7 @@ package org.partiql.lang.eval.time
 
 import com.amazon.ion.IonStruct
 import com.amazon.ion.IonSystem
-import org.partiql.lang.errors.ErrorCode
+import org.partiql.errors.ErrorCode
 import org.partiql.lang.eval.EvaluationException
 import org.partiql.lang.eval.TIME_ANNOTATION
 import org.partiql.lang.eval.err

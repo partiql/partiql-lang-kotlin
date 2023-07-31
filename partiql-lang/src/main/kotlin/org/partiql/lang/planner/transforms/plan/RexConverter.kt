@@ -2,8 +2,8 @@ package org.partiql.lang.planner.transforms.plan
 
 import com.amazon.ionelement.api.MetaContainer
 import com.amazon.ionelement.api.ionNull
+import org.partiql.errors.ErrorCode
 import org.partiql.lang.domains.PartiqlAst
-import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.builtins.ExprFunctionCurrentUser
 import org.partiql.lang.eval.err

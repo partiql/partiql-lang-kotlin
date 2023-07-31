@@ -15,12 +15,12 @@
 package org.partiql.lang.eval
 
 import com.amazon.ionelement.api.MetaContainer
+import org.partiql.errors.ErrorBehaviorInPermissiveMode
+import org.partiql.errors.ErrorCode
+import org.partiql.errors.Property
 import org.partiql.lang.ast.SourceLocationMeta
 import org.partiql.lang.ast.StaticTypeMeta
 import org.partiql.lang.domains.staticType
-import org.partiql.lang.errors.ErrorBehaviorInPermissiveMode
-import org.partiql.lang.errors.ErrorCode
-import org.partiql.lang.errors.Property
 import org.partiql.lang.types.StaticTypeUtils.isInstance
 
 /**

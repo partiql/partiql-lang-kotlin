@@ -1,11 +1,11 @@
 package org.partiql.lang.ast.passes.inference
 
+import org.partiql.errors.Problem
+import org.partiql.errors.ProblemSeverity
 import org.partiql.lang.ast.passes.SemanticException
 import org.partiql.lang.domains.PartiqlAst
 import org.partiql.lang.domains.staticType
-import org.partiql.lang.errors.Problem
 import org.partiql.lang.errors.ProblemCollector
-import org.partiql.lang.errors.ProblemSeverity
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.visitors.StaticTypeInferenceVisitorTransform
 import org.partiql.lang.eval.visitors.StaticTypeVisitorTransform

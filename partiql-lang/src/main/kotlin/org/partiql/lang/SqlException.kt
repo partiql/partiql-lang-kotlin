@@ -14,10 +14,10 @@
 
 package org.partiql.lang
 
-import org.partiql.lang.errors.ErrorCode
-import org.partiql.lang.errors.Property
-import org.partiql.lang.errors.PropertyValueMap
-import org.partiql.lang.errors.UNKNOWN
+import org.partiql.errors.ErrorCode
+import org.partiql.errors.Property
+import org.partiql.errors.PropertyValueMap
+import org.partiql.errors.UNKNOWN
 
 /**
  * General exception class for the interpreter.

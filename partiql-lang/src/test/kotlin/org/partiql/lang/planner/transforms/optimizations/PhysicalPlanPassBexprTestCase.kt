@@ -1,9 +1,9 @@
 package org.partiql.lang.planner.transforms.optimizations
 
 import org.junit.jupiter.api.Assertions
+import org.partiql.errors.Problem
+import org.partiql.errors.ProblemHandler
 import org.partiql.lang.domains.PartiqlPhysical
-import org.partiql.lang.errors.Problem
-import org.partiql.lang.errors.ProblemHandler
 import org.partiql.lang.planner.PartiQLPhysicalPass
 import org.partiql.lang.planner.transforms.PLAN_VERSION_NUMBER
 

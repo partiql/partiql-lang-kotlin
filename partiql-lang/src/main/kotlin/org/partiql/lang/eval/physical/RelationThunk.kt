@@ -1,9 +1,9 @@
 package org.partiql.lang.eval.physical
 
 import com.amazon.ionelement.api.MetaContainer
+import org.partiql.errors.ErrorCode
+import org.partiql.errors.Property
 import org.partiql.lang.ast.SourceLocationMeta
-import org.partiql.lang.errors.ErrorCode
-import org.partiql.lang.errors.Property
 import org.partiql.lang.eval.EvaluationException
 import org.partiql.lang.eval.ThunkFactory
 import org.partiql.lang.eval.errorContextFrom

@@ -21,11 +21,11 @@ import com.amazon.ion.IonValue
 import com.amazon.ionelement.api.SexpElement
 import com.amazon.ionelement.api.toIonElement
 import com.amazon.ionelement.api.toIonValue
+import org.partiql.errors.ErrorCode
+import org.partiql.errors.Property
 import org.partiql.lang.CUSTOM_TEST_TYPES
 import org.partiql.lang.TestBase
 import org.partiql.lang.domains.PartiqlAst
-import org.partiql.lang.errors.ErrorCode
-import org.partiql.lang.errors.Property
 import org.partiql.lang.util.SexpAstPrettyPrinter
 import org.partiql.lang.util.asIonSexp
 import org.partiql.lang.util.checkErrorAndErrorContext

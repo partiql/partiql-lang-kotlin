@@ -17,11 +17,11 @@ package org.partiql.lang.planner.transforms.plan
 import com.amazon.ionelement.api.ElementType
 import com.amazon.ionelement.api.StringElement
 import com.amazon.ionelement.api.TextElement
-import org.partiql.lang.ast.UNKNOWN_SOURCE_LOCATION
+import org.partiql.errors.Problem
+import org.partiql.errors.ProblemHandler
+import org.partiql.errors.UNKNOWN_PROBLEM_LOCATION
 import org.partiql.lang.ast.passes.SemanticProblemDetails
 import org.partiql.lang.ast.passes.inference.cast
-import org.partiql.lang.errors.Problem
-import org.partiql.lang.errors.ProblemHandler
 import org.partiql.lang.eval.ExprValueType
 import org.partiql.lang.eval.builtins.SCALAR_BUILTINS_DEFAULT
 import org.partiql.lang.planner.PlanningProblemDetails
@@ -407,7 +407,7 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
     private fun handleInvalidInputTypeForAggFun(funcName: String, actualType: StaticType, expectedType: StaticType, ctx: Context) {
         ctx.problemHandler.handleProblem(
             Problem(
-                sourceLocation = UNKNOWN_SOURCE_LOCATION,
+                sourceLocation = UNKNOWN_PROBLEM_LOCATION,
                 details = SemanticProblemDetails.InvalidArgumentTypeForFunction(
                     functionName = funcName,
                     expectedType = expectedType,
@@ -1626,7 +1626,7 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
     private fun handleExpressionAlwaysReturnsNullOrMissingError(ctx: Context) {
         ctx.problemHandler.handleProblem(
             Problem(
-                sourceLocation = UNKNOWN_SOURCE_LOCATION,
+                sourceLocation = UNKNOWN_PROBLEM_LOCATION,
                 details = SemanticProblemDetails.ExpressionAlwaysReturnsNullOrMissing
             )
         )
@@ -1636,7 +1636,7 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
     private fun handleIncompatibleDataTypesForOpError(ctx: Context, actualTypes: List<StaticType>, op: String) {
         ctx.problemHandler.handleProblem(
             Problem(
-                sourceLocation = UNKNOWN_SOURCE_LOCATION,
+                sourceLocation = UNKNOWN_PROBLEM_LOCATION,
                 details = SemanticProblemDetails.IncompatibleDatatypesForOp(
                     actualTypes,
                     op
@@ -1648,7 +1648,7 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
     private fun handleNoSuchFunctionError(ctx: Context, functionName: String) {
         ctx.problemHandler.handleProblem(
             Problem(
-                sourceLocation = UNKNOWN_SOURCE_LOCATION,
+                sourceLocation = UNKNOWN_PROBLEM_LOCATION,
                 details = SemanticProblemDetails.NoSuchFunction(functionName)
             )
         )
@@ -1657,7 +1657,7 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
     private fun handleIncompatibleDataTypeForExprError(expectedType: StaticType, actualType: StaticType, ctx: Context) {
         ctx.problemHandler.handleProblem(
             Problem(
-                sourceLocation = UNKNOWN_SOURCE_LOCATION,
+                sourceLocation = UNKNOWN_PROBLEM_LOCATION,
                 details = SemanticProblemDetails.IncompatibleDataTypeForExpr(expectedType, actualType)
             )
         )
@@ -1671,7 +1671,7 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
     ) {
         ctx.problemHandler.handleProblem(
             Problem(
-                sourceLocation = UNKNOWN_SOURCE_LOCATION,
+                sourceLocation = UNKNOWN_PROBLEM_LOCATION,
                 details = SemanticProblemDetails.IncorrectNumberOfArgumentsToFunctionCall(
                     functionName,
                     expectedArity,
@@ -1684,7 +1684,7 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
     private fun handleNullOrMissingFunctionArgument(functionName: String, ctx: Context) {
         ctx.problemHandler.handleProblem(
             Problem(
-                sourceLocation = UNKNOWN_SOURCE_LOCATION,
+                sourceLocation = UNKNOWN_PROBLEM_LOCATION,
                 details = SemanticProblemDetails.NullOrMissingFunctionArgument(
                     functionName = functionName
                 )
@@ -1695,7 +1695,7 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
     private fun handleUndefinedVariable(name: BindingName, ctx: Context) {
         ctx.problemHandler.handleProblem(
             Problem(
-                sourceLocation = UNKNOWN_SOURCE_LOCATION,
+                sourceLocation = UNKNOWN_PROBLEM_LOCATION,
                 details = PlanningProblemDetails.UndefinedVariable(name.name, name.bindingCase == BindingCase.SENSITIVE)
             )
         )
@@ -1704,7 +1704,7 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
     private fun handleInvalidArgumentTypeForFunction(functionName: String, expectedType: StaticType, actualType: StaticType, ctx: Context) {
         ctx.problemHandler.handleProblem(
             Problem(
-                sourceLocation = UNKNOWN_SOURCE_LOCATION,
+                sourceLocation = UNKNOWN_PROBLEM_LOCATION,
                 details = SemanticProblemDetails.InvalidArgumentTypeForFunction(
                     functionName = functionName,
                     expectedType = expectedType,
@@ -1717,7 +1717,7 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
     private fun handleMissingType(ctx: Context): StaticType {
         ctx.problemHandler.handleProblem(
             Problem(
-                sourceLocation = UNKNOWN_SOURCE_LOCATION,
+                sourceLocation = UNKNOWN_PROBLEM_LOCATION,
                 details = PlanningProblemDetails.CompileError("Unable to determine type of node.")
             )
         )
@@ -1727,7 +1727,7 @@ internal object PlanTyper : PlanRewriter<PlanTyper.Context>() {
     private fun handleDuplicateAliasesError(ctx: Context) {
         ctx.problemHandler.handleProblem(
             Problem(
-                sourceLocation = UNKNOWN_SOURCE_LOCATION,
+                sourceLocation = UNKNOWN_PROBLEM_LOCATION,
                 details = SemanticProblemDetails.DuplicateAliasesInSelectListItem
             )
         )

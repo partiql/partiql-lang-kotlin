@@ -14,7 +14,7 @@
 
 package org.partiql.lang.eval
 
-import org.partiql.lang.errors.ErrorCode
+import org.partiql.errors.ErrorCode
 
 /** Indicates if a struct is ordered or not. */
 enum class StructOrdering {

@@ -1,7 +1,7 @@
 package org.partiql.lang.planner.validators
 
+import org.partiql.errors.ErrorCode
 import org.partiql.lang.domains.PartiqlLogicalResolved
-import org.partiql.lang.errors.ErrorCode
 import org.partiql.lang.eval.EvaluationException
 import org.partiql.lang.util.propertyValueMapOf
 
