@@ -3,6 +3,7 @@ package org.partiql.lib.tpc.formats
 import org.partiql.lib.tpc.Format
 import org.partiql.lib.tpc.ResultSet
 import org.partiql.lib.tpc.formats.csv.CsvResultSetWriter
+import org.partiql.lib.tpc.formats.ion.IonResultSetWriter
 import java.nio.file.Path
 
 /**
@@ -30,7 +31,7 @@ interface ResultSetWriter : AutoCloseable {
 object ResultSetWriterFactory {
 
     fun create(format: Format, output: Path) = when (format) {
-        Format.ION -> TODO("Ion not implemented")
+        Format.ION -> IonResultSetWriter(output)
         Format.CSV -> CsvResultSetWriter(output)
         Format.PARQUET -> TODO("Parquet not implemented")
     }

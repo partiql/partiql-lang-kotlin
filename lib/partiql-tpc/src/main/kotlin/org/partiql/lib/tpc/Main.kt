@@ -22,6 +22,8 @@ import org.partiql.lib.tpc.formats.ResultSetWriterFactory
 import picocli.CommandLine
 import picocli.CommandLine.Option
 import java.nio.file.Path
+import kotlin.io.path.createDirectory
+import kotlin.io.path.notExists
 import kotlin.system.exitProcess
 
 /**
@@ -78,6 +80,11 @@ class MainCommand : Runnable {
 
     override fun run() {
         val sNano = System.nanoTime()
+        // Prepare
+        if (output.notExists()) {
+            output.createDirectory()
+        }
+        // Generate
         when (table) {
             null -> genAll()
             else -> genOne(table!!)

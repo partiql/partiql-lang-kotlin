@@ -26,17 +26,12 @@ class CsvResultSetWriter(
         val mappers = records.table.mappers()
         // Process each record
         try {
-
             for (rows in records.results) {
-                if (rows == null) {
-                    // skip silently; make a note??
-                    continue
-                }
+                // skip silently; make a note??
+                if (rows == null) continue
                 for (row in rows) {
-                    if (row == null) {
-                        // skip silently; make a note??
-                        continue
-                    }
+                    // skip silently; make a note??
+                    if (row == null) continue
                     // map values
                     val r = row.mapIndexed { i, s ->
                         when (s) {

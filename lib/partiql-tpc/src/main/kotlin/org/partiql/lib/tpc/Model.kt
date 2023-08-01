@@ -55,12 +55,12 @@ fun Table.mappers(): Array<Mapper<*>> = columns.map {
     }
 }.toTypedArray()
 
-private fun toInt(s: String): Int = s.toInt(10)
+fun toInt(s: String): Int = s.toInt(10)
 
-private fun toDecimal(s: String): Double = s.toDouble() // should it be BigDecimal?
+fun toDecimal(s: String): Double = s.toDouble() // should it be BigDecimal?
 
-private fun identity(s: String): String = s
+fun identity(s: String): String = s
 
-private fun toTime(s: String): LocalTime = LocalTime.parse(s)
+fun toTime(s: String): LocalTime = LocalTime.parse(s)
 
-private fun toDate(s: String): LocalDate = LocalDate.parse(s)
+fun toDate(s: String): LocalDate = LocalDate.parse(s)
