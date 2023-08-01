@@ -1,0 +1,11 @@
+= PartiQL Plugins
+
+PartiQL Plugins are early in development and are subject to change.
+As of now, plugins are used to provide the PartiQL query planner with
+access to a Catalog. Further extensions are in design.
+
+== Development
+
+=== Setup
+
+

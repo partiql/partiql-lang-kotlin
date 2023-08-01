@@ -25,7 +25,7 @@ include(
     "plugins:partiql-mockdb",
     "lib:isl",
     "lib:sprout",
-    "lib:transpiler",
+    "lib:partiql-transpiler",
     "test:partiql-tests-runner",
     "test:partiql-randomized-tests",
     "examples",
