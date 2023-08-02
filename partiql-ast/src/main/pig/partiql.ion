@@ -87,6 +87,8 @@ may then be further optimized by selecting better implementations of each operat
             (lit value::ion)
 
             // A variable reference
+            // wVG-TODO: In Phase 2, this will change to (varref id::lexid),
+            //   similar to what Sprout's partiql_ast.ion does in expr.var
             (id name::symbol case::case_sensitivity qualifier::scope_qualifier)
 
             // A parameter, i.e. `?`
@@ -458,7 +460,7 @@ may then be further optimized by selecting better implementations of each operat
         // A data definition operation.
         (sum ddl_op
             // `CREATE TABLE <symbol> ( <table_def> )?`
-            (create_table table_name::symbol def::(? table_def))
+            (create_table table_name::identifier def::(? table_def))
 
             // `DROP TABLE <identifier>`
             (drop_table table_name::identifier)

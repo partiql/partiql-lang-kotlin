@@ -116,7 +116,8 @@ class QueryPrettyPrinter {
     }
 
     private fun writeAstNode(node: PartiqlAst.DdlOp.CreateTable, sb: StringBuilder) {
-        sb.append("CREATE TABLE ${node.tableName.text}")
+        sb.append("CREATE TABLE ")
+        writeAstNode(node.tableName, sb)
         node.def?.let {
             var separator = "\n\t"
             sb.append(" (")

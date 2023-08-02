@@ -226,6 +226,25 @@ internal class PartiQLPigVisitor(
         }
     }
 
+    // Compared to visitLexid(), this readLexidAsIdentifier() method does not add a dummy `unqualified()` ScopeQualifier,
+    // because it is not needed at is call sites. 
+    // wVG-TODO: After dust settles, this will probably become the new  `override fun visitLexid`
+    //   Sprout-targeting parser already does something like this.
+    fun readLexidAsIdentifier(ctx: PartiQLParser.LexidContext) = PartiqlAst.build {
+        val metas = ctx.ident.getSourceMetaContainer()
+        when (ctx.ident.type) {
+            PartiQLParser.REGULAR_IDENTIFIER -> {
+                val strId = ctx.REGULAR_IDENTIFIER().text
+                identifier(strId, caseInsensitive(), metas)
+            }
+            PartiQLParser.DELIMITED_IDENTIFIER -> {
+                val strId = ctx.DELIMITED_IDENTIFIER().text.trim('\"').replace("\"\"", "\"")
+                identifier(strId, caseSensitive(), metas)
+            }
+            else -> throw ParserException("Bug: only REGULAR_IDENTIFIER or DELIMITED_IDENTIFIER should be possible", ErrorCode.PARSE_UNEXPECTED_TOKEN)
+        }
+    }
+
     /**
      *
      * DATA DEFINITION LANGUAGE (DDL)
@@ -238,26 +257,27 @@ internal class PartiQLPigVisitor(
     }
 
     override fun visitDropTable(ctx: PartiQLParser.DropTableContext) = PartiqlAst.build {
-        val id = visitLexid(ctx.tableName().lexid())
-        dropTable(id.toIdentifier(), ctx.DROP().getSourceMetaContainer())
+        val id = readLexidAsIdentifier(ctx.tableName().lexid())
+        dropTable(id, ctx.DROP().getSourceMetaContainer())
     }
 
     override fun visitDropIndex(ctx: PartiQLParser.DropIndexContext) = PartiqlAst.build {
-        val id = visitLexid(ctx.target)
-        val key = visitLexid(ctx.on)
-        dropIndex(key.toIdentifier(), id.toIdentifier(), ctx.DROP().getSourceMetaContainer())
+        val id = readLexidAsIdentifier(ctx.target)
+        val key = readLexidAsIdentifier(ctx.on)
+        dropIndex(key, id, ctx.DROP().getSourceMetaContainer())
     }
 
     override fun visitCreateTable(ctx: PartiQLParser.CreateTableContext) = PartiqlAst.build {
-        val name = visitLexid(ctx.tableName().lexid()).name
+        val name = readLexidAsIdentifier(ctx.tableName().lexid())
         val def = ctx.tableDef()?.let { visitTableDef(it) }
-        createTable_(name, def, ctx.CREATE().getSourceMetaContainer())
+        createTable(name, def, ctx.CREATE().getSourceMetaContainer())
     }
 
     override fun visitCreateIndex(ctx: PartiQLParser.CreateIndexContext) = PartiqlAst.build {
-        val id = visitLexid(ctx.lexid())
+        val id = readLexidAsIdentifier(ctx.lexid())
         val fields = ctx.pathSimple().map { path -> visitPathSimple(path) }
-        createIndex(id.toIdentifier(), fields, ctx.CREATE().getSourceMetaContainer())
+        createIndex(id, fields, ctx.CREATE().getSourceMetaContainer())
+        createIndex(id, fields, ctx.CREATE().getSourceMetaContainer())
     }
 
     override fun visitTableDef(ctx: PartiQLParser.TableDefContext) = PartiqlAst.build {
@@ -1754,14 +1774,6 @@ internal class PartiQLPigVisitor(
     private fun PartiqlAst.Expr.Id.toPigSymbolPrimitive(): SymbolPrimitive =
         this.name.copy(metas = this.metas)
 
-    private fun PartiqlAst.Expr.Id.toIdentifier(): PartiqlAst.Identifier {
-        val name = this.name.text
-        val case = this.case
-        return PartiqlAst.build {
-            identifier(name, case)
-        }
-    }
-
     /**
      * With the <string> and <int> nodes of a literal time expression, returns the parsed string and precision.
      * TIME (<int>)? (WITH TIME ZONE)? <string>
@@ -1984,6 +1996,8 @@ internal class PartiQLPigVisitor(
 
     private fun TerminalNode.getStringValue(): String = this.symbol.getStringValue()
 
+    // wVG-TODO It is doubtful it is useful to have these extractions gathered here.
+    // The part for identifiers is now in readLexid.  Move others to better places as well?
     private fun Token.getStringValue(): String = when (this.type) {
         PartiQLParser.REGULAR_IDENTIFIER -> this.text
         PartiQLParser.DELIMITED_IDENTIFIER -> this.text.removePrefix("\"").removeSuffix("\"").replace("\"\"", "\"")

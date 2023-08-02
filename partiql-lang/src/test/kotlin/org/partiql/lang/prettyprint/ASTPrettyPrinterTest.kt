@@ -63,7 +63,7 @@ class ASTPrettyPrinterTest {
             """
                 Ddl
                     op: CreateTable
-                        tableName: Symbol foo
+                        tableName: Identifier foo (case_insensitive)
             """.trimIndent()
         )
     }

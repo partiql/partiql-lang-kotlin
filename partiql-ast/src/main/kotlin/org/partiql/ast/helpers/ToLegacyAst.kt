@@ -128,7 +128,7 @@ private class AstTranslator(val metas: Map<String, MetaContainer>) : AstBaseVisi
         if (node.name !is Identifier.Symbol) {
             error("The legacy AST does not support qualified identifiers as table names")
         }
-        val tableName = (node.name as Identifier.Symbol).symbol
+        val tableName = visitIdentifierSymbol((node.name as Identifier.Symbol), ctx)
         val def = node.definition?.let { visitTableDefinition(it, ctx) }
         ddl(createTable(tableName, def), metas)
     }

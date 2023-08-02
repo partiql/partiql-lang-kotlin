@@ -421,13 +421,13 @@ internal class PartiQLParserDefault : PartiQLParser {
         }
         override fun visitLexid(ctx: GeneratedParser.LexidContext) = translate(ctx) {
             when (ctx.ident.type) {
-                GeneratedParser.DELIMITED_IDENTIFIER -> identifierSymbol(
-                    ctx.DELIMITED_IDENTIFIER().getStringValue(),
-                    Identifier.CaseSensitivity.SENSITIVE,
-                )
                 GeneratedParser.REGULAR_IDENTIFIER -> identifierSymbol(
-                    ctx.REGULAR_IDENTIFIER().getStringValue(),
+                    ctx.REGULAR_IDENTIFIER().text,
                     Identifier.CaseSensitivity.INSENSITIVE,
+                )
+                GeneratedParser.DELIMITED_IDENTIFIER -> identifierSymbol(
+                    ctx.DELIMITED_IDENTIFIER().text.trim('\"').replace("\"\"", "\""),
+                    Identifier.CaseSensitivity.SENSITIVE,
                 )
                 else -> throw error(ctx, "Invalid symbol reference.")
             }
@@ -1999,6 +1999,8 @@ internal class PartiQLParserDefault : PartiQLParser {
 
         private fun TerminalNode.getStringValue(): String = this.symbol.getStringValue()
 
+        // wVG-TODO It is doubtful it is useful to have these extractions gathered here.
+        // The part for identifiers is now in visitLexid.  Move others to better places as well?
         private fun Token.getStringValue(): String = when (this.type) {
             GeneratedParser.REGULAR_IDENTIFIER -> this.text
             GeneratedParser.DELIMITED_IDENTIFIER -> this.text.removePrefix("\"").removeSuffix("\"").replace("\"\"", "\"")
