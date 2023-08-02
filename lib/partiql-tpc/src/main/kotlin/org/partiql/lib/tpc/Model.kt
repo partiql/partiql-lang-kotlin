@@ -1,6 +1,5 @@
 package org.partiql.lib.tpc
 
-import io.trino.tpcds.Results
 import io.trino.tpcds.Table
 import io.trino.tpcds.column.ColumnType
 import java.time.LocalDate
@@ -20,17 +19,6 @@ enum class Benchmark(val display: String) {
     TPCDS("TPC-DS"),
     TPCH("TPC-H"),
 }
-
-/**
- * Associate a Table with
- *
- * @property table
- * @property results
- */
-class ResultSet(
-    val table: Table,
-    val results: Results,
-)
 
 /**
  * Generated data is string-ly typed

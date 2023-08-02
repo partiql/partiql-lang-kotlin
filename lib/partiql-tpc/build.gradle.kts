@@ -4,11 +4,17 @@ plugins {
 }
 
 dependencies {
+    implementation(Deps.avro)
     implementation(Deps.csv)
-    implementation(Deps.picoCli)
+    implementation(Deps.hadoopCommon)
+    // ??? without this I was getting linking errors at runtime
+    implementation("org.apache.hadoop:hadoop-mapreduce-client-core:3.3.6")
     implementation(Deps.ionElement)
-    implementation("io.trino.tpcds:tpcds:1.4")
-    implementation("org.apache.parquet:parquet:1.13.1")
+    implementation(Deps.parquet)
+    implementation(Deps.parquetAvro)
+    implementation(Deps.parquetHadoop)
+    implementation(Deps.picoCli)
+    implementation(Deps.trinoTPC)
 }
 
 kotlin {

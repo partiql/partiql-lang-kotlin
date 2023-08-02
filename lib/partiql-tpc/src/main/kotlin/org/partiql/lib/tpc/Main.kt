@@ -115,12 +115,12 @@ class MainCommand : Runnable {
             .withChunkNumber(part)
             .withTable(table)
             .withNoSexism(true)
+        val writer = ResultSetWriterFactory.create(table, format, output)
         val results = constructResults(table, session)
-        val set = ResultSet(table, results)
-        val writer = ResultSetWriterFactory.create(format, output)
-        writer.open()
-        writer.write(set)
-        writer.close()
+        writer.use {
+            it.open(table)
+            it.write(results)
+            // auto-close
+        }
     }
 }
-

@@ -4,12 +4,11 @@ import com.amazon.ion.IonType
 import com.amazon.ion.IonWriter
 import com.amazon.ion.Timestamp
 import com.amazon.ion.system.IonTextWriterBuilder
+import io.trino.tpcds.Results
 import io.trino.tpcds.Table
 import io.trino.tpcds.column.ColumnType
-import org.partiql.lib.tpc.ResultSet
 import org.partiql.lib.tpc.formats.ResultSetWriter
 import java.io.FileOutputStream
-import java.io.OutputStreamWriter
 import java.nio.file.Path
 import java.time.LocalDate
 import java.time.LocalTime
@@ -30,22 +29,23 @@ internal typealias IonMapper = (IonWriter, String) -> Unit
  */
 class IonResultSetWriter(private val output: Path) : ResultSetWriter {
 
-    val ionTextWriter = IonTextWriterBuilder.standard()
+    private lateinit var writer: IonWriter
+    private lateinit var mappers: Array<Pair<String, IonMapper>>
 
-    override fun open() {}
-
-    override fun write(records: ResultSet) {
+    override fun open(table: Table) {
         // Initialize output appendable
-        val tableName = records.table.name.lowercase()
+        val tableName = table.name.lowercase()
         val path = output.resolve(tableName).toString() + ".ion"
         val file = FileOutputStream(path)
-        val out = OutputStreamWriter(file)
-        val writer = IonTextWriterBuilder.standard().build(file)
-        // Generate field mappers
-        val mappers: Array<Pair<String, IonMapper>> = records.table.fieldMappers()
+        // Initialize writer
+        writer = IonTextWriterBuilder.standard().build(file)
+        mappers = table.fieldMappers()
+    }
+
+    override fun write(results: Results) {
         // Process each record
         try {
-            for (rows in records.results) {
+            for (rows in results) {
                 // skip silently; make a note??
                 if (rows == null) continue
                 for (row in rows) {
