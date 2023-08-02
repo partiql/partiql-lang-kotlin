@@ -1,3 +1,5 @@
+@file:OptIn(PartiQLValueExperimental::class)
+
 package org.partiql.transpiler
 
 import com.amazon.ion.IonSymbol
@@ -8,6 +10,8 @@ import org.partiql.ast.Identifier
 import org.partiql.ast.SetQuantifier
 import org.partiql.ast.Statement
 import org.partiql.ast.builder.AstFactory
+import org.partiql.lang.ast.passes.inference.isNumeric
+import org.partiql.lang.types.StaticTypeUtils
 import org.partiql.plan.Arg
 import org.partiql.plan.Case
 import org.partiql.plan.PartiQLPlan
@@ -39,6 +43,8 @@ import org.partiql.types.SymbolType
 import org.partiql.types.TimeType
 import org.partiql.types.TimestampType
 import org.partiql.value.PartiQLValueExperimental
+import org.partiql.value.io.PartiQLValueIonReaderBuilder
+import org.partiql.value.nullValue
 import org.partiql.value.symbolValue
 
 /**
@@ -55,7 +61,7 @@ abstract class TranspilerTarget {
      * @param plan
      * @param onProblem
      */
-    open fun retarget(plan: PartiQLPlan, onProblem: ProblemCallback) = plan
+    open fun retarget(plan: PartiQLPlan, onProblem: ProblemCallback): PartiQLPlan = plan
 
     /**
      * Default AST to SQL
@@ -98,6 +104,9 @@ abstract class TranspilerTarget {
 
         private val factory: AstFactory = Ast
 
+        @Suppress("PrivatePropertyName")
+        private val ERROR_NODE = factory.exprLit(nullValue(listOf("ERR")))
+
         private inline fun <T : AstNode> unplan(block: AstFactory.() -> T): T = factory.block()
 
         override fun defaultReturn(node: PlanNode, ctx: Unit): AstNode =
@@ -120,22 +129,58 @@ abstract class TranspilerTarget {
             exprPath(root, steps)
         }
 
-        override fun visitRexLit(node: Rex.Lit, ctx: Unit): AstNode {
-            TODO()
+        @OptIn(PartiQLValueExperimental::class)
+        override fun visitRexLit(node: Rex.Lit, ctx: Unit) = unplan {
+            // temporary
+            val ion = node.value.toString().byteInputStream()
+            val value = PartiQLValueIonReaderBuilder.standard().build(ion).read()
+            exprLit(value)
         }
 
         override fun visitRexUnary(node: Rex.Unary, ctx: Unit) = unplan {
             // temporary
+            val type = node.value.grabType()
             val op = when (node.op) {
-                Rex.Unary.Op.NOT -> Expr.Unary.Op.NOT
-                Rex.Unary.Op.POS -> Expr.Unary.Op.POS
-                Rex.Unary.Op.NEG -> Expr.Unary.Op.NEG
+                Rex.Unary.Op.NOT -> {
+                    if (type != StaticType.BOOL) {
+                        onProblem(
+                            TranspilerProblem(
+                                level = TranspilerProblem.Level.ERROR,
+                                message = "Cannot negate $node with non-boolean type $type",
+                            )
+                        )
+                    }
+                    Expr.Unary.Op.NOT
+                }
+                Rex.Unary.Op.POS -> {
+                    if (!type.isNumeric()) {
+                        onProblem(
+                            TranspilerProblem(
+                                level = TranspilerProblem.Level.ERROR,
+                                message = "Cannot use unary plus (+) with non-numeric type $type",
+                            )
+                        )
+                    }
+                    Expr.Unary.Op.POS
+                }
+                Rex.Unary.Op.NEG -> {
+                    if (!type.isNumeric()) {
+                        onProblem(
+                            TranspilerProblem(
+                                level = TranspilerProblem.Level.ERROR,
+                                message = "Cannot use unary minus (-) with non-numeric type $type",
+                            )
+                        )
+                    }
+                    Expr.Unary.Op.NEG
+                }
             }
             val expr = visitRex(node.value, ctx)
             exprUnary(op, expr)
         }
 
         override fun visitRexBinary(node: Rex.Binary, ctx: Unit) = unplan {
+            val comparable = StaticTypeUtils.areStaticTypesComparable(node.lhs.grabType(), node.rhs.grabType())
             // temporary, could do "valueOf" but that's fragile
             val op = when (node.op) {
                 Rex.Binary.Op.PLUS -> Expr.Binary.Op.PLUS
@@ -152,6 +197,14 @@ abstract class TranspilerTarget {
                 Rex.Binary.Op.GT -> Expr.Binary.Op.GT
                 Rex.Binary.Op.LT -> Expr.Binary.Op.LT
                 Rex.Binary.Op.LTE -> Expr.Binary.Op.LTE
+            }
+            if (!comparable) {
+                onProblem(
+                    TranspilerProblem(
+                        level = TranspilerProblem.Level.ERROR,
+                        message = "Operands of binary $op are incompatible",
+                    )
+                )
             }
             val lhs = visitRex(node.lhs, ctx)
             val rhs = visitRex(node.rhs, ctx)
@@ -309,11 +362,79 @@ abstract class TranspilerTarget {
 
         // SQL and PartiQL Special Forms
 
-        open fun callLike(args: List<Arg>, ctx: Unit): Expr = unplan { TODO() }
+        open fun callLike(args: List<Arg>, ctx: Unit): Expr = when (args.size) {
+            2 -> callLike2(args, ctx)
+            3 -> callLike3(args, ctx)
+            else -> {
+                onProblem(
+                    TranspilerProblem(
+                        level = TranspilerProblem.Level.ERROR,
+                        message = "SQL builtin `LIKE` can have arity 2 or 3, found arity ${args.size}",
+                    )
+                )
+                ERROR_NODE
+            }
+        }
 
-        open fun callBetween(args: List<Arg>, ctx: Unit): Expr = unplan { TODO() }
+        private fun callLike2(args: List<Arg>, ctx: Unit): Expr = unplan {
+            val valid = args.validate("LIKE", StaticType.TEXT, StaticType.TEXT)
+            if (!valid) {
+                onProblem(
+                    TranspilerProblem(
+                        level = TranspilerProblem.Level.ERROR,
+                        message = "Arguments for `LIKE` arity-2 were invalid",
+                    )
+                )
+                return ERROR_NODE
+            }
+            val value = args.unplan(0, ctx)
+            val pattern = args.unplan(1, ctx)
+            val escape = null
+            val not = false
+            exprLike(value, pattern, escape, not)
+        }
 
-        open fun callInCollection(args: List<Arg>, ctx: Unit): Expr = unplan { TODO() }
+        private fun callLike3(args: List<Arg>, ctx: Unit): Expr = unplan {
+            val valid = args.validate("like", StaticType.TEXT, StaticType.TEXT, StaticType.TEXT)
+            if (!valid) {
+                onProblem(
+                    TranspilerProblem(
+                        level = TranspilerProblem.Level.ERROR,
+                        message = "Arguments for `LIKE` arity-3 were invalid",
+                    )
+                )
+                return ERROR_NODE
+            }
+            val value = args.unplan(0, ctx)
+            val pattern = args.unplan(1, ctx)
+            val escape = args.unplan(2, ctx)
+            val not = false
+            exprLike(value, pattern, escape, not)
+        }
+
+        open fun callBetween(args: List<Arg>, ctx: Unit): Expr = unplan {
+            var valid = true
+            valid = args.assertArgCount("BETWEEN", 3)
+            valid = args.areComparable()
+            if (!valid) {
+                onProblem(
+                    TranspilerProblem(
+                        level = TranspilerProblem.Level.ERROR,
+                        message = "Arguments for `BETWEEN` are not comparable",
+                    )
+                )
+                return ERROR_NODE
+            }
+            val value = args.unplan(0, ctx)
+            val lower = args.unplan(1, ctx)
+            val upper = args.unplan(2, ctx)
+            val not = false
+            exprBetween(value, lower, upper, not)
+        }
+
+        open fun callInCollection(args: List<Arg>, ctx: Unit): Expr = unplan {
+            TODO()
+        }
 
         open fun callIsType(args: List<Arg>, ctx: Unit): Expr = unplan { TODO() }
 
@@ -390,7 +511,76 @@ abstract class TranspilerTarget {
 
         // Helpers
 
-        private fun AstFactory.id(name: String, case: Case): Identifier.Symbol = when (case) {
+        private fun List<Arg>.assertArgCount(name: String, count: Int): Boolean {
+            if (size != count) {
+                onProblem(TranspilerProblem(
+                    level = TranspilerProblem.Level.ERROR,
+                    message = "Expected $count arguments for $name, but found $size"
+                ))
+                return false
+            }
+            return true
+        }
+
+        /**
+         * TODO
+         *
+         * @param types
+         * @return
+         */
+        private fun List<Arg>.validate(name: String, vararg types: StaticType): Boolean {
+            var valid = assertArgCount(name, types.size)
+            forEachIndexed { i, arg ->
+                if (arg is Arg.Type) {
+                    // TODO skip!!
+                    return@forEachIndexed
+                }
+                val actualType = (arg as Arg.Value).value.grabType()
+                val expectedType = types[i]
+                // check if types agree
+                val argIsSubtype = StaticTypeUtils.isSubTypeOf(actualType, expectedType)
+                if (!argIsSubtype) {
+                    valid = false
+                    onProblem(
+                        TranspilerProblem(
+                            level = TranspilerProblem.Level.ERROR,
+                            message = "Expected arg $i of `$name` to be (sub)type $expectedType, but was $actualType"
+                        )
+                    )
+                }
+            }
+            return valid
+        }
+
+        /**
+         * Returns true if all arguments are comparable.
+         */
+        private fun List<Arg>.areComparable(): Boolean {
+            var comparable = true
+            for (i in indices) {
+                for (j in i + 1 until size) {
+                    val lhs = (this[i] as Arg.Value).value.grabType()
+                    val rhs = (this[j] as Arg.Value).value.grabType()
+                    val ok = StaticTypeUtils.areStaticTypesComparable(lhs, rhs)
+                    if (!ok) {
+                        onProblem(
+                            TranspilerProblem(
+                            level = TranspilerProblem.Level.ERROR,
+                                message = "$lhs is not comparable to $rhs"
+                        ))
+                       comparable = false
+                    }
+                }
+            }
+            return comparable
+        }
+
+        /**
+         * Syntax sugar
+         */
+        private fun List<Arg>.unplan(i: Int, ctx: Unit) = visitRex((this[i] as Arg.Value).value, ctx)
+
+        private fun AstFactory.id(name: String, case: Case = Case.SENSITIVE): Identifier.Symbol = when (case) {
             Case.SENSITIVE -> identifierSymbol(name, Identifier.CaseSensitivity.SENSITIVE)
             Case.INSENSITIVE -> identifierSymbol(name, Identifier.CaseSensitivity.INSENSITIVE)
         }
@@ -420,6 +610,29 @@ abstract class TranspilerTarget {
                 is TimestampType -> "TIMESTAMP"
             }
             exprLit(symbolValue(symbol))
+        }
+
+        private fun Rex.grabType(): StaticType {
+            val knownType = when (this) {
+                is Rex.Agg -> this.type
+                is Rex.Binary -> this.type
+                is Rex.Call -> this.type
+                is Rex.Collection.Array -> this.type
+                is Rex.Collection.Bag -> this.type
+                is Rex.Id -> this.type
+                is Rex.Lit -> this.type
+                is Rex.Path -> this.type
+                is Rex.Query.Collection -> this.type
+                is Rex.Query.Scalar.Pivot -> this.type
+                is Rex.Tuple -> this.type
+                is Rex.Unary -> this.type
+                is Rex.Query.Scalar.Subquery -> this.type
+                is Rex.Switch -> this.type
+            }
+            return when (knownType) {
+                null -> StaticType.ANY
+                else -> knownType
+            }
         }
     }
 }

@@ -18,4 +18,6 @@ class TranspilerProblem(val level: Level, val message: String) {
         WARNING,
         ERROR,
     }
+
+    override fun toString() = "$level: $message"
 }

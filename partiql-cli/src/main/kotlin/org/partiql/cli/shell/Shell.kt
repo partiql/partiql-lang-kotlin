@@ -414,13 +414,13 @@ private fun History.Entry.pretty(): String {
 
 private fun ansi(string: String, style: AttributedStyle) = AttributedString(string, style).toAnsi()
 
-private fun PrintStream.success(string: String) = this.println(ansi(string, SUCCESS))
+public fun PrintStream.success(string: String) = this.println(ansi(string, SUCCESS))
 
-private fun PrintStream.error(string: String) = this.println(ansi(string, ERROR))
+public fun PrintStream.error(string: String) = this.println(ansi(string, ERROR))
 
-private fun PrintStream.info(string: String) = this.println(ansi(string, INFO))
+public fun PrintStream.info(string: String) = this.println(ansi(string, INFO))
 
-private fun PrintStream.warn(string: String) = this.println(ansi(string, WARN))
+public fun PrintStream.warn(string: String) = this.println(ansi(string, WARN))
 
 private class ThreadInterrupter : Closeable {
     private val thread = Thread.currentThread()

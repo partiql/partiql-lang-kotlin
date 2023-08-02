@@ -22,6 +22,10 @@ dependencies {
     implementation(project(":partiql-lang"))
     implementation(project(":partiql-plan"))
     implementation(project(":partiql-types"))
+    // !! DEBUG !!
+    implementation(project(":lib:partiql-transpiler"))
+    implementation(project(":plugins:partiql-mockdb"))
+    // !! DEBUG !!
     implementation(Deps.csv)
     implementation(Deps.awsSdkBom)
     implementation(Deps.awsSdkDynamodb)
