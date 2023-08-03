@@ -53,6 +53,12 @@ internal class PartiQLCommand(private val ion: IonSystem) : Runnable {
     @CommandLine.ArgGroup(exclusive = false, heading = "%n@|bold,underline Interactive (Shell) Configurations|@%n%n")
     internal var shellOptions: ShellOptions? = null
 
+    @CommandLine.Option(
+        names = ["--target"],
+        description = ["Transpilation target"],
+    )
+    var target: String = "partiql"
+
     internal companion object {
         private const val SHEBANG_PREFIX = "#!"
     }
@@ -100,7 +106,7 @@ internal class PartiQLCommand(private val ion: IonSystem) : Runnable {
      * Runs the interactive shell
      */
     private fun runShell(shell: ShellOptions = ShellOptions()) {
-        val config = Shell.ShellConfiguration(isMonochrome = shell.isMonochrome)
+        val config = Shell.ShellConfiguration(isMonochrome = shell.isMonochrome, target = target)
         Shell(System.out, options.pipeline, options.environment, config).start()
     }
 

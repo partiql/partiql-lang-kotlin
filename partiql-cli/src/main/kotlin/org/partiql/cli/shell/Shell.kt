@@ -102,7 +102,7 @@ internal class Shell(
     private val output: OutputStream,
     private val compiler: AbstractPipeline,
     private val initialGlobal: Bindings<ExprValue>,
-    private val config: ShellConfiguration = ShellConfiguration()
+    private val config: ShellConfiguration,
 ) {
     private val homeDir: Path = Paths.get(System.getProperty("user.home"))
     private val globals = ShellGlobalBinding().add(initialGlobal)
@@ -298,6 +298,8 @@ internal class Shell(
             EvaluationSession.build {
                 globals(bindings)
                 user(currentUser)
+                // HACK!!
+                withContextVariable("target", config.target)
             }
         )
 
@@ -393,7 +395,7 @@ internal class Shell(
      * A configuration class representing any configurations specified by the user
      * @param isMonochrome specifies the removal of syntax highlighting
      */
-    class ShellConfiguration(val isMonochrome: Boolean = false)
+    class ShellConfiguration(val isMonochrome: Boolean = false, val target: String)
 }
 
 /**

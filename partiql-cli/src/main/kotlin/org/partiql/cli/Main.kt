@@ -33,6 +33,7 @@ import org.partiql.plugins.mockdb.LocalPlugin
 import org.partiql.transpiler.Transpiler
 import org.partiql.transpiler.TranspilerProblem
 import org.partiql.transpiler.targets.PartiQLTarget
+import org.partiql.transpiler.targets.RedshiftTarget
 import picocli.CommandLine
 import java.io.PrintStream
 import java.time.Instant
@@ -82,8 +83,15 @@ object Debug {
     @Suppress("UNUSED_PARAMETER")
     @Throws(Exception::class)
     fun action(input: String, session: EvaluationSession): String {
+        session.context.forEach {
+            println("${it.key}: ${it.value}")
+        }
         // IMPLEMENT DEBUG BEHAVIOR HERE
-        val target = PartiQLTarget
+        val target = when (val t = session.context["target"]) {
+            "partiql" -> PartiQLTarget
+            "redshift" -> RedshiftTarget
+            else -> throw IllegalArgumentException("Unknown target $t")
+        }
         val context = ctx("test-query", "local", listOf("babel"))
         val transpiler = Transpiler(target, context)
         val result = transpiler.transpile(input)

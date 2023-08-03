@@ -102,12 +102,12 @@ abstract class TranspilerTarget {
      */
     public open class BaseRuleset(val onProblem: ProblemCallback) : PlanBaseVisitor<AstNode, Unit>() {
 
-        private val factory: AstFactory = Ast
+        public val factory: AstFactory = Ast
+
+        public inline fun <T : AstNode> unplan(block: AstFactory.() -> T): T = factory.block()
 
         @Suppress("PrivatePropertyName")
         private val ERROR_NODE = factory.exprLit(nullValue(listOf("ERR")))
-
-        private inline fun <T : AstNode> unplan(block: AstFactory.() -> T): T = factory.block()
 
         override fun defaultReturn(node: PlanNode, ctx: Unit): AstNode =
             throw UnsupportedOperationException("Cannot unplan $node")
@@ -344,7 +344,7 @@ abstract class TranspilerTarget {
                 onProblem(problem)
             }
             // ERR: Double projection!
-            if (node.constructor != null && sfw.select == null) {
+            if (node.constructor != null && sfw.select != null) {
                 val problem = TranspilerProblem(
                     level = TranspilerProblem.Level.ERROR,
                     message = "Unsupported query plan; the input plan suggests both SELECT and SELECT VALUE Clauses",
@@ -580,7 +580,7 @@ abstract class TranspilerTarget {
          */
         private fun List<Arg>.unplan(i: Int, ctx: Unit) = visitRex((this[i] as Arg.Value).value, ctx)
 
-        private fun AstFactory.id(name: String, case: Case = Case.SENSITIVE): Identifier.Symbol = when (case) {
+        public fun AstFactory.id(name: String, case: Case = Case.SENSITIVE): Identifier.Symbol = when (case) {
             Case.SENSITIVE -> identifierSymbol(name, Identifier.CaseSensitivity.SENSITIVE)
             Case.INSENSITIVE -> identifierSymbol(name, Identifier.CaseSensitivity.INSENSITIVE)
         }
@@ -612,7 +612,7 @@ abstract class TranspilerTarget {
             exprLit(symbolValue(symbol))
         }
 
-        private fun Rex.grabType(): StaticType {
+        public fun Rex.grabType(): StaticType {
             val knownType = when (this) {
                 is Rex.Agg -> this.type
                 is Rex.Binary -> this.type

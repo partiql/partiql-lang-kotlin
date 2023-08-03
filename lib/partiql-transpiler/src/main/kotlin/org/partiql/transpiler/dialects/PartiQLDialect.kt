@@ -241,7 +241,7 @@ abstract class PartiQLDialect : Dialect() {
 
     override fun visitExprCall(node: Expr.Call, head: Block): Block {
         var h = head
-        h = h concat visitIdentifier(node.function, h)
+        h = visitIdentifier(node.function, h)
         h = h concat list { node.args }
         return h
     }
