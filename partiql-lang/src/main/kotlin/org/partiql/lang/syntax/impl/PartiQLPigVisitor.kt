@@ -247,6 +247,12 @@ internal class PartiQLPigVisitor(
         }
     }
 
+    // wVG This method is functionally equivalent to the legacy visitLexid()
+    fun readLexidAsExprId(ctx: PartiQLParser.LexidContext): PartiqlAst.Expr.Id = PartiqlAst.build {
+        val ident = readLexidAsIdentifier(ctx)
+        id(ident.name.text, ident.case, unqualified(), ident.metas)
+    }
+
     /**
      *
      * DATA DEFINITION LANGUAGE (DDL)
@@ -386,7 +392,7 @@ internal class PartiQLPigVisitor(
 
     override fun visitInsertStatement(ctx: PartiQLParser.InsertStatementContext) = PartiqlAst.build {
         insert_(
-            target = visitLexid(ctx.lexid()),
+            target = readLexidAsExprId(ctx.lexid()),
             asAlias = ctx.asIdent()?.let { visitAsIdent(it).name },
             values = visitExpr(ctx.value),
             conflictAction = ctx.onConflict()?.let { visitOnConflict(it) },
@@ -396,7 +402,7 @@ internal class PartiQLPigVisitor(
 
     override fun visitReplaceCommand(ctx: PartiQLParser.ReplaceCommandContext) = PartiqlAst.build {
         insert_(
-            target = visitLexid(ctx.lexid()),
+            target = readLexidAsExprId(ctx.lexid()),
             asAlias = ctx.asIdent()?.let { visitAsIdent(it).name },
             values = visitExpr(ctx.value),
             conflictAction = doReplace(excluded()),
@@ -407,7 +413,7 @@ internal class PartiQLPigVisitor(
     // Based on https://github.com/partiql/partiql-docs/blob/main/RFCs/0011-partiql-insert.md
     override fun visitUpsertCommand(ctx: PartiQLParser.UpsertCommandContext) = PartiqlAst.build {
         insert_(
-            target = visitLexid(ctx.lexid()),
+            target = readLexidAsExprId(ctx.lexid()),
             asAlias = ctx.asIdent()?.let { visitAsIdent(it).name },
             values = visitExpr(ctx.value),
             conflictAction = doUpdate(excluded()),
@@ -501,7 +507,7 @@ internal class PartiQLPigVisitor(
     }
 
     override fun visitPathSimple(ctx: PartiQLParser.PathSimpleContext) = PartiqlAst.build {
-        val root = visitLexid(ctx.lexid())
+        val root = readLexidAsExprId(ctx.lexid())
         if (ctx.pathSimpleSteps().isEmpty()) return@build root
         val steps = ctx.pathSimpleSteps().map { visit(it) as PartiqlAst.PathStep }
         path(root, steps, root.metas)
@@ -512,7 +518,7 @@ internal class PartiQLPigVisitor(
     }
 
     override fun visitPathSimpleSymbol(ctx: PartiQLParser.PathSimpleSymbolContext) = PartiqlAst.build {
-        pathExpr(visitLexid(ctx.lexid()), caseSensitive())
+        pathExpr(readLexidAsExprId(ctx.lexid()), caseSensitive())
     }
 
     override fun visitPathSimpleDotSymbol(ctx: PartiQLParser.PathSimpleDotSymbolContext) =
