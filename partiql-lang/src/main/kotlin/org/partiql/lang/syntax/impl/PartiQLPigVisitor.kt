@@ -235,11 +235,13 @@ internal class PartiQLPigVisitor(
         when (ctx.ident.type) {
             PartiQLParser.REGULAR_IDENTIFIER -> {
                 val strId = ctx.REGULAR_IDENTIFIER().text
-                identifier(strId, caseInsensitive(), metas)
+                val symId = SymbolPrimitive(strId, metas)
+                identifier_(symId, caseInsensitive(), metas)
             }
             PartiQLParser.DELIMITED_IDENTIFIER -> {
                 val strId = ctx.DELIMITED_IDENTIFIER().text.trim('\"').replace("\"\"", "\"")
-                identifier(strId, caseSensitive(), metas)
+                val symId = SymbolPrimitive(strId, metas)
+                identifier_(symId, caseSensitive(), metas)
             }
             else -> throw ParserException("Bug: only REGULAR_IDENTIFIER or DELIMITED_IDENTIFIER should be possible", ErrorCode.PARSE_UNEXPECTED_TOKEN)
         }
