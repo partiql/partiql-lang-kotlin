@@ -655,8 +655,9 @@ internal class PartiQLPigVisitor(
 
     override fun visitLetBinding(ctx: PartiQLParser.LetBindingContext) = PartiqlAst.build {
         val expr = visitExpr(ctx.expr())
-        val metas = ctx.lexid().getSourceMetaContainer()
-        letBinding_(expr, convertSymbolPrimitive(ctx.lexid())!!, metas)
+        val ident = readLexidAsIdentifier(ctx.lexid())
+        val metas = ident.metas
+        letBinding_(expr, ident.name, metas)
     }
 
     /**
@@ -1287,10 +1288,13 @@ internal class PartiQLPigVisitor(
     }
 
     override fun visitFunctionCallIdent(ctx: PartiQLParser.FunctionCallIdentContext) = PartiqlAst.build {
-        val name = ctx.name.getString().lowercase()
+        // wVG Even under the "legacy" identifiers, the lower-case conversion here looks suspicious;
+        //     this probably should have done "case insensitive"; but this will become mute in Phase 2.
+        val funIdent = readLexidAsIdentifier(ctx.name)
+        val funName = funIdent.name.text.lowercase()
         val args = ctx.expr().map { visitExpr(it) }
-        val metas = ctx.name.getSourceMetaContainer()
-        call(name, args = args, metas = metas)
+        val metas = funIdent.metas
+        call(funName, args = args, metas = metas)
     }
 
     override fun visitFunctionCallReserved(ctx: PartiQLParser.FunctionCallReservedContext) = PartiqlAst.build {
@@ -1650,10 +1654,12 @@ internal class PartiQLPigVisitor(
     }
 
     override fun visitTypeCustom(ctx: PartiQLParser.TypeCustomContext) = PartiqlAst.build {
-        val metas = ctx.lexid().getSourceMetaContainer()
-        val customName: String = when (val name = ctx.lexid().getString().lowercase()) {
+        val typIdent = readLexidAsIdentifier(ctx.lexid())
+        val typSymbol = typIdent.name
+        val metas = typIdent.metas
+        val customName = when (val name = typSymbol.text.lowercase()) {
             in customKeywords -> name
-            in customTypeAliases.keys -> customTypeAliases.getOrDefault(name, name)
+            in customTypeAliases.keys -> customTypeAliases.get(name)!!
             else -> throw ParserException("Invalid custom type name: $name", ErrorCode.PARSE_INVALID_QUERY)
         }
         customType_(SymbolPrimitive(customName, metas), metas)
@@ -1752,15 +1758,6 @@ internal class PartiQLPigVisitor(
                 else -> throw ParserException("Unknown unary operator", ErrorCode.PARSE_INVALID_QUERY)
             }
         }
-
-    private fun PartiQLParser.LexidContext.getSourceMetaContainer() = when (this.ident.type) {
-        PartiQLParser.REGULAR_IDENTIFIER -> this.REGULAR_IDENTIFIER().getSourceMetaContainer()
-        PartiQLParser.DELIMITED_IDENTIFIER -> this.DELIMITED_IDENTIFIER().getSourceMetaContainer()
-        else -> throw ParserException(
-            "Unable to get identifier's source meta-container.",
-            ErrorCode.PARSE_INVALID_QUERY
-        )
-    }
 
     private fun PartiqlAst.Expr.getStringValue(token: Token? = null): String = when (this) {
         is PartiqlAst.Expr.Id -> this.name.text.lowercase()
@@ -1926,11 +1923,6 @@ internal class PartiQLPigVisitor(
         }
     }
 
-    private fun convertSymbolPrimitive(sym: PartiQLParser.LexidContext?): SymbolPrimitive? = when (sym) {
-        null -> null
-        else -> SymbolPrimitive(sym.getString(), sym.getSourceMetaContainer())
-    }
-
     private fun PartiQLParser.SelectClauseContext.getMetas(): MetaContainer = when (this) {
         is PartiQLParser.SelectAllContext -> this.SELECT().getSourceMetaContainer()
         is PartiQLParser.SelectItemsContext -> this.SELECT().getSourceMetaContainer()
@@ -2042,28 +2034,9 @@ internal class PartiQLPigVisitor(
         }
     }
 
-    private fun PartiQLParser.LexidContext.getString(): String {
-        return when {
-            this.DELIMITED_IDENTIFIER() != null -> this.DELIMITED_IDENTIFIER().getStringValue()
-            this.REGULAR_IDENTIFIER() != null -> this.REGULAR_IDENTIFIER().text
-            else -> throw ParserException("Unable to get symbol's text.", ErrorCode.PARSE_INVALID_QUERY)
-        }
-    }
-
-    private fun getSymbolPathExpr(ctx: PartiQLParser.LexidContext) = PartiqlAst.build {
-        when {
-            ctx.DELIMITED_IDENTIFIER() != null -> pathExpr(
-                lit(ionString(ctx.DELIMITED_IDENTIFIER().getStringValue())), caseSensitive(),
-                metas = ctx.DELIMITED_IDENTIFIER().getSourceMetaContainer()
-            )
-
-            ctx.REGULAR_IDENTIFIER() != null -> pathExpr(
-                lit(ionString(ctx.REGULAR_IDENTIFIER().text)), caseInsensitive(),
-                metas = ctx.REGULAR_IDENTIFIER().getSourceMetaContainer()
-            )
-
-            else -> throw ParserException("Unable to get symbol's text.", ErrorCode.PARSE_INVALID_QUERY)
-        }
+    private fun getSymbolPathExpr(ctx: PartiQLParser.LexidContext): PartiqlAst.PathStep.PathExpr = PartiqlAst.build {
+        val ident = readLexidAsIdentifier(ctx)
+        pathExpr(lit(ionString(ident.name.text)), ident.case, ident.metas)
     }
 
     private fun String.toInteger() = BigInteger(this, 10)
