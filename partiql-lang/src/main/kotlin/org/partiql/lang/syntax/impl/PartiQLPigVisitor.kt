@@ -1138,10 +1138,9 @@ internal class PartiQLPigVisitor(
 
     override fun visitVariableIdentifier(ctx: PartiQLParser.VariableIdentifierContext): PartiqlAst.PartiqlAstNode =
         PartiqlAst.build {
-            val metas = ctx.ident.getSourceMetaContainer()
+            val ident = visitLexid(ctx.ident)
             val qualifier = if (ctx.qualifier == null) unqualified() else localsFirst()
-            val sensitivity = if (ctx.ident.type == PartiQLParser.REGULAR_IDENTIFIER) caseInsensitive() else caseSensitive()
-            id(ctx.ident.getStringValue(), sensitivity, qualifier, metas)
+            id_(ident.name, ident.case, qualifier, ident.metas)
         }
 
     override fun visitVariableKeyword(ctx: PartiQLParser.VariableKeywordContext): PartiqlAst.PartiqlAstNode =
@@ -1978,11 +1977,11 @@ internal class PartiQLPigVisitor(
 
     private fun TerminalNode.getStringValue(): String = this.symbol.getStringValue()
 
-    // wVG-TODO It is doubtful it is useful to have these extractions gathered here.
-    // The part for identifiers is now in readLexid.  Move others to better places as well?
+    // TODO? Move these computations to the specific spot(s) where they needed?
+    // It is doubtful it is useful to have these extractions gathered in a switch like this,
+    // since the calling sites have already determined one case vs another.
+    // What formerly was here for REGULAR|DELIMITED_IDENTIFIER is now in visitLexid().
     private fun Token.getStringValue(): String = when (this.type) {
-        PartiQLParser.REGULAR_IDENTIFIER -> this.text
-        PartiQLParser.DELIMITED_IDENTIFIER -> this.text.removePrefix("\"").removeSuffix("\"").replace("\"\"", "\"")
         PartiQLParser.LITERAL_STRING -> this.text.removePrefix("'").removeSuffix("'").replace("''", "'")
         PartiQLParser.ION_CLOSURE -> this.text.removePrefix("`").removeSuffix("`")
         else -> throw this.err("Unsupported token for grabbing string value.", ErrorCode.PARSE_INVALID_QUERY)

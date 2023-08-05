@@ -723,7 +723,7 @@ parameter
     : QUESTION_MARK;
 
 varRefExpr
-    : qualifier=AT_SIGN? ident=(REGULAR_IDENTIFIER|DELIMITED_IDENTIFIER)   # VariableIdentifier
+    : qualifier=AT_SIGN? ident=lexid                            # VariableIdentifier
     | qualifier=AT_SIGN? key=nonReservedKeywords                # VariableKeyword
     ;
 

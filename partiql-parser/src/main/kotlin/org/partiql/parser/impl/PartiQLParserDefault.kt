@@ -1385,16 +1385,12 @@ internal class PartiQLParserDefault : PartiQLParser {
             visit(ctx.expr())
 
         override fun visitVariableIdentifier(ctx: GeneratedParser.VariableIdentifierContext) = translate(ctx) {
-            val symbol = ctx.ident.getStringValue()
-            val case = when (ctx.ident.type) {
-                GeneratedParser.REGULAR_IDENTIFIER -> Identifier.CaseSensitivity.INSENSITIVE
-                else -> Identifier.CaseSensitivity.SENSITIVE
-            }
+            val symbol = visitLexid(ctx.ident)
             val scope = when (ctx.qualifier) {
                 null -> Expr.Var.Scope.DEFAULT
                 else -> Expr.Var.Scope.LOCAL
             }
-            exprVar(identifierSymbol(symbol, case), scope)
+            exprVar(symbol, scope)
         }
 
         override fun visitVariableKeyword(ctx: GeneratedParser.VariableKeywordContext) = translate(ctx) {
