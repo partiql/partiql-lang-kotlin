@@ -192,11 +192,11 @@ internal class PartiQLPigVisitor(
      *
      */
 
-    override fun visitAsIdent(ctx: PartiQLParser.AsIdentContext) = readLexidAsIdentifier(ctx.lexid())
+    override fun visitAsIdent(ctx: PartiQLParser.AsIdentContext) = visitLexid(ctx.lexid())
 
-    override fun visitAtIdent(ctx: PartiQLParser.AtIdentContext) = readLexidAsIdentifier(ctx.lexid())
+    override fun visitAtIdent(ctx: PartiQLParser.AtIdentContext) = visitLexid(ctx.lexid())
 
-    override fun visitByIdent(ctx: PartiQLParser.ByIdentContext) = readLexidAsIdentifier(ctx.lexid())
+    override fun visitByIdent(ctx: PartiQLParser.ByIdentContext) = visitLexid(ctx.lexid())
 
     /** Interpret an ANTLR-parsed regular identifier as one of expected local keywords. */
     fun readLocalKeyword(
@@ -211,26 +211,7 @@ internal class PartiQLPigVisitor(
             return Pair(keyword, meta)
         else throw terminal.err("Expected one of: ${expected.joinToString(", ")}.", code)
     }
-    override fun visitLexid(ctx: PartiQLParser.LexidContext) = PartiqlAst.build {
-        val metas = ctx.ident.getSourceMetaContainer()
-        when (ctx.ident.type) {
-            PartiQLParser.DELIMITED_IDENTIFIER -> id(
-                ctx.DELIMITED_IDENTIFIER().getStringValue(),
-                caseSensitive(),
-                unqualified(),
-                metas
-            )
-
-            PartiQLParser.REGULAR_IDENTIFIER -> id(ctx.REGULAR_IDENTIFIER().getStringValue(), caseInsensitive(), unqualified(), metas)
-            else -> throw ParserException("Invalid symbol reference.", ErrorCode.PARSE_INVALID_QUERY)
-        }
-    }
-
-    // Compared to visitLexid(), this readLexidAsIdentifier() method does not add a dummy `unqualified()` ScopeQualifier,
-    // because it is not needed at is call sites. 
-    // wVG-TODO: After dust settles, this will probably become the new  `override fun visitLexid`
-    //   Sprout-targeting parser already does something like this.
-    fun readLexidAsIdentifier(ctx: PartiQLParser.LexidContext): PartiqlAst.Identifier = PartiqlAst.build {
+    override fun visitLexid(ctx: PartiQLParser.LexidContext): PartiqlAst.Identifier = PartiqlAst.build {
         val metas = ctx.ident.getSourceMetaContainer()
         when (ctx.ident.type) {
             PartiQLParser.REGULAR_IDENTIFIER -> {
@@ -247,9 +228,10 @@ internal class PartiQLPigVisitor(
         }
     }
 
-    // wVG This method is functionally equivalent to the legacy visitLexid()
+    // PR-COMMENT This method is functionally equivalent to the legacy visitLexid(),
+    // but it is only called in places where returned Expr.Id is actually needed.
     fun readLexidAsExprId(ctx: PartiQLParser.LexidContext): PartiqlAst.Expr.Id = PartiqlAst.build {
-        val ident = readLexidAsIdentifier(ctx)
+        val ident = visitLexid(ctx)
         id(ident.name.text, ident.case, unqualified(), ident.metas)
     }
 
@@ -265,24 +247,24 @@ internal class PartiQLPigVisitor(
     }
 
     override fun visitDropTable(ctx: PartiQLParser.DropTableContext) = PartiqlAst.build {
-        val id = readLexidAsIdentifier(ctx.tableName().lexid())
+        val id = visitLexid(ctx.tableName().lexid())
         dropTable(id, ctx.DROP().getSourceMetaContainer())
     }
 
     override fun visitDropIndex(ctx: PartiQLParser.DropIndexContext) = PartiqlAst.build {
-        val id = readLexidAsIdentifier(ctx.target)
-        val key = readLexidAsIdentifier(ctx.on)
+        val id = visitLexid(ctx.target)
+        val key = visitLexid(ctx.on)
         dropIndex(key, id, ctx.DROP().getSourceMetaContainer())
     }
 
     override fun visitCreateTable(ctx: PartiQLParser.CreateTableContext) = PartiqlAst.build {
-        val name = readLexidAsIdentifier(ctx.tableName().lexid())
+        val name = visitLexid(ctx.tableName().lexid())
         val def = ctx.tableDef()?.let { visitTableDef(it) }
         createTable(name, def, ctx.CREATE().getSourceMetaContainer())
     }
 
     override fun visitCreateIndex(ctx: PartiQLParser.CreateIndexContext) = PartiqlAst.build {
-        val id = readLexidAsIdentifier(ctx.lexid())
+        val id = visitLexid(ctx.lexid())
         val fields = ctx.pathSimple().map { path -> visitPathSimple(path) }
         createIndex(id, fields, ctx.CREATE().getSourceMetaContainer())
         createIndex(id, fields, ctx.CREATE().getSourceMetaContainer())
@@ -294,14 +276,14 @@ internal class PartiQLPigVisitor(
     }
 
     override fun visitColumnDeclaration(ctx: PartiQLParser.ColumnDeclarationContext) = PartiqlAst.build {
-        val name = readLexidAsIdentifier(ctx.columnName().lexid()).name
+        val name = visitLexid(ctx.columnName().lexid()).name
         val type = visit(ctx.type()) as PartiqlAst.Type
         val constrs = ctx.columnConstraint().map { visitColumnConstraint(it) }
         columnDeclaration_(name, type, constrs)
     }
 
     override fun visitColumnConstraint(ctx: PartiQLParser.ColumnConstraintContext) = PartiqlAst.build {
-        val name = ctx.columnConstraintName()?.let { readLexidAsIdentifier(it.lexid()).name }
+        val name = ctx.columnConstraintName()?.let { visitLexid(it.lexid()).name }
         val def = visit(ctx.columnConstraintDef()) as PartiqlAst.ColumnConstraintDef
         columnConstraint_(name, def)
     }
@@ -612,7 +594,7 @@ internal class PartiQLPigVisitor(
 
     override fun visitProjectionItem(ctx: PartiQLParser.ProjectionItemContext) = PartiqlAst.build {
         val expr = visitExpr(ctx.expr())
-        val alias = ctx.lexid()?.let { readLexidAsIdentifier(it).name }
+        val alias = ctx.lexid()?.let { visitLexid(it).name }
         if (expr is PartiqlAst.Expr.Path) convertPathToProjectionItem(expr, alias)
         else projectExpr_(expr, asAlias = alias, expr.metas)
     }
@@ -655,7 +637,7 @@ internal class PartiQLPigVisitor(
 
     override fun visitLetBinding(ctx: PartiQLParser.LetBindingContext) = PartiqlAst.build {
         val expr = visitExpr(ctx.expr())
-        val ident = readLexidAsIdentifier(ctx.lexid())
+        val ident = visitLexid(ctx.lexid())
         val metas = ident.metas
         letBinding_(expr, ident.name, metas)
     }
@@ -703,7 +685,7 @@ internal class PartiQLPigVisitor(
         groupBy_(strategy, keyList = keyList, groupAsAlias = alias, ctx.GROUP().getSourceMetaContainer())
     }
 
-    override fun visitGroupAlias(ctx: PartiQLParser.GroupAliasContext) = readLexidAsIdentifier(ctx.lexid())
+    override fun visitGroupAlias(ctx: PartiQLParser.GroupAliasContext) = visitLexid(ctx.lexid())
 
     /**
      * Returns a GROUP BY key
@@ -726,7 +708,7 @@ internal class PartiQLPigVisitor(
                 ErrorCode.PARSE_UNSUPPORTED_LITERALS_GROUPBY
             )
         }
-        val alias = ctx.lexid()?.let { readLexidAsIdentifier(it).name }
+        val alias = ctx.lexid()?.let { visitLexid(it).name }
         groupKey_(expr, asAlias = alias, expr.metas)
     }
 
@@ -795,7 +777,7 @@ internal class PartiQLPigVisitor(
     }
 
     override fun visitPatternPathVariable(ctx: PartiQLParser.PatternPathVariableContext) =
-        readLexidAsIdentifier(ctx.lexid())
+        visitLexid(ctx.lexid())
 
     override fun visitSelectorBasic(ctx: PartiQLParser.SelectorBasicContext) = PartiqlAst.build {
         val metas = ctx.mod.getSourceMetaContainer()
@@ -843,7 +825,7 @@ internal class PartiQLPigVisitor(
     }
 
     override fun visitLabelPrimaryName(ctx: PartiQLParser.LabelPrimaryNameContext) = PartiqlAst.build {
-        val x = readLexidAsIdentifier(ctx.lexid()).name
+        val x = visitLexid(ctx.lexid()).name
         graphLabelName_(x)
     }
 
@@ -885,7 +867,7 @@ internal class PartiQLPigVisitor(
 
     override fun visitEdgeSpec(ctx: PartiQLParser.EdgeSpecContext) = PartiqlAst.build {
         val placeholderDirection = edgeRight()
-        val variable = ctx.lexid()?.let { readLexidAsIdentifier(it).name }
+        val variable = ctx.lexid()?.let { visitLexid(it).name }
         val prefilter = ctx.whereClause()?.let { visitWhereClause(it) }
         val label = ctx.labelSpec()?.let { visit(it) as PartiqlAst.GraphLabelSpec }
         edge_(direction = placeholderDirection, variable = variable, prefilter = prefilter, label = label)
@@ -950,7 +932,7 @@ internal class PartiQLPigVisitor(
     }
 
     override fun visitNode(ctx: PartiQLParser.NodeContext) = PartiqlAst.build {
-        val variable = ctx.lexid()?.let { readLexidAsIdentifier(it).name }
+        val variable = ctx.lexid()?.let { visitLexid(it).name }
         val prefilter = ctx.whereClause()?.let { visitWhereClause(it) }
         val label = ctx.labelSpec()?.let { visit(it) as PartiqlAst.GraphLabelSpec }
         node_(variable = variable, prefilter = prefilter, label = label)
@@ -1039,13 +1021,13 @@ internal class PartiQLPigVisitor(
 
     override fun visitTableBaseRefSymbol(ctx: PartiQLParser.TableBaseRefSymbolContext) = PartiqlAst.build {
         val expr = visit(ctx.source) as PartiqlAst.Expr
-        val name = ctx.lexid()?.let { readLexidAsIdentifier(it).name }
+        val name = ctx.lexid()?.let { visitLexid(it).name }
         scan_(expr, name, metas = expr.metas)
     }
 
     override fun visitFromClauseSimpleImplicit(ctx: PartiQLParser.FromClauseSimpleImplicitContext) = PartiqlAst.build {
         val path = visitPathSimple(ctx.pathSimple())
-        val name = ctx.lexid()?.let { readLexidAsIdentifier(it).name }
+        val name = ctx.lexid()?.let { visitLexid(it).name }
         scan_(path, name, metas = path.metas)
     }
 
@@ -1290,7 +1272,7 @@ internal class PartiQLPigVisitor(
     override fun visitFunctionCallIdent(ctx: PartiQLParser.FunctionCallIdentContext) = PartiqlAst.build {
         // wVG Even under the "legacy" identifiers, the lower-case conversion here looks suspicious;
         //     this probably should have done "case insensitive"; but this will become mute in Phase 2.
-        val funIdent = readLexidAsIdentifier(ctx.name)
+        val funIdent = visitLexid(ctx.name)
         val funName = funIdent.name.text.lowercase()
         val args = ctx.expr().map { visitExpr(it) }
         val metas = funIdent.metas
@@ -1654,7 +1636,7 @@ internal class PartiQLPigVisitor(
     }
 
     override fun visitTypeCustom(ctx: PartiQLParser.TypeCustomContext) = PartiqlAst.build {
-        val typIdent = readLexidAsIdentifier(ctx.lexid())
+        val typIdent = visitLexid(ctx.lexid())
         val typSymbol = typIdent.name
         val metas = typIdent.metas
         val customName = when (val name = typSymbol.text.lowercase()) {
@@ -2035,7 +2017,7 @@ internal class PartiQLPigVisitor(
     }
 
     private fun getSymbolPathExpr(ctx: PartiQLParser.LexidContext): PartiqlAst.PathStep.PathExpr = PartiqlAst.build {
-        val ident = readLexidAsIdentifier(ctx)
+        val ident = visitLexid(ctx)
         pathExpr(lit(ionString(ident.name.text)), ident.case, ident.metas)
     }
 
