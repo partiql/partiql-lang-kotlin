@@ -1481,7 +1481,7 @@ internal class PartiQLPigVisitor(
 
     override fun visitLiteralIon(ctx: PartiQLParser.LiteralIonContext) = PartiqlAst.build {
         val ionValue = try {
-            loadSingleElement(ctx.ION_CLOSURE().getStringValue())
+            loadSingleElement(ctx.ION_CLOSURE().text.trim('`'))
         } catch (e: IonElementException) {
             throw ParserException("Unable to parse Ion value.", ErrorCode.PARSE_UNEXPECTED_TOKEN, cause = e)
         }
@@ -1492,7 +1492,7 @@ internal class PartiQLPigVisitor(
     }
 
     override fun visitLiteralString(ctx: PartiQLParser.LiteralStringContext) = PartiqlAst.build {
-        lit(ionString(ctx.LITERAL_STRING().getStringValue()), ctx.LITERAL_STRING().getSourceMetaContainer())
+        lit(ionString(ctx.LITERAL_STRING().getLiteralStringContent()), ctx.LITERAL_STRING().getSourceMetaContainer())
     }
 
     override fun visitLiteralInteger(ctx: PartiQLParser.LiteralIntegerContext): PartiqlAst.Expr.Lit = PartiqlAst.build {
@@ -1500,7 +1500,7 @@ internal class PartiQLPigVisitor(
     }
 
     override fun visitLiteralDate(ctx: PartiQLParser.LiteralDateContext) = PartiqlAst.build {
-        val dateString = ctx.LITERAL_STRING().getStringValue()
+        val dateString = ctx.LITERAL_STRING().getLiteralStringContent()
         if (DATE_PATTERN_REGEX.matches(dateString).not()) {
             throw ctx.LITERAL_STRING()
                 .err("Expected DATE string to be of the format yyyy-MM-dd", ErrorCode.PARSE_INVALID_DATE_STRING)
@@ -1765,7 +1765,7 @@ internal class PartiQLPigVisitor(
      * TIME (<int>)? (WITH TIME ZONE)? <string>
      */
     private fun getTimeStringAndPrecision(stringNode: TerminalNode, integerNode: TerminalNode?): Pair<String, Long> {
-        val timeString = stringNode.getStringValue()
+        val timeString = stringNode.getLiteralStringContent()
         val precision = when (integerNode) {
             null -> try {
                 getPrecisionFromTimeString(timeString).toLong()
@@ -1837,7 +1837,7 @@ internal class PartiQLPigVisitor(
         stringNode: TerminalNode,
         integerNode: TerminalNode?
     ): Pair<String, Long?> {
-        val timestampString = stringNode.getStringValue()
+        val timestampString = stringNode.getLiteralStringContent()
         val precision = when (integerNode) {
             null -> return timestampString to null
             else -> integerNode.text.toInteger().toLong()
@@ -1975,17 +1975,12 @@ internal class PartiQLPigVisitor(
         }
     }
 
-    private fun TerminalNode.getStringValue(): String = this.symbol.getStringValue()
-
-    // TODO? Move these computations to the specific spot(s) where they needed?
-    // It is doubtful it is useful to have these extractions gathered in a switch like this,
-    // since the calling sites have already determined one case vs another.
-    // What formerly was here for REGULAR|DELIMITED_IDENTIFIER is now in visitLexid().
-    private fun Token.getStringValue(): String = when (this.type) {
-        PartiQLParser.LITERAL_STRING -> this.text.removePrefix("'").removeSuffix("'").replace("''", "'")
-        PartiQLParser.ION_CLOSURE -> this.text.removePrefix("`").removeSuffix("`")
-        else -> throw this.err("Unsupported token for grabbing string value.", ErrorCode.PARSE_INVALID_QUERY)
-    }
+    private fun TerminalNode.getLiteralStringContent(): String =
+        when (this.symbol.type) {
+            PartiQLParser.LITERAL_STRING ->
+                this.symbol.text.removePrefix("'").removeSuffix("'").replace("''", "'")
+            else -> throw this.err("Bug: should have only been called on a LITERAL_STRING token", ErrorCode.PARSE_INVALID_QUERY)
+        }
 
     private fun getStrategy(strategy: PartiQLParser.SetQuantifierStrategyContext?, default: PartiqlAst.SetQuantifier) =
         PartiqlAst.build {
