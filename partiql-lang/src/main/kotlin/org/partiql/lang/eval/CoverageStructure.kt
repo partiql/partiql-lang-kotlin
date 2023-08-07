@@ -15,16 +15,62 @@
 package org.partiql.lang.eval
 
 /**
- * Represents the static structure of a compiled [Expression]. For example, a PartiQL query that contains a single
- * boolean expression will contain a [branchCount] of 2. This structure is distinct from the execution data found
+ * Represents the static structure of a compiled [Expression]. This structure is distinct from the execution data found
  * within [CoverageData].
  *
- * @param branchCount the total number of branches found in the PartiQL Statement
- * @param branchLocations represents the line numbers (value) for each branch name (key)
+ * @param branches represents the distinct outcome of an expression/clause that dictates control flow. For example,
+ * a WHERE clause has two potential branches/outcomes.
  */
 public data class CoverageStructure(
-    val branchCount: Int = 0,
-    val branchLocations: Map<String, Int> = emptyMap(),
-    val conditionCount: Int = 0,
-    val conditionLocations: Map<String, Int> = emptyMap()
-)
+    val branches: Map<String, Branch> = emptyMap(),
+    val branchConditions: Map<String, BranchCondition> = emptyMap()
+) {
+    public data class Branch(
+        val id: String,
+        val type: Type,
+        val outcome: Outcome,
+        val line: Long
+    ) {
+        public enum class Type {
+            WHERE,
+            HAVING,
+            CASE_WHEN
+        }
+
+        public enum class Outcome {
+            TRUE,
+            FALSE
+        }
+    }
+
+    public data class BranchCondition(
+        val id: String,
+        val type: Type,
+        val outcome: Outcome,
+        val line: Long
+    ) {
+        public enum class Type {
+            GT,
+            GTE,
+            LT,
+            LTE,
+            EQ,
+            NEQ,
+            AND,
+            OR,
+            NOT,
+            BETWEEN,
+            LIKE,
+            IS,
+            IN,
+            CAN_CAST,
+            CAN_LOSSLESS_CAST
+        }
+        public enum class Outcome {
+            TRUE,
+            FALSE,
+            NULL,
+            MISSING
+        }
+    }
+}

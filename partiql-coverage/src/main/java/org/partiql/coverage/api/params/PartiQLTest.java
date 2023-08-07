@@ -30,5 +30,9 @@ import java.lang.annotation.*;
 @TestTemplate
 @ExtendWith(PartiQLTestExtension.class)
 public @interface PartiQLTest {
+
+    /**
+     * @return a Java Class implementing PartiQLTestProvider. This must expose a no-argument constructor.
+     */
     Class<? extends PartiQLTestProvider> provider();
 }

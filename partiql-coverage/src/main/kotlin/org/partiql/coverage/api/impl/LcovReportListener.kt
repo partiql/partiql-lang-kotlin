@@ -15,9 +15,8 @@ internal abstract class LcovReportListener : TestExecutionListener {
     
     abstract fun isLcovEnabled(): Boolean
     abstract fun getReportPath(): String
-    abstract fun getBranchCountKey(): String
-    abstract fun getLineNumberOfBranchPrefix(): String
-    abstract fun getResultOfBranchPrefix(): String
+    abstract fun getTargetCountKey(): String
+    abstract fun getCoverageTargetType(): ReportKey.CoverageTarget
 
     override fun testPlanExecutionStarted(testPlan: TestPlan?) {
         if (testPlan == null) { return super.testPlanExecutionStarted(testPlan) }
@@ -42,46 +41,29 @@ internal abstract class LcovReportListener : TestExecutionListener {
         val providerName = map[ReportKey.PROVIDER_NAME] ?: "PQL_NO_PROVIDER_FOUND_" + kotlin.random.Random(5).nextLong()
 
         // Branch Information (CASE, WHERE, HAVING)
-        val branchCount = map[getBranchCountKey()]?.toInt() ?: 0
-        val branchToLineMap = mutableMapOf<String, Int>()
-        val branchResults = mutableMapOf<String, Int>()
+        val branchCount = map[getTargetCountKey()]?.toInt() ?: 0
+        val branchToLineMap = mutableMapOf<String, Long>()
+        val branchResults = mutableMapOf<String, Long>()
 
-        var executedCount: Int = 0
-        map.forEach { (key, value) ->
-            when {
-                key.startsWith(getLineNumberOfBranchPrefix()) -> {
-                    val branchId = key.substring(getLineNumberOfBranchPrefix().length)
-                    val lineNumber = value.toInt()
-                    branchToLineMap[branchId] = lineNumber
-                }
-                key.startsWith(getResultOfBranchPrefix()) -> {
-                    val branchId = key.substring(getResultOfBranchPrefix().length)
-                    val lineNumber = value.toInt()
-                    branchResults[branchId] = lineNumber
-                    executedCount += value.toInt()
-                }
-            }
-        }
+        // Represents Branch/Condition Names
+        val targetIds = map.filter { it.key.startsWith(ReportKey.COVERAGE_TARGET_PREFIX) }.filter {
+            ReportKey.CoverageTarget.valueOf(it.value) == getCoverageTargetType()
+        }.keys.map { it.split(ReportKey.DELIMITER)[1] }.toSet()
 
-        // Get ALL Branches Hit (including conditions)
-        val lcovBranchesHit = branchResults.values.filter { it > 0 }.size
-        val lcovBranchesFound = branchCount
-        
-        // Line Information
-        // TODO: Fix this
-        val lcovLinesFound = branchToLineMap.values.maxOrNull() ?: 0
-
-        // Aggregate ALL Branch Information (including conditions)
-        val lcovBranches = branchToLineMap.entries.map { (branchId, lineNumber) ->
-            val count = branchResults[branchId] ?: 0
-            Branch(branchId, count, lineNumber)
-        }
-
-        // TODO
-        // Aggregate Line Data
-        val count = 1
-        val lcovLineData = branchToLineMap.values.toSet().map { lineNumber ->
-            LineData(lineNumber, count)
+        val lcovBranches = mutableListOf<Branch>()
+        val lcovLineData = mutableSetOf<LineData>()
+        var executedCount = 0L
+        targetIds.forEach { targetId ->
+            val lineNum = map[ReportKey.LINE_NUMBER_OF_TARGET_PREFIX + ReportKey.DELIMITER + targetId]?.toLong() ?: -1L
+            val outcome = map[ReportKey.OUTCOME_OF_TARGET_PREFIX + ReportKey.DELIMITER + targetId] ?: "UNKNOWN_OUTCOME"
+            val type = map[ReportKey.TYPE_OF_TARGET_PREFIX + ReportKey.DELIMITER + targetId] ?: "UNKNOWN_TYPE"
+            val targetName = "$type${ReportKey.DELIMITER}$outcome${ReportKey.DELIMITER}$targetId"
+            val count = map[ReportKey.TARGET_COUNT_PREFIX + ReportKey.DELIMITER + targetId]?.toLong() ?: 0L
+            executedCount += count
+            branchResults[targetName] = count
+            branchToLineMap[targetName] = lineNum
+            lcovBranches.add(Branch(targetName, count, lineNum))
+            lcovLineData.add(LineData(lineNum, 1)) // NOTE: This is inaccurate.
         }
 
         // Write Query to File
@@ -93,10 +75,10 @@ internal abstract class LcovReportListener : TestExecutionListener {
         val coverageEntry = getCoverageInformationEntry(
             testName = testIdentifier?.uniqueId ?: "NO_TEST_NAME",
             filePath = queryPath.absolutePath,
-            branchesFound = lcovBranchesFound,
-            branchesHit = lcovBranchesHit,
-            linesFound = lcovLinesFound,
-            linesHit = lcovLinesFound,
+            branchesFound = branchCount,
+            branchesHit = lcovBranches.filter { it.count > 0 }.size,
+            linesFound = lcovLineData.size, // NOTE: This is inaccurate.
+            linesHit = lcovLineData.size, // NOTE: This is inaccurate.
             branches = lcovBranches,
             lineData = lcovLineData
         )
@@ -131,8 +113,8 @@ internal abstract class LcovReportListener : TestExecutionListener {
         branchesHit: Int,
         linesFound: Int,
         linesHit: Int,
-        branches: List<Branch>,
-        lineData: List<LineData>
+        branches: Iterable<Branch>,
+        lineData: Iterable<LineData>
     ): String {
         val strBuilder = StringBuilder()
 
@@ -168,12 +150,12 @@ internal abstract class LcovReportListener : TestExecutionListener {
 
     private data class Branch(
         val name: String,
-        val count: Int,
-        val line: Int
+        val count: Long,
+        val line: Long
     )
 
     private data class LineData(
-        val line: Int,
-        val executionCount: Int
+        val line: Long,
+        val executionCount: Long
     )
 }

@@ -37,23 +37,17 @@ internal class CoverageCompiler(
     // A unique identifier for each branch
     private var conditionCount: Int = 0
     private var branchCount: Int = 0
-
-    // The boolean outcomes of each branch
     private val conditionCounts = mutableMapOf<String, Int>()
     private val branchCounts = mutableMapOf<String, Int>()
-
-    // The line number for a decision. Key = decision id. Value = line number.
-    private val conditionLocations = mutableMapOf<String, Int>()
-    private val branchLocations = mutableMapOf<String, Int>()
+    private val conditions: MutableMap<String, CoverageStructure.BranchCondition> = mutableMapOf()
+    private val branches: MutableMap<String, CoverageStructure.Branch> = mutableMapOf()
 
     override fun compile(originalAst: PartiqlAst.Statement): Expression {
         val expression = super.compile(originalAst)
         return object : Expression {
             override val coverageStructure: CoverageStructure = CoverageStructure(
-                conditionCount = conditionCount * 2,
-                conditionLocations = conditionLocations.toMap(),
-                branchCount = branchCount * 2,
-                branchLocations = branchLocations.toMap()
+                branches = branches.toMap(),
+                branchConditions = conditions.toMap()
             )
 
             @Suppress("DEPRECATION")
@@ -63,7 +57,7 @@ internal class CoverageCompiler(
 
             override fun evaluate(session: EvaluationSession): PartiQLResult {
                 val result = (expression.evaluate(session) as PartiQLResult.Value).value
-                // TODO: This is a hack to materialize the ExprValue
+                // TODO: This is a hack to materialize the ExprValue. Could be useful to use JMH's Blackhole.
                 val str = ConfigurableExprValueFormatter.standard.format(result)
                 return PartiQLResult.Value(
                     value = result,
@@ -79,7 +73,7 @@ internal class CoverageCompiler(
         return super.compileId(expr, metas)
     }
 
-    // TODO: Figure out how we can determine whether an ID should be a boolean.
+    // TODO: Figure out how we can determine whether a function call should be a boolean.
     //  This will likely be addressed when we move towards static resolution in the successor to the EvaluatingCompiler
     override fun compileCall(expr: PartiqlAst.Expr.Call, metas: MetaContainer): ThunkEnv {
         return super.compileCall(expr, metas)
@@ -97,59 +91,59 @@ internal class CoverageCompiler(
     //
     //
 
-    override fun compileAnd(expr: PartiqlAst.Expr.And, metas: MetaContainer): ThunkEnv = compileCondition("AND", metas) {
+    override fun compileAnd(expr: PartiqlAst.Expr.And, metas: MetaContainer): ThunkEnv = compileCondition(CoverageStructure.BranchCondition.Type.AND, metas) {
         super.compileAnd(expr, metas)
     }
 
-    override fun compileOr(expr: PartiqlAst.Expr.Or, metas: MetaContainer): ThunkEnv = compileCondition("OR", metas) {
+    override fun compileOr(expr: PartiqlAst.Expr.Or, metas: MetaContainer): ThunkEnv = compileCondition(CoverageStructure.BranchCondition.Type.OR, metas) {
         super.compileOr(expr, metas)
     }
 
-    override fun compileNot(expr: PartiqlAst.Expr.Not, metas: MetaContainer): ThunkEnv = compileCondition("NOT", metas) {
+    override fun compileNot(expr: PartiqlAst.Expr.Not, metas: MetaContainer): ThunkEnv = compileCondition(CoverageStructure.BranchCondition.Type.NOT, metas) {
         super.compileNot(expr, metas)
     }
 
-    override fun compileGt(expr: PartiqlAst.Expr.Gt, metas: MetaContainer): ThunkEnv = compileCondition("GT", metas) {
+    override fun compileGt(expr: PartiqlAst.Expr.Gt, metas: MetaContainer): ThunkEnv = compileCondition(CoverageStructure.BranchCondition.Type.GT, metas) {
         super.compileGt(expr, metas)
     }
 
-    override fun compileGte(expr: PartiqlAst.Expr.Gte, metas: MetaContainer): ThunkEnv = compileCondition("GTE", metas) {
+    override fun compileGte(expr: PartiqlAst.Expr.Gte, metas: MetaContainer): ThunkEnv = compileCondition(CoverageStructure.BranchCondition.Type.GTE, metas) {
         super.compileGte(expr, metas)
     }
 
-    override fun compileBetween(expr: PartiqlAst.Expr.Between, metas: MetaContainer): ThunkEnv = compileCondition("BETWEEN", metas) {
+    override fun compileBetween(expr: PartiqlAst.Expr.Between, metas: MetaContainer): ThunkEnv = compileCondition(CoverageStructure.BranchCondition.Type.BETWEEN, metas) {
         super.compileBetween(expr, metas)
     }
 
-    override fun compileEq(expr: PartiqlAst.Expr.Eq, metas: MetaContainer): ThunkEnv = compileCondition("EQ", metas) {
+    override fun compileEq(expr: PartiqlAst.Expr.Eq, metas: MetaContainer): ThunkEnv = compileCondition(CoverageStructure.BranchCondition.Type.EQ, metas) {
         super.compileEq(expr, metas)
     }
 
-    override fun compileIs(expr: PartiqlAst.Expr.IsType, metas: MetaContainer): ThunkEnv = compileCondition("IS", metas) {
+    override fun compileIs(expr: PartiqlAst.Expr.IsType, metas: MetaContainer): ThunkEnv = compileCondition(CoverageStructure.BranchCondition.Type.IS, metas) {
         super.compileIs(expr, metas)
     }
 
-    override fun compileIn(expr: PartiqlAst.Expr.InCollection, metas: MetaContainer): ThunkEnv = compileCondition("IN", metas) {
+    override fun compileIn(expr: PartiqlAst.Expr.InCollection, metas: MetaContainer): ThunkEnv = compileCondition(CoverageStructure.BranchCondition.Type.IN, metas) {
         super.compileIn(expr, metas)
     }
 
-    override fun compileCanCast(expr: PartiqlAst.Expr.CanCast, metas: MetaContainer): ThunkEnv = compileCondition("CAN_CAST", metas) {
+    override fun compileCanCast(expr: PartiqlAst.Expr.CanCast, metas: MetaContainer): ThunkEnv = compileCondition(CoverageStructure.BranchCondition.Type.CAN_CAST, metas) {
         super.compileCanCast(expr, metas)
     }
 
-    override fun compileCanLosslessCast(expr: PartiqlAst.Expr.CanLosslessCast, metas: MetaContainer): ThunkEnv = compileCondition("CAN_LOSSLESS_CAST", metas) {
+    override fun compileCanLosslessCast(expr: PartiqlAst.Expr.CanLosslessCast, metas: MetaContainer): ThunkEnv = compileCondition(CoverageStructure.BranchCondition.Type.CAN_LOSSLESS_CAST, metas) {
         super.compileCanLosslessCast(expr, metas)
     }
 
-    override fun compileLt(expr: PartiqlAst.Expr.Lt, metas: MetaContainer): ThunkEnv = compileCondition("LT", metas) {
+    override fun compileLt(expr: PartiqlAst.Expr.Lt, metas: MetaContainer): ThunkEnv = compileCondition(CoverageStructure.BranchCondition.Type.LT, metas) {
         super.compileLt(expr, metas)
     }
 
-    override fun compileLte(expr: PartiqlAst.Expr.Lte, metas: MetaContainer): ThunkEnv = compileCondition("LTEQ", metas) {
+    override fun compileLte(expr: PartiqlAst.Expr.Lte, metas: MetaContainer): ThunkEnv = compileCondition(CoverageStructure.BranchCondition.Type.LTE, metas) {
         super.compileLte(expr, metas)
     }
 
-    override fun compileNe(expr: PartiqlAst.Expr.Ne, metas: MetaContainer): ThunkEnv = compileCondition("NEQ", metas) {
+    override fun compileNe(expr: PartiqlAst.Expr.Ne, metas: MetaContainer): ThunkEnv = compileCondition(CoverageStructure.BranchCondition.Type.NEQ, metas) {
         super.compileNe(expr, metas)
     }
     
@@ -159,11 +153,11 @@ internal class CoverageCompiler(
     //
     //
 
-    override fun compileWhere(node: PartiqlAst.Expr): ThunkEnv = compileBranch("WHERE", node.metas) {
+    override fun compileWhere(node: PartiqlAst.Expr): ThunkEnv = compileBranch(CoverageStructure.Branch.Type.WHERE, node.metas) {
         super.compileWhere(node)
     }
 
-    override fun compileHaving(node: PartiqlAst.Expr) = compileBranch("HAVING", node.metas) {
+    override fun compileHaving(node: PartiqlAst.Expr) = compileBranch(CoverageStructure.Branch.Type.HAVING, node.metas) {
         super.compileHaving(node)
     }
 
@@ -175,7 +169,7 @@ internal class CoverageCompiler(
         val valueThunk = compileAstExpr(expr.expr)
         val branchThunks = expr.cases.pairs.map {
             Pair(
-                compileBranchWithoutCheck("WHEN", it.first.metas) { compileAstExpr(it.first) },
+                compileBranchWithoutCheck(CoverageStructure.Branch.Type.CASE_WHEN, it.first.metas) { compileAstExpr(it.first) },
                 compileAstExpr(it.second)
             )
         }
@@ -217,7 +211,7 @@ internal class CoverageCompiler(
 
     override fun compileSearchedCase(expr: PartiqlAst.Expr.SearchedCase, metas: MetaContainer): ThunkEnv {
         val branchThunks = expr.cases.pairs.map {
-            compileBranchWithoutCheck("WHEN", it.first.metas) { compileAstExpr(it.first) } to compileAstExpr(it.second)
+            compileBranchWithoutCheck(CoverageStructure.Branch.Type.CASE_WHEN, it.first.metas) { compileAstExpr(it.first) } to compileAstExpr(it.second)
         }
         val elseThunk = when (val default = expr.default) {
             null -> thunkFactory.thunkEnv(metas) { ExprValue.nullValue }
@@ -229,11 +223,6 @@ internal class CoverageCompiler(
                 branchThunks.forEach { bt ->
                     val compiledWhen = bt.first
                     val conditionValue = compiledWhen.thunk(env)
-                    // Any unknown value is considered the same as false.
-                    // Note that .booleanValue() here will throw an EvaluationException if
-                    // the data type is not boolean.
-                    // TODO:  .booleanValue does not have access to metas, so the EvaluationException is reported to be
-                    // at the line & column of the CASE statement, not the predicate, unfortunately.
                     if (conditionValue.isNotUnknown()) {
                         val result = conditionValue.booleanValue()
                         when (result) {
@@ -271,38 +260,37 @@ internal class CoverageCompiler(
         }
     }
     
-    private fun compileBranch(operand: String?, metas: MetaContainer = emptyMetaContainer(), compilation: () -> ThunkEnv) : ThunkEnv {
+    private fun compileBranch(operand: CoverageStructure.Branch.Type, metas: MetaContainer = emptyMetaContainer(), compilation: () -> ThunkEnv) : ThunkEnv {
         val branchThunkEnv = compileBranchWithoutCheck(operand, metas, compilation)
 
         // Get Boolean Decision/Outcome
         val thunk = branchThunkEnv.thunk
         return { env ->
             val resultExprValue = thunk.invoke(env)
-            if (resultExprValue.type == ExprValueType.BOOL) {
-                when (resultExprValue.booleanValue()) {
+
+            when (resultExprValue.type) {
+                ExprValueType.BOOL -> when (resultExprValue.booleanValue()) {
                     true -> branchCounts[branchThunkEnv.truthId] = branchCounts[branchThunkEnv.truthId]!! + 1
                     false -> branchCounts[branchThunkEnv.falseId] = branchCounts[branchThunkEnv.falseId]!! + 1
                 }
+                ExprValueType.NULL -> branchCounts[branchThunkEnv.falseId] = branchCounts[branchThunkEnv.falseId]!! + 1
+                ExprValueType.MISSING -> branchCounts[branchThunkEnv.falseId] = branchCounts[branchThunkEnv.falseId]!! + 1
+                else -> { /* Do nothing */ }
             }
             resultExprValue
         }
     }
 
-    private fun compileBranchWithoutCheck(operand: String?, metas: MetaContainer = emptyMetaContainer(), compilation: () -> ThunkEnv): BranchThunkEnv {
-        val uniqueDecisionId = ++branchCount
-        val truthId = "B$uniqueDecisionId::$operand::T"
-        val falseId = "B$uniqueDecisionId::$operand::F"
+    private fun compileBranchWithoutCheck(operand: CoverageStructure.Branch.Type, metas: MetaContainer = emptyMetaContainer(), compilation: () -> ThunkEnv): BranchThunkEnv {
+        val truthId = "B${++branchCount}"
+        val falseId = "B${++branchCount}"
         branchCounts[truthId] = 0
         branchCounts[falseId] = 0
 
         // Add Location Information
-        metas.sourceLocationMeta?.let { location ->
-            branchLocations[truthId] = location.lineNum.toInt()
-            branchLocations[falseId] = location.lineNum.toInt()
-        } ?: run {
-            branchLocations[truthId] = -1
-            branchLocations[falseId] = -1
-        }
+        val lineNumber = metas.sourceLocationMeta?.lineNum ?: -1L
+        branches[truthId] = CoverageStructure.Branch(truthId, operand, outcome = CoverageStructure.Branch.Outcome.TRUE, lineNumber)
+        branches[falseId] = CoverageStructure.Branch(falseId, operand, outcome = CoverageStructure.Branch.Outcome.FALSE, lineNumber)
 
         return BranchThunkEnv(
             truthId,
@@ -317,31 +305,45 @@ internal class CoverageCompiler(
         val thunk: ThunkEnv
     )
 
-    private fun compileCondition(operand: String? = null, metas: MetaContainer = emptyMetaContainer(), compilation: () -> ThunkEnv): ThunkEnv {
-        val uniqueDecisionId = ++conditionCount
-        val truthId = "C$uniqueDecisionId::$operand::T"
-        val falseId = "C$uniqueDecisionId::$operand::F"
+    private fun compileCondition(operand: CoverageStructure.BranchCondition.Type, metas: MetaContainer = emptyMetaContainer(), compilation: () -> ThunkEnv): ThunkEnv {
+        val truthId = "C${++conditionCount}"
+        val falseId = "C${++conditionCount}"
+        val nullId = "C${++conditionCount}"
+        val missingId = "C${++conditionCount}"
         conditionCounts[truthId] = 0
         conditionCounts[falseId] = 0
+        conditionCounts[nullId] = 0
 
         // Add Location Information
-        metas.sourceLocationMeta?.let { location ->
-            conditionLocations[truthId] = location.lineNum.toInt()
-            conditionLocations[falseId] = location.lineNum.toInt()
-        } ?: run {
-            conditionLocations[truthId] = -1
-            conditionLocations[falseId] = -1
+        val lineNumber = metas.sourceLocationMeta?.lineNum ?: -1L
+        conditions[truthId] = CoverageStructure.BranchCondition(truthId, operand, outcome = CoverageStructure.BranchCondition.Outcome.TRUE, lineNumber)
+        conditions[falseId] = CoverageStructure.BranchCondition(falseId, operand, outcome = CoverageStructure.BranchCondition.Outcome.FALSE, lineNumber)
+        conditions[nullId] = CoverageStructure.BranchCondition(nullId, operand, outcome = CoverageStructure.BranchCondition.Outcome.NULL, lineNumber)
+
+        // Handle Permissive Mode
+        if (compileOptions.typingMode == TypingMode.PERMISSIVE) {
+            conditionCounts[missingId] = 0
+            conditions[missingId] = CoverageStructure.BranchCondition(
+                missingId,
+                operand,
+                outcome = CoverageStructure.BranchCondition.Outcome.MISSING,
+                lineNumber
+            )
         }
 
         // Get Boolean Decision/Outcome
         val thunk = compilation.invoke()
         return { env ->
             val resultExprValue = thunk.invoke(env)
-            if (resultExprValue.type == ExprValueType.BOOL) {
-                when (resultExprValue.booleanValue()) {
+            when (resultExprValue.type) {
+                ExprValueType.BOOL -> when (resultExprValue.booleanValue()) {
                     true -> conditionCounts[truthId] = conditionCounts[truthId]!! + 1
                     false -> conditionCounts[falseId] = conditionCounts[falseId]!! + 1
                 }
+                ExprValueType.NULL -> conditionCounts[nullId] = conditionCounts[nullId]!! + 1
+                // We should never receive MISSING unless in permissive mode
+                ExprValueType.MISSING -> conditionCounts[missingId] = (conditionCounts[missingId] ?: 0) + 1
+                else -> { /* Do nothing */ }
             }
             resultExprValue
         }

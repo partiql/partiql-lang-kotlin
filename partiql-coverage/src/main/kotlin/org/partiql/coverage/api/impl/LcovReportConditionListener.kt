@@ -10,11 +10,9 @@ internal class LcovReportConditionListener : LcovReportListener() {
 
     override fun getReportPath(): String = this.reportPath!!
 
-    override fun getBranchCountKey(): String = ReportKey.CONDITION_COUNT 
+    override fun getTargetCountKey(): String = ReportKey.CONDITION_COUNT 
 
-    override fun getLineNumberOfBranchPrefix(): String = ReportKey.LINE_NUMBER_OF_CONDITION_PREFIX
-
-    override fun getResultOfBranchPrefix(): String = ReportKey.RESULT_OF_CONDITION_PREFIX
+    override fun getCoverageTargetType(): ReportKey.CoverageTarget = ReportKey.CoverageTarget.BRANCH_CONDITION
 
 
     override fun testPlanExecutionStarted(testPlan: TestPlan?) {
