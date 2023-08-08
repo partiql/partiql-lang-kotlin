@@ -2,7 +2,7 @@ package org.partiql.test.coverage.simple
 
 import org.partiql.coverage.api.PartiQLTestCase
 import org.partiql.coverage.api.PartiQLTestProvider
-import org.partiql.coverage.api.params.PartiQLTest
+import org.partiql.coverage.api.PartiQLTest
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.EvaluationSession
 import org.partiql.lang.eval.ExprValue

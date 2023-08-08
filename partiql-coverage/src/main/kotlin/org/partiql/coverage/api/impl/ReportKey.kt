@@ -1,6 +1,6 @@
 package org.partiql.coverage.api.impl
 
-public object ReportKey {
+internal object ReportKey {
     public const val BRANCH_COUNT: String = "\$pql-bc"
     public const val CONDITION_COUNT: String = "\$pql-cc"
     public const val PACKAGE_NAME: String = "\$pql-pan"

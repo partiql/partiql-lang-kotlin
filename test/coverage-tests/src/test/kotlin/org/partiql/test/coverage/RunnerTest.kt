@@ -1,8 +1,8 @@
 package org.partiql.test.coverage
 
+import org.partiql.coverage.api.PartiQLTest
 import org.partiql.coverage.api.PartiQLTestCase
 import org.partiql.coverage.api.PartiQLTestProvider
-import org.partiql.coverage.api.params.PartiQLTest
 import org.partiql.lang.CompilerPipeline
 import org.partiql.lang.eval.Bindings
 import org.partiql.lang.eval.EvaluationSession
@@ -182,6 +182,7 @@ class RunnerTest {
                 }
             )
         )
+
         class TestCase(override val session: EvaluationSession) : PartiQLTestCase
     }
 }

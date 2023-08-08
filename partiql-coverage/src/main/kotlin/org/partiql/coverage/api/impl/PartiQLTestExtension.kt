@@ -1,4 +1,4 @@
-package org.partiql.coverage.api.params
+package org.partiql.coverage.api.impl
 
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.junit.jupiter.api.extension.TestTemplateInvocationContext
@@ -11,7 +11,7 @@ import org.junit.platform.commons.util.Preconditions
 import org.junit.platform.commons.util.ReflectionUtils
 import org.partiql.coverage.api.PartiQLTestCase
 import org.partiql.coverage.api.PartiQLTestProvider
-import org.partiql.coverage.api.impl.ReportKey
+import org.partiql.coverage.api.PartiQLTest
 import org.partiql.lang.CompilerPipeline.Companion.standard
 import java.lang.reflect.Method
 import java.util.concurrent.atomic.AtomicLong
@@ -19,7 +19,7 @@ import java.util.stream.Stream
 import java.util.stream.StreamSupport
 
 /**
- * TODO
+ * JUnit extension that is invoked on test methods annotated with [PartiQLTest].
  */
 internal class PartiQLTestExtension : TestTemplateInvocationContextProvider {
     override fun supportsTestTemplate(context: ExtensionContext): Boolean {
@@ -28,10 +28,10 @@ internal class PartiQLTestExtension : TestTemplateInvocationContextProvider {
         val testMethod = context.testMethod.get()
         if (!AnnotationUtils.isAnnotated(testMethod, PartiQLTest::class.java)) { return false }
 
-        val methodContext = ParameterizedTestMethodContext(testMethod)
+        val methodContext = PartiQLTestMethodContext(testMethod)
         Preconditions.condition(methodContext.hasPotentiallyValidSignature()) {
             String.format(
-                "@ParameterizedTest method [%s] declares formal parameters in an invalid order: "
+                "@PartiQLTest method [%s] declares formal parameters in an invalid order: "
                     + "argument aggregators must be declared after any indexed arguments "
                     + "and before any arguments resolved by another ParameterResolver.",
                 testMethod.toGenericString()
@@ -46,7 +46,7 @@ internal class PartiQLTestExtension : TestTemplateInvocationContextProvider {
     ): Stream<TestTemplateInvocationContext> {
         val templateMethod = extensionContext.requiredTestMethod
         val displayName = extensionContext.displayName
-        val methodContext = getStore(extensionContext)[METHOD_CONTEXT_KEY, ParameterizedTestMethodContext::class.java]
+        val methodContext = getStore(extensionContext)[METHOD_CONTEXT_KEY, PartiQLTestMethodContext::class.java]
         val argumentMaxLength = extensionContext.getConfigurationParameter(
             ARGUMENT_MAX_LENGTH_KEY
         ) { s: String -> s.toInt() }.orElse(512)
@@ -105,7 +105,7 @@ internal class PartiQLTestExtension : TestTemplateInvocationContextProvider {
         }
 
         // Compute Coverage Metrics
-        val tests: Stream<Array<Any?>> = Stream.of(prov)
+        val tests: Stream<Array<Any>> = Stream.of(prov)
             .map { provider: PartiQLTestProvider -> AnnotationConsumerInitializer.initialize(templateMethod, provider) }
             .flatMap { provider: PartiQLTestProvider -> arguments(provider, extensionContext) }
             .map { testCase: PartiQLTestCase ->
@@ -124,7 +124,7 @@ internal class PartiQLTestExtension : TestTemplateInvocationContextProvider {
             }
 
         // Invoke Test Methods
-        return tests.map { arguments: Array<Any?> ->
+        return tests.map { arguments: Array<Any> ->
             invocationCount.incrementAndGet()
             createInvocationContext(
                 formatter,
@@ -171,26 +171,21 @@ internal class PartiQLTestExtension : TestTemplateInvocationContextProvider {
         }
 
         private fun createInvocationContext(
-            formatter: ParameterizedTestNameFormatter,
-            methodContext: ParameterizedTestMethodContext, arguments: Array<Any?>, invocationIndex: Int
+            formatter: PartiQLTestNameFormatter,
+            methodContext: PartiQLTestMethodContext, arguments: Array<Any>, invocationIndex: Int
         ): TestTemplateInvocationContext {
-            return ParameterizedTestInvocationContext(formatter, methodContext, arguments, invocationIndex)
+            return PartiQLTestInvocationContext(formatter, methodContext, arguments, invocationIndex)
         }
 
         private fun createNameFormatter(
             extensionContext: ExtensionContext, templateMethod: Method,
-            methodContext: ParameterizedTestMethodContext, displayName: String, argumentMaxLength: Int
-        ): ParameterizedTestNameFormatter {
-            // PartiQLTest parameterizedTest = findAnnotation(templateMethod, PartiQLTest.class).get();
+            methodContext: PartiQLTestMethodContext, displayName: String, argumentMaxLength: Int
+        ): PartiQLTestNameFormatter {
             var pattern = "[{index}]"
-            pattern = Preconditions.notBlank(pattern.trim { it <= ' ' }
-            ) {
-                String.format(
-                    "Configuration error: @ParameterizedTest on method [%s] must be declared with a non-empty name.",
-                    templateMethod
-                )
+            pattern = Preconditions.notBlank(pattern.trim { it <= ' ' }) {
+                "Configuration error: @PartiQLTest on method [$templateMethod] must be declared with a non-empty name."
             }
-            return ParameterizedTestNameFormatter(pattern, displayName, methodContext, argumentMaxLength)
+            return PartiQLTestNameFormatter(pattern, displayName, methodContext, argumentMaxLength)
         }
 
         private fun arguments(

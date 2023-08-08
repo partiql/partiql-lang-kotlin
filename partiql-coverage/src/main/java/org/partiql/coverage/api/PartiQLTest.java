@@ -1,8 +1,8 @@
-package org.partiql.coverage.api.params;
+package org.partiql.coverage.api;
 
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.*;
-import org.partiql.coverage.api.*;
+import org.partiql.coverage.api.impl.*;
 
 import java.lang.annotation.*;
 
@@ -19,7 +19,7 @@ import java.lang.annotation.*;
  *
  * <pre>
  * <code>&#64;PartiQLTest(Provider::class)
- * public fun myTest(tc: PartiQLTestCase, result: PartiQLResult) {
+ * public fun myTest(tc: CustomPartiQLTestCase, result: PartiQLResult) {
  *     assert(result.value == PartiQLInt(2))
  * }
  * </code>
